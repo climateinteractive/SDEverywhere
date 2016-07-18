@@ -1,0 +1,45 @@
+#!/usr/bin/env sh
+function usage {
+  echo 'usage: sdelistall'
+  echo 'Set the SDE_HOME environment variable to the SDEverywhere directory name.'
+  echo 'For example: export SDE_HOME=$HOME/Projects/SDEverywhere'
+  echo 'This script assumes that each model is in a directory under $SDE_HOME/models'
+  echo 'with the same name as the MDL file basename.'
+  exit 1
+}
+if [[ -z $SDE_HOME ]]; then usage; fi
+if [[ ! -d $SDE_HOME ]]; then usage; fi
+if [[ ! -d $SDE_HOME/models ]]; then usage; fi
+
+echo 'listing vars for the active_initial model'
+sde generate $SDE_HOME/models/active_initial/active_initial.mdl --list >$SDE_HOME/models/active_initial/active_initial_vars.txt
+echo 'listing vars for the arrays model'
+sde generate $SDE_HOME/models/arrays/arrays.mdl --list >$SDE_HOME/models/arrays/arrays_vars.txt
+echo 'listing vars for the delay model'
+sde generate $SDE_HOME/models/delay/delay.mdl --list >$SDE_HOME/models/delay/delay_vars.txt
+echo 'listing vars for the delay3 model'
+sde generate $SDE_HOME/models/delay3/delay3.mdl --list >$SDE_HOME/models/delay3/delay3_vars.txt
+echo 'listing vars for the index model'
+sde generate $SDE_HOME/models/index/index.mdl --list >$SDE_HOME/models/index/index_vars.txt
+echo 'listing vars for the initial model'
+sde generate $SDE_HOME/models/initial/initial.mdl --list >$SDE_HOME/models/initial/initial_vars.txt
+echo 'listing vars for the interleaved model'
+sde generate $SDE_HOME/models/interleaved/interleaved.mdl --list >$SDE_HOME/models/interleaved/interleaved_vars.txt
+echo 'listing vars for the lookup model'
+sde generate $SDE_HOME/models/lookup/lookup.mdl --list >$SDE_HOME/models/lookup/lookup_vars.txt
+echo 'listing vars for the lotka model'
+sde generate $SDE_HOME/models/lotka/lotka.mdl --list >$SDE_HOME/models/lotka/lotka_vars.txt
+echo 'listing vars for the mapping model'
+sde generate $SDE_HOME/models/mapping/mapping.mdl --list >$SDE_HOME/models/mapping/mapping_vars.txt
+echo 'listing vars for the ref model'
+sde generate $SDE_HOME/models/ref/ref.mdl --list >$SDE_HOME/models/ref/ref_vars.txt
+echo 'listing vars for the subscript model'
+sde generate $SDE_HOME/models/subscript/subscript.mdl --list >$SDE_HOME/models/subscript/subscript_vars.txt
+echo 'listing vars for the sum model'
+sde generate $SDE_HOME/models/sum/sum.mdl --list >$SDE_HOME/models/sum/sum_vars.txt
+echo 'listing vars for the smooth model'
+sde generate $SDE_HOME/models/smooth/smooth.mdl --list >$SDE_HOME/models/smooth/smooth_vars.txt
+echo 'listing vars for the smooth3 model'
+sde generate $SDE_HOME/models/smooth3/smooth3.mdl --list >$SDE_HOME/models/smooth3/smooth3_vars.txt
+echo 'listing vars for the vector model'
+sde generate $SDE_HOME/models/vector/vector.mdl --list >$SDE_HOME/models/vector/vector_vars.txt

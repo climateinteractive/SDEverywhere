@@ -1,0 +1,30 @@
+{
+  "name": "sdeverywhere",
+  "version": "0.2.0",
+  "description": "SDEverywhere command line tools",
+  "author": "Todd Fincannon <todd@toddfincannon.com> (https://toddfincannon.com)",
+  "homepage": "http://sdeverywhere.org",
+  "license": "MIT",
+  "readmeFilename": "README.md",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ToddFincannon/SDEverywhere.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ToddFincannon/SDEverywhere/issues"
+  },
+  "dependencies": {
+    "antlr4": "^4.5.2",
+    "babel-polyfill": "^6.2.0",
+    "ramda": "^0.21.0",
+    "source-map-support": "^0.4.0",
+    "uglify-js": "^2.6.2",
+    "yargs": "^4.7.1"
+  },
+  "devDependencies": {},
+  "scripts": {},
+  "preferGlobal": true,
+  "bin": {
+    "sde": "./index.js"
+  }
+}

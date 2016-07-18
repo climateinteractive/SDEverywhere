@@ -1,0 +1,147 @@
+a: const
+= 1
+refId(_a)
+
+D3: aux
+= DELAY3(input,MAX(a,b))
+refId(_d3)
+refs(__level3, __level2, __level1, __aux3)
+
+b: const
+= 2
+refId(_b)
+
+aux1: aux
+= level1/d
+refId(_aux1)
+refs(_level1, _d)
+
+aux2: aux
+= level2/d
+refId(_aux2)
+refs(_level2, _d)
+
+d: aux
+= delay/3
+refId(_d)
+
+D1: aux
+= DELAY3(input,delay)
+refId(_d1)
+refs(__level6, __level5, __level4, __aux6)
+
+D2: aux
+= level3/d
+refId(_d2)
+refs(_level3, _d)
+
+delay: const
+= 5
+refId(_delay)
+
+input: aux
+= STEP(1,10)-STEP(1,20)
+refId(_input)
+
+level1: level
+= INTEG(input-aux1,level3)
+refId(_level1)
+refs(_input, _aux1)
+initRefs(_level3)
+
+level2: level
+= INTEG(aux1-aux2,level3)
+refId(_level2)
+refs(_aux1, _aux2)
+initRefs(_level3)
+
+level3: level
+= INTEG(aux2-D2,d*input)
+refId(_level3)
+refs(_aux2, _d2)
+initRefs(_d, _input)
+
+FINAL TIME: const
+= 40
+refId(_final_time)
+
+INITIAL TIME: const
+= 0
+refId(_initial_time)
+
+SAVEPER: aux
+= TIME STEP
+refId(_saveper)
+
+TIME STEP: const
+= 1
+refId(_time_step)
+
+Time: const
+= 
+refId(_time)
+
+_level3: level
+= INTEG(_aux2-D3,input*((MAX(a,b))/3))
+refId(__level3)
+refs(__aux2, _d3)
+initRefs(_input)
+
+_level2: level
+= INTEG(_aux1-_aux2,_level3)
+refId(__level2)
+refs(__aux1, __aux2)
+initRefs(__level3)
+
+_level1: level
+= INTEG(input-_aux1,_level3)
+refId(__level1)
+refs(_input, __aux1)
+initRefs(__level3)
+
+_aux1: aux
+= _level1/((MAX(a,b))/3)
+refId(__aux1)
+refs(__level1)
+
+_aux2: aux
+= _level2/((MAX(a,b))/3)
+refId(__aux2)
+refs(__level2)
+
+_aux3: aux
+= (MAX(a,b))/3.0
+refId(__aux3)
+
+_level6: level
+= INTEG(_aux5-D1,input*((delay)/3))
+refId(__level6)
+refs(__aux5, _d1)
+initRefs(_input)
+
+_level5: level
+= INTEG(_aux4-_aux5,_level6)
+refId(__level5)
+refs(__aux4, __aux5)
+initRefs(__level6)
+
+_level4: level
+= INTEG(input-_aux4,_level6)
+refId(__level4)
+refs(_input, __aux4)
+initRefs(__level6)
+
+_aux4: aux
+= _level4/((delay)/3)
+refId(__aux4)
+refs(__level4)
+
+_aux5: aux
+= _level5/((delay)/3)
+refId(__aux5)
+refs(__level5)
+
+_aux6: aux
+= (delay)/3.0
+refId(__aux6)
+

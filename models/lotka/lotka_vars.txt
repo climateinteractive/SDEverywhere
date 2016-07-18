@@ -1,0 +1,100 @@
+Fractional predation rate: aux
+= Reference predation rate*(Predators Y/Reference predators)
+refId(_fractional_predation_rate)
+refs(_predators_y)
+
+Predation rate per predator beta: aux
+= Reference predation rate/Reference predators
+refId(_predation_rate_per_predator_beta)
+
+Predator decrease rate: aux
+= Predators Y*Predator fractional decrease rate gamma
+refId(_predator_decrease_rate)
+refs(_predators_y)
+
+Predator fractional decrease rate gamma: const
+= 0.1
+refId(_predator_fractional_decrease_rate_gamma)
+
+Predator fractional growth rate: aux
+= Reference predator growth rate*(Prey X/Reference prey)
+refId(_predator_fractional_growth_rate)
+refs(_prey_x)
+
+Predator growth per prey delta: aux
+= Reference predator growth rate/Reference prey
+refId(_predator_growth_per_prey_delta)
+
+Predator increase rate: aux
+= Predators Y*Predator fractional growth rate
+refId(_predator_increase_rate)
+refs(_predators_y, _predator_fractional_growth_rate)
+
+Predators Y: level
+= INTEG(Predator increase rate-Predator decrease rate,Relative initial predators*Reference predators)
+refId(_predators_y)
+refs(_predator_increase_rate, _predator_decrease_rate)
+
+Prey decrease rate: aux
+= Prey X*Fractional predation rate
+refId(_prey_decrease_rate)
+refs(_prey_x, _fractional_predation_rate)
+
+Prey fractional growth rate alpha: const
+= 0.3
+refId(_prey_fractional_growth_rate_alpha)
+
+Prey increase rate: aux
+= Prey fractional growth rate alpha*Prey X
+refId(_prey_increase_rate)
+refs(_prey_x)
+
+Prey X: level
+= INTEG(Prey increase rate-Prey decrease rate,Relative initial prey*Reference prey)
+refId(_prey_x)
+refs(_prey_increase_rate, _prey_decrease_rate)
+
+Reference predation rate: const
+= 0.1
+refId(_reference_predation_rate)
+
+Reference predator growth rate: const
+= 0.2
+refId(_reference_predator_growth_rate)
+
+Reference predators: const
+= 10
+refId(_reference_predators)
+
+Reference prey: const
+= 100
+refId(_reference_prey)
+
+Relative initial predators: const
+= 1
+refId(_relative_initial_predators)
+
+Relative initial prey: const
+= 1
+refId(_relative_initial_prey)
+
+FINAL TIME: const
+= 100
+refId(_final_time)
+
+INITIAL TIME: const
+= 0
+refId(_initial_time)
+
+SAVEPER: aux
+= TIME STEP
+refId(_saveper)
+
+TIME STEP: const
+= 0.015625
+refId(_time_step)
+
+Time: const
+= 
+refId(_time)
+

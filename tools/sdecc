@@ -1,0 +1,22 @@
+#!/usr/bin/env sh
+function usage {
+  echo 'usage: sdecc <model-name>'
+  echo 'Set the SDE_HOME environment variable to the SDEverywhere directory name.'
+  echo 'For example: export SDE_HOME=$HOME/Projects/SDEverywhere'
+  echo 'This script assumes that the model code is in the $SDE_HOME/build directory.'
+  echo 'with the same name as the MDL file basename.'
+  exit 1
+}
+if [[ -z $SDE_HOME ]]; then usage; fi
+if [[ ! -d $SDE_HOME ]]; then usage; fi
+if [[ ! -d $SDE_HOME/c ]]; then usage; fi
+if [[ ! -d $SDE_HOME/build ]]; then mkdir $SDE_HOME/build; fi
+if [[ -z $1 ]]; then usage; fi
+MDL_NAME=$1
+pushd $SDE_HOME/c >/dev/null
+ln -sf $SDE_HOME/build/$MDL_NAME.c .
+export P=$MDL_NAME
+make >/dev/null
+mv $MDL_NAME $SDE_HOME/build
+rm $MDL_NAME.c
+popd >/dev/null

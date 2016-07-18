@@ -1,0 +1,28 @@
+{
+  "name": "sdeverywhere-source",
+  "version": "0.2.0",
+  "description": "SDEverywhere source",
+  "author": "Todd Fincannon <todd@toddfincannon.com> (https://toddfincannon.com)",
+  "homepage": "http://sdeverywhere.org",
+  "license": "MIT",
+  "readmeFilename": "README.md",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ToddFincannon/SDEverywhere.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ToddFincannon/SDEverywhere/issues"
+  },
+  "dependencies": {
+    "babel-cli": "^6.2.0",
+    "babel-preset-es2015-node5": "^1.1.1",
+    "source-map-support": "^0.4.0"
+  },
+  "scripts": {
+    "build": "babel . --out-dir ../tools --source-maps --ignore node_modules/,ModelLexer.js,ModelParser.js,ModelVisitor.js",
+    "watch": "babel . --out-dir ../tools --source-maps --ignore node_modules/,ModelLexer.js,ModelParser.js,ModelVisitor.js --watch"
+  },
+  "babel": {
+    "presets": ["es2015-node5"]
+  }
+}

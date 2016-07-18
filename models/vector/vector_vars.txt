@@ -1,0 +1,256 @@
+ASCENDING: const
+= 1
+refId(_ascending)
+
+DESCENDING: const
+= 0
+refId(_descending)
+
+VSSUM: const
+= 0
+refId(_vssum)
+
+VSMAX: const
+= 3
+refId(_vsmax)
+
+VSERRNONE: const
+= 0
+refId(_vserrnone)
+
+VSERRATLEASTONE: const
+= 1
+refId(_vserratleastone)
+
+a[DimA]: const (non-apply-to-all)
+= 0,1,1
+refId(_a[_a1])
+families(_dima)
+subscripts(_a1)
+
+a[DimA]: const (non-apply-to-all)
+= 0,1,1
+refId(_a[_a2])
+families(_dima)
+subscripts(_a2)
+
+a[DimA]: const (non-apply-to-all)
+= 0,1,1
+refId(_a[_a3])
+families(_dima)
+subscripts(_a3)
+
+b[DimB]: const (non-apply-to-all)
+= 1,2
+refId(_b[_b1])
+families(_dimb)
+subscripts(_b1)
+
+b[DimB]: const (non-apply-to-all)
+= 1,2
+refId(_b[_b2])
+families(_dimb)
+subscripts(_b2)
+
+c[DimA]: aux
+= 10+VECTOR ELM MAP(b[B1],a[DimA])
+refId(_c)
+families(_dima)
+subscripts(_dima)
+
+d[A1,B1]: const (non-apply-to-all)
+= 1
+refId(_d[_a1,_b1])
+families(_dima, _dimb)
+subscripts(_a1, _b1)
+
+d[A2,B1]: const (non-apply-to-all)
+= 2
+refId(_d[_a2,_b1])
+families(_dima, _dimb)
+subscripts(_a2, _b1)
+
+d[A3,B1]: const (non-apply-to-all)
+= 3
+refId(_d[_a3,_b1])
+families(_dima, _dimb)
+subscripts(_a3, _b1)
+
+d[A1,B2]: const (non-apply-to-all)
+= 4
+refId(_d[_a1,_b2])
+families(_dima, _dimb)
+subscripts(_a1, _b2)
+
+d[A2,B2]: const (non-apply-to-all)
+= 5
+refId(_d[_a2,_b2])
+families(_dima, _dimb)
+subscripts(_a2, _b2)
+
+d[A3,B2]: const (non-apply-to-all)
+= 6
+refId(_d[_a3,_b2])
+families(_dima, _dimb)
+subscripts(_a3, _b2)
+
+e[A1,B1]: const (non-apply-to-all)
+= 0
+refId(_e[_a1,_b1])
+families(_dima, _dimb)
+subscripts(_a1, _b1)
+
+e[A2,B1]: const (non-apply-to-all)
+= 1
+refId(_e[_a2,_b1])
+families(_dima, _dimb)
+subscripts(_a2, _b1)
+
+e[A3,B1]: const (non-apply-to-all)
+= 0
+refId(_e[_a3,_b1])
+families(_dima, _dimb)
+subscripts(_a3, _b1)
+
+e[A1,B2]: const (non-apply-to-all)
+= 1
+refId(_e[_a1,_b2])
+families(_dima, _dimb)
+subscripts(_a1, _b2)
+
+e[A2,B2]: const (non-apply-to-all)
+= 0
+refId(_e[_a2,_b2])
+families(_dima, _dimb)
+subscripts(_a2, _b2)
+
+e[A3,B2]: const (non-apply-to-all)
+= 1
+refId(_e[_a3,_b2])
+families(_dima, _dimb)
+subscripts(_a3, _b2)
+
+f[DimA,DimB]: aux
+= VECTOR ELM MAP(d[DimA,B1],a[DimA])
+refId(_f)
+families(_dima, _dimb)
+subscripts(_dima, _dimb)
+
+g[DimA,DimB]: aux
+= VECTOR ELM MAP(d[DimA,B1],e[DimA,DimB])
+refId(_g)
+families(_dima, _dimb)
+subscripts(_dima, _dimb)
+
+h[DimA]: const (non-apply-to-all)
+= 2100,2010,2020
+refId(_h[_a1])
+families(_dima)
+subscripts(_a1)
+
+h[DimA]: const (non-apply-to-all)
+= 2100,2010,2020
+refId(_h[_a2])
+families(_dima)
+subscripts(_a2)
+
+h[DimA]: const (non-apply-to-all)
+= 2100,2010,2020
+refId(_h[_a3])
+families(_dima)
+subscripts(_a3)
+
+l[DimA]: aux
+= VECTOR SORT ORDER(h[DimA],ASCENDING)
+refId(_l)
+families(_dima)
+subscripts(_dima)
+
+m[DimA]: aux
+= VECTOR SORT ORDER(h[DimA],0)
+refId(_m)
+families(_dima)
+subscripts(_dima)
+
+o[A1,B1]: const (non-apply-to-all)
+= 1
+refId(_o[_a1,_b1])
+families(_dima, _dimb)
+subscripts(_a1, _b1)
+
+o[A1,B2]: const (non-apply-to-all)
+= 2
+refId(_o[_a1,_b2])
+families(_dima, _dimb)
+subscripts(_a1, _b2)
+
+o[A2,B1]: const (non-apply-to-all)
+= 4
+refId(_o[_a2,_b1])
+families(_dima, _dimb)
+subscripts(_a2, _b1)
+
+o[A2,B2]: const (non-apply-to-all)
+= 3
+refId(_o[_a2,_b2])
+families(_dima, _dimb)
+subscripts(_a2, _b2)
+
+o[A3,B1]: const (non-apply-to-all)
+= 5
+refId(_o[_a3,_b1])
+families(_dima, _dimb)
+subscripts(_a3, _b1)
+
+o[A3,B2]: const (non-apply-to-all)
+= 5
+refId(_o[_a3,_b2])
+families(_dima, _dimb)
+subscripts(_a3, _b2)
+
+p[DimA,DimB]: aux
+= VECTOR SORT ORDER(o[DimA,DimB],ASCENDING)
+refId(_p)
+families(_dima, _dimb)
+subscripts(_dima, _dimb)
+
+q[DimB]: aux
+= VECTOR SELECT(e[DimA!,DimB],c[DimA!],0,VSSUM,VSERRNONE)
+refId(_q)
+families(_dimb)
+subscripts(_dimb)
+refs(_c)
+
+r[DimA]: aux
+= VECTOR SELECT(e[DimA,DimB!],d[DimA,DimB!],:NA:,VSMAX,VSERRNONE)
+refId(_r)
+families(_dima)
+subscripts(_dima)
+
+s[DimB]: aux
+= SUM(c[DimA!]*e[DimA!,DimB])
+refId(_s)
+families(_dimb)
+subscripts(_dimb)
+refs(_c)
+
+FINAL TIME: const
+= 1
+refId(_final_time)
+
+INITIAL TIME: const
+= 0
+refId(_initial_time)
+
+SAVEPER: aux
+= TIME STEP
+refId(_saveper)
+
+TIME STEP: const
+= 1
+refId(_time_step)
+
+Time: const
+= 
+refId(_time)
+

@@ -1,0 +1,54 @@
+D1: aux
+= DELAY1(input,delay)
+refId(_d1)
+refs(__level1, __aux1)
+
+D2: aux
+= level/delay
+refId(_d2)
+refs(_level)
+
+delay: const
+= 5
+refId(_delay)
+
+input: aux
+= STEP(1,10)-STEP(1,20)
+refId(_input)
+
+level: level
+= INTEG(input-D2,input*delay)
+refId(_level)
+refs(_input, _d2)
+initRefs(_input)
+
+FINAL TIME: const
+= 40
+refId(_final_time)
+
+INITIAL TIME: const
+= 0
+refId(_initial_time)
+
+SAVEPER: aux
+= TIME STEP
+refId(_saveper)
+
+TIME STEP: const
+= 1
+refId(_time_step)
+
+Time: const
+= 
+refId(_time)
+
+_level1: level
+= INTEG(input-D1,input)
+refId(__level1)
+refs(_input, _d1)
+initRefs(_input)
+
+_aux1: aux
+= delay
+refId(__aux1)
+

@@ -1,0 +1,91 @@
+pgr[DimA]: aux
+= (p[DimA]-SMOOTH(p[DimA],p delay))/p[DimA]/p delay
+refId(_pgr)
+families(_dima)
+subscripts(_dima)
+refs(_p[_a1], _p[_a2], _p[_a3], __level1)
+
+p delay: const
+= 1
+refId(_p_delay)
+
+p[A2]: aux (non-apply-to-all)
+= 2000+RAMP(100,1,10)
+refId(_p[_a2])
+families(_dima)
+subscripts(_a2)
+
+p[A1]: aux (non-apply-to-all)
+= 1000+RAMP(100,1,10)
+refId(_p[_a1])
+families(_dima)
+subscripts(_a1)
+
+p[A3]: aux (non-apply-to-all)
+= 3000+RAMP(100,1,10)
+refId(_p[_a3])
+families(_dima)
+subscripts(_a3)
+
+delay: const
+= 2
+refId(_delay)
+
+input: aux
+= 3+PULSE(10,10)
+refId(_input)
+
+S2 Level: level
+= INTEG((input-S2 Level)/delay,input)
+refId(_s2_level)
+refs(_input)
+initRefs(_input)
+
+S1: aux
+= scale*SMOOTH(input,delay)
+refId(_s1)
+refs(__level2)
+
+S2: aux
+= scale*S2 Level
+refId(_s2)
+refs(_s2_level)
+
+scale: const
+= 6
+refId(_scale)
+
+FINAL TIME: const
+= 40
+refId(_final_time)
+
+INITIAL TIME: const
+= 0
+refId(_initial_time)
+
+SAVEPER: aux
+= TIME STEP
+refId(_saveper)
+
+TIME STEP: const
+= 1
+refId(_time_step)
+
+Time: const
+= 
+refId(_time)
+
+_level1[DimA]: level
+= INTEG((p[DimA]-_level1[DimA])/p delay,p[DimA])
+refId(__level1)
+families(_dima)
+subscripts(_dima)
+refs(_p[_a1], _p[_a2], _p[_a3])
+initRefs(_p[_a1], _p[_a2], _p[_a3])
+
+_level2: level
+= INTEG((input-_level2)/delay,input)
+refId(__level2)
+refs(_input)
+initRefs(_input)
+

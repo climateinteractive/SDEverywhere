@@ -1,0 +1,162 @@
+inputA[DimA]: const (non-apply-to-all)
+= 1,2,3
+refId(_inputa[_a1])
+families(_dima)
+subscripts(_a1)
+
+inputA[DimA]: const (non-apply-to-all)
+= 1,2,3
+refId(_inputa[_a2])
+families(_dima)
+subscripts(_a2)
+
+inputA[DimA]: const (non-apply-to-all)
+= 1,2,3
+refId(_inputa[_a3])
+families(_dima)
+subscripts(_a3)
+
+a[DimA]: aux
+= inputA[DimA]*10
+refId(_a)
+families(_dima)
+subscripts(_dima)
+
+b[DimA]: const
+= 42
+refId(_b)
+families(_dima)
+subscripts(_dima)
+
+c[DimA]: aux
+= inputA[DimA]+a[DimA]
+refId(_c)
+families(_dima)
+subscripts(_dima)
+refs(_a)
+
+d[A1]: aux
+= inputA[A1]*10
+refId(_d)
+families(_dima)
+subscripts(_a1)
+
+e[DimB]: aux
+= inputA[DimA]*10
+refId(_e)
+families(_dimb)
+subscripts(_dimb)
+
+inputAB[A1,B1]: const (non-apply-to-all)
+= 11
+refId(_inputab[_a1,_b1])
+families(_dima, _dimb)
+subscripts(_a1, _b1)
+
+inputAB[A1,B2]: const (non-apply-to-all)
+= 12
+refId(_inputab[_a1,_b2])
+families(_dima, _dimb)
+subscripts(_a1, _b2)
+
+inputAB[A1,B3]: const (non-apply-to-all)
+= 13
+refId(_inputab[_a1,_b3])
+families(_dima, _dimb)
+subscripts(_a1, _b3)
+
+inputAB[A2,B1]: const (non-apply-to-all)
+= 14
+refId(_inputab[_a2,_b1])
+families(_dima, _dimb)
+subscripts(_a2, _b1)
+
+inputAB[A2,B2]: const (non-apply-to-all)
+= 15
+refId(_inputab[_a2,_b2])
+families(_dima, _dimb)
+subscripts(_a2, _b2)
+
+inputAB[A2,B3]: const (non-apply-to-all)
+= 16
+refId(_inputab[_a2,_b3])
+families(_dima, _dimb)
+subscripts(_a2, _b3)
+
+inputAB[A3,B1]: const (non-apply-to-all)
+= 17
+refId(_inputab[_a3,_b1])
+families(_dima, _dimb)
+subscripts(_a3, _b1)
+
+inputAB[A3,B2]: const (non-apply-to-all)
+= 18
+refId(_inputab[_a3,_b2])
+families(_dima, _dimb)
+subscripts(_a3, _b2)
+
+inputAB[A3,B3]: const (non-apply-to-all)
+= 19
+refId(_inputab[_a3,_b3])
+families(_dima, _dimb)
+subscripts(_a3, _b3)
+
+f[DimA,DimB]: aux
+= inputAB[DimA,DimB]*a[DimA]
+refId(_f)
+families(_dima, _dimb)
+subscripts(_dima, _dimb)
+refs(_a)
+
+g[DimB]: level
+= INTEG(a[DimA],e[DimB])
+refId(_g)
+families(_dimb)
+subscripts(_dimb)
+refs(_a)
+initRefs(_e)
+
+h: aux
+= SUM(a[DimA!])+1
+refId(_h)
+refs(_a)
+
+o[DimB]: aux
+= SUM(inputAB[DimA!,DimB])
+refId(_o)
+families(_dimb)
+subscripts(_dimb)
+
+p[DimA]: aux
+= SUM(inputAB[DimA,DimB!])
+refId(_p)
+families(_dima)
+subscripts(_dima)
+
+r[DimA,DimB]: aux
+= inputAB[DimA,DimB]*g[DimB]
+refId(_r)
+families(_dima, _dimb)
+subscripts(_dima, _dimb)
+refs(_g)
+
+FINAL TIME: const
+= 1
+refId(_final_time)
+
+INITIAL TIME: const
+= 0
+refId(_initial_time)
+
+SAVEPER: aux
+= TIME STEP
+refId(_saveper)
+
+TIME STEP: const
+= 1
+refId(_time_step)
+
+Time: const
+= 
+refId(_time)
+
