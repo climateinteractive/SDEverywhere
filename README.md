@@ -199,7 +199,7 @@ SDEverywhere covers a subset of the Vensim Modeling Language used in models that
 
 ### Installing parser tools
 
-If you will be expanding the Vensim parser, you will need the [ANTLR 4](http://www.antlr.org/) parser generator. Working on the code generator does not require ANTLR 4.
+If you will be expanding the Vensim parser, you will need the [ANTLR 4](http://www.antlr.org/) parser generator. Working on the code generator or Vensim function library does not require ANTLR 4.
 
 Install the [Java SE 8 JDK](http://www.oracle.com/technetwork/java/javase/downloads/index.html).
 
@@ -220,8 +220,16 @@ alias grun='java org.antlr.v4.runtime.misc.TestRig'
 
 Instead of a one-time build, set Babel to watch the `src` directory and automatically transpile a file when it changes.
 ~~~
-cd src
+cd $SDE_HOME/src
 npm run watch
+~~~
+
+### Running your local version during development
+
+If you installed SDEverywhere globally with `npm install -g`, then the `sde` command runs the globally installed copy located in your Node.js directory. This will not be affected by your source code changes during development. Run the `sde.js` file from the `tools` directory instead.
+~~~
+cd $SDE_HOME/tools
+node sde.js --help
 ~~~
 
 ## SDEverywhere architecture
