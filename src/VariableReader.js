@@ -46,9 +46,6 @@ export default class VariableReader extends ModelReader {
           let dim = sub(subscript);
           let specialSeparationDim = specialSeparationDims[this.var.varName];
           if (dim.size < sub(dim.family).size || specialSeparationDim === subscript) {
-            // if (specialSeparationDim) {
-              // console.error(`separating ${this.var.varName} on ${specialSeparationDim}`);
-            // }
             // Separate into variables for each index in the subdimension.
             R.forEach(indName => {
               let v = new Variable(this.var.eqnCtx);
