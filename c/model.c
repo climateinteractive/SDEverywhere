@@ -8,7 +8,7 @@ size_t outputIndex = 0;
 // Each number in the output can take up to 13 characters plus a separator character.
 const size_t outputStringLength = 14;
 
-void EMSCRIPTEN_KEEPALIVE run() {
+void run() {
   // Allocate the output buffer as a single block.
   // Add one character for a null terminator.
   if (outputData == NULL) {
@@ -34,7 +34,7 @@ void EMSCRIPTEN_KEEPALIVE run() {
   }
 }
 
-void EMSCRIPTEN_KEEPALIVE finish() {
+void finish() {
   if (outputData != NULL) {
     free(outputData);
   }

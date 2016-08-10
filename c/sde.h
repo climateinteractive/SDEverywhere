@@ -19,13 +19,7 @@ extern "C" {
 #include <float.h>
 #include <string.h>
 #include <ctype.h>
-
-#ifdef TARGET_ASM
-#include <emscripten.h>
-#else
 #include <stdio.h>
-#define EMSCRIPTEN_KEEPALIVE
-#endif
 
 #include "model.h"
 #include "vensim.h"
@@ -52,10 +46,11 @@ EXTERN double _time_step;
 EXTERN double _saveper;
 
 // API
-void EMSCRIPTEN_KEEPALIVE init();
-void EMSCRIPTEN_KEEPALIVE setInputs(const char* json);
-void EMSCRIPTEN_KEEPALIVE run();
-void EMSCRIPTEN_KEEPALIVE finish();
+void initConstants();
+void initLevels();
+void setInputs(const char* json);
+void run();
+void finish();
 
 // Evaluation
 void evalAux();

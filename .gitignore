@@ -1,7 +1,6 @@
 # Project files
 tools/*.js
 tools/*.map
-tools/sderun
 !tools/ModelLexer.js
 !tools/ModelParser.js
 !tools/ModelVisitor.js

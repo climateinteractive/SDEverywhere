@@ -67,13 +67,14 @@ ${dimensionMappingsSection()}
   //
   function emitInitCode() {
     initMode = true;
-    return `void EMSCRIPTEN_KEEPALIVE init() {
+    return `void initConstants() {
   // Initialize constants.
 ${section(Model.constVars())}
 
   // Initialize lookups.
 ${section(Model.lookupVars())}
-
+}
+void initLevels() {
   // Initialize variables with initialization values, such as levels, and the variables they depend on.
 ${section(Model.initVars())}
 }
@@ -102,7 +103,7 @@ ${section(Model.levelVars())}
   //
   function emitIOCode() {
     initMode = false;
-    return `void EMSCRIPTEN_KEEPALIVE setInputs(const char* json) {
+    return `void setInputs(const char* json) {
 ${inputSection()}}
 
 void writeHeader() {
@@ -119,7 +120,7 @@ ${outputSection(spec.outputVars)}
 
   function emitIOCodeAllVars() {
     initMode = false;
-    return `void EMSCRIPTEN_KEEPALIVE setInputs(const char* json) {
+    return `void setInputs(const char* json) {
 ${inputSection()}}
 
 void writeHeader() {
