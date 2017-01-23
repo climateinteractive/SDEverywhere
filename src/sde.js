@@ -28,6 +28,6 @@ require('yargs')
   .command(require('./sdecmp'))
   .help('h')
   .alias('h', 'help')
-  .version('v', '0.2.0')
+  .version('v', '0.2.1')
   .alias('v', 'version')
   .argv;
