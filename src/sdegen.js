@@ -10,6 +10,9 @@ import 'babel-polyfill';
 import { install } from 'source-map-support';
 install();
 
+// Set PREPROCESS_ONLY to true to output the preprocessed model and quit.
+const PREPROCESS_ONLY = false;
+
 let modelDirname;
 let modelBasename;
 
@@ -56,6 +59,10 @@ exports.handler = argv => {
 function parseModel(modelFilename) {
   // Read the mdl file and return a parse tree.
   let input = preprocess(modelFilename);
+  if (PREPROCESS_ONLY) {
+    console.log(input);
+    process.exit();
+  }
   let chars = new antlr4.InputStream(input);
   let lexer = new ModelLexer(chars);
   let tokens = new antlr4.CommonTokenStream(lexer);
