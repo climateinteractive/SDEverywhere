@@ -8,7 +8,10 @@ DimB: B1, B2, B3
 	~
 	~		|
 
-inputA[DimA] = 1, 2, 3
+inputA[DimA]=
+	-1 ,
+	-2 ,
+	-3
 	~
 	~	constant array
 	|

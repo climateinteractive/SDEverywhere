@@ -1,17 +1,17 @@
 inputA[DimA]: const (non-apply-to-all)
-= 1,2,3
+= -1,-2,-3
 refId(_inputa[_a1])
 families(_dima)
 subscripts(_a1)
 
 inputA[DimA]: const (non-apply-to-all)
-= 1,2,3
+= -1,-2,-3
 refId(_inputa[_a2])
 families(_dima)
 subscripts(_a2)
 
 inputA[DimA]: const (non-apply-to-all)
-= 1,2,3
+= -1,-2,-3
 refId(_inputa[_a3])
 families(_dima)
 subscripts(_a3)
