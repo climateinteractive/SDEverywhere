@@ -1,8 +1,6 @@
-'use strict';
-
 const fs = require('fs');
 const app = require('commander');
-import * as R from 'ramda';
+const R = require('ramda');
 
 const sdetree = (function() {
   let buf = '';
@@ -31,7 +29,7 @@ const sdetree = (function() {
 
   function main() {
     app
-      .version('0.2.0')
+      .version('0.2.1')
       .option('-f, --treefile <tree-file>', 'Specify an ANTLR parse tree print')
       .parse(process.argv);
 

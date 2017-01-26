@@ -1,8 +1,8 @@
 {UTF-8}
 inputA[DimA]=
 	-1 ,
-	-2 ,
-	-3 
+	+2 ,
+	3 
 	~
 	~	constant array
 	|

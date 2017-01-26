@@ -7,6 +7,7 @@ tools/*.map
 !tools/toposort.js
 !tools/index.js
 build/*
+models/test/*
 .DS_Store
 *.tokens
 *.class

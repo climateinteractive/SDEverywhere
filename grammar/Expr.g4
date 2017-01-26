@@ -59,7 +59,7 @@ Const
 
 fragment
 IntegerConst
-    :   Sign? Digit+
+    :   Digit+
     ;
 
 fragment
@@ -69,8 +69,8 @@ NonzeroDigit
 
 fragment
 FloatingConst
-    :   Sign? FractionalConstant ExponentPart?
-    |   Sign? DigitSeq ExponentPart
+    :   FractionalConstant ExponentPart?
+    |   DigitSeq ExponentPart
     ;
 
 fragment

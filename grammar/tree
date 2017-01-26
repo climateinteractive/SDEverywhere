@@ -13,4 +13,4 @@ if [ "$1" = "-g" ]; then
   shift
 fi
 $grun Model model -tree $1 >~/tmp/x
-babel-node sdetree.js -f ~/tmp/x
+node sdetree.js -f ~/tmp/x

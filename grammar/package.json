@@ -1,0 +1,15 @@
+{
+  "name": "grammar",
+  "version": "0.2.1",
+  "description": "Grammar tools for SDEverywhere",
+  "main": "sdetree.js",
+  "scripts": {},
+  "author": "Todd Fincannon",
+  "license": "MIT",
+  "dependencies": {
+    "antlr4": "^4.5.2",
+    "command": "0.0.5",
+    "commander": "^2.9.0",
+    "ramda": "^0.23.0"
+  }
+}
