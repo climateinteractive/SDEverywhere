@@ -43,13 +43,18 @@ exports.handler = argv => {
   let spec = parseSpec(argv.spec);
   let subscripts = parseSubscripts();
   let listMode = '';
+  let code = '';
   if (argv.list) {
     listMode = 'printVarList';
   }
   else if (argv.refidtest) {
     listMode = 'printRefIdTest';
   }
-  let code = codeGenerator(parseTree, spec, subscripts, listMode).generate();
+  try {
+    code = codeGenerator(parseTree, spec, subscripts, listMode).generate();
+  } catch (e) {
+    console.log('code generator exception: ' + e.message);
+  }
   // Print the generated code.
   if (!(argv.list || argv.refidtest)) {
     console.log(code);
