@@ -61,15 +61,15 @@ export default class VariableReader extends ModelReader {
     super.visitSubscriptList(ctx);
   }
   visitConstList(ctx) {
-    let consts = ctx.Const();
-    if (consts.length > 1) {
+    let exprs = ctx.expr();
+    if (exprs.length > 1) {
       // Construct a variable (based on the variable so far) for each constant on the list.
       // Assume the subscript is a dimension because a constant list has more than one value.
       // TODO are there cases where there is more than one dimension?
       let dimName = this.var.subscripts[0];
       if (isDimension(dimName)) {
         let dim = sub(dimName);
-        if (dim.size != consts.length) {
+        if (dim.size != exprs.length) {
           vlog('ERROR: the number of dimensions does not match the number of constants in constant list', this.var.varName);
         }
         R.forEach(indName => {

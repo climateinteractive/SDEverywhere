@@ -2,7 +2,7 @@
 inputA[DimA]=
 	-1 ,
 	+2 ,
-	3 
+	3
 	~
 	~	constant array
 	|
@@ -104,39 +104,3 @@ TIME STEP  = 1
 	~	Month [0,?]
 	~	The time step for the simulation.
 	|
-
-\\\---/// Sketch information - do not modify anything except names
-V300  Do not put anything below this section - it will be ignored
-*View 1
-$192-192-192,0,Times New Roman|12||0-0-0|0-0-0|0-0-255|-1--1--1|-1--1--1|72,72,100,0
-///---\\\
-:L<%^E!@
-1:arrays.vdf64
-9:arrays
-22:$,Dollar,Dollars,$s
-22:Hour,Hours
-22:Month,Months
-22:Person,People,Persons
-22:Unit,Units
-22:Week,Weeks
-22:Year,Years
-22:Day,Days
-15:0,0,0,0,0,0
-19:100,0
-27:2,
-34:0,
-4:Time
-5:e[DimB]
-35:Date
-36:YYYY-MM-DD
-37:2000
-38:1
-39:1
-40:2
-41:0
-42:0
-24:0
-25:1
-26:1
-6:A1
-6:B1

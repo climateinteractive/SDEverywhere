@@ -521,17 +521,17 @@ export default class EquationGen extends ModelReader {
     }
   }
   visitConstList(ctx) {
-    let consts = ctx.Const();
-    // console.error(`visitConstList ${this.var.refId} ${consts.length} consts`);
-    if (consts.length === 1) {
+    let exprs = ctx.expr();
+    // console.error(`visitConstList ${this.var.refId} ${exprs.length} exprs`);
+    if (exprs.length === 1) {
       // Emit a single constant into the expression code.
-      this.emit(strToConst(consts[0].getText()));
+      this.emit(strToConst(exprs[0].getText()));
     }
     else {
       // Extract an indexed constant value from the const list.
       let indName = this.var.subscripts[0];
       let indexNumber = sub(indName).value;
-      this.emit(strToConst(consts[indexNumber].getText()));
+      this.emit(strToConst(exprs[indexNumber].getText()));
     }
   }
   //
