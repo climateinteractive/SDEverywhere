@@ -19,6 +19,7 @@ double bool_cond(double cond);
 
 double _COS(double x);
 double _EXP(double x);
+double _GAME(double x);
 double _IF_THEN_ELSE(double condition, double true_value, double false_value);
 double _INTEG(double value, double rate);
 double _INTEGER(double x);

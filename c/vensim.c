@@ -26,6 +26,9 @@ double _COS(double x) {
 double _EXP(double x) {
   return exp(x);
 }
+double _GAME(double x) {
+  return x;
+}
 double _IF_THEN_ELSE(double condition, double true_value, double false_value) {
 	// TODO Generate a special form that only evaluates one argument instead of calling a function.
 	if (bool_cond(condition)) {
