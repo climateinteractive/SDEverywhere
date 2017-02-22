@@ -2,7 +2,7 @@ grammar Model;
 import Expr;
 
 model: equation+ ;
-equation: lhs ( ('=='|'=') (expr | constList) | lookup ) ;
+equation: lhs | ( lhs ( (':='|'=='|'=') (expr | constList) | lookup ) ) ;
 lhs: Id subscriptList? ;
 subscriptList : '[' Id (',' Id)* ']' ;
 constList : expr (',' expr)* ;
