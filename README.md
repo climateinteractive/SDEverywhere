@@ -8,27 +8,28 @@ Using SDEverywhere, you can deploy interactive System Dynamics models in mobile,
 
 ## Caveats
 
-SDEverywhere has been used to generate code for complex models with hundreds of equations, but your model may use features of Vensim that SDEverywhere cannot translate yet. Please fork our code and contribute! Here are some prominent current limitations.
+SDEverywhere has been used to generate code for complex models with thousands of equations, but your model may use features of Vensim that SDEverywhere cannot translate yet. Please fork our code and contribute! Here are some prominent current limitations.
 
 - SDEverywhere generates 64-bit code, which will not run on 32-bit Windows.
 - Sketch information, the visual representation of the model, is not converted.
 - Only the most common [Vensim functions](https://www.vensim.com/documentation/index.html?20770.htm) are implemented.
 - Arrays must be one- or two-dimensional.
+- All models run using the Euler integrator.
 - You must remove subscript definitions from the model and code them in JSON.
 - You must remove tabbed arrays and add them to the model as separate, non-apply-to-all variables.
-- You must remove macros and hand code them in C.
-- All models run using the Euler integrator.
-- Translating from C to JavaScript using Emscripten has been tested but is not currently supported.
+- You must remove macros and either hand code them in C or rewrite equations that use them.
+
+Subscript definitions, tabbed arrays, and macros are removed from the model during preprocessing and written to the `removals.txt` file for your reference.
 
 ## Installing
 
 ### Requirements
 
-Using SDEverywhere requires the Mac OS X operating system and the free [Xcode](https://itunes.apple.com/en/app/xcode/id497799835?mt=12) development tools from Apple.
+Using SDEverywhere requires the macOS operating system and the free [Xcode](https://itunes.apple.com/en/app/xcode/id497799835?mt=12) development tools from Apple.
 
 ### Install Node.js
 
-Install [Node.js](https://nodejs.org/en/download/current/) version 6 to get a JavaScript runtime based on the Google V8 engine. This will also install the `npm` Node Package Manager.
+Install [Node.js](https://nodejs.org/en/download/current/) version 6 or later to get a JavaScript runtime based on the Google V8 engine. This will also install the `npm` Node Package Manager.
 
 ### Get the code
 
@@ -81,7 +82,7 @@ cd $SDE_HOME/tools
 ./sdetest arrays
 ~~~
 
-If that worked OK, you have installed everything needed to use SDEverywhere. You can test *all* the models too.
+If that worked OK, you have installed everything needed to use SDEverywhere. You can test *all* the test models too.
 ~~~
 cd $SDE_HOME/tools
 ./sdetestall
@@ -143,6 +144,12 @@ cd $SDE_HOME/models/{model}
 sde generate {model}.mdl -l >{model}_vars.txt
 ~~~
 
+### Preprocess a model to remove subscript definitions, macros, and tabbed arays to removals.txt
+~~~
+cd $SDE_HOME/models/{model}
+sde generate {model}.mdl -p >{model}_pp.mdl
+~~~
+
 ### Compile the C code into an executable in the build directory
 ~~~
 $SDE_HOME/tools/sdecc {model}
@@ -157,7 +164,7 @@ $SDE_HOME/build/{model} >$SDE_HOME/build/{model}.txt
 
 Most applications do not require all variables in the output. And we usually want to designate some constant variables as inputs. In SDEverywhere, this is done with a model specification JSON file. The conventional name is `{model}_spec.json`.
 
-First, create a model specification file that gives the Vensim names of input and output variables of interest. Be sure to include `Time` among the output variables.
+First, create a model specification file that gives the Vensim names of input and output variables of interest. Be sure to include `Time` first among the output variables.
 ~~~
 {
   "inputVars": [

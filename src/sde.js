@@ -1,5 +1,5 @@
 //  SDEverywhere
-//  https://sdeverywhere.org
+//  http://sdeverywhere.org
 //  Copyright © 2016-17 Todd Fincannon and Climate Interactive
 //  SDEverywhere may be freely distributed under the MIT license.
 
