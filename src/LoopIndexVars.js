@@ -1,39 +1,39 @@
-import { Subscript, sub, isDimension } from './Subscript';
+import { Subscript, sub, isDimension } from './Subscript'
 
 export default class LoopIndexVars {
   constructor() {
-    this.loopIndexVars = this.loopIndexVarGen();
-    this.lhsLoopIndices = {};
+    this.loopIndexVars = this.loopIndexVarGen()
+    this.lhsLoopIndices = {}
   }
   index(subscriptName) {
-    let index;
+    let index
     if (isDimension(subscriptName)) {
-      let subscript = sub(subscriptName);
+      let subscript = sub(subscriptName)
       if (subscript) {
-        let family = subscript.family;
-        index = this.lhsLoopIndices[family];
+        let family = subscript.family
+        index = this.lhsLoopIndices[family]
         if (!index) {
-          index = this.loopIndexVars.next();
-          this.lhsLoopIndices[family] = index;
+          index = this.loopIndexVars.next()
+          this.lhsLoopIndices[family] = index
         }
       }
     }
-    return index;
+    return index
   }
   marked() {
-    return this.loopIndexVars.marked;
+    return this.loopIndexVars.marked
   }
   loopIndexVarGen() {
     // Return an object supplying C loop index variables.
     // Loop index variables are assigned in order from this list.
-    const LOOP_INDEX_VARS = ['i', 'j', 'k', 'l'];
-    let iter = LOOP_INDEX_VARS[Symbol.iterator]();
+    const LOOP_INDEX_VARS = ['i', 'j', 'k', 'l']
+    let iter = LOOP_INDEX_VARS[Symbol.iterator]()
     // Array functions like SUM are evaluated with a special inner loop using this loop index variable.
-    const ARRAY_FN_LOOP_INDEX_VAR = 'm';
+    const ARRAY_FN_LOOP_INDEX_VAR = 'm'
     return {
       next: () => iter.next().value,
       marked: ARRAY_FN_LOOP_INDEX_VAR
-    };
+    }
   }
 }
 

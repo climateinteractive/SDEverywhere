@@ -1,17 +1,17 @@
-let fs = require('fs');
-let child_process = require('child_process');
-let path = require('path');
-let antlr4 = require('antlr4/index');
-let ModelLexer = require('./ModelLexer').ModelLexer;
-let ModelParser = require('./ModelParser').ModelParser;
-import { codeGenerator } from './CodeGen';
-import { preprocessModel } from './Preprocessor';
+let fs = require('fs')
+let child_process = require('child_process')
+let path = require('path')
+let antlr4 = require('antlr4/index')
+let ModelLexer = require('./ModelLexer').ModelLexer
+let ModelParser = require('./ModelParser').ModelParser
+import { codeGenerator } from './CodeGen'
+import { preprocessModel } from './Preprocessor'
 
-let modelDirname;
-let modelBasename;
+let modelDirname
+let modelBasename
 
-exports.command = 'generate <model>';
-exports.describe = 'generate model code';
+exports.command = 'generate <model>'
+exports.describe = 'generate model code'
 exports.builder = {
   spec: {
     describe: 'filename of the I/O specification JSON file',
@@ -33,74 +33,74 @@ exports.builder = {
     type: 'boolean',
     alias: 'p'
   }
-};
+}
 exports.handler = argv => {
   // Parse input files and then hand data to the code generator.
-  modelDirname = path.dirname(argv.model);
-  modelBasename = path.basename(argv.model).replace(/\.mdl/i, '');
-  let spec = parseSpec(argv.spec);
-  let parseTree = parseModel(argv.model, spec, argv.preprocess);
-  let subscripts = parseSubscripts();
-  let listMode = '';
-  let code = '';
+  modelDirname = path.dirname(argv.model)
+  modelBasename = path.basename(argv.model).replace(/\.mdl/i, '')
+  let spec = parseSpec(argv.spec)
+  let parseTree = parseModel(argv.model, spec, argv.preprocess)
+  let subscripts = parseSubscripts()
+  let listMode = ''
+  let code = ''
   if (argv.list) {
-    listMode = 'printVarList';
+    listMode = 'printVarList'
   } else if (argv.refidtest) {
-    listMode = 'printRefIdTest';
+    listMode = 'printRefIdTest'
   }
   try {
-    code = codeGenerator(parseTree, spec, subscripts, listMode).generate();
+    code = codeGenerator(parseTree, spec, subscripts, listMode).generate()
   } catch (e) {
-    console.log('code generator exception: ' + e.message);
+    console.log('code generator exception: ' + e.message)
   }
   // Print the generated code.
   if (!(argv.list || argv.refidtest)) {
-    console.log(code);
+    console.log(code)
   }
-  process.exit(0);
-};
+  process.exit(0)
+}
 function parseModel(modelFilename, spec, preprocess) {
   // Read the mdl file and return a parse tree.
-  let writeRemovals = preprocess;
-  let input = preprocessModel(modelFilename, spec, writeRemovals);
+  let writeRemovals = preprocess
+  let input = preprocessModel(modelFilename, spec, writeRemovals)
   if (preprocess) {
-    console.log(input);
-    process.exit();
+    console.log(input)
+    process.exit()
   }
-  let chars = new antlr4.InputStream(input);
-  let lexer = new ModelLexer(chars);
-  let tokens = new antlr4.CommonTokenStream(lexer);
-  let parser = new ModelParser(tokens);
-  parser.buildParseTrees = true;
-  return parser.model();
+  let chars = new antlr4.InputStream(input)
+  let lexer = new ModelLexer(chars)
+  let tokens = new antlr4.CommonTokenStream(lexer)
+  let parser = new ModelParser(tokens)
+  parser.buildParseTrees = true
+  return parser.model()
 }
 function parseSpec(specFilename) {
-  return parseJsonFile(specFilename);
+  return parseJsonFile(specFilename)
 }
 function parseSubscripts() {
   // TODO read subscript dimensions and mappings in the grammar
-  let jsFilename = path.join(modelDirname, `${modelBasename}_subs.js`);
-  let jsonFilename = path.join(modelDirname, `${modelBasename}_subs.json`);
-  preprocessSubsFile(jsFilename, jsonFilename);
-  return parseJsonFile(jsonFilename);
+  let jsFilename = path.join(modelDirname, `${modelBasename}_subs.js`)
+  let jsonFilename = path.join(modelDirname, `${modelBasename}_subs.json`)
+  preprocessSubsFile(jsFilename, jsonFilename)
+  return parseJsonFile(jsonFilename)
 }
 function parseJsonFile(filename) {
   // Parse the JSON file if it exists.
-  let result = {};
+  let result = {}
   try {
-    let json = fs.readFileSync(filename, 'utf8');
-    result = JSON.parse(json);
+    let json = fs.readFileSync(filename, 'utf8')
+    result = JSON.parse(json)
     // console.error(`loaded ${filename}`);
   } catch (ex) {
     // If the file doesn't exist, return an empty object without complaining.
   }
-  return result;
+  return result
 }
 function preprocessSubsFile(jsFilename, jsonFilename) {
-  let uglifyjs = `${process.env.SDE_HOME}/tools/node_modules/.bin/uglifyjs`;
+  let uglifyjs = `${process.env.SDE_HOME}/tools/node_modules/.bin/uglifyjs`
   try {
-    fs.accessSync(jsFilename, fs.R_OK);
-    let cmd = `${uglifyjs} --beautify quote-keys --expr ${jsFilename} >${jsonFilename} 2>/dev/null`;
-    child_process.execSync(cmd);
+    fs.accessSync(jsFilename, fs.R_OK)
+    let cmd = `${uglifyjs} --beautify quote-keys --expr ${jsFilename} >${jsonFilename} 2>/dev/null`
+    child_process.execSync(cmd)
   } catch (e) {}
 }
