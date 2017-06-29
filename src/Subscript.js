@@ -5,7 +5,7 @@ import { canonicalName, asort, vlog } from './Helpers';
 // subscript name as the key and a subscript object as the value.
 let subscripts = new Map();
 
-export function Subscript(modelName, modelValue=null, modelFamily=null, modelMappings=null) {
+export function Subscript(modelName, modelValue = null, modelFamily = null, modelMappings = null) {
   let name = canonicalName(modelName);
   if (modelValue === null) {
     // Look up a subscript by its model name.
@@ -16,8 +16,7 @@ export function Subscript(modelName, modelValue=null, modelFamily=null, modelMap
   if (Array.isArray(modelValue)) {
     value = R.map(x => canonicalName(x), modelValue);
     size = value.length;
-  }
-  else if (typeof modelValue === 'number') {
+  } else if (typeof modelValue === 'number') {
     value = modelValue;
     size = 1;
   }
@@ -43,7 +42,7 @@ export function Subscript(modelName, modelValue=null, modelFamily=null, modelMap
     value: value,
     size: size,
     family: family,
-    mappings: mappings,
+    mappings: mappings
   };
   subscripts.set(name, subscript);
   return subscript;
@@ -55,11 +54,11 @@ export function sub(name) {
 }
 export function isIndex(name) {
   let s = sub(name);
-  return (s && typeof s.value === 'number');
+  return s && typeof s.value === 'number';
 }
 export function isDimension(name) {
   let s = sub(name);
-  return (s && Array.isArray(s.value));
+  return s && Array.isArray(s.value);
 }
 export function addMapping(fromSubscript, toSubscript, value) {
   let subFrom = sub(fromSubscript);
@@ -138,7 +137,13 @@ export function normalizeSubscripts(subscripts) {
   // Sort a list of subscript names already in canonical form according to the subscript family.
   let subs = R.map(name => sub(name), subscripts);
   subs = R.sortBy(R.prop('family'), subs);
-  return R.map(R.prop('name'), subs);
+  let normalizedSubs;
+  try {
+    normalizedSubs = R.map(R.prop('name'), subs);
+  } catch (e) {
+    debugger;
+  }
+  return normalizedSubs;
 }
 export function subscriptFamilies(subscripts) {
   // Return a list of the subscript families for each subscript.
@@ -172,8 +177,7 @@ export function indexNamesForSubscript(subscript) {
   if (isIndex(subscript)) {
     // The subscript is an index, so just return it.
     return [subscript];
-  }
-  else {
+  } else {
     // Return a list of index names for the dimension.
     let dim = sub(subscript);
     if (!dim) {
@@ -195,13 +199,11 @@ export function separatedVariableIndex(rhsSub, variable) {
       if (sub(varSub).family === sub(sepDim).family) {
         if (!isIndex(varSub)) {
           console.error(`ERROR: ${variable.refId} subscript in separation dimension ${sepDim} is not an index`);
-        }
-        else {
+        } else {
           if (rhsSub === sepDim) {
             // The subscript dimension is the separation dimension, so use the separated var index.
             separatedIndexName = varSub;
-          }
-          else {
+          } else {
             // Find the index that maps from the subscript dimension to the separated var index.
             for (let fromIndexName of sub(rhsSub).value) {
               if (mapIndex(rhsSub, fromIndexName, sepDim) === varSub) {

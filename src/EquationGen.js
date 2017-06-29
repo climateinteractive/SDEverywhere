@@ -5,9 +5,34 @@ import ModelReader from './ModelReader';
 import LoopIndexVars from './LoopIndexVars';
 import * as Model from './Model';
 import * as R from 'ramda';
-import { sub, isDimension, isIndex, dimensionNames, hasMapping, normalizeSubscripts, separatedVariableIndex } from './Subscript';
-import { canonicalName, cFunctionName, list, listConcat, lines, newTmpVarName, cdbl, strToConst, vlog,
-  printVar, mapIndexed, extractMatch, isArrayFunction, isSmoothFunction, isDelayFunction, cVarOrConst, constValue } from './Helpers';
+import {
+  sub,
+  isDimension,
+  isIndex,
+  dimensionNames,
+  hasMapping,
+  normalizeSubscripts,
+  separatedVariableIndex
+} from './Subscript';
+import {
+  canonicalName,
+  cFunctionName,
+  list,
+  listConcat,
+  lines,
+  newTmpVarName,
+  cdbl,
+  strToConst,
+  vlog,
+  printVar,
+  mapIndexed,
+  extractMatch,
+  isArrayFunction,
+  isSmoothFunction,
+  isDelayFunction,
+  cVarOrConst,
+  constValue
+} from './Helpers';
 
 export default class EquationGen extends ModelReader {
   constructor(variable, initMode = false) {
@@ -64,11 +89,13 @@ export default class EquationGen extends ModelReader {
     let dimNames = dimensionNames(this.var.subscripts);
     // Turn each dimension name into a loop with a loop index variable.
     // If the variable has no subscripts, nothing will be emitted here.
-    this.subscriptLoopOpeningCode = R.concat(this.subscriptLoopOpeningCode,
+    this.subscriptLoopOpeningCode = R.concat(
+      this.subscriptLoopOpeningCode,
       R.map(dimName => {
         let i = this.loopIndexVars.index(dimName);
         return `  for (size_t ${i} = 0; ${i} < ${sub(dimName).size}; ${i}++) {`;
-      }, dimNames));
+      }, dimNames)
+    );
     // Walk the parse tree to generate code into all channels.
     this.visitEquation(this.var.eqnCtx);
     // Either emit constant list code or a regular var assignment.
@@ -76,18 +103,14 @@ export default class EquationGen extends ModelReader {
     // Close the assignment loops.
     this.subscriptLoopClosingCode = R.concat(this.subscriptLoopClosingCode, R.map(dimName => `  }`, dimNames));
     // Assemble code from each channel into final var code output.
-    return this.comments.concat(
-      this.subscriptLoopOpeningCode,
-      this.tmpVarCode,
-      formula,
-      this.subscriptLoopClosingCode);
+    return this.comments.concat(this.subscriptLoopOpeningCode, this.tmpVarCode, formula, this.subscriptLoopClosingCode);
   }
   //
   // Helpers
   //
   currentVarName() {
     let n = this.varNames.length;
-    return (n > 0) ? this.varNames[n-1] : undefined;
+    return n > 0 ? this.varNames[n - 1] : undefined;
   }
   lookupName() {
     // Convert a call name into a lookup name.
@@ -97,8 +120,7 @@ export default class EquationGen extends ModelReader {
     if (isArrayFunction(this.currentFunctionName())) {
       // Emit code to the array function code buffer if we are in an array function.
       this.arrayFunctionCode += text;
-    }
-    else {
+    } else {
       // Otherwise emit code to the expression code channel.
       this.exprCode += text;
     }
@@ -112,8 +134,7 @@ export default class EquationGen extends ModelReader {
       if (isDimension(subscript)) {
         let i = this.loopIndexVars.index(subscript);
         return `[${subscript}[${i}]]`;
-      }
-      else {
+      } else {
         return `[${sub(subscript).value}]`;
       }
     }, subscripts).join('');
@@ -134,8 +155,7 @@ export default class EquationGen extends ModelReader {
       if (isIndex(rhsSub)) {
         // Return the index number for an index subscript.
         return `[${sub(rhsSub).value}]`;
-      }
-      else {
+      } else {
         // The subscript is a dimension.
         // Use the single index name for a separated variable if it exists.
         let separatedIndexName = separatedVariableIndex(rhsSub, this.var);
@@ -145,9 +165,8 @@ export default class EquationGen extends ModelReader {
         // Get the loop index variable, matching the previously emitted for loop variable.
         let i;
         if (rhsSub === this.markedDim) {
-          i =  this.loopIndexVars.marked();
-        }
-        else {
+          i = this.loopIndexVars.marked();
+        } else {
           // See if we need to apply a mapping because the RHS dim is not found on the LHS.
           if (!R.find(lhsSub => sub(lhsSub).family === sub(rhsSub).family, this.var.subscripts)) {
             // Find the  mapping from the RHS subscript to a LHS subscript.
@@ -175,8 +194,7 @@ export default class EquationGen extends ModelReader {
       if (isIndex(rhsSub)) {
         // Emit the index vemOffset from VECTOR ELM MAP for the index subscript.
         return `[${this.vemIndexDim}[${this.vemIndexBase} + ${this.vemOffset}]]`;
-      }
-      else {
+      } else {
         let i = this.loopIndexVars.index(rhsSub);
         return `[${rhsSub}[${i}]]`;
       }
@@ -190,8 +208,7 @@ export default class EquationGen extends ModelReader {
       this.vsoVarName += `[${subscripts[0]}[${i}]]`;
       i = this.loopIndexVars.index(subscripts[1]);
       this.vsoTmpDimName = subscripts[1];
-    }
-    else {
+    } else {
       this.vsoTmpDimName = subscripts[0];
     }
     // Emit the tmp var subscript just after emitting the tmp var elsewhere.
@@ -201,15 +218,14 @@ export default class EquationGen extends ModelReader {
     // See if the function name in the current call is actually a lookup.
     // console.error(`isLookup ${this.lookupName()}`);
     let v = Model.varWithName(this.lookupName());
-    return (v && v.isLookup());
+    return v && v.isLookup();
   }
   generateLookup() {
     // TODO use the lookup range
     if (this.initMode) {
-      let args = R.reduce((a,p) => listConcat(a, `${cdbl(p[0])}, ${cdbl(p[1])}`, true), '', this.var.points);
+      let args = R.reduce((a, p) => listConcat(a, `${cdbl(p[0])}, ${cdbl(p[1])}`, true), '', this.var.points);
       return [`  ${this.lhs} = __new_lookup(${this.var.points.length}, ${args});`];
-    }
-    else {
+    } else {
       return [];
     }
   }
@@ -226,8 +242,7 @@ export default class EquationGen extends ModelReader {
     if (this.var.hasInitValue && this.initMode && this.callStack.length <= 1) {
       super.visitCall(ctx);
       this.callStack.pop();
-    }
-    else if (isArrayFunction(this.currentFunctionName())) {
+    } else if (isArrayFunction(this.currentFunctionName())) {
       // Generate a loop that evaluates array functions inline.
       // Collect information and generate the argument expression into the array function code buffer.
       super.visitCall(ctx);
@@ -256,8 +271,7 @@ export default class EquationGen extends ModelReader {
       }
       if (fn === '_SUM' || (fn === '_VECTOR_SELECT' && this.vsAction === 0)) {
         this.tmpVarCode.push(`	  ${tmpVar} += ${this.arrayFunctionCode};`);
-      }
-      else if (fn === '_VECTOR_SELECT' && this.vsAction === 3) {
+      } else if (fn === '_VECTOR_SELECT' && this.vsAction === 3) {
         this.tmpVarCode.push(`	  ${tmpVar} = fmax(${tmpVar}, ${this.arrayFunctionCode});`);
       }
       if (fn === '_VECTOR_SELECT') {
@@ -271,23 +285,20 @@ export default class EquationGen extends ModelReader {
       this.arrayFunctionCode = '';
       // Emit the temporary variable into the formula expression in place of the SUM call.
       if (fn === '_VECTOR_SELECT') {
-        this.emit(`${condVar} ? ${tmpVar} : ${this.vsNullValue}`)
-      }
-      else {
+        this.emit(`${condVar} ? ${tmpVar} : ${this.vsNullValue}`);
+      } else {
         this.emit(tmpVar);
       }
-    }
-    else if (fn === '_VECTOR_ELM_MAP') {
+    } else if (fn === '_VECTOR_ELM_MAP') {
       super.visitCall(ctx);
-      this.emit(`${this.vemVarName}${this.vemSubscriptGen()}`)
+      this.emit(`${this.vemVarName}${this.vemSubscriptGen()}`);
       this.callStack.pop();
       this.vemVarName = '';
       this.vemSubscripts = [];
       this.vemIndexDim = '';
       this.vemIndexBase = 0;
       this.vemOffset = '';
-    }
-    else if (fn === '_VECTOR_SORT_ORDER') {
+    } else if (fn === '_VECTOR_SORT_ORDER') {
       super.visitCall(ctx);
       let dimSize = sub(this.vsoTmpDimName).size;
       let vso = `  double* ${this.vsoTmpName} = _VECTOR_SORT_ORDER(${this.vsoVarName}, ${dimSize}, ${this.vsoOrder});`;
@@ -298,31 +309,26 @@ export default class EquationGen extends ModelReader {
       this.vsoOrder = '';
       this.vsoTmpName = '';
       this.vsoTmpDimName = '';
-    }
-    else if (this.isLookup()) {
+    } else if (this.isLookup()) {
       // A lookup has function syntax but lookup semantics. Convert the function call into a lookup call.
       this.emit(`_LOOKUP(${this.lookupName()}, `);
       super.visitCall(ctx);
       this.emit(')');
       this.callStack.pop();
-    }
-    else if (fn === '_ACTIVE_INITIAL') {
+    } else if (fn === '_ACTIVE_INITIAL') {
       // Only emit the eval-time initialization without the function call for ACTIVE INITIAL.
       super.visitCall(ctx);
-    }
-    else if (isSmoothFunction(fn)) {
+    } else if (isSmoothFunction(fn)) {
       // For smooth functions, replace the entire call with the expansion variable generated earlier.
       this.emit(this.var.smoothVarName);
       let smoothVar = Model.varWithRefId(this.var.smoothVarName);
       this.emit(this.rhsSubscriptGen(smoothVar.subscripts));
-    }
-    else if (isDelayFunction(fn)) {
+    } else if (isDelayFunction(fn)) {
       // For delay  functions, replace the entire call with the expansion variable generated earlier.
       let delayVar = Model.varWithRefId(this.var.delayVarName);
       let rhsSubs = this.rhsSubscriptGen(delayVar.subscripts);
       this.emit(`(${this.var.delayVarName}${rhsSubs} / ${this.var.delayTimeVarName}${rhsSubs})`);
-    }
-    else {
+    } else {
       // Generate code for ordinary function calls here.
       this.emit(fn);
       this.emit('(');
@@ -341,21 +347,18 @@ export default class EquationGen extends ModelReader {
         let i = 0;
         if (fn === '_INTEG' || fn === '_ACTIVE_INITIAL') {
           i = 1;
-        }
-        else if (fn === '_SAMPLE_IF_TRUE') {
+        } else if (fn === '_SAMPLE_IF_TRUE') {
           i = 2;
         }
         this.setArgIndex(i);
         exprs[i].accept(this);
-      }
-      else {
+      } else {
         // We are in eval mode, not init mode.
         // For ACTIVE INITIAL, emit the first arg without a function call.
         if (fn === '_ACTIVE_INITIAL') {
           this.setArgIndex(0);
           exprs[0].accept(this);
-        }
-        else {
+        } else {
           // Emit the variable LHS as the first arg at eval time, giving the current value for the level.
           this.emit(this.lhs);
           this.emit(', ');
@@ -369,8 +372,7 @@ export default class EquationGen extends ModelReader {
           }
         }
       }
-    }
-    else if (fn === '_VECTOR_SELECT') {
+    } else if (fn === '_VECTOR_SELECT') {
       this.setArgIndex(0);
       exprs[0].accept(this);
       this.setArgIndex(1);
@@ -383,20 +385,17 @@ export default class EquationGen extends ModelReader {
       // TODO obey the error handling instruction here
       this.setArgIndex(4);
       this.vsError = cVarOrConst(exprs[4]);
-    }
-    else if (fn === '_VECTOR_ELM_MAP') {
+    } else if (fn === '_VECTOR_ELM_MAP') {
       this.setArgIndex(0);
       exprs[0].accept(this);
       this.setArgIndex(1);
       exprs[1].accept(this);
-    }
-    else if (fn === '_VECTOR_SORT_ORDER') {
+    } else if (fn === '_VECTOR_SORT_ORDER') {
       this.setArgIndex(0);
       exprs[0].accept(this);
       this.setArgIndex(1);
       this.vsoOrder = cVarOrConst(exprs[1]);
-    }
-    else {
+    } else {
       // Ordinary expression lists are completely emitted with comma delimiters.
       for (let i = 0; i < exprs.length; i++) {
         if (i > 0) this.emit(', ');
@@ -413,24 +412,20 @@ export default class EquationGen extends ModelReader {
       let argIndex = this.argIndexForFunctionName('_VECTOR_SELECT');
       if (argIndex === 0) {
         this.vsSelectionArray = this.currentVarName();
-      }
-      else if (argIndex === 1) {
+      } else if (argIndex === 1) {
         this.emit(this.currentVarName());
       }
-    }
-    else if (this.currentFunctionName() === '_VECTOR_ELM_MAP') {
+    } else if (this.currentFunctionName() === '_VECTOR_ELM_MAP') {
       if (this.argIndexForFunctionName('_VECTOR_ELM_MAP') === 1) {
         this.vemOffset = `(size_t)${this.currentVarName()}`;
       }
-    }
-    else if (this.currentFunctionName() === '_VECTOR_SORT_ORDER') {
+    } else if (this.currentFunctionName() === '_VECTOR_SORT_ORDER') {
       if (this.argIndexForFunctionName('_VECTOR_SORT_ORDER') === 0) {
         this.vsoVarName = this.currentVarName();
         this.vsoTmpName = newTmpVarName();
         this.emit(this.vsoTmpName);
       }
-    }
-    else {
+    } else {
       this.emit(this.currentVarName());
     }
     super.visitVar(ctx);
@@ -468,7 +463,7 @@ export default class EquationGen extends ModelReader {
           subscripts[i] = result;
         }
         return result;
-      }
+      };
       let subscripts = R.map(id => canonicalName(id.getText()), ctx.Id());
       if (subscripts.length > 2) {
         console.err(`${this.currentVarName()} has more than 2 dimensions, which is currently unsupported.`);
@@ -477,19 +472,16 @@ export default class EquationGen extends ModelReader {
       if (fn === '_SUM') {
         this.markedDim = extractMarkedDim();
         this.emit(this.rhsSubscriptGen(subscripts));
-      }
-      else if (fn === '_VECTOR_SELECT') {
+      } else if (fn === '_VECTOR_SELECT') {
         let argIndex = this.argIndexForFunctionName('_VECTOR_SELECT');
         if (argIndex === 0) {
           this.markedDim = extractMarkedDim();
           this.vsSelectionArray += this.rhsSubscriptGen(subscripts);
-        }
-        else if (argIndex === 1) {
+        } else if (argIndex === 1) {
           this.markedDim = extractMarkedDim();
           this.emit(this.rhsSubscriptGen(subscripts));
         }
-      }
-      else if (fn === '_VECTOR_ELM_MAP') {
+      } else if (fn === '_VECTOR_ELM_MAP') {
         if (this.argIndexForFunctionName('_VECTOR_ELM_MAP') === 0) {
           this.vemVarName = this.currentVarName();
           // Gather information from the argument to generate code later.
@@ -503,18 +495,15 @@ export default class EquationGen extends ModelReader {
               break;
             }
           }
-        }
-        else {
+        } else {
           // Add subscripts to the offset argument.
           this.vemOffset += this.rhsSubscriptGen(subscripts);
         }
-      }
-      else if (fn === '_VECTOR_SORT_ORDER') {
+      } else if (fn === '_VECTOR_SORT_ORDER') {
         if (this.argIndexForFunctionName('_VECTOR_SORT_ORDER') === 0) {
           this.vsoSubscriptGen(subscripts);
         }
-      }
-      else {
+      } else {
         // Add C subscripts to the variable name that was already emitted.
         this.emit(this.rhsSubscriptGen(subscripts));
       }
@@ -526,8 +515,7 @@ export default class EquationGen extends ModelReader {
     if (exprs.length === 1) {
       // Emit a single constant into the expression code.
       this.emit(strToConst(exprs[0].getText()));
-    }
-    else {
+    } else {
       // Extract an indexed constant value from the const list.
       let indName = this.var.subscripts[0];
       let indexNumber = sub(indName).value;

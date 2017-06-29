@@ -30,7 +30,7 @@ exports.builder = {
     describe: 'limit comparisons to one or more times separated by spaces',
     type: 'array',
     alias: 't'
-  },
+  }
 };
 exports.handler = argv => {
   if (argv.precision) {
@@ -71,7 +71,7 @@ function readLog(logfile) {
   let log = new Map();
   let varName = '';
   let varValues = new Map();
-  let lines = fs.readFileSync(logfile).toString().split(/\r?\n/);
+  let lines = fs.readFileSync(logfile, 'utf8').split(/\r?\n/);
   R.forEach(line => {
     if (line.includes('\t')) {
       // Data lines in Vensim DAT format have {time}\t{value} format.
@@ -81,12 +81,10 @@ function readLog(logfile) {
       // Save the value at time t in the varValues map.
       if (Number.isNaN(t) || Number.isNaN(value)) {
         console.error(`${varName} value is NaN at time=${t}`);
-      }
-      else {
+      } else {
         varValues.set(t, value);
       }
-    }
-    else {
+    } else {
       // Lines without a tab are variable names that start a data section.
       // Save the values for the current var if we are not on the first one with no values yet.
       if (varName != '') {
@@ -106,8 +104,7 @@ function difference(x, y) {
   let diff = 0;
   if (isZero(x) || isZero(y)) {
     diff = Math.abs(x - y);
-  }
-  else {
+  } else {
     diff = Math.abs(1 - x / y);
   }
   return diff;

@@ -33,8 +33,7 @@ export default class ModelLHSReader extends ModelReader {
     // Expand dimensions in a subscripted var into individual vars with indices.
     if (this.modelLHSList.length > 0) {
       return R.map(modelLHS => modelLHS.replace(/"/g, ''), this.modelLHSList);
-    }
-    else {
+    } else {
       return [this.varName.replace(/"/g, '')];
     }
   }
@@ -53,33 +52,28 @@ export default class ModelLHSReader extends ModelReader {
       // The list is just one variable with indices.
       let modelIndices = R.reduce((a, ind) => listConcat(a, ind), '', inds);
       this.modelLHSList = [`${this.varName}[${modelIndices}]`];
-    }
-    else if (dims.length === 1) {
+    } else if (dims.length === 1) {
       // Expand the single subscript dimension.
       if (subscripts.length === 1) {
         let dim = sub(canonicalName(subscripts[0]));
         this.modelLHSList = R.map(modelDim => `${this.varName}[${modelDim}]`, dim.modelValue);
-      }
-      // Expand the dimension in the first or second position.
-      else if (isDimension(canonicalName(subscripts[0]))) {
+      } else if (isDimension(canonicalName(subscripts[0]))) {
+        // Expand the dimension in the first or second position.
         let dim = sub(canonicalName(subscripts[0]));
         let modelIndex = subscripts[1];
         this.modelLHSList = R.map(modelDim => `${this.varName}[${modelDim},${modelIndex}]`, dim.modelValue);
-      }
-      else {
+      } else {
         let dim = sub(canonicalName(subscripts[1]));
         let modelIndex = subscripts[0];
         this.modelLHSList = R.map(modelDim => `${this.varName}[${modelIndex},${modelDim}]`, dim.modelValue);
       }
-    }
-    else if (dims.length === 2) {
+    } else if (dims.length === 2) {
       for (let modelDim0 of sub(canonicalName(dims[0])).modelValue) {
         for (let modelDim1 of sub(canonicalName(dims[1])).modelValue) {
           this.modelLHSList.push(`${this.varName}[${modelDim0},${modelDim1}]`);
         }
       }
-    }
-    else {
+    } else {
       console.err(`${this.varName} has more than 2 dimensions, which is currently unsupported.`);
     }
     // console.error(this.modelLHSList);

@@ -1,5 +1,5 @@
+import * as path from 'path';
 import * as util from 'util';
-import * as fs from 'fs';
 import * as R from 'ramda';
 import * as Model from './Model';
 import ModelLHSReader from './ModelLHSReader';
@@ -23,15 +23,18 @@ export function canonicalName(name) {
   // and converting to lower case, since Vensim ids are case-insensitive. Spaces at the
   // beginning and ending of names are discarded. An underscore is prepended to the name
   // because Vensim names can begin with numbers, which is not valid in C.
-  return '_' + name
-    .replace(/"/g, '')
-    .trim()
-    .replace(/\s+!$/g, '!')
-    .replace(/\s/g, '_')
-    .replace(/,/g, '_')
-    .replace(/-/g, '_')
-    .replace(/\./g, '_')
-    .toLowerCase();
+  return (
+    '_' +
+    name
+      .replace(/"/g, '')
+      .trim()
+      .replace(/\s+!$/g, '!')
+      .replace(/\s/g, '_')
+      .replace(/,/g, '_')
+      .replace(/-/g, '_')
+      .replace(/\./g, '_')
+      .toLowerCase()
+  );
 }
 export function cFunctionName(name) {
   return canonicalName(name).toUpperCase();
@@ -62,15 +65,14 @@ export function isDelayFunction(fn) {
 }
 export function isArrayFunction(fn) {
   // Return true if fn is a Vensim array function.
-  return (fn === '_SUM' || fn === '_VECTOR_SELECT');
+  return fn === '_SUM' || fn === '_VECTOR_SELECT';
 }
 export function listConcat(a, x, addSpaces = false) {
   // Append a string x to string a with comma delimiters
   let s = addSpaces ? ' ' : '';
   if (R.isEmpty(x)) {
     return a;
-  }
-  else {
+  } else {
     return a + (R.isEmpty(a) ? '' : `,${s}`) + x;
   }
 }
@@ -91,13 +93,11 @@ export function cVarOrConst(expr) {
   let value = expr.getText().trim();
   if (value === ':NA:') {
     return '_NA_';
-  }
-  else {
+  } else {
     let v = Model.varWithName(canonicalName(value));
     if (v) {
       return v.varName;
-    }
-    else {
+    } else {
       let d = parseFloat(value);
       if (Number.isNaN(d)) {
         d = 0;
@@ -130,8 +130,7 @@ export function extractMatch(fn, list) {
   let i = R.findIndex(fn, list);
   if (i >= 0) {
     return list.splice(i, 1)[0];
-  }
-  else {
+  } else {
     return undefined;
   }
 }
@@ -143,23 +142,22 @@ export function replaceInArray(oldStr, newStr, a) {
     let b = a.slice(0);
     b.splice(i, 1, newStr);
     return b;
-  }
-  else {
+  } else {
     return a;
   }
 }
 export function mapObjProps(f, obj) {
   // Map the key and value for each of the object's properties through function f.
   let result = {};
-  R.forEach(k => result[f(k)] = f(obj[k]), Object.keys(obj));
+  R.forEach(k => (result[f(k)] = f(obj[k])), Object.keys(obj));
   return result;
 }
 // Function to map over lists's value and index
 export let mapIndexed = R.addIndex(R.map);
 // Function to sort an array of strings
-export let asort = R.sort((a, b) => (a > b) ? 1 : (a < b) ? -1 : 0);
+export let asort = R.sort((a, b) => (a > b ? 1 : a < b ? -1 : 0));
 // Function to alpha sort an array of variables on the model LHS
-export let vsort = R.sort((a, b) => (a.modelLHS > b.modelLHS) ? 1 : (a.modelLHS < b.modelLHS) ? -1 : 0);
+export let vsort = R.sort((a, b) => (a.modelLHS > b.modelLHS ? 1 : a.modelLHS < b.modelLHS ? -1 : 0));
 // Function to list an array to stderr
 export let list = R.forEach(x => console.error(x));
 // Function to expand an array of strings into a comma-delimited list of strings
@@ -220,57 +218,19 @@ export function allModelVars() {
   }
   // Accumulate a list of model var names with subscripted vars expanded into separate vars with each index.
   // This matches the export format for Vensim DAT files.
-  return R.uniq(R.reduce((a, v) => {
-    if (v.varType != 'lookup') {
-      let modelLHSReader = new ModelLHSReader();
-      modelLHSReader.read(v.modelLHS);
-      return R.concat(a, modelLHSReader.names());
-    }
-    else {
-      return a;
-    }
-  }, [], sortedVars()));
-}
-//
-// Model file preprocessor
-//
-export function preprocess(mdlFilename) {
-  // Read the model file and remove the sketch information at the end.
-  let output = '';
-  function emit(line) {
-    output += line;
-    output += '\n';
-  }
-  let lines = fs.readFileSync(mdlFilename).toString().split(/\r?\n/);
-  let model = [];
-  let beforeSketch = true;
-  R.forEach(line => {
-    if (beforeSketch) {
-      if (line.match(/\\\\\\---\/\/\/ Sketch/)) {
-        beforeSketch = false;
-      }
-      else {
-        model.push(line);
-      }
-    }
-  }, lines);
-  // Join lines continued with trailing backslash characters.
-  let backslash = /\\\s*$/;
-  let prevLine = '';
-  R.forEach(line => {
-    if (!R.isEmpty(prevLine)) {
-        // console.log(`BEFORE ${line}`);
-      line = prevLine + line.trim();
-        // console.log(`AFTER ${line}`);
-      prevLine = '';
-    }
-    let m = line.match(backslash);
-    if (m) {
-      prevLine = line.substr(0, m.index);
-    }
-    if (R.isEmpty(prevLine)) {
-      emit(line);
-    }
-  }, model);
-  return output;
+  return R.uniq(
+    R.reduce(
+      (a, v) => {
+        if (v.varType != 'lookup') {
+          let modelLHSReader = new ModelLHSReader();
+          modelLHSReader.read(v.modelLHS);
+          return R.concat(a, modelLHSReader.names());
+        } else {
+          return a;
+        }
+      },
+      [],
+      sortedVars()
+    )
+  );
 }

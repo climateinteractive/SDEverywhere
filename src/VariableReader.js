@@ -23,8 +23,7 @@ export default class VariableReader extends ModelReader {
     // Add variables to the model.
     if (this.expandedVars.length > 0) {
       R.forEach(v => Model.addVariable(v), this.expandedVars);
-    }
-    else {
+    } else {
       Model.addVariable(this.var);
     }
   }
@@ -70,7 +69,10 @@ export default class VariableReader extends ModelReader {
       if (isDimension(dimName)) {
         let dim = sub(dimName);
         if (dim.size != exprs.length) {
-          vlog('ERROR: the number of dimensions does not match the number of constants in constant list', this.var.varName);
+          vlog(
+            'ERROR: the number of dimensions does not match the number of constants in constant list',
+            this.var.varName
+          );
         }
         R.forEach(indName => {
           let v = new Variable(this.var.eqnCtx);
@@ -78,8 +80,7 @@ export default class VariableReader extends ModelReader {
           v.subscripts = [indName];
           this.expandedVars.push(v);
         }, dim.value);
-      }
-      else {
+      } else {
         vlog('ERROR: no dimension for constant list', this.var.varName);
       }
     }

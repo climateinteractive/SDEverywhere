@@ -1,9 +1,29 @@
 let assert = require('assert');
 import * as R from 'ramda';
-import { Subscript, sub, isIndex, isDimension, addMapping, hasMapping, loadSubscripts, normalizeSubscripts, subscriptFamilies, subscriptFamily, allSubscripts, allDimensions, allMappings, indexNamesForSubscript, dimensionNames, indexNames, mapIndex, printSubscripts, printSubscript } from './Subscript';
+import {
+  Subscript,
+  sub,
+  isIndex,
+  isDimension,
+  addMapping,
+  hasMapping,
+  loadSubscripts,
+  normalizeSubscripts,
+  subscriptFamilies,
+  subscriptFamily,
+  allSubscripts,
+  allDimensions,
+  allMappings,
+  indexNamesForSubscript,
+  dimensionNames,
+  indexNames,
+  mapIndex,
+  printSubscripts,
+  printSubscript
+} from './Subscript';
 import { vlog } from './Helpers';
-import { install } from 'source-map-support';
-install();
+// import { install } from 'source-map-support';
+// install();
 
 let s = Subscript('S');
 assert(s === undefined);
@@ -24,7 +44,7 @@ assert1(s);
 s = sub('_s');
 assert1(s);
 
-let u = { name:'T', value:0 };
+let u = { name: 'T', value: 0 };
 let t = Subscript(u.name, u.value, u.family);
 assert(t.family === '_t');
 

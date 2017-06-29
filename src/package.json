@@ -14,15 +14,16 @@
     "url": "https://github.com/ToddFincannon/SDEverywhere/issues"
   },
   "dependencies": {
-    "babel-cli": "6.2.0",
-    "babel-preset-es2015-node5": "1.1.1",
-    "source-map-support": "0.4.0"
+    "babel-cli": "6.x",
+    "babel-preset-es2015-node5": "1.x"
   },
   "scripts": {
     "build": "babel . --out-dir ../tools --source-maps --ignore node_modules/,ModelLexer.js,ModelParser.js,ModelVisitor.js",
     "watch": "babel . --out-dir ../tools --source-maps --ignore node_modules/,ModelLexer.js,ModelParser.js,ModelVisitor.js --watch"
   },
   "babel": {
-    "presets": ["es2015-node5"]
+    "presets": [
+      "es2015-node5"
+    ]
   }
 }

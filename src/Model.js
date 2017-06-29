@@ -85,7 +85,7 @@ function removeConstRefs() {
   // Remove references to const vars since they do not affect evaluation order.
   function refIsConst(refId) {
     let v = Model.varWithRefId(refId);
-    return (v && v.varType === 'const');
+    return v && v.varType === 'const';
   }
   R.forEach(v => {
     v.references = R.reject(refIsConst, v.references);
@@ -191,7 +191,7 @@ function varsOfType(varType, vars = null) {
     vars = variables;
   }
   function pass(v) {
-    return (v.varType === varType && v.varName !== '_time');
+    return v.varType === varType && v.varName !== '_time';
   }
   return R.filter(pass, vars);
 }
@@ -216,8 +216,7 @@ function sortVarsOfType(varType) {
         // Reverse the order of level-to-level references so that level evaluation refers
         // to the value in the previous time step rather than the currently evaluated one.
         return [ref.refId, v.refId];
-      }
-      else {
+      } else {
         return [v.refId, ref.refId];
       }
     }, refs);
@@ -275,8 +274,7 @@ function sortInitVars() {
               vars.push(refVar);
               // console.error(`+ ${refVar.refId}`);
             }
-          }
-          else {
+          } else {
             console.error(`no var with refId for ${refId}, referenced by ${v.refId}`);
           }
         }
@@ -327,14 +325,12 @@ function splitRefId(refId) {
   let varName = '';
   let subs = [];
   let m;
-  while(m = re.exec(refId)) {
+  while ((m = re.exec(refId))) {
     if (m[0] === '[') {
       inSubs = true;
-    }
-    else if (inSubs) {
+    } else if (inSubs) {
       subs.push(m[0]);
-    }
-    else {
+    } else {
       varName = m[0];
     }
   }
@@ -368,16 +364,14 @@ export function printRefIdTest() {
         if (vars.length < 2) {
           vlog('ERROR: only one instance of non-apply-to-all array', varName);
         }
-      }
-      else {
+      } else {
         // An apply-to-all array should have only one instance of the var name.
         if (vars.length > 1) {
           vlog('ERROR: more than one instance of apply-to-all array', varName);
           listVars(vars);
         }
       }
-    }
-    else {
+    } else {
       // The var is a scalar and should only have one instance of the var name.
       if (vars.length > 1) {
         vlog('ERROR: more than one instance of scalar var', varName);

@@ -5,13 +5,7 @@ let antlr4 = require('antlr4/index');
 let ModelLexer = require('./ModelLexer').ModelLexer;
 let ModelParser = require('./ModelParser').ModelParser;
 import { codeGenerator } from './CodeGen';
-import { preprocess } from './Helpers';
-import 'babel-polyfill';
-import { install } from 'source-map-support';
-install();
-
-// Set PREPROCESS_ONLY to true to output the preprocessed model and quit.
-const PREPROCESS_ONLY = false;
+import { preprocessModel } from './Preprocessor';
 
 let modelDirname;
 let modelBasename;
@@ -34,20 +28,24 @@ exports.builder = {
     type: 'boolean',
     alias: 'r'
   },
+  preprocess: {
+    describe: 'output the preprocessed model',
+    type: 'boolean',
+    alias: 'p'
+  }
 };
 exports.handler = argv => {
   // Parse input files and then hand data to the code generator.
   modelDirname = path.dirname(argv.model);
   modelBasename = path.basename(argv.model).replace(/\.mdl/i, '');
-  let parseTree = parseModel(argv.model);
   let spec = parseSpec(argv.spec);
+  let parseTree = parseModel(argv.model, spec, argv.preprocess);
   let subscripts = parseSubscripts();
   let listMode = '';
   let code = '';
   if (argv.list) {
     listMode = 'printVarList';
-  }
-  else if (argv.refidtest) {
+  } else if (argv.refidtest) {
     listMode = 'printRefIdTest';
   }
   try {
@@ -60,11 +58,12 @@ exports.handler = argv => {
     console.log(code);
   }
   process.exit(0);
-}
-function parseModel(modelFilename) {
+};
+function parseModel(modelFilename, spec, preprocess) {
   // Read the mdl file and return a parse tree.
-  let input = preprocess(modelFilename);
-  if (PREPROCESS_ONLY) {
+  let writeRemovals = preprocess;
+  let input = preprocessModel(modelFilename, spec, writeRemovals);
+  if (preprocess) {
     console.log(input);
     process.exit();
   }
@@ -89,11 +88,10 @@ function parseJsonFile(filename) {
   // Parse the JSON file if it exists.
   let result = {};
   try {
-    let json = fs.readFileSync(filename);
+    let json = fs.readFileSync(filename, 'utf8');
     result = JSON.parse(json);
     // console.error(`loaded ${filename}`);
-  }
-  catch(ex) {
+  } catch (ex) {
     // If the file doesn't exist, return an empty object without complaining.
   }
   return result;
@@ -102,9 +100,7 @@ function preprocessSubsFile(jsFilename, jsonFilename) {
   let uglifyjs = `${process.env.SDE_HOME}/tools/node_modules/.bin/uglifyjs`;
   try {
     fs.accessSync(jsFilename, fs.R_OK);
-    let cmd = `${uglifyjs} --beautify quote-keys --expr ${jsFilename} >${jsonFilename} 2>/dev/null`
+    let cmd = `${uglifyjs} --beautify quote-keys --expr ${jsFilename} >${jsonFilename} 2>/dev/null`;
     child_process.execSync(cmd);
-  }
-  catch (e) {
-  }
+  } catch (e) {}
 }

@@ -60,8 +60,7 @@ export default class Variable {
     if (eqnCtx) {
       if (eqnCtx.expr()) {
         return eqnCtx.expr().getText();
-      }
-      else if (eqnCtx.constList()) {
+      } else if (eqnCtx.constList()) {
         return eqnCtx.constList().getText();
       }
     }

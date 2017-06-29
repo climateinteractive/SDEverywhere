@@ -15,11 +15,10 @@
   },
   "dependencies": {
     "antlr4": "4.5.3",
-    "babel-polyfill": "^6.2.0",
-    "ramda": "^0.21.0",
-    "source-map-support": "^0.4.0",
-    "uglify-js": "^2.6.2",
-    "yargs": "^4.7.1"
+    "numeral": "2.0.x",
+    "ramda": "0.23.x",
+    "uglify-js": "2.x",
+    "yargs": "4.x"
   },
   "devDependencies": {},
   "scripts": {},

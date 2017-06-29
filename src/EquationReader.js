@@ -7,8 +7,28 @@ import Variable from './Variable';
 import ModelReader from './ModelReader';
 import VariableReader from './VariableReader';
 import VarNameReader from './VarNameReader';
-import { sub, normalizeSubscripts, indexNamesForSubscript, isIndex, hasMapping, mapIndex, separatedVariableIndex } from './Subscript';
-import { canonicalName, cFunctionName, list, newLookupVarName, newLevelVarName, newAuxVarName, vlog, listVar, printVar, isSmoothFunction, isDelayFunction } from './Helpers';
+import {
+  sub,
+  normalizeSubscripts,
+  indexNamesForSubscript,
+  isIndex,
+  hasMapping,
+  mapIndex,
+  separatedVariableIndex
+} from './Subscript';
+import {
+  canonicalName,
+  cFunctionName,
+  list,
+  newLookupVarName,
+  newLevelVarName,
+  newAuxVarName,
+  vlog,
+  listVar,
+  printVar,
+  isSmoothFunction,
+  isDelayFunction
+} from './Helpers';
 
 // Set this true to get a list of functions used in the model. This may include lookups.
 const PRINT_FUNCTION_NAMES = false;
@@ -31,8 +51,7 @@ export default class EquationReader extends ModelReader {
     // Set the var type based on the contents of the equation.
     if (this.var.points.length > 0) {
       this.var.varType = 'lookup';
-    }
-    else if (this.var.isAux() && !this.rhsNonConst) {
+    } else if (this.var.isAux() && !this.rhsNonConst) {
       this.var.varType = 'const';
     }
   }
@@ -41,19 +60,18 @@ export default class EquationReader extends ModelReader {
   //
   addReferencesToList(list) {
     // Add reference ids gathered while walking the RHS parse tree to the variable's reference list.
-    let add = (refId) => {
+    let add = refId => {
       // In Vensim a variable can refer to its current value in the state.
       // Do not add self-references to the lists of references.
       // Do not duplicate references.
       if (refId != this.var.refId && !R.contains(refId, list)) {
         list.push(refId);
       }
-    }
+    };
     // Add expanded reference ids if they exist, otherwise, add the single reference id.
     if (R.isEmpty(this.expandedRefIds)) {
       add(this.refId);
-    }
-    else {
+    } else {
       R.forEach(refId => add(refId), this.expandedRefIds);
     }
   }
@@ -65,19 +83,17 @@ export default class EquationReader extends ModelReader {
     this.rhsNonConst = true;
     // Convert the function name from Vensim to C format.
     let fn = cFunctionName(ctx.Id().getText());
-    this.callStack.push({fn:fn});
+    this.callStack.push({ fn: fn });
     if (PRINT_FUNCTION_NAMES) {
       console.error(fn);
     }
     if (fn === '_INTEG') {
       this.var.varType = 'level';
       this.var.hasInitValue = true;
-    }
-    else if (fn === '_INITIAL') {
+    } else if (fn === '_INITIAL') {
       this.var.varType = 'initial';
       this.var.hasInitValue = true;
-    }
-    else if (fn === '_ACTIVE_INITIAL' || fn === '_SAMPLE_IF_TRUE') {
+    } else if (fn === '_ACTIVE_INITIAL' || fn === '_SAMPLE_IF_TRUE') {
       this.var.hasInitValue = true;
     }
     super.visitCall(ctx);
@@ -91,8 +107,7 @@ export default class EquationReader extends ModelReader {
       // Get SMOOTH* arguments for the function expansion.
       let args = R.map(expr => expr.getText(), ctx.expr());
       this.var.smoothVarName = this.expandSmoothFunction(fn, args);
-    }
-    else if (isDelayFunction(fn)) {
+    } else if (isDelayFunction(fn)) {
       // Generate a level var to expand the DELAY* call.
       let args = R.map(expr => expr.getText(), ctx.expr());
       this.var.delayVarName = this.expandDelayFunction(fn, args);
@@ -103,15 +118,13 @@ export default class EquationReader extends ModelReader {
       let delayTimeEqn;
       if (fn === '_DELAY1' || fn === '_DELAY1I') {
         delayTimeEqn = `${delayTimeVarName}${modelSubs} = ${args[1]}`;
-      }
-      else if (fn === '_DELAY3' || fn === '_DELAY3I') {
-        delayTimeEqn = `${delayTimeVarName}${modelSubs} = (${args[1]}) / 3.0`
+      } else if (fn === '_DELAY3' || fn === '_DELAY3I') {
+        delayTimeEqn = `${delayTimeVarName}${modelSubs} = (${args[1]}) / 3.0`;
       }
       this.addVariable(delayTimeEqn);
       // Add a reference to the var, since it won't show up until code gen time.
       this.var.references.push(this.var.delayTimeVarName);
-    }
-    else {
+    } else {
       super.visitExprList(ctx);
     }
   }
@@ -129,20 +142,15 @@ export default class EquationReader extends ModelReader {
     if (isSmoothFunction(fn) || isDelayFunction(fn)) {
       // Do not set references inside the call, since it will be replaced
       // with the generated level var.
-    }
-    else if (this.argIndexForFunctionName('_INTEG') === 1) {
+    } else if (this.argIndexForFunctionName('_INTEG') === 1) {
       this.addReferencesToList(this.var.initReferences);
-    }
-    else if (this.argIndexForFunctionName('_ACTIVE_INITIAL') === 1) {
+    } else if (this.argIndexForFunctionName('_ACTIVE_INITIAL') === 1) {
       this.addReferencesToList(this.var.initReferences);
-    }
-    else if (this.argIndexForFunctionName('_SAMPLE_IF_TRUE') === 2) {
+    } else if (this.argIndexForFunctionName('_SAMPLE_IF_TRUE') === 2) {
       this.addReferencesToList(this.var.initReferences);
-    }
-    else if (this.var.isInitial()) {
+    } else if (this.var.isInitial()) {
       this.addReferencesToList(this.var.initReferences);
-    }
-    else {
+    } else {
       this.addReferencesToList(this.var.references);
     }
   }
@@ -187,8 +195,7 @@ export default class EquationReader extends ModelReader {
             let separatedIndexName = separatedVariableIndex(subscripts[pos], this.var);
             if (separatedIndexName) {
               indexNamesAtPos = [separatedIndexName];
-            }
-            else {
+            } else {
               // Generate references to all the indices for the subscript.
               indexNamesAtPos = indexNamesForSubscript(subscripts[pos]);
             }
@@ -198,7 +205,9 @@ export default class EquationReader extends ModelReader {
               R.forEach(refVar => {
                 let refVarIndexNames = indexNamesForSubscript(refVar.subscripts[pos]);
                 if (refVarIndexNames.length === 0) {
-                  console.error(`no subscript at pos ${pos} for var ${refVar.refId} with subscripts ${refVar.subscripts}`);
+                  console.error(
+                    `no subscript at pos ${pos} for var ${refVar.refId} with subscripts ${refVar.subscripts}`
+                  );
                 }
                 if (R.contains(indexName, refVarIndexNames)) {
                   expandedRefIds.push(refVar.refId);
@@ -206,23 +215,20 @@ export default class EquationReader extends ModelReader {
                 }
               }, varsWithRefName);
             }, indexNamesAtPos);
-          }
-          else if (numLoops === 2) {
+          } else if (numLoops === 2) {
             // Expand the dimension in both positions.
             let indexNamesAtPos0;
             let separatedIndexName0 = separatedVariableIndex(subscripts[0], this.var);
             if (separatedIndexName0) {
               indexNamesAtPos0 = [separatedIndexName0];
-            }
-            else {
+            } else {
               indexNamesAtPos0 = indexNamesForSubscript(subscripts[0]);
             }
             let indexNamesAtPos1;
             let separatedIndexName1 = separatedVariableIndex(subscripts[1], this.var);
             if (separatedIndexName1) {
               indexNamesAtPos1 = [separatedIndexName1];
-            }
-            else {
+            } else {
               indexNamesAtPos1 = indexNamesForSubscript(subscripts[1]);
             }
             R.forEach(indexName0 => {
@@ -230,11 +236,15 @@ export default class EquationReader extends ModelReader {
                 R.forEach(refVar => {
                   let refVarIndexNames0 = indexNamesForSubscript(refVar.subscripts[0]);
                   if (refVarIndexNames0.length === 0) {
-                    console.error(`ERROR: no subscript at pos 0 for var ${refVar.refId} with subscripts ${refVar.subscripts}`);
+                    console.error(
+                      `ERROR: no subscript at pos 0 for var ${refVar.refId} with subscripts ${refVar.subscripts}`
+                    );
                   }
                   let refVarIndexNames1 = indexNamesForSubscript(refVar.subscripts[1]);
                   if (refVarIndexNames1.length === 0) {
-                    console.error(`ERROR: no subscript at pos 1 for var ${refVar.refId} with subscripts ${refVar.subscripts}`);
+                    console.error(
+                      `ERROR: no subscript at pos 1 for var ${refVar.refId} with subscripts ${refVar.subscripts}`
+                    );
                   }
                   if (R.contains(indexName0, refVarIndexNames0) && R.contains(indexName1, refVarIndexNames1)) {
                     expandedRefIds.push(refVar.refId);
@@ -279,9 +289,8 @@ export default class EquationReader extends ModelReader {
     if (fn === '_SMOOTH' || fn === '_SMOOTHI') {
       let level = this.generateSmoothLevel(input, delay, init, 1);
       return canonicalName(level);
-    }
-    else if (fn === '_SMOOTH3' || fn === '_SMOOTH3I') {
-      let delay3 = `(${delay} / 3)`
+    } else if (fn === '_SMOOTH3' || fn === '_SMOOTH3I') {
+      let delay3 = `(${delay} / 3)`;
       let level1 = this.generateSmoothLevel(input, delay3, init, 1);
       let level2 = this.generateSmoothLevel(level1, delay3, init, 2);
       let level3 = this.generateSmoothLevel(level2, delay3, init, 3);
@@ -315,10 +324,9 @@ export default class EquationReader extends ModelReader {
       let level = newLevelVarName();
       this.generateDelayLevel(fn, level, input, this.var.modelLHS, delay, init, 1);
       return canonicalName(level);
-    }
-    else if (fn === '_DELAY3' || fn === '_DELAY3I') {
+    } else if (fn === '_DELAY3' || fn === '_DELAY3I') {
       let modelSubs = this.modelSubs();
-      let delay3 = `((${delay}) / 3)`
+      let delay3 = `((${delay}) / 3)`;
       let init = `${args[2] ? args[2] : args[0]} * ${delay3}`;
       let level1 = newLevelVarName();
       let level2 = newLevelVarName();

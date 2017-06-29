@@ -10,17 +10,17 @@ export default class ModelReader extends ModelVisitor {
   }
   currentFunctionName() {
     let n = this.callStack.length;
-    return n > 0 ? this.callStack[n-1].fn : '';
+    return n > 0 ? this.callStack[n - 1].fn : '';
   }
   setArgIndex(argIndex) {
     let n = this.callStack.length;
     if (n > 0) {
-      this.callStack[n-1].argIndex = argIndex;
+      this.callStack[n - 1].argIndex = argIndex;
     }
   }
   argIndexForFunctionName(name) {
     let argIndex;
-    for (let i = this.callStack.length-1; i >= 0; i--) {
+    for (let i = this.callStack.length - 1; i >= 0; i--) {
       if (this.callStack[i].fn === name) {
         argIndex = this.callStack[i].argIndex;
         break;
@@ -41,11 +41,9 @@ export default class ModelReader extends ModelVisitor {
       ctx.lhs().accept(this);
       if (ctx.expr()) {
         ctx.expr().accept(this);
-      }
-      else if (ctx.constList()) {
+      } else if (ctx.constList()) {
         ctx.constList().accept(this);
-      }
-      else if (ctx.lookup()) {
+      } else if (ctx.lookup()) {
         ctx.lookup().accept(this);
       }
     }
