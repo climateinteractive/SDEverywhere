@@ -79,21 +79,22 @@ let allUniq = list => {
 }
 
 module.exports = {
+  allUniq,
+  clearBuf,
+  emit,
+  emitJson,
+  emitLine,
+  getBuf,
+  open,
+  print,
+  printa,
+  printBuf,
+  printJson,
+  printu,
   sorta,
   sortn,
   sortu,
-  print,
   write,
-  printa,
-  printu,
-  printJson,
-  allUniq,
-  open,
-  emit,
-  emitLine,
-  emitJson,
-  printBuf,
   writeBuf,
-  getBuf,
-  clearBuf
+  writeJson
 }

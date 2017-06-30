@@ -1,11 +1,11 @@
 const fs = require('fs')
-const child_process = require('child_process')
 const path = require('path')
 const antlr4 = require('antlr4/index')
 const ModelLexer = require('./ModelLexer').ModelLexer
 const ModelParser = require('./ModelParser').ModelParser
 const { codeGenerator } = require('./CodeGen')
 const { preprocessModel } = require('./Preprocessor')
+const F = require('./futil')
 
 let modelDirname
 let modelBasename
@@ -98,10 +98,9 @@ function parseJsonFile(filename) {
   return result
 }
 function preprocessSubsFile(jsFilename, jsonFilename) {
-  let uglifyjs = `${process.env.SDE_HOME}/src/node_modules/.bin/uglifyjs`
   try {
-    fs.accessSync(jsFilename, fs.R_OK)
-    let cmd = `${uglifyjs} --beautify quote-keys --expr ${jsFilename} >${jsonFilename} 2>/dev/null`
-    child_process.execSync(cmd)
+    let js = fs.readFileSync(jsFilename, 'utf8')
+    let o = eval(js)
+    F.writeJson(o, jsonFilename)
   } catch (e) {}
 }

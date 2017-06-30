@@ -16,7 +16,6 @@
   "dependencies": {
     "antlr4": "4.5.3",
     "ramda": "^0.24.1",
-    "uglify-js": "2.x",
     "yargs": "^7.1.0"
   },
   "scripts": {},
