@@ -1,8 +1,8 @@
 {
   "name": "sdeverywhere",
   "version": "0.2.2",
-  "description": "SDEverywhere source",
-  "author": "Todd Fincannon <todd@toddfincannon.com> (https://toddfincannon.com)",
+  "description": "SDEverywhere translates System Dynamics models from Vensim to C",
+  "author": "Todd Fincannon <todd@toddfincannon.com> (http://toddfincannon.com)",
   "homepage": "http://sdeverywhere.org",
   "license": "MIT",
   "readmeFilename": "README.md",
@@ -14,9 +14,9 @@
     "url": "https://github.com/ToddFincannon/SDEverywhere/issues"
   },
   "dependencies": {
-    "antlr4": "4.5.3",
-    "ramda": "^0.24.1",
-    "yargs": "^7.1.0"
+    "antlr4": "4.7.0",
+    "ramda": "0.24.x",
+    "yargs": "7.1.0"
   },
   "scripts": {},
   "preferGlobal": true,

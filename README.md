@@ -201,14 +201,14 @@ Install the [Java SE 8 JDK](http://www.oracle.com/technetwork/java/javase/downlo
 Install ANTLR 4 Java tools.
 ~~~
 cd /usr/local/lib
-sudo curl -O http://www.antlr.org/download/antlr-4.5-complete.jar
+sudo curl -O http://www.antlr.org/download/antlr-4.7-complete.jar
 ~~~
 
 Set up ANTLR 4 in `.bash_profile`.
 ~~~
-export CLASSPATH=".:/usr/local/lib/antlr-4.5-complete.jar:$CLASSPATH"
-alias antlr4='java -jar /usr/local/lib/antlr-4.5-complete.jar'
-alias grun='java org.antlr.v4.runtime.misc.TestRig'
+export CLASSPATH=".:/usr/local/lib/antlr-4.7-complete.jar:$CLASSPATH"
+alias antlr4='java -jar /usr/local/lib/antlr-4.7-complete.jar'
+alias grun='java org.antlr.v4.gui.TestRig'
 ~~~
 
 ### Running your local version during development

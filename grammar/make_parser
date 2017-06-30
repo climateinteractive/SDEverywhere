@@ -1,8 +1,8 @@
 #!/usr/bin/env sh
-antlr4='java -jar /usr/local/lib/antlr-4.5-complete.jar'
+antlr4='java -jar /usr/local/lib/antlr-4.7-complete.jar'
 rm ModelLexer.js ModelParser.js ModelVisitor.js Model*.java *.class *.tokens >&/dev/null
 $antlr4 -Dlanguage=JavaScript -visitor -no-listener Model.g4
-mv ModelLexer.js ../tools
-mv ModelParser.js ../tools
-mv ModelVisitor.js ../tools
+mv ModelLexer.js ../src
+mv ModelParser.js ../src
+mv ModelVisitor.js ../src
 rm *.tokens

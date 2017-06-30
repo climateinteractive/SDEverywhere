@@ -1,5 +1,6 @@
 # Project files
 build/*
+models/**/*_subs.json
 .DS_Store
 *.tokens
 *.class

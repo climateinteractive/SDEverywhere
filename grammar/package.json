@@ -6,10 +6,17 @@
   "scripts": {},
   "author": "Todd Fincannon",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ToddFincannon/SDEverywhere.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ToddFincannon/SDEverywhere/issues"
+  },
   "dependencies": {
-    "antlr4": "4.5.3",
+    "antlr4": "4.7.0",
     "command": "0.0.5",
-    "commander": "^2.9.0",
-    "ramda": "^0.23.0"
+    "commander": "2.9.0",
+    "ramda": "0.24.x"
   }
 }
