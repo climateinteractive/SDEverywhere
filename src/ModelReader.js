@@ -139,18 +139,4 @@ module.exports = class ModelReader extends ModelVisitor {
   visitParens(ctx) {
     ctx.expr().accept(this)
   }
-
-  // Helpers
-
-  visitChildren(ctx) {
-    console.error('visitChildren called on nonmatched expression "' + ctx.getText() + '"')
-    if (ctx.children) {
-      for (var c of ctx.children) {
-        c.accept(this)
-      }
-    }
-  }
-  visitTerminal(ctx) {
-    console.error('visitTerminal called on nonmatched expression')
-  }
 }

@@ -141,7 +141,7 @@ function normalizeSubscripts(subscripts) {
   try {
     normalizedSubs = R.map(R.prop('name'), subs)
   } catch (e) {
-    debugger
+    // debugger
   }
   return normalizedSubs
 }

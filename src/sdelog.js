@@ -33,7 +33,6 @@ function exportDat(filename) {
       steps.push(R.zipObj(varNames, line.split('\t')))
     }
   }, lines)
-  debugger
   R.forEach(varName => {
     if (varName != 'time') {
       F.print(varName)
