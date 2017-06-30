@@ -45,24 +45,12 @@ The SDEverywhere tools scripts need to know where you installed SDEverywhere. Se
 export SDE_HOME="$HOME/Projects/SDEverywhere"
 ~~~
 
-### Build SDEverywhere
+### Install dependencies
 
 Install Node packages locally in the SDEverywhere `src` directory.
 ~~~
 cd $SDE_HOME/src
 npm install
-~~~
-
-Install Node packages for the `tools` directory.
-~~~
-cd ../tools
-npm install
-~~~
-
-Build the SDEverywhere tools from [ES6](http://exploringjs.com/es6/) (ECMAScript 2015) source code in the `src` directory to get JavaScript 1.5 code in the `tools` directory.
-~~~
-cd ../src
-npm run build
 ~~~
 
 ### Install the SDEverywhere command line tool
@@ -223,14 +211,6 @@ alias antlr4='java -jar /usr/local/lib/antlr-4.5-complete.jar'
 alias grun='java org.antlr.v4.runtime.misc.TestRig'
 ~~~
 
-### Running the Babel transpiler automatically
-
-Instead of a one-time build, set Babel to watch the `src` directory and automatically transpile a file when it changes.
-~~~
-cd $SDE_HOME/src
-npm run watch
-~~~
-
 ### Running your local version during development
 
 If you installed SDEverywhere globally with `npm install -g`, then the `sde` command runs the globally installed copy located in your Node.js directory. This will not be affected by your source code changes during development. Run the `sde.js` file from the `tools` directory instead.
@@ -243,7 +223,7 @@ node sde.js --help
 
 SDEverywhere is a transpiler that converts models written in the [Vensim Modeling Language](http://www.vensim.com/documentation/index.html?22300.htm) to either C or JavaScript. The language features and Vensim library functions that are most commonly used in models are supported, including subscripts.
 
-SDEverywhere is written in the [ES6](https://github.com/lukehoban/es6features) language (also known as ECMAScript 2015, the latest JavaScript standard). It relies on the [Babel](https://babeljs.io/) transpiler to convert ES6 into JavaScript code that can run in the [Node.js](https://nodejs.org/en/) environment as a command line app. Much of the code is written in a functional programming style using the [Ramda](http://ramdajs.com/) toolkit.
+SDEverywhere is written in the [ES6](https://github.com/lukehoban/es6features) language (also known as ECMAScript 2015, the latest JavaScript standard). Much of the code is written in a functional programming style using the [Ramda](http://ramdajs.com/) toolkit.
 
 ### Some notes on terminology
 

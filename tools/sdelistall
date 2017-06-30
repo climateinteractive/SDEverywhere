@@ -11,7 +11,7 @@ if [[ -z $SDE_HOME ]]; then usage; fi
 if [[ ! -d $SDE_HOME ]]; then usage; fi
 if [[ ! -d $SDE_HOME/models ]]; then usage; fi
 # SDE=sde
-SDE="node sde.js"
+SDE="node ../src/sde.js"
 
 echo 'listing vars for the active_initial model'
 $SDE generate $SDE_HOME/models/active_initial/active_initial.mdl --list >$SDE_HOME/models/active_initial/active_initial_vars.txt

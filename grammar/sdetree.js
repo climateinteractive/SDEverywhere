@@ -29,7 +29,7 @@ const sdetree = (function() {
 
   function main() {
     app
-      .version('0.2.1')
+      .version('0.2.2')
       .option('-f, --treefile <tree-file>', 'Specify an ANTLR parse tree print')
       .parse(process.argv);
 

@@ -1,9 +1,9 @@
-import * as fs from 'fs'
-import * as path from 'path'
-import * as R from 'ramda'
-import * as F from './futil'
+const fs = require('fs')
+const path = require('path')
+const R = require('ramda')
+const F = require('./futil')
 
-export function preprocessModel(mdlFilename, spec, writeRemovals = false) {
+function preprocessModel(mdlFilename, spec, writeRemovals = false) {
   function firstLine(s) {
     let i = s.indexOf('\n')
     if (i < 0) {
@@ -99,3 +99,5 @@ export function preprocessModel(mdlFilename, spec, writeRemovals = false) {
   // Return the preprocessed model as a string.
   return F.getBuf('pp')
 }
+
+module.exports = { preprocessModel }

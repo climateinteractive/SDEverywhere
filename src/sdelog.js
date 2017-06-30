@@ -1,6 +1,6 @@
-let fs = require('fs')
-import * as R from 'ramda'
-import * as F from './futil'
+const fs = require('fs')
+const R = require('ramda')
+const F = require('./futil')
 
 exports.command = 'log <logfile>'
 exports.describe = 'process an SDEverywhere log file'

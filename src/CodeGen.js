@@ -1,11 +1,12 @@
-import * as R from 'ramda'
-import VarNameReader from './VarNameReader'
-import EquationGen from './EquationGen'
-import * as Model from './Model'
-import { sub, loadSubscripts, allDimensions, allMappings, isDimension, subscriptFamilies } from './Subscript'
-import { asort, lines, list, strlist, vlog, allModelVars } from './Helpers'
+const R = require('ramda')
+const VarNameReader = require('./VarNameReader')
+const ModelLHSReader = require('./ModelLHSReader')
+const EquationGen = require('./EquationGen')
+const Model = require('./Model')
+const { sub, loadSubscripts, allDimensions, allMappings, isDimension, subscriptFamilies } = require('./Subscript')
+const { asort, lines, list, strlist, vlog } = require('./Helpers')
 
-export function codeGenerator(parseTree, spec, subscripts, listMode) {
+let codeGenerator = (parseTree, spec, subscripts, listMode) => {
   // Set true when in the init section, false in the eval section
   let initMode = false
   // Set true to output all variables when there is no model run spec.
@@ -178,6 +179,34 @@ ${outputSection(allModelVars())}
     let a = R.map(indexName => sub(indexName).value, indices)
     return strlist(a)
   }
+  function allModelVars() {
+    // Return a list of Vensim model var names for all variables.
+    function sortedVars() {
+      // Return a list of all vars sorted by the model LHS var name (without subscripts), case insensitive.
+      return R.sortBy(v => {
+        let modelLHSReader = new ModelLHSReader()
+        modelLHSReader.read(v.modelLHS)
+        return modelLHSReader.varName.replace(/"/g, '').toUpperCase()
+      }, Model.variables)
+    }
+    // Accumulate a list of model var names with subscripted vars expanded into separate vars with each index.
+    // This matches the export format for Vensim DAT files.
+    return R.uniq(
+      R.reduce(
+        (a, v) => {
+          if (v.varType != 'lookup') {
+            let modelLHSReader = new ModelLHSReader()
+            modelLHSReader.read(v.modelLHS)
+            return R.concat(a, modelLHSReader.names())
+          } else {
+            return a
+          }
+        },
+        [],
+        sortedVars()
+      )
+    )
+  }
   //
   // Input/output section helpers
   //
@@ -196,3 +225,5 @@ ${outputSection(allModelVars())}
     generate: generate
   }
 }
+
+module.exports = { codeGenerator }

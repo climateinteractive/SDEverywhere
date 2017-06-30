@@ -17,7 +17,7 @@ if [[ ! -d $SDE_HOME/models ]]; then usage; fi
 if [[ ! -d $SDE_HOME/tools ]]; then usage; fi
 if [[ ! -d $SDE_HOME/build ]]; then mkdir $SDE_HOME/build; fi
 # SDE=sde
-SDE="node sde.js"
+SDE="node ../src/sde.js"
 MDL_NAME=$1
 DATA_FILE=$2
 MDL_PATH=$SDE_HOME/models/$MDL_NAME

@@ -1,6 +1,6 @@
-let assert = require('assert')
-import * as R from 'ramda'
-import {
+const assert = require('assert')
+const R = require('ramda')
+const {
   Subscript,
   sub,
   isIndex,
@@ -20,10 +20,8 @@ import {
   mapIndex,
   printSubscripts,
   printSubscript
-} from './Subscript'
-import { vlog } from './Helpers'
-// import { install } from 'source-map-support';
-// install();
+} = require('./Subscript')
+const { vlog } = require('./Helpers')
 
 let s = Subscript('S')
 assert(s === undefined)

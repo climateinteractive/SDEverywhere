@@ -1,9 +1,6 @@
 const fs = require('fs')
 const R = require('ramda')
-const num = require('numeral')
 
-// Numeric value of a string or number
-let n = x => (typeof x === 'number' ? x : num(x).value())
 // String sort comparison function
 let acmp = R.comparator((a, b) => a < b)
 // Numeric string sort comparison function
@@ -81,20 +78,22 @@ let allUniq = list => {
   return true
 }
 
-exports.sorta = sorta
-exports.sortn = sortn
-exports.sortu = sortu
-exports.print = print
-exports.write = write
-exports.printa = printa
-exports.printu = printu
-exports.printJson = printJson
-exports.allUniq = allUniq
-exports.open = open
-exports.emit = emit
-exports.emitLine = emitLine
-exports.emitJson = emitJson
-exports.printBuf = printBuf
-exports.writeBuf = writeBuf
-exports.getBuf = getBuf
-exports.clearBuf = clearBuf
+module.exports = {
+  sorta,
+  sortn,
+  sortu,
+  print,
+  write,
+  printa,
+  printu,
+  printJson,
+  allUniq,
+  open,
+  emit,
+  emitLine,
+  emitJson,
+  printBuf,
+  writeBuf,
+  getBuf,
+  clearBuf
+}

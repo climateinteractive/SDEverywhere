@@ -1,6 +1,6 @@
-let fs = require('fs')
-import * as R from 'ramda'
-import { vlog } from './Helpers'
+const fs = require('fs')
+const R = require('ramda')
+const { vlog } = require('./Helpers')
 
 // The epsilon value determines the required precision for value comparisons.
 let ε = 1e-5

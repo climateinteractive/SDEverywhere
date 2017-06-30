@@ -1,6 +1,6 @@
-import { Subscript, sub, isDimension } from './Subscript'
+const { Subscript, sub, isDimension } = require('./Subscript')
 
-export default class LoopIndexVars {
+module.exports = class LoopIndexVars {
   constructor() {
     this.loopIndexVars = this.loopIndexVarGen()
     this.lhsLoopIndices = {}

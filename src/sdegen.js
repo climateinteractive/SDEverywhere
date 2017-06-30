@@ -1,11 +1,11 @@
-let fs = require('fs')
-let child_process = require('child_process')
-let path = require('path')
-let antlr4 = require('antlr4/index')
-let ModelLexer = require('./ModelLexer').ModelLexer
-let ModelParser = require('./ModelParser').ModelParser
-import { codeGenerator } from './CodeGen'
-import { preprocessModel } from './Preprocessor'
+const fs = require('fs')
+const child_process = require('child_process')
+const path = require('path')
+const antlr4 = require('antlr4/index')
+const ModelLexer = require('./ModelLexer').ModelLexer
+const ModelParser = require('./ModelParser').ModelParser
+const { codeGenerator } = require('./CodeGen')
+const { preprocessModel } = require('./Preprocessor')
 
 let modelDirname
 let modelBasename
@@ -51,7 +51,8 @@ exports.handler = argv => {
   try {
     code = codeGenerator(parseTree, spec, subscripts, listMode).generate()
   } catch (e) {
-    console.log('code generator exception: ' + e.message)
+    // console.log('code generator exception: ' + e.message)
+    console.log(e.stack)
   }
   // Print the generated code.
   if (!(argv.list || argv.refidtest)) {
@@ -97,7 +98,7 @@ function parseJsonFile(filename) {
   return result
 }
 function preprocessSubsFile(jsFilename, jsonFilename) {
-  let uglifyjs = `${process.env.SDE_HOME}/tools/node_modules/.bin/uglifyjs`
+  let uglifyjs = `${process.env.SDE_HOME}/src/node_modules/.bin/uglifyjs`
   try {
     fs.accessSync(jsFilename, fs.R_OK)
     let cmd = `${uglifyjs} --beautify quote-keys --expr ${jsFilename} >${jsonFilename} 2>/dev/null`

@@ -1,11 +1,11 @@
-let antlr4 = require('antlr4/index')
-let ModelLexer = require('./ModelLexer').ModelLexer
-let ModelParser = require('./ModelParser').ModelParser
-import ModelReader from './ModelReader'
-import LoopIndexVars from './LoopIndexVars'
-import * as Model from './Model'
-import * as R from 'ramda'
-import {
+const antlr4 = require('antlr4/index')
+const R = require('ramda')
+const ModelLexer = require('./ModelLexer').ModelLexer
+const ModelParser = require('./ModelParser').ModelParser
+const ModelReader = require('./ModelReader')
+const LoopIndexVars = require('./LoopIndexVars')
+const Model = require('./Model')
+const {
   sub,
   isDimension,
   isIndex,
@@ -13,8 +13,8 @@ import {
   hasMapping,
   normalizeSubscripts,
   separatedVariableIndex
-} from './Subscript'
-import {
+} = require('./Subscript')
+const {
   canonicalName,
   cFunctionName,
   list,
@@ -24,17 +24,14 @@ import {
   cdbl,
   strToConst,
   vlog,
-  printVar,
   mapIndexed,
   extractMatch,
   isArrayFunction,
   isSmoothFunction,
-  isDelayFunction,
-  cVarOrConst,
-  constValue
-} from './Helpers'
+  isDelayFunction
+} = require('./Helpers')
 
-export default class EquationGen extends ModelReader {
+module.exports = class EquationGen extends ModelReader {
   constructor(variable, initMode = false) {
     super()
     // the variable we are generating code for
@@ -124,6 +121,42 @@ export default class EquationGen extends ModelReader {
       // Otherwise emit code to the expression code channel.
       this.exprCode += text
     }
+  }
+  cVarOrConst(expr) {
+    // Get either a constant or a var name in C format from a parse tree expression.
+    let value = expr.getText().trim()
+    if (value === ':NA:') {
+      return '_NA_'
+    } else {
+      let v = Model.varWithName(canonicalName(value))
+      if (v) {
+        return v.varName
+      } else {
+        let d = parseFloat(value)
+        if (Number.isNaN(d)) {
+          d = 0
+        }
+        return cdbl(d)
+      }
+    }
+  }
+  constValue(c) {
+    // Get a numeric value from a constant var name in model form.
+    // Return 0 if the value is not a numeric string or const variable.
+    let value = parseFloat(c)
+    if (!Number.isNaN(value)) {
+      return value
+    }
+    // Look up the value as a symbol name and return the const value.
+    value = 0
+    let v = Model.varWithName(canonicalName(c))
+    if (v && v.isConst()) {
+      value = parseFloat(v.modelFormula)
+      if (Number.isNaN(value)) {
+        value = 0
+      }
+    }
+    return value
   }
 
   lhsSubscriptGen(subscripts) {
@@ -378,13 +411,13 @@ export default class EquationGen extends ModelReader {
       this.setArgIndex(1)
       exprs[1].accept(this)
       this.setArgIndex(2)
-      this.vsNullValue = cVarOrConst(exprs[2])
+      this.vsNullValue = this.cVarOrConst(exprs[2])
       // TODO implement other actions besides just sum and max
       this.setArgIndex(3)
-      this.vsAction = constValue(exprs[3].getText().trim())
+      this.vsAction = this.constValue(exprs[3].getText().trim())
       // TODO obey the error handling instruction here
       this.setArgIndex(4)
-      this.vsError = cVarOrConst(exprs[4])
+      this.vsError = this.cVarOrConst(exprs[4])
     } else if (fn === '_VECTOR_ELM_MAP') {
       this.setArgIndex(0)
       exprs[0].accept(this)
@@ -394,7 +427,7 @@ export default class EquationGen extends ModelReader {
       this.setArgIndex(0)
       exprs[0].accept(this)
       this.setArgIndex(1)
-      this.vsoOrder = cVarOrConst(exprs[1])
+      this.vsoOrder = this.cVarOrConst(exprs[1])
     } else {
       // Ordinary expression lists are completely emitted with comma delimiters.
       for (let i = 0; i < exprs.length; i++) {

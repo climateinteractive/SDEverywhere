@@ -1,11 +1,10 @@
-let antlr4 = require('antlr4/index')
-let ModelParser = require('./ModelParser').ModelParser
-import * as R from 'ramda'
-import * as Model from './Model'
-import ModelReader from './ModelReader'
-import Variable from './Variable'
-import { sub, isDimension, normalizeSubscripts } from './Subscript'
-import { canonicalName, vlog, replaceInArray } from './Helpers'
+const antlr4 = require('antlr4/index')
+const ModelParser = require('./ModelParser').ModelParser
+const R = require('ramda')
+const ModelReader = require('./ModelReader')
+const Variable = require('./Variable')
+const { sub, isDimension, normalizeSubscripts } = require('./Subscript')
+const { canonicalName, vlog, replaceInArray } = require('./Helpers')
 
 // List var names that need to be separated because of circular references,
 // mapped to the dimension subscript to separate on.
@@ -13,18 +12,19 @@ let specialSeparationDims = {
   // '{c-variable-name}': '{c-dimension-name}',
 }
 
-export default class VariableReader extends ModelReader {
+module.exports = class VariableReader extends ModelReader {
   visitEquation(ctx) {
     // Start a new variable and an alternate array of variables for constant lists.
+    const { addVariable } = require('./Model')
     this.var = new Variable(ctx)
     this.expandedVars = []
     // Fill in the variable by visiting the equation parse context.
     super.visitEquation(ctx)
     // Add variables to the model.
     if (this.expandedVars.length > 0) {
-      R.forEach(v => Model.addVariable(v), this.expandedVars)
+      R.forEach(v => addVariable(v), this.expandedVars)
     } else {
-      Model.addVariable(this.var)
+      addVariable(this.var)
     }
   }
   visitLhs(ctx) {

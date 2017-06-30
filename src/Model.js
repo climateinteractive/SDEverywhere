@@ -1,18 +1,17 @@
-import * as R from 'ramda'
-let toposort = require('./toposort')
-import VariableReader from './VariableReader'
-import EquationReader from './EquationReader'
-import Variable from './Variable'
-import * as Model from './Model'
-import { isIndex, dimensionNames, allDimensions, indexNames } from './Subscript'
-import { printEqn, vsort, printVar, listVars, list, vlog } from './Helpers'
+const R = require('ramda')
+const toposort = require('./toposort')
+const VariableReader = require('./VariableReader')
+const Variable = require('./Variable')
+const Model = require('./Model')
+const { isIndex, dimensionNames, allDimensions, indexNames, subscriptFamilies } = require('./Subscript')
+const { printEqn, vsort, listVars, list, strlist, vlog } = require('./Helpers')
 
-export let variables = []
+let variables = []
 let nonAtoANames = Object.create(null)
 // Set true for diagnostic printing of init, aux, and level vars in sorted order.
 const PRINT_SORTED_VARS = false
 
-export function read(tree) {
+function read(tree) {
   // Read all variables in the model parse tree.
   // This populates the variables table with basic information for each variable
   // such as the var name and subscripts.
@@ -24,7 +23,7 @@ export function read(tree) {
   v.varName = '_time'
   addVariable(v)
 }
-export function analyze() {
+function analyze() {
   // Analyze the RHS of each equation in stages after all the variables are read.
   // Find non-apply-to-all vars that are defined with more than one equation.
   findNonAtoAVars()
@@ -76,6 +75,7 @@ function setRefIds() {
 function readEquations() {
   // Augment variables with information from their equations.
   // This requires a refId for each var so that actual refIds can be resolved for the reference list.
+  const EquationReader = require('./EquationReader')
   R.forEach(v => {
     let equationReader = new EquationReader(v)
     equationReader.read()
@@ -84,7 +84,7 @@ function readEquations() {
 function removeConstRefs() {
   // Remove references to const vars since they do not affect evaluation order.
   function refIsConst(refId) {
-    let v = Model.varWithRefId(refId)
+    let v = varWithRefId(refId)
     return v && v.varType === 'const'
   }
   R.forEach(v => {
@@ -92,45 +92,70 @@ function removeConstRefs() {
     v.initReferences = R.reject(refIsConst, v.initReferences)
   }, variables)
 }
+function printVar(v) {
+  let nonAtoA = isNonAtoAName(v.varName) ? ' (non-apply-to-all)' : ''
+  console.log(`${v.modelLHS}: ${v.varType}${nonAtoA}`)
+  if (!v.hasPoints()) {
+    console.log(`= ${v.modelFormula}`)
+  }
+  console.log(`refId(${v.refId})`)
+  if (v.hasSubscripts()) {
+    console.log(`families(${strlist(subscriptFamilies(v.subscripts))})`)
+    console.log(`subscripts(${strlist(v.subscripts)})`)
+  }
+  if (v.separationDim) {
+    console.log(`separationDim(${v.separationDim})`)
+  }
+  if (v.references.length > 0) {
+    console.log(`refs(${strlist(v.references)})`)
+  }
+  if (v.initReferences.length > 0) {
+    console.log(`initRefs(${strlist(v.initReferences)})`)
+  }
+  // if (v.hasPoints()) {
+  //   console.log(R.map(p => `(${p[0]}, ${p[1]})`, v.points));
+  // }
+  console.log()
+}
 //
 // Model API
 //
-export function addVariable(v) {
+function addVariable(v) {
   // Add the variable to the variables list.
   variables.push(v)
 }
-export function isNonAtoAName(varName) {
+function isNonAtoAName(varName) {
   return R.has(varName, nonAtoANames)
 }
-export function expansionFlags(varName) {
+function expansionFlags(varName) {
   return nonAtoANames[varName]
 }
-export function allVars() {
+function allVars() {
   // Return all vars except placeholders.
   function isNotPlaceholderVar(v) {
     return v.varName !== '_time'
   }
   return R.filter(isNotPlaceholderVar, variables)
 }
-export function constVars() {
+function constVars() {
   return vsort(varsOfType('const'))
 }
-export function lookupVars() {
+function lookupVars() {
   return vsort(varsOfType('lookup'))
 }
-export function auxVars() {
+function auxVars() {
   // console.error('AUX VARS');
   return sortVarsOfType('aux')
 }
-export function levelVars() {
+function levelVars() {
   // console.error('LEVEL VARS');
   return sortVarsOfType('level')
 }
-export function initVars() {
+function initVars() {
   // console.error('INIT VARS');
   return sortInitVars()
 }
-export function varWithRefId(refId) {
+function varWithRefId(refId) {
   // Find a variable from a reference id.
   // A direct reference will find scalar vars, apply-to-all arrays, and non-apply-to-all array
   // elements defined by individual index.
@@ -167,18 +192,18 @@ export function varWithRefId(refId) {
   }
   return refVar
 }
-export function varWithName(varName) {
+function varWithName(varName) {
   // Find a variable with the given name in canonical form.
   // The function returns the first instance of a non-apply-to-all variable with the name.
   let v = R.find(R.propEq('varName', varName), variables)
   return v
 }
-export function varsWithName(varName) {
+function varsWithName(varName) {
   // Find all variables with the given name in canonical form.
   let vars = R.filter(R.propEq('varName', varName), variables)
   return vars
 }
-export function varNames() {
+function varNames() {
   // Return a sorted list of var names.
   return R.uniq(R.map(v => v.varName, variables)).sort()
 }
@@ -307,7 +332,7 @@ function sortInitVars() {
 //
 // Helpers for refIds
 //
-export function refIdForVar(v) {
+function refIdForVar(v) {
   // Start a reference id using the variable name.
   let refId = v.varName
   // References to apply-to-all arrays reference the entire array, so no subscripts
@@ -347,13 +372,13 @@ function joinRefId(refIdParts) {
 //
 // Helpers for model analysis
 //
-export function printVarList() {
+function printVarList() {
   // Print full information on each var.
   R.forEach(v => printVar(v), variables)
   // Print the var name only.
   // R.forEach(v => console.log(v.modelLHS), variables);
 }
-export function printRefIdTest() {
+function printRefIdTest() {
   // Verify that each variable has the correct number of instances of the var name.
   R.forEach(v => {
     let varName = v.varName
@@ -390,4 +415,26 @@ export function printRefIdTest() {
       vlog('ERROR: no var for refId', refId)
     }
   }
+}
+
+module.exports = {
+  variables,
+  read,
+  analyze,
+  addVariable,
+  isNonAtoAName,
+  expansionFlags,
+  allVars,
+  constVars,
+  lookupVars,
+  auxVars,
+  levelVars,
+  initVars,
+  varWithRefId,
+  varWithName,
+  varsWithName,
+  varNames,
+  refIdForVar,
+  printVarList,
+  printRefIdTest
 }

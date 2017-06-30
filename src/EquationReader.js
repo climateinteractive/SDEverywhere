@@ -1,13 +1,13 @@
-let antlr4 = require('antlr4/index')
-let ModelLexer = require('./ModelLexer').ModelLexer
-let ModelParser = require('./ModelParser').ModelParser
-import * as R from 'ramda'
-import * as Model from './Model'
-import Variable from './Variable'
-import ModelReader from './ModelReader'
-import VariableReader from './VariableReader'
-import VarNameReader from './VarNameReader'
-import {
+const antlr4 = require('antlr4/index')
+const ModelLexer = require('./ModelLexer').ModelLexer
+const ModelParser = require('./ModelParser').ModelParser
+const R = require('ramda')
+const Model = require('./Model')
+const Variable = require('./Variable')
+const ModelReader = require('./ModelReader')
+const VariableReader = require('./VariableReader')
+const VarNameReader = require('./VarNameReader')
+const {
   sub,
   normalizeSubscripts,
   indexNamesForSubscript,
@@ -15,8 +15,8 @@ import {
   hasMapping,
   mapIndex,
   separatedVariableIndex
-} from './Subscript'
-import {
+} = require('./Subscript')
+const {
   canonicalName,
   cFunctionName,
   list,
@@ -25,15 +25,14 @@ import {
   newAuxVarName,
   vlog,
   listVar,
-  printVar,
   isSmoothFunction,
   isDelayFunction
-} from './Helpers'
+} = require('./Helpers')
 
 // Set this true to get a list of functions used in the model. This may include lookups.
 const PRINT_FUNCTION_NAMES = false
 
-export default class EquationReader extends ModelReader {
+module.exports = class EquationReader extends ModelReader {
   constructor(variable) {
     super()
     // variable that will be read

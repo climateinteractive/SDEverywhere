@@ -1,6 +1,6 @@
 {
   "name": "grammar",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Grammar tools for SDEverywhere",
   "main": "sdetree.js",
   "scripts": {},

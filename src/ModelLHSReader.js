@@ -1,16 +1,16 @@
-let antlr4 = require('antlr4/index')
-let ModelLexer = require('./ModelLexer').ModelLexer
-let ModelParser = require('./ModelParser').ModelParser
-import ModelReader from './ModelReader'
-import * as R from 'ramda'
-import { sub, isIndex, isDimension } from './Subscript'
-import { canonicalName, list, subscripts, listConcat } from './Helpers'
+const antlr4 = require('antlr4/index')
+const R = require('ramda')
+const ModelLexer = require('./ModelLexer').ModelLexer
+const ModelParser = require('./ModelParser').ModelParser
+const ModelReader = require('./ModelReader')
+const { sub, isIndex, isDimension } = require('./Subscript')
+const { canonicalName, list, subscripts, listConcat } = require('./Helpers')
 
 //
 // ModelLHSReader parses the LHS of a var in Vensim format and
 // constructs a list of var names with indices for subscripted vars.
 //
-export default class ModelLHSReader extends ModelReader {
+module.exports = class ModelLHSReader extends ModelReader {
   constructor() {
     super()
     this.varName = ''

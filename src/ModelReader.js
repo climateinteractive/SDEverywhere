@@ -1,8 +1,8 @@
-let antlr4 = require('antlr4/index')
-import * as R from 'ramda'
-let ModelVisitor = require('./ModelVisitor').ModelVisitor
+const antlr4 = require('antlr4/index')
+const R = require('ramda')
+const ModelVisitor = require('./ModelVisitor').ModelVisitor
 
-export default class ModelReader extends ModelVisitor {
+module.exports = class ModelReader extends ModelVisitor {
   constructor() {
     super()
     // stack of function names and argument indices

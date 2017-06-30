@@ -1,11 +1,11 @@
-import * as R from 'ramda'
-import { canonicalName, asort, vlog } from './Helpers'
+const R = require('ramda')
+const { canonicalName, asort, vlog } = require('./Helpers')
 
 // The Subscript module maintains a subscript map with the canonical
 // subscript name as the key and a subscript object as the value.
 let subscripts = new Map()
 
-export function Subscript(modelName, modelValue = null, modelFamily = null, modelMappings = null) {
+function Subscript(modelName, modelValue = null, modelFamily = null, modelMappings = null) {
   let name = canonicalName(modelName)
   if (modelValue === null) {
     // Look up a subscript by its model name.
@@ -47,20 +47,20 @@ export function Subscript(modelName, modelValue = null, modelFamily = null, mode
   subscripts.set(name, subscript)
   return subscript
 }
-export function sub(name) {
+function sub(name) {
   // Look up a subscript by its canonical name.
   // Return undefined if the name is not a subscript name.
   return subscripts.get(name)
 }
-export function isIndex(name) {
+function isIndex(name) {
   let s = sub(name)
   return s && typeof s.value === 'number'
 }
-export function isDimension(name) {
+function isDimension(name) {
   let s = sub(name)
   return s && Array.isArray(s.value)
 }
-export function addMapping(fromSubscript, toSubscript, value) {
+function addMapping(fromSubscript, toSubscript, value) {
   let subFrom = sub(fromSubscript)
   let subTo = sub(toSubscript)
   if (subFrom === undefined) {
@@ -71,7 +71,7 @@ export function addMapping(fromSubscript, toSubscript, value) {
   }
   subFrom.mappings[toSubscript] = value
 }
-export function hasMapping(fromSubscript, toSubscript) {
+function hasMapping(fromSubscript, toSubscript) {
   let result = false
   let subFrom = sub(fromSubscript)
   let subTo = sub(toSubscript)
@@ -86,7 +86,7 @@ export function hasMapping(fromSubscript, toSubscript) {
   }
   return false
 }
-export function mapIndex(fromSubName, fromIndexName, toSubName) {
+function mapIndex(fromSubName, fromIndexName, toSubName) {
   // Return the index name that the fromSubName dimension maps from fromIndexName
   // to the toSubName dimension. Return undefined if there is no such mapping.
   let toIndexName
@@ -106,7 +106,7 @@ export function mapIndex(fromSubName, fromIndexName, toSubName) {
   }
   return toIndexName
 }
-export function loadSubscripts(subscriptsArray) {
+function loadSubscripts(subscriptsArray) {
   // Load subscripts from an array of the form:
   // [
   //   // DimA: A1, A2, A3
@@ -127,13 +127,13 @@ export function loadSubscripts(subscriptsArray) {
   // ]
   R.forEach(s => Subscript(s.name, s.value, s.family, s.mappings), subscriptsArray)
 }
-export function printSubscripts() {
+function printSubscripts() {
   console.error(subscripts)
 }
-export function printSubscript(subName) {
+function printSubscript(subName) {
   console.error(sub(subName))
 }
-export function normalizeSubscripts(subscripts) {
+function normalizeSubscripts(subscripts) {
   // Sort a list of subscript names already in canonical form according to the subscript family.
   let subs = R.map(name => sub(name), subscripts)
   subs = R.sortBy(R.prop('family'), subs)
@@ -145,24 +145,24 @@ export function normalizeSubscripts(subscripts) {
   }
   return normalizedSubs
 }
-export function subscriptFamilies(subscripts) {
+function subscriptFamilies(subscripts) {
   // Return a list of the subscript families for each subscript.
   return R.map(name => sub(name).family, subscripts)
 }
-export function subscriptFamily(subscriptName) {
+function subscriptFamily(subscriptName) {
   // Return the subscript family object for the subscript name.
   let family = sub(subscriptName).family
   return sub(family)
 }
-export function allSubscripts() {
+function allSubscripts() {
   // Return an array of all subscript objects.
   return [...subscripts.values()]
 }
-export function allDimensions() {
+function allDimensions() {
   // Return an array of all dimension subscript objects.
   return R.filter(subscript => Array.isArray(subscript.value), allSubscripts())
 }
-export function allMappings() {
+function allMappings() {
   // Return an array of all subscript mappings as objects.
   let mappings = []
   R.forEach(subscript => {
@@ -172,7 +172,7 @@ export function allMappings() {
   }, allSubscripts())
   return mappings
 }
-export function indexNamesForSubscript(subscript) {
+function indexNamesForSubscript(subscript) {
   // Return a list of index names for a subscript in canonical form.
   if (isIndex(subscript)) {
     // The subscript is an index, so just return it.
@@ -188,7 +188,7 @@ export function indexNamesForSubscript(subscript) {
     return dim.value
   }
 }
-export function separatedVariableIndex(rhsSub, variable) {
+function separatedVariableIndex(rhsSub, variable) {
   // If a RHS subscript matches the variable's separation dimension, return the index name corresponding to the LHS.
   let separatedIndexName
   let sepDim = variable.separationDim
@@ -219,6 +219,29 @@ export function separatedVariableIndex(rhsSub, variable) {
   return separatedIndexName
 }
 // Function to filter canonical dimension names from a list of names
-export let dimensionNames = R.pipe(R.filter(subscript => isDimension(subscript)), asort)
+let dimensionNames = R.pipe(R.filter(subscript => isDimension(subscript)), asort)
 // Function to filter canonical index names from a list of names
-export let indexNames = R.pipe(R.filter(subscript => isIndex(subscript)), asort)
+let indexNames = R.pipe(R.filter(subscript => isIndex(subscript)), asort)
+
+module.exports = {
+  Subscript,
+  sub,
+  isIndex,
+  isDimension,
+  addMapping,
+  hasMapping,
+  mapIndex,
+  loadSubscripts,
+  printSubscripts,
+  printSubscript,
+  normalizeSubscripts,
+  subscriptFamilies,
+  subscriptFamily,
+  allSubscripts,
+  allDimensions,
+  allMappings,
+  indexNamesForSubscript,
+  separatedVariableIndex,
+  dimensionNames,
+  indexNames
+}

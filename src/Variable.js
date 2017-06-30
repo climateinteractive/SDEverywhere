@@ -1,7 +1,7 @@
-import * as R from 'ramda'
-import { list, subscripts } from './Helpers'
+const R = require('ramda')
+const { list, subscripts } = require('./Helpers')
 
-export default class Variable {
+module.exports = class Variable {
   constructor(eqnCtx) {
     // The equation rule context allows us to generate code by visiting the parse tree.
     this.eqnCtx = eqnCtx
