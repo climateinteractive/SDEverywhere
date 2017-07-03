@@ -3,8 +3,9 @@ const path = require('path')
 const R = require('ramda')
 const F = require('./futil')
 
-function preprocessModel(mdlFilename, spec, writeRemovals = false) {
-  function firstLine(s) {
+let preprocessModel = (mdlFilename, spec, writeRemovals = false) => {
+  // Get the first line of an equation.
+  let firstLine = (s) => {
     let i = s.indexOf('\n')
     if (i < 0) {
       return s.trim()
@@ -12,11 +13,13 @@ function preprocessModel(mdlFilename, spec, writeRemovals = false) {
       return s.slice(0, i).trim()
     }
   }
-  function emit(s) {
+  // Emit an equation to the model output channel.
+  let emit = (s) => {
     F.emitLine(s, 'pp')
     F.emit('\t|\n\n', 'pp')
   }
-  function emitRemoval(s) {
+  // Emit an equation to the removals channel.
+  let emitRemoval = (s) => {
     F.emitLine(s, 'rm')
     F.emit('\t|\n\n', 'rm')
   }
@@ -26,7 +29,6 @@ function preprocessModel(mdlFilename, spec, writeRemovals = false) {
   F.open('pp')
   // Read the model file and remove the sketch information at the end.
   let mdl = fs.readFileSync(mdlFilename, 'utf8')
-  // Trim the sketch section.
   let iEnd = mdl.indexOf('\\\\\\---/// Sketch')
   mdl = mdl.slice(0, iEnd)
 
@@ -53,6 +55,7 @@ function preprocessModel(mdlFilename, spec, writeRemovals = false) {
   let eqns = R.map(eqn => eqn.trim(), mdl.split('|'))
   // Remove some equations into the removals channel.
   R.forEach(eqn => {
+    // The syntax of the equation's first line determines what kind it is.
     let s = firstLine(eqn)
     if (R.contains('********************************************************', s)) {
       // Skip groups
@@ -61,12 +64,8 @@ function preprocessModel(mdlFilename, spec, writeRemovals = false) {
     } else if (s.endsWith(':')) {
       // Subscript range definition
       emitRemoval(eqn)
-      // } else if (R.contains(':SUPPLEMENTARY', eqn)) {
-      //   emitRemoval(eqn)
-    } else if (R.contains('SAMPLE UNTIL', eqn)) {
-      emitRemoval(eqn)
-    } else if (R.contains('RAMP FROM TO', eqn)) {
-      emitRemoval(eqn)
+    // } else if (R.contains(':SUPPLEMENTARY', eqn)) {
+    //   emitRemoval(eqn)
     } else if (!R.isEmpty(eqn)) {
       emit(eqn)
     }
