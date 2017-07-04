@@ -61,34 +61,10 @@ let preprocessModel = (mdlFilename, spec, writeRemovals = false) => {
       // Skip groups
     } else if (R.contains('TABBED ARRAY', s)) {
       emitRemoval(eqn)
-    } else if (s.endsWith(':')) {
-      // Subscript range definition
-      emitRemoval(eqn)
-    // } else if (R.contains(':SUPPLEMENTARY', eqn)) {
-    //   emitRemoval(eqn)
     } else if (!R.isEmpty(eqn)) {
       emit(eqn)
     }
   }, eqns)
-  mdl = F.getBuf('pp')
-  F.clearBuf('pp')
-
-  // Join lines continued with trailing backslash characters.
-  let backslash = /\\\s*$/
-  let prevLine = ''
-  R.forEach(line => {
-    if (!R.isEmpty(prevLine)) {
-      line = prevLine + line.trim()
-      prevLine = ''
-    }
-    let m = line.match(backslash)
-    if (m) {
-      prevLine = line.substr(0, m.index)
-    }
-    if (R.isEmpty(prevLine)) {
-      F.emitLine(line, 'pp')
-    }
-  }, mdl.split(/\r?\n/))
 
   // Write removals to a file in the model directory.
   if (writeRemovals) {

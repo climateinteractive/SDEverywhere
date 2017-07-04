@@ -6,7 +6,7 @@ var ModelVisitor = require('./ModelVisitor').ModelVisitor;
 var grammarFileName = "Model.g4";
 
 var serializedATN = ["\u0003\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964",
-    "\u0003!\u00ac\u0004\u0002\t\u0002\u0004\u0003\t\u0003\u0004\u0004\t",
+    "\u0003\"\u00ac\u0004\u0002\t\u0002\u0004\u0003\t\u0003\u0004\u0004\t",
     "\u0004\u0004\u0005\t\u0005\u0004\u0006\t\u0006\u0004\u0007\t\u0007\u0004",
     "\b\t\b\u0004\t\t\t\u0004\n\t\n\u0004\u000b\t\u000b\u0004\f\t\f\u0004",
     "\r\t\r\u0003\u0002\u0003\u0002\u0006\u0002\u001d\n\u0002\r\u0002\u000e",
@@ -33,8 +33,8 @@ var serializedATN = ["\u0003\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964",
     "\f\u0003\f\u0003\f\u0007\f\u00a1\n\f\f\f\u000e\f\u00a4\u000b\f\u0003",
     "\r\u0003\r\u0003\r\u0003\r\u0003\r\u0003\r\u0003\r\u0002\u0003\f\u000e",
     "\u0002\u0004\u0006\b\n\f\u000e\u0010\u0012\u0014\u0016\u0018\u0002\u0007",
-    "\u0004\u0002\u0004\u0004\u0019\u001a\u0003\u0002\u0011\u0012\u0003\u0002",
-    "\u0013\u0014\u0003\u0002\u0015\u0018\u0004\u0002\u0019\u0019\u001b\u001b",
+    "\u0004\u0002\u0004\u0004\u001a\u001b\u0003\u0002\u0012\u0013\u0003\u0002",
+    "\u0014\u0015\u0003\u0002\u0016\u0019\u0004\u0002\u001a\u001a\u001c\u001c",
     "\u0002\u00bd\u0002\u001c\u0003\u0002\u0002\u0002\u0004 \u0003\u0002",
     "\u0002\u0002\u0006,\u0003\u0002\u0002\u0002\b.\u0003\u0002\u0002\u0002",
     "\n5\u0003\u0002\u0002\u0002\fc\u0003\u0002\u0002\u0002\u000e\u007f\u0003",
@@ -44,32 +44,32 @@ var serializedATN = ["\u0003\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964",
     "\u0004\u0003\u0002\u001b\u001d\u0005\u0006\u0004\u0002\u001c\u001a\u0003",
     "\u0002\u0002\u0002\u001c\u001b\u0003\u0002\u0002\u0002\u001d\u001e\u0003",
     "\u0002\u0002\u0002\u001e\u001c\u0003\u0002\u0002\u0002\u001e\u001f\u0003",
-    "\u0002\u0002\u0002\u001f\u0003\u0003\u0002\u0002\u0002 !\u0007\u001d",
+    "\u0002\u0002\u0002\u001f\u0003\u0003\u0002\u0002\u0002 !\u0007\u001e",
     "\u0002\u0002!\"\u0007\u0003\u0002\u0002\"#\u0005\u0010\t\u0002#\u0005",
     "\u0003\u0002\u0002\u0002$-\u0005\u0012\n\u0002%&\u0005\b\u0005\u0002",
     "&)\t\u0002\u0002\u0002\'*\u0005\f\u0007\u0002(*\u0005\n\u0006\u0002",
     ")\'\u0003\u0002\u0002\u0002)(\u0003\u0002\u0002\u0002*-\u0003\u0002",
     "\u0002\u0002+-\u0005\b\u0005\u0002,$\u0003\u0002\u0002\u0002,%\u0003",
     "\u0002\u0002\u0002,+\u0003\u0002\u0002\u0002-\u0007\u0003\u0002\u0002",
-    "\u0002.3\u0007\u001d\u0002\u0002/0\u0007\u0005\u0002\u000201\u0005\u0010",
+    "\u0002.3\u0007\u001e\u0002\u0002/0\u0007\u0005\u0002\u000201\u0005\u0010",
     "\t\u000212\u0007\u0006\u0002\u000224\u0003\u0002\u0002\u00023/\u0003",
     "\u0002\u0002\u000234\u0003\u0002\u0002\u00024\t\u0003\u0002\u0002\u0002",
     "5:\u0005\f\u0007\u000267\u0007\u0007\u0002\u000279\u0005\f\u0007\u0002",
     "86\u0003\u0002\u0002\u00029<\u0003\u0002\u0002\u0002:8\u0003\u0002\u0002",
     "\u0002:;\u0003\u0002\u0002\u0002;\u000b\u0003\u0002\u0002\u0002<:\u0003",
-    "\u0002\u0002\u0002=>\b\u0007\u0001\u0002>?\u0007\u001d\u0002\u0002?",
+    "\u0002\u0002\u0002=>\b\u0007\u0001\u0002>?\u0007\u001e\u0002\u0002?",
     "A\u0007\b\u0002\u0002@B\u0005\u000e\b\u0002A@\u0003\u0002\u0002\u0002",
     "AB\u0003\u0002\u0002\u0002BC\u0003\u0002\u0002\u0002Cd\u0007\t\u0002",
-    "\u0002DI\u0007\u001d\u0002\u0002EF\u0007\u0005\u0002\u0002FG\u0005\u0010",
+    "\u0002DI\u0007\u001e\u0002\u0002EF\u0007\u0005\u0002\u0002FG\u0005\u0010",
     "\t\u0002GH\u0007\u0006\u0002\u0002HJ\u0003\u0002\u0002\u0002IE\u0003",
     "\u0002\u0002\u0002IJ\u0003\u0002\u0002\u0002JK\u0003\u0002\u0002\u0002",
     "KL\u0007\b\u0002\u0002LM\u0005\f\u0007\u0002MN\u0007\t\u0002\u0002N",
     "d\u0003\u0002\u0002\u0002OP\u0007\n\u0002\u0002Pd\u0005\f\u0007\u0011",
-    "QR\u0007\u0014\u0002\u0002Rd\u0005\f\u0007\u0010ST\u0007\u0013\u0002",
-    "\u0002Td\u0005\f\u0007\u000fUZ\u0007\u001d\u0002\u0002VW\u0007\u0005",
+    "QR\u0007\u0015\u0002\u0002Rd\u0005\f\u0007\u0010ST\u0007\u0014\u0002",
+    "\u0002Td\u0005\f\u0007\u000fUZ\u0007\u001e\u0002\u0002VW\u0007\u0005",
     "\u0002\u0002WX\u0005\u0010\t\u0002XY\u0007\u0006\u0002\u0002Y[\u0003",
     "\u0002\u0002\u0002ZV\u0003\u0002\u0002\u0002Z[\u0003\u0002\u0002\u0002",
-    "[d\u0003\u0002\u0002\u0002\\d\u0007\u001e\u0002\u0002]d\u0007 \u0002",
+    "[d\u0003\u0002\u0002\u0002\\d\u0007\u001f\u0002\u0002]d\u0007!\u0002",
     "\u0002^d\u0005\u0012\n\u0002_`\u0007\b\u0002\u0002`a\u0005\f\u0007\u0002",
     "ab\u0007\t\u0002\u0002bd\u0003\u0002\u0002\u0002c=\u0003\u0002\u0002",
     "\u0002cD\u0003\u0002\u0002\u0002cO\u0003\u0002\u0002\u0002cQ\u0003\u0002",
@@ -91,8 +91,8 @@ var serializedATN = ["\u0003\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964",
     "\u0003\u0002\u0002\u0002\u0083\u0086\u0003\u0002\u0002\u0002\u0084\u0082",
     "\u0003\u0002\u0002\u0002\u0084\u0085\u0003\u0002\u0002\u0002\u0085\u000f",
     "\u0003\u0002\u0002\u0002\u0086\u0084\u0003\u0002\u0002\u0002\u0087\u008c",
-    "\u0007\u001d\u0002\u0002\u0088\u0089\u0007\u0007\u0002\u0002\u0089\u008b",
-    "\u0007\u001d\u0002\u0002\u008a\u0088\u0003\u0002\u0002\u0002\u008b\u008e",
+    "\u0007\u001e\u0002\u0002\u0088\u0089\u0007\u0007\u0002\u0002\u0089\u008b",
+    "\u0007\u001e\u0002\u0002\u008a\u0088\u0003\u0002\u0002\u0002\u008b\u008e",
     "\u0003\u0002\u0002\u0002\u008c\u008a\u0003\u0002\u0002\u0002\u008c\u008d",
     "\u0003\u0002\u0002\u0002\u008d\u0011\u0003\u0002\u0002\u0002\u008e\u008c",
     "\u0003\u0002\u0002\u0002\u008f\u0091\u0007\b\u0002\u0002\u0090\u0092",
@@ -100,7 +100,7 @@ var serializedATN = ["\u0003\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964",
     "\u0003\u0002\u0002\u0002\u0092\u0093\u0003\u0002\u0002\u0002\u0093\u0094",
     "\u0005\u0016\f\u0002\u0094\u0095\u0007\t\u0002\u0002\u0095\u0013\u0003",
     "\u0002\u0002\u0002\u0096\u0097\u0007\u0005\u0002\u0002\u0097\u0098\u0005",
-    "\u0018\r\u0002\u0098\u0099\u0007\u0014\u0002\u0002\u0099\u009a\u0005",
+    "\u0018\r\u0002\u0098\u0099\u0007\u0015\u0002\u0002\u0099\u009a\u0005",
     "\u0018\r\u0002\u009a\u009b\u0007\u0006\u0002\u0002\u009b\u009c\u0007",
     "\u0007\u0002\u0002\u009c\u0015\u0003\u0002\u0002\u0002\u009d\u00a2\u0005",
     "\u0018\r\u0002\u009e\u009f\u0007\u0007\u0002\u0002\u009f\u00a1\u0005",
@@ -120,14 +120,14 @@ var decisionsToDFA = atn.decisionToState.map( function(ds, index) { return new a
 var sharedContextCache = new antlr4.PredictionContextCache();
 
 var literalNames = [ null, "':'", "':='", "'['", "']'", "','", "'('", "')'", 
-                     "':NOT:'", "'^'", "':AND:'", "':OR:'", null, null, 
-                     null, "'*'", "'/'", "'+'", "'-'", "'<'", "'<='", "'>'", 
-                     "'>='", "'='", "'=='", "'<>'", "'!'", null, null, null, 
-                     "':NA:'" ];
+                     "':NOT:'", "'^'", "':AND:'", "':OR:'", null, "'\\'", 
+                     null, null, "'*'", "'/'", "'+'", "'-'", "'<'", "'<='", 
+                     "'>'", "'>='", "'='", "'=='", "'<>'", "'!'", null, 
+                     null, null, "':NA:'" ];
 
 var symbolicNames = [ null, null, null, null, null, null, null, null, null, 
-                      null, null, null, "Encoding", "UnitsDoc", "Group", 
-                      "Star", "Div", "Plus", "Minus", "Less", "LessEqual", 
+                      null, null, null, "Encoding", "Continuation", "UnitsDoc", 
+                      "Group", "Star", "Div", "Plus", "Minus", "Less", "LessEqual", 
                       "Greater", "GreaterEqual", "Equal", "TwoEqual", "NotEqual", 
                       "Exclamation", "Id", "Const", "StringLiteral", "Keyword", 
                       "Whitespace" ];
@@ -167,25 +167,26 @@ ModelParser.T__8 = 9;
 ModelParser.T__9 = 10;
 ModelParser.T__10 = 11;
 ModelParser.Encoding = 12;
-ModelParser.UnitsDoc = 13;
-ModelParser.Group = 14;
-ModelParser.Star = 15;
-ModelParser.Div = 16;
-ModelParser.Plus = 17;
-ModelParser.Minus = 18;
-ModelParser.Less = 19;
-ModelParser.LessEqual = 20;
-ModelParser.Greater = 21;
-ModelParser.GreaterEqual = 22;
-ModelParser.Equal = 23;
-ModelParser.TwoEqual = 24;
-ModelParser.NotEqual = 25;
-ModelParser.Exclamation = 26;
-ModelParser.Id = 27;
-ModelParser.Const = 28;
-ModelParser.StringLiteral = 29;
-ModelParser.Keyword = 30;
-ModelParser.Whitespace = 31;
+ModelParser.Continuation = 13;
+ModelParser.UnitsDoc = 14;
+ModelParser.Group = 15;
+ModelParser.Star = 16;
+ModelParser.Div = 17;
+ModelParser.Plus = 18;
+ModelParser.Minus = 19;
+ModelParser.Less = 20;
+ModelParser.LessEqual = 21;
+ModelParser.Greater = 22;
+ModelParser.GreaterEqual = 23;
+ModelParser.Equal = 24;
+ModelParser.TwoEqual = 25;
+ModelParser.NotEqual = 26;
+ModelParser.Exclamation = 27;
+ModelParser.Id = 28;
+ModelParser.Const = 29;
+ModelParser.StringLiteral = 30;
+ModelParser.Keyword = 31;
+ModelParser.Whitespace = 32;
 
 ModelParser.RULE_model = 0;
 ModelParser.RULE_subscriptRange = 1;

@@ -21,5 +21,6 @@ constList : expr ( ',' expr )* ;
 // The character encoding is given at the start of a Vensim file.
 // The units and documentation sections and group markings are skipped for now.
 Encoding : '{' [A-Za-z0-9-]+ '}' -> skip ;
+Continuation : '\\' -> skip ;
 UnitsDoc : '~' .*? '|' -> skip ;
 Group : '****' .*? '|' -> skip ;
