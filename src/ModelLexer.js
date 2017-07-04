@@ -88,7 +88,7 @@ var serializedATN = ["\u0003\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964",
     "\u0002\u0002\u0002U\u011d\u0003\u0002\u0002\u0002W\u0123\u0003\u0002",
     "\u0002\u0002YZ\u0007<\u0002\u0002Z[\u0007?\u0002\u0002[\u0004\u0003",
     "\u0002\u0002\u0002\\]\u0007]\u0002\u0002]\u0006\u0003\u0002\u0002\u0002",
-    "^_\u0007.\u0002\u0002_\b\u0003\u0002\u0002\u0002`a\u0007_\u0002\u0002",
+    "^_\u0007_\u0002\u0002_\b\u0003\u0002\u0002\u0002`a\u0007.\u0002\u0002",
     "a\n\u0003\u0002\u0002\u0002bc\u0007*\u0002\u0002c\f\u0003\u0002\u0002",
     "\u0002de\u0007+\u0002\u0002e\u000e\u0003\u0002\u0002\u0002fg\u0007<",
     "\u0002\u0002gh\u0007P\u0002\u0002hi\u0007Q\u0002\u0002ij\u0007V\u0002",
@@ -245,7 +245,7 @@ ModelLexer.prototype.channelNames = [ "DEFAULT_TOKEN_CHANNEL", "HIDDEN" ];
 
 ModelLexer.prototype.modeNames = [ "DEFAULT_MODE" ];
 
-ModelLexer.prototype.literalNames = [ null, "':='", "'['", "','", "']'", 
+ModelLexer.prototype.literalNames = [ null, "':='", "'['", "']'", "','", 
                                       "'('", "')'", "':NOT:'", "'^'", "':AND:'", 
                                       "':OR:'", null, null, null, "'*'", 
                                       "'/'", "'+'", "'-'", "'<'", "'<='", 

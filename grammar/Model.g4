@@ -11,15 +11,14 @@ model: equation+ ;
 // A Vensim lookup is simply a vector or array of data.
 // Typically, the RHS is a formula expression or constant list.
 // The RHS is empty for data equations.
-equation: subscriptRange | lookup | ( lhs ( (':='|'=='|'=') (expr | constList) ) ) | lhs ;
-lhs: Id ( '[' subscriptList ']' )? ;
-subscriptList : Id ( ',' Id )* ;
+equation : subscriptRange | lookup | ( lhs ( (':='|'=='|'=') (expr | constList) ) ) | lhs ;
+lhs : Id ('[' subscriptList ']')? ;
+subscriptRange : Id ':' subscriptList ;
 constList : expr ( ',' expr )* ;
-subscriptRange: Id ':' subscriptList ;
 
 // The lexer strips some tokens we are not interested in.
 // The character encoding is given at the start of a Vensim file.
 // The units and documentation sections and group markings are skipped for now.
-Encoding: '{' [A-Za-z0-9-]+ '}' -> skip ;
-UnitsDoc: '~' .*? '|' -> skip ;
-Group: '****' .*? '|' -> skip ;
+Encoding : '{' [A-Za-z0-9-]+ '}' -> skip ;
+UnitsDoc : '~' .*? '|' -> skip ;
+Group : '****' .*? '|' -> skip ;

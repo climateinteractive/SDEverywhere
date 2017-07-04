@@ -30,12 +30,6 @@ ModelVisitor.prototype.visitLhs = function(ctx) {
 };
 
 
-// Visit a parse tree produced by ModelParser#subscriptList.
-ModelVisitor.prototype.visitSubscriptList = function(ctx) {
-  return this.visitChildren(ctx);
-};
-
-
 // Visit a parse tree produced by ModelParser#constList.
 ModelVisitor.prototype.visitConstList = function(ctx) {
   return this.visitChildren(ctx);
@@ -146,6 +140,12 @@ ModelVisitor.prototype.visitPower = function(ctx) {
 
 // Visit a parse tree produced by ModelParser#exprList.
 ModelVisitor.prototype.visitExprList = function(ctx) {
+  return this.visitChildren(ctx);
+};
+
+
+// Visit a parse tree produced by ModelParser#subscriptList.
+ModelVisitor.prototype.visitSubscriptList = function(ctx) {
   return this.visitChildren(ctx);
 };
 
