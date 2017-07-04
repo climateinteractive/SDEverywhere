@@ -13,6 +13,14 @@ let specialSeparationDims = {
 }
 
 module.exports = class VariableReader extends ModelReader {
+  visitModel(ctx) {
+    let equations = ctx.equation()
+    if (equations) {
+      for (let equation of equations) {
+        equation.accept(this)
+      }
+    }
+  }
   visitEquation(ctx) {
     // Start a new variable and an alternate array of variables for constant lists.
     const { addVariable } = require('./Model')

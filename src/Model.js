@@ -1,6 +1,7 @@
 const R = require('ramda')
 const toposort = require('./toposort')
 const VariableReader = require('./VariableReader')
+const SubscriptRangeReader = require('./SubscriptRangeReader')
 const Variable = require('./Variable')
 const Model = require('./Model')
 const { isIndex, dimensionNames, allDimensions, indexNames, subscriptFamilies } = require('./Subscript')
@@ -11,7 +12,11 @@ let nonAtoANames = Object.create(null)
 // Set true for diagnostic printing of init, aux, and level vars in sorted order.
 const PRINT_SORTED_VARS = false
 
-function read(tree) {
+function readSubscriptRanges(tree) {
+  let subscriptRangeReader = new SubscriptRangeReader()
+  subscriptRangeReader.visitModel(tree)
+}
+function readVariables(tree) {
   // Read all variables in the model parse tree.
   // This populates the variables table with basic information for each variable
   // such as the var name and subscripts.
@@ -419,7 +424,8 @@ function printRefIdTest() {
 
 module.exports = {
   variables,
-  read,
+  readVariables,
+  readSubscriptRanges,
   analyze,
   addVariable,
   isNonAtoAName,

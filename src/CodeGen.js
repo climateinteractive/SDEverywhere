@@ -3,7 +3,7 @@ const VarNameReader = require('./VarNameReader')
 const ModelLHSReader = require('./ModelLHSReader')
 const EquationGen = require('./EquationGen')
 const Model = require('./Model')
-const { sub, loadSubscripts, allDimensions, allMappings, isDimension, subscriptFamilies } = require('./Subscript')
+const { sub, allDimensions, allMappings, isDimension, subscriptFamilies, printSubscripts } = require('./Subscript')
 const { asort, lines, list, strlist, vlog } = require('./Helpers')
 
 let codeGenerator = (parseTree, spec, subscripts, listMode) => {
@@ -16,10 +16,11 @@ let codeGenerator = (parseTree, spec, subscripts, listMode) => {
   let section = R.pipe(generateSection, R.flatten, lines)
 
   function generate() {
-    // Load an array of subscripts defined as objects.
-    loadSubscripts(subscripts)
+    // Subscript ranges must be defined before reading variables that use them.
+    Model.readSubscriptRanges(parseTree)
+    // printSubscripts()
     // Read variables from the model parse tree.
-    Model.read(parseTree)
+    Model.readVariables(parseTree)
     // Analyze model equations to fill in more details about variables.
     Model.analyze()
     // In list mode, print variables to the console instead of generating code.

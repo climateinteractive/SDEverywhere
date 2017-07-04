@@ -28,14 +28,6 @@ module.exports = class ModelReader extends ModelVisitor {
     }
     return argIndex
   }
-  visitModel(ctx) {
-    let equations = ctx.equation()
-    if (equations) {
-      for (let equation of equations) {
-        equation.accept(this)
-      }
-    }
-  }
   visitEquation(ctx) {
     if (ctx) {
       ctx.lhs().accept(this)
