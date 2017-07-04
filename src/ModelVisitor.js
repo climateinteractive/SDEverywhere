@@ -18,6 +18,12 @@ ModelVisitor.prototype.visitModel = function(ctx) {
 };
 
 
+// Visit a parse tree produced by ModelParser#subscriptRange.
+ModelVisitor.prototype.visitSubscriptRange = function(ctx) {
+  return this.visitChildren(ctx);
+};
+
+
 // Visit a parse tree produced by ModelParser#equation.
 ModelVisitor.prototype.visitEquation = function(ctx) {
   return this.visitChildren(ctx);
