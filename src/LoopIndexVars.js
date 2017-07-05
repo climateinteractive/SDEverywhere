@@ -1,4 +1,4 @@
-const { Subscript, sub, isDimension } = require('./Subscript')
+const { sub, isDimension } = require('./Subscript')
 
 module.exports = class LoopIndexVars {
   constructor() {
@@ -38,6 +38,7 @@ module.exports = class LoopIndexVars {
 }
 
 // Test
+// const { Subscript } = require('./Subscript')
 // let loopIndices = new LoopIndexVars();
 // console.error(loopIndices.marked());
 // let s = Subscript('S', ['A1', 'A2', 'A3', 'A4']);

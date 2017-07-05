@@ -1,9 +1,37 @@
+const util = require('util')
 const R = require('ramda')
 const { canonicalName, asort, vlog } = require('./Helpers')
+
+// A subscript is a dimension or an index.
+// Both have the same properties: model name, canonical name, family, values.
+// A family is a dimension that is a reference to the maximal dimension containing an index or subdimension.
+// The family of the maximal dimension is itself.
+// Values are a single number for indices and an array of subscripts for dimensions.
+// A Variable includes a list of families sorted by canonical name ("normal order")
+// and a list of subscripts in normal order.
 
 // The Subscript module maintains a subscript map with the canonical
 // subscript name as the key and a subscript object as the value.
 let subscripts = new Map()
+
+// Subscript API
+//
+// Subscript(modelName)
+//   gets the subscript with the model name
+// Subscript(modelName, modelValue) with modelValue as array
+//   sets a subscript dimension and its indices
+// Subscript(modelName, modelValue, modelFamily, modelMappings)
+// with modelMappings of the form [ { toDim: dimension, value: indexArray } ]
+//   sets a subscript dimension that maps the index elements in indexArray
+//   to the index elements in another dimension
+// Subscript(modelName, modelValue, modelFamily) with modelValue as number
+//   sets a subscript element and its index value in the subscript family
+//
+// Call Subscript with an array of subscript indices to establish a dimension.
+// If there is a mapping to another dimension, give modelMappings in the call.
+// Alternatively, call addMapping afterward.
+// Then call Subscript with each individual subscript index name and its numeric index value.
+// All dimension and index names are in model form, not canonical form.
 
 function Subscript(modelName, modelValue = null, modelFamily = null, modelMappings = null) {
   let name = canonicalName(modelName)
@@ -61,6 +89,8 @@ function isDimension(name) {
   return s && Array.isArray(s.value)
 }
 function addMapping(fromSubscript, toSubscript, value) {
+  // Add all indices in fromSubscript given as an array in value mapping to toSubscript.
+  // All arguments are in canonical form.
   let subFrom = sub(fromSubscript)
   let subTo = sub(toSubscript)
   if (subFrom === undefined) {
@@ -128,7 +158,9 @@ function loadSubscripts(subscriptsArray) {
   R.forEach(s => Subscript(s.name, s.value, s.family, s.mappings), subscriptsArray)
 }
 function printSubscripts() {
-  console.error(subscripts)
+  for (let [k, v] of subscripts) {
+    console.error(`${k}: ${util.inspect(v, { depth: null })}`)
+  }
 }
 function printSubscript(subName) {
   console.error(sub(subName))
@@ -167,7 +199,11 @@ function allMappings() {
   let mappings = []
   R.forEach(subscript => {
     R.forEach(mapTo => {
-      mappings.push({ mapFrom: subscript.name, mapTo: mapTo, value: subscript.mappings[mapTo] })
+      mappings.push({
+        mapFrom: subscript.name,
+        mapTo: mapTo,
+        value: subscript.mappings[mapTo]
+      })
     }, Object.keys(subscript.mappings))
   }, allSubscripts())
   return mappings

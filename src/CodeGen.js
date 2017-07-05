@@ -3,7 +3,7 @@ const VarNameReader = require('./VarNameReader')
 const ModelLHSReader = require('./ModelLHSReader')
 const EquationGen = require('./EquationGen')
 const Model = require('./Model')
-const { sub, allDimensions, allMappings, isDimension, subscriptFamilies, printSubscripts } = require('./Subscript')
+const { sub, allDimensions, allMappings, isDimension, subscriptFamilies, loadSubscripts, printSubscripts } = require('./Subscript')
 const { asort, lines, list, strlist, vlog } = require('./Helpers')
 
 let codeGenerator = (parseTree, spec, subscripts, listMode) => {
@@ -17,6 +17,8 @@ let codeGenerator = (parseTree, spec, subscripts, listMode) => {
 
   function generate() {
     // Subscript ranges must be defined before reading variables that use them.
+    // TODO remove this (and subscript loading in sdegen) once subscripts are fully parseable.
+    // loadSubscripts(subscripts)
     Model.readSubscriptRanges(parseTree)
     // printSubscripts()
     // Read variables from the model parse tree.

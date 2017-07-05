@@ -6,7 +6,7 @@ const { Subscript } = require('./Subscript')
 module.exports = class SubscriptRangeReader extends ModelReader {
   constructor() {
     super()
-    this.subNames = []
+    this.indNames = []
   }
   visitModel(ctx) {
     let subscriptRanges = ctx.subscriptRange()
@@ -18,16 +18,22 @@ module.exports = class SubscriptRangeReader extends ModelReader {
   }
   visitSubscriptRange(ctx) {
     if (ctx) {
-      let family = ctx.Id().getText()
+      let ids = ctx.Id()
+      // Define a dimension and the names of its indices.
+      let dim = ids[0].getText()
+      let toDim = ids.length > 1 ? ids[1].getText() : null
       ctx.subscriptList().accept(this)
-      Subscript(family, this.subNames)
-      for (let i = 0; i < this.subNames.length; i++) {
-        let name = this.subNames[i]
-        Subscript(name, i, family)
+      // Make a mapping to another dimension if it is present.
+      let mappings = toDim ? [{ toDim: toDim, value: this.indNames }] : null
+      Subscript(dim, this.indNames, dim, mappings)
+      // Define indices with their numeric values that belong to the dimension.
+      for (let i = 0; i < this.indNames.length; i++) {
+        let name = this.indNames[i]
+        Subscript(name, i, dim)
       }
     }
   }
   visitSubscriptList(ctx) {
-    this.subNames = R.map(id => id.getText(), ctx.Id())
+    this.indNames = R.map(id => id.getText(), ctx.Id())
   }
 }
