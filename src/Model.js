@@ -4,7 +4,17 @@ const VariableReader = require('./VariableReader')
 const SubscriptRangeReader = require('./SubscriptRangeReader')
 const Variable = require('./Variable')
 const Model = require('./Model')
-const { isIndex, dimensionNames, allDimensions, indexNames, subscriptFamilies } = require('./Subscript')
+const {
+  addIndex,
+  allDimensions,
+  dimensionNames,
+  indexNames,
+  isDimension,
+  isIndex,
+  sub,
+  Subscript,
+  subscriptFamilies
+} = require('./Subscript')
 const { printEqn, vsort, listVars, list, strlist, vlog } = require('./Helpers')
 
 let variables = []
@@ -17,25 +27,40 @@ function readSubscriptRanges(tree) {
   let subscriptRangeReader = new SubscriptRangeReader()
   subscriptRangeReader.visitModel(tree)
   let allDims = allDimensions()
+  debugger
   // Expand subdimensions that appeared in subscript ranges and mappings into indices.
-  
-
+  // Repeat until there are no dimensions in values.
+  let dimFoundInValue
+  do {
+    let dimFoundInValue = false
+    for (let dim of allDims) {
+      let value = R.flatten(R.map(subscript => (isDimension(subscript) ? sub(subscript).value : subscript), dim.value))
+      if (!R.equals(value, dim.value)) {
+        dimFoundInValue = true
+        dim.value = value
+      }
+    }
+  } while (dimFoundInValue)
   // Update the families of subdimensions.
   // At this point, all dimensions have their family set to their own dimension name.
   // List the number of values for each dimension.
   for (let dim of allDims) {
-    // Find an index in the dimension.
-    for (let subscript of dim.value) {
-      if (isIndex(subscript)) {
-        // Find the dimension in this family with the largest number of values.
-        // This is the "maximal" dimension that serves as the subscript family.
-        let maxSize = dim.value.length
-        for (let thisDim of allDims) {
-          if (R.contains(subscript, thisDim.value) && thisDim.value.length > maxSize) {
-            dim.family = thisDim.name
-          }
-        }
-        break
+    // Take the first index in the dimension.
+    let index = dim.value[0]
+    // Find the dimension in this family with the largest number of values.
+    // This is the "maximal" dimension that serves as the subscript family.
+    let maxSize = dim.value.length
+    for (let thisDim of allDims) {
+      if (R.contains(index, thisDim.value) && thisDim.value.length > maxSize) {
+        dim.family = thisDim.name
+      }
+    }
+  }
+  // Define indices in order from the maximal (family) dimension.
+  for (let dim of allDims) {
+    if (dim.family === dim.name) {
+      for (let i = 0; i < dim.value.length; i++) {
+        addIndex(dim.value[i], i, dim.family)
       }
     }
   }

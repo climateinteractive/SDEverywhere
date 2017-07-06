@@ -24,13 +24,10 @@ module.exports = class SubscriptRangeReader extends ModelReader {
       let toDim = ids.length > 1 ? ids[1].getText() : null
       ctx.subscriptList().accept(this)
       // Make a mapping to another dimension if it is present.
+      // TODO fill in the value of the mapping
       let mappings = toDim ? [{ toDim: toDim, value: this.indNames }] : null
+      // The family is temporarily set to be the dimension name.
       Subscript(dim, this.indNames, dim, mappings)
-      // Define indices with their numeric values that belong to the dimension.
-      for (let i = 0; i < this.indNames.length; i++) {
-        let name = this.indNames[i]
-        Subscript(name, i, dim)
-      }
     }
   }
   visitSubscriptList(ctx) {

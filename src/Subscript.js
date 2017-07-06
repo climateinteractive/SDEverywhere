@@ -88,6 +88,17 @@ function isDimension(name) {
   let s = sub(name)
   return s && Array.isArray(s.value)
 }
+function addIndex(name, value, family) {
+  // Add an index with arguments in canonical form.
+  let subscript = {
+    name: name,
+    value: value,
+    size: 1,
+    family: family,
+    mappings: {}
+  }
+  subscripts.set(name, subscript)
+}
 function addMapping(fromSubscript, toSubscript, value) {
   // Add all indices in fromSubscript given as an array in value mapping to toSubscript.
   // All arguments are in canonical form.
@@ -260,6 +271,7 @@ module.exports = {
   // addMapping,
   // subscriptFamily,
   Subscript,
+  addIndex,
   allDimensions,
   allMappings,
   dimensionNames,
