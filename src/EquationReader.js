@@ -12,8 +12,6 @@ const {
   normalizeSubscripts,
   indexNamesForSubscript,
   isIndex,
-  hasMapping,
-  mapIndex,
   separatedVariableIndex
 } = require('./Subscript')
 const {

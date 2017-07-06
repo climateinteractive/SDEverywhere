@@ -162,9 +162,6 @@ function printSubscripts() {
     console.error(`${k}: ${util.inspect(v, { depth: null })}`)
   }
 }
-function printSubscript(subName) {
-  console.error(sub(subName))
-}
 function normalizeSubscripts(subscripts) {
   // Sort a list of subscript names already in canonical form according to the subscript family.
   let subs = R.map(name => sub(name), subscripts)
@@ -179,7 +176,7 @@ function normalizeSubscripts(subscripts) {
 }
 function subscriptFamilies(subscripts) {
   // Return a list of the subscript families for each subscript.
-  return R.map(name => sub(name).family, subscripts)
+  return R.map(subscriptName => sub(subscriptName).family, subscripts)
 }
 function subscriptFamily(subscriptName) {
   // Return the subscript family object for the subscript name.
@@ -260,24 +257,21 @@ let dimensionNames = R.pipe(R.filter(subscript => isDimension(subscript)), asort
 let indexNames = R.pipe(R.filter(subscript => isIndex(subscript)), asort)
 
 module.exports = {
+  // addMapping,
+  // subscriptFamily,
   Subscript,
-  sub,
-  isIndex,
-  isDimension,
-  addMapping,
-  hasMapping,
-  mapIndex,
-  loadSubscripts,
-  printSubscripts,
-  printSubscript,
-  normalizeSubscripts,
-  subscriptFamilies,
-  subscriptFamily,
-  allSubscripts,
   allDimensions,
   allMappings,
-  indexNamesForSubscript,
-  separatedVariableIndex,
   dimensionNames,
-  indexNames
+  hasMapping,
+  indexNames,
+  indexNamesForSubscript,
+  isDimension,
+  isIndex,
+  loadSubscripts,
+  normalizeSubscripts,
+  printSubscripts,
+  separatedVariableIndex,
+  sub,
+  subscriptFamilies
 }

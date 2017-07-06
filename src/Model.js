@@ -13,8 +13,32 @@ let nonAtoANames = Object.create(null)
 const PRINT_SORTED_VARS = false
 
 function readSubscriptRanges(tree) {
+  // Read subscript ranges from the model.
   let subscriptRangeReader = new SubscriptRangeReader()
   subscriptRangeReader.visitModel(tree)
+  let allDims = allDimensions()
+  // Expand subdimensions that appeared in subscript ranges and mappings into indices.
+  
+
+  // Update the families of subdimensions.
+  // At this point, all dimensions have their family set to their own dimension name.
+  // List the number of values for each dimension.
+  for (let dim of allDims) {
+    // Find an index in the dimension.
+    for (let subscript of dim.value) {
+      if (isIndex(subscript)) {
+        // Find the dimension in this family with the largest number of values.
+        // This is the "maximal" dimension that serves as the subscript family.
+        let maxSize = dim.value.length
+        for (let thisDim of allDims) {
+          if (R.contains(subscript, thisDim.value) && thisDim.value.length > maxSize) {
+            dim.family = thisDim.name
+          }
+        }
+        break
+      }
+    }
+  }
 }
 function readVariables(tree) {
   // Read all variables in the model parse tree.
