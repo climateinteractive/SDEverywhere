@@ -32,7 +32,7 @@ function readSubscriptRanges(tree) {
   // Repeat until there are no dimensions in values.
   let dimFoundInValue
   do {
-    let dimFoundInValue = false
+    dimFoundInValue = false
     for (let dim of allDims) {
       let value = R.flatten(R.map(subscript => (isDimension(subscript) ? sub(subscript).value : subscript), dim.value))
       if (!R.equals(value, dim.value)) {

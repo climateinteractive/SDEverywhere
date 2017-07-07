@@ -6,7 +6,7 @@ import Expr;
 model: ( subscriptRange | equation )+ ;
 
 // A subscript range definition names subscripts in a dimension.
-subscriptRange : Id ':' subscriptList ( '->' Id )? ;
+subscriptRange : Id ':' ( subscriptList | '(' Id '-' Id ')' ) ( '->' ( Id | '(' Id ':' subscriptList ')' ) )? ;
 
 // An equation has a left-hand side and a right-hand side.
 // A Vensim lookup is simply a vector or array of data.
