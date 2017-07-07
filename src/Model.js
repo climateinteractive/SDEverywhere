@@ -27,7 +27,7 @@ function readSubscriptRanges(tree) {
   let subscriptRangeReader = new SubscriptRangeReader()
   subscriptRangeReader.visitModel(tree)
   let allDims = allDimensions()
-  debugger
+  // debugger
   // Expand subdimensions that appeared in subscript ranges and mappings into indices.
   // Repeat until there are no dimensions in values.
   let dimFoundInValue
@@ -64,6 +64,12 @@ function readSubscriptRanges(tree) {
       }
     }
   }
+  // TODO
+  // When there is a subscript mapping, map indices in the fromDim to the mapping value,
+  // which may include both indices and subdimensions.
+
+  // Iterate fromDim indices in order to list toDim indices they map to.
+
 }
 function readVariables(tree) {
   // Read all variables in the model parse tree.
