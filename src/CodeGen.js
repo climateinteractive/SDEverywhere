@@ -20,7 +20,7 @@ let codeGenerator = (parseTree, spec, subscripts, listMode) => {
     // TODO remove this (and subscript loading in sdegen) once subscripts are fully parseable.
     // loadSubscripts(subscripts)
     Model.readSubscriptRanges(parseTree)
-    printSubscripts()
+    // printSubscripts()
     // Read variables from the model parse tree.
     Model.readVariables(parseTree)
     // Analyze model equations to fill in more details about variables.

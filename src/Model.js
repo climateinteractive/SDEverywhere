@@ -27,7 +27,6 @@ function readSubscriptRanges(tree) {
   let subscriptRangeReader = new SubscriptRangeReader()
   subscriptRangeReader.visitModel(tree)
   let allDims = allDimensions()
-  // debugger
   // Expand subdimensions that appeared in subscript ranges and mappings into indices.
   // Repeat until there are no dimensions in values.
   let dimFoundInValue
@@ -38,6 +37,7 @@ function readSubscriptRanges(tree) {
       if (!R.equals(value, dim.value)) {
         dimFoundInValue = true
         dim.value = value
+        dim.size = value.length
       }
     }
   } while (dimFoundInValue)
@@ -64,12 +64,37 @@ function readSubscriptRanges(tree) {
       }
     }
   }
-  // TODO
-  // When there is a subscript mapping, map indices in the fromDim to the mapping value,
-  // which may include both indices and subdimensions.
-
-  // Iterate fromDim indices in order to list toDim indices they map to.
-
+  // When there is a subscript mapping, the mapping value pulled from the subscript range
+  // in the model is either a map-to dimension with the same cardinality as the map-from
+  // dimension, or a list of subscripts in the map-to dimension with the same cardinality
+  // as the map-from dimension. The mapping value must be transformed into a list of
+  // map-from indices in one-to-one correspondence with the map-to indices.
+  for (let fromDim of allDims) {
+    for (let toDimName in fromDim.mappings) {
+      let mappingValue = fromDim.mappings[toDimName]
+      if (R.isEmpty(mappingValue)) {
+        // When there is no list of map-to subscripts, list fromDim indices.
+        fromDim.mappings[toDimName] = fromDim.value
+      } else {
+        // The mapping value is a list of map-to subscripts.
+        // List fromDim indices in the order in which they map onto toDim indices.
+        let mv = []
+        for (let i = 0; i < fromDim.value.length; i++) {
+          let fromIndName = fromDim.value[i]
+          let toSubName = mappingValue[i]
+          let toSub = sub(toSubName)
+          if (isDimension(toSubName)) {
+            for (let toIndName of toSub.value) {
+              mv[sub(toIndName).value] = fromIndName
+            }
+          } else {
+            mv[toSub.value] = fromIndName
+          }
+        }
+        fromDim.mappings[toDimName] = mv
+      }
+    }
+  }
 }
 function readVariables(tree) {
   // Read all variables in the model parse tree.

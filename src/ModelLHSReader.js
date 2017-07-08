@@ -3,7 +3,7 @@ const R = require('ramda')
 const ModelLexer = require('./ModelLexer').ModelLexer
 const ModelParser = require('./ModelParser').ModelParser
 const ModelReader = require('./ModelReader')
-const { sub, isIndex, isDimension } = require('./Subscript')
+const { sub, isIndex, isDimension, indexNamesForSubscript } = require('./Subscript')
 const { canonicalName, list, subscripts, listConcat } = require('./Helpers')
 
 //
@@ -46,6 +46,19 @@ module.exports = class ModelLHSReader extends ModelReader {
     // Construct the modelLHSList array with the LHS expanded into an entry for each index
     // in the same format as Vensim log files.
     // TODO handle more than two dimensions
+    let modelLHSInds = dim => {
+      // Construct the model indices for a dimension. If the subscript range contained a dimension,
+      // expand it into index names.
+      let indNames = R.map(subscriptModelName => {
+        let subscript = canonicalName(subscriptModelName)
+        if (isDimension(subscript)) {
+          return sub(subscript).modelValue
+        } else {
+          return subscriptModelName
+        }
+      }, dim.modelValue)
+      return R.flatten(indNames)
+    }
     let subscripts = R.map(id => id.getText(), ctx.Id())
     let [dims, inds] = R.partition(subscript => isDimension(canonicalName(subscript)), subscripts)
     if (dims.length === 0) {
@@ -56,20 +69,20 @@ module.exports = class ModelLHSReader extends ModelReader {
       // Expand the single subscript dimension.
       if (subscripts.length === 1) {
         let dim = sub(canonicalName(subscripts[0]))
-        this.modelLHSList = R.map(modelDim => `${this.varName}[${modelDim}]`, dim.modelValue)
+        this.modelLHSList = R.map(modelDim => `${this.varName}[${modelDim}]`, modelLHSInds(dim))
       } else if (isDimension(canonicalName(subscripts[0]))) {
         // Expand the dimension in the first or second position.
         let dim = sub(canonicalName(subscripts[0]))
         let modelIndex = subscripts[1]
-        this.modelLHSList = R.map(modelDim => `${this.varName}[${modelDim},${modelIndex}]`, dim.modelValue)
+        this.modelLHSList = R.map(modelDim => `${this.varName}[${modelDim},${modelIndex}]`, modelLHSInds(dim))
       } else {
         let dim = sub(canonicalName(subscripts[1]))
         let modelIndex = subscripts[0]
-        this.modelLHSList = R.map(modelDim => `${this.varName}[${modelIndex},${modelDim}]`, dim.modelValue)
+        this.modelLHSList = R.map(modelDim => `${this.varName}[${modelIndex},${modelDim}]`, modelLHSInds(dim))
       }
     } else if (dims.length === 2) {
-      for (let modelDim0 of sub(canonicalName(dims[0])).modelValue) {
-        for (let modelDim1 of sub(canonicalName(dims[1])).modelValue) {
+      for (let modelDim0 of modelLHSInds(sub(canonicalName(dims[0])))) {
+        for (let modelDim1 of modelLHSInds(sub(canonicalName(dims[1])))) {
           this.modelLHSList.push(`${this.varName}[${modelDim0},${modelDim1}]`)
         }
       }
