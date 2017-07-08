@@ -2,7 +2,6 @@ grammar Model;
 import Expr;
 
 // A Vensim model is a sequence of equations and subscript ranges.
-// This grammar assumes that the sketch section has been removed.
 model: ( subscriptRange | equation )+ ;
 
 // A subscript range definition names subscripts in a dimension.
@@ -27,3 +26,5 @@ Encoding : '{' [A-Za-z0-9-]+ '}' -> skip ;
 Continuation : '\\' -> skip ;
 UnitsDoc : '~' .*? '|' -> skip ;
 Group : '****' .*? '|' -> skip ;
+// Ignore the ANTLR 4 warning message for this rule.
+Sketch : '\\\\\\---/// Sketch' .* -> skip;

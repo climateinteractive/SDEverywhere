@@ -27,10 +27,8 @@ let preprocessModel = (mdlFilename, spec, writeRemovals = false) => {
   // Open output channels.
   F.open('rm')
   F.open('pp')
-  // Read the model file and remove the sketch information at the end.
+  // Read the model file.
   let mdl = fs.readFileSync(mdlFilename, 'utf8')
-  let iEnd = mdl.indexOf('\\\\\\---/// Sketch')
-  mdl = mdl.slice(0, iEnd)
 
   // Remove the macro section.
   let inMacroSection = false

@@ -4,8 +4,6 @@
 
 These scripts generate a lexer and parser in Java and then run the ANTLR TestRig tool. They are useful in development when you are trying to understand how the lexer is tokenizing your model and what parse tree the parser is generating.
 
-The grammar currently assumes that the sketch section is removed from the model, and that lines continued with the backslash character have been joined. You can accomplish this with the sdepp tool below. Alternatively, you can just put the equation in question in a .mdl file without the sketch section, so that preprocessing is unnecessary.
-
 ## Installing
 
 To install on a Unix-like system such as Mac OS X:
