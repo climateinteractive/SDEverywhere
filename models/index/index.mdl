@@ -1,4 +1,6 @@
 {UTF-8}
+DimA: A1, A2, A3
+~~|
 a[DimA] = b[DimA] + 10
 ~~|
 b[A1] = 1

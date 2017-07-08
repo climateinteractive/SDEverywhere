@@ -4,6 +4,11 @@ pgr[DimA]=
 	~
 	~		|
 
+DimA:
+	A1, A2, A3
+	~
+	~		|
+
 p delay=
 	1
 	~

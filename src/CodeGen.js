@@ -6,7 +6,7 @@ const Model = require('./Model')
 const { sub, allDimensions, allMappings, isDimension, subscriptFamilies, loadSubscripts, printSubscripts } = require('./Subscript')
 const { asort, lines, list, strlist, vlog } = require('./Helpers')
 
-let codeGenerator = (parseTree, spec, subscripts, listMode) => {
+let codeGenerator = (parseTree, spec, listMode) => {
   // Set true when in the init section, false in the eval section
   let initMode = false
   // Set true to output all variables when there is no model run spec.
@@ -17,8 +17,6 @@ let codeGenerator = (parseTree, spec, subscripts, listMode) => {
 
   function generate() {
     // Subscript ranges must be defined before reading variables that use them.
-    // TODO remove this (and subscript loading in sdegen) once subscripts are fully parseable.
-    // loadSubscripts(subscripts)
     Model.readSubscriptRanges(parseTree)
     // printSubscripts()
     // Read variables from the model parse tree.

@@ -40,7 +40,6 @@ exports.handler = argv => {
   modelBasename = path.basename(argv.model).replace(/\.mdl/i, '')
   let spec = parseSpec(argv.spec)
   let parseTree = parseModel(argv.model, spec, argv.preprocess)
-  let subscripts = parseSubscripts()
   let listMode = ''
   let code = ''
   if (argv.list) {
@@ -49,7 +48,7 @@ exports.handler = argv => {
     listMode = 'printRefIdTest'
   }
   try {
-    code = codeGenerator(parseTree, spec, subscripts, listMode).generate()
+    code = codeGenerator(parseTree, spec, listMode).generate()
   } catch (e) {
     // console.log('code generator exception: ' + e.message)
     console.log(e.stack)
@@ -78,13 +77,6 @@ function parseModel(modelFilename, spec, preprocess) {
 function parseSpec(specFilename) {
   return parseJsonFile(specFilename)
 }
-function parseSubscripts() {
-  // TODO read subscript dimensions and mappings in the grammar
-  let jsFilename = path.join(modelDirname, `${modelBasename}_subs.js`)
-  let jsonFilename = path.join(modelDirname, `${modelBasename}_subs.json`)
-  preprocessSubsFile(jsFilename, jsonFilename)
-  return parseJsonFile(jsonFilename)
-}
 function parseJsonFile(filename) {
   // Parse the JSON file if it exists.
   let result = {}
@@ -96,11 +88,4 @@ function parseJsonFile(filename) {
     // If the file doesn't exist, return an empty object without complaining.
   }
   return result
-}
-function preprocessSubsFile(jsFilename, jsonFilename) {
-  try {
-    let js = fs.readFileSync(jsFilename, 'utf8')
-    let o = eval(js)
-    F.writeJson(o, jsonFilename)
-  } catch (e) {}
 }

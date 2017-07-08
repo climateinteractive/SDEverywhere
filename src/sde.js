@@ -28,5 +28,5 @@ require('yargs')
   .command(require('./sdecmp'))
   .help('h')
   .alias('h', 'help')
-  .version('v', '0.2.2')
+  .version('v', '0.3.0')
   .alias('v', 'version').argv

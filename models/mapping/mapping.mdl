@@ -1,4 +1,16 @@
 {UTF-8}
+DimA: A1, A2, A3
+	~
+	~		|
+
+SubA: A1, A2
+	~
+	~		|
+
+DimB: B1, B2 -> (DimA: SubA, A3)
+	~
+	~		|
+
 b[DimB] = 1, 2
 	~
 	~	constant array
@@ -9,6 +21,18 @@ a[DimA] = b[DimB] * 10
 	~	mapping an index to a subrange
 	~	:SUPPLEMENTARY
 	|
+
+SubC: C1, C2
+	~
+	~		|
+
+DimC: SubC, C3 -> DimD
+	~
+	~		|
+
+DimD: D1, D2, D3
+	~
+	~		|
 
 c[DimC] = 1, 2, 3
 	~
