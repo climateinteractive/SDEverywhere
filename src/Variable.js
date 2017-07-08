@@ -6,6 +6,7 @@ module.exports = class Variable {
     // The equation rule context allows us to generate code by visiting the parse tree.
     this.eqnCtx = eqnCtx
     // Save both sides of the equation text in the model for documentation purposes.
+    debugger
     this.modelLHS = eqnCtx ? eqnCtx.lhs().getText() : ''
     this.modelFormula = this.formula(eqnCtx)
     // An equation defines a variable with a var name, saved in canonical form here.

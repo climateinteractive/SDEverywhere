@@ -2,6 +2,7 @@
 build/*
 models/**/*_subs.json
 .DS_Store
+removals.txt
 *.java
 *.tokens
 *.class

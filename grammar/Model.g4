@@ -11,10 +11,11 @@ subscriptSequence : '(' Id '-' Id ')' ;
 subscriptMapping : '->' ( Id | '(' Id ':' subscriptList ')' ) ;
 
 // An equation has a left-hand side and a right-hand side.
-// A Vensim lookup is simply a vector or array of data.
 // Typically, the RHS is a formula expression or constant list.
+// A Vensim lookup is simply a vector or array of data.
 // The RHS is empty for data equations.
-equation : lookup | ( lhs ( ( ':=' | '==' | '=' ) ( expr | constList ) ) ) | lhs ;
+equation : lhs ( ( ':=' | '==' | '=' ) ( expr | constList ) | lookup )? ;
+
 lhs : Id ( '[' subscriptList ']' )? ;
 constList : expr ( ',' expr )* ;
 

@@ -67,7 +67,7 @@ let preprocessModel = (mdlFilename, spec, writeRemovals = false) => {
   }, eqns)
 
   // Write removals to a file in the model directory.
-  if (writeRemovals) {
+  if (writeRemovals && F.getBuf('rm').length > 0) {
     let rmPathname = path.join(path.dirname(mdlFilename), 'removals.txt')
     F.writeBuf(rmPathname, 'rm')
   }
