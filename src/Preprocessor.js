@@ -63,6 +63,25 @@ let preprocessModel = (mdlFilename, spec, writeRemovals = false) => {
       emit(eqn)
     }
   }, eqns)
+  mdl = F.getBuf('pp')
+  F.clearBuf('pp')
+
+  // Join lines continued with trailing backslash characters.
+  let backslash = /\\\s*$/
+  let prevLine = ''
+  R.forEach(line => {
+    if (!R.isEmpty(prevLine)) {
+      line = prevLine + line.trim()
+      prevLine = ''
+    }
+    let m = line.match(backslash)
+    if (m) {
+      prevLine = line.substr(0, m.index)
+    }
+    if (R.isEmpty(prevLine)) {
+      F.emitLine(line, 'pp')
+    }
+  }, mdl.split(/\r?\n/))
 
   // Write removals to a file in the model directory.
   if (writeRemovals && F.getBuf('rm').length > 0) {

@@ -39,7 +39,7 @@ TwoEqual : '==' ;
 NotEqual : '<>' ;
 Exclamation : '!' ;
 
-Id : ((Nondigit IdChar*) | (Nondigit (IdChar | ' ')* IdChar) | StringLiteral) (' '* Exclamation)? ;
+Id : ((Nondigit IdChar*) | (Nondigit (IdChar | ' ')* IdChar) | StringLiteral) Exclamation? ;
 
 fragment
 IdChar : [a-zA-Z0-9_] ;

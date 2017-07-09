@@ -23,7 +23,6 @@ constList : expr ( ',' expr )* ;
 // Line continuation characters don't matter to us because we skip whitepace.
 // The units and documentation sections and group markings are skipped for now.
 Encoding : '{' [A-Za-z0-9-]+ '}' -> skip ;
-Continuation : '\\' -> skip ;
 UnitsDoc : '~' .*? '|' -> skip ;
 Group : '****' .*? '|' -> skip ;
 // Ignore the ANTLR 4 warning message for this rule.
