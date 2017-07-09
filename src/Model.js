@@ -53,6 +53,7 @@ function readSubscriptRanges(tree) {
     for (let thisDim of allDims) {
       if (R.contains(index, thisDim.value) && thisDim.value.length > maxSize) {
         dim.family = thisDim.name
+        maxSize = thisDim.value.length
       }
     }
   }
