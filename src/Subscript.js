@@ -170,7 +170,7 @@ function loadSubscripts(subscriptsArray) {
 }
 function printSubscripts() {
   for (let [k, v] of subscripts) {
-    console.error(`${k}: ${util.inspect(v, { depth: null })}`)
+    console.log(`${k}:\n${util.inspect(v, { depth: null })}\n`)
   }
 }
 function normalizeSubscripts(subscripts) {

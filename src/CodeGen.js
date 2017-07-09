@@ -18,13 +18,13 @@ let codeGenerator = (parseTree, spec, listMode) => {
   function generate() {
     // Subscript ranges must be defined before reading variables that use them.
     Model.readSubscriptRanges(parseTree)
-    // printSubscripts()
     // Read variables from the model parse tree.
     Model.readVariables(parseTree)
     // Analyze model equations to fill in more details about variables.
     Model.analyze()
     // In list mode, print variables to the console instead of generating code.
     if (listMode === 'printVarList') {
+      printSubscripts()
       Model.printVarList()
     } else if (listMode === 'printRefIdTest') {
       Model.printRefIdTest()
