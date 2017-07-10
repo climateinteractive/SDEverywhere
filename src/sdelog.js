@@ -2,13 +2,9 @@ const fs = require('fs')
 const R = require('ramda')
 const F = require('./futil')
 
-exports.command = 'log <logfile>'
+exports.command = 'log [options] <logfile>'
 exports.describe = 'process an SDEverywhere log file'
 exports.builder = {
-  logfile: {
-    describe: 'filename of an SDE log file in TSV format',
-    type: 'string'
-  },
   dat: {
     describe: 'convert to Vensim DAT format',
     type: 'boolean',

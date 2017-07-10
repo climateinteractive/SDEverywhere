@@ -5,19 +5,11 @@ const { vlog } = require('./Helpers')
 // The epsilon value determines the required precision for value comparisons.
 let ε = 1e-5
 
-exports.command = 'compare <vensimlog> <sdelog>'
-exports.describe = 'compare Vensim and SDEverywhere log files'
+exports.command = 'compare [options] <vensimlog> <sdelog>'
+exports.describe = 'compare Vensim and SDEverywhere log files in DAT format'
 exports.builder = {
-  vensimlog: {
-    describe: 'filename of a Vensim log file in DAT format',
-    type: 'string'
-  },
-  sdelog: {
-    describe: 'filename of an SDE log file in DAT format',
-    type: 'string'
-  },
   precision: {
-    describe: 'precision to which values must agree to match (default 1e-5)',
+    describe: 'precision to which values must agree (default 1e-5)',
     type: 'number',
     alias: 'p'
   },
@@ -27,7 +19,7 @@ exports.builder = {
     alias: 'n'
   },
   times: {
-    describe: 'limit comparisons to one or more times separated by spaces',
+    describe: 'limit comparisons to times separated by spaces',
     type: 'array',
     alias: 't'
   }

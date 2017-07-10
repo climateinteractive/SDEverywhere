@@ -3,30 +3,26 @@
 //  Copyright © 2016-17 Todd Fincannon and Climate Interactive
 //  SDEverywhere may be freely distributed under the MIT license.
 
-// sde --help
-// sde -h
+// usage: sde <command>
 //
-// sde generate <model>
-// sde generate <model> --spec <specfile>
-// sde generate <model> --list
-// sde generate <model> --refidtest
+// Commands:
+//   generate <model>              generate model code
+//   log <logfile>                 process an SDEverywhere log file
+//   compare <vensimlog> <sdelog>  compare Vensim and SDEverywhere log files
 //
-// sde build <model>
-//
-// sde log <logfile>
-//
-// sde compare <vensimlog> <sdelog>
-// sde compare <vensimlog> <sdelog> --precision <epsilon>
-// sde compare <vensimlog> <sdelog> --variable <varname>
+// Options:
+//   -h, --help     Show help                                             [boolean]
+//   -v, --version  Show version number                                   [boolean]
 
 require('yargs')
   .strict()
-  .usage('usage: $0 <command> [options]')
+  .usage('usage: $0 <command>')
   .command(require('./sdegen'))
-  // .command('build <model>', 'build the generated model', require('./sdebuild'))
   .command(require('./sdelog'))
   .command(require('./sdecmp'))
-  .help('h')
+  .demandCommand(1)
+  .help()
+  .version()
   .alias('h', 'help')
-  .version('v', '0.3.0')
-  .alias('v', 'version').argv
+  .alias('v', 'version')
+  .argv

@@ -10,11 +10,11 @@ const F = require('./futil')
 let modelDirname
 let modelBasename
 
-exports.command = 'generate <model>'
+exports.command = 'generate [options] <model>'
 exports.describe = 'generate model code'
 exports.builder = {
   spec: {
-    describe: 'filename of the I/O specification JSON file',
+    describe: 'pathname of the I/O specification JSON file',
     type: 'string',
     alias: 's'
   },

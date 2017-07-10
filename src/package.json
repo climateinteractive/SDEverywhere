@@ -16,7 +16,7 @@
   "dependencies": {
     "antlr4": "4.7.0",
     "ramda": "0.24.x",
-    "yargs": "7.1.0"
+    "yargs": "8.0.x"
   },
   "scripts": {},
   "preferGlobal": true,
