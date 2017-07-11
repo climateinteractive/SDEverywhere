@@ -1,4 +1,4 @@
-const fs = require('fs')
+const fs = require('fs-extra')
 const path = require('path')
 const antlr4 = require('antlr4/index')
 const ModelLexer = require('./ModelLexer').ModelLexer
@@ -13,31 +13,52 @@ let modelBasename
 exports.command = 'generate [options] <model>'
 exports.describe = 'generate model code'
 exports.builder = {
-  spec: {
-    describe: 'pathname of the I/O specification JSON file',
-    type: 'string',
-    alias: 's'
+  genc: {
+    describe: 'generate C code for the model',
+    type: 'boolean',
+    alias: 'c'
   },
   list: {
     describe: 'list model variables',
     type: 'boolean',
     alias: 'l'
   },
-  refidtest: {
-    describe: 'test reference ids',
-    type: 'boolean',
-    alias: 'r'
-  },
   preprocess: {
     describe: 'output the preprocessed model',
     type: 'boolean',
     alias: 'p'
+  },
+  spec: {
+    describe: 'pathname of the I/O specification JSON file',
+    type: 'string',
+    alias: 's'
+  },
+  build: {
+    describe: 'build directory (defaults to ./build)',
+    type: 'string',
+    alias: 'b'
+  },
+  refidtest: {
+    describe: 'test reference ids',
+    type: 'boolean',
+    alias: 'r'
   }
 }
 exports.handler = argv => {
   // Parse input files and then hand data to the code generator.
   modelDirname = path.dirname(argv.model)
   modelBasename = path.basename(argv.model).replace(/\.mdl/i, '')
+  // Ensure the build directory exists.
+  let buildDirname = argv.build || `${modelDirname}/build`
+  fs.ensureDirSync(buildDirname)
+  let outputPathname
+  if (argv.genc) {
+    outputPathname = path.join(buildDirname, `${modelBasename}.c`)
+  } else if (argv.list) {
+    outputPathname = path.join(buildDirname, `${modelBasename}_vars.txt`)
+  } else if (argv.preprocess) {
+    outputPathname = path.join(buildDirname, `${modelBasename}.mdl`)
+  }
   let spec = parseSpec(argv.spec)
   let parseTree = parseModel(argv.model, spec, argv.preprocess)
   let listMode = ''
@@ -50,12 +71,16 @@ exports.handler = argv => {
   try {
     code = codeGenerator(parseTree, spec, listMode).generate()
   } catch (e) {
-    // console.log('code generator exception: ' + e.message)
     console.log(e.stack)
   }
-  // Print the generated code.
-  if (!(argv.list || argv.refidtest)) {
-    console.log(code)
+  // Output the generated code to the build directory.
+  if (argv.genc) {
+    try {
+      fs.outputFileSync(outputPathname, code)
+    } catch (e) {
+      console.log(outputPathname)
+      console.log(e.message)
+    }
   }
   process.exit(0)
 }
