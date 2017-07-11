@@ -54,8 +54,6 @@ exports.handler = argv => {
   let outputPathname
   if (argv.genc) {
     outputPathname = path.join(buildDirname, `${modelBasename}.c`)
-  } else if (argv.list) {
-    outputPathname = path.join(buildDirname, `${modelBasename}_vars.txt`)
   } else if (argv.preprocess) {
     outputPathname = path.join(buildDirname, `${modelBasename}.mdl`)
   }
