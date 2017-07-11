@@ -3,7 +3,7 @@ const path = require('path')
 const R = require('ramda')
 const F = require('./futil')
 
-let preprocessModel = (mdlFilename, spec, writeRemovals = false) => {
+let preprocessModel = (mdlFilename, writeRemovals = false) => {
   // Get the first line of an equation.
   let firstLine = (s) => {
     let i = s.indexOf('\n')

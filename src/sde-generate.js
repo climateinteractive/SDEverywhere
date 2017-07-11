@@ -5,10 +5,8 @@ const ModelLexer = require('./ModelLexer').ModelLexer
 const ModelParser = require('./ModelParser').ModelParser
 const { codeGenerator } = require('./CodeGen')
 const { preprocessModel } = require('./Preprocessor')
+const { mdlPathProps } = require('./Helpers')
 const F = require('./futil')
-
-let modelDirname
-let modelBasename
 
 exports.command = 'generate [options] <model>'
 exports.describe = 'generate model code'
@@ -46,50 +44,36 @@ exports.builder = {
 }
 exports.handler = argv => {
   // Parse input files and then hand data to the code generator.
-  modelDirname = path.dirname(argv.model)
-  modelBasename = path.basename(argv.model).replace(/\.mdl/i, '')
+  let { modelDirname, modelName, modelPathname } = mdlPathProps(argv.model)
   // Ensure the build directory exists.
-  let buildDirname = argv.build || `${modelDirname}/build`
+  let buildDirname = argv.build || path.join(modelDirname, 'build')
   fs.ensureDirSync(buildDirname)
-  let outputPathname
-  if (argv.genc) {
-    outputPathname = path.join(buildDirname, `${modelBasename}.c`)
-  } else if (argv.preprocess) {
-    outputPathname = path.join(buildDirname, `${modelBasename}.mdl`)
+  // Preprocess model text into parser input. Stop now if that's all we're doing.
+  let writeRemovals = argv.preprocess
+  let input = preprocessModel(modelPathname, writeRemovals)
+  if (argv.preprocess) {
+    let outputPathname = path.join(buildDirname, `${modelName}.mdl`)
+    writeOutput(outputPathname, input)
+    process.exit()
   }
-  let spec = parseSpec(argv.spec)
-  let parseTree = parseModel(argv.model, spec, argv.preprocess)
+  // Parse the model and generate code.
   let listMode = ''
-  let code = ''
   if (argv.list) {
     listMode = 'printVarList'
   } else if (argv.refidtest) {
     listMode = 'printRefIdTest'
   }
-  try {
-    code = codeGenerator(parseTree, spec, listMode).generate()
-  } catch (e) {
-    console.log(e.stack)
-  }
-  // Output the generated code to the build directory.
+  let parseTree = parseModel(input)
+  let spec = parseSpec(argv.spec)
+  let code = codeGenerator(parseTree, spec, listMode).generate()
   if (argv.genc) {
-    try {
-      fs.outputFileSync(outputPathname, code)
-    } catch (e) {
-      console.log(outputPathname)
-      console.log(e.message)
-    }
+    let outputPathname = path.join(buildDirname, `${modelName}.c`)
+    writeOutput(outputPathname, code)
   }
   process.exit(0)
 }
-function parseModel(modelFilename, spec, preprocess) {
-  // Read the mdl file and return a parse tree.
-  let writeRemovals = preprocess
-  let input = preprocessModel(modelFilename, spec, writeRemovals)
-  if (preprocess) {
-    console.log(input)
-    process.exit()
-  }
+function parseModel(input) {
+  // Read the model text and return a parse tree.
   let chars = new antlr4.InputStream(input)
   let lexer = new ModelLexer(chars)
   let tokens = new antlr4.CommonTokenStream(lexer)
@@ -111,4 +95,12 @@ function parseJsonFile(filename) {
     // If the file doesn't exist, return an empty object without complaining.
   }
   return result
+}
+function writeOutput(outputPathname, outputText) {
+  try {
+    fs.outputFileSync(outputPathname, outputText)
+  } catch (e) {
+    console.log(outputPathname)
+    console.log(e.message)
+  }
 }

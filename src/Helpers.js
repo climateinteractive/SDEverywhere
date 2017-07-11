@@ -113,6 +113,19 @@ function mapObjProps(f, obj) {
   R.forEach(k => (result[f(k)] = f(obj[k])), Object.keys(obj))
   return result
 }
+let mdlPathProps = model => {
+  // Normalize a model pathname that may or may not include the .mdl extension.
+  // Return an object with properties that look like this:
+  // modelDirname: '/Users/todd/src/models/arrays'
+  // modelName: 'arrays'
+  // modelPathname: '/Users/todd/src/models/arrays/arrays.mdl'
+  let p = R.merge({ ext: '.mdl' }, R.pick(['dir', 'name'], path.parse(model)))
+  return {
+    modelDirname: p.dir,
+    modelName: p.name,
+    modelPathname: path.format(p)
+  }
+}
 // Function to map over lists's value and index
 let mapIndexed = R.addIndex(R.map)
 // Function to sort an array of strings
@@ -159,6 +172,7 @@ module.exports = {
   listVars,
   mapIndexed,
   mapObjProps,
+  mdlPathProps,
   newAuxVarName,
   newLevelVarName,
   newLookupVarName,
