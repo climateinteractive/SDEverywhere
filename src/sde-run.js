@@ -1,17 +1,37 @@
-const fs = require('fs-extra')
-const path = require('path')
-const sh = require('shelljs')
-const moment = require('moment')
-const { mdlPathProps } = require('./Helpers')
+const { build } = require('./sde-build')
+const { exec } = require('./sde-exec')
 
-exports.command = 'run <model>'
-exports.describe = 'build a model, run it, and capture its output to a file'
-exports.builder = {
+let command = 'run <model>'
+let describe = 'build a model, run it, and capture its output to a file'
+let builder = {
+  spec: {
+    describe: 'pathname of the I/O specification JSON file',
+    type: 'string',
+    alias: 's'
+  },
   builddir: {
     describe: 'build directory (defaults to ./build)',
     type: 'string',
     alias: 'b'
+  },
+  outfile: {
+    describe: 'output pathname',
+    type: 'string',
+    alias: 'o'
   }
 }
-exports.handler = argv => {
+let handler = argv => {
+  run(argv.model, argv)
+}
+let run = (model, opts) => {
+  build(model, opts)
+  exec(model, opts)
+}
+
+module.exports = {
+  command,
+  describe,
+  builder,
+  handler,
+  run
 }

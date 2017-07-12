@@ -12,7 +12,7 @@
 // clean
 // build - generate, compile
 // run - build, exec
-// test - build, run, log, compare
+// test - run, log, compare
 
 require('yargs')
   .strict()

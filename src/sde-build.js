@@ -1,6 +1,3 @@
-const fs = require('fs-extra')
-const path = require('path')
-const sh = require('shelljs')
 const { generate } = require('./sde-generate')
 const { compile } = require('./sde-compile')
 

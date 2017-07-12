@@ -130,6 +130,13 @@ let mdlPathProps = model => {
 }
 let execCmd = cmd => {
   // Run a command line silently in the "sh" shell. Print error output on error.
+  let result = sh.exec(cmd, { silent: true })
+  if (sh.error()) {
+    console.log(result.stderr)
+  }
+}
+let execCmdAsync = cmd => {
+  // Run a command line asynchronously and silently in the "sh" shell. Print error output on error.
   sh.exec(cmd, { silent: true }, (status, stdout, stderr) => {
     if (status) {
       console.log(stderr)

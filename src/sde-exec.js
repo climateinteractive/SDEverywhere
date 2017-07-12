@@ -10,6 +10,11 @@ let builder = {
     describe: 'build directory (defaults to ./build)',
     type: 'string',
     alias: 'b'
+  },
+  outfile: {
+    describe: 'output pathname',
+    type: 'string',
+    alias: 'o'
   }
 }
 let handler = argv => {
@@ -21,8 +26,16 @@ let exec = (model, opts) => {
   let buildDirname = opts.builddir || path.join(modelDirname, 'build')
   fs.ensureDirSync(buildDirname)
   // Run the model and capture output in the model directory.
-  let timestamp = moment().format('YYYY-MM-DD_HH-mm-ss')
-  execCmd(`${buildDirname}/${modelName} >${modelDirname}/${modelName}_${timestamp}.txt`)
+  let modelCmd = `${buildDirname}/${modelName}`
+  let outputPathname
+  if (opts.outfile) {
+    outputPathname = opts.outfile
+  } else {
+    let timestamp = moment().format('YYYY-MM-DD_HH-mm-ss')
+    outputPathname = path.join(modelDirname, `${modelName}_${timestamp}.txt`)
+  }
+  execCmd(`${modelCmd} >${outputPathname}`)
+  debugger
 }
 
 module.exports = {
