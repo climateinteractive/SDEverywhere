@@ -17,6 +17,7 @@
     "antlr4": "4.7.0",
     "fs-extra": "3.0.x",
     "ramda": "0.24.x",
+    "shelljs": "0.7.x",
     "yargs": "8.0.x"
   },
   "scripts": {},
