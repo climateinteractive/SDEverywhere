@@ -72,7 +72,7 @@ exports.handler = argv => {
   }
   process.exit(0)
 }
-function parseModel(input) {
+let parseModel = input => {
   // Read the model text and return a parse tree.
   let chars = new antlr4.InputStream(input)
   let lexer = new ModelLexer(chars)
@@ -81,10 +81,10 @@ function parseModel(input) {
   parser.buildParseTrees = true
   return parser.model()
 }
-function parseSpec(specFilename) {
+let parseSpec = specFilename => {
   return parseJsonFile(specFilename)
 }
-function parseJsonFile(filename) {
+let parseJsonFile = filename => {
   // Parse the JSON file if it exists.
   let result = {}
   try {
@@ -96,7 +96,7 @@ function parseJsonFile(filename) {
   }
   return result
 }
-function writeOutput(outputPathname, outputText) {
+let writeOutput = (outputPathname, outputText) => {
   try {
     fs.outputFileSync(outputPathname, outputText)
   } catch (e) {

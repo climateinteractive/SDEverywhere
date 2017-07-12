@@ -1,4 +1,5 @@
-const fs = require('fs')
+const fs = require('fs-extra')
+const path = require('path')
 const R = require('ramda')
 const F = require('./futil')
 
@@ -6,35 +7,37 @@ exports.command = 'log [options] <logfile>'
 exports.describe = 'process an SDEverywhere log file'
 exports.builder = {
   dat: {
-    describe: 'convert to Vensim DAT format',
+    describe: 'convert a TSV log file to a Vensim DAT file',
     type: 'boolean',
     alias: 'd'
   }
 }
 exports.handler = argv => {
   if (argv.dat) {
-    exportDat(argv.logfile)
+    let logPathname = argv.logfile
+    let p = path.parse(logPathname)
+    let datPathname = path.format({ dir: p.dir, name: p.name, ext: '.dat' })
+    exportDat(logPathname, datPathname)
   }
   process.exit(0)
 }
 
-function exportDat(filename) {
-  let lines = fs.readFileSync(filename, 'utf8').split(/\r?\n/)
+let exportDat = (logPathname, datPathname) => {
+  let lines = fs.readFileSync(logPathname, 'utf8').split(/\r?\n/)
   let varNames = []
   let steps = []
-  R.forEach(line => {
+  for (let line of lines) {
     if (R.isEmpty(varNames)) {
       varNames = R.map(v => v.toLowerCase(), line.split('\t'))
     } else if (!R.isEmpty(line)) {
       steps.push(R.zipObj(varNames, line.split('\t')))
     }
-  }, lines)
-  R.forEach(varName => {
-    if (varName != 'time') {
-      F.print(varName)
-      R.forEach(step => {
-        F.print(`${step.time}\t${step[varName]}`)
-      }, steps)
+  }
+  for (let varName of varNames) {
+    if (varName !== 'time') {
+      F.emitLine(varName)
+      for (let step of steps) F.emitLine(`${step.time}\t${step[varName]}`)
     }
-  }, varNames)
+  }
+  F.writeBuf(datPathname)
 }

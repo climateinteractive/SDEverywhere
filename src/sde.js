@@ -9,6 +9,7 @@
 // exec
 // log
 // compare
+// clean
 // build - generate, compile
 // run - build, exec
 // test - build, run, log, compare
@@ -21,6 +22,7 @@ require('yargs')
   .command(require('./sde-exec'))
   .command(require('./sde-log'))
   .command(require('./sde-compare'))
+  .command(require('./sde-clean'))
   .command(require('./sde-build'))
   .command(require('./sde-run'))
   .command(require('./sde-test'))

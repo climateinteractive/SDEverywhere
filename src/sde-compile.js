@@ -22,7 +22,7 @@ exports.handler = argv => {
   sh.ls(cDirname).forEach(filename => {
     let srcPathname = path.join(cDirname, filename)
     let dstPathname = path.join(buildDirname, filename)
-    sh.ln('-sf', srcPathname, dstPathname)
+    fs.ensureSymlinkSync(srcPathname, dstPathname)
   })
   // Run make to compile the model C code.
   sh.cd(buildDirname)
