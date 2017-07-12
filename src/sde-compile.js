@@ -1,15 +1,7 @@
 const fs = require('fs-extra')
 const path = require('path')
 const sh = require('shelljs')
-const { mdlPathProps } = require('./Helpers')
-
-// pushd $SDE_HOME/c >/dev/null
-// ln -sf $SDE_HOME/build/$MDL_NAME.c .
-// export P=$MDL_NAME
-// make >/dev/null
-// mv $MDL_NAME $SDE_HOME/build
-// rm $MDL_NAME.c
-// popd >/dev/null
+const { mdlPathProps, execCmd } = require('./Helpers')
 
 exports.command = 'compile <model>'
 exports.describe = 'compile the generated model to an executable file'
@@ -34,10 +26,5 @@ exports.handler = argv => {
   })
   // Run make to compile the model C code.
   sh.cd(buildDirname)
-  let cmd = `make P=${modelName}`
-  sh.exec(cmd, {silent:true}, (code, stdout, stderr) => {
-    if (code) {
-      console.log(stderr)
-    }
-  })
+  execCmd(`make P=${modelName}`)
 }

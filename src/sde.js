@@ -10,7 +10,7 @@
 // log
 // compare
 // build - generate, compile
-// run - generate, compile, exec
+// run - build, exec
 // test - build, run, log, compare
 
 require('yargs')
