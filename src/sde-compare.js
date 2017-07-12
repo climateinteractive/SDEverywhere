@@ -5,9 +5,9 @@ const { vlog } = require('./Helpers')
 // The epsilon value determines the required precision for value comparisons.
 let ε = 1e-5
 
-exports.command = 'compare [options] <vensimlog> <sdelog>'
-exports.describe = 'compare Vensim and SDEverywhere log files in DAT format'
-exports.builder = {
+let command = 'compare [options] <vensimlog> <sdelog>'
+let describe = 'compare Vensim and SDEverywhere log files in DAT format'
+let builder = {
   precision: {
     describe: 'precision to which values must agree (default 1e-5)',
     type: 'number',
@@ -24,26 +24,24 @@ exports.builder = {
     alias: 't'
   }
 }
-exports.handler = argv => {
-  if (argv.precision) {
-    ε = argv.precision
-  }
-  compareDat(argv.vensimlog, argv.sdelog, argv.name, argv.times)
-  process.exit(0)
+let handler = argv => {
+  compare(argv.vensimlog, argv.sdelog, argv)
 }
-
-function compareDat(vensimfile, sdefile, name, times) {
+let compare = (vensimfile, sdefile, opts) => {
+  if (opts.precision) {
+    ε = opts.precision
+  }
   let vensimLog = readLog(vensimfile)
   let sdeLog = readLog(sdefile)
   for (let varName of vensimLog.keys()) {
     let sdeValues = sdeLog.get(varName)
     // Ignore variables that are not found in the SDE log file.
-    if (sdeValues && (!name || varName === name)) {
+    if (sdeValues && (!opts.name || varName === opts.name)) {
       let vensimValue = undefined
       let vensimValues = vensimLog.get(varName)
       // Filter on time t, the key in the values list.
       for (let t of vensimValues.keys()) {
-        if (!times || R.find(time => isEqual(time, t), times)) {
+        if (!opts.times || R.find(time => isEqual(time, t), opts.times)) {
           // In Vensim log files, const vars only have one value at the initial time.
           if (vensimValues.size > 1 || !vensimValue) {
             vensimValue = vensimValues.get(t)
@@ -59,7 +57,7 @@ function compareDat(vensimfile, sdefile, name, times) {
     }
   }
 }
-function readLog(logfile) {
+let readLog = logfile => {
   let log = new Map()
   let varName = ''
   let varValues = new Map()
@@ -89,10 +87,10 @@ function readLog(logfile) {
   }, lines)
   return log
 }
-function isZero(value) {
+let isZero = value => {
   return Math.abs(value) < ε
 }
-function difference(x, y) {
+let difference = (x, y) => {
   let diff = 0
   if (isZero(x) || isZero(y)) {
     diff = Math.abs(x - y)
@@ -101,6 +99,14 @@ function difference(x, y) {
   }
   return diff
 }
-function isEqual(x, y) {
+let isEqual = (x, y) => {
   return difference(x, y) < ε
+}
+
+module.exports = {
+  command,
+  describe,
+  builder,
+  handler,
+  compare
 }

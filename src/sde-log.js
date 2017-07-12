@@ -3,25 +3,25 @@ const path = require('path')
 const R = require('ramda')
 const F = require('./futil')
 
-exports.command = 'log [options] <logfile>'
-exports.describe = 'process an SDEverywhere log file'
-exports.builder = {
+let command = 'log [options] <logfile>'
+let describe = 'process an SDEverywhere log file'
+let builder = {
   dat: {
     describe: 'convert a TSV log file to a Vensim DAT file',
     type: 'boolean',
     alias: 'd'
   }
 }
-exports.handler = argv => {
-  if (argv.dat) {
-    let logPathname = argv.logfile
+let handler = argv => {
+  log(argv.logfile, argv)
+}
+let log = (logPathname, opts) => {
+  if (opts.dat) {
     let p = path.parse(logPathname)
     let datPathname = path.format({ dir: p.dir, name: p.name, ext: '.dat' })
     exportDat(logPathname, datPathname)
   }
-  process.exit(0)
 }
-
 let exportDat = (logPathname, datPathname) => {
   let lines = fs.readFileSync(logPathname, 'utf8').split(/\r?\n/)
   let varNames = []
@@ -40,4 +40,11 @@ let exportDat = (logPathname, datPathname) => {
     }
   }
   F.writeBuf(datPathname)
+}
+module.exports = {
+  command,
+  describe,
+  builder,
+  handler,
+  log
 }

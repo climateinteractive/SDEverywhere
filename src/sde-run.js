@@ -7,7 +7,7 @@ const { mdlPathProps } = require('./Helpers')
 exports.command = 'run <model>'
 exports.describe = 'build a model, run it, and capture its output to a file'
 exports.builder = {
-  build: {
+  builddir: {
     describe: 'build directory (defaults to ./build)',
     type: 'string',
     alias: 'b'

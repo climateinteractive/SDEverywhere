@@ -8,9 +8,9 @@ const { preprocessModel } = require('./Preprocessor')
 const { mdlPathProps } = require('./Helpers')
 const F = require('./futil')
 
-exports.command = 'generate [options] <model>'
-exports.describe = 'generate model code'
-exports.builder = {
+let command = 'generate [options] <model>'
+let describe = 'generate model code'
+let builder = {
   genc: {
     describe: 'generate C code for the model',
     type: 'boolean',
@@ -31,7 +31,7 @@ exports.builder = {
     type: 'string',
     alias: 's'
   },
-  build: {
+  builddir: {
     describe: 'build directory (defaults to ./build)',
     type: 'string',
     alias: 'b'
@@ -42,35 +42,38 @@ exports.builder = {
     alias: 'r'
   }
 }
-exports.handler = argv => {
+let handler = argv => {
+  generate(argv.model, argv)
+}
+
+let generate = (model, opts) => {
   // Parse input files and then hand data to the code generator.
-  let { modelDirname, modelName, modelPathname } = mdlPathProps(argv.model)
+  let { modelDirname, modelName, modelPathname } = mdlPathProps(model)
   // Ensure the build directory exists.
-  let buildDirname = argv.build || path.join(modelDirname, 'build')
+  let buildDirname = opts.builddir || path.join(modelDirname, 'build')
   fs.ensureDirSync(buildDirname)
   // Preprocess model text into parser input. Stop now if that's all we're doing.
-  let writeRemovals = argv.preprocess
+  let writeRemovals = opts.preprocess
   let input = preprocessModel(modelPathname, writeRemovals)
-  if (argv.preprocess) {
+  if (opts.preprocess) {
     let outputPathname = path.join(buildDirname, `${modelName}.mdl`)
     writeOutput(outputPathname, input)
     process.exit()
   }
   // Parse the model and generate code.
   let listMode = ''
-  if (argv.list) {
+  if (opts.list) {
     listMode = 'printVarList'
-  } else if (argv.refidtest) {
+  } else if (opts.refidtest) {
     listMode = 'printRefIdTest'
   }
   let parseTree = parseModel(input)
-  let spec = parseSpec(argv.spec)
+  let spec = parseSpec(opts.spec)
   let code = codeGenerator(parseTree, spec, listMode).generate()
-  if (argv.genc) {
+  if (opts.genc) {
     let outputPathname = path.join(buildDirname, `${modelName}.c`)
     writeOutput(outputPathname, code)
   }
-  process.exit(0)
 }
 let parseModel = input => {
   // Read the model text and return a parse tree.
@@ -103,4 +106,11 @@ let writeOutput = (outputPathname, outputText) => {
     console.log(outputPathname)
     console.log(e.message)
   }
+}
+module.exports = {
+  command,
+  describe,
+  builder,
+  handler,
+  generate
 }

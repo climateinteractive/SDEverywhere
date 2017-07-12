@@ -39,7 +39,6 @@ const sdetree = (function() {
     else {
       app.help();
     }
-    process.exit(0);
   }
   return {
     main: main
