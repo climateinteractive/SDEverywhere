@@ -27,8 +27,12 @@ let compile = (model, opts) => {
     fs.ensureSymlinkSync(srcPathname, dstPathname)
   })
   // Run make to compile the model C code.
-  sh.cd(buildDirname)
+  let silentState = sh.config.silent
+  sh.config.silent = true
+  sh.pushd(buildDirname)
   let exitCode = execCmd(`make P=${modelName}`)
+  sh.popd()
+  sh.config.silent = silentState
   if (exitCode > 0) {
     process.exit(exitCode)
   }

@@ -1,8 +1,8 @@
 # Project files
-build/*
-models/**/*_subs.json
-.DS_Store
+models/**/build*
+models/**/output*
 removals.txt
+.DS_Store
 *.java
 *.tokens
 *.class
