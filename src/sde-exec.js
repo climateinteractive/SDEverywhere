@@ -1,7 +1,7 @@
 const fs = require('fs-extra')
 const path = require('path')
 const moment = require('moment')
-const { modelPathProps, execCmd } = require('./Helpers')
+const { modelPathProps, buildDir, outputDir, execCmd } = require('./Helpers')
 
 let command = 'exec <model>'
 let describe = 'execute the model and capture its output to a file'
@@ -22,20 +22,22 @@ let handler = argv => {
 }
 let exec = (model, opts) => {
   let { modelDirname, modelName, modelPathname } = modelPathProps(model)
-  // Ensure the build directory exists.
-  let buildDirname = opts.builddir || path.join(modelDirname, 'build')
-  fs.ensureDirSync(buildDirname)
+  // Ensure the build and output directories exist.
+  let buildDirname = buildDir(opts.builddir, modelDirname)
+  let outputDirname = outputDir(opts.outfile, modelDirname)
   // Run the model and capture output in the model directory.
   let modelCmd = `${buildDirname}/${modelName}`
   let outputPathname
   if (opts.outfile) {
     outputPathname = opts.outfile
   } else {
-    let timestamp = moment().format('YYYY-MM-DD_HH-mm-ss')
-    outputPathname = path.join(modelDirname, `${modelName}_${timestamp}.txt`)
+    outputPathname = path.join(outputDirname, `${modelName}.txt`)
   }
-  execCmd(`${modelCmd} >${outputPathname}`)
-  debugger
+  let exitCode = execCmd(`${modelCmd} >${outputPathname}`)
+  if (exitCode > 0) {
+    process.exit(exitCode)
+  }
+  return 0
 }
 
 module.exports = {

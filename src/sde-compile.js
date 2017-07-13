@@ -1,7 +1,7 @@
 const fs = require('fs-extra')
 const path = require('path')
 const sh = require('shelljs')
-const { modelPathProps, execCmd } = require('./Helpers')
+const { modelPathProps, buildDir, execCmd } = require('./Helpers')
 
 let command = 'compile <model>'
 let describe = 'compile the generated model to an executable file'
@@ -18,10 +18,9 @@ let handler = argv => {
 let compile = (model, opts) => {
   let { modelDirname, modelName, modelPathname } = modelPathProps(model)
   // Ensure the build directory exists.
-  let buildDirname = opts.builddir || path.join(modelDirname, 'build')
-  fs.ensureDirSync(buildDirname)
+  let buildDirname = buildDir(opts.builddir, modelDirname)
   // Link our C source files in the build directory.
-  let cDirname = path.resolve('../c')
+  let cDirname = path.join(__dirname, 'c')
   sh.ls(cDirname).forEach(filename => {
     let srcPathname = path.join(cDirname, filename)
     let dstPathname = path.join(buildDirname, filename)
@@ -29,7 +28,11 @@ let compile = (model, opts) => {
   })
   // Run make to compile the model C code.
   sh.cd(buildDirname)
-  execCmd(`make P=${modelName}`)
+  let exitCode = execCmd(`make P=${modelName}`)
+  if (exitCode > 0) {
+    process.exit(exitCode)
+  }
+  return 0
 }
 module.exports = {
   command,

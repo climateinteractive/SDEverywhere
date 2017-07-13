@@ -14,7 +14,9 @@
 // run - build, exec
 // test - run, log, compare
 
-require('yargs')
+const util = require('util')
+
+let exitCode = require('yargs')
   .strict()
   .usage('usage: $0 <command>')
   .command(require('./sde-generate'))

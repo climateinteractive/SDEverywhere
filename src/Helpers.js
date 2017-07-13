@@ -116,8 +116,11 @@ let mapObjProps = (f, obj) => {
   return result
 }
 // Command helpers
-let outputDir = (build, modelDirname) => {
-  return ensureDir(output, 'output', modelDirname)
+let outputDir = (outfile, modelDirname) => {
+  if (outfile) {
+    outfile = path.dirname(outfile)
+  }
+  return ensureDir(outfile, 'output', modelDirname)
 }
 let buildDir = (build, modelDirname) => {
   return ensureDir(build, 'build', modelDirname)
@@ -137,7 +140,7 @@ let modelPathProps = model => {
   // modelPathname: '/Users/todd/src/models/arrays/arrays.mdl'
   let p = R.merge({ ext: '.mdl' }, R.pick(['dir', 'name'], path.parse(model)))
   if (R.isEmpty(p.dir)) {
-    p.dir = sh.pwd().stdout
+    p.dir = process.cwd()
   }
   return {
     modelDirname: p.dir,
@@ -147,18 +150,24 @@ let modelPathProps = model => {
 }
 let execCmd = cmd => {
   // Run a command line silently in the "sh" shell. Print error output on error.
+  let exitCode = 0
   let result = sh.exec(cmd, { silent: true })
   if (sh.error()) {
     console.log(result.stderr)
+    exitCode = 1
   }
+  return exitCode
 }
 let execCmdAsync = cmd => {
   // Run a command line asynchronously and silently in the "sh" shell. Print error output on error.
+  let exitCode = 0
   sh.exec(cmd, { silent: true }, (status, stdout, stderr) => {
     if (status) {
       console.log(stderr)
+      exitCode = 1
     }
   })
+  return exitCode
 }
 // Function to map over lists's value and index
 let mapIndexed = R.addIndex(R.map)
