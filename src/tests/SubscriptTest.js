@@ -20,8 +20,8 @@ const {
   mapIndex,
   printSubscripts,
   printSubscript
-} = require('./Subscript')
-const { vlog } = require('./Helpers')
+} = require('../Subscript')
+const { vlog } = require('../Helpers')
 
 let s = Subscript('S')
 assert(s === undefined)

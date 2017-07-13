@@ -272,6 +272,7 @@ module.exports = {
   // subscriptFamily,
   Subscript,
   addIndex,
+  addMapping,
   allDimensions,
   allMappings,
   dimensionNames,
@@ -281,9 +282,11 @@ module.exports = {
   isDimension,
   isIndex,
   loadSubscripts,
+  mapIndex,
   normalizeSubscripts,
   printSubscripts,
   separatedVariableIndex,
   sub,
-  subscriptFamilies
+  subscriptFamilies,
+  subscriptFamily
 }

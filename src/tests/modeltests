@@ -1,0 +1,4 @@
+#!/usr/bin/env sh
+for MODEL in $(ls ../../models); do
+  echo "testing the $MODEL model"
+done
