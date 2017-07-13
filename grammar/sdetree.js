@@ -1,4 +1,4 @@
-const fs = require('fs');
+const fs = require('fs-extra');
 const app = require('commander');
 const R = require('ramda');
 

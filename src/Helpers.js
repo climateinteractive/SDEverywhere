@@ -1,3 +1,4 @@
+const fs = require('fs-extra')
 const path = require('path')
 const util = require('util')
 const R = require('ramda')
@@ -115,13 +116,29 @@ let mapObjProps = (f, obj) => {
   return result
 }
 // Command helpers
-let mdlPathProps = model => {
+let outputDir = (build, modelDirname) => {
+  return ensureDir(output, 'output', modelDirname)
+}
+let buildDir = (build, modelDirname) => {
+  return ensureDir(build, 'build', modelDirname)
+}
+let ensureDir = (dir, defaultDir, modelDirname) => {
+  // Ensure the directory exists as given or under the model directory.
+  let dirName = dir || path.join(modelDirname, defaultDir)
+  fs.ensureDirSync(dirName)
+  return dirName
+}
+let modelPathProps = model => {
   // Normalize a model pathname that may or may not include the .mdl extension.
+  // If there is not path in the model argument, default to the current working directory.
   // Return an object with properties that look like this:
   // modelDirname: '/Users/todd/src/models/arrays'
   // modelName: 'arrays'
   // modelPathname: '/Users/todd/src/models/arrays/arrays.mdl'
   let p = R.merge({ ext: '.mdl' }, R.pick(['dir', 'name'], path.parse(model)))
+  if (R.isEmpty(p.dir)) {
+    p.dir = sh.pwd().stdout
+  }
   return {
     modelDirname: p.dir,
     modelName: p.name,
@@ -175,6 +192,7 @@ let vlog = (title, value, depth = 1) => {
 
 module.exports = {
   asort,
+  buildDir,
   canonicalName,
   cdbl,
   cFunctionName,
@@ -190,11 +208,12 @@ module.exports = {
   listVars,
   mapIndexed,
   mapObjProps,
-  mdlPathProps,
+  modelPathProps,
   newAuxVarName,
   newLevelVarName,
   newLookupVarName,
   newTmpVarName,
+  outputDir,
   replaceInArray,
   strlist,
   strToConst,

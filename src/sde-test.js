@@ -2,7 +2,7 @@ const path = require('path')
 const { run } = require('./sde-run')
 const { log } = require('./sde-log')
 const { compare } = require('./sde-compare')
-const { mdlPathProps } = require('./Helpers')
+const { modelPathProps } = require('./Helpers')
 
 let command = 'test <model>'
 let describe = 'build the model, run it, process the log, and compare to Vensim data'
@@ -13,7 +13,7 @@ let builder = {
     alias: 's'
   },
   builddir: {
-    describe: 'build directory (defaults to ./build)',
+    describe: 'build directory',
     type: 'string',
     alias: 'b'
   },
@@ -29,7 +29,7 @@ let handler = argv => {
 let test = (model, opts) => {
   // Run the model and save output to an SDE log file.
   const LOG_BASENAME = 'sde'
-  let { modelDirname, modelName } = mdlPathProps(model)
+  let { modelDirname, modelName } = modelPathProps(model)
   let logPathname
   if (opts.outfile) {
     logPathname = opts.outfile

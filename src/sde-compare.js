@@ -1,4 +1,4 @@
-const fs = require('fs')
+const fs = require('fs-extra')
 const R = require('ramda')
 const { vlog } = require('./Helpers')
 

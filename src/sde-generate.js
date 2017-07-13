@@ -5,7 +5,7 @@ const ModelLexer = require('./ModelLexer').ModelLexer
 const ModelParser = require('./ModelParser').ModelParser
 const { codeGenerator } = require('./CodeGen')
 const { preprocessModel } = require('./Preprocessor')
-const { mdlPathProps } = require('./Helpers')
+const { modelPathProps, buildDir } = require('./Helpers')
 const F = require('./futil')
 
 let command = 'generate [options] <model>'
@@ -13,8 +13,19 @@ let describe = 'generate model code'
 let builder = {
   genc: {
     describe: 'generate C code for the model',
-    type: 'boolean',
-    alias: 'c'
+    type: 'boolean'
+  },
+  genjs: {
+    describe: 'generate JavaScript for the model',
+    type: 'boolean'
+  },
+  genwasm: {
+    describe: 'generate WebAssembly for the model',
+    type: 'boolean'
+  },
+  genhtml: {
+    describe: 'generate an HTML UI for the model',
+    type: 'boolean'
   },
   list: {
     describe: 'list model variables',
@@ -32,7 +43,7 @@ let builder = {
     alias: 's'
   },
   builddir: {
-    describe: 'build directory (defaults to ./build)',
+    describe: 'build directory',
     type: 'string',
     alias: 'b'
   },
@@ -47,18 +58,22 @@ let handler = argv => {
 }
 
 let generate = (model, opts) => {
-  // Parse input files and then hand data to the code generator.
-  let { modelDirname, modelName, modelPathname } = mdlPathProps(model)
+  // Preview coming attractions.
+  if (opts.genjs || opts.genwasm || opts.genhtml) {
+    console.log('This option is not available yet.')
+    process.exit(1)
+  }
+  // Get the model name and directory from the model argument.
+  let { modelDirname, modelName, modelPathname } = modelPathProps(model)
   // Ensure the build directory exists.
-  let buildDirname = opts.builddir || path.join(modelDirname, 'build')
-  fs.ensureDirSync(buildDirname)
+  let buildDirname = buildDir(opts.builddir, modelDirname)
   // Preprocess model text into parser input. Stop now if that's all we're doing.
   let writeRemovals = opts.preprocess
   let input = preprocessModel(modelPathname, writeRemovals)
   if (opts.preprocess) {
     let outputPathname = path.join(buildDirname, `${modelName}.mdl`)
     writeOutput(outputPathname, input)
-    process.exit()
+    process.exit(0)
   }
   // Parse the model and generate code.
   let listMode = ''

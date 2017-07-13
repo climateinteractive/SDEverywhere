@@ -1,13 +1,12 @@
-const fs = require('fs-extra')
 const path = require('path')
-const moment = require('moment')
-const { mdlPathProps, execCmd } = require('./Helpers')
+const sh = require('shelljs')
+const { modelPathProps, buildDir } = require('./Helpers')
 
 let command = 'clean <model>'
 let describe = 'clean out the build directory for a model'
 let builder = {
   builddir: {
-    describe: 'build directory (defaults to ./build)',
+    describe: 'build directory',
     type: 'string',
     alias: 'b'
   }
@@ -16,10 +15,13 @@ let handler = argv => {
   clean(argv.model, argv)
 }
 let clean = (model, opts) => {
-  let { modelDirname, modelName, modelPathname } = mdlPathProps(model)
-  // Ensure the build directory exists and empty it.
+  // Remove the build directory.
+  let { modelDirname, modelName, modelPathname } = modelPathProps(model)
   let buildDirname = opts.builddir || path.join(modelDirname, 'build')
-  fs.emptyDirSync(buildDirname)
+  let silentState = sh.config.silent
+  sh.config.silent = true
+  sh.rm('-r', buildDirname)
+  sh.config.silent = silentState
 }
 module.exports = {
   command,

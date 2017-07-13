@@ -1,13 +1,13 @@
 const fs = require('fs-extra')
 const path = require('path')
 const moment = require('moment')
-const { mdlPathProps, execCmd } = require('./Helpers')
+const { modelPathProps, execCmd } = require('./Helpers')
 
 let command = 'exec <model>'
 let describe = 'execute the model and capture its output to a file'
 let builder = {
   builddir: {
-    describe: 'build directory (defaults to ./build)',
+    describe: 'build directory',
     type: 'string',
     alias: 'b'
   },
@@ -21,7 +21,7 @@ let handler = argv => {
   exec(argv.model, argv)
 }
 let exec = (model, opts) => {
-  let { modelDirname, modelName, modelPathname } = mdlPathProps(model)
+  let { modelDirname, modelName, modelPathname } = modelPathProps(model)
   // Ensure the build directory exists.
   let buildDirname = opts.builddir || path.join(modelDirname, 'build')
   fs.ensureDirSync(buildDirname)

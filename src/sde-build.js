@@ -10,7 +10,7 @@ let builder = {
     alias: 's'
   },
   builddir: {
-    describe: 'build directory (defaults to ./build)',
+    describe: 'build directory',
     type: 'string',
     alias: 'b'
   }
