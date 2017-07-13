@@ -37,26 +37,19 @@ Visit the [GitHub repo](https://github.com/ToddFincannon/SDEverywhere) to downlo
 git clone https://github.com/ToddFincannon/SDEverywhere
 ~~~
 
-### Set the SDE_HOME environment variable
-
-The SDEverywhere tools scripts need to know where you installed SDEverywhere. Set the path in an `SDE_HOME` environment variable in your `~/.bash_profile` and start a new terminal tab or window. For instance, if you copied SDEverywhere to `~/Projects/SDEverywhere`, you would add this line:
-~~~
-export SDE_HOME="$HOME/Projects/SDEverywhere"
-~~~
-
 ### Install dependencies
 
 Install Node packages locally in the SDEverywhere `src` directory.
 ~~~
-cd $SDE_HOME/src
+cd src
 npm install
 ~~~
 
 ### Install the SDEverywhere command line tool
 
-You can run SDEverywhere from anywhere on your machine by installing the `sde` command line tool globally using `npm`.
+You can run SDEverywhere from anywhere on your machine by installing the `sde` command line tool globally using `npm`. The examples in this guide assume a global installation. If you choose not to do that, instead of the `sde` command, run `node sde.js` from the `src` directory.
 ~~~
-cd $SDE_HOME/src
+cd src
 npm install -g
 sde -v
 ~~~
@@ -65,21 +58,19 @@ sde -v
 
 Test your installation by building and running test models in the `models` directory, and then comparing SDEverywhere output to Vensim x64 output. Each model has its own directory under `models` with the same name as the model.
 ~~~
-cd $SDE_HOME/tools
-./sdetest arrays
+cd models/arrays
+sde test arrays
 ~~~
 
 If that worked OK, you have installed everything needed to use SDEverywhere. You can test *all* the test models too.
 ~~~
-cd $SDE_HOME/tools
-./sdetestall
+cd src/tests
+./modeltests
 ~~~
 
 ## Sample models
 
-Since you installed the `sde` command globally, you can run it from anywhere. The following examples use the setup that comes with SDEverywhere, but you can structure the directories any way you want. Look at the `sdetest` script for a complete sequence of commands using this setup.
-
-The Vensim `.mdl` file is located in the `models` directory in a folder with the base name of the `.mdl` file. The C code will be written with the same base name in the `build` directory.
+The sample Vensim models located in the `models` directory in a folder with the base name of the `.mdl` file. The C code will be written with the same base name in the `build` directory.
 
 The following models are included as samples and test cases for various Vensim features.
 
@@ -107,44 +98,74 @@ Here are the files in each model directory.
 
 Filename          | Description
 ----------------- | -----------
-{model}.mdl       | Model with subscripts removed as currently required by SDEverywhere
-{model}_subs.mdl  | Full model (including subscripts) that can run in Vensim
+{model}.mdl       | Vensim model
 {model}.vdf64     | Vensim data file from a 64-bit run using default variable values
 {model}.dat       | Data file exported in DAT text format
 {model}.txt       | SDEverywhere log file in DAT format with values for all time steps
-{model}_subs.js   | Subscripts in JS format with comments
-{model}_subs.json | Subscripts in minified JSON format
 {model}_spec.json | Model specification including input and output variables of interest
 {model}_vars.txt  | SDEverywhere variable analysis
 
 ## Usage
 
+Use `sde -h` to see a list of all commands.
+
+Use `sde {command}` to see options for a command.
+
+The following commands are run from the `models/{model}` directory. It is usually easiest to run from the directory where the `.mdl` file is located. However, in place of `{model}` in the command below, you can give a full pathname to locate the `.mdl` file anywhere on the system.
+
 ### Generate baseline model code that outputs all variables with no inputs
 ~~~
-cd $SDE_HOME/models/{model}
-sde generate {model}.mdl >$SDE_HOME/build/{model}.c
+sde generate -c {model}
 ~~~
 
 ### List a model's variables
 ~~~
-cd $SDE_HOME/models/{model}
-sde generate {model}.mdl -l >{model}_vars.txt
+sde generate {model} -l >{model}_vars.txt
 ~~~
 
 ### Preprocess a model to remove macros and tabbed arays to removals.txt
 ~~~
-cd $SDE_HOME/models/{model}
-sde generate {model}.mdl -p >{model}_pp.mdl
+sde generate {model} -p >{model}_pp.mdl
 ~~~
 
 ### Compile the C code into an executable in the build directory
 ~~~
-$SDE_HOME/tools/sdecc {model}
+sde compile {model}
 ~~~
 
-### Run the executable and capture output into a text file
+### Run the executable and capture output into a text file in the output directory
 ~~~
-$SDE_HOME/build/{model} >$SDE_HOME/build/{model}.txt
+sde exec {model}
+~~~
+
+### Convert the SDEverywhere output file to a Vensim DAT file in the output directory
+~~~
+sde log -d output/{model}.txt
+~~~
+
+### Compare the previously exported Vensim DAT file to SDEverywhere output
+~~~
+sde compare {model}.dat output/{model}.dat
+~~~
+
+### Generate C code and compile it in the build directory
+~~~
+sde build {model}
+~~~
+
+### Build and run the model
+~~~
+sde run {model}
+~~~
+
+### Run the model and compare its output to a previously exported Vensim DAT file
+~~~
+sde test {model}
+~~~
+
+### Delete the build directory
+~~~
+sde clean {model}
 ~~~
 
 ### Specify input and output variables
@@ -168,18 +189,17 @@ First, create a model specification file that gives the Vensim names of input an
 
 Generate code using the `-s` argument.
 ~~~
-cd $SDE_HOME/models/{model}
-sde generate {model}.mdl -s {model}_spec.json >$SDE_HOME/build/{model}.c
+cd models/{model}
+sde generate {model}.mdl -s {model}_spec.json
 ~~~
 
 ### Generating, compiling, running, and testing the C code
 
 First run the model in 64-bit Vensim and export the run in DAT format to the `{model}.dat` file in the `models/{model}` directory.
 
-The `sdetest` command generates baseline C code that outputs all variables with no inputs. It then compiles the C code and runs it. The output is captured and converted into DAT format in the `{model}.txt` file. This is compared to the Vensim run. All values that differ by a factor of 1e-5 or more are listed with the variance.
+The `sde test` command generates baseline C code that outputs all variables with no inputs. It then compiles the C code and runs it. The output is captured and converted into DAT format in the `output/{model}.dat` file. This is compared to Vensim run exported to a `{model}.dat` file in the current directory. All values that differ by a factor of 1e-5 or more are listed with the variance.
 ~~~
-cd $SDE_HOME/tools
-./sdetest {model}
+sde test {model}
 ~~~
 
 ## Contributing
@@ -208,14 +228,6 @@ Set up ANTLR 4 in `.bash_profile`.
 export CLASSPATH=".:/usr/local/lib/antlr-4.7-complete.jar:$CLASSPATH"
 alias antlr4='java -jar /usr/local/lib/antlr-4.7-complete.jar'
 alias grun='java org.antlr.v4.gui.TestRig'
-~~~
-
-### Running your local version during development
-
-If you installed SDEverywhere globally with `npm install -g`, then the `sde` command runs the globally installed copy located in your Node.js directory. This will not be affected by your source code changes during development. Run the `sde.js` file from the `src` directory instead.
-~~~
-cd $SDE_HOME/src
-node sde.js --help
 ~~~
 
 ### Debugging

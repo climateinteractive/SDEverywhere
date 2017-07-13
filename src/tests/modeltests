@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 for MODEL in $(ls ../../models); do
   echo "testing the $MODEL model"
-  sde clean ../../models/$MODEL/$MODEL
-  sde test ../../models/$MODEL/$MODEL -p 1e-4
-  sde clean ../../models/$MODEL/$MODEL
+  node ../sde.js clean ../../models/$MODEL/$MODEL
+  node ../sde.js test ../../models/$MODEL/$MODEL -p 1e-4
+  node ../sde.js clean ../../models/$MODEL/$MODEL
 done
