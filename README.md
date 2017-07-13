@@ -1,16 +1,17 @@
 # SDEverywhere Guide
 
+Revised: 2017-07-13 (version 0.3.0)
+
 ## Introduction
 
 [SDEverywhere](http://sdeverywhere.org/) is a [Vensim](http://vensim.com/) to C [transpiler](https://en.wikipedia.org/wiki/Source-to-source_compiler) that handles a broad range of [System Dynamics](http://www.systemdynamics.org/what-is-s/) models. It supports some advanced features of [Vensim Modeling Language](https://www.vensim.com/documentation/index.html?ref_language.htm), including subscripts, subranges, and subscript mapping. It generates human-readable C code.
 
-Using SDEverywhere, you can deploy interactive System Dynamics models in mobile, desktop, and web apps for policymakers and the general public. Or you could perform model analysis using general-purpose languages, running the model as high-performance C code.
+Using SDEverywhere, you can deploy interactive System Dynamics models in mobile, desktop, and web apps for policymakers and the public. Or you could perform model analysis using general-purpose languages, running the model as high-performance C code.
 
 ## Caveats
 
 SDEverywhere has been used to generate code for complex models with thousands of equations, but your model may use features of Vensim that SDEverywhere cannot translate yet. Please fork our code and contribute! Here are some prominent current limitations.
 
-- SDEverywhere generates 64-bit code, which will not run on 32-bit Windows.
 - Sketch information, the visual representation of the model, is not converted.
 - Only the most common [Vensim functions](https://www.vensim.com/documentation/index.html?20770.htm) are implemented.
 - Arrays must be one- or two-dimensional.
@@ -24,28 +25,25 @@ Tabbed arrays and macros are removed from the model during preprocessing and wri
 
 ### Requirements
 
-Using SDEverywhere requires the macOS operating system and the free [Xcode](https://itunes.apple.com/en/app/xcode/id497799835?mt=12) development tools from Apple.
+Using SDEverywhere requires the macOS operating system and the free [Xcode](https://itunes.apple.com/us/app/xcode/id497799835) development tools from Apple.
 
 ### Install Node.js
 
-Install [Node.js](https://nodejs.org/en/download/current/) version 6 or later to get a JavaScript runtime based on the Google V8 engine. This will also install the `npm` Node Package Manager.
+Install [Node.js](https://nodejs.org/) version 6.11.1 LTS or later. This will also install the `npm` Node Package Manager.
 
-### Get the code
+### Install SDEverywhere as an npm package
 
-Visit the [GitHub repo](https://github.com/ToddFincannon/SDEverywhere) to download the code as a zip file and install it in the directory of your choice. Alternatively, clone the repository on your machine.
+If you want to use SDEverywhere without getting the sample models, tests, and source code, simply install the npm package. The global installation gives you the `sde` command everywhere on your system.
+~~~
+npm install sdeverywhere -g
+~~~
+
+### Get the source code and sample models
+
+If you want the full source code, visit the [GitHub repo](https://github.com/ToddFincannon/SDEverywhere) to download the code as a zip file and install it in the directory of your choice. Alternatively, clone the repository on your machine.
 ~~~
 git clone https://github.com/ToddFincannon/SDEverywhere
 ~~~
-
-### Install dependencies
-
-Install Node packages locally in the SDEverywhere `src` directory.
-~~~
-cd src
-npm install
-~~~
-
-### Install the SDEverywhere command line tool
 
 You can run SDEverywhere from anywhere on your machine by installing the `sde` command line tool globally using `npm`. The examples in this guide assume a global installation. If you choose not to do that, instead of the `sde` command, run `node sde.js` from the `src` directory.
 ~~~
@@ -56,13 +54,13 @@ sde -v
 
 ## Test your setup
 
-Test your installation by building and running test models in the `models` directory, and then comparing SDEverywhere output to Vensim x64 output. Each model has its own directory under `models` with the same name as the model.
+If you installed the sample models from the GitHub repo, you can test your installation by building and running the models in the `models` directory, and then comparing SDEverywhere output to Vensim x64 output. Each model has its own directory under `models` with the same name as the model. For instance:
 ~~~
 cd models/arrays
 sde test arrays
 ~~~
 
-If that worked OK, you have installed everything needed to use SDEverywhere. You can test *all* the test models too.
+If that worked OK, you have installed everything needed to use SDEverywhere. You can test *all* the sample models too.
 ~~~
 cd src/tests
 ./modeltests
@@ -111,7 +109,11 @@ Use `sde -h` to see a list of all commands.
 
 Use `sde {command}` to see options for a command.
 
-The following commands are run from the `models/{model}` directory. It is usually easiest to run from the directory where the `.mdl` file is located. However, in place of `{model}` in the command below, you can give a full pathname to locate the `.mdl` file anywhere on the system.
+It is usually easiest to run these commands from the directory where the `.mdl` file is located. The `{model}` placeholder can be the model filename, for instance `arrays.mdl`, or simply the model name `arrays`.
+
+If you are not running from the model directory, you can give a full pathname to locate the `.mdl` file anywhere on the system.
+
+By default, SDEverywhere will create a `build` directory in your model directory to hold the generated code and the compiled model. If you run the model, it will also create an `output` directory by default. You can specify other directories with command options.
 
 ### Generate baseline model code that outputs all variables with no inputs
 ~~~
@@ -120,12 +122,12 @@ sde generate -c {model}
 
 ### List a model's variables
 ~~~
-sde generate {model} -l >{model}_vars.txt
+sde generate -l {model} >{model}_vars.txt
 ~~~
 
 ### Preprocess a model to remove macros and tabbed arays to removals.txt
 ~~~
-sde generate {model} -p >{model}_pp.mdl
+sde generate -p {model} >{model}_pp.mdl
 ~~~
 
 ### Compile the C code into an executable in the build directory
@@ -138,12 +140,12 @@ sde compile {model}
 sde exec {model}
 ~~~
 
-### Convert the SDEverywhere output file to a Vensim DAT file in the output directory
+### Convert the SDEverywhere output file to a DAT file in the output directory
 ~~~
 sde log -d output/{model}.txt
 ~~~
 
-### Compare the previously exported Vensim DAT file to SDEverywhere output
+### Compare a previously exported Vensim DAT file to SDEverywhere output
 ~~~
 sde compare {model}.dat output/{model}.dat
 ~~~
@@ -189,17 +191,48 @@ First, create a model specification file that gives the Vensim names of input an
 
 Generate code using the `-s` argument.
 ~~~
-cd models/{model}
-sde generate {model}.mdl -s {model}_spec.json
+sde generate -c {model}.mdl -s {model}_spec.json
 ~~~
 
 ### Generating, compiling, running, and testing the C code
 
-First run the model in 64-bit Vensim and export the run in DAT format to the `{model}.dat` file in the `models/{model}` directory.
+First, run the model in 64-bit Vensim and export the run in DAT format to the `{model}.dat` file in the model directory.
 
-The `sde test` command generates baseline C code that outputs all variables with no inputs. It then compiles the C code and runs it. The output is captured and converted into DAT format in the `output/{model}.dat` file. This is compared to Vensim run exported to a `{model}.dat` file in the current directory. All values that differ by a factor of 1e-5 or more are listed with the variance.
+The `sde test` command generates baseline C code that outputs all variables with no inputs. It then compiles the C code and runs it. The output is captured and converted into DAT format in the `output/{model}.dat` file. This is compared to Vensim run exported to a `{model}.dat` file in the model directory. All values that differ by a factor of 1e-5 or more are listed with the variance.
 ~~~
 sde test {model}
+~~~
+
+### Setting inputs
+
+SDEverywhere generates code that runs the model using the constants defined in the model. To explore model behavior, the user changes the values of constants we call "input variables" and runs the model again.
+
+There is a `setInputs` function stubbed out in the generated code that gets called at initialization. The spec file lists input variables, but you need to implement `setInputs` yourself. It takes a string with serialized input values and sets variable values from it. The serialization format depends on the needs of your application. JSON would be one choice.
+
+Here is an implementation to help you get started. This format minimizes the amount of data on the wire for web applications. It parses index-value pairs sent in a compact format that looks like this: `0:3.14 6:42`. That is, the values are separated by spaces, and each pair has an index number, a colon, and a floating point number.
+
+The zero-based index maps into a static array of input variable pointers held in the function. These are used to set the value directly into the static `double` variable in the generated code.
+~~~
+void setInputs(const char* inputData) {
+  static double* inputVarPtrs[] = {
+    &_var_1,
+    &_var_2
+  };
+  char* inputs = (char*)inputData;
+  // fprintf(stderr, "inputs = %s\n", inputs);
+  char* token = strtok(inputs, " ");
+  while (token) {
+    char* p = strchr(token, ':');
+    if (p) {
+      *p = '\0';
+      int modelVarIndex = atoi(token);
+      double value = atof(p+1);
+      // fprintf(stderr, "input [%d] = %g\n", modelVarIndex, value);
+      *inputVarPtrs[modelVarIndex] = value;
+    }
+    token = strtok(NULL, " ");
+  }
+}
 ~~~
 
 ## Contributing
