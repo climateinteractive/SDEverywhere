@@ -110,7 +110,7 @@ ${section(Model.levelVars())}
   //
   function emitIOCode() {
     initMode = false
-    return `void setInputs(const char* json) {
+    return `void setInputs(const char* inputData) {
 ${inputSection()}}
 void writeHeader() {
   writeText("${R.map(v => v.replace(/"/g, ''), spec.outputVars).join('\\t')}");
@@ -126,7 +126,7 @@ ${outputSection(spec.outputVars)}
 
   function emitIOCodeAllVars() {
     initMode = false
-    return `void setInputs(const char* json) {
+    return `void setInputs(const char* inputData) {
 ${inputSection()}}
 
 void writeHeader() {
@@ -232,32 +232,30 @@ ${outputSection(allModelVars())}
     if (spec.inputVars) {
       for (var i in spec.inputVars) {
         var inputVar = spec.inputVars[i].toLowerCase().replace(new RegExp(' ', 'g'), '_')
-        inputVarArray += '&_' + inputVar + ',\n\t\t\t'
+        inputVarArray += '&_' + inputVar + ',\n    '
       }
     }
     //c array of inputVar pointers
-    var inputVars = `
-    static double* inputVarPtrs[] = {
-      ${inputVarArray}
-    };
-    `
+    var inputVars = `  static double* inputVarPtrs[] = {
+    ${inputVarArray}
+  };
+`
     //if compiling for web, include this input string parser
     //TODO: put in own .js file in the /src/web folder
     if (codeGenOpts.setInputs_web) {
-      var parseFunc = `
-    char* inputs = (char*)json;
-    char* token = strtok(inputs, " ");
-    while (token) {
-      char* p = strchr(token, ':');
-      if (p) {
-        *p = '\\0';
-        int modelVarIndex = atoi(token);
-        double value = atof(p+1);
-        *inputVarPtrs[modelVarIndex] = value;
-      }
-      token = strtok(NULL, " ");
+      var parseFunc = `  char* inputs = (char*)inputData;
+  char* token = strtok(inputs, " ");
+  while (token) {
+    char* p = strchr(token, ':');
+    if (p) {
+      *p = '\\0';
+      int modelVarIndex = atoi(token);
+      double value = atof(p+1);
+      *inputVarPtrs[modelVarIndex] = value;
     }
-      `
+    token = strtok(NULL, " ");
+  }
+`
       inputVars += parseFunc
     }
     return inputVars
