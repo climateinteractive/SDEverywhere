@@ -3,10 +3,18 @@ const VarNameReader = require('./VarNameReader')
 const ModelLHSReader = require('./ModelLHSReader')
 const EquationGen = require('./EquationGen')
 const Model = require('./Model')
-const { sub, allDimensions, allMappings, isDimension, subscriptFamilies, loadSubscripts, printSubscripts } = require('./Subscript')
+const {
+  sub,
+  allDimensions,
+  allMappings,
+  isDimension,
+  subscriptFamilies,
+  loadSubscripts,
+  printSubscripts
+} = require('./Subscript')
 const { asort, lines, list, strlist, vlog } = require('./Helpers')
 
-let codeGenerator = (parseTree, spec, listMode) => {
+let codeGenerator = (parseTree, spec, listMode, codeGenOpts) => {
   // Set true when in the init section, false in the eval section
   let initMode = false
   // Set true to output all variables when there is no model run spec.
@@ -104,7 +112,6 @@ ${section(Model.levelVars())}
     initMode = false
     return `void setInputs(const char* json) {
 ${inputSection()}}
-
 void writeHeader() {
   writeText("${R.map(v => v.replace(/"/g, ''), spec.outputVars).join('\\t')}");
 }
@@ -218,8 +225,42 @@ ${outputSection(allModelVars())}
     let section = R.pipe(code, lines)
     return section(modelVarNames)
   }
+
   function inputSection() {
-    return ''
+    var inputVarArray = ''
+    //if there was a modelSpec, then generate the list of input variables
+    if (spec.inputVars) {
+      for (var i in spec.inputVars) {
+        var inputVar = spec.inputVars[i].toLowerCase().replace(new RegExp(' ', 'g'), '_')
+        inputVarArray += '&_' + inputVar + ',\n\t\t\t'
+      }
+    }
+    //c array of inputVar pointers
+    var inputVars = `
+    static double* inputVarPtrs[] = {
+      ${inputVarArray}
+    };
+    `
+    //if compiling for web, include this input string parser
+    //TODO: put in own .js file in the /src/web folder
+    if (codeGenOpts.setInputs_web) {
+      var parseFunc = `
+    char* inputs = (char*)json;
+    char* token = strtok(inputs, " ");
+    while (token) {
+      char* p = strchr(token, ':');
+      if (p) {
+        *p = '\\0';
+        int modelVarIndex = atoi(token);
+        double value = atof(p+1);
+        *inputVarPtrs[modelVarIndex] = value;
+      }
+      token = strtok(NULL, " ");
+    }
+      `
+      inputVars += parseFunc
+    }
+    return inputVars
   }
 
   return {
