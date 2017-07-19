@@ -27,11 +27,9 @@
         <!-- Header row-->
       	<tr>
           <th>
-            <h3>Views</h3>
           </th>
-          <th><h2 id="title"></h2></th>
-      	  <th>
-            <h3>Chart Controls</h3>
+          <th style-"width:60%"><h2 id="title"></h2></th>
+      	  <th style="width:25%">
           </th>
       	 </tr>
       	<tr>
@@ -40,37 +38,41 @@
             <div id="viewList"></div>
           </td>
       	  <td>
-            <!-- will contain the charts-->
-            <span id="chart0"><svg></svg></span>
-            <span id="chart1"><svg></svg></span>
+            <div id="charts">
+              <!-- will contain the charts-->
+              <div id="chart0">
+                <svg></svg>
+                <button id="chart0_toggle">Toggle Series</button>
+                <div>
+                </div>
+              </div>
+              <div id="chart1">
+                <svg></svg>
+                <button id="chart1_toggle">Toggle Series</button>
+                <div>
+                </div>
+              </div>
+              <div id="chart2">
+                <svg></svg>
+                <button id="chart1_toggle">Toggle Series</button>
+                <div>
+                </div>
+              </div>
+
+            </div>
           </td>
       	  <td>
             <!-- buttons and sliders -->
+            <button id="toggleSliders">Toggle Sliders</button>
             <button id="reset">Reset</button>
-            <button id="toggleConfig">Toggle Config</button>
+            <div id="sliderList"><span id="sliderVars"></span></div>
             <hr/>
-            <div><h4>Input Variables</h4><span id="sliders"></span></div>
+            <div><span id="sliders"></span></div>
           </td>
       	 </tr>
       </table>
 
       <hr/>
-
-      <!-- Contains widgets to configure the chart's axes as well as available sliders-->
-      <div id="config">
-        <table>
-        	<tr>
-        	  <th>Y-axis Series</th>
-        	  <th>X-axis</th>
-            <th>Slider Vars</th>
-        	 </tr>
-        	<tr>
-        	  <td><span id="yVars"></span></td>
-        	  <td><span id="xVars"></span></td>
-            <td><span id="sliderVars"></span></td>
-        	 </tr>
-        </table>
-      </div>
 
       <!--=======  END HTML  =========-->
 

@@ -14,28 +14,34 @@
     "Predators Y",
     "Prey X",
     "Predator increase rate",
+    "Predator decrease rate",
     "Prey increase rate",
     "Prey decrease rate",
     "Time"
   ],
   "viewButtons" :  {
         "Population" : {
+          "yVars" : [
+                      ["Predators Y", "Prey X"]
+                    ],
+          "xVars" : ["Time"],
           "sliders" : [
             "Reference predators",
             "Reference prey"
-          ],
-          "yVars1" : ["Predators Y", "Prey X"],
-          "xVar1" : "Time"
+          ]
         },
 
         "Rates" : {
+          "yVars" : [
+                      ["Predator increase rate", "Predator decrease rate"],
+                      ["Prey increase rate", "Prey decrease rate"]
+                    ],
+          "xVars" : ["Time","Time"],
           "sliders" : [
             "Reference predation rate",
             "Predator fractional decrease rate gamma",
             "Prey fractional growth rate alpha"
-          ],
-          "yVars1" : [  "Prey increase rate", "Prey decrease rate"],
-          "xVar1" : "Time"
+          ]
         }
       }
 }

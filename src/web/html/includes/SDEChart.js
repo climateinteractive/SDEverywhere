@@ -11,21 +11,9 @@ function SDEChart(domId, yVars, xVar, sdHeaders, sdData) {
 
     //create initial charts
     this.refreshCharts();
-
 }
+
 //==============< BEGIN Chart Control Event Handlers >=============//
-
-/** changes x-axis series **/
- SDEChart.prototype.onChangeXDropdown = function() {
-    this.currXVar = $(this).val();
-    this.refreshCharts();
- };
-
- /** changes y-axis series **/
- SDEChart.prototype.onChangeYVarSelection = function() {
-    this.currYVarList = $(this).val();
-    this.refreshCharts();
- };
 
  //==============< BEGIN SDEverywhere Functions to generate Charts >=============//
 
@@ -113,7 +101,13 @@ SDEChart.prototype.getNDV3Data = function(yVarList, xVar, sdHeaders, sdData) {
 /**
 Refreshes the charts to reflect the values of this.currYVarList & currXVar
 **/
-SDEChart.prototype.refreshCharts = function() {
+SDEChart.prototype.refreshCharts = function(currYVarList, currXVar) {
+
+  if(currYVarList)
+    this.currYVarList = currYVarList;
+  if(currXVar)
+    this.currXVar = currXVar;
+
   //get the data from the CSV & create an NVD3 chart
   var chartData = this.getNDV3Data(this.currYVarList, this.currXVar, this.sdHeaders, this.sdData);
   this.createCharts(chartData,this.currYVarList, this.currXVar);

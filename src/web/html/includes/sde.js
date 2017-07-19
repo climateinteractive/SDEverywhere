@@ -1,17 +1,17 @@
 //==============< BEGIN Model-Specific Params >=============//
-    // This section is auto-filled in by SDEverywhere
+// This section is auto-filled in by SDEverywhere
 
-    var modelName = ::modelName_::;
-    var modelScript = ::modelJS_::;
+var modelName = ::modelName_::;
+var modelScript = ::modelJS_::;
 
-    //Entries are varName : [min, max, init]
-    var inputVarDef = ::inputVarDef_::;
+//Entries are varName : [min, max, init]
+var inputVarDef = ::inputVarDef_::;
 
-    //list of available output variables
-    var outputVars = ::outputVars_::;
+//list of available output variables
+var outputVars = ::outputVars_::;
 
-    //list of available output variables
-    var viewButtons = ::viewButtons_::;
+//list of available output variables
+var viewButtons = ::viewButtons_::;
 
 //==============< BEGIN General Params and Constants >=============//
 
@@ -26,31 +26,25 @@ var SLIDER_PARAMS_INIT = 2
 var URL_CHARTVAR_SEPARATOR = ",";
 var URL_CHART_SEPARATOR = ";";
 
-//initial variables to show
-var init_sliderVars = [inputVars[0], inputVars[1]];
-var init_yVarList = [
-                      [outputVars[0],outputVars[1]],
-                      [outputVars[2],outputVars[3]],
-                    ];
-    //default to time on x-axis
-var init_xVar = ["Time","Time"];
-
 //==============< BEGIN Global State Vars & "Main" Function >=============//
 
 //holds the data printed out by an SDEverywhere WASM
 var sdHeaders = null;
 var sdData = [];
 
-//holds the current data to be plotted
-var chartYVars = init_yVarList;
-var chartXVars = init_xVar;
-var currSliderVars = init_sliderVars;
+//holds the charts and current data to be plotted
+var sdeCharts = [];
+var chartYVars = [[outputVars[1]]];
+var chartXVars = ["Time"];
+var currSliderList = [[inputVars[0]]];
+
+//holds viewInfo
+var currView = null;
 
 var runStartTime;
 
 //the "msin" function
 $( function() {
-      initUI();
 
       runStartTime = performance.now();
 
@@ -58,6 +52,7 @@ $( function() {
       $.getScript( modelScript )
          //model will be run during the leading
          .done(function( script, textStatus ) {
+             initUI();
 
              //set the page title
              $("#title").text("SDEverywhere: "+modelName);
@@ -78,22 +73,25 @@ $( function() {
 Creates widgets for the UI as well as parses query string args
 **/
 var initUI = function() {
-  //see whether we have query variables to set the chart inputs and contents
-  var url = new URL(document.location.href);
-  parseURLArgs(url);
 
   //create viewButtons
   createViewButtons("viewList",viewButtons);
 
+  //see whether we have query variables to set the chart inputs and contents
+  var url = new URL(document.location.href);
+  parseURLArgs(url);
+
   //create the config-related widgets
-  createDropDownList("#sliderVars","sliderDropdown","sliderDropdown",inputVars,onChangeSliderVarSelection,false, currSliderVars);
-  //createDropDownList("#yVars","dataDropdown","dataDropdown",outputVars,onChangeYVarSelection, false, currYVarList );
-  //createDropDownList("#xVars","dataDropdownX","dataDropdownX",outputVars,onChangeXDropdown,true, [currXVar]);
-  $("#toggleConfig").click(onClick_toggleConfig.bind(this));
-  $("#config").hide();
+  createDropDownList("#sliderVars","sliderDropdown","sliderDropdown",inputVars,onChangeSliderVarSelection,false, currSliderList);
+  $("#toggleSliders").click(onClick_toggleSliders.bind(this));
+  $("#sliderList").hide();
 
   //create input sliders for the next model run
-  createSliders("#sliders","a","B",currSliderVars,null,null);
+  createSliders("#sliders","a","B",currSliderList,null,null);
+
+  //add toggle event handler to the chart series toggle buttons -- do this only once
+  $("#charts button").click(onClick_toggleChartSeries);
+
 }
 
 
@@ -102,28 +100,34 @@ Checks the URL query string for args and sets the chart & sliders accordingly
 **/
 var parseURLArgs = function(url) {
 
-  var modelInputs = url.searchParams.get("inputs");
-
   //parse the model inputVars to set the model input params, slider list and values
+  var modelInputs = url.searchParams.get("inputs");
   if(modelInputs) {
-
     //non-default arguments were passed in
     Module.arguments = [modelInputs];
 
-    //set the slider list & values to match the arg values
-    currSliderVars = [];
-    var sliderArgs = modelInputs.split(" ");
-    for(var i in sliderArgs) {
-        var currArg = sliderArgs[i].split(":");
+    var modelInputs = modelInputs.split(" ");
+    for(var i in modelInputs) {
+        var currArg = modelInputs[i].split(":");
         var modelInputName = inputVars[currArg[0]];
         var modelInputVal = currArg[1];
-
-        //update slider list
-        currSliderVars.push(modelInputName);
         //set the slider value
         inputVarDef[modelInputName][SLIDER_PARAMS_INIT] = modelInputVal;
     } //for (var i
   } // if modelInputs
+
+  //see if there is a slider list -- if so, then show only those sliders
+  var sliders = url.searchParams.get("sliders");
+  //set the slider list & values to match the arg values
+  if(sliders) {
+    sliders = sliders.split(",");
+
+    currSliderList = [];
+    for(var i in sliders) {
+      var sliderVarName = inputVars[sliders[i]];
+      currSliderList.push(sliderVarName);
+    }
+  }
 
   //parse the yVar list to put the correct outputVars on the chart
   var yVars = url.searchParams.get("yVars");
@@ -162,8 +166,58 @@ var parseURLArgs = function(url) {
     }
   } //if(xVarCodesForCharts) {
 
+  //if neither x nor y args were set, then check for view number and use that if it exists
+  //  if not, then default to first view
+  if(!(yVars && xVarCodesForCharts) && viewButtons != null) {
+    //check to see whether we have view data
+    var viewsList = Object.keys(viewButtons);
+    if(viewsList.length > 0) {
+
+      //check to see if view was specified in the URL
+      //if not, default to first view
+      var viewName = url.searchParams.get("view")
+      if(viewName == null)
+        viewName = viewsList[0]
+
+      //update the list of yVars, xVars, and sliders
+      //but don't make the charts yet since we haven't run the model yet
+      updateView(viewName, false);
+    }
+  }
 } //end parseURLArgs()
 
+
+/**
+updates the view -- i.e. charts & sliders shown
+**/
+ function updateView(viewName, refreshCharts) {
+   //check to see if view exists
+   if(!(viewName in viewButtons)) {
+     console.log("View not found: "+ viewName);
+     return;
+   }
+
+   //save the current view name
+   currView = viewName;
+
+   //get parameters for view
+   var viewParams = viewButtons[currView];
+
+   //save the x & y vars that should appear on the chart(s)
+   chartXVars = viewParams.xVars.slice();
+   chartYVars = viewParams.yVars.slice();
+   if(refreshCharts)
+    createCharts(viewName);
+
+   //update the list of visible sliders
+   currSliderList = viewParams.sliders.slice();
+   createSliders("#sliders","sliderList","sliderList",currSliderList,null,null);
+
+   //highlight the selected view button so user can identify the current view
+   var buttonDomId = varNameToViewButtonId(viewName);
+   $(".viewButton_highlight").removeClass("viewButton_highlight");
+   $("#"+buttonDomId).addClass("viewButton_highlight");
+ }
 
 //==============< END init functions >=============//
 
@@ -171,21 +225,15 @@ var parseURLArgs = function(url) {
 
 //define callbacks that are used by the auto-generated .js file that calls the WASM
 var Module = {
-  //don't exit on run-time
-  //noExitRuntime : true,
-
-  //gets called after the WASM is finished executing
+  //gets called right after the WASM is finished executing
   postRun: function() {
-    //console.log("Finished Model Execution");
-
     //get the data from the CSV & create an NVD3 chart
     var runEndTime = performance.now()
     var elapsedTime = runEndTime - runStartTime // in ms
     console.warn("Script Load + Model Run: "+Math.round(elapsedTime)+ " ms");
 
-    //create the initial charts
-    var chart1 = new SDEChart("chart0",chartYVars[0], chartXVars[0], sdHeaders, sdData);
-    var chart2 = new SDEChart("chart1",chartYVars[1], chartXVars[1], sdHeaders, sdData);
+    //create charts only after we run the model
+    createCharts();
   },
 
   //gets called when the .wasm prints to stdout
@@ -229,20 +277,30 @@ var Module = {
 /**
 Creates URL to reload the page and pass the right input variabls to it
 **/
-var reloadPage = function(includeArgs, currSliderVars, chartYVars, chartXVars) {
+var reloadPage = function(includeURLArgs, currSliderList, chartYVars, chartXVars) {
   var newRunURL = 'index.html';
 
-  if(includeArgs) {
-    //encode model input values from sliders
-    var modelInputArgs = genModelVarArgString(currSliderVars).trim();
-    //encode chart y & x vars into a compact string form
-    var yVarArgs = genChartVarsURLArg(chartYVars).trim();
-    var xVarArgs = genEncodedOutputVarList(chartXVars,URL_CHART_SEPARATOR).trim();
+  if(includeURLArgs) {
 
-    //generate the new URL
+    //encode all model input values from sliders
+    var modelInputArgs = genModelVarArgString(currSliderList).trim();
     newRunURL+='?inputs='+modelInputArgs;
-    newRunURL+='&yVars='+yVarArgs;
-    newRunURL+='&xVars='+xVarArgs;
+
+    //see if we are looking at an unchanged view
+    //(i.e. yVars, xVars, and sliders are still as defined)
+    if(currView != null) {
+      //if so, then we don't have to pass-on a list of y,x, and sliders
+      newRunURL+='&view='+currView;
+    } else {
+      //if we have modified the current view, then
+      //encode chart y & x vars into a compact string form
+      var yVarArgs = genChartVarsURLArg(chartYVars).trim();
+      var xVarArgs = genEncodedOutputVarList(chartXVars,URL_CHART_SEPARATOR).trim();
+      var sliderArgs = genEncodedInputVarList(currSliderList,URL_CHARTVAR_SEPARATOR).trim();
+      newRunURL+='&yVars='+yVarArgs;
+      newRunURL+='&xVars='+xVarArgs;
+      newRunURL+='&sliders='+sliderArgs;
+    }
   }
 
   document.location.href=newRunURL;
@@ -271,35 +329,20 @@ var genChartVarsURLArg = function(allChartsOutputVars) {
 }
 
 /**
-Generates an encoded list of variables with the specified delimiters
+go through all inputVars and create a URL query var for the current values
 **/
-var genEncodedOutputVarList = function(varList, delimiter) {
-  var codedVarList = "";
-  for(var i in varList) {
-      var outputVar = varList[i];
-      var varCode = outputName_toId(outputVar);
-      if(i > 0)
-        codedVarList += delimiter;
-      codedVarList += varCode;
-  }
-  return codedVarList;
-}
-
-/**
-go through sliders and create a URL query var for the values
-**/
-var genModelVarArgString = function(currSliderVars) {
+var genModelVarArgString = function(currSliderList) {
   var argString = "";
 
   //create an encoded model input arg value string
-  for(var i in currSliderVars) {
+  for(var i in inputVars) {
       //get slider value
-      var currInputVar = currSliderVars[i];
+      var currInputVar = inputVars[i];
       var sliderDOMId = "#"+varNameToSliderId(currInputVar);
-      var currInputVal = $(sliderDOMId).slider( "option", "value");
+      var currInputVal = $(sliderDOMId+" .slider").slider( "option", "value");
 
       //encode it as [index]:[value] and add to argString
-      var argArrayIndex = inputName_toId(currInputVar);
+      var argArrayIndex = inputVarName_toCode(currInputVar);
       var argToken = argArrayIndex + ":" + currInputVal + " ";
       argString += argToken;
   }
@@ -309,18 +352,95 @@ var genModelVarArgString = function(currSliderVars) {
 
 //==============< BEGIN Widget Control Event Handlers >=============//
 
-var onClick_toggleConfig = function() {
-  $("#config").slideToggle("slow");
+/**
+Toggles whether the slider menu is visible
+***/
+var onClick_toggleSliders = function() {
+  $("#sliderList").slideToggle("slow");
 }
 
-/**  changes the available sliders **/
+/**  changes the available sliders on a given view **/
 var onChangeSliderVarSelection = function() {
-    currSliderVars = $(this).val();
-    createSliders("#sliders","sliderList","sliderList",currSliderVars,null,null);
+    currSliderList = $(this).val();
+
+    //since we changed the slider value in the view, we're technically not looking at it anymore
+    currView = null;
+
+    //update the mulitselect by replacing it
+    //TODO: don't replace HTML, just update selection...
+    createSliders("#sliders","sliderList","sliderList",currSliderList,null,null);
  };
 
+/**
+toggles whether the series selector is visible for a given chart
+**/
+ var onClick_toggleChartSeries = function() {
+   //has form [chartDivId]_toggle
+   var toggleId = $(this).attr("id").split("_");
+   var chartId = toggleId[0];
+
+   $("#"+chartId+" div").slideToggle("slow");
+ }
+
+  /**
+  Update the data series shown on a chart
+  **/
+  var onChangeChartSeries = function() {
+    //clear out currViewPointer as we are altering the configured view
+    currView = null;
+
+    //dropdown Id's have form [chartSeries]_[chartNum]
+    var dropdown = $(this).attr("id").split("_");
+    var series = dropdown[0];
+    var i = dropdown[1];
+
+    //update the correct global variable
+    if(series == "y")//this.currXVar = $(this).val();
+      chartYVars[i] = $(this).val();
+    else {
+      chartXVars[i] = $(this).val();
+    }
+
+    //regenerate new charts with the series data
+    //TODO: don't regenerate whole SVG
+    sdeCharts[i].refreshCharts(chartYVars[i], chartXVars[i]);
+
+  };
 
  //==============< BEGIN SDEverywhere Functions to generate Widgets >=============//
+
+ /**
+ create charts that reflect the current x & y display vars
+ **/
+ function createCharts(viewName) {
+   //check to see whether each chart has y & x variables
+   if(chartYVars.length != chartXVars.length) {
+     alert("Error: "+viewName+": xVars and yVars indicate a differing # of charts");
+   }
+
+   //clear existing charts, series selectors, and hiddle toggles
+   d3.selectAll("svg > *").remove();
+   $("#charts button").hide();
+   $("#charts div div > *").remove();
+
+   //create new charts
+   sdeCharts = new Array(chartYVars.length);
+   for(var i in chartYVars) {
+     var divId = "chart"+i;
+     //create the chart object
+     sdeCharts[i] = new SDEChart(divId,chartYVars[i], chartXVars[i], sdHeaders, sdData);
+
+     //create series dropdowns and hide them
+     var dropdownSelector = "#"+divId+" div";
+     createDropDownList(dropdownSelector,"y_"+i,"y_"+i,outputVars,onChangeChartSeries, false, chartYVars[i] );
+     createDropDownList(dropdownSelector,"x_"+i,"x_"+i,outputVars,onChangeChartSeries,true, [chartXVars[i]]);
+     $(dropdownSelector).hide();
+
+     //create dropdown toggles for each chart and show button
+     var toggleSelector = "#"+divId+" button"
+     $(toggleSelector).show();
+   }
+ }
 
 
 /**
@@ -354,35 +474,30 @@ function createDropDownList(selector, name, id, optionList, onChange, isSingle, 
    $(selector).append(combo);
 }
 
-function varNameToSliderId(sliderVarName) {
-  var noSpaces = sliderVarName.replace(/\s/g, '-');
-  return "slider-"+noSpaces;
-}
-
 /**
 create list of sliderss
 **/
 //https://stackoverflow.com/questions/7895205/creating-dropdown-selectoption-elements-with-javascript
-function createSliders(selector, name, id, varList, initValList,onChange) {
+function createSliders(selector, name, id, visibleSliderVarList, initValList,onChange) {
 
     var sliderDiv = $("#sliders");
     sliderDiv.empty();
 
     //add each column header to the drop-down list
-    $.each(varList, function (i, el) {
+    $.each(inputVars, function (i, inputVarName) {
 
-        var sliderDOMId = varNameToSliderId(el);
+        var sliderDOMId = varNameToSliderId(inputVarName);
+
         //add the slider HTML
-        var currSliderHTML = "<div>"+el+"</div>"; //slider label
-        currSliderHTML += "<div id='"+sliderDOMId+"'>";
-        currSliderHTML += "<div class='custom-handle ui-slider-handle'></div></div>";
+        var currSliderHTML = `<div id="${sliderDOMId}"><div>${inputVarName}</div>`; //slider label
+        currSliderHTML += "<div class='slider'>";
+        currSliderHTML += "<div class='custom-handle ui-slider-handle'></div></div></div>";
         sliderDiv.append(currSliderHTML);
 
-
         //convert the HTML into a slider
-        var currSlider = $("#"+sliderDOMId);
-        var handle = $( "#"+sliderDOMId+" .custom-handle");
-        var currSliderParams = inputVarDef[el];
+        var currSlider = $("#"+sliderDOMId+ " .slider");
+        var handle = $( "#"+sliderDOMId+" .slider .custom-handle");
+        var currSliderParams = inputVarDef[inputVarName];
         currSlider.slider({
            min: currSliderParams[SLIDER_PARAMS_MIN],
            max: currSliderParams[SLIDER_PARAMS_MAX],
@@ -397,37 +512,90 @@ function createSliders(selector, name, id, varList, initValList,onChange) {
           //onChange, refresh the page with the slider vals
            change: function(event, ui) {
              console.log(ui.value)
-             reloadPage(true, currSliderVars, chartYVars, chartXVars);
+             reloadPage(true, currSliderList, chartYVars, chartXVars);
            }
-
          });
 
+         //hide the slider if we don't need it in the view
+         var currSlider = $("#"+sliderDOMId);
+         if(visibleSliderVarList.indexOf(inputVarName) < 0)
+          currSlider.hide();
     });
 }
 
+
+
 /**
-create a drop-down list
+create a list of all view buttons
 **/
 function createViewButtons(divId, buttonConfig) {
 
     //get button div
     var buttonDiv = $("#"+divId);
 
-    //add each column header to the drop-down list
-    $.each(Object.keys(buttonConfig), function (i, el) {
-        var viewName = el;
+    //add each button to the view list
+    $.each(Object.keys(buttonConfig), function (i, viewName) {
         var viewParams = buttonConfig[viewName];
-        buttonDiv.append("<a href='.'>"+ el + "</a><br/>");
+        var buttonDomId = varNameToViewButtonId(viewName);
+        buttonDiv.append(`<input class='viewButton' id='${buttonDomId}' type='submit' value='${viewName}'/><br/>`);
+    });
+
+    //add click listener to each button
+    $(`#${divId} input`).click(function() {
+        var viewName = ($(this).attr("value"));
+        updateView(viewName, true);
     });
 }
 
+
 //==============< BEGIN Helper Functions >=============//
 
+var domifyStr = function(strVar) {
+  return strVar.toLowerCase().replace(new RegExp(' ', 'g'), '_')
 
-var outputName_toId = function(currOutputVar) {
+}
+
+/**
+Generates an encoded list of variables with the specified delimiters
+**/
+var genEncodedVarList = function(encoderFunc, varList, delimiter) {
+  var codedVarList = "";
+  for(var i in varList) {
+      var outputVar = varList[i];
+      var varCode = encoderFunc(outputVar);
+      if(i > 0)
+        codedVarList += delimiter;
+      codedVarList += varCode;
+  }
+  return codedVarList;
+}
+
+//creates a list of coded outputVars
+var genEncodedOutputVarList = function(outputVarList, delimiter) {
+   return genEncodedVarList(outputName_toCode,outputVarList, delimiter);
+}
+
+//creates a list of coded inputVars
+var genEncodedInputVarList = function(inputVarList, delimiter) {
+  return genEncodedVarList(inputVarName_toCode,inputVarList, delimiter);
+}
+
+//gets code for a given inputVar
+var inputVarName_toCode = function(currInputVar) {
+  return inputVars.indexOf(currInputVar);
+}
+
+//gets code for a given outputVar
+var outputName_toCode = function(currOutputVar) {
   return outputVars.indexOf(currOutputVar);
 }
 
-var inputName_toId = function(currInputVar) {
-  return inputVars.indexOf(currInputVar);
+/** generates domId for specified slider **/
+function varNameToSliderId(sliderVarName) {
+  return "slider_"+domifyStr(sliderVarName);
+}
+
+/** generates domId for specified view button **/
+function varNameToViewButtonId(viewName) {
+  return "view_"+domifyStr(viewName);
 }

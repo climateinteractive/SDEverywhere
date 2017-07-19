@@ -54,8 +54,6 @@ let compile = (model, opts) => {
 Compiles WASM out of the .c and .h files in the build directory
 **/
 let compileWASM = (modelName, modelJS, buildDirname) => {
-  const { spawn } = require('child_process')
-
   //create the arg array for the emcc call
   let emccArgs = []
 
@@ -76,16 +74,13 @@ let compileWASM = (modelName, modelJS, buildDirname) => {
   emccArgs.push('-s')
   emccArgs.push('WASM=1')
   emccArgs.push('-Wall')
-  //console.log(emccArgs);
-
-  //make the emcc call and pass in the argArray
-  const emcc = spawn('emcc', emccArgs)
-  emcc.stderr.on('data', data => {
-    console.log(`stderr: ${data}`)
-  })
-  emcc.on('close', code => {
-    process.exit(code)
-  })
+  // Run emcc to generate wasm code.
+  let cmd = `emcc ${emccArgs.join(' ')}`
+  let exitCode = execCmd(cmd)
+  if (exitCode) {
+    console.log('The Emscripten SDK must be installed in your path.');
+  }
+  process.exit(exitCode)
 }
 
 module.exports = {
