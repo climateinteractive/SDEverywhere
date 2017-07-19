@@ -1,0 +1,31 @@
+body {
+  font-family: helvetica;
+  margin: 0;
+  padding: 1em;
+  text-align:center;
+}
+
+table {
+  width:100%;
+}
+
+td {
+  vertical-align:top;
+}
+
+span#chart, span#chart svg {
+  height:400px;
+}
+
+.ui-slider {
+  margin-top:0.5em;
+  margin-bottom:2em;
+}
+
+.ui-slider .ui-slider-handle {
+    width: 2.5em;
+    height:1.3em;
+    text-align:center;
+    padding-top:0.2em;
+    font-size:10pt;
+  }
