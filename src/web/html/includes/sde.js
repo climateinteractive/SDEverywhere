@@ -46,6 +46,14 @@ var runStartTime;
 //the "msin" function
 $( function() {
 
+      //parse the model inputVars to set the model input params, slider list and values
+      var url = new URL(document.location.href);
+      var modelInputs = url.searchParams.get("inputs");
+      if(modelInputs) {
+        //non-default arguments were passed in
+        Module.arguments = [modelInputs];
+      }
+
       runStartTime = performance.now();
 
         //load the JS that was generated with the WASM
@@ -103,8 +111,6 @@ var parseURLArgs = function(url) {
   //parse the model inputVars to set the model input params, slider list and values
   var modelInputs = url.searchParams.get("inputs");
   if(modelInputs) {
-    //non-default arguments were passed in
-    Module.arguments = [modelInputs];
 
     var modelInputs = modelInputs.split(" ");
     for(var i in modelInputs) {
