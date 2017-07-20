@@ -3,7 +3,7 @@ const path = require('path')
 const moment = require('moment')
 const { modelPathProps, buildDir, outputDir, execCmd } = require('./Helpers')
 
-let command = 'exec <model>'
+let command = 'exec [options] <model>'
 let describe = 'execute the model and capture its output to a file'
 let builder = {
   builddir: {

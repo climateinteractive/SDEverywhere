@@ -1,7 +1,7 @@
 const { build } = require('./sde-build')
 const { exec } = require('./sde-exec')
 
-let command = 'run <model>'
+let command = 'run [options] <model>'
 let describe = 'build a model, run it, and capture its output to a file'
 let builder = {
   spec: {

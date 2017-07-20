@@ -269,7 +269,7 @@ source emsdk_set_env.sh
 ~~~
 sde generate --genwebc --spec {model}_web_spec.json {model}
 sde compile --wasm {model}
-sde generate --html --spec {model}_web_spec.json {model}
+sde generate --genhtml --spec {model}_web_spec.json {model}
 ~~~
 
 The first command generates C code from your model that is compatible with the web interface. The second command generates a WebAssembly file that can be directly called from the web application. The third command generates the web application code (HTML/JS/CSS) needed to run the model and graph the results.

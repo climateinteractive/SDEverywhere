@@ -4,7 +4,7 @@ const { log } = require('./sde-log')
 const { compare } = require('./sde-compare')
 const { modelPathProps, outputDir } = require('./Helpers')
 
-let command = 'test <model>'
+let command = 'test [options] <model>'
 let describe = 'build the model, run it, process the log, and compare to Vensim data'
 let builder = {
   spec: {

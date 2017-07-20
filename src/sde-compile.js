@@ -3,7 +3,7 @@ const path = require('path')
 const sh = require('shelljs')
 const { modelPathProps, buildDir, execCmd } = require('./Helpers')
 
-let command = 'compile <model>'
+let command = 'compile [options] <model>'
 let describe = 'compile the generated model to an executable file'
 let builder = {
   builddir: {

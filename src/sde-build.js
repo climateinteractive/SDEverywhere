@@ -1,7 +1,7 @@
 const { generate } = require('./sde-generate')
 const { compile } = require('./sde-compile')
 
-let command = 'build <model>'
+let command = 'build [options] <model>'
 let describe = 'generate model code and compile it'
 let builder = {
   spec: {

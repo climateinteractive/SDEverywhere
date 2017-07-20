@@ -2,7 +2,7 @@ const path = require('path')
 const sh = require('shelljs')
 const { modelPathProps, buildDir } = require('./Helpers')
 
-let command = 'clean <model>'
+let command = 'clean [options] <model>'
 let describe = 'clean out the build, output, and html directories for a model'
 let builder = {
   modeldir: {
