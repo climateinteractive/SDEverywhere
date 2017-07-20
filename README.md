@@ -115,64 +115,74 @@ If you are not running from the model directory, you can give a full pathname to
 
 By default, SDEverywhere will create a `build` directory in your model directory to hold the generated code and the compiled model. If you run the model, it will also create an `output` directory by default. You can specify other directories with command options.
 
-### Generate baseline model code that outputs all variables with no inputs
+**Generate baseline model code that outputs all variables with no inputs**
 ~~~
 sde generate --genc {model}
 ~~~
 
-### List a model's variables
+**List a model's variables**
 ~~~
 sde generate --list {model} >{model}_vars.txt
 ~~~
 
-### Preprocess a model to remove macros and tabbed arays to removals.txt
+**Preprocess a model to remove macros and tabbed arays to removals.txt**
 ~~~
 sde generate ----preprocess {model} >{model}_pp.mdl
 ~~~
 
-### Compile the C code into an executable in the build directory
+**Compile the C code into an executable in the build directory**
 ~~~
 sde compile {model}
 ~~~
 
-### Run the executable and capture output into a text file in the output directory
+**Run the executable and capture output into a text file in the output directory**
 ~~~
 sde exec {model} {arguments}
 ~~~
 
-### Convert the SDEverywhere output file to a DAT file in the output directory
+**Convert the SDEverywhere output file to a DAT file in the output directory**
 ~~~
 sde log --dat output/{model}.txt
 ~~~
 
-### Compare a previously exported Vensim DAT file to SDEverywhere output
+**Compare a previously exported Vensim DAT file to SDEverywhere output**
 ~~~
 sde compare {model}.dat output/{model}.dat
 ~~~
 
-### Generate C code and compile it in the build directory
+**Generate C code and compile it in the build directory**
 ~~~
-sde build --native {model}
-~~~
-
-### Generate WebAssembly code and a web page in the html directory
-~~~
-sde build --web {model}
+sde build {model}
 ~~~
 
-### Build C code and run the model
+**Build C code and run the model**
 ~~~
 sde run {model}
 ~~~
 
-### Run the model and compare its output to a previously exported Vensim DAT file
+**Run the model and compare its output to a previously exported Vensim DAT file**
 ~~~
 sde test {model}
 ~~~
 
-### Delete the build, output, and html directories
+**Delete the build, output, and html directories**
 ~~~
 sde clean {model}
+~~~
+
+**Generate C code that is compatible with the web interface**
+~~~
+sde generate --genwebc --spec {model}_web_spec.json {model}
+~~~
+
+**Generate WebAssembly code that can be embedded in a web app**
+~~~
+sde compile --wasm {model}
+~~~
+
+**Generate a web app to run the model and graph the results**
+~~~
+sde generate --genhtml --spec {model}_web_spec.json {model}
 ~~~
 
 ### Specify input and output variables
