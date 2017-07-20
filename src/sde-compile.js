@@ -78,7 +78,7 @@ let compileWASM = (modelName, modelJS, buildDirname) => {
   let cmd = `emcc ${emccArgs.join(' ')}`
   let exitCode = execCmd(cmd)
   if (exitCode) {
-    console.log('The Emscripten SDK must be installed in your path.');
+    console.log('The Emscripten SDK must be installed in your path.')
   }
   process.exit(exitCode)
 }
