@@ -1,7 +1,18 @@
 #!/usr/bin/env sh
+# Use the global sde command if it is available.
+SDE='node ../sde.js'
+if which sde >/dev/null; then SDE=sde; fi
+$SDE -v &>/dev/null
+if [[ $? -ne 0 ]]; then
+  echo 'SDEverywhere is not installed.'
+  echo 'Run "npm install" in the src directory to install it locally.'
+  echo 'You could also install it globally with "npm install sdeverywhere -g".'
+  exit 1
+fi
+# Test each model against saved Vensim data.
 for MODEL in $(ls ../../models); do
   echo "testing the $MODEL model"
-  node ../sde.js clean ../../models/$MODEL/$MODEL
-  node ../sde.js test ../../models/$MODEL/$MODEL -p 1e-4
-  node ../sde.js clean ../../models/$MODEL/$MODEL
+  $SDE clean ../../models/$MODEL/$MODEL
+  $SDE test ../../models/$MODEL/$MODEL -p 1e-4
+  $SDE clean ../../models/$MODEL/$MODEL
 done
