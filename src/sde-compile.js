@@ -26,7 +26,12 @@ let compile = (model, opts) => {
   // Link our C source files in the build directory.
   let cDirname = path.join(__dirname, 'c')
   sh.ls(cDirname).forEach(filename => {
-    let srcPathname = path.join(cDirname, filename)
+    // If a C source file is present in the model directory, link to it instead
+    // as an override.
+    let srcPathname = path.join(modelDirname, filename)
+    if (!fs.existsSync(srcPathname)) {
+      srcPathname = path.join(cDirname, filename)
+    }
     let dstPathname = path.join(buildDirname, filename)
     fs.ensureSymlinkSync(srcPathname, dstPathname)
   })

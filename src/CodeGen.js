@@ -221,7 +221,7 @@ ${outputSection(allModelVars())}
   function outputSection(modelVarNames) {
     // Read the model var name and emit the output call using the C var name.
     // TODO specify output precision in the spec file
-    let precision = 4;
+    let precision = 6;
     let code = R.map(modelVarName => `  outputVar(${new VarNameReader().read(modelVarName)}, ${precision});`)
     // Emit code to output the variables.
     let section = R.pipe(code, lines)
