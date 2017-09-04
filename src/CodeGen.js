@@ -77,12 +77,18 @@ ${dimensionMappingsSection()}
   //
   function emitInitCode() {
     initMode = true
-    return `void initConstants() {
+    return `// Internal state
+bool lookups_initialized = false;
+
+void initConstants() {
   // Initialize constants.
 ${section(Model.constVars())}
 
   // Initialize lookups.
+if (!lookups_initialized) {
 ${section(Model.lookupVars())}
+  lookups_initialized = true;
+}
 }
 void initLevels() {
   // Initialize variables with initialization values, such as levels, and the variables they depend on.
