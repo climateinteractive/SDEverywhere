@@ -1,6 +1,5 @@
 const R = require('ramda')
 const { Digraph, TopologicalOrder } = require('digraph-sort')
-const toposort = require('./toposort')
 const VariableReader = require('./VariableReader')
 const SubscriptRangeReader = require('./SubscriptRangeReader')
 const Variable = require('./Variable')
@@ -356,6 +355,7 @@ function sortInitVars() {
   let initVars = R.filter(R.propEq('hasInitValue', true), variables)
   // vlog('initVars.length', initVars.length);
   // Copy the list so we can mutate it and have the original list later.
+  // This starts a queue of vars to examine. Referenced var will be added to the queue.
   let vars = R.map(v => v.copy(), initVars)
   // listVars(vars);
   // R.forEach(v => { console.error(v.refId); console.error(v.references); }, vars);
@@ -394,14 +394,15 @@ function sortInitVars() {
     }
   }
   // Construct a dependency graph in the form of [var name, dependency var name] pairs.
-  let graph = []
+  // We use refIds instead of vars here because the deps are stated in refIds.
+  let graph = new Digraph()
   // vlog('depsMap', depsMap);
   for (let refId of depsMap.keys()) {
-    R.forEach(dep => graph.push([refId, dep]), depsMap.get(refId))
+    R.forEach(dep => graph.addEdge(refId, dep), depsMap.get(refId))
   }
-  // console.error(graph);
+  // console.error(graph.toString())
   // Sort into a reference id dependency list.
-  let deps = toposort(graph).reverse()
+  let deps = new TopologicalOrder(graph).dependencyOrder()
   // return [];
   // Turn the reference id list into a var list.
   let sortedVars = R.map(refId => varWithRefId(refId), deps)

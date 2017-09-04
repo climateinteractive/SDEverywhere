@@ -21,7 +21,9 @@
     "shelljs": "^0.7.8",
     "yargs": "^8.0.2"
   },
-  "scripts": {},
+  "scripts": {
+    "debug": "node --inspect-brk sde.js"
+  },
   "preferGlobal": true,
   "bin": {
     "sde": "./index.js"
