@@ -6,13 +6,14 @@ const Variable = require('./Variable')
 const { sub, isDimension, normalizeSubscripts } = require('./Subscript')
 const { canonicalName, vlog, replaceInArray } = require('./Helpers')
 
-// List var names that need to be separated because of circular references,
-// mapped to the dimension subscript to separate on.
-let specialSeparationDims = {
-  // '{c-variable-name}': '{c-dimension-name}',
-}
-
 module.exports = class VariableReader extends ModelReader {
+  constructor(specialSeparationDims) {
+    super()
+    // specialSeparationDims are var names that need to be separated because of
+    // circular references, mapped to the dimension subscript to separate on.
+    // '{c-variable-name}': '{c-dimension-name}'
+    this.specialSeparationDims = specialSeparationDims || {}
+  }
   visitModel(ctx) {
     let equations = ctx.equation()
     if (equations) {
@@ -47,11 +48,11 @@ module.exports = class VariableReader extends ModelReader {
       // If the LHS has a subdimension as a subscript, expand it into individual
       // scalar variables for each index in the subdimension. This handles the case
       // where the indices need to be evaluated interleaved with other variables.
-      // The separated variables replace the  original model variable.
+      // The separated variables are used instead of the original model variable.
       R.forEach(subscript => {
         if (isDimension(subscript)) {
           let dim = sub(subscript)
-          let specialSeparationDim = specialSeparationDims[this.var.varName]
+          let specialSeparationDim = this.specialSeparationDims[this.var.varName]
           if (dim.size < sub(dim.family).size || specialSeparationDim === subscript) {
             // Separate into variables for each index in the subdimension.
             R.forEach(indName => {

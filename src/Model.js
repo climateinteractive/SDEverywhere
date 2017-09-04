@@ -97,11 +97,11 @@ function readSubscriptRanges(tree) {
     }
   }
 }
-function readVariables(tree) {
+function readVariables(tree, specialSeparationDims) {
   // Read all variables in the model parse tree.
   // This populates the variables table with basic information for each variable
   // such as the var name and subscripts.
-  let variableReader = new VariableReader()
+  let variableReader = new VariableReader(specialSeparationDims)
   variableReader.visitModel(tree)
   // Add a placeholder variable for the exogenous variable Time.
   let v = new Variable(null)
