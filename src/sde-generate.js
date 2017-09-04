@@ -74,8 +74,9 @@ let generate = (model, opts) => {
   } //if (opts.genwebc || opts.genhtml) {
 
   // Preprocess model text into parser input. Stop now if that's all we're doing.
+  let spec = parseSpec(opts.spec)
   let writeRemovals = opts.preprocess
-  let input = preprocessModel(modelPathname, writeRemovals)
+  let input = preprocessModel(modelPathname, spec, writeRemovals)
   if (opts.preprocess) {
     let outputPathname = path.join(buildDirname, `${modelName}.mdl`)
     writeOutput(outputPathname, input)
@@ -90,7 +91,6 @@ let generate = (model, opts) => {
     listMode = 'printRefIdTest'
   }
   let parseTree = parseModel(input)
-  let spec = parseSpec(opts.spec)
   let code = codeGenerator(parseTree, spec, listMode, codeGenOpts).generate()
   if (opts.genc || opts.genwebc) {
     let outputPathname = path.join(buildDirname, `${modelName}.c`)
