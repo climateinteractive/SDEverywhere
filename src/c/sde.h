@@ -60,7 +60,7 @@ void evalLevels();
 void storeOutputData();
 void writeHeader();
 void startOutput();
-void outputVar(double value);
+void outputVar(double value, int precision);
 void writeOutputData();
 void writeText(const char* text);
 
