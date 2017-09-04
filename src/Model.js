@@ -1,4 +1,5 @@
 const R = require('ramda')
+const { Digraph, TopologicalOrder } = require('digraph-sort')
 const toposort = require('./toposort')
 const VariableReader = require('./VariableReader')
 const SubscriptRangeReader = require('./SubscriptRangeReader')
@@ -314,7 +315,6 @@ function sortVarsOfType(varType) {
   // Start with vars of the given varType.
   let vars = varsOfType(varType)
   // Accumulate a list of variable dependencies as var pairs.
-  let graph = R.unnest(R.map(v => refs(v), vars))
   function refs(v) {
     // Return a list of dependency pairs for all vars referenced by v at eval time.
     let refs = R.map(refId => varWithRefId(refId), v.references)
@@ -326,22 +326,23 @@ function sortVarsOfType(varType) {
       if (v.varType === 'level' && ref.varType === 'level') {
         // Reverse the order of level-to-level references so that level evaluation refers
         // to the value in the previous time step rather than the currently evaluated one.
-        return [ref.refId, v.refId]
+        return [ref, v]
       } else {
-        return [v.refId, ref.refId]
+        return [v, ref]
       }
     }, refs)
   }
+  let graph = new Digraph()
+  R.forEach(v => {
+    R.forEach(edge => graph.addEdge(edge[0], edge[1]), refs(v))
+  }, vars)
   // Sort into an lhs dependency list.
-  let deps = toposort(graph).reverse()
-  // Turn the dependency-sorted var name list into a var list.
-  let sortedVars = varsOfType(varType, R.map(refId => varWithRefId(refId), deps))
+  let depVars = new TopologicalOrder(graph).dependencyOrder()
   // Find vars of the given varType with no dependencies, and add them to the list.
-  let nodepVars = vsort(R.filter(v => !R.contains(v, sortedVars), vars))
-  sortedVars = R.concat(nodepVars, sortedVars)
+  let nodepVars = vsort(R.filter(v => !R.contains(v, depVars), vars))
+  let sortedVars = R.concat(nodepVars, depVars)
   if (PRINT_SORTED_VARS) {
     sortedVars.forEach((v, i) => console.error(`${v.refId}`))
-    // sortedVars.forEach((v, i) => console.error(`${v.refId}\t${i}`));
   }
   return sortedVars
 }
@@ -411,7 +412,6 @@ function sortInitVars() {
   sortedVars = R.concat(nodepVars, sortedVars)
   if (PRINT_SORTED_VARS) {
     sortedVars.forEach((v, i) => console.error(`${v.refId}`))
-    // sortedVars.forEach((v, i) => console.error(`${v.refId}\t${i}`));
   }
   return sortedVars
 }
