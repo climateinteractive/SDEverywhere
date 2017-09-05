@@ -241,9 +241,8 @@ ${outputSection(allModelVars())}
     var inputVarArray = ''
     //if there was a modelSpec, then generate the list of input variables
     if (spec.inputVars) {
-      for (var i in spec.inputVars) {
-        var inputVar = spec.inputVars[i].toLowerCase().replace(new RegExp(' ', 'g'), '_')
-        inputVarArray += '&_' + inputVar + ',\n    '
+      for (let inputVar of spec.inputVars) {
+        inputVarArray += `&${new VarNameReader().read(inputVar)},\n    `
       }
     }
     //c array of inputVar pointers
