@@ -44,8 +44,8 @@ void startOutput() {
   outputIndex = 0;
 }
 
-void outputVar(double value, int precision) {
-  int numChars = snprintf(outputData + outputIndex, outputStringLength+1, "%.*g\t", precision, value);
+void outputVar(double value) {
+  int numChars = snprintf(outputData + outputIndex, outputStringLength+1, "%g\t", value);
   outputIndex += numChars;
 }
 
