@@ -3,6 +3,7 @@ const path = require('path')
 const util = require('util')
 const R = require('ramda')
 const sh = require('shelljs')
+const sprintf = require('voca/sprintf')
 
 // Set true to print a stack trace in vlog
 const PRINT_VLOG_TRACE = false
@@ -18,25 +19,69 @@ let nextAuxVarSeq = 1
 
 let canonicalName = name => {
   // Format a model variable name into a valid C identifier.
-  // The name is normalized by removing quotes, replacing spaces, periods, and dashes with underscores,
-  // and converting to lower case, since Vensim ids are case-insensitive. Spaces at the
+  // Names are converted to lower case, since Vensim names are case-insensitive. Spaces at the
   // beginning and ending of names are discarded. An underscore is prepended to the name
-  // because Vensim names can begin with numbers, which is not valid in C.
-  return (
+  // because Vensim names can begin with numbers, which is not valid in C. Other characters
+  // are converted to a UTF-16 code point in hexadecimal preceded by an underscore. This
+  // mimics the Universal Character Notation (\unnnn) in C11 section 6.4.3. We do not adopt
+  // UCN because Vensim allows characters such as apostrophe that cannot be encoded in UCN.
+  // Cases unhandled until the ANTLR grammar is revised:
+  // "internal \"quotes\""
+  // Émissions de gaz à effet de serre (Latin-1 characters)
+
+  let cName =
     '_' +
     name
-      .replace(/"/g, '')
+      .replace(/^"/, '')
+      .replace(/"$/, '')
       .trim()
       .replace(/\s+!$/g, '!')
-      .replace(/\s/g, '_')
-      .replace(/,/g, '_')
-      .replace(/-/g, '_')
-      .replace(/\./g, '_')
+      .replace(/\s+/g, '_')
       .toLowerCase()
-  )
+  // Replace all other UTF-8 characters with "_nnnn" using the UTF-16 hex encoding.
+  return encodeCIdentifier(cName)
+}
+let vensimName = name => {
+  // - read variables as well as subscripts
+  // - get the variable name and subscripts with regexes (simple because they are just numbers)
+  // - look up the var
+  // - get the subscript family and look up the subscript name
+  return name
 }
 let cFunctionName = name => {
   return canonicalName(name).toUpperCase()
+}
+let isCIdentifierChar = c => {
+  return (c >= 48 && c <= 57) || (c >= 65 && c <= 90) || (c >= 97 && c <= 122) || c === 95
+}
+let encodeCIdentifier = str => {
+  let s = ''
+  for (let i = 0; i < str.length; i++) {
+    let c = str.codePointAt(i)
+    // Allow the exclamation mark since it is encountered in dimension names.
+    // It will be removed in the process of emitting C code.
+    if (isCIdentifierChar(c) || c == 33) {
+      s += String.fromCodePoint(c)
+    } else {
+      s += `_${sprintf('%04x', c)}`
+    }
+  }
+  return s
+}
+let decodeCIdentifier = str => {
+  let s = ''
+  let i = 0
+  let re = /_([0-9a-fA-F]{4})/g
+  let m
+  while ((m = re.exec(str)) !== null) {
+    s += str.slice(i, m.index)
+    let c = Number.parseInt(m[1], 16)
+    s += String.fromCodePoint(c)
+    i = re.lastIndex
+    // pr(`${index = m.index} ${m[1]} ${lastIndex = re.lastIndex} `)
+  }
+  s += str.slice(i, str.length)
+  return s
 }
 let newTmpVarName = () => {
   // Return a unique temporary variable name
@@ -205,6 +250,8 @@ module.exports = {
   canonicalName,
   cdbl,
   cFunctionName,
+  decodeCIdentifier,
+  encodeCIdentifier,
   execCmd,
   extractMatch,
   isArrayFunction,
@@ -226,6 +273,7 @@ module.exports = {
   replaceInArray,
   strlist,
   strToConst,
+  vensimName,
   vlog,
   vsort
 }

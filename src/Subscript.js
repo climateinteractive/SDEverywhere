@@ -147,27 +147,6 @@ function mapIndex(fromSubName, fromIndexName, toSubName) {
   }
   return toIndexName
 }
-function loadSubscripts(subscriptsArray) {
-  // Load subscripts from an array of the form:
-  // [
-  //   // DimA: A1, A2, A3
-  //   { name: 'DimA', value: [ 'A1', 'A2', 'A3' ] },
-  //   { name: 'A1', value: 0, family: 'DimA' },
-  //   { name: 'A2', value: 1, family: 'DimA' },
-  //   { name: 'A3', value: 2, family: 'DimA' },
-  //   // SubA: A1, A2
-  //   { name: 'SubA', value: ['A1', 'A2'], family: 'DimA' },
-  //   // DimB: B1, B2 -> (DimA: SubA, A3)
-  //   // Dimension mapping expanded through subdimensions
-  //   { name: 'DimB', value: [ 'B1', 'B2' ],
-  //     mappings: [
-  //       { toDim: 'DimA', value: [ 'B1', 'B1', 'B2' ] },
-  //     ] },
-  //   { name: 'B1', value: 0, family: 'DimB' },
-  //   { name: 'B2', value: 1, family: 'DimB' },
-  // ]
-  R.forEach(s => Subscript(s.name, s.value, s.family, s.mappings), subscriptsArray)
-}
 function printSubscripts() {
   for (let [k, v] of subscripts) {
     console.log(`${k}:\n${util.inspect(v, { depth: null })}\n`)
@@ -181,7 +160,6 @@ function normalizeSubscripts(subscripts) {
   try {
     normalizedSubs = R.map(R.prop('name'), subs)
   } catch (e) {
-    // debugger
   }
   return normalizedSubs
 }
@@ -281,7 +259,6 @@ module.exports = {
   indexNamesForSubscript,
   isDimension,
   isIndex,
-  loadSubscripts,
   mapIndex,
   normalizeSubscripts,
   printSubscripts,

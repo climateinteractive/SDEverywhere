@@ -22,6 +22,17 @@ let nonAtoANames = Object.create(null)
 // Set true for diagnostic printing of init, aux, and level vars in sorted order.
 const PRINT_SORTED_VARS = false
 
+function read(parseTree, spec) {
+  // Some arrays need to be separated into variables with individual indices to
+  // prevent eval cycles. They are manually added to the spec file.
+  let specialSeparationDims = spec.specialSeparationDims
+  // Subscript ranges must be defined before reading variables that use them.
+  readSubscriptRanges(parseTree)
+  // Read variables from the model parse tree.
+  readVariables(parseTree, specialSeparationDims)
+  // Analyze model equations to fill in more details about variables.
+  analyze()
+}
 function readSubscriptRanges(tree) {
   // Read subscript ranges from the model.
   let subscriptRangeReader = new SubscriptRangeReader()
@@ -505,24 +516,22 @@ function printRefIdTest() {
 }
 
 module.exports = {
-  variables,
-  readVariables,
-  readSubscriptRanges,
-  analyze,
   addVariable,
-  isNonAtoAName,
-  expansionFlags,
   allVars,
-  constVars,
-  lookupVars,
   auxVars,
-  levelVars,
+  constVars,
+  expansionFlags,
   initVars,
-  varWithRefId,
-  varWithName,
-  varsWithName,
-  varNames,
-  refIdForVar,
+  isNonAtoAName,
+  levelVars,
+  lookupVars,
+  printRefIdTest,
   printVarList,
-  printRefIdTest
+  read,
+  refIdForVar,
+  variables,
+  varNames,
+  varsWithName,
+  varWithName,
+  varWithRefId
 }

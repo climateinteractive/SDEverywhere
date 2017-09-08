@@ -1,4 +1,5 @@
 const fs = require('fs-extra')
+const json5 = require('json5')
 const path = require('path')
 const sh = require('shelljs')
 const antlr4 = require('antlr4/index')
@@ -151,11 +152,11 @@ let parseSpec = specFilename => {
 }
 
 let parseJsonFile = filename => {
-  // Parse the JSON file if it exists.
+  // Parse the JSON file if it exists. JSON5 format is supported.
   let result = {}
   try {
     let json = fs.readFileSync(filename, 'utf8')
-    result = JSON.parse(json)
+    result = json5.parse(json)
     // console.error(`loaded ${filename}`);
   } catch (ex) {
     // If the file doesn't exist, return an empty object without complaining.

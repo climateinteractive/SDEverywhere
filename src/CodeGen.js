@@ -9,7 +9,6 @@ const {
   allMappings,
   isDimension,
   subscriptFamilies,
-  loadSubscripts,
   printSubscripts
 } = require('./Subscript')
 const { asort, lines, list, strlist, vlog } = require('./Helpers')
@@ -19,20 +18,13 @@ let codeGenerator = (parseTree, spec, listMode, codeGenOpts) => {
   let initMode = false
   // Set true to output all variables when there is no model run spec.
   let outputAllVars = R.isEmpty(spec) ? true : false
-  // Some arrays need to be separated into variables with individual indices to
-  // prevent eval cycles. They are manually added to the spec file.
-  let specialSeparationDims = spec.specialSeparationDims
   // Function to generate a section of the code
   let generateSection = R.map(v => new EquationGen(v, initMode).generate())
   let section = R.pipe(generateSection, R.flatten, lines)
 
   function generate() {
-    // Subscript ranges must be defined before reading variables that use them.
-    Model.readSubscriptRanges(parseTree)
-    // Read variables from the model parse tree.
-    Model.readVariables(parseTree, specialSeparationDims)
-    // Analyze model equations to fill in more details about variables.
-    Model.analyze()
+    // Read variables and subscript ranges from the model parse tree.
+    Model.read(parseTree, spec)
     // In list mode, print variables to the console instead of generating code.
     if (listMode === 'printVarList') {
       printSubscripts()

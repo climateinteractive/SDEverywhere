@@ -5,7 +5,7 @@ const F = require('./futil')
 
 let preprocessModel = (mdlFilename, spec, writeRemovals = false) => {
   // Equations that contain a string in the removalKeys list in the spec file will be removed.
-  let removalKeys = spec.removalKeys || []
+  let removalKeys = (spec && spec.removalKeys) || []
   // Get the first line of an equation.
   let firstLine = (s) => {
     let i = s.indexOf('\n')

@@ -6,7 +6,6 @@ const Model = require('./Model')
 const Variable = require('./Variable')
 const ModelReader = require('./ModelReader')
 const VariableReader = require('./VariableReader')
-const VarNameReader = require('./VarNameReader')
 const {
   sub,
   normalizeSubscripts,
@@ -166,7 +165,7 @@ module.exports = class EquationReader extends ModelReader {
     // Add subscripts to the refId.
     if (ctx.parentCtx.ruleIndex === ModelParser.RULE_expr) {
       // Get the referenced var's subscripts in normal order.
-      let subscripts = R.map(id => canonicalName(id.getText()).replace('!', ''), ctx.Id())
+      let subscripts = R.map(id => canonicalName(id.getText().replace('!', '')), ctx.Id())
       subscripts = normalizeSubscripts(subscripts)
       // console.error(`${this.var.refId} → ${this.refId} [ ${subscripts} ]`);
       if (subscripts.length > 0) {
