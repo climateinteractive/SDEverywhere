@@ -85,14 +85,14 @@ let generate = (model, opts) => {
   }
 
   // Parse the model and generate code.
-  let listMode = ''
+  let operation = 'generateC'
   if (opts.list) {
-    listMode = 'printVarList'
+    operation = 'printVarList'
   } else if (opts.refidtest) {
-    listMode = 'printRefIdTest'
+    operation = 'printRefIdTest'
   }
   let parseTree = parseModel(input)
-  let code = codeGenerator(parseTree, spec, listMode, codeGenOpts).generate()
+  let code = codeGenerator(parseTree, spec, operation, codeGenOpts).generate()
   if (opts.genc || opts.genwebc) {
     let outputPathname = path.join(buildDirname, `${modelName}.c`)
     writeOutput(outputPathname, code)

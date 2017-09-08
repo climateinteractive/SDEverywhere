@@ -13,6 +13,7 @@
 // build - generate, compile
 // run - build, exec
 // test - run, log, compare
+// names
 
 const util = require('util')
 
@@ -28,6 +29,7 @@ let exitCode = require('yargs')
   .command(require('./sde-build'))
   .command(require('./sde-run'))
   .command(require('./sde-test'))
+  .command(require('./sde-names'))
   .demandCommand(1)
   .help()
   .version()

@@ -1,5 +1,5 @@
-const R = require('ramda')
 const VarNameReader = require('./VarNameReader')
+const R = require('ramda')
 const ModelLHSReader = require('./ModelLHSReader')
 const EquationGen = require('./EquationGen')
 const Model = require('./Model')
@@ -13,7 +13,7 @@ const {
 } = require('./Subscript')
 const { asort, lines, list, strlist, vlog } = require('./Helpers')
 
-let codeGenerator = (parseTree, spec, listMode, codeGenOpts) => {
+let codeGenerator = (parseTree, spec, operation, codeGenOpts) => {
   // Set true when in the init section, false in the eval section
   let initMode = false
   // Set true to output all variables when there is no model run spec.
@@ -26,12 +26,14 @@ let codeGenerator = (parseTree, spec, listMode, codeGenOpts) => {
     // Read variables and subscript ranges from the model parse tree.
     Model.read(parseTree, spec)
     // In list mode, print variables to the console instead of generating code.
-    if (listMode === 'printVarList') {
+    if (operation === 'printVarList') {
       printSubscripts()
       Model.printVarList()
-    } else if (listMode === 'printRefIdTest') {
+    } else if (operation === 'printRefIdTest') {
       Model.printRefIdTest()
-    } else {
+    } else if (operation === 'convertNames') {
+      // Prevent code generation only.
+    } else if (operation === 'generateC') {
       // Generate code for each variable in the proper order.
       let code = emitDeclCode()
       code += emitInitCode()
