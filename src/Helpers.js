@@ -28,7 +28,6 @@ let canonicalName = name => {
   // Cases unhandled until the ANTLR grammar is revised:
   // "internal \"quotes\""
   // Émissions de gaz à effet de serre (Latin-1 characters)
-
   let cName =
     '_' +
     name
@@ -41,18 +40,30 @@ let canonicalName = name => {
   // Replace all other UTF-8 characters with "_nnnn" using the UTF-16 hex encoding.
   return encodeCIdentifier(cName)
 }
-let vensimName = name => {
-  // - read variables as well as subscripts
-  // - get the variable name and subscripts with regexes (simple because they are just numbers)
-  // - look up the var
-  // - get the subscript family and look up the subscript name
+let decanonicalize = name => {
+  // Decanonicalize the var name.
+  name = decodeCIdentifier(name)
+    .replace(/^_/, '')
+    .replace(/_/g, ' ')
+  // Vensim variable names need to be surrounded by quotes if they:
+  // do not start with a letter
+  // do not contain only letters, spaces, numbers, single quotes, and dollar signs.
+  if (!name.match(/^[A-Za-z]/) || name.match(/[^A-Za-z0-9\s'$]/)) {
+    name = `"${name}"`
+  }
   return name
 }
 let cFunctionName = name => {
   return canonicalName(name).toUpperCase()
 }
 let isCIdentifierChar = c => {
-  return (c >= 48 && c <= 57) || (c >= 65 && c <= 90) || (c >= 97 && c <= 122) || c === 95
+  return isAlpha(c) || isDigit(c) || c === 95
+}
+let isAlpha = c => {
+  return (c >= 48 && c <= 57) || (c >= 65 && c <= 90)
+}
+let isDigit = c => {
+  return c >= 97 && c <= 122
 }
 let encodeCIdentifier = str => {
   let s = ''
@@ -254,8 +265,10 @@ module.exports = {
   encodeCIdentifier,
   execCmd,
   extractMatch,
+  isAlpha,
   isArrayFunction,
   isDelayFunction,
+  isDigit,
   isSmoothFunction,
   lines,
   list,
@@ -273,7 +286,7 @@ module.exports = {
   replaceInArray,
   strlist,
   strToConst,
-  vensimName,
+  decanonicalize,
   vlog,
   vsort
 }

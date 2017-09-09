@@ -7,6 +7,7 @@ const ModelParser = require('./ModelParser').ModelParser
 const VarNameReader = require('./VarNameReader')
 const { codeGenerator } = require('./CodeGen')
 const { preprocessModel } = require('./Preprocessor')
+const { vensimName } = require('./Model')
 const { modelPathProps } = require('./Helpers')
 const F = require('./futil')
 
@@ -36,19 +37,19 @@ let names = (model, namesPathname, opts) => {
   let spec = parseSpec(opts.spec)
   // Preprocess model text into parser input.
   let input = preprocessModel(modelPathname, spec)
-  // Parse the model and generate code.
+  // Parse the model to get variable and subscript information.
   let parseTree = parseModel(input)
   let operation = 'convertNames'
   let codeGenOpts = {}
   codeGenerator(parseTree, spec, operation, codeGenOpts).generate()
-
+  // Read each variable name from the names file and convert it.
   let lines = fs.readFileSync(namesPathname, 'utf8').split(/\r?\n/)
   for (let line of lines) {
     if (line.length > 0) {
       if (opts.toc) {
         F.emitLine(new VarNameReader().read(line))
       } else if (opts.tovensim) {
-        F.emitLine(line)
+        F.emitLine(vensimName(line))
       }
     }
   }

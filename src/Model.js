@@ -3,19 +3,30 @@ const { Digraph, TopologicalOrder } = require('digraph-sort')
 const VariableReader = require('./VariableReader')
 const SubscriptRangeReader = require('./SubscriptRangeReader')
 const Variable = require('./Variable')
-const Model = require('./Model')
 const {
   addIndex,
   allDimensions,
   dimensionNames,
   indexNames,
+  indexNamesForSubscript,
   isDimension,
   isIndex,
   sub,
   Subscript,
   subscriptFamilies
 } = require('./Subscript')
-const { printEqn, vsort, listVars, list, strlist, vlog } = require('./Helpers')
+const {
+  decodeCIdentifier,
+  isAlpha,
+  isDigit,
+  printEqn,
+  vsort,
+  listVars,
+  list,
+  strlist,
+  decanonicalize,
+  vlog
+} = require('./Helpers')
 
 let variables = []
 let nonAtoANames = Object.create(null)
@@ -304,6 +315,37 @@ function varNames() {
   // Return a sorted list of var names.
   return R.uniq(R.map(v => v.varName, variables)).sort()
 }
+function vensimName(name) {
+  let result = name
+  // Get the variable name and subscripts with regexes (simple because they are just numbers).
+  let m = name.match(/(_[A-Za-z0-9_]+)(\[\d+\])?(\[\d+\])?/)
+  if (m) {
+    let varName = m[1]
+    let indexNumbers = []
+    if (m[2]) {
+      indexNumbers.push(m[2].replace('[', '').replace(']', ''))
+      if (m[3]) {
+        indexNumbers.push(m[3].replace('[', '').replace(']', ''))
+      }
+    }
+    // Look up the var.
+    let v = varWithName(varName)
+    // Get the subscript families and look up the subscript names.
+    let subscripts = ''
+    if (v) {
+      let families = subscriptFamilies(v.subscripts)
+      for (var i = 0; i < families.length; i++) {
+        let indexNames = indexNamesForSubscript(families[i])
+        let indexNumber = Number.parseInt(indexNumbers[i])
+        let indexModelName = decanonicalize(indexNames[indexNumber])
+        subscripts += `[${indexModelName}]`
+      }
+    }
+    // Put it all together.
+    result = decanonicalize(varName) + subscripts
+  }
+  return result
+}
 //
 // Helpers for getting lists of vars
 //
@@ -533,5 +575,6 @@ module.exports = {
   varNames,
   varsWithName,
   varWithName,
-  varWithRefId
+  varWithRefId,
+  vensimName
 }
