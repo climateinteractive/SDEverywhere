@@ -328,10 +328,9 @@ function vensimName(name) {
         indexNumbers.push(m[3].replace('[', '').replace(']', ''))
       }
     }
-    // Look up the var.
-    let v = varWithName(varName)
     // Get the subscript families and look up the subscript names.
     let subscripts = ''
+    let v = varWithName(varName)
     if (v) {
       let families = subscriptFamilies(v.subscripts)
       for (var i = 0; i < families.length; i++) {

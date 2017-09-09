@@ -74,7 +74,7 @@ let encodeCIdentifier = str => {
     if (isCIdentifierChar(c) || c == 33) {
       s += String.fromCodePoint(c)
     } else {
-      s += `_${sprintf('%04x', c)}`
+      s += `_u${sprintf('%04x', c)}`
     }
   }
   return s
@@ -82,7 +82,7 @@ let encodeCIdentifier = str => {
 let decodeCIdentifier = str => {
   let s = ''
   let i = 0
-  let re = /_([0-9a-fA-F]{4})/g
+  let re = /_u([0-9a-fA-F]{4})/g
   let m
   while ((m = re.exec(str)) !== null) {
     s += str.slice(i, m.index)
