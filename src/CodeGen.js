@@ -126,12 +126,12 @@ ${outputSection(spec.outputVars)}
 ${inputSection()}}
 
 void writeHeader() {
-  writeText("${R.map(varName => Model.vensimName(varName), allModelVars(true)).join('\\t')}");
+  writeText("${R.map(varName => Model.vensimName(varName), expandedVarNames(true)).join('\\t')}");
 }
 
 void storeOutputData() {
   startOutput();
-${outputSection(allModelVars())}
+${outputSection(expandedVarNames())}
   writeOutputData();
 }
 `
@@ -157,7 +157,7 @@ ${outputSection(allModelVars())}
   function internalVarsSection() {
     // Declare internal variables to run the model.
     if (outputAllVars) {
-      return `const int numOutputs = ${allModelVars().length + 1};`
+      return `const int numOutputs = ${expandedVarNames().length};`
     } else {
       return `const int numOutputs = ${spec.outputVars.length};`
     }
@@ -183,7 +183,7 @@ ${outputSection(allModelVars())}
     let a = R.map(indexName => sub(indexName).value, indices)
     return strlist(a)
   }
-  function allModelVars(vensimNames) {
+  function expandedVarNames(vensimNames) {
     // Return a list of C var names for all variables.
     // Expand subscripted vars into separate var names with each index.
     function sortedVars() {
@@ -197,7 +197,7 @@ ${outputSection(allModelVars())}
     return R.uniq(
       R.reduce(
         (a, v) => {
-          if (v.varType != 'lookup') {
+          if (v.varType != 'lookup' && v.includeInOutput) {
             let modelLHSReader = new ModelLHSReader()
             modelLHSReader.read(v.modelLHS)
             if (vensimNames) {

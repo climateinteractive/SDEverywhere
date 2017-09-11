@@ -368,6 +368,8 @@ module.exports = class EquationReader extends ModelReader {
     let variableReader = new VariableReader()
     variableReader.visitEquation(tree)
     variableReader.var.refId = Model.refIdForVar(variableReader.var)
+    // Inhibit output for generated variables.
+    variableReader.var.includeInOutput = false
     // Finish the variable by parsing the RHS.
     let equationReader = new EquationReader(variableReader.var)
     equationReader.read()
