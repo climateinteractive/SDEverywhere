@@ -1,5 +1,4 @@
 const fs = require('fs-extra')
-const json5 = require('json5')
 const path = require('path')
 const antlr4 = require('antlr4/index')
 const ModelLexer = require('./ModelLexer').ModelLexer
@@ -68,11 +67,11 @@ let parseSpec = specFilename => {
   return parseJsonFile(specFilename)
 }
 let parseJsonFile = filename => {
-  // Parse the JSON file if it exists. JSON5 format is supported.
+  // Parse the JSON file if it exists.
   let result = {}
   try {
     let json = fs.readFileSync(filename, 'utf8')
-    result = json5.parse(json)
+    result = JSON.parse(json)
     // console.error(`loaded ${filename}`);
   } catch (ex) {
     // If the file doesn't exist, return an empty object without complaining.
