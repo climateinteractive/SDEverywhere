@@ -6,7 +6,7 @@ const ModelParser = require('./ModelParser').ModelParser
 const VarNameReader = require('./VarNameReader')
 const { codeGenerator } = require('./CodeGen')
 const { preprocessModel } = require('./Preprocessor')
-const { vensimName } = require('./Model')
+const { vensimName, cName } = require('./Model')
 const { modelPathProps } = require('./Helpers')
 const F = require('./futil')
 
@@ -46,7 +46,7 @@ let names = (model, namesPathname, opts) => {
   for (let line of lines) {
     if (line.length > 0) {
       if (opts.toc) {
-        F.emitLine(new VarNameReader().read(line))
+        F.emitLine(cName(line))
       } else if (opts.tovensim) {
         F.emitLine(vensimName(line))
       }

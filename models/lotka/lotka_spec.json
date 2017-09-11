@@ -1,15 +1,5 @@
 {
   "name": "Lotka-Volterra Model",
-  "version": "1",
-	"author": "Tom Fiddaman via Travis Franck",
-	"description": "Classic predator-prey model",
-  "inputVars": [
-    "Reference predators",
-    "Reference prey"
-  ],
-  "outputVars": [
-    "Time",
-    "Predators Y",
-    "Prey X"
-  ]
+  "inputVars": ["_reference_predators", "_reference_prey"],
+  "outputVars": ["_time", "_predators_y", "_prey_x"]
 }

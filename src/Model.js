@@ -1,6 +1,7 @@
 const R = require('ramda')
 const { Digraph, TopologicalOrder } = require('digraph-sort')
 const VariableReader = require('./VariableReader')
+const VarNameReader = require('./VarNameReader')
 const SubscriptRangeReader = require('./SubscriptRangeReader')
 const Variable = require('./Variable')
 const {
@@ -345,6 +346,9 @@ function vensimName(name) {
   }
   return result
 }
+function cName(modelVarName) {
+  return new VarNameReader().read(modelVarName)
+}
 //
 // Helpers for getting lists of vars
 //
@@ -560,6 +564,7 @@ module.exports = {
   addVariable,
   allVars,
   auxVars,
+  cName,
   constVars,
   expansionFlags,
   initVars,

@@ -3,15 +3,8 @@ const R = require('ramda')
 const ModelLHSReader = require('./ModelLHSReader')
 const EquationGen = require('./EquationGen')
 const Model = require('./Model')
-const {
-  sub,
-  allDimensions,
-  allMappings,
-  isDimension,
-  subscriptFamilies,
-  printSubscripts
-} = require('./Subscript')
-const { asort, lines, list, strlist, vlog } = require('./Helpers')
+const { sub, allDimensions, allMappings, isDimension, subscriptFamilies, printSubscripts } = require('./Subscript')
+const { asort, canonicalName, lines, list, strlist, vlog } = require('./Helpers')
 
 let codeGenerator = (parseTree, spec, operation, codeGenOpts) => {
   // Set true when in the init section, false in the eval section
@@ -32,7 +25,7 @@ let codeGenerator = (parseTree, spec, operation, codeGenOpts) => {
     } else if (operation === 'printRefIdTest') {
       Model.printRefIdTest()
     } else if (operation === 'convertNames') {
-      // Prevent code generation only.
+      // Do not generate output, but leave the results of model analysis.
     } else if (operation === 'generateC') {
       // Generate code for each variable in the proper order.
       let code = emitDeclCode()
@@ -116,7 +109,7 @@ ${section(Model.levelVars())}
     return `void setInputs(const char* inputData) {
 ${inputSection()}}
 void writeHeader() {
-  writeText("${R.map(v => v.replace(/"/g, ''), spec.outputVars).join('\\t')}");
+  writeText("${R.map(varName => Model.vensimName(varName), spec.outputVars).join('\\t')}");
 }
 
 void storeOutputData() {
@@ -133,7 +126,7 @@ ${outputSection(spec.outputVars)}
 ${inputSection()}}
 
 void writeHeader() {
-  writeText("${allModelVars().join('\\t')}");
+  writeText("${R.map(varName => Model.vensimName(varName), allModelVars(true)).join('\\t')}");
 }
 
 void storeOutputData() {
@@ -190,8 +183,9 @@ ${outputSection(allModelVars())}
     let a = R.map(indexName => sub(indexName).value, indices)
     return strlist(a)
   }
-  function allModelVars() {
-    // Return a list of Vensim model var names for all variables.
+  function allModelVars(vensimNames) {
+    // Return a list of C var names for all variables.
+    // Expand subscripted vars into separate var names with each index.
     function sortedVars() {
       // Return a list of all vars sorted by the model LHS var name (without subscripts), case insensitive.
       return R.sortBy(v => {
@@ -200,15 +194,17 @@ ${outputSection(allModelVars())}
         return modelLHSReader.varName.replace(/"/g, '').toUpperCase()
       }, Model.variables)
     }
-    // Accumulate a list of model var names with subscripted vars expanded into separate vars with each index.
-    // This matches the export format for Vensim DAT files.
     return R.uniq(
       R.reduce(
         (a, v) => {
           if (v.varType != 'lookup') {
             let modelLHSReader = new ModelLHSReader()
             modelLHSReader.read(v.modelLHS)
-            return R.concat(a, modelLHSReader.names())
+            if (vensimNames) {
+              return R.concat(a, modelLHSReader.names())
+            } else {
+              return R.concat(a, R.map(Model.cName, modelLHSReader.names()))
+            }
           } else {
             return a
           }
@@ -221,31 +217,21 @@ ${outputSection(allModelVars())}
   //
   // Input/output section helpers
   //
-  function outputSection(modelVarNames) {
-    // Read the model var name and emit the output call using the C var name.
-    let code = R.map(modelVarName => `  outputVar(${new VarNameReader().read(modelVarName)});`)
-    // Emit code to output the variables.
+  function outputSection(varNames) {
+    // Emit output calls using varNames in C format.
+    let code = R.map(varName => `  outputVar(${varName});`)
     let section = R.pipe(code, lines)
-    return section(modelVarNames)
+    return section(varNames)
   }
 
   function inputSection() {
-    var inputVarArray = ''
-    //if there was a modelSpec, then generate the list of input variables
+    // If there was an I/O spec file, then emit code to parse input variables.
+    // The user can replace this with a parser for a different serialization format.
+    let inputVars = ''
     if (spec.inputVars) {
-      for (let inputVar of spec.inputVars) {
-        inputVarArray += `&${new VarNameReader().read(inputVar)},\n    `
-      }
-    }
-    //c array of inputVar pointers
-    var inputVars = `  static double* inputVarPtrs[] = {
-    ${inputVarArray}
-  };
-`
-    //if compiling for web, include this input string parser
-    //TODO: put in own .js file in the /src/web folder
-    if (codeGenOpts.setInputs_web) {
-      var parseFunc = `  char* inputs = (char*)inputData;
+      let inputVarPtrs = R.reduce((a, inputVar) => R.concat(a, `    &${inputVar},\n`), '', spec.inputVars)
+      inputVars = `  static double* inputVarPtrs[] = {\n${inputVarPtrs}  };
+  char* inputs = (char*)inputData;
   char* token = strtok(inputs, " ");
   while (token) {
     char* p = strchr(token, ':');
@@ -258,7 +244,6 @@ ${outputSection(allModelVars())}
     token = strtok(NULL, " ");
   }
 `
-      inputVars += parseFunc
     }
     return inputVars
   }
