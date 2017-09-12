@@ -1,6 +1,6 @@
 const fs = require('fs-extra')
 const R = require('ramda')
-const { canonicalName } = require('./Helpers')
+const { cName } = require('./Model')
 
 // The epsilon value determines the required precision for value comparisons.
 let ε = 1e-5
@@ -63,27 +63,34 @@ let readLog = logfile => {
   let varValues = new Map()
   let lines = fs.readFileSync(logfile, 'utf8').split(/\r?\n/)
   R.forEach(line => {
-    if (line.includes('\t')) {
-      // Data lines in Vensim DAT format have {time}\t{value} format.
-      let values = line.split('\t')
-      let t = Number.parseFloat(values[0])
-      let value = Number.parseFloat(values[1])
-      // Save the value at time t in the varValues map.
-      if (Number.isNaN(t) || Number.isNaN(value)) {
-        console.error(`${varName} value is NaN at time=${t}`)
+    if (line !== '') {
+      if (line.includes('\t')) {
+        // Data lines in Vensim DAT format have {time}\t{value} format.
+        let values = line.split('\t')
+        let t = Number.parseFloat(values[0])
+        let value = Number.parseFloat(values[1])
+        // Save the value at time t in the varValues map.
+        if (Number.isNaN(t) || Number.isNaN(value)) {
+          console.error(`${varName} value is NaN at time=${t}`)
+        } else {
+          varValues.set(t, value)
+        }
       } else {
-        varValues.set(t, value)
+        // Lines without a tab are variable names that start a data section.
+        // Save the values for the current var if we are not on the first one with no values yet.
+        if (varName != '') {
+          log.set(varName, varValues)
+        }
+        // Start a new map for this var.
+        // Convert the var name to canonical form so it is the same in both logs.
+        try {
+          varName = cName(line)
+        } catch (e) {
+          console.error(line)
+          console.error(e.message)
+        }
+        varValues = new Map()
       }
-    } else {
-      // Lines without a tab are variable names that start a data section.
-      // Save the values for the current var if we are not on the first one with no values yet.
-      if (varName != '') {
-        log.set(varName, varValues)
-      }
-      // Start a new map for this var.
-      // Convert the var name to canonical form so it is the same in both logs.
-      varName = canonicalName(line)
-      varValues = new Map()
     }
   }, lines)
   return log

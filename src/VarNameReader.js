@@ -4,7 +4,7 @@ const ModelParser = require('./ModelParser').ModelParser
 const ModelReader = require('./ModelReader')
 const R = require('ramda')
 const { sub, isIndex, normalizeSubscripts } = require('./Subscript')
-const { canonicalName, list, vlog, subscripts } = require('./Helpers')
+const { canonicalName, encodeCIdentifier, list, vlog, subscripts } = require('./Helpers')
 //
 // VarNameReader reads a model var name using the parser to get the var name in C format.
 // This is used to generate a variable output in the output section.
@@ -16,14 +16,15 @@ module.exports = class VarNameReader extends ModelReader {
   }
   read(modelVarName) {
     // Parse an individual model var name and convert it into a a canonical C var name.
-    // The parser won't pick up subscripts if it encounters a minus sign, so replace it here.
-    modelVarName = modelVarName.replace(/-/g, '_').replace(/\./g, '_')
+    // Encode special characters in the var name before going to the parser.
+    let m = modelVarName.match(/([^\[]+)(\[.*)?/)
+    let varName = canonicalName(m[1]) + (m[2] || '')
     // Identifiers can't start with digits, so quote it. The quotes are removed later.
-    if (/^\d/.test(modelVarName)) {
-      modelVarName = `"${modelVarName}"`
+    if (/^\d/.test(varName)) {
+      varName = `"${varName}"`
     }
     // Parse a single var name, which may include subscripts.
-    let chars = new antlr4.InputStream(modelVarName)
+    let chars = new antlr4.InputStream(varName)
     let lexer = new ModelLexer(chars)
     let tokens = new antlr4.CommonTokenStream(lexer)
     let parser = new ModelParser(tokens)
@@ -34,8 +35,7 @@ module.exports = class VarNameReader extends ModelReader {
     return this.varName
   }
   visitLhs(ctx) {
-    let varName = ctx.Id().getText()
-    this.varName = canonicalName(varName)
+    this.varName = ctx.Id().getText()
     super.visitLhs(ctx)
   }
   visitSubscriptList(ctx) {
