@@ -3,7 +3,6 @@ const path = require('path')
 const antlr4 = require('antlr4/index')
 const ModelLexer = require('./ModelLexer').ModelLexer
 const ModelParser = require('./ModelParser').ModelParser
-const VarNameReader = require('./VarNameReader')
 const { codeGenerator } = require('./CodeGen')
 const { preprocessModel } = require('./Preprocessor')
 const { vensimName, cName } = require('./Model')
@@ -17,7 +16,7 @@ let builder = {
     describe: 'convert a file with Vensim variable names to C names',
     type: 'boolean'
   },
-  tovensim: {
+  tovml: {
     describe: 'convert a file with C variable names to Vensim names',
     type: 'boolean'
   },
@@ -47,7 +46,7 @@ let names = (model, namesPathname, opts) => {
     if (line.length > 0) {
       if (opts.toc) {
         F.emitLine(cName(line))
-      } else if (opts.tovensim) {
+      } else if (opts.tovml) {
         F.emitLine(vensimName(line))
       }
     }

@@ -19,30 +19,22 @@ let nextAuxVarSeq = 1
 
 let canonicalName = name => {
   // Format a model variable name into a valid C identifier.
-  // Names are converted to lower case, since Vensim names are case-insensitive. Spaces at the
-  // beginning and ending of names are discarded. An underscore is prepended to the name
-  // because Vensim names can begin with numbers, which is not valid in C. Other characters
-  // are converted to a UTF-16 code point in hexadecimal preceded by an underscore. This
-  // mimics the Universal Character Notation (\unnnn) in C11 section 6.4.3. We do not adopt
-  // UCN because Vensim allows characters such as apostrophe that cannot be encoded in UCN.
-  // Cases unhandled until the ANTLR grammar is revised:
-  // "internal \"quotes\""
-  // Émissions de gaz à effet de serre (Latin-1 characters)
-  let cName =
+  return (
     '_' +
     name
-      .replace(/^"/, '')
-      .replace(/"$/, '')
+      .replace(/"/g, '')
       .trim()
       .replace(/\s+!$/g, '!')
-      .replace(/\s+/g, '_')
+      .replace(/\s/g, '_')
+      .replace(/,/g, '_')
+      .replace(/-/g, '_')
+      .replace(/\./g, '_')
       .toLowerCase()
-  // Replace all other UTF-8 characters with "_nnnn" using the UTF-16 hex encoding.
-  return encodeCIdentifier(cName)
+  )
 }
 let decanonicalize = name => {
   // Decanonicalize the var name.
-  name = decodeCIdentifier(name)
+  name = name
     .replace(/^_/, '')
     .replace(/_/g, ' ')
   // Vensim variable names need to be surrounded by quotes if they:
@@ -55,44 +47,6 @@ let decanonicalize = name => {
 }
 let cFunctionName = name => {
   return canonicalName(name).toUpperCase()
-}
-let isCIdentifierChar = c => {
-  return isAlpha(c) || isDigit(c) || c === 95
-}
-let isAlpha = c => {
-  return (c >= 48 && c <= 57) || (c >= 65 && c <= 90)
-}
-let isDigit = c => {
-  return c >= 97 && c <= 122
-}
-let encodeCIdentifier = str => {
-  let s = ''
-  for (let i = 0; i < str.length; i++) {
-    let c = str.codePointAt(i)
-    // Allow the exclamation mark since it is encountered in dimension names.
-    // It will be removed in the process of emitting C code.
-    if (isCIdentifierChar(c) || c == 33) {
-      s += String.fromCodePoint(c)
-    } else {
-      s += `_u${sprintf('%04x', c)}`
-    }
-  }
-  return s
-}
-let decodeCIdentifier = str => {
-  let s = ''
-  let i = 0
-  let re = /_u([0-9a-fA-F]{4})/g
-  let m
-  while ((m = re.exec(str)) !== null) {
-    s += str.slice(i, m.index)
-    let c = Number.parseInt(m[1], 16)
-    s += String.fromCodePoint(c)
-    i = re.lastIndex
-    // pr(`${index = m.index} ${m[1]} ${lastIndex = re.lastIndex} `)
-  }
-  s += str.slice(i, str.length)
-  return s
 }
 let newTmpVarName = () => {
   // Return a unique temporary variable name
@@ -261,14 +215,10 @@ module.exports = {
   canonicalName,
   cdbl,
   cFunctionName,
-  decodeCIdentifier,
-  encodeCIdentifier,
   execCmd,
   extractMatch,
-  isAlpha,
   isArrayFunction,
   isDelayFunction,
-  isDigit,
   isSmoothFunction,
   lines,
   list,

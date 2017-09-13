@@ -1,4 +1,3 @@
-const VarNameReader = require('./VarNameReader')
 const R = require('ramda')
 const ModelLHSReader = require('./ModelLHSReader')
 const EquationGen = require('./EquationGen')

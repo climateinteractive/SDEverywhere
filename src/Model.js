@@ -17,7 +17,6 @@ const {
   subscriptFamilies
 } = require('./Subscript')
 const {
-  decodeCIdentifier,
   isAlpha,
   isDigit,
   printEqn,
@@ -316,10 +315,11 @@ function varNames() {
   // Return a sorted list of var names.
   return R.uniq(R.map(v => v.varName, variables)).sort()
 }
-function vensimName(name) {
-  let result = name
-  // Get the variable name and subscripts with regexes (simple because they are just numbers).
-  let m = name.match(/(_[A-Za-z0-9_]+)(\[\d+\])?(\[\d+\])?/)
+function vensimName(cVarName) {
+  // Convert a C variable name to a Vensim name.
+  let result = cVarName
+  // Get the variable name and subscripts with regexes.
+  let m = cVarName.match(/(_[A-Za-z0-9_]+)(\[\d+\])?(\[\d+\])?/)
   if (m) {
     let varName = m[1]
     let indexNumbers = []
@@ -331,8 +331,13 @@ function vensimName(name) {
     }
     // Get the subscript families and look up the subscript names.
     let subscripts = ''
+    debugger
     let v = varWithName(varName)
     if (v) {
+      m = v.modelLHS.match(/[^\[]+/)
+      if (m) {
+        varName = m[0]
+      }
       let families = subscriptFamilies(v.subscripts)
       for (var i = 0; i < families.length; i++) {
         let indexNames = indexNamesForSubscript(families[i])
@@ -340,14 +345,14 @@ function vensimName(name) {
         let indexModelName = decanonicalize(indexNames[indexNumber])
         subscripts += `[${indexModelName}]`
       }
+      result = varName + subscripts
     }
-    // Put it all together.
-    result = decanonicalize(varName) + subscripts
   }
   return result
 }
-function cName(modelVarName) {
-  return new VarNameReader().read(modelVarName)
+function cName(vensimVarName) {
+  // Convert a Vensim variable name to a C name.
+  return new VarNameReader().read(vensimVarName)
 }
 //
 // Helpers for getting lists of vars
