@@ -108,7 +108,7 @@ ${section(Model.levelVars())}
     return `void setInputs(const char* inputData) {
 ${inputSection()}}
 void writeHeader() {
-  writeText("${R.map(varName => Model.vensimName(varName), spec.outputVars).join('\\t')}");
+  writeText("${R.map(varName => headerTitle(varName), spec.outputVars).join('\\t')}");
 }
 
 void storeOutputData() {
@@ -125,7 +125,7 @@ ${outputSection(spec.outputVars)}
 ${inputSection()}}
 
 void writeHeader() {
-  writeText("${R.map(varName => Model.vensimName(varName), expandedVarNames(true)).join('\\t')}");
+  writeText("${R.map(varName => headerTitle(varName), expandedVarNames(true)).join('\\t')}");
 }
 
 void storeOutputData() {
@@ -183,7 +183,8 @@ ${outputSection(expandedVarNames())}
     return strlist(a)
   }
   function expandedVarNames(vensimNames) {
-    // Return a list of C var names for all variables.
+    // Return a list of var names for all variables.
+    // The names are in Vensim format if vensimNames is true, otherwise they are in C format.
     // Expand subscripted vars into separate var names with each index.
     function sortedVars() {
       // Return a list of all vars sorted by the model LHS var name (without subscripts), case insensitive.
@@ -222,7 +223,6 @@ ${outputSection(expandedVarNames())}
     let section = R.pipe(code, lines)
     return section(varNames)
   }
-
   function inputSection() {
     // If there was an I/O spec file, then emit code to parse input variables.
     // The user can replace this with a parser for a different serialization format.
@@ -245,6 +245,9 @@ ${outputSection(expandedVarNames())}
 `
     }
     return inputVars
+  }
+  function headerTitle(varName) {
+    return Model.vensimName(varName).replace(/"/g, '\\"')
   }
 
   return {
