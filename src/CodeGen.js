@@ -9,7 +9,7 @@ let codeGenerator = (parseTree, spec, operation, codeGenOpts) => {
   // Set true when in the init section, false in the eval section
   let initMode = false
   // Set true to output all variables when there is no model run spec.
-  let outputAllVars = R.isEmpty(spec) ? true : false
+  let outputAllVars = spec.outputVars && spec.outputVars.length > 0 ? false : true
   // Function to generate a section of the code
   let generateSection = R.map(v => new EquationGen(v, initMode).generate())
   let section = R.pipe(generateSection, R.flatten, lines)
@@ -30,7 +30,7 @@ let codeGenerator = (parseTree, spec, operation, codeGenOpts) => {
       let code = emitDeclCode()
       code += emitInitCode()
       code += emitEvalCode()
-      code += outputAllVars ? emitIOCodeAllVars() : emitIOCode()
+      code += emitIOCode()
       return code
     }
   }
@@ -104,33 +104,18 @@ ${section(Model.levelVars())}
   // Input/output section
   //
   function emitIOCode() {
+    let headerVars = outputAllVars ? expandedVarNames(true) : spec.outputVars
+    let outputVars = outputAllVars ? expandedVarNames() : spec.outputVars
     initMode = false
     return `void setInputs(const char* inputData) {
 ${inputSection()}}
 void writeHeader() {
-  writeText("${R.map(varName => headerTitle(varName), spec.outputVars).join('\\t')}");
+  writeText("${R.map(varName => headerTitle(varName), headerVars).join('\\t')}");
 }
 
 void storeOutputData() {
   startOutput();
-${outputSection(spec.outputVars)}
-  writeOutputData();
-}
-`
-  }
-
-  function emitIOCodeAllVars() {
-    initMode = false
-    return `void setInputs(const char* inputData) {
-${inputSection()}}
-
-void writeHeader() {
-  writeText("${R.map(varName => headerTitle(varName), expandedVarNames(true)).join('\\t')}");
-}
-
-void storeOutputData() {
-  startOutput();
-${outputSection(expandedVarNames())}
+${outputSection(outputVars)}
   writeOutputData();
 }
 `
@@ -227,7 +212,7 @@ ${outputSection(expandedVarNames())}
     // If there was an I/O spec file, then emit code to parse input variables.
     // The user can replace this with a parser for a different serialization format.
     let inputVars = ''
-    if (spec.inputVars) {
+    if (spec.inputVars && spec.inputVars.length > 0) {
       let inputVarPtrs = R.reduce((a, inputVar) => R.concat(a, `    &${inputVar},\n`), '', spec.inputVars)
       inputVars = `  static double* inputVarPtrs[] = {\n${inputVarPtrs}  };
   char* inputs = (char*)inputData;

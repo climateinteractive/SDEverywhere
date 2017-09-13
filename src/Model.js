@@ -331,7 +331,6 @@ function vensimName(cVarName) {
     }
     // Get the subscript families and look up the subscript names.
     let subscripts = ''
-    debugger
     let v = varWithName(varName)
     if (v) {
       m = v.modelLHS.match(/[^\[]+/)
