@@ -352,6 +352,7 @@ function vensimName(cVarName) {
 }
 function cName(vensimVarName) {
   // Convert a Vensim variable name to a C name.
+  // This function requires model analysis to be completed first when the variable has subscripts.
   return new VarNameReader().read(vensimVarName)
 }
 //

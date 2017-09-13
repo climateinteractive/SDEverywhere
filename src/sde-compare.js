@@ -1,6 +1,6 @@
 const fs = require('fs-extra')
 const R = require('ramda')
-const { cName } = require('./Model')
+const { canonicalName } = require('./Helpers')
 
 // The epsilon value determines the required precision for value comparisons.
 let ε = 1e-5
@@ -83,12 +83,7 @@ let readLog = logfile => {
         }
         // Start a new map for this var.
         // Convert the var name to canonical form so it is the same in both logs.
-        try {
-          varName = cName(line)
-        } catch (e) {
-          console.error(line)
-          console.error(e.message)
-        }
+        varName = canonicalName(line)
         varValues = new Map()
       }
     }
