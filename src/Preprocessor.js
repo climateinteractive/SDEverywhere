@@ -55,13 +55,11 @@ let preprocessModel = (mdlFilename, spec, writeRemovals = false) => {
   let eqns = R.map(eqn => eqn.trim(), mdl.split('|'))
   // Remove some equations into the removals channel.
   R.forEach(eqn => {
-    // The syntax of the equation's first line determines what kind it is.
-    let s = firstLine(eqn)
-    if (R.contains('********************************************************', s)) {
+    if (R.contains('********************************************************', eqn)) {
       // Skip groups
-    } else if (R.contains('TABBED ARRAY', s)) {
+    } else if (R.contains('TABBED ARRAY', eqn)) {
       emitRemoval(eqn)
-    } else if (R.any(x => R.contains(x, s), removalKeys)) {
+    } else if (R.any(x => R.contains(x, eqn), removalKeys)) {
       emitRemoval(eqn)
     } else if (!R.isEmpty(eqn)) {
       emit(eqn)
