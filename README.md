@@ -1,6 +1,6 @@
 # SDEverywhere Guide
 
-Revised: 2017-07-19 (version 0.3.2)
+Revised: 2017-09-14 (version 0.3.4)
 
 ## Introduction
 
@@ -222,33 +222,11 @@ sde test {model}
 
 SDEverywhere generates code that runs the model using the constants defined in the model. To explore model behavior, the user changes the values of constants we call "input variables" and runs the model again.
 
-There is a `setInputs` function stubbed out in the generated code that gets called at initialization. The spec file lists input variables, but you need to implement `setInputs` yourself. It takes a string with serialized input values and sets variable values from it. The serialization format depends on the needs of your application. JSON would be one choice.
+There is a `setInputs` implementation in the generated code that gets called at initialization. It takes a string with serialized input values and sets variable values from it. The serialization format depends on the needs of your application. You can replace `setInputs` if you want to use a different serialization form. The input variables are listed in the `inputVars` section of the spec file. Look at the `arrays` model for an example.
 
-Here is an implementation to help you get started. This format minimizes the amount of data on the wire for web applications. It parses index-value pairs sent in a compact format that looks like this: `0:3.14 6:42`. That is, the values are separated by spaces, and each pair has an index number, a colon, and a floating point number.
+The generated format minimizes the amount of data on the wire for web applications. It parses index-value pairs sent in a compact format that looks like this: `0:3.14 6:42`. That is, the values are separated by spaces, and each pair has an index number, a colon, and a floating point number.
 
 The zero-based index maps into a static array of input variable pointers held in the function. These are used to set the value directly into the static `double` variable in the generated code.
-~~~
-void setInputs(const char* inputData) {
-  static double* inputVarPtrs[] = {
-    &_var_1,
-    &_var_2
-  };
-  char* inputs = (char*)inputData;
-  // fprintf(stderr, "inputs = %s\n", inputs);
-  char* token = strtok(inputs, " ");
-  while (token) {
-    char* p = strchr(token, ':');
-    if (p) {
-      *p = '\0';
-      int modelVarIndex = atoi(token);
-      double value = atof(p+1);
-      // fprintf(stderr, "input [%d] = %g\n", modelVarIndex, value);
-      *inputVarPtrs[modelVarIndex] = value;
-    }
-    token = strtok(NULL, " ");
-  }
-}
-~~~
 
 ## Generating a web application
 
