@@ -1,6 +1,6 @@
 {
   "name": "sdeverywhere",
-  "version": "0.3.4",
+  "version": "0.4.0",
   "description": "SDEverywhere translates System Dynamics models from Vensim to C and JavaScript",
   "author": "Todd Fincannon <todd@toddfincannon.com> (http://toddfincannon.com)",
   "homepage": "http://sdeverywhere.org",
@@ -16,7 +16,7 @@
   "dependencies": {
     "antlr4": "^4.7.0",
     "digraph-sort": "^0.2.0",
-    "fs-extra": "^4.0.1",
+    "fs-extra": "^4.0.2",
     "moment": "^2.18.1",
     "ramda": "^0.24.1",
     "shelljs": "^0.7.8",
