@@ -1,10 +1,13 @@
 const fs = require('fs-extra')
 const R = require('ramda')
+const numeral = require('numeral')
 
+// Numeric value of a string or number
+let num = x => (typeof x === 'number' ? x : numeral(x).value())
 // String sort comparison function
 let acmp = R.comparator((a, b) => a < b)
 // Numeric string sort comparison function
-let ncmp = R.comparator((a, b) => n(a) < n(b))
+let ncmp = R.comparator((a, b) => num(a) < num(b))
 // alphanumeric sort
 let sorta = R.sort(acmp)
 // numeric sort
@@ -20,6 +23,7 @@ let printu = a => printa(sortu(a))
 let print = s => {
   console.log(s)
 }
+let pr = print
 let write = (s, pathname) => {
   fs.writeFileSync(pathname, s, { encoding: 'utf8' })
 }
@@ -85,7 +89,9 @@ module.exports = {
   emitJson,
   emitLine,
   getBuf,
+  num,
   open,
+  pr,
   print,
   printa,
   printBuf,
@@ -95,6 +101,5 @@ module.exports = {
   sortn,
   sortu,
   write,
-  writeBuf,
-  writeJson
+  writeBuf
 }
