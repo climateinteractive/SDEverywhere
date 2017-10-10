@@ -1,12 +1,13 @@
 const fs = require('fs-extra')
 const path = require('path')
+const R = require('ramda')
 const sh = require('shelljs')
 const antlr4 = require('antlr4/index')
 const ModelLexer = require('./ModelLexer').ModelLexer
 const ModelParser = require('./ModelParser').ModelParser
 const { codeGenerator } = require('./CodeGen')
 const { preprocessModel } = require('./Preprocessor')
-const { modelPathProps, buildDir } = require('./Helpers')
+const { modelPathProps, buildDir, readDat } = require('./Helpers')
 const F = require('./futil')
 
 let command = 'generate [options] <model>'
@@ -75,6 +76,7 @@ let generate = (model, opts) => {
 
   // Preprocess model text into parser input. Stop now if that's all we're doing.
   let spec = parseSpec(opts.spec)
+  let extData = readDatFiles(spec.datfiles)
   let writeRemovals = opts.preprocess
   let input = preprocessModel(modelPathname, spec, writeRemovals)
   if (opts.preprocess) {
@@ -91,7 +93,7 @@ let generate = (model, opts) => {
     operation = 'printRefIdTest'
   }
   let parseTree = parseModel(input)
-  let code = codeGenerator(parseTree, spec, operation, codeGenOpts).generate()
+  let code = codeGenerator(parseTree, spec, operation, codeGenOpts, extData).generate()
   if (opts.genc || opts.genwebc) {
     let outputPathname = path.join(buildDirname, `${modelName}.c`)
     writeOutput(outputPathname, code)
@@ -161,6 +163,17 @@ let parseJsonFile = filename => {
     // If the file doesn't exist, return an empty object without complaining.
   }
   return result
+}
+let readDatFiles = datfiles => {
+  // Read time series from external DAT files into a single object.
+  let extData = new Map()
+  if (datfiles) {
+    R.forEach(pathname => {
+      let data = readDat(pathname)
+      extData = new Map([...extData, ...data])
+    }, datfiles)
+  }
+  return extData
 }
 let writeOutput = (outputPathname, outputText) => {
   try {

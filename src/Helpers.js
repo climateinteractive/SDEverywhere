@@ -4,6 +4,7 @@ const util = require('util')
 const R = require('ramda')
 const sh = require('shelljs')
 const sprintf = require('voca/sprintf')
+const { num } = require('./futil')
 
 // Set true to print a stack trace in vlog
 const PRINT_VLOG_TRACE = false
@@ -34,9 +35,7 @@ let canonicalName = name => {
 }
 let decanonicalize = name => {
   // Decanonicalize the var name.
-  name = name
-    .replace(/^_/, '')
-    .replace(/_/g, ' ')
+  name = name.replace(/^_/, '').replace(/_/g, ' ')
   // Vensim variable names need to be surrounded by quotes if they:
   // do not start with a letter
   // do not contain only letters, spaces, numbers, single quotes, and dollar signs.
@@ -168,6 +167,62 @@ let execCmd = cmd => {
   }
   return exitCode
 }
+let readDat = pathname => {
+  // Read a Vensim DAT file into an object.
+  // Key: variable name in canonical format
+  // Value: Map from numeric time value to numeric variable value
+  let splitDatLine = line => {
+    // Return an array of nonempty string fields up to the first blank field.
+    const f = line.split('\t')
+    const len = f.length
+    let fieldFrom = (i, values) => {
+      if (len > i) {
+        let value = f[i].trim()
+        if (value !== '') {
+          values.push(value)
+          fieldFrom(i + 1, values)
+        }
+      }
+      return values
+    }
+    return fieldFrom(0, [])
+  }
+  let log = new Map()
+  let varName = ''
+  let varValues = new Map()
+  let lineNum = 1
+  try {
+    let lines = fs.readFileSync(pathname, 'utf8').split(/\r?\n/)
+    lines.forEach(line => {
+      let values = splitDatLine(line)
+      if (values.length === 1) {
+        // Lines without a single value are variable names that start a data section.
+        // Save the values for the current var if we are not on the first one with no values yet.
+        if (varName != '') {
+          log.set(varName, varValues)
+        }
+        // Start a new map for this var.
+        // Convert the var name to canonical form so it is the same in both logs.
+        varName = canonicalName(values[0])
+        varValues = new Map()
+      } else if (values.length > 1) {
+        // Data lines in Vensim DAT format have {time}\t{value} format with optional comments afterward.
+        let t = num(values[0])
+        let value = num(values[1])
+        // Save the value at time t in the varValues map.
+        if (Number.isNaN(t) || Number.isNaN(value)) {
+          console.error(`[${lineNum}] var "${varName}" value is NaN at time=${t}`)
+        } else {
+          varValues.set(t, value)
+        }
+      }
+      lineNum++
+    })
+  } catch (e) {
+    console.error(e.message)
+  }
+  return log
+}
 let execCmdAsync = cmd => {
   // Run a command line asynchronously and silently in the "sh" shell. Print error output on error.
   let exitCode = 0
@@ -233,6 +288,7 @@ module.exports = {
   newLookupVarName,
   newTmpVarName,
   outputDir,
+  readDat,
   replaceInArray,
   strlist,
   strToConst,

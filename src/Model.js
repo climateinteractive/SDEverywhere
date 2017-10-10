@@ -251,6 +251,9 @@ function constVars() {
 function lookupVars() {
   return vsort(varsOfType('lookup'))
 }
+function dataVars() {
+  return vsort(varsOfType('data'))
+}
 function auxVars() {
   // console.error('AUX VARS');
   return sortVarsOfType('aux')
@@ -571,6 +574,7 @@ module.exports = {
   auxVars,
   cName,
   constVars,
+  dataVars,
   expansionFlags,
   initVars,
   isNonAtoAName,

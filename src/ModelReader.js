@@ -38,6 +38,9 @@ module.exports = class ModelReader extends ModelVisitor {
       } else if (ctx.lookup()) {
         ctx.lookup().accept(this)
       }
+      else {
+        this.var.varType = 'data'
+      }
     }
   }
   visitLhs(ctx) {

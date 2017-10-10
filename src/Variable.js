@@ -89,4 +89,7 @@ module.exports = class Variable {
   isLookup() {
     return this.varType === 'lookup'
   }
+  isData() {
+    return this.varType === 'data'
+  }
 }

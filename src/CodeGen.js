@@ -5,13 +5,13 @@ const Model = require('./Model')
 const { sub, allDimensions, allMappings, isDimension, subscriptFamilies, printSubscripts } = require('./Subscript')
 const { asort, canonicalName, lines, list, strlist, vlog } = require('./Helpers')
 
-let codeGenerator = (parseTree, spec, operation, codeGenOpts) => {
+let codeGenerator = (parseTree, spec, operation, codeGenOpts, extData) => {
   // Set true when in the init section, false in the eval section
   let initMode = false
   // Set true to output all variables when there is no model run spec.
   let outputAllVars = spec.outputVars && spec.outputVars.length > 0 ? false : true
   // Function to generate a section of the code
-  let generateSection = R.map(v => new EquationGen(v, initMode).generate())
+  let generateSection = R.map(v => new EquationGen(v, extData, initMode).generate())
   let section = R.pipe(generateSection, R.flatten, lines)
 
   function generate() {
@@ -73,6 +73,7 @@ ${section(Model.constVars())}
   // Initialize lookups.
 if (!lookups_initialized) {
 ${section(Model.lookupVars())}
+${section(Model.dataVars())}
   lookups_initialized = true;
 }
 }
@@ -130,7 +131,7 @@ ${outputSection(outputVars)}
       // Build a C array declaration for the variable v.
       // This uses the subscript family for each dimension, which may overallocate
       // if the subscript is a subdimension.
-      let varType = v.isLookup() ? 'Lookup* ' : 'double '
+      let varType = v.isLookup() || v.isData() ? 'Lookup* ' : 'double '
       let families = subscriptFamilies(v.subscripts)
       return varType + v.varName + R.map(family => `[${sub(family).size}]`, families).join('')
     }

@@ -32,10 +32,12 @@ const {
 } = require('./Helpers')
 
 module.exports = class EquationGen extends ModelReader {
-  constructor(variable, initMode = false) {
+  constructor(variable, extData, initMode = false) {
     super()
     // the variable we are generating code for
     this.var = variable
+    // external data map from DAT files
+    this.extData = extData
     // initMode is true for vars with separate init-time code generation
     this.initMode = initMode
     // Map of LHS subscript families to loop index vars for lookup on the RHS
@@ -77,6 +79,9 @@ module.exports = class EquationGen extends ModelReader {
   }
   generate() {
     // Generate code for the variable in either init or eval mode.
+    if (this.var.isData()) {
+      return this.generateData()
+    }
     if (this.var.isLookup()) {
       return this.generateLookup()
     }
@@ -247,7 +252,7 @@ module.exports = class EquationGen extends ModelReader {
     // Emit the tmp var subscript just after emitting the tmp var elsewhere.
     this.emit(`[${this.vsoTmpDimName}[${i}]]`)
   }
-  isLookup() {
+  functionIsLookup() {
     // See if the function name in the current call is actually a lookup.
     // console.error(`isLookup ${this.lookupName()}`);
     let v = Model.varWithName(this.lookupName())
@@ -261,6 +266,22 @@ module.exports = class EquationGen extends ModelReader {
     } else {
       return []
     }
+  }
+  generateData() {
+    let result = []
+    if (this.initMode) {
+      // Copy data from an external file to a lookup.
+      let data = this.extData.get(this.var.varName)
+      if (data) {
+        let args = R.reduce(
+          (a, p) => listConcat(a, `${cdbl(p[0])}, ${cdbl(p[1])}`, true),
+          '',
+          Array.from(data.entries())
+        )
+        result = [`  ${this.lhs} = __new_lookup(${data.size}, ${args});`]
+      }
+    }
+    return result
   }
   //
   // Visitor callbacks
@@ -342,7 +363,7 @@ module.exports = class EquationGen extends ModelReader {
       this.vsoOrder = ''
       this.vsoTmpName = ''
       this.vsoTmpDimName = ''
-    } else if (this.isLookup()) {
+    } else if (this.functionIsLookup() || this.var.isData()) {
       // A lookup has function syntax but lookup semantics. Convert the function call into a lookup call.
       this.emit(`_LOOKUP(${this.lookupName()}, `)
       super.visitCall(ctx)
