@@ -190,10 +190,10 @@ function readEquations() {
   }, variables)
 }
 function removeConstRefs() {
-  // Remove references to const vars since they do not affect evaluation order.
+  // Remove references to const, data, and lookup vars since they do not affect evaluation order.
   function refIsConst(refId) {
     let v = varWithRefId(refId)
-    return v && v.varType === 'const'
+    return v && (v.varType === 'const' || v.varType === 'data' || v.varType === 'lookup')
   }
   R.forEach(v => {
     v.references = R.reject(refIsConst, v.references)

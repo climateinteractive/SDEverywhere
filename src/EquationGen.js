@@ -480,7 +480,12 @@ module.exports = class EquationGen extends ModelReader {
         this.emit(this.vsoTmpName)
       }
     } else {
-      this.emit(this.currentVarName())
+      let v = Model.varWithName(this.currentVarName())
+      if (v && v.varType === 'data') {
+        this.emit(`_LOOKUP(${this.currentVarName()}, _time)`)
+      } else {
+        this.emit(this.currentVarName())
+      }
     }
     super.visitVar(ctx)
     this.varNames.pop()
