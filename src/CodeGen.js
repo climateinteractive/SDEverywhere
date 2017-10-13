@@ -169,7 +169,7 @@ ${outputSection(outputVars)}
     return strlist(a)
   }
   function expandedVarNames(vensimNames) {
-    // Return a list of var names for all variables.
+    // Return a list of var names for all variables except lookups and data variables.
     // The names are in Vensim format if vensimNames is true, otherwise they are in C format.
     // Expand subscripted vars into separate var names with each index.
     function sortedVars() {
@@ -183,7 +183,7 @@ ${outputSection(outputVars)}
     return R.uniq(
       R.reduce(
         (a, v) => {
-          if (v.varType != 'lookup' && v.includeInOutput) {
+          if (v.varType != 'lookup' && v.varType != 'data' && v.includeInOutput) {
             let modelLHSReader = new ModelLHSReader()
             modelLHSReader.read(v.modelLHS)
             if (vensimNames) {
