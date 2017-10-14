@@ -20,6 +20,9 @@ double bool_cond(double cond) {
 // See the Vensim Reference Manual for descriptions of the functions.
 // http://www.vensim.com/documentation/index.html?22300.htm
 //
+double _ABS(double x) {
+	return fabs(x);
+}
 double _COS(double x) {
 	return cos(x);
 }

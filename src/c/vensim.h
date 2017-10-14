@@ -17,6 +17,7 @@ double bool_cond(double cond);
 
 #define _NA_ (-DBL_MAX)
 
+double _ABS(double x);
 double _COS(double x);
 double _EXP(double x);
 double _GAME(double x);
