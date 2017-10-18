@@ -160,6 +160,8 @@ function normalizeSubscripts(subscripts) {
   try {
     normalizedSubs = R.map(R.prop('name'), subs)
   } catch (e) {
+    console.error(`normalizeSubscripts fails for ${subscripts}`)
+    debugger
   }
   return normalizedSubs
 }

@@ -1,9 +1,8 @@
 const fs = require('fs-extra')
 const R = require('ramda')
-const numeral = require('numeral')
 
 // Numeric value of a string or number
-let num = x => (typeof x === 'number' ? x : numeral(x).value())
+let num = x => (typeof x === 'number' ? x : Number.parseFloat(x))
 // String sort comparison function
 let acmp = R.comparator((a, b) => a < b)
 // Numeric string sort comparison function
