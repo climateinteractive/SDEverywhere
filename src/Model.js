@@ -16,17 +16,7 @@ const {
   Subscript,
   subscriptFamilies
 } = require('./Subscript')
-const {
-  isAlpha,
-  isDigit,
-  printEqn,
-  vsort,
-  listVars,
-  list,
-  strlist,
-  decanonicalize,
-  vlog
-} = require('./Helpers')
+const { isAlpha, isDigit, printEqn, vsort, listVars, list, strlist, decanonicalize, vlog } = require('./Helpers')
 
 let variables = []
 let nonAtoANames = Object.create(null)
@@ -66,17 +56,30 @@ function readSubscriptRanges(tree) {
   // Update the families of subdimensions.
   // At this point, all dimensions have their family set to their own dimension name.
   // List the number of values for each dimension.
+  let dimComparator = (dim1, dim2) => {
+    // Sort dimensions by size ascending, by name descending.
+    if (dim1.size < dim2.size) {
+      return -1
+    } else if (dim1.size > dim2.size) {
+      return 1
+    } else if (dim1.name > dim2.name) {
+      return -1
+    } else if (dim1.name < dim2.name) {
+      return 1
+    } else {
+      return 0
+    }
+  }
   for (let dim of allDims) {
     // Take the first index in the dimension.
     let index = dim.value[0]
     // Find the dimension in this family with the largest number of values.
     // This is the "maximal" dimension that serves as the subscript family.
-    let maxSize = dim.value.length
-    for (let thisDim of allDims) {
-      if (R.contains(index, thisDim.value) && thisDim.value.length > maxSize) {
-        dim.family = thisDim.name
-        maxSize = thisDim.value.length
-      }
+    // If two dimensions have the same maximal size, choose the one that comes
+    // first in alpha sort order, by convention.
+    let familyDims = R.sort(dimComparator, R.filter(thisDim => R.contains(index, thisDim.value), allDims))
+    if (familyDims.length > 0) {
+      dim.family = R.last(familyDims).name
     }
   }
   // Define indices in order from the maximal (family) dimension.
