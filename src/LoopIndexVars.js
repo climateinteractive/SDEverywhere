@@ -8,14 +8,10 @@ module.exports = class LoopIndexVars {
   index(subscriptName) {
     let index
     if (isDimension(subscriptName)) {
-      let subscript = sub(subscriptName)
-      if (subscript) {
-        let family = subscript.family
-        index = this.lhsLoopIndices[family]
-        if (!index) {
-          index = this.loopIndexVars.next()
-          this.lhsLoopIndices[family] = index
-        }
+      index = this.lhsLoopIndices[subscriptName]
+      if (!index) {
+        index = this.loopIndexVars.next()
+        this.lhsLoopIndices[subscriptName] = index
       }
     }
     return index
