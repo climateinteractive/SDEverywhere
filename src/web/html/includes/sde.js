@@ -251,7 +251,7 @@ var Module = {
 
       //save headers and rows separately for later use
       if(sdHeaders == null)
-        sdHeaders = rowData;
+        sdHeaders = rowData.map(canonicalName)
       else
         sdData.push(rowData);
     };
@@ -604,4 +604,20 @@ function varNameToSliderId(sliderVarName) {
 /** generates domId for specified view button **/
 function varNameToViewButtonId(viewName) {
   return "view_"+domifyStr(viewName);
+}
+
+// Format a model variable name into a valid C identifier.
+function canonicalName(name) {
+  return (
+    '_' +
+    name
+      .replace(/"/g, '')
+      .trim()
+      .replace(/\s+!$/g, '!')
+      .replace(/\s/g, '_')
+      .replace(/,/g, '_')
+      .replace(/-/g, '_')
+      .replace(/\./g, '_')
+      .toLowerCase()
+  )
 }
