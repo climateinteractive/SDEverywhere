@@ -170,11 +170,6 @@ sde test {model}
 sde clean {model}
 ~~~
 
-**Generate C code that is compatible with the web interface**
-~~~
-sde generate --genwebc --spec {model}_web_spec.json {model}
-~~~
-
 **Generate WebAssembly code that can be embedded in a web app**
 ~~~
 sde compile --wasm {model}
@@ -255,12 +250,12 @@ source emsdk_set_env.sh
 
 2. Give the following commands to build the web page.
 ~~~
-sde generate --genwebc --spec {model}_web_spec.json {model}
+sde generate --genc --spec {model}_web_spec.json {model}
 sde compile --wasm {model}
 sde generate --genhtml --spec {model}_web_spec.json {model}
 ~~~
 
-The first command generates C code from your model that is compatible with the web interface. The second command generates a WebAssembly file that can be directly called from the web application. The third command generates the web application code (HTML/JS/CSS) needed to run the model and graph the results.
+The first command generates C code from your model. The second command generates a WebAssembly file that can be directly called from the web application. The third command generates the web application code (HTML/JS/CSS) needed to run the model and graph the results.
 
 The commands above create a self-contained application in an `html` folder in your model directory. The `html` folder will contain an `index.html` file which can be opened directly in Firefox or hosted on a web server.
 

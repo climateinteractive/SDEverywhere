@@ -17,10 +17,6 @@ let builder = {
     describe: 'generate C code for the model',
     type: 'boolean'
   },
-  genwebc: {
-    describe: 'generate web-enabled C for the model',
-    type: 'boolean'
-  },
   genhtml: {
     describe: 'generate an HTML UI for the model',
     type: 'boolean'
@@ -60,20 +56,11 @@ let generate = (model, opts) => {
   let { modelDirname, modelName, modelPathname } = modelPathProps(model)
   // Ensure the build directory exists.
   let buildDirname = buildDir(opts.builddir, modelDirname)
-  //an options map for code generation
-  let codeGenOpts = {}
-
-  //check to see whether we're building for the web
-  if (opts.genwebc || opts.genhtml) {
-    //check for specs .json
-    if (!opts.spec) {
-      console.log('You must provide a model spec JSON for web-enabled SDE')
-      process.exit(-1)
-    }
-    //if generating C for web, then populate setInputs()
-    codeGenOpts.setInputs_web = true
-  } //if (opts.genwebc || opts.genhtml) {
-
+  // Check options when we're building for the web.
+  if (opts.genhtml && !opts.spec) {
+    console.log('You must provide a model spec JSON for web-enabled SDE')
+    process.exit(1)
+  }
   // Preprocess model text into parser input. Stop now if that's all we're doing.
   let spec = parseSpec(opts.spec)
   let extData = readDatFiles(spec.datfiles)
@@ -84,7 +71,6 @@ let generate = (model, opts) => {
     writeOutput(outputPathname, input)
     process.exit(0)
   }
-
   // Parse the model and generate code.
   let operation = 'generateC'
   if (opts.list) {
@@ -93,41 +79,33 @@ let generate = (model, opts) => {
     operation = 'printRefIdTest'
   }
   let parseTree = parseModel(input)
-  let code = codeGenerator(parseTree, spec, operation, codeGenOpts, extData).generate()
-  if (opts.genc || opts.genwebc) {
+  let code = codeGenerator(parseTree, spec, operation, extData).generate()
+  if (opts.genc) {
     let outputPathname = path.join(buildDirname, `${modelName}.c`)
     writeOutput(outputPathname, code)
   }
-
-  //generate HTML model
+  // Generate a web app for the model.
   if (opts.genhtml) {
-    let modelJS = `sd_${modelName}.js` //generate HTML model
+    let modelJS = `sd_${modelName}.js`
     createHTML(modelDirname, buildDirname, modelName, modelJS, spec)
-    process.exit(1)
+    process.exit(0)
   }
 }
-
-/**
-Copies the HTML & page JS from the src/web directory
-Replaces the model-specific variables with contents of the model specs JSON
-**/
 let createHTML = (modelDirname, buildDirname, modelName, modelJS, spec) => {
-  //destination directory of web application
-  var web_app_path = path.join(modelDirname, 'html')
-
-  //copy template files directory over from $SDE_HOME/src/web/html
-  var templatePath = path.join(__dirname, 'web', 'html')
+  // Copy the HTML and page JS from the src/web directory.
+  // Replace the model-specific variables with contents of the model spec JSON.
+  // Copy the template files directory over from $SDE_HOME/src/web/html.
+  let templatePath = path.join(__dirname, 'web', 'html')
   sh.cp('-rf', templatePath, modelDirname)
-
-  //insert model-specific varuabkes into local copy of index.html
-  var index_html_path = path.join(web_app_path, 'includes', 'sde.js')
+  // Insert model-specific variables into the local copy of index.html.
+  let web_app_path = path.join(modelDirname, 'html')
+  let index_html_path = path.join(web_app_path, 'includes', 'sde.js')
   sh.sed('-i', '::modelName_::', '"' + modelName + '"', index_html_path)
   sh.sed('-i', '::modelJS_::', '"' + modelJS + '"', index_html_path)
   sh.sed('-i', '::inputVarDef_::', JSON.stringify(spec.inputVarDef), index_html_path)
   sh.sed('-i', '::outputVars_::', JSON.stringify(spec.outputVars), index_html_path)
   sh.sed('-i', '::viewButtons_::', JSON.stringify(spec.viewButtons), index_html_path)
-
-  //copy JS & wasm from the build directory
+  // Copy JS & wasm from the build directory.
   sh.cp(path.join(buildDirname, '*.js'), web_app_path)
   sh.cp(path.join(buildDirname, '*.wasm'), web_app_path)
 }
@@ -141,7 +119,6 @@ let parseModel = input => {
   parser.buildParseTrees = true
   return parser.model()
 }
-
 let parseSpec = specFilename => {
   var parsedJSON = parseJsonFile(specFilename)
 
@@ -151,7 +128,6 @@ let parseSpec = specFilename => {
   }
   return parsedJSON
 }
-
 let parseJsonFile = filename => {
   // Parse the JSON file if it exists.
   let result = {}
