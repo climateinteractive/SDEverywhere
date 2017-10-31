@@ -1,6 +1,7 @@
 const fs = require('fs-extra')
 const path = require('path')
 const sh = require('shelljs')
+const R = require('ramda');
 const { modelPathProps, buildDir, execCmd } = require('./Helpers')
 
 let command = 'compile [options] <model>'
@@ -12,7 +13,7 @@ let builder = {
     alias: 'b'
   },
   wasm: {
-    describe: 'creates a WASM binary instead of native',
+    describe: 'compile to a WebAssembly binary',
     type: 'boolean'
   }
 }
@@ -55,27 +56,22 @@ let compile = (model, opts) => {
   return 0
 }
 
-/**
-Compiles WASM out of the .c and .h files in the build directory
-**/
 let compileWASM = (modelName, modelJS, buildDirname) => {
-  //create the arg array for the emcc call
+  // Compile WASM from C source files in the build directory.
   let emccArgs = []
-
-  //first add the source .c files from the buildDir
+  // Add the source files from the buildDir.
   sh.ls(buildDirname).forEach(filename => {
-    if (filename.slice(-2) == '.c') {
+    if (R.endsWith('.c', filename)) {
       let srcPathname = path.join(buildDirname, filename)
       emccArgs.push(srcPathname)
     }
   })
-
-  //include the buildDir as a place to look for .h files
+  // Include the buildDir as a place to look for .h files.
   emccArgs.push('-I' + buildDirname)
-  //set the output JS path (WASM will be in same dir)
+  // Set the output JS path (WASM will be in same dir).
   emccArgs.push('-o')
   emccArgs.push(path.join(buildDirname, modelJS))
-  //other flags to set WASM and optimization
+  // Set other flags for WASM compilation and optimization.
   emccArgs.push('-s')
   emccArgs.push('WASM=1')
   emccArgs.push('-Wall')
