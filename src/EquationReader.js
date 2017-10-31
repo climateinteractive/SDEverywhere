@@ -367,7 +367,12 @@ module.exports = class EquationReader extends ModelReader {
     // Read the var and add it to the Model var table.
     let variableReader = new VariableReader()
     variableReader.visitEquation(tree)
-    variableReader.var.refId = Model.refIdForVar(variableReader.var)
+    // Fill in the refId for generated variables.
+    if (variableReader.expandedVars.length > 0) {
+      R.forEach(v => v.refId = Model.refIdForVar(v), variableReader.expandedVars)
+    } else {
+      variableReader.var.refId = Model.refIdForVar(variableReader.var)
+    }
     // Inhibit output for generated variables.
     variableReader.var.includeInOutput = false
     // Finish the variable by parsing the RHS.

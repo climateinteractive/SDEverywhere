@@ -303,6 +303,7 @@ function varWithRefId(refId) {
       }
     }
     vlog('ERROR: no var found for refId', refId)
+    debugger
   }
   return refVar
 }
