@@ -35,12 +35,17 @@ let canonicalName = name => {
 }
 let decanonicalize = name => {
   // Decanonicalize the var name.
-  name = name.replace(/^_/, '').replace(/_/g, ' ')
-  // Vensim variable names need to be surrounded by quotes if they:
-  // do not start with a letter
-  // do not contain only letters, spaces, numbers, single quotes, and dollar signs.
-  if (!name.match(/^[A-Za-z]/) || name.match(/[^A-Za-z0-9\s'$]/)) {
-    name = `"${name}"`
+  try {
+    name = name.replace(/^_/, '').replace(/_/g, ' ')
+    // Vensim variable names need to be surrounded by quotes if they:
+    // do not start with a letter
+    // do not contain only letters, spaces, numbers, single quotes, and dollar signs.
+    if (!name.match(/^[A-Za-z]/) || name.match(/[^A-Za-z0-9\s'$]/)) {
+      name = `"${name}"`
+    }
+  } catch (e) {
+    debugger
+    throw(e)
   }
   return name
 }
