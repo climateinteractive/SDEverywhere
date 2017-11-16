@@ -4,7 +4,6 @@
 extern "C" {
 #endif
 
-const char* run_model(const char* inputs);
 double roundToSignificantFigures(double num, int n);
 double print6(double num);
 
