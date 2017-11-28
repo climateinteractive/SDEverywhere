@@ -79,6 +79,7 @@ ${section(Model.dataVars())}
 }
 void initLevels() {
   // Initialize variables with initialization values, such as levels, and the variables they depend on.
+  _time = _initial_time;
 ${section(Model.initVars())}
 }
 
