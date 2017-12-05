@@ -33,6 +33,8 @@ function read(parseTree, spec) {
   readVariables(parseTree, specialSeparationDims)
   // Analyze model equations to fill in more details about variables.
   analyze()
+  // Check that all input and output vars in the spec actually exist in the model.
+  checkSpecVars(spec)
 }
 function readSubscriptRanges(tree) {
   // Read subscript ranges from the model.
@@ -144,6 +146,21 @@ function analyze() {
   readEquations()
   // Remove constants from references now that all var types are determined.
   removeConstRefs()
+}
+function checkSpecVars(spec) {
+  // Look up each var in the spec and issue and error message if it does not exist.
+  function check(varNames) {
+    for (let varName of varNames) {
+      // TODO handle mismatch of subscripted variables having numerical indices in the spec
+      if (!R.contains('[', varName)) {
+        if (!R.find(R.propEq('refId', varName), variables)) {
+          console.error(`ERROR: var name ${varName} is not in the model`)
+        }
+      }
+    }
+  }
+  check(spec.inputVars)
+  check(spec.outputVars)
 }
 //
 // Analysis helpers
