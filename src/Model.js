@@ -16,7 +16,18 @@ const {
   Subscript,
   subscriptFamilies
 } = require('./Subscript')
-const { isAlpha, isDigit, printEqn, vsort, listVars, list, strlist, decanonicalize, vlog } = require('./Helpers')
+const {
+  decanonicalize,
+  isAlpha,
+  isDigit,
+  isIterable,
+  list,
+  listVars,
+  printEqn,
+  strlist,
+  vlog,
+  vsort
+} = require('./Helpers')
 
 let variables = []
 let nonAtoANames = Object.create(null)
@@ -150,17 +161,21 @@ function analyze() {
 function checkSpecVars(spec) {
   // Look up each var in the spec and issue and error message if it does not exist.
   function check(varNames) {
-    for (let varName of varNames) {
-      // TODO handle mismatch of subscripted variables having numerical indices in the spec
-      if (!R.contains('[', varName)) {
-        if (!R.find(R.propEq('refId', varName), variables)) {
-          console.error(`ERROR: var name ${varName} is not in the model`)
+    if (isIterable(varNames)) {
+      for (let varName of varNames) {
+        // TODO handle mismatch of subscripted variables having numerical indices in the spec
+        if (!R.contains('[', varName)) {
+          if (!R.find(R.propEq('refId', varName), variables)) {
+            console.error(`ERROR: var name ${varName} is not in the model`)
+          }
         }
       }
     }
   }
-  check(spec.inputVars)
-  check(spec.outputVars)
+  if (spec) {
+    check(spec.inputVars)
+    check(spec.outputVars)
+  }
 }
 //
 // Analysis helpers

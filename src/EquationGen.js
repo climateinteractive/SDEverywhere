@@ -279,6 +279,8 @@ module.exports = class EquationGen extends ModelReader {
           Array.from(data.entries())
         )
         result = [`  ${this.lhs} = __new_lookup(${data.size}, ${args});`]
+      } else {
+        console.error(`data variable ${this.var.varName} not found in external data sources`)
       }
     }
     return result

@@ -45,7 +45,7 @@ let decanonicalize = name => {
     }
   } catch (e) {
     debugger
-    throw(e)
+    throw e
   }
   return name
 }
@@ -129,6 +129,13 @@ let mapObjProps = (f, obj) => {
   R.forEach(k => (result[f(k)] = f(obj[k])), Object.keys(obj))
   return result
 }
+let isIterable = obj => {
+  // Return true of the object is iterable.
+  if (obj == null) {
+    return false
+  }
+  return typeof obj[Symbol.iterator] === 'function'
+}
 // Command helpers
 let outputDir = (outfile, modelDirname) => {
   if (outfile) {
@@ -173,7 +180,7 @@ let execCmd = cmd => {
   return exitCode
 }
 let readDat = pathname => {
-  // Read a Vensim DAT file into an object.
+  // Read a Vensim DAT file into a Map.
   // Key: variable name in canonical format
   // Value: Map from numeric time value to numeric variable value
   let splitDatLine = line => {
@@ -181,7 +188,7 @@ let readDat = pathname => {
     const f = line.split('\t')
     const len = f.length
     let fieldFrom = (i, values) => {
-      if (len > i) {
+      if (i < len) {
         let value = f[i].trim()
         if (value !== '') {
           values.push(value)
@@ -201,8 +208,8 @@ let readDat = pathname => {
     lines.forEach(line => {
       let values = splitDatLine(line)
       if (values.length === 1) {
-        // Lines without a single value are variable names that start a data section.
-        // Save the values for the current var if we are not on the first one with no values yet.
+        // Lines with a single value are variable names that start a data section.
+        // Save the values for the current var if we are not on the first one.
         if (varName != '') {
           log.set(varName, varValues)
         }
@@ -215,8 +222,10 @@ let readDat = pathname => {
         let t = num(values[0])
         let value = num(values[1])
         // Save the value at time t in the varValues map.
-        if (Number.isNaN(t) || Number.isNaN(value)) {
-          console.error(`[${lineNum}] var "${varName}" value is NaN at time=${t}`)
+        if (Number.isNaN(t)) {
+          console.error(`DAT file ${pathname}:${lineNum} time value is NaN`)
+        } else if (Number.isNaN(value)) {
+          console.error(`DAT file ${pathname}:${lineNum} var "${varName}" value is NaN at time=${t}`)
         } else {
           varValues.set(t, value)
         }
@@ -280,6 +289,7 @@ module.exports = {
   isArrayFunction,
   isDelayFunction,
   isSmoothFunction,
+  isIterable,
   lines,
   list,
   listConcat,
