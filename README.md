@@ -374,6 +374,13 @@ An exception of "code generator exception: Cannot read property 'name' of undefi
 
 To print a stack trace to the console, use `console.error(e.stack)` in an exception handler and `console.trace()` elsewhere.
 
+In the C input parsing code, show a changed value:
+~~~
+if (*inputVarPtrs[modelVarIndex] != value) {
+  fprintf(stderr, "input %d changed from %g to %g\n", modelVarIndex, *inputVarPtrs[modelVarIndex], value);
+}
+~~~
+
 ## SDEverywhere architecture
 
 SDEverywhere is a transpiler that converts models written in the [Vensim Modeling Language](http://www.vensim.com/documentation/index.html?22300.htm) to either C or JavaScript. The language features and Vensim library functions that are most commonly used in models are supported, including subscripts.
