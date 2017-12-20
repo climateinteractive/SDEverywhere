@@ -367,17 +367,17 @@ module.exports = class EquationReader extends ModelReader {
     // Read the var and add it to the Model var table.
     let variableReader = new VariableReader()
     variableReader.visitEquation(tree)
-    // Fill in the refId for generated variables.
-    if (variableReader.expandedVars.length > 0) {
-      R.forEach(v => v.refId = Model.refIdForVar(v), variableReader.expandedVars)
-    } else {
-      variableReader.var.refId = Model.refIdForVar(variableReader.var)
-    }
-    // Inhibit output for generated variables.
-    variableReader.var.includeInOutput = false
-    // Finish the variable by parsing the RHS.
-    let equationReader = new EquationReader(variableReader.var)
-    equationReader.read()
+    // Fill in the rest of the var, which may been expanded on a separation dim.
+    let generatedVars = variableReader.expandedVars.length > 0 ? variableReader.expandedVars : [variableReader.var]
+    R.forEach(v => {
+      // Fill in the refId.
+      v.refId = Model.refIdForVar(v)
+      // Inhibit output for generated variables.
+      v.includeInOutput = false
+      // Finish the variable by parsing the RHS.
+      let equationReader = new EquationReader(v)
+      equationReader.read()
+    }, generatedVars)
   }
   modelSubs() {
     let modelSubs = ''
