@@ -26,14 +26,23 @@ extern "C" {
 #include "macros.h"
 #include "fcmp.h"
 
-// Float point comparisons
-extern double _epsilon;
+#ifdef PRECISION_FCMP
+// Optional high-precision but slow floating point comparison macros
+EXTERN double _epsilon;
 #define fz(x) (fcmp(x, 0.0, _epsilon) == 0)
 #define feq(x1,x2) (fcmp(x1, x2, _epsilon) == 0)
 #define flt(x1,x2) (fcmp(x1, x2, _epsilon) == -1)
 #define fle(x1,x2) (fcmp(x1, x2, _epsilon) <= 0)
 #define fgt(x1,x2) (fcmp(x1, x2, _epsilon) == 1)
 #define fge(x1,x2) (fcmp(x1, x2, _epsilon) >= 0)
+#else
+#define fz(x) (x == 0)
+#define feq(x1,x2) (x1 == x2)
+#define flt(x1,x2) (x1 < x2)
+#define fle(x1,x2) (x1 <= x2)
+#define fgt(x1,x2) (x1 > x2)
+#define fge(x1,x2) (x1 >= x2)
+#endif
 
 // Internal variables
 EXTERN const int numOutputs;
