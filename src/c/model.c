@@ -1,4 +1,11 @@
 #include "sde.h"
+#include <time.h>
+
+// Define PERF_TEST to output run time information.
+// #define PERF_TEST
+#ifdef PERF_TEST
+  struct timespec startTime, finishTime;
+#endif
 
 // The special _time variable is not included in .mdl files.
 double _time;
@@ -14,6 +21,9 @@ void run() {
   if (outputData == NULL) {
     outputData = (char*)malloc(outputStringLength * numOutputs + 1);
   }
+  #ifdef PERF_TEST
+    clock_gettime(CLOCK_MONOTONIC, &startTime);
+  #endif
   // Initialize time with the required INITIAL TIME control variable.
   _time = _initial_time;
   // Write a header for output data.
@@ -35,6 +45,12 @@ void run() {
 }
 
 void finish() {
+  #ifdef PERF_TEST
+    clock_gettime(CLOCK_MONOTONIC, &finishTime);
+    double runtime = 1000.0 * finishTime.tv_sec + 1e-6 * finishTime.tv_nsec -
+      (1000.0 * startTime.tv_sec + 1e-6 * startTime.tv_nsec);
+    fprintf(stderr, "calculation runtime = %.0f ms\n", runtime);
+  #endif
   if (outputData != NULL) {
     free(outputData);
   }
@@ -50,7 +66,10 @@ void outputVar(double value) {
 }
 
 void writeOutput(const char* text) {
+  // Don't write output if we are doing a performance test, so we get calc time only.
+  #ifndef PERF_TEST
   puts(text);
+  #endif
 }
 
 void writeOutputData() {
