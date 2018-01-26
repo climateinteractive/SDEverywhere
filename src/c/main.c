@@ -1,27 +1,42 @@
 #include "sde.h"
 
 int main(int argc, char** argv) {
-  initConstants();
+  // TODO make the input buffer size dynamic
+  char* inputs[1000];
+  // Try to read input from a file named in the argument.
   if (argc > 1) {
-    // Try to read input from a file named in the argument.
-    char buf[1000];
     FILE* instream = fopen(argv[1], "r");
-    if (instream && fgets(buf, sizeof buf, instream) != NULL) {
+    if (instream && fgets(inputs, sizeof inputs, instream) != NULL) {
       fclose(instream);
-      size_t len = strlen(buf);
-      if (buf[len-1] == '\n') {
-        buf[len-1] = '\0';
+      size_t len = strlen(inputs);
+      if (inputs[len-1] == '\n') {
+        inputs[len-1] = '\0';
       }
-      // fprintf(stderr, "%s\n", buf);
-      setInputs(buf);
-    } else {
-      // TODO this will pass an incorrect filename as input - fix this
-      // No file was found, so pass the argument directly as input.
-      // This is the input path for the web app.
-      setInputs(argv[1]);
     }
   }
-  initLevels();
-  run();
+  else {
+    *inputs = '\0';
+  }
+  // Run the model and get output for all time steps.
+  const char* outputs = run_model(inputs);
+  // Write a header for output data.
+  printf("%s\n", getHeader());
+  // Write tab-delimited output data, one line per output time step.
+  if (outputs != NULL) {
+    char* p = outputs;
+    while (*p) {
+      char* line = p;
+      for (size_t i = 0; i < numOutputs; i++) {
+        if (i > 0) {
+          p++;
+        }
+        while (*p && *p != '\t') {
+          p++;
+        }
+      }
+      *p++ = '\0';
+      printf("%s\n", line);
+    }
+  }
   finish();
 }

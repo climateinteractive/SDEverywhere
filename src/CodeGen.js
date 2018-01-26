@@ -111,14 +111,12 @@ ${section(Model.levelVars())}
     initMode = false
     return `void setInputs(const char* inputData) {
 ${inputSection()}}
-void writeHeader() {
-  writeText("${R.map(varName => headerTitle(varName), headerVars).join('\\t')}");
+const char* getHeader() {
+  return "${R.map(varName => headerTitle(varName), headerVars).join('\\t')}";
 }
 
 void storeOutputData() {
-  startOutput();
 ${outputSection(outputVars)}
-  writeOutputData();
 }
 `
   }

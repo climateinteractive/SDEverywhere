@@ -24,10 +24,10 @@ extern "C" {
 #include "model.h"
 #include "vensim.h"
 #include "macros.h"
-#include "fcmp.h"
 
 #ifdef PRECISION_FCMP
 // Optional high-precision but slow floating point comparison macros
+#include "fcmp.h"
 EXTERN double _epsilon;
 #define fz(x) (fcmp(x, 0.0, _epsilon) == 0)
 #define feq(x1,x2) (fcmp(x1, x2, _epsilon) == 0)
@@ -44,6 +44,9 @@ EXTERN double _epsilon;
 #define fge(x1,x2) (x1 >= x2)
 #endif
 
+// Each number in the output can take up to 13 characters plus a separator character.
+#define OUTPUT_STRING_LEN 14
+
 // Internal variables
 EXTERN const int numOutputs;
 
@@ -55,23 +58,19 @@ EXTERN double _time_step;
 EXTERN double _saveper;
 
 // API
+const char* run_model(const char* inputs);
+void run();
+void outputVar(double value);
+void finish();
+
+// Functions implemented by the model
 void initConstants();
 void initLevels();
 void setInputs(const char* json);
-void run();
-void finish();
-
-// Evaluation
 void evalAux();
 void evalLevels();
-
-// Helpers
 void storeOutputData();
-void writeHeader();
-void startOutput();
-void outputVar(double value);
-void writeOutputData();
-void writeText(const char* text);
+const char* getHeader();
 
 #ifdef __cplusplus
 }

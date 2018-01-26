@@ -12,22 +12,26 @@ double _time;
 // Output data buffer
 char* outputData;
 size_t outputIndex = 0;
-// Each number in the output can take up to 13 characters plus a separator character.
-const size_t outputStringLength = 14;
+
+const char* run_model(const char* inputs) {
+  // run_model does everything necessary to run the model with the given inputs.
+  // It may be called multiple times. Call finish() after all runs are complete.
+  // Initialize the state to default values in the model at the start of each run.
+  initConstants();
+  // Set inputs for this run that override default values.
+  // fprintf(stderr, "run_model inputs = %s\n", inputs);
+  setInputs(inputs);
+  initLevels();
+  run();
+  return outputData;
+}
 
 void run() {
-  // Allocate the output buffer as a single block.
-  // Add one character for a null terminator.
-  if (outputData == NULL) {
-    outputData = (char*)malloc(outputStringLength * numOutputs + 1);
-  }
   #ifdef PERF_TEST
     clock_gettime(CLOCK_MONOTONIC, &startTime);
   #endif
   // Initialize time with the required INITIAL TIME control variable.
   _time = _initial_time;
-  // Write a header for output data.
-  writeHeader();
   // Set up a run loop using a fixed number of time steps.
   int step = 0;
   int lastStep = (int)(round((_final_time - _initial_time) / _time_step));
@@ -44,6 +48,18 @@ void run() {
   }
 }
 
+void outputVar(double value) {
+  // Allocate an output buffer for all output steps as a single block.
+  // Add one character for a null terminator.
+  if (outputData == NULL) {
+    int numOutputSteps = (int)(round((_final_time - _initial_time) / _saveper)) + 1;
+    size_t size = numOutputSteps * (OUTPUT_STRING_LEN * numOutputs) + 1;
+    outputData = (char*)malloc(size);
+  }
+  int numChars = snprintf(outputData + outputIndex, OUTPUT_STRING_LEN+1, "%g\t", value);
+  outputIndex += numChars;
+}
+
 void finish() {
   #ifdef PERF_TEST
     clock_gettime(CLOCK_MONOTONIC, &finishTime);
@@ -54,30 +70,4 @@ void finish() {
   if (outputData != NULL) {
     free(outputData);
   }
-}
-
-void startOutput() {
-  outputIndex = 0;
-}
-
-void outputVar(double value) {
-  int numChars = snprintf(outputData + outputIndex, outputStringLength+1, "%g\t", value);
-  outputIndex += numChars;
-}
-
-void writeOutput(const char* text) {
-  // Don't write output if we are doing a performance test, so we get calc time only.
-  #ifndef PERF_TEST
-  puts(text);
-  #endif
-}
-
-void writeOutputData() {
-  // Send output data in string format to the application environment.
-  // The implementation of writeOutput depends on the environment in which the model is used.
-  writeOutput(outputData);
-}
-
-void writeText(const char* text) {
-  writeOutput(text);
 }
