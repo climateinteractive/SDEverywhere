@@ -154,7 +154,7 @@ let ensureDir = (dir, defaultDir, modelDirname) => {
 }
 let modelPathProps = model => {
   // Normalize a model pathname that may or may not include the .mdl extension.
-  // If there is not path in the model argument, default to the current working directory.
+  // If there is not a path in the model argument, default to the current working directory.
   // Return an object with properties that look like this:
   // modelDirname: '/Users/todd/src/models/arrays'
   // modelName: 'arrays'
