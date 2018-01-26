@@ -2,7 +2,7 @@
 
 int main(int argc, char** argv) {
   // TODO make the input buffer size dynamic
-  char* inputs[1000];
+  char inputs[1000];
   // Try to read input from a file named in the argument.
   if (argc > 1) {
     FILE* instream = fopen(argv[1], "r");
@@ -18,7 +18,7 @@ int main(int argc, char** argv) {
     *inputs = '\0';
   }
   // Run the model and get output for all time steps.
-  const char* outputs = run_model(inputs);
+  char* outputs = run_model(inputs);
   // Write a header for output data.
   printf("%s\n", getHeader());
   // Write tab-delimited output data, one line per output time step.

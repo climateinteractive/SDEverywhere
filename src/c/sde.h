@@ -58,8 +58,9 @@ EXTERN double _time_step;
 EXTERN double _saveper;
 
 // API
-const char* run_model(const char* inputs);
+char* run_model(const char* inputs);
 void run();
+void startOutput();
 void outputVar(double value);
 void finish();
 

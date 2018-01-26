@@ -13,7 +13,7 @@ double _time;
 char* outputData;
 size_t outputIndex = 0;
 
-const char* run_model(const char* inputs) {
+char* run_model(const char* inputs) {
   // run_model does everything necessary to run the model with the given inputs.
   // It may be called multiple times. Call finish() after all runs are complete.
   // Initialize the state to default values in the model at the start of each run.
@@ -30,6 +30,8 @@ void run() {
   #ifdef PERF_TEST
     clock_gettime(CLOCK_MONOTONIC, &startTime);
   #endif
+  // Restart fresh output for all steps in this run.
+  startOutput();
   // Initialize time with the required INITIAL TIME control variable.
   _time = _initial_time;
   // Set up a run loop using a fixed number of time steps.
@@ -46,6 +48,10 @@ void run() {
     _time += _time_step;
     step++;
   }
+}
+
+void startOutput() {
+  outputIndex = 0;
 }
 
 void outputVar(double value) {
