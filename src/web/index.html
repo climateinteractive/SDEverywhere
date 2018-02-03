@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>SDEverywhere</title>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="bootstrap.css">
+  <link rel="stylesheet" href="font-awesome.min.css">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="web-styles.css">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="/images/favicon-32x32.png" sizes="32x32">
+  <link rel="icon" type="image/png" href="/images/favicon-16x16.png" sizes="16x16">
+</head>
+<body>
+  <div class="container-fluid main-wnd">
+    <!-- app menu -->
+    <div class="row" id="appMenu">
+      <ul class="nav nav-tabs">
+      </ul>
+    </div>
+    <!-- chart section -->
+    <div class="row" id="chartSection">
+      <div class="col-xs-6">
+        <canvas id="canvas0"></canvas>
+        <div id="legendContainer0">
+        </div>
+      </div>
+      <div class="col-xs-6">
+        <canvas id="canvas1"></canvas>
+        <div id="legendContainer1">
+        </div>
+      </div>
+    </div>
+    <!-- input section -->
+    <div class="row" id="inputSection">
+      <div class="col-xs-12">
+        <div id="inputPanel">
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="jquery.min.js"></script>
+  <script src="bootstrap.min.js"></script>
+  <script src="text-metrics.min.js"></script>
+  <script src="index.min.js"></script>
+  <script src="model_sde.js"></script>
+</body>
+</html>

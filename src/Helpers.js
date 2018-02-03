@@ -3,7 +3,6 @@ const path = require('path')
 const util = require('util')
 const R = require('ramda')
 const sh = require('shelljs')
-const sprintf = require('voca/sprintf')
 const { num } = require('./futil')
 
 // Set true to print a stack trace in vlog

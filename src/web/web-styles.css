@@ -1,0 +1,55 @@
+/* main window override */
+
+.main-wnd {
+  padding: 0 2% 2% 2%;
+}
+
+/* app menu */
+
+#menu-button {
+  background-color: #e6e7e8;
+}
+#menu-button:hover, #menu-button:focus, #menu-button.focus {
+  color: #000;
+  text-decoration: none;
+}
+.dropdown-menu>li>a>.fa-check {
+  visibility: hidden;
+}
+.dropdown-menu>li>a.selected>.fa-check {
+  visibility: visible;
+}
+
+/* Ref: http://bootsnipp.com/snippets/featured/multi-level-dropdown-menu-bs3 */
+
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  -webkit-border-radius: 0 6px 6px 6px;
+  -moz-border-radius: 0 6px 6px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  -webkit-border-radius: 6px 0 6px 6px;
+  -moz-border-radius: 6px 0 6px 6px;
+  border-radius: 6px 0 6px 6px;
+}
+
+/* menu bar */
+.nav-tabs > li > a {
+  color: #000;
+  /*font-size: 2.5vmin;*/
+}
