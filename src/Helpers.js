@@ -16,6 +16,8 @@ let nextLookupVarSeq = 1
 let nextLevelVarSeq = 1
 // next sequence number for generated aux variable names
 let nextAuxVarSeq = 1
+// string table for web apps
+let strings = []
 
 let canonicalName = name => {
   // Format a model variable name into a valid C identifier.
@@ -135,6 +137,15 @@ let isIterable = obj => {
   }
   return typeof obj[Symbol.iterator] === 'function'
 }
+let stringToId = str => {
+  // Look up a string id. Create the id from the string if it is not found.
+  let stringIndex = R.indexOf(str, strings)
+  if (stringIndex < 0) {
+    stringIndex = strings.length
+    strings.push(str)
+  }
+  return `id${stringIndex}`
+}
 // Command helpers
 let outputDir = (outfile, modelDirname) => {
   if (outfile) {
@@ -143,7 +154,12 @@ let outputDir = (outfile, modelDirname) => {
   return ensureDir(outfile, 'output', modelDirname)
 }
 let buildDir = (build, modelDirname) => {
+  // Ensure the given build directory or {modelDir}/build exists.
   return ensureDir(build, 'build', modelDirname)
+}
+let webDir = buildDirname => {
+  // Ensure a web directory exists under the build directory.
+  return ensureDir(null, 'web', buildDirname)
 }
 let ensureDir = (dir, defaultDir, modelDirname) => {
   // Ensure the directory exists as given or under the model directory.
@@ -304,9 +320,12 @@ module.exports = {
   outputDir,
   readDat,
   replaceInArray,
+  strings,
+  stringToId,
   strlist,
   strToConst,
   decanonicalize,
   vlog,
-  vsort
+  vsort,
+  webDir
 }
