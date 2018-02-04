@@ -7,22 +7,21 @@ const parse = require('minimist')
 const F = require('./futil')
 const { canonicalName, strings, stringToId } = require('./helpers')
 
-let cfg = {}
-let sliders = {}
-let inputVarNames = []
-let outputVarNames = []
+let cfg, sliders, inputVarNames, outputVarNames
+let yamlPathname, specPathname, cfgPathname, stringsPathname
 
-let yamlPathname = ''
-let specPathname = ''
-let cfgPathname = ''
-let stringsPathname = ''
-let setPathnames = (modelDir, webDir) => {
+let init = (modelDir, webDir) => {
   yamlPathname = path.join(modelDir, 'app.yaml')
   specPathname = path.join(modelDir, 'web_spec.json')
   if (webDir) {
     cfgPathname = path.join(webDir, 'model_config.js')
     stringsPathname = path.join(webDir, 'strings.js')
   }
+  cfg = {}
+  sliders = {}
+  inputVarNames = []
+  outputVarNames = []
+  F.clearBuf()
 }
 let exportObj = (name, obj) => {
   let js = `exports.${name} = ${JSON.stringify(obj)}`
@@ -324,8 +323,7 @@ let emitSpec = () => {
 }
 let makeModelSpec = modelDir => {
   try {
-    setPathnames(modelDir)
-    F.clearBuf()
+    init(modelDir)
     parseCfg()
     getVarNames()
     emitSpec()
@@ -338,8 +336,7 @@ let makeModelSpec = modelDir => {
 }
 let makeModelConfig = (modelDir, webDir) => {
   try {
-    setPathnames(modelDir, webDir)
-    F.clearBuf()
+    init(modelDir, webDir)
     parseCfg()
     getVarNames()
     emitConsts()

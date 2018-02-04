@@ -60,8 +60,10 @@ void outputVar(double value) {
   if (outputData == NULL) {
     int numOutputSteps = (int)(round((_final_time - _initial_time) / _saveper)) + 1;
     size_t size = numOutputSteps * (OUTPUT_STRING_LEN * numOutputs) + 1;
+    // fprintf(stderr, "output data size = %zu\n", size);
     outputData = (char*)malloc(size);
   }
+  // Format the value as a string in the output data buffer.
   int numChars = snprintf(outputData + outputIndex, OUTPUT_STRING_LEN+1, "%g\t", value);
   outputIndex += numChars;
 }

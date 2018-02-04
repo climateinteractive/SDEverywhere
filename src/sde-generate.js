@@ -110,7 +110,11 @@ let generateWASM = (buildDirname, webDirname) => {
   // Set flags for WASM compilation and optimization.
   // Use -O0 optimization in development to get readable model_sde.js wrapper source.
   // Use -O3 optimization for productions runs.
-  args.push('-s WASM=1 -Wall -O0')
+  args.push('-s WASM=1 -Wall -O3')
+  // Turn on safe heap to debug "application has corrupted its heap memory area" exceptions.
+  // Also turn on the clamp when using safe heap. Ref: https://github.com/WebAssembly/binaryen/issues/1110
+  // args.push('-s SAFE_HEAP=1')
+  // args.push('-s "BINARYEN_TRAP_MODE=\'clamp\'"')
   // Prevent the WASM code from exiting after it runs the model.
   args.push('-s NO_EXIT_RUNTIME=1')
   // Export the function that runs the model.
