@@ -209,7 +209,14 @@ Recovery
 1,54,53,30,0,0,43,0,0,192,0,-1--1--1,,1|(498,54)|
 ///---\\\
 :L<%^E!@
-9:current
-15:0,0,0,0
+1:sir.vdf
+9:sir
+15:0,0,0,0,0,0
 19:100,0
-5:Infectious Population I
+27:2,
+34:0,
+4:Time
+5:Average Duration of Illness d
+24:0
+25:2000
+26:2000
