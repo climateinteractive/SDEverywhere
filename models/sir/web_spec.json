@@ -2,7 +2,6 @@
   "name": "SIR",
   "inputVars": [
     "_average_duration_of_illness_d",
-    "_contact_rate_ramp_slope",
     "_infectivity_i",
     "_initial_contact_rate"
   ],

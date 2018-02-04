@@ -2,7 +2,7 @@ app:
   title: SIR
   logo: logo.png
   version: '1.0.0'
-  help_url: http://www.mhhe.com/business/opsci/sterman/
+  help_url: http://www.mhhe.com/business/opsci/sterman/models.mhtml
   colors:
     color_1: '#0072b2' # blue
     color_2: '#d33700' # red
@@ -12,14 +12,6 @@ app:
   initial_view: Models > SIR Model
   track_sliders: true
   sliders:
-    Contact Rate Ramp Slope:
-      label: Contact Rate Ramp Slope
-      units: per day
-      format: '0.000'
-      value: 0.004
-      min: -1
-      max: 1
-      step: 0.1
     Initial Contact Rate:
       label: Initial Contact Rate
       units: per day
@@ -32,7 +24,7 @@ app:
       label: Infectivity
       units: probability
       format: '0.00'
-      value: 0.25
+      value: 0.1
       min: -2
       max: 2
       step: 0.25
@@ -52,12 +44,12 @@ views:
           - title: Infection and Recovery Rates
             x_axis:
               min: 0
-              max: 60
+              max: 2000
             y_axis:
               units: people/day
               format: 0a
               min: 0
-              max: 2500
+              max: 1000
             plots:
               - name: Infection Rate
                 label: Infection Rate
@@ -70,12 +62,12 @@ views:
           - title: Population
             x_axis:
               min: 0
-              max: 60
+              max: 2000
             y_axis:
               units: people
               format: 0a
               min: 0
-              max: 10000
+              max: 12000
             plots:
               - name: Susceptible Population S
                 label: Susceptible
@@ -90,7 +82,6 @@ views:
                 color: color_3
                 style: line
     sliders:
-      - Contact Rate Ramp Slope
       - Initial Contact Rate
       - Infectivity i
       - Average Duration of Illness d
