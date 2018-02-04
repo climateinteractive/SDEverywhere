@@ -57,7 +57,7 @@ SDEverywhere generates a web application based on a standard template. You fill 
 
 ## Generating the web app
 
-Generate the web app.
+Generate WebAssembly code for the model and embed it in a web app.
 ~~~
 sde generate --genhtml {model}
 ~~~

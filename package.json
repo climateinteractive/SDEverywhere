@@ -15,23 +15,21 @@
   },
   "dependencies": {
     "antlr4": "^4.7.0",
-    "chart.js": "2.7.x",
+    "browserify": "^14.0.0",
+    "chart.js": "^2.7.0",
     "digraph-sort": "^0.2.0",
-    "he": "1.1.x",
+    "he": "^1.1.0",
+    "js-yaml": "^3.10.0",
+    "minimist": "^1.2.0",
     "moment": "^2.18.1",
     "numbro": "^1.11.0",
-    "ramda": "^0.24.1",
+    "prettier": "^1.8.2",
+    "ramda": "^0.25.0",
     "shelljs": "^0.7.8",
     "yargs": "^8.0.2"
   },
-  "devDependencies": {
-    "browserify": "14.x",
-    "js-yaml": "^3.10.0",
-    "minimist": "^1.2.0",
-    "prettier": "^1.8.2"
-  },
   "preferGlobal": true,
   "bin": {
-    "sde": "./index.js"
+    "sde": "src/index.js"
   }
 }

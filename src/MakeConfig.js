@@ -325,6 +325,7 @@ let emitSpec = () => {
 let makeModelSpec = modelDir => {
   try {
     setPathnames(modelDir)
+    F.clearBuf()
     parseCfg()
     getVarNames()
     emitSpec()
@@ -338,6 +339,7 @@ let makeModelSpec = modelDir => {
 let makeModelConfig = (modelDir, webDir) => {
   try {
     setPathnames(modelDir, webDir)
+    F.clearBuf()
     parseCfg()
     getVarNames()
     emitConsts()

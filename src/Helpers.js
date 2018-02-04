@@ -167,6 +167,19 @@ let ensureDir = (dir, defaultDir, modelDirname) => {
   fs.ensureDirSync(dirName)
   return dirName
 }
+let linkCSourceFiles = (modelDirname, buildDirname) =>{
+  let cDirname = path.join(__dirname, 'c')
+  sh.ls(cDirname).forEach(filename => {
+    // If a C source file is present in the model directory, link to it instead
+    // as an override.
+    let srcPathname = path.join(modelDirname, filename)
+    if (!fs.existsSync(srcPathname)) {
+      srcPathname = path.join(cDirname, filename)
+    }
+    let dstPathname = path.join(buildDirname, filename)
+    fs.ensureSymlinkSync(srcPathname, dstPathname)
+  })
+}
 let modelPathProps = model => {
   // Normalize a model pathname that may or may not include the .mdl extension.
   // If there is not a path in the model argument, default to the current working directory.
@@ -306,6 +319,7 @@ module.exports = {
   isSmoothFunction,
   isIterable,
   lines,
+  linkCSourceFiles,
   list,
   listConcat,
   listVar,

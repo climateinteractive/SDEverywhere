@@ -3,11 +3,12 @@ const path = require('path')
 const R = require('ramda')
 const sh = require('shelljs')
 const antlr4 = require('antlr4/index')
+const browserify = require('browserify')
 const ModelLexer = require('./ModelLexer').ModelLexer
 const ModelParser = require('./ModelParser').ModelParser
 const { codeGenerator } = require('./CodeGen')
 const { preprocessModel } = require('./Preprocessor')
-const { modelPathProps, buildDir, webDir, readDat } = require('./Helpers')
+const { modelPathProps, buildDir, webDir, linkCSourceFiles, execCmd, readDat } = require('./Helpers')
 const { makeModelSpec, makeModelConfig } = require('./MakeConfig')
 const F = require('./futil')
 
@@ -57,7 +58,8 @@ let generate = (model, opts) => {
   let { modelDirname, modelName, modelPathname } = modelPathProps(model)
   // Ensure the build directory exists.
   let buildDirname = buildDir(opts.builddir, modelDirname)
-  // Generate a spec file from the app.yaml file. Override the --spec argument if present.
+  // Generate a spec file from the app.yaml file for web apps.
+  // This overrides the --spec argument if present.
   if (opts.genhtml) {
     opts.spec = makeModelSpec(modelDirname)
   }
@@ -87,22 +89,55 @@ let generate = (model, opts) => {
   // Generate a web app for the model.
   if (opts.genhtml) {
     let webDirname = webDir(buildDirname)
-    makeModelConfig(modelDirname, webDirname)
-    // let modelJS = `sd_${modelName}.js`
-    // createHTML(modelDirname, buildDirname, modelName, modelJS, spec)
-    process.exit(0)
+    linkCSourceFiles(modelDirname, buildDirname)
+    if (generateWASM(buildDirname, webDirname) === 0) {
+      makeModelConfig(modelDirname, webDirname)
+      copyTemplate(buildDirname)
+      packApp(webDirname)
+    }
   }
 }
-let createHTML = (modelDirname, buildDirname, modelName, modelJS, spec) => {
-  // Copy template files from the src/web directory.
-  // Replace the model-specific variables with contents of the model spec JSON.
-  let templatePath = path.join(__dirname, 'web', 'html')
-  sh.cp('-rf', templatePath, modelDirname)
-  // Copy JS & wasm from the build directory.
-  sh.cp(path.join(buildDirname, '*.js'), web_app_path)
-  sh.cp(path.join(buildDirname, '*.wasm'), web_app_path)
+let generateWASM = (buildDirname, webDirname) => {
+  // Generate WASM from C source files in the build directory.
+  let sourceFiles = sh.ls(`${buildDirname}/*.c`)
+  let args = R.reject(pathname => pathname.endsWith('main.c'), sourceFiles)
+  // Include the build directory as a place to look for header files.
+  args.push(`-I${buildDirname}`)
+  // Set the output pathname for the JavaScript wrapper to the web directory.
+  // The WASM file will be written to the same directory and basename.
+  args.push('-o')
+  args.push(path.join(webDirname, 'model_sde.js'))
+  // Set flags for WASM compilation and optimization.
+  // Use -O0 optimization in development to get readable model_sde.js wrapper source.
+  // Use -O3 optimization for productions runs.
+  args.push('-s WASM=1 -Wall -O0')
+  // Prevent the WASM code from exiting after it runs the model.
+  args.push('-s NO_EXIT_RUNTIME=1')
+  // Export the function that runs the model.
+  args.push('-s EXPORTED_FUNCTIONS="[\'_run_model\']"')
+  // Export the Module.cwrap method used to wrap arguments.
+  args.push('-s "EXTRA_EXPORTED_RUNTIME_METHODS=[\'cwrap\']"')
+  // Run the emcc command to generate WASM code.
+  let cmd = `emcc ${args.join(' ')}`
+  // console.log(cmd)
+  let exitCode = execCmd(cmd)
+  if (exitCode) {
+    console.error('The Emscripten SDK must be installed in your path.')
+  }
+  return exitCode
 }
-
+let copyTemplate = buildDirname => {
+  // Copy template files from the src/web directory.
+  let templatePath = path.join(__dirname, 'web')
+  sh.cp('-Rf', templatePath, buildDirname)
+}
+let packApp = webDirname => {
+  let sourcePathname = path.join(webDirname, 'index.js')
+  let minPathname = path.join(webDirname, 'index.min.js')
+  let b = browserify(sourcePathname)
+  let writable = fs.createWriteStream(minPathname)
+  b.bundle().pipe(writable)
+}
 let parseModel = input => {
   // Read the model text and return a parse tree.
   let chars = new antlr4.InputStream(input)
@@ -113,13 +148,7 @@ let parseModel = input => {
   return parser.model()
 }
 let parseSpec = specFilename => {
-  var parsedJSON = parseJsonFile(specFilename)
-
-  //get a simple list if inputVars
-  if ('inputVarDef' in parsedJSON) {
-    parsedJSON.inputVars = Object.keys(parsedJSON.inputVarDef)
-  }
-  return parsedJSON
+  return parseJsonFile(specFilename)
 }
 let parseJsonFile = filename => {
   // Parse the JSON file if it exists.
