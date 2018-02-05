@@ -1,5 +1,0 @@
-{
-  "name": "Lotka-Volterra Model",
-  "inputVars": ["_reference_predators", "_reference_prey"],
-  "outputVars": ["_time", "_predators_y", "_prey_x"]
-}
