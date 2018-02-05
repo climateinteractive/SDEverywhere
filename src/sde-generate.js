@@ -93,6 +93,7 @@ let generate = (model, opts) => {
     if (generateWASM(buildDirname, webDirname) === 0) {
       makeModelConfig(modelDirname, webDirname)
       copyTemplate(buildDirname)
+      customizeApp(modelDirname, webDirname)
       packApp(webDirname)
     }
   }
@@ -131,8 +132,21 @@ let generateWASM = (buildDirname, webDirname) => {
 }
 let copyTemplate = buildDirname => {
   // Copy template files from the src/web directory.
-  let templatePath = path.join(__dirname, 'web')
-  sh.cp('-Rf', templatePath, buildDirname)
+  let templateDirname = path.join(__dirname, 'web')
+  sh.cp('-Rf', templateDirname, buildDirname)
+}
+let customizeApp = (modelDirname, webDirname) => {
+  // Read the newly generated model config to customize app files.
+  let cfgPathname = `${webDirname}/model_config`
+  try {
+    const { app } = require(cfgPathname)
+    if (app && app.logo) {
+      let logoPathname = `${modelDirname}/${app.logo}`
+      sh.cp('-f', logoPathname, webDirname)
+    }
+  } catch (e) {
+    console.error(e.message);
+  }
 }
 let packApp = webDirname => {
   // Concatenate JS source files for the browser.
