@@ -180,6 +180,9 @@ let linkCSourceFiles = (modelDirname, buildDirname) =>{
     fs.ensureSymlinkSync(srcPathname, dstPathname)
   })
 }
+let filesExcept = (glob, exceptionFn) => {
+  return R.reject(exceptionFn, sh.ls(glob))
+}
 let modelPathProps = model => {
   // Normalize a model pathname that may or may not include the .mdl extension.
   // If there is not a path in the model argument, default to the current working directory.
@@ -314,6 +317,7 @@ module.exports = {
   cFunctionName,
   execCmd,
   extractMatch,
+  filesExcept,
   isArrayFunction,
   isDelayFunction,
   isSmoothFunction,

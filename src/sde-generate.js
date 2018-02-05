@@ -8,7 +8,7 @@ const ModelLexer = require('./ModelLexer').ModelLexer
 const ModelParser = require('./ModelParser').ModelParser
 const { codeGenerator } = require('./CodeGen')
 const { preprocessModel } = require('./Preprocessor')
-const { modelPathProps, buildDir, webDir, linkCSourceFiles, execCmd, readDat } = require('./Helpers')
+const { modelPathProps, buildDir, webDir, linkCSourceFiles, filesExcept, execCmd, readDat } = require('./Helpers')
 const { makeModelSpec, makeModelConfig } = require('./MakeConfig')
 const F = require('./futil')
 
@@ -99,8 +99,7 @@ let generate = (model, opts) => {
 }
 let generateWASM = (buildDirname, webDirname) => {
   // Generate WASM from C source files in the build directory.
-  let sourceFiles = sh.ls(`${buildDirname}/*.c`)
-  let args = R.reject(pathname => pathname.endsWith('main.c'), sourceFiles)
+  let args = filesExcept(`${buildDirname}/*.c`, name => name.endsWith('main.c'))
   // Include the build directory as a place to look for header files.
   args.push(`-I${buildDirname}`)
   // Set the output pathname for the JavaScript wrapper to the web directory.
@@ -136,11 +135,22 @@ let copyTemplate = buildDirname => {
   sh.cp('-Rf', templatePath, buildDirname)
 }
 let packApp = webDirname => {
+  // Concatenate JS source files for the browser.
   let sourcePathname = path.join(webDirname, 'index.js')
   let minPathname = path.join(webDirname, 'index.min.js')
   let b = browserify(sourcePathname)
   let writable = fs.createWriteStream(minPathname)
-  b.bundle().pipe(writable)
+  b
+    .bundle()
+    .pipe(writable)
+    .on('finish', error => {
+      // Remove JavaScript source files.
+      let sourceFiles = filesExcept(
+        `${webDirname}/*.js`,
+        name => name.endsWith('index.min.js') || name.endsWith('model_sde.js')
+      )
+      sh.rm(sourceFiles)
+    })
 }
 let parseModel = input => {
   // Read the model text and return a parse tree.
