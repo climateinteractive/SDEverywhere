@@ -1,6 +1,6 @@
 # SDEverywhere Guide
 
-Revised: 2017-09-14 (version 0.3.4)
+Revised: 2018-02-04 (version 0.4.0)
 
 ## Introduction
 
@@ -82,10 +82,10 @@ index          | Apply-to-all and non-apply-to-all arrays
 initial        | INITIAL function
 interleaved    | Demonstrating a case where non-apply-to-all array elements are separated in eval order
 lookup         | Lookup variables and functions
-lotka          | Lotka-Volterra model
 mapping        | Mapping subranges
 ref            | An eval order that require an apply-to-all array to become non-apply-to-all
 sample         | SAMPLE function
+sir            | SIR infection model
 smooth         | SMOOTH function
 smooth3        | SMOOTH3 function
 subscript      | Subscript references in various orders
@@ -170,14 +170,9 @@ sde test {model}
 sde clean {model}
 ~~~
 
-**Generate WebAssembly code that can be embedded in a web app**
-~~~
-sde compile --wasm {model}
-~~~
-
 **Generate a web app to run the model and graph the results**
 ~~~
-sde generate --genhtml --spec {model}_web_spec.json {model}
+sde generate --genhtml {model}
 ~~~
 
 ### Specify input and output variables
@@ -235,25 +230,6 @@ SDEverywhere covers a subset of the Vensim Modeling Language used in models that
 - Enhance the C code generator to produce code for new language features now that you can parse them.
 - Implement more Vensim functions. This is the easiest way to help out.
 - Target languages other than C, such as R or Ruby. (If you want Python, check out the excellent [PySD](https://github.com/JamesPHoughton/pysd)).
-
-### Installing parser tools
-
-If you will be expanding the Vensim parser, you will need the [ANTLR 4](http://www.antlr.org/) parser generator. Working on the code generator or Vensim function library does not require ANTLR 4.
-
-Install the [Java SE 8 JDK](http://www.oracle.com/technetwork/java/javase/downloads/index.html).
-
-Install ANTLR 4 Java tools.
-~~~
-cd /usr/local/lib
-sudo curl -O http://www.antlr.org/download/antlr-4.7-complete.jar
-~~~
-
-Set up ANTLR 4 in `.bash_profile`.
-~~~
-export CLASSPATH=".:/usr/local/lib/antlr-4.7-complete.jar:$CLASSPATH"
-alias antlr4='java -jar /usr/local/lib/antlr-4.7-complete.jar'
-alias grun='java org.antlr.v4.gui.TestRig'
-~~~
 
 ### Debugging
 
