@@ -1,6 +1,6 @@
 # Using SDEverywhere to Make a Vensim Model into a Web Application
 
-Revised: 2018-02-04
+Revised: 2018-02-05
 
 This tutorial shows you how to take your Vensim model and turn it into an interactive web application using the open-source SDEverywhere toolkit. SDEverywhere currently requires the macOS operating system.
 
@@ -70,3 +70,5 @@ http-server build/web
 ~~~
 
 If you are using your own web server, configure it to serve files from the `build/web` directory under the model directory.
+
+The files to deploy to a web server in production are found in the `build/web` directory.
