@@ -48,6 +48,7 @@ let startup = () => {
   logEnvironment()
   setNumCharts(NUM_CHARTS)
   setLanguage('EN')
+  setTitle()
   buildAppMenu()
   setDefaultInputValues()
   resetInputs()
@@ -183,6 +184,14 @@ let setLanguage = language => {
   uiConfig.setLanguage(language)
   let cultures = { EN: 'en-US' }
   num.culture(cultures[language])
+}
+let setTitle = () => {
+  if (app.title) {
+    let title = str(app.title)
+    if (title) {
+      $('title').text(title)
+    }
+  }
 }
 let buildAppMenu = () => {
   // The language must be set with setLanguage first.
