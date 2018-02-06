@@ -145,14 +145,16 @@ let customizeApp = (modelDirname, webDirname) => {
       sh.cp('-f', logoPathname, webDirname)
     }
   } catch (e) {
-    console.error(e.message);
+    console.error(e.message)
   }
 }
 let packApp = webDirname => {
   // Concatenate JS source files for the browser.
   let sourcePathname = path.join(webDirname, 'index.js')
   let minPathname = path.join(webDirname, 'index.min.js')
-  let b = browserify(sourcePathname)
+  // Resolve module imports against the SDEverywhere node_modules.
+  let nodePath = path.resolve(__dirname, '..', 'node_modules')
+  let b = browserify(sourcePathname, { paths: nodePath })
   let writable = fs.createWriteStream(minPathname)
   b
     .bundle()
@@ -163,6 +165,7 @@ let packApp = webDirname => {
         `${webDirname}/*.js`,
         name => name.endsWith('index.min.js') || name.endsWith('model_sde.js')
       )
+      // In development, comment this out to retain generated source files.
       sh.rm(sourceFiles)
     })
 }
