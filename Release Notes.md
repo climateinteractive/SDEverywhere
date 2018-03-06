@@ -4,10 +4,10 @@
 
 - updated web app generation to use an improved template
 - added new app.yaml web app specification file
-- generate complete web app with the `sde generate --genthml` command
+- generate complete web app with the `sde generate --genhtml` command
 - removed the Vensim grammar to an independent package
 - removed the lotka sample model
-- added the sir sample model
+- added the SIR sample model
 - optimized performance by making high-precision floating point comparisons optional
 - added support for generating code to run the model interactively
 - removed unnecessary glib2 dependency
