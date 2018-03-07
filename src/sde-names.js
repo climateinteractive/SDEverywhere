@@ -38,7 +38,7 @@ let names = (model, namesPathname, opts) => {
   // Parse the model to get variable and subscript information.
   let parseTree = parseModel(input)
   let operation = 'convertNames'
-  codeGenerator(parseTree, spec, operation).generate()
+  codeGenerator(parseTree, { spec, operation }).generate()
   // Read each variable name from the names file and convert it.
   let lines = fs.readFileSync(namesPathname, 'utf8').split(/\r?\n/)
   for (let line of lines) {

@@ -5,8 +5,9 @@ const Model = require('./Model')
 const { sub, allDimensions, allMappings, isDimension, subscriptFamilies, printSubscripts } = require('./Subscript')
 const { asort, canonicalName, lines, list, strlist, vlog } = require('./Helpers')
 
-let codeGenerator = (parseTree, spec, operation, extData) => {
-  // Set true when in the init section, false in the eval section
+let codeGenerator = (parseTree, opts) => {
+  const { spec, operation, extData } = opts
+  // Set true when in the init section, false in the eval section.
   let initMode = false
   // Set true to output all variables when there is no model run spec.
   let outputAllVars = spec.outputVars && spec.outputVars.length > 0 ? false : true
