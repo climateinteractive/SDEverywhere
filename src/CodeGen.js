@@ -24,6 +24,8 @@ let codeGenerator = (parseTree, opts) => {
       Model.printVarList()
     } else if (operation === 'printRefIdTest') {
       Model.printRefIdTest()
+    } else if (operation === 'printRefGraph') {
+      Model.printRefGraph(opts.varname)
     } else if (operation === 'convertNames') {
       // Do not generate output, but leave the results of model analysis.
     } else if (operation === 'generateC') {

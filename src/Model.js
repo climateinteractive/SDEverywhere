@@ -603,6 +603,25 @@ function printRefIdTest() {
     }
   }
 }
+function printRefGraph(varName) {
+  // Walk the reference tree rooted at varName and print it out in indented form.
+  let printRefs = (v, indent, stack) => {
+    for (let refId of v.references) {
+      // Exclude a variable here to limit the depth of the search.
+      // if (!refId.startsWith('_policy_levels')) {
+        if (!stack.includes(refId)) {
+          console.log(`${'  '.repeat(indent)}${refId}`)
+          let refVar = R.find(R.propEq('refId', refId), variables)
+          printRefs(refVar, indent + 1, R.append(refId, stack))
+        }
+      // }
+    }
+  }
+  for (let v of varsWithName(varName)) {
+    console.log(v.varName)
+    printRefs(v, 1, [])
+  }
+}
 
 module.exports = {
   addVariable,
@@ -616,6 +635,7 @@ module.exports = {
   isNonAtoAName,
   levelVars,
   lookupVars,
+  printRefGraph,
   printRefIdTest,
   printVarList,
   read,
