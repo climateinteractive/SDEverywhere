@@ -194,14 +194,14 @@ First, create a model specification file that gives the Vensim names of input an
 }
 ~~~
 
-Generate code using the `--spec` argument.
+### Generating, compiling, running, and testing the C code
+
+To generate C code using the `--spec` argument, enter the following command:
 ~~~
 sde generate --genc --spec {model}_spec.json {model}
 ~~~
 
-### Generating, compiling, running, and testing the C code
-
-First, run the model in 64-bit Vensim and export the run in DAT format to the `{model}.dat` file in the model directory.
+SDE allows for validation against Vensim output. Before running the C file, it is useful to generate the Vensim data so you can ensure the C code is valid and reproduces the same results as Vensim. To make the Vensim output, run the model in 64-bit Vensim and export the run in DAT format to the `{model}.dat` file in the model directory.
 
 The `sde test` command generates baseline C code that outputs all variables with no inputs. It then compiles the C code and runs it. The output is captured and converted into DAT format in the `output/{model}.dat` file. This is compared to Vensim run exported to a `{model}.dat` file in the model directory. All values that differ by a factor of 1e-5 or more are listed with the variance.
 ~~~
