@@ -31,23 +31,23 @@ Using SDEverywhere requires the macOS operating system and the free [Xcode](http
 
 Install [Node.js](https://nodejs.org/) version 8.9.4 LTS or later. This will also install the `npm` Node Package Manager.
 
-### Install SDEverywhere as an npm package
+### Install the current release version of SDEverywhere (npm package)
 
 If you want to use SDEverywhere without getting the sample models, tests, and source code, simply install the npm package. The global installation gives you the `sde` command everywhere on your system.
 ~~~
 npm install sdeverywhere -g
 ~~~
 
-### Get the source code and sample models
+### Install the source code and sample models
 
-If you want the full source code, visit the [GitHub repo](https://github.com/ToddFincannon/SDEverywhere) to download the code as a zip file and install it in the directory of your choice. Alternatively, clone the repository on your machine.
+If you want the full source code, visit the [GitHub repo](https://github.com/ToddFincannon/SDEverywhere) to download the code. Downloading the source code allows you to run the release version (same as above) or a development branch, if you're changing the tool. You can download the source code to your computer as a zip file (and then unzip) or clone the repository using git.
 ~~~
 git clone https://github.com/ToddFincannon/SDEverywhere
 ~~~
 
 You can run SDEverywhere from anywhere on your machine by installing the `sde` command line tool globally using `npm`. The examples in this guide assume a global installation. If you choose not to do that, instead of the `sde` command, run `node sde.js` from the `src` directory.
 ~~~
-cd src
+cd <local_directory_with_source>
 npm install -g
 sde -v
 ~~~
