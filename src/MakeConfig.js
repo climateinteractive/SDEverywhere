@@ -282,9 +282,18 @@ let emitViews = () => {
       // Resolve the full slider definition for each slider by name.
       if (section.sliders) {
         for (let sliderName of section.sliders) {
-          let name = canonicalName(sliderName)
-          let slider = sliders[name]
-          appView.sliders.push(slider)
+          if (!sliderName) {
+            // Emit an empty object for a blank slider.
+            appView.sliders.push({})
+          } else {
+            let name = canonicalName(sliderName)
+            let slider = sliders[name]
+            if (slider) {
+              appView.sliders.push(slider)
+            } else {
+              console.error(`warning: slider "${sliderName}" is defined in a view but does not exist`)
+            }
+          }
         }
       }
       viewConfig[viewId] = appView

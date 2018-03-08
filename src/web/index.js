@@ -290,14 +290,15 @@ let buildInputPanel = () => {
         panelClass += ' lastSlider'
       }
       html += '<td>'
-      html += `<div class="${panelClass}">`
-      html += `<label class="sliderLabel" for="${slider.name}">${str(slider.label)}</label><br>`
-      html += `<input type="range" id="${slider.name}" min="${slider.minValue}" max="${slider.maxValue}" step="${
-        slider.step
-      }">`
-      html += `<span class="sliderValue" id="${valueId(slider.name)}"></span>`
-      html += `<span class="sliderUnits" id="${unitsId(slider.name)}"></span>`
-      html += '</div>'
+      // Empty slider objects indicate a blank cell in the input panel.
+      if (!R.isEmpty(slider)) {
+        html += `<div class="${panelClass}">`
+        html += `<label class="sliderLabel" for="${slider.name}">${str(slider.label)}</label><br>`
+        html += `<input type="range" id="${slider.name}" min="${slider.minValue}" max="${slider.maxValue}" step="${slider.step}">`
+        html += `<span class="sliderValue" id="${valueId(slider.name)}"></span>`
+        html += `<span class="sliderUnits" id="${unitsId(slider.name)}"></span>`
+        html += '</div>'
+      }
       html += '</td>'
       if (isLastCol()) {
         html += '</tr>'
@@ -351,7 +352,7 @@ let setInputFontSizes = () => {
 }
 let showInputValue = varName => {
   let slider = R.find(R.propEq('name', varName), viewConfig[currentViewId].sliders)
-  if (slider) {
+  if (slider && !R.isEmpty(slider)) {
     // Set the value on the range control.
     let value = getInputValue(slider.name)
     $(`#${slider.name}`).val(value)
@@ -363,7 +364,7 @@ let showInputValue = varName => {
 }
 let showInputUnits = varName => {
   let slider = R.find(R.propEq('name', varName), viewConfig[currentViewId].sliders)
-  if (slider && slider.units) {
+  if (slider && !R.isEmpty(slider) && slider.units) {
     // Set the units in the label under the slider.
     let unitsText = ` ${str(slider.units)}`
     $(`#${unitsId(slider.name)}`).text(unitsText)
