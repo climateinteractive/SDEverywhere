@@ -5,7 +5,7 @@ const yaml = require('js-yaml')
 const prettier = require('prettier')
 const parse = require('minimist')
 const F = require('./futil')
-const { canonicalName, strings, stringToId } = require('./helpers')
+const { canonicalName, strings, stringToId } = require('./Helpers')
 
 let cfg, sliders, inputVarNames, outputVarNames
 let yamlPathname, specPathname, cfgPathname, stringsPathname
