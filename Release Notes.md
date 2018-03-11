@@ -1,5 +1,12 @@
 # SDEverywhere Release Notes
 
+## Version 0.4.1, released on 2018-03-11
+
+- enable a blank cell in the HTML input panel with an empty value in `sliders`
+- add `sde causes` command to print model variable dependencies
+- fixed HTML generation on Linux
+- corrected instructions for building from the repo
+
 ## Version 0.4.0, released on 2018-02-05
 
 - updated web app generation to use an improved template

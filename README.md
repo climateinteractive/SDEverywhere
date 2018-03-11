@@ -1,6 +1,6 @@
 # SDEverywhere Guide
 
-Revised: 2018-02-04 (version 0.4.0)
+Revised: 2018-03-11 (version 0.4.1)
 
 ## Introduction
 
@@ -20,6 +20,10 @@ SDEverywhere has been used to generate code for complex models with thousands of
 - You must remove macros and either hand code them in C or rewrite equations that use them.
 
 Tabbed arrays and macros are removed from the model during preprocessing and written to the `removals.txt` file for your reference.
+
+## Conventions used in this guide
+
+A string surrounded by curly braces `{like this}` indicates a placeholder that you should fill in with the appropriate value.
 
 ## Installing
 
@@ -45,12 +49,19 @@ If you want the full source code, visit the [GitHub repo](https://github.com/Tod
 git clone https://github.com/ToddFincannon/SDEverywhere
 ~~~
 
-You can run SDEverywhere from anywhere on your machine by installing the `sde` command line tool globally using `npm`. The examples in this guide assume a global installation. If you choose not to do that, instead of the `sde` command, run `node sde.js` from the `src` directory.
+If you previously installed the SDEverywhere package using npm, uninstall that package before installing your new, local copy.
 ~~~
-cd <local_directory_with_source>
+npm rm sdeverywhere -g
+~~~
+
+You can run SDEverywhere from anywhere on your machine by installing the `sde` command line tool globally using `npm`. The examples in this guide assume a global installation.
+~~~
+cd {local SDEverywhere directory}
 npm install -g
 sde -v
 ~~~
+
+If you need to run SDEverywhere in a debugger, use the instructions in the "Debugging" section below.
 
 ## Test your setup
 
@@ -173,6 +184,11 @@ sde clean {model}
 **Generate a web app to run the model and graph the results**
 ~~~
 sde generate --genhtml {model}
+~~~
+
+**Print variable dependencies**
+~~~
+sde causes {model} {C variable name}
 ~~~
 
 ### Specify input and output variables
