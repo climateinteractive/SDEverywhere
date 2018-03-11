@@ -9,8 +9,8 @@ const { vensimName, cName } = require('./Model')
 const { modelPathProps } = require('./Helpers')
 const F = require('./futil')
 
-let command = 'graph [options] <model> <varname>'
-let describe = 'print the reference graph for a C variable name'
+let command = 'causes [options] <model> <varname>'
+let describe = 'print dependencies for a C variable name'
 let builder = {
   spec: {
     describe: 'pathname of the I/O specification JSON file',
@@ -19,9 +19,9 @@ let builder = {
   }
 }
 let handler = argv => {
-  graph(argv.model, argv.varname, argv)
+  causes(argv.model, argv.varname, argv)
 }
-let graph = (model, varname, opts) => {
+let causes = (model, varname, opts) => {
   // Get the model name and directory from the model argument.
   let { modelDirname, modelName, modelPathname } = modelPathProps(model)
   let spec = parseSpec(opts.spec)
