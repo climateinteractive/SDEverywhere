@@ -1,6 +1,6 @@
 {
   "name": "sdeverywhere",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "description": "SDEverywhere translates System Dynamics models from Vensim to C and JavaScript",
   "author": "Todd Fincannon <todd@toddfincannon.com> (http://toddfincannon.com)",
   "homepage": "http://sdeverywhere.org",

@@ -17,6 +17,7 @@ let codeGenerator = (parseTree, opts) => {
 
   function generate() {
     // Read variables and subscript ranges from the model parse tree.
+    // This is the main entry point for code generation and is called just once.
     Model.read(parseTree, spec)
     // In list mode, print variables to the console instead of generating code.
     if (operation === 'printVarList') {

@@ -195,12 +195,14 @@ let parseJsonFile = filename => {
 }
 let readDatFiles = datfiles => {
   // Read time series from external DAT files into a single object.
+  // The datfiles object is a map from var prefixes to pathnames.
   let extData = new Map()
   if (datfiles) {
-    R.forEach(pathname => {
-      let data = readDat(pathname)
+    for (let varPrefix in datfiles) {
+      let pathname = datfiles[varPrefix]
+      let data = readDat(pathname, varPrefix)
       extData = new Map([...extData, ...data])
-    }, datfiles)
+    }
   }
   return extData
 }

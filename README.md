@@ -1,6 +1,6 @@
 # SDEverywhere Guide
 
-Revised: 2018-03-11 (version 0.4.1)
+Revised: 2018-05-18 (version 0.4.2)
 
 ## Introduction
 

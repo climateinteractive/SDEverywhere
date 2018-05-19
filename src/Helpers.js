@@ -167,7 +167,7 @@ let ensureDir = (dir, defaultDir, modelDirname) => {
   fs.ensureDirSync(dirName)
   return dirName
 }
-let linkCSourceFiles = (modelDirname, buildDirname) =>{
+let linkCSourceFiles = (modelDirname, buildDirname) => {
   let cDirname = path.join(__dirname, 'c')
   sh.ls(cDirname).forEach(filename => {
     // If a C source file is present in the model directory, link to it instead
@@ -210,10 +210,14 @@ let execCmd = cmd => {
   }
   return exitCode
 }
-let readDat = pathname => {
+let readDat = (pathname, varPrefix = '') => {
   // Read a Vensim DAT file into a Map.
   // Key: variable name in canonical format
   // Value: Map from numeric time value to numeric variable value
+  let log = new Map()
+  let varName = ''
+  let varValues = new Map()
+  let lineNum = 1
   let splitDatLine = line => {
     // Return an array of nonempty string fields up to the first blank field.
     const f = line.split('\t')
@@ -230,10 +234,11 @@ let readDat = pathname => {
     }
     return fieldFrom(0, [])
   }
-  let log = new Map()
-  let varName = ''
-  let varValues = new Map()
-  let lineNum = 1
+  let addValues = () => {
+    if (varName != '' && varValues.size > 0) {
+      log.set(`${varPrefix}${varName}`, varValues)
+    }
+  }
   try {
     let lines = fs.readFileSync(pathname, 'utf8').split(/\r?\n/)
     lines.forEach(line => {
@@ -241,9 +246,7 @@ let readDat = pathname => {
       if (values.length === 1) {
         // Lines with a single value are variable names that start a data section.
         // Save the values for the current var if we are not on the first one.
-        if (varName != '') {
-          log.set(varName, varValues)
-        }
+        addValues()
         // Start a new map for this var.
         // Convert the var name to canonical form so it is the same in both logs.
         varName = canonicalName(values[0])
@@ -263,6 +266,7 @@ let readDat = pathname => {
       }
       lineNum++
     })
+    addValues()
   } catch (e) {
     console.error(e.message)
   }

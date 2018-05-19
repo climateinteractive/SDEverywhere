@@ -160,21 +160,21 @@ function analyze() {
 }
 function checkSpecVars(spec) {
   // Look up each var in the spec and issue and error message if it does not exist.
-  function check(varNames) {
+  function check(varNames, specType) {
     if (isIterable(varNames)) {
       for (let varName of varNames) {
         // TODO handle mismatch of subscripted variables having numerical indices in the spec
         if (!R.contains('[', varName)) {
           if (!R.find(R.propEq('refId', varName), variables)) {
-            console.error(`ERROR: var name ${varName} is not in the model`)
+              console.error(`ERROR: ${specType} spec var name ${varName} is not in the model`)
           }
         }
       }
     }
   }
   if (spec) {
-    check(spec.inputVars)
-    check(spec.outputVars)
+    check(spec.inputVars, 'input')
+    check(spec.outputVars, 'output')
   }
 }
 //
@@ -609,11 +609,11 @@ function printRefGraph(varName) {
     for (let refId of v.references) {
       // Exclude a variable here to limit the depth of the search.
       // if (!refId.startsWith('_policy_levels')) {
-        if (!stack.includes(refId)) {
-          console.log(`${'  '.repeat(indent)}${refId}`)
-          let refVar = R.find(R.propEq('refId', refId), variables)
-          printRefs(refVar, indent + 1, R.append(refId, stack))
-        }
+      if (!stack.includes(refId)) {
+        console.log(`${'  '.repeat(indent)}${refId}`)
+        let refVar = R.find(R.propEq('refId', refId), variables)
+        printRefs(refVar, indent + 1, R.append(refId, stack))
+      }
       // }
     }
   }
