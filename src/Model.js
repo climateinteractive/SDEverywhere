@@ -1,3 +1,6 @@
+const antlr4 = require('antlr4/index')
+const ModelLexer = require('./ModelLexer').ModelLexer
+const ModelParser = require('./ModelParser').ModelParser
 const R = require('ramda')
 const { Digraph, TopologicalOrder } = require('digraph-sort')
 const VariableReader = require('./VariableReader')
@@ -22,6 +25,7 @@ const {
   isDigit,
   isIterable,
   list,
+  listConcat,
   listVars,
   printEqn,
   strlist,
@@ -34,7 +38,7 @@ let nonAtoANames = Object.create(null)
 // Set true for diagnostic printing of init, aux, and level vars in sorted order.
 const PRINT_SORTED_VARS = false
 
-function read(parseTree, spec) {
+function read(parseTree, spec, extData) {
   // Some arrays need to be separated into variables with individual indices to
   // prevent eval cycles. They are manually added to the spec file.
   let specialSeparationDims = spec.specialSeparationDims
@@ -45,7 +49,7 @@ function read(parseTree, spec) {
   // Analyze model equations to fill in more details about variables.
   analyze()
   // Check that all input and output vars in the spec actually exist in the model.
-  checkSpecVars(spec)
+  checkSpecVars(spec, extData)
 }
 function readSubscriptRanges(tree) {
   // Read subscript ranges from the model.
@@ -158,7 +162,7 @@ function analyze() {
   // Remove constants from references now that all var types are determined.
   removeConstRefs()
 }
-function checkSpecVars(spec) {
+function checkSpecVars(spec, extData) {
   // Look up each var in the spec and issue and error message if it does not exist.
   function check(varNames, specType) {
     if (isIterable(varNames)) {
@@ -166,7 +170,20 @@ function checkSpecVars(spec) {
         // TODO handle mismatch of subscripted variables having numerical indices in the spec
         if (!R.contains('[', varName)) {
           if (!R.find(R.propEq('refId', varName), variables)) {
-              console.error(`ERROR: ${specType} spec var name ${varName} is not in the model`)
+            // Look for a variable in external data.
+            if (extData.has(varName)) {
+              // console.error(`found ${specType} ${varName} in extData`)
+              // Copy data from an external file to an equation that does a lookup.
+              let lookup = R.reduce(
+                (a, p) => listConcat(a, `(${p[0]}, ${p[1]})`, true),
+                '',
+                Array.from(extData.get(varName))
+              )
+              let modelEquation = `${decanonicalize(varName)} = WITH LOOKUP(Time, (${lookup}))`
+              addEquation(modelEquation)
+            } else {
+              console.error(`data variable ${varName} not found in external data sources`)
+            }
           }
         }
       }
@@ -223,6 +240,25 @@ function readEquations() {
     let equationReader = new EquationReader(v)
     equationReader.read()
   }, variables)
+}
+function addEquation(modelEquation) {
+  // Add an equation in Vensim model format.
+  const EquationReader = require('./EquationReader')
+  let chars = new antlr4.InputStream(modelEquation)
+  let lexer = new ModelLexer(chars)
+  let tokens = new antlr4.CommonTokenStream(lexer)
+  let parser = new ModelParser(tokens)
+  parser.buildParseTrees = true
+  let tree = parser.equation()
+  // Read the var and add it to the Model var table.
+  let variableReader = new VariableReader()
+  variableReader.visitEquation(tree)
+  let v = variableReader.var
+  // Fill in the refId.
+  v.refId = refIdForVar(v)
+  // Finish the variable by parsing the RHS.
+  let equationReader = new EquationReader(v)
+  equationReader.read()
 }
 function removeConstRefs() {
   // Remove references to const, data, and lookup vars since they do not affect evaluation order.
@@ -624,6 +660,7 @@ function printRefGraph(varName) {
 }
 
 module.exports = {
+  addEquation,
   addVariable,
   allVars,
   auxVars,
