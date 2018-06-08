@@ -7,7 +7,7 @@ const { codeGenerator } = require('./CodeGen')
 const { preprocessModel } = require('./Preprocessor')
 const { vensimName, cName } = require('./Model')
 const { modelPathProps } = require('./Helpers')
-const F = require('./futil')
+const B = require('bufx')
 
 let command = 'causes [options] <model> <varname>'
 let describe = 'print dependencies for a C variable name'

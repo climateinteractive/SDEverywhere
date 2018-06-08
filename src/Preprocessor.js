@@ -1,7 +1,7 @@
 const fs = require('fs-extra')
 const path = require('path')
 const R = require('ramda')
-const F = require('./futil')
+const B = require('bufx')
 
 let preprocessModel = (mdlFilename, spec, writeRemovals = false) => {
   // Equations that contain a string in the removalKeys list in the spec file will be removed.
@@ -17,18 +17,18 @@ let preprocessModel = (mdlFilename, spec, writeRemovals = false) => {
   }
   // Emit an equation to the model output channel.
   let emit = (s) => {
-    F.emitLine(s, 'pp')
-    F.emit('\t|\n\n', 'pp')
+    B.emitLine(s, 'pp')
+    B.emit('\t|\n\n', 'pp')
   }
   // Emit an equation to the removals channel.
   let emitRemoval = (s) => {
-    F.emitLine(s, 'rm')
-    F.emit('\t|\n\n', 'rm')
+    B.emitLine(s, 'rm')
+    B.emit('\t|\n\n', 'rm')
   }
 
   // Open output channels.
-  F.open('rm')
-  F.open('pp')
+  B.open('rm')
+  B.open('pp')
   // Read the model file.
   let mdl = fs.readFileSync(mdlFilename, 'utf8')
 
@@ -36,20 +36,20 @@ let preprocessModel = (mdlFilename, spec, writeRemovals = false) => {
   let inMacroSection = false
   R.forEach(line => {
     if (!inMacroSection && R.contains(':MACRO:', line)) {
-      F.emitLine(line, 'rm')
+      B.emitLine(line, 'rm')
       inMacroSection = true
     } else if (inMacroSection) {
-      F.emitLine(line, 'rm')
+      B.emitLine(line, 'rm')
       if (R.contains(':END OF MACRO:', line)) {
-        F.emit('\n', 'rm')
+        B.emit('\n', 'rm')
         inMacroSection = false
       }
     } else {
-      F.emitLine(line, 'pp')
+      B.emitLine(line, 'pp')
     }
   }, mdl.split(/\r?\n/))
-  mdl = F.getBuf('pp')
-  F.clearBuf('pp')
+  mdl = B.getBuf('pp')
+  B.clearBuf('pp')
 
   // Split the model into an array of equations and groups.
   let eqns = R.map(eqn => eqn.trim(), mdl.split('|'))
@@ -65,8 +65,8 @@ let preprocessModel = (mdlFilename, spec, writeRemovals = false) => {
       emit(eqn)
     }
   }, eqns)
-  mdl = F.getBuf('pp')
-  F.clearBuf('pp')
+  mdl = B.getBuf('pp')
+  B.clearBuf('pp')
 
   // Join lines continued with trailing backslash characters.
   let backslash = /\\\s*$/
@@ -81,17 +81,17 @@ let preprocessModel = (mdlFilename, spec, writeRemovals = false) => {
       prevLine = line.substr(0, m.index)
     }
     if (R.isEmpty(prevLine)) {
-      F.emitLine(line, 'pp')
+      B.emitLine(line, 'pp')
     }
   }, mdl.split(/\r?\n/))
 
   // Write removals to a file in the model directory.
-  if (writeRemovals && F.getBuf('rm').length > 0) {
+  if (writeRemovals && B.getBuf('rm').length > 0) {
     let rmPathname = path.join(path.dirname(mdlFilename), 'removals.txt')
-    F.writeBuf(rmPathname, 'rm')
+    B.writeBuf(rmPathname, 'rm')
   }
   // Return the preprocessed model as a string.
-  return F.getBuf('pp')
+  return B.getBuf('pp')
 }
 
 module.exports = { preprocessModel }

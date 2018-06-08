@@ -7,7 +7,7 @@ const { codeGenerator } = require('./CodeGen')
 const { preprocessModel } = require('./Preprocessor')
 const { vensimName, cName } = require('./Model')
 const { modelPathProps } = require('./Helpers')
-const F = require('./futil')
+const B = require('bufx')
 
 let command = 'names [options] <model> <namesfile>'
 let describe = 'convert variable names in a model'
@@ -44,13 +44,13 @@ let names = (model, namesPathname, opts) => {
   for (let line of lines) {
     if (line.length > 0) {
       if (opts.toc) {
-        F.emitLine(cName(line))
+        B.emitLine(cName(line))
       } else if (opts.tovml) {
-        F.emitLine(vensimName(line))
+        B.emitLine(vensimName(line))
       }
     }
   }
-  F.printBuf()
+  B.printBuf()
 }
 let parseModel = input => {
   // Read the model text and return a parse tree.

@@ -3,7 +3,7 @@ const path = require('path')
 const util = require('util')
 const R = require('ramda')
 const sh = require('shelljs')
-const { num } = require('./futil')
+const { num } = require('bufx')
 
 // Set true to print a stack trace in vlog
 const PRINT_VLOG_TRACE = false

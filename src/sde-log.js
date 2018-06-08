@@ -2,7 +2,7 @@ const fs = require('fs-extra')
 const path = require('path')
 const R = require('ramda')
 const { canonicalName } = require('./Helpers')
-const F = require('./futil')
+const B = require('bufx')
 
 let command = 'log [options] <logfile>'
 let describe = 'process an SDEverywhere log file'
@@ -42,13 +42,13 @@ let exportDat = (logPathname, datPathname) => {
   // Emit all time step values for each var name.
   for (let varKey of varKeys) {
     if (varKey !== '_time') {
-      F.emitLine(varNames[varKey])
+      B.emitLine(varNames[varKey])
       for (let step of steps) {
-        F.emitLine(`${step['_time']}\t${step[varKey]}`)
+        B.emitLine(`${step['_time']}\t${step[varKey]}`)
       }
     }
   }
-  F.writeBuf(datPathname)
+  B.writeBuf(datPathname)
 }
 module.exports = {
   command,

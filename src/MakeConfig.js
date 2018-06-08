@@ -4,7 +4,7 @@ const R = require('ramda')
 const yaml = require('js-yaml')
 const prettier = require('prettier')
 const parse = require('minimist')
-const F = require('./futil')
+const B = require('bufx')
 const { canonicalName, strings, stringToId } = require('./Helpers')
 
 let cfg, sliders, inputVarNames, outputVarNames
@@ -21,15 +21,15 @@ let init = (modelDir, webDir) => {
   sliders = {}
   inputVarNames = []
   outputVarNames = []
-  F.clearBuf()
+  B.clearBuf()
 }
 let exportObj = (name, obj) => {
   let js = `exports.${name} = ${JSON.stringify(obj)}`
-  F.emitJs(js)
+  B.emitJs(js)
 }
 let parseCfg = () => {
   // Parse the app.yaml file in the app directory.
-  let data = F.read(yamlPathname)
+  let data = B.read(yamlPathname)
   cfg = yaml.safeLoad(data)
 }
 let getVarNames = () => {
@@ -49,8 +49,8 @@ let getVarNames = () => {
       }
     }
   }
-  inputVarNames = F.sortu(R.map(name => canonicalName(name), inputVarNames))
-  outputVarNames = F.sortu(R.map(name => canonicalName(name), outputVarNames))
+  inputVarNames = B.sortu(R.map(name => canonicalName(name), inputVarNames))
+  outputVarNames = B.sortu(R.map(name => canonicalName(name), outputVarNames))
   outputVarNames.unshift('_time')
 }
 let emitConsts = () => {
@@ -308,7 +308,7 @@ let emitStrings = () => {
     stringMap[id] = { EN: strings[i] }
   }
   let js = `module.exports = ${JSON.stringify(stringMap)}`
-  F.emitJs(js)
+  B.emitJs(js)
 }
 let emitSpec = () => {
   let spec = {}
@@ -328,7 +328,7 @@ let emitSpec = () => {
   }
   spec.inputVars = inputVarNames
   spec.outputVars = outputVarNames
-  F.emitJson(spec)
+  B.emitJson(spec)
 }
 let makeModelSpec = modelDir => {
   try {
@@ -336,7 +336,7 @@ let makeModelSpec = modelDir => {
     parseCfg()
     getVarNames()
     emitSpec()
-    F.writeBuf(specPathname)
+    B.writeBuf(specPathname)
     return specPathname
   } catch (e) {
     console.error(e.message)
@@ -354,10 +354,10 @@ let makeModelConfig = (modelDir, webDir) => {
     emitMenu()
     emitCharts()
     emitViews()
-    F.writeBuf(cfgPathname)
-    F.clearBuf()
+    B.writeBuf(cfgPathname)
+    B.clearBuf()
     emitStrings()
-    F.writeBuf(stringsPathname)
+    B.writeBuf(stringsPathname)
     return [cfgPathname, stringsPathname]
   } catch (e) {
     console.error(e.message)

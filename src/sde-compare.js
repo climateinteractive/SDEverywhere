@@ -1,6 +1,6 @@
 const fs = require('fs-extra')
 const R = require('ramda')
-const { pr } = require('./futil')
+const { pr } = require('bufx')
 const { canonicalName, readDat } = require('./Helpers')
 
 // The epsilon value determines the required precision for value comparisons.

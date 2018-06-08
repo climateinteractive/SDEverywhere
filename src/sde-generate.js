@@ -10,7 +10,7 @@ const { codeGenerator } = require('./CodeGen')
 const { preprocessModel } = require('./Preprocessor')
 const { modelPathProps, buildDir, webDir, linkCSourceFiles, filesExcept, execCmd, readDat } = require('./Helpers')
 const { makeModelSpec, makeModelConfig } = require('./MakeConfig')
-const F = require('./futil')
+const B = require('bufx')
 
 let command = 'generate [options] <model>'
 let describe = 'generate model code'
