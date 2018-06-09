@@ -1,5 +1,10 @@
 # SDEverywhere Release Notes
 
+## Version 0.4.2, released on TBD
+
+- read output vars from dat files to WITH LOOKUP variables
+- read data variables from external dat files into lookups with optional per-file variable name  prefix
+
 ## Version 0.4.1, released on 2018-03-11
 
 - enable a blank cell in the HTML input panel with an empty value in `sliders`
