@@ -1,8 +1,7 @@
 const fs = require('fs-extra')
 const path = require('path')
 const antlr4 = require('antlr4/index')
-const ModelLexer = require('./ModelLexer').ModelLexer
-const ModelParser = require('./ModelParser').ModelParser
+const { ModelLexer, ModelParser } = require('antlr4-vensim')
 const { codeGenerator } = require('./CodeGen')
 const { preprocessModel } = require('./Preprocessor')
 const { vensimName, cName } = require('./Model')

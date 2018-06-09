@@ -1,6 +1,5 @@
 const antlr4 = require('antlr4/index')
-const ModelLexer = require('./ModelLexer').ModelLexer
-const ModelParser = require('./ModelParser').ModelParser
+const { ModelLexer, ModelParser } = require('antlr4-vensim')
 const R = require('ramda')
 const Model = require('./Model')
 const Variable = require('./Variable')
