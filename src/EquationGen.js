@@ -85,7 +85,7 @@ module.exports = class EquationGen extends ModelReader {
       return this.generateLookup()
     }
     // Show the model var as a comment for reference.
-    this.comments.push(`  // ${this.var.modelLHS} = ${this.var.modelFormula}`)
+    this.comments.push(`  // ${this.var.modelLHS} = ${this.var.modelFormula.replace('\n', '')}`)
     // Inialize array variables with dimensions in a loop for each dimension.
     let dimNames = dimensionNames(this.var.subscripts)
     // Turn each dimension name into a loop with a loop index variable.
