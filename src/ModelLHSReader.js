@@ -86,7 +86,7 @@ module.exports = class ModelLHSReader extends ModelReader {
         }
       }
     } else {
-      console.err(`${this.varName} has more than 2 dimensions, which is currently unsupported.`)
+      console.error(`${this.varName} has more than 2 dimensions, which is currently unsupported.`)
     }
     // console.error(this.modelLHSList);
   }

@@ -526,7 +526,7 @@ module.exports = class EquationGen extends ModelReader {
       }
       let subscripts = R.map(id => canonicalName(id.getText()), ctx.Id())
       if (subscripts.length > 2) {
-        console.err(`${this.currentVarName()} has more than 2 dimensions, which is currently unsupported.`)
+        console.error(`${this.currentVarName()} has more than 2 dimensions, which is currently unsupported.`)
       }
       let fn = this.currentFunctionName()
       if (fn === '_SUM') {

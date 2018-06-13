@@ -31,6 +31,8 @@ let canonicalName = name => {
       .replace(/,/g, '_')
       .replace(/-/g, '_')
       .replace(/\./g, '_')
+      .replace(/\$/g, '_')
+      .replace(/'/g, '_')
       .toLowerCase()
   )
 }
