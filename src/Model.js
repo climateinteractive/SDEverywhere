@@ -130,7 +130,11 @@ function readSubscriptRanges(tree) {
               mv[sub(toIndName).value] = fromIndName
             }
           } else {
-            mv[toSub.value] = fromIndName
+            try {
+              mv[toSub.value] = fromIndName
+            } catch (e) {
+              console.error(`ERROR: map-to subscript "${toSubName}" from index "${fromIndName}" in dimension "${fromDim.name}" not found in readSubscriptRanges`)
+            }
           }
         }
         fromDim.mappings[toDimName] = mv

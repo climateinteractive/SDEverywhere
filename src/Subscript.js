@@ -167,7 +167,12 @@ function normalizeSubscripts(subscripts) {
 }
 function subscriptFamilies(subscripts) {
   // Return a list of the subscript families for each subscript.
-  return R.map(subscriptName => sub(subscriptName).family, subscripts)
+  try {
+    return R.map(subscriptName => sub(subscriptName).family, subscripts)
+  } catch (e) {
+    console.error(`ERROR: subscript not found in "${subscripts.join(',')}" in subscriptFamilies`)
+    debugger
+  }
 }
 function subscriptFamily(subscriptName) {
   // Return the subscript family object for the subscript name.
@@ -243,9 +248,15 @@ function separatedVariableIndex(rhsSub, variable) {
   return separatedIndexName
 }
 // Function to filter canonical dimension names from a list of names
-let dimensionNames = R.pipe(R.filter(subscript => isDimension(subscript)), asort)
+let dimensionNames = R.pipe(
+  R.filter(subscript => isDimension(subscript)),
+  asort
+)
 // Function to filter canonical index names from a list of names
-let indexNames = R.pipe(R.filter(subscript => isIndex(subscript)), asort)
+let indexNames = R.pipe(
+  R.filter(subscript => isIndex(subscript)),
+  asort
+)
 
 module.exports = {
   // addMapping,
