@@ -87,6 +87,14 @@ p[DimA] = SUM(inputAB[DimA, DimB!])
 
 r[DimA,DimB] = inputAB[DimA,DimB] * g[DimB] ~~|
 
+s[DimA,DimB]=
+	11,12,13;
+	21,22,23;
+	31,32,33;
+	~
+	~	2D constant array
+	|
+
 ********************************************************
 	.Control
 ********************************************************~
@@ -120,7 +128,7 @@ V300  Do not put anything below this section - it will be ignored
 $192-192-192,0,Times New Roman|12||0-0-0|0-0-0|0-0-255|-1--1--1|-1--1--1|96,96,100,0
 ///---\\\
 :L<%^E!@
-1:arrays.vdf64
+1:arrays.vdf
 9:arrays
 22:$,Dollar,Dollars,$s
 22:Hour,Hours

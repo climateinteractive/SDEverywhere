@@ -70,27 +70,52 @@ module.exports = class VariableReader extends ModelReader {
   }
   visitConstList(ctx) {
     let exprs = ctx.expr()
+    let errmsgNoDim = () => vlog('ERROR: no dimension for constant list in variable', this.var.varName)
+    let errmsgDimSize = () =>
+      vlog('ERROR: the dimension size does not match the number of constants in constant list', this.var.varName)
+    // A constant list should have more than one value because the syntax is a list of constants delimited by commas.
     if (exprs.length > 1) {
       // Construct a variable (based on the variable so far) for each constant on the list.
-      // Assume the subscript is a dimension because a constant list has more than one value.
-      // TODO are there cases where there is more than one dimension?
-      let dimName = this.var.subscripts[0]
-      if (isDimension(dimName)) {
-        let dim = sub(dimName)
-        if (dim.size != exprs.length) {
-          vlog(
-            'ERROR: the number of dimensions does not match the number of constants in constant list',
-            this.var.varName
-          )
+      // The parser collapses 2D constant lists into a flat list in row-major order.
+      // The subscripts must be dimensions.
+      let numDims = this.var.subscripts.length
+      if (numDims === 0) {
+        errmsgNoDim()
+      } else if (numDims === 1) {
+        let dimName = this.var.subscripts[0]
+        if (isDimension(dimName)) {
+          let dim = sub(dimName)
+          if (dim.size != exprs.length) {
+            errmsgDimSize()
+          }
+          R.forEach(indName => {
+            let v = new Variable(this.var.eqnCtx)
+            v.varName = this.var.varName
+            v.subscripts = [indName]
+            this.expandedVars.push(v)
+          }, dim.value)
+        } else {
+          errmsgNoDim()
         }
-        R.forEach(indName => {
-          let v = new Variable(this.var.eqnCtx)
-          v.varName = this.var.varName
-          v.subscripts = [indName]
-          this.expandedVars.push(v)
-        }, dim.value)
-      } else {
-        vlog('ERROR: no dimension for constant list', this.var.varName)
+      } else if (numDims === 2) {
+        let dimName1 = this.var.subscripts[0]
+        let dimName2 = this.var.subscripts[1]
+        if (isDimension(dimName1) && isDimension(dimName2)) {
+          let dim1 = sub(dimName1)
+          let dim2 = sub(dimName2)
+          let n = dim1.size * dim2.size
+          if (n != exprs.length) {
+            errmsgNoDim()
+          }
+          for (let indName1 of dim1.value) {
+            for (let indName2 of dim2.value) {
+              let v = new Variable(this.var.eqnCtx)
+              v.varName = this.var.varName
+              v.subscripts = [indName1, indName2]
+              this.expandedVars.push(v)
+            }
+          }
+        }
       }
     }
   }

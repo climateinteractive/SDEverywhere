@@ -6,6 +6,7 @@ const LoopIndexVars = require('./LoopIndexVars')
 const Model = require('./Model')
 const {
   sub,
+  subscriptFamily,
   isDimension,
   isIndex,
   dimensionNames,
@@ -571,15 +572,27 @@ module.exports = class EquationGen extends ModelReader {
   }
   visitConstList(ctx) {
     let exprs = ctx.expr()
-    // console.error(`visitConstList ${this.var.refId} ${exprs.length} exprs`);
+    // console.error(`visitConstList ${this.var.refId} ${exprs.length} exprs`)
     if (exprs.length === 1) {
       // Emit a single constant into the expression code.
       this.emit(strToConst(exprs[0].getText()))
     } else {
-      // Extract an indexed constant value from the const list.
-      let indName = this.var.subscripts[0]
-      let indexNumber = sub(indName).value
-      this.emit(strToConst(exprs[indexNumber].getText()))
+      // Extract a single value from the const list by its index number.
+      let numDims = this.var.subscripts.length
+      if (numDims === 1) {
+        let indName = this.var.subscripts[0]
+        let indexNumber = sub(indName).value
+        this.emit(strToConst(exprs[indexNumber].getText()))
+      } else if (numDims === 2) {
+        // Calculate the index into the flattened 2D const list.
+        let indName1 = this.var.subscripts[0]
+        let indName2 = this.var.subscripts[1]
+        let ind1 = sub(indName1)
+        let ind2 = sub(indName2)
+        let dim1 = subscriptFamily(indName1)
+        let i = dim1.size * ind1.value + ind2.value
+        this.emit(strToConst(exprs[i].getText()))
+      }
     }
   }
   //
