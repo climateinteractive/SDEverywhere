@@ -3,7 +3,7 @@ const { ModelLexer, ModelParser } = require('antlr4-vensim')
 const ModelReader = require('./ModelReader')
 const R = require('ramda')
 const { sub, isIndex, normalizeSubscripts } = require('./Subscript')
-const { canonicalName, list, vlog, subscripts } = require('./Helpers')
+const { canonicalName, vlog, subscripts } = require('./Helpers')
 //
 // VarNameReader reads a model var name using the parser to get the var name in C format.
 // This is used to generate a variable output in the output section.

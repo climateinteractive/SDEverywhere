@@ -1,5 +1,5 @@
 const R = require('ramda')
-const { list, subscripts } = require('./Helpers')
+const { subscripts } = require('./Helpers')
 
 module.exports = class Variable {
   constructor(eqnCtx) {

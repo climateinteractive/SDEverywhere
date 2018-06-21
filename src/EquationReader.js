@@ -15,12 +15,10 @@ const {
 const {
   canonicalName,
   cFunctionName,
-  list,
   newLookupVarName,
   newLevelVarName,
   newAuxVarName,
   vlog,
-  listVar,
   isSmoothFunction,
   isDelayFunction
 } = require('./Helpers')

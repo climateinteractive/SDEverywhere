@@ -3,7 +3,7 @@ const R = require('ramda')
 const { ModelLexer, ModelParser } = require('antlr4-vensim')
 const ModelReader = require('./ModelReader')
 const { sub, isIndex, isDimension, indexNamesForSubscript } = require('./Subscript')
-const { canonicalName, list, subscripts, listConcat } = require('./Helpers')
+const { canonicalName, subscripts, listConcat } = require('./Helpers')
 
 //
 // ModelLHSReader parses the LHS of a var in Vensim format and

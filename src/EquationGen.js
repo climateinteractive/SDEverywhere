@@ -17,7 +17,6 @@ const {
 const {
   canonicalName,
   cFunctionName,
-  list,
   listConcat,
   lines,
   newTmpVarName,

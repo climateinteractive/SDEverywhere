@@ -292,17 +292,11 @@ let asort = R.sort((a, b) => (a > b ? 1 : a < b ? -1 : 0))
 // Function to alpha sort an array of variables on the model LHS
 let vsort = R.sort((a, b) => (a.modelLHS > b.modelLHS ? 1 : a.modelLHS < b.modelLHS ? -1 : 0))
 // Function to list an array to stderr
-let list = R.forEach(x => console.error(x))
+let printArray = R.forEach(x => console.error(x))
 // Function to expand an array of strings into a comma-delimited list of strings
 let strlist = a => {
   return a.join(', ')
 }
-// Function to list a var to stderr
-let listVar = v => {
-  console.error(`${v.refId}: ${v.varType}`)
-}
-// Function to list an array of vars to stderr
-let listVars = R.forEach(v => listVar(v))
 // Function to join an array with newlines
 let lines = R.join('\n')
 //
@@ -330,10 +324,7 @@ module.exports = {
   isIterable,
   lines,
   linkCSourceFiles,
-  list,
   listConcat,
-  listVar,
-  listVars,
   mapIndexed,
   mapObjProps,
   modelPathProps,
@@ -342,6 +333,7 @@ module.exports = {
   newLookupVarName,
   newTmpVarName,
   outputDir,
+  printArray,
   readDat,
   replaceInArray,
   strings,

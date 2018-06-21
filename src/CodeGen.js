@@ -3,7 +3,7 @@ const ModelLHSReader = require('./ModelLHSReader')
 const EquationGen = require('./EquationGen')
 const Model = require('./Model')
 const { sub, allDimensions, allMappings, isDimension, subscriptFamilies, printSubscripts } = require('./Subscript')
-const { asort, canonicalName, lines, list, strlist, vlog } = require('./Helpers')
+const { asort, canonicalName, lines, strlist, vlog } = require('./Helpers')
 
 let codeGenerator = (parseTree, opts) => {
   const { spec, operation, extData } = opts

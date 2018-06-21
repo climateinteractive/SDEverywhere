@@ -23,9 +23,7 @@ const {
   isAlpha,
   isDigit,
   isIterable,
-  list,
   listConcat,
-  listVars,
   printEqn,
   strlist,
   vlog,
@@ -496,7 +494,7 @@ function sortInitVars() {
   // Copy the list so we can mutate it and have the original list later.
   // This starts a queue of vars to examine. Referenced var will be added to the queue.
   let vars = R.map(v => v.copy(), initVars)
-  // listVars(vars);
+  // printVars(vars);
   // R.forEach(v => { console.error(v.refId); console.error(v.references); }, vars);
   // Build a map of dependencies indexed by the lhs of each var.
   let depsMap = new Map()
@@ -619,14 +617,14 @@ function printRefIdTest() {
         // An apply-to-all array should have only one instance of the var name.
         if (vars.length > 1) {
           vlog('ERROR: more than one instance of apply-to-all array', varName)
-          listVars(vars)
+          printVars(vars)
         }
       }
     } else {
       // The var is a scalar and should only have one instance of the var name.
       if (vars.length > 1) {
         vlog('ERROR: more than one instance of scalar var', varName)
-        listVars(vars)
+        printVars(vars)
       }
     }
   }, variables)
