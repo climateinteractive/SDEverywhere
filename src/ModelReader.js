@@ -29,23 +29,25 @@ module.exports = class ModelReader extends ModelVisitor {
     return argIndex
   }
   visitEquation(ctx) {
-    if (ctx) {
-      ctx.lhs().accept(this)
-      if (ctx.expr()) {
-        ctx.expr().accept(this)
-      } else if (ctx.constList()) {
-        ctx.constList().accept(this)
-      } else if (ctx.lookup()) {
-        ctx.lookup().accept(this)
-      }
-      else {
-        this.var.varType = 'data'
-      }
+    ctx.lhs().accept(this)
+    if (ctx.expr()) {
+      ctx.expr().accept(this)
+    } else if (ctx.constList()) {
+      ctx.constList().accept(this)
+    } else if (ctx.lookup()) {
+      ctx.lookup().accept(this)
+    } else {
+      this.var.varType = 'data'
     }
   }
   visitLhs(ctx) {
-    if (ctx.subscriptList()) {
-      ctx.subscriptList().accept(this)
+    // An LHS may have a subscript list after the var name.
+    // If it has an EXCEPT clause, it will have a second subscript list there too.
+    let subscriptLists = ctx.subscriptList()
+    if (subscriptLists.length > 0) {
+      for (let i = 0; i < subscriptLists.length; i++) {
+        subscriptLists[i].accept(this)
+      }
     }
   }
 

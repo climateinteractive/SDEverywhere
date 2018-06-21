@@ -5,13 +5,7 @@ const Model = require('./Model')
 const Variable = require('./Variable')
 const ModelReader = require('./ModelReader')
 const VariableReader = require('./VariableReader')
-const {
-  sub,
-  normalizeSubscripts,
-  indexNamesForSubscript,
-  isIndex,
-  separatedVariableIndex
-} = require('./Subscript')
+const { sub, normalizeSubscripts, indexNamesForSubscript, isIndex, separatedVariableIndex } = require('./Subscript')
 const {
   canonicalName,
   cFunctionName,
@@ -40,7 +34,10 @@ module.exports = class EquationReader extends ModelReader {
   }
   read() {
     // Fill in more information about the variable by analyzing the equation parse tree.
-    this.visitEquation(this.var.eqnCtx)
+    // Variables that were added programmatically do not have a parse tree context.
+    if (this.var.eqnCtx) {
+      this.visitEquation(this.var.eqnCtx)
+    }
     // Set the var type based on the contents of the equation.
     if (this.var.points.length > 0) {
       this.var.varType = 'lookup'

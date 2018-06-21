@@ -4,7 +4,7 @@ const R = require('ramda')
 const ModelReader = require('./ModelReader')
 const Variable = require('./Variable')
 const { sub, isDimension, normalizeSubscripts } = require('./Subscript')
-const { canonicalName, vlog, replaceInArray } = require('./Helpers')
+const { canonicalName, vlog, replaceInArray, printArray } = require('./Helpers')
 
 module.exports = class VariableReader extends ModelReader {
   constructor(specialSeparationDims) {
@@ -41,30 +41,57 @@ module.exports = class VariableReader extends ModelReader {
     super.visitLhs(ctx)
   }
   visitSubscriptList(ctx) {
+    // VariableReader only considers subscript lists in the LHS.
+    // Other rules can assume that subscripts are filled in because this comes first.
     if (ctx.parentCtx.ruleIndex === ModelParser.RULE_lhs) {
-      // Get LHS subscripts in normal form.
-      let subscripts = R.map(id => canonicalName(id.getText()), ctx.Id())
-      this.var.subscripts = normalizeSubscripts(subscripts)
-      // If the LHS has a subdimension as a subscript, expand it into individual
-      // scalar variables for each index in the subdimension. This handles the case
-      // where the indices need to be evaluated interleaved with other variables.
-      // The separated variables are used instead of the original model variable.
-      R.forEach(subscript => {
+      if (this.var.subscripts.length == 0) {
+        // Get LHS subscripts in normal form.
+        let subscripts = R.map(id => canonicalName(id.getText()), ctx.Id())
+        this.var.subscripts = normalizeSubscripts(subscripts)
+        // If the LHS has a subdimension as a subscript, expand it into individual
+        // scalar variables for each index in the subdimension. This handles the case
+        // where the indices need to be evaluated interleaved with other variables.
+        // The separated variables are used instead of the original model variable.
+        R.forEach(subscript => {
+          if (isDimension(subscript)) {
+            let dim = sub(subscript)
+            let specialSeparationDim = this.specialSeparationDims[this.var.varName]
+            if (dim.size < sub(dim.family).size || specialSeparationDim === subscript) {
+              // Separate into variables for each index in the subdimension.
+              R.forEach(indName => {
+                let v = new Variable(this.var.eqnCtx)
+                v.varName = this.var.varName
+                v.subscripts = replaceInArray(subscript, indName, this.var.subscripts)
+                v.separationDim = subscript
+                this.expandedVars.push(v)
+              }, dim.value)
+            }
+          }
+        }, this.var.subscripts)
+      } else {
+        // A second subscript list is an EXCEPT clause that establishes an ad hoc subdimension.
+        // printArray(R.map(id => id.getText(), ctx.Id()))
+        // Construct a subdimension from the LHS subscripts minus the exception indices.
+        let exceptInds = R.map(id => canonicalName(id.getText()), ctx.Id())
+        // vlog('var with EXCEPT clause', this.var.varName)
+        // printArray(this.var.subscripts)
+        // printArray(exceptInds)
+        // TODO handle more than one subscript in the LHS and EXCEPT clause
+        let subscript = this.var.subscripts[0]
         if (isDimension(subscript)) {
           let dim = sub(subscript)
-          let specialSeparationDim = this.specialSeparationDims[this.var.varName]
-          if (dim.size < sub(dim.family).size || specialSeparationDim === subscript) {
-            // Separate into variables for each index in the subdimension.
-            R.forEach(indName => {
+          // Separate into variables for each index in the subdimension minus exceptions.
+          R.forEach(indName => {
+            if (!R.contains(indName, exceptInds)) {
               let v = new Variable(this.var.eqnCtx)
               v.varName = this.var.varName
               v.subscripts = replaceInArray(subscript, indName, this.var.subscripts)
               v.separationDim = subscript
               this.expandedVars.push(v)
-            }, dim.value)
-          }
+            }
+          }, dim.value)
         }
-      }, this.var.subscripts)
+      }
     }
     super.visitSubscriptList(ctx)
   }
