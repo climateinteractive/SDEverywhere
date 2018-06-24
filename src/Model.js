@@ -97,6 +97,8 @@ function readSubscriptRanges(tree) {
     }
   }
   // Define indices in order from the maximal (family) dimension.
+  // Until now, only dimensions have been defined. We wait until dimension families have been
+  // determined to define indices, so that they will belong to exactly one dimension (the family).
   for (let dim of allDims) {
     if (dim.family === dim.name) {
       for (let i = 0; i < dim.value.length; i++) {
@@ -131,7 +133,11 @@ function readSubscriptRanges(tree) {
             try {
               mv[toSub.value] = fromIndName
             } catch (e) {
-              console.error(`ERROR: map-to subscript "${toSubName}" from index "${fromIndName}" in dimension "${fromDim.name}" not found in readSubscriptRanges`)
+              console.error(
+                `ERROR: map-to subscript "${toSubName}" from index "${fromIndName}" in dimension "${
+                  fromDim.name
+                }" not found in readSubscriptRanges`
+              )
             }
           }
         }

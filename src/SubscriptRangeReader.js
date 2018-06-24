@@ -28,10 +28,10 @@ module.exports = class SubscriptRangeReader extends ModelReader {
     // Make a mapping to another dimension if it is present.
     let mappings = this.toDim ? [{ toDim: this.toDim, value: this.mappingValue }] : null
     // Create a new subscript range definition.
-    // The family is provisionally set to be the dimension name.
+    // The family is provisionally set to the dimension name.
     // It will be updated to the maximal dimension if this is a subdimension.
     // The mapping value contains dimensions and indices in the toDim.
-    // It will be expanded and inverted to fromDim subscripts later.
+    // It will be expanded and inverted to fromDim indices later.
     Subscript(dimName, this.indNames, dimName, mappings)
   }
   visitSubscriptList(ctx) {

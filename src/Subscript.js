@@ -4,34 +4,46 @@ const { canonicalName, asort, vlog } = require('./Helpers')
 
 // A subscript is a dimension or an index.
 // Both have the same properties: model name, canonical name, family, values.
+
+// |Property     |Description                                                       |
+// |-------------|------------------------------------------------------------------|
+// |modelName    |subscript name in Vensim format                                   |
+// |modelValue   |subscript value in Vensim format                                  |
+// |modelMappings|mappings from a dimension to a mapping value in Vensim format     |
+// |name         |subscript name in canonical C format                              |
+// |value        |subscript value in canonical C format                             |
+// |mappings     |mappings from a dimension to a mapping value in canonical C format|
+// |size         |number of indices in a dimension or 1 for an index                |
+// |family       |subscript family on canonical C format (finalized later)          |
+
 // A family is a dimension that is a reference to the maximal dimension containing an index or subdimension.
 // The family of the maximal dimension is itself.
 // Values are a single number for indices and an array of subscripts for dimensions.
-// A Variable includes a list of families sorted by canonical name ("normal order")
-// and a list of subscripts in normal order.
-
-// The Subscript module maintains a subscript map with the canonical
-// subscript name as the key and a subscript object as the value.
-let subscripts = new Map()
+// A Variable includes a list of subscripts in normal order.
+// Mappings give a list of indices in the mapping value that map in order to to-dim indices.
 
 // Subscript API
 //
-// Subscript(modelName)
-//   gets the subscript with the model name
-// Subscript(modelName, modelValue) with modelValue as array
-//   sets a subscript dimension and its indices
 // Subscript(modelName, modelValue, modelFamily, modelMappings)
 // with modelMappings of the form [ { toDim: dimension, value: indexArray } ]
 //   sets a subscript dimension that maps the index elements in indexArray
 //   to the index elements in another dimension
+// Subscript(modelName)
+//   gets the subscript with the model name
+// Subscript(modelName, modelValue) with modelValue as array
+//   sets a subscript dimension and its indices
 // Subscript(modelName, modelValue, modelFamily) with modelValue as number
 //   sets a subscript element and its index value in the subscript family
 //
 // Call Subscript with an array of subscript indices to establish a dimension.
 // If there is a mapping to another dimension, give modelMappings in the call.
-// Alternatively, call addMapping afterward.
 // Then call Subscript with each individual subscript index name and its numeric index value.
 // All dimension and index names are in model form, not canonical form.
+// They must be converted to canonical form later after all subscripts are read.
+
+// The Subscript module maintains a subscript map with the canonical
+// subscript name as the key and a subscript object as the value.
+let subscripts = new Map()
 
 function Subscript(modelName, modelValue = null, modelFamily = null, modelMappings = null) {
   let name = canonicalName(modelName)
@@ -63,14 +75,14 @@ function Subscript(modelName, modelValue = null, modelFamily = null, modelMappin
   }
   // Save the subscript as an object in the subscripts store.
   let subscript = {
-    modelName: modelName,
-    modelValue: modelValue,
-    modelMappings: modelMappings,
-    name: name,
-    value: value,
-    size: size,
-    family: family,
-    mappings: mappings
+    modelName,
+    modelValue,
+    modelMappings,
+    name,
+    value,
+    size,
+    family,
+    mappings
   }
   subscripts.set(name, subscript)
   return subscript
@@ -98,19 +110,6 @@ function addIndex(name, value, family) {
     mappings: {}
   }
   subscripts.set(name, subscript)
-}
-function addMapping(fromSubscript, toSubscript, value) {
-  // Add all indices in fromSubscript given as an array in value mapping to toSubscript.
-  // All arguments are in canonical form.
-  let subFrom = sub(fromSubscript)
-  let subTo = sub(toSubscript)
-  if (subFrom === undefined) {
-    vlog('ERROR: undefined addMapping fromSubscript', fromSubscript)
-  }
-  if (subTo === undefined) {
-    vlog('ERROR: undefined addMapping toSubscript', toSubscript)
-  }
-  subFrom.mappings[toSubscript] = value
 }
 function hasMapping(fromSubscript, toSubscript) {
   let result = false
@@ -259,11 +258,8 @@ let indexNames = R.pipe(
 )
 
 module.exports = {
-  // addMapping,
-  // subscriptFamily,
   Subscript,
   addIndex,
-  addMapping,
   allDimensions,
   allMappings,
   dimensionNames,
