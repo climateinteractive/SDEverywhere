@@ -7,7 +7,7 @@ let preprocessModel = (mdlFilename, spec, writeRemovals = false) => {
   // Equations that contain a string in the removalKeys list in the spec file will be removed.
   let removalKeys = (spec && spec.removalKeys) || []
   // Get the first line of an equation.
-  let firstLine = (s) => {
+  let firstLine = s => {
     let i = s.indexOf('\n')
     if (i < 0) {
       return s.trim()
@@ -16,12 +16,12 @@ let preprocessModel = (mdlFilename, spec, writeRemovals = false) => {
     }
   }
   // Emit an equation to the model output channel.
-  let emit = (s) => {
+  let emit = s => {
     B.emitLine(s, 'pp')
     B.emit('\t|\n\n', 'pp')
   }
   // Emit an equation to the removals channel.
-  let emitRemoval = (s) => {
+  let emitRemoval = s => {
     B.emitLine(s, 'rm')
     B.emit('\t|\n\n', 'rm')
   }
@@ -69,19 +69,16 @@ let preprocessModel = (mdlFilename, spec, writeRemovals = false) => {
   B.clearBuf('pp')
 
   // Join lines continued with trailing backslash characters.
-  let backslash = /\\\s*$/
-  let prevLine = ''
+  let backslashEnding = /\\\s*$/
+  let lineBuf = ''
   R.forEach(line => {
-    if (!R.isEmpty(prevLine)) {
-      line = prevLine + line.trim()
-      prevLine = ''
-    }
-    let m = line.match(backslash)
-    if (m) {
-      prevLine = line.substr(0, m.index)
-    }
-    if (R.isEmpty(prevLine)) {
-      B.emitLine(line, 'pp')
+    let continuation = line.match(backslashEnding)
+    if (continuation) {
+      lineBuf += line.substr(0, continuation.index)
+    } else {
+      lineBuf += line.trim()
+      B.emitLine(lineBuf, 'pp')
+      lineBuf = ''
     }
   }, mdl.split(/\r?\n/))
 
