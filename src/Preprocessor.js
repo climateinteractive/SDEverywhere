@@ -1,9 +1,10 @@
-const fs = require('fs-extra')
 const path = require('path')
 const R = require('ramda')
 const B = require('bufx')
 
 let preprocessModel = (mdlFilename, spec, writeRemovals = false) => {
+  const REMOVALS_FILENAME = 'removals.txt'
+  let mdl, eqns
   // Equations that contain a string in the removalKeys list in the spec file will be removed.
   let removalKeys = (spec && spec.removalKeys) || []
   // Get the first line of an equation.
@@ -15,11 +16,16 @@ let preprocessModel = (mdlFilename, spec, writeRemovals = false) => {
       return s.slice(0, i).trim()
     }
   }
+  let getMdlFromPPBuf = () => {
+    // Reset the mdl string from the preprocessor buffer.
+    mdl = B.getBuf('pp')
+    B.clearBuf('pp')
+  }
   // Open output channels.
   B.open('rm')
   B.open('pp')
   // Read the model file.
-  let mdl = fs.readFileSync(mdlFilename, 'utf8')
+  mdl = B.read(mdlFilename)
 
   // Remove the macro section.
   let inMacroSection = false
@@ -37,12 +43,10 @@ let preprocessModel = (mdlFilename, spec, writeRemovals = false) => {
       B.emitLine(line, 'pp')
     }
   }
-  mdl = B.getBuf('pp')
-  B.clearBuf('pp')
+  getMdlFromPPBuf()
 
   // Split the model into an array of equations and groups.
-  // let eqns = R.map(eqn => eqn.trim(), mdl.split('|'))
-  let eqns = mdl.split('|')
+  eqns = mdl.split('|')
   // Remove some equations into the removals channel.
   for (let eqn of eqns) {
     if (R.contains('\\---/// Sketch', eqn)) {
@@ -60,8 +64,7 @@ let preprocessModel = (mdlFilename, spec, writeRemovals = false) => {
       B.emit('|', 'pp')
     }
   }
-  mdl = B.getBuf('pp')
-  B.clearBuf('pp')
+  getMdlFromPPBuf()
 
   // Join lines continued with trailing backslash characters.
   let prevLine = ''
@@ -80,14 +83,45 @@ let preprocessModel = (mdlFilename, spec, writeRemovals = false) => {
       B.emitLine(line, 'pp')
     }
   }
+  getMdlFromPPBuf()
+
+  // Join formula lines.
+  eqns = mdl.split('|')
+  for (let eqn of eqns) {
+    let i = eqn.indexOf('~')
+    if (i >= 0) {
+      // let formula = eqn.substr(0, i)
+      // let comment = eqn.substr(i)
+      // Join formula lines with no spaces.
+      let formula = B.lines(eqn.substr(0, i))
+      for (let i = 0; i < formula.length; i++) {
+        if (i === 0 && formula[i] === '{UTF-8}') {
+          B.emitLine(formula[i], 'pp')
+        } else {
+          B.emit(formula[i].replace(/^\t+/, ''), 'pp')
+        }
+      }
+      // Emit the comment as-is with a leading tab to emulate Vensim.
+      B.emit('\n\t', 'pp')
+      B.emit(eqn.substr(i), 'pp')
+      B.emitLine('|', 'pp')
+    } else {
+      // Emit an equation without a comment.
+      if (!R.isEmpty(eqn.trim())) {
+        B.emit(eqn, 'pp')
+        B.emitLine('|', 'pp')
+      }
+    }
+  }
+  getMdlFromPPBuf()
 
   // Write removals to a file in the model directory.
   if (writeRemovals && B.getBuf('rm').length > 0) {
-    let rmPathname = path.join(path.dirname(mdlFilename), 'removals.txt')
+    let rmPathname = path.join(path.dirname(mdlFilename), REMOVALS_FILENAME)
     B.writeBuf(rmPathname, 'rm')
   }
   // Return the preprocessed model as a string.
-  return B.getBuf('pp')
+  return mdl
 }
 
 module.exports = { preprocessModel }

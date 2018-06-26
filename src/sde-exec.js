@@ -1,4 +1,3 @@
-const fs = require('fs-extra')
 const path = require('path')
 const moment = require('moment')
 const { modelPathProps, buildDir, outputDir, execCmd } = require('./Helpers')

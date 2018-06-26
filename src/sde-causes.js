@@ -1,4 +1,3 @@
-const fs = require('fs-extra')
 const path = require('path')
 const antlr4 = require('antlr4/index')
 const { ModelLexer, ModelParser } = require('antlr4-vensim')
@@ -47,7 +46,7 @@ let parseJsonFile = filename => {
   // Parse the JSON file if it exists.
   let result = {}
   try {
-    let json = fs.readFileSync(filename, 'utf8')
+    let json = B.read(filename)
     result = JSON.parse(json)
     // console.error(`loaded ${filename}`);
   } catch (ex) {
@@ -57,7 +56,7 @@ let parseJsonFile = filename => {
 }
 let writeOutput = (outputPathname, outputText) => {
   try {
-    fs.outputFileSync(outputPathname, outputText)
+    B.write(outputText, outputPathname)
   } catch (e) {
     console.log(outputPathname)
     console.log(e.message)

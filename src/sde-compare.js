@@ -1,4 +1,3 @@
-const fs = require('fs-extra')
 const R = require('ramda')
 const { pr } = require('bufx')
 const { canonicalName, readDat } = require('./Helpers')

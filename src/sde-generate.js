@@ -184,7 +184,7 @@ let parseJsonFile = filename => {
   // Parse the JSON file if it exists.
   let result = {}
   try {
-    let json = fs.readFileSync(filename, 'utf8')
+    let json = B.read(filename)
     result = JSON.parse(json)
     // console.error(`loaded ${filename}`);
   } catch (ex) {
@@ -207,7 +207,7 @@ let readDatFiles = datfiles => {
 }
 let writeOutput = (outputPathname, outputText) => {
   try {
-    fs.outputFileSync(outputPathname, outputText)
+    B.write(outputText, outputPathname)
   } catch (e) {
     console.log(outputPathname)
     console.log(e.message)
