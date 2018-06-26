@@ -39,7 +39,7 @@ let names = (model, namesPathname, opts) => {
   let operation = 'convertNames'
   codeGenerator(parseTree, { spec, operation }).generate()
   // Read each variable name from the names file and convert it.
-  let lines = fs.readFileSync(namesPathname, 'utf8').split(/\r?\n/)
+  let lines = B.lines(B.read(namesPathname))
   for (let line of lines) {
     if (line.length > 0) {
       if (opts.toc) {

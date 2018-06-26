@@ -24,7 +24,7 @@ let log = (logPathname, opts) => {
   }
 }
 let exportDat = (logPathname, datPathname) => {
-  let lines = fs.readFileSync(logPathname, 'utf8').split(/\r?\n/)
+  let lines = B.lines(B.read(logPathname))
   let varNames = {}
   let varKeys = []
   let steps = []

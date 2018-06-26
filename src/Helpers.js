@@ -3,7 +3,7 @@ const path = require('path')
 const util = require('util')
 const R = require('ramda')
 const sh = require('shelljs')
-const { num } = require('bufx')
+const B = require('bufx')
 
 // Set true to print a stack trace in vlog
 const PRINT_VLOG_TRACE = false
@@ -242,7 +242,7 @@ let readDat = (pathname, varPrefix = '') => {
     }
   }
   try {
-    let lines = fs.readFileSync(pathname, 'utf8').split(/\r?\n/)
+    let lines = B.lines(B.read(pathname))
     lines.forEach(line => {
       let values = splitDatLine(line)
       if (values.length === 1) {
@@ -255,8 +255,8 @@ let readDat = (pathname, varPrefix = '') => {
         varValues = new Map()
       } else if (values.length > 1) {
         // Data lines in Vensim DAT format have {time}\t{value} format with optional comments afterward.
-        let t = num(values[0])
-        let value = num(values[1])
+        let t = B.num(values[0])
+        let value = B.num(values[1])
         // Save the value at time t in the varValues map.
         if (Number.isNaN(t)) {
           console.error(`DAT file ${pathname}:${lineNum} time value is NaN`)
