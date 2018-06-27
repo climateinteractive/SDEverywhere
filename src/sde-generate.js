@@ -28,9 +28,14 @@ let builder = {
     alias: 'l'
   },
   preprocess: {
-    describe: 'output the preprocessed model',
+    describe: 'write a preprocessed model that runs in Vensim',
     type: 'boolean',
     alias: 'p'
+  },
+  analysis: {
+    describe: 'write a nonexecutable preprocessed model for analysis',
+    type: 'boolean',
+    alias: 'a'
   },
   spec: {
     describe: 'pathname of the I/O specification JSON file',
@@ -65,9 +70,12 @@ let generate = (model, opts) => {
   // Preprocess model text into parser input. Stop now if that's all we're doing.
   let spec = parseSpec(opts.spec)
   let extData = readDatFiles(spec.datfiles)
-  let writeRemovals = opts.preprocess
-  let input = preprocessModel(modelPathname, spec, writeRemovals)
-  if (opts.preprocess) {
+  // Produce a runnable model with the "genc" and "preprocess" options.
+  let profile = opts.analysis ? 'analysis' : 'genc'
+  // Write the preprocessed model and removals if the option is "analysis" or "preprocess".
+  let writeFiles = opts.analysis || opts.preprocess
+  let input = preprocessModel(modelPathname, spec, profile, writeFiles)
+  if (writeFiles) {
     let outputPathname = path.join(buildDirname, `${modelName}.mdl`)
     writeOutput(outputPathname, input)
     process.exit(0)
@@ -155,8 +163,7 @@ let packApp = webDirname => {
   let nodePath = path.resolve(__dirname, '..', 'node_modules')
   let b = browserify(sourcePathname, { paths: nodePath })
   let writable = fs.createWriteStream(minPathname)
-  b
-    .bundle()
+  b.bundle()
     .pipe(writable)
     .on('finish', error => {
       // Remove JavaScript source files.
