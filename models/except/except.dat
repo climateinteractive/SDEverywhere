@@ -1,9 +1,11 @@
-A[A1]
+a[A1]
 0	1
-A[A2]
+a[A2]
 0	2
-A[A3]
+a[A3]
 0	2
+b[A1]
+0	3
 FINAL TIME
 0	1
 INITIAL TIME

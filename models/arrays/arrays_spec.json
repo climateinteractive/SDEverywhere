@@ -1,5 +1,5 @@
 {
   "name": "Arrays test model",
   "inputVars": ["_inputa[0]", "_inputa[1]", "_inputa[2]"],
-  "outputVars": ["_a[0]", "_a[1]", "_a[2]", "_f[0][0]", "_f[0][1]", "_f[0][2]", "_h"]
+  "outputVars": ["_time", "_a[0]", "_a[1]", "_a[2]", "_f[0][0]", "_f[0][1]", "_f[0][2]", "_h"]
 }
