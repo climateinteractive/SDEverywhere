@@ -22,17 +22,17 @@ module.exports = class SubscriptRangeReader extends ModelReader {
     this.mappingValue = []
     this.toDim = ''
     // All subscript ranges have a dimension name.
-    let dimName = ctx.Id().getText()
+    let modelName = ctx.Id().getText()
     // Visit children to fill in the subscript range definition.
     super.visitSubscriptRange(ctx)
     // Make a mapping to another dimension if it is present.
-    let mappings = this.toDim ? [{ toDim: this.toDim, value: this.mappingValue }] : null
-    // Create a new subscript range definition.
+    let modelMappings = this.toDim ? [{ toDim: this.toDim, value: this.mappingValue }] : null
+    // Create a new subscript range definition from Vensim-format names.
     // The family is provisionally set to the dimension name.
     // It will be updated to the maximal dimension if this is a subdimension.
     // The mapping value contains dimensions and indices in the toDim.
     // It will be expanded and inverted to fromDim indices later.
-    Subscript(dimName, this.indNames, dimName, mappings)
+    Subscript(modelName, this.indNames, modelName, modelMappings)
   }
   visitSubscriptList(ctx) {
     // A subscript list can appear in either a subscript range or mapping.

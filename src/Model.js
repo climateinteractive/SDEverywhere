@@ -53,8 +53,9 @@ function readSubscriptRanges(tree) {
   let subscriptRangeReader = new SubscriptRangeReader()
   subscriptRangeReader.visitModel(tree)
   let allDims = allDimensions()
-  // Expand subdimensions that appeared in subscript ranges and mappings into indices.
-  // Repeat until there are no dimensions in values.
+
+  // Expand dimensions that appeared in subscript range definitions into indices.
+  // Repeat until there are only indices in dimension values.
   let dimFoundInValue
   do {
     dimFoundInValue = false
@@ -67,9 +68,9 @@ function readSubscriptRanges(tree) {
       }
     }
   } while (dimFoundInValue)
-  // Update the families of subdimensions.
-  // At this point, all dimensions have their family set to their own dimension name.
-  // List the number of values for each dimension.
+
+  // Update the families of dimensions. At this point, all dimensions have their family
+  // provisionally set to their own dimension name.
   let dimComparator = (dim1, dim2) => {
     // Sort dimensions by size ascending, by name descending.
     if (dim1.size < dim2.size) {
@@ -96,6 +97,7 @@ function readSubscriptRanges(tree) {
       dim.family = R.last(familyDims).name
     }
   }
+
   // Define indices in order from the maximal (family) dimension.
   // Until now, only dimensions have been defined. We wait until dimension families have been
   // determined to define indices, so that they will belong to exactly one dimension (the family).
@@ -106,6 +108,7 @@ function readSubscriptRanges(tree) {
       }
     }
   }
+
   // When there is a subscript mapping, the mapping value pulled from the subscript range
   // in the model is either a map-to dimension with the same cardinality as the map-from
   // dimension, or a list of subscripts in the map-to dimension with the same cardinality
@@ -120,23 +123,29 @@ function readSubscriptRanges(tree) {
       } else {
         // The mapping value is a list of map-to subscripts.
         // List fromDim indices in the order in which they map onto toDim indices.
+        // Indices are filled in the mapping value by map-to index number as they
+        // occur in the map-from dimension.
         let mv = []
         for (let i = 0; i < fromDim.value.length; i++) {
           let fromIndName = fromDim.value[i]
           let toSubName = mappingValue[i]
           let toSub = sub(toSubName)
           if (isDimension(toSubName)) {
+            // Fill in indices from a dimension in the mapping value.
             for (let toIndName of toSub.value) {
-              mv[sub(toIndName).value] = fromIndName
+              let toIndNumber = sub(toIndName).value
+              mv[toIndNumber] = fromIndName
             }
           } else {
+            // Fill in a single index from an index in the mapping value.
             try {
-              mv[toSub.value] = fromIndName
+              let toIndNumber = toSub.value
+              mv[toIndNumber] = fromIndName
             } catch (e) {
               console.error(
-                `ERROR: map-to subscript "${toSubName}" from index "${fromIndName}" in dimension "${
+                `ERROR: map-to index "${toSubName}" not found when mapping from dimension "${
                   fromDim.name
-                }" not found in readSubscriptRanges`
+                }" index "${fromIndName}"`
               )
             }
           }

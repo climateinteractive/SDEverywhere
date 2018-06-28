@@ -69,9 +69,9 @@ function Subscript(modelName, modelValue = null, modelFamily = null, modelMappin
   // Convert the subscript mappings into canonical form.
   let mappings = {}
   if (modelMappings !== null) {
-    R.forEach(m => {
-      mappings[canonicalName(m.toDim)] = R.map(indName => canonicalName(indName), m.value)
-    }, modelMappings)
+    for (let m of modelMappings) {
+      mappings[canonicalName(m.toDim)] = R.map(subName => canonicalName(subName), m.value)
+    }
   }
   // Save the subscript as an object in the subscripts store.
   let subscript = {
