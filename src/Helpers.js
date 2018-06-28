@@ -237,7 +237,7 @@ let readDat = (pathname, varPrefix = '') => {
     return fieldFrom(0, [])
   }
   let addValues = () => {
-    if (varName != '' && varValues.size > 0) {
+    if (varName !== '' && varValues.size > 0) {
       log.set(`${varPrefix}${varName}`, varValues)
     }
   }

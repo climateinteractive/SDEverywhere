@@ -3,7 +3,7 @@ const { ModelParser } = require('antlr4-vensim')
 const R = require('ramda')
 const ModelReader = require('./ModelReader')
 const Variable = require('./Variable')
-const { sub, isDimension, normalizeSubscripts } = require('./Subscript')
+const { sub, isDimension, isIndex, normalizeSubscripts } = require('./Subscript')
 const { canonicalName, vlog, replaceInArray, printArray } = require('./Helpers')
 
 module.exports = class VariableReader extends ModelReader {
@@ -70,26 +70,38 @@ module.exports = class VariableReader extends ModelReader {
         }, this.var.subscripts)
       } else {
         // A second subscript list is an EXCEPT clause that establishes an ad hoc subdimension.
-        // printArray(R.map(id => id.getText(), ctx.Id()))
         // Construct a subdimension from the LHS subscripts minus the exception indices.
-        let exceptInds = R.map(id => canonicalName(id.getText()), ctx.Id())
+        let exceptSubs = R.map(id => canonicalName(id.getText()), ctx.Id())
+        // printArray(R.map(id => id.getText(), ctx.Id()))
         // vlog('var with EXCEPT clause', this.var.varName)
         // printArray(this.var.subscripts)
-        // printArray(exceptInds)
-        // TODO handle more than one subscript in the LHS and EXCEPT clause
-        let subscript = this.var.subscripts[0]
-        if (isDimension(subscript)) {
-          let dim = sub(subscript)
-          // Separate into variables for each index in the subdimension minus exceptions.
-          R.forEach(indName => {
-            if (!R.contains(indName, exceptInds)) {
-              let v = new Variable(this.var.eqnCtx)
-              v.varName = this.var.varName
-              v.subscripts = replaceInArray(subscript, indName, this.var.subscripts)
-              v.separationDim = subscript
-              this.expandedVars.push(v)
+        // printArray(exceptSubs)
+        let isException = (indName, exceptSub) => {
+          // Compare the LHS index name directly to an exception index subscript.
+          let result = false
+          if (isIndex(exceptSub)) {
+            result = indName === exceptSub
+          } else if (isDimension(exceptSub)) {
+            result = R.contains(indName, sub(exceptSub).value)
+          }
+          return result
+        }
+        // 1D case
+        if (this.var.subscripts.length === 1) {
+          let subscript = this.var.subscripts[0]
+          let exceptSub = exceptSubs[0]
+          if (isDimension(subscript)) {
+            // Separate into variables for each index in the dimension minus exceptions.
+            for (let indName of sub(subscript).value) {
+              if (!isException(indName, exceptSub)) {
+                let v = new Variable(this.var.eqnCtx)
+                v.varName = this.var.varName
+                v.subscripts = replaceInArray(subscript, indName, this.var.subscripts)
+                v.separationDim = subscript
+                this.expandedVars.push(v)
+              }
             }
-          }, dim.value)
+          }
         }
       }
     }
@@ -112,7 +124,7 @@ module.exports = class VariableReader extends ModelReader {
         let dimName = this.var.subscripts[0]
         if (isDimension(dimName)) {
           let dim = sub(dimName)
-          if (dim.size != exprs.length) {
+          if (dim.size !== exprs.length) {
             errmsgDimSize()
           }
           R.forEach(indName => {
@@ -131,7 +143,7 @@ module.exports = class VariableReader extends ModelReader {
           let dim1 = sub(dimName1)
           let dim2 = sub(dimName2)
           let n = dim1.size * dim2.size
-          if (n != exprs.length) {
+          if (n !== exprs.length) {
             errmsgNoDim()
           }
           for (let indName1 of dim1.value) {

@@ -54,7 +54,7 @@ module.exports = class EquationReader extends ModelReader {
       // In Vensim a variable can refer to its current value in the state.
       // Do not add self-references to the lists of references.
       // Do not duplicate references.
-      if (refId != this.var.refId && !R.contains(refId, list)) {
+      if (refId !== this.var.refId && !R.contains(refId, list)) {
         list.push(refId)
       }
     }

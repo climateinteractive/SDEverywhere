@@ -222,7 +222,7 @@ function findNonAtoAVars() {
     // Return true if the subscript is the same for all vars with that name.
     let subscript = vars[0].subscripts[i]
     for (let v of vars) {
-      if (v.subscripts[i] != subscript) {
+      if (v.subscripts[i] !== subscript) {
         return false
       }
     }
@@ -534,7 +534,7 @@ function sortInitVars() {
           // console.error(refId);
           let refVar = varWithRefId(refId)
           if (refVar) {
-            if (refVar.varType != 'const' && !R.contains(refVar, vars)) {
+            if (refVar.varType !== 'const' && !R.contains(refVar, vars)) {
               vars.push(refVar)
               // console.error(`+ ${refVar.refId}`);
             }
