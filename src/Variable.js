@@ -12,8 +12,8 @@ module.exports = class Variable {
     this.varName = ''
     // Subscripts are canonical dimension or index names on the LHS in normal order.
     this.subscripts = []
-    // Array variables that are separated in VariableReader keep the original dimension here.
-    this.separationDim = ''
+    // Array variables that are separated in VariableReader keep the original dimensions here.
+    this.separationDims = []
     // Lookup vars have lookup points and an optional range.
     this.range = []
     this.points = []
@@ -44,7 +44,7 @@ module.exports = class Variable {
     c.modelFormula = this.modelFormula
     c.varName = this.varName
     c.subscripts = this.subscripts.slice()
-    c.separationDim = this.separationDim
+    c.separationDims = this.separationDims
     c.range = this.range.slice()
     c.points = this.points.slice()
     c.refId = this.refId

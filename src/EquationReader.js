@@ -38,7 +38,7 @@ module.exports = class EquationReader extends ModelReader {
     if (this.var.eqnCtx) {
       this.visitEquation(this.var.eqnCtx)
     }
-    // Set the var type based on the contents of the equation.
+    // Refine the var type based on the contents of the equation.
     if (this.var.points.length > 0) {
       this.var.varType = 'lookup'
     } else if (this.var.isAux() && !this.rhsNonConst) {
@@ -156,7 +156,7 @@ module.exports = class EquationReader extends ModelReader {
     this.var.lookupArgVarName = this.generateLookupArg(ctx)
   }
   visitSubscriptList(ctx) {
-    // Add subscripts to the refId.
+    // When an equation references a non-appy-to-all array, add its subscripts to the array var's refId.
     if (ctx.parentCtx.ruleIndex === ModelParser.RULE_expr) {
       // Get the referenced var's subscripts in normal order.
       let subscripts = R.map(id => canonicalName(id.getText().replace('!', '')), ctx.Id())

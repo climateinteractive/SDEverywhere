@@ -1,9 +1,24 @@
 {UTF-8}
 DimA: A1, A2, A3 ~~|
 SubA: A2, A3 ~~|
-a[A1] = 1 ~~|
-a[DimA] :EXCEPT: [A1] = 2 ~~|
-b[DimA] :EXCEPT: [SubA] = 3 ~~|
+DimC: C1, C2, C3 ~~|
+SubC: C2, C3 ~~|
+
+a[DimA] = 1 ~~|
+b[SubA] = 2 ~~|
+c[DimA, DimC] = 3 ~~|
+d[SubA, C1] = 4 ~~|
+e[DimA, SubC] = 5 ~~|
+f[A1, C1] = 6 ~~|
+g[DimA] :EXCEPT: [A1] = 7 ~~|
+h[DimA] :EXCEPT: [SubA] = 8 ~~|
+p[DimA, DimC] :EXCEPT: [A1, C1] = 9 ~~|
+q[DimA, DimC] :EXCEPT: [SubA, C2] = 10 ~~|
+r[DimA, DimC] :EXCEPT: [DimA, C1] = 11 ~~|
+s[A3] = 12 ~~|
+s[SubA] :EXCEPT: [A3] = 13 ~~|
+t[SubA, SubC] = 14 ~~|
+
 INITIAL TIME = 0 ~~|
 FINAL TIME = 1 ~~|
 SAVEPER = 1 ~~|

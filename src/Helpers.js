@@ -115,7 +115,7 @@ let extractMatch = (fn, list) => {
   }
 }
 let replaceInArray = (oldStr, newStr, a) => {
-  // Replace the first occurrence of oldStr with newStr in array a.
+  // Replace the first occurrence of oldStr with newStr in an array of strings a.
   // A new array is constructed. The original array remains unchanged.
   let i = R.indexOf(oldStr, a)
   if (i >= 0) {
@@ -303,7 +303,11 @@ let lines = R.join('\n')
 // Debugging helpers
 //
 let vlog = (title, value, depth = 1) => {
-  console.error(title, ':', util.inspect(value, { depth: depth, colors: false }))
+  if (value) {
+    console.error(title, ':', util.inspect(value, { depth: depth, colors: false }))
+  } else {
+    console.error(title)
+  }
   if (PRINT_VLOG_TRACE) {
     console.trace()
   }

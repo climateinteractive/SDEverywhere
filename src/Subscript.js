@@ -219,24 +219,25 @@ function indexNamesForSubscript(subscript) {
 function separatedVariableIndex(rhsSub, variable) {
   // If a RHS subscript matches the variable's separation dimension, return the index name corresponding to the LHS.
   let separatedIndexName
-  let sepDim = variable.separationDim
-  let varSubs = variable.subscripts
-  if (sepDim && (rhsSub === sepDim || hasMapping(rhsSub, sepDim))) {
-    // Find the var subscript that was separated.
-    for (let varSub of varSubs) {
-      if (sub(varSub).family === sub(sepDim).family) {
-        if (!isIndex(varSub)) {
-          console.error(`ERROR: ${variable.refId} subscript in separation dimension ${sepDim} is not an index`)
-        } else {
-          if (rhsSub === sepDim) {
-            // The subscript dimension is the separation dimension, so use the separated var index.
-            separatedIndexName = varSub
+  for (let sepDim of variable.separationDims) {
+    let varSubs = variable.subscripts
+    if (sepDim && (rhsSub === sepDim || hasMapping(rhsSub, sepDim))) {
+      // Find the var subscript that was separated.
+      for (let varSub of varSubs) {
+        if (sub(varSub).family === sub(sepDim).family) {
+          if (!isIndex(varSub)) {
+            console.error(`ERROR: ${variable.refId} subscript in separation dimension ${sepDim} is not an index`)
           } else {
-            // Find the index that maps from the subscript dimension to the separated var index.
-            for (let fromIndexName of sub(rhsSub).value) {
-              if (mapIndex(rhsSub, fromIndexName, sepDim) === varSub) {
-                separatedIndexName = fromIndexName
-                break
+            if (rhsSub === sepDim) {
+              // The subscript dimension is the separation dimension, so use the separated var index.
+              separatedIndexName = varSub
+            } else {
+              // Find the index that maps from the subscript dimension to the separated var index.
+              for (let fromIndexName of sub(rhsSub).value) {
+                if (mapIndex(rhsSub, fromIndexName, sepDim) === varSub) {
+                  separatedIndexName = fromIndexName
+                  break
+                }
               }
             }
           }

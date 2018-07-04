@@ -298,8 +298,8 @@ function printVar(v) {
     console.log(`families(${strlist(subscriptFamilies(v.subscripts))})`)
     console.log(`subscripts(${strlist(v.subscripts)})`)
   }
-  if (v.separationDim) {
-    console.log(`separationDim(${v.separationDim})`)
+  if (v.separationDims.length > 0) {
+    console.log(`separationDims(${strlist(v.separationDims)})`)
   }
   if (v.references.length > 0) {
     console.log(`refs(${strlist(v.references)})`)
