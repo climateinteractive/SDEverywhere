@@ -34,6 +34,7 @@ let compare = (vensimfile, sdefile, opts) => {
   }
   let vensimLog = readDat(vensimfile)
   let sdeLog = readDat(sdefile)
+  let noDATDifference = true
   for (let varName of vensimLog.keys()) {
     let sdeValues = sdeLog.get(varName)
     // Ignore variables that are not found in the SDE log file.
@@ -52,10 +53,14 @@ let compare = (vensimfile, sdefile, opts) => {
           if (diff > ε) {
             let diffPct = (diff * 100).toFixed(6)
             pr(`${varName} time=${t.toFixed(2)} vensim=${vensimValue} sde=${sdeValue} diff=${diffPct}%`)
+            noDATDifference = false
           }
         }
       }
     }
+  }
+  if (noDATDifference) {
+	  pr("Data were the same for " + vensimfile + " and " + sdefile)
   }
 }
 let isZero = value => {

@@ -21,6 +21,8 @@ SDEverywhere has been used to generate code for complex models with thousands of
 
 Tabbed arrays and macros are removed from the model during preprocessing and written to the `removals.txt` file for your reference.
 
+Remember: the above restrictions can be removed if you help contribute the project!
+
 ## Conventions used in this guide
 
 A string surrounded by curly braces `{like this}` indicates a placeholder that you should fill in with the appropriate value.
