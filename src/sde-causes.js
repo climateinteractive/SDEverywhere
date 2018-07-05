@@ -7,7 +7,7 @@ const { vensimName, cName } = require('./Model')
 const { modelPathProps } = require('./Helpers')
 const B = require('bufx')
 
-let command = 'causes [options] <model> <varname>'
+let command = 'causes [options] <model> <C_varname>'
 let describe = 'print dependencies for a C variable name'
 let builder = {
   spec: {
