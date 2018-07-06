@@ -19,20 +19,17 @@ module.exports = class SubscriptRangeReader extends ModelReader {
   visitSubscriptRange(ctx) {
     // When entering a new subscript range definition, reset the properties that will be filled in.
     this.indNames = []
-    this.mappingValue = []
-    this.toDim = ''
+    this.modelMappings = []
     // All subscript ranges have a dimension name.
     let modelName = ctx.Id().getText()
     // Visit children to fill in the subscript range definition.
     super.visitSubscriptRange(ctx)
-    // Make a mapping to another dimension if it is present.
-    let modelMappings = this.toDim ? [{ toDim: this.toDim, value: this.mappingValue }] : null
     // Create a new subscript range definition from Vensim-format names.
     // The family is provisionally set to the dimension name.
     // It will be updated to the maximal dimension if this is a subdimension.
     // The mapping value contains dimensions and indices in the toDim.
     // It will be expanded and inverted to fromDim indices later.
-    Subscript(modelName, this.indNames, modelName, modelMappings)
+    Subscript(modelName, this.indNames, modelName, this.modelMappings)
   }
   visitSubscriptList(ctx) {
     // A subscript list can appear in either a subscript range or mapping.
@@ -43,6 +40,13 @@ module.exports = class SubscriptRangeReader extends ModelReader {
     if (ctx.parentCtx.ruleIndex === ModelParser.RULE_subscriptMapping) {
       this.mappingValue = subscripts
     }
+  }
+  visitSubscriptMapping(ctx) {
+    let toDim = ctx.Id().getText()
+    // If a subscript list is part of the mapping, mappingValue will be set by visitSubscriptList.
+    this.mappingValue = []
+    super.visitSubscriptMapping(ctx)
+    this.modelMappings.push({ toDim, value: this.mappingValue })
   }
   visitSubscriptSequence(ctx) {
     // Construct index names from the sequence start and end indices.
@@ -58,9 +62,5 @@ module.exports = class SubscriptRangeReader extends ModelReader {
         this.indNames.push(prefix + i)
       }
     }
-  }
-  visitSubscriptMapping(ctx) {
-    this.toDim = ctx.Id().getText()
-    super.visitSubscriptMapping(ctx)
   }
 }
