@@ -136,9 +136,6 @@ module.exports = class VariableReader extends ModelReader {
         // Expand the subscript exceptions. Discard already expanded vars from the LHS.
         debugLog(`${this.var.varName} exceptSubs`, subscripts)
         this.expandedVars = []
-        if (this.var.varName === '_pccr') {
-          debugger
-        }
         expandVars(subscripts)
       }
     }

@@ -69,43 +69,38 @@ function readSubscriptRanges(tree, dimensionFamilies, indexFamilies) {
     }
   } while (dimFoundInValue)
 
-  // If dimension families have been given in the spec file, use them instead of calculating families.
-  if (dimensionFamilies) {
-    for (let dim of allDims) {
-      let family = dimensionFamilies[dim.name]
-      if (family) {
-        dim.family = family
-      } else {
-        console.error(`No family found in the spec for dimension ${dim.name}`)
-      }
+  // Update the families of dimensions. At this point, all dimensions have their family
+  // provisionally set to their own dimension name.
+  let dimComparator = (dim1, dim2) => {
+    // Sort dimensions by size ascending, by name descending.
+    if (dim1.size < dim2.size) {
+      return -1
+    } else if (dim1.size > dim2.size) {
+      return 1
+    } else if (dim1.name > dim2.name) {
+      return -1
+    } else if (dim1.name < dim2.name) {
+      return 1
+    } else {
+      return 0
     }
-  } else {
-    // Update the families of dimensions. At this point, all dimensions have their family
-    // provisionally set to their own dimension name.
-    let dimComparator = (dim1, dim2) => {
-      // Sort dimensions by size ascending, by name descending.
-      if (dim1.size < dim2.size) {
-        return -1
-      } else if (dim1.size > dim2.size) {
-        return 1
-      } else if (dim1.name > dim2.name) {
-        return -1
-      } else if (dim1.name < dim2.name) {
-        return 1
-      } else {
-        return 0
-      }
-    }
-    for (let dim of allDims) {
-      // Take the first index in the dimension.
-      let index = dim.value[0]
+  }
+  for (let dim of allDims) {
+    // Try looking up the family in the spec file dimension families if they exist.
+    if (dimensionFamilies && dimensionFamilies[dim.name]) {
+      dim.family = dimensionFamilies[dim.name]
+    } else {
       // Find the dimension in this family with the largest number of values.
       // This is the "maximal" dimension that serves as the subscript family.
       // If two dimensions have the same maximal size, choose the one that comes
       // first in alpha sort order, by convention.
+      // Take the first index in the dimension.
+      let index = dim.value[0]
       let familyDims = R.sort(dimComparator, R.filter(thisDim => R.contains(index, thisDim.value), allDims))
       if (familyDims.length > 0) {
         dim.family = R.last(familyDims).name
+      } else {
+        console.error(`No family found for dimension ${dim.name}`)
       }
     }
   }
