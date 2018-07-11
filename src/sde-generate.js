@@ -7,7 +7,7 @@ const browserify = require('browserify')
 const { ModelLexer, ModelParser } = require('antlr4-vensim')
 const { codeGenerator } = require('./CodeGen')
 const { preprocessModel } = require('./Preprocessor')
-const { modelPathProps, buildDir, webDir, linkCSourceFiles, filesExcept, execCmd, readDat } = require('./Helpers')
+const { canonicalName, modelPathProps, buildDir, webDir, linkCSourceFiles, filesExcept, execCmd, readDat } = require('./Helpers')
 const { makeModelSpec, makeModelConfig } = require('./MakeConfig')
 const B = require('bufx')
 
@@ -185,7 +185,17 @@ let parseModel = input => {
   return parser.model()
 }
 let parseSpec = specFilename => {
-  return parseJsonFile(specFilename)
+  let spec = parseJsonFile(specFilename)
+  // Translate dimension families in the spec to canonical form.
+  if (spec.dimensionFamilies) {
+    let f = {}
+    for (let dimName in spec.dimensionFamilies) {
+      let family = spec.dimensionFamilies[dimName]
+      f[canonicalName(dimName)] = canonicalName(family)
+    }
+    spec.dimensionFamilies = f
+  }
+  return spec
 }
 let parseJsonFile = filename => {
   // Parse the JSON file if it exists.
