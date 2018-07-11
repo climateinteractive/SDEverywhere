@@ -88,9 +88,11 @@ module.exports = class VariableReader extends ModelReader {
       if (numSubscriptsToExpand === 1) {
         let expansionPos = expanding[0] ? 0 : 1
         let expansionSubscript = this.var.subscripts[expansionPos]
+        // An exception subscript can be an index. Expand on a single index or on all indices of a dimension.
+        let expansionSubs = isIndex(expansionSubscript) ? [sub(expansionSubscript).name] : sub(expansionSubscript).value
         let exceptSub = exceptSubs ? exceptSubs[expansionPos] : null
         debugLog(`expanding ${this.var.varName}[${strlist(this.var.subscripts)}] subscript`, expansionSubscript)
-        for (let indName of sub(expansionSubscript).value) {
+        for (let indName of expansionSubs) {
           if (!isException(indName, exceptSub)) {
             let v = new Variable(this.var.eqnCtx)
             v.varName = this.var.varName
@@ -104,10 +106,12 @@ module.exports = class VariableReader extends ModelReader {
         debugLog(`expanding ${this.var.varName}[${strlist(this.var.subscripts)}] subscripts`, strlist(this.var.subscripts))
         let expansionSubscript0 = this.var.subscripts[0]
         let expansionSubscript1 = this.var.subscripts[1]
+        let expansionSubs0 = isIndex(expansionSubscript0) ? [sub(expansionSubscript0).name] : sub(expansionSubscript0).value
+        let expansionSubs1 = isIndex(expansionSubscript1) ? [sub(expansionSubscript1).name] : sub(expansionSubscript1).value
         let exceptSub0 = exceptSubs ? exceptSubs[0] : null
         let exceptSub1 = exceptSubs ? exceptSubs[1] : null
-        for (let indName0 of sub(expansionSubscript0).value) {
-          for (let indName1 of sub(expansionSubscript1).value) {
+        for (let indName0 of expansionSubs0) {
+          for (let indName1 of expansionSubs1) {
             if (!isException(indName0, exceptSub0) || !isException(indName1, exceptSub1)) {
               let v = new Variable(this.var.eqnCtx)
               v.varName = this.var.varName
@@ -132,6 +136,9 @@ module.exports = class VariableReader extends ModelReader {
         // Expand the subscript exceptions. Discard already expanded vars from the LHS.
         debugLog(`${this.var.varName} exceptSubs`, subscripts)
         this.expandedVars = []
+        if (this.var.varName === '_pccr') {
+          debugger
+        }
         expandVars(subscripts)
       }
     }
