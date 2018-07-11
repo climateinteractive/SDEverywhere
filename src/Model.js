@@ -128,16 +128,28 @@ function readSubscriptRanges(tree, dimensionFamilies, indexFamilies) {
   // map-from indices in one-to-one correspondence with the map-to indices.
   for (let fromDim of allDims) {
     for (let toDimName in fromDim.mappings) {
+      let toDim = sub(toDimName)
       let mappingValue = fromDim.mappings[toDimName]
+      let invertedMappingValue = []
       if (R.isEmpty(mappingValue)) {
         // When there is no list of map-to subscripts, list fromDim indices.
-        fromDim.mappings[toDimName] = fromDim.value
+        invertedMappingValue = fromDim.value
       } else {
         // The mapping value is a list of map-to subscripts.
         // List fromDim indices in the order in which they map onto toDim indices.
         // Indices are filled in the mapping value by map-to index number as they
         // occur in the map-from dimension.
-        let mv = []
+        let setMappingValue = (toIndNumber, fromIndName) => {
+          if (Number.isInteger(toIndNumber) && toIndNumber >= 0 && toIndNumber < toDim.size) {
+            invertedMappingValue[toIndNumber] = fromIndName
+          } else {
+            console.error(
+              `ERROR: map-to index "${toSubName}" not found when mapping from dimension "${
+                fromDim.name
+              }" index "${fromIndName}"`
+            )
+          }
+        }
         for (let i = 0; i < fromDim.value.length; i++) {
           let fromIndName = fromDim.value[i]
           let toSubName = mappingValue[i]
@@ -145,25 +157,18 @@ function readSubscriptRanges(tree, dimensionFamilies, indexFamilies) {
           if (isDimension(toSubName)) {
             // Fill in indices from a dimension in the mapping value.
             for (let toIndName of toSub.value) {
-              let toIndNumber = sub(toIndName).value
-              mv[toIndNumber] = fromIndName
+              let toIndNumber = toDim.value.indexOf(toIndName)
+              setMappingValue(toIndNumber, fromIndName)
             }
           } else {
             // Fill in a single index from an index in the mapping value.
-            try {
-              let toIndNumber = toSub.value
-              mv[toIndNumber] = fromIndName
-            } catch (e) {
-              console.error(
-                `ERROR: map-to index "${toSubName}" not found when mapping from dimension "${
-                  fromDim.name
-                }" index "${fromIndName}"`
-              )
-            }
+            let toIndNumber = toDim.value.indexOf(toSub.name)
+            setMappingValue(toIndNumber, fromIndName)
           }
         }
-        fromDim.mappings[toDimName] = mv
       }
+      // Replace toDim subscripts in the mapping value with fromDim subscripts that map to them.
+      fromDim.mappings[toDimName] = invertedMappingValue
     }
   }
 }
