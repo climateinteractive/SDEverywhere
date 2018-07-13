@@ -112,7 +112,7 @@ ACTIVE INITIAL used here to break simultaneity
 1,27,26,8,0,0,0,0,0,64,1,-1--1--1,,1|(236,329)|
 ///---\\\
 :L<%^E!@
-1:active_initial.vdf64
+1:active_initial.vdf
 9:active_initial
 22:$,Dollar,Dollars,$s
 22:Hour,Hours

@@ -77,7 +77,7 @@ V300  Do not put anything below this section - it will be ignored
 $192-192-192,0,Times New Roman|12||0-0-0|0-0-0|0-0-255|-1--1--1|-1--1--1|96,96,100,0
 ///---\\\
 :L<%^E!@
-1:mapping.vdf64
+1:mapping.vdf
 9:mapping
 22:$,Dollar,Dollars,$s
 22:Hour,Hours
