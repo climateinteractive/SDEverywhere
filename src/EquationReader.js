@@ -102,14 +102,14 @@ module.exports = class EquationReader extends ModelReader {
       let args = R.map(expr => expr.getText(), ctx.expr())
       this.var.delayVarName = this.expandDelayFunction(fn, args)
       // Generate an aux var to hold the delay time expression.
-      let modelSubs = this.modelSubs()
+      let genSubs = this.genSubs(...args)
       let delayTimeVarName = newAuxVarName()
       this.var.delayTimeVarName = canonicalName(delayTimeVarName)
       let delayTimeEqn
       if (fn === '_DELAY1' || fn === '_DELAY1I') {
-        delayTimeEqn = `${delayTimeVarName}${modelSubs} = ${args[1]}`
+        delayTimeEqn = `${delayTimeVarName}${genSubs} = ${args[1]}`
       } else if (fn === '_DELAY3' || fn === '_DELAY3I') {
-        delayTimeEqn = `${delayTimeVarName}${modelSubs} = (${args[1]}) / 3.0`
+        delayTimeEqn = `${delayTimeVarName}${genSubs} = (${args[1]}) / 3.0`
       }
       this.addVariable(delayTimeEqn)
       // Add a reference to the var, since it won't show up until code gen time.
@@ -290,11 +290,11 @@ module.exports = class EquationReader extends ModelReader {
   generateSmoothLevel(input, delay, init, levelNumber) {
     // Generate a level equation to implement SMOOTH.
     // The parameters are model names. Return the canonical name of the generated level var.
-    let modelSubs = this.modelSubs()
+    let genSubs = this.genSubs(input, delay, init)
     let level = newLevelVarName()
-    let levelLHS = level + modelSubs
-    if (levelNumber > 1 && modelSubs) {
-      input += modelSubs
+    let levelLHS = level + genSubs
+    if (levelNumber > 1 && genSubs) {
+      input += genSubs
     }
     let eqn = `${levelLHS} = INTEG((${input} - ${levelLHS}) / ${delay}, ${init})`
     this.addVariable(eqn)
@@ -312,10 +312,10 @@ module.exports = class EquationReader extends ModelReader {
     if (fn === '_DELAY1' || fn === '_DELAY1I') {
       let init = args[2] ? args[2] : args[0]
       let level = newLevelVarName()
-      this.generateDelayLevel(fn, level, input, this.var.modelLHS, delay, init, 1)
+      this.generateDelayLevel(fn, level, input, this.var.modelLHS, init, 1)
       return canonicalName(level)
     } else if (fn === '_DELAY3' || fn === '_DELAY3I') {
-      let modelSubs = this.modelSubs()
+      let genSubs = this.genSubs()
       let delay3 = `((${delay}) / 3)`
       let init = `${args[2] ? args[2] : args[0]} * ${delay3}`
       let level1 = newLevelVarName()
@@ -323,26 +323,19 @@ module.exports = class EquationReader extends ModelReader {
       let level3 = newLevelVarName()
       let aux1 = newAuxVarName()
       let aux2 = newAuxVarName()
-      this.generateDelayLevel(fn, level3, aux2, this.var.modelLHS, delay3, init, 3)
-      this.generateDelayLevel(fn, level2, aux1, aux2, delay3, level3, 2)
-      this.generateDelayLevel(fn, level1, input, aux1, delay3, level3, 1)
-      this.addVariable(`${aux1}${modelSubs} = ${level1}${modelSubs} / ${delay3}`)
-      this.addVariable(`${aux2}${modelSubs} = ${level2}${modelSubs} / ${delay3}`)
+      this.generateDelayLevel(fn, level3, aux2, this.var.modelLHS, init, 3)
+      this.generateDelayLevel(fn, level2, aux1, aux2, level3, 2)
+      this.generateDelayLevel(fn, level1, input, aux1, level3, 1)
+      this.addVariable(`${aux1}${genSubs} = ${level1}${genSubs} / ${delay3}`)
+      this.addVariable(`${aux2}${genSubs} = ${level2}${genSubs} / ${delay3}`)
       return canonicalName(level3)
     }
   }
-  generateDelayLevel(fn, level, input, aux, delay, init, levelNumber) {
+  generateDelayLevel(fn, level, input, aux, init, levelNumber) {
     // Generate a level equation to implement SMOOTH.
     // The parameters are model names. Return the canonical name of the generated level var.
-    let modelSubs = this.modelSubs()
-    if (levelNumber > 1) {
-      input += modelSubs
-    }
-    if (levelNumber < 3) {
-      init += modelSubs
-      aux += modelSubs
-    }
-    let eqn = `${level}${modelSubs} = INTEG(${input} - ${aux}, ${init})`
+    let levelSubs = this.genSubs(input, aux, init)
+    let eqn = `${level}${levelSubs} = INTEG(${input} - ${aux}, ${init})`
     this.addVariable(eqn)
     // Add a reference to the new level var.
     // If it has subscripts, the refId is still just the var name, because it is an apply-to-all array.
@@ -373,11 +366,19 @@ module.exports = class EquationReader extends ModelReader {
       equationReader.read()
     }, generatedVars)
   }
-  modelSubs() {
-    let modelSubs = ''
-    if (this.var.subscripts.length > 0) {
-      modelSubs = this.var.modelLHS.replace(/^[^[]+/, '')
+  genSubs(...varNames) {
+    // Get the subscripts from one or more varnames. Check if they agree.
+    // This is used to get the subscripts for generated variables.
+    let result = new Set()
+    for (let subscriptedVarname of varNames) {
+      let subs = subscriptedVarname.replace(/^[^[]+/, '')
+      if (subs) {
+        result.add(subs)
+      }
     }
-    return modelSubs
+    if (result.size > 1) {
+      console.error(`ERROR: genSubs subscripts do not agree: ${[...varNames]}`)
+    }
+    return [...result][0] || ''
   }
 }

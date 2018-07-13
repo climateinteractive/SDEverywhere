@@ -1,91 +1,25 @@
 {UTF-8}
-D1=
-	DELAY1(input, delay)
-	~
-	~		|
+DimA: A1, A2, A3 ~~|
 
-D2=
-	level / delay
-	~
-	~		|
+input = STEP(1,4) - STEP(1,7) ~~|
+delay = 5 ~~|
+init = 0 ~~|
 
-delay=
-	5
-	~
-	~		|
+input a[DimA]= 10, 20, 33 ~~|
+delay a[DimA] = 1, 2, 3 ~~|
+init a[DimA] = 0 ~~|
 
-input=
-	STEP(1,10)-STEP(1,20)
-	~
-	~		|
+D1 = DELAY1(input, delay) ~~|
 
-level= INTEG (
-	input - D2,
-		input * delay)
-	~
-	~		|
+D2[DimA] = DELAY1I(input a[DimA], delay, init) ~~|
 
-********************************************************
-	.Control
-********************************************************~
-		Simulation Control Parameters
-	|
+D3[DimA] = DELAY1I(input, delay a[DimA], init) ~~|
 
-FINAL TIME  = 40
-	~	Month
-	~	The final time for the simulation.
-	|
+D4[DimA] = DELAY1I(input, delay, init a[DimA]) ~~|
 
-INITIAL TIME  = 0
-	~	Month
-	~	The initial time for the simulation.
-	|
+D5[DimA] = DELAY1I(input a[DimA], delay a[DimA], init a[DimA]) ~~|
 
-SAVEPER  =
-        TIME STEP
-	~	Month [0,?]
-	~	The frequency with which output is stored.
-	|
-
-TIME STEP  = 1
-	~	Month [0,?]
-	~	The time step for the simulation.
-	|
-
-\\\---/// Sketch information - do not modify anything except names
-V300  Do not put anything below this section - it will be ignored
-*View 1
-$192-192-192,0,Times New Roman|12||0-0-0|0-0-0|0-0-255|-1--1--1|-1--1--1|96,96,100,0
-10,1,D1,113,54,12,11,8,3,0,0,0,0,0,0
-10,2,input,47,106,17,11,8,3,0,0,0,0,0,0
-10,3,delay,165,108,18,11,8,3,0,0,0,0,0,0
-1,4,2,1,0,0,0,0,0,128,0,-1--1--1,,1|(74,83)|
-1,5,3,1,0,0,0,0,0,128,0,-1--1--1,,1|(143,85)|
-10,6,level,59,175,40,20,3,3,0,0,0,0,0,0
-10,7,D2,156,174,12,11,8,3,0,0,0,0,0,0
-1,8,2,6,0,0,0,0,0,128,0,-1--1--1,,1|(50,128)|
-1,9,3,6,0,0,0,0,0,128,0,-1--1--1,,1|(124,133)|
-1,10,3,7,0,0,0,0,0,128,0,-1--1--1,,1|(161,134)|
-1,11,6,7,0,0,0,0,0,128,0,-1--1--1,,1|(114,174)|
-1,12,7,6,1,0,0,0,0,128,0,-1--1--1,,1|(115,251)|
-///---\\\
-:L<%^E!@
-1:delay.vdf64
-9:delay
-15:0,0,0,0,0,0
-19:100,0
-27:2,
-34:0,
-4:Time
-5:D1
-35:Date
-36:YYYY-MM-DD
-37:2000
-38:1
-39:1
-40:2
-41:0
-42:0
-24:0
-25:40
-26:40
+INITIAL TIME = 0 ~~|
+FINAL TIME = 10 ~~|
+TIME STEP = 1 ~~|
+SAVEPER = TIME STEP ~~|
