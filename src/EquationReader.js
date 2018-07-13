@@ -370,10 +370,13 @@ module.exports = class EquationReader extends ModelReader {
     // Get the subscripts from one or more varnames. Check if they agree.
     // This is used to get the subscripts for generated variables.
     let result = new Set()
-    for (let subscriptedVarname of varNames) {
-      let subs = subscriptedVarname.replace(/^[^[]+/, '')
+    const re = /\[[^\]]+\]/g
+    for (let varName of varNames) {
+      let subs = varName.match(re)
       if (subs) {
-        result.add(subs)
+        for (let sub of subs) {
+          result.add(sub)
+        }
       }
     }
     if (result.size > 1) {
