@@ -164,6 +164,174 @@ s[A3,B2]
 0	32
 s[A3,B3]
 0	33
+s1d[A1]
+0	1
+s1d[A2]
+0	1
+s1d[A3]
+0	1
+s1i[A1]
+0	1
+s2dd[A1,B1]
+0	1
+s2dd[A1,B2]
+0	1
+s2dd[A1,B3]
+0	1
+s2dd[A2,B1]
+0	1
+s2dd[A2,B2]
+0	1
+s2dd[A2,B3]
+0	1
+s2dd[A3,B1]
+0	1
+s2dd[A3,B2]
+0	1
+s2dd[A3,B3]
+0	1
+s2di[A1,B1]
+0	1
+s2di[A2,B1]
+0	1
+s2di[A3,B1]
+0	1
+s2id[A1,B1]
+0	1
+s2id[A1,B2]
+0	1
+s2id[A1,B3]
+0	1
+s2ii[A1,B1]
+0	1
+s3ddd[A1,B1,C1]
+0	1
+s3ddd[A1,B1,C2]
+0	1
+s3ddd[A1,B1,C3]
+0	1
+s3ddd[A1,B2,C1]
+0	1
+s3ddd[A1,B2,C2]
+0	1
+s3ddd[A1,B2,C3]
+0	1
+s3ddd[A1,B3,C1]
+0	1
+s3ddd[A1,B3,C2]
+0	1
+s3ddd[A1,B3,C3]
+0	1
+s3ddd[A2,B1,C1]
+0	1
+s3ddd[A2,B1,C2]
+0	1
+s3ddd[A2,B1,C3]
+0	1
+s3ddd[A2,B2,C1]
+0	1
+s3ddd[A2,B2,C2]
+0	1
+s3ddd[A2,B2,C3]
+0	1
+s3ddd[A2,B3,C1]
+0	1
+s3ddd[A2,B3,C2]
+0	1
+s3ddd[A2,B3,C3]
+0	1
+s3ddd[A3,B1,C1]
+0	1
+s3ddd[A3,B1,C2]
+0	1
+s3ddd[A3,B1,C3]
+0	1
+s3ddd[A3,B2,C1]
+0	1
+s3ddd[A3,B2,C2]
+0	1
+s3ddd[A3,B2,C3]
+0	1
+s3ddd[A3,B3,C1]
+0	1
+s3ddd[A3,B3,C2]
+0	1
+s3ddd[A3,B3,C3]
+0	1
+s3ddi[A1,B1,C1]
+0	1
+s3ddi[A1,B2,C1]
+0	1
+s3ddi[A1,B3,C1]
+0	1
+s3ddi[A2,B1,C1]
+0	1
+s3ddi[A2,B2,C1]
+0	1
+s3ddi[A2,B3,C1]
+0	1
+s3ddi[A3,B1,C1]
+0	1
+s3ddi[A3,B2,C1]
+0	1
+s3ddi[A3,B3,C1]
+0	1
+s3did[A1,B1,C1]
+0	1
+s3did[A1,B1,C2]
+0	1
+s3did[A1,B1,C3]
+0	1
+s3did[A2,B1,C1]
+0	1
+s3did[A2,B1,C2]
+0	1
+s3did[A2,B1,C3]
+0	1
+s3did[A3,B1,C1]
+0	1
+s3did[A3,B1,C2]
+0	1
+s3did[A3,B1,C3]
+0	1
+s3dii[A1,B1,C1]
+0	1
+s3dii[A2,B1,C1]
+0	1
+s3dii[A3,B1,C1]
+0	1
+s3idd[A1,B1,C1]
+0	1
+s3idd[A1,B1,C2]
+0	1
+s3idd[A1,B1,C3]
+0	1
+s3idd[A1,B2,C1]
+0	1
+s3idd[A1,B2,C2]
+0	1
+s3idd[A1,B2,C3]
+0	1
+s3idd[A1,B3,C1]
+0	1
+s3idd[A1,B3,C2]
+0	1
+s3idd[A1,B3,C3]
+0	1
+s3idi[A1,B1,C1]
+0	1
+s3idi[A1,B2,C1]
+0	1
+s3idi[A1,B3,C1]
+0	1
+s3iid[A1,B1,C1]
+0	1
+s3iid[A1,B1,C2]
+0	1
+s3iid[A1,B1,C3]
+0	1
+s3iii[A1,B1,C1]
+0	1
 SAVEPER
 0	1
 1	1

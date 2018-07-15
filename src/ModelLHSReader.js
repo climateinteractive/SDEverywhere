@@ -18,7 +18,6 @@ module.exports = class ModelLHSReader extends ModelReader {
   read(modelLHS) {
     // Parse a model LHS and return the var name without subscripts.
     // The names function may be called on this object to retrieve expanded subscript names.
-    // console.error(modelLHS);
     let chars = new antlr4.InputStream(modelLHS)
     let lexer = new ModelLexer(chars)
     let tokens = new antlr4.CommonTokenStream(lexer)
@@ -44,50 +43,22 @@ module.exports = class ModelLHSReader extends ModelReader {
   visitSubscriptList(ctx) {
     // Construct the modelLHSList array with the LHS expanded into an entry for each index
     // in the same format as Vensim log files.
-    // TODO handle more than two dimensions
-    let modelLHSInds = dim => {
-      // Construct the model indices for a dimension. If the subscript range contained a dimension,
-      // expand it into index names.
-      let indNames = R.map(subscriptModelName => {
-        let subscript = canonicalName(subscriptModelName)
-        if (isDimension(subscript)) {
-          return sub(subscript).modelValue
-        } else {
-          return subscriptModelName
-        }
-      }, dim.modelValue)
-      return R.flatten(indNames)
-    }
     let subscripts = R.map(id => id.getText(), ctx.Id())
-    let [dims, inds] = R.partition(subscript => isDimension(canonicalName(subscript)), subscripts)
-    if (dims.length === 0) {
-      // The list is just one variable with indices.
-      let modelIndices = R.reduce((a, ind) => listConcat(a, ind), '', inds)
-      this.modelLHSList = [`${this.varName}[${modelIndices}]`]
-    } else if (dims.length === 1) {
-      // Expand the single subscript dimension.
-      if (subscripts.length === 1) {
-        let dim = sub(canonicalName(subscripts[0]))
-        this.modelLHSList = R.map(modelDim => `${this.varName}[${modelDim}]`, modelLHSInds(dim))
-      } else if (isDimension(canonicalName(subscripts[0]))) {
-        // Expand the dimension in the first or second position.
-        let dim = sub(canonicalName(subscripts[0]))
-        let modelIndex = subscripts[1]
-        this.modelLHSList = R.map(modelDim => `${this.varName}[${modelDim},${modelIndex}]`, modelLHSInds(dim))
+    let expandLHSDims = (a, subscripts) => {
+      if (subscripts.length === 0) {
+        this.modelLHSList.push(`${this.varName}[${a.join(',')}]`)
       } else {
-        let dim = sub(canonicalName(subscripts[1]))
-        let modelIndex = subscripts[0]
-        this.modelLHSList = R.map(modelDim => `${this.varName}[${modelIndex},${modelDim}]`, modelLHSInds(dim))
-      }
-    } else if (dims.length === 2) {
-      for (let modelDim0 of modelLHSInds(sub(canonicalName(dims[0])))) {
-        for (let modelDim1 of modelLHSInds(sub(canonicalName(dims[1])))) {
-          this.modelLHSList.push(`${this.varName}[${modelDim0},${modelDim1}]`)
+        let sub0 = canonicalName(subscripts[0])
+        if (isDimension(sub0)) {
+          for (let subscriptModelName of sub(sub0).modelValue) {
+            expandLHSDims(a.concat(subscriptModelName), subscripts.slice(1))
+          }
+        } else {
+          expandLHSDims(a.concat(subscripts[0]), subscripts.slice(1))
         }
       }
-    } else {
-      console.error(`${this.varName} has more than 2 dimensions, which is currently unsupported.`)
     }
-    // console.error(this.modelLHSList);
+    expandLHSDims([], subscripts)
+    return this.modelLHSList
   }
 }
