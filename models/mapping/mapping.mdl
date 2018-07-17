@@ -1,110 +1,26 @@
 {UTF-8}
-DimA: A1, A2, A3
-	~
-	~		|
+DimA: A1, A2, A3 ~~|
+DimB: B1, B2 -> (DimA: SubA, A3) ~~|
+DimC: SubC, C3 -> DimD ~~|
+DimD: D1, D2, D3 ~~|
+SubA: A1, A2 ~~|
+SubC: C1, C2 ~~|
 
-SubA: A1, A2
-	~
-	~		|
-
-DimB: B1, B2 -> (DimA: SubA, A3)
-	~
-	~		|
-
-b[DimB] = 1, 2
-	~
-	~	constant array
-	|
-
+b[DimB] = 1, 2 ~~|
 a[DimA] = b[DimB] * 10
 	~
-	~	mapping an index to a subrange
-	~	:SUPPLEMENTARY
+	~	mapping an index to a subdimension
 	|
-
-SubC: C1, C2
-	~
-	~		|
-
-DimC: SubC, C3 -> DimD
-	~
-	~		|
-
-DimD: D1, D2, D3
-	~
-	~		|
-
 c[DimC] = 1, 2, 3
 	~
-	~		|
-
+	~	defining a dimension with a subdimension
+	|
 d[DimD] = c[DimC] * 10
 	~
-	~	mapping a subrange to an index
-	~	:SUPPLEMENTARY
+	~	mapping a subdimension to an index
 	|
 
-********************************************************
-	.Control
-********************************************************~
-		Simulation Control Parameters
-	|
-
-FINAL TIME  = 1
-	~	Month
-	~	The final time for the simulation.
-	|
-
-INITIAL TIME  = 0
-	~	Month
-	~	The initial time for the simulation.
-	|
-
-SAVEPER  =
-        TIME STEP
-	~	Month [0,?]
-	~	The frequency with which output is stored.
-	|
-
-TIME STEP  = 1
-	~	Month [0,?]
-	~	The time step for the simulation.
-	|
-
-\\\---/// Sketch information - do not modify anything except names
-V300  Do not put anything below this section - it will be ignored
-*View 1
-$192-192-192,0,Times New Roman|12||0-0-0|0-0-0|0-0-255|-1--1--1|-1--1--1|96,96,100,0
-///---\\\
-:L<%^E!@
-1:mapping.vdf
-9:mapping
-22:$,Dollar,Dollars,$s
-22:Hour,Hours
-22:Month,Months
-22:Person,People,Persons
-22:Unit,Units
-22:Week,Weeks
-22:Year,Years
-22:Day,Days
-15:0,0,0,0,0,0
-19:100,0
-27:2,
-34:0,
-4:Time
-5:a[DimA]
-35:Date
-36:YYYY-MM-DD
-37:2000
-38:1
-39:1
-40:2
-41:0
-42:0
-24:0
-25:1
-26:1
-6:A1
-6:B1
-6:C1
-6:D1
+INITIAL TIME = 0 ~~|
+FINAL TIME = 1 ~~|
+TIME STEP = 1 ~~|
+SAVEPER = TIME STEP ~~|

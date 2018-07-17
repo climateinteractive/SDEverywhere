@@ -106,6 +106,8 @@ let strToConst = c => {
   let d = parseFloat(c)
   return cdbl(d)
 }
+let first = a => a[0]
+let rest = a => a.slice(1)
 let extractMatch = (fn, list) => {
   // Return the first element of a list that matches the predicate and remove it from the list,
   // or return undefined if no element matches.
@@ -324,6 +326,7 @@ module.exports = {
   execCmd,
   extractMatch,
   filesExcept,
+  first,
   isArrayFunction,
   isDelayFunction,
   isSmoothFunction,
@@ -342,6 +345,7 @@ module.exports = {
   printArray,
   readDat,
   replaceInArray,
+  rest,
   strings,
   stringToId,
   strlist,

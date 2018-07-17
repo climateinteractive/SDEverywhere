@@ -3,7 +3,7 @@ const R = require('ramda')
 const { ModelLexer, ModelParser } = require('antlr4-vensim')
 const ModelReader = require('./ModelReader')
 const { sub, isIndex, isDimension, indexNamesForSubscript } = require('./Subscript')
-const { canonicalName, subscripts, listConcat } = require('./Helpers')
+const { canonicalName, subscripts, listConcat, first, rest } = require('./Helpers')
 
 //
 // ModelLHSReader parses the LHS of a var in Vensim format and
@@ -44,17 +44,43 @@ module.exports = class ModelLHSReader extends ModelReader {
     // Construct the modelLHSList array with the LHS expanded into an entry for each index
     // in the same format as Vensim log files.
     let subscripts = R.map(id => id.getText(), ctx.Id())
+    let modelLHSInds = dim => {
+      // Construct the model indices for a dimension.
+      // If the subscript range contains a dimension, expand it into index names in place.
+      let indNames = R.map(subscriptModelName => {
+        let subscript = canonicalName(subscriptModelName)
+        if (isDimension(subscript)) {
+          return sub(subscript).modelValue
+        } else {
+          return subscriptModelName
+        }
+      }, dim.modelValue)
+      return R.flatten(indNames)
+    }
     let expandLHSDims = (a, subscripts) => {
+      // Recursively emit an LHS with Vensim names for each index in LHS dimensions.
+      // Accumulate expanded subscripts in the "a" variable.
       if (subscripts.length === 0) {
         this.modelLHSList.push(`${this.varName}[${a.join(',')}]`)
       } else {
-        let sub0 = canonicalName(subscripts[0])
-        if (isDimension(sub0)) {
-          for (let subscriptModelName of sub(sub0).modelValue) {
-            expandLHSDims(a.concat(subscriptModelName), subscripts.slice(1))
+        // Expand the first subscript into the accumulator.
+        let firstSub = canonicalName(first(subscripts))
+        if (isDimension(firstSub)) {
+          // Emit each index in a dimension subscript.
+          for (let subscriptModelName of sub(firstSub).modelValue) {
+            if (isDimension(canonicalName(subscriptModelName))) {
+              // Expand a subdimension found in a dimension subscript value.
+              for (let ind of modelLHSInds(sub(canonicalName(subscriptModelName)))) {
+                expandLHSDims(a.concat(ind), rest(subscripts))
+              }
+            } else {
+              // Expand an index subscript in a dimension directly.
+              expandLHSDims(a.concat(subscriptModelName), rest(subscripts))
+            }
           }
         } else {
-          expandLHSDims(a.concat(subscripts[0]), subscripts.slice(1))
+          // Emit an index subscript directly.
+          expandLHSDims(a.concat(first(subscripts)), rest(subscripts))
         }
       }
     }

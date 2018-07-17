@@ -67,6 +67,7 @@ module.exports = class VariableReader extends ModelReader {
       for (let i = 0; i < this.var.subscripts.length; i++) {
         let subscript = this.var.subscripts[i]
         let expand = false
+        // Expand a subdimension in the LHS.
         if (isDimension(subscript)) {
           let dim = sub(subscript)
           let specialSeparationDim = this.specialSeparationDims[this.var.varName]
@@ -151,6 +152,9 @@ module.exports = class VariableReader extends ModelReader {
       // Construct a variable (based on the variable so far) for each constant on the list.
       // The parser collapses 2D constant lists into a flat list in row-major order.
       // The subscripts must be dimensions.
+      // Clear any expanded vars from the LHS and start over.
+      // TODO handle a const list on the RHS of an exception equation, which needs the LHS expansion
+      this.expandedVars = []
       let numDims = this.var.subscripts.length
       if (numDims === 0) {
         errmsgNoDim()
