@@ -5,29 +5,30 @@ const ModelReader = require('./ModelReader')
 const LoopIndexVars = require('./LoopIndexVars')
 const Model = require('./Model')
 const {
-  sub,
-  subscriptFamily,
-  isDimension,
-  isIndex,
   dimensionNames,
   hasMapping,
+  indexNamesForSubscript,
+  isDimension,
+  isIndex,
   normalizeSubscripts,
-  separatedVariableIndex
+  separatedVariableIndex,
+  sub,
+  subscriptFamily
 } = require('./Subscript')
 const {
   canonicalName,
-  cFunctionName,
-  listConcat,
-  lines,
-  newTmpVarName,
   cdbl,
-  strToConst,
-  vlog,
-  mapIndexed,
+  cFunctionName,
   extractMatch,
   isArrayFunction,
+  isDelayFunction,
   isSmoothFunction,
-  isDelayFunction
+  lines,
+  listConcat,
+  mapIndexed,
+  newTmpVarName,
+  strToConst,
+  vlog
 } = require('./Helpers')
 
 module.exports = class EquationGen extends ModelReader {
@@ -577,22 +578,25 @@ module.exports = class EquationGen extends ModelReader {
       this.emit(strToConst(exprs[0].getText()))
     } else {
       // Extract a single value from the const list by its index number.
-      let numDims = this.var.subscripts.length
+      // All const lists with > 1 value are separated on dimensions in the LHS.
+      // The LHS of a separated variable here will contain only index subscripts.
+      let numDims = this.var.separationDims.length
       if (numDims === 1) {
-        let indName = this.var.subscripts[0]
-        let indexNumber = sub(indName).value
-        // Map the index number to an LHS subdimension index number if it exists.
-        if (!R.isEmpty(this.var.separationDims)) {
-          let sepDim = sub(this.var.separationDims[0])
-          for (var i = 0; i < sepDim.value.length; i++) {
-            let subDimIndexNumber = sub(sepDim.value[i]).value
-            if (subDimIndexNumber === indexNumber) {
-              indexNumber = i
-              break
+        // Find the index that is in the separation dimension.
+        let sepDim = sub(this.var.separationDims[0])
+        for (let ind of this.var.subscripts) {
+          let i = sepDim.value.indexOf(ind)
+          if (i >= 0) {
+            try {
+              // Emit the constant at this position in the constant list.
+              this.emit(strToConst(exprs[i].getText()))
+            } catch (e) {
+              debugger
+              throw e
             }
+            break
           }
         }
-        this.emit(strToConst(exprs[indexNumber].getText()))
       } else if (numDims === 2) {
         // Calculate the index into the flattened 2D const list.
         // TODO map the index number to an LHS subdimension index number if it exists
@@ -602,7 +606,12 @@ module.exports = class EquationGen extends ModelReader {
         let ind2 = sub(indName2)
         let dim1 = subscriptFamily(indName1)
         let i = dim1.size * ind1.value + ind2.value
-        this.emit(strToConst(exprs[i].getText()))
+        try {
+          this.emit(strToConst(exprs[i].getText()))
+        } catch (e) {
+          debugger
+          throw e
+        }
       }
     }
   }

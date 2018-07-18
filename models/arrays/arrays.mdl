@@ -108,10 +108,10 @@ s3idi[A1, DimB, C1] = 1 ~~|
 s3iid[A1, B1, DimC] = 1 ~~|
 s3iii[A1, B1, C1] = 1 ~~|
 
-t[SubA] = 1, 2
-	~
-	~	constant list on a subdimension
-	|
+t[SubA] = 1 ~~|
+u[SubA] = 1, 2 ~~|
+v[DimA, B1] = 1, 2, 3 ~~|
+w[A1, DimB] = 1, 2, 3 ~~|
 
 INITIAL TIME = 0 ~~|
 FINAL TIME = 1 ~~|

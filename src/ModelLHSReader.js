@@ -2,7 +2,7 @@ const antlr4 = require('antlr4/index')
 const R = require('ramda')
 const { ModelLexer, ModelParser } = require('antlr4-vensim')
 const ModelReader = require('./ModelReader')
-const { sub, isIndex, isDimension, indexNamesForSubscript } = require('./Subscript')
+const { sub, isIndex, isDimension } = require('./Subscript')
 const { canonicalName, subscripts, listConcat } = require('./Helpers')
 
 //
