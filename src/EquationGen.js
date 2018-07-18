@@ -581,9 +581,21 @@ module.exports = class EquationGen extends ModelReader {
       if (numDims === 1) {
         let indName = this.var.subscripts[0]
         let indexNumber = sub(indName).value
+        // Map the index number to an LHS subdimension index number if it exists.
+        if (!R.isEmpty(this.var.separationDims)) {
+          let sepDim = sub(this.var.separationDims[0])
+          for (var i = 0; i < sepDim.value.length; i++) {
+            let subDimIndexNumber = sub(sepDim.value[i]).value
+            if (subDimIndexNumber === indexNumber) {
+              indexNumber = i
+              break
+            }
+          }
+        }
         this.emit(strToConst(exprs[indexNumber].getText()))
       } else if (numDims === 2) {
         // Calculate the index into the flattened 2D const list.
+        // TODO map the index number to an LHS subdimension index number if it exists
         let indName1 = this.var.subscripts[0]
         let indName2 = this.var.subscripts[1]
         let ind1 = sub(indName1)

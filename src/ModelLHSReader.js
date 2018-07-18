@@ -3,7 +3,7 @@ const R = require('ramda')
 const { ModelLexer, ModelParser } = require('antlr4-vensim')
 const ModelReader = require('./ModelReader')
 const { sub, isIndex, isDimension, indexNamesForSubscript } = require('./Subscript')
-const { canonicalName, subscripts, listConcat, first, rest } = require('./Helpers')
+const { canonicalName, subscripts, listConcat } = require('./Helpers')
 
 //
 // ModelLHSReader parses the LHS of a var in Vensim format and
@@ -64,23 +64,23 @@ module.exports = class ModelLHSReader extends ModelReader {
         this.modelLHSList.push(`${this.varName}[${a.join(',')}]`)
       } else {
         // Expand the first subscript into the accumulator.
-        let firstSub = canonicalName(first(subscripts))
+        let firstSub = canonicalName(R.head(subscripts))
         if (isDimension(firstSub)) {
           // Emit each index in a dimension subscript.
           for (let subscriptModelName of sub(firstSub).modelValue) {
             if (isDimension(canonicalName(subscriptModelName))) {
               // Expand a subdimension found in a dimension subscript value.
               for (let ind of modelLHSInds(sub(canonicalName(subscriptModelName)))) {
-                expandLHSDims(a.concat(ind), rest(subscripts))
+                expandLHSDims(a.concat(ind), R.tail(subscripts))
               }
             } else {
               // Expand an index subscript in a dimension directly.
-              expandLHSDims(a.concat(subscriptModelName), rest(subscripts))
+              expandLHSDims(a.concat(subscriptModelName), R.tail(subscripts))
             }
           }
         } else {
           // Emit an index subscript directly.
-          expandLHSDims(a.concat(first(subscripts)), rest(subscripts))
+          expandLHSDims(a.concat(R.head(subscripts)), R.tail(subscripts))
         }
       }
     }

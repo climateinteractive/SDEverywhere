@@ -335,5 +335,9 @@ s3iii[A1,B1,C1]
 SAVEPER
 0	1
 1	1
+t[A2]
+0	1
+t[A3]
+0	2
 TIME STEP
 0	1

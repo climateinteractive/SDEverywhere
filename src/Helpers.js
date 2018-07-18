@@ -106,8 +106,8 @@ let strToConst = c => {
   let d = parseFloat(c)
   return cdbl(d)
 }
-let first = a => a[0]
-let rest = a => a.slice(1)
+let first = a => R.head(a)
+let rest = a => R.tail(a)
 let extractMatch = (fn, list) => {
   // Return the first element of a list that matches the predicate and remove it from the list,
   // or return undefined if no element matches.

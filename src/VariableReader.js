@@ -104,11 +104,18 @@ module.exports = class VariableReader extends ModelReader {
           }
         }
       } else if (numSubscriptsToExpand === 2) {
-        debugLog(`expanding ${this.var.varName}[${strlist(this.var.subscripts)}] subscripts`, strlist(this.var.subscripts))
+        debugLog(
+          `expanding ${this.var.varName}[${strlist(this.var.subscripts)}] subscripts`,
+          strlist(this.var.subscripts)
+        )
         let expansionSubscript0 = this.var.subscripts[0]
         let expansionSubscript1 = this.var.subscripts[1]
-        let expansionSubs0 = isIndex(expansionSubscript0) ? [sub(expansionSubscript0).name] : sub(expansionSubscript0).value
-        let expansionSubs1 = isIndex(expansionSubscript1) ? [sub(expansionSubscript1).name] : sub(expansionSubscript1).value
+        let expansionSubs0 = isIndex(expansionSubscript0)
+          ? [sub(expansionSubscript0).name]
+          : sub(expansionSubscript0).value
+        let expansionSubs1 = isIndex(expansionSubscript1)
+          ? [sub(expansionSubscript1).name]
+          : sub(expansionSubscript1).value
         let exceptSub0 = exceptSubs ? exceptSubs[0] : null
         let exceptSub1 = exceptSubs ? exceptSubs[1] : null
         for (let indName0 of expansionSubs0) {
@@ -152,44 +159,45 @@ module.exports = class VariableReader extends ModelReader {
       // Construct a variable (based on the variable so far) for each constant on the list.
       // The parser collapses 2D constant lists into a flat list in row-major order.
       // The subscripts must be dimensions.
-      // Clear any expanded vars from the LHS and start over.
       // TODO handle a const list on the RHS of an exception equation, which needs the LHS expansion
-      this.expandedVars = []
-      let numDims = this.var.subscripts.length
-      if (numDims === 0) {
-        errmsgNoDim()
-      } else if (numDims === 1) {
-        let dimName = this.var.subscripts[0]
-        if (isDimension(dimName)) {
-          let dim = sub(dimName)
-          if (dim.size != exprs.length) {
-            errmsgDimSize()
-          }
-          R.forEach(indName => {
-            let v = new Variable(this.var.eqnCtx)
-            v.varName = this.var.varName
-            v.subscripts = [indName]
-            this.expandedVars.push(v)
-          }, dim.value)
-        } else {
+      // Skip this if vars were already expanded on a subdimension.
+      if (R.isEmpty(this.expandedVars)) {
+        let numDims = this.var.subscripts.length
+        if (numDims === 0) {
           errmsgNoDim()
-        }
-      } else if (numDims === 2) {
-        let dimName1 = this.var.subscripts[0]
-        let dimName2 = this.var.subscripts[1]
-        if (isDimension(dimName1) && isDimension(dimName2)) {
-          let dim1 = sub(dimName1)
-          let dim2 = sub(dimName2)
-          let n = dim1.size * dim2.size
-          if (n != exprs.length) {
-            errmsgNoDim()
-          }
-          for (let indName1 of dim1.value) {
-            for (let indName2 of dim2.value) {
+        } else if (numDims === 1) {
+          let dimName = this.var.subscripts[0]
+          if (isDimension(dimName)) {
+            let dim = sub(dimName)
+            if (dim.size != exprs.length) {
+              errmsgDimSize()
+            }
+            R.forEach(indName => {
               let v = new Variable(this.var.eqnCtx)
               v.varName = this.var.varName
-              v.subscripts = [indName1, indName2]
+              v.subscripts = [indName]
               this.expandedVars.push(v)
+            }, dim.value)
+          } else {
+            errmsgNoDim()
+          }
+        } else if (numDims === 2) {
+          let dimName1 = this.var.subscripts[0]
+          let dimName2 = this.var.subscripts[1]
+          if (isDimension(dimName1) && isDimension(dimName2)) {
+            let dim1 = sub(dimName1)
+            let dim2 = sub(dimName2)
+            let n = dim1.size * dim2.size
+            if (n != exprs.length) {
+              errmsgNoDim()
+            }
+            for (let indName1 of dim1.value) {
+              for (let indName2 of dim2.value) {
+                let v = new Variable(this.var.eqnCtx)
+                v.varName = this.var.varName
+                v.subscripts = [indName1, indName2]
+                this.expandedVars.push(v)
+              }
             }
           }
         }
