@@ -247,7 +247,7 @@ function findNonAtoAVars() {
       // The expansion dim is true at each dim position where the subscript varies.
       let numDims = vars[0].subscripts.length
       let expansionDims = []
-      for (var i = 0; i < numDims; i++) {
+      for (let i = 0; i < numDims; i++) {
         expansionDims[i] = !areSubsEqual(vars, i)
       }
       nonAtoANames[name] = expansionDims
@@ -441,7 +441,7 @@ function vensimName(cVarName) {
         varName = m[0]
       }
       let families = subscriptFamilies(v.subscripts)
-      for (var i = 0; i < families.length; i++) {
+      for (let i = 0; i < families.length; i++) {
         let indexNames = indexNamesForSubscript(families[i])
         let indexNumber = Number.parseInt(indexNumbers[i])
         let indexModelName = decanonicalize(indexNames[indexNumber])

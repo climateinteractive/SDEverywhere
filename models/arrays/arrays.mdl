@@ -3,6 +3,7 @@ DimA: A1, A2, A3 -> DimB ~~|
 DimB: B1, B2, B3 ~~|
 DimC: C1, C2, C3 ~~|
 SubA: A2, A3 ~~|
+DimX: SubA, A1 ~~|
 
 inputA[DimA]=
 	-1 ,
@@ -112,6 +113,7 @@ t[SubA] = 1 ~~|
 u[SubA] = 1, 2 ~~|
 v[DimA, B1] = 1, 2, 3 ~~|
 w[A1, DimB] = 1, 2, 3 ~~|
+x[DimX] = 1, 2, 3 ~~|
 
 INITIAL TIME = 0 ~~|
 FINAL TIME = 1 ~~|

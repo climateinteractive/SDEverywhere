@@ -571,11 +571,19 @@ module.exports = class EquationGen extends ModelReader {
     }
   }
   visitConstList(ctx) {
+    let emitConstAtPos = i => {
+      try {
+        this.emit(strToConst(exprs[i].getText()))
+      } catch (e) {
+        debugger
+        throw e
+      }
+    }
     let exprs = ctx.expr()
     // console.error(`visitConstList ${this.var.refId} ${exprs.length} exprs`)
     if (exprs.length === 1) {
       // Emit a single constant into the expression code.
-      this.emit(strToConst(exprs[0].getText()))
+      emitConstAtPos(0)
     } else {
       // Extract a single value from the const list by its index number.
       // All const lists with > 1 value are separated on dimensions in the LHS.
@@ -587,31 +595,29 @@ module.exports = class EquationGen extends ModelReader {
         for (let ind of this.var.subscripts) {
           let i = sepDim.value.indexOf(ind)
           if (i >= 0) {
-            try {
-              // Emit the constant at this position in the constant list.
-              this.emit(strToConst(exprs[i].getText()))
-            } catch (e) {
-              debugger
-              throw e
-            }
+            // Emit the constant at this position in the constant list.
+            emitConstAtPos(i)
             break
           }
         }
       } else if (numDims === 2) {
-        // Calculate the index into the flattened 2D const list.
-        // TODO map the index number to an LHS subdimension index number if it exists
-        let indName1 = this.var.subscripts[0]
-        let indName2 = this.var.subscripts[1]
-        let ind1 = sub(indName1)
-        let ind2 = sub(indName2)
-        let dim1 = subscriptFamily(indName1)
-        let i = dim1.size * ind1.value + ind2.value
-        try {
-          this.emit(strToConst(exprs[i].getText()))
-        } catch (e) {
-          debugger
-          throw e
+        // Calculate an index into a flattened 2D array in two steps.
+        let constPos
+        for (let dim of this.var.separationDims) {
+          let sepDim = sub(dim)
+          for (let ind of this.var.subscripts) {
+            let i = sepDim.value.indexOf(ind)
+            if (i >= 0) {
+              if (constPos === undefined) {
+                constPos = sepDim.size * i
+              } else {
+                constPos += i
+              }
+              break
+            }
+          }
         }
+        emitConstAtPos(constPos)
       }
     }
   }

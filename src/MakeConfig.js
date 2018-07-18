@@ -303,7 +303,7 @@ let emitViews = () => {
 }
 let emitStrings = () => {
   let stringMap = {}
-  for (var i = 0; i < strings.length; i++) {
+  for (let i = 0; i < strings.length; i++) {
     let id = `id${i}`
     stringMap[id] = { EN: strings[i] }
   }
