@@ -59,7 +59,7 @@ module.exports = class VariableReader extends ModelReader {
     }
     return result
   }
-  subscriptPosToExpand() {
+  subscriptPosToExpand(exceptSubs = null) {
     // Decide whether we need to expand each subscript on the LHS.
     // Construct an array of booleans in each subscript position.
     let expanding = []
@@ -137,17 +137,19 @@ module.exports = class VariableReader extends ModelReader {
   visitSubscriptList(ctx) {
     if (ctx.parentCtx.ruleIndex === ModelParser.RULE_lhs) {
       let subscripts = normalizeSubscripts(R.map(id => canonicalName(id.getText()), ctx.Id()))
-      let expanding = this.subscriptPosToExpand()
       if (R.isEmpty(this.var.subscripts)) {
         // The first subscript list is subscripts attached to a variable name.
         // We detect that it's first by virtue of the var subscripts not being set yet.
         this.var.subscripts = subscripts
+        let expanding = this.subscriptPosToExpand()
         this.expandVars(expanding)
       } else {
         // A second subscript list is an EXCEPT clause that establishes an ad hoc subdimension.
-        // Expand the subscript exceptions. Discard already expanded vars from the LHS.
-        debugLog(`${this.var.varName} exceptSubs`, subscripts)
+        // Discard already expanded vars from the LHS.
         this.expandedVars = []
+        // Expand the subscript exceptions.
+        debugLog(`${this.var.varName} exceptSubs`, subscripts)
+        let expanding = this.subscriptPosToExpand(subscripts)
         this.expandVars(expanding, subscripts)
       }
     }
