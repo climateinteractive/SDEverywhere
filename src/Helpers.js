@@ -83,7 +83,7 @@ let isDelayFunction = fn => {
 }
 let isArrayFunction = fn => {
   // Return true if fn is a Vensim array function.
-  return fn === '_SUM' || fn === '_VECTOR_SELECT'
+  return fn === '_SUM' || fn === '_VECTOR_SELECT' || fn === '_VMAX' || fn === '_VMIN'
 }
 let listConcat = (a, x, addSpaces = false) => {
   // Append a string x to string a with comma delimiters

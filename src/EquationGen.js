@@ -28,6 +28,7 @@ const {
   mapIndexed,
   newTmpVarName,
   strToConst,
+  strlist,
   vlog
 } = require('./Helpers')
 
@@ -190,6 +191,13 @@ module.exports = class EquationGen extends ModelReader {
     }
     // Get the loop index var name source.
     let cSubscripts = R.map(rhsSub => {
+      if (this.var.refId === '_reference_cost_without_fuel_for_elec[_new]') {
+        console.error(
+          `rhsSubscriptGen ${this.var.refId} ${this.var.modelFormula} subscripts=${
+            this.var.subscripts
+          } → ${subscripts} rhsSub=${rhsSub}`
+        )
+      }
       if (isIndex(rhsSub)) {
         // Return the index number for an index subscript.
         return `[${sub(rhsSub).value}]`
@@ -206,15 +214,22 @@ module.exports = class EquationGen extends ModelReader {
           i = this.loopIndexVars.marked()
         } else {
           // See if we need to apply a mapping because the RHS dim is not found on the LHS.
-          if (!R.find(lhsSub => sub(lhsSub).family === sub(rhsSub).family, this.var.subscripts)) {
-            // Find the  mapping from the RHS subscript to a LHS subscript.
-            for (let lhsSub of this.var.subscripts) {
-              if (hasMapping(rhsSub, lhsSub)) {
-                // console.error(`${this.var.refId} hasMapping ${rhsSub} → ${lhsSub}`);
-                i = this.loopIndexVars.index(lhsSub)
-                return `[__map${rhsSub}${lhsSub}[${i}]]`
+          try {
+            // if (!R.find(lhsSub => sub(lhsSub).family === sub(rhsSub).family, this.var.subscripts)) {
+            let found = this.var.subscripts.findIndex(lhsSub => sub(lhsSub).family === sub(rhsSub).family)
+            if (found < 0) {
+              // Find the  mapping from the RHS subscript to a LHS subscript.
+              for (let lhsSub of this.var.subscripts) {
+                if (hasMapping(rhsSub, lhsSub)) {
+                  // console.error(`${this.var.refId} hasMapping ${rhsSub} → ${lhsSub}`);
+                  i = this.loopIndexVars.index(lhsSub)
+                  return `[__map${rhsSub}${lhsSub}[${i}]]`
+                }
               }
             }
+          } catch (e) {
+            debugger
+            throw e
           }
           // There is no mapping, so use the loop index for this dim family on the LHS.
           i = this.loopIndexVars.index(rhsSub)
@@ -298,7 +313,7 @@ module.exports = class EquationGen extends ModelReader {
     if (this.var.hasInitValue && this.initMode && this.callStack.length <= 1) {
       super.visitCall(ctx)
       this.callStack.pop()
-    } else if (isArrayFunction(this.currentFunctionName())) {
+    } else if (isArrayFunction(fn)) {
       // Generate a loop that evaluates array functions inline.
       // Collect information and generate the argument expression into the array function code buffer.
       super.visitCall(ctx)
@@ -309,6 +324,8 @@ module.exports = class EquationGen extends ModelReader {
         initValue = this.vsAction === 3 ? '-DBL_MAX' : '0.0'
         condVar = newTmpVarName()
         this.tmpVarCode.push(`  bool ${condVar} = false;`)
+      } else if (fn === '_VMAX') {
+        initValue = '-DBL_MAX'
       }
       let tmpVar = newTmpVarName()
       this.tmpVarCode.push(`  double ${tmpVar} = ${initValue};`)
@@ -327,6 +344,8 @@ module.exports = class EquationGen extends ModelReader {
       }
       if (fn === '_SUM' || (fn === '_VECTOR_SELECT' && this.vsAction === 0)) {
         this.tmpVarCode.push(`	  ${tmpVar} += ${this.arrayFunctionCode};`)
+      } else if (fn === '_VMAX') {
+        this.tmpVarCode.push(`	  ${tmpVar} = fmax(${tmpVar}, ${this.arrayFunctionCode});`)
       } else if (fn === '_VECTOR_SELECT' && this.vsAction === 3) {
         this.tmpVarCode.push(`	  ${tmpVar} = fmax(${tmpVar}, ${this.arrayFunctionCode});`)
       }
@@ -530,7 +549,7 @@ module.exports = class EquationGen extends ModelReader {
         console.error(`${this.currentVarName()} has more than 2 dimensions, which is currently unsupported.`)
       }
       let fn = this.currentFunctionName()
-      if (fn === '_SUM') {
+      if (fn === '_SUM' || fn === '_VMAX') {
         this.markedDim = extractMarkedDim()
         this.emit(this.rhsSubscriptGen(subscripts))
       } else if (fn === '_VECTOR_SELECT') {

@@ -57,10 +57,13 @@ If you previously installed the SDEverywhere package using npm, uninstall that p
 npm rm sdeverywhere -g
 ~~~
 
-You can run SDEverywhere from anywhere on your machine by installing the `sde` command line tool globally using `npm`. The examples in this guide assume a global installation.
+The best way to run SDEverywhere in development is to link it into the Node global modules. You must also link `antlr4-vensim` too. If you update Node, you will need to do the link again in the global modules in the new Node directory.
 ~~~
-cd {local SDEverywhere directory}
-npm install -g
+cd antlr4-vensim
+npm link
+cd ../SDEverywhere
+npm link antlr4-vensim
+npm link
 sde -v
 ~~~
 
@@ -251,6 +254,8 @@ SDEverywhere covers a subset of the Vensim modeling language used in models that
 - Target languages other than C, such as R or Ruby. (If you want Python, check out the excellent [PySD](https://github.com/JamesPHoughton/pysd)).
 
 ### Debugging
+
+If you are using Atom, you can run the Chrome debugger inside Atom using the [Atom IDE](https://ide.atom.io/).
 
 To run in the Chrome debugger, start Node with the `--inspect-brk` flag. Use `node sde.js` from the SDEverywhere `src` directory.
 
