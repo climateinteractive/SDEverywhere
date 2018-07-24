@@ -324,6 +324,8 @@ module.exports = class EquationGen extends ModelReader {
         initValue = this.vsAction === 3 ? '-DBL_MAX' : '0.0'
         condVar = newTmpVarName()
         this.tmpVarCode.push(`  bool ${condVar} = false;`)
+      } else if (fn === '_VMIN') {
+        initValue = 'DBL_MAX'
       } else if (fn === '_VMAX') {
         initValue = '-DBL_MAX'
       }
@@ -344,9 +346,9 @@ module.exports = class EquationGen extends ModelReader {
       }
       if (fn === '_SUM' || (fn === '_VECTOR_SELECT' && this.vsAction === 0)) {
         this.tmpVarCode.push(`	  ${tmpVar} += ${this.arrayFunctionCode};`)
-      } else if (fn === '_VMAX') {
-        this.tmpVarCode.push(`	  ${tmpVar} = fmax(${tmpVar}, ${this.arrayFunctionCode});`)
-      } else if (fn === '_VECTOR_SELECT' && this.vsAction === 3) {
+      } else if (fn === '_VMIN') {
+        this.tmpVarCode.push(`	  ${tmpVar} = fmin(${tmpVar}, ${this.arrayFunctionCode});`)
+      } else if (fn === '_VMAX' || (fn === '_VECTOR_SELECT' && this.vsAction === 3)) {
         this.tmpVarCode.push(`	  ${tmpVar} = fmax(${tmpVar}, ${this.arrayFunctionCode});`)
       }
       if (fn === '_VECTOR_SELECT') {
@@ -549,7 +551,7 @@ module.exports = class EquationGen extends ModelReader {
         console.error(`${this.currentVarName()} has more than 2 dimensions, which is currently unsupported.`)
       }
       let fn = this.currentFunctionName()
-      if (fn === '_SUM' || fn === '_VMAX') {
+      if (fn === '_SUM' || fn === '_VMIN' || fn === '_VMAX') {
         this.markedDim = extractMarkedDim()
         this.emit(this.rhsSubscriptGen(subscripts))
       } else if (fn === '_VECTOR_SELECT') {

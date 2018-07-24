@@ -1,6 +1,9 @@
 {UTF-8}
 DimA: A1, A2, A3 ~~|
 DimB: B1, B2 ~~|
+DimX : one,two,three,four,five ~~|
+SubX: two,three,four ~~|
+
 ASCENDING==1 ~~|
 DESCENDING==0 ~~|
 VSSUM==0 ~~|
@@ -38,60 +41,12 @@ q[DimB] = VECTOR SELECT(e[DimA!,DimB], c[DimA!], 0, VSSUM, VSERRNONE) ~~|
 r[DimA] = VECTOR SELECT(e[DimA,DimB!], d[DimA,DimB!], :NA:, VSMAX, VSERRNONE) ~~|
 s[DimB] = SUM(c[DimA!] * e[DimA!,DimB]) ~~|
 
-********************************************************
-	.Control
-********************************************************~
-		Simulation Control Parameters
-	|
+u = VMAX(x[DimX!]) ~~|
+v = VMAX(x[SubX!]) ~~|
+w = VMIN(x[DimX!]) ~~|
+x[DimX] = 1, 2, 3, 4, 5 ~~|
 
-FINAL TIME  = 1
-	~	Month
-	~	The final time for the simulation.
-	|
-
-INITIAL TIME  = 0
-	~	Month
-	~	The initial time for the simulation.
-	|
-
-SAVEPER  =
-        TIME STEP
-	~	Month [0,?]
-	~	The frequency with which output is stored.
-	|
-
-TIME STEP  = 1
-	~	Month [0,?]
-	~	The time step for the simulation.
-	|
-
-\\\---/// Sketch information - do not modify anything except names
-V300  Do not put anything below this section - it will be ignored
-*View 1
-$0-0-0,0,|0||0-0-0|0-0-0|0-0-0|0-0-0|0-0-0|0,0,100,0
-///---\\\
-:L<%^E!@
-1:vector.vdf
-9:vector
-15:0,0,0,0,0,0
-19:100,0
-27:2,
-34:0,
-4:Time
-5:q[DimB]
-35:Date
-36:YYYY-MM-DD
-37:2000
-38:1
-39:1
-40:2
-41:0
-42:1
-24:0
-25:1
-26:1
-6:A1
-6:A2
-6:A3
-6:B1
-6:B2
+INITIAL TIME  = 0 ~~|
+FINAL TIME  = 1 ~~|
+TIME STEP  = 1 ~~|
+SAVEPER  = TIME STEP ~~|

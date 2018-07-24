@@ -1,3 +1,77 @@
+_dima:
+{ modelName: 'DimA',
+  modelValue: [ 'A1', 'A2', 'A3' ],
+  modelMappings: [],
+  name: '_dima',
+  value: [ '_a1', '_a2', '_a3' ],
+  size: 3,
+  family: '_dima',
+  mappings: {} }
+
+_dimb:
+{ modelName: 'DimB',
+  modelValue: [ 'B1', 'B2' ],
+  modelMappings: [],
+  name: '_dimb',
+  value: [ '_b1', '_b2' ],
+  size: 2,
+  family: '_dimb',
+  mappings: {} }
+
+_dimx:
+{ modelName: 'DimX',
+  modelValue: [ 'one', 'two', 'three', 'four', 'five' ],
+  modelMappings: [],
+  name: '_dimx',
+  value: [ '_one', '_two', '_three', '_four', '_five' ],
+  size: 5,
+  family: '_dimx',
+  mappings: {} }
+
+_subx:
+{ modelName: 'SubX',
+  modelValue: [ 'two', 'three', 'four' ],
+  modelMappings: [],
+  name: '_subx',
+  value: [ '_two', '_three', '_four' ],
+  size: 3,
+  family: '_dimx',
+  mappings: {} }
+
+_a1:
+{ name: '_a1', value: 0, size: 1, family: '_dima', mappings: {} }
+
+_a2:
+{ name: '_a2', value: 1, size: 1, family: '_dima', mappings: {} }
+
+_a3:
+{ name: '_a3', value: 2, size: 1, family: '_dima', mappings: {} }
+
+_b1:
+{ name: '_b1', value: 0, size: 1, family: '_dimb', mappings: {} }
+
+_b2:
+{ name: '_b2', value: 1, size: 1, family: '_dimb', mappings: {} }
+
+_one:
+{ name: '_one', value: 0, size: 1, family: '_dimx', mappings: {} }
+
+_two:
+{ name: '_two', value: 1, size: 1, family: '_dimx', mappings: {} }
+
+_three:
+{ name: '_three',
+  value: 2,
+  size: 1,
+  family: '_dimx',
+  mappings: {} }
+
+_four:
+{ name: '_four', value: 3, size: 1, family: '_dimx', mappings: {} }
+
+_five:
+{ name: '_five', value: 4, size: 1, family: '_dimx', mappings: {} }
+
 ASCENDING: const
 = 1
 refId(_ascending)
@@ -27,30 +101,35 @@ a[DimA]: const (non-apply-to-all)
 refId(_a[_a1])
 families(_dima)
 subscripts(_a1)
+separationDims(_dima)
 
 a[DimA]: const (non-apply-to-all)
 = 0,1,1
 refId(_a[_a2])
 families(_dima)
 subscripts(_a2)
+separationDims(_dima)
 
 a[DimA]: const (non-apply-to-all)
 = 0,1,1
 refId(_a[_a3])
 families(_dima)
 subscripts(_a3)
+separationDims(_dima)
 
 b[DimB]: const (non-apply-to-all)
 = 1,2
 refId(_b[_b1])
 families(_dimb)
 subscripts(_b1)
+separationDims(_dimb)
 
 b[DimB]: const (non-apply-to-all)
 = 1,2
 refId(_b[_b2])
 families(_dimb)
 subscripts(_b2)
+separationDims(_dimb)
 
 c[DimA]: aux
 = 10+VECTOR ELM MAP(b[B1],a[DimA])
@@ -147,18 +226,21 @@ h[DimA]: const (non-apply-to-all)
 refId(_h[_a1])
 families(_dima)
 subscripts(_a1)
+separationDims(_dima)
 
 h[DimA]: const (non-apply-to-all)
 = 2100,2010,2020
 refId(_h[_a2])
 families(_dima)
 subscripts(_a2)
+separationDims(_dima)
 
 h[DimA]: const (non-apply-to-all)
 = 2100,2010,2020
 refId(_h[_a3])
 families(_dima)
 subscripts(_a3)
+separationDims(_dima)
 
 l[DimA]: aux
 = VECTOR SORT ORDER(h[DimA],ASCENDING)
@@ -234,21 +316,68 @@ families(_dimb)
 subscripts(_dimb)
 refs(_c)
 
-FINAL TIME: const
-= 1
-refId(_final_time)
+u: aux
+= VMAX(x[DimX!])
+refId(_u)
+
+v: aux
+= VMAX(x[SubX!])
+refId(_v)
+
+w: aux
+= VMIN(x[DimX!])
+refId(_w)
+
+x[DimX]: const (non-apply-to-all)
+= 1,2,3,4,5
+refId(_x[_one])
+families(_dimx)
+subscripts(_one)
+separationDims(_dimx)
+
+x[DimX]: const (non-apply-to-all)
+= 1,2,3,4,5
+refId(_x[_two])
+families(_dimx)
+subscripts(_two)
+separationDims(_dimx)
+
+x[DimX]: const (non-apply-to-all)
+= 1,2,3,4,5
+refId(_x[_three])
+families(_dimx)
+subscripts(_three)
+separationDims(_dimx)
+
+x[DimX]: const (non-apply-to-all)
+= 1,2,3,4,5
+refId(_x[_four])
+families(_dimx)
+subscripts(_four)
+separationDims(_dimx)
+
+x[DimX]: const (non-apply-to-all)
+= 1,2,3,4,5
+refId(_x[_five])
+families(_dimx)
+subscripts(_five)
+separationDims(_dimx)
 
 INITIAL TIME: const
 = 0
 refId(_initial_time)
 
-SAVEPER: aux
-= TIME STEP
-refId(_saveper)
+FINAL TIME: const
+= 1
+refId(_final_time)
 
 TIME STEP: const
 = 1
 refId(_time_step)
+
+SAVEPER: aux
+= TIME STEP
+refId(_saveper)
 
 Time: const
 = 
