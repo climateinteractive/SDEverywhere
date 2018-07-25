@@ -23,12 +23,13 @@ const {
   isArrayFunction,
   isDelayFunction,
   isSmoothFunction,
+  isTrendFunction,
   lines,
   listConcat,
   mapIndexed,
   newTmpVarName,
-  strToConst,
   strlist,
+  strToConst,
   vlog
 } = require('./Helpers')
 
@@ -400,6 +401,11 @@ module.exports = class EquationGen extends ModelReader {
       this.emit(this.var.smoothVarName)
       let smoothVar = Model.varWithRefId(this.var.smoothVarName)
       this.emit(this.rhsSubscriptGen(smoothVar.subscripts))
+    } else if (isTrendFunction(fn)) {
+      // For delay  functions, replace the entire call with the expansion variable generated earlier.
+      let trendVar = Model.varWithRefId(this.var.trendVarName)
+      let rhsSubs = this.rhsSubscriptGen(trendVar.subscripts)
+      this.emit(`${this.var.trendVarName}${rhsSubs}`)
     } else if (isDelayFunction(fn)) {
       // For delay  functions, replace the entire call with the expansion variable generated earlier.
       let delayVar = Model.varWithRefId(this.var.delayVarName)

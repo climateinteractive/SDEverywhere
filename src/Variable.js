@@ -31,6 +31,8 @@ module.exports = class Variable {
     this.lookupArgVarName = ''
     // SMOOTH* calls are expanded into new level vars and substituted during code generation.
     this.smoothVarName = ''
+    // TREND calls are expanded into new level vars and substituted during code generation.
+    this.trendVarName = ''
     // DELAY3* calls are expanded into new level vars and substituted during code generation.
     this.delayVarName = ''
     this.delayTimeVarName = ''
@@ -54,6 +56,7 @@ module.exports = class Variable {
     c.hasInitValue = this.hasInitValue
     c.lookupArgVarName = this.lookupArgVarName
     c.smoothVarName = this.smoothVarName
+    c.trendVarName = this.trendVarName
     c.delayVarName = this.delayVarName
     c.delayTimeVarName = this.delayTimeVarName
     return c

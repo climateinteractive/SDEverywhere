@@ -77,6 +77,10 @@ let isSmoothFunction = fn => {
   // Return true if fn is a Vensim smooth function.
   return fn === '_SMOOTH' || fn === '_SMOOTHI' || fn === '_SMOOTH3' || fn === '_SMOOTH3I'
 }
+let isTrendFunction = fn => {
+  // Return true if fn is a Vensim trend function.
+  return fn === '_TREND'
+}
 let isDelayFunction = fn => {
   // Return true if fn is a Vensim delay function.
   return fn === '_DELAY1' || fn === '_DELAY1I' || fn === '_DELAY3' || fn === '_DELAY3I'
@@ -323,14 +327,16 @@ module.exports = {
   canonicalName,
   cdbl,
   cFunctionName,
+  decanonicalize,
   execCmd,
   extractMatch,
   filesExcept,
   first,
   isArrayFunction,
   isDelayFunction,
-  isSmoothFunction,
   isIterable,
+  isSmoothFunction,
+  isTrendFunction,
   lines,
   linkCSourceFiles,
   listConcat,
@@ -350,7 +356,6 @@ module.exports = {
   stringToId,
   strlist,
   strToConst,
-  decanonicalize,
   vlog,
   vsort,
   webDir
