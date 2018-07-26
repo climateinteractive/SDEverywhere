@@ -101,6 +101,10 @@ module.exports = class EquationGen extends ModelReader {
       }, dimNames)
     )
     // Walk the parse tree to generate code into all channels.
+    // Use this to examine code generation for a particular variable.
+    // if (this.var.refId === '') {
+    //   debugger
+    // }
     this.visitEquation(this.var.eqnCtx)
     // Either emit constant list code or a regular var assignment.
     let formula = `  ${this.lhs} = ${this.exprCode};`
@@ -192,13 +196,6 @@ module.exports = class EquationGen extends ModelReader {
     }
     // Get the loop index var name source.
     let cSubscripts = R.map(rhsSub => {
-      if (this.var.refId === '_reference_cost_without_fuel_for_elec[_new]') {
-        console.error(
-          `rhsSubscriptGen ${this.var.refId} ${this.var.modelFormula} subscripts=${
-            this.var.subscripts
-          } → ${subscripts} rhsSub=${rhsSub}`
-        )
-      }
       if (isIndex(rhsSub)) {
         // Return the index number for an index subscript.
         return `[${sub(rhsSub).value}]`
@@ -553,20 +550,22 @@ module.exports = class EquationGen extends ModelReader {
         return result
       }
       let subscripts = R.map(id => canonicalName(id.getText()), ctx.Id())
-      if (subscripts.length > 2) {
-        console.error(`${this.currentVarName()} has more than 2 dimensions, which is currently unsupported.`)
-      }
+      // This no longer seems to be necessary.
+      // if (subscripts.length > 2) {
+      //   console.error(`${this.currentVarName()} has more than 2 dimensions, which is currently unsupported.`)
+      // }
       let fn = this.currentFunctionName()
       if (fn === '_SUM' || fn === '_VMIN' || fn === '_VMAX') {
-        this.markedDim = extractMarkedDim()
+        // Preserve a marked dimension that was previously extracted in this call.
+        this.markedDim = extractMarkedDim() || this.markedDim
         this.emit(this.rhsSubscriptGen(subscripts))
       } else if (fn === '_VECTOR_SELECT') {
         let argIndex = this.argIndexForFunctionName('_VECTOR_SELECT')
         if (argIndex === 0) {
-          this.markedDim = extractMarkedDim()
+          this.markedDim = extractMarkedDim() || this.markedDim
           this.vsSelectionArray += this.rhsSubscriptGen(subscripts)
         } else if (argIndex === 1) {
-          this.markedDim = extractMarkedDim()
+          this.markedDim = extractMarkedDim() || this.markedDim
           this.emit(this.rhsSubscriptGen(subscripts))
         }
       } else if (fn === '_VECTOR_ELM_MAP') {
