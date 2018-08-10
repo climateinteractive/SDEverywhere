@@ -4,6 +4,7 @@ SubA: A2, A3 ~~|
 SubA2: A2 ~~|
 DimC: C1, C2, C3 ~~|
 SubC: C2, C3 ~~|
+DimD: D1, D2 -> (DimA: SubA, A1) ~~|
 
 a[DimA] = 1 ~~|
 b[SubA] = 2 ~~|
@@ -25,6 +26,8 @@ v[SubA] :EXCEPT: [A1] = a[SubA] ~~|
 w[DimA] :EXCEPT: [SubA] = a[DimA] ~~|
 x[DimA] :EXCEPT: [SubA] = c[DimA, C1] ~~|
 y[SubA, SubC] :EXCEPT: [A3, C3] = c[SubA, SubC] ~~|
+j[DimD] = 10, 20 ~~|
+k[DimA] :EXCEPT: [A1] = a[DimA] + j[DimD] ~~|
 
 INITIAL TIME = 0 ~~|
 FINAL TIME = 1 ~~|

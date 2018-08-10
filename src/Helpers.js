@@ -35,6 +35,7 @@ let canonicalName = name => {
       .replace(/'/g, '_')
       .replace(/&/g, '_')
       .replace(/%/g, '_')
+      .replace(/\//g, '_')
       .toLowerCase()
   )
 }
@@ -101,7 +102,7 @@ let listConcat = (a, x, addSpaces = false) => {
 let cdbl = x => {
   // Convert a number into a C double constant.
   let s = x.toString()
-  if (!s.includes('.')) {
+  if (!s.includes('.') && !s.includes('e')) {
     s += '.0'
   }
   return s

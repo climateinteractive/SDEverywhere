@@ -127,24 +127,25 @@ function hasMapping(fromSubscript, toSubscript) {
   return false
 }
 function mapIndex(fromSubName, fromIndexName, toSubName) {
-  // Return the index name that the fromSubName dimension maps from fromIndexName
-  // to the toSubName dimension. Return undefined if there is no such mapping.
-  let toIndexName
+  // Return the index names that the fromSubName dimension maps from fromIndexName
+  // to the toSubName dimension. Return an empty array if there is no such mapping.
+  let toIndexNames = []
   let fromSub = sub(fromSubName)
   let toSub = sub(toSubName)
   if (fromSub && toSub && isDimension(fromSubName) && isDimension(toSubName)) {
     let mapping = fromSub.mappings[toSubName]
     let fromSubIndexNames = fromSub.value
     if (mapping) {
-      // Find the position of fromIndexName in the mapping.
-      let pos = R.indexOf(fromIndexName, mapping)
-      if (pos >= 0) {
-        // Return the index name at the same position in the toSub dimension.
-        toIndexName = toSub.value[pos]
+      // Find the positions of fromIndexName in the mapping.
+      for (let pos = 0; pos < mapping.length; pos++) {
+        if (mapping[pos] === fromIndexName) {
+          // Return the index name at the same position in the toSub dimension.
+          toIndexNames.push(toSub.value[pos])
+        }
       }
     }
   }
-  return toIndexName
+  return toIndexNames
 }
 function printSubscripts() {
   for (let [k, v] of subscripts) {
@@ -220,21 +221,21 @@ function separatedVariableIndex(rhsSub, variable) {
   // If a RHS subscript matches the variable's separation dimension, return the index name corresponding to the LHS.
   let separatedIndexName
   for (let sepDim of variable.separationDims) {
-    let varSubs = variable.subscripts
-    if (sepDim && (rhsSub === sepDim || hasMapping(rhsSub, sepDim))) {
+    if (rhsSub === sepDim || hasMapping(rhsSub, sepDim)) {
       // Find the var subscript that was separated.
-      for (let varSub of varSubs) {
-        if (sub(varSub).family === sub(sepDim).family) {
-          if (!isIndex(varSub)) {
+      for (let lhsSub of variable.subscripts) {
+        if (sub(lhsSub).family === sub(sepDim).family) {
+          if (!isIndex(lhsSub)) {
             console.error(`ERROR: ${variable.refId} subscript in separation dimension ${sepDim} is not an index`)
           } else {
             if (rhsSub === sepDim) {
               // The subscript dimension is the separation dimension, so use the separated var index.
-              separatedIndexName = varSub
+              separatedIndexName = lhsSub
             } else {
               // Find the index that maps from the subscript dimension to the separated var index.
               for (let fromIndexName of sub(rhsSub).value) {
-                if (mapIndex(rhsSub, fromIndexName, sepDim) === varSub) {
+                let mappedIndices = mapIndex(rhsSub, fromIndexName, sepDim)
+                if (mappedIndices.includes(lhsSub)) {
                   separatedIndexName = fromIndexName
                   break
                 }
