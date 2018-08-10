@@ -260,7 +260,7 @@ let readDat = (pathname, varPrefix = '') => {
         addValues()
         // Start a new map for this var.
         // Convert the var name to canonical form so it is the same in both logs.
-        varName = canonicalName(values[0])
+        varName = canonicalVensimName(values[0])
         varValues = new Map()
       } else if (values.length > 1) {
         // Data lines in Vensim DAT format have {time}\t{value} format with optional comments afterward.
@@ -293,6 +293,19 @@ let execCmdAsync = cmd => {
     }
   })
   return exitCode
+}
+// Convert the var name and subscript names to canonical form separately.
+let canonicalVensimName = vname => {
+  let result = vname
+  let m = vname.match(/([^\[]+)(?:\[([^\]]+)\])?/)
+  if (m) {
+    result = canonicalName(m[1])
+    if (m[2]) {
+      let subscripts = m[2].split(',').map(x => canonicalName(x))
+      result += `[${subscripts.join(',')}]`
+    }
+  }
+  return result
 }
 // Function to map over lists's value and index
 let mapIndexed = R.addIndex(R.map)

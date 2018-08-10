@@ -433,21 +433,25 @@ function vensimName(cVarName) {
       }
     }
     // Get the subscript families and look up the subscript names.
-    let subscripts = ''
+    let subscripts = []
     let v = varWithName(varName)
     if (v) {
       m = v.modelLHS.match(/[^\[]+/)
       if (m) {
-        varName = m[0]
+        result = m[0]
       }
       let families = subscriptFamilies(v.subscripts)
       for (let i = 0; i < families.length; i++) {
         let indexNames = indexNamesForSubscript(families[i])
         let indexNumber = Number.parseInt(indexNumbers[i])
         let indexModelName = decanonicalize(indexNames[indexNumber])
-        subscripts += `[${indexModelName}]`
+        subscripts.push(indexModelName)
       }
-      result = varName + subscripts
+      if (!R.isEmpty(subscripts)) {
+        result += `[${subscripts.join(',')}]`
+      }
+    } else {
+      console.error(`no var with name ${varName} in vensimName`)
     }
   }
   return result

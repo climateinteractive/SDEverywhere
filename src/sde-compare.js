@@ -59,7 +59,7 @@ let compare = (vensimfile, sdefile, opts) => {
     }
   }
   if (noDATDifference) {
-	  pr("Data were the same for " + vensimfile + " and " + sdefile)
+    pr(`Data were the same for ${vensimfile} and ${sdefile}`)
   }
 }
 let isZero = value => {
