@@ -9,6 +9,8 @@ d = SUM(a[DimA!]) + SUM(b[DimA!]) ~~|
 e = SUM(a[DimA!] * b[DimA!] / TIME STEP) ~~|
 f[DimA, DimC] = 1 ~~|
 g[DimA, DimC] = SUM(f[DimA!, DimC!]) ~~|
+h[DimC] = 10, 20, 30 ~~|
+i = SUM(a[DimA!] + h[DimC!]) ~~|
 
 INITIAL TIME = 0 ~~|
 FINAL TIME = 1 ~~|

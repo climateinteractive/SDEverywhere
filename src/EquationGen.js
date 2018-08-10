@@ -543,33 +543,31 @@ module.exports = class EquationGen extends ModelReader {
   visitSubscriptList(ctx) {
     // Emit subscripts for a variable occurring on the RHS.
     if (ctx.parentCtx.ruleIndex === ModelParser.RULE_expr) {
-      let extractmarkedDims = () => {
+      let extractMarkedDims = () => {
         // Extract all marked dimensions and update subscripts.
-        let result = []
+        let dims = []
         for (var i = 0; i < subscripts.length; i++) {
           if (subscripts[i].includes('!')) {
             // Remove the "!" from the subscript name and save it as a marked dimension.
             subscripts[i] = subscripts[i].replace('!', '')
-            result.push(subscripts[i])
+            dims.push(subscripts[i])
           }
         }
-        // Set marked dimensions if they were found, otherwise preserve previously found marked dims.
-        if (!R.isEmpty(result)) {
-          this.markedDims = result
-        }
+        // Merge marked dims that were found into the list for this call.
+        this.markedDims = R.uniq(R.concat(this.markedDims, dims))
       }
       let subscripts = R.map(id => canonicalName(id.getText()), ctx.Id())
       let fn = this.currentFunctionName()
       if (fn === '_SUM' || fn === '_VMIN' || fn === '_VMAX') {
-        extractmarkedDims()
+        extractMarkedDims()
         this.emit(this.rhsSubscriptGen(subscripts))
       } else if (fn === '_VECTOR_SELECT') {
         let argIndex = this.argIndexForFunctionName('_VECTOR_SELECT')
         if (argIndex === 0) {
-          extractmarkedDims()
+          extractMarkedDims()
           this.vsSelectionArray += this.rhsSubscriptGen(subscripts)
         } else if (argIndex === 1) {
-          extractmarkedDims()
+          extractMarkedDims()
           this.emit(this.rhsSubscriptGen(subscripts))
         }
       } else if (fn === '_VECTOR_ELM_MAP') {

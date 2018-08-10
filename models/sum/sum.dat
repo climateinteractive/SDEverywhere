@@ -66,6 +66,15 @@ g[A3,C2]
 g[A3,C3]
 0	9
 1	9
+h[C1]
+0	10
+h[C2]
+0	20
+h[C3]
+0	30
+i
+0	198
+1	198
 INITIAL TIME
 0	0
 SAVEPER
