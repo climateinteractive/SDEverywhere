@@ -12,9 +12,9 @@ removals.txt
 *.2mdl
 *.o
 *.dSYM
-
 # Logs
 npm-debug.log*
-
 # Dependency directories
 node_modules
+# VS Code
+.vscode/

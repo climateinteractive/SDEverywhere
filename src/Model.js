@@ -1,6 +1,7 @@
 const antlr4 = require('antlr4/index')
 const { ModelLexer, ModelParser } = require('antlr4-vensim')
 const R = require('ramda')
+const toposort = require('./toposort')
 const { Digraph, TopologicalOrder } = require('digraph-sort')
 const VariableReader = require('./VariableReader')
 const VarNameReader = require('./VarNameReader')
@@ -482,6 +483,7 @@ function sortVarsOfType(varType) {
   // Start with vars of the given varType.
   let vars = varsOfType(varType)
   // Accumulate a list of variable dependencies as var pairs.
+  let graph = R.unnest(R.map(v => refs(v), vars))
   function refs(v) {
     // Return a list of dependency pairs for all vars referenced by v at eval time.
     let refs = R.map(refId => varWithRefId(refId), v.references)
@@ -493,21 +495,19 @@ function sortVarsOfType(varType) {
       if (v.varType === 'level' && ref.varType === 'level') {
         // Reverse the order of level-to-level references so that level evaluation refers
         // to the value in the previous time step rather than the currently evaluated one.
-        return [ref, v]
+        return [ref.refId, v.refId]
       } else {
-        return [v, ref]
+        return [v.refId, ref.refId]
       }
     }, refs)
   }
-  let graph = new Digraph()
-  R.forEach(v => {
-    R.forEach(edge => graph.addEdge(edge[0], edge[1]), refs(v))
-  }, vars)
   // Sort into an lhs dependency list.
-  let depVars = new TopologicalOrder(graph).dependencyOrder()
+  let deps = toposort(graph).reverse()
+  // Turn the dependency-sorted var name list into a var list.
+  let sortedVars = varsOfType(varType, R.map(refId => varWithRefId(refId), deps))
   // Find vars of the given varType with no dependencies, and add them to the list.
-  let nodepVars = vsort(R.filter(v => !R.contains(v, depVars), vars))
-  let sortedVars = R.concat(nodepVars, depVars)
+  let nodepVars = vsort(R.filter(v => !R.contains(v, sortedVars), vars))
+  sortedVars = R.concat(nodepVars, sortedVars)
   if (PRINT_SORTED_VARS) {
     sortedVars.forEach((v, i) => console.error(`${v.refId}`))
   }
@@ -563,14 +563,14 @@ function sortInitVars() {
   }
   // Construct a dependency graph in the form of [var name, dependency var name] pairs.
   // We use refIds instead of vars here because the deps are stated in refIds.
-  let graph = new Digraph()
+  let graph = []
   // vlog('depsMap', depsMap);
   for (let refId of depsMap.keys()) {
-    R.forEach(dep => graph.addEdge(refId, dep), depsMap.get(refId))
+    R.forEach(dep => graph.push([refId, dep]), depsMap.get(refId))
   }
-  // console.error(graph.toString())
+  // console.error(graph);
   // Sort into a reference id dependency list.
-  let deps = new TopologicalOrder(graph).dependencyOrder()
+  let deps = toposort(graph).reverse()
   // return [];
   // Turn the reference id list into a var list.
   let sortedVars = R.map(refId => varWithRefId(refId), deps)
