@@ -255,6 +255,9 @@ function findNonAtoAVars() {
     }
   }, varNames())
 }
+function addNonAtoAVar(varName, expansionDims) {
+  nonAtoANames[varName] = expansionDims
+}
 function setRefIds() {
   // Set the refId for each var. This requires knowing which vars are non-apply-to-all.
   R.forEach(v => {
@@ -693,6 +696,7 @@ function printRefGraph(varName) {
 
 module.exports = {
   addEquation,
+  addNonAtoAVar,
   addVariable,
   allVars,
   auxVars,

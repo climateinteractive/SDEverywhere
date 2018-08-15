@@ -22,6 +22,7 @@ const {
   extractMatch,
   isArrayFunction,
   isDelayFunction,
+  isSeparatedVar,
   isSmoothFunction,
   isTrendFunction,
   lines,
@@ -402,8 +403,15 @@ module.exports = class EquationGen extends ModelReader {
     } else if (isSmoothFunction(fn)) {
       // For smooth functions, replace the entire call with the expansion variable generated earlier.
       this.emit(this.var.smoothVarName)
-      let smoothVar = Model.varWithRefId(this.var.smoothVarName)
-      this.emit(this.rhsSubscriptGen(smoothVar.subscripts))
+      if (isSeparatedVar(this.var)) {
+        let s = sub(this.var.subscripts[0])
+        let f = sub(s.family)
+        let i = f.value.indexOf(s.name)
+        this.emit(`[${i}]`)
+      } else {
+        let smoothVar = Model.varWithRefId(this.var.smoothVarName)
+        this.emit(this.rhsSubscriptGen(smoothVar.subscripts))
+      }
     } else if (isTrendFunction(fn)) {
       // For delay  functions, replace the entire call with the expansion variable generated earlier.
       let trendVar = Model.varWithRefId(this.var.trendVarName)

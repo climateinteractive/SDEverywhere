@@ -58,6 +58,9 @@ let decanonicalize = name => {
 let cFunctionName = name => {
   return canonicalName(name).toUpperCase()
 }
+let isSeparatedVar = v => {
+  return v.separationDims.length > 0
+}
 let newTmpVarName = () => {
   // Return a unique temporary variable name
   return `__t${nextTmpVarSeq++}`
@@ -66,9 +69,10 @@ let newLookupVarName = () => {
   // Return a unique lookup arg variable name
   return `_lookup${nextLookupVarSeq++}`
 }
-let newLevelVarName = () => {
-  // Return a unique level variable name
-  return `_level${nextLevelVarSeq++}`
+let newLevelVarName = basename => {
+  // Return a unique level variable name.
+  let suffix = basename || nextLevelVarSeq++
+  return `_level${suffix}`
 }
 let newAuxVarName = () => {
   // Return a unique aux variable name
@@ -349,6 +353,7 @@ module.exports = {
   isArrayFunction,
   isDelayFunction,
   isIterable,
+  isSeparatedVar,
   isSmoothFunction,
   isTrendFunction,
   lines,
