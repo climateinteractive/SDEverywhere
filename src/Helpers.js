@@ -69,10 +69,13 @@ let newLookupVarName = () => {
   // Return a unique lookup arg variable name
   return `_lookup${nextLookupVarSeq++}`
 }
-let newLevelVarName = basename => {
+let newLevelVarName = (basename = null, levelNumber = 0) => {
   // Return a unique level variable name.
-  let suffix = basename || nextLevelVarSeq++
-  return `_level${suffix}`
+  let levelName = basename || nextLevelVarSeq++
+  if (levelNumber) {
+    levelName += `_${levelNumber}`
+  }
+  return `_level${levelName}`
 }
 let newAuxVarName = () => {
   // Return a unique aux variable name

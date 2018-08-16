@@ -315,7 +315,7 @@ module.exports = class EquationReader extends ModelReader {
       // of using the dimension on the LHS and letting addVariable do it, so that the whole array of
       // separated variables are not added for each visit here by an already-separated index.
       // Start by getting a level var based on the var name, so it is the same for all separated levels.
-      level = newLevelVarName(this.var.varName)
+      level = newLevelVarName(this.var.varName, levelNumber)
       // Replace the dimension in the generated variable subscript with the index from the LHS.
       let genSubscript = genSubs.replace('[', '').replace(']', '')
       let s = sub(this.var.subscripts[0])
