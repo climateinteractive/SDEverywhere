@@ -404,10 +404,7 @@ module.exports = class EquationGen extends ModelReader {
       // For smooth functions, replace the entire call with the expansion variable generated earlier.
       this.emit(this.var.smoothVarName)
       if (isSeparatedVar(this.var)) {
-        let s = sub(this.var.subscripts[0])
-        let f = sub(s.family)
-        let i = f.value.indexOf(s.name)
-        this.emit(`[${i}]`)
+        this.emit(this.rhsSubscriptGen(this.var.subscripts))
       } else {
         let smoothVar = Model.varWithRefId(this.var.smoothVarName)
         this.emit(this.rhsSubscriptGen(smoothVar.subscripts))

@@ -346,6 +346,7 @@ module.exports = {
   asort,
   buildDir,
   canonicalName,
+  canonicalVensimName,
   cdbl,
   cFunctionName,
   decanonicalize,
