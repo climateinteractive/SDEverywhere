@@ -236,7 +236,7 @@ ${outputSection(outputVars)}
     return inputVars
   }
   function headerTitle(varName) {
-    return Model.vensimName(varName).replace(/"/g, '\\"')
+    return varName.replace(/"/g, '\\"')
   }
 
   return {

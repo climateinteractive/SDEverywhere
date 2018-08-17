@@ -1,129 +1,29 @@
 {UTF-8}
-pgr[DimA]=
-	(p[DimA] - SMOOTH(p[DimA], p delay)) / p[DimA] / p delay
-	~
-	~		|
+DimA: A1, A2, A3 -> DimB ~~|
+SubA: A2, A3 -> SubB ~~|
+DimB: B1, B2, B3 ~~|
+SubB: B2, B3 ~~|
 
-DimA:
-	A1, A2, A3
-	~
-	~		|
+input = 3 + PULSE(10, 10) ~~|
+input2[SubA] = 3 + PULSE(10, 10) ~~|
+input3[DimA] = 3 + PULSE(10, 10) ~~|
+input3x3[DimA,DimB] = 3 + PULSE(10, 10) ~~|
+input2x3[SubA,DimB] = 3 + PULSE(10, 10) ~~|
+delay = 2 ~~|
+delay_2[SubA] = 2 ~~|
+delay_3[DimA] = 2 ~~|
 
-p delay=
-	1
-	~
-	~		|
+s1 = SMOOTH(input, delay) ~~|
+s2[DimA] = SMOOTH(input, delay) ~~|
+s3[DimA] = SMOOTH(input3[DimA], delay_3[DimA]) ~~|
+s4[SubA] = SMOOTH(input2[SubA], delay_2[SubA]) ~~|
+s5[SubA] = SMOOTH3(input2[SubA], delay_2[SubA]) ~~|
+s6[DimB] = SMOOTH(input3[DimA], delay_3[DimA]) ~~|
+s7[SubB] = SMOOTH(input2[SubA], delay_2[SubA]) ~~|
+s8[DimA,DimB] = SMOOTH(input3x3[DimA,DimB], delay) ~~|
+s9[SubA,DimB] = SMOOTH(input2x3[SubA,DimB], delay) ~~|
 
-p[A2]=
-	2000 + RAMP(100, 1, 10) ~~|
-p[A1]=
-	1000 + RAMP(100, 1, 10) ~~|
-p[A3]=
-	3000 + RAMP(100, 1, 10)
-	~
-	~		|
-
-delay=
-	2
-	~
-	~		|
-
-input=
-	3 + PULSE(10, 10)
-	~
-	~		|
-
-S2 Level= INTEG (
-	(input - S2 Level) / delay,
-		input)
-	~
-	~		|
-
-S1=
-	scale * SMOOTH(input, delay)
-	~
-	~		|
-
-S2=
-	scale * S2 Level
-	~
-	~		|
-
-scale=
-	6
-	~
-	~		|
-
-********************************************************
-	.Control
-********************************************************~
-		Simulation Control Parameters
-	|
-
-FINAL TIME  = 40
-	~	Month
-	~	The final time for the simulation.
-	|
-
-INITIAL TIME  = 0
-	~	Month
-	~	The initial time for the simulation.
-	|
-
-SAVEPER  =
-        TIME STEP
-	~	Month [0,?]
-	~	The frequency with which output is stored.
-	|
-
-TIME STEP  = 1
-	~	Month [0,?]
-	~	The time step for the simulation.
-	|
-
-\\\---/// Sketch information - do not modify anything except names
-V300  Do not put anything below this section - it will be ignored
-*View 1
-$192-192-192,0,Times New Roman|12||0-0-0|0-0-0|0-0-255|-1--1--1|-1--1--1|96,96,100,0
-10,1,scale,119,175,17,11,8,3,0,0,0,0,0,0
-10,2,input,211,175,17,11,8,3,0,0,0,0,0,0
-10,3,delay,301,173,18,11,8,3,0,0,0,0,0,0
-10,4,S1,211,110,11,11,8,3,0,0,0,0,0,0
-10,5,S2,213,357,11,11,8,3,0,0,0,0,0,0
-10,6,S2 Level,211,260,40,20,3,3,0,0,0,0,0,0
-1,7,2,4,0,0,0,0,0,128,0,-1--1--1,,1|(211,149)|
-1,8,3,4,0,0,0,0,0,128,0,-1--1--1,,1|(259,143)|
-1,9,2,6,0,0,0,0,0,128,0,-1--1--1,,1|(211,206)|
-1,10,3,6,0,0,0,0,0,128,0,-1--1--1,,1|(265,207)|
-1,11,1,5,1,0,0,0,0,128,0,-1--1--1,,1|(129,273)|
-1,12,6,5,0,0,0,0,0,128,0,-1--1--1,,1|(211,306)|
-1,13,1,4,0,0,0,0,0,128,0,-1--1--1,,1|(161,144)|
-10,14,p,583,184,6,11,8,3,0,0,0,0,0,0
-10,15,pgr,701,187,12,11,8,3,0,0,0,0,0,0
-10,16,p delay,635,263,24,11,8,3,0,0,0,0,0,0
-1,17,16,15,0,0,0,0,0,128,0,-1--1--1,,1|(662,230)|
-1,18,14,15,0,0,0,0,0,128,0,-1--1--1,,1|(632,184)|
-///---\\\
-:L<%^E!@
-1:smooth.vdf
-9:smooth
-15:0,0,0,0,0,0
-19:100,0
-27:2,
-34:0,
-4:Time
-5:pgr[DimA]
-35:Date
-36:YYYY-MM-DD
-37:2000
-38:1
-39:1
-40:2
-41:0
-42:0
-24:0
-25:40
-26:40
-6:A1
-6:A2
-6:A3
+INITIAL TIME  = 0 ~~|
+FINAL TIME  = 40 ~~|
+SAVEPER  = 1 ~~|
+TIME STEP  = 1 ~~|
