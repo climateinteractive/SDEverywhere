@@ -203,16 +203,16 @@ module.exports = class EquationGen extends ModelReader {
         return `[${sub(rhsSub).value}]`
       } else {
         // The subscript is a dimension.
-        // Use the single index name for a separated variable if it exists.
-        let separatedIndexName = separatedVariableIndex(rhsSub, this.var)
-        if (separatedIndexName) {
-          return `[${sub(separatedIndexName).value}]`
-        }
         // Get the loop index variable, matching the previously emitted for loop variable.
         let i
         if (this.markedDims.includes(rhsSub)) {
           i = this.arrayIndexVars.index(rhsSub)
         } else {
+          // Use the single index name for a separated variable if it exists.
+          let separatedIndexName = separatedVariableIndex(rhsSub, this.var)
+          if (separatedIndexName) {
+            return `[${sub(separatedIndexName).value}]`
+          }
           // See if we need to apply a mapping because the RHS dim is not found on the LHS.
           try {
             let found = this.var.subscripts.findIndex(lhsSub => sub(lhsSub).family === sub(rhsSub).family)
@@ -547,7 +547,7 @@ module.exports = class EquationGen extends ModelReader {
       let extractMarkedDims = () => {
         // Extract all marked dimensions and update subscripts.
         let dims = []
-        for (var i = 0; i < subscripts.length; i++) {
+        for (let i = 0; i < subscripts.length; i++) {
           if (subscripts[i].includes('!')) {
             // Remove the "!" from the subscript name and save it as a marked dimension.
             subscripts[i] = subscripts[i].replace('!', '')

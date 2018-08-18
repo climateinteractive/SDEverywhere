@@ -18,6 +18,16 @@ _dimc:
   family: '_dimc',
   mappings: {} }
 
+_suba:
+{ modelName: 'SubA',
+  modelValue: [ 'A2', 'A3' ],
+  modelMappings: [],
+  name: '_suba',
+  value: [ '_a2', '_a3' ],
+  size: 2,
+  family: '_dima',
+  mappings: {} }
+
 _a1:
 { name: '_a1', value: 0, size: 1, family: '_dima', mappings: {} }
 
@@ -78,6 +88,34 @@ families(_dima)
 subscripts(_a3)
 separationDims(_dima)
 
+a 2[SubA]: const (non-apply-to-all)
+= 1,2
+refId(_a_2[_a2])
+families(_dima)
+subscripts(_a2)
+separationDims(_suba)
+
+a 2[SubA]: const (non-apply-to-all)
+= 1,2
+refId(_a_2[_a3])
+families(_dima)
+subscripts(_a3)
+separationDims(_suba)
+
+b 2[SubA]: const (non-apply-to-all)
+= 4,5
+refId(_b_2[_a2])
+families(_dima)
+subscripts(_a2)
+separationDims(_suba)
+
+b 2[SubA]: const (non-apply-to-all)
+= 4,5
+refId(_b_2[_a3])
+families(_dima)
+subscripts(_a3)
+separationDims(_suba)
+
 c: aux
 = SUM(a[DimA!])+1
 refId(_c)
@@ -101,6 +139,65 @@ g[DimA,DimC]: aux
 refId(_g)
 families(_dima, _dimc)
 subscripts(_dima, _dimc)
+
+h[DimC]: const (non-apply-to-all)
+= 10,20,30
+refId(_h[_c1])
+families(_dimc)
+subscripts(_c1)
+separationDims(_dimc)
+
+h[DimC]: const (non-apply-to-all)
+= 10,20,30
+refId(_h[_c2])
+families(_dimc)
+subscripts(_c2)
+separationDims(_dimc)
+
+h[DimC]: const (non-apply-to-all)
+= 10,20,30
+refId(_h[_c3])
+families(_dimc)
+subscripts(_c3)
+separationDims(_dimc)
+
+i: aux
+= SUM(a[DimA!]+h[DimC!])
+refId(_i)
+
+j[DimA]: aux
+= a[DimA]/SUM(b[DimA!])
+refId(_j)
+families(_dima)
+subscripts(_dima)
+
+k[SubA]: aux (non-apply-to-all)
+= SUM(b 2[SubA!])
+refId(_k[_a2])
+families(_dima)
+subscripts(_a2)
+separationDims(_suba)
+
+k[SubA]: aux (non-apply-to-all)
+= SUM(b 2[SubA!])
+refId(_k[_a3])
+families(_dima)
+subscripts(_a3)
+separationDims(_suba)
+
+l[SubA]: aux (non-apply-to-all)
+= a 2[SubA]/SUM(b 2[SubA!])
+refId(_l[_a2])
+families(_dima)
+subscripts(_a2)
+separationDims(_suba)
+
+l[SubA]: aux (non-apply-to-all)
+= a 2[SubA]/SUM(b 2[SubA!])
+refId(_l[_a3])
+families(_dima)
+subscripts(_a3)
+separationDims(_suba)
 
 INITIAL TIME: const
 = 0
