@@ -107,7 +107,7 @@ module.exports = class EquationReader extends ModelReader {
       // TODO consider allowing more than one SMOOTH* call substitution
       // Get SMOOTH* arguments for the function expansion.
       let args = R.map(expr => expr.getText(), ctx.expr())
-      this.var.smoothVarName = this.expandSmoothFunction(fn, args)
+      this.expandSmoothFunction(fn, args)
     } else if (isTrendFunction(fn)) {
       // Generate a level var to expand the TREND call.
       // Get TREND arguments for the function expansion.
@@ -301,14 +301,12 @@ module.exports = class EquationReader extends ModelReader {
     let delay = args[1]
     let init = args[2] !== undefined ? args[2] : args[0]
     if (fn === '_SMOOTH' || fn === '_SMOOTHI') {
-      let level = this.generateSmoothLevel(input, delay, init, 1)
-      return canonicalName(level)
+      this.generateSmoothLevel(input, delay, init, 1)
     } else if (fn === '_SMOOTH3' || fn === '_SMOOTH3I') {
       let delay3 = `(${delay} / 3)`
       let level1 = this.generateSmoothLevel(input, delay3, init, 1)
       let level2 = this.generateSmoothLevel(level1, delay3, init, 2)
-      let level3 = this.generateSmoothLevel(level2, delay3, init, 3)
-      return canonicalName(level3)
+      this.generateSmoothLevel(level2, delay3, init, 3)
     }
   }
   generateSmoothLevel(input, delay, init, levelNumber) {
@@ -364,6 +362,7 @@ module.exports = class EquationReader extends ModelReader {
     }
     this.addVariable(eqn)
     // Add a reference to the new level var.
+    this.var.smoothVarRefId = levelRefId
     this.refId = levelRefId
     this.expandedRefIds = []
     this.addReferencesToList(this.var.references)

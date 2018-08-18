@@ -402,13 +402,9 @@ module.exports = class EquationGen extends ModelReader {
       super.visitCall(ctx)
     } else if (isSmoothFunction(fn)) {
       // For smooth functions, replace the entire call with the expansion variable generated earlier.
-      this.emit(this.var.smoothVarName)
-      if (isSeparatedVar(this.var)) {
-        this.emit(this.rhsSubscriptGen(this.var.subscripts))
-      } else {
-        let smoothVar = Model.varWithRefId(this.var.smoothVarName)
-        this.emit(this.rhsSubscriptGen(smoothVar.subscripts))
-      }
+      let smoothVar = Model.varWithRefId(this.var.smoothVarRefId)
+      this.emit(smoothVar.varName)
+      this.emit(this.rhsSubscriptGen(smoothVar.subscripts))
     } else if (isTrendFunction(fn)) {
       // For delay  functions, replace the entire call with the expansion variable generated earlier.
       let trendVar = Model.varWithRefId(this.var.trendVarName)

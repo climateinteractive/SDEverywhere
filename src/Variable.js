@@ -30,7 +30,7 @@ module.exports = class Variable {
     // Lookup args generate vars that are substituted into the call during code generation.
     this.lookupArgVarName = ''
     // SMOOTH* calls are expanded into new level vars and substituted during code generation.
-    this.smoothVarName = ''
+    this.smoothVarRefId = ''
     // TREND calls are expanded into new level vars and substituted during code generation.
     this.trendVarName = ''
     // DELAY3* calls are expanded into new level vars and substituted during code generation.
@@ -55,7 +55,7 @@ module.exports = class Variable {
     c.initReferences = this.initReferences.slice()
     c.hasInitValue = this.hasInitValue
     c.lookupArgVarName = this.lookupArgVarName
-    c.smoothVarName = this.smoothVarName
+    c.smoothVarRefId = this.smoothVarRefId
     c.trendVarName = this.trendVarName
     c.delayVarName = this.delayVarName
     c.delayTimeVarName = this.delayTimeVarName
