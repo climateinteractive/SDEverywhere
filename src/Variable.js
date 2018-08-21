@@ -59,6 +59,7 @@ module.exports = class Variable {
     c.trendVarName = this.trendVarName
     c.delayVarName = this.delayVarName
     c.delayTimeVarName = this.delayTimeVarName
+    c.includeInOutput = this.includeInOutput
     return c
   }
   formula(eqnCtx) {

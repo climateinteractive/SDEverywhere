@@ -13,17 +13,17 @@ let codeGenerator = (parseTree, opts) => {
   let outputAllVars = spec.outputVars && spec.outputVars.length > 0 ? false : true
   // Function to generate a section of the code
   let generateSection = R.map(v => new EquationGen(v, extData, initMode).generate())
-  let section = R.pipe(generateSection, R.flatten, lines)
-
+  let section = R.pipe(
+    generateSection,
+    R.flatten,
+    lines
+  )
   function generate() {
     // Read variables and subscript ranges from the model parse tree.
     // This is the main entry point for code generation and is called just once.
     Model.read(parseTree, spec, extData)
     // In list mode, print variables to the console instead of generating code.
-    if (operation === 'printVarList') {
-      printSubscripts()
-      Model.printVarList()
-    } else if (operation === 'printRefIdTest') {
+    if (operation === 'printRefIdTest') {
       Model.printRefIdTest()
     } else if (operation === 'printRefGraph') {
       Model.printRefGraph(opts.varname)
@@ -139,7 +139,12 @@ ${outputSection(outputVars)}
       return varType + v.varName + R.map(family => `[${sub(family).size}]`, families).join('')
     }
     // Non-apply-to-all variables are declared multiple times, but coalesce using uniq.
-    let decls = R.pipe(R.map(v => `${decl(v)};`), R.uniq, asort, lines)
+    let decls = R.pipe(
+      R.map(v => `${decl(v)};`),
+      R.uniq,
+      asort,
+      lines
+    )
     return decls(Model.allVars())
   }
   function internalVarsSection() {
@@ -155,7 +160,11 @@ ${outputSection(outputVars)}
     // These index number arrays will be used to indirectly reference array elements.
     // The indirection is required to support subdimensions that are a non-contiguous subset of the array elements.
     let a = R.map(dim => `const size_t ${dim.name}[${dim.size}] = { ${indexNumberList(sub(dim.name).value)} };`)
-    let arrayDims = R.pipe(a, asort, lines)
+    let arrayDims = R.pipe(
+      a,
+      asort,
+      lines
+    )
     return arrayDims(allDimensions())
   }
   function dimensionMappingsSection() {
@@ -163,7 +172,11 @@ ${outputSection(outputVars)}
     let a = R.map(m => {
       return `const size_t __map${m.mapFrom}${m.mapTo}[${sub(m.mapTo).size}] = { ${indexNumberList(m.value)} };`
     })
-    let mappingArrays = R.pipe(a, asort, lines)
+    let mappingArrays = R.pipe(
+      a,
+      asort,
+      lines
+    )
     return mappingArrays(allMappings())
   }
   function indexNumberList(indices) {
@@ -209,7 +222,10 @@ ${outputSection(outputVars)}
   function outputSection(varNames) {
     // Emit output calls using varNames in C format.
     let code = R.map(varName => `  outputVar(${varName});`)
-    let section = R.pipe(code, lines)
+    let section = R.pipe(
+      code,
+      lines
+    )
     return section(varNames)
   }
   function inputSection() {

@@ -7,8 +7,19 @@ const browserify = require('browserify')
 const { ModelLexer, ModelParser } = require('antlr4-vensim')
 const { codeGenerator } = require('./CodeGen')
 const { preprocessModel } = require('./Preprocessor')
-const { canonicalName, modelPathProps, buildDir, webDir, linkCSourceFiles, filesExcept, execCmd, readDat } = require('./Helpers')
+const {
+  canonicalName,
+  modelPathProps,
+  buildDir,
+  webDir,
+  linkCSourceFiles,
+  filesExcept,
+  execCmd,
+  readDat
+} = require('./Helpers')
 const { makeModelSpec, makeModelConfig } = require('./MakeConfig')
+const Model = require('./Model')
+const Subscript = require('./Subscript')
 const B = require('bufx')
 
 let command = 'generate [options] <model>'
@@ -92,6 +103,20 @@ let generate = (model, opts) => {
   if (opts.genc || opts.genhtml) {
     let outputPathname = path.join(buildDirname, `${modelName}.c`)
     writeOutput(outputPathname, code)
+  }
+  if (opts.list) {
+    // Write variables to a YAML file.
+    let outputPathname = path.join(buildDirname, `${modelName}_vars.yaml`)
+    let yaml = Model.yamlVarList()
+    writeOutput(outputPathname, yaml)
+    // Write subscripts to a text file.
+    outputPathname = path.join(buildDirname, `${modelName}_subs.txt`)
+    let subs = Subscript.printSubscripts()
+    writeOutput(outputPathname, subs)
+    // Write variables to a text file.
+    outputPathname = path.join(buildDirname, `${modelName}_vars.txt`)
+    let vars = Model.printVarList()
+    writeOutput(outputPathname, vars)
   }
   // Generate a web app for the model.
   if (opts.genhtml) {

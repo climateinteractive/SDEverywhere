@@ -1,6 +1,8 @@
 const antlr4 = require('antlr4/index')
 const { ModelLexer, ModelParser } = require('antlr4-vensim')
 const R = require('ramda')
+const B = require('bufx')
+const yaml = require('js-yaml')
 const toposort = require('./toposort')
 const { Digraph, TopologicalOrder } = require('digraph-sort')
 const VariableReader = require('./VariableReader')
@@ -302,31 +304,6 @@ function removeConstRefs() {
     v.references = R.reject(refIsConst, v.references)
     v.initReferences = R.reject(refIsConst, v.initReferences)
   }, variables)
-}
-function printVar(v) {
-  let nonAtoA = isNonAtoAName(v.varName) ? ' (non-apply-to-all)' : ''
-  console.log(`${v.modelLHS}: ${v.varType}${nonAtoA}`)
-  if (!v.hasPoints()) {
-    console.log(`= ${v.modelFormula}`)
-  }
-  console.log(`refId(${v.refId})`)
-  if (v.hasSubscripts()) {
-    console.log(`families(${strlist(subscriptFamilies(v.subscripts))})`)
-    console.log(`subscripts(${strlist(v.subscripts)})`)
-  }
-  if (v.separationDims.length > 0) {
-    console.log(`separationDims(${strlist(v.separationDims)})`)
-  }
-  if (v.references.length > 0) {
-    console.log(`refs(${strlist(v.references)})`)
-  }
-  if (v.initReferences.length > 0) {
-    console.log(`initRefs(${strlist(v.initReferences)})`)
-  }
-  // if (v.hasPoints()) {
-  //   console.log(R.map(p => `(${p[0]}, ${p[1]})`, v.points));
-  // }
-  console.log()
 }
 //
 // Model API
@@ -632,9 +609,67 @@ function joinRefId(refIdParts) {
 //
 function printVarList() {
   // Print full information on each var.
-  R.forEach(v => printVar(v), variables)
-  // Print the var name only.
-  // R.forEach(v => console.log(v.modelLHS), variables);
+  B.clearBuf()
+  for (const v of variables) {
+    printVar(v)
+  }
+  return B.getBuf()
+}
+function yamlVarList() {
+  // Print selected properties of all variable objects to a YAML string.
+  let vars = {}
+  for (const v of variables) {
+    let varObj = filterVar(v)
+    vars[varObj.refId] = varObj
+  }
+  return yaml.safeDump(vars)
+}
+function printVar(v) {
+  let nonAtoA = isNonAtoAName(v.varName) ? ' (non-apply-to-all)' : ''
+  B.emitLine(`${v.modelLHS}: ${v.varType}${nonAtoA}`)
+  if (!v.hasPoints()) {
+    B.emitLine(`= ${v.modelFormula}`)
+  }
+  B.emitLine(`refId(${v.refId})`)
+  if (v.hasSubscripts()) {
+    B.emitLine(`families(${strlist(subscriptFamilies(v.subscripts))})`)
+    B.emitLine(`subscripts(${strlist(v.subscripts)})`)
+  }
+  if (v.separationDims.length > 0) {
+    B.emitLine(`separationDims(${strlist(v.separationDims)})`)
+  }
+  if (v.references.length > 0) {
+    B.emitLine(`refs(${strlist(v.references)})`)
+  }
+  if (v.initReferences.length > 0) {
+    B.emitLine(`initRefs(${strlist(v.initReferences)})`)
+  }
+  // if (v.hasPoints()) {
+  //   B.emitLine(R.map(p => `(${p[0]}, ${p[1]})`, v.points));
+  // }
+  B.emitLine('')
+}
+function filterVar(v) {
+  let varObj = {}
+  varObj.refId = v.refId
+  varObj.varName = v.varName
+  if (v.hasSubscripts()) {
+    varObj.subscripts = v.subscripts
+    varObj.families = subscriptFamilies(v.subscripts)
+  }
+  if (v.references.length > 0) {
+    varObj.references = v.references
+  }
+  if (v.initReferences.length > 0) {
+    varObj.initReferences = v.initReferences
+  }
+  varObj.varType = v.varType
+  if (v.separationDims.length > 0) {
+    varObj.separationDims = v.separationDims
+  }
+  varObj.modelLHS = v.modelLHS
+  varObj.modelFormula = v.modelFormula
+  return varObj
 }
 function printRefIdTest() {
   // Verify that each variable has the correct number of instances of the var name.
@@ -704,6 +739,7 @@ module.exports = {
   constVars,
   dataVars,
   expansionFlags,
+  filterVar,
   initVars,
   isNonAtoAName,
   levelVars,
@@ -718,5 +754,6 @@ module.exports = {
   varsWithName,
   varWithName,
   varWithRefId,
-  vensimName
+  vensimName,
+  yamlVarList
 }

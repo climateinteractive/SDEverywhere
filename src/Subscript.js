@@ -1,5 +1,6 @@
 const util = require('util')
 const R = require('ramda')
+const B = require('bufx')
 const { canonicalName, asort, vlog } = require('./Helpers')
 
 // A subscript is a dimension or an index.
@@ -148,9 +149,11 @@ function mapIndex(fromSubName, fromIndexName, toSubName) {
   return toIndexNames
 }
 function printSubscripts() {
+  B.clearBuf()
   for (let [k, v] of subscripts) {
-    console.log(`${k}:\n${util.inspect(v, { depth: null })}\n`)
+    B.emitLine(`${k}:\n${util.inspect(v, { depth: null })}\n`)
   }
+  return B.getBuf()
 }
 function normalizeSubscripts(subscripts) {
   // Sort a list of subscript names already in canonical form according to the subscript family.
