@@ -1,6 +1,7 @@
 const util = require('util')
 const R = require('ramda')
 const B = require('bufx')
+const yaml = require('js-yaml')
 const { canonicalName, asort, vlog } = require('./Helpers')
 
 // A subscript is a dimension or an index.
@@ -155,6 +156,21 @@ function printSubscripts() {
   }
   return B.getBuf()
 }
+function yamlSubsList() {
+  let subs = {}
+  for (let [k, v] of subscripts) {
+    subs[k] = v
+  }
+  return yaml.safeDump(subs)
+}
+function loadSubscriptsFromYaml(yamlSubs) {
+  // Load the subscripts map from subscripts serialized to a YAML file by yamlSubsList.
+  // This function should be called instead of adding subscripts through the constructor.
+  let subs = yaml.safeLoad(yamlSubs)
+  for (const k in subs) {
+    subscripts.set(k, subs[k])
+  }
+}
 function normalizeSubscripts(subscripts) {
   // Sort a list of subscript names already in canonical form according to the subscript family.
   let subs = R.map(name => sub(name), subscripts)
@@ -273,11 +289,13 @@ module.exports = {
   indexNamesForSubscript,
   isDimension,
   isIndex,
+  loadSubscriptsFromYaml,
   mapIndex,
   normalizeSubscripts,
   printSubscripts,
   separatedVariableIndex,
   sub,
   subscriptFamilies,
-  subscriptFamily
+  subscriptFamily,
+  yamlSubsList
 }

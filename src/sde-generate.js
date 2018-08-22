@@ -91,9 +91,12 @@ let generate = (model, opts) => {
     writeOutput(outputPathname, input)
     process.exit(0)
   }
-  // Parse the model and generate code.
-  let operation = 'generateC'
-  if (opts.list) {
+  // Parse the model and generate code. If no operation is specified, the code generator will
+  // read the model and do nothing else. This is required for the list operation.
+  let operation = ''
+  if (opts.genc) {
+    operation = 'generateC'
+  } else if (opts.list) {
     operation = 'printVarList'
   } else if (opts.refidtest) {
     operation = 'printRefIdTest'
@@ -105,18 +108,23 @@ let generate = (model, opts) => {
     writeOutput(outputPathname, code)
   }
   if (opts.list) {
-    // Write variables to a YAML file.
-    let outputPathname = path.join(buildDirname, `${modelName}_vars.yaml`)
-    let yaml = Model.yamlVarList()
-    writeOutput(outputPathname, yaml)
-    // Write subscripts to a text file.
-    outputPathname = path.join(buildDirname, `${modelName}_subs.txt`)
-    let subs = Subscript.printSubscripts()
-    writeOutput(outputPathname, subs)
+    let outputPathname, outputText
     // Write variables to a text file.
     outputPathname = path.join(buildDirname, `${modelName}_vars.txt`)
-    let vars = Model.printVarList()
-    writeOutput(outputPathname, vars)
+    outputText = Model.printVarList()
+    writeOutput(outputPathname, outputText)
+    // Write subscripts to a text file.
+    outputPathname = path.join(buildDirname, `${modelName}_subs.txt`)
+    outputText = Subscript.printSubscripts()
+    writeOutput(outputPathname, outputText)
+    // Write variables to a YAML file.
+    outputPathname = path.join(buildDirname, `${modelName}_vars.yaml`)
+    outputText = Model.yamlVarList()
+    writeOutput(outputPathname, outputText)
+    // Write subscripts to a YAML file.
+    outputPathname = path.join(buildDirname, `${modelName}_subs.yaml`)
+    outputText = Subscript.yamlSubsList()
+    writeOutput(outputPathname, outputText)
   }
   // Generate a web app for the model.
   if (opts.genhtml) {
