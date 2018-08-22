@@ -617,11 +617,7 @@ function printVarList() {
 }
 function yamlVarList() {
   // Print selected properties of all variable objects to a YAML string.
-  let vars = {}
-  for (const v of variables) {
-    let varObj = filterVar(v)
-    vars[varObj.refId] = varObj
-  }
+  let vars = variables.map(v => filterVar(v))
   return yaml.safeDump(vars)
 }
 function printVar(v) {
