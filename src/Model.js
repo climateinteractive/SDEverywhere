@@ -4,7 +4,6 @@ const R = require('ramda')
 const B = require('bufx')
 const yaml = require('js-yaml')
 const toposort = require('./toposort')
-const { Digraph, TopologicalOrder } = require('digraph-sort')
 const VariableReader = require('./VariableReader')
 const VarNameReader = require('./VarNameReader')
 const SubscriptRangeReader = require('./SubscriptRangeReader')
@@ -12,22 +11,16 @@ const Variable = require('./Variable')
 const {
   addIndex,
   allDimensions,
-  dimensionNames,
-  indexNames,
   indexNamesForSubscript,
   isDimension,
   isIndex,
   sub,
-  Subscript,
   subscriptFamilies
 } = require('./Subscript')
 const {
   decanonicalize,
-  isAlpha,
-  isDigit,
   isIterable,
   listConcat,
-  printEqn,
   strlist,
   vlog,
   vsort
@@ -352,37 +345,71 @@ function varWithRefId(refId) {
   // elements defined by individual index.
   let refVar = R.find(R.propEq('refId', refId), variables)
   if (!refVar) {
-    // Try replacing indices in the refId with dimensions.
-    // This covers the case were a non-apply-to-all array is referenced by an
-    // individual index, but the array element is defined as part of a subdimension.
-    // TODO support more than one index in the [ind,ind] case
+    // Look at variables with the reference's varName to find one with matching subscripts.
     let refIdParts = splitRefId(refId)
-    if (refIdParts.subs.length > 0) {
-      for (let [i, subscript] of refIdParts.subs.entries()) {
-        if (isIndex(subscript)) {
-          // Find a dimension containing the index.
-          for (let dim of allDimensions()) {
-            if (R.contains(subscript, dim.value)) {
-              // More than one dimension might contain the index, but the variable will only
-              // be defined with one particular dimension, so there is no confusion.
-              let testRefIdParts = R.clone(refIdParts)
-              testRefIdParts.subs[i] = dim.name
-              let testRefId = joinRefId(testRefIdParts)
-              // vlog('trying testRefId', testRefId);
-              refVar = R.find(R.propEq('refId', testRefId), variables)
-              if (refVar) {
-                // console.error(`substituting ${refVar.refId} for ${refId}`);
-                return refVar
-              }
-            }
+    let refVarName = refIdParts.varName
+    let refSubscripts = refIdParts.subscripts
+    let varRefIds = refIdsWithName(refVarName)
+    for (const varRefId of varRefIds) {
+      let { subscripts } = splitRefId(varRefId)
+      // Compare subscripts at each position in normal order. If the var name does not have subscripts,
+      // the match will succeed, since the var is an apply-to-all array that includes the refId.
+      let matches = true
+      for (let pos = 0; pos < subscripts.length; pos++) {
+        // If both subscripts are an index or dimension, they must match.
+        if (
+          (isIndex(subscripts[pos]) && isIndex(refSubscripts[pos])) ||
+          (isDimension(subscripts[pos]) && isDimension(refSubscripts[pos]))
+        ) {
+          if (subscripts[pos] !== refSubscripts[pos]) {
+            matches = false
+            break
           }
+        } else if (isDimension(subscripts[pos]) && isIndex(refSubscripts[pos])) {
+          // If the ref subscript is an index and the var subscript is a dimension,
+          // they match if the dimension includes the index.
+          if (!sub(subscripts[pos]).value.includes(refSubscripts[pos])) {
+            matches = false
+            break
+          }
+        } else {
+          // We should not encounter a case where the ref subscript is a dimension
+          // and the var subscript is an index.
+          matches = false
+          break
         }
       }
+      if (matches) {
+        refVar = R.find(R.propEq('refId', varRefId), variables)
+        break
+      }
     }
-    vlog('ERROR: no var found for refId', refId)
-    debugger
+    if (!refVar) {
+      vlog('ERROR: no var found for refId', refId)
+      debugger
+    }
   }
   return refVar
+}
+function splitRefId(refId) {
+  // Split a refId into component parts with a regular expression matching var name and subscripts.
+  let re = /\w+|\[/g
+  let inSubs = false
+  let varName = ''
+  let subscripts = []
+  let m
+  while ((m = re.exec(refId))) {
+    if (m[0] === '[') {
+      inSubs = true
+    } else if (inSubs) {
+      subscripts.push(m[0])
+    } else {
+      varName = m[0]
+    }
+  }
+  // Put subscripts in normal order.
+  subscripts = normalizeSubscripts(subscripts)
+  return { varName, subscripts }
 }
 function varWithName(varName) {
   // Find a variable with the given name in canonical form.
@@ -394,6 +421,10 @@ function varsWithName(varName) {
   // Find all variables with the given name in canonical form.
   let vars = R.filter(R.propEq('varName', varName), variables)
   return vars
+}
+function refIdsWithName(varName) {
+  // Find refIds of all variables with the given name in canonical form.
+  return varsWithName(varName).map(v => v.refId)
 }
 function varNames() {
   // Return a sorted list of var names.
@@ -578,32 +609,6 @@ function refIdForVar(v) {
   }
   return refId
 }
-function splitRefId(refId) {
-  // Split a refId into component parts with a regular expression matching var name and subscripts.
-  let re = /\w+|\[/g
-  let inSubs = false
-  let varName = ''
-  let subs = []
-  let m
-  while ((m = re.exec(refId))) {
-    if (m[0] === '[') {
-      inSubs = true
-    } else if (inSubs) {
-      subs.push(m[0])
-    } else {
-      varName = m[0]
-    }
-  }
-  return { refId: refId, varName: varName, subs: subs, dims: dimensionNames(subs), inds: indexNames(subs) }
-}
-function joinRefId(refIdParts) {
-  // Joing a refIdParts structure created by splitRefId back into a refId.
-  let refId = refIdParts.varName
-  if (refIdParts.subs.length > 0) {
-    refId += `[${refIdParts.subs.join(',')}]`
-  }
-  return refId
-}
 //
 // Helpers for model analysis
 //
@@ -619,6 +624,9 @@ function yamlVarList() {
   // Print selected properties of all variable objects to a YAML string.
   let vars = variables.map(v => filterVar(v))
   return yaml.safeDump(vars)
+}
+function loadVariablesFromYaml(yamlVars) {
+  variables = yaml.safeLoad(yamlVars)
 }
 function printVar(v) {
   let nonAtoA = isNonAtoAName(v.varName) ? ' (non-apply-to-all)' : ''
@@ -739,12 +747,14 @@ module.exports = {
   initVars,
   isNonAtoAName,
   levelVars,
+  loadVariablesFromYaml,
   lookupVars,
   printRefGraph,
   printRefIdTest,
   printVarList,
   read,
   refIdForVar,
+  refIdsWithName,
   variables,
   varNames,
   varsWithName,
