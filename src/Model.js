@@ -615,14 +615,15 @@ function refIdForVar(v) {
 function printVarList() {
   // Print full information on each var.
   B.clearBuf()
-  for (const v of variables) {
+  let vars = R.sortBy(R.prop('refId'), variables)
+  for (const v of vars) {
     printVar(v)
   }
   return B.getBuf()
 }
 function yamlVarList() {
   // Print selected properties of all variable objects to a YAML string.
-  let vars = variables.map(v => filterVar(v))
+  let vars = R.sortBy(R.prop('refId'), R.map(v => filterVar(v), variables))
   return yaml.safeDump(vars)
 }
 function loadVariablesFromYaml(yamlVars) {
