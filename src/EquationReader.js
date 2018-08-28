@@ -396,7 +396,7 @@ module.exports = class EquationReader extends ModelReader {
     let input = args[0]
     let delay = args[1]
     if (fn === '_DELAY1' || fn === '_DELAY1I') {
-      let init = args[2] !== undefined ? args[2] : args[0]
+      let init = `${args[2] !== undefined ? args[2] : args[0]} * ${delay}`
       let level = newLevelVarName()
       this.generateDelayLevel(fn, level, input, this.var.modelLHS, init)
       return canonicalName(level)

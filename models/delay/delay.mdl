@@ -1,11 +1,11 @@
 {UTF-8}
 DimA: A1, A2, A3 ~~|
 
-input = STEP(1,4) - STEP(1,7) ~~|
+input = STEP(10, 0) - STEP(10, 4) ~~|
 delay = 5 ~~|
 init = 0 ~~|
 
-input a[DimA]= 10, 20, 33 ~~|
+input a[DimA]= 10, 20, 30 ~~|
 delay a[DimA] = 1, 2, 3 ~~|
 init a[DimA] = 0 ~~|
 
