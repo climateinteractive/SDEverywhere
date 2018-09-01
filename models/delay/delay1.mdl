@@ -1,7 +1,7 @@
 {UTF-8}
 input = STEP(10, 0) - STEP(10, 4) ~~|
 delay = 5 ~~|
-p = DELAY3(input, delay) ~~|
+D1 = DELAY1(input, delay) ~~|
 
 INITIAL TIME = 0 ~~|
 FINAL TIME = 10 ~~|

@@ -124,7 +124,7 @@ module.exports = class EquationReader extends ModelReader {
     } else if (isDelayFunction(fn)) {
       // Generate a level var to expand the DELAY* call.
       let args = R.map(expr => expr.getText(), ctx.expr())
-      this.var.delayVarName = this.expandDelayFunction(fn, args)
+      this.expandDelayFunction(fn, args)
       // Generate an aux var to hold the delay time expression.
       let genSubs = this.genSubs(...args)
       let delayTimeVarName = newAuxVarName()
@@ -398,10 +398,8 @@ module.exports = class EquationReader extends ModelReader {
     if (fn === '_DELAY1' || fn === '_DELAY1I') {
       let init = `${args[2] !== undefined ? args[2] : args[0]} * ${delay}`
       let level = newLevelVarName()
-      this.generateDelayLevel(fn, level, input, this.var.modelLHS, init)
-      return canonicalName(level)
+      this.var.delayVarRefId = this.generateDelayLevel(level, input, this.var.modelLHS, init)
     } else if (fn === '_DELAY3' || fn === '_DELAY3I') {
-      let genSubs = this.genSubs(delay)
       let delay3 = `((${delay}) / 3)`
       let init = `${args[2] ? args[2] : args[0]} * ${delay3}`
       let level1 = newLevelVarName()
@@ -409,26 +407,36 @@ module.exports = class EquationReader extends ModelReader {
       let level3 = newLevelVarName()
       let aux1 = newAuxVarName()
       let aux2 = newAuxVarName()
-      this.generateDelayLevel(fn, level3, aux2, this.var.modelLHS, init)
-      this.generateDelayLevel(fn, level2, aux1, aux2, level3)
-      this.generateDelayLevel(fn, level1, input, aux1, level3)
+      this.var.delayVarRefId = this.generateDelayLevel(level3, aux2, this.var.modelLHS, init)
+      this.generateDelayLevel(level2, aux1, aux2, level3)
+      this.generateDelayLevel(level1, input, aux1, level3)
+      // Generate equations for the aux vars using the subs in the generated level var.
+      let genSubs = this.genSubs(this.var.delayVarRefId)
       this.addVariable(`${aux1}${genSubs} = ${level1}${genSubs} / ${delay3}`)
       this.addVariable(`${aux2}${genSubs} = ${level2}${genSubs} / ${delay3}`)
-      return canonicalName(level3)
     }
   }
-  generateDelayLevel(fn, level, input, aux, init) {
+  generateDelayLevel(level, input, aux, init) {
     // Generate a level equation to implement DELAY.
-    // The parameters are model names. Return the canonical name of the generated level var.
-    let levelSubs = this.genSubs(input, aux, init)
-    let eqn = `${level}${levelSubs} = INTEG(${input} - ${aux}, ${init})`
+    // The parameters are model names. Return the refId of the generated level var.
+    let genSubs = this.genSubs(input, aux, init)
+    let levelLHS, levelRefId
+    if (isSeparatedVar(this.var)) {
+    } else {
+      levelLHS = level + genSubs
+      // If it has subscripts, the refId is still just the var name, because it is an apply-to-all array.
+      levelRefId = canonicalName(level)
+    }
+    let eqn = `${levelLHS} = INTEG(${input} - ${aux}, ${init})`
+    if (isSeparatedVar(this.var)) {
+      Model.addNonAtoAVar(canonicalName(level), [true])
+    }
     this.addVariable(eqn)
     // Add a reference to the new level var.
-    // If it has subscripts, the refId is still just the var name, because it is an apply-to-all array.
-    this.refId = canonicalName(level)
+    this.refId = levelRefId
     this.expandedRefIds = []
     this.addReferencesToList(this.var.references)
-    return level
+    return levelRefId
   }
   addVariable(modelEquation) {
     let chars = new antlr4.InputStream(modelEquation)

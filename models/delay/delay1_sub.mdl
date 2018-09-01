@@ -1,7 +1,10 @@
 {UTF-8}
+DimA: A1, A2, A3 ~~|
+
 input = STEP(10, 0) - STEP(10, 4) ~~|
-delay = 5 ~~|
-p = DELAY3(input, delay) ~~|
+init = 0 ~~|
+delay a[DimA] = 1, 2, 3 ~~|
+D3[DimA] = DELAY1I(input, delay a[DimA], init) ~~|
 
 INITIAL TIME = 0 ~~|
 FINAL TIME = 10 ~~|

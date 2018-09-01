@@ -412,9 +412,9 @@ module.exports = class EquationGen extends ModelReader {
       this.emit(`${this.var.trendVarName}${rhsSubs}`)
     } else if (isDelayFunction(fn)) {
       // For delay  functions, replace the entire call with the expansion variable generated earlier.
-      let delayVar = Model.varWithRefId(this.var.delayVarName)
+      let delayVar = Model.varWithRefId(this.var.delayVarRefId)
       let rhsSubs = this.rhsSubscriptGen(delayVar.subscripts)
-      this.emit(`(${this.var.delayVarName}${rhsSubs} / ${this.var.delayTimeVarName}${rhsSubs})`)
+      this.emit(`(${delayVar.varName}${rhsSubs} / ${this.var.delayTimeVarName}${rhsSubs})`)
     } else {
       // Generate code for ordinary function calls here.
       this.emit(fn)
