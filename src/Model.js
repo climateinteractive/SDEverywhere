@@ -14,6 +14,7 @@ const {
   indexNamesForSubscript,
   isDimension,
   isIndex,
+  normalizeSubscripts,
   sub,
   subscriptFamilies
 } = require('./Subscript')

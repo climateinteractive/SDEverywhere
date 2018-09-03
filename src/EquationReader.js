@@ -125,19 +125,6 @@ module.exports = class EquationReader extends ModelReader {
       // Generate a level var to expand the DELAY* call.
       let args = R.map(expr => expr.getText(), ctx.expr())
       this.expandDelayFunction(fn, args)
-      // Generate an aux var to hold the delay time expression.
-      let genSubs = this.genSubs(...args)
-      let delayTimeVarName = newAuxVarName()
-      this.var.delayTimeVarName = canonicalName(delayTimeVarName)
-      let delayTimeEqn
-      if (fn === '_DELAY1' || fn === '_DELAY1I') {
-        delayTimeEqn = `${delayTimeVarName}${genSubs} = ${args[1]}`
-      } else if (fn === '_DELAY3' || fn === '_DELAY3I') {
-        delayTimeEqn = `${delayTimeVarName}${genSubs} = (${args[1]}) / 3.0`
-      }
-      this.addVariable(delayTimeEqn)
-      // Add a reference to the var, since it won't show up until code gen time.
-      this.var.references.push(this.var.delayTimeVarName)
     } else {
       super.visitExprList(ctx)
     }
@@ -313,6 +300,7 @@ module.exports = class EquationReader extends ModelReader {
     // Generate a level equation to implement SMOOTH.
     // The parameters are model names. Return the canonical name of the generated level var.
     let genSubs = this.genSubs(input, delay, init)
+    // For SMOOTH3, the previous level is the input for level number 2 and 3. Add RHS subscripts.
     if (levelNumber > 1 && genSubs) {
       input += genSubs
     }
@@ -362,6 +350,7 @@ module.exports = class EquationReader extends ModelReader {
     }
     this.addVariable(eqn)
     // Add a reference to the new level var.
+    // For SMOOTH3, the smoothVarRefId is the final level refId.
     this.var.smoothVarRefId = levelRefId
     this.refId = levelRefId
     this.expandedRefIds = []
@@ -395,10 +384,53 @@ module.exports = class EquationReader extends ModelReader {
     // Generate variables for a DELAY* call found in the RHS.
     let input = args[0]
     let delay = args[1]
+    let genSubs = this.genSubs(this.var.modelLHS)
+
     if (fn === '_DELAY1' || fn === '_DELAY1I') {
+      let level, levelLHS, levelRefId
+      let levelNumber = 1
       let init = `${args[2] !== undefined ? args[2] : args[0]} * ${delay}`
-      let level = newLevelVarName()
-      this.var.delayVarRefId = this.generateDelayLevel(level, input, this.var.modelLHS, init)
+      let aux = this.var.modelLHS
+      if (isSeparatedVar(this.var)) {
+        level = newLevelVarName(this.var.varName, levelNumber)
+        let index
+        let sepDim
+        let r = genSubs.match(/\[(.*)\]/)
+        if (r) {
+          let rhsSubs = r[1].split(',').map(x => canonicalName(x))
+          for (let rhsSub of rhsSubs) {
+            let separatedIndexName = separatedVariableIndex(rhsSub, this.var)
+            if (separatedIndexName) {
+              index = decanonicalize(separatedIndexName)
+              sepDim = decanonicalize(rhsSub)
+              break
+            }
+          }
+        }
+        if (index) {
+          let re = new RegExp(sepDim, 'gi')
+          let newGenSubs = genSubs.replace(re, index)
+          levelLHS = `${level}${newGenSubs}`
+          levelRefId = canonicalVensimName(levelLHS)
+          input = input.replace(re, index)
+          aux = aux.replace(re, index)
+          delay = delay.replace(re, index)
+          init = init.replace(re, index)
+        }
+        Model.addNonAtoAVar(canonicalName(level), [true])
+      } else {
+        level = newLevelVarName()
+        levelLHS = level + genSubs
+        levelRefId = canonicalName(level)
+      }
+      this.var.delayVarRefId = this.generateDelayLevel(levelLHS, levelRefId, input, aux, init)
+      // Generate an aux var to hold the delay time expression.
+      let delayTimeVarName = newAuxVarName()
+      this.var.delayTimeVarName = canonicalName(delayTimeVarName)
+      let delayTimeEqn = `${delayTimeVarName}${genSubs} = ${delay}`
+      this.addVariable(delayTimeEqn)
+      // Add a reference to the var, since it won't show up until code gen time.
+      this.var.references.push(this.var.delayTimeVarName)
     } else if (fn === '_DELAY3' || fn === '_DELAY3I') {
       let delay3 = `((${delay}) / 3)`
       let init = `${args[2] ? args[2] : args[0]} * ${delay3}`
@@ -411,26 +443,22 @@ module.exports = class EquationReader extends ModelReader {
       this.generateDelayLevel(level2, aux1, aux2, level3)
       this.generateDelayLevel(level1, input, aux1, level3)
       // Generate equations for the aux vars using the subs in the generated level var.
-      let genSubs = this.genSubs(this.var.delayVarRefId)
       this.addVariable(`${aux1}${genSubs} = ${level1}${genSubs} / ${delay3}`)
       this.addVariable(`${aux2}${genSubs} = ${level2}${genSubs} / ${delay3}`)
+
+      // Generate an aux var to hold the delay time expression.
+      let delayTimeVarName = newAuxVarName()
+      this.var.delayTimeVarName = canonicalName(delayTimeVarName)
+      let delayTimeEqn = `${delayTimeVarName}${genSubs} = (${delay}) / 3.0`
+      this.addVariable(delayTimeEqn)
+      // Add a reference to the var, since it won't show up until code gen time.
+      this.var.references.push(this.var.delayTimeVarName)
     }
   }
-  generateDelayLevel(level, input, aux, init) {
+  generateDelayLevel(levelLHS, levelRefId, input, aux, init) {
     // Generate a level equation to implement DELAY.
     // The parameters are model names. Return the refId of the generated level var.
-    let genSubs = this.genSubs(input, aux, init)
-    let levelLHS, levelRefId
-    if (isSeparatedVar(this.var)) {
-    } else {
-      levelLHS = level + genSubs
-      // If it has subscripts, the refId is still just the var name, because it is an apply-to-all array.
-      levelRefId = canonicalName(level)
-    }
     let eqn = `${levelLHS} = INTEG(${input} - ${aux}, ${init})`
-    if (isSeparatedVar(this.var)) {
-      Model.addNonAtoAVar(canonicalName(level), [true])
-    }
     this.addVariable(eqn)
     // Add a reference to the new level var.
     this.refId = levelRefId
