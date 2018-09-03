@@ -77,9 +77,13 @@ let newLevelVarName = (basename = null, levelNumber = 0) => {
   }
   return `_level${levelName}`
 }
-let newAuxVarName = () => {
-  // Return a unique aux variable name
-  return `_aux${nextAuxVarSeq++}`
+let newAuxVarName = (basename = null, auxNumber = 0) => {
+  // Return a unique aux variable name.
+  let auxName = basename || nextAuxVarSeq++
+  if (auxNumber) {
+    auxName += `_${auxNumber}`
+  }
+  return `_aux${auxName}`
 }
 let isSmoothFunction = fn => {
   // Return true if fn is a Vensim smooth function.

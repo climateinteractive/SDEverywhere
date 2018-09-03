@@ -388,11 +388,10 @@ module.exports = class EquationReader extends ModelReader {
 
     if (fn === '_DELAY1' || fn === '_DELAY1I') {
       let level, levelLHS, levelRefId
-      let levelNumber = 1
       let init = `${args[2] !== undefined ? args[2] : args[0]} * ${delay}`
-      let aux = this.var.modelLHS
+      let varLHS = this.var.modelLHS
       if (isSeparatedVar(this.var)) {
-        level = newLevelVarName(this.var.varName, levelNumber)
+        level = newLevelVarName(this.var.varName, 1)
         let index
         let sepDim
         let r = genSubs.match(/\[(.*)\]/)
@@ -413,7 +412,7 @@ module.exports = class EquationReader extends ModelReader {
           levelLHS = `${level}${newGenSubs}`
           levelRefId = canonicalVensimName(levelLHS)
           input = input.replace(re, index)
-          aux = aux.replace(re, index)
+          varLHS = varLHS.replace(re, index)
           delay = delay.replace(re, index)
           init = init.replace(re, index)
         }
@@ -423,7 +422,8 @@ module.exports = class EquationReader extends ModelReader {
         levelLHS = level + genSubs
         levelRefId = canonicalName(level)
       }
-      this.var.delayVarRefId = this.generateDelayLevel(levelLHS, levelRefId, input, aux, init)
+      // Generate a level var that will replace the DELAY function call.
+      this.var.delayVarRefId = this.generateDelayLevel(levelLHS, levelRefId, input, varLHS, init)
       // Generate an aux var to hold the delay time expression.
       let delayTimeVarName = newAuxVarName()
       this.var.delayTimeVarName = canonicalName(delayTimeVarName)
@@ -431,25 +431,85 @@ module.exports = class EquationReader extends ModelReader {
       this.addVariable(delayTimeEqn)
       // Add a reference to the var, since it won't show up until code gen time.
       this.var.references.push(this.var.delayTimeVarName)
-    } else if (fn === '_DELAY3' || fn === '_DELAY3I') {
-      let delay3 = `((${delay}) / 3)`
-      let init = `${args[2] ? args[2] : args[0]} * ${delay3}`
-      let level1 = newLevelVarName()
-      let level2 = newLevelVarName()
-      let level3 = newLevelVarName()
-      let aux1 = newAuxVarName()
-      let aux2 = newAuxVarName()
-      this.var.delayVarRefId = this.generateDelayLevel(level3, aux2, this.var.modelLHS, init)
-      this.generateDelayLevel(level2, aux1, aux2, level3)
-      this.generateDelayLevel(level1, input, aux1, level3)
-      // Generate equations for the aux vars using the subs in the generated level var.
-      this.addVariable(`${aux1}${genSubs} = ${level1}${genSubs} / ${delay3}`)
-      this.addVariable(`${aux2}${genSubs} = ${level2}${genSubs} / ${delay3}`)
 
+    } else if (fn === '_DELAY3' || fn === '_DELAY3I') {
+      let level1, level1LHS, level1RefId
+      let level2, level2LHS, level2RefId
+      let level3, level3LHS, level3RefId
+      let delay3 = `((${delay}) / 3)`
+      let init = `${args[2] !== undefined ? args[2] : args[0]} * ${delay3}`
+      let varLHS = this.var.modelLHS
+      let aux1, aux1LHS
+      let aux2, aux2LHS
+      let delayTime, delayTimeLHS
+      if (isSeparatedVar(this.var)) {
+        level1 = newLevelVarName(this.var.varName, 1)
+        level2 = newLevelVarName(this.var.varName, 2)
+        level3 = newLevelVarName(this.var.varName, 3)
+        aux1 = newAuxVarName(this.var.varName, 1)
+        aux2 = newAuxVarName(this.var.varName, 2)
+        delayTime = newAuxVarName()
+        let index
+        let sepDim
+        let r = genSubs.match(/\[(.*)\]/)
+        if (r) {
+          let rhsSubs = r[1].split(',').map(x => canonicalName(x))
+          for (let rhsSub of rhsSubs) {
+            let separatedIndexName = separatedVariableIndex(rhsSub, this.var)
+            if (separatedIndexName) {
+              index = decanonicalize(separatedIndexName)
+              sepDim = decanonicalize(rhsSub)
+              break
+            }
+          }
+        }
+        if (index) {
+          let re = new RegExp(sepDim, 'gi')
+          let newGenSubs = genSubs.replace(re, index)
+          level1LHS = `${level1}${newGenSubs}`
+          level2LHS = `${level2}${newGenSubs}`
+          level3LHS = `${level3}${newGenSubs}`
+          aux1LHS = `${aux1}${newGenSubs}`
+          aux2LHS = `${aux2}${newGenSubs}`
+          delayTimeLHS = `${delayTime}${newGenSubs}`
+          level1RefId = canonicalVensimName(level1LHS)
+          level2RefId = canonicalVensimName(level2LHS)
+          level3RefId = canonicalVensimName(level3LHS)
+          input = input.replace(re, index)
+          varLHS = varLHS.replace(re, index)
+          delay3 = delay3.replace(re, index)
+          init = init.replace(re, index)
+        }
+        Model.addNonAtoAVar(canonicalName(level1), [true])
+        Model.addNonAtoAVar(canonicalName(level2), [true])
+        Model.addNonAtoAVar(canonicalName(level3), [true])
+      } else {
+        level1 = newLevelVarName()
+        level2 = newLevelVarName()
+        level3 = newLevelVarName()
+        aux1 = newAuxVarName()
+        aux2 = newAuxVarName()
+        delayTime = newAuxVarName()
+        level1LHS = level1 + genSubs
+        level2LHS = level2 + genSubs
+        level3LHS = level3 + genSubs
+        aux1LHS = aux1 + genSubs
+        aux2LHS = aux2 + genSubs
+        delayTimeLHS = delayTime + genSubs
+        level1RefId = canonicalName(level1)
+        level2RefId = canonicalName(level2)
+        level3RefId = canonicalName(level3)
+      }
+      // Generate a level var that will replace the DELAY function call.
+      this.var.delayVarRefId = this.generateDelayLevel(level3LHS, level3RefId, aux2LHS, varLHS, init)
+      this.generateDelayLevel(level2LHS, level2RefId, aux1LHS, aux2LHS, level3LHS)
+      this.generateDelayLevel(level1LHS, level1RefId, input, aux1LHS, level3LHS)
+      // Generate equations for the aux vars using the subs in the generated level var.
+      this.addVariable(`${aux1LHS} = ${level1LHS} / ${delay3}`)
+      this.addVariable(`${aux2LHS} = ${level2LHS} / ${delay3}`)
       // Generate an aux var to hold the delay time expression.
-      let delayTimeVarName = newAuxVarName()
-      this.var.delayTimeVarName = canonicalName(delayTimeVarName)
-      let delayTimeEqn = `${delayTimeVarName}${genSubs} = (${delay}) / 3.0`
+      this.var.delayTimeVarName = canonicalName(delayTime)
+      let delayTimeEqn = `${delayTimeLHS} = ${delay3}`
       this.addVariable(delayTimeEqn)
       // Add a reference to the var, since it won't show up until code gen time.
       this.var.references.push(this.var.delayTimeVarName)
