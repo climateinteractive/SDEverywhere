@@ -80,7 +80,7 @@ let generate = (model, opts) => {
   }
   // Preprocess model text into parser input. Stop now if that's all we're doing.
   let spec = parseSpec(opts.spec)
-  let extData = readDatFiles(spec.datfiles)
+  let extData = readDatFiles(modelDirname, spec.datfiles)
   // Produce a runnable model with the "genc" and "preprocess" options.
   let profile = opts.analysis ? 'analysis' : 'genc'
   // Write the preprocessed model and removals if the option is "analysis" or "preprocess".
@@ -94,7 +94,7 @@ let generate = (model, opts) => {
   // Parse the model and generate code. If no operation is specified, the code generator will
   // read the model and do nothing else. This is required for the list operation.
   let operation = ''
-  if (opts.genc) {
+  if (opts.genc || opts.genhtml) {
     operation = 'generateC'
   } else if (opts.list) {
     operation = 'printVarList'
@@ -242,13 +242,13 @@ let parseJsonFile = filename => {
   }
   return result
 }
-let readDatFiles = datfiles => {
+let readDatFiles = (modelDirname, datfiles) => {
   // Read time series from external DAT files into a single object.
   // The datfiles object is a map from var prefixes to pathnames.
   let extData = new Map()
   if (datfiles) {
     for (let varPrefix in datfiles) {
-      let pathname = datfiles[varPrefix]
+      let pathname = path.join(modelDirname, datfiles[varPrefix])
       let data = readDat(pathname, varPrefix)
       extData = new Map([...extData, ...data])
     }

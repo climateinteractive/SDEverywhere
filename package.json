@@ -17,7 +17,7 @@
     "antlr4": "^4.7.0",
     "antlr4-vensim": "0.4.2",
     "browserify": "^16.2.2",
-    "bufx": "^1.0.0",
+    "bufx": "^1.0.1",
     "chart.js": "^2.7.0",
     "digraph-sort": "^0.2.0",
     "he": "^1.1.0",
