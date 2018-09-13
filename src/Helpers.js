@@ -258,7 +258,9 @@ let readDat = (pathname, varPrefix = '') => {
   }
   let addValues = () => {
     if (varName !== '' && varValues.size > 0) {
+      // TODO support reading external data without a prefix (data vars in the model instead of graph vars)
       log.set(`${varPrefix}${varName}`, varValues)
+      // log.set(varName, varValues)
     }
   }
   try {

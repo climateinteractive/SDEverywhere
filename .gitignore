@@ -16,5 +16,3 @@ removals.txt
 npm-debug.log*
 # Dependency directories
 node_modules
-# VS Code
-.vscode/

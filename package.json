@@ -14,7 +14,7 @@
     "url": "https://github.com/ToddFincannon/SDEverywhere/issues"
   },
   "dependencies": {
-    "antlr4": "^4.7.0",
+    "antlr4": "4.7.1",
     "antlr4-vensim": "0.4.2",
     "browserify": "^16.2.2",
     "bufx": "^1.0.1",
