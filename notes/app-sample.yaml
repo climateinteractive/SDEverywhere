@@ -2,7 +2,7 @@ app:
   title: {application title string}
   logo: {optional filename string of an app logo image}
   version: {version number string}
-  datfiles: {optional array of Vensim DAT filename strings giving external data variables}
+  datfiles: {optional map from prefix strings to Vensim DAT filename strings giving external data variables}
   removalKeys: {optional array of strings to search for in equations we want to remove in preprocessing}
   help_url: {optional URL string of an online help file}
   colors:
