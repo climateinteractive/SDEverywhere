@@ -34,7 +34,7 @@
         "generate",
         "--genc",
         "--spec",
-        "/Users/todd/Projects/enroads/model/spec.json",
+        "/Users/todd/Projects/enroads/model/app_spec.json",
         "/Users/todd/Projects/enroads/model/enroads.mdl"
       ]
     },
@@ -45,6 +45,12 @@
       "program": "${workspaceFolder}/src/sde.js",
       // "args": ["generate", "--genhtml", "/Users/todd/src/alps/model/alps.mdl"],
       "args": ["generate", "--genhtml", "/Users/todd/Projects/enroads/model/enroads.mdl"],
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "explore",
+      "program": "${workspaceFolder}/src/x.js"
     }
   ]
 }
