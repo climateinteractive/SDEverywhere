@@ -38,11 +38,11 @@ function toposort(nodes, edges) {
   function visit(node, i, predecessors) {
     if(predecessors.has(node)) {
       // ToddF: show the cyclic dependency sequence
-      console.error('Cyclic dependency detected!');
-      console.error(predecessors.concat(node).join(' →\n'));
+      console.error('Cyclic dependency detected!')
+      console.error([...predecessors].join(' →\n'))
       var nodeRep
       try {
-        nodeRep = ", node was:" + JSON.stringify(node)
+        nodeRep = ", node was: " + node
       } catch(e) {
         nodeRep = ""
       }

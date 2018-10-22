@@ -9,7 +9,7 @@
       "request": "launch",
       "name": "SDE model code gen",
       "program": "${workspaceFolder}/src/sde.js",
-      "args": ["generate", "--genc", "/Users/todd/Projects/SDEverywhere/models/delay/delay3_sub.mdl"],
+      "args": ["generate", "--genc", "/Users/todd/Projects/SDEverywhere/models/delay/delay3_sub.mdl"]
     },
     {
       "type": "node",
@@ -23,7 +23,13 @@
       "request": "launch",
       "name": "enroads code gen",
       "program": "${workspaceFolder}/src/sde.js",
-      "args": ["generate", "--genc", "/Users/todd/Projects/enroads/model/enroads.mdl"]
+      "args": [
+        "generate",
+        "--genc",
+        "--spec",
+        "/Users/todd/Projects/enroads/model/full_spec.json",
+        "/Users/todd/Projects/enroads/model/enroads.mdl"
+      ]
     },
     {
       "type": "node",
@@ -44,7 +50,7 @@
       "name": "html app gen",
       "program": "${workspaceFolder}/src/sde.js",
       // "args": ["generate", "--genhtml", "/Users/todd/src/alps/model/alps.mdl"],
-      "args": ["generate", "--genhtml", "/Users/todd/Projects/enroads/model/enroads.mdl"],
+      "args": ["generate", "--genhtml", "/Users/todd/Projects/enroads/model/enroads.mdl"]
     },
     {
       "type": "node",
