@@ -1,6 +1,6 @@
 # SDEverywhere Guide
 
-Revised: 2018-06-14
+Revised: 2018-12-21
 
 ## Introduction
 
@@ -36,7 +36,7 @@ Using SDEverywhere requires the macOS operating system and the free [Xcode](http
 
 ### Install Node.js
 
-Install [Node.js](https://nodejs.org/) version 8.9.4 LTS or later. This will also install the `npm` Node Package Manager.
+Install [Node.js](https://nodejs.org/) version 10.14.2 LTS or later. This will also install the `npm` Node Package Manager.
 
 ### Install the current release version of SDEverywhere (npm package)
 
@@ -63,6 +63,7 @@ cd antlr4-vensim
 npm link
 cd ../SDEverywhere
 npm link antlr4-vensim
+npm install
 npm link
 sde -v
 ~~~
