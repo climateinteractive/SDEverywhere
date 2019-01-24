@@ -1,6 +1,6 @@
 # Using SDEverywhere to Make a Vensim Model into a Web Application
 
-Revised: 2019-01-22
+Revised: 2019-01-23
 
 This tutorial shows you how to take your Vensim model and turn it into an interactive web application using the open-source SDEverywhere toolkit. SDEverywhere currently requires the macOS operating system.
 
@@ -8,9 +8,9 @@ This tutorial shows you how to take your Vensim model and turn it into an intera
 
 ### Install a development web server (optional)
 
-You can run the generated web app from any web server. If you need a simple web server on your development machine, install `http-server` globally.
+You can run the generated web app from any web server. If you need a simple web server on your development machine, install `serve` globally.
 ~~~
-npm install http-server -g
+npm install serve -g
 ~~~
 
 ### Set up Emscripten
@@ -25,15 +25,22 @@ cd emsdk
 ./emsdk activate latest
 ~~~
 
-2. Edit the `emsdk_set_env.sh` file that was just created to remove the clang and node directories from the PATH. (They are second and third directories in the list.) The `...` below is a placeholder for the folder where you installed Emscripten. The version numbers below also might have changed.
+2. Note the recommended PATH printed by the last command, which will look something like this, depending on where you installed Emscripten:
 ~~~
-.../emsdk/clang/e1.38.24_64bit
-.../emsdk/node/8.9.1_64bit/bin
+/Users/todd/src/emsdk:/Users/todd/src/emsdk/clang/e1.38.25_64bit:/Users/todd/src/emsdk/node/8.9.1_64bit/bin:/Users/todd/src/emsdk/emscripten/1.38.25
 ~~~
 
-3. Close your terminal window. Reopen it, go back to the `emsdk` directory, and enable the Emscripten environment. You can put this command in your `~/.bash_profile` if you want to permanently enable Emscripten.
+3. Copy the PATH line. Remove the clang and node directories from the PATH. (They are second and third directories in the colon-delimited list.)
+
+4. Add the Emscripten SDK to your PATH in `~/.bash_profile` like this:
 ~~~
-source emsdk_set_env.sh
+# Set up Emscripten
+export PATH="/Users/todd/src/emsdk:/Users/todd/src/emsdk/emscripten/1.38.25:$PATH"
+~~~
+
+5. Close your terminal window. Reopen it, and check if the Emscripten compiler is now available.
+~~~
+emcc -v
 ~~~
 
 ## Generating model code and validating it
@@ -70,9 +77,9 @@ Generate WebAssembly code for the model and embed it in a web app.
 sde generate --genhtml {model}
 ~~~
 
-If you installed the Node-based `http-server`, start it, and then open the web app with the URL it prints.
+If you installed the Node-based `serve`, start it, and then open the web app with the URL it prints.
 ~~~
-http-server build/web
+serve build/web
 ~~~
 
 If you are using your own web server, configure it to serve files from the `build/web` directory under the model directory.
