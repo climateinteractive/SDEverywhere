@@ -149,8 +149,8 @@ let generateWASM = (buildDirname, webDirname) => {
   args.push(path.join(webDirname, 'model_sde.js'))
   // Set flags for WASM compilation and optimization.
   // Use -O0 optimization in development to get readable model_sde.js wrapper source.
-  // Use -O3 optimization for productions runs.
-  args.push('-s WASM=1 -Wall -O3')
+  // Use -Oz optimization for productions runs.
+  args.push('-Wall -Oz')
   // Turn on safe heap to debug "application has corrupted its heap memory area" exceptions.
   // Also turn on the clamp when using safe heap. Ref: https://github.com/WebAssembly/binaryen/issues/1110
   // args.push('-s SAFE_HEAP=1')
@@ -161,6 +161,10 @@ let generateWASM = (buildDirname, webDirname) => {
   args.push('-s EXPORTED_FUNCTIONS="[\'_run_model\']"')
   // Export the Module.cwrap method used to wrap arguments.
   args.push('-s "EXTRA_EXPORTED_RUNTIME_METHODS=[\'cwrap\']"')
+  // Use a simpler malloc to reduce code size.
+  args.push('-s MALLOC=emmalloc')
+  // Run the Closure compiler to minimize JS glue code.
+  args.push('--closure 1')
   // Run the emcc command to generate WASM code.
   let cmd = `emcc ${args.join(' ')}`
   // console.log(cmd)
