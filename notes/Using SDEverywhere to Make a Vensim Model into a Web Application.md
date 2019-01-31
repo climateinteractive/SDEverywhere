@@ -8,9 +8,9 @@ This tutorial shows you how to take your Vensim model and turn it into an intera
 
 ### Install a development web server (optional)
 
-You can run the generated web app from any web server. If you need a simple web server on your development machine, install `serve` globally.
+You can run the generated web app from any web server. If you need a simple web server on your development machine, install `http-server` globally.
 ~~~
-npm install serve -g
+npm install http-server -g
 ~~~
 
 ### Install the Java JDK
@@ -84,9 +84,9 @@ Generate WebAssembly code for the model and embed it in a web app.
 sde generate --genhtml {model}
 ~~~
 
-If you installed the Node-based `serve`, start it, and then open the web app with the URL it prints.
+If you installed the Node-based `http-server`, start it, and then open the web app with the URL it prints.
 ~~~
-serve build/web
+http-server build/web
 ~~~
 
 If you are using your own web server, configure it to serve files from the `build/web` directory under the model directory.
