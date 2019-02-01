@@ -28,6 +28,7 @@
     "prettier": "^1.16.1",
     "ramda": "^0.26.1",
     "shelljs": "^0.8.3",
+    "split-string": "^6.0.0",
     "yargs": "^8.0.2"
   },
   "preferGlobal": true,

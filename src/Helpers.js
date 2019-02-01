@@ -3,6 +3,7 @@ const path = require('path')
 const util = require('util')
 const R = require('ramda')
 const sh = require('shelljs')
+const split = require('split-string')
 const B = require('bufx')
 
 // Set true to print a stack trace in vlog
@@ -320,6 +321,11 @@ let canonicalVensimName = vname => {
   }
   return result
 }
+// Split a model string into an array of equations without the "|" terminator.
+// Allow "|" to occur in quoted variable names across line breaks.
+let splitEquations = mdl => {
+  return split(mdl, { separator: '|', quotes: ['"'] })
+}
 // Function to map over lists's value and index
 let mapIndexed = R.addIndex(R.map)
 // Function to sort an array of strings
@@ -381,6 +387,7 @@ module.exports = {
   readDat,
   replaceInArray,
   rest,
+  splitEquations,
   strings,
   stringToId,
   strlist,

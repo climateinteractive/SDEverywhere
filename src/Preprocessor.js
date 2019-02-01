@@ -1,6 +1,7 @@
 const path = require('path')
 const R = require('ramda')
 const B = require('bufx')
+const { splitEquations } = require('./Helpers')
 
 let preprocessModel = (mdlFilename, spec, profile = 'genc', writeRemovals = false) => {
   const MACROS_FILENAME = 'macros.txt'
@@ -69,7 +70,7 @@ let preprocessModel = (mdlFilename, spec, profile = 'genc', writeRemovals = fals
   getMdlFromPPBuf()
 
   // Split the model into an array of equations and groups.
-  eqns = mdl.split('|')
+  eqns = splitEquations(mdl)
   // Remove some equations into the removals channel.
   for (let eqn of eqns) {
     if (R.contains('\\---/// Sketch', eqn)) {
@@ -109,7 +110,7 @@ let preprocessModel = (mdlFilename, spec, profile = 'genc', writeRemovals = fals
   getMdlFromPPBuf()
 
   // Emit formula lines without comment contents.
-  eqns = mdl.split('|')
+  eqns = splitEquations(mdl)
   for (let eqn of eqns) {
     let i = eqn.indexOf('~')
     if (i >= 0) {
