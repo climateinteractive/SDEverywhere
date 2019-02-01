@@ -4,6 +4,7 @@ const util = require('util')
 const R = require('ramda')
 const sh = require('shelljs')
 const split = require('split-string')
+const num = require('numbro')
 const B = require('bufx')
 
 // Set true to print a stack trace in vlog
@@ -242,20 +243,12 @@ let readDat = (pathname, varPrefix = '') => {
   let varValues = new Map()
   let lineNum = 1
   let splitDatLine = line => {
-    // Return an array of nonempty string fields up to the first blank field.
-    const f = line.split('\t')
-    const len = f.length
-    let fieldFrom = (i, values) => {
-      if (i < len) {
-        let value = f[i].trim()
-        if (value !== '') {
-          values.push(value)
-          fieldFrom(i + 1, values)
-        }
-      }
-      return values
+    const f = line.split('\t').map(s => s.trim())
+    if (f.length < 2 || !R.isEmpty(f[1])) {
+      return f
+    } else {
+      return [f[0]]
     }
-    return fieldFrom(0, [])
   }
   let addValues = () => {
     if (varName !== '' && varValues.size > 0) {
@@ -265,6 +258,7 @@ let readDat = (pathname, varPrefix = '') => {
     }
   }
   try {
+    // console.log(pathname)
     let lines = B.lines(B.read(pathname))
     lines.forEach(line => {
       let values = splitDatLine(line)
@@ -275,7 +269,7 @@ let readDat = (pathname, varPrefix = '') => {
         // Start a new map for this var.
         // Convert the var name to canonical form so it is the same in both logs.
         varName = canonicalVensimName(values[0])
-        varValues = new Map()
+        varValues.clear()
       } else if (values.length > 1) {
         // Data lines in Vensim DAT format have {time}\t{value} format with optional comments afterward.
         let t = B.num(values[0])
@@ -290,6 +284,9 @@ let readDat = (pathname, varPrefix = '') => {
         }
       }
       lineNum++
+      // if (lineNum % 1e5 === 0) {
+      //   console.log(num(lineNum).format('0,0'))
+      // }
     })
     addValues()
   } catch (e) {
