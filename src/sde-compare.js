@@ -1,6 +1,6 @@
 const R = require('ramda')
 const { pr } = require('bufx')
-const { canonicalName, readDat } = require('./Helpers')
+const { readDat, fileExists } = require('./Helpers')
 
 // The epsilon value determines the required precision for value comparisons.
 let ε = 1e-5
@@ -27,39 +27,50 @@ let builder = {
 let handler = argv => {
   compare(argv.vensimlog, argv.sdelog, argv)
 }
-let compare = (vensimfile, sdefile, opts) => {
+let compare = async (vensimfile, sdefile, opts) => {
   if (opts.precision) {
     ε = opts.precision
   }
-  let vensimLog = readDat(vensimfile)
-  let sdeLog = readDat(sdefile)
-  let noDATDifference = true
-  for (let varName of vensimLog.keys()) {
-    let sdeValues = sdeLog.get(varName)
-    // Ignore variables that are not found in the SDE log file.
-    if (sdeValues && (!opts.name || varName === opts.name)) {
-      let vensimValue = undefined
-      let vensimValues = vensimLog.get(varName)
-      // Filter on time t, the key in the values list.
-      for (let t of vensimValues.keys()) {
-        if (!opts.times || R.find(time => isEqual(time, t), opts.times)) {
-          // In Vensim log files, const vars only have one value at the initial time.
-          if (vensimValues.size > 1 || !vensimValue) {
-            vensimValue = vensimValues.get(t)
-          }
-          let sdeValue = sdeValues.get(t)
-          let diff = difference(sdeValue, vensimValue)
-          if (diff > ε) {
-            let diffPct = (diff * 100).toFixed(6)
-            pr(`${varName} time=${t.toFixed(2)} vensim=${vensimValue} sde=${sdeValue} diff=${diffPct}%`)
-            noDATDifference = false
+  if (fileExists(vensimfile) && fileExists(sdefile)) {
+    let vensimLog = await readDat(vensimfile)
+    let sdeLog = await readDat(sdefile)
+    if (vensimLog.size > 0 && sdeLog.size > 0) {
+      let noDATDifference = true
+      for (let varName of vensimLog.keys()) {
+        let sdeValues = sdeLog.get(varName)
+        // Ignore variables that are not found in the SDE log file.
+        if (sdeValues && (!opts.name || varName === opts.name)) {
+          let vensimValue = undefined
+          let vensimValues = vensimLog.get(varName)
+          // Filter on time t, the key in the values list.
+          for (let t of vensimValues.keys()) {
+            if (!opts.times || R.find(time => isEqual(time, t), opts.times)) {
+              // In Vensim log files, const vars only have one value at the initial time.
+              if (vensimValues.size > 1 || !vensimValue) {
+                vensimValue = vensimValues.get(t)
+              }
+              let sdeValue = sdeValues.get(t)
+              let diff = difference(sdeValue, vensimValue)
+              if (diff > ε) {
+                let diffPct = (diff * 100).toFixed(6)
+                pr(`${varName} time=${t.toFixed(2)} vensim=${vensimValue} sde=${sdeValue} diff=${diffPct}%`)
+                noDATDifference = false
+              }
+            }
           }
         }
       }
+      if (noDATDifference) {
+        pr(`Data were the same for ${vensimfile} and ${sdefile}`)
+      }
+    } else {
+      if (vensimLog.size === 0) {
+        console.error(`${vensimfile} did not contain Vensim data`)
+      }
+      if (sdeLog.size === 0) {
+        console.error(`${sdefile} did not contain Vensim data`)
+      }
     }
-  }
-  if (noDATDifference) {
-    pr(`Data were the same for ${vensimfile} and ${sdefile}`)
   }
 }
 let isZero = value => {

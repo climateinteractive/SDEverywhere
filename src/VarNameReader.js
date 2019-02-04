@@ -15,12 +15,6 @@ module.exports = class VarNameReader extends ModelReader {
   }
   read(modelVarName) {
     // Parse an individual model var name and convert it into a a canonical C var name.
-    // The parser won't pick up subscripts if it encounters a minus sign, so replace it here.
-    modelVarName = modelVarName.replace(/-/g, '_').replace(/\./g, '_')
-    // Identifiers can't start with digits, so quote it. The quotes are removed later.
-    if (/^\d/.test(modelVarName)) {
-      modelVarName = `"${modelVarName}"`
-    }
     // Parse a single var name, which may include subscripts.
     let chars = new antlr4.InputStream(modelVarName)
     let lexer = new ModelLexer(chars)

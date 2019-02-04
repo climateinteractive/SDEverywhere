@@ -18,8 +18,6 @@ module.exports = class ModelLHSReader extends ModelReader {
   read(modelLHS) {
     // Parse a model LHS and return the var name without subscripts.
     // The names function may be called on this object to retrieve expanded subscript names.
-    // First remove troublesome characters the grammar can't handle.
-    modelLHS = modelLHS.replace(/\//g, ' ')
     let chars = new antlr4.InputStream(modelLHS)
     let lexer = new ModelLexer(chars)
     let tokens = new antlr4.CommonTokenStream(lexer)
@@ -32,9 +30,9 @@ module.exports = class ModelLHSReader extends ModelReader {
   names() {
     // Expand dimensions in a subscripted var into individual vars with indices.
     if (this.modelLHSList.length > 0) {
-      return R.map(modelLHS => modelLHS.replace(/"/g, ''), this.modelLHSList)
+      return this.modelLHSList
     } else {
-      return [this.varName.replace(/"/g, '')]
+      return [this.varName]
     }
   }
   visitLhs(ctx) {

@@ -4,7 +4,7 @@ const util = require('util')
 const R = require('ramda')
 const sh = require('shelljs')
 const split = require('split-string')
-const num = require('numbro')
+const byline = require('byline')
 const B = require('bufx')
 
 // Set true to print a stack trace in vlog
@@ -26,8 +26,8 @@ let canonicalName = name => {
   return (
     '_' +
     name
-      .replace(/"/g, '')
       .trim()
+      .replace(/"/g, '_')
       .replace(/\s+!$/g, '!')
       .replace(/\s/g, '_')
       .replace(/,/g, '_')
@@ -38,6 +38,7 @@ let canonicalName = name => {
       .replace(/&/g, '_')
       .replace(/%/g, '_')
       .replace(/\//g, '_')
+      .replace(/\|/g, '_')
       .toLowerCase()
   )
 }
@@ -191,6 +192,13 @@ let ensureDir = (dir, defaultDir, modelDirname) => {
   fs.ensureDirSync(dirName)
   return dirName
 }
+let fileExists = pathname => {
+  let exists = fs.existsSync(pathname)
+  if (!exists) {
+    console.error(`${pathname} not found`)
+  }
+  return exists
+}
 let linkCSourceFiles = (modelDirname, buildDirname) => {
   let cDirname = path.join(__dirname, 'c')
   sh.ls(cDirname).forEach(filename => {
@@ -234,7 +242,7 @@ let execCmd = cmd => {
   }
   return exitCode
 }
-let readDat = (pathname, varPrefix = '') => {
+let readDat = async (pathname, varPrefix = '') => {
   // Read a Vensim DAT file into a Map.
   // Key: variable name in canonical format
   // Value: Map from numeric time value to numeric variable value
@@ -257,10 +265,10 @@ let readDat = (pathname, varPrefix = '') => {
       // log.set(varName, varValues)
     }
   }
-  try {
-    // console.log(pathname)
-    let lines = B.lines(B.read(pathname))
-    lines.forEach(line => {
+  // console.log(pathname)
+  return new Promise(resolve => {
+    let stream = byline(fs.createReadStream(pathname, 'utf8'))
+    stream.on('data', line => {
       let values = splitDatLine(line)
       if (values.length === 1) {
         // Lines with a single value are variable names that start a data section.
@@ -269,7 +277,7 @@ let readDat = (pathname, varPrefix = '') => {
         // Start a new map for this var.
         // Convert the var name to canonical form so it is the same in both logs.
         varName = canonicalVensimName(values[0])
-        varValues.clear()
+        varValues = new Map()
       } else if (values.length > 1) {
         // Data lines in Vensim DAT format have {time}\t{value} format with optional comments afterward.
         let t = B.num(values[0])
@@ -288,11 +296,11 @@ let readDat = (pathname, varPrefix = '') => {
       //   console.log(num(lineNum).format('0,0'))
       // }
     })
-    addValues()
-  } catch (e) {
-    console.error(e.message)
-  }
-  return log
+    stream.on('end', () => {
+      addValues()
+      resolve(log)
+    })
+  })
 }
 let execCmdAsync = cmd => {
   // Run a command line asynchronously and silently in the "sh" shell. Print error output on error.
@@ -362,6 +370,7 @@ module.exports = {
   execCmd,
   extractMatch,
   filesExcept,
+  fileExists,
   first,
   isArrayFunction,
   isDelayFunction,

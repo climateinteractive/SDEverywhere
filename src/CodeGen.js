@@ -2,8 +2,8 @@ const R = require('ramda')
 const ModelLHSReader = require('./ModelLHSReader')
 const EquationGen = require('./EquationGen')
 const Model = require('./Model')
-const { sub, allDimensions, allMappings, isDimension, subscriptFamilies, printSubscripts } = require('./Subscript')
-const { asort, canonicalName, lines, strlist, vlog } = require('./Helpers')
+const { sub, allDimensions, allMappings, subscriptFamilies } = require('./Subscript')
+const { asort, lines, strlist } = require('./Helpers')
 
 let codeGenerator = (parseTree, opts) => {
   const { spec, operation, extData } = opts
@@ -193,7 +193,7 @@ ${outputSection(outputVars)}
       return R.sortBy(v => {
         let modelLHSReader = new ModelLHSReader()
         modelLHSReader.read(v.modelLHS)
-        return modelLHSReader.varName.replace(/"/g, '').toUpperCase()
+        return modelLHSReader.varName.toUpperCase()
       }, Model.variables)
     }
     return R.uniq(
