@@ -5,6 +5,7 @@ const R = require('ramda')
 const sh = require('shelljs')
 const split = require('split-string')
 const byline = require('byline')
+const num = require('numbro')
 const B = require('bufx')
 
 // Set true to print a stack trace in vlog
@@ -292,9 +293,7 @@ let readDat = async (pathname, varPrefix = '') => {
         }
       }
       lineNum++
-      // if (lineNum % 1e5 === 0) {
-      //   console.log(num(lineNum).format('0,0'))
-      // }
+      // if (lineNum % 1e5 === 0) console.log(num(lineNum).format('0,0'))
     })
     stream.on('end', () => {
       addValues()

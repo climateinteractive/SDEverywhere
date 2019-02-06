@@ -1,6 +1,6 @@
 # SDEverywhere Guide
 
-Revised: 2018-12-21
+Revised: 2019-02-05
 
 ## Table of Contents
 
@@ -22,11 +22,11 @@ Revised: 2018-12-21
 
 [Contributing](#contributing)
 
-[SDEverywhere architecture](#sd-everywhere-architecture)
+[SDEverywhere architecture](#sdeverywhere-architecture)
 
-[WebAssembly](#web-assembly)
+[WebAssembly](#webassembly)
 
-[Subscripts in SDEverywhere](#subscripts-in-sd-everywhere)
+[Subscripts in SDEverywhere](#subscripts-in-sdeverywhere)
 
 ## Introduction
 
@@ -222,6 +222,16 @@ sde generate --genhtml {model}
 **Print variable dependencies**
 ~~~
 sde causes {model} {C variable name}
+~~~
+
+**Convert variable names to C format**
+~~~
+sde names {model} {Vensim names file}
+~~~
+
+**Print the SDEverywhere home directory**
+~~~
+sde which
 ~~~
 
 ### Specify input and output variables

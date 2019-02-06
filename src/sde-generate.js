@@ -68,7 +68,7 @@ let handler = argv => {
   generate(argv.model, argv)
 }
 
-let generate = (model, opts) => {
+let generate = async (model, opts) => {
   // Get the model name and directory from the model argument.
   let { modelDirname, modelName, modelPathname } = modelPathProps(model)
   // Ensure the build directory exists.
@@ -80,7 +80,16 @@ let generate = (model, opts) => {
   }
   // Preprocess model text into parser input. Stop now if that's all we're doing.
   let spec = parseSpec(opts.spec)
-  let extData = readDatFiles(modelDirname, spec.datfiles)
+  // Read time series from external DAT files into a single object.
+  // The datfiles object is a map from var prefixes to pathnames.
+  let extData = new Map()
+  if (spec.datfiles) {
+    for (let varPrefix in spec.datfiles) {
+      let pathname = path.join(modelDirname, spec.datfiles[varPrefix])
+      let data = await readDat(pathname, varPrefix)
+      extData = new Map([...extData, ...data])
+    }
+  }
   // Produce a runnable model with the "genc" and "preprocess" options.
   let profile = opts.analysis ? 'analysis' : 'genc'
   // Write the preprocessed model and removals if the option is "analysis" or "preprocess".
@@ -245,19 +254,6 @@ let parseJsonFile = filename => {
     // If the file doesn't exist, return an empty object without complaining.
   }
   return result
-}
-let readDatFiles = (modelDirname, datfiles) => {
-  // Read time series from external DAT files into a single object.
-  // The datfiles object is a map from var prefixes to pathnames.
-  let extData = new Map()
-  if (datfiles) {
-    for (let varPrefix in datfiles) {
-      let pathname = path.join(modelDirname, datfiles[varPrefix])
-      let data = readDat(pathname, varPrefix)
-      extData = new Map([...extData, ...data])
-    }
-  }
-  return extData
 }
 let writeOutput = (outputPathname, outputText) => {
   try {
