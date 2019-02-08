@@ -24,6 +24,10 @@ let variables = []
 let nonAtoANames = Object.create(null)
 // Set true for diagnostic printing of init, aux, and level vars in sorted order.
 const PRINT_SORTED_VARS = false
+// Set true to print dependency graphs before they are sorted.
+const PRINT_INIT_GRAPH = false
+const PRINT_AUX_GRAPH = false
+const PRINT_LEVEL_GRAPH = false
 
 function read(parseTree, spec, extData) {
   // Some arrays need to be separated into variables with individual indices to
@@ -512,6 +516,8 @@ function sortVarsOfType(varType) {
     }, refs)
   }
   // Sort into an lhs dependency list.
+  if (PRINT_AUX_GRAPH) printDepsGraph(graph, 'AUX')
+  if (PRINT_LEVEL_GRAPH) printDepsGraph(graph, 'LEVEL')
   let deps = toposort(graph).reverse()
   // Turn the dependency-sorted var name list into a var list.
   let sortedVars = varsOfType(varType, R.map(refId => varWithRefId(refId), deps))
@@ -578,7 +584,7 @@ function sortInitVars() {
   for (let refId of depsMap.keys()) {
     R.forEach(dep => graph.push([refId, dep]), depsMap.get(refId))
   }
-  // console.error(graph);
+  if (PRINT_INIT_GRAPH) printDepsGraph(graph, 'INIT')
   // Sort into a reference id dependency list.
   let deps = toposort(graph).reverse()
   // return [];
@@ -732,7 +738,13 @@ function printRefGraph(varName) {
     printRefs(v, 1, [])
   }
 }
-
+function printDepsGraph(graph, varType) {
+  // The dependency graph is an array of pairs.
+  console.error(`${varType} GRAPH`)
+  for (const dep of graph) {
+    console.error(`${dep[0]} → ${dep[1]}`)
+  }
+}
 module.exports = {
   addEquation,
   addNonAtoAVar,

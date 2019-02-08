@@ -37,13 +37,14 @@ function toposort(nodes, edges) {
 
   function visit(node, i, predecessors) {
     if(predecessors.has(node)) {
+      debugger
       var nodeRep
       try {
-        nodeRep = ", node was: " + node + '\n'
+        nodeRep = '\n' + node + '\n'
       } catch(e) {
         nodeRep = ""
       }
-      throw new Error('toposort cyclic dependency' + nodeRep + [...predecessors].join(' →\n'))
+      throw new Error('toposort cyclic dependency:\n' + [...predecessors].join(' →\n') + nodeRep)
     }
 
     if (!nodesHash.has(node)) {
