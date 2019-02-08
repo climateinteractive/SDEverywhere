@@ -49,8 +49,12 @@ let preprocessModel = (mdlFilename, spec, profile = 'genc', writeRemovals = fals
   B.open('macros')
   B.open('pp')
   // Read the model file.
-  mdl = B.read(mdlFilename)
-
+  try {
+    mdl = B.read(mdlFilename)
+  } catch (error) {
+    console.error(error.message)
+    return
+  }
   // Remove the macro section.
   let inMacroSection = false
   for (let line of B.lines(mdl)) {

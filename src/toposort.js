@@ -37,16 +37,13 @@ function toposort(nodes, edges) {
 
   function visit(node, i, predecessors) {
     if(predecessors.has(node)) {
-      // ToddF: show the cyclic dependency sequence
-      console.error('Cyclic dependency detected!')
-      console.error([...predecessors].join(' →\n'))
       var nodeRep
       try {
-        nodeRep = ", node was: " + node
+        nodeRep = ", node was: " + node + '\n'
       } catch(e) {
         nodeRep = ""
       }
-      throw new Error('Cyclic dependency' + nodeRep)
+      throw new Error('toposort cyclic dependency' + nodeRep + [...predecessors].join(' →\n'))
     }
 
     if (!nodesHash.has(node)) {

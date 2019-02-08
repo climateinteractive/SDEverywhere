@@ -69,82 +69,86 @@ let handler = argv => {
 }
 
 let generate = async (model, opts) => {
-  // Get the model name and directory from the model argument.
-  let { modelDirname, modelName, modelPathname } = modelPathProps(model)
-  // Ensure the build directory exists.
-  let buildDirname = buildDir(opts.builddir, modelDirname)
-  // Generate a spec file from the app.yaml file for web apps.
-  // This overrides the --spec argument if present.
-  if (opts.genhtml) {
-    opts.spec = makeModelSpec(modelDirname)
-  }
-  // Preprocess model text into parser input. Stop now if that's all we're doing.
-  let spec = parseSpec(opts.spec)
-  // Read time series from external DAT files into a single object.
-  // The datfiles object is a map from var prefixes to pathnames.
-  let extData = new Map()
-  if (spec.datfiles) {
-    for (let varPrefix in spec.datfiles) {
-      let pathname = path.join(modelDirname, spec.datfiles[varPrefix])
-      let data = await readDat(pathname, varPrefix)
-      extData = new Map([...extData, ...data])
+  try {
+    // Get the model name and directory from the model argument.
+    let { modelDirname, modelName, modelPathname } = modelPathProps(model)
+    // Ensure the build directory exists.
+    let buildDirname = buildDir(opts.builddir, modelDirname)
+    // Generate a spec file from the app.yaml file for web apps.
+    // This overrides the --spec argument if present.
+    if (opts.genhtml) {
+      opts.spec = makeModelSpec(modelDirname)
     }
-  }
-  // Produce a runnable model with the "genc" and "preprocess" options.
-  let profile = opts.analysis ? 'analysis' : 'genc'
-  // Write the preprocessed model and removals if the option is "analysis" or "preprocess".
-  let writeFiles = opts.analysis || opts.preprocess
-  let input = preprocessModel(modelPathname, spec, profile, writeFiles)
-  if (writeFiles) {
-    let outputPathname = path.join(buildDirname, `${modelName}.mdl`)
-    writeOutput(outputPathname, input)
-    process.exit(0)
-  }
-  // Parse the model and generate code. If no operation is specified, the code generator will
-  // read the model and do nothing else. This is required for the list operation.
-  let operation = ''
-  if (opts.genc || opts.genhtml) {
-    operation = 'generateC'
-  } else if (opts.list) {
-    operation = 'printVarList'
-  } else if (opts.refidtest) {
-    operation = 'printRefIdTest'
-  }
-  let parseTree = parseModel(input)
-  let code = codeGenerator(parseTree, { spec, operation, extData }).generate()
-  if (opts.genc || opts.genhtml) {
-    let outputPathname = path.join(buildDirname, `${modelName}.c`)
-    writeOutput(outputPathname, code)
-  }
-  if (opts.list) {
-    let outputPathname, outputText
-    // Write variables to a text file.
-    outputPathname = path.join(buildDirname, `${modelName}_vars.txt`)
-    outputText = Model.printVarList()
-    writeOutput(outputPathname, outputText)
-    // Write subscripts to a text file.
-    outputPathname = path.join(buildDirname, `${modelName}_subs.txt`)
-    outputText = Subscript.printSubscripts()
-    writeOutput(outputPathname, outputText)
-    // Write variables to a YAML file.
-    outputPathname = path.join(buildDirname, `${modelName}_vars.yaml`)
-    outputText = Model.yamlVarList()
-    writeOutput(outputPathname, outputText)
-    // Write subscripts to a YAML file.
-    outputPathname = path.join(buildDirname, `${modelName}_subs.yaml`)
-    outputText = Subscript.yamlSubsList()
-    writeOutput(outputPathname, outputText)
-  }
-  // Generate a web app for the model.
-  if (opts.genhtml) {
-    let webDirname = webDir(buildDirname)
-    linkCSourceFiles(modelDirname, buildDirname)
-    if (generateWASM(buildDirname, webDirname) === 0) {
-      makeModelConfig(modelDirname, webDirname)
-      copyTemplate(buildDirname)
-      customizeApp(modelDirname, webDirname)
-      packApp(webDirname)
+    // Preprocess model text into parser input. Stop now if that's all we're doing.
+    let spec = parseSpec(opts.spec)
+    // Read time series from external DAT files into a single object.
+    // The datfiles object is a map from var prefixes to pathnames.
+    let extData = new Map()
+    if (spec.datfiles) {
+      for (let varPrefix in spec.datfiles) {
+        let pathname = path.join(modelDirname, spec.datfiles[varPrefix])
+        let data = await readDat(pathname, varPrefix)
+        extData = new Map([...extData, ...data])
+      }
     }
+    // Produce a runnable model with the "genc" and "preprocess" options.
+    let profile = opts.analysis ? 'analysis' : 'genc'
+    // Write the preprocessed model and removals if the option is "analysis" or "preprocess".
+    let writeFiles = opts.analysis || opts.preprocess
+    let input = preprocessModel(modelPathname, spec, profile, writeFiles)
+    if (writeFiles) {
+      let outputPathname = path.join(buildDirname, `${modelName}.mdl`)
+      writeOutput(outputPathname, input)
+      process.exit(0)
+    }
+    // Parse the model and generate code. If no operation is specified, the code generator will
+    // read the model and do nothing else. This is required for the list operation.
+    let operation = ''
+    if (opts.genc || opts.genhtml) {
+      operation = 'generateC'
+    } else if (opts.list) {
+      operation = 'printVarList'
+    } else if (opts.refidtest) {
+      operation = 'printRefIdTest'
+    }
+    let parseTree = parseModel(input)
+    let code = codeGenerator(parseTree, { spec, operation, extData }).generate()
+    if (opts.genc || opts.genhtml) {
+      let outputPathname = path.join(buildDirname, `${modelName}.c`)
+      writeOutput(outputPathname, code)
+    }
+    if (opts.list) {
+      let outputPathname, outputText
+      // Write variables to a text file.
+      outputPathname = path.join(buildDirname, `${modelName}_vars.txt`)
+      outputText = Model.printVarList()
+      writeOutput(outputPathname, outputText)
+      // Write subscripts to a text file.
+      outputPathname = path.join(buildDirname, `${modelName}_subs.txt`)
+      outputText = Subscript.printSubscripts()
+      writeOutput(outputPathname, outputText)
+      // Write variables to a YAML file.
+      outputPathname = path.join(buildDirname, `${modelName}_vars.yaml`)
+      outputText = Model.yamlVarList()
+      writeOutput(outputPathname, outputText)
+      // Write subscripts to a YAML file.
+      outputPathname = path.join(buildDirname, `${modelName}_subs.yaml`)
+      outputText = Subscript.yamlSubsList()
+      writeOutput(outputPathname, outputText)
+    }
+    // Generate a web app for the model.
+    if (opts.genhtml) {
+      let webDirname = webDir(buildDirname)
+      linkCSourceFiles(modelDirname, buildDirname)
+      if (generateWASM(buildDirname, webDirname) === 0) {
+        makeModelConfig(modelDirname, webDirname)
+        copyTemplate(buildDirname)
+        customizeApp(modelDirname, webDirname)
+        packApp(webDirname)
+      }
+    }
+  } catch (error) {
+    console.error(error.message)
   }
 }
 let generateWASM = (buildDirname, webDirname) => {

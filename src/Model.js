@@ -18,14 +18,7 @@ const {
   sub,
   subscriptFamilies
 } = require('./Subscript')
-const {
-  decanonicalize,
-  isIterable,
-  listConcat,
-  strlist,
-  vlog,
-  vsort
-} = require('./Helpers')
+const { decanonicalize, isIterable, listConcat, strlist, vlog, vsort } = require('./Helpers')
 
 let variables = []
 let nonAtoANames = Object.create(null)
@@ -449,19 +442,24 @@ function vensimName(cVarName) {
     let subscripts = []
     let v = varWithName(varName)
     if (v) {
-      m = v.modelLHS.match(/[^\[]+/)
-      if (m) {
-        result = m[0]
-      }
-      let families = subscriptFamilies(v.subscripts)
-      for (let i = 0; i < families.length; i++) {
-        let indexNames = indexNamesForSubscript(families[i])
-        let indexNumber = Number.parseInt(indexNumbers[i])
-        let indexModelName = decanonicalize(indexNames[indexNumber])
-        subscripts.push(indexModelName)
-      }
-      if (!R.isEmpty(subscripts)) {
-        result += `[${subscripts.join(',')}]`
+      // Ensure that the C var name is subscripted when the var has subscripts.
+      if (R.isEmpty(v.subscripts) || !R.isEmpty(indexNumbers)) {
+        m = v.modelLHS.match(/[^\[]+/)
+        if (m) {
+          result = m[0]
+        }
+        let families = subscriptFamilies(v.subscripts)
+        for (let i = 0; i < families.length; i++) {
+          let indexNames = indexNamesForSubscript(families[i])
+          let indexNumber = Number.parseInt(indexNumbers[i])
+          let indexModelName = decanonicalize(indexNames[indexNumber])
+          subscripts.push(indexModelName)
+        }
+        if (!R.isEmpty(subscripts)) {
+          result += `[${subscripts.join(',')}]`
+        }
+      } else {
+        console.error(`${cVarName} has no subscripts in vensimName`)
       }
     } else {
       console.error(`no var with name ${varName} in vensimName`)

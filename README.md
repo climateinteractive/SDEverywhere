@@ -62,7 +62,7 @@ Using SDEverywhere requires the macOS operating system and the free [Xcode](http
 
 ### Install Node.js
 
-Install [Node.js](https://nodejs.org/) version 10.14.2 LTS or later. This will also install the `npm` Node Package Manager.
+Install [Node.js](https://nodejs.org/) version 10.15.0 LTS or later. This will also install the `npm` Node Package Manager.
 
 ### Install the current release version of SDEverywhere (npm package)
 
@@ -141,7 +141,6 @@ Here are the files in each model directory.
 Filename          | Description
 ----------------- | -----------
 {model}.mdl       | Vensim model
-{model}.vdf64     | Vensim data file from a 64-bit run using default variable values
 {model}.dat       | Data file exported in DAT text format
 {model}.txt       | SDEverywhere log file in DAT format with values for all time steps
 {model}_spec.json | Model specification including input and output variables of interest
