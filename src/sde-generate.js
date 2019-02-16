@@ -85,9 +85,9 @@ let generate = async (model, opts) => {
     // The datfiles object is a map from var prefixes to pathnames.
     let extData = new Map()
     if (spec.datfiles) {
-      for (let varPrefix in spec.datfiles) {
-        let pathname = path.join(modelDirname, spec.datfiles[varPrefix])
-        let data = await readDat(pathname, varPrefix)
+      for (let datfile of spec.datfiles) {
+        let pathname = path.join(modelDirname, datfile)
+        let data = await readDat(pathname)
         extData = new Map([...extData, ...data])
       }
     }

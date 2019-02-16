@@ -243,7 +243,7 @@ let execCmd = cmd => {
   }
   return exitCode
 }
-let readDat = async (pathname, varPrefix = '') => {
+let readDat = async (pathname) => {
   // Read a Vensim DAT file into a Map.
   // Key: variable name in canonical format
   // Value: Map from numeric time value to numeric variable value
@@ -261,9 +261,7 @@ let readDat = async (pathname, varPrefix = '') => {
   }
   let addValues = () => {
     if (varName !== '' && varValues.size > 0) {
-      // TODO support reading external data without a prefix (data vars in the model instead of graph vars)
-      log.set(`${varPrefix}${varName}`, varValues)
-      // log.set(varName, varValues)
+      log.set(varName, varValues)
     }
   }
   // console.log(pathname)
