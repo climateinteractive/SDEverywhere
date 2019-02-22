@@ -67,24 +67,24 @@ Install [Node.js](https://nodejs.org/) version 10.15.0 LTS or later. This will a
 ### Install the current release version of SDEverywhere (npm package)
 
 If you want to use SDEverywhere without getting the sample models, tests, and source code, simply install the npm package. The global installation gives you the `sde` command everywhere on your system.
-~~~
+~~~ bash
 npm install sdeverywhere -g
 ~~~
 
 ### Install the source code and sample models
 
 If you want the full source code, visit the [GitHub repo](https://github.com/ToddFincannon/SDEverywhere) to download the code. Downloading the source code allows you to run the release version (same as above) or a development branch, if you're changing the tool. You can download the source code to your computer as a zip file (and then unzip) or clone the repository using git.
-~~~
+~~~ bash
 git clone https://github.com/ToddFincannon/SDEverywhere
 ~~~
 
 If you previously installed the SDEverywhere package using npm, uninstall that package before installing your new, local copy.
-~~~
+~~~ bash
 npm rm sdeverywhere -g
 ~~~
 
 The best way to run SDEverywhere in development is to link it into the Node global modules. You must also link `antlr4-vensim` too. If you update Node, you will need to do the link again in the global modules in the new Node directory.
-~~~
+~~~ bash
 cd antlr4-vensim
 npm link
 cd ../SDEverywhere
@@ -99,13 +99,13 @@ If you need to run SDEverywhere in a debugger, use the instructions in the "Debu
 ## Test your setup
 
 If you installed the sample models from the GitHub repo, you can test your installation by building and running the models in the `models` directory, and then comparing SDEverywhere output to Vensim x64 output. Each model has its own directory under `models` with the same name as the model. For instance:
-~~~
+~~~ bash
 cd models/arrays
 sde test arrays
 ~~~
 
 If that worked OK, you have installed everything needed to use SDEverywhere. You can test *all* the sample models too.
-~~~
+~~~ bash
 cd src/tests
 ./modeltests
 ~~~
@@ -159,77 +159,77 @@ If you are not running from the model directory, you can give a full pathname to
 By default, SDEverywhere will create a `build` directory in your model directory to hold the generated code and the compiled model. If you run the model, it will also create an `output` directory by default. You can specify other directories with command options.
 
 **Generate baseline model code that outputs all variables with no inputs**
-~~~
+~~~ bash
 sde generate --genc {model}
 ~~~
 
 **List a model's variables**
-~~~
+~~~ bash
 sde generate --list {model} >{model}_vars.txt
 ~~~
 
 **Preprocess a model to remove macros and tabbed arays to removals.txt**
-~~~
+~~~ bash
 sde generate ----preprocess {model} >{model}_pp.mdl
 ~~~
 
 **Compile the C code into an executable in the build directory**
-~~~
+~~~ bash
 sde compile {model}
 ~~~
 
 **Run the executable and capture output into a text file in the output directory**
-~~~
+~~~ bash
 sde exec {model} {arguments}
 ~~~
 
 **Convert the SDEverywhere output file to a DAT file in the output directory**
-~~~
+~~~ bash
 sde log --dat output/{model}.txt
 ~~~
 
 **Compare a previously exported Vensim DAT file to SDEverywhere output**
-~~~
+~~~ bash
 sde compare {model}.dat output/{model}.dat
 ~~~
 
 **Generate C code and compile it in the build directory**
-~~~
+~~~ bash
 sde build {model}
 ~~~
 
 **Build C code and run the model**
-~~~
+~~~ bash
 sde run {model}
 ~~~
 
 **Run the model and compare its output to a previously exported Vensim DAT file**
-~~~
+~~~ bash
 sde test {model}
 ~~~
 
 **Delete the build, output, and html directories**
-~~~
+~~~ bash
 sde clean {model}
 ~~~
 
 **Generate a web app to run the model and graph the results**
-~~~
+~~~ bash
 sde generate --genhtml {model}
 ~~~
 
 **Print variable dependencies**
-~~~
+~~~ bash
 sde causes {model} {C variable name}
 ~~~
 
 **Convert variable names to C format**
-~~~
+~~~ bash
 sde names {model} {Vensim names file}
 ~~~
 
 **Print the SDEverywhere home directory**
-~~~
+~~~ bash
 sde which
 ~~~
 
@@ -238,7 +238,7 @@ sde which
 Most applications do not require all variables in the output. And we usually want to designate some constant variables as inputs. In SDEverywhere, this is done with a model specification JSON file. The conventional name is `{model}_spec.json`.
 
 First, create a model specification file that gives the Vensim names of input and output variables of interest. Be sure to include `Time` first among the output variables.
-~~~
+~~~ JSON
 {
   "inputVars": [
     "Reference predators",
@@ -255,14 +255,14 @@ First, create a model specification file that gives the Vensim names of input an
 ### Generating, compiling, running, and testing the C code
 
 To generate C code using the `--spec` argument, enter the following command:
-~~~
+~~~ bash
 sde generate --genc --spec {model}_spec.json {model}
 ~~~
 
 SDE allows for validation against Vensim output. Before running the C file, it is useful to generate the Vensim data so you can ensure the C code is valid and reproduces the same results as Vensim. To make the Vensim output, run the model in 64-bit Vensim and export the run in DAT format to the `{model}.dat` file in the model directory.
 
 The `sde test` command generates baseline C code that outputs all variables with no inputs. It then compiles the C code and runs it. The output is captured and converted into DAT format in the `output/{model}.dat` file. This is compared to Vensim run exported to a `{model}.dat` file in the model directory. All values that differ by a factor of 1e-5 or more are listed with the variance.
-~~~
+~~~ bash
 sde test {model}
 ~~~
 
@@ -306,7 +306,7 @@ An exception of "code generator exception: Cannot read property 'name' of undefi
 To print a stack trace to the console, use `console.error(e.stack)` in an exception handler and `console.trace()` elsewhere.
 
 In the C input parsing code, show a changed value:
-~~~
+~~~ C
 if (*inputVarPtrs[modelVarIndex] != value) {
   fprintf(stderr, "input %d changed from %g to %g\n", modelVarIndex, *inputVarPtrs[modelVarIndex], value);
 }
@@ -383,7 +383,7 @@ The ANTLR parser generator creates the `ModelVisitor` class to provide an empty 
 `ModelReader` is an SDEverywhere base class for more specialized parse tree walker classes. It does not extract any information from the parse tree on its own. Instead, it visits each element of a rule context by getting the element from the rule context and then calling its `accept` method. `ModelReader` knows what elements are part of each rule context in what order, which ones are optional, and which ones can take multiple values. The `accept` method goes through the visitor framework to make a "visit" call on the method for the element's rule contxt. In effect, it is asking a child rule context to "accept" a "visit" from "this" parent rule context.
 
 For instance, when the LHS of an equation is visited, the `visitLhs` method is called. It sees if there is a subscript list in the parse tree under the LHS node. If there is, the `accept` method is called on the subscript list rule context.
-~~~
+~~~ JavaScript
 visitLhs(ctx) {
   if (ctx.subscriptList()) {
     ctx.subscriptList().accept(this);
@@ -449,7 +449,7 @@ For web apps, SDEverywhere converts the C code it generates into [WebAssembly](h
 
 Instead of calling `startup()` on page load, we need to wait for the WebAssembly (wasm) module to load. We define a global Module object with the callback.
 
-~~~
+~~~ JavaScript
 window.Module = {
   preRun: [],
   postRun: [],
