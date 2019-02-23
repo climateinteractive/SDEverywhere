@@ -3,7 +3,7 @@ const num = require('numbro')
 const he = require('he')
 const R = require('ramda')
 // Application modules
-const { app, appMenu, viewConfig } = require('./model_config')
+const { app, appMenu, viewConfig } = require('./appcfg')
 const { setNumCharts, setChartData, createChart, createCharts, updateCharts, destroyChart } = require('./charts')
 const modelRun = require('./model_run')
 const { setDefaultInputValues, resetInputs, formatInputs, getInputValue, setInputValue } = require('./model_data')

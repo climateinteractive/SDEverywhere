@@ -12,9 +12,9 @@ let yamlPathname, specPathname, cfgPathname, stringsPathname
 
 let init = (modelDir, webDir) => {
   yamlPathname = path.join(modelDir, 'app.yaml')
-  specPathname = path.join(modelDir, 'web_spec.json')
+  specPathname = path.join(modelDir, 'app_spec.json')
   if (webDir) {
-    cfgPathname = path.join(webDir, 'model_config.js')
+    cfgPathname = path.join(webDir, 'appcfg.js')
     stringsPathname = path.join(webDir, 'strings.js')
   }
   cfg = {}

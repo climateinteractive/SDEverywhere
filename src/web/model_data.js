@@ -1,5 +1,5 @@
 const R = require('ramda')
-const { inputVarNames, viewConfig } = require('./model_config')
+const { inputVarNames, viewConfig } = require('./appcfg')
 const log = require('./log')
 
 // Data storage for input variables

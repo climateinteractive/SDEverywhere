@@ -1,7 +1,7 @@
 const Chart = require('chart.js')
 const R = require('ramda')
 const num = require('numbro')
-const { app, chartConfig, outputVarNames, TIME_VAR_NAME } = require('./model_config')
+const { app, chartConfig, outputVarNames, TIME_VAR_NAME } = require('./appcfg')
 const { str } = require('./ui_config')
 const log = require('./log')
 

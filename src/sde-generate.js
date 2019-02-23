@@ -22,6 +22,9 @@ const Model = require('./Model')
 const Subscript = require('./Subscript')
 const B = require('bufx')
 
+// Set true to retain generated source files during development.
+const RETAIN_GENERATED_SOURCE_FILES = false
+
 let command = 'generate [options] <model>'
 let describe = 'generate model code'
 let builder = {
@@ -194,7 +197,7 @@ let copyTemplate = buildDirname => {
 }
 let customizeApp = (modelDirname, webDirname) => {
   // Read the newly generated model config to customize app files.
-  let cfgPathname = `${webDirname}/model_config`
+  let cfgPathname = `${webDirname}/appcfg`
   try {
     const { app } = require(cfgPathname)
     if (app && app.logo) {
@@ -221,8 +224,9 @@ let packApp = webDirname => {
         `${webDirname}/*.js`,
         name => name.endsWith('index.min.js') || name.endsWith('model_sde.js')
       )
-      // In development, comment this out to retain generated source files.
-      sh.rm(sourceFiles)
+      if (!RETAIN_GENERATED_SOURCE_FILES) {
+        sh.rm(sourceFiles)
+      }
     })
 }
 let parseModel = input => {
