@@ -145,8 +145,8 @@ let openBrowserWindow = url => {
   window.open(url, '_blank')
 }
 let helpUsing = () => {
-  if (app.help_url) {
-    openBrowserWindow(app.help_url)
+  if (app.helpUrl) {
+    openBrowserWindow(app.helpUrl)
   }
 }
 let resetSim = () => {

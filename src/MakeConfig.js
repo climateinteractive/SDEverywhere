@@ -1,17 +1,19 @@
 #!/usr/bin/env node
 const path = require('path')
 const R = require('ramda')
-const yaml = require('js-yaml')
-const prettier = require('prettier')
-const parse = require('minimist')
+const parseCsv = require('csv-parse/lib/sync')
 const B = require('bufx')
-const { canonicalName, strings, stringToId } = require('./Helpers')
+const { canonicalName, strings, stringToId, matchRegex } = require('./Helpers')
 
-let cfg, sliders, inputVarNames, outputVarNames
-let yamlPathname, specPathname, cfgPathname, stringsPathname
+let cfg, inputVarNames, outputVarNames
+let configDirname, specPathname, cfgPathname, stringsPathname
+
+const CONFIG_FILES = ['app.csv', 'colors.csv', 'graphs.csv', 'sliders.csv', 'views.csv']
+const CSV_PARSE_OPTS = { columns: true, trim: true, skip_empty_lines: true, skip_lines_with_empty_values: true }
+const MAX_PLOTS = 8
 
 let init = (modelDir, webDir) => {
-  yamlPathname = path.join(modelDir, 'app.yaml')
+  configDirname = path.join(modelDir, 'config')
   specPathname = path.join(modelDir, 'app_spec.json')
   if (webDir) {
     cfgPathname = path.join(webDir, 'appcfg.js')
@@ -23,29 +25,34 @@ let init = (modelDir, webDir) => {
   outputVarNames = []
   B.clearBuf()
 }
-let exportObj = (name, obj) => {
-  let js = `exports.${name} = ${JSON.stringify(obj)}`
-  B.emitJs(js)
-}
 let parseCfg = () => {
-  // Parse the app.yaml file in the app directory.
-  let data = B.read(yamlPathname)
-  cfg = yaml.safeLoad(data)
+  // Parse each CSV file in the config directory and add it to the cfg object.
+  for (const filename of CONFIG_FILES) {
+    let cfgSection = filename.replace('.csv', '')
+    let pathname = path.join(configDirname, filename)
+    try {
+      let data = B.read(pathname)
+      let obj = parseCsv(data, CSV_PARSE_OPTS)
+      if (cfgSection === 'app') {
+        cfg[cfgSection] = obj[0]
+      } else {
+        cfg[cfgSection] = obj
+      }
+    } catch (error) {
+      console.error(`ERROR: config file ${pathname} not found`)
+    }
+  }
 }
 let getVarNames = () => {
   // Compile a list of input and output variable names.
-  for (let sliderName in cfg.app.sliders) {
-    inputVarNames.push(sliderName)
+  for (let slider of cfg.sliders) {
+    inputVarNames.push(slider.varName)
   }
-  for (let section of cfg.views) {
-    // TODO allow slider object overrides and additions at the section and view levels
-    for (let view of section.views) {
-      if (view.graphs) {
-        for (let graph of view.graphs) {
-          for (let plot of graph.plots) {
-            outputVarNames.push(plot.name)
-          }
-        }
+  for (const graph of cfg.graphs) {
+    for (let plotNum = 1; plotNum <= MAX_PLOTS; plotNum++) {
+      let varName = graph[`plot${plotNum}Variable`]
+      if (varName) {
+        outputVarNames.push(varName)
       }
     }
   }
@@ -57,40 +64,18 @@ let emitConsts = () => {
   exportObj('TIME_VAR_NAME', '_time')
 }
 let emitApp = () => {
-  if (cfg.app) {
-    let app = {}
-    app.title = stringToId(cfg.app.title)
-    app.logo = cfg.app.logo
-    app.version = cfg.app.version
-    app.help_url = cfg.app.help_url
-    app.colors = cfg.app.colors
-    app.initialView = stringToId(cfg.app.initial_view)
-    app.trackSliders = cfg.app.track_sliders || false
-    // Fill out slider definitions indexed by name for the app.
-    for (let sliderName in cfg.app.sliders) {
-      let slider = cfg.app.sliders[sliderName]
-      if (R.has('label', slider) && R.has('max', slider) && R.has('step', slider)) {
-        let appSlider = {
-          name: canonicalName(sliderName),
-          label: stringToId(slider.label),
-          value: slider.value || 0,
-          minValue: slider.min || 0,
-          maxValue: slider.max,
-          step: slider.step
-        }
-        if (R.has('units', slider)) {
-          appSlider.units = stringToId(slider.units)
-        }
-        if (R.has('format', slider)) {
-          appSlider.format = slider.format
-        }
-        sliders[appSlider.name] = appSlider
-      } else {
-        console.error(`warning: the ${sliderName} app slider does not have label, max, and step`)
-      }
-    }
-    exportObj('app', app)
+  let app = {}
+  app.title = stringToId(cfg.app.title)
+  app.logo = cfg.app.logo
+  app.version = cfg.app.version
+  app.helpUrl = cfg.app.helpUrl
+  app.initialView = stringToId(cfg.app.initialView)
+  app.trackSliders = !!cfg.app.trackSliders
+  app.colors = {}
+  for (const color of cfg.colors) {
+    app.colors[`color_${color.colorId}`] = color.hexCode
   }
+  exportObj('app', app)
 }
 let emitVars = () => {
   exportObj('inputVarNames', inputVarNames)
@@ -129,21 +114,24 @@ let emitMenu = () => {
     },
     { type: 'separator' }
   ]
-  for (let section of cfg.views) {
-    sectionMenu = {}
-    sectionSubmenu = []
-    sectionMenu.id = stringToId(section.title)
-    for (let view of section.views) {
-      let viewId = stringToId(`${section.title} > ${view.title}`)
-      sectionSubmenu.push({ id: viewId, label: stringToId(view.title) })
+  let sectionTitle = ''
+  for (const view of cfg.views) {
+    let section = viewTitleSection(view.title)
+    if (section && section !== sectionTitle) {
+      sectionTitle = section
+      sectionMenu = {}
+      sectionSubmenu = []
+      sectionMenu.id = stringToId(sectionTitle)
     }
+    let viewId = stringToId(view.title)
+    sectionSubmenu.push({ id: viewId, label: stringToId(viewTitleName(view.title)) })
     sectionMenu.submenu = sectionSubmenu
     toplevelSubmenu.push(sectionMenu)
   }
   topLevelMenu.submenu = toplevelSubmenu
   appMenu.push(topLevelMenu)
   // Help menu
-  if (cfg.app && (cfg.app.version || (cfg.app.help_url && cfg.app.title))) {
+  if (cfg.app.version || (cfg.app.helpUrl && cfg.app.title)) {
     topLevelMenu = { id: stringToId('Help') }
     toplevelSubmenu = []
     if (cfg.app.version) {
@@ -152,7 +140,7 @@ let emitMenu = () => {
         enabled: false
       })
     }
-    if (cfg.app.help_url && cfg.app.title) {
+    if (cfg.app.helpUrl && cfg.app.title) {
       if (!R.isEmpty(toplevelSubmenu)) {
         toplevelSubmenu.push({ type: 'separator' })
       }
@@ -167,137 +155,100 @@ let emitMenu = () => {
   exportObj('appMenu', appMenu)
 }
 let emitCharts = () => {
-  // Compile the configuration for each chart.
-  // fossil_fuel_emissions_by_country_group_1r: {
-  //   title: 'fossil_fuel_emissions',
-  //   yAxisLabel: 'ya_gigatons_co2_year',
-  //   yMax: 120,
-  //   varNames: ['_global_co2_ff_emissions'],
-  //   xAxisLabels: ['global'],
-  //   colors: ['COLOR_REGION_1']
-  // }
-  // Chart properties:
-  //   beginYAxisAtZero
-  //   colors
-  //   lineStyle
-  //   title
-  //   varNames
-  //   xAxisLabels
-  //   xMax
-  //   xMin
-  //   yAxisLabel
-  //   yMax
-  //   yMin
-
+  let value
   let chartConfig = {}
-  for (let section of cfg.views) {
-    for (let view of section.views) {
-      if (view.graphs) {
-        for (let graph of view.graphs) {
-          let id = stringToId(graph.title)
-          let chart = {}
-          if (R.has('title', graph)) {
-            chart.title = stringToId(graph.title)
-          }
-          if (graph.x_axis) {
-            // TODO Add this to the UI?
-            // if (R.has('label', graph.x_axis)) {
-            // }
-            if (R.has('min', graph.x_axis)) {
-              chart.xMin = graph.x_axis.min
-            }
-            if (R.has('max', graph.x_axis)) {
-              chart.xMax = graph.x_axis.max
-            }
-          } else {
-            console.error(
-              `warning: the ${section.title} > ${view.title} > ${graph.title} graph does not have an x_axis`
-            )
-          }
-          if (graph.y_axis) {
-            if (R.has('units', graph.y_axis)) {
-              chart.yAxisLabel = stringToId(graph.y_axis.units)
-            }
-            if (R.has('format', graph.y_axis)) {
-              chart.yFormat = graph.y_axis.format
-            }
-            if (R.has('min', graph.y_axis)) {
-              chart.yMin = graph.y_axis.min
-            }
-            if (R.has('max', graph.y_axis)) {
-              chart.yMax = graph.y_axis.max
-            }
-          } else {
-            console.error(`warning: the ${section.title} > ${view.title} > ${graph.title} graph does not have a y_axis`)
-          }
-          for (let plot of graph.plots) {
-            if (R.has('name', plot) && R.has('label', plot)) {
-              if (!chart.varNames) {
-                chart.varNames = []
-              }
-              if (!chart.xAxisLabels) {
-                chart.xAxisLabels = []
-              }
-              chart.varNames.push(canonicalName(plot.name))
-              chart.xAxisLabels.push(stringToId(plot.label))
-              // TODO check if color or style is missing once one is defined
-              if (R.has('color', plot)) {
-                if (!chart.colors) {
-                  chart.colors = []
-                }
-                chart.colors.push(plot.color)
-              }
-              if (R.has('style', plot)) {
-                if (!chart.lineStyle) {
-                  chart.lineStyle = []
-                }
-                chart.lineStyle.push(plot.style)
-              }
-            } else {
-              console.error(
-                `warning: a ${section.title} > ${view.title} > ${graph.title} plot does not have a name and label`
-              )
-            }
-          }
-          chartConfig[id] = chart
+  for (const graph of cfg.graphs) {
+    let chart = {}
+    chart.title = stringToId(graph.title)
+    if (val(graph.xAxisMin) && val(graph.xAxisMax)) {
+      chart.xMin = num(val(graph.xAxisMin))
+      chart.xMax = num(val(graph.xAxisMax))
+    } else {
+      console.error(`warning: the ${graph.title} graph does not have x axis min and max`)
+    }
+    if (val(graph.yAxisMax)) {
+      chart.yMin = num(val(graph.yAxisMin, 0))
+      chart.yMax = num(val(graph.yAxisMax))
+      chart.yAxisLabel = stringToId(graph.yAxisUnits)
+      chart.yFormat = val(graph.yAxisFormat, '0')
+    } else {
+      console.error(`warning: the ${graph.title} graph does not have y axis max`)
+    }
+    chart.varNames = []
+    chart.xAxisLabels = []
+    chart.colors = []
+    chart.lineStyle = []
+    chart.datasets = []
+    for (let plotNum = 1; plotNum <= MAX_PLOTS; plotNum++) {
+      let prefix = `plot${plotNum}`
+      let key = `${prefix}Variable`
+      if (graph[key]) {
+        value = canonicalName(graph[key])
+        chart.varNames.push(value)
+
+        key = `${prefix}Label`
+        value = stringToId(graph[key])
+        chart.xAxisLabels.push(value)
+
+        key = `${prefix}Color`
+        if (colorForId(graph[key])) {
+          value = `color_${graph[key]}`
+        } else {
+          console.error(`warning: the ${graph.title} graph color ${graph[key]} does not exist`)
         }
+        chart.colors.push(value)
+
+        key = `${prefix}Style`
+        value = val(graph[key], 'line').toLowerCase()
+        chart.lineStyle.push(value)
+
+        key = `${prefix}Dataset`
+        value = val(graph[key])
+        chart.datasets.push(value)
+      } else {
+        break
       }
     }
+    chartConfig[chart.title] = chart
   }
   exportObj('chartConfig', chartConfig)
 }
 let emitViews = () => {
+  // View titles may have a "section" indicated as "{section} > {view}". This groups related views
+  // in the app menu. Views in a section may also share the same sliders by giving the section name
+  // as the view title in sliders config.
   let viewConfig = {}
-  for (let section of cfg.views) {
-    for (let view of section.views) {
-      let viewId = stringToId(`${section.title} > ${view.title}`)
-      let appView = { title: stringToId(view.title), chartIds: [], sliders: [] }
-      if (view.graphs) {
-        for (let graph of view.graphs) {
-          if (R.has('title', graph)) {
-            appView.chartIds.push(stringToId(graph.title))
-          }
+  for (let view of cfg.views) {
+    let appView = { title: stringToId(view.title), chartIds: [], sliders: [] }
+    let addGraph = graphTitle => {
+      if (graphTitle) {
+        if (R.find(R.propEq('title', graphTitle), cfg.graphs)) {
+          appView.chartIds.push(stringToId(graphTitle))
+        } else {
+          console.error(`warning: view "${view.title}" graph "${graphTitle}" does not exist`)
         }
       }
-      // Resolve the full slider definition for each slider by name.
-      if (section.sliders) {
-        for (let sliderName of section.sliders) {
-          if (!sliderName) {
-            // Emit an empty object for a blank slider.
-            appView.sliders.push({})
-          } else {
-            let name = canonicalName(sliderName)
-            let slider = sliders[name]
-            if (slider) {
-              appView.sliders.push(slider)
-            } else {
-              console.error(`warning: slider "${sliderName}" is defined in a view but does not exist`)
-            }
-          }
-        }
-      }
-      viewConfig[viewId] = appView
     }
+    addGraph(view.leftGraph)
+    addGraph(view.rightGraph)
+    // Find sliders with a view title that matches this view title or section.
+    let section = viewTitleSection(view.title)
+    for (const slider of cfg.sliders) {
+      if (slider.viewTitle === view.title || slider.viewTitle === section) {
+        let viewSlider = {
+          name: canonicalName(slider.varName),
+          label: stringToId(slider.label),
+          value: num(val(slider.sliderDefault)),
+          minValue: num(val(slider.sliderMin)),
+          maxValue: num(val(slider.sliderMax)),
+          step: num(val(slider.sliderStep)),
+          units: stringToId(slider.units),
+          format: val(slider.format)
+        }
+        appView.sliders.push(viewSlider)
+      }
+    }
+    viewConfig[appView.title] = appView
   }
   exportObj('viewConfig', viewConfig)
 }
@@ -310,32 +261,38 @@ let emitStrings = () => {
   let js = `module.exports = ${JSON.stringify(stringMap)}`
   B.emitJs(js)
 }
-let emitSpec = () => {
+let emitSpec = currentSpec => {
   let spec = {}
-  if (cfg.app) {
-    if (cfg.app.title) {
-      spec.name = cfg.app.title
-    }
-    if (cfg.app.datfiles) {
-      spec.datfiles = cfg.app.datfiles
-    }
-    if (cfg.app.removalKeys) {
-      spec.removalKeys = cfg.app.removalKeys
-    }
-    if (cfg.app.specialSeparationDims) {
-      spec.specialSeparationDims = cfg.app.specialSeparationDims
-    }
+  if (cfg.app.title) {
+    spec.name = cfg.app.title
+  }
+  if (cfg.app.externalDatfiles) {
+    spec.datfiles = cfg.app.externalDatfiles.split(',')
+  }
+  if (cfg.app.removalKeys) {
+    spec.removalKeys = cfg.app.removalKeys.split(',')
   }
   spec.inputVars = inputVarNames
   spec.outputVars = outputVarNames
-  B.emitJson(spec)
+  for (const key in currentSpec) {
+    if (!spec[key]) {
+      spec[key] = currentSpec[key]
+    }
+  }
+  B.emitPrettyJson(spec)
 }
 let makeModelSpec = modelDir => {
+  // Read an existing spec file to pick up and maintain extra properties.
+  let currentSpec = {}
+  try {
+    let json = B.read(specPathname)
+    currentSpec = JSON.parse(json)
+  } catch (e) {}
   try {
     init(modelDir)
     parseCfg()
     getVarNames()
-    emitSpec()
+    emitSpec(currentSpec)
     B.writeBuf(specPathname)
     return specPathname
   } catch (e) {
@@ -364,6 +321,52 @@ let makeModelConfig = (modelDir, webDir) => {
     console.error(e.stack)
   }
 }
+//
+// Helpers
+//
+let val = (value, defaultValue) => {
+  // All CSV values are strings. Empty CSV cells have an empty string value.
+  // The CSV parser has already trimmed the string value.
+  // Empty cells return an empty string unless a default value is supplied.
+  // Undefined values return an empty string.
+  // Test the return value with R.isEmpty to see if the cell had a value.
+  if (R.isNil(value)) {
+    value = ''
+  }
+  let result = value
+  if (R.isEmpty(value) && !R.isNil(defaultValue)) {
+    result = defaultValue
+  }
+  return result
+}
+let num = value => {
+  // If the value can be converted to a number, return a numeric value, otherwise return n unchanged.
+  let n = parseFloat(value)
+  if (!Number.isNaN(n)) {
+    return n
+  } else {
+    return value
+  }
+}
+let colorForId = colorId => {
+  let color = R.find(R.propEq('colorId', colorId), cfg.colors)
+  return color ? color.hexCode : ''
+}
+let viewTitleSection = viewTitle => {
+  // Extract the section from a view title if it exists.
+  // For example, the section of the view title "Summary > Total" is "Summary".
+  return matchRegex(viewTitle, /^(.+) >/)
+}
+let viewTitleName = viewTitle => {
+  // Extract the view name from a view title if it exists.
+  // For example, the view name of the view title "Summary > Total" is "Total".
+  return matchRegex(viewTitle, /^.* > (.+)/)
+}
+let exportObj = (name, obj) => {
+  let js = `exports.${name} = ${JSON.stringify(obj)}`
+  B.emitJs(js)
+}
+
 module.exports = {
   makeModelConfig,
   makeModelSpec

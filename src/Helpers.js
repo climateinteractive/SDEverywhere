@@ -342,6 +342,30 @@ let strlist = a => {
 }
 // Function to join an array with newlines
 let lines = R.join('\n')
+// Match a string against a regular expression and return the first match.
+// If a capturing group was present, return the first group, otherwise
+// return the entire match. If the string did not match, return the empty string.
+let matchRegex = (str, regex) => {
+  let m = str.match(regex)
+  if (!m) {
+    return ''
+  } else if (m.length > 1) {
+    return m[1]
+  } else if (m.length > 0) {
+    return m[0]
+  }
+}
+// Match a string against a regular expression with capture groups.
+// Return an array of matches for each capture group.
+// If the string did not match, return the empty string.
+let matchRegexCaptures = (str, regex) => {
+  let m = str.match(regex)
+  if (m && m.length > 0) {
+    return m.splice(1)
+  } else {
+    return []
+  }
+}
 //
 // Debugging helpers
 //
@@ -380,6 +404,8 @@ module.exports = {
   listConcat,
   mapIndexed,
   mapObjProps,
+  matchRegex,
+  matchRegexCaptures,
   modelPathProps,
   newAuxVarName,
   newLevelVarName,
