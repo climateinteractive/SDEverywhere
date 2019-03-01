@@ -17,7 +17,7 @@ const {
   execCmd,
   readDat
 } = require('./Helpers')
-const { makeModelSpec, makeModelConfig } = require('./MakeConfig')
+const { initConfig, makeModelSpec, makeModelConfig, makeChartData } = require('./MakeConfig')
 const Model = require('./Model')
 const Subscript = require('./Subscript')
 const B = require('bufx')
@@ -77,18 +77,22 @@ let generate = async (model, opts) => {
     let { modelDirname, modelName, modelPathname } = modelPathProps(model)
     // Ensure the build directory exists.
     let buildDirname = buildDir(opts.builddir, modelDirname)
-    // Generate a spec file from the app.yaml file for web apps.
+    // The web directory is only used for the --genhtml option.
+    let webDirname = ''
+    // Generate a spec file from the config files for web apps.
     // This overrides the --spec argument if present.
     if (opts.genhtml) {
-      opts.spec = makeModelSpec(modelDirname)
+      webDirname = webDir(buildDirname)
+      initConfig(modelDirname, webDirname)
+      opts.spec = makeModelSpec()
     }
     // Preprocess model text into parser input. Stop now if that's all we're doing.
     let spec = parseSpec(opts.spec)
     // Read time series from external DAT files into a single object.
-    // The datfiles object is a map from var prefixes to pathnames.
+    // extData is a map from var prefixes to pathnames.
     let extData = new Map()
-    if (spec.datfiles) {
-      for (let datfile of spec.datfiles) {
+    if (spec.externalDatfiles) {
+      for (let datfile of spec.externalDatfiles) {
         let pathname = path.join(modelDirname, datfile)
         let data = await readDat(pathname)
         extData = new Map([...extData, ...data])
@@ -141,10 +145,10 @@ let generate = async (model, opts) => {
     }
     // Generate a web app for the model.
     if (opts.genhtml) {
-      let webDirname = webDir(buildDirname)
       linkCSourceFiles(modelDirname, buildDirname)
       if (generateWASM(buildDirname, webDirname) === 0) {
-        makeModelConfig(modelDirname, webDirname)
+        makeModelConfig()
+        makeChartData()
         copyTemplate(buildDirname)
         customizeApp(modelDirname, webDirname)
         packApp(webDirname)
@@ -220,11 +224,11 @@ let packApp = webDirname => {
     .pipe(writable)
     .on('finish', error => {
       // Remove JavaScript source files.
-      let sourceFiles = filesExcept(
-        `${webDirname}/*.js`,
-        name => name.endsWith('index.min.js') || name.endsWith('model_sde.js')
-      )
       if (!RETAIN_GENERATED_SOURCE_FILES) {
+        let sourceFiles = filesExcept(
+          `${webDirname}/*.js`,
+          name => name.endsWith('index.min.js') || name.endsWith('model_sde.js')
+        )
         sh.rm(sourceFiles)
       }
     })

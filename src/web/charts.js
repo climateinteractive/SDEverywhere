@@ -3,6 +3,7 @@ const R = require('ramda')
 const num = require('numbro')
 const { app, chartConfig, outputVarNames, TIME_VAR_NAME } = require('./appcfg')
 const { str } = require('./ui_config')
+const extData = require('./chart_data')
 const log = require('./log')
 
 // Line width as a fraction of canvas height
@@ -56,9 +57,25 @@ let setChartData = (operation, outputs, currentChartIds, selectedChart = -1) => 
     chartIds = currentChartIds
     let i = 0
     let chartCfg = chartConfig[chartIds[iChart]]
+    let useExtData = iVar => !R.isEmpty(chartCfg.datasets[iVar])
     modelData[iChart] = []
     for (let iVar = 0; iVar < chartCfg.varNames.length; iVar++) {
-      modelData[iChart].push([])
+      if (useExtData(iVar)) {
+        let dataset = chartCfg.datasets[iVar]
+        let varName = chartCfg.varNames[iVar]
+        let data = extData[dataset][varName]
+        // Expand constants to the full time series.
+        if (data.length === 1) {
+          let y = data[0].y
+          data = []
+          for (let x = chartCfg.xMin; x <= chartCfg.xMax; x++) {
+            data.push({ x, y })
+          }
+        }
+        modelData[iChart].push(data)
+      } else {
+        modelData[iChart].push([])
+      }
     }
     for (let value of values) {
       if (value === '') {
@@ -75,15 +92,18 @@ let setChartData = (operation, outputs, currentChartIds, selectedChart = -1) => 
         // If this output var is in the chart, add the time and value to the data set.
         for (let iVar = 0; iVar < chartCfg.varNames.length; iVar++) {
           if (outputVarNames[i] === chartCfg.varNames[iVar]) {
-            // Filter out values not in the time range for this chart.
-            // Filter out values SDEverywhere represent as :NA:.
-            if (time >= chartCfg.xMin && time <= chartCfg.xMax && isNum(value)) {
-              modelData[iChart][iVar].push({ x: time, y: Number.parseFloat(value) })
+            // Don't extract data from the model run for variables using external data.
+            if (!useExtData(iVar)) {
+              // Filter out values not in the time range for this chart.
+              // Filter out values SDEverywhere represent as :NA:.
+              if (time >= chartCfg.xMin && time <= chartCfg.xMax && isNum(value)) {
+                modelData[iChart][iVar].push({ x: time, y: Number.parseFloat(value) })
+              }
+              // Inspect data here
+              // if (time === 2050 && outputVarNames[i] === '_crops_imported') {
+              //   log(`[${time}] ${value}`);
+              // }
             }
-            // Inspect data here
-            // if (time === 2050 && outputVarNames[i] === '_crops_imported') {
-            //   log(`[${time}] ${value}`);
-            // }
           }
         }
       }

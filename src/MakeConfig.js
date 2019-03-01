@@ -1,29 +1,35 @@
 #!/usr/bin/env node
+const fs = require('fs-extra')
 const path = require('path')
 const R = require('ramda')
 const parseCsv = require('csv-parse/lib/sync')
+const byline = require('byline')
 const B = require('bufx')
 const { canonicalName, strings, stringToId, matchRegex } = require('./Helpers')
 
-let cfg, inputVarNames, outputVarNames
-let configDirname, specPathname, cfgPathname, stringsPathname
+let cfg, inputVarNames, outputVarNames, chartVarnames, chartDatfiles
+let configDirname, specPathname, cfgPathname, stringsPathname, chartDataPathname, datDirname
 
 const CONFIG_FILES = ['app.csv', 'colors.csv', 'graphs.csv', 'sliders.csv', 'views.csv']
 const CSV_PARSE_OPTS = { columns: true, trim: true, skip_empty_lines: true, skip_lines_with_empty_values: true }
 const MAX_PLOTS = 8
 
-let init = (modelDir, webDir) => {
+let initConfig = (modelDir, webDir) => {
   configDirname = path.join(modelDir, 'config')
+  datDirname = modelDir
   specPathname = path.join(modelDir, 'app_spec.json')
   if (webDir) {
     cfgPathname = path.join(webDir, 'appcfg.js')
     stringsPathname = path.join(webDir, 'strings.js')
+    chartDataPathname = path.join(webDir, 'chart_data.js')
   }
   cfg = {}
-  sliders = {}
   inputVarNames = []
   outputVarNames = []
-  B.clearBuf()
+  chartVarnames = {}
+  chartDatfiles = {}
+  parseCfg()
+  getVarNames()
 }
 let parseCfg = () => {
   // Parse each CSV file in the config directory and add it to the cfg object.
@@ -34,7 +40,10 @@ let parseCfg = () => {
       let data = B.read(pathname)
       let obj = parseCsv(data, CSV_PARSE_OPTS)
       if (cfgSection === 'app') {
-        cfg[cfgSection] = obj[0]
+        cfg.app = obj[0]
+        cfg.app.startTime = num(val(cfg.app.startTime))
+        cfg.app.endTime = num(val(cfg.app.endTime))
+        cfg.app.initialTime = num(val(cfg.app.initialTime))
       } else {
         cfg[cfgSection] = obj
       }
@@ -212,6 +221,23 @@ let emitCharts = () => {
     chartConfig[chart.title] = chart
   }
   exportObj('chartConfig', chartConfig)
+
+  // Compile a list of chart varnames to load from external data.
+  for (const chartId in chartConfig) {
+    let chart = chartConfig[chartId]
+    for (let i = 0; i < chart.datasets.length; i++) {
+      let dataset = chart.datasets[i]
+      if (dataset) {
+        if (!chartVarnames[dataset]) {
+          chartVarnames[dataset] = []
+        }
+        chartVarnames[dataset].push(chart.varNames[i])
+      }
+    }
+  }
+  for (const dataset in chartVarnames) {
+    chartVarnames[dataset] = B.sortu(chartVarnames[dataset])
+  }
 }
 let emitViews = () => {
   // View titles may have a "section" indicated as "{section} > {view}". This groups related views
@@ -267,10 +293,15 @@ let emitSpec = currentSpec => {
     spec.name = cfg.app.title
   }
   if (cfg.app.externalDatfiles) {
-    spec.datfiles = cfg.app.externalDatfiles.split(',')
+    spec.externalDatfiles = cfg.app.externalDatfiles.split(',')
   }
-  if (cfg.app.removalKeys) {
-    spec.removalKeys = cfg.app.removalKeys.split(',')
+  if (cfg.app.chartDatfiles) {
+    // Map datasets to dat filenames for later reference.
+    for (const datfile of cfg.app.chartDatfiles.split(',')) {
+      let dataset = path.basename(datfile, '.dat')
+      chartDatfiles[dataset] = datfile
+    }
+    spec.chartDatfiles = chartDatfiles
   }
   spec.inputVars = inputVarNames
   spec.outputVars = outputVarNames
@@ -281,7 +312,7 @@ let emitSpec = currentSpec => {
   }
   B.emitPrettyJson(spec)
 }
-let makeModelSpec = modelDir => {
+let makeModelSpec = () => {
   // Read an existing spec file to pick up and maintain extra properties.
   let currentSpec = {}
   try {
@@ -289,9 +320,8 @@ let makeModelSpec = modelDir => {
     currentSpec = JSON.parse(json)
   } catch (e) {}
   try {
-    init(modelDir)
-    parseCfg()
-    getVarNames()
+    // Write app_spec.json
+    B.clearBuf()
     emitSpec(currentSpec)
     B.writeBuf(specPathname)
     return specPathname
@@ -300,11 +330,10 @@ let makeModelSpec = modelDir => {
     console.error(e.stack)
   }
 }
-let makeModelConfig = (modelDir, webDir) => {
+let makeModelConfig = () => {
   try {
-    init(modelDir, webDir)
-    parseCfg()
-    getVarNames()
+    // Write appcfg.js
+    B.clearBuf()
     emitConsts()
     emitApp()
     emitVars()
@@ -312,6 +341,7 @@ let makeModelConfig = (modelDir, webDir) => {
     emitCharts()
     emitViews()
     B.writeBuf(cfgPathname)
+    // Write strings.js
     B.clearBuf()
     emitStrings()
     B.writeBuf(stringsPathname)
@@ -320,6 +350,95 @@ let makeModelConfig = (modelDir, webDir) => {
     console.error(e.message)
     console.error(e.stack)
   }
+}
+let makeChartData = async () => {
+  // Read the dat files given in graph config and extract data to a JS file.
+  // Skip this if the chart_data.js file already exists, since it normally only needs
+  // to be created when the model changes, when we do a clean and rebuild.
+  try {
+    // Write chart_data.js
+    B.clearBuf()
+    let root = {}
+    for (const dataset in chartVarnames) {
+      root[dataset] = await readChartDat(dataset)
+    }
+    let js = `module.exports = ${JSON.stringify(root)}`
+    B.emitJs(js)
+    B.writeBuf(chartDataPathname)
+  } catch (e) {
+    console.error(e.message)
+    console.error(e.stack)
+  }
+}
+let readChartDat = async dataset => {
+  // Read a Vensim DAT file with reference data for a chart into a Map.
+  // Key: variable name in canonical format
+  // Value: Map from numeric time value to numeric variable value
+  let log = {}
+  let varName = ''
+  let varValues = []
+  let lineNum = 1
+  let initialValue = 0
+  let splitDatLine = line => {
+    const f = line.split('\t').map(s => s.trim())
+    if (f.length < 2 || !R.isEmpty(f[1])) {
+      return f
+    } else {
+      return [f[0]]
+    }
+  }
+  let addValues = () => {
+    if (varName !== '') {
+      // Only save vars in the list of external varnames for this dataset.
+      if (chartVarnames[dataset].includes(varName)) {
+        // A constant has a single value at the initial year. If it is  earlier than than the start year for graphs,
+        // there will not be any data in varValues. Emit the single value at the start year.
+        if (R.isEmpty(varValues)) {
+          varValues = [{ x: cfg.app.startTime, y: initialValue }]
+        }
+        log[varName] = varValues
+      }
+    }
+  }
+  let datfile = chartDatfiles[dataset]
+  let datPathname = path.join(datDirname, datfile)
+  return new Promise(resolve => {
+    let stream = byline(fs.createReadStream(datPathname, 'utf8'))
+    stream.on('data', line => {
+      let values = splitDatLine(line)
+      if (values.length === 1) {
+        // Lines with a single value are variable names that start a data section.
+        // Save the values for the current var if we are not on the first one.
+        addValues()
+        // Start a new map for this var.
+        varName = canonicalName(values[0])
+        varValues = []
+      } else if (values.length > 1) {
+        // Data lines in Vensim DAT format have {time}\t{value} format with optional comments afterward.
+        let t = B.num(values[0])
+        let value = B.num(values[1])
+        // Save the value at time t in the varValues array if it is in the range we are graphing.
+        if (Number.isNaN(t)) {
+          console.error(`DAT file ${pathname}:${lineNum} time value is NaN`)
+        } else if (Number.isNaN(value)) {
+          console.error(`DAT file ${pathname}:${lineNum} var "${varName}" value is NaN at time=${t}`)
+        } else {
+          if (t === cfg.app.initialTime) {
+            initialValue = value
+          }
+          // TODO override with chart min/max years?
+          if (t >= cfg.app.startTime && t <= cfg.app.endTime) {
+            varValues.push({ x: t, y: value })
+          }
+        }
+      }
+      lineNum++
+    })
+    stream.on('end', () => {
+      addValues()
+      resolve(log)
+    })
+  })
 }
 //
 // Helpers
@@ -368,6 +487,8 @@ let exportObj = (name, obj) => {
 }
 
 module.exports = {
+  initConfig,
+  makeModelSpec,
   makeModelConfig,
-  makeModelSpec
+  makeChartData
 }
