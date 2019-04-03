@@ -1,6 +1,6 @@
 # Using SDEverywhere to Make a Vensim Model into a Web Application
 
-Revised: 2019-03-07
+Revised: 2019-03-25
 
 This tutorial shows you how to take your Vensim model and turn it into an interactive web application using the open-source SDEverywhere toolkit. SDEverywhere currently requires the macOS operating system in development, but the resulting web app can be run on any web server, or even offline using the Firefox browser.
 
@@ -41,6 +41,8 @@ source ./emsdk_env.sh
 ~~~ bash
 emcc -v
 ~~~
+
+6. If `emcc` complains about needing a newer Python version that the one that ships with macOS, download and install the [latest Python 2.7.x version](https://www.python.org/downloads/).
 
 ## Generating model code and validating it
 

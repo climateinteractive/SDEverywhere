@@ -329,13 +329,15 @@ module.exports = class EquationReader extends ModelReader {
       }
       // Use the Vensim form of the index in the LHS and in all arguments.
       if (index) {
-        let re = new RegExp(sepDim, 'gi')
+        // let re = new RegExp(sepDim, 'gi')
+        let re = new RegExp(`\\[(.*)${sepDim}(.*)\\]`, 'i')
+        let replacement = `[$1${index}$2]`
         let newGenSubs = genSubs.replace(re, index)
         levelLHS = `${level}${newGenSubs}`
         levelRefId = canonicalVensimName(levelLHS)
-        input = input.replace(re, index)
-        delay = delay.replace(re, index)
-        init = init.replace(re, index)
+        input = input.replace(re, replacement)
+        delay = delay.replace(re, replacement)
+        init = init.replace(re, replacement)
       }
     } else {
       // In the normal case, generate a unique variable name for the level var.
@@ -563,6 +565,7 @@ module.exports = class EquationReader extends ModelReader {
     }
     if (result.size > 1) {
       console.error(`ERROR: genSubs subscripts do not agree: ${[...varNames]}`)
+      debugger
     }
     return [...result][0] || ''
   }
