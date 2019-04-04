@@ -17,11 +17,11 @@ let builder = {
 let handler = argv => {
   log(argv.logfile, argv)
 }
-let log = (logPathname, opts) => {
+let log = async (logPathname, opts) => {
   if (opts.dat) {
     let p = path.parse(logPathname)
     let datPathname = path.format({ dir: p.dir, name: p.name, ext: '.dat' })
-    exportDat(logPathname, datPathname)
+    await exportDat(logPathname, datPathname)
   }
 }
 let exportDat = async (logPathname, datPathname) => {
@@ -47,7 +47,9 @@ let exportDat = async (logPathname, datPathname) => {
           steps.push(R.zipObj(varKeys, line.split('\t')))
         }
       })
-      stream.on('end', () => resolve())
+      stream.on('end', () => {
+        resolve()
+      })
     })
   }
   let writeDat = async () => {

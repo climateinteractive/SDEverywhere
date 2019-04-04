@@ -31,7 +31,7 @@ let builder = {
 let handler = argv => {
   test(argv.model, argv)
 }
-let test = (model, opts) => {
+let test = async (model, opts) => {
   // Run the model and save output to an SDE log file.
   let { modelDirname, modelName } = modelPathProps(model)
   let logPathname
@@ -45,7 +45,7 @@ let test = (model, opts) => {
   run(model, opts)
   // Convert the TSV log file to a DAT file in the same directory.
   opts.dat = true
-  log(logPathname, opts)
+  await log(logPathname, opts)
   // Assume there is a Vensim-created DAT file named {modelName}.dat in the model directory.
   // Compare it to the SDE DAT file.
   let vensimPathname = path.join(modelDirname, `${modelName}.dat`)
