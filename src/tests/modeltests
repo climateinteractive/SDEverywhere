@@ -12,7 +12,7 @@ fi
 # Test each model against saved Vensim data.
 for MODEL in $(ls ../../models); do
   echo "testing the $MODEL model"
-  $SDE clean ../../models/$MODEL/$MODEL
+  $SDE clean --modeldir ../../models/$MODEL
   $SDE test ../../models/$MODEL/$MODEL -p 1e-4
-  $SDE clean ../../models/$MODEL/$MODEL
+  $SDE clean --modeldir ../../models/$MODEL
 done
