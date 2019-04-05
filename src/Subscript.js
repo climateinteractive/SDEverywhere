@@ -238,25 +238,34 @@ function indexNamesForSubscript(subscript) {
 }
 function separatedVariableIndex(rhsSub, variable) {
   // If a RHS subscript matches the variable's separation dimension, return the index name corresponding to the LHS.
-  let separatedIndexName
+  // The LHS and RHS subscripts need not be in normal order or have the same number of subscripts in a var.
+  // The search proceeds through three stages:
+  // 1. Find a sepDim that matches rhsSub.
+  // 2. Then find an lhsSub in the same family as the sepDim.
+  // 3. Further qualify the lhsSub.
+
+  // (1)
   for (let sepDim of variable.separationDims) {
     if (rhsSub === sepDim || hasMapping(rhsSub, sepDim)) {
-      // Find the var subscript that was separated.
+      // (2)
       for (let lhsSub of variable.subscripts) {
         if (sub(lhsSub).family === sub(sepDim).family) {
           if (!isIndex(lhsSub)) {
             console.error(`ERROR: ${variable.refId} subscript in separation dimension ${sepDim} is not an index`)
           } else {
+            // (3)
             if (rhsSub === sepDim) {
-              // The subscript dimension is the separation dimension, so use the separated var index.
-              separatedIndexName = lhsSub
+              // There may be more than one lhsSub in the same family as rhsSub.
+              // Pick the one that belongs to the rhsSub.
+              if (indexNamesForSubscript(rhsSub).includes(lhsSub)) {
+                return lhsSub
+              }
             } else {
               // Find the index that maps from the subscript dimension to the separated var index.
               for (let fromIndexName of sub(rhsSub).value) {
                 let mappedIndices = mapIndex(rhsSub, fromIndexName, sepDim)
                 if (mappedIndices.includes(lhsSub)) {
-                  separatedIndexName = fromIndexName
-                  break
+                  return fromIndexName
                 }
               }
             }
@@ -265,7 +274,7 @@ function separatedVariableIndex(rhsSub, variable) {
       }
     }
   }
-  return separatedIndexName
+  return null
 }
 // Function to filter canonical dimension names from a list of names
 let dimensionNames = R.pipe(
