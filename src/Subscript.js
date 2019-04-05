@@ -92,7 +92,14 @@ function Subscript(modelName, modelValue = null, modelFamily = null, modelMappin
 function sub(name) {
   // Look up a subscript by its canonical name.
   // Return undefined if the name is not a subscript name.
-  return subscripts.get(name)
+  let result
+  try {
+    result = subscripts.get(name)
+  } catch (e) {
+    console.error(`sub name ${name} not found`)
+    debugger
+  }
+  return result
 }
 function isIndex(name) {
   let s = sub(name)
