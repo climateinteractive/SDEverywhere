@@ -69,8 +69,8 @@ module.exports = class VariableReader extends ModelReader {
       // Expand a subdimension in the LHS.
       if (isDimension(subscript)) {
         let dim = sub(subscript)
-        let specialSeparationDim = this.specialSeparationDims[this.var.varName]
-        expand = dim.size < sub(dim.family).size || specialSeparationDim === subscript
+        let specialSeparationDims = this.specialSeparationDims[this.var.varName] || []
+        expand = dim.size < sub(dim.family).size || specialSeparationDims.includes(subscript)
       }
       // Also expand on exception subscripts that are indices or subdimensions.
       if (!expand && exceptSubs) {

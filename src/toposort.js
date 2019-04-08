@@ -37,7 +37,7 @@ function toposort(nodes, edges) {
 
   function visit(node, i, predecessors) {
     if(predecessors.has(node)) {
-      debugger
+      // debugger
       var nodeRep
       try {
         nodeRep = '\n' + node + '\n'
