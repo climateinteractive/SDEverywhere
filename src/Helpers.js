@@ -243,7 +243,7 @@ let execCmd = cmd => {
   }
   return exitCode
 }
-let readDat = async (pathname) => {
+let readDat = async pathname => {
   // Read a Vensim DAT file into a Map.
   // Key: variable name in canonical format
   // Value: Map from numeric time value to numeric variable value
@@ -325,8 +325,9 @@ let canonicalVensimName = vname => {
 }
 // Split a model string into an array of equations without the "|" terminator.
 // Allow "|" to occur in quoted variable names across line breaks.
+// Retain the backslash character.
 let splitEquations = mdl => {
-  return split(mdl, { separator: '|', quotes: ['"'] })
+  return split(mdl, { separator: '|', quotes: ['"'], keep: () => true })
 }
 // Function to map over lists's value and index
 let mapIndexed = R.addIndex(R.map)

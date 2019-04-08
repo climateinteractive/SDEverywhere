@@ -116,9 +116,9 @@ let preprocessModel = (mdlFilename, spec, profile = 'genc', writeRemovals = fals
   // Emit formula lines without comment contents.
   eqns = splitEquations(mdl)
   for (let eqn of eqns) {
-    let i = eqn.indexOf('~')
-    if (i >= 0) {
-      let formula = B.lines(eqn.substr(0, i))
+    let iComment = eqn.indexOf('~')
+    if (iComment >= 0) {
+      let formula = B.lines(eqn.substr(0, iComment))
       for (let i = 0; i < formula.length; i++) {
         if (i === 0) {
           if (formula[i] === ENCODING) {
