@@ -329,8 +329,7 @@ module.exports = class EquationReader extends ModelReader {
       }
       // Use the Vensim form of the index in the LHS and in all arguments.
       if (index) {
-        // let re = new RegExp(sepDim, 'gi')
-        let re = new RegExp(`\\[(.*)${sepDim}(.*)\\]`, 'i')
+        let re = new RegExp(`\\[(.*?)${sepDim}(.*?)\\]`, 'gi')
         let replacement = `[$1${index}$2]`
         let newGenSubs = genSubs.replace(re, replacement)
         levelLHS = `${level}${newGenSubs}`
@@ -433,7 +432,6 @@ module.exports = class EquationReader extends ModelReader {
       this.addVariable(delayTimeEqn)
       // Add a reference to the var, since it won't show up until code gen time.
       this.var.references.push(this.var.delayTimeVarName)
-
     } else if (fn === '_DELAY3' || fn === '_DELAY3I') {
       let level1, level1LHS, level1RefId
       let level2, level2LHS, level2RefId
