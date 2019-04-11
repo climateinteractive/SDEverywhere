@@ -518,7 +518,13 @@ function sortVarsOfType(varType) {
   // Sort into an lhs dependency list.
   if (PRINT_AUX_GRAPH) printDepsGraph(graph, 'AUX')
   if (PRINT_LEVEL_GRAPH) printDepsGraph(graph, 'LEVEL')
-  let deps = toposort(graph).reverse()
+  let deps
+  try {
+    deps = toposort(graph).reverse()
+  } catch (e) {
+    console.error(e.message)
+    process.exit(1)
+  }
   // Turn the dependency-sorted var name list into a var list.
   let sortedVars = varsOfType(varType, R.map(refId => varWithRefId(refId), deps))
   // Find vars of the given varType with no dependencies, and add them to the list.
@@ -586,8 +592,13 @@ function sortInitVars() {
   }
   if (PRINT_INIT_GRAPH) printDepsGraph(graph, 'INIT')
   // Sort into a reference id dependency list.
-  let deps = toposort(graph).reverse()
-  // return [];
+  let deps
+  try {
+    deps = toposort(graph).reverse()
+  } catch (e) {
+    console.error(e.message)
+    process.exit(1)
+  }
   // Turn the reference id list into a var list.
   let sortedVars = R.map(refId => varWithRefId(refId), deps)
   // Filter out vars with constant values.
