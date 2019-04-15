@@ -45,6 +45,16 @@ EXTERN double _epsilon;
 #define fge(x1,x2) (x1 >= x2)
 #endif
 
+// Enable this to add print statements in initLevels and evalAux for debugging.
+// #define PRDBG
+#ifdef PRDBG
+#define PRINIT(v) printf("initLevels: " #v " = %g\n", (v));
+#define PRAUX(v) if (_time == 1990) { printf("evalAux: " #v " = %g\n", (v)); }
+#else
+#define PRINIT(v)
+#define PRAUX(v)
+#endif
+
 // Each number in the output can take up to 13 characters plus a separator character.
 #define OUTPUT_STRING_LEN 14
 
