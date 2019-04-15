@@ -6,12 +6,10 @@ const Variable = require('./Variable')
 const ModelReader = require('./ModelReader')
 const VariableReader = require('./VariableReader')
 const {
-  hasMapping,
+  extractMarkedDims,
   indexNamesForSubscript,
-  isIndex,
   normalizeSubscripts,
-  separatedVariableIndex,
-  sub
+  separatedVariableIndex
 } = require('./Subscript')
 const {
   canonicalName,
@@ -169,8 +167,13 @@ module.exports = class EquationReader extends ModelReader {
   visitSubscriptList(ctx) {
     // When an equation references a non-appy-to-all array, add its subscripts to the array var's refId.
     if (ctx.parentCtx.ruleIndex === ModelParser.RULE_expr) {
-      // Get the referenced var's subscripts in normal order.
-      let subscripts = R.map(id => canonicalName(id.getText().replace('!', '')), ctx.Id())
+      if (this.var.varName === '_new_carrier_share_of_end_use' && this.refId === '_share_of_nonelectric_carriers') {
+        debugger
+      }
+      // Get the referenced var's subscripts in canonical form.
+      let subscripts = R.map(id => canonicalName(id.getText()), ctx.Id())
+      // Remove dimension subscripts marked with ! and save them for later.
+      let markedDims = extractMarkedDims(subscripts)
       subscripts = normalizeSubscripts(subscripts)
       // console.error(`${this.var.refId} → ${this.refId} [ ${subscripts} ]`);
       if (subscripts.length > 0) {
@@ -193,8 +196,9 @@ module.exports = class EquationReader extends ModelReader {
             // This process ensures that we generate references to vars that are in the var table.
             let indexNamesAtPos
             // Use the single index name for a separated variable if it exists.
+            // But don't do this if the subscript is a marked dimension in a vector function.
             let separatedIndexName = separatedVariableIndex(subscripts[pos], this.var)
-            if (separatedIndexName) {
+            if (!markedDims.includes(subscripts[pos]) && separatedIndexName) {
               indexNamesAtPos = [separatedIndexName]
             } else {
               // Generate references to all the indices for the subscript.
@@ -431,7 +435,6 @@ module.exports = class EquationReader extends ModelReader {
       this.addVariable(delayTimeEqn)
       // Add a reference to the var, since it won't show up until code gen time.
       this.var.references.push(this.var.delayTimeVarName)
-
     } else if (fn === '_DELAY3' || fn === '_DELAY3I') {
       let level1, level1LHS, level1RefId
       let level2, level2LHS, level2RefId
