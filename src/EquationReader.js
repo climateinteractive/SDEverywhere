@@ -167,9 +167,6 @@ module.exports = class EquationReader extends ModelReader {
   visitSubscriptList(ctx) {
     // When an equation references a non-appy-to-all array, add its subscripts to the array var's refId.
     if (ctx.parentCtx.ruleIndex === ModelParser.RULE_expr) {
-      if (this.var.varName === '_new_carrier_share_of_end_use' && this.refId === '_share_of_nonelectric_carriers') {
-        debugger
-      }
       // Get the referenced var's subscripts in canonical form.
       let subscripts = R.map(id => canonicalName(id.getText()), ctx.Id())
       // Remove dimension subscripts marked with ! and save them for later.
@@ -224,14 +221,14 @@ module.exports = class EquationReader extends ModelReader {
             // Expand the dimension in both positions.
             let indexNamesAtPos0
             let separatedIndexName0 = separatedVariableIndex(subscripts[0], this.var)
-            if (separatedIndexName0) {
+            if (!markedDims.includes(subscripts[0]) && separatedIndexName0) {
               indexNamesAtPos0 = [separatedIndexName0]
             } else {
               indexNamesAtPos0 = indexNamesForSubscript(subscripts[0])
             }
             let indexNamesAtPos1
             let separatedIndexName1 = separatedVariableIndex(subscripts[1], this.var)
-            if (separatedIndexName1) {
+            if (!markedDims.includes(subscripts[1]) && separatedIndexName1) {
               indexNamesAtPos1 = [separatedIndexName1]
             } else {
               indexNamesAtPos1 = indexNamesForSubscript(subscripts[1])
