@@ -6,12 +6,10 @@ const Variable = require('./Variable')
 const ModelReader = require('./ModelReader')
 const VariableReader = require('./VariableReader')
 const {
-  hasMapping,
+  extractMarkedDims,
   indexNamesForSubscript,
-  isIndex,
   normalizeSubscripts,
-  separatedVariableIndex,
-  sub
+  separatedVariableIndex
 } = require('./Subscript')
 const {
   canonicalName,
@@ -169,8 +167,10 @@ module.exports = class EquationReader extends ModelReader {
   visitSubscriptList(ctx) {
     // When an equation references a non-appy-to-all array, add its subscripts to the array var's refId.
     if (ctx.parentCtx.ruleIndex === ModelParser.RULE_expr) {
-      // Get the referenced var's subscripts in normal order.
-      let subscripts = R.map(id => canonicalName(id.getText().replace('!', '')), ctx.Id())
+      // Get the referenced var's subscripts in canonical form.
+      let subscripts = R.map(id => canonicalName(id.getText()), ctx.Id())
+      // Remove dimension subscripts marked with ! and save them for later.
+      let markedDims = extractMarkedDims(subscripts)
       subscripts = normalizeSubscripts(subscripts)
       // console.error(`${this.var.refId} → ${this.refId} [ ${subscripts} ]`);
       if (subscripts.length > 0) {
@@ -193,8 +193,9 @@ module.exports = class EquationReader extends ModelReader {
             // This process ensures that we generate references to vars that are in the var table.
             let indexNamesAtPos
             // Use the single index name for a separated variable if it exists.
+            // But don't do this if the subscript is a marked dimension in a vector function.
             let separatedIndexName = separatedVariableIndex(subscripts[pos], this.var)
-            if (separatedIndexName) {
+            if (!markedDims.includes(subscripts[pos]) && separatedIndexName) {
               indexNamesAtPos = [separatedIndexName]
             } else {
               // Generate references to all the indices for the subscript.
@@ -220,14 +221,14 @@ module.exports = class EquationReader extends ModelReader {
             // Expand the dimension in both positions.
             let indexNamesAtPos0
             let separatedIndexName0 = separatedVariableIndex(subscripts[0], this.var)
-            if (separatedIndexName0) {
+            if (!markedDims.includes(subscripts[0]) && separatedIndexName0) {
               indexNamesAtPos0 = [separatedIndexName0]
             } else {
               indexNamesAtPos0 = indexNamesForSubscript(subscripts[0])
             }
             let indexNamesAtPos1
             let separatedIndexName1 = separatedVariableIndex(subscripts[1], this.var)
-            if (separatedIndexName1) {
+            if (!markedDims.includes(subscripts[1]) && separatedIndexName1) {
               indexNamesAtPos1 = [separatedIndexName1]
             } else {
               indexNamesAtPos1 = indexNamesForSubscript(subscripts[1])

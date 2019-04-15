@@ -1,4 +1,3 @@
-const antlr4 = require('antlr4/index')
 const R = require('ramda')
 const { ModelLexer, ModelParser } = require('antlr4-vensim')
 const ModelReader = require('./ModelReader')
@@ -6,30 +5,24 @@ const LoopIndexVars = require('./LoopIndexVars')
 const Model = require('./Model')
 const {
   dimensionNames,
+  extractMarkedDims,
   hasMapping,
-  indexNamesForSubscript,
   isDimension,
   isIndex,
   normalizeSubscripts,
   separatedVariableIndex,
-  sub,
-  subscriptFamily
+  sub
 } = require('./Subscript')
 const {
   canonicalName,
   cdbl,
   cFunctionName,
-  extractMatch,
   isArrayFunction,
   isDelayFunction,
-  isSeparatedVar,
   isSmoothFunction,
   isTrendFunction,
-  lines,
   listConcat,
-  mapIndexed,
   newTmpVarName,
-  strlist,
   strToConst,
   vlog
 } = require('./Helpers')
@@ -544,31 +537,24 @@ module.exports = class EquationGen extends ModelReader {
   visitSubscriptList(ctx) {
     // Emit subscripts for a variable occurring on the RHS.
     if (ctx.parentCtx.ruleIndex === ModelParser.RULE_expr) {
-      let extractMarkedDims = () => {
+      let subscripts = R.map(id => canonicalName(id.getText()), ctx.Id())
+      let mergeMarkedDims = () => {
         // Extract all marked dimensions and update subscripts.
-        let dims = []
-        for (let i = 0; i < subscripts.length; i++) {
-          if (subscripts[i].includes('!')) {
-            // Remove the "!" from the subscript name and save it as a marked dimension.
-            subscripts[i] = subscripts[i].replace('!', '')
-            dims.push(subscripts[i])
-          }
-        }
+        let dims = extractMarkedDims(subscripts)
         // Merge marked dims that were found into the list for this call.
         this.markedDims = R.uniq(R.concat(this.markedDims, dims))
       }
-      let subscripts = R.map(id => canonicalName(id.getText()), ctx.Id())
       let fn = this.currentFunctionName()
       if (fn === '_SUM' || fn === '_VMIN' || fn === '_VMAX') {
-        extractMarkedDims()
+        mergeMarkedDims()
         this.emit(this.rhsSubscriptGen(subscripts))
       } else if (fn === '_VECTOR_SELECT') {
         let argIndex = this.argIndexForFunctionName('_VECTOR_SELECT')
         if (argIndex === 0) {
-          extractMarkedDims()
+          mergeMarkedDims()
           this.vsSelectionArray += this.rhsSubscriptGen(subscripts)
         } else if (argIndex === 1) {
-          extractMarkedDims()
+          mergeMarkedDims()
           this.emit(this.rhsSubscriptGen(subscripts))
         }
       } else if (fn === '_VECTOR_ELM_MAP') {

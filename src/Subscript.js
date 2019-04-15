@@ -191,6 +191,18 @@ function normalizeSubscripts(subscripts) {
   }
   return normalizedSubs
 }
+function extractMarkedDims(subscripts) {
+  // Extract all marked dimensions and update subscripts.
+  let dims = []
+  for (let i = 0; i < subscripts.length; i++) {
+    if (subscripts[i].includes('!')) {
+      // Remove the "!" from the subscript name and save it as a marked dimension.
+      subscripts[i] = subscripts[i].replace('!', '')
+      dims.push(subscripts[i])
+    }
+  }
+  return dims
+}
 function subscriptFamilies(subscripts) {
   // Return a list of the subscript families for each subscript.
   try {
@@ -300,6 +312,7 @@ module.exports = {
   allDimensions,
   allMappings,
   dimensionNames,
+  extractMarkedDims,
   hasMapping,
   indexNames,
   indexNamesForSubscript,

@@ -659,6 +659,7 @@ function printVar(v) {
   if (v.separationDims.length > 0) {
     B.emitLine(`separationDims(${strlist(v.separationDims)})`)
   }
+  B.emitLine(`hasInitValue(${v.hasInitValue})`)
   if (v.references.length > 0) {
     B.emitLine(`refs(${strlist(v.references)})`)
   }
@@ -681,6 +682,7 @@ function filterVar(v) {
   if (v.references.length > 0) {
     varObj.references = v.references
   }
+  varObj.hasInitValue = v.hasInitValue
   if (v.initReferences.length > 0) {
     varObj.initReferences = v.initReferences
   }
