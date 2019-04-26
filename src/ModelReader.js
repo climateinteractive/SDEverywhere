@@ -1,4 +1,4 @@
-const antlr4 = require('antlr4/index')
+const antlr4 = require('antlr4')
 const R = require('ramda')
 const { ModelVisitor } = require('antlr4-vensim')
 
@@ -42,7 +42,7 @@ module.exports = class ModelReader extends ModelVisitor {
   }
   visitLhs(ctx) {
     // An LHS may have a subscript list after the var name.
-    // If it has an EXCEPT clause, it will have a second subscript list there too.
+    // If it has an EXCEPT clause, it will have one or more other subscript lists there too.
     let subscriptLists = ctx.subscriptList()
     if (subscriptLists.length > 0) {
       for (let i = 0; i < subscriptLists.length; i++) {

@@ -1,4 +1,4 @@
-const antlr4 = require('antlr4/index')
+const antlr4 = require('antlr4')
 const R = require('ramda')
 const { ModelLexer, ModelParser } = require('antlr4-vensim')
 const ModelReader = require('./ModelReader')

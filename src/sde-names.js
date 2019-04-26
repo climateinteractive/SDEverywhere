@@ -1,5 +1,5 @@
 const path = require('path')
-const antlr4 = require('antlr4/index')
+const antlr4 = require('antlr4')
 const { ModelLexer, ModelParser } = require('antlr4-vensim')
 const { codeGenerator } = require('./CodeGen')
 const { preprocessModel } = require('./Preprocessor')
