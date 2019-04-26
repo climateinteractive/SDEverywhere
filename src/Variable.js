@@ -12,6 +12,8 @@ module.exports = class Variable {
     this.varName = ''
     // Subscripts are canonical dimension or index names on the LHS in normal order.
     this.subscripts = []
+    // Exception subscripts are subscript lists given in an EXCEPT clause on the LHS.
+    this.exceptSubscripts = []
     // Array variables that are separated in VariableReader keep the original dimensions here.
     this.separationDims = []
     // Lookup vars have lookup points and an optional range.
