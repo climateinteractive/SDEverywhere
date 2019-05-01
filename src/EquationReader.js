@@ -2,7 +2,6 @@ const antlr4 = require('antlr4')
 const { ModelLexer, ModelParser } = require('antlr4-vensim')
 const R = require('ramda')
 const Model = require('./Model')
-const Variable = require('./Variable')
 const ModelReader = require('./ModelReader')
 const VariableReader = require('./VariableReader')
 const {
@@ -20,6 +19,7 @@ const {
   isSeparatedVar,
   isSmoothFunction,
   isTrendFunction,
+  matchRegex,
   newAuxVarName,
   newLevelVarName,
   newLookupVarName,
@@ -94,6 +94,8 @@ module.exports = class EquationReader extends ModelReader {
       this.var.hasInitValue = true
     } else if (fn === '_ACTIVE_INITIAL' || fn === '_SAMPLE_IF_TRUE') {
       this.var.hasInitValue = true
+    } else if (fn === '_GET_DIRECT_DATA') {
+      this.var.varType = 'data'
     }
     super.visitCall(ctx)
     this.callStack.pop()
@@ -123,6 +125,15 @@ module.exports = class EquationReader extends ModelReader {
       // Generate a level var to expand the DELAY* call.
       let args = R.map(expr => expr.getText(), ctx.expr())
       this.expandDelayFunction(fn, args)
+    } else if (fn === '_GET_DIRECT_DATA') {
+      // Extract string constant arguments into an object used in code generation.
+      let args = R.map(arg => matchRegex(arg, /'(.*)'/), R.map(expr => expr.getText(), ctx.expr()))
+      this.var.directDataArgs = {
+        tag: args[0],
+        sheetName: args[1],
+        timeRowOrCol: args[2],
+        startCell: args[3]
+      }
     } else {
       super.visitExprList(ctx)
     }

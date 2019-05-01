@@ -1,6 +1,5 @@
 const fs = require('fs-extra')
 const path = require('path')
-const R = require('ramda')
 const sh = require('shelljs')
 const antlr4 = require('antlr4')
 const browserify = require('browserify')
@@ -15,7 +14,8 @@ const {
   linkCSourceFiles,
   filesExcept,
   execCmd,
-  readDat
+  readDat,
+  readXlsx
 } = require('./Helpers')
 const { initConfig, makeModelSpec, makeModelConfig, makeChartData } = require('./MakeConfig')
 const Model = require('./Model')
@@ -97,6 +97,14 @@ let generate = async (model, opts) => {
       extData = new Map([...extData, ...data])
     }
   }
+  // Attach Excel workbook data to directData entries by tag name.
+  let directData = new Map()
+  if (spec.directData) {
+    for (let [tag, xlsxFilename] of Object.entries(spec.directData)) {
+      let pathname = path.join(modelDirname, xlsxFilename)
+      directData.set(tag, readXlsx(pathname))
+    }
+  }
   // Produce a runnable model with the "genc" and "preprocess" options.
   let profile = opts.analysis ? 'analysis' : 'genc'
   // Write the preprocessed model and removals if the option is "analysis" or "preprocess".
@@ -118,7 +126,7 @@ let generate = async (model, opts) => {
     operation = 'printRefIdTest'
   }
   let parseTree = parseModel(input)
-  let code = codeGenerator(parseTree, { spec, operation, extData }).generate()
+  let code = codeGenerator(parseTree, { spec, operation, extData, directData }).generate()
   if (opts.genc || opts.genhtml) {
     let outputPathname = path.join(buildDirname, `${modelName}.c`)
     writeOutput(outputPathname, code)

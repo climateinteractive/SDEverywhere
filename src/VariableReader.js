@@ -11,12 +11,13 @@ const DEBUG_LOG = false
 let debugLog = (title, value) => !DEBUG_LOG || vlog(title, value)
 
 module.exports = class VariableReader extends ModelReader {
-  constructor(specialSeparationDims) {
+  constructor(specialSeparationDims, directData) {
     super()
     // specialSeparationDims are var names that need to be separated because of
     // circular references, mapped to the dimension subscript to separate on.
     // '{c-variable-name}': '{c-dimension-name}'
     this.specialSeparationDims = specialSeparationDims || {}
+    this.directData = directData || {}
   }
   visitModel(ctx) {
     let equations = ctx.equation()
@@ -47,17 +48,9 @@ module.exports = class VariableReader extends ModelReader {
     super.visitLhs(ctx)
     // Possibly expand the var on subdimensions.
     if (!R.isEmpty(this.var.subscripts)) {
-      // if (R.isEmpty(this.var.exceptSubsc ripts)) {
       // Expand on LHS subscripts alone.
       let expanding = this.subscriptPosToExpand()
       this.expandVars(expanding)
-      // } else {
-      //   // Expand on LHS subscripts minus exception subscripts.
-      //   let subscripts = this.var.exceptSubscripts[0]
-      //   debugLog(`${this.var.varName} exceptSubs`, subscripts)
-      //   let expanding = this.subscriptPosToExpand(subscripts)
-      //   this.expandVars(expanding, subscripts)
-      // }
     }
   }
   subscriptPosToExpand() {
@@ -189,12 +182,6 @@ module.exports = class VariableReader extends ModelReader {
     let exprs = ctx.expr()
     if (exprs.length > 1 && R.isEmpty(this.expandedVars)) {
       let expanding = R.map(subscript => isDimension(subscript), this.var.subscripts)
-      // let expanding = []
-      // for (let subscript of this.var.subscripts) {
-      //   let s = canonicalName(subscript)
-      //   let d = isDimension(s)
-      //   expanding.push(d)
-      // }
       this.expandVars(expanding)
     }
   }

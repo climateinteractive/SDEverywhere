@@ -16,6 +16,8 @@ module.exports = class Variable {
     this.exceptSubscripts = []
     // Array variables that are separated in VariableReader keep the original dimensions here.
     this.separationDims = []
+    // Direct data function arguments are saved here for use in code generation.
+    this.directDataArgs = null
     // Lookup vars have lookup points and an optional range.
     this.range = []
     this.points = []

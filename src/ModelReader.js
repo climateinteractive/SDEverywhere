@@ -1,5 +1,3 @@
-const antlr4 = require('antlr4')
-const R = require('ramda')
 const { ModelVisitor } = require('antlr4-vensim')
 
 module.exports = class ModelReader extends ModelVisitor {

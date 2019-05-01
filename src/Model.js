@@ -29,14 +29,14 @@ const PRINT_INIT_GRAPH = false
 const PRINT_AUX_GRAPH = false
 const PRINT_LEVEL_GRAPH = false
 
-function read(parseTree, spec, extData) {
+function read(parseTree, spec, extData, directData) {
   // Some arrays need to be separated into variables with individual indices to
   // prevent eval cycles. They are manually added to the spec file.
   let specialSeparationDims = spec.specialSeparationDims
   // Subscript ranges must be defined before reading variables that use them.
   readSubscriptRanges(parseTree, spec.dimensionFamilies, spec.indexFamilies)
   // Read variables from the model parse tree.
-  readVariables(parseTree, specialSeparationDims)
+  readVariables(parseTree, specialSeparationDims, directData)
   // Analyze model equations to fill in more details about variables.
   analyze()
   // Check that all input and output vars in the spec actually exist in the model.
@@ -161,11 +161,11 @@ function readSubscriptRanges(tree, dimensionFamilies, indexFamilies) {
     }
   }
 }
-function readVariables(tree, specialSeparationDims) {
+function readVariables(tree, specialSeparationDims, directData) {
   // Read all variables in the model parse tree.
   // This populates the variables table with basic information for each variable
   // such as the var name and subscripts.
-  let variableReader = new VariableReader(specialSeparationDims)
+  let variableReader = new VariableReader(specialSeparationDims, directData)
   variableReader.visitModel(tree)
   // Add a placeholder variable for the exogenous variable Time.
   let v = new Variable(null)

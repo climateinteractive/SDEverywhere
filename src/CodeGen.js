@@ -6,13 +6,13 @@ const { sub, allDimensions, allMappings, subscriptFamilies } = require('./Subscr
 const { asort, lines, strlist } = require('./Helpers')
 
 let codeGenerator = (parseTree, opts) => {
-  const { spec, operation, extData } = opts
+  const { spec, operation, extData, directData } = opts
   // Set true when in the init section, false in the eval section.
   let initMode = false
   // Set true to output all variables when there is no model run spec.
   let outputAllVars = spec.outputVars && spec.outputVars.length > 0 ? false : true
   // Function to generate a section of the code
-  let generateSection = R.map(v => new EquationGen(v, extData, initMode).generate())
+  let generateSection = R.map(v => new EquationGen(v, extData, directData, initMode).generate())
   let section = R.pipe(
     generateSection,
     R.flatten,
@@ -21,7 +21,7 @@ let codeGenerator = (parseTree, opts) => {
   function generate() {
     // Read variables and subscript ranges from the model parse tree.
     // This is the main entry point for code generation and is called just once.
-    Model.read(parseTree, spec, extData)
+    Model.read(parseTree, spec, extData, directData)
     // In list mode, print variables to the console instead of generating code.
     if (operation === 'printRefIdTest') {
       Model.printRefIdTest()

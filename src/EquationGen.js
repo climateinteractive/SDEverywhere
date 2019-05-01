@@ -1,4 +1,5 @@
 const R = require('ramda')
+const XLSX = require('xlsx')
 const { ModelLexer, ModelParser } = require('antlr4-vensim')
 const ModelReader = require('./ModelReader')
 const LoopIndexVars = require('./LoopIndexVars')
@@ -28,12 +29,14 @@ const {
 } = require('./Helpers')
 
 module.exports = class EquationGen extends ModelReader {
-  constructor(variable, extData, initMode = false) {
+  constructor(variable, extData, directData, initMode = false) {
     super()
     // the variable we are generating code for
     this.var = variable
     // external data map from DAT files
     this.extData = extData
+    // direct data workbooks from Excel files
+    this.directData = directData
     // initMode is true for vars with separate init-time code generation
     this.initMode = initMode
     // Maps of LHS subscript families to loop index vars for lookup on the RHS
@@ -277,17 +280,62 @@ module.exports = class EquationGen extends ModelReader {
   generateData() {
     let result = []
     if (this.initMode) {
-      // Copy data from an external file to a lookup.
-      let data = this.extData.get(this.var.varName)
-      if (data) {
-        let args = R.reduce(
-          (a, p) => listConcat(a, `${cdbl(p[0])}, ${cdbl(p[1])}`, true),
-          '',
-          Array.from(data.entries())
-        )
-        result = [`  ${this.lhs} = __new_lookup(${data.size}, ${args});`]
+      // If direct data exists for this variable, copy it from the workbook into one or more lookups.
+      if (this.var.directDataArgs) {
+        let { tag, sheetName, timeRowOrCol, startCell } = this.var.directDataArgs
+        let workbook = this.directData.get(tag)
+        if (workbook) {
+          let sheet = workbook.Sheets[sheetName]
+          if (sheet) {
+            let dataCol, dataRow, dataCell, timeCol, timeRow, timeCell, nextCell
+            let lookupData = ''
+            let lookupSize = 0
+            let cell = (c, r) => sheet[XLSX.utils.encode_cell({ c, r })]
+            let dataAddress = XLSX.utils.decode_cell(startCell)
+            dataCol = dataAddress.c
+            dataRow = dataAddress.r
+            dataCell = cell(dataCol, dataRow)
+            if (isNaN(parseInt(timeRowOrCol))) {
+              // Time values are in a column.
+              timeCol = XLSX.utils.decode_col(timeRowOrCol)
+              timeRow = dataRow
+              nextCell = () => {
+                dataRow++
+                timeRow++
+              }
+            } else {
+              // Time values are in a row.
+              timeCol = dataCol
+              timeRow = XLSX.utils.decode_row(timeRowOrCol)
+              nextCell = () => {
+                dataCol++
+                timeCol++
+              }
+            }
+            timeCell = cell(timeCol, timeRow)
+            while (timeCell && dataCell) {
+              lookupData = listConcat(lookupData, `${timeCell.v}, ${dataCell.v}`, true)
+              lookupSize++
+              nextCell()
+              dataCell = cell(dataCol, dataRow)
+              timeCell = cell(timeCol, timeRow)
+            }
+            result = [`  ${this.lhs} = __new_lookup(${lookupSize}, ${lookupData});`]
+          }
+        }
       } else {
-        console.error(`data variable ${this.var.varName} not found in external data sources`)
+        // If there is external data for this variable, copy it from an external file to a lookup.
+        let data = this.extData.get(this.var.varName)
+        if (data) {
+          let args = R.reduce(
+            (a, p) => listConcat(a, `${cdbl(p[0])}, ${cdbl(p[1])}`, true),
+            '',
+            Array.from(data.entries())
+          )
+          result = [`  ${this.lhs} = __new_lookup(${data.size}, ${args});`]
+        } else {
+          console.error(`data variable ${this.var.varName} not found in external data sources`)
+        }
       }
     }
     return result

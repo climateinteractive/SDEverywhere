@@ -5,6 +5,7 @@ const R = require('ramda')
 const sh = require('shelljs')
 const split = require('split-string')
 const byline = require('byline')
+const XLSX = require('xlsx')
 const num = require('numbro')
 const B = require('bufx')
 
@@ -123,8 +124,15 @@ let cdbl = x => {
   return s
 }
 let strToConst = c => {
-  let d = parseFloat(c)
-  return cdbl(d)
+  let str = matchRegex(c, /'(.*)'/)
+  if (str) {
+    // Convert a Vensim string constant into a C string literal.
+    return `"${str}"`
+  } else {
+  // Parse the string into a float.
+    let d = parseFloat(c)
+    return cdbl(d)
+  }
 }
 let first = a => R.head(a)
 let rest = a => R.tail(a)
@@ -299,6 +307,9 @@ let readDat = async pathname => {
     })
   })
 }
+let readXlsx = pathname => {
+  return XLSX.readFile(pathname, { cellDates: true })
+}
 let execCmdAsync = cmd => {
   // Run a command line asynchronously and silently in the "sh" shell. Print error output on error.
   let exitCode = 0
@@ -415,6 +426,7 @@ module.exports = {
   outputDir,
   printArray,
   readDat,
+  readXlsx,
   replaceInArray,
   rest,
   splitEquations,
