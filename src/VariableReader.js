@@ -66,6 +66,12 @@ module.exports = class VariableReader extends ModelReader {
         let specialSeparationDims = this.specialSeparationDims[this.var.varName] || []
         expand = dim.size < sub(dim.family).size || specialSeparationDims.includes(subscript)
       }
+      if (!expand) {
+        // Direct data vars with subscripts are separated because we generate a lookup for each index.
+        if (isDimension(subscript) && this.var.modelFormula.includes('GET DIRECT DATA')) {
+          expand = true
+        }
+      }
       // Also expand on exception subscripts that are indices or subdimensions.
       if (!expand) {
         for (const exceptSubs of this.var.exceptSubscripts) {

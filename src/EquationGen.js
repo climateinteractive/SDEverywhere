@@ -287,41 +287,19 @@ module.exports = class EquationGen extends ModelReader {
         if (workbook) {
           let sheet = workbook.Sheets[sheetName]
           if (sheet) {
-            let dataCol, dataRow, dataCell, timeCol, timeRow, timeCell, nextCell
-            let lookupData = ''
-            let lookupSize = 0
-            let cell = (c, r) => sheet[XLSX.utils.encode_cell({ c, r })]
-            let dataAddress = XLSX.utils.decode_cell(startCell)
-            dataCol = dataAddress.c
-            dataRow = dataAddress.r
-            dataCell = cell(dataCol, dataRow)
-            if (isNaN(parseInt(timeRowOrCol))) {
-              // Time values are in a column.
-              timeCol = XLSX.utils.decode_col(timeRowOrCol)
-              timeRow = dataRow
-              nextCell = () => {
-                dataRow++
-                timeRow++
-              }
-            } else {
-              // Time values are in a row.
-              timeCol = dataCol
-              timeRow = XLSX.utils.decode_row(timeRowOrCol)
-              nextCell = () => {
-                dataCol++
-                timeCol++
-              }
+            let indexNum = 0
+            if (!R.isEmpty(this.var.subscripts)) {
+              // Generate a lookup for a separated index in the variable's dimension.
+              // TODO allow the index to be in either position of a 2D subscript
+              let ind = sub(this.var.subscripts[0])
+              indexNum = ind.value
             }
-            timeCell = cell(timeCol, timeRow)
-            while (timeCell && dataCell) {
-              lookupData = listConcat(lookupData, `${timeCell.v}, ${dataCell.v}`, true)
-              lookupSize++
-              nextCell()
-              dataCell = cell(dataCol, dataRow)
-              timeCell = cell(timeCol, timeRow)
-            }
-            result = [`  ${this.lhs} = __new_lookup(${lookupSize}, ${lookupData});`]
+            result.push(this.generateDirectDataLookup(sheet, timeRowOrCol, startCell, indexNum))
+          } else {
+            console.error(`direct data worksheet ${sheetName} tagged ${tag} not found`)
           }
+        } else {
+          console.error(`direct data workbook tagged ${tag} not found`)
         }
       } else {
         // If there is external data for this variable, copy it from an external file to a lookup.
@@ -339,6 +317,45 @@ module.exports = class EquationGen extends ModelReader {
       }
     }
     return result
+  }
+  generateDirectDataLookup(sheet, timeRowOrCol, startCell, indexNum) {
+    // Read a row or column of data as (time, value) pairs from the worksheet.
+    let dataCol, dataRow, dataCell, timeCol, timeRow, timeCell, nextCell
+    let lookupData = ''
+    let lookupSize = 0
+    let cell = (c, r) => sheet[XLSX.utils.encode_cell({ c, r })]
+    let dataAddress = XLSX.utils.decode_cell(startCell)
+    dataCol = dataAddress.c
+    dataRow = dataAddress.r
+    if (isNaN(parseInt(timeRowOrCol))) {
+      // Time values are in a column.
+      timeCol = XLSX.utils.decode_col(timeRowOrCol)
+      timeRow = dataRow
+      dataCol += indexNum
+      nextCell = () => {
+        dataRow++
+        timeRow++
+      }
+    } else {
+      // Time values are in a row.
+      timeCol = dataCol
+      timeRow = XLSX.utils.decode_row(timeRowOrCol)
+      dataRow += indexNum
+      nextCell = () => {
+        dataCol++
+        timeCol++
+      }
+    }
+    timeCell = cell(timeCol, timeRow)
+    dataCell = cell(dataCol, dataRow)
+    while (timeCell && dataCell) {
+      lookupData = listConcat(lookupData, `${cdbl(timeCell.v)}, ${cdbl(dataCell.v)}`, true)
+      lookupSize++
+      nextCell()
+      dataCell = cell(dataCol, dataRow)
+      timeCell = cell(timeCol, timeRow)
+    }
+    return [`  ${this.lhs} = __new_lookup(${lookupSize}, ${lookupData});`]
   }
   //
   // Visitor callbacks
@@ -543,25 +560,30 @@ module.exports = class EquationGen extends ModelReader {
       } else if (argIndex === 1) {
         this.emit(this.currentVarName())
       }
+      super.visitVar(ctx)
     } else if (this.currentFunctionName() === '_VECTOR_ELM_MAP') {
       if (this.argIndexForFunctionName('_VECTOR_ELM_MAP') === 1) {
         this.vemOffset = `(size_t)${this.currentVarName()}`
       }
+      super.visitVar(ctx)
     } else if (this.currentFunctionName() === '_VECTOR_SORT_ORDER') {
       if (this.argIndexForFunctionName('_VECTOR_SORT_ORDER') === 0) {
         this.vsoVarName = this.currentVarName()
         this.vsoTmpName = newTmpVarName()
         this.emit(this.vsoTmpName)
       }
+      super.visitVar(ctx)
     } else {
       let v = Model.varWithName(this.currentVarName())
       if (v && v.varType === 'data') {
-        this.emit(`_LOOKUP(${this.currentVarName()}, _time)`)
+        this.emit(`_LOOKUP(${this.currentVarName()}`)
+        super.visitVar(ctx)
+        this.emit(', _time)')
       } else {
         this.emit(this.currentVarName())
+        super.visitVar(ctx)
       }
     }
-    super.visitVar(ctx)
     this.varNames.pop()
   }
   visitLookupArg(ctx) {
@@ -756,6 +778,8 @@ module.exports = class EquationGen extends ModelReader {
     var keyword = ctx.Keyword().getText()
     if (keyword === ':NA:') {
       keyword = '_NA_'
+    } else if (keyword === ':INTERPOLATE:') {
+      keyword = ''
     }
     this.emit(keyword)
   }

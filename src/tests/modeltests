@@ -13,6 +13,10 @@ fi
 for MODEL in $(ls ../../models); do
   echo "testing the $MODEL model"
   $SDE clean --modeldir ../../models/$MODEL
-  $SDE test ../../models/$MODEL/$MODEL -p 1e-4
+  CMD="$SDE test ../../models/$MODEL/$MODEL -p 1e-4"
+  if [[ $MODEL == 'directdata' ]]; then
+    CMD="$CMD --spec ../../models/$MODEL/spec.json"
+  fi
+  $CMD
   $SDE clean --modeldir ../../models/$MODEL
 done
