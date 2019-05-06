@@ -205,7 +205,7 @@ module.exports = class EquationGen extends ModelReader {
           i = this.arrayIndexVars.index(rhsSub)
         } else {
           // Use the single index name for a separated variable if it exists.
-          let separatedIndexName = separatedVariableIndex(rhsSub, this.var)
+          let separatedIndexName = separatedVariableIndex(rhsSub, this.var, subscripts)
           if (separatedIndexName) {
             return `[${sub(separatedIndexName).value}]`
           }

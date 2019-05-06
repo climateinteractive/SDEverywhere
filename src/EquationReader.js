@@ -205,7 +205,7 @@ module.exports = class EquationReader extends ModelReader {
             let indexNamesAtPos
             // Use the single index name for a separated variable if it exists.
             // But don't do this if the subscript is a marked dimension in a vector function.
-            let separatedIndexName = separatedVariableIndex(subscripts[pos], this.var)
+            let separatedIndexName = separatedVariableIndex(subscripts[pos], this.var, subscripts)
             if (!markedDims.includes(subscripts[pos]) && separatedIndexName) {
               indexNamesAtPos = [separatedIndexName]
             } else {
@@ -231,14 +231,14 @@ module.exports = class EquationReader extends ModelReader {
           } else if (numLoops === 2) {
             // Expand the dimension in both positions.
             let indexNamesAtPos0
-            let separatedIndexName0 = separatedVariableIndex(subscripts[0], this.var)
+            let separatedIndexName0 = separatedVariableIndex(subscripts[0], this.var, subscripts)
             if (!markedDims.includes(subscripts[0]) && separatedIndexName0) {
               indexNamesAtPos0 = [separatedIndexName0]
             } else {
               indexNamesAtPos0 = indexNamesForSubscript(subscripts[0])
             }
             let indexNamesAtPos1
-            let separatedIndexName1 = separatedVariableIndex(subscripts[1], this.var)
+            let separatedIndexName1 = separatedVariableIndex(subscripts[1], this.var, subscripts)
             if (!markedDims.includes(subscripts[1]) && separatedIndexName1) {
               indexNamesAtPos1 = [separatedIndexName1]
             } else {
@@ -331,7 +331,7 @@ module.exports = class EquationReader extends ModelReader {
       if (r) {
         let rhsSubs = r[1].split(',').map(x => canonicalName(x))
         for (let rhsSub of rhsSubs) {
-          let separatedIndexName = separatedVariableIndex(rhsSub, this.var)
+          let separatedIndexName = separatedVariableIndex(rhsSub, this.var, rhsSubs)
           if (separatedIndexName) {
             index = decanonicalize(separatedIndexName)
             sepDim = decanonicalize(rhsSub)
@@ -411,7 +411,7 @@ module.exports = class EquationReader extends ModelReader {
         if (r) {
           let rhsSubs = r[1].split(',').map(x => canonicalName(x))
           for (let rhsSub of rhsSubs) {
-            let separatedIndexName = separatedVariableIndex(rhsSub, this.var)
+            let separatedIndexName = separatedVariableIndex(rhsSub, this.var, rhsSubs)
             if (separatedIndexName) {
               index = decanonicalize(separatedIndexName)
               sepDim = decanonicalize(rhsSub)
@@ -467,7 +467,7 @@ module.exports = class EquationReader extends ModelReader {
         if (r) {
           let rhsSubs = r[1].split(',').map(x => canonicalName(x))
           for (let rhsSub of rhsSubs) {
-            let separatedIndexName = separatedVariableIndex(rhsSub, this.var)
+            let separatedIndexName = separatedVariableIndex(rhsSub, this.var, rhsSubs)
             if (separatedIndexName) {
               index = decanonicalize(separatedIndexName)
               sepDim = decanonicalize(rhsSub)

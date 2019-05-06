@@ -255,8 +255,8 @@ function indexNamesForSubscript(subscript) {
     return dim.value
   }
 }
-function separatedVariableIndex(rhsSub, variable) {
-  // If a RHS subscript matches the variable's separation dimension, return the index name corresponding to the LHS.
+function separatedVariableIndex(rhsSub, variable, rhsSubscripts) {
+  // Given an RHS subscript, find an LHS index in the separation dimension that matches it.
   // The LHS and RHS subscripts need not be in normal order or have the same number of subscripts in a var.
   // The search proceeds through three stages:
   // 1. Find a sepDim that matches rhsSub.
@@ -276,8 +276,19 @@ function separatedVariableIndex(rhsSub, variable) {
             if (rhsSub === sepDim) {
               // There may be more than one lhsSub in the same family as rhsSub.
               // Pick the one that belongs to the rhsSub.
-              if (indexNamesForSubscript(rhsSub).includes(lhsSub)) {
-                return lhsSub
+              // If there are two LHS subs both in the same family, choose by position instead.
+              if (
+                rhsSubscripts &&
+                variable.subscripts.length === 2 &&
+                rhsSubscripts.length === 2 &&
+                sub(variable.subscripts[0]).family === sub(variable.subscripts[1]).family
+              ) {
+                let pos = rhsSubscripts.indexOf(rhsSub)
+                return variable.subscripts[pos]
+              } else {
+                if (indexNamesForSubscript(rhsSub).includes(lhsSub)) {
+                  return lhsSub
+                }
               }
             } else {
               // Find the index that maps from the subscript dimension to the separated var index.
