@@ -181,7 +181,7 @@ sde generate --list {model} >{model}_vars.txt
 **Preprocess a model to remove macros and tabbed arays to removals.txt**
 
 ~~~ bash
-sde generate ----preprocess {model} >{model}_pp.mdl
+sde generate --preprocess {model}
 ~~~
 
 **Compile the C code into an executable in the build directory**
