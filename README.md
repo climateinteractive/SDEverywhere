@@ -178,7 +178,7 @@ sde generate --genc {model}
 sde generate --list {model} >{model}_vars.txt
 ~~~
 
-**Preprocess a model to remove macros and tabbed arays to removals.txt**
+**Preprocess a model to remove macros and tabbed arrays to removals.txt**
 
 ~~~ bash
 sde generate --preprocess {model}
@@ -405,7 +405,7 @@ In SDEverywhere, most of the work is accomplished by visitor classes that walk t
 
 The ANTLR parser generator creates the `ModelVisitor` class to provide an empty interface consisting of "visit" methods for each parser rule. The runtime calls these methods as each rule is matched in the parse tree. The visit methods take a `ParserRuleContext` argument encapsulating the current spot in the parse tree. The rule context provides information on each part of the string that matched the rule. This is where SDEverywhere extracts information about the model from the parse tree.
 
-`ModelReader` is an SDEverywhere base class for more specialized parse tree walker classes. It does not extract any information from the parse tree on its own. Instead, it visits each element of a rule context by getting the element from the rule context and then calling its `accept` method. `ModelReader` knows what elements are part of each rule context in what order, which ones are optional, and which ones can take multiple values. The `accept` method goes through the visitor framework to make a "visit" call on the method for the element's rule contxt. In effect, it is asking a child rule context to "accept" a "visit" from "this" parent rule context.
+`ModelReader` is an SDEverywhere base class for more specialized parse tree walker classes. It does not extract any information from the parse tree on its own. Instead, it visits each element of a rule context by getting the element from the rule context and then calling its `accept` method. `ModelReader` knows what elements are part of each rule context in what order, which ones are optional, and which ones can take multiple values. The `accept` method goes through the visitor framework to make a "visit" call on the method for the element's rule context. In effect, it is asking a child rule context to "accept" a "visit" from "this" parent rule context.
 
 For instance, when the LHS of an equation is visited, the `visitLhs` method is called. It sees if there is a subscript list in the parse tree under the LHS node. If there is, the `accept` method is called on the subscript list rule context.
 ~~~ JavaScript
