@@ -175,13 +175,13 @@ sde generate --genc {model}
 **List a model's variables**
 
 ~~~ bash
-sde generate --list {model} >{model}_vars.txt
+sde generate --list {model}   ## list will be `build` directory
 ~~~
 
 **Preprocess a model to remove macros and tabbed arrays to removals.txt**
 
 ~~~ bash
-sde generate --preprocess {model}
+sde generate --preprocess {model}  ## model will be `build` directory
 ~~~
 
 **Compile the C code into an executable in the build directory**
