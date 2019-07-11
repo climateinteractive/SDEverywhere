@@ -67,8 +67,17 @@ double _PULSE(double start, double width) {
 	return (time_plus > start && time_plus < start + width) ? 1.0 : 0.0;
 }
 double _RAMP(double slope, double start_time, double end_time) {
+	// Return 0 until the start time is exceeded.
+	// Interpolate from start time to end time.
+	// Hold at the end time value.
+	// Allow start time > end time.
 	if (fgt(_time, start_time)) {
-		return slope * ((flt(_time, end_time) ? _time : end_time) - start_time);
+		if (flt(_time, end_time) || fgt(start_time, end_time)) {
+			return slope * (_time - start_time);
+		}
+		else {
+			return slope * (end_time - start_time);
+		}
 	}
 	else {
 		return 0.0;
