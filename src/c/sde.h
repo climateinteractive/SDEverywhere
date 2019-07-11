@@ -49,10 +49,10 @@ EXTERN double _epsilon;
 // #define PRDBG
 #ifdef PRDBG
 #define PRINIT(v) printf("initLevels: " #v " = %g\n", (v));
-#define PRAUX(v) if (_time == 1990) { printf("evalAux: " #v " = %g\n", (v)); }
+#define PRAUX(v, t) if (_time == t) { printf("evalAux: " #v " = %g\n", (v)); }
 #else
 #define PRINIT(v)
-#define PRAUX(v)
+#define PRAUX(v, t)
 #endif
 
 // Each number in the output can take up to 13 characters plus a separator character.
