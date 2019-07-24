@@ -204,7 +204,7 @@ function checkSpecVars(spec, extData) {
               let modelEquation = `${decanonicalize(varName)} = WITH LOOKUP(Time, (${lookup}))`
               addEquation(modelEquation)
             } else {
-              console.error(`data variable ${varName} not found in external data sources`)
+              console.error(`${specType} variable ${varName} not found in the model or external data sources`)
             }
           }
         }
