@@ -1,9 +1,16 @@
 # SDEverywhere Release Notes
 
-## Version 0.4.2, released on TBD
+## Version 0.5.0, released on 2019-07-24
 
-- read output vars from dat files to WITH LOOKUP variables
-- read data variables from external dat files into lookups with optional per-file variable name  prefix
+- web app generation uses simpler CSV configuration instead of YAML
+- three-dimensional arrays
+- :EXCEPT: subscripts
+- two-dimensional const arrays
+- GET DIRECT DATA for Excel at code generation time
+- read output variables from DAT files to WITH LOOKUP variables
+- generate variable documention in text and YAML formats
+- allow all special characters in variable names
+- improved coverage of subrange and mapping edge cases
 
 ## Version 0.4.1, released on 2018-03-11
 

@@ -1,6 +1,6 @@
 # SDEverywhere Guide
 
-Revised: 2019-03-07
+Revised: 2019-07-24
 
 ## Table of Contents
 
@@ -67,7 +67,7 @@ If you want to use SDEverywhere without getting the sample models, tests, and so
 
 **Install the current release version of SDEverywhere with npm**
 
-~~~ bash
+~~~
 npm install sdeverywhere -g
 ~~~
 
@@ -75,20 +75,20 @@ npm install sdeverywhere -g
 
 Visit the [GitHub repo](https://github.com/ToddFincannon/SDEverywhere) to download the code for SDEverywhere and the Vensim model parser. Downloading the source code allows you to run the release version (same as above) or a development branch, if you're changing the tool. You can download the source code to your computer as a zip file (and then unzip) or clone the repository using git.
 
-~~~ bash
+~~~
 git clone https://github.com/ToddFincannon/SDEverywhere
 git clone https://github.com/ToddFincannon/antlr4-vensim
 ~~~
 
 If you previously installed the SDEverywhere package using npm, uninstall that package before installing your new, local copy.
 
-~~~ bash
+~~~
 npm rm sdeverywhere -g
 ~~~
 
 To run SDEverywhere in development, link it into the Node global modules. You must link `antlr4-vensim` first. If you update Node, you will need to do the links again in the global modules in the new Node directory.
 
-~~~ bash
+~~~
 cd antlr4-vensim
 npm link
 cd ../SDEverywhere
@@ -104,16 +104,14 @@ If you need to run SDEverywhere in a debugger, use the instructions in the "Debu
 
 If you installed the sample models from the GitHub repo, you can test your installation by building and running the models in the `models` directory, and then comparing SDEverywhere output to Vensim x64 output. Each model has its own directory under `models` with the same name as the model. For instance:
 
-
-~~~ bash
+~~~
 cd models/arrays
 sde test arrays
 ~~~
 
 If that worked OK, you have installed everything needed to use SDEverywhere. You can test *all* the sample models too.
 
-
-~~~ bash
+~~~
 cd src/tests
 ./modeltests
 ~~~
@@ -168,91 +166,91 @@ By default, SDEverywhere will create a `build` directory in your model directory
 
 **Generate baseline model code that outputs all variables with no inputs**
 
-~~~ bash
+~~~
 sde generate --genc {model}
 ~~~
 
 **List a model's variables**
 
-~~~ bash
+~~~
 sde generate --list {model}   ## list will be `build` directory
 ~~~
 
 **Preprocess a model to remove macros and tabbed arrays to removals.txt**
 
-~~~ bash
+~~~
 sde generate --preprocess {model}  ## model will be `build` directory
 ~~~
 
 **Compile the C code into an executable in the build directory**
 
-~~~ bash
+~~~
 sde compile {model}
 ~~~
 
 **Run the executable and capture output into a text file in the output directory**
 
-~~~ bash
+~~~
 sde exec {model} {arguments}
 ~~~
 
 **Convert the SDEverywhere output file to a DAT file in the output directory**
 
-~~~ bash
+~~~
 sde log --dat output/{model}.txt
 ~~~
 
 **Compare a previously exported Vensim DAT file to SDEverywhere output**
 
-~~~ bash
+~~~
 sde compare {model}.dat output/{model}.dat
 ~~~
 
 **Generate C code and compile it in the build directory**
 
-~~~ bash
+~~~
 sde build {model}
 ~~~
 
 **Build C code and run the model**
 
-~~~ bash
+~~~
 sde run {model}
 ~~~
 
 **Run the model and compare its output to a previously exported Vensim DAT file**
 
-~~~ bash
+~~~
 sde test {model}
 ~~~
 
 **Delete the build, output, and html directories**
 
-~~~ bash
+~~~
 sde clean {model}
 ~~~
 
 **Generate a web app to run the model and graph the results**
 
-~~~ bash
+~~~
 sde generate --genhtml {model}
 ~~~
 
 **Print variable dependencies**
 
-~~~ bash
+~~~
 sde causes {model} {C variable name}
 ~~~
 
 **Convert variable names to C format**
 
-~~~ bash
+~~~
 sde names {model} {Vensim names file}
 ~~~
 
 **Print the SDEverywhere home directory**
 
-~~~ bash
+~~~
 sde which
 ~~~
 
@@ -279,7 +277,7 @@ First, create a model specification file that gives the Vensim names of input an
 
 To generate C code using the `--spec` argument, enter the following command:
 
-~~~ bash
+~~~
 sde generate --genc --spec {model}_spec.json {model}
 ~~~
 
@@ -287,7 +285,7 @@ SDE allows for validation against Vensim output. Before running the C file, it i
 
 The `sde test` command generates baseline C code that outputs all variables with no inputs. It then compiles the C code and runs it. The output is captured and converted into DAT format in the `output/{model}.dat` file. This is compared to Vensim run exported to a `{model}.dat` file in the model directory. All values that differ by a factor of 1e-5 or more are listed with the variance.
 
-~~~ bash
+~~~
 sde test {model}
 ~~~
 
