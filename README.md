@@ -1,6 +1,6 @@
 # SDEverywhere Guide
 
-Revised: 2019-07-24
+Revised: 2019-08-01
 
 ## Table of Contents
 
@@ -65,13 +65,13 @@ Install [Node.js](https://nodejs.org/) version 8.9.4 LTS or later. This will als
 
 If you want to use the stable release of SDEverywhere, simply install the npm package. If you want to work with latest version of SDEverywhere in development, install source code from GitHub (see below).
 
-**Install the current release version of SDEverywhere with npm**
+**Install the stable release version of SDEverywhere**
 
 ~~~
 npm install sdeverywhere -g
 ~~~
 
-**Install SDEverywhere with source code and sample models**
+**Install the development version SDEverywhere**
 
 If you previously installed the SDEverywhere package using npm, uninstall that package first before installing your new, local copy.
 
@@ -92,7 +92,7 @@ cd ..
 git clone https://github.com/ToddFincannon/SDEverywhere
 cd SDEverywhere
 git checkout -b develop origin/develop
-ß~~~
+~~~
 
 Using Sourcetree, do File > New > Clone from URL. Fill in the form as follows, substituting your project directory name for "{project directory}".
 
