@@ -63,7 +63,7 @@ Install [Node.js](https://nodejs.org/) version 8.9.4 LTS or later. This will als
 
 ### Install SDEverywhere
 
-If you want to use SDEverywhere without getting the sample models, tests, and source code, simply install the npm package. Otherwise, set up for SDEverywhere development by installing source code from GitHub.
+If you want to use the stable release of SDEverywhere, simply install the npm package. If you want to work with latest version of SDEverywhere in development, install source code from GitHub (see below).
 
 **Install the current release version of SDEverywhere with npm**
 
@@ -73,22 +73,49 @@ npm install sdeverywhere -g
 
 **Install SDEverywhere with source code and sample models**
 
-Visit the [GitHub repo](https://github.com/ToddFincannon/SDEverywhere) to download the code for SDEverywhere and the Vensim model parser. Downloading the source code allows you to run the release version (same as above) or a development branch, if you're changing the tool. You can download the source code to your computer as a zip file (and then unzip) or clone the repository using git.
-
-~~~
-git clone https://github.com/ToddFincannon/SDEverywhere
-git clone https://github.com/ToddFincannon/antlr4-vensim
-~~~
-
-If you previously installed the SDEverywhere package using npm, uninstall that package before installing your new, local copy.
+If you previously installed the SDEverywhere package using npm, uninstall that package first before installing your new, local copy.
 
 ~~~
 npm rm sdeverywhere -g
 ~~~
 
-To run SDEverywhere in development, link it into the Node global modules. You must link `antlr4-vensim` first. If you update Node, you will need to do the links again in the global modules in the new Node directory.
+Clone the `SDEverywhere` and `antlr4-vensim` repos in a project directory of your choice using either `git` on the command line or Sourcetree (see below).
+
+Using Git, clone each repo and track the `develop` branch, substituting your project directory name for "{project directory}".
 
 ~~~
+cd {project directory}
+git clone https://github.com/ToddFincannon/antlr4-vensim
+cd antlr4-vensim
+git checkout -b develop origin/develop
+cd ..
+git clone https://github.com/ToddFincannon/SDEverywhere
+cd SDEverywhere
+git checkout -b develop origin/develop
+ß~~~
+
+Using Sourcetree, do File > New > Clone from URL. Fill in the form as follows, substituting your project directory name for "{project directory}".
+
+| Prompt           | Contents                                           | 
+|------------------|----------------------------------------------------| 
+| Source URL       | https://github.com/ToddFincannon/antlr4-vensim.git | 
+| Destination Path | {project directory}/antlr4-vensim                  | 
+| Name             | antlr4-vensim                                      | 
+
+Then do the same for SDEverywhere.
+
+| Prompt           | Contents                                           | 
+|------------------|----------------------------------------------------| 
+| Source URL       | https://github.com/ToddFincannon/SDEverywhere.git  | 
+| Destination Path | {project directory}/SDEverywhere                   | 
+| Name             | SDEverywhere                                       | 
+
+Track the `develop` branch for both repos in Sourcetree by opening "origin" under Remotes in the sidebar, and then double-clicking `develop`. Click the Checkout button.
+
+When running SDEverywhere in development, link it into the Node global modules. You must link `antlr4-vensim` first. If you update Node, you will need to do the links again in the global modules in the new Node directory.
+
+~~~
+cd {project directory}
 cd antlr4-vensim
 npm link
 cd ../SDEverywhere
@@ -102,9 +129,10 @@ If you need to run SDEverywhere in a debugger, use the instructions in the "Debu
 
 ## Test your setup
 
-If you installed the sample models from the GitHub repo, you can test your installation by building and running the models in the `models` directory, and then comparing SDEverywhere output to Vensim x64 output. Each model has its own directory under `models` with the same name as the model. For instance:
+If you cloned the GitHub repo, you can test your installation by building and running the models in the `models` directory, and then comparing SDEverywhere output to Vensim x64 output. Each model has its own directory under `models` with the same name as the model. For instance:
 
 ~~~
+cd {project directory}/SDEverywhere
 cd models/arrays
 sde test arrays
 ~~~
