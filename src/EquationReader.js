@@ -453,14 +453,16 @@ module.exports = class EquationReader extends ModelReader {
       let varLHS = this.var.modelLHS
       let aux1, aux1LHS
       let aux2, aux2LHS
-      let delayTime, delayTimeLHS
+      let aux3, aux3LHS
+      let aux4, aux4LHS
       if (isSeparatedVar(this.var)) {
         level1 = newLevelVarName(this.var.varName, 1)
         level2 = newLevelVarName(this.var.varName, 2)
         level3 = newLevelVarName(this.var.varName, 3)
         aux1 = newAuxVarName(this.var.varName, 1)
         aux2 = newAuxVarName(this.var.varName, 2)
-        delayTime = newAuxVarName()
+        aux3 = newAuxVarName(this.var.varName, 3)
+        aux4 = newAuxVarName(this.var.varName, 4)
         let index
         let sepDim
         let r = genSubs.match(/\[(.*)\]/)
@@ -483,7 +485,8 @@ module.exports = class EquationReader extends ModelReader {
           level3LHS = `${level3}${newGenSubs}`
           aux1LHS = `${aux1}${newGenSubs}`
           aux2LHS = `${aux2}${newGenSubs}`
-          delayTimeLHS = `${delayTime}${newGenSubs}`
+          aux3LHS = `${aux3}${newGenSubs}`
+          aux4LHS = `${aux4}${newGenSubs}`
           level1RefId = canonicalVensimName(level1LHS)
           level2RefId = canonicalVensimName(level2LHS)
           level3RefId = canonicalVensimName(level3LHS)
@@ -501,28 +504,30 @@ module.exports = class EquationReader extends ModelReader {
         level3 = newLevelVarName()
         aux1 = newAuxVarName()
         aux2 = newAuxVarName()
-        delayTime = newAuxVarName()
+        aux3 = newAuxVarName()
+        aux4 = newAuxVarName()
         level1LHS = level1 + genSubs
         level2LHS = level2 + genSubs
         level3LHS = level3 + genSubs
         aux1LHS = aux1 + genSubs
         aux2LHS = aux2 + genSubs
-        delayTimeLHS = delayTime + genSubs
+        aux3LHS = aux3 + genSubs
+        aux4LHS = aux4 + genSubs
         level1RefId = canonicalName(level1)
         level2RefId = canonicalName(level2)
         level3RefId = canonicalName(level3)
       }
       // Generate a level var that will replace the DELAY function call.
-      this.var.delayVarRefId = this.generateDelayLevel(level3LHS, level3RefId, aux2LHS, varLHS, init)
-      this.generateDelayLevel(level2LHS, level2RefId, aux1LHS, aux2LHS, level3LHS)
-      this.generateDelayLevel(level1LHS, level1RefId, input, aux1LHS, level3LHS)
+      this.var.delayVarRefId = this.generateDelayLevel(level3LHS, level3RefId, aux2LHS, aux3LHS, init)
+      this.generateDelayLevel(level2LHS, level2RefId, aux1LHS, aux2LHS, init)
+      this.generateDelayLevel(level1LHS, level1RefId, input, aux1LHS, init)
       // Generate equations for the aux vars using the subs in the generated level var.
       this.addVariable(`${aux1LHS} = ${level1LHS} / ${delay3}`)
       this.addVariable(`${aux2LHS} = ${level2LHS} / ${delay3}`)
+      this.addVariable(`${aux3LHS} = ${level3LHS} / ${delay3}`)
       // Generate an aux var to hold the delay time expression.
-      this.var.delayTimeVarName = canonicalName(delayTime)
-      let delayTimeEqn = `${delayTimeLHS} = ${delay3}`
-      this.addVariable(delayTimeEqn)
+      this.var.delayTimeVarName = canonicalName(aux4)
+      this.addVariable(`${aux4LHS} = ${delay3}`)
       // Add a reference to the var, since it won't show up until code gen time.
       this.var.references.push(this.var.delayTimeVarName)
     }

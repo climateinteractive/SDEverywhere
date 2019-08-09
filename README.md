@@ -154,8 +154,7 @@ Model          | Description
 -------------- | -----------
 active_initial | ACTIVE INITIAL function
 arrays         | 1-D and 2-D arrays with a variety of subscript references
-delay          | DELAY function
-delay3         | DELAY3 function
+delay          | DELAY and DELAY3 functions
 index          | Apply-to-all and non-apply-to-all arrays
 initial        | INITIAL function
 interleaved    | Demonstrating a case where non-apply-to-all array elements are separated in eval order

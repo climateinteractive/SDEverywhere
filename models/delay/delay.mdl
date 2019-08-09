@@ -14,6 +14,8 @@ input 2[SubA]= 20, 30 ~~|
 delay 2 = 5 ~~|
 init 2[SubA] = 0 ~~|
 
+k = 42 ~~|
+
 d1 = DELAY1(input, delay) ~~|
 d2[DimA] = DELAY1I(input a[DimA], delay, init) ~~|
 d3[DimA] = DELAY1I(input, delay a[DimA], init) ~~|
@@ -24,6 +26,10 @@ d6[SubA] = DELAY1I(input 2[SubA], delay 2, init 2[SubA]) ~~|
 d7 = DELAY3(input, delay) ~~|
 d8[DimA] = DELAY3(input, delay a[DimA]) ~~|
 d9[SubA] = DELAY3I(input 2[SubA], delay 2, init 2[SubA]) ~~|
+
+d10 = k * DELAY3(input, delay) ~~|
+d11[DimA] = k * DELAY3(input, delay a[DimA]) ~~|
+d12[SubA] = k * DELAY3I(input 2[SubA], delay 2, init 2[SubA]) ~~|
 
 INITIAL TIME = 0 ~~|
 FINAL TIME = 10 ~~|
