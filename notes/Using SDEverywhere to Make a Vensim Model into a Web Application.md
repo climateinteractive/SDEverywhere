@@ -107,7 +107,7 @@ sde generate --genhtml {model}
 3. Start the development web server, and then open the web app with the URL it prints.
 
 ~~~
-npx http-server build/web -c-1
+npx http-server build/web -c-1 -o
 ~~~
 
 If you are using your own web server, configure it to serve files from the `model/build/web` directory.
