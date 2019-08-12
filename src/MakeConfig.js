@@ -129,13 +129,13 @@ let emitMenu = () => {
     if (section && section !== sectionTitle) {
       sectionTitle = section
       sectionMenu = {}
-      sectionSubmenu = []
       sectionMenu.id = stringToId(sectionTitle)
+      sectionSubmenu = []
+      sectionMenu.submenu = sectionSubmenu
+      toplevelSubmenu.push(sectionMenu)
     }
     let viewId = stringToId(view.title)
     sectionSubmenu.push({ id: viewId, label: stringToId(viewTitleName(view.title)) })
-    sectionMenu.submenu = sectionSubmenu
-    toplevelSubmenu.push(sectionMenu)
   }
   topLevelMenu.submenu = toplevelSubmenu
   appMenu.push(topLevelMenu)
