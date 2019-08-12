@@ -6,17 +6,7 @@ const browserify = require('browserify')
 const { ModelLexer, ModelParser } = require('antlr4-vensim')
 const { codeGenerator } = require('./CodeGen')
 const { preprocessModel } = require('./Preprocessor')
-const {
-  canonicalName,
-  modelPathProps,
-  buildDir,
-  webDir,
-  linkCSourceFiles,
-  filesExcept,
-  execCmd,
-  readDat,
-  readXlsx
-} = require('./Helpers')
+const { canonicalName, modelPathProps, buildDir, webDir, linkCSourceFiles, filesExcept, execCmd, readDat, readXlsx } = require('./Helpers')
 const { initConfig, makeModelSpec, makeModelConfig, makeChartData } = require('./MakeConfig')
 const Model = require('./Model')
 const Subscript = require('./Subscript')
@@ -204,13 +194,18 @@ let copyTemplate = buildDirname => {
   sh.cp('-Rf', templateDirname, buildDirname)
 }
 let customizeApp = (modelDirname, webDirname) => {
-  // Read the newly generated model config to customize app files.
-  let cfgPathname = `${webDirname}/appcfg`
   try {
+    // Read the newly generated model config to customize app files.
+    let cfgPathname = `${webDirname}/appcfg`
     const { app } = require(cfgPathname)
     if (app && app.logo) {
       let logoPathname = `${modelDirname}/${app.logo}`
       sh.cp('-f', logoPathname, webDirname)
+    }
+    // Copy the custom.css file if it exists in the model directory.
+    let cssPathname = path.join(modelDirname, 'custom.css')
+    if (fs.existsSync(cssPathname)) {
+      sh.cp('-f', cssPathname, webDirname)
     }
   } catch (e) {
     console.error(e.message)
@@ -229,10 +224,7 @@ let packApp = webDirname => {
     .on('finish', error => {
       // Remove JavaScript source files.
       if (!RETAIN_GENERATED_SOURCE_FILES) {
-        let sourceFiles = filesExcept(
-          `${webDirname}/*.js`,
-          name => name.endsWith('index.min.js') || name.endsWith('model_sde.js')
-        )
+        let sourceFiles = filesExcept(`${webDirname}/*.js`, name => name.endsWith('index.min.js') || name.endsWith('model_sde.js'))
         sh.rm(sourceFiles)
       }
     })
