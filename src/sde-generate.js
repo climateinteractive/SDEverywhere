@@ -203,7 +203,7 @@ let customizeApp = (modelDirname, webDirname) => {
       sh.cp('-f', logoPathname, webDirname)
     }
     // Copy the custom.css file if it exists in the model directory.
-    let cssPathname = path.join(modelDirname, 'config/custom.css')
+    let cssPathname = path.join(modelDirname, 'config', 'custom.css')
     if (fs.existsSync(cssPathname)) {
       sh.cp('-f', cssPathname, webDirname)
     }
