@@ -284,7 +284,7 @@ let buildInputPanel = () => {
       }
       let panelClass = 'sliderPanel'
       if (isFirstCol()) {
-        panelClass += ' firstSlider'
+        panelClass += ` firstSlider ${slider.name}`
       }
       if (isLastCol()) {
         panelClass += ' lastSlider'
