@@ -55,6 +55,16 @@ source ./emsdk_env.sh
 emcc -v
 ~~~
 
+8. [Optional] Edit your shell profile. If you expect to use SDE frequently, you can edit your shell profile script to automatically set up the Emscripten environment. On macOS Mojave, the current best way is to add the following to you `$HOME/.bash_profile` file:
+
+~~~
+##  Setup for SDE making webapps; this loads the Emscripten settings, and then overrides NODE_JS to the NVS version
+source $HOME/replaceme_PATHTO/emsdk/emsdk_env.sh > /dev/null
+NODE_JS='$HOME/.nvs/default/bin/node'
+~~~
+
+where `$HOME` is likely `/Users/<yourusername>` and `replaceme_PATHTO` is folder path to where you place your `emsdk` directory in Step 4 above.
+
 ## Generating model code and validating it
 
 The first step generates C code for your model and validates it against a Vensim run. This is necessary to ensure that SDEverywhere can handle all the Vensim constructs in your model and that it generates correct code for your equations. In a later step, the C code will be converted to JavaScript code that will be embedded in your web app.
