@@ -145,7 +145,7 @@ let generate = async (model, opts) => {
     linkCSourceFiles(modelDirname, buildDirname)
     if (generateWASM(buildDirname, webDirname) === 0) {
       makeModelConfig()
-      makeChartData()
+      await makeChartData()
       copyTemplate(buildDirname)
       customizeApp(modelDirname, webDirname)
       packApp(webDirname)
