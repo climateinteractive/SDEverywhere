@@ -78,12 +78,21 @@ let generate = async (model, opts) => {
   // Preprocess model text into parser input. Stop now if that's all we're doing.
   let spec = parseSpec(opts.spec)
   // Read time series from external DAT files into a single object.
-  // extData is a map from var prefixes to pathnames.
+  // externalDatfiles is an array of either filenames or objects
+  // giving a variable name prefix as the key and a filename as the value.
   let extData = new Map()
   if (spec.externalDatfiles) {
     for (let datfile of spec.externalDatfiles) {
-      let pathname = path.join(modelDirname, datfile)
-      let data = await readDat(pathname)
+      let prefix = ''
+      let filename = ''
+      if (typeof datfile === 'object') {
+        prefix = Object.keys(datfile)[0]
+        filename = datfile[prefix]
+      } else {
+        filename = datfile
+      }
+      let pathname = path.join(modelDirname, filename)
+      let data = await readDat(pathname, prefix)
       extData = new Map([...extData, ...data])
     }
   }
