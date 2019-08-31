@@ -45,7 +45,7 @@ double _INTEG(double value, double rate) {
 	return (value + rate * _time_step);
 }
 double _INTEGER(double x) {
-	return floor(x);
+	return trunc(x);
 }
 double _LN(double x) {
   return log(x);
