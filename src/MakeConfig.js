@@ -293,11 +293,11 @@ let emitSpec = currentSpec => {
     spec.name = cfg.app.title
   }
   if (cfg.app.externalDatfiles) {
-    spec.externalDatfiles = cfg.app.externalDatfiles.split(',')
+    spec.externalDatfiles = cfg.app.externalDatfiles.split(';')
   }
   if (cfg.app.chartDatfiles) {
     // Map datasets to dat filenames for later reference.
-    for (const datfile of cfg.app.chartDatfiles.split(',')) {
+    for (const datfile of cfg.app.chartDatfiles.split(';')) {
       let dataset = path.basename(datfile, '.dat')
       chartDatfiles[dataset] = datfile
     }

@@ -2,8 +2,8 @@
   "name": "sdeverywhere",
   "version": "0.5.0",
   "description": "SDEverywhere translates System Dynamics models from Vensim to C and WebAssembly",
-  "author": "Todd Fincannon <todd@toddfincannon.com> (http://toddfincannon.com)",
-  "homepage": "http://sdeverywhere.org",
+  "author": "Todd Fincannon <todd@toddfincannon.com> (https://toddfincannon.com)",
+  "homepage": "https://sdeverywhere.org",
   "license": "MIT",
   "readmeFilename": "README.md",
   "repository": {
