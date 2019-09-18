@@ -269,7 +269,8 @@ let emitViews = () => {
           maxValue: num(val(slider.sliderMax)),
           step: num(val(slider.sliderStep)),
           units: stringToId(slider.units),
-          format: val(slider.format)
+          format: val(slider.format),
+          description: slider.description
         }
         appView.sliders.push(viewSlider)
       }

@@ -293,7 +293,7 @@ let buildInputPanel = () => {
       // Empty slider objects indicate a blank cell in the input panel.
       if (!R.isEmpty(slider)) {
         html += `<div class="${panelClass}">`
-        html += `<label class="sliderLabel" for="${slider.name}">${str(slider.label)}</label><br>`
+        html += `<label class="sliderLabel" for="${slider.name}" title="${slider.description}">${str(slider.label)}</label><br>`
         html += `<input type="range" id="${slider.name}" min="${slider.minValue}" max="${slider.maxValue}" step="${slider.step}">`
         html += `<span class="sliderValue" id="${valueId(slider.name)}"></span>`
         html += `<span class="sliderUnits" id="${unitsId(slider.name)}"></span>`
