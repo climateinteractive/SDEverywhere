@@ -1,5 +1,11 @@
 # SDEverywhere Release Notes
 
+## Version 0.5.1 (updated wip 2019-09-24)
+
+- support multiple chartDatfiles delimited by semicolons in app.csv
+- override generated app styles in an optional custom.css file in the config folder
+- add optional varname prefix to readDat
+
 ## Version 0.5.0, released on 2019-07-24
 
 - web app generation uses simpler CSV configuration instead of YAML
