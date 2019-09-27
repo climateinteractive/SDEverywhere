@@ -1,6 +1,6 @@
 # SDEverywhere Release Notes
 
-## Version 0.5.1 (updated wip 2019-09-24)
+## Version 0.5.1, released on 2019-09-27
 
 - support multiple chartDatfiles delimited by semicolons in app.csv
 - override generated app styles in an optional custom.css file in the config folder
