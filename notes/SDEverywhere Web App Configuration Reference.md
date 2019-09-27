@@ -23,8 +23,8 @@ trackSliders | boolean | set true to run the model as sliders are moved; set fal
 initialTime | number | start time in model runs
 startTime | number | start time to show on graphs
 endTime | number | final time in model runs
-externalDatfiles | string | optional comma-delimited list of Vensim DAT filenames giving external data variables
-chartDatfiles | string list | optional comma-delimited list of Vensim DAT filenames with chart data
+externalDatfiles | string | optional semicolon-delimited list of Vensim DAT filenames giving external data variables
+chartDatfiles | string list | optional semicolon-delimited list of Vensim DAT filenames with chart data
 logo | string | optional filename of an app logo image
 helpUrl | string | optional URL of an online help file
 

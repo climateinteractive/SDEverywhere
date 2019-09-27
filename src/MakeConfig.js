@@ -129,13 +129,13 @@ let emitMenu = () => {
     if (section && section !== sectionTitle) {
       sectionTitle = section
       sectionMenu = {}
-      sectionSubmenu = []
       sectionMenu.id = stringToId(sectionTitle)
+      sectionSubmenu = []
+      sectionMenu.submenu = sectionSubmenu
+      toplevelSubmenu.push(sectionMenu)
     }
     let viewId = stringToId(view.title)
     sectionSubmenu.push({ id: viewId, label: stringToId(viewTitleName(view.title)) })
-    sectionMenu.submenu = sectionSubmenu
-    toplevelSubmenu.push(sectionMenu)
   }
   topLevelMenu.submenu = toplevelSubmenu
   appMenu.push(topLevelMenu)
@@ -269,7 +269,8 @@ let emitViews = () => {
           maxValue: num(val(slider.sliderMax)),
           step: num(val(slider.sliderStep)),
           units: stringToId(slider.units),
-          format: val(slider.format)
+          format: val(slider.format),
+          description: slider.description
         }
         appView.sliders.push(viewSlider)
       }
@@ -293,11 +294,11 @@ let emitSpec = currentSpec => {
     spec.name = cfg.app.title
   }
   if (cfg.app.externalDatfiles) {
-    spec.externalDatfiles = cfg.app.externalDatfiles.split(',')
+    spec.externalDatfiles = cfg.app.externalDatfiles.split(';')
   }
   if (cfg.app.chartDatfiles) {
     // Map datasets to dat filenames for later reference.
-    for (const datfile of cfg.app.chartDatfiles.split(',')) {
+    for (const datfile of cfg.app.chartDatfiles.split(';')) {
       let dataset = path.basename(datfile, '.dat')
       chartDatfiles[dataset] = datfile
     }

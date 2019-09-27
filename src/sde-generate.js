@@ -24,6 +24,8 @@ const B = require('bufx')
 
 // Set true to retain generated source files during development.
 const RETAIN_GENERATED_SOURCE_FILES = false
+// A custom CSS file may be provided to override built-in styles.
+const CUSTOM_CSS = 'custom.css'
 
 let command = 'generate [options] <model>'
 let describe = 'generate model code'
@@ -88,12 +90,21 @@ let generate = async (model, opts) => {
   // Preprocess model text into parser input. Stop now if that's all we're doing.
   let spec = parseSpec(opts.spec)
   // Read time series from external DAT files into a single object.
-  // extData is a map from var prefixes to pathnames.
+  // externalDatfiles is an array of either filenames or objects
+  // giving a variable name prefix as the key and a filename as the value.
   let extData = new Map()
   if (spec.externalDatfiles) {
     for (let datfile of spec.externalDatfiles) {
-      let pathname = path.join(modelDirname, datfile)
-      let data = await readDat(pathname)
+      let prefix = ''
+      let filename = ''
+      if (typeof datfile === 'object') {
+        prefix = Object.keys(datfile)[0]
+        filename = datfile[prefix]
+      } else {
+        filename = datfile
+      }
+      let pathname = path.join(modelDirname, filename)
+      let data = await readDat(pathname, prefix)
       extData = new Map([...extData, ...data])
     }
   }
@@ -155,7 +166,7 @@ let generate = async (model, opts) => {
     linkCSourceFiles(modelDirname, buildDirname)
     if (generateWASM(buildDirname, webDirname) === 0) {
       makeModelConfig()
-      makeChartData()
+      await makeChartData()
       copyTemplate(buildDirname)
       customizeApp(modelDirname, webDirname)
       packApp(webDirname)
@@ -204,13 +215,22 @@ let copyTemplate = buildDirname => {
   sh.cp('-Rf', templateDirname, buildDirname)
 }
 let customizeApp = (modelDirname, webDirname) => {
-  // Read the newly generated model config to customize app files.
-  let cfgPathname = `${webDirname}/appcfg`
   try {
+    // Read the newly generated model config to customize app files.
+    let cfgPathname = `${webDirname}/appcfg`
     const { app } = require(cfgPathname)
     if (app && app.logo) {
       let logoPathname = `${modelDirname}/${app.logo}`
       sh.cp('-f', logoPathname, webDirname)
+    }
+    // Copy the custom.css file if it exists in the model directory.
+    let cssPathname = path.join(modelDirname, 'config', CUSTOM_CSS)
+    if (fs.existsSync(cssPathname)) {
+      sh.cp('-f', cssPathname, webDirname)
+    } else {
+      // Create a blank file if it is not provided to avoid a 404 on the CSS link in the HTML.
+      let outputPathname = path.join(webDirname, CUSTOM_CSS)
+      B.write('', outputPathname)
     }
   } catch (e) {
     console.error(e.message)
@@ -229,10 +249,7 @@ let packApp = webDirname => {
     .on('finish', error => {
       // Remove JavaScript source files.
       if (!RETAIN_GENERATED_SOURCE_FILES) {
-        let sourceFiles = filesExcept(
-          `${webDirname}/*.js`,
-          name => name.endsWith('index.min.js') || name.endsWith('model_sde.js')
-        )
+        let sourceFiles = filesExcept(`${webDirname}/*.js`, name => name.endsWith('index.min.js') || name.endsWith('model_sde.js'))
         sh.rm(sourceFiles)
       }
     })

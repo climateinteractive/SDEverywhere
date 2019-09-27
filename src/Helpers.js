@@ -129,7 +129,7 @@ let strToConst = c => {
     // Convert a Vensim string constant into a C string literal.
     return `"${str}"`
   } else {
-  // Parse the string into a float.
+    // Parse the string into a float.
     let d = parseFloat(c)
     return cdbl(d)
   }
@@ -251,10 +251,11 @@ let execCmd = cmd => {
   }
   return exitCode
 }
-let readDat = async pathname => {
+let readDat = async (pathname, prefix = '') => {
   // Read a Vensim DAT file into a Map.
   // Key: variable name in canonical format
   // Value: Map from numeric time value to numeric variable value
+  // The optional prefix string is prepended to var names when present.
   let log = new Map()
   let varName = ''
   let varValues = new Map()
@@ -269,7 +270,7 @@ let readDat = async pathname => {
   }
   let addValues = () => {
     if (varName !== '' && varValues.size > 0) {
-      log.set(varName, varValues)
+      log.set(prefix + varName, varValues)
     }
   }
   // console.log(pathname)
