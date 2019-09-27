@@ -6,7 +6,17 @@ const browserify = require('browserify')
 const { ModelLexer, ModelParser } = require('antlr4-vensim')
 const { codeGenerator } = require('./CodeGen')
 const { preprocessModel } = require('./Preprocessor')
-const { canonicalName, modelPathProps, buildDir, webDir, linkCSourceFiles, filesExcept, execCmd, readDat, readXlsx } = require('./Helpers')
+const {
+  canonicalName,
+  modelPathProps,
+  buildDir,
+  webDir,
+  linkCSourceFiles,
+  filesExcept,
+  execCmd,
+  readDat,
+  readXlsx
+} = require('./Helpers')
 const { initConfig, makeModelSpec, makeModelConfig, makeChartData } = require('./MakeConfig')
 const Model = require('./Model')
 const Subscript = require('./Subscript')
@@ -14,6 +24,8 @@ const B = require('bufx')
 
 // Set true to retain generated source files during development.
 const RETAIN_GENERATED_SOURCE_FILES = false
+// A custom CSS file may be provided to override built-in styles.
+const CUSTOM_CSS = 'custom.css'
 
 let command = 'generate [options] <model>'
 let describe = 'generate model code'
@@ -212,9 +224,13 @@ let customizeApp = (modelDirname, webDirname) => {
       sh.cp('-f', logoPathname, webDirname)
     }
     // Copy the custom.css file if it exists in the model directory.
-    let cssPathname = path.join(modelDirname, 'config', 'custom.css')
+    let cssPathname = path.join(modelDirname, 'config', CUSTOM_CSS)
     if (fs.existsSync(cssPathname)) {
       sh.cp('-f', cssPathname, webDirname)
+    } else {
+      // Create a blank file if it is not provided to avoid a 404 on the CSS link in the HTML.
+      let outputPathname = path.join(webDirname, CUSTOM_CSS)
+      B.write('', outputPathname)
     }
   } catch (e) {
     console.error(e.message)
