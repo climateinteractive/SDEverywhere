@@ -1,6 +1,6 @@
 # SDEverywhere Guide
 
-Revised: 2019-08-01
+Revised: 2020-04-06
 
 ## Table of Contents
 
@@ -63,58 +63,58 @@ Install [Node.js](https://nodejs.org/) version 8.9.4 LTS or later. This will als
 
 ### Install SDEverywhere
 
-If you want to use the stable release of SDEverywhere, simply install the npm package. If you want to work with latest version of SDEverywhere in development, install source code from GitHub (see below).
+If you want to use the stable release of SDEverywhere, simply install the npm package. If you want to work with the latest version of SDEverywhere in development, install source code from GitHub (see below).
 
 **Install the stable release version of SDEverywhere**
 
-~~~
+```
 npm install sdeverywhere -g
-~~~
+```
 
-**Install the development version SDEverywhere**
+**Install the development version of SDEverywhere**
 
 If you previously installed the SDEverywhere package using npm, uninstall that package first before installing your new, local copy.
 
-~~~
+```
 npm rm sdeverywhere -g
-~~~
+```
 
 Clone the `SDEverywhere` and `antlr4-vensim` repos in a project directory of your choice using either `git` on the command line or Sourcetree (see below).
 
-Using Git, clone each repo and track the `develop` branch, substituting your project directory name for "{project directory}".
+*If you are using command-line Git*, clone each repo and track the `develop` branch, substituting your project directory name for "{project directory}".
 
-~~~
+```
 cd {project directory}
-git clone https://github.com/ToddFincannon/antlr4-vensim
+git clone https://github.com/climateinteractive/antlr4-vensim
 cd antlr4-vensim
 git checkout -b develop origin/develop
 cd ..
-git clone https://github.com/ToddFincannon/SDEverywhere
+git clone https://github.com/climateinteractive/SDEverywhere
 cd SDEverywhere
 git checkout -b develop origin/develop
-~~~
+```
 
-Using Sourcetree, do File > New > Clone from URL. Fill in the form as follows, substituting your project directory name for "{project directory}".
+*If you are using Sourcetree*,  do File > New > Clone from URL. Fill in the form as follows, substituting your project directory name for "{project directory}".
 
-| Prompt           | Contents                                           | 
-|------------------|----------------------------------------------------| 
-| Source URL       | https://github.com/ToddFincannon/antlr4-vensim.git | 
-| Destination Path | {project directory}/antlr4-vensim                  | 
-| Name             | antlr4-vensim                                      | 
+| Prompt           | Contents                                                |
+| ---------------- | ------------------------------------------------------- |
+| Source URL       | https://github.com/climateinteractive/antlr4-vensim.git |
+| Destination Path | {project directory}/antlr4-vensim                       |
+| Name             | antlr4-vensim                                           |
 
 Then do the same for SDEverywhere.
 
-| Prompt           | Contents                                           | 
-|------------------|----------------------------------------------------| 
-| Source URL       | https://github.com/ToddFincannon/SDEverywhere.git  | 
-| Destination Path | {project directory}/SDEverywhere                   | 
-| Name             | SDEverywhere                                       | 
+| Prompt           | Contents                                               |
+| ---------------- | ------------------------------------------------------ |
+| Source URL       | https://github.com/climateinteractive/SDEverywhere.git |
+| Destination Path | {project directory}/SDEverywhere                       |
+| Name             | SDEverywhere                                           |
 
 Track the `develop` branch for both repos in Sourcetree by opening "origin" under Remotes in the sidebar, and then double-clicking `develop`. Click the Checkout button.
 
 When running SDEverywhere in development, link it into the Node global modules. You must link `antlr4-vensim` first. If you update Node, you will need to do the links again in the global modules in the new Node directory.
 
-~~~
+```
 cd {project directory}
 cd antlr4-vensim
 npm link
@@ -123,26 +123,19 @@ npm link antlr4-vensim
 npm install
 npm link
 sde -v
-~~~
+```
 
 If you need to run SDEverywhere in a debugger, use the instructions in the "Debugging" section below.
 
 ## Test your setup
 
-If you cloned the GitHub repo, you can test your installation by building and running the models in the `models` directory, and then comparing SDEverywhere output to Vensim x64 output. Each model has its own directory under `models` with the same name as the model. For instance:
+If you cloned the GitHub repo, you can test your installation by building and running the models in the `models` directory, and then comparing SDEverywhere output to Vensim x64 output. Each model has its own directory under `models` with the same name as the model.
 
-~~~
-cd {project directory}/SDEverywhere
-cd models/arrays
-sde test arrays
-~~~
+Run all model tests with npm.
 
-If that worked OK, you have installed everything needed to use SDEverywhere. You can test *all* the sample models too.
-
-~~~
-cd src/tests
-./modeltests
-~~~
+```
+npm test
+```
 
 ## Sample models
 
@@ -150,34 +143,34 @@ The sample Vensim models located in the `models` directory in a folder with the 
 
 The following models are included as samples and test cases for various Vensim features.
 
-Model          | Description
--------------- | -----------
-active_initial | ACTIVE INITIAL function
-arrays         | 1-D and 2-D arrays with a variety of subscript references
-delay          | DELAY and DELAY3 functions
-index          | Apply-to-all and non-apply-to-all arrays
-initial        | INITIAL function
-interleaved    | Demonstrating a case where non-apply-to-all array elements are separated in eval order
-lookup         | Lookup variables and functions
-mapping        | Mapping subranges
-ref            | An eval order that require an apply-to-all array to become non-apply-to-all
-sample         | SAMPLE function
-sir            | SIR infection model
-smooth         | SMOOTH function
-smooth3        | SMOOTH3 function
-subscript      | Subscript references in various orders
-sum            | SUM expressions
-vector         | Vector functions
+| Model          | Description                                                                            |
+| -------------- | -------------------------------------------------------------------------------------- |
+| active_initial | ACTIVE INITIAL function                                                                |
+| arrays         | 1-D and 2-D arrays with a variety of subscript references                              |
+| delay          | DELAY and DELAY3 functions                                                             |
+| index          | Apply-to-all and non-apply-to-all arrays                                               |
+| initial        | INITIAL function                                                                       |
+| interleaved    | Demonstrating a case where non-apply-to-all array elements are separated in eval order |
+| lookup         | Lookup variables and functions                                                         |
+| mapping        | Mapping subranges                                                                      |
+| ref            | An eval order that require an apply-to-all array to become non-apply-to-all            |
+| sample         | SAMPLE function                                                                        |
+| sir            | SIR infection model                                                                    |
+| smooth         | SMOOTH function                                                                        |
+| smooth3        | SMOOTH3 function                                                                       |
+| subscript      | Subscript references in various orders                                                 |
+| sum            | SUM expressions                                                                        |
+| vector         | Vector functions                                                                       |
 
 Here are the files in each model directory.
 
-Filename          | Description
------------------ | -----------
-{model}.mdl       | Vensim model
-{model}.dat       | Data file exported in DAT text format
-{model}.txt       | SDEverywhere log file in DAT format with values for all time steps
-{model}_spec.json | Model specification including input and output variables of interest
-{model}_vars.txt  | SDEverywhere variable analysis
+| Filename           | Description                                                          |
+| ------------------ | -------------------------------------------------------------------- |
+| {model}.mdl        | Vensim model                                                         |
+| {model}.dat        | Data file exported in DAT text format                                |
+| {model}.txt        | SDEverywhere log file in DAT format with values for all time steps   |
+| {model}\_spec.json | Model specification including input and output variables of interest |
+| {model}\_vars.txt  | SDEverywhere variable analysis                                       |
 
 ## Usage
 
@@ -193,100 +186,101 @@ By default, SDEverywhere will create a `build` directory in your model directory
 
 **Generate baseline model code that outputs all variables with no inputs**
 
-~~~
+```
 sde generate --genc {model}
-~~~
+```
 
 **List a model's variables**
 
-~~~
+```
 sde generate --list {model}   ## list will be `build` directory
-~~~
+```
 
 **Preprocess a model to remove macros and tabbed arrays to removals.txt**
 
-~~~
+```
 sde generate --preprocess {model}  ## model will be `build` directory
-~~~
+```
 
 **Compile the C code into an executable in the build directory**
 
-~~~
+```
 sde compile {model}
-~~~
+```
 
 **Run the executable and capture output into a text file in the output directory**
 
-~~~
+```
 sde exec {model} {arguments}
-~~~
+```
 
 **Convert the SDEverywhere output file to a DAT file in the output directory**
 
-~~~
+```
 sde log --dat output/{model}.txt
-~~~
+```
 
 **Compare a previously exported Vensim DAT file to SDEverywhere output**
 
-~~~
+```
 sde compare {model}.dat output/{model}.dat
-~~~
+```
 
 **Generate C code and compile it in the build directory**
 
-~~~
+```
 sde build {model}
-~~~
+```
 
 **Build C code and run the model**
 
-~~~
+```
 sde run {model}
-~~~
+```
 
 **Run the model and compare its output to a previously exported Vensim DAT file**
 
-~~~
+```
 sde test {model}
-~~~
+```
 
 **Delete the build, output, and html directories**
 
-~~~
+```
 sde clean {model}
-~~~
+```
 
 **Generate a web app to run the model and graph the results**
 
-~~~
+```
 sde generate --genhtml {model}
-~~~
+```
 
 **Print variable dependencies**
 
-~~~
+```
 sde causes {model} {C variable name}
-~~~
+```
 
 **Convert variable names to C format**
 
-~~~
+```
 sde names {model} {Vensim names file}
-~~~
+```
 
 **Print the SDEverywhere home directory**
 
-~~~
+```
 sde which
-~~~
+```
 
 ### Specify input and output variables
 
 Most applications do not require all variables in the output. And we usually want to designate some constant variables as inputs. In SDEverywhere, this is done with a model specification JSON file. The conventional name is `{model}_spec.json`.
 
 First, create a model specification file that gives the Vensim names of input and output variables of interest. Be sure to include `Time` first among the output variables.
-~~~ JSON
+
+```JSON
 {
   "inputVars": [
     "Reference predators",
@@ -298,23 +292,23 @@ First, create a model specification file that gives the Vensim names of input an
     "Prey X"
   ]
 }
-~~~
+```
 
 ### Generating, compiling, running, and testing the C code
 
 To generate C code using the `--spec` argument, enter the following command:
 
-~~~
+```
 sde generate --genc --spec {model}_spec.json {model}
-~~~
+```
 
 SDE allows for validation against Vensim output. Before running the C file, it is useful to generate the Vensim data so you can ensure the C code is valid and reproduces the same results as Vensim. To make the Vensim output, run the model in 64-bit Vensim and export the run in DAT format to the `{model}.dat` file in the model directory.
 
 The `sde test` command generates baseline C code that outputs all variables with no inputs. It then compiles the C code and runs it. The output is captured and converted into DAT format in the `output/{model}.dat` file. This is compared to Vensim run exported to a `{model}.dat` file in the model directory. All values that differ by a factor of 1e-5 or more are listed with the variance.
 
-~~~
+```
 sde test {model}
-~~~
+```
 
 ### Setting inputs
 
@@ -356,11 +350,12 @@ An exception of "code generator exception: Cannot read property 'name' of undefi
 To print a stack trace to the console, use `console.error(e.stack)` in an exception handler and `console.trace()` elsewhere.
 
 In the C input parsing code, show a changed value:
-~~~ C
+
+```C
 if (*inputVarPtrs[modelVarIndex] != value) {
   fprintf(stderr, "input %d changed from %g to %g\n", modelVarIndex, *inputVarPtrs[modelVarIndex], value);
 }
-~~~
+```
 
 ## SDEverywhere architecture
 
@@ -372,7 +367,7 @@ SDEverywhere is written in the [ECMAScript 2015](https://github.com/lukehoban/es
 
 SDEverywhere uses [XMILE](http://docs.oasis-open.org/xmile/) terminology in most cases. A Vensim subscript range becomes a "dimension" that has "indices". (The XMILE specification has "element" as the child of "dimension" in the model XML format, but uses "index" informally, so SDEverywhere sticks with "index".) XMILE does not include the notion of subranges. SDEverywhere calls subranges "subdimensions".
 
-Vensim refers to variables and equations interchangeably. This usually makes sense, since most variables are defined by a single equation. In SDEverywhere, models define variables with equations. However, a subscripted variable may be defined by multiple equations. In XMILE terminology, an *apply-to-all* array has an equation that defines all indices of the variable. There is just one array variable. A *non-apply-to-all* array is defined by different equations for each index. This means there are multiple variables, one for each index.
+Vensim refers to variables and equations interchangeably. This usually makes sense, since most variables are defined by a single equation. In SDEverywhere, models define variables with equations. However, a subscripted variable may be defined by multiple equations. In XMILE terminology, an _apply-to-all_ array has an equation that defines all indices of the variable. There is just one array variable. A _non-apply-to-all_ array is defined by different equations for each index. This means there are multiple variables, one for each index.
 
 The `Variable` class is the heart of SDEverywhere. An equation has a left-hand side (LHS), usually the variable name, and a right-hand side (RHS), usually a formula expression that is evaluated to determine the variable's value. The RHS could also be a Vensim lookup (a set of data points) or a constant array.
 
@@ -380,7 +375,7 @@ The `Variable` class is the heart of SDEverywhere. An equation has a left-hand s
 
 The `sdegen` command reads the model file, an optional model spec JSON file detailing input and output variables, and an optional subscript JSON file detailing dimensions, indices, and mappings. Each file is parsed and then handed off to the `CodeGen` object.
 
-The model file is parsed using a grammar generated by [ANTLR 4](http://www.antlr.org/). The parser constructs a parse tree that the code generator works with. The model file is passed through a preprocessor first to handle some things the grammar can't work with yet, such as macros and tabbed arrays. See the [antlr4-vensim](https://github.com/ToddFincannon/antlr4-vensim) package for more on the parser.
+The model file is parsed using a grammar generated by [ANTLR 4](http://www.antlr.org/). The parser constructs a parse tree that the code generator works with. The model file is passed through a preprocessor first to handle some things the grammar can't work with yet, such as macros and tabbed arrays. See the [antlr4-vensim](https://github.com/climateinteractive/antlr4-vensim) package for more on the parser.
 
 ### Code generation overview
 
@@ -433,13 +428,14 @@ The ANTLR parser generator creates the `ModelVisitor` class to provide an empty 
 `ModelReader` is an SDEverywhere base class for more specialized parse tree walker classes. It does not extract any information from the parse tree on its own. Instead, it visits each element of a rule context by getting the element from the rule context and then calling its `accept` method. `ModelReader` knows what elements are part of each rule context in what order, which ones are optional, and which ones can take multiple values. The `accept` method goes through the visitor framework to make a "visit" call on the method for the element's rule context. In effect, it is asking a child rule context to "accept" a "visit" from "this" parent rule context.
 
 For instance, when the LHS of an equation is visited, the `visitLhs` method is called. It sees if there is a subscript list in the parse tree under the LHS node. If there is, the `accept` method is called on the subscript list rule context.
-~~~ JavaScript
+
+```JavaScript
 visitLhs(ctx) {
   if (ctx.subscriptList()) {
     ctx.subscriptList().accept(this);
   }
 }
-~~~
+```
 
 The remaining SDEverywhere visitor classes derive from the abstract `ModelReader` base to extract information from the parse tree.
 
@@ -499,13 +495,13 @@ For web apps, SDEverywhere converts the C code it generates into [WebAssembly](h
 
 Instead of calling `startup()` on page load, we need to wait for the WebAssembly (wasm) module to load. We define a global Module object with the callback.
 
-~~~ JavaScript
+```JavaScript
 window.Module = {
   preRun: [],
   postRun: [],
   onRuntimeInitialized: () => startup()
 }
-~~~
+```
 
 It is set in `window` so that Browserify will make it part of the global namespace. Defining `var Module` in the html file does not work. A more elegant solution would be to use the Browserify `insertGlobalVars` method. This would best be done by running Browserify from JavaScript instead of the CLI.
 
@@ -541,31 +537,36 @@ The dimensions given to the right of the `->` marker are the "mapping value" of 
 ### Subscript mapping example
 
 Here is a mapped dimension with three subscripts in the map-from and map-to dimensions.
-~~~
+
+```
 DimA: R1, R2, R3 -> (EFGroups: Group1, Group2, Group3)
-~~~
+```
 
 But `EFGroups` has four subscripts!
-~~~
-EFGroups: DimF, E1, E2, E3
-~~~
 
-The map-to dimension does not really have three subscripts. The *mapping* must list three subscripts to match the number of indices in the map-from dimension. But the total number of indices in the map-to dimension can be greater than in the map-from dimension.
+```
+EFGroups: DimF, E1, E2, E3
+```
+
+The map-to dimension does not really have three subscripts. The _mapping_ must list three subscripts to match the number of indices in the map-from dimension. But the total number of indices in the map-to dimension can be greater than in the map-from dimension.
 
 These dimensions are simple lists of indices.
-~~~
+
+```
 DimE: E1, E2, E3
 DimF: F1, F2, F3
 DimR: R1, R2, R3
-~~~
+```
 
 If we expand the `DimF` dimension in the `EFGroups` map-to dimension, we see that `EFGroups` has a total of six indices.
-~~~
+
+```
 EFGroups: F1, F2, F3, E1, E2, E3
-~~~
+```
 
 Therefore, the mapping in `DimA` maps the the three indices in `DimA` to the six indices in `EFGroups` in a different order than they occur in the definition of `EFGroups`, through other dimensions `Group1`, `Group2`, and `Group3`.
-~~~
+
+```
 DimA: R1, R2, R3 -> (EFGroups: Group1, Group2, Group3)
 
 Group1: F1, E1
@@ -575,19 +576,21 @@ Group3: F3, E3
 R1 → Group1 → F1, E1
 R2 → Group2 → F2, E2
 R3 → Group3 → F3, E3
-~~~
+```
 
 What this mapping accomplishes is to group the subscripts in `EFGroups` in a different way when it occurs in an equation with `DimA`. For instance:
-~~~
+
+```
 x[EFGroups] = a[DimA] * 10
-~~~
+```
 
 Notice that in an equation, the map-to dimension is on the LHS and the map-from dimension is on the RHS, the opposite of how they occur in the subscript range definition. This subscripted equation is evaluated as follows when expanded over its indices by SDEverywhere:
-~~~
+
+```
 x[F1] = a[R1] * 10
 x[E1] = a[R1] * 10
 x[F2] = a[R2] * 10
 x[E2] = a[R2] * 10
 x[F3] = a[R3] * 10
 x[E3] = a[R3] * 10
-~~~
+```
