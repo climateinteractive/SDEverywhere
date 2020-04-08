@@ -12,7 +12,7 @@ const {
   isIndex,
   normalizeSubscripts,
   separatedVariableIndex,
-  sub
+  sub,
 } = require('./Subscript')
 const {
   canonicalName,
@@ -25,7 +25,7 @@ const {
   listConcat,
   newTmpVarName,
   strToConst,
-  vlog
+  vlog,
 } = require('./Helpers')
 
 module.exports = class EquationGen extends ModelReader {
@@ -107,7 +107,10 @@ module.exports = class EquationGen extends ModelReader {
     // Either emit constant list code or a regular var assignment.
     let formula = `  ${this.lhs} = ${this.exprCode};`
     // Close the assignment loops.
-    this.subscriptLoopClosingCode = R.concat(this.subscriptLoopClosingCode, R.map(dimName => `  }`, dimNames))
+    this.subscriptLoopClosingCode = R.concat(
+      this.subscriptLoopClosingCode,
+      R.map(dimName => `  }`, dimNames)
+    )
     // Assemble code from each channel into final var code output.
     return this.comments.concat(this.subscriptLoopOpeningCode, this.tmpVarCode, formula, this.subscriptLoopClosingCode)
   }
@@ -686,16 +689,20 @@ module.exports = class EquationGen extends ModelReader {
           }
         }
       } else if (numDims === 2) {
-        // Calculate an index into a flattened 2D array in two steps.
+        // Calculate an index into a flattened array in two steps.
         let constPos
+        // Get the number of columns in the array.
+        let numCols = sub(this.var.separationDims[1]).size
         for (let dim of this.var.separationDims) {
           let sepDim = sub(dim)
           for (let ind of this.var.subscripts) {
             let i = sepDim.value.indexOf(ind)
             if (i >= 0) {
               if (constPos === undefined) {
-                constPos = sepDim.size * i
+                // Multiply the row (first) index by the number of columns.
+                constPos = numCols * i
               } else {
+                // Add the column (second) index.
                 constPos += i
               }
               break
