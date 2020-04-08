@@ -2,6 +2,7 @@ const R = require('ramda')
 const XLSX = require('xlsx')
 const { ModelLexer, ModelParser } = require('antlr4-vensim')
 const ModelReader = require('./ModelReader')
+const ModelLHSReader = require('./ModelLHSReader')
 const LoopIndexVars = require('./LoopIndexVars')
 const Model = require('./Model')
 const {
@@ -689,27 +690,36 @@ module.exports = class EquationGen extends ModelReader {
           }
         }
       } else if (numDims === 2) {
-        // Calculate an index into a flattened array in two steps.
-        let constPos
-        // Get the number of columns in the array.
-        let numCols = sub(this.var.separationDims[1]).size
+        // Calculate an index into a flattened array by converting the indices to numeric form and looking them up
+        // in a C name array listed in the same Vensim order as the constant array in the model.
+        let cVarName
+        let modelLHSReader = new ModelLHSReader()
+        modelLHSReader.read(this.var.modelLHS)
+        let cNames = modelLHSReader.names().map(Model.cName)
+        // Visit dims in normal order. Find the ind in the dim. Compose the C array expression with numeric indices.
         for (let dim of this.var.separationDims) {
           let sepDim = sub(dim)
           for (let ind of this.var.subscripts) {
             let i = sepDim.value.indexOf(ind)
             if (i >= 0) {
-              if (constPos === undefined) {
-                // Multiply the row (first) index by the number of columns.
-                constPos = numCols * i
+              let indexNum = sub(ind).value
+              if (!cVarName) {
+                cVarName = `${this.var.varName}[${indexNum}]`
               } else {
-                // Add the column (second) index.
-                constPos += i
+                cVarName += `[${indexNum}]`
               }
               break
             }
           }
         }
-        emitConstAtPos(constPos)
+        // Find the position of the constant in Vensim order from the expanded LHS var list.
+        let constPos = R.indexOf(cVarName, cNames)
+        if (constPos >= 0) {
+          emitConstAtPos(constPos)
+          // console.error(`${this.var.refId} position = ${constPos}`)
+        }else{
+          console.error(`${this.var.refId} → ${cVarName} not found in C names`)
+        }
       }
     }
   }
