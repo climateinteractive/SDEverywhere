@@ -3,7 +3,7 @@ const ModelLHSReader = require('./ModelLHSReader')
 const EquationGen = require('./EquationGen')
 const Model = require('./Model')
 const { sub, allDimensions, allMappings, subscriptFamilies } = require('./Subscript')
-const { asort, lines, strlist } = require('./Helpers')
+const { asort, lines, strlist, abend } = require('./Helpers')
 
 let codeGenerator = (parseTree, opts) => {
   const { spec, operation, extData, directData } = opts
@@ -13,29 +13,29 @@ let codeGenerator = (parseTree, opts) => {
   let outputAllVars = spec.outputVars && spec.outputVars.length > 0 ? false : true
   // Function to generate a section of the code
   let generateSection = R.map(v => new EquationGen(v, extData, directData, initMode).generate())
-  let section = R.pipe(
-    generateSection,
-    R.flatten,
-    lines
-  )
+  let section = R.pipe(generateSection, R.flatten, lines)
   function generate() {
     // Read variables and subscript ranges from the model parse tree.
     // This is the main entry point for code generation and is called just once.
-    Model.read(parseTree, spec, extData, directData)
-    // In list mode, print variables to the console instead of generating code.
-    if (operation === 'printRefIdTest') {
-      Model.printRefIdTest()
-    } else if (operation === 'printRefGraph') {
-      Model.printRefGraph(opts.varname)
-    } else if (operation === 'convertNames') {
-      // Do not generate output, but leave the results of model analysis.
-    } else if (operation === 'generateC') {
-      // Generate code for each variable in the proper order.
-      let code = emitDeclCode()
-      code += emitInitCode()
-      code += emitEvalCode()
-      code += emitIOCode()
-      return code
+    try {
+      Model.read(parseTree, spec, extData, directData)
+      // In list mode, print variables to the console instead of generating code.
+      if (operation === 'printRefIdTest') {
+        Model.printRefIdTest()
+      } else if (operation === 'printRefGraph') {
+        Model.printRefGraph(opts.varname)
+      } else if (operation === 'convertNames') {
+        // Do not generate output, but leave the results of model analysis.
+      } else if (operation === 'generateC') {
+        // Generate code for each variable in the proper order.
+        let code = emitDeclCode()
+        code += emitInitCode()
+        code += emitEvalCode()
+        code += emitIOCode()
+        return code
+      }
+    } catch (e) {
+      abend(e)
     }
   }
 
@@ -160,11 +160,7 @@ ${outputSection(outputVars)}
     // These index number arrays will be used to indirectly reference array elements.
     // The indirection is required to support subdimensions that are a non-contiguous subset of the array elements.
     let a = R.map(dim => `const size_t ${dim.name}[${dim.size}] = { ${indexNumberList(sub(dim.name).value)} };`)
-    let arrayDims = R.pipe(
-      a,
-      asort,
-      lines
-    )
+    let arrayDims = R.pipe(a, asort, lines)
     return arrayDims(allDimensions())
   }
   function dimensionMappingsSection() {
@@ -172,11 +168,7 @@ ${outputSection(outputVars)}
     let a = R.map(m => {
       return `const size_t __map${m.mapFrom}${m.mapTo}[${sub(m.mapTo).size}] = { ${indexNumberList(m.value)} };`
     })
-    let mappingArrays = R.pipe(
-      a,
-      asort,
-      lines
-    )
+    let mappingArrays = R.pipe(a, asort, lines)
     return mappingArrays(allMappings())
   }
   function indexNumberList(indices) {
@@ -222,10 +214,7 @@ ${outputSection(outputVars)}
   function outputSection(varNames) {
     // Emit output calls using varNames in C format.
     let code = R.map(varName => `  outputVar(${varName});`)
-    let section = R.pipe(
-      code,
-      lines
-    )
+    let section = R.pipe(code, lines)
     return section(varNames)
   }
   function inputSection() {
@@ -256,7 +245,7 @@ ${outputSection(outputVars)}
   }
 
   return {
-    generate: generate
+    generate: generate,
   }
 }
 

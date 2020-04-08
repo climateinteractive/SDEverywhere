@@ -238,7 +238,7 @@ let modelPathProps = model => {
   return {
     modelDirname: p.dir,
     modelName: p.name,
-    modelPathname: path.format(p)
+    modelPathname: path.format(p),
   }
 }
 let execCmd = cmd => {
@@ -392,8 +392,13 @@ let vlog = (title, value, depth = 1) => {
     console.trace()
   }
 }
-
+let abend = error => {
+  console.error(error.message)
+  console.trace()
+  process.exit(1)
+}
 module.exports = {
+  abend,
   asort,
   buildDir,
   canonicalName,
@@ -437,5 +442,5 @@ module.exports = {
   strToConst,
   vlog,
   vsort,
-  webDir
+  webDir,
 }
