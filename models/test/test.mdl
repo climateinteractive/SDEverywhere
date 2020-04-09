@@ -1,0 +1,19 @@
+{UTF-8}
+
+DimA: A1, A2, A3 ~~|
+DimB: B1, B2, B3, B4, B5, B6, B7  ~~|
+
+a[DimB,DimA]  = 
+        1, 0, 0;
+        1, 0, 0;
+        0, 1, 0;
+        0, 1, 0;
+        1, 0, 0;
+        0, 1, 0;
+        0, 0, 1;
+	~~|
+
+INITIAL TIME = 0 ~~|
+FINAL TIME = 1 ~~|
+TIME STEP = 1 ~~|
+SAVEPER = TIME STEP ~~|
