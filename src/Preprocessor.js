@@ -6,6 +6,7 @@ const { splitEquations } = require('./Helpers')
 let preprocessModel = (mdlFilename, spec, profile = 'genc', writeRemovals = false) => {
   const MACROS_FILENAME = 'macros.txt'
   const REMOVALS_FILENAME = 'removals.txt'
+  const INSERTIONS_FILENAME = 'mdl-edits.txt'
   const ENCODING = '{UTF-8}'
   let profiles = {
     // simplified but still runnable model
@@ -25,6 +26,8 @@ let preprocessModel = (mdlFilename, spec, profile = 'genc', writeRemovals = fals
   let mdl, eqns
   // Equations that contain a string in the removalKeys list in the spec file will be removed.
   let removalKeys = (spec && spec.removalKeys) || []
+  // Optional insertions can be used to add expanded macros back into the model.
+  let insertions = ''
   // Get the first line of an equation.
   let firstLine = s => {
     let i = s.indexOf('\n')
@@ -48,6 +51,11 @@ let preprocessModel = (mdlFilename, spec, profile = 'genc', writeRemovals = fals
   B.open('rm')
   B.open('macros')
   B.open('pp')
+  // Read the optional insertions file.
+  try {
+    insertions = B.read(INSERTIONS_FILENAME)
+  } catch (error) {
+  }
   // Read the model file.
   try {
     mdl = B.read(mdlFilename)
@@ -113,6 +121,13 @@ let preprocessModel = (mdlFilename, spec, profile = 'genc', writeRemovals = fals
   }
   getMdlFromPPBuf()
 
+  // Emit the encoding line and optional insertions.
+  if (opts.emitEncoding) {
+    B.emitLine(ENCODING, 'pp')
+  }
+  if (insertions) {
+    B.emitLine(insertions, 'pp')
+  }
   // Emit formula lines without comment contents.
   eqns = splitEquations(mdl)
   for (let eqn of eqns) {
@@ -121,11 +136,7 @@ let preprocessModel = (mdlFilename, spec, profile = 'genc', writeRemovals = fals
       let formula = B.lines(eqn.substr(0, iComment))
       for (let i = 0; i < formula.length; i++) {
         if (i === 0) {
-          if (formula[i] === ENCODING) {
-            if (opts.emitEncoding) {
-              B.emitLine(ENCODING, 'pp')
-            }
-          } else {
+          if (formula[i] !== ENCODING) {
             emitPP(formula[i])
           }
         } else {

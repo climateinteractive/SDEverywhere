@@ -320,6 +320,10 @@ The generated format minimizes the amount of data on the wire for web applicatio
 
 The zero-based index maps into a static array of input variable pointers held in the function. These are used to set the value directly into the static `double` variable in the generated code.
 
+### Inserting a file into the model
+
+Some constructs like macros are not supported by SDEverywhere. They are removed from the model by the preprocessor into the `removals.txt` file. You can edit these constructs into a form that SDEverywhere supports and insert them back into the model. Simply create a file called `mdl-edits.txt` in the model directory with the constructs to insert. For instance, manually expand macros and place them into the `mdl-edits.txt` file. The preprocessor will read this file and insert its contents unchanged into the beginning of the model.
+
 ## Generating a web application
 
 Refer to the "Using SDEverywhere to Make a Vensim Model into a Web Application" article in the `notes` directory for full details on designing and building your web app.
