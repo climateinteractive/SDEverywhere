@@ -374,6 +374,10 @@ module.exports = class EquationGen extends ModelReader {
     if (this.var.hasInitValue && this.initMode && this.callStack.length <= 1) {
       super.visitCall(ctx)
       this.callStack.pop()
+    } else if (fn === '_ELMCOUNT') {
+      // Replace the function with the value of its argument, emitted in visitVar.
+      super.visitCall(ctx)
+      this.callStack.pop()
     } else if (isArrayFunction(fn)) {
       // Generate a loop that evaluates array functions inline.
       // Collect information and generate the argument expression into the array function code buffer.
@@ -558,10 +562,15 @@ module.exports = class EquationGen extends ModelReader {
     let id = ctx.Id().getText()
     let varName = canonicalName(id)
     if (isDimension(varName)) {
-      // A subscript masquerading as a variable takes the value of the loop index var plus one
-      // (since Vensim indices are one-based).
-      let i = this.loopIndexVars.index(varName)
-      this.emit(`(${varName}[${i}] + 1)`)
+      if (this.currentFunctionName() === '_ELMCOUNT') {
+        // Emit the size of the dimension.
+        this.emit(`${sub(varName).size}`)
+      } else {
+        // A subscript masquerading as a variable takes the value of the loop index var plus one
+        // (since Vensim indices are one-based).
+        let i = this.loopIndexVars.index(varName)
+        this.emit(`(${varName}[${i}] + 1)`)
+      }
     } else {
       this.varNames.push(varName)
       if (this.currentFunctionName() === '_VECTOR_SELECT') {
