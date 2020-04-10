@@ -8,7 +8,8 @@ const {
   extractMarkedDims,
   indexNamesForSubscript,
   normalizeSubscripts,
-  separatedVariableIndex
+  separatedVariableIndex,
+  isDimension
 } = require('./Subscript')
 const {
   canonicalName,
@@ -22,8 +23,7 @@ const {
   matchRegex,
   newAuxVarName,
   newLevelVarName,
-  newLookupVarName,
-  vlog
+  newLookupVarName
 } = require('./Helpers')
 
 // Set this true to get a list of functions used in the model. This may include lookups.
@@ -127,7 +127,10 @@ module.exports = class EquationReader extends ModelReader {
       this.expandDelayFunction(fn, args)
     } else if (fn === '_GET_DIRECT_DATA') {
       // Extract string constant arguments into an object used in code generation.
-      let args = R.map(arg => matchRegex(arg, /'(.*)'/), R.map(expr => expr.getText(), ctx.expr()))
+      let args = R.map(
+        arg => matchRegex(arg, /'(.*)'/),
+        R.map(expr => expr.getText(), ctx.expr())
+      )
       this.var.directDataArgs = {
         tag: args[0],
         sheetName: args[1],
@@ -144,24 +147,27 @@ module.exports = class EquationReader extends ModelReader {
     // Get the var name of a variable in a call and save it as a reference.
     let id = ctx.Id().getText()
     let varName = canonicalName(id)
-    let fn = this.currentFunctionName()
-    this.refId = varName
-    this.expandedRefIds = []
-    super.visitVar(ctx)
-    // Separate init references from eval references in level formulas.
-    if (isSmoothFunction(fn) || isTrendFunction(fn) || isDelayFunction(fn)) {
-      // Do not set references inside the call, since it will be replaced
-      // with the generated level var.
-    } else if (this.argIndexForFunctionName('_INTEG') === 1) {
-      this.addReferencesToList(this.var.initReferences)
-    } else if (this.argIndexForFunctionName('_ACTIVE_INITIAL') === 1) {
-      this.addReferencesToList(this.var.initReferences)
-    } else if (this.argIndexForFunctionName('_SAMPLE_IF_TRUE') === 2) {
-      this.addReferencesToList(this.var.initReferences)
-    } else if (this.var.isInitial()) {
-      this.addReferencesToList(this.var.initReferences)
-    } else {
-      this.addReferencesToList(this.var.references)
+    // Do not add a dimension name as a reference.
+    if (!isDimension(varName)) {
+      let fn = this.currentFunctionName()
+      this.refId = varName
+      this.expandedRefIds = []
+      super.visitVar(ctx)
+      // Separate init references from eval references in level formulas.
+      if (isSmoothFunction(fn) || isTrendFunction(fn) || isDelayFunction(fn)) {
+        // Do not set references inside the call, since it will be replaced
+        // with the generated level var.
+      } else if (this.argIndexForFunctionName('_INTEG') === 1) {
+        this.addReferencesToList(this.var.initReferences)
+      } else if (this.argIndexForFunctionName('_ACTIVE_INITIAL') === 1) {
+        this.addReferencesToList(this.var.initReferences)
+      } else if (this.argIndexForFunctionName('_SAMPLE_IF_TRUE') === 2) {
+        this.addReferencesToList(this.var.initReferences)
+      } else if (this.var.isInitial()) {
+        this.addReferencesToList(this.var.initReferences)
+      } else {
+        this.addReferencesToList(this.var.references)
+      }
     }
   }
   visitLookupCall(ctx) {

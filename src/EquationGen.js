@@ -13,7 +13,7 @@ const {
   isIndex,
   normalizeSubscripts,
   separatedVariableIndex,
-  sub,
+  sub
 } = require('./Subscript')
 const {
   canonicalName,
@@ -26,7 +26,7 @@ const {
   listConcat,
   newTmpVarName,
   strToConst,
-  vlog,
+  vlog
 } = require('./Helpers')
 
 module.exports = class EquationGen extends ModelReader {
@@ -556,39 +556,47 @@ module.exports = class EquationGen extends ModelReader {
   visitVar(ctx) {
     // Push the var name on the stack and then emit it.
     let id = ctx.Id().getText()
-    this.varNames.push(canonicalName(id))
-    if (this.currentFunctionName() === '_VECTOR_SELECT') {
-      let argIndex = this.argIndexForFunctionName('_VECTOR_SELECT')
-      if (argIndex === 0) {
-        this.vsSelectionArray = this.currentVarName()
-      } else if (argIndex === 1) {
-        this.emit(this.currentVarName())
-      }
-      super.visitVar(ctx)
-    } else if (this.currentFunctionName() === '_VECTOR_ELM_MAP') {
-      if (this.argIndexForFunctionName('_VECTOR_ELM_MAP') === 1) {
-        this.vemOffset = `(size_t)${this.currentVarName()}`
-      }
-      super.visitVar(ctx)
-    } else if (this.currentFunctionName() === '_VECTOR_SORT_ORDER') {
-      if (this.argIndexForFunctionName('_VECTOR_SORT_ORDER') === 0) {
-        this.vsoVarName = this.currentVarName()
-        this.vsoTmpName = newTmpVarName()
-        this.emit(this.vsoTmpName)
-      }
-      super.visitVar(ctx)
+    let varName = canonicalName(id)
+    if (isDimension(varName)) {
+      // A subscript masquerading as a variable takes the value of the loop index var plus one
+      // (since Vensim indices are one-based).
+      let i = this.loopIndexVars.index(varName)
+      this.emit(`(${varName}[${i}] + 1)`)
     } else {
-      let v = Model.varWithName(this.currentVarName())
-      if (v && v.varType === 'data') {
-        this.emit(`_LOOKUP(${this.currentVarName()}`)
+      this.varNames.push(varName)
+      if (this.currentFunctionName() === '_VECTOR_SELECT') {
+        let argIndex = this.argIndexForFunctionName('_VECTOR_SELECT')
+        if (argIndex === 0) {
+          this.vsSelectionArray = this.currentVarName()
+        } else if (argIndex === 1) {
+          this.emit(this.currentVarName())
+        }
         super.visitVar(ctx)
-        this.emit(', _time)')
+      } else if (this.currentFunctionName() === '_VECTOR_ELM_MAP') {
+        if (this.argIndexForFunctionName('_VECTOR_ELM_MAP') === 1) {
+          this.vemOffset = `(size_t)${this.currentVarName()}`
+        }
+        super.visitVar(ctx)
+      } else if (this.currentFunctionName() === '_VECTOR_SORT_ORDER') {
+        if (this.argIndexForFunctionName('_VECTOR_SORT_ORDER') === 0) {
+          this.vsoVarName = this.currentVarName()
+          this.vsoTmpName = newTmpVarName()
+          this.emit(this.vsoTmpName)
+        }
+        super.visitVar(ctx)
       } else {
-        this.emit(this.currentVarName())
-        super.visitVar(ctx)
+        let v = Model.varWithName(this.currentVarName())
+        if (v && v.varType === 'data') {
+          this.emit(`_LOOKUP(${this.currentVarName()}`)
+          super.visitVar(ctx)
+          this.emit(', _time)')
+        } else {
+          this.emit(this.currentVarName())
+          super.visitVar(ctx)
+        }
       }
+      this.varNames.pop()
     }
-    this.varNames.pop()
   }
   visitLookupArg(ctx) {
     // Substitute the previously generated lookup arg var name into the expression.
@@ -717,7 +725,7 @@ module.exports = class EquationGen extends ModelReader {
         if (constPos >= 0) {
           emitConstAtPos(constPos)
           // console.error(`${this.var.refId} position = ${constPos}`)
-        }else{
+        } else {
           console.error(`${this.var.refId} → ${cVarName} not found in C names`)
         }
       }
