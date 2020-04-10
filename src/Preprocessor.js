@@ -3,7 +3,7 @@ const R = require('ramda')
 const B = require('bufx')
 const { splitEquations } = require('./Helpers')
 
-let preprocessModel = (mdlFilename, spec, profile = 'genc', writeRemovals = false) => {
+let preprocessModel = (mdlFilename, spec, profile = 'genc', writeFiles = false) => {
   const MACROS_FILENAME = 'macros.txt'
   const REMOVALS_FILENAME = 'removals.txt'
   const INSERTIONS_FILENAME = 'mdl-edits.txt'
@@ -28,15 +28,6 @@ let preprocessModel = (mdlFilename, spec, profile = 'genc', writeRemovals = fals
   let removalKeys = (spec && spec.removalKeys) || []
   // Optional insertions can be used to add expanded macros back into the model.
   let insertions = ''
-  // Get the first line of an equation.
-  let firstLine = s => {
-    let i = s.indexOf('\n')
-    if (i < 0) {
-      return s.trim()
-    } else {
-      return s.slice(0, i).trim()
-    }
-  }
   let getMdlFromPPBuf = () => {
     // Reset the mdl string from the preprocessor buffer.
     mdl = B.getBuf('pp')
@@ -51,11 +42,13 @@ let preprocessModel = (mdlFilename, spec, profile = 'genc', writeRemovals = fals
   B.open('rm')
   B.open('macros')
   B.open('pp')
-  // Read the optional insertions file.
+  // Read the optional insertions file into the model unless we are doing a pass that writes removals.
   try {
-    insertions = B.read(INSERTIONS_FILENAME)
-  } catch (error) {
-  }
+    if (!writeFiles) {
+      let insPathname = path.join(path.dirname(mdlFilename), INSERTIONS_FILENAME)
+      insertions = B.read(insPathname)
+    }
+  } catch (error) {}
   // Read the model file.
   try {
     mdl = B.read(mdlFilename)
@@ -158,7 +151,7 @@ let preprocessModel = (mdlFilename, spec, profile = 'genc', writeRemovals = fals
   getMdlFromPPBuf()
 
   // Write removals to a file in the model directory.
-  if (writeRemovals) {
+  if (writeFiles) {
     if (B.getBuf('macros')) {
       let macrosPathname = path.join(path.dirname(mdlFilename), MACROS_FILENAME)
       B.writeBuf(macrosPathname, 'macros')
