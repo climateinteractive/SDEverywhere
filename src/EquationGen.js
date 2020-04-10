@@ -563,13 +563,15 @@ module.exports = class EquationGen extends ModelReader {
     let varName = canonicalName(id)
     if (isDimension(varName)) {
       if (this.currentFunctionName() === '_ELMCOUNT') {
-        // Emit the size of the dimension.
+        // Emit the size of the dimension in place of the dimension name.
         this.emit(`${sub(varName).size}`)
       } else {
         // A subscript masquerading as a variable takes the value of the loop index var plus one
         // (since Vensim indices are one-based).
-        let i = this.loopIndexVars.index(varName)
-        this.emit(`(${varName}[${i}] + 1)`)
+        let s = this.rhsSubscriptGen([varName])
+        // Remove the brackets around the C subscript expression.
+        s = s.slice(1, s.length-1)
+        this.emit(`(${s} + 1)`)
       }
     } else {
       this.varNames.push(varName)

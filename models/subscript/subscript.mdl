@@ -33,6 +33,12 @@ r[DimA] = IF THEN ELSE (DimA = Selected A, 1, 0)
 
 Selected A = 2  ~~~:SUPPLEMENTARY|
 
+s[DimA] = DimB
+	~
+	~	mapped dimension name reference in an expression
+  ~:SUPPLEMENTARY
+	|
+
 ********************************************************
 	.Control
 ********************************************************~
