@@ -183,11 +183,14 @@ module.exports = class VariableReader extends ModelReader {
     super.visitSubscriptList(ctx)
   }
   visitConstList(ctx) {
-    // Expand a subscripted equation with a constant list if it was not already expanded
-    // because of a subdimension or EXCEPT clause on the LHS.
+    // Expand a subscripted equation with a constant list.
     let exprs = ctx.expr()
-    if (exprs.length > 1 && R.isEmpty(this.expandedVars)) {
+    if (exprs.length > 1) {
       let expanding = R.map(subscript => isDimension(subscript), this.var.subscripts)
+      // If the var was already expanded, do it over to make sure we expand on all subscripts.
+      if (!R.isEmpty(this.expandedVars)) {
+        this.expandedVars = []
+      }
       this.expandVars(expanding)
     }
   }
