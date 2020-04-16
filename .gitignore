@@ -5,3 +5,5 @@ build/*
 grammar/*
 models/*
 notes/*
+.DS_Store
+/node_modules
