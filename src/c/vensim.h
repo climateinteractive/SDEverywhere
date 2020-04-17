@@ -33,6 +33,7 @@ double _MAX(double a, double b);
 double _MIN(double a, double b);
 double _MODULO(double a, double b);
 double _PULSE(double start, double width);
+double _PULSE_TRAIN(double start, double width, double interval, double end);
 double _RAMP(double slope, double start_time, double end_time);
 double _SAMPLE_IF_TRUE(double currentValue, double condition, double input);
 double _SIN(double x);

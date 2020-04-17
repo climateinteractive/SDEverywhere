@@ -66,6 +66,15 @@ double _PULSE(double start, double width) {
 	}
 	return (time_plus > start && time_plus < start + width) ? 1.0 : 0.0;
 }
+double _PULSE_TRAIN(double start, double width, double interval, double end) {
+  double n = floor((end - start) / interval);
+  for (double k = 0; fle(k, n); k++) {
+    if (_PULSE(start + k * interval, width) && fle(_time, end)) {
+      return 1.0;
+    }
+  }
+  return 0.0;
+}
 double _RAMP(double slope, double start_time, double end_time) {
 	// Return 0 until the start time is exceeded.
 	// Interpolate from start time to end time.
