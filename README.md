@@ -2,31 +2,45 @@
 
 Revised: 2020-04-06
 
-## Table of Contents
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
-[Introduction](#introduction)
+- [SDEverywhere Guide](#sdeverywhere-guide)
+  - [Introduction](#introduction)
+  - [Caveats](#caveats)
+  - [Conventions used in this guide](#conventions-used-in-this-guide)
+  - [Installing](#installing)
+    - [Requirements](#requirements)
+    - [Install Node.js](#install-nodejs)
+    - [Install SDEverywhere](#install-sdeverywhere)
+  - [Test your setup](#test-your-setup)
+  - [Sample models](#sample-models)
+  - [Usage](#usage)
+    - [Specify input and output variables](#specify-input-and-output-variables)
+    - [Generating, compiling, running, and testing the C code](#generating-compiling-running-and-testing-the-c-code)
+    - [Setting inputs](#setting-inputs)
+    - [Inserting a file into the model](#inserting-a-file-into-the-model)
+  - [Generating a web application](#generating-a-web-application)
+  - [Contributing](#contributing)
+    - [Debugging](#debugging)
+  - [SDEverywhere architecture](#sdeverywhere-architecture)
+    - [Some notes on terminology](#some-notes-on-terminology)
+    - [Parsing](#parsing)
+    - [Code generation overview](#code-generation-overview)
+    - [The generated model and the run loop](#the-generated-model-and-the-run-loop)
+    - [The Variable object](#the-variable-object)
+    - [Visitor classes](#visitor-classes)
+    - [Code generation details](#code-generation-details)
+      - [VariableReader](#variablereader)
+      - [EquationReader](#equationreader)
+      - [CodeGen](#codegen)
+      - [EquationGen](#equationgen)
+  - [WebAssembly](#webassembly)
+  - [Subscripts in SDEverywhere](#subscripts-in-sdeverywhere)
+    - [Subscript range definition forms](#subscript-range-definition-forms)
+    - [Subscript mapping example](#subscript-mapping-example)
 
-[Caveats](#caveats)
-
-[Conventions used in this guide](#conventions-used-in-this-guide)
-
-[Installing](#installing)
-
-[Test your setup](#test-your-setup)
-
-[Sample models](#sample-models)
-
-[Usage](#usage)
-
-[Generating a web application](#generating-a-web-application)
-
-[Contributing](#contributing)
-
-[SDEverywhere architecture](#sdeverywhere-architecture)
-
-[WebAssembly](#webassembly)
-
-[Subscripts in SDEverywhere](#subscripts-in-sdeverywhere)
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 ## Introduction
 
@@ -292,6 +306,29 @@ First, create a model specification file that gives the Vensim names of input an
     "Prey X"
   ]
 }
+```
+
+### Specify external data sources
+
+Add a `directData` section to the spec file to have SDEverywhere read data from an Excel file into lookups with a variable name prefix. There is an example in the `directdata` sample model.
+
+```JSON
+"directData": {
+  "?data": "data.xlsx"
+}
+```
+
+### Specify equations to remove from the model
+
+When SDEverywhere cannot handle a certain Vensim construct yet, you will need to remove equations that use the construct from the model, convert it by hand into something that SDEverywhere can handle, and then insert it back into the model. To have the preprocessor remove equations from the model into a `removals.txt` file, specify substrings to match in the equation in the `removalKeys` section. Macros and TABBED ARRAY equations are already automatically removed by the preprocessor.
+
+For instance, you could key on the variable name in the equation definition.
+
+```JSON
+"removalKeys": [
+  "varname1 =",
+  "varname2 ="
+]
 ```
 
 ### Generating, compiling, running, and testing the C code
