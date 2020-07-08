@@ -60,6 +60,8 @@ ${arrayDimensionsSection()}
 // Dimension mappings
 ${dimensionMappingsSection()}
 
+// Lookup data arrays
+${section(Model.lookupVars())}
 `
   }
   //
