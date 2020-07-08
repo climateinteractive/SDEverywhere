@@ -259,7 +259,7 @@ double* _VECTOR_SORT_ORDER(double* vector, size_t size, double direction) {
     // TODO signal error
     return NULL;
   }
-  for (size_t i = 0; i < size; i++) {
+  for (int i = 0; i < size; i++) {
     d[i].x = vector[i];
     d[i].ind = i;
   }
