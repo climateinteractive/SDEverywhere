@@ -4,46 +4,63 @@
 extern "C" {
 #endif
 
+//
+// Helpers
+//
+#define _NA_ (-DBL_MAX)
+#define bool_cond(cond) ((double)(cond) != 0.0)
+
+//
+// Vensim functions
+// See the Vensim Reference Manual for descriptions of the functions.
+// http://www.vensim.com/documentation/index.html?22300.htm
+//
+#define _ABS(x) fabs(x)
+#define _COS(x) cos(x)
+#define _EXP(x) exp(x)
+#define _GAME(x) (x)
+#define _IF_THEN_ELSE(c, t, f) (bool_cond(c) ? (t) : (f))
+#define _INTEG(value, rate) ((value) + (rate) * _time_step)
+#define _INTEGER(x) trunc(x)
+#define _LN(x) log(x)
+#define _MAX(a, b) fmax(a, b)
+#define _MIN(a, b) fmin(a, b)
+#define _MODULO(a, b) fmod(a, b)
+#define _SAMPLE_IF_TRUE(current, condition, input) (bool_cond(condition) ? (input) : (current))
+#define _SIN(x) sin(x)
+#define _SQRT(x) sqrt(x)
+#define _STEP(height, step_time) (fgt(_time + _time_step / 2.0, (step_time)) ? (height) : 0.0)
+double _PULSE(double start, double width);
+double _PULSE_TRAIN(double start, double width, double interval, double end);
+double _RAMP(double slope, double start_time, double end_time);
+double* _VECTOR_SORT_ORDER(double* vector, size_t size, double direction);
+double _XIDZ(double a, double b, double x);
+double _ZIDZ(double a, double b);
+
+//
+// Lookups
+//
+typedef enum {
+  Interpolate, Forward, Backward
+} LookupMode;
+
 typedef struct {
   double* data;
   size_t n;
   double* inverted_data;
 } Lookup;
+
 Lookup* __new_lookup(size_t size, ...);
 void __delete_lookup(Lookup* lookup);
 void __print_lookup(Lookup* lookup);
 
-double bool_cond(double cond);
-
-#define _NA_ (-DBL_MAX)
-
-double _ABS(double x);
-double _COS(double x);
-double _EXP(double x);
-double _GAME(double x);
-double _IF_THEN_ELSE(double condition, double true_value, double false_value);
-double _INTEG(double value, double rate);
-double _INTEGER(double x);
-double _LN(double x);
-double _LOOKUP_BACKWARD(Lookup* lookup, double x);
+double __lookup(double* data, size_t n, double input, LookupMode mode);
+#define _LOOKUP(lookup, x) __lookup((lookup)->data, (lookup)->n, x, Interpolate)
+#define _LOOKUP_FORWARD(lookup, x) __lookup((lookup)->data, (lookup)->n, x, Forward)
+#define _LOOKUP_BACKWARD(lookup, x) __lookup((lookup)->data, (lookup)->n, x, Backward)
+#define _WITH_LOOKUP(x, lookup) __lookup((lookup)->data, (lookup)->n, x, Interpolate)
 double _LOOKUP_INVERT(Lookup* lookup, double y);
-double _LOOKUP(Lookup* lookup, double input);
-double _LOOKUP_FORWARD(Lookup* lookup, double x);
-double _MAX(double a, double b);
-double _MIN(double a, double b);
-double _MODULO(double a, double b);
-double _PULSE(double start, double width);
-double _PULSE_TRAIN(double start, double width, double interval, double end);
-double _RAMP(double slope, double start_time, double end_time);
-double _SAMPLE_IF_TRUE(double currentValue, double condition, double input);
-double _SIN(double x);
-double _SQRT(double x);
-double _STEP(double height, double step_time);
-double _WITH_LOOKUP(double x, Lookup* lookup);
-double _XIDZ(double a, double b, double x);
-double _ZIDZ(double a, double b);
 
-double* _VECTOR_SORT_ORDER(double* vector, size_t size, double direction);
 #ifdef __cplusplus
 }
 #endif
