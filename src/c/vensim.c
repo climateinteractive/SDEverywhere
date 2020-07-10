@@ -124,24 +124,27 @@ double _ZIDZ(double a, double b) {
 //
 // Lookups
 //
-Lookup* __new_lookup(size_t size, ...) {
+Lookup* __new_lookup(size_t size, bool copy, double *data) {
 	// Make a new Lookup with "size" number of pairs given in x, y order in a flattened list.
 	Lookup* lookup = malloc(sizeof(Lookup));
-	lookup->data = malloc(sizeof(double) * 2 * size);
 	lookup->n = size;
 	lookup->inverted_data = NULL;
-	// Copy arguments into the lookup data.
-	va_list args;
-	va_start(args, size);
-	for (size_t i = 0; i < 2 * size; i++) {
-		*(lookup->data + i) = va_arg(args, double);
+	lookup->data_is_owned = copy;
+	if (copy) {
+		// Copy array into the lookup data.
+		lookup->data = malloc(sizeof(double) * 2 * size);
+		for (size_t i = 0; i < 2 * size; i++) {
+			memcpy(lookup->data, data, size * 2 * sizeof(double));
+		}
+	} else {
+		// Store a pointer to the lookup data (assumed to be static or owned elsewhere).
+		lookup->data = data;
 	}
-	va_end(args);
 	return lookup;
 }
 void __delete_lookup(Lookup* lookup) {
 	if (lookup) {
-		if (lookup->data) {
+		if (lookup->data && lookup->data_is_owned) {
 			free(lookup->data);
 		}
 		if (lookup->inverted_data) {
@@ -256,7 +259,7 @@ double* _VECTOR_SORT_ORDER(double* vector, size_t size, double direction) {
     // TODO signal error
     return NULL;
   }
-  for (size_t i = 0; i < size; i++) {
+  for (int i = 0; i < size; i++) {
     d[i].x = vector[i];
     d[i].ind = i;
   }
