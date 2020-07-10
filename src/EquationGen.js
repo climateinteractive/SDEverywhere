@@ -11,6 +11,7 @@ const {
   hasMapping,
   isDimension,
   isIndex,
+  isTrivialDimension,
   normalizeSubscripts,
   separatedVariableIndex,
   sub
@@ -177,7 +178,12 @@ module.exports = class EquationGen extends ModelReader {
     return R.map(subscript => {
       if (isDimension(subscript)) {
         let i = this.loopIndexVars.index(subscript)
-        return `_${subscript}_${i}_`
+        if (isTrivialDimension(subscript)) {
+          // When the dimension is trivial, we can simply emit e.g. `[i]` instead of `[_dim[i]]`
+          return `_${i}_`
+        } else {
+          return `_${subscript}_${i}_`
+        }
       } else {
         return `_${sub(subscript).value}_`
       }
@@ -188,7 +194,12 @@ module.exports = class EquationGen extends ModelReader {
     return R.map(subscript => {
       if (isDimension(subscript)) {
         let i = this.loopIndexVars.index(subscript)
-        return `[${subscript}[${i}]]`
+        if (isTrivialDimension(subscript)) {
+          // When the dimension is trivial, we can simply emit e.g. `[i]` instead of `[_dim[i]]`
+          return `[${i}]`
+        } else {
+          return `[${subscript}[${i}]]`
+        }
       } else {
         return `[${sub(subscript).value}]`
       }
@@ -243,7 +254,12 @@ module.exports = class EquationGen extends ModelReader {
           i = this.loopIndexVars.index(rhsSub)
         }
         // Return the dimension and loop index for a dimension subscript.
-        return `[${rhsSub}[${i}]]`
+        if (isTrivialDimension(rhsSub)) {
+          // When the dimension is trivial, we can simply emit e.g. `[i]` instead of `[_dim[i]]`
+          return `[${i}]`
+        } else {
+          return `[${rhsSub}[${i}]]`
+        }
       }
     }, subscripts).join('')
     return cSubscripts
