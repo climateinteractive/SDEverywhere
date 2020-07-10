@@ -3,7 +3,7 @@ const ModelLHSReader = require('./ModelLHSReader')
 const EquationGen = require('./EquationGen')
 const Model = require('./Model')
 const { sub, allDimensions, allMappings, subscriptFamilies } = require('./Subscript')
-const { asort, lines, strlist, abend } = require('./Helpers')
+const { asort, lines, strlist, abend, mapIndexed } = require('./Helpers')
 
 let codeGenerator = (parseTree, opts) => {
   const { spec, operation, extData, directData } = opts
@@ -64,6 +64,7 @@ ${dimensionMappingsSection()}
 ${section(Model.lookupVars())}
 `
   }
+
   //
   // Initialization section
   //
@@ -72,42 +73,44 @@ ${section(Model.lookupVars())}
     return `// Internal state
 bool lookups_initialized = false;
 
-void initConstants() {
-  // Initialize constants.
-${section(Model.constVars())}
-
+void initLookups() {
   // Initialize lookups.
-if (!lookups_initialized) {
-${section(Model.lookupVars())}
-${section(Model.dataVars())}
-  lookups_initialized = true;
-}
-}
-void initLevels() {
-  // Initialize variables with initialization values, such as levels, and the variables they depend on.
-  _time = _initial_time;
-${section(Model.initVars())}
+  if (!lookups_initialized) {
+    ${section(Model.lookupVars())}
+    ${section(Model.dataVars())}
+    lookups_initialized = true;
+  }
 }
 
+${chunkedFunctions('initConstants', Model.constVars(),
+'  // Initialize constants.',
+'  initLookups();'
+)}
+
+${chunkedFunctions('initLevels', Model.initVars(), `
+  // Initialize variables with initialization values, such as levels, and the variables they depend on.
+  _time = _initial_time;`
+)}
 `
   }
+
   //
   // Evaluation section
   //
   function emitEvalCode() {
     initMode = false
-    return `void evalAux() {
-  // Evaluate auxiliaries in order from the bottom up.
-${section(Model.auxVars())}
-}
 
-void evalLevels() {
-  // Evaluate levels.
-${section(Model.levelVars())}
-}
+    return `
+${chunkedFunctions('evalAux', Model.auxVars(),
+'  // Evaluate auxiliaries in order from the bottom up.'
+)}
 
+${chunkedFunctions('evalLevels', Model.levelVars(),
+'  // Evaluate levels.'
+)}
 `
   }
+
   //
   // Input/output section
   //
@@ -125,6 +128,55 @@ void storeOutputData() {
 ${outputSection(outputVars)}
 }
 `
+  }
+
+  //
+  // Chunked function helper
+  //
+  function chunkedFunctions(name, vars, preStep, postStep) {
+    // Emit one function for each chunk
+    let func = (chunk, idx) => {
+      return `
+void ${name}${idx}() {
+  ${section(chunk)}
+}
+`
+    }
+    let funcs = R.pipe(
+      mapIndexed(func),
+      lines
+    )
+
+    // Emit one roll-up function that calls the other chunk functions
+    let funcCall = (chunk, idx) => {
+      return `  ${name}${idx}();`
+    }
+    let funcCalls = R.pipe(
+      mapIndexed(funcCall),
+      lines
+    )
+
+    // Break the vars into chunks of 30; this number was empirically
+    // determined by looking at runtime performance and memory usage
+    // of the En-ROADS model on various devices
+    let chunks = R.splitEvery(30, vars)
+
+    if (!preStep) {
+      preStep = ''
+    }
+    if (!postStep) {
+      postStep = ''
+    }
+
+    return `
+${funcs(chunks)}
+
+void ${name}() {
+${preStep}
+${funcCalls(chunks)}
+${postStep}
+}
+    `
   }
 
   //
