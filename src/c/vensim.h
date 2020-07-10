@@ -48,9 +48,10 @@ typedef struct {
   double* data;
   size_t n;
   double* inverted_data;
+  bool data_is_owned;
 } Lookup;
 
-Lookup* __new_lookup(size_t size, ...);
+Lookup* __new_lookup(size_t size, bool copy, double* data);
 void __delete_lookup(Lookup* lookup);
 void __print_lookup(Lookup* lookup);
 

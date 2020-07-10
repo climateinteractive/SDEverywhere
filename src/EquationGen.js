@@ -88,7 +88,7 @@ module.exports = class EquationGen extends ModelReader {
     }
     // Show the model var as a comment for reference.
     this.comments.push(`  // ${this.var.modelLHS} = ${this.var.modelFormula.replace('\n', '')}`)
-    // Inialize array variables with dimensions in a loop for each dimension.
+    // Initialize array variables with dimensions in a loop for each dimension.
     let dimNames = dimensionNames(this.var.subscripts)
     // Turn each dimension name into a loop with a loop index variable.
     // If the variable has no subscripts, nothing will be emitted here.
@@ -172,10 +172,19 @@ module.exports = class EquationGen extends ModelReader {
     return value
   }
 
+  lookupDataNameGen(subscripts) {
+    // Construct a name for the static data array associated with a lookup variable.
+    return R.map(subscript => {
+      if (isDimension(subscript)) {
+        let i = this.loopIndexVars.index(subscript)
+        return `_${subscript}_${i}_`
+      } else {
+        return `_${sub(subscript).value}_`
+      }
+    }, subscripts).join('')
+  }
   lhsSubscriptGen(subscripts) {
     // Construct C array subscripts from subscript names in the variable's normal order.
-    // Collect the dimension names from the subscripts.
-    let dimNames = dimensionNames(subscripts)
     return R.map(subscript => {
       if (isDimension(subscript)) {
         let i = this.loopIndexVars.index(subscript)
@@ -186,7 +195,7 @@ module.exports = class EquationGen extends ModelReader {
     }, subscripts).join('')
   }
   rhsSubscriptGen(subscripts) {
-    // Normalize RHS subsripts.
+    // Normalize RHS subscripts.
     try {
       subscripts = normalizeSubscripts(subscripts)
     } catch (e) {
@@ -273,12 +282,20 @@ module.exports = class EquationGen extends ModelReader {
     return v && v.isLookup()
   }
   generateLookup() {
-    // TODO use the lookup range
+    // Construct the name of the data array, which is based on the associated lookup var name,
+    // with any subscripts tacked on the end.
+    const dataName = this.var.varName + '_data_' + this.lookupDataNameGen(this.var.subscripts)
     if (this.initMode) {
-      let args = R.reduce((a, p) => listConcat(a, `${cdbl(p[0])}, ${cdbl(p[1])}`, true), '', this.var.points)
-      return [`  ${this.lhs} = __new_lookup(${this.var.points.length}, ${args});`]
+      // In init mode, create the `Lookup`, passing in a pointer to the static data array declared earlier.
+      // TODO: Make use of the lookup range
+      return [`  ${this.lhs} = __new_lookup(${this.var.points.length}, /*copy=*/false, ${dataName});`]
     } else {
-      return []
+      // In decl mode, declare a static data array that will be used to create the associated `Lookup`
+      // at init time. Using static arrays is better for code size, helps us avoid creating a copy of
+      // the data in memory, and seems to perform much better when compiled to wasm when compared to the
+      // previous approach that used varargs + copying, especially on constrained (e.g. iOS) devices.
+      let data = R.reduce((a, p) => listConcat(a, `${cdbl(p[0])}, ${cdbl(p[1])}`, true), '', this.var.points)
+      return [`double ${dataName}[${this.var.points.length * 2}] = { ${data} };`]
     }
   }
   generateData() {
@@ -314,7 +331,7 @@ module.exports = class EquationGen extends ModelReader {
             '',
             Array.from(data.entries())
           )
-          result = [`  ${this.lhs} = __new_lookup(${data.size}, ${args});`]
+          result = [`  ${this.lhs} = __new_lookup(${data.size}, /*copy=*/true, (double[]){ ${args} });`]
         } else {
           console.error(`data variable ${this.var.varName} not found in external data sources`)
         }
@@ -359,7 +376,7 @@ module.exports = class EquationGen extends ModelReader {
       dataCell = cell(dataCol, dataRow)
       timeCell = cell(timeCol, timeRow)
     }
-    return [`  ${this.lhs} = __new_lookup(${lookupSize}, ${lookupData});`]
+    return [`  ${this.lhs} = __new_lookup(${lookupSize}, /*copy=*/true, (double[]){ ${lookupData} });`]
   }
   //
   // Visitor callbacks
