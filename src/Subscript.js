@@ -109,6 +109,15 @@ function isDimension(name) {
   let s = sub(name)
   return s && Array.isArray(s.value)
 }
+function isTrivialDimension(name) {
+  // Return true if the dimension values are trivial, i.e., {0, 1, 2, ..., n-1}
+  let s = sub(name)
+  if (!s || !Array.isArray(s.value)) {
+    return false
+  }
+  // The following evaluates to true when all sub-dimensions match their position in the array
+  return R.addIndex(R.all)((subdim, idx) => sub(subdim).value === idx, s.value)
+}
 function addIndex(name, value, family) {
   // Add an index with arguments in canonical form.
   let subscript = {
@@ -332,6 +341,7 @@ module.exports = {
   indexNamesForSubscript,
   isDimension,
   isIndex,
+  isTrivialDimension,
   loadSubscriptsFromYaml,
   mapIndex,
   normalizeSubscripts,
