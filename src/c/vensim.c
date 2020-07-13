@@ -95,47 +95,50 @@ void __print_lookup(Lookup* lookup) {
 	}
 }
 double __lookup(double* data, size_t n, double input, LookupMode mode) {
-  // Interpolate the y value from an array of (x,y) pairs.
-  // BUG The x values are assumed to be monotonically increasing.
-  double* last_x = NULL;
-  double* last_y = NULL;
-	for (size_t i = 0; i < n; i++) {
-		double* x = data + 2 * i;
-		double* y = x + 1;
-    if (feq(*x, input)) {
-      return *y;
-		}
-    if (fgt(*x, input)) {
-      if (last_x == NULL) {
-        // The input is less than the first x, so return the low end of the range.
-        return *y;
-      }
-			// We went past the input, so return a value depending on the lookup mode.
-			if (mode == Interpolate) {
-	      // Interpolate along the line from the last (x,y).
-	      double dx = *x - *last_x;
-	      double dy = *y - *last_y;
-	      return *last_y + (dy/dx) * (input - *last_x);
+	// Interpolate the y value from an array of (x,y) pairs.
+	// NOTE: The x values are assumed to be monotonically increasing.
+	const size_t max = n * 2;
+
+	for (size_t xi = 0; xi < max; xi += 2) {
+		double x = data[xi];
+
+		if (fge(x, input)) {
+			// We went past the input, or hit it exactly.
+			if (xi == 0 || feq(x, input)) {
+				// The input is less than the first x, or this x equals the input; return the
+				// associated y without interpolation.
+				return data[xi + 1];
 			}
-			else if (mode == Forward) {
-				// Return the next value without interpolating.
-				// If we are on the last lookup point, return the current y value, otherwise go to the next one.
-				if (i < n - 1) {
-					x += 2;
-					y = x + 1;
+
+			// Calculate the y value depending on the lookup mode.
+			switch (mode) {
+			default:
+			case Interpolate: {
+				// Interpolate along the line from the last (x,y).
+				double last_x = data[xi - 2];
+				double last_y = data[xi - 1];
+				double y = data[xi + 1];
+				double dx = x - last_x;
+				double dy = y - last_y;
+				return last_y + ((dy / dx) * (input - last_x));
+			}
+			case Forward: {
+				// Return the next y value without interpolating.
+				if (xi + 3 < max) {
+					return data[xi + 3];
+				} else {
+					return data[max - 1];
 				}
-				return *y;
 			}
-			else if (mode == Backward) {
-				// Return the previous value without interpolating.
-				return *last_y;
+			case Backward:
+				// Return the previous y value without interpolating.
+				return data[xi - 1];
 			}
-    }
-    last_x = x;
-    last_y = y;
-  }
-  // The input is greater than all the x values, so return the high end of the range.
-	return *(data + 2 * (n - 1) + 1);
+		}
+	}
+
+	// The input is greater than all the x values, so return the high end of the range.
+	return data[max - 1];
 }
 double _LOOKUP_INVERT(Lookup* lookup, double y) {
 	if (lookup->inverted_data == NULL) {
