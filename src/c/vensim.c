@@ -6,59 +6,11 @@ extern double _time_step;
 double _epsilon = 1e-6;
 
 //
-// Helpers
-//
-typedef enum {
-  Interpolate, Forward, Backward
-} LookupMode;
-
-double bool_cond(double cond) {
-	return (cond != 0.0);
-}
-//
 // Vensim functions
 // See the Vensim Reference Manual for descriptions of the functions.
 // http://www.vensim.com/documentation/index.html?22300.htm
 //
-double _ABS(double x) {
-	return fabs(x);
-}
-double _COS(double x) {
-	return cos(x);
-}
-double _EXP(double x) {
-  return exp(x);
-}
-double _GAME(double x) {
-  return x;
-}
-double _IF_THEN_ELSE(double condition, double true_value, double false_value) {
-	// TODO Generate a special form that only evaluates one argument instead of calling a function.
-	if (bool_cond(condition)) {
-		return true_value;
-	}
-	else {
-		return false_value;
-	}
-}
-double _INTEG(double value, double rate) {
-	return (value + rate * _time_step);
-}
-double _INTEGER(double x) {
-	return trunc(x);
-}
-double _LN(double x) {
-  return log(x);
-}
-double _MAX(double a, double b) {
-  return fmax(a, b);
-}
-double _MIN(double a, double b) {
-  return fmin(a, b);
-}
-double _MODULO(double a, double b) {
-  return fmod(a, b);
-}
+
 double _PULSE(double start, double width) {
 	double time_plus = _time + _time_step / 2.0;
 	if (width == 0.0) {
@@ -92,25 +44,6 @@ double _RAMP(double slope, double start_time, double end_time) {
 		return 0.0;
 	}
 }
-double _SAMPLE_IF_TRUE(double currentValue, double condition, double input) {
-  // TODO Generate a special form that only evaluates one argument instead of calling a function.
-	if (bool_cond(condition)) {
-		return input;
-	}
-	else {
-		return currentValue;
-	}
-}
-double _SIN(double x) {
-	return sin(x);
-}
-double _SQRT(double x) {
-  return sqrt(x);
-}
-double _STEP(double height, double step_time) {
-	double __time_plus = _time + _time_step / 2.0;
-	return fgt(__time_plus, step_time) ? height : 0.0;
-}
 double _XIDZ(double a, double b, double x) {
 	return fz(b) ? x : a / b;
 }
@@ -121,6 +54,7 @@ double _ZIDZ(double a, double b) {
 		return a / b;
 	}
 }
+
 //
 // Lookups
 //
@@ -202,18 +136,6 @@ double __lookup(double* data, size_t n, double input, LookupMode mode) {
   }
   // The input is greater than all the x values, so return the high end of the range.
 	return *(data + 2 * (n - 1) + 1);
-}
-double _LOOKUP(Lookup* lookup, double x) {
-	return __lookup(lookup->data, lookup->n, x, Interpolate);
-}
-double _LOOKUP_FORWARD(Lookup* lookup, double x) {
-	return __lookup(lookup->data, lookup->n, x, Forward);
-}
-double _LOOKUP_BACKWARD(Lookup* lookup, double x) {
-	return __lookup(lookup->data, lookup->n, x, Backward);
-}
-double _WITH_LOOKUP(double x, Lookup* lookup) {
-  return __lookup(lookup->data, lookup->n, x, Interpolate);
 }
 double _LOOKUP_INVERT(Lookup* lookup, double y) {
 	if (lookup->inverted_data == NULL) {
