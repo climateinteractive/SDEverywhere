@@ -2,6 +2,7 @@ const R = require('ramda')
 const XLSX = require('xlsx')
 const { ModelLexer, ModelParser } = require('antlr4-vensim')
 const ModelReader = require('./ModelReader')
+const ModelLHSReader = require('./ModelLHSReader')
 const LoopIndexVars = require('./LoopIndexVars')
 const Model = require('./Model')
 const {
@@ -10,6 +11,7 @@ const {
   hasMapping,
   isDimension,
   isIndex,
+  isTrivialDimension,
   normalizeSubscripts,
   separatedVariableIndex,
   sub
@@ -87,7 +89,7 @@ module.exports = class EquationGen extends ModelReader {
     }
     // Show the model var as a comment for reference.
     this.comments.push(`  // ${this.var.modelLHS} = ${this.var.modelFormula.replace('\n', '')}`)
-    // Inialize array variables with dimensions in a loop for each dimension.
+    // Initialize array variables with dimensions in a loop for each dimension.
     let dimNames = dimensionNames(this.var.subscripts)
     // Turn each dimension name into a loop with a loop index variable.
     // If the variable has no subscripts, nothing will be emitted here.
@@ -107,7 +109,10 @@ module.exports = class EquationGen extends ModelReader {
     // Either emit constant list code or a regular var assignment.
     let formula = `  ${this.lhs} = ${this.exprCode};`
     // Close the assignment loops.
-    this.subscriptLoopClosingCode = R.concat(this.subscriptLoopClosingCode, R.map(dimName => `  }`, dimNames))
+    this.subscriptLoopClosingCode = R.concat(
+      this.subscriptLoopClosingCode,
+      R.map(dimName => `  }`, dimNames)
+    )
     // Assemble code from each channel into final var code output.
     return this.comments.concat(this.subscriptLoopOpeningCode, this.tmpVarCode, formula, this.subscriptLoopClosingCode)
   }
@@ -168,21 +173,40 @@ module.exports = class EquationGen extends ModelReader {
     return value
   }
 
-  lhsSubscriptGen(subscripts) {
-    // Construct C array subscripts from subscript names in the variable's normal order.
-    // Collect the dimension names from the subscripts.
-    let dimNames = dimensionNames(subscripts)
+  lookupDataNameGen(subscripts) {
+    // Construct a name for the static data array associated with a lookup variable.
     return R.map(subscript => {
       if (isDimension(subscript)) {
         let i = this.loopIndexVars.index(subscript)
-        return `[${subscript}[${i}]]`
+        if (isTrivialDimension(subscript)) {
+          // When the dimension is trivial, we can simply emit e.g. `[i]` instead of `[_dim[i]]`
+          return `_${i}_`
+        } else {
+          return `_${subscript}_${i}_`
+        }
+      } else {
+        return `_${sub(subscript).value}_`
+      }
+    }, subscripts).join('')
+  }
+  lhsSubscriptGen(subscripts) {
+    // Construct C array subscripts from subscript names in the variable's normal order.
+    return R.map(subscript => {
+      if (isDimension(subscript)) {
+        let i = this.loopIndexVars.index(subscript)
+        if (isTrivialDimension(subscript)) {
+          // When the dimension is trivial, we can simply emit e.g. `[i]` instead of `[_dim[i]]`
+          return `[${i}]`
+        } else {
+          return `[${subscript}[${i}]]`
+        }
       } else {
         return `[${sub(subscript).value}]`
       }
     }, subscripts).join('')
   }
   rhsSubscriptGen(subscripts) {
-    // Normalize RHS subsripts.
+    // Normalize RHS subscripts.
     try {
       subscripts = normalizeSubscripts(subscripts)
     } catch (e) {
@@ -230,7 +254,12 @@ module.exports = class EquationGen extends ModelReader {
           i = this.loopIndexVars.index(rhsSub)
         }
         // Return the dimension and loop index for a dimension subscript.
-        return `[${rhsSub}[${i}]]`
+        if (isTrivialDimension(rhsSub)) {
+          // When the dimension is trivial, we can simply emit e.g. `[i]` instead of `[_dim[i]]`
+          return `[${i}]`
+        } else {
+          return `[${rhsSub}[${i}]]`
+        }
       }
     }, subscripts).join('')
     return cSubscripts
@@ -269,12 +298,20 @@ module.exports = class EquationGen extends ModelReader {
     return v && v.isLookup()
   }
   generateLookup() {
-    // TODO use the lookup range
+    // Construct the name of the data array, which is based on the associated lookup var name,
+    // with any subscripts tacked on the end.
+    const dataName = this.var.varName + '_data_' + this.lookupDataNameGen(this.var.subscripts)
     if (this.initMode) {
-      let args = R.reduce((a, p) => listConcat(a, `${cdbl(p[0])}, ${cdbl(p[1])}`, true), '', this.var.points)
-      return [`  ${this.lhs} = __new_lookup(${this.var.points.length}, ${args});`]
+      // In init mode, create the `Lookup`, passing in a pointer to the static data array declared earlier.
+      // TODO: Make use of the lookup range
+      return [`  ${this.lhs} = __new_lookup(${this.var.points.length}, /*copy=*/false, ${dataName});`]
     } else {
-      return []
+      // In decl mode, declare a static data array that will be used to create the associated `Lookup`
+      // at init time. Using static arrays is better for code size, helps us avoid creating a copy of
+      // the data in memory, and seems to perform much better when compiled to wasm when compared to the
+      // previous approach that used varargs + copying, especially on constrained (e.g. iOS) devices.
+      let data = R.reduce((a, p) => listConcat(a, `${cdbl(p[0])}, ${cdbl(p[1])}`, true), '', this.var.points)
+      return [`double ${dataName}[${this.var.points.length * 2}] = { ${data} };`]
     }
   }
   generateData() {
@@ -310,7 +347,7 @@ module.exports = class EquationGen extends ModelReader {
             '',
             Array.from(data.entries())
           )
-          result = [`  ${this.lhs} = __new_lookup(${data.size}, ${args});`]
+          result = [`  ${this.lhs} = __new_lookup(${data.size}, /*copy=*/true, (double[]){ ${args} });`]
         } else {
           console.error(`data variable ${this.var.varName} not found in external data sources`)
         }
@@ -355,7 +392,7 @@ module.exports = class EquationGen extends ModelReader {
       dataCell = cell(dataCol, dataRow)
       timeCell = cell(timeCol, timeRow)
     }
-    return [`  ${this.lhs} = __new_lookup(${lookupSize}, ${lookupData});`]
+    return [`  ${this.lhs} = __new_lookup(${lookupSize}, /*copy=*/true, (double[]){ ${lookupData} });`]
   }
   //
   // Visitor callbacks
@@ -368,6 +405,10 @@ module.exports = class EquationGen extends ModelReader {
     // Do not emit the function calls in init mode, only the init expression.
     // Do emit function calls inside an init expression (with call stack length > 1).
     if (this.var.hasInitValue && this.initMode && this.callStack.length <= 1) {
+      super.visitCall(ctx)
+      this.callStack.pop()
+    } else if (fn === '_ELMCOUNT') {
+      // Replace the function with the value of its argument, emitted in visitVar.
       super.visitCall(ctx)
       this.callStack.pop()
     } else if (isArrayFunction(fn)) {
@@ -552,39 +593,54 @@ module.exports = class EquationGen extends ModelReader {
   visitVar(ctx) {
     // Push the var name on the stack and then emit it.
     let id = ctx.Id().getText()
-    this.varNames.push(canonicalName(id))
-    if (this.currentFunctionName() === '_VECTOR_SELECT') {
-      let argIndex = this.argIndexForFunctionName('_VECTOR_SELECT')
-      if (argIndex === 0) {
-        this.vsSelectionArray = this.currentVarName()
-      } else if (argIndex === 1) {
-        this.emit(this.currentVarName())
-      }
-      super.visitVar(ctx)
-    } else if (this.currentFunctionName() === '_VECTOR_ELM_MAP') {
-      if (this.argIndexForFunctionName('_VECTOR_ELM_MAP') === 1) {
-        this.vemOffset = `(size_t)${this.currentVarName()}`
-      }
-      super.visitVar(ctx)
-    } else if (this.currentFunctionName() === '_VECTOR_SORT_ORDER') {
-      if (this.argIndexForFunctionName('_VECTOR_SORT_ORDER') === 0) {
-        this.vsoVarName = this.currentVarName()
-        this.vsoTmpName = newTmpVarName()
-        this.emit(this.vsoTmpName)
-      }
-      super.visitVar(ctx)
-    } else {
-      let v = Model.varWithName(this.currentVarName())
-      if (v && v.varType === 'data') {
-        this.emit(`_LOOKUP(${this.currentVarName()}`)
-        super.visitVar(ctx)
-        this.emit(', _time)')
+    let varName = canonicalName(id)
+    if (isDimension(varName)) {
+      if (this.currentFunctionName() === '_ELMCOUNT') {
+        // Emit the size of the dimension in place of the dimension name.
+        this.emit(`${sub(varName).size}`)
       } else {
-        this.emit(this.currentVarName())
-        super.visitVar(ctx)
+        // A subscript masquerading as a variable takes the value of the loop index var plus one
+        // (since Vensim indices are one-based).
+        let s = this.rhsSubscriptGen([varName])
+        // Remove the brackets around the C subscript expression.
+        s = s.slice(1, s.length-1)
+        this.emit(`(${s} + 1)`)
       }
+    } else {
+      this.varNames.push(varName)
+      if (this.currentFunctionName() === '_VECTOR_SELECT') {
+        let argIndex = this.argIndexForFunctionName('_VECTOR_SELECT')
+        if (argIndex === 0) {
+          this.vsSelectionArray = this.currentVarName()
+        } else if (argIndex === 1) {
+          this.emit(this.currentVarName())
+        }
+        super.visitVar(ctx)
+      } else if (this.currentFunctionName() === '_VECTOR_ELM_MAP') {
+        if (this.argIndexForFunctionName('_VECTOR_ELM_MAP') === 1) {
+          this.vemOffset = `(size_t)${this.currentVarName()}`
+        }
+        super.visitVar(ctx)
+      } else if (this.currentFunctionName() === '_VECTOR_SORT_ORDER') {
+        if (this.argIndexForFunctionName('_VECTOR_SORT_ORDER') === 0) {
+          this.vsoVarName = this.currentVarName()
+          this.vsoTmpName = newTmpVarName()
+          this.emit(this.vsoTmpName)
+        }
+        super.visitVar(ctx)
+      } else {
+        let v = Model.varWithName(this.currentVarName())
+        if (v && v.varType === 'data') {
+          this.emit(`_LOOKUP(${this.currentVarName()}`)
+          super.visitVar(ctx)
+          this.emit(', _time)')
+        } else {
+          this.emit(this.currentVarName())
+          super.visitVar(ctx)
+        }
+      }
+      this.varNames.pop()
     }
-    this.varNames.pop()
   }
   visitLookupArg(ctx) {
     // Substitute the previously generated lookup arg var name into the expression.
@@ -686,23 +742,36 @@ module.exports = class EquationGen extends ModelReader {
           }
         }
       } else if (numDims === 2) {
-        // Calculate an index into a flattened 2D array in two steps.
-        let constPos
+        // Calculate an index into a flattened array by converting the indices to numeric form and looking them up
+        // in a C name array listed in the same Vensim order as the constant array in the model.
+        let cVarName
+        let modelLHSReader = new ModelLHSReader()
+        modelLHSReader.read(this.var.modelLHS)
+        let cNames = modelLHSReader.names().map(Model.cName)
+        // Visit dims in normal order. Find the ind in the dim. Compose the C array expression with numeric indices.
         for (let dim of this.var.separationDims) {
           let sepDim = sub(dim)
           for (let ind of this.var.subscripts) {
             let i = sepDim.value.indexOf(ind)
             if (i >= 0) {
-              if (constPos === undefined) {
-                constPos = sepDim.size * i
+              let indexNum = sub(ind).value
+              if (!cVarName) {
+                cVarName = `${this.var.varName}[${indexNum}]`
               } else {
-                constPos += i
+                cVarName += `[${indexNum}]`
               }
               break
             }
           }
         }
-        emitConstAtPos(constPos)
+        // Find the position of the constant in Vensim order from the expanded LHS var list.
+        let constPos = R.indexOf(cVarName, cNames)
+        if (constPos >= 0) {
+          emitConstAtPos(constPos)
+          // console.error(`${this.var.refId} position = ${constPos}`)
+        } else {
+          console.error(`${this.var.refId} → ${cVarName} not found in C names`)
+        }
       }
     }
   }

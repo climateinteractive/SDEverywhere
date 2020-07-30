@@ -3,9 +3,10 @@ const R = require('ramda')
 const B = require('bufx')
 const { splitEquations } = require('./Helpers')
 
-let preprocessModel = (mdlFilename, spec, profile = 'genc', writeRemovals = false) => {
+let preprocessModel = (mdlFilename, spec, profile = 'genc', writeFiles = false) => {
   const MACROS_FILENAME = 'macros.txt'
   const REMOVALS_FILENAME = 'removals.txt'
+  const INSERTIONS_FILENAME = 'mdl-edits.txt'
   const ENCODING = '{UTF-8}'
   let profiles = {
     // simplified but still runnable model
@@ -25,15 +26,8 @@ let preprocessModel = (mdlFilename, spec, profile = 'genc', writeRemovals = fals
   let mdl, eqns
   // Equations that contain a string in the removalKeys list in the spec file will be removed.
   let removalKeys = (spec && spec.removalKeys) || []
-  // Get the first line of an equation.
-  let firstLine = s => {
-    let i = s.indexOf('\n')
-    if (i < 0) {
-      return s.trim()
-    } else {
-      return s.slice(0, i).trim()
-    }
-  }
+  // Optional insertions can be used to add expanded macros back into the model.
+  let insertions = ''
   let getMdlFromPPBuf = () => {
     // Reset the mdl string from the preprocessor buffer.
     mdl = B.getBuf('pp')
@@ -48,6 +42,13 @@ let preprocessModel = (mdlFilename, spec, profile = 'genc', writeRemovals = fals
   B.open('rm')
   B.open('macros')
   B.open('pp')
+  // Read the optional insertions file into the model unless we are doing a pass that writes removals.
+  try {
+    if (!writeFiles) {
+      let insPathname = path.join(path.dirname(mdlFilename), INSERTIONS_FILENAME)
+      insertions = B.read(insPathname)
+    }
+  } catch (error) {}
   // Read the model file.
   try {
     mdl = B.read(mdlFilename)
@@ -113,6 +114,13 @@ let preprocessModel = (mdlFilename, spec, profile = 'genc', writeRemovals = fals
   }
   getMdlFromPPBuf()
 
+  // Emit the encoding line and optional insertions.
+  if (opts.emitEncoding) {
+    B.emitLine(ENCODING, 'pp')
+  }
+  if (insertions) {
+    B.emitLine(insertions, 'pp')
+  }
   // Emit formula lines without comment contents.
   eqns = splitEquations(mdl)
   for (let eqn of eqns) {
@@ -121,11 +129,7 @@ let preprocessModel = (mdlFilename, spec, profile = 'genc', writeRemovals = fals
       let formula = B.lines(eqn.substr(0, iComment))
       for (let i = 0; i < formula.length; i++) {
         if (i === 0) {
-          if (formula[i] === ENCODING) {
-            if (opts.emitEncoding) {
-              B.emitLine(ENCODING, 'pp')
-            }
-          } else {
+          if (formula[i] !== ENCODING) {
             emitPP(formula[i])
           }
         } else {
@@ -147,7 +151,7 @@ let preprocessModel = (mdlFilename, spec, profile = 'genc', writeRemovals = fals
   getMdlFromPPBuf()
 
   // Write removals to a file in the model directory.
-  if (writeRemovals) {
+  if (writeFiles) {
     if (B.getBuf('macros')) {
       let macrosPathname = path.join(path.dirname(mdlFilename), MACROS_FILENAME)
       B.writeBuf(macrosPathname, 'macros')

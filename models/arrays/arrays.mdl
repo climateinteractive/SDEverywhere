@@ -2,6 +2,7 @@
 DimA: A1, A2, A3 -> DimB ~~|
 DimB: B1, B2, B3 ~~|
 DimC: C1, C2, C3 ~~|
+DimD: D1, D2, D3, D4 ~~|
 SubA: A2, A3 ~~|
 DimX: SubA, A1 ~~|
 
@@ -84,10 +85,10 @@ p[DimA] = SUM(inputAB[DimA, DimB!])
 
 r[DimA,DimB] = inputAB[DimA,DimB] * g[DimB] ~~|
 
-s[DimA,DimB]=
-	11,12,13;
-	21,22,23;
-	31,32,33;
+s[DimA,DimD]=
+	11,12,13,14;
+	21,22,23,24;
+	31,32,33,34;
 	~
 	~	2D constant array
 	|
@@ -114,6 +115,15 @@ u[SubA] = 1, 2 ~~|
 v[DimA, B1] = 1, 2, 3 ~~|
 w[A1, DimB] = 1, 2, 3 ~~|
 x[DimX] = 1, 2, 3 ~~|
+
+y[DimD,DimA]=
+	11,12,13;
+	21,22,23;
+	31,32,33;
+	41,42,43;
+	~
+	~	2D constant array with dimensions not in normal order
+	|
 
 INITIAL TIME = 0 ~~|
 FINAL TIME = 1 ~~|

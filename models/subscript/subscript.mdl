@@ -25,6 +25,20 @@ o[DimA, DimB] = f[DimA, DimB] ~~~:SUPPLEMENTARY|
 
 p[DimB, DimA] = f[DimA, DimB] ~~~:SUPPLEMENTARY|
 
+r[DimA] = IF THEN ELSE (DimA = Selected A, 1, 0)
+	~
+	~	dimension name reference in an expression
+  ~:SUPPLEMENTARY
+	|
+
+Selected A = 2  ~~~:SUPPLEMENTARY|
+
+s[DimA] = DimB
+	~
+	~	mapped dimension name reference in an expression
+  ~:SUPPLEMENTARY
+	|
+
 ********************************************************
 	.Control
 ********************************************************~
@@ -58,7 +72,7 @@ V300  Do not put anything below this section - it will be ignored
 $192-192-192,0,Times New Roman|12||0-0-0|0-0-0|0-0-255|-1--1--1|-1--1--1|96,96,100,0
 ///---\\\
 :L<%^E!@
-1:subscript.vdf
+1:subscript.vdfx
 9:subscript
 15:0,0,0,0,0,0
 19:100,0
@@ -66,8 +80,34 @@ $192-192-192,0,Times New Roman|12||0-0-0|0-0-0|0-0-255|-1--1--1|-1--1--1|96,96,1
 34:0,
 4:Time
 5:p[DimB,DimA]
+76:0
+77:0
+78:0
+79:0
+80:0
+81:0
 24:0
 25:1
 26:1
+57:1
+54:0
+55:0
+59:0
+56:0
+58:0
+71:0
+44:65001
+46:0
+45:0
+49:0
+50:0
+51:
+52:
+53:
+43:subscript
+47:subscript
+48:
+75:
+43:subscript
 6:A1
 6:B1
