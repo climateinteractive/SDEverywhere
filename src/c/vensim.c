@@ -94,6 +94,7 @@ void __print_lookup(Lookup* lookup) {
 		}
 	}
 }
+
 double __lookup(double* data, size_t n, double input, LookupMode mode) {
 	// Interpolate the y value from an array of (x,y) pairs.
 	// NOTE: The x values are assumed to be monotonically increasing.
@@ -124,11 +125,7 @@ double __lookup(double* data, size_t n, double input, LookupMode mode) {
 			}
 			case Forward: {
 				// Return the next y value without interpolating.
-				if (xi + 3 < max) {
-					return data[xi + 3];
-				} else {
-					return data[max - 1];
-				}
+				return data[xi + 1];
 			}
 			case Backward:
 				// Return the previous y value without interpolating.
@@ -140,6 +137,7 @@ double __lookup(double* data, size_t n, double input, LookupMode mode) {
 	// The input is greater than all the x values, so return the high end of the range.
 	return data[max - 1];
 }
+
 double _LOOKUP_INVERT(Lookup* lookup, double y) {
 	if (lookup->inverted_data == NULL) {
 		// Invert the matrix and cache it.
