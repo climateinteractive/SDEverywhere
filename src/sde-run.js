@@ -23,8 +23,8 @@ let builder = {
 let handler = argv => {
   run(argv.model, argv)
 }
-let run = (model, opts) => {
-  build(model, opts)
+let run = async (model, opts) => {
+  await build(model, opts)
   exec(model, opts)
 }
 

@@ -42,7 +42,7 @@ let test = async (model, opts) => {
     logPathname = path.join(outputDirname, `${modelName}.txt`)
     opts.outfile = logPathname
   }
-  run(model, opts)
+  await run(model, opts)
   // Convert the TSV log file to a DAT file in the same directory.
   opts.dat = true
   await log(logPathname, opts)
@@ -51,7 +51,7 @@ let test = async (model, opts) => {
   let vensimPathname = path.join(modelDirname, `${modelName}.dat`)
   let p = path.parse(logPathname)
   let sdePathname = path.format({ dir: p.dir, name: p.name, ext: '.dat' })
-  compare(vensimPathname, sdePathname, opts)
+  await compare(vensimPathname, sdePathname, opts)
 }
 
 module.exports = {
