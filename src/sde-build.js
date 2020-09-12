@@ -18,9 +18,9 @@ let builder = {
 let handler = argv => {
   build(argv.model, argv)
 }
-let build = (model, opts) => {
+let build = async (model, opts) => {
   opts.genc = true
-  generate(model, opts)
+  await generate(model, opts)
   compile(model, opts)
 }
 
