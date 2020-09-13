@@ -1702,7 +1702,7 @@ delay a[A3]
 0	3
 FINAL TIME
 0	10
-init
+init 1
 0	0
 init 2[A2]
 0	0
