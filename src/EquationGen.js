@@ -586,6 +586,11 @@ module.exports = class EquationGen extends ModelReader {
       this.vsoOrder = ''
       this.vsoTmpName = ''
       this.vsoTmpDimName = ''
+    } else if (fn === '_GET_DATA_BETWEEN_TIMES') {
+      this.emit('_GET_DATA_BETWEEN_TIMES(')
+      super.visitCall(ctx)
+      this.emit(')')
+      this.callStack.pop()
     } else if (this.functionIsLookup() || this.var.isData()) {
       // A lookup has function syntax but lookup semantics. Convert the function call into a lookup call.
       this.emit(`_LOOKUP(${this.lookupName()}, `)
@@ -723,6 +728,9 @@ module.exports = class EquationGen extends ModelReader {
           this.vsoTmpName = newTmpVarName()
           this.emit(this.vsoTmpName)
         }
+        super.visitVar(ctx)
+      } else if (this.currentFunctionName() === '_GET_DATA_BETWEEN_TIMES') {
+        this.emit(this.currentVarName())
         super.visitVar(ctx)
       } else {
         let v = Model.varWithName(this.currentVarName())
