@@ -62,6 +62,10 @@ double __lookup(double* data, size_t n, double input, LookupMode mode);
 #define _WITH_LOOKUP(x, lookup) __lookup((lookup)->data, (lookup)->n, x, Interpolate)
 double _LOOKUP_INVERT(Lookup* lookup, double y);
 
+double __get_data_between_times(double *data, size_t n, double input, LookupMode mode);
+#define _GET_DATA_MODE_TO_LOOKUP_MODE(mode) ((mode) >= 1) ? Forward : (((mode) <= -1) ? Backward : Interpolate)
+#define _GET_DATA_BETWEEN_TIMES(lookup, x, mode) __get_data_between_times((lookup)->data, (lookup)->n, x, _GET_DATA_MODE_TO_LOOKUP_MODE(mode))
+
 #ifdef __cplusplus
 }
 #endif

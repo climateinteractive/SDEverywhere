@@ -138,6 +138,82 @@ double __lookup(double* data, size_t n, double input, LookupMode mode) {
 	return data[max - 1];
 }
 
+// This function is similar to `__lookup` in concept, but Vensim produces results for
+// the GET DATA BETWEEN TIMES function that differ in unexpected ways from normal lookup
+// behavior, so we implement it as a separate function here.
+double __get_data_between_times(double *data, size_t n, double input, LookupMode mode) {
+  // Interpolate the y value from an array of (x,y) pairs.
+  // NOTE: The x values are assumed to be monotonically increasing.
+  const size_t max = n * 2;
+
+  switch (mode) {
+    case Forward: {
+      // Vensim appears to round non-integral input values down to a whole number
+      // when mode is 1 (look forward), so we will do the same
+      input = floor(input);
+
+      for (size_t xi = 0; xi < max; xi += 2) {
+        double x = data[xi];
+        if (x >= input) {
+          return data[xi + 1];
+        }
+      }
+
+      return data[max - 1];
+    }
+
+    case Backward: {
+      // Vensim appears to round non-integral input values down to a whole number
+      // when mode is -1 (hold backward), so we will do the same
+      input = floor(input);
+
+      for (size_t xi = 2; xi < max; xi += 2) {
+        double x = data[xi];
+        if (x >= input) {
+          return data[xi - 1];
+        }
+      }
+
+      if (max >= 4) {
+        return data[max - 3];
+      } else {
+        return data[1];
+      }
+    }
+
+    case Interpolate:
+    default: {
+      // NOTE: This function produces results that match Vensim output for GET DATA BETWEEN TIMES with a
+      // mode of 0 (interpolate), but only when the input values are integral (whole numbers).  If the
+      // input value is fractional, Vensim produces bizarre/unexpected interpolated values.
+      // TODO: For now we print a warning, but ideally we would match the Vensim results exactly.
+      static warned = 0;
+      if (input - floor(input) > 0) {
+        if (!warned) {
+          fprintf(stderr, "WARNING: GET DATA BETWEEN TIMES was called with an input value (%f) that has a fractional part.\n", input);
+          fprintf(stderr, "When mode is 0 (interpolate) and the input value is not a whole number, Vensim produces unexpected\n");
+          fprintf(stderr, "results that may differ from those produced by SDEverywhere.\n");
+          warned = 1;
+        }
+      }
+
+      for (size_t xi = 2; xi < max; xi += 2) {
+        double x = data[xi];
+        if (x >= input) {
+          double last_x = data[xi - 2];
+          double last_y = data[xi - 1];
+          double y = data[xi + 1];
+          double dx = x - last_x;
+          double dy = y - last_y;
+          return last_y + ((dy / dx) * (input - last_x));
+        }
+      }
+
+      return data[max - 1];
+    }
+  }
+}
+
 double _LOOKUP_INVERT(Lookup* lookup, double y) {
 	if (lookup->inverted_data == NULL) {
 		// Invert the matrix and cache it.
