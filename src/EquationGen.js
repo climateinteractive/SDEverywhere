@@ -82,7 +82,11 @@ module.exports = class EquationGen extends ModelReader {
   generate() {
     // Generate code for the variable in either init or eval mode.
     if (this.var.isData()) {
-      return this.generateData()
+      if (this.var.directDataArgs) {
+        return this.generateDirectDataInit()
+      } else {
+        return this.generateExternalDataInit()
+      }
     }
     if (this.var.isLookup()) {
       return this.generateLookup()
@@ -314,47 +318,139 @@ module.exports = class EquationGen extends ModelReader {
       return [`double ${dataName}[${this.var.points.length * 2}] = { ${data} };`]
     }
   }
-  generateData() {
+
+  generateDirectDataInit() {
+    // If direct data exists for this variable, copy it from the workbook into one or more lookups.
     let result = []
     if (this.initMode) {
-      // If direct data exists for this variable, copy it from the workbook into one or more lookups.
-      if (this.var.directDataArgs) {
-        let { tag, sheetName, timeRowOrCol, startCell } = this.var.directDataArgs
-        let workbook = this.directData.get(tag)
-        if (workbook) {
-          let sheet = workbook.Sheets[sheetName]
-          if (sheet) {
-            let indexNum = 0
-            if (!R.isEmpty(this.var.subscripts)) {
-              // Generate a lookup for a separated index in the variable's dimension.
-              // TODO allow the index to be in either position of a 2D subscript
-              let ind = sub(this.var.subscripts[0])
-              indexNum = ind.value
-            }
-            result.push(this.generateDirectDataLookup(sheet, timeRowOrCol, startCell, indexNum))
-          } else {
-            console.error(`direct data worksheet ${sheetName} tagged ${tag} not found`)
+      let { tag, sheetName, timeRowOrCol, startCell } = this.var.directDataArgs
+      let workbook = this.directData.get(tag)
+      if (workbook) {
+        let sheet = workbook.Sheets[sheetName]
+        if (sheet) {
+          let indexNum = 0
+          if (!R.isEmpty(this.var.subscripts)) {
+            // Generate a lookup for a separated index in the variable's dimension.
+            // TODO allow the index to be in either position of a 2D subscript
+            let ind = sub(this.var.subscripts[0])
+            indexNum = ind.value
           }
+          result.push(this.generateDirectDataLookup(sheet, timeRowOrCol, startCell, indexNum))
         } else {
-          console.error(`direct data workbook tagged ${tag} not found`)
+          throw new Error(`ERROR: Direct data worksheet ${sheetName} tagged ${tag} not found`)
         }
       } else {
-        // If there is external data for this variable, copy it from an external file to a lookup.
-        let data = this.extData.get(this.var.varName)
-        if (data) {
-          let args = R.reduce(
-            (a, p) => listConcat(a, `${cdbl(p[0])}, ${cdbl(p[1])}`, true),
-            '',
-            Array.from(data.entries())
-          )
-          result = [`  ${this.lhs} = __new_lookup(${data.size}, /*copy=*/true, (double[]){ ${args} });`]
-        } else {
-          console.error(`data variable ${this.var.varName} not found in external data sources`)
-        }
+        throw new Error(`ERROR: Direct data workbook tagged ${tag} not found`)
       }
     }
     return result
   }
+
+  generateExternalDataInit() {
+    // If there is external data for this variable, copy it from an external file to a lookup.
+    // Just like in generateLookup(), we declare static arrays to hold the data points in the first pass
+    // ("decl" mode), then initialize each `Lookup` using that data in the second pass ("init" mode).
+    const initMode = this.initMode
+
+    const newLookup = (name, lhs, data, subscriptIndexes) => {
+      if (!data) {
+        throw new Error(`ERROR: Data for ${name} not found in external data sources`)
+      }
+
+      const dataName = this.var.varName + '_data_' + R.map(i => `_${i}_`, subscriptIndexes).join('')
+      if (initMode) {
+        // In init mode, create the `Lookup`, passing in a pointer to the static data array declared in decl mode.
+        return `  ${lhs} = __new_lookup(${data.size}, /*copy=*/false, ${dataName});`
+      } else {
+        // In decl mode, declare a static data array that will be used to create the associated `Lookup`
+        // at init time. See `generateLookup` for more details.
+        const points = R.reduce((a, p) => listConcat(a, `${cdbl(p[0])}, ${cdbl(p[1])}`, true), '', Array.from(data.entries()))
+        return `double ${dataName}[${data.size * 2}] = { ${points} };`
+      }
+    }
+
+    // There are three common cases that we handle:
+    //  - variable has no subscripts (C variable _thing = _thing from dat file)
+    //  - variable has subscript(s) (C variable with index _thing[0] = _thing[_subscript] from dat file)
+    //  - variable has dimension(s) (C variable in for loop, _thing[i] = _thing[_subscript_i] from dat file)
+
+    // TODO: Generalize the code below to make it work for any number of subscripts/dimensions
+
+    if (!this.var.subscripts || this.var.subscripts.length === 0) {
+      // No subscripts
+      const data = this.extData.get(this.var.varName)
+      return [newLookup(this.var.varName, this.lhs, data, [])]
+    }
+
+    if (this.var.subscripts.length === 1) {
+      const subscript = this.var.subscripts[0]
+      if (isDimension(subscript)) {
+        // There is exactly one dimension
+        const dims = sub(subscript).value
+        if (dims && dims.length > 0) {
+          const result = []
+          for (const dim of dims) {
+            const nameInDat = `${this.var.varName}[${dim}]`
+            const dimIndex = sub(dim).value
+            const lhs = `${this.var.varName}[${dimIndex}]`
+            const data = this.extData.get(nameInDat)
+            result.push(newLookup(nameInDat, lhs, data, [dimIndex]))
+          }
+          return result
+        } else {
+          throw new Error(`ERROR: Data variable ${this.var.varName} missing dimensions for ${subscript}`)
+        }
+      } else {
+        // There is exactly one subscript
+        const nameInDat = `${this.var.varName}[${subscript}]`
+        const data = this.extData.get(nameInDat)
+        const subIndex = sub(subscript).value
+        return [newLookup(nameInDat, this.lhs, data, [subIndex])]
+      }
+    }
+
+    if (this.var.subscripts.length === 2) {
+      const subscriptOuter = this.var.subscripts[0]
+      const subscriptInner = this.var.subscripts[1]
+      if (isDimension(subscriptOuter) && isDimension(subscriptInner)) {
+        // There are two dimensions
+        const dimsOuter = sub(subscriptOuter).value
+        const dimsInner = sub(subscriptInner).value
+        if (dimsOuter && dimsOuter.length > 0 && dimsInner && dimsInner.length > 0) {
+          const result = []
+          for (const dimOuter of dimsOuter) {
+            for (const dimInner of dimsInner) {
+              // Note: It appears that the dat file can have the subscripts in a different order
+              // than what SDE uses when declaring the C array.  If we don't find data for one
+              // order, we try the other.
+              let nameInDat = `${this.var.varName}[${dimInner},${dimOuter}]`
+              let data = this.extData.get(nameInDat)
+              if (!data) {
+                nameInDat = `${this.var.varName}[${dimOuter},${dimInner}]`
+                data = this.extData.get(nameInDat)
+              }
+              const dimIndexOuter = sub(dimOuter).value
+              const dimIndexInner = sub(dimInner).value
+              const lhs = `${this.var.varName}[${dimIndexOuter}][${dimIndexInner}]`
+              const lookup = newLookup(nameInDat, lhs, data, [dimIndexOuter, dimIndexInner])
+              if (lookup) {
+                result.push(lookup)
+              }
+            }
+          }
+          return result
+        } else {
+          throw new Error(`ERROR: Data variable ${this.var.varName} missing dimensions for ${subscript}`)
+        }
+      } else {
+        // There are two subscripts
+        throw new Error(`ERROR: Data variable ${this.var.varName} has 2 subscripts; not yet handled`)
+      }
+    }
+
+    throw new Error(`ERROR: Data variable ${this.var.varName} has > 2 subscripts; not yet handled`)
+  }
+
   generateDirectDataLookup(sheet, timeRowOrCol, startCell, indexNum) {
     // Read a row or column of data as (time, value) pairs from the worksheet.
     let dataCol, dataRow, dataCell, timeCol, timeRow, timeCell, nextCell
