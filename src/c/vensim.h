@@ -49,17 +49,19 @@ typedef struct {
   size_t n;
   double* inverted_data;
   bool data_is_owned;
+  double last_input;
+  size_t last_hit_index;
 } Lookup;
 
 Lookup* __new_lookup(size_t size, bool copy, double* data);
 void __delete_lookup(Lookup* lookup);
 void __print_lookup(Lookup* lookup);
 
-double __lookup(double* data, size_t n, double input, LookupMode mode);
-#define _LOOKUP(lookup, x) __lookup((lookup)->data, (lookup)->n, x, Interpolate)
-#define _LOOKUP_FORWARD(lookup, x) __lookup((lookup)->data, (lookup)->n, x, Forward)
-#define _LOOKUP_BACKWARD(lookup, x) __lookup((lookup)->data, (lookup)->n, x, Backward)
-#define _WITH_LOOKUP(x, lookup) __lookup((lookup)->data, (lookup)->n, x, Interpolate)
+double __lookup(Lookup* lookup, double* data, double input, LookupMode mode);
+#define _LOOKUP(lookup, x) __lookup(lookup, (lookup)->data, x, Interpolate)
+#define _LOOKUP_FORWARD(lookup, x) __lookup(lookup, (lookup)->data, x, Forward)
+#define _LOOKUP_BACKWARD(lookup, x) __lookup(lookup, (lookup)->data, x, Backward)
+#define _WITH_LOOKUP(x, lookup) __lookup(lookup, (lookup)->data, x, Interpolate)
 double _LOOKUP_INVERT(Lookup* lookup, double y);
 
 double __get_data_between_times(double *data, size_t n, double input, LookupMode mode);

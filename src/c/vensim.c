@@ -74,6 +74,8 @@ Lookup* __new_lookup(size_t size, bool copy, double *data) {
 		// Store a pointer to the lookup data (assumed to be static or owned elsewhere).
 		lookup->data = data;
 	}
+	lookup->last_input = DBL_MAX;
+	lookup->last_hit_index = 0;
 	return lookup;
 }
 void __delete_lookup(Lookup* lookup) {
@@ -95,16 +97,33 @@ void __print_lookup(Lookup* lookup) {
 	}
 }
 
-double __lookup(double* data, size_t n, double input, LookupMode mode) {
+double __lookup(Lookup* lookup, double* data, double input, LookupMode mode) {
 	// Interpolate the y value from an array of (x,y) pairs.
 	// NOTE: The x values are assumed to be monotonically increasing.
-	const size_t max = n * 2;
 
-	for (size_t xi = 0; xi < max; xi += 2) {
+	const size_t max = (lookup->n) * 2;
+
+	// Use the cached values for improved lookup performance, except in the case
+	// of `LOOKUP INVERT` (since it may not be accurate if calls flip back and forth
+	// between inverted and non-inverted data).
+	int use_cached_values = data != lookup->inverted_data;
+	size_t start_index;
+	if (use_cached_values && input >= lookup->last_input) {
+		start_index = lookup->last_hit_index;
+	} else {
+		start_index = 0;
+	}
+
+	for (size_t xi = start_index; xi < max; xi += 2) {
 		double x = data[xi];
 
 		if (fge(x, input)) {
 			// We went past the input, or hit it exactly.
+			if (use_cached_values) {
+				lookup->last_input = input;
+				lookup->last_hit_index = xi;
+			}
+
 			if (xi == 0 || feq(x, input)) {
 				// The input is less than the first x, or this x equals the input; return the
 				// associated y without interpolation.
@@ -135,6 +154,10 @@ double __lookup(double* data, size_t n, double input, LookupMode mode) {
 	}
 
 	// The input is greater than all the x values, so return the high end of the range.
+	if (use_cached_values) {
+		lookup->last_input = input;
+		lookup->last_hit_index = max;
+	}
 	return data[max - 1];
 }
 
@@ -187,7 +210,7 @@ double __get_data_between_times(double *data, size_t n, double input, LookupMode
       // mode of 0 (interpolate), but only when the input values are integral (whole numbers).  If the
       // input value is fractional, Vensim produces bizarre/unexpected interpolated values.
       // TODO: For now we print a warning, but ideally we would match the Vensim results exactly.
-      static warned = 0;
+      static int warned = 0;
       if (input - floor(input) > 0) {
         if (!warned) {
           fprintf(stderr, "WARNING: GET DATA BETWEEN TIMES was called with an input value (%f) that has a fractional part.\n", input);
@@ -226,8 +249,7 @@ double _LOOKUP_INVERT(Lookup* lookup, double y) {
 			pLookup += 2;
 		}
 	}
-  double result = __lookup(lookup->inverted_data, lookup->n, y, Interpolate);
-	return result;
+	return __lookup(lookup, lookup->inverted_data, y, Interpolate);
 }
 
 typedef struct {
