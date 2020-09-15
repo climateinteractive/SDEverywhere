@@ -41,6 +41,8 @@ function read(parseTree, spec, extData, directData) {
   analyze()
   // Check that all input and output vars in the spec actually exist in the model.
   checkSpecVars(spec, extData)
+  // Remove variables that are not referenced by an input or output variable.
+  removeUnusedVariables(spec)
 }
 function readSubscriptRanges(tree, dimensionFamilies, indexFamilies) {
   // Read subscript ranges from the model.
@@ -181,8 +183,6 @@ function analyze() {
   setRefIds()
   // Read the RHS to list the refIds of vars that are referenced and set the var type.
   readEquations()
-  // Remove constants from references now that all var types are determined.
-  removeConstRefs()
 }
 function checkSpecVars(spec, extData) {
   // Look up each var in the spec and issue and error message if it does not exist.
@@ -216,6 +216,105 @@ function checkSpecVars(spec, extData) {
     check(spec.outputVars, 'output')
   }
 }
+
+function removeUnusedVariables(spec) {
+  // Remove any variables that are not referenced by an input or output variable.
+  // This ensures that only computations that are relevant to the outputs are performed.
+
+  // Only remove dead code if we have an explicit set of inputs and outputs
+  if (!spec.outputVars || spec.outputVars.length === 0 || !spec.inputVars || spec.inputVars.length === 0) {
+    return
+  }
+
+  // Keep track of all variable names that are referenced somewhere.  Note that we
+  // don't attempt to track specific "ref ids" (e.g. `_some_variable[_subscript]`)
+  // but instead just track generic variable names (e.g. `_some_variable`).  This
+  // ensure that we include all subscripts for a variable, which might mean we
+  // include some subscripts that aren't needed, but it is safer than trying to
+  // eliminate those and possibly omit something that is needed.
+  const referencedVarNames = []
+
+  // Add the given variable name to the list of referenced variables, if it's not
+  // already there.
+  const recordUsedVarName = varName => {
+    if (!referencedVarNames.includes(varName)) {
+      referencedVarNames.push(varName)
+    }
+  }
+
+  // Add the given variable to the list of referenced variables, and do the same for
+  // some special things (i.e., lookups) that it might reference.a
+  const recordUsedVariable = v => {
+    // Add the variable to the list of referenced variables
+    recordUsedVarName(v.varName)
+
+    // Include any lookup variables that are referenced by this variable
+    if (v.referencedLookupVarNames) {
+      for (const lookupVarName of v.referencedLookupVarNames) {
+        recordUsedVarName(lookupVarName)
+      }
+    }
+
+    // Look through the list of function names that are referenced by this
+    // variable and see if any of them are lookups (which should be included in
+    // our list of referenced variables)
+    if (v.referencedFunctionNames) {
+      for (const fnName of v.referencedFunctionNames) {
+        // Convert the function name (e.g. `__damage_lookup`) to a lookup var name (chop off
+        // the leading underscore)
+        const lookupName = fnName.slice(1)
+        const varForFn = varWithName(lookupName)
+        if (varForFn && varForFn.isLookup()) {
+          recordUsedVarName(varForFn.varName)
+        }
+      }
+    }
+  }
+
+  // Walk the reference tree rooted at the given var and record it (and anything
+  // that it references) as being "used".
+  const referencedRefIds = []
+  const recordRefsOfVariable = v => {
+    let refs = v.references.concat(v.initReferences)
+    for (const refId of refs) {
+      if (!referencedRefIds.includes(refId)) {
+        referencedRefIds.push(refId)
+        const refVar = varWithRefId(refId)
+        recordUsedVariable(refVar)
+        recordRefsOfVariable(refVar)
+      }
+    }
+  }
+
+  // Always keep special vars used by SDE
+  recordUsedVarName('_initial_time')
+  recordUsedVarName('_final_time')
+  recordUsedVarName('_saveper')
+  recordUsedVarName('_time_step')
+
+  // Keep all input variables
+  for (const inputVarName of spec.inputVars) {
+    for (const v of varsWithName(inputVarName)) {
+      recordUsedVariable(v)
+    }
+  }
+
+  // Keep all output variables and the variables they depend on
+  for (const outputVarName of spec.outputVars) {
+    // The outputVars can include a raw index, e.g. `_output_var[0]`,
+    // which isn't an actual "ref id", so we'll just derive the
+    // var name by chopping off the index part.
+    const outputVarBaseName = outputVarName.split('[')[0]
+    for (const v of varsWithName(outputVarBaseName)) {
+      recordUsedVariable(v)
+      recordRefsOfVariable(v)
+    }
+  }
+
+  // Filter out unneeded variables so we're left with the minimal set of variables to emit
+  variables = R.filter(v => referencedVarNames.includes(v.varName), variables)
+}
+
 //
 // Analysis helpers
 //
@@ -284,17 +383,6 @@ function addEquation(modelEquation) {
   // Finish the variable by parsing the RHS.
   let equationReader = new EquationReader(v)
   equationReader.read()
-}
-function removeConstRefs() {
-  // Remove references to const, data, and lookup vars since they do not affect evaluation order.
-  function refIsConst(refId) {
-    let v = varWithRefId(refId)
-    return v && (v.varType === 'const' || v.varType === 'data' || v.varType === 'lookup')
-  }
-  R.forEach(v => {
-    v.references = R.reject(refIsConst, v.references)
-    v.initReferences = R.reject(refIsConst, v.initReferences)
-  }, variables)
 }
 //
 // Model API

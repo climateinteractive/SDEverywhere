@@ -1,6 +1,6 @@
 {
   "name": "getdata",
   "externalDatfiles": [
-    "data.dat"
+    "getdata_data.dat"
   ]
 }

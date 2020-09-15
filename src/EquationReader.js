@@ -138,6 +138,17 @@ module.exports = class EquationReader extends ModelReader {
         startCell: args[3]
       }
     } else {
+      // Keep track of all function names referenced in this expression.  Note that lookup
+      // variables are sometimes function-like, so they will be included here.  This will be
+      // used later to decide whether a lookup variable needs to be included in generated code.
+      const canonicalFnName = canonicalName(fn)
+      if (this.var.referencedFunctionNames) {
+        if (!this.var.referencedFunctionNames.includes(canonicalFnName)) {
+          this.var.referencedFunctionNames.push(canonicalFnName)
+        }
+      } else {
+        this.var.referencedFunctionNames = [canonicalFnName]
+      }
       super.visitExprList(ctx)
     }
   }
@@ -173,13 +184,30 @@ module.exports = class EquationReader extends ModelReader {
   visitLookupCall(ctx) {
     // Mark the RHS as non-constant, since it has a lookup.
     this.rhsNonConst = true
+    // Keep track of the lookup variable that is referenced on the RHS.
+    const id = ctx.Id().getText()
+    const lookupVarName = canonicalName(id)
+    if (this.var.referencedLookupVarNames) {
+      this.var.referencedLookupVarNames.push(lookupVarName)
+    } else {
+      this.var.referencedLookupVarNames = [lookupVarName]
+    }
+    // Complete the visit.
     ctx.expr().accept(this)
     super.visitLookupCall(ctx)
   }
   visitLookupArg(ctx) {
     // When a call argument is a lookup, generate a new lookup variable and save the variable name to emit later.
     // TODO consider expanding this to more than one lookup arg per equation
-    this.var.lookupArgVarName = this.generateLookupArg(ctx)
+    const lookupArgVarName = this.generateLookupArg(ctx)
+    this.var.lookupArgVarName = lookupArgVarName
+    // Keep track of all lookup variables that are referenced.  This will be used later to decide
+    // whether a lookup variable needs to be included in generated code.
+    if (this.var.referencedLookupVarNames) {
+      this.var.referencedLookupVarNames.push(lookupArgVarName)
+    } else {
+      this.var.referencedLookupVarNames = [lookupArgVarName]
+    }
   }
   visitSubscriptList(ctx) {
     // When an equation references a non-appy-to-all array, add its subscripts to the array var's refId.
