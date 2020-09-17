@@ -1,0 +1,125 @@
+{UTF-8}
+
+DimA: A1, A2, A3
+  ~~|
+
+DimB: B1, B2, B3
+  ~~|
+
+DimC: C1, C2
+  ~~|
+
+DimD: D1, D2 -> DimC
+  ~~|
+
+DimE: E1, E2
+  ~~|
+
+Simple 1
+  ~~|
+
+Simple 2
+  ~~|
+
+A Values[DimA]
+  ~~|
+
+BC Values[DimB,DimC]
+  ~~|
+
+D Values[DimD]
+  ~~|
+
+E Values[E1]
+  ~~|
+
+E Values[E2]
+  ~~|
+
+Look1((0,0),(1,1),(2,2))
+	~~|
+
+Look2((0,0),(1,1),(2,2))
+	~~|
+
+Input 1 = 10.0
+  ~~|
+
+Input 2 = 20.0
+  ~~|
+
+Input 3 = 30.0
+  ~~|
+
+Simple Totals =
+  Simple 1 + Simple 2
+  ~~|
+
+A Totals =
+  SUM( A Values[DimA!] )
+  ~~|
+
+B1 Totals =
+  SUM( BC Values[B1,DimC!] )
+  ~~|
+
+D Totals =
+  SUM( D Values[DimD!] )
+  ~~|
+
+E1 Values =
+  E Values[E1]
+  ~~|
+
+E2 Values =
+  E Values[E2]
+  ~~|
+
+Input 1 and 2 Total =
+  Input 1 + Input 2
+  ~~|
+
+Input 2 and 3 Total =
+  Input 2 + Input 3
+  ~~|
+
+Look1 Value at t1 =
+  Look1(1)
+  ~~|
+
+Look2 Value at t1 =
+  Look2(1)
+  ~~|
+
+With Look1 at t1 = WITH LOOKUP ( 1, ([(0,0)-(2,2)],(0,0),(1,1),(2,2)) )
+	~~|
+
+With Look2 at t1 = WITH LOOKUP ( 1, ([(0,0)-(2,2)],(0,0),(1,1),(2,2)) )
+	~~|
+
+********************************************************
+	.Control
+********************************************************~
+		Simulation Control Parameters
+	|
+
+FINAL TIME  = 10
+	~	Month
+	~	The final time for the simulation.
+	|
+
+INITIAL TIME  = 0
+	~	Month
+	~	The initial time for the simulation.
+	|
+
+SAVEPER  =
+        TIME STEP
+	~	Month [0,?]
+	~	The frequency with which output is stored.
+	|
+
+TIME STEP  = 1
+	~	Month [0,?]
+	~	The time step for the simulation.
+	|

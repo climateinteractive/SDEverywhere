@@ -1,0 +1,19 @@
+{
+  "name": "prune",
+  "inputVars": [
+    "_input_1",
+    "_input_2"
+  ],
+  "outputVars": [
+    "_time",
+    "_input_1_and_2_total",
+    "_simple_totals",
+    "_a_totals",
+    "_b1_totals",
+    "_look1_value_at_t1",
+    "_with_look1_at_t1"
+  ],
+  "externalDatfiles": [
+    "prune_data.dat"
+  ]
+}
