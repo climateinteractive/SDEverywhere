@@ -18,6 +18,7 @@ const {
 } = require('./Subscript')
 const {
   canonicalName,
+  cartesianProductOf,
   cdbl,
   cFunctionName,
   isArrayFunction,
@@ -26,6 +27,7 @@ const {
   isTrendFunction,
   listConcat,
   newTmpVarName,
+  permutationsOf,
   strToConst,
   vlog
 } = require('./Helpers')
@@ -374,81 +376,64 @@ module.exports = class EquationGen extends ModelReader {
     //  - variable has subscript(s) (C variable with index _thing[0] = _thing[_subscript] from dat file)
     //  - variable has dimension(s) (C variable in for loop, _thing[i] = _thing[_subscript_i] from dat file)
 
-    // TODO: Generalize the code below to make it work for any number of subscripts/dimensions
-
     if (!this.var.subscripts || this.var.subscripts.length === 0) {
       // No subscripts
       const data = this.extData.get(this.var.varName)
       return [newLookup(this.var.varName, this.lhs, data, [])]
     }
 
-    if (this.var.subscripts.length === 1) {
+    if (this.var.subscripts.length === 1 && !isDimension(this.var.subscripts[0])) {
+      // There is exactly one subscript
       const subscript = this.var.subscripts[0]
-      if (isDimension(subscript)) {
-        // There is exactly one dimension
-        const dims = sub(subscript).value
-        if (dims && dims.length > 0) {
-          const result = []
-          for (const dim of dims) {
-            const nameInDat = `${this.var.varName}[${dim}]`
-            const dimIndex = sub(dim).value
-            const lhs = `${this.var.varName}[${dimIndex}]`
-            const data = this.extData.get(nameInDat)
-            result.push(newLookup(nameInDat, lhs, data, [dimIndex]))
-          }
-          return result
-        } else {
-          throw new Error(`ERROR: Data variable ${this.var.varName} missing dimensions for ${subscript}`)
-        }
-      } else {
-        // There is exactly one subscript
-        const nameInDat = `${this.var.varName}[${subscript}]`
-        const data = this.extData.get(nameInDat)
-        const subIndex = sub(subscript).value
-        return [newLookup(nameInDat, this.lhs, data, [subIndex])]
-      }
+      const nameInDat = `${this.var.varName}[${subscript}]`
+      const data = this.extData.get(nameInDat)
+      const subIndex = sub(subscript).value
+      return [newLookup(nameInDat, this.lhs, data, [subIndex])]
     }
 
-    if (this.var.subscripts.length === 2) {
-      const subscriptOuter = this.var.subscripts[0]
-      const subscriptInner = this.var.subscripts[1]
-      if (isDimension(subscriptOuter) && isDimension(subscriptInner)) {
-        // There are two dimensions
-        const dimsOuter = sub(subscriptOuter).value
-        const dimsInner = sub(subscriptInner).value
-        if (dimsOuter && dimsOuter.length > 0 && dimsInner && dimsInner.length > 0) {
-          const result = []
-          for (const dimOuter of dimsOuter) {
-            for (const dimInner of dimsInner) {
-              // Note: It appears that the dat file can have the subscripts in a different order
-              // than what SDE uses when declaring the C array.  If we don't find data for one
-              // order, we try the other.
-              let nameInDat = `${this.var.varName}[${dimInner},${dimOuter}]`
-              let data = this.extData.get(nameInDat)
-              if (!data) {
-                nameInDat = `${this.var.varName}[${dimOuter},${dimInner}]`
-                data = this.extData.get(nameInDat)
-              }
-              const dimIndexOuter = sub(dimOuter).value
-              const dimIndexInner = sub(dimInner).value
-              const lhs = `${this.var.varName}[${dimIndexOuter}][${dimIndexInner}]`
-              const lookup = newLookup(nameInDat, lhs, data, [dimIndexOuter, dimIndexInner])
-              if (lookup) {
-                result.push(lookup)
-              }
-            }
-          }
-          return result
-        } else {
-          throw new Error(`ERROR: Data variable ${this.var.varName} missing dimensions for ${subscript}`)
-        }
-      } else {
-        // There are two subscripts
-        throw new Error(`ERROR: Data variable ${this.var.varName} has 2 subscripts; not yet handled`)
-      }
+    if (!R.all(s => isDimension(s), this.var.subscripts)) {
+      // We don't yet handle the case where there are more than one subscript or a mix of
+      // subscripts and dimensions
+      // TODO: Remove this restriction
+      throw new Error(`ERROR: Data variable ${this.var.varName} has >= 2 subscripts; not yet handled`)
     }
 
-    throw new Error(`ERROR: Data variable ${this.var.varName} has > 2 subscripts; not yet handled`)
+    // At this point, we know that we have one or more dimensions; compute all combinations
+    // of the dimensions that we will iterate over
+    const result = []
+    const allDims = R.map(s => sub(s).value, this.var.subscripts)
+    const dimTuples = cartesianProductOf(allDims)
+    for (const dims of dimTuples) {
+      // Note: It appears that the dat file can have the subscripts in a different order
+      // than what SDE uses when declaring the C array.  If we don't find data for one
+      // order, we try the other possible permutations.
+      const dimNamePermutations = permutationsOf(dims)
+      let nameInDat, data
+      for (const dimNames of dimNamePermutations) {
+        nameInDat = `${this.var.varName}[${dimNames.join(',')}]`
+        data = this.extData.get(nameInDat)
+        if (data) {
+          break
+        }
+      }
+      if (!data) {
+        // We currently treat this as a warning, not an error, since there can sometimes be
+        // datasets that are a sparse matrix, i.e., data is not defined for certain dimensions.
+        // For these cases, the lookup will not be initialized (the Lookup pointer will remain
+        // NULL, and any calls to `LOOKUP` will return `:NA:`.
+        console.error(`WARNING: Data for ${nameInDat} not found in external data sources`)
+        continue
+      }
+
+      const subscriptIndexes = R.map(dim => sub(dim).value, dims)
+      const varSubscripts = R.map(index => `[${index}]`, subscriptIndexes).join('')
+      const lhs = `${this.var.varName}${varSubscripts}`
+      const lookup = newLookup(nameInDat, lhs, data, subscriptIndexes)
+      if (lookup) {
+        result.push(lookup)
+      }
+    }
+    return result
   }
 
   generateDirectDataLookup(sheet, timeRowOrCol, startCell, indexNum) {
@@ -692,6 +677,20 @@ module.exports = class EquationGen extends ModelReader {
     }
   }
   visitVar(ctx) {
+    // Helper function that emits a lookup call if the variable is a data variable,
+    // otherwise emits a normal variable.
+    const emitVar = () => {
+      let v = Model.varWithName(this.currentVarName())
+      if (v && v.varType === 'data') {
+        this.emit(`_LOOKUP(${this.currentVarName()}`)
+        super.visitVar(ctx)
+        this.emit(', _time)')
+      } else {
+        this.emit(this.currentVarName())
+        super.visitVar(ctx)
+      }
+    }
+
     // Push the var name on the stack and then emit it.
     let id = ctx.Id().getText()
     let varName = canonicalName(id)
@@ -713,10 +712,12 @@ module.exports = class EquationGen extends ModelReader {
         let argIndex = this.argIndexForFunctionName('_VECTOR_SELECT')
         if (argIndex === 0) {
           this.vsSelectionArray = this.currentVarName()
+          super.visitVar(ctx)
         } else if (argIndex === 1) {
-          this.emit(this.currentVarName())
+          emitVar()
+        } else {
+          super.visitVar(ctx)
         }
-        super.visitVar(ctx)
       } else if (this.currentFunctionName() === '_VECTOR_ELM_MAP') {
         if (this.argIndexForFunctionName('_VECTOR_ELM_MAP') === 1) {
           this.vemOffset = `(size_t)${this.currentVarName()}`
@@ -733,15 +734,7 @@ module.exports = class EquationGen extends ModelReader {
         this.emit(this.currentVarName())
         super.visitVar(ctx)
       } else {
-        let v = Model.varWithName(this.currentVarName())
-        if (v && v.varType === 'data') {
-          this.emit(`_LOOKUP(${this.currentVarName()}`)
-          super.visitVar(ctx)
-          this.emit(', _time)')
-        } else {
-          this.emit(this.currentVarName())
-          super.visitVar(ctx)
-        }
+        emitVar()
       }
       this.varNames.pop()
     }

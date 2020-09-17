@@ -379,6 +379,45 @@ let matchRegexCaptures = (str, regex) => {
     return []
   }
 }
+
+/**
+ * Return the cartesian product of the given array of arrays.
+ *
+ * For example, if we have an array that lists out two dimensions:
+ *   [ ['a1','a2'], ['b1','b2','b3'] ]
+ * this function will return all the combinations, e.g.:
+ *   [ ['a1', 'b1'], ['a1', 'b2'], ['a1', 'b3'], ['a2', 'b1'], ... ]
+ *
+ * This can be used in place of nested for loops and has the benefit of working
+ * for multi-dimensional inputs.
+ */
+const cartesianProductOf = arr => {
+  // Implementation based on: https://stackoverflow.com/a/36234242
+  return arr.reduce((a, b) => {
+    return a
+      .map(x => b.map(y => x.concat([y])))
+      .reduce((v, w) => v.concat(w), [])
+  }, [[]])
+}
+
+/**
+ * Return all possible permutations of the given array elements.
+ *
+ * For example, if we have an array of numbers:
+ *   [1,2,3]
+ * this function will return all the permutations, e.g.:
+ *   [ [1,2,3], [1,3,2], [2,1,3], [2,3,1], [3,1,2], [3,2,1] ]
+ */
+const permutationsOf = (elems, subperms = [[]]) => {
+  // Implementation based on: https://gist.github.com/CrossEye/f7c2f77f7db7a94af209
+  return R.isEmpty(elems) ?
+    subperms :
+    R.addIndex(R.chain)((elem, idx) => permutationsOf(
+      R.remove(idx, 1, elems),
+      R.map(R.append(elem), subperms)
+    ), elems)
+}
+
 //
 // Debugging helpers
 //
@@ -403,6 +442,7 @@ module.exports = {
   buildDir,
   canonicalName,
   canonicalVensimName,
+  cartesianProductOf,
   cdbl,
   cFunctionName,
   decanonicalize,
@@ -430,6 +470,7 @@ module.exports = {
   newLookupVarName,
   newTmpVarName,
   outputDir,
+  permutationsOf,
   printArray,
   readDat,
   readXlsx,

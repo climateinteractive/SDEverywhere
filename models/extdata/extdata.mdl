@@ -36,6 +36,9 @@ E Values[E1]
 E Values[E2]
   ~~|
 
+EBC Values[DimE,DimB,DimC]
+  ~~|
+
 Simple Totals =
   Simple 1 + Simple 2
   ~~|
@@ -58,6 +61,63 @@ E1 Values =
 
 E2 Values =
   E Values[E2]
+  ~~|
+
+Chosen E = 2
+  ~~|
+
+Chosen B = 3
+  ~~|
+
+Chosen C = 1
+  ~~|
+
+E Selection[DimE] =
+  IF THEN ELSE ( DimE = Chosen E , 1 , 0 )
+  ~~|
+
+B Selection[DimB] =
+  IF THEN ELSE ( DimB = Chosen B , 1 , 0 )
+  ~~|
+
+C Selection[DimC] =
+  IF THEN ELSE ( DimC = Chosen C , 1 , 0 )
+  ~~|
+
+Total EBC for Selected C[DimE,DimB] =
+  VECTOR SELECT (
+    C Selection[DimC!] ,
+    EBC Values[DimE,DimB,DimC!] ,
+    0,
+    VSSUM,
+    VSERRATLEASTONE
+  )
+  ~~|
+
+Total EBC for Selected BC[DimE] =
+  VECTOR SELECT (
+    B Selection[DimB!] ,
+    Total EBC for Selected C[DimE,DimB!] ,
+    0,
+    VSSUM,
+    VSERRATLEASTONE
+  )
+  ~~|
+
+Total EBC =
+  VECTOR SELECT (
+    E Selection[DimE!] ,
+    Total EBC for Selected BC[DimE!] ,
+    0,
+    VSSUM,
+    VSERRATLEASTONE
+  )
+  ~~|
+
+VSERRATLEASTONE = 1
+  ~~|
+
+VSSUM = 0
   ~~|
 
 ********************************************************
