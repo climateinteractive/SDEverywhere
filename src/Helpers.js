@@ -432,8 +432,7 @@ let vlog = (title, value, depth = 1) => {
   }
 }
 let abend = error => {
-  console.error(error.message)
-  console.trace()
+  console.error(error)
   process.exit(1)
 }
 module.exports = {

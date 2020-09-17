@@ -7,12 +7,12 @@ const { asort, lines, strlist, abend, mapIndexed } = require('./Helpers')
 
 let codeGenerator = (parseTree, opts) => {
   const { spec, operation, extData, directData } = opts
-  // Set true when in the init section, false in the eval section.
-  let initMode = false
+  // Set to 'decl', 'init-lookups', 'eval', etc depending on the section being generated.
+  let mode = ''
   // Set true to output all variables when there is no model run spec.
   let outputAllVars = spec.outputVars && spec.outputVars.length > 0 ? false : true
   // Function to generate a section of the code
-  let generateSection = R.map(v => new EquationGen(v, extData, directData, initMode).generate())
+  let generateSection = R.map(v => new EquationGen(v, extData, directData, mode).generate())
   let section = R.pipe(generateSection, R.flatten, lines)
   function generate() {
     // Read variables and subscript ranges from the model parse tree.
@@ -29,7 +29,9 @@ let codeGenerator = (parseTree, opts) => {
       } else if (operation === 'generateC') {
         // Generate code for each variable in the proper order.
         let code = emitDeclCode()
-        code += emitInitCode()
+        code += emitInitLookupsCode()
+        code += emitInitConstantsCode()
+        code += emitInitLevelsCode()
         code += emitEvalCode()
         code += emitIOCode()
         return code
@@ -45,7 +47,7 @@ let codeGenerator = (parseTree, opts) => {
   // Declaration section
   //
   function emitDeclCode() {
-    initMode = false
+    mode = 'decl'
     return `#include "sde.h"
 
 // Model variables
@@ -63,14 +65,15 @@ ${dimensionMappingsSection()}
 // Lookup data arrays
 ${section(Model.lookupVars())}
 ${section(Model.dataVars())}
+
 `
   }
 
   //
   // Initialization section
   //
-  function emitInitCode() {
-    initMode = true
+  function emitInitLookupsCode() {
+    mode = 'init-lookups'
     return `// Internal state
 bool lookups_initialized = false;
 
@@ -82,12 +85,22 @@ void initLookups() {
     lookups_initialized = true;
   }
 }
+`
+  }
 
+  function emitInitConstantsCode() {
+    mode = 'init-constants'
+    return `
 ${chunkedFunctions('initConstants', Model.constVars(),
 '  // Initialize constants.',
 '  initLookups();'
 )}
+`
+  }
 
+  function emitInitLevelsCode() {
+    mode = 'init-levels'
+    return `
 ${chunkedFunctions('initLevels', Model.initVars(), `
   // Initialize variables with initialization values, such as levels, and the variables they depend on.
   _time = _initial_time;`
@@ -99,7 +112,7 @@ ${chunkedFunctions('initLevels', Model.initVars(), `
   // Evaluation section
   //
   function emitEvalCode() {
-    initMode = false
+    mode = 'eval'
 
     return `
 ${chunkedFunctions('evalAux', Model.auxVars(),
@@ -118,7 +131,7 @@ ${chunkedFunctions('evalLevels', Model.levelVars(),
   function emitIOCode() {
     let headerVars = outputAllVars ? expandedVarNames(true) : spec.outputVars
     let outputVars = outputAllVars ? expandedVarNames() : spec.outputVars
-    initMode = false
+    mode = 'io'
     return `void setInputs(const char* inputData) {
 ${inputSection()}}
 const char* getHeader() {

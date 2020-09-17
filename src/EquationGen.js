@@ -33,7 +33,7 @@ const {
 } = require('./Helpers')
 
 module.exports = class EquationGen extends ModelReader {
-  constructor(variable, extData, directData, initMode = false) {
+  constructor(variable, extData, directData, mode) {
     super()
     // the variable we are generating code for
     this.var = variable
@@ -41,8 +41,8 @@ module.exports = class EquationGen extends ModelReader {
     this.extData = extData
     // direct data workbooks from Excel files
     this.directData = directData
-    // initMode is true for vars with separate init-time code generation
-    this.initMode = initMode
+    // set to 'decl', 'init-lookups', 'eval', etc depending on the section being generated
+    this.mode = mode
     // Maps of LHS subscript families to loop index vars for lookup on the RHS
     this.loopIndexVars = new LoopIndexVars(['i', 'j', 'k'])
     this.arrayIndexVars = new LoopIndexVars(['v', 'w'])
@@ -58,6 +58,9 @@ module.exports = class EquationGen extends ModelReader {
     this.subscriptLoopOpeningCode = []
     // subscript loop closing channel
     this.subscriptLoopClosingCode = []
+    // the name of the current array function (might differ from `currentFunctionName`
+    // in the case where an expression is passed to an array function such as `SUM`)
+    this.currentArrayFunctionName = ''
     // array function code buffer
     this.arrayFunctionCode = ''
     // the marked dimensions for an array function
@@ -134,7 +137,7 @@ module.exports = class EquationGen extends ModelReader {
     return canonicalName(this.currentFunctionName()).slice(1)
   }
   emit(text) {
-    if (isArrayFunction(this.currentFunctionName())) {
+    if (this.currentArrayFunctionName) {
       // Emit code to the array function code buffer if we are in an array function.
       this.arrayFunctionCode += text
     } else {
@@ -307,24 +310,26 @@ module.exports = class EquationGen extends ModelReader {
     // Construct the name of the data array, which is based on the associated lookup var name,
     // with any subscripts tacked on the end.
     const dataName = this.var.varName + '_data_' + this.lookupDataNameGen(this.var.subscripts)
-    if (this.initMode) {
-      // In init mode, create the `Lookup`, passing in a pointer to the static data array declared earlier.
-      // TODO: Make use of the lookup range
-      return [`  ${this.lhs} = __new_lookup(${this.var.points.length}, /*copy=*/false, ${dataName});`]
-    } else {
+    if (this.mode === 'decl') {
       // In decl mode, declare a static data array that will be used to create the associated `Lookup`
       // at init time. Using static arrays is better for code size, helps us avoid creating a copy of
       // the data in memory, and seems to perform much better when compiled to wasm when compared to the
       // previous approach that used varargs + copying, especially on constrained (e.g. iOS) devices.
       let data = R.reduce((a, p) => listConcat(a, `${cdbl(p[0])}, ${cdbl(p[1])}`, true), '', this.var.points)
       return [`double ${dataName}[${this.var.points.length * 2}] = { ${data} };`]
+    } else if (this.mode === 'init-lookups') {
+      // In init mode, create the `Lookup`, passing in a pointer to the static data array declared earlier.
+      // TODO: Make use of the lookup range
+      return [`  ${this.lhs} = __new_lookup(${this.var.points.length}, /*copy=*/false, ${dataName});`]
+    } else {
+      return []
     }
   }
 
   generateDirectDataInit() {
     // If direct data exists for this variable, copy it from the workbook into one or more lookups.
     let result = []
-    if (this.initMode) {
+    if (this.mode === 'init-lookups') {
       let { tag, sheetName, timeRowOrCol, startCell } = this.var.directDataArgs
       let workbook = this.directData.get(tag)
       if (workbook) {
@@ -352,7 +357,7 @@ module.exports = class EquationGen extends ModelReader {
     // If there is external data for this variable, copy it from an external file to a lookup.
     // Just like in generateLookup(), we declare static arrays to hold the data points in the first pass
     // ("decl" mode), then initialize each `Lookup` using that data in the second pass ("init" mode).
-    const initMode = this.initMode
+    const mode = this.mode
 
     const newLookup = (name, lhs, data, subscriptIndexes) => {
       if (!data) {
@@ -360,14 +365,16 @@ module.exports = class EquationGen extends ModelReader {
       }
 
       const dataName = this.var.varName + '_data_' + R.map(i => `_${i}_`, subscriptIndexes).join('')
-      if (initMode) {
-        // In init mode, create the `Lookup`, passing in a pointer to the static data array declared in decl mode.
-        return `  ${lhs} = __new_lookup(${data.size}, /*copy=*/false, ${dataName});`
-      } else {
+      if (mode === 'decl') {
         // In decl mode, declare a static data array that will be used to create the associated `Lookup`
         // at init time. See `generateLookup` for more details.
         const points = R.reduce((a, p) => listConcat(a, `${cdbl(p[0])}, ${cdbl(p[1])}`, true), '', Array.from(data.entries()))
         return `double ${dataName}[${data.size * 2}] = { ${points} };`
+      } else if (mode === 'init-lookups') {
+        // In init mode, create the `Lookup`, passing in a pointer to the static data array declared in decl mode.
+        return `  ${lhs} = __new_lookup(${data.size}, /*copy=*/false, ${dataName});`
+      } else {
+        return undefined
       }
     }
 
@@ -421,7 +428,9 @@ module.exports = class EquationGen extends ModelReader {
         // datasets that are a sparse matrix, i.e., data is not defined for certain dimensions.
         // For these cases, the lookup will not be initialized (the Lookup pointer will remain
         // NULL, and any calls to `LOOKUP` will return `:NA:`.
-        console.error(`WARNING: Data for ${nameInDat} not found in external data sources`)
+        if (mode === 'decl') {
+          console.error(`WARNING: Data for ${nameInDat} not found in external data sources`)
+        }
         continue
       }
 
@@ -485,7 +494,7 @@ module.exports = class EquationGen extends ModelReader {
     let fn = this.currentFunctionName()
     // Do not emit the function calls in init mode, only the init expression.
     // Do emit function calls inside an init expression (with call stack length > 1).
-    if (this.var.hasInitValue && this.initMode && this.callStack.length <= 1) {
+    if (this.var.hasInitValue && this.mode.startsWith('init') && this.callStack.length <= 1) {
       super.visitCall(ctx)
       this.callStack.pop()
     } else if (fn === '_ELMCOUNT') {
@@ -493,6 +502,18 @@ module.exports = class EquationGen extends ModelReader {
       super.visitCall(ctx)
       this.callStack.pop()
     } else if (isArrayFunction(fn)) {
+      // Capture the name of this array function (e.g. `SUM`).  This should be used
+      // to determine if a subscripted variable is used inside of an expression
+      // passed to an array function, e.g.:
+      //   SUM ( Variable[Dim] )
+      // or
+      //   SUM ( IF THEN ELSE ( Variable[Dim], ... ) )
+      // In the first example, when `Variable` is evaluated, both `currentFunctionName`
+      // and `currentArrayFunctionName` will be `SUM`.  But in the second case, when
+      // `Variable` is evaluated, `currentFunctionName` will be `IF THEN ELSE` but
+      // `currentArrayFunctionName` will be `SUM`.  A non-empty `currentArrayFunctionName`
+      // is an indication that a loop needs to be generated.
+      this.currentArrayFunctionName = fn
       // Generate a loop that evaluates array functions inline.
       // Collect information and generate the argument expression into the array function code buffer.
       super.visitCall(ctx)
@@ -545,6 +566,7 @@ module.exports = class EquationGen extends ModelReader {
       // Reset state variables that were set down in the parse tree.
       this.markedDims = []
       this.arrayFunctionCode = ''
+      this.currentArrayFunctionName = ''
       // Emit the temporary variable into the formula expression in place of the SUM call.
       if (fn === '_VECTOR_SELECT') {
         this.emit(`${condVar} ? ${tmpVar} : ${this.vsNullValue}`)
@@ -614,7 +636,7 @@ module.exports = class EquationGen extends ModelReader {
     let fn = this.currentFunctionName()
     // Split level functions into init and eval expressions.
     if (fn === '_INTEG' || fn === '_SAMPLE_IF_TRUE' || fn === '_ACTIVE_INITIAL') {
-      if (this.initMode) {
+      if (this.mode.startsWith('init')) {
         // Get the index of the argument holding the initial value.
         let i = 0
         if (fn === '_INTEG' || fn === '_ACTIVE_INITIAL') {
@@ -768,10 +790,11 @@ module.exports = class EquationGen extends ModelReader {
         this.markedDims = R.uniq(R.concat(this.markedDims, dims))
       }
       let fn = this.currentFunctionName()
-      if (fn === '_SUM' || fn === '_VMIN' || fn === '_VMAX') {
+      let arrayFn = this.currentArrayFunctionName
+      if (arrayFn === '_SUM' || arrayFn === '_VMIN' || arrayFn === '_VMAX') {
         mergeMarkedDims()
         this.emit(this.rhsSubscriptGen(subscripts))
-      } else if (fn === '_VECTOR_SELECT') {
+      } else if (arrayFn === '_VECTOR_SELECT') {
         let argIndex = this.argIndexForFunctionName('_VECTOR_SELECT')
         if (argIndex === 0) {
           mergeMarkedDims()

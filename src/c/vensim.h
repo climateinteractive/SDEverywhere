@@ -57,11 +57,11 @@ Lookup* __new_lookup(size_t size, bool copy, double* data);
 void __delete_lookup(Lookup* lookup);
 void __print_lookup(Lookup* lookup);
 
-double __lookup(Lookup* lookup, double* data, double input, LookupMode mode);
-#define _LOOKUP(lookup, x) __lookup(lookup, (lookup)->data, x, Interpolate)
-#define _LOOKUP_FORWARD(lookup, x) __lookup(lookup, (lookup)->data, x, Forward)
-#define _LOOKUP_BACKWARD(lookup, x) __lookup(lookup, (lookup)->data, x, Backward)
-#define _WITH_LOOKUP(x, lookup) __lookup(lookup, (lookup)->data, x, Interpolate)
+double __lookup(Lookup *lookup, double input, bool use_inverted_data, LookupMode mode);
+#define _LOOKUP(lookup, x) __lookup(lookup, x, false, Interpolate)
+#define _LOOKUP_FORWARD(lookup, x) __lookup(lookup, x, false, Forward)
+#define _LOOKUP_BACKWARD(lookup, x) __lookup(lookup, x, false, Backward)
+#define _WITH_LOOKUP(x, lookup) __lookup(lookup, x, false, Interpolate)
 double _LOOKUP_INVERT(Lookup* lookup, double y);
 
 double __get_data_between_times(double *data, size_t n, double input, LookupMode mode);
