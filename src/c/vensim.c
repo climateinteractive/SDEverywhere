@@ -97,16 +97,21 @@ void __print_lookup(Lookup* lookup) {
 	}
 }
 
-double __lookup(Lookup* lookup, double* data, double input, LookupMode mode) {
+double __lookup(Lookup* lookup, double input, bool use_inverted_data, LookupMode mode) {
 	// Interpolate the y value from an array of (x,y) pairs.
 	// NOTE: The x values are assumed to be monotonically increasing.
 
+	if (lookup == NULL) {
+		return _NA_;
+	}
+
+	const double *data = use_inverted_data ? lookup->inverted_data : lookup->data;
 	const size_t max = (lookup->n) * 2;
 
 	// Use the cached values for improved lookup performance, except in the case
 	// of `LOOKUP INVERT` (since it may not be accurate if calls flip back and forth
 	// between inverted and non-inverted data).
-	int use_cached_values = data != lookup->inverted_data;
+	bool use_cached_values = !use_inverted_data;
 	size_t start_index;
 	if (use_cached_values && input >= lookup->last_input) {
 		start_index = lookup->last_hit_index;
@@ -210,13 +215,13 @@ double __get_data_between_times(double *data, size_t n, double input, LookupMode
       // mode of 0 (interpolate), but only when the input values are integral (whole numbers).  If the
       // input value is fractional, Vensim produces bizarre/unexpected interpolated values.
       // TODO: For now we print a warning, but ideally we would match the Vensim results exactly.
-      static int warned = 0;
+      static bool warned = false;
       if (input - floor(input) > 0) {
         if (!warned) {
           fprintf(stderr, "WARNING: GET DATA BETWEEN TIMES was called with an input value (%f) that has a fractional part.\n", input);
           fprintf(stderr, "When mode is 0 (interpolate) and the input value is not a whole number, Vensim produces unexpected\n");
           fprintf(stderr, "results that may differ from those produced by SDEverywhere.\n");
-          warned = 1;
+          warned = true;
         }
       }
 
@@ -249,7 +254,7 @@ double _LOOKUP_INVERT(Lookup* lookup, double y) {
 			pLookup += 2;
 		}
 	}
-	return __lookup(lookup, lookup->inverted_data, y, Interpolate);
+	return __lookup(lookup, y, true, Interpolate);
 }
 
 typedef struct {
