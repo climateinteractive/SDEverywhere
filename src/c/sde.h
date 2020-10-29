@@ -70,6 +70,7 @@ EXTERN double _saveper;
 
 // API
 char* run_model(const char* inputs);
+void runModelWithBuffers(double* inputs, double* outputs);
 void run(void);
 void startOutput(void);
 void outputVar(double value);
@@ -78,7 +79,8 @@ void finish(void);
 // Functions implemented by the model
 void initConstants(void);
 void initLevels(void);
-void setInputs(const char* json);
+void setInputs(const char* inputData);
+void setInputsFromBuffer(double *inputData);
 void evalAux(void);
 void evalLevels(void);
 void storeOutputData(void);
