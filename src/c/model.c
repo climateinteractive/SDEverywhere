@@ -9,9 +9,18 @@
 
 // The special _time variable is not included in .mdl files.
 double _time;
-// Output data buffer
-char* outputData;
+
+// Output data buffer used by `run_model`
+char* outputData = NULL;
 size_t outputIndex = 0;
+
+// Output data buffer used by `runModelWithBuffers`
+double* outputBuffer = NULL;
+size_t outputVarIndex = 0;
+size_t numSavePoints = 0;
+size_t savePointIndex = 0;
+
+int step = 0;
 
 char* run_model(const char* inputs) {
   // run_model does everything necessary to run the model with the given inputs.
@@ -26,21 +35,60 @@ char* run_model(const char* inputs) {
   return outputData;
 }
 
+/**
+ * Run the model, reading inputs from the given `inputs` buffer, and writing outputs
+ * to the given `outputs` buffer.
+ *
+ * This function performs the same steps as the original `run_model` function,
+ * except that it uses the provided pre-allocated buffers.
+ *
+ * The `inputs` buffer is assumed to have one double value for each input variable;
+ * they must be in exactly the same order as the variables are listed in the spec file.
+ *
+ * After each step of the run, the `outputs` buffer will be updated with the output
+ * variables.  The buffer needs to be at least as large as:
+ *   `number of output variables` * `number of save points`
+ * where `number of save points` is typically one point for each year inclusive of
+ * the start and end times.
+ *
+ * The outputs will be stored in the same order as the outputs are defined in the
+ * spec file, with one "row" for each variable.  For example, the first value in
+ * the buffer will be the output value at t0 for the first output variable, followed
+ * by the output value for that variable at t1, and so on.  After the value for tN
+ * (where tN is the last time in the range), the second variable outputs will begin,
+ * and so on.
+ */
+void runModelWithBuffers(double* inputs, double* outputs) {
+  outputBuffer = outputs;
+  initConstants();
+  setInputsFromBuffer(inputs);
+  initLevels();
+  run();
+  outputBuffer = NULL;
+}
+
 void run() {
   #ifdef PERF_TEST
     clock_gettime(CLOCK_MONOTONIC, &startTime);
   #endif
+
   // Restart fresh output for all steps in this run.
-  startOutput();
+  numSavePoints = (size_t)(round((_final_time - _initial_time) / _saveper)) + 1;
+  savePointIndex = 0;
+  outputIndex = 0;
+
   // Initialize time with the required INITIAL TIME control variable.
   _time = _initial_time;
+
   // Set up a run loop using a fixed number of time steps.
-  int step = 0;
   int lastStep = (int)(round((_final_time - _initial_time) / _time_step));
+  step = 0;
   while (step <= lastStep) {
     evalAux();
     if (fmod(_time, _saveper) < 1e-6) {
+      outputVarIndex = 0;
       storeOutputData();
+      savePointIndex++;
     }
     if (step == lastStep) break;
     // Propagate levels for the next time step.
@@ -50,22 +98,26 @@ void run() {
   }
 }
 
-void startOutput() {
-  outputIndex = 0;
-}
-
 void outputVar(double value) {
-  // Allocate an output buffer for all output steps as a single block.
-  // Add one character for a null terminator.
-  if (outputData == NULL) {
-    int numOutputSteps = (int)(round((_final_time - _initial_time) / _saveper)) + 1;
-    size_t size = numOutputSteps * (OUTPUT_STRING_LEN * numOutputs) + 1;
-    // fprintf(stderr, "output data size = %zu\n", size);
-    outputData = (char*)malloc(size);
+  if (outputBuffer != NULL) {
+    // Write each value into the preallocated buffer; each variable has a "row" that
+    // contains `numSavePoints` values, one value for each save point
+    double *outputPtr = outputBuffer + (outputVarIndex * numSavePoints) + savePointIndex;
+    *outputPtr = value;
+    outputVarIndex++;
+  } else {
+    // Allocate an output buffer for all output steps as a single block.
+    // Add one character for a null terminator.
+    if (outputData == NULL) {
+      int numOutputSteps = (int)(round((_final_time - _initial_time) / _saveper)) + 1;
+      size_t size = numOutputSteps * (OUTPUT_STRING_LEN * numOutputs) + 1;
+      // fprintf(stderr, "output data size = %zu\n", size);
+      outputData = (char*)malloc(size);
+    }
+    // Format the value as a string in the output data buffer.
+    int numChars = snprintf(outputData + outputIndex, OUTPUT_STRING_LEN+1, "%g\t", value);
+    outputIndex += numChars;
   }
-  // Format the value as a string in the output data buffer.
-  int numChars = snprintf(outputData + outputIndex, OUTPUT_STRING_LEN+1, "%g\t", value);
-  outputIndex += numChars;
 }
 
 void finish() {

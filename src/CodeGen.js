@@ -132,8 +132,10 @@ ${chunkedFunctions('evalLevels', Model.levelVars(),
     let headerVars = outputAllVars ? expandedVarNames(true) : spec.outputVars
     let outputVars = outputAllVars ? expandedVarNames() : spec.outputVars
     mode = 'io'
-    return `void setInputs(const char* inputData) {
-${inputSection()}}
+    return `void setInputs(const char* inputData) {${inputsFromStringImpl()}}
+
+void setInputsFromBuffer(double* inputData) {${inputsFromBufferImpl()}}
+
 const char* getHeader() {
   return "${R.map(varName => headerTitle(varName), headerVars).join('\\t')}";
 }
@@ -285,13 +287,14 @@ ${postStep}
     let section = R.pipe(code, lines)
     return section(varNames)
   }
-  function inputSection() {
+  function inputsFromStringImpl() {
     // If there was an I/O spec file, then emit code to parse input variables.
     // The user can replace this with a parser for a different serialization format.
     let inputVars = ''
     if (spec.inputVars && spec.inputVars.length > 0) {
       let inputVarPtrs = R.reduce((a, inputVar) => R.concat(a, `    &${inputVar},\n`), '', spec.inputVars)
-      inputVars = `  static double* inputVarPtrs[] = {\n${inputVarPtrs}  };
+      inputVars = `
+  static double* inputVarPtrs[] = {\n${inputVarPtrs}  };
   char* inputs = (char*)inputData;
   char* token = strtok(inputs, " ");
   while (token) {
@@ -305,6 +308,17 @@ ${postStep}
     token = strtok(NULL, " ");
   }
 `
+    }
+    return inputVars
+  }
+  function inputsFromBufferImpl() {
+    let inputVars = ''
+    if (spec.inputVars && spec.inputVars.length > 0) {
+      inputVars += '\n'
+      for (let i = 0; i < spec.inputVars.length; i++) {
+        const inputVar = spec.inputVars[i]
+        inputVars += `  ${inputVar} = inputData[${i}];\n`
+      }
     }
     return inputVars
   }
