@@ -2,7 +2,6 @@ const fs = require('fs-extra')
 const path = require('path')
 const sh = require('shelljs')
 const antlr4 = require('antlr4')
-const browserify = require('browserify')
 const { ModelLexer, ModelParser } = require('antlr4-vensim')
 const { codeGenerator } = require('./CodeGen')
 const { preprocessModel } = require('./Preprocessor')
@@ -237,6 +236,7 @@ let customizeApp = (modelDirname, webDirname) => {
   }
 }
 let packApp = webDirname => {
+  const browserify = require('browserify')
   // Concatenate JS source files for the browser.
   let sourcePathname = path.join(webDirname, 'index.js')
   let minPathname = path.join(webDirname, 'index.min.js')
