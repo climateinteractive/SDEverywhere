@@ -1,6 +1,6 @@
 {
   "name": "sdeverywhere",
-  "version": "0.5.3",
+  "version": "0.6.0",
   "description": "SDEverywhere translates System Dynamics models from Vensim to C and WebAssembly",
   "homepage": "https://sdeverywhere.org",
   "author": "Climate Interactive",
