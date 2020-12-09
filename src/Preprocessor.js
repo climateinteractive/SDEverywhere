@@ -117,13 +117,49 @@ let preprocessModel = (mdlFilename, spec, profile = 'genc', writeFiles = false) 
   // Emit the encoding line and optional insertions.
   if (opts.emitEncoding) {
     B.emitLine(ENCODING, 'pp')
+    B.emitLine('', 'pp')
   }
   if (insertions) {
     B.emitLine(insertions, 'pp')
   }
-  // Emit formula lines without comment contents.
+
+  // Split into separate equations
   eqns = splitEquations(mdl)
+
+  // Extract the LHS variable name (minus any double quotes) for each equation,
+  // which we will use to sort the equations alphabetically
+  const unsortedEqns = []
   for (let eqn of eqns) {
+    // Ignore the encoding
+    eqn = eqn.replace('{UTF-8}', '')
+    // Remove ":RAW:" flag
+    eqn = eqn.replace(/:RAW:/, '')
+    // Remove whitespace
+    eqn = eqn.trim()
+    if (eqn.length > 0) {
+      // Split on newlines so that we look only at the first line of each equation
+      let key = eqn.split(/\n/)[0]
+      // Ignore double quotes
+      key = key.replace(/\"/, '')
+      // Ignore any whitespace that remains
+      key = key.trim()
+      // Ignore case
+      key.toLowerCase()
+      unsortedEqns.push({
+        key,
+        eqn
+      })
+    }
+  }
+
+  // Sort the equations alphabetically by LHS variable name
+  const sortedEqns = unsortedEqns.sort((a, b) => {
+    return (a.key < b.key) ? -1 : (a.key > b.key) ? 1 : 0;
+  })
+
+  // Emit formula lines without comment contents.
+  for (const elem of sortedEqns) {
+    const eqn = elem.eqn
     let iComment = eqn.indexOf('~')
     if (iComment >= 0) {
       let formula = B.lines(eqn.substr(0, iComment))
@@ -142,7 +178,7 @@ let preprocessModel = (mdlFilename, spec, profile = 'genc', writeFiles = false) 
         }
       }
       if (opts.emitCommentMarkers) {
-        emitPP('~~|')
+        B.emitLine('~~|\n', 'pp')
       } else {
         B.emitLine('', 'pp')
       }
