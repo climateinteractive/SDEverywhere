@@ -19,14 +19,16 @@ function test {
   # Clean up before
   $SDE clean --modeldir $MODEL_DIR
 
-  # Test
-  SPEC_FILE=$MODEL_DIR/${MODEL}_spec.json
-  if [[ -f $SPEC_FILE ]]; then
-    TEST_ARGS="--spec $SPEC_FILE"
-  else
-    TEST_ARGS=
+  # Test (only if there is a dat file to compare against)
+  if [[ -f $MODEL_DIR/${MODEL}.dat ]]; then
+    SPEC_FILE=$MODEL_DIR/${MODEL}_spec.json
+    if [[ -f $SPEC_FILE ]]; then
+      TEST_ARGS="--spec $SPEC_FILE"
+    else
+      TEST_ARGS=
+    fi
+    $SDE test $TEST_ARGS -p 1e-4 $MODEL_DIR/$MODEL
   fi
-  $SDE test $TEST_ARGS -p 1e-4 $MODEL_DIR/$MODEL
 
   # Run additional script to validate output
   VALIDATE_SCRIPT=$MODEL_DIR/${MODEL}_check.sh

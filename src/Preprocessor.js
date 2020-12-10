@@ -126,59 +126,76 @@ let preprocessModel = (mdlFilename, spec, profile = 'genc', writeFiles = false) 
   // Split into separate equations
   eqns = splitEquations(mdl)
 
-  // Extract the LHS variable name (minus any double quotes) for each equation,
-  // which we will use to sort the equations alphabetically
-  const unsortedEqns = []
+  // Extract the LHS variable name for each equation, which we will use to sort
+  // the equations alphabetically
+  const unsorted = []
   for (let eqn of eqns) {
     // Ignore the encoding
     eqn = eqn.replace('{UTF-8}', '')
-    // Remove ":RAW:" flag
-    eqn = eqn.replace(/:RAW:/, '')
+    // Remove ":RAW:" flag; it is not needed by SDE and causes problems if left in
+    eqn = eqn.replace(/:RAW:/g, '')
     // Remove whitespace
     eqn = eqn.trim()
     if (eqn.length > 0) {
-      // Split on newlines so that we look only at the first line of each equation
-      let key = eqn.split(/\n/)[0]
+      // Split on newlines so that we look only at the first line of each declaration
+      let line = eqn.split(/\n/)[0].trim()
+      // If the line contains an '=', treat this as an equation, otherwise it is a
+      // basic declaration
+      let kind
+      let key = line
+      if (key.includes('=')) {
+        kind = 'eqn'
+        key = key.split('=')[0].trim()
+      } else {
+        kind = 'decl'
+      }
       // Ignore double quotes
-      key = key.replace(/\"/, '')
+      key = key.replace(/\"/g, '')
       // Ignore any whitespace that remains
       key = key.trim()
       // Ignore case
-      key.toLowerCase()
-      unsortedEqns.push({
+      key = key.toLowerCase()
+      unsorted.push({
         key,
+        kind,
         eqn
       })
     }
   }
 
   // Sort the equations alphabetically by LHS variable name
-  const sortedEqns = unsortedEqns.sort((a, b) => {
+  const sorted = unsorted.sort((a, b) => {
     return (a.key < b.key) ? -1 : (a.key > b.key) ? 1 : 0;
   })
 
   // Emit formula lines without comment contents.
-  for (const elem of sortedEqns) {
+  for (const elem of sorted) {
     const eqn = elem.eqn
     let iComment = eqn.indexOf('~')
     if (iComment >= 0) {
       let formula = B.lines(eqn.substr(0, iComment))
       for (let i = 0; i < formula.length; i++) {
+        let line = formula[i]
+        // Remove trailing whitespace
+        line = line.replace(/\s+$/, '')
         if (i === 0) {
-          if (formula[i] !== ENCODING) {
-            emitPP(formula[i])
+          if (line !== ENCODING) {
+            emitPP(line)
           }
         } else {
           if (opts.joinFormulaLines) {
-            emitPP(formula[i].replace(/^\t+/, ''))
+            // Remove any leading tabs
+            emitPP(line.replace(/^\t+/, ''))
           } else {
-            B.emitLine('', 'pp')
-            emitPP(formula[i])
+            // Only emit the line if it has non-whitespace characters
+            if (line.length > 0) {
+              emitPP(`\n${line}`)
+            }
           }
         }
       }
       if (opts.emitCommentMarkers) {
-        B.emitLine('~~|\n', 'pp')
+        B.emitLine('\n\t~~|\n', 'pp')
       } else {
         B.emitLine('', 'pp')
       }
