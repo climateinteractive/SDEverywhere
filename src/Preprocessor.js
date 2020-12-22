@@ -3,7 +3,7 @@ const R = require('ramda')
 const B = require('bufx')
 const { splitEquations } = require('./Helpers')
 
-let preprocessModel = (mdlFilename, spec, profile = 'genc', writeFiles = false) => {
+let preprocessModel = (mdlFilename, spec, profile = 'genc', writeFiles = false, outDecls = []) => {
   const MACROS_FILENAME = 'macros.txt'
   const REMOVALS_FILENAME = 'removals.txt'
   const INSERTIONS_FILENAME = 'mdl-edits.txt'
@@ -128,7 +128,7 @@ let preprocessModel = (mdlFilename, spec, profile = 'genc', writeFiles = false) 
 
   // Extract the LHS variable name for each equation, which we will use to sort
   // the equations alphabetically
-  const unsorted = []
+  const unsorted = outDecls
   for (let eqn of eqns) {
     // Ignore the encoding
     eqn = eqn.replace('{UTF-8}', '')
@@ -139,18 +139,28 @@ let preprocessModel = (mdlFilename, spec, profile = 'genc', writeFiles = false) 
     if (eqn.length > 0) {
       // Split on newlines so that we look only at the first line of each declaration
       let line = eqn.split(/\n/)[0].trim()
-      // If the line contains an '=', treat this as an equation, otherwise it is a
-      // basic declaration
       let kind
       let key = line
+      // Strip the ":INTERPOLATE:"; it should not be included in the key
+      key = key.replace(/:INTERPOLATE:/g, '')
       if (key.includes('=')) {
+        // The line contains an '='; treat this as an equation
         kind = 'eqn'
         key = key.split('=')[0].trim()
+      } else if (key.includes(':')) {
+        // The line contains a ':'; treat this as an subscript declaration
+        kind = 'sub'
+        key = key.split(':')[0].trim()
       } else {
+        // Treat this as a general declaration
         kind = 'decl'
       }
       // Ignore double quotes
       key = key.replace(/\"/g, '')
+      // Ignore the comments if this is a one-line declaration
+      key = key.split('~')[0]
+      // Ignore the lookup data if it starts on the first line
+      key = key.split('(')[0]
       // Ignore any whitespace that remains
       key = key.trim()
       // Ignore case
@@ -158,7 +168,7 @@ let preprocessModel = (mdlFilename, spec, profile = 'genc', writeFiles = false) 
       unsorted.push({
         key,
         kind,
-        eqn
+        originalDecl: eqn
       })
     }
   }
@@ -170,9 +180,11 @@ let preprocessModel = (mdlFilename, spec, profile = 'genc', writeFiles = false) 
 
   // Emit formula lines without comment contents.
   for (const elem of sorted) {
-    const eqn = elem.eqn
+    const eqn = elem.originalDecl
+    let processedDecl = eqn
     let iComment = eqn.indexOf('~')
     if (iComment >= 0) {
+      processedDecl = ''
       let formula = B.lines(eqn.substr(0, iComment))
       for (let i = 0; i < formula.length; i++) {
         let line = formula[i]
@@ -181,25 +193,33 @@ let preprocessModel = (mdlFilename, spec, profile = 'genc', writeFiles = false) 
         if (i === 0) {
           if (line !== ENCODING) {
             emitPP(line)
+            processedDecl += line
           }
         } else {
           if (opts.joinFormulaLines) {
             // Remove any leading tabs
-            emitPP(line.replace(/^\t+/, ''))
+            const lineWithoutLeadingTabs = line.replace(/^\t+/, '')
+            emitPP(lineWithoutLeadingTabs)
+            processedDecl += lineWithoutLeadingTabs
           } else {
             // Only emit the line if it has non-whitespace characters
             if (line.length > 0) {
               emitPP(`\n${line}`)
+              processedDecl += `\n${line}`
             }
           }
         }
       }
+      // Emit the last line
       if (opts.emitCommentMarkers) {
-        B.emitLine('\n\t~~|\n', 'pp')
+        const declEnd = '\n\t~~|'
+        B.emitLine(`${declEnd}\n`, 'pp')
+        processedDecl += declEnd
       } else {
         B.emitLine('', 'pp')
       }
     }
+    elem.processedDecl = processedDecl
   }
   getMdlFromPPBuf()
 
