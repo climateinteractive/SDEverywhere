@@ -184,12 +184,13 @@ function analyze() {
   // Read the RHS to list the refIds of vars that are referenced and set the var type.
   readEquations()
 }
+
 function checkSpecVars(spec, extData) {
   // Look up each var in the spec and issue and error message if it does not exist.
+
   function check(varNames, specType) {
     if (isIterable(varNames)) {
       for (let varName of varNames) {
-        // TODO handle mismatch of subscripted variables having numerical indices in the spec
         if (!R.contains('[', varName)) {
           if (!R.find(R.propEq('refId', varName), variables)) {
             // Look for a variable in external data.
@@ -211,7 +212,18 @@ function checkSpecVars(spec, extData) {
       }
     }
   }
+
   if (spec) {
+    // If the spec file contains `input/outputVarNames` (with full Vensim variable names)
+    // convert those to C names first.  Otherwise, use `input/outputNames` which are already
+    // assumed to be valid C names.
+    if (spec.inputVarNames) {
+      spec.inputVars = R.map(cName, spec.inputVarNames)
+    }
+    if (spec.outputVarNames) {
+      spec.outputVars = R.map(cName, spec.outputVarNames)
+    }
+
     check(spec.inputVars, 'input')
     check(spec.outputVars, 'output')
   }

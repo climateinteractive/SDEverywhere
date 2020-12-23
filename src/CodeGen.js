@@ -9,8 +9,15 @@ let codeGenerator = (parseTree, opts) => {
   const { spec, operation, extData, directData } = opts
   // Set to 'decl', 'init-lookups', 'eval', etc depending on the section being generated.
   let mode = ''
-  // Set true to output all variables when there is no model run spec.
-  let outputAllVars = spec.outputVars && spec.outputVars.length > 0 ? false : true
+  // Set to true to output all variables when there is no model run spec.
+  let outputAllVars
+  if (spec.outputVars && spec.outputVars.length > 0) {
+    outputAllVars = false
+  } else if (spec.outputVarNames && spec.outputVarNames.length > 0) {
+    outputAllVars = false
+  } else {
+    outputAllVars = true
+  }
   // Function to generate a section of the code
   let generateSection = R.map(v => new EquationGen(v, extData, directData, mode).generate())
   let section = R.pipe(generateSection, R.flatten, lines)

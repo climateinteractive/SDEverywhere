@@ -3,7 +3,6 @@ const antlr4 = require('antlr4')
 const { ModelLexer, ModelParser } = require('antlr4-vensim')
 const { codeGenerator } = require('./CodeGen')
 const { preprocessModel } = require('./Preprocessor')
-const { vensimName, cName } = require('./Model')
 const { modelPathProps } = require('./Helpers')
 const B = require('bufx')
 
