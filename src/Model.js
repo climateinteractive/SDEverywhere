@@ -196,7 +196,7 @@ function checkSpecVars(spec, extData) {
     if (isIterable(varNames)) {
       for (let varName of varNames) {
         if (!R.contains('[', varName)) {
-          if (!R.find(R.propEq('refId', varName), variables)) {
+          if (!varWithRefId(varName)) {
             // Look for a variable in external data.
             if (extData.has(varName)) {
               // console.error(`found ${specType} ${varName} in extData`)
