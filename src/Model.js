@@ -703,16 +703,19 @@ function sortInitVars() {
   if (PRINT_SORTED_VARS) {
     console.error('INIT')
   }
+
   // Get dependencies at init time for vars with init values, such as levels.
   // This will be a subgraph of all dependencies rooted in vars with init values.
   // Therefore, we have to recurse into dependencies starting with those vars.
   let initVars = R.filter(R.propEq('hasInitValue', true), variables)
   // vlog('initVars.length', initVars.length);
+
   // Copy the list so we can mutate it and have the original list later.
   // This starts a queue of vars to examine. Referenced var will be added to the queue.
   let vars = R.map(v => v.copy(), initVars)
   // printVars(vars);
   // R.forEach(v => { console.error(v.refId); console.error(v.references); }, vars);
+
   // Build a map of dependencies indexed by the lhs of each var.
   let depsMap = new Map()
   while (vars.length > 0) {
@@ -720,6 +723,7 @@ function sortInitVars() {
     // console.error(`- ${v.refId} (${vars.length})`);
     addDepsToMap(v)
   }
+
   function addDepsToMap(v) {
     // Add dependencies of var v to the map when they are not already present.
     // Use init references for vars such as levels that have an initial value.
@@ -747,6 +751,7 @@ function sortInitVars() {
       }, refIds)
     }
   }
+
   // Construct a dependency graph in the form of [var name, dependency var name] pairs.
   // We use refIds instead of vars here because the deps are stated in refIds.
   let graph = []
@@ -755,6 +760,7 @@ function sortInitVars() {
     R.forEach(dep => graph.push([refId, dep]), depsMap.get(refId))
   }
   if (PRINT_INIT_GRAPH) printDepsGraph(graph, 'INIT')
+
   // Sort into a reference id dependency list.
   let deps
   try {
@@ -763,13 +769,24 @@ function sortInitVars() {
     console.error(e.message)
     process.exit(1)
   }
+
   // Turn the reference id list into a var list.
   let sortedVars = R.map(refId => varWithRefId(refId), deps)
+
   // Filter out vars with constant values.
   sortedVars = R.reject(R.propSatisfies(varType => varType === 'const' || varType === 'lookup', 'varType'), sortedVars)
+
+  // Add the ref ids to a set for faster lookup in the next step
+  const sortedVarRefIds = new Set()
+  for (const v of sortedVars) {
+    sortedVarRefIds.add(v.refId)
+  }
+
   // Find vars with init values but no dependencies, and add them to the list.
-  let nodepVars = vsort(R.filter(v => !R.contains(v, sortedVars), initVars))
-  sortedVars = R.concat(nodepVars, sortedVars)
+  const nodepVars = R.filter(v => !sortedVarRefIds.has(v.refId), initVars)
+  const sortedNodepVars = vsort(nodepVars)
+  sortedVars = R.concat(sortedNodepVars, sortedVars)
+
   if (PRINT_SORTED_VARS) {
     sortedVars.forEach((v, i) => console.error(`${v.refId}`))
   }
