@@ -644,9 +644,11 @@ function sortVarsOfType(varType) {
   if (PRINT_SORTED_VARS) {
     console.error(varType.toUpperCase())
   }
+
   // Get vars with varType 'aux' or 'level' sorted in dependency order at eval time.
   // Start with vars of the given varType.
   let vars = varsOfType(varType)
+
   // Accumulate a list of variable dependencies as var pairs.
   let graph = R.unnest(R.map(v => refs(v), vars))
   function refs(v) {
@@ -666,6 +668,7 @@ function sortVarsOfType(varType) {
       }
     }, refs)
   }
+
   // Sort into an lhs dependency list.
   if (PRINT_AUX_GRAPH) printDepsGraph(graph, 'AUX')
   if (PRINT_LEVEL_GRAPH) printDepsGraph(graph, 'LEVEL')
@@ -676,11 +679,21 @@ function sortVarsOfType(varType) {
     console.error(e.message)
     process.exit(1)
   }
+
   // Turn the dependency-sorted var name list into a var list.
   let sortedVars = varsOfType(varType, R.map(refId => varWithRefId(refId), deps))
+
+  // Add the ref ids to a set for faster lookup in the next step
+  const sortedVarRefIds = new Set()
+  for (const v of sortedVars) {
+    sortedVarRefIds.add(v.refId)
+  }
+
   // Find vars of the given varType with no dependencies, and add them to the list.
-  let nodepVars = vsort(R.filter(v => !R.contains(v, sortedVars), vars))
-  sortedVars = R.concat(nodepVars, sortedVars)
+  const nodepVars = R.filter(v => !sortedVarRefIds.has(v.refId), vars)
+  const sortedNodepVars = vsort(nodepVars)
+  sortedVars = R.concat(sortedNodepVars, sortedVars)
+
   if (PRINT_SORTED_VARS) {
     sortedVars.forEach((v, i) => console.error(`${v.refId}`))
   }
