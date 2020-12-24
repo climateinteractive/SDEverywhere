@@ -21,6 +21,10 @@ const {
 const { decanonicalize, isIterable, listConcat, strlist, vlog, vsort } = require('./Helpers')
 
 let variables = []
+
+// Also keep variables in a map (with `varName` as key) for faster lookup
+const variablesByName = new Map()
+
 let nonAtoANames = Object.create(null)
 // Set true for diagnostic printing of init, aux, and level vars in sorted order.
 const PRINT_SORTED_VARS = false
@@ -192,7 +196,7 @@ function checkSpecVars(spec, extData) {
     if (isIterable(varNames)) {
       for (let varName of varNames) {
         if (!R.contains('[', varName)) {
-          if (!R.find(R.propEq('refId', varName), variables)) {
+          if (!varWithRefId(varName)) {
             // Look for a variable in external data.
             if (extData.has(varName)) {
               // console.error(`found ${specType} ${varName} in extData`)
@@ -325,6 +329,17 @@ function removeUnusedVariables(spec) {
 
   // Filter out unneeded variables so we're left with the minimal set of variables to emit
   variables = R.filter(v => referencedVarNames.includes(v.varName), variables)
+
+  // Rebuild the variables-by-name map
+  variablesByName.clear()
+  for (const v of variables) {
+    let varsForName = variablesByName.get(v.varName)
+    if (!varsForName) {
+      varsForName = []
+      variablesByName.set(v.varName, varsForName)
+    }
+    varsForName.push(v)
+  }
 }
 
 //
@@ -402,6 +417,14 @@ function addEquation(modelEquation) {
 function addVariable(v) {
   // Add the variable to the variables list.
   variables.push(v)
+
+  // Add to the map of variables by name
+  let varsForName = variablesByName.get(v.varName)
+  if (!varsForName) {
+    varsForName = []
+    variablesByName.set(v.varName, varsForName)
+  }
+  varsForName.push(v)
 }
 function isNonAtoAName(varName) {
   return R.has(varName, nonAtoANames)
@@ -438,10 +461,35 @@ function initVars() {
   return sortInitVars()
 }
 function varWithRefId(refId) {
+
+  const findVarWithRefId = rid => {
+    // First see if we have a map key where ref id matches the var name
+    let varsForName = variablesByName.get(rid)
+    if (varsForName) {
+      const v = R.find(R.propEq('refId', rid), varsForName)
+      if (v) {
+        return v
+      }
+    }
+    
+    // Failing that, chop off the subscript part of the ref id and
+    // find the variables that share that name
+    const varNamePart = rid.split('[')[0]
+    varsForName = variablesByName.get(varNamePart)
+    if (varsForName) {
+      const v = R.find(R.propEq('refId', rid), varsForName)
+      if (v) {
+        return v
+      }
+    }
+
+    return undefined
+  }
+
   // Find a variable from a reference id.
   // A direct reference will find scalar vars, apply-to-all arrays, and non-apply-to-all array
   // elements defined by individual index.
-  let refVar = R.find(R.propEq('refId', refId), variables)
+  let refVar = findVarWithRefId(refId)
   if (!refVar) {
     // Look at variables with the reference's varName to find one with matching subscripts.
     let refIdParts = splitRefId(refId)
@@ -478,7 +526,7 @@ function varWithRefId(refId) {
         }
       }
       if (matches) {
-        refVar = R.find(R.propEq('refId', varRefId), variables)
+        refVar = findVarWithRefId(varRefId)
         break
       }
     }
@@ -512,13 +560,16 @@ function splitRefId(refId) {
 function varWithName(varName) {
   // Find a variable with the given name in canonical form.
   // The function returns the first instance of a non-apply-to-all variable with the name.
-  let v = R.find(R.propEq('varName', varName), variables)
-  return v
+  const varsForName = variablesByName.get(varName)
+  if (varsForName && varsForName.length > 0) {
+    return varsForName[0]
+  } else {
+    return undefined
+  }
 }
 function varsWithName(varName) {
   // Find all variables with the given name in canonical form.
-  let vars = R.filter(R.propEq('varName', varName), variables)
-  return vars
+  return variablesByName.get(varName) || []
 }
 function refIdsWithName(varName) {
   // Find refIds of all variables with the given name in canonical form.
@@ -526,7 +577,7 @@ function refIdsWithName(varName) {
 }
 function varNames() {
   // Return a sorted list of var names.
-  return R.uniq(R.map(v => v.varName, variables)).sort()
+  return R.uniq(Array.from(variablesByName.keys())).sort()
 }
 function vensimName(cVarName) {
   // Convert a C variable name to a Vensim name.
@@ -593,9 +644,11 @@ function sortVarsOfType(varType) {
   if (PRINT_SORTED_VARS) {
     console.error(varType.toUpperCase())
   }
+
   // Get vars with varType 'aux' or 'level' sorted in dependency order at eval time.
   // Start with vars of the given varType.
   let vars = varsOfType(varType)
+
   // Accumulate a list of variable dependencies as var pairs.
   let graph = R.unnest(R.map(v => refs(v), vars))
   function refs(v) {
@@ -615,6 +668,7 @@ function sortVarsOfType(varType) {
       }
     }, refs)
   }
+
   // Sort into an lhs dependency list.
   if (PRINT_AUX_GRAPH) printDepsGraph(graph, 'AUX')
   if (PRINT_LEVEL_GRAPH) printDepsGraph(graph, 'LEVEL')
@@ -625,11 +679,21 @@ function sortVarsOfType(varType) {
     console.error(e.message)
     process.exit(1)
   }
+
   // Turn the dependency-sorted var name list into a var list.
   let sortedVars = varsOfType(varType, R.map(refId => varWithRefId(refId), deps))
+
+  // Add the ref ids to a set for faster lookup in the next step
+  const sortedVarRefIds = new Set()
+  for (const v of sortedVars) {
+    sortedVarRefIds.add(v.refId)
+  }
+
   // Find vars of the given varType with no dependencies, and add them to the list.
-  let nodepVars = vsort(R.filter(v => !R.contains(v, sortedVars), vars))
-  sortedVars = R.concat(nodepVars, sortedVars)
+  const nodepVars = R.filter(v => !sortedVarRefIds.has(v.refId), vars)
+  const sortedNodepVars = vsort(nodepVars)
+  sortedVars = R.concat(sortedNodepVars, sortedVars)
+
   if (PRINT_SORTED_VARS) {
     sortedVars.forEach((v, i) => console.error(`${v.refId}`))
   }
@@ -639,23 +703,34 @@ function sortInitVars() {
   if (PRINT_SORTED_VARS) {
     console.error('INIT')
   }
+
   // Get dependencies at init time for vars with init values, such as levels.
   // This will be a subgraph of all dependencies rooted in vars with init values.
   // Therefore, we have to recurse into dependencies starting with those vars.
   let initVars = R.filter(R.propEq('hasInitValue', true), variables)
   // vlog('initVars.length', initVars.length);
+
   // Copy the list so we can mutate it and have the original list later.
   // This starts a queue of vars to examine. Referenced var will be added to the queue.
   let vars = R.map(v => v.copy(), initVars)
   // printVars(vars);
   // R.forEach(v => { console.error(v.refId); console.error(v.references); }, vars);
+
+  // Keep track of which var ref ids are currently in the queue for faster lookup
+  const queueRefIds = new Set()
+  for (const v of vars) {
+    queueRefIds.add(v.refId)
+  }
+
   // Build a map of dependencies indexed by the lhs of each var.
-  let depsMap = new Map()
+  const depsMap = new Map()
   while (vars.length > 0) {
     let v = vars.pop()
+    queueRefIds.delete(v.refId)
     // console.error(`- ${v.refId} (${vars.length})`);
     addDepsToMap(v)
   }
+
   function addDepsToMap(v) {
     // Add dependencies of var v to the map when they are not already present.
     // Use init references for vars such as levels that have an initial value.
@@ -672,8 +747,9 @@ function sortInitVars() {
           // console.error(refId);
           let refVar = varWithRefId(refId)
           if (refVar) {
-            if (refVar.varType !== 'const' && !R.contains(refVar, vars)) {
+            if (refVar.varType !== 'const' && !queueRefIds.has(refVar.refId)) {
               vars.push(refVar)
+              queueRefIds.add(refVar.refId)
               // console.error(`+ ${refVar.refId}`);
             }
           } else {
@@ -683,6 +759,7 @@ function sortInitVars() {
       }, refIds)
     }
   }
+
   // Construct a dependency graph in the form of [var name, dependency var name] pairs.
   // We use refIds instead of vars here because the deps are stated in refIds.
   let graph = []
@@ -691,6 +768,7 @@ function sortInitVars() {
     R.forEach(dep => graph.push([refId, dep]), depsMap.get(refId))
   }
   if (PRINT_INIT_GRAPH) printDepsGraph(graph, 'INIT')
+
   // Sort into a reference id dependency list.
   let deps
   try {
@@ -699,13 +777,24 @@ function sortInitVars() {
     console.error(e.message)
     process.exit(1)
   }
+
   // Turn the reference id list into a var list.
   let sortedVars = R.map(refId => varWithRefId(refId), deps)
+
   // Filter out vars with constant values.
   sortedVars = R.reject(R.propSatisfies(varType => varType === 'const' || varType === 'lookup', 'varType'), sortedVars)
+
+  // Add the ref ids to a set for faster lookup in the next step
+  const sortedVarRefIds = new Set()
+  for (const v of sortedVars) {
+    sortedVarRefIds.add(v.refId)
+  }
+
   // Find vars with init values but no dependencies, and add them to the list.
-  let nodepVars = vsort(R.filter(v => !R.contains(v, sortedVars), initVars))
-  sortedVars = R.concat(nodepVars, sortedVars)
+  const nodepVars = R.filter(v => !sortedVarRefIds.has(v.refId), initVars)
+  const sortedNodepVars = vsort(nodepVars)
+  sortedVars = R.concat(sortedNodepVars, sortedVars)
+
   if (PRINT_SORTED_VARS) {
     sortedVars.forEach((v, i) => console.error(`${v.refId}`))
   }
@@ -741,9 +830,6 @@ function yamlVarList() {
   // Print selected properties of all variable objects to a YAML string.
   let vars = R.sortBy(R.prop('refId'), R.map(v => filterVar(v), variables))
   return yaml.safeDump(vars)
-}
-function loadVariablesFromYaml(yamlVars) {
-  variables = yaml.safeLoad(yamlVars)
 }
 function printVar(v) {
   let nonAtoA = isNonAtoAName(v.varName) ? ' (non-apply-to-all)' : ''
@@ -872,7 +958,6 @@ module.exports = {
   initVars,
   isNonAtoAName,
   levelVars,
-  loadVariablesFromYaml,
   lookupVars,
   printRefGraph,
   printRefIdTest,
