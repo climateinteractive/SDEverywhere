@@ -716,10 +716,17 @@ function sortInitVars() {
   // printVars(vars);
   // R.forEach(v => { console.error(v.refId); console.error(v.references); }, vars);
 
+  // Keep track of which var ref ids are currently in the queue for faster lookup
+  const queueRefIds = new Set()
+  for (const v of vars) {
+    queueRefIds.add(v.refId)
+  }
+
   // Build a map of dependencies indexed by the lhs of each var.
-  let depsMap = new Map()
+  const depsMap = new Map()
   while (vars.length > 0) {
     let v = vars.pop()
+    queueRefIds.delete(v.refId)
     // console.error(`- ${v.refId} (${vars.length})`);
     addDepsToMap(v)
   }
@@ -740,8 +747,9 @@ function sortInitVars() {
           // console.error(refId);
           let refVar = varWithRefId(refId)
           if (refVar) {
-            if (refVar.varType !== 'const' && !R.contains(refVar, vars)) {
+            if (refVar.varType !== 'const' && !queueRefIds.has(refVar.refId)) {
               vars.push(refVar)
+              queueRefIds.add(refVar.refId)
               // console.error(`+ ${refVar.refId}`);
             }
           } else {
