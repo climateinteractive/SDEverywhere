@@ -245,7 +245,7 @@ function removeUnusedVariables(spec) {
   // Keep track of all variable names that are referenced somewhere.  Note that we
   // don't attempt to track specific "ref ids" (e.g. `_some_variable[_subscript]`)
   // but instead just track generic variable names (e.g. `_some_variable`).  This
-  // ensure that we include all subscripts for a variable, which might mean we
+  // ensures that we include all subscripts for a variable, which might mean we
   // include some subscripts that aren't needed, but it is safer than trying to
   // eliminate those and possibly omit something that is needed.
   const referencedVarNames = []
@@ -259,7 +259,7 @@ function removeUnusedVariables(spec) {
   }
 
   // Add the given variable to the list of referenced variables, and do the same for
-  // some special things (i.e., lookups) that it might reference.a
+  // some special things (i.e., lookups) that it might reference.
   const recordUsedVariable = v => {
     // Add the variable to the list of referenced variables
     recordUsedVarName(v.varName)
@@ -291,8 +291,15 @@ function removeUnusedVariables(spec) {
   // that it references) as being "used".
   const referencedRefIds = []
   const recordRefsOfVariable = v => {
-    let refs = v.references.concat(v.initReferences)
-    for (const refId of refs) {
+    // If this variable is subscripted, we need to record all subscript variants;
+    // `refIdsWithName` will return those.  We also need to record all variables
+    // that are referenced by this variable, either directly (`v.references`) or
+    // in an "INITIAL" expression (`v.initReferences`).  It's OK if we end up with
+    // duplicates in this list, because we will examine each reference only once.
+    let refIds = refIdsWithName(v.varName)
+    refIds = refIds.concat(v.references)
+    refIds = refIds.concat(v.initReferences)
+    for (const refId of refIds) {
       if (!referencedRefIds.includes(refId)) {
         referencedRefIds.push(refId)
         const refVar = varWithRefId(refId)
