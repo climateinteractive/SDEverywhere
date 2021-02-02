@@ -1,17 +1,18 @@
 {
   "name": "prune",
-  "inputVars": [
-    "_input_1",
-    "_input_2"
+  "inputVarNames": [
+    "Input 1",
+    "Input 2"
   ],
-  "outputVars": [
-    "_time",
-    "_input_1_and_2_total",
-    "_simple_totals",
-    "_a_totals",
-    "_b1_totals",
-    "_look1_value_at_t1",
-    "_with_look1_at_t1"
+  "outputVarNames": [
+    "Time",
+    "Input 1 and 2 Total",
+    "Simple Totals",
+    "A Totals",
+    "B1 Totals",
+    "Look1 Value at t1",
+    "With Look1 at t1",
+    "Partial[C2]"
   ],
   "externalDatfiles": [
     "prune_data.dat"

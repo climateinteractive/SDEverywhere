@@ -39,6 +39,10 @@ expect_present "__lookup1"
 expect_present "_look1"
 expect_present "_look1_value_at_t1"
 expect_present "_with_look1_at_t1"
+expect_present "_constant_partial_1"
+expect_present "_constant_partial_2"
+expect_present "_initial_partial"
+expect_present "_partial"
 
 # Verify that unreferenced variables do not appear in the generated C file
 expect_not_present "_input_3"

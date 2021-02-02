@@ -97,6 +97,24 @@ With Look1 at t1 = WITH LOOKUP ( 1, ([(0,0)-(2,2)],(0,0),(1,1),(2,2)) )
 With Look2 at t1 = WITH LOOKUP ( 1, ([(0,0)-(2,2)],(0,0),(1,1),(2,2)) )
 	~~|
 
+Constant Partial 1 = 1
+	~~|
+
+Constant Partial 2 = 2
+	~~|
+
+Initial Partial[C1] =
+  INITIAL( Constant Partial 1 )
+	~~|
+
+Initial Partial[C2] =
+  INITIAL( Constant Partial 2 )
+	~~|
+
+Partial[C2] =
+  Initial Partial[C2]
+	~~|
+
 ********************************************************
 	.Control
 ********************************************************~
