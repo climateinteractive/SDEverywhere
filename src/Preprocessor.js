@@ -1,7 +1,7 @@
 const path = require('path')
 const R = require('ramda')
 const B = require('bufx')
-const { splitEquations } = require('./Helpers')
+const { splitEquations, replaceDelimitedStrings } = require('./Helpers')
 
 let preprocessModel = (mdlFilename, spec, profile = 'genc', writeFiles = false, outDecls = []) => {
   const MACROS_FILENAME = 'macros.txt'
@@ -134,6 +134,8 @@ let preprocessModel = (mdlFilename, spec, profile = 'genc', writeFiles = false, 
     eqn = eqn.replace('{UTF-8}', '')
     // Remove ":RAW:" flag; it is not needed by SDE and causes problems if left in
     eqn = eqn.replace(/:RAW:/g, '')
+    // Remove inline comments
+    eqn = replaceDelimitedStrings(eqn, '{', '}', '')
     // Remove whitespace
     eqn = eqn.trim()
     if (eqn.length > 0) {

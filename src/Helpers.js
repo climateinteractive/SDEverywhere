@@ -6,7 +6,6 @@ const sh = require('shelljs')
 const split = require('split-string')
 const byline = require('byline')
 const XLSX = require('xlsx')
-const num = require('numbro')
 const B = require('bufx')
 
 // Set true to print a stack trace in vlog
@@ -379,6 +378,34 @@ let matchRegexCaptures = (str, regex) => {
     return []
   }
 }
+// Match delimiters recursively. Replace delimited strings globally.
+let replaceDelimitedStrings = (str, open, close, newStr) => {
+  // str is the string to operate on.
+  // open and close are the opening and closing delimiter characters.
+  // newStr is the string to replace delimited substrings with.
+  let result = ''
+  let start = 0
+  let depth = 0
+  let n = str.length
+  for (let i = 0; i < n; i++) {
+    if (str.charAt(i) === open) {
+      if (depth === 0) {
+        result += str.substring(start, i)
+      }
+      depth++
+    } else if (str.charAt(i) === close && depth > 0) {
+      depth--
+      if (depth === 0) {
+        result += newStr
+        start = i + 1
+      }
+    }
+  }
+  if (start < n) {
+    result += str.substring(start)
+  }
+  return result
+}
 
 /**
  * Return the cartesian product of the given array of arrays.
@@ -474,6 +501,7 @@ module.exports = {
   readDat,
   readXlsx,
   replaceInArray,
+  replaceDelimitedStrings,
   rest,
   splitEquations,
   strings,
