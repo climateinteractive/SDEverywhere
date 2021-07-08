@@ -1,11 +1,11 @@
 #!/usr/bin/env node
-const fs = require('fs-extra')
-const path = require('path')
-const R = require('ramda')
-const parseCsv = require('csv-parse/lib/sync')
-const byline = require('byline')
-const B = require('bufx')
-const { canonicalName, strings, stringToId, matchRegex } = require('./Helpers')
+import fs from 'fs-extra'
+import path from 'path'
+import R from 'ramda'
+import parseCsv from 'csv-parse/lib/sync.js'
+import byline from 'byline'
+import B from 'bufx'
+import { canonicalName, strings, stringToId, matchRegex } from './Helpers.js'
 
 let cfg, inputVarNames, outputVarNames, chartVarnames, chartDatfiles
 let configDirname, specPathname, cfgPathname, stringsPathname, chartDataPathname, datDirname
@@ -14,7 +14,7 @@ const CONFIG_FILES = ['app.csv', 'colors.csv', 'graphs.csv', 'sliders.csv', 'vie
 const CSV_PARSE_OPTS = { columns: true, trim: true, skip_empty_lines: true, skip_lines_with_empty_values: true }
 const MAX_PLOTS = 8
 
-let initConfig = (modelDir, webDir) => {
+export let initConfig = (modelDir, webDir) => {
   configDirname = path.join(modelDir, 'config')
   datDirname = modelDir
   specPathname = path.join(modelDir, 'app_spec.json')
@@ -313,7 +313,7 @@ let emitSpec = currentSpec => {
   }
   B.emitPrettyJson(spec)
 }
-let makeModelSpec = () => {
+export let makeModelSpec = () => {
   // Read an existing spec file to pick up and maintain extra properties.
   let currentSpec = {}
   try {
@@ -331,7 +331,7 @@ let makeModelSpec = () => {
     console.error(e.stack)
   }
 }
-let makeModelConfig = () => {
+export let makeModelConfig = () => {
   try {
     // Write appcfg.js
     B.clearBuf()
@@ -352,7 +352,7 @@ let makeModelConfig = () => {
     console.error(e.stack)
   }
 }
-let makeChartData = async () => {
+export let makeChartData = async () => {
   // Read the dat files given in graph config and extract data to a JS file.
   // Skip this if the chart_data.js file already exists, since it normally only needs
   // to be created when the model changes, when we do a clean and rebuild.
@@ -485,11 +485,4 @@ let viewTitleName = viewTitle => {
 let exportObj = (name, obj) => {
   let js = `exports.${name} = ${JSON.stringify(obj)}`
   B.emitJs(js)
-}
-
-module.exports = {
-  initConfig,
-  makeModelSpec,
-  makeModelConfig,
-  makeChartData
 }

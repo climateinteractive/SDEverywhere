@@ -1,4 +1,4 @@
-const path = require('path')
+import path from 'path'
 
 let command = 'which'
 let describe = 'print the SDEverywhere home directory'
@@ -8,10 +8,10 @@ let handler = argv => {
 }
 let which = opts => {
   // The SDEverywhere home directory is one level above the src directory where this code runs.
-  let homeDir = path.join(__dirname, '..')
+  let homeDir = path.resolve(new URL('..', import.meta.url).pathname)
   console.log(homeDir)
 }
-module.exports = {
+export default {
   command,
   describe,
   builder,
