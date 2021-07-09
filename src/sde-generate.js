@@ -17,7 +17,7 @@ import {
   readDat,
   readXlsx
 } from './Helpers.js'
-import { initConfig, makeModelSpec, makeModelConfig, makeChartData } from './MakeConfig.js'
+import { initConfig, makeModelSpec, makeModelConfig, makeChartData, readModelConfig } from './MakeConfig.js'
 import Model from './Model.js'
 import { printSubscripts, yamlSubsList } from './Subscript.js'
 
@@ -216,8 +216,7 @@ let copyTemplate = buildDirname => {
 let customizeApp = (modelDirname, webDirname) => {
   try {
     // Read the newly generated model config to customize app files.
-    let cfgPathname = `${webDirname}/appcfg`
-    const { app } = require(cfgPathname)
+    let app = readModelConfig().app
     if (app && app.logo) {
       let logoPathname = `${modelDirname}/${app.logo}`
       sh.cp('-f', logoPathname, webDirname)
@@ -236,23 +235,25 @@ let customizeApp = (modelDirname, webDirname) => {
   }
 }
 let packApp = webDirname => {
-  const browserify = require('browserify')
   // Concatenate JS source files for the browser.
   let sourcePathname = path.join(webDirname, 'index.js')
   let minPathname = path.join(webDirname, 'index.min.js')
   // Resolve module imports against the SDEverywhere node_modules.
   let nodePath = path.join(new URL('..', import.meta.url).pathname, 'node_modules')
-  let b = browserify(sourcePathname, { paths: nodePath })
-  let writable = fs.createWriteStream(minPathname)
-  b.bundle()
-    .pipe(writable)
-    .on('finish', error => {
-      // Remove JavaScript source files.
-      if (!RETAIN_GENERATED_SOURCE_FILES) {
-        let sourceFiles = filesExcept(`${webDirname}/*.js`, name => name.endsWith('index.min.js') || name.endsWith('model_sde.js'))
-        sh.rm(sourceFiles)
-      }
-    })
+  // Browserify is an optional install that we only import when generating HTML.
+  import('browserify').then(browserify => {
+    let b = browserify.default(sourcePathname, { paths: nodePath })
+    let writable = fs.createWriteStream(minPathname)
+    b.bundle()
+      .pipe(writable)
+      .on('finish', error => {
+        // Remove JavaScript source files.
+        if (!RETAIN_GENERATED_SOURCE_FILES) {
+          let sourceFiles = filesExcept(`${webDirname}/*.js`, name => name.endsWith('index.min.js') || name.endsWith('model_sde.js'))
+          sh.rm(sourceFiles)
+        }
+      })
+  })
 }
 let parseModel = input => {
   // Read the model text and return a parse tree.

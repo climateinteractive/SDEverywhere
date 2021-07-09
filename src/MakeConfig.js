@@ -352,6 +352,12 @@ export let makeModelConfig = () => {
     console.error(e.stack)
   }
 }
+export let readModelConfig = () => {
+  // Evaluate the model config file into an app object. Resolve the exports.
+  let cfg = B.read(cfgPathname)
+  cfg = `let exports = {}; ${cfg}; return exports`
+  return Function(cfg)()
+}
 export let makeChartData = async () => {
   // Read the dat files given in graph config and extract data to a JS file.
   // Skip this if the chart_data.js file already exists, since it normally only needs
