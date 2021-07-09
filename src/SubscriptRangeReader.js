@@ -1,10 +1,9 @@
-const antlr4 = require('antlr4')
-const { ModelParser } = require('antlr4-vensim')
-const R = require('ramda')
-const ModelReader = require('./ModelReader')
-const { Subscript } = require('./Subscript')
+import { ModelParser } from 'antlr4-vensim'
+import R from 'ramda'
+import ModelReader from './ModelReader.js'
+import { Subscript } from './Subscript.js'
 
-module.exports = class SubscriptRangeReader extends ModelReader {
+export default class SubscriptRangeReader extends ModelReader {
   constructor() {
     super()
   }

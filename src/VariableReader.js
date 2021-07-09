@@ -1,16 +1,16 @@
-const antlr4 = require('antlr4')
-const { ModelParser } = require('antlr4-vensim')
-const R = require('ramda')
-const ModelReader = require('./ModelReader')
-const Variable = require('./Variable')
-const { sub, isDimension, isIndex, normalizeSubscripts } = require('./Subscript')
-const { canonicalName, vlog, replaceInArray, strlist } = require('./Helpers')
+import { ModelParser } from 'antlr4-vensim'
+import R from 'ramda'
+import ModelReader from './ModelReader.js'
+import Model from './Model.js'
+import Variable from './Variable.js'
+import { sub, isDimension, isIndex, normalizeSubscripts } from './Subscript.js'
+import { canonicalName, vlog, replaceInArray, strlist } from './Helpers.js'
 
 // Set true to print extra debugging information to stderr.
 const DEBUG_LOG = false
 let debugLog = (title, value) => !DEBUG_LOG || vlog(title, value)
 
-module.exports = class VariableReader extends ModelReader {
+export default class VariableReader extends ModelReader {
   constructor(specialSeparationDims, directData) {
     super()
     // specialSeparationDims are var names that need to be separated because of
@@ -29,7 +29,6 @@ module.exports = class VariableReader extends ModelReader {
   }
   visitEquation(ctx) {
     // Start a new variable defined by this equation.
-    const { addVariable } = require('./Model')
     this.var = new Variable(ctx)
     // Allow for an alternate array of variables that are expanded over subdimensions.
     this.expandedVars = []
@@ -37,10 +36,10 @@ module.exports = class VariableReader extends ModelReader {
     super.visitEquation(ctx)
     if (R.isEmpty(this.expandedVars)) {
       // Add a single variable defined by the equation.
-      addVariable(this.var)
+      Model.addVariable(this.var)
     } else {
       // Add variables expanded over indices to the model.
-      R.forEach(v => addVariable(v), this.expandedVars)
+      R.forEach(v => Model.addVariable(v), this.expandedVars)
     }
   }
   visitLhs(ctx) {

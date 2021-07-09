@@ -1,9 +1,9 @@
-const { build } = require('./sde-build')
-const { exec } = require('./sde-exec')
+import { build } from './sde-build.js'
+import { exec } from './sde-exec.js'
 
-let command = 'run [options] <model>'
-let describe = 'build a model, run it, and capture its output to a file'
-let builder = {
+export let command = 'run [options] <model>'
+export let describe = 'build a model, run it, and capture its output to a file'
+export let builder = {
   spec: {
     describe: 'pathname of the I/O specification JSON file',
     type: 'string',
@@ -20,15 +20,15 @@ let builder = {
     alias: 'o'
   }
 }
-let handler = argv => {
+export let handler = argv => {
   run(argv.model, argv)
 }
-let run = async (model, opts) => {
+export let run = async (model, opts) => {
   await build(model, opts)
   exec(model, opts)
 }
 
-module.exports = {
+export default {
   command,
   describe,
   builder,

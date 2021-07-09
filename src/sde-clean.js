@@ -1,6 +1,5 @@
-const path = require('path')
-const sh = require('shelljs')
-const { modelPathProps, buildDir } = require('./Helpers')
+import path from 'path'
+import sh from 'shelljs'
 
 let command = 'clean [options]'
 let describe = 'clean out the build, output, and html directories for a model'
@@ -27,7 +26,7 @@ let clean = (opts) => {
   sh.rm('-r', htmlDirname)
   sh.config.silent = silentState
 }
-module.exports = {
+export default {
   command,
   describe,
   builder,

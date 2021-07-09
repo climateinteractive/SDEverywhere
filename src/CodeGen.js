@@ -1,11 +1,11 @@
-const R = require('ramda')
-const ModelLHSReader = require('./ModelLHSReader')
-const EquationGen = require('./EquationGen')
-const Model = require('./Model')
-const { sub, allDimensions, allMappings, subscriptFamilies } = require('./Subscript')
-const { asort, lines, strlist, abend, mapIndexed } = require('./Helpers')
+import R from 'ramda'
+import ModelLHSReader from './ModelLHSReader.js'
+import EquationGen from './EquationGen.js'
+import Model from './Model.js'
+import { sub, allDimensions, allMappings, subscriptFamilies } from './Subscript.js'
+import { asort, lines, strlist, abend, mapIndexed } from './Helpers.js'
 
-let codeGenerator = (parseTree, opts) => {
+export let codeGenerator = (parseTree, opts) => {
   const { spec, operation, extData, directData } = opts
   // Set to 'decl', 'init-lookups', 'eval', etc depending on the section being generated.
   let mode = ''
@@ -337,5 +337,3 @@ ${postStep}
     generate: generate,
   }
 }
-
-module.exports = { codeGenerator }

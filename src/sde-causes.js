@@ -1,10 +1,9 @@
-const path = require('path')
-const antlr4 = require('antlr4')
-const { ModelLexer, ModelParser } = require('antlr4-vensim')
-const { codeGenerator } = require('./CodeGen')
-const { preprocessModel } = require('./Preprocessor')
-const { modelPathProps } = require('./Helpers')
-const B = require('bufx')
+import antlr4 from 'antlr4'
+import { ModelLexer, ModelParser } from 'antlr4-vensim'
+import { codeGenerator } from './CodeGen.js'
+import { preprocessModel } from './Preprocessor.js'
+import { modelPathProps } from './Helpers.js'
+import B from 'bufx'
 
 let command = 'causes [options] <model> <C_varname>'
 let describe = 'print dependencies for a C variable name'
@@ -61,7 +60,7 @@ let writeOutput = (outputPathname, outputText) => {
     console.log(e.message)
   }
 }
-module.exports = {
+export default {
   command,
   describe,
   builder,

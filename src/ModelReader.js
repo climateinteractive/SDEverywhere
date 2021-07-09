@@ -1,6 +1,6 @@
-const { ModelVisitor } = require('antlr4-vensim')
+import { ModelVisitor } from 'antlr4-vensim'
 
-module.exports = class ModelReader extends ModelVisitor {
+export default class ModelReader extends ModelVisitor {
   constructor() {
     super()
     // stack of function names and argument indices

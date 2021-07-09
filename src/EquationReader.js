@@ -1,17 +1,17 @@
-const antlr4 = require('antlr4')
-const { ModelLexer, ModelParser } = require('antlr4-vensim')
-const R = require('ramda')
-const Model = require('./Model')
-const ModelReader = require('./ModelReader')
-const VariableReader = require('./VariableReader')
-const {
+import antlr4 from 'antlr4'
+import { ModelLexer, ModelParser } from 'antlr4-vensim'
+import R from 'ramda'
+import Model from './Model.js'
+import ModelReader from './ModelReader.js'
+import VariableReader from './VariableReader.js'
+import {
   extractMarkedDims,
   indexNamesForSubscript,
   normalizeSubscripts,
   separatedVariableIndex,
   isDimension
-} = require('./Subscript')
-const {
+} from './Subscript.js'
+import {
   canonicalName,
   canonicalVensimName,
   cFunctionName,
@@ -24,12 +24,12 @@ const {
   newAuxVarName,
   newLevelVarName,
   newLookupVarName
-} = require('./Helpers')
+} from './Helpers.js'
 
 // Set this true to get a list of functions used in the model. This may include lookups.
 const PRINT_FUNCTION_NAMES = false
 
-module.exports = class EquationReader extends ModelReader {
+export default class EquationReader extends ModelReader {
   constructor(variable) {
     super()
     // variable that will be read

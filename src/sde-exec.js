@@ -1,10 +1,10 @@
-const path = require('path')
-const moment = require('moment')
-const { modelPathProps, buildDir, outputDir, execCmd } = require('./Helpers')
+import path from 'path'
+import moment from 'moment'
+import { modelPathProps, buildDir, outputDir, execCmd } from './Helpers.js'
 
-let command = 'exec [options] <model>'
-let describe = 'execute the model and capture its output to a file'
-let builder = {
+export let command = 'exec [options] <model>'
+export let describe = 'execute the model and capture its output to a file'
+export let builder = {
   builddir: {
     describe: 'build directory',
     type: 'string',
@@ -16,10 +16,10 @@ let builder = {
     alias: 'o'
   }
 }
-let handler = argv => {
+export let handler = argv => {
   exec(argv.model, argv)
 }
-let exec = (model, opts) => {
+export let exec = (model, opts) => {
   let { modelDirname, modelName, modelPathname } = modelPathProps(model)
   // Ensure the build and output directories exist.
   let buildDirname = buildDir(opts.builddir, modelDirname)
@@ -39,7 +39,7 @@ let exec = (model, opts) => {
   return 0
 }
 
-module.exports = {
+export default {
   command,
   describe,
   builder,

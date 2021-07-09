@@ -1,11 +1,10 @@
-const path = require('path')
-const antlr4 = require('antlr4')
-const { ModelLexer, ModelParser } = require('antlr4-vensim')
-const { codeGenerator } = require('./CodeGen')
-const { preprocessModel } = require('./Preprocessor')
-const { vensimName, cName } = require('./Model')
-const { modelPathProps } = require('./Helpers')
-const B = require('bufx')
+import antlr4 from 'antlr4'
+import { ModelLexer, ModelParser } from 'antlr4-vensim'
+import { codeGenerator } from './CodeGen.js'
+import { preprocessModel } from './Preprocessor.js'
+import Model from './Model.js'
+import { modelPathProps } from './Helpers.js'
+import B from 'bufx'
 
 let command = 'names [options] <model> <namesfile>'
 let describe = 'convert variable names in a model'
@@ -42,9 +41,9 @@ let names = (model, namesPathname, opts) => {
   for (let line of lines) {
     if (line.length > 0) {
       if (opts.toc) {
-        B.emitLine(cName(line))
+        B.emitLine(Model.cName(line))
       } else if (opts.tovml) {
-        B.emitLine(vensimName(line))
+        B.emitLine(Model.vensimName(line))
       }
     }
   }
@@ -82,7 +81,7 @@ let writeOutput = (outputPathname, outputText) => {
     console.log(e.message)
   }
 }
-module.exports = {
+export default {
   command,
   describe,
   builder,

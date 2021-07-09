@@ -1,7 +1,7 @@
-const B = require('bufx')
-const path = require('path')
-const { modelPathProps, buildDir } = require('./Helpers')
-const { preprocessModel } = require('./Preprocessor')
+import B from 'bufx'
+import path from 'path'
+import { modelPathProps, buildDir } from './Helpers.js'
+import { preprocessModel } from './Preprocessor.js'
 
 const command = 'flatten [options] <outmodel>'
 
@@ -184,7 +184,7 @@ const flatten = async (outFile, inFiles, opts) => {
   B.writeBuf(outputPathname, 'pp')
 }
 
-module.exports = {
+export default {
   command,
   describe,
   builder,
