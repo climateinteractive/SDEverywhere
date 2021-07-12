@@ -330,10 +330,10 @@ export default class EquationGen extends ModelReader {
     // If direct data exists for this variable, copy it from the workbook into one or more lookups.
     let result = []
     if (this.mode === 'init-lookups') {
-      let { tag, sheetName, timeRowOrCol, startCell } = this.var.directDataArgs
-      let workbook = this.directData.get(tag)
+      let { file, tab, timeRowOrCol, startCell } = this.var.directDataArgs
+      let workbook = this.directData.get(file)
       if (workbook) {
-        let sheet = workbook.Sheets[sheetName]
+        let sheet = workbook.Sheets[tab]
         if (sheet) {
           let indexNum = 0
           if (!R.isEmpty(this.var.subscripts)) {
@@ -344,10 +344,10 @@ export default class EquationGen extends ModelReader {
           }
           result.push(this.generateDirectDataLookup(sheet, timeRowOrCol, startCell, indexNum))
         } else {
-          throw new Error(`ERROR: Direct data worksheet ${sheetName} tagged ${tag} not found`)
+          throw new Error(`ERROR: Direct data worksheet ${tab} tagged ${file} not found`)
         }
       } else {
-        throw new Error(`ERROR: Direct data workbook tagged ${tag} not found`)
+        throw new Error(`ERROR: Direct data workbook tagged ${file} not found`)
       }
     }
     return result
