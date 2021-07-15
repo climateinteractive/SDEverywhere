@@ -1,14 +1,15 @@
-const antlr4 = require('antlr4')
-const { ModelLexer, ModelParser } = require('antlr4-vensim')
-const R = require('ramda')
-const B = require('bufx')
-const yaml = require('js-yaml')
-const toposort = require('./toposort')
-const VariableReader = require('./VariableReader')
-const VarNameReader = require('./VarNameReader')
-const SubscriptRangeReader = require('./SubscriptRangeReader')
-const Variable = require('./Variable')
-const {
+import antlr4 from 'antlr4'
+import { ModelLexer, ModelParser } from 'antlr4-vensim'
+import R from 'ramda'
+import B from 'bufx'
+import yaml from 'js-yaml'
+import toposort from './toposort.js'
+import VariableReader from './VariableReader.js'
+import VarNameReader from './VarNameReader.js'
+import SubscriptRangeReader from './SubscriptRangeReader.js'
+import EquationReader from './EquationReader.js'
+import Variable from './Variable.js'
+import {
   addIndex,
   allDimensions,
   indexNamesForSubscript,
@@ -17,8 +18,8 @@ const {
   normalizeSubscripts,
   sub,
   subscriptFamilies
-} = require('./Subscript')
-const { decanonicalize, isIterable, listConcat, strlist, vlog, vsort } = require('./Helpers')
+} from './Subscript.js'
+import { decanonicalize, isIterable, listConcat, strlist, vlog, vsort } from './Helpers.js'
 
 let variables = []
 
@@ -393,7 +394,6 @@ function setRefIds() {
 function readEquations() {
   // Augment variables with information from their equations.
   // This requires a refId for each var so that actual refIds can be resolved for the reference list.
-  const EquationReader = require('./EquationReader')
   R.forEach(v => {
     let equationReader = new EquationReader(v)
     equationReader.read()
@@ -401,7 +401,6 @@ function readEquations() {
 }
 function addEquation(modelEquation) {
   // Add an equation in Vensim model format.
-  const EquationReader = require('./EquationReader')
   let chars = new antlr4.InputStream(modelEquation)
   let lexer = new ModelLexer(chars)
   let tokens = new antlr4.CommonTokenStream(lexer)
@@ -478,7 +477,7 @@ function varWithRefId(refId) {
         return v
       }
     }
-    
+
     // Failing that, chop off the subscript part of the ref id and
     // find the variables that share that name
     const varNamePart = rid.split('[')[0]
@@ -951,7 +950,7 @@ function printDepsGraph(graph, varType) {
     console.error(`${dep[0]} → ${dep[1]}`)
   }
 }
-module.exports = {
+export default {
   addEquation,
   addNonAtoAVar,
   addVariable,

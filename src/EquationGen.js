@@ -1,11 +1,11 @@
-const R = require('ramda')
-const XLSX = require('xlsx')
-const { ModelLexer, ModelParser } = require('antlr4-vensim')
-const ModelReader = require('./ModelReader')
-const ModelLHSReader = require('./ModelLHSReader')
-const LoopIndexVars = require('./LoopIndexVars')
-const Model = require('./Model')
-const {
+import R from 'ramda'
+import XLSX from 'xlsx'
+import { ModelLexer, ModelParser } from 'antlr4-vensim'
+import ModelReader from './ModelReader.js'
+import ModelLHSReader from './ModelLHSReader.js'
+import LoopIndexVars from './LoopIndexVars.js'
+import Model from './Model.js'
+import {
   dimensionNames,
   extractMarkedDims,
   hasMapping,
@@ -15,8 +15,8 @@ const {
   normalizeSubscripts,
   separatedVariableIndex,
   sub
-} = require('./Subscript')
-const {
+} from './Subscript.js'
+import {
   canonicalName,
   cartesianProductOf,
   cdbl,
@@ -30,9 +30,9 @@ const {
   permutationsOf,
   strToConst,
   vlog
-} = require('./Helpers')
+} from './Helpers.js'
 
-module.exports = class EquationGen extends ModelReader {
+export default class EquationGen extends ModelReader {
   constructor(variable, extData, directData, mode) {
     super()
     // the variable we are generating code for

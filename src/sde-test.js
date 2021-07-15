@@ -1,12 +1,12 @@
-const path = require('path')
-const { run } = require('./sde-run')
-const { log } = require('./sde-log')
-const { compare } = require('./sde-compare')
-const { modelPathProps, outputDir } = require('./Helpers')
+import path from 'path'
+import { run } from './sde-run.js'
+import { log } from './sde-log.js'
+import { compare } from './sde-compare.js'
+import { modelPathProps, outputDir } from './Helpers.js'
 
-let command = 'test [options] <model>'
-let describe = 'build the model, run it, process the log, and compare to Vensim data'
-let builder = {
+export let command = 'test [options] <model>'
+export let describe = 'build the model, run it, process the log, and compare to Vensim data'
+export let builder = {
   spec: {
     describe: 'pathname of the I/O specification JSON file',
     type: 'string',
@@ -28,10 +28,10 @@ let builder = {
     alias: 'p'
   }
 }
-let handler = argv => {
+export let handler = argv => {
   test(argv.model, argv)
 }
-let test = async (model, opts) => {
+export let test = async (model, opts) => {
   // Run the model and save output to an SDE log file.
   let { modelDirname, modelName } = modelPathProps(model)
   let logPathname
@@ -54,7 +54,7 @@ let test = async (model, opts) => {
   await compare(vensimPathname, sdePathname, opts)
 }
 
-module.exports = {
+export default {
   command,
   describe,
   builder,
