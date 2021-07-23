@@ -1,3 +1,4 @@
+import path from 'path'
 import { ModelParser } from 'antlr4-vensim'
 import R from 'ramda'
 import XLSX from 'xlsx'
@@ -6,8 +7,10 @@ import { Subscript } from './Subscript.js'
 import { cFunctionName, matchRegex, readCsv } from './Helpers.js'
 
 export default class SubscriptRangeReader extends ModelReader {
-  constructor() {
+  constructor(modelDirname) {
     super()
+    // The model directory is required when reading data files for GET DIRECT SUBSCRIPT.
+    this.modelDirname = modelDirname
     // Index names from a subscript list or GET DIRECT SUBSCRIPT
     this.indNames = []
     // Dimension mappings with model names
@@ -104,7 +107,8 @@ export default class SubscriptRangeReader extends ModelReader {
       nextCell = () => col++
     }
     // Read subscript names from the CSV file at the given position.
-    let data = readCsv(pathname, delimiter)
+    let csvPathname = path.resolve(this.modelDirname, pathname)
+    let data = readCsv(csvPathname, delimiter)
     if (data) {
       let indexName = data[row][col]
       while (indexName != null) {
