@@ -455,8 +455,8 @@ export default class EquationReader extends ModelReader {
         }
         if (index) {
           let re = new RegExp(sepDim, 'gi')
-          let newGenSubs = genSubs.replace(re, index)
-          levelLHS = `${level}${newGenSubs}`
+          genSubs = genSubs.replace(re, index)
+          levelLHS = `${level}${genSubs}`
           levelRefId = canonicalVensimName(levelLHS)
           input = input.replace(re, index)
           varLHS = varLHS.replace(re, index)
@@ -474,10 +474,13 @@ export default class EquationReader extends ModelReader {
       // Generate an aux var to hold the delay time expression.
       let delayTimeVarName = newAuxVarName()
       this.var.delayTimeVarName = canonicalName(delayTimeVarName)
+      if (isSeparatedVar(this.var)) {
+        Model.addNonAtoAVar(this.var.delayTimeVarName, [true])
+      }
       let delayTimeEqn = `${delayTimeVarName}${genSubs} = ${delay}`
       this.addVariable(delayTimeEqn)
       // Add a reference to the var, since it won't show up until code gen time.
-      this.var.references.push(this.var.delayTimeVarName)
+      this.var.references.push(canonicalVensimName(`${delayTimeVarName}${genSubs}`))
     } else if (fn === '_DELAY3' || fn === '_DELAY3I') {
       let level1, level1LHS, level1RefId
       let level2, level2LHS, level2RefId
@@ -513,14 +516,14 @@ export default class EquationReader extends ModelReader {
         }
         if (index) {
           let re = new RegExp(sepDim, 'gi')
-          let newGenSubs = genSubs.replace(re, index)
-          level1LHS = `${level1}${newGenSubs}`
-          level2LHS = `${level2}${newGenSubs}`
-          level3LHS = `${level3}${newGenSubs}`
-          aux1LHS = `${aux1}${newGenSubs}`
-          aux2LHS = `${aux2}${newGenSubs}`
-          aux3LHS = `${aux3}${newGenSubs}`
-          aux4LHS = `${aux4}${newGenSubs}`
+          genSubs = genSubs.replace(re, index)
+          level1LHS = `${level1}${genSubs}`
+          level2LHS = `${level2}${genSubs}`
+          level3LHS = `${level3}${genSubs}`
+          aux1LHS = `${aux1}${genSubs}`
+          aux2LHS = `${aux2}${genSubs}`
+          aux3LHS = `${aux3}${genSubs}`
+          aux4LHS = `${aux4}${genSubs}`
           level1RefId = canonicalVensimName(level1LHS)
           level2RefId = canonicalVensimName(level2LHS)
           level3RefId = canonicalVensimName(level3LHS)
@@ -561,9 +564,12 @@ export default class EquationReader extends ModelReader {
       this.addVariable(`${aux3LHS} = ${level3LHS} / ${delay3}`)
       // Generate an aux var to hold the delay time expression.
       this.var.delayTimeVarName = canonicalName(aux4)
+      if (isSeparatedVar(this.var)) {
+        Model.addNonAtoAVar(this.var.delayTimeVarName, [true])
+      }
       this.addVariable(`${aux4LHS} = ${delay3}`)
       // Add a reference to the var, since it won't show up until code gen time.
-      this.var.references.push(this.var.delayTimeVarName)
+      this.var.references.push(canonicalVensimName(`${aux4}${genSubs}`))
     }
   }
   generateDelayLevel(levelLHS, levelRefId, input, aux, init) {
