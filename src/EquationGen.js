@@ -638,12 +638,12 @@ export default class EquationGen extends ModelReader {
       this.emit(smoothVar.varName)
       this.emit(this.rhsSubscriptGen(smoothVar.subscripts))
     } else if (isTrendFunction(fn)) {
-      // For delay  functions, replace the entire call with the expansion variable generated earlier.
+      // For trend functions, replace the entire call with the expansion variable generated earlier.
       let trendVar = Model.varWithRefId(this.var.trendVarName)
       let rhsSubs = this.rhsSubscriptGen(trendVar.subscripts)
       this.emit(`${this.var.trendVarName}${rhsSubs}`)
     } else if (isDelayFunction(fn)) {
-      // For delay  functions, replace the entire call with the expansion variable generated earlier.
+      // For delay functions, replace the entire call with the expansion variable generated earlier.
       let delayVar = Model.varWithRefId(this.var.delayVarRefId)
       let rhsSubs = this.rhsSubscriptGen(delayVar.subscripts)
       this.emit(`(${delayVar.varName}${rhsSubs} / ${this.var.delayTimeVarName}${rhsSubs})`)
