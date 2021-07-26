@@ -1,3 +1,4 @@
+import path from 'path'
 import R from 'ramda'
 import XLSX from 'xlsx'
 import { ModelLexer, ModelParser } from 'antlr4-vensim'
@@ -34,7 +35,7 @@ import {
 } from './Helpers.js'
 
 export default class EquationGen extends ModelReader {
-  constructor(variable, extData, directData, mode) {
+  constructor(variable, extData, directData, mode, modelDirname) {
     super()
     // the variable we are generating code for
     this.var = variable
@@ -44,6 +45,8 @@ export default class EquationGen extends ModelReader {
     this.directData = directData
     // set to 'decl', 'init-lookups', 'eval', etc depending on the section being generated
     this.mode = mode
+    // The model directory is required when reading data files for GET DIRECT DATA.
+    this.modelDirname = modelDirname
     // Maps of LHS subscript families to loop index vars for lookup on the RHS
     this.loopIndexVars = new LoopIndexVars(['i', 'j', 'k'])
     this.arrayIndexVars = new LoopIndexVars(['v', 'w'])
@@ -375,7 +378,8 @@ export default class EquationGen extends ModelReader {
         }
       } else {
         // The file is a CSV pathname. Read it now.
-        let data = readCsv(file, tab)
+        let csvPathname = path.resolve(this.modelDirname, file)
+        let data = readCsv(csvPathname, tab)
         if (data) {
           getCellValue = (c, r) => (data[r] != null ? cdbl(data[r][c]) : null)
         }
@@ -439,7 +443,8 @@ export default class EquationGen extends ModelReader {
     // Map zero, one, or two dimensions on the LHS in model order to a table of numbers in a CSV file.
     let result = this.comments
     let { file, tab, startCell } = this.var.directConstArgs
-    let data = readCsv(file, tab)
+    let csvPathname = path.resolve(this.modelDirname, file)
+    let data = readCsv(csvPathname, tab)
     if (data) {
       let getCellValue = (c, r) => (data[r] != null && data[r][c] != null ? cdbl(data[r][c]) : null)
       let modelLHSReader = new ModelLHSReader()
@@ -578,6 +583,7 @@ export default class EquationGen extends ModelReader {
     }
     return result
   }
+
   //
   // Visitor callbacks
   //
@@ -707,12 +713,12 @@ export default class EquationGen extends ModelReader {
       this.emit(smoothVar.varName)
       this.emit(this.rhsSubscriptGen(smoothVar.subscripts))
     } else if (isTrendFunction(fn)) {
-      // For delay  functions, replace the entire call with the expansion variable generated earlier.
+      // For trend functions, replace the entire call with the expansion variable generated earlier.
       let trendVar = Model.varWithRefId(this.var.trendVarName)
       let rhsSubs = this.rhsSubscriptGen(trendVar.subscripts)
       this.emit(`${this.var.trendVarName}${rhsSubs}`)
     } else if (isDelayFunction(fn)) {
-      // For delay  functions, replace the entire call with the expansion variable generated earlier.
+      // For delay functions, replace the entire call with the expansion variable generated earlier.
       let delayVar = Model.varWithRefId(this.var.delayVarRefId)
       let rhsSubs = this.rhsSubscriptGen(delayVar.subscripts)
       this.emit(`(${delayVar.varName}${rhsSubs} / ${this.var.delayTimeVarName}${rhsSubs})`)
