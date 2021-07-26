@@ -443,7 +443,8 @@ export default class EquationGen extends ModelReader {
     // Map zero, one, or two dimensions on the LHS in model order to a table of numbers in a CSV file.
     let result = this.comments
     let { file, tab, startCell } = this.var.directConstArgs
-    let data = readCsv(file, tab)
+    let csvPathname = path.resolve(this.modelDirname, file)
+    let data = readCsv(csvPathname, tab)
     if (data) {
       let getCellValue = (c, r) => (data[r] != null && data[r][c] != null ? cdbl(data[r][c]) : null)
       let modelLHSReader = new ModelLHSReader()
