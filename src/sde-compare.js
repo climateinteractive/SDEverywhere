@@ -1,13 +1,13 @@
-const R = require('ramda')
-const { pr } = require('bufx')
-const { readDat, fileExists } = require('./Helpers')
+import R from 'ramda'
+import { pr } from 'bufx'
+import { readDat, fileExists } from './Helpers.js'
 
 // The epsilon value determines the required precision for value comparisons.
 let ε = 1e-5
 
-let command = 'compare [options] <vensimlog> <sdelog>'
-let describe = 'compare Vensim and SDEverywhere log files in DAT format'
-let builder = {
+export let command = 'compare [options] <vensimlog> <sdelog>'
+export let describe = 'compare Vensim and SDEverywhere log files in DAT format'
+export let builder = {
   precision: {
     describe: 'precision to which values must agree (default 1e-5)',
     type: 'number',
@@ -24,10 +24,10 @@ let builder = {
     alias: 't'
   }
 }
-let handler = argv => {
+export let handler = argv => {
   compare(argv.vensimlog, argv.sdelog, argv)
 }
-let compare = async (vensimfile, sdefile, opts) => {
+export let compare = async (vensimfile, sdefile, opts) => {
   if (opts.precision) {
     ε = opts.precision
   }
@@ -89,7 +89,7 @@ let isEqual = (x, y) => {
   return difference(x, y) < ε
 }
 
-module.exports = {
+export default {
   command,
   describe,
   builder,

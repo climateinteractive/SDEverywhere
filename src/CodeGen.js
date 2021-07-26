@@ -1,12 +1,12 @@
-const R = require('ramda')
-const ModelLHSReader = require('./ModelLHSReader')
-const EquationGen = require('./EquationGen')
-const Model = require('./Model')
-const { sub, allDimensions, allMappings, subscriptFamilies } = require('./Subscript')
-const { asort, lines, strlist, abend, mapIndexed } = require('./Helpers')
+import R from 'ramda'
+import ModelLHSReader from './ModelLHSReader.js'
+import EquationGen from './EquationGen.js'
+import Model from './Model.js'
+import { sub, allDimensions, allMappings, subscriptFamilies } from './Subscript.js'
+import { asort, lines, strlist, abend, mapIndexed } from './Helpers.js'
 
-let codeGenerator = (parseTree, opts) => {
-  const { spec, operation, extData, directData } = opts
+export let codeGenerator = (parseTree, opts) => {
+  const { spec, operation, extData, directData, modelDirname } = opts
   // Set to 'decl', 'init-lookups', 'eval', etc depending on the section being generated.
   let mode = ''
   // Set to true to output all variables when there is no model run spec.
@@ -25,7 +25,7 @@ let codeGenerator = (parseTree, opts) => {
     // Read variables and subscript ranges from the model parse tree.
     // This is the main entry point for code generation and is called just once.
     try {
-      Model.read(parseTree, spec, extData, directData)
+      Model.read(parseTree, spec, extData, directData, modelDirname)
       // In list mode, print variables to the console instead of generating code.
       if (operation === 'printRefIdTest') {
         Model.printRefIdTest()
@@ -337,5 +337,3 @@ ${postStep}
     generate: generate,
   }
 }
-
-module.exports = { codeGenerator }

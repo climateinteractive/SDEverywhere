@@ -1,14 +1,14 @@
-const antlr4 = require('antlr4')
-const { ModelLexer, ModelParser } = require('antlr4-vensim')
-const ModelReader = require('./ModelReader')
-const R = require('ramda')
-const { sub, isIndex, normalizeSubscripts } = require('./Subscript')
-const { canonicalName, vlog, subscripts } = require('./Helpers')
+import antlr4 from 'antlr4'
+import { ModelLexer, ModelParser } from 'antlr4-vensim'
+import ModelReader from './ModelReader.js'
+import R from 'ramda'
+import { sub, isIndex, normalizeSubscripts } from './Subscript.js'
+import { canonicalName } from './Helpers.js'
 //
 // VarNameReader reads a model var name using the parser to get the var name in C format.
 // This is used to generate a variable output in the output section.
 //
-module.exports = class VarNameReader extends ModelReader {
+export default class VarNameReader extends ModelReader {
   constructor() {
     super()
     this.varName = ''

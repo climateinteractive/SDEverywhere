@@ -1,6 +1,6 @@
 # SDEverywhere Guide
 
-Revised: 2020-04-06
+Revised: 2021-07-08
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
@@ -73,7 +73,7 @@ Using SDEverywhere requires the macOS operating system and the free [Xcode](http
 
 ### Install Node.js
 
-Install [Node.js](https://nodejs.org/) version 8.9.4 LTS or later. This will also install the `npm` Node Package Manager.
+Install [Node.js](https://nodejs.org/) version 14 or later. This will also install the `npm` Node Package Manager.
 
 ### Install SDEverywhere
 

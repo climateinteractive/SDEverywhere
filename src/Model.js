@@ -1,15 +1,17 @@
-const antlr4 = require('antlr4')
-const { ModelLexer, ModelParser } = require('antlr4-vensim')
-const R = require('ramda')
-const B = require('bufx')
-const yaml = require('js-yaml')
-const toposort = require('./toposort')
-const VariableReader = require('./VariableReader')
-const VarNameReader = require('./VarNameReader')
-const SubscriptRangeReader = require('./SubscriptRangeReader')
-const Variable = require('./Variable')
-const {
+import antlr4 from 'antlr4'
+import { ModelLexer, ModelParser } from 'antlr4-vensim'
+import R from 'ramda'
+import B from 'bufx'
+import yaml from 'js-yaml'
+import toposort from './toposort.js'
+import VariableReader from './VariableReader.js'
+import VarNameReader from './VarNameReader.js'
+import SubscriptRangeReader from './SubscriptRangeReader.js'
+import EquationReader from './EquationReader.js'
+import Variable from './Variable.js'
+import {
   addIndex,
+  allAliases,
   allDimensions,
   indexNamesForSubscript,
   isDimension,
@@ -17,8 +19,8 @@ const {
   normalizeSubscripts,
   sub,
   subscriptFamilies
-} = require('./Subscript')
-const { decanonicalize, isIterable, listConcat, strlist, vlog, vsort } = require('./Helpers')
+} from './Subscript.js'
+import { decanonicalize, isIterable, listConcat, strlist, vlog, vsort } from './Helpers.js'
 
 let variables = []
 
@@ -33,12 +35,12 @@ const PRINT_INIT_GRAPH = false
 const PRINT_AUX_GRAPH = false
 const PRINT_LEVEL_GRAPH = false
 
-function read(parseTree, spec, extData, directData) {
+function read(parseTree, spec, extData, directData, modelDirname) {
   // Some arrays need to be separated into variables with individual indices to
   // prevent eval cycles. They are manually added to the spec file.
   let specialSeparationDims = spec.specialSeparationDims
   // Subscript ranges must be defined before reading variables that use them.
-  readSubscriptRanges(parseTree, spec.dimensionFamilies, spec.indexFamilies)
+  readSubscriptRanges(parseTree, spec.dimensionFamilies, spec.indexFamilies, modelDirname)
   // Read variables from the model parse tree.
   readVariables(parseTree, specialSeparationDims, directData)
   // Analyze model equations to fill in more details about variables.
@@ -48,26 +50,38 @@ function read(parseTree, spec, extData, directData) {
   // Remove variables that are not referenced by an input or output variable.
   removeUnusedVariables(spec)
 }
-function readSubscriptRanges(tree, dimensionFamilies, indexFamilies) {
+function readSubscriptRanges(tree, dimensionFamilies, indexFamilies, modelDirname) {
   // Read subscript ranges from the model.
-  let subscriptRangeReader = new SubscriptRangeReader()
+  let subscriptRangeReader = new SubscriptRangeReader(modelDirname)
   subscriptRangeReader.visitModel(tree)
   let allDims = allDimensions()
-
   // Expand dimensions that appeared in subscript range definitions into indices.
   // Repeat until there are only indices in dimension values.
   let dimFoundInValue
   do {
     dimFoundInValue = false
     for (let dim of allDims) {
-      let value = R.flatten(R.map(subscript => (isDimension(subscript) ? sub(subscript).value : subscript), dim.value))
-      if (!R.equals(value, dim.value)) {
-        dimFoundInValue = true
-        dim.value = value
-        dim.size = value.length
+      if (dim.value !== '') {
+        let value = R.flatten(R.map(subscript => (isDimension(subscript) ? sub(subscript).value : subscript), dim.value))
+        if (!R.equals(value, dim.value)) {
+          dimFoundInValue = true
+          dim.value = value
+          dim.size = value.length
+        }
       }
     }
   } while (dimFoundInValue)
+
+  // Fill in subscript aliases from their model families.
+  for (let dim of allAliases()) {
+    if (dim.value === '') {
+      let refDim = sub(dim.family)
+      dim.value = refDim.value
+      dim.size = refDim.size
+      dim.modelValue = refDim.modelValue
+      allDims.push(dim)
+    }
+  }
 
   // Update the families of dimensions. At this point, all dimensions have their family
   // provisionally set to their own dimension name.
@@ -96,7 +110,10 @@ function readSubscriptRanges(tree, dimensionFamilies, indexFamilies) {
       // first in alpha sort order, by convention.
       // Take the first index in the dimension.
       let index = dim.value[0]
-      let familyDims = R.sort(dimComparator, R.filter(thisDim => R.contains(index, thisDim.value), allDims))
+      let familyDims = R.sort(
+        dimComparator,
+        R.filter(thisDim => R.contains(index, thisDim.value), allDims)
+      )
       if (familyDims.length > 0) {
         dim.family = R.last(familyDims).name
       } else {
@@ -139,9 +156,7 @@ function readSubscriptRanges(tree, dimensionFamilies, indexFamilies) {
             invertedMappingValue[toIndNumber] = fromIndName
           } else {
             console.error(
-              `ERROR: map-to index "${toSubName}" not found when mapping from dimension "${
-                fromDim.name
-              }" index "${fromIndName}"`
+              `ERROR: map-to index "${toSubName}" not found when mapping from dimension "${fromDim.name}" index "${fromIndName}"`
             )
           }
         }
@@ -393,7 +408,6 @@ function setRefIds() {
 function readEquations() {
   // Augment variables with information from their equations.
   // This requires a refId for each var so that actual refIds can be resolved for the reference list.
-  const EquationReader = require('./EquationReader')
   R.forEach(v => {
     let equationReader = new EquationReader(v)
     equationReader.read()
@@ -401,7 +415,6 @@ function readEquations() {
 }
 function addEquation(modelEquation) {
   // Add an equation in Vensim model format.
-  const EquationReader = require('./EquationReader')
   let chars = new antlr4.InputStream(modelEquation)
   let lexer = new ModelLexer(chars)
   let tokens = new antlr4.CommonTokenStream(lexer)
@@ -468,7 +481,6 @@ function initVars() {
   return sortInitVars()
 }
 function varWithRefId(refId) {
-
   const findVarWithRefId = rid => {
     // First see if we have a map key where ref id matches the var name
     let varsForName = variablesByName.get(rid)
@@ -478,7 +490,7 @@ function varWithRefId(refId) {
         return v
       }
     }
-    
+
     // Failing that, chop off the subscript part of the ref id and
     // find the variables that share that name
     const varNamePart = rid.split('[')[0]
@@ -688,7 +700,10 @@ function sortVarsOfType(varType) {
   }
 
   // Turn the dependency-sorted var name list into a var list.
-  let sortedVars = varsOfType(varType, R.map(refId => varWithRefId(refId), deps))
+  let sortedVars = varsOfType(
+    varType,
+    R.map(refId => varWithRefId(refId), deps)
+  )
 
   // Add the ref ids to a set for faster lookup in the next step
   const sortedVarRefIds = new Set()
@@ -789,7 +804,10 @@ function sortInitVars() {
   let sortedVars = R.map(refId => varWithRefId(refId), deps)
 
   // Filter out vars with constant values.
-  sortedVars = R.reject(R.propSatisfies(varType => varType === 'const' || varType === 'lookup', 'varType'), sortedVars)
+  sortedVars = R.reject(
+    R.propSatisfies(varType => varType === 'const' || varType === 'lookup', 'varType'),
+    sortedVars
+  )
 
   // Add the ref ids to a set for faster lookup in the next step
   const sortedVarRefIds = new Set()
@@ -835,7 +853,10 @@ function printVarList() {
 }
 function yamlVarList() {
   // Print selected properties of all variable objects to a YAML string.
-  let vars = R.sortBy(R.prop('refId'), R.map(v => filterVar(v), variables))
+  let vars = R.sortBy(
+    R.prop('refId'),
+    R.map(v => filterVar(v), variables)
+  )
   return yaml.safeDump(vars)
 }
 function printVar(v) {
@@ -951,7 +972,7 @@ function printDepsGraph(graph, varType) {
     console.error(`${dep[0]} → ${dep[1]}`)
   }
 }
-module.exports = {
+export default {
   addEquation,
   addNonAtoAVar,
   addVariable,

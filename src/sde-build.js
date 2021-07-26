@@ -1,9 +1,9 @@
-const { generate } = require('./sde-generate')
-const { compile } = require('./sde-compile')
+import { generate } from './sde-generate.js'
+import { compile } from './sde-compile.js'
 
-let command = 'build [options] <model>'
-let describe = 'generate model code and compile it'
-let builder = {
+export let command = 'build [options] <model>'
+export let describe = 'generate model code and compile it'
+export let builder = {
   spec: {
     describe: 'pathname of the I/O specification JSON file',
     type: 'string',
@@ -15,16 +15,16 @@ let builder = {
     alias: 'b'
   }
 }
-let handler = argv => {
+export let handler = argv => {
   build(argv.model, argv)
 }
-let build = async (model, opts) => {
+export let build = async (model, opts) => {
   opts.genc = true
   await generate(model, opts)
   compile(model, opts)
 }
 
-module.exports = {
+export default {
   command,
   describe,
   builder,

@@ -1,9 +1,9 @@
-const path = require('path')
-const R = require('ramda')
-const B = require('bufx')
-const { splitEquations } = require('./Helpers')
+import path from 'path'
+import R from 'ramda'
+import B from 'bufx'
+import { splitEquations, replaceDelimitedStrings } from './Helpers.js'
 
-let preprocessModel = (mdlFilename, spec, profile = 'genc', writeFiles = false, outDecls = []) => {
+export let preprocessModel = (mdlFilename, spec, profile = 'genc', writeFiles = false, outDecls = []) => {
   const MACROS_FILENAME = 'macros.txt'
   const REMOVALS_FILENAME = 'removals.txt'
   const INSERTIONS_FILENAME = 'mdl-edits.txt'
@@ -134,6 +134,8 @@ let preprocessModel = (mdlFilename, spec, profile = 'genc', writeFiles = false, 
     eqn = eqn.replace('{UTF-8}', '')
     // Remove ":RAW:" flag; it is not needed by SDE and causes problems if left in
     eqn = eqn.replace(/:RAW:/g, '')
+    // Remove inline comments
+    eqn = replaceDelimitedStrings(eqn, '{', '}', '')
     // Remove whitespace
     eqn = eqn.trim()
     if (eqn.length > 0) {
@@ -238,5 +240,3 @@ let preprocessModel = (mdlFilename, spec, profile = 'genc', writeFiles = false, 
   // Return the preprocessed model as a string.
   return mdl
 }
-
-module.exports = { preprocessModel }
