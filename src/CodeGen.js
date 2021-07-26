@@ -19,7 +19,7 @@ export let codeGenerator = (parseTree, opts) => {
     outputAllVars = true
   }
   // Function to generate a section of the code
-  let generateSection = R.map(v => new EquationGen(v, extData, directData, mode).generate())
+  let generateSection = R.map(v => new EquationGen(v, extData, directData, mode, modelDirname).generate())
   let section = R.pipe(generateSection, R.flatten, lines)
   function generate() {
     // Read variables and subscript ranges from the model parse tree.
