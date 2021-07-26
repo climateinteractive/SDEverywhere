@@ -325,13 +325,8 @@ export let readCsv = (pathname, delimiter = ',') => {
     skip_empty_lines: true,
     skip_lines_with_empty_values: true
   }
-  try {
-    let data = B.read(pathname)
-    result = parseCsv(data, CSV_PARSE_OPTS)
-  } catch (error) {
-    console.error(`ERROR: CSV file ${pathname} not found`)
-  }
-  return result
+  let data = B.read(pathname)
+  return parseCsv(data, CSV_PARSE_OPTS)
 }
 // Convert the var name and subscript names to canonical form separately.
 export let canonicalVensimName = vname => {
