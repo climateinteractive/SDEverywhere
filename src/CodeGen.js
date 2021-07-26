@@ -6,7 +6,7 @@ import { sub, allDimensions, allMappings, subscriptFamilies } from './Subscript.
 import { asort, lines, strlist, abend, mapIndexed } from './Helpers.js'
 
 export let codeGenerator = (parseTree, opts) => {
-  const { spec, operation, extData, directData } = opts
+  const { spec, operation, extData, directData, modelDirname } = opts
   // Set to 'decl', 'init-lookups', 'eval', etc depending on the section being generated.
   let mode = ''
   // Set to true to output all variables when there is no model run spec.
@@ -19,13 +19,13 @@ export let codeGenerator = (parseTree, opts) => {
     outputAllVars = true
   }
   // Function to generate a section of the code
-  let generateSection = R.map(v => new EquationGen(v, extData, directData, mode).generate())
+  let generateSection = R.map(v => new EquationGen(v, extData, directData, mode, modelDirname).generate())
   let section = R.pipe(generateSection, R.flatten, lines)
   function generate() {
     // Read variables and subscript ranges from the model parse tree.
     // This is the main entry point for code generation and is called just once.
     try {
-      Model.read(parseTree, spec, extData, directData)
+      Model.read(parseTree, spec, extData, directData, modelDirname)
       // In list mode, print variables to the console instead of generating code.
       if (operation === 'printRefIdTest') {
         Model.printRefIdTest()
@@ -253,7 +253,7 @@ ${postStep}
     let a = R.map(indexName => sub(indexName).value, indices)
     return strlist(a)
   }
-  function expandedVarNames(vensimNames) {
+  function expandedVarNames(vensimNames = false) {
     // Return a list of var names for all variables except lookups and data variables.
     // The names are in Vensim format if vensimNames is true, otherwise they are in C format.
     // Expand subscripted vars into separate var names with each index.

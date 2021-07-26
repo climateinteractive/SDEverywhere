@@ -96,6 +96,8 @@ export default class EquationReader extends ModelReader {
       this.var.hasInitValue = true
     } else if (fn === '_GET_DIRECT_DATA') {
       this.var.varType = 'data'
+    } else if (fn === '_GET_DIRECT_CONSTANTS') {
+      this.var.varType = 'const'
     }
     super.visitCall(ctx)
     this.callStack.pop()
@@ -127,15 +129,32 @@ export default class EquationReader extends ModelReader {
       this.expandDelayFunction(fn, args)
     } else if (fn === '_GET_DIRECT_DATA') {
       // Extract string constant arguments into an object used in code generation.
+      // For Excel files, the file argument names an indirect "?" file tag from the model settings.
+      // For CSV files, it gives a relative pathname in the model directory.
+      // For Excel files, the tab argument names an Excel worksheet.
+      // For CSV files, it gives the delimiter character.
       let args = R.map(
         arg => matchRegex(arg, /'(.*)'/),
         R.map(expr => expr.getText(), ctx.expr())
       )
       this.var.directDataArgs = {
-        tag: args[0],
-        sheetName: args[1],
+        file: args[0],
+        tab: args[1],
         timeRowOrCol: args[2],
         startCell: args[3]
+      }
+    } else if (fn === '_GET_DIRECT_CONSTANTS') {
+      // Extract string constant arguments into an object used in code generation.
+      // The file argument gives a relative pathname in the model directory.
+      // The tab argument gives the delimiter character.
+      let args = R.map(
+        arg => matchRegex(arg, /'(.*)'/),
+        R.map(expr => expr.getText(), ctx.expr())
+      )
+      this.var.directConstArgs = {
+        file: args[0],
+        tab: args[1],
+        startCell: args[2]
       }
     } else {
       // Keep track of all function names referenced in this expression.  Note that lookup
@@ -455,8 +474,8 @@ export default class EquationReader extends ModelReader {
         }
         if (index) {
           let re = new RegExp(sepDim, 'gi')
-          let newGenSubs = genSubs.replace(re, index)
-          levelLHS = `${level}${newGenSubs}`
+          genSubs = genSubs.replace(re, index)
+          levelLHS = `${level}${genSubs}`
           levelRefId = canonicalVensimName(levelLHS)
           input = input.replace(re, index)
           varLHS = varLHS.replace(re, index)
@@ -474,10 +493,13 @@ export default class EquationReader extends ModelReader {
       // Generate an aux var to hold the delay time expression.
       let delayTimeVarName = newAuxVarName()
       this.var.delayTimeVarName = canonicalName(delayTimeVarName)
+      if (isSeparatedVar(this.var)) {
+        Model.addNonAtoAVar(this.var.delayTimeVarName, [true])
+      }
       let delayTimeEqn = `${delayTimeVarName}${genSubs} = ${delay}`
       this.addVariable(delayTimeEqn)
       // Add a reference to the var, since it won't show up until code gen time.
-      this.var.references.push(this.var.delayTimeVarName)
+      this.var.references.push(canonicalVensimName(`${delayTimeVarName}${genSubs}`))
     } else if (fn === '_DELAY3' || fn === '_DELAY3I') {
       let level1, level1LHS, level1RefId
       let level2, level2LHS, level2RefId
@@ -513,14 +535,14 @@ export default class EquationReader extends ModelReader {
         }
         if (index) {
           let re = new RegExp(sepDim, 'gi')
-          let newGenSubs = genSubs.replace(re, index)
-          level1LHS = `${level1}${newGenSubs}`
-          level2LHS = `${level2}${newGenSubs}`
-          level3LHS = `${level3}${newGenSubs}`
-          aux1LHS = `${aux1}${newGenSubs}`
-          aux2LHS = `${aux2}${newGenSubs}`
-          aux3LHS = `${aux3}${newGenSubs}`
-          aux4LHS = `${aux4}${newGenSubs}`
+          genSubs = genSubs.replace(re, index)
+          level1LHS = `${level1}${genSubs}`
+          level2LHS = `${level2}${genSubs}`
+          level3LHS = `${level3}${genSubs}`
+          aux1LHS = `${aux1}${genSubs}`
+          aux2LHS = `${aux2}${genSubs}`
+          aux3LHS = `${aux3}${genSubs}`
+          aux4LHS = `${aux4}${genSubs}`
           level1RefId = canonicalVensimName(level1LHS)
           level2RefId = canonicalVensimName(level2LHS)
           level3RefId = canonicalVensimName(level3LHS)
@@ -561,9 +583,12 @@ export default class EquationReader extends ModelReader {
       this.addVariable(`${aux3LHS} = ${level3LHS} / ${delay3}`)
       // Generate an aux var to hold the delay time expression.
       this.var.delayTimeVarName = canonicalName(aux4)
+      if (isSeparatedVar(this.var)) {
+        Model.addNonAtoAVar(this.var.delayTimeVarName, [true])
+      }
       this.addVariable(`${aux4LHS} = ${delay3}`)
       // Add a reference to the var, since it won't show up until code gen time.
-      this.var.references.push(this.var.delayTimeVarName)
+      this.var.references.push(canonicalVensimName(`${aux4}${genSubs}`))
     }
   }
   generateDelayLevel(levelLHS, levelRefId, input, aux, init) {
