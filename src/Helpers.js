@@ -98,6 +98,10 @@ export let isTrendFunction = fn => {
   // Return true if fn is a Vensim trend function.
   return fn === '_TREND'
 }
+export let isNpvFunction = fn => {
+  // Return true if fn is a Vensim NPV function.
+  return fn === '_NPV'
+}
 export let isDelayFunction = fn => {
   // Return true if fn is a Vensim delay function.
   return fn === '_DELAY1' || fn === '_DELAY1I' || fn === '_DELAY3' || fn === '_DELAY3I'

@@ -26,6 +26,7 @@ import {
   isDelayFunction,
   isSmoothFunction,
   isTrendFunction,
+  isNpvFunction,
   listConcat,
   newTmpVarName,
   permutationsOf,
@@ -717,6 +718,11 @@ export default class EquationGen extends ModelReader {
       let trendVar = Model.varWithRefId(this.var.trendVarName)
       let rhsSubs = this.rhsSubscriptGen(trendVar.subscripts)
       this.emit(`${this.var.trendVarName}${rhsSubs}`)
+    } else if (isNpvFunction(fn)) {
+      // For NPV functions, replace the entire call with the expansion variable generated earlier.
+      let npvVar = Model.varWithRefId(this.var.npvVarName)
+      let rhsSubs = this.rhsSubscriptGen(npvVar.subscripts)
+      this.emit(`${this.var.npvVarName}${rhsSubs}`)
     } else if (isDelayFunction(fn)) {
       // For delay functions, replace the entire call with the expansion variable generated earlier.
       let delayVar = Model.varWithRefId(this.var.delayVarRefId)

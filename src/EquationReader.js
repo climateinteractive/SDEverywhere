@@ -20,6 +20,7 @@ import {
   isSeparatedVar,
   isSmoothFunction,
   isTrendFunction,
+  isNpvFunction,
   matchRegex,
   newAuxVarName,
   newLevelVarName,
@@ -123,6 +124,21 @@ export default class EquationReader extends ModelReader {
       this.addVariable(`${aux}${genSubs} = ZIDZ(${input} - ${level}${genSubs}, ${avgTime} * ABS(${level}${genSubs}))`)
       this.var.trendVarName = canonicalName(aux)
       this.var.references.push(this.var.trendVarName)
+    } else if (isNpvFunction(fn)) {
+      // Generate level vars to expand the NPV call.
+      // Get NPV arguments for the function expansion.
+      let args = R.map(expr => expr.getText(), ctx.expr())
+      let stream = args[0]
+      let discountRate = args[1]
+      let initVal = args[2]
+      let factor = args[3]
+      let level = this.generateNpvLevels(stream, discountRate, initVal, factor)
+      let genSubs = this.genSubs(stream, discountRate, initVal, factor)
+      let aux = newAuxVarName()
+      // npv = (ncum + stream * TIME STEP * df) * factor
+      this.addVariable(`${aux}${genSubs} = (${level.ncum} + ${stream} * TIME STEP * ${level.df}) * ${factor}`)
+      this.var.npvVarName = canonicalName(aux)
+      this.var.references.push(this.var.npvVarName)
     } else if (isDelayFunction(fn)) {
       // Generate a level var to expand the DELAY* call.
       let args = R.map(expr => expr.getText(), ctx.expr())
@@ -184,7 +200,7 @@ export default class EquationReader extends ModelReader {
       this.expandedRefIds = []
       super.visitVar(ctx)
       // Separate init references from eval references in level formulas.
-      if (isSmoothFunction(fn) || isTrendFunction(fn) || isDelayFunction(fn)) {
+      if (isSmoothFunction(fn) || isTrendFunction(fn) || isNpvFunction(fn) || isDelayFunction(fn)) {
         // Do not set references inside the call, since it will be replaced
         // with the generated level var.
       } else if (this.argIndexForFunctionName('_INTEG') === 1) {
@@ -445,6 +461,27 @@ export default class EquationReader extends ModelReader {
     this.expandedRefIds = []
     this.addReferencesToList(this.var.references)
     return level
+  }
+  generateNpvLevels(stream, discountRate, initVal, factor) {
+    // Generate two level equations to implement NPV.
+    // Return the canonical names of the generated level vars as object properties.
+    let genSubs = this.genSubs(stream, discountRate, initVal, factor)
+    // df = INTEG((-df * discount rate) / (1 + discount rate * TIME STEP), 1)
+    let df = newLevelVarName()
+    let dfLHS = df + genSubs
+    let dfEqn = `${dfLHS} = INTEG((-${dfLHS} * ${discountRate}) / (1 + ${discountRate} * TIME STEP), 1)`
+    this.addVariable(dfEqn)
+    // ncum = INTEG(stream * df, init val)
+    let ncum = newLevelVarName()
+    let ncumLHS = ncum + genSubs
+    let ncumEqn = `${ncumLHS} = INTEG(${stream} * ${dfLHS}, ${initVal})`
+    this.addVariable(ncumEqn)
+    // Add references to the new level vars.
+    // If they have subscripts, the refIds are still just the var name, because they are apply-to-all arrays.
+    this.refId = ''
+    this.expandedRefIds = [canonicalName(ncum), canonicalName(df)]
+    this.addReferencesToList(this.var.references)
+    return { ncum, df }
   }
   expandDelayFunction(fn, args) {
     // Generate variables for a DELAY* call found in the RHS.
