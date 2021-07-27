@@ -10,10 +10,6 @@ init val = 0 ~~|
 factor = 1 ~~|
 NPV vs initial time = NPV(stream, discount rate, init val, factor) ~~~:SUPPLEMENTARY|
 
-ncum = INTEG(stream * df, init val) ~~|
-df = INTEG((-df * discount rate) / (1 + discount rate * TIME STEP), 1) ~~|
-mynpv = (ncum + stream * TIME STEP * df) * factor ~~~:SUPPLEMENTARY|
-
 ********************************************************
 	.Control
 ********************************************************~

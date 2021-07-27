@@ -36,6 +36,8 @@ export default class Variable {
     this.smoothVarRefId = ''
     // TREND calls are expanded into new level vars and substituted during code generation.
     this.trendVarName = ''
+    // NPV calls are expanded into new level vars and substituted during code generation.
+    this.npvVarName = ''
     // DELAY3* calls are expanded into new level vars and substituted during code generation.
     this.delayVarRefId = ''
     this.delayTimeVarName = ''
