@@ -62,7 +62,9 @@ function readSubscriptRanges(tree, dimensionFamilies, indexFamilies, modelDirnam
     dimFoundInValue = false
     for (let dim of allDims) {
       if (dim.value !== '') {
-        let value = R.flatten(R.map(subscript => (isDimension(subscript) ? sub(subscript).value : subscript), dim.value))
+        let value = R.flatten(
+          R.map(subscript => (isDimension(subscript) ? sub(subscript).value : subscript), dim.value)
+        )
         if (!R.equals(value, dim.value)) {
           dimFoundInValue = true
           dim.value = value

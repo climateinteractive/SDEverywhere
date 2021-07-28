@@ -95,7 +95,7 @@ npm rm sdeverywhere -g
 
 Clone the `SDEverywhere` and `antlr4-vensim` repos in a project directory of your choice using either `git` on the command line or Sourcetree (see below).
 
-*If you are using command-line Git*, clone each repo and track the `develop` branch, substituting your project directory name for "{project directory}".
+_If you are using command-line Git_, clone each repo and track the `develop` branch, substituting your project directory name for "{project directory}".
 
 ```
 cd {project directory}
@@ -108,7 +108,7 @@ cd SDEverywhere
 git checkout -b develop origin/develop
 ```
 
-*If you are using Sourcetree*,  do File > New > Clone from URL. Fill in the form as follows, substituting your project directory name for "{project directory}".
+_If you are using Sourcetree_, do File > New > Clone from URL. Fill in the form as follows, substituting your project directory name for "{project directory}".
 
 | Prompt           | Contents                                                |
 | ---------------- | ------------------------------------------------------- |
@@ -267,7 +267,7 @@ sde clean {model}
 **Generate a web app to run the model and graph the results**
 
 Note that the `generate --genhtml` command currently uses [Browserify](http://browserify.org)
-to bundle the web app.  The `browserify` package is not included with SDEverywhere by
+to bundle the web app. The `browserify` package is not included with SDEverywhere by
 default, so you will need to install it first as a dev dependency.
 
 ```

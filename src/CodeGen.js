@@ -98,17 +98,17 @@ void initLookups() {
   function emitInitConstantsCode() {
     mode = 'init-constants'
     return `
-${chunkedFunctions('initConstants', Model.constVars(),
-'  // Initialize constants.',
-'  initLookups();'
-)}
+${chunkedFunctions('initConstants', Model.constVars(), '  // Initialize constants.', '  initLookups();')}
 `
   }
 
   function emitInitLevelsCode() {
     mode = 'init-levels'
     return `
-${chunkedFunctions('initLevels', Model.initVars(), `
+${chunkedFunctions(
+  'initLevels',
+  Model.initVars(),
+  `
   // Initialize variables with initialization values, such as levels, and the variables they depend on.
   _time = _initial_time;`
 )}
@@ -122,13 +122,9 @@ ${chunkedFunctions('initLevels', Model.initVars(), `
     mode = 'eval'
 
     return `
-${chunkedFunctions('evalAux', Model.auxVars(),
-'  // Evaluate auxiliaries in order from the bottom up.'
-)}
+${chunkedFunctions('evalAux', Model.auxVars(), '  // Evaluate auxiliaries in order from the bottom up.')}
 
-${chunkedFunctions('evalLevels', Model.levelVars(),
-'  // Evaluate levels.'
-)}
+${chunkedFunctions('evalLevels', Model.levelVars(), '  // Evaluate levels.')}
 `
   }
 
@@ -165,19 +161,13 @@ void ${name}${idx}() {
 }
 `
     }
-    let funcs = R.pipe(
-      mapIndexed(func),
-      lines
-    )
+    let funcs = R.pipe(mapIndexed(func), lines)
 
     // Emit one roll-up function that calls the other chunk functions
     let funcCall = (chunk, idx) => {
       return `  ${name}${idx}();`
     }
-    let funcCalls = R.pipe(
-      mapIndexed(funcCall),
-      lines
-    )
+    let funcCalls = R.pipe(mapIndexed(funcCall), lines)
 
     // Break the vars into chunks of 30; this number was empirically
     // determined by looking at runtime performance and memory usage
@@ -334,6 +324,6 @@ ${postStep}
   }
 
   return {
-    generate: generate,
+    generate: generate
   }
 }

@@ -7,21 +7,21 @@
  * @returns {Array}
  */
 
-export default function(edges) {
+export default function (edges) {
   return toposort(uniqueNodes(edges), edges)
 }
 
 function toposort(nodes, edges) {
-  var cursor = nodes.length
-    , sorted = new Array(cursor)
-    , visited = {}
-    , i = cursor
+  var cursor = nodes.length,
+    sorted = new Array(cursor),
+    visited = {},
+    i = cursor,
     // Better data structures make algorithm much faster.
-    , outgoingEdges = makeOutgoingEdges(edges)
-    , nodesHash = makeNodesHash(nodes)
+    outgoingEdges = makeOutgoingEdges(edges),
+    nodesHash = makeNodesHash(nodes)
 
   // check for unknown nodes
-  edges.forEach(function(edge) {
+  edges.forEach(function (edge) {
     if (!nodesHash.has(edge[0]) || !nodesHash.has(edge[1])) {
       throw new Error('Unknown node. There is an unknown node in the supplied edges.')
     }
@@ -34,28 +34,30 @@ function toposort(nodes, edges) {
   return sorted
 
   function visit(node, i, predecessors) {
-    if(predecessors.has(node)) {
+    if (predecessors.has(node)) {
       // debugger
       var nodeRep
       try {
         nodeRep = '\n' + node + '\n'
-      } catch(e) {
-        nodeRep = ""
+      } catch (e) {
+        nodeRep = ''
       }
       throw new Error('toposort cyclic dependency:\n' + [...predecessors].join(' →\n') + nodeRep)
     }
 
     if (!nodesHash.has(node)) {
-      throw new Error('Found unknown node. Make sure to provided all involved nodes. Unknown node: '+JSON.stringify(node))
+      throw new Error(
+        'Found unknown node. Make sure to provided all involved nodes. Unknown node: ' + JSON.stringify(node)
+      )
     }
 
-    if (visited[i]) return;
+    if (visited[i]) return
     visited[i] = true
 
     var outgoing = outgoingEdges.get(node) || new Set()
     outgoing = Array.from(outgoing)
 
-    if (i = outgoing.length) {
+    if ((i = outgoing.length)) {
       predecessors.add(node)
       do {
         var child = outgoing[--i]
@@ -68,7 +70,7 @@ function toposort(nodes, edges) {
   }
 }
 
-function uniqueNodes(arr){
+function uniqueNodes(arr) {
   var res = new Set()
   for (var i = 0, len = arr.length; i < len; i++) {
     var edge = arr[i]
@@ -78,7 +80,7 @@ function uniqueNodes(arr){
   return Array.from(res)
 }
 
-function makeOutgoingEdges(arr){
+function makeOutgoingEdges(arr) {
   var edges = new Map()
   for (var i = 0, len = arr.length; i < len; i++) {
     var edge = arr[i]
@@ -89,7 +91,7 @@ function makeOutgoingEdges(arr){
   return edges
 }
 
-function makeNodesHash(arr){
+function makeNodesHash(arr) {
   var res = new Map()
   for (var i = 0, len = arr.length; i < len; i++) {
     res.set(arr[i], i)

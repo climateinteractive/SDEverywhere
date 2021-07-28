@@ -1,9 +1,6 @@
 {
   "name": "prune",
-  "inputVarNames": [
-    "Input 1",
-    "Input 2"
-  ],
+  "inputVarNames": ["Input 1", "Input 2"],
   "outputVarNames": [
     "Time",
     "Input 1 and 2 Total",
@@ -14,7 +11,5 @@
     "With Look1 at t1",
     "Partial[C2]"
   ],
-  "externalDatfiles": [
-    "prune_data.dat"
-  ]
+  "externalDatfiles": ["prune_data.dat"]
 }

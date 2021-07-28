@@ -166,7 +166,7 @@ const flatten = async (outFile, inFiles, opts) => {
 
   // Sort the declarations alphabetically by LHS variable name
   const sorted = Object.values(collapsed).sort((a, b) => {
-    return (a.key < b.key) ? -1 : (a.key > b.key) ? 1 : 0;
+    return a.key < b.key ? -1 : a.key > b.key ? 1 : 0
   })
 
   // Build a single buffer containing the sorted declarations

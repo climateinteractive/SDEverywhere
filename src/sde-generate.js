@@ -249,7 +249,10 @@ let packApp = webDirname => {
       .on('finish', error => {
         // Remove JavaScript source files.
         if (!RETAIN_GENERATED_SOURCE_FILES) {
-          let sourceFiles = filesExcept(`${webDirname}/*.js`, name => name.endsWith('index.min.js') || name.endsWith('model_sde.js'))
+          let sourceFiles = filesExcept(
+            `${webDirname}/*.js`,
+            name => name.endsWith('index.min.js') || name.endsWith('model_sde.js')
+          )
           sh.rm(sourceFiles)
         }
       })

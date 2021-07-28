@@ -132,12 +132,7 @@ export default class EquationGen extends ModelReader {
       R.map(dimName => `  }`, dimNames)
     )
     // Assemble code from each channel into final var code output.
-    return this.comments.concat(
-      this.subscriptLoopOpeningCode,
-      this.tmpVarCode,
-      formula,
-      this.subscriptLoopClosingCode
-    )
+    return this.comments.concat(this.subscriptLoopOpeningCode, this.tmpVarCode, formula, this.subscriptLoopClosingCode)
   }
   //
   // Helpers
@@ -258,9 +253,7 @@ export default class EquationGen extends ModelReader {
           }
           // See if we need to apply a mapping because the RHS dim is not found on the LHS.
           try {
-            let found = this.var.subscripts.findIndex(
-              lhsSub => sub(lhsSub).family === sub(rhsSub).family
-            )
+            let found = this.var.subscripts.findIndex(lhsSub => sub(lhsSub).family === sub(rhsSub).family)
             if (found < 0) {
               // Find the  mapping from the RHS subscript to a LHS subscript.
               for (let lhsSub of this.var.subscripts) {
@@ -338,18 +331,12 @@ export default class EquationGen extends ModelReader {
       // at init time. Using static arrays is better for code size, helps us avoid creating a copy of
       // the data in memory, and seems to perform much better when compiled to wasm when compared to the
       // previous approach that used varargs + copying, especially on constrained (e.g. iOS) devices.
-      let data = R.reduce(
-        (a, p) => listConcat(a, `${cdbl(p[0])}, ${cdbl(p[1])}`, true),
-        '',
-        this.var.points
-      )
+      let data = R.reduce((a, p) => listConcat(a, `${cdbl(p[0])}, ${cdbl(p[1])}`, true), '', this.var.points)
       return [`double ${dataName}[${this.var.points.length * 2}] = { ${data} };`]
     } else if (this.mode === 'init-lookups') {
       // In init mode, create the `Lookup`, passing in a pointer to the static data array declared earlier.
       // TODO: Make use of the lookup range
-      return [
-        `  ${this.lhs} = __new_lookup(${this.var.points.length}, /*copy=*/false, ${dataName});`
-      ]
+      return [`  ${this.lhs} = __new_lookup(${this.var.points.length}, /*copy=*/false, ${dataName});`]
     } else {
       return []
     }
@@ -436,9 +423,7 @@ export default class EquationGen extends ModelReader {
       dataValue = getCellValue(dataCol, dataRow)
       timeValue = getCellValue(timeCol, timeRow)
     }
-    return [
-      `  ${this.lhs} = __new_lookup(${lookupSize}, /*copy=*/true, (double[]){ ${lookupData} });`
-    ]
+    return [`  ${this.lhs} = __new_lookup(${lookupSize}, /*copy=*/true, (double[]){ ${lookupData} });`]
   }
   generateDirectConstInit() {
     // Map zero, one, or two dimensions on the LHS in model order to a table of numbers in a CSV file.
@@ -540,9 +525,7 @@ export default class EquationGen extends ModelReader {
       // We don't yet handle the case where there are more than one subscript or a mix of
       // subscripts and dimensions
       // TODO: Remove this restriction
-      throw new Error(
-        `ERROR: Data variable ${this.var.varName} has >= 2 subscripts; not yet handled`
-      )
+      throw new Error(`ERROR: Data variable ${this.var.varName} has >= 2 subscripts; not yet handled`)
     }
 
     // At this point, we know that we have one or more dimensions; compute all combinations
