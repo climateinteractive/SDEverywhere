@@ -15,7 +15,9 @@
     "url": "https://github.com/climateinteractive/SDEverywhere/issues"
   },
   "scripts": {
-    "test": "cd src/tests && ./modeltests"
+    "test": "cd src/tests && ./modeltests",
+    "prettier:check": "prettier --check .",
+    "prettier:fix": "prettier --write ."
   },
   "dependencies": {
     "antlr4": "4.9.2",
@@ -31,7 +33,7 @@
     "minimist": "^1.2.5",
     "moment": "^2.24.0",
     "numbro": "1.11.1",
-    "prettier": "^2.0.4",
+    "prettier": "^2.3.2",
     "ramda": "^0.27.0",
     "shelljs": "^0.8.3",
     "split-string": "^6.0.0",
