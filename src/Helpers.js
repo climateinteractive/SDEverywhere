@@ -298,9 +298,7 @@ export let readDat = async (pathname, prefix = '') => {
         if (Number.isNaN(t)) {
           console.error(`DAT file ${pathname}:${lineNum} time value is NaN`)
         } else if (Number.isNaN(value)) {
-          console.error(
-            `DAT file ${pathname}:${lineNum} var "${varName}" value is NaN at time=${t}`
-          )
+          console.error(`DAT file ${pathname}:${lineNum} var "${varName}" value is NaN at time=${t}`)
         } else {
           varValues.set(t, value)
         }
@@ -356,9 +354,7 @@ export let mapIndexed = R.addIndex(R.map)
 // Function to sort an array of strings
 export let asort = R.sort((a, b) => (a > b ? 1 : a < b ? -1 : 0))
 // Function to alpha sort an array of variables on the model LHS
-export let vsort = R.sort((a, b) =>
-  a.modelLHS > b.modelLHS ? 1 : a.modelLHS < b.modelLHS ? -1 : 0
-)
+export let vsort = R.sort((a, b) => (a.modelLHS > b.modelLHS ? 1 : a.modelLHS < b.modelLHS ? -1 : 0))
 // Function to list an array to stderr
 export let printArray = R.forEach(x => console.error(x))
 // Function to expand an array of strings into a comma-delimited list of strings

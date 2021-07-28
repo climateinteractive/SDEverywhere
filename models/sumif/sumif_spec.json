@@ -1,6 +1,4 @@
 {
   "name": "sumif",
-  "externalDatfiles": [
-    "sumif_data.dat"
-  ]
+  "externalDatfiles": ["sumif_data.dat"]
 }

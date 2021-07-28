@@ -177,7 +177,7 @@ export let preprocessModel = (mdlFilename, spec, profile = 'genc', writeFiles = 
 
   // Sort the equations alphabetically by LHS variable name
   const sorted = unsorted.sort((a, b) => {
-    return (a.key < b.key) ? -1 : (a.key > b.key) ? 1 : 0;
+    return a.key < b.key ? -1 : a.key > b.key ? 1 : 0
   })
 
   // Emit formula lines without comment contents.
