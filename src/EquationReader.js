@@ -95,7 +95,7 @@ export default class EquationReader extends ModelReader {
       this.var.hasInitValue = true
     } else if (fn === '_ACTIVE_INITIAL' || fn === '_SAMPLE_IF_TRUE') {
       this.var.hasInitValue = true
-    } else if (fn === '_GET_DIRECT_DATA') {
+    } else if (fn === '_GET_DIRECT_DATA' || fn === '_GET_DIRECT_LOOKUPS') {
       this.var.varType = 'data'
     } else if (fn === '_GET_DIRECT_CONSTANTS') {
       this.var.varType = 'const'
@@ -143,7 +143,7 @@ export default class EquationReader extends ModelReader {
       // Generate a level var to expand the DELAY* call.
       let args = R.map(expr => expr.getText(), ctx.expr())
       this.expandDelayFunction(fn, args)
-    } else if (fn === '_GET_DIRECT_DATA') {
+    } else if (fn === '_GET_DIRECT_DATA' || fn === '_GET_DIRECT_LOOKUPS') {
       // Extract string constant arguments into an object used in code generation.
       // For Excel files, the file argument names an indirect "?" file tag from the model settings.
       // For CSV files, it gives a relative pathname in the model directory.
