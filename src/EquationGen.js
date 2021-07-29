@@ -369,7 +369,7 @@ export default class EquationGen extends ModelReader {
         let csvPathname = path.resolve(this.modelDirname, file)
         let data = readCsv(csvPathname, tab)
         if (data) {
-          getCellValue = (c, r) => (data[r] != null ? cdbl(data[r][c]) : null)
+          getCellValue = (c, r) => (data[r] != null && data[r][c] != null ? cdbl(data[r][c]) : null)
         }
       }
       // If the data was found, convert it to a lookup.

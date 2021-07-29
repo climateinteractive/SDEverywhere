@@ -67,7 +67,10 @@ export default class VariableReader extends ModelReader {
       }
       if (!expand) {
         // Direct data vars with subscripts are separated because we generate a lookup for each index.
-        if (isDimension(subscript) && this.var.modelFormula.includes('GET DIRECT DATA')) {
+        if (
+          isDimension(subscript) &&
+          (this.var.modelFormula.includes('GET DIRECT DATA') || this.var.modelFormula.includes('GET DIRECT LOOKUPS'))
+        ) {
           expand = true
         }
       }
