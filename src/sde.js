@@ -51,5 +51,4 @@ yargs
   .help()
   .version()
   .alias('h', 'help')
-  .alias('v', 'version')
-  .argv
+  .alias('v', 'version').argv

@@ -19,7 +19,7 @@ export let codeGenerator = (parseTree, opts) => {
     outputAllVars = true
   }
   // Function to generate a section of the code
-  let generateSection = R.map(v => new EquationGen(v, extData, directData, mode).generate())
+  let generateSection = R.map(v => new EquationGen(v, extData, directData, mode, modelDirname).generate())
   let section = R.pipe(generateSection, R.flatten, lines)
   function generate() {
     // Read variables and subscript ranges from the model parse tree.
@@ -98,17 +98,17 @@ void initLookups() {
   function emitInitConstantsCode() {
     mode = 'init-constants'
     return `
-${chunkedFunctions('initConstants', Model.constVars(),
-'  // Initialize constants.',
-'  initLookups();'
-)}
+${chunkedFunctions('initConstants', Model.constVars(), '  // Initialize constants.', '  initLookups();')}
 `
   }
 
   function emitInitLevelsCode() {
     mode = 'init-levels'
     return `
-${chunkedFunctions('initLevels', Model.initVars(), `
+${chunkedFunctions(
+  'initLevels',
+  Model.initVars(),
+  `
   // Initialize variables with initialization values, such as levels, and the variables they depend on.
   _time = _initial_time;`
 )}
@@ -122,13 +122,9 @@ ${chunkedFunctions('initLevels', Model.initVars(), `
     mode = 'eval'
 
     return `
-${chunkedFunctions('evalAux', Model.auxVars(),
-'  // Evaluate auxiliaries in order from the bottom up.'
-)}
+${chunkedFunctions('evalAux', Model.auxVars(), '  // Evaluate auxiliaries in order from the bottom up.')}
 
-${chunkedFunctions('evalLevels', Model.levelVars(),
-'  // Evaluate levels.'
-)}
+${chunkedFunctions('evalLevels', Model.levelVars(), '  // Evaluate levels.')}
 `
   }
 
@@ -165,19 +161,13 @@ void ${name}${idx}() {
 }
 `
     }
-    let funcs = R.pipe(
-      mapIndexed(func),
-      lines
-    )
+    let funcs = R.pipe(mapIndexed(func), lines)
 
     // Emit one roll-up function that calls the other chunk functions
     let funcCall = (chunk, idx) => {
       return `  ${name}${idx}();`
     }
-    let funcCalls = R.pipe(
-      mapIndexed(funcCall),
-      lines
-    )
+    let funcCalls = R.pipe(mapIndexed(funcCall), lines)
 
     // Break the vars into chunks of 30; this number was empirically
     // determined by looking at runtime performance and memory usage
@@ -253,7 +243,7 @@ ${postStep}
     let a = R.map(indexName => sub(indexName).value, indices)
     return strlist(a)
   }
-  function expandedVarNames(vensimNames) {
+  function expandedVarNames(vensimNames = false) {
     // Return a list of var names for all variables except lookups and data variables.
     // The names are in Vensim format if vensimNames is true, otherwise they are in C format.
     // Expand subscripted vars into separate var names with each index.
@@ -334,6 +324,6 @@ ${postStep}
   }
 
   return {
-    generate: generate,
+    generate: generate
   }
 }

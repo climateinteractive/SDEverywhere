@@ -15,6 +15,8 @@ export default class Variable {
     this.separationDims = []
     // Direct data function arguments are saved here for use in code generation.
     this.directDataArgs = null
+    // Direct constants function arguments are saved here for use in code generation.
+    this.directConstArgs = null
     // Lookup vars have lookup points and an optional range.
     this.range = []
     this.points = []
@@ -34,6 +36,8 @@ export default class Variable {
     this.smoothVarRefId = ''
     // TREND calls are expanded into new level vars and substituted during code generation.
     this.trendVarName = ''
+    // NPV calls are expanded into new level vars and substituted during code generation.
+    this.npvVarName = ''
     // DELAY3* calls are expanded into new level vars and substituted during code generation.
     this.delayVarRefId = ''
     this.delayTimeVarName = ''

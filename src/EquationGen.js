@@ -1,3 +1,4 @@
+import path from 'path'
 import R from 'ramda'
 import XLSX from 'xlsx'
 import { ModelLexer, ModelParser } from 'antlr4-vensim'
@@ -25,15 +26,17 @@ import {
   isDelayFunction,
   isSmoothFunction,
   isTrendFunction,
+  isNpvFunction,
   listConcat,
   newTmpVarName,
   permutationsOf,
+  readCsv,
   strToConst,
   vlog
 } from './Helpers.js'
 
 export default class EquationGen extends ModelReader {
-  constructor(variable, extData, directData, mode) {
+  constructor(variable, extData, directData, mode, modelDirname) {
     super()
     // the variable we are generating code for
     this.var = variable
@@ -43,6 +46,8 @@ export default class EquationGen extends ModelReader {
     this.directData = directData
     // set to 'decl', 'init-lookups', 'eval', etc depending on the section being generated
     this.mode = mode
+    // The model directory is required when reading data files for GET DIRECT DATA.
+    this.modelDirname = modelDirname
     // Maps of LHS subscript families to loop index vars for lookup on the RHS
     this.loopIndexVars = new LoopIndexVars(['i', 'j', 'k'])
     this.arrayIndexVars = new LoopIndexVars(['v', 'w'])
@@ -98,6 +103,10 @@ export default class EquationGen extends ModelReader {
     }
     // Show the model var as a comment for reference.
     this.comments.push(`  // ${this.var.modelLHS} = ${this.var.modelFormula.replace('\n', '')}`)
+    // Emit direct constants individually without separating them first.
+    if (this.var.directConstArgs) {
+      return this.generateDirectConstInit()
+    }
     // Initialize array variables with dimensions in a loop for each dimension.
     let dimNames = dimensionNames(this.var.subscripts)
     // Turn each dimension name into a loop with a loop index variable.
@@ -300,6 +309,13 @@ export default class EquationGen extends ModelReader {
     // Emit the tmp var subscript just after emitting the tmp var elsewhere.
     this.emit(`[${this.vsoTmpDimName}[${i}]]`)
   }
+  directConstSubscriptGen(subscripts) {
+    // Construct numeric constant variable subscripts in normal order.
+    let cSubscripts = subscripts.map(s => (isDimension(s) ? sub(s).value : [s]))
+    let indexSubscripts = cartesianProductOf(cSubscripts)
+    let numericSubscripts = indexSubscripts.map(idx => idx.map(s => sub(s).value))
+    return numericSubscripts.map(s => s.reduce((a, v) => a.concat(`[${v}]`), ''))
+  }
   functionIsLookup() {
     // See if the function name in the current call is actually a lookup.
     // console.error(`isLookup ${this.lookupName()}`);
@@ -330,29 +346,132 @@ export default class EquationGen extends ModelReader {
     // If direct data exists for this variable, copy it from the workbook into one or more lookups.
     let result = []
     if (this.mode === 'init-lookups') {
-      let { tag, sheetName, timeRowOrCol, startCell } = this.var.directDataArgs
-      let workbook = this.directData.get(tag)
-      if (workbook) {
-        let sheet = workbook.Sheets[sheetName]
-        if (sheet) {
-          let indexNum = 0
-          if (!R.isEmpty(this.var.subscripts)) {
-            // Generate a lookup for a separated index in the variable's dimension.
-            // TODO allow the index to be in either position of a 2D subscript
-            let ind = sub(this.var.subscripts[0])
-            indexNum = ind.value
+      let getCellValue
+      let { file, tab, timeRowOrCol, startCell } = this.var.directDataArgs
+      if (file.startsWith('?')) {
+        // The file is a tag for an Excel file with data in the directData map.
+        let workbook = this.directData.get(file)
+        if (workbook) {
+          let sheet = workbook.Sheets[tab]
+          if (sheet) {
+            getCellValue = (c, r) => {
+              let cell = sheet[XLSX.utils.encode_cell({ c, r })]
+              return cell != null ? cdbl(cell.v) : null
+            }
+          } else {
+            throw new Error(`ERROR: Direct data worksheet ${tab} tagged ${file} not found`)
           }
-          result.push(this.generateDirectDataLookup(sheet, timeRowOrCol, startCell, indexNum))
         } else {
-          throw new Error(`ERROR: Direct data worksheet ${sheetName} tagged ${tag} not found`)
+          throw new Error(`ERROR: Direct data workbook tagged ${file} not found`)
         }
       } else {
-        throw new Error(`ERROR: Direct data workbook tagged ${tag} not found`)
+        // The file is a CSV pathname. Read it now.
+        let csvPathname = path.resolve(this.modelDirname, file)
+        let data = readCsv(csvPathname, tab)
+        if (data) {
+          getCellValue = (c, r) => (data[r] != null && data[r][c] != null ? cdbl(data[r][c]) : null)
+        }
+      }
+      // If the data was found, convert it to a lookup.
+      if (getCellValue) {
+        let indexNum = 0
+        if (!R.isEmpty(this.var.subscripts)) {
+          // Generate a lookup for a separated index in the variable's dimension.
+          // TODO allow the index to be in either position of a 2D subscript
+          let ind = sub(this.var.subscripts[0])
+          indexNum = ind.value
+        }
+        result.push(this.generateDirectDataLookup(getCellValue, timeRowOrCol, startCell, indexNum))
       }
     }
     return result
   }
-
+  generateDirectDataLookup(getCellValue, timeRowOrCol, startCell, indexNum) {
+    // Read a row or column of data as (time, value) pairs from the worksheet.
+    // The cell(c,r) function wraps data access by column and row.
+    let dataCol, dataRow, dataValue, timeCol, timeRow, timeValue, nextCell
+    let lookupData = ''
+    let lookupSize = 0
+    let dataAddress = XLSX.utils.decode_cell(startCell)
+    dataCol = dataAddress.c
+    dataRow = dataAddress.r
+    if (isNaN(parseInt(timeRowOrCol))) {
+      // Time values are in a column.
+      timeCol = XLSX.utils.decode_col(timeRowOrCol)
+      timeRow = dataRow
+      dataCol += indexNum
+      nextCell = () => {
+        dataRow++
+        timeRow++
+      }
+    } else {
+      // Time values are in a row.
+      timeCol = dataCol
+      timeRow = XLSX.utils.decode_row(timeRowOrCol)
+      dataRow += indexNum
+      nextCell = () => {
+        dataCol++
+        timeCol++
+      }
+    }
+    timeValue = getCellValue(timeCol, timeRow)
+    dataValue = getCellValue(dataCol, dataRow)
+    while (timeValue != null && dataValue != null) {
+      lookupData = listConcat(lookupData, `${timeValue}, ${dataValue}`, true)
+      lookupSize++
+      nextCell()
+      dataValue = getCellValue(dataCol, dataRow)
+      timeValue = getCellValue(timeCol, timeRow)
+    }
+    return [`  ${this.lhs} = __new_lookup(${lookupSize}, /*copy=*/true, (double[]){ ${lookupData} });`]
+  }
+  generateDirectConstInit() {
+    // Map zero, one, or two dimensions on the LHS in model order to a table of numbers in a CSV file.
+    let result = this.comments
+    let { file, tab, startCell } = this.var.directConstArgs
+    let csvPathname = path.resolve(this.modelDirname, file)
+    let data = readCsv(csvPathname, tab)
+    if (data) {
+      let getCellValue = (c, r) => (data[r] != null && data[r][c] != null ? cdbl(data[r][c]) : null)
+      let modelLHSReader = new ModelLHSReader()
+      modelLHSReader.read(this.var.modelLHS)
+      // Get C subscripts in text form for the LHS in normal order.
+      let lhsSubscripts = this.directConstSubscriptGen(this.var.subscripts)
+      // Generate cell offsets for the data table corresponding to each LHS subscript.
+      let dimNames = this.var.subscripts.filter(s => isDimension(s))
+      let inds = dimNames.map(dim => [...Array(sub(dim).size).keys()])
+      // Add a second dimension if necessary to get row, column pairs.
+      if (inds.length === 1) {
+        inds.unshift([0])
+      }
+      // Read values by column first when the start cell ends with an asterisk.
+      // Ref: https://www.vensim.com/documentation/fn_get_direct_constants.html
+      if (startCell.endsWith('*')) {
+        inds.reverse()
+        startCell = startCell.slice(0, -1)
+      }
+      // If there are two data dimensions and the model order differs from normal order, transpose them.
+      if (dimNames.length > 1) {
+        let modelDimNames = modelLHSReader.modelSubscripts.filter(s => isDimension(s))
+        if (dimNames[0] !== modelDimNames[0]) {
+          inds.reverse()
+        }
+      }
+      // Read CSV data into an indexed variable for each cell.
+      let cellOffsets = cartesianProductOf(inds)
+      let dataAddress = XLSX.utils.decode_cell(startCell)
+      let startCol = dataAddress.c
+      let startRow = dataAddress.r
+      for (let i = 0; i < cellOffsets.length; i++) {
+        let rowOffset = cellOffsets[i][0] ? cellOffsets[i][0] : 0
+        let colOffset = cellOffsets[i][1] ? cellOffsets[i][1] : 0
+        let dataValue = getCellValue(startCol + colOffset, startRow + rowOffset)
+        let lhs = `${this.var.varName}${lhsSubscripts[i] || ''}`
+        result.push(`  ${lhs} = ${dataValue};`)
+      }
+    }
+    return result
+  }
   generateExternalDataInit() {
     // If there is external data for this variable, copy it from an external file to a lookup.
     // Just like in generateLookup(), we declare static arrays to hold the data points in the first pass
@@ -368,7 +487,11 @@ export default class EquationGen extends ModelReader {
       if (mode === 'decl') {
         // In decl mode, declare a static data array that will be used to create the associated `Lookup`
         // at init time. See `generateLookup` for more details.
-        const points = R.reduce((a, p) => listConcat(a, `${cdbl(p[0])}, ${cdbl(p[1])}`, true), '', Array.from(data.entries()))
+        const points = R.reduce(
+          (a, p) => listConcat(a, `${cdbl(p[0])}, ${cdbl(p[1])}`, true),
+          '',
+          Array.from(data.entries())
+        )
         return `double ${dataName}[${data.size * 2}] = { ${points} };`
       } else if (mode === 'init-lookups') {
         // In init mode, create the `Lookup`, passing in a pointer to the static data array declared in decl mode.
@@ -445,45 +568,6 @@ export default class EquationGen extends ModelReader {
     return result
   }
 
-  generateDirectDataLookup(sheet, timeRowOrCol, startCell, indexNum) {
-    // Read a row or column of data as (time, value) pairs from the worksheet.
-    let dataCol, dataRow, dataCell, timeCol, timeRow, timeCell, nextCell
-    let lookupData = ''
-    let lookupSize = 0
-    let cell = (c, r) => sheet[XLSX.utils.encode_cell({ c, r })]
-    let dataAddress = XLSX.utils.decode_cell(startCell)
-    dataCol = dataAddress.c
-    dataRow = dataAddress.r
-    if (isNaN(parseInt(timeRowOrCol))) {
-      // Time values are in a column.
-      timeCol = XLSX.utils.decode_col(timeRowOrCol)
-      timeRow = dataRow
-      dataCol += indexNum
-      nextCell = () => {
-        dataRow++
-        timeRow++
-      }
-    } else {
-      // Time values are in a row.
-      timeCol = dataCol
-      timeRow = XLSX.utils.decode_row(timeRowOrCol)
-      dataRow += indexNum
-      nextCell = () => {
-        dataCol++
-        timeCol++
-      }
-    }
-    timeCell = cell(timeCol, timeRow)
-    dataCell = cell(dataCol, dataRow)
-    while (timeCell && dataCell) {
-      lookupData = listConcat(lookupData, `${cdbl(timeCell.v)}, ${cdbl(dataCell.v)}`, true)
-      lookupSize++
-      nextCell()
-      dataCell = cell(dataCol, dataRow)
-      timeCell = cell(timeCol, timeRow)
-    }
-    return [`  ${this.lhs} = __new_lookup(${lookupSize}, /*copy=*/true, (double[]){ ${lookupData} });`]
-  }
   //
   // Visitor callbacks
   //
@@ -617,6 +701,11 @@ export default class EquationGen extends ModelReader {
       let trendVar = Model.varWithRefId(this.var.trendVarName)
       let rhsSubs = this.rhsSubscriptGen(trendVar.subscripts)
       this.emit(`${this.var.trendVarName}${rhsSubs}`)
+    } else if (isNpvFunction(fn)) {
+      // For NPV functions, replace the entire call with the expansion variable generated earlier.
+      let npvVar = Model.varWithRefId(this.var.npvVarName)
+      let rhsSubs = this.rhsSubscriptGen(npvVar.subscripts)
+      this.emit(`${this.var.npvVarName}${rhsSubs}`)
     } else if (isDelayFunction(fn)) {
       // For delay functions, replace the entire call with the expansion variable generated earlier.
       let delayVar = Model.varWithRefId(this.var.delayVarRefId)
@@ -725,7 +814,7 @@ export default class EquationGen extends ModelReader {
         // (since Vensim indices are one-based).
         let s = this.rhsSubscriptGen([varName])
         // Remove the brackets around the C subscript expression.
-        s = s.slice(1, s.length-1)
+        s = s.slice(1, s.length - 1)
         this.emit(`(${s} + 1)`)
       }
     } else {

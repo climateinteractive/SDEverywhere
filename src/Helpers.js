@@ -98,6 +98,10 @@ export let isTrendFunction = fn => {
   // Return true if fn is a Vensim trend function.
   return fn === '_TREND'
 }
+export let isNpvFunction = fn => {
+  // Return true if fn is a Vensim NPV function.
+  return fn === '_NPV'
+}
 export let isDelayFunction = fn => {
   // Return true if fn is a Vensim delay function.
   return fn === '_DELAY1' || fn === '_DELAY1I' || fn === '_DELAY3' || fn === '_DELAY3I'
@@ -294,9 +298,7 @@ export let readDat = async (pathname, prefix = '') => {
         if (Number.isNaN(t)) {
           console.error(`DAT file ${pathname}:${lineNum} time value is NaN`)
         } else if (Number.isNaN(value)) {
-          console.error(
-            `DAT file ${pathname}:${lineNum} var "${varName}" value is NaN at time=${t}`
-          )
+          console.error(`DAT file ${pathname}:${lineNum} var "${varName}" value is NaN at time=${t}`)
         } else {
           varValues.set(t, value)
         }
@@ -325,13 +327,8 @@ export let readCsv = (pathname, delimiter = ',') => {
     skip_empty_lines: true,
     skip_lines_with_empty_values: true
   }
-  try {
-    let data = B.read(pathname)
-    result = parseCsv(data, CSV_PARSE_OPTS)
-  } catch (error) {
-    console.error(`ERROR: CSV file ${pathname} not found`)
-  }
-  return result
+  let data = B.read(pathname)
+  return parseCsv(data, CSV_PARSE_OPTS)
 }
 // Convert the var name and subscript names to canonical form separately.
 export let canonicalVensimName = vname => {
@@ -357,9 +354,7 @@ export let mapIndexed = R.addIndex(R.map)
 // Function to sort an array of strings
 export let asort = R.sort((a, b) => (a > b ? 1 : a < b ? -1 : 0))
 // Function to alpha sort an array of variables on the model LHS
-export let vsort = R.sort((a, b) =>
-  a.modelLHS > b.modelLHS ? 1 : a.modelLHS < b.modelLHS ? -1 : 0
-)
+export let vsort = R.sort((a, b) => (a.modelLHS > b.modelLHS ? 1 : a.modelLHS < b.modelLHS ? -1 : 0))
 // Function to list an array to stderr
 export let printArray = R.forEach(x => console.error(x))
 // Function to expand an array of strings into a comma-delimited list of strings
