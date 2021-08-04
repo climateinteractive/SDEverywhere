@@ -23,6 +23,8 @@ import {
 import { decanonicalize, isIterable, listConcat, strlist, vlog, vsort } from './Helpers.js'
 
 let variables = []
+let inputVars = []
+let constantExprs = new Map()
 
 // Also keep variables in a map (with `varName` as key) for faster lookup
 const variablesByName = new Map()
@@ -43,6 +45,21 @@ function read(parseTree, spec, extData, directData, modelDirname) {
   readSubscriptRanges(parseTree, spec.dimensionFamilies, spec.indexFamilies, modelDirname)
   // Read variables from the model parse tree.
   readVariables(parseTree, specialSeparationDims, directData)
+  if (spec) {
+    // If the spec file contains `input/outputVarNames` (with full Vensim variable names)
+    // convert those to C names first.  Otherwise, use `input/outputNames` which are already
+    // assumed to be valid C names.
+    if (spec.inputVarNames) {
+      spec.inputVars = R.map(cName, spec.inputVarNames)
+    }
+    if (spec.outputVarNames) {
+      spec.outputVars = R.map(cName, spec.outputVarNames)
+    }
+    // Save the input vars locally so that they can be referenced by `isInputVar`.
+    if (spec.inputVars) {
+      inputVars = spec.inputVars
+    }
+  }
   // Analyze model equations to fill in more details about variables.
   analyze()
   // Check that all input and output vars in the spec actually exist in the model.
@@ -235,16 +252,6 @@ function checkSpecVars(spec, extData) {
   }
 
   if (spec) {
-    // If the spec file contains `input/outputVarNames` (with full Vensim variable names)
-    // convert those to C names first.  Otherwise, use `input/outputNames` which are already
-    // assumed to be valid C names.
-    if (spec.inputVarNames) {
-      spec.inputVars = R.map(cName, spec.inputVarNames)
-    }
-    if (spec.outputVarNames) {
-      spec.outputVars = R.map(cName, spec.outputVarNames)
-    }
-
     check(spec.inputVars, 'input')
     check(spec.outputVars, 'output')
   }
@@ -648,6 +655,19 @@ function cName(vensimVarName) {
   // This function requires model analysis to be completed first when the variable has subscripts.
   return new VarNameReader().read(vensimVarName)
 }
+function isInputVar(varName) {
+  // Return true if the given variable (in canonical form) is included in the list of
+  // input variables in the spec file.
+  return inputVars.includes(varName)
+}
+function addConstantExpr(exprText, constantValue) {
+  // Record the constant value for the given expression in a map for later lookup.
+  constantExprs.set(exprText, constantValue)
+}
+function getConstantExprValue(exprText) {
+  // Return the constant value for the given expression if one was recorded.
+  return constantExprs.get(exprText)
+}
 //
 // Helpers for getting lists of vars
 //
@@ -975,6 +995,7 @@ function printDepsGraph(graph, varType) {
   }
 }
 export default {
+  addConstantExpr,
   addEquation,
   addNonAtoAVar,
   addVariable,
@@ -985,7 +1006,9 @@ export default {
   dataVars,
   expansionFlags,
   filterVar,
+  getConstantExprValue,
   initVars,
+  isInputVar,
   isNonAtoAName,
   levelVars,
   lookupVars,

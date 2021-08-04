@@ -115,6 +115,132 @@ Partial[C2] =
   Initial Partial[C2]
 	~~|
 
+Test 1 T = 1
+	~~|
+Test 1 F = 1
+	~~|
+Test 1 Result = IF THEN ELSE(Input 1 = 10.0, Test 1 T, Test 1 F)
+	~
+  ~ Should not be eliminated because "Input 1" is listed as an input in the spec file.
+  |
+
+Test 2 T = 1
+	~~|
+Test 2 F = 1
+	~~|
+Test 2 Result = IF THEN ELSE(0, Test 2 T, Test 2 F)
+	~
+  ~ Only "Test 2 F" should be generated.
+  |
+
+Test 3 T = 1
+	~~|
+Test 3 F = 1
+	~~|
+Test 3 Result = IF THEN ELSE(1, Test 3 T, Test 3 F)
+	~
+  ~ Only "Test 3 T" should be generated.
+  |
+
+Test 4 Cond = 0
+	~~|
+Test 4 T = 1
+	~~|
+Test 4 F = 1
+	~~|
+Test 4 Result = IF THEN ELSE(Test 4 Cond, Test 4 T, Test 4 F)
+	~
+  ~ Only "Test 4 F" should be generated.
+  |
+
+Test 5 Cond = 1
+	~~|
+Test 5 T = 1
+	~~|
+Test 5 F = 1
+	~~|
+Test 5 Result = IF THEN ELSE(Test 5 Cond, Test 5 T, Test 5 F)
+	~
+  ~ Only "Test 5 T" should be generated.
+  |
+
+Test 6 Cond = 0
+	~~|
+Test 6 T = 1
+	~~|
+Test 6 F = 1
+	~~|
+Test 6 Result = IF THEN ELSE(Test 6 Cond = 1, Test 6 T, Test 6 F)
+	~
+  ~ Only "Test 6 F" should be generated.
+  |
+
+Test 7 Cond = 1
+	~~|
+Test 7 T = 1
+	~~|
+Test 7 F = 1
+	~~|
+Test 7 Result = IF THEN ELSE(Test 7 Cond = 1, Test 7 T, Test 7 F)
+	~
+  ~ Only "Test 7 T" should be generated.
+  |
+
+Test 8 Cond = 0
+	~~|
+Test 8 T = 1
+	~~|
+Test 8 F = 1
+	~~|
+Test 8 Result = IF THEN ELSE(Test 8 Cond > 0, Test 8 T, Test 8 F)
+	~
+  ~ Only "Test 8 F" should be generated.
+  |
+
+Test 9 Cond = 1
+	~~|
+Test 9 T = 1
+	~~|
+Test 9 F = 1
+	~~|
+Test 9 Result = IF THEN ELSE(Test 9 Cond > 0, Test 9 T, Test 9 F)
+	~
+  ~ Only "Test 9 T" should be generated.
+  |
+
+Test 10 Cond = 1
+	~~|
+Test 10 T = 1
+	~~|
+Test 10 F = 1
+	~~|
+Test 10 Result = IF THEN ELSE(ABS(Test 10 Cond), Test 10 T, Test 10 F)
+	~
+  ~ Should not be eliminated because condition contains function call.
+  |
+
+Test 11 Cond = 0
+	~~|
+Test 11 T = 1
+	~~|
+Test 11 F = 1
+	~~|
+Test 11 Result = IF THEN ELSE(Test 11 Cond :AND: ABS(Test 11 Cond), Test 11 T, Test 11 F)
+	~
+  ~ Only "Test 11 F" should be generated.
+  |
+
+Test 12 Cond = 1
+	~~|
+Test 12 T = 1
+	~~|
+Test 12 F = 1
+	~~|
+Test 12 Result = IF THEN ELSE(Test 12 Cond :OR: ABS(Test 12 Cond), Test 12 T, Test 12 F)
+	~
+  ~ Only "Test 12 T" should be generated.
+  |
+
 ********************************************************
 	.Control
 ********************************************************~
