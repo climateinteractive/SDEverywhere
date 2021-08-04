@@ -962,9 +962,9 @@ export default class EquationGen extends ModelReader {
           const dim = this.var.separationDims[i]
           const sepDim = sub(dim)
           const ind = this.var.subscripts[i]
-          let j = sepDim.value.indexOf(ind)
+          const j = sepDim.value.indexOf(ind)
           if (j >= 0) {
-            let indexNum = sub(ind).value
+            const indexNum = sub(ind).value
             if (!cVarName) {
               cVarName = `${this.var.varName}[${indexNum}]`
             } else {
