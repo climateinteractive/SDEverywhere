@@ -27,11 +27,12 @@ extern "C" {
 #define _MIN(a, b) fmin(a, b)
 #define _MODULO(a, b) fmod(a, b)
 #define _QUANTUM(a, b) ((b) <= 0 ? (a) : (b) * trunc((a) / (b)))
-
 #define _SAMPLE_IF_TRUE(current, condition, input) (bool_cond(condition) ? (input) : (current))
 #define _SIN(x) sin(x)
 #define _SQRT(x) sqrt(x)
 #define _STEP(height, step_time) (fgt(_time + _time_step / 2.0, (step_time)) ? (height) : 0.0)
+
+double* _ALLOCATE_AVAILABLE(size_t num_requesters, double* requested_quantities, double* priority_profiles, double resource_available, double* allocations);
 double _PULSE(double start, double width);
 double _PULSE_TRAIN(double start, double width, double interval, double end);
 double _RAMP(double slope, double start_time, double end_time);

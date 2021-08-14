@@ -296,3 +296,101 @@ double* _VECTOR_SORT_ORDER(double* vector, size_t size, double direction) {
   }
   return result;
 }
+
+//
+// ALLOCATE AVAILABLE
+//
+// Mathematical functions for calculating the normal pdf and cdf at a point x
+double normal(double x, double μ, double σ) {
+  double base = 1.0 / (σ * sqrt(2.0 * M_PI));
+  double exponent = -pow(x - μ, 2.0) / (2.0 * σ * σ);
+  return base * exp(exponent);
+}
+double P(double x) {
+  // Zelen & Severo (1964) in Handbook Of Mathematical Functions, Abramowitz and Stegun, 26.2.17
+  double p = 0.2316419;
+  double b[5] = {0.31938153, -0.356563782, 1.781477937, -1.821255978, 1.330274429};
+  double t = 1.0 / (1.0 + p * x);
+  double y = 0.0;
+  double k = t;
+  for (size_t i = 0; i < 5; i++) {
+    y += b[i] * k;
+    k *= t;
+  }
+  return 1 - normal(x, 0.0, 1.0) * y;
+}
+double cdfu(double x) {
+  // Calculate the unit cumulative distribution function from x to +∞, often known as Q(x).
+  return x >= 0.0 ? 1.0 - P(x) : P(-x);
+}
+double cdf(double x, double σ) { return cdfu(x / σ); }
+// Access the doubly-subscripted priority profiles array by pointer.
+enum { PTYPE, PPRIORITY, PWIDTH, PEXTRA };
+double get_pp(double* pp, size_t iProfile, size_t iElement) {
+  const int NUM_PP = PEXTRA - PTYPE + 1;
+  return *(pp + iProfile * NUM_PP + iElement);
+}
+double* _ALLOCATE_AVAILABLE(size_t num_requesters, double* requested_quantities, double* priority_profiles,
+    double resource_available, double* allocations) {
+  // requested_quantities points to an array of length num_requesters
+  // priority_profiles points to an array of num_requesters arrays of length 4
+  // allocations points to an array of length num_requesters in which results are returned
+
+  // The priority profiles give the mean and standard deviation of normal curves used to allocate
+  // the available resource, with a higher mean indicating a higher priority. The search space for
+  // allocations that match the available resource is the x axis with tails on both ends of the curves.
+  const double normal_curve_tail = 5.0;
+  // Limit the search to this number of steps.
+  const size_t max_steps = 30;
+  // Find the minimum and maximum means in the priority curves.
+  double min_mean = DBL_MAX;
+  double max_mean = DBL_MIN;
+  for (size_t i = 0; i < num_requesters; i++) {
+    min_mean = fmin(get_pp(priority_profiles, i, PPRIORITY), min_mean);
+    max_mean = fmax(get_pp(priority_profiles, i, PPRIORITY), max_mean);
+  }
+  // Start the search in the midpoint of the means, with a big first jump.
+  double total_allocations = 0.0;
+  double x = (max_mean - min_mean) / 2.0;
+  double delta = normal_curve_tail;
+  size_t num_steps = 0;
+  double last_delta_sign = 1.0;
+  size_t num_jumps_in_same_direction = 0;
+  do {
+    // Calculate allocations for each requester.
+    for (size_t i = 0; i < num_requesters; i++) {
+      double mean = get_pp(priority_profiles, i, PPRIORITY);
+      double sigma = get_pp(priority_profiles, i, PWIDTH);
+      // The allocation is the area under the requester's normal curve from x out to +∞
+      // scaled by the size of the request. We integrate over the right-hand side of the
+      // normal curve so that higher means have higher priority, that is, are allocated more.
+      // The unit cumulative distribution function integrates to one over all x,
+      // so we simply multiply by a constant to scale the area under the curve.
+      allocations[i] = requested_quantities[i] * cdf(x - mean, sigma);
+    }
+    // Sum the allocations for comparison with the available resource.
+    total_allocations = 0.0;
+    for (size_t i = 0; i < num_requesters; i++) {
+      total_allocations += allocations[i];
+    }
+    if (++num_steps >= max_steps) {
+      // TODO signal error
+      break;
+    }
+    // Set up the next x value by computing a new delta that is usually half the size of the
+    // previous delta, that is, do a binary search of the x axis. We may jump over the target
+    // x value, so we may need to change direction.
+    double delta_sign = total_allocations < resource_available ? -1.0 : 1.0;
+    // Too many jumps in the same direction can result in the search converging on a point
+    // that falls short of the target x value. Stop halving the delta when that happens until
+    // we jump over the target again.
+    num_jumps_in_same_direction = delta_sign == last_delta_sign ? num_jumps_in_same_direction + 1 : 0;
+    last_delta_sign = delta_sign;
+    delta = (delta_sign * fabs(delta)) / (num_jumps_in_same_direction < 3 ? 2.0 : 1.0);
+    x += delta;
+    // The search terminates when the total allocations are equal to the available resource
+    // up to a very small epsilon difference.
+  } while (fabs(total_allocations - resource_available) > _epsilon);
+  // Return a pointer to the allocations array the caller passed with the results filled in.
+  return allocations;
+}
