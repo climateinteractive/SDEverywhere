@@ -958,18 +958,17 @@ export default class EquationGen extends ModelReader {
         modelLHSReader.read(this.var.modelLHS)
         let cNames = modelLHSReader.names().map(Model.cName)
         // Visit dims in normal order. Find the ind in the dim. Compose the C array expression with numeric indices.
-        for (let dim of this.var.separationDims) {
-          let sepDim = sub(dim)
-          for (let ind of this.var.subscripts) {
-            let i = sepDim.value.indexOf(ind)
-            if (i >= 0) {
-              let indexNum = sub(ind).value
-              if (!cVarName) {
-                cVarName = `${this.var.varName}[${indexNum}]`
-              } else {
-                cVarName += `[${indexNum}]`
-              }
-              break
+        for (let i = 0; i < this.var.separationDims.length; i++) {
+          const dim = this.var.separationDims[i]
+          const sepDim = sub(dim)
+          const ind = this.var.subscripts[i]
+          const j = sepDim.value.indexOf(ind)
+          if (j >= 0) {
+            const indexNum = sub(ind).value
+            if (!cVarName) {
+              cVarName = `${this.var.varName}[${indexNum}]`
+            } else {
+              cVarName += `[${indexNum}]`
             }
           }
         }
