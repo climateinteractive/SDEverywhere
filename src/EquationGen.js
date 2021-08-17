@@ -2,6 +2,7 @@ import path from 'path'
 import R from 'ramda'
 import XLSX from 'xlsx'
 import { ModelLexer, ModelParser } from 'antlr4-vensim'
+import ExprReader from './ExprReader.js'
 import ModelReader from './ModelReader.js'
 import ModelLHSReader from './ModelLHSReader.js'
 import LoopIndexVars from './LoopIndexVars.js'
@@ -691,6 +692,10 @@ export default class EquationGen extends ModelReader {
     } else if (fn === '_ACTIVE_INITIAL') {
       // Only emit the eval-time initialization without the function call for ACTIVE INITIAL.
       super.visitCall(ctx)
+    } else if (fn === '_IF_THEN_ELSE') {
+      // Conditional expressions are handled specially in `visitExprList`.
+      super.visitCall(ctx)
+      this.callStack.pop()
     } else if (isSmoothFunction(fn)) {
       // For smooth functions, replace the entire call with the expansion variable generated earlier.
       let smoothVar = Model.varWithRefId(this.var.smoothVarRefId)
@@ -778,6 +783,32 @@ export default class EquationGen extends ModelReader {
       exprs[0].accept(this)
       this.setArgIndex(1)
       this.vsoOrder = this.cVarOrConst(exprs[1])
+    } else if (fn === '_IF_THEN_ELSE') {
+      // See if the condition expression was previously determined to resolve to a
+      // compile-time constant.  If so, we only need to emit code for one branch.
+      const condText = ctx.expr(0).getText()
+      const condValue = Model.getConstantExprValue(condText)
+      if (condValue !== undefined) {
+        if (condValue !== 0) {
+          // Emit only the "if true" branch
+          this.setArgIndex(1)
+          ctx.expr(1).accept(this)
+        } else {
+          // Emit only the "if false" branch
+          this.setArgIndex(2)
+          ctx.expr(2).accept(this)
+        }
+      } else {
+        // Emit a normal if/else with both branches
+        this.emit(fn)
+        this.emit('(')
+        for (let i = 0; i < exprs.length; i++) {
+          if (i > 0) this.emit(', ')
+          this.setArgIndex(i)
+          exprs[i].accept(this)
+        }
+        this.emit(')')
+      }
     } else {
       // Ordinary expression lists are completely emitted with comma delimiters.
       for (let i = 0; i < exprs.length; i++) {
