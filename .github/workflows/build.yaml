@@ -26,4 +26,4 @@ jobs:
       - name: Run Tests
         run: |
           npm run prettier:check
-          npm test
+          npm run test
