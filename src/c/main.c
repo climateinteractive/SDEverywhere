@@ -13,8 +13,8 @@ int main(int argc, char** argv) {
     if (instream && fgets(inputs, sizeof inputs, instream) != NULL) {
       fclose(instream);
       size_t len = strlen(inputs);
-      if (inputs[len-1] == '\n') {
-        inputs[len-1] = '\0';
+      if (inputs[len - 1] == '\n') {
+        inputs[len - 1] = '\0';
       }
     }
     if (argc > 2) {
@@ -23,8 +23,7 @@ int main(int argc, char** argv) {
         raw_output = true;
       }
     }
-  }
-  else {
+  } else {
     *inputs = '\0';
   }
   // Run the model and get output for all time steps.
@@ -34,7 +33,7 @@ int main(int argc, char** argv) {
       // Write raw output data directly.
       fputs(outputs, stdout);
     } else {
-    // Write a header for output data.
+      // Write a header for output data.
       printf("%s\n", getHeader());
       // Write tab-delimited output data, one line per output time step.
       if (outputs != NULL) {

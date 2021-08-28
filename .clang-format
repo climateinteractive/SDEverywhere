@@ -1,6 +1,7 @@
 ---
 Language:        Cpp
 # BasedOnStyle:  Google
+# Ref: https://clang.llvm.org/docs/ClangFormatStyleOptions.html
 AccessModifierOffset: -1
 AlignAfterOpenBracket: DontAlign
 AlignConsecutiveMacros: None

@@ -1,10 +1,11 @@
-#include "sde.h"
 #include <time.h>
+
+#include "sde.h"
 
 // Define PERF_TEST to output run time information.
 // #define PERF_TEST
 #ifdef PERF_TEST
-  struct timespec startTime, finishTime;
+struct timespec startTime, finishTime;
 #endif
 
 // The special _time variable is not included in .mdl files.
@@ -68,9 +69,9 @@ void runModelWithBuffers(double* inputs, double* outputs) {
 }
 
 void run() {
-  #ifdef PERF_TEST
-    clock_gettime(CLOCK_MONOTONIC, &startTime);
-  #endif
+#ifdef PERF_TEST
+  clock_gettime(CLOCK_MONOTONIC, &startTime);
+#endif
 
   // Restart fresh output for all steps in this run.
   numSavePoints = (size_t)(round((_final_time - _initial_time) / _saveper)) + 1;
@@ -102,7 +103,7 @@ void outputVar(double value) {
   if (outputBuffer != NULL) {
     // Write each value into the preallocated buffer; each variable has a "row" that
     // contains `numSavePoints` values, one value for each save point
-    double *outputPtr = outputBuffer + (outputVarIndex * numSavePoints) + savePointIndex;
+    double* outputPtr = outputBuffer + (outputVarIndex * numSavePoints) + savePointIndex;
     *outputPtr = value;
     outputVarIndex++;
   } else {
@@ -115,18 +116,18 @@ void outputVar(double value) {
       outputData = (char*)malloc(size);
     }
     // Format the value as a string in the output data buffer.
-    int numChars = snprintf(outputData + outputIndex, OUTPUT_STRING_LEN+1, "%g\t", value);
+    int numChars = snprintf(outputData + outputIndex, OUTPUT_STRING_LEN + 1, "%g\t", value);
     outputIndex += numChars;
   }
 }
 
 void finish() {
-  #ifdef PERF_TEST
-    clock_gettime(CLOCK_MONOTONIC, &finishTime);
-    double runtime = 1000.0 * finishTime.tv_sec + 1e-6 * finishTime.tv_nsec -
-      (1000.0 * startTime.tv_sec + 1e-6 * startTime.tv_nsec);
-    fprintf(stderr, "calculation runtime = %.0f ms\n", runtime);
-  #endif
+#ifdef PERF_TEST
+  clock_gettime(CLOCK_MONOTONIC, &finishTime);
+  double runtime =
+      1000.0 * finishTime.tv_sec + 1e-6 * finishTime.tv_nsec - (1000.0 * startTime.tv_sec + 1e-6 * startTime.tv_nsec);
+  fprintf(stderr, "calculation runtime = %.0f ms\n", runtime);
+#endif
   if (outputData != NULL) {
     free(outputData);
   }
