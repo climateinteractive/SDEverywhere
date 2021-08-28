@@ -299,12 +299,12 @@ double* _VECTOR_SORT_ORDER(double* vector, size_t size, double direction) {
 // ALLOCATE AVAILABLE
 //
 // Mathematical functions for calculating the normal pdf and cdf at a point x
-double normal(double x, double μ, double σ) {
+double __pdf_normal(double x, double μ, double σ) {
   double base = 1.0 / (σ * sqrt(2.0 * M_PI));
   double exponent = -pow(x - μ, 2.0) / (2.0 * σ * σ);
   return base * exp(exponent);
 }
-double P(double x) {
+double __cdf_unit_normal_P(double x) {
   // Zelen & Severo (1964) in Handbook Of Mathematical Functions, Abramowitz and Stegun, 26.2.17
   double p = 0.2316419;
   double b[5] = {0.31938153, -0.356563782, 1.781477937, -1.821255978, 1.330274429};
@@ -315,28 +315,32 @@ double P(double x) {
     y += b[i] * k;
     k *= t;
   }
-  return 1 - normal(x, 0.0, 1.0) * y;
+  return 1.0 - __pdf_normal(x, 0.0, 1.0) * y;
 }
-double cdfu(double x) {
+double __cdf_unit_normal_Q(double x) {
   // Calculate the unit cumulative distribution function from x to +∞, often known as Q(x).
-  return x >= 0.0 ? 1.0 - P(x) : P(-x);
+  return x >= 0.0 ? 1.0 - __cdf_unit_normal_P(x) : __cdf_unit_normal_P(-x);
 }
-double cdf(double x, double σ) { return cdfu(x / σ); }
+double __cdf_normal_Q(double x, double σ) { return __cdf_unit_normal_Q(x / σ); }
 // Access the doubly-subscripted priority profiles array by pointer.
 enum { PTYPE, PPRIORITY, PWIDTH, PEXTRA };
-double get_pp(double* pp, size_t iProfile, size_t iElement) {
+double __get_pp(double* pp, size_t iProfile, size_t iElement) {
   const int NUM_PP = PEXTRA - PTYPE + 1;
   return *(pp + iProfile * NUM_PP + iElement);
 }
-double* _ALLOCATE_AVAILABLE(size_t num_requesters, double* requested_quantities, double* priority_profiles,
-    double resource_available, double* allocations) {
-  // requested_quantities points to an array of length num_requesters
-  // priority_profiles points to an array of num_requesters arrays of length 4
-  // allocations points to an array of length num_requesters in which results are returned
-
+#define ALLOCATIONS_BUFSIZE 60
+double* _ALLOCATE_AVAILABLE(
+    double* requested_quantities, double* priority_profiles, double available_resource, size_t num_requesters) {
+  // requested_quantities points to an array of length num_requesters.
+  // priority_profiles points to an array of num_requesters arrays of length 4.
   // The priority profiles give the mean and standard deviation of normal curves used to allocate
   // the available resource, with a higher mean indicating a higher priority. The search space for
   // allocations that match the available resource is the x axis with tails on both ends of the curves.
+  static double allocations[ALLOCATIONS_BUFSIZE];
+  if (num_requesters > ALLOCATIONS_BUFSIZE) {
+    fprintf(stderr, "_ALLOCATE_AVAILABLE num_requesters exceeds internal maximum size of %d\n", ALLOCATIONS_BUFSIZE);
+    return NULL;
+  }
   const double normal_curve_tail = 5.0;
   // Limit the search to this number of steps.
   const size_t max_steps = 30;
@@ -344,8 +348,8 @@ double* _ALLOCATE_AVAILABLE(size_t num_requesters, double* requested_quantities,
   double min_mean = DBL_MAX;
   double max_mean = DBL_MIN;
   for (size_t i = 0; i < num_requesters; i++) {
-    min_mean = fmin(get_pp(priority_profiles, i, PPRIORITY), min_mean);
-    max_mean = fmax(get_pp(priority_profiles, i, PPRIORITY), max_mean);
+    min_mean = fmin(__get_pp(priority_profiles, i, PPRIORITY), min_mean);
+    max_mean = fmax(__get_pp(priority_profiles, i, PPRIORITY), max_mean);
   }
   // Start the search in the midpoint of the means, with a big first jump.
   double total_allocations = 0.0;
@@ -357,14 +361,14 @@ double* _ALLOCATE_AVAILABLE(size_t num_requesters, double* requested_quantities,
   do {
     // Calculate allocations for each requester.
     for (size_t i = 0; i < num_requesters; i++) {
-      double mean = get_pp(priority_profiles, i, PPRIORITY);
-      double sigma = get_pp(priority_profiles, i, PWIDTH);
+      double mean = __get_pp(priority_profiles, i, PPRIORITY);
+      double sigma = __get_pp(priority_profiles, i, PWIDTH);
       // The allocation is the area under the requester's normal curve from x out to +∞
       // scaled by the size of the request. We integrate over the right-hand side of the
       // normal curve so that higher means have higher priority, that is, are allocated more.
       // The unit cumulative distribution function integrates to one over all x,
       // so we simply multiply by a constant to scale the area under the curve.
-      allocations[i] = requested_quantities[i] * cdf(x - mean, sigma);
+      allocations[i] = requested_quantities[i] * __cdf_normal_Q(x - mean, sigma);
     }
     // Sum the allocations for comparison with the available resource.
     total_allocations = 0.0;
@@ -372,13 +376,15 @@ double* _ALLOCATE_AVAILABLE(size_t num_requesters, double* requested_quantities,
       total_allocations += allocations[i];
     }
     if (++num_steps >= max_steps) {
-      // TODO signal error
+      fprintf(stderr,
+          "_ALLOCATE_AVAILABLE failed to converge at time=%g with total_allocations=%g, available_resource=%g\n", _time,
+          total_allocations, available_resource);
       break;
     }
     // Set up the next x value by computing a new delta that is usually half the size of the
     // previous delta, that is, do a binary search of the x axis. We may jump over the target
     // x value, so we may need to change direction.
-    double delta_sign = total_allocations < resource_available ? -1.0 : 1.0;
+    double delta_sign = total_allocations < available_resource ? -1.0 : 1.0;
     // Too many jumps in the same direction can result in the search converging on a point
     // that falls short of the target x value. Stop halving the delta when that happens until
     // we jump over the target again.
@@ -388,7 +394,7 @@ double* _ALLOCATE_AVAILABLE(size_t num_requesters, double* requested_quantities,
     x += delta;
     // The search terminates when the total allocations are equal to the available resource
     // up to a very small epsilon difference.
-  } while (fabs(total_allocations - resource_available) > _epsilon);
+  } while (fabs(total_allocations - available_resource) > _epsilon);
   // Return a pointer to the allocations array the caller passed with the results filled in.
   return allocations;
 }
