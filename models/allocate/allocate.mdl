@@ -61,7 +61,7 @@ region:
 	~
 	~		|
 
-pprofile : ptype, ppriority, pwidth, pextra
+XPriority : ptype, ppriority, pwidth, pextra
 	~
 	~		|
 
