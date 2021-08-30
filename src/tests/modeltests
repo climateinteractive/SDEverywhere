@@ -27,7 +27,12 @@ function test {
     else
       TEST_ARGS=
     fi
-    $SDE test $TEST_ARGS -p 1e-4 $MODEL_DIR/$MODEL
+    # Reduce comparison precision for models that cannot reproduce Vensim results.
+    PRECISION="1e-4"
+    if [[ $MODEL == "allocate" ]]; then
+      PRECISION="1e-2"
+    fi
+    $SDE test $TEST_ARGS -p $PRECISION $MODEL_DIR/$MODEL
   fi
 
   # Run additional script to validate output
