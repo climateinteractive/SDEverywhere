@@ -344,6 +344,12 @@ double* _ALLOCATE_AVAILABLE(
   const double normal_curve_tail = 5.0;
   // Limit the search to this number of steps.
   const size_t max_steps = 30;
+  // Clamp the available resource to total requests so they can converge.
+  double totalRequests = 0.0;
+  for (size_t i = 0; i < num_requesters; i++) {
+    totalRequests += requested_quantities[i];
+  }
+  available_resource = fmin(available_resource, totalRequests);
   // Find the minimum and maximum means in the priority curves.
   double min_mean = DBL_MAX;
   double max_mean = DBL_MIN;
