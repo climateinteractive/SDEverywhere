@@ -89,6 +89,12 @@ export default class EquationGen extends ModelReader {
     this.vsNullValue = ''
     this.vsAction = 0
     this.vsError = ''
+    // components extracted from arguments to ALLOCATE AVAILABLE
+    this.aaRequestArray = ''
+    this.aaPriorityArray = ''
+    this.aaAvailableResource = ''
+    this.aaTmpName = ''
+    this.aaTmpDimName = ''
   }
   generate() {
     // Generate code for the variable in either init or eval mode.
@@ -309,6 +315,13 @@ export default class EquationGen extends ModelReader {
     }
     // Emit the tmp var subscript just after emitting the tmp var elsewhere.
     this.emit(`[${this.vsoTmpDimName}[${i}]]`)
+  }
+  aaSubscriptGen(subscripts) {
+    // _ALLOCATE_AVAILABLE will iterate over the subscript in its first arg.
+    let i = this.loopIndexVars.index(subscripts[0])
+    this.aaTmpDimName = subscripts[0]
+    // Emit the tmp var subscript just after emitting the tmp var elsewhere.
+    this.emit(`[${this.aaTmpDimName}[${i}]]`)
   }
   directConstSubscriptGen(subscripts) {
     // Construct numeric constant variable subscripts in normal order.
@@ -678,6 +691,18 @@ export default class EquationGen extends ModelReader {
       this.vsoOrder = ''
       this.vsoTmpName = ''
       this.vsoTmpDimName = ''
+    } else if (fn === '_ALLOCATE_AVAILABLE') {
+      super.visitCall(ctx)
+      let dimSize = sub(this.aaTmpDimName).size
+      let aa = `  double* ${this.aaTmpName} = _ALLOCATE_AVAILABLE(${this.aaRequestArray}, (double*)${this.aaPriorityArray}, ${this.aaAvailableResource}, ${dimSize});`
+      // Inject the AA call into the loop opening code that was aleady emitted into that channel.
+      this.subscriptLoopOpeningCode.splice(this.var.subscripts.length - 1, 0, aa)
+      this.callStack.pop()
+      this.aaRequestArray = ''
+      this.aaPriorityArray = ''
+      this.aaAvailableResource = ''
+      this.aaTmpName = ''
+      this.aaTmpDimName = ''
     } else if (fn === '_GET_DATA_BETWEEN_TIMES') {
       this.emit('_GET_DATA_BETWEEN_TIMES(')
       super.visitCall(ctx)
@@ -783,6 +808,13 @@ export default class EquationGen extends ModelReader {
       exprs[0].accept(this)
       this.setArgIndex(1)
       this.vsoOrder = this.cVarOrConst(exprs[1])
+    } else if (fn === '_ALLOCATE_AVAILABLE') {
+      this.setArgIndex(0)
+      exprs[0].accept(this)
+      this.setArgIndex(1)
+      exprs[1].accept(this)
+      this.setArgIndex(2)
+      this.aaAvailableResource = this.cVarOrConst(exprs[2])
     } else if (fn === '_IF_THEN_ELSE') {
       // See if the condition expression was previously determined to resolve to a
       // compile-time constant.  If so, we only need to emit code for one branch.
@@ -872,6 +904,15 @@ export default class EquationGen extends ModelReader {
           this.emit(this.vsoTmpName)
         }
         super.visitVar(ctx)
+      } else if (this.currentFunctionName() === '_ALLOCATE_AVAILABLE') {
+        if (this.argIndexForFunctionName('_ALLOCATE_AVAILABLE') === 0) {
+          this.aaRequestArray = this.currentVarName()
+          this.aaTmpName = newTmpVarName()
+          this.emit(this.aaTmpName)
+        } else if (this.argIndexForFunctionName('_ALLOCATE_AVAILABLE') === 1) {
+          this.aaPriorityArray = this.currentVarName()
+        }
+        super.visitVar(ctx)
       } else if (this.currentFunctionName() === '_GET_DATA_BETWEEN_TIMES') {
         this.emit(this.currentVarName())
         super.visitVar(ctx)
@@ -944,6 +985,10 @@ export default class EquationGen extends ModelReader {
       } else if (fn === '_VECTOR_SORT_ORDER') {
         if (this.argIndexForFunctionName('_VECTOR_SORT_ORDER') === 0) {
           this.vsoSubscriptGen(subscripts)
+        }
+      } else if (fn === '_ALLOCATE_AVAILABLE') {
+        if (this.argIndexForFunctionName('_ALLOCATE_AVAILABLE') === 0) {
+          this.aaSubscriptGen(subscripts)
         }
       } else {
         // Add C subscripts to the variable name that was already emitted.
