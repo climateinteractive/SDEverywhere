@@ -10,7 +10,6 @@ double _epsilon = 1e-6;
 // See the Vensim Reference Manual for descriptions of the functions.
 // http://www.vensim.com/documentation/index.html?22300.htm
 //
-
 double _PULSE(double start, double width) {
   double time_plus = _time + _time_step / 2.0;
   if (width == 0.0) {
@@ -403,4 +402,34 @@ double* _ALLOCATE_AVAILABLE(
   } while (fabs(total_allocations - available_resource) > _epsilon);
   // Return a pointer to the allocations array the caller passed with the results filled in.
   return allocations;
+}
+
+//
+// DELAY FIXED
+//
+FixedDelay* __new_fixed_delay(double delay_time, double initial_value) {
+  // Make new fixed delay data with a ring buffer for the delay line.
+  // We don't know the size until runtime, so it must be dynamically allocated.
+  // Oniy initialize once, when the pointer to the structure is still null.
+  FixedDelay* fixed_delay = malloc(sizeof(FixedDelay));
+  fixed_delay->n = (size_t)ceil(delay_time / _time_step);
+  fixed_delay->data = malloc(sizeof(double) * fixed_delay->n);
+  fixed_delay->data_index = 0;
+  fixed_delay->initial_value = initial_value;
+  return fixed_delay;
+}
+double _DELAY_FIXED(double input, FixedDelay* fixed_delay) {
+  // Cache input values in a ring buffer for the number of time steps equal to the delay time.
+  // Return the init value until the time reaches the delay time.
+  double result;
+  if (_time < fixed_delay->n * _time_step - 1e-6) {
+    result = fixed_delay->initial_value;
+  } else {
+    result = fixed_delay->data[fixed_delay->data_index + 1];
+  }
+  fixed_delay->data[fixed_delay->data_index++] = input;
+  if (fixed_delay->data_index >= fixed_delay->n) {
+    fixed_delay->data_index = 0;
+  }
+  return result;
 }
