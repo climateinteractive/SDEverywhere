@@ -423,13 +423,26 @@ double _DELAY_FIXED(double input, FixedDelay* fixed_delay) {
   // Return the init value until the time reaches the delay time.
   double result;
   if (_time < fixed_delay->n * _time_step - 1e-6) {
-    result = fixed_delay->initial_value;
+    result =  fixed_delay->initial_value;
+    fixed_delay->data[fixed_delay->data_index] = fixed_delay->initial_value;
   } else {
-    result = fixed_delay->data[fixed_delay->data_index + 1];
+    result = fixed_delay->data[fixed_delay->data_index];
+    fixed_delay->data[fixed_delay->data_index] = input;
   }
-  fixed_delay->data[fixed_delay->data_index++] = input;
-  if (fixed_delay->data_index >= fixed_delay->n) {
+  if (++fixed_delay->data_index >= fixed_delay->n) {
     fixed_delay->data_index = 0;
   }
   return result;
 }
+// double _DELAY_FIXED(double input, FixedDelay* fixed_delay) {
+//   // Cache input values in a ring buffer for the number of time steps equal to the delay time.
+//   // Return the init value until the time reaches the delay time.
+//   double result;
+//   bool delayTimeReached = _time > fixed_delay->n * _time_step + 1e-6;
+//   result = delayTimeReached ? fixed_delay->data[fixed_delay->data_index] : fixed_delay->initial_value;
+//   fixed_delay->data[fixed_delay->data_index++] = delayTimeReached ? input : fixed_delay->initial_value;
+//   if (fixed_delay->data_index >= fixed_delay->n) {
+//     fixed_delay->data_index = 0;
+//   }
+//   return result;
+// }
