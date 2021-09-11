@@ -206,7 +206,10 @@ ${postStep}
       let families = subscriptFamilies(v.subscripts)
       if (v.isFixedDelay()) {
         // Add the associated FixedDelay var decl.
-        fixedDelayDecls += `\nFixedDelay* ${v.fixedDelayVarName};`
+        fixedDelayDecls += `\nFixedDelay* ${v.fixedDelayVarName}${R.map(
+          family => `[${sub(family).size}]`,
+          families
+        ).join('')};`
       }
       return varType + v.varName + R.map(family => `[${sub(family).size}]`, families).join('')
     }

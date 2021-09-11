@@ -1,55 +1,33 @@
 {UTF-8}
 receiving = DELAY FIXED(shipping, shipping time, shipping) ~~|
-shipments in transit = INTEG(shipping - receiving, shipping * shipping time) ~~|
-reference shipping rate = 1 ~~|
 shipping = STEP(reference shipping rate, 10) - STEP(reference shipping rate, 20) ~~|
 shipping time = 20 ~~|
+reference shipping rate = 1 ~~|
+shipments in transit = INTEG(shipping - receiving, shipping * shipping time) ~~|
+
+DimA: A1, A2, A3 ~~|
+input[A1] = 10 * TIME ~~|
+input[A2] = 20 * TIME ~~|
+input[A3] = 30 * TIME ~~|
+output[DimA] = DELAY FIXED(input[DimA], 1, 0) ~~|
 
 INITIAL TIME = 0 ~~|
-FINAL TIME = 100 ~~|
+FINAL TIME = 50 ~~|
 TIME STEP = 1 ~~|
 SAVEPER = TIME STEP ~~|
 
 \\\---/// Sketch information - do not modify anything except names
 V300  Do not put anything below this section - it will be ignored
 *View 1
-$192-192-192,0,Times New Roman|12||0-0-0|0-0-0|0-0-255|-1--1--1|255-255-255|96,96,100,0
+$0-0-0,0,|0||0-0-0|0-0-0|0-0-0|0-0-0|0-0-0|0,0,100,0
 ///---\\\
 :L<%^E!@
-1:delayfixed.vdfx
-4:Time
-5:FINAL TIME
 9:delayfixed
-19:100,0
-24:0
-25:100
-26:100
-57:1
-54:0
-55:0
-82:0
-86:0
-59:0
-56:0
-58:0
-71:0
-44:65001
-46:0
-45:0
-49:0
-50:0
-51:
-52:
-53:
-43:delayfixed
-47:delayfixed
-48:
 15:0,0,0,0,0,0
-27:0,
+19:100,0
+27:2,
 34:0,
-42:1
-72:0
-73:0
+5:FINAL TIME
 35:Date
 36:YYYY-MM-DD
 37:2000
@@ -57,16 +35,7 @@ $192-192-192,0,Times New Roman|12||0-0-0|0-0-0|0-0-255|-1--1--1|255-255-255|96,9
 39:1
 40:2
 41:0
-95:0
-96:0
-97:0
-77:0
-78:0
-93:0
-94:0
-92:0
-91:0
-90:0
-87:0
-75:
-43:delayfixed
+42:1
+24:0
+25:0
+26:0

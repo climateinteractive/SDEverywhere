@@ -767,7 +767,7 @@ export default class EquationGen extends ModelReader {
         exprs[i].accept(this)
         // For DELAY FIXED, also initialize the support struct out of band, as it is not a Vensim var.
         if (fn === '_DELAY_FIXED') {
-          this.emit(`;\n  ${this.var.fixedDelayVarName} = __new_fixed_delay(`)
+          this.emit(`;\n  ${this.var.fixedDelayVarName}${this.lhsSubscriptGen(this.var.subscripts)} = __new_fixed_delay(`)
           this.setArgIndex(1)
           exprs[1].accept(this)
           this.emit(', ')
@@ -786,7 +786,7 @@ export default class EquationGen extends ModelReader {
           this.setArgIndex(0)
           exprs[0].accept(this)
           this.emit(', ')
-          this.emit(this.var.fixedDelayVarName)
+          this.emit(`${this.var.fixedDelayVarName}${this.lhsSubscriptGen(this.var.subscripts)}`)
         } else {
           // Emit the variable LHS as the first arg at eval time, giving the current value for the level.
           this.emit(this.lhs)
