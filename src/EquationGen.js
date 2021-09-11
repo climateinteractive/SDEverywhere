@@ -754,23 +754,39 @@ export default class EquationGen extends ModelReader {
     let exprs = ctx.expr()
     let fn = this.currentFunctionName()
     // Split level functions into init and eval expressions.
-    if (fn === '_INTEG' || fn === '_SAMPLE_IF_TRUE' || fn === '_ACTIVE_INITIAL') {
+    if (fn === '_INTEG' || fn === '_SAMPLE_IF_TRUE' || fn === '_ACTIVE_INITIAL' || fn === '_DELAY_FIXED') {
       if (this.mode.startsWith('init')) {
         // Get the index of the argument holding the initial value.
         let i = 0
         if (fn === '_INTEG' || fn === '_ACTIVE_INITIAL') {
           i = 1
-        } else if (fn === '_SAMPLE_IF_TRUE') {
+        } else if (fn === '_SAMPLE_IF_TRUE' || fn === '_DELAY_FIXED') {
           i = 2
         }
         this.setArgIndex(i)
         exprs[i].accept(this)
+        // For DELAY FIXED, also initialize the support struct out of band, as it is not a Vensim var.
+        if (fn === '_DELAY_FIXED') {
+          this.emit(`;\n  ${this.var.fixedDelayVarName} = __new_fixed_delay(`)
+          this.setArgIndex(1)
+          exprs[1].accept(this)
+          this.emit(', ')
+          this.setArgIndex(2)
+          exprs[2].accept(this)
+          this.emit(')')
+        }
       } else {
         // We are in eval mode, not init mode.
-        // For ACTIVE INITIAL, emit the first arg without a function call.
         if (fn === '_ACTIVE_INITIAL') {
+          // For ACTIVE INITIAL, emit the first arg without a function call.
           this.setArgIndex(0)
           exprs[0].accept(this)
+        } else if (fn === '_DELAY_FIXED') {
+          // For DELAY FIXED, emit the first arg followed by the FixedDelay support var.
+          this.setArgIndex(0)
+          exprs[0].accept(this)
+          this.emit(', ')
+          this.emit(this.var.fixedDelayVarName)
         } else {
           // Emit the variable LHS as the first arg at eval time, giving the current value for the level.
           this.emit(this.lhs)

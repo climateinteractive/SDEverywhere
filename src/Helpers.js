@@ -16,6 +16,8 @@ export const PRINT_VLOG_TRACE = false
 let nextTmpVarSeq = 1
 // next sequence number for generated lookup variable names
 let nextLookupVarSeq = 1
+// next sequence number for generated fixed delay variable names
+let nextFixedDelayVarSeq = 1
 // next sequence number for generated level variable names
 let nextLevelVarSeq = 1
 // next sequence number for generated aux variable names
@@ -73,6 +75,10 @@ export let newTmpVarName = () => {
 export let newLookupVarName = () => {
   // Return a unique lookup arg variable name
   return `_lookup${nextLookupVarSeq++}`
+}
+export let newFixedDelayVarName = () => {
+  // Return a unique fixed delay variable name
+  return `_fixed_delay${nextFixedDelayVarSeq++}`
 }
 export let newLevelVarName = (basename = null, levelNumber = 0) => {
   // Return a unique level variable name.

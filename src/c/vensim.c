@@ -408,9 +408,10 @@ double* _ALLOCATE_AVAILABLE(
 // DELAY FIXED
 //
 FixedDelay* __new_fixed_delay(double delay_time, double initial_value) {
-  // Make new fixed delay data with a ring buffer for the delay line.
+  // Construct a FixedDelay struct with a ring buffer for the delay line.
   // We don't know the size until runtime, so it must be dynamically allocated.
-  // Oniy initialize once, when the pointer to the structure is still null.
+  // The delay time is quantized to an integral number of time steps.
+  // The FixedDelay should be constructed at init time to latch the delay time and initial value.
   FixedDelay* fixed_delay = malloc(sizeof(FixedDelay));
   fixed_delay->n = (size_t)ceil(delay_time / _time_step);
   fixed_delay->data = malloc(sizeof(double) * fixed_delay->n);
@@ -421,28 +422,15 @@ FixedDelay* __new_fixed_delay(double delay_time, double initial_value) {
 double _DELAY_FIXED(double input, FixedDelay* fixed_delay) {
   // Cache input values in a ring buffer for the number of time steps equal to the delay time.
   // Return the init value until the time reaches the delay time.
-  double result;
-  if (_time < fixed_delay->n * _time_step - 1e-6) {
-    result =  fixed_delay->initial_value;
-    fixed_delay->data[fixed_delay->data_index] = fixed_delay->initial_value;
-  } else {
-    result = fixed_delay->data[fixed_delay->data_index];
-    fixed_delay->data[fixed_delay->data_index] = input;
-  }
-  if (++fixed_delay->data_index >= fixed_delay->n) {
-    fixed_delay->data_index = 0;
+  double result = 0.0;
+  // Require the buffer size to be positive to protect from buffer overflows.
+  if (fixed_delay->n > 0) {
+    // Compare the current time to the delay time up to an epsilon difference.
+    bool delayTimeReached = _time > fixed_delay->n * _time_step - 1e-6;
+    fixed_delay->data[fixed_delay->data_index] = delayTimeReached ? input : fixed_delay->initial_value;
+    // Because DELAY FIXED is a level, get the value one time step ahead in the buffer.
+    fixed_delay->data_index = (fixed_delay->data_index + 1) % fixed_delay->n;
+    result = delayTimeReached ? fixed_delay->data[fixed_delay->data_index] : fixed_delay->initial_value;
   }
   return result;
 }
-// double _DELAY_FIXED(double input, FixedDelay* fixed_delay) {
-//   // Cache input values in a ring buffer for the number of time steps equal to the delay time.
-//   // Return the init value until the time reaches the delay time.
-//   double result;
-//   bool delayTimeReached = _time > fixed_delay->n * _time_step + 1e-6;
-//   result = delayTimeReached ? fixed_delay->data[fixed_delay->data_index] : fixed_delay->initial_value;
-//   fixed_delay->data[fixed_delay->data_index++] = delayTimeReached ? input : fixed_delay->initial_value;
-//   if (fixed_delay->data_index >= fixed_delay->n) {
-//     fixed_delay->data_index = 0;
-//   }
-//   return result;
-// }

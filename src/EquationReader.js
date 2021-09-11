@@ -25,7 +25,8 @@ import {
   matchRegex,
   newAuxVarName,
   newLevelVarName,
-  newLookupVarName
+  newLookupVarName,
+  newFixedDelayVarName
 } from './Helpers.js'
 
 // Set this true to get a list of functions used in the model. This may include lookups.
@@ -88,9 +89,13 @@ export default class EquationReader extends ModelReader {
     if (PRINT_FUNCTION_NAMES) {
       console.error(fn)
     }
-    if (fn === '_INTEG') {
+    if (fn === '_INTEG' || fn === '_DELAY_FIXED') {
       this.var.varType = 'level'
       this.var.hasInitValue = true
+      if (fn === '_DELAY_FIXED') {
+        this.var.varSubtype = 'fixedDelay'
+        this.var.fixedDelayVarName = canonicalName(newFixedDelayVarName())
+      }
     } else if (fn === '_INITIAL') {
       this.var.varType = 'initial'
       this.var.hasInitValue = true
