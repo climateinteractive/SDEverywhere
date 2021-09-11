@@ -239,6 +239,10 @@ export default class EquationReader extends ModelReader {
         // with the generated level var.
       } else if (this.argIndexForFunctionName('_INTEG') === 1) {
         this.addReferencesToList(this.var.initReferences)
+      } else if (this.argIndexForFunctionName('_DELAY_FIXED') === 1) {
+        this.addReferencesToList(this.var.initReferences)
+      } else if (this.argIndexForFunctionName('_DELAY_FIXED') === 2) {
+        this.addReferencesToList(this.var.initReferences)
       } else if (this.argIndexForFunctionName('_ACTIVE_INITIAL') === 1) {
         this.addReferencesToList(this.var.initReferences)
       } else if (this.argIndexForFunctionName('_SAMPLE_IF_TRUE') === 2) {
