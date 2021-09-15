@@ -1029,51 +1029,21 @@ export default class EquationGen extends ModelReader {
       // Emit a single constant into the expression code.
       emitConstAtPos(0)
     } else {
-      // Extract a single value from the const list by its index number.
       // All const lists with > 1 value are separated on dimensions in the LHS.
-      // The LHS of a separated variable here will contain only index subscripts.
-      let numDims = this.var.separationDims.length
-      if (numDims === 1) {
-        // Find the index that is in the separation dimension.
-        let sepDim = sub(this.var.separationDims[0])
-        for (let ind of this.var.subscripts) {
-          let i = sepDim.value.indexOf(ind)
-          if (i >= 0) {
-            // Emit the constant at this position in the constant list.
-            emitConstAtPos(i)
-            break
-          }
-        }
-      } else if (numDims === 2) {
-        // Calculate an index into a flattened array by converting the indices to numeric form and looking them up
-        // in a C name array listed in the same Vensim order as the constant array in the model.
-        let cVarName
-        let modelLHSReader = new ModelLHSReader()
-        modelLHSReader.read(this.var.modelLHS)
-        let cNames = modelLHSReader.names().map(Model.cName)
-        // Visit dims in normal order. Find the ind in the dim. Compose the C array expression with numeric indices.
-        for (let i = 0; i < this.var.separationDims.length; i++) {
-          const dim = this.var.separationDims[i]
-          const sepDim = sub(dim)
-          const ind = this.var.subscripts[i]
-          const j = sepDim.value.indexOf(ind)
-          if (j >= 0) {
-            const indexNum = sub(ind).value
-            if (!cVarName) {
-              cVarName = `${this.var.varName}[${indexNum}]`
-            } else {
-              cVarName += `[${indexNum}]`
-            }
-          }
-        }
-        // Find the position of the constant in Vensim order from the expanded LHS var list.
-        let constPos = R.indexOf(cVarName, cNames)
-        if (constPos >= 0) {
-          emitConstAtPos(constPos)
-          // console.error(`${this.var.refId} position = ${constPos}`)
-        } else {
-          console.error(`${this.var.refId} → ${cVarName} not found in C names`)
-        }
+      // The LHS of a separated variable here will contain only index subscripts in normal order.
+      // Calculate an index into a flattened array by converting the indices to numeric form and looking them up
+      // in a C name array listed in the same Vensim order as the constant array in the model.
+      let modelLHSReader = new ModelLHSReader()
+      modelLHSReader.read(this.var.modelLHS)
+      let cNames = modelLHSReader.names().map(Model.cName)
+      let cVarName = this.var.varName + R.map(indName => `[${sub(indName).value}]`, this.var.subscripts).join('')
+      // Find the position of the constant in Vensim order from the expanded LHS var list.
+      let constPos = R.indexOf(cVarName, cNames)
+      if (constPos >= 0) {
+        emitConstAtPos(constPos)
+        // console.error(`${this.var.refId} position = ${constPos}`)
+      } else {
+        console.error(`ERROR: const list element ${this.var.refId} → ${cVarName} not found in C names`)
       }
     }
   }
