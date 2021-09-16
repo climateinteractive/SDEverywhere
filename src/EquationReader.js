@@ -26,7 +26,8 @@ import {
   newAuxVarName,
   newLevelVarName,
   newLookupVarName,
-  newFixedDelayVarName
+  newFixedDelayVarName,
+  cartesianProductOf
 } from './Helpers.js'
 
 // Set this true to get a list of functions used in the model. This may include lookups.
@@ -300,76 +301,52 @@ export default class EquationReader extends ModelReader {
           // Find the refIds of the vars that include the indices in the reference.
           // Get the vars with the var name of the reference. We will choose from these vars.
           let varsWithRefName = Model.varsWithName(this.refId)
-          // Support one or two dimensions that vary in non-apply-to-all variable definitions.
-          let numLoops = R.reduce((n, f) => n + (f ? 1 : 0), 0, expansionFlags)
           // The refIds of actual vars containing the indices will accumulate with possible duplicates.
           let expandedRefIds = []
-          if (numLoops === 1) {
-            // Find refIds for a subscript in either the first or the second position.
-            let pos = expansionFlags[0] ? 0 : 1
-            // For each index name at the subscript position, find refIds for vars that include the index.
-            // This process ensures that we generate references to vars that are in the var table.
-            let indexNamesAtPos
-            // Use the single index name for a separated variable if it exists.
-            // But don't do this if the subscript is a marked dimension in a vector function.
-            let separatedIndexName = separatedVariableIndex(subscripts[pos], this.var, subscripts)
-            if (!markedDims.includes(subscripts[pos]) && separatedIndexName) {
-              indexNamesAtPos = [separatedIndexName]
-            } else {
-              // Generate references to all the indices for the subscript.
-              indexNamesAtPos = indexNamesForSubscript(subscripts[pos])
+          let iSub
+          // Accumulate an array of lists of the separated index names at each position.
+          let indexNames = []
+          for (iSub = 0; iSub < expansionFlags.length; iSub++) {
+            if (expansionFlags[iSub]) {
+              // For each index name at the subscript position, find refIds for vars that include the index.
+              // This process ensures that we generate references to vars that are in the var table.
+              let indexNamesAtPos
+              // Use the single index name for a separated variable if it exists.
+              // But don't do this if the subscript is a marked dimension in a vector function.
+              let separatedIndexName = separatedVariableIndex(subscripts[iSub], this.var, subscripts)
+              if (!markedDims.includes(subscripts[iSub]) && separatedIndexName) {
+                indexNamesAtPos = [separatedIndexName]
+              } else {
+                // Generate references to all the indices for the subscript.
+                indexNamesAtPos = indexNamesForSubscript(subscripts[iSub])
+              }
+              indexNames.push(indexNamesAtPos)
             }
-            // vlog('indexNamesAtPos', indexNamesAtPos);
-            for (let indexName of indexNamesAtPos) {
-              // Consider each var with the same name as the reference in the equation.
-              for (let refVar of varsWithRefName) {
-                let refVarIndexNames = indexNamesForSubscript(refVar.subscripts[pos])
-                if (refVarIndexNames.length === 0) {
-                  console.error(
-                    `no subscript at pos ${pos} for var ${refVar.refId} with subscripts ${refVar.subscripts}`
-                  )
-                }
-                if (refVarIndexNames.includes(indexName)) {
-                  expandedRefIds.push(refVar.refId)
-                  // console.error(`adding reference ${refVar.refId}`);
+          }
+          // Flatten the arrays of index names at each position into an array of index name combinations.
+          let separatedIndices = cartesianProductOf(indexNames)
+          // Find a separated variable for each combination of indices.
+          for (let separatedIndex of separatedIndices) {
+            // Consider each var with the same name as the reference in the equation.
+            for (let refVar of varsWithRefName) {
+              let iSeparatedIndex = 0
+              for (iSub = 0; iSub < expansionFlags.length; iSub++) {
+                if (expansionFlags[iSub]) {
+                  let refVarIndexNames = indexNamesForSubscript(refVar.subscripts[iSub])
+                  if (refVarIndexNames.length === 0) {
+                    console.error(
+                      `ERROR: no subscript at subscript position ${iSub} for var ${refVar.refId} with subscripts ${refVar.subscripts}`
+                    )
+                  }
+                  if (!refVarIndexNames.includes(separatedIndex[iSeparatedIndex++])) {
+                    break
+                  }
                 }
               }
-            }
-          } else if (numLoops === 2) {
-            // Expand the dimension in both positions.
-            let indexNamesAtPos0
-            let separatedIndexName0 = separatedVariableIndex(subscripts[0], this.var, subscripts)
-            if (!markedDims.includes(subscripts[0]) && separatedIndexName0) {
-              indexNamesAtPos0 = [separatedIndexName0]
-            } else {
-              indexNamesAtPos0 = indexNamesForSubscript(subscripts[0])
-            }
-            let indexNamesAtPos1
-            let separatedIndexName1 = separatedVariableIndex(subscripts[1], this.var, subscripts)
-            if (!markedDims.includes(subscripts[1]) && separatedIndexName1) {
-              indexNamesAtPos1 = [separatedIndexName1]
-            } else {
-              indexNamesAtPos1 = indexNamesForSubscript(subscripts[1])
-            }
-            for (let indexName0 of indexNamesAtPos0) {
-              for (let indexName1 of indexNamesAtPos1) {
-                for (let refVar of varsWithRefName) {
-                  let refVarIndexNames0 = indexNamesForSubscript(refVar.subscripts[0])
-                  if (refVarIndexNames0.length === 0) {
-                    console.error(
-                      `ERROR: no subscript at pos 0 for var ${refVar.refId} with subscripts ${refVar.subscripts}`
-                    )
-                  }
-                  let refVarIndexNames1 = indexNamesForSubscript(refVar.subscripts[1])
-                  if (refVarIndexNames1.length === 0) {
-                    console.error(
-                      `ERROR: no subscript at pos 1 for var ${refVar.refId} with subscripts ${refVar.subscripts}`
-                    )
-                  }
-                  if (refVarIndexNames0.includes(indexName0) && refVarIndexNames1.includes(indexName1)) {
-                    expandedRefIds.push(refVar.refId)
-                  }
-                }
+              if (iSub >= expansionFlags.length) {
+                // All separated index names matched index names in the var, so add it as a reference.
+                expandedRefIds.push(refVar.refId)
+                break
               }
             }
           }
