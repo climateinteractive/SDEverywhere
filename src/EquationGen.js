@@ -388,11 +388,19 @@ export default class EquationGen extends ModelReader {
       // If the data was found, convert it to a lookup.
       if (getCellValue) {
         let indexNum = 0
-        if (!R.isEmpty(this.var.subscripts)) {
+        if (!R.isEmpty(this.var.separationDims)) {
           // Generate a lookup for a separated index in the variable's dimension.
-          // TODO allow the index to be in either position of a 2D subscript
-          let ind = sub(this.var.subscripts[0])
-          indexNum = ind.value
+          if (this.var.separationDims.length > 1) {
+            console.error(`WARNING: direct data variable ${this.var.varName} separated on more than one dimension`)
+          }
+          let dimName = this.var.separationDims[0]
+          for (let subscript of this.var.subscripts) {
+            if (sub(subscript).family === dimName) {
+              let ind = sub(subscript)
+              indexNum = ind.value
+              break
+            }
+          }
         }
         result.push(this.generateDirectDataLookup(getCellValue, timeRowOrCol, startCell, indexNum))
       }
