@@ -320,21 +320,21 @@ export default class EquationReader extends ModelReader {
               indexNamesAtPos = indexNamesForSubscript(subscripts[pos])
             }
             // vlog('indexNamesAtPos', indexNamesAtPos);
-            R.forEach(indexName => {
+            for (let indexName of indexNamesAtPos) {
               // Consider each var with the same name as the reference in the equation.
-              R.forEach(refVar => {
+              for (let refVar of varsWithRefName) {
                 let refVarIndexNames = indexNamesForSubscript(refVar.subscripts[pos])
                 if (refVarIndexNames.length === 0) {
                   console.error(
                     `no subscript at pos ${pos} for var ${refVar.refId} with subscripts ${refVar.subscripts}`
                   )
                 }
-                if (R.contains(indexName, refVarIndexNames)) {
+                if (refVarIndexNames.includes(indexName)) {
                   expandedRefIds.push(refVar.refId)
                   // console.error(`adding reference ${refVar.refId}`);
                 }
-              }, varsWithRefName)
-            }, indexNamesAtPos)
+              }
+            }
           } else if (numLoops === 2) {
             // Expand the dimension in both positions.
             let indexNamesAtPos0
@@ -351,9 +351,9 @@ export default class EquationReader extends ModelReader {
             } else {
               indexNamesAtPos1 = indexNamesForSubscript(subscripts[1])
             }
-            R.forEach(indexName0 => {
-              R.forEach(indexName1 => {
-                R.forEach(refVar => {
+            for (let indexName0 of indexNamesAtPos0) {
+              for (let indexName1 of indexNamesAtPos1) {
+                for (let refVar of varsWithRefName) {
                   let refVarIndexNames0 = indexNamesForSubscript(refVar.subscripts[0])
                   if (refVarIndexNames0.length === 0) {
                     console.error(
@@ -366,12 +366,12 @@ export default class EquationReader extends ModelReader {
                       `ERROR: no subscript at pos 1 for var ${refVar.refId} with subscripts ${refVar.subscripts}`
                     )
                   }
-                  if (R.contains(indexName0, refVarIndexNames0) && R.contains(indexName1, refVarIndexNames1)) {
+                  if (refVarIndexNames0.includes(indexName0) && refVarIndexNames1.includes(indexName1)) {
                     expandedRefIds.push(refVar.refId)
                   }
-                }, varsWithRefName)
-              }, indexNamesAtPos1)
-            }, indexNamesAtPos0)
+                }
+              }
+            }
           }
           // Sort the expandedRefIds and eliminate duplicates.
           this.expandedRefIds = R.uniq(expandedRefIds.sort())
