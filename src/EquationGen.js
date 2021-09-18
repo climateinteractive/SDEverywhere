@@ -98,10 +98,14 @@ export default class EquationGen extends ModelReader {
   generate() {
     // Generate code for the variable in either init or eval mode.
     if (this.var.isData()) {
-      if (this.var.directDataArgs) {
-        return this.generateDirectDataInit()
-      } else {
-        return this.generateExternalDataInit()
+      if (R.isEmpty(this.var.points)) {
+        if (this.var.directDataArgs) {
+          return this.generateDirectDataInit()
+        } else {
+          return this.generateExternalDataInit()
+        }
+      } else if (this.mode === 'decl') {
+        return
       }
     }
     if (this.var.isLookup()) {
@@ -196,7 +200,6 @@ export default class EquationGen extends ModelReader {
     }
     return value
   }
-
   lookupDataNameGen(subscripts) {
     // Construct a name for the static data array associated with a lookup variable.
     return R.map(subscript => {
@@ -354,7 +357,6 @@ export default class EquationGen extends ModelReader {
       return []
     }
   }
-
   generateDirectDataInit() {
     // If direct data exists for this variable, copy it from the workbook into one or more lookups.
     let result = []
@@ -588,10 +590,20 @@ export default class EquationGen extends ModelReader {
     }
     return result
   }
-
   //
   // Visitor callbacks
   //
+  visitEquation(ctx) {
+    if (this.var.isData() && !R.isEmpty(this.var.points)) {
+      if (this.mode === 'init-lookups') {
+        // If the var already has lookup data points, use those instead of reading them from a file.
+        let lookupData = R.reduce((a, p) => listConcat(a, `${cdbl(p[0])}, ${cdbl(p[1])}`, true), '', this.var.points)
+        this.emit(`__new_lookup(${this.var.points.length}, /*copy=*/true, (double[]){ ${lookupData} });`)
+      }
+    } else {
+      super.visitEquation(ctx)
+    }
+  }
   visitCall(ctx) {
     // Convert the function name from Vensim to C format and push it onto the function name stack.
     // This maintains the name of the current function as its arguments are visited.

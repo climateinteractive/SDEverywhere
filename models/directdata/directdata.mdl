@@ -20,16 +20,20 @@ i[A1, DimB] = GET DIRECT DATA('e_data.csv', ',', 'A', 'B2')
 |
 j[A1, DimB] = i[A1, DimB] ~~~:SUPPLEMENTARY|
 
+k[A1, DimB] = GET DIRECT DATA('e_data.csv', ',', 'A', 'B2') ~~|
+k[A2, DimB] = 0 ~~|
+l[DimA, DimB] = k[DimA, DimB] ~~|
+
 ********************************************************
 	.Control
 ********************************************************~
 		Simulation Control Parameters
 	|
 
-FINAL TIME = 2050 ~~|
 INITIAL TIME = 1990 ~~|
-SAVEPER = TIME STEP ~~|
+FINAL TIME = 2050 ~~|
 TIME STEP = 1 ~~|
+SAVEPER = TIME STEP ~~|
 
 \\\---/// Sketch information - do not modify anything except names
 V300  Do not put anything below this section - it will be ignored

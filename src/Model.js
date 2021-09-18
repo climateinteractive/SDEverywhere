@@ -66,6 +66,8 @@ function read(parseTree, spec, extData, directData, modelDirname) {
   checkSpecVars(spec, extData)
   // Remove variables that are not referenced by an input or output variable.
   removeUnusedVariables(spec)
+  // Resolve duplicate declarations by converting to one variable type.
+  resolveDuplicateDeclarations()
 }
 function readSubscriptRanges(tree, dimensionFamilies, indexFamilies, modelDirname) {
   // Read subscript ranges from the model.
@@ -372,7 +374,33 @@ function removeUnusedVariables(spec) {
     varsForName.push(v)
   }
 }
-
+function resolveDuplicateDeclarations() {
+  // Find subscripted const vars where some subscripts are data vars.
+  // TODO consider doing the same for lookup vars
+  let constValue = v => {
+    let value = parseFloat(v.modelFormula)
+    if (Number.isNaN(value)) {
+      value = 0
+    }
+    return value
+  }
+  let data = dataVars()
+  for (let constVar of constVars()) {
+    let dataVar = data.find(d => d.varName === constVar.varName)
+    if (dataVar) {
+      // console.log(`dup decl const(${constVar.refId}), data(${dataVar.refId})`)
+      // Change the var type from const to data and add lookup data points.
+      constVar.varType = 'data'
+      let initialTimeVar = varWithName('_initial_time')
+      let finalTimeVar = varWithName('_final_time')
+      constVar.points = [
+        [constValue(initialTimeVar), constValue(constVar)],
+        [constValue(finalTimeVar), constValue(constVar)]
+      ]
+      break
+    }
+  }
+}
 //
 // Analysis helpers
 //
