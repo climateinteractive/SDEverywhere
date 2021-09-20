@@ -386,10 +386,10 @@ function resolveDuplicateDeclarations() {
   }
   let data = dataVars()
   for (let constVar of constVars()) {
-    let dataVar = data.find(d => d.varName === constVar.varName)
-    if (dataVar) {
-      // console.log(`dup decl const(${constVar.refId}), data(${dataVar.refId})`)
+    if (data.find(d => d.varName === constVar.varName)) {
       // Change the var type from const to data and add lookup data points.
+      // We are guaranteed to have values for the well-known initial and final time variables.
+      // For a constant, the equivalent lookup has the same value from initial through final times.
       constVar.varType = 'data'
       let initialTimeVar = varWithName('_initial_time')
       let finalTimeVar = varWithName('_final_time')

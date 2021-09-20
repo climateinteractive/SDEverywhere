@@ -98,6 +98,8 @@ export default class EquationGen extends ModelReader {
   generate() {
     // Generate code for the variable in either init or eval mode.
     if (this.var.isData()) {
+      // If the data var was converted from a const, it will have lookup points.
+      // Otherwise, read a data file to get lookup data.
       if (R.isEmpty(this.var.points)) {
         if (this.var.directDataArgs) {
           return this.generateDirectDataInit()
