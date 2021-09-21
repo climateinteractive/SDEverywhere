@@ -377,27 +377,23 @@ function removeUnusedVariables(spec) {
 function resolveDuplicateDeclarations() {
   // Find subscripted const vars where some subscripts are data vars.
   // TODO consider doing the same for lookup vars
-  let constValue = v => {
-    let value = parseFloat(v.modelFormula)
-    if (Number.isNaN(value)) {
-      value = 0
-    }
-    return value
-  }
+  // Least and greatest safe double values in C rounded to convenient consts
+  const MIN_SAFE_DBL = -1e308
+  const MAX_SAFE_DBL = 1e308
   let data = dataVars()
   for (let constVar of constVars()) {
     if (data.find(d => d.varName === constVar.varName)) {
       // Change the var type from const to data and add lookup data points.
-      // We are guaranteed to have values for the well-known initial and final time variables.
-      // For a constant, the equivalent lookup has the same value from initial through final times.
+      // For a constant, the equivalent lookup has the same value over the entire x axis.
+      let value = parseFloat(constVar.modelFormula)
+      if (isNaN(value)) {
+        console.error(`The value for const var ${constVar.refId} converted to a lookup is NaN.`)
+      }
       constVar.varType = 'data'
-      let initialTimeVar = varWithName('_initial_time')
-      let finalTimeVar = varWithName('_final_time')
       constVar.points = [
-        [constValue(initialTimeVar), constValue(constVar)],
-        [constValue(finalTimeVar), constValue(constVar)]
+        [MIN_SAFE_DBL, value],
+        [MAX_SAFE_DBL, value]
       ]
-      break
     }
   }
 }
