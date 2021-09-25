@@ -122,7 +122,9 @@ export default class EquationReader extends ModelReader {
       let level = this.expandTrendFunction(fn, args)
       let genSubs = this.genSubs(input, avgTime, init)
       let aux = newAuxVarName()
-      this.addVariable(`${aux}${genSubs} = ZIDZ(${input} - ${level}${genSubs}, ${avgTime} * ABS(${level}${genSubs})) ~~|`)
+      this.addVariable(
+        `${aux}${genSubs} = ZIDZ(${input} - ${level}${genSubs}, ${avgTime} * ABS(${level}${genSubs})) ~~|`
+      )
       this.var.trendVarName = canonicalName(aux)
       this.var.references.push(this.var.trendVarName)
     } else if (isNpvFunction(fn)) {
