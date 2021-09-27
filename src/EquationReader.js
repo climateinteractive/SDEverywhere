@@ -127,7 +127,9 @@ export default class EquationReader extends ModelReader {
       let level = this.expandTrendFunction(fn, args)
       let genSubs = this.genSubs(input, avgTime, init)
       let aux = newAuxVarName()
-      this.addVariable(`${aux}${genSubs} = ZIDZ(${input} - ${level}${genSubs}, ${avgTime} * ABS(${level}${genSubs}))`)
+      this.addVariable(
+        `${aux}${genSubs} = ZIDZ(${input} - ${level}${genSubs}, ${avgTime} * ABS(${level}${genSubs})) ~~|`
+      )
       this.var.trendVarName = canonicalName(aux)
       this.var.references.push(this.var.trendVarName)
     } else if (isNpvFunction(fn)) {
@@ -142,7 +144,7 @@ export default class EquationReader extends ModelReader {
       let genSubs = this.genSubs(stream, discountRate, initVal, factor)
       let aux = newAuxVarName()
       // npv = (ncum + stream * TIME STEP * df) * factor
-      this.addVariable(`${aux}${genSubs} = (${level.ncum} + ${stream} * TIME STEP * ${level.df}) * ${factor}`)
+      this.addVariable(`${aux}${genSubs} = (${level.ncum} + ${stream} * TIME STEP * ${level.df}) * ${factor} ~~|`)
       this.var.npvVarName = canonicalName(aux)
       this.var.references.push(this.var.npvVarName)
     } else if (isDelayFunction(fn)) {
@@ -397,7 +399,7 @@ export default class EquationReader extends ModelReader {
   generateLookupArg(lookupArgCtx) {
     // Generate a variable for a lookup argument found in the RHS.
     let varName = newLookupVarName()
-    let eqn = `${varName}${lookupArgCtx.getText()}`
+    let eqn = `${varName}${lookupArgCtx.getText()} ~~|`
     this.addVariable(eqn)
     return canonicalName(varName)
   }
@@ -464,7 +466,7 @@ export default class EquationReader extends ModelReader {
       // If it has subscripts, the refId is still just the var name, because it is an apply-to-all array.
       levelRefId = canonicalName(level)
     }
-    let eqn = `${levelLHS} = INTEG((${input} - ${levelLHS}) / ${delay}, ${init})`
+    let eqn = `${levelLHS} = INTEG((${input} - ${levelLHS}) / ${delay}, ${init}) ~~|`
     if (isSeparatedVar(this.var)) {
       Model.addNonAtoAVar(canonicalName(level), [true])
     }
@@ -491,7 +493,7 @@ export default class EquationReader extends ModelReader {
     let genSubs = this.genSubs(input, avgTime, init)
     let level = newLevelVarName()
     let levelLHS = level + genSubs
-    let eqn = `${levelLHS} = INTEG((${input} - ${levelLHS}) / ${avgTime}, ${input} / (1 + ${init} * ${avgTime}))`
+    let eqn = `${levelLHS} = INTEG((${input} - ${levelLHS}) / ${avgTime}, ${input} / (1 + ${init} * ${avgTime})) ~~|`
     this.addVariable(eqn)
     // Add a reference to the new level var.
     // If it has subscripts, the refId is still just the var name, because it is an apply-to-all array.
@@ -507,12 +509,12 @@ export default class EquationReader extends ModelReader {
     // df = INTEG((-df * discount rate) / (1 + discount rate * TIME STEP), 1)
     let df = newLevelVarName()
     let dfLHS = df + genSubs
-    let dfEqn = `${dfLHS} = INTEG((-${dfLHS} * ${discountRate}) / (1 + ${discountRate} * TIME STEP), 1)`
+    let dfEqn = `${dfLHS} = INTEG((-${dfLHS} * ${discountRate}) / (1 + ${discountRate} * TIME STEP), 1) ~~|`
     this.addVariable(dfEqn)
     // ncum = INTEG(stream * df, init val)
     let ncum = newLevelVarName()
     let ncumLHS = ncum + genSubs
-    let ncumEqn = `${ncumLHS} = INTEG(${stream} * ${dfLHS}, ${initVal})`
+    let ncumEqn = `${ncumLHS} = INTEG(${stream} * ${dfLHS}, ${initVal}) ~~|`
     this.addVariable(ncumEqn)
     // Add references to the new level vars.
     // If they have subscripts, the refIds are still just the var name, because they are apply-to-all arrays.
@@ -571,7 +573,7 @@ export default class EquationReader extends ModelReader {
       if (isSeparatedVar(this.var)) {
         Model.addNonAtoAVar(this.var.delayTimeVarName, [true])
       }
-      let delayTimeEqn = `${delayTimeVarName}${genSubs} = ${delay}`
+      let delayTimeEqn = `${delayTimeVarName}${genSubs} = ${delay} ~~|`
       this.addVariable(delayTimeEqn)
       // Add a reference to the var, since it won't show up until code gen time.
       this.var.references.push(canonicalVensimName(`${delayTimeVarName}${genSubs}`))
@@ -653,15 +655,15 @@ export default class EquationReader extends ModelReader {
       this.generateDelayLevel(level2LHS, level2RefId, aux1LHS, aux2LHS, init)
       this.generateDelayLevel(level1LHS, level1RefId, input, aux1LHS, init)
       // Generate equations for the aux vars using the subs in the generated level var.
-      this.addVariable(`${aux1LHS} = ${level1LHS} / ${delay3}`)
-      this.addVariable(`${aux2LHS} = ${level2LHS} / ${delay3}`)
-      this.addVariable(`${aux3LHS} = ${level3LHS} / ${delay3}`)
+      this.addVariable(`${aux1LHS} = ${level1LHS} / ${delay3} ~~|`)
+      this.addVariable(`${aux2LHS} = ${level2LHS} / ${delay3} ~~|`)
+      this.addVariable(`${aux3LHS} = ${level3LHS} / ${delay3} ~~|`)
       // Generate an aux var to hold the delay time expression.
       this.var.delayTimeVarName = canonicalName(aux4)
       if (isSeparatedVar(this.var)) {
         Model.addNonAtoAVar(this.var.delayTimeVarName, [true])
       }
-      this.addVariable(`${aux4LHS} = ${delay3}`)
+      this.addVariable(`${aux4LHS} = ${delay3} ~~|`)
       // Add a reference to the var, since it won't show up until code gen time.
       this.var.references.push(canonicalVensimName(`${aux4}${genSubs}`))
     }
@@ -669,7 +671,7 @@ export default class EquationReader extends ModelReader {
   generateDelayLevel(levelLHS, levelRefId, input, aux, init) {
     // Generate a level equation to implement DELAY.
     // The parameters are model names. Return the refId of the generated level var.
-    let eqn = `${levelLHS} = INTEG(${input} - ${aux}, ${init})`
+    let eqn = `${levelLHS} = INTEG(${input} - ${aux}, ${init}) ~~|`
     this.addVariable(eqn)
     // Add a reference to the new level var.
     this.refId = levelRefId
