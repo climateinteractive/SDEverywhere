@@ -4,7 +4,7 @@ import ModelReader from './ModelReader.js'
 import Model from './Model.js'
 import Variable from './Variable.js'
 import { sub, isDimension, isIndex, normalizeSubscripts } from './Subscript.js'
-import { canonicalName, vlog, replaceInArray, strlist } from './Helpers.js'
+import { canonicalName, vlog, replaceInArray, strlist, cartesianProductOf } from './Helpers.js'
 
 // Set true to print extra debugging information to stderr.
 const DEBUG_LOG = false
@@ -116,12 +116,10 @@ export default class VariableReader extends ModelReader {
       }
       return skip
     }
-    let skipExpansion2 = (indName0, indName1) => {
+    let skipExpansion2 = indNames => {
       let skip = false
-      for (const exceptSubs of this.var.exceptSubscripts) {
-        let exceptSub0 = exceptSubs[0]
-        let exceptSub1 = exceptSubs[1]
-        if (isException(indName0, exceptSub0) && isException(indName1, exceptSub1)) {
+      for (let exceptSubs of this.var.exceptSubscripts) {
+        if (isException(indNames[0], exceptSubs[0]) && isException(indNames[1], exceptSubs[1])) {
           skip = true
           break
         }
@@ -150,24 +148,25 @@ export default class VariableReader extends ModelReader {
         `expanding ${this.var.varName}[${strlist(this.var.subscripts)}] subscripts`,
         strlist(this.var.subscripts)
       )
-      let expansionSubscript0 = this.var.subscripts[0]
-      let expansionSubscript1 = this.var.subscripts[1]
-      let expansionSubs0 = isIndex(expansionSubscript0)
-        ? [sub(expansionSubscript0).name]
-        : sub(expansionSubscript0).value
-      let expansionSubs1 = isIndex(expansionSubscript1)
-        ? [sub(expansionSubscript1).name]
-        : sub(expansionSubscript1).value
-      for (let indName0 of expansionSubs0) {
-        for (let indName1 of expansionSubs1) {
-          if (!skipExpansion2(indName0, indName1)) {
-            let v = new Variable(this.var.eqnCtx)
-            v.varName = this.var.varName
-            v.subscripts = [indName0, indName1]
-            v.separationDims = [expansionSubscript0, expansionSubscript1]
-            debugLog(`  ${strlist(v.subscripts)}`)
-            this.expandedVars.push(v)
+      // Find the subscripts we need to expand.
+      let separationDims = []
+      for (let i = 0; i < expanding.length; i++) {
+        if (expanding[i]) {
+          separationDims.push(this.var.subscripts[i])
+        }
+      }
+      let expansionSubs = separationDims.map(s => (isIndex(s) ? [sub(s).name] : sub(s).value))
+      for (let indNames of cartesianProductOf(expansionSubs)) {
+        if (!skipExpansion2(indNames)) {
+          let v = new Variable(this.var.eqnCtx)
+          v.varName = this.var.varName
+          v.subscripts = []
+          for (let i = 0; i < expanding.length; i++) {
+            v.subscripts.push(expanding[i] ? indNames.shift() : this.var.subscripts[i])
           }
+          v.separationDims = separationDims
+          debugLog(`  ${strlist(v.subscripts)}`)
+          this.expandedVars.push(v)
         }
       }
     }
