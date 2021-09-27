@@ -428,8 +428,8 @@ double _DELAY_FIXED(double input, FixedDelay* fixed_delay) {
     fixed_delay->data[fixed_delay->data_index] = input;
     // Because DELAY FIXED is a level, get the value one time step ahead in the buffer.
     fixed_delay->data_index = (fixed_delay->data_index + 1) % fixed_delay->n;
-    // Compare the current time to the delay time up to an epsilon difference.
-    if (_time < fixed_delay->n * _time_step - 1e-6) {
+    // Start pulling from the ring buffer when the next time step will reach the delay time.
+    if (_time < _initial_time + (fixed_delay->n - 1) * _time_step - 1e-6) {
       result = fixed_delay->initial_value;
     } else {
       result = fixed_delay->data[fixed_delay->data_index];
