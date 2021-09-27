@@ -110,7 +110,7 @@ export default class VariableReader extends ModelReader {
       }
       expansion.push(value || [subscript])
     }
-    // Generate an array of fullly expanded subscripts.
+    // Generate an array of fully expanded subscripts.
     let expandedSubs = cartesianProductOf(expansion)
     for (let subs of expandedSubs) {
       // Skip expansions that match exception subscripts.
