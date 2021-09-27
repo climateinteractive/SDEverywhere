@@ -94,80 +94,34 @@ export default class VariableReader extends ModelReader {
   }
   expandVars(expanding) {
     // Expand the indicated subscripts into variable objects in the expandedVars list.
-    let isException = (indName, exceptSub) => {
-      // Compare the LHS index name directly to an exception index subscript.
-      let result = false
-      if (isIndex(exceptSub)) {
-        result = indName === exceptSub
-      } else if (isDimension(exceptSub)) {
-        result = R.contains(indName, sub(exceptSub).value)
+    debugLog(`expanding ${this.var.varName}[${strlist(this.var.subscripts)}] subscripts`, strlist(this.var.subscripts))
+    let expansion = []
+    let separationDims = []
+    // Construct an array with an array at each subscript position. If the subscript is expanded at that position,
+    // it will become an array of indices. Otherwise, it remains an index or dimension as a single-valued array.
+    for (let i = 0; i < this.var.subscripts.length; i++) {
+      let subscript = this.var.subscripts[i]
+      let value
+      if (expanding[i]) {
+        separationDims.push(subscript)
+        if (isDimension(subscript)) {
+          value = sub(subscript).value
+        }
       }
-      return result
+      expansion.push(value || [subscript])
     }
-    let skipExpansion = (indName, expansionPos) => {
-      // Look for this index in each of the exception subscript lists at expansionsPos.
-      let skip = false
-      for (const exceptSubs of this.var.exceptSubscripts) {
-        let exceptSub = exceptSubs[expansionPos]
-        if (isException(indName, exceptSub)) {
-          skip = true
-          break
-        }
-      }
-      return skip
-    }
-    let skipExpansion2 = indNames => {
-      let skip = false
-      for (let exceptSubs of this.var.exceptSubscripts) {
-        if (isException(indNames[0], exceptSubs[0]) && isException(indNames[1], exceptSubs[1])) {
-          skip = true
-          break
-        }
-      }
-      return skip
-    }
-    let numSubscriptsToExpand = expanding.reduce((n, x) => n + (!!x ? 1 : 0), 0)
-    if (numSubscriptsToExpand === 1) {
-      let expansionPos = expanding[0] ? 0 : 1
-      let expansionSubscript = this.var.subscripts[expansionPos]
-      // An exception subscript can be an index. Expand on a single index or on all indices of a dimension.
-      let expansionSubs = isIndex(expansionSubscript) ? [sub(expansionSubscript).name] : sub(expansionSubscript).value
-      debugLog(`expanding ${this.var.varName}[${strlist(this.var.subscripts)}] subscript`, expansionSubscript)
-      for (let indName of expansionSubs) {
-        if (!skipExpansion(indName, expansionPos)) {
-          let v = new Variable(this.var.eqnCtx)
-          v.varName = this.var.varName
-          v.subscripts = replaceInArray(expansionSubscript, indName, this.var.subscripts)
-          v.separationDims.push(expansionSubscript)
-          debugLog(`  ${strlist(v.subscripts)}`)
-          this.expandedVars.push(v)
-        }
-      }
-    } else if (numSubscriptsToExpand === 2) {
-      debugLog(
-        `expanding ${this.var.varName}[${strlist(this.var.subscripts)}] subscripts`,
-        strlist(this.var.subscripts)
-      )
-      // Find the subscripts we need to expand.
-      let separationDims = []
-      for (let i = 0; i < expanding.length; i++) {
-        if (expanding[i]) {
-          separationDims.push(this.var.subscripts[i])
-        }
-      }
-      let expansionSubs = separationDims.map(s => (isIndex(s) ? [sub(s).name] : sub(s).value))
-      for (let indNames of cartesianProductOf(expansionSubs)) {
-        if (!skipExpansion2(indNames)) {
-          let v = new Variable(this.var.eqnCtx)
-          v.varName = this.var.varName
-          v.subscripts = []
-          for (let i = 0; i < expanding.length; i++) {
-            v.subscripts.push(expanding[i] ? indNames.shift() : this.var.subscripts[i])
-          }
-          v.separationDims = separationDims
-          debugLog(`  ${strlist(v.subscripts)}`)
-          this.expandedVars.push(v)
-        }
+    // Generate an array of fully expanded subscripts.
+    let expandedSubs = cartesianProductOf(expansion)
+    for (let subs of expandedSubs) {
+      // Skip expansions that match exception subscripts.
+      if (!R.any(e => R.equals(e, subs), this.var.exceptSubscripts)) {
+        // Add a new variable to the expanded vars.
+        let v = new Variable(this.var.eqnCtx)
+        v.varName = this.var.varName
+        v.subscripts = subs
+        v.separationDims = separationDims
+        debugLog(`  ${strlist(v.subscripts)}`)
+        this.expandedVars.push(v)
       }
     }
   }
