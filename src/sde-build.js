@@ -19,9 +19,15 @@ export let handler = argv => {
   build(argv.model, argv)
 }
 export let build = async (model, opts) => {
-  opts.genc = true
-  await generate(model, opts)
-  compile(model, opts)
+  try {
+    opts.genc = true
+    await generate(model, opts)
+    compile(model, opts)
+  } catch (e) {
+    // Exit with a non-zero error code if any step failed
+    console.error(`ERROR: ${e.message}\n`)
+    process.exit(1)
+  }
 }
 
 export default {

@@ -206,11 +206,7 @@ export let ensureDir = (dir, defaultDir, modelDirname) => {
   return dirName
 }
 export let fileExists = pathname => {
-  let exists = fs.existsSync(pathname)
-  if (!exists) {
-    console.error(`${pathname} not found`)
-  }
-  return exists
+  return fs.existsSync(pathname)
 }
 export let linkCSourceFiles = (modelDirname, buildDirname) => {
   let cDirname = path.join(new URL('.', import.meta.url).pathname, 'c')
