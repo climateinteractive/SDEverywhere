@@ -197,12 +197,20 @@ ${postStep}
   //
   function declSection() {
     // Emit a declaration for each variable in the model.
+    let fixedDelayDecls = ''
     let decl = v => {
       // Build a C array declaration for the variable v.
       // This uses the subscript family for each dimension, which may overallocate
       // if the subscript is a subdimension.
       let varType = v.isLookup() || v.isData() ? 'Lookup* ' : 'double '
       let families = subscriptFamilies(v.subscripts)
+      if (v.isFixedDelay()) {
+        // Add the associated FixedDelay var decl.
+        fixedDelayDecls += `\nFixedDelay* ${v.fixedDelayVarName}${R.map(
+          family => `[${sub(family).size}]`,
+          families
+        ).join('')};`
+      }
       return varType + v.varName + R.map(family => `[${sub(family).size}]`, families).join('')
     }
     // Non-apply-to-all variables are declared multiple times, but coalesce using uniq.
@@ -212,7 +220,7 @@ ${postStep}
       asort,
       lines
     )
-    return decls(Model.allVars())
+    return decls(Model.allVars()) + fixedDelayDecls
   }
   function internalVarsSection() {
     // Declare internal variables to run the model.
