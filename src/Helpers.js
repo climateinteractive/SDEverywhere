@@ -245,9 +245,10 @@ export let execCmd = cmd => {
   // Run a command line silently in the "sh" shell. Print error output on error.
   let exitCode = 0
   let result = sh.exec(cmd, { silent: true })
-  if (sh.error()) {
-    console.log(result.stderr)
-    exitCode = 1
+  if (result.code !== 0) {
+    console.log(result.stdout)
+    console.error(result.stderr)
+    exitCode = result.code
   }
   return exitCode
 }

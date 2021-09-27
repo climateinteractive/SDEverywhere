@@ -1,6 +1,6 @@
 import path from 'path'
 import moment from 'moment'
-import { modelPathProps, buildDir, outputDir, execCmd } from './Helpers.js'
+import { modelPathProps, buildDir, outputDir, execCmd, fileExists } from './Helpers.js'
 
 export let command = 'exec [options] <model>'
 export let describe = 'execute the model and capture its output to a file'
@@ -20,7 +20,7 @@ export let handler = argv => {
   exec(argv.model, argv)
 }
 export let exec = (model, opts) => {
-  let { modelDirname, modelName, modelPathname } = modelPathProps(model)
+  let { modelDirname, modelName } = modelPathProps(model)
   // Ensure the build and output directories exist.
   let buildDirname = buildDir(opts.builddir, modelDirname)
   let outputDirname = outputDir(opts.outfile, modelDirname)
@@ -35,6 +35,9 @@ export let exec = (model, opts) => {
   let exitCode = execCmd(`${modelCmd} >${outputPathname}`)
   if (exitCode > 0) {
     process.exit(exitCode)
+  } else if (!fileExists(outputPathname)) {
+    console.error(`ERROR: Failed to write model output to ${outputPathname}`)
+    process.exit(1)
   }
   return 0
 }
