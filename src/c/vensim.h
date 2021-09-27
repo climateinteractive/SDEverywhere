@@ -71,6 +71,19 @@ double __get_data_between_times(double *data, size_t n, double input, LookupMode
 #define _GET_DATA_MODE_TO_LOOKUP_MODE(mode) ((mode) >= 1) ? Forward : (((mode) <= -1) ? Backward : Interpolate)
 #define _GET_DATA_BETWEEN_TIMES(lookup, x, mode) __get_data_between_times((lookup)->data, (lookup)->n, x, _GET_DATA_MODE_TO_LOOKUP_MODE(mode))
 
+//
+// DELAY FIXED
+//
+typedef struct {
+  double* data;
+  size_t n;
+  size_t data_index;
+  double initial_value;
+} FixedDelay;
+
+double _DELAY_FIXED(double input, FixedDelay* fixed_delay);
+FixedDelay* __new_fixed_delay(double delay_time, double initial_value);
+
 #ifdef __cplusplus
 }
 #endif
