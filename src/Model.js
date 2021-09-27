@@ -66,6 +66,8 @@ function read(parseTree, spec, extData, directData, modelDirname) {
   checkSpecVars(spec, extData)
   // Remove variables that are not referenced by an input or output variable.
   removeUnusedVariables(spec)
+  // Resolve duplicate declarations by converting to one variable type.
+  resolveDuplicateDeclarations()
 }
 function readSubscriptRanges(tree, dimensionFamilies, indexFamilies, modelDirname) {
   // Read subscript ranges from the model.
@@ -372,7 +374,29 @@ function removeUnusedVariables(spec) {
     varsForName.push(v)
   }
 }
-
+function resolveDuplicateDeclarations() {
+  // Find subscripted const vars where some subscripts are data vars.
+  // TODO consider doing the same for lookup vars
+  // Least and greatest safe double values in C rounded to convenient consts
+  const MIN_SAFE_DBL = -1e308
+  const MAX_SAFE_DBL = 1e308
+  let data = dataVars()
+  for (let constVar of constVars()) {
+    if (data.find(d => d.varName === constVar.varName)) {
+      // Change the var type from const to data and add lookup data points.
+      // For a constant, the equivalent lookup has the same value over the entire x axis.
+      let value = parseFloat(constVar.modelFormula)
+      if (isNaN(value)) {
+        console.error(`The value for const var ${constVar.refId} converted to a lookup is NaN.`)
+      }
+      constVar.varType = 'data'
+      constVar.points = [
+        [MIN_SAFE_DBL, value],
+        [MAX_SAFE_DBL, value]
+      ]
+    }
+  }
+}
 //
 // Analysis helpers
 //
