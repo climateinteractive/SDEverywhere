@@ -2,7 +2,6 @@ import path from 'path'
 import R from 'ramda'
 import XLSX from 'xlsx'
 import { ModelLexer, ModelParser } from 'antlr4-vensim'
-import ExprReader from './ExprReader.js'
 import ModelReader from './ModelReader.js'
 import ModelLHSReader from './ModelLHSReader.js'
 import LoopIndexVars from './LoopIndexVars.js'
@@ -99,10 +98,16 @@ export default class EquationGen extends ModelReader {
   generate() {
     // Generate code for the variable in either init or eval mode.
     if (this.var.isData()) {
-      if (this.var.directDataArgs) {
-        return this.generateDirectDataInit()
-      } else {
-        return this.generateExternalDataInit()
+      // If the data var was converted from a const, it will have lookup points.
+      // Otherwise, read a data file to get lookup data.
+      if (R.isEmpty(this.var.points)) {
+        if (this.var.directDataArgs) {
+          return this.generateDirectDataInit()
+        } else {
+          return this.generateExternalDataInit()
+        }
+      } else if (this.mode === 'decl') {
+        return
       }
     }
     if (this.var.isLookup()) {
@@ -197,7 +202,6 @@ export default class EquationGen extends ModelReader {
     }
     return value
   }
-
   lookupDataNameGen(subscripts) {
     // Construct a name for the static data array associated with a lookup variable.
     return R.map(subscript => {
@@ -355,7 +359,6 @@ export default class EquationGen extends ModelReader {
       return []
     }
   }
-
   generateDirectDataInit() {
     // If direct data exists for this variable, copy it from the workbook into one or more lookups.
     let result = []
@@ -389,11 +392,19 @@ export default class EquationGen extends ModelReader {
       // If the data was found, convert it to a lookup.
       if (getCellValue) {
         let indexNum = 0
-        if (!R.isEmpty(this.var.subscripts)) {
+        if (!R.isEmpty(this.var.separationDims)) {
           // Generate a lookup for a separated index in the variable's dimension.
-          // TODO allow the index to be in either position of a 2D subscript
-          let ind = sub(this.var.subscripts[0])
-          indexNum = ind.value
+          if (this.var.separationDims.length > 1) {
+            console.error(`WARNING: direct data variable ${this.var.varName} separated on more than one dimension`)
+          }
+          let dimName = this.var.separationDims[0]
+          for (let subscript of this.var.subscripts) {
+            if (sub(subscript).family === dimName) {
+              let ind = sub(subscript)
+              indexNum = ind.value
+              break
+            }
+          }
         }
         result.push(this.generateDirectDataLookup(getCellValue, timeRowOrCol, startCell, indexNum))
       }
@@ -581,10 +592,20 @@ export default class EquationGen extends ModelReader {
     }
     return result
   }
-
   //
   // Visitor callbacks
   //
+  visitEquation(ctx) {
+    if (this.var.isData() && !R.isEmpty(this.var.points)) {
+      if (this.mode === 'init-lookups') {
+        // If the var already has lookup data points, use those instead of reading them from a file.
+        let lookupData = R.reduce((a, p) => listConcat(a, `${cdbl(p[0])}, ${cdbl(p[1])}`, true), '', this.var.points)
+        this.emit(`__new_lookup(${this.var.points.length}, /*copy=*/true, (double[]){ ${lookupData} });`)
+      }
+    } else {
+      super.visitEquation(ctx)
+    }
+  }
   visitCall(ctx) {
     // Convert the function name from Vensim to C format and push it onto the function name stack.
     // This maintains the name of the current function as its arguments are visited.
@@ -1029,51 +1050,21 @@ export default class EquationGen extends ModelReader {
       // Emit a single constant into the expression code.
       emitConstAtPos(0)
     } else {
-      // Extract a single value from the const list by its index number.
       // All const lists with > 1 value are separated on dimensions in the LHS.
-      // The LHS of a separated variable here will contain only index subscripts.
-      let numDims = this.var.separationDims.length
-      if (numDims === 1) {
-        // Find the index that is in the separation dimension.
-        let sepDim = sub(this.var.separationDims[0])
-        for (let ind of this.var.subscripts) {
-          let i = sepDim.value.indexOf(ind)
-          if (i >= 0) {
-            // Emit the constant at this position in the constant list.
-            emitConstAtPos(i)
-            break
-          }
-        }
-      } else if (numDims === 2) {
-        // Calculate an index into a flattened array by converting the indices to numeric form and looking them up
-        // in a C name array listed in the same Vensim order as the constant array in the model.
-        let cVarName
-        let modelLHSReader = new ModelLHSReader()
-        modelLHSReader.read(this.var.modelLHS)
-        let cNames = modelLHSReader.names().map(Model.cName)
-        // Visit dims in normal order. Find the ind in the dim. Compose the C array expression with numeric indices.
-        for (let i = 0; i < this.var.separationDims.length; i++) {
-          const dim = this.var.separationDims[i]
-          const sepDim = sub(dim)
-          const ind = this.var.subscripts[i]
-          const j = sepDim.value.indexOf(ind)
-          if (j >= 0) {
-            const indexNum = sub(ind).value
-            if (!cVarName) {
-              cVarName = `${this.var.varName}[${indexNum}]`
-            } else {
-              cVarName += `[${indexNum}]`
-            }
-          }
-        }
-        // Find the position of the constant in Vensim order from the expanded LHS var list.
-        let constPos = R.indexOf(cVarName, cNames)
-        if (constPos >= 0) {
-          emitConstAtPos(constPos)
-          // console.error(`${this.var.refId} position = ${constPos}`)
-        } else {
-          console.error(`${this.var.refId} → ${cVarName} not found in C names`)
-        }
+      // The LHS of a separated variable here will contain only index subscripts in normal order.
+      // Calculate an index into a flattened array by converting the indices to numeric form and looking them up
+      // in a C name array listed in the same Vensim order as the constant array in the model.
+      let modelLHSReader = new ModelLHSReader()
+      modelLHSReader.read(this.var.modelLHS)
+      let cNames = modelLHSReader.names().map(Model.cName)
+      let cVarName = this.var.varName + R.map(indName => `[${sub(indName).value}]`, this.var.subscripts).join('')
+      // Find the position of the constant in Vensim order from the expanded LHS var list.
+      let constPos = R.indexOf(cVarName, cNames)
+      if (constPos >= 0) {
+        emitConstAtPos(constPos)
+        // console.error(`${this.var.refId} position = ${constPos}`)
+      } else {
+        console.error(`ERROR: const list element ${this.var.refId} → ${cVarName} not found in C names`)
       }
     }
   }

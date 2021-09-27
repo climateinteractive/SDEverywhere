@@ -128,7 +128,7 @@ export let listConcat = (a, x, addSpaces = false) => {
 export let cdbl = x => {
   // Convert a number into a C double constant.
   let s = x.toString()
-  if (!s.includes('.') && !s.includes('e')) {
+  if (!s.includes('.') && !s.toLowerCase().includes('e')) {
     s += '.0'
   }
   return s
