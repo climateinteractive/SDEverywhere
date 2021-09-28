@@ -20,7 +20,7 @@ export let handler = argv => {
   exec(argv.model, argv)
 }
 export let exec = (model, opts) => {
-  let { modelDirname, modelName, modelPathname } = modelPathProps(model)
+  let { modelDirname, modelName } = modelPathProps(model)
   // Ensure the build and output directories exist.
   let buildDirname = buildDir(opts.builddir, modelDirname)
   let outputDirname = outputDir(opts.outfile, modelDirname)

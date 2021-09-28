@@ -14,7 +14,7 @@ export let handler = argv => {
   compile(argv.model, argv)
 }
 export let compile = (model, opts) => {
-  let { modelDirname, modelName, modelPathname } = modelPathProps(model)
+  let { modelDirname, modelName } = modelPathProps(model)
   // Ensure the build directory exists.
   let buildDirname = buildDir(opts.builddir, modelDirname)
   // Link SDEverywhere C source files into the build directory.
