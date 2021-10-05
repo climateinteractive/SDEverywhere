@@ -125,6 +125,17 @@ export function isTrivialDimension(name) {
   // The following evaluates to true when all sub-dimensions match their position in the array
   return R.addIndex(R.all)((subdim, idx) => sub(subdim).value === idx, s.value)
 }
+export function indexInSepDim(ind, v) {
+  // Find the separation dim in the variable that includes the index, or return null.
+  let result = null
+  for (let sepDim of v.separationDims) {
+    if (sub(sepDim).value.includes(ind)) {
+      result = sepDim
+      break
+    }
+  }
+  return result
+}
 export function addIndex(name, value, family) {
   // Add an index with arguments in canonical form.
   let subscript = {
