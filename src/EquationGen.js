@@ -477,7 +477,6 @@ export default class EquationGen extends ModelReader {
               if (modelDim.family === ind.family) {
                 // Set the numeric index for the model dimension in the cell offset entry.
                 // Use the position within the dimension to map subdimensions onto cell offsets.
-                // entry[iModelDim] = ind.value
                 let pos = modelDim.value.indexOf(indexSubscript)
                 let entryRowOrCol = modelDimNames.length > 1 ? iModelDim : 1
                 entry[entryRowOrCol] = pos
