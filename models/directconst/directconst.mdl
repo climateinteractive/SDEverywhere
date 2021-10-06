@@ -1,4 +1,6 @@
 {UTF-8}
+DimA: A1, A2, A3 ~~|
+SubA: A2, A3 ~~|
 DimB: B1, B2, B3 ~~|
 DimC: C1, C2 ~~|
 DimD: D1, D2 ~~|
@@ -37,6 +39,16 @@ e[DimC, DimB] =
     ',',
     'B2*'
   ) ~~~:SUPPLEMENTARY|
+
+f[DimC, SubA] =
+  GET DIRECT CONSTANTS(
+    'data/f.csv',
+    ',',
+    'B2'
+  ) ~~~:SUPPLEMENTARY|
+
+f[DimC, DimA] :EXCEPT: [DimC, SubA] = 0
+~~~:SUPPLEMENTARY|
 
 ********************************************************
 	.Control

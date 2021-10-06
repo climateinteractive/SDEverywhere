@@ -328,13 +328,6 @@ export default class EquationGen extends ModelReader {
     // Emit the tmp var subscript just after emitting the tmp var elsewhere.
     this.emit(`[${this.aaTmpDimName}[${i}]]`)
   }
-  directConstSubscriptGen(subscripts) {
-    // Construct numeric constant variable subscripts in normal order.
-    let cSubscripts = subscripts.map(s => (isDimension(s) ? sub(s).value : [s]))
-    let indexSubscripts = cartesianProductOf(cSubscripts)
-    let numericSubscripts = indexSubscripts.map(idx => idx.map(s => sub(s).value))
-    return numericSubscripts.map(s => s.reduce((a, v) => a.concat(`[${v}]`), ''))
-  }
   functionIsLookup() {
     // See if the function name in the current call is actually a lookup.
     // console.error(`isLookup ${this.lookupName()}`);
