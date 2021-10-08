@@ -19,8 +19,8 @@ double _PULSE(double start, double width) {
 }
 double _PULSE_TRAIN(double start, double width, double interval, double end) {
   double n = floor((end - start) / interval);
-  for (double k = 0; fle(k, n); k++) {
-    if (_PULSE(start + k * interval, width) && fle(_time, end)) {
+  for (double k = 0; k <= n; k++) {
+    if (_PULSE(start + k * interval, width) && _time <= end) {
       return 1.0;
     }
   }
@@ -31,8 +31,8 @@ double _RAMP(double slope, double start_time, double end_time) {
   // Interpolate from start time to end time.
   // Hold at the end time value.
   // Allow start time > end time.
-  if (fgt(_time, start_time)) {
-    if (flt(_time, end_time) || fgt(start_time, end_time)) {
+  if (_time > start_time) {
+    if (_time < end_time || start_time > end_time) {
       return slope * (_time - start_time);
     } else {
       return slope * (end_time - start_time);
@@ -41,9 +41,9 @@ double _RAMP(double slope, double start_time, double end_time) {
     return 0.0;
   }
 }
-double _XIDZ(double a, double b, double x) { return fz(b) ? x : a / b; }
+double _XIDZ(double a, double b, double x) { return fabs(b) < _epsilon ? x : a / b; }
 double _ZIDZ(double a, double b) {
-  if (fz(b)) {
+  if (fabs(b) < _epsilon) {
     return 0.0;
   } else {
     return a / b;
@@ -117,14 +117,14 @@ double __lookup(Lookup* lookup, double input, bool use_inverted_data, LookupMode
   for (size_t xi = start_index; xi < max; xi += 2) {
     double x = data[xi];
 
-    if (fge(x, input)) {
+    if (x >= input) {
       // We went past the input, or hit it exactly.
       if (use_cached_values) {
         lookup->last_input = input;
         lookup->last_hit_index = xi;
       }
 
-      if (xi == 0 || feq(x, input)) {
+      if (xi == 0 || x == input) {
         // The input is less than the first x, or this x equals the input; return the
         // associated y without interpolation.
         return data[xi + 1];
