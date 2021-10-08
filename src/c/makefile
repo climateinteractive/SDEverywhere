@@ -1,5 +1,5 @@
 # Do "export P={c-file-basename}" before running this makefile.
-OBJECTS=main.o vensim.o model.o macros.o fcmp.o
+OBJECTS=main.o vensim.o model.o macros.o
 CFLAGS=-Wall -O3
 LDLIBS=
 
