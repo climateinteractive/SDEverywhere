@@ -49,8 +49,8 @@ export default class EquationGen extends ModelReader {
     // The model directory is required when reading data files for GET DIRECT DATA.
     this.modelDirname = modelDirname
     // Maps of LHS subscript families to loop index vars for lookup on the RHS
-    this.loopIndexVars = new LoopIndexVars(['i', 'j', 'k'])
-    this.arrayIndexVars = new LoopIndexVars(['v', 'w'])
+    this.loopIndexVars = new LoopIndexVars(['i', 'j', 'k', 'l', 'm'])
+    this.arrayIndexVars = new LoopIndexVars(['u', 'v', 'w', 's', 't', 'f', 'g', 'h', 'o', 'p', 'q', 'r'])
     // The LHS for array variables includes subscripts in normal form.
     this.lhs = this.var.varName + this.lhsSubscriptGen(this.var.subscripts)
     // formula expression channel
