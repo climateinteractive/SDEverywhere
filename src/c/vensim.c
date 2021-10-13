@@ -358,7 +358,7 @@ double* _ALLOCATE_AVAILABLE(
   }
   // Start the search in the midpoint of the means, with a big first jump.
   double total_allocations = 0.0;
-  double x = (max_mean - min_mean) / 2.0;
+  double x = (max_mean + min_mean) / 2.0;
   double delta = normal_curve_tail;
   size_t num_steps = 0;
   double last_delta_sign = 1.0;

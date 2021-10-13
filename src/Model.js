@@ -1042,6 +1042,7 @@ export default {
   read,
   refIdForVar,
   refIdsWithName,
+  splitRefId,
   variables,
   varNames,
   varsWithName,

@@ -10,6 +10,7 @@ import {
   indexNamesForSubscript,
   normalizeSubscripts,
   separatedVariableIndex,
+  sub,
   isDimension
 } from './Subscript.js'
 import {
@@ -67,7 +68,7 @@ export default class EquationReader extends ModelReader {
       // In Vensim a variable can refer to its current value in the state.
       // Do not add self-references to the lists of references.
       // Do not duplicate references.
-      if (refId !== this.var.refId && !R.contains(refId, list)) {
+      if (refId !== this.var.refId && !list.includes(refId)) {
         list.push(refId)
       }
     }
@@ -75,7 +76,7 @@ export default class EquationReader extends ModelReader {
     if (R.isEmpty(this.expandedRefIds)) {
       add(this.refId)
     } else {
-      R.forEach(refId => add(refId), this.expandedRefIds)
+      this.expandedRefIds.forEach(refId => add(refId))
     }
   }
   //
@@ -250,6 +251,18 @@ export default class EquationReader extends ModelReader {
         this.addReferencesToList(this.var.initReferences)
       } else if (this.argIndexForFunctionName('_SAMPLE_IF_TRUE') === 2) {
         this.addReferencesToList(this.var.initReferences)
+      } else if (this.argIndexForFunctionName('_ALLOCATE_AVAILABLE') === 1) {
+        // Reference the second and third elements of the priority profile argument instead of the first one
+        // that Vensim requires for ALLOCATE AVAILABLE. This is required to get correct dependencies.
+        let ptypeRefId = this.expandedRefIds[0]
+        let { subscripts } = Model.splitRefId(ptypeRefId)
+        let ptypeIndexName = subscripts[1]
+        let profileElementsDimName = sub(ptypeIndexName).family
+        let profileElementsDim = sub(profileElementsDimName)
+        let priorityRefId = ptypeRefId.replace(ptypeIndexName, profileElementsDim.value[1])
+        let widthRefId = ptypeRefId.replace(ptypeIndexName, profileElementsDim.value[2])
+        this.expandedRefIds = [priorityRefId, widthRefId]
+        this.addReferencesToList(this.var.references)
       } else if (this.var.isInitial()) {
         this.addReferencesToList(this.var.initReferences)
       } else {
