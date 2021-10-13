@@ -851,7 +851,7 @@ function sortInitVars() {
 
   // Filter out vars with constant values.
   sortedVars = R.reject(
-    R.propSatisfies(varType => varType === 'const' || varType === 'lookup', 'varType'),
+    R.propSatisfies(varType => varType === 'const' || varType === 'lookup' || varType === 'data', 'varType'),
     sortedVars
   )
 

@@ -162,6 +162,9 @@ export default class EquationGen extends ModelReader {
     if (this.currentArrayFunctionName) {
       // Emit code to the array function code buffer if we are in an array function.
       this.arrayFunctionCode += text
+    } else if (this.argIndexForFunctionName('_VECTOR_ELM_MAP') === 1) {
+      // Emit expression code in the second argument of VECTOR ELM MAP to vemOffset.
+      this.vemOffset += text
     } else {
       // Otherwise emit code to the expression code channel.
       this.exprCode += text
@@ -300,7 +303,7 @@ export default class EquationGen extends ModelReader {
     let cSubscripts = R.map(rhsSub => {
       if (isIndex(rhsSub)) {
         // Emit the index vemOffset from VECTOR ELM MAP for the index subscript.
-        return `[${this.vemIndexDim}[${this.vemIndexBase} + ${this.vemOffset}]]`
+        return `[${this.vemIndexDim}[(size_t)(${this.vemIndexBase} + ${this.vemOffset})]]`
       } else {
         let i = this.loopIndexVars.index(rhsSub)
         return `[${rhsSub}[${i}]]`
@@ -705,8 +708,8 @@ export default class EquationGen extends ModelReader {
       }
     } else if (fn === '_VECTOR_ELM_MAP') {
       super.visitCall(ctx)
-      this.emit(`${this.vemVarName}${this.vemSubscriptGen()}`)
       this.callStack.pop()
+      this.emit(`${this.vemVarName}${this.vemSubscriptGen()}`)
       this.vemVarName = ''
       this.vemSubscripts = []
       this.vemIndexDim = ''
@@ -944,7 +947,7 @@ export default class EquationGen extends ModelReader {
         }
       } else if (this.currentFunctionName() === '_VECTOR_ELM_MAP') {
         if (this.argIndexForFunctionName('_VECTOR_ELM_MAP') === 1) {
-          this.vemOffset = `(size_t)${this.currentVarName()}`
+          this.vemOffset = this.currentVarName()
         }
         super.visitVar(ctx)
       } else if (this.currentFunctionName() === '_VECTOR_SORT_ORDER') {
