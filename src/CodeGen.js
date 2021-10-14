@@ -81,24 +81,37 @@ ${section(Model.dataVars())}
   //
   function emitInitLookupsCode() {
     mode = 'init-lookups'
-    return `// Internal state
+    let code = `// Internal state
 bool lookups_initialized = false;
-
-void initLookups() {
-  // Initialize lookups.
-  if (!lookups_initialized) {
-    ${section(Model.lookupVars())}
-    ${section(Model.dataVars())}
-    lookups_initialized = true;
-  }
-}
+bool data_initialized = false;
 `
+    code += chunkedFunctions(
+      'initLookups',
+      Model.lookupVars(),
+      `  // Initialize lookups.
+  if (!lookups_initialized) {
+`,
+      `      lookups_initialized = true;
+  }
+`
+    )
+    code += chunkedFunctions(
+      'initData',
+      Model.dataVars(),
+      `  // Initialize data.
+  if (!data_initialized) {
+`,
+      `      data_initialized = true;
+  }
+`
+    )
+    return code
   }
 
   function emitInitConstantsCode() {
     mode = 'init-constants'
     return `
-${chunkedFunctions('initConstants', Model.constVars(), '  // Initialize constants.', '  initLookups();')}
+${chunkedFunctions('initConstants', Model.constVars(), '  // Initialize constants.', '  initLookups();\n  initData();')}
 `
   }
 
