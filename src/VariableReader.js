@@ -125,7 +125,6 @@ export default class VariableReader extends ModelReader {
     }
     for (let subs of expandedSubs) {
       // Skip expansions that match exception subscripts.
-      // if (!R.any(e => R.equals(e, subs), this.var.exceptSubscripts)) {
       if (!skipExpansion(subs)) {
         // Add a new variable to the expanded vars.
         let v = new Variable(this.var.eqnCtx)
