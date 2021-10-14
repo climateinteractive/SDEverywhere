@@ -15,18 +15,20 @@ let builder = {
   }
 }
 let handler = argv => {
-  causes(argv.model, argv.varname, argv)
+  causes(argv.model, argv.c_varname, argv)
 }
 let causes = (model, varname, opts) => {
   // Get the model name and directory from the model argument.
   let { modelDirname, modelName, modelPathname } = modelPathProps(model)
+  let extData = new Map()
+  let directData = new Map()
   let spec = parseSpec(opts.spec)
   // Preprocess model text into parser input.
   let input = preprocessModel(modelPathname, spec)
   // Parse the model to get variable and subscript information.
   let parseTree = parseModel(input)
   let operation = 'printRefGraph'
-  codeGenerator(parseTree, { spec, operation, varname }).generate()
+  codeGenerator(parseTree, { spec, operation, extData, directData, modelDirname, varname }).generate()
 }
 let parseModel = input => {
   // Read the model text and return a parse tree.
