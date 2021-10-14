@@ -3,8 +3,8 @@ import R from 'ramda'
 import ModelReader from './ModelReader.js'
 import Model from './Model.js'
 import Variable from './Variable.js'
-import { sub, isDimension, isIndex, normalizeSubscripts } from './Subscript.js'
-import { canonicalName, vlog, replaceInArray, strlist, cartesianProductOf } from './Helpers.js'
+import { sub, isDimension, isIndex, normalizeSubscripts, subscriptsMatch, isSubdimension } from './Subscript.js'
+import { canonicalName, vlog, strlist, cartesianProductOf } from './Helpers.js'
 
 // Set true to print extra debugging information to stderr.
 const DEBUG_LOG = false
@@ -59,11 +59,13 @@ export default class VariableReader extends ModelReader {
     for (let iLhsSub = 0; iLhsSub < this.var.subscripts.length; iLhsSub++) {
       let subscript = this.var.subscripts[iLhsSub]
       let expand = false
-      // Expand a subdimension in the LHS.
+      // Expand a subdimension and special separation dims in the LHS.
       if (isDimension(subscript)) {
-        let dim = sub(subscript)
-        let specialSeparationDims = this.specialSeparationDims[this.var.varName] || []
-        expand = dim.size < sub(dim.family).size || specialSeparationDims.includes(subscript)
+        expand = isSubdimension(subscript)
+        if (!expand) {
+          let specialSeparationDims = this.specialSeparationDims[this.var.varName] || []
+          expand = specialSeparationDims.includes(subscript)
+        }
       }
       if (!expand) {
         // Direct data vars with subscripts are separated because we generate a lookup for each index.
@@ -76,13 +78,8 @@ export default class VariableReader extends ModelReader {
       }
       // Also expand on exception subscripts that are indices or subdimensions.
       if (!expand) {
-        for (const exceptSubs of this.var.exceptSubscripts) {
-          let exceptSub = exceptSubs[iLhsSub]
-          expand = isIndex(exceptSub)
-          if (!expand && isDimension(exceptSub)) {
-            let dim = sub(exceptSub)
-            expand = dim.size < sub(dim.family).size
-          }
+        for (let exceptSubs of this.var.exceptSubscripts) {
+          expand = isIndex(exceptSubs[iLhsSub]) || isSubdimension(exceptSubs[iLhsSub])
           if (expand) {
             break
           }
@@ -110,11 +107,25 @@ export default class VariableReader extends ModelReader {
       }
       expansion.push(value || [subscript])
     }
-    // Generate an array of fully expanded subscripts.
+    // Generate an array of fully expanded subscripts, which may be indices or dimensions.
     let expandedSubs = cartesianProductOf(expansion)
+    let skipExpansion = subs => {
+      // Check the subscripts against each set of except subscripts. Skip expansion if one of them matches.
+      let subsRange = R.range(0, subs.length)
+      for (let exceptSubscripts of this.var.exceptSubscripts) {
+        if (subs.length === exceptSubscripts.length) {
+          if (R.all(i => subscriptsMatch(subs[i], exceptSubscripts[i]), subsRange)) {
+            return true
+          }
+        } else {
+          console.error(`WARNING: expandedSubs length ≠ exceptSubscripts length in ${this.var.varName}`)
+        }
+      }
+      return false
+    }
     for (let subs of expandedSubs) {
       // Skip expansions that match exception subscripts.
-      if (!R.any(e => R.equals(e, subs), this.var.exceptSubscripts)) {
+      if (!skipExpansion(subs)) {
         // Add a new variable to the expanded vars.
         let v = new Variable(this.var.eqnCtx)
         v.varName = this.var.varName
