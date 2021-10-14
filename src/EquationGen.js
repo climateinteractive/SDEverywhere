@@ -13,6 +13,7 @@ import {
   isDimension,
   isIndex,
   isTrivialDimension,
+  indexInSepDim,
   normalizeSubscripts,
   separatedVariableIndex,
   sub
@@ -330,13 +331,6 @@ export default class EquationGen extends ModelReader {
     // Emit the tmp var subscript just after emitting the tmp var elsewhere.
     this.emit(`[${this.aaTmpDimName}[${i}]]`)
   }
-  directConstSubscriptGen(subscripts) {
-    // Construct numeric constant variable subscripts in normal order.
-    let cSubscripts = subscripts.map(s => (isDimension(s) ? sub(s).value : [s]))
-    let indexSubscripts = cartesianProductOf(cSubscripts)
-    let numericSubscripts = indexSubscripts.map(idx => idx.map(s => sub(s).value))
-    return numericSubscripts.map(s => s.reduce((a, v) => a.concat(`[${v}]`), ''))
-  }
   functionIsLookup() {
     // See if the function name in the current call is actually a lookup.
     // console.error(`isLookup ${this.lookupName()}`);
@@ -454,39 +448,56 @@ export default class EquationGen extends ModelReader {
     return [`  ${this.lhs} = __new_lookup(${lookupSize}, /*copy=*/true, (double[]){ ${lookupData} });`]
   }
   generateDirectConstInit() {
-    // Map zero, one, or two dimensions on the LHS in model order to a table of numbers in a CSV file.
+    // Map zero, one, or two subscripts on the LHS in model order to a table of numbers in a CSV file.
+    // The subscripts may be indices to pick out a subset of the data.
     let result = this.comments
     let { file, tab, startCell } = this.var.directConstArgs
     let csvPathname = path.resolve(this.modelDirname, file)
     let data = readCsv(csvPathname, tab)
     if (data) {
       let getCellValue = (c, r) => (data[r] != null && data[r][c] != null ? cdbl(data[r][c]) : null)
+      // Get C subscripts in text form for the LHS in normal order.
       let modelLHSReader = new ModelLHSReader()
       modelLHSReader.read(this.var.modelLHS)
-      // Get C subscripts in text form for the LHS in normal order.
-      let lhsSubscripts = this.directConstSubscriptGen(this.var.subscripts)
-      // Generate cell offsets for the data table corresponding to each LHS subscript.
-      let dimNames = this.var.subscripts.filter(s => isDimension(s))
-      let inds = dimNames.map(dim => [...Array(sub(dim).size).keys()])
-      // Add a second dimension if necessary to get row, column pairs.
-      if (inds.length === 1) {
-        inds.unshift([0])
-      }
-      // Read values by column first when the start cell ends with an asterisk.
-      // Ref: https://www.vensim.com/documentation/fn_get_direct_constants.html
-      if (startCell.endsWith('*')) {
-        inds.reverse()
-        startCell = startCell.slice(0, -1)
-      }
-      // If there are two data dimensions and the model order differs from normal order, transpose them.
-      if (dimNames.length > 1) {
-        let modelDimNames = modelLHSReader.modelSubscripts.filter(s => isDimension(s))
-        if (dimNames[0] !== modelDimNames[0]) {
-          inds.reverse()
+      let modelDimNames = modelLHSReader.modelSubscripts.filter(s => isDimension(s))
+      // Generate offsets from the start cell in the table corresponding to LHS indices.
+      let cellOffsets = []
+      let cSubscripts = this.var.subscripts.map(s => (isDimension(s) ? sub(s).value : [s]))
+      let lhsIndexSubscripts = cartesianProductOf(cSubscripts)
+      // Find the table cell offset for each LHS index tuple.
+      for (let indexSubscripts of lhsIndexSubscripts) {
+        let entry = [0, 0]
+        for (let i = 0; i < this.var.subscripts.length; i++) {
+          // LHS dimensions or indices in a separated dimension map to table cells.
+          let lhsSubscript = this.var.subscripts[i]
+          if (isDimension(lhsSubscript) || indexInSepDim(lhsSubscript, this.var)) {
+            // Consider the LHS index subscript at this position.
+            let indexSubscript = indexSubscripts[i]
+            let ind = sub(indexSubscript)
+            // Find the model subscript position corresponding to the LHS index subscript.
+            for (let iModelDim = 0; iModelDim < modelDimNames.length; iModelDim++) {
+              let modelDim = sub(modelDimNames[iModelDim])
+              if (modelDim.family === ind.family) {
+                // Set the numeric index for the model dimension in the cell offset entry.
+                // Use the position within the dimension to map subdimensions onto cell offsets.
+                let pos = modelDim.value.indexOf(indexSubscript)
+                let entryRowOrCol = modelDimNames.length > 1 ? iModelDim : 1
+                entry[entryRowOrCol] = pos
+                break
+              }
+            }
+          }
         }
+        // Read values by column first when the start cell ends with an asterisk.
+        // Ref: https://www.vensim.com/documentation/fn_get_direct_constants.html
+        if (startCell.endsWith('*')) {
+          entry.reverse()
+        }
+        cellOffsets.push(entry)
       }
       // Read CSV data into an indexed variable for each cell.
-      let cellOffsets = cartesianProductOf(inds)
+      let numericSubscripts = lhsIndexSubscripts.map(idx => idx.map(s => sub(s).value))
+      let lhsSubscripts = numericSubscripts.map(s => s.reduce((a, v) => a.concat(`[${v}]`), ''))
       let dataAddress = XLSX.utils.decode_cell(startCell)
       let startCol = dataAddress.c
       let startRow = dataAddress.r
