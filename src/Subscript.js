@@ -116,6 +116,14 @@ export function isDimension(name) {
   let s = sub(name)
   return s && Array.isArray(s.value)
 }
+export function isSubdimension(name) {
+  let result = false
+  let s = sub(name)
+  if (s && Array.isArray(s.value)) {
+    result = s.size < sub(s.family).size
+  }
+  return result
+}
 export function isTrivialDimension(name) {
   // Return true if the dimension values are trivial, i.e., {0, 1, 2, ..., n-1}
   let s = sub(name)
@@ -124,6 +132,35 @@ export function isTrivialDimension(name) {
   }
   // The following evaluates to true when all sub-dimensions match their position in the array
   return R.addIndex(R.all)((subdim, idx) => sub(subdim).value === idx, s.value)
+}
+export function indexInSepDim(ind, v) {
+  // Find the separation dim in the variable that includes the index, or return null.
+  let result = null
+  for (let sepDim of v.separationDims) {
+    if (sub(sepDim).value.includes(ind)) {
+      result = sepDim
+      break
+    }
+  }
+  return result
+}
+export function subscriptsMatch(s1, s2) {
+  // Return true when subscript s1 matches subscript s2.
+  let matches = false
+  if (isIndex(s1) && isIndex(s2)) {
+    matches = s1 === s2
+  } else if (isDimension(s1) && isDimension(s2)) {
+    matches = s1 === s2
+    if (!matches) {
+      // Also match when s2 is a subdimension of s1.
+      matches = sub(s2).family === sub(s1).family && sub(s2).value.length < sub(s1).value.length
+    }
+  } else if (isDimension(s1) && isIndex(s2)) {
+    matches = sub(s1).value.includes(s2)
+  } else if (isIndex(s1) && isDimension(s2)) {
+    matches = sub(s2).value.includes(s1)
+  }
+  return matches
 }
 export function addIndex(name, value, family) {
   // Add an index with arguments in canonical form.
