@@ -3,6 +3,8 @@ DimA: A1, A2, A3 ~~|
 SubA: A2, A3 ~~|
 DimB: B1, B2, B3 ~~|
 DimC: C1, C2 ~~|
+From DimC: DimC ~~|
+To DimC: DimC ~~|
 DimD: D1, D2 ~~|
 
 a =
@@ -49,6 +51,13 @@ f[DimC, SubA] =
 
 f[DimC, DimA] :EXCEPT: [DimC, SubA] = 0
 ~~~:SUPPLEMENTARY|
+
+g[From DimC, To DimC] =
+  GET DIRECT CONSTANTS(
+    'data/g.csv',
+    ',',
+    'B2'
+  ) ~~~:SUPPLEMENTARY|
 
 ********************************************************
 	.Control
