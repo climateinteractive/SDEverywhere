@@ -11,6 +11,12 @@ input[A2] = 20 * TIME ~~|
 input[A3] = 30 * TIME ~~|
 output[DimA] = DELAY FIXED(input[DimA], 1, 0) ~~|
 
+a delay time = 0 ~~|
+a = DELAY FIXED(input[A1] + 1, a delay time, 0) ~~|
+
+b delay time = 1 ~~|
+b = DELAY FIXED(input[A1] + 1, b delay time, 0) ~~|
+
 INITIAL TIME = 0 ~~|
 FINAL TIME = 50 ~~|
 TIME STEP = 1 ~~|
