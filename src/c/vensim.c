@@ -328,6 +328,7 @@ double __get_pp(double* pp, size_t iProfile, size_t iElement) {
   return *(pp + iProfile * NUM_PP + iElement);
 }
 #define ALLOCATIONS_BUFSIZE 60
+// #define PRINT_ALLOCATIONS_DEBUG_INFO
 double* _ALLOCATE_AVAILABLE(
     double* requested_quantities, double* priority_profiles, double available_resource, size_t num_requesters) {
   // requested_quantities points to an array of length num_requesters.
@@ -340,15 +341,22 @@ double* _ALLOCATE_AVAILABLE(
     fprintf(stderr, "_ALLOCATE_AVAILABLE num_requesters exceeds internal maximum size of %d\n", ALLOCATIONS_BUFSIZE);
     return NULL;
   }
-  const double normal_curve_tail = 5.0;
   // Limit the search to this number of steps.
-  const size_t max_steps = 30;
-  // Clamp the available resource to total requests so they can converge.
-  double totalRequests = 0.0;
+  const size_t max_steps = 100;
+  // If the available resource is more than the total requests, clamp to the total requests so we don't overallocate.
+  double total_requests = 0.0;
   for (size_t i = 0; i < num_requesters; i++) {
-    totalRequests += requested_quantities[i];
+    total_requests += requested_quantities[i];
   }
-  available_resource = fmin(available_resource, totalRequests);
+  available_resource = fmin(available_resource, total_requests);
+#ifdef PRINT_ALLOCATIONS_DEBUG_INFO
+  fprintf(stderr, "\n_ALLOCATE_AVAILABLE time=%g num_requesters=%zu, available_resource=%f, total_requests=%f\n", _time,
+      num_requesters, available_resource, total_requests);
+  for (size_t i = 0; i < num_requesters; i++) {
+    fprintf(stderr, "[%2zu] requested_quantities=%17f  mean=%8g  sigma=%8g\n", i, requested_quantities[i],
+        __get_pp(priority_profiles, i, PPRIORITY), __get_pp(priority_profiles, i, PWIDTH));
+  }
+#endif
   // Find the minimum and maximum means in the priority curves.
   double min_mean = DBL_MAX;
   double max_mean = DBL_MIN;
@@ -356,34 +364,42 @@ double* _ALLOCATE_AVAILABLE(
     min_mean = fmin(__get_pp(priority_profiles, i, PPRIORITY), min_mean);
     max_mean = fmax(__get_pp(priority_profiles, i, PPRIORITY), max_mean);
   }
-  // Start the search in the midpoint of the means, with a big first jump.
+  // Start the search in the midpoint of the means, with a big first jump scaled to the spread of the means.
   double total_allocations = 0.0;
   double x = (max_mean + min_mean) / 2.0;
-  double delta = normal_curve_tail;
+  double delta = (max_mean - min_mean) / 2.0;
   size_t num_steps = 0;
   double last_delta_sign = 1.0;
   size_t num_jumps_in_same_direction = 0;
   do {
     // Calculate allocations for each requester.
     for (size_t i = 0; i < num_requesters; i++) {
-      double mean = __get_pp(priority_profiles, i, PPRIORITY);
-      double sigma = __get_pp(priority_profiles, i, PWIDTH);
-      // The allocation is the area under the requester's normal curve from x out to +∞
-      // scaled by the size of the request. We integrate over the right-hand side of the
-      // normal curve so that higher means have higher priority, that is, are allocated more.
-      // The unit cumulative distribution function integrates to one over all x,
-      // so we simply multiply by a constant to scale the area under the curve.
-      allocations[i] = requested_quantities[i] * __cdf_normal_Q(x - mean, sigma);
+      if (requested_quantities[i] > 0.0) {
+        double mean = __get_pp(priority_profiles, i, PPRIORITY);
+        double sigma = __get_pp(priority_profiles, i, PWIDTH);
+        // The allocation is the area under the requester's normal curve from x out to +∞
+        // scaled by the size of the request. We integrate over the right-hand side of the
+        // normal curve so that higher means have higher priority, that is, are allocated more.
+        // The unit cumulative distribution function integrates to one over all x,
+        // so we simply multiply by a constant to scale the area under the curve.
+        allocations[i] = requested_quantities[i] * __cdf_normal_Q(x - mean, sigma);
+      } else {
+        allocations[i] = 0.0;
+      }
     }
     // Sum the allocations for comparison with the available resource.
     total_allocations = 0.0;
     for (size_t i = 0; i < num_requesters; i++) {
       total_allocations += allocations[i];
     }
+#ifdef PRINT_ALLOCATIONS_DEBUG_INFO
+    fprintf(stderr, "x=%-+14g delta=%-+14g Δ=%-+14g total_allocations=%-+14g available_resource=%-+14g\n", x, delta,
+        fabs(total_allocations - available_resource), total_allocations, available_resource);
+#endif
     if (++num_steps >= max_steps) {
       fprintf(stderr,
-          "_ALLOCATE_AVAILABLE failed to converge at time=%g with total_allocations=%g, available_resource=%g\n", _time,
-          total_allocations, available_resource);
+          "_ALLOCATE_AVAILABLE failed to converge at time=%g with total_allocations=%18f, available_resource=%18f\n",
+          _time, total_allocations, available_resource);
       break;
     }
     // Set up the next x value by computing a new delta that is usually half the size of the
@@ -400,6 +416,13 @@ double* _ALLOCATE_AVAILABLE(
     // The search terminates when the total allocations are equal to the available resource
     // up to a very small epsilon difference.
   } while (fabs(total_allocations - available_resource) > _epsilon);
+#ifdef PRINT_ALLOCATIONS_DEBUG_INFO
+  fprintf(stderr, "converged with Δ=%g in %zu steps\n", fabs(total_allocations - available_resource), num_steps);
+  fprintf(stderr, "total_allocations=%f, available_resource=%f\n", total_allocations, available_resource);
+  for (size_t i = 0; i < num_requesters; i++) {
+    fprintf(stderr, "[%2zu] %f\n", i, allocations[i]);
+  }
+#endif
   // Return a pointer to the allocations array the caller passed with the results filled in.
   return allocations;
 }
