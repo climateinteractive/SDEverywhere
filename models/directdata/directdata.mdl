@@ -1,6 +1,8 @@
 {UTF-8}
 DimA: A1, A2 ~~|
 DimB: B1, B2 ~~|
+DimC <-> DimM ~~|
+DimM: M1, M2, M3 ~~|
 
 a[DimA] := GET DIRECT DATA('?data', 'A Data', 'A', 'B2') ~~|
 b[DimA] = a[DimA] * 10 ~~~:SUPPLEMENTARY|
@@ -23,6 +25,12 @@ j[A1, DimB] = i[A1, DimB] ~~~:SUPPLEMENTARY|
 k[A1, DimB] = GET DIRECT DATA('e_data.csv', ',', 'A', 'B2') ~~|
 k[A2, DimB] = 0 ~~|
 l[DimA, DimB] = k[DimA, DimB] ~~|
+
+m[DimM] = GET DIRECT DATA( 'm.csv', ',', '1', 'B2' ) ~~|
+n = m[M2] ~~|
+
+o[DimM] = GET DIRECT DATA( 'mt.csv', ',', 'A', 'B2' ) ~~|
+p = o[M2] ~~|
 
 ********************************************************
 	.Control

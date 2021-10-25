@@ -396,7 +396,7 @@ export default class EquationGen extends ModelReader {
           }
           let dimName = this.var.separationDims[0]
           for (let subscript of this.var.subscripts) {
-            if (sub(subscript).family === dimName) {
+            if (sub(subscript).family === dimName || sub(dimName).value.includes(subscript)) {
               let ind = sub(subscript)
               indexNum = ind.value
               break
@@ -466,7 +466,7 @@ export default class EquationGen extends ModelReader {
       let lhsIndexSubscripts = cartesianProductOf(cSubscripts)
       // Find the table cell offset for each LHS index tuple.
       for (let indexSubscripts of lhsIndexSubscripts) {
-        let entry = [0, 0]
+        let entry = [null, null]
         for (let i = 0; i < this.var.subscripts.length; i++) {
           // LHS dimensions or indices in a separated dimension map to table cells.
           let lhsSubscript = this.var.subscripts[i]
@@ -476,18 +476,25 @@ export default class EquationGen extends ModelReader {
             let ind = sub(indexSubscript)
             // Find the model subscript position corresponding to the LHS index subscript.
             for (let iModelDim = 0; iModelDim < modelDimNames.length; iModelDim++) {
-              let modelDim = sub(modelDimNames[iModelDim])
-              if (modelDim.family === ind.family) {
-                // Set the numeric index for the model dimension in the cell offset entry.
-                // Use the position within the dimension to map subdimensions onto cell offsets.
-                let pos = modelDim.value.indexOf(indexSubscript)
-                let entryRowOrCol = modelDimNames.length > 1 ? iModelDim : 1
-                entry[entryRowOrCol] = pos
-                break
+              // Only fill an entry position once.
+              if (entry[iModelDim] === null) {
+                let modelDim = sub(modelDimNames[iModelDim])
+                if (modelDim.family === ind.family) {
+                  // Set the numeric index for the model dimension in the cell offset entry.
+                  // Use the position within the dimension to map subdimensions onto cell offsets.
+                  let pos = modelDim.value.indexOf(indexSubscript)
+                  // Vectors use a 2D cell offset that maps to columns in the first row.
+                  // Tables use a 2D cell offset with the row or column matching the model dimension.
+                  let entryRowOrCol = modelDimNames.length > 1 ? iModelDim : 1
+                  entry[entryRowOrCol] = pos
+                  break
+                }
               }
             }
           }
         }
+        // Replace unfilled entry positions with zero.
+        entry = entry.map(x => (x === null ? 0 : x))
         // Read values by column first when the start cell ends with an asterisk.
         // Ref: https://www.vensim.com/documentation/fn_get_direct_constants.html
         if (startCell.endsWith('*')) {
