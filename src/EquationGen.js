@@ -396,7 +396,7 @@ export default class EquationGen extends ModelReader {
           }
           let dimName = this.var.separationDims[0]
           for (let subscript of this.var.subscripts) {
-            if (sub(subscript).family === dimName) {
+            if (sub(subscript).family === dimName || sub(dimName).value.includes(subscript)) {
               let ind = sub(subscript)
               indexNum = ind.value
               break
