@@ -5,6 +5,7 @@
 
 // Commands:
 // generate
+// flatten
 // compile
 // exec
 // log
@@ -15,6 +16,7 @@
 // test - run, log, compare
 // names
 // causes
+// which
 
 import yargs from 'yargs'
 import sdeGenerate from './sde-generate.js'
@@ -31,7 +33,7 @@ import sdeNames from './sde-names.js'
 import sdeCauses from './sde-causes.js'
 import sdeWhich from './sde-which.js'
 
-yargs
+yargs(process.argv.slice(2))
   .strict()
   .usage('usage: $0 <command>')
   .command(sdeGenerate)
@@ -51,4 +53,5 @@ yargs
   .help()
   .version()
   .alias('h', 'help')
-  .alias('v', 'version').argv
+  .alias('v', 'version')
+  .parse()
