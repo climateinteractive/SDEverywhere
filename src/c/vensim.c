@@ -445,7 +445,7 @@ FixedDelay* __new_fixed_delay(double delay_time, double initial_value) {
 double _DELAY_FIXED(double input, FixedDelay* fixed_delay) {
   // Cache input values in a ring buffer for the number of time steps equal to the delay time.
   // Return the init value until the time reaches the delay time.
-  double result = 0.0;
+  double result;
   // Require the buffer size to be positive to protect from buffer overflows.
   if (fixed_delay->n > 0) {
     fixed_delay->data[fixed_delay->data_index] = input;
@@ -457,6 +457,9 @@ double _DELAY_FIXED(double input, FixedDelay* fixed_delay) {
     } else {
       result = fixed_delay->data[fixed_delay->data_index];
     }
+  } else {
+    // For a zero delay, take the value directly from the input.
+    result = input;
   }
   return result;
 }
