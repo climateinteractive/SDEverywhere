@@ -30,15 +30,15 @@ The [Emscripten toolchain](https://emscripten.org/) converts the C code generate
 
 4. You will need to run the following command from the `emsdk` directory every time you want to use Emscripten—that is, every time you generate web apps with SDEverywhere. This will temporarily use the Node and clang compiler bundled with Emscripten. When you close the terminal tab, the Emscripten environment will go away.
 
-    ```
-    source ./emsdk_env.sh
-    ```
+   ```
+   source ./emsdk_env.sh
+   ```
 
 5. Test your Emscripten installation.
 
-    ```
-    emcc -v
-    ```
+   ```
+   emcc -v
+   ```
 
 ## Generating model code and validating it
 
@@ -78,23 +78,23 @@ The development scripts assume that your model is in the `model` subdirectory of
 
 1. Activate the Emscripten SDK in your `emsdk` directory (see [Install Emscripten](#install-emscripten) above).
 
-    ```
-    source ./emsdk_env.sh
-    ```
+   ```
+   source ./emsdk_env.sh
+   ```
 
 2. Generate WebAssembly code for the model and embed it in a web app.
 
-    ```
-    cd model
-    sde generate --genhtml {model}
-    ```
+   ```
+   cd model
+   sde generate --genhtml {model}
+   ```
 
 3. Start a development web server, and then open the web app with the URL it prints.
 
-    ```
-    npm install --no-save local-web-server
-    npx ws -d build/web -o
-    ```
+   ```
+   npm install --no-save local-web-server
+   npx ws -d build/web -o
+   ```
 
 If you are using your own web server, configure it to serve files from the `model/build/web` directory.
 
