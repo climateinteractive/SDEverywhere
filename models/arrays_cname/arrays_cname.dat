@@ -101,6 +101,222 @@ inputAB[A3,B2]
 0	18
 inputAB[A3,B3]
 0	19
+ndim4[A1,B1,C1,D1]
+0	4
+ndim4[A1,B1,C1,D2]
+0	4
+ndim4[A1,B1,C1,D3]
+0	4
+ndim4[A1,B1,C1,D4]
+0	4
+ndim4[A1,B1,C2,D1]
+0	4
+ndim4[A1,B1,C2,D2]
+0	4
+ndim4[A1,B1,C2,D3]
+0	4
+ndim4[A1,B1,C2,D4]
+0	4
+ndim4[A1,B1,C3,D1]
+0	4
+ndim4[A1,B1,C3,D2]
+0	4
+ndim4[A1,B1,C3,D3]
+0	4
+ndim4[A1,B1,C3,D4]
+0	4
+ndim4[A1,B2,C1,D1]
+0	4
+ndim4[A1,B2,C1,D2]
+0	4
+ndim4[A1,B2,C1,D3]
+0	4
+ndim4[A1,B2,C1,D4]
+0	4
+ndim4[A1,B2,C2,D1]
+0	4
+ndim4[A1,B2,C2,D2]
+0	4
+ndim4[A1,B2,C2,D3]
+0	4
+ndim4[A1,B2,C2,D4]
+0	4
+ndim4[A1,B2,C3,D1]
+0	4
+ndim4[A1,B2,C3,D2]
+0	4
+ndim4[A1,B2,C3,D3]
+0	4
+ndim4[A1,B2,C3,D4]
+0	4
+ndim4[A1,B3,C1,D1]
+0	4
+ndim4[A1,B3,C1,D2]
+0	4
+ndim4[A1,B3,C1,D3]
+0	4
+ndim4[A1,B3,C1,D4]
+0	4
+ndim4[A1,B3,C2,D1]
+0	4
+ndim4[A1,B3,C2,D2]
+0	4
+ndim4[A1,B3,C2,D3]
+0	4
+ndim4[A1,B3,C2,D4]
+0	4
+ndim4[A1,B3,C3,D1]
+0	4
+ndim4[A1,B3,C3,D2]
+0	4
+ndim4[A1,B3,C3,D3]
+0	4
+ndim4[A1,B3,C3,D4]
+0	4
+ndim4[A2,B1,C1,D1]
+0	4
+ndim4[A2,B1,C1,D2]
+0	4
+ndim4[A2,B1,C1,D3]
+0	4
+ndim4[A2,B1,C1,D4]
+0	4
+ndim4[A2,B1,C2,D1]
+0	4
+ndim4[A2,B1,C2,D2]
+0	4
+ndim4[A2,B1,C2,D3]
+0	4
+ndim4[A2,B1,C2,D4]
+0	4
+ndim4[A2,B1,C3,D1]
+0	4
+ndim4[A2,B1,C3,D2]
+0	4
+ndim4[A2,B1,C3,D3]
+0	4
+ndim4[A2,B1,C3,D4]
+0	4
+ndim4[A2,B2,C1,D1]
+0	4
+ndim4[A2,B2,C1,D2]
+0	4
+ndim4[A2,B2,C1,D3]
+0	4
+ndim4[A2,B2,C1,D4]
+0	4
+ndim4[A2,B2,C2,D1]
+0	4
+ndim4[A2,B2,C2,D2]
+0	4
+ndim4[A2,B2,C2,D3]
+0	4
+ndim4[A2,B2,C2,D4]
+0	4
+ndim4[A2,B2,C3,D1]
+0	4
+ndim4[A2,B2,C3,D2]
+0	4
+ndim4[A2,B2,C3,D3]
+0	4
+ndim4[A2,B2,C3,D4]
+0	4
+ndim4[A2,B3,C1,D1]
+0	4
+ndim4[A2,B3,C1,D2]
+0	4
+ndim4[A2,B3,C1,D3]
+0	4
+ndim4[A2,B3,C1,D4]
+0	4
+ndim4[A2,B3,C2,D1]
+0	4
+ndim4[A2,B3,C2,D2]
+0	4
+ndim4[A2,B3,C2,D3]
+0	4
+ndim4[A2,B3,C2,D4]
+0	4
+ndim4[A2,B3,C3,D1]
+0	4
+ndim4[A2,B3,C3,D2]
+0	4
+ndim4[A2,B3,C3,D3]
+0	4
+ndim4[A2,B3,C3,D4]
+0	4
+ndim4[A3,B1,C1,D1]
+0	4
+ndim4[A3,B1,C1,D2]
+0	4
+ndim4[A3,B1,C1,D3]
+0	4
+ndim4[A3,B1,C1,D4]
+0	4
+ndim4[A3,B1,C2,D1]
+0	4
+ndim4[A3,B1,C2,D2]
+0	4
+ndim4[A3,B1,C2,D3]
+0	4
+ndim4[A3,B1,C2,D4]
+0	4
+ndim4[A3,B1,C3,D1]
+0	4
+ndim4[A3,B1,C3,D2]
+0	4
+ndim4[A3,B1,C3,D3]
+0	4
+ndim4[A3,B1,C3,D4]
+0	4
+ndim4[A3,B2,C1,D1]
+0	4
+ndim4[A3,B2,C1,D2]
+0	4
+ndim4[A3,B2,C1,D3]
+0	4
+ndim4[A3,B2,C1,D4]
+0	4
+ndim4[A3,B2,C2,D1]
+0	4
+ndim4[A3,B2,C2,D2]
+0	4
+ndim4[A3,B2,C2,D3]
+0	4
+ndim4[A3,B2,C2,D4]
+0	4
+ndim4[A3,B2,C3,D1]
+0	4
+ndim4[A3,B2,C3,D2]
+0	4
+ndim4[A3,B2,C3,D3]
+0	4
+ndim4[A3,B2,C3,D4]
+0	4
+ndim4[A3,B3,C1,D1]
+0	4
+ndim4[A3,B3,C1,D2]
+0	4
+ndim4[A3,B3,C1,D3]
+0	4
+ndim4[A3,B3,C1,D4]
+0	4
+ndim4[A3,B3,C2,D1]
+0	4
+ndim4[A3,B3,C2,D2]
+0	4
+ndim4[A3,B3,C2,D3]
+0	4
+ndim4[A3,B3,C2,D4]
+0	4
+ndim4[A3,B3,C3,D1]
+0	4
+ndim4[A3,B3,C3,D2]
+0	4
+ndim4[A3,B3,C3,D3]
+0	4
+ndim4[A3,B3,C3,D4]
+0	4
 o[B1]
 0	42
 1	42
