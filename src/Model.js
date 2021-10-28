@@ -635,15 +635,12 @@ function vensimName(cVarName) {
   // Convert a C variable name to a Vensim name.
   let result = cVarName
   // Get the variable name and subscripts with regexes.
-  let m = cVarName.match(/(_[A-Za-z0-9_]+)(\[\d+\])?(\[\d+\])?/)
+  let m = cVarName.match(/(_[A-Za-z0-9_]+)((\[\d+\])*)/)
   if (m) {
     let varName = m[1]
     let indexNumbers = []
-    if (m[2]) {
-      indexNumbers.push(m[2].replace('[', '').replace(']', ''))
-      if (m[3]) {
-        indexNumbers.push(m[3].replace('[', '').replace(']', ''))
-      }
+    for (let x of m[2].matchAll(/\[(\d+)\]/g)) {
+      indexNumbers.push(x[1])
     }
     // Get the subscript families and look up the subscript names.
     let subscripts = []

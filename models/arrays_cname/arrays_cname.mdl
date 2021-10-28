@@ -150,6 +150,11 @@ z[C2, DimA, DimB]=
 	~	2D constant array with additional index subscript (2/2)
 	|
 
+ndim4[DimA, DimB, DimC, DimD] = 4
+	~
+	~	4D constant array
+	|
+
 INITIAL TIME = 0 ~~|
 FINAL TIME = 1 ~~|
 TIME STEP = 1 ~~|
