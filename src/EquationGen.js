@@ -881,6 +881,7 @@ export default class EquationGen extends ModelReader {
       const condText = ctx.expr(0).getText()
       const condValue = Model.getConstantExprValue(condText)
       if (condValue !== undefined) {
+        this.emit('(')
         if (condValue !== 0) {
           // Emit only the "if true" branch
           this.setArgIndex(1)
@@ -890,6 +891,7 @@ export default class EquationGen extends ModelReader {
           this.setArgIndex(2)
           ctx.expr(2).accept(this)
         }
+        this.emit(')')
       } else {
         // Emit a normal if/else with both branches
         this.emit(fn)
