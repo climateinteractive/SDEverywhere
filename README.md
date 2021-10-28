@@ -1,6 +1,6 @@
 # SDEverywhere Guide
 
-Revised: 2021-07-08
+Revised: 2021-10-21
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
@@ -160,20 +160,44 @@ The following models are included as samples and test cases for various Vensim f
 | Model          | Description                                                                            |
 | -------------- | -------------------------------------------------------------------------------------- |
 | active_initial | ACTIVE INITIAL function                                                                |
-| arrays         | 1-D and 2-D arrays with a variety of subscript references                              |
+| allocate       | ALLOCATE AVAILABLE function                                                            |
+| arrays_cname   | 1-D and 2-D arrays with a variety of subscript references using C language var names   |
+| arrays_varname | 1-D and 2-D arrays with a variety of subscript references using Vensim var names       |
+| comments       | Range, units, and documentation removal                                                |
 | delay          | DELAY and DELAY3 functions                                                             |
+| delayfixed     | DELAY FIXED function                                                                   |
+| delayfixed2    | DELAY FIXED function                                                                   |
+| directconst    | GET DIRECT CONSTANTS function                                                          |
+| directdata     | GET DIRECT DATA function                                                               |
+| directlookups  | GET DIRECT LOOKUPS function                                                            |
+| directsubs     | GET DIRECT SUBSCRIPT function                                                          |
+| elmcount       | ELMCOUNT function                                                                      |
+| except         | Exception equations                                                                    |
+| except2        | Exception equations                                                                    |
+| extdata        | Loading external data from DAT files                                                   |
+| getdata        | GET DATA BETWEEN TIMES function                                                        |
 | index          | Apply-to-all and non-apply-to-all arrays                                               |
 | initial        | INITIAL function                                                                       |
 | interleaved    | Demonstrating a case where non-apply-to-all array elements are separated in eval order |
 | lookup         | Lookup variables and functions                                                         |
 | mapping        | Mapping subranges                                                                      |
+| multimap       | Mapping a subscript range to multiple ranges                                           |
+| npv            | NPV function                                                                           |
+| preprocess     | SDEverywhere preprocessor phase                                                        |
+| prune          | Removing variables that are not referenced by input or output variables                |
+| pulsetrain     | PULSE TRAIN function                                                                   |
+| quantum        | QUANTUM function                                                                       |
 | ref            | An eval order that require an apply-to-all array to become non-apply-to-all            |
 | sample         | SAMPLE function                                                                        |
 | sir            | SIR infection model                                                                    |
 | smooth         | SMOOTH function                                                                        |
 | smooth3        | SMOOTH3 function                                                                       |
+| specialchars   | Variables with special characters allowed by Vensim                                    |
+| subalias       | Subscript range aliasing with <->                                                      |
 | subscript      | Subscript references in various orders                                                 |
 | sum            | SUM expressions                                                                        |
+| sumif          | Handling nested subscripts within array function calls                                 |
+| trend          | TREND function                                                                         |
 | vector         | Vector functions                                                                       |
 
 Here are the files in each model directory.

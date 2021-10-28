@@ -1,6 +1,6 @@
 # Using SDEverywhere to Make a Vensim Model into a Web Application
 
-Revised: 2021-07-08
+Revised: 2021-10-21
 
 This tutorial shows you how to take your Vensim model and turn it into an interactive web application using the open-source SDEverywhere toolkit. SDEverywhere currently requires the macOS operating system in development, but the resulting web app can be run on any web server, or even offline using the Firefox browser.
 
@@ -26,31 +26,19 @@ The [Emscripten toolchain](https://emscripten.org/) converts the C code generate
 
 2. Install Python 3. This is now the default on recent versions of macOS. Check with `python --version`. If you need to install Python 3, the easiest way is to use the [pyenv Python version manager](https://github.com/pyenv/pyenv). Follow the instructions for installing pyenv using Homebrew.
 
-3. Clone the Emscripten SDK from GitHub.
+3. Install the Emscripten SDK with the [download and install](https://emscripten.org/docs/getting_started/downloads.html#download-and-install) procedure.
 
-```
-git clone https://github.com/emscripten-core/emsdk.git
-```
+4. You will need to run the following command from the `emsdk` directory every time you want to use Emscripten—that is, every time you generate web apps with SDEverywhere. This will temporarily use the Node and clang compiler bundled with Emscripten. When you close the terminal tab, the Emscripten environment will go away.
 
-4. Install and activate the Emscripten SDK using the upstream LLVM backend.
+   ```
+   source ./emsdk_env.sh
+   ```
 
-```
-cd emsdk
-./emsdk install latest-upstream
-./emsdk activate latest-upstream
-```
+5. Test your Emscripten installation.
 
-5. You will need to run the following command from the `emsdk` directory every time you want to use Emscripten—that is, every time you generate web apps with SDEverywhere. This will temporarily use the Node and clang compiler bundled with Emscripten. When you close the terminal tab, the Emscripten environment will go away.
-
-```
-source ./emsdk_env.sh
-```
-
-6. Test your Emscripten installation.
-
-```
-emcc -v
-```
+   ```
+   emcc -v
+   ```
 
 ## Generating model code and validating it
 
@@ -90,23 +78,23 @@ The development scripts assume that your model is in the `model` subdirectory of
 
 1. Activate the Emscripten SDK in your `emsdk` directory (see [Install Emscripten](#install-emscripten) above).
 
-```
-source ./emsdk_env.sh
-```
+   ```
+   source ./emsdk_env.sh
+   ```
 
 2. Generate WebAssembly code for the model and embed it in a web app.
 
-```
-cd model
-sde generate --genhtml {model}
-```
+   ```
+   cd model
+   sde generate --genhtml {model}
+   ```
 
 3. Start a development web server, and then open the web app with the URL it prints.
 
-```
-npm install --no-save local-web-server
-npx ws -d build/web -o
-```
+   ```
+   npm install --no-save local-web-server
+   npx ws -d build/web -o
+   ```
 
 If you are using your own web server, configure it to serve files from the `model/build/web` directory.
 
