@@ -430,14 +430,17 @@ double* _ALLOCATE_AVAILABLE(
 //
 // DELAY FIXED
 //
-FixedDelay* __new_fixed_delay(double delay_time, double initial_value) {
+FixedDelay* __new_fixed_delay(FixedDelay* fixed_delay, double delay_time, double initial_value) {
   // Construct a FixedDelay struct with a ring buffer for the delay line.
   // We don't know the size until runtime, so it must be dynamically allocated.
   // The delay time is quantized to an integral number of time steps.
   // The FixedDelay should be constructed at init time to latch the delay time and initial value.
-  FixedDelay* fixed_delay = malloc(sizeof(FixedDelay));
-  fixed_delay->n = (size_t)ceil(delay_time / _time_step);
-  fixed_delay->data = malloc(sizeof(double) * fixed_delay->n);
+  // Allocate memory on the first call only. Pass the same pointer back in on subsequent runs.
+  if (fixed_delay == NULL) {
+    fixed_delay = malloc(sizeof(FixedDelay));
+    fixed_delay->n = (size_t)ceil(delay_time / _time_step);
+    fixed_delay->data = malloc(sizeof(double) * fixed_delay->n);
+  }
   fixed_delay->data_index = 0;
   fixed_delay->initial_value = initial_value;
   return fixed_delay;
