@@ -396,9 +396,14 @@ export default class EquationGen extends ModelReader {
           }
           let dimName = this.var.separationDims[0]
           for (let subscript of this.var.subscripts) {
-            if (sub(subscript).family === dimName || sub(dimName).value.includes(subscript)) {
-              let ind = sub(subscript)
-              indexNum = ind.value
+            if (sub(subscript).family === dimName) {
+              // Use the index value in the subscript family when that is the separation dimension.
+              indexNum = sub(subscript).value
+              break
+            }
+            if (sub(dimName).value.includes(subscript)) {
+              // Look up the index when the separation dimension is a subdimension.
+              indexNum = sub(dimName).value.indexOf(subscript)
               break
             }
           }
