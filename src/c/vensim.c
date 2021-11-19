@@ -296,9 +296,9 @@ double* _VECTOR_SORT_ORDER(double* vector, size_t size, double direction) {
 // ALLOCATE AVAILABLE
 //
 // Mathematical functions for calculating the normal pdf and cdf at a point x
-double __pdf_normal(double x, double μ, double σ) {
-  double base = 1.0 / (σ * sqrt(2.0 * M_PI));
-  double exponent = -pow(x - μ, 2.0) / (2.0 * σ * σ);
+double __pdf_normal(double x, double mu, double sigma) {
+  double base = 1.0 / (sigma * sqrt(2.0 * M_PI));
+  double exponent = -pow(x - mu, 2.0) / (2.0 * sigma * sigma);
   return base * exp(exponent);
 }
 double __cdf_unit_normal_P(double x) {
@@ -318,7 +318,7 @@ double __cdf_unit_normal_Q(double x) {
   // Calculate the unit cumulative distribution function from x to +∞, often known as Q(x).
   return x >= 0.0 ? 1.0 - __cdf_unit_normal_P(x) : __cdf_unit_normal_P(-x);
 }
-double __cdf_normal_Q(double x, double σ) { return __cdf_unit_normal_Q(x / σ); }
+double __cdf_normal_Q(double x, double sigma) { return __cdf_unit_normal_Q(x / sigma); }
 // Access the doubly-subscripted priority profiles array by pointer.
 enum { PTYPE, PPRIORITY, PWIDTH, PEXTRA };
 double __get_pp(double* pp, size_t iProfile, size_t iElement) {
@@ -428,14 +428,17 @@ double* _ALLOCATE_AVAILABLE(
 //
 // DELAY FIXED
 //
-FixedDelay* __new_fixed_delay(double delay_time, double initial_value) {
+FixedDelay* __new_fixed_delay(FixedDelay* fixed_delay, double delay_time, double initial_value) {
   // Construct a FixedDelay struct with a ring buffer for the delay line.
   // We don't know the size until runtime, so it must be dynamically allocated.
   // The delay time is quantized to an integral number of time steps.
   // The FixedDelay should be constructed at init time to latch the delay time and initial value.
-  FixedDelay* fixed_delay = malloc(sizeof(FixedDelay));
-  fixed_delay->n = (size_t)ceil(delay_time / _time_step);
-  fixed_delay->data = malloc(sizeof(double) * fixed_delay->n);
+  // Allocate memory on the first call only. Pass the same pointer back in on subsequent runs.
+  if (fixed_delay == NULL) {
+    fixed_delay = malloc(sizeof(FixedDelay));
+    fixed_delay->n = (size_t)ceil(delay_time / _time_step);
+    fixed_delay->data = malloc(sizeof(double) * fixed_delay->n);
+  }
   fixed_delay->data_index = 0;
   fixed_delay->initial_value = initial_value;
   return fixed_delay;
