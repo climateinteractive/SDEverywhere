@@ -62,9 +62,7 @@ Lookup* __new_lookup(size_t size, bool copy, double* data) {
   if (copy) {
     // Copy array into the lookup data.
     lookup->data = malloc(sizeof(double) * 2 * size);
-    for (size_t i = 0; i < 2 * size; i++) {
-      memcpy(lookup->data, data, size * 2 * sizeof(double));
-    }
+    memcpy(lookup->data, data, size * 2 * sizeof(double));
   } else {
     // Store a pointer to the lookup data (assumed to be static or owned elsewhere).
     lookup->data = data;
