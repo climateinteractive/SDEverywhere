@@ -351,6 +351,9 @@ export default class EquationGen extends ModelReader {
     } else if (this.mode === 'init-lookups') {
       // In init mode, create the `Lookup`, passing in a pointer to the static data array declared earlier.
       // TODO: Make use of the lookup range
+      if (this.var.points.length < 1) {
+        throw new Error(`ERROR: lookup size = ${this.var.points.length} in ${this.lhs}`)
+      }
       return [`  ${this.lhs} = __new_lookup(${this.var.points.length}, /*copy=*/false, ${dataName});`]
     } else {
       return []
@@ -450,6 +453,9 @@ export default class EquationGen extends ModelReader {
       dataValue = getCellValue(dataCol, dataRow)
       timeValue = getCellValue(timeCol, timeRow)
     }
+    if (lookupSize < 1) {
+      throw new Error(`ERROR: lookup size = ${lookupSize} in ${this.lhs}`)
+    }
     return [`  ${this.lhs} = __new_lookup(${lookupSize}, /*copy=*/true, (double[]){ ${lookupData} });`]
   }
   generateDirectConstInit() {
@@ -546,6 +552,9 @@ export default class EquationGen extends ModelReader {
         return `double ${dataName}[${data.size * 2}] = { ${points} };`
       } else if (mode === 'init-lookups') {
         // In init mode, create the `Lookup`, passing in a pointer to the static data array declared in decl mode.
+        if (data.size < 1) {
+          throw new Error(`ERROR: lookup size = ${data.size} in ${lhs}`)
+        }
         return `  ${lhs} = __new_lookup(${data.size}, /*copy=*/false, ${dataName});`
       } else {
         return undefined
@@ -625,6 +634,9 @@ export default class EquationGen extends ModelReader {
     if (this.var.isData() && !R.isEmpty(this.var.points)) {
       if (this.mode === 'init-lookups') {
         // If the var already has lookup data points, use those instead of reading them from a file.
+        if (this.var.points.length < 1) {
+          throw new Error(`ERROR: lookup size = ${this.var.points.length} in ${this.var.refId}`)
+        }
         let lookupData = R.reduce((a, p) => listConcat(a, `${cdbl(p[0])}, ${cdbl(p[1])}`, true), '', this.var.points)
         this.emit(`__new_lookup(${this.var.points.length}, /*copy=*/true, (double[]){ ${lookupData} });`)
       }
@@ -814,9 +826,8 @@ export default class EquationGen extends ModelReader {
         exprs[i].accept(this)
         // For DELAY FIXED, also initialize the support struct out of band, as it is not a Vensim var.
         if (fn === '_DELAY_FIXED') {
-          this.emit(
-            `;\n  ${this.var.fixedDelayVarName}${this.lhsSubscriptGen(this.var.subscripts)} = __new_fixed_delay(`
-          )
+          let fixedDelay = `${this.var.fixedDelayVarName}${this.lhsSubscriptGen(this.var.subscripts)}`
+          this.emit(`;\n  ${fixedDelay} = __new_fixed_delay(${fixedDelay}, `)
           this.setArgIndex(1)
           exprs[1].accept(this)
           this.emit(', ')
