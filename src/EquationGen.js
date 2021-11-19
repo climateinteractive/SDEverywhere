@@ -351,6 +351,9 @@ export default class EquationGen extends ModelReader {
     } else if (this.mode === 'init-lookups') {
       // In init mode, create the `Lookup`, passing in a pointer to the static data array declared earlier.
       // TODO: Make use of the lookup range
+      if (this.var.points.length < 1) {
+        throw new Error(`ERROR: lookup size = ${this.var.points.length} in ${this.lhs}`)
+      }
       return [`  ${this.lhs} = __new_lookup(${this.var.points.length}, /*copy=*/false, ${dataName});`]
     } else {
       return []
@@ -444,6 +447,9 @@ export default class EquationGen extends ModelReader {
       nextCell()
       dataValue = getCellValue(dataCol, dataRow)
       timeValue = getCellValue(timeCol, timeRow)
+    }
+    if (lookupSize < 1) {
+      throw new Error(`ERROR: lookup size = ${lookupSize} in ${this.lhs}`)
     }
     return [`  ${this.lhs} = __new_lookup(${lookupSize}, /*copy=*/true, (double[]){ ${lookupData} });`]
   }
@@ -541,6 +547,9 @@ export default class EquationGen extends ModelReader {
         return `double ${dataName}[${data.size * 2}] = { ${points} };`
       } else if (mode === 'init-lookups') {
         // In init mode, create the `Lookup`, passing in a pointer to the static data array declared in decl mode.
+        if (data.size < 1) {
+          throw new Error(`ERROR: lookup size = ${data.size} in ${lhs}`)
+        }
         return `  ${lhs} = __new_lookup(${data.size}, /*copy=*/false, ${dataName});`
       } else {
         return undefined
@@ -620,6 +629,9 @@ export default class EquationGen extends ModelReader {
     if (this.var.isData() && !R.isEmpty(this.var.points)) {
       if (this.mode === 'init-lookups') {
         // If the var already has lookup data points, use those instead of reading them from a file.
+        if (this.var.points.length < 1) {
+          throw new Error(`ERROR: lookup size = ${this.var.points.length} in ${this.var.refId}`)
+        }
         let lookupData = R.reduce((a, p) => listConcat(a, `${cdbl(p[0])}, ${cdbl(p[1])}`, true), '', this.var.points)
         this.emit(`__new_lookup(${this.var.points.length}, /*copy=*/true, (double[]){ ${lookupData} });`)
       }
