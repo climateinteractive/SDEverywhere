@@ -82,7 +82,7 @@ typedef struct {
 } FixedDelay;
 
 double _DELAY_FIXED(double input, FixedDelay* fixed_delay);
-FixedDelay* __new_fixed_delay(double delay_time, double initial_value);
+FixedDelay* __new_fixed_delay(FixedDelay* fixed_delay, double delay_time, double initial_value);
 
 #ifdef __cplusplus
 }
