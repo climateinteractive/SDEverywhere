@@ -22,6 +22,8 @@ let nextFixedDelayVarSeq = 1
 let nextLevelVarSeq = 1
 // next sequence number for generated aux variable names
 let nextAuxVarSeq = 1
+// parsed csv data cache
+let csvData = new Map()
 // string table for web apps
 export let strings = []
 
@@ -321,16 +323,21 @@ export let readCsv = (pathname, delimiter = ',') => {
   // Read the CSV file at the pathname and parse it with the given delimiter.
   // Return an array of rows that are each an array of columns.
   // If there is a header row, it is returned as the first row.
-  let result = null
-  const CSV_PARSE_OPTS = {
-    delimiter,
-    columns: false,
-    trim: true,
-    skip_empty_lines: true,
-    skip_lines_with_empty_values: true
+  // Cache parsed files to support multiple reads from different equations.
+  let csv = csvData.get(pathname)
+  if (csv == null) {
+    const CSV_PARSE_OPTS = {
+      delimiter,
+      columns: false,
+      trim: true,
+      skip_empty_lines: true,
+      skip_lines_with_empty_values: true
+    }
+    let data = B.read(pathname)
+    csv = parseCsv(data, CSV_PARSE_OPTS)
+    csvData.set(pathname, csv)
   }
-  let data = B.read(pathname)
-  return parseCsv(data, CSV_PARSE_OPTS)
+  return csv
 }
 // Convert the var name and subscript names to canonical form separately.
 export let canonicalVensimName = vname => {

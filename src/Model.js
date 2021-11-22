@@ -315,7 +315,7 @@ function removeUnusedVariables(spec) {
 
   // Walk the reference tree rooted at the given var and record it (and anything
   // that it references) as being "used".
-  const referencedRefIds = []
+  const referencedRefIds = new Set()
   const recordRefsOfVariable = v => {
     // If this variable is subscripted, we need to record all subscript variants;
     // `refIdsWithName` will return those.  We also need to record all variables
@@ -326,8 +326,8 @@ function removeUnusedVariables(spec) {
     refIds = refIds.concat(v.references)
     refIds = refIds.concat(v.initReferences)
     for (const refId of refIds) {
-      if (!referencedRefIds.includes(refId)) {
-        referencedRefIds.push(refId)
+      if (!referencedRefIds.has(refId)) {
+        referencedRefIds.add(refId)
         const refVar = varWithRefId(refId)
         recordUsedVariable(refVar)
         recordRefsOfVariable(refVar)
