@@ -115,7 +115,7 @@ export default class EquationGen extends ModelReader {
       return this.generateLookup()
     }
     // Show the model var as a comment for reference.
-    this.comments.push(`  // ${this.var.modelLHS} = ${this.var.modelFormula.replace('\n', '')}`)
+    this.comments.push(`  // ${this.var.modelLHS} = ${this.var.modelFormula.replace(/\n/g, '')}`)
     // Emit direct constants individually without separating them first.
     if (this.var.directConstArgs) {
       return this.generateDirectConstInit()

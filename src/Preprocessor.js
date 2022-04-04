@@ -139,10 +139,12 @@ export let preprocessModel = (mdlFilename, spec, profile = 'genc', writeFiles = 
     // Remove whitespace
     eqn = eqn.trim()
     if (eqn.length > 0) {
-      // Split on newlines so that we look only at the first line of each declaration
-      let line = eqn.split(/\n/)[0].trim()
+      // Remove newlines so that we look at the full equation as a single line
+      let line = eqn.replace(/\n/g, ' ').trim()
       let kind
       let key = line
+      // Remove everything after the comment delimiters
+      key = key.split('~')[0]
       // Strip the ":INTERPOLATE:"; it should not be included in the key
       key = key.replace(/:INTERPOLATE:/g, '')
       if (key.includes('=')) {
@@ -159,12 +161,13 @@ export let preprocessModel = (mdlFilename, spec, profile = 'genc', writeFiles = 
       }
       // Ignore double quotes
       key = key.replace(/\"/g, '')
-      // Ignore the comments if this is a one-line declaration
-      key = key.split('~')[0]
       // Ignore the lookup data if it starts on the first line
       key = key.split('(')[0]
       // Ignore any whitespace that remains
       key = key.trim()
+      // Remove whitespace on the inside of the brackets
+      key = key.replace(/\[\s*/g, '[')
+      key = key.replace(/\s*\]/g, ']')
       // Ignore case
       key = key.toLowerCase()
       unsorted.push({
