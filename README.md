@@ -101,11 +101,9 @@ _If you are using command-line Git_, clone each repo and track the `develop` bra
 cd {project directory}
 git clone https://github.com/climateinteractive/antlr4-vensim
 cd antlr4-vensim
-git checkout -b develop origin/develop
 cd ..
 git clone https://github.com/climateinteractive/SDEverywhere
 cd SDEverywhere
-git checkout -b develop origin/develop
 ```
 
 _If you are using Sourcetree_, do File > New > Clone from URL. Fill in the form as follows, substituting your project directory name for "{project directory}".
@@ -124,20 +122,21 @@ Then do the same for SDEverywhere.
 | Destination Path | {project directory}/SDEverywhere                       |
 | Name             | SDEverywhere                                           |
 
-Track the `develop` branch for both repos in Sourcetree by opening "origin" under Remotes in the sidebar, and then double-clicking `develop`. Click the Checkout button.
+Track the `main` branch for both repos in Sourcetree by opening "origin" under Remotes in the sidebar, and then double-clicking `main`. Click the Checkout button.
 
-When running SDEverywhere in development, link it into the Node global modules. You must link `antlr4-vensim` first. If you update Node, you will need to do the links again in the global modules in the new Node directory.
+When running SDEverywhere in development, you can also link the local version of `antlr4-vensim` by adding the following to `package.json`:
 
 ```
-cd {project directory}
-cd antlr4-vensim
-npm link
-cd ../SDEverywhere
-npm link antlr4-vensim
-npm install
-npm link
-sde -v
+{
+  "pnpm": {
+    "overrides": {
+      "antlr4-vensim": "link:../antlr4-vensim"
+    }
+  }
+}
 ```
+
+Then run `pnpm install`.
 
 If you need to run SDEverywhere in a debugger, use the instructions in the "Debugging" section below.
 
@@ -145,10 +144,10 @@ If you need to run SDEverywhere in a debugger, use the instructions in the "Debu
 
 If you cloned the GitHub repo, you can test your installation by building and running the models in the `models` directory, and then comparing SDEverywhere output to Vensim x64 output. Each model has its own directory under `models` with the same name as the model.
 
-Run all model tests with npm.
+Run all model tests with pnpm.
 
 ```
-npm test
+pnpm test
 ```
 
 ## Sample models

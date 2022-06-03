@@ -1,27 +1,19 @@
 {
   "name": "sdeverywhere",
   "version": "0.6.0",
-  "type": "module",
   "description": "SDEverywhere translates System Dynamics models from Vensim to C and WebAssembly",
-  "homepage": "https://sdeverywhere.org",
-  "author": "Climate Interactive",
-  "license": "MIT",
-  "readmeFilename": "README.md",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/climateinteractive/SDEverywhere.git"
-  },
-  "bugs": {
-    "url": "https://github.com/climateinteractive/SDEverywhere/issues"
+  "type": "module",
+  "bin": {
+    "sde": "src/index.js"
   },
   "scripts": {
-    "test": "cd src/tests && ./modeltests",
     "prettier:check": "prettier --check .",
-    "prettier:fix": "prettier --write ."
+    "prettier:fix": "prettier --write .",
+    "test": "cd src/tests && ./modeltests"
   },
   "dependencies": {
     "antlr4": "4.9.2",
-    "antlr4-vensim": "https://github.com/climateinteractive/antlr4-vensim#b7b90e3",
+    "antlr4-vensim": "0.6.0",
     "bufx": "^1.0.5",
     "byline": "^5.0.0",
     "chart.js": "^2.9.4",
@@ -32,15 +24,24 @@
     "js-yaml": "^3.13.1",
     "minimist": "^1.2.5",
     "numbro": "1.11.1",
-    "prettier": "^2.3.2",
     "ramda": "^0.27.0",
     "shelljs": "^0.8.3",
     "split-string": "^6.0.0",
     "xlsx": "^0.17.0",
     "yargs": "^17.2.1"
   },
-  "preferGlobal": true,
-  "bin": {
-    "sde": "src/index.js"
+  "devDependencies": {
+    "prettier": "^2.3.2"
+  },
+  "author": "Climate Interactive",
+  "license": "MIT",
+  "homepage": "https://sdeverywhere.org",
+  "readmeFilename": "README.md",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/climateinteractive/SDEverywhere.git"
+  },
+  "bugs": {
+    "url": "https://github.com/climateinteractive/SDEverywhere/issues"
   }
 }
