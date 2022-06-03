@@ -4,7 +4,7 @@ SubA: A2, A3 ~~|
 
 input = STEP(10, 0) - STEP(10, 4) ~~|
 delay = 5 ~~|
-init = 0 ~~|
+init 1 = 0 ~~|
 
 input a[DimA]= 10, 20, 30 ~~|
 delay a[DimA] = 1, 2, 3 ~~|
@@ -17,8 +17,8 @@ init 2[SubA] = 0 ~~|
 k = 42 ~~|
 
 d1 = DELAY1(input, delay) ~~|
-d2[DimA] = DELAY1I(input a[DimA], delay, init) ~~|
-d3[DimA] = DELAY1I(input, delay a[DimA], init) ~~|
+d2[DimA] = DELAY1I(input a[DimA], delay, init 1) ~~|
+d3[DimA] = DELAY1I(input, delay a[DimA], init 1) ~~|
 d4[DimA] = DELAY1I(input, delay, init a[DimA]) ~~|
 d5[DimA] = DELAY1I(input a[DimA], delay a[DimA], init a[DimA]) ~~|
 d6[SubA] = DELAY1I(input 2[SubA], delay 2, init 2[SubA]) ~~|

@@ -1,22 +1,26 @@
-const { ModelVisitor } = require('antlr4-vensim')
+import { ModelVisitor } from 'antlr4-vensim'
 
-module.exports = class ModelReader extends ModelVisitor {
+export default class ModelReader extends ModelVisitor {
   constructor() {
     super()
-    // stack of function names and argument indices
+    // stack of function names and argument indices encountered on the RHS
     this.callStack = []
   }
   currentFunctionName() {
+    // Return the name of the current function on top of the call stack.
     let n = this.callStack.length
     return n > 0 ? this.callStack[n - 1].fn : ''
   }
   setArgIndex(argIndex) {
+    // Set the argument index in the current function call on top of the call stack.
+    // This may be set in the exprList visitor and picked up in the var visitor to facilitate special argument handling.
     let n = this.callStack.length
     if (n > 0) {
       this.callStack[n - 1].argIndex = argIndex
     }
   }
   argIndexForFunctionName(name) {
+    // Search the call stack for the function name. Return the current argument index or undefined if not found.
     let argIndex
     for (let i = this.callStack.length - 1; i >= 0; i--) {
       if (this.callStack[i].fn === name) {

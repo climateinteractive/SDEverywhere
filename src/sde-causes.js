@@ -1,11 +1,9 @@
-const path = require('path')
-const antlr4 = require('antlr4')
-const { ModelLexer, ModelParser } = require('antlr4-vensim')
-const { codeGenerator } = require('./CodeGen')
-const { preprocessModel } = require('./Preprocessor')
-const { vensimName, cName } = require('./Model')
-const { modelPathProps } = require('./Helpers')
-const B = require('bufx')
+import antlr4 from 'antlr4'
+import { ModelLexer, ModelParser } from 'antlr4-vensim'
+import { codeGenerator } from './CodeGen.js'
+import { preprocessModel } from './Preprocessor.js'
+import { modelPathProps } from './Helpers.js'
+import B from 'bufx'
 
 let command = 'causes [options] <model> <C_varname>'
 let describe = 'print dependencies for a C variable name'
@@ -17,18 +15,20 @@ let builder = {
   }
 }
 let handler = argv => {
-  causes(argv.model, argv.varname, argv)
+  causes(argv.model, argv.c_varname, argv)
 }
 let causes = (model, varname, opts) => {
   // Get the model name and directory from the model argument.
   let { modelDirname, modelName, modelPathname } = modelPathProps(model)
+  let extData = new Map()
+  let directData = new Map()
   let spec = parseSpec(opts.spec)
   // Preprocess model text into parser input.
   let input = preprocessModel(modelPathname, spec)
   // Parse the model to get variable and subscript information.
   let parseTree = parseModel(input)
   let operation = 'printRefGraph'
-  codeGenerator(parseTree, { spec, operation, varname }).generate()
+  codeGenerator(parseTree, { spec, operation, extData, directData, modelDirname, varname }).generate()
 }
 let parseModel = input => {
   // Read the model text and return a parse tree.
@@ -62,7 +62,7 @@ let writeOutput = (outputPathname, outputText) => {
     console.log(e.message)
   }
 }
-module.exports = {
+export default {
   command,
   describe,
   builder,

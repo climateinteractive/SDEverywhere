@@ -1,0 +1,95 @@
+{UTF-8}
+DimA: A1, A2, A3 ~~|
+SubA: A2, A3 ~~|
+DimB: B1, B2, B3 ~~|
+DimC: C1, C2 ~~|
+From DimC: DimC ~~|
+To DimC: DimC ~~|
+DimD: D1, D2 ~~|
+
+a =
+  GET DIRECT CONSTANTS(
+    'data/a.csv',
+    ',',
+    'B2'
+  ) ~~~:SUPPLEMENTARY|
+
+b[DimB] =
+  GET DIRECT CONSTANTS(
+    'data/b.csv',
+    ',',
+    'B2*'
+  ) ~~~:SUPPLEMENTARY|
+
+c[DimB, DimC] =
+  GET DIRECT CONSTANTS(
+    'data/c.csv',
+    ',',
+    'B2'
+  ) ~~~:SUPPLEMENTARY|
+
+d[D1, DimB, DimC] =
+  GET DIRECT CONSTANTS(
+    'data/c.csv',
+    ',',
+    'B2'
+  ) ~~~:SUPPLEMENTARY|
+
+e[DimC, DimB] =
+  GET DIRECT CONSTANTS(
+    'data/c.csv',
+    ',',
+    'B2*'
+  ) ~~~:SUPPLEMENTARY|
+
+f[DimC, SubA] =
+  GET DIRECT CONSTANTS(
+    'data/f.csv',
+    ',',
+    'B2'
+  ) ~~~:SUPPLEMENTARY|
+
+f[DimC, DimA] :EXCEPT: [DimC, SubA] = 0
+~~~:SUPPLEMENTARY|
+
+g[From DimC, To DimC] =
+  GET DIRECT CONSTANTS(
+    'data/g.csv',
+    ',',
+    'B2'
+  ) ~~~:SUPPLEMENTARY|
+
+********************************************************
+	.Control
+********************************************************~
+		Simulation Control Parameters
+	|
+
+INITIAL TIME = 0 ~~|
+FINAL TIME = 1 ~~|
+TIME STEP = 1 ~~|
+SAVEPER = TIME STEP ~~|
+
+\\\---/// Sketch information - do not modify anything except names
+V300  Do not put anything below this section - it will be ignored
+*View 1
+$0-0-0,0,|0||0-0-0|0-0-0|0-0-0|0-0-0|0-0-0|0,0,100,0
+///---\\\
+:L<%^E!@
+9:directconst
+15:0,0,0,0,0,0
+19:100,0
+27:2,
+34:0,
+5:FINAL TIME
+35:Date
+36:YYYY-MM-DD
+37:2000
+38:1
+39:1
+40:2
+41:0
+42:1
+24:0
+25:0
+26:0

@@ -1,23 +1,23 @@
-const fs = require('fs-extra')
-const path = require('path')
-const R = require('ramda')
-const B = require('bufx')
-const byline = require('byline')
-const { canonicalName } = require('./Helpers')
+import fs from 'fs-extra'
+import path from 'path'
+import R from 'ramda'
+import B from 'bufx'
+import byline from 'byline'
+import { canonicalName } from './Helpers.js'
 
-let command = 'log [options] <logfile>'
-let describe = 'process an SDEverywhere log file'
-let builder = {
+export let command = 'log [options] <logfile>'
+export let describe = 'process an SDEverywhere log file'
+export let builder = {
   dat: {
     describe: 'convert a TSV log file to a Vensim DAT file',
     type: 'boolean',
     alias: 'd'
   }
 }
-let handler = argv => {
+export let handler = argv => {
   log(argv.logfile, argv)
 }
-let log = async (logPathname, opts) => {
+export let log = async (logPathname, opts) => {
   if (opts.dat) {
     let p = path.parse(logPathname)
     let datPathname = path.format({ dir: p.dir, name: p.name, ext: '.dat' })
@@ -57,6 +57,11 @@ let exportDat = async (logPathname, datPathname) => {
     let stream = fs.createWriteStream(datPathname, 'utf8')
     let iVarKey = 0
     let finished = () => {}
+    stream.on('finish', () => {
+      // Resolve the promise after `stream.end()` has been called and all data has been flushed
+      // to the output file
+      finished()
+    })
     let writeContinuation = () => {
       while (iVarKey < varKeys.length) {
         let varKey = varKeys[iVarKey++]
@@ -74,8 +79,9 @@ let exportDat = async (logPathname, datPathname) => {
           }
         }
       }
+      // End the stream after the last line is emitted; this will trigger a `finish` event after
+      // all data has been flushed to the output file
       stream.end()
-      finished()
     }
     return new Promise(resolve => {
       // Start the write on the next event loop tick so we can return immediately.
@@ -87,7 +93,7 @@ let exportDat = async (logPathname, datPathname) => {
   await readLog()
   await writeDat()
 }
-module.exports = {
+export default {
   command,
   describe,
   builder,

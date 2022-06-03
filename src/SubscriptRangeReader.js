@@ -1,12 +1,20 @@
-const antlr4 = require('antlr4')
-const { ModelParser } = require('antlr4-vensim')
-const R = require('ramda')
-const ModelReader = require('./ModelReader')
-const { Subscript } = require('./Subscript')
+import path from 'path'
+import { ModelParser } from 'antlr4-vensim'
+import R from 'ramda'
+import XLSX from 'xlsx'
+import ModelReader from './ModelReader.js'
+import { Subscript } from './Subscript.js'
+import { cFunctionName, matchRegex, readCsv } from './Helpers.js'
 
-module.exports = class SubscriptRangeReader extends ModelReader {
-  constructor() {
+export default class SubscriptRangeReader extends ModelReader {
+  constructor(modelDirname) {
     super()
+    // The model directory is required when reading data files for GET DIRECT SUBSCRIPT.
+    this.modelDirname = modelDirname
+    // Index names from a subscript list or GET DIRECT SUBSCRIPT
+    this.indNames = []
+    // Dimension mappings with model names
+    this.modelMappings = []
   }
   visitModel(ctx) {
     let subscriptRanges = ctx.subscriptRange()
@@ -20,16 +28,23 @@ module.exports = class SubscriptRangeReader extends ModelReader {
     // When entering a new subscript range definition, reset the properties that will be filled in.
     this.indNames = []
     this.modelMappings = []
-    // All subscript ranges have a dimension name.
-    let modelName = ctx.Id().getText()
-    // Visit children to fill in the subscript range definition.
-    super.visitSubscriptRange(ctx)
-    // Create a new subscript range definition from Vensim-format names.
-    // The family is provisionally set to the dimension name.
-    // It will be updated to the maximal dimension if this is a subdimension.
-    // The mapping value contains dimensions and indices in the toDim.
-    // It will be expanded and inverted to fromDim indices later.
-    Subscript(modelName, this.indNames, modelName, this.modelMappings)
+    // A subscript alias has two Ids, while a regular subscript range definition has just one.
+    if (ctx.Id().length === 1) {
+      // Subscript range definitions have a dimension name.
+      let modelName = ctx.Id()[0].getText()
+      // Visit children to fill in the subscript range definition.
+      super.visitSubscriptRange(ctx)
+      // Create a new subscript range definition from Vensim-format names.
+      // The family is provisionally set to the dimension name.
+      // It will be updated to the maximal dimension if this is a subdimension.
+      // The mapping value contains dimensions and indices in the toDim.
+      // It will be expanded and inverted to fromDim indices later.
+      Subscript(modelName, this.indNames, modelName, this.modelMappings)
+    } else {
+      let modelName = ctx.Id()[0].getText()
+      let modelFamily = ctx.Id()[1].getText()
+      Subscript(modelName, '', modelFamily, [])
+    }
   }
   visitSubscriptList(ctx) {
     // A subscript list can appear in either a subscript range or mapping.
@@ -62,5 +77,46 @@ module.exports = class SubscriptRangeReader extends ModelReader {
         this.indNames.push(prefix + i)
       }
     }
+  }
+  visitCall(ctx) {
+    // A subscript range can have a GET DIRECT SUBSCRIPT call on the RHS.
+    let fn = cFunctionName(ctx.Id().getText())
+    if (fn === '_GET_DIRECT_SUBSCRIPT') {
+      super.visitCall(ctx)
+    }
+  }
+  visitExprList(ctx) {
+    // We assume the only call that ends up here is GET DIRECT SUBSCRIPT.
+    let args = R.map(
+      arg => matchRegex(arg, /'(.*)'/),
+      R.map(expr => expr.getText(), ctx.expr())
+    )
+    let pathname = args[0]
+    let delimiter = args[1]
+    let firstCell = args[2]
+    let lastCell = args[3]
+    // let prefix = args[4]
+    // If lastCell is a column letter, scan the column, else scan the row.
+    let dataAddress = XLSX.utils.decode_cell(firstCell)
+    let col = dataAddress.c
+    let row = dataAddress.r
+    let nextCell
+    if (isNaN(parseInt(lastCell))) {
+      nextCell = () => row++
+    } else {
+      nextCell = () => col++
+    }
+    // Read subscript names from the CSV file at the given position.
+    let csvPathname = path.resolve(this.modelDirname, pathname)
+    let data = readCsv(csvPathname, delimiter)
+    if (data) {
+      let indexName = data[row][col]
+      while (indexName != null) {
+        this.indNames.push(indexName)
+        nextCell()
+        indexName = data[row] != null ? data[row][col] : null
+      }
+    }
+    super.visitExprList(ctx)
   }
 }

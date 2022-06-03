@@ -2,12 +2,12 @@ _dima:
 {
   modelName: 'DimA',
   modelValue: [ 'A1', 'A2', 'A3' ],
-  modelMappings: [ { toDim: 'DimB', value: [] } ],
+  modelMappings: [ { toDim: 'DimB', value: [] }, { toDim: 'DimC', value: [] } ],
   name: '_dima',
   value: [ '_a1', '_a2', '_a3' ],
   size: 3,
   family: '_dima',
-  mappings: { _dimb: [ '_a1', '_a2', '_a3' ] }
+  mappings: { _dimb: [ '_a1', '_a2', '_a3' ], _dimc: [ '_a1', '_a2', '_a3' ] }
 }
 
 _dimb:
@@ -31,42 +31,6 @@ _dimc:
   value: [ '_c1', '_c2', '_c3' ],
   size: 3,
   family: '_dimc',
-  mappings: {}
-}
-
-_dimd:
-{
-  modelName: 'DimD',
-  modelValue: [ 'D1', 'D2', 'D3', 'D4' ],
-  modelMappings: [],
-  name: '_dimd',
-  value: [ '_d1', '_d2', '_d3', '_d4' ],
-  size: 4,
-  family: '_dimd',
-  mappings: {}
-}
-
-_suba:
-{
-  modelName: 'SubA',
-  modelValue: [ 'A2', 'A3' ],
-  modelMappings: [],
-  name: '_suba',
-  value: [ '_a2', '_a3' ],
-  size: 2,
-  family: '_dima',
-  mappings: {}
-}
-
-_dimx:
-{
-  modelName: 'DimX',
-  modelValue: [ 'SubA', 'A1' ],
-  modelMappings: [],
-  name: '_dimx',
-  value: [ '_a2', '_a3', '_a1' ],
-  size: 3,
-  family: '_dima',
   mappings: {}
 }
 
@@ -96,16 +60,4 @@ _c2:
 
 _c3:
 { name: '_c3', value: 2, size: 1, family: '_dimc', mappings: {} }
-
-_d1:
-{ name: '_d1', value: 0, size: 1, family: '_dimd', mappings: {} }
-
-_d2:
-{ name: '_d2', value: 1, size: 1, family: '_dimd', mappings: {} }
-
-_d3:
-{ name: '_d3', value: 2, size: 1, family: '_dimd', mappings: {} }
-
-_d4:
-{ name: '_d4', value: 3, size: 1, family: '_dimd', mappings: {} }
 

@@ -8,6 +8,7 @@ removals.txt
 *.tokens
 *.class
 *.vdf
+*.vdfx
 *.vdf64
 *.3vm
 *.2mdl

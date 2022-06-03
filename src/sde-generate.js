@@ -1,12 +1,12 @@
-const fs = require('fs-extra')
-const path = require('path')
-const sh = require('shelljs')
-const antlr4 = require('antlr4')
-const browserify = require('browserify')
-const { ModelLexer, ModelParser } = require('antlr4-vensim')
-const { codeGenerator } = require('./CodeGen')
-const { preprocessModel } = require('./Preprocessor')
-const {
+import fs from 'fs-extra'
+import path from 'path'
+import sh from 'shelljs'
+import B from 'bufx'
+import antlr4 from 'antlr4'
+import { ModelLexer, ModelParser } from 'antlr4-vensim'
+import { codeGenerator } from './CodeGen.js'
+import { preprocessModel } from './Preprocessor.js'
+import {
   canonicalName,
   modelPathProps,
   buildDir,
@@ -16,20 +16,19 @@ const {
   execCmd,
   readDat,
   readXlsx
-} = require('./Helpers')
-const { initConfig, makeModelSpec, makeModelConfig, makeChartData } = require('./MakeConfig')
-const Model = require('./Model')
-const Subscript = require('./Subscript')
-const B = require('bufx')
+} from './Helpers.js'
+import { initConfig, makeModelSpec, makeModelConfig, makeChartData, readModelConfig } from './MakeConfig.js'
+import Model from './Model.js'
+import { printSubscripts, yamlSubsList } from './Subscript.js'
 
 // Set true to retain generated source files during development.
 const RETAIN_GENERATED_SOURCE_FILES = false
 // A custom CSS file may be provided to override built-in styles.
 const CUSTOM_CSS = 'custom.css'
 
-let command = 'generate [options] <model>'
-let describe = 'generate model code'
-let builder = {
+export let command = 'generate [options] <model>'
+export let describe = 'generate model code'
+export let builder = {
   genc: {
     describe: 'generate C code for the model',
     type: 'boolean'
@@ -69,11 +68,11 @@ let builder = {
     alias: 'r'
   }
 }
-let handler = argv => {
+export let handler = argv => {
   generate(argv.model, argv)
 }
 
-let generate = async (model, opts) => {
+export let generate = async (model, opts) => {
   // Get the model name and directory from the model argument.
   let { modelDirname, modelName, modelPathname } = modelPathProps(model)
   // Ensure the build directory exists.
@@ -108,12 +107,12 @@ let generate = async (model, opts) => {
       extData = new Map([...extData, ...data])
     }
   }
-  // Attach Excel workbook data to directData entries by tag name.
+  // Attach Excel workbook data to directData entries by file name.
   let directData = new Map()
   if (spec.directData) {
-    for (let [tag, xlsxFilename] of Object.entries(spec.directData)) {
+    for (let [file, xlsxFilename] of Object.entries(spec.directData)) {
       let pathname = path.join(modelDirname, xlsxFilename)
-      directData.set(tag, readXlsx(pathname))
+      directData.set(file, readXlsx(pathname))
     }
   }
   // Produce a runnable model with the "genc" and "preprocess" options.
@@ -137,7 +136,7 @@ let generate = async (model, opts) => {
     operation = 'printRefIdTest'
   }
   let parseTree = parseModel(input)
-  let code = codeGenerator(parseTree, { spec, operation, extData, directData }).generate()
+  let code = codeGenerator(parseTree, { spec, operation, extData, directData, modelDirname }).generate()
   if (opts.genc || opts.genhtml) {
     let outputPathname = path.join(buildDirname, `${modelName}.c`)
     writeOutput(outputPathname, code)
@@ -150,7 +149,7 @@ let generate = async (model, opts) => {
     writeOutput(outputPathname, outputText)
     // Write subscripts to a text file.
     outputPathname = path.join(buildDirname, `${modelName}_subs.txt`)
-    outputText = Subscript.printSubscripts()
+    outputText = printSubscripts()
     writeOutput(outputPathname, outputText)
     // Write variables to a YAML file.
     outputPathname = path.join(buildDirname, `${modelName}_vars.yaml`)
@@ -158,7 +157,7 @@ let generate = async (model, opts) => {
     writeOutput(outputPathname, outputText)
     // Write subscripts to a YAML file.
     outputPathname = path.join(buildDirname, `${modelName}_subs.yaml`)
-    outputText = Subscript.yamlSubsList()
+    outputText = yamlSubsList()
     writeOutput(outputPathname, outputText)
   }
   // Generate a web app for the model.
@@ -211,14 +210,13 @@ let generateWASM = (buildDirname, webDirname) => {
 }
 let copyTemplate = buildDirname => {
   // Copy template files from the src/web directory.
-  let templateDirname = path.join(__dirname, 'web')
+  let templateDirname = path.join(new URL('.', import.meta.url).pathname, 'web')
   sh.cp('-Rf', templateDirname, buildDirname)
 }
 let customizeApp = (modelDirname, webDirname) => {
   try {
     // Read the newly generated model config to customize app files.
-    let cfgPathname = `${webDirname}/appcfg`
-    const { app } = require(cfgPathname)
+    let app = readModelConfig().app
     if (app && app.logo) {
       let logoPathname = `${modelDirname}/${app.logo}`
       sh.cp('-f', logoPathname, webDirname)
@@ -241,18 +239,24 @@ let packApp = webDirname => {
   let sourcePathname = path.join(webDirname, 'index.js')
   let minPathname = path.join(webDirname, 'index.min.js')
   // Resolve module imports against the SDEverywhere node_modules.
-  let nodePath = path.resolve(__dirname, '..', 'node_modules')
-  let b = browserify(sourcePathname, { paths: nodePath })
-  let writable = fs.createWriteStream(minPathname)
-  b.bundle()
-    .pipe(writable)
-    .on('finish', error => {
-      // Remove JavaScript source files.
-      if (!RETAIN_GENERATED_SOURCE_FILES) {
-        let sourceFiles = filesExcept(`${webDirname}/*.js`, name => name.endsWith('index.min.js') || name.endsWith('model_sde.js'))
-        sh.rm(sourceFiles)
-      }
-    })
+  let nodePath = path.join(new URL('..', import.meta.url).pathname, 'node_modules')
+  // Browserify is an optional install that we only import when generating HTML.
+  import('browserify').then(browserify => {
+    let b = browserify.default(sourcePathname, { paths: nodePath })
+    let writable = fs.createWriteStream(minPathname)
+    b.bundle()
+      .pipe(writable)
+      .on('finish', error => {
+        // Remove JavaScript source files.
+        if (!RETAIN_GENERATED_SOURCE_FILES) {
+          let sourceFiles = filesExcept(
+            `${webDirname}/*.js`,
+            name => name.endsWith('index.min.js') || name.endsWith('model_sde.js')
+          )
+          sh.rm(sourceFiles)
+        }
+      })
+  })
 }
 let parseModel = input => {
   // Read the model text and return a parse tree.
@@ -296,7 +300,7 @@ let writeOutput = (outputPathname, outputText) => {
     console.log(e.message)
   }
 }
-module.exports = {
+export default {
   command,
   describe,
   builder,

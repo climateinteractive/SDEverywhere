@@ -1,19 +1,20 @@
-const antlr4 = require('antlr4')
-const R = require('ramda')
-const { ModelLexer, ModelParser } = require('antlr4-vensim')
-const ModelReader = require('./ModelReader')
-const { sub, isIndex, isDimension } = require('./Subscript')
-const { canonicalName, subscripts, listConcat } = require('./Helpers')
+import antlr4 from 'antlr4'
+import R from 'ramda'
+import { ModelLexer, ModelParser } from 'antlr4-vensim'
+import ModelReader from './ModelReader.js'
+import { sub, isDimension } from './Subscript.js'
+import { canonicalName } from './Helpers.js'
 
 //
 // ModelLHSReader parses the LHS of a var in Vensim format and
 // constructs a list of var names with indices for subscripted vars.
 //
-module.exports = class ModelLHSReader extends ModelReader {
+export default class ModelLHSReader extends ModelReader {
   constructor() {
     super()
     this.varName = ''
     this.modelLHSList = []
+    this.modelSubscripts = []
   }
   read(modelLHS) {
     // Parse a model LHS and return the var name without subscripts.
@@ -44,6 +45,7 @@ module.exports = class ModelLHSReader extends ModelReader {
     // Construct the modelLHSList array with the LHS expanded into an entry for each index
     // in the same format as Vensim log files.
     let subscripts = R.map(id => id.getText(), ctx.Id())
+    this.modelSubscripts = subscripts.map(s => canonicalName(s))
     let modelLHSInds = dim => {
       // Construct the model indices for a dimension.
       // If the subscript range contains a dimension, expand it into index names in place.

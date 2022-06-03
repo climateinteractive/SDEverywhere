@@ -1,24 +1,31 @@
-const R = require('ramda')
-const ModelLHSReader = require('./ModelLHSReader')
-const EquationGen = require('./EquationGen')
-const Model = require('./Model')
-const { sub, allDimensions, allMappings, subscriptFamilies } = require('./Subscript')
-const { asort, lines, strlist, abend, mapIndexed } = require('./Helpers')
+import R from 'ramda'
+import ModelLHSReader from './ModelLHSReader.js'
+import EquationGen from './EquationGen.js'
+import Model from './Model.js'
+import { sub, allDimensions, allMappings, subscriptFamilies } from './Subscript.js'
+import { asort, lines, strlist, abend, mapIndexed } from './Helpers.js'
 
-let codeGenerator = (parseTree, opts) => {
-  const { spec, operation, extData, directData } = opts
-  // Set true when in the init section, false in the eval section.
-  let initMode = false
-  // Set true to output all variables when there is no model run spec.
-  let outputAllVars = spec.outputVars && spec.outputVars.length > 0 ? false : true
+export let codeGenerator = (parseTree, opts) => {
+  const { spec, operation, extData, directData, modelDirname } = opts
+  // Set to 'decl', 'init-lookups', 'eval', etc depending on the section being generated.
+  let mode = ''
+  // Set to true to output all variables when there is no model run spec.
+  let outputAllVars
+  if (spec.outputVars && spec.outputVars.length > 0) {
+    outputAllVars = false
+  } else if (spec.outputVarNames && spec.outputVarNames.length > 0) {
+    outputAllVars = false
+  } else {
+    outputAllVars = true
+  }
   // Function to generate a section of the code
-  let generateSection = R.map(v => new EquationGen(v, extData, directData, initMode).generate())
+  let generateSection = R.map(v => new EquationGen(v, extData, directData, mode, modelDirname).generate())
   let section = R.pipe(generateSection, R.flatten, lines)
   function generate() {
     // Read variables and subscript ranges from the model parse tree.
     // This is the main entry point for code generation and is called just once.
     try {
-      Model.read(parseTree, spec, extData, directData)
+      Model.read(parseTree, spec, extData, directData, modelDirname)
       // In list mode, print variables to the console instead of generating code.
       if (operation === 'printRefIdTest') {
         Model.printRefIdTest()
@@ -29,7 +36,9 @@ let codeGenerator = (parseTree, opts) => {
       } else if (operation === 'generateC') {
         // Generate code for each variable in the proper order.
         let code = emitDeclCode()
-        code += emitInitCode()
+        code += emitInitLookupsCode()
+        code += emitInitConstantsCode()
+        code += emitInitLevelsCode()
         code += emitEvalCode()
         code += emitIOCode()
         return code
@@ -45,7 +54,7 @@ let codeGenerator = (parseTree, opts) => {
   // Declaration section
   //
   function emitDeclCode() {
-    initMode = false
+    mode = 'decl'
     return `#include "sde.h"
 
 // Model variables
@@ -62,32 +71,57 @@ ${dimensionMappingsSection()}
 
 // Lookup data arrays
 ${section(Model.lookupVars())}
+${section(Model.dataVars())}
+
 `
   }
 
   //
   // Initialization section
   //
-  function emitInitCode() {
-    initMode = true
-    return `// Internal state
+  function emitInitLookupsCode() {
+    mode = 'init-lookups'
+    let code = `// Internal state
 bool lookups_initialized = false;
-
-void initLookups() {
-  // Initialize lookups.
+bool data_initialized = false;
+`
+    code += chunkedFunctions(
+      'initLookups',
+      Model.lookupVars(),
+      `  // Initialize lookups.
   if (!lookups_initialized) {
-    ${section(Model.lookupVars())}
-    ${section(Model.dataVars())}
-    lookups_initialized = true;
+`,
+      `      lookups_initialized = true;
   }
-}
+`
+    )
+    code += chunkedFunctions(
+      'initData',
+      Model.dataVars(),
+      `  // Initialize data.
+  if (!data_initialized) {
+`,
+      `      data_initialized = true;
+  }
+`
+    )
+    return code
+  }
 
-${chunkedFunctions('initConstants', Model.constVars(),
-'  // Initialize constants.',
-'  initLookups();'
-)}
+  function emitInitConstantsCode() {
+    mode = 'init-constants'
+    return `
+${chunkedFunctions('initConstants', Model.constVars(), '  // Initialize constants.', '  initLookups();\n  initData();')}
+`
+  }
 
-${chunkedFunctions('initLevels', Model.initVars(), `
+  function emitInitLevelsCode() {
+    mode = 'init-levels'
+    return `
+${chunkedFunctions(
+  'initLevels',
+  Model.initVars(),
+  `
   // Initialize variables with initialization values, such as levels, and the variables they depend on.
   _time = _initial_time;`
 )}
@@ -98,16 +132,12 @@ ${chunkedFunctions('initLevels', Model.initVars(), `
   // Evaluation section
   //
   function emitEvalCode() {
-    initMode = false
+    mode = 'eval'
 
     return `
-${chunkedFunctions('evalAux', Model.auxVars(),
-'  // Evaluate auxiliaries in order from the bottom up.'
-)}
+${chunkedFunctions('evalAux', Model.auxVars(), '  // Evaluate auxiliaries in order from the bottom up.')}
 
-${chunkedFunctions('evalLevels', Model.levelVars(),
-'  // Evaluate levels.'
-)}
+${chunkedFunctions('evalLevels', Model.levelVars(), '  // Evaluate levels.')}
 `
   }
 
@@ -117,9 +147,11 @@ ${chunkedFunctions('evalLevels', Model.levelVars(),
   function emitIOCode() {
     let headerVars = outputAllVars ? expandedVarNames(true) : spec.outputVars
     let outputVars = outputAllVars ? expandedVarNames() : spec.outputVars
-    initMode = false
-    return `void setInputs(const char* inputData) {
-${inputSection()}}
+    mode = 'io'
+    return `void setInputs(const char* inputData) {${inputsFromStringImpl()}}
+
+void setInputsFromBuffer(double* inputData) {${inputsFromBufferImpl()}}
+
 const char* getHeader() {
   return "${R.map(varName => headerTitle(varName), headerVars).join('\\t')}";
 }
@@ -142,19 +174,13 @@ void ${name}${idx}() {
 }
 `
     }
-    let funcs = R.pipe(
-      mapIndexed(func),
-      lines
-    )
+    let funcs = R.pipe(mapIndexed(func), lines)
 
     // Emit one roll-up function that calls the other chunk functions
     let funcCall = (chunk, idx) => {
       return `  ${name}${idx}();`
     }
-    let funcCalls = R.pipe(
-      mapIndexed(funcCall),
-      lines
-    )
+    let funcCalls = R.pipe(mapIndexed(funcCall), lines)
 
     // Break the vars into chunks of 30; this number was empirically
     // determined by looking at runtime performance and memory usage
@@ -184,12 +210,20 @@ ${postStep}
   //
   function declSection() {
     // Emit a declaration for each variable in the model.
+    let fixedDelayDecls = ''
     let decl = v => {
       // Build a C array declaration for the variable v.
       // This uses the subscript family for each dimension, which may overallocate
       // if the subscript is a subdimension.
       let varType = v.isLookup() || v.isData() ? 'Lookup* ' : 'double '
       let families = subscriptFamilies(v.subscripts)
+      if (v.isFixedDelay()) {
+        // Add the associated FixedDelay var decl.
+        fixedDelayDecls += `\nFixedDelay* ${v.fixedDelayVarName}${R.map(
+          family => `[${sub(family).size}]`,
+          families
+        ).join('')};`
+      }
       return varType + v.varName + R.map(family => `[${sub(family).size}]`, families).join('')
     }
     // Non-apply-to-all variables are declared multiple times, but coalesce using uniq.
@@ -199,7 +233,7 @@ ${postStep}
       asort,
       lines
     )
-    return decls(Model.allVars())
+    return decls(Model.allVars()) + fixedDelayDecls
   }
   function internalVarsSection() {
     // Declare internal variables to run the model.
@@ -230,7 +264,7 @@ ${postStep}
     let a = R.map(indexName => sub(indexName).value, indices)
     return strlist(a)
   }
-  function expandedVarNames(vensimNames) {
+  function expandedVarNames(vensimNames = false) {
     // Return a list of var names for all variables except lookups and data variables.
     // The names are in Vensim format if vensimNames is true, otherwise they are in C format.
     // Expand subscripted vars into separate var names with each index.
@@ -271,13 +305,14 @@ ${postStep}
     let section = R.pipe(code, lines)
     return section(varNames)
   }
-  function inputSection() {
+  function inputsFromStringImpl() {
     // If there was an I/O spec file, then emit code to parse input variables.
     // The user can replace this with a parser for a different serialization format.
     let inputVars = ''
     if (spec.inputVars && spec.inputVars.length > 0) {
       let inputVarPtrs = R.reduce((a, inputVar) => R.concat(a, `    &${inputVar},\n`), '', spec.inputVars)
-      inputVars = `  static double* inputVarPtrs[] = {\n${inputVarPtrs}  };
+      inputVars = `
+  static double* inputVarPtrs[] = {\n${inputVarPtrs}  };
   char* inputs = (char*)inputData;
   char* token = strtok(inputs, " ");
   while (token) {
@@ -294,13 +329,22 @@ ${postStep}
     }
     return inputVars
   }
+  function inputsFromBufferImpl() {
+    let inputVars = ''
+    if (spec.inputVars && spec.inputVars.length > 0) {
+      inputVars += '\n'
+      for (let i = 0; i < spec.inputVars.length; i++) {
+        const inputVar = spec.inputVars[i]
+        inputVars += `  ${inputVar} = inputData[${i}];\n`
+      }
+    }
+    return inputVars
+  }
   function headerTitle(varName) {
     return Model.vensimName(varName).replace(/"/g, '\\"')
   }
 
   return {
-    generate: generate,
+    generate: generate
   }
 }
-
-module.exports = { codeGenerator }

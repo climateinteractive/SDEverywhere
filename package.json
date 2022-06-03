@@ -1,6 +1,7 @@
 {
   "name": "sdeverywhere",
-  "version": "0.5.3",
+  "version": "0.6.0",
+  "type": "module",
   "description": "SDEverywhere translates System Dynamics models from Vensim to C and WebAssembly",
   "homepage": "https://sdeverywhere.org",
   "author": "Climate Interactive",
@@ -14,29 +15,29 @@
     "url": "https://github.com/climateinteractive/SDEverywhere/issues"
   },
   "scripts": {
-    "test": "cd src/tests && ./modeltests"
+    "test": "cd src/tests && ./modeltests",
+    "prettier:check": "prettier --check .",
+    "prettier:fix": "prettier --write ."
   },
   "dependencies": {
-    "antlr4": "4.8.0",
-    "antlr4-vensim": "0.5.0",
-    "browserify": "^16.5.1",
+    "antlr4": "4.9.2",
+    "antlr4-vensim": "https://github.com/climateinteractive/antlr4-vensim#b7b90e3",
     "bufx": "^1.0.5",
     "byline": "^5.0.0",
-    "chart.js": "^2.9.3",
-    "csv": "^5.3.2",
+    "chart.js": "^2.9.4",
+    "csv-parse": "^4.15.4",
     "digraph-sort": "^0.2.1",
     "fs-extra": "^9.0.0",
     "he": "^1.2.0",
     "js-yaml": "^3.13.1",
     "minimist": "^1.2.5",
-    "moment": "^2.24.0",
     "numbro": "1.11.1",
-    "prettier": "^2.0.4",
+    "prettier": "^2.3.2",
     "ramda": "^0.27.0",
     "shelljs": "^0.8.3",
     "split-string": "^6.0.0",
-    "xlsx": "^0.15.6",
-    "yargs": "^15.3.1"
+    "xlsx": "^0.17.0",
+    "yargs": "^17.2.1"
   },
   "preferGlobal": true,
   "bin": {

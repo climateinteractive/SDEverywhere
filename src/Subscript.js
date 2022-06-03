@@ -1,8 +1,8 @@
-const util = require('util')
-const R = require('ramda')
-const B = require('bufx')
-const yaml = require('js-yaml')
-const { canonicalName, asort, vlog } = require('./Helpers')
+import util from 'util'
+import R from 'ramda'
+import B from 'bufx'
+import yaml from 'js-yaml'
+import { canonicalName, asort, vlog } from './Helpers.js'
 
 // A subscript is a dimension or an index.
 // Both have the same properties: model name, canonical name, family, values.
@@ -36,6 +36,8 @@ const { canonicalName, asort, vlog } = require('./Helpers')
 //   sets a subscript dimension and its indices
 // Subscript(modelName, modelValue, modelFamily) with modelValue as number
 //   sets a subscript element and its index value in the subscript family
+// Subscript(modelName, '', modelFamily, [])
+//   sets modelName as an alias for the dimension named as modelFamily
 //
 // Call Subscript with an array of subscript indices to establish a dimension.
 // If there is a mapping to another dimension, give modelMappings in the call.
@@ -47,20 +49,25 @@ const { canonicalName, asort, vlog } = require('./Helpers')
 // subscript name as the key and a subscript object as the value.
 let subscripts = new Map()
 
-function Subscript(modelName, modelValue = null, modelFamily = null, modelMappings = null) {
+export function Subscript(modelName, modelValue = null, modelFamily = null, modelMappings = null) {
   let name = canonicalName(modelName)
   if (modelValue === null) {
     // Look up a subscript by its model name.
     return sub(name)
   }
-  // Map the subscript value array into canonical form.
   let value, size
   if (Array.isArray(modelValue)) {
+    // Map the subscript value array into canonical form.
     value = R.map(x => canonicalName(x), modelValue)
     size = value.length
   } else if (typeof modelValue === 'number') {
+    // The value is an index.
     value = modelValue
     size = 1
+  } else if (modelValue === '') {
+    // An empty value string indicates a subscript alias given by the modelFamily.
+    value = ''
+    size = 0
   }
   // Convert the model family into canonical form.
   if (modelFamily === null) {
@@ -89,7 +96,7 @@ function Subscript(modelName, modelValue = null, modelFamily = null, modelMappin
   subscripts.set(name, subscript)
   return subscript
 }
-function sub(name) {
+export function sub(name) {
   // Look up a subscript by its canonical name.
   // Return undefined if the name is not a subscript name.
   let result
@@ -101,15 +108,23 @@ function sub(name) {
   }
   return result
 }
-function isIndex(name) {
+export function isIndex(name) {
   let s = sub(name)
   return s && typeof s.value === 'number'
 }
-function isDimension(name) {
+export function isDimension(name) {
   let s = sub(name)
   return s && Array.isArray(s.value)
 }
-function isTrivialDimension(name) {
+export function isSubdimension(name) {
+  let result = false
+  let s = sub(name)
+  if (s && Array.isArray(s.value)) {
+    result = s.size < sub(s.family).size
+  }
+  return result
+}
+export function isTrivialDimension(name) {
   // Return true if the dimension values are trivial, i.e., {0, 1, 2, ..., n-1}
   let s = sub(name)
   if (!s || !Array.isArray(s.value)) {
@@ -118,7 +133,36 @@ function isTrivialDimension(name) {
   // The following evaluates to true when all sub-dimensions match their position in the array
   return R.addIndex(R.all)((subdim, idx) => sub(subdim).value === idx, s.value)
 }
-function addIndex(name, value, family) {
+export function indexInSepDim(ind, v) {
+  // Find the separation dim in the variable that includes the index, or return null.
+  let result = null
+  for (let sepDim of v.separationDims) {
+    if (sub(sepDim).value.includes(ind)) {
+      result = sepDim
+      break
+    }
+  }
+  return result
+}
+export function subscriptsMatch(s1, s2) {
+  // Return true when subscript s1 matches subscript s2.
+  let matches = false
+  if (isIndex(s1) && isIndex(s2)) {
+    matches = s1 === s2
+  } else if (isDimension(s1) && isDimension(s2)) {
+    matches = s1 === s2
+    if (!matches) {
+      // Also match when s2 is a subdimension of s1.
+      matches = sub(s2).family === sub(s1).family && sub(s2).value.length < sub(s1).value.length
+    }
+  } else if (isDimension(s1) && isIndex(s2)) {
+    matches = sub(s1).value.includes(s2)
+  } else if (isIndex(s1) && isDimension(s2)) {
+    matches = sub(s2).value.includes(s1)
+  }
+  return matches
+}
+export function addIndex(name, value, family) {
   // Add an index with arguments in canonical form.
   let subscript = {
     name: name,
@@ -129,7 +173,7 @@ function addIndex(name, value, family) {
   }
   subscripts.set(name, subscript)
 }
-function hasMapping(fromSubscript, toSubscript) {
+export function hasMapping(fromSubscript, toSubscript) {
   let result = false
   let subFrom = sub(fromSubscript)
   let subTo = sub(toSubscript)
@@ -144,7 +188,7 @@ function hasMapping(fromSubscript, toSubscript) {
   }
   return false
 }
-function mapIndex(fromSubName, fromIndexName, toSubName) {
+export function mapIndex(fromSubName, fromIndexName, toSubName) {
   // Return the index names that the fromSubName dimension maps from fromIndexName
   // to the toSubName dimension. Return an empty array if there is no such mapping.
   let toIndexNames = []
@@ -165,21 +209,21 @@ function mapIndex(fromSubName, fromIndexName, toSubName) {
   }
   return toIndexNames
 }
-function printSubscripts() {
+export function printSubscripts() {
   B.clearBuf()
   for (let [k, v] of subscripts) {
     B.emitLine(`${k}:\n${util.inspect(v, { depth: null })}\n`)
   }
   return B.getBuf()
 }
-function yamlSubsList() {
+export function yamlSubsList() {
   let subs = {}
   for (let [k, v] of subscripts) {
     subs[k] = v
   }
   return yaml.safeDump(subs)
 }
-function loadSubscriptsFromYaml(yamlSubs) {
+export function loadSubscriptsFromYaml(yamlSubs) {
   // Load the subscripts map from subscripts serialized to a YAML file by yamlSubsList.
   // This function should be called instead of adding subscripts through the constructor.
   let subs = yaml.safeLoad(yamlSubs)
@@ -187,7 +231,7 @@ function loadSubscriptsFromYaml(yamlSubs) {
     subscripts.set(k, subs[k])
   }
 }
-function normalizeSubscripts(subscripts) {
+export function normalizeSubscripts(subscripts) {
   // Sort a list of subscript names already in canonical form according to the subscript family.
   let subs = R.map(name => sub(name), subscripts)
   subs = R.sortBy(R.prop('family'), subs)
@@ -200,7 +244,7 @@ function normalizeSubscripts(subscripts) {
   }
   return normalizedSubs
 }
-function extractMarkedDims(subscripts) {
+export function extractMarkedDims(subscripts) {
   // Extract all marked dimensions and update subscripts.
   let dims = []
   for (let i = 0; i < subscripts.length; i++) {
@@ -212,7 +256,7 @@ function extractMarkedDims(subscripts) {
   }
   return dims
 }
-function subscriptFamilies(subscripts) {
+export function subscriptFamilies(subscripts) {
   // Return a list of the subscript families for each subscript.
   try {
     return R.map(subscriptName => sub(subscriptName).family, subscripts)
@@ -221,20 +265,24 @@ function subscriptFamilies(subscripts) {
     debugger
   }
 }
-function subscriptFamily(subscriptName) {
+export function subscriptFamily(subscriptName) {
   // Return the subscript family object for the subscript name.
   let family = sub(subscriptName).family
   return sub(family)
 }
-function allSubscripts() {
+export function allSubscripts() {
   // Return an array of all subscript objects.
   return [...subscripts.values()]
 }
-function allDimensions() {
+export function allDimensions() {
   // Return an array of all dimension subscript objects.
   return R.filter(subscript => Array.isArray(subscript.value), allSubscripts())
 }
-function allMappings() {
+export function allAliases() {
+  // Return an array of all subscript aliases.
+  return R.filter(subscript => subscript.value === '', allSubscripts())
+}
+export function allMappings() {
   // Return an array of all subscript mappings as objects.
   let mappings = []
   R.forEach(subscript => {
@@ -248,7 +296,7 @@ function allMappings() {
   }, allSubscripts())
   return mappings
 }
-function indexNamesForSubscript(subscript) {
+export function indexNamesForSubscript(subscript) {
   // Return a list of index names for a subscript in canonical form.
   if (isIndex(subscript)) {
     // The subscript is an index, so just return it.
@@ -264,7 +312,7 @@ function indexNamesForSubscript(subscript) {
     return dim.value
   }
 }
-function separatedVariableIndex(rhsSub, variable, rhsSubscripts) {
+export function separatedVariableIndex(rhsSub, variable, rhsSubscripts) {
   // Given an RHS subscript, find an LHS index in the separation dimension that matches it.
   // The LHS and RHS subscripts need not be in normal order or have the same number of subscripts in a var.
   // The search proceeds through three stages:
@@ -319,36 +367,12 @@ function separatedVariableIndex(rhsSub, variable, rhsSubscripts) {
   return null
 }
 // Function to filter canonical dimension names from a list of names
-let dimensionNames = R.pipe(
+export let dimensionNames = R.pipe(
   R.filter(subscript => isDimension(subscript)),
   asort
 )
 // Function to filter canonical index names from a list of names
-let indexNames = R.pipe(
+export let indexNames = R.pipe(
   R.filter(subscript => isIndex(subscript)),
   asort
 )
-
-module.exports = {
-  Subscript,
-  addIndex,
-  allDimensions,
-  allMappings,
-  dimensionNames,
-  extractMarkedDims,
-  hasMapping,
-  indexNames,
-  indexNamesForSubscript,
-  isDimension,
-  isIndex,
-  isTrivialDimension,
-  loadSubscriptsFromYaml,
-  mapIndex,
-  normalizeSubscripts,
-  printSubscripts,
-  separatedVariableIndex,
-  sub,
-  subscriptFamilies,
-  subscriptFamily,
-  yamlSubsList
-}

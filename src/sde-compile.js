@@ -1,22 +1,20 @@
-const path = require('path')
-const sh = require('shelljs')
-const R = require('ramda')
-const { modelPathProps, buildDir, linkCSourceFiles, execCmd } = require('./Helpers')
+import sh from 'shelljs'
+import { modelPathProps, buildDir, linkCSourceFiles, execCmd } from './Helpers.js'
 
-let command = 'compile [options] <model>'
-let describe = 'compile the generated model to an executable file'
-let builder = {
+export let command = 'compile [options] <model>'
+export let describe = 'compile the generated model to an executable file'
+export let builder = {
   builddir: {
     describe: 'build directory',
     type: 'string',
     alias: 'b'
   }
 }
-let handler = argv => {
+export let handler = argv => {
   compile(argv.model, argv)
 }
-let compile = (model, opts) => {
-  let { modelDirname, modelName, modelPathname } = modelPathProps(model)
+export let compile = (model, opts) => {
+  let { modelDirname, modelName } = modelPathProps(model)
   // Ensure the build directory exists.
   let buildDirname = buildDir(opts.builddir, modelDirname)
   // Link SDEverywhere C source files into the build directory.
@@ -33,7 +31,7 @@ let compile = (model, opts) => {
   }
   return 0
 }
-module.exports = {
+export default {
   command,
   describe,
   builder,

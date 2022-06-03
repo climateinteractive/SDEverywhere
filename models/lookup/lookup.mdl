@@ -52,39 +52,114 @@ f = c[A1](i)
 	~		~	:SUPPLEMENTARY 
 	|
 
-g((0,1),(1,1),(2,2))
+g((0,0),(1,1),(2,2))
 	~	
 	~	lookup definition
 	|
 
-g1 = LOOKUP FORWARD(g,-1)
-	~	
-	~		~	:SUPPLEMENTARY 
+g at minus 1 forward = LOOKUP FORWARD(g,-1)
+	~
+	~		~	:SUPPLEMENTARY
 	|
 
-g2 = LOOKUP FORWARD(g,1.5)
-	~	
-	~		~	:SUPPLEMENTARY 
+g at 0 forward = LOOKUP FORWARD(g,0)
+	~
+	~		~	:SUPPLEMENTARY
 	|
 
-g3 = LOOKUP FORWARD(g,2.5)
-	~	
-	~		~	:SUPPLEMENTARY 
+g at 0pt5 forward = LOOKUP FORWARD(g,0.5)
+	~
+	~		~	:SUPPLEMENTARY
 	|
 
-g4 = LOOKUP BACKWARD(g,-1)
-	~	
-	~		~	:SUPPLEMENTARY 
+g at 1pt0 forward = LOOKUP FORWARD(g,1.0)
+	~
+	~		~	:SUPPLEMENTARY
 	|
 
-g5 = LOOKUP BACKWARD(g,1.5)
-	~	
-	~		~	:SUPPLEMENTARY 
+g at 1pt5 forward = LOOKUP FORWARD(g,1.5)
+	~
+	~		~	:SUPPLEMENTARY
 	|
 
-g6 = LOOKUP BACKWARD(g,2.5)
-	~	
-	~		~	:SUPPLEMENTARY 
+g at 2pt0 forward = LOOKUP FORWARD(g,2.0)
+	~
+	~		~	:SUPPLEMENTARY
+	|
+
+g at 2pt5 forward = LOOKUP FORWARD(g,2.5)
+	~
+	~		~	:SUPPLEMENTARY
+	|
+
+g at minus 1 backward = LOOKUP BACKWARD(g,-1)
+	~
+	~		~	:SUPPLEMENTARY
+	|
+
+g at 0 backward = LOOKUP BACKWARD(g,0)
+	~
+	~		~	:SUPPLEMENTARY
+	|
+
+g at 0pt5 backward = LOOKUP BACKWARD(g,0.5)
+	~
+	~		~	:SUPPLEMENTARY
+	|
+
+g at 1pt0 backward = LOOKUP BACKWARD(g,1.0)
+	~
+	~		~	:SUPPLEMENTARY
+	|
+
+g at 1pt5 backward = LOOKUP BACKWARD(g,1.5)
+	~
+	~		~	:SUPPLEMENTARY
+	|
+
+g at 2pt0 backward = LOOKUP BACKWARD(g,2.0)
+	~
+	~		~	:SUPPLEMENTARY
+	|
+
+g at 2pt5 backward = LOOKUP BACKWARD(g,2.5)
+	~
+	~		~	:SUPPLEMENTARY
+	|
+
+withlookup at minus 1 = WITH LOOKUP ( -1, ([(0,0)-(2,2)],(0,0),(1,1),(2,2)) )
+	~
+	~		~	:SUPPLEMENTARY
+	|
+
+withlookup at 0 = WITH LOOKUP ( 0, ([(0,0)-(2,2)],(0,0),(1,1),(2,2)) )
+	~
+	~		~	:SUPPLEMENTARY
+	|
+
+withlookup at 0pt5 = WITH LOOKUP ( 0.5, ([(0,0)-(2,2)],(0,0),(1,1),(2,2)) )
+	~
+	~		~	:SUPPLEMENTARY
+	|
+
+withlookup at 1pt0 = WITH LOOKUP ( 1.0, ([(0,0)-(2,2)],(0,0),(1,1),(2,2)) )
+	~
+	~		~	:SUPPLEMENTARY
+	|
+
+withlookup at 1pt5 = WITH LOOKUP ( 1.5, ([(0,0)-(2,2)],(0,0),(1,1),(2,2)) )
+	~
+	~		~	:SUPPLEMENTARY
+	|
+
+withlookup at 2pt0 = WITH LOOKUP ( 2.0, ([(0,0)-(2,2)],(0,0),(1,1),(2,2)) )
+	~
+	~		~	:SUPPLEMENTARY
+	|
+
+withlookup at 2pt5 = WITH LOOKUP ( 2.5, ([(0,0)-(2,2)],(0,0),(1,1),(2,2)) )
+	~
+	~		~	:SUPPLEMENTARY
 	|
 
 ********************************************************
@@ -120,15 +195,46 @@ V300  Do not put anything below this section - it will be ignored
 $192-192-192,0,Times New Roman|12||0-0-0|0-0-0|0-0-255|-1--1--1|-1--1--1|0,0,100,0
 ///---\\\
 :L<%^E!@
-1:lookup.vdf
+1:lookup.vdfx
 9:lookup
 15:0,0,0,0,0,0
 19:100,0
 27:2,
 34:0,
+42:0
+72:0
+73:0
 4:Time
-5:d
+5:c[DimA]
+76:0
+77:0
+78:0
+79:0
+80:0
+81:0
 24:0
 25:10
 26:10
+57:1
+54:0
+55:0
+82:0
+86:0
+59:0
+56:0
+58:0
+71:0
+44:65001
+46:0
+45:0
+49:0
+50:0
+51:
+52:
+53:
+43:lookup
+47:lookup
+48:
+75:
+43:lookup
 6:A1

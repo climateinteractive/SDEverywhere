@@ -1,6 +1,6 @@
-const { sub, isDimension } = require('./Subscript')
+import { isDimension } from './Subscript.js'
 
-module.exports = class LoopIndexVars {
+export default class LoopIndexVars {
   constructor(indexVars) {
     this.loopIndexVars = this.loopIndexVarGen(indexVars)
     this.loopIndices = {}

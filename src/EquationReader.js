@@ -1,17 +1,19 @@
-const antlr4 = require('antlr4')
-const { ModelLexer, ModelParser } = require('antlr4-vensim')
-const R = require('ramda')
-const Model = require('./Model')
-const ModelReader = require('./ModelReader')
-const VariableReader = require('./VariableReader')
-const {
+import antlr4 from 'antlr4'
+import { ModelLexer, ModelParser } from 'antlr4-vensim'
+import R from 'ramda'
+import ExprReader from './ExprReader.js'
+import Model from './Model.js'
+import ModelReader from './ModelReader.js'
+import VariableReader from './VariableReader.js'
+import {
   extractMarkedDims,
   indexNamesForSubscript,
   normalizeSubscripts,
   separatedVariableIndex,
+  sub,
   isDimension
-} = require('./Subscript')
-const {
+} from './Subscript.js'
+import {
   canonicalName,
   canonicalVensimName,
   cFunctionName,
@@ -20,16 +22,19 @@ const {
   isSeparatedVar,
   isSmoothFunction,
   isTrendFunction,
+  isNpvFunction,
   matchRegex,
   newAuxVarName,
   newLevelVarName,
-  newLookupVarName
-} = require('./Helpers')
+  newLookupVarName,
+  newFixedDelayVarName,
+  cartesianProductOf
+} from './Helpers.js'
 
 // Set this true to get a list of functions used in the model. This may include lookups.
 const PRINT_FUNCTION_NAMES = false
 
-module.exports = class EquationReader extends ModelReader {
+export default class EquationReader extends ModelReader {
   constructor(variable) {
     super()
     // variable that will be read
@@ -63,7 +68,7 @@ module.exports = class EquationReader extends ModelReader {
       // In Vensim a variable can refer to its current value in the state.
       // Do not add self-references to the lists of references.
       // Do not duplicate references.
-      if (refId !== this.var.refId && !R.contains(refId, list)) {
+      if (refId !== this.var.refId && !list.includes(refId)) {
         list.push(refId)
       }
     }
@@ -71,7 +76,7 @@ module.exports = class EquationReader extends ModelReader {
     if (R.isEmpty(this.expandedRefIds)) {
       add(this.refId)
     } else {
-      R.forEach(refId => add(refId), this.expandedRefIds)
+      this.expandedRefIds.forEach(refId => add(refId))
     }
   }
   //
@@ -86,16 +91,22 @@ module.exports = class EquationReader extends ModelReader {
     if (PRINT_FUNCTION_NAMES) {
       console.error(fn)
     }
-    if (fn === '_INTEG') {
+    if (fn === '_INTEG' || fn === '_DELAY_FIXED') {
       this.var.varType = 'level'
       this.var.hasInitValue = true
+      if (fn === '_DELAY_FIXED') {
+        this.var.varSubtype = 'fixedDelay'
+        this.var.fixedDelayVarName = canonicalName(newFixedDelayVarName())
+      }
     } else if (fn === '_INITIAL') {
       this.var.varType = 'initial'
       this.var.hasInitValue = true
     } else if (fn === '_ACTIVE_INITIAL' || fn === '_SAMPLE_IF_TRUE') {
       this.var.hasInitValue = true
-    } else if (fn === '_GET_DIRECT_DATA') {
+    } else if (fn === '_GET_DIRECT_DATA' || fn === '_GET_DIRECT_LOOKUPS') {
       this.var.varType = 'data'
+    } else if (fn === '_GET_DIRECT_CONSTANTS') {
+      this.var.varType = 'const'
     }
     super.visitCall(ctx)
     this.callStack.pop()
@@ -118,26 +129,99 @@ module.exports = class EquationReader extends ModelReader {
       let level = this.expandTrendFunction(fn, args)
       let genSubs = this.genSubs(input, avgTime, init)
       let aux = newAuxVarName()
-      this.addVariable(`${aux}${genSubs} = ZIDZ(${input} - ${level}${genSubs}, ${avgTime} * ABS(${level}${genSubs}))`)
+      this.addVariable(
+        `${aux}${genSubs} = ZIDZ(${input} - ${level}${genSubs}, ${avgTime} * ABS(${level}${genSubs})) ~~|`
+      )
       this.var.trendVarName = canonicalName(aux)
       this.var.references.push(this.var.trendVarName)
+    } else if (isNpvFunction(fn)) {
+      // Generate level vars to expand the NPV call.
+      // Get NPV arguments for the function expansion.
+      let args = R.map(expr => expr.getText(), ctx.expr())
+      let stream = args[0]
+      let discountRate = args[1]
+      let initVal = args[2]
+      let factor = args[3]
+      let level = this.generateNpvLevels(stream, discountRate, initVal, factor)
+      let genSubs = this.genSubs(stream, discountRate, initVal, factor)
+      let aux = newAuxVarName()
+      // npv = (ncum + stream * TIME STEP * df) * factor
+      this.addVariable(`${aux}${genSubs} = (${level.ncum} + ${stream} * TIME STEP * ${level.df}) * ${factor} ~~|`)
+      this.var.npvVarName = canonicalName(aux)
+      this.var.references.push(this.var.npvVarName)
     } else if (isDelayFunction(fn)) {
       // Generate a level var to expand the DELAY* call.
       let args = R.map(expr => expr.getText(), ctx.expr())
       this.expandDelayFunction(fn, args)
-    } else if (fn === '_GET_DIRECT_DATA') {
+    } else if (fn === '_GET_DIRECT_DATA' || fn === '_GET_DIRECT_LOOKUPS') {
       // Extract string constant arguments into an object used in code generation.
+      // For Excel files, the file argument names an indirect "?" file tag from the model settings.
+      // For CSV files, it gives a relative pathname in the model directory.
+      // For Excel files, the tab argument names an Excel worksheet.
+      // For CSV files, it gives the delimiter character.
       let args = R.map(
         arg => matchRegex(arg, /'(.*)'/),
         R.map(expr => expr.getText(), ctx.expr())
       )
       this.var.directDataArgs = {
-        tag: args[0],
-        sheetName: args[1],
+        file: args[0],
+        tab: args[1],
         timeRowOrCol: args[2],
         startCell: args[3]
       }
+    } else if (fn === '_GET_DIRECT_CONSTANTS') {
+      // Extract string constant arguments into an object used in code generation.
+      // The file argument gives a relative pathname in the model directory.
+      // The tab argument gives the delimiter character.
+      let args = R.map(
+        arg => matchRegex(arg, /'(.*)'/),
+        R.map(expr => expr.getText(), ctx.expr())
+      )
+      this.var.directConstArgs = {
+        file: args[0],
+        tab: args[1],
+        startCell: args[2]
+      }
+    } else if (fn === '_IF_THEN_ELSE') {
+      // Evaluate the condition expression of the `IF THEN ELSE`.  If it resolves
+      // to a compile-time constant, we only need to visit one branch, which means
+      // that no references will be recorded for the other branch, therefore allowing
+      // it to be skipped in the unused reference elimination phase and during the
+      // final code generation phase.
+      const condText = ctx.expr(0).getText()
+      const exprReader = new ExprReader()
+      const condExpr = exprReader.read(condText)
+      if (condExpr.constantValue !== undefined) {
+        // Record the conditional expression and its constant value so that
+        // it can be accessed later by EquationGen.  We need to record it
+        // this way because any variables referenced by the expression may
+        // be removed during the unused reference elimination phase.
+        Model.addConstantExpr(condText, condExpr.constantValue)
+        if (condExpr.constantValue !== 0) {
+          // Only visit the "if true" branch
+          this.setArgIndex(1)
+          ctx.expr(1).accept(this)
+        } else {
+          // Only visit the "if false" branch
+          this.setArgIndex(2)
+          ctx.expr(2).accept(this)
+        }
+      } else {
+        // Visit the condition and both branches
+        super.visitExprList(ctx)
+      }
     } else {
+      // Keep track of all function names referenced in this expression.  Note that lookup
+      // variables are sometimes function-like, so they will be included here.  This will be
+      // used later to decide whether a lookup variable needs to be included in generated code.
+      const canonicalFnName = canonicalName(fn)
+      if (this.var.referencedFunctionNames) {
+        if (!this.var.referencedFunctionNames.includes(canonicalFnName)) {
+          this.var.referencedFunctionNames.push(canonicalFnName)
+        }
+      } else {
+        this.var.referencedFunctionNames = [canonicalFnName]
+      }
       super.visitExprList(ctx)
     }
   }
@@ -154,15 +238,31 @@ module.exports = class EquationReader extends ModelReader {
       this.expandedRefIds = []
       super.visitVar(ctx)
       // Separate init references from eval references in level formulas.
-      if (isSmoothFunction(fn) || isTrendFunction(fn) || isDelayFunction(fn)) {
+      if (isSmoothFunction(fn) || isTrendFunction(fn) || isNpvFunction(fn) || isDelayFunction(fn)) {
         // Do not set references inside the call, since it will be replaced
         // with the generated level var.
       } else if (this.argIndexForFunctionName('_INTEG') === 1) {
+        this.addReferencesToList(this.var.initReferences)
+      } else if (this.argIndexForFunctionName('_DELAY_FIXED') === 1) {
+        this.addReferencesToList(this.var.initReferences)
+      } else if (this.argIndexForFunctionName('_DELAY_FIXED') === 2) {
         this.addReferencesToList(this.var.initReferences)
       } else if (this.argIndexForFunctionName('_ACTIVE_INITIAL') === 1) {
         this.addReferencesToList(this.var.initReferences)
       } else if (this.argIndexForFunctionName('_SAMPLE_IF_TRUE') === 2) {
         this.addReferencesToList(this.var.initReferences)
+      } else if (this.argIndexForFunctionName('_ALLOCATE_AVAILABLE') === 1) {
+        // Reference the second and third elements of the priority profile argument instead of the first one
+        // that Vensim requires for ALLOCATE AVAILABLE. This is required to get correct dependencies.
+        let ptypeRefId = this.expandedRefIds[0]
+        let { subscripts } = Model.splitRefId(ptypeRefId)
+        let ptypeIndexName = subscripts[1]
+        let profileElementsDimName = sub(ptypeIndexName).family
+        let profileElementsDim = sub(profileElementsDimName)
+        let priorityRefId = ptypeRefId.replace(ptypeIndexName, profileElementsDim.value[1])
+        let widthRefId = ptypeRefId.replace(ptypeIndexName, profileElementsDim.value[2])
+        this.expandedRefIds = [priorityRefId, widthRefId]
+        this.addReferencesToList(this.var.references)
       } else if (this.var.isInitial()) {
         this.addReferencesToList(this.var.initReferences)
       } else {
@@ -173,13 +273,30 @@ module.exports = class EquationReader extends ModelReader {
   visitLookupCall(ctx) {
     // Mark the RHS as non-constant, since it has a lookup.
     this.rhsNonConst = true
+    // Keep track of the lookup variable that is referenced on the RHS.
+    const id = ctx.Id().getText()
+    const lookupVarName = canonicalName(id)
+    if (this.var.referencedLookupVarNames) {
+      this.var.referencedLookupVarNames.push(lookupVarName)
+    } else {
+      this.var.referencedLookupVarNames = [lookupVarName]
+    }
+    // Complete the visit.
     ctx.expr().accept(this)
     super.visitLookupCall(ctx)
   }
   visitLookupArg(ctx) {
     // When a call argument is a lookup, generate a new lookup variable and save the variable name to emit later.
     // TODO consider expanding this to more than one lookup arg per equation
-    this.var.lookupArgVarName = this.generateLookupArg(ctx)
+    const lookupArgVarName = this.generateLookupArg(ctx)
+    this.var.lookupArgVarName = lookupArgVarName
+    // Keep track of all lookup variables that are referenced.  This will be used later to decide
+    // whether a lookup variable needs to be included in generated code.
+    if (this.var.referencedLookupVarNames) {
+      this.var.referencedLookupVarNames.push(lookupArgVarName)
+    } else {
+      this.var.referencedLookupVarNames = [lookupArgVarName]
+    }
   }
   visitSubscriptList(ctx) {
     // When an equation references a non-appy-to-all array, add its subscripts to the array var's refId.
@@ -199,78 +316,54 @@ module.exports = class EquationReader extends ModelReader {
           // Find the refIds of the vars that include the indices in the reference.
           // Get the vars with the var name of the reference. We will choose from these vars.
           let varsWithRefName = Model.varsWithName(this.refId)
-          // Support one or two dimensions that vary in non-apply-to-all variable definitions.
-          let numLoops = R.reduce((n, f) => n + (f ? 1 : 0), 0, expansionFlags)
           // The refIds of actual vars containing the indices will accumulate with possible duplicates.
           let expandedRefIds = []
-          if (numLoops === 1) {
-            // Find refIds for a subscript in either the first or the second position.
-            let pos = expansionFlags[0] ? 0 : 1
-            // For each index name at the subscript position, find refIds for vars that include the index.
-            // This process ensures that we generate references to vars that are in the var table.
-            let indexNamesAtPos
-            // Use the single index name for a separated variable if it exists.
-            // But don't do this if the subscript is a marked dimension in a vector function.
-            let separatedIndexName = separatedVariableIndex(subscripts[pos], this.var, subscripts)
-            if (!markedDims.includes(subscripts[pos]) && separatedIndexName) {
-              indexNamesAtPos = [separatedIndexName]
-            } else {
-              // Generate references to all the indices for the subscript.
-              indexNamesAtPos = indexNamesForSubscript(subscripts[pos])
+          let iSub
+          // Accumulate an array of lists of the separated index names at each position.
+          let indexNames = []
+          for (iSub = 0; iSub < expansionFlags.length; iSub++) {
+            if (expansionFlags[iSub]) {
+              // For each index name at the subscript position, find refIds for vars that include the index.
+              // This process ensures that we generate references to vars that are in the var table.
+              let indexNamesAtPos
+              // Use the single index name for a separated variable if it exists.
+              // But don't do this if the subscript is a marked dimension in a vector function.
+              let separatedIndexName = separatedVariableIndex(subscripts[iSub], this.var, subscripts)
+              if (!markedDims.includes(subscripts[iSub]) && separatedIndexName) {
+                indexNamesAtPos = [separatedIndexName]
+              } else {
+                // Generate references to all the indices for the subscript.
+                indexNamesAtPos = indexNamesForSubscript(subscripts[iSub])
+              }
+              indexNames.push(indexNamesAtPos)
             }
-            // vlog('indexNamesAtPos', indexNamesAtPos);
-            R.forEach(indexName => {
-              // Consider each var with the same name as the reference in the equation.
-              R.forEach(refVar => {
-                let refVarIndexNames = indexNamesForSubscript(refVar.subscripts[pos])
-                if (refVarIndexNames.length === 0) {
-                  console.error(
-                    `no subscript at pos ${pos} for var ${refVar.refId} with subscripts ${refVar.subscripts}`
-                  )
-                }
-                if (R.contains(indexName, refVarIndexNames)) {
-                  expandedRefIds.push(refVar.refId)
-                  // console.error(`adding reference ${refVar.refId}`);
-                }
-              }, varsWithRefName)
-            }, indexNamesAtPos)
-          } else if (numLoops === 2) {
-            // Expand the dimension in both positions.
-            let indexNamesAtPos0
-            let separatedIndexName0 = separatedVariableIndex(subscripts[0], this.var, subscripts)
-            if (!markedDims.includes(subscripts[0]) && separatedIndexName0) {
-              indexNamesAtPos0 = [separatedIndexName0]
-            } else {
-              indexNamesAtPos0 = indexNamesForSubscript(subscripts[0])
-            }
-            let indexNamesAtPos1
-            let separatedIndexName1 = separatedVariableIndex(subscripts[1], this.var, subscripts)
-            if (!markedDims.includes(subscripts[1]) && separatedIndexName1) {
-              indexNamesAtPos1 = [separatedIndexName1]
-            } else {
-              indexNamesAtPos1 = indexNamesForSubscript(subscripts[1])
-            }
-            R.forEach(indexName0 => {
-              R.forEach(indexName1 => {
-                R.forEach(refVar => {
-                  let refVarIndexNames0 = indexNamesForSubscript(refVar.subscripts[0])
-                  if (refVarIndexNames0.length === 0) {
+          }
+          // Flatten the arrays of index names at each position into an array of index name combinations.
+          let separatedIndices = cartesianProductOf(indexNames)
+          // Find a separated variable for each combination of indices.
+          for (let separatedIndex of separatedIndices) {
+            // Consider each var with the same name as the reference in the equation.
+            for (let refVar of varsWithRefName) {
+              let iSeparatedIndex = 0
+              for (iSub = 0; iSub < expansionFlags.length; iSub++) {
+                if (expansionFlags[iSub]) {
+                  let refVarIndexNames = indexNamesForSubscript(refVar.subscripts[iSub])
+                  if (refVarIndexNames.length === 0) {
                     console.error(
-                      `ERROR: no subscript at pos 0 for var ${refVar.refId} with subscripts ${refVar.subscripts}`
+                      `ERROR: no subscript at subscript position ${iSub} for var ${refVar.refId} with subscripts ${refVar.subscripts}`
                     )
                   }
-                  let refVarIndexNames1 = indexNamesForSubscript(refVar.subscripts[1])
-                  if (refVarIndexNames1.length === 0) {
-                    console.error(
-                      `ERROR: no subscript at pos 1 for var ${refVar.refId} with subscripts ${refVar.subscripts}`
-                    )
+                  if (!refVarIndexNames.includes(separatedIndex[iSeparatedIndex++])) {
+                    break
                   }
-                  if (R.contains(indexName0, refVarIndexNames0) && R.contains(indexName1, refVarIndexNames1)) {
-                    expandedRefIds.push(refVar.refId)
-                  }
-                }, varsWithRefName)
-              }, indexNamesAtPos1)
-            }, indexNamesAtPos0)
+                }
+              }
+              if (iSub >= expansionFlags.length) {
+                // All separated index names matched index names in the var, so add it as a reference.
+                expandedRefIds.push(refVar.refId)
+                break
+              }
+            }
           }
           // Sort the expandedRefIds and eliminate duplicates.
           this.expandedRefIds = R.uniq(expandedRefIds.sort())
@@ -296,7 +389,7 @@ module.exports = class EquationReader extends ModelReader {
   generateLookupArg(lookupArgCtx) {
     // Generate a variable for a lookup argument found in the RHS.
     let varName = newLookupVarName()
-    let eqn = `${varName}${lookupArgCtx.getText()}`
+    let eqn = `${varName}${lookupArgCtx.getText()} ~~|`
     this.addVariable(eqn)
     return canonicalName(varName)
   }
@@ -363,7 +456,7 @@ module.exports = class EquationReader extends ModelReader {
       // If it has subscripts, the refId is still just the var name, because it is an apply-to-all array.
       levelRefId = canonicalName(level)
     }
-    let eqn = `${levelLHS} = INTEG((${input} - ${levelLHS}) / ${delay}, ${init})`
+    let eqn = `${levelLHS} = INTEG((${input} - ${levelLHS}) / ${delay}, ${init}) ~~|`
     if (isSeparatedVar(this.var)) {
       Model.addNonAtoAVar(canonicalName(level), [true])
     }
@@ -390,7 +483,7 @@ module.exports = class EquationReader extends ModelReader {
     let genSubs = this.genSubs(input, avgTime, init)
     let level = newLevelVarName()
     let levelLHS = level + genSubs
-    let eqn = `${levelLHS} = INTEG((${input} - ${levelLHS}) / ${avgTime}, ${input} / (1 + ${init} * ${avgTime}))`
+    let eqn = `${levelLHS} = INTEG((${input} - ${levelLHS}) / ${avgTime}, ${input} / (1 + ${init} * ${avgTime})) ~~|`
     this.addVariable(eqn)
     // Add a reference to the new level var.
     // If it has subscripts, the refId is still just the var name, because it is an apply-to-all array.
@@ -398,6 +491,27 @@ module.exports = class EquationReader extends ModelReader {
     this.expandedRefIds = []
     this.addReferencesToList(this.var.references)
     return level
+  }
+  generateNpvLevels(stream, discountRate, initVal, factor) {
+    // Generate two level equations to implement NPV.
+    // Return the canonical names of the generated level vars as object properties.
+    let genSubs = this.genSubs(stream, discountRate, initVal, factor)
+    // df = INTEG((-df * discount rate) / (1 + discount rate * TIME STEP), 1)
+    let df = newLevelVarName()
+    let dfLHS = df + genSubs
+    let dfEqn = `${dfLHS} = INTEG((-${dfLHS} * ${discountRate}) / (1 + ${discountRate} * TIME STEP), 1) ~~|`
+    this.addVariable(dfEqn)
+    // ncum = INTEG(stream * df, init val)
+    let ncum = newLevelVarName()
+    let ncumLHS = ncum + genSubs
+    let ncumEqn = `${ncumLHS} = INTEG(${stream} * ${dfLHS}, ${initVal}) ~~|`
+    this.addVariable(ncumEqn)
+    // Add references to the new level vars.
+    // If they have subscripts, the refIds are still just the var name, because they are apply-to-all arrays.
+    this.refId = ''
+    this.expandedRefIds = [canonicalName(ncum), canonicalName(df)]
+    this.addReferencesToList(this.var.references)
+    return { ncum, df }
   }
   expandDelayFunction(fn, args) {
     // Generate variables for a DELAY* call found in the RHS.
@@ -427,8 +541,8 @@ module.exports = class EquationReader extends ModelReader {
         }
         if (index) {
           let re = new RegExp(sepDim, 'gi')
-          let newGenSubs = genSubs.replace(re, index)
-          levelLHS = `${level}${newGenSubs}`
+          genSubs = genSubs.replace(re, index)
+          levelLHS = `${level}${genSubs}`
           levelRefId = canonicalVensimName(levelLHS)
           input = input.replace(re, index)
           varLHS = varLHS.replace(re, index)
@@ -446,10 +560,13 @@ module.exports = class EquationReader extends ModelReader {
       // Generate an aux var to hold the delay time expression.
       let delayTimeVarName = newAuxVarName()
       this.var.delayTimeVarName = canonicalName(delayTimeVarName)
-      let delayTimeEqn = `${delayTimeVarName}${genSubs} = ${delay}`
+      if (isSeparatedVar(this.var)) {
+        Model.addNonAtoAVar(this.var.delayTimeVarName, [true])
+      }
+      let delayTimeEqn = `${delayTimeVarName}${genSubs} = ${delay} ~~|`
       this.addVariable(delayTimeEqn)
       // Add a reference to the var, since it won't show up until code gen time.
-      this.var.references.push(this.var.delayTimeVarName)
+      this.var.references.push(canonicalVensimName(`${delayTimeVarName}${genSubs}`))
     } else if (fn === '_DELAY3' || fn === '_DELAY3I') {
       let level1, level1LHS, level1RefId
       let level2, level2LHS, level2RefId
@@ -485,14 +602,14 @@ module.exports = class EquationReader extends ModelReader {
         }
         if (index) {
           let re = new RegExp(sepDim, 'gi')
-          let newGenSubs = genSubs.replace(re, index)
-          level1LHS = `${level1}${newGenSubs}`
-          level2LHS = `${level2}${newGenSubs}`
-          level3LHS = `${level3}${newGenSubs}`
-          aux1LHS = `${aux1}${newGenSubs}`
-          aux2LHS = `${aux2}${newGenSubs}`
-          aux3LHS = `${aux3}${newGenSubs}`
-          aux4LHS = `${aux4}${newGenSubs}`
+          genSubs = genSubs.replace(re, index)
+          level1LHS = `${level1}${genSubs}`
+          level2LHS = `${level2}${genSubs}`
+          level3LHS = `${level3}${genSubs}`
+          aux1LHS = `${aux1}${genSubs}`
+          aux2LHS = `${aux2}${genSubs}`
+          aux3LHS = `${aux3}${genSubs}`
+          aux4LHS = `${aux4}${genSubs}`
           level1RefId = canonicalVensimName(level1LHS)
           level2RefId = canonicalVensimName(level2LHS)
           level3RefId = canonicalVensimName(level3LHS)
@@ -528,20 +645,23 @@ module.exports = class EquationReader extends ModelReader {
       this.generateDelayLevel(level2LHS, level2RefId, aux1LHS, aux2LHS, init)
       this.generateDelayLevel(level1LHS, level1RefId, input, aux1LHS, init)
       // Generate equations for the aux vars using the subs in the generated level var.
-      this.addVariable(`${aux1LHS} = ${level1LHS} / ${delay3}`)
-      this.addVariable(`${aux2LHS} = ${level2LHS} / ${delay3}`)
-      this.addVariable(`${aux3LHS} = ${level3LHS} / ${delay3}`)
+      this.addVariable(`${aux1LHS} = ${level1LHS} / ${delay3} ~~|`)
+      this.addVariable(`${aux2LHS} = ${level2LHS} / ${delay3} ~~|`)
+      this.addVariable(`${aux3LHS} = ${level3LHS} / ${delay3} ~~|`)
       // Generate an aux var to hold the delay time expression.
       this.var.delayTimeVarName = canonicalName(aux4)
-      this.addVariable(`${aux4LHS} = ${delay3}`)
+      if (isSeparatedVar(this.var)) {
+        Model.addNonAtoAVar(this.var.delayTimeVarName, [true])
+      }
+      this.addVariable(`${aux4LHS} = ${delay3} ~~|`)
       // Add a reference to the var, since it won't show up until code gen time.
-      this.var.references.push(this.var.delayTimeVarName)
+      this.var.references.push(canonicalVensimName(`${aux4}${genSubs}`))
     }
   }
   generateDelayLevel(levelLHS, levelRefId, input, aux, init) {
     // Generate a level equation to implement DELAY.
     // The parameters are model names. Return the refId of the generated level var.
-    let eqn = `${levelLHS} = INTEG(${input} - ${aux}, ${init})`
+    let eqn = `${levelLHS} = INTEG(${input} - ${aux}, ${init}) ~~|`
     this.addVariable(eqn)
     // Add a reference to the new level var.
     this.refId = levelRefId

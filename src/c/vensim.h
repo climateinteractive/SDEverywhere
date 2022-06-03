@@ -26,10 +26,13 @@ extern "C" {
 #define _MAX(a, b) fmax(a, b)
 #define _MIN(a, b) fmin(a, b)
 #define _MODULO(a, b) fmod(a, b)
+#define _QUANTUM(a, b) ((b) <= 0 ? (a) : (b) * trunc((a) / (b)))
 #define _SAMPLE_IF_TRUE(current, condition, input) (bool_cond(condition) ? (input) : (current))
 #define _SIN(x) sin(x)
 #define _SQRT(x) sqrt(x)
-#define _STEP(height, step_time) (fgt(_time + _time_step / 2.0, (step_time)) ? (height) : 0.0)
+#define _STEP(height, step_time) (_time + _time_step / 2.0 > (step_time) ? (height) : 0.0)
+
+double* _ALLOCATE_AVAILABLE(double* requested_quantities, double* priority_profiles, double available_resource, size_t num_requesters);
 double _PULSE(double start, double width);
 double _PULSE_TRAIN(double start, double width, double interval, double end);
 double _RAMP(double slope, double start_time, double end_time);
@@ -49,18 +52,37 @@ typedef struct {
   size_t n;
   double* inverted_data;
   bool data_is_owned;
+  double last_input;
+  size_t last_hit_index;
 } Lookup;
 
 Lookup* __new_lookup(size_t size, bool copy, double* data);
 void __delete_lookup(Lookup* lookup);
 void __print_lookup(Lookup* lookup);
 
-double __lookup(double* data, size_t n, double input, LookupMode mode);
-#define _LOOKUP(lookup, x) __lookup((lookup)->data, (lookup)->n, x, Interpolate)
-#define _LOOKUP_FORWARD(lookup, x) __lookup((lookup)->data, (lookup)->n, x, Forward)
-#define _LOOKUP_BACKWARD(lookup, x) __lookup((lookup)->data, (lookup)->n, x, Backward)
-#define _WITH_LOOKUP(x, lookup) __lookup((lookup)->data, (lookup)->n, x, Interpolate)
+double __lookup(Lookup *lookup, double input, bool use_inverted_data, LookupMode mode);
+#define _LOOKUP(lookup, x) __lookup(lookup, x, false, Interpolate)
+#define _LOOKUP_FORWARD(lookup, x) __lookup(lookup, x, false, Forward)
+#define _LOOKUP_BACKWARD(lookup, x) __lookup(lookup, x, false, Backward)
+#define _WITH_LOOKUP(x, lookup) __lookup(lookup, x, false, Interpolate)
 double _LOOKUP_INVERT(Lookup* lookup, double y);
+
+double __get_data_between_times(double *data, size_t n, double input, LookupMode mode);
+#define _GET_DATA_MODE_TO_LOOKUP_MODE(mode) ((mode) >= 1) ? Forward : (((mode) <= -1) ? Backward : Interpolate)
+#define _GET_DATA_BETWEEN_TIMES(lookup, x, mode) __get_data_between_times((lookup)->data, (lookup)->n, x, _GET_DATA_MODE_TO_LOOKUP_MODE(mode))
+
+//
+// DELAY FIXED
+//
+typedef struct {
+  double* data;
+  size_t n;
+  size_t data_index;
+  double initial_value;
+} FixedDelay;
+
+double _DELAY_FIXED(double input, FixedDelay* fixed_delay);
+FixedDelay* __new_fixed_delay(FixedDelay* fixed_delay, double delay_time, double initial_value);
 
 #ifdef __cplusplus
 }

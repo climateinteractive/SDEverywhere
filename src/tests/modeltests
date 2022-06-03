@@ -1,22 +1,59 @@
-#!/usr/bin/env sh
-# Use the global sde command if it is available.
+#!/bin/bash
+
+set -e # fail on error
+
+# Use the local sde command.
 SDE='node ../sde.js'
-if which sde >/dev/null; then SDE=sde; fi
 $SDE -v &>/dev/null
 if [[ $? -ne 0 ]]; then
   echo 'SDEverywhere is not installed.'
-  echo 'Run "npm install" in the src directory to install it locally.'
-  echo 'You could also install it globally with "npm install sdeverywhere -g".'
+  echo 'Run "npm install" in the top directory to install it locally.'
   exit 1
 fi
-# Test each model against saved Vensim data.
-for MODEL in $(ls ../../models); do
-  echo "testing the $MODEL model"
-  $SDE clean --modeldir ../../models/$MODEL
-  CMD="$SDE test ../../models/$MODEL/$MODEL -p 1e-4"
-  if [[ $MODEL == 'directdata' ]]; then
-    CMD="$CMD --spec ../../models/$MODEL/spec.json"
+
+function test {
+  MODEL=$1
+  echo "Testing the $MODEL model"
+  MODEL_DIR=../../models/$MODEL
+
+  # Clean up before
+  $SDE clean --modeldir $MODEL_DIR
+
+  # Test (only if there is a dat file to compare against)
+  if [[ -f $MODEL_DIR/${MODEL}.dat ]]; then
+    SPEC_FILE=$MODEL_DIR/${MODEL}_spec.json
+    if [[ -f $SPEC_FILE ]]; then
+      TEST_ARGS="--spec $SPEC_FILE"
+    else
+      TEST_ARGS=
+    fi
+    # Reduce comparison precision for models that cannot reproduce Vensim results.
+    PRECISION="1e-4"
+    if [[ $MODEL == "allocate" ]]; then
+      PRECISION="1e-2"
+    fi
+    $SDE test $TEST_ARGS -p $PRECISION $MODEL_DIR/$MODEL
   fi
-  $CMD
-  $SDE clean --modeldir ../../models/$MODEL
-done
+
+  # Run additional script to validate output
+  VALIDATE_SCRIPT=$MODEL_DIR/${MODEL}_check.sh
+  if [[ -f $VALIDATE_SCRIPT ]]; then
+    echo "Performing additional validation checks on $MODEL"
+    $VALIDATE_SCRIPT
+  fi
+
+  # Clean up after
+  $SDE clean --modeldir $MODEL_DIR
+
+  echo
+}
+
+if [[ -n $1 ]]; then
+  # Test the given model against saved Vensim data.
+  test $1
+else
+  # Test each model against saved Vensim data.
+  for m in $(ls ../../models); do
+    test $m
+  done
+fi
