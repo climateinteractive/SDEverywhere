@@ -287,17 +287,6 @@ sde test {model}
 sde clean {model}
 ```
 
-**Generate a web app to run the model and graph the results**
-
-Note that the `generate --genhtml` command currently uses [Browserify](http://browserify.org)
-to bundle the web app. The `browserify` package is not included with SDEverywhere by
-default, so you will need to install it first as a dev dependency.
-
-```
-npm install --save-dev browserify
-sde generate --genhtml {model}
-```
-
 **Print variable dependencies**
 
 ```
