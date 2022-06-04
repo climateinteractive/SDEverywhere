@@ -1,0 +1,79 @@
+#
+# This runs after changes are merged to `main`.  There are two scenarios:
+#   1. The commit was from a feature branch being merged.  In this case,
+#      release-please will create/update a release PR to include the commit.
+#   2. The commit was from a release-please PR being merged.  In this case,
+#      the release will be tagged and the publish steps will be taken.
+#
+
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run release-please
+        uses: GoogleCloudPlatform/release-please-action@v3
+        id: release
+        with:
+          # Note that we need to use a custom token here because events triggered
+          # by the special `GITHUB_TOKEN` will not create a new workflow run (to
+          # avoid creating recursive workflow runs).  In our case, we want this
+          # release-please action to trigger the `build` workflow when it pushes
+          # to a `release-please` branch; using a custom token here makes it work.
+          token: ${{ secrets.GH_ACCESS_TOKEN }}
+          command: manifest
+          monorepo-tags: true
+
+      - name: Check out repo
+        uses: actions/checkout@v2
+
+      - name: Install Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+
+      # The pnpm caching strategy in the following steps is based on:
+      #   https://github.com/pnpm/action-setup#use-cache-to-reduce-installation-time
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 7
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        run: echo "::set-output name=pnpm_cache_dir::$(pnpm store path)"
+
+      - name: Enable pnpm cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ steps.pnpm-cache.outputs.pnpm_cache_dir }}
+          key: pnpm-store-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            pnpm-store-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: |
+          pnpm install
+
+      - name: Build
+        id: build
+        run: |
+          pnpm prettier:check
+          pnpm test
+
+      # Save the npmjs auth token so that the workflow can publish packages to the registry
+      - name: Configure npm auth token
+        if: ${{ steps.release.outputs.releases_created }}
+        run: |
+          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_ACCESS_TOKEN }}" > ~/.npmrc
+
+      - name: Publish packages
+        if: ${{ steps.release.outputs.releases_created }}
+        run: |
+          pnpm -r publish

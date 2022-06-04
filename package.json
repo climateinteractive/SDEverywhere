@@ -3,6 +3,10 @@
   "version": "0.6.0",
   "description": "SDEverywhere translates System Dynamics models from Vensim to C and WebAssembly",
   "type": "module",
+  "files": [
+    "src/**",
+    "!.DS_Store"
+  ],
   "bin": {
     "sde": "src/index.js"
   },
