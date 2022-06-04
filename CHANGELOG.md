@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.6.0](https://github.com/climateinteractive/SDEverywhere/compare/sdeverywhere-v0.5.3...sdeverywhere-v0.6.0) (2022-06-04)
+## [0.6.0](https://github.com/climateinteractive/SDEverywhere/compare/0.5.3...sdeverywhere-v0.6.0) (2022-06-04)
 
 
 ### Features
@@ -70,3 +70,64 @@
 * improve code gen performance by avoiding linear searches ([#63](https://github.com/climateinteractive/SDEverywhere/issues/63)) ([d4bf555](https://github.com/climateinteractive/SDEverywhere/commit/d4bf555bd8c568af8c837eccd135e79a490d5c0f)), closes [#62](https://github.com/climateinteractive/SDEverywhere/issues/62)
 * optimize IF THEN ELSE for cases where condition expression resolves to a constant ([#103](https://github.com/climateinteractive/SDEverywhere/issues/103)) ([f9ef675](https://github.com/climateinteractive/SDEverywhere/commit/f9ef67539938ed949a17022df05707a2c06c558a)), closes [#102](https://github.com/climateinteractive/SDEverywhere/issues/102)
 * remove variables that are not referenced by input or output variables ([#44](https://github.com/climateinteractive/SDEverywhere/issues/44)) ([6c80c59](https://github.com/climateinteractive/SDEverywhere/commit/6c80c5919d94b9d66c2df3d27f181989ac864000)), closes [#1](https://github.com/climateinteractive/SDEverywhere/issues/1)
+
+## 0.5.3 (2020-07-29)
+
+- improved performance of LOOKUP
+- optimized dimension name references to avoid array accesses
+- changed lookup initialization to use static arrays for improved Wasm performance
+- replaced wrapper functions with C macros to reduce function call overhead
+- split large functions reduce stack frame size (improves Wasm memory use and performance)
+
+## 0.5.2 (2020-06-03)
+
+- includes fixes that more fully automate conversion of complicated MDL model files
+- moved tools to Python 3
+- use the updated ANTLR-Version package
+- improved support for two-dimensional arrays
+- added handling of 2D constant arrays with subscripts in any order
+- added support for dimension name references
+- added support for ELMCOUNT
+- added support for PULSE TRAIN
+- updated documentation
+- updated npm package dependencies
+
+## 0.5.1 (2019-09-27)
+
+- support multiple chartDatfiles delimited by semicolons in app.csv
+- override generated app styles in an optional custom.css file in the config folder
+- add optional varname prefix to readDat
+
+## 0.5.0 (2019-07-24)
+
+- web app generation uses simpler CSV configuration instead of YAML
+- three-dimensional arrays
+- :EXCEPT: subscripts
+- two-dimensional const arrays
+- GET DIRECT DATA for Excel at code generation time
+- read output variables from DAT files to WITH LOOKUP variables
+- generate variable documention in text and YAML formats
+- allow all special characters in variable names
+- improved coverage of subrange and mapping edge cases
+
+## 0.4.1 (2018-03-11)
+
+- enable a blank cell in the HTML input panel with an empty value in `sliders`
+- add `sde causes` command to print model variable dependencies
+- fixed HTML generation on Linux
+- corrected instructions for building from the repo
+
+## 0.4.0 (2018-02-05)
+
+- updated web app generation to use an improved template
+- added new app.yaml web app specification file
+- generate complete web app with the `sde generate --genhtml` command
+- removed the Vensim grammar to an independent package
+- removed the lotka sample model
+- added the SIR sample model
+- optimized performance by making high-precision floating point comparisons optional
+- added support for generating code to run the model interactively
+- removed unnecessary glib2 dependency
+- added a warning message when an input or output variable does not exist in the model
+- fill in all ref ids for a generated variable that is expanded over a non-apply-to-all array
+- implement Vensim data variables in DAT files with lookups
