@@ -1,5 +1,7 @@
 {
+  "packages": {
+    ".": { "release-as": "0.6.0" }
+  },
   "last-release-sha": "94381c3545c49f680aa97289b88a18def18769ac",
-  "release-as": "0.6.0",
   "pull-request-title-pattern": "chore: release${component} ${version}"
 }
