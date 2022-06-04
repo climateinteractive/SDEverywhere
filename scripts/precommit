@@ -1,0 +1,19 @@
+#!/bin/bash
+
+#
+# This script is run by the `precommit` script in each pnpm workspace's
+# `package.json` file.  It first checks to see if there are any changes
+# in the current directory for the current commit.  If so, then it runs
+# the normal precommit steps (lint and prettier).  If not, it skips those
+# steps.  This makes commits faster by only running checks when files
+# have actually changed.
+#
+
+# The following will produce a list of files that were changed
+# (A=Added, M=Modified, R=Renamed) for the current working directory,
+# or an empty string if there are no changes.
+DIR_CHANGES=`git diff --cached --name-only --diff-filter=AMR -- .`
+if [[ $DIR_CHANGES != "" ]]; then
+  pnpm lint
+  pnpm prettier:check
+fi
