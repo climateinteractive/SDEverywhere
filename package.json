@@ -1,46 +1,29 @@
 {
-  "name": "sdeverywhere",
-  "version": "0.6.0",
+  "name": "sdeverywhere-monorepo",
+  "private": true,
   "description": "SDEverywhere translates System Dynamics models from Vensim to C and WebAssembly",
   "type": "module",
-  "files": [
-    "src/**",
-    "!.DS_Store"
-  ],
-  "bin": {
-    "sde": "src/index.js"
-  },
   "scripts": {
-    "prettier:check": "prettier --check .",
-    "prettier:fix": "prettier --write .",
-    "test": "cd src/tests && ./modeltests"
-  },
-  "dependencies": {
-    "antlr4": "4.9.2",
-    "antlr4-vensim": "0.6.0",
-    "bufx": "^1.0.5",
-    "byline": "^5.0.0",
-    "chart.js": "^2.9.4",
-    "csv-parse": "^4.15.4",
-    "digraph-sort": "^0.2.1",
-    "fs-extra": "^9.0.0",
-    "he": "^1.2.0",
-    "js-yaml": "^3.13.1",
-    "minimist": "^1.2.5",
-    "numbro": "1.11.1",
-    "ramda": "^0.27.0",
-    "shelljs": "^0.8.3",
-    "split-string": "^6.0.0",
-    "xlsx": "^0.17.0",
-    "yargs": "^17.2.1"
+    "clean": "pnpm -r clean",
+    "lint-pkgs": "pnpm -r lint",
+    "lint": "pnpm lint-pkgs",
+    "prettier-local:check": "prettier --check \"./*.{js,json,md,yaml}\"",
+    "prettier-local:fix": "prettier --write \"./*.{js,json,md,yaml}\"",
+    "prettier-pkgs:check": "pnpm -r prettier:check",
+    "prettier-pkgs:fix": "pnpm -r prettier:fix",
+    "prettier:check": "run-s prettier-local:check prettier-pkgs:check",
+    "prettier:fix": "run-s prettier-local:fix prettier-pkgs:fix",
+    "precommit": "pnpm -r precommit",
+    "build": "pnpm run -r --workspace-concurrency=1 build",
+    "test:e2e": "cd tests && ./modeltests"
   },
   "devDependencies": {
-    "prettier": "^2.3.2"
+    "npm-run-all": "^4.1.5",
+    "prettier": "^2.6.2"
   },
   "author": "Climate Interactive",
   "license": "MIT",
   "homepage": "https://sdeverywhere.org",
-  "readmeFilename": "README.md",
   "repository": {
     "type": "git",
     "url": "https://github.com/climateinteractive/SDEverywhere.git"

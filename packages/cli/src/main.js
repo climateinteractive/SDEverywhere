@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 //  SDEverywhere
 //  https://sdeverywhere.org
 //  Copyright © 2021 Todd Fincannon and Climate Interactive
