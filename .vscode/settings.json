@@ -1,0 +1,24 @@
+{
+  "psi-header.config": {
+    "forceToTop": true,
+    "company": "Climate Interactive / New Venture Fund"
+  },
+  "psi-header.lang-config": [
+    {
+      "language": "*",
+      "begin": "",
+      "end": "",
+      "prefix": "// "
+    }
+  ],
+  "psi-header.templates": [
+    {
+      "language": "*",
+      "template": ["Copyright (c) <<yeartoyear('fc','now')>> <<company>>"]
+    }
+  ],
+  "yaml.schemas": {
+    // XXX: Workaround for vscode-yaml issue: https://github.com/redhat-developer/vscode-yaml/issues/397
+    "https://json.schemastore.org/github-workflow": "/.github/workflows/**/*.yaml"
+  }
+}

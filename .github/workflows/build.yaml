@@ -1,15 +1,17 @@
 #
-# Builds and tests the package on Linux.
+# Builds and tests the packages on Linux.
 #
-# This runs after changes are pushed to a feature branch or to `main`.
+# This runs after changes are pushed to a feature branch.  It does not
+# run for pushes to the main branch because that is covered by the
+# `release` workflow.
 #
 
 name: Build
 
 on:
   push:
-    branches:
-      - '**'
+    branches-ignore:
+      - main
 
 jobs:
   build:
