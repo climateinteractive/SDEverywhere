@@ -203,10 +203,6 @@ export let buildDir = (build, modelDirname) => {
   // Ensure the given build directory or {modelDir}/build exists.
   return ensureDir(build, 'build', modelDirname)
 }
-export let webDir = buildDirname => {
-  // Ensure a web directory exists under the build directory.
-  return ensureDir(null, 'web', buildDirname)
-}
 export let ensureDir = (dir, defaultDir, modelDirname) => {
   // Ensure the directory exists as given or under the model directory.
   let dirName = dir || path.join(modelDirname, defaultDir)
@@ -228,9 +224,6 @@ export let linkCSourceFiles = (modelDirname, buildDirname) => {
     let dstPathname = path.join(buildDirname, filename)
     fs.ensureSymlinkSync(srcPathname, dstPathname)
   })
-}
-export let filesExcept = (glob, exceptionFn) => {
-  return R.reject(exceptionFn, sh.ls(glob))
 }
 export let modelPathProps = model => {
   // Normalize a model pathname that may or may not include the .mdl extension.
