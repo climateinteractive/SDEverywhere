@@ -1,8 +1,7 @@
 import B from 'bufx'
 
-import { parseModel, preprocessModel } from '@sdeverywhere/compile'
+import { generateCode, parseModel, preprocessModel } from '@sdeverywhere/compile'
 
-import { codeGenerator } from './CodeGen.js'
 import { modelPathProps } from './utils.js'
 
 let command = 'causes [options] <model> <C_varname>'
@@ -28,7 +27,7 @@ let causes = (model, varname, opts) => {
   // Parse the model to get variable and subscript information.
   let parseTree = parseModel(input)
   let operation = 'printRefGraph'
-  codeGenerator(parseTree, { spec, operation, extData, directData, modelDirname, varname }).generate()
+  generateCode(parseTree, { spec, operation, extData, directData, modelDirname, varname })
 }
 let parseSpec = specFilename => {
   return parseJsonFile(specFilename)

@@ -5,7 +5,11 @@ import Model from './Model.js'
 import { sub, allDimensions, allMappings, subscriptFamilies } from './Subscript.js'
 import { asort, lines, strlist, abend, mapIndexed } from './Helpers.js'
 
-export let codeGenerator = (parseTree, opts) => {
+export function generateCode(parseTree, opts) {
+  return codeGenerator(parseTree, opts).generate()
+}
+
+let codeGenerator = (parseTree, opts) => {
   const { spec, operation, extData, directData, modelDirname } = opts
   // Set to 'decl', 'init-lookups', 'eval', etc depending on the section being generated.
   let mode = ''

@@ -1,8 +1,7 @@
 import B from 'bufx'
 
-import { parseModel, preprocessModel } from '@sdeverywhere/compile'
+import { generateCode, parseModel, preprocessModel } from '@sdeverywhere/compile'
 
-import { codeGenerator } from './CodeGen.js'
 import Model from './Model.js'
 import { modelPathProps } from './utils.js'
 
@@ -35,7 +34,7 @@ let names = (model, namesPathname, opts) => {
   // Parse the model to get variable and subscript information.
   let parseTree = parseModel(input)
   let operation = 'convertNames'
-  codeGenerator(parseTree, { spec, operation }).generate()
+  generateCode(parseTree, { spec, operation })
   // Read each variable name from the names file and convert it.
   let lines = B.lines(B.read(namesPathname))
   for (let line of lines) {

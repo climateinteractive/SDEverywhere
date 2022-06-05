@@ -2,9 +2,8 @@ import path from 'path'
 
 import B from 'bufx'
 
-import { canonicalName, parseModel, preprocessModel, readDat } from '@sdeverywhere/compile'
+import { canonicalName, generateCode, parseModel, preprocessModel, readDat } from '@sdeverywhere/compile'
 
-import { codeGenerator } from './CodeGen.js'
 import { readXlsx } from './Helpers.js'
 import Model from './Model.js'
 import { printSubscripts, yamlSubsList } from './Subscript.js'
@@ -107,7 +106,7 @@ export let generate = async (model, opts) => {
     operation = 'printRefIdTest'
   }
   let parseTree = parseModel(input)
-  let code = codeGenerator(parseTree, { spec, operation, extData, directData, modelDirname }).generate()
+  let code = generateCode(parseTree, { spec, operation, extData, directData, modelDirname })
   if (opts.genc) {
     let outputPathname = path.join(buildDirname, `${modelName}.c`)
     writeOutput(outputPathname, code)
