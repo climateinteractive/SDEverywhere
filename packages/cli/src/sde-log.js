@@ -1,9 +1,11 @@
 import fs from 'fs'
 import path from 'path'
-import R from 'ramda'
+
 import B from 'bufx'
 import byline from 'byline'
-import { canonicalName } from './Helpers.js'
+import R from 'ramda'
+
+import { canonicalName } from '@sdeverywhere/compile'
 
 export let command = 'log [options] <logfile>'
 export let describe = 'process an SDEverywhere log file'
