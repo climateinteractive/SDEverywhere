@@ -211,23 +211,6 @@ export let ensureDir = (dir, defaultDir, modelDirname) => {
 export let fileExists = pathname => {
   return fs.existsSync(pathname)
 }
-export let modelPathProps = model => {
-  // Normalize a model pathname that may or may not include the .mdl extension.
-  // If there is not a path in the model argument, default to the current working directory.
-  // Return an object with properties that look like this:
-  // modelDirname: '/Users/todd/src/models/arrays'
-  // modelName: 'arrays'
-  // modelPathname: '/Users/todd/src/models/arrays/arrays.mdl'
-  let p = R.merge({ ext: '.mdl' }, R.pick(['dir', 'name'], path.parse(model)))
-  if (R.isEmpty(p.dir)) {
-    p.dir = process.cwd()
-  }
-  return {
-    modelDirname: p.dir,
-    modelName: p.name,
-    modelPathname: path.format(p)
-  }
-}
 export let readDat = async (pathname, prefix = '') => {
   // Read a Vensim DAT file into a Map.
   // Key: variable name in canonical format

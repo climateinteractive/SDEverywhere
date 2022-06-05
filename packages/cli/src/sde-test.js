@@ -1,8 +1,10 @@
 import path from 'path'
+
+import { outputDir } from './Helpers.js'
 import { run } from './sde-run.js'
 import { log } from './sde-log.js'
 import { compare } from './sde-compare.js'
-import { modelPathProps, outputDir } from './Helpers.js'
+import { modelPathProps } from './utils.js'
 
 export let command = 'test [options] <model>'
 export let describe = 'build the model, run it, process the log, and compare to Vensim data'

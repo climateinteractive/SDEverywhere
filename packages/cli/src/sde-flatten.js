@@ -1,7 +1,10 @@
-import B from 'bufx'
 import path from 'path'
-import { modelPathProps, buildDir } from './Helpers.js'
+
+import B from 'bufx'
+
+import { buildDir } from './Helpers.js'
 import { preprocessModel } from './Preprocessor.js'
+import { modelPathProps } from './utils.js'
 
 const command = 'flatten [options] <outmodel>'
 

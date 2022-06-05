@@ -5,7 +5,7 @@ import { parseModel } from '@sdeverywhere/compile'
 import { codeGenerator } from './CodeGen.js'
 import { preprocessModel } from './Preprocessor.js'
 import Model from './Model.js'
-import { modelPathProps } from './Helpers.js'
+import { modelPathProps } from './utils.js'
 
 let command = 'names [options] <model> <namesfile>'
 let describe = 'convert variable names in a model'

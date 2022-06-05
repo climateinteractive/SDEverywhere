@@ -6,9 +6,10 @@ import { parseModel } from '@sdeverywhere/compile'
 
 import { codeGenerator } from './CodeGen.js'
 import { preprocessModel } from './Preprocessor.js'
-import { canonicalName, modelPathProps, buildDir, readDat, readXlsx } from './Helpers.js'
+import { canonicalName, buildDir, readDat, readXlsx } from './Helpers.js'
 import Model from './Model.js'
 import { printSubscripts, yamlSubsList } from './Subscript.js'
+import { modelPathProps } from './utils.js'
 
 export let command = 'generate [options] <model>'
 export let describe = 'generate model code'
