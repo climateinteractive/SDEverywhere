@@ -1,5 +1,3 @@
-import antlr4 from 'antlr4'
-import { ModelLexer, ModelParser } from 'antlr4-vensim'
 import R from 'ramda'
 import B from 'bufx'
 import yaml from 'js-yaml'
@@ -9,6 +7,7 @@ import VarNameReader from './VarNameReader.js'
 import SubscriptRangeReader from './SubscriptRangeReader.js'
 import EquationReader from './EquationReader.js'
 import Variable from './Variable.js'
+import { createParser } from './Parser.js'
 import {
   addIndex,
   allAliases,
@@ -448,11 +447,7 @@ function readEquations() {
 }
 function addEquation(modelEquation) {
   // Add an equation in Vensim model format.
-  let chars = new antlr4.InputStream(modelEquation)
-  let lexer = new ModelLexer(chars)
-  let tokens = new antlr4.CommonTokenStream(lexer)
-  let parser = new ModelParser(tokens)
-  parser.buildParseTrees = true
+  let parser = createParser(modelEquation)
   let tree = parser.equation()
   // Read the var and add it to the Model var table.
   let variableReader = new VariableReader()

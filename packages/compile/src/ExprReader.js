@@ -1,7 +1,7 @@
-import antlr4 from 'antlr4'
-import { ModelLexer, ModelParser, ModelVisitor } from 'antlr4-vensim'
+import { ModelLexer, ModelVisitor } from 'antlr4-vensim'
 import { canonicalName } from './Helpers.js'
 import Model from './Model.js'
+import { createParser } from './Parser.js'
 
 /**
  * Reads an expression and determines if it resolves to a constant numeric value.
@@ -15,11 +15,7 @@ export default class ExprReader extends ModelVisitor {
   }
 
   read(exprText) {
-    let chars = new antlr4.InputStream(exprText)
-    let lexer = new ModelLexer(chars)
-    let tokens = new antlr4.CommonTokenStream(lexer)
-    let parser = new ModelParser(tokens)
-    parser.buildParseTrees = true
+    let parser = createParser(exprText)
     let expr = parser.expr()
     expr.accept(this)
 

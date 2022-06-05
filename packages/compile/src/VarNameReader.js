@@ -1,7 +1,6 @@
-import antlr4 from 'antlr4'
-import { ModelLexer, ModelParser } from 'antlr4-vensim'
 import ModelReader from './ModelReader.js'
 import R from 'ramda'
+import { createParser } from './Parser.js'
 import { sub, isIndex, normalizeSubscripts } from './Subscript.js'
 import { canonicalName } from './Helpers.js'
 //
@@ -16,11 +15,7 @@ export default class VarNameReader extends ModelReader {
   read(modelVarName) {
     // Parse an individual model var name and convert it into a a canonical C var name.
     // Parse a single var name, which may include subscripts.
-    let chars = new antlr4.InputStream(modelVarName)
-    let lexer = new ModelLexer(chars)
-    let tokens = new antlr4.CommonTokenStream(lexer)
-    let parser = new ModelParser(tokens)
-    parser.buildParseTrees = true
+    let parser = createParser(modelVarName)
     let tree = parser.lhs()
     // Generate and return the canonical name.
     this.visitLhs(tree)

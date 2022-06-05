@@ -1,7 +1,6 @@
-import antlr4 from 'antlr4'
 import R from 'ramda'
-import { ModelLexer, ModelParser } from 'antlr4-vensim'
 import ModelReader from './ModelReader.js'
+import { createParser } from './Parser.js'
 import { sub, isDimension } from './Subscript.js'
 import { canonicalName } from './Helpers.js'
 
@@ -19,11 +18,7 @@ export default class ModelLHSReader extends ModelReader {
   read(modelLHS) {
     // Parse a model LHS and return the var name without subscripts.
     // The names function may be called on this object to retrieve expanded subscript names.
-    let chars = new antlr4.InputStream(modelLHS)
-    let lexer = new ModelLexer(chars)
-    let tokens = new antlr4.CommonTokenStream(lexer)
-    let parser = new ModelParser(tokens)
-    parser.buildParseTrees = true
+    let parser = createParser(modelLHS)
     let tree = parser.lhs()
     this.visitLhs(tree)
     return this.varName
