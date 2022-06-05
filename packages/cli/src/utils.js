@@ -1,3 +1,4 @@
+import fs from 'fs'
 import path from 'path'
 
 import R from 'ramda'
@@ -39,4 +40,29 @@ export function modelPathProps(model) {
     modelName: p.name,
     modelPathname: path.format(p)
   }
+}
+
+export function outputDir(outfile, modelDirname) {
+  if (outfile) {
+    outfile = path.dirname(outfile)
+  }
+  return ensureDir(outfile, 'output', modelDirname)
+}
+
+/**
+ * Ensure the given build directory or {modelDir}/build exists.
+ */
+export function buildDir(build, modelDirname) {
+  return ensureDir(build, 'build', modelDirname)
+}
+
+/**
+ * Ensure the directory exists as given or under the model directory.
+ */
+function ensureDir(dir, defaultDir, modelDirname) {
+  let dirName = dir || path.join(modelDirname, defaultDir)
+  if (!fs.existsSync(dirName)) {
+    fs.mkdirSync(dirName, { recursive: true })
+  }
+  return dirName
 }

@@ -5,10 +5,10 @@ import B from 'bufx'
 import { parseModel, preprocessModel, readDat } from '@sdeverywhere/compile'
 
 import { codeGenerator } from './CodeGen.js'
-import { canonicalName, buildDir, readXlsx } from './Helpers.js'
+import { canonicalName, readXlsx } from './Helpers.js'
 import Model from './Model.js'
 import { printSubscripts, yamlSubsList } from './Subscript.js'
-import { modelPathProps } from './utils.js'
+import { buildDir, modelPathProps } from './utils.js'
 
 export let command = 'generate [options] <model>'
 export let describe = 'generate model code'

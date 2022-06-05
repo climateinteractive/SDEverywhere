@@ -1,7 +1,6 @@
 import path from 'path'
 
-import { buildDir, outputDir } from './Helpers.js'
-import { execCmd, modelPathProps } from './utils.js'
+import { buildDir, execCmd, modelPathProps, outputDir } from './utils.js'
 
 export let command = 'exec [options] <model>'
 export let describe = 'execute the model and capture its output to a file'

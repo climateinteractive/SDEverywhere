@@ -1,5 +1,3 @@
-import fs from 'fs-extra'
-import path from 'path'
 import util from 'util'
 import R from 'ramda'
 import split from 'split-string'
@@ -191,25 +189,6 @@ export let stringToId = str => {
   return `id${stringIndex}`
 }
 // Command helpers
-export let outputDir = (outfile, modelDirname) => {
-  if (outfile) {
-    outfile = path.dirname(outfile)
-  }
-  return ensureDir(outfile, 'output', modelDirname)
-}
-export let buildDir = (build, modelDirname) => {
-  // Ensure the given build directory or {modelDir}/build exists.
-  return ensureDir(build, 'build', modelDirname)
-}
-export let ensureDir = (dir, defaultDir, modelDirname) => {
-  // Ensure the directory exists as given or under the model directory.
-  let dirName = dir || path.join(modelDirname, defaultDir)
-  fs.ensureDirSync(dirName)
-  return dirName
-}
-export let fileExists = pathname => {
-  return fs.existsSync(pathname)
-}
 export let readXlsx = pathname => {
   return XLSX.readFile(pathname, { cellDates: true })
 }

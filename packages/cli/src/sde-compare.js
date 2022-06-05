@@ -1,9 +1,9 @@
+import { existsSync } from 'fs'
+
 import { pr } from 'bufx'
 import R from 'ramda'
 
 import { readDat } from '@sdeverywhere/compile'
-
-import { fileExists } from './Helpers.js'
 
 // The epsilon value determines the required precision for value comparisons.
 let ε = 1e-5
@@ -31,10 +31,10 @@ export let handler = argv => {
   compare(argv.vensimlog, argv.sdelog, argv)
 }
 export let compare = async (vensimfile, sdefile, opts) => {
-  if (!fileExists(vensimfile)) {
+  if (!existsSync(vensimfile)) {
     throw new Error(`Vensim DAT file not found: ${vensimfile}`)
   }
-  if (!fileExists(sdefile)) {
+  if (!existsSync(sdefile)) {
     throw new Error(`SDEverywhere DAT file not found: ${sdefile}`)
   }
 

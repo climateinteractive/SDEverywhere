@@ -1,6 +1,6 @@
 import sh from 'shelljs'
-import { buildDir } from './Helpers.js'
-import { execCmd, modelPathProps } from './utils.js'
+
+import { buildDir, execCmd, modelPathProps } from './utils.js'
 
 export let command = 'compile [options] <model>'
 export let describe = 'compile the generated model to an executable file'
