@@ -1,9 +1,8 @@
 import B from 'bufx'
 
-import { parseModel } from '@sdeverywhere/compile'
+import { parseModel, preprocessModel } from '@sdeverywhere/compile'
 
 import { codeGenerator } from './CodeGen.js'
-import { preprocessModel } from './Preprocessor.js'
 import Model from './Model.js'
 import { modelPathProps } from './utils.js'
 

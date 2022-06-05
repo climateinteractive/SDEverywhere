@@ -2,8 +2,9 @@ import path from 'path'
 
 import B from 'bufx'
 
+import { preprocessModel } from '@sdeverywhere/compile'
+
 import { buildDir } from './Helpers.js'
-import { preprocessModel } from './Preprocessor.js'
 import { modelPathProps } from './utils.js'
 
 const command = 'flatten [options] <outmodel>'
