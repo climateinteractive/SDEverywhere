@@ -1,6 +1,9 @@
-import R from 'ramda'
 import { pr } from 'bufx'
-import { readDat, fileExists } from './Helpers.js'
+import R from 'ramda'
+
+import { readDat } from '@sdeverywhere/compile'
+
+import { fileExists } from './Helpers.js'
 
 // The epsilon value determines the required precision for value comparisons.
 let ε = 1e-5

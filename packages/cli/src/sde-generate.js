@@ -2,11 +2,11 @@ import path from 'path'
 
 import B from 'bufx'
 
-import { parseModel } from '@sdeverywhere/compile'
+import { parseModel, readDat } from '@sdeverywhere/compile'
 
 import { codeGenerator } from './CodeGen.js'
 import { preprocessModel } from './Preprocessor.js'
-import { canonicalName, buildDir, readDat, readXlsx } from './Helpers.js'
+import { canonicalName, buildDir, readXlsx } from './Helpers.js'
 import Model from './Model.js'
 import { printSubscripts, yamlSubsList } from './Subscript.js'
 import { modelPathProps } from './utils.js'
