@@ -1,5 +1,6 @@
 import sh from 'shelljs'
-import { modelPathProps, buildDir, linkCSourceFiles, execCmd } from './Helpers.js'
+import { modelPathProps, buildDir, linkCSourceFiles } from './Helpers.js'
+import { execCmd } from './utils.js'
 
 export let command = 'compile [options] <model>'
 export let describe = 'compile the generated model to an executable file'
@@ -37,4 +38,18 @@ export default {
   builder,
   handler,
   compile
+}
+
+let linkCSourceFiles = (modelDirname, buildDirname) => {
+  let cDirname = path.join(new URL('.', import.meta.url).pathname, 'c')
+  sh.ls(cDirname).forEach(filename => {
+    // If a C source file is present in the model directory, link to it instead
+    // as an override.
+    let srcPathname = path.join(modelDirname, filename)
+    if (!fs.existsSync(srcPathname)) {
+      srcPathname = path.join(cDirname, filename)
+    }
+    let dstPathname = path.join(buildDirname, filename)
+    fs.ensureSymlinkSync(srcPathname, dstPathname)
+  })
 }

@@ -2,7 +2,6 @@ import fs from 'fs-extra'
 import path from 'path'
 import util from 'util'
 import R from 'ramda'
-import sh from 'shelljs'
 import split from 'split-string'
 import byline from 'byline'
 import XLSX from 'xlsx'
@@ -212,19 +211,6 @@ export let ensureDir = (dir, defaultDir, modelDirname) => {
 export let fileExists = pathname => {
   return fs.existsSync(pathname)
 }
-export let linkCSourceFiles = (modelDirname, buildDirname) => {
-  let cDirname = path.join(new URL('.', import.meta.url).pathname, 'c')
-  sh.ls(cDirname).forEach(filename => {
-    // If a C source file is present in the model directory, link to it instead
-    // as an override.
-    let srcPathname = path.join(modelDirname, filename)
-    if (!fs.existsSync(srcPathname)) {
-      srcPathname = path.join(cDirname, filename)
-    }
-    let dstPathname = path.join(buildDirname, filename)
-    fs.ensureSymlinkSync(srcPathname, dstPathname)
-  })
-}
 export let modelPathProps = model => {
   // Normalize a model pathname that may or may not include the .mdl extension.
   // If there is not a path in the model argument, default to the current working directory.
@@ -241,16 +227,6 @@ export let modelPathProps = model => {
     modelName: p.name,
     modelPathname: path.format(p)
   }
-}
-export let execCmd = cmd => {
-  // Run a command line silently in the "sh" shell. Print error output on error.
-  let exitCode = 0
-  let result = sh.exec(cmd, { silent: true })
-  if (result.code !== 0) {
-    console.error(result.stderr)
-    exitCode = result.code
-  }
-  return exitCode
 }
 export let readDat = async (pathname, prefix = '') => {
   // Read a Vensim DAT file into a Map.
