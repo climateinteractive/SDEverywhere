@@ -1,7 +1,9 @@
 import path from 'path'
+
 import B from 'bufx'
-import antlr4 from 'antlr4'
-import { ModelLexer, ModelParser } from 'antlr4-vensim'
+
+import { parseModel } from '@sdeverywhere/compile'
+
 import { codeGenerator } from './CodeGen.js'
 import { preprocessModel } from './Preprocessor.js'
 import { canonicalName, modelPathProps, buildDir, readDat, readXlsx } from './Helpers.js'
@@ -129,15 +131,6 @@ export let generate = async (model, opts) => {
     outputText = yamlSubsList()
     writeOutput(outputPathname, outputText)
   }
-}
-let parseModel = input => {
-  // Read the model text and return a parse tree.
-  let chars = new antlr4.InputStream(input)
-  let lexer = new ModelLexer(chars)
-  let tokens = new antlr4.CommonTokenStream(lexer)
-  let parser = new ModelParser(tokens)
-  parser.buildParseTrees = true
-  return parser.model()
 }
 let parseSpec = specFilename => {
   let spec = parseJsonFile(specFilename)

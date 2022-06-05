@@ -1,10 +1,11 @@
-import antlr4 from 'antlr4'
-import { ModelLexer, ModelParser } from 'antlr4-vensim'
+import B from 'bufx'
+
+import { parseModel } from '@sdeverywhere/compile'
+
 import { codeGenerator } from './CodeGen.js'
 import { preprocessModel } from './Preprocessor.js'
 import Model from './Model.js'
 import { modelPathProps } from './Helpers.js'
-import B from 'bufx'
 
 let command = 'names [options] <model> <namesfile>'
 let describe = 'convert variable names in a model'
@@ -28,7 +29,7 @@ let handler = argv => {
 }
 let names = (model, namesPathname, opts) => {
   // Get the model name and directory from the model argument.
-  let { modelDirname, modelName, modelPathname } = modelPathProps(model)
+  let { modelPathname } = modelPathProps(model)
   let spec = parseSpec(opts.spec)
   // Preprocess model text into parser input.
   let input = preprocessModel(modelPathname, spec)
@@ -49,15 +50,6 @@ let names = (model, namesPathname, opts) => {
   }
   B.printBuf()
 }
-let parseModel = input => {
-  // Read the model text and return a parse tree.
-  let chars = new antlr4.InputStream(input)
-  let lexer = new ModelLexer(chars)
-  let tokens = new antlr4.CommonTokenStream(lexer)
-  let parser = new ModelParser(tokens)
-  parser.buildParseTrees = true
-  return parser.model()
-}
 let parseSpec = specFilename => {
   return parseJsonFile(specFilename)
 }
@@ -72,14 +64,6 @@ let parseJsonFile = filename => {
     // If the file doesn't exist, return an empty object without complaining.
   }
   return result
-}
-let writeOutput = (outputPathname, outputText) => {
-  try {
-    B.write(outputText, outputPathname)
-  } catch (e) {
-    console.log(outputPathname)
-    console.log(e.message)
-  }
 }
 export default {
   command,

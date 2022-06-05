@@ -1,9 +1,10 @@
-import antlr4 from 'antlr4'
-import { ModelLexer, ModelParser } from 'antlr4-vensim'
+import B from 'bufx'
+
+import { parseModel } from '@sdeverywhere/compile'
+
 import { codeGenerator } from './CodeGen.js'
 import { preprocessModel } from './Preprocessor.js'
 import { modelPathProps } from './Helpers.js'
-import B from 'bufx'
 
 let command = 'causes [options] <model> <C_varname>'
 let describe = 'print dependencies for a C variable name'
@@ -29,15 +30,6 @@ let causes = (model, varname, opts) => {
   let parseTree = parseModel(input)
   let operation = 'printRefGraph'
   codeGenerator(parseTree, { spec, operation, extData, directData, modelDirname, varname }).generate()
-}
-let parseModel = input => {
-  // Read the model text and return a parse tree.
-  let chars = new antlr4.InputStream(input)
-  let lexer = new ModelLexer(chars)
-  let tokens = new antlr4.CommonTokenStream(lexer)
-  let parser = new ModelParser(tokens)
-  parser.buildParseTrees = true
-  return parser.model()
 }
 let parseSpec = specFilename => {
   return parseJsonFile(specFilename)
