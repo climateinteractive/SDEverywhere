@@ -2,7 +2,7 @@ import path from 'path'
 import sh from 'shelljs'
 
 let command = 'clean [options]'
-let describe = 'clean out the build, output, and html directories for a model'
+let describe = 'clean out the build and output directories for a model'
 let builder = {
   modeldir: {
     describe: 'model directory',
@@ -18,12 +18,10 @@ let clean = opts => {
   // Default to the current directory if no model directory is given.
   let buildDirname = path.join(opts.modeldir || '.', 'build')
   let outputDirname = path.join(opts.modeldir || '.', 'output')
-  let htmlDirname = path.join(opts.modeldir || '.', 'html')
   let silentState = sh.config.silent
   sh.config.silent = true
   sh.rm('-r', buildDirname)
   sh.rm('-r', outputDirname)
-  sh.rm('-r', htmlDirname)
   sh.config.silent = silentState
 }
 export default {
