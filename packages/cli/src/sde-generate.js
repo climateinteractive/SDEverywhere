@@ -1,9 +1,9 @@
 import path from 'path'
 import B from 'bufx'
 
-import { canonicalName, preprocessModel } from '@sdeverywhere/compile'
+import { preprocessModel } from '@sdeverywhere/compile'
 
-import { buildDir, modelPathProps } from './utils.js'
+import { buildDir, modelPathProps, parseSpec } from './utils.js'
 
 export let command = 'generate [options] <model>'
 export let describe = 'generate model code'
@@ -76,31 +76,7 @@ export let generate = async (model, opts) => {
   }
   parseAndGenerate(spec, operation, modelDirname)
 }
-let parseSpec = specFilename => {
-  let spec = parseJsonFile(specFilename)
-  // Translate dimension families in the spec to canonical form.
-  if (spec.dimensionFamilies) {
-    let f = {}
-    for (let dimName in spec.dimensionFamilies) {
-      let family = spec.dimensionFamilies[dimName]
-      f[canonicalName(dimName)] = canonicalName(family)
-    }
-    spec.dimensionFamilies = f
-  }
-  return spec
-}
-let parseJsonFile = filename => {
-  // Parse the JSON file if it exists.
-  let result = {}
-  try {
-    let json = B.read(filename)
-    result = JSON.parse(json)
-    // console.error(`loaded ${filename}`);
-  } catch (ex) {
-    // If the file doesn't exist, return an empty object without complaining.
-  }
-  return result
-}
+
 let writeOutput = (outputPathname, outputText) => {
   try {
     B.write(outputText, outputPathname)

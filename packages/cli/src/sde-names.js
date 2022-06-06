@@ -3,7 +3,7 @@ import B from 'bufx'
 import { generateCode, parseModel, preprocessModel } from '@sdeverywhere/compile'
 
 import Model from './Model.js'
-import { modelPathProps } from './utils.js'
+import { modelPathProps, parseSpec } from './utils.js'
 
 let command = 'names [options] <model> <namesfile>'
 let describe = 'convert variable names in a model'
@@ -47,21 +47,6 @@ let names = (model, namesPathname, opts) => {
     }
   }
   B.printBuf()
-}
-let parseSpec = specFilename => {
-  return parseJsonFile(specFilename)
-}
-let parseJsonFile = filename => {
-  // Parse the JSON file if it exists.
-  let result = {}
-  try {
-    let json = B.read(filename)
-    result = JSON.parse(json)
-    // console.error(`loaded ${filename}`);
-  } catch (ex) {
-    // If the file doesn't exist, return an empty object without complaining.
-  }
-  return result
 }
 export default {
   command,

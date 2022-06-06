@@ -1,8 +1,6 @@
-import B from 'bufx'
-
 import { generateCode, parseModel, preprocessModel } from '@sdeverywhere/compile'
 
-import { modelPathProps } from './utils.js'
+import { modelPathProps, parseSpec } from './utils.js'
 
 let command = 'causes [options] <model> <C_varname>'
 let describe = 'print dependencies for a C variable name'
@@ -28,21 +26,6 @@ let causes = (model, varname, opts) => {
   let parseTree = parseModel(input)
   let operation = 'printRefGraph'
   generateCode(parseTree, { spec, operation, extData, directData, modelDirname, varname })
-}
-let parseSpec = specFilename => {
-  return parseJsonFile(specFilename)
-}
-let parseJsonFile = filename => {
-  // Parse the JSON file if it exists.
-  let result = {}
-  try {
-    let json = B.read(filename)
-    result = JSON.parse(json)
-    // console.error(`loaded ${filename}`);
-  } catch (ex) {
-    // If the file doesn't exist, return an empty object without complaining.
-  }
-  return result
 }
 export default {
   command,

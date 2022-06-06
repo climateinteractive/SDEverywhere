@@ -1,8 +1,11 @@
 import fs from 'fs'
 import path from 'path'
 
+import B from 'bufx'
 import R from 'ramda'
 import sh from 'shelljs'
+
+import { canonicalName } from '@sdeverywhere/compile'
 
 /**
  * Run a command line silently in the "sh" shell. Print error output on error.
@@ -40,6 +43,38 @@ export function modelPathProps(model) {
     modelName: p.name,
     modelPathname: path.format(p)
   }
+}
+
+/**
+ * Read and parse a model spec JSON file.
+ *
+ * @param specFilename The name of the model spec JSON file, relative to the
+ * current working directory.
+ * @return An object containing the model spec properties, or an empty object if
+ * the spec file does not exist.
+ */
+export function parseSpec(specFilename) {
+  // Parse the JSON file if it exists.
+  let spec = {}
+  try {
+    let json = B.read(specFilename)
+    spec = JSON.parse(json)
+  } catch (ex) {
+    // If the file doesn't exist, use an empty object without complaining.
+    // TODO: This needs to be fixed to fail fast instead of staying silent
+  }
+
+  // Translate dimension families in the spec to canonical form.
+  if (spec.dimensionFamilies) {
+    let f = {}
+    for (let dimName in spec.dimensionFamilies) {
+      let family = spec.dimensionFamilies[dimName]
+      f[canonicalName(dimName)] = canonicalName(family)
+    }
+    spec.dimensionFamilies = f
+  }
+
+  return spec
 }
 
 export function outputDir(outfile, modelDirname) {
