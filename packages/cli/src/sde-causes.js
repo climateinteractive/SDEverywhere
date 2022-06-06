@@ -18,7 +18,7 @@ let handler = argv => {
 }
 let causes = (model, varname, opts) => {
   // Get the model name and directory from the model argument.
-  let { modelDirname, modelName, modelPathname } = modelPathProps(model)
+  let { modelDirname, modelPathname } = modelPathProps(model)
   let extData = new Map()
   let directData = new Map()
   let spec = parseSpec(opts.spec)
@@ -43,14 +43,6 @@ let parseJsonFile = filename => {
     // If the file doesn't exist, return an empty object without complaining.
   }
   return result
-}
-let writeOutput = (outputPathname, outputText) => {
-  try {
-    B.write(outputText, outputPathname)
-  } catch (e) {
-    console.log(outputPathname)
-    console.log(e.message)
-  }
 }
 export default {
   command,
