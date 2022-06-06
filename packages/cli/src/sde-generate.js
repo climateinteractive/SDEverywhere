@@ -61,7 +61,7 @@ export let generate = async (model, opts) => {
   let input = preprocessModel(modelPathname, spec, profile, writeFiles)
   if (writeFiles) {
     let outputPathname = path.join(buildDirname, `${modelName}.mdl`)
-    writeOutput(outputPathname, input)
+    B.write(input, outputPathname)
     process.exit(0)
   }
   // Parse the model and generate code. If no operation is specified, the code generator will
@@ -77,14 +77,6 @@ export let generate = async (model, opts) => {
   parseAndGenerate(spec, operation, modelDirname)
 }
 
-let writeOutput = (outputPathname, outputText) => {
-  try {
-    B.write(outputText, outputPathname)
-  } catch (e) {
-    console.log(outputPathname)
-    console.log(e.message)
-  }
-}
 export default {
   command,
   describe,
