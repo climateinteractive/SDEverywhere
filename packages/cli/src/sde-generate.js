@@ -1,12 +1,8 @@
 import path from 'path'
-
 import B from 'bufx'
 
-import { canonicalName, generateCode, parseModel, preprocessModel, readDat } from '@sdeverywhere/compile'
+import { canonicalName, preprocessModel } from '@sdeverywhere/compile'
 
-import { readXlsx } from './Helpers.js'
-import Model from './Model.js'
-import { printSubscripts, yamlSubsList } from './Subscript.js'
 import { buildDir, modelPathProps } from './utils.js'
 
 export let command = 'generate [options] <model>'
@@ -58,33 +54,6 @@ export let generate = async (model, opts) => {
   let buildDirname = buildDir(opts.builddir, modelDirname)
   // Preprocess model text into parser input. Stop now if that's all we're doing.
   let spec = parseSpec(opts.spec)
-  // Read time series from external DAT files into a single object.
-  // externalDatfiles is an array of either filenames or objects
-  // giving a variable name prefix as the key and a filename as the value.
-  let extData = new Map()
-  if (spec.externalDatfiles) {
-    for (let datfile of spec.externalDatfiles) {
-      let prefix = ''
-      let filename = ''
-      if (typeof datfile === 'object') {
-        prefix = Object.keys(datfile)[0]
-        filename = datfile[prefix]
-      } else {
-        filename = datfile
-      }
-      let pathname = path.join(modelDirname, filename)
-      let data = await readDat(pathname, prefix)
-      extData = new Map([...extData, ...data])
-    }
-  }
-  // Attach Excel workbook data to directData entries by file name.
-  let directData = new Map()
-  if (spec.directData) {
-    for (let [file, xlsxFilename] of Object.entries(spec.directData)) {
-      let pathname = path.join(modelDirname, xlsxFilename)
-      directData.set(file, readXlsx(pathname))
-    }
-  }
   // Produce a runnable model with the "genc" and "preprocess" options.
   let profile = opts.analysis ? 'analysis' : 'genc'
   // Write the preprocessed model and removals if the option is "analysis" or "preprocess".
@@ -105,31 +74,7 @@ export let generate = async (model, opts) => {
   } else if (opts.refidtest) {
     operation = 'printRefIdTest'
   }
-  let parseTree = parseModel(input)
-  let code = generateCode(parseTree, { spec, operation, extData, directData, modelDirname })
-  if (opts.genc) {
-    let outputPathname = path.join(buildDirname, `${modelName}.c`)
-    writeOutput(outputPathname, code)
-  }
-  if (opts.list) {
-    let outputPathname, outputText
-    // Write variables to a text file.
-    outputPathname = path.join(buildDirname, `${modelName}_vars.txt`)
-    outputText = Model.printVarList()
-    writeOutput(outputPathname, outputText)
-    // Write subscripts to a text file.
-    outputPathname = path.join(buildDirname, `${modelName}_subs.txt`)
-    outputText = printSubscripts()
-    writeOutput(outputPathname, outputText)
-    // Write variables to a YAML file.
-    outputPathname = path.join(buildDirname, `${modelName}_vars.yaml`)
-    outputText = Model.yamlVarList()
-    writeOutput(outputPathname, outputText)
-    // Write subscripts to a YAML file.
-    outputPathname = path.join(buildDirname, `${modelName}_subs.yaml`)
-    outputText = yamlSubsList()
-    writeOutput(outputPathname, outputText)
-  }
+  parseAndGenerate(spec, operation, modelDirname)
 }
 let parseSpec = specFilename => {
   let spec = parseJsonFile(specFilename)
