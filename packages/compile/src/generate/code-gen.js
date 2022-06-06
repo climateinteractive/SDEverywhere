@@ -1,5 +1,5 @@
 import R from 'ramda'
-import ModelLHSReader from './ModelLHSReader.js'
+import ModelLHSReader from './model-lhs-reader.js'
 import EquationGen from './equation-gen.js'
 import Model from './Model.js'
 import { sub, allDimensions, allMappings, subscriptFamilies } from './Subscript.js'

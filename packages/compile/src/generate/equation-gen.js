@@ -3,7 +3,7 @@ import R from 'ramda'
 import XLSX from 'xlsx'
 import { ModelLexer, ModelParser } from 'antlr4-vensim'
 import ModelReader from './ModelReader.js'
-import ModelLHSReader from './ModelLHSReader.js'
+import ModelLHSReader from './model-lhs-reader.js'
 import LoopIndexVars from './loop-index-vars.js'
 import Model from './Model.js'
 import {
