@@ -5,7 +5,7 @@ import B from 'bufx'
 
 import { readXlsx } from './_shared/helpers.js'
 import { readDat } from './_shared/read-dat.js'
-import { generateCode } from './CodeGen.js'
+import { generateCode } from './generate/code-gen.js'
 import Model from './Model.js'
 import { parseModel } from './Parser.js'
 import { printSubscripts, yamlSubsList } from './Subscript.js'
