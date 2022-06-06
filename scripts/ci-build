@@ -10,5 +10,4 @@ cd $PROJ_DIR
 
 pnpm run prettier-local:check
 pnpm run -r --workspace-concurrency=1 ci:build
-# TODO
-#pnpm run test:e2e
+pnpm run test:e2e
