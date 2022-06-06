@@ -1,0 +1,8 @@
+{
+  "name": "sdeverywhere-tests",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@sdeverywhere/cli": "workspace:*"
+  }
+}

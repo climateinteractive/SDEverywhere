@@ -18,7 +18,7 @@ importers:
       fs-extra: ^10.1.0
       ramda: ^0.27.0
       shelljs: ^0.8.3
-      yargs: ^17.2.1
+      yargs: ^17.5.1
     dependencies:
       '@sdeverywhere/compile': link:../compile
       bufx: 1.0.5
@@ -49,6 +49,12 @@ importers:
       ramda: 0.27.2
       split-string: 6.1.0
       xlsx: 0.17.5
+
+  tests:
+    specifiers:
+      '@sdeverywhere/cli': workspace:*
+    dependencies:
+      '@sdeverywhere/cli': link:../packages/cli
 
 packages:
 
