@@ -3,11 +3,11 @@
 import path from 'path'
 import B from 'bufx'
 
-import { generateCode } from './CodeGen.js'
 import { readXlsx } from './_shared/helpers.js'
+import { readDat } from './_shared/read-dat.js'
+import { generateCode } from './CodeGen.js'
 import Model from './Model.js'
 import { parseModel } from './Parser.js'
-import { readDat } from './ReadDat.js'
 import { printSubscripts, yamlSubsList } from './Subscript.js'
 
 /**
