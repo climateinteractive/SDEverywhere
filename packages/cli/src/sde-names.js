@@ -1,8 +1,5 @@
-import B from 'bufx'
+import { parseAndGenerate, preprocessModel, printNames } from '@sdeverywhere/compile'
 
-import { generateCode, parseModel, preprocessModel } from '@sdeverywhere/compile'
-
-import Model from './Model.js'
 import { modelPathProps, parseSpec } from './utils.js'
 
 let command = 'names [options] <model> <namesfile>'
@@ -27,26 +24,14 @@ let handler = argv => {
 }
 let names = (model, namesPathname, opts) => {
   // Get the model name and directory from the model argument.
-  let { modelPathname } = modelPathProps(model)
+  let { modelDirname, modelPathname, modelName } = modelPathProps(model)
   let spec = parseSpec(opts.spec)
   // Preprocess model text into parser input.
   let input = preprocessModel(modelPathname, spec)
   // Parse the model to get variable and subscript information.
-  let parseTree = parseModel(input)
-  let operation = 'convertNames'
-  generateCode(parseTree, { spec, operation })
+  parseAndGenerate(input, spec, 'convertNames', modelDirname, modelName, '')
   // Read each variable name from the names file and convert it.
-  let lines = B.lines(B.read(namesPathname))
-  for (let line of lines) {
-    if (line.length > 0) {
-      if (opts.toc) {
-        B.emitLine(Model.cName(line))
-      } else if (opts.tovml) {
-        B.emitLine(Model.vensimName(line))
-      }
-    }
-  }
-  B.printBuf()
+  printNames(namesPathname, opts.toc ? 'to-c' : 'to-vensim')
 }
 export default {
   command,

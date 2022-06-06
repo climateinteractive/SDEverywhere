@@ -19,10 +19,13 @@ import { printSubscripts, yamlSubsList } from './Subscript.js'
  * - If `operation` is 'printVarList', variables and subscripts will be written to
  *   txt and yaml files under `buildDir`.
  * - If `operation` is 'printRefIdTest', reference identifiers will be printed to the console.
+ * - If `operation` is 'convertNames', no output will be generated, but the results of model
+ *   analysis will be available.
  *
  * @param input The preprocessed Vensim model text.
  * @param spec The model spec (from the JSON file).
- * @param operation Either 'generateC', 'printVarList', 'printRefIdTest', or empty string.
+ * @param operation Either 'generateC', 'printVarList', 'printRefIdTest', 'convertNames',
+ * or empty string.
  * @param modelDirname The absolute path to the directory containing the mdl file.
  * The dat and xlsx files referenced by the spec will be relative to this directory.
  * @param modelName The model name (without the mdl extension).
@@ -85,4 +88,27 @@ export function parseAndGenerate(input, spec, operation, modelDirname, modelName
   }
 
   return code
+}
+
+/**
+ * Read the variable names from the given file, convert them to their
+ * C or Vensim representation, and print the results to the console.
+ *
+ * This is used only to implement the `sde names` command.
+ *
+ * @param namesPathname The path to the file containing variables names.
+ * @param operation Either 'to-c' or 'to-vensim'.
+ */
+export function printNames(namesPathname, operation) {
+  let lines = B.lines(B.read(namesPathname))
+  for (let line of lines) {
+    if (line.length > 0) {
+      if (operation === 'to-c') {
+        B.emitLine(Model.cName(line))
+      } else {
+        B.emitLine(Model.vensimName(line))
+      }
+    }
+  }
+  B.printBuf()
 }

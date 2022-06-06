@@ -74,7 +74,7 @@ export let generate = async (model, opts) => {
   } else if (opts.refidtest) {
     operation = 'printRefIdTest'
   }
-  parseAndGenerate(spec, operation, modelDirname)
+  parseAndGenerate(input, spec, operation, modelDirname, modelName, buildDirname)
 }
 
 export default {
