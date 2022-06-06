@@ -32,7 +32,7 @@ import { printSubscripts, yamlSubsList } from './Subscript.js'
  * @param buildDir The output directory where the C or list files will be written.
  * @return A string containing the generated C code.
  */
-export function parseAndGenerate(input, spec, operation, modelDirname, modelName, buildDir) {
+export async function parseAndGenerate(input, spec, operation, modelDirname, modelName, buildDir) {
   // Read time series from external DAT files into a single object.
   // externalDatfiles is an array of either filenames or objects
   // giving a variable name prefix as the key and a filename as the value.
