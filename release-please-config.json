@@ -1,7 +1,8 @@
 {
   "packages": {
-    ".": { "release-as": "0.6.0" }
+    "packages/compile": {},
+    "packages/cli": {}
   },
-  "last-release-sha": "94381c3545c49f680aa97289b88a18def18769ac",
+  "plugins": ["node-workspace"],
   "pull-request-title-pattern": "chore: release${component} ${version}"
 }

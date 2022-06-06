@@ -61,11 +61,9 @@ jobs:
         run: |
           pnpm install
 
-      - name: Build
-        id: build
+      - name: Build and test
         run: |
-          pnpm prettier:check
-          pnpm test
+          ./scripts/ci-build
 
       # Save the npmjs auth token so that the workflow can publish packages to the registry
       - name: Configure npm auth token

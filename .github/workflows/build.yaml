@@ -48,7 +48,6 @@ jobs:
         run: |
           pnpm install
 
-      - name: Run tests
+      - name: Build and test
         run: |
-          pnpm prettier:check
-          pnpm test
+          ./scripts/ci-build

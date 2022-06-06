@@ -1,0 +1,40 @@
+{
+  "name": "@sdeverywhere/compile",
+  "version": "0.7.0",
+  "description": "The core Vensim to C compiler for the SDEverywhere tool suite.",
+  "type": "module",
+  "files": [
+    "src/**",
+    "!.DS_Store"
+  ],
+  "main": "./src/index.js",
+  "scripts": {
+    "lint": "echo No lint step yet",
+    "prettier:check": "prettier --check .",
+    "prettier:fix": "prettier --write .",
+    "precommit": "../../scripts/precommit",
+    "ci:build": "run-s lint prettier:check"
+  },
+  "dependencies": {
+    "antlr4": "4.9.2",
+    "antlr4-vensim": "0.6.0",
+    "bufx": "^1.0.5",
+    "byline": "^5.0.0",
+    "csv-parse": "^4.15.4",
+    "js-yaml": "^3.13.1",
+    "ramda": "^0.27.0",
+    "split-string": "^6.0.0",
+    "xlsx": "^0.17.0"
+  },
+  "author": "Climate Interactive",
+  "license": "MIT",
+  "homepage": "https://sdeverywhere.org",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/climateinteractive/SDEverywhere.git",
+    "directory": "packages/compile"
+  },
+  "bugs": {
+    "url": "https://github.com/climateinteractive/SDEverywhere/issues"
+  }
+}

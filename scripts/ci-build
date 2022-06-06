@@ -1,0 +1,13 @@
+#!/bin/bash
+
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+PROJ_DIR=$SCRIPT_DIR/..
+
+set -e # fail on error
+set -x # include all commands in logs
+
+cd $PROJ_DIR
+
+pnpm run prettier-local:check
+pnpm run -r --workspace-concurrency=1 ci:build
+pnpm run test:e2e
