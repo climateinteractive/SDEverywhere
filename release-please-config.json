@@ -4,5 +4,6 @@
     "packages/cli": {}
   },
   "plugins": ["node-workspace"],
+  "bump-minor-pre-major": true,
   "pull-request-title-pattern": "chore: release${component} ${version}"
 }
