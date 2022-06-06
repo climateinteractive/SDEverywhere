@@ -3,6 +3,7 @@ import R from 'ramda'
 import ExprReader from './ExprReader.js'
 import Model from './Model.js'
 import ModelReader from './ModelReader.js'
+import { createParser } from './Parser.js'
 import VariableReader from './VariableReader.js'
 import {
   extractMarkedDims,
