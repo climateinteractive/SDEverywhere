@@ -2,7 +2,7 @@ import { generateCode, parseModel, preprocessModel } from '@sdeverywhere/compile
 
 import { modelPathProps, parseSpec } from './utils.js'
 
-let command = 'causes [options] <model> <C_varname>'
+let command = 'causes [options] <model> <c_varname>'
 let describe = 'print dependencies for a C variable name'
 let builder = {
   spec: {
