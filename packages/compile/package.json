@@ -11,7 +11,8 @@
     "lint": "echo No lint step yet",
     "prettier:check": "prettier --check .",
     "prettier:fix": "prettier --write .",
-    "precommit": "../../scripts/precommit"
+    "precommit": "../../scripts/precommit",
+    "ci:build": "run-s lint prettier:check"
   },
   "dependencies": {
     "antlr4": "4.9.2",
