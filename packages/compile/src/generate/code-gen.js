@@ -1,6 +1,6 @@
 import R from 'ramda'
 import ModelLHSReader from './ModelLHSReader.js'
-import EquationGen from './EquationGen.js'
+import EquationGen from './equation-gen.js'
 import Model from './Model.js'
 import { sub, allDimensions, allMappings, subscriptFamilies } from './Subscript.js'
 import { asort, lines, strlist, abend, mapIndexed } from './_shared/helpers.js'
