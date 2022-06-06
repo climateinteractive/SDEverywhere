@@ -1,5 +1,5 @@
 import { ModelLexer, ModelVisitor } from 'antlr4-vensim'
-import { canonicalName } from './Helpers.js'
+import { canonicalName } from './_shared/helpers.js'
 import Model from './Model.js'
 import { createParser } from './Parser.js'
 

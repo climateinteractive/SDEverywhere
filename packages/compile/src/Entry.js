@@ -4,7 +4,7 @@ import path from 'path'
 import B from 'bufx'
 
 import { generateCode } from './CodeGen.js'
-import { readXlsx } from './Helpers.js'
+import { readXlsx } from './_shared/helpers.js'
 import Model from './Model.js'
 import { parseModel } from './Parser.js'
 import { readDat } from './ReadDat.js'

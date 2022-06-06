@@ -2,7 +2,7 @@ import util from 'util'
 import R from 'ramda'
 import B from 'bufx'
 import yaml from 'js-yaml'
-import { canonicalName, asort, vlog } from './Helpers.js'
+import { canonicalName, asort, vlog } from './_shared/helpers.js'
 
 // A subscript is a dimension or an index.
 // Both have the same properties: model name, canonical name, family, values.

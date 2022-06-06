@@ -4,7 +4,7 @@ import ModelReader from './ModelReader.js'
 import Model from './Model.js'
 import Variable from './Variable.js'
 import { sub, isDimension, isIndex, normalizeSubscripts, subscriptsMatch, isSubdimension } from './Subscript.js'
-import { canonicalName, vlog, strlist, cartesianProductOf } from './Helpers.js'
+import { canonicalName, vlog, strlist, cartesianProductOf } from './_shared/helpers.js'
 
 // Set true to print extra debugging information to stderr.
 const DEBUG_LOG = false

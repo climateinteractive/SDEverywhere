@@ -3,7 +3,7 @@ import ModelLHSReader from './ModelLHSReader.js'
 import EquationGen from './EquationGen.js'
 import Model from './Model.js'
 import { sub, allDimensions, allMappings, subscriptFamilies } from './Subscript.js'
-import { asort, lines, strlist, abend, mapIndexed } from './Helpers.js'
+import { asort, lines, strlist, abend, mapIndexed } from './_shared/helpers.js'
 
 export function generateCode(parseTree, opts) {
   return codeGenerator(parseTree, opts).generate()

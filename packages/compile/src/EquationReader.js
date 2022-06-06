@@ -29,7 +29,7 @@ import {
   newLookupVarName,
   newFixedDelayVarName,
   cartesianProductOf
-} from './Helpers.js'
+} from './_shared/helpers.js'
 
 // Set this true to get a list of functions used in the model. This may include lookups.
 const PRINT_FUNCTION_NAMES = false

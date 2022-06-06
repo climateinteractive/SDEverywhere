@@ -2,7 +2,7 @@ import R from 'ramda'
 import ModelReader from './ModelReader.js'
 import { createParser } from './Parser.js'
 import { sub, isDimension } from './Subscript.js'
-import { canonicalName } from './Helpers.js'
+import { canonicalName } from './_shared/helpers.js'
 
 //
 // ModelLHSReader parses the LHS of a var in Vensim format and

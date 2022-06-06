@@ -19,7 +19,7 @@ import {
   sub,
   subscriptFamilies
 } from './Subscript.js'
-import { decanonicalize, isIterable, listConcat, strlist, vlog, vsort } from './Helpers.js'
+import { decanonicalize, isIterable, listConcat, strlist, vlog, vsort } from './_shared/helpers.js'
 
 let variables = []
 let inputVars = []

@@ -34,7 +34,7 @@ import {
   readCsv,
   strToConst,
   vlog
-} from './Helpers.js'
+} from './_shared/helpers.js'
 
 export default class EquationGen extends ModelReader {
   constructor(variable, extData, directData, mode, modelDirname) {
