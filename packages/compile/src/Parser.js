@@ -1,5 +1,8 @@
 // Copyright (c) 2022 Climate Interactive / New Venture Fund
 
+import antlr4 from 'antlr4'
+import { ModelLexer, ModelParser } from 'antlr4-vensim'
+
 /**
  * Create a `ModelParser` for the given model text, which can be the
  * contents of an entire `mdl` file, or a portion of one (e.g., an

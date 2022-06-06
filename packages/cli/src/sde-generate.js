@@ -1,7 +1,7 @@
 import path from 'path'
 import B from 'bufx'
 
-import { preprocessModel } from '@sdeverywhere/compile'
+import { parseAndGenerate, preprocessModel } from '@sdeverywhere/compile'
 
 import { buildDir, modelPathProps, parseSpec } from './utils.js'
 
