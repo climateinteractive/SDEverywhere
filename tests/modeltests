@@ -1,20 +1,20 @@
 #!/bin/bash
 
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+PROJ_DIR=$SCRIPT_DIR/..
+MODELS_DIR=$PROJ_DIR/models
+
 set -e # fail on error
 
+cd $PROJ_DIR
+
 # Use the local sde command.
-SDE='node ../sde.js'
-$SDE -v &>/dev/null
-if [[ $? -ne 0 ]]; then
-  echo 'SDEverywhere is not installed.'
-  echo 'Run "npm install" in the top directory to install it locally.'
-  exit 1
-fi
+SDE="node $PROJ_DIR/packages/cli/src/main.js"
 
 function test {
   MODEL=$1
   echo "Testing the $MODEL model"
-  MODEL_DIR=../../models/$MODEL
+  MODEL_DIR=$MODELS_DIR/$MODEL
 
   # Clean up before
   $SDE clean --modeldir $MODEL_DIR
@@ -53,7 +53,7 @@ if [[ -n $1 ]]; then
   test $1
 else
   # Test each model against saved Vensim data.
-  for m in $(ls ../../models); do
+  for m in $(ls $MODELS_DIR); do
     test $m
   done
 fi
