@@ -20,6 +20,9 @@
 // causes
 // which
 
+import fs from 'fs'
+import path from 'path'
+
 import yargs from 'yargs'
 import sdeGenerate from './sde-generate.js'
 import sdeFlatten from './sde-flatten.js'
@@ -35,8 +38,16 @@ import sdeNames from './sde-names.js'
 import sdeCauses from './sde-causes.js'
 import sdeWhich from './sde-which.js'
 
-yargs(process.argv.slice(2))
+// Workaround yargs issue where it doesn't find version from package.json
+// automatically in all cases in ESM context
+const srcDir = new URL('.', import.meta.url).pathname
+const pkgFile = path.resolve(srcDir, '..', 'package.json')
+const pkg = JSON.parse(fs.readFileSync(pkgFile))
+
+const yarg = yargs(process.argv.slice(2))
+yarg
   .strict()
+  .scriptName('sde')
   .usage('usage: $0 <command>')
   .command(sdeGenerate)
   .command(sdeFlatten)
@@ -53,7 +64,8 @@ yargs(process.argv.slice(2))
   .command(sdeWhich)
   .demandCommand(1)
   .help()
-  .version()
+  .version(pkg.version)
   .alias('h', 'help')
   .alias('v', 'version')
+  .wrap(yarg.terminalWidth())
   .parse()
