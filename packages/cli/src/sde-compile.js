@@ -1,3 +1,5 @@
+import fs from 'fs-extra'
+import path from 'path'
 import sh from 'shelljs'
 
 import { buildDir, execCmd, modelPathProps } from './utils.js'
