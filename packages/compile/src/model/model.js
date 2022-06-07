@@ -173,7 +173,7 @@ function readSubscriptRanges(tree, dimensionFamilies, indexFamilies, modelDirnam
         // List fromDim indices in the order in which they map onto toDim indices.
         // Indices are filled in the mapping value by map-to index number as they
         // occur in the map-from dimension.
-        let setMappingValue = (toIndNumber, fromIndName) => {
+        let setMappingValue = (toSubName, toIndNumber, fromIndName) => {
           if (Number.isInteger(toIndNumber) && toIndNumber >= 0 && toIndNumber < toDim.size) {
             invertedMappingValue[toIndNumber] = fromIndName
           } else {
@@ -190,12 +190,12 @@ function readSubscriptRanges(tree, dimensionFamilies, indexFamilies, modelDirnam
             // Fill in indices from a dimension in the mapping value.
             for (let toIndName of toSub.value) {
               let toIndNumber = toDim.value.indexOf(toIndName)
-              setMappingValue(toIndNumber, fromIndName)
+              setMappingValue(toSubName, toIndNumber, fromIndName)
             }
           } else {
             // Fill in a single index from an index in the mapping value.
             let toIndNumber = toDim.value.indexOf(toSub.name)
-            setMappingValue(toIndNumber, fromIndName)
+            setMappingValue(toSubName, toIndNumber, fromIndName)
           }
         }
       }
@@ -404,7 +404,6 @@ function resolveDuplicateDeclarations() {
 function findNonAtoAVars() {
   // Find variables with multiple instances with the same var name, which makes them
   // elements in a non-apply-to-all array. This function constructs the nonAtoANames list.
-  let names = varNames()
   function areSubsEqual(vars, i) {
     // Scan the subscripts for each var at position i in normal order.
     // Return true if the subscript is the same for all vars with that name.
@@ -581,7 +580,6 @@ function varWithRefId(refId) {
     }
     if (!refVar) {
       vlog('ERROR: no var found for refId', refId)
-      debugger
     }
   }
   return refVar
@@ -645,7 +643,7 @@ function vensimName(cVarName) {
     if (v) {
       // Ensure that the C var name is subscripted when the var has subscripts.
       if (R.isEmpty(v.subscripts) || !R.isEmpty(indexNumbers)) {
-        m = v.modelLHS.match(/[^\[]+/)
+        m = v.modelLHS.match(/[^[]+/)
         if (m) {
           result = m[0]
         }
@@ -757,7 +755,7 @@ function sortVarsOfType(varType) {
   sortedVars = R.concat(sortedNodepVars, sortedVars)
 
   if (PRINT_SORTED_VARS) {
-    sortedVars.forEach((v, i) => console.error(`${v.refId}`))
+    sortedVars.forEach(v => console.error(`${v.refId}`))
   }
   return sortedVars
 }
@@ -861,7 +859,7 @@ function sortInitVars() {
   sortedVars = R.concat(sortedNodepVars, sortedVars)
 
   if (PRINT_SORTED_VARS) {
-    sortedVars.forEach((v, i) => console.error(`${v.refId}`))
+    sortedVars.forEach(v => console.error(`${v.refId}`))
   }
   return sortedVars
 }
@@ -963,14 +961,14 @@ function printRefIdTest() {
         // An apply-to-all array should have only one instance of the var name.
         if (vars.length > 1) {
           vlog('ERROR: more than one instance of apply-to-all array', varName)
-          printVars(vars)
+          // printVars(vars)
         }
       }
     } else {
       // The var is a scalar and should only have one instance of the var name.
       if (vars.length > 1) {
         vlog('ERROR: more than one instance of scalar var', varName)
-        printVars(vars)
+        // printVars(vars)
       }
     }
   }, variables)

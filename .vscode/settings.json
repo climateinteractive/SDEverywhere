@@ -1,4 +1,5 @@
 {
+  "eslint.workingDirectories": ["./packages/*"],
   "psi-header.config": {
     "forceToTop": true,
     "company": "Climate Interactive / New Venture Fund"

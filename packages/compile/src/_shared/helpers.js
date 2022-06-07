@@ -46,17 +46,12 @@ export let canonicalName = name => {
 }
 export let decanonicalize = name => {
   // Decanonicalize the var name.
-  try {
-    name = name.replace(/^_/, '').replace(/_/g, ' ')
-    // Vensim variable names need to be surrounded by quotes if they:
-    // do not start with a letter
-    // do not contain only letters, spaces, numbers, single quotes, and dollar signs.
-    if (!name.match(/^[A-Za-z]/) || name.match(/[^A-Za-z0-9\s'$]/)) {
-      name = `"${name}"`
-    }
-  } catch (e) {
-    debugger
-    throw e
+  name = name.replace(/^_/, '').replace(/_/g, ' ')
+  // Vensim variable names need to be surrounded by quotes if they:
+  // do not start with a letter
+  // do not contain only letters, spaces, numbers, single quotes, and dollar signs.
+  if (!name.match(/^[A-Za-z]/) || name.match(/[^A-Za-z0-9\s'$]/)) {
+    name = `"${name}"`
   }
   return name
 }
@@ -215,7 +210,7 @@ export let readCsv = (pathname, delimiter = ',') => {
 // Convert the var name and subscript names to canonical form separately.
 export let canonicalVensimName = vname => {
   let result = vname
-  let m = vname.match(/([^\[]+)(?:\[([^\]]+)\])?/)
+  let m = vname.match(/([^[]+)(?:\[([^\]]+)\])?/)
   if (m) {
     result = canonicalName(m[1])
     if (m[2]) {

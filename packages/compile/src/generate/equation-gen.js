@@ -144,7 +144,7 @@ export default class EquationGen extends ModelReader {
     // Close the assignment loops.
     this.subscriptLoopClosingCode = R.concat(
       this.subscriptLoopClosingCode,
-      R.map(dimName => `  }`, dimNames)
+      R.map(() => `  }`, dimNames)
     )
     // Assemble code from each channel into final var code output.
     return this.comments.concat(this.subscriptLoopOpeningCode, this.tmpVarCode, formula, this.subscriptLoopClosingCode)
@@ -269,21 +269,16 @@ export default class EquationGen extends ModelReader {
             return `[${sub(separatedIndexName).value}]`
           }
           // See if we need to apply a mapping because the RHS dim is not found on the LHS.
-          try {
-            let found = this.var.subscripts.findIndex(lhsSub => sub(lhsSub).family === sub(rhsSub).family)
-            if (found < 0) {
-              // Find the  mapping from the RHS subscript to a LHS subscript.
-              for (let lhsSub of this.var.subscripts) {
-                if (hasMapping(rhsSub, lhsSub)) {
-                  // console.error(`${this.var.refId} hasMapping ${rhsSub} → ${lhsSub}`);
-                  i = this.loopIndexVars.index(lhsSub)
-                  return `[__map${rhsSub}${lhsSub}[${i}]]`
-                }
+          let found = this.var.subscripts.findIndex(lhsSub => sub(lhsSub).family === sub(rhsSub).family)
+          if (found < 0) {
+            // Find the  mapping from the RHS subscript to a LHS subscript.
+            for (let lhsSub of this.var.subscripts) {
+              if (hasMapping(rhsSub, lhsSub)) {
+                // console.error(`${this.var.refId} hasMapping ${rhsSub} → ${lhsSub}`);
+                i = this.loopIndexVars.index(lhsSub)
+                return `[__map${rhsSub}${lhsSub}[${i}]]`
               }
             }
-          } catch (e) {
-            debugger
-            throw e
           }
           // There is no mapping, so use the loop index for this dim family on the LHS.
           i = this.loopIndexVars.index(rhsSub)
@@ -1002,7 +997,7 @@ export default class EquationGen extends ModelReader {
       this.varNames.pop()
     }
   }
-  visitLookupArg(ctx) {
+  visitLookupArg() {
     // Substitute the previously generated lookup arg var name into the expression.
     if (this.var.lookupArgVarName) {
       this.emit(this.var.lookupArgVarName)
@@ -1078,12 +1073,7 @@ export default class EquationGen extends ModelReader {
   }
   visitConstList(ctx) {
     let emitConstAtPos = i => {
-      try {
-        this.emit(strToConst(exprs[i].getText()))
-      } catch (e) {
-        debugger
-        throw e
-      }
+      this.emit(strToConst(exprs[i].getText()))
     }
     let exprs = ctx.expr()
     // console.error(`visitConstList ${this.var.refId} ${exprs.length} exprs`)

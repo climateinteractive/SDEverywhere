@@ -575,7 +575,6 @@ export default class EquationReader extends ModelReader {
       let level3, level3LHS, level3RefId
       let delay3 = `((${delay}) / 3)`
       let init = `${args[2] !== undefined ? args[2] : args[0]} * ${delay3}`
-      let varLHS = this.var.modelLHS
       let aux1, aux1LHS
       let aux2, aux2LHS
       let aux3, aux3LHS
@@ -616,7 +615,6 @@ export default class EquationReader extends ModelReader {
           level2RefId = canonicalVensimName(level2LHS)
           level3RefId = canonicalVensimName(level3LHS)
           input = input.replace(re, index)
-          varLHS = varLHS.replace(re, index)
           delay3 = delay3.replace(re, index)
           init = init.replace(re, index)
         }
@@ -704,7 +702,6 @@ export default class EquationReader extends ModelReader {
     }
     if (result.size > 1) {
       console.error(`ERROR: genSubs subscripts do not agree: ${[...varNames]}`)
-      debugger
     }
     return [...result][0] || ''
   }
