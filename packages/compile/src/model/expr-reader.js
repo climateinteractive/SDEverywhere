@@ -1,7 +1,9 @@
 import { ModelLexer, ModelVisitor } from 'antlr4-vensim'
-import { canonicalName } from './Helpers.js'
-import Model from './Model.js'
-import { createParser } from './Parser.js'
+
+import { canonicalName } from '../_shared/helpers.js'
+import { createParser } from '../parse/parser.js'
+
+import Model from './model.js'
 
 /**
  * Reads an expression and determines if it resolves to a constant numeric value.

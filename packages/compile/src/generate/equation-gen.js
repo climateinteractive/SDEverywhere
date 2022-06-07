@@ -1,23 +1,8 @@
 import path from 'path'
+import { ModelLexer, ModelParser } from 'antlr4-vensim'
 import R from 'ramda'
 import XLSX from 'xlsx'
-import { ModelLexer, ModelParser } from 'antlr4-vensim'
-import ModelReader from './ModelReader.js'
-import ModelLHSReader from './ModelLHSReader.js'
-import LoopIndexVars from './LoopIndexVars.js'
-import Model from './Model.js'
-import {
-  dimensionNames,
-  extractMarkedDims,
-  hasMapping,
-  isDimension,
-  isIndex,
-  isTrivialDimension,
-  indexInSepDim,
-  normalizeSubscripts,
-  separatedVariableIndex,
-  sub
-} from './Subscript.js'
+
 import {
   canonicalName,
   cartesianProductOf,
@@ -34,7 +19,24 @@ import {
   readCsv,
   strToConst,
   vlog
-} from './Helpers.js'
+} from '../_shared/helpers.js'
+import {
+  dimensionNames,
+  extractMarkedDims,
+  hasMapping,
+  isDimension,
+  isIndex,
+  isTrivialDimension,
+  indexInSepDim,
+  normalizeSubscripts,
+  separatedVariableIndex,
+  sub
+} from '../_shared/subscript.js'
+import ModelReader from '../parse/model-reader.js'
+import Model from '../model/model.js'
+
+import LoopIndexVars from './loop-index-vars.js'
+import ModelLHSReader from './model-lhs-reader.js'
 
 export default class EquationGen extends ModelReader {
   constructor(variable, extData, directData, mode, modelDirname) {

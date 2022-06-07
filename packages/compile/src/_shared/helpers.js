@@ -1,9 +1,9 @@
 import util from 'util'
+import B from 'bufx'
+import parseCsv from 'csv-parse/lib/sync.js'
 import R from 'ramda'
 import split from 'split-string'
 import XLSX from 'xlsx'
-import parseCsv from 'csv-parse/lib/sync.js'
-import B from 'bufx'
 
 // Set true to print a stack trace in vlog
 export const PRINT_VLOG_TRACE = false

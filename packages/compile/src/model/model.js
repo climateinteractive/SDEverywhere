@@ -1,13 +1,8 @@
-import R from 'ramda'
 import B from 'bufx'
 import yaml from 'js-yaml'
-import toposort from './toposort.js'
-import VariableReader from './VariableReader.js'
-import VarNameReader from './VarNameReader.js'
-import SubscriptRangeReader from './SubscriptRangeReader.js'
-import EquationReader from './EquationReader.js'
-import Variable from './Variable.js'
-import { createParser } from './Parser.js'
+import R from 'ramda'
+
+import { decanonicalize, isIterable, listConcat, strlist, vlog, vsort } from '../_shared/helpers.js'
 import {
   addIndex,
   allAliases,
@@ -18,8 +13,15 @@ import {
   normalizeSubscripts,
   sub,
   subscriptFamilies
-} from './Subscript.js'
-import { decanonicalize, isIterable, listConcat, strlist, vlog, vsort } from './Helpers.js'
+} from '../_shared/subscript.js'
+import { createParser } from '../parse/parser.js'
+
+import EquationReader from './equation-reader.js'
+import SubscriptRangeReader from './subscript-range-reader.js'
+import toposort from './toposort.js'
+import VarNameReader from './var-name-reader.js'
+import Variable from './variable.js'
+import VariableReader from './variable-reader.js'
 
 let variables = []
 let inputVars = []

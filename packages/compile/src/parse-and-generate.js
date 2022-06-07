@@ -3,12 +3,12 @@
 import path from 'path'
 import B from 'bufx'
 
-import { generateCode } from './CodeGen.js'
-import { readXlsx } from './Helpers.js'
-import Model from './Model.js'
-import { parseModel } from './Parser.js'
-import { readDat } from './ReadDat.js'
-import { printSubscripts, yamlSubsList } from './Subscript.js'
+import { readXlsx } from './_shared/helpers.js'
+import { readDat } from './_shared/read-dat.js'
+import { printSubscripts, yamlSubsList } from './_shared/subscript.js'
+import { parseModel } from './parse/parser.js'
+import Model from './model/model.js'
+import { generateCode } from './generate/code-gen.js'
 
 /**
  * Parse a Vensim model and generate C code.

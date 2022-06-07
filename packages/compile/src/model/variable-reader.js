@@ -1,10 +1,19 @@
 import { ModelParser } from 'antlr4-vensim'
 import R from 'ramda'
-import ModelReader from './ModelReader.js'
-import Model from './Model.js'
-import Variable from './Variable.js'
-import { sub, isDimension, isIndex, normalizeSubscripts, subscriptsMatch, isSubdimension } from './Subscript.js'
-import { canonicalName, vlog, strlist, cartesianProductOf } from './Helpers.js'
+
+import { canonicalName, vlog, strlist, cartesianProductOf } from '../_shared/helpers.js'
+import {
+  sub,
+  isDimension,
+  isIndex,
+  normalizeSubscripts,
+  subscriptsMatch,
+  isSubdimension
+} from '../_shared/subscript.js'
+import ModelReader from '../parse/model-reader.js'
+
+import Model from './model.js'
+import Variable from './variable.js'
 
 // Set true to print extra debugging information to stderr.
 const DEBUG_LOG = false

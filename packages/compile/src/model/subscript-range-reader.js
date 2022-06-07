@@ -2,9 +2,10 @@ import path from 'path'
 import { ModelParser } from 'antlr4-vensim'
 import R from 'ramda'
 import XLSX from 'xlsx'
-import ModelReader from './ModelReader.js'
-import { Subscript } from './Subscript.js'
-import { cFunctionName, matchRegex, readCsv } from './Helpers.js'
+
+import { cFunctionName, matchRegex, readCsv } from '../_shared/helpers.js'
+import { Subscript } from '../_shared/subscript.js'
+import ModelReader from '../parse/model-reader.js'
 
 export default class SubscriptRangeReader extends ModelReader {
   constructor(modelDirname) {

@@ -1,10 +1,9 @@
 import fs from 'fs'
-
 import B from 'bufx'
 import byline from 'byline'
 import R from 'ramda'
 
-import { canonicalVensimName } from './Helpers.js'
+import { canonicalVensimName } from './helpers.js'
 
 /**
  * Read a Vensim `dat` file with static data and return a Map.
