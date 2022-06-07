@@ -9,7 +9,7 @@
   ],
   "main": "./src/index.js",
   "scripts": {
-    "lint": "echo No lint step yet",
+    "lint": "eslint . --max-warnings 0",
     "prettier:check": "prettier --check .",
     "prettier:fix": "prettier --write .",
     "precommit": "../../scripts/precommit",
