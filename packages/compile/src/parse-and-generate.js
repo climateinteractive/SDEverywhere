@@ -5,10 +5,10 @@ import B from 'bufx'
 
 import { readXlsx } from './_shared/helpers.js'
 import { readDat } from './_shared/read-dat.js'
+import { printSubscripts, yamlSubsList } from './_shared/subscript.js'
+import { parseModel } from './parse/parser.js'
+import Model from './model/model.js'
 import { generateCode } from './generate/code-gen.js'
-import Model from './Model.js'
-import { parseModel } from './Parser.js'
-import { printSubscripts, yamlSubsList } from './Subscript.js'
 
 /**
  * Parse a Vensim model and generate C code.

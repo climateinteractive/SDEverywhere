@@ -1,7 +1,7 @@
 import path from 'path'
-import R from 'ramda'
 import B from 'bufx'
-import { splitEquations, replaceDelimitedStrings } from './_shared/helpers.js'
+import R from 'ramda'
+import { splitEquations, replaceDelimitedStrings } from '../_shared/helpers.js'
 
 export let preprocessModel = (mdlFilename, spec, profile = 'genc', writeFiles = false, outDecls = []) => {
   const MACROS_FILENAME = 'macros.txt'

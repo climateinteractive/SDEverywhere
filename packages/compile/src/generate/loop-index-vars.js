@@ -1,4 +1,4 @@
-import { isDimension } from './Subscript.js'
+import { isDimension } from '../_shared/subscript.js'
 
 export default class LoopIndexVars {
   constructor(indexVars) {

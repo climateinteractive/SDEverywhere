@@ -2,7 +2,7 @@
 
 export { canonicalName } from './_shared/helpers.js'
 export { readDat } from './_shared/read-dat.js'
+export { preprocessModel } from './preprocess/preprocessor.js'
+export { parseModel } from './parse/parser.js'
 export { generateCode } from './generate/code-gen.js'
 export { parseAndGenerate, printNames } from './parse-and-generate.js'
-export { parseModel } from './Parser.js'
-export { preprocessModel } from './preprocess/preprocessor.js'

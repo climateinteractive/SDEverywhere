@@ -1,18 +1,6 @@
 import { ModelParser } from 'antlr4-vensim'
 import R from 'ramda'
-import ExprReader from './ExprReader.js'
-import Model from './Model.js'
-import ModelReader from './ModelReader.js'
-import { createParser } from './Parser.js'
-import VariableReader from './VariableReader.js'
-import {
-  extractMarkedDims,
-  indexNamesForSubscript,
-  normalizeSubscripts,
-  separatedVariableIndex,
-  sub,
-  isDimension
-} from './Subscript.js'
+
 import {
   canonicalName,
   canonicalVensimName,
@@ -29,7 +17,21 @@ import {
   newLookupVarName,
   newFixedDelayVarName,
   cartesianProductOf
-} from './_shared/helpers.js'
+} from '../_shared/helpers.js'
+import {
+  extractMarkedDims,
+  indexNamesForSubscript,
+  normalizeSubscripts,
+  separatedVariableIndex,
+  sub,
+  isDimension
+} from '../_shared/subscript.js'
+import ModelReader from '../parse/model-reader.js'
+import { createParser } from '../parse/parser.js'
+
+import ExprReader from './expr-reader.js'
+import Model from './model.js'
+import VariableReader from './variable-reader.js'
 
 // Set this true to get a list of functions used in the model. This may include lookups.
 const PRINT_FUNCTION_NAMES = false

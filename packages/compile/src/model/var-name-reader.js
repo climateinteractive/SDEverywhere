@@ -1,8 +1,10 @@
-import ModelReader from './ModelReader.js'
 import R from 'ramda'
-import { createParser } from './Parser.js'
-import { sub, isIndex, normalizeSubscripts } from './Subscript.js'
-import { canonicalName } from './_shared/helpers.js'
+
+import { canonicalName } from '../_shared/helpers.js'
+import { sub, isIndex, normalizeSubscripts } from '../_shared/subscript.js'
+import ModelReader from '../parse/model-reader.js'
+import { createParser } from '../parse/parser.js'
+
 //
 // VarNameReader reads a model var name using the parser to get the var name in C format.
 // This is used to generate a variable output in the output section.
