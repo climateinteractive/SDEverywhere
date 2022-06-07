@@ -6,7 +6,7 @@ let builder = {}
 let handler = argv => {
   which(argv)
 }
-let which = opts => {
+let which = () => {
   // The SDEverywhere home directory is one level above the src directory where this code runs.
   let homeDir = path.resolve(new URL('..', import.meta.url).pathname)
   console.log(homeDir)

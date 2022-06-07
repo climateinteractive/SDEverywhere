@@ -48,7 +48,9 @@ export let preprocessModel = (mdlFilename, spec, profile = 'genc', writeFiles = 
       let insPathname = path.join(path.dirname(mdlFilename), INSERTIONS_FILENAME)
       insertions = B.read(insPathname)
     }
-  } catch (error) {}
+  } catch (error) {
+    // TODO: Handle error
+  }
   // Read the model file.
   try {
     mdl = B.read(mdlFilename)
@@ -160,7 +162,7 @@ export let preprocessModel = (mdlFilename, spec, profile = 'genc', writeFiles = 
         kind = 'decl'
       }
       // Ignore double quotes
-      key = key.replace(/\"/g, '')
+      key = key.replace(/"/g, '')
       // Ignore the lookup data if it starts on the first line
       key = key.split('(')[0]
       // Ignore any whitespace that remains

@@ -104,7 +104,6 @@ export function sub(name) {
     result = subscripts.get(name)
   } catch (e) {
     console.error(`sub name ${name} not found`)
-    debugger
   }
   return result
 }
@@ -174,7 +173,6 @@ export function addIndex(name, value, family) {
   subscripts.set(name, subscript)
 }
 export function hasMapping(fromSubscript, toSubscript) {
-  let result = false
   let subFrom = sub(fromSubscript)
   let subTo = sub(toSubscript)
   if (subFrom === undefined) {
@@ -196,7 +194,6 @@ export function mapIndex(fromSubName, fromIndexName, toSubName) {
   let toSub = sub(toSubName)
   if (fromSub && toSub && isDimension(fromSubName) && isDimension(toSubName)) {
     let mapping = fromSub.mappings[toSubName]
-    let fromSubIndexNames = fromSub.value
     if (mapping) {
       // Find the positions of fromIndexName in the mapping.
       for (let pos = 0; pos < mapping.length; pos++) {
@@ -240,7 +237,6 @@ export function normalizeSubscripts(subscripts) {
     normalizedSubs = R.map(R.prop('name'), subs)
   } catch (e) {
     console.error(`normalizeSubscripts fails for ${subscripts}`)
-    debugger
   }
   return normalizedSubs
 }
@@ -262,7 +258,6 @@ export function subscriptFamilies(subscripts) {
     return R.map(subscriptName => sub(subscriptName).family, subscripts)
   } catch (e) {
     console.error(`ERROR: subscript not found in "${subscripts.join(',')}" in subscriptFamilies`)
-    debugger
   }
 }
 export function subscriptFamily(subscriptName) {
