@@ -1,0 +1,55 @@
+{
+  "name": "@sdeverywhere/runtime-async",
+  "version": "0.1.0",
+  "files": [
+    "dist/**",
+    "docs/**"
+  ],
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./runner": {
+      "types": "./dist/runner.d.ts",
+      "import": "./dist/runner.js",
+      "require": "./dist/runner.cjs"
+    },
+    "./worker": {
+      "types": "./dist/worker.d.ts",
+      "import": "./dist/worker.js",
+      "require": "./dist/worker.cjs"
+    }
+  },
+  "scripts": {
+    "clean": "rm -rf dist docs",
+    "lint": "eslint src --ext .ts --max-warnings 0",
+    "prettier:check": "prettier --check .",
+    "prettier:fix": "prettier --write .",
+    "precommit": "../../scripts/precommit",
+    "test": "echo No tests yet",
+    "test:ci": "echo No tests yet",
+    "build": "tsup",
+    "ci:build": "run-s clean lint prettier:check test:ci build"
+  },
+  "dependencies": {
+    "@sdeverywhere/runtime": "^0.1.0",
+    "threads": "1.7.0"
+  },
+  "author": "Climate Interactive",
+  "license": "MIT",
+  "homepage": "https://sdeverywhere.org",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/climateinteractive/SDEverywhere.git",
+    "directory": "packages/runtime-async"
+  },
+  "bugs": {
+    "url": "https://github.com/climateinteractive/SDEverywhere/issues"
+  }
+}
