@@ -1,0 +1,17 @@
+// This contains the TypeScript configuration for testing.
+{
+  "extends": "./tsconfig-base.json",
+  "compilerOptions": {
+    // We specify the `packages` directory as the root, since TypeScript requires
+    // all referenced files to live underneath the root directory
+    "rootDir": "..",
+    // The following lines make tsc process the sources in the other packages
+    // in the monorepo instead of requiring them to be built first into their
+    // respective `dist` directories; this makes the development process easier
+    "baseUrl": ".",
+    "paths": {
+      "@sdeverywhere/runtime": ["../runtime/src"]
+    }
+  },
+  "include": ["src/**/*"]
+}
