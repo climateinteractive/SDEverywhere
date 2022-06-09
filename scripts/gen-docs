@@ -1,0 +1,32 @@
+#!/bin/bash
+
+#
+# This script runs typedoc to generate API documentation in Markdown format
+# for the TypeScript package in the current working directory.
+#
+
+# Remove the existing generated docs
+find docs ! -name 'index.md' -delete
+
+# Generate the docs for the current package
+typedoc \
+--tsconfig ./tsconfig-build.json \
+--disableSources \
+--readme none \
+--githubPages false \
+--plugin typedoc-plugin-markdown \
+--entryDocument entry.md \
+--hideInPageTOC \
+--hideMembersSymbol \
+--allReflectionsHaveOwnDocument \
+--out docs \
+--cleanOutputDir false \
+src/index.ts
+
+# Update breadcrumb links to point to our custom `index.md`
+if [[ "$OSTYPE" == "darwin"* ]]; then
+  in_place=''
+else
+  in_place=
+fi
+grep -rl "entry.md" docs | xargs sed -i $in_place 's/entry\.md/index\.md/g'
