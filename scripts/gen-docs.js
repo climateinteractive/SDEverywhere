@@ -32,7 +32,7 @@ function applyReplacements(filePath) {
 
 function main() {
   // Remove the existing generated docs
-  execSync(`find ./docs ! -name 'index.md' -delete`)
+  execSync(`find ./docs -mindepth 1 ! -name 'index.md' -delete`)
 
   // Load more project-specific replacements from the `.typedoc/replacements.json` file
   const replacementsFile = resolvePath('.typedoc', 'replacements.json')
