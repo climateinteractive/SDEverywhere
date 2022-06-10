@@ -7,4 +7,3 @@
 ## Worker Thread
 
 - [exposeModelWorker](functions/exposeModelWorker.md)
-- [InitWasmModel](types/InitWasmModel.md)

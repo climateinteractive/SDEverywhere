@@ -13,7 +13,7 @@ and sending the outputs back to the main process.
 
 | Name | Type | Description |
 | :------ | :------ | :------ |
-| `init` | [`InitWasmModel`](../types/InitWasmModel.md) | The function that initializes the `WasmModel` instance that is used in the worker thread. |
+| `init` | () => `Promise`<[`WasmModelInitResult`](../../../runtime/docs/interfaces/WasmModelInitResult.md)\> | The function that initializes the `WasmModel` instance that is used in the worker thread. |
 
 #### Returns
 

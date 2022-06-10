@@ -6,13 +6,8 @@ import { expose, Transfer } from 'threads/worker'
 import type { WasmBuffer, WasmModel, WasmModelInitResult } from '@sdeverywhere/runtime'
 import { perfElapsed, perfNow } from '@sdeverywhere/runtime'
 
-/**
- * A function that asynchronously initializes a `WasmModel` and resolves when complete.
- */
-export type InitWasmModel = () => Promise<WasmModelInitResult>
-
 /** @hidden */
-let initWasmModel: InitWasmModel
+let initWasmModel: () => Promise<WasmModelInitResult>
 /** @hidden */
 let wasmModel: WasmModel
 /** @hidden */
@@ -100,7 +95,7 @@ const modelWorker = {
  * @param init The function that initializes the `WasmModel` instance that
  * is used in the worker thread.
  */
-export function exposeModelWorker(init: InitWasmModel): void {
+export function exposeModelWorker(init: () => Promise<WasmModelInitResult>): void {
   // Save the initializer, which will be used when the runner calls `initModel`
   // on the worker
   initWasmModel = init

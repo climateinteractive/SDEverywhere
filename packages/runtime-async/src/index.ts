@@ -2,5 +2,4 @@
 
 export { spawnAsyncModelRunner } from './runner'
 
-export type { InitWasmModel } from './worker'
 export { exposeModelWorker } from './worker'
