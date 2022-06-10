@@ -30,6 +30,12 @@ export interface ModelRunner {
    * running the model synchronously, in which case this will be undefined.
    */
   runModelSync?(inputs: InputValue[], outputs: Outputs): Outputs
+
+  /**
+   * Terminate the runner by releasing underlying resources (e.g., the worker thread or
+   * Wasm module/buffers).
+   */
+  terminate(): Promise<void>
 }
 
 /**
@@ -46,7 +52,14 @@ export function createWasmModelRunner(wasmResult: WasmModelInitResult): ModelRun
   const outputsArray = outputsBuffer.getArrayView()
   const rowLength = wasmResult.endTime - wasmResult.startTime + 1
 
+  // Disallow `runModel` after the runner has been terminated
+  let terminated = false
+
   const runModelSync = (inputs: InputValue[], outputs: Outputs) => {
+    if (terminated) {
+      throw new Error('Model runner has already been terminated')
+    }
+
     // Capture the current set of input values into the reusable buffer
     let i = 0
     for (const input of inputs) {
@@ -65,11 +78,17 @@ export function createWasmModelRunner(wasmResult: WasmModelInitResult): ModelRun
     return outputs
   }
 
-  // TODO: Error if `runModel` is called while another one already in progress
   return {
     runModel: (inputs, outputs) => {
       return Promise.resolve(runModelSync(inputs, outputs))
     },
-    runModelSync
+    runModelSync,
+    terminate: () => {
+      if (!terminated) {
+        // TODO: Release wasm-related resources (module or buffers)
+        terminated = true
+      }
+      return Promise.resolve()
+    }
   }
 }

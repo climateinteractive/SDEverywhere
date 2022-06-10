@@ -1,6 +1,6 @@
 // Copyright (c) 2020-2022 Climate Interactive / New Venture Fund
 
-import { BlobWorker, spawn, Transfer, Worker } from 'threads'
+import { BlobWorker, spawn, Thread, Transfer, Worker } from 'threads'
 
 import type { ModelRunner } from '@sdeverywhere/runtime'
 
@@ -62,9 +62,14 @@ async function spawnAsyncModelRunnerWithWorker(worker: Worker): Promise<ModelRun
   // Use a flag to ensure that only one request is made at a time
   let running = false
 
+  // Disallow `runModel` after the runner has been terminated
+  let terminated = false
+
   return {
     runModel: async (inputs, outputs) => {
-      if (running) {
+      if (terminated) {
+        throw new Error('Async model runner has already been terminated')
+      } else if (running) {
         throw new Error('Async model runner only supports one `runModel` call at a time')
       } else {
         running = true
@@ -103,6 +108,15 @@ async function spawnAsyncModelRunnerWithWorker(worker: Worker): Promise<ModelRun
       outputs.updateFromBuffer(outputsArray, rowLength)
 
       return outputs
+    },
+
+    terminate: () => {
+      if (terminated) {
+        return Promise.resolve()
+      } else {
+        terminated = true
+        return Thread.terminate(modelWorker)
+      }
     }
   }
 }

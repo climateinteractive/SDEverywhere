@@ -25,3 +25,16 @@ Run the model.
 `Promise`<[`Outputs`](../classes/Outputs.md)\>
 
 A promise that resolves with the outputs when the model run is complete.
+
+___
+
+### terminate
+
+**terminate**(): `Promise`<`void`\>
+
+Terminate the runner by releasing underlying resources (e.g., the worker thread or
+Wasm module/buffers).
+
+#### Returns
+
+`Promise`<`void`\>
