@@ -56,10 +56,6 @@ export function createWasmModelRunner(wasmResult: WasmModelInitResult): ModelRun
   let terminated = false
 
   const runModelSync = (inputs: InputValue[], outputs: Outputs) => {
-    if (terminated) {
-      throw new Error('Model runner has already been terminated')
-    }
-
     // Capture the current set of input values into the reusable buffer
     let i = 0
     for (const input of inputs) {
@@ -80,9 +76,17 @@ export function createWasmModelRunner(wasmResult: WasmModelInitResult): ModelRun
 
   return {
     runModel: (inputs, outputs) => {
+      if (terminated) {
+        return Promise.reject(new Error('Model runner has already been terminated'))
+      }
       return Promise.resolve(runModelSync(inputs, outputs))
     },
-    runModelSync,
+    runModelSync: (inputs, outputs) => {
+      if (terminated) {
+        throw new Error('Model runner has already been terminated')
+      }
+      return runModelSync(inputs, outputs)
+    },
     terminate: () => {
       if (!terminated) {
         // TODO: Release wasm-related resources (module or buffers)

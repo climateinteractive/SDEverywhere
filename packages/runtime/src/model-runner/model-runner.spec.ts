@@ -2,33 +2,23 @@
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
-import type { ModelRunner } from '@sdeverywhere/runtime'
-import { createInputValue, Outputs } from '@sdeverywhere/runtime'
+import type { WasmModule } from '../wasm-model'
+import { initWasmModelAndBuffers } from '../wasm-model'
 
-import { spawnAsyncModelRunner } from '../src/runner'
+import { createInputValue } from './inputs'
+import type { ModelRunner } from './model-runner'
+import { createWasmModelRunner } from './model-runner'
+import { Outputs } from './outputs'
 
-//
-// Note that the Node worker implementation below must use `require` and relies
-// on the compiled (JavaScript / CommonJS) versions of the `runtime` and
-// `runtime-async` packages, which is why this test file is treated as an
-// integration test and kept in the separate `tests` directory.  It must be
-// run only after the `runtime` and `runtime-async` have been built.
-//
-
-const workerSource = `
-const path = require('path')
-const { initWasmModelAndBuffers } = require('@sdeverywhere/runtime')
-const { exposeModelWorker } = require('@sdeverywhere/runtime-async')
-
-function initWasmModel() {
+function createMockWasmModel() {
   // This is a mock WasmModule that is sufficient for testing communication between the
   // async runner and worker
   const heap = new Float64Array(1000)
   let mallocOffset = 0
-  const wasmModule = {
+  const wasmModule: WasmModule = {
     cwrap: () => {
       // This is a mock implementation of runModelWithBuffers
-      return (inputsAddress, outputsAddress) => {
+      return (_inputsAddress: number, outputsAddress: number) => {
         // The outputsAddress is in bytes, so convert to float64 offset
         const outputsOffset = outputsAddress / 8
         // Store a value in 2000 for the first output series
@@ -47,14 +37,12 @@ function initWasmModel() {
   }
   return initWasmModelAndBuffers(wasmModule, 3, ['_output_1', '_output_2'], 2000, 2100)
 }
-exposeModelWorker(initWasmModel)
-`
 
-describe('spawnAsyncModelRunner', () => {
+describe('createWasmModelRunner', () => {
   let runner: ModelRunner
 
   beforeEach(async () => {
-    runner = await spawnAsyncModelRunner({ source: workerSource })
+    runner = createWasmModelRunner(createMockWasmModel())
   })
 
   afterEach(async () => {
@@ -63,7 +51,7 @@ describe('spawnAsyncModelRunner', () => {
     }
   })
 
-  it('should run the model in a worker', async () => {
+  it('should run the model', async () => {
     expect(runner).toBeDefined()
     const inputs = [createInputValue('_input_1', 0), createInputValue('_input_2', 0), createInputValue('_input_3', 0)]
     const inOutputs = new Outputs(['_output_1', '_output_2'], 2000, 2100)
@@ -80,9 +68,6 @@ describe('spawnAsyncModelRunner', () => {
     await runner.terminate()
 
     const outputs = new Outputs(['_output_1', '_output_2'], 2000, 2100)
-    await expect(runner.runModel([], outputs)).rejects.toThrow('Async model runner has already been terminated')
+    await expect(runner.runModel([], outputs)).rejects.toThrow('Model runner has already been terminated')
   })
-
-  // TODO
-  // it('should throw an error if runModel is called while another is already in progress')
 })
