@@ -6,7 +6,7 @@
 #
 
 # Remove the existing generated docs
-find docs ! -name 'index.md' -delete
+find ./docs ! -name 'index.md' -delete
 
 # Generate the docs for the current package
 typedoc \
@@ -24,9 +24,9 @@ typedoc \
 src/index.ts
 
 # Update breadcrumb links to point to our custom `index.md`
-if [[ "$OSTYPE" == "darwin"* ]]; then
-  in_place=''
+if [[ "$OSTYPE" == darwin* ]]; then
+  in_place_args=(-i '')
 else
-  in_place=
+  in_place_args=(-i)
 fi
-grep -rl "entry.md" docs | xargs sed -i $in_place 's/entry\.md/index\.md/g'
+grep -rl "entry.md" ./docs | xargs sed "${in_place_args[@]}" -e 's/entry\.md/index\.md/g'
