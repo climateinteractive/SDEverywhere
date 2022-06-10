@@ -4,6 +4,40 @@
 
 Represents the outputs from a model run.
 
+## Properties
+
+### seriesLength
+
+ `Readonly` **seriesLength**: `number`
+
+The number of data points in each series.
+
+___
+
+### varSeries
+
+ `Readonly` **varSeries**: [`Series`](Series.md)[]
+
+The array of series, one for each output variable.
+
+___
+
+### varIds
+
+ `Readonly` **varIds**: `string`[]
+
+___
+
+### timeStart
+
+ `Readonly` **timeStart**: `number`
+
+___
+
+### timeEnd
+
+ `Readonly` **timeEnd**: `number`
+
 ## Constructors
 
 ### constructor
@@ -18,59 +52,7 @@ Represents the outputs from a model run.
 | `timeStart` | `number` |
 | `timeEnd` | `number` |
 
-## Properties
-
-### seriesLength
-
- `Readonly` **seriesLength**: `number`
-
-The number of data points in each series.
-
-___
-
-### timeEnd
-
- `Readonly` **timeEnd**: `number`
-
-___
-
-### timeStart
-
- `Readonly` **timeStart**: `number`
-
-___
-
-### varIds
-
- `Readonly` **varIds**: `string`[]
-
-___
-
-### varSeries
-
- `Readonly` **varSeries**: [`Series`](Series.md)[]
-
-The array of series, one for each output variable.
-
 ## Methods
-
-### getSeriesForVar
-
-**getSeriesForVar**(`varId`): [`Series`](Series.md)
-
-Return the series for the given output variable.
-
-#### Parameters
-
-| Name | Type | Description |
-| :------ | :------ | :------ |
-| `varId` | `string` | The ID of the output variable (as used by SDEverywhere). |
-
-#### Returns
-
-[`Series`](Series.md)
-
-___
 
 ### updateFromBuffer
 
@@ -96,3 +78,21 @@ the time range in the buffer produced by the model.
 `Result`<`void`, ``"invalid-point-count"``\>
 
 An `ok` result if the buffer is valid, otherwise an `err` result.
+
+___
+
+### getSeriesForVar
+
+**getSeriesForVar**(`varId`): [`Series`](Series.md)
+
+Return the series for the given output variable.
+
+#### Parameters
+
+| Name | Type | Description |
+| :------ | :------ | :------ |
+| `varId` | `string` | The ID of the output variable (as used by SDEverywhere). |
+
+#### Returns
+
+[`Series`](Series.md)

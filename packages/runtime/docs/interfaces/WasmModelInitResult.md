@@ -6,11 +6,11 @@ The result of model initialization.
 
 ## Properties
 
-### endTime
+### model
 
- **endTime**: `number`
+ **model**: [`WasmModel`](../classes/WasmModel.md)
 
-The end time (year) for the model.
+The wasm model.
 
 ___
 
@@ -22,11 +22,11 @@ The buffer used to pass input values to the model.
 
 ___
 
-### model
+### outputsBuffer
 
- **model**: [`WasmModel`](../classes/WasmModel.md)
+ **outputsBuffer**: [`WasmBuffer`](../classes/WasmBuffer.md)
 
-The wasm model.
+The buffer used to receive output values from the model.
 
 ___
 
@@ -38,16 +38,16 @@ The output variable IDs.
 
 ___
 
-### outputsBuffer
-
- **outputsBuffer**: [`WasmBuffer`](../classes/WasmBuffer.md)
-
-The buffer used to receive output values from the model.
-
-___
-
 ### startTime
 
  **startTime**: `number`
 
 The start time (year) for the model.
+
+___
+
+### endTime
+
+ **endTime**: `number`
+
+The end time (year) for the model.

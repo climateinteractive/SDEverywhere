@@ -26,31 +26,7 @@ out of the wasm buffer.
 | `wasmModule` | [`WasmModule`](../interfaces/WasmModule.md) | The `WasmModule` used to initialize the memory. |
 | `numElements` | `number` | The number of 64-bit `double` elements in the buffer. |
 
-## Properties
-
-### byteOffset
-
- `Private` **byteOffset**: `number`
-
-___
-
-### heapArray
-
- `Private` **heapArray**: `Float64Array`
-
 ## Methods
-
-### dispose
-
-**dispose**(): `void`
-
-Dispose the buffer by freeing the allocated heap memory.
-
-#### Returns
-
-`void`
-
-___
 
 ### getArrayView
 
@@ -61,3 +37,15 @@ ___
 `Float64Array`
 
 A new `Float64Array` view on the underlying heap buffer.
+
+___
+
+### dispose
+
+**dispose**(): `void`
+
+Dispose the buffer by freeing the allocated heap memory.
+
+#### Returns
+
+`void`

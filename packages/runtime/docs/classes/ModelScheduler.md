@@ -12,29 +12,7 @@ The `ModelRunner` is pluggable to allow for running the model synchronously
 (on the main JavaScript thread) or asynchronously (in a Web Worker or Node.js
 worker thread).
 
-## Constructors
-
-### constructor
-
-**new ModelScheduler**(`runner`, `userInputs`, `outputs`)
-
-#### Parameters
-
-| Name | Type | Description |
-| :------ | :------ | :------ |
-| `runner` | [`ModelRunner`](../interfaces/ModelRunner.md) | The model runner. |
-| `userInputs` | [`InputValue`](../interfaces/InputValue.md)[] | The input values, in the same order as in the spec file passed to `sde`. |
-| `outputs` | [`Outputs`](Outputs.md) | The structure into which the model outputs will be stored. |
-
 ## Properties
-
-### currentInputs
-
- `Private` `Readonly` **currentInputs**: [`InputValue`](../interfaces/InputValue.md)[]
-
-The second array that holds a stable copy of the user inputs.
-
-___
 
 ### onOutputsChanged
 
@@ -56,43 +34,16 @@ Called when `outputs` has been updated after a model run.
 
 `void`
 
-___
+## Constructors
 
-### runInProgress
+### constructor
 
- `Private` **runInProgress**: `boolean` = `false`
+**new ModelScheduler**(`runner`, `userInputs`, `outputs`)
 
-Whether a model run is in progress.
+#### Parameters
 
-___
-
-### runNeeded
-
- `Private` **runNeeded**: `boolean` = `false`
-
-Whether a model run has been scheduled.
-
-## Methods
-
-### runWasmModelIfNeeded
-
-`Private` **runWasmModelIfNeeded**(): `void`
-
-Schedule a wasm model run (if not already pending).  When the run is
-complete, save the outputs and call the `onOutputsChanged` callback.
-
-#### Returns
-
-`void`
-
-___
-
-### runWasmModelNow
-
-`Private` **runWasmModelNow**(): `Promise`<`void`\>
-
-Run the wasm model asynchronously using the current set of input values.
-
-#### Returns
-
-`Promise`<`void`\>
+| Name | Type | Description |
+| :------ | :------ | :------ |
+| `runner` | [`ModelRunner`](../interfaces/ModelRunner.md) | The model runner. |
+| `userInputs` | [`InputValue`](../interfaces/InputValue.md)[] | The input values, in the same order as in the spec file passed to `sde`. |
+| `outputs` | [`Outputs`](Outputs.md) | The structure into which the model outputs will be stored. |

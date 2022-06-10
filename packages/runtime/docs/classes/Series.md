@@ -19,29 +19,17 @@ A time series of data points for an output variable.
 
 ## Properties
 
-### points
-
- `Readonly` **points**: [`Point`](../interfaces/Point.md)[]
-
-___
-
 ### varId
 
  `Readonly` **varId**: `string`
 
-## Methods
-
-### copy
-
-**copy**(): [`Series`](Series.md)
-
-Create a new `Series` instance that is a copy of this one.
-
-#### Returns
-
-[`Series`](Series.md)
-
 ___
+
+### points
+
+ `Readonly` **points**: [`Point`](../interfaces/Point.md)[]
+
+## Methods
 
 ### getValueAtTime
 
@@ -58,3 +46,15 @@ Return the Y value at the given time.
 #### Returns
 
 `number`
+
+___
+
+### copy
+
+**copy**(): [`Series`](Series.md)
+
+Create a new `Series` instance that is a copy of this one.
+
+#### Returns
+
+[`Series`](Series.md)

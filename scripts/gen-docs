@@ -11,6 +11,9 @@ find ./docs ! -name 'index.md' -delete
 # Generate the docs for the current package
 typedoc \
 --tsconfig ./tsconfig-build.json \
+--sort source-order \
+--excludeExternals \
+--excludePrivate \
 --disableSources \
 --readme none \
 --githubPages false \

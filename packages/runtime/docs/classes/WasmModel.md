@@ -17,27 +17,6 @@ a given set of input values, producing a set of output values.
 | :------ | :------ | :------ |
 | `wasmModule` | [`WasmModule`](../interfaces/WasmModule.md) | The `WasmModule` containing the `runModelWithBuffers` function. |
 
-## Properties
-
-### wasmRunModel
-
- `Private` `Readonly` **wasmRunModel**: (`inputsAddress`: `number`, `outputsAddress`: `number`) => `void`
-
-#### Type declaration
-
-(`inputsAddress`, `outputsAddress`): `void`
-
-##### Parameters
-
-| Name | Type |
-| :------ | :------ |
-| `inputsAddress` | `number` |
-| `outputsAddress` | `number` |
-
-##### Returns
-
-`void`
-
 ## Methods
 
 ### runModel
