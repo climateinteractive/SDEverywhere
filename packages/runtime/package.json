@@ -25,7 +25,7 @@
     "test:watch": "vitest",
     "test:ci": "vitest run",
     "build": "tsup",
-    "docs": "../../scripts/gen-docs",
+    "docs": "../../scripts/gen-docs.js",
     "ci:build": "run-s clean lint prettier:check test:ci build docs"
   },
   "dependencies": {
