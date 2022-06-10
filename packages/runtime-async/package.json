@@ -34,7 +34,8 @@
     "test": "echo No tests yet",
     "test:ci": "echo No tests yet",
     "build": "tsup",
-    "ci:build": "run-s clean lint prettier:check test:ci build"
+    "docs": "../../scripts/gen-docs.js",
+    "ci:build": "run-s clean lint prettier:check test:ci build docs"
   },
   "dependencies": {
     "@sdeverywhere/runtime": "^0.1.0",
