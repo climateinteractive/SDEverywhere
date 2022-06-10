@@ -26,5 +26,6 @@
 
 - [WasmModel](classes/WasmModel.md)
 - [WasmBuffer](classes/WasmBuffer.md)
+- [WasmModule](interfaces/WasmModule.md)
 - [WasmModelInitResult](interfaces/WasmModelInitResult.md)
 - [initWasmModelAndBuffers](functions/initWasmModelAndBuffers.md)
