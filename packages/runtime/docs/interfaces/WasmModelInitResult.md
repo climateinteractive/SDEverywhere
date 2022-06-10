@@ -1,4 +1,4 @@
-[@sdeverywhere/runtime](../entry.md) / WasmModelInitResult
+[@sdeverywhere/runtime](../index.md) / WasmModelInitResult
 
 # Interface: WasmModelInitResult
 

@@ -1,4 +1,4 @@
-[@sdeverywhere/runtime](../entry.md) / InputValue
+[@sdeverywhere/runtime](../index.md) / InputValue
 
 # Interface: InputValue
 

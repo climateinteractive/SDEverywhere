@@ -1,4 +1,4 @@
-[@sdeverywhere/runtime](../entry.md) / Outputs
+[@sdeverywhere/runtime](../index.md) / Outputs
 
 # Class: Outputs
 

@@ -1,4 +1,4 @@
-[@sdeverywhere/runtime](../entry.md) / createInputValue
+[@sdeverywhere/runtime](../index.md) / createInputValue
 
 # Function: createInputValue
 

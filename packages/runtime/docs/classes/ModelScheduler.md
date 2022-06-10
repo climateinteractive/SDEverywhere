@@ -1,4 +1,4 @@
-[@sdeverywhere/runtime](../entry.md) / ModelScheduler
+[@sdeverywhere/runtime](../index.md) / ModelScheduler
 
 # Class: ModelScheduler
 

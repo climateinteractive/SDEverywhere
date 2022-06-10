@@ -1,4 +1,4 @@
-[@sdeverywhere/runtime](../entry.md) / OutputVarId
+[@sdeverywhere/runtime](../index.md) / OutputVarId
 
 # Type alias: OutputVarId
 

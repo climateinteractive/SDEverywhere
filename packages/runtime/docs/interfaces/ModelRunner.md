@@ -1,4 +1,4 @@
-[@sdeverywhere/runtime](../entry.md) / ModelRunner
+[@sdeverywhere/runtime](../index.md) / ModelRunner
 
 # Interface: ModelRunner
 

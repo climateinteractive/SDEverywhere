@@ -1,4 +1,4 @@
-[@sdeverywhere/runtime](../entry.md) / ParseError
+[@sdeverywhere/runtime](../index.md) / ParseError
 
 # Type alias: ParseError
 

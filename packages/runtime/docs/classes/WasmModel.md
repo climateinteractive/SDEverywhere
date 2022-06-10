@@ -1,4 +1,4 @@
-[@sdeverywhere/runtime](../entry.md) / WasmModel
+[@sdeverywhere/runtime](../index.md) / WasmModel
 
 # Class: WasmModel
 
@@ -15,7 +15,7 @@ a given set of input values, producing a set of output values.
 
 | Name | Type | Description |
 | :------ | :------ | :------ |
-| `wasmModule` | `WasmModule` | The `WasmModule` containing the `runModelWithBuffers` function. |
+| `wasmModule` | [`WasmModule`](../interfaces/WasmModule.md) | The `WasmModule` containing the `runModelWithBuffers` function. |
 
 ## Properties
 

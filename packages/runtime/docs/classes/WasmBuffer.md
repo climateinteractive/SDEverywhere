@@ -1,4 +1,4 @@
-[@sdeverywhere/runtime](../entry.md) / WasmBuffer
+[@sdeverywhere/runtime](../index.md) / WasmBuffer
 
 # Class: WasmBuffer
 
@@ -23,7 +23,7 @@ out of the wasm buffer.
 
 | Name | Type | Description |
 | :------ | :------ | :------ |
-| `wasmModule` | `WasmModule` | The `WasmModule` used to initialize the memory. |
+| `wasmModule` | [`WasmModule`](../interfaces/WasmModule.md) | The `WasmModule` used to initialize the memory. |
 | `numElements` | `number` | The number of 64-bit `double` elements in the buffer. |
 
 ## Properties

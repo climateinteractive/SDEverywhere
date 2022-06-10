@@ -1,4 +1,4 @@
-[@sdeverywhere/runtime](../entry.md) / initWasmModelAndBuffers
+[@sdeverywhere/runtime](../index.md) / initWasmModelAndBuffers
 
 # Function: initWasmModelAndBuffers
 
@@ -10,7 +10,7 @@ Initialize the wasm model and buffers.
 
 | Name | Type | Description |
 | :------ | :------ | :------ |
-| `wasmModule` | `WasmModule` | The `WasmModule` that wraps the `wasm` binary. |
+| `wasmModule` | [`WasmModule`](../interfaces/WasmModule.md) | The `WasmModule` that wraps the `wasm` binary. |
 | `numInputs` | `number` | The number of input variables, per the spec file passed to `sde`. |
 | `outputVarIds` | `string`[] | The output variable IDs, per the spec file passed to `sde`. |
 | `startTime` | `number` | The start time (year) for the model. |

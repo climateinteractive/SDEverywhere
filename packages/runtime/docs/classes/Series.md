@@ -1,4 +1,4 @@
-[@sdeverywhere/runtime](../entry.md) / Series
+[@sdeverywhere/runtime](../index.md) / Series
 
 # Class: Series
 

@@ -1,4 +1,4 @@
-[@sdeverywhere/runtime](../entry.md) / Point
+[@sdeverywhere/runtime](../index.md) / Point
 
 # Interface: Point
 

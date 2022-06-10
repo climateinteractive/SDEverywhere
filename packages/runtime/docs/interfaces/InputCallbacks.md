@@ -1,4 +1,4 @@
-[@sdeverywhere/runtime](../entry.md) / InputCallbacks
+[@sdeverywhere/runtime](../index.md) / InputCallbacks
 
 # Interface: InputCallbacks
 

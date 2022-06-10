@@ -1,4 +1,4 @@
-[@sdeverywhere/runtime](../entry.md) / createWasmModelRunner
+[@sdeverywhere/runtime](../index.md) / createWasmModelRunner
 
 # Function: createWasmModelRunner
 
