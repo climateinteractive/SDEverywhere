@@ -31,11 +31,12 @@
     "prettier:check": "prettier --check .",
     "prettier:fix": "prettier --write .",
     "precommit": "../../scripts/precommit",
-    "test": "echo No tests yet",
-    "test:ci": "echo No tests yet",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ci": "vitest run",
     "build": "tsup",
     "docs": "../../scripts/gen-docs.js",
-    "ci:build": "run-s clean lint prettier:check test:ci build docs"
+    "ci:build": "run-s clean lint prettier:check build test:ci docs"
   },
   "dependencies": {
     "@sdeverywhere/runtime": "^0.1.0",
