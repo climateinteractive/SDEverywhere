@@ -43,7 +43,7 @@ async function initApp() {
 
 ## Documentation
 
-API documentation is available in the `docs` directory of the generated package.
+API documentation is available in the [`docs`](./docs/index.md) directory.
 
 ## License
 

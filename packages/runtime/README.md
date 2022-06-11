@@ -111,7 +111,7 @@ build/<mymodel>.c build/macros.c build/model.c build/vensim.c \
 
 ## Documentation
 
-API documentation is available in the `docs` directory of the generated package.
+API documentation is available in the [`docs`](./docs/index.md) directory.
 
 ## License
 
