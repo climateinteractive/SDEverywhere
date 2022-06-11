@@ -1,0 +1,18 @@
+// This contains the TypeScript configuration that is common to the
+// packages developed in this repository.
+{
+  "compilerOptions": {
+    // Generate a .d.ts file for each .ts file
+    "declaration": true,
+    // Improve compatibility with ES6 modules in generated code
+    "esModuleInterop": true,
+    // Use Node.js-style module resolution
+    "moduleResolution": "node",
+    // Enable warnings for transpilation-unsafe code
+    "isolatedModules": true,
+    // Enable strict enforcement of `import type`
+    "importsNotUsedAsValues": "error",
+    // The default list of type definitions
+    "types": []
+  }
+}
