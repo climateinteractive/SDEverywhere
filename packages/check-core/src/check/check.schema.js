@@ -1,0 +1,506 @@
+// Copyright (c) 2022 Climate Interactive / New Venture Fund
+
+export default {
+  $schema: 'http://json-schema.org/draft-07/schema#',
+  title: 'Model Check Test',
+  type: 'array',
+  description: 'A group of tests.',
+  items: {
+    $ref: '#/$defs/group'
+  },
+
+  $defs: {
+    group: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        describe: {
+          type: 'string'
+        },
+        tests: {
+          type: 'array',
+          items: {
+            $ref: '#/$defs/test'
+          }
+        }
+      },
+      required: ['describe', 'tests']
+    },
+
+    test: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        it: {
+          type: 'string'
+        },
+        scenarios: {
+          type: 'array',
+          items: {
+            $ref: '#/$defs/scenario'
+          },
+          minItems: 1
+        },
+        datasets: {
+          type: 'array',
+          items: {
+            $ref: '#/$defs/dataset'
+          },
+          minItems: 1
+        },
+        predicates: {
+          type: 'array',
+          items: {
+            $ref: '#/$defs/predicate'
+          },
+          minItems: 1
+        }
+      },
+      required: ['it', 'datasets', 'predicates']
+    },
+
+    scenario: {
+      oneOf: [
+        { $ref: '#/$defs/scenario_with_input_at_position' },
+        { $ref: '#/$defs/scenario_with_input_at_value' },
+        { $ref: '#/$defs/scenario_with_multiple_input_settings' },
+        { $ref: '#/$defs/scenario_with_inputs_in_preset_at_position' },
+        { $ref: '#/$defs/scenario_with_inputs_in_group_at_position' },
+        { $ref: '#/$defs/scenario_preset' },
+        { $ref: '#/$defs/scenario_expand_for_each_input_in_group' }
+      ]
+    },
+
+    scenario_position: {
+      type: 'string',
+      enum: ['min', 'max', 'default']
+    },
+
+    scenario_with_input_at_position: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        with: {
+          type: 'string'
+        },
+        at: {
+          $ref: '#/$defs/scenario_position'
+        }
+      },
+      required: ['with', 'at']
+    },
+
+    scenario_with_input_at_value: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        with: {
+          type: 'string'
+        },
+        at: {
+          type: 'number'
+        }
+      },
+      required: ['with', 'at']
+    },
+
+    scenario_input_at_position: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        input: {
+          type: 'string'
+        },
+        at: {
+          $ref: '#/$defs/scenario_position'
+        }
+      },
+      required: ['input', 'at']
+    },
+
+    scenario_input_at_value: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        input: {
+          type: 'string'
+        },
+        at: {
+          type: 'number'
+        }
+      },
+      required: ['input', 'at']
+    },
+
+    scenario_input_setting: {
+      oneOf: [{ $ref: '#/$defs/scenario_input_at_position' }, { $ref: '#/$defs/scenario_input_at_value' }]
+    },
+
+    scenario_input_setting_array: {
+      type: 'array',
+      items: {
+        $ref: '#/$defs/scenario_input_setting'
+      },
+      minItems: 1
+    },
+
+    scenario_with_multiple_input_settings: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        with: {
+          $ref: '#/$defs/scenario_input_setting_array'
+        }
+      },
+      required: ['with']
+    },
+
+    scenario_with_inputs_in_preset_at_position: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        with_inputs: {
+          type: 'string',
+          enum: ['all']
+        },
+        at: {
+          $ref: '#/$defs/scenario_position'
+        }
+      },
+      required: ['with_inputs', 'at']
+    },
+
+    scenario_with_inputs_in_group_at_position: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        with_inputs_in: {
+          type: 'string'
+        },
+        at: {
+          $ref: '#/$defs/scenario_position'
+        }
+      },
+      required: ['with_inputs_in', 'at']
+    },
+
+    scenario_preset: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        preset: {
+          type: 'string',
+          enum: ['matrix']
+        }
+      },
+      required: ['preset']
+    },
+
+    scenario_expand_for_each_input_in_group: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        scenarios_for_each_input_in: {
+          type: 'string'
+        },
+        at: {
+          $ref: '#/$defs/scenario_position'
+        }
+      },
+      required: ['scenarios_for_each_input_in', 'at']
+    },
+
+    dataset: {
+      oneOf: [{ $ref: '#/$defs/dataset_name' }, { $ref: '#/$defs/dataset_group' }, { $ref: '#/$defs/dataset_matching' }]
+    },
+
+    dataset_name: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        name: {
+          type: 'string'
+        },
+        source: {
+          type: 'string'
+        }
+      },
+      required: ['name']
+    },
+
+    dataset_group: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        group: {
+          type: 'string'
+        }
+      },
+      required: ['group']
+    },
+
+    dataset_matching: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        matching: {
+          type: 'object',
+          additionalProperties: false,
+          properties: {
+            type: {
+              type: 'string'
+            }
+          },
+          required: ['type']
+        }
+      },
+      required: ['matching']
+    },
+
+    predicate: {
+      type: 'object',
+      oneOf: [
+        { $ref: '#/$defs/predicate_gt' },
+        { $ref: '#/$defs/predicate_gte' },
+        { $ref: '#/$defs/predicate_lt' },
+        { $ref: '#/$defs/predicate_lte' },
+        { $ref: '#/$defs/predicate_gt_lt' },
+        { $ref: '#/$defs/predicate_gt_lte' },
+        { $ref: '#/$defs/predicate_gte_lt' },
+        { $ref: '#/$defs/predicate_gte_lte' },
+        { $ref: '#/$defs/predicate_eq' },
+        { $ref: '#/$defs/predicate_approx' }
+      ]
+    },
+
+    predicate_gt: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        gt: { $ref: '#/$defs/predicate_ref' },
+        time: { $ref: '#/$defs/predicate_time' }
+      },
+      required: ['gt']
+    },
+    predicate_gte: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        gte: { $ref: '#/$defs/predicate_ref' },
+        time: { $ref: '#/$defs/predicate_time' }
+      },
+      required: ['gte']
+    },
+    predicate_lt: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        lt: { $ref: '#/$defs/predicate_ref' },
+        time: { $ref: '#/$defs/predicate_time' }
+      },
+      required: ['lt']
+    },
+    predicate_lte: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        lte: { $ref: '#/$defs/predicate_ref' },
+        time: { $ref: '#/$defs/predicate_time' }
+      },
+      required: ['lte']
+    },
+    predicate_gt_lt: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        gt: { $ref: '#/$defs/predicate_ref' },
+        lt: { $ref: '#/$defs/predicate_ref' },
+        time: { $ref: '#/$defs/predicate_time' }
+      },
+      required: ['gt', 'lt']
+    },
+    predicate_gt_lte: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        gt: { $ref: '#/$defs/predicate_ref' },
+        lte: { $ref: '#/$defs/predicate_ref' },
+        time: { $ref: '#/$defs/predicate_time' }
+      },
+      required: ['gt', 'lte']
+    },
+    predicate_gte_lt: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        gte: { $ref: '#/$defs/predicate_ref' },
+        lt: { $ref: '#/$defs/predicate_ref' },
+        time: { $ref: '#/$defs/predicate_time' }
+      },
+      required: ['gte', 'lt']
+    },
+    predicate_gte_lte: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        gte: { $ref: '#/$defs/predicate_ref' },
+        lte: { $ref: '#/$defs/predicate_ref' },
+        time: { $ref: '#/$defs/predicate_time' }
+      },
+      required: ['gte', 'lte']
+    },
+    predicate_eq: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        eq: { $ref: '#/$defs/predicate_ref' },
+        time: { $ref: '#/$defs/predicate_time' }
+      },
+      required: ['eq']
+    },
+    predicate_approx: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        approx: { $ref: '#/$defs/predicate_ref' },
+        tolerance: { type: 'number' },
+        time: { $ref: '#/$defs/predicate_time' }
+      },
+      required: ['approx']
+    },
+
+    predicate_ref: {
+      oneOf: [{ $ref: '#/$defs/predicate_ref_constant' }, { $ref: '#/$defs/predicate_ref_data' }]
+    },
+
+    predicate_ref_constant: {
+      type: 'number'
+    },
+
+    predicate_ref_data: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        dataset: { $ref: '#/$defs/predicate_ref_data_dataset' },
+        scenario: { $ref: '#/$defs/predicate_ref_data_scenario' }
+      },
+      required: ['dataset']
+    },
+
+    predicate_ref_data_dataset: {
+      oneOf: [{ $ref: '#/$defs/dataset_name' }, { $ref: '#/$defs/predicate_ref_data_dataset_special' }]
+    },
+    predicate_ref_data_dataset_special: {
+      type: 'string',
+      enum: ['inherit']
+    },
+
+    predicate_ref_data_scenario: {
+      oneOf: [
+        { $ref: '#/$defs/scenario_with_input_at_position' },
+        { $ref: '#/$defs/scenario_with_input_at_value' },
+        { $ref: '#/$defs/scenario_with_multiple_input_settings' },
+        { $ref: '#/$defs/scenario_with_inputs_in_preset_at_position' },
+        { $ref: '#/$defs/scenario_with_inputs_in_group_at_position' },
+        { $ref: '#/$defs/predicate_ref_data_scenario_special' }
+      ]
+    },
+    predicate_ref_data_scenario_special: {
+      type: 'string',
+      enum: ['inherit']
+    },
+
+    predicate_time: {
+      oneOf: [
+        { $ref: '#/$defs/predicate_time_single' },
+        { $ref: '#/$defs/predicate_time_pair' },
+        { $ref: '#/$defs/predicate_time_gt' },
+        { $ref: '#/$defs/predicate_time_gte' },
+        { $ref: '#/$defs/predicate_time_lt' },
+        { $ref: '#/$defs/predicate_time_lte' },
+        { $ref: '#/$defs/predicate_time_gt_lt' },
+        { $ref: '#/$defs/predicate_time_gt_lte' },
+        { $ref: '#/$defs/predicate_time_gte_lt' },
+        { $ref: '#/$defs/predicate_time_gte_lte' }
+      ]
+    },
+
+    predicate_time_single: {
+      type: 'number'
+    },
+    predicate_time_pair: {
+      type: 'array',
+      items: [{ type: 'number' }, { type: 'number' }],
+      minItems: 2,
+      maxItems: 2
+    },
+    predicate_time_gt: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        after_excl: { type: 'number' }
+      },
+      required: ['after_excl']
+    },
+    predicate_time_gte: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        after_incl: { type: 'number' }
+      },
+      required: ['after_incl']
+    },
+    predicate_time_lt: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        before_excl: { type: 'number' }
+      },
+      required: ['before_excl']
+    },
+    predicate_time_lte: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        before_incl: { type: 'number' }
+      },
+      required: ['before_incl']
+    },
+    predicate_time_gt_lt: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        after_excl: { type: 'number' },
+        before_excl: { type: 'number' }
+      },
+      required: ['after_excl', 'before_excl']
+    },
+    predicate_time_gt_lte: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        after_excl: { type: 'number' },
+        before_incl: { type: 'number' }
+      },
+      required: ['after_excl', 'before_incl']
+    },
+    predicate_time_gte_lt: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        after_incl: { type: 'number' },
+        before_excl: { type: 'number' }
+      },
+      required: ['after_incl', 'before_excl']
+    },
+    predicate_time_gte_lte: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        after_incl: { type: 'number' },
+        before_incl: { type: 'number' }
+      },
+      required: ['after_incl', 'before_incl']
+    }
+  }
+}

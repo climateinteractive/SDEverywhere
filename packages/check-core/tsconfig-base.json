@@ -1,0 +1,18 @@
+// This contains the TypeScript configuration that is shared between
+// testing (`tsconfig-test.json`) and production builds (`tsconfig-build.json`).
+{
+  "extends": "../../tsconfig-common.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "allowJs": true,
+    "module": "es6",
+    "target": "es6",
+    // The following is required for importing JSON Schema files
+    "resolveJsonModule": true,
+    // The following is required by ajv's `JSONSchemaType`
+    // "strictNullChecks": true,
+    "noImplicitAny": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true
+  }
+}
