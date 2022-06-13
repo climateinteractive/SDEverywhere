@@ -1,0 +1,7 @@
+//- Copyright (c) 2022 Climate Interactive / New Venture Fund
+
+mixin links
+  +if('viewModel.linkItems')
+    .link-container
+      +each('viewModel.linkItems as linkItem')
+        .link-row(on:click!='{() => onLinkClicked(linkItem)}') { linkItem.text }
