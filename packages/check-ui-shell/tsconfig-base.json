@@ -3,7 +3,6 @@
 {
   "extends": "../../tsconfig-common.json",
   "compilerOptions": {
-    "rootDir": "./src",
     "outDir": "./dist",
     // Don't emit .d.ts files
     "declaration": false,

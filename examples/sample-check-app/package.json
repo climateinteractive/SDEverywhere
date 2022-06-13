@@ -1,42 +1,28 @@
 {
-  "name": "@sdeverywhere/check-ui-shell",
-  "version": "0.1.0",
-  "files": [
-    "dist/**",
-    "types/**"
-  ],
+  "name": "@sdeverywhere/sample-check-app",
+  "private": true,
+  "version": "1.0.0",
   "type": "module",
-  "module": "dist/index.js",
-  "types": "types/index.d.ts",
   "scripts": {
-    "clean": "rm -rf dist",
+    "clean": "rm -rf public",
     "lint:ts": "eslint src --max-warnings 0",
     "lint:svelte": "svelte-check --fail-on-hints --fail-on-warnings --output human",
     "lint": "run-s lint:ts lint:svelte",
     "prettier:check": "prettier --check .",
     "prettier:fix": "prettier --write .",
     "precommit": "../../scripts/precommit",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "test:ci": "vitest run",
+    "test": "echo No tests yet",
     "type-check": "tsc --noEmit -p tsconfig-build.json",
     "build": "vite build",
-    "ci:build": "run-s clean lint prettier:check test:ci type-check build"
+    "dev": "vite",
+    "ci:build": "run-s clean lint prettier:check type-check build"
   },
   "dependencies": {
-    "@sdeverywhere/check-core": "^0.1.0",
-    "@fortawesome/free-regular-svg-icons": "^6.1.1",
-    "@fortawesome/free-solid-svg-icons": "^6.1.1",
-    "@juggle/resize-observer": "^3.3.0",
-    "assert-never": "^1.2.1",
-    "chart.js": "^2.9.4",
-    "copy-text-to-clipboard": "^3.0.1",
-    "fontfaceobserver": "^2.1.0",
-    "svelte-awesome": "^3.0.0"
+    "@sdeverywhere/check-core": "workspace:*",
+    "@sdeverywhere/check-ui-shell": "workspace:*",
+    "@sdeverywhere/sample-check-tests": "workspace:*"
   },
   "devDependencies": {
-    "@types/chart.js": "^2.9.34",
-    "@types/fontfaceobserver": "^0.0.6",
     "postcss": "^8.2.14",
     "pug": "^3.0.1",
     "sass": "^1.34.1",
@@ -50,7 +36,7 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/climateinteractive/SDEverywhere.git",
-    "directory": "packages/check-ui-shell"
+    "directory": "examples/sample-check-app"
   },
   "bugs": {
     "url": "https://github.com/climateinteractive/SDEverywhere/issues"
