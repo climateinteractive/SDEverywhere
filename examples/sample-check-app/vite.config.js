@@ -1,4 +1,3 @@
-import { readFileSync } from 'fs'
 import { dirname, resolve as resolvePath } from 'path'
 import { fileURLToPath } from 'url'
 
@@ -16,11 +15,13 @@ const appDir = dirname(fileURLToPath(import.meta.url))
 // "production" build, otherwise returns an empty string (in which case,
 // the checks will be run in the browser).
 function suiteSummaryJson() {
-  if (production) {
-    return readFileSync('suite-summary.json', 'utf8')
-  } else {
-    return ''
-  }
+  // TODO: Use the 'suite-summary.json' if available
+  // if (production) {
+  //   return readFileSync('suite-summary.json', 'utf8')
+  // } else {
+  //   return ''
+  // }
+  return ''
 }
 
 function localPackage(...subpath) {
