@@ -1,9 +1,7 @@
 # sample-check-tests
 
-This is a small sample app that demonstrates use of the `@sdeverywhere/check-core`
-package in isolation (independent of other SDEverywhere packages).
-It defines a sample set of checks and comparisons to be run on the bundle in the
-`sample-check-bundle` directory.
+This package defines the sample set of checks and comparisons to be run in the
+application in the `sample-check-app` directory.
 
 ## License
 
