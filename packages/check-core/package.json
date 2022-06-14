@@ -1,0 +1,43 @@
+{
+  "name": "@sdeverywhere/check-core",
+  "version": "0.1.0",
+  "files": [
+    "dist/**",
+    "schema/**"
+  ],
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "clean": "rm -rf dist",
+    "lint": "eslint src --ext .ts --max-warnings 0",
+    "prettier:check": "prettier --check .",
+    "prettier:fix": "prettier --write .",
+    "precommit": "../../scripts/precommit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ci": "vitest run",
+    "compile": "tsup",
+    "copy-schema": "./scripts/copy-schema.js",
+    "build": "run-s compile copy-schema",
+    "docs": "../../scripts/gen-docs.js",
+    "ci:build": "run-s clean lint prettier:check test:ci build docs"
+  },
+  "dependencies": {
+    "ajv": "^8.6.3",
+    "assert-never": "^1.2.1",
+    "neverthrow": "^4.2.2",
+    "yaml": "^2.1.0"
+  },
+  "author": "Climate Interactive",
+  "license": "MIT",
+  "homepage": "https://sdeverywhere.org",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/climateinteractive/SDEverywhere.git",
+    "directory": "packages/check-core"
+  },
+  "bugs": {
+    "url": "https://github.com/climateinteractive/SDEverywhere/issues"
+  }
+}

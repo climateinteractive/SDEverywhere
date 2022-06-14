@@ -20,11 +20,13 @@
     "test": "run-s test:pkgs test:e2e"
   },
   "devDependencies": {
+    "@sveltejs/vite-plugin-svelte": "1.0.0-next.42",
     "@typescript-eslint/eslint-plugin": "^5.27.1",
     "@typescript-eslint/parser": "^5.27.1",
     "eslint": "^8.14.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-eslint-comments": "^3.2.0",
+    "eslint-plugin-svelte3": "^4.0.0",
     "glob": "^8.0.3",
     "npm-run-all": "^4.1.5",
     "prettier": "^2.6.2",
@@ -32,7 +34,17 @@
     "typedoc": "^0.22.17",
     "typedoc-plugin-markdown": "^3.12.1",
     "typescript": "^4.7.3",
+    "vite": "^2.9.6",
     "vitest": "^0.14.1"
+  },
+  "pnpm": {
+    "peerDependencyRules": {
+      "ignoreMissing": [
+        "eslint",
+        "svelte",
+        "vite"
+      ]
+    }
   },
   "author": "Climate Interactive",
   "license": "MIT",
