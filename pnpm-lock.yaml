@@ -191,6 +191,15 @@ importers:
       split-string: 6.1.0
       xlsx: 0.17.5
 
+  packages/plugin-wasm:
+    specifiers:
+      '@sdeverywhere/build': ^0.1.0
+      '@types/node': ^16.11.7
+    dependencies:
+      '@sdeverywhere/build': link:../build
+    devDependencies:
+      '@types/node': 16.11.40
+
   packages/runtime:
     specifiers:
       neverthrow: ^2.7.1
