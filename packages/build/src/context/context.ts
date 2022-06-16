@@ -5,6 +5,8 @@ import { log } from '../_shared/log'
 
 import type { ResolvedConfig } from '../_shared/resolved-config'
 
+import type { ProcessOptions, ProcessOutput } from './spawn-child'
+import { spawnChild } from './spawn-child'
 import type { StagedFiles } from './staged-files'
 
 /**
@@ -16,7 +18,11 @@ export class BuildContext {
    * @param config The resolved configuration.
    * @hidden
    */
-  constructor(public readonly config: ResolvedConfig, private readonly stagedFiles: StagedFiles) {}
+  constructor(
+    public readonly config: ResolvedConfig,
+    private readonly stagedFiles: StagedFiles,
+    private readonly abortSignal: AbortSignal | undefined
+  ) {}
 
   /**
    * Log a message to the console and/or the in-browser overlay panel.
@@ -64,5 +70,18 @@ export class BuildContext {
    */
   writeStagedFile(srcDir: string, dstDir: string, filename: string, content: string): void {
     this.stagedFiles.writeStagedFile(srcDir, dstDir, filename, content)
+  }
+
+  /**
+   * Spawn a child process that runs the given command.
+   *
+   * @param cwd The directory in which the command will be executed.
+   * @param command The command to execute.
+   * @param args The arguments to pass to the command.
+   * @param opts Additional options to configure the process.
+   * @returns The output of the process.
+   */
+  spawnChild(cwd: string, command: string, args: string[], opts?: ProcessOptions): Promise<ProcessOutput> {
+    return spawnChild(cwd, command, args, this.abortSignal, opts)
   }
 }

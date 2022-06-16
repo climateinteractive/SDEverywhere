@@ -82,3 +82,26 @@ file is written.
 #### Returns
 
 `void`
+
+___
+
+### spawnChild
+
+**spawnChild**(`cwd`, `command`, `args`, `opts?`): `Promise`<`ProcessOutput`\>
+
+Spawn a child process that runs the given command.
+
+#### Parameters
+
+| Name | Type | Description |
+| :------ | :------ | :------ |
+| `cwd` | `string` | The directory in which the command will be executed. |
+| `command` | `string` | The command to execute. |
+| `args` | `string`[] | The arguments to pass to the command. |
+| `opts?` | `ProcessOptions` | Additional options to configure the process. |
+
+#### Returns
+
+`Promise`<`ProcessOutput`\>
+
+The output of the process.

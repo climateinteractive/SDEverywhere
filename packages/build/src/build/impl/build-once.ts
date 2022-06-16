@@ -1,6 +1,6 @@
 // Copyright (c) 2022 Climate Interactive / New Venture Fund
 
-// import { existsSync, readFileSync, writeFileSync } from 'fs'
+import { existsSync, readFileSync, writeFileSync } from 'fs'
 import { writeFile } from 'fs/promises'
 import { join as joinPath } from 'path'
 
@@ -16,10 +16,10 @@ import { StagedFiles } from '../../context/staged-files'
 import type { Plugin } from '../../plugin/plugin'
 
 import { generateModel } from './gen-model'
-// import { computeInputFilesHash } from './hash-files'
+import { computeInputFilesHash } from './hash-files'
 
 export interface BuildOnceOptions {
-  buildModel?: boolean
+  forceModelGen?: boolean
   abortSignal?: AbortSignal
 }
 
@@ -44,12 +44,7 @@ export async function buildOnce(
 ): Promise<Result<boolean, Error>> {
   // Create the build context
   const stagedFiles = new StagedFiles(config.prepDir)
-  const context = new BuildContext(config, stagedFiles)
-
-  // // Ensure that the staged directory exists before we build the WASM model
-  // // (otherwise emcc will fail) and add a staged file entry
-  // const outputJsFile = config.outputJsFile
-  // stagedFiles.prepareStagedFile('model', outputJsFile, config.outputJsDir, outputJsFile)
+  const context = new BuildContext(config, stagedFiles, options.abortSignal)
 
   // Prepare for the model build by generating necessary config files.
   // For now we find the first plugin that implements `preGenerate`.
@@ -79,40 +74,35 @@ export async function buildOnce(
   const specPath = joinPath(config.prepDir, 'spec.json')
   await writeFile(specPath, JSON.stringify(specJson, null, 2))
 
-  // TODO: Move the following to the wasm plugin
+  // Read the hash from the last successful model build, if available
+  const modelHashPath = joinPath(config.prepDir, 'model-hash.txt')
+  let previousModelHash: string
+  if (existsSync(modelHashPath)) {
+    previousModelHash = readFileSync(modelHashPath, 'utf8')
+  } else {
+    previousModelHash = 'NONE'
+  }
 
-  // // Read the hash from the last successful model build, if available
-  // const modelHashPath = joinPath(config.prepDir, 'model-hash.txt')
-  // let previousModelHash: string
-  // if (existsSync(modelHashPath)) {
-  //   previousModelHash = readFileSync(modelHashPath, 'utf8')
-  // } else {
-  //   previousModelHash = 'NONE'
-  // }
-
-  // // The WASM model build is time consuming, so we avoid rebuilding it if
-  // // the build input files are unchanged since the last successful build
-  // const inputFilesHash = await computeInputFilesHash(config)
-  // let needModelBuild: boolean
-  const needModelGen = true
-  // if (options.buildModel === true) {
-  //   needModelBuild = true
-  // } else {
-  //   const noStagedWasm = !stagedFiles.stagedFileExists('model', config.outputJsFile)
-  //   const noDstWasm = !stagedFiles.destinationFileExists('model', config.outputJsFile)
-  //   const hashMismatch = inputFilesHash !== previousModelHash
-  //   needModelBuild = noStagedWasm || noDstWasm || hashMismatch
-  // }
+  // The code gen and Wasm build steps are time consuming, so we avoid rebuilding
+  // it if the build input files are unchanged since the last successful build
+  const inputFilesHash = await computeInputFilesHash(config)
+  let needModelGen: boolean
+  if (options.forceModelGen === true) {
+    needModelGen = true
+  } else {
+    const hashMismatch = inputFilesHash !== previousModelHash
+    needModelGen = hashMismatch
+  }
 
   let succeeded = true
   try {
     if (needModelGen) {
       // Generate the model
-      await generateModel(context, /*stagedFiles,*/ plugins, options.abortSignal)
+      await generateModel(context, plugins)
 
-      //   // Save the hash of the input files, which can be used to determine if
-      //   // we need to rebuild the model the next time
-      //   writeFileSync(modelHashPath, inputFilesHash)
+      // Save the hash of the input files, which can be used to determine if
+      // we need to rebuild the model the next time
+      writeFileSync(modelHashPath, inputFilesHash)
     } else {
       // Skip code generation
       log('info', 'Skipping model code generation; already up-to-date')
@@ -161,9 +151,8 @@ export async function buildOnce(
     // When a build is aborted, the error will have "ABORT" as the message,
     // in which case we can swallow the error; for actual errors, rethrow
     if (e.message !== 'ABORT') {
-      // TODO
-      // // Clear the hash so that the model is rebuilt next time
-      // writeFileSync(modelHashPath, '')
+      // Clear the hash so that the model is rebuilt next time
+      writeFileSync(modelHashPath, '')
 
       // Return an error result
       return err(e)
