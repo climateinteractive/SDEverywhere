@@ -1,0 +1,113 @@
+// Copyright (c) 2022 Climate Interactive / New Venture Fund
+
+import type { ModelSpec } from '../_shared/model-spec'
+import type { ResolvedConfig } from '../_shared/resolved-config'
+import type { BuildContext } from '../context/context'
+
+/**
+ * The plugin interface that can be implemented to customize the model
+ * generation and build process.
+ *
+ * These functions are all optional.
+ *
+ * NOTE: Currently it is required to have exactly one plugin in the chain
+ * that implements the `preGenerate` function because that function provides
+ * information that is used to drive the rest of the build process.
+ *
+ * These functions will be called during the build process in the order
+ * listed below:
+ *   - init (only called once before initial build steps)
+ *   - preGenerate
+ *       - preProcessMdl
+ *       - postProcessMdl
+ *       - preGenerateC
+ *       - postGenerateC
+ *   - postGenerate
+ *   - postBuild
+ *   - watch (only called once after initial build steps when mode==development)
+ */
+export interface Plugin {
+  /**
+   * Called after the user configuration has been resolved, but before the
+   * model is generated and other build steps.
+   *
+   * @param config The build configuration.
+   */
+  init?(config: ResolvedConfig): Promise<void>
+
+  /**
+   * Called before the "generate model" steps are performed.
+   *
+   * You must implement this function so that the generated model is
+   * configured with the desired inputs and outputs.
+   *
+   * @param context The build context (for logging, etc).
+   * @return A `ModelSpec` that defines the model inputs and outputs.
+   */
+  preGenerate?: (context: BuildContext) => Promise<ModelSpec>
+
+  /**
+   * Called before SDE preprocesses the mdl file (in the case of one mdl file),
+   * or before SDE flattens the mdl files (in the case of multiple mdl files).
+   *
+   * @param context The build context (for logging, etc).
+   */
+  preProcessMdl?: (context: BuildContext) => Promise<void>
+
+  /**
+   * Called after SDE preprocesses the mdl file (in the case of one mdl file),
+   * or after SDE flattens the mdl files (in the case of multiple mdl files).
+   *
+   * @param context The build context (for logging, etc).
+   * @param mdlContent The resulting mdl file content.
+   * @return The modified mdl file content (if postprocessing was needed).
+   */
+  postProcessMdl?: (context: BuildContext, mdlContent: string) => Promise<string>
+
+  /**
+   * Called before SDE generates a C file from the mdl file.
+   *
+   * @param context The build context (for logging, etc).
+   */
+  preGenerateC?: (context: BuildContext) => Promise<void>
+
+  /**
+   * Called after SDE generates a C file from the mdl file.
+   *
+   * @param context The build context (for logging, etc).
+   * @param cContent The resulting C file content.
+   * @return The modified C file content (if postprocessing was needed).
+   */
+  postGenerateC?: (context: BuildContext, cContent: string) => Promise<string>
+
+  /**
+   * Called after the "generate model" process has completed (but before the staged
+   * files are copied to their destination).
+   *
+   * @param context The build context (for logging, etc).
+   * @param modelSpec The spec that controls how the model is generated.
+   * @return Whether the plugin succeeded (for example, a plugin that runs tests can
+   * return false to indicate that one or more tests failed).
+   */
+  postGenerate?: (context: BuildContext, modelSpec: ModelSpec) => Promise<boolean>
+
+  /**
+   * Called after the model has been generated and after the staged files
+   * have been copied to their destination.
+   *
+   * @param context The build context (for logging, etc).
+   * @param modelSpec The spec that controls how the model is generated.
+   * @return Whether the plugin succeeded (for example, a plugin that runs tests can
+   * return false to indicate that one or more tests failed).
+   */
+  postBuild?(context: BuildContext, modelSpec: ModelSpec): Promise<boolean>
+
+  /**
+   * Called in development/watch mode after the initial build has completed
+   * (i.e., after the model has been generated and after the staged files
+   * have been copied to their destination).
+   *
+   * @param config The build configuration.
+   */
+  watch?(config: ResolvedConfig): Promise<void>
+}
