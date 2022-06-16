@@ -1,0 +1,42 @@
+{
+  "name": "@sdeverywhere/plugin-worker",
+  "version": "0.1.0",
+  "files": [
+    "dist/**"
+  ],
+  "type": "module",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "clean": "rm -rf dist",
+    "lint": "eslint src --ext .ts --max-warnings 0",
+    "prettier:check": "prettier --check .",
+    "prettier:fix": "prettier --write .",
+    "precommit": "../../scripts/precommit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ci": "vitest run",
+    "build": "tsup",
+    "ci:build": "run-s clean lint prettier:check test:ci build"
+  },
+  "dependencies": {
+    "@sdeverywhere/build": "^0.1.0",
+    "@sdeverywhere/runtime": "^0.1.0",
+    "@sdeverywhere/runtime-async": "^0.1.0",
+    "vite": "^2.9.12"
+  },
+  "devDependencies": {
+    "@types/node": "^16.11.7"
+  },
+  "author": "Climate Interactive",
+  "license": "MIT",
+  "homepage": "https://sdeverywhere.org",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/climateinteractive/SDEverywhere.git",
+    "directory": "packages/plugin-worker"
+  },
+  "bugs": {
+    "url": "https://github.com/climateinteractive/SDEverywhere/issues"
+  }
+}
