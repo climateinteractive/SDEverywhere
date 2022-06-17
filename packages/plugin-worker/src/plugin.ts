@@ -9,22 +9,28 @@ import type { BuildContext, ModelSpec, Plugin } from '@sdeverywhere/build'
 import type { WorkerPluginOptions } from './options'
 import { createViteConfig } from './vite-config'
 
-export function workerPlugin(options: WorkerPluginOptions): Plugin {
+export function workerPlugin(options?: WorkerPluginOptions): Plugin {
   return new WorkerPlugin(options)
 }
 
 class WorkerPlugin implements Plugin {
-  constructor(private readonly options: WorkerPluginOptions) {}
+  constructor(private readonly options?: WorkerPluginOptions) {}
 
   async postGenerate(context: BuildContext, modelSpec: ModelSpec): Promise<boolean> {
     const log = context.log
     log('info', 'Building worker')
 
-    // Locate the input (model JS/Wasm) file in the staged directory
+    // Locate the input (model JS/Wasm) file in the staged directory.  Note
+    // that this relies on the `plugin-wasm` package writing a file called
+    // `wasm-model.js` to the `staged/model` directory.
+    const prepDir = context.config.prepDir
     const srcDir = 'model'
-    const stagedModelDir = joinPath(context.config.prepDir, 'staged', srcDir)
-    const inModelJsFile = 'TODO' // context.config.outputJsFile
+    const stagedModelDir = joinPath(prepDir, 'staged', srcDir)
+    const inModelJsFile = 'wasm-model.js'
     const outWorkerJsFile = 'worker.js'
+
+    // If `outputPaths` is undefined, write the `worker.js` to the prep dir
+    const outputPaths = this.options?.outputPaths || [joinPath(prepDir, outWorkerJsFile)]
 
     // Add staged file entries; this will cause the generated worker to be copied
     // to the configured output paths during the "copy staged files" step
@@ -33,7 +39,7 @@ class WorkerPlugin implements Plugin {
     // where a plugin needs access to these in `postGenerate`, in which case the
     // files will not have been copied already.  Need to reconsider the ordering
     // of plugins and the "copy staged files" step(s).
-    for (const outputPath of this.options.outputPaths) {
+    for (const outputPath of outputPaths) {
       const dstDir = dirname(outputPath)
       const dstFile = basename(outputPath)
       context.prepareStagedFile(srcDir, outWorkerJsFile, dstDir, dstFile)
@@ -43,7 +49,7 @@ class WorkerPlugin implements Plugin {
     const viteConfig = createViteConfig(stagedModelDir, inModelJsFile, modelSpec, outWorkerJsFile)
     await build(viteConfig)
 
-    log('info', 'Done!')
+    // log('info', 'Done!')
 
     return true
   }
