@@ -59,7 +59,7 @@ export async function loadConfig(
       const configModule = await import(configUrl)
       userConfig = await configModule.config()
     } catch (e) {
-      return err(new Error(`Failed to load config file '${configPath}'`))
+      return err(new Error(`Failed to load config file '${configPath}': ${e.message}`))
     }
   }
 

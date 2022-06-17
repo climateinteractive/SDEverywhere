@@ -24,7 +24,7 @@ describe('build config file loading', () => {
     if (result.isOk()) {
       throw new Error('Expected error result')
     }
-    expect(result.error.message).toBe(`Failed to load config file '${configPath}'`)
+    expect(result.error.message).toMatch(`Failed to load config file '${configPath}'`)
   })
 
   it('should proceed if config file is valid', async () => {

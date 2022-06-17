@@ -8,15 +8,16 @@ import type { Result } from 'neverthrow'
 import { err, ok } from 'neverthrow'
 
 import { clearOverlay, log } from '../../_shared/log'
-import type { ModelSpec } from '../../_shared/model-spec'
 import type { ResolvedConfig } from '../../_shared/resolved-config'
 
+import type { UserConfig } from '../../config/user-config'
 import { BuildContext } from '../../context/context'
 import { StagedFiles } from '../../context/staged-files'
 import type { Plugin } from '../../plugin/plugin'
 
 import { generateModel } from './gen-model'
 import { computeInputFilesHash } from './hash-files'
+import type { ModelSpec } from '../../_shared/model-spec'
 
 export interface BuildOnceOptions {
   forceModelGen?: boolean
@@ -39,6 +40,7 @@ export interface BuildOnceOptions {
  */
 export async function buildOnce(
   config: ResolvedConfig,
+  userConfig: UserConfig,
   plugins: Plugin[],
   options: BuildOnceOptions
 ): Promise<Result<boolean, Error>> {
@@ -46,28 +48,28 @@ export async function buildOnce(
   const stagedFiles = new StagedFiles(config.prepDir)
   const context = new BuildContext(config, stagedFiles, options.abortSignal)
 
-  // Prepare for the model build by generating necessary config files.
-  // For now we find the first plugin that implements `preGenerate`.
-  // TODO: Should we allow multiple plugins to implement `preGenerate`?
+  // Get the model spec from the config
   let modelSpec: ModelSpec
+  try {
+    modelSpec = await userConfig.modelSpec(context)
+    if (modelSpec === undefined) {
+      return err(new Error('The model spec must be defined'))
+    }
+  } catch (e) {
+    return err(e)
+  }
+
+  // Run plugins that implement `preGenerate`
   for (const plugin of plugins) {
     if (plugin.preGenerate) {
-      try {
-        modelSpec = await plugin.preGenerate(context)
-      } catch (e) {
-        return err(e)
-      }
-      break
+      plugin.preGenerate(context, modelSpec)
     }
-  }
-  if (modelSpec === undefined) {
-    return err(new Error(`Must provide one plugin that implements 'preGenerate'`))
   }
 
   // Write the spec file
   const specJson = {
-    inputVarNames: modelSpec.inputVarNames,
-    outputVarNames: modelSpec.outputVarNames,
+    inputVarNames: modelSpec.inputs.map(input => input.varName),
+    outputVarNames: modelSpec.outputs.map(output => output.varName),
     externalDatfiles: modelSpec.datFiles,
     ...modelSpec.options
   }

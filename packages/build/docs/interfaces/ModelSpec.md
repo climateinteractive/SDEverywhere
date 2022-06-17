@@ -23,19 +23,19 @@ The end time (year) for the model (typically the same as `FINAL TIME`).
 
 ___
 
-### inputVarNames
+### inputs
 
- **inputVarNames**: `string`[]
+ **inputs**: [`InputSpec`](InputSpec.md)[]
 
-The input variable names (the longform names used in the modeling tool).
+The input variable specs.
 
 ___
 
-### outputVarNames
+### outputs
 
- **outputVarNames**: `string`[]
+ **outputs**: [`OutputSpec`](OutputSpec.md)[]
 
-The output variable names (the longform names used in the modeling tool).
+The output variable specs.
 
 ___
 

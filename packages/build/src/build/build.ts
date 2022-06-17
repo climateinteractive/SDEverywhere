@@ -88,7 +88,7 @@ export async function build(mode: BuildMode, options: BuildOptions): Promise<Res
       // Enable dev mode (which will rebuild when watched files are changed).
       // First run an initial build so that we have a baseline, and then
       // once that is complete, enable file watchers.
-      const buildResult = await buildOnce(resolvedConfig, plugins, {})
+      const buildResult = await buildOnce(resolvedConfig, userConfig, plugins, {})
       // TODO: We should trap errors here and keep the dev process
       // running if the initial build fails
       if (buildResult.isErr()) {
@@ -103,14 +103,14 @@ export async function build(mode: BuildMode, options: BuildOptions): Promise<Res
       }
 
       // Watch for changes to the source/model/test files
-      watch(resolvedConfig, plugins)
+      watch(resolvedConfig, userConfig, plugins)
 
       // Return a build result with undefined exit code, indicating that the
       // process should be kept alive
       return ok({})
     } else {
       // Run a single build
-      const buildResult = await buildOnce(resolvedConfig, plugins, {})
+      const buildResult = await buildOnce(resolvedConfig, userConfig, plugins, {})
       if (buildResult.isErr()) {
         return err(buildResult.error)
       }

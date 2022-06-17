@@ -12,8 +12,8 @@ import { buildOptions } from '../_shared/build-options'
 const modelSpec: ModelSpec = {
   startTime: 2000,
   endTime: 2100,
-  inputVarNames: ['Y'],
-  outputVarNames: ['Z'],
+  inputs: [{ varName: 'Y', defaultValue: 0, minValue: -10, maxValue: 10 }],
+  outputs: [{ varName: 'Z' }],
   datFiles: []
 }
 
@@ -23,11 +23,7 @@ describe('build in development mode', () => {
       rootDir: resolvePath(__dirname, '..'),
       prepDir: resolvePath(__dirname, 'sde-prep'),
       modelFiles: [resolvePath(__dirname, '..', '_shared', 'sample.mdl')],
-      plugins: [
-        {
-          preGenerate: async () => modelSpec
-        }
-      ]
+      modelSpec: async () => modelSpec
     }
 
     const result = await build('development', buildOptions(userConfig))

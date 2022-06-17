@@ -85,7 +85,7 @@ async function preprocessMdl(
   prepDir: string,
   modelFile: string
 ): Promise<void> {
-  log('info', '  Preprocessing mdl file')
+  log('verbose', '  Preprocessing mdl file')
 
   // Copy the source file to the prep directory to make the next steps easier
   await copyFile(modelFile, joinPath(prepDir, 'processed.mdl'))

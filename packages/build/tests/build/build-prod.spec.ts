@@ -12,8 +12,8 @@ import { buildOptions } from '../_shared/build-options'
 const modelSpec: ModelSpec = {
   startTime: 2000,
   endTime: 2100,
-  inputVarNames: ['Y'],
-  outputVarNames: ['Z'],
+  inputs: [{ varName: 'Y', defaultValue: 0, minValue: -10, maxValue: 10 }],
+  outputs: [{ varName: 'Z' }],
   datFiles: []
 }
 
@@ -23,11 +23,7 @@ describe('build in production mode', () => {
       rootDir: resolvePath(__dirname, '..'),
       prepDir: resolvePath(__dirname, 'sde-prep'),
       modelFiles: [],
-      plugins: [
-        {
-          preGenerate: async () => modelSpec
-        }
-      ]
+      modelSpec: async () => modelSpec
     }
 
     const result = await build('production', buildOptions(userConfig))
@@ -39,11 +35,11 @@ describe('build in production mode', () => {
   })
 
   it('should call plugin functions in the expected order', async () => {
-    const pluginCalls: string[] = []
+    const calls: string[] = []
 
     const plugin = (num: number) => {
       const record = (f: string) => {
-        pluginCalls.push(`plugin ${num}: ${f}`)
+        calls.push(`plugin ${num}: ${f}`)
       }
       const p: Plugin = {
         init: async () => {
@@ -51,7 +47,6 @@ describe('build in production mode', () => {
         },
         preGenerate: async () => {
           record('preGenerate')
-          return modelSpec
         },
         preProcessMdl: async () => {
           record('preProcessMdl')
@@ -86,6 +81,10 @@ describe('build in production mode', () => {
       rootDir: resolvePath(__dirname, '..'),
       prepDir: resolvePath(__dirname, 'sde-prep'),
       modelFiles: [resolvePath(__dirname, '..', '_shared', 'sample.mdl')],
+      modelSpec: async () => {
+        calls.push('modelSpec')
+        return modelSpec
+      },
       plugins: [plugin(1), plugin(2)]
     }
 
@@ -95,12 +94,12 @@ describe('build in production mode', () => {
     }
 
     expect(result.value.exitCode).toBe(0)
-    expect(pluginCalls).toEqual([
+    expect(calls).toEqual([
       'plugin 1: init',
       'plugin 2: init',
+      'modelSpec',
       'plugin 1: preGenerate',
-      // Note: Only the first preGenerate function is called at this time,
-      // so it is expected that we don't see a "plugin 2: preGenerate" call
+      'plugin 2: preGenerate',
       'plugin 1: preProcessMdl',
       'plugin 2: preProcessMdl',
       'plugin 1: postProcessMdl',

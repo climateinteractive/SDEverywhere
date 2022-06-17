@@ -7,10 +7,6 @@ generation and build process.
 
 These functions are all optional.
 
-NOTE: Currently it is required to have exactly one plugin in the chain
-that implements the `preGenerate` function because that function provides
-information that is used to drive the rest of the build process.
-
 These functions will be called during the build process in the order
 listed below:
   - init (only called once before initial build steps)
@@ -46,24 +42,20 @@ ___
 
 ### preGenerate
 
-`Optional` **preGenerate**(`context`): `Promise`<[`ModelSpec`](ModelSpec.md)\>
+`Optional` **preGenerate**(`context`, `modelSpec`): `Promise`<`void`\>
 
 Called before the "generate model" steps are performed.
-
-You must implement this function so that the generated model is
-configured with the desired inputs and outputs.
 
 #### Parameters
 
 | Name | Type | Description |
 | :------ | :------ | :------ |
 | `context` | [`BuildContext`](../classes/BuildContext.md) | The build context (for logging, etc). |
+| `modelSpec` | [`ModelSpec`](ModelSpec.md) | The spec that controls how the model is generated. |
 
 #### Returns
 
-`Promise`<[`ModelSpec`](ModelSpec.md)\>
-
-A `ModelSpec` that defines the model inputs and outputs.
+`Promise`<`void`\>
 
 ___
 

@@ -7,6 +7,7 @@ import chokidar from 'chokidar'
 import { clearOverlay, log, logError } from '../../_shared/log'
 import type { ResolvedConfig } from '../../_shared/resolved-config'
 
+import type { UserConfig } from '../../config/user-config'
 import type { Plugin } from '../../plugin/plugin'
 
 import type { BuildOnceOptions } from './build-once'
@@ -16,7 +17,7 @@ class BuildState {
   readonly abortController = new AbortController()
 }
 
-export function watch(config: ResolvedConfig, plugins: Plugin[]): void {
+export function watch(config: ResolvedConfig, userConfig: UserConfig, plugins: Plugin[]): void {
   // Add a small delay so that if multiple files are changed at once (as is
   // often the case when switching branches), we batch them up and start the
   // the build after things settle down
@@ -50,7 +51,7 @@ export function watch(config: ResolvedConfig, plugins: Plugin[]): void {
     const buildOptions: BuildOnceOptions = {
       abortSignal: currentBuildState.abortController.signal
     }
-    buildOnce(config, plugins, buildOptions)
+    buildOnce(config, userConfig, plugins, buildOptions)
       .catch(e => {
         logError(e)
         // log('info', 'Waiting for changes...')

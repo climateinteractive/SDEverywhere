@@ -10,10 +10,6 @@ import type { BuildContext } from '../context/context'
  *
  * These functions are all optional.
  *
- * NOTE: Currently it is required to have exactly one plugin in the chain
- * that implements the `preGenerate` function because that function provides
- * information that is used to drive the rest of the build process.
- *
  * These functions will be called during the build process in the order
  * listed below:
  *   - init (only called once before initial build steps)
@@ -38,13 +34,10 @@ export interface Plugin {
   /**
    * Called before the "generate model" steps are performed.
    *
-   * You must implement this function so that the generated model is
-   * configured with the desired inputs and outputs.
-   *
    * @param context The build context (for logging, etc).
-   * @return A `ModelSpec` that defines the model inputs and outputs.
+   * @param modelSpec The spec that controls how the model is generated.
    */
-  preGenerate?: (context: BuildContext) => Promise<ModelSpec>
+  preGenerate?: (context: BuildContext, modelSpec: ModelSpec) => Promise<void>
 
   /**
    * Called before SDE preprocesses the mdl file (in the case of one mdl file),

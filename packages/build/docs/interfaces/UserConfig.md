@@ -59,3 +59,26 @@ ___
 
 The array of plugins that are used to customize the build process.  These will be
 executed in the order defined here.
+
+## Methods
+
+### modelSpec
+
+**modelSpec**(`context`): `Promise`<[`ModelSpec`](ModelSpec.md)\>
+
+Called before the "generate model" steps are performed.
+
+You must implement this function so that the generated model is
+configured with the desired inputs and outputs.
+
+#### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `context` | [`BuildContext`](../classes/BuildContext.md) |
+
+#### Returns
+
+`Promise`<[`ModelSpec`](ModelSpec.md)\>
+
+A `ModelSpec` that defines the model inputs and outputs.

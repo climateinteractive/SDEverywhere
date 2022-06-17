@@ -1,5 +1,7 @@
 // Copyright (c) 2022 Climate Interactive / New Venture Fund
 
+import type { ModelSpec } from '../_shared/model-spec'
+import type { BuildContext } from '../context/context'
 import type { Plugin } from '../plugin/plugin'
 
 /**
@@ -43,4 +45,14 @@ export interface UserConfig {
    * executed in the order defined here.
    */
   plugins?: Plugin[]
+
+  /**
+   * Called before the "generate model" steps are performed.
+   *
+   * You must implement this function so that the generated model is
+   * configured with the desired inputs and outputs.
+   *
+   * @return A `ModelSpec` that defines the model inputs and outputs.
+   */
+  modelSpec: (context: BuildContext) => Promise<ModelSpec>
 }
