@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "@sdeverywhere/check-core": "^0.1.0"
+  }
+}
