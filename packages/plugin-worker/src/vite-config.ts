@@ -23,12 +23,12 @@ const __dirname = dirname(__filename)
  * doesn't seem to be working correctly in an ESM setting
  */
 function injectModelSpec(modelSpec: ModelSpec): VitePlugin {
-  const outputVarIds = modelSpec.outputVarNames.map(name => sdeNameForVensimVarName(name))
+  const outputVarIds = modelSpec.outputs.map(o => sdeNameForVensimVarName(o.varName))
 
   const moduleSrc = `
 export const startTime = ${modelSpec.startTime};
 export const endTime = ${modelSpec.endTime};
-export const numInputs = ${modelSpec.inputVarNames.length};
+export const numInputs = ${modelSpec.inputs.length};
 export const outputVarIds = ${JSON.stringify(outputVarIds)};
 `
 
