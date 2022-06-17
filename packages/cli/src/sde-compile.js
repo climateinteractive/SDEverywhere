@@ -2,11 +2,18 @@ import fs from 'fs-extra'
 import path from 'path'
 import sh from 'shelljs'
 
+import { generate } from './sde-generate.js'
+
 import { buildDir, execCmd, modelPathProps } from './utils.js'
 
 export let command = 'compile [options] <model>'
-export let describe = 'compile the generated model to an executable file'
+export let describe = 'generate model code and compile it to an executable file'
 export let builder = {
+  spec: {
+    describe: 'pathname of the I/O specification JSON file',
+    type: 'string',
+    alias: 's'
+  },
   builddir: {
     describe: 'build directory',
     type: 'string',
@@ -16,23 +23,34 @@ export let builder = {
 export let handler = argv => {
   compile(argv.model, argv)
 }
-export let compile = (model, opts) => {
-  let { modelDirname, modelName } = modelPathProps(model)
-  // Ensure the build directory exists.
-  let buildDirname = buildDir(opts.builddir, modelDirname)
-  // Link SDEverywhere C source files into the build directory.
-  linkCSourceFiles(modelDirname, buildDirname)
-  // Run make to compile the model C code.
-  let silentState = sh.config.silent
-  sh.config.silent = true
-  sh.pushd(buildDirname)
-  let exitCode = execCmd(`make P=${modelName}`)
-  sh.popd()
-  sh.config.silent = silentState
-  if (exitCode > 0) {
-    process.exit(exitCode)
+export let compile = async (model, opts) => {
+  try {
+    // Generate the C code
+    opts.genc = true
+    await generate(model, opts)
+
+    // Compile the generated C code into an executable
+    let { modelDirname, modelName } = modelPathProps(model)
+    // Ensure the build directory exists.
+    let buildDirname = buildDir(opts.builddir, modelDirname)
+    // Link SDEverywhere C source files into the build directory.
+    linkCSourceFiles(modelDirname, buildDirname)
+    // Run make to compile the model C code.
+    let silentState = sh.config.silent
+    sh.config.silent = true
+    sh.pushd(buildDirname)
+    let exitCode = execCmd(`make P=${modelName}`)
+    sh.popd()
+    sh.config.silent = silentState
+    if (exitCode > 0) {
+      process.exit(exitCode)
+    }
+    return 0
+  } catch (e) {
+    // Exit with a non-zero error code if any step failed
+    console.error(`ERROR: ${e.message}\n`)
+    process.exit(1)
   }
-  return 0
 }
 export default {
   command,
