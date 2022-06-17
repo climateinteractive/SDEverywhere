@@ -24,9 +24,10 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:ci": "vitest run",
+    "type-check": "tsc --noEmit -p tsconfig-build.json",
     "build": "tsup",
     "docs": "../../scripts/gen-docs.js",
-    "ci:build": "run-s clean lint prettier:check test:ci build docs"
+    "ci:build": "run-s clean lint prettier:check test:ci type-check build docs"
   },
   "dependencies": {
     "chokidar": "^3.5.3",
