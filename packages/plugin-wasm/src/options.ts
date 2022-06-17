@@ -2,17 +2,14 @@
 
 export interface WasmPluginOptions {
   /**
-   * The path to the Emscripten SDK.
+   * The path to the Emscripten SDK.  If undefined, the plugin will walk up the directory
+   * structure to find the nearest `emsdk` directory.
    */
-  emsdkDir: string
+  emsdkDir?: string
 
   /**
-   * The destination directory of the resulting JS file (containing the embedded Wasm model).
+   * The path of the resulting JS file (containing the embedded Wasm model).  If undefined,
+   * the plugin will write `wasm-model.js` to the configured `prepDir`.
    */
-  outputJsDir: string
-
-  /**
-   * The name of the resulting JS file (containing the embedded Wasm model).
-   */
-  outputJsFile: string
+  outputJsPath?: string
 }

@@ -1,35 +1,64 @@
 // Copyright (c) 2022 Climate Interactive / New Venture Fund
 
-import { join as joinPath } from 'path'
+import { existsSync } from 'fs'
+import { basename, dirname, join as joinPath } from 'path'
+
+import { findUp } from 'find-up'
 
 import type { BuildContext, Plugin } from '@sdeverywhere/build'
 
 import type { WasmPluginOptions } from './options'
 
-export function wasmPlugin(options: WasmPluginOptions): Plugin {
+export function wasmPlugin(options?: WasmPluginOptions): Plugin {
   return new WasmPlugin(options)
 }
 
 class WasmPlugin implements Plugin {
-  constructor(private readonly options: WasmPluginOptions) {}
+  constructor(private readonly options?: WasmPluginOptions) {}
 
   async postGenerateC(context: BuildContext, cContent: string): Promise<string> {
     context.log('info', '  Generating WebAssembly module')
 
-    // Ensure that the staged directory exists before we build the Wasm model
-    // (otherwise emcc will fail) and add a staged file entry
-    const outputJsFile = this.options.outputJsFile
-    const outputJsPath = context.prepareStagedFile('model', outputJsFile, this.options.outputJsDir, outputJsFile)
+    // Locate the Emscripten SDK directory
+    let emsdkDir: string
+    if (this.options?.emsdkDir) {
+      // Try the configured directory
+      emsdkDir = this.options.emsdkDir
+      if (!existsSync(emsdkDir)) {
+        throw new Error(`Invalid emsdk directory '${emsdkDir}'`)
+      }
+    } else {
+      // Walk up the directory structure to find the nearest `emsdk` directory
+      emsdkDir = await findUp('emsdk', { type: 'directory' })
+      if (emsdkDir === undefined) {
+        throw new Error('Could not find emsdk directory')
+      }
+    }
 
     // XXX: On Windows, we need to use Windows-specific commands; need to revisit
     const isWin = process.platform === 'win32'
     const emccCmd = isWin ? 'emcc.bat' : 'emcc'
-    const emccCmdPath = joinPath(this.options.emsdkDir, 'upstream', 'emscripten', emccCmd)
+    const emccCmdPath = joinPath(emsdkDir, 'upstream', 'emscripten', emccCmd)
+
+    // If `outputJsPath` is undefined, write `wasm-model.js` to the prep dir
+    const stagedOutputJsFile = 'wasm-model.js'
+    let outputJsPath: string
+    if (this.options?.outputJsPath) {
+      outputJsPath = this.options.outputJsPath
+    } else {
+      outputJsPath = joinPath(context.config.prepDir, stagedOutputJsFile)
+    }
+    const outputJsDir = dirname(outputJsPath)
+    const outputJsFile = basename(outputJsPath)
+
+    // Ensure that the staged directory exists before we build the Wasm model
+    // (otherwise emcc will fail) and add a staged file entry
+    const stagedOutputJsPath = context.prepareStagedFile('model', stagedOutputJsFile, outputJsDir, outputJsFile)
 
     // Generate the Wasm binary (wrapped in a JS file)
-    await buildWasm(context, emccCmdPath, context.config.prepDir, outputJsPath)
+    await buildWasm(context, emccCmdPath, context.config.prepDir, stagedOutputJsPath)
 
-    context.log('info', '  Done!')
+    // context.log('info', '  Done!')
 
     return cContent
   }
