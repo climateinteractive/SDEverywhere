@@ -6,7 +6,7 @@ import { pathToFileURL } from 'url'
 // import type { ViteDevServer } from 'vite'
 import { build /*, createServer*/ } from 'vite'
 
-import type { BuildContext, Plugin /*, ResolvedConfig*/ } from '@sdeverywhere/build'
+import type { BuildContext, ModelSpec, Plugin /*, ResolvedConfig*/ } from '@sdeverywhere/build'
 
 import type { Bundle } from '@sdeverywhere/check-core'
 import { createConfig } from '@sdeverywhere/check-core'
@@ -39,40 +39,43 @@ class CheckPlugin implements Plugin {
   // staged files are copied to their final destination(s).  We should probably
   // make it configurable so that it can either be run as a `postGenerate` or a
   // `postBuild` step.
-  async postBuild(context: BuildContext): Promise<boolean> {
+  async postBuild(context: BuildContext, modelSpec: ModelSpec): Promise<boolean> {
     if (context.config.mode === 'development') {
       // Nothing to do here in dev mode; the dev server will refresh and
       // re-run the tests when changes are detected
       return true
-    } else {
-      let currentBundlePath: string
-      if (this.options?.current === undefined) {
-        // Path to current bundle was not provided, so generate a default bundle
-        currentBundlePath = await this.genCurrentBundle(context)
-      } else {
-        // Use the provided bundle
-        currentBundlePath = this.options.current.path
-      }
-
-      let testConfigPath: string
-      if (this.options?.testConfigPath === undefined) {
-        // Test config was not provided, so generate a default config
-        testConfigPath = await this.genTestConfig(context)
-      } else {
-        // Use the provided test config
-        testConfigPath = this.options.testConfigPath
-      }
-
-      // For production builds, run the model checks/comparisons, and then
-      // inject the results into the generated report
-      return this.runChecks(context, currentBundlePath, testConfigPath)
     }
+
+    let currentBundleName: string
+    let currentBundlePath: string
+    if (this.options?.current === undefined) {
+      // Path to current bundle was not provided, so generate a default bundle
+      currentBundleName = 'current'
+      currentBundlePath = await this.genCurrentBundle(context, modelSpec)
+    } else {
+      // Use the provided bundle
+      currentBundleName = this.options.current.name
+      currentBundlePath = this.options.current.path
+    }
+
+    let testConfigPath: string
+    if (this.options?.testConfigPath === undefined) {
+      // Test config was not provided, so generate a default config
+      testConfigPath = await this.genTestConfig(context)
+    } else {
+      // Use the provided test config
+      testConfigPath = this.options.testConfigPath
+    }
+
+    // For production builds, run the model checks/comparisons, and then
+    // inject the results into the generated report
+    return this.runChecks(context, currentBundleName, currentBundlePath, testConfigPath)
   }
 
-  private async genCurrentBundle(context: BuildContext): Promise<string> {
+  private async genCurrentBundle(context: BuildContext, modelSpec: ModelSpec): Promise<string> {
     context.log('info', 'Generating model check bundle...')
     const prepDir = context.config.prepDir
-    const viteConfig = createViteConfigForBundle(prepDir)
+    const viteConfig = createViteConfigForBundle(prepDir, modelSpec)
     await build(viteConfig)
     return joinPath(context.config.prepDir, 'check-bundle.js')
   }
@@ -85,15 +88,20 @@ class CheckPlugin implements Plugin {
     return joinPath(context.config.prepDir, 'check-tests.js')
   }
 
-  private async runChecks(context: BuildContext, currentBundlePath: string, testConfigPath: string): Promise<boolean> {
+  private async runChecks(
+    context: BuildContext,
+    currentBundleName: string,
+    currentBundlePath: string,
+    testConfigPath: string
+  ): Promise<boolean> {
     context.log('info', 'Running model checks...')
 
     // Load the bundles used by the model check/compare configuration.  We
     // always initialize the "current" bundle.   Note that on Windows the
     // dynamic import path must be a `file://` URL, so we have to convert.
-    const moduleR = await import(pathToFileURL(this.options.current.path).toString())
+    const moduleR = await import(pathToFileURL(currentBundlePath).toString())
     const bundleR = moduleR.createBundle() as Bundle
-    const nameR = this.options.current.name
+    const nameR = currentBundleName
 
     // Only initialize the "baseline" bundle if it is defined and the version
     // is the same as the "current" one.  If the baseline bundle has a different
@@ -128,6 +136,7 @@ class CheckPlugin implements Plugin {
     const viteConfig = createViteConfigForReport(
       this.options,
       prepDir,
+      currentBundleName,
       currentBundlePath,
       testConfigPath,
       result.suiteSummary

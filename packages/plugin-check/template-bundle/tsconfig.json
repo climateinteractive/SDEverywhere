@@ -20,6 +20,7 @@
     // for plugging in "real" files later
     "baseUrl": ".",
     "paths": {
+      "virtual:model-spec": ["./src/empty-model-spec.ts"],
       "@_model_worker_": ["./src"]
     }
   }

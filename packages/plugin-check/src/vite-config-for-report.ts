@@ -18,6 +18,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 export function createViteConfigForReport(
   options: CheckPluginOptions | undefined,
   prepDir: string,
+  currentBundleName: string,
   currentBundlePath: string,
   testConfigPath: string,
   suiteSummary: SuiteSummary | undefined
@@ -105,7 +106,7 @@ export function createViteConfigForReport(
       __BASELINE_NAME__: JSON.stringify(options?.baseline?.name || ''),
 
       // Inject the current branch name
-      __CURRENT_NAME__: JSON.stringify(options?.current?.name || '')
+      __CURRENT_NAME__: JSON.stringify(currentBundleName)
     },
 
     plugins: [

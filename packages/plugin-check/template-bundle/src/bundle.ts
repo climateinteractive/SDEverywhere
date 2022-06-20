@@ -13,18 +13,17 @@ import type {
   Scenario
 } from '@sdeverywhere/check-core'
 
-import type { ModelRunner, Point } from '@sdeverywhere/runtime'
+import type { InputValue, InputVarId, ModelRunner, Point } from '@sdeverywhere/runtime'
 import { Outputs } from '@sdeverywhere/runtime'
 import { spawnAsyncModelRunner } from '@sdeverywhere/runtime-async'
 
+import type { Input } from './inputs'
 import { getInputVars, setInputsForScenario } from './inputs'
 import { getOutputVars } from './outputs'
 
-import modelWorkerJs from '@_model_worker_/worker.js?raw'
+import { startTime, endTime, inputSpecs, outputSpecs } from 'virtual:model-spec'
 
-// TODO: Get these from the ModelSpec defined by `sde.config.js`
-const startTime = 2000
-const endTime = 2100
+import modelWorkerJs from '@_model_worker_/worker.js?raw'
 
 // The current version of the check bundle format.  This should be
 // incremented when there is an incompatible change to the bundle format.
@@ -40,21 +39,26 @@ const modelSizeInBytes = __MODEL_SIZE_IN_BYTES__
 const __DATA_SIZE_IN_BYTES__ = 1
 const dataSizeInBytes = __DATA_SIZE_IN_BYTES__
 
-// The special model version, injected at build time.  This is only used
-// to determine which variables will be simulated by this sample bundle.
-const __MODEL_VERSION__ = 1
-const modelVersion = __MODEL_VERSION__
-
 export class BundleModel implements CheckBundleModel {
+  private readonly inputs: InputValue[]
   private outputs: Outputs
 
   /**
    * @param modelSpec The spec for the bundled model.
+   * @param inputMap The model inputs.
    * @param modelRunner The model runner.
    */
-  constructor(public readonly modelSpec: ModelSpec, private readonly modelRunner: ModelRunner) {
+  constructor(
+    public readonly modelSpec: ModelSpec,
+    private readonly inputMap: Map<InputVarId, Input>,
+    private readonly modelRunner: ModelRunner
+  ) {
+    // Derive an array of `InputValue` instances that can be passed to the runner
+    this.inputs = [...inputMap.values()].map(input => input.value)
+
     // Create an `Outputs` instance that is initialized to hold output data
     // produced by the Wasm model
+    const outputVarIds = outputSpecs.map(o => o.varId)
     this.outputs = new Outputs(outputVarIds, startTime, endTime)
   }
 
@@ -112,20 +116,13 @@ export class BundleModel implements CheckBundleModel {
  * Initialize a `BundleModel` instance that supports the running the model
  * under different scenarios.
  */
-async function initBundleModel(modelSpec: ModelSpec): Promise<BundleModel> {
+async function initBundleModel(modelSpec: ModelSpec, inputMap: Map<InputVarId, Input>): Promise<BundleModel> {
   // Initialize the Wasm model asynchronously.  We inline the worker code in the
-  // rolled-up bundle, so that we don't have to fetch a separate `worker.js` file
+  // rolled-up bundle so that we don't have to fetch a separate `worker.js` file
   const modelRunner = await spawnAsyncModelRunner({ source: modelWorkerJs })
 
-  // Create an `Input` instance for each input variable in the config
-  const inputs: Input[] = []
-  for (const inputSpec of coreConfig.inputs.values()) {
-    const input = createModelInput(inputSpec)
-    inputs.push(input)
-  }
-
   // Return a `BundleModel` that wraps the underlying config and Wasm model
-  return new BundleModel(modelSpec, modelRunner)
+  return new BundleModel(modelSpec, inputMap, modelRunner)
 }
 
 /**
@@ -150,8 +147,8 @@ export function datasetFromPoints(points: Point[]): Dataset {
  */
 export function createBundle(): Bundle {
   // Gather information about the input and output variables used in the model
-  const inputVars = getInputVars()
-  const outputVars = getOutputVars(modelVersion)
+  const inputVars = getInputVars(inputSpecs)
+  const outputVars = getOutputVars(outputSpecs)
 
   const modelSpec: ModelSpec = {
     modelSizeInBytes,
@@ -169,7 +166,7 @@ export function createBundle(): Bundle {
     version: VERSION,
     modelSpec,
     initModel: () => {
-      return initBundleModel(modelSpec)
+      return initBundleModel(modelSpec, inputVars)
     }
   }
 }

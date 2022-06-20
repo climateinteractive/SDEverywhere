@@ -29,6 +29,7 @@
     "ci:build": "run-s clean lint prettier:check test:ci type-check build"
   },
   "dependencies": {
+    "@rollup/plugin-node-resolve": "^13.3.0",
     "@sdeverywhere/build": "^0.1.0",
     "@sdeverywhere/check-core": "^0.1.0",
     "@sdeverywhere/check-ui-shell": "^0.1.0",
@@ -36,7 +37,8 @@
     "@sdeverywhere/runtime-async": "^0.1.0",
     "assert-never": "^1.2.1",
     "picocolors": "^1.0.0",
-    "rollup-plugin-node-polyfills": "^0.2.1"
+    "rollup-plugin-node-polyfills": "^0.2.1",
+    "vite": "^2.9.12"
   },
   "devDependencies": {
     "@types/node": "^16.11.7"
