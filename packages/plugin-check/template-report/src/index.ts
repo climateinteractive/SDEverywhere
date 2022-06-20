@@ -3,7 +3,7 @@
 import type { Bundle, SuiteSummary } from '@sdeverywhere/check-core'
 
 import { initAppShell } from '@sdeverywhere/check-ui-shell'
-import '@sdeverywhere/check-ui-common/dist/style.css'
+import '@sdeverywhere/check-ui-shell/dist/style.css'
 
 import { initOverlay } from './overlay'
 
