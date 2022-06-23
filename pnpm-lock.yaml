@@ -251,12 +251,14 @@ importers:
 
   packages/plugin-worker:
     specifiers:
+      '@rollup/plugin-node-resolve': ^13.3.0
       '@sdeverywhere/build': ^0.1.0
       '@sdeverywhere/runtime': ^0.1.0
       '@sdeverywhere/runtime-async': ^0.1.0
       '@types/node': ^16.11.7
       vite: ^2.9.12
     dependencies:
+      '@rollup/plugin-node-resolve': 13.3.0
       '@sdeverywhere/build': link:../build
       '@sdeverywhere/runtime': link:../runtime
       '@sdeverywhere/runtime-async': link:../runtime-async
