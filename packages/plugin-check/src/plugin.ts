@@ -75,7 +75,7 @@ class CheckPlugin implements Plugin {
   private async genCurrentBundle(context: BuildContext, modelSpec: ModelSpec): Promise<string> {
     context.log('info', 'Generating model check bundle...')
     const prepDir = context.config.prepDir
-    const viteConfig = createViteConfigForBundle(prepDir, modelSpec)
+    const viteConfig = await createViteConfigForBundle(prepDir, modelSpec)
     await build(viteConfig)
     return joinPath(context.config.prepDir, 'check-bundle.js')
   }

@@ -5,6 +5,7 @@ import { dirname, join as joinPath, relative, resolve as resolvePath } from 'pat
 import { fileURLToPath } from 'url'
 
 import type { InlineConfig, Plugin as VitePlugin } from 'vite'
+import { nodeResolve } from '@rollup/plugin-node-resolve'
 
 import { sdeNameForVensimVarName } from './var-names'
 
@@ -61,7 +62,7 @@ export const outputSpecs = ${JSON.stringify(outputSpecs)};
   }
 }
 
-export function createViteConfigForBundle(prepDir: string, modelSpec: ModelSpec): InlineConfig {
+export async function createViteConfigForBundle(prepDir: string, modelSpec: ModelSpec): Promise<InlineConfig> {
   // Use `template-bundle` as the root directory for the bundle project
   const root = resolvePath(__dirname, '..', 'template-bundle')
 
@@ -88,19 +89,41 @@ export function createViteConfigForBundle(prepDir: string, modelSpec: ModelSpec)
 
     // Configure path aliases
     resolve: {
-      alias: {
+      alias: [
         // Inject the configured model worker
-        '@_model_worker_': modelWorkerPath
+        {
+          find: '@_model_worker_',
+          replacement: modelWorkerPath
+        },
 
-        // XXX: Prevent Vite from using the `browser` section of `threads/package.json` since
-        // we want to force the use of the general module (under dist) that chooses the correct
-        // implementation (Web Worker vs worker_threads) at runtime
-        // threads: resolvePath(__dirname, `../../node_modules/threads/dist-esm`)
-      }
+        // XXX: Prevent Vite from using the `browser` section of `threads/package.json`
+        // since we want to force the use of the general module (under dist-esm) that chooses
+        // the correct implementation (Web Worker vs worker_threads) at runtime.  Currently
+        // Vite's library mode is browser focused, so using a `customResolver` seems to be
+        // the easiest way to prevent Vite from picking up the `browser` exports.
+        {
+          find: 'threads',
+          replacement: 'threads',
+          customResolver: async function (source, importer, options) {
+            // Note that we need to use `resolveId.call` here in order to provide the
+            // right `this` context, which provides Rollup plugin functionality
+            const customResolver = nodeResolve({ browser: false })
+            const resolved = await customResolver.resolveId.call(this, source, importer, options)
+            // Force the use of the `dist-esm` variant of the threads.js package
+            if (source === 'threads/worker') {
+              return resolved.id.replace('worker.mjs', 'dist-esm/worker/index.js')
+            } else {
+              return resolved.id.replace('index.mjs', 'dist-esm/index.js')
+            }
+          }
+        }
+      ]
     },
 
-    // Use a virtual module plugin to inject the model spec values
-    plugins: [injectModelSpec(modelSpec)],
+    plugins: [
+      // Use a virtual module plugin to inject the model spec values
+      injectModelSpec(modelSpec)
+    ],
 
     build: {
       // Write output files to the configured directory (instead of the default `dist`);
