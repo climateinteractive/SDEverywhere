@@ -31,6 +31,13 @@ class CheckPlugin implements Plugin {
   constructor(private readonly options?: CheckPluginOptions) {}
 
   async watch(config: ResolvedConfig): Promise<void> {
+    if (this.options?.testConfigPath === undefined) {
+      // Test config was not provided, so generate a default config in watch mode.
+      // The test template uses import.meta.importGlob so that checks are re-run
+      // automatically when the *.check.yaml files are changed.
+      await this.genTestConfig(config, 'watch')
+    }
+
     // For development mode, run Vite in dev mode so that it serves the
     // model-check report locally (with live reload enabled).  When a model
     // test file is changed, the tests will be re-run in the browser.
@@ -47,19 +54,23 @@ class CheckPlugin implements Plugin {
   // `postBuild` step.
   async postBuild(context: BuildContext, modelSpec: ModelSpec): Promise<boolean> {
     // For both production builds and local development, generate default bundle
-    // and/or test config in this post-build step each time a source file is changed
-    // TODO: We could potentially use watch mode for these sub-steps instead of
-    // running them unconditionally
+    // in this post-build step each time a source file is changed
+    // TODO: We could potentially use watch mode for the bundle similar to
+    // what we do for the test config, but the bundle depends on the ModelSpec,
+    // which currently isn't made available to the `watch` function
     if (this.options?.current === undefined) {
       // Path to current bundle was not provided, so generate a default bundle
-      await this.genCurrentBundle(context, modelSpec)
-    }
-    if (this.options?.testConfigPath === undefined) {
-      // Test config was not provided, so generate a default config
-      await this.genTestConfig(context)
+      context.log('info', 'Generating model check bundle...')
+      await this.genCurrentBundle(context.config, modelSpec)
     }
 
     if (context.config.mode === 'production') {
+      if (this.options?.testConfigPath === undefined) {
+        // Test config was not provided, so generate a default config
+        context.log('info', 'Generating model check test configuration...')
+        await this.genTestConfig(context.config, 'build')
+      }
+
       // For production builds, run the model checks/comparisons, and then
       // inject the results into the generated report
       const testOptions = this.resolveTestOptions(context.config)
@@ -71,18 +82,16 @@ class CheckPlugin implements Plugin {
     }
   }
 
-  private async genCurrentBundle(context: BuildContext, modelSpec: ModelSpec): Promise<void> {
-    context.log('info', 'Generating model check bundle...')
-    const prepDir = context.config.prepDir
+  private async genCurrentBundle(config: ResolvedConfig, modelSpec: ModelSpec): Promise<void> {
+    const prepDir = config.prepDir
     const viteConfig = await createViteConfigForBundle(prepDir, modelSpec)
     await build(viteConfig)
   }
 
-  private async genTestConfig(context: BuildContext): Promise<void> {
-    context.log('info', 'Generating model check test configuration...')
-    const rootDir = context.config.rootDir
-    const prepDir = context.config.prepDir
-    const viteConfig = createViteConfigForTests(rootDir, prepDir)
+  private async genTestConfig(config: ResolvedConfig, mode: 'build' | 'watch'): Promise<void> {
+    const rootDir = config.rootDir
+    const prepDir = config.prepDir
+    const viteConfig = createViteConfigForTests(rootDir, prepDir, mode)
     await build(viteConfig)
   }
 
