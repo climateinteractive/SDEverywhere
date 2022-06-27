@@ -92,7 +92,12 @@ export function createViteConfigForReport(
     optimizeDeps: {
       // Prevent Vite from examining other html files when scanning entrypoints
       // for dependency optimization
-      entries: ['index.html']
+      entries: ['index.html'],
+
+      // XXX: The threads.js implementation references `tiny-worker` as an optional
+      // dependency, but it doesn't get used at runtime, so we can just exclude it
+      // so that Vite doesn't complain in dev mode
+      exclude: ['tiny-worker']
     },
 
     // Configure path aliases
