@@ -4,23 +4,19 @@ import type { Bundle, CompareOptions, ConfigOptions, DatasetKey } from '@sdevery
 
 import { DatasetManager, ScenarioManager } from '@sdeverywhere/check-core'
 
-// Use the glob path to the yaml check files that is injected by
-// the Vite config
-// const __YAML_PATH__ = './*.yaml'
-
 // Load the yaml test files.  Note that we use `vite-plugin-glob` here
 // instead of Vite's built-in `import.meta.globEager` because the plugin
 // does a better job of handling HMR when the yaml files are outside of
 // the `template-report` app root directory.
-// const yamlGlob = import.meta.importGlob(__YAML_PATH__, {
-//   eager: true,
-//   as: 'raw'
-// })
+const yamlGlob = import.meta.importGlob(__YAML_PATH__, {
+  eager: true,
+  as: 'raw'
+})
 const tests: string[] = []
-// for (const yamlKey of Object.keys(yamlGlob)) {
-//   const yaml = yamlGlob[yamlKey]
-//   tests.push(yaml as unknown as string)
-// }
+for (const yamlKey of Object.keys(yamlGlob)) {
+  const yaml = yamlGlob[yamlKey]
+  tests.push(yaml as unknown as string)
+}
 
 // If an output variable is renamed, define the mapping from the old key
 // to the new key here.  If this step is omitted, the old variable will

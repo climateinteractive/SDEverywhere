@@ -4,13 +4,23 @@ import { dirname, relative, resolve as resolvePath } from 'path'
 import { fileURLToPath } from 'url'
 
 import type { InlineConfig } from 'vite'
+import globPlugin from 'vite-plugin-glob'
+import replace from '@rollup/plugin-replace'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 
-export function createViteConfigForTests(prepDir: string): InlineConfig {
+export function createViteConfigForTests(projDir: string, prepDir: string): InlineConfig {
   // Use `template-tests` as the root directory for the tests project
   const root = resolvePath(__dirname, '..', 'template-tests')
+
+  // Include `*.check.yaml` files under the configured project root directory.  This
+  // glob path apparently must be a relative path (relative to the `template-tests/src`
+  // directory where the glob is used).
+  const templateSrcDir = resolvePath(root, 'src')
+  const relProjDir = relative(templateSrcDir, projDir)
+  //  TODO: Use yamlPath from options
+  const yamlPath = `${relProjDir}/**/*.check.yaml`
 
   // // Read the `package.json` for the template project
   // const pkgPath = resolvePath(root, 'package.json')
@@ -32,6 +42,27 @@ export function createViteConfigForTests(prepDir: string): InlineConfig {
 
     // TODO: Disable vite output by default?
     // logLevel: 'silent',
+
+    plugins: [
+      // Inject special values into the generated JS
+      // TODO: We currently have to use `@rollup/plugin-replace` instead of Vite's
+      // built-in `define` feature because the latter does not seem to run before
+      // the glob plugin, and that requires the glob to be injected as a literal;
+      // `plugin-replace` seems to work as long as we order it before `plugin-glob`.
+      // Maybe we can switch back to `define` once we move to Vite 3.x.
+      replace({
+        preventAssignment: true,
+        values: {
+          // Inject the glob pattern for matching check yaml files
+          __YAML_PATH__: JSON.stringify(yamlPath)
+        }
+      }),
+
+      // Use `vite-plugin-glob` instead of Vite's built-in `import.meta.globEager`
+      // because the plugin does a better job of handling HMR when the yaml files
+      // are outside of the `template-report` app root directory.
+      globPlugin()
+    ],
 
     build: {
       // Write output files to the configured directory (instead of the default `dist`);

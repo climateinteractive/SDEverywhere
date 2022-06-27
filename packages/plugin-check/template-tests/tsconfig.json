@@ -13,6 +13,7 @@
     "importsNotUsedAsValues": "error",
     "noImplicitAny": true,
     "noUnusedLocals": true,
-    "noUnusedParameters": true
+    "noUnusedParameters": true,
+    "types": ["vite-plugin-glob/client"]
   }
 }

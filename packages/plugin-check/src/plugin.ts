@@ -80,8 +80,9 @@ class CheckPlugin implements Plugin {
 
   private async genTestConfig(context: BuildContext): Promise<void> {
     context.log('info', 'Generating model check test configuration...')
+    const rootDir = context.config.rootDir
     const prepDir = context.config.prepDir
-    const viteConfig = createViteConfigForTests(prepDir)
+    const viteConfig = createViteConfigForTests(rootDir, prepDir)
     await build(viteConfig)
   }
 
