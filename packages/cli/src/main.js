@@ -26,7 +26,7 @@ import path from 'path'
 
 import yargs from 'yargs'
 import sdeBuild from './sde-build.js'
-// import sdeDev from './sde-dev.js'
+import sdeDev from './sde-dev.js'
 import sdeGenerate from './sde-generate.js'
 import sdeFlatten from './sde-flatten.js'
 import sdeCompile from './sde-compile.js'
@@ -52,7 +52,7 @@ yarg
   .scriptName('sde')
   .usage('usage: $0 <command>')
   .command(sdeBuild)
-  // .command(sdeDev)
+  .command(sdeDev)
   .command(sdeGenerate)
   .command(sdeFlatten)
   .command(sdeCompile)
