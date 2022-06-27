@@ -27,7 +27,7 @@
     "type-check": "tsc --noEmit -p tsconfig-build.json",
     "build": "tsup",
     "docs": "../../scripts/gen-docs.js",
-    "ci:build": "run-s clean lint prettier:check test:ci type-check build docs"
+    "ci:build": "run-s clean lint prettier:check type-check build test:ci docs"
   },
   "dependencies": {
     "chokidar": "^3.5.3",
