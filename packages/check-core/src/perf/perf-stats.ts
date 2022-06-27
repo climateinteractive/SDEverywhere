@@ -15,6 +15,15 @@ export class PerfStats {
   }
 
   toReport(): PerfReport {
+    if (this.times.length === 0) {
+      return {
+        minTime: 0,
+        maxTime: 0,
+        avgTime: 0,
+        allTimes: []
+      }
+    }
+
     // Get the absolute min and max times, just for informational
     // purposes (these will be thrown out before computing the average)
     const minTime = Math.min(...this.times)

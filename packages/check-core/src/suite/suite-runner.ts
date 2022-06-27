@@ -119,12 +119,35 @@ class SuiteRunner {
       }
     }
 
-    // Schedule the tasks.  The ref data tasks must be processed first so that
+    // Plan the data tasks.  The ref data tasks must be processed first so that
     // the reference data is available in memory when checks are performed.
     const refDataPlan = refDataPlanner.buildPlan()
     const dataPlan = dataPlanner.buildPlan()
     const dataRequests = [...refDataPlan.requests, ...dataPlan.requests]
     const taskCount = dataRequests.length
+    if (taskCount === 0) {
+      // There are no checks or comparison tests; notify completion callback
+      // with empty reports
+      let compareReport: CompareReport
+      if (this.config.compare) {
+        compareReport = {
+          datasetReports: [],
+          perfReportL: this.perfStatsL.toReport(),
+          perfReportR: this.perfStatsR.toReport()
+        }
+      }
+      this.cancel()
+      this.callbacks.onProgress?.(1)
+      this.callbacks.onComplete?.({
+        checkReport: {
+          groups: []
+        },
+        compareReport
+      })
+      return
+    }
+
+    // Schedule a task for each data request
     let tasksCompleted = 0
     let dataTaskId = 1
     for (const dataRequest of dataRequests) {
