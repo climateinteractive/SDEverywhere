@@ -40,7 +40,6 @@ importers:
 
   examples/hello-world:
     specifiers:
-      '@sdeverywhere/check-core': ^0.1.0
       '@sdeverywhere/cli': ^0.7.0
       '@sdeverywhere/plugin-check': ^0.1.0
       '@sdeverywhere/plugin-wasm': ^0.1.0
@@ -48,7 +47,6 @@ importers:
       rollup-plugin-node-polyfills: ^0.2.1
       sirv-cli: ^2.0.2
     dependencies:
-      '@sdeverywhere/check-core': link:../../packages/check-core
       '@sdeverywhere/cli': link:../../packages/cli
       '@sdeverywhere/plugin-check': link:../../packages/plugin-check
       '@sdeverywhere/plugin-wasm': link:../../packages/plugin-wasm

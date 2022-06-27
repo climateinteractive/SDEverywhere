@@ -1,7 +1,6 @@
 // Copyright (c) 2022 Climate Interactive / New Venture Fund
 
 import { dirname, relative, resolve as resolvePath } from 'path'
-import { readFileSync } from 'fs'
 import { fileURLToPath } from 'url'
 
 import type { InlineConfig } from 'vite'
@@ -13,9 +12,9 @@ export function createViteConfigForTests(prepDir: string): InlineConfig {
   // Use `template-tests` as the root directory for the tests project
   const root = resolvePath(__dirname, '..', 'template-tests')
 
-  // Read the `package.json` for the template project
-  const pkgPath = resolvePath(root, 'package.json')
-  const pkg = JSON.parse(readFileSync(pkgPath, 'utf8'))
+  // // Read the `package.json` for the template project
+  // const pkgPath = resolvePath(root, 'package.json')
+  // const pkg = JSON.parse(readFileSync(pkgPath, 'utf8'))
 
   // Calculate output directory relative to the template root
   // TODO: For now we write it to `prepDir`; make this configurable?
@@ -48,7 +47,14 @@ export function createViteConfigForTests(prepDir: string): InlineConfig {
 
       rollupOptions: {
         // Prevent dependencies from being included in packaged library
-        external: Object.keys(pkg.dependencies)
+        // TODO: For now we include check-core in the packaged library so that its
+        // dependencies are correctly resolved at runtime.  Ideally this would only
+        // include a couple functions that are used for defining tests, but Vite 2.x
+        // does not implement tree shaking for ES libraries, which means the generated
+        // library is much larger than it needs to be.  Once we upgrade to Vite 3.x,
+        // the generated library should be smaller; see related fix:
+        //   https://github.com/vitejs/vite/pull/8737
+        // external: Object.keys(pkg.dependencies)
       }
     }
   }
