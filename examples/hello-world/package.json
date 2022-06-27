@@ -5,14 +5,14 @@
   "type": "module",
   "scripts": {
     "build": "sde build",
-    "dev": "sde dev"
+    "dev": "sde dev",
+    "serve": "sirv ./sde-prep/check-report"
   },
   "dependencies": {
     "@sdeverywhere/cli": "^0.7.0",
     "@sdeverywhere/plugin-check": "^0.1.0",
     "@sdeverywhere/plugin-wasm": "^0.1.0",
     "@sdeverywhere/plugin-worker": "^0.1.0",
-    "rollup-plugin-node-polyfills": "^0.2.1",
     "sirv-cli": "^2.0.2"
   }
 }

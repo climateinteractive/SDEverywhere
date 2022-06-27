@@ -44,14 +44,12 @@ importers:
       '@sdeverywhere/plugin-check': ^0.1.0
       '@sdeverywhere/plugin-wasm': ^0.1.0
       '@sdeverywhere/plugin-worker': ^0.1.0
-      rollup-plugin-node-polyfills: ^0.2.1
       sirv-cli: ^2.0.2
     dependencies:
       '@sdeverywhere/cli': link:../../packages/cli
       '@sdeverywhere/plugin-check': link:../../packages/plugin-check
       '@sdeverywhere/plugin-wasm': link:../../packages/plugin-wasm
       '@sdeverywhere/plugin-worker': link:../../packages/plugin-worker
-      rollup-plugin-node-polyfills: 0.2.1
       sirv-cli: 2.0.2
 
   examples/sample-check-app:

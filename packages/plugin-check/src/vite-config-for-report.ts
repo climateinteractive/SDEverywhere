@@ -3,17 +3,16 @@
 import { dirname, relative, join as joinPath, resolve as resolvePath } from 'path'
 import { fileURLToPath } from 'url'
 
-import type { InlineConfig } from 'vite'
+import type { Alias, InlineConfig } from 'vite'
 // import globPlugin from 'vite-plugin-glob'
-
-// import { NodeModulesPolyfillPlugin } from '@esbuild-plugins/node-modules-polyfill'
-import rollupNodePolyFill from 'rollup-plugin-node-polyfills'
+import { nodeResolve } from '@rollup/plugin-node-resolve'
 
 import type { SuiteSummary } from '@sdeverywhere/check-core'
 
 import type { CheckPluginOptions } from './options'
 
-const __dirname = dirname(fileURLToPath(import.meta.url))
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
 
 export function createViteConfigForReport(
   options: CheckPluginOptions | undefined,
@@ -37,6 +36,38 @@ export function createViteConfigForReport(
 
   // Convert the suite summary to JSON, which is what the app currently expects
   const suiteSummaryJson = suiteSummary ? JSON.stringify(suiteSummary) : ''
+
+  const alias = (find: string, replacement: string) => {
+    return {
+      find,
+      replacement
+    } as Alias
+  }
+
+  // XXX: This provides custom handling for Node built-ins such as 'events' that are
+  // referenced by the check bundle (specifically in the Node implementation of
+  // threads.js).  These are not actually used in the browser, so we just need
+  // to provide no-op polyfills for these.
+  const polyfillAlias = (find: string) => {
+    return {
+      find,
+      replacement: find,
+      customResolver: async function (_source, _importer, options) {
+        const customResolver = nodeResolve()
+        // Replace uses of Node built-ins (e.g. 'events') with the appropriate polyfill
+        const customSource = `rollup-plugin-node-polyfills/polyfills/${find}`
+        // Use this file as the "importer" so that we resolve `rollup-plugin-node-polyfills`
+        // relative to `plugin-check/node_modules`.  Without this workaround, the consuming
+        // project would need `rollup-plugin-node-polyfills` as an explicit dependency, and
+        // we want to avoid that since it's more of an implementation detail.
+        const customImporter = __filename
+        // Note that we need to use `resolveId.call` here in order to provide the
+        // right `this` context, which provides Rollup plugin functionality
+        const resolved = await customResolver.resolveId.call(this, customSource, customImporter, options)
+        return resolved.id
+      }
+    } as Alias
+  }
 
   return {
     // Don't use an external config file
@@ -62,39 +93,34 @@ export function createViteConfigForReport(
       // Prevent Vite from examining other html files when scanning entrypoints
       // for dependency optimization
       entries: ['index.html']
-
-      // esbuildOptions: {
-      //   // Include polyfills
-      //   plugins: [NodeModulesPolyfillPlugin()]
-      // }
     },
 
     // Configure path aliases
     resolve: {
-      alias: {
+      alias: [
         // Use the configured "baseline" bundle if defined, otherwise use the "empty" bundle
         // (which will cause comparison tests to be skipped)
-        '@_baseline_bundle_': options?.baseline ? options.baseline.path : '/src/empty-bundle.ts',
+        alias('@_baseline_bundle_', options?.baseline ? options.baseline.path : '/src/empty-bundle.ts'),
 
         // Use the configured "current" bundle
-        '@_current_bundle_': currentBundlePath,
+        alias('@_current_bundle_', currentBundlePath),
 
         // Use the configured test config file
-        '@_test_config_': testConfigPath,
+        alias('@_test_config_', testConfigPath),
 
         // Make the overlay use the `messages.html` file that is written to the prep directory
-        '@_prep_': prepDir,
+        alias('@_prep_', prepDir),
 
         // XXX: Include polyfills for these modules that are used in the Node-specific
         // implementation of threads.js; this allows us to use one bundle that works
         // in both Node and browser environments
-        events: 'rollup-plugin-node-polyfills/polyfills/events',
-        os: 'rollup-plugin-node-polyfills/polyfills/os',
-        path: 'rollup-plugin-node-polyfills/polyfills/path',
+        polyfillAlias('events'),
+        polyfillAlias('os'),
+        polyfillAlias('path'),
         // XXX: The following is only needed due to threads.js 1.7.0 importing `fileURLToPath`.
         // We use a no-op polyfill of our own for the time being.
-        url: '/src/url-polyfill.ts'
-      }
+        alias('url', '/src/url-polyfill.ts')
+      ]
     },
 
     // Inject special values into the generated JS
@@ -129,12 +155,6 @@ export function createViteConfigForReport(
           // XXX: Prevent vite from creating a separate `vendor.js` file
           manualChunks: undefined
         },
-
-        plugins: [
-          // Enable Node polyfills for production build (see resolve.alias
-          // section above)
-          rollupNodePolyFill()
-        ],
 
         onwarn: (warning, warn) => {
           // XXX: Suppress "Use of eval is strongly discouraged" warnings that are
