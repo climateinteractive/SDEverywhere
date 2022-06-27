@@ -2,7 +2,10 @@
   "name": "@sdeverywhere/plugin-check",
   "version": "0.1.0",
   "files": [
-    "dist/**"
+    "dist/**",
+    "template-bundle/**",
+    "template-report/**",
+    "template-tests/**"
   ],
   "type": "module",
   "main": "dist/index.cjs",
@@ -30,6 +33,7 @@
   },
   "dependencies": {
     "@rollup/plugin-node-resolve": "^13.3.0",
+    "@rollup/plugin-replace": "^2.4.1",
     "@sdeverywhere/build": "^0.1.0",
     "@sdeverywhere/check-core": "^0.1.0",
     "@sdeverywhere/check-ui-shell": "^0.1.0",
@@ -38,7 +42,8 @@
     "assert-never": "^1.2.1",
     "picocolors": "^1.0.0",
     "rollup-plugin-node-polyfills": "^0.2.1",
-    "vite": "^2.9.12"
+    "vite": "^2.9.12",
+    "vite-plugin-glob": "^0.3.2"
   },
   "devDependencies": {
     "@types/node": "^16.11.7"
