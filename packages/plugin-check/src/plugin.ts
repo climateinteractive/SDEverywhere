@@ -3,12 +3,12 @@
 import { join as joinPath } from 'path'
 import { pathToFileURL } from 'url'
 
-// import type { ViteDevServer } from 'vite'
-import { build /*, createServer*/ } from 'vite'
+import type { InlineConfig, ViteDevServer } from 'vite'
+import { build, createServer } from 'vite'
 
-import type { BuildContext, ModelSpec, Plugin /*, ResolvedConfig*/ } from '@sdeverywhere/build'
+import type { BuildContext, ModelSpec, Plugin, ResolvedConfig } from '@sdeverywhere/build'
 
-import type { Bundle } from '@sdeverywhere/check-core'
+import type { Bundle, SuiteSummary } from '@sdeverywhere/check-core'
 import { createConfig } from '@sdeverywhere/check-core'
 
 import type { CheckPluginOptions } from './options'
@@ -21,18 +21,24 @@ export function checkPlugin(options?: CheckPluginOptions): Plugin {
   return new CheckPlugin(options)
 }
 
+interface TestOptions {
+  currentBundleName: string
+  currentBundlePath: string
+  testConfigPath: string
+}
+
 class CheckPlugin implements Plugin {
   constructor(private readonly options?: CheckPluginOptions) {}
 
-  // TODO: Reimplement this
-  // async watch(config: ResolvedConfig): Promise<void> {
-  //   // For development mode, run Vite in dev mode so that it serves the
-  //   // model-check report locally (with live reload enabled).  When a model
-  //   // test file is changed, the tests will be re-run in the browser.
-  //   const viteConfig = createViteConfigForReport(this.options, config.prepDir, undefined)
-  //   const server: ViteDevServer = await createServer(viteConfig)
-  //   await server.listen()
-  // }
+  async watch(config: ResolvedConfig): Promise<void> {
+    // For development mode, run Vite in dev mode so that it serves the
+    // model-check report locally (with live reload enabled).  When a model
+    // test file is changed, the tests will be re-run in the browser.
+    const testOptions = this.resolveTestOptions(config)
+    const viteConfig = this.createViteConfigForReport(config, testOptions, undefined)
+    const server: ViteDevServer = await createServer(viteConfig)
+    await server.listen()
+  }
 
   // TODO: Note that this plugin runs as a `postBuild` step because it currently
   // needs to run after other plugins, and those plugins need to run after the
@@ -40,68 +46,54 @@ class CheckPlugin implements Plugin {
   // make it configurable so that it can either be run as a `postGenerate` or a
   // `postBuild` step.
   async postBuild(context: BuildContext, modelSpec: ModelSpec): Promise<boolean> {
-    if (context.config.mode === 'development') {
-      // Nothing to do here in dev mode; the dev server will refresh and
-      // re-run the tests when changes are detected
-      return true
-    }
-
-    let currentBundleName: string
-    let currentBundlePath: string
+    // For both production builds and local development, generate default bundle
+    // and/or test config in this post-build step each time a source file is changed
+    // TODO: We could potentially use watch mode for these sub-steps instead of
+    // running them unconditionally
     if (this.options?.current === undefined) {
       // Path to current bundle was not provided, so generate a default bundle
-      currentBundleName = 'current'
-      currentBundlePath = await this.genCurrentBundle(context, modelSpec)
-    } else {
-      // Use the provided bundle
-      currentBundleName = this.options.current.name
-      currentBundlePath = this.options.current.path
+      await this.genCurrentBundle(context, modelSpec)
     }
-
-    let testConfigPath: string
     if (this.options?.testConfigPath === undefined) {
       // Test config was not provided, so generate a default config
-      testConfigPath = await this.genTestConfig(context)
-    } else {
-      // Use the provided test config
-      testConfigPath = this.options.testConfigPath
+      await this.genTestConfig(context)
     }
 
-    // For production builds, run the model checks/comparisons, and then
-    // inject the results into the generated report
-    return this.runChecks(context, currentBundleName, currentBundlePath, testConfigPath)
+    if (context.config.mode === 'production') {
+      // For production builds, run the model checks/comparisons, and then
+      // inject the results into the generated report
+      const testOptions = this.resolveTestOptions(context.config)
+      return this.runChecks(context, testOptions)
+    } else {
+      // Nothing to do here in dev mode; the dev server will refresh and
+      // re-run the tests in the browser when changes are detected
+      return true
+    }
   }
 
-  private async genCurrentBundle(context: BuildContext, modelSpec: ModelSpec): Promise<string> {
+  private async genCurrentBundle(context: BuildContext, modelSpec: ModelSpec): Promise<void> {
     context.log('info', 'Generating model check bundle...')
     const prepDir = context.config.prepDir
     const viteConfig = await createViteConfigForBundle(prepDir, modelSpec)
     await build(viteConfig)
-    return joinPath(context.config.prepDir, 'check-bundle.js')
   }
 
-  private async genTestConfig(context: BuildContext): Promise<string> {
+  private async genTestConfig(context: BuildContext): Promise<void> {
     context.log('info', 'Generating model check test configuration...')
     const prepDir = context.config.prepDir
     const viteConfig = createViteConfigForTests(prepDir)
     await build(viteConfig)
-    return joinPath(context.config.prepDir, 'check-tests.js')
   }
 
-  private async runChecks(
-    context: BuildContext,
-    currentBundleName: string,
-    currentBundlePath: string,
-    testConfigPath: string
-  ): Promise<boolean> {
+  private async runChecks(context: BuildContext, testOptions: TestOptions): Promise<boolean> {
     context.log('info', 'Running model checks...')
 
     // Load the bundles used by the model check/compare configuration.  We
     // always initialize the "current" bundle.   Note that on Windows the
     // dynamic import path must be a `file://` URL, so we have to convert.
-    const moduleR = await import(pathToFileURL(currentBundlePath).toString())
+    const moduleR = await import(pathToFileURL(testOptions.currentBundlePath).toString())
     const bundleR = moduleR.createBundle() as Bundle
-    const nameR = currentBundleName
+    const nameR = testOptions.currentBundleName
 
     // Only initialize the "baseline" bundle if it is defined and the version
     // is the same as the "current" one.  If the baseline bundle has a different
@@ -120,7 +112,7 @@ class CheckPlugin implements Plugin {
     }
 
     // Get the model check/compare configuration
-    const testConfigModule = await import(pathToFileURL(testConfigPath).toString())
+    const testConfigModule = await import(pathToFileURL(testOptions.testConfigPath).toString())
     const checkOptions = await testConfigModule.getConfigOptions(bundleL, bundleR, {
       nameL,
       nameR
@@ -132,19 +124,55 @@ class CheckPlugin implements Plugin {
 
     // Build the report (using Vite)
     context.log('info', 'Building model check report')
-    const prepDir = context.config.prepDir
-    const viteConfig = createViteConfigForReport(
-      this.options,
-      prepDir,
-      currentBundleName,
-      currentBundlePath,
-      testConfigPath,
-      result.suiteSummary
-    )
+    const viteConfig = this.createViteConfigForReport(context.config, testOptions, result.suiteSummary)
     await build(viteConfig)
 
     // context.log('info', 'Done!')
 
     return result.allChecksPassed
+  }
+
+  private resolveTestOptions(config: ResolvedConfig): TestOptions {
+    let currentBundleName: string
+    let currentBundlePath: string
+    if (this.options?.current === undefined) {
+      // Path to current bundle was not provided, so use a generated bundle
+      currentBundleName = 'current'
+      currentBundlePath = joinPath(config.prepDir, 'check-bundle.js')
+    } else {
+      // Use the provided bundle
+      currentBundleName = this.options.current.name
+      currentBundlePath = this.options.current.path
+    }
+
+    let testConfigPath: string
+    if (this.options?.testConfigPath === undefined) {
+      // Test config was not provided, so use a generated config
+      testConfigPath = joinPath(config.prepDir, 'check-tests.js')
+    } else {
+      // Use the provided test config
+      testConfigPath = this.options.testConfigPath
+    }
+
+    return {
+      currentBundleName,
+      currentBundlePath,
+      testConfigPath
+    }
+  }
+
+  private createViteConfigForReport(
+    config: ResolvedConfig,
+    testOptions: TestOptions,
+    suiteSummary: SuiteSummary | undefined
+  ): InlineConfig {
+    return createViteConfigForReport(
+      this.options,
+      config.prepDir,
+      testOptions.currentBundleName,
+      testOptions.currentBundlePath,
+      testOptions.testConfigPath,
+      suiteSummary
+    )
   }
 }

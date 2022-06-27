@@ -146,7 +146,7 @@ export async function buildOnce(
     if (config.mode === 'development') {
       // Hide the "rebuilding" message in the dev overlay in the app if the
       // build succeeded; otherwise keep the error message visible
-      log('info', 'Waiting for changes...')
+      log('info', 'Waiting for changes...\n')
       clearOverlay()
     }
   } catch (e) {
