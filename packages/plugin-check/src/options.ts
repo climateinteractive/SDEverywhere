@@ -15,9 +15,13 @@ export interface CheckPluginOptions {
   /** The current bundle, i.e., the bundle that is being developed and checked. */
   current?: CheckBundle
 
-  // /** The glob-style path to the check yaml files to be included. */
-  // // TODO: Make this optional
-  // yamlPath: string
+  // TODO
+  // /**
+  //  * The glob-style path to the check yaml files to be included.  If undefined,
+  //  * a default pattern will be used that finds all `*.check.yaml` files under
+  //  * the configured `rootDir`.
+  //  */
+  // yamlPath?: string
 
   /**
    * The absolute path to the JS file containing the test configuration.  If undefined,
