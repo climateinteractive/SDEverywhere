@@ -7,10 +7,12 @@ import { outputVar } from '../check/_mocks/mock-check-dataset'
 import { inputVar } from '../check/_mocks/mock-check-scenario'
 import { createConfig } from '../config/config'
 import type { Config, ConfigOptions } from '../config/config-types'
+import type { SuiteReport } from './suite-report'
 import type { RunSuiteCallbacks } from './suite-runner'
 import { runSuite } from './suite-runner'
 
 interface MockConfigOptions {
+  emptyTests?: boolean
   invalidTests?: boolean
   throwInCurrentGetDatasets?: boolean
 }
@@ -56,7 +58,9 @@ function mockBundle(mockOptions: MockConfigOptions): Bundle {
 
 async function mockConfig(mockOptions: MockConfigOptions): Promise<Config> {
   let tests: string[]
-  if (mockOptions.invalidTests === true) {
+  if (mockOptions.emptyTests === true) {
+    tests = []
+  } else if (mockOptions.invalidTests === true) {
     tests = ['INVALID']
   } else {
     const test = `
@@ -109,6 +113,34 @@ describe('runSuite', () => {
 
     expect(sawOnComplete).toBe(true)
     expect(progressPcts).toEqual([0, 0.5, 1])
+  })
+
+  it('should notify progress and completion callbacks even when there are no tests', async () => {
+    const config = await mockConfig({ emptyTests: true })
+
+    const progressPcts: number[] = []
+    const report: SuiteReport = await new Promise((resolve, reject) => {
+      const callbacks: RunSuiteCallbacks = {
+        onProgress: pct => {
+          progressPcts.push(pct)
+        },
+        onComplete: suiteReport => {
+          resolve(suiteReport)
+        },
+        onError: () => {
+          reject(new Error('onError should not be called'))
+        }
+      }
+      runSuite(config, callbacks)
+    })
+
+    expect(report).toEqual({
+      checkReport: {
+        groups: []
+      },
+      compareReport: undefined
+    })
+    expect(progressPcts).toEqual([0, 1])
   })
 
   it('should notify error callback if there was an error', async () => {
