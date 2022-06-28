@@ -1,7 +1,16 @@
 {
   "packages": {
     "packages/compile": {},
-    "packages/cli": {}
+    "packages/build": { "release-as": "0.1.0" },
+    "packages/cli": {},
+    "packages/runtime": { "release-as": "0.1.0" },
+    "packages/runtime-async": { "release-as": "0.1.0" },
+    "packages/check-core": { "release-as": "0.1.0" },
+    "packages/check-ui-shell": { "release-as": "0.1.0" },
+    "packages/plugin-check": { "release-as": "0.1.0" },
+    "packages/plugin-vite": { "release-as": "0.1.0" },
+    "packages/plugin-wasm": { "release-as": "0.1.0" },
+    "packages/plugin-worker": { "release-as": "0.1.0" }
   },
   "plugins": ["node-workspace"],
   "bump-minor-pre-major": true,
