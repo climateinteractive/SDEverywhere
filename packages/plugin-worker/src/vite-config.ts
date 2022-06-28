@@ -129,14 +129,6 @@ export function createViteConfig(
         fileName: () => outputFile
       },
 
-      // XXX: Prevent Vite from using the `browser` section of `threads/package.json` since
-      // we want to force the use of the general module (under dist-esm) that chooses the
-      // correct implementation (Web Worker vs worker_threads) at runtime.  Currently Vite's
-      // library mode is browser focused, and the only way to prevent it from using the
-      // `browser` section is to set `ssr: true`.  See this related comment:
-      //   https://github.com/vitejs/vite/issues/4405#issuecomment-1066115981)
-      // ssr: true,
-
       rollupOptions: {
         onwarn: (warning, warn) => {
           // XXX: Suppress "Use of eval is strongly discouraged" warnings that are
