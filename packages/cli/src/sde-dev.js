@@ -11,19 +11,26 @@ export let builder = {
     describe: 'path to the config file (defaults to `sde.config.js` in the current directory)',
     type: 'string',
     alias: 'c'
+  },
+  verbose: {
+    describe: 'enable verbose log messages',
+    type: 'boolean'
   }
 }
 export let handler = argv => {
-  dev(argv.config)
+  dev(argv.config, argv.verbose)
 }
-export let dev = async configPath => {
+export let dev = async (configPath, verbose) => {
+  const logLevels = ['error', 'info']
+  if (verbose) {
+    logLevels.push('verbose')
+  }
   const srcDir = new URL('.', import.meta.url).pathname
   const sdeDir = path.resolve(srcDir, '..')
   const sdeCmdPath = path.resolve(srcDir, 'main.js')
   const result = await runBuild('development', {
     config: configPath,
-    // TODO: Enable verbose only if `--verbose` flag is passed
-    logLevels: ['error', 'info', 'verbose'],
+    logLevels,
     sdeDir,
     sdeCmdPath
   })
