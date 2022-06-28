@@ -238,6 +238,14 @@ importers:
     devDependencies:
       '@types/node': 16.11.40
 
+  packages/plugin-vite:
+    specifiers:
+      '@sdeverywhere/build': ^0.1.0
+      vite: ^2.9.12
+    dependencies:
+      '@sdeverywhere/build': link:../build
+      vite: 2.9.12
+
   packages/plugin-wasm:
     specifiers:
       '@sdeverywhere/build': ^0.1.0
