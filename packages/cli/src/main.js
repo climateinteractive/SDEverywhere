@@ -6,6 +6,8 @@
 //  SDEverywhere may be freely distributed under the MIT license.
 
 // Commands:
+// bundle
+// dev
 // generate
 // flatten
 // compile
@@ -24,6 +26,8 @@ import fs from 'fs'
 import path from 'path'
 
 import yargs from 'yargs'
+import sdeBundle from './sde-bundle.js'
+import sdeDev from './sde-dev.js'
 import sdeGenerate from './sde-generate.js'
 import sdeFlatten from './sde-flatten.js'
 import sdeCompile from './sde-compile.js'
@@ -49,6 +53,8 @@ yarg
   .strict()
   .scriptName('sde')
   .usage('usage: $0 <command>')
+  .command(sdeBundle)
+  .command(sdeDev)
   .command(sdeGenerate)
   .command(sdeFlatten)
   .command(sdeCompile)

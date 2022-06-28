@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "target": "es6",
+    // Use "es2020" for dynamic import
+    "module": "es2020",
+    // Emit additional JS to ease support for importing CommonJS modules
+    "esModuleInterop": true,
+    // Use Node.js-style module resolution
+    "moduleResolution": "node",
+    // Enable warnings for transpilation-unsafe code
+    "isolatedModules": true,
+    // Enable strict enforcement of `import type`
+    "importsNotUsedAsValues": "error",
+    "noImplicitAny": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "types": ["vite-plugin-glob/client"]
+  }
+}

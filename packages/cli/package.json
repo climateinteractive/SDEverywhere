@@ -18,6 +18,7 @@
     "ci:build": "run-s lint prettier:check"
   },
   "dependencies": {
+    "@sdeverywhere/build": "^0.1.0",
     "@sdeverywhere/compile": "^0.7.0",
     "bufx": "^1.0.5",
     "byline": "^5.0.0",

@@ -1,0 +1,62 @@
+{
+  "name": "@sdeverywhere/plugin-check",
+  "version": "0.1.0",
+  "files": [
+    "dist/**",
+    "template-bundle/**",
+    "template-report/**",
+    "template-tests/**"
+  ],
+  "type": "module",
+  "main": "dist/index.cjs",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "scripts": {
+    "clean": "rm -rf dist",
+    "lint": "eslint src --ext .ts --max-warnings 0",
+    "prettier:check": "prettier --check .",
+    "prettier:fix": "prettier --write .",
+    "precommit": "../../scripts/precommit",
+    "test": "echo No tests yet",
+    "test:watch": "echo No tests yet",
+    "test:ci": "echo No tests yet",
+    "type-check": "tsc --noEmit -p tsconfig-build.json",
+    "build": "tsup",
+    "ci:build": "run-s clean lint prettier:check test:ci type-check build"
+  },
+  "dependencies": {
+    "@rollup/plugin-node-resolve": "^13.3.0",
+    "@rollup/plugin-replace": "^2.4.1",
+    "@sdeverywhere/build": "^0.1.0",
+    "@sdeverywhere/check-core": "^0.1.0",
+    "@sdeverywhere/check-ui-shell": "^0.1.0",
+    "@sdeverywhere/runtime": "^0.1.0",
+    "@sdeverywhere/runtime-async": "^0.1.0",
+    "assert-never": "^1.2.1",
+    "picocolors": "^1.0.0",
+    "rollup-plugin-node-polyfills": "^0.2.1",
+    "vite": "^2.9.12",
+    "vite-plugin-glob": "^0.3.2"
+  },
+  "devDependencies": {
+    "@types/node": "^16.11.7"
+  },
+  "author": "Climate Interactive",
+  "license": "MIT",
+  "homepage": "https://sdeverywhere.org",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/climateinteractive/SDEverywhere.git",
+    "directory": "packages/plugin-check"
+  },
+  "bugs": {
+    "url": "https://github.com/climateinteractive/SDEverywhere/issues"
+  }
+}

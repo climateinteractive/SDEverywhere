@@ -34,9 +34,10 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:ci": "vitest run",
+    "type-check": "tsc --noEmit -p tsconfig-build.json",
     "build": "tsup",
     "docs": "../../scripts/gen-docs.js",
-    "ci:build": "run-s clean lint prettier:check build test:ci docs"
+    "ci:build": "run-s clean lint prettier:check type-check build test:ci docs"
   },
   "dependencies": {
     "@sdeverywhere/runtime": "^0.1.0",
