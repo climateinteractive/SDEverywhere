@@ -34,7 +34,7 @@
     "@sdeverywhere/build": "^0.1.0",
     "@sdeverywhere/runtime": "^0.1.0",
     "@sdeverywhere/runtime-async": "^0.1.0",
-    "vite": "^2.9.12"
+    "vite": "2.9.6"
   },
   "devDependencies": {
     "@types/node": "^16.11.7"
