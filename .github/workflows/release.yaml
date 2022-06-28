@@ -74,4 +74,4 @@ jobs:
       - name: Publish packages
         if: ${{ steps.release.outputs.releases_created }}
         run: |
-          pnpm -r publish
+          pnpm -r publish --access public
