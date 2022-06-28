@@ -1,4 +1,4 @@
-// Copyright (c) 2022 Climate Interactive / New Venture Fund. All rights reserved.
+// Copyright (c) 2022 Climate Interactive / New Venture Fund
 
 import type { InlineConfig, ViteDevServer } from 'vite'
 import { build, createServer } from 'vite'
