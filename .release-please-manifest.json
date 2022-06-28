@@ -1,4 +1,13 @@
 {
-  "packages/compile": "0.6.0",
-  "packages/cli": "0.6.0"
+  "packages/compile": "0.7.0",
+  "packages/cli": "0.7.0",
+  "packages/build": "0.1.0",
+  "packages/check-core": "0.1.0",
+  "packages/check-ui-shell": "0.1.0",
+  "packages/plugin-check": "0.1.0",
+  "packages/plugin-vite": "0.1.0",
+  "packages/plugin-wasm": "0.1.0",
+  "packages/plugin-worker": "0.1.0",
+  "packages/runtime": "0.1.0",
+  "packages/runtime-async": "0.1.0"
 }

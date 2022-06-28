@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.7.0](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.6.0...compile-v0.7.0) (2022-06-28)
+
+
+### ⚠ BREAKING CHANGES
+
+* The `sdeverywhere` package is deprecated and effectively replaced by `@sdeverywhere/cli`.  Additionally, the `sde generate --genhtml` command and supporting code has been removed and will be replaced with a different solution in the near future.
+
+### Features
+
+* refactor into monorepo with compile and cli packages ([#192](https://github.com/climateinteractive/SDEverywhere/issues/192)) ([8946f18](https://github.com/climateinteractive/SDEverywhere/commit/8946f1854a116f7e9935d5e93d4485865d06d114)), closes [#191](https://github.com/climateinteractive/SDEverywhere/issues/191)
+
 ## [0.6.0](https://github.com/climateinteractive/SDEverywhere/compare/0.5.3...sdeverywhere-v0.6.0) (2022-06-04)
 
 
