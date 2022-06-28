@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "sde build",
+    "build": "sde bundle",
     "dev": "sde dev",
     "serve": "sirv ./sde-prep/check-report"
   },

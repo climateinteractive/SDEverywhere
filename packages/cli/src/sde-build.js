@@ -1,44 +1,31 @@
-import path from 'path'
+import { generate } from './sde-generate.js'
+import { compile } from './sde-compile.js'
 
-import { build as runBuild } from '@sdeverywhere/build'
-
-export let command = 'build [options]'
-export let describe = 'build a model as specified by a config file'
+export let command = 'build [options] <model>'
+export let describe = 'generate model code and compile it'
 export let builder = {
-  config: {
-    describe: 'path to the config file (defaults to `sde.config.js` in the current directory)',
+  spec: {
+    describe: 'pathname of the I/O specification JSON file',
     type: 'string',
-    alias: 'c'
+    alias: 's'
   },
-  verbose: {
-    describe: 'enable verbose log messages',
-    type: 'boolean'
+  builddir: {
+    describe: 'build directory',
+    type: 'string',
+    alias: 'b'
   }
 }
 export let handler = argv => {
-  build(argv.config, argv.verbose)
+  build(argv.model, argv)
 }
-export let build = async (configPath, verbose) => {
-  const logLevels = ['error', 'info']
-  if (verbose) {
-    logLevels.push('verbose')
-  }
-  const srcDir = new URL('.', import.meta.url).pathname
-  const sdeDir = path.resolve(srcDir, '..')
-  const sdeCmdPath = path.resolve(srcDir, 'main.js')
-  const result = await runBuild('production', {
-    config: configPath,
-    logLevels,
-    sdeDir,
-    sdeCmdPath
-  })
-  if (result.isOk()) {
-    // Exit with the specified code
-    console.log()
-    process.exit(result.exitCode)
-  } else {
-    // Exit with a non-zero code if any step failed
-    console.error(`ERROR: ${result.error.message}\n`)
+export let build = async (model, opts) => {
+  try {
+    opts.genc = true
+    await generate(model, opts)
+    compile(model, opts)
+  } catch (e) {
+    // Exit with a non-zero error code if any step failed
+    console.error(`ERROR: ${e.message}\n`)
     process.exit(1)
   }
 }

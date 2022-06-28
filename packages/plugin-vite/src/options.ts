@@ -9,7 +9,7 @@ export interface VitePluginOptions {
   /** The Vite config to use. */
   config: InlineConfig
 
-  /** Specifies the behavior of the plugin for different sde build modes. */
+  /** Specifies the behavior of the plugin for different `sde` build modes. */
   apply?: {
     /**
      * The behavior of the plugin when sde is configured for development mode.

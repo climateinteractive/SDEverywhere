@@ -6,7 +6,7 @@ import { compare } from './sde-compare.js'
 import { modelPathProps, outputDir } from './utils.js'
 
 export let command = 'test [options] <model>'
-export let describe = 'compile the model, run it, process the log, and compare to Vensim data'
+export let describe = 'build the model, run it, process the log, and compare to Vensim data'
 export let builder = {
   spec: {
     describe: 'pathname of the I/O specification JSON file',

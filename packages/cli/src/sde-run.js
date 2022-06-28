@@ -1,8 +1,8 @@
-import { compile } from './sde-compile.js'
+import { build } from './sde-build.js'
 import { exec } from './sde-exec.js'
 
 export let command = 'run [options] <model>'
-export let describe = 'compile the model, run it, and capture its output to a file'
+export let describe = 'build a model, run it, and capture its output to a file'
 export let builder = {
   spec: {
     describe: 'pathname of the I/O specification JSON file',
@@ -24,7 +24,7 @@ export let handler = argv => {
   run(argv.model, argv)
 }
 export let run = async (model, opts) => {
-  await compile(model, opts)
+  await build(model, opts)
   exec(model, opts)
 }
 

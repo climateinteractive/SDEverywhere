@@ -6,7 +6,7 @@
 //  SDEverywhere may be freely distributed under the MIT license.
 
 // Commands:
-// build
+// bundle
 // dev
 // generate
 // flatten
@@ -15,7 +15,8 @@
 // log
 // compare
 // clean
-// run - compile, exec
+// build - generate, compile
+// run - build, exec
 // test - run, log, compare
 // names
 // causes
@@ -25,7 +26,7 @@ import fs from 'fs'
 import path from 'path'
 
 import yargs from 'yargs'
-import sdeBuild from './sde-build.js'
+import sdeBundle from './sde-bundle.js'
 import sdeDev from './sde-dev.js'
 import sdeGenerate from './sde-generate.js'
 import sdeFlatten from './sde-flatten.js'
@@ -34,6 +35,7 @@ import sdeExec from './sde-exec.js'
 import sdeLog from './sde-log.js'
 import sdeCompare from './sde-compare.js'
 import sdeClean from './sde-clean.js'
+import sdeBuild from './sde-build.js'
 import sdeRun from './sde-run.js'
 import sdeTest from './sde-test.js'
 import sdeNames from './sde-names.js'
@@ -51,7 +53,7 @@ yarg
   .strict()
   .scriptName('sde')
   .usage('usage: $0 <command>')
-  .command(sdeBuild)
+  .command(sdeBundle)
   .command(sdeDev)
   .command(sdeGenerate)
   .command(sdeFlatten)
@@ -60,6 +62,7 @@ yarg
   .command(sdeLog)
   .command(sdeCompare)
   .command(sdeClean)
+  .command(sdeBuild)
   .command(sdeRun)
   .command(sdeTest)
   .command(sdeNames)
