@@ -4,8 +4,6 @@ import { dirname, relative, join as joinPath, resolve as resolvePath } from 'pat
 import { fileURLToPath } from 'url'
 
 import type { Alias, InlineConfig } from 'vite'
-// import globPlugin from 'vite-plugin-glob'
-import { nodeResolve } from '@rollup/plugin-node-resolve'
 
 import type { SuiteSummary } from '@sdeverywhere/check-core'
 
@@ -48,24 +46,10 @@ export function createViteConfigForReport(
   // referenced by the check bundle (specifically in the Node implementation of
   // threads.js).  These are not actually used in the browser, so we just need
   // to provide no-op polyfills for these.
-  const polyfillAlias = (find: string) => {
+  const noopPolyfillAlias = (find: string) => {
     return {
       find,
-      replacement: find,
-      customResolver: async function (_source, _importer, options) {
-        const customResolver = nodeResolve()
-        // Replace uses of Node built-ins (e.g. 'events') with the appropriate polyfill
-        const customSource = `rollup-plugin-node-polyfills/polyfills/${find}`
-        // Use this file as the "importer" so that we resolve `rollup-plugin-node-polyfills`
-        // relative to `plugin-check/node_modules`.  Without this workaround, the consuming
-        // project would need `rollup-plugin-node-polyfills` as an explicit dependency, and
-        // we want to avoid that since it's more of an implementation detail.
-        const customImporter = __filename
-        // Note that we need to use `resolveId.call` here in order to provide the
-        // right `this` context, which provides Rollup plugin functionality
-        const resolved = await customResolver.resolveId.call(this, customSource, customImporter, options)
-        return resolved.id
-      }
+      replacement: '/polyfills/noop-polyfills.ts'
     } as Alias
   }
 
@@ -116,15 +100,13 @@ export function createViteConfigForReport(
         // Make the overlay use the `messages.html` file that is written to the prep directory
         alias('@_prep_', prepDir),
 
-        // XXX: Include polyfills for these modules that are used in the Node-specific
-        // implementation of threads.js; this allows us to use one bundle that works
-        // in both Node and browser environments
-        polyfillAlias('events'),
-        polyfillAlias('os'),
-        polyfillAlias('path'),
-        // XXX: The following is only needed due to threads.js 1.7.0 importing `fileURLToPath`.
-        // We use a no-op polyfill of our own for the time being.
-        alias('url', '/src/url-polyfill.ts')
+        // XXX: Include no-op polyfills for these modules that are used in the Node-specific
+        // implementation of threads.js; this allows us to use one bundle that works in both
+        // Node and browser environments
+        noopPolyfillAlias('events'),
+        noopPolyfillAlias('os'),
+        noopPolyfillAlias('path'),
+        noopPolyfillAlias('url')
       ]
     },
 
