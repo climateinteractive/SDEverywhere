@@ -64,6 +64,11 @@ export function createViteConfigForReport(
     // how the path to the js/css files are generated in `index.html`
     base: '',
 
+    // Use a custom cache directory under `prepDir`, as otherwise Vite will use
+    // `packages/plugin-check/template-report/node_modules/.vite`, and we want to
+    // avoid generating files in `template-report` (which should be read-only)
+    cacheDir: joinPath(prepDir, '.vite-check-report'),
+
     // Load static files from `static` (instead of the default `public`)
     // publicDir: 'static',
 
