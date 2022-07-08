@@ -41,7 +41,6 @@
     "@sdeverywhere/runtime-async": "^0.1.0",
     "assert-never": "^1.2.1",
     "picocolors": "^1.0.0",
-    "rollup-plugin-node-polyfills": "^0.2.1",
     "vite": "^2.9.12",
     "vite-plugin-glob": "^0.3.2"
   },
