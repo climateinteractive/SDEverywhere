@@ -154,7 +154,6 @@ importers:
       chart.js: 2.9.4
       copy-text-to-clipboard: 3.0.1
       fontfaceobserver: 2.3.0
-      svelte-awesome: 3.0.0_svelte@3.48.0
     devDependencies:
       '@types/chart.js': 2.9.37
       '@types/fontfaceobserver': 0.0.6
@@ -162,6 +161,7 @@ importers:
       pug: 3.0.2
       sass: 1.52.3
       svelte: 3.48.0
+      svelte-awesome: 3.0.0_svelte@3.48.0
       svelte-check: 2.7.2_yycwrhreageim5tbshm6ymwmre
       svelte-preprocess: 4.10.7_yycwrhreageim5tbshm6ymwmre
 
@@ -3032,7 +3032,7 @@ packages:
         optional: true
     dependencies:
       svelte: 3.48.0
-    dev: false
+    dev: true
 
   /svelte-check/2.7.2_yycwrhreageim5tbshm6ymwmre:
     resolution: {integrity: sha512-TuVX4YtXHbRM8sVuK5Jk+mKWdm3f0d6hvAC6qCTp8yUszGZewpEBCo2V5fRWZCiz+0J4OCiDHOS+DFMxv39rJA==}
@@ -3189,6 +3189,7 @@ packages:
   /svelte/3.48.0:
     resolution: {integrity: sha512-fN2YRm/bGumvjUpu6yI3BpvZnpIm9I6A7HR4oUNYd7ggYyIwSA/BX7DJ+UXXffLp6XNcUijyLvttbPVCYa/3xQ==}
     engines: {node: '>= 8'}
+    dev: true
 
   /text-table/0.2.0:
     resolution: {integrity: sha1-f17oI66AUgfACvLfSoTsP8+lcLQ=}
