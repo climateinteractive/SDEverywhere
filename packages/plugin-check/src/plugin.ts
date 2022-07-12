@@ -28,6 +28,8 @@ interface TestOptions {
 }
 
 class CheckPlugin implements Plugin {
+  private firstBuild = true
+
   constructor(private readonly options?: CheckPluginOptions) {}
 
   async watch(config: ResolvedConfig): Promise<void> {
@@ -53,6 +55,9 @@ class CheckPlugin implements Plugin {
   // make it configurable so that it can either be run as a `postGenerate` or a
   // `postBuild` step.
   async postBuild(context: BuildContext, modelSpec: ModelSpec): Promise<boolean> {
+    const firstBuild = this.firstBuild
+    this.firstBuild = false
+
     // For both production builds and local development, generate default bundle
     // in this post-build step each time a source file is changed
     // TODO: We could potentially use watch mode for the bundle similar to
@@ -64,13 +69,17 @@ class CheckPlugin implements Plugin {
       await this.genCurrentBundle(context.config, modelSpec)
     }
 
-    if (context.config.mode === 'production') {
-      if (this.options?.testConfigPath === undefined) {
+    // For production builds (and for the initial build in local development mode),
+    // generate default test config in this post-build step
+    if (this.options?.testConfigPath === undefined) {
+      if (context.config.mode === 'production' || firstBuild) {
         // Test config was not provided, so generate a default config
         context.log('info', 'Generating model check test configuration...')
         await this.genTestConfig(context.config, 'build')
       }
+    }
 
+    if (context.config.mode === 'production') {
       // For production builds, run the model checks/comparisons, and then
       // inject the results into the generated report
       const testOptions = this.resolveTestOptions(context.config)
