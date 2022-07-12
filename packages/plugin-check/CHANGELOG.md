@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/climateinteractive/SDEverywhere/compare/plugin-check-v0.1.1...plugin-check-v0.1.2) (2022-07-12)
+
+
+### Bug Fixes
+
+* add explicit "optimizeDeps.include" entries for check report Vite config ([#220](https://github.com/climateinteractive/SDEverywhere/issues/220)) ([b79ddb1](https://github.com/climateinteractive/SDEverywhere/commit/b79ddb199a28e81a66c8c420ee00929ae698e8d8)), closes [#219](https://github.com/climateinteractive/SDEverywhere/issues/219)
+
 ## [0.1.1](https://github.com/climateinteractive/SDEverywhere/compare/plugin-check-v0.1.0...plugin-check-v0.1.1) (2022-07-12)
 
 
