@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.1](https://github.com/climateinteractive/SDEverywhere/compare/plugin-worker-v0.1.0...plugin-worker-v0.1.1) (2022-07-12)
+
+
+### Bug Fixes
+
+* add rollup as dependency to avoid issues with transitive peerDependencies ([#214](https://github.com/climateinteractive/SDEverywhere/issues/214)) ([4ca5052](https://github.com/climateinteractive/SDEverywhere/commit/4ca50521ddac2f6d9434b20cd272684bf26d95e2)), closes [#209](https://github.com/climateinteractive/SDEverywhere/issues/209)
+
 ## 0.1.0 (2022-06-28)
 
 

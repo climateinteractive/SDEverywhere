@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.1](https://github.com/climateinteractive/SDEverywhere/compare/check-ui-shell-v0.1.0...check-ui-shell-v0.1.1) (2022-07-12)
+
+
+### Bug Fixes
+
+* move svelte-awesome to devDependencies to avoid peer dependency issues ([#215](https://github.com/climateinteractive/SDEverywhere/issues/215)) ([a75dfe3](https://github.com/climateinteractive/SDEverywhere/commit/a75dfe3e9a7b0910025bb870aa9d21f0079e2d95)), closes [#208](https://github.com/climateinteractive/SDEverywhere/issues/208)
+
 ## 0.1.0 (2022-06-28)
 
 
