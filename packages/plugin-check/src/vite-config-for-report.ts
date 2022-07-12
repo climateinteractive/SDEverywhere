@@ -83,6 +83,27 @@ export function createViteConfigForReport(
       // for dependency optimization
       entries: ['index.html'],
 
+      // XXX: When plugin-check is installed via pnpm, the Vite dev server seems
+      // to have no trouble resolving other dependencies using the optimizeDeps
+      // mechanism.  However, this fails when the package is installed via yarn
+      // or npm (probably due to the fact that the `template-report` directory
+      // is located under the top-level `node_modules` directory); in the browser,
+      // there will be "import not found" errors for the packages referenced below.
+      // As a terrible workaround, explicitly include the direct dependencies so
+      // that Vite optimizes them; this works for pnpm, yarn, and npm.  We should
+      // find a less fragile solution.
+      include: [
+        // from check-core
+        'assert-never',
+        'ajv',
+        'neverthrow',
+        'yaml',
+        // from check-ui-shell
+        'fontfaceobserver',
+        'copy-text-to-clipboard',
+        'chart.js'
+      ],
+
       // XXX: The threads.js implementation references `tiny-worker` as an optional
       // dependency, but it doesn't get used at runtime, so we can just exclude it
       // so that Vite doesn't complain in dev mode
