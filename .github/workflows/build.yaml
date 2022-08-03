@@ -1,5 +1,7 @@
 #
-# Builds and tests the packages on Linux.
+# Builds and tests the packages.  This builds on Linux by default, but
+# can be configured to build on Windows and/or macOS by uncommenting
+# the matrix config lines below.
 #
 # This runs after changes are pushed to a feature branch.  It does not
 # run for pushes to the main branch because that is covered by the
@@ -15,8 +17,22 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.config.os }}
+    timeout-minutes: 20
+    strategy:
+      matrix:
+        config:
+          - { plat: 'linux', os: 'ubuntu-20.04' }
+          # - { plat: 'mac', os: 'macos-10.15' }
+          - { plat: 'win', os: 'windows-2019' }
     steps:
+      # Force Unix-style line endings (otherwise Prettier checks will fail on Windows)
+      - name: Configure git to use Unix-style line endings
+        if: matrix.config.plat == 'win'
+        run: |
+          git config --global core.autocrlf false
+          git config --global core.eol lf
+
       - name: Check out repo
         uses: actions/checkout@v2
 
@@ -34,6 +50,7 @@ jobs:
 
       - name: Get pnpm store directory
         id: pnpm-cache
+        shell: bash
         run: echo "::set-output name=pnpm_cache_dir::$(pnpm store path)"
 
       - name: Enable pnpm cache
@@ -45,9 +62,11 @@ jobs:
             pnpm-store-${{ runner.os }}-
 
       - name: Install dependencies
+        shell: bash
         run: |
           pnpm install
 
       - name: Build and test
+        shell: bash
         run: |
           ./scripts/ci-build
