@@ -4,6 +4,8 @@ import path from 'path'
 
 import { build as runBuild } from '@sdeverywhere/build'
 
+import { parentDirForFileUrl } from './utils.js'
+
 export let command = 'dev [options]'
 export let describe = 'run a model in a live development environment'
 export let builder = {
@@ -25,7 +27,7 @@ export let dev = async (configPath, verbose) => {
   if (verbose) {
     logLevels.push('verbose')
   }
-  const srcDir = new URL('.', import.meta.url).pathname
+  const srcDir = parentDirForFileUrl(import.meta.url)
   const sdeDir = path.resolve(srcDir, '..')
   const sdeCmdPath = path.resolve(srcDir, 'main.js')
   const result = await runBuild('development', {

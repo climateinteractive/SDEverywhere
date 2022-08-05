@@ -1,5 +1,7 @@
 import path from 'path'
 
+import { parentDirForFileUrl } from './utils.js'
+
 let command = 'which'
 let describe = 'print the SDEverywhere home directory'
 let builder = {}
@@ -8,7 +10,8 @@ let handler = argv => {
 }
 let which = () => {
   // The SDEverywhere home directory is one level above the src directory where this code runs.
-  let homeDir = path.resolve(new URL('..', import.meta.url).pathname)
+  let srcDir = parentDirForFileUrl(import.meta.url)
+  let homeDir = path.resolve(srcDir, '..')
   console.log(homeDir)
 }
 export default {
