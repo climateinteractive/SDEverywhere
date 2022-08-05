@@ -48,6 +48,12 @@ jobs:
         with:
           version: 7
 
+      - name: Configure pnpm
+        if: matrix.config.plat == 'win'
+        run: |
+          # Force pnpm to use bash shell for running scripts on Windows
+          pnpm config set script-shell bash
+
       - name: Get pnpm store directory
         id: pnpm-cache
         shell: bash
