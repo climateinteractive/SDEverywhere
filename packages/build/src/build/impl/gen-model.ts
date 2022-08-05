@@ -26,9 +26,10 @@ export async function generateModel(context: BuildContext, plugins: Plugin[]): P
   const config = context.config
   const prepDir = config.prepDir
 
-  // XXX: On Windows, we need to use Windows-specific commands; need to revisit
-  const isWin = process.platform === 'win32'
-  const sdeCmdPath = isWin ? `${config.sdeCmdPath}.cmd` : config.sdeCmdPath
+  // TODO: For now we assume the path is to the `main.js` file in the cli package;
+  // this seems to work on both Unix and Windows, but we may need to revisit this
+  // as part of removing the `sdeCmdPath` config hack
+  const sdeCmdPath = config.sdeCmdPath
 
   // Process the mdl file(s)
   for (const plugin of plugins) {
