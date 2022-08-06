@@ -167,7 +167,7 @@ importers:
 
   packages/cli:
     specifiers:
-      '@sdeverywhere/build': ^0.1.0
+      '@sdeverywhere/build': ^0.1.1
       '@sdeverywhere/compile': ^0.7.0
       bufx: ^1.0.5
       byline: ^5.0.0
@@ -209,7 +209,7 @@ importers:
     specifiers:
       '@rollup/plugin-node-resolve': ^13.3.0
       '@rollup/plugin-replace': ^2.4.1
-      '@sdeverywhere/build': ^0.1.0
+      '@sdeverywhere/build': ^0.1.1
       '@sdeverywhere/check-core': ^0.1.0
       '@sdeverywhere/check-ui-shell': ^0.1.1
       '@sdeverywhere/runtime': ^0.1.0
@@ -238,7 +238,7 @@ importers:
 
   packages/plugin-vite:
     specifiers:
-      '@sdeverywhere/build': ^0.1.0
+      '@sdeverywhere/build': ^0.1.1
       vite: ^2.9.12
     dependencies:
       '@sdeverywhere/build': link:../build
@@ -246,7 +246,7 @@ importers:
 
   packages/plugin-wasm:
     specifiers:
-      '@sdeverywhere/build': ^0.1.0
+      '@sdeverywhere/build': ^0.1.1
       '@types/node': ^16.11.7
       find-up: ^6.3.0
     dependencies:
@@ -258,7 +258,7 @@ importers:
   packages/plugin-worker:
     specifiers:
       '@rollup/plugin-node-resolve': ^13.3.0
-      '@sdeverywhere/build': ^0.1.0
+      '@sdeverywhere/build': ^0.1.1
       '@sdeverywhere/runtime': ^0.1.0
       '@sdeverywhere/runtime-async': ^0.1.0
       '@types/node': ^16.11.7
