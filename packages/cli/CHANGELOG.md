@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.7.1](https://github.com/climateinteractive/SDEverywhere/compare/cli-v0.7.0...cli-v0.7.1) (2022-08-06)
+
+
+### Bug Fixes
+
+* correct handling of paths on Windows and those containing spaces ([#223](https://github.com/climateinteractive/SDEverywhere/issues/223)) ([c783e81](https://github.com/climateinteractive/SDEverywhere/commit/c783e811a43331e4c563438b8fa441792bdcfe28)), closes [#222](https://github.com/climateinteractive/SDEverywhere/issues/222)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/build bumped from ^0.1.0 to ^0.1.1
+
 ## [0.7.0](https://github.com/climateinteractive/SDEverywhere/compare/cli-v0.6.0...cli-v0.7.0) (2022-06-28)
 
 

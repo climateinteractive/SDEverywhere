@@ -1,5 +1,11 @@
 # Changelog
 
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/build bumped from ^0.1.0 to ^0.1.1
+
 ## 0.1.0 (2022-06-28)
 
 

@@ -1,5 +1,11 @@
 # Changelog
 
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/build bumped from ^0.1.0 to ^0.1.1
+
 ## [0.1.1](https://github.com/climateinteractive/SDEverywhere/compare/plugin-worker-v0.1.0...plugin-worker-v0.1.1) (2022-07-12)
 
 
