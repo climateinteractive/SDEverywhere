@@ -1,8 +1,8 @@
 // Copyright (c) 2022 Climate Interactive / New Venture Fund
 
 import { existsSync, lstatSync, mkdirSync } from 'fs'
-import { join as joinPath, resolve as resolvePath } from 'path'
-import { pathToFileURL } from 'url'
+import { dirname, join as joinPath, relative, resolve as resolvePath } from 'path'
+import { fileURLToPath } from 'url'
 
 import type { Result } from 'neverthrow'
 import { err, ok } from 'neverthrow'
@@ -40,10 +40,9 @@ export async function loadConfig(
     // Use the given `UserConfig` object
     userConfig = config
   } else {
-    // Load the project-specific config.  Note that on Windows the import path
-    // must be a `file://` URL, so we have to convert here.  If no `--config`
-    // arg was specified on the command line, look for a `sde.config.js` file
-    // in the current directory, and failing that, use a default config.
+    // Load the project-specific config.  If no `--config` arg was specified
+    // on the command line, look for a `sde.config.js` file in the current
+    // directory, and failing that, use a default config.
     // TODO: Create a default config if no file found; for now, we just fail
     let configPath: string
     if (typeof config === 'string') {
@@ -55,8 +54,8 @@ export async function loadConfig(
       if (!existsSync(configPath)) {
         return err(new Error(`Cannot find config file '${configPath}'`))
       }
-      const configUrl = pathToFileURL(configPath).toString()
-      const configModule = await import(configUrl)
+      const configRelPath = relativeToSourcePath(configPath)
+      const configModule = await import(configRelPath)
       userConfig = await configModule.config()
     } catch (e) {
       return err(new Error(`Failed to load config file '${configPath}': ${e.message}`))
@@ -168,4 +167,17 @@ function resolveUserConfig(
     sdeDir,
     sdeCmdPath
   }
+}
+
+/**
+ * Return a Unix-style path (e.g. '../../foo.js') that is relative to the directory of
+ * the current source file.  This can be used to construct a path that is safe for
+ * dynamic import on either Unix or Windows.
+ *
+ * @param filePath The path to make relative.
+ */
+function relativeToSourcePath(filePath: string): string {
+  const srcDir = dirname(fileURLToPath(import.meta.url))
+  const relPath = relative(srcDir, filePath)
+  return relPath.replaceAll('\\', '/')
 }

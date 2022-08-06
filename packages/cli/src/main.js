@@ -26,6 +26,7 @@ import fs from 'fs'
 import path from 'path'
 
 import yargs from 'yargs'
+
 import sdeBundle from './sde-bundle.js'
 import sdeDev from './sde-dev.js'
 import sdeGenerate from './sde-generate.js'
@@ -41,12 +42,14 @@ import sdeTest from './sde-test.js'
 import sdeNames from './sde-names.js'
 import sdeCauses from './sde-causes.js'
 import sdeWhich from './sde-which.js'
+import { parentDirForFileUrl } from './utils.js'
 
 // Workaround yargs issue where it doesn't find version from package.json
 // automatically in all cases in ESM context
-const srcDir = new URL('.', import.meta.url).pathname
+const srcDir = parentDirForFileUrl(import.meta.url)
 const pkgFile = path.resolve(srcDir, '..', 'package.json')
 const pkg = JSON.parse(fs.readFileSync(pkgFile))
+const pkgVersion = pkg.version
 
 const yarg = yargs(process.argv.slice(2))
 yarg
@@ -70,7 +73,7 @@ yarg
   .command(sdeWhich)
   .demandCommand(1)
   .help()
-  .version(pkg.version)
+  .version(pkgVersion)
   .alias('h', 'help')
   .alias('v', 'version')
   .wrap(yarg.terminalWidth())

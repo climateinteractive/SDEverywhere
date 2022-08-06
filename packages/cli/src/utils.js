@@ -1,5 +1,6 @@
 import fs from 'fs'
 import path from 'path'
+import { fileURLToPath } from 'url'
 
 import B from 'bufx'
 import R from 'ramda'
@@ -77,6 +78,20 @@ export function parseSpec(specFilename) {
   return spec
 }
 
+/**
+ * Return the absolute path to the directory in which the given (source)
+ * file is located.  (This is a replacement for `__dirname`, which is not
+ * available in an ESM context.)
+ *
+ * @param srcFileUrl The URL for the source file (i.e., `import.meta.url`).
+ */
+export function parentDirForFileUrl(srcFileUrl) {
+  return path.dirname(fileURLToPath(srcFileUrl))
+}
+
+/**
+ * Ensure the output directory exists for a given output file path.
+ */
 export function outputDir(outfile, modelDirname) {
   if (outfile) {
     outfile = path.dirname(outfile)

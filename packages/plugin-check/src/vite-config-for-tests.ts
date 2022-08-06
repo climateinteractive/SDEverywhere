@@ -19,8 +19,11 @@ export function createViteConfigForTests(projDir: string, prepDir: string, mode:
   // directory where the glob is used).
   const templateSrcDir = resolvePath(root, 'src')
   const relProjDir = relative(templateSrcDir, projDir)
-  //  TODO: Use yamlPath from options
-  const yamlPath = `${relProjDir}/**/*.check.yaml`
+  // XXX: The glob pattern must use forward slashes only, so on Windows we need to
+  // convert backslashes to slashes
+  const relProjDirPath = relProjDir.replaceAll('\\', '/')
+  // TODO: Use yamlPath from options
+  const yamlPath = `${relProjDirPath}/**/*.check.yaml`
 
   // // Read the `package.json` for the template project
   // const pkgPath = resolvePath(root, 'package.json')

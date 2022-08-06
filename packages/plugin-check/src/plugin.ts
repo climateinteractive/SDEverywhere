@@ -1,7 +1,7 @@
 // Copyright (c) 2022 Climate Interactive / New Venture Fund
 
-import { join as joinPath } from 'path'
-import { pathToFileURL } from 'url'
+import { dirname, join as joinPath, relative } from 'path'
+import { fileURLToPath } from 'url'
 
 import type { InlineConfig, ViteDevServer } from 'vite'
 import { build, createServer } from 'vite'
@@ -108,9 +108,8 @@ class CheckPlugin implements Plugin {
     context.log('info', 'Running model checks...')
 
     // Load the bundles used by the model check/compare configuration.  We
-    // always initialize the "current" bundle.   Note that on Windows the
-    // dynamic import path must be a `file://` URL, so we have to convert.
-    const moduleR = await import(pathToFileURL(testOptions.currentBundlePath).toString())
+    // always initialize the "current" bundle.
+    const moduleR = await import(relativeToSourcePath(testOptions.currentBundlePath))
     const bundleR = moduleR.createBundle() as Bundle
     const nameR = testOptions.currentBundleName
 
@@ -121,7 +120,7 @@ class CheckPlugin implements Plugin {
     let bundleL: Bundle
     let nameL: string
     if (this.options?.baseline) {
-      const moduleL = await import(pathToFileURL(this.options.baseline.path).toString())
+      const moduleL = await import(relativeToSourcePath(this.options.baseline.path))
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const rawBundleL: any = moduleL.createBundle() as any
       if (rawBundleL.version === bundleR.version) {
@@ -131,7 +130,7 @@ class CheckPlugin implements Plugin {
     }
 
     // Get the model check/compare configuration
-    const testConfigModule = await import(pathToFileURL(testOptions.testConfigPath).toString())
+    const testConfigModule = await import(relativeToSourcePath(testOptions.testConfigPath))
     const checkOptions = await testConfigModule.getConfigOptions(bundleL, bundleR, {
       nameL,
       nameR
@@ -194,4 +193,17 @@ class CheckPlugin implements Plugin {
       suiteSummary
     )
   }
+}
+
+/**
+ * Return a Unix-style path (e.g. '../../foo.js') that is relative to the directory of
+ * the current source file.  This can be used to construct a path that is safe for
+ * dynamic import on either Unix or Windows.
+ *
+ * @param filePath The path to make relative.
+ */
+function relativeToSourcePath(filePath: string): string {
+  const srcDir = dirname(fileURLToPath(import.meta.url))
+  const relPath = relative(srcDir, filePath)
+  return relPath.replaceAll('\\', '/')
 }

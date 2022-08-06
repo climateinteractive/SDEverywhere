@@ -6,7 +6,7 @@ PROJ_DIR=$SCRIPT_DIR/..
 set -e # fail on error
 set -x # include all commands in logs
 
-cd $PROJ_DIR
+cd "$PROJ_DIR"
 
 pnpm run prettier-local:check
 pnpm run -r --workspace-concurrency=1 ci:build
