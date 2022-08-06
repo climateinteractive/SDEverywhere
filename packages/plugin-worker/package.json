@@ -1,6 +1,6 @@
 {
   "name": "@sdeverywhere/plugin-worker",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "files": [
     "dist/**",
     "template-worker/**"
@@ -31,7 +31,7 @@
   },
   "dependencies": {
     "@rollup/plugin-node-resolve": "^13.3.0",
-    "@sdeverywhere/build": "^0.1.0",
+    "@sdeverywhere/build": "^0.1.1",
     "@sdeverywhere/runtime": "^0.1.0",
     "@sdeverywhere/runtime-async": "^0.1.0",
     "rollup": "^2.76.0",
