@@ -5,11 +5,12 @@ PROJ_DIR=$SCRIPT_DIR/..
 MODELS_DIR=$PROJ_DIR/models
 
 set -e # fail on error
+#set -x
 
-cd $PROJ_DIR
+cd "$PROJ_DIR"
 
 # Use the local sde command.
-SDE="node $PROJ_DIR/packages/cli/src/main.js"
+SDE_MAIN="$PROJ_DIR/packages/cli/src/main.js"
 
 function test {
   MODEL=$1
@@ -17,7 +18,7 @@ function test {
   MODEL_DIR=$MODELS_DIR/$MODEL
 
   # Clean up before
-  $SDE clean --modeldir $MODEL_DIR
+  node "$SDE_MAIN" clean --modeldir "$MODEL_DIR"
 
   # Test (only if there is a dat file to compare against)
   if [[ -f $MODEL_DIR/${MODEL}.dat ]]; then
@@ -32,7 +33,7 @@ function test {
     if [[ $MODEL == "allocate" ]]; then
       PRECISION="1e-2"
     fi
-    $SDE test $TEST_ARGS -p $PRECISION $MODEL_DIR/$MODEL
+    node "$SDE_MAIN" test $TEST_ARGS -p $PRECISION "$MODEL_DIR/$MODEL"
   fi
 
   # Run additional script to validate output
@@ -43,7 +44,7 @@ function test {
   fi
 
   # Clean up after
-  $SDE clean --modeldir $MODEL_DIR
+  node "$SDE_MAIN" clean --modeldir "$MODEL_DIR"
 
   echo
 }
@@ -53,7 +54,7 @@ if [[ -n $1 ]]; then
   test $1
 else
   # Test each model against saved Vensim data.
-  for m in $(ls $MODELS_DIR); do
+  for m in $(ls "$MODELS_DIR"); do
     test $m
   done
 fi
