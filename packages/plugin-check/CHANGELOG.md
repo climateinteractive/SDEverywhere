@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.4](https://github.com/climateinteractive/SDEverywhere/compare/plugin-check-v0.1.3...plugin-check-v0.1.4) (2022-08-09)
+
+
+### Bug Fixes
+
+* exclude moment dependency in plugin-check report config ([#226](https://github.com/climateinteractive/SDEverywhere/issues/226)) ([3e9da1a](https://github.com/climateinteractive/SDEverywhere/commit/3e9da1a5d1aefa73bea1538b6bd7e0990bc10c2f)), closes [#225](https://github.com/climateinteractive/SDEverywhere/issues/225)
+
 ## [0.1.3](https://github.com/climateinteractive/SDEverywhere/compare/plugin-check-v0.1.2...plugin-check-v0.1.3) (2022-08-06)
 
 

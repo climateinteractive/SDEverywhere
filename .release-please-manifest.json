@@ -4,7 +4,7 @@
   "packages/build": "0.1.1",
   "packages/check-core": "0.1.0",
   "packages/check-ui-shell": "0.1.1",
-  "packages/plugin-check": "0.1.3",
+  "packages/plugin-check": "0.1.4",
   "packages/plugin-vite": "0.1.1",
   "packages/plugin-wasm": "0.1.1",
   "packages/plugin-worker": "0.1.2",
