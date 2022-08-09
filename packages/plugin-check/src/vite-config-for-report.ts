@@ -104,10 +104,17 @@ export function createViteConfigForReport(
         'chart.js'
       ],
 
-      // XXX: The threads.js implementation references `tiny-worker` as an optional
-      // dependency, but it doesn't get used at runtime, so we can just exclude it
-      // so that Vite doesn't complain in dev mode
-      exclude: ['tiny-worker']
+      exclude: [
+        // XXX: The threads.js implementation references `tiny-worker` as an optional
+        // dependency, but it doesn't get used at runtime, so we can just exclude it
+        // so that Vite doesn't complain in dev mode
+        'tiny-worker',
+
+        // XXX: Similarly, chart.js treats `moment` as an optional dependency, but we
+        // don't use it at runtime; we need to exclude it here, otherwise Vite will
+        // complain about missing dependencies in dev mode
+        'moment'
+      ]
     },
 
     // Configure path aliases
