@@ -1,4 +1,4 @@
-// Copyright (c) 2022 Climate Interactive / New Venture Fund. All rights reserved.
+// Copyright (c) 2022 Climate Interactive / New Venture Fund
 
 export function optionalString(stringValue?: string): string | undefined {
   if (stringValue !== undefined && stringValue.length > 0) {

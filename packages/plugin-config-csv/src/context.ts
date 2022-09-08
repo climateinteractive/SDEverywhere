@@ -7,19 +7,39 @@ import parseCsv from 'csv-parse/lib/sync.js'
 
 import type { BuildContext, InputSpec, LogLevel, OutputSpec } from '@sdeverywhere/build'
 
+import { Strings } from './strings'
 import type { InputVarId, OutputVarId } from './var-names'
+import { sdeNameForVensimVarName } from './var-names'
+
+import type { HexColor } from './spec-types/graphs'
 
 export type CsvRow = { [key: string]: string }
+export type ColorId = string
 
 export class ConfigContext {
   private readonly inputSpecs: Map<InputVarId, InputSpec> = new Map()
   private readonly outputVarNames: Map<OutputVarId, string> = new Map()
+  private readonly staticVarNames: Map<string, Set<string>> = new Map()
 
   constructor(
     private readonly buildContext: BuildContext,
+    private readonly configDir: string,
+    public readonly strings: Strings,
+    private readonly colorMap: Map<ColorId, HexColor>,
     public readonly modelStartTime: number,
-    public readonly modelEndTime: number
+    public readonly modelEndTime: number,
+    public readonly graphDefaultMinTime: number,
+    public readonly graphDefaultMaxTime: number
   ) {}
+
+  /**
+   * Read a CSV file of the given name from the config directory.
+   *
+   * @param name The base name of the CSV file.
+   */
+  readConfigCsvFile(name: string): CsvRow[] {
+    return readConfigCsvFile(this.configDir, name)
+  }
 
   /**
    * Log a message to the console and/or the in-browser overlay panel.
@@ -51,6 +71,45 @@ export class ConfigContext {
     this.buildContext.writeStagedFile(srcDir, dstDir, filename, content)
   }
 
+  addInputVariable(inputVarName: string, defaultValue: number, minValue: number, maxValue: number): void {
+    // We use the C name as the key to avoid redundant entries in cases where
+    // the csv file refers to variables with different capitalization
+    const varId = sdeNameForVensimVarName(inputVarName)
+    if (this.inputSpecs.get(varId)) {
+      // Fail if the variable was already added (there should only be one spec
+      // per input variable)
+      console.error(`ERROR: Input variable ${inputVarName} was already added`)
+    }
+    this.inputSpecs.set(varId, {
+      varName: inputVarName,
+      defaultValue,
+      minValue,
+      maxValue
+    })
+  }
+
+  addOutputVariable(outputVarName: string): void {
+    // We use the C name as the key to avoid redundant entries in cases where
+    // the csv file refers to variables with different capitalization
+    const varId = sdeNameForVensimVarName(outputVarName)
+    this.outputVarNames.set(varId, outputVarName)
+  }
+
+  addStaticVariable(sourceName: string, varName: string): void {
+    const sourceVarNames = this.staticVarNames.get(sourceName)
+    if (sourceVarNames) {
+      sourceVarNames.add(varName)
+    } else {
+      const varNames: Set<string> = new Set()
+      varNames.add(varName)
+      this.staticVarNames.set(sourceName, varNames)
+    }
+  }
+
+  getHexColorForId(colorId: ColorId): HexColor {
+    return this.colorMap.get(colorId)
+  }
+
   getOrderedInputs(): InputSpec[] {
     // TODO: It would be nice to alphabetize the inputs, but currently we have
     // code that assumes that the InputSpecs in the map have the same order
@@ -77,15 +136,35 @@ export class ConfigContext {
 }
 
 export function createConfigContext(buildContext: BuildContext, configDir: string): ConfigContext {
-  // Read basic app configuration from `model.csv`
+  // Read basic model configuration from `model.csv`
   const modelCsv = readConfigCsvFile(configDir, 'model')[0]
-  const modelStartTime = Number(modelCsv.startTime)
-  const modelEndTime = Number(modelCsv.endTime)
+  const modelStartTime = Number(modelCsv['model start time'])
+  const modelEndTime = Number(modelCsv['model end time'])
+  const graphDefaultMinTime = Number(modelCsv['graph min time'])
+  const graphDefaultMaxTime = Number(modelCsv['graph max time'])
 
   // Read the static strings from `strings.csv`
-  // const strings = readStringsCsv()
+  const strings = readStringsCsv(configDir)
 
-  return new ConfigContext(buildContext, modelStartTime, modelEndTime /*, strings*/)
+  // Read color configuration from `colors.csv`
+  const colorsCsv = readConfigCsvFile(configDir, 'colors')
+  const colors = new Map()
+  for (const row of colorsCsv) {
+    const colorId = row['id']
+    const hexColor = row['hex code']
+    colors.set(colorId, hexColor)
+  }
+
+  return new ConfigContext(
+    buildContext,
+    configDir,
+    strings,
+    colors,
+    modelStartTime,
+    modelEndTime,
+    graphDefaultMinTime,
+    graphDefaultMaxTime
+  )
 }
 
 function configFilePath(configDir: string, name: string, ext: string): string {
@@ -109,19 +188,22 @@ function readConfigCsvFile(configDir: string, name: string): CsvRow[] {
 /**
  * Initialize a `Strings` instance with the core strings from `strings.csv`.
  */
-// function readStringsCsv(configDir: string): Strings {
-//   const strings = new Strings()
+function readStringsCsv(configDir: string): Strings {
+  const strings = new Strings()
 
-//   const rows = readConfigCsvFile(configDir, 'strings')
-//   for (const row of rows) {
-//     const key = row['id']
-//     let str = row['string']
+  // TODO: For now we use the same "layout" and "context" for all core strings
+  const layout = 'default'
+  const context = 'Core'
 
-//     str = str ? str.trim() : ''
-//     if (str) {
-//       strings.add(key, str, layout, strCtxt, 'primary')
-//     }
-//   }
+  const rows = readConfigCsvFile(configDir, 'strings')
+  for (const row of rows) {
+    const key = row['id']
+    let str = row['string']
+    str = str ? str.trim() : ''
+    if (str) {
+      strings.add(key, str, layout, context)
+    }
+  }
 
-//   return strings
-// }
+  return strings
+}

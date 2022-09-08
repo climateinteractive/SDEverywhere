@@ -1,2 +1,2 @@
-startTime,endTime
-100,200
+model start time,model end time,graph min time,graph max time
+0,200,0,200

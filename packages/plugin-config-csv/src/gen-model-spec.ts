@@ -1,4 +1,4 @@
-// Copyright (c) 2022 Climate Interactive / New Venture Fund. All rights reserved.
+// Copyright (c) 2022 Climate Interactive / New Venture Fund
 
 import type { ConfigContext } from './context'
 import { sdeNameForVensimVarName } from './var-names'

@@ -1,6 +1,6 @@
 import { ModelScheduler } from '@sdeverywhere/runtime'
 import { spawnAsyncModelRunner } from '@sdeverywhere/runtime-async'
-import modelWorkerJs from './generated/worker.js?raw'
+import modelWorkerJs from './model/generated/worker.js?raw'
 
 export class Model {
   constructor() {}
