@@ -2,7 +2,6 @@
 
 import type { ConfigContext, CsvRow } from './context'
 import { optionalNumber, optionalString } from './read-config'
-
 import type {
   GraphAlternateSpec,
   GraphDatasetSpec,
@@ -12,9 +11,10 @@ import type {
   GraphSide,
   GraphSpec,
   LineStyle,
-  LineStyleModifier
-} from './spec-types/graphs'
-import type { StringKey, UnitSystem } from './spec-types/types'
+  LineStyleModifier,
+  StringKey,
+  UnitSystem
+} from './spec-types'
 import { genStringKey, htmlToUtf8 } from './strings'
 import { sdeNameForVensimVarName } from './var-names'
 

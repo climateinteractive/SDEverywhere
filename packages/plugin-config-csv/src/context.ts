@@ -7,11 +7,10 @@ import parseCsv from 'csv-parse/lib/sync.js'
 
 import type { BuildContext, InputSpec, LogLevel, OutputSpec } from '@sdeverywhere/build'
 
+import type { HexColor } from './spec-types'
 import { Strings } from './strings'
 import type { InputVarId, OutputVarId } from './var-names'
 import { sdeNameForVensimVarName } from './var-names'
-
-import type { HexColor } from './spec-types/graphs'
 
 export type CsvRow = { [key: string]: string }
 export type ColorId = string
@@ -140,8 +139,8 @@ export function createConfigContext(buildContext: BuildContext, configDir: strin
   const modelCsv = readConfigCsvFile(configDir, 'model')[0]
   const modelStartTime = Number(modelCsv['model start time'])
   const modelEndTime = Number(modelCsv['model end time'])
-  const graphDefaultMinTime = Number(modelCsv['graph min time'])
-  const graphDefaultMaxTime = Number(modelCsv['graph max time'])
+  const graphDefaultMinTime = Number(modelCsv['graph default min time'])
+  const graphDefaultMaxTime = Number(modelCsv['graph default max time'])
 
   // Read the static strings from `strings.csv`
   const strings = readStringsCsv(configDir)

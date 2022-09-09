@@ -2,7 +2,7 @@
 
 import sanitizeHtml from 'sanitize-html'
 
-import type { StringKey } from './spec-types/types'
+import type { StringKey } from './spec-types'
 
 interface StringRecord {
   key: StringKey
@@ -73,11 +73,12 @@ export class Strings {
       // TODO: For now, allow certain keys to appear more than once; we only add the string once
       const prefix = key.substring(0, key.indexOf('__'))
       switch (prefix) {
-        case 'input_range':
-        case 'input_units':
         case 'graph_dataset_label':
         case 'graph_xaxis_label':
         case 'graph_yaxis_label':
+        case 'input_group_title':
+        case 'input_range':
+        case 'input_units':
           break
         default:
           throw new Error(`More than one string with key=${key}`)
