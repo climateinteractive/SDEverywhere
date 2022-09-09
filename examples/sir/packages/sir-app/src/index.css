@@ -1,3 +1,125 @@
+html,
 body {
-  background-color: blueviolet;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  box-sizing: border-box;
+  background-color: #fff;
+  font-family: Helvetica, sans-serif;
+  font-size: 1vw;
+}
+
+p {
+  margin-top: 0;
+  margin-bottom: 0.7vw;
+}
+
+/*
+ * Top panel: graphs
+ */
+
+#graphs-container {
+  min-height: 50%;
+  padding: 0 1vw;
+}
+
+#graph-selector {
+  margin-top: 1vw;
+}
+
+/*
+ * This container is set up to allow for automatic responsive sizing
+ * by Chart.js.  For this to work, we need the canvas element to have
+ * this parent container with `position: relative` and fixed dimensions
+ * using `vw` units.
+ */
+.graph-container {
+  position: relative;
+  width: 38vw;
+  height: 24vw;
+}
+
+#top-graph-container {
+  margin-top: 1vw;
+}
+
+/*
+ * Bottom panel: sliders and switches
+ */
+
+#inputs-container {
+  display: inline-flex;
+  flex-direction: column;
+  padding: 0 1vw;
+  height: 100%;
+  overflow-x: hidden;
+  overflow-y: scroll;
+  background-color: #ddd;
+}
+
+#inputs-title {
+  margin-top: 1vw;
+  font-weight: bold;
+  font-size: 1.5em;
+  color: #111;
+}
+
+.input-title {
+  font-weight: bold;
+  font-size: 1.2em;
+  color: #111;
+  margin-top: 1vw;
+}
+
+.input-desc {
+  font-style: italic;
+  color: #333;
+  margin-bottom: 2vw;
+}
+
+.switch-checkbox {
+  margin-bottom: 0.6vw;
+}
+
+.switch-label {
+  font-weight: bold;
+  font-size: 1.2em;
+  color: #111;
+  vertical-align: middle;
+  margin-left: 0.4vw;
+}
+
+/*
+ * Customizations for bootstrap-slider
+ */
+
+.slider.slider-horizontal {
+  width: 94%;
+  height: 1.5vw;
+  margin-left: 3%;
+  margin-top: 0.2vw;
+  margin-bottom: 0.2vw;
+}
+
+.slider.slider-horizontal .slider-track {
+  height: 1vw;
+  top: 0.25vw; /* (slider-handle:height / 2) - (slider-track:height / 2) */
+  margin-top: 0;
+}
+
+.slider-rangeHighlight {
+  background: #8888aa;
+}
+
+.slider-handle {
+  width: 1.5vw;
+  height: 1.5vw;
+  background: #000;
+}
+
+.slider.slider-horizontal .slider-handle {
+  margin-left: -0.75vw;
 }

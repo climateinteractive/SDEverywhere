@@ -18,6 +18,7 @@
     "jquery": "^3.5.1"
   },
   "devDependencies": {
+    "@types/chart.js": "^2.9.34",
     "vite": "^2.9.12"
   }
 }

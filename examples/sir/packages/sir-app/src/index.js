@@ -1,13 +1,14 @@
 import $ from 'jquery'
 import Slider from 'bootstrap-slider'
 import 'bootstrap-slider/dist/css/bootstrap-slider.css'
+import './index.css'
 
-import { createModel } from '@core'
+import { config as coreConfig, createModel } from '@core'
 import enStrings from '@core-strings/en'
 
-let coreConfig
+import { GraphView } from './graph-view'
+
 let model
-let modelContext
 let graphView
 
 /**
@@ -28,22 +29,28 @@ function addSliderItem(sliderInput) {
   const div = $(`<div class="input-item"/>`).append([
     $(`<div class="input-title">${str(spec.labelKey)}</div>`),
     $(`<input id="${inputElemId}" class="slider" type="text"></input>`),
-    $(`<div class="input-desc">${str(spec.descriptionKey)}</div>`)
+    $(`<div class="input-desc">${spec.descriptionKey ? str(spec.descriptionKey) : ''}</div>`)
   ])
 
   $('#inputs-content').append(div)
 
+  const value = sliderInput.get()
   const slider = new Slider(`#${inputElemId}`, {
-    value: sliderInput.get(),
+    value,
     min: spec.minValue,
     max: spec.maxValue,
     step: spec.step,
     reversed: spec.reversed,
-    tooltip: 'hide'
+    tooltip: 'hide',
+    selection: 'none',
+    rangeHighlights: [{ start: spec.defaultValue, end: value }]
   })
 
   // Update the model input when the slider is dragged or the track is clicked
   slider.on('change', change => {
+    const start = spec.defaultValue
+    const end = change.newValue
+    slider.setAttribute('rangeHighlights', [{ start, end }])
     sliderInput.set(change.newValue)
   })
 }
@@ -75,35 +82,33 @@ function addSwitchItem(switchInput) {
     // This is a switch that controls whether the slider that follows it is active
     addCheckbox('The following slider will have an effect only when this is checked.')
     for (const sliderId of spec.slidersActiveWhenOn) {
-      const slider = modelContext.getInputForId(sliderId)
+      const slider = model.getInputForId(sliderId)
       addSliderItem(slider)
     }
   } else {
     // This is a detailed settings switch; when it's off, the sliders above it
     // are active and the sliders below are inactive (and vice versa)
     for (const sliderId of spec.slidersActiveWhenOff) {
-      const slider = modelContext.getInputForId(sliderId)
+      const slider = model.getInputForId(sliderId)
       addSliderItem(slider)
     }
     addCheckbox(
       'When this is unchecked, only the slider above has an effect, and the ones below are inactive (and vice versa).'
     )
     for (const sliderId of spec.slidersActiveWhenOn) {
-      const slider = modelContext.getInputForId(sliderId)
+      const slider = model.getInputForId(sliderId)
       addSliderItem(slider)
     }
   }
 }
-
-function showInputs() {}
 
 /**
  * Initialize the UI for the inputs menu and panel.
  */
 function initInputsUI() {
   $('#inputs-content').empty()
-  for (const inputId of coreConfig.inputIds) {
-    const input = modelContext.getInputForId(inputId)
+  for (const inputId of coreConfig.inputs.keys()) {
+    const input = model.getInputForId(inputId)
     if (input.kind === 'slider') {
       addSliderItem(input)
     } else if (input.kind === 'switch') {
@@ -116,37 +121,26 @@ function initInputsUI() {
  * GRAPHS
  */
 
-// function createGraphViewModel(graphSpec) {
-//   return {
-//     spec: graphSpec,
-//     style: 'normal',
-//     getLineWidth: () => window.innerWidth * (0.5 / 100),
-//     getScaleLabelFontSize: () => window.innerWidth * (1.2 / 100),
-//     getAxisLabelFontSize: () => window.innerWidth * (1.0 / 100),
-//     getSeriesForVar: (varId, sourceName) => {
-//       return modelContext.getSeriesForVar(varId, sourceName)
-//     },
-//     getStringForKey: key => {
-//       // TODO: Inject values if string is templated
-//       return str(key)
-//     },
-//     formatYAxisTickValue: value => {
-//       // TODO: Can use d3-format here and pass graphSpec.yFormat
-//       const stringValue = value.toFixed(1)
-//       if (graphSpec.kind === 'h-bar' && graphSpec.id !== '142') {
-//         // For bar charts that display percentages, format as a percent value
-//         return `${stringValue}%`
-//       } else {
-//         // For all other cases, return the string value without units
-//         return stringValue
-//       }
-//     },
-//     formatYAxisTooltipValue: value => {
-//       // TODO: Can use d3-format here and pass '.2~f', for example
-//       return value.toFixed(2)
-//     }
-//   }
-// }
+function createGraphViewModel(graphSpec) {
+  return {
+    spec: graphSpec,
+    style: 'normal',
+    getLineWidth: () => window.innerWidth * (0.5 / 100),
+    getScaleLabelFontSize: () => window.innerWidth * (1.2 / 100),
+    getAxisLabelFontSize: () => window.innerWidth * (1.0 / 100),
+    getSeriesForVar: (varId, sourceName) => {
+      return model.getSeriesForVar(varId, sourceName)
+    },
+    getStringForKey: key => {
+      // TODO: Inject values if string is templated
+      return str(key)
+    },
+    formatYAxisTickValue: value => {
+      // TODO: Can use d3-format here and pass graphSpec.yFormat
+      return value.toFixed(1)
+    }
+  }
+}
 
 function showGraph(graphSpec) {
   if (graphView) {
@@ -205,7 +199,6 @@ async function initApp() {
   // Initialize the model asynchronously
   try {
     model = await createModel()
-    modelContext = model.addContext()
   } catch (e) {
     console.error(`ERROR: Failed to load model: ${e.message}`)
     return
@@ -216,11 +209,11 @@ async function initApp() {
   initGraphsUI()
 
   // When the model outputs are updated, refresh the graph
-  modelContext.onOutputsChanged(() => {
+  model.onOutputsChanged = () => {
     if (graphView) {
       graphView.updateData()
     }
-  })
+  }
 }
 
 // Initialize the app when this script is loaded

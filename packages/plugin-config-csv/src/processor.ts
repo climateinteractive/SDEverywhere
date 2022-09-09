@@ -96,15 +96,15 @@ async function processModelConfig(buildContext: BuildContext, options: ConfigOpt
   // Write the generated files
   context.log('info', 'Generating files...')
 
-  if (outModelSpecsDir) {
-    context.log('verbose', '  Writing model specs')
-    writeModelSpec(context, outModelSpecsDir)
-  }
-
   const configSpecs = generateConfigSpecs(context)
   if (outConfigSpecsDir) {
     context.log('verbose', '  Writing config specs')
     writeConfigSpecs(context, configSpecs, outConfigSpecsDir)
+  }
+
+  if (outModelSpecsDir) {
+    context.log('verbose', '  Writing model specs')
+    writeModelSpec(context, outModelSpecsDir)
   }
 
   if (outStringsDir) {
