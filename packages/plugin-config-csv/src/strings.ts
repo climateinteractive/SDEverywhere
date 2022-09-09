@@ -2,6 +2,8 @@
 
 import sanitizeHtml from 'sanitize-html'
 
+import type { BuildContext } from '@sdeverywhere/build'
+
 import type { StringKey } from './spec-types'
 
 interface StringRecord {
@@ -13,9 +15,9 @@ interface StringRecord {
   appendedStringKeys?: string[]
 }
 
-// type LangCode = string
-// type StringMap = Map<StringKey, string>
-// type XlatMap = Map<LangCode, StringMap>
+type LangCode = string
+type StringMap = Map<StringKey, string>
+type XlatMap = Map<LangCode, StringMap>
 
 export class Strings {
   private readonly records: Map<StringKey, StringRecord> = new Map()
@@ -98,16 +100,23 @@ export class Strings {
     return key
   }
 
-  // /**
-  //  * Write a `<lang>.js` file containing translated strings for each supported language.
-  //  *
-  //  * @param context The build context.
-  //  * @param dstDir The `strings` directory in the core package.
-  //  * @param xlatLangs The set of languages that are configured for translation.
-  //  */
-  // writeJsFiles(context: BuildContext, dstDir: string, xlatLangs: Map<LangCode, LangSpec>): void {
-  //   writeLangJsFiles(context, dstDir, this.records, xlatLangs)
-  // }
+  /**
+   * Write a `<lang>.js` file containing translated strings for each supported language.
+   *
+   * @param context The build context.
+   * @param dstDir The `strings` directory in the core package.
+   * @param xlatLangs The set of languages that are configured for translation.
+   */
+  writeJsFiles(context: BuildContext, dstDir: string /*, xlatLangs: Map<LangCode, LangSpec>*/): void {
+    writeLangJsFiles(context, dstDir, this.records /*, xlatLangs*/)
+  }
+}
+
+function getSortedRecords(records: Map<StringKey, StringRecord>): StringRecord[] {
+  // Sort records by string key
+  return Array.from(records.values()).sort((a, b) => {
+    return a.key > b.key ? 1 : b.key > a.key ? -1 : 0
+  })
 }
 
 function checkInvisibleCharacters(s: string): void {
@@ -117,6 +126,33 @@ function checkInvisibleCharacters(s: string): void {
       `String contains one or more non-breaking space characters (to fix, replace "HERE" with a normal space):\n  ${e}`
     )
   }
+}
+
+function utf8SubscriptToHtml(key: StringKey, s: string): string {
+  if (key.includes('graph_yaxis_label')) {
+    // Chart.js doesn't support using HTML tags like subscripts or superscripts
+    // in axis labels.  For now, we will convert subscript literals in axis labels
+    // to a simple number.  (We could preserve the subscript literal, but it doesn't
+    // render all that well.)
+    s = s.replace(/₂/gi, '2')
+    s = s.replace(/₃/gi, '3')
+    s = s.replace(/₄/gi, '4')
+    s = s.replace(/₆/gi, '6')
+    return s
+  }
+
+  // Unicode subscript literals render differently in some browsers (very low
+  // in Safari for example), so we will replace them with HTML `sub` tags
+  s = s.replace(/₂/gi, '<sub>2</sub>')
+  s = s.replace(/₃/gi, '<sub>3</sub>')
+  s = s.replace(/₄/gi, '<sub>4</sub>')
+  s = s.replace(/₆/gi, '<sub>6</sub>')
+
+  // If the subscript tag is followed by a space, that space needs to be
+  // replaced with a non-breaking space, otherwise the whitespace will be lost
+  s = s.replace(/<\/sub> /gi, '</sub>&nbsp;')
+
+  return s
 }
 
 function htmlSubscriptAndSuperscriptToUtf8(s: string): string {
@@ -194,4 +230,99 @@ export function genStringKey(prefix: string, s: string): string {
   key = key.replace(/\\n/g, '')
   key = key.replace(/<br>/g, '_')
   return `${prefix}__${key}`
+}
+
+/**
+ * Write a `<lang>.js` file containing translated strings for each supported language.
+ *
+ * These files are currently saved as plain JS (ES6) files.  The only difference compared
+ * to JSON files is these JS files start with `export default`, so converting to JSON is
+ * as trivial as stripping those two words, if needed.
+ *
+ * @param context The build context.
+ * @param dstDir The `strings` directory in the core package.
+ * @param records The string records.
+ * //@param xlatLangs The set of languages that are configured for translation.
+ */
+function writeLangJsFiles(
+  context: BuildContext,
+  dstDir: string,
+  records: Map<StringKey, StringRecord>
+  // xlatLangs: Map<LangCode, LangSpec>
+): void {
+  const xlatMap: XlatMap = new Map()
+  const sortedRecords = getSortedRecords(records)
+
+  // const baseStringForKey = (key: StringKey) => {
+  //   const record = records.get(key)
+  //   if (!record) {
+  //     throw new Error(`No base string found for key=${key}`)
+  //   }
+  //   return record.str
+  // }
+
+  // Add base (e.g., English) strings that were gathered from the config files
+  const enStrings: StringMap = new Map()
+  for (const record of sortedRecords) {
+    const s = record.str
+    enStrings.set(record.key, utf8SubscriptToHtml(record.key, s))
+  }
+  // TODO: Don't assume English, make the base language configurable
+  xlatMap.set('en', enStrings)
+
+  // TODO: Enable support for translation files (for now, we only write base strings)
+  // const hasSecondary =
+  //   existsSync(projectFilePath('localization', 'graph-descriptions')) &&
+  //   existsSync(projectFilePath('localization', 'input-descriptions'))
+  // for (const lang of xlatLangs.keys()) {
+  //   const langStrings: StringMap = new Map()
+
+  //   let poMsgs: Map<string, string>
+  //   const primaryMsgs = readXlatPoFile('primary', lang)
+  //   if (hasSecondary) {
+  //     const graphMsgs = readXlatPoFile('graph-descriptions', lang)
+  //     const inputMsgs = readXlatPoFile('input-descriptions', lang)
+  //     poMsgs = new Map([...primaryMsgs, ...graphMsgs, ...inputMsgs])
+  //   } else {
+  //     poMsgs = primaryMsgs
+  //   }
+
+  //   const xlatStringForKey = (key: StringKey) => {
+  //     return poMsgs.get(key)
+  //   }
+
+  //   // Add the translation of each English string.
+  //   for (const record of sortedRecords) {
+  //     if (record.grouping !== 'primary') {
+  //       // Only include secondary strings (graph and input descriptions) if they are
+  //       // explicitly requested for this language; if not included, the English
+  //       // descriptions will be used as a fallback
+  //       if (xlatLangs.get(lang).includeSecondary !== true) {
+  //         continue
+  //       }
+  //     }
+
+  //     const xlatStr = xlatStringForKey(record.key)
+  //     if (xlatStr) {
+  //       // Add the translated string
+  //       const s = xlatStr
+  //       langStrings.set(record.key, utf8SubscriptToHtml(record.key, s))
+  //     } else {
+  //       // No translation for this string.  We don't add the English string to
+  //       // map as a fallback.  Instead, we configure the i18n library to use
+  //       // English strings as a fallback at runtime.
+  //       // console.warn(`WARNING: No translated string for lang=${lang} id=${stringObj.id}`)
+  //     }
+  //   }
+
+  //   xlatMap.set(lang, langStrings)
+  // }
+
+  // Write a JS file for each language for use in the core package
+  for (const lang of xlatMap.keys()) {
+    const stringsForLang = xlatMap.get(lang)
+    const stringsObj = Object.fromEntries(stringsForLang)
+    const json = JSON.stringify(stringsObj, null, 2)
+    context.writeStagedFile('strings', dstDir, `${lang}.js`, `export default ${json}`)
+  }
 }

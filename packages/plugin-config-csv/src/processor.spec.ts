@@ -23,7 +23,7 @@ interface TestEnv {
 
 async function prepareForBuild(optionsFunc: (corePkgDir: string) => ConfigOptions): Promise<TestEnv> {
   const baseTmpDir = await temp.mkdir('sde-plugin-config-csv')
-  console.log(baseTmpDir)
+  // console.log(baseTmpDir)
   const projDir = joinPath(baseTmpDir, 'proj')
   await mkdir(projDir)
   const corePkgDir = joinPath(projDir, 'core-package')
@@ -37,7 +37,8 @@ async function prepareForBuild(optionsFunc: (corePkgDir: string) => ConfigOption
 
   const buildOptions: BuildOptions = {
     config,
-    logLevels: ['info'],
+    //logLevels: ['info'],
+    logLevels: [],
     sdeDir: '',
     sdeCmdPath: ''
   }
@@ -154,6 +155,24 @@ export const inputSpecs: InputSpec[] = [
 ]
 `
 
+const enStrings1 = `\
+export default {
+  "__string_1": "String 1",
+  "__string_2": "String 2",
+  "graph_001_title": "Graph 1 Title",
+  "graph_dataset_label__baseline": "Baseline",
+  "graph_dataset_label__current_scenario": "Current Scenario",
+  "graph_xaxis_label__x_axis": "X-Axis",
+  "graph_yaxis_label__y_axis": "Y-Axis",
+  "input_001_description": "This is a description of Slider A",
+  "input_001_label": "Slider A Label",
+  "input_002_description": "This is a description of Slider B",
+  "input_002_label": "Slider B Label",
+  "input_003_label": "Switch C Label",
+  "input_group_title__input_group_1": "Input Group 1",
+  "input_units__pct": "%"
+}`
+
 describe('configProcessor', () => {
   beforeAll(() => {
     temp.track()
@@ -192,7 +211,8 @@ describe('configProcessor', () => {
     const configSpecsFile = joinPath(testEnv.corePkgDir, 'src', 'config', 'generated', 'config-specs.ts')
     expect(await readFile(configSpecsFile, 'utf8')).toEqual(configSpecs1)
 
-    // TODO: Check strings
+    const enStringsFile = joinPath(testEnv.corePkgDir, 'strings', 'en.js')
+    expect(await readFile(enStringsFile, 'utf8')).toEqual(enStrings1)
   })
 
   it('should write to given directories if out paths are provided', async () => {
@@ -216,6 +236,7 @@ describe('configProcessor', () => {
     const configSpecsFile = joinPath(testEnv.corePkgDir, 'cgen', 'config-specs.ts')
     expect(await readFile(configSpecsFile, 'utf8')).toEqual(configSpecs1)
 
-    // TODO: Check strings
+    const enStringsFile = joinPath(testEnv.corePkgDir, 'sgen', 'en.js')
+    expect(await readFile(enStringsFile, 'utf8')).toEqual(enStrings1)
   })
 })

@@ -1,0 +1,13 @@
+# yaml-language-server: $schema=../node_modules/@sdeverywhere/plugin-check/node_modules/@sdeverywhere/check-core/schema/check.schema.json
+
+- describe: Population Variables
+  tests:
+    - it: should be non-negative all input scenarios
+      scenarios:
+        - preset: matrix
+      datasets:
+        - name: Infectious Population I
+        - name: Recovered Population R
+        - name: Susceptible Population S
+      predicates:
+        - gte: 0

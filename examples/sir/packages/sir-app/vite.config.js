@@ -31,7 +31,8 @@ export default defineConfig(env => {
 
     resolve: {
       alias: {
-        '@core': resolve(appDir, '..', 'sir-core', 'src')
+        '@core': resolve(appDir, '..', 'sir-core', 'src'),
+        '@core-strings': resolve(appDir, '..', 'sir-core', 'strings')
       }
     },
 

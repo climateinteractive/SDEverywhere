@@ -3,7 +3,7 @@
 import { existsSync } from 'fs'
 import { join as joinPath } from 'path'
 
-import type { BuildContext, InputSpec, ModelSpec, OutputSpec } from '@sdeverywhere/build'
+import type { BuildContext, ModelSpec } from '@sdeverywhere/build'
 
 import { createConfigContext } from './context'
 import { writeModelSpec } from './gen-model-spec'
@@ -101,57 +101,29 @@ async function processModelConfig(buildContext: BuildContext, options: ConfigOpt
     writeModelSpec(context, outModelSpecsDir)
   }
 
+  const configSpecs = generateConfigSpecs(context)
   if (outConfigSpecsDir) {
-    const configSpecs = generateConfigSpecs(context)
     context.log('verbose', '  Writing config specs')
     writeConfigSpecs(context, configSpecs, outConfigSpecsDir)
   }
 
   if (outStringsDir) {
-    // context.log('verbose', '  Writing translated strings')
-    // context.writeTranslationJsFiles(options.outStringsDir)
+    context.log('verbose', '  Writing strings')
+    context.writeStringsFiles(outStringsDir)
   }
 
   const t1 = performance.now()
   const elapsed = ((t1 - t0) / 1000).toFixed(1)
   context.log('info', `Done generating files (${elapsed}s)`)
 
-  // TODO: model.csv
+  // TODO: List these in model.csv
   const datFiles: string[] = []
-
-  // export interface InputSpec {
-  //   /** The variable name (as used in the modeling tool). */
-  //   varName: string
-
-  //   /** The default value for the input. */
-  //   defaultValue: number
-
-  //   /** The minimum value for the input. */
-  //   minValue: number
-
-  //   /** The maximum value for the input. */
-  //   maxValue: number
-  // }
-
-  // TODO
-  const inputs: InputSpec[] = []
-
-  // /**
-  //  * Describes a model output variable.
-  //  */
-  // export interface OutputSpec {
-  //   /** The variable name (as used in the modeling tool). */
-  //   varName: string
-  // }
-
-  // TODO
-  const outputs: OutputSpec[] = []
 
   return {
     startTime: context.modelStartTime,
     endTime: context.modelEndTime,
-    inputs,
-    outputs,
+    inputs: context.getOrderedInputs(),
+    outputs: context.getOrderedOutputs(),
     datFiles
   }
 }

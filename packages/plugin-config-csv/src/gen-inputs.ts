@@ -110,7 +110,7 @@ function inputSpecFromCsv(r: CsvRow, context: ConfigContext): InputSpec | undefi
 
   let descriptionKey: StringKey
   if (description) {
-    descriptionKey = strings.add(key('description'), description, layout, strCtxt('Description'), 'slider-descriptions')
+    descriptionKey = strings.add(key('description'), description, layout, strCtxt('Description'), 'input-descriptions')
   }
 
   // Converts a slider row in `inputs.csv` to a `SliderSpec`

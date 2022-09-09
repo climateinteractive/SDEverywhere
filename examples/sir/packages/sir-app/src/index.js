@@ -3,7 +3,7 @@ import Slider from 'bootstrap-slider'
 import 'bootstrap-slider/dist/css/bootstrap-slider.css'
 
 import { createModel } from '@core'
-import enStrings from '@core/strings/en'
+import enStrings from '@core-strings/en'
 
 let coreConfig
 let model

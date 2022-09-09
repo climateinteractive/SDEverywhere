@@ -128,9 +128,8 @@ export class ConfigContext {
     })
   }
 
-  writeStringsFiles(): void {
-    // const dstDir = corePackageFilePath('strings')
-    // this.strings.writeJsFiles(this.buildContext, dstDir, xlatLangs)
+  writeStringsFiles(dstDir: string): void {
+    this.strings.writeJsFiles(this.buildContext, dstDir /*, xlatLangs*/)
   }
 }
 
