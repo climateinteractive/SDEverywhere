@@ -21,12 +21,12 @@ export async function config() {
 
     // The following files will be hashed to determine whether the model needs
     // to be rebuilt when watch mode is active
-    modelInputPaths: ['model/**'],
+    modelInputPaths: ['model/*.mdl'],
 
     // The following files will cause the model to be rebuilt when watch mode is
     // is active.  Note that these are globs so we use forward slashes regardless
     // of platform.
-    watchPaths: ['config/**', 'model/**'],
+    watchPaths: ['config/**', 'model/*.mdl'],
 
     // Read csv files from `config` directory
     modelSpec: configProcessor({

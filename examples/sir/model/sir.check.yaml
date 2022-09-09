@@ -2,7 +2,7 @@
 
 - describe: Population Variables
   tests:
-    - it: should be non-negative all input scenarios
+    - it: should be between 0 and 10000 for all input scenarios
       scenarios:
         - preset: matrix
       datasets:
@@ -11,3 +11,4 @@
         - name: Susceptible Population S
       predicates:
         - gte: 0
+        - lte: 10000
