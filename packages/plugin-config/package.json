@@ -2,7 +2,8 @@
   "name": "@sdeverywhere/plugin-config",
   "version": "0.1.0",
   "files": [
-    "dist/**"
+    "dist/**",
+    "template-config/**"
   ],
   "type": "module",
   "main": "dist/index.cjs",

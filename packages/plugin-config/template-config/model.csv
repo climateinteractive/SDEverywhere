@@ -1,2 +1,2 @@
 model start time,model end time,graph default min time,graph default max time,model dat files
-0,200,0,100,
+0,100,0,100,Data1.dat;Data2.dat
