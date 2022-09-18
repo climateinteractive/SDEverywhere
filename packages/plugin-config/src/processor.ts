@@ -116,14 +116,11 @@ async function processModelConfig(buildContext: BuildContext, options: ConfigOpt
   const elapsed = ((t1 - t0) / 1000).toFixed(1)
   context.log('info', `Done generating files (${elapsed}s)`)
 
-  // TODO: List these in model.csv
-  const datFiles: string[] = []
-
   return {
     startTime: context.modelStartTime,
     endTime: context.modelEndTime,
     inputs: context.getOrderedInputs(),
     outputs: context.getOrderedOutputs(),
-    datFiles
+    datFiles: context.datFiles
   }
 }

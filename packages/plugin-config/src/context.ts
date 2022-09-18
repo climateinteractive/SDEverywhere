@@ -1,7 +1,7 @@
 // Copyright (c) 2022 Climate Interactive / New Venture Fund
 
 import { readFileSync } from 'fs'
-import { join as joinPath } from 'path'
+import { join as joinPath, relative } from 'path'
 
 import parseCsv from 'csv-parse/lib/sync.js'
 
@@ -28,7 +28,8 @@ export class ConfigContext {
     public readonly modelStartTime: number,
     public readonly modelEndTime: number,
     public readonly graphDefaultMinTime: number,
-    public readonly graphDefaultMaxTime: number
+    public readonly graphDefaultMaxTime: number,
+    public readonly datFiles: string[]
   ) {}
 
   /**
@@ -140,6 +141,17 @@ export function createConfigContext(buildContext: BuildContext, configDir: strin
   const modelEndTime = Number(modelCsv['model end time'])
   const graphDefaultMinTime = Number(modelCsv['graph default min time'])
   const graphDefaultMaxTime = Number(modelCsv['graph default max time'])
+  const datFilesString = modelCsv['model dat files']
+  const origDatFiles = datFilesString.length > 0 ? datFilesString.split(';') : []
+
+  // The dat file paths in the config file are assumed to be relative to
+  // the project directory (i.e., the directory where the `sde.config.js`
+  // file resides), so we need to convert to paths that are relative to
+  // the `sde-prep` directory (since that is the "model" directory from
+  // the perspective of the compile package).
+  const prepDir = buildContext.config.prepDir
+  const projDir = buildContext.config.rootDir
+  const datFiles = origDatFiles.map(f => joinPath(relative(prepDir, projDir), f))
 
   // Read the static strings from `strings.csv`
   const strings = readStringsCsv(configDir)
@@ -161,7 +173,8 @@ export function createConfigContext(buildContext: BuildContext, configDir: strin
     modelStartTime,
     modelEndTime,
     graphDefaultMinTime,
-    graphDefaultMaxTime
+    graphDefaultMaxTime,
+    datFiles
   )
 }
 
