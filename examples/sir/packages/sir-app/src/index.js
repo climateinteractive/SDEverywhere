@@ -195,7 +195,6 @@ function showGraph(graphSpec) {
   const legendContainer = $('#top-graph-legend')
   legendContainer.empty()
   for (const itemSpec of graphSpec.legendItems) {
-    console.log(itemSpec)
     const attrs = `class="graph-legend-item" style="background-color: ${itemSpec.color}"`
     const label = str(itemSpec.labelKey)
     const itemElem = $(`<div ${attrs}>${label}</div>`)
