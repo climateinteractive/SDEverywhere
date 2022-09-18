@@ -62,7 +62,6 @@ export class Model {
   public getSeriesForVar(varId: OutputVarId, sourceName?: string): Series | undefined {
     if (sourceName === undefined) {
       // Return the latest model output data
-      console.log(this.outputs)
       return this.outputs.getSeriesForVar(varId)
     } else if (sourceName === 'Ref') {
       // Return the saved reference data
