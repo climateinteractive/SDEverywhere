@@ -30,13 +30,20 @@ p {
   margin-top: 10px;
 }
 
+.graph-outer-container {
+  display: flex;
+  flex-direction: column;
+  margin-top: 10px;
+  margin-bottom: 20px;
+}
+
 /*
  * This container is set up to allow for automatic responsive sizing
  * by Chart.js.  For this to work, we need the canvas element to have
  * this parent container with `position: relative` and fixed dimensions
  * using `px` or `vw`/`vh` units.
  */
-.graph-container {
+.graph-inner-container {
   position: relative;
   width: 100%;
   height: 40vh;
@@ -45,6 +52,20 @@ p {
 #top-graph-container {
   margin-top: 16px;
   margin-bottom: 10px;
+}
+
+.graph-legend {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  width: 100%;
+  margin-top: 2px;
+}
+
+.graph-legend-item {
+  padding: 4px 8px 3px 8px;
+  margin: 1px 3px;
+  color: #fff;
 }
 
 /*

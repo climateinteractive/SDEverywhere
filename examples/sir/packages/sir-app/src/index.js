@@ -178,6 +178,7 @@ function showGraph(graphSpec) {
     graphView.destroy()
   }
 
+  // Create a new GraphView that targets the canvas element
   const canvas = $('#top-graph-canvas')[0]
   const viewModel = createGraphViewModel(graphSpec)
   const options = {
@@ -189,6 +190,17 @@ function showGraph(graphSpec) {
   const xAxisLabel = graphSpec.xAxisLabelKey ? str(graphSpec.xAxisLabelKey) : undefined
   const yAxisLabel = graphSpec.yAxisLabelKey ? str(graphSpec.yAxisLabelKey) : undefined
   graphView = new GraphView(canvas, viewModel, options, tooltipsEnabled, xAxisLabel, yAxisLabel)
+
+  // Show the legend items for the graph
+  const legendContainer = $('#top-graph-legend')
+  legendContainer.empty()
+  for (const itemSpec of graphSpec.legendItems) {
+    console.log(itemSpec)
+    const attrs = `class="graph-legend-item" style="background-color: ${itemSpec.color}"`
+    const label = str(itemSpec.labelKey)
+    const itemElem = $(`<div ${attrs}>${label}</div>`)
+    legendContainer.append(itemElem)
+  }
 }
 
 function addGraphItem(graphSpec) {
