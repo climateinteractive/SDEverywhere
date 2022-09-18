@@ -6,6 +6,7 @@ import './index.css'
 import { config as coreConfig, createModel } from '@core'
 import enStrings from '@core-strings/en'
 
+import { initOverlay } from './dev-overlay'
 import { GraphView } from './graph-view'
 
 let model
@@ -248,6 +249,7 @@ async function initApp() {
   // Initialize the user interface
   initInputsUI()
   initGraphsUI()
+  initOverlay()
 
   // When the model outputs are updated, refresh the graph
   model.onOutputsChanged = () => {

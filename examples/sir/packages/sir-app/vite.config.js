@@ -7,6 +7,7 @@ import { defineConfig } from 'vite'
 // Node will complain ("ERROR: __dirname is not defined in ES module scope") so
 // we use our own special name here
 const appDir = dirname(fileURLToPath(import.meta.url))
+const projDir = resolve(appDir, '..', '..')
 
 export default defineConfig(env => {
   return {
@@ -32,7 +33,8 @@ export default defineConfig(env => {
     resolve: {
       alias: {
         '@core': resolve(appDir, '..', 'sir-core', 'src'),
-        '@core-strings': resolve(appDir, '..', 'sir-core', 'strings')
+        '@core-strings': resolve(appDir, '..', 'sir-core', 'strings'),
+        '@prep': resolve(projDir, 'sde-prep')
       }
     },
 
