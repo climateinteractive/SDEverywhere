@@ -18,6 +18,23 @@ function str(key) {
   return enStrings[key]
 }
 
+/**
+ * Return a formatted string representation of the given number.
+ */
+function format(num, formatString) {
+  // TODO: You could use d3-format or another similar formatting library
+  // here.  For now, this is set up to handle a small subset of formats
+  // used in the example config files.
+  switch (formatString) {
+    case '.1f':
+      return num.toFixed(1)
+    case '.2f':
+      return num.toFixed(2)
+    default:
+      return num.toString()
+  }
+}
+
 /*
  * INPUTS
  */
@@ -55,16 +72,7 @@ function addSliderItem(sliderInput) {
 
   // Show the initial value and update the value when the slider is changed
   const updateValueElement = v => {
-    // TODO: Use d3-format
-    let s
-    if (spec.format === '.2f') {
-      s = v.toFixed(2)
-    } else if (spec.format === '.1f') {
-      s = v.toFixed(1)
-    } else {
-      s = v.toString()
-    }
-    inputValue.text(s.toString())
+    inputValue.text(format(v, spec.format))
   }
   updateValueElement(value)
 
@@ -159,8 +167,7 @@ function createGraphViewModel(graphSpec) {
       return str(key)
     },
     formatYAxisTickValue: value => {
-      // TODO: Can use d3-format here and pass graphSpec.yFormat
-      return value.toFixed(1)
+      return format(value, graphSpec.yFormat)
     }
   }
 }
