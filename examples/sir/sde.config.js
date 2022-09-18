@@ -43,6 +43,9 @@ export async function config() {
         outputPaths: [corePath('src', 'model', 'generated', 'worker.js')]
       }),
 
+      // Run model check
+      checkPlugin(),
+
       // Build or serve the model explorer app
       vitePlugin({
         name: `${baseName}-app`,
@@ -52,10 +55,7 @@ export async function config() {
         config: {
           configFile: appPath('vite.config.js')
         }
-      }),
-
-      // Run model check
-      checkPlugin()
+      })
     ]
   }
 }
