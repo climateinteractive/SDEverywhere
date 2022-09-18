@@ -26,8 +26,15 @@ function addSliderItem(sliderInput) {
   const spec = sliderInput.spec
   const inputElemId = `input-${spec.id}`
 
-  const div = $(`<div class="input-item"/>`).append([
+  const inputValue = $(`<div class="input-value"/>`)
+  const titleRow = $(`<div class="input-title-row"/>`).append([
     $(`<div class="input-title">${str(spec.labelKey)}</div>`),
+    inputValue,
+    $(`<div class="input-units">${str(spec.unitsKey)}</div>`)
+  ])
+
+  const div = $(`<div class="input-item"/>`).append([
+    titleRow,
     $(`<input id="${inputElemId}" class="slider" type="text"></input>`),
     $(`<div class="input-desc">${spec.descriptionKey ? str(spec.descriptionKey) : ''}</div>`)
   ])
@@ -46,11 +53,27 @@ function addSliderItem(sliderInput) {
     rangeHighlights: [{ start: spec.defaultValue, end: value }]
   })
 
+  // Show the initial value and update the value when the slider is changed
+  const updateValueElement = v => {
+    // TODO: Use d3-format
+    let s
+    if (spec.format === '.2f') {
+      s = v.toFixed(2)
+    } else if (spec.format === '.1f') {
+      s = v.toFixed(1)
+    } else {
+      s = v.toString()
+    }
+    inputValue.text(s.toString())
+  }
+  updateValueElement(value)
+
   // Update the model input when the slider is dragged or the track is clicked
   slider.on('change', change => {
     const start = spec.defaultValue
     const end = change.newValue
     slider.setAttribute('rangeHighlights', [{ start, end }])
+    updateValueElement(change.newValue)
     sliderInput.set(change.newValue)
   })
 }

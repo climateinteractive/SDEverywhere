@@ -61,18 +61,30 @@ p {
   background-color: #ddd;
 }
 
-#inputs-title {
-  margin-top: 10px;
-  font-weight: bold;
-  font-size: 1.5em;
-  color: #111;
+.input-title-row {
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  margin-top: 12px;
 }
 
 .input-title {
+  flex: 1;
   font-weight: bold;
   font-size: 1.2em;
   color: #111;
-  margin-top: 12px;
+}
+
+.input-value {
+  font-weight: bold;
+  font-size: 1.2em;
+  color: #111;
+}
+
+.input-units {
+  margin-left: 5px;
+  font-size: 1em;
+  color: #111;
 }
 
 .input-desc {

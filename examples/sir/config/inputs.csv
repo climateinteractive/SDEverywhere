@@ -1,4 +1,4 @@
 id,input type,viewid,varname,label,view level,group name,slider min,slider max,slider/switch default,slider step,units,format,reversed,range 2 start,range 3 start,range 4 start,range 5 start,range 1 label,range 2 label,range 3 label,range 4 label,range 5 label,enabled value,disabled value,controlled input ids,listing label,description
 1,slider,v1,Initial Contact Rate,Initial Contact Rate,,Inputs,0,5,2.5,0.1,per day,.1f,,,,,,,,,,,,,,,
-2,slider,v1,Infectivity i,Infectivity,,Inputs,-2,2,0.25,0.05,probability,.2f,,,,,,,,,,,,,,,
+2,slider,v1,Infectivity i,Infectivity,,Inputs,-2,2,0.25,0.05,(probability),.2f,,,,,,,,,,,,,,,
 3,slider,v1,Average Duration of Illness d,Average Duration of Illness,,Inputs,0,10,2,1,days,,,,,,,,,,,,,,,,
