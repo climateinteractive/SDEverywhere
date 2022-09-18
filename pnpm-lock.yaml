@@ -52,14 +52,6 @@ importers:
       '@sdeverywhere/plugin-worker': link:../../packages/plugin-worker
       sirv-cli: 2.0.2
 
-  examples/hello-world/sde-prep/template-report:
-    specifiers:
-      '@sdeverywhere/check-core': ^0.1.0
-      '@sdeverywhere/check-ui-shell': ^0.1.0
-    dependencies:
-      '@sdeverywhere/check-core': link:../../../../packages/check-core
-      '@sdeverywhere/check-ui-shell': link:../../../../packages/check-ui-shell
-
   examples/sample-check-app:
     specifiers:
       '@sdeverywhere/check-core': workspace:*
