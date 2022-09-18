@@ -17,65 +17,82 @@ const modelSpec: ModelSpec = {
   datFiles: []
 }
 
+const plugin = (num: number, calls: string[]) => {
+  const record = (f: string) => {
+    calls.push(`plugin ${num}: ${f}`)
+  }
+  const p: Plugin = {
+    init: async () => {
+      record('init')
+    },
+    preGenerate: async () => {
+      record('preGenerate')
+    },
+    preProcessMdl: async () => {
+      record('preProcessMdl')
+    },
+    postProcessMdl: async (_, mdlContent) => {
+      record('postProcessMdl')
+      return mdlContent
+    },
+    preGenerateC: async () => {
+      record('preGenerateC')
+    },
+    postGenerateC: async (_, cContent) => {
+      record('postGenerateC')
+      return cContent
+    },
+    postGenerate: async () => {
+      record('postGenerate')
+      return true
+    },
+    postBuild: async () => {
+      record('postBuild')
+      return true
+    },
+    watch: async () => {
+      record('watch')
+    }
+  }
+  return p
+}
+
 describe('build in production mode', () => {
-  it('should fail if model files array is empty', async () => {
+  it('should skip certain callbacks if model files array is empty', async () => {
+    const calls: string[] = []
+
     const userConfig: UserConfig = {
       rootDir: resolvePath(__dirname, '..'),
       prepDir: resolvePath(__dirname, 'sde-prep'),
       modelFiles: [],
-      modelSpec: async () => modelSpec
+      modelSpec: async () => {
+        calls.push('modelSpec')
+        return modelSpec
+      },
+      plugins: [plugin(1, calls), plugin(2, calls)]
     }
 
     const result = await build('production', buildOptions(userConfig))
-    if (result.isOk()) {
-      throw new Error('Expected error result but got: ' + result.value)
+    if (result.isErr()) {
+      throw new Error('Expected ok result but got: ' + result.error.message)
     }
 
-    expect(result.error.message).toBe('No model input files specified')
+    expect(result.value.exitCode).toBe(0)
+    expect(calls).toEqual([
+      'plugin 1: init',
+      'plugin 2: init',
+      'modelSpec',
+      'plugin 1: preGenerate',
+      'plugin 2: preGenerate',
+      'plugin 1: postGenerate',
+      'plugin 2: postGenerate',
+      'plugin 1: postBuild',
+      'plugin 2: postBuild'
+    ])
   })
 
   it('should call plugin functions in the expected order', async () => {
     const calls: string[] = []
-
-    const plugin = (num: number) => {
-      const record = (f: string) => {
-        calls.push(`plugin ${num}: ${f}`)
-      }
-      const p: Plugin = {
-        init: async () => {
-          record('init')
-        },
-        preGenerate: async () => {
-          record('preGenerate')
-        },
-        preProcessMdl: async () => {
-          record('preProcessMdl')
-        },
-        postProcessMdl: async (_, mdlContent) => {
-          record('postProcessMdl')
-          return mdlContent
-        },
-        preGenerateC: async () => {
-          record('preGenerateC')
-        },
-        postGenerateC: async (_, cContent) => {
-          record('postGenerateC')
-          return cContent
-        },
-        postGenerate: async () => {
-          record('postGenerate')
-          return true
-        },
-        postBuild: async () => {
-          record('postBuild')
-          return true
-        },
-        watch: async () => {
-          record('watch')
-        }
-      }
-      return p
-    }
 
     const userConfig: UserConfig = {
       rootDir: resolvePath(__dirname, '..'),
@@ -85,7 +102,7 @@ describe('build in production mode', () => {
         calls.push('modelSpec')
         return modelSpec
       },
-      plugins: [plugin(1), plugin(2)]
+      plugins: [plugin(1, calls), plugin(2, calls)]
     }
 
     const result = await build('production', buildOptions(userConfig))
