@@ -3,18 +3,19 @@ body {
   display: flex;
   flex-direction: column;
   width: 100%;
+  max-width: 700px;
   height: 100%;
-  margin: 0;
+  margin: 0 auto;
   overflow: hidden;
   box-sizing: border-box;
   background-color: #fff;
   font-family: Helvetica, sans-serif;
-  font-size: 1vw;
+  font-size: 13px;
 }
 
 p {
   margin-top: 0;
-  margin-bottom: 0.7vw;
+  margin-bottom: 10px;
 }
 
 /*
@@ -22,28 +23,28 @@ p {
  */
 
 #graphs-container {
-  min-height: 50%;
-  padding: 0 1vw;
+  padding: 0 10px;
 }
 
 #graph-selector {
-  margin-top: 1vw;
+  margin-top: 10px;
 }
 
 /*
  * This container is set up to allow for automatic responsive sizing
  * by Chart.js.  For this to work, we need the canvas element to have
  * this parent container with `position: relative` and fixed dimensions
- * using `vw` units.
+ * using `px` or `vw`/`vh` units.
  */
 .graph-container {
   position: relative;
-  width: 38vw;
-  height: 24vw;
+  width: 100%;
+  height: 40vh;
 }
 
 #top-graph-container {
-  margin-top: 1vw;
+  margin-top: 16px;
+  margin-bottom: 10px;
 }
 
 /*
@@ -53,7 +54,7 @@ p {
 #inputs-container {
   display: inline-flex;
   flex-direction: column;
-  padding: 0 1vw;
+  padding: 0 10px;
   height: 100%;
   overflow-x: hidden;
   overflow-y: scroll;
@@ -61,7 +62,7 @@ p {
 }
 
 #inputs-title {
-  margin-top: 1vw;
+  margin-top: 10px;
   font-weight: bold;
   font-size: 1.5em;
   color: #111;
@@ -71,17 +72,17 @@ p {
   font-weight: bold;
   font-size: 1.2em;
   color: #111;
-  margin-top: 1vw;
+  margin-top: 12px;
 }
 
 .input-desc {
   font-style: italic;
   color: #333;
-  margin-bottom: 2vw;
+  margin-bottom: 24px;
 }
 
 .switch-checkbox {
-  margin-bottom: 0.6vw;
+  margin-bottom: 8px;
 }
 
 .switch-label {
@@ -89,7 +90,7 @@ p {
   font-size: 1.2em;
   color: #111;
   vertical-align: middle;
-  margin-left: 0.4vw;
+  margin-left: 6px;
 }
 
 /*
@@ -98,28 +99,28 @@ p {
 
 .slider.slider-horizontal {
   width: 94%;
-  height: 1.5vw;
+  height: 16px;
   margin-left: 3%;
-  margin-top: 0.2vw;
-  margin-bottom: 0.2vw;
+  margin-top: 4px;
+  margin-bottom: 4px;
 }
 
 .slider.slider-horizontal .slider-track {
-  height: 1vw;
-  top: 0.25vw; /* (slider-handle:height / 2) - (slider-track:height / 2) */
+  height: 8px;
+  top: 4px; /* (slider-handle:height / 2) - (slider-track:height / 2) */
   margin-top: 0;
 }
 
 .slider-rangeHighlight {
-  background: #8888aa;
+  background: #5588ff;
 }
 
 .slider-handle {
-  width: 1.5vw;
-  height: 1.5vw;
+  width: 16px;
+  height: 16px;
   background: #000;
 }
 
 .slider.slider-horizontal .slider-handle {
-  margin-left: -0.75vw;
+  margin-left: -8px;
 }
