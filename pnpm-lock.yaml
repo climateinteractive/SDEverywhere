@@ -103,14 +103,14 @@ importers:
     specifiers:
       '@sdeverywhere/cli': ^0.7.0
       '@sdeverywhere/plugin-check': ^0.1.0
-      '@sdeverywhere/plugin-config-csv': ^0.1.0
+      '@sdeverywhere/plugin-config': ^0.1.0
       '@sdeverywhere/plugin-vite': ^0.1.1
       '@sdeverywhere/plugin-wasm': ^0.1.0
       '@sdeverywhere/plugin-worker': ^0.1.0
     dependencies:
       '@sdeverywhere/cli': link:../../packages/cli
       '@sdeverywhere/plugin-check': link:../../packages/plugin-check
-      '@sdeverywhere/plugin-config-csv': link:../../packages/plugin-config-csv
+      '@sdeverywhere/plugin-config': link:../../packages/plugin-config
       '@sdeverywhere/plugin-vite': link:../../packages/plugin-vite
       '@sdeverywhere/plugin-wasm': link:../../packages/plugin-wasm
       '@sdeverywhere/plugin-worker': link:../../packages/plugin-worker
@@ -283,7 +283,7 @@ importers:
     devDependencies:
       '@types/node': 16.11.40
 
-  packages/plugin-config-csv:
+  packages/plugin-config:
     specifiers:
       '@sdeverywhere/build': ^0.1.1
       '@types/byline': ^4.2.33
