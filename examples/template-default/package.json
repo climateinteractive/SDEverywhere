@@ -1,11 +1,12 @@
 {
-  "name": "sir",
+  "name": "project",
   "version": "1.0.0",
   "private": true,
   "type": "module",
   "scripts": {
     "build": "sde bundle",
-    "dev": "sde dev"
+    "dev": "sde dev",
+    "start": "sde dev"
   },
   "dependencies": {
     "@sdeverywhere/cli": "^0.7.0",

@@ -8,8 +8,8 @@
     // Configure path aliases
     "paths": {
       // The following lines enable path aliases within the app
-      "@core": ["../sir-core/src"],
-      "@core-strings": ["../sir-core/strings"],
+      "@core": ["../core/src"],
+      "@core-strings": ["../core/strings"],
       "@prep/*": ["../../sde-prep/*"]
     },
     // XXX: The following two lines work around a TS/VSCode issue where this config

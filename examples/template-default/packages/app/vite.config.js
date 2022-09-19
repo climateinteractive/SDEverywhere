@@ -32,8 +32,8 @@ export default defineConfig(env => {
 
     resolve: {
       alias: {
-        '@core': resolve(appDir, '..', 'sir-core', 'src'),
-        '@core-strings': resolve(appDir, '..', 'sir-core', 'strings'),
+        '@core': resolve(appDir, '..', 'core', 'src'),
+        '@core-strings': resolve(appDir, '..', 'core', 'strings'),
         '@prep': resolve(projDir, 'sde-prep')
       }
     },
@@ -57,8 +57,8 @@ export default defineConfig(env => {
     },
 
     server: {
-      // Run the dev server at `localhost:8091` by default
-      port: 8091,
+      // Run the dev server at `localhost:8080` by default
+      port: 8080,
 
       // Open the app in the browser by default
       open: '/index.html'

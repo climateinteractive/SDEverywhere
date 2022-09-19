@@ -112,8 +112,8 @@ async function chooseProjectDir(): Promise<string> {
 // so this should be re-evaluated later.
 async function runDegit(templateTarget: string, hash: string, dstDir: string, spinner: Ora): Promise<void> {
   const emitter = degit(`${templateTarget}${hash}`, {
-    cache: false,
-    force: true
+    cache: false
+    // force: true
   })
 
   try {
@@ -311,6 +311,7 @@ export async function main(): Promise<void> {
 
   // TODO: See if project contains an mdl file, if not, use hello-world
   // TODO: Set up sde.config.js file to use selected mdl file
+  // TODO: Fill in default values for config files
 
   ora({ text: green('Setup complete!') }).succeed()
 
