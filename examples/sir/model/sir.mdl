@@ -113,7 +113,7 @@ INITIAL TIME  = 0
 	~	The initial time for the simulation.
 	|
 
-SAVEPER  = 2
+SAVEPER  = 1
 	~	Day
 	~	The frequency with which output is stored.
 	|

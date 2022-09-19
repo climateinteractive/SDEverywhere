@@ -18,12 +18,17 @@ import type { Plugin } from '../../plugin/plugin'
  *   - `postGenerateC`
  */
 export async function generateModel(context: BuildContext, plugins: Plugin[]): Promise<void> {
+  const config = context.config
+  if (config.modelFiles.length === 0) {
+    log('info', 'No model input files specified, skipping model generation steps')
+    return
+  }
+
   log('info', 'Generating model...')
 
   const t0 = performance.now()
 
   // Use the defined prep directory
-  const config = context.config
   const prepDir = config.prepDir
 
   // TODO: For now we assume the path is to the `main.js` file in the cli package;
@@ -37,10 +42,7 @@ export async function generateModel(context: BuildContext, plugins: Plugin[]): P
       await plugin.preProcessMdl(context)
     }
   }
-  if (config.modelFiles.length === 0) {
-    // Require at least one input file
-    throw new Error('No model input files specified')
-  } else if (config.modelFiles.length === 1) {
+  if (config.modelFiles.length === 1) {
     // Preprocess the single mdl file
     await preprocessMdl(context, sdeCmdPath, prepDir, config.modelFiles[0])
   } else {
