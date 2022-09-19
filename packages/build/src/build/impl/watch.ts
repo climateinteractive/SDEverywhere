@@ -52,7 +52,15 @@ export function watch(config: ResolvedConfig, userConfig: UserConfig, plugins: P
       abortSignal: currentBuildState.abortController.signal
     }
     buildOnce(config, userConfig, plugins, buildOptions)
+      .then(result => {
+        // Log the error message in case of error result
+        if (result.isErr()) {
+          logError(result.error)
+        }
+      })
       .catch(e => {
+        // Also catch thrown errors that may have not already been
+        // handled by `buildOnce`
         logError(e)
         // log('info', 'Waiting for changes...')
       })
