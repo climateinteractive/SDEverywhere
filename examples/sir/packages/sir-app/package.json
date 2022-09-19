@@ -15,7 +15,8 @@
   "dependencies": {
     "bootstrap-slider": "10.6.2",
     "chart.js": "^2.9.4",
-    "jquery": "^3.5.1"
+    "jquery": "^3.5.1",
+    "sir-core": "^1.0.0"
   },
   "devDependencies": {
     "@types/chart.js": "^2.9.34",

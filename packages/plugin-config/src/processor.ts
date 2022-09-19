@@ -7,7 +7,7 @@ import type { BuildContext, ModelSpec } from '@sdeverywhere/build'
 
 import { createConfigContext } from './context'
 import { writeModelSpec } from './gen-model-spec'
-import { generateConfigSpecs, writeConfigSpecs } from './gen-config-specs'
+import { generateConfigSpecs, writeConfigSpecs, writeSpecTypes } from './gen-config-specs'
 
 export interface ConfigOutputPaths {
   /** The absolute path to the directory where model spec files will be written. */
@@ -100,6 +100,7 @@ async function processModelConfig(buildContext: BuildContext, options: ConfigOpt
   if (outConfigSpecsDir) {
     context.log('verbose', '  Writing config specs')
     writeConfigSpecs(context, configSpecs, outConfigSpecsDir)
+    writeSpecTypes(context, outConfigSpecsDir)
   }
 
   if (outModelSpecsDir) {

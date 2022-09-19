@@ -26,7 +26,9 @@
     "test:watch": "vitest",
     "test:ci": "vitest run",
     "type-check": "tsc --noEmit -p tsconfig-build.json",
-    "build": "tsup",
+    "bundle": "tsup",
+    "copy-types": "cp src/spec-types.ts dist",
+    "build": "run-s bundle copy-types",
     "ci:build": "run-s clean lint prettier:check test:ci type-check build"
   },
   "dependencies": {

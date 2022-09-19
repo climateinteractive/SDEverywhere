@@ -1,9 +1,15 @@
 // Copyright (c) 2022 Climate Interactive / New Venture Fund
 
+import { readFileSync } from 'fs'
+import { dirname, resolve as resolvePath } from 'path'
+import { fileURLToPath } from 'url'
+
 import type { ConfigContext } from './context'
 import { generateGraphSpecs } from './gen-graphs'
 import { generateInputsConfig } from './gen-inputs'
 import type { GraphId, GraphSpec, InputId, InputSpec } from './spec-types'
+
+const __dirname = dirname(fileURLToPath(import.meta.url))
 
 export interface ConfigSpecs {
   graphSpecs: Map<GraphId, GraphSpec>
@@ -69,4 +75,16 @@ export function writeConfigSpecs(context: ConfigContext, config: ConfigSpecs, ds
 
   // Write the `config-specs.ts` file
   context.writeStagedFile('config', dstDir, 'config-specs.ts', tsContent)
+}
+
+/**
+ * Write the `spec-types.ts` file to the given destination directory.
+ */
+export function writeSpecTypes(context: ConfigContext, dstDir: string): void {
+  // Copy the `spec-types.ts` file.  Currently we keep the full source of the file
+  // in the `dist` directory for this package so that we can access it here.
+  const tsFile = 'spec-types.ts'
+  const tsPath = resolvePath(__dirname, tsFile)
+  const tsContent = readFileSync(tsPath, 'utf8')
+  context.writeStagedFile('config', dstDir, tsFile, tsContent)
 }

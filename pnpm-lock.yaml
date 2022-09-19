@@ -113,11 +113,13 @@ importers:
       bootstrap-slider: 10.6.2
       chart.js: ^2.9.4
       jquery: ^3.5.1
+      sir-core: ^1.0.0
       vite: ^2.9.12
     dependencies:
       bootstrap-slider: 10.6.2
       chart.js: 2.9.4
       jquery: 3.6.1
+      sir-core: link:../sir-core
     devDependencies:
       '@types/chart.js': 2.9.37
       vite: 2.9.12

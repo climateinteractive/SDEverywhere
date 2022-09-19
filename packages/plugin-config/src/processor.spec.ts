@@ -1,5 +1,6 @@
 // Copyright (c) 2022 Climate Interactive / New Venture Fund
 
+import { existsSync } from 'fs'
 import { mkdir, readFile } from 'fs/promises'
 import { dirname, join as joinPath } from 'path'
 import { fileURLToPath } from 'url'
@@ -236,6 +237,9 @@ describe('configProcessor', () => {
     const configSpecsFile = joinPath(testEnv.corePkgDir, 'src', 'config', 'generated', 'config-specs.ts')
     expect(await readFile(configSpecsFile, 'utf8')).toEqual(configSpecs1)
 
+    const specTypesFile = joinPath(testEnv.corePkgDir, 'src', 'config', 'generated', 'spec-types.ts')
+    expect(existsSync(specTypesFile)).toBe(true)
+
     const enStringsFile = joinPath(testEnv.corePkgDir, 'strings', 'en.js')
     expect(await readFile(enStringsFile, 'utf8')).toEqual(enStrings1)
   })
@@ -263,6 +267,9 @@ describe('configProcessor', () => {
 
     const configSpecsFile = joinPath(testEnv.corePkgDir, 'cgen', 'config-specs.ts')
     expect(await readFile(configSpecsFile, 'utf8')).toEqual(configSpecs1)
+
+    const specTypesFile = joinPath(testEnv.corePkgDir, 'cgen', 'spec-types.ts')
+    expect(existsSync(specTypesFile)).toBe(true)
 
     const enStringsFile = joinPath(testEnv.corePkgDir, 'sgen', 'en.js')
     expect(await readFile(enStringsFile, 'utf8')).toEqual(enStrings1)
