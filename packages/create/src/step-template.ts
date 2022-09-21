@@ -45,16 +45,17 @@ export async function chooseTemplate(projDir: string, args: Arguments): Promise<
   )
 
   // Handle response
-  const templateSpinner = ora('Copying project files...').start()
+  if (args.dryRun) {
+    ora().info(dim(`--dry-run enabled, skipping.`))
+    return
+  }
+
+  // Copy the template files to the project directory
   const templateTarget = `climateinteractive/SDEverywhere/examples/${options.template}`
   // TODO: Fix this before branch is merged
   const hash = '#chris/228-create-package'
-
-  // Copy the template files to the project directory
-  if (!args.dryRun) {
-    await runDegit(templateTarget, hash, projDir, args, templateSpinner)
-  }
-
+  const templateSpinner = ora('Copying project files...').start()
+  await runDegit(templateTarget, hash, projDir, args, templateSpinner)
   templateSpinner.text = green('Template copied!')
   templateSpinner.succeed()
 }

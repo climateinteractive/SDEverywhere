@@ -28,33 +28,36 @@ export async function chooseInstallDeps(projDir: string, args: Arguments, pkgMan
   // Handle response
   if (args.dryRun) {
     ora().info(dim(`--dry-run enabled, skipping.`))
-  } else if (installResponse.install) {
-    const installExec = execa(pkgManager, ['install'], { cwd: projDir })
-    const installingPackagesMsg = 'Installing packages...'
-    const installSpinner = ora(installingPackagesMsg).start()
-    try {
-      await new Promise<void>((resolve, reject) => {
-        installExec.stdout?.on('data', function (data) {
-          installSpinner.text = `${installingPackagesMsg}\n${bold(`[${pkgManager}]`)} ${data}`
-        })
-        installExec.stderr?.on('data', function (data) {
-          installSpinner.text = `${installingPackagesMsg}\n${bold(`[${pkgManager}]`)} ${data}`
-        })
-        installExec.on('error', error => reject(error))
-        installExec.on('exit', code => reject(`Install failed (code=${code})`))
-        installExec.on('close', () => resolve())
-      })
-      installSpinner.text = green('Packages installed!')
-      installSpinner.succeed()
-    } catch (e) {
-      installSpinner.text = yellow(
-        `There was an error installing packages. Try running ${cyan(
-          `${pkgManager} install`
-        )} in your project directory later.`
-      )
-      installSpinner.warn()
-    }
-  } else {
+    return
+  } else if (!installResponse.install) {
     ora().info(dim(`No problem! Remember to install dependencies after setup.`))
+    return
+  }
+
+  // Install dependencies
+  const installExec = execa(pkgManager, ['install'], { cwd: projDir })
+  const installingPackagesMsg = 'Installing packages...'
+  const installSpinner = ora(installingPackagesMsg).start()
+  try {
+    await new Promise<void>((resolve, reject) => {
+      installExec.stdout?.on('data', function (data) {
+        installSpinner.text = `${installingPackagesMsg}\n${bold(`[${pkgManager}]`)} ${data}`
+      })
+      installExec.stderr?.on('data', function (data) {
+        installSpinner.text = `${installingPackagesMsg}\n${bold(`[${pkgManager}]`)} ${data}`
+      })
+      installExec.on('error', error => reject(error))
+      installExec.on('exit', code => reject(`Install failed (code=${code})`))
+      installExec.on('close', () => resolve())
+    })
+    installSpinner.text = green('Packages installed!')
+    installSpinner.succeed()
+  } catch (e) {
+    installSpinner.text = yellow(
+      `There was an error installing packages. Try running ${cyan(
+        `${pkgManager} install`
+      )} in your project directory later.`
+    )
+    installSpinner.warn()
   }
 }

@@ -22,12 +22,17 @@ export async function chooseGitInit(projDir: string, args: Arguments): Promise<v
       }
     }
   )
+
+  // Handle response
   if (args.dryRun) {
     ora().info(dim(`--dry-run enabled, skipping.`))
-  } else if (gitResponse.git) {
-    await execaCommand('git init', { cwd: projDir })
-    ora().succeed(green('Git repository created!'))
-  } else {
+    return
+  } else if (!gitResponse.git) {
     ora().info(dim(`No problem! You can come back and run ${cyan(`git init`)} later.`))
+    return
   }
+
+  // Init git repo
+  await execaCommand('git init', { cwd: projDir })
+  ora().succeed(green('Git repository initialized!'))
 }
