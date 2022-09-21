@@ -50,7 +50,7 @@ export async function chooseInstallEmsdk(projDir: string, args: Arguments): Prom
             'Operation cancelled. Your project folder has been created, but the Emscripten SDK and other dependencies have not been installed.'
           )
         )
-        process.exit(1)
+        process.exit(0)
       }
     }
   )
@@ -75,7 +75,7 @@ export async function chooseInstallEmsdk(projDir: string, args: Arguments): Prom
       color: 'red',
       text: red(`Failed to install Emscripten SDK: ${e.message}`)
     }).fail()
-    process.exit(1)
+    process.exit(0)
   }
 
   ora({

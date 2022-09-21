@@ -43,7 +43,7 @@ export async function chooseProjectDir(args: Arguments): Promise<string> {
     } else {
       // The provided directory is not valid, so show error message and exit
       showInvalidDirMsg(projDir)
-      process.exit(1)
+      process.exit(0)
     }
   } else {
     // Directory was not provided, so prompt the user
@@ -63,10 +63,15 @@ export async function chooseProjectDir(args: Arguments): Promise<string> {
         //   return true
         // }
       },
-      { onCancel: () => ora().info(dim('Operation cancelled.')) }
+      {
+        onCancel: () => {
+          ora().info(dim('Operation cancelled.'))
+          process.exit(0)
+        }
+      }
     )
     if (!projDir) {
-      process.exit(1)
+      process.exit(0)
     }
     projDir = dirResponse.directory
     if (projDir === '<current directory>') {
@@ -76,7 +81,7 @@ export async function chooseProjectDir(args: Arguments): Promise<string> {
       showValidDirMsg(projDir)
     } else {
       showInvalidDirMsg(projDir)
-      process.exit(1)
+      process.exit(0)
     }
   }
 

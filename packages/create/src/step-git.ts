@@ -18,7 +18,7 @@ export async function chooseGitInit(projDir: string, args: Arguments): Promise<v
     {
       onCancel: () => {
         ora().info(dim('Operation cancelled. Your project folder has already been created.'))
-        process.exit(1)
+        process.exit(0)
       }
     }
   )

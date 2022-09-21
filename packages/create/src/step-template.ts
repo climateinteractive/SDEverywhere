@@ -36,11 +36,13 @@ export async function chooseTemplate(projDir: string, args: Arguments): Promise<
         choices: TEMPLATES
       }
     ],
-    { onCancel: () => ora().info(dim('Operation cancelled.')) }
+    {
+      onCancel: () => {
+        ora().info(dim('Operation cancelled.'))
+        process.exit(0)
+      }
+    }
   )
-  if (!options.template) {
-    process.exit(1)
-  }
 
   // Handle response
   const templateSpinner = ora('Copying project files...').start()
@@ -118,7 +120,7 @@ async function runDegit(
         'Please file a new issue with the command output here: https://github.com/climateinteractive/sdeverywhere/issues'
       )
     )
-    process.exit(1)
+    process.exit(0)
 
     // // Warning for issue #655 and other corrupted cache issue
     // if (e.message === 'zlib: unexpected end of file' || e.message === 'TAR_BAD_ARCHIVE: Unrecognized archive format') {

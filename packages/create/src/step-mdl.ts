@@ -38,7 +38,7 @@ export async function chooseMdlFile(projDir: string): Promise<string> {
       color: 'red',
       text: `No mdl files were found in "${projDir}". Add your mdl file to that directory and try again.`
     }).fail()
-    process.exit(1)
+    process.exit(0)
   } else if (mdlFiles.length === 1) {
     // Only one mdl file
     ora().succeed(`Found "${mdlFiles[0]}", will configure the project to use that mdl file.`)
@@ -55,11 +55,13 @@ export async function chooseMdlFile(projDir: string): Promise<string> {
           choices: mdlChoices
         }
       ],
-      { onCancel: () => ora().info(dim('Operation cancelled.')) }
+      {
+        onCancel: () => {
+          ora().info(dim('Operation cancelled.'))
+          process.exit(0)
+        }
+      }
     )
-    if (!options.mdlFile) {
-      process.exit(1)
-    }
     mdlFile = options.mdlFile
   }
 

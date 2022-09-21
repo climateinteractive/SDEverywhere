@@ -20,7 +20,7 @@ export async function chooseInstallDeps(projDir: string, args: Arguments, pkgMan
         ora().info(
           dim('Operation cancelled. Your project folder has been created, but no dependencies have been installed.')
         )
-        process.exit(1)
+        process.exit(0)
       }
     }
   )
