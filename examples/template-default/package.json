@@ -8,6 +8,10 @@
     "dev": "sde dev",
     "start": "sde dev"
   },
+  "workspaces": [
+    "packages/core",
+    "packages/app"
+  ],
   "dependencies": {
     "@sdeverywhere/cli": "^0.7.0",
     "@sdeverywhere/plugin-check": "^0.1.0",
