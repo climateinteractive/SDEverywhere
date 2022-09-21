@@ -70,9 +70,6 @@ export async function chooseProjectDir(args: Arguments): Promise<string> {
         }
       }
     )
-    if (!projDir) {
-      process.exit(0)
-    }
     projDir = dirResponse.directory
     if (projDir === '<current directory>') {
       projDir = process.cwd()
