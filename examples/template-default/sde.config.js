@@ -16,16 +16,16 @@ const corePath = (...parts) => packagePath('core', ...parts)
 export async function config() {
   return {
     // Specify the Vensim model to read
-    modelFiles: ['model/MODEL_NAME.mdl'],
+    modelFiles: ['MODEL_NAME.mdl'],
 
     // The following files will be hashed to determine whether the model needs
     // to be rebuilt when watch mode is active
-    modelInputPaths: ['model/*.mdl'],
+    modelInputPaths: ['MODEL_NAME.mdl'],
 
     // The following files will cause the model to be rebuilt when watch mode is
     // is active.  Note that these are globs so we use forward slashes regardless
     // of platform.
-    watchPaths: ['config/**', 'model/*.mdl'],
+    watchPaths: ['config/**', 'MODEL_NAME.mdl'],
 
     // Read csv files from `config` directory
     modelSpec: configProcessor({
