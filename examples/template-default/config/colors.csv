@@ -1,3 +1,6 @@
 id,hex code,name,comment
-black,#000000,,
 blue,#0072b2,,
+red,#d33700,,
+green,#53bb37,,
+gray,#a7a9ac,,
+black,#000000,,
