@@ -28,7 +28,7 @@ function runCreate(args: string[] = []) {
   }
 }
 
-describe('create directories', () => {
+describe('step - create project directory', () => {
   // it('should stop if directory provided on command line contains important files', () => {
   //   // TODO
   // })
