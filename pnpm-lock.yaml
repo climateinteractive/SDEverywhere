@@ -207,6 +207,7 @@ importers:
 
   packages/create:
     specifiers:
+      '@sdeverywhere/compile': ^0.7.0
       '@types/degit': ^2.8.3
       '@types/fs-extra': ^9.0.13
       '@types/node': ^16.11.7
@@ -220,8 +221,10 @@ importers:
       ora: ^6.1.2
       prompts: ^2.4.2
       which-pm-runs: ^1.1.0
+      yaml: ^2.1.1
       yargs-parser: ^21.1.1
     dependencies:
+      '@sdeverywhere/compile': link:../compile
       degit: 2.8.4
       execa: 6.1.0
       fs-extra: 10.1.0
@@ -229,6 +232,7 @@ importers:
       ora: 6.1.2
       prompts: 2.4.2
       which-pm-runs: 1.1.0
+      yaml: 2.1.1
       yargs-parser: 21.1.1
     devDependencies:
       '@types/degit': 2.8.3

@@ -8,6 +8,7 @@ import prompts from 'prompts'
 import detectPackageManager from 'which-pm-runs'
 import yargs from 'yargs-parser'
 
+import { chooseGenConfig, updateSdeConfig } from './step-config'
 import { chooseInstallDeps } from './step-deps'
 import { chooseProjectDir } from './step-directory'
 import { chooseInstallEmsdk } from './step-emsdk'
@@ -29,27 +30,37 @@ export async function main(): Promise<void> {
 
   // Prompt the user to select a project directory
   const projDir = await chooseProjectDir(args)
+  console.log()
 
   // Prompt the user to select a template
-  await chooseTemplate(projDir, args)
+  const templateName = await chooseTemplate(projDir, args)
+  console.log()
 
   // Prompt the user to select an mdl file
   const mdlPath = await chooseMdlFile(projDir)
-  // TODO
-  console.log(mdlPath)
 
-  // TODO: Prompt the user to choose input/output vars (if default template chosen)
+  // Update the `sde.config.js` file to use the chosen mdl file
+  await updateSdeConfig(projDir, mdlPath)
+  console.log()
+
+  // If the user chose the default template, offer to set up CSV files
+  if (templateName === 'template-default' && !args.dryRun) {
+    await chooseGenConfig(projDir, mdlPath)
+    console.log()
+  }
 
   // Prompt the user to install Emscripten SDK
   await chooseInstallEmsdk(projDir, args)
+  console.log()
 
   // Prompt the user to install dependencies
   await chooseInstallDeps(projDir, args, pkgManager)
+  console.log()
 
   // Prompt the user to initialize a git repo
   await chooseGitInit(projDir, args)
-
   console.log()
+
   ora({ text: green('Setup complete!') }).succeed()
 
   console.log(`\n${bgCyan(black(' Next steps '))}\n`)

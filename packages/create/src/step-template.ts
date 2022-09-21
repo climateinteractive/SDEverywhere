@@ -25,7 +25,7 @@ const TEMPLATES = [
   }
 ]
 
-export async function chooseTemplate(projDir: string, args: Arguments): Promise<void> {
+export async function chooseTemplate(projDir: string, args: Arguments): Promise<string> {
   // Prompt the user
   const options = await prompts(
     [
@@ -58,6 +58,8 @@ export async function chooseTemplate(projDir: string, args: Arguments): Promise<
   await runDegit(templateTarget, hash, projDir, args, templateSpinner)
   templateSpinner.text = green('Template copied!')
   templateSpinner.succeed()
+
+  return options.template
 }
 
 // XXX: This is mostly copied from Astro's create package:

@@ -65,10 +65,7 @@ export async function chooseMdlFile(projDir: string): Promise<string> {
     mdlFile = options.mdlFile
   }
 
-  ora({
-    color: 'green',
-    text: green(`Using "${bold(mdlFile)}" as the model for the project.`)
-  }).succeed()
+  ora(green(`Using "${bold(mdlFile)}" as the model for the project.`)).succeed()
 
   return mdlFile
 }

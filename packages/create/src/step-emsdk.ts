@@ -4,7 +4,7 @@ import { existsSync, rmSync } from 'fs'
 import { join as joinPath, resolve as resolvePath } from 'path'
 
 import { execa } from 'execa'
-import { bold, dim, green, red } from 'kleur/colors'
+import { bold, cyan, dim, green, red } from 'kleur/colors'
 import ora from 'ora'
 import prompts from 'prompts'
 import type { Arguments } from 'yargs-parser'
@@ -61,7 +61,9 @@ export async function chooseInstallEmsdk(projDir: string, args: Arguments): Prom
     return
   } else if (installResponse.install === 'skip') {
     ora().info(
-      dim('No problem! Be sure to install the Emscripten SDK and configure it in `sde.config.js` after setup.')
+      dim(
+        `No problem! Be sure to install the Emscripten SDK and configure it in "${cyan('sde.config.js')}" after setup.`
+      )
     )
     return
   }
