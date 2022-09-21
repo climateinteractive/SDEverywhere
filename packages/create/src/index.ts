@@ -1,7 +1,9 @@
 // Copyright (c) 2022 Climate Interactive / New Venture Fund
 
-import { existsSync } from 'fs'
-import { relative, resolve as resolvePath } from 'path'
+import { existsSync, mkdtempSync, readdirSync } from 'fs'
+import { copy } from 'fs-extra'
+import { tmpdir } from 'os'
+import { relative, join as joinPath, resolve as resolvePath } from 'path'
 
 import degit from 'degit'
 import { execa, execaCommand } from 'execa'
@@ -111,23 +113,39 @@ async function chooseProjectDir(): Promise<string> {
 // It contains workarounds for degit issues that may or may not be relevant for SDE,
 // so this should be re-evaluated later.
 async function runDegit(templateTarget: string, hash: string, dstDir: string, spinner: Ora): Promise<void> {
+  // Enable verbose degit logging if the --verbose flag is used
+  const verbose = args.verbose
+
+  // Set up degit (we will be writing to a temporary directory, so force is safe)
   const emitter = degit(`${templateTarget}${hash}`, {
-    cache: false
-    // force: true
+    cache: false,
+    force: true,
+    verbose
   })
 
   try {
-    // emitter.on('info', info => {
-    //   logger.debug(info.message)
-    // })
-    await emitter.clone(dstDir)
+    if (verbose) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      emitter.on('info', (info: any) => {
+        console.log(info.message)
+      })
+    }
+
+    // Make degit write to a temporary directory
+    const tmpDir = mkdtempSync(joinPath(tmpdir(), 'sde-create-'))
+    await emitter.clone(tmpDir)
 
     // degit does not return an error when an invalid template is provided, as such we
     // need to handle this manually
-    // if (isEmpty(cwd)) {
-    //   fs.rmdirSync(cwd)
-    //   throw new Error(`Error: The provided template (${cyan(options.template)}) does not exist`)
-    // }
+    if (!existsSync(tmpDir) || readdirSync(tmpDir).length === 0) {
+      throw new Error('The requested template failed to download')
+    }
+
+    // Copy files to destination without overwriting
+    await copy(tmpDir, dstDir, {
+      overwrite: false,
+      errorOnExist: false
+    })
   } catch (e) {
     spinner.fail()
 
@@ -213,7 +231,7 @@ async function chooseTemplate(projDir: string): Promise<void> {
 
   // Handle response
   const templateSpinner = ora('Copying project files...').start()
-  const templateTarget = `climateinteractive/sdeverywhere/examples/${options.template}`
+  const templateTarget = `climateinteractive/SDEverywhere/examples/${options.template}`
   // TODO: Fix this before branch is merged
   const hash = '#chris/228-create-package'
 

@@ -91,47 +91,6 @@ importers:
       '@sdeverywhere/check-core': link:../../packages/check-core
       assert-never: 1.2.1
 
-  examples/sir:
-    specifiers:
-      '@sdeverywhere/cli': ^0.7.0
-      '@sdeverywhere/plugin-check': ^0.1.0
-      '@sdeverywhere/plugin-config': ^0.1.0
-      '@sdeverywhere/plugin-vite': ^0.1.1
-      '@sdeverywhere/plugin-wasm': ^0.1.0
-      '@sdeverywhere/plugin-worker': ^0.1.0
-    dependencies:
-      '@sdeverywhere/cli': link:../../packages/cli
-      '@sdeverywhere/plugin-check': link:../../packages/plugin-check
-      '@sdeverywhere/plugin-config': link:../../packages/plugin-config
-      '@sdeverywhere/plugin-vite': link:../../packages/plugin-vite
-      '@sdeverywhere/plugin-wasm': link:../../packages/plugin-wasm
-      '@sdeverywhere/plugin-worker': link:../../packages/plugin-worker
-
-  examples/sir/packages/sir-app:
-    specifiers:
-      '@types/chart.js': ^2.9.34
-      bootstrap-slider: 10.6.2
-      chart.js: ^2.9.4
-      jquery: ^3.5.1
-      sir-core: ^1.0.0
-      vite: ^2.9.12
-    dependencies:
-      bootstrap-slider: 10.6.2
-      chart.js: 2.9.4
-      jquery: 3.6.1
-      sir-core: link:../sir-core
-    devDependencies:
-      '@types/chart.js': 2.9.37
-      vite: 2.9.12
-
-  examples/sir/packages/sir-core:
-    specifiers:
-      '@sdeverywhere/runtime': ^0.1.0
-      '@sdeverywhere/runtime-async': ^0.1.0
-    dependencies:
-      '@sdeverywhere/runtime': link:../../../../packages/runtime
-      '@sdeverywhere/runtime-async': link:../../../../packages/runtime-async
-
   packages/build:
     specifiers:
       '@types/cross-spawn': ^6.0.2
@@ -249,12 +208,14 @@ importers:
   packages/create:
     specifiers:
       '@types/degit': ^2.8.3
+      '@types/fs-extra': ^9.0.13
       '@types/node': ^16.11.7
       '@types/prompts': ^2.0.14
       '@types/which-pm-runs': ^1.0.0
       '@types/yargs-parser': ^21.0.0
       degit: ^2.8.4
       execa: ^6.1.0
+      fs-extra: ^10.1.0
       kleur: ^4.1.5
       ora: ^6.1.2
       prompts: ^2.4.2
@@ -263,6 +224,7 @@ importers:
     dependencies:
       degit: 2.8.4
       execa: 6.1.0
+      fs-extra: 10.1.0
       kleur: 4.1.5
       ora: 6.1.2
       prompts: 2.4.2
@@ -270,6 +232,7 @@ importers:
       yargs-parser: 21.1.1
     devDependencies:
       '@types/degit': 2.8.3
+      '@types/fs-extra': 9.0.13
       '@types/node': 16.11.40
       '@types/prompts': 2.0.14
       '@types/which-pm-runs': 1.0.0
@@ -639,6 +602,12 @@ packages:
     resolution: {integrity: sha512-QJ1znjr9CDax2L17rgBnDOfNHsC1XtVAMswu+lRWvWb+kANhHA0slUNSSBsG8FVNvM4I4yXlN9doJRot3A2hkQ==}
     dev: true
 
+  /@types/fs-extra/9.0.13:
+    resolution: {integrity: sha512-nEnwB++1u5lVDM2UI4c1+5R+FYaKfaAzS4OococimjVm3nQw3TuzH5UNsocrcTBbhnerblyHj4A49qXbIiZdpA==}
+    dependencies:
+      '@types/node': 17.0.42
+    dev: true
+
   /@types/json-schema/7.0.11:
     resolution: {integrity: sha512-wOuvG1SN4Us4rez+tylwwwCV1psiNVOkJeM3AUWUNWg/jDQY2+HE/444y5gc+jBmRqASOm2Oeh5c1axHobwRKQ==}
     dev: true
@@ -976,10 +945,6 @@ packages:
       buffer: 6.0.3
       inherits: 2.0.4
       readable-stream: 3.6.0
-    dev: false
-
-  /bootstrap-slider/10.6.2:
-    resolution: {integrity: sha512-8JTPZB9QVOdrGzYF3YgC3YW6ssfPeBvBwZnXffiZ7YH/zz1D0EKlZvmQsm/w3N0XjVNYQEoQ0ax+jHrErV4K1Q==}
     dev: false
 
   /brace-expansion/1.1.11:
@@ -1892,6 +1857,15 @@ packages:
     engines: {node: '>=0.8'}
     dev: false
 
+  /fs-extra/10.1.0:
+    resolution: {integrity: sha512-oRXApq54ETRj4eMiFzGnHWGy+zo5raudjuxN0b8H7s/RU2oW0Wvsx9O0ACRN/kRq9E8Vu/ReskGB5o3ji+FzHQ==}
+    engines: {node: '>=12'}
+    dependencies:
+      graceful-fs: 4.2.10
+      jsonfile: 6.1.0
+      universalify: 2.0.0
+    dev: false
+
   /fs.realpath/1.0.0:
     resolution: {integrity: sha512-OO0pH2lK6a0hZnAdau5ItzHPI6pUlvI7jMVnxUQRtw4owF2wk8lOSabtGDCTP4Ggrg2MbGnWO9X8K1t4+fGMDw==}
 
@@ -2320,10 +2294,6 @@ packages:
     engines: {node: '>=10'}
     dev: true
 
-  /jquery/3.6.1:
-    resolution: {integrity: sha512-opJeO4nCucVnsjiXOE+/PcCgYw9Gwpvs/a6B1LL/lQhwWwpbVEVYDZ1FokFr8PRc7ghYlrFPuyHuiiDNTQxmcw==}
-    dev: false
-
   /js-stringify/1.0.2:
     resolution: {integrity: sha512-rtS5ATOo2Q5k1G+DADISilDA6lv79zIiwFd6CcjuIxGKLFm5C+RLImRscVap9k55i+MOZwgliw+NejvkLuGD5g==}
     dev: true
@@ -2362,6 +2332,14 @@ packages:
   /jsonc-parser/3.0.0:
     resolution: {integrity: sha512-fQzRfAbIBnR0IQvftw9FJveWiHp72Fg20giDrHz6TdfB12UH/uue0D3hm57UB5KgAVuniLMCaS8P1IMj9NR7cA==}
     dev: true
+
+  /jsonfile/6.1.0:
+    resolution: {integrity: sha512-5dgndWOriYSm5cnYaJNhalLNDKOqFwyDB/rr1E9ZsGciGvKPs8R2xYGCacuf3z6K1YKDz182fd+fY3cn3pMqXQ==}
+    dependencies:
+      universalify: 2.0.0
+    optionalDependencies:
+      graceful-fs: 4.2.10
+    dev: false
 
   /jstransformer/1.0.0:
     resolution: {integrity: sha1-7Yvwkh4vPx7U1cGkT2hwntJHIsM=}
@@ -3807,6 +3785,11 @@ packages:
       has-symbols: 1.0.3
       which-boxed-primitive: 1.0.2
     dev: true
+
+  /universalify/2.0.0:
+    resolution: {integrity: sha512-hAZsKq7Yy11Zu1DE0OzWjw7nnLZmJZYTDZZyEFHZdUhV8FkH5MCfoU1XMaxXovpyW5nq5scPqq0ZDP9Zyl04oQ==}
+    engines: {node: '>= 10.0.0'}
+    dev: false
 
   /uri-js/4.4.1:
     resolution: {integrity: sha512-7rKUyy33Q1yc98pQ1DAmLtwX109F7TIfWlW1Ydo8Wl1ii1SeHieeh0HHfPeL2fMXK6z0s8ecKs9frCuLJvndBg==}
