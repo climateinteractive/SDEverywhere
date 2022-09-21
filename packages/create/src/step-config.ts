@@ -56,12 +56,67 @@ export async function chooseGenConfig(projDir: string, mdlPath: string): Promise
     return
   }
 
+  // Extract `INITIAL TIME` and `FINAL TIME` values and remove special control variables from the list
+  let initialTime: number
+  let finalTime: number
+  const validVars: MdlVariable[] = []
+  for (const v of mdlVars) {
+    const varName = v.name.toLowerCase()
+    let skip = false
+    switch (varName) {
+      case 'final time':
+        skip = true
+        if (v.kind === 'const') {
+          finalTime = v.value
+        }
+        break
+      case 'initial time':
+        skip = true
+        if (v.kind === 'const') {
+          initialTime = v.value
+        }
+        break
+      case 'saveper':
+      case 'time':
+      case 'time step':
+        skip = true
+        break
+      default:
+        break
+    }
+    if (!skip) {
+      validVars.push(v)
+    }
+  }
+
+  // Set the values in `model.csv`
+  if (initialTime === undefined) {
+    initialTime = 0
+  }
+  if (finalTime === undefined) {
+    finalTime = 100
+  }
+
+  // TODO: Auto-detect dat files that are referenced by the mdl and include them here
+  const datFiles: string[] = []
+  const datPart = datFiles.join(';')
+
+  // Preserve the `model.csv` header but drop other existing content (if any)
+  const modelCsvFile = joinPath(projDir, 'config', 'model.csv')
+  const origModelCsvContent = await readFile(modelCsvFile, 'utf8')
+  const modelCsvHeader = origModelCsvContent.split('\n')[0]
+
+  // Add line and write out updated `model.csv`
+  const modelCsvLine = `${initialTime},${finalTime},${initialTime},${finalTime},${datPart}`
+  const newModelCsvContent = `${modelCsvHeader}\n${modelCsvLine}\n`
+  await writeFile(modelCsvFile, newModelCsvContent)
+
   // See if the user wants to generate graph config
-  await chooseGenGraphConfig(projDir, mdlVars)
+  await chooseGenGraphConfig(projDir, validVars)
   console.log()
 
   // See if the user wants to generate slider config
-  await chooseGenSliderConfig(projDir, mdlVars)
+  await chooseGenSliderConfig(projDir, validVars)
 }
 
 async function chooseGenGraphConfig(projDir: string, mdlVars: MdlVariable[]): Promise<void> {
@@ -337,19 +392,6 @@ async function readModelVars(projDir: string, mdlPath: string): Promise<MdlVaria
   // Create a simplified array of variables
   const mdlVars: MdlVariable[] = []
   for (const varObj of varObjs) {
-    // Skip special control variables
-    const varName = varObj.modelLHS.toLowerCase()
-    switch (varName) {
-      case 'final time':
-      case 'initial time':
-      case 'saveper':
-      case 'time':
-      case 'time step':
-        continue
-      default:
-        break
-    }
-
     // Only include certain variables for now
     // TODO: Include "data" vars
     switch (varObj.varType) {
