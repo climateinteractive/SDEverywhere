@@ -1,7 +1,7 @@
 // Copyright (c) 2022 Climate Interactive / New Venture Fund
 
 import { execa } from 'execa'
-import { bold, dim, green, reset } from 'kleur/colors'
+import { bold, cyan, dim, green, reset, yellow } from 'kleur/colors'
 import ora from 'ora'
 import prompts from 'prompts'
 import type { Arguments } from 'yargs-parser'
@@ -32,15 +32,28 @@ export async function chooseInstallDeps(projDir: string, args: Arguments, pkgMan
     const installExec = execa(pkgManager, ['install'], { cwd: projDir })
     const installingPackagesMsg = 'Installing packages...'
     const installSpinner = ora(installingPackagesMsg).start()
-    await new Promise<void>((resolve, reject) => {
-      installExec.stdout?.on('data', function (data) {
-        installSpinner.text = `${installingPackagesMsg}\n${bold(`[${pkgManager}]`)} ${data}`
+    try {
+      await new Promise<void>((resolve, reject) => {
+        installExec.stdout?.on('data', function (data) {
+          installSpinner.text = `${installingPackagesMsg}\n${bold(`[${pkgManager}]`)} ${data}`
+        })
+        installExec.stderr?.on('data', function (data) {
+          installSpinner.text = `${installingPackagesMsg}\n${bold(`[${pkgManager}]`)} ${data}`
+        })
+        installExec.on('error', error => reject(error))
+        installExec.on('exit', code => reject(`Install failed (code=${code})`))
+        installExec.on('close', () => resolve())
       })
-      installExec.on('error', error => reject(error))
-      installExec.on('close', () => resolve())
-    })
-    installSpinner.text = green('Packages installed!')
-    installSpinner.succeed()
+      installSpinner.text = green('Packages installed!')
+      installSpinner.succeed()
+    } catch (e) {
+      installSpinner.text = yellow(
+        `There was an error installing packages. Try running ${cyan(
+          `${pkgManager} install`
+        )} in your project directory later.`
+      )
+      installSpinner.warn()
+    }
   } else {
     ora().info(dim(`No problem! Remember to install dependencies after setup.`))
   }
