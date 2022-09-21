@@ -1,6 +1,6 @@
 // Copyright (c) 2022 Climate Interactive / New Venture Fund
 
-import { existsSync, mkdtempSync, readdirSync } from 'fs'
+import { existsSync, mkdtempSync, readdirSync, rmSync } from 'fs'
 import { readdir } from 'fs/promises'
 import { copy } from 'fs-extra'
 import { tmpdir } from 'os'
@@ -15,6 +15,8 @@ import type { Choice } from 'prompts'
 import prompts from 'prompts'
 import detectPackageManager from 'which-pm-runs'
 import yargs from 'yargs-parser'
+
+import { installEmscripten } from './install-emsdk'
 
 export const TEMPLATES = [
   {
@@ -93,6 +95,9 @@ async function chooseProjectDir(): Promise<string> {
       },
       { onCancel: () => ora().info(dim('Operation cancelled.')) }
     )
+    if (!projDir) {
+      process.exit(1)
+    }
     projDir = dirResponse.directory
     if (projDir === '<current directory>') {
       projDir = process.cwd()
@@ -146,6 +151,9 @@ async function runDegit(templateTarget: string, hash: string, dstDir: string, sp
       overwrite: false,
       errorOnExist: false
     })
+
+    // Remove the temporary directory
+    rmSync(tmpDir, { recursive: true, force: true })
   } catch (e) {
     spinner.fail()
 
@@ -307,7 +315,78 @@ async function chooseMdlFile(projDir: string): Promise<string> {
   return mdlFile
 }
 
-async function chooseInstall(projDir: string): Promise<void> {
+async function chooseInstallEmsdk(projDir: string): Promise<void> {
+  // TODO: Use findUp and skip this step if emsdk directory already exists
+
+  // Prompt the user
+  const underParentDir = resolvePath(projDir, '..', 'emsdk')
+  const underProjDir = joinPath(projDir, 'emsdk')
+  const installResponse = await prompts(
+    {
+      type: 'select',
+      name: 'install',
+      message: `Would you like to install the Emscripten SDK?`,
+      choices: [
+        // ${reset(dim('(recommended)'))
+        {
+          title: `Install under parent directory (${bold(underParentDir)})`,
+          description: 'This is recommended so that it can be shared by multiple projects',
+          value: 'parent'
+        },
+        {
+          title: `Install under project directory (${bold(underProjDir)})"`,
+          description: 'This is useful for keeping everything under a single project directory',
+          value: 'project'
+        },
+        {
+          title: `Don't install`,
+          description: `It's OK, you can install it later`,
+          value: 'skip'
+        }
+      ]
+    },
+    {
+      onCancel: () => {
+        ora().info(
+          dim(
+            'Operation cancelled. Your project folder has been created, but the Emscripten SDK and other dependencies have not been installed.'
+          )
+        )
+        process.exit(1)
+      }
+    }
+  )
+
+  // Handle response
+  if (args.dryRun) {
+    ora().info(dim(`--dry-run enabled, skipping.`))
+    return
+  } else if (installResponse.install === 'skip') {
+    ora().info(
+      dim('No problem! Be sure to install the Emscripten SDK and configure it in `sde.config.js` after setup.')
+    )
+    return
+  }
+
+  const installDir = installResponse.install === 'parent' ? underParentDir : underProjDir
+  try {
+    // TODO: Use spinner here
+    await installEmscripten(installDir)
+  } catch (e) {
+    ora({
+      color: 'red',
+      text: red(`Failed to install Emscripten SDK: ${e.message}`)
+    }).fail()
+    process.exit(1)
+  }
+
+  ora({
+    color: 'green',
+    text: green(`Installed the Emscripten SDK in "${bold(installDir)}"`)
+  }).succeed()
+}
+
+async function chooseInstallDeps(projDir: string): Promise<void> {
   // Prompt the user
   const installResponse = await prompts(
     {
@@ -367,7 +446,7 @@ async function chooseGitInit(projDir: string): Promise<void> {
     ora().info(dim(`--dry-run enabled, skipping.`))
   } else if (gitResponse.git) {
     await execaCommand('git init', { cwd: projDir })
-    ora().succeed('Git repository created!')
+    ora().succeed(green('Git repository created!'))
   } else {
     ora().info(dim(`No problem! You can come back and run ${cyan(`git init`)} later.`))
   }
@@ -381,24 +460,28 @@ export async function main(): Promise<void> {
   // Prompt the user to select a project directory
   const projDir = await chooseProjectDir()
 
-  // Prompt the user to select a template
-  await chooseTemplate(projDir)
+  if (args.TODO) {
+    // Prompt the user to select a template
+    await chooseTemplate(projDir)
 
-  // Prompt the user to select an mdl file
-  const mdlPath = await chooseMdlFile(projDir)
-  // TODO
-  console.log(mdlPath)
+    // Prompt the user to select an mdl file
+    const mdlPath = await chooseMdlFile(projDir)
+    // TODO
+    console.log(mdlPath)
+  }
 
   // TODO: Prompt the user to choose input/output vars (if default template chosen)
 
-  // TODO: Prompt the user to install Emscripten SDK
+  // Prompt the user to install Emscripten SDK
+  await chooseInstallEmsdk(projDir)
 
   // Prompt the user to install dependencies
-  await chooseInstall(projDir)
+  await chooseInstallDeps(projDir)
 
   // Prompt the user to initialize a git repo
   await chooseGitInit(projDir)
 
+  console.log()
   ora({ text: green('Setup complete!') }).succeed()
 
   console.log(`\n${bgCyan(black(' Next steps '))}\n`)
