@@ -51,10 +51,13 @@ export async function chooseTemplate(projDir: string, args: Arguments, pkgManage
     return
   }
 
+  // Allow branch name or commit hash to be overridden on command line
+  const defaultRev = 'main'
+  const commit = args.commit || defaultRev
+
   // Copy the template files to the project directory
   const templateTarget = `climateinteractive/SDEverywhere/examples/${options.template}`
-  // TODO: Fix this before branch is merged
-  const hash = '#chris/228-create-package'
+  const hash = `#${commit}`
   const templateSpinner = ora('Copying project files...').start()
   await runDegit(templateTarget, hash, projDir, args, templateSpinner)
   templateSpinner.text = green('Template copied!')
