@@ -1,0 +1,6 @@
+// This contains the TypeScript configuration for production builds.
+{
+  "extends": "./tsconfig-base.json",
+  "include": ["src/**/*"],
+  "exclude": ["src/**/_mocks/**/*", "**/*.spec.ts"]
+}

@@ -1,6 +1,5 @@
 packages:
   - packages/*
   - examples/*
-  # TODO: This next line can be removed once we remove sir/packages
-  - examples/sir/packages/*
+  - '!examples/template-*'
   - tests
