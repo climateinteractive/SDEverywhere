@@ -73,17 +73,11 @@ export async function chooseInstallEmsdk(projDir: string, args: Arguments): Prom
     // TODO: Use spinner here
     await installEmscripten(installDir)
   } catch (e) {
-    ora({
-      color: 'red',
-      text: red(`Failed to install Emscripten SDK: ${e.message}`)
-    }).fail()
+    ora(red(`Failed to install Emscripten SDK: ${e.message}`)).fail()
     process.exit(0)
   }
 
-  ora({
-    color: 'green',
-    text: green(`Installed the Emscripten SDK in "${bold(installDir)}"`)
-  }).succeed()
+  ora(green(`Installed the Emscripten SDK in "${bold(installDir)}"`)).succeed()
 }
 
 /**

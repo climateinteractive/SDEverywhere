@@ -3,7 +3,7 @@
 import { existsSync } from 'fs'
 import { resolve as resolvePath } from 'path'
 
-import { bold, dim, green } from 'kleur/colors'
+import { bold, dim, green, red } from 'kleur/colors'
 import ora from 'ora'
 import prompts from 'prompts'
 import type { Arguments } from 'yargs-parser'
@@ -20,17 +20,11 @@ export async function chooseProjectDir(args: Arguments): Promise<string> {
   }
 
   const showValidDirMsg = (dir: string) => {
-    ora({
-      color: 'green',
-      text: green(`Using "${bold(dir)}" as the project directory.`)
-    }).succeed()
+    ora(green(`Using "${bold(dir)}" as the project directory.`)).succeed()
   }
 
   const showInvalidDirMsg = (dir: string) => {
-    ora({
-      color: 'red',
-      text: `"${bold(dir)}" contains existing 'package.json' and/or 'packages' directory, stopping.`
-    }).fail()
+    ora(red(`"${bold(dir)}" contains existing 'package.json' and/or 'packages' directory, stopping.`)).fail()
   }
 
   // See if project directory is provided on command line
