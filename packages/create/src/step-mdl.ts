@@ -1,12 +1,32 @@
 // Copyright (c) 2022 Climate Interactive / New Venture Fund
 
-import { readdir } from 'fs/promises'
-import { relative, resolve as resolvePath } from 'path'
+import { readdir, writeFile } from 'fs/promises'
+import { join as joinPath, relative, resolve as resolvePath } from 'path'
 
-import { bold, dim, green } from 'kleur/colors'
+import { bold, cyan, dim, green, yellow } from 'kleur/colors'
 import ora from 'ora'
 import type { Choice } from 'prompts'
 import prompts from 'prompts'
+
+const sampleMdlContent = `\
+{UTF-8}
+
+X = TIME
+  ~~|
+
+Y = 0
+  ~ [-10,10,0.1]
+  ~
+  |
+
+Z = X + Y
+  ~~|
+
+INITIAL TIME = 2000 ~~|
+FINAL TIME = 2100 ~~|
+TIME STEP = 1 ~~|
+SAVEPER = TIME STEP ~~|
+`
 
 export async function chooseMdlFile(projDir: string): Promise<string> {
   // Find all `.mdl` files in the project directory
@@ -32,13 +52,17 @@ export async function chooseMdlFile(projDir: string): Promise<string> {
 
   let mdlFile: string
   if (mdlFiles.length === 0) {
-    // No mdl files found; print error message and exit
-    // TODO: Offer to add a basic mdl to get the user started
-    ora({
-      color: 'red',
-      text: `No mdl files were found in "${projDir}". Add your mdl file to that directory and try again.`
-    }).fail()
-    process.exit(0)
+    // No mdl files found; write a sample mdl to get the user started
+    const sampleMdlFile = joinPath(projDir, 'sample.mdl')
+    await writeFile(sampleMdlFile, sampleMdlContent)
+    ora(
+      yellow(
+        `No mdl files were found in "${projDir}". A "${cyan(
+          'sample.mdl'
+        )}" file has been added to the project to get you started.`
+      )
+    ).warn()
+    mdlFile = 'sample.mdl'
   } else if (mdlFiles.length === 1) {
     // Only one mdl file
     ora().succeed(`Found "${mdlFiles[0]}", will configure the project to use that mdl file.`)
