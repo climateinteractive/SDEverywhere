@@ -8,9 +8,11 @@
     "packages/check-core": {},
     "packages/check-ui-shell": {},
     "packages/plugin-check": {},
+    "packages/plugin-config": { "release-as": "0.1.0" },
     "packages/plugin-vite": {},
     "packages/plugin-wasm": {},
-    "packages/plugin-worker": {}
+    "packages/plugin-worker": {},
+    "packages/create": { "release-as": "0.1.0" }
   },
   "plugins": ["node-workspace"],
   "bump-minor-pre-major": true,
