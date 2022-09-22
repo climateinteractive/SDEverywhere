@@ -1,5 +1,11 @@
 # Changelog
 
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/build bumped from ^0.1.1 to ^0.2.0
+
 ## [0.7.1](https://github.com/climateinteractive/SDEverywhere/compare/cli-v0.7.0...cli-v0.7.1) (2022-08-06)
 
 

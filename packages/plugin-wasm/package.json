@@ -1,6 +1,6 @@
 {
   "name": "@sdeverywhere/plugin-wasm",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "files": [
     "dist/**"
   ],
@@ -29,7 +29,7 @@
     "ci:build": "run-s clean lint prettier:check test:ci type-check build"
   },
   "dependencies": {
-    "@sdeverywhere/build": "^0.1.1",
+    "@sdeverywhere/build": "^0.2.0",
     "find-up": "^6.3.0"
   },
   "devDependencies": {
