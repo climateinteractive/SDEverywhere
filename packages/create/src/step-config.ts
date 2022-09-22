@@ -1,7 +1,8 @@
 // Copyright (c) 2022 Climate Interactive / New Venture Fund
 
+import { existsSync } from 'fs'
 import { mkdir, readFile, writeFile } from 'fs/promises'
-import { dirname, join as joinPath, parse as parsePath, resolve as resolvePath } from 'path'
+import { dirname, join as joinPath, parse as parsePath, relative, resolve as resolvePath } from 'path'
 
 import { bold, cyan, dim, green, reset, yellow } from 'kleur/colors'
 import ora from 'ora'
@@ -29,6 +30,23 @@ interface MdlLevelVariable {
 
 type MdlVariable = MdlConstVariable | MdlAuxVariable | MdlLevelVariable
 
+const sampleCheckContent = `\
+# yaml-language-server: $schema=SCHEMA_PATH
+
+# NOTE: This is just a simple check to get you started.  Replace "Some output" with
+# the name of some variable you'd like to test.  Additional tests can be developed
+# in the "playground" (beta) inside the model-check report.
+- describe: Some output
+  tests:
+    - it: should be > 0 for all input scenarios
+      scenarios:
+        - preset: matrix
+      datasets:
+        - name: Some output
+      predicates:
+        - gt: 0
+`
+
 export async function updateSdeConfig(projDir: string, mdlPath: string): Promise<void> {
   // Read the `sde.config.js` file from the template
   const configPath = joinPath(projDir, 'sde.config.js')
@@ -39,6 +57,33 @@ export async function updateSdeConfig(projDir: string, mdlPath: string): Promise
 
   // Write the updated file
   await writeFile(configPath, configText)
+}
+
+export async function generateCheckYaml(projDir: string, mdlPath: string): Promise<void> {
+  // Generate a sample `{mdl}.check.yaml` file if one doesn't already exist
+  // TODO: Make this optional (ask user first)?
+  const checkYamlFile = mdlPath.replace('.mdl', '.check.yaml')
+  const checkYamlPath = joinPath(projDir, checkYamlFile)
+  if (!existsSync(checkYamlPath)) {
+    // Get relative path from yaml file parent dir to project dir
+    let relProjPath = relative(dirname(checkYamlPath), projDir)
+    if (relProjPath.length === 0) {
+      relProjPath = './'
+    }
+
+    // TODO: This path is normally different depending on whether using npm/yarn or
+    // pnpm. For npm/yarn, `check-core` is hoisted under top-level `node_modules`,
+    // but for pnpm, it is nested under `node_modules/.pnpm`.  As an ugly workaround
+    // the templates declare `check-core` as a direct dependency even though it is
+    // not really needed (a transitive dependency via `plugin-check` would normally
+    // suffice).  This allows us to use the same path here that works for all
+    // three package managers.
+    const nodeModulesPart = joinPath(relProjPath, 'node_modules')
+    const checkCorePart = '@sdeverywhere/check-core/schema/check.schema.json'
+    const schemaPath = `${nodeModulesPart}/${checkCorePart}`
+    const checkContent = sampleCheckContent.replace('SCHEMA_PATH', schemaPath)
+    await writeFile(checkYamlPath, checkContent)
+  }
 }
 
 export async function chooseGenConfig(projDir: string, mdlPath: string): Promise<void> {

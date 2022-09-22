@@ -13,6 +13,7 @@
     "packages/app"
   ],
   "dependencies": {
+    "@sdeverywhere/check-core": "^0.1.0",
     "@sdeverywhere/cli": "^0.7.0",
     "@sdeverywhere/plugin-check": "^0.1.0",
     "@sdeverywhere/plugin-config": "^0.1.0",

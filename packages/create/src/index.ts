@@ -8,7 +8,7 @@ import prompts from 'prompts'
 import detectPackageManager from 'which-pm-runs'
 import yargs from 'yargs-parser'
 
-import { chooseGenConfig, updateSdeConfig } from './step-config'
+import { chooseGenConfig, generateCheckYaml, updateSdeConfig } from './step-config'
 import { chooseInstallDeps } from './step-deps'
 import { chooseProjectDir } from './step-directory'
 import { chooseInstallEmsdk } from './step-emsdk'
@@ -39,8 +39,10 @@ export async function main(): Promise<void> {
   // Prompt the user to select an mdl file
   const mdlPath = await chooseMdlFile(projDir)
 
-  // Update the `sde.config.js` file to use the chosen mdl file
+  // Update the `sde.config.js` file to use the chosen mdl file and
+  // generate a sample `.check.yaml` file
   await updateSdeConfig(projDir, mdlPath)
+  await generateCheckYaml(projDir, mdlPath)
   console.log()
 
   // If the user chose the default template, offer to set up CSV files
