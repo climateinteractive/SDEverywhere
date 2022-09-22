@@ -1,6 +1,7 @@
 // Copyright (c) 2022 Climate Interactive / New Venture Fund
 
 import { existsSync, mkdtempSync, readdirSync, rmSync } from 'fs'
+import { writeFile } from 'fs/promises'
 import { copy } from 'fs-extra'
 import { tmpdir } from 'os'
 import { join as joinPath } from 'path'
@@ -25,7 +26,7 @@ const TEMPLATES = [
   }
 ]
 
-export async function chooseTemplate(projDir: string, args: Arguments): Promise<string> {
+export async function chooseTemplate(projDir: string, args: Arguments, pkgManager: string): Promise<string> {
   // Prompt the user
   const options = await prompts(
     [
@@ -58,6 +59,15 @@ export async function chooseTemplate(projDir: string, args: Arguments): Promise<
   await runDegit(templateTarget, hash, projDir, args, templateSpinner)
   templateSpinner.text = green('Template copied!')
   templateSpinner.succeed()
+
+  if (options.template === 'template-default' && pkgManager === 'pnpm') {
+    // pnpm doesn't use the "workspaces" config from `package.json` (like npm and yarn use),
+    // so in the case of pnpm, write a `pnpm-workspace.yaml` file so that the default
+    // template monorepo layout is set up correctly
+    const workspaceFile = joinPath(projDir, 'pnpm-workspace.yaml')
+    const workspaceContent = `packages:\n  - packages/*\n`
+    await writeFile(workspaceFile, workspaceContent)
+  }
 
   return options.template
 }

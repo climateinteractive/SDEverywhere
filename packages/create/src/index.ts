@@ -33,7 +33,7 @@ export async function main(): Promise<void> {
   console.log()
 
   // Prompt the user to select a template
-  const templateName = await chooseTemplate(projDir, args)
+  const templateName = await chooseTemplate(projDir, args, pkgManager)
   console.log()
 
   // Prompt the user to select an mdl file
@@ -61,7 +61,7 @@ export async function main(): Promise<void> {
   await chooseGitInit(projDir, args)
   console.log()
 
-  ora({ text: green('Setup complete!') }).succeed()
+  ora(green('Setup complete!')).succeed()
 
   console.log(`\n${bgCyan(black(' Next steps '))}\n`)
 
