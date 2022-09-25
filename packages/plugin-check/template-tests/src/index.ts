@@ -4,11 +4,8 @@ import type { Bundle, CompareOptions, ConfigOptions, DatasetKey } from '@sdevery
 
 import { DatasetManager, ScenarioManager } from '@sdeverywhere/check-core'
 
-// Load the yaml test files.  Note that we use `vite-plugin-glob` here
-// instead of Vite's built-in `import.meta.globEager` because the plugin
-// does a better job of handling HMR when the yaml files are outside of
-// the `template-report` app root directory.
-const yamlGlob = import.meta.importGlob(__YAML_PATH__, {
+// Load the yaml test files
+const yamlGlob = import.meta.glob(__YAML_PATH__, {
   eager: true,
   as: 'raw'
 })

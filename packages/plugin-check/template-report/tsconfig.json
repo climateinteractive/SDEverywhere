@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
-    "target": "es6",
+    // Use "esnext" for import.meta
+    "target": "esnext",
     // Use "es2020" for dynamic import
     "module": "es2020",
     // Emit additional JS to ease support for importing CommonJS modules
@@ -14,7 +15,6 @@
     "noImplicitAny": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    // "types": ["vite/client", "vite-plugin-glob/client"],
     "types": ["vite/client"],
     "skipLibCheck": true,
     // Use placeholders for path aliases that are configured in the Vite
