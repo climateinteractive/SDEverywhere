@@ -40,12 +40,14 @@ importers:
 
   examples/hello-world:
     specifiers:
+      '@sdeverywhere/build': ^0.2.0
       '@sdeverywhere/cli': ^0.7.0
       '@sdeverywhere/plugin-check': ^0.1.0
       '@sdeverywhere/plugin-wasm': ^0.1.0
       '@sdeverywhere/plugin-worker': ^0.1.0
       sirv-cli: ^2.0.2
     dependencies:
+      '@sdeverywhere/build': link:../../packages/build
       '@sdeverywhere/cli': link:../../packages/cli
       '@sdeverywhere/plugin-check': link:../../packages/plugin-check
       '@sdeverywhere/plugin-wasm': link:../../packages/plugin-wasm
@@ -246,7 +248,7 @@ importers:
     specifiers:
       '@rollup/plugin-node-resolve': ^13.3.0
       '@rollup/plugin-replace': ^2.4.1
-      '@sdeverywhere/build': ^0.2.0
+      '@sdeverywhere/build': workspace:*
       '@sdeverywhere/check-core': ^0.1.0
       '@sdeverywhere/check-ui-shell': ^0.1.1
       '@sdeverywhere/runtime': ^0.1.0
@@ -260,7 +262,6 @@ importers:
     dependencies:
       '@rollup/plugin-node-resolve': 13.3.0_rollup@2.76.0
       '@rollup/plugin-replace': 2.4.2_rollup@2.76.0
-      '@sdeverywhere/build': link:../build
       '@sdeverywhere/check-core': link:../check-core
       '@sdeverywhere/check-ui-shell': link:../check-ui-shell
       '@sdeverywhere/runtime': link:../runtime
@@ -271,11 +272,12 @@ importers:
       vite: 2.9.12
       vite-plugin-glob: 0.3.2
     devDependencies:
+      '@sdeverywhere/build': link:../build
       '@types/node': 16.11.40
 
   packages/plugin-config:
     specifiers:
-      '@sdeverywhere/build': ^0.2.0
+      '@sdeverywhere/build': workspace:*
       '@types/byline': ^4.2.33
       '@types/dedent': ^0.7.0
       '@types/marked': ^4.0.1
@@ -288,11 +290,11 @@ importers:
       sanitize-html: ^2.7.1
       temp: ^0.9.4
     dependencies:
-      '@sdeverywhere/build': link:../build
       byline: 5.0.0
       csv-parse: 4.16.3
       sanitize-html: 2.7.1
     devDependencies:
+      '@sdeverywhere/build': link:../build
       '@types/byline': 4.2.33
       '@types/dedent': 0.7.0
       '@types/marked': 4.0.6
@@ -304,27 +306,28 @@ importers:
 
   packages/plugin-vite:
     specifiers:
-      '@sdeverywhere/build': ^0.2.0
+      '@sdeverywhere/build': workspace:*
       vite: ^2.9.12
     dependencies:
-      '@sdeverywhere/build': link:../build
       vite: 2.9.12
+    devDependencies:
+      '@sdeverywhere/build': link:../build
 
   packages/plugin-wasm:
     specifiers:
-      '@sdeverywhere/build': ^0.2.0
+      '@sdeverywhere/build': workspace:*
       '@types/node': ^16.11.7
       find-up: ^6.3.0
     dependencies:
-      '@sdeverywhere/build': link:../build
       find-up: 6.3.0
     devDependencies:
+      '@sdeverywhere/build': link:../build
       '@types/node': 16.11.40
 
   packages/plugin-worker:
     specifiers:
       '@rollup/plugin-node-resolve': ^13.3.0
-      '@sdeverywhere/build': ^0.2.0
+      '@sdeverywhere/build': workspace:*
       '@sdeverywhere/runtime': ^0.1.0
       '@sdeverywhere/runtime-async': ^0.1.0
       '@types/node': ^16.11.7
@@ -332,12 +335,12 @@ importers:
       vite: 2.9.6
     dependencies:
       '@rollup/plugin-node-resolve': 13.3.0_rollup@2.76.0
-      '@sdeverywhere/build': link:../build
       '@sdeverywhere/runtime': link:../runtime
       '@sdeverywhere/runtime-async': link:../runtime-async
       rollup: 2.76.0
       vite: 2.9.6
     devDependencies:
+      '@sdeverywhere/build': link:../build
       '@types/node': 16.11.40
 
   packages/runtime:
