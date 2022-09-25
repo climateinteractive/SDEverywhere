@@ -31,7 +31,6 @@
   },
   "dependencies": {
     "@rollup/plugin-node-resolve": "^13.3.0",
-    "@sdeverywhere/build": "^0.2.0",
     "@sdeverywhere/runtime": "^0.1.0",
     "@sdeverywhere/runtime-async": "^0.1.0",
     "rollup": "^2.76.0",
@@ -46,7 +45,11 @@
       "it as a dependency here."
     ]
   },
+  "peerDependencies": {
+    "@sdeverywhere/build": "^0.2.0"
+  },
   "devDependencies": {
+    "@sdeverywhere/build": "workspace:*",
     "@types/node": "^16.11.7"
   },
   "author": "Climate Interactive",

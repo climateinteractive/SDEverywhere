@@ -29,10 +29,13 @@
     "ci:build": "run-s clean lint prettier:check test:ci type-check build"
   },
   "dependencies": {
-    "@sdeverywhere/build": "^0.2.0",
     "find-up": "^6.3.0"
   },
+  "peerDependencies": {
+    "@sdeverywhere/build": "^0.2.0"
+  },
   "devDependencies": {
+    "@sdeverywhere/build": "workspace:*",
     "@types/node": "^16.11.7"
   },
   "author": "Climate Interactive",

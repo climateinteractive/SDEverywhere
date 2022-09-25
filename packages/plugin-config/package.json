@@ -32,12 +32,15 @@
     "ci:build": "run-s clean lint prettier:check test:ci type-check build"
   },
   "dependencies": {
-    "@sdeverywhere/build": "^0.2.0",
     "byline": "^5.0.0",
     "csv-parse": "^4.15.4",
     "sanitize-html": "^2.7.1"
   },
+  "peerDependencies": {
+    "@sdeverywhere/build": "^0.2.0"
+  },
   "devDependencies": {
+    "@sdeverywhere/build": "workspace:*",
     "@types/byline": "^4.2.33",
     "@types/dedent": "^0.7.0",
     "@types/marked": "^4.0.1",

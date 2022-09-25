@@ -9,6 +9,7 @@
     "serve": "sirv ./sde-prep/check-report"
   },
   "dependencies": {
+    "@sdeverywhere/build": "^0.2.0",
     "@sdeverywhere/cli": "^0.7.0",
     "@sdeverywhere/plugin-check": "^0.1.0",
     "@sdeverywhere/plugin-wasm": "^0.1.0",
