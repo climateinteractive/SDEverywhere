@@ -255,7 +255,6 @@ importers:
   packages/plugin-check:
     specifiers:
       '@rollup/plugin-node-resolve': ^13.3.0
-      '@rollup/plugin-replace': ^2.4.1
       '@sdeverywhere/build': ^0.2.0
       '@sdeverywhere/check-core': ^0.1.0
       '@sdeverywhere/check-ui-shell': ^0.1.1
@@ -268,7 +267,6 @@ importers:
       vite: ^3.1.3
     dependencies:
       '@rollup/plugin-node-resolve': 13.3.0_rollup@2.76.0
-      '@rollup/plugin-replace': 2.4.2_rollup@2.76.0
       '@sdeverywhere/build': link:../build
       '@sdeverywhere/check-core': link:../check-core
       '@sdeverywhere/check-ui-shell': link:../check-ui-shell
@@ -521,19 +519,6 @@ packages:
       is-builtin-module: 3.1.0
       is-module: 1.0.0
       resolve: 1.22.0
-      rollup: 2.76.0
-    dev: false
-
-  /@rollup/plugin-replace/2.4.2_rollup@2.76.0:
-    resolution: {integrity: sha512-IGcu+cydlUMZ5En85jxHH4qj2hta/11BHq95iHEyb2sbgiN0eCdzvUcHw5gt9pBL5lTi4JDYJ1acCoMGpTvEZg==}
-    peerDependencies:
-      rollup: ^1.20.0 || ^2.0.0
-    peerDependenciesMeta:
-      rollup:
-        optional: true
-    dependencies:
-      '@rollup/pluginutils': 3.1.0_rollup@2.76.0
-      magic-string: 0.25.9
       rollup: 2.76.0
     dev: false
 
@@ -2489,6 +2474,7 @@ packages:
     resolution: {integrity: sha512-RmF0AsMzgt25qzqqLc1+MbHmhdx0ojF2Fvs4XnOqz2ZOBXzzkEwc/dJQZCYHAn7v1jbVOjAZfK8msRn4BxO4VQ==}
     dependencies:
       sourcemap-codec: 1.4.8
+    dev: true
 
   /magic-string/0.26.4:
     resolution: {integrity: sha512-e5uXtVJ22aEpK9u1+eQf0fSxHeqwyV19K+uGnlROCxUhzwRip9tBsaMViK/0vC3viyPd5Gtucp3UmEp/Q2cPTQ==}
@@ -3305,6 +3291,7 @@ packages:
 
   /sourcemap-codec/1.4.8:
     resolution: {integrity: sha512-9NykojV5Uih4lgo5So5dtw+f0JgJX30KCNI8gwhz2J9A15wD0Ml6tjHKwf6fTSa6fAdVBdZeNOs9eJ71qCk8vA==}
+    dev: true
 
   /spdx-correct/3.1.1:
     resolution: {integrity: sha512-cOYcUWwhCuHCXi49RhFRCyJEK3iPj1Ziz9DpViV3tbZOwXD49QzIN3MpOLJNxh2qwq2lJJZaKMVw9qNi4jTC0w==}

@@ -155,13 +155,6 @@ export function createViteConfigForReport(
       __CURRENT_NAME__: JSON.stringify(currentBundleName)
     },
 
-    plugins: [
-      // Use `vite-plugin-glob` instead of Vite's built-in `import.meta.globEager`
-      // because the plugin does a better job of handling HMR when the yaml files
-      // are outside of the `template-report` app root directory.
-      // globPlugin(),
-    ],
-
     build: {
       // Write output files to the configured directory (instead of the default `dist`);
       // note that this must be relative to the project `root`
