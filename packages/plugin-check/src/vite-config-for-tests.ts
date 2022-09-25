@@ -4,7 +4,6 @@ import { dirname, relative, resolve as resolvePath } from 'path'
 import { fileURLToPath } from 'url'
 
 import type { InlineConfig } from 'vite'
-import globPlugin from 'vite-plugin-glob'
 import replace from '@rollup/plugin-replace'
 
 const __filename = fileURLToPath(import.meta.url)
@@ -59,12 +58,7 @@ export function createViteConfigForTests(projDir: string, prepDir: string, mode:
           // Inject the glob pattern for matching check yaml files
           __YAML_PATH__: JSON.stringify(yamlPath)
         }
-      }),
-
-      // Use `vite-plugin-glob` instead of Vite's built-in `import.meta.globEager`
-      // because the plugin does a better job of handling HMR when the yaml files
-      // are outside of the `template-report` app root directory.
-      globPlugin()
+      })
     ],
 
     build: {
