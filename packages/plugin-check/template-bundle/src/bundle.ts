@@ -21,7 +21,7 @@ import type { Input } from './inputs'
 import { getInputVars, setInputsForScenario } from './inputs'
 import { getOutputVars } from './outputs'
 
-import { startTime, endTime, inputSpecs, outputSpecs } from 'virtual:model-spec'
+import { startTime, endTime, inputSpecs, outputSpecs, modelSizeInBytes, dataSizeInBytes } from 'virtual:model-spec'
 
 import modelWorkerJs from '@_model_worker_/worker.js?raw'
 
@@ -30,14 +30,6 @@ import modelWorkerJs from '@_model_worker_/worker.js?raw'
 // The model-check tools can use this value to skip tests if two bundles
 // have different version numbers.
 const VERSION = 1
-
-// The size (in bytes) of the model file(s), injected at build time.
-const __MODEL_SIZE_IN_BYTES__ = 1
-const modelSizeInBytes = __MODEL_SIZE_IN_BYTES__
-
-// The size (in bytes) of the data file(s), injected at build time.
-const __DATA_SIZE_IN_BYTES__ = 1
-const dataSizeInBytes = __DATA_SIZE_IN_BYTES__
 
 export class BundleModel implements CheckBundleModel {
   private readonly inputs: InputValue[]
