@@ -24,6 +24,14 @@ export function createStatsTableViewModel(
     return n === 0 ? '' : `${signed(n, 1)}%`
   }
 
+  function pctChange(s0: number, s1: number): number {
+    if (s0 !== 0) {
+      return ((s1 - s0) / s0) * 100
+    } else {
+      return 0
+    }
+  }
+
   const modelSpecL = compareConfig.bundleL.model.modelSpec
   const modelSpecR = compareConfig.bundleR.model.modelSpec
 
@@ -38,17 +46,17 @@ export function createStatsTableViewModel(
   const modelSizeL = modelSpecL.modelSizeInBytes
   const modelSizeR = modelSpecR.modelSizeInBytes
   const modelSizeChange = modelSizeR - modelSizeL
-  const modelSizePctChange = ((modelSizeR - modelSizeL) / modelSizeL) * 100
+  const modelSizePctChange = pctChange(modelSizeL, modelSizeR)
 
   const dataSizeL = modelSpecL.dataSizeInBytes
   const dataSizeR = modelSpecR.dataSizeInBytes
   const dataSizeChange = dataSizeR - dataSizeL
-  const dataSizePctChange = ((dataSizeR - dataSizeL) / dataSizeL) * 100
+  const dataSizePctChange = pctChange(dataSizeL, dataSizeR)
 
   const avgTimeL = perfReportL.avgTime || 0
   const avgTimeR = perfReportR.avgTime || 0
   const avgTimeChange = avgTimeR - avgTimeL
-  const avgTimePctChange = avgTimeL > 0 ? ((avgTimeR - avgTimeL) / avgTimeL) * 100 : 0
+  const avgTimePctChange = pctChange(avgTimeL, avgTimeR)
 
   const minTimeL = perfReportL.minTime
   const minTimeR = perfReportR.minTime
