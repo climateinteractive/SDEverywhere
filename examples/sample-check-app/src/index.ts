@@ -27,4 +27,8 @@ const checkOptions = getConfigOptions(baselineBundle() as Bundle, currentBundle(
 // Initialize the root Svelte component
 const appShell = initAppShell(checkOptions, suiteSummary)
 
+document.addEventListener('sde-check-bundle', e => {
+  console.log(e)
+})
+
 export default appShell

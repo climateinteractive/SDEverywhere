@@ -1,0 +1,13 @@
+//- Copyright (c) 2021-2022 Climate Interactive / New Venture Fund
+
+//- Note: These mixins are kept in an external pug file to work around a
+//- Svelte issue related to `each` and TypeScript, see:
+//-   https://github.com/sveltejs/svelte-preprocess/issues/207
+
+mixin optionsL
+  +each(`$bundleNamesL as name`)
+    option { name }
+
+mixin optionsR
+  +each(`$bundleNamesR as name`)
+    option { name }

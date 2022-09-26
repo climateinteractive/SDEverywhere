@@ -33,11 +33,13 @@
   },
   "dependencies": {
     "@rollup/plugin-node-resolve": "^13.3.0",
+    "@rollup/plugin-replace": "^4.0.0",
     "@sdeverywhere/check-core": "^0.1.0",
     "@sdeverywhere/check-ui-shell": "^0.1.1",
     "@sdeverywhere/runtime": "^0.1.0",
     "@sdeverywhere/runtime-async": "^0.1.0",
     "assert-never": "^1.2.1",
+    "chokidar": "^3.5.3",
     "picocolors": "^1.0.0",
     "rollup": "^2.76.0",
     "vite": "^3.1.3"

@@ -11,11 +11,37 @@ import type { HeaderViewModel } from './header-vm'
 export let viewModel: HeaderViewModel
 const simplifyScenarios = viewModel.simplifyScenarios
 const thresholds = viewModel.thresholds
+const bundleNamesL = viewModel.bundleNamesL
+const bundleNamesR = viewModel.bundleNamesR
 
 const dispatch = createEventDispatcher()
 
 function onHome() {
   dispatch('command', { cmd: 'show-summary' })
+}
+
+function onSelectBundleL(e: Event) {
+  const target = e.target as HTMLSelectElement
+  console.log(target.value)
+  const changeEvent = new CustomEvent('sde-check-bundle', {
+    detail: {
+      kind: 'left',
+      name: target.value
+    }
+  })
+  document.dispatchEvent(changeEvent)
+}
+
+function onSelectBundleR(e: Event) {
+  const target = e.target as HTMLSelectElement
+  console.log(target.value)
+  const changeEvent = new CustomEvent('sde-check-bundle', {
+    detail: {
+      kind: 'right',
+      name: target.value
+    }
+  })
+  document.dispatchEvent(changeEvent)
 }
 
 </script>
@@ -26,6 +52,8 @@ function onHome() {
 <!-- TEMPLATE -->
 <template lang='pug'>
 
+include header.pug
+
 .header-container
   .header-content
     .header-group
@@ -35,12 +63,20 @@ function onHome() {
       .header-group
         input.checkbox(type='checkbox' name='simplify-toggle' bind:checked!='{$simplifyScenarios}')
         label(for='simplify-toggle') Simplify Scenarios
-    +if('viewModel.nameL')
+    +if('viewModel.nameL || $bundleNamesL.length > 1')
       .spacer-fixed
       .header-group
         .label Comparing:
-        .label.dataset-color-0 {viewModel.nameL}
-        .label.dataset-color-1 {viewModel.nameR}
+        +if('$bundleNamesL.length > 1')
+          select.selector.dataset-color-0(on:change!='{onSelectBundleL}')
+            +optionsL
+          +else
+            .label.dataset-color-0 {viewModel.nameL}
+        +if('$bundleNamesR.length > 1')
+          select.selector.dataset-color-1(on:change!='{onSelectBundleR}')
+            +optionsR
+          +else
+            .label.dataset-color-1 {viewModel.nameR}
       .spacer-fixed
       .header-group
         .label Thresholds:
@@ -90,6 +126,20 @@ function onHome() {
 
 .label:not(:last-child)
   margin-right: 1rem
+
+// .label.baseline
+//   cursor: pointer
+//   &:hover
+//     font-weight: 700
+//     color: rgb(219, 72, 101)
+
+select
+  margin-right: 1rem
+  font-family: Roboto, sans-serif
+  font-size: 1em
+  background-color: #353535
+  border: none
+  border-radius: .4rem
 
 .line
   min-height: 1px
