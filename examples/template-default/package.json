@@ -6,7 +6,7 @@
   "scripts": {
     "build": "sde bundle",
     "dev": "sde dev",
-    "start": "sde dev"
+    "save-baseline": "sde-check baseline --save"
   },
   "workspaces": [
     "packages/core",

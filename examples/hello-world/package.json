@@ -6,6 +6,7 @@
   "scripts": {
     "build": "sde bundle",
     "dev": "sde dev",
+    "save-baseline": "sde-check baseline --save",
     "serve": "sirv ./sde-prep/check-report"
   },
   "dependencies": {

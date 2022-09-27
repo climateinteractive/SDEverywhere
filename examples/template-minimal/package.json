@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "build": "sde bundle",
-    "dev": "sde dev"
+    "dev": "sde dev",
+    "save-baseline": "sde-check baseline --save"
   },
   "dependencies": {
     "@sdeverywhere/build": "^0.2.0",
