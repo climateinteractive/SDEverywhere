@@ -14,31 +14,60 @@ import { createBundle as createBaselineBundle } from '@_baseline_bundle_'
 import { createBundle as createCurrentBundle } from '@_current_bundle_'
 import { getConfigOptions } from '@_test_config_'
 
-// Initialize the overlay element used to show builder messages/errors
-initOverlay()
+function loadBundleName(key: string): string | undefined {
+  if (import.meta.hot) {
+    return localStorage.getItem(`sde-check-selected-bundle-${key}`)
+  } else {
+    return undefined
+  }
+}
+
+function saveBundleName(key: string, value: string): void {
+  if (import.meta.hot) {
+    localStorage.setItem(`sde-check-selected-bundle-${key}`, value)
+  }
+}
 
 // For local development mode, load the list of available baseline bundles
-let baselineBundleNames: string[]
-let currentBundleNames: string[]
-// TODO: Only do this if baseline bundles path is defined
-// TODO: Sort them alphabetically (reversed, so that newer dates are first)
-// TODO: If no bundles, default to current
-// TODO: If no saved bundle name, default to current
+type BundleModule = {
+  createBundle(): Bundle
+}
+type LoadBundle = () => Promise<Bundle>
+const availableBundles: { [key: string]: LoadBundle } = {}
+let bundleNames: string[]
 let selectedBaselineBundleName: string
 let selectedCurrentBundleName: string
 const baselinesPath = __BASELINE_BUNDLES_PATH__
-if (import.meta && baselinesPath) {
-  // Get the available bundles
+if (import.meta.hot && baselinesPath) {
+  // Restore the previously selected bundles (from before the page was reloaded)
+  selectedBaselineBundleName = loadBundleName('baseline')
+  selectedCurrentBundleName = loadBundleName('current')
+
+  // Get the available baseline bundles
   const bundlesGlob = import.meta.glob(__BASELINE_BUNDLES_PATH__, {
     eager: false
   })
-  // const baselineBundles: string[] = []
-  console.log(`BUNDLE COUNT: ${Object.keys(bundlesGlob).length}`)
+  const baselineBundleNames: string[] = []
   for (const bundleKey of Object.keys(bundlesGlob)) {
     const loadBundle = bundlesGlob[bundleKey]
-    console.log(bundleKey)
-    console.log(loadBundle)
+    const bundlePathParts = bundleKey.split('/')
+    const bundleFileName = bundlePathParts[bundlePathParts.length - 1]
+    const bundleName = bundleFileName.replace('.js', '')
+    baselineBundleNames.push(bundleName)
+    availableBundles[bundleName] = async () => {
+      const module = (await loadBundle()) as BundleModule
+      return module.createBundle() as Bundle
+    }
   }
+
+  // Alphabetize (reversed, so that newer dates are at the top of the list)
+  baselineBundleNames.sort((a, b) => {
+    return b.toLowerCase().localeCompare(a.toLowerCase())
+  })
+
+  // Always include the "current" bundle as the first option, followed by
+  // the alphabetized bundle names
+  bundleNames = ['current', ...baselineBundleNames]
 }
 
 async function initForProduction(): Promise<void> {
@@ -74,53 +103,85 @@ async function initForProduction(): Promise<void> {
   })
 
   // Initialize the root Svelte component
-  initAppShell(checkOptions, suiteSummary)
+  initAppShell(checkOptions, {
+    suiteSummary
+  })
 }
 
 async function initForLocal(): Promise<void> {
+  async function createBundle(requestedName: string | undefined): Promise<[Bundle, string]> {
+    if (requestedName === undefined) {
+      requestedName = 'current'
+    }
+
+    // See if there is a bundle available for the requested name
+    let bundle: Bundle
+    let bundleName: string
+    if (requestedName in availableBundles) {
+      // Load the bundle for the requested name
+      const loadBundle = availableBundles[requestedName]
+      bundle = await loadBundle()
+      bundleName = requestedName
+    } else {
+      // Load the "current" bundle
+      bundle = createCurrentBundle()
+      bundleName = 'current'
+    }
+    return [bundle, bundleName]
+  }
+
+  const [bundleL, nameL] = await createBundle(selectedBaselineBundleName)
+  const [bundleR, nameR] = await createBundle(selectedCurrentBundleName)
+
   // Prepare the model check/compare configuration
-  // XXX: For now, use current vs itself
-  const bundleR: Bundle = createCurrentBundle()
-  const bundleL = bundleR
   const checkOptions = await getConfigOptions(bundleL, bundleR, {
-    nameL: __CURRENT_NAME__,
-    nameR: __CURRENT_NAME__
+    nameL,
+    nameR
   })
 
   // Initialize the root Svelte component
-  initAppShell(checkOptions)
+  initAppShell(checkOptions, {
+    bundleNames
+  })
 }
 
-async function init() {
+async function initBundlesAndUI() {
   // Prepare options differently if in local development mode
-  if (import.meta) {
+  if (import.meta.hot) {
     await initForLocal()
   } else {
     await initForProduction()
   }
 }
 
+// Initialize the overlay element used to show builder messages/errors
+initOverlay()
+
 // Initialize the bundles and user interface
-init()
+initBundlesAndUI()
 
-// Reload everything when the user chooses a new baseline or current bundle
-document.addEventListener('sde-check-bundle', e => {
-  // Change the selected bundle
-  const info = (e as CustomEvent).detail
-  if (info.kind === 'left') {
-    selectedBaselineBundleName = info.name
-  } else {
-    selectedCurrentBundleName = info.name
-  }
+if (import.meta.hot) {
+  // Reload everything when the user chooses a new baseline or current bundle
+  document.addEventListener('sde-check-bundle', e => {
+    // Change the selected bundle
+    const info = (e as CustomEvent).detail
+    if (info.kind === 'left') {
+      saveBundleName('baseline', info.name)
+      selectedBaselineBundleName = info.name
+    } else {
+      saveBundleName('current', info.name)
+      selectedCurrentBundleName = info.name
+    }
 
-  // Before switching bundles, clear out the app-shell-container element
-  const container = document.getElementById('app-shell-container')
-  while (container.firstChild) {
-    container.removeChild(container.firstChild)
-  }
+    // Before switching bundles, clear out the app-shell-container element
+    const container = document.getElementById('app-shell-container')
+    while (container.firstChild) {
+      container.removeChild(container.firstChild)
+    }
 
-  // TODO: Release resources associated with active bundles
+    // TODO: Release resources associated with active bundles
 
-  // Reinitialize using the chosen bundles
-  init()
-})
+    // Reinitialize using the chosen bundles
+    initBundlesAndUI()
+  })
+}

@@ -127,12 +127,6 @@ include header.pug
 .label:not(:last-child)
   margin-right: 1rem
 
-// .label.baseline
-//   cursor: pointer
-//   &:hover
-//     font-weight: 700
-//     color: rgb(219, 72, 101)
-
 select
   margin-right: 1rem
   font-family: Roboto, sans-serif
@@ -142,10 +136,10 @@ select
   -webkit-appearance: none
   -moz-appearance: none
   appearance: none
-  padding: .4rem 1.6rem .4rem .4rem
+  padding: .2rem 1.6rem .2rem .4rem
   background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' fill='%23555'><polygon points='0,0 100,0 50,60'/></svg>") no-repeat
   background-size: .8rem
-  background-position: calc(100% - .4rem) 60%
+  background-position: calc(100% - .4rem) 70%
   background-repeat: no-repeat
   background-color: #353535
   border: none

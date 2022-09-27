@@ -49,12 +49,6 @@ export function createViteConfigForReport(
   // Convert the suite summary to JSON, which is what the app currently expects
   const suiteSummaryJson = suiteSummary ? JSON.stringify(suiteSummary) : ''
 
-  function localPackage(...subpath: string[]) {
-    const foo = resolvePath(__dirname, '..', '..', ...subpath)
-    console.log(foo)
-    return foo
-  }
-
   const alias = (find: string, replacement: string) => {
     return {
       find,
@@ -156,9 +150,6 @@ export function createViteConfigForReport(
 
         // Make the overlay use the `messages.html` file that is written to the prep directory
         alias('@_prep_', prepDir),
-
-        // alias('@sdeverywhere/check-core', localPackage('check-core', 'src')),
-        // alias('@sdeverywhere/check-ui-shell', localPackage('check-ui-shell', 'src')),
 
         // XXX: Include no-op polyfills for these modules that are used in the Node-specific
         // implementation of threads.js; this allows us to use one bundle that works in both

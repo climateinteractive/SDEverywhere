@@ -21,26 +21,28 @@ export function createHeaderViewModel(
 
   // Only include the comparison-related header elements if the compare
   // config is defined
-  // if (compareConfig) {
-  const thresholds = compareConfig.thresholds
-  const thresholdStrings: string[] = []
-  thresholdStrings.push('no diff')
-  for (let i = 0; i < 3; i++) {
-    thresholdStrings.push(`diff &lt; ${thresholds[i]}%`)
-  }
-  thresholdStrings.push(`diff &gt;= ${thresholds[2]}%`)
+  if (compareConfig) {
+    const thresholds = compareConfig.thresholds
+    const thresholdStrings: string[] = []
+    thresholdStrings.push('no diff')
+    for (let i = 0; i < 3; i++) {
+      thresholdStrings.push(`diff &lt; ${thresholds[i]}%`)
+    }
+    thresholdStrings.push(`diff &gt;= ${thresholds[2]}%`)
 
-  return {
-    nameL: compareConfig.bundleL.name,
-    nameR: compareConfig.bundleR.name,
-    bundleNamesL: writable([compareConfig.bundleL.name, 'Baseline 2']),
-    bundleNamesR: writable([compareConfig.bundleR.name, 'Baseline 2']),
-    thresholds: thresholdStrings,
-    simplifyScenarios
+    return {
+      nameL: compareConfig.bundleL.name,
+      nameR: compareConfig.bundleR.name,
+      bundleNamesL: writable([compareConfig.bundleL.name]),
+      bundleNamesR: writable([compareConfig.bundleR.name]),
+      thresholds: thresholdStrings,
+      simplifyScenarios
+    }
+  } else {
+    return {
+      bundleNamesL: writable([]),
+      bundleNamesR: writable([]),
+      simplifyScenarios
+    }
   }
-  // } else {
-  //   return {
-  //     simplifyScenarios
-  //   }
-  // }
 }

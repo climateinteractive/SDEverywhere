@@ -6,8 +6,8 @@
 
 mixin optionsL
   +each(`$bundleNamesL as name`)
-    option { name }
+    option(selected!='{name === viewModel.nameL}') { name }
 
 mixin optionsR
   +each(`$bundleNamesR as name`)
-    option { name }
+    option(selected!='{name === viewModel.nameR}') { name }
