@@ -20,28 +20,22 @@ function onHome() {
   dispatch('command', { cmd: 'show-summary' })
 }
 
-function onSelectBundleL(e: Event) {
-  const target = e.target as HTMLSelectElement
-  console.log(target.value)
+function onSelectBundle(kind: string, name: string): void {
   const changeEvent = new CustomEvent('sde-check-bundle', {
     detail: {
-      kind: 'left',
-      name: target.value
+      kind,
+      name
     }
   })
   document.dispatchEvent(changeEvent)
 }
 
+function onSelectBundleL(e: Event) {
+  onSelectBundle('left', (e.target as HTMLSelectElement).value)
+}
+
 function onSelectBundleR(e: Event) {
-  const target = e.target as HTMLSelectElement
-  console.log(target.value)
-  const changeEvent = new CustomEvent('sde-check-bundle', {
-    detail: {
-      kind: 'right',
-      name: target.value
-    }
-  })
-  document.dispatchEvent(changeEvent)
+  onSelectBundle('right', (e.target as HTMLSelectElement).value)
 }
 
 </script>
