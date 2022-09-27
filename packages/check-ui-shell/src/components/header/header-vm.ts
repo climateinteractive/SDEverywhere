@@ -3,6 +3,7 @@
 import type { Writable } from 'svelte/store'
 import { writable } from 'svelte/store'
 import type { CompareConfig } from '@sdeverywhere/check-core'
+import { localStorageWritableBoolean } from '../../_shared/stores'
 
 export interface HeaderViewModel {
   nameL?: string
@@ -17,7 +18,12 @@ export function createHeaderViewModel(
   compareConfig: CompareConfig | undefined,
   includeSimplifyScenarios: boolean
 ): HeaderViewModel {
-  const simplifyScenarios: Writable<boolean> = includeSimplifyScenarios ? writable(true) : undefined
+  let simplifyScenarios: Writable<boolean>
+  if (includeSimplifyScenarios) {
+    simplifyScenarios = localStorageWritableBoolean('sde-check-simplify-scenarios', true)
+  } else {
+    simplifyScenarios = undefined
+  }
 
   // Only include the comparison-related header elements if the compare
   // config is defined
