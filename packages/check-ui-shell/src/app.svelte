@@ -31,12 +31,11 @@ let viewMode: ViewMode = 'summary'
 // occurs more frequently in Firefox and Chrome than in Safari.)  As a workaround,
 // observe loading of the font used by the graphs (Roboto Condensed 400) so
 // that we can wait for it to be loaded before rendering the app.
-// const graphFont = new FontFaceObserver('Roboto Condensed', { weight: 400 })
-// let graphFontReady = false
-// graphFont.load().then(() => {
-//   graphFontReady = true
-// })
-const graphFontReady = true
+const graphFont = new FontFaceObserver('Roboto Condensed', { weight: 400 })
+let graphFontReady = false
+graphFont.load().then(() => {
+  graphFontReady = true
+})
 
 // Wait for the fonts to be loaded before we render the app
 let viewReady = false
