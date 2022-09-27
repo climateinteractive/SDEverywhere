@@ -1,11 +1,13 @@
 // Copyright (c) 2022 Climate Interactive / New Venture Fund
 
-import type { ModelSpec } from '@sdeverywhere/build'
+import { existsSync, statSync } from 'fs'
 import { dirname, join as joinPath, relative, resolve as resolvePath } from 'path'
 import { fileURLToPath } from 'url'
 
 import type { InlineConfig, Plugin as VitePlugin } from 'vite'
 import { nodeResolve } from '@rollup/plugin-node-resolve'
+
+import type { ModelSpec } from '@sdeverywhere/build'
 
 import { sdeNameForVensimVarName } from './var-names'
 
@@ -22,7 +24,7 @@ const __dirname = dirname(__filename)
  * TODO: This could be simplified by using `vite-plugin-virtual` but that
  * doesn't seem to be working correctly in an ESM setting
  */
-function injectModelSpec(modelSpec: ModelSpec): VitePlugin {
+function injectModelSpec(prepDir: string, modelSpec: ModelSpec): VitePlugin {
   // Include the SDE variable ID with each spec
   const inputSpecs = modelSpec.inputs.map(i => {
     return {
@@ -37,11 +39,33 @@ function injectModelSpec(modelSpec: ModelSpec): VitePlugin {
     }
   })
 
+  function stagedFileSize(filename: string): number {
+    const path = joinPath(prepDir, 'staged', 'model', filename)
+    if (existsSync(path)) {
+      return statSync(path).size
+    } else {
+      return 0
+    }
+  }
+
+  // The size (in bytes) of the `wasm-model.js` file
+  // TODO: Ideally we would measure the size of the raw WASM binary, but currently
+  // we inline it as a base64 blob inside the JS file, so we take the size of the
+  // whole JS file as the second best option
+  const modelSizeInBytes = stagedFileSize('wasm-model.js')
+
+  // The size (in bytes) of the `static-data.ts` file
+  // TODO: Ideally we would measure the size of the minified JS file here, or
+  // at least ignore things like whitespace
+  const dataSizeInBytes = stagedFileSize('static-data.ts')
+
   const moduleSrc = `
 export const startTime = ${modelSpec.startTime};
 export const endTime = ${modelSpec.endTime};
 export const inputSpecs = ${JSON.stringify(inputSpecs)};
 export const outputSpecs = ${JSON.stringify(outputSpecs)};
+export const modelSizeInBytes = ${modelSizeInBytes};
+export const dataSizeInBytes = ${dataSizeInBytes};
 `
 
   const virtualModuleId = 'virtual:model-spec'
@@ -122,7 +146,7 @@ export async function createViteConfigForBundle(prepDir: string, modelSpec: Mode
 
     plugins: [
       // Use a virtual module plugin to inject the model spec values
-      injectModelSpec(modelSpec)
+      injectModelSpec(prepDir, modelSpec)
     ],
 
     build: {

@@ -3,7 +3,8 @@
 import { dirname, relative, join as joinPath, resolve as resolvePath } from 'path'
 import { fileURLToPath } from 'url'
 
-import type { Alias, InlineConfig } from 'vite'
+import type { Alias, InlineConfig, PluginOption } from 'vite'
+import replace from '@rollup/plugin-replace'
 
 import type { SuiteSummary } from '@sdeverywhere/check-core'
 
@@ -14,6 +15,7 @@ const __dirname = dirname(__filename)
 
 export function createViteConfigForReport(
   options: CheckPluginOptions | undefined,
+  projDir: string,
   prepDir: string,
   currentBundleName: string,
   currentBundlePath: string,
@@ -22,6 +24,17 @@ export function createViteConfigForReport(
 ): InlineConfig {
   // Use `template-report` as the root directory for the report project
   const root = resolvePath(__dirname, '..', 'template-report')
+
+  // Include `baselines/*.js` files under the configured project root directory.  This
+  // glob path apparently must be a relative path (relative to the `template-report/src`
+  // directory where the glob is used).
+  const templateSrcDir = resolvePath(root, 'src')
+  const relProjDir = relative(templateSrcDir, projDir)
+  // XXX: The glob pattern must use forward slashes only, so on Windows we need to
+  // convert backslashes to slashes
+  const relProjDirPath = relProjDir.replaceAll('\\', '/')
+  // TODO: Use baselinesDir from options
+  const baselinesPath = `${relProjDirPath}/baselines/*.js`
 
   // Calculate output directory relative to the template root
   let reportPath: string
@@ -154,6 +167,20 @@ export function createViteConfigForReport(
       // Inject the current branch name
       __CURRENT_NAME__: JSON.stringify(currentBundleName)
     },
+
+    plugins: [
+      // Inject special values into the generated JS
+      // TODO: We currently have to use `@rollup/plugin-replace` instead of Vite's
+      // built-in `define` feature because the latter does not seem to run before
+      // the glob handler (which requires the glob to be injected as a literal)
+      replace({
+        preventAssignment: true,
+        values: {
+          // Inject the path for baseline bundles
+          __BASELINE_BUNDLES_PATH__: JSON.stringify(baselinesPath)
+        }
+      }) as PluginOption
+    ],
 
     build: {
       // Write output files to the configured directory (instead of the default `dist`);

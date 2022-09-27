@@ -56,8 +56,8 @@ sub {
  */
 
 :root {
-  --dataset-0: deepskyblue;
-  --dataset-1: crimson;
+  --dataset-0: crimson;
+  --dataset-1: deepskyblue;
   --bucket-0: green;
   --bucket-1: orange;
   --bucket-2: orangered;

@@ -13,3 +13,5 @@ export const startTime = 0
 export const endTime = 0
 export const inputSpecs: InputSpec[] = []
 export const outputSpecs: OutputSpec[] = []
+export const modelSizeInBytes = 0
+export const dataSizeInBytes = 0

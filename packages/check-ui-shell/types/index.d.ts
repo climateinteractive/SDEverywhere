@@ -2,8 +2,10 @@
 
 import type { ConfigOptions, SuiteSummary } from '@sdeverywhere/check-core'
 
-export function initAppShell(
-  configOptions: ConfigOptions,
-  suiteSummary?: SuiteSummary,
-  containerId = 'app-shell-container'
-): unknown
+export interface AppShellOptions {
+  suiteSummary?: SuiteSummary
+  containerId?: string
+  bundleNames?: string[]
+}
+
+export function initAppShell(configOptions: ConfigOptions, appShellOptions?: AppShellOptions): unknown

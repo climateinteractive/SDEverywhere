@@ -13,6 +13,16 @@
       rel="stylesheet"
     />
 
+    <style>
+      /*
+       * TODO: This avoids white flash when page reloads (due to the CSS bundled with
+       * check-ui-shell being loaded asynchronously); should fix this
+       */
+      body {
+        background-color: #272727;
+      }
+    </style>
+
     <script type="module" src="./src/index.ts"></script>
   </head>
 

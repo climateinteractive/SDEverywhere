@@ -6,6 +6,8 @@ import { fileURLToPath } from 'url'
 import type { InlineConfig, ViteDevServer } from 'vite'
 import { build, createServer } from 'vite'
 
+import chokidar from 'chokidar'
+
 import type { BuildContext, ModelSpec, Plugin, ResolvedConfig } from '@sdeverywhere/build'
 
 import type { Bundle, SuiteSummary } from '@sdeverywhere/check-core'
@@ -35,7 +37,7 @@ class CheckPlugin implements Plugin {
   async watch(config: ResolvedConfig): Promise<void> {
     if (this.options?.testConfigPath === undefined) {
       // Test config was not provided, so generate a default config in watch mode.
-      // The test template uses import.meta.importGlob so that checks are re-run
+      // The test template uses import.meta.glob so that checks are re-run
       // automatically when the *.check.yaml files are changed.
       await this.genTestConfig(config, 'watch')
     }
@@ -47,6 +49,29 @@ class CheckPlugin implements Plugin {
     const viteConfig = this.createViteConfigForReport(config, testOptions, undefined)
     const server: ViteDevServer = await createServer(viteConfig)
     await server.listen()
+
+    // XXX: Currently Vite doesn't reload the page if a file is added/removed
+    // in the baselines directory (Vite's import.meta.glob handling doesn't
+    // seem to do this automatically), so as a workaround, watch the baselines
+    // directory and restart the server if files are added/removed
+    // TODO: The same problem also applies to the glob for `.check.yaml` files
+    // in the test config, so we should also reload if files match/unmatch
+    // the `.check.yaml` glob
+    // TODO: Use the baselines directory from the config
+    const baselinesDir = 'baselines'
+    const watcher = chokidar.watch(baselinesDir, {
+      // Watch paths are resolved relative to the project root directory
+      cwd: config.rootDir,
+      // Don't send initial "file added" events
+      ignoreInitial: true,
+      // XXX: Include a delay, otherwise on macOS we sometimes get multiple
+      // change events when a file is saved just once
+      awaitWriteFinish: {
+        stabilityThreshold: 200
+      }
+    })
+    watcher.on('add', () => server.restart())
+    watcher.on('unlink', () => server.restart())
   }
 
   // TODO: Note that this plugin runs as a `postBuild` step because it currently
@@ -186,6 +211,7 @@ class CheckPlugin implements Plugin {
   ): InlineConfig {
     return createViteConfigForReport(
       this.options,
+      config.rootDir,
       config.prepDir,
       testOptions.currentBundleName,
       testOptions.currentBundlePath,

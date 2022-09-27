@@ -7,12 +7,15 @@ import { initAppModel } from './model/app-model'
 import { default as AppShell } from './app-shell.svelte'
 import { AppViewModel } from './app-vm'
 
-export function initAppShell(
-  configOptions: ConfigOptions,
-  suiteSummary?: SuiteSummary,
-  containerId = 'app-shell-container'
-): AppShell {
+export interface AppShellOptions {
+  suiteSummary?: SuiteSummary
+  containerId?: string
+  bundleNames?: string[]
+}
+
+export function initAppShell(configOptions: ConfigOptions, appShellOptions?: AppShellOptions): AppShell {
   // Initialize the root Svelte component
+  const containerId = appShellOptions?.containerId || 'app-shell-container'
   const appShell = new AppShell({
     target: document.getElementById(containerId),
     props: {
@@ -23,8 +26,17 @@ export function initAppShell(
   // Initialize the app model asynchronously
   initAppModel(configOptions)
     .then(appModel => {
-      // Create the app view model and update the AppShell component
-      const appViewModel = new AppViewModel(appModel, suiteSummary)
+      // Create the app view model
+      const appViewModel = new AppViewModel(appModel, appShellOptions?.suiteSummary)
+
+      if (appShellOptions?.bundleNames) {
+        // Set the list of available bundle names
+        // TODO: Pass these to AppViewModel constructor instead of setting them here
+        appViewModel.headerViewModel.bundleNamesL.set(appShellOptions.bundleNames)
+        appViewModel.headerViewModel.bundleNamesR.set(appShellOptions.bundleNames)
+      }
+
+      // Update the AppShell component
       appShell.$set({
         appViewModel
       })
