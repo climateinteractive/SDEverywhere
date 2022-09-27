@@ -47,8 +47,13 @@ export async function chooseInstallDeps(projDir: string, args: Arguments, pkgMan
         installSpinner.text = `${installingPackagesMsg}\n${bold(`[${pkgManager}]`)} ${data}`
       })
       installExec.on('error', error => reject(error))
-      installExec.on('exit', code => reject(`Install failed (code=${code})`))
-      installExec.on('close', () => resolve())
+      installExec.on('close', code => {
+        if (code !== 0) {
+          reject(`Install failed (code=${code})`)
+        } else {
+          resolve()
+        }
+      })
     })
     installSpinner.text = green('Packages installed!')
     installSpinner.succeed()
