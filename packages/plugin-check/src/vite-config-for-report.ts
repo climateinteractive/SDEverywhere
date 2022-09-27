@@ -35,7 +35,6 @@ export function createViteConfigForReport(
   const relProjDirPath = relProjDir.replaceAll('\\', '/')
   // TODO: Use baselinesDir from options
   const baselinesPath = `${relProjDirPath}/baselines/*.js`
-  console.log(baselinesPath)
 
   // Calculate output directory relative to the template root
   let reportPath: string
@@ -128,10 +127,6 @@ export function createViteConfigForReport(
         // don't use it at runtime; we need to exclude it here, otherwise Vite will
         // complain about missing dependencies in dev mode
         'moment'
-
-        // XXX: Prevent Vite from prebundling the local packages
-        // '@sdeverywhere/check-core',
-        // '@sdeverywhere/check-ui-shell'
       ]
     },
 
