@@ -24,6 +24,8 @@ export function createCheckSummaryTestViewModel(
   dataCoordinator: CheckDataCoordinator,
   test: CheckTestReport
 ): CheckSummaryTestViewModel {
+  let expandedFirstGraph = false
+
   const rows: CheckSummaryRowViewModel[] = []
   const testRow = row(0, 'test', test.status, test.name)
   for (const scenario of test.scenarios) {
@@ -32,6 +34,7 @@ export function createCheckSummaryTestViewModel(
       rows.push(row(2, 'dataset', dataset.status, datasetMessage(dataset, bold)))
       for (const predicate of dataset.predicates) {
         let graphBoxViewModel: CheckSummaryGraphBoxViewModel
+        let graphVisible = false
         if (scenario.checkScenario.scenario && dataset.checkDataset.datasetKey) {
           graphBoxViewModel = new CheckSummaryGraphBoxViewModel(
             dataCoordinator,
@@ -39,8 +42,22 @@ export function createCheckSummaryTestViewModel(
             dataset.checkDataset.datasetKey,
             predicate
           )
+          if (!expandedFirstGraph && predicate.result.status === 'failed') {
+            // Expand the graph for the first failing check
+            expandedFirstGraph = true
+            graphVisible = true
+          }
         }
-        rows.push(row(3, 'predicate', predicate.result.status, predicateMessage(predicate, bold), graphBoxViewModel))
+        rows.push(
+          row(
+            3,
+            'predicate',
+            predicate.result.status,
+            predicateMessage(predicate, bold),
+            graphBoxViewModel,
+            graphVisible
+          )
+        )
       }
     }
   }

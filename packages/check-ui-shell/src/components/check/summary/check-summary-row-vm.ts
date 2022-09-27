@@ -31,7 +31,8 @@ export function row(
   rowClass: string,
   status: CheckStatus,
   content: string,
-  graphBoxViewModel?: CheckSummaryGraphBoxViewModel
+  graphBoxViewModel?: CheckSummaryGraphBoxViewModel,
+  graphVisible = false
 ): CheckSummaryRowViewModel {
   const whitespace = '&ensp;'.repeat(2 + indent * 4)
   const statusChar = charForStatus(status)
@@ -42,6 +43,6 @@ export function row(
     status,
     span,
     graphBoxViewModel,
-    graphVisible: writable(false)
+    graphVisible: writable(graphVisible)
   }
 }
