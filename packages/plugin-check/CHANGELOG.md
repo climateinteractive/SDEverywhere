@@ -1,11 +1,5 @@
 # Changelog
 
-### Dependencies
-
-* The following workspace dependencies were updated
-  * dependencies
-    * @sdeverywhere/build bumped from ^0.1.1 to ^0.2.0
-
 ## [0.2.0](https://github.com/climateinteractive/SDEverywhere/compare/plugin-check-v0.1.5...plugin-check-v0.2.0) (2022-09-28)
 
 
@@ -25,6 +19,16 @@
 * The following workspace dependencies were updated
   * dependencies
     * @sdeverywhere/check-ui-shell bumped from ^0.1.1 to ^0.2.0
+
+
+## [0.1.5](https://github.com/climateinteractive/SDEverywhere/compare/plugin-check-v0.1.4...plugin-check-v0.1.5) (2022-09-21)
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/build bumped from ^0.1.1 to ^0.2.0
+
 
 ## [0.1.4](https://github.com/climateinteractive/SDEverywhere/compare/plugin-check-v0.1.3...plugin-check-v0.1.4) (2022-08-09)
 

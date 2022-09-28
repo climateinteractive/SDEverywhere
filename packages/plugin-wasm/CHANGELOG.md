@@ -1,10 +1,14 @@
 # Changelog
 
-### Dependencies
+## [0.1.3](https://github.com/climateinteractive/SDEverywhere/compare/plugin-wasm-v0.1.2...plugin-wasm-v0.1.3) (2022-09-28)
 
-* The following workspace dependencies were updated
-  * dependencies
-    * @sdeverywhere/build bumped from ^0.1.0 to ^0.1.1
+
+### Bug Fixes
+
+* make build package a peer dependency for plugins ([#241](https://github.com/climateinteractive/SDEverywhere/issues/241)) ([05ea85f](https://github.com/climateinteractive/SDEverywhere/commit/05ea85f256ceed064018cdfab1bd6d52a7dca735)), closes [#237](https://github.com/climateinteractive/SDEverywhere/issues/237)
+
+
+## [0.1.2](https://github.com/climateinteractive/SDEverywhere/compare/plugin-wasm-v0.1.1...plugin-wasm-v0.1.2) (2022-09-21)
 
 ### Dependencies
 
@@ -12,12 +16,14 @@
   * dependencies
     * @sdeverywhere/build bumped from ^0.1.1 to ^0.2.0
 
-## [0.1.3](https://github.com/climateinteractive/SDEverywhere/compare/plugin-wasm-v0.1.2...plugin-wasm-v0.1.3) (2022-09-28)
 
+## [0.1.1](https://github.com/climateinteractive/SDEverywhere/compare/plugin-wasm-v0.1.0...plugin-wasm-v0.1.1) (2022-08-05)
 
-### Bug Fixes
+### Dependencies
 
-* make build package a peer dependency for plugins ([#241](https://github.com/climateinteractive/SDEverywhere/issues/241)) ([05ea85f](https://github.com/climateinteractive/SDEverywhere/commit/05ea85f256ceed064018cdfab1bd6d52a7dca735)), closes [#237](https://github.com/climateinteractive/SDEverywhere/issues/237)
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/build bumped from ^0.1.0 to ^0.1.1
 
 ## 0.1.0 (2022-06-28)
 
