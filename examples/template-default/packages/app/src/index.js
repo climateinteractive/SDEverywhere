@@ -9,6 +9,8 @@ import enStrings from '@core-strings/en'
 import { initOverlay } from './dev-overlay'
 import { GraphView } from './graph-view'
 
+const selectedGraphKey = 'model-explorer-selected-graph'
+
 let model
 let graphView
 
@@ -139,13 +141,18 @@ function addSwitchItem(switchInput) {
  */
 function initInputsUI() {
   $('#inputs-content').empty()
-  for (const inputId of coreConfig.inputs.keys()) {
-    const input = model.getInputForId(inputId)
-    if (input.kind === 'slider') {
-      addSliderItem(input)
-    } else if (input.kind === 'switch') {
-      addSwitchItem(input)
+  if (coreConfig.inputs.size > 0) {
+    for (const inputId of coreConfig.inputs.keys()) {
+      const input = model.getInputForId(inputId)
+      if (input.kind === 'slider') {
+        addSliderItem(input)
+      } else if (input.kind === 'switch') {
+        addSwitchItem(input)
+      }
     }
+  } else {
+    const msg = `No sliders configured. You can edit 'config/inputs.csv' to get started.`
+    $('#inputs-content').html(`<div style="padding-top: 10px">${msg}</div>`)
   }
 }
 
@@ -201,11 +208,15 @@ function showGraph(graphSpec) {
     const itemElem = $(`<div ${attrs}>${label}</div>`)
     legendContainer.append(itemElem)
   }
+
+  // Save the graph ID so that this graph is selected by default when the page is reloaded
+  localStorage.setItem(selectedGraphKey, graphSpec.id)
 }
 
-function addGraphItem(graphSpec) {
+function addGraphItem(graphSpec, selected) {
   const title = str(graphSpec.menuTitleKey || graphSpec.titleKey)
-  const option = $(`<option value="${graphSpec.id}">${title}</option>`).data(graphSpec)
+  const selectedAttr = selected ? 'selected' : ''
+  const option = $(`<option value="${graphSpec.id}" ${selectedAttr}>${title}</option>`).data(graphSpec)
   $('#graph-selector').append(option)
 }
 
@@ -213,20 +224,39 @@ function addGraphItem(graphSpec) {
  * Initialize the UI for the graphs panel.
  */
 function initGraphsUI() {
+  // Determine the initial graph
+  let initialGraphId = localStorage.getItem(selectedGraphKey)
+  if (initialGraphId === undefined || !coreConfig.graphs.has(initialGraphId)) {
+    if (coreConfig.graphs.size > 0) {
+      const firstGraphSpec = [...coreConfig.graphs.values()][0]
+      initialGraphId = firstGraphSpec.id
+    }
+  }
+
   // Add the graph selector options
-  for (const spec of coreConfig.graphs.values()) {
-    addGraphItem(spec)
+  if (coreConfig.graphs.size > 0) {
+    for (const spec of coreConfig.graphs.values()) {
+      addGraphItem(spec, spec.id === initialGraphId)
+    }
+  } else {
+    $('#graph-selector').hide()
+    $('#top-graph-inner-container').text(`No graphs configured. You can edit 'config/graphs.csv' to get started.`)
   }
 
   // When a graph item is selected, show that graph
-  $('select').on('change', function () {
+  $('#graph-selector').on('change', function () {
     const graphId = this.value
     const graphSpec = coreConfig.graphs.get(graphId)
     showGraph(graphSpec)
   })
 
-  // Select the first graph by default
-  showGraph(coreConfig.graphs.values().next().value)
+  // Show the initial graph
+  if (initialGraphId !== undefined) {
+    const initialGraphSpec = coreConfig.graphs.get(initialGraphId)
+    if (initialGraphSpec !== undefined) {
+      showGraph(initialGraphSpec)
+    }
+  }
 }
 
 /*
