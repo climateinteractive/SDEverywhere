@@ -1,6 +1,6 @@
 {
   "dependencies": {
     "@sdeverywhere/check-core": "^0.1.0",
-    "@sdeverywhere/check-ui-shell": "^0.1.0"
+    "@sdeverywhere/check-ui-shell": "^0.2.0"
   }
 }
