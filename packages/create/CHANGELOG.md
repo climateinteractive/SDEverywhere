@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.1](https://github.com/climateinteractive/SDEverywhere/compare/create-v0.1.0...create-v0.1.1) (2022-09-28)
+
+
+### Bug Fixes
+
+* only report error for install deps step if exit code is non-zero ([#249](https://github.com/climateinteractive/SDEverywhere/issues/249)) ([dc14b1c](https://github.com/climateinteractive/SDEverywhere/commit/dc14b1cbcc5119e08c4878ecdc5d133e74acacfa)), closes [#239](https://github.com/climateinteractive/SDEverywhere/issues/239)
+
 ## 0.1.0 (2022-09-22)
 
 

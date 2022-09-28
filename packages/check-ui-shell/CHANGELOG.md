@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.2.0](https://github.com/climateinteractive/SDEverywhere/compare/check-ui-shell-v0.1.1...check-ui-shell-v0.2.0) (2022-09-28)
+
+
+### Features
+
+* allow for selecting different model-check baseline bundle in local dev mode ([#246](https://github.com/climateinteractive/SDEverywhere/issues/246)) ([6425eb8](https://github.com/climateinteractive/SDEverywhere/commit/6425eb8240d3a7e3e83c7b6e5be5dd837b2a5c57)), closes [#244](https://github.com/climateinteractive/SDEverywhere/issues/244)
+
+
+### Bug Fixes
+
+* upgrade to vite 3.1.3 ([#242](https://github.com/climateinteractive/SDEverywhere/issues/242)) ([e6ff922](https://github.com/climateinteractive/SDEverywhere/commit/e6ff922f002411b83a9ab0688c5a65433b8f4d61)), closes [#238](https://github.com/climateinteractive/SDEverywhere/issues/238)
+
 ## [0.1.1](https://github.com/climateinteractive/SDEverywhere/compare/check-ui-shell-v0.1.0...check-ui-shell-v0.1.1) (2022-07-12)
 
 

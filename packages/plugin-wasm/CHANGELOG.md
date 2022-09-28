@@ -12,6 +12,13 @@
   * dependencies
     * @sdeverywhere/build bumped from ^0.1.1 to ^0.2.0
 
+## [0.1.3](https://github.com/climateinteractive/SDEverywhere/compare/plugin-wasm-v0.1.2...plugin-wasm-v0.1.3) (2022-09-28)
+
+
+### Bug Fixes
+
+* make build package a peer dependency for plugins ([#241](https://github.com/climateinteractive/SDEverywhere/issues/241)) ([05ea85f](https://github.com/climateinteractive/SDEverywhere/commit/05ea85f256ceed064018cdfab1bd6d52a7dca735)), closes [#237](https://github.com/climateinteractive/SDEverywhere/issues/237)
+
 ## 0.1.0 (2022-06-28)
 
 
