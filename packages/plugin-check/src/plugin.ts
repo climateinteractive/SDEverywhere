@@ -1,7 +1,7 @@
 // Copyright (c) 2022 Climate Interactive / New Venture Fund
 
 import { existsSync } from 'fs'
-import { copyFile } from 'fs/promises'
+import { copyFile, mkdir } from 'fs/promises'
 import { dirname, join as joinPath, relative } from 'path'
 import { fileURLToPath } from 'url'
 
@@ -129,6 +129,9 @@ class CheckPlugin implements Plugin {
     if (existsSync(currentBundleFile)) {
       // TODO: Use the baselines directory from the config (not yet available)
       const baselinesDir = joinPath(config.rootDir, 'baselines')
+      if (!existsSync(baselinesDir)) {
+        await mkdir(baselinesDir, { recursive: true })
+      }
       const previousBundleFile = joinPath(baselinesDir, 'previous.js')
       await copyFile(currentBundleFile, previousBundleFile)
     }
