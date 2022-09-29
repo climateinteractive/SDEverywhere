@@ -74,7 +74,6 @@ void run() {
 #endif
 
   // Restart fresh output for all steps in this run.
-  numSavePoints = (size_t)(round((_final_time - _initial_time) / _saveper)) + 1;
   savePointIndex = 0;
   outputIndex = 0;
 
@@ -87,6 +86,13 @@ void run() {
   while (step <= lastStep) {
     evalAux();
     if (fmod(_time, _saveper) < 1e-6) {
+      // Note that many Vensim models set `SAVEPER = TIME STEP`, in which case SDE
+      // treats `SAVEPER` as an aux rather than a constant.  Therefore, we need to
+      // initialize `numSavePoints` here, after the first `evalAux` call, to be
+      // certain that `_saveper` has been initialized before it is used.
+      if (numSavePoints == 0) {
+        numSavePoints = (size_t)(round((_final_time - _initial_time) / _saveper)) + 1;
+      }
       outputVarIndex = 0;
       storeOutputData();
       savePointIndex++;
