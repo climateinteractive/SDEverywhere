@@ -11,4 +11,4 @@
         - name: Susceptible Population S
       predicates:
         - gte: 0
-        - lte: 10000
+          lte: 10000
