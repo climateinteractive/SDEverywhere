@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/climateinteractive/SDEverywhere/compare/plugin-check-v0.2.0...plugin-check-v0.2.1) (2022-09-30)
+
+
+### Bug Fixes
+
+* make plugin-check automatically copy current bundle to baselines ([#257](https://github.com/climateinteractive/SDEverywhere/issues/257)) ([0462f7f](https://github.com/climateinteractive/SDEverywhere/commit/0462f7f94b71bfcd71b71d2d74c34f58096fd1e2)), closes [#256](https://github.com/climateinteractive/SDEverywhere/issues/256)
+
 ## [0.2.0](https://github.com/climateinteractive/SDEverywhere/compare/plugin-check-v0.1.5...plugin-check-v0.2.0) (2022-09-28)
 
 

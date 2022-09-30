@@ -1,6 +1,6 @@
 {
   "name": "@sdeverywhere/plugin-check",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "files": [
     "bin/**",
     "dist/**",
