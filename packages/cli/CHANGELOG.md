@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.3](https://github.com/climateinteractive/SDEverywhere/compare/cli-v0.7.2...cli-v0.7.3) (2022-09-30)
+
+
+### Bug Fixes
+
+* initialize numSavePoints after evalAux to get correct SAVEPER value ([#254](https://github.com/climateinteractive/SDEverywhere/issues/254)) ([1e0c9d0](https://github.com/climateinteractive/SDEverywhere/commit/1e0c9d0dc13c59cbfca7707343921128bbab067e)), closes [#253](https://github.com/climateinteractive/SDEverywhere/issues/253)
+
 ## [0.7.2](https://github.com/climateinteractive/SDEverywhere/compare/cli-v0.7.1...cli-v0.7.2) (2022-09-21)
 
 
