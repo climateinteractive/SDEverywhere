@@ -1,5 +1,7 @@
 // Copyright (c) 2022 Climate Interactive / New Venture Fund
 
+import { existsSync } from 'fs'
+import { copyFile, mkdir } from 'fs/promises'
 import { dirname, join as joinPath, relative } from 'path'
 import { fileURLToPath } from 'url'
 
@@ -90,6 +92,11 @@ class CheckPlugin implements Plugin {
     // which currently isn't made available to the `watch` function
     if (this.options?.current === undefined) {
       // Path to current bundle was not provided, so generate a default bundle
+      if (context.config.mode === 'development') {
+        // Copy the previous bundle to the `baselines` directory so that
+        // we automatically have it available as a baseline for comparison
+        await this.copyPreviousBundle(context.config)
+      }
       context.log('info', 'Generating model check bundle...')
       await this.genCurrentBundle(context.config, modelSpec)
     }
@@ -113,6 +120,20 @@ class CheckPlugin implements Plugin {
       // Nothing to do here in dev mode; the dev server will refresh and
       // re-run the tests in the browser when changes are detected
       return true
+    }
+  }
+
+  private async copyPreviousBundle(config: ResolvedConfig): Promise<void> {
+    // Only copy if the current bundle exists
+    const currentBundleFile = joinPath(config.prepDir, 'check-bundle.js')
+    if (existsSync(currentBundleFile)) {
+      // TODO: Use the baselines directory from the config (not yet available)
+      const baselinesDir = joinPath(config.rootDir, 'baselines')
+      if (!existsSync(baselinesDir)) {
+        await mkdir(baselinesDir, { recursive: true })
+      }
+      const previousBundleFile = joinPath(baselinesDir, 'previous.js')
+      await copyFile(currentBundleFile, previousBundleFile)
     }
   }
 
