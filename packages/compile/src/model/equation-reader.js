@@ -16,6 +16,7 @@ import {
   newLevelVarName,
   newLookupVarName,
   newFixedDelayVarName,
+  newDepreciationVarName,
   cartesianProductOf
 } from '../_shared/helpers.js'
 import {
@@ -109,6 +110,10 @@ export default class EquationReader extends ModelReader {
       this.var.varType = 'data'
     } else if (fn === '_GET_DIRECT_CONSTANTS') {
       this.var.varType = 'const'
+    } else if (fn === '_DEPRECIATE_STRAIGHTLINE') {
+      this.var.hasInitValue = true
+      this.var.varSubtype = 'depreciation'
+      this.var.depreciationVarName = canonicalName(newDepreciationVarName())
     }
     super.visitCall(ctx)
     this.callStack.pop()
@@ -248,6 +253,10 @@ export default class EquationReader extends ModelReader {
       } else if (this.argIndexForFunctionName('_DELAY_FIXED') === 1) {
         this.addReferencesToList(this.var.initReferences)
       } else if (this.argIndexForFunctionName('_DELAY_FIXED') === 2) {
+        this.addReferencesToList(this.var.initReferences)
+      } else if (this.argIndexForFunctionName('_DEPRECIATE_STRAIGHTLINE') === 1) {
+        this.addReferencesToList(this.var.initReferences)
+      } else if (this.argIndexForFunctionName('_DEPRECIATE_STRAIGHTLINE') === 2) {
         this.addReferencesToList(this.var.initReferences)
       } else if (this.argIndexForFunctionName('_ACTIVE_INITIAL') === 1) {
         this.addReferencesToList(this.var.initReferences)
