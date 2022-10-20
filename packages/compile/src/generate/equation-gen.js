@@ -818,6 +818,8 @@ export default class EquationGen extends ModelReader {
           i = 1
         } else if (fn === '_SAMPLE_IF_TRUE' || fn === '_DELAY_FIXED') {
           i = 2
+        } else if (fn === '_DEPRECIATE_STRAIGHTLINE') {
+          i = 3
         }
         this.setArgIndex(i)
         exprs[i].accept(this)
