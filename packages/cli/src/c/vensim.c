@@ -474,11 +474,20 @@ Depreciation* __new_depreciation(Depreciation* depreciation, double dtime, doubl
   // The depreciation time is quantized to an integral number of time steps.
   // The Depreciation should be constructed at init time to latch the depreciation time and initial value.
   // Allocate memory on the first call only. Pass the same pointer back in on subsequent runs.
+  size_t n = (size_t)ceil(dtime / _time_step);
+  size_t bufsize = n * sizeof(double);
   if (depreciation == NULL) {
+    // Create the Depreciation object and allocate its data buffer.
     depreciation = malloc(sizeof(Depreciation));
-    depreciation->n = (size_t)ceil(dtime / _time_step);
-    depreciation->data = malloc(sizeof(double) * depreciation->n);
+    depreciation->data = malloc(bufsize);
+  } else if (depreciation->n != n) {
+    // The depreciation time has changed since a previous run. Reallocate the data buffer.
+    free(depreciation->data);
+    depreciation->data = malloc(bufsize);
   }
+  // Reset state at the start of each run.
+  memset(depreciation->data, 0, bufsize);
+  depreciation->n = n;
   depreciation->data_index = 0;
   depreciation->dtime = dtime;
   depreciation->initial_value = initial_value;
