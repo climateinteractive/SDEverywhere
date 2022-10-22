@@ -810,7 +810,13 @@ export default class EquationGen extends ModelReader {
     let exprs = ctx.expr()
     let fn = this.currentFunctionName()
     // Split level functions into init and eval expressions.
-    if (fn === '_INTEG' || fn === '_SAMPLE_IF_TRUE' || fn === '_ACTIVE_INITIAL' || fn === '_DELAY_FIXED' || fn === '_DEPRECIATE_STRAIGHTLINE') {
+    if (
+      fn === '_INTEG' ||
+      fn === '_SAMPLE_IF_TRUE' ||
+      fn === '_ACTIVE_INITIAL' ||
+      fn === '_DELAY_FIXED' ||
+      fn === '_DEPRECIATE_STRAIGHTLINE'
+    ) {
       if (this.mode.startsWith('init')) {
         // Get the index of the argument holding the initial value.
         let i = 0
@@ -834,8 +840,7 @@ export default class EquationGen extends ModelReader {
           this.setArgIndex(2)
           exprs[2].accept(this)
           this.emit(')')
-        }
-        else if (fn === '_DEPRECIATE_STRAIGHTLINE') {
+        } else if (fn === '_DEPRECIATE_STRAIGHTLINE') {
           let depreciation = `${this.var.depreciationVarName}${this.lhsSubscriptGen(this.var.subscripts)}`
           this.emit(`;\n  ${depreciation} = __new_depreciation(${depreciation}, `)
           this.setArgIndex(1)
