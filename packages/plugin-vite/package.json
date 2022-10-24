@@ -28,14 +28,13 @@
     "build": "tsup",
     "ci:build": "run-s clean lint prettier:check test:ci type-check build"
   },
-  "dependencies": {
-    "vite": "^3.1.3"
-  },
   "peerDependencies": {
-    "@sdeverywhere/build": "^0.2.0"
+    "@sdeverywhere/build": "^0.2.0",
+    "vite": "^3.0.0"
   },
   "devDependencies": {
-    "@sdeverywhere/build": "*"
+    "@sdeverywhere/build": "*",
+    "vite": "3.1.3"
   },
   "author": "Climate Interactive",
   "license": "MIT",
