@@ -14,6 +14,8 @@ let nextTmpVarSeq = 1
 let nextLookupVarSeq = 1
 // next sequence number for generated fixed delay variable names
 let nextFixedDelayVarSeq = 1
+// next sequence number for generated depreciation variable names
+let nextDepreciationVarSeq = 1
 // next sequence number for generated level variable names
 let nextLevelVarSeq = 1
 // next sequence number for generated aux variable names
@@ -72,6 +74,10 @@ export let newLookupVarName = () => {
 export let newFixedDelayVarName = () => {
   // Return a unique fixed delay variable name
   return `_fixed_delay${nextFixedDelayVarSeq++}`
+}
+export let newDepreciationVarName = () => {
+  // Return a unique depreciation variable name
+  return `_depreciation${nextDepreciationVarSeq++}`
 }
 export let newLevelVarName = (basename = null, levelNumber = 0) => {
   // Return a unique level variable name.

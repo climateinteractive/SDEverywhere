@@ -217,6 +217,7 @@ ${postStep}
   function declSection() {
     // Emit a declaration for each variable in the model.
     let fixedDelayDecls = ''
+    let depreciationDecls = ''
     let decl = v => {
       // Build a C array declaration for the variable v.
       // This uses the subscript family for each dimension, which may overallocate
@@ -226,6 +227,12 @@ ${postStep}
       if (v.isFixedDelay()) {
         // Add the associated FixedDelay var decl.
         fixedDelayDecls += `\nFixedDelay* ${v.fixedDelayVarName}${R.map(
+          family => `[${sub(family).size}]`,
+          families
+        ).join('')};`
+      } else if (v.isDepreciation()) {
+        // Add the associated Depreciation var decl.
+        depreciationDecls += `\nDepreciation* ${v.depreciationVarName}${R.map(
           family => `[${sub(family).size}]`,
           families
         ).join('')};`
@@ -239,7 +246,7 @@ ${postStep}
       asort,
       lines
     )
-    return decls(Model.allVars()) + fixedDelayDecls
+    return decls(Model.allVars()) + fixedDelayDecls + depreciationDecls
   }
   function internalVarsSection() {
     // Declare internal variables to run the model.

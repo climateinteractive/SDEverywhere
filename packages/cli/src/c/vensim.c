@@ -464,3 +464,54 @@ double _DELAY_FIXED(double input, FixedDelay* fixed_delay) {
   }
   return result;
 }
+
+//
+// DEPRECIATE STRAIGHTLINE
+//
+Depreciation* __new_depreciation(Depreciation* depreciation, double dtime, double initial_value) {
+  // Construct a Depreciation struct with a ring buffer for the time steps in the depreciation time.
+  // We don't know the size until runtime, so it must be dynamically allocated.
+  // The depreciation time is quantized to an integral number of time steps.
+  // The Depreciation should be constructed at init time to latch the depreciation time and initial value.
+  // Allocate memory on the first call only. Pass the same pointer back in on subsequent runs.
+  size_t n = (size_t)ceil(dtime / _time_step);
+  size_t bufsize = n * sizeof(double);
+  if (depreciation == NULL) {
+    // Create the Depreciation object and allocate its data buffer.
+    depreciation = malloc(sizeof(Depreciation));
+    depreciation->data = malloc(bufsize);
+  } else if (depreciation->n != n) {
+    // The depreciation time has changed since a previous run. Reallocate the data buffer.
+    free(depreciation->data);
+    depreciation->data = malloc(bufsize);
+  }
+  // Reset state at the start of each run.
+  memset(depreciation->data, 0, bufsize);
+  depreciation->n = n;
+  depreciation->data_index = 0;
+  depreciation->dtime = dtime;
+  depreciation->initial_value = initial_value;
+  return depreciation;
+}
+double _DEPRECIATE_STRAIGHTLINE(double input, Depreciation* depreciation) {
+  // Distribute the input at this time step over the depreciation time in a ring buffer.
+  // Return the depreciation amout at the current time.
+  double result;
+  // Require the buffer size to be positive to protect from buffer overflows.
+  if (depreciation->n > 0) {
+    // Distribute input from the stream over the depreciation time.
+    double distribution = input / depreciation->dtime;
+    for (size_t i = 0; i < depreciation->n; i++) {
+      size_t pos = (depreciation->data_index + i) % depreciation->n;
+      depreciation->data[pos] += distribution;
+    }
+    result = depreciation->data[depreciation->data_index];
+    // Move to the next time step by pushing zero and shifting.
+    depreciation->data[depreciation->data_index] = 0;
+    depreciation->data_index = (depreciation->data_index + 1) % depreciation->n;
+  } else {
+    // For a zero deprecitation time, take the value directly from the input.
+    result = input;
+  }
+  return result;
+}

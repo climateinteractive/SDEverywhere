@@ -810,7 +810,13 @@ export default class EquationGen extends ModelReader {
     let exprs = ctx.expr()
     let fn = this.currentFunctionName()
     // Split level functions into init and eval expressions.
-    if (fn === '_INTEG' || fn === '_SAMPLE_IF_TRUE' || fn === '_ACTIVE_INITIAL' || fn === '_DELAY_FIXED') {
+    if (
+      fn === '_INTEG' ||
+      fn === '_SAMPLE_IF_TRUE' ||
+      fn === '_ACTIVE_INITIAL' ||
+      fn === '_DELAY_FIXED' ||
+      fn === '_DEPRECIATE_STRAIGHTLINE'
+    ) {
       if (this.mode.startsWith('init')) {
         // Get the index of the argument holding the initial value.
         let i = 0
@@ -818,10 +824,13 @@ export default class EquationGen extends ModelReader {
           i = 1
         } else if (fn === '_SAMPLE_IF_TRUE' || fn === '_DELAY_FIXED') {
           i = 2
+        } else if (fn === '_DEPRECIATE_STRAIGHTLINE') {
+          i = 3
         }
         this.setArgIndex(i)
         exprs[i].accept(this)
-        // For DELAY FIXED, also initialize the support struct out of band, as it is not a Vensim var.
+        // For DELAY FIXED and DEPRECIATE STRAIGHTLINE, also initialize the support struct
+        // out of band, as they are not Vensim vars.
         if (fn === '_DELAY_FIXED') {
           let fixedDelay = `${this.var.fixedDelayVarName}${this.lhsSubscriptGen(this.var.subscripts)}`
           this.emit(`;\n  ${fixedDelay} = __new_fixed_delay(${fixedDelay}, `)
@@ -830,6 +839,15 @@ export default class EquationGen extends ModelReader {
           this.emit(', ')
           this.setArgIndex(2)
           exprs[2].accept(this)
+          this.emit(')')
+        } else if (fn === '_DEPRECIATE_STRAIGHTLINE') {
+          let depreciation = `${this.var.depreciationVarName}${this.lhsSubscriptGen(this.var.subscripts)}`
+          this.emit(`;\n  ${depreciation} = __new_depreciation(${depreciation}, `)
+          this.setArgIndex(1)
+          exprs[1].accept(this)
+          this.emit(', ')
+          this.setArgIndex(2)
+          exprs[3].accept(this)
           this.emit(')')
         }
       } else {
@@ -844,6 +862,12 @@ export default class EquationGen extends ModelReader {
           exprs[0].accept(this)
           this.emit(', ')
           this.emit(`${this.var.fixedDelayVarName}${this.lhsSubscriptGen(this.var.subscripts)}`)
+        } else if (fn === '_DEPRECIATE_STRAIGHTLINE') {
+          // For DEPRECIATE STRAIGHTLINE, emit the first arg followed by the Depreciation support var.
+          this.setArgIndex(0)
+          exprs[0].accept(this)
+          this.emit(', ')
+          this.emit(`${this.var.depreciationVarName}${this.lhsSubscriptGen(this.var.subscripts)}`)
         } else {
           // Emit the variable LHS as the first arg at eval time, giving the current value for the level.
           this.emit(this.lhs)
