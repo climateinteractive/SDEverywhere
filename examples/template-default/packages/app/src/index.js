@@ -53,9 +53,18 @@ function addSliderItem(sliderInput) {
     $(`<div class="input-units">${str(spec.unitsKey)}</div>`)
   ])
 
+  let tickPos = (spec.defaultValue - spec.minValue) / (spec.maxValue - spec.minValue)
+  if (spec.reversed) {
+    tickPos = 1 - tickPos
+  }
+  const sliderRow = $(`<div class="input-slider-row"/>`).append([
+    $(`<div class="input-slider-tick" style="left:${tickPos * 100}%"></div>`),
+    $(`<input id="${inputElemId}" class="slider" type="text"></input>`)
+  ])
+
   const div = $(`<div class="input-item"/>`).append([
     titleRow,
-    $(`<input id="${inputElemId}" class="slider" type="text"></input>`),
+    sliderRow,
     $(`<div class="input-desc">${spec.descriptionKey ? str(spec.descriptionKey) : ''}</div>`)
   ])
 
