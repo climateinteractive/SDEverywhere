@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.7.4](https://github.com/climateinteractive/SDEverywhere/compare/cli-v0.7.3...cli-v0.7.4) (2022-10-25)
+
+
+### Features
+
+* implement DEPRECIATE STRAIGHTLINE ([#264](https://github.com/climateinteractive/SDEverywhere/issues/264)) ([e93101e](https://github.com/climateinteractive/SDEverywhere/commit/e93101e64cce34ffa53ff31d3307de25ada0d4ce)), closes [#258](https://github.com/climateinteractive/SDEverywhere/issues/258)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/compile bumped from ^0.7.0 to ^0.7.1
+
 ## [0.7.3](https://github.com/climateinteractive/SDEverywhere/compare/cli-v0.7.2...cli-v0.7.3) (2022-09-30)
 
 
