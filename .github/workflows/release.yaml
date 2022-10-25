@@ -31,7 +31,7 @@ jobs:
           monorepo-tags: true
 
       - name: Check out repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Install Node.js
         uses: actions/setup-node@v3
@@ -47,7 +47,7 @@ jobs:
 
       - name: Get pnpm store directory
         id: pnpm-cache
-        run: echo "::set-output name=pnpm_cache_dir::$(pnpm store path)"
+        run: echo "pnpm_cache_dir=$(pnpm store path)" >> $GITHUB_OUTPUT
 
       - name: Enable pnpm cache
         uses: actions/cache@v3
