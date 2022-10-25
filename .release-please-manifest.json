@@ -1,15 +1,15 @@
 {
-  "packages/compile": "0.7.0",
-  "packages/cli": "0.7.3",
+  "packages/compile": "0.7.1",
+  "packages/cli": "0.7.4",
   "packages/build": "0.2.0",
   "packages/check-core": "0.1.0",
   "packages/check-ui-shell": "0.2.0",
   "packages/plugin-check": "0.2.1",
-  "packages/plugin-vite": "0.1.3",
+  "packages/plugin-vite": "0.1.4",
   "packages/plugin-wasm": "0.1.3",
   "packages/plugin-worker": "0.1.4",
   "packages/runtime": "0.1.0",
   "packages/runtime-async": "0.1.0",
-  "packages/create": "0.1.1",
+  "packages/create": "0.1.2",
   "packages/plugin-config": "0.1.1"
 }

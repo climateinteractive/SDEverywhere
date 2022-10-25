@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.1](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.0...compile-v0.7.1) (2022-10-25)
+
+
+### Features
+
+* implement DEPRECIATE STRAIGHTLINE ([#264](https://github.com/climateinteractive/SDEverywhere/issues/264)) ([e93101e](https://github.com/climateinteractive/SDEverywhere/commit/e93101e64cce34ffa53ff31d3307de25ada0d4ce)), closes [#258](https://github.com/climateinteractive/SDEverywhere/issues/258)
+
 ## [0.7.0](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.6.0...compile-v0.7.0) (2022-06-28)
 
 
