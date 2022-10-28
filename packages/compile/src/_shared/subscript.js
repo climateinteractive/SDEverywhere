@@ -315,8 +315,39 @@ export function separatedVariableIndex(rhsSub, variable, rhsSubscripts) {
   // 2. Then find an lhsSub in the same family as the sepDim.
   // 3. Further qualify the lhsSub.
 
+  function multipleSubsInSameFamily() {
+    const allFamilies = [...variable.subscripts.map(s => sub(s).family)]
+    const uniqueFamilies = new Set(allFamilies)
+    return allFamilies.length !== uniqueFamilies.size
+  }
+
   // If rhsSub is found on the LHS, don't convert it into an index.
   if (!variable.subscripts.includes(rhsSub)) {
+    // There may be more than one lhsSub in the same family as rhsSub.
+    // We detect and handle this case up front in order to pick the one
+    // that belongs to the rhsSub (choosing by position).
+    if (rhsSubscripts && variable.subscripts.length >= 2 && rhsSubscripts.length >= 2 && multipleSubsInSameFamily()) {
+      // XXX: For now, look at the order of variable.separationDims to determine
+      // which lhs sub to choose.  For example (assuming both "sector" dims resolve
+      // to the same family):
+      //   variable.subscripts: [ '_scenario', '_oagriculture', '_energy' ]
+      //   variable.separationDims: [ '_supplying_sectors', '_producing_sector' ]
+      //   if rhsSub is '_producing_sector', we want to return '_energy'
+      const sepDimIndex = variable.separationDims.indexOf(rhsSub)
+      const sepSubs = variable.subscripts.filter(s => sub(s).family !== s)
+      if (sepDimIndex >= 0) {
+        if (sepDimIndex < sepSubs.length) {
+          const sepSub = sepSubs[sepDimIndex]
+          return sepSub
+        } else {
+          console.error`ERROR: Failed to find dim index for rhsSub ${rhsSub} in lhs sepDims ${variable.separationDims}`
+          process.exit(1)
+        }
+      } else {
+        console.error(`ERROR: rhsSub ${rhsSub} not included in lhs sepDims ${variable.separationDims}`)
+        process.exit(1)
+      }
+    }
     // (1)
     for (let sepDim of variable.separationDims) {
       if (rhsSub === sepDim || hasMapping(rhsSub, sepDim)) {
@@ -328,21 +359,8 @@ export function separatedVariableIndex(rhsSub, variable, rhsSubscripts) {
             } else {
               // (3)
               if (rhsSub === sepDim) {
-                // There may be more than one lhsSub in the same family as rhsSub.
-                // Pick the one that belongs to the rhsSub.
-                // If there are two LHS subs both in the same family, choose by position instead.
-                if (
-                  rhsSubscripts &&
-                  variable.subscripts.length === 2 &&
-                  rhsSubscripts.length === 2 &&
-                  sub(variable.subscripts[0]).family === sub(variable.subscripts[1]).family
-                ) {
-                  let pos = rhsSubscripts.indexOf(rhsSub)
-                  return variable.subscripts[pos]
-                } else {
-                  if (indexNamesForSubscript(rhsSub).includes(lhsSub)) {
-                    return lhsSub
-                  }
+                if (indexNamesForSubscript(rhsSub).includes(lhsSub)) {
+                  return lhsSub
                 }
               } else {
                 // Find the index that maps from the subscript dimension to the separated var index.
