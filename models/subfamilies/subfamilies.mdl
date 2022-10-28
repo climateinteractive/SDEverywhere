@@ -1,0 +1,47 @@
+{UTF-8}
+
+Scenario : S1, S2
+  ~~|
+
+Sector : A1, A2, A3
+  ~~|
+
+Supplying Sector : A1, A2
+  -> Producing Sector
+  ~~|
+
+Producing Sector : A1, A2
+  -> Supplying Sector
+  ~~|
+
+X[A1,A1] = 101 ~~|
+X[A1,A2] = 102 ~~|
+X[A1,A3] = 103 ~~|
+X[A2,A1] = 201 ~~|
+X[A2,A2] = 202 ~~|
+X[A2,A3] = 203 ~~|
+X[A3,A1] = 301 ~~|
+X[A3,A2] = 302 ~~|
+X[A3,A3] = 303 ~~|
+
+Y[S1] = 1000 ~~|
+Y[S2] = 2000 ~~|
+
+U[Supplying Sector, Producing Sector] =
+  X[Supplying Sector, Producing Sector] + 5
+  ~
+  ~
+  ~ :SUPPLEMENTARY 
+  |
+
+V[Scenario, Supplying Sector, Producing Sector] = 
+  Y[Scenario] + X[Supplying Sector, Producing Sector]
+  ~
+  ~
+  ~ :SUPPLEMENTARY 
+  |
+
+INITIAL TIME = 0 ~~|
+FINAL TIME = 1 ~~|
+TIME STEP = 1 ~~|
+SAVEPER = TIME STEP ~~|
