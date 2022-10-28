@@ -1,0 +1,12 @@
+# yaml-language-server: $schema=../node_modules/@sdeverywhere/plugin-check/node_modules/@sdeverywhere/check-core/schema/check.schema.json
+
+- describe: Z
+  tests:
+    - it: should be in the range [1990,2110] for all input scenarios
+      scenarios:
+        - preset: matrix
+      datasets:
+        - name: Z
+      predicates:
+        - gte: 1990
+          lte: 2110

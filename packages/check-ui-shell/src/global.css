@@ -1,0 +1,184 @@
+:root {
+  /*
+   * This variable is set to 1vh by default, but can be overridden to
+   * work around `100vh` issues in mobile Safari and Chrome.
+   */
+  --vh: 1vh;
+}
+
+html,
+body {
+  box-sizing: border-box;
+  width: 100vw;
+  height: 100vh;
+  margin: 0;
+  background-color: #272727;
+  color: #fff;
+  font-family: Roboto;
+  font-weight: 500;
+  /* 1rem == 1% of the app width */
+  font-size: 1vw;
+  /* Disable scrolling on the body; it can be re-enabled for specific children */
+  overflow: hidden;
+}
+
+#app-shell-container {
+  display: flex;
+  width: 100vw;
+  height: 100%;
+  margin: 0;
+}
+
+a {
+  color: #fff;
+  text-decoration: none;
+}
+
+a:hover {
+  font-weight: bold;
+}
+
+/* Render subscripts and superscripts without affecting line height */
+sup,
+sub {
+  vertical-align: 0;
+  position: relative;
+}
+sup {
+  bottom: 0.7ex;
+}
+sub {
+  top: 0.6ex;
+}
+
+/*
+ * Standard colors
+ */
+
+:root {
+  --dataset-0: crimson;
+  --dataset-1: deepskyblue;
+  --bucket-0: green;
+  --bucket-1: orange;
+  --bucket-2: orangered;
+  --bucket-3: crimson;
+  --bucket-4: magenta;
+  --status-passed: green;
+  --status-failed: crimson;
+  --status-error: orangered;
+}
+
+.dataset-color-0 {
+  color: var(--dataset-0);
+}
+.dataset-color-1 {
+  color: var(--dataset-1);
+}
+.bucket-color-0 {
+  color: var(--bucket-0);
+}
+.bucket-color-1 {
+  color: var(--bucket-1);
+}
+.bucket-color-2 {
+  color: var(--bucket-2);
+}
+.bucket-color-3 {
+  color: var(--bucket-3);
+}
+.bucket-color-4 {
+  color: var(--bucket-4);
+}
+.status-color-passed {
+  color: var(--status-passed);
+}
+.status-color-failed {
+  color: var(--status-failed);
+}
+.status-color-error {
+  color: var(--status-error);
+}
+
+.dataset-bg-0 {
+  background-color: var(--dataset-0);
+}
+.dataset-bg-1 {
+  background-color: var(--dataset-1);
+}
+.bucket-bg-0 {
+  background-color: var(--bucket-0);
+}
+.bucket-bg-1 {
+  background-color: var(--bucket-1);
+}
+.bucket-bg-2 {
+  background-color: var(--bucket-2);
+}
+.bucket-bg-3 {
+  background-color: var(--bucket-3);
+}
+.bucket-bg-4 {
+  background-color: var(--bucket-4);
+}
+.status-bg-passed {
+  background-color: var(--status-passed);
+}
+.status-bg-failed {
+  background-color: var(--status-failed);
+}
+.status-bg-error {
+  background-color: var(--status-error);
+}
+
+.dataset-border-0 {
+  border-color: var(--dataset-0);
+}
+.dataset-border-1 {
+  border-color: var(--dataset-1);
+}
+.bucket-border-0 {
+  border-color: var(--bucket-0);
+}
+.bucket-border-1 {
+  border-color: var(--bucket-1);
+}
+.bucket-border-2 {
+  border-color: var(--bucket-2);
+}
+.bucket-border-3 {
+  border-color: var(--bucket-3);
+}
+.bucket-border-4 {
+  border-color: var(--bucket-4);
+}
+.status-border-passed {
+  border-color: var(--status-passed);
+}
+.status-border-failed {
+  border-color: var(--status-failed);
+}
+.status-border-error {
+  border-color: var(--status-error);
+}
+
+/* Add this class to disable text selection */
+.no-selection {
+  -webkit-touch-callout: none; /* iOS Safari */
+  -webkit-user-select: none; /* Safari */
+  -khtml-user-select: none; /* Konqueror HTML */
+  -moz-user-select: none; /* Old versions of Firefox */
+  -ms-user-select: none; /* Internet Explorer/Edge */
+  user-select: none; /* Non-prefixed version, currently supported by Chrome, Edge, Opera and Firefox */
+  cursor: default;
+}
+
+/* Add this class to re-enable text selection */
+.allow-selection {
+  -webkit-touch-callout: default; /* iOS Safari */
+  -webkit-user-select: text; /* Safari */
+  -khtml-user-select: text; /* Konqueror HTML */
+  -moz-user-select: text; /* Old versions of Firefox */
+  -ms-user-select: text; /* Internet Explorer/Edge */
+  user-select: text; /* Non-prefixed version, currently supported by Chrome, Edge, Opera and Firefox */
+  cursor: text;
+}

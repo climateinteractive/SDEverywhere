@@ -1,0 +1,40 @@
+{
+  "name": "@sdeverywhere/cli",
+  "version": "0.7.4",
+  "description": "Contains the `sde` command line interface for the SDEverywhere tool suite.",
+  "type": "module",
+  "files": [
+    "src/**",
+    "!.DS_Store"
+  ],
+  "bin": {
+    "sde": "src/main.js"
+  },
+  "scripts": {
+    "lint": "eslint . --max-warnings 0",
+    "prettier:check": "prettier --check .",
+    "prettier:fix": "prettier --write .",
+    "precommit": "../../scripts/precommit",
+    "ci:build": "run-s lint prettier:check"
+  },
+  "dependencies": {
+    "@sdeverywhere/build": "^0.2.0",
+    "@sdeverywhere/compile": "^0.7.1",
+    "bufx": "^1.0.5",
+    "byline": "^5.0.0",
+    "ramda": "^0.27.0",
+    "shelljs": "^0.8.3",
+    "yargs": "^17.5.1"
+  },
+  "author": "Climate Interactive",
+  "license": "MIT",
+  "homepage": "https://sdeverywhere.org",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/climateinteractive/SDEverywhere.git",
+    "directory": "packages/cli"
+  },
+  "bugs": {
+    "url": "https://github.com/climateinteractive/SDEverywhere/issues"
+  }
+}

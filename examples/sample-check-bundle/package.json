@@ -1,0 +1,42 @@
+{
+  "name": "@sdeverywhere/sample-check-bundle",
+  "version": "1.0.0",
+  "private": true,
+  "files": [
+    "dist/**"
+  ],
+  "module": "dist/index.js",
+  "types": "types/index.d.ts",
+  "scripts": {
+    "clean": "rm -rf dist",
+    "lint": "eslint src --ext .ts --max-warnings 0",
+    "prettier:check": "prettier --check .",
+    "prettier:fix": "prettier --write .",
+    "precommit": "../../scripts/precommit",
+    "test": "echo No tests yet",
+    "test:ci": "echo No tests yet",
+    "type-check": "tsc --noEmit -p tsconfig-build.json",
+    "build-v1": "MODEL_VERSION=1 vite build",
+    "build-v2": "MODEL_VERSION=2 vite build",
+    "build": "run-s build-v1 build-v2",
+    "ci:build": "run-s clean lint prettier:check test:ci type-check build"
+  },
+  "dependencies": {
+    "@sdeverywhere/check-core": "workspace:*",
+    "assert-never": "^1.2.1"
+  },
+  "devDependencies": {
+    "vite": "^3.1.3"
+  },
+  "author": "Climate Interactive",
+  "license": "MIT",
+  "homepage": "https://sdeverywhere.org",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/climateinteractive/SDEverywhere.git",
+    "directory": "examples/sample-check-bundle"
+  },
+  "bugs": {
+    "url": "https://github.com/climateinteractive/SDEverywhere/issues"
+  }
+}

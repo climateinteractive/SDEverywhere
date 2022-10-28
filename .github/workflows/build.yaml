@@ -1,29 +1,143 @@
 #
-# Builds and tests the package on Linux.
+# Builds and tests the packages.  This builds on Linux by default, but
+# can be configured to build on Windows and/or macOS by uncommenting
+# the matrix config lines below.
 #
-# This runs after changes are pushed to a feature branch or to `develop`.
+# This runs after changes are pushed to a feature branch.  It does not
+# run for pushes to the main branch because that is covered by the
+# `release` workflow.
 #
 
 name: Build
 
 on:
   push:
-    branches:
-      - '**'
-      - '!master'
+    branches-ignore:
+      - main
 
 jobs:
+  # The `build` job builds and tests all packages in the monorepo
   build:
-    if: "! contains(toJSON(github.event.commits.*.message), '[skip-ci]')"
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.config.os }}
+    timeout-minutes: 20
+    strategy:
+      matrix:
+        config:
+          - { plat: 'linux', os: 'ubuntu-20.04' }
+          # - { plat: 'mac', os: 'macos-10.15' }
+          # - { plat: 'win', os: 'windows-2019' }
     steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-
-      - name: Install Dependencies
-        run: npm ci
-
-      - name: Run Tests
+      # Force Unix-style line endings (otherwise Prettier checks will fail on Windows)
+      - name: Configure git to use Unix-style line endings
+        if: matrix.config.plat == 'win'
         run: |
-          npm run prettier:check
-          npm run test
+          git config --global core.autocrlf false
+          git config --global core.eol lf
+
+      - name: Check out repo
+        uses: actions/checkout@v3
+
+      - name: Install Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+
+      # The pnpm caching strategy in the following steps is based on:
+      #   https://github.com/pnpm/action-setup#use-cache-to-reduce-installation-time
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2.2.4
+        with:
+          version: 7
+
+      - name: Configure pnpm
+        if: matrix.config.plat == 'win'
+        run: |
+          # Force pnpm to use bash shell for running scripts on Windows
+          pnpm config set script-shell bash
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: echo "pnpm_cache_dir=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: Enable pnpm cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ steps.pnpm-cache.outputs.pnpm_cache_dir }}
+          key: pnpm-store-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            pnpm-store-${{ runner.os }}-
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          pnpm install
+
+      - name: Build and test
+        shell: bash
+        run: |
+          ./scripts/ci-build
+
+  # The `test_e2e` job runs the model tests.  This job runs in parallel with the `build`
+  # job (which cuts down on overall time to execute the workflow) because it only needs
+  # to build the `@sdeverywhere/build` package in order to run the model tests.
+  test_e2e:
+    runs-on: ${{ matrix.config.os }}
+    timeout-minutes: 20
+    strategy:
+      matrix:
+        config:
+          - { plat: 'linux', os: 'ubuntu-20.04' }
+          # - { plat: 'mac', os: 'macos-10.15' }
+          # - { plat: 'win', os: 'windows-2019' }
+    steps:
+      # Force Unix-style line endings (otherwise Prettier checks will fail on Windows)
+      - name: Configure git to use Unix-style line endings
+        if: matrix.config.plat == 'win'
+        run: |
+          git config --global core.autocrlf false
+          git config --global core.eol lf
+
+      - name: Check out repo
+        uses: actions/checkout@v3
+
+      - name: Install Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+
+      # The pnpm caching strategy in the following steps is based on:
+      #   https://github.com/pnpm/action-setup#use-cache-to-reduce-installation-time
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2.2.4
+        with:
+          version: 7
+
+      - name: Configure pnpm
+        if: matrix.config.plat == 'win'
+        run: |
+          # Force pnpm to use bash shell for running scripts on Windows
+          pnpm config set script-shell bash
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: echo "pnpm_cache_dir=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: Enable pnpm cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ steps.pnpm-cache.outputs.pnpm_cache_dir }}
+          key: pnpm-store-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            pnpm-store-${{ runner.os }}-
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          pnpm install
+
+      - name: Run model tests
+        shell: bash
+        run: |
+          ./scripts/ci-test-e2e

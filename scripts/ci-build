@@ -1,0 +1,27 @@
+#!/bin/bash
+
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+PROJ_DIR=$SCRIPT_DIR/..
+
+set -e # fail on error
+set -x # include all commands in logs
+
+cd "$PROJ_DIR"
+
+pnpm run prettier-local:check
+pnpm run -r --workspace-concurrency=1 ci:build
+
+# Fail the build if there are any untracked or modified files.  This usually
+# only occurs if the typedoc-generated docs need updating after any API
+# changes.  (We currently keep the generated API docs as tracked files in
+# the repo, and updating them is a manual step.)
+set +e
+set +x
+if [[ -n "$(git status --porcelain)" ]]; then
+echo
+  echo "ERROR: There are untracked or modified files reported by git; maybe the API docs need to be updated?"
+  echo
+  git status
+  echo
+  exit 1
+fi

@@ -1,0 +1,21 @@
+{
+  "packages": {
+    "packages/compile": {},
+    "packages/build": {},
+    "packages/cli": {},
+    "packages/runtime": {},
+    "packages/runtime-async": {},
+    "packages/check-core": {},
+    "packages/check-ui-shell": {},
+    "packages/plugin-check": {},
+    "packages/plugin-config": {},
+    "packages/plugin-vite": {},
+    "packages/plugin-wasm": {},
+    "packages/plugin-worker": {},
+    "packages/create": {}
+  },
+  "plugins": ["node-workspace"],
+  "bump-minor-pre-major": true,
+  "bump-patch-for-minor-pre-major": true,
+  "pull-request-title-pattern": "chore: release${component} ${version}"
+}

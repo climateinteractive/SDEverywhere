@@ -1,0 +1,24 @@
+{
+  "name": "app",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "clean": "rm -rf public",
+    "lint": "eslint src --max-warnings 0",
+    "prettier:check": "prettier --check .",
+    "prettier:fix": "prettier --write .",
+    "precommit": "../scripts/precommit",
+    "build": "vite build",
+    "dev": "vite"
+  },
+  "dependencies": {
+    "bootstrap-slider": "10.6.2",
+    "chart.js": "^2.9.4",
+    "jquery": "^3.5.1"
+  },
+  "devDependencies": {
+    "@types/chart.js": "^2.9.34",
+    "vite": "^3.1.3"
+  }
+}

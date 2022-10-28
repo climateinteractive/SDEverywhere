@@ -1,0 +1,130 @@
+{UTF-8}
+dtime=
+	20
+	~	
+	~		|
+
+Capacity Cost=
+	1e+06
+	~	$/MW
+	~		|
+
+New Capacity=
+	IF THEN ELSE (Time = 2022, 1000, IF THEN ELSE(Time = 2026,2500,0))
+	~	MW
+	~		|
+
+str=
+	Capacity Cost*New Capacity
+	~	$
+	~		|
+
+Depreciated Amount=
+	DEPRECIATE STRAIGHTLINE(str, dtime, 1, 0)
+	~	
+	~		|
+
+********************************************************
+	.Control
+********************************************************~
+		Simulation Control Parameters
+	|
+
+FINAL TIME  = 2050
+	~	Year
+	~	The final time for the simulation.
+	|
+
+INITIAL TIME  = 2020
+	~	Year
+	~	The initial time for the simulation.
+	|
+
+SAVEPER  =
+        TIME STEP
+	~	Year [0,?]
+	~	The frequency with which output is stored.
+	|
+
+TIME STEP  = 1
+	~	Year [0,?]
+	~	The time step for the simulation.
+	|
+
+\\\---/// Sketch information - do not modify anything except names
+V300  Do not put anything below this section - it will be ignored
+*View 1
+$192-192-192,0,Courier|12||0-0-0|0-0-0|0-0-255|-1--1--1|255-255-255|96,96,100,0
+10,1,New Capacity,344,277,56,9,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,2,Time,310,223,29,9,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|||128-128-128,0,0,0,0,0,0
+1,3,2,1,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
+10,4,Capacity Cost,423,168,39,16,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+10,5,str,537,238,53,16,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,6,1,5,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+1,7,4,5,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,8,Depreciated Amount,713,243,53,16,8,3,0,0,0,0,0,0,0,0,0,0,0,0
+1,9,5,8,0,0,0,0,0,128,0,-1--1--1,,1|(0,0)|
+10,10,dtime,587,313,46,23,8,3,0,0,-1,0,0,0,0,0,0,0,0,0
+1,11,10,8,0,0,0,0,0,64,1,-1--1--1,,1|(0,0)|
+///---\\\
+:L<%^E!@
+1:depreciate.vdfx
+4:Time
+5:Capacity Cost
+9:depreciate
+19:100,0
+24:2020
+25:2050
+26:2050
+57:1
+54:0
+55:0
+82:1
+86:0
+59:0
+56:0
+58:0
+71:0
+110:0
+111:0
+44:0
+46:0
+45:0
+49:0
+50:0
+51:
+52:
+53:
+43:/Users/todd/Projects/SDEverywhere/models/depreciate/depreciate.dat
+47:
+48:
+15:0,0,0,0,0,0
+27:0,
+34:0,
+42:1
+72:0
+73:0
+35:Date
+36:YYYY-MM-DD
+37:2020
+38:1
+39:1
+40:0
+41:0
+95:0
+96:0
+97:0
+77:0
+78:0
+102:1
+93:0
+94:0
+92:0
+91:0
+90:0
+87:0
+75:
+43:/Users/todd/Projects/SDEverywhere/models/depreciate/depreciate.dat
+103:8,8,8,3,8
+105:0,0,0,0,0,0,0,0,0,0
+104:Courier|12||0-0-0|0-0-0|-1--1--1|0-0-255|192-192-192|-1--1--1

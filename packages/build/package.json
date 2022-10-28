@@ -1,0 +1,56 @@
+{
+  "name": "@sdeverywhere/build",
+  "version": "0.2.0",
+  "files": [
+    "dist/**"
+  ],
+  "type": "module",
+  "main": "dist/index.cjs",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "scripts": {
+    "clean": "rm -rf dist",
+    "lint": "eslint src --ext .ts --max-warnings 0",
+    "prettier:check": "prettier --check .",
+    "prettier:fix": "prettier --write .",
+    "precommit": "../../scripts/precommit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ci": "vitest run",
+    "type-check": "tsc --noEmit -p tsconfig-build.json",
+    "build": "tsup",
+    "docs": "../../scripts/gen-docs.js",
+    "ci:build": "run-s clean lint prettier:check type-check build test:ci docs"
+  },
+  "dependencies": {
+    "chokidar": "^3.5.3",
+    "cross-spawn": "^7.0.3",
+    "folder-hash": "^4.0.2",
+    "neverthrow": "^4.3.1",
+    "picocolors": "^1.0.0",
+    "tiny-glob": "^0.2.9"
+  },
+  "devDependencies": {
+    "@types/cross-spawn": "^6.0.2",
+    "@types/folder-hash": "^4.0.1",
+    "@types/node": "^16.11.7"
+  },
+  "author": "Climate Interactive",
+  "license": "MIT",
+  "homepage": "https://sdeverywhere.org",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/climateinteractive/SDEverywhere.git",
+    "directory": "packages/build"
+  },
+  "bugs": {
+    "url": "https://github.com/climateinteractive/SDEverywhere/issues"
+  }
+}

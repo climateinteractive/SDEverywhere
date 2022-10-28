@@ -1,2 +1,2 @@
-src/web
-.vscode
+pnpm-lock.yaml
+**/CHANGELOG.md

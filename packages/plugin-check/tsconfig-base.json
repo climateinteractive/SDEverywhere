@@ -1,0 +1,17 @@
+// This contains the TypeScript configuration that is shared between
+// testing (`tsconfig-test.json`) and production builds (`tsconfig-build.json`).
+{
+  "extends": "../../tsconfig-common.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    // Use "es2021" because this is the ES version for Node 16
+    "target": "es2021",
+    // Use "es2020" because this is a Node module (using ESM) and we need to
+    // use dynamic imports
+    "module": "es2020",
+    "noImplicitAny": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "types": ["node"]
+  }
+}

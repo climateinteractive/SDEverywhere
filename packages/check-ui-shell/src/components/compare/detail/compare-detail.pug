@@ -1,0 +1,14 @@
+//- Copyright (c) 2021-2022 Climate Interactive / New Venture Fund
+
+//- Note: These mixins are kept in an external pug file to work around a
+//- Svelte issue related to `each` and TypeScript, see:
+//-   https://github.com/sveltejs/svelte-preprocess/issues/207
+
+mixin related-items
+  +each('viewModel.relatedItems as relatedItem')
+    li.related-item { @html relatedItem }
+
+mixin rows
+  +each('viewModel.rows as rowViewModel')
+    .row-container
+      DetailRow(viewModel!='{rowViewModel}')

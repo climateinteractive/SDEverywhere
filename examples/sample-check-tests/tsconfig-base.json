@@ -1,0 +1,15 @@
+// This contains the TypeScript configuration that is shared between
+// testing (`tsconfig-test.json`) and production builds (`tsconfig-build.json`).
+{
+  "extends": "../../tsconfig-common.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "allowJs": true,
+    "module": "es6",
+    "target": "es6",
+    "noImplicitAny": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "types": ["vite/client"]
+  }
+}

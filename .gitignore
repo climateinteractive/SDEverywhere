@@ -18,6 +18,3 @@ removals.txt
 npm-debug.log*
 # Dependency directories
 node_modules
-# Tools
-.vscode/
-.vscode/ipch

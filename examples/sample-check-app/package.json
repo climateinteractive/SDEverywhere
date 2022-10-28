@@ -1,0 +1,46 @@
+{
+  "name": "@sdeverywhere/sample-check-app",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "clean": "rm -rf public",
+    "lint:ts": "eslint src --max-warnings 0",
+    "lint:svelte": "svelte-check --fail-on-hints --fail-on-warnings --output human",
+    "lint": "run-s lint:ts lint:svelte",
+    "prettier:check": "prettier --check .",
+    "prettier:fix": "prettier --write .",
+    "precommit": "../../scripts/precommit",
+    "test": "echo No tests yet",
+    "type-check": "tsc --noEmit -p tsconfig-build.json",
+    "build": "vite build",
+    "dev": "vite",
+    "ci:build": "run-s clean lint prettier:check type-check build"
+  },
+  "dependencies": {
+    "@sdeverywhere/check-core": "workspace:*",
+    "@sdeverywhere/check-ui-shell": "workspace:*",
+    "@sdeverywhere/sample-check-tests": "workspace:*"
+  },
+  "devDependencies": {
+    "@sveltejs/vite-plugin-svelte": "^1.0.8",
+    "postcss": "^8.2.14",
+    "pug": "^3.0.1",
+    "sass": "^1.34.1",
+    "svelte": "^3.47.0",
+    "svelte-check": "^2.7.0",
+    "svelte-preprocess": "^4.10.6",
+    "vite": "^3.1.3"
+  },
+  "author": "Climate Interactive",
+  "license": "MIT",
+  "homepage": "https://sdeverywhere.org",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/climateinteractive/SDEverywhere.git",
+    "directory": "examples/sample-check-app"
+  },
+  "bugs": {
+    "url": "https://github.com/climateinteractive/SDEverywhere/issues"
+  }
+}

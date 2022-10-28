@@ -1,0 +1,50 @@
+{
+  "name": "@sdeverywhere/plugin-vite",
+  "version": "0.1.4",
+  "files": [
+    "dist/**"
+  ],
+  "type": "module",
+  "main": "dist/index.cjs",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "scripts": {
+    "clean": "rm -rf dist",
+    "lint": "eslint src --ext .ts --max-warnings 0",
+    "prettier:check": "prettier --check .",
+    "prettier:fix": "prettier --write .",
+    "precommit": "../../scripts/precommit",
+    "test": "echo No tests yet",
+    "test:watch": "echo No tests yet",
+    "test:ci": "echo No tests yet",
+    "type-check": "tsc --noEmit -p tsconfig-build.json",
+    "build": "tsup",
+    "ci:build": "run-s clean lint prettier:check test:ci type-check build"
+  },
+  "peerDependencies": {
+    "@sdeverywhere/build": "^0.2.0",
+    "vite": "^3.0.0"
+  },
+  "devDependencies": {
+    "@sdeverywhere/build": "*",
+    "vite": "3.1.3"
+  },
+  "author": "Climate Interactive",
+  "license": "MIT",
+  "homepage": "https://sdeverywhere.org",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/climateinteractive/SDEverywhere.git",
+    "directory": "packages/plugin-vite"
+  },
+  "bugs": {
+    "url": "https://github.com/climateinteractive/SDEverywhere/issues"
+  }
+}

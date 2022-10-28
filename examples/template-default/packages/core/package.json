@@ -1,0 +1,26 @@
+{
+  "name": "core",
+  "version": "1.0.0",
+  "private": true,
+  "files": [
+    "dist/**",
+    "strings/**"
+  ],
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "clean": "rm -rf dist",
+    "lint": "eslint src --max-warnings 0",
+    "prettier:check": "prettier --check .",
+    "prettier:fix": "prettier --write .",
+    "precommit": "../scripts/precommit"
+  },
+  "dependencies": {
+    "@sdeverywhere/runtime": "^0.1.0",
+    "@sdeverywhere/runtime-async": "^0.1.0"
+  },
+  "devDependencies": {
+    "vite": "^3.1.3"
+  }
+}
