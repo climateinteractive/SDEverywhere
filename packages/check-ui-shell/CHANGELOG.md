@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/climateinteractive/SDEverywhere/compare/check-ui-shell-v0.2.0...check-ui-shell-v0.2.1) (2022-10-29)
+
+
+### Bug Fixes
+
+* make colors for comparison graph plots match dataset styles ([#280](https://github.com/climateinteractive/SDEverywhere/issues/280)) ([20e7d2b](https://github.com/climateinteractive/SDEverywhere/commit/20e7d2b08b12c9adcce3e9238441475b0dd64723)), closes [#279](https://github.com/climateinteractive/SDEverywhere/issues/279)
+
 ## [0.2.0](https://github.com/climateinteractive/SDEverywhere/compare/check-ui-shell-v0.1.1...check-ui-shell-v0.2.0) (2022-09-28)
 
 
