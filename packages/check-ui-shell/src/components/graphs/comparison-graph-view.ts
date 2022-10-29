@@ -142,8 +142,10 @@ function createChart(canvas: HTMLCanvasElement, viewModel: ComparisonGraphViewMo
 
   // Add the right data points first so that they are drawn on top of the
   // left data points
-  addPlot(viewModel.pointsR, 'crimson')
-  addPlot(viewModel.pointsL, 'deepskyblue')
+  // TODO: Use the colors defined in CSS (or make them configurable through other means);
+  // these should not be hardcoded here
+  addPlot(viewModel.pointsR, 'deepskyblue')
+  addPlot(viewModel.pointsL, 'crimson')
   for (const refPlot of viewModel.refPlots) {
     addPlot(refPlot.points, 'green', refPlot.style || 'normal')
   }
