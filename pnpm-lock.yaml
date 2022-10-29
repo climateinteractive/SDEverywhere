@@ -260,7 +260,7 @@ importers:
       '@rollup/plugin-replace': ^4.0.0
       '@sdeverywhere/build': '*'
       '@sdeverywhere/check-core': ^0.1.0
-      '@sdeverywhere/check-ui-shell': ^0.2.0
+      '@sdeverywhere/check-ui-shell': ^0.2.1
       '@sdeverywhere/runtime': ^0.1.0
       '@sdeverywhere/runtime-async': ^0.1.0
       '@types/node': ^16.11.7
