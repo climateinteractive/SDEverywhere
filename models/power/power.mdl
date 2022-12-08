@@ -1,0 +1,10 @@
+{UTF-8}
+base = 2 ~~|
+a = POWER(base, 2) ~~|
+b = POWER(base, 0.5) ~~|
+c = POWER(base, 1.5) ~~|
+
+INITIAL TIME = 0 ~~|
+FINAL TIME = 1 ~~|
+TIME STEP = 1 ~~|
+SAVEPER = TIME STEP ~~|
