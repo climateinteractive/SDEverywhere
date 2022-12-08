@@ -434,11 +434,19 @@ FixedDelay* __new_fixed_delay(FixedDelay* fixed_delay, double delay_time, double
   // The delay time is quantized to an integral number of time steps.
   // The FixedDelay should be constructed at init time to latch the delay time and initial value.
   // Allocate memory on the first call only. Pass the same pointer back in on subsequent runs.
+  size_t n = (size_t)ceil(delay_time / _time_step);
+  size_t bufsize = n * sizeof(double);
   if (fixed_delay == NULL) {
+    // Create the FixedDelay object and allocate its data buffer.
     fixed_delay = malloc(sizeof(FixedDelay));
-    fixed_delay->n = (size_t)ceil(delay_time / _time_step);
-    fixed_delay->data = malloc(sizeof(double) * fixed_delay->n);
+    fixed_delay->data = malloc(bufsize);
+  } else if (fixed_delay->n != n) {
+    // The delay time has changed since a previous run. Reallocate the data buffer.
+    free(fixed_delay->data);
+    fixed_delay->data = malloc(bufsize);
   }
+  // Reset state at the start of each run.
+  fixed_delay->n = n;
   fixed_delay->data_index = 0;
   fixed_delay->initial_value = initial_value;
   return fixed_delay;
