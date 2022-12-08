@@ -201,7 +201,7 @@ importers:
       antlr4-vensim: 0.6.0
       bufx: ^1.0.5
       byline: ^5.0.0
-      csv-parse: ^4.15.4
+      csv-parse: ^5.3.3
       js-yaml: ^3.13.1
       ramda: ^0.27.0
       split-string: ^6.0.0
@@ -211,7 +211,7 @@ importers:
       antlr4-vensim: 0.6.0
       bufx: 1.0.5
       byline: 5.0.0
-      csv-parse: 4.16.3
+      csv-parse: 5.3.3
       js-yaml: 3.14.1
       ramda: 0.27.2
       split-string: 6.1.0
@@ -1248,6 +1248,10 @@ packages:
 
   /csv-parse/4.16.3:
     resolution: {integrity: sha512-cO1I/zmz4w2dcKHVvpCr7JVRu8/FymG5OEpmvsZYlccYolPBLoVGKUHgNoc4ZGkFeFlWGEDmMyBM+TTqRdW/wg==}
+    dev: false
+
+  /csv-parse/5.3.3:
+    resolution: {integrity: sha512-kEWkAPleNEdhFNkHQpFHu9RYPogsFj3dx6bCxL847fsiLgidzWg0z/O0B1kVWMJUc5ky64zGp18LX2T3DQrOfw==}
     dev: false
 
   /debug/4.3.4:

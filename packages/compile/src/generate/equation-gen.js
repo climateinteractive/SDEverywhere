@@ -383,7 +383,15 @@ export default class EquationGen extends ModelReader {
         let csvPathname = path.resolve(this.modelDirname, file)
         let data = readCsv(csvPathname, tab)
         if (data) {
-          getCellValue = (c, r) => (data[r] != null && data[r][c] != null ? cdbl(data[r][c]) : null)
+          getCellValue = (c, r) => {
+            let value = '0.0'
+            try {
+              value = data[r] != null && data[r][c] != null ? cdbl(data[r][c]) : null
+            } catch (error) {
+              console.error(`${error.message} in ${csvPathname}`)
+            }
+            return value
+          }
         }
       }
       // If the data was found, convert it to a lookup.
@@ -463,7 +471,15 @@ export default class EquationGen extends ModelReader {
     let csvPathname = path.resolve(this.modelDirname, file)
     let data = readCsv(csvPathname, tab)
     if (data) {
-      let getCellValue = (c, r) => (data[r] != null && data[r][c] != null ? cdbl(data[r][c]) : null)
+      let getCellValue = (c, r) => {
+        let value = '0.0'
+        try {
+          value = data[r] != null && data[r][c] != null ? cdbl(data[r][c]) : null
+        } catch (error) {
+          console.error(`${error.message} in ${csvPathname}`)
+        }
+        return value
+      }
       // Get C subscripts in text form for the LHS in normal order.
       let modelLHSReader = new ModelLHSReader()
       modelLHSReader.read(this.var.modelLHS)

@@ -1,6 +1,6 @@
 import util from 'util'
 import B from 'bufx'
-import parseCsv from 'csv-parse/lib/sync.js'
+import { parse as parseCsv } from 'csv-parse/sync'
 import R from 'ramda'
 import split from 'split-string'
 import XLSX from 'xlsx'
@@ -124,9 +124,29 @@ export let listConcat = (a, x, addSpaces = false) => {
     return a + (R.isEmpty(a) ? '' : `,${s}`) + x
   }
 }
+// Convert a number or string into a C double constant string.
+// A blank string is converted to zero, following Excel.
+// A string that cannot be converted throws an exception.
 export let cdbl = x => {
-  // Convert a number into a C double constant.
-  let s = x.toString()
+  function throwError() {
+    throw new Error(`ERROR: cannot convert "${x}" to a number`)
+  }
+  let s = '0.0'
+  if (typeof x === 'number') {
+    s = x.toString()
+  } else if (typeof x === 'string') {
+    if (x.trim() !== '') {
+      let f = parseFloat(x)
+      if (!Number.isNaN(f)) {
+        s = f.toString()
+      } else {
+        throwError()
+      }
+    }
+  } else {
+    throwError()
+  }
+  // Format as a C double literal with a decimal point.
   if (!s.includes('.') && !s.toLowerCase().includes('e')) {
     s += '.0'
   }
@@ -207,8 +227,12 @@ export let readCsv = (pathname, delimiter = ',') => {
       skip_empty_lines: true,
       skip_lines_with_empty_values: true
     }
-    let data = B.read(pathname)
-    csv = parseCsv(data, CSV_PARSE_OPTS)
+    try {
+      let data = B.read(pathname)
+      csv = parseCsv(data, CSV_PARSE_OPTS)
+    } catch (err) {
+      console.error(`ERROR: readCsv ${pathname} ${err.message}`)
+    }
     csvData.set(pathname, csv)
   }
   return csv
