@@ -107,7 +107,7 @@ async function buildWasm(
   addFlag('SINGLE_FILE=1')
   addFlag('EXPORT_ES6=1')
   addFlag('USE_ES6_IMPORT_META=0')
-  addFlag(`EXPORTED_FUNCTIONS=['_malloc','_runModelWithBuffers']`)
+  addFlag(`EXPORTED_FUNCTIONS=['_malloc','_getInitialTime','_getFinalTime','_getSaveper','_runModelWithBuffers']`)
   addFlag(`EXPORTED_RUNTIME_METHODS=['cwrap']`)
 
   await context.spawnChild(prepDir, command, args, {

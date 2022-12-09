@@ -152,7 +152,7 @@ export async function chooseGenConfig(projDir: string, mdlPath: string): Promise
   const modelCsvHeader = origModelCsvContent.split('\n')[0]
 
   // Add line and write out updated `model.csv`
-  const modelCsvLine = `${initialTime},${finalTime},${initialTime},${finalTime},${datPart}`
+  const modelCsvLine = `${initialTime},${finalTime},${datPart}`
   const newModelCsvContent = `${modelCsvHeader}\n${modelCsvLine}\n`
   await writeFile(modelCsvFile, newModelCsvContent)
 

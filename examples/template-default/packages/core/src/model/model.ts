@@ -3,7 +3,6 @@ import { ModelScheduler, Outputs } from '@sdeverywhere/runtime'
 import { spawnAsyncModelRunner } from '@sdeverywhere/runtime-async'
 import type { InputId } from '../config/generated/spec-types'
 import { config } from '../config/config'
-import { endTime, outputVarIds, startTime } from './generated/model-spec'
 import { createModelInput, createSimpleInputValue, Input } from './inputs'
 import modelWorkerJs from './generated/worker.js?raw'
 
@@ -97,7 +96,7 @@ export async function createModel(): Promise<Model> {
   for (const inputSpec of config.inputs.values()) {
     defaultInputs.push(createSimpleInputValue(inputSpec.varId, inputSpec.defaultValue))
   }
-  const defaultOutputs = createOutputs()
+  const defaultOutputs = runner.createOutputs()
   const initialOutputs = await runner.runModel(defaultInputs, defaultOutputs)
 
   // Capture data from the reference run for the given variables; note that we
@@ -126,10 +125,6 @@ function createInputs(): Map<InputVarId, Input> {
     orderedInputs.set(input.spec.id, input)
   }
   return orderedInputs
-}
-
-function createOutputs(): Outputs {
-  return new Outputs(outputVarIds, startTime, endTime)
 }
 
 /**

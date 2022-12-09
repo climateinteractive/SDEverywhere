@@ -5,16 +5,37 @@ import { WasmBuffer } from './wasm-buffer'
 import type { WasmModule } from './wasm-module'
 
 /**
- * An interface to the En-ROADS model.  Allows for running the model with
+ * An interface to the generated WebAssembly model.  Allows for running the model with
  * a given set of input values, producing a set of output values.
  */
 export class WasmModel {
+  /** The start time for the model (aka `INITIAL TIME`). */
+  public readonly startTime: number
+  /** The end time for the model (aka `FINAL TIME`). */
+  public readonly endTime: number
+  /** The frequency with which output values are saved (aka `SAVEPER`). */
+  public readonly saveFreq: number
+  /** The number of save points for each output. */
+  public readonly numSavePoints: number
+
   private readonly wasmRunModel: (inputsAddress: number, outputsAddress: number) => void
 
   /**
-   * @param wasmModule The `WasmModule` containing the `runModelWithBuffers` function.
+   * @param wasmModule The `WasmModule` that provides access to the native functions.
    */
   constructor(wasmModule: WasmModule) {
+    function getNumberValue(funcName: string): number {
+      const wasmGetValue: () => number = wasmModule.cwrap(funcName, 'number', [])
+      return wasmGetValue()
+    }
+    this.startTime = getNumberValue('getInitialTime')
+    this.endTime = getNumberValue('getFinalTime')
+    this.saveFreq = getNumberValue('getSaveper')
+
+    // Each series will include one data point per "save", inclusive of the
+    // start and end times
+    this.numSavePoints = Math.round((this.endTime - this.startTime) / this.saveFreq) + 1
+
     this.wasmRunModel = wasmModule.cwrap('runModelWithBuffers', null, ['number', 'number'])
   }
 
@@ -42,10 +63,6 @@ export interface WasmModelInitResult {
   outputsBuffer: WasmBuffer
   /** The output variable IDs. */
   outputVarIds: OutputVarId[]
-  /** The start time (year) for the model. */
-  startTime: number
-  /** The end time (year) for the model. */
-  endTime: number
 }
 
 /**
@@ -54,15 +71,11 @@ export interface WasmModelInitResult {
  * @param wasmModule The `WasmModule` that wraps the `wasm` binary.
  * @param numInputs The number of input variables, per the spec file passed to `sde`.
  * @param outputVarIds The output variable IDs, per the spec file passed to `sde`.
- * @param startTime The start time (year) for the model.
- * @param endTime The end time (year) for the model.
  */
 export function initWasmModelAndBuffers(
   wasmModule: WasmModule,
   numInputs: number,
-  outputVarIds: OutputVarId[],
-  startTime: number,
-  endTime: number
+  outputVarIds: OutputVarId[]
 ): WasmModelInitResult {
   // Wrap the native C `runModelWithBuffers` function in a JS function that we can call
   const model = new WasmModel(wasmModule)
@@ -70,22 +83,14 @@ export function initWasmModelAndBuffers(
   // Allocate a buffer that is large enough to hold the input values
   const inputsBuffer = new WasmBuffer(wasmModule, numInputs)
 
-  // Each series will include one data point per year, inclusive of the
-  // start and end years
-  // TODO: We should pull these from the C variables instead of having them passed in;
-  // for now we assume `_saveper` is 1 but that should be pulled from the C variable too
-  const seriesLength = endTime - startTime + 1
-
   // Allocate a buffer that is large enough to hold the series data for
   // each output variable
-  const outputsBuffer = new WasmBuffer(wasmModule, outputVarIds.length * seriesLength)
+  const outputsBuffer = new WasmBuffer(wasmModule, outputVarIds.length * model.numSavePoints)
 
   return {
     model,
     inputsBuffer,
     outputsBuffer,
-    outputVarIds,
-    startTime,
-    endTime
+    outputVarIds
   }
 }

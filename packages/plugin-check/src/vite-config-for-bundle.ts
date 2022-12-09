@@ -60,8 +60,6 @@ function injectModelSpec(prepDir: string, modelSpec: ModelSpec): VitePlugin {
   const dataSizeInBytes = stagedFileSize('static-data.ts')
 
   const moduleSrc = `
-export const startTime = ${modelSpec.startTime};
-export const endTime = ${modelSpec.endTime};
 export const inputSpecs = ${JSON.stringify(inputSpecs)};
 export const outputSpecs = ${JSON.stringify(outputSpecs)};
 export const modelSizeInBytes = ${modelSizeInBytes};

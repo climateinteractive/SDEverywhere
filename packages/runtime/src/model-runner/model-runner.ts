@@ -2,7 +2,7 @@
 
 import type { WasmModelInitResult } from '../wasm-model'
 import type { InputValue } from './inputs'
-import type { Outputs } from './outputs'
+import { Outputs } from './outputs'
 import { perfElapsed, perfNow } from './perf'
 
 /**
@@ -10,6 +10,14 @@ import { perfElapsed, perfNow } from './perf'
  * or asynchronously (e.g. in a Web Worker), depending on the implementation.
  */
 export interface ModelRunner {
+  /**
+   * Create an `Outputs` instance that is sized to accommodate the output variable
+   * data stored by the model.
+   *
+   * @return A new `Outputs` instance.
+   */
+  createOutputs(): Outputs
+
   /**
    * Run the model.
    *
@@ -50,7 +58,7 @@ export function createWasmModelRunner(wasmResult: WasmModelInitResult): ModelRun
   const inputsArray = inputsBuffer.getArrayView()
   const outputsBuffer = wasmResult.outputsBuffer
   const outputsArray = outputsBuffer.getArrayView()
-  const rowLength = wasmResult.endTime - wasmResult.startTime + 1
+  const rowLength = wasmModel.numSavePoints
 
   // Disallow `runModel` after the runner has been terminated
   let terminated = false
@@ -75,18 +83,24 @@ export function createWasmModelRunner(wasmResult: WasmModelInitResult): ModelRun
   }
 
   return {
+    createOutputs: () => {
+      return new Outputs(wasmResult.outputVarIds, wasmModel.startTime, wasmModel.endTime, wasmModel.saveFreq)
+    },
+
     runModel: (inputs, outputs) => {
       if (terminated) {
         return Promise.reject(new Error('Model runner has already been terminated'))
       }
       return Promise.resolve(runModelSync(inputs, outputs))
     },
+
     runModelSync: (inputs, outputs) => {
       if (terminated) {
         throw new Error('Model runner has already been terminated')
       }
       return runModelSync(inputs, outputs)
     },
+
     terminate: () => {
       if (!terminated) {
         // TODO: Release wasm-related resources (module or buffers)

@@ -27,8 +27,6 @@ function injectModelSpec(modelSpec: ModelSpec): VitePlugin {
   const outputVarIds = modelSpec.outputs.map(o => sdeNameForVensimVarName(o.varName))
 
   const moduleSrc = `
-export const startTime = ${modelSpec.startTime};
-export const endTime = ${modelSpec.endTime};
 export const numInputs = ${modelSpec.inputs.length};
 export const outputVarIds = ${JSON.stringify(outputVarIds)};
 `

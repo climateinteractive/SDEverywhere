@@ -25,8 +25,6 @@ export class ConfigContext {
     private readonly configDir: string,
     public readonly strings: Strings,
     private readonly colorMap: Map<ColorId, HexColor>,
-    public readonly modelStartTime: number,
-    public readonly modelEndTime: number,
     public readonly graphDefaultMinTime: number,
     public readonly graphDefaultMaxTime: number,
     public readonly datFiles: string[]
@@ -137,8 +135,6 @@ export class ConfigContext {
 export function createConfigContext(buildContext: BuildContext, configDir: string): ConfigContext {
   // Read basic model configuration from `model.csv`
   const modelCsv = readConfigCsvFile(configDir, 'model')[0]
-  const modelStartTime = Number(modelCsv['model start time'])
-  const modelEndTime = Number(modelCsv['model end time'])
   const graphDefaultMinTime = Number(modelCsv['graph default min time'])
   const graphDefaultMaxTime = Number(modelCsv['graph default max time'])
   const datFilesString = modelCsv['model dat files']
@@ -165,17 +161,7 @@ export function createConfigContext(buildContext: BuildContext, configDir: strin
     colors.set(colorId, hexColor)
   }
 
-  return new ConfigContext(
-    buildContext,
-    configDir,
-    strings,
-    colors,
-    modelStartTime,
-    modelEndTime,
-    graphDefaultMinTime,
-    graphDefaultMaxTime,
-    datFiles
-  )
+  return new ConfigContext(buildContext, configDir, strings, colors, graphDefaultMinTime, graphDefaultMaxTime, datFiles)
 }
 
 function configFilePath(configDir: string, name: string, ext: string): string {

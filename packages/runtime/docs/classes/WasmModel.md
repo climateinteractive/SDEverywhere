@@ -2,8 +2,40 @@
 
 # Class: WasmModel
 
-An interface to the En-ROADS model.  Allows for running the model with
+An interface to the generated WebAssembly model.  Allows for running the model with
 a given set of input values, producing a set of output values.
+
+## Properties
+
+### startTime
+
+ `Readonly` **startTime**: `number`
+
+The start time for the model (aka `INITIAL TIME`).
+
+___
+
+### endTime
+
+ `Readonly` **endTime**: `number`
+
+The end time for the model (aka `FINAL TIME`).
+
+___
+
+### saveFreq
+
+ `Readonly` **saveFreq**: `number`
+
+The frequency with which output values are saved (aka `SAVEPER`).
+
+___
+
+### numSavePoints
+
+ `Readonly` **numSavePoints**: `number`
+
+The number of save points for each output.
 
 ## Constructors
 
@@ -15,7 +47,7 @@ a given set of input values, producing a set of output values.
 
 | Name | Type | Description |
 | :------ | :------ | :------ |
-| `wasmModule` | [`WasmModule`](../interfaces/WasmModule.md) | The `WasmModule` containing the `runModelWithBuffers` function. |
+| `wasmModule` | [`WasmModule`](../interfaces/WasmModule.md) | The `WasmModule` that provides access to the native functions. |
 
 ## Methods
 

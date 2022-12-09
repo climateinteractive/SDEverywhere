@@ -118,8 +118,6 @@ async function processModelConfig(buildContext: BuildContext, options: ConfigOpt
   context.log('info', `Done generating files (${elapsed}s)`)
 
   return {
-    startTime: context.modelStartTime,
-    endTime: context.modelEndTime,
     inputs: context.getOrderedInputs(),
     outputs: context.getOrderedOutputs(),
     datFiles: context.datFiles
