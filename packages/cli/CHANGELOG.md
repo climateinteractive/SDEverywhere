@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.7.5](https://github.com/climateinteractive/SDEverywhere/compare/cli-v0.7.4...cli-v0.7.5) (2022-12-09)
+
+
+### Features
+
+* add the Vensim POWER functions as a C macro ([#286](https://github.com/climateinteractive/SDEverywhere/issues/286)) ([8fc1ee8](https://github.com/climateinteractive/SDEverywhere/commit/8fc1ee8e587c4224862f0dec0772627dc6f6acfa)), closes [#283](https://github.com/climateinteractive/SDEverywhere/issues/283)
+
+
+### Bug Fixes
+
+* reset FixedDelay state at the beginning of each run ([#289](https://github.com/climateinteractive/SDEverywhere/issues/289)) ([b5e03c4](https://github.com/climateinteractive/SDEverywhere/commit/b5e03c47019746c8afaebbffdf6cee0c74707f93)), closes [#285](https://github.com/climateinteractive/SDEverywhere/issues/285)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/compile bumped from ^0.7.1 to ^0.7.2
+
 ## [0.7.4](https://github.com/climateinteractive/SDEverywhere/compare/cli-v0.7.3...cli-v0.7.4) (2022-10-25)
 
 
