@@ -28,29 +28,36 @@ ___
 
 ___
 
-### timeStart
+### startTime
 
- `Readonly` **timeStart**: `number`
+ `Readonly` **startTime**: `number`
 
 ___
 
-### timeEnd
+### endTime
 
- `Readonly` **timeEnd**: `number`
+ `Readonly` **endTime**: `number`
+
+___
+
+### saveFreq
+
+ `Readonly` **saveFreq**: `number` = `1`
 
 ## Constructors
 
 ### constructor
 
-**new Outputs**(`varIds`, `timeStart`, `timeEnd`)
+**new Outputs**(`varIds`, `startTime`, `endTime`, `saveFreq?`)
 
 #### Parameters
 
-| Name | Type |
-| :------ | :------ |
-| `varIds` | `string`[] |
-| `timeStart` | `number` |
-| `timeEnd` | `number` |
+| Name | Type | Default value | Description |
+| :------ | :------ | :------ | :------ |
+| `varIds` | `string`[] | `undefined` | The output variable identifiers. |
+| `startTime` | `number` | `undefined` | The start time for the model. |
+| `endTime` | `number` | `undefined` | The end time for the model. |
+| `saveFreq` | `number` | `1` | The frequency with which output values are saved (aka `SAVEPER`). |
 
 ## Methods
 
@@ -71,7 +78,7 @@ the time range in the buffer produced by the model.
 | Name | Type | Description |
 | :------ | :------ | :------ |
 | `outputsBuffer` | `Float64Array` | The raw outputs buffer produced by the model. |
-| `rowLength` | `number` | The number of elements per row (one element per year or save point). |
+| `rowLength` | `number` | The number of elements per row (one element per save point). |
 
 #### Returns
 
