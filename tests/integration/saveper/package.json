@@ -5,12 +5,16 @@
   "type": "module",
   "scripts": {
     "build": "sde bundle",
-    "dev": "sde dev"
+    "dev": "sde dev",
+    "run-tests": "./run-tests.js",
+    "test": "run-s build run-tests"
   },
   "dependencies": {
     "@sdeverywhere/build": "workspace:*",
     "@sdeverywhere/cli": "workspace:*",
     "@sdeverywhere/plugin-wasm": "workspace:*",
-    "@sdeverywhere/plugin-worker": "workspace:*"
+    "@sdeverywhere/plugin-worker": "workspace:*",
+    "@sdeverywhere/runtime": "workspace:*",
+    "@sdeverywhere/runtime-async": "workspace:*"
   }
 }

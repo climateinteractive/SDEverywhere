@@ -11,6 +11,6 @@ Z = X + Y
   ~~|
 
 INITIAL TIME = 2000 ~~|
-FINAL TIME = 2005 ~~|
-TIME STEP = 0.2 ~~|
+FINAL TIME = 2002 ~~|
+TIME STEP = 0.5 ~~|
 SAVEPER = TIME STEP ~~|
