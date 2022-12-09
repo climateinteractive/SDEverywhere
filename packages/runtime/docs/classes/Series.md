@@ -35,7 +35,9 @@ ___
 
 **getValueAtTime**(`time`): `number`
 
-Return the Y value at the given time.
+Return the Y value at the given time.  Note that this does not attempt to interpolate
+if there is no data point defined for the given time and will return undefined in
+that case.
 
 #### Parameters
 
@@ -46,6 +48,9 @@ Return the Y value at the given time.
 #### Returns
 
 `number`
+
+The y value for the given time, or undefined if there is no data point defined
+for the given time.
 
 ___
 

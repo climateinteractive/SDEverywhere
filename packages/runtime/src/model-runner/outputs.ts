@@ -9,7 +9,7 @@ export type ParseError = 'invalid-point-count'
 
 /** A data point. */
 export interface Point {
-  /** The x value (typically a year). */
+  /** The x value (typically a time value). */
   x: number
   /** The y value. */
   y: number
@@ -26,16 +26,18 @@ export class Series {
   constructor(public readonly varId: OutputVarId, public readonly points: Point[]) {}
 
   /**
-   * Return the Y value at the given time.
+   * Return the Y value at the given time.  Note that this does not attempt to interpolate
+   * if there is no data point defined for the given time and will return undefined in
+   * that case.
    *
    * @param time The x (time) value.
+   * @return The y value for the given time, or undefined if there is no data point defined
+   * for the given time.
    */
   getValueAtTime(time: number): number | undefined {
-    // TODO: This assumes one data point per year; we should take `_saveper` into account
-    // and if it's not 1 point per year, search for a specific x value
     // TODO: Add option to allow interpolation if the given time value is in between points
-    const startTime = this.points[0].x
-    return this.points[time - startTime]?.y
+    // TODO: Use binary search to make lookups faster
+    return this.points.find(p => p.x === time)?.y
   }
 
   /**
@@ -62,13 +64,21 @@ export class Outputs {
    */
   public runTimeInMillis: number
 
+  /**
+   * @param varIds The output variable identifiers.
+   * @param startTime The start time for the model.
+   * @param endTime The end time for the model.
+   * @param saveFreq The frequency with which output values are saved (aka `SAVEPER`).
+   */
   constructor(
     public readonly varIds: OutputVarId[],
-    public readonly timeStart: number,
-    public readonly timeEnd: number
+    public readonly startTime: number,
+    public readonly endTime: number,
+    public readonly saveFreq = 1
   ) {
-    // Each series will include one data point per year, inclusive of the start and end years
-    this.seriesLength = timeEnd - timeStart + 1
+    // Each series will include one data point per "save", inclusive of the
+    // start and end times
+    this.seriesLength = Math.round((endTime - startTime) / saveFreq) + 1
 
     // Create an array of arrays, one for each output variable
     this.varSeries = new Array(varIds.length)
@@ -76,9 +86,8 @@ export class Outputs {
     // Populate the arrays, filling in the time for each point
     for (let i = 0; i < varIds.length; i++) {
       const points: Point[] = new Array(this.seriesLength)
-      let time = timeStart
       for (let j = 0; j < this.seriesLength; j++) {
-        points[j] = { x: time++, y: 0 }
+        points[j] = { x: startTime + j * saveFreq, y: 0 }
       }
       const varId = varIds[i]
       this.varSeries[i] = new Series(varId, points)
@@ -95,7 +104,7 @@ export class Outputs {
    * the time range in the buffer produced by the model.
    *
    * @param outputsBuffer The raw outputs buffer produced by the model.
-   * @param rowLength The number of elements per row (one element per year or save point).
+   * @param rowLength The number of elements per row (one element per save point).
    * @return An `ok` result if the buffer is valid, otherwise an `err` result.
    */
   updateFromBuffer(outputsBuffer: Float64Array, rowLength: number): Result<void, ParseError> {

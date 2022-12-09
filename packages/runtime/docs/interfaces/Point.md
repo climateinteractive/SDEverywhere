@@ -10,7 +10,7 @@ A data point.
 
  **x**: `number`
 
-The x value (typically a year).
+The x value (typically a time value).
 
 ___
 
