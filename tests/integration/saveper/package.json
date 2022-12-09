@@ -1,0 +1,16 @@
+{
+  "name": "saveper",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "sde bundle",
+    "dev": "sde dev"
+  },
+  "dependencies": {
+    "@sdeverywhere/build": "workspace:*",
+    "@sdeverywhere/cli": "workspace:*",
+    "@sdeverywhere/plugin-wasm": "workspace:*",
+    "@sdeverywhere/plugin-worker": "workspace:*"
+  }
+}

@@ -9,13 +9,16 @@ set -x # include all commands in logs
 cd "$PROJ_DIR"
 
 # Build the `@sdeverywhere/build` package, which is the only one that needs to be
-# built prior to running the model tests.  (The model tests do depend on the
+# built prior to running the C-level model tests.  (The model tests do depend on the
 # `compile` and `cli` packages, but those don't currently have a build step since
 # they are pure JavaScript.)
 pnpm -F build build
 
-# Run the model tests
-pnpm run test:e2e
+# Run the C-level model tests
+pnpm run test:c-int
+
+# Run the JS-level integration tests (that exercise the build and runtime packages)
+pnpm run test:js-int
 
 # Fail the build if there are any untracked or modified files.  This usually
 # only occurs if the typedoc-generated docs need updating after any API

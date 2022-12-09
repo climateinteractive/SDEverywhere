@@ -80,7 +80,7 @@ jobs:
 
   # The `test_e2e` job runs the model tests.  This job runs in parallel with the `build`
   # job (which cuts down on overall time to execute the workflow) because it only needs
-  # to build the `@sdeverywhere/build` package in order to run the model tests.
+  # to build a subset of the packages in order to run the integration tests.
   test_e2e:
     runs-on: ${{ matrix.config.os }}
     timeout-minutes: 20
@@ -137,7 +137,7 @@ jobs:
         run: |
           pnpm install
 
-      - name: Run model tests
+      - name: Run integration tests
         shell: bash
         run: |
           ./scripts/ci-test-e2e

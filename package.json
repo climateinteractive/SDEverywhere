@@ -16,8 +16,9 @@
     "precommit": "pnpm -r precommit",
     "build": "pnpm run -r --workspace-concurrency=1 build",
     "test:pkgs": "pnpm -r test",
-    "test:e2e": "./tests/modeltests",
-    "test": "run-s test:pkgs test:e2e"
+    "test:c-int": "./tests/modeltests",
+    "test:js-int": "./tests/run-js-int-tests",
+    "test": "run-s test:pkgs test:c-int test:js-int"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^5.27.1",
