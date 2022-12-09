@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.2](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.1...compile-v0.7.2) (2022-12-09)
+
+
+### Bug Fixes
+
+* check for valid numbers when reading a CSV file ([#288](https://github.com/climateinteractive/SDEverywhere/issues/288)) ([7fa249e](https://github.com/climateinteractive/SDEverywhere/commit/7fa249ec14af298926b865bb437034b7f1bc6b24))
+
 ## [0.7.1](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.0...compile-v0.7.1) (2022-10-25)
 
 
