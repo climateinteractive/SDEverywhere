@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.7.3](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.2...compile-v0.7.3) (2022-12-10)
+
+
+### Features
+
+* expose accessor functions for control parameters ([#296](https://github.com/climateinteractive/SDEverywhere/issues/296)) ([a44d097](https://github.com/climateinteractive/SDEverywhere/commit/a44d0977d14daf4104e17d2710a812e0986d35a5)), closes [#295](https://github.com/climateinteractive/SDEverywhere/issues/295)
+
+
+### Bug Fixes
+
+* upgrade csv-parse to 5.3.3 and update option names ([#300](https://github.com/climateinteractive/SDEverywhere/issues/300)) ([71d0c8b](https://github.com/climateinteractive/SDEverywhere/commit/71d0c8b2d0e5f4737f968975a16bfd7b2d47b87a)), closes [#299](https://github.com/climateinteractive/SDEverywhere/issues/299)
+
 ## [0.7.2](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.1...compile-v0.7.2) (2022-12-09)
 
 
