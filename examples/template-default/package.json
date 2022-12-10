@@ -18,7 +18,7 @@
     "@sdeverywhere/cli": "^0.7.6",
     "@sdeverywhere/plugin-check": "^0.3.0",
     "@sdeverywhere/plugin-config": "^0.2.0",
-    "@sdeverywhere/plugin-vite": "^0.1.4",
+    "@sdeverywhere/plugin-vite": "^0.1.5",
     "@sdeverywhere/plugin-wasm": "^0.2.0",
     "@sdeverywhere/plugin-worker": "^0.2.0"
   }
