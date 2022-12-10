@@ -3,7 +3,7 @@
 import { readFileSync } from 'fs'
 import { join as joinPath, relative } from 'path'
 
-import parseCsv from 'csv-parse/lib/sync.js'
+import { parse as parseCsv } from 'csv-parse/sync'
 
 import type { BuildContext, InputSpec, LogLevel, OutputSpec } from '@sdeverywhere/build'
 
@@ -174,7 +174,7 @@ function readCsvFile(path: string): CsvRow[] {
     columns: true,
     trim: true,
     skip_empty_lines: true,
-    skip_lines_with_empty_values: true
+    skip_records_with_empty_values: true
   })
 }
 

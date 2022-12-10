@@ -33,7 +33,7 @@
   },
   "dependencies": {
     "byline": "^5.0.0",
-    "csv-parse": "^4.15.4",
+    "csv-parse": "^5.3.3",
     "sanitize-html": "^2.7.1"
   },
   "peerDependencies": {
