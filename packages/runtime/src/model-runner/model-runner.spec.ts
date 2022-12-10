@@ -8,7 +8,6 @@ import { initWasmModelAndBuffers } from '../wasm-model'
 import { createInputValue } from './inputs'
 import type { ModelRunner } from './model-runner'
 import { createWasmModelRunner } from './model-runner'
-import { Outputs } from './outputs'
 
 function createMockWasmModel() {
   // This is a mock WasmModule that is sufficient for testing communication between the
@@ -16,15 +15,26 @@ function createMockWasmModel() {
   const heap = new Float64Array(1000)
   let mallocOffset = 0
   const wasmModule: WasmModule = {
-    cwrap: () => {
-      // This is a mock implementation of runModelWithBuffers
-      return (_inputsAddress: number, outputsAddress: number) => {
-        // The outputsAddress is in bytes, so convert to float64 offset
-        const outputsOffset = outputsAddress / 8
-        // Store a value in 2000 for the first output series
-        heap.set([6], outputsOffset)
-        // Store a value in 2100 for the second output series
-        heap.set([7], outputsOffset + 201)
+    cwrap: fname => {
+      // Return a mock implementation of each wrapped C function
+      switch (fname) {
+        case 'getInitialTime':
+          return () => 2000
+        case 'getFinalTime':
+          return () => 2100
+        case 'getSaveper':
+          return () => 1
+        case 'runModelWithBuffers':
+          return (_inputsAddress: number, outputsAddress: number) => {
+            // The outputsAddress is in bytes, so convert to float64 offset
+            const outputsOffset = outputsAddress / 8
+            // Store a value in 2000 for the first output series
+            heap.set([6], outputsOffset)
+            // Store a value in 2100 for the second output series
+            heap.set([7], outputsOffset + 201)
+          }
+        default:
+          throw new Error(`Unhandled call to cwrap with function name '${fname}'`)
       }
     },
     _malloc: lengthInBytes => {
@@ -35,7 +45,7 @@ function createMockWasmModel() {
     _free: () => undefined,
     HEAPF64: heap
   }
-  return initWasmModelAndBuffers(wasmModule, 3, ['_output_1', '_output_2'], 2000, 2100)
+  return initWasmModelAndBuffers(wasmModule, 3, ['_output_1', '_output_2'])
 }
 
 describe('createWasmModelRunner', () => {
@@ -54,7 +64,7 @@ describe('createWasmModelRunner', () => {
   it('should run the model', async () => {
     expect(runner).toBeDefined()
     const inputs = [createInputValue('_input_1', 0), createInputValue('_input_2', 0), createInputValue('_input_3', 0)]
-    const inOutputs = new Outputs(['_output_1', '_output_2'], 2000, 2100)
+    const inOutputs = runner.createOutputs()
     const outOutputs = await runner.runModel(inputs, inOutputs)
     expect(outOutputs).toBeDefined()
     expect(outOutputs.runTimeInMillis).toBeGreaterThan(0)
@@ -67,7 +77,7 @@ describe('createWasmModelRunner', () => {
 
     await runner.terminate()
 
-    const outputs = new Outputs(['_output_1', '_output_2'], 2000, 2100)
+    const outputs = runner.createOutputs()
     await expect(runner.runModel([], outputs)).rejects.toThrow('Model runner has already been terminated')
   })
 })

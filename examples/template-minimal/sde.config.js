@@ -8,11 +8,6 @@ export async function config() {
 
     modelSpec: async () => {
       return {
-        // TODO: Change these values as desired (usually they will be the same as
-        // the `INITIAL TIME` and `FINAL TIME` values from the mdl, but you can
-        // use different values here)
-        startTime: 2000,
-        endTime: 2100,
         inputs: [
           // TODO: List your input variables here
           { varName: 'Y', defaultValue: 0, minValue: -10, maxValue: 10 }

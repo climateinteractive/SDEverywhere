@@ -16,6 +16,10 @@ let inputsWasmBuffer: WasmBuffer
 let outputsWasmBuffer: WasmBuffer
 
 interface InitResult {
+  outputVarIds: string[]
+  startTime: number
+  endTime: number
+  saveFreq: number
   rowLength: number
   ioBuffer: ArrayBuffer
 }
@@ -28,12 +32,12 @@ const modelWorker = {
     }
 
     // Initialize the wasm model and associated buffers
-    const result = await initWasmModel()
+    const wasmResult = await initWasmModel()
 
     // Capture the `WasmModel` instance and `WasmBuffer` instances
-    wasmModel = result.model
-    inputsWasmBuffer = result.inputsBuffer
-    outputsWasmBuffer = result.outputsBuffer
+    wasmModel = wasmResult.model
+    inputsWasmBuffer = wasmResult.inputsBuffer
+    outputsWasmBuffer = wasmResult.outputsBuffer
 
     // Create a combined array that will hold a copy of the inputs and outputs
     // wasm buffers; this buffer is no-copy transferable, whereas the wasm ones
@@ -43,12 +47,17 @@ const modelWorker = {
     const outputsLength = outputsWasmBuffer.getArrayView().length
     const ioArray = new Float64Array(runTimeLength + inputsLength + outputsLength)
 
-    // The row length is the number of elements in each row of the outputs buffer
-    const rowLength = result.endTime - result.startTime + 1
-
     // Transfer the underlying buffer to the runner
     const ioBuffer = ioArray.buffer
-    return Transfer({ rowLength, ioBuffer }, [ioBuffer])
+    const initResult: InitResult = {
+      outputVarIds: wasmResult.outputVarIds,
+      startTime: wasmModel.startTime,
+      endTime: wasmModel.endTime,
+      saveFreq: wasmModel.saveFreq,
+      rowLength: wasmModel.numSavePoints,
+      ioBuffer
+    }
+    return Transfer(initResult, [ioBuffer])
   },
 
   runModel(ioBuffer: ArrayBuffer): TransferDescriptor<ArrayBuffer> {

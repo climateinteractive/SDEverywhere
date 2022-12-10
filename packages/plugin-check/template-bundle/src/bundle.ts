@@ -13,15 +13,14 @@ import type {
   Scenario
 } from '@sdeverywhere/check-core'
 
-import type { InputValue, InputVarId, ModelRunner, Point } from '@sdeverywhere/runtime'
-import { Outputs } from '@sdeverywhere/runtime'
+import type { InputValue, InputVarId, ModelRunner, Outputs, Point } from '@sdeverywhere/runtime'
 import { spawnAsyncModelRunner } from '@sdeverywhere/runtime-async'
 
 import type { Input } from './inputs'
 import { getInputVars, setInputsForScenario } from './inputs'
 import { getOutputVars } from './outputs'
 
-import { startTime, endTime, inputSpecs, outputSpecs, modelSizeInBytes, dataSizeInBytes } from 'virtual:model-spec'
+import { inputSpecs, outputSpecs, modelSizeInBytes, dataSizeInBytes } from 'virtual:model-spec'
 
 import modelWorkerJs from '@_model_worker_/worker.js?raw'
 
@@ -50,8 +49,7 @@ export class BundleModel implements CheckBundleModel {
 
     // Create an `Outputs` instance that is initialized to hold output data
     // produced by the Wasm model
-    const outputVarIds = outputSpecs.map(o => o.varId)
-    this.outputs = new Outputs(outputVarIds, startTime, endTime)
+    this.outputs = modelRunner.createOutputs()
   }
 
   // from CheckBundleModel interface
@@ -149,9 +147,13 @@ export function createBundle(): Bundle {
     outputVars,
     implVars: new Map(),
     inputGroups: new Map(),
-    datasetGroups: new Map(),
-    startTime,
-    endTime
+    datasetGroups: new Map()
+    // TODO: startTime and endTime are optional; the comparison graphs work OK if
+    // they are undefined.  The main benefit of using these is to set a specific
+    // range for the x-axis on the comparison graphs, so maybe we should find
+    // another way to allow these to be defined.
+    // startTime,
+    // endTime
   }
 
   return {

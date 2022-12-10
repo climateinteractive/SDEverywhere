@@ -6,6 +6,10 @@ and compiled to a WebAssembly (Wasm) module via [Emscripten](https://emscripten.
 
 ## Usage
 
+NOTE: If you use the `@sdeverywhere/create` package, most of the initialization
+steps listed below are already handled for you in the generated `core` package,
+and you can work directly with a `ModelRunner` and/or `ModelScheduler` instance.
+
 ### 1. Initialize the `WasmModel`
 
 In your application, load the wasm module using the wrapper produced by
@@ -26,7 +30,7 @@ async function initWasmModel(): Promise<WasmModelInitResult> {
   const wasmModule = await loadWasm()
 
   // Initialize the wasm model and its associated buffers
-  return initWasmModelAndBuffers(wasmModule, inputVarNames.length, outputVarNames, 2000, 2100)
+  return initWasmModelAndBuffers(wasmModule, inputVarNames.length, outputVarNames)
 }
 ```
 
@@ -52,7 +56,7 @@ async function main() {
   const inputs = [createInputValue('_input1', 2), createInputValue('_input2', 10)] // etc
 
   // Create an `Outputs` instance to hold the model outputs
-  let outputs = new Outputs(wasmResult.outputVarIds, wasmResult.startTime, wasmResult.endTime)
+  let outputs = modelRunner.createOutputs()
 
   // Run the model with those inputs
   outputs = await modelRunner.runModel(inputs, outputs)
@@ -93,6 +97,11 @@ async function initModel() {
 
 ## Emscripten Notes
 
+If you use the `@sdeverywhere/plugin-wasm` package to build a WebAssembly
+version of your model, the following steps are already handled for you.
+The notes below are only needed if you want more low-level control over
+how the C model is compiled into a WebAssembly module.
+
 The `@sdeverywhere/runtime` package assumes you have created `<mymodel>.wasm`
 and `<mymodel>.js` files with Emscripten.
 The `emcc` command line options should be similar to the following:
@@ -102,12 +111,18 @@ $ emcc \
 build/<mymodel>.c build/macros.c build/model.c build/vensim.c \
 -Ibuild -o ./output/<mymodel>.js -Wall -Os \
 -s STRICT=1 -s MALLOC=emmalloc -s FILESYSTEM=0 -s MODULARIZE=1 \
--s EXPORTED_FUNCTIONS="['_runModelWithBuffers', '_malloc']" \
+-s EXPORTED_FUNCTIONS="['_malloc','_getInitialTime','_getFinalTime','_getSaveper','_runModelWithBuffers']" \
 -s EXPORTED_RUNTIME_METHODS="['cwrap']"
 ```
 
-(The generated module must export at minimum `_runModelWithBuffers`,
-`_malloc`, and `cwrap`.)
+Note that the generated module must export the following functions at minimum:
+
+- `_malloc`
+- `_getInitialTime`
+- `_getFinalTime`
+- `_getSaveper`
+- `_runModelWithBuffers`
+- `cwrap`
 
 ## Documentation
 

@@ -7,6 +7,21 @@ or asynchronously (e.g. in a Web Worker), depending on the implementation.
 
 ## Methods
 
+### createOutputs
+
+**createOutputs**(): [`Outputs`](../classes/Outputs.md)
+
+Create an `Outputs` instance that is sized to accommodate the output variable
+data stored by the model.
+
+#### Returns
+
+[`Outputs`](../classes/Outputs.md)
+
+A new `Outputs` instance.
+
+___
+
 ### runModel
 
 **runModel**(`inputs`, `outputs`): `Promise`<[`Outputs`](../classes/Outputs.md)\>

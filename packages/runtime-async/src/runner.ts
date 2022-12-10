@@ -3,6 +3,7 @@
 import { BlobWorker, spawn, Thread, Transfer, Worker } from 'threads'
 
 import type { ModelRunner } from '@sdeverywhere/runtime'
+import { Outputs } from '@sdeverywhere/runtime'
 
 /**
  * Initialize a `ModelRunner` that runs the model asynchronously in a worker thread.
@@ -56,8 +57,10 @@ async function spawnAsyncModelRunnerWithWorker(worker: Worker): Promise<ModelRun
 
   // Wait for the worker to initialize the wasm model (in the worker thread)
   const initResult = await modelWorker.initModel()
-  const rowLength: number = initResult.rowLength
   let ioBuffer: ArrayBuffer = initResult.ioBuffer
+
+  // The row length is the number of elements in each row of the outputs buffer
+  const rowLength = initResult.rowLength
 
   // Use a flag to ensure that only one request is made at a time
   let running = false
@@ -66,6 +69,10 @@ async function spawnAsyncModelRunnerWithWorker(worker: Worker): Promise<ModelRun
   let terminated = false
 
   return {
+    createOutputs: () => {
+      return new Outputs(initResult.outputVarIds, initResult.startTime, initResult.endTime, initResult.saveFreq)
+    },
+
     runModel: async (inputs, outputs) => {
       if (terminated) {
         throw new Error('Async model runner has already been terminated')

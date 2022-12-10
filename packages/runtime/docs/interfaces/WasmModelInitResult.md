@@ -35,19 +35,3 @@ ___
  **outputVarIds**: `string`[]
 
 The output variable IDs.
-
-___
-
-### startTime
-
- **startTime**: `number`
-
-The start time (year) for the model.
-
-___
-
-### endTime
-
- **endTime**: `number`
-
-The end time (year) for the model.

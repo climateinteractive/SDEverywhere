@@ -16,6 +16,9 @@ describe('ModelScheduler', () => {
   // Note: this tests the behavior of the scheduler with real timers
   it('should run the model', async () => {
     const runner: ModelRunner = {
+      createOutputs: () => {
+        return new Outputs(['_output_1', '_output_2'], 2000, 2100, 1)
+      },
       runModel: async (inputs, outputs) => {
         const input1 = inputs.find(i => i.varId === '_input_1')
         const input2 = inputs.find(i => i.varId === '_input_2')
@@ -32,7 +35,7 @@ describe('ModelScheduler', () => {
     const input2 = createInputValue('_input_2', 0)
     const input3 = createInputValue('_input_3', 0)
     const inputs = [input1, input2, input3]
-    const outputs = new Outputs(['_output_1', '_output_2'], 2000, 2100)
+    const outputs = runner.createOutputs()
 
     const scheduler = new ModelScheduler(runner, inputs, outputs)
 
@@ -61,6 +64,9 @@ describe('ModelScheduler', () => {
   // Note: this tests the behavior of the scheduler with fake timers
   it('should enqueue another run if the inputs are changed while current run is in progress', async () => {
     const runner: ModelRunner = {
+      createOutputs: () => {
+        return new Outputs(['_output_1', '_output_2'], 2000, 2100, 1)
+      },
       runModel: (inputs, outputs) => {
         // For this runModel implementation, use setTimeout so that we have control
         // over timing (pretend that the model takes 20ms to run)
@@ -83,7 +89,7 @@ describe('ModelScheduler', () => {
     const input2 = createInputValue('_input_2', 0)
     const input3 = createInputValue('_input_3', 0)
     const inputs = [input1, input2, input3]
-    const outputs = new Outputs(['_output_1', '_output_2'], 2000, 2100)
+    const outputs = runner.createOutputs()
 
     // Enable the use of fake timers for this test
     vi.useFakeTimers()
