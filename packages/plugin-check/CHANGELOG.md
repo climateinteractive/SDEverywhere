@@ -18,8 +18,8 @@
   * dependencies
     * @sdeverywhere/runtime bumped from ^0.1.0 to ^0.2.0
     * @sdeverywhere/runtime-async bumped from ^0.1.0 to ^0.2.0
-  * devDependencies
-    * @sdeverywhere/build bumped from * to 0.3.0
+  * peerDependencies
+    * @sdeverywhere/build bumped from ^0.2.0 to ^0.3.0
 
 ## [0.2.2](https://github.com/climateinteractive/SDEverywhere/compare/plugin-check-v0.2.1...plugin-check-v0.2.2) (2022-10-28)
 
