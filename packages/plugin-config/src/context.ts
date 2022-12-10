@@ -174,7 +174,7 @@ function readCsvFile(path: string): CsvRow[] {
     columns: true,
     trim: true,
     skip_empty_lines: true,
-    skip_lines_with_empty_values: true
+    skip_records_with_empty_values: true
   })
 }
 
