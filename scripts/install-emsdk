@@ -1,0 +1,72 @@
+#!/bin/bash
+
+#
+# This script installs the Emscripten SDK to the `emsdk` directory under
+# the current directory (if `emsdk` is not already present), then
+# activates the requested version (specified with EM_VERSION).
+#
+# The implementation is similar to the existing `setup-emsdk` action
+# (https://github.com/mymindstorm/setup-emsdk) except that one has issues
+# with the cache directory on Windows, so having our own script gives us
+# more control over installation and caching behavior.
+#
+
+if [[ -z $EM_VERSION ]]; then
+  echo "ERROR: Must specify EM_VERSION"
+  exit 1
+fi
+
+# If EM_DIR is not specified, use the `emsdk` directory under the current one
+if [[ -z $EM_DIR ]]; then
+  EM_DIR=$PWD/emsdk
+fi
+
+set -e # fail on error
+#set -x # include all commands in logs
+
+echo
+echo "Python info:"
+set +e
+which python3
+python3 --version
+set -e
+
+emsdk_cmd() {
+  # XXX: Workaround for installing locally when python path is not executable
+  # if [[ PLATFORM == "win" ]]; then
+  #   winpty python.exe emsdk.py $@
+  # else
+    python3 emsdk.py $@
+  # fi
+}
+
+# Only download if the emsdk directory wasn't restored from a cache
+echo
+if [[ ! -d "$EM_DIR" ]]; then
+  echo "Downloading Emscripten SDK to $EM_DIR"
+  echo
+  git clone https://github.com/emscripten-core/emsdk.git "$EM_DIR"
+else
+  echo "Found existing Emscripten SDK directory: $EM_DIR"
+fi
+echo
+
+cd "$EM_DIR"
+if [[ $CI == true ]]; then
+  # On GitHub Actions, remove the `.git` directory to keep the cache smaller.
+  # When we update to a new version, the cache key will miss and the emsdk
+  # repo will be redownloaded.
+  echo "CI detected, removing .git directory..."
+  rm -rf .git
+  echo
+else
+  # For local development, pull to get the latest
+  echo "Local development detected, performing git pull..."
+  git pull
+  echo
+fi
+
+echo "Activating Emscripten SDK $EM_VERSION..."
+emsdk_cmd install $EM_VERSION
+emsdk_cmd activate $EM_VERSION
+echo

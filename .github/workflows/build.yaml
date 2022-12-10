@@ -15,6 +15,12 @@ on:
     branches-ignore:
       - main
 
+env:
+  EM_DIR: 'emsdk'
+  EM_VERSION: 2.0.34
+  # This is an additional key that can be used to invalidate the emsdk cache when needed
+  EM_KEY: 'v1'
+
 jobs:
   # The `build` job builds and tests all packages in the monorepo
   build:
@@ -78,10 +84,10 @@ jobs:
         run: |
           ./scripts/ci-build
 
-  # The `test_e2e` job runs the model tests.  This job runs in parallel with the `build`
-  # job (which cuts down on overall time to execute the workflow) because it only needs
-  # to build a subset of the packages in order to run the integration tests.
-  test_e2e:
+  # The `test_c` job runs the C-level integration tests.  This job runs in parallel with
+  # the other jobs (which cuts down on overall time to execute the workflow) because it
+  # only needs to build a subset of the packages in order to run the integration tests.
+  test_c:
     runs-on: ${{ matrix.config.os }}
     timeout-minutes: 20
     strategy:
@@ -140,4 +146,78 @@ jobs:
       - name: Run integration tests
         shell: bash
         run: |
-          ./scripts/ci-test-e2e
+          ./scripts/ci-run-c-int-tests
+
+  # The `test_js` job runs the JS-level integration tests.  This job runs in parallel with
+  # the other jobs (which cuts down on overall time to execute the workflow) because it
+  # only needs to build a subset of the packages in order to run the integration tests.
+  test_js:
+    runs-on: ${{ matrix.config.os }}
+    timeout-minutes: 20
+    strategy:
+      matrix:
+        config:
+          - { plat: 'linux', os: 'ubuntu-20.04' }
+          # - { plat: 'mac', os: 'macos-10.15' }
+          # - { plat: 'win', os: 'windows-2019' }
+    steps:
+      # Force Unix-style line endings (otherwise Prettier checks will fail on Windows)
+      - name: Configure git to use Unix-style line endings
+        if: matrix.config.plat == 'win'
+        run: |
+          git config --global core.autocrlf false
+          git config --global core.eol lf
+
+      - name: Check out repo
+        uses: actions/checkout@v3
+
+      - name: Enable Emscripten cache
+        uses: actions/cache@v3
+        with:
+          path: ${{env.EM_DIR}}
+          key: emsdk-app-${{env.EM_VERSION}}-${{env.EM_KEY}}
+
+      - name: Install Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+
+      # The pnpm caching strategy in the following steps is based on:
+      #   https://github.com/pnpm/action-setup#use-cache-to-reduce-installation-time
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2.2.4
+        with:
+          version: 7
+
+      - name: Configure pnpm
+        if: matrix.config.plat == 'win'
+        run: |
+          # Force pnpm to use bash shell for running scripts on Windows
+          pnpm config set script-shell bash
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: echo "pnpm_cache_dir=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: Enable pnpm cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ steps.pnpm-cache.outputs.pnpm_cache_dir }}
+          key: pnpm-store-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            pnpm-store-${{ runner.os }}-
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          pnpm install
+
+      - name: Install Emscripten
+        run: |
+          ./scripts/install-emsdk
+
+      - name: Run integration tests
+        shell: bash
+        run: |
+          ./scripts/ci-run-js-int-tests
