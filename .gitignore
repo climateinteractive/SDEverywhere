@@ -17,4 +17,5 @@ removals.txt
 # Logs
 npm-debug.log*
 # Dependency directories
+emsdk
 node_modules
