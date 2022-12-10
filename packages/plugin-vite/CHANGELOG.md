@@ -1,11 +1,5 @@
 # Changelog
 
-### Dependencies
-
-* The following workspace dependencies were updated
-  * devDependencies
-    * @sdeverywhere/build bumped from * to 0.3.0
-
 ## [0.1.4](https://github.com/climateinteractive/SDEverywhere/compare/plugin-vite-v0.1.3...plugin-vite-v0.1.4) (2022-10-25)
 
 
