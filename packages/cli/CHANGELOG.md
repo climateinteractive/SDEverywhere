@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.7.6](https://github.com/climateinteractive/SDEverywhere/compare/cli-v0.7.5...cli-v0.7.6) (2022-12-10)
+
+
+### Features
+
+* expose accessor functions for control parameters ([#296](https://github.com/climateinteractive/SDEverywhere/issues/296)) ([a44d097](https://github.com/climateinteractive/SDEverywhere/commit/a44d0977d14daf4104e17d2710a812e0986d35a5)), closes [#295](https://github.com/climateinteractive/SDEverywhere/issues/295)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/build bumped from ^0.2.0 to ^0.3.0
+    * @sdeverywhere/compile bumped from ^0.7.2 to ^0.7.3
+
 ## [0.7.5](https://github.com/climateinteractive/SDEverywhere/compare/cli-v0.7.4...cli-v0.7.5) (2022-12-09)
 
 
