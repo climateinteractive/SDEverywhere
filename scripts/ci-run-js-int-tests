@@ -8,16 +8,15 @@ set -x # include all commands in logs
 
 cd "$PROJ_DIR"
 
-# Build the `@sdeverywhere/build` package, which is the only one that needs to be
-# built prior to running the C-level model tests.  (The model tests do depend on the
-# `compile` and `cli` packages, but those don't currently have a build step since
-# they are pure JavaScript.)
+# Build the subset of packages that are required for running the JS-level
+# integration tests
 pnpm -F build build
+pnpm -F plugin-wasm build
+pnpm -F plugin-worker build
+pnpm -F runtime build
+pnpm -F runtime-async build
 
-# Run the C-level model tests
-pnpm run test:c-int
-
-# Run the JS-level integration tests (that exercise the build and runtime packages)
+# Run the JS-level integration tests that exercise the build and runtime packages
 pnpm run test:js-int
 
 # Fail the build if there are any untracked or modified files.  This usually

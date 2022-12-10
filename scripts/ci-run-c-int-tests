@@ -1,0 +1,33 @@
+#!/bin/bash
+
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+PROJ_DIR=$SCRIPT_DIR/..
+
+set -e # fail on error
+set -x # include all commands in logs
+
+cd "$PROJ_DIR"
+
+# Build the `@sdeverywhere/build` package, which is the only one that needs to be
+# built prior to running the C-level model tests.  (The model tests do depend on the
+# `compile` and `cli` packages, but those don't currently have a build step since
+# they are pure JavaScript.)
+pnpm -F build build
+
+# Run the C-level model/integration tests
+pnpm run test:c-int
+
+# Fail the build if there are any untracked or modified files.  This usually
+# only occurs if the typedoc-generated docs need updating after any API
+# changes.  (We currently keep the generated API docs as tracked files in
+# the repo, and updating them is a manual step.)
+set +e
+set +x
+if [[ -n "$(git status --porcelain)" ]]; then
+echo
+  echo "ERROR: There are untracked or modified files reported by git"
+  echo
+  git status
+  echo
+  exit 1
+fi

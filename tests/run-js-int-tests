@@ -1,10 +1,6 @@
 #!/bin/bash
 
-# TODO: Run the JS-level integration tests here.  Before we add this step,
-# we first need to change the ci-test-e2e script to build the minimal set
-# of packages that are required to run the JS-level tests:
-#   build
-#   plugin-wasm
-#   plugin-worker
-# Also, to run this in GitHub Actions, we need to change the workflow to
-# install the Emscripten SDK.
+set -e # fail on error
+set -x # include all commands in logs
+
+# TODO: Run integration tests here
