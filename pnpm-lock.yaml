@@ -36,11 +36,11 @@ importers:
 
   examples/hello-world:
     specifiers:
-      '@sdeverywhere/build': ^0.2.0
-      '@sdeverywhere/cli': ^0.7.0
-      '@sdeverywhere/plugin-check': ^0.2.0
-      '@sdeverywhere/plugin-wasm': ^0.1.0
-      '@sdeverywhere/plugin-worker': ^0.1.0
+      '@sdeverywhere/build': ^0.3.0
+      '@sdeverywhere/cli': ^0.7.6
+      '@sdeverywhere/plugin-check': ^0.3.0
+      '@sdeverywhere/plugin-wasm': ^0.2.0
+      '@sdeverywhere/plugin-worker': ^0.2.0
       sirv-cli: ^2.0.2
     dependencies:
       '@sdeverywhere/build': link:../../packages/build
@@ -179,8 +179,8 @@ importers:
 
   packages/cli:
     specifiers:
-      '@sdeverywhere/build': ^0.2.0
-      '@sdeverywhere/compile': ^0.7.2
+      '@sdeverywhere/build': ^0.3.0
+      '@sdeverywhere/compile': ^0.7.3
       bufx: ^1.0.5
       byline: ^5.0.0
       ramda: ^0.27.0
@@ -219,7 +219,7 @@ importers:
 
   packages/create:
     specifiers:
-      '@sdeverywhere/compile': ^0.7.2
+      '@sdeverywhere/compile': ^0.7.3
       '@types/degit': ^2.8.3
       '@types/fs-extra': ^9.0.13
       '@types/node': ^16.11.7
@@ -261,8 +261,8 @@ importers:
       '@sdeverywhere/build': '*'
       '@sdeverywhere/check-core': ^0.1.0
       '@sdeverywhere/check-ui-shell': ^0.2.1
-      '@sdeverywhere/runtime': ^0.1.0
-      '@sdeverywhere/runtime-async': ^0.1.0
+      '@sdeverywhere/runtime': ^0.2.0
+      '@sdeverywhere/runtime-async': ^0.2.0
       '@types/node': ^16.11.7
       assert-never: ^1.2.1
       chokidar: ^3.5.3
@@ -337,8 +337,8 @@ importers:
     specifiers:
       '@rollup/plugin-node-resolve': ^13.3.0
       '@sdeverywhere/build': '*'
-      '@sdeverywhere/runtime': ^0.1.0
-      '@sdeverywhere/runtime-async': ^0.1.0
+      '@sdeverywhere/runtime': ^0.2.0
+      '@sdeverywhere/runtime-async': ^0.2.0
       '@types/node': ^16.11.7
       rollup: ^2.76.0
       vite: ^3.1.3
@@ -360,7 +360,7 @@ importers:
 
   packages/runtime-async:
     specifiers:
-      '@sdeverywhere/runtime': ^0.1.0
+      '@sdeverywhere/runtime': ^0.2.0
       threads: 1.7.0
     dependencies:
       '@sdeverywhere/runtime': link:../runtime

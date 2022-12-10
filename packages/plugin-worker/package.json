@@ -46,10 +46,10 @@
     ]
   },
   "peerDependencies": {
-    "@sdeverywhere/build": "^0.2.0"
+    "@sdeverywhere/build": "^0.3.0"
   },
   "devDependencies": {
-    "@sdeverywhere/build": "0.3.0",
+    "@sdeverywhere/build": "*",
     "@types/node": "^16.11.7"
   },
   "author": "Climate Interactive",

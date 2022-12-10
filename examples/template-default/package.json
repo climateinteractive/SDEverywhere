@@ -13,13 +13,13 @@
     "packages/app"
   ],
   "dependencies": {
-    "@sdeverywhere/build": "^0.2.0",
+    "@sdeverywhere/build": "^0.3.0",
     "@sdeverywhere/check-core": "^0.1.0",
-    "@sdeverywhere/cli": "^0.7.0",
-    "@sdeverywhere/plugin-check": "^0.2.0",
-    "@sdeverywhere/plugin-config": "^0.1.0",
-    "@sdeverywhere/plugin-vite": "^0.1.1",
-    "@sdeverywhere/plugin-wasm": "^0.1.0",
-    "@sdeverywhere/plugin-worker": "^0.1.0"
+    "@sdeverywhere/cli": "^0.7.6",
+    "@sdeverywhere/plugin-check": "^0.3.0",
+    "@sdeverywhere/plugin-config": "^0.2.0",
+    "@sdeverywhere/plugin-vite": "^0.1.5",
+    "@sdeverywhere/plugin-wasm": "^0.2.0",
+    "@sdeverywhere/plugin-worker": "^0.2.0"
   }
 }
