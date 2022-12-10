@@ -295,13 +295,13 @@ importers:
       '@types/sanitize-html': ^2.6.2
       '@types/temp': ^0.9.1
       byline: ^5.0.0
-      csv-parse: ^4.15.4
+      csv-parse: ^5.3.3
       dedent: ^0.7.0
       sanitize-html: ^2.7.1
       temp: ^0.9.4
     dependencies:
       byline: 5.0.0
-      csv-parse: 4.16.3
+      csv-parse: 5.3.3
       sanitize-html: 2.7.1
     devDependencies:
       '@sdeverywhere/build': link:../build
@@ -1261,10 +1261,6 @@ packages:
       path-key: 3.1.1
       shebang-command: 2.0.0
       which: 2.0.2
-
-  /csv-parse/4.16.3:
-    resolution: {integrity: sha512-cO1I/zmz4w2dcKHVvpCr7JVRu8/FymG5OEpmvsZYlccYolPBLoVGKUHgNoc4ZGkFeFlWGEDmMyBM+TTqRdW/wg==}
-    dev: false
 
   /csv-parse/5.3.3:
     resolution: {integrity: sha512-kEWkAPleNEdhFNkHQpFHu9RYPogsFj3dx6bCxL847fsiLgidzWg0z/O0B1kVWMJUc5ky64zGp18LX2T3DQrOfw==}

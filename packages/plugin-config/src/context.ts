@@ -3,7 +3,7 @@
 import { readFileSync } from 'fs'
 import { join as joinPath, relative } from 'path'
 
-import parseCsv from 'csv-parse/lib/sync.js'
+import { parse as parseCsv } from 'csv-parse/sync'
 
 import type { BuildContext, InputSpec, LogLevel, OutputSpec } from '@sdeverywhere/build'
 
