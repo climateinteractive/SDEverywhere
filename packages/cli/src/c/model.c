@@ -23,6 +23,49 @@ size_t savePointIndex = 0;
 
 int step = 0;
 
+void initControlParamsIfNeeded() {
+  static bool controlParamsInitialized = false;
+  if (controlParamsInitialized) {
+    return;
+  }
+
+  // Some models may define the control parameters as variables that are
+  // dependent on other values that are only known at runtime (after running
+  // the initializers and/or one step of the model), so we need to perform
+  // those steps once before the parameters are accessed
+  // TODO: This approach doesn't work if one or more control parameters are
+  // defined in terms of some value that is provided at runtime as an input
+  initConstants();
+  initLevels();
+  _time = _initial_time;
+  evalAux();
+  controlParamsInitialized = true;
+}
+
+/**
+ * Return the constant or computed value of `INITIAL TIME`.
+ */
+double getInitialTime() {
+  initControlParamsIfNeeded();
+  return _initial_time;
+}
+
+/**
+ * Return the constant or computed value of `FINAL TIME`.
+ */
+double getFinalTime() {
+  initControlParamsIfNeeded();
+  return _final_time;
+}
+
+/**
+ * Return the constant or computed value of `SAVEPER`.
+ */
+double getSaveper() {
+  initControlParamsIfNeeded();
+  return _saveper;
+}
+
 char* run_model(const char* inputs) {
   // run_model does everything necessary to run the model with the given inputs.
   // It may be called multiple times. Call finish() after all runs are complete.

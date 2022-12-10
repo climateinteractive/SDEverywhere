@@ -42,7 +42,7 @@ let codeGenerator = (parseTree, opts) => {
       } else if (operation === 'generateC') {
         // Generate code for each variable in the proper order.
         let code = emitDeclCode()
-        code += emitGetControlValuesCode()
+        // code += emitGetControlValuesCode()
         code += emitInitLookupsCode()
         code += emitInitConstantsCode()
         code += emitInitLevelsCode()
