@@ -42,7 +42,6 @@ let codeGenerator = (parseTree, opts) => {
       } else if (operation === 'generateC') {
         // Generate code for each variable in the proper order.
         let code = emitDeclCode()
-        // code += emitGetControlValuesCode()
         code += emitInitLookupsCode()
         code += emitInitConstantsCode()
         code += emitInitLevelsCode()
@@ -79,55 +78,6 @@ ${dimensionMappingsSection()}
 // Lookup data arrays
 ${section(Model.lookupVars())}
 ${section(Model.dataVars())}
-
-`
-  }
-
-  //
-  // Control value getters section
-  //
-  function emitGetControlValuesCode() {
-    function getConstTimeValue(vensimName) {
-      const v = Model.varWithName(Model.cName(vensimName))
-      if (v && v.varType === 'const') {
-        return v.modelFormula
-      } else {
-        throw new Error(`SDE only supports ${vensimName} defined as a constant value`)
-      }
-    }
-
-    function getSaveperValue() {
-      const v = Model.varWithName('_saveper')
-      if (v && v.varType === 'const') {
-        return v.modelFormula
-      } else if (v && v.varType === 'aux' && v.modelFormula === 'TIME STEP') {
-        return getConstTimeValue('TIME STEP')
-      } else {
-        throw new Error(`SDE only supports SAVEPER defined as TIME STEP or a constant value`)
-      }
-    }
-
-    // For now we only allow models that have:
-    //   INITIAL TIME = a constant value
-    //   FINAL TIME = a constant value
-    //   SAVEPER = a constant value or constant `TIME STEP`
-    // If the model does not meet these expectations, we throw an error.
-    // TODO: Loosen this up to allow for certain common constant expressions
-    const initialTimeValue = getConstTimeValue('INITIAL TIME')
-    const finalTimeValue = getConstTimeValue('FINAL TIME')
-    const saveperValue = getSaveperValue('SAVEPER')
-
-    return `
-// Control parameter accessors
-double getInitialTime() {
-  return ${initialTimeValue};
-}
-double getFinalTime() {
-  return ${finalTimeValue};
-}
-double getSaveper() {
-  return ${saveperValue};
-}
 
 `
   }
