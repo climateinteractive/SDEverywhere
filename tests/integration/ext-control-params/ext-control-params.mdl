@@ -1,0 +1,16 @@
+{UTF-8}
+
+X = TIME ~~|
+
+Y = 0
+  ~ [-10,10,0.1]
+  ~
+  |
+
+Z = X + Y
+  ~~|
+
+INITIAL TIME = GET DIRECT CONSTANTS('ext-control-params.csv', ',', 'A2') ~~|
+FINAL TIME = INITIAL TIME + 2 ~~|
+TIME STEP = GET DIRECT CONSTANTS('ext-control-params.csv', ',', 'B2') ~~|
+SAVEPER = TIME STEP * 2 ~~|
