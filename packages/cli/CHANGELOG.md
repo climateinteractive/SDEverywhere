@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.7.7](https://github.com/climateinteractive/SDEverywhere/compare/cli-v0.7.6...cli-v0.7.7) (2022-12-13)
+
+
+### Bug Fixes
+
+* initialize control parameters prior to access ([#304](https://github.com/climateinteractive/SDEverywhere/issues/304)) ([365bbb2](https://github.com/climateinteractive/SDEverywhere/commit/365bbb2b751effd7b903cd2848b271ec0c19d243)), closes [#301](https://github.com/climateinteractive/SDEverywhere/issues/301)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/compile bumped from ^0.7.3 to ^0.7.4
+
 ## [0.7.6](https://github.com/climateinteractive/SDEverywhere/compare/cli-v0.7.5...cli-v0.7.6) (2022-12-10)
 
 
