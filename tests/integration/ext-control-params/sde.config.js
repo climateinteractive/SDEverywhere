@@ -3,7 +3,7 @@ import { workerPlugin } from '@sdeverywhere/plugin-worker'
 
 export async function config() {
   return {
-    modelFiles: ['saveper.mdl'],
+    modelFiles: ['ext-control-params.mdl'],
 
     modelSpec: async () => {
       return {
@@ -14,6 +14,14 @@ export async function config() {
     },
 
     plugins: [
+      // XXX: Include a custom plugin that applies post-processing steps.  This is
+      // a workaround for issue #303 where external data files can't be resolved.
+      {
+        postProcessMdl: (_, mdlContent) => {
+          return mdlContent.replaceAll('ext-control-params.csv', '../ext-control-params.csv')
+        }
+      },
+
       // Generate a `wasm-model.js` file containing the Wasm model
       wasmPlugin(),
 

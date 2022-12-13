@@ -50,18 +50,16 @@ EXTERN double _final_time;
 EXTERN double _time_step;
 EXTERN double _saveper;
 
-// API (defined in model.h)
+// API (defined in model.c)
+double getInitialTime(void);
+double getFinalTime(void);
+double getSaveper(void);
 char* run_model(const char* inputs);
 void runModelWithBuffers(double* inputs, double* outputs);
 void run(void);
 void startOutput(void);
 void outputVar(double value);
 void finish(void);
-
-// API (defined by the generated model)
-double getInitialTime(void);
-double getFinalTime(void);
-double getSaveper(void);
 
 // Functions implemented by the generated model
 void initConstants(void);
