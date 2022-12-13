@@ -1,5 +1,11 @@
 # Changelog
 
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/compile bumped from ^0.7.3 to ^0.7.4
+
 ## [0.2.0](https://github.com/climateinteractive/SDEverywhere/compare/create-v0.1.3...create-v0.2.0) (2022-12-10)
 
 

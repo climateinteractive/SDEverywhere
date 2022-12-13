@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.4](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.3...compile-v0.7.4) (2022-12-13)
+
+
+### Bug Fixes
+
+* initialize control parameters prior to access ([#304](https://github.com/climateinteractive/SDEverywhere/issues/304)) ([365bbb2](https://github.com/climateinteractive/SDEverywhere/commit/365bbb2b751effd7b903cd2848b271ec0c19d243)), closes [#301](https://github.com/climateinteractive/SDEverywhere/issues/301)
+
 ## [0.7.3](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.2...compile-v0.7.3) (2022-12-10)
 
 
