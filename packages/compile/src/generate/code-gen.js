@@ -282,12 +282,17 @@ ${postStep}
     // The names are in Vensim format if vensimNames is true, otherwise they are in C format.
     // Expand subscripted vars into separate var names with each index.
     function sortedVars() {
-      // Return a list of all vars sorted by the model LHS var name (without subscripts), case insensitive.
-      return R.sortBy(v => {
-        let modelLHSReader = new ModelLHSReader()
-        modelLHSReader.read(v.modelLHS)
-        return modelLHSReader.varName.toUpperCase()
-      }, Model.variables)
+      // Return a list of all vars in the order that they are evaluated by SDE
+      // in the generated model
+      let vars = []
+      vars.push(Model.varWithName('_time'))
+      vars.push(...Model.constVars())
+      vars.push(...Model.lookupVars())
+      vars.push(...Model.dataVars())
+      vars.push(...Model.initVars())
+      vars.push(...Model.auxVars())
+      // TODO: also levelVars not covered by initVars?
+      return vars
     }
     return R.uniq(
       R.reduce(
