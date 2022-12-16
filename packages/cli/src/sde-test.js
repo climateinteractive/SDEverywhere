@@ -27,6 +27,11 @@ export let builder = {
     describe: 'precision to which values must agree (default 1e-5)',
     type: 'number',
     alias: 'p'
+  },
+  times: {
+    describe: 'limit comparisons to times separated by spaces',
+    type: 'array',
+    alias: 't'
   }
 }
 export let handler = argv => {
