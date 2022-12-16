@@ -224,8 +224,8 @@ export let readCsv = (pathname, delimiter = ',') => {
       delimiter,
       columns: false,
       trim: true,
-      skip_empty_lines: true,
-      skip_records_with_empty_values: true
+      skip_empty_lines: false,
+      skip_records_with_empty_values: false
     }
     try {
       let data = B.read(pathname)
