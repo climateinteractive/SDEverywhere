@@ -55,7 +55,7 @@ export async function readDat(pathname, prefix = '') {
         if (Number.isNaN(t)) {
           console.error(`DAT file ${pathname}:${lineNum} time value is NaN`)
         } else if (Number.isNaN(value)) {
-          console.error(`DAT file ${pathname}:${lineNum} var "${varName}" value is NaN at time=${t}`)
+          // console.error(`DAT file ${pathname}:${lineNum} var "${varName}" value is NaN at time=${t}`)
         } else {
           varValues.set(t, value)
         }
