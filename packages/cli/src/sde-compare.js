@@ -53,7 +53,9 @@ export let compare = async (vensimfile, sdefile, opts) => {
   }
 
   let noDATDifference = true
-  for (let varName of vensimLog.keys()) {
+  // Visit the variables in the order that they are evaluated by SDE.  This helps
+  // to quickly surface the root cause of cascading differences.
+  for (let varName of sdeLog.keys()) {
     let sdeValues = sdeLog.get(varName)
     // Ignore variables that are not found in the SDE log file.
     if (sdeValues && (!opts.name || varName === opts.name)) {
