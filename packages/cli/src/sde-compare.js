@@ -79,6 +79,10 @@ export let compare = async (vensimfile, sdefile, opts) => {
   }
   if (noDATDifference) {
     pr(`Data were the same for ${vensimfile} and ${sdefile}`)
+    return true
+  } else {
+    pr(`Data differences detected for ${vensimfile} and ${sdefile}`)
+    return false
   }
 }
 let isZero = value => {
