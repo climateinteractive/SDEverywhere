@@ -64,18 +64,8 @@ g[C2,C1]
 0	21
 g[C2,C2]
 0	22
-h[B1,C1]
-0	1
-h[B1,C2]
-0	2
-h[B2,C1]
+h
 0	3
-h[B2,C2]
-0	0
-h[B3,C1]
-0	5
-h[B3,C2]
-0	6
 INITIAL TIME
 0	0
 SAVEPER
