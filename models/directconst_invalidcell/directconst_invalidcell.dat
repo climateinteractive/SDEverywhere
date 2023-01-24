@@ -1,0 +1,21 @@
+c[B1,C1]
+0	1
+c[B1,C2]
+0	2
+c[B2,C1]
+0	3
+c[B2,C2]
+0	0
+c[B3,C1]
+0	5
+c[B3,C2]
+0	6
+FINAL TIME
+0	1
+INITIAL TIME
+0	0
+SAVEPER
+0	1
+1	1
+TIME STEP
+0	1
