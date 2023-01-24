@@ -53,7 +53,12 @@ export let test = async (model, opts) => {
     let vensimPathname = path.join(modelDirname, `${modelName}.dat`)
     let p = path.parse(logPathname)
     let sdePathname = path.format({ dir: p.dir, name: p.name, ext: '.dat' })
-    await compare(vensimPathname, sdePathname, opts)
+    let noDiffs = await compare(vensimPathname, sdePathname, opts)
+    if (!noDiffs) {
+      // Exit with a non-zero error code if differences were detected
+      console.error()
+      process.exit(1)
+    }
   } catch (e) {
     // Exit with a non-zero error code if any step failed
     console.error(`ERROR: ${e.message}\n`)

@@ -59,18 +59,17 @@ g[From DimC, To DimC] =
     'B2'
   ) ~~~:SUPPLEMENTARY|
 
-h[DimB, DimC] =
+h =
   GET DIRECT CONSTANTS(
     'data/h.csv',
     ',',
-    'B2'
+    'B5'
   )
-  ~
-  ~ This csv file has a cell that does not contain a number so that we can check that
-    SDE does not throw an error in this case.  Note that Vensim will raise an error if
-    a cell in the csv file does not contain a number, so to run this test in Vensim,
-    temporarily change cell C3 to 0 in `h.csv`.
-  ~:SUPPLEMENTARY|
+	~	
+	~	This csv file has a blank line. The formula will have the correct value
+		only if SDEverywhere retains blank lines.
+	~	:SUPPLEMENTARY 
+	|
 
 ********************************************************
 	.Control

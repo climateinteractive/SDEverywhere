@@ -1,0 +1,51 @@
+{UTF-8}
+DimB: B1, B2, B3 ~~|
+DimC: C1, C2 ~~|
+
+c[DimB, DimC] =
+  GET DIRECT CONSTANTS(
+    'data/c.csv',
+    ',',
+    'B2'
+  )
+  ~
+  ~ This csv file has a cell that does not contain a number so that we can check that
+    SDE does not throw an error in this case.  Note that Vensim will raise an error if
+    a cell in the csv file does not contain a number, so to run this test in Vensim,
+    temporarily change cell C3 to 0 in `c.csv`.
+  ~:SUPPLEMENTARY|
+
+********************************************************
+	.Control
+********************************************************~
+		Simulation Control Parameters
+	|
+
+INITIAL TIME = 0 ~~|
+FINAL TIME = 1 ~~|
+TIME STEP = 1 ~~|
+SAVEPER = TIME STEP ~~|
+
+\\\---/// Sketch information - do not modify anything except names
+V300  Do not put anything below this section - it will be ignored
+*View 1
+$0-0-0,0,|0||0-0-0|0-0-0|0-0-0|0-0-0|0-0-0|0,0,100,0
+///---\\\
+:L<%^E!@
+9:directconst
+15:0,0,0,0,0,0
+19:100,0
+27:2,
+34:0,
+5:FINAL TIME
+35:Date
+36:YYYY-MM-DD
+37:2000
+38:1
+39:1
+40:2
+41:0
+42:1
+24:0
+25:0
+26:0
