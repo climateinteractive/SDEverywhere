@@ -210,6 +210,15 @@ TODO: Using config files
 
 TODO: model-check
 
+## Contributing
+
+SDEverywhere covers a subset of the Vensim modeling language used in models that have been deployed with it. There is still much to contribute.
+
+- Expand the Vensim parser to cover more of the language syntax, such as documentation strings, `:EXCEPT:` clauses, etc.
+- Enhance the C code generator to produce code for new language features now that you can parse them.
+- Implement more Vensim functions. This is the easiest way to help out.
+- Target languages other than C, such as R or Ruby. (If you want Python, check out the excellent [PySD](https://github.com/JamesPHoughton/pysd)).
+
 ## License
 
 All packages developed in the SDEverywhere repository are distributed under the MIT license.
@@ -535,15 +544,6 @@ Some constructs like macros are not supported by SDEverywhere. They are removed 
 ## Generating a web application
 
 Refer to the "Using SDEverywhere to Make a Vensim Model into a Web Application" article in the `notes` directory for full details on designing and building your web app.
-
-## Contributing
-
-SDEverywhere covers a subset of the Vensim modeling language used in models that have been deployed with it. There is still much to contribute.
-
-- Expand the Vensim parser to cover more of the language syntax, such as documentation strings, :EXCEPT clauses, etc.
-- Enhance the C code generator to produce code for new language features now that you can parse them.
-- Implement more Vensim functions. This is the easiest way to help out.
-- Target languages other than C, such as R or Ruby. (If you want Python, check out the excellent [PySD](https://github.com/JamesPHoughton/pysd)).
 
 ### Debugging
 
