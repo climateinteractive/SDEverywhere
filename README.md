@@ -1,52 +1,36 @@
-# SDEverywhere Guide
-
-Revised: 2021-10-21
-
-<!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-
-- [SDEverywhere Guide](#sdeverywhere-guide)
-  - [Introduction](#introduction)
-  - [Caveats](#caveats)
-  - [Conventions used in this guide](#conventions-used-in-this-guide)
-  - [Installing](#installing)
-    - [Requirements](#requirements)
-    - [Install Node.js](#install-nodejs)
-    - [Install SDEverywhere](#install-sdeverywhere)
-  - [Test your setup](#test-your-setup)
-  - [Sample models](#sample-models)
-  - [Usage](#usage)
-    - [Specify input and output variables](#specify-input-and-output-variables)
-    - [Generating, compiling, running, and testing the C code](#generating-compiling-running-and-testing-the-c-code)
-    - [Setting inputs](#setting-inputs)
-    - [Inserting a file into the model](#inserting-a-file-into-the-model)
-  - [Generating a web application](#generating-a-web-application)
-  - [Contributing](#contributing)
-    - [Debugging](#debugging)
-  - [SDEverywhere architecture](#sdeverywhere-architecture)
-    - [Some notes on terminology](#some-notes-on-terminology)
-    - [Parsing](#parsing)
-    - [Code generation overview](#code-generation-overview)
-    - [The generated model and the run loop](#the-generated-model-and-the-run-loop)
-    - [The Variable object](#the-variable-object)
-    - [Visitor classes](#visitor-classes)
-    - [Code generation details](#code-generation-details)
-      - [VariableReader](#variablereader)
-      - [EquationReader](#equationreader)
-      - [CodeGen](#codegen)
-      - [EquationGen](#equationgen)
-  - [WebAssembly](#webassembly)
-  - [Subscripts in SDEverywhere](#subscripts-in-sdeverywhere)
-    - [Subscript range definition forms](#subscript-range-definition-forms)
-    - [Subscript mapping example](#subscript-mapping-example)
-
-<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+# SDEverywhere &nbsp;&nbsp; ![](https://github.com/climateinteractive/SDEverywhere/actions/workflows/build.yaml/badge.svg)
 
 ## Introduction
 
-[SDEverywhere](http://sdeverywhere.org/) is a [Vensim](http://vensim.com/) [transpiler](https://en.wikipedia.org/wiki/Source-to-source_compiler) that handles a broad range of [System Dynamics](http://www.systemdynamics.org/what-is-s/) models. It supports some advanced features of the [Vensim modeling language](https://www.vensim.com/documentation/index.html?ref_language.htm), including subscripts, subranges, and subscript mapping. It generates C and JavaScript code, and can create a generic web user interface for simple models.
+TODO: suite/collection of libraries and command line tools to transform System Dynamics models for ...
+
+TODO:
+
+- Vensim to C (and WebAssembly/JavaScript)
+- web user interface
+- model check/comparison
+
+[SDEverywhere](http://sdeverywhere.org/) is a [Vensim](http://vensim.com/) [transpiler](https://en.wikipedia.org/wiki/Source-to-source_compiler) that handles a broad range of [System Dynamics](http://www.systemdynamics.org/what-is-system-dynamics/) models. It supports some advanced features of the [Vensim modeling language](https://www.vensim.com/documentation/index.html?ref_language.htm), including subscripts, subranges, and subscript mapping. It generates C and JavaScript code, and can create a generic web user interface for simple models.
 
 Using SDEverywhere, you can deploy interactive System Dynamics models in mobile, desktop, and web apps for policymakers and the public. Or you could perform model analysis using general-purpose languages, running the model as high-performance C code.
+
+## Quick start
+
+TODO: Requirements
+
+TODO: Install [Node.js](https://nodejs.org/) version 14 or later. This will also install the `npm` Node Package Manager.
+
+TODO: `npm create @sdeverywhere`
+
+## Documentation
+
+TODO: Link to wiki and table of packages
+
+## Use in production
+
+- [Climate Interactive](https://www.climateinteractive.org) has been using SDEverywhere in production since 2019 for their popular simulation tools:
+  - [En-ROADS](https://en-roads.climateinteractive.org) &mdash; an online global climate simulator that allows users to explore the impact of policies on hundreds of factors like energy prices, temperature, air quality, and sea level rise
+  - [C-ROADS](https://c-roads.climateinteractive.org) &mdash; an online policy simulator (also available as a macOS or Windows desktop application) that helps people understand the long-term climate impacts of national and regional greenhouse gas emission reductions at the global level
 
 ## Caveats
 
@@ -60,6 +44,176 @@ SDEverywhere has been used to generate code for complex models with thousands of
 - You must rewrite equations that use macros or code them in C.
 
 Tabbed arrays and macros are removed from the model during preprocessing and written to the `removals.txt` file for your reference.
+
+## Repository structure
+
+SDEverywhere is developed in a monorepo structure.
+Each package listed in the table below is developed as a separate npm package/library under the `packages` directory in this repository.
+All packages are published independently to the [npm registry](https://www.npmjs.com).
+
+If you're new to SDEverywhere, refer to the [Quick start](#quick-start) section above.
+Running the `npm create @sdeverywhere` command described in that section will take care of setting up a recommended project structure and will install/configure the necessary `@sdeverywhere` packages from the table below.
+
+If you want more control over which packages are installed, or for API documentation and configuration instructions, refer to the links below.
+
+Packages marked with an asterisk (\*) are implementation details
+Most users won't need to interact with these implementation packages directly, but they may be useful for advanced use cases (for example, if you want to build a custom test runner).
+
+<table>
+  <tr>
+    <th>Package</th>
+    <th>Version</th>
+    <th>Links</th>
+  </tr>
+  <tr>
+    <td colspan="3"><em>Project creation</em></td>
+  </tr>
+  <tr>
+    <td><a href="./packages/create">@sdeverywhere/create</a></td>
+    <td><a href="https://www.npmjs.com/package/@sdeverywhere/create"><img style="vertical-align:middle;" src="https://img.shields.io/npm/v/@sdeverywhere/create.svg?label=%20"></a></td>
+    <td>
+      <a href="./packages/create">Source</a>&nbsp;|&nbsp;
+      <a href="./packages/create/README.md">Docs</a>&nbsp;|&nbsp;
+      <a href="./packages/create/CHANGELOG.md">Changelog</a>
+    </td>
+  </tr>
+  <tr>
+    <td colspan="3"><em>Command line interface</em></td>
+  </tr>
+  <tr>
+    <td><a href="./packages/cli">@sdeverywhere/cli</a></td>
+    <td><a href="https://www.npmjs.com/package/@sdeverywhere/cli"><img style="vertical-align:middle;" src="https://img.shields.io/npm/v/@sdeverywhere/cli.svg?label=%20"></a></td>
+    <td>
+      <a href="./packages/cli">Source</a>&nbsp;|&nbsp;
+      <a href="./packages/cli/README.md">Docs</a>&nbsp;|&nbsp;
+      <a href="./packages/cli/CHANGELOG.md">Changelog</a>
+    </td>
+  </tr>
+  <tr>
+    <td colspan="3"><em>Build plugins</em></td>
+  </tr>
+  <tr>
+    <td><a href="./packages/plugin-config">@sdeverywhere/plugin-config</a></td>
+    <td><a href="https://www.npmjs.com/package/@sdeverywhere/plugin-config"><img style="vertical-align:middle;" src="https://img.shields.io/npm/v/@sdeverywhere/plugin-config.svg?label=%20"></a></td>
+    <td>
+      <a href="./packages/plugin-config">Source</a>&nbsp;|&nbsp;
+      <a href="./packages/plugin-config/README.md">Docs</a>&nbsp;|&nbsp;
+      <a href="./packages/plugin-config/CHANGELOG.md">Changelog</a>
+    </td>
+  </tr>
+  <tr>
+    <td><a href="./packages/plugin-wasm">@sdeverywhere/plugin-wasm</a></td>
+    <td><a href="https://www.npmjs.com/package/@sdeverywhere/plugin-wasm"><img style="vertical-align:middle;" src="https://img.shields.io/npm/v/@sdeverywhere/plugin-wasm.svg?label=%20"></a></td>
+    <td>
+      <a href="./packages/plugin-wasm">Source</a>&nbsp;|&nbsp;
+      <a href="./packages/plugin-wasm/README.md">Docs</a>&nbsp;|&nbsp;
+      <a href="./packages/plugin-wasm/CHANGELOG.md">Changelog</a>
+    </td>
+  </tr>
+  <tr>
+    <td><a href="./packages/plugin-worker">@sdeverywhere/plugin-worker</a></td>
+    <td><a href="https://www.npmjs.com/package/@sdeverywhere/plugin-worker"><img style="vertical-align:middle;" src="https://img.shields.io/npm/v/@sdeverywhere/plugin-worker.svg?label=%20"></a></td>
+    <td>
+      <a href="./packages/plugin-worker">Source</a>&nbsp;|&nbsp;
+      <a href="./packages/plugin-worker/README.md">Docs</a>&nbsp;|&nbsp;
+      <a href="./packages/plugin-worker/CHANGELOG.md">Changelog</a>
+    </td>
+  </tr>
+  <tr>
+    <td><a href="./packages/plugin-vite">@sdeverywhere/plugin-vite</a></td>
+    <td><a href="https://www.npmjs.com/package/@sdeverywhere/plugin-vite"><img style="vertical-align:middle;" src="https://img.shields.io/npm/v/@sdeverywhere/plugin-vite.svg?label=%20"></a></td>
+    <td>
+      <a href="./packages/plugin-vite">Source</a>&nbsp;|&nbsp;
+      <a href="./packages/plugin-vite/README.md">Docs</a>&nbsp;|&nbsp;
+      <a href="./packages/plugin-vite/CHANGELOG.md">Changelog</a>
+    </td>
+  </tr>
+  <tr>
+    <td><a href="./packages/plugin-check">@sdeverywhere/plugin-check</a></td>
+    <td><a href="https://www.npmjs.com/package/@sdeverywhere/plugin-check"><img style="vertical-align:middle;" src="https://img.shields.io/npm/v/@sdeverywhere/plugin-check.svg?label=%20"></a></td>
+    <td>
+      <a href="./packages/plugin-check">Source</a>&nbsp;|&nbsp;
+      <a href="./packages/plugin-check/README.md">Docs</a>&nbsp;|&nbsp;
+      <a href="./packages/plugin-check/CHANGELOG.md">Changelog</a>
+    </td>
+  </tr>
+  <tr>
+    <td colspan="3"><em>Runtime libraries</em></td>
+  </tr>
+  <tr>
+    <td><a href="./packages/runtime">@sdeverywhere/runtime</a></td>
+    <td><a href="https://www.npmjs.com/package/@sdeverywhere/runtime"><img style="vertical-align:middle;" src="https://img.shields.io/npm/v/@sdeverywhere/runtime.svg?label=%20"></a></td>
+    <td>
+      <a href="./packages/runtime">Source</a>&nbsp;|&nbsp;
+      <a href="./packages/runtime/README.md">Docs</a>&nbsp;|&nbsp;
+      <a href="./packages/runtime/CHANGELOG.md">Changelog</a>
+    </td>
+  </tr>
+  <tr>
+    <td><a href="./packages/runtime-async">@sdeverywhere/runtime-async</a></td>
+    <td><a href="https://www.npmjs.com/package/@sdeverywhere/runtime-async"><img style="vertical-align:middle;" src="https://img.shields.io/npm/v/@sdeverywhere/runtime-async.svg?label=%20"></a></td>
+    <td>
+      <a href="./packages/runtime-async">Source</a>&nbsp;|&nbsp;
+      <a href="./packages/runtime-async/README.md">Docs</a>&nbsp;|&nbsp;
+      <a href="./packages/runtime-async/CHANGELOG.md">Changelog</a>
+    </td>
+  </tr>
+  <tr>
+    <td colspan="3"><em>Build/CLI implementation</em></td>
+  </tr>
+  <tr>
+    <td><a href="./packages/build">@sdeverywhere/build</a> *</td>
+    <td><a href="https://www.npmjs.com/package/@sdeverywhere/build"><img style="vertical-align:middle;" src="https://img.shields.io/npm/v/@sdeverywhere/build.svg?label=%20"></a></td>
+    <td>
+      <a href="./packages/build">Source</a>&nbsp;|&nbsp;
+      <a href="./packages/build/README.md">Docs</a>&nbsp;|&nbsp;
+      <a href="./packages/build/CHANGELOG.md">Changelog</a>
+    </td>
+  </tr>
+  <tr>
+    <td><a href="./packages/compile">@sdeverywhere/compile</a> *</td>
+    <td><a href="https://www.npmjs.com/package/@sdeverywhere/compile"><img style="vertical-align:middle;" src="https://img.shields.io/npm/v/@sdeverywhere/compile.svg?label=%20"></a></td>
+    <td>
+      <a href="./packages/compile">Source</a>&nbsp;|&nbsp;
+      <a href="./packages/compile/README.md">Docs</a>&nbsp;|&nbsp;
+      <a href="./packages/compile/CHANGELOG.md">Changelog</a>
+    </td>
+  </tr>
+  <tr>
+    <td colspan="3"><em>`model-check` implementation</em></td>
+  </tr>
+  <tr>
+    <td><a href="./packages/check-core">@sdeverywhere/check-core</a> *</td>
+    <td><a href="https://www.npmjs.com/package/@sdeverywhere/check-core"><img style="vertical-align:middle;" src="https://img.shields.io/npm/v/@sdeverywhere/check-core.svg?label=%20"></a></td>
+    <td>
+      <a href="./packages/check-core">Source</a>&nbsp;|&nbsp;
+      <a href="./packages/check-core/README.md">Docs</a>&nbsp;|&nbsp;
+      <a href="./packages/check-core/CHANGELOG.md">Changelog</a>
+    </td>
+  </tr>
+  <tr>
+    <td><a href="./packages/check-ui-shell">@sdeverywhere/check-ui-shell</a> *</td>
+    <td><a href="https://www.npmjs.com/package/@sdeverywhere/check-ui-shell"><img style="vertical-align:middle;" src="https://img.shields.io/npm/v/@sdeverywhere/check-ui-shell.svg?label=%20"></a></td>
+    <td>
+      <a href="./packages/check-ui-shell">Source</a>&nbsp;|&nbsp;
+      <a href="./packages/check-ui-shell/README.md">Docs</a>&nbsp;|&nbsp;
+      <a href="./packages/check-ui-shell/CHANGELOG.md">Changelog</a>
+    </td>
+  </tr>
+</table>
+
+## Features
+
+TODO: Using `create`
+
+TODO: Using config files
+
+TODO: model-check
+
+## License
+
+All packages developed in the SDEverywhere repository are distributed under the MIT license.
+See [LICENSE](./LICENSE) for more details.
 
 ## Conventions used in this guide
 
