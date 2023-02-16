@@ -486,30 +486,6 @@ Some constructs like macros are not supported by SDEverywhere. They are removed 
 
 Refer to the "Using SDEverywhere to Make a Vensim Model into a Web Application" article in the `notes` directory for full details on designing and building your web app.
 
-### Debugging
-
-If you are using Atom, you can run the Chrome debugger inside Atom using the [Atom IDE](https://ide.atom.io/).
-
-To run in the Chrome debugger, start Node with the `--inspect-brk` flag. Use `node main.js` from the `packages/cli/src` directory.
-
-[Debugging Node.js with Chrome DevTools](https://medium.com/@paul_irish/debugging-node-js-nightlies-with-chrome-devtools-7c4a1b95ae27)
-
-Place a `debugger` statement in the code to set a breakpoint. Only one source file is available when the debugger starts. Others will become available as you step through code or examine the call stack. You can set additional breakpoints in the debugger once the source file is loaded.
-
-When running in the Chrome debugger, enter `ctx.getText()` in the console when in a visitor method to see the text of the parser node.
-
-An exception of "code generator exception: Cannot read property 'name' of undefined" is generated when a subscript is not able to be resolved by the `subs()` function in `normalizeSubscripts()`.
-
-To print a stack trace to the console, use `console.error(e.stack)` in an exception handler and `console.trace()` elsewhere.
-
-In the C input parsing code, show a changed value:
-
-```C
-if (*inputVarPtrs[modelVarIndex] != value) {
-  fprintf(stderr, "input %d changed from %g to %g\n", modelVarIndex, *inputVarPtrs[modelVarIndex], value);
-}
-```
-
 ## SDEverywhere architecture
 
 SDEverywhere is a transpiler that converts models written in the [Vensim modeling language](http://www.vensim.com/documentation/index.html?22300.htm) to either C or JavaScript. The language features and Vensim library functions that are most commonly used in models are supported, including subscripts.
