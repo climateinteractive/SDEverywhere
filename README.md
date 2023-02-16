@@ -305,72 +305,13 @@ If you need to run SDEverywhere in a debugger, use the instructions in the "Debu
 
 ## Test your setup
 
-If you cloned the GitHub repo, you can test your installation by building and running the models in the `models` directory, and then comparing SDEverywhere output to Vensim x64 output. Each model has its own directory under `models` with the same name as the model.
+If you cloned the GitHub repo, you can test your installation by building and running the models in the `models` directory, and then comparing SDEverywhere output to Vensim output. Each model has its own directory under `models` with the same name as the model.
 
 Run all model tests with pnpm.
 
 ```
 pnpm test
 ```
-
-## Sample models
-
-The sample Vensim models located in the `models` directory in a folder with the base name of the `.mdl` file. The C code will be written with the same base name in the `build` directory.
-
-The following models are included as samples and test cases for various Vensim features.
-
-| Model          | Description                                                                            |
-| -------------- | -------------------------------------------------------------------------------------- |
-| active_initial | ACTIVE INITIAL function                                                                |
-| allocate       | ALLOCATE AVAILABLE function                                                            |
-| arrays_cname   | 1-D and 2-D arrays with a variety of subscript references using C language var names   |
-| arrays_varname | 1-D and 2-D arrays with a variety of subscript references using Vensim var names       |
-| comments       | Range, units, and documentation removal                                                |
-| delay          | DELAY and DELAY3 functions                                                             |
-| delayfixed     | DELAY FIXED function                                                                   |
-| delayfixed2    | DELAY FIXED function                                                                   |
-| directconst    | GET DIRECT CONSTANTS function                                                          |
-| directdata     | GET DIRECT DATA function                                                               |
-| directlookups  | GET DIRECT LOOKUPS function                                                            |
-| directsubs     | GET DIRECT SUBSCRIPT function                                                          |
-| elmcount       | ELMCOUNT function                                                                      |
-| except         | Exception equations                                                                    |
-| except2        | Exception equations                                                                    |
-| extdata        | Loading external data from DAT files                                                   |
-| getdata        | GET DATA BETWEEN TIMES function                                                        |
-| index          | Apply-to-all and non-apply-to-all arrays                                               |
-| initial        | INITIAL function                                                                       |
-| interleaved    | Demonstrating a case where non-apply-to-all array elements are separated in eval order |
-| lookup         | Lookup variables and functions                                                         |
-| mapping        | Mapping subranges                                                                      |
-| multimap       | Mapping a subscript range to multiple ranges                                           |
-| npv            | NPV function                                                                           |
-| preprocess     | SDEverywhere preprocessor phase                                                        |
-| prune          | Removing variables that are not referenced by input or output variables                |
-| pulsetrain     | PULSE TRAIN function                                                                   |
-| quantum        | QUANTUM function                                                                       |
-| ref            | An eval order that require an apply-to-all array to become non-apply-to-all            |
-| sample         | SAMPLE function                                                                        |
-| sir            | SIR infection model                                                                    |
-| smooth         | SMOOTH function                                                                        |
-| smooth3        | SMOOTH3 function                                                                       |
-| specialchars   | Variables with special characters allowed by Vensim                                    |
-| subalias       | Subscript range aliasing with <->                                                      |
-| subscript      | Subscript references in various orders                                                 |
-| sum            | SUM expressions                                                                        |
-| sumif          | Handling nested subscripts within array function calls                                 |
-| trend          | TREND function                                                                         |
-| vector         | Vector functions                                                                       |
-
-Here are the files in each model directory.
-
-| Filename           | Description                                                          |
-| ------------------ | -------------------------------------------------------------------- |
-| {model}.mdl        | Vensim model                                                         |
-| {model}.dat        | Data file exported in DAT text format                                |
-| {model}.txt        | SDEverywhere log file in DAT format with values for all time steps   |
-| {model}\_spec.json | Model specification including input and output variables of interest |
-| {model}\_vars.txt  | SDEverywhere variable analysis                                       |
 
 ## Usage
 
