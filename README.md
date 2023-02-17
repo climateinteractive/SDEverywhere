@@ -56,8 +56,8 @@ Running the `npm create @sdeverywhere` command described in that section will ta
 
 If you want more control over which packages are installed, or for API documentation and configuration instructions, refer to the links below.
 
-Packages marked with an asterisk (\*) are implementation details
-Most users won't need to interact with these implementation packages directly, but they may be useful for advanced use cases (for example, if you want to build a custom test runner).
+Packages marked with an asterisk (\*) are implementation details.
+Most users won't need to interact with these implementation packages directly, but they may be useful for advanced use cases (for example, if you want to create a new build plugin or a custom test runner).
 
 <table>
   <tr>
