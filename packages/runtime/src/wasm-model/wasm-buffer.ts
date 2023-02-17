@@ -14,26 +14,18 @@ import type { WasmModule } from './wasm-module'
  * in the browser's normal JS thread, and then use `getArrayView` to copy into and
  * out of the wasm buffer.
  */
-export class WasmBuffer {
-  private byteOffset: number
-  private heapArray: Float64Array
-
+export class WasmBuffer<ArrType> {
   /**
    * @param wasmModule The `WasmModule` used to initialize the memory.
-   * @param numElements The number of 64-bit `double` elements in the buffer.
+   * @param byteOffset The byte offset within the wasm heap.
+   * @param heapArray The array view on the underlying heap buffer.
    */
-  constructor(private readonly wasmModule: WasmModule, numElements: number) {
-    const sizeOfFloat64 = 8
-    const lengthInBytes = numElements * sizeOfFloat64
-    this.byteOffset = wasmModule._malloc(lengthInBytes)
-    const float64Offset = this.byteOffset / sizeOfFloat64
-    this.heapArray = wasmModule.HEAPF64.subarray(float64Offset, float64Offset + numElements)
-  }
+  constructor(private readonly wasmModule: WasmModule, private byteOffset: number, private heapArray: ArrType) {}
 
   /**
-   * @return A new `Float64Array` view on the underlying heap buffer.
+   * @return An `ArrType` view on the underlying heap buffer.
    */
-  getArrayView(): Float64Array {
+  getArrayView(): ArrType {
     return this.heapArray
   }
 
@@ -55,4 +47,38 @@ export class WasmBuffer {
       this.byteOffset = undefined
     }
   }
+}
+
+/**
+ * Return a `WasmBuffer` that holds int32 elements.
+ *
+ * @hidden For internal use only.
+ *
+ * @param wasmModule The `WasmModule` used to initialize the memory.
+ * @param numElements The number of elements in the buffer.
+ */
+export function createInt32WasmBuffer(wasmModule: WasmModule, numElements: number): WasmBuffer<Int32Array> {
+  const elemSizeInBytes = 4
+  const lengthInBytes = numElements * elemSizeInBytes
+  const byteOffset = wasmModule._malloc(lengthInBytes)
+  const elemOffset = byteOffset / elemSizeInBytes
+  const heapArray = wasmModule.HEAPI32.subarray(elemOffset, elemOffset + numElements)
+  return new WasmBuffer<Int32Array>(wasmModule, byteOffset, heapArray)
+}
+
+/**
+ * Return a `WasmBuffer` that holds float64 elements.
+ *
+ * @hidden For internal use only.
+ *
+ * @param wasmModule The `WasmModule` used to initialize the memory.
+ * @param numElements The number of elements in the buffer.
+ */
+export function createFloat64WasmBuffer(wasmModule: WasmModule, numElements: number): WasmBuffer<Float64Array> {
+  const elemSizeInBytes = 8
+  const lengthInBytes = numElements * elemSizeInBytes
+  const byteOffset = wasmModule._malloc(lengthInBytes)
+  const elemOffset = byteOffset / elemSizeInBytes
+  const heapArray = wasmModule.HEAPF64.subarray(elemOffset, elemOffset + numElements)
+  return new WasmBuffer<Float64Array>(wasmModule, byteOffset, heapArray)
 }
