@@ -330,8 +330,14 @@ function removeUnusedVariables(spec) {
       if (!referencedRefIds.has(refId)) {
         referencedRefIds.add(refId)
         const refVar = varWithRefId(refId)
-        recordUsedVariable(refVar)
-        recordRefsOfVariable(refVar)
+        if (refVar) {
+          recordUsedVariable(refVar)
+          recordRefsOfVariable(refVar)
+        } else {
+          console.error(`No var found for ${refId}`)
+          console.error(v)
+          process.exit(1)
+        }
       }
     }
   }
@@ -1010,6 +1016,87 @@ function printDepsGraph(graph, varType) {
     console.error(`${dep[0]} → ${dep[1]}`)
   }
 }
+
+function nonInternalNonDataVars() {
+  // Filter out data/lookup variables and variables that are generated/used internally
+  const isInternal = v => {
+    return v.refId.startsWith('__level') || v.refId.startsWith('__aux') || v.refId === '_time'
+  }
+  const isDataOrLookup = v => {
+    return v.varType === 'data' || v.varType === 'lookup'
+  }
+  return R.filter(v => !isInternal(v) && !isDataOrLookup(v), variables)
+}
+
+function filteredVars() {
+  // Extract a subset of the available info for each variable and sort by `refId`
+  return R.sortBy(
+    R.prop('refId'),
+    R.map(v => filterVar(v), nonInternalNonDataVars())
+  )
+}
+
+function varIndexInfo() {
+  // Return an array, sorted by `varName`, containing information for each
+  // non-internal variable:
+  //   varName
+  //   varIndex
+  //   subscriptCount
+
+  // Get the filtered non-internal, non-lookup variables
+  const sortedVars = filteredVars()
+
+  // Get the set of unique variable names, and assign a 1-based index
+  // to each; this matches the index number used in `storeOutput()`
+  // in the generated C code
+  const infoMap = new Map()
+  let varIndex = 1
+  for (const v of sortedVars) {
+    const varName = v.varName
+    if (!infoMap.get(varName)) {
+      infoMap.set(varName, {
+        varName,
+        varIndex,
+        subscriptCount: v.families ? v.families.length : 0
+      })
+      varIndex++
+    }
+  }
+
+  return Array.from(infoMap.values())
+}
+
+function jsonList() {
+  // Return a stringified JSON object containing variable and subscript information
+  // for the model.
+
+  // Get the set of available subscripts
+  const allDims = [...allDimensions()]
+  const sortedDims = allDims.sort((a, b) => a.name.localeCompare(b.name))
+
+  // Extract a subset of the available info for each variable and sort by `refId`
+  const sortedVars = filteredVars()
+
+  // Get the set of unique variable names, and assign a 1-based index
+  // to each; this matches the index number used in `storeOutput()`
+  // in the generated C code
+  const varNames = R.uniq(R.map(v => v.varName, sortedVars))
+  const varNamesWithIndex = new Map()
+  varNames.forEach((varName, i) => {
+    varNamesWithIndex.set(varName, i + 1)
+  })
+  for (const v of sortedVars) {
+    v.varIndex = varNamesWithIndex.get(v.varName)
+  }
+
+  // Convert to JSON
+  const obj = {
+    dimensions: sortedDims,
+    variables: sortedVars
+  }
+  return JSON.stringify(obj, null, 2)
+}
+
 export default {
   addConstantExpr,
   addEquation,
@@ -1026,6 +1113,7 @@ export default {
   initVars,
   isInputVar,
   isNonAtoAName,
+  jsonList,
   levelVars,
   lookupVars,
   printRefGraph,
@@ -1036,6 +1124,7 @@ export default {
   refIdsWithName,
   splitRefId,
   variables,
+  varIndexInfo,
   varNames,
   varsWithName,
   varWithName,
