@@ -11,16 +11,21 @@ let initWasmModel: () => Promise<WasmModelInitResult>
 /** @hidden */
 let wasmModel: WasmModel
 /** @hidden */
-let inputsWasmBuffer: WasmBuffer
+let inputsWasmBuffer: WasmBuffer<Float64Array>
 /** @hidden */
-let outputsWasmBuffer: WasmBuffer
+let outputsWasmBuffer: WasmBuffer<Float64Array>
+/** @hidden */
+let outputIndicesWasmBuffer: WasmBuffer<Int32Array>
 
 interface InitResult {
   outputVarIds: string[]
   startTime: number
   endTime: number
   saveFreq: number
-  rowLength: number
+  inputsLength: number
+  outputsLength: number
+  outputIndicesLength: number
+  outputRowLength: number
   ioBuffer: ArrayBuffer
 }
 
@@ -38,6 +43,7 @@ const modelWorker = {
     wasmModel = wasmResult.model
     inputsWasmBuffer = wasmResult.inputsBuffer
     outputsWasmBuffer = wasmResult.outputsBuffer
+    outputIndicesWasmBuffer = wasmResult.outputIndicesBuffer
 
     // Create a combined array that will hold a copy of the inputs and outputs
     // wasm buffers; this buffer is no-copy transferable, whereas the wasm ones
@@ -45,7 +51,9 @@ const modelWorker = {
     const runTimeLength = 8
     const inputsLength = inputsWasmBuffer.getArrayView().length
     const outputsLength = outputsWasmBuffer.getArrayView().length
-    const ioArray = new Float64Array(runTimeLength + inputsLength + outputsLength)
+    const outputIndicesLength = outputIndicesWasmBuffer?.getArrayView().length || 0
+    const totalLength = runTimeLength + inputsLength + outputsLength + outputIndicesLength
+    const ioArray = new Float64Array(totalLength)
 
     // Transfer the underlying buffer to the runner
     const ioBuffer = ioArray.buffer
@@ -54,7 +62,10 @@ const modelWorker = {
       startTime: wasmModel.startTime,
       endTime: wasmModel.endTime,
       saveFreq: wasmModel.saveFreq,
-      rowLength: wasmModel.numSavePoints,
+      inputsLength,
+      outputsLength,
+      outputIndicesLength,
+      outputRowLength: wasmModel.numSavePoints,
       ioBuffer
     }
     return Transfer(initResult, [ioBuffer])
@@ -66,29 +77,45 @@ const modelWorker = {
     }
 
     // The run time is stored in the first 8 bytes
+    const runTimeOffsetInBytes = 0
     const runTimeLengthInElements = 1
     const runTimeLengthInBytes = runTimeLengthInElements * 8
 
     // Copy the inputs into the wasm inputs buffer
     const inputsWasmArray = inputsWasmBuffer.getArrayView()
+    const inputsOffsetInBytes = runTimeOffsetInBytes + runTimeLengthInBytes
     const inputsLengthInElements = inputsWasmArray.length
-    const inputsLengthInBytes = inputsLengthInElements * 8
-    const inputsBufferArray = new Float64Array(ioBuffer, runTimeLengthInBytes, inputsLengthInElements)
+    const inputsLengthInBytes = inputsWasmArray.byteLength
+    const inputsBufferArray = new Float64Array(ioBuffer, inputsOffsetInBytes, inputsLengthInElements)
     inputsWasmArray.set(inputsBufferArray)
+
+    // Copy the output indices into the wasm buffer, if needed
+    const outputsWasmArray = outputsWasmBuffer.getArrayView()
+    const outputsOffsetInBytes = runTimeLengthInBytes + inputsLengthInBytes
+    const outputsLengthInBytes = outputsWasmArray.byteLength
+    let useIndices = false
+    if (outputIndicesWasmBuffer) {
+      const indicesWasmArray = outputIndicesWasmBuffer.getArrayView()
+      const indicesLengthInElements = indicesWasmArray.length
+      const indicesOffsetInBytes = outputsOffsetInBytes + outputsLengthInBytes
+      const indicesBufferArray = new Int32Array(ioBuffer, indicesOffsetInBytes, indicesLengthInElements)
+      indicesWasmArray.set(indicesBufferArray)
+      useIndices = true
+    }
 
     // Run the model using the wasm buffers
     const t0 = perfNow()
-    wasmModel.runModel(inputsWasmBuffer, outputsWasmBuffer)
+    wasmModel.runModel(inputsWasmBuffer, outputsWasmBuffer, useIndices ? outputIndicesWasmBuffer : undefined)
     const elapsed = perfElapsed(t0)
 
     // Write the model run time to the buffer
-    const runTimeBufferArray = new Float64Array(ioBuffer, 0, runTimeLengthInElements)
+    const runTimeBufferArray = new Float64Array(ioBuffer, runTimeOffsetInBytes, runTimeLengthInElements)
     runTimeBufferArray[0] = elapsed
 
     // Copy the outputs from the wasm outputs buffer
-    const outputsOffsetInBytes = runTimeLengthInBytes + inputsLengthInBytes
-    const outputsBufferArray = new Float64Array(ioBuffer, outputsOffsetInBytes)
-    outputsBufferArray.set(outputsWasmBuffer.getArrayView())
+    const outputsLengthInElements = outputsWasmArray.length
+    const outputsBufferArray = new Float64Array(ioBuffer, outputsOffsetInBytes, outputsLengthInElements)
+    outputsBufferArray.set(outputsWasmArray)
 
     // Transfer the buffer back to the runner
     return Transfer(ioBuffer)
