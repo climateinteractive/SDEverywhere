@@ -75,6 +75,13 @@ double getSaveper() {
   return _saveper;
 }
 
+/**
+ * Return the constant `maxOutputIndices` value.
+ */
+int getMaxOutputIndices() {
+  return maxOutputIndices;
+}
+
 char* run_model(const char* inputs) {
   // run_model does everything necessary to run the model with the given inputs.
   // It may be called multiple times. Call finish() after all runs are complete.
@@ -150,7 +157,7 @@ void run() {
       outputVarIndex = 0;
       if (outputIndexBuffer != NULL) {
         // Store the outputs as specified in the current output index buffer
-        for (size_t i = 0; i < numOutputs; i++) {
+        for (size_t i = 0; i < maxOutputIndices; i++) {
           size_t indexBufferOffset = i * INDICES_PER_OUTPUT;
           size_t varIndex = (size_t)outputIndexBuffer[indexBufferOffset];
           if (varIndex > 0) {
@@ -158,6 +165,9 @@ void run() {
             size_t subIndex1 = (size_t)outputIndexBuffer[indexBufferOffset + 2];
             size_t subIndex2 = (size_t)outputIndexBuffer[indexBufferOffset + 3];
             storeOutput(varIndex, subIndex0, subIndex1, subIndex2);
+          } else {
+            // Stop when we reach the first zero index
+            break;
           }
         }
       } else {

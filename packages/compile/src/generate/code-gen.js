@@ -167,14 +167,14 @@ ${specOutputSection(outputVars)}
 }
 
 void storeOutput(size_t varIndex, size_t subIndex0, size_t subIndex1, size_t subIndex2) {
-  #define USE_OUTPUT_INDICES 0
-  #if USE_OUTPUT_INDICES
-    switch (varIndex) {
-  ${fullOutputSection(Model.varIndexInfo())}
-      default:
-        break;
-    }
-  #endif
+#if USE_OUTPUT_INDICES
+  switch (varIndex) {
+${fullOutputSection(Model.varIndexInfo())}
+    default:
+      break;
+  }
+#endif
+}
 `
   }
 
@@ -260,11 +260,16 @@ ${postStep}
   }
   function internalVarsSection() {
     // Declare internal variables to run the model.
+    let decls
     if (outputAllVars) {
-      return `const int numOutputs = ${expandedVarNames().length};`
+      decls = `const int numOutputs = ${expandedVarNames().length};`
     } else {
-      return `const int numOutputs = ${spec.outputVars.length};`
+      decls = `const int numOutputs = ${spec.outputVars.length};`
     }
+    decls += `\n#define USE_OUTPUT_INDICES 0`
+    decls += `\n#define MAX_OUTPUT_INDICES 1000`
+    decls += `\nconst int maxOutputIndices = USE_OUTPUT_INDICES ? MAX_OUTPUT_INDICES : 0;`
+    return decls
   }
   function arrayDimensionsSection() {
     // Emit a declaration for each array dimension's index numbers.
