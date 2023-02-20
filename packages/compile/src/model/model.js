@@ -1017,34 +1017,45 @@ function printDepsGraph(graph, varType) {
   }
 }
 
-function nonInternalNonDataVars() {
+function allListedVars() {
+  // Put variables into the order that they are evaluated by SDE in the generated model
+  let vars = []
+  vars.push(...constVars())
+  vars.push(...lookupVars())
+  vars.push(...dataVars())
+  vars.push(varWithName('_time'))
+  vars.push(...initVars())
+  vars.push(...auxVars())
+  // TODO: Also levelVars not covered by initVars?
+
   // Filter out data/lookup variables and variables that are generated/used internally
   const isInternal = v => {
-    return v.refId.startsWith('__level') || v.refId.startsWith('__aux') || v.refId === '_time'
+    return v.refId.startsWith('__level') || v.refId.startsWith('__aux')
   }
+  // TODO: Why do we filter these out?
   const isDataOrLookup = v => {
     return v.varType === 'data' || v.varType === 'lookup'
   }
-  return R.filter(v => !isInternal(v) && !isDataOrLookup(v), variables)
+
+  return R.filter(v => !isInternal(v) && !isDataOrLookup(v), vars)
 }
 
-function filteredVars() {
-  // Extract a subset of the available info for each variable and sort by `refId`
-  return R.sortBy(
-    R.prop('refId'),
-    R.map(v => filterVar(v), nonInternalNonDataVars())
-  )
+function filteredListedVars() {
+  // Extract a subset of the available info for each variable and sort all variables
+  // according to the order that they are evaluated by SDE in the generated model
+  return R.map(v => filterVar(v), allListedVars())
 }
 
 function varIndexInfo() {
   // Return an array, sorted by `varName`, containing information for each
-  // non-internal variable:
+  // listed variable:
   //   varName
   //   varIndex
   //   subscriptCount
 
-  // Get the filtered non-internal, non-lookup variables
-  const sortedVars = filteredVars()
+  // Get the filtered variables in the order that they are evaluated by SDE in the
+  // generated model
+  const sortedVars = filteredListedVars()
 
   // Get the set of unique variable names, and assign a 1-based index
   // to each; this matches the index number used in `storeOutput()`
@@ -1074,8 +1085,8 @@ function jsonList() {
   const allDims = [...allDimensions()]
   const sortedDims = allDims.sort((a, b) => a.name.localeCompare(b.name))
 
-  // Extract a subset of the available info for each variable and sort by `refId`
-  const sortedVars = filteredVars()
+  // Extract a subset of the available info for each variable and put them in eval order
+  const sortedVars = filteredListedVars()
 
   // Get the set of unique variable names, and assign a 1-based index
   // to each; this matches the index number used in `storeOutput()`
