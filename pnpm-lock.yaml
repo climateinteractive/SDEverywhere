@@ -388,6 +388,22 @@ importers:
       '@sdeverywhere/runtime': link:../../../packages/runtime
       '@sdeverywhere/runtime-async': link:../../../packages/runtime-async
 
+  tests/integration/impl-var-access:
+    specifiers:
+      '@sdeverywhere/build': workspace:*
+      '@sdeverywhere/cli': workspace:*
+      '@sdeverywhere/plugin-wasm': workspace:*
+      '@sdeverywhere/plugin-worker': workspace:*
+      '@sdeverywhere/runtime': workspace:*
+      '@sdeverywhere/runtime-async': workspace:*
+    dependencies:
+      '@sdeverywhere/build': link:../../../packages/build
+      '@sdeverywhere/cli': link:../../../packages/cli
+      '@sdeverywhere/plugin-wasm': link:../../../packages/plugin-wasm
+      '@sdeverywhere/plugin-worker': link:../../../packages/plugin-worker
+      '@sdeverywhere/runtime': link:../../../packages/runtime
+      '@sdeverywhere/runtime-async': link:../../../packages/runtime-async
+
   tests/integration/saveper:
     specifiers:
       '@sdeverywhere/build': workspace:*
