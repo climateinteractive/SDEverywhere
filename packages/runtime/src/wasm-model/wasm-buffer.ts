@@ -62,7 +62,7 @@ export function createInt32WasmBuffer(wasmModule: WasmModule, numElements: numbe
   const lengthInBytes = numElements * elemSizeInBytes
   const byteOffset = wasmModule._malloc(lengthInBytes)
   const elemOffset = byteOffset / elemSizeInBytes
-  const heapArray = wasmModule.HEAPI32.subarray(elemOffset, elemOffset + numElements)
+  const heapArray = wasmModule.HEAP32.subarray(elemOffset, elemOffset + numElements)
   return new WasmBuffer<Int32Array>(wasmModule, byteOffset, heapArray)
 }
 

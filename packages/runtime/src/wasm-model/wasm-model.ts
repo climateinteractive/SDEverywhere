@@ -27,6 +27,12 @@ export class WasmModel {
   public readonly saveFreq: number
   /** The number of save points for each output. */
   public readonly numSavePoints: number
+  /**
+   * The maximum number of output indices that can be passed for each run.
+   * @hidden This is not yet part of the public API; it is exposed here for use
+   * in experimental testing tools.
+   */
+  public readonly maxOutputIndices: number
 
   private readonly wasmRunModel: (inputsAddress: number, outputsAddress: number, outputIndicesAddress: number) => void
 
@@ -41,6 +47,13 @@ export class WasmModel {
     this.startTime = getNumberValue('getInitialTime')
     this.endTime = getNumberValue('getFinalTime')
     this.saveFreq = getNumberValue('getSaveper')
+
+    // Note that `getMaxOutputIndices` is not yet official, so proceed if it is not exposed
+    try {
+      this.maxOutputIndices = getNumberValue('getMaxOutputIndices')
+    } catch (e) {
+      this.maxOutputIndices = 0
+    }
 
     // Each series will include one data point per "save", inclusive of the
     // start and end times
@@ -76,7 +89,11 @@ export interface WasmModelInitResult {
   inputsBuffer: WasmBuffer<Float64Array>
   /** The buffer used to receive output values from the model. */
   outputsBuffer: WasmBuffer<Float64Array>
-  /** The buffer used to control which variables are written to `outputsBuffer`. */
+  /**
+   * The buffer used to control which variables are written to `outputsBuffer`.
+   * @hidden This is not yet part of the public API; it is exposed here for use
+   * in experimental testing tools.
+   */
   outputIndicesBuffer?: WasmBuffer<Int32Array>
   /** The output variable IDs. */
   outputVarIds: OutputVarId[]
@@ -88,13 +105,11 @@ export interface WasmModelInitResult {
  * @param wasmModule The `WasmModule` that wraps the `wasm` binary.
  * @param numInputs The number of input variables, per the spec file passed to `sde`.
  * @param outputVarIds The output variable IDs, per the spec file passed to `sde`.
- * @param useOutputIndices Whether to initialize the `outputIndicesBuffer`.
  */
 export function initWasmModelAndBuffers(
   wasmModule: WasmModule,
   numInputs: number,
-  outputVarIds: OutputVarId[],
-  useOutputIndices = false
+  outputVarIds: OutputVarId[]
 ): WasmModelInitResult {
   // Wrap the native C `runModelWithBuffers` function in a JS function that we can call
   const model = new WasmModel(wasmModule)
@@ -102,14 +117,14 @@ export function initWasmModelAndBuffers(
   // Allocate a buffer that is large enough to hold the input values
   const inputsBuffer = createFloat64WasmBuffer(wasmModule, numInputs)
 
-  // Allocate a buffer that is large enough to hold the series data for
-  // each output variable
-  const outputsBuffer = createFloat64WasmBuffer(wasmModule, outputVarIds.length * model.numSavePoints)
+  // Allocate a buffer that is large enough to hold the series data for each output variable
+  const outputVarCount = Math.max(outputVarIds.length, model.maxOutputIndices)
+  const outputsBuffer = createFloat64WasmBuffer(wasmModule, outputVarCount * model.numSavePoints)
 
-  // Allocate a buffer for the output indices, if requested
+  // Allocate a buffer for the output indices, if requested (for accessing internal variables)
   let outputIndicesBuffer: WasmBuffer<Int32Array>
-  if (useOutputIndices) {
-    outputIndicesBuffer = createInt32WasmBuffer(wasmModule, outputVarIds.length * indicesPerOutput)
+  if (model.maxOutputIndices > 0) {
+    outputIndicesBuffer = createInt32WasmBuffer(wasmModule, model.maxOutputIndices * indicesPerOutput)
   }
 
   return {
@@ -126,19 +141,21 @@ export function initWasmModelAndBuffers(
  * the synchronous and asynchronous model runner implementations.
  */
 export function updateOutputIndices(indicesArray: Int32Array, outputVarSpecs: OutputVarSpec[]): void {
-  for (let j = 0; j < indicesArray.length; j++) {
-    const offset = j * indicesPerOutput
-    if (j < outputVarSpecs.length) {
-      // Write the indices to the buffer
-      const outputVarSpec = outputVarSpecs[j]
-      const subCount = outputVarSpec.subscriptIndices?.length || 0
-      indicesArray[offset + 0] = outputVarSpec.varIndex
-      indicesArray[offset + 1] = subCount > 0 ? outputVarSpec.subscriptIndices[0] : 0
-      indicesArray[offset + 2] = subCount > 1 ? outputVarSpec.subscriptIndices[1] : 0
-      indicesArray[offset + 3] = subCount > 2 ? outputVarSpec.subscriptIndices[2] : 0
-    } else {
-      // Using zero makes SDE skip this position
-      indicesArray[offset] = 0
-    }
+  if (indicesArray.length < outputVarSpecs.length * indicesPerOutput) {
+    throw new Error('Length of indicesArray must be large enough to accommodate the given outputVarSpecs')
   }
+
+  // Write the indices to the buffer
+  let offset = 0
+  for (const outputVarSpec of outputVarSpecs) {
+    const subCount = outputVarSpec.subscriptIndices?.length || 0
+    indicesArray[offset + 0] = outputVarSpec.varIndex
+    indicesArray[offset + 1] = subCount > 0 ? outputVarSpec.subscriptIndices[0] : 0
+    indicesArray[offset + 2] = subCount > 1 ? outputVarSpec.subscriptIndices[1] : 0
+    indicesArray[offset + 3] = subCount > 2 ? outputVarSpec.subscriptIndices[2] : 0
+    offset += indicesPerOutput
+  }
+
+  // Fill the remainder of the buffer with zeros
+  indicesArray.fill(0, offset)
 }

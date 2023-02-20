@@ -69,7 +69,7 @@ export class Outputs {
    * stored in this `Outputs` instance.  If undefined, the default set of outputs
    * will be stored (as configured in `varIds`).
    * @hidden This is not yet part of the public API; it is exposed here for use
-   * in performance testing tools.
+   * in experimental testing tools.
    */
   public varSpecs?: OutputVarSpec[]
 
@@ -108,7 +108,7 @@ export class Outputs {
    * stored in this `Outputs` instance.  If undefined, the default set of outputs
    * will be stored (as configured in `varIds`).
    * @hidden This is not yet part of the public API; it is exposed here for use
-   * in performance testing tools.
+   * in experimental testing tools.
    */
   setVarSpecs(varSpecs: OutputVarSpec[]) {
     if (varSpecs.length !== this.varIds.length) {

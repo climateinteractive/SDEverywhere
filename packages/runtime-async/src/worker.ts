@@ -99,8 +99,11 @@ const modelWorker = {
       const indicesLengthInElements = indicesWasmArray.length
       const indicesOffsetInBytes = outputsOffsetInBytes + outputsLengthInBytes
       const indicesBufferArray = new Int32Array(ioBuffer, indicesOffsetInBytes, indicesLengthInElements)
-      indicesWasmArray.set(indicesBufferArray)
-      useIndices = true
+      if (indicesBufferArray[0] !== 0) {
+        // Only use the indices if the first index is non-zero
+        indicesWasmArray.set(indicesBufferArray)
+        useIndices = true
+      }
     }
 
     // Run the model using the wasm buffers

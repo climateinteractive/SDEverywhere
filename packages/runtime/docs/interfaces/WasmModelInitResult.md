@@ -30,14 +30,6 @@ The buffer used to receive output values from the model.
 
 ___
 
-### outputIndicesBuffer
-
- `Optional` **outputIndicesBuffer**: [`WasmBuffer`](../classes/WasmBuffer.md)<`Int32Array`\>
-
-The buffer used to control which variables are written to `outputsBuffer`.
-
-___
-
 ### outputVarIds
 
  **outputVarIds**: `string`[]
