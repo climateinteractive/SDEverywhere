@@ -35,7 +35,7 @@ interface Dimension {
  * in experimental testing tools.
  */
 export class ModelListing {
-  private readonly varSpecs: Map<OutputVarId, OutputVarSpec> = new Map()
+  public readonly varSpecs: Map<OutputVarId, OutputVarSpec> = new Map()
 
   constructor(modelJsonString: string) {
     // Parse the model listing JSON (as written by `sde generate --list`)
