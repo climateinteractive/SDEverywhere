@@ -1032,12 +1032,8 @@ function allListedVars() {
   const isInternal = v => {
     return v.refId.startsWith('__level') || v.refId.startsWith('__aux')
   }
-  // TODO: Why do we filter these out?
-  const isDataOrLookup = v => {
-    return v.varType === 'data' || v.varType === 'lookup'
-  }
 
-  return R.filter(v => !isInternal(v) && !isDataOrLookup(v), vars)
+  return R.filter(v => !isInternal(v), vars)
 }
 
 function filteredListedVars() {
@@ -1063,6 +1059,11 @@ function varIndexInfo() {
   const infoMap = new Map()
   let varIndex = 1
   for (const v of sortedVars) {
+    if (v.varType === 'data' || v.varType === 'lookup') {
+      // Omit the index for data and lookup variables; at this time, the data for these
+      // cannot be output like for other types of variables
+      continue
+    }
     const varName = v.varName
     if (!infoMap.get(varName)) {
       infoMap.set(varName, {
@@ -1097,6 +1098,11 @@ function jsonList() {
     varNamesWithIndex.set(varName, i + 1)
   })
   for (const v of sortedVars) {
+    if (v.varType === 'data' || v.varType === 'lookup') {
+      // Omit the index for data and lookup variables; at this time, the data for these
+      // cannot be output like for other types of variables
+      continue
+    }
     v.varIndex = varNamesWithIndex.get(v.varName)
   }
 
