@@ -1,6 +1,7 @@
 // Copyright (c) 2021-2022 Climate Interactive / New Venture Fund
 
 import Ajv from 'ajv'
+import betterAjvErrors from 'better-ajv-errors'
 import type { Result } from 'neverthrow'
 import { err, ok } from 'neverthrow'
 import yaml from 'yaml'
@@ -28,12 +29,8 @@ export function parseTestYaml(yamlStrings: string[]): Result<CheckSpec, Error> {
         groups.push(group)
       }
     } else {
-      let msg = 'Failed to parse YAML tests'
-      for (const error of validate.errors || []) {
-        if (error.message) {
-          msg += `\n${error.message}`
-        }
-      }
+      const errDetail = betterAjvErrors(jsonSchema, parsed, validate.errors, { indent: 2 })
+      const msg = `Failed to parse YAML tests\n\n${errDetail}`
       return err(new Error(msg))
     }
   }
