@@ -12,7 +12,9 @@
 import { mkdirSync, writeFileSync } from 'fs'
 import { dirname, resolve as resolvePath } from 'path'
 import { fileURLToPath } from 'url'
-import schema from '../src/check/check.schema.js'
+
+import checkSchema from '../src/check/check.schema.js'
+import compareSchema from '../src/compare/compare.schema.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
@@ -20,6 +22,11 @@ const __dirname = dirname(__filename)
 const schemaDir = resolvePath(__dirname, '..', 'schema')
 mkdirSync(schemaDir, { recursive: true })
 
-const json = JSON.stringify(schema, null, 2)
-const schemaFile = resolvePath(schemaDir, 'check.schema.json')
-writeFileSync(schemaFile, json)
+function writeJsonSchema(schema, name) {
+  const json = JSON.stringify(schema, null, 2)
+  const schemaFile = resolvePath(schemaDir, `${name}.schema.json`)
+  writeFileSync(schemaFile, json)
+}
+
+writeJsonSchema(checkSchema, 'check')
+writeJsonSchema(compareSchema, 'compare')
