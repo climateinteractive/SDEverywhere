@@ -1,4 +1,4 @@
-# yaml-language-server: $schema=../node_modules/@sdeverywhere/check-core/schema/check.schema.json
+# yaml-language-server: $schema=../../node_modules/@sdeverywhere/check-core/schema/check.schema.json
 
 - describe: Outputs (referenced by name)
   tests:

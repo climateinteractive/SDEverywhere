@@ -2,18 +2,19 @@
 
 import type { Bundle, ConfigOptions } from '@sdeverywhere/check-core'
 
-import { getCompareDatasets } from './compare-datasets'
-import { getCompareScenarios } from './compare-scenarios'
+import { getCompareDatasets } from './compare/compare-datasets'
+import { getCompareScenarios } from './compare/compare-scenarios'
 
-import tests from './tests.yaml?raw'
+import checksYaml from './check/checks.yaml?raw'
+// import compareScenariosYaml from './compare/scenarios.yaml?raw'
 
 export function getConfigOptions(bundleL: Bundle, bundleR: Bundle): ConfigOptions {
   // Configure the set of input scenarios used for comparisons; this includes
   // the default matrix of scenarios plus some custom multi-input scenarios
-  const scenarios = getCompareScenarios(bundleL, bundleR)
+  const compareScenarios = getCompareScenarios(bundleL, bundleR)
 
   // Configure the datasets to be compared
-  const datasets = getCompareDatasets(bundleL, bundleR)
+  const compareDatasets = getCompareDatasets(bundleL, bundleR)
 
   return {
     current: {
@@ -21,7 +22,7 @@ export function getConfigOptions(bundleL: Bundle, bundleR: Bundle): ConfigOption
       bundle: bundleR
     },
     check: {
-      tests: [tests]
+      tests: [checksYaml]
     },
     compare: {
       baseline: {
@@ -29,12 +30,9 @@ export function getConfigOptions(bundleL: Bundle, bundleR: Bundle): ConfigOption
         bundle: bundleL
       },
       thresholds: [1, 5, 10],
-      scenarios,
-      datasets
+      scenarios: compareScenarios,
+      // scenariosYaml: compareScenariosYaml,
+      datasets: compareDatasets
     }
   }
-}
-
-export function getCheckTests(): string[] {
-  return [tests]
 }
