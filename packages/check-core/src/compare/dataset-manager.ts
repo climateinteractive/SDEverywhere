@@ -4,8 +4,8 @@ import type { Scenario } from '../_shared/scenario'
 import type { DatasetKey } from '../_shared/types'
 import type { Bundle } from '../bundle/bundle-types'
 import type { OutputVar } from '../bundle/var-types'
-import type { CompareDatasets } from '../compare/compare-config'
-import type { DatasetInfo } from '../compare/compare-info'
+import type { CompareDatasets } from './compare-datasets'
+import type { DatasetInfo } from './compare-info'
 
 /**
  * Manages a set of dataset keys (corresponding to the available model outputs

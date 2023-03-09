@@ -3,7 +3,7 @@
 import { describe, expect, it } from 'vitest'
 
 import type { Dataset } from '../_shared/types'
-import { diffDatasets } from './compare-datasets'
+import { diffDatasets } from './compare-diff-datasets'
 
 describe('diffDatasets', () => {
   it('should return a report for two datasets', () => {

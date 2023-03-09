@@ -1,80 +1,40 @@
 // Copyright (c) 2021-2022 Climate Interactive / New Venture Fund
 
-import type { Scenario } from '../_shared/scenario'
-import type { DatasetKey, ScenarioGroupKey, ScenarioKey } from '../_shared/types'
 import type { LoadedBundle, NamedBundle } from '../bundle/bundle-types'
-import type { CompareGroupInfo } from './compare-group'
-import type { DatasetInfo, ScenarioInfo } from './compare-info'
-
-/**
- * Provides access to the set of scenarios that are used when comparing the two models.
- */
-export interface CompareScenarios {
-  /**
-   * Return an array containing all configured scenarios.
-   */
-  getScenarios(): Scenario[]
-
-  /**
-   * Return the scenario for the given key.
-   *
-   * @param scenarioKey The key for the scenario.
-   */
-  getScenario(scenarioKey: ScenarioKey): Scenario | undefined
-
-  /**
-   * Return the group info for the given group key.
-   *
-   * @param groupKey The scenario group key.
-   */
-  getScenarioGroupInfo(groupKey: ScenarioGroupKey): CompareGroupInfo | undefined
-
-  /**
-   * Return the title/subtitle info for the given scenario.
-   *
-   * Note that the given `groupKey` could be different than `scenario.groupKey`.  This
-   * will be the case for the "all inputs at default" item that is included in each
-   * row in the detail view for reference purposes.  The provided `groupKey` will be
-   * used to customize the title and subtitle for that item (for example, it will show
-   * the default value of the input associated with the row).
-   *
-   * @param scenario The scenario to be displayed.
-   * @param groupKey The key for the group in which the scenario will be displayed.
-   */
-  getScenarioInfo(scenario: Scenario, groupKey: ScenarioGroupKey): ScenarioInfo | undefined
-}
-
-/**
- * Provides access to the set of datasets that are configured for comparison.
- */
-export interface CompareDatasets {
-  /** The mapping of renamed dataset keys. */
-  renamedDatasetKeys?: Map<DatasetKey, DatasetKey>
-
-  /**
-   * Return the keys for the datasets that should be compared for the given scenario.
-   *
-   * @param scenario The scenario.
-   */
-  getDatasetKeysForScenario(scenario: Scenario): DatasetKey[]
-
-  /**
-   * Return the dataset info for the given key.
-   */
-  getDatasetInfo(datasetKey: DatasetKey): DatasetInfo | undefined
-}
+import type { CompareDatasets } from './compare-datasets'
+import type { CompareScenarios } from './compare-scenarios'
 
 export interface CompareOptions {
+  /** The left-side ("baseline") bundle being compared. */
   baseline: NamedBundle
+  /**
+   * The array of thresholds used to color differences, e.g., [1, 5, 10] will use
+   * buckets of 0%, 0-1%, 1-5%, 5-10%, and >10%.
+   */
   thresholds: number[]
-  scenarios: CompareScenarios
+  /** The set of input scenarios that will be compared. */
+  scenarios?: CompareScenarios
+  /**
+   * The strings containing comparison scenario definitions in YAML format.  If
+   * defined, these will be combined with the `scenarios` property.
+   */
+  scenarioYaml?: string[]
+  /** The set of datasets that will be compared. */
   datasets: CompareDatasets
 }
 
 export interface CompareConfig {
+  /** The loaded left-side ("baseline") bundle being compared. */
   bundleL: LoadedBundle
+  /** The loaded right-side ("current") bundle being compared. */
   bundleR: LoadedBundle
+  /**
+   * The array of thresholds used to color differences, e.g., [1, 5, 10] will use
+   * buckets of 0%, 0-1%, 1-5%, 5-10%, and >10%.
+   */
   thresholds: number[]
+  /** The resolved set of input scenarios that will be compared. */
   scenarios: CompareScenarios
+  /** The set of datasets that will be compared. */
   datasets: CompareDatasets
 }

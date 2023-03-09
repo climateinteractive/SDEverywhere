@@ -9,9 +9,8 @@ import type { ScenarioGroupKey, ScenarioKey, VarId } from '../_shared/types'
 import type { Bundle } from '../bundle/bundle-types'
 import type { InputVar, RelatedItem } from '../bundle/var-types'
 
-import type { CompareGroupInfo } from '../compare/compare-group'
-import type { ScenarioInfo } from '../compare/compare-info'
-import type { CompareScenarios } from '../compare/compare-config'
+import type { CompareGroupInfo } from './compare-group'
+import type { CompareScenarios, CompareScenarioInfo } from './compare-scenarios'
 
 /**
  * Manages a set of scenarios (corresponding to the available model inputs
@@ -19,8 +18,8 @@ import type { CompareScenarios } from '../compare/compare-config'
  */
 export class ScenarioManager implements CompareScenarios {
   private readonly scenarios: Map<ScenarioKey, Scenario> = new Map()
-  private readonly scenarioInfo: Map<ScenarioKey, ScenarioInfo> = new Map()
-  private readonly defaultInfoForGroup: Map<ScenarioGroupKey, ScenarioInfo> = new Map()
+  private readonly scenarioInfo: Map<ScenarioKey, CompareScenarioInfo> = new Map()
+  private readonly defaultInfoForGroup: Map<ScenarioGroupKey, CompareScenarioInfo> = new Map()
   private readonly groupInfo: Map<ScenarioGroupKey, CompareGroupInfo> = new Map()
 
   /**
@@ -45,7 +44,7 @@ export class ScenarioManager implements CompareScenarios {
   }
 
   // from CompareScenarios interface
-  getScenarioInfo(scenario: Scenario, groupKey: ScenarioGroupKey): ScenarioInfo | undefined {
+  getScenarioInfo(scenario: Scenario, groupKey: ScenarioGroupKey): CompareScenarioInfo | undefined {
     // If this is the "all inputs at default" scenario, see if we have custom
     // info for the given group
     if (scenario.key === 'all_inputs_at_default') {
@@ -67,12 +66,12 @@ export class ScenarioManager implements CompareScenarios {
    * @param groupKey The scenario group key.
    * @param scenarioInfo The custom info to be displayed.
    */
-  setDefaultScenarioInfoForGroup(groupKey: ScenarioGroupKey, scenarioInfo: ScenarioInfo): void {
+  setDefaultScenarioInfoForGroup(groupKey: ScenarioGroupKey, scenarioInfo: CompareScenarioInfo): void {
     this.defaultInfoForGroup.set(groupKey, scenarioInfo)
   }
 
   /**
-   * Add a scenario to the set.
+   * Add an input scenario to the set.
    *
    * @param scenario The scenario to be added.
    * @param scenarioInfo The custom title/subtitle for the scenario.  If left undefined, the
@@ -80,19 +79,19 @@ export class ScenarioManager implements CompareScenarios {
    * @param groupInfo The custom title/subtitle for the group.  If left undefined, the
    * default (possibly generic) info will be used.
    */
-  addScenario(scenario: Scenario, scenarioInfo?: ScenarioInfo, groupInfo?: CompareGroupInfo): void {
+  addInputScenario(scenario: Scenario, scenarioInfo?: CompareScenarioInfo, groupInfo?: CompareGroupInfo): void {
     // Add the scenario
     this.scenarios.set(scenario.key, scenario)
 
-    // Add the scenario info, if provided
+    // Add the provided scenario info or use defaults
     if (!scenarioInfo) {
-      scenarioInfo = this.getInfoForScenario(scenario)
+      scenarioInfo = this.getInfoForInputScenario(scenario)
     }
     this.scenarioInfo.set(scenario.key, scenarioInfo)
 
     // Add the provided group info or use defaults
     if (!groupInfo) {
-      groupInfo = this.getGroupInfoForScenario(scenario)
+      groupInfo = this.getGroupInfoForInputScenario(scenario)
     }
     this.groupInfo.set(scenario.groupKey, groupInfo)
   }
@@ -116,7 +115,7 @@ export class ScenarioManager implements CompareScenarios {
    * function to generate a different set of scenarios that is better suited
    * for the model you are testing.
    */
-  addScenarioMatrix(): void {
+  addInputScenarioMatrix(): void {
     // Get the set of input variable IDs for each model
     const inputVarIdsL = Array.from(this.bundleL.modelSpec.inputVars.keys())
     const inputVarIdsR = Array.from(this.bundleR.modelSpec.inputVars.keys())
@@ -126,16 +125,16 @@ export class ScenarioManager implements CompareScenarios {
     const inputVarIds = new Set([...inputVarIdsL, ...inputVarIdsR])
 
     // Compute the matrix of scenarios based on the available input variables
-    this.addScenario(allInputsAtPositionScenario('at-default'))
-    this.addScenario(allInputsAtPositionScenario('at-minimum'))
-    this.addScenario(allInputsAtPositionScenario('at-maximum'))
+    this.addInputScenario(allInputsAtPositionScenario('at-default'))
+    this.addInputScenario(allInputsAtPositionScenario('at-minimum'))
+    this.addInputScenario(allInputsAtPositionScenario('at-maximum'))
     for (const inputVarId of inputVarIds) {
-      this.addScenario(inputAtPositionScenario(inputVarId, inputVarId, 'at-minimum'))
-      this.addScenario(inputAtPositionScenario(inputVarId, inputVarId, 'at-maximum'))
+      this.addInputScenario(inputAtPositionScenario(inputVarId, inputVarId, 'at-minimum'))
+      this.addInputScenario(inputAtPositionScenario(inputVarId, inputVarId, 'at-maximum'))
     }
   }
 
-  private getGroupInfoForScenario(scenario: Scenario): CompareGroupInfo {
+  private getGroupInfoForInputScenario(scenario: Scenario): CompareGroupInfo {
     switch (scenario.kind) {
       case 'all-inputs':
         return {
@@ -170,7 +169,7 @@ export class ScenarioManager implements CompareScenarios {
     }
   }
 
-  private getInfoForScenario(scenario: Scenario): ScenarioInfo {
+  private getInfoForInputScenario(scenario: Scenario): CompareScenarioInfo {
     switch (scenario.kind) {
       case 'all-inputs':
         return this.getInfoForPositionSetting(undefined, scenario.position)
@@ -192,7 +191,7 @@ export class ScenarioManager implements CompareScenarios {
     }
   }
 
-  private getInfoForPositionSetting(inputVarId: VarId | undefined, inputPosition: InputPosition): ScenarioInfo {
+  private getInfoForPositionSetting(inputVarId: VarId | undefined, inputPosition: InputPosition): CompareScenarioInfo {
     const title = inputPosition.replace('-', ' ')
 
     let subtitle: string

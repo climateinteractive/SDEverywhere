@@ -89,25 +89,31 @@ export { checkSummaryFromReport, checkReportFromSummary } from './check/check-su
 // compare
 //
 
-export type { CompareConfig, CompareDatasets, CompareOptions, CompareScenarios } from './compare/compare-config'
+export type { CompareConfig, CompareOptions } from './compare/compare-config'
 
 export type { CompareDataRequestKey } from './compare/compare-data-coordinator'
 export { CompareDataCoordinator } from './compare/compare-data-coordinator'
 
-export type { DiffPoint, DiffReport, DiffValidity } from './compare/compare-datasets'
-export { diffDatasets, compareDatasets } from './compare/compare-datasets'
+export type { CompareDatasets, CompareDatasetInfo } from './compare/compare-datasets'
+
+export type { DiffPoint, DiffReport, DiffValidity } from './compare/compare-diff-datasets'
+export { diffDatasets, compareDatasets } from './compare/compare-diff-datasets'
 
 export type { GraphDatasetReport, GraphInclusion, GraphMetadataReport, GraphReport } from './compare/compare-graphs'
 export { diffGraphs } from './compare/compare-graphs'
 
 export type { CompareItem, CompareGroupInfo, CompareGroup } from './compare/compare-group'
 
-export type { DatasetInfo, ScenarioInfo } from './compare/compare-info'
-
 export type { CompareDatasetReport, CompareReport } from './compare/compare-report'
+
+export type { CompareScenarios, CompareScenarioInfo } from './compare/compare-scenarios'
 
 export type { CompareDatasetSummary, CompareSummary } from './compare/compare-summary'
 export { compareSummaryFromReport } from './compare/compare-summary'
+
+export { DatasetManager } from './compare/dataset-manager'
+
+export { ScenarioManager } from './compare/scenario-manager'
 
 //
 // config
@@ -116,10 +122,6 @@ export { compareSummaryFromReport } from './compare/compare-summary'
 export type { Config, ConfigOptions } from './config/config-types'
 
 export { createConfig } from './config/config'
-
-export { DatasetManager } from './config/dataset-manager'
-
-export { ScenarioManager } from './config/scenario-manager'
 
 //
 // perf

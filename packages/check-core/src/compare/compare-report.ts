@@ -2,7 +2,7 @@
 
 import type { DatasetKey, ScenarioKey } from '../_shared/types'
 import type { PerfReport } from '../perf/perf-stats'
-import type { DiffReport } from './compare-datasets'
+import type { DiffReport } from './compare-diff-datasets'
 
 export interface CompareDatasetReport {
   scenarioKey: ScenarioKey
