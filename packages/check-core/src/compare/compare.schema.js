@@ -3,77 +3,58 @@
 export default {
   $schema: 'http://json-schema.org/draft-07/schema#',
   title: 'Model Comparison Test',
-  type: 'object',
-  description: 'A group of model comparison scenarios.',
-  additionalProperties: false,
-  properties: {
-    input_scenarios: {
-      $ref: '#/$defs/top_level_input_scenarios_array'
-    },
-    user_scenarios: {
-      $ref: '#/$defs/top_level_user_scenarios_array'
-    }
+  type: 'array',
+  description: 'A group of model comparison scenarios and views.',
+  items: {
+    $ref: '#/$defs/top_level_array_item'
   },
 
   $defs: {
     //
-    // INPUT SCENARIOS
+    // TOP-LEVEL
     //
 
-    top_level_input_scenarios_array: {
-      type: 'array',
-      items: {
-        $ref: '#/$defs/top_level_input_scenarios_array_item'
-      }
-    },
-
-    top_level_input_scenarios_array_item: {
+    top_level_array_item: {
       oneOf: [
-        { $ref: '#/$defs/input_scenarios_array_scenario_item' },
-        { $ref: '#/$defs/input_scenarios_array_group_item' }
+        { $ref: '#/$defs/scenario_array_item' },
+        { $ref: '#/$defs/scenario_group_array_item' },
+        { $ref: '#/$defs/view_group_array_item' }
       ]
     },
 
-    input_scenarios_array_scenario_item: {
+    //
+    // SCENARIOS
+    //
+
+    scenario_array_item: {
       type: 'object',
       additionalProperties: false,
       properties: {
         scenario: {
-          $ref: '#/$defs/input_scenario'
+          $ref: '#/$defs/scenario'
         }
       },
       required: ['scenario']
     },
 
-    input_scenarios_array_group_item: {
-      type: 'object',
-      additionalProperties: false,
-      properties: {
-        group: {
-          $ref: '#/$defs/input_scenario_group'
-        }
-      },
-      required: ['group']
-    },
-
-    input_scenario: {
+    scenario: {
       oneOf: [
-        { $ref: '#/$defs/input_scenario_with_input_at_position' },
-        { $ref: '#/$defs/input_scenario_with_input_at_value' },
-        { $ref: '#/$defs/input_scenario_with_multiple_input_settings' },
-        { $ref: '#/$defs/input_scenario_with_inputs_in_preset_at_position' }
-        // { $ref: '#/$defs/input_scenario_with_inputs_in_group_at_position' }
-        // { $ref: '#/$defs/input_scenario_preset' }
-        // { $ref: '#/$defs/input_scenario_expand_for_each_input_in_group' }
+        { $ref: '#/$defs/scenario_with_input_at_position' },
+        { $ref: '#/$defs/scenario_with_input_at_value' },
+        { $ref: '#/$defs/scenario_with_multiple_input_settings' },
+        { $ref: '#/$defs/scenario_with_inputs_in_preset_at_position' },
+        // { $ref: '#/$defs/scenario_with_inputs_in_group_at_position' }
+        { $ref: '#/$defs/scenario_preset' }
+        // { $ref: '#/$defs/scenario_expand_for_each_input_in_group' }
       ]
     },
 
-    input_scenario_position: {
+    scenario_position: {
       type: 'string',
       enum: ['min', 'max', 'default']
     },
 
-    input_scenario_with_input_at_position: {
+    scenario_with_input_at_position: {
       type: 'object',
       additionalProperties: false,
       properties: {
@@ -84,13 +65,13 @@ export default {
           type: 'string'
         },
         at: {
-          $ref: '#/$defs/input_scenario_position'
+          $ref: '#/$defs/scenario_position'
         }
       },
       required: ['name', 'with', 'at']
     },
 
-    input_scenario_with_input_at_value: {
+    scenario_with_input_at_value: {
       type: 'object',
       additionalProperties: false,
       properties: {
@@ -107,7 +88,7 @@ export default {
       required: ['name', 'with', 'at']
     },
 
-    input_scenario_input_at_position: {
+    scenario_input_at_position: {
       type: 'object',
       additionalProperties: false,
       properties: {
@@ -115,13 +96,13 @@ export default {
           type: 'string'
         },
         at: {
-          $ref: '#/$defs/input_scenario_position'
+          $ref: '#/$defs/scenario_position'
         }
       },
       required: ['input', 'at']
     },
 
-    input_scenario_input_at_value: {
+    scenario_input_at_value: {
       type: 'object',
       additionalProperties: false,
       properties: {
@@ -135,19 +116,19 @@ export default {
       required: ['input', 'at']
     },
 
-    input_scenario_input_setting: {
-      oneOf: [{ $ref: '#/$defs/input_scenario_input_at_position' }, { $ref: '#/$defs/input_scenario_input_at_value' }]
+    scenario_input_setting: {
+      oneOf: [{ $ref: '#/$defs/scenario_input_at_position' }, { $ref: '#/$defs/scenario_input_at_value' }]
     },
 
-    input_scenario_input_setting_array: {
+    scenario_input_setting_array: {
       type: 'array',
       items: {
-        $ref: '#/$defs/input_scenario_input_setting'
+        $ref: '#/$defs/scenario_input_setting'
       },
       minItems: 1
     },
 
-    input_scenario_with_multiple_input_settings: {
+    scenario_with_multiple_input_settings: {
       type: 'object',
       additionalProperties: false,
       properties: {
@@ -155,13 +136,13 @@ export default {
           type: 'string'
         },
         with: {
-          $ref: '#/$defs/input_scenario_input_setting_array'
+          $ref: '#/$defs/scenario_input_setting_array'
         }
       },
       required: ['name', 'with']
     },
 
-    input_scenario_with_inputs_in_preset_at_position: {
+    scenario_with_inputs_in_preset_at_position: {
       type: 'object',
       additionalProperties: false,
       properties: {
@@ -173,25 +154,40 @@ export default {
           enum: ['all']
         },
         at: {
-          $ref: '#/$defs/input_scenario_position'
+          $ref: '#/$defs/scenario_position'
         }
       },
       required: ['name', 'with_inputs', 'at']
     },
 
-    // input_scenario_preset: {
-    //   type: 'object',
-    //   additionalProperties: false,
-    //   properties: {
-    //     preset: {
-    //       type: 'string',
-    //       enum: ['matrix']
-    //     }
-    //   },
-    //   required: ['preset']
-    // }
+    scenario_preset: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        preset: {
+          type: 'string',
+          enum: ['matrix']
+        }
+      },
+      required: ['preset']
+    },
 
-    input_scenario_group: {
+    //
+    // SCENARIO GROUPS
+    //
+
+    scenario_group_array_item: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        scenario_group: {
+          $ref: '#/$defs/scenario_group'
+        }
+      },
+      required: ['scenario_group']
+    },
+
+    scenario_group: {
       type: 'object',
       additionalProperties: false,
       properties: {
@@ -201,7 +197,7 @@ export default {
         scenarios: {
           type: 'array',
           items: {
-            $ref: '#/$defs/input_scenario_group_scenarios_array_item'
+            $ref: '#/$defs/scenario_group_scenarios_array_item'
           },
           minItems: 1
         }
@@ -209,11 +205,11 @@ export default {
       required: ['name', 'scenarios']
     },
 
-    input_scenario_group_scenarios_array_item: {
-      oneOf: [{ $ref: '#/$defs/input_scenarios_array_scenario_item' }, { $ref: '#/$defs/input_scenario_ref' }]
+    scenario_group_scenarios_array_item: {
+      oneOf: [{ $ref: '#/$defs/scenario_array_item' }, { $ref: '#/$defs/scenario_ref' }]
     },
 
-    input_scenario_ref: {
+    scenario_ref: {
       type: 'object',
       additionalProperties: false,
       properties: {
@@ -224,7 +220,7 @@ export default {
       required: ['scenario_ref']
     },
 
-    input_scenario_group_ref: {
+    scenario_group_ref: {
       type: 'object',
       additionalProperties: false,
       properties: {
@@ -236,28 +232,10 @@ export default {
     },
 
     //
-    // USER SCENARIOS
+    // VIEWS
     //
 
-    top_level_user_scenarios_array: {
-      type: 'array',
-      items: {
-        $ref: '#/$defs/top_level_user_scenarios_array_group_item'
-      }
-    },
-
-    top_level_user_scenarios_array_group_item: {
-      type: 'object',
-      additionalProperties: false,
-      properties: {
-        group: {
-          $ref: '#/$defs/user_scenario_group'
-        }
-      }
-      // required: ['group']
-    },
-
-    user_scenario_group: {
+    view: {
       type: 'object',
       additionalProperties: false,
       properties: {
@@ -267,64 +245,79 @@ export default {
         scenarios: {
           type: 'array',
           items: {
-            $ref: '#/$defs/user_scenarios_array_item'
+            $ref: '#/$defs/view_scenarios_array_item'
           },
           minItems: 1
+        },
+        graphs: {
+          $ref: '#/$defs/view_graphs'
         }
       },
-      required: ['name', 'scenarios']
+      required: ['name', 'scenarios', 'graphs']
     },
 
-    user_scenarios_array_item: {
+    view_scenarios_array_item: {
+      oneOf: [{ $ref: '#/$defs/scenario_ref' }, { $ref: '#/$defs/scenario_group_ref' }]
+    },
+
+    view_graphs: {
+      oneOf: [{ $ref: '#/$defs/view_graphs_preset' }, { $ref: '#/$defs/view_graphs_array' }]
+    },
+
+    view_graphs_preset: {
+      type: 'string',
+      enum: ['all']
+    },
+
+    view_graphs_array: {
+      type: 'array',
+      items: {
+        type: 'string'
+      },
+      minItems: 1
+    },
+
+    //
+    // VIEW GROUPS
+    //
+
+    view_group_array_item: {
       type: 'object',
       additionalProperties: false,
       properties: {
-        scenario: {
-          $ref: '#/$defs/user_scenario'
+        view_group: {
+          $ref: '#/$defs/view_group'
         }
-      }
+      },
+      required: ['view_group']
     },
 
-    user_scenario: {
+    view_group: {
       type: 'object',
       additionalProperties: false,
       properties: {
         name: {
           type: 'string'
         },
-        input_scenarios: {
+        views: {
           type: 'array',
           items: {
-            $ref: '#/$defs/user_scenario_input_scenarios_array_item'
+            $ref: '#/$defs/view_group_views_array_item'
           },
           minItems: 1
-        },
-        graphs: {
-          $ref: '#/$defs/user_scenario_graphs'
         }
       },
-      required: ['name', 'input_scenarios', 'graphs']
+      required: ['name', 'views']
     },
 
-    user_scenario_input_scenarios_array_item: {
-      oneOf: [{ $ref: '#/$defs/input_scenario_ref' }, { $ref: '#/$defs/input_scenario_group_ref' }]
-    },
-
-    user_scenario_graphs: {
-      oneOf: [{ $ref: '#/$defs/user_scenario_graphs_preset' }, { $ref: '#/$defs/user_scenario_graphs_array' }]
-    },
-
-    user_scenario_graphs_preset: {
-      type: 'string',
-      enum: ['all']
-    },
-
-    user_scenario_graphs_array: {
-      type: 'array',
-      items: {
-        type: 'string'
-      },
-      minItems: 1
+    view_group_views_array_item: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        view: {
+          $ref: '#/$defs/view'
+        }
+      }
     }
   }
 }
