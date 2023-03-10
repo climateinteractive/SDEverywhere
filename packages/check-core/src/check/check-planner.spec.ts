@@ -20,9 +20,7 @@ describe('CheckPlanner', () => {
     dataSizeInBytes: 0,
     inputVars: new Map([inputVar('I1'), inputVar('I2')]),
     outputVars: new Map([outputVar('V1'), outputVar('V2[A1]')]),
-    implVars: new Map([implVar('V1'), implVar('V2', [dimension('A')]), implVar('V3'), implVar('V4', [dimension('A')])]),
-    inputGroups: new Map(),
-    datasetGroups: new Map()
+    implVars: new Map([implVar('V1'), implVar('V2', [dimension('A')]), implVar('V3'), implVar('V4', [dimension('A')])])
   }
 
   const i1 = modelSpec.inputVars.get('_i1')

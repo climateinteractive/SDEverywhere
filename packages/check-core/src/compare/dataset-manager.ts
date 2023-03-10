@@ -2,7 +2,7 @@
 
 import type { Scenario } from '../_shared/scenario'
 import type { DatasetKey } from '../_shared/types'
-import type { Bundle } from '../bundle/bundle-types'
+import type { ModelSpec } from '../bundle/bundle-types'
 import type { OutputVar } from '../bundle/var-types'
 import type { CompareDatasets } from './compare-datasets'
 import type { DatasetInfo } from './compare-info'
@@ -25,13 +25,13 @@ export class DatasetManager implements CompareDatasets {
   public readonly modelOutputVarKeys: DatasetKey[]
 
   /**
-   * @param bundleL The "left" bundle being compared.
-   * @param bundleR The "right" bundle being compared.
+   * @param modelSpecL The model spec for the "left" bundle being compared.
+   * @param modelSpecR The model spec for the "right" bundle being compared.
    * @param renamedDatasetKeys The mapping of renamed dataset keys.
    */
   constructor(
-    private readonly bundleL: Bundle,
-    private readonly bundleR: Bundle,
+    private readonly modelSpecL: ModelSpec,
+    private readonly modelSpecR: ModelSpec,
     public readonly renamedDatasetKeys?: Map<DatasetKey, DatasetKey>
   ) {
     // Invert the map of renamed keys so that new names are on the left (map
@@ -59,8 +59,8 @@ export class DatasetManager implements CompareDatasets {
         }
       })
     }
-    addOutputVars(bundleL.modelSpec.outputVars, false)
-    addOutputVars(bundleR.modelSpec.outputVars, true)
+    addOutputVars(modelSpecL.outputVars, false)
+    addOutputVars(modelSpecR.outputVars, true)
     this.allOutputVarKeys = Array.from(allOutputVarKeysSet)
     this.modelOutputVarKeys = Array.from(modelOutputVarKeysSet)
   }
@@ -79,16 +79,13 @@ export class DatasetManager implements CompareDatasets {
 
   // from CompareDatasets interface
   getDatasetInfo(datasetKey: DatasetKey): DatasetInfo | undefined {
-    const modelSpecL = this.bundleL.modelSpec
-    const modelSpecR = this.bundleR.modelSpec
-
     // Get the dataset keys accounting for renames
     const datasetKeyL = datasetKey
     const datasetKeyR = this.renamedDatasetKeys?.get(datasetKeyL) || datasetKeyL
 
     // Get the output variable name
-    const outputVarL = modelSpecL.outputVars.get(datasetKeyL)
-    const outputVarR = modelSpecR.outputVars.get(datasetKeyR)
+    const outputVarL = this.modelSpecL.outputVars.get(datasetKeyL)
+    const outputVarR = this.modelSpecR.outputVars.get(datasetKeyR)
     let varName: string
     let newVarName: string
     let sourceName: string

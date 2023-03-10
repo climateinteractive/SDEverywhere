@@ -92,10 +92,12 @@ export interface ModelSpec {
   outputVars: Map<DatasetKey, OutputVar>
   /** The map of all variables (both internal and exported) in this version of the model. */
   implVars: Map<DatasetKey, ImplVar>
+  /** The custom input variable aliases defined for this model. */
+  inputAliases?: Map<string, VarId>
   /** The custom input variable groups defined for this model. */
-  inputGroups: Map<string, InputVar[]>
+  inputGroups?: Map<string, InputVar[]>
   /** The custom dataset (output variable) groups defined for this model. */
-  datasetGroups: Map<string, DatasetKey[]>
+  datasetGroups?: Map<string, DatasetKey[]>
   /** The start time (year) for the model. */
   startTime?: number
   /** The end time (year) for the model. */

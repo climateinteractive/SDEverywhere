@@ -30,8 +30,7 @@ describe('expandScenarios', () => {
     inputVars,
     outputVars: new Map(),
     implVars: new Map(),
-    inputGroups,
-    datasetGroups: new Map()
+    inputGroups
   }
 
   it('should expand "with: input" at position specs', () => {
