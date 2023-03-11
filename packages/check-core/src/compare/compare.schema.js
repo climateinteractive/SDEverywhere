@@ -58,7 +58,10 @@ export default {
       type: 'object',
       additionalProperties: false,
       properties: {
-        name: {
+        title: {
+          type: 'string'
+        },
+        subtitle: {
           type: 'string'
         },
         with: {
@@ -68,14 +71,17 @@ export default {
           $ref: '#/$defs/scenario_position'
         }
       },
-      required: ['name', 'with', 'at']
+      required: ['with', 'at']
     },
 
     scenario_with_input_at_value: {
       type: 'object',
       additionalProperties: false,
       properties: {
-        name: {
+        title: {
+          type: 'string'
+        },
+        subtitle: {
           type: 'string'
         },
         with: {
@@ -85,7 +91,7 @@ export default {
           type: 'number'
         }
       },
-      required: ['name', 'with', 'at']
+      required: ['with', 'at']
     },
 
     scenario_input_at_position: {
@@ -132,21 +138,27 @@ export default {
       type: 'object',
       additionalProperties: false,
       properties: {
-        name: {
+        title: {
+          type: 'string'
+        },
+        subtitle: {
           type: 'string'
         },
         with: {
           $ref: '#/$defs/scenario_input_setting_array'
         }
       },
-      required: ['name', 'with']
+      required: ['with']
     },
 
     scenario_with_inputs_in_preset_at_position: {
       type: 'object',
       additionalProperties: false,
       properties: {
-        name: {
+        title: {
+          type: 'string'
+        },
+        subtitle: {
           type: 'string'
         },
         with_inputs: {
@@ -157,7 +169,7 @@ export default {
           $ref: '#/$defs/scenario_position'
         }
       },
-      required: ['name', 'with_inputs', 'at']
+      required: ['with_inputs', 'at']
     },
 
     scenario_preset: {

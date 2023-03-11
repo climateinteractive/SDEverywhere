@@ -50,26 +50,36 @@ export function valueForPos(inputVar: InputVar, position: InputPosition): number
   }
 }
 
-export function allAtPos(position: InputPosition): CompareScenarioWithAllInputs {
+export function allAtPos(
+  position: InputPosition,
+  titleOpts?: { title?: string; subtitle?: string }
+): CompareScenarioWithAllInputs {
+  // TODO: Generate title/subtitle
   return {
-    kind: 'with-all-inputs',
+    kind: 'scenario-with-all-inputs',
+    title: titleOpts?.title,
+    subtitle: titleOpts?.subtitle,
     position
   }
 }
 
 export function scenarioWithInput(
-  requestedName: string,
+  requestedInputName: string,
   at: InputPosition | number,
   inputVarL: InputVar | CompareScenarioError | undefined,
-  inputVarR: InputVar | CompareScenarioError | undefined
+  inputVarR: InputVar | CompareScenarioError | undefined,
+  titleOpts?: { title?: string; subtitle?: string }
 ): CompareScenarioWithInputs {
   const resolvedInput: CompareScenarioInput = {
-    requestedName,
+    requestedName: requestedInputName,
     stateL: stateForInputVar(inputVarL, at),
     stateR: stateForInputVar(inputVarR, at)
   }
+  // TODO: Generate title/subtitle
   return {
-    kind: 'with-inputs',
+    kind: 'scenario-with-inputs',
+    title: titleOpts?.title || 'TODO: at position or value',
+    subtitle: titleOpts?.subtitle,
     resolvedInputs: [resolvedInput]
   }
 }

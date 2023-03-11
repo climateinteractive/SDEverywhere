@@ -108,6 +108,8 @@ export type { CompareDatasetReport, CompareReport } from './compare/compare-repo
 
 export type { CompareScenarios, CompareScenarioInfo } from './compare/compare-scenarios'
 
+export * from './compare/compare-spec'
+
 export type { CompareDatasetSummary, CompareSummary } from './compare/compare-summary'
 export { compareSummaryFromReport } from './compare/compare-summary'
 

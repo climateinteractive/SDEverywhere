@@ -10,6 +10,13 @@ import { allAtPos, inputVar, scenarioWithInput } from './_mocks/mock-compare-sce
 import type { CompareScenario } from './compare-scenario'
 import { expandScenarios } from './compare-scenario'
 import { ModelInputs } from './model-inputs'
+import {
+  inputAtPositionSpec,
+  inputAtValueSpec,
+  scenarioMatrixSpec,
+  scenarioWithAllInputsSpec,
+  scenarioWithInputsSpec
+} from './_mocks/mock-compare-spec'
 
 function mockModelSpec(kind: 'L' | 'R'): ModelSpec {
   //
@@ -65,20 +72,20 @@ describe('expandScenarios', () => {
   const modelInputsL = new ModelInputs(mockModelSpec('L'))
   const modelInputsR = new ModelInputs(mockModelSpec('R'))
 
-  it('should expand "with: input" at position specs', () => {
+  it.only('should expand "with: input" at position specs', () => {
     const scenarioSpecs: CompareScenarioSpec[] = [
       // Match by variable name
-      { with: 'ivarA', at: 'default' },
+      scenarioWithInputsSpec([inputAtPositionSpec('ivarA', 'default')]),
       // Match by input ID
-      { with: 'id 2', at: 'min' },
+      scenarioWithInputsSpec([inputAtPositionSpec('id 2', 'min')]),
       // Match by alias (slider name)
-      { with: 's3', at: 'max' },
+      scenarioWithInputsSpec([inputAtPositionSpec('s3', 'max')]),
       // Error if name can only be resolved on left side
-      { with: 'ivarB', at: 'min' },
+      scenarioWithInputsSpec([inputAtPositionSpec('ivarB', 'min')]),
       // Error if name can only be resolved on right side
-      { with: 'ivarD', at: 'min' },
+      scenarioWithInputsSpec([inputAtPositionSpec('ivarD', 'min')]),
       // Error if name can't be resolved on either side
-      { with: 'ivarX', at: 'min' }
+      scenarioWithInputsSpec([inputAtPositionSpec('ivarX', 'min')])
     ]
 
     expect(expandScenarios(modelInputsL, modelInputsR, scenarioSpecs, false)).toEqual([
@@ -109,15 +116,15 @@ describe('expandScenarios', () => {
   it('should expand "with: input" at value specs', () => {
     const scenarioSpecs: CompareScenarioSpec[] = [
       // Match by variable name
-      { with: 'ivarA', at: 20 },
+      scenarioWithInputsSpec([inputAtValueSpec('ivarA', 20)]),
       // Match by input ID
-      { with: 'id 2', at: 40 },
+      scenarioWithInputsSpec([inputAtValueSpec('id 2', 40)]),
       // Match by alias (slider name)
-      { with: 'S3', at: 60 },
+      scenarioWithInputsSpec([inputAtValueSpec('S3', 60)]),
       // Error if value is out of range on both sides
-      { with: 'ivarA', at: 500 },
+      scenarioWithInputsSpec([inputAtValueSpec('ivarA', 500)]),
       // Error if value is out of range on one side
-      { with: 'id 2', at: 90 }
+      scenarioWithInputsSpec([inputAtValueSpec('id 2', 90)])
     ]
 
     expect(expandScenarios(modelInputsL, modelInputsR, scenarioSpecs, false)).toEqual([
@@ -163,9 +170,9 @@ describe('expandScenarios', () => {
 
   it('should expand "with_inputs: all" at position specs', () => {
     const scenarioSpecs: CompareScenarioSpec[] = [
-      { with_inputs: 'all', at: 'default' },
-      { with_inputs: 'all', at: 'min' },
-      { with_inputs: 'all', at: 'max' }
+      scenarioWithAllInputsSpec('default'),
+      scenarioWithAllInputsSpec('min'),
+      scenarioWithAllInputsSpec('max')
     ]
     expect(expandScenarios(modelInputsL, modelInputsR, scenarioSpecs, false)).toEqual([
       allAtPos('at-default'),
@@ -238,7 +245,7 @@ describe('expandScenarios', () => {
       )
     }
 
-    expect(expandScenarios(modelInputsL, modelInputsR, [{ preset: 'matrix' }], false)).toMatchObject([
+    expect(expandScenarios(modelInputsL, modelInputsR, [scenarioMatrixSpec()], false)).toMatchObject([
       allAtPos('at-default'),
       scenario(1, 'min', 'IVarA', 'IVarA'),
       scenario(1, 'max', 'IVarA', 'IVarA'),
@@ -252,6 +259,6 @@ describe('expandScenarios', () => {
   })
 
   it('should expand "preset: matrix" spec into a smaller set when simplify is true', () => {
-    expect(expandScenarios(modelInputsL, modelInputsR, [{ preset: 'matrix' }], true)).toEqual([allAtPos('at-default')])
+    expect(expandScenarios(modelInputsL, modelInputsR, [scenarioMatrixSpec()], true)).toEqual([allAtPos('at-default')])
   })
 })

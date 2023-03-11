@@ -31,7 +31,7 @@ export interface CompareScenarioInputState {
 
 /** A scenario input that has been checked against both "left" and "right" model. */
 export interface CompareScenarioInput {
-  // /** The requested name of the input. */
+  /** The requested name of the input. */
   requestedName: string
   /** The resolved state of the input for the "left" model. */
   stateL: CompareScenarioInputState
@@ -41,14 +41,22 @@ export interface CompareScenarioInput {
 
 /** A single resolved input scenario with all inputs set to a given position. */
 export interface CompareScenarioWithAllInputs {
-  kind: 'with-all-inputs'
+  kind: 'scenario-with-all-inputs'
+  /** The scenario title. */
+  title: string
+  /** The scenario subtitle. */
+  subtitle?: string
   /** The input position that will be applied to all available inputs. */
   position: InputPosition
 }
 
 /** A single resolved input scenario with a set of inputs. */
 export interface CompareScenarioWithInputs {
-  kind: 'with-inputs'
+  kind: 'scenario-with-inputs'
+  /** The scenario title. */
+  title: string
+  /** The scenario subtitle. */
+  subtitle?: string
   /** The resolutions for all inputs in the scenario. */
   resolvedInputs: CompareScenarioInput[]
 }
@@ -88,48 +96,33 @@ function resolveScenariosFromSpec(
   scenarioSpec: CompareScenarioSpec,
   simplify: boolean
 ): CompareScenario[] {
-  if (scenarioSpec.preset === 'matrix') {
-    // Create a matrix of scenarios
-    return resolveScenarioMatrix(modelInputsL, modelInputsR, simplify)
-  }
+  switch (scenarioSpec.kind) {
+    case 'scenario-matrix':
+      // Create a matrix of scenarios
+      return resolveScenarioMatrix(modelInputsL, modelInputsR, simplify)
 
-  // if (scenarioSpec.scenarios_for_each_input_in !== undefined) {
-  //   // Create multiple scenarios (one scenario for each input in the given group)
-  //   const groupName = scenarioSpec.scenarios_for_each_input_in
-  //   const position = scenarioSpec.at as CompareScenarioInputPosition
-  //   return resolveScenariosForEachInputInGroup(modelInputs, groupName, position)
-  // }
-
-  if (scenarioSpec.with !== undefined) {
-    if (Array.isArray(scenarioSpec.with)) {
-      // Create one scenario that contains the given input settings
-      const inputSpecs = scenarioSpec.with as CompareScenarioInputSpec[]
-      return [resolveScenarioForInputSpecs(modelInputsL, modelInputsR, inputSpecs)]
-    } else {
-      // Create a single "input at <position|value>" scenario
-      const inputSpec: CompareScenarioInputSpec = {
-        input: scenarioSpec.with,
-        at: scenarioSpec.at
-      }
-      return [resolveScenarioForInputSpecs(modelInputsL, modelInputsR, [inputSpec])]
+    case 'scenario-with-all-inputs': {
+      // Create an "all inputs at <position>" scenario
+      const position = inputPosition(scenarioSpec.position)
+      return [resolveScenarioWithAllInputsAtPosition(scenarioSpec.title, scenarioSpec.subtitle, position)]
     }
+
+    case 'scenario-with-inputs': {
+      // Create one scenario that contains the given input setting(s)
+      return [
+        resolveScenarioForInputSpecs(
+          modelInputsL,
+          modelInputsR,
+          scenarioSpec.title,
+          scenarioSpec.subtitle,
+          scenarioSpec.inputs
+        )
+      ]
+    }
+
+    default:
+      assertNever(scenarioSpec)
   }
-
-  if (scenarioSpec.with_inputs === 'all') {
-    // Create an "all inputs at <position>" scenario
-    const position = inputPosition(scenarioSpec.at as CompareScenarioInputPosition)
-    return [resolveScenarioWithAllInputsAtPosition(position)]
-  }
-
-  // if (scenarioSpec.with_inputs_in !== undefined) {
-  //   // Create one scenario that sets all inputs in the given group to a position
-  //   const groupName = scenarioSpec.with_inputs_in
-  //   const position = scenarioSpec.at as CompareScenarioInputPosition
-  //   return [resolveScenarioWithAllInputsInGroupAtPosition(modelInputsL, modelInputsR, groupName, position)]
-  // }
-
-  // Internal error
-  throw new Error(`Unhandled scenario spec: ${JSON.stringify(scenarioSpec)}`)
 }
 
 /**
@@ -143,7 +136,7 @@ function resolveScenarioMatrix(
   const resolvedScenarios: CompareScenario[] = []
 
   // Add an "all inputs at default" scenario
-  resolvedScenarios.push(resolveScenarioWithAllInputsAtPosition('at-default'))
+  resolvedScenarios.push(resolveScenarioWithAllInputsAtPosition(undefined, undefined, 'at-default'))
 
   if (!simplify) {
     // Get the union of all input IDs appearing on either side
@@ -156,11 +149,21 @@ function resolveScenarioMatrix(
     // create a scenario for it, but it will be flagged in the UI to make it clear
     // that the input configuration has changed.
     for (const inputIdAlias of inputIdAliases) {
+      const inputAtMin: CompareScenarioInputSpec = {
+        kind: 'input-at-position',
+        inputName: inputIdAlias,
+        position: 'min'
+      }
+      const inputAtMax: CompareScenarioInputSpec = {
+        kind: 'input-at-position',
+        inputName: inputIdAlias,
+        position: 'max'
+      }
       resolvedScenarios.push(
-        resolveScenarioForInputSpecs(modelInputsL, modelInputsR, [{ input: inputIdAlias, at: 'min' }])
+        resolveScenarioForInputSpecs(modelInputsL, modelInputsR, undefined, undefined, [inputAtMin])
       )
       resolvedScenarios.push(
-        resolveScenarioForInputSpecs(modelInputsL, modelInputsR, [{ input: inputIdAlias, at: 'max' }])
+        resolveScenarioForInputSpecs(modelInputsL, modelInputsR, undefined, undefined, [inputAtMax])
       )
     }
   }
@@ -171,9 +174,20 @@ function resolveScenarioMatrix(
 /**
  * Return a resolved `CompareScenario` with all inputs set to the given position.
  */
-function resolveScenarioWithAllInputsAtPosition(position: InputPosition): CompareScenarioWithAllInputs {
+function resolveScenarioWithAllInputsAtPosition(
+  title: string | undefined,
+  subtitle: string | undefined,
+  position: InputPosition
+): CompareScenarioWithAllInputs {
+  if (title === undefined) {
+    // No title was defined, so set one based on position (e.g., "at minimum")
+    title = position.replace('-', ' ')
+  }
+
   return {
-    kind: 'with-all-inputs',
+    kind: 'scenario-with-all-inputs',
+    title,
+    subtitle,
     position
   }
 }
@@ -184,16 +198,39 @@ function resolveScenarioWithAllInputsAtPosition(position: InputPosition): Compar
 function resolveScenarioForInputSpecs(
   modelInputsL: ModelInputs,
   modelInputsR: ModelInputs,
+  title: string | undefined,
+  subtitle: string | undefined,
   inputSpecs: CompareScenarioInputSpec[]
 ): CompareScenario {
   // Convert the input specs to `CompareScenarioInput` instances
   const resolvedInputs = inputSpecs.map(inputSpec => {
-    return resolveInputForName(modelInputsL, modelInputsR, inputSpec.input, inputSpec.at)
+    switch (inputSpec.kind) {
+      case 'input-at-position':
+        return resolveInputForName(modelInputsL, modelInputsR, inputSpec.inputName, inputSpec.position)
+      case 'input-at-value':
+        return resolveInputForName(modelInputsL, modelInputsR, inputSpec.inputName, inputSpec.value)
+      default:
+        assertNever(inputSpec)
+    }
   })
+
+  if (title === undefined) {
+    // No title was defined, so set a default one based on input name.  For now we only
+    // attempt this if there's a single input in the scenario.
+    // if (resolvedInputs.length === 1 && resolvedInputs[0]) {
+    // const setting = scenario.settings[0]
+    //  this.getInfoForPositionSetting(setting.inputVarId, setting.position)
+    // } else {
+    //     title: `PLACEHOLDER (scenario info not provided)`
+    //   }
+    title = 'TODO: at position or value'
+  }
 
   // Create a `CompareScenario` with the resolved inputs
   return {
-    kind: 'with-inputs',
+    kind: 'scenario-with-inputs',
+    title,
+    subtitle,
     resolvedInputs
   }
 }
