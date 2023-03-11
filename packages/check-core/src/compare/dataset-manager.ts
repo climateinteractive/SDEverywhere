@@ -4,8 +4,7 @@ import type { Scenario } from '../_shared/scenario'
 import type { DatasetKey } from '../_shared/types'
 import type { ModelSpec } from '../bundle/bundle-types'
 import type { OutputVar } from '../bundle/var-types'
-import type { CompareDatasets } from './compare-datasets'
-import type { DatasetInfo } from './compare-info'
+import type { CompareDatasetInfo, CompareDatasets } from './compare-datasets'
 
 /**
  * Manages a set of dataset keys (corresponding to the available model outputs
@@ -78,7 +77,7 @@ export class DatasetManager implements CompareDatasets {
   }
 
   // from CompareDatasets interface
-  getDatasetInfo(datasetKey: DatasetKey): DatasetInfo | undefined {
+  getDatasetInfo(datasetKey: DatasetKey): CompareDatasetInfo | undefined {
     // Get the dataset keys accounting for renames
     const datasetKeyL = datasetKey
     const datasetKeyR = this.renamedDatasetKeys?.get(datasetKeyL) || datasetKeyL
