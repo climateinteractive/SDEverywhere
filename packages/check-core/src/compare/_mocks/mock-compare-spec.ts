@@ -16,6 +16,8 @@ import type {
   CompareViewGraphsPresetSpec,
   CompareViewGraphsSpec,
   CompareViewGroupSpec,
+  CompareViewGroupWithScenariosSpec,
+  CompareViewGroupWithViewsSpec,
   CompareViewSpec
 } from '../compare-spec'
 
@@ -107,13 +109,13 @@ export function scenarioGroupRefSpec(groupName: string): CompareScenarioGroupRef
 
 export function viewSpec(
   viewName: string,
-  scenarios: (CompareScenarioRefSpec | CompareScenarioGroupRefSpec)[],
+  scenario: CompareScenarioRefSpec,
   graphs: CompareViewGraphsSpec
 ): CompareViewSpec {
   return {
     kind: 'view',
     name: viewName,
-    scenarios,
+    scenario,
     graphs
   }
 }
@@ -136,10 +138,23 @@ export function graphsArraySpec(graphIds: string[]): CompareViewGraphsArraySpec 
 // VIEW GROUPS
 //
 
-export function viewGroupSpec(groupName: string, views: CompareViewSpec[]): CompareViewGroupSpec {
+export function viewGroupWithViewsSpec(groupName: string, views: CompareViewSpec[]): CompareViewGroupWithViewsSpec {
   return {
-    kind: 'view-group',
+    kind: 'view-group-with-views',
     name: groupName,
     views
+  }
+}
+
+export function viewGroupWithScenariosSpec(
+  groupName: string,
+  scenarios: (CompareScenarioRefSpec | CompareScenarioGroupRefSpec)[],
+  graphs: CompareViewGraphsSpec
+): CompareViewGroupWithScenariosSpec {
+  return {
+    kind: 'view-group-with-scenarios',
+    name: groupName,
+    scenarios,
+    graphs
   }
 }

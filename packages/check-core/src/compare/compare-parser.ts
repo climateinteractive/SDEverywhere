@@ -111,11 +111,11 @@ interface ParsedScenarioGroupRef {
 
 type ParsedViewName = string
 
-type ParsedViewScenariosItem = ParsedScenarioRef | ParsedScenarioGroupRef
-
 type ParsedViewGraphsPreset = 'all'
 
 type ParsedViewGraphId = string
+
+type ParsedViewGraphs = ParsedViewGraphsPreset | ParsedViewGraphId[]
 
 /**
  * A definition of a view.  A view presents a set of graphs for a single input scenario.  This
@@ -124,8 +124,8 @@ type ParsedViewGraphId = string
 interface ParsedView {
   name: ParsedViewName
   // desc?: string
-  scenarios?: ParsedViewScenariosItem[]
-  graphs?: ParsedViewGraphsPreset | ParsedViewGraphId[]
+  scenario_ref?: ParsedScenarioTitle
+  graphs?: ParsedViewGraphs
 }
 
 //
@@ -134,18 +134,20 @@ interface ParsedView {
 
 type ParsedViewGroupName = string
 
-/**
- * A definition of a group of views.  Multiple related views can be grouped together under a single name
- * to make them easy to distinguish in a report.
- */
 interface ParsedViewGroupViewsItem {
   view: ParsedView
 }
 
-/** A definition of a view group. */
+type ParsedViewGroupScenariosItem = ParsedScenarioRef | ParsedScenarioGroupRef
+
+/**
+ * A definition of a group of views.
+ */
 interface ParsedViewGroup {
   name: ParsedViewGroupName
-  views: ParsedViewGroupViewsItem[]
+  views?: ParsedViewGroupViewsItem[]
+  scenarios?: ParsedViewGroupScenariosItem[]
+  graphs?: ParsedViewGraphs
 }
 
 /** A single item in an array of view definitions. */
@@ -317,43 +319,28 @@ function scenarioGroupSpecFromParsed(parsedScenarioGroup: ParsedScenarioGroup): 
 //
 
 function viewSpecFromParsed(parsedView: ParsedView): CompareViewSpec {
-  const scenarios: (CompareScenarioRefSpec | CompareScenarioGroupRefSpec)[] = parsedView.scenarios.map(
-    parsedScenarioOrGroupRef => {
-      if ('scenario_ref' in parsedScenarioOrGroupRef) {
-        return {
-          kind: 'scenario-ref',
-          scenarioName: parsedScenarioOrGroupRef.scenario_ref
-        }
-      } else if ('scenario_group_ref' in parsedScenarioOrGroupRef) {
-        return {
-          kind: 'scenario-group-ref',
-          groupName: parsedScenarioOrGroupRef.scenario_group_ref
-        }
-      } else {
-        // Internal error (this should have already been rejected by the validator)
-        throw new Error('Invalid view item')
-      }
-    }
-  )
+  return {
+    kind: 'view',
+    name: parsedView.name,
+    scenario: {
+      kind: 'scenario-ref',
+      scenarioName: parsedView.scenario_ref
+    },
+    graphs: viewGraphsSpecFromParsed(parsedView.graphs)
+  }
+}
 
-  let graphs: CompareViewGraphsSpec
-  if (parsedView.graphs === 'all') {
-    graphs = {
+function viewGraphsSpecFromParsed(parsedGraphs: ParsedViewGraphs): CompareViewGraphsSpec {
+  if (parsedGraphs === 'all') {
+    return {
       kind: 'graphs-preset',
       preset: 'all'
     }
   } else {
-    graphs = {
+    return {
       kind: 'graphs-array',
-      graphIds: parsedView.graphs
+      graphIds: parsedGraphs
     }
-  }
-
-  return {
-    kind: 'view',
-    name: parsedView.name,
-    scenarios,
-    graphs
   }
 }
 
@@ -362,9 +349,41 @@ function viewSpecFromParsed(parsedView: ParsedView): CompareViewSpec {
 //
 
 function viewGroupSpecFromParsed(parsedViewGroup: ParsedViewGroup): CompareViewGroupSpec {
-  return {
-    kind: 'view-group',
-    name: parsedViewGroup.name,
-    views: parsedViewGroup.views.map(item => viewSpecFromParsed(item.view))
+  if (parsedViewGroup.views !== undefined) {
+    // This is a view group with an array of views
+    return {
+      kind: 'view-group-with-views',
+      name: parsedViewGroup.name,
+      views: parsedViewGroup.views.map(item => viewSpecFromParsed(item.view))
+    }
+  } else if (parsedViewGroup.scenarios !== undefined) {
+    // This is a view group with an array of scenario (or scenario group) references
+    const scenarios: (CompareScenarioRefSpec | CompareScenarioGroupRefSpec)[] = parsedViewGroup.scenarios.map(
+      parsedScenarioOrGroupRef => {
+        if ('scenario_ref' in parsedScenarioOrGroupRef) {
+          return {
+            kind: 'scenario-ref',
+            scenarioName: parsedScenarioOrGroupRef.scenario_ref
+          }
+        } else if ('scenario_group_ref' in parsedScenarioOrGroupRef) {
+          return {
+            kind: 'scenario-group-ref',
+            groupName: parsedScenarioOrGroupRef.scenario_group_ref
+          }
+        } else {
+          // Internal error (this should have already been rejected by the validator)
+          throw new Error('Invalid view group')
+        }
+      }
+    )
+    return {
+      kind: 'view-group-with-scenarios',
+      name: parsedViewGroup.name,
+      scenarios,
+      graphs: viewGraphsSpecFromParsed(parsedViewGroup.graphs)
+    }
+  } else {
+    // Internal error (this should have already been rejected by the validator)
+    throw new Error('Invalid view group')
   }
 }

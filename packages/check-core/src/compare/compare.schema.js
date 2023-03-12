@@ -254,22 +254,14 @@ export default {
         name: {
           type: 'string'
         },
-        scenarios: {
-          type: 'array',
-          items: {
-            $ref: '#/$defs/view_scenarios_array_item'
-          },
-          minItems: 1
+        scenario_ref: {
+          type: 'string'
         },
         graphs: {
           $ref: '#/$defs/view_graphs'
         }
       },
-      required: ['name', 'scenarios', 'graphs']
-    },
-
-    view_scenarios_array_item: {
-      oneOf: [{ $ref: '#/$defs/scenario_ref' }, { $ref: '#/$defs/scenario_group_ref' }]
+      required: ['name', 'scenario_ref', 'graphs']
     },
 
     view_graphs: {
@@ -305,6 +297,13 @@ export default {
     },
 
     view_group: {
+      oneOf: [
+        { $ref: '#/$defs/view_group_with_views_array' },
+        { $ref: '#/$defs/view_group_shorthand_with_scenarios_array' }
+      ]
+    },
+
+    view_group_with_views_array: {
       type: 'object',
       additionalProperties: false,
       properties: {
@@ -330,6 +329,31 @@ export default {
           $ref: '#/$defs/view'
         }
       }
+    },
+
+    view_group_shorthand_with_scenarios_array: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        name: {
+          type: 'string'
+        },
+        scenarios: {
+          type: 'array',
+          items: {
+            $ref: '#/$defs/view_group_scenarios_array_item'
+          },
+          minItems: 1
+        },
+        graphs: {
+          $ref: '#/$defs/view_graphs'
+        }
+      },
+      required: ['name', 'scenarios', 'graphs']
+    },
+
+    view_group_scenarios_array_item: {
+      oneOf: [{ $ref: '#/$defs/scenario_ref' }, { $ref: '#/$defs/scenario_group_ref' }]
     }
   }
 }

@@ -148,15 +148,14 @@ export interface CompareViewGraphsPresetSpec {
 export type CompareViewGraphsSpec = CompareViewGraphsArraySpec | CompareViewGraphsPresetSpec
 
 /**
- * A definition of a view.  A view presents a set of graphs for a single input scenario.  This
- * definition allows for specifying a set of graphs to be shown in a number of different scenarios.
+ * A definition of a view.  A view presents a set of graphs for a single input scenario.
  */
 export interface CompareViewSpec {
   kind: 'view'
   /** The name of the view. */
   name: CompareViewName
-  /** The set of scenarios to be shown in the views. */
-  scenarios: (CompareScenarioRefSpec | CompareScenarioGroupRefSpec)[]
+  /** The scenario to be shown in the view. */
+  scenario: CompareScenarioRefSpec
   /** The graphs to be shown for each scenario view. */
   graphs: CompareViewGraphsSpec
 }
@@ -168,16 +167,35 @@ export interface CompareViewSpec {
 export type CompareViewGroupName = string
 
 /**
- * A definition of a group of views.  Multiple related views can be grouped together under a single name
- * to make them easy to distinguish in a report.
+ * Specifies a view group with an explicit array of view definitions.
  */
-export interface CompareViewGroupSpec {
-  kind: 'view-group'
+export interface CompareViewGroupWithViewsSpec {
+  kind: 'view-group-with-views'
   /** The name of the group of views. */
   name: CompareViewGroupName
   /** The views that are included in this group. */
   views: CompareViewSpec[]
 }
+
+/**
+ * Specifies a view group by declaring the scenarios included in the group (one view per scenario), along
+ * with a set of graphs that will shown in each view.
+ */
+export interface CompareViewGroupWithScenariosSpec {
+  kind: 'view-group-with-scenarios'
+  /** The name of the group of views. */
+  name: CompareViewGroupName
+  /** The scenarios to be included (one view will be created for each scenario). */
+  scenarios: (CompareScenarioRefSpec | CompareScenarioGroupRefSpec)[]
+  /** The graphs to be shown for each scenario view. */
+  graphs: CompareViewGraphsSpec
+}
+
+/**
+ * A definition of a group of views.  Multiple related views can be grouped together under a single name
+ * to make them easy to distinguish in a report.
+ */
+export type CompareViewGroupSpec = CompareViewGroupWithViewsSpec | CompareViewGroupWithScenariosSpec
 
 //
 // TOP-LEVEL TYPES

@@ -14,7 +14,8 @@ import {
   scenarioRefSpec,
   scenarioWithAllInputsSpec,
   scenarioWithInputsSpec,
-  viewGroupSpec,
+  viewGroupWithScenariosSpec,
+  viewGroupWithViewsSpec,
   viewSpec
 } from './_mocks/mock-compare-spec'
 
@@ -81,19 +82,34 @@ describe('parseComparisonScenariosYaml', () => {
     views:
       - view:
           name: All graphs
-          scenarios:
-            - scenario_ref: S0
+          scenario_ref: S0
           graphs: all
 
+- view_group:
+    name: Temp (explicit views)
+    views:
       - view:
-          name: Temperature
-          scenarios:
-            - scenario_ref: S0
-            - scenario_ref: S1
-            - scenario_group_ref: G1
+          name: Temp for Scenario_0
+          scenario_ref: S0
           graphs:
             - '86'
             - '87'
+      - view:
+          name: Temp for Scenario_1
+          scenario_ref: S1
+          graphs:
+            - '86'
+            - '87'
+
+- view_group:
+    name: Temp (shorthand)
+    scenarios:
+      - scenario_ref: S0
+      - scenario_ref: S1
+      - scenario_group_ref: G1
+    graphs:
+      - '86'
+      - '87'
 `
 
     const result = parseComparisonScenariosYaml([yaml])
@@ -121,14 +137,16 @@ describe('parseComparisonScenariosYaml', () => {
     ])
 
     expect(compareSpec.viewGroups).toEqual([
-      viewGroupSpec('Baseline', [
-        viewSpec('All graphs', [scenarioRefSpec('S0')], graphsPresetSpec('all')),
-        viewSpec(
-          'Temperature',
-          [scenarioRefSpec('S0'), scenarioRefSpec('S1'), scenarioGroupRefSpec('G1')],
-          graphsArraySpec(['86', '87'])
-        )
-      ])
+      viewGroupWithViewsSpec('Baseline', [viewSpec('All graphs', scenarioRefSpec('S0'), graphsPresetSpec('all'))]),
+      viewGroupWithViewsSpec('Temp (explicit views)', [
+        viewSpec('Temp for Scenario_0', scenarioRefSpec('S0'), graphsArraySpec(['86', '87'])),
+        viewSpec('Temp for Scenario_1', scenarioRefSpec('S1'), graphsArraySpec(['86', '87']))
+      ]),
+      viewGroupWithScenariosSpec(
+        'Temp (shorthand)',
+        [scenarioRefSpec('S0'), scenarioRefSpec('S1'), scenarioGroupRefSpec('G1')],
+        graphsArraySpec(['86', '87'])
+      )
     ])
   })
 })
