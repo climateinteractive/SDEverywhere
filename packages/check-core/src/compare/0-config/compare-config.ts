@@ -1,8 +1,8 @@
 // Copyright (c) 2021-2022 Climate Interactive / New Venture Fund
 
-import type { LoadedBundle, NamedBundle } from '../bundle/bundle-types'
-import type { CompareDatasets } from './compare-datasets'
-import type { CompareScenarios } from './compare-scenarios'
+import type { LoadedBundle, NamedBundle } from '../../bundle/bundle-types'
+import type { CompareDatasets } from '../compare-datasets'
+// import type { CompareScenarios } from './compare-scenarios'
 
 export interface CompareOptions {
   /** The left-side ("baseline") bundle being compared. */
@@ -13,12 +13,12 @@ export interface CompareOptions {
    */
   thresholds: number[]
   /** The set of input scenarios that will be compared. */
-  scenarios?: CompareScenarios
+  // scenarios?: CompareScenarios
   /**
    * The strings containing comparison scenario definitions in YAML format.  If
    * defined, these will be combined with the `scenarios` property.
    */
-  scenarioYaml?: string[]
+  scenariosYaml?: string[]
   /** The set of datasets that will be compared. */
   datasets: CompareDatasets
 }
@@ -34,7 +34,9 @@ export interface CompareConfig {
    */
   thresholds: number[]
   /** The resolved set of input scenarios that will be compared. */
-  scenarios: CompareScenarios
+  // scenarios: CompareScenarios
+  // TODO: Include the resolved scenarios here
+  scenariosYaml: string[]
   /** The set of datasets that will be compared. */
   datasets: CompareDatasets
 }

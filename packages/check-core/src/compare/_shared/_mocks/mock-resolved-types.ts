@@ -1,15 +1,16 @@
 // Copyright (c) 2021-2022 Climate Interactive / New Venture Fund
 
-import type { InputPosition } from '../../_shared/scenario'
-import type { VarId } from '../../_shared/types'
-import type { InputId, InputVar } from '../../bundle/var-types'
+import type { InputPosition } from '../../../_shared/scenario'
+import type { VarId } from '../../../_shared/types'
+import type { InputId, InputVar } from '../../../bundle/var-types'
+
 import type {
-  CompareScenarioError,
+  CompareResolverError,
   CompareScenarioInput,
   CompareScenarioInputState,
   CompareScenarioWithAllInputs,
   CompareScenarioWithInputs
-} from '../compare-scenario'
+} from '../compare-resolved-types'
 
 export function inputVar(varName: string, inputId?: InputId, maxValue = 100): [VarId, InputVar] {
   const varId = `_${varName.toLowerCase()}`
@@ -66,8 +67,8 @@ export function allAtPos(
 export function scenarioWithInput(
   requestedInputName: string,
   at: InputPosition | number,
-  inputVarL: InputVar | CompareScenarioError | undefined,
-  inputVarR: InputVar | CompareScenarioError | undefined,
+  inputVarL: InputVar | CompareResolverError | undefined,
+  inputVarR: InputVar | CompareResolverError | undefined,
   titleOpts?: { title?: string; subtitle?: string }
 ): CompareScenarioWithInputs {
   const resolvedInput: CompareScenarioInput = {
@@ -85,7 +86,7 @@ export function scenarioWithInput(
 }
 
 export function stateForInputVar(
-  inputVar: InputVar | CompareScenarioError | undefined,
+  inputVar: InputVar | CompareResolverError | undefined,
   at: InputPosition | number
 ): CompareScenarioInputState {
   if (inputVar === undefined) {

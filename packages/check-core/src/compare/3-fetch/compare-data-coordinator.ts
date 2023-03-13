@@ -1,10 +1,10 @@
 // Copyright (c) 2021-2022 Climate Interactive / New Venture Fund
 
 import { assertNever } from 'assert-never'
-import { TaskQueue } from '../_shared/task-queue'
-import type { Scenario } from '../_shared/scenario'
-import type { DatasetKey, DatasetMap } from '../_shared/types'
-import type { BundleModel, BundleGraphData, BundleGraphId } from '../bundle/bundle-types'
+import { TaskQueue } from '../../_shared/task-queue'
+import type { Scenario } from '../../_shared/scenario'
+import type { DatasetKey, DatasetMap } from '../../_shared/types'
+import type { BundleModel, BundleGraphData, BundleGraphId } from '../../bundle/bundle-types'
 
 export type CompareDataRequestKey = string
 

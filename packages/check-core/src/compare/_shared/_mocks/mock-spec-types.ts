@@ -15,11 +15,10 @@ import type {
   CompareViewGraphsArraySpec,
   CompareViewGraphsPresetSpec,
   CompareViewGraphsSpec,
-  CompareViewGroupSpec,
   CompareViewGroupWithScenariosSpec,
   CompareViewGroupWithViewsSpec,
   CompareViewSpec
-} from '../compare-spec'
+} from '../compare-spec-types'
 
 //
 // SCENARIOS

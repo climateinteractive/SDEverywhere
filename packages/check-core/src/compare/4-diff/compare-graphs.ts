@@ -1,7 +1,7 @@
 // Copyright (c) 2021-2022 Climate Interactive / New Venture Fund
 
-import type { DatasetKey, ScenarioKey } from '../_shared/types'
-import type { BundleGraphSpec } from '../bundle/bundle-types'
+import type { DatasetKey, ScenarioKey } from '../../_shared/types'
+import type { BundleGraphSpec } from '../../bundle/bundle-types'
 import type { CompareDatasetSummary } from './compare-summary'
 
 export type GraphInclusion = 'neither' | 'left-only' | 'right-only' | 'both'

@@ -6,7 +6,7 @@ import type { InputPosition, InputSetting, Scenario } from '../_shared/scenario'
 import { allInputsAtPositionScenario, inputAtPositionScenario } from '../_shared/scenario'
 import type { ScenarioGroupKey, ScenarioKey, VarId } from '../_shared/types'
 
-import type { Bundle } from '../bundle/bundle-types'
+import type { ModelSpec } from '../bundle/bundle-types'
 import type { InputVar, RelatedItem } from '../bundle/var-types'
 
 import type { CompareGroupInfo } from './compare-group'
@@ -23,10 +23,10 @@ export class ScenarioManager implements CompareScenarios {
   private readonly groupInfo: Map<ScenarioGroupKey, CompareGroupInfo> = new Map()
 
   /**
-   * @param bundleL The "left" bundle being compared.
-   * @param bundleR The "right" bundle being compared.
+   * @param modelSpecL The model spec for the "left" bundle being compared.
+   * @param modelSpecR The model spec for the "right" bundle being compared.
    */
-  constructor(private readonly bundleL: Bundle, private readonly bundleR: Bundle) {}
+  constructor(private readonly modelSpecL: ModelSpec, private readonly modelSpecR: ModelSpec) {}
 
   // from CompareScenarios interface
   getScenarios(): Scenario[] {
@@ -79,7 +79,7 @@ export class ScenarioManager implements CompareScenarios {
    * @param groupInfo The custom title/subtitle for the group.  If left undefined, the
    * default (possibly generic) info will be used.
    */
-  addInputScenario(scenario: Scenario, scenarioInfo?: CompareScenarioInfo, groupInfo?: CompareGroupInfo): void {
+  addScenario(scenario: Scenario, scenarioInfo?: CompareScenarioInfo, groupInfo?: CompareGroupInfo): void {
     // Add the scenario
     this.scenarios.set(scenario.key, scenario)
 
@@ -104,8 +104,6 @@ export class ScenarioManager implements CompareScenarios {
    * advertised by the given bundles.  It will generate scenarios such that for
    * any output variable, the model will be run:
    *   - once with all inputs at their default
-   *   - once with all inputs at their minimum
-   *   - once with all inputs at their maximum
    *   - twice for each input
    *       - once with single input at its minimum
    *       - once with single input at its maximum
@@ -115,22 +113,20 @@ export class ScenarioManager implements CompareScenarios {
    * function to generate a different set of scenarios that is better suited
    * for the model you are testing.
    */
-  addInputScenarioMatrix(): void {
+  addScenarioMatrix(): void {
     // Get the set of input variable IDs for each model
-    const inputVarIdsL = Array.from(this.bundleL.modelSpec.inputVars.keys())
-    const inputVarIdsR = Array.from(this.bundleR.modelSpec.inputVars.keys())
+    const inputVarIdsL = Array.from(this.modelSpecL.inputVars.keys())
+    const inputVarIdsR = Array.from(this.modelSpecR.inputVars.keys())
 
     // Get the union of all input variables appearing in left and/or right
     // TODO: Omit the inputs that are in L but not in R
     const inputVarIds = new Set([...inputVarIdsL, ...inputVarIdsR])
 
     // Compute the matrix of scenarios based on the available input variables
-    this.addInputScenario(allInputsAtPositionScenario('at-default'))
-    this.addInputScenario(allInputsAtPositionScenario('at-minimum'))
-    this.addInputScenario(allInputsAtPositionScenario('at-maximum'))
+    this.addScenario(allInputsAtPositionScenario('at-default'))
     for (const inputVarId of inputVarIds) {
-      this.addInputScenario(inputAtPositionScenario(inputVarId, inputVarId, 'at-minimum'))
-      this.addInputScenario(inputAtPositionScenario(inputVarId, inputVarId, 'at-maximum'))
+      this.addScenario(inputAtPositionScenario(inputVarId, inputVarId, 'at-minimum'))
+      this.addScenario(inputAtPositionScenario(inputVarId, inputVarId, 'at-maximum'))
     }
   }
 
@@ -196,8 +192,8 @@ export class ScenarioManager implements CompareScenarios {
 
     let subtitle: string
     if (inputVarId) {
-      const inputVarL = this.bundleL.modelSpec.inputVars.get(inputVarId)
-      const inputVarR = this.bundleR.modelSpec.inputVars.get(inputVarId)
+      const inputVarL = this.modelSpecL.inputVars.get(inputVarId)
+      const inputVarR = this.modelSpecR.inputVars.get(inputVarId)
       const valueL = inputValue(inputVarL, inputPosition)
       const valueR = inputValue(inputVarR, inputPosition)
       if (valueL !== valueR) {
@@ -254,8 +250,8 @@ export class ScenarioManager implements CompareScenarios {
 
   private getInputVarForSetting(setting: InputSetting): InputVar | undefined {
     const inputVarId = setting.inputVarId
-    const inputVarL = this.bundleL.modelSpec.inputVars.get(inputVarId)
-    const inputVarR = this.bundleR.modelSpec.inputVars.get(inputVarId)
+    const inputVarL = this.modelSpecL.inputVars.get(inputVarId)
+    const inputVarR = this.modelSpecR.inputVars.get(inputVarId)
     return inputVarR || inputVarL
   }
 }

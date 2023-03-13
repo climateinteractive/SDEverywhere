@@ -89,32 +89,34 @@ export { checkSummaryFromReport, checkReportFromSummary } from './check/check-su
 // compare
 //
 
-export type { CompareConfig, CompareOptions } from './compare/compare-config'
+export * from './compare/_shared/compare-spec-types'
 
-export type { CompareDataRequestKey } from './compare/compare-data-coordinator'
-export { CompareDataCoordinator } from './compare/compare-data-coordinator'
+export type { CompareConfig, CompareOptions } from './compare/0-config/compare-config'
 
-export type { CompareDatasets, CompareDatasetInfo } from './compare/compare-datasets'
+export type { CompareDataRequestKey } from './compare/3-fetch/compare-data-coordinator'
+export { CompareDataCoordinator } from './compare/3-fetch/compare-data-coordinator'
 
-export type { DiffPoint, DiffReport, DiffValidity } from './compare/compare-diff-datasets'
-export { diffDatasets, compareDatasets } from './compare/compare-diff-datasets'
+export type { DiffPoint, DiffReport, DiffValidity } from './compare/4-diff/compare-diff-datasets'
+export { diffDatasets, compareDatasets } from './compare/4-diff/compare-diff-datasets'
 
-export type { GraphDatasetReport, GraphInclusion, GraphMetadataReport, GraphReport } from './compare/compare-graphs'
-export { diffGraphs } from './compare/compare-graphs'
+export type {
+  GraphDatasetReport,
+  GraphInclusion,
+  GraphMetadataReport,
+  GraphReport
+} from './compare/4-diff/compare-graphs'
+export { diffGraphs } from './compare/4-diff/compare-graphs'
 
+export type { CompareDatasetReport, CompareReport } from './compare/4-diff/compare-report'
+
+export type { CompareDatasetSummary, CompareSummary } from './compare/4-diff/compare-summary'
+export { compareSummaryFromReport } from './compare/4-diff/compare-summary'
+
+// TODO: Organize the following
 export type { CompareItem, CompareGroupInfo, CompareGroup } from './compare/compare-group'
-
-export type { CompareDatasetReport, CompareReport } from './compare/compare-report'
-
+export type { CompareDatasets, CompareDatasetInfo } from './compare/compare-datasets'
 export type { CompareScenarios, CompareScenarioInfo } from './compare/compare-scenarios'
-
-export * from './compare/compare-spec'
-
-export type { CompareDatasetSummary, CompareSummary } from './compare/compare-summary'
-export { compareSummaryFromReport } from './compare/compare-summary'
-
 export { DatasetManager } from './compare/dataset-manager'
-
 export { ScenarioManager } from './compare/scenario-manager'
 
 //

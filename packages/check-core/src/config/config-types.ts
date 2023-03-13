@@ -2,7 +2,7 @@
 
 import type { NamedBundle } from '../bundle/bundle-types'
 import type { CheckConfig, CheckOptions } from '../check/check-config'
-import type { CompareConfig, CompareOptions } from '../compare/compare-config'
+import type { CompareConfig, CompareOptions } from '../compare'
 
 export interface ConfigOptions {
   /**

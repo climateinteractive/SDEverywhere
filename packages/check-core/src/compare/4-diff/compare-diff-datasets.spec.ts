@@ -2,7 +2,7 @@
 
 import { describe, expect, it } from 'vitest'
 
-import type { Dataset } from '../_shared/types'
+import type { Dataset } from '../../_shared/types'
 import { diffDatasets } from './compare-diff-datasets'
 
 describe('diffDatasets', () => {

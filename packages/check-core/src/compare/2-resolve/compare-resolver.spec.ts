@@ -2,21 +2,24 @@
 
 import { describe, expect, it } from 'vitest'
 
-import type { VarId } from '../_shared/types'
-import type { ModelSpec } from '../bundle/bundle-types'
-import type { InputId, InputVar } from '../bundle/var-types'
-import type { CompareScenarioSpec } from './compare-spec'
-import { allAtPos, inputVar, scenarioWithInput } from './_mocks/mock-compare-scenario'
-import type { CompareScenario } from './compare-scenario'
-import { expandScenarios } from './compare-scenario'
-import { ModelInputs } from './model-inputs'
+import type { VarId } from '../../_shared/types'
+import type { ModelSpec } from '../../bundle/bundle-types'
+import type { InputId, InputVar } from '../../bundle/var-types'
+
+import type { CompareScenarioSpec } from '../_shared/compare-spec-types'
+import type { CompareScenario } from '../_shared/compare-resolved-types'
+
 import {
   inputAtPositionSpec,
   inputAtValueSpec,
   scenarioMatrixSpec,
   scenarioWithAllInputsSpec,
   scenarioWithInputsSpec
-} from './_mocks/mock-compare-spec'
+} from '../_shared/_mocks/mock-spec-types'
+import { allAtPos, inputVar, scenarioWithInput } from '../_shared/_mocks/mock-resolved-types'
+
+import { expandScenarios } from './compare-resolver'
+import { ModelInputs } from './model-inputs'
 
 function mockModelSpec(kind: 'L' | 'R'): ModelSpec {
   //

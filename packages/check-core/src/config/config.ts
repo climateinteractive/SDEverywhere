@@ -3,9 +3,12 @@
 import type { Scenario } from '../_shared/scenario'
 import type { DatasetKey, DatasetMap } from '../_shared/types'
 import type { BundleModel, LoadedBundle, NamedBundle } from '../bundle/bundle-types'
-import type { CompareConfig } from '../compare/compare-config'
-import { resolveCompareScenarios } from '../compare/compare-resolve-scenarios'
+
 import type { CheckConfig } from '../check/check-config'
+
+import type { CompareConfig } from '../compare'
+// import { resolveCompareScenarios } from '../compare/compare-resolve-scenarios'
+
 import type { Config, ConfigOptions } from './config-types'
 import { synchronizedBundleModel } from './synchronized-model'
 
@@ -74,19 +77,21 @@ export async function createConfig(options: ConfigOptions): Promise<Config> {
     }
 
     // Resolve and combine the provided comparison scenario configuration
-    const compareScenarios = resolveCompareScenarios(
-      options.compare.baseline.bundle,
-      options.current.bundle,
-      options.compare.scenarios,
-      options.compare.scenarioYaml
-    )
+    // const compareScenarios = resolveCompareScenarios(
+    //   options.compare.baseline.bundle,
+    //   options.current.bundle,
+    //   options.compare.scenarios,
+    //   options.compare.scenarioYaml
+    // )
 
     // Initialize the configuration for comparisons
     compareConfig = {
       bundleL: baselineBundle,
       bundleR: currentBundle,
       thresholds: options.compare.thresholds,
-      scenarios: compareScenarios,
+      // scenarios: compareScenarios,
+      // scenarios: undefined,
+      scenariosYaml: options.compare.scenariosYaml,
       datasets: options.compare.datasets
     }
   }

@@ -2,8 +2,10 @@
 
 import type { CheckSummary } from '../check/check-summary'
 import { checkSummaryFromReport } from '../check/check-summary'
-import type { CompareSummary } from '../compare/compare-summary'
-import { compareSummaryFromReport } from '../compare/compare-summary'
+
+import type { CompareSummary } from '../compare'
+import { compareSummaryFromReport } from '../compare'
+
 import type { SuiteReport } from './suite-report'
 
 /**

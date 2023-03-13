@@ -11,8 +11,8 @@ import { DataPlanner } from '../data/data-planner'
 import { parseTestYaml } from '../check/check-parser'
 import { runChecks } from '../check/check-runner'
 
-import type { CompareDatasetReport, CompareReport } from '../compare/compare-report'
-import { runCompare } from '../compare/compare-runner'
+import type { CompareDatasetReport, CompareReport } from '../compare'
+import { runCompare } from '../compare'
 
 import type { Config } from '../config/config-types'
 

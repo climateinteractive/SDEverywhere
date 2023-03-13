@@ -1,7 +1,7 @@
 // Copyright (c) 2023 Climate Interactive / New Venture Fund
 
-import type { ModelSpec } from '../bundle/bundle-types'
-import type { InputVar } from '../bundle/var-types'
+import type { ModelSpec } from '../../bundle/bundle-types'
+import type { InputVar } from '../../bundle/var-types'
 
 /**
  * Wraps a `ModelSpec` to provide easier/faster lookups of input variables by variable

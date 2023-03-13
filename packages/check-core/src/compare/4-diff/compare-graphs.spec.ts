@@ -2,8 +2,8 @@
 
 import { describe, expect, it } from 'vitest'
 
-import type { CompareDatasetSummary, DatasetKey } from '..'
-import type { BundleGraphDatasetSpec, BundleGraphSpec } from '../bundle/bundle-types'
+import type { CompareDatasetSummary, DatasetKey } from '../..'
+import type { BundleGraphDatasetSpec, BundleGraphSpec } from '../../bundle/bundle-types'
 import type { GraphDatasetReport, GraphMetadataReport } from './compare-graphs'
 import { diffGraphs } from './compare-graphs'
 

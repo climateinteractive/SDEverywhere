@@ -1,6 +1,6 @@
 // Copyright (c) 2021-2022 Climate Interactive / New Venture Fund
 
-import type { Dataset, DatasetKey, DatasetMap, ScenarioKey } from '../_shared/types'
+import type { Dataset, DatasetKey, DatasetMap, ScenarioKey } from '../../_shared/types'
 import type { CompareDatasetReport } from './compare-report'
 
 export interface DiffPoint {

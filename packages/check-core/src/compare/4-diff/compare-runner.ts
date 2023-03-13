@@ -1,9 +1,9 @@
 // Copyright (c) 2021-2022 Climate Interactive / New Venture Fund
 
-import type { Scenario } from '../_shared/scenario'
-import { allInputsAtPositionScenario } from '../_shared/scenario'
-import type { DataPlanner } from '../data/data-planner'
-import type { CompareConfig } from './compare-config'
+import type { Scenario } from '../../_shared/scenario'
+import { allInputsAtPositionScenario } from '../../_shared/scenario'
+import type { DataPlanner } from '../../data/data-planner'
+import type { CompareConfig } from '../0-config/compare-config'
 import { diffDatasets } from './compare-diff-datasets'
 import type { CompareDatasetReport } from './compare-report'
 
@@ -21,9 +21,10 @@ export function runCompare(
   simplifyScenarios: boolean
 ): () => CompareDatasetReport[] {
   // Get the configured set of scenarios
-  const scenarios: Scenario[] = simplifyScenarios
-    ? [allInputsAtPositionScenario('at-default')]
-    : compareConfig.scenarios.getScenarios()
+  // const scenarios: Scenario[] = simplifyScenarios
+  //   ? [allInputsAtPositionScenario('at-default')]
+  //   : compareConfig.scenarios.getScenarios()
+  const scenarios: Scenario[] = []
 
   // TODO: The following leads to an explosion of scenario/dataset combinations;
   // if memory usage becomes a concern, we can change this to add a wildcard
