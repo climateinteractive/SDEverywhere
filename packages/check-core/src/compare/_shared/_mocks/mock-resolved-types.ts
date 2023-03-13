@@ -6,11 +6,18 @@ import type { InputId, InputVar } from '../../../bundle/var-types'
 
 import type {
   CompareResolverError,
+  CompareScenario,
+  CompareScenarioGroup,
   CompareScenarioInput,
   CompareScenarioInputState,
   CompareScenarioWithAllInputs,
-  CompareScenarioWithInputs
+  CompareScenarioWithInputs,
+  CompareUnresolvedScenarioRef
 } from '../compare-resolved-types'
+
+//
+// SCENARIOS
+//
 
 export function inputVar(varName: string, inputId?: InputId, maxValue = 100): [VarId, InputVar] {
   const varId = `_${varName.toLowerCase()}`
@@ -53,13 +60,14 @@ export function valueForPos(inputVar: InputVar, position: InputPosition): number
 
 export function allAtPos(
   position: InputPosition,
-  titleOpts?: { title?: string; subtitle?: string }
+  opts?: { id?: string; title?: string; subtitle?: string }
 ): CompareScenarioWithAllInputs {
   // TODO: Generate title/subtitle
   return {
     kind: 'scenario-with-all-inputs',
-    title: titleOpts?.title,
-    subtitle: titleOpts?.subtitle,
+    id: opts?.id,
+    title: opts?.title,
+    subtitle: opts?.subtitle,
     position
   }
 }
@@ -69,7 +77,7 @@ export function scenarioWithInput(
   at: InputPosition | number,
   inputVarL: InputVar | CompareResolverError | undefined,
   inputVarR: InputVar | CompareResolverError | undefined,
-  titleOpts?: { title?: string; subtitle?: string }
+  opts?: { id?: string; title?: string; subtitle?: string }
 ): CompareScenarioWithInputs {
   const resolvedInput: CompareScenarioInput = {
     requestedName: requestedInputName,
@@ -79,8 +87,9 @@ export function scenarioWithInput(
   // TODO: Generate title/subtitle
   return {
     kind: 'scenario-with-inputs',
-    title: titleOpts?.title || 'TODO: at position or value',
-    subtitle: titleOpts?.subtitle,
+    id: opts?.id,
+    title: opts?.title,
+    subtitle: opts?.subtitle,
     resolvedInputs: [resolvedInput]
   }
 }
@@ -116,5 +125,20 @@ export function stateForInputVar(
     inputVar,
     position,
     value
+  }
+}
+
+//
+// SCENARIO GROUPS
+//
+
+export function scenarioGroup(
+  name: string,
+  scenarios: (CompareScenario | CompareUnresolvedScenarioRef)[]
+): CompareScenarioGroup {
+  return {
+    kind: 'scenario-group',
+    name,
+    scenarios
   }
 }

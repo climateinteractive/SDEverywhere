@@ -58,6 +58,9 @@ export default {
       type: 'object',
       additionalProperties: false,
       properties: {
+        id: {
+          type: 'string'
+        },
         title: {
           type: 'string'
         },
@@ -78,6 +81,9 @@ export default {
       type: 'object',
       additionalProperties: false,
       properties: {
+        id: {
+          type: 'string'
+        },
         title: {
           type: 'string'
         },
@@ -138,6 +144,9 @@ export default {
       type: 'object',
       additionalProperties: false,
       properties: {
+        id: {
+          type: 'string'
+        },
         title: {
           type: 'string'
         },
@@ -155,6 +164,9 @@ export default {
       type: 'object',
       additionalProperties: false,
       properties: {
+        id: {
+          type: 'string'
+        },
         title: {
           type: 'string'
         },

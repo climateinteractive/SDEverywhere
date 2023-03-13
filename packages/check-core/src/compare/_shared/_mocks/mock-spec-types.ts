@@ -1,8 +1,10 @@
 // Copyright (c) 2023 Climate Interactive / New Venture Fund
 
 import type {
+  CompareScenarioGroupId,
   CompareScenarioGroupRefSpec,
   CompareScenarioGroupSpec,
+  CompareScenarioId,
   CompareScenarioInputAtPositionSpec,
   CompareScenarioInputAtValueSpec,
   CompareScenarioInputPosition,
@@ -12,9 +14,11 @@ import type {
   CompareScenarioSpec,
   CompareScenarioWithAllInputsSpec,
   CompareScenarioWithInputsSpec,
+  CompareSpecs,
   CompareViewGraphsArraySpec,
   CompareViewGraphsPresetSpec,
   CompareViewGraphsSpec,
+  CompareViewGroupSpec,
   CompareViewGroupWithScenariosSpec,
   CompareViewGroupWithViewsSpec,
   CompareViewSpec
@@ -32,10 +36,11 @@ export function scenarioMatrixSpec(): CompareScenarioPresetMatrixSpec {
 
 export function scenarioWithAllInputsSpec(
   position: CompareScenarioInputPosition,
-  opts?: { title?: string; subtitle?: string }
+  opts?: { id?: string; title?: string; subtitle?: string }
 ): CompareScenarioWithAllInputsSpec {
   return {
     kind: 'scenario-with-all-inputs',
+    id: opts?.id,
     title: opts?.title,
     subtitle: opts?.subtitle,
     position
@@ -44,10 +49,11 @@ export function scenarioWithAllInputsSpec(
 
 export function scenarioWithInputsSpec(
   inputs: CompareScenarioInputSpec[],
-  opts?: { title?: string; subtitle?: string }
+  opts?: { id?: string; title?: string; subtitle?: string }
 ): CompareScenarioWithInputsSpec {
   return {
     kind: 'scenario-with-inputs',
+    id: opts?.id,
     title: opts?.title,
     subtitle: opts?.subtitle,
     inputs
@@ -73,10 +79,10 @@ export function inputAtValueSpec(inputName: string, value: number): CompareScena
   }
 }
 
-export function scenarioRefSpec(scenarioName: string): CompareScenarioRefSpec {
+export function scenarioRefSpec(scenarioId: CompareScenarioId): CompareScenarioRefSpec {
   return {
     kind: 'scenario-ref',
-    scenarioName
+    scenarioId
   }
 }
 
@@ -86,19 +92,21 @@ export function scenarioRefSpec(scenarioName: string): CompareScenarioRefSpec {
 
 export function scenarioGroupSpec(
   groupName: string,
-  scenarios: (CompareScenarioSpec | CompareScenarioRefSpec)[]
+  scenarios: (CompareScenarioSpec | CompareScenarioRefSpec)[],
+  opts?: { id?: string }
 ): CompareScenarioGroupSpec {
   return {
     kind: 'scenario-group',
+    id: opts?.id,
     name: groupName,
     scenarios
   }
 }
 
-export function scenarioGroupRefSpec(groupName: string): CompareScenarioGroupRefSpec {
+export function scenarioGroupRefSpec(groupId: CompareScenarioGroupId): CompareScenarioGroupRefSpec {
   return {
     kind: 'scenario-group-ref',
-    groupName
+    groupId
   }
 }
 
@@ -155,5 +163,21 @@ export function viewGroupWithScenariosSpec(
     name: groupName,
     scenarios,
     graphs
+  }
+}
+
+//
+// TOP-LEVEL TYPES
+//
+
+export function compareSpecs(
+  scenarios: CompareScenarioSpec[],
+  scenarioGroups: CompareScenarioGroupSpec[] = [],
+  viewGroups: CompareViewGroupSpec[] = []
+): CompareSpecs {
+  return {
+    scenarios,
+    scenarioGroups,
+    viewGroups
   }
 }

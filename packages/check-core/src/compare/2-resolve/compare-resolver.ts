@@ -6,41 +6,124 @@ import type { InputPosition } from '../../_shared/scenario'
 import type { InputId, InputVar } from '../../bundle/var-types'
 
 import type {
+  CompareScenarioId,
   CompareScenarioInputPosition,
   CompareScenarioInputSpec,
-  CompareScenarioSpec
+  CompareScenarioSpec,
+  CompareScenarioSubtitle,
+  CompareScenarioTitle,
+  CompareSpecs
 } from '../_shared/compare-spec-types'
 import type {
+  CompareResolvedItems,
   CompareScenario,
+  CompareScenarioGroup,
   CompareScenarioInput,
   CompareScenarioInputState,
-  CompareScenarioWithAllInputs
+  CompareScenarioWithAllInputs,
+  CompareUnresolvedScenarioRef
 } from '../_shared/compare-resolved-types'
 
 import type { ModelInputs } from './model-inputs'
 
 /**
- * Return the list of scenarios that can be expanded from the given specs.
+ * Expand and resolve all the provided scenario and view specs.  This will inspect all the
+ * requested specs, resolve references to input variables and scenarios, and then return
+ * the metadata for the fully resolved scenarios and views.
  *
  * @param modelInputsL The model inputs for the "left" bundle being compared.
  * @param modelInputsR The model inputs for the "right" bundle being compared.
- * @param scenarioSpecs The scenario specs from a comparison definition.
+ * @param specs The scenario and view specs that were parsed from YAML/JSON definitions.
  * @param simplify If true, reduce the number of scenarios generated for a `matrix`
  * to make the tests run faster, otherwise expand the full set of scenarios.
  */
-export function expandScenarios(
+export function resolveSpecs(
   modelInputsL: ModelInputs,
   modelInputsR: ModelInputs,
-  scenarioSpecs: CompareScenarioSpec[],
+  specs: CompareSpecs,
   simplify: boolean
-): CompareScenario[] {
-  // Resolve the specs and convert to `CompareScenario` instances
+): CompareResolvedItems {
+  // Keep track of all resolved scenarios
   const resolvedScenarios: CompareScenario[] = []
-  for (const scenarioSpec of scenarioSpecs) {
-    resolvedScenarios.push(...resolveScenariosFromSpec(modelInputsL, modelInputsR, scenarioSpec, simplify))
+
+  // Keep track of resolved scenarios that include an ID
+  const resolvedScenariosById: Map<CompareScenarioId, CompareScenario> = new Map()
+
+  function addResolvedScenarios(scenarios: CompareScenario[]): void {
+    for (const resolvedScenario of scenarios) {
+      // Add the scenario to the general set
+      resolvedScenarios.push(resolvedScenario)
+
+      // Also add to the map of scenarios with an ID, if one is defined
+      if (resolvedScenario.id !== undefined) {
+        // See if ID is already used
+        // TODO: Mark this as an error in the interface rather than throwing
+        if (resolvedScenariosById.has(resolvedScenario.id)) {
+          throw new Error(`Multiple scenarios defined with the same id (${resolvedScenario.id})`)
+        }
+        resolvedScenariosById.set(resolvedScenario.id, resolvedScenario)
+      }
+    }
   }
-  return resolvedScenarios
+
+  // Resolve the top-level scenario specs and convert to `CompareScenario` instances
+  for (const scenarioSpec of specs.scenarios) {
+    addResolvedScenarios([...resolveScenariosFromSpec(modelInputsL, modelInputsR, scenarioSpec, simplify)])
+  }
+
+  // Resolve scenarios that are defined inside scenario groups and add them to the set of scenarios
+  for (const scenarioGroupSpec of specs.scenarioGroups) {
+    for (const scenarioItem of scenarioGroupSpec.scenarios) {
+      if (scenarioItem.kind !== 'scenario-ref') {
+        addResolvedScenarios([...resolveScenariosFromSpec(modelInputsL, modelInputsR, scenarioItem, simplify)])
+      }
+    }
+  }
+
+  // Now that all scenarios have been resolved, resolve the groups themselves.  Note that we do this as a
+  // secondary pass after resolving all top-level and nested scenario definitions so that groups can refer
+  // to scenarios that are defined elsewhere (order does not matter).
+  const resolvedScenarioGroups: CompareScenarioGroup[] = []
+  for (const scenarioGroupSpec of specs.scenarioGroups) {
+    const scenariosForGroup: (CompareScenario | CompareUnresolvedScenarioRef)[] = []
+    for (const scenarioItem of scenarioGroupSpec.scenarios) {
+      if (scenarioItem.kind === 'scenario-ref') {
+        // See if we have a scenario defined for this ID
+        const referencedScenario = resolvedScenariosById.get(scenarioItem.scenarioId)
+        if (referencedScenario) {
+          // Found it, add it to the group
+          scenariosForGroup.push(referencedScenario)
+        } else {
+          // Not found, add an unresolved ref item to the group
+          scenariosForGroup.push({
+            kind: 'unresolved-scenario-ref',
+            scenarioId: scenarioItem.scenarioId
+          })
+        }
+      } else {
+        // Add the fully resolved scenarios to this group
+        scenariosForGroup.push(...resolveScenariosFromSpec(modelInputsL, modelInputsR, scenarioItem, simplify))
+      }
+    }
+    resolvedScenarioGroups.push({
+      kind: 'scenario-group',
+      name: scenarioGroupSpec.name,
+      scenarios: scenariosForGroup
+    })
+  }
+
+  // TODO: viewGroups
+
+  return {
+    scenarios: resolvedScenarios,
+    scenarioGroups: resolvedScenarioGroups,
+    viewGroups: []
+  }
 }
+
+//
+// SCENARIOS
+//
 
 /**
  * Return one or more resolved `CompareScenario` instances for the given scenario spec.
@@ -59,7 +142,9 @@ function resolveScenariosFromSpec(
     case 'scenario-with-all-inputs': {
       // Create an "all inputs at <position>" scenario
       const position = inputPosition(scenarioSpec.position)
-      return [resolveScenarioWithAllInputsAtPosition(scenarioSpec.title, scenarioSpec.subtitle, position)]
+      return [
+        resolveScenarioWithAllInputsAtPosition(scenarioSpec.id, scenarioSpec.title, scenarioSpec.subtitle, position)
+      ]
     }
 
     case 'scenario-with-inputs': {
@@ -68,6 +153,7 @@ function resolveScenariosFromSpec(
         resolveScenarioForInputSpecs(
           modelInputsL,
           modelInputsR,
+          scenarioSpec.id,
           scenarioSpec.title,
           scenarioSpec.subtitle,
           scenarioSpec.inputs
@@ -91,7 +177,7 @@ function resolveScenarioMatrix(
   const resolvedScenarios: CompareScenario[] = []
 
   // Add an "all inputs at default" scenario
-  resolvedScenarios.push(resolveScenarioWithAllInputsAtPosition(undefined, undefined, 'at-default'))
+  resolvedScenarios.push(resolveScenarioWithAllInputsAtPosition(undefined, undefined, undefined, 'at-default'))
 
   if (!simplify) {
     // Get the union of all input IDs appearing on either side
@@ -115,10 +201,10 @@ function resolveScenarioMatrix(
         position: 'max'
       }
       resolvedScenarios.push(
-        resolveScenarioForInputSpecs(modelInputsL, modelInputsR, undefined, undefined, [inputAtMin])
+        resolveScenarioForInputSpecs(modelInputsL, modelInputsR, undefined, undefined, undefined, [inputAtMin])
       )
       resolvedScenarios.push(
-        resolveScenarioForInputSpecs(modelInputsL, modelInputsR, undefined, undefined, [inputAtMax])
+        resolveScenarioForInputSpecs(modelInputsL, modelInputsR, undefined, undefined, undefined, [inputAtMax])
       )
     }
   }
@@ -130,17 +216,20 @@ function resolveScenarioMatrix(
  * Return a resolved `CompareScenario` with all inputs set to the given position.
  */
 function resolveScenarioWithAllInputsAtPosition(
-  title: string | undefined,
-  subtitle: string | undefined,
+  id: CompareScenarioId | undefined,
+  title: CompareScenarioTitle | undefined,
+  subtitle: CompareScenarioSubtitle | undefined,
   position: InputPosition
 ): CompareScenarioWithAllInputs {
-  if (title === undefined) {
-    // No title was defined, so set one based on position (e.g., "at minimum")
-    title = position.replace('-', ' ')
-  }
+  // TODO: Default title?
+  // if (title === undefined) {
+  //   // No title was defined, so set one based on position (e.g., "at minimum")
+  //   title = position.replace('-', ' ')
+  // }
 
   return {
     kind: 'scenario-with-all-inputs',
+    id,
     title,
     subtitle,
     position
@@ -153,8 +242,9 @@ function resolveScenarioWithAllInputsAtPosition(
 function resolveScenarioForInputSpecs(
   modelInputsL: ModelInputs,
   modelInputsR: ModelInputs,
-  title: string | undefined,
-  subtitle: string | undefined,
+  id: CompareScenarioId | undefined,
+  title: CompareScenarioTitle | undefined,
+  subtitle: CompareScenarioSubtitle | undefined,
   inputSpecs: CompareScenarioInputSpec[]
 ): CompareScenario {
   // Convert the input specs to `CompareScenarioInput` instances
@@ -178,12 +268,13 @@ function resolveScenarioForInputSpecs(
     // } else {
     //     title: `PLACEHOLDER (scenario info not provided)`
     //   }
-    title = 'TODO: at position or value'
+    // title = 'TODO: at position or value'
   }
 
   // Create a `CompareScenario` with the resolved inputs
   return {
     kind: 'scenario-with-inputs',
+    id,
     title,
     subtitle,
     resolvedInputs
@@ -309,3 +400,7 @@ function inputValueAtPosition(inputVar: InputVar, position: InputPosition): numb
       assertNever(position)
   }
 }
+
+//
+// SCENARIO GROUPS
+//

@@ -12,7 +12,7 @@ import type {
   CompareScenarioInputSpec,
   CompareScenarioRefSpec,
   CompareScenarioSpec,
-  CompareSpec,
+  CompareSpecs,
   CompareViewGraphsSpec,
   CompareViewGroupSpec,
   CompareViewSpec
@@ -37,6 +37,8 @@ import jsonSchema from './compare.schema'
 // SCENARIOS
 //
 
+type ParsedScenarioId = string
+
 type ParsedScenarioTitle = string
 type ParsedScenarioSubtitle = string
 
@@ -59,6 +61,7 @@ interface ParsedScenarioInput {
  * can set multiple inputs to particular values/positions.
  */
 interface ParsedScenario {
+  id?: ParsedScenarioId
   title?: ParsedScenarioTitle
   subtitle?: ParsedScenarioSubtitle
   preset?: 'matrix'
@@ -82,6 +85,8 @@ interface ParsedScenarioRef {
 // SCENARIO GROUPS
 //
 
+type ParsedScenarioGroupId = string
+
 type ParsedScenarioGroupName = string
 
 type ParsedScenarioGroupScenariosItem = ParsedScenarioArrayItem | ParsedScenarioRef
@@ -91,6 +96,7 @@ type ParsedScenarioGroupScenariosItem = ParsedScenarioArrayItem | ParsedScenario
  * can later be referenced by group name in a view definition.
  */
 interface ParsedScenarioGroup {
+  id?: ParsedScenarioGroupId
   name: ParsedScenarioGroupName
   scenarios: ParsedScenarioGroupScenariosItem[]
 }
@@ -102,7 +108,7 @@ interface ParsedScenarioGroupArrayItem {
 
 /** A reference to a scenario group definition. */
 interface ParsedScenarioGroupRef {
-  scenario_group_ref: ParsedScenarioGroupName
+  scenario_group_ref: ParsedScenarioGroupId
 }
 
 //
@@ -166,7 +172,7 @@ type ParsedTopLevelDefItem = ParsedScenarioArrayItem | ParsedScenarioGroupArrayI
  *
  * @param yamlStrings The YAML formatted strings to parse.
  */
-export function parseComparisonScenariosYaml(yamlStrings: string[]): Result<CompareSpec, Error> {
+export function parseComparisonScenariosYaml(yamlStrings: string[]): Result<CompareSpecs, Error> {
   const scenarios: CompareScenarioSpec[] = []
   const scenarioGroups: CompareScenarioGroupSpec[] = []
   const viewGroups: CompareViewGroupSpec[] = []
@@ -246,6 +252,7 @@ function scenarioSpecFromParsed(parsedScenario: ParsedScenario): CompareScenario
     }
     return {
       kind: 'scenario-with-inputs',
+      id: parsedScenario.id,
       title: parsedScenario.title,
       subtitle: parsedScenario.subtitle,
       inputs: inputSpecs
@@ -256,6 +263,7 @@ function scenarioSpecFromParsed(parsedScenario: ParsedScenario): CompareScenario
     // Create an "all inputs at <position>" scenario
     return {
       kind: 'scenario-with-all-inputs',
+      id: parsedScenario.id,
       title: parsedScenario.title,
       subtitle: parsedScenario.subtitle,
       position: parsedScenario.at as CompareScenarioInputPosition
@@ -300,7 +308,7 @@ function scenarioGroupSpecFromParsed(parsedScenarioGroup: ParsedScenarioGroup): 
       if ('scenario_ref' in parsedScenarioOrRef) {
         return {
           kind: 'scenario-ref',
-          scenarioName: parsedScenarioOrRef.scenario_ref
+          scenarioId: parsedScenarioOrRef.scenario_ref
         }
       } else {
         return scenarioSpecFromParsed(parsedScenarioOrRef.scenario as ParsedScenario)
@@ -309,6 +317,7 @@ function scenarioGroupSpecFromParsed(parsedScenarioGroup: ParsedScenarioGroup): 
   )
   return {
     kind: 'scenario-group',
+    id: parsedScenarioGroup.id,
     name: parsedScenarioGroup.name,
     scenarios: scenarioSpecs
   }
@@ -324,7 +333,7 @@ function viewSpecFromParsed(parsedView: ParsedView): CompareViewSpec {
     name: parsedView.name,
     scenario: {
       kind: 'scenario-ref',
-      scenarioName: parsedView.scenario_ref
+      scenarioId: parsedView.scenario_ref
     },
     graphs: viewGraphsSpecFromParsed(parsedView.graphs)
   }
@@ -363,12 +372,12 @@ function viewGroupSpecFromParsed(parsedViewGroup: ParsedViewGroup): CompareViewG
         if ('scenario_ref' in parsedScenarioOrGroupRef) {
           return {
             kind: 'scenario-ref',
-            scenarioName: parsedScenarioOrGroupRef.scenario_ref
+            scenarioId: parsedScenarioOrGroupRef.scenario_ref
           }
         } else if ('scenario_group_ref' in parsedScenarioOrGroupRef) {
           return {
             kind: 'scenario-group-ref',
-            groupName: parsedScenarioOrGroupRef.scenario_group_ref
+            groupId: parsedScenarioOrGroupRef.scenario_group_ref
           }
         } else {
           // Internal error (this should have already been rejected by the validator)

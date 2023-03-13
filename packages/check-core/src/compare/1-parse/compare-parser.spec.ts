@@ -17,7 +17,7 @@ import {
   viewGroupWithScenariosSpec,
   viewGroupWithViewsSpec,
   viewSpec
-} from './_mocks/mock-compare-spec'
+} from '../_shared/_mocks/mock-spec-types'
 
 describe('parseComparisonScenariosYaml', () => {
   it('should reject malformed yaml', () => {
@@ -40,6 +40,7 @@ describe('parseComparisonScenariosYaml', () => {
     preset: matrix
 
 - scenario:
+    id: S0
     title: S0
     subtitle: subtitle
     with_inputs: all
@@ -122,7 +123,7 @@ describe('parseComparisonScenariosYaml', () => {
 
     expect(compareSpec.scenarios).toEqual([
       scenarioMatrixSpec(),
-      scenarioWithAllInputsSpec('default', { title: 'S0', subtitle: 'subtitle' }),
+      scenarioWithAllInputsSpec('default', { id: 'S0', title: 'S0', subtitle: 'subtitle' }),
       scenarioWithInputsSpec([inputAtPositionSpec('Input1', 'min')], { title: 'S1', subtitle: 'subtitle' }),
       scenarioWithInputsSpec([inputAtValueSpec('Input1', 5)], { title: 'S2' }),
       scenarioWithInputsSpec([inputAtPositionSpec('Input1', 'max'), inputAtValueSpec('Input2', 5)], { title: 'S3' })

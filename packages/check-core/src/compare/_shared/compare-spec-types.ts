@@ -4,7 +4,10 @@
 // SCENARIOS
 //
 
-export type CompareScenarioName = string
+export type CompareScenarioId = string
+
+export type CompareScenarioTitle = string
+export type CompareScenarioSubtitle = string
 
 export type CompareScenarioInputName = string
 
@@ -43,10 +46,12 @@ export type CompareScenarioInputSpec = CompareScenarioInputAtPositionSpec | Comp
  */
 export interface CompareScenarioWithInputsSpec {
   kind: 'scenario-with-inputs'
+  /** The unique identifier for the scenario. */
+  id?: CompareScenarioId
   /** The title of the scenario. */
-  title?: string
+  title?: CompareScenarioTitle
   /** The subtitle of the scenario. */
-  subtitle?: string
+  subtitle?: CompareScenarioSubtitle
   /** The input settings for this scenario. */
   inputs: CompareScenarioInputSpec[]
 }
@@ -56,10 +61,12 @@ export interface CompareScenarioWithInputsSpec {
  */
 export interface CompareScenarioWithAllInputsSpec {
   kind: 'scenario-with-all-inputs'
+  /** The unique identifier for the scenario. */
+  id?: CompareScenarioId
   /** The title of the scenario. */
-  title?: string
+  title?: CompareScenarioTitle
   /** The subtitle of the scenario. */
-  subtitle?: string
+  subtitle?: CompareScenarioSubtitle
   /** The position that will be used for all available inputs. */
   position: CompareScenarioInputPosition
 }
@@ -87,13 +94,15 @@ export type CompareScenarioSpec =
 /** A reference to a scenario definition. */
 export interface CompareScenarioRefSpec {
   kind: 'scenario-ref'
-  /** The name of the scenario that is referenced. */
-  scenarioName: CompareScenarioName
+  /** The ID of the scenario that is referenced. */
+  scenarioId: CompareScenarioId
 }
 
 //
 // SCENARIO GROUPS
 //
+
+export type CompareScenarioGroupId = string
 
 export type CompareScenarioGroupName = string
 
@@ -103,6 +112,8 @@ export type CompareScenarioGroupName = string
  */
 export interface CompareScenarioGroupSpec {
   kind: 'scenario-group'
+  /** The unique identifier for the group. */
+  id?: CompareScenarioId
   /** The name of the group. */
   name: CompareScenarioGroupName
   /** The scenarios that are included in this group. */
@@ -112,8 +123,8 @@ export interface CompareScenarioGroupSpec {
 /** A reference to a scenario group definition. */
 export interface CompareScenarioGroupRefSpec {
   kind: 'scenario-group-ref'
-  /** The name of the scenario group that is referenced. */
-  groupName: CompareScenarioGroupName
+  /** The ID of the scenario group that is referenced. */
+  groupId: CompareScenarioGroupId
 }
 
 //
@@ -205,7 +216,7 @@ export type CompareViewGroupSpec = CompareViewGroupWithViewsSpec | CompareViewGr
  * Contains the scenario and view definitions from one or more sources (JSON/YAML files or manually
  * defined specs).
  */
-export interface CompareSpec {
+export interface CompareSpecs {
   /** The requested scenarios. */
   scenarios: CompareScenarioSpec[]
   /** The requested scenario groups. */
