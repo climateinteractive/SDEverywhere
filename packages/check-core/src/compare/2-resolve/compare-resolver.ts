@@ -15,13 +15,13 @@ import type {
   CompareScenarioSubtitle,
   CompareScenarioTitle,
   CompareSpecs,
+  CompareSpecsSource,
   CompareViewGraphId,
   CompareViewGraphsSpec,
   CompareViewGroupSpec,
   CompareViewTitle
 } from '../_shared/compare-spec-types'
 import type {
-  CompareResolvedItems,
   CompareScenario,
   CompareScenarioGroup,
   CompareScenarioInput,
@@ -33,36 +33,85 @@ import type {
   CompareViewGroup
 } from '../_shared/compare-resolved-types'
 
-import type { ModelInputs } from './model-inputs'
+import type { ModelInputs } from '../../bundle/model-inputs'
+import { parseCompareSpecs } from '../1-parse/compare-parser'
+
+export interface CompareResolvedDefs {
+  /** The set of resolved scenarios. */
+  scenarios: CompareScenario[]
+  /** The set of resolved scenario groups. */
+  scenarioGroups: CompareScenarioGroup[]
+  /** The set of resolved view groups. */
+  viewGroups: CompareViewGroup[]
+}
+
+/**
+ * Expand and resolve all the scenario and view specs in the provided sources, which can
+ * be a mix of YAML, JSON, and object specs.
+ *
+ * @param modelInputsL The model inputs for the "left" bundle being compared.
+ * @param modelInputsR The model inputs for the "right" bundle being compared.
+ * @param specSources The scenario and view spec sources.
+ */
+export function resolveCompareSpecsFromSources(
+  modelInputsL: ModelInputs,
+  modelInputsR: ModelInputs,
+  specSources: (CompareSpecs | CompareSpecsSource)[]
+): CompareResolvedDefs {
+  const combinedSpecs: CompareSpecs = {
+    scenarios: [],
+    scenarioGroups: [],
+    viewGroups: []
+  }
+
+  for (const specSource of specSources) {
+    let specs: CompareSpecs
+    if ('kind' in specSource) {
+      const parseResult = parseCompareSpecs(specSource)
+      if (parseResult.isOk()) {
+        specs = parseResult.value
+      } else {
+        // TODO: Fail fast instead of logging errors?
+        const filenamePart = specSource.filename ? ` in ${specSource.filename}` : ''
+        console.error(`ERROR: Failed to parse comparison spec${filenamePart}, skipping`)
+        continue
+      }
+    } else {
+      specs = specSource
+    }
+    combinedSpecs.scenarios.push(...specs.scenarios)
+    combinedSpecs.scenarioGroups.push(...specs.scenarioGroups)
+    combinedSpecs.viewGroups.push(...specs.viewGroups)
+  }
+
+  return resolveCompareSpecs(modelInputsL, modelInputsR, combinedSpecs)
+}
 
 /**
  * Expand and resolve all the provided scenario and view specs.  This will inspect all the
  * requested specs, resolve references to input variables and scenarios, and then return
- * the metadata for the fully resolved scenarios and views.
+ * the definitions for the fully resolved scenarios and views.
  *
  * @param modelInputsL The model inputs for the "left" bundle being compared.
  * @param modelInputsR The model inputs for the "right" bundle being compared.
  * @param specs The scenario and view specs that were parsed from YAML/JSON definitions.
- * @param simplify If true, reduce the number of scenarios generated for a `matrix`
- * to make the tests run faster, otherwise expand the full set of scenarios.
  */
-export function resolveSpecs(
+export function resolveCompareSpecs(
   modelInputsL: ModelInputs,
   modelInputsR: ModelInputs,
-  specs: CompareSpecs,
-  simplify: boolean
-): CompareResolvedItems {
+  specs: CompareSpecs
+): CompareResolvedDefs {
   // Resolve the top-level scenario specs and convert to `CompareScenario` instances
   const resolvedScenarios = new ResolvedScenarios()
   for (const scenarioSpec of specs.scenarios) {
-    resolvedScenarios.add(resolveScenariosFromSpec(modelInputsL, modelInputsR, scenarioSpec, simplify))
+    resolvedScenarios.add(resolveScenariosFromSpec(modelInputsL, modelInputsR, scenarioSpec))
   }
 
   // Resolve scenarios that are defined inside scenario groups and add them to the set of scenarios
   for (const scenarioGroupSpec of specs.scenarioGroups) {
     for (const scenarioItem of scenarioGroupSpec.scenarios) {
       if (scenarioItem.kind !== 'scenario-ref') {
-        resolvedScenarios.add(resolveScenariosFromSpec(modelInputsL, modelInputsR, scenarioItem, simplify))
+        resolvedScenarios.add(resolveScenariosFromSpec(modelInputsL, modelInputsR, scenarioItem))
       }
     }
   }
@@ -89,7 +138,7 @@ export function resolveSpecs(
         }
       } else {
         // Add the fully resolved scenarios to this group
-        scenariosForGroup.push(...resolveScenariosFromSpec(modelInputsL, modelInputsR, scenarioItem, simplify))
+        scenariosForGroup.push(...resolveScenariosFromSpec(modelInputsL, modelInputsR, scenarioItem))
       }
     }
     resolvedScenarioGroups.add({
@@ -157,13 +206,12 @@ class ResolvedScenarios {
 function resolveScenariosFromSpec(
   modelInputsL: ModelInputs,
   modelInputsR: ModelInputs,
-  scenarioSpec: CompareScenarioSpec,
-  simplify: boolean
+  scenarioSpec: CompareScenarioSpec
 ): CompareScenario[] {
   switch (scenarioSpec.kind) {
     case 'scenario-matrix':
       // Create a matrix of scenarios
-      return resolveScenarioMatrix(modelInputsL, modelInputsR, simplify)
+      return resolveScenarioMatrix(modelInputsL, modelInputsR)
 
     case 'scenario-with-all-inputs': {
       // Create an "all inputs at <position>" scenario
@@ -195,44 +243,38 @@ function resolveScenariosFromSpec(
 /**
  * Return a matrix of scenarios that covers all inputs for the given model.
  */
-function resolveScenarioMatrix(
-  modelInputsL: ModelInputs,
-  modelInputsR: ModelInputs,
-  simplify: boolean
-): CompareScenario[] {
+function resolveScenarioMatrix(modelInputsL: ModelInputs, modelInputsR: ModelInputs): CompareScenario[] {
   const resolvedScenarios: CompareScenario[] = []
 
   // Add an "all inputs at default" scenario
   resolvedScenarios.push(resolveScenarioWithAllInputsAtPosition(undefined, undefined, undefined, 'at-default'))
 
-  if (!simplify) {
-    // Get the union of all input IDs appearing on either side
-    const inputIdAliases: Set<InputId> = new Set()
-    modelInputsL.getAllInputIdAliases().forEach(alias => inputIdAliases.add(alias))
-    modelInputsR.getAllInputIdAliases().forEach(alias => inputIdAliases.add(alias))
+  // Get the union of all input IDs appearing on either side
+  const inputIdAliases: Set<InputId> = new Set()
+  modelInputsL.getAllInputIdAliases().forEach(alias => inputIdAliases.add(alias))
+  modelInputsR.getAllInputIdAliases().forEach(alias => inputIdAliases.add(alias))
 
-    // Create two scenarios for each input, one with the input at its minimum, and one
-    // with the input at its maximum.  If the input only exists on one side, we still
-    // create a scenario for it, but it will be flagged in the UI to make it clear
-    // that the input configuration has changed.
-    for (const inputIdAlias of inputIdAliases) {
-      const inputAtMin: CompareScenarioInputSpec = {
-        kind: 'input-at-position',
-        inputName: inputIdAlias,
-        position: 'min'
-      }
-      const inputAtMax: CompareScenarioInputSpec = {
-        kind: 'input-at-position',
-        inputName: inputIdAlias,
-        position: 'max'
-      }
-      resolvedScenarios.push(
-        resolveScenarioForInputSpecs(modelInputsL, modelInputsR, undefined, undefined, undefined, [inputAtMin])
-      )
-      resolvedScenarios.push(
-        resolveScenarioForInputSpecs(modelInputsL, modelInputsR, undefined, undefined, undefined, [inputAtMax])
-      )
+  // Create two scenarios for each input, one with the input at its minimum, and one
+  // with the input at its maximum.  If the input only exists on one side, we still
+  // create a scenario for it, but it will be flagged in the UI to make it clear
+  // that the input configuration has changed.
+  for (const inputIdAlias of inputIdAliases) {
+    const inputAtMin: CompareScenarioInputSpec = {
+      kind: 'input-at-position',
+      inputName: inputIdAlias,
+      position: 'min'
     }
+    const inputAtMax: CompareScenarioInputSpec = {
+      kind: 'input-at-position',
+      inputName: inputIdAlias,
+      position: 'max'
+    }
+    resolvedScenarios.push(
+      resolveScenarioForInputSpecs(modelInputsL, modelInputsR, undefined, undefined, undefined, [inputAtMin])
+    )
+    resolvedScenarios.push(
+      resolveScenarioForInputSpecs(modelInputsL, modelInputsR, undefined, undefined, undefined, [inputAtMax])
+    )
   }
 
   return resolvedScenarios

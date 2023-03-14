@@ -2,7 +2,8 @@
 
 import type { LoadedBundle, NamedBundle } from '../../bundle/bundle-types'
 import type { CompareDatasets } from '../compare-datasets'
-// import type { CompareScenarios } from './compare-scenarios'
+import type { CompareScenario, CompareViewGroup } from '../_shared/compare-resolved-types'
+import type { CompareSpecs, CompareSpecsSource } from '../_shared/compare-spec-types'
 
 export interface CompareOptions {
   /** The left-side ("baseline") bundle being compared. */
@@ -12,13 +13,11 @@ export interface CompareOptions {
    * buckets of 0%, 0-1%, 1-5%, 5-10%, and >10%.
    */
   thresholds: number[]
-  /** The set of input scenarios that will be compared. */
-  // scenarios?: CompareScenarios
   /**
-   * The strings containing comparison scenario definitions in YAML format.  If
-   * defined, these will be combined with the `scenarios` property.
+   * The requested comparison scenario and view specifications.  These can be
+   * specified in YAML or JSON files, or using `Spec` objects.
    */
-  scenariosYaml?: string[]
+  specs: (CompareSpecs | CompareSpecsSource)[]
   /** The set of datasets that will be compared. */
   datasets: CompareDatasets
 }
@@ -33,10 +32,10 @@ export interface CompareConfig {
    * buckets of 0%, 0-1%, 1-5%, 5-10%, and >10%.
    */
   thresholds: number[]
-  /** The resolved set of input scenarios that will be compared. */
-  // scenarios: CompareScenarios
-  // TODO: Include the resolved scenarios here
-  scenariosYaml: string[]
+  /** The set of resolved scenarios. */
+  scenarios: CompareScenario[]
+  /** The set of resolved view groups. */
+  viewGroups: CompareViewGroup[]
   /** The set of datasets that will be compared. */
   datasets: CompareDatasets
 }

@@ -36,8 +36,8 @@ import {
   viewGroup
 } from '../_shared/_mocks/mock-resolved-types'
 
-import { resolveSpecs } from './compare-resolver'
-import { ModelInputs } from './model-inputs'
+import { resolveCompareSpecs } from './compare-resolver'
+import { ModelInputs } from '../../bundle/model-inputs'
 import type { CompareSpecs } from '../_shared/compare-spec-types'
 
 function mockModelSpec(kind: 'L' | 'R'): ModelSpec {
@@ -90,7 +90,7 @@ function mockModelSpec(kind: 'L' | 'R'): ModelSpec {
   }
 }
 
-describe('resolveSpecs', () => {
+describe('resolveCompareSpecs', () => {
   const modelInputsL = new ModelInputs(mockModelSpec('L'))
   const modelInputsR = new ModelInputs(mockModelSpec('R'))
 
@@ -118,7 +118,7 @@ describe('resolveSpecs', () => {
         scenarioWithInputsSpec([inputAtPositionSpec('ivarX', 'min')])
       ])
 
-      const resolved = resolveSpecs(modelInputsL, modelInputsR, specs, false)
+      const resolved = resolveCompareSpecs(modelInputsL, modelInputsR, specs)
       expect(resolved).toEqual({
         scenarios: [
           scenarioWithInput('ivarA', 'at-default', lVar('IVarA'), rVar('IVarA')),
@@ -147,7 +147,7 @@ describe('resolveSpecs', () => {
         scenarioWithInputsSpec([inputAtValueSpec('id 2', 90)])
       ])
 
-      const resolved = resolveSpecs(modelInputsL, modelInputsR, specs, false)
+      const resolved = resolveCompareSpecs(modelInputsL, modelInputsR, specs)
       expect(resolved).toEqual({
         scenarios: [
           scenarioWithInput('ivarA', 20, lVar('IVarA'), rVar('IVarA')),
@@ -178,7 +178,7 @@ describe('resolveSpecs', () => {
     //     valueSetting('_i2', 40),
     //     positionSetting('_i3', 'at-maximum')
     //   ])
-    //   expect(resolveSpecs(modelSpec, specs, false)).toEqual([
+    //   expect(resolveCompareSpecs(modelSpec, specs)).toEqual([
     //     multipleInputs(scenario, undefined, [inputDesc(i1, 20), inputDesc(i2, 40), inputDesc(i3, 'at-maximum')])
     //   ])
     // })
@@ -190,7 +190,7 @@ describe('resolveSpecs', () => {
         scenarioWithAllInputsSpec('max')
       ])
 
-      const resolved = resolveSpecs(modelInputsL, modelInputsR, specs, false)
+      const resolved = resolveCompareSpecs(modelInputsL, modelInputsR, specs)
       expect(resolved).toEqual({
         scenarios: [allAtPos('at-default'), allAtPos('at-minimum'), allAtPos('at-maximum')],
         scenarioGroups: [],
@@ -217,7 +217,7 @@ describe('resolveSpecs', () => {
     //     positionSetting('_i3', 'at-maximum')
     //   ])
 
-    //   expect(resolveSpecs(modelSpec, specs, false)).toEqual([
+    //   expect(resolveCompareSpecs(modelSpec, specs)).toEqual([
     //     multipleInputs(scenario1, 'input group 1', [inputDesc(i1, 'at-minimum'), inputDesc(i2, 'at-minimum')]),
     //     multipleInputs(scenario2, 'Input Group 2', [inputDesc(i2, 'at-maximum'), inputDesc(i3, 'at-maximum')]),
     //     allAtPos('at-maximum')
@@ -227,7 +227,7 @@ describe('resolveSpecs', () => {
     // it('should expand "with_inputs_in: group" to error when group is unknown', () => {
     //   const specs: CompareScenarioSpec[] = [{ with_inputs_in: 'Unknown Group', at: 'min' }]
 
-    //   expect(resolveSpecs(modelSpec, specs, false)).toEqual([
+    //   expect(resolveCompareSpecs(modelSpec, specs)).toEqual([
     //     {
     //       inputDescs: [],
     //       error: {
@@ -241,7 +241,7 @@ describe('resolveSpecs', () => {
     // it('should expand "with_inputs_in: group" to error when group is empty', () => {
     //   const specs: CompareScenarioSpec[] = [{ with_inputs_in: 'input group 3', at: 'min' }]
 
-    //   expect(resolveSpecs(modelSpec, specs, false)).toEqual([
+    //   expect(resolveCompareSpecs(modelSpec, specs)).toEqual([
     //     {
     //       inputDescs: [],
     //       error: {
@@ -264,7 +264,7 @@ describe('resolveSpecs', () => {
 
       const specs = compareSpecs([scenarioMatrixSpec()])
 
-      const resolved = resolveSpecs(modelInputsL, modelInputsR, specs, false)
+      const resolved = resolveCompareSpecs(modelInputsL, modelInputsR, specs)
       expect(resolved).toEqual({
         scenarios: [
           allAtPos('at-default'),
@@ -277,17 +277,6 @@ describe('resolveSpecs', () => {
           scenario(4, 'min', undefined, 'IVarD'),
           scenario(4, 'max', undefined, 'IVarD')
         ],
-        scenarioGroups: [],
-        viewGroups: []
-      })
-    })
-
-    it('should expand "preset: matrix" spec into a smaller set when simplify is true', () => {
-      const specs = compareSpecs([scenarioMatrixSpec()])
-
-      const resolved = resolveSpecs(modelInputsL, modelInputsR, specs, true)
-      expect(resolved).toEqual({
-        scenarios: [allAtPos('at-default')],
         scenarioGroups: [],
         viewGroups: []
       })
@@ -310,7 +299,7 @@ describe('resolveSpecs', () => {
         ]
       )
 
-      const resolved = resolveSpecs(modelInputsL, modelInputsR, specs, false)
+      const resolved = resolveCompareSpecs(modelInputsL, modelInputsR, specs)
       expect(resolved).toEqual({
         scenarios: [
           scenarioWithInput('id 1', 'at-maximum', lVar('IVarA'), rVar('IVarA'), { id: 'id_1_at_max' }),
@@ -332,7 +321,7 @@ describe('resolveSpecs', () => {
         [scenarioGroupSpec('Group with invalid ref', [scenarioRefSpec('unknown')])]
       )
 
-      const resolved = resolveSpecs(modelInputsL, modelInputsR, specs, false)
+      const resolved = resolveCompareSpecs(modelInputsL, modelInputsR, specs)
       expect(resolved).toEqual({
         scenarios: [scenarioWithInput('id 1', 'at-maximum', lVar('IVarA'), rVar('IVarA'))],
         scenarioGroups: [scenarioGroup('Group with invalid ref', [unresolvedScenarioRef('unknown')])],
@@ -365,7 +354,7 @@ describe('resolveSpecs', () => {
         ]
       }
 
-      const resolved = resolveSpecs(modelInputsL, modelInputsR, specs, false)
+      const resolved = resolveCompareSpecs(modelInputsL, modelInputsR, specs)
       expect(resolved).toEqual({
         scenarios: [
           scenarioWithInput('id 1', 'at-maximum', lVar('IVarA'), rVar('IVarA'), { id: 'id_1_at_max' }),
@@ -423,7 +412,7 @@ describe('resolveSpecs', () => {
         ]
       }
 
-      const resolved = resolveSpecs(modelInputsL, modelInputsR, specs, false)
+      const resolved = resolveCompareSpecs(modelInputsL, modelInputsR, specs)
       expect(resolved).toEqual({
         scenarios: [
           scenarioWithInput('id 1', 'at-maximum', lVar('IVarA'), rVar('IVarA'), {
@@ -493,7 +482,7 @@ describe('resolveSpecs', () => {
         ]
       }
 
-      const resolved = resolveSpecs(modelInputsL, modelInputsR, specs, false)
+      const resolved = resolveCompareSpecs(modelInputsL, modelInputsR, specs)
       expect(resolved).toEqual({
         scenarios: [],
         scenarioGroups: [],
@@ -510,7 +499,7 @@ describe('resolveSpecs', () => {
         ]
       }
 
-      const resolved = resolveSpecs(modelInputsL, modelInputsR, specs, false)
+      const resolved = resolveCompareSpecs(modelInputsL, modelInputsR, specs)
       expect(resolved).toEqual({
         scenarios: [],
         scenarioGroups: [],
@@ -535,7 +524,7 @@ describe('resolveSpecs', () => {
         ]
       }
 
-      const resolved = resolveSpecs(modelInputsL, modelInputsR, specs, false)
+      const resolved = resolveCompareSpecs(modelInputsL, modelInputsR, specs)
       expect(resolved).toEqual({
         scenarios: [],
         scenarioGroups: [

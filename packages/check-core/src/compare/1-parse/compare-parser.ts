@@ -1,6 +1,7 @@
 // Copyright (c) 2023 Climate Interactive / New Venture Fund
 
 import Ajv from 'ajv'
+import assertNever from 'assert-never'
 import type { Result } from 'neverthrow'
 import { err, ok } from 'neverthrow'
 import yaml from 'yaml'
@@ -13,6 +14,7 @@ import type {
   CompareScenarioRefSpec,
   CompareScenarioSpec,
   CompareSpecs,
+  CompareSpecsSource,
   CompareViewGraphsSpec,
   CompareViewGroupSpec,
   CompareViewSpec
@@ -168,11 +170,11 @@ interface ParsedViewGroupArrayItem {
 type ParsedTopLevelDefItem = ParsedScenarioArrayItem | ParsedScenarioGroupArrayItem | ParsedViewGroupArrayItem
 
 /**
- * Parse the comparison test definitions in the given YAML strings.
+ * Parse the comparison test definitions in the given JSON or YAML strings.
  *
- * @param yamlStrings The YAML formatted strings to parse.
+ * @param specSource The JSON or YAML formatted string to parse.
  */
-export function parseComparisonScenariosYaml(yamlStrings: string[]): Result<CompareSpecs, Error> {
+export function parseCompareSpecs(specSource: CompareSpecsSource): Result<CompareSpecs, Error> {
   const scenarios: CompareScenarioSpec[] = []
   const scenarioGroups: CompareScenarioGroupSpec[] = []
   const viewGroups: CompareViewGroupSpec[] = []
@@ -184,29 +186,38 @@ export function parseComparisonScenariosYaml(yamlStrings: string[]): Result<Comp
   // const schema: JSONSchemaType<CompareSpec> = jsonSchema
   const validate = ajv.compile<ParsedTopLevelDefItem[]>(jsonSchema)
 
-  // Parse the YAML strings
-  for (const yamlString of yamlStrings) {
-    const parsed = yaml.parse(yamlString)
+  // Parse the JSON or YAML string
+  let parsed: unknown
+  switch (specSource.kind) {
+    case 'json':
+      parsed = JSON.parse(specSource.content)
+      break
+    case 'yaml':
+      parsed = yaml.parse(specSource.content)
+      break
+    default:
+      assertNever(specSource.kind)
+  }
 
-    if (validate(parsed)) {
-      for (const specItem of parsed) {
-        if ('scenario' in specItem) {
-          scenarios.push(scenarioSpecFromParsed(specItem.scenario))
-        } else if ('scenario_group' in specItem) {
-          scenarioGroups.push(scenarioGroupSpecFromParsed(specItem.scenario_group))
-        } else if ('view_group' in specItem) {
-          viewGroups.push(viewGroupSpecFromParsed(specItem.view_group))
-        }
+  // Validate and convert the parsed objects to specs
+  if (validate(parsed)) {
+    for (const specItem of parsed) {
+      if ('scenario' in specItem) {
+        scenarios.push(scenarioSpecFromParsed(specItem.scenario))
+      } else if ('scenario_group' in specItem) {
+        scenarioGroups.push(scenarioGroupSpecFromParsed(specItem.scenario_group))
+      } else if ('view_group' in specItem) {
+        viewGroups.push(viewGroupSpecFromParsed(specItem.view_group))
       }
-    } else {
-      let msg = 'Failed to parse YAML comparison definitions'
-      for (const error of validate.errors || []) {
-        if (error.message) {
-          msg += `\n${error.message}`
-        }
-      }
-      return err(new Error(msg))
     }
+  } else {
+    let msg = 'Failed to parse YAML comparison definitions'
+    for (const error of validate.errors || []) {
+      if (error.message) {
+        msg += `\n${error.message}`
+      }
+    }
+    return err(new Error(msg))
   }
 
   return ok({

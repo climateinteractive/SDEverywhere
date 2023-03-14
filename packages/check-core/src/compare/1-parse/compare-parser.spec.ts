@@ -2,7 +2,7 @@
 
 import { describe, expect, it } from 'vitest'
 
-import { parseComparisonScenariosYaml } from './compare-parser'
+import { parseCompareSpecs } from './compare-parser'
 import {
   graphsArraySpec,
   graphsPresetSpec,
@@ -19,7 +19,7 @@ import {
   viewSpec
 } from '../_shared/_mocks/mock-spec-types'
 
-describe('parseComparisonScenariosYaml', () => {
+describe('parseCompareSpecs', () => {
   it('should reject malformed yaml', () => {
     const yaml = `
 - describe: Group1
@@ -30,7 +30,7 @@ describe('parseComparisonScenariosYaml', () => {
       predicates:
         - gt: 0
 `
-    const result = parseComparisonScenariosYaml([yaml])
+    const result = parseCompareSpecs({ kind: 'yaml', content: yaml })
     expect(result.isOk()).toBe(false)
   })
 
@@ -114,7 +114,7 @@ describe('parseComparisonScenariosYaml', () => {
       - '87'
 `
 
-    const result = parseComparisonScenariosYaml([yaml])
+    const result = parseCompareSpecs({ kind: 'yaml', content: yaml })
     expect(result.isOk()).toBe(true)
     if (!result.isOk()) {
       return
@@ -153,6 +153,49 @@ describe('parseComparisonScenariosYaml', () => {
         [scenarioRefSpec('S0'), scenarioRefSpec('S1'), scenarioGroupRefSpec('G1')],
         graphsArraySpec(['86', '87'])
       )
+    ])
+  })
+
+  it('should reject malformed json', () => {
+    const json = `\
+{
+  "scenario": 1
+}`
+
+    const result = parseCompareSpecs({ kind: 'json', content: json })
+    expect(result.isOk()).toBe(false)
+  })
+
+  it('should accept valid json', () => {
+    const json = `\
+[
+  {
+    "scenario": {
+      "preset": "matrix"
+    }
+  },
+  {
+    "scenario": {
+      "id": "S0",
+      "title": "S0",
+      "subtitle": "subtitle",
+      "with_inputs": "all",
+      "at": "default"
+    }
+  }
+]`
+
+    const result = parseCompareSpecs({ kind: 'json', content: json })
+    expect(result.isOk()).toBe(true)
+    if (!result.isOk()) {
+      return
+    }
+
+    const compareSpec = result.value
+
+    expect(compareSpec.scenarios).toEqual([
+      scenarioMatrixSpec(),
+      scenarioWithAllInputsSpec('default', { id: 'S0', title: 'S0', subtitle: 'subtitle' })
     ])
   })
 })

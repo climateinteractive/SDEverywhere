@@ -3,11 +3,12 @@
 import type { Scenario } from '../_shared/scenario'
 import type { DatasetKey, DatasetMap } from '../_shared/types'
 import type { BundleModel, LoadedBundle, NamedBundle } from '../bundle/bundle-types'
+import { ModelInputs } from '../bundle/model-inputs'
 
 import type { CheckConfig } from '../check/check-config'
 
 import type { CompareConfig } from '../compare'
-// import { resolveCompareScenarios } from '../compare/compare-resolve-scenarios'
+import { resolveCompareSpecsFromSources } from '../compare'
 
 import type { Config, ConfigOptions } from './config-types'
 import { synchronizedBundleModel } from './synchronized-model'
@@ -76,22 +77,18 @@ export async function createConfig(options: ConfigOptions): Promise<Config> {
       model: adjBundleModelR
     }
 
-    // Resolve and combine the provided comparison scenario configuration
-    // const compareScenarios = resolveCompareScenarios(
-    //   options.compare.baseline.bundle,
-    //   options.current.bundle,
-    //   options.compare.scenarios,
-    //   options.compare.scenarioYaml
-    // )
+    // Combine and resolve the provided comparison specifications
+    const modelInputsL = new ModelInputs(baselineBundle.model.modelSpec)
+    const modelInputsR = new ModelInputs(currentBundle.model.modelSpec)
+    const compareDefs = resolveCompareSpecsFromSources(modelInputsL, modelInputsR, options.compare.specs)
 
     // Initialize the configuration for comparisons
     compareConfig = {
       bundleL: baselineBundle,
       bundleR: currentBundle,
       thresholds: options.compare.thresholds,
-      // scenarios: compareScenarios,
-      // scenarios: undefined,
-      scenariosYaml: options.compare.scenariosYaml,
+      scenarios: compareDefs.scenarios,
+      viewGroups: compareDefs.viewGroups,
       datasets: options.compare.datasets
     }
   }

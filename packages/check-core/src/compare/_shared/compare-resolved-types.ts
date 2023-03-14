@@ -146,16 +146,3 @@ export interface CompareViewGroup {
   /** The array of resolved (and unresolved) views that are included in this group. */
   views: (CompareView | CompareUnresolvedView)[]
 }
-
-//
-// TOP-LEVEL TYPES
-//
-
-export interface CompareResolvedItems {
-  /** The set of resolved scenarios. */
-  scenarios: CompareScenario[]
-  /** The set of resolved scenario groups. */
-  scenarioGroups: CompareScenarioGroup[]
-  /** The set of resolved view groups. */
-  viewGroups: CompareViewGroup[]
-}

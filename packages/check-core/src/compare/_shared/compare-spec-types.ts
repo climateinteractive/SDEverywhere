@@ -224,3 +224,12 @@ export interface CompareSpecs {
   /** The requested view groups. */
   viewGroups: CompareViewGroupSpec[]
 }
+
+/** A source of comparison scenario and specifications. */
+export interface CompareSpecsSource {
+  kind: 'yaml' | 'json'
+  /** The source filename, if known. */
+  filename?: string
+  /** A string containing YAML or JSON content. */
+  content: string
+}
