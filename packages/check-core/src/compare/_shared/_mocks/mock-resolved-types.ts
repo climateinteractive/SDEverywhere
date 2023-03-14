@@ -12,8 +12,12 @@ import type {
   CompareScenarioInputState,
   CompareScenarioWithAllInputs,
   CompareScenarioWithInputs,
-  CompareUnresolvedScenarioRef
+  CompareUnresolvedScenarioRef,
+  CompareUnresolvedView,
+  CompareView,
+  CompareViewGroup
 } from '../compare-resolved-types'
+import type { CompareScenarioGroupId, CompareScenarioId, CompareViewGraphId } from '../compare-spec-types'
 
 //
 // SCENARIOS
@@ -128,17 +132,67 @@ export function stateForInputVar(
   }
 }
 
+export function unresolvedScenarioRef(scenarioId: CompareScenarioId): CompareUnresolvedScenarioRef {
+  return {
+    kind: 'unresolved-scenario-ref',
+    scenarioId
+  }
+}
+
 //
 // SCENARIO GROUPS
 //
 
 export function scenarioGroup(
   name: string,
-  scenarios: (CompareScenario | CompareUnresolvedScenarioRef)[]
+  scenarios: (CompareScenario | CompareUnresolvedScenarioRef)[],
+  opts?: { id?: string }
 ): CompareScenarioGroup {
   return {
     kind: 'scenario-group',
+    id: opts?.id,
     name,
     scenarios
+  }
+}
+
+//
+// VIEWS
+//
+
+export function view(name: string, scenario: CompareScenario, graphs: 'all' | CompareViewGraphId[]): CompareView {
+  return {
+    kind: 'view',
+    name,
+    scenario,
+    graphs
+  }
+}
+
+export function unresolvedViewForScenarioId(name: string, scenarioId: CompareScenarioId): CompareUnresolvedView {
+  return {
+    kind: 'unresolved-view',
+    name,
+    scenarioId
+  }
+}
+
+export function unresolvedViewForScenarioGroupId(name: string, groupId: CompareScenarioGroupId): CompareUnresolvedView {
+  return {
+    kind: 'unresolved-view',
+    name,
+    scenarioGroupId: groupId
+  }
+}
+
+//
+// VIEW GROUPS
+//
+
+export function viewGroup(name: string, views: (CompareView | CompareUnresolvedView)[]): CompareViewGroup {
+  return {
+    kind: 'view-group',
+    name,
+    views
   }
 }

@@ -10,18 +10,35 @@ import type { CompareScenario } from '../_shared/compare-resolved-types'
 
 import {
   compareSpecs,
+  graphsArraySpec,
+  graphsPresetSpec,
   inputAtPositionSpec,
   inputAtValueSpec,
+  scenarioGroupRefSpec,
   scenarioGroupSpec,
   scenarioMatrixSpec,
   scenarioRefSpec,
   scenarioWithAllInputsSpec,
-  scenarioWithInputsSpec
+  scenarioWithInputsSpec,
+  viewGroupWithScenariosSpec,
+  viewGroupWithViewsSpec,
+  viewSpec
 } from '../_shared/_mocks/mock-spec-types'
-import { allAtPos, inputVar, scenarioGroup, scenarioWithInput } from '../_shared/_mocks/mock-resolved-types'
+import {
+  allAtPos,
+  inputVar,
+  scenarioGroup,
+  scenarioWithInput,
+  unresolvedScenarioRef,
+  unresolvedViewForScenarioGroupId,
+  unresolvedViewForScenarioId,
+  view,
+  viewGroup
+} from '../_shared/_mocks/mock-resolved-types'
 
 import { resolveSpecs } from './compare-resolver'
 import { ModelInputs } from './model-inputs'
+import type { CompareSpecs } from '../_shared/compare-spec-types'
 
 function mockModelSpec(kind: 'L' | 'R'): ModelSpec {
   //
@@ -77,6 +94,13 @@ describe('resolveSpecs', () => {
   const modelInputsL = new ModelInputs(mockModelSpec('L'))
   const modelInputsR = new ModelInputs(mockModelSpec('R'))
 
+  const lVar = (name: string) => modelInputsL.getInputVarForName(name)
+  const rVar = (name: string) => modelInputsR.getInputVarForName(name)
+
+  //
+  // SCENARIOS
+  //
+
   describe('with scenario specs', () => {
     it('should expand "with: input" at position specs', () => {
       const specs = compareSpecs([
@@ -97,26 +121,11 @@ describe('resolveSpecs', () => {
       const resolved = resolveSpecs(modelInputsL, modelInputsR, specs, false)
       expect(resolved).toEqual({
         scenarios: [
-          scenarioWithInput(
-            'ivarA',
-            'at-default',
-            modelInputsL.getInputVarForName('IVarA'),
-            modelInputsR.getInputVarForName('IVarA')
-          ),
-          scenarioWithInput(
-            'id 2',
-            'at-minimum',
-            modelInputsL.getInputVarForName('IVarB'),
-            modelInputsR.getInputVarForName('IVarB_Renamed')
-          ),
-          scenarioWithInput(
-            's3',
-            'at-maximum',
-            modelInputsL.getInputVarForName('IVarC'),
-            modelInputsR.getInputVarForName('IVarD')
-          ),
-          scenarioWithInput('ivarB', 'at-minimum', modelInputsL.getInputVarForName('IVarB'), undefined),
-          scenarioWithInput('ivarD', 'at-minimum', undefined, modelInputsR.getInputVarForName('IVarD')),
+          scenarioWithInput('ivarA', 'at-default', lVar('IVarA'), rVar('IVarA')),
+          scenarioWithInput('id 2', 'at-minimum', lVar('IVarB'), rVar('IVarB_Renamed')),
+          scenarioWithInput('s3', 'at-maximum', lVar('IVarC'), rVar('IVarD')),
+          scenarioWithInput('ivarB', 'at-minimum', lVar('IVarB'), undefined),
+          scenarioWithInput('ivarD', 'at-minimum', undefined, rVar('IVarD')),
           scenarioWithInput('ivarX', 'at-minimum', undefined, undefined)
         ],
         scenarioGroups: [],
@@ -141,26 +150,11 @@ describe('resolveSpecs', () => {
       const resolved = resolveSpecs(modelInputsL, modelInputsR, specs, false)
       expect(resolved).toEqual({
         scenarios: [
-          scenarioWithInput(
-            'ivarA',
-            20,
-            modelInputsL.getInputVarForName('IVarA'),
-            modelInputsR.getInputVarForName('IVarA')
-          ),
-          scenarioWithInput(
-            'id 2',
-            40,
-            modelInputsL.getInputVarForName('IVarB'),
-            modelInputsR.getInputVarForName('IVarB_Renamed')
-          ),
-          scenarioWithInput(
-            'S3',
-            60,
-            modelInputsL.getInputVarForName('IVarC'),
-            modelInputsR.getInputVarForName('IVarD')
-          ),
+          scenarioWithInput('ivarA', 20, lVar('IVarA'), rVar('IVarA')),
+          scenarioWithInput('id 2', 40, lVar('IVarB'), rVar('IVarB_Renamed')),
+          scenarioWithInput('S3', 60, lVar('IVarC'), rVar('IVarD')),
           scenarioWithInput('ivarA', 500, { kind: 'invalid-value' }, { kind: 'invalid-value' }),
-          scenarioWithInput('id 2', 90, modelInputsL.getInputVarForName('IVarB'), { kind: 'invalid-value' })
+          scenarioWithInput('id 2', 90, lVar('IVarB'), { kind: 'invalid-value' })
         ],
         scenarioGroups: [],
         viewGroups: []
@@ -263,8 +257,8 @@ describe('resolveSpecs', () => {
         return scenarioWithInput(
           `id ${id}`,
           pos === 'min' ? 'at-minimum' : 'at-maximum',
-          varNameL && modelInputsL.getInputVarForName(varNameL),
-          varNameR && modelInputsR.getInputVarForName(varNameR)
+          varNameL && lVar(varNameL),
+          varNameR && rVar(varNameR)
         )
       }
 
@@ -300,8 +294,12 @@ describe('resolveSpecs', () => {
     })
   })
 
+  //
+  // SCENARIO GROUPS
+  //
+
   describe('with scenario group specs', () => {
-    it.only('should resolve a group with valid scenarios and refs', () => {
+    it('should resolve a scenario group with valid scenarios and refs', () => {
       const specs = compareSpecs(
         [scenarioWithInputsSpec([inputAtPositionSpec('id 1', 'max')], { id: 'id_1_at_max' })],
         [
@@ -315,42 +313,20 @@ describe('resolveSpecs', () => {
       const resolved = resolveSpecs(modelInputsL, modelInputsR, specs, false)
       expect(resolved).toEqual({
         scenarios: [
-          scenarioWithInput(
-            'id 1',
-            'at-maximum',
-            modelInputsL.getInputVarForName('IVarA'),
-            modelInputsR.getInputVarForName('IVarA'),
-            { id: 'id_1_at_max' }
-          ),
-          scenarioWithInput(
-            'id 2',
-            'at-maximum',
-            modelInputsL.getInputVarForName('IVarB'),
-            modelInputsR.getInputVarForName('IVarB_Renamed')
-          )
+          scenarioWithInput('id 1', 'at-maximum', lVar('IVarA'), rVar('IVarA'), { id: 'id_1_at_max' }),
+          scenarioWithInput('id 2', 'at-maximum', lVar('IVarB'), rVar('IVarB_Renamed'))
         ],
         scenarioGroups: [
           scenarioGroup('Group with two vars at max', [
-            scenarioWithInput(
-              'id 1',
-              'at-maximum',
-              modelInputsL.getInputVarForName('IVarA'),
-              modelInputsR.getInputVarForName('IVarA'),
-              { id: 'id_1_at_max' }
-            ),
-            scenarioWithInput(
-              'id 2',
-              'at-maximum',
-              modelInputsL.getInputVarForName('IVarB'),
-              modelInputsR.getInputVarForName('IVarB_Renamed')
-            )
+            scenarioWithInput('id 1', 'at-maximum', lVar('IVarA'), rVar('IVarA'), { id: 'id_1_at_max' }),
+            scenarioWithInput('id 2', 'at-maximum', lVar('IVarB'), rVar('IVarB_Renamed'))
           ])
         ],
         viewGroups: []
       })
     })
 
-    it('should resolve a group that refers to an unknown scenario', () => {
+    it('should resolve a scenario group that refers to an unknown scenario', () => {
       const specs = compareSpecs(
         [scenarioWithInputsSpec([inputAtPositionSpec('id 1', 'max')])],
         [scenarioGroupSpec('Group with invalid ref', [scenarioRefSpec('unknown')])]
@@ -358,23 +334,223 @@ describe('resolveSpecs', () => {
 
       const resolved = resolveSpecs(modelInputsL, modelInputsR, specs, false)
       expect(resolved).toEqual({
-        scenarios: [
-          scenarioWithInput(
-            'id 1',
-            'at-maximum',
-            modelInputsL.getInputVarForName('IVarA'),
-            modelInputsR.getInputVarForName('IVarA')
-          )
-        ],
+        scenarios: [scenarioWithInput('id 1', 'at-maximum', lVar('IVarA'), rVar('IVarA'))],
+        scenarioGroups: [scenarioGroup('Group with invalid ref', [unresolvedScenarioRef('unknown')])],
+        viewGroups: []
+      })
+    })
+  })
+
+  //
+  // VIEW GROUPS
+  //
+
+  describe('with view group specs', () => {
+    it('should resolve a view group that is specified with an array of view specs', () => {
+      const specs: CompareSpecs = {
+        scenarios: [scenarioWithInputsSpec([inputAtPositionSpec('id 1', 'max')], { id: 'id_1_at_max' })],
         scenarioGroups: [
-          scenarioGroup('Group with invalid ref', [
-            {
-              kind: 'unresolved-scenario-ref',
-              scenarioId: 'unknown'
-            }
+          scenarioGroupSpec('Group with two vars at max', [
+            scenarioRefSpec('id_1_at_max'),
+            scenarioWithInputsSpec([inputAtPositionSpec('id 2', 'max')], { id: 'id_2_at_max' })
           ])
         ],
-        viewGroups: []
+        viewGroups: [
+          viewGroupWithViewsSpec('View group 1', [
+            viewSpec('View with all graphs', scenarioRefSpec('id_1_at_max'), graphsPresetSpec('all'))
+          ]),
+          viewGroupWithViewsSpec('View group 2', [
+            viewSpec('View with specific graphs', scenarioRefSpec('id_1_at_max'), graphsArraySpec(['1', '2']))
+          ])
+        ]
+      }
+
+      const resolved = resolveSpecs(modelInputsL, modelInputsR, specs, false)
+      expect(resolved).toEqual({
+        scenarios: [
+          scenarioWithInput('id 1', 'at-maximum', lVar('IVarA'), rVar('IVarA'), { id: 'id_1_at_max' }),
+          scenarioWithInput('id 2', 'at-maximum', lVar('IVarB'), rVar('IVarB_Renamed'), { id: 'id_2_at_max' })
+        ],
+        scenarioGroups: [
+          scenarioGroup('Group with two vars at max', [
+            scenarioWithInput('id 1', 'at-maximum', lVar('IVarA'), rVar('IVarA'), { id: 'id_1_at_max' }),
+            scenarioWithInput('id 2', 'at-maximum', lVar('IVarB'), rVar('IVarB_Renamed'), { id: 'id_2_at_max' })
+          ])
+        ],
+        viewGroups: [
+          viewGroup('View group 1', [
+            view(
+              'View with all graphs',
+              scenarioWithInput('id 1', 'at-maximum', lVar('IVarA'), rVar('IVarA'), { id: 'id_1_at_max' }),
+              'all'
+            )
+          ]),
+          viewGroup('View group 2', [
+            view(
+              'View with specific graphs',
+              scenarioWithInput('id 1', 'at-maximum', lVar('IVarA'), rVar('IVarA'), { id: 'id_1_at_max' }),
+              ['1', '2']
+            )
+          ])
+        ]
+      })
+    })
+
+    it('should resolve a view group that is specified using the shorthand with an array of scenarios', () => {
+      const specs: CompareSpecs = {
+        scenarios: [
+          scenarioWithInputsSpec([inputAtPositionSpec('id 1', 'max')], {
+            id: 'id_1_at_max',
+            title: 'input id 1 at max'
+          })
+        ],
+        scenarioGroups: [
+          scenarioGroupSpec(
+            'Group with two vars at max',
+            [
+              scenarioRefSpec('id_1_at_max'),
+              scenarioWithInputsSpec([inputAtPositionSpec('id 2', 'max')], {
+                id: 'id_2_at_max',
+                title: 'input id 2 at max'
+              })
+            ],
+            { id: 'group_1' }
+          )
+        ],
+        viewGroups: [
+          viewGroupWithScenariosSpec('View group 1', [scenarioRefSpec('id_1_at_max')], graphsPresetSpec('all')),
+          viewGroupWithScenariosSpec('View group 2', [scenarioGroupRefSpec('group_1')], graphsArraySpec(['1', '2']))
+        ]
+      }
+
+      const resolved = resolveSpecs(modelInputsL, modelInputsR, specs, false)
+      expect(resolved).toEqual({
+        scenarios: [
+          scenarioWithInput('id 1', 'at-maximum', lVar('IVarA'), rVar('IVarA'), {
+            id: 'id_1_at_max',
+            title: 'input id 1 at max'
+          }),
+          scenarioWithInput('id 2', 'at-maximum', lVar('IVarB'), rVar('IVarB_Renamed'), {
+            id: 'id_2_at_max',
+            title: 'input id 2 at max'
+          })
+        ],
+        scenarioGroups: [
+          scenarioGroup(
+            'Group with two vars at max',
+            [
+              scenarioWithInput('id 1', 'at-maximum', lVar('IVarA'), rVar('IVarA'), {
+                id: 'id_1_at_max',
+                title: 'input id 1 at max'
+              }),
+              scenarioWithInput('id 2', 'at-maximum', lVar('IVarB'), rVar('IVarB_Renamed'), {
+                id: 'id_2_at_max',
+                title: 'input id 2 at max'
+              })
+            ],
+            { id: 'group_1' }
+          )
+        ],
+        viewGroups: [
+          viewGroup('View group 1', [
+            view(
+              'input id 1 at max',
+              scenarioWithInput('id 1', 'at-maximum', lVar('IVarA'), rVar('IVarA'), {
+                id: 'id_1_at_max',
+                title: 'input id 1 at max'
+              }),
+              'all'
+            )
+          ]),
+          viewGroup('View group 2', [
+            view(
+              'input id 1 at max',
+              scenarioWithInput('id 1', 'at-maximum', lVar('IVarA'), rVar('IVarA'), {
+                id: 'id_1_at_max',
+                title: 'input id 1 at max'
+              }),
+              ['1', '2']
+            ),
+            view(
+              'input id 2 at max',
+              scenarioWithInput('id 2', 'at-maximum', lVar('IVarB'), rVar('IVarB_Renamed'), {
+                id: 'id_2_at_max',
+                title: 'input id 2 at max'
+              }),
+              ['1', '2']
+            )
+          ])
+        ]
+      })
+    })
+
+    it('should resolve a view group that refers to an unknown scenario', () => {
+      const specs: CompareSpecs = {
+        scenarios: [],
+        scenarioGroups: [],
+        viewGroups: [
+          viewGroupWithScenariosSpec('View group 1', [scenarioRefSpec('id_1_at_max')], graphsPresetSpec('all'))
+        ]
+      }
+
+      const resolved = resolveSpecs(modelInputsL, modelInputsR, specs, false)
+      expect(resolved).toEqual({
+        scenarios: [],
+        scenarioGroups: [],
+        viewGroups: [viewGroup('View group 1', [unresolvedViewForScenarioId('Unnamed view', 'id_1_at_max')])]
+      })
+    })
+
+    it('should resolve a view group that refers to an unknown scenario group', () => {
+      const specs: CompareSpecs = {
+        scenarios: [],
+        scenarioGroups: [],
+        viewGroups: [
+          viewGroupWithScenariosSpec('View group 2', [scenarioGroupRefSpec('group_1')], graphsArraySpec(['1', '2']))
+        ]
+      }
+
+      const resolved = resolveSpecs(modelInputsL, modelInputsR, specs, false)
+      expect(resolved).toEqual({
+        scenarios: [],
+        scenarioGroups: [],
+        viewGroups: [viewGroup('View group 2', [unresolvedViewForScenarioGroupId('Unnamed view', 'group_1')])]
+      })
+    })
+
+    it('should resolve a view group that refers to a scenario group with some unresolved scenarios', () => {
+      const specs: CompareSpecs = {
+        scenarios: [],
+        scenarioGroups: [
+          scenarioGroupSpec(
+            'Group with two vars at max',
+            [scenarioRefSpec('id_1_at_max'), scenarioRefSpec('id_2_at_max')],
+            {
+              id: 'group_1'
+            }
+          )
+        ],
+        viewGroups: [
+          viewGroupWithScenariosSpec('View group 1', [scenarioGroupRefSpec('group_1')], graphsArraySpec(['1', '2']))
+        ]
+      }
+
+      const resolved = resolveSpecs(modelInputsL, modelInputsR, specs, false)
+      expect(resolved).toEqual({
+        scenarios: [],
+        scenarioGroups: [
+          scenarioGroup(
+            'Group with two vars at max',
+            [unresolvedScenarioRef('id_1_at_max'), unresolvedScenarioRef('id_2_at_max')],
+            { id: 'group_1' }
+          )
+        ],
+        viewGroups: [
+          viewGroup('View group 1', [
+            unresolvedViewForScenarioId('Unnamed view', 'id_1_at_max'),
+            unresolvedViewForScenarioId('Unnamed view', 'id_2_at_max')
+          ])
+        ]
       })
     })
   })

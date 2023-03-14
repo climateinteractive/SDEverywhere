@@ -113,7 +113,7 @@ export type CompareScenarioGroupName = string
 export interface CompareScenarioGroupSpec {
   kind: 'scenario-group'
   /** The unique identifier for the group. */
-  id?: CompareScenarioId
+  id?: CompareScenarioGroupId
   /** The name of the group. */
   name: CompareScenarioGroupName
   /** The scenarios that are included in this group. */

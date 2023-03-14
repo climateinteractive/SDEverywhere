@@ -6,13 +6,19 @@ import type { InputPosition } from '../../_shared/scenario'
 import type { InputId, InputVar } from '../../bundle/var-types'
 
 import type {
+  CompareScenarioGroupId,
   CompareScenarioId,
   CompareScenarioInputPosition,
   CompareScenarioInputSpec,
+  CompareScenarioRefSpec,
   CompareScenarioSpec,
   CompareScenarioSubtitle,
   CompareScenarioTitle,
-  CompareSpecs
+  CompareSpecs,
+  CompareViewGraphId,
+  CompareViewGraphsSpec,
+  CompareViewGroupSpec,
+  CompareViewName
 } from '../_shared/compare-spec-types'
 import type {
   CompareResolvedItems,
@@ -21,7 +27,10 @@ import type {
   CompareScenarioInput,
   CompareScenarioInputState,
   CompareScenarioWithAllInputs,
-  CompareUnresolvedScenarioRef
+  CompareUnresolvedScenarioRef,
+  CompareUnresolvedView,
+  CompareView,
+  CompareViewGroup
 } from '../_shared/compare-resolved-types'
 
 import type { ModelInputs } from './model-inputs'
@@ -43,39 +52,17 @@ export function resolveSpecs(
   specs: CompareSpecs,
   simplify: boolean
 ): CompareResolvedItems {
-  // Keep track of all resolved scenarios
-  const resolvedScenarios: CompareScenario[] = []
-
-  // Keep track of resolved scenarios that include an ID
-  const resolvedScenariosById: Map<CompareScenarioId, CompareScenario> = new Map()
-
-  function addResolvedScenarios(scenarios: CompareScenario[]): void {
-    for (const resolvedScenario of scenarios) {
-      // Add the scenario to the general set
-      resolvedScenarios.push(resolvedScenario)
-
-      // Also add to the map of scenarios with an ID, if one is defined
-      if (resolvedScenario.id !== undefined) {
-        // See if ID is already used
-        // TODO: Mark this as an error in the interface rather than throwing
-        if (resolvedScenariosById.has(resolvedScenario.id)) {
-          throw new Error(`Multiple scenarios defined with the same id (${resolvedScenario.id})`)
-        }
-        resolvedScenariosById.set(resolvedScenario.id, resolvedScenario)
-      }
-    }
-  }
-
   // Resolve the top-level scenario specs and convert to `CompareScenario` instances
+  const resolvedScenarios = new ResolvedScenarios()
   for (const scenarioSpec of specs.scenarios) {
-    addResolvedScenarios([...resolveScenariosFromSpec(modelInputsL, modelInputsR, scenarioSpec, simplify)])
+    resolvedScenarios.add(resolveScenariosFromSpec(modelInputsL, modelInputsR, scenarioSpec, simplify))
   }
 
   // Resolve scenarios that are defined inside scenario groups and add them to the set of scenarios
   for (const scenarioGroupSpec of specs.scenarioGroups) {
     for (const scenarioItem of scenarioGroupSpec.scenarios) {
       if (scenarioItem.kind !== 'scenario-ref') {
-        addResolvedScenarios([...resolveScenariosFromSpec(modelInputsL, modelInputsR, scenarioItem, simplify)])
+        resolvedScenarios.add(resolveScenariosFromSpec(modelInputsL, modelInputsR, scenarioItem, simplify))
       }
     }
   }
@@ -83,13 +70,13 @@ export function resolveSpecs(
   // Now that all scenarios have been resolved, resolve the groups themselves.  Note that we do this as a
   // secondary pass after resolving all top-level and nested scenario definitions so that groups can refer
   // to scenarios that are defined elsewhere (order does not matter).
-  const resolvedScenarioGroups: CompareScenarioGroup[] = []
+  const resolvedScenarioGroups = new ResolvedScenarioGroups()
   for (const scenarioGroupSpec of specs.scenarioGroups) {
     const scenariosForGroup: (CompareScenario | CompareUnresolvedScenarioRef)[] = []
     for (const scenarioItem of scenarioGroupSpec.scenarios) {
       if (scenarioItem.kind === 'scenario-ref') {
         // See if we have a scenario defined for this ID
-        const referencedScenario = resolvedScenariosById.get(scenarioItem.scenarioId)
+        const referencedScenario = resolvedScenarios.getScenarioForId(scenarioItem.scenarioId)
         if (referencedScenario) {
           // Found it, add it to the group
           scenariosForGroup.push(referencedScenario)
@@ -105,25 +92,64 @@ export function resolveSpecs(
         scenariosForGroup.push(...resolveScenariosFromSpec(modelInputsL, modelInputsR, scenarioItem, simplify))
       }
     }
-    resolvedScenarioGroups.push({
+    resolvedScenarioGroups.add({
       kind: 'scenario-group',
+      id: scenarioGroupSpec.id,
       name: scenarioGroupSpec.name,
       scenarios: scenariosForGroup
     })
   }
 
-  // TODO: viewGroups
+  // Resolve the view groups
+  const resolvedViewGroups: CompareViewGroup[] = []
+  for (const viewGroupSpec of specs.viewGroups) {
+    const resolvedViewGroup = resolveViewGroupFromSpec(resolvedScenarios, resolvedScenarioGroups, viewGroupSpec)
+    resolvedViewGroups.push(resolvedViewGroup)
+  }
 
   return {
-    scenarios: resolvedScenarios,
-    scenarioGroups: resolvedScenarioGroups,
-    viewGroups: []
+    scenarios: resolvedScenarios.getAll(),
+    scenarioGroups: resolvedScenarioGroups.getAll(),
+    viewGroups: resolvedViewGroups
   }
 }
 
 //
 // SCENARIOS
 //
+
+class ResolvedScenarios {
+  /** The array of all resolved scenarios. */
+  private readonly resolvedScenarios: CompareScenario[] = []
+
+  /** The set of resolved scenarios that include an ID, keyed by ID. */
+  private readonly resolvedScenariosById: Map<CompareScenarioId, CompareScenario> = new Map()
+
+  add(scenarios: CompareScenario[]): void {
+    for (const resolvedScenario of scenarios) {
+      // Add the scenario to the general set
+      this.resolvedScenarios.push(resolvedScenario)
+
+      // Also add to the map of scenarios with an ID, if one is defined
+      if (resolvedScenario.id !== undefined) {
+        // See if ID is already used
+        // TODO: Mark this as an error in the interface rather than throwing
+        if (this.resolvedScenariosById.has(resolvedScenario.id)) {
+          throw new Error(`Multiple scenarios defined with the same id (${resolvedScenario.id})`)
+        }
+        this.resolvedScenariosById.set(resolvedScenario.id, resolvedScenario)
+      }
+    }
+  }
+
+  getAll(): CompareScenario[] {
+    return this.resolvedScenarios
+  }
+
+  getScenarioForId(id: CompareScenarioId): CompareScenario | undefined {
+    return this.resolvedScenariosById.get(id)
+  }
+}
 
 /**
  * Return one or more resolved `CompareScenario` instances for the given scenario spec.
@@ -404,3 +430,178 @@ function inputValueAtPosition(inputVar: InputVar, position: InputPosition): numb
 //
 // SCENARIO GROUPS
 //
+
+class ResolvedScenarioGroups {
+  /** The array of all resolved scenario groups. */
+  private readonly resolvedGroups: CompareScenarioGroup[] = []
+
+  /** The set of resolved scenario groups that include an ID, keyed by ID. */
+  private readonly resolvedGroupsById: Map<CompareScenarioGroupId, CompareScenarioGroup> = new Map()
+
+  add(group: CompareScenarioGroup): void {
+    // Add the group to the general set
+    this.resolvedGroups.push(group)
+
+    // Also add to the map of groups with an ID, if one is defined
+    if (group.id !== undefined) {
+      // See if ID is already used
+      // TODO: Mark this as an error in the interface rather than throwing
+      if (this.resolvedGroupsById.has(group.id)) {
+        throw new Error(`Multiple scenario groups defined with the same id (${group.id})`)
+      }
+      this.resolvedGroupsById.set(group.id, group)
+    }
+  }
+
+  getAll(): CompareScenarioGroup[] {
+    return this.resolvedGroups
+  }
+
+  getGroupForId(id: CompareScenarioGroupId): CompareScenarioGroup | undefined {
+    return this.resolvedGroupsById.get(id)
+  }
+}
+
+//
+// VIEWS
+//
+
+/**
+ * Return the graphs "all" preset or the graph IDs from a view graphs spec.
+ */
+function resolveGraphsFromSpec(graphsSpec: CompareViewGraphsSpec): 'all' | CompareViewGraphId[] {
+  switch (graphsSpec.kind) {
+    case 'graphs-preset':
+      return 'all'
+    case 'graphs-array':
+      return graphsSpec.graphIds
+    default:
+      assertNever(graphsSpec)
+  }
+}
+
+function resolveViewForScenarioRefSpec(
+  resolvedScenarios: ResolvedScenarios,
+  viewName: CompareViewName | undefined,
+  refSpec: CompareScenarioRefSpec,
+  graphs: 'all' | CompareViewGraphId[]
+): CompareView | CompareUnresolvedView {
+  const resolvedScenario = resolvedScenarios.getScenarioForId(refSpec.scenarioId)
+  if (resolvedScenario) {
+    // Add the resolved view
+    return resolveViewForScenario(viewName, resolvedScenario, graphs)
+  } else {
+    // Add the unresolved view
+    return unresolvedViewForScenarioId(viewName, refSpec.scenarioId)
+  }
+}
+
+function resolveViewForScenario(
+  viewName: CompareViewName | undefined,
+  resolvedScenario: CompareScenario,
+  graphs: 'all' | CompareViewGraphId[]
+): CompareView {
+  return {
+    kind: 'view',
+    // TODO: For now, derive a view name from the scenario if an explicit view
+    // name was not provided
+    name: viewName || resolvedScenario.title || 'Unnamed view',
+    scenario: resolvedScenario,
+    graphs
+  }
+}
+
+function unresolvedViewForScenarioId(
+  viewName: CompareViewName | undefined,
+  scenarioId: CompareScenarioId
+): CompareUnresolvedView {
+  return {
+    kind: 'unresolved-view',
+    name: viewName || 'Unnamed view',
+    scenarioId
+  }
+}
+
+function unresolvedViewForScenarioGroupId(
+  viewName: CompareViewName | undefined,
+  scenarioGroupId: CompareScenarioGroupId
+): CompareUnresolvedView {
+  return {
+    kind: 'unresolved-view',
+    name: viewName || 'Unnamed view',
+    scenarioGroupId
+  }
+}
+
+//
+// VIEW GROUPS
+//
+
+/**
+ * Return a resolved `CompareViewGroup` instance for the given view group spec.
+ */
+function resolveViewGroupFromSpec(
+  resolvedScenarios: ResolvedScenarios,
+  resolvedScenarioGroups: ResolvedScenarioGroups,
+  viewGroupSpec: CompareViewGroupSpec
+): CompareViewGroup {
+  let views: (CompareView | CompareUnresolvedView)[]
+
+  switch (viewGroupSpec.kind) {
+    case 'view-group-with-views': {
+      // Resolve each view
+      views = viewGroupSpec.views.map(viewSpec => {
+        const graphs = resolveGraphsFromSpec(viewSpec.graphs)
+        return resolveViewForScenarioRefSpec(resolvedScenarios, viewSpec.name, viewSpec.scenario, graphs)
+      })
+      break
+    }
+    case 'view-group-with-scenarios': {
+      // Resolve to one view for each scenario (with the same set of graphs for each view)
+      const graphs = resolveGraphsFromSpec(viewGroupSpec.graphs)
+      views = []
+      for (const refSpec of viewGroupSpec.scenarios) {
+        switch (refSpec.kind) {
+          case 'scenario-ref':
+            // Add a view for the scenario
+            views.push(resolveViewForScenarioRefSpec(resolvedScenarios, undefined, refSpec, graphs))
+            break
+          case 'scenario-group-ref': {
+            const resolvedGroup = resolvedScenarioGroups.getGroupForId(refSpec.groupId)
+            if (resolvedGroup) {
+              // Add a view for each scenario in the group
+              for (const scenario of resolvedGroup.scenarios) {
+                switch (scenario.kind) {
+                  case 'unresolved-scenario-ref':
+                    views.push(unresolvedViewForScenarioId(undefined, scenario.scenarioId))
+                    break
+                  case 'scenario-with-inputs':
+                  case 'scenario-with-all-inputs':
+                    views.push(resolveViewForScenario(undefined, scenario, graphs))
+                    break
+                  default:
+                    assertNever(scenario)
+                }
+              }
+            } else {
+              // Add an unresolved view that covers the whole group
+              views.push(unresolvedViewForScenarioGroupId(undefined, refSpec.groupId))
+            }
+            break
+          }
+          default:
+            assertNever(refSpec)
+        }
+      }
+      break
+    }
+    default:
+      assertNever(viewGroupSpec)
+  }
+
+  return {
+    kind: 'view-group',
+    name: viewGroupSpec.name,
+    views
+  }
+}
