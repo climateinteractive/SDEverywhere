@@ -89,28 +89,27 @@ export { checkSummaryFromReport, checkReportFromSummary } from './check/check-su
 // compare
 //
 
-export * from './compare/_shared/compare-spec-types'
+export * from './compare/config/compare-spec-types'
+export type { CompareConfig, CompareOptions } from './compare/config/compare-config'
 
-export type { CompareConfig, CompareOptions } from './compare/0-config/compare-config'
+export type { CompareDataRequestKey } from './compare/run/compare-data-coordinator'
+export { CompareDataCoordinator } from './compare/run/compare-data-coordinator'
 
-export type { CompareDataRequestKey } from './compare/3-fetch/compare-data-coordinator'
-export { CompareDataCoordinator } from './compare/3-fetch/compare-data-coordinator'
-
-export type { DiffPoint, DiffReport, DiffValidity } from './compare/4-diff/compare-diff-datasets'
-export { diffDatasets, compareDatasets } from './compare/4-diff/compare-diff-datasets'
+export type { DiffPoint, DiffReport, DiffValidity } from './compare/run/compare-diff-datasets'
+export { diffDatasets, compareDatasets } from './compare/run/compare-diff-datasets'
 
 export type {
   GraphDatasetReport,
   GraphInclusion,
   GraphMetadataReport,
   GraphReport
-} from './compare/4-diff/compare-graphs'
-export { diffGraphs } from './compare/4-diff/compare-graphs'
+} from './compare/run/compare-diff-graphs'
+export { diffGraphs } from './compare/run/compare-diff-graphs'
 
-export type { CompareDatasetReport, CompareReport } from './compare/4-diff/compare-report'
+export type { CompareDatasetReport, CompareReport } from './compare/run/compare-report'
 
-export type { CompareDatasetSummary, CompareSummary } from './compare/4-diff/compare-summary'
-export { compareSummaryFromReport } from './compare/4-diff/compare-summary'
+export type { CompareDatasetSummary, CompareSummary } from './compare/run/compare-summary'
+export { compareSummaryFromReport } from './compare/run/compare-summary'
 
 // TODO: Organize the following
 export type { CompareItem, CompareGroupInfo, CompareGroup } from './compare/compare-group'

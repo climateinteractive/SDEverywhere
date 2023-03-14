@@ -9,7 +9,7 @@ import type {
   CompareViewGraphId,
   CompareViewGroupTitle,
   CompareViewTitle
-} from './compare-spec-types'
+} from '../config/compare-spec-types'
 
 //
 // SCENARIOS

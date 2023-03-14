@@ -2,8 +2,20 @@
 
 import { assertNever } from 'assert-never'
 
-import type { InputPosition } from '../../_shared/scenario'
-import type { InputId, InputVar } from '../../bundle/var-types'
+import type { InputPosition } from '../../../_shared/scenario'
+import type { InputId, InputVar } from '../../../bundle/var-types'
+
+import type {
+  CompareScenario,
+  CompareScenarioGroup,
+  CompareScenarioInput,
+  CompareScenarioInputState,
+  CompareScenarioWithAllInputs,
+  CompareUnresolvedScenarioRef,
+  CompareUnresolvedView,
+  CompareView,
+  CompareViewGroup
+} from '../../_shared/compare-resolved-types'
 
 import type {
   CompareScenarioGroupId,
@@ -15,26 +27,13 @@ import type {
   CompareScenarioSubtitle,
   CompareScenarioTitle,
   CompareSpecs,
-  CompareSpecsSource,
   CompareViewGraphId,
   CompareViewGraphsSpec,
   CompareViewGroupSpec,
   CompareViewTitle
-} from '../_shared/compare-spec-types'
-import type {
-  CompareScenario,
-  CompareScenarioGroup,
-  CompareScenarioInput,
-  CompareScenarioInputState,
-  CompareScenarioWithAllInputs,
-  CompareUnresolvedScenarioRef,
-  CompareUnresolvedView,
-  CompareView,
-  CompareViewGroup
-} from '../_shared/compare-resolved-types'
+} from '../compare-spec-types'
 
-import type { ModelInputs } from '../../bundle/model-inputs'
-import { parseCompareSpecs } from '../1-parse/compare-parser'
+import type { ModelInputs } from '../../../bundle/model-inputs'
 
 export interface CompareResolvedDefs {
   /** The set of resolved scenarios. */
@@ -43,48 +42,6 @@ export interface CompareResolvedDefs {
   scenarioGroups: CompareScenarioGroup[]
   /** The set of resolved view groups. */
   viewGroups: CompareViewGroup[]
-}
-
-/**
- * Expand and resolve all the scenario and view specs in the provided sources, which can
- * be a mix of YAML, JSON, and object specs.
- *
- * @param modelInputsL The model inputs for the "left" bundle being compared.
- * @param modelInputsR The model inputs for the "right" bundle being compared.
- * @param specSources The scenario and view spec sources.
- */
-export function resolveCompareSpecsFromSources(
-  modelInputsL: ModelInputs,
-  modelInputsR: ModelInputs,
-  specSources: (CompareSpecs | CompareSpecsSource)[]
-): CompareResolvedDefs {
-  const combinedSpecs: CompareSpecs = {
-    scenarios: [],
-    scenarioGroups: [],
-    viewGroups: []
-  }
-
-  for (const specSource of specSources) {
-    let specs: CompareSpecs
-    if ('kind' in specSource) {
-      const parseResult = parseCompareSpecs(specSource)
-      if (parseResult.isOk()) {
-        specs = parseResult.value
-      } else {
-        // TODO: Fail fast instead of logging errors?
-        const filenamePart = specSource.filename ? ` in ${specSource.filename}` : ''
-        console.error(`ERROR: Failed to parse comparison spec${filenamePart}, skipping`)
-        continue
-      }
-    } else {
-      specs = specSource
-    }
-    combinedSpecs.scenarios.push(...specs.scenarios)
-    combinedSpecs.scenarioGroups.push(...specs.scenarioGroups)
-    combinedSpecs.viewGroups.push(...specs.viewGroups)
-  }
-
-  return resolveCompareSpecs(modelInputsL, modelInputsR, combinedSpecs)
 }
 
 /**

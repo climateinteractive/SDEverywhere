@@ -18,7 +18,7 @@ import type {
   CompareViewGraphsSpec,
   CompareViewGroupSpec,
   CompareViewSpec
-} from '../_shared/compare-spec-types'
+} from '../compare-spec-types'
 
 import jsonSchema from './compare.schema'
 

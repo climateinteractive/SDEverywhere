@@ -17,7 +17,7 @@ import type {
   CompareView,
   CompareViewGroup
 } from '../compare-resolved-types'
-import type { CompareScenarioGroupId, CompareScenarioId, CompareViewGraphId } from '../compare-spec-types'
+import type { CompareScenarioGroupId, CompareScenarioId, CompareViewGraphId } from '../../config/compare-spec-types'
 
 //
 // SCENARIOS

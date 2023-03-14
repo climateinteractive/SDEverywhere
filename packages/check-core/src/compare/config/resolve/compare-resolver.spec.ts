@@ -2,11 +2,26 @@
 
 import { describe, expect, it } from 'vitest'
 
-import type { VarId } from '../../_shared/types'
-import type { ModelSpec } from '../../bundle/bundle-types'
-import type { InputId, InputVar } from '../../bundle/var-types'
+import type { VarId } from '../../../_shared/types'
+import type { ModelSpec } from '../../../bundle/bundle-types'
+import { ModelInputs } from '../../../bundle/model-inputs'
+import type { InputId, InputVar } from '../../../bundle/var-types'
 
-import type { CompareScenario } from '../_shared/compare-resolved-types'
+import type { CompareSpecs } from '../../config/compare-spec-types'
+
+import type { CompareScenario } from '../../_shared/compare-resolved-types'
+
+import {
+  allAtPos,
+  inputVar,
+  scenarioGroup,
+  scenarioWithInput,
+  unresolvedScenarioRef,
+  unresolvedViewForScenarioGroupId,
+  unresolvedViewForScenarioId,
+  view,
+  viewGroup
+} from '../../_shared/_mocks/mock-resolved-types'
 
 import {
   compareSpecs,
@@ -23,22 +38,9 @@ import {
   viewGroupWithScenariosSpec,
   viewGroupWithViewsSpec,
   viewSpec
-} from '../_shared/_mocks/mock-spec-types'
-import {
-  allAtPos,
-  inputVar,
-  scenarioGroup,
-  scenarioWithInput,
-  unresolvedScenarioRef,
-  unresolvedViewForScenarioGroupId,
-  unresolvedViewForScenarioId,
-  view,
-  viewGroup
-} from '../_shared/_mocks/mock-resolved-types'
+} from '../_mocks/mock-spec-types'
 
 import { resolveCompareSpecs } from './compare-resolver'
-import { ModelInputs } from '../../bundle/model-inputs'
-import type { CompareSpecs } from '../_shared/compare-spec-types'
 
 function mockModelSpec(kind: 'L' | 'R'): ModelSpec {
   //

@@ -3,7 +3,7 @@
 import type { Scenario } from '../../_shared/scenario'
 // import { allInputsAtPositionScenario } from '../../_shared/scenario'
 import type { DataPlanner } from '../../data/data-planner'
-import type { CompareConfig } from '../0-config/compare-config'
+import type { CompareConfig } from '../config/compare-config'
 import { diffDatasets } from './compare-diff-datasets'
 import type { CompareDatasetReport } from './compare-report'
 

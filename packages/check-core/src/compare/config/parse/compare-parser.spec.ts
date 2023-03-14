@@ -17,7 +17,7 @@ import {
   viewGroupWithScenariosSpec,
   viewGroupWithViewsSpec,
   viewSpec
-} from '../_shared/_mocks/mock-spec-types'
+} from '../_mocks/mock-spec-types'
 
 describe('parseCompareSpecs', () => {
   it('should reject malformed yaml', () => {
