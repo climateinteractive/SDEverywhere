@@ -18,7 +18,7 @@ import type {
   CompareViewGraphId,
   CompareViewGraphsSpec,
   CompareViewGroupSpec,
-  CompareViewName
+  CompareViewTitle
 } from '../_shared/compare-spec-types'
 import type {
   CompareResolvedItems,
@@ -95,7 +95,7 @@ export function resolveSpecs(
     resolvedScenarioGroups.add({
       kind: 'scenario-group',
       id: scenarioGroupSpec.id,
-      name: scenarioGroupSpec.name,
+      title: scenarioGroupSpec.title,
       scenarios: scenariosForGroup
     })
   }
@@ -482,53 +482,51 @@ function resolveGraphsFromSpec(graphsSpec: CompareViewGraphsSpec): 'all' | Compa
 
 function resolveViewForScenarioRefSpec(
   resolvedScenarios: ResolvedScenarios,
-  viewName: CompareViewName | undefined,
+  viewTitle: CompareViewTitle | undefined,
   refSpec: CompareScenarioRefSpec,
   graphs: 'all' | CompareViewGraphId[]
 ): CompareView | CompareUnresolvedView {
   const resolvedScenario = resolvedScenarios.getScenarioForId(refSpec.scenarioId)
   if (resolvedScenario) {
     // Add the resolved view
-    return resolveViewForScenario(viewName, resolvedScenario, graphs)
+    return resolveViewForScenario(viewTitle, resolvedScenario, graphs)
   } else {
     // Add the unresolved view
-    return unresolvedViewForScenarioId(viewName, refSpec.scenarioId)
+    return unresolvedViewForScenarioId(viewTitle, refSpec.scenarioId)
   }
 }
 
 function resolveViewForScenario(
-  viewName: CompareViewName | undefined,
+  viewTitle: CompareViewTitle | undefined,
   resolvedScenario: CompareScenario,
   graphs: 'all' | CompareViewGraphId[]
 ): CompareView {
   return {
     kind: 'view',
-    // TODO: For now, derive a view name from the scenario if an explicit view
-    // name was not provided
-    name: viewName || resolvedScenario.title || 'Unnamed view',
+    title: viewTitle,
     scenario: resolvedScenario,
     graphs
   }
 }
 
 function unresolvedViewForScenarioId(
-  viewName: CompareViewName | undefined,
+  viewTitle: CompareViewTitle | undefined,
   scenarioId: CompareScenarioId
 ): CompareUnresolvedView {
   return {
     kind: 'unresolved-view',
-    name: viewName || 'Unnamed view',
+    title: viewTitle,
     scenarioId
   }
 }
 
 function unresolvedViewForScenarioGroupId(
-  viewName: CompareViewName | undefined,
+  viewTitle: CompareViewTitle | undefined,
   scenarioGroupId: CompareScenarioGroupId
 ): CompareUnresolvedView {
   return {
     kind: 'unresolved-view',
-    name: viewName || 'Unnamed view',
+    title: viewTitle,
     scenarioGroupId
   }
 }
@@ -552,7 +550,7 @@ function resolveViewGroupFromSpec(
       // Resolve each view
       views = viewGroupSpec.views.map(viewSpec => {
         const graphs = resolveGraphsFromSpec(viewSpec.graphs)
-        return resolveViewForScenarioRefSpec(resolvedScenarios, viewSpec.name, viewSpec.scenario, graphs)
+        return resolveViewForScenarioRefSpec(resolvedScenarios, viewSpec.title, viewSpec.scenario, graphs)
       })
       break
     }
@@ -601,7 +599,7 @@ function resolveViewGroupFromSpec(
 
   return {
     kind: 'view-group',
-    name: viewGroupSpec.name,
+    title: viewGroupSpec.title,
     views
   }
 }

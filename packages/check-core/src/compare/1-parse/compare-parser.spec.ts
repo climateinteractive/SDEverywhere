@@ -66,7 +66,8 @@ describe('parseComparisonScenariosYaml', () => {
         at: 5
 
 - scenario_group:
-    name: G1
+    id: G1
+    title: G1
     scenarios:
       - scenario_ref: S0
       - scenario:
@@ -79,31 +80,31 @@ describe('parseComparisonScenariosYaml', () => {
               at: max
 
 - view_group:
-    name: Baseline
+    title: Baseline
     views:
       - view:
-          name: All graphs
+          title: All graphs
           scenario_ref: S0
           graphs: all
 
 - view_group:
-    name: Temp (explicit views)
+    title: Temp (explicit views)
     views:
       - view:
-          name: Temp for Scenario_0
+          title: Temp for Scenario_0
           scenario_ref: S0
           graphs:
             - '86'
             - '87'
       - view:
-          name: Temp for Scenario_1
+          title: Temp for Scenario_1
           scenario_ref: S1
           graphs:
             - '86'
             - '87'
 
 - view_group:
-    name: Temp (shorthand)
+    title: Temp (shorthand)
     scenarios:
       - scenario_ref: S0
       - scenario_ref: S1
@@ -130,11 +131,15 @@ describe('parseComparisonScenariosYaml', () => {
     ])
 
     expect(compareSpec.scenarioGroups).toEqual([
-      scenarioGroupSpec('G1', [
-        scenarioRefSpec('S0'),
-        scenarioWithInputsSpec([inputAtPositionSpec('Input3', 'min')], { title: 'S5' }),
-        scenarioWithInputsSpec([inputAtPositionSpec('Input3', 'max')])
-      ])
+      scenarioGroupSpec(
+        'G1',
+        [
+          scenarioRefSpec('S0'),
+          scenarioWithInputsSpec([inputAtPositionSpec('Input3', 'min')], { title: 'S5' }),
+          scenarioWithInputsSpec([inputAtPositionSpec('Input3', 'max')])
+        ],
+        { id: 'G1' }
+      )
     ])
 
     expect(compareSpec.viewGroups).toEqual([

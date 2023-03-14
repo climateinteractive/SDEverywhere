@@ -4,11 +4,11 @@ import type { InputVar } from '../../bundle/var-types'
 import type { InputPosition } from '../../_shared/scenario'
 import type {
   CompareScenarioGroupId,
-  CompareScenarioGroupName,
+  CompareScenarioGroupTitle,
   CompareScenarioId,
   CompareViewGraphId,
-  CompareViewGroupName,
-  CompareViewName
+  CompareViewGroupTitle,
+  CompareViewTitle
 } from './compare-spec-types'
 
 //
@@ -92,8 +92,8 @@ export interface CompareScenarioGroup {
   kind: 'scenario-group'
   /** The unique identifier for the group. */
   id?: CompareScenarioGroupId
-  /** The name of the group. */
-  name: CompareScenarioGroupName
+  /** The title of the group. */
+  title: CompareScenarioGroupTitle
   /**
    * The scenarios that are included in this group.  This includes scenario that were successfully
    * resolved as well as scenario references that could not be resolved.
@@ -115,8 +115,8 @@ export interface CompareUnresolvedScenarioGroupRef {
 /** A resolved view definition.  A view presents a set of graphs for a single input scenario. */
 export interface CompareView {
   kind: 'view'
-  /** The name of the view. */
-  name: CompareViewName
+  /** The title of the view.  If undefined, the title will be inferred from the scenario. */
+  title: CompareViewTitle
   /** The resolved scenario to be shown in the view. */
   scenario: CompareScenario
   /** The graphs to be shown for each scenario view. */
@@ -126,8 +126,8 @@ export interface CompareView {
 /** An unresolved view. */
 export interface CompareUnresolvedView {
   kind: 'unresolved-view'
-  /** The requested name of the view, if provided. */
-  name?: CompareViewName
+  /** The requested title of the view, if provided. */
+  title?: CompareViewTitle
   /** The ID of the referenced scenario that could not be resolved. */
   scenarioId?: CompareScenarioId
   /** The ID of the referenced scenario group that could not be resolved. */
@@ -141,8 +141,8 @@ export interface CompareUnresolvedView {
 /** A resolved group of compared scenario/graph views. */
 export interface CompareViewGroup {
   kind: 'view-group'
-  /** The name of the group of views. */
-  name: CompareViewGroupName
+  /** The title of the group of views. */
+  title: CompareViewGroupTitle
   /** The array of resolved (and unresolved) views that are included in this group. */
   views: (CompareView | CompareUnresolvedView)[]
 }

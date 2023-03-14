@@ -144,14 +144,14 @@ export function unresolvedScenarioRef(scenarioId: CompareScenarioId): CompareUnr
 //
 
 export function scenarioGroup(
-  name: string,
+  title: string,
   scenarios: (CompareScenario | CompareUnresolvedScenarioRef)[],
   opts?: { id?: string }
 ): CompareScenarioGroup {
   return {
     kind: 'scenario-group',
     id: opts?.id,
-    name,
+    title,
     scenarios
   }
 }
@@ -160,27 +160,37 @@ export function scenarioGroup(
 // VIEWS
 //
 
-export function view(name: string, scenario: CompareScenario, graphs: 'all' | CompareViewGraphId[]): CompareView {
+export function view(
+  title: string | undefined,
+  scenario: CompareScenario,
+  graphs: 'all' | CompareViewGraphId[]
+): CompareView {
   return {
     kind: 'view',
-    name,
+    title,
     scenario,
     graphs
   }
 }
 
-export function unresolvedViewForScenarioId(name: string, scenarioId: CompareScenarioId): CompareUnresolvedView {
+export function unresolvedViewForScenarioId(
+  title: string | undefined,
+  scenarioId: CompareScenarioId
+): CompareUnresolvedView {
   return {
     kind: 'unresolved-view',
-    name,
+    title,
     scenarioId
   }
 }
 
-export function unresolvedViewForScenarioGroupId(name: string, groupId: CompareScenarioGroupId): CompareUnresolvedView {
+export function unresolvedViewForScenarioGroupId(
+  title: string | undefined,
+  groupId: CompareScenarioGroupId
+): CompareUnresolvedView {
   return {
     kind: 'unresolved-view',
-    name,
+    title,
     scenarioGroupId: groupId
   }
 }
@@ -189,10 +199,10 @@ export function unresolvedViewForScenarioGroupId(name: string, groupId: CompareS
 // VIEW GROUPS
 //
 
-export function viewGroup(name: string, views: (CompareView | CompareUnresolvedView)[]): CompareViewGroup {
+export function viewGroup(title: string, views: (CompareView | CompareUnresolvedView)[]): CompareViewGroup {
   return {
     kind: 'view-group',
-    name,
+    title,
     views
   }
 }

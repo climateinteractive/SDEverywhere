@@ -91,14 +91,14 @@ export function scenarioRefSpec(scenarioId: CompareScenarioId): CompareScenarioR
 //
 
 export function scenarioGroupSpec(
-  groupName: string,
+  title: string,
   scenarios: (CompareScenarioSpec | CompareScenarioRefSpec)[],
   opts?: { id?: string }
 ): CompareScenarioGroupSpec {
   return {
     kind: 'scenario-group',
     id: opts?.id,
-    name: groupName,
+    title,
     scenarios
   }
 }
@@ -115,13 +115,13 @@ export function scenarioGroupRefSpec(groupId: CompareScenarioGroupId): CompareSc
 //
 
 export function viewSpec(
-  viewName: string,
+  title: string | undefined,
   scenario: CompareScenarioRefSpec,
   graphs: CompareViewGraphsSpec
 ): CompareViewSpec {
   return {
     kind: 'view',
-    name: viewName,
+    title,
     scenario,
     graphs
   }
@@ -145,22 +145,22 @@ export function graphsArraySpec(graphIds: string[]): CompareViewGraphsArraySpec 
 // VIEW GROUPS
 //
 
-export function viewGroupWithViewsSpec(groupName: string, views: CompareViewSpec[]): CompareViewGroupWithViewsSpec {
+export function viewGroupWithViewsSpec(title: string, views: CompareViewSpec[]): CompareViewGroupWithViewsSpec {
   return {
     kind: 'view-group-with-views',
-    name: groupName,
+    title,
     views
   }
 }
 
 export function viewGroupWithScenariosSpec(
-  groupName: string,
+  title: string,
   scenarios: (CompareScenarioRefSpec | CompareScenarioGroupRefSpec)[],
   graphs: CompareViewGraphsSpec
 ): CompareViewGroupWithScenariosSpec {
   return {
     kind: 'view-group-with-scenarios',
-    name: groupName,
+    title,
     scenarios,
     graphs
   }

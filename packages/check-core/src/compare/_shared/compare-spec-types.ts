@@ -104,18 +104,18 @@ export interface CompareScenarioRefSpec {
 
 export type CompareScenarioGroupId = string
 
-export type CompareScenarioGroupName = string
+export type CompareScenarioGroupTitle = string
 
 /**
  * A definition of a group of input scenarios.  Multiple scenarios can be grouped together under a single name, and
- * can later be referenced by group name in a view definition.
+ * can later be referenced by group ID in a view definition.
  */
 export interface CompareScenarioGroupSpec {
   kind: 'scenario-group'
   /** The unique identifier for the group. */
   id?: CompareScenarioGroupId
-  /** The name of the group. */
-  name: CompareScenarioGroupName
+  /** The title of the group. */
+  title: CompareScenarioGroupTitle
   /** The scenarios that are included in this group. */
   scenarios: (CompareScenarioSpec | CompareScenarioRefSpec)[]
 }
@@ -131,7 +131,7 @@ export interface CompareScenarioGroupRefSpec {
 // VIEWS
 //
 
-export type CompareViewName = string
+export type CompareViewTitle = string
 
 export type CompareViewGraphId = string
 
@@ -163,8 +163,8 @@ export type CompareViewGraphsSpec = CompareViewGraphsArraySpec | CompareViewGrap
  */
 export interface CompareViewSpec {
   kind: 'view'
-  /** The name of the view. */
-  name: CompareViewName
+  /** The title of the view.  If undefined, the title will be inferred from the scenario. */
+  title?: CompareViewTitle
   /** The scenario to be shown in the view. */
   scenario: CompareScenarioRefSpec
   /** The graphs to be shown for each scenario view. */
@@ -175,15 +175,15 @@ export interface CompareViewSpec {
 // VIEW GROUPS
 //
 
-export type CompareViewGroupName = string
+export type CompareViewGroupTitle = string
 
 /**
  * Specifies a view group with an explicit array of view definitions.
  */
 export interface CompareViewGroupWithViewsSpec {
   kind: 'view-group-with-views'
-  /** The name of the group of views. */
-  name: CompareViewGroupName
+  /** The title of the group of views. */
+  title: CompareViewGroupTitle
   /** The views that are included in this group. */
   views: CompareViewSpec[]
 }
@@ -194,8 +194,8 @@ export interface CompareViewGroupWithViewsSpec {
  */
 export interface CompareViewGroupWithScenariosSpec {
   kind: 'view-group-with-scenarios'
-  /** The name of the group of views. */
-  name: CompareViewGroupName
+  /** The title of the group of views. */
+  title: CompareViewGroupTitle
   /** The scenarios to be included (one view will be created for each scenario). */
   scenarios: (CompareScenarioRefSpec | CompareScenarioGroupRefSpec)[]
   /** The graphs to be shown for each scenario view. */
@@ -203,7 +203,7 @@ export interface CompareViewGroupWithScenariosSpec {
 }
 
 /**
- * A definition of a group of views.  Multiple related views can be grouped together under a single name
+ * A definition of a group of views.  Multiple related views can be grouped together under a single title
  * to make them easy to distinguish in a report.
  */
 export type CompareViewGroupSpec = CompareViewGroupWithViewsSpec | CompareViewGroupWithScenariosSpec

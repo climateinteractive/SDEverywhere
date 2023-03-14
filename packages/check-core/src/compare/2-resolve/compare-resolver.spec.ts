@@ -454,7 +454,7 @@ describe('resolveSpecs', () => {
         viewGroups: [
           viewGroup('View group 1', [
             view(
-              'input id 1 at max',
+              undefined,
               scenarioWithInput('id 1', 'at-maximum', lVar('IVarA'), rVar('IVarA'), {
                 id: 'id_1_at_max',
                 title: 'input id 1 at max'
@@ -464,7 +464,7 @@ describe('resolveSpecs', () => {
           ]),
           viewGroup('View group 2', [
             view(
-              'input id 1 at max',
+              undefined,
               scenarioWithInput('id 1', 'at-maximum', lVar('IVarA'), rVar('IVarA'), {
                 id: 'id_1_at_max',
                 title: 'input id 1 at max'
@@ -472,7 +472,7 @@ describe('resolveSpecs', () => {
               ['1', '2']
             ),
             view(
-              'input id 2 at max',
+              undefined,
               scenarioWithInput('id 2', 'at-maximum', lVar('IVarB'), rVar('IVarB_Renamed'), {
                 id: 'id_2_at_max',
                 title: 'input id 2 at max'
@@ -497,7 +497,7 @@ describe('resolveSpecs', () => {
       expect(resolved).toEqual({
         scenarios: [],
         scenarioGroups: [],
-        viewGroups: [viewGroup('View group 1', [unresolvedViewForScenarioId('Unnamed view', 'id_1_at_max')])]
+        viewGroups: [viewGroup('View group 1', [unresolvedViewForScenarioId(undefined, 'id_1_at_max')])]
       })
     })
 
@@ -514,7 +514,7 @@ describe('resolveSpecs', () => {
       expect(resolved).toEqual({
         scenarios: [],
         scenarioGroups: [],
-        viewGroups: [viewGroup('View group 2', [unresolvedViewForScenarioGroupId('Unnamed view', 'group_1')])]
+        viewGroups: [viewGroup('View group 2', [unresolvedViewForScenarioGroupId(undefined, 'group_1')])]
       })
     })
 
@@ -547,8 +547,8 @@ describe('resolveSpecs', () => {
         ],
         viewGroups: [
           viewGroup('View group 1', [
-            unresolvedViewForScenarioId('Unnamed view', 'id_1_at_max'),
-            unresolvedViewForScenarioId('Unnamed view', 'id_2_at_max')
+            unresolvedViewForScenarioId(undefined, 'id_1_at_max'),
+            unresolvedViewForScenarioId(undefined, 'id_2_at_max')
           ])
         ]
       })

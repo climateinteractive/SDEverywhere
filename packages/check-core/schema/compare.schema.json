@@ -63,6 +63,9 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
+        "id": {
+          "type": "string"
+        },
         "title": {
           "type": "string"
         },
@@ -85,6 +88,9 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
+        "id": {
+          "type": "string"
+        },
         "title": {
           "type": "string"
         },
@@ -156,6 +162,9 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
+        "id": {
+          "type": "string"
+        },
         "title": {
           "type": "string"
         },
@@ -174,6 +183,9 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
+        "id": {
+          "type": "string"
+        },
         "title": {
           "type": "string"
         },
@@ -226,7 +238,10 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "name": {
+        "id": {
+          "type": "string"
+        },
+        "title": {
           "type": "string"
         },
         "scenarios": {
@@ -238,7 +253,7 @@
         }
       },
       "required": [
-        "name",
+        "title",
         "scenarios"
       ]
     },
@@ -280,7 +295,7 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "name": {
+        "title": {
           "type": "string"
         },
         "scenario_ref": {
@@ -291,7 +306,6 @@
         }
       },
       "required": [
-        "name",
         "scenario_ref",
         "graphs"
       ]
@@ -345,7 +359,7 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "name": {
+        "title": {
           "type": "string"
         },
         "views": {
@@ -357,7 +371,7 @@
         }
       },
       "required": [
-        "name",
+        "title",
         "views"
       ]
     },
@@ -374,7 +388,7 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "name": {
+        "title": {
           "type": "string"
         },
         "scenarios": {
@@ -389,7 +403,7 @@
         }
       },
       "required": [
-        "name",
+        "title",
         "scenarios",
         "graphs"
       ]

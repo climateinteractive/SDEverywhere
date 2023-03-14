@@ -87,17 +87,17 @@ interface ParsedScenarioRef {
 
 type ParsedScenarioGroupId = string
 
-type ParsedScenarioGroupName = string
+type ParsedScenarioGroupTitle = string
 
 type ParsedScenarioGroupScenariosItem = ParsedScenarioArrayItem | ParsedScenarioRef
 
 /**
  * A definition of a group of input scenarios.  Multiple scenarios can be grouped together under a single name, and
- * can later be referenced by group name in a view definition.
+ * can later be referenced by group ID in a view definition.
  */
 interface ParsedScenarioGroup {
   id?: ParsedScenarioGroupId
-  name: ParsedScenarioGroupName
+  title: ParsedScenarioGroupTitle
   scenarios: ParsedScenarioGroupScenariosItem[]
 }
 
@@ -115,7 +115,7 @@ interface ParsedScenarioGroupRef {
 // VIEWS
 //
 
-type ParsedViewName = string
+type ParsedViewTitle = string
 
 type ParsedViewGraphsPreset = 'all'
 
@@ -128,7 +128,7 @@ type ParsedViewGraphs = ParsedViewGraphsPreset | ParsedViewGraphId[]
  * definition allows for specifying a set of graphs to be shown in a number of different scenarios.
  */
 interface ParsedView {
-  name: ParsedViewName
+  title?: ParsedViewTitle
   // desc?: string
   scenario_ref?: ParsedScenarioTitle
   graphs?: ParsedViewGraphs
@@ -138,7 +138,7 @@ interface ParsedView {
 // VIEW GROUPS
 //
 
-type ParsedViewGroupName = string
+type ParsedViewGroupTitle = string
 
 interface ParsedViewGroupViewsItem {
   view: ParsedView
@@ -150,7 +150,7 @@ type ParsedViewGroupScenariosItem = ParsedScenarioRef | ParsedScenarioGroupRef
  * A definition of a group of views.
  */
 interface ParsedViewGroup {
-  name: ParsedViewGroupName
+  title: ParsedViewGroupTitle
   views?: ParsedViewGroupViewsItem[]
   scenarios?: ParsedViewGroupScenariosItem[]
   graphs?: ParsedViewGraphs
@@ -318,7 +318,7 @@ function scenarioGroupSpecFromParsed(parsedScenarioGroup: ParsedScenarioGroup): 
   return {
     kind: 'scenario-group',
     id: parsedScenarioGroup.id,
-    name: parsedScenarioGroup.name,
+    title: parsedScenarioGroup.title,
     scenarios: scenarioSpecs
   }
 }
@@ -330,7 +330,7 @@ function scenarioGroupSpecFromParsed(parsedScenarioGroup: ParsedScenarioGroup): 
 function viewSpecFromParsed(parsedView: ParsedView): CompareViewSpec {
   return {
     kind: 'view',
-    name: parsedView.name,
+    title: parsedView.title,
     scenario: {
       kind: 'scenario-ref',
       scenarioId: parsedView.scenario_ref
@@ -362,7 +362,7 @@ function viewGroupSpecFromParsed(parsedViewGroup: ParsedViewGroup): CompareViewG
     // This is a view group with an array of views
     return {
       kind: 'view-group-with-views',
-      name: parsedViewGroup.name,
+      title: parsedViewGroup.title,
       views: parsedViewGroup.views.map(item => viewSpecFromParsed(item.view))
     }
   } else if (parsedViewGroup.scenarios !== undefined) {
@@ -387,7 +387,7 @@ function viewGroupSpecFromParsed(parsedViewGroup: ParsedViewGroup): CompareViewG
     )
     return {
       kind: 'view-group-with-scenarios',
-      name: parsedViewGroup.name,
+      title: parsedViewGroup.title,
       scenarios,
       graphs: viewGraphsSpecFromParsed(parsedViewGroup.graphs)
     }

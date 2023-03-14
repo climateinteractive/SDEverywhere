@@ -215,7 +215,10 @@ export default {
       type: 'object',
       additionalProperties: false,
       properties: {
-        name: {
+        id: {
+          type: 'string'
+        },
+        title: {
           type: 'string'
         },
         scenarios: {
@@ -226,7 +229,7 @@ export default {
           minItems: 1
         }
       },
-      required: ['name', 'scenarios']
+      required: ['title', 'scenarios']
     },
 
     scenario_group_scenarios_array_item: {
@@ -263,7 +266,7 @@ export default {
       type: 'object',
       additionalProperties: false,
       properties: {
-        name: {
+        title: {
           type: 'string'
         },
         scenario_ref: {
@@ -273,7 +276,7 @@ export default {
           $ref: '#/$defs/view_graphs'
         }
       },
-      required: ['name', 'scenario_ref', 'graphs']
+      required: ['scenario_ref', 'graphs']
     },
 
     view_graphs: {
@@ -319,7 +322,7 @@ export default {
       type: 'object',
       additionalProperties: false,
       properties: {
-        name: {
+        title: {
           type: 'string'
         },
         views: {
@@ -330,7 +333,7 @@ export default {
           minItems: 1
         }
       },
-      required: ['name', 'views']
+      required: ['title', 'views']
     },
 
     view_group_views_array_item: {
@@ -347,7 +350,7 @@ export default {
       type: 'object',
       additionalProperties: false,
       properties: {
-        name: {
+        title: {
           type: 'string'
         },
         scenarios: {
@@ -361,7 +364,7 @@ export default {
           $ref: '#/$defs/view_graphs'
         }
       },
-      required: ['name', 'scenarios', 'graphs']
+      required: ['title', 'scenarios', 'graphs']
     },
 
     view_group_scenarios_array_item: {
