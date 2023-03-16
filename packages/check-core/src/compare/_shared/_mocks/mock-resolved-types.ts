@@ -110,7 +110,7 @@ export function stateForInputVar(
     }
   }
 
-  if ('kind' in inputVar) {
+  if (!('varId' in inputVar)) {
     return {
       error: inputVar
     }
@@ -161,13 +161,15 @@ export function scenarioGroup(
 //
 
 export function view(
-  title: string | undefined,
+  title: string,
+  subtitle: string | undefined,
   scenario: CompareScenario,
   graphs: 'all' | CompareViewGraphId[]
 ): CompareView {
   return {
     kind: 'view',
     title,
+    subtitle,
     scenario,
     graphs
   }

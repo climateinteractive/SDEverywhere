@@ -118,6 +118,7 @@ interface ParsedScenarioGroupRef {
 //
 
 type ParsedViewTitle = string
+type ParsedViewSubtitle = string
 
 type ParsedViewGraphsPreset = 'all'
 
@@ -131,6 +132,7 @@ type ParsedViewGraphs = ParsedViewGraphsPreset | ParsedViewGraphId[]
  */
 interface ParsedView {
   title?: ParsedViewTitle
+  subtitle?: ParsedViewSubtitle
   // desc?: string
   scenario_ref?: ParsedScenarioTitle
   graphs?: ParsedViewGraphs
@@ -342,6 +344,7 @@ function viewSpecFromParsed(parsedView: ParsedView): CompareViewSpec {
   return {
     kind: 'view',
     title: parsedView.title,
+    subtitle: parsedView.subtitle,
     scenario: {
       kind: 'scenario-ref',
       scenarioId: parsedView.scenario_ref

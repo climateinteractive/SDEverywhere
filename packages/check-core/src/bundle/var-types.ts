@@ -20,6 +20,11 @@ export type InputId = string
  */
 export interface InputVar {
   /**
+   * Whether this input is controlled by a continuous range/slider or a discrete on/off switch.
+   * If undefined, 'slider' will be assumed.
+   */
+  kind?: 'slider' | 'switch'
+  /**
    * A unique, stable identifier string for this input.
    *
    * This can be used to identify an input variable in a way that is resilient

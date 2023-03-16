@@ -339,7 +339,13 @@ describe('resolveCompareSpecs', () => {
   describe('with view group specs', () => {
     it('should resolve a view group that is specified with an array of view specs', () => {
       const specs: CompareSpecs = {
-        scenarios: [scenarioWithInputsSpec([inputAtPositionSpec('id 1', 'max')], { id: 'id_1_at_max' })],
+        scenarios: [
+          scenarioWithInputsSpec([inputAtPositionSpec('id 1', 'max')], {
+            id: 'id_1_at_max',
+            title: 'input id 1',
+            subtitle: 'at max'
+          })
+        ],
         scenarioGroups: [
           scenarioGroupSpec('Group with two vars at max', [
             scenarioRefSpec('id_1_at_max'),
@@ -348,40 +354,53 @@ describe('resolveCompareSpecs', () => {
         ],
         viewGroups: [
           viewGroupWithViewsSpec('View group 1', [
-            viewSpec('View with all graphs', scenarioRefSpec('id_1_at_max'), graphsPresetSpec('all'))
+            viewSpec('View with all graphs', undefined, scenarioRefSpec('id_1_at_max'), graphsPresetSpec('all'))
           ]),
           viewGroupWithViewsSpec('View group 2', [
-            viewSpec('View with specific graphs', scenarioRefSpec('id_1_at_max'), graphsArraySpec(['1', '2']))
+            viewSpec(
+              // This view has an explicit title and subtitle
+              'View with specific graphs',
+              undefined,
+              scenarioRefSpec('id_1_at_max'),
+              graphsArraySpec(['1', '2'])
+            ),
+            viewSpec(
+              // This view has no explicit title/subtitle, so it should be inferred from the scenario title/subtitle (which are defined)
+              undefined,
+              undefined,
+              scenarioRefSpec('id_1_at_max'),
+              graphsArraySpec(['1', '2'])
+            ),
+            viewSpec(
+              // This view has no explicit title and its scenario title is also undefined, so it should resolve to "Untitled view"
+              undefined,
+              undefined,
+              scenarioRefSpec('id_2_at_max'),
+              graphsArraySpec(['1', '2'])
+            )
           ])
         ]
       }
 
+      const expectedId1AtMax = scenarioWithInput('id 1', 'at-maximum', lVar('IVarA'), rVar('IVarA'), {
+        id: 'id_1_at_max',
+        title: 'input id 1',
+        subtitle: 'at max'
+      })
+      const expectedId2AtMax = scenarioWithInput('id 2', 'at-maximum', lVar('IVarB'), rVar('IVarB_Renamed'), {
+        id: 'id_2_at_max'
+      })
+
       const resolved = resolveCompareSpecs(modelInputsL, modelInputsR, specs)
       expect(resolved).toEqual({
-        scenarios: [
-          scenarioWithInput('id 1', 'at-maximum', lVar('IVarA'), rVar('IVarA'), { id: 'id_1_at_max' }),
-          scenarioWithInput('id 2', 'at-maximum', lVar('IVarB'), rVar('IVarB_Renamed'), { id: 'id_2_at_max' })
-        ],
-        scenarioGroups: [
-          scenarioGroup('Group with two vars at max', [
-            scenarioWithInput('id 1', 'at-maximum', lVar('IVarA'), rVar('IVarA'), { id: 'id_1_at_max' }),
-            scenarioWithInput('id 2', 'at-maximum', lVar('IVarB'), rVar('IVarB_Renamed'), { id: 'id_2_at_max' })
-          ])
-        ],
+        scenarios: [expectedId1AtMax, expectedId2AtMax],
+        scenarioGroups: [scenarioGroup('Group with two vars at max', [expectedId1AtMax, expectedId2AtMax])],
         viewGroups: [
-          viewGroup('View group 1', [
-            view(
-              'View with all graphs',
-              scenarioWithInput('id 1', 'at-maximum', lVar('IVarA'), rVar('IVarA'), { id: 'id_1_at_max' }),
-              'all'
-            )
-          ]),
+          viewGroup('View group 1', [view('View with all graphs', undefined, expectedId1AtMax, 'all')]),
           viewGroup('View group 2', [
-            view(
-              'View with specific graphs',
-              scenarioWithInput('id 1', 'at-maximum', lVar('IVarA'), rVar('IVarA'), { id: 'id_1_at_max' }),
-              ['1', '2']
-            )
+            view('View with specific graphs', undefined, expectedId1AtMax, ['1', '2']),
+            view('input id 1', 'at max', expectedId1AtMax, ['1', '2']),
+            view('Untitled view', undefined, expectedId2AtMax, ['1', '2'])
           ])
         ]
       })
@@ -392,7 +411,8 @@ describe('resolveCompareSpecs', () => {
         scenarios: [
           scenarioWithInputsSpec([inputAtPositionSpec('id 1', 'max')], {
             id: 'id_1_at_max',
-            title: 'input id 1 at max'
+            title: 'input id 1',
+            subtitle: 'at max'
           })
         ],
         scenarioGroups: [
@@ -402,7 +422,8 @@ describe('resolveCompareSpecs', () => {
               scenarioRefSpec('id_1_at_max'),
               scenarioWithInputsSpec([inputAtPositionSpec('id 2', 'max')], {
                 id: 'id_2_at_max',
-                title: 'input id 2 at max'
+                title: 'input id 2',
+                subtitle: 'at max'
               })
             ],
             { id: 'group_1' }
@@ -414,62 +435,28 @@ describe('resolveCompareSpecs', () => {
         ]
       }
 
+      const expectedId1AtMax = scenarioWithInput('id 1', 'at-maximum', lVar('IVarA'), rVar('IVarA'), {
+        id: 'id_1_at_max',
+        title: 'input id 1',
+        subtitle: 'at max'
+      })
+      const expectedId2AtMax = scenarioWithInput('id 2', 'at-maximum', lVar('IVarB'), rVar('IVarB_Renamed'), {
+        id: 'id_2_at_max',
+        title: 'input id 2',
+        subtitle: 'at max'
+      })
+
       const resolved = resolveCompareSpecs(modelInputsL, modelInputsR, specs)
       expect(resolved).toEqual({
-        scenarios: [
-          scenarioWithInput('id 1', 'at-maximum', lVar('IVarA'), rVar('IVarA'), {
-            id: 'id_1_at_max',
-            title: 'input id 1 at max'
-          }),
-          scenarioWithInput('id 2', 'at-maximum', lVar('IVarB'), rVar('IVarB_Renamed'), {
-            id: 'id_2_at_max',
-            title: 'input id 2 at max'
-          })
-        ],
+        scenarios: [expectedId1AtMax, expectedId2AtMax],
         scenarioGroups: [
-          scenarioGroup(
-            'Group with two vars at max',
-            [
-              scenarioWithInput('id 1', 'at-maximum', lVar('IVarA'), rVar('IVarA'), {
-                id: 'id_1_at_max',
-                title: 'input id 1 at max'
-              }),
-              scenarioWithInput('id 2', 'at-maximum', lVar('IVarB'), rVar('IVarB_Renamed'), {
-                id: 'id_2_at_max',
-                title: 'input id 2 at max'
-              })
-            ],
-            { id: 'group_1' }
-          )
+          scenarioGroup('Group with two vars at max', [expectedId1AtMax, expectedId2AtMax], { id: 'group_1' })
         ],
         viewGroups: [
-          viewGroup('View group 1', [
-            view(
-              undefined,
-              scenarioWithInput('id 1', 'at-maximum', lVar('IVarA'), rVar('IVarA'), {
-                id: 'id_1_at_max',
-                title: 'input id 1 at max'
-              }),
-              'all'
-            )
-          ]),
+          viewGroup('View group 1', [view('input id 1', 'at max', expectedId1AtMax, 'all')]),
           viewGroup('View group 2', [
-            view(
-              undefined,
-              scenarioWithInput('id 1', 'at-maximum', lVar('IVarA'), rVar('IVarA'), {
-                id: 'id_1_at_max',
-                title: 'input id 1 at max'
-              }),
-              ['1', '2']
-            ),
-            view(
-              undefined,
-              scenarioWithInput('id 2', 'at-maximum', lVar('IVarB'), rVar('IVarB_Renamed'), {
-                id: 'id_2_at_max',
-                title: 'input id 2 at max'
-              }),
-              ['1', '2']
-            )
+            view('input id 1', 'at max', expectedId1AtMax, ['1', '2']),
+            view('input id 2', 'at max', expectedId2AtMax, ['1', '2'])
           ])
         ]
       })

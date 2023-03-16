@@ -8,6 +8,7 @@ import type {
   CompareScenarioId,
   CompareViewGraphId,
   CompareViewGroupTitle,
+  CompareViewSubtitle,
   CompareViewTitle
 } from '../config/compare-spec-types'
 
@@ -115,8 +116,10 @@ export interface CompareUnresolvedScenarioGroupRef {
 /** A resolved view definition.  A view presents a set of graphs for a single input scenario. */
 export interface CompareView {
   kind: 'view'
-  /** The title of the view.  If undefined, the title will be inferred from the scenario. */
+  /** The title of the view. */
   title: CompareViewTitle
+  /** The subtitle of the view. */
+  subtitle?: CompareViewSubtitle
   /** The resolved scenario to be shown in the view. */
   scenario: CompareScenario
   /** The graphs to be shown for each scenario view. */
@@ -128,6 +131,8 @@ export interface CompareUnresolvedView {
   kind: 'unresolved-view'
   /** The requested title of the view, if provided. */
   title?: CompareViewTitle
+  /** The requested subtitle of the view, if provided. */
+  subtitle?: CompareViewSubtitle
   /** The ID of the referenced scenario that could not be resolved. */
   scenarioId?: CompareScenarioId
   /** The ID of the referenced scenario group that could not be resolved. */

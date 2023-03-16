@@ -116,12 +116,14 @@ export function scenarioGroupRefSpec(groupId: CompareScenarioGroupId): CompareSc
 
 export function viewSpec(
   title: string | undefined,
+  subtitle: string | undefined,
   scenario: CompareScenarioRefSpec,
   graphs: CompareViewGraphsSpec
 ): CompareViewSpec {
   return {
     kind: 'view',
     title,
+    subtitle,
     scenario,
     graphs
   }

@@ -269,6 +269,9 @@ export default {
         title: {
           type: 'string'
         },
+        subtitle: {
+          type: 'string'
+        },
         scenario_ref: {
           type: 'string'
         },

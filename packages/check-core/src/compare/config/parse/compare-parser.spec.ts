@@ -98,6 +98,7 @@ describe('parseCompareSpecs', () => {
             - '87'
       - view:
           title: Temp for Scenario_1
+          subtitle: Subtitle goes here
           scenario_ref: S1
           graphs:
             - '86'
@@ -143,10 +144,12 @@ describe('parseCompareSpecs', () => {
     ])
 
     expect(compareSpec.viewGroups).toEqual([
-      viewGroupWithViewsSpec('Baseline', [viewSpec('All graphs', scenarioRefSpec('S0'), graphsPresetSpec('all'))]),
+      viewGroupWithViewsSpec('Baseline', [
+        viewSpec('All graphs', undefined, scenarioRefSpec('S0'), graphsPresetSpec('all'))
+      ]),
       viewGroupWithViewsSpec('Temp (explicit views)', [
-        viewSpec('Temp for Scenario_0', scenarioRefSpec('S0'), graphsArraySpec(['86', '87'])),
-        viewSpec('Temp for Scenario_1', scenarioRefSpec('S1'), graphsArraySpec(['86', '87']))
+        viewSpec('Temp for Scenario_0', undefined, scenarioRefSpec('S0'), graphsArraySpec(['86', '87'])),
+        viewSpec('Temp for Scenario_1', 'Subtitle goes here', scenarioRefSpec('S1'), graphsArraySpec(['86', '87']))
       ]),
       viewGroupWithScenariosSpec(
         'Temp (shorthand)',

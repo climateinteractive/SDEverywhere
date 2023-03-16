@@ -132,6 +132,7 @@ export interface CompareScenarioGroupRefSpec {
 //
 
 export type CompareViewTitle = string
+export type CompareViewSubtitle = string
 
 export type CompareViewGraphId = string
 
@@ -165,6 +166,8 @@ export interface CompareViewSpec {
   kind: 'view'
   /** The title of the view.  If undefined, the title will be inferred from the scenario. */
   title?: CompareViewTitle
+  /** The subtitle of the view.  If undefined, the subtitle will be inferred from the scenario. */
+  subtitle?: CompareViewGroupTitle
   /** The scenario to be shown in the view. */
   scenario: CompareScenarioRefSpec
   /** The graphs to be shown for each scenario view. */

@@ -30,6 +30,7 @@ import type {
   CompareViewGraphId,
   CompareViewGraphsSpec,
   CompareViewGroupSpec,
+  CompareViewSubtitle,
   CompareViewTitle
 } from '../compare-spec-types'
 
@@ -482,27 +483,43 @@ function resolveGraphsFromSpec(graphsSpec: CompareViewGraphsSpec): 'all' | Compa
 function resolveViewForScenarioRefSpec(
   resolvedScenarios: ResolvedScenarios,
   viewTitle: CompareViewTitle | undefined,
+  viewSubtitle: CompareViewSubtitle | undefined,
   refSpec: CompareScenarioRefSpec,
   graphs: 'all' | CompareViewGraphId[]
 ): CompareView | CompareUnresolvedView {
   const resolvedScenario = resolvedScenarios.getScenarioForId(refSpec.scenarioId)
   if (resolvedScenario) {
     // Add the resolved view
-    return resolveViewForScenario(viewTitle, resolvedScenario, graphs)
+    return resolveViewForScenario(viewTitle, viewSubtitle, resolvedScenario, graphs)
   } else {
     // Add the unresolved view
-    return unresolvedViewForScenarioId(viewTitle, refSpec.scenarioId)
+    return unresolvedViewForScenarioId(viewTitle, viewSubtitle, refSpec.scenarioId)
   }
 }
 
 function resolveViewForScenario(
   viewTitle: CompareViewTitle | undefined,
+  viewSubtitle: CompareViewSubtitle | undefined,
   resolvedScenario: CompareScenario,
   graphs: 'all' | CompareViewGraphId[]
 ): CompareView {
+  // If explicit title/subtitle were not provided for the view, infer them from the scenario
+  // TODO: For now we only infer the subtitle if an explicit title was also not provided; this might
+  // be surprising if the user wants the title inferred but wants to provide an explicit subtitle
+  if (viewTitle === undefined) {
+    viewTitle = resolvedScenario.title
+    if (viewTitle === undefined) {
+      viewTitle = 'Untitled view'
+    }
+    if (viewSubtitle === undefined) {
+      viewSubtitle = resolvedScenario.subtitle
+    }
+  }
+
   return {
     kind: 'view',
     title: viewTitle,
+    subtitle: viewSubtitle,
     scenario: resolvedScenario,
     graphs
   }
@@ -510,22 +527,26 @@ function resolveViewForScenario(
 
 function unresolvedViewForScenarioId(
   viewTitle: CompareViewTitle | undefined,
+  viewSubtitle: CompareViewSubtitle | undefined,
   scenarioId: CompareScenarioId
 ): CompareUnresolvedView {
   return {
     kind: 'unresolved-view',
     title: viewTitle,
+    subtitle: viewSubtitle,
     scenarioId
   }
 }
 
 function unresolvedViewForScenarioGroupId(
   viewTitle: CompareViewTitle | undefined,
+  viewSubtitle: CompareViewSubtitle | undefined,
   scenarioGroupId: CompareScenarioGroupId
 ): CompareUnresolvedView {
   return {
     kind: 'unresolved-view',
     title: viewTitle,
+    subtitle: viewSubtitle,
     scenarioGroupId
   }
 }
@@ -549,7 +570,13 @@ function resolveViewGroupFromSpec(
       // Resolve each view
       views = viewGroupSpec.views.map(viewSpec => {
         const graphs = resolveGraphsFromSpec(viewSpec.graphs)
-        return resolveViewForScenarioRefSpec(resolvedScenarios, viewSpec.title, viewSpec.scenario, graphs)
+        return resolveViewForScenarioRefSpec(
+          resolvedScenarios,
+          viewSpec.title,
+          viewSpec.subtitle,
+          viewSpec.scenario,
+          graphs
+        )
       })
       break
     }
@@ -561,7 +588,7 @@ function resolveViewGroupFromSpec(
         switch (refSpec.kind) {
           case 'scenario-ref':
             // Add a view for the scenario
-            views.push(resolveViewForScenarioRefSpec(resolvedScenarios, undefined, refSpec, graphs))
+            views.push(resolveViewForScenarioRefSpec(resolvedScenarios, undefined, undefined, refSpec, graphs))
             break
           case 'scenario-group-ref': {
             const resolvedGroup = resolvedScenarioGroups.getGroupForId(refSpec.groupId)
@@ -570,11 +597,11 @@ function resolveViewGroupFromSpec(
               for (const scenario of resolvedGroup.scenarios) {
                 switch (scenario.kind) {
                   case 'unresolved-scenario-ref':
-                    views.push(unresolvedViewForScenarioId(undefined, scenario.scenarioId))
+                    views.push(unresolvedViewForScenarioId(undefined, undefined, scenario.scenarioId))
                     break
                   case 'scenario-with-inputs':
                   case 'scenario-with-all-inputs':
-                    views.push(resolveViewForScenario(undefined, scenario, graphs))
+                    views.push(resolveViewForScenario(undefined, undefined, scenario, graphs))
                     break
                   default:
                     assertNever(scenario)
@@ -582,7 +609,7 @@ function resolveViewGroupFromSpec(
               }
             } else {
               // Add an unresolved view that covers the whole group
-              views.push(unresolvedViewForScenarioGroupId(undefined, refSpec.groupId))
+              views.push(unresolvedViewForScenarioGroupId(undefined, undefined, refSpec.groupId))
             }
             break
           }
