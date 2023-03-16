@@ -70,6 +70,10 @@ describe('parseCompareSpecs', () => {
     title: G1
     scenarios:
       - scenario_ref: S0
+      - scenario_ref:
+          id: S1
+          title: S1 custom title
+          subtitle: custom subtitle
       - scenario:
           title: S5
           with: Input3
@@ -136,6 +140,7 @@ describe('parseCompareSpecs', () => {
         'G1',
         [
           scenarioRefSpec('S0'),
+          scenarioRefSpec('S1', 'S1 custom title', 'custom subtitle'),
           scenarioWithInputsSpec([inputAtPositionSpec('Input3', 'min')], { title: 'S5' }),
           scenarioWithInputsSpec([inputAtPositionSpec('Input3', 'max')])
         ],
@@ -144,12 +149,10 @@ describe('parseCompareSpecs', () => {
     ])
 
     expect(compareSpec.viewGroups).toEqual([
-      viewGroupWithViewsSpec('Baseline', [
-        viewSpec('All graphs', undefined, scenarioRefSpec('S0'), graphsPresetSpec('all'))
-      ]),
+      viewGroupWithViewsSpec('Baseline', [viewSpec('All graphs', undefined, 'S0', graphsPresetSpec('all'))]),
       viewGroupWithViewsSpec('Temp (explicit views)', [
-        viewSpec('Temp for Scenario_0', undefined, scenarioRefSpec('S0'), graphsArraySpec(['86', '87'])),
-        viewSpec('Temp for Scenario_1', 'Subtitle goes here', scenarioRefSpec('S1'), graphsArraySpec(['86', '87']))
+        viewSpec('Temp for Scenario_0', undefined, 'S0', graphsArraySpec(['86', '87'])),
+        viewSpec('Temp for Scenario_1', 'Subtitle goes here', 'S1', graphsArraySpec(['86', '87']))
       ]),
       viewGroupWithScenariosSpec(
         'Temp (shorthand)',

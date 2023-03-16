@@ -233,15 +233,40 @@ export default {
     },
 
     scenario_group_scenarios_array_item: {
-      oneOf: [{ $ref: '#/$defs/scenario_array_item' }, { $ref: '#/$defs/scenario_ref' }]
+      oneOf: [{ $ref: '#/$defs/scenario_array_item' }, { $ref: '#/$defs/scenario_ref_array_item' }]
+    },
+
+    scenario_ref_id: {
+      type: 'string'
+    },
+
+    scenario_ref_object: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        id: {
+          type: 'string'
+        },
+        title: {
+          type: 'string'
+        },
+        subtitle: {
+          type: 'string'
+        }
+      },
+      required: ['id']
     },
 
     scenario_ref: {
+      oneOf: [{ $ref: '#/$defs/scenario_ref_id' }, { $ref: '#/$defs/scenario_ref_object' }]
+    },
+
+    scenario_ref_array_item: {
       type: 'object',
       additionalProperties: false,
       properties: {
         scenario_ref: {
-          type: 'string'
+          $ref: '#/$defs/scenario_ref'
         }
       },
       required: ['scenario_ref']
@@ -371,7 +396,7 @@ export default {
     },
 
     view_group_scenarios_array_item: {
-      oneOf: [{ $ref: '#/$defs/scenario_ref' }, { $ref: '#/$defs/scenario_group_ref' }]
+      oneOf: [{ $ref: '#/$defs/scenario_ref_array_item' }, { $ref: '#/$defs/scenario_group_ref' }]
     }
   }
 }

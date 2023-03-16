@@ -78,9 +78,16 @@ interface ParsedScenarioArrayItem {
   scenario: ParsedScenario
 }
 
+/** A reference to a scenario definition with optional title/subtitle overrides. */
+interface ParsedScenarioRefObject {
+  id: ParsedScenarioId
+  title?: ParsedScenarioTitle
+  subtitle?: ParsedScenarioSubtitle
+}
+
 /** A reference to a scenario definition. */
 interface ParsedScenarioRef {
-  scenario_ref: ParsedScenarioTitle
+  scenario_ref: ParsedScenarioId | ParsedScenarioRefObject
 }
 
 //
@@ -134,7 +141,7 @@ interface ParsedView {
   title?: ParsedViewTitle
   subtitle?: ParsedViewSubtitle
   // desc?: string
-  scenario_ref?: ParsedScenarioTitle
+  scenario_ref?: ParsedScenarioId
   graphs?: ParsedViewGraphs
 }
 
@@ -319,12 +326,9 @@ function scenarioGroupSpecFromParsed(parsedScenarioGroup: ParsedScenarioGroup): 
   const scenarioSpecs: (CompareScenarioSpec | CompareScenarioRefSpec)[] = parsedScenarioGroup.scenarios.map(
     parsedScenarioOrRef => {
       if ('scenario_ref' in parsedScenarioOrRef) {
-        return {
-          kind: 'scenario-ref',
-          scenarioId: parsedScenarioOrRef.scenario_ref
-        }
+        return scenarioRefSpecFromParsed(parsedScenarioOrRef)
       } else {
-        return scenarioSpecFromParsed(parsedScenarioOrRef.scenario as ParsedScenario)
+        return scenarioSpecFromParsed(parsedScenarioOrRef.scenario)
       }
     }
   )
@@ -333,6 +337,29 @@ function scenarioGroupSpecFromParsed(parsedScenarioGroup: ParsedScenarioGroup): 
     id: parsedScenarioGroup.id,
     title: parsedScenarioGroup.title,
     scenarios: scenarioSpecs
+  }
+}
+
+function scenarioRefSpecFromParsed(parsedScenarioRef: ParsedScenarioRef): CompareScenarioRefSpec {
+  if (typeof parsedScenarioRef.scenario_ref === 'string') {
+    return {
+      kind: 'scenario-ref',
+      scenarioId: parsedScenarioRef.scenario_ref
+    }
+  } else {
+    return {
+      kind: 'scenario-ref',
+      scenarioId: parsedScenarioRef.scenario_ref.id,
+      title: parsedScenarioRef.scenario_ref.title,
+      subtitle: parsedScenarioRef.scenario_ref.subtitle
+    }
+  }
+}
+
+function scenarioGroupRefSpecFromParsed(parsedGroupRef: ParsedScenarioGroupRef): CompareScenarioGroupRefSpec {
+  return {
+    kind: 'scenario-group-ref',
+    groupId: parsedGroupRef.scenario_group_ref
   }
 }
 
@@ -345,10 +372,7 @@ function viewSpecFromParsed(parsedView: ParsedView): CompareViewSpec {
     kind: 'view',
     title: parsedView.title,
     subtitle: parsedView.subtitle,
-    scenario: {
-      kind: 'scenario-ref',
-      scenarioId: parsedView.scenario_ref
-    },
+    scenarioId: parsedView.scenario_ref,
     graphs: viewGraphsSpecFromParsed(parsedView.graphs)
   }
 }
@@ -384,15 +408,9 @@ function viewGroupSpecFromParsed(parsedViewGroup: ParsedViewGroup): CompareViewG
     const scenarios: (CompareScenarioRefSpec | CompareScenarioGroupRefSpec)[] = parsedViewGroup.scenarios.map(
       parsedScenarioOrGroupRef => {
         if ('scenario_ref' in parsedScenarioOrGroupRef) {
-          return {
-            kind: 'scenario-ref',
-            scenarioId: parsedScenarioOrGroupRef.scenario_ref
-          }
+          return scenarioRefSpecFromParsed(parsedScenarioOrGroupRef)
         } else if ('scenario_group_ref' in parsedScenarioOrGroupRef) {
-          return {
-            kind: 'scenario-group-ref',
-            groupId: parsedScenarioOrGroupRef.scenario_group_ref
-          }
+          return scenarioGroupRefSpecFromParsed(parsedScenarioOrGroupRef)
         } else {
           // Internal error (this should have already been rejected by the validator)
           throw new Error('Invalid view group')

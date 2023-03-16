@@ -3,6 +3,8 @@
 import { assertNever } from 'assert-never'
 
 import type { InputPosition } from '../../../_shared/scenario'
+
+import type { ModelInputs } from '../../../bundle/model-inputs'
 import type { InputId, InputVar } from '../../../bundle/var-types'
 
 import type {
@@ -33,8 +35,6 @@ import type {
   CompareViewSubtitle,
   CompareViewTitle
 } from '../compare-spec-types'
-
-import type { ModelInputs } from '../../../bundle/model-inputs'
 
 export interface CompareResolvedDefs {
   /** The set of resolved scenarios. */
@@ -85,8 +85,15 @@ export function resolveCompareSpecs(
         // See if we have a scenario defined for this ID
         const referencedScenario = resolvedScenarios.getScenarioForId(scenarioItem.scenarioId)
         if (referencedScenario) {
-          // Found it, add it to the group
-          scenariosForGroup.push(referencedScenario)
+          // Found it; create a copy of it to allow for adding the title/subtitle overrides if provided
+          const resolvedScenario = { ...referencedScenario }
+          if (scenarioItem.title) {
+            resolvedScenario.title = scenarioItem.title
+          }
+          if (scenarioItem.subtitle) {
+            resolvedScenario.subtitle = scenarioItem.subtitle
+          }
+          scenariosForGroup.push(resolvedScenario)
         } else {
           // Not found, add an unresolved ref item to the group
           scenariosForGroup.push({
@@ -285,18 +292,6 @@ function resolveScenarioForInputSpecs(
     }
   })
 
-  if (title === undefined) {
-    // No title was defined, so set a default one based on input name.  For now we only
-    // attempt this if there's a single input in the scenario.
-    // if (resolvedInputs.length === 1 && resolvedInputs[0]) {
-    // const setting = scenario.settings[0]
-    //  this.getInfoForPositionSetting(setting.inputVarId, setting.position)
-    // } else {
-    //     title: `PLACEHOLDER (scenario info not provided)`
-    //   }
-    // title = 'TODO: at position or value'
-  }
-
   // Create a `CompareScenario` with the resolved inputs
   return {
     kind: 'scenario-with-inputs',
@@ -480,20 +475,35 @@ function resolveGraphsFromSpec(graphsSpec: CompareViewGraphsSpec): 'all' | Compa
   }
 }
 
-function resolveViewForScenarioRefSpec(
+function resolveViewForScenarioId(
   resolvedScenarios: ResolvedScenarios,
   viewTitle: CompareViewTitle | undefined,
   viewSubtitle: CompareViewSubtitle | undefined,
+  scenarioId: CompareScenarioId,
+  graphs: 'all' | CompareViewGraphId[]
+): CompareView | CompareUnresolvedView {
+  const resolvedScenario = resolvedScenarios.getScenarioForId(scenarioId)
+  if (resolvedScenario) {
+    // Add the resolved view
+    return resolveViewForScenario(viewTitle, viewSubtitle, resolvedScenario, graphs)
+  } else {
+    // Add the unresolved view
+    return unresolvedViewForScenarioId(viewTitle, viewSubtitle, scenarioId)
+  }
+}
+
+function resolveViewForScenarioRefSpec(
+  resolvedScenarios: ResolvedScenarios,
   refSpec: CompareScenarioRefSpec,
   graphs: 'all' | CompareViewGraphId[]
 ): CompareView | CompareUnresolvedView {
   const resolvedScenario = resolvedScenarios.getScenarioForId(refSpec.scenarioId)
   if (resolvedScenario) {
     // Add the resolved view
-    return resolveViewForScenario(viewTitle, viewSubtitle, resolvedScenario, graphs)
+    return resolveViewForScenario(refSpec.title, refSpec.subtitle, resolvedScenario, graphs)
   } else {
     // Add the unresolved view
-    return unresolvedViewForScenarioId(viewTitle, viewSubtitle, refSpec.scenarioId)
+    return unresolvedViewForScenarioId(undefined, undefined, refSpec.scenarioId)
   }
 }
 
@@ -570,11 +580,11 @@ function resolveViewGroupFromSpec(
       // Resolve each view
       views = viewGroupSpec.views.map(viewSpec => {
         const graphs = resolveGraphsFromSpec(viewSpec.graphs)
-        return resolveViewForScenarioRefSpec(
+        return resolveViewForScenarioId(
           resolvedScenarios,
           viewSpec.title,
           viewSpec.subtitle,
-          viewSpec.scenario,
+          viewSpec.scenarioId,
           graphs
         )
       })
@@ -588,7 +598,7 @@ function resolveViewGroupFromSpec(
         switch (refSpec.kind) {
           case 'scenario-ref':
             // Add a view for the scenario
-            views.push(resolveViewForScenarioRefSpec(resolvedScenarios, undefined, undefined, refSpec, graphs))
+            views.push(resolveViewForScenarioRefSpec(resolvedScenarios, refSpec, graphs))
             break
           case 'scenario-group-ref': {
             const resolvedGroup = resolvedScenarioGroups.getGroupForId(refSpec.groupId)

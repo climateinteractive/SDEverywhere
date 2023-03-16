@@ -354,28 +354,28 @@ describe('resolveCompareSpecs', () => {
         ],
         viewGroups: [
           viewGroupWithViewsSpec('View group 1', [
-            viewSpec('View with all graphs', undefined, scenarioRefSpec('id_1_at_max'), graphsPresetSpec('all'))
+            viewSpec('View with all graphs', undefined, 'id_1_at_max', graphsPresetSpec('all'))
           ]),
           viewGroupWithViewsSpec('View group 2', [
             viewSpec(
               // This view has an explicit title and subtitle
               'View with specific graphs',
               undefined,
-              scenarioRefSpec('id_1_at_max'),
+              'id_1_at_max',
               graphsArraySpec(['1', '2'])
             ),
             viewSpec(
               // This view has no explicit title/subtitle, so it should be inferred from the scenario title/subtitle (which are defined)
               undefined,
               undefined,
-              scenarioRefSpec('id_1_at_max'),
+              'id_1_at_max',
               graphsArraySpec(['1', '2'])
             ),
             viewSpec(
               // This view has no explicit title and its scenario title is also undefined, so it should resolve to "Untitled view"
               undefined,
               undefined,
-              scenarioRefSpec('id_2_at_max'),
+              'id_2_at_max',
               graphsArraySpec(['1', '2'])
             )
           ])
@@ -411,15 +411,25 @@ describe('resolveCompareSpecs', () => {
         scenarios: [
           scenarioWithInputsSpec([inputAtPositionSpec('id 1', 'max')], {
             id: 'id_1_at_max',
-            title: 'input id 1',
-            subtitle: 'at max'
+            title: 'id 1 at max default title',
+            subtitle: 'id 1 at max default subtitle'
+          }),
+          scenarioWithInputsSpec([inputAtPositionSpec('id 1', 'min')], {
+            id: 'id_1_at_min',
+            title: 'id 1 at min default title',
+            subtitle: 'id 1 at min default subtitle'
           })
         ],
         scenarioGroups: [
           scenarioGroupSpec(
-            'Group with two vars at max',
+            'Group',
             [
               scenarioRefSpec('id_1_at_max'),
+              scenarioRefSpec(
+                'id_1_at_min',
+                'id 1 at min title override from scenario group',
+                'id 1 at min subtitle override from scenario group'
+              ),
               scenarioWithInputsSpec([inputAtPositionSpec('id 2', 'max')], {
                 id: 'id_2_at_max',
                 title: 'input id 2',
@@ -430,16 +440,43 @@ describe('resolveCompareSpecs', () => {
           )
         ],
         viewGroups: [
-          viewGroupWithScenariosSpec('View group 1', [scenarioRefSpec('id_1_at_max')], graphsPresetSpec('all')),
+          viewGroupWithScenariosSpec(
+            'View group 1',
+            [
+              scenarioRefSpec(
+                'id_1_at_max',
+                'id 1 at max title override from view group',
+                'id 1 at max subtitle override from view group'
+              ),
+              scenarioRefSpec(
+                'id_1_at_min',
+                'id 1 at min title override from view group',
+                'id 1 at min subtitle override from view group'
+              )
+            ],
+            graphsPresetSpec('all')
+          ),
           viewGroupWithScenariosSpec('View group 2', [scenarioGroupRefSpec('group_1')], graphsArraySpec(['1', '2']))
         ]
       }
 
-      const expectedId1AtMax = scenarioWithInput('id 1', 'at-maximum', lVar('IVarA'), rVar('IVarA'), {
-        id: 'id_1_at_max',
-        title: 'input id 1',
-        subtitle: 'at max'
-      })
+      const expectedId1 = (pos: 'min' | 'max', title: string, subtitle: string) => {
+        return scenarioWithInput('id 1', pos === 'min' ? 'at-minimum' : 'at-maximum', lVar('IVarA'), rVar('IVarA'), {
+          id: `id_1_at_${pos}`,
+          title,
+          subtitle
+        })
+      }
+
+      const expectedId1AtMax = expectedId1('max', 'id 1 at max default title', 'id 1 at max default subtitle')
+      const expectedId1AtMin = expectedId1('min', 'id 1 at min default title', 'id 1 at min default subtitle')
+
+      const expectedId1AtMinWithScenarioGroupOverride = expectedId1(
+        'min',
+        'id 1 at min title override from scenario group',
+        'id 1 at min subtitle override from scenario group'
+      )
+
       const expectedId2AtMax = scenarioWithInput('id 2', 'at-maximum', lVar('IVarB'), rVar('IVarB_Renamed'), {
         id: 'id_2_at_max',
         title: 'input id 2',
@@ -447,19 +484,38 @@ describe('resolveCompareSpecs', () => {
       })
 
       const resolved = resolveCompareSpecs(modelInputsL, modelInputsR, specs)
-      expect(resolved).toEqual({
-        scenarios: [expectedId1AtMax, expectedId2AtMax],
-        scenarioGroups: [
-          scenarioGroup('Group with two vars at max', [expectedId1AtMax, expectedId2AtMax], { id: 'group_1' })
-        ],
-        viewGroups: [
-          viewGroup('View group 1', [view('input id 1', 'at max', expectedId1AtMax, 'all')]),
-          viewGroup('View group 2', [
-            view('input id 1', 'at max', expectedId1AtMax, ['1', '2']),
-            view('input id 2', 'at max', expectedId2AtMax, ['1', '2'])
-          ])
-        ]
-      })
+      expect(resolved.scenarios).toEqual([expectedId1AtMax, expectedId1AtMin, expectedId2AtMax])
+      expect(resolved.scenarioGroups).toEqual([
+        scenarioGroup('Group', [expectedId1AtMax, expectedId1AtMinWithScenarioGroupOverride, expectedId2AtMax], {
+          id: 'group_1'
+        })
+      ])
+      expect(resolved.viewGroups).toEqual([
+        viewGroup('View group 1', [
+          view(
+            'id 1 at max title override from view group',
+            'id 1 at max subtitle override from view group',
+            expectedId1AtMax,
+            'all'
+          ),
+          view(
+            'id 1 at min title override from view group',
+            'id 1 at min subtitle override from view group',
+            expectedId1AtMin,
+            'all'
+          )
+        ]),
+        viewGroup('View group 2', [
+          view('id 1 at max default title', 'id 1 at max default subtitle', expectedId1AtMax, ['1', '2']),
+          view(
+            'id 1 at min title override from scenario group',
+            'id 1 at min subtitle override from scenario group',
+            expectedId1AtMinWithScenarioGroupOverride,
+            ['1', '2']
+          ),
+          view('input id 2', 'at max', expectedId2AtMax, ['1', '2'])
+        ])
+      ])
     })
 
     it('should resolve a view group that refers to an unknown scenario', () => {

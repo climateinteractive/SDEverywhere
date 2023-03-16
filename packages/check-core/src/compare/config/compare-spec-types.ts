@@ -96,6 +96,10 @@ export interface CompareScenarioRefSpec {
   kind: 'scenario-ref'
   /** The ID of the scenario that is referenced. */
   scenarioId: CompareScenarioId
+  /** The optional title that is used instead of the referenced scenario's title. */
+  title?: CompareScenarioTitle
+  /** The optional subtitle that is used instead of the referenced scenario's subtitle. */
+  subtitle?: CompareScenarioSubtitle
 }
 
 //
@@ -169,7 +173,7 @@ export interface CompareViewSpec {
   /** The subtitle of the view.  If undefined, the subtitle will be inferred from the scenario. */
   subtitle?: CompareViewGroupTitle
   /** The scenario to be shown in the view. */
-  scenario: CompareScenarioRefSpec
+  scenarioId: CompareScenarioId
   /** The graphs to be shown for each scenario view. */
   graphs: CompareViewGraphsSpec
 }

@@ -79,10 +79,16 @@ export function inputAtValueSpec(inputName: string, value: number): CompareScena
   }
 }
 
-export function scenarioRefSpec(scenarioId: CompareScenarioId): CompareScenarioRefSpec {
+export function scenarioRefSpec(
+  scenarioId: CompareScenarioId,
+  title?: string,
+  subtitle?: string
+): CompareScenarioRefSpec {
   return {
     kind: 'scenario-ref',
-    scenarioId
+    scenarioId,
+    title,
+    subtitle
   }
 }
 
@@ -117,14 +123,14 @@ export function scenarioGroupRefSpec(groupId: CompareScenarioGroupId): CompareSc
 export function viewSpec(
   title: string | undefined,
   subtitle: string | undefined,
-  scenario: CompareScenarioRefSpec,
+  scenarioId: CompareScenarioId,
   graphs: CompareViewGraphsSpec
 ): CompareViewSpec {
   return {
     kind: 'view',
     title,
     subtitle,
-    scenario,
+    scenarioId,
     graphs
   }
 }
