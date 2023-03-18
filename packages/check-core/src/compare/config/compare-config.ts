@@ -2,7 +2,7 @@
 
 import type { LoadedBundle, NamedBundle } from '../../bundle/bundle-types'
 import type { ModelInputs } from '../../bundle/model-inputs'
-import type { CompareScenario, CompareViewGroup } from '../_shared/compare-resolved-types'
+import type { CompareViewGroup } from '../_shared/compare-resolved-types'
 
 import type { CompareDatasets } from '../compare-datasets'
 
@@ -10,6 +10,7 @@ import type { CompareSpecs, CompareSpecsSource } from './compare-spec-types'
 import { parseCompareSpecs } from './parse/compare-parser'
 import type { CompareResolvedDefs } from './resolve/compare-resolver'
 import { resolveCompareSpecs } from './resolve/compare-resolver'
+import type { CompareScenarios } from './compare-scenarios'
 
 export interface CompareOptions {
   /** The left-side ("baseline") bundle being compared. */
@@ -39,7 +40,7 @@ export interface CompareConfig {
    */
   thresholds: number[]
   /** The set of resolved scenarios. */
-  scenarios: CompareScenario[]
+  scenarios: CompareScenarios
   /** The set of resolved view groups. */
   viewGroups: CompareViewGroup[]
   /** The set of datasets that will be compared. */

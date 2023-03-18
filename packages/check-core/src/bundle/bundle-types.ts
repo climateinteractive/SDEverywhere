@@ -1,7 +1,7 @@
 // Copyright (c) 2021-2022 Climate Interactive / New Venture Fund
 
 import type { DataSource } from '../_shared/data-source'
-import type { Scenario } from '../_shared/scenario'
+import type { ScenarioSpec } from '../_shared/scenario-spec-types'
 import type { DatasetKey, VarId } from '../_shared/types'
 
 import type { ImplVar, InputVar, OutputVar } from './var-types'
@@ -122,9 +122,9 @@ export interface BundleModel extends DataSource {
    * Load the data used to display the graph by running the model with inputs
    * configured for the given scenario.
    */
-  getGraphDataForScenario(scenario: Scenario, graphId: BundleGraphId): Promise<BundleGraphData>
+  getGraphDataForScenario(scenarioSpec: ScenarioSpec, graphId: BundleGraphId): Promise<BundleGraphData>
   /** Return the links to be displayed for the graph in the given scenario. */
-  getGraphLinksForScenario(scenario: Scenario, graphId: BundleGraphId): LinkItem[]
+  getGraphLinksForScenario(scenarioSpec: ScenarioSpec, graphId: BundleGraphId): LinkItem[]
 }
 
 /**

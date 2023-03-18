@@ -1,6 +1,6 @@
 // Copyright (c) 2021-2022 Climate Interactive / New Venture Fund
 
-import type { InputPosition } from '../../../_shared/scenario'
+import type { InputPosition } from '../../../_shared/scenario-spec-types'
 import type { VarId } from '../../../_shared/types'
 import type { InputId, InputVar } from '../../../bundle/var-types'
 

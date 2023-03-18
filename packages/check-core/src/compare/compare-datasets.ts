@@ -1,8 +1,8 @@
 // Copyright (c) 2023 Climate Interactive / New Venture Fund
 
-import type { Scenario } from '../_shared/scenario'
 import type { DatasetKey } from '../_shared/types'
 import type { RelatedItem } from '../bundle/var-types'
+import type { CompareScenario } from './_shared/compare-resolved-types'
 
 /**
  * The variable/source name info associated with a dataset in a comparison test.
@@ -30,9 +30,9 @@ export interface CompareDatasets {
   /**
    * Return the keys for the datasets that should be compared for the given scenario.
    *
-   * @param scenario The scenario.
+   * @param scenario The scenario definition.
    */
-  getDatasetKeysForScenario(scenario: Scenario): DatasetKey[]
+  getDatasetKeysForScenario(scenario: CompareScenario): DatasetKey[]
 
   /**
    * Return the dataset info for the given key.

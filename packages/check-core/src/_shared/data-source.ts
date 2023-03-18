@@ -1,6 +1,6 @@
 // Copyright (c) 2021-2022 Climate Interactive / New Venture Fund
 
-import type { Scenario } from './scenario'
+import type { ScenarioSpec } from './scenario-spec-types'
 import type { DatasetKey, DatasetMap } from './types'
 
 export interface DatasetsResult {
@@ -17,5 +17,5 @@ export interface DatasetsResult {
 
 export interface DataSource {
   /** Return the datasets that result from running the given scenario. */
-  getDatasetsForScenario(scenario: Scenario, datasetKeys: DatasetKey[]): Promise<DatasetsResult>
+  getDatasetsForScenario(scenarioSpec: ScenarioSpec, datasetKeys: DatasetKey[]): Promise<DatasetsResult>
 }

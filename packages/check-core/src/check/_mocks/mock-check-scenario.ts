@@ -1,7 +1,7 @@
 // Copyright (c) 2021-2022 Climate Interactive / New Venture Fund
 
-import type { InputPosition, Scenario } from '../../_shared/scenario'
-import { allInputsAtPositionScenario, inputAtPositionScenario, inputAtValueScenario } from '../../_shared/scenario'
+import type { InputPosition, ScenarioSpec } from '../../_shared/scenario-spec-types'
+import { allInputsAtPositionSpec, inputAtPositionSpec, inputAtValueSpec } from '../../_shared/scenario-specs'
 import type { VarId } from '../../_shared/types'
 import type { InputVar } from '../../bundle/var-types'
 import type { CheckScenario, CheckScenarioInputDesc } from '../check-scenario'
@@ -46,7 +46,7 @@ export function valueForPos(position: InputPosition): number | undefined {
 
 export function allAtPos(position: InputPosition): CheckScenario {
   return {
-    scenario: allInputsAtPositionScenario(position),
+    spec: allInputsAtPositionSpec(position),
     inputDescs: []
   }
 }
@@ -54,7 +54,7 @@ export function allAtPos(position: InputPosition): CheckScenario {
 export function inputAtPos(inputVar: InputVar, position: InputPosition): CheckScenario {
   const varName = inputVar.varName
   const varId = `_${varName.toLowerCase()}`
-  const scenario = inputAtPositionScenario(varId, varId, position)
+  const spec = inputAtPositionSpec(varId, position)
   const inputDesc: CheckScenarioInputDesc = {
     name: varName,
     inputVar,
@@ -62,7 +62,7 @@ export function inputAtPos(inputVar: InputVar, position: InputPosition): CheckSc
     value: valueForPos(position)
   }
   return {
-    scenario,
+    spec,
     inputDescs: [inputDesc]
   }
 }
@@ -70,14 +70,14 @@ export function inputAtPos(inputVar: InputVar, position: InputPosition): CheckSc
 export function inputAtValue(inputVar: InputVar, value: number): CheckScenario {
   const varName = inputVar.varName
   const varId = `_${varName.toLowerCase()}`
-  const scenario = inputAtValueScenario(varId, varId, value)
+  const spec = inputAtValueSpec(varId, value)
   const inputDesc: CheckScenarioInputDesc = {
     name: varName,
     inputVar,
     value
   }
   return {
-    scenario,
+    spec,
     inputDescs: [inputDesc]
   }
 }
@@ -112,12 +112,12 @@ export function inputDesc(inputVar: InputVar, at: InputPosition | number): Check
 }
 
 export function multipleInputs(
-  scenario: Scenario,
+  spec: ScenarioSpec,
   inputGroupName: string | undefined,
   inputDescs: CheckScenarioInputDesc[]
 ): CheckScenario {
   return {
-    scenario,
+    spec,
     inputGroupName,
     inputDescs
   }

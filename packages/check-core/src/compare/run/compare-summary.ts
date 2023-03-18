@@ -1,7 +1,8 @@
 // Copyright (c) 2021-2022 Climate Interactive / New Venture Fund
 
 import type { PerfReport } from '../../perf/perf-stats'
-import type { DatasetKey, ScenarioKey } from '../../_shared/types'
+import type { DatasetKey } from '../../_shared/types'
+import type { CompareScenarioDefKey } from '../config/compare-scenarios'
 import type { CompareReport } from './compare-report'
 
 /**
@@ -11,8 +12,8 @@ import type { CompareReport } from './compare-report'
  * to keep the file smaller when there are many reported differences.
  */
 export interface CompareDatasetSummary {
-  /** Short for `scenarioKey`. */
-  s: ScenarioKey
+  /** Short for `scenarioDefKey`. */
+  s: CompareScenarioDefKey
   /** Short for `datasetKey`. */
   d: DatasetKey
   /** Short for `maxDiff`. */
@@ -43,7 +44,7 @@ export function compareSummaryFromReport(compareReport: CompareReport): CompareS
   for (const r of compareReport.datasetReports) {
     if (r.diffReport.validity === 'both' && r.diffReport.maxDiff > 0) {
       datasetSummaries.push({
-        s: r.scenarioKey,
+        s: r.scenarioDefKey,
         d: r.datasetKey,
         md: r.diffReport.maxDiff
       })

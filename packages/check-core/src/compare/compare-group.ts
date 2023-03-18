@@ -1,8 +1,8 @@
 // Copyright (c) 2022 Climate Interactive / New Venture Fund
 
 import type { RelatedItem } from '../bundle/var-types'
-import type { Scenario } from '../_shared/scenario'
 import type { DatasetKey } from '../_shared/types'
+import type { CompareScenario } from './_shared/compare-resolved-types'
 
 /**
  * Describes a scenario/dataset comparison.
@@ -13,7 +13,7 @@ export interface CompareItem {
   /** The item subtitle. */
   subtitle?: string
   /** The scenario used for comparison. */
-  scenario: Scenario
+  scenario: CompareScenario
   /** The key for the datasets being compared. */
   datasetKey: DatasetKey
 }

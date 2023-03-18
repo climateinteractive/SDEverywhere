@@ -1,9 +1,9 @@
 // Copyright (c) 2021-2022 Climate Interactive / New Venture Fund
 
-import type { Scenario } from '../_shared/scenario'
 import type { DatasetKey } from '../_shared/types'
 import type { ModelSpec } from '../bundle/bundle-types'
 import type { OutputVar } from '../bundle/var-types'
+import type { CompareScenario } from './_shared/compare-resolved-types'
 import type { CompareDatasetInfo, CompareDatasets } from './compare-datasets'
 
 /**
@@ -65,8 +65,8 @@ export class DatasetManager implements CompareDatasets {
   }
 
   // from CompareDatasets interface
-  getDatasetKeysForScenario(scenario: Scenario): DatasetKey[] {
-    if (scenario.kind === 'all-inputs' && scenario.position === 'at-default') {
+  getDatasetKeysForScenario(scenario: CompareScenario): DatasetKey[] {
+    if (scenario.kind === 'scenario-with-all-inputs' && scenario.position === 'at-default') {
       // Include both model and static variables for the "all at default" scenario
       return this.allOutputVarKeys
     } else {

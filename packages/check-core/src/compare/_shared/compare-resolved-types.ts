@@ -1,7 +1,7 @@
 // Copyright (c) 2023 Climate Interactive / New Venture Fund
 
+import type { InputPosition } from '../../_shared/scenario-spec-types'
 import type { InputVar } from '../../bundle/var-types'
-import type { InputPosition } from '../../_shared/scenario'
 import type {
   CompareScenarioGroupId,
   CompareScenarioGroupTitle,

@@ -4,10 +4,11 @@ import { describe, expect, it } from 'vitest'
 
 import type { CompareDatasetSummary, DatasetKey } from '../..'
 import type { BundleGraphDatasetSpec, BundleGraphSpec } from '../../bundle/bundle-types'
+import type { CompareScenarioDefKey } from '../config/compare-scenarios'
 import type { GraphDatasetReport, GraphMetadataReport } from './compare-diff-graphs'
 import { diffGraphs } from './compare-diff-graphs'
 
-const scenarioKey = 'all_inputs_at_default'
+const scenarioDefKey = 'all_inputs_at_default' as CompareScenarioDefKey
 
 function dataset(key: string, varName: string, label: string, color: string): BundleGraphDatasetSpec {
   return {
@@ -46,13 +47,13 @@ describe('diffGraphs', () => {
       metadata: new Map([])
     }
 
-    const reportLeftOnly = diffGraphs(graph, undefined, scenarioKey, [])
+    const reportLeftOnly = diffGraphs(graph, undefined, scenarioDefKey, [])
     expect(reportLeftOnly.inclusion).toBe('left-only')
 
-    const reportRightOnly = diffGraphs(undefined, graph, scenarioKey, [])
+    const reportRightOnly = diffGraphs(undefined, graph, scenarioDefKey, [])
     expect(reportRightOnly.inclusion).toBe('right-only')
 
-    const reportNeither = diffGraphs(undefined, undefined, scenarioKey, [])
+    const reportNeither = diffGraphs(undefined, undefined, scenarioDefKey, [])
     expect(reportNeither.inclusion).toBe('neither')
   })
 
@@ -69,7 +70,7 @@ describe('diffGraphs', () => {
     }
     const graphR = graphL
 
-    const report = diffGraphs(graphL, graphR, scenarioKey, [])
+    const report = diffGraphs(graphL, graphR, scenarioDefKey, [])
     expect(report.inclusion).toBe('both')
     expect(report.metadataReports).toEqual([])
   })
@@ -104,7 +105,7 @@ describe('diffGraphs', () => {
       ])
     }
 
-    const report = diffGraphs(graphL, graphR, scenarioKey, [])
+    const report = diffGraphs(graphL, graphR, scenarioDefKey, [])
     expect(report.inclusion).toBe('both')
     expect(report.metadataReports).toEqual([
       metadataReport('title', 'Graph 1', 'New Graph 1'),
@@ -135,12 +136,12 @@ describe('diffGraphs', () => {
       metadata: new Map([['title', 'Graph 1']])
     }
     const summaries: CompareDatasetSummary[] = [
-      { d: 'Model__coal_amount', s: 'a_different_scenario', md: 40 },
-      { d: 'Model__coal_amount', s: scenarioKey, md: 50 },
-      { d: 'Model__oil_amount', s: scenarioKey, md: 10 }
+      { d: 'Model__coal_amount', s: 'a_different_scenario' as CompareScenarioDefKey, md: 40 },
+      { d: 'Model__coal_amount', s: scenarioDefKey, md: 50 },
+      { d: 'Model__oil_amount', s: scenarioDefKey, md: 10 }
     ]
 
-    const report = diffGraphs(graphL, graphR, scenarioKey, summaries)
+    const report = diffGraphs(graphL, graphR, scenarioDefKey, summaries)
     expect(report.inclusion).toBe('both')
     expect(report.metadataReports).toEqual([])
     expect(report.datasetReports).toEqual([

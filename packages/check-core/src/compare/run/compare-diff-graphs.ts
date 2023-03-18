@@ -1,8 +1,9 @@
 // Copyright (c) 2021-2022 Climate Interactive / New Venture Fund
 
-import type { DatasetKey, ScenarioKey } from '../../_shared/types'
+import type { DatasetKey } from '../../_shared/types'
 import type { BundleGraphSpec } from '../../bundle/bundle-types'
 import type { CompareDatasetSummary } from './compare-summary'
+import type { CompareScenarioDefKey } from '../config/compare-scenarios'
 
 export type GraphInclusion = 'neither' | 'left-only' | 'right-only' | 'both'
 
@@ -36,13 +37,13 @@ export interface GraphReport {
  *
  * @param graphL The graph defined in the left bundle.
  * @param graphR The graph defined in the right bundle.
- * @param scenarioKey The scenario used for comparing datasets.
+ * @param scenarioDefKey The scenario used for comparing datasets.
  * @param datasetSummaries The set of summaries from a previous comparison run.
  */
 export function diffGraphs(
   graphL: BundleGraphSpec | undefined,
   graphR: BundleGraphSpec | undefined,
-  scenarioKey: ScenarioKey,
+  scenarioDefKey: CompareScenarioDefKey,
   datasetSummaries: CompareDatasetSummary[]
 ): GraphReport {
   // Check in which bundles the graph is defined
@@ -92,7 +93,7 @@ export function diffGraphs(
       datasetKeys.add(dataset.datasetKey)
     }
     for (const datasetKey of datasetKeys) {
-      const summary = datasetSummaries.find(summary => summary.d === datasetKey && summary.s === scenarioKey)
+      const summary = datasetSummaries.find(summary => summary.d === datasetKey && summary.s === scenarioDefKey)
       // TODO: Flag as an error if we don't have a CompareDatasetSummary
       // for the datasets?
       const maxDiff = summary !== undefined ? summary.md : undefined

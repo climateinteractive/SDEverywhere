@@ -2,7 +2,7 @@
 
 import { assertNever } from 'assert-never'
 
-import type { InputPosition } from '../../../_shared/scenario'
+import type { InputPosition } from '../../../_shared/scenario-spec-types'
 
 import type { ModelInputs } from '../../../bundle/model-inputs'
 import type { InputId, InputVar } from '../../../bundle/var-types'

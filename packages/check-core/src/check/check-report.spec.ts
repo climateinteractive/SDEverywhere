@@ -3,7 +3,7 @@
 import { describe, expect, it } from 'vitest'
 
 import type { CheckScenarioReport } from '..'
-import { positionSetting, settingsScenario } from '../_shared/scenario'
+import { positionSetting, inputSettingsSpec, valueSetting } from '../_shared/scenario-specs'
 import type { CheckDataRef } from './check-data-ref'
 import { dataRef } from './check-data-ref'
 import type { CheckResult } from './check-func'
@@ -365,10 +365,9 @@ describe('scenarioMessage', () => {
   })
 
   it('should work with multiple input settings', () => {
-    // TODO: Include actual settings; for now this fake scenario is sufficient
-    const scenario = settingsScenario('x', 'x', [])
+    const scenarioSpec = inputSettingsSpec([valueSetting('_i1', 66), positionSetting('_i2', 'at-minimum')])
     const s = scenarioReport(
-      multipleInputs(scenario, undefined, [inputDesc(i1, 66), inputDesc(i2, 'at-minimum')]),
+      multipleInputs(scenarioSpec, undefined, [inputDesc(i1, 66), inputDesc(i2, 'at-minimum')]),
       'passed',
       []
     )
@@ -376,13 +375,9 @@ describe('scenarioMessage', () => {
   })
 
   it('should work with input group at position', () => {
-    const key = 'group_input_group_1'
-    const scenario = settingsScenario(key, key, [
-      positionSetting('_i1', 'at-minimum'),
-      positionSetting('_i2', 'at-minimum')
-    ])
+    const scenarioSpec = inputSettingsSpec([positionSetting('_i1', 'at-minimum'), positionSetting('_i2', 'at-minimum')])
     const s = scenarioReport(
-      multipleInputs(scenario, 'Input Group 1', [inputDesc(i1, 'at-minimum'), inputDesc(i2, 'at-minimum')]),
+      multipleInputs(scenarioSpec, 'Input Group 1', [inputDesc(i1, 'at-minimum'), inputDesc(i2, 'at-minimum')]),
       'passed',
       []
     )

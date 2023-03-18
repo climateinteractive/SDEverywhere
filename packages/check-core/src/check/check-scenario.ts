@@ -2,16 +2,14 @@
 
 import assertNever from 'assert-never'
 
-import type { InputPosition, InputSetting, Scenario } from '../_shared/scenario'
+import type { InputPosition, ScenarioSpec } from '../_shared/scenario-spec-types'
 import {
-  allInputsAtPositionScenario,
-  inputAtPositionScenario,
-  keyForInputAtPosition,
-  keyForInputAtValue,
+  allInputsAtPositionSpec,
+  inputAtPositionSpec,
+  inputSettingsSpec,
   positionSetting,
-  settingsScenario,
   valueSetting
-} from '../_shared/scenario'
+} from '../_shared/scenario-specs'
 
 import type { ModelSpec } from '../bundle/bundle-types'
 import type { InputVar } from '../bundle/var-types'
@@ -36,8 +34,8 @@ export interface CheckScenarioInputDesc {
 }
 
 export interface CheckScenario {
-  /** The scenario for the matched input(s); can be undefined if input(s) failed to match. */
-  scenario?: Scenario
+  /** The spec used to configure the model with the matched input(s); can be undefined if input(s) failed to match. */
+  spec?: ScenarioSpec
   /** The name of the associated input group, if any. */
   inputGroupName?: string
   /** The descriptions of the inputs; if empty, it is an "all inputs" scenario. */
@@ -155,6 +153,7 @@ function inputDescForName(
   at: CheckScenarioPosition | number
 ): CheckScenarioInputDesc {
   // Find an input variable that matches the given name
+  // TODO: Use ModelInputs here
   const inputNameToMatch = inputName.toLowerCase()
   const inputVar = [...modelSpec.inputVars.values()].find(inputVar => {
     return inputVar.varName.toLowerCase() === inputNameToMatch
@@ -176,13 +175,15 @@ function inputDescForName(
  * Return the input group that matches the given name.
  */
 function groupForName(modelSpec: ModelSpec, groupName: string): [string, InputVar[]] | undefined {
-  // Ignore case when matching by group
-  const groupToMatch = groupName.toLowerCase()
+  if (modelSpec.inputGroups) {
+    // Ignore case when matching by group
+    const groupToMatch = groupName.toLowerCase()
 
-  // Find the group that matches the given name
-  for (const [group, inputVars] of modelSpec.inputGroups) {
-    if (group.toLowerCase() === groupToMatch) {
-      return [group, inputVars]
+    // Find the group that matches the given name
+    for (const [group, inputVars] of modelSpec.inputGroups) {
+      if (group.toLowerCase() === groupToMatch) {
+        return [group, inputVars]
+      }
     }
   }
 
@@ -210,9 +211,8 @@ function errorScenarioForInputGroup(
  * Return a `CheckScenario` with all inputs at the given position.
  */
 function checkScenarioWithAllInputsAtPosition(position: InputPosition): CheckScenario {
-  const scenario = allInputsAtPositionScenario(position)
   return {
-    scenario,
+    spec: allInputsAtPositionSpec(position),
     inputDescs: []
   }
 }
@@ -222,9 +222,8 @@ function checkScenarioWithAllInputsAtPosition(position: InputPosition): CheckSce
  */
 function checkScenarioWithInputAtPosition(inputVar: InputVar, position: InputPosition): CheckScenario {
   const varId = inputVar.varId
-  const scenario = inputAtPositionScenario(varId, varId, position)
   return {
-    scenario,
+    spec: inputAtPositionSpec(varId, position),
     inputDescs: [inputDescAtPosition(inputVar, position)]
   }
 }
@@ -236,53 +235,26 @@ function checkScenarioForInputDescs(
   groupName: string | undefined,
   inputDescs: CheckScenarioInputDesc[]
 ): CheckScenario {
-  let scenario: Scenario
+  let spec: ScenarioSpec
   if (inputDescs.every(desc => desc.inputVar !== undefined)) {
-    // All inputs were resolved, so create a `Scenario` that includes them all
-    const settings: InputSetting[] = []
-    const keyParts: string[] = []
-    for (const inputDesc of inputDescs) {
+    // All inputs were resolved, so create a `ScenarioSpec` that includes them all
+    const settings = inputDescs.map(inputDesc => {
       const varId = inputDesc.inputVar.varId
       if (inputDesc.position) {
-        settings.push(positionSetting(varId, inputDesc.position))
-        keyParts.push(keyForInputAtPosition(varId, inputDesc.position))
+        return positionSetting(varId, inputDesc.position)
       } else {
-        settings.push(valueSetting(varId, inputDesc.value))
-        keyParts.push(keyForInputAtValue(varId, inputDesc.value))
+        return valueSetting(varId, inputDesc.value)
       }
-    }
-    if (settings.length === 1) {
-      // Use a simple key when there's only one input
-      const scenarioKey = `input${keyParts[0]}`
-      const groupKey = settings[0].inputVarId
-      scenario = settingsScenario(scenarioKey, groupKey, settings)
-    } else if (settings.length > 1) {
-      // Derive or build a key when there are multiple inputs
-      let scenarioKey: string
-      let groupKey: string
-      if (groupName) {
-        // Build a scenario/group key using the provided group name
-        // TODO: Allow for specifying the groupKey in YAML?
-        scenarioKey = `group_${groupName.toLowerCase().replace(/ /g, '_')}`
-        groupKey = scenarioKey
-      } else {
-        // No group name was provided, so build a scenario key by joining
-        // all the key parts together
-        // TODO: This could create very long and unwieldy keys if there are
-        // many inputs; consider using a hash instead?
-        scenarioKey = 'multi' + keyParts.join('_')
-        groupKey = scenarioKey
-      }
-      scenario = settingsScenario(scenarioKey, groupKey, settings)
-    }
+    })
+    spec = inputSettingsSpec(settings)
   } else {
-    // One or more inputs could not be resolved; leave `scenario` undefined
+    // One or more inputs could not be resolved; leave `spec` undefined
     // so that we can report the error later
-    scenario = undefined
+    spec = undefined
   }
 
   return {
-    scenario,
+    spec,
     inputGroupName: groupName,
     inputDescs
   }

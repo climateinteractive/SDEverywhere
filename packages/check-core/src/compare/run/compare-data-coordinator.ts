@@ -1,23 +1,27 @@
 // Copyright (c) 2021-2022 Climate Interactive / New Venture Fund
 
 import { assertNever } from 'assert-never'
+
+import type { ScenarioSpec } from '../../_shared/scenario-spec-types'
 import { TaskQueue } from '../../_shared/task-queue'
-import type { Scenario } from '../../_shared/scenario'
 import type { DatasetKey, DatasetMap } from '../../_shared/types'
+
 import type { BundleModel, BundleGraphData, BundleGraphId } from '../../bundle/bundle-types'
+import type { DatasetsResult } from '../../_shared/data-source'
 
 export type CompareDataRequestKey = string
 
 interface DatasetRequest {
   kind: 'dataset'
-  scenario: Scenario
+  scenarioSpecL?: ScenarioSpec
+  scenarioSpecR?: ScenarioSpec
   datasetKeys: DatasetKey[]
 }
 
 interface GraphDataRequest {
   kind: 'graph-data'
-  bundle: 'left' | 'right'
-  scenario: Scenario
+  scenarioSpecL?: ScenarioSpec
+  scenarioSpecR?: ScenarioSpec
   graphId: BundleGraphId
 }
 
@@ -25,13 +29,14 @@ type DataRequest = DatasetRequest | GraphDataRequest
 
 interface DatasetResponse {
   kind: 'dataset'
-  datasetMapL: DatasetMap
-  datasetMapR: DatasetMap
+  datasetMapL?: DatasetMap
+  datasetMapR?: DatasetMap
 }
 
 interface GraphDataResponse {
   kind: 'graph-data'
-  graphData?: BundleGraphData
+  graphDataL?: BundleGraphData
+  graphDataR?: BundleGraphData
 }
 
 type DataResponse = DatasetResponse | GraphDataResponse
@@ -45,28 +50,12 @@ export class CompareDataCoordinator {
   constructor(public readonly bundleModelL: BundleModel, public readonly bundleModelR: BundleModel) {
     this.taskQueue = new TaskQueue({
       process: async request => {
+        // Run the models in parallel
         switch (request.kind) {
-          case 'dataset': {
-            // Run the models for this scenario (in parallel)
-            const [resultL, resultR] = await Promise.all([
-              this.bundleModelL.getDatasetsForScenario(request.scenario, request.datasetKeys),
-              this.bundleModelR.getDatasetsForScenario(request.scenario, request.datasetKeys)
-            ])
-            return {
-              kind: 'dataset',
-              datasetMapL: resultL.datasetMap,
-              datasetMapR: resultR.datasetMap
-            }
-          }
-          case 'graph-data': {
-            // Run the selected model for this scenario
-            const bundleModel = request.bundle === 'right' ? this.bundleModelR : this.bundleModelL
-            const graphData = await bundleModel.getGraphDataForScenario(request.scenario, request.graphId)
-            return {
-              kind: 'graph-data',
-              graphData
-            }
-          }
+          case 'dataset':
+            return this.processDatasetRequest(request)
+          case 'graph-data':
+            return this.processGraphDataRequest(request)
           default:
             assertNever(request)
         }
@@ -74,15 +63,69 @@ export class CompareDataCoordinator {
     })
   }
 
+  private async processDatasetRequest(request: DatasetRequest): Promise<DatasetResponse> {
+    // Helper function that fetches data from a particular model
+    async function fetchDatasets(
+      bundleModel: BundleModel,
+      scenarioSpec: ScenarioSpec | undefined
+    ): Promise<DatasetsResult> {
+      if (scenarioSpec) {
+        return bundleModel.getDatasetsForScenario(scenarioSpec, request.datasetKeys)
+      } else {
+        return undefined
+      }
+    }
+
+    // Run the model(s) in parallel and extract the requested datasets
+    const [resultL, resultR] = await Promise.all([
+      fetchDatasets(this.bundleModelL, request.scenarioSpecL),
+      fetchDatasets(this.bundleModelR, request.scenarioSpecR)
+    ])
+
+    return {
+      kind: 'dataset',
+      datasetMapL: resultL?.datasetMap,
+      datasetMapR: resultR?.datasetMap
+    }
+  }
+
+  private async processGraphDataRequest(request: GraphDataRequest): Promise<GraphDataResponse> {
+    // Helper function that fetches data from a particular model
+    async function fetchGraphData(
+      bundleModel: BundleModel,
+      scenarioSpec: ScenarioSpec | undefined
+    ): Promise<BundleGraphData> {
+      if (scenarioSpec) {
+        return bundleModel.getGraphDataForScenario(scenarioSpec, request.graphId)
+      } else {
+        return undefined
+      }
+    }
+
+    // Run the model(s) in parallel and extract the requested graph data
+    const [graphDataL, graphDataR] = await Promise.all([
+      fetchGraphData(this.bundleModelL, request.scenarioSpecL),
+      fetchGraphData(this.bundleModelR, request.scenarioSpecR)
+    ])
+
+    return {
+      kind: 'graph-data',
+      graphDataL,
+      graphDataR
+    }
+  }
+
   requestDatasetMaps(
     requestKey: CompareDataRequestKey,
-    scenario: Scenario,
+    scenarioSpecL: ScenarioSpec,
+    scenarioSpecR: ScenarioSpec,
     datasetKeys: DatasetKey[],
-    onResponse: (datasetMapL: DatasetMap, datasetMapR: DatasetMap) => void
+    onResponse: (datasetMapL?: DatasetMap, datasetMapR?: DatasetMap) => void
   ): void {
     const request: DatasetRequest = {
       kind: 'dataset',
-      scenario,
+      scenarioSpecL,
+      scenarioSpecR,
       datasetKeys
     }
     this.taskQueue.addTask(requestKey, request, response => {
@@ -94,20 +137,20 @@ export class CompareDataCoordinator {
 
   requestGraphData(
     requestKey: CompareDataRequestKey,
-    bundle: 'left' | 'right',
-    scenario: Scenario,
+    scenarioSpecL: ScenarioSpec,
+    scenarioSpecR: ScenarioSpec,
     graphId: BundleGraphId,
-    onResponse: (graphData: BundleGraphData) => void
+    onResponse: (graphDataL?: BundleGraphData, graphDataR?: BundleGraphData) => void
   ): void {
     const request: GraphDataRequest = {
       kind: 'graph-data',
-      bundle,
-      scenario,
+      scenarioSpecL,
+      scenarioSpecR,
       graphId
     }
     this.taskQueue.addTask(requestKey, request, response => {
       if (response.kind === 'graph-data') {
-        onResponse(response.graphData)
+        onResponse(response.graphDataL, response.graphDataR)
       }
     })
   }

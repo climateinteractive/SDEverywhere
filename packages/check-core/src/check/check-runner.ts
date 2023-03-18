@@ -46,7 +46,7 @@ export function runChecks(
     // by one or more predicates.  These requests will be processed before all
     // other checks so that the reference data is available in memory when the
     // check action is performed.
-    refDataPlanner.addRequest(undefined, dataRef.scenario.scenario, dataRef.dataset.datasetKey, datasets => {
+    refDataPlanner.addRequest(undefined, dataRef.scenario.spec, dataRef.dataset.datasetKey, datasets => {
       const dataset = datasets.datasetR
       if (dataset) {
         refDatasets.set(dataRefKey, dataset)
@@ -61,7 +61,7 @@ export function runChecks(
   for (const [checkKey, checkTask] of checkPlan.tasks.entries()) {
     // For each check, add a request to the data planner so that the check
     // runs when the dataset is fetched
-    dataPlanner.addRequest(undefined, checkTask.scenario.scenario, checkTask.dataset.datasetKey, datasets => {
+    dataPlanner.addRequest(undefined, checkTask.scenario.spec, checkTask.dataset.datasetKey, datasets => {
       // Run the check action on the dataset, then save the result
       const dataset = datasets.datasetR
       const checkResult = runCheck(checkTask, dataset, refDatasets)
@@ -116,7 +116,7 @@ export function runCheck(
               name: dataRef.dataset.name
             }
           }
-        } else if (dataRef.scenario.scenario === undefined) {
+        } else if (dataRef.scenario.spec === undefined) {
           // One or more inputs could not be resolved
           if (dataRef.scenario.error) {
             return {

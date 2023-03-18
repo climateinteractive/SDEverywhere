@@ -182,9 +182,9 @@ describe('CheckPlanner', () => {
       scenario: allAtPos('at-default')
     })
 
-    const ref2 = plan.dataRefs.get('input_i1_at_75::ModelImpl_v3')
+    const ref2 = plan.dataRefs.get('inputs__i1_at_75::ModelImpl_v3')
     expect(ref2).toEqual({
-      key: 'input_i1_at_75::ModelImpl_v3',
+      key: 'inputs__i1_at_75::ModelImpl_v3',
       dataset: dataset('ModelImpl', 'V3'),
       scenario: inputAtValue(i1, 75)
     })

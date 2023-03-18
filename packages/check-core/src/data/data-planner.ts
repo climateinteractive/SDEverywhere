@@ -1,7 +1,7 @@
 // Copyright (c) 2021-2022 Climate Interactive / New Venture Fund
 
-import type { Scenario } from '../_shared/scenario'
-import type { Dataset, DatasetKey, ScenarioKey } from '../_shared/types'
+import type { ScenarioSpec, ScenarioSpecUid } from '../_shared/scenario-spec-types'
+import type { Dataset, DatasetKey } from '../_shared/types'
 
 export interface DatasetPair {
   datasetL?: Dataset
@@ -20,8 +20,8 @@ export interface DataTask {
 }
 
 export interface DataRequest {
-  scenarioL?: Scenario
-  scenarioR?: Scenario
+  scenarioSpecL?: ScenarioSpec
+  scenarioSpecR?: ScenarioSpec
   dataTasks: DataTask[]
 }
 
@@ -57,13 +57,13 @@ export interface DataPlan {
  */
 export class DataPlanner {
   /** Tasks that need to access both "left" and "right" models in parallel. */
-  private readonly taskSetsLR: Map<ScenarioPairKey, DataTaskSet> = new Map()
+  private readonly taskSetsLR: Map<ScenarioPairUid, DataTaskSet> = new Map()
 
   /** Tasks that only need to access the "left" model. */
-  private readonly taskSetsL: Map<ScenarioKey, DataTaskSet> = new Map()
+  private readonly taskSetsL: Map<ScenarioSpecUid, DataTaskSet> = new Map()
 
   /** Tasks that only need to access the "right" model. */
-  private readonly taskSetsR: Map<ScenarioKey, DataTaskSet> = new Map()
+  private readonly taskSetsR: Map<ScenarioSpecUid, DataTaskSet> = new Map()
 
   private complete = false
 
@@ -77,43 +77,43 @@ export class DataPlanner {
   /**
    * Add a request to the plan for the given scenario(s) and data task.
    *
-   * @param scenarioL The input scenario used to configure the "left" model, or undefined if no data
+   * @param scenarioSpecL The input scenario used to configure the "left" model, or undefined if no data
    * is needed from the left model.
-   * @param scenarioR The input scenario used to configure the "right" model, or undefined if no data
+   * @param scenarioSpecR The input scenario used to configure the "right" model, or undefined if no data
    * is needed from the right model.
    * @param datasetKey The key for the dataset to be fetched from each model for the given scenario.
    * @param dataAction The action to be performed with the fetched datasets.
    */
   addRequest(
-    scenarioL: Scenario | undefined,
-    scenarioR: Scenario | undefined,
+    scenarioSpecL: ScenarioSpec | undefined,
+    scenarioSpecR: ScenarioSpec | undefined,
     datasetKey: DatasetKey,
     dataAction: DataAction
   ): void {
-    if (scenarioL === undefined && scenarioR === undefined) {
-      console.warn('WARNING: Both scenarios are undefined for DataPlanner request, skipping')
+    if (scenarioSpecL === undefined && scenarioSpecR === undefined) {
+      console.warn('WARNING: Both scenario specs are undefined for DataPlanner request, skipping')
       return
     }
 
     // Determine which set this request will be added to
-    let taskSetsMap: Map<ScenarioPairKey, DataTaskSet>
-    let key: string
-    if (scenarioL && scenarioR) {
+    let taskSetsMap: Map<ScenarioPairUid, DataTaskSet>
+    let uid: string
+    if (scenarioSpecL && scenarioSpecR) {
       taskSetsMap = this.taskSetsLR
-      key = scenarioPairKey(scenarioL, scenarioR)
-    } else if (scenarioR) {
+      uid = scenarioPairUid(scenarioSpecL, scenarioSpecR)
+    } else if (scenarioSpecR) {
       taskSetsMap = this.taskSetsR
-      key = scenarioR.key
+      uid = scenarioSpecR.uid
     } else {
       taskSetsMap = this.taskSetsL
-      key = scenarioL.key
+      uid = scenarioSpecL.uid
     }
 
     // Add the task to the appropriate task set (creating a new set if needed)
-    let taskSet = taskSetsMap.get(key)
+    let taskSet = taskSetsMap.get(uid)
     if (!taskSet) {
-      taskSet = new DataTaskSet(scenarioL, scenarioR)
-      taskSetsMap.set(key, taskSet)
+      taskSet = new DataTaskSet(scenarioSpecL, scenarioSpecR)
+      taskSetsMap.set(uid, taskSet)
     }
     taskSet.addTask({
       datasetKey,
@@ -131,26 +131,26 @@ export class DataPlanner {
     this.complete = true
 
     // Create mappings to make it easy to look up "LR" task sets using only
-    // an "L" or "R" key.  This will create a mapping to the first available
-    // set with an "L" key on the left side (in case there are multiple with
-    // the same "L" key but different "R" keys), and same approach for "R" keys.
-    const lKeyMappings: Map<ScenarioKey, ScenarioPairKey> = new Map()
-    const rKeyMappings: Map<ScenarioKey, ScenarioPairKey> = new Map()
-    for (const lrKey of this.taskSetsLR.keys()) {
-      const [lKey, rKey] = lrKey.split('::')
-      if (!lKeyMappings.has(lKey)) {
-        lKeyMappings.set(lKey, lrKey)
+    // an "L" or "R" uid.  This will create a mapping to the first available
+    // set with an "L" uid on the left side (in case there are multiple with
+    // the same "L" uid but different "R" uids), and same approach for "R" uids.
+    const lKeyMappings: Map<ScenarioSpecUid, ScenarioPairUid> = new Map()
+    const rKeyMappings: Map<ScenarioSpecUid, ScenarioPairUid> = new Map()
+    for (const lrUid of this.taskSetsLR.keys()) {
+      const [lUid, rUid] = lrUid.split('::')
+      if (!lKeyMappings.has(lUid)) {
+        lKeyMappings.set(lUid, lrUid)
       }
-      if (!rKeyMappings.has(rKey)) {
-        rKeyMappings.set(rKey, lrKey)
+      if (!rKeyMappings.has(rUid)) {
+        rKeyMappings.set(rUid, lrUid)
       }
     }
 
     // See if we can fold "L-only" and "R-only" requests into an existing "LR" set
     function merge(
-      taskSetsLR: Map<ScenarioPairKey, DataTaskSet>,
-      taskSetsForSide: Map<ScenarioKey, DataTaskSet>,
-      keyMappingsForSide: Map<ScenarioKey, ScenarioPairKey>
+      taskSetsLR: Map<ScenarioPairUid, DataTaskSet>,
+      taskSetsForSide: Map<ScenarioSpecUid, DataTaskSet>,
+      keyMappingsForSide: Map<ScenarioSpecUid, ScenarioPairUid>
     ) {
       for (const [keyForSide, taskSetForSide] of taskSetsForSide.entries()) {
         const lrKey = keyMappingsForSide.get(keyForSide)
@@ -192,7 +192,10 @@ class DataTaskSet {
   private readonly modelTasks: Map<DatasetKey, DataTask[]> = new Map()
   private readonly modelImplTasks: Map<DatasetKey, DataTask[]> = new Map()
 
-  constructor(private readonly scenarioL: Scenario | undefined, private readonly scenarioR: Scenario | undefined) {}
+  constructor(
+    private readonly scenarioSpecL: ScenarioSpec | undefined,
+    private readonly scenarioSpecR: ScenarioSpec | undefined
+  ) {}
 
   /**
    * Add a task that will be performed when the data is fetched for the scenario(s)
@@ -254,8 +257,8 @@ class DataTaskSet {
       const dataTasks: DataTask[] = []
       this.modelTasks.forEach(tasks => dataTasks.push(...tasks))
       dataRequests.push({
-        scenarioL: this.scenarioL,
-        scenarioR: this.scenarioR,
+        scenarioSpecL: this.scenarioSpecL,
+        scenarioSpecR: this.scenarioSpecR,
         dataTasks
       })
     }
@@ -274,8 +277,8 @@ class DataTaskSet {
           dataTasks.push(...this.modelImplTasks.get(datasetKey))
         }
         dataRequests.push({
-          scenarioL: this.scenarioL,
-          scenarioR: this.scenarioR,
+          scenarioSpecL: this.scenarioSpecL,
+          scenarioSpecR: this.scenarioSpecR,
           dataTasks
         })
       }
@@ -286,13 +289,13 @@ class DataTaskSet {
 }
 
 /**
- * A key that includes one or two scenario keys to uniquely identify a pair of scenarios.
- * The format is `<left_key>::<right_key>`.
+ * An ID that includes one or two scenario UIDs to uniquely identify a pair of scenarios.
+ * The format is `<left_uid>::<right_uid>`.
  */
-type ScenarioPairKey = string
+type ScenarioPairUid = string
 
 /**
- * Create a key for the given scenarios.
+ * Create a unique identifier for the given scenarios.
  *
  * For example, a request that includes scenarios for both left and right might look like:
  *   scenario1::scenario1
@@ -303,13 +306,16 @@ type ScenarioPairKey = string
  * A request that only accesses the left model might use a key like:
  *   scenario1::
  *
- * @param scenarioL The input scenario used to configure the "left" model, or undefined if no data
+ * @param scenarioSpecL The input scenario used to configure the "left" model, or undefined if no data
  * is needed from the left model.
- * @param scenarioR The input scenario used to configure the "right" model, or undefined if no data
+ * @param scenarioSpecR The input scenario used to configure the "right" model, or undefined if no data
  * is needed from the right model.
  */
-function scenarioPairKey(scenarioL: Scenario | undefined, scenarioR: Scenario | undefined): ScenarioPairKey {
-  const keyL = scenarioL?.key || ''
-  const keyR = scenarioR?.key || ''
-  return `${keyL}::${keyR}`
+function scenarioPairUid(
+  scenarioSpecL: ScenarioSpec | undefined,
+  scenarioSpecR: ScenarioSpec | undefined
+): ScenarioPairUid {
+  const uidL = scenarioSpecL?.uid || ''
+  const uidR = scenarioSpecR?.uid || ''
+  return `${uidL}::${uidR}`
 }

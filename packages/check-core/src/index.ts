@@ -4,28 +4,9 @@
 // _shared
 //
 
-export type { DatasetsResult, DataSource } from './_shared/data-source'
-
-export type {
-  AllInputsScenario,
-  InputPosition,
-  InputSetting,
-  PositionSetting,
-  Scenario,
-  SettingsScenario,
-  ValueSetting
-} from './_shared/scenario'
-export {
-  allInputsAtPositionScenario,
-  inputAtPositionScenario,
-  inputAtValueScenario,
-  matrixScenarios,
-  positionSetting,
-  settingsScenario,
-  valueSetting
-} from './_shared/scenario'
-
-export type { Dataset, DatasetKey, DatasetMap, ScenarioGroupKey, ScenarioKey, SourceName, VarId } from './_shared/types'
+export * from './_shared/data-source'
+export * from './_shared/scenario-spec-types'
+export * from './_shared/types'
 
 //
 // bundle
@@ -91,6 +72,7 @@ export { checkSummaryFromReport, checkReportFromSummary } from './check/check-su
 
 export * from './compare/config/compare-spec-types'
 export type { CompareConfig, CompareOptions } from './compare/config/compare-config'
+export type { CompareScenarios } from './compare/config/compare-scenarios'
 
 export type { CompareDataRequestKey } from './compare/run/compare-data-coordinator'
 export { CompareDataCoordinator } from './compare/run/compare-data-coordinator'
@@ -114,9 +96,7 @@ export { compareSummaryFromReport } from './compare/run/compare-summary'
 // TODO: Organize the following
 export type { CompareItem, CompareGroupInfo, CompareGroup } from './compare/compare-group'
 export type { CompareDatasets, CompareDatasetInfo } from './compare/compare-datasets'
-export type { CompareScenarios, CompareScenarioInfo } from './compare/compare-scenarios'
 export { DatasetManager } from './compare/dataset-manager'
-export { ScenarioManager } from './compare/scenario-manager'
 
 //
 // config

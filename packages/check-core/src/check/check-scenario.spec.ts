@@ -2,14 +2,13 @@
 
 import { describe, expect, it } from 'vitest'
 
+import { inputSettingsSpec, positionSetting, valueSetting } from '../_shared/scenario-specs'
 import type { VarId } from '../_shared/types'
 import type { ModelSpec } from '../bundle/bundle-types'
 import type { InputVar } from '../bundle/var-types'
 import { expandScenarios } from './check-scenario'
 import type { CheckScenarioSpec } from './check-spec'
 import { allAtPos, inputAtPos, inputAtValue, inputDesc, inputVar, multipleInputs } from './_mocks/mock-check-scenario'
-import { settingsScenario } from '..'
-import { positionSetting, valueSetting } from '../_shared/scenario'
 
 describe('expandScenarios', () => {
   const inputVars: Map<VarId, InputVar> = new Map([inputVar('I1'), inputVar('I2'), inputVar('I3')])
@@ -34,13 +33,13 @@ describe('expandScenarios', () => {
   }
 
   it('should expand "with: input" at position specs', () => {
-    const scenarioSpecs: CheckScenarioSpec[] = [
+    const checkScenarioSpecs: CheckScenarioSpec[] = [
       { with: 'I1', at: 'default' },
       { with: 'I2', at: 'min' },
       { with: 'i3', at: 'max' }
     ]
 
-    expect(expandScenarios(modelSpec, scenarioSpecs, false)).toEqual([
+    expect(expandScenarios(modelSpec, checkScenarioSpecs, false)).toEqual([
       inputAtPos(i1, 'at-default'),
       inputAtPos(i2, 'at-minimum'),
       inputAtPos(i3, 'at-maximum')
@@ -48,13 +47,13 @@ describe('expandScenarios', () => {
   })
 
   it('should expand "with: input" at value specs', () => {
-    const scenarioSpecs: CheckScenarioSpec[] = [
+    const checkScenarioSpecs: CheckScenarioSpec[] = [
       { with: 'I1', at: 20 },
       { with: 'I2', at: 40 },
       { with: 'i3', at: 60 }
     ]
 
-    expect(expandScenarios(modelSpec, scenarioSpecs, false)).toEqual([
+    expect(expandScenarios(modelSpec, checkScenarioSpecs, false)).toEqual([
       inputAtValue(i1, 20),
       inputAtValue(i2, 40),
       inputAtValue(i3, 60)
@@ -62,7 +61,7 @@ describe('expandScenarios', () => {
   })
 
   it('should expand "with: [...]" multiple setting specs', () => {
-    const scenarioSpecs: CheckScenarioSpec[] = [
+    const checkScenarioSpecs: CheckScenarioSpec[] = [
       {
         with: [
           { input: 'I1', at: 20 },
@@ -72,24 +71,24 @@ describe('expandScenarios', () => {
       }
     ]
 
-    const key = 'multi_i1_at_20__i2_at_40__i3_at_max'
-    const scenario = settingsScenario(key, key, [
+    const modelScenarioSpec = inputSettingsSpec([
       valueSetting('_i1', 20),
       valueSetting('_i2', 40),
       positionSetting('_i3', 'at-maximum')
     ])
-    expect(expandScenarios(modelSpec, scenarioSpecs, false)).toEqual([
-      multipleInputs(scenario, undefined, [inputDesc(i1, 20), inputDesc(i2, 40), inputDesc(i3, 'at-maximum')])
+
+    expect(expandScenarios(modelSpec, checkScenarioSpecs, false)).toEqual([
+      multipleInputs(modelScenarioSpec, undefined, [inputDesc(i1, 20), inputDesc(i2, 40), inputDesc(i3, 'at-maximum')])
     ])
   })
 
   it('should expand "with_inputs: all" at position specs', () => {
-    const scenarioSpecs: CheckScenarioSpec[] = [
+    const checkScenarioSpecs: CheckScenarioSpec[] = [
       { with_inputs: 'all', at: 'default' },
       { with_inputs: 'all', at: 'min' },
       { with_inputs: 'all', at: 'max' }
     ]
-    expect(expandScenarios(modelSpec, scenarioSpecs, false)).toEqual([
+    expect(expandScenarios(modelSpec, checkScenarioSpecs, false)).toEqual([
       allAtPos('at-default'),
       allAtPos('at-minimum'),
       allAtPos('at-maximum')
@@ -97,35 +96,33 @@ describe('expandScenarios', () => {
   })
 
   it('should expand "with_inputs_in: group" at position specs', () => {
-    const scenarioSpecs: CheckScenarioSpec[] = [
+    const checkScenarioSpecs: CheckScenarioSpec[] = [
       { with_inputs_in: 'Input GROUP 1', at: 'min' },
       { with_inputs_in: 'input group 2', at: 'max' },
       { with_inputs: 'all', at: 'max' }
     ]
 
-    const key1 = 'group_input_group_1'
-    const scenario1 = settingsScenario(key1, key1, [
+    const modelScenarioSpec1 = inputSettingsSpec([
       positionSetting('_i1', 'at-minimum'),
       positionSetting('_i2', 'at-minimum')
     ])
 
-    const key2 = 'group_input_group_2'
-    const scenario2 = settingsScenario(key2, key2, [
+    const modelScenarioSpec2 = inputSettingsSpec([
       positionSetting('_i2', 'at-maximum'),
       positionSetting('_i3', 'at-maximum')
     ])
 
-    expect(expandScenarios(modelSpec, scenarioSpecs, false)).toEqual([
-      multipleInputs(scenario1, 'input group 1', [inputDesc(i1, 'at-minimum'), inputDesc(i2, 'at-minimum')]),
-      multipleInputs(scenario2, 'Input Group 2', [inputDesc(i2, 'at-maximum'), inputDesc(i3, 'at-maximum')]),
+    expect(expandScenarios(modelSpec, checkScenarioSpecs, false)).toEqual([
+      multipleInputs(modelScenarioSpec1, 'input group 1', [inputDesc(i1, 'at-minimum'), inputDesc(i2, 'at-minimum')]),
+      multipleInputs(modelScenarioSpec2, 'Input Group 2', [inputDesc(i2, 'at-maximum'), inputDesc(i3, 'at-maximum')]),
       allAtPos('at-maximum')
     ])
   })
 
   it('should expand "with_inputs_in: group" to error when group is unknown', () => {
-    const scenarioSpecs: CheckScenarioSpec[] = [{ with_inputs_in: 'Unknown Group', at: 'min' }]
+    const checkScenarioSpecs: CheckScenarioSpec[] = [{ with_inputs_in: 'Unknown Group', at: 'min' }]
 
-    expect(expandScenarios(modelSpec, scenarioSpecs, false)).toEqual([
+    expect(expandScenarios(modelSpec, checkScenarioSpecs, false)).toEqual([
       {
         inputDescs: [],
         error: {
@@ -137,9 +134,9 @@ describe('expandScenarios', () => {
   })
 
   it('should expand "with_inputs_in: group" to error when group is empty', () => {
-    const scenarioSpecs: CheckScenarioSpec[] = [{ with_inputs_in: 'input group 3', at: 'min' }]
+    const checkScenarioSpecs: CheckScenarioSpec[] = [{ with_inputs_in: 'input group 3', at: 'min' }]
 
-    expect(expandScenarios(modelSpec, scenarioSpecs, false)).toEqual([
+    expect(expandScenarios(modelSpec, checkScenarioSpecs, false)).toEqual([
       {
         inputDescs: [],
         error: {
@@ -151,12 +148,12 @@ describe('expandScenarios', () => {
   })
 
   it('should expand "scenario_for_each_input_in: group" at position specs', () => {
-    const scenarioSpecs: CheckScenarioSpec[] = [
+    const checkScenarioSpecs: CheckScenarioSpec[] = [
       { scenarios_for_each_input_in: 'Input GROUP 1', at: 'min' },
       { scenarios_for_each_input_in: 'input group 2', at: 'max' }
     ]
 
-    expect(expandScenarios(modelSpec, scenarioSpecs, false)).toEqual([
+    expect(expandScenarios(modelSpec, checkScenarioSpecs, false)).toEqual([
       inputAtPos(i1, 'at-minimum'),
       inputAtPos(i2, 'at-minimum'),
       inputAtPos(i2, 'at-maximum'),
@@ -165,9 +162,9 @@ describe('expandScenarios', () => {
   })
 
   it('should expand "scenario_for_each_input_in: group" with error when group is unknown', () => {
-    const scenarioSpecs: CheckScenarioSpec[] = [{ scenarios_for_each_input_in: 'Unknown Group', at: 'min' }]
+    const checkScenarioSpecs: CheckScenarioSpec[] = [{ scenarios_for_each_input_in: 'Unknown Group', at: 'min' }]
 
-    expect(expandScenarios(modelSpec, scenarioSpecs, false)).toEqual([
+    expect(expandScenarios(modelSpec, checkScenarioSpecs, false)).toEqual([
       {
         inputDescs: [],
         error: {
@@ -179,9 +176,9 @@ describe('expandScenarios', () => {
   })
 
   it('should expand "scenario_for_each_input_in: group" with error when group is empty', () => {
-    const scenarioSpecs: CheckScenarioSpec[] = [{ scenarios_for_each_input_in: 'input group 3', at: 'min' }]
+    const checkScenarioSpecs: CheckScenarioSpec[] = [{ scenarios_for_each_input_in: 'input group 3', at: 'min' }]
 
-    expect(expandScenarios(modelSpec, scenarioSpecs, false)).toEqual([
+    expect(expandScenarios(modelSpec, checkScenarioSpecs, false)).toEqual([
       {
         inputDescs: [],
         error: {

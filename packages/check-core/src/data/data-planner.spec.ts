@@ -2,8 +2,8 @@
 
 import { describe, expect, it } from 'vitest'
 
-import type { Scenario } from '../_shared/scenario'
-import { inputAtValueScenario } from '../_shared/scenario'
+import type { ScenarioSpec } from '../_shared/scenario-spec-types'
+import { inputAtValueSpec } from '../_shared/scenario-specs'
 import type { DatasetKey } from '../_shared/types'
 
 import type { DataRequest, DataTask } from './data-planner'
@@ -21,21 +21,21 @@ function noopTask(datasetKey: DatasetKey): DataTask {
 }
 
 function request(
-  scenarioL: Scenario | undefined,
-  scenarioR: Scenario | undefined,
+  scenarioSpecL: ScenarioSpec | undefined,
+  scenarioSpecR: ScenarioSpec | undefined,
   datasetKeys: DatasetKey[]
 ): DataRequest {
   return {
-    scenarioL,
-    scenarioR,
+    scenarioSpecL,
+    scenarioSpecR,
     dataTasks: datasetKeys.map(noopTask)
   }
 }
 
 describe('DataPlanner', () => {
-  const s1 = inputAtValueScenario('i1', 'i1', 1)
-  const s2 = inputAtValueScenario('i2', 'i2', 1)
-  const s3 = inputAtValueScenario('i3', 'i3', 1)
+  const s1 = inputAtValueSpec('i1', 1)
+  const s2 = inputAtValueSpec('i2', 1)
+  const s3 = inputAtValueSpec('i3', 1)
 
   it('should build a basic plan', () => {
     const planner = new DataPlanner(2)

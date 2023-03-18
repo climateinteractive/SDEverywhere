@@ -1,7 +1,7 @@
 // Copyright (c) 2021-2022 Climate Interactive / New Venture Fund
 
 import type { DatasetsResult } from '../_shared/data-source'
-import type { Scenario } from '../_shared/scenario'
+import type { ScenarioSpec } from '../_shared/scenario-spec-types'
 import { TaskQueue } from '../_shared/task-queue'
 import type { DatasetKey } from '../_shared/types'
 
@@ -170,10 +170,10 @@ class SuiteRunner {
 
     async function getDatasets(
       bundleModel: BundleModel | undefined,
-      scenario: Scenario | undefined
+      scenarioSpec: ScenarioSpec | undefined
     ): Promise<DatasetsResult> {
-      if (bundleModel && scenario) {
-        return bundleModel.getDatasetsForScenario(scenario, datasetKeys)
+      if (bundleModel && scenarioSpec) {
+        return bundleModel.getDatasetsForScenario(scenarioSpec, datasetKeys)
       } else {
         return undefined
       }
@@ -183,8 +183,8 @@ class SuiteRunner {
     const bundleModelL = this.config.compare?.bundleL.model
     const bundleModelR = this.config.compare?.bundleR.model || this.config.check.bundle.model
     const [datasetsResultL, datasetsResultR] = await Promise.all([
-      getDatasets(bundleModelL, request.scenarioL),
-      getDatasets(bundleModelR, request.scenarioR)
+      getDatasets(bundleModelL, request.scenarioSpecL),
+      getDatasets(bundleModelR, request.scenarioSpecR)
     ])
 
     // Update the performance stats

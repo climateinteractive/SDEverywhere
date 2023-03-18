@@ -29,7 +29,7 @@ export function suiteSummaryFromReport(suiteReport: SuiteReport): SuiteSummary {
   const checkSummary = checkSummaryFromReport(suiteReport.checkReport)
 
   // Convert compare report to terse summaries
-  // TODO: For now we output "terse" JSON that contains just the ScenarioKey,
+  // TODO: For now we output "terse" JSON that contains just the ScenarioDefKey,
   // DatasetKey, and score (maxDiff) for each scenario, since this is all the
   // app needs.  Later we should add different reporting modes.
   let compareSummary: CompareSummary

@@ -1,6 +1,5 @@
 // Copyright (c) 2021-2022 Climate Interactive / New Venture Fund
 
-import type { Scenario } from '../_shared/scenario'
 import type { DatasetKey, DatasetMap } from '../_shared/types'
 import type { BundleModel, LoadedBundle, NamedBundle } from '../bundle/bundle-types'
 import { ModelInputs } from '../bundle/model-inputs'
@@ -8,10 +7,11 @@ import { ModelInputs } from '../bundle/model-inputs'
 import type { CheckConfig } from '../check/check-config'
 
 import type { CompareConfig } from '../compare'
-import { resolveCompareSpecsFromSources } from '../compare'
+import { CompareScenarios, resolveCompareSpecsFromSources } from '../compare'
 
 import type { Config, ConfigOptions } from './config-types'
 import { synchronizedBundleModel } from './synchronized-model'
+import type { ScenarioSpec } from '../_shared/scenario-spec-types'
 
 export async function createConfig(options: ConfigOptions): Promise<Config> {
   // Initialize the "current" bundle model (the one being checked)
@@ -50,12 +50,12 @@ export async function createConfig(options: ConfigOptions): Promise<Config> {
     const origBundleModelR = origCurrentBundle.model
     const adjBundleModelR: BundleModel = {
       modelSpec: origBundleModelR.modelSpec,
-      getDatasetsForScenario: async (scenario: Scenario, datasetKeys: DatasetKey[]) => {
+      getDatasetsForScenario: async (scenarioSpec: ScenarioSpec, datasetKeys: DatasetKey[]) => {
         // The given dataset keys are for the "left" bundle, so convert to the "right" keys
         const rightKeys = datasetKeys.map(rightKeyForLeftKey)
 
         // The returned dataset map has the "right" keys, so convert back to the "left" keys
-        const result = await origBundleModelR.getDatasetsForScenario(scenario, rightKeys)
+        const result = await origBundleModelR.getDatasetsForScenario(scenarioSpec, rightKeys)
         const mapWithRightKeys = result.datasetMap
         const mapWithLeftKeys: DatasetMap = new Map()
         for (const [rightKey, dataset] of mapWithRightKeys.entries()) {
@@ -87,7 +87,7 @@ export async function createConfig(options: ConfigOptions): Promise<Config> {
       bundleL: baselineBundle,
       bundleR: currentBundle,
       thresholds: options.compare.thresholds,
-      scenarios: compareDefs.scenarios,
+      scenarios: new CompareScenarios(compareDefs.scenarios),
       viewGroups: compareDefs.viewGroups,
       datasets: options.compare.datasets
     }

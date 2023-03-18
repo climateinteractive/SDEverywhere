@@ -1,6 +1,7 @@
 // Copyright (c) 2021-2022 Climate Interactive / New Venture Fund
 
-import type { Dataset, DatasetKey, DatasetMap, ScenarioKey } from '../../_shared/types'
+import type { Dataset, DatasetKey, DatasetMap } from '../../_shared/types'
+import type { CompareScenarioDefKey } from '../config/compare-scenarios'
 import type { CompareDatasetReport } from './compare-report'
 
 export interface DiffPoint {
@@ -125,7 +126,7 @@ export function diffDatasets(datasetL: Dataset | undefined, datasetR: Dataset | 
 }
 
 export function compareDatasets(
-  scenarioKey: ScenarioKey,
+  scenarioDefKey: CompareScenarioDefKey,
   datasetKey: DatasetKey,
   datasetMapL: DatasetMap,
   datasetMapR: DatasetMap
@@ -134,7 +135,7 @@ export function compareDatasets(
   const datasetR = datasetMapR.get(datasetKey)
   const diffReport = diffDatasets(datasetL, datasetR)
   return {
-    scenarioKey,
+    scenarioDefKey,
     datasetKey,
     diffReport
   }
