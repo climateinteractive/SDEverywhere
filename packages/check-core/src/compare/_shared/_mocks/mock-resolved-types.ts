@@ -76,6 +76,32 @@ export function allAtPos(
   }
 }
 
+export function resolvedInput(
+  requestedInputName: string,
+  at: InputPosition | number,
+  inputVarL: InputVar | CompareResolverError | undefined,
+  inputVarR: InputVar | CompareResolverError | undefined
+): CompareScenarioInput {
+  return {
+    requestedName: requestedInputName,
+    stateL: stateForInputVar(inputVarL, at),
+    stateR: stateForInputVar(inputVarR, at)
+  }
+}
+
+export function scenarioWithInputs(
+  resolvedInputs: CompareScenarioInput[],
+  opts?: { id?: string; title?: string; subtitle?: string }
+): CompareScenarioWithInputs {
+  return {
+    kind: 'scenario-with-inputs',
+    id: opts?.id,
+    title: opts?.title,
+    subtitle: opts?.subtitle,
+    resolvedInputs
+  }
+}
+
 export function scenarioWithInput(
   requestedInputName: string,
   at: InputPosition | number,
@@ -83,19 +109,8 @@ export function scenarioWithInput(
   inputVarR: InputVar | CompareResolverError | undefined,
   opts?: { id?: string; title?: string; subtitle?: string }
 ): CompareScenarioWithInputs {
-  const resolvedInput: CompareScenarioInput = {
-    requestedName: requestedInputName,
-    stateL: stateForInputVar(inputVarL, at),
-    stateR: stateForInputVar(inputVarR, at)
-  }
-  // TODO: Generate title/subtitle
-  return {
-    kind: 'scenario-with-inputs',
-    id: opts?.id,
-    title: opts?.title,
-    subtitle: opts?.subtitle,
-    resolvedInputs: [resolvedInput]
-  }
+  const input = resolvedInput(requestedInputName, at, inputVarL, inputVarR)
+  return scenarioWithInputs([input], opts)
 }
 
 export function stateForInputVar(
