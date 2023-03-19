@@ -3,7 +3,7 @@
 import type { DatasetKey } from '../../_shared/types'
 import type { BundleGraphSpec } from '../../bundle/bundle-types'
 import type { CompareDatasetSummary } from './compare-summary'
-import type { CompareScenarioDefKey } from '../config/compare-scenarios'
+import type { CompareScenarioKey } from '../_shared/compare-resolved-types'
 
 export type GraphInclusion = 'neither' | 'left-only' | 'right-only' | 'both'
 
@@ -37,13 +37,13 @@ export interface GraphReport {
  *
  * @param graphL The graph defined in the left bundle.
  * @param graphR The graph defined in the right bundle.
- * @param scenarioDefKey The scenario used for comparing datasets.
+ * @param scenarioKey The key of the scenario used for comparing datasets.
  * @param datasetSummaries The set of summaries from a previous comparison run.
  */
 export function diffGraphs(
   graphL: BundleGraphSpec | undefined,
   graphR: BundleGraphSpec | undefined,
-  scenarioDefKey: CompareScenarioDefKey,
+  scenarioKey: CompareScenarioKey,
   datasetSummaries: CompareDatasetSummary[]
 ): GraphReport {
   // Check in which bundles the graph is defined
@@ -93,7 +93,7 @@ export function diffGraphs(
       datasetKeys.add(dataset.datasetKey)
     }
     for (const datasetKey of datasetKeys) {
-      const summary = datasetSummaries.find(summary => summary.d === datasetKey && summary.s === scenarioDefKey)
+      const summary = datasetSummaries.find(summary => summary.d === datasetKey && summary.s === scenarioKey)
       // TODO: Flag as an error if we don't have a CompareDatasetSummary
       // for the datasets?
       const maxDiff = summary !== undefined ? summary.md : undefined

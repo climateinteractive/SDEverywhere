@@ -56,6 +56,8 @@ export type {
 } from './check/check-report'
 export { scenarioMessage, datasetMessage, predicateMessage } from './check/check-report'
 
+export type { CheckScenario, CheckScenarioError, CheckScenarioInputDesc } from './check/check-scenario'
+
 export type {
   CheckPredicateTimeOptions,
   CheckPredicateTimeRange,
@@ -69,6 +71,8 @@ export { checkSummaryFromReport, checkReportFromSummary } from './check/check-su
 //
 // compare
 //
+
+export * from './compare/_shared/compare-resolved-types'
 
 export * from './compare/config/compare-spec-types'
 export type { CompareConfig, CompareOptions } from './compare/config/compare-config'
@@ -92,6 +96,8 @@ export type { CompareDatasetReport, CompareReport } from './compare/run/compare-
 
 export type { CompareDatasetSummary, CompareSummary } from './compare/run/compare-summary'
 export { compareSummaryFromReport } from './compare/run/compare-summary'
+
+export { restoreFromTerseSummaries } from './compare/run/compare-terse-summaries'
 
 // TODO: Organize the following
 export type { CompareItem, CompareGroupInfo, CompareGroup } from './compare/compare-group'

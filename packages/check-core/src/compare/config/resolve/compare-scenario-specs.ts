@@ -2,33 +2,38 @@
 
 import { assertNever } from 'assert-never'
 
-import type { InputSetting, ScenarioSpec } from '../../_shared/scenario-spec-types'
-import { allInputsAtPositionSpec, inputSettingsSpec, positionSetting, valueSetting } from '../../_shared/scenario-specs'
+import type { InputSetting, ScenarioSpec } from '../../../_shared/scenario-spec-types'
+import {
+  allInputsAtPositionSpec,
+  inputSettingsSpec,
+  positionSetting,
+  valueSetting
+} from '../../../_shared/scenario-specs'
 
-import type { CompareScenario, CompareScenarioInput } from '../_shared/compare-resolved-types'
+import type { CompareScenarioInput, CompareScenarioSettings } from '../../_shared/compare-resolved-types'
 
 /**
  * Create a pair of `ScenarioSpec` instances that can be used to run each model given a
- * `CompareScenario` object.
+ * `CompareScenarioSettings` object.
  */
-export function scenarioSpecsFromDef(
-  scenarioDef: CompareScenario
+export function scenarioSpecsFromSettings(
+  settings: CompareScenarioSettings
 ): [ScenarioSpec | undefined, ScenarioSpec | undefined] {
-  switch (scenarioDef.kind) {
-    case 'scenario-with-all-inputs': {
+  switch (settings.kind) {
+    case 'all-inputs-settings': {
       // In this case, the same `Scenario` can be used on both sides
-      const scenario = allInputsAtPositionSpec(scenarioDef.position)
+      const scenario = allInputsAtPositionSpec(settings.position)
       return [scenario, scenario]
     }
-    case 'scenario-with-inputs': {
+    case 'input-settings': {
       // In this case, create separate `Scenario` instances for each side, in case the
       // input variable names are different
-      const scenarioL = scenarioSpecFromInputs(scenarioDef.resolvedInputs, 'left')
-      const scenarioR = scenarioSpecFromInputs(scenarioDef.resolvedInputs, 'right')
-      return [scenarioL, scenarioR]
+      const specL = scenarioSpecFromInputs(settings.inputs, 'left')
+      const specR = scenarioSpecFromInputs(settings.inputs, 'right')
+      return [specL, specR]
     }
     default:
-      assertNever(scenarioDef)
+      assertNever(settings)
   }
 }
 
@@ -50,7 +55,7 @@ function scenarioSpecFromInputs(inputs: CompareScenarioInput[], side: 'left' | '
     if (state.position) {
       settings.push(positionSetting(varId, state.position))
     } else {
-      settings.push(valueSetting(varId, state.value))
+      settings.push(valueSetting(varId, state.value as number))
     }
   }
 

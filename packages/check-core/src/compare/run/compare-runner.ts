@@ -4,7 +4,6 @@ import type { DataPlanner } from '../../data/data-planner'
 import type { CompareConfig } from '../config/compare-config'
 import { diffDatasets } from './compare-diff-datasets'
 import type { CompareDatasetReport } from './compare-report'
-import { scenarioSpecsFromDef } from './compare-scenario-specs'
 
 /**
  * Prepare all comparison tests and add them to the given data planner.
@@ -28,24 +27,19 @@ export function runCompare(
   // placeholder in the data request and then expand the dataset keys at the
   // time that the request is processed instead of adding them all in advance
   const datasetReports: CompareDatasetReport[] = []
-  for (const scenarioDefKey of compareConfig.scenarios.getAllDefKeys()) {
-    const scenarioDef = compareConfig.scenarios.getByDefKey(scenarioDefKey)
-
-    // Get a `ScenarioSpec` instance for each model
-    const [scenarioSpecL, scenarioSpecR] = scenarioSpecsFromDef(scenarioDef)
-
+  for (const scenario of compareConfig.scenarios.values()) {
     // Get the keys of the datasets of interest for this scenario
-    const datasetKeys = compareConfig.datasets.getDatasetKeysForScenario(scenarioDef)
+    const datasetKeys = compareConfig.datasets.getDatasetKeysForScenario(scenario)
 
     // For each dataset key, add a request so that the datasets are fetched
     // from the data sources (i.e., run the models with the given scenario
     // and compare the datasets)
     for (const datasetKey of datasetKeys) {
-      dataPlanner.addRequest(scenarioSpecL, scenarioSpecR, datasetKey, datasets => {
+      dataPlanner.addRequest(scenario.specL, scenario.specR, datasetKey, datasets => {
         // Diff the two datasets
         const diffReport = diffDatasets(datasets.datasetL, datasets.datasetR)
         datasetReports.push({
-          scenarioDefKey,
+          scenarioKey: scenario.key,
           datasetKey,
           diffReport
         })

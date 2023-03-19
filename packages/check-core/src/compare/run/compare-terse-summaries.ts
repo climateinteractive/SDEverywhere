@@ -25,18 +25,17 @@ export function restoreFromTerseSummaries(
 
   // Get the full set of scenario/dataset pairs
   const allDatasetSummaries: CompareDatasetSummary[] = []
-  for (const scenarioDefKey of compareConfig.scenarios.getAllDefKeys()) {
-    const scenarioDef = compareConfig.scenarios.getByDefKey(scenarioDefKey)
-    const datasetKeys = compareConfig.datasets.getDatasetKeysForScenario(scenarioDef)
+  for (const scenario of compareConfig.scenarios.values()) {
+    const datasetKeys = compareConfig.datasets.getDatasetKeysForScenario(scenario)
     for (const datasetKey of datasetKeys) {
       // If we have a summary in the array that was passed in, it means
       // the `maxDiff` was non-zero, so include that value, otherwise
       // assume zero
-      const key = `${scenarioDefKey}::${datasetKey}`
+      const key = `${scenario.key}::${datasetKey}`
       const existingSummary = existingSummaries.get(key)
       const maxDiff = existingSummary?.md || 0
       allDatasetSummaries.push({
-        s: scenarioDefKey,
+        s: scenario.key,
         d: datasetKey,
         md: maxDiff
       })

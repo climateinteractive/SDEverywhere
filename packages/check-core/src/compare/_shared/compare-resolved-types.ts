@@ -1,6 +1,6 @@
 // Copyright (c) 2023 Climate Interactive / New Venture Fund
 
-import type { InputPosition } from '../../_shared/scenario-spec-types'
+import type { InputPosition, ScenarioSpec } from '../../_shared/scenario-spec-types'
 import type { InputVar } from '../../bundle/var-types'
 import type {
   CompareScenarioGroupId,
@@ -15,6 +15,9 @@ import type {
 //
 // SCENARIOS
 //
+
+/** A unique key for a `CompareScenario`, generated internally for use by the library. */
+export type CompareScenarioKey = string & { _brand?: 'CompareScenarioKey' }
 
 export interface CompareResolverUnknownInputError {
   kind: 'unknown-input'
@@ -48,34 +51,44 @@ export interface CompareScenarioInput {
   stateR: CompareScenarioInputState
 }
 
-/** A single resolved input scenario with all inputs set to a given position. */
-export interface CompareScenarioWithAllInputs {
-  kind: 'scenario-with-all-inputs'
-  /** The unique identifier for the scenario. */
-  id?: CompareScenarioId
-  /** The scenario title. */
-  title: string
-  /** The scenario subtitle. */
-  subtitle?: string
+/** A configuration that sets model inputs to specific values. */
+export interface CompareScenarioInputSettings {
+  kind: 'input-settings'
+  /** The resolutions for the specified inputs in the scenario. */
+  inputs: CompareScenarioInput[]
+}
+
+/** A configuration that sets all inputs in the model to a certain position. */
+export interface CompareScenarioAllInputsSettings {
+  kind: 'all-inputs-settings'
   /** The input position that will be applied to all available inputs. */
   position: InputPosition
 }
 
-/** A single resolved input scenario with a set of inputs. */
-export interface CompareScenarioWithInputs {
-  kind: 'scenario-with-inputs'
-  /** The unique identifier for the scenario. */
+/**
+ * The configuration for an input scenario, either a set of individual input settings, or one
+ * that sets all inputs in the model to a certain position.
+ */
+export type CompareScenarioSettings = CompareScenarioInputSettings | CompareScenarioAllInputsSettings
+
+/** A single resolved input scenario. */
+export interface CompareScenario {
+  kind: 'scenario'
+  /** The unique key for the scenario, generated internally for use by the library. */
+  key: CompareScenarioKey
+  /** The unique user-defined identifier for the scenario. */
   id?: CompareScenarioId
   /** The scenario title. */
   title: string
   /** The scenario subtitle. */
   subtitle?: string
-  /** The resolutions for all inputs in the scenario. */
-  resolvedInputs: CompareScenarioInput[]
+  /** The resolved settings for the model inputs in this scenario. */
+  settings: CompareScenarioSettings
+  /** The input scenario used to configure the "left" model, or undefined if data not available. */
+  specL?: ScenarioSpec
+  /** The input scenario used to configure the "right" model, or undefined if data not available. */
+  specR?: ScenarioSpec
 }
-
-/** A single resolved input scenario. */
-export type CompareScenario = CompareScenarioWithAllInputs | CompareScenarioWithInputs
 
 /** An unresolved input scenario reference. */
 export interface CompareUnresolvedScenarioRef {

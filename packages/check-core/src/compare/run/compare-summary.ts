@@ -2,7 +2,7 @@
 
 import type { PerfReport } from '../../perf/perf-stats'
 import type { DatasetKey } from '../../_shared/types'
-import type { CompareScenarioDefKey } from '../config/compare-scenarios'
+import type { CompareScenarioKey } from '../_shared/compare-resolved-types'
 import type { CompareReport } from './compare-report'
 
 /**
@@ -12,8 +12,8 @@ import type { CompareReport } from './compare-report'
  * to keep the file smaller when there are many reported differences.
  */
 export interface CompareDatasetSummary {
-  /** Short for `scenarioDefKey`. */
-  s: CompareScenarioDefKey
+  /** Short for `scenarioKey`. */
+  s: CompareScenarioKey
   /** Short for `datasetKey`. */
   d: DatasetKey
   /** Short for `maxDiff`. */
@@ -44,7 +44,7 @@ export function compareSummaryFromReport(compareReport: CompareReport): CompareS
   for (const r of compareReport.datasetReports) {
     if (r.diffReport.validity === 'both' && r.diffReport.maxDiff > 0) {
       datasetSummaries.push({
-        s: r.scenarioDefKey,
+        s: r.scenarioKey,
         d: r.datasetKey,
         md: r.diffReport.maxDiff
       })

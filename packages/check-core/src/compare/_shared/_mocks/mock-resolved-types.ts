@@ -1,6 +1,6 @@
 // Copyright (c) 2021-2022 Climate Interactive / New Venture Fund
 
-import type { InputPosition } from '../../../_shared/scenario-spec-types'
+import type { InputPosition, ScenarioSpec } from '../../../_shared/scenario-spec-types'
 import type { VarId } from '../../../_shared/types'
 import type { InputId, InputVar } from '../../../bundle/var-types'
 
@@ -10,14 +10,14 @@ import type {
   CompareScenarioGroup,
   CompareScenarioInput,
   CompareScenarioInputState,
-  CompareScenarioWithAllInputs,
-  CompareScenarioWithInputs,
+  CompareScenarioKey,
   CompareUnresolvedScenarioRef,
   CompareUnresolvedView,
   CompareView,
   CompareViewGroup
 } from '../compare-resolved-types'
 import type { CompareScenarioGroupId, CompareScenarioId, CompareViewGraphId } from '../../config/compare-spec-types'
+import { allInputsAtPositionSpec } from '../../../_shared/scenario-specs'
 
 //
 // SCENARIOS
@@ -63,16 +63,23 @@ export function valueForPos(inputVar: InputVar, position: InputPosition): number
 }
 
 export function allAtPos(
+  key: CompareScenarioKey,
   position: InputPosition,
   opts?: { id?: string; title?: string; subtitle?: string }
-): CompareScenarioWithAllInputs {
-  // TODO: Generate title/subtitle
+): CompareScenario {
+  const spec = allInputsAtPositionSpec(position)
   return {
-    kind: 'scenario-with-all-inputs',
+    kind: 'scenario',
+    key,
     id: opts?.id,
     title: opts?.title,
     subtitle: opts?.subtitle,
-    position
+    settings: {
+      kind: 'all-inputs-settings',
+      position
+    },
+    specL: spec,
+    specR: spec
   }
 }
 
@@ -90,27 +97,39 @@ export function resolvedInput(
 }
 
 export function scenarioWithInputs(
+  key: CompareScenarioKey,
   resolvedInputs: CompareScenarioInput[],
+  specL?: ScenarioSpec,
+  specR?: ScenarioSpec,
   opts?: { id?: string; title?: string; subtitle?: string }
-): CompareScenarioWithInputs {
+): CompareScenario {
   return {
-    kind: 'scenario-with-inputs',
+    kind: 'scenario',
+    key,
     id: opts?.id,
     title: opts?.title,
     subtitle: opts?.subtitle,
-    resolvedInputs
+    settings: {
+      kind: 'input-settings',
+      inputs: resolvedInputs
+    },
+    specL,
+    specR
   }
 }
 
 export function scenarioWithInput(
+  key: CompareScenarioKey,
   requestedInputName: string,
   at: InputPosition | number,
   inputVarL: InputVar | CompareResolverError | undefined,
   inputVarR: InputVar | CompareResolverError | undefined,
+  specL?: ScenarioSpec,
+  specR?: ScenarioSpec,
   opts?: { id?: string; title?: string; subtitle?: string }
-): CompareScenarioWithInputs {
+): CompareScenario {
   const input = resolvedInput(requestedInputName, at, inputVarL, inputVarR)
-  return scenarioWithInputs([input], opts)
+  return scenarioWithInputs(key, [input], specL, specR, opts)
 }
 
 export function stateForInputVar(

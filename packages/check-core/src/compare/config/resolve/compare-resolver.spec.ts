@@ -2,6 +2,7 @@
 
 import { describe, expect, it } from 'vitest'
 
+import { inputAtPositionSpec as atPosSpec, inputAtValueSpec as atValSpec } from '../../../_shared/scenario-specs'
 import type { VarId } from '../../../_shared/types'
 import type { ModelSpec } from '../../../bundle/bundle-types'
 import { ModelInputs } from '../../../bundle/model-inputs'
@@ -9,7 +10,7 @@ import type { InputId, InputVar } from '../../../bundle/var-types'
 
 import type { CompareSpecs } from '../../config/compare-spec-types'
 
-import type { CompareScenario } from '../../_shared/compare-resolved-types'
+import type { CompareScenario, CompareScenarioKey } from '../../_shared/compare-resolved-types'
 
 import {
   allAtPos,
@@ -123,12 +124,52 @@ describe('resolveCompareSpecs', () => {
       const resolved = resolveCompareSpecs(modelInputsL, modelInputsR, specs)
       expect(resolved).toEqual({
         scenarios: [
-          scenarioWithInput('ivarA', 'at-default', lVar('IVarA'), rVar('IVarA')),
-          scenarioWithInput('id 2', 'at-minimum', lVar('IVarB'), rVar('IVarB_Renamed')),
-          scenarioWithInput('s3', 'at-maximum', lVar('IVarC'), rVar('IVarD')),
-          scenarioWithInput('ivarB', 'at-minimum', lVar('IVarB'), undefined),
-          scenarioWithInput('ivarD', 'at-minimum', undefined, rVar('IVarD')),
-          scenarioWithInput('ivarX', 'at-minimum', undefined, undefined)
+          scenarioWithInput(
+            '1',
+            'ivarA',
+            'at-default',
+            lVar('IVarA'),
+            rVar('IVarA'),
+            atPosSpec('_ivara', 'at-default'),
+            atPosSpec('_ivara', 'at-default')
+          ),
+          scenarioWithInput(
+            '2',
+            'id 2',
+            'at-minimum',
+            lVar('IVarB'),
+            rVar('IVarB_Renamed'),
+            atPosSpec('_ivarb', 'at-minimum'),
+            atPosSpec('_ivarb_renamed', 'at-minimum')
+          ),
+          scenarioWithInput(
+            '3',
+            's3',
+            'at-maximum',
+            lVar('IVarC'),
+            rVar('IVarD'),
+            atPosSpec('_ivarc', 'at-maximum'),
+            atPosSpec('_ivard', 'at-maximum')
+          ),
+          scenarioWithInput(
+            '4',
+            'ivarB',
+            'at-minimum',
+            lVar('IVarB'),
+            undefined,
+            atPosSpec('_ivarb', 'at-minimum'),
+            undefined
+          ),
+          scenarioWithInput(
+            '5',
+            'ivarD',
+            'at-minimum',
+            undefined,
+            rVar('IVarD'),
+            undefined,
+            atPosSpec('_ivard', 'at-minimum')
+          ),
+          scenarioWithInput('6', 'ivarX', 'at-minimum', undefined, undefined, undefined, undefined)
         ],
         scenarioGroups: [],
         viewGroups: []
@@ -152,11 +193,51 @@ describe('resolveCompareSpecs', () => {
       const resolved = resolveCompareSpecs(modelInputsL, modelInputsR, specs)
       expect(resolved).toEqual({
         scenarios: [
-          scenarioWithInput('ivarA', 20, lVar('IVarA'), rVar('IVarA')),
-          scenarioWithInput('id 2', 40, lVar('IVarB'), rVar('IVarB_Renamed')),
-          scenarioWithInput('S3', 60, lVar('IVarC'), rVar('IVarD')),
-          scenarioWithInput('ivarA', 500, { kind: 'invalid-value' }, { kind: 'invalid-value' }),
-          scenarioWithInput('id 2', 90, lVar('IVarB'), { kind: 'invalid-value' })
+          scenarioWithInput(
+            '1',
+            'ivarA',
+            20,
+            lVar('IVarA'),
+            rVar('IVarA'),
+            atValSpec('_ivara', 20),
+            atValSpec('_ivara', 20)
+          ),
+          scenarioWithInput(
+            '2',
+            'id 2',
+            40,
+            lVar('IVarB'),
+            rVar('IVarB_Renamed'),
+            atValSpec('_ivarb', 40),
+            atValSpec('_ivarb_renamed', 40)
+          ),
+          scenarioWithInput(
+            '3',
+            'S3',
+            60,
+            lVar('IVarC'),
+            rVar('IVarD'),
+            atValSpec('_ivarc', 60),
+            atValSpec('_ivard', 60)
+          ),
+          scenarioWithInput(
+            '4',
+            'ivarA',
+            500,
+            { kind: 'invalid-value' },
+            { kind: 'invalid-value' },
+            undefined,
+            undefined
+          ),
+          scenarioWithInput(
+            '5',
+            'id 2',
+            90,
+            lVar('IVarB'),
+            { kind: 'invalid-value' },
+            atValSpec('_ivarb', 90),
+            undefined
+          )
         ],
         scenarioGroups: [],
         viewGroups: []
@@ -194,7 +275,7 @@ describe('resolveCompareSpecs', () => {
 
       const resolved = resolveCompareSpecs(modelInputsL, modelInputsR, specs)
       expect(resolved).toEqual({
-        scenarios: [allAtPos('at-default'), allAtPos('at-minimum'), allAtPos('at-maximum')],
+        scenarios: [allAtPos('1', 'at-default'), allAtPos('2', 'at-minimum'), allAtPos('3', 'at-maximum')],
         scenarioGroups: [],
         viewGroups: []
       })
@@ -255,12 +336,24 @@ describe('resolveCompareSpecs', () => {
     // })
 
     it('should expand "preset: matrix" spec', () => {
-      function scenario(id: number, pos: 'min' | 'max', varNameL?: string, varNameR?: string): CompareScenario {
+      function scenario(
+        key: CompareScenarioKey,
+        id: number,
+        pos: 'min' | 'max',
+        varNameL?: string,
+        varNameR?: string
+      ): CompareScenario {
+        const ipos = pos === 'min' ? 'at-minimum' : 'at-maximum'
+        const specL = varNameL && atPosSpec(`_${varNameL.toLowerCase()}`, ipos)
+        const specR = varNameR && atPosSpec(`_${varNameR.toLowerCase()}`, ipos)
         return scenarioWithInput(
+          key,
           `id ${id}`,
-          pos === 'min' ? 'at-minimum' : 'at-maximum',
+          ipos,
           varNameL && lVar(varNameL),
-          varNameR && rVar(varNameR)
+          varNameR && rVar(varNameR),
+          specL,
+          specR
         )
       }
 
@@ -269,15 +362,15 @@ describe('resolveCompareSpecs', () => {
       const resolved = resolveCompareSpecs(modelInputsL, modelInputsR, specs)
       expect(resolved).toEqual({
         scenarios: [
-          allAtPos('at-default'),
-          scenario(1, 'min', 'IVarA', 'IVarA'),
-          scenario(1, 'max', 'IVarA', 'IVarA'),
-          scenario(2, 'min', 'IVarB', 'IVarB_Renamed'),
-          scenario(2, 'max', 'IVarB', 'IVarB_Renamed'),
-          scenario(3, 'min', 'IVarC', undefined),
-          scenario(3, 'max', 'IVarC', undefined),
-          scenario(4, 'min', undefined, 'IVarD'),
-          scenario(4, 'max', undefined, 'IVarD')
+          allAtPos('1', 'at-default'),
+          scenario('2', 1, 'min', 'IVarA', 'IVarA'),
+          scenario('3', 1, 'max', 'IVarA', 'IVarA'),
+          scenario('4', 2, 'min', 'IVarB', 'IVarB_Renamed'),
+          scenario('5', 2, 'max', 'IVarB', 'IVarB_Renamed'),
+          scenario('6', 3, 'min', 'IVarC', undefined),
+          scenario('7', 3, 'max', 'IVarC', undefined),
+          scenario('8', 4, 'min', undefined, 'IVarD'),
+          scenario('9', 4, 'max', undefined, 'IVarD')
         ],
         scenarioGroups: [],
         viewGroups: []
@@ -301,18 +394,31 @@ describe('resolveCompareSpecs', () => {
         ]
       )
 
+      const expectedId1AtMax = scenarioWithInput(
+        '1',
+        'id 1',
+        'at-maximum',
+        lVar('IVarA'),
+        rVar('IVarA'),
+        atPosSpec('_ivara', 'at-maximum'),
+        atPosSpec('_ivara', 'at-maximum'),
+        { id: 'id_1_at_max' }
+      )
+
+      const expectedId2AtMax = scenarioWithInput(
+        '2',
+        'id 2',
+        'at-maximum',
+        lVar('IVarB'),
+        rVar('IVarB_Renamed'),
+        atPosSpec('_ivarb', 'at-maximum'),
+        atPosSpec('_ivarb_renamed', 'at-maximum')
+      )
+
       const resolved = resolveCompareSpecs(modelInputsL, modelInputsR, specs)
       expect(resolved).toEqual({
-        scenarios: [
-          scenarioWithInput('id 1', 'at-maximum', lVar('IVarA'), rVar('IVarA'), { id: 'id_1_at_max' }),
-          scenarioWithInput('id 2', 'at-maximum', lVar('IVarB'), rVar('IVarB_Renamed'))
-        ],
-        scenarioGroups: [
-          scenarioGroup('Group with two vars at max', [
-            scenarioWithInput('id 1', 'at-maximum', lVar('IVarA'), rVar('IVarA'), { id: 'id_1_at_max' }),
-            scenarioWithInput('id 2', 'at-maximum', lVar('IVarB'), rVar('IVarB_Renamed'))
-          ])
-        ],
+        scenarios: [expectedId1AtMax, expectedId2AtMax],
+        scenarioGroups: [scenarioGroup('Group with two vars at max', [expectedId1AtMax, expectedId2AtMax])],
         viewGroups: []
       })
     })
@@ -323,9 +429,19 @@ describe('resolveCompareSpecs', () => {
         [scenarioGroupSpec('Group with invalid ref', [scenarioRefSpec('unknown')])]
       )
 
+      const expectedId1AtMax = scenarioWithInput(
+        '1',
+        'id 1',
+        'at-maximum',
+        lVar('IVarA'),
+        rVar('IVarA'),
+        atPosSpec('_ivara', 'at-maximum'),
+        atPosSpec('_ivara', 'at-maximum')
+      )
+
       const resolved = resolveCompareSpecs(modelInputsL, modelInputsR, specs)
       expect(resolved).toEqual({
-        scenarios: [scenarioWithInput('id 1', 'at-maximum', lVar('IVarA'), rVar('IVarA'))],
+        scenarios: [expectedId1AtMax],
         scenarioGroups: [scenarioGroup('Group with invalid ref', [unresolvedScenarioRef('unknown')])],
         viewGroups: []
       })
@@ -382,14 +498,33 @@ describe('resolveCompareSpecs', () => {
         ]
       }
 
-      const expectedId1AtMax = scenarioWithInput('id 1', 'at-maximum', lVar('IVarA'), rVar('IVarA'), {
-        id: 'id_1_at_max',
-        title: 'input id 1',
-        subtitle: 'at max'
-      })
-      const expectedId2AtMax = scenarioWithInput('id 2', 'at-maximum', lVar('IVarB'), rVar('IVarB_Renamed'), {
-        id: 'id_2_at_max'
-      })
+      const expectedId1AtMax = scenarioWithInput(
+        '1',
+        'id 1',
+        'at-maximum',
+        lVar('IVarA'),
+        rVar('IVarA'),
+        atPosSpec('_ivara', 'at-maximum'),
+        atPosSpec('_ivara', 'at-maximum'),
+        {
+          id: 'id_1_at_max',
+          title: 'input id 1',
+          subtitle: 'at max'
+        }
+      )
+
+      const expectedId2AtMax = scenarioWithInput(
+        '2',
+        'id 2',
+        'at-maximum',
+        lVar('IVarB'),
+        rVar('IVarB_Renamed'),
+        atPosSpec('_ivarb', 'at-maximum'),
+        atPosSpec('_ivarb_renamed', 'at-maximum'),
+        {
+          id: 'id_2_at_max'
+        }
+      )
 
       const resolved = resolveCompareSpecs(modelInputsL, modelInputsR, specs)
       expect(resolved).toEqual({
@@ -460,28 +595,48 @@ describe('resolveCompareSpecs', () => {
         ]
       }
 
-      const expectedId1 = (pos: 'min' | 'max', title: string, subtitle: string) => {
-        return scenarioWithInput('id 1', pos === 'min' ? 'at-minimum' : 'at-maximum', lVar('IVarA'), rVar('IVarA'), {
-          id: `id_1_at_${pos}`,
-          title,
-          subtitle
-        })
+      const expectedId1 = (key: CompareScenarioKey, pos: 'min' | 'max', title: string, subtitle: string) => {
+        const ipos = pos === 'min' ? 'at-minimum' : 'at-maximum'
+        return scenarioWithInput(
+          key,
+          'id 1',
+          ipos,
+          lVar('IVarA'),
+          rVar('IVarA'),
+          atPosSpec('_ivara', ipos),
+          atPosSpec('_ivara', ipos),
+          {
+            id: `id_1_at_${pos}`,
+            title,
+            subtitle
+          }
+        )
       }
 
-      const expectedId1AtMax = expectedId1('max', 'id 1 at max default title', 'id 1 at max default subtitle')
-      const expectedId1AtMin = expectedId1('min', 'id 1 at min default title', 'id 1 at min default subtitle')
+      const expectedId1AtMax = expectedId1('1', 'max', 'id 1 at max default title', 'id 1 at max default subtitle')
+      const expectedId1AtMin = expectedId1('2', 'min', 'id 1 at min default title', 'id 1 at min default subtitle')
 
       const expectedId1AtMinWithScenarioGroupOverride = expectedId1(
+        '2',
         'min',
         'id 1 at min title override from scenario group',
         'id 1 at min subtitle override from scenario group'
       )
 
-      const expectedId2AtMax = scenarioWithInput('id 2', 'at-maximum', lVar('IVarB'), rVar('IVarB_Renamed'), {
-        id: 'id_2_at_max',
-        title: 'input id 2',
-        subtitle: 'at max'
-      })
+      const expectedId2AtMax = scenarioWithInput(
+        '3',
+        'id 2',
+        'at-maximum',
+        lVar('IVarB'),
+        rVar('IVarB_Renamed'),
+        atPosSpec('_ivarb', 'at-maximum'),
+        atPosSpec('_ivarb_renamed', 'at-maximum'),
+        {
+          id: 'id_2_at_max',
+          title: 'input id 2',
+          subtitle: 'at max'
+        }
+      )
 
       const resolved = resolveCompareSpecs(modelInputsL, modelInputsR, specs)
       expect(resolved.scenarios).toEqual([expectedId1AtMax, expectedId1AtMin, expectedId2AtMax])

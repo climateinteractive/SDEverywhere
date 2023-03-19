@@ -66,7 +66,7 @@ export class DatasetManager implements CompareDatasets {
 
   // from CompareDatasets interface
   getDatasetKeysForScenario(scenario: CompareScenario): DatasetKey[] {
-    if (scenario.kind === 'scenario-with-all-inputs' && scenario.position === 'at-default') {
+    if (scenario.settings.kind === 'all-inputs-settings' && scenario.settings.position === 'at-default') {
       // Include both model and static variables for the "all at default" scenario
       return this.allOutputVarKeys
     } else {
