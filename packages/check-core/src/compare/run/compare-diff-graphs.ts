@@ -2,8 +2,8 @@
 
 import type { DatasetKey } from '../../_shared/types'
 import type { BundleGraphSpec } from '../../bundle/bundle-types'
-import type { CompareDatasetSummary } from './compare-summary'
 import type { CompareScenarioKey } from '../_shared/compare-resolved-types'
+import type { ComparisonTestSummary } from './comparison-report-types'
 
 export type GraphInclusion = 'neither' | 'left-only' | 'right-only' | 'both'
 
@@ -38,13 +38,13 @@ export interface GraphReport {
  * @param graphL The graph defined in the left bundle.
  * @param graphR The graph defined in the right bundle.
  * @param scenarioKey The key of the scenario used for comparing datasets.
- * @param datasetSummaries The set of summaries from a previous comparison run.
+ * @param testSummaries The set of test summaries from a previous comparison run.
  */
 export function diffGraphs(
   graphL: BundleGraphSpec | undefined,
   graphR: BundleGraphSpec | undefined,
   scenarioKey: CompareScenarioKey,
-  datasetSummaries: CompareDatasetSummary[]
+  testSummaries: ComparisonTestSummary[]
 ): GraphReport {
   // Check in which bundles the graph is defined
   let inclusion: GraphInclusion
@@ -93,10 +93,10 @@ export function diffGraphs(
       datasetKeys.add(dataset.datasetKey)
     }
     for (const datasetKey of datasetKeys) {
-      const summary = datasetSummaries.find(summary => summary.d === datasetKey && summary.s === scenarioKey)
-      // TODO: Flag as an error if we don't have a CompareDatasetSummary
+      const testSummary = testSummaries.find(summary => summary.d === datasetKey && summary.s === scenarioKey)
+      // TODO: Flag as an error if we don't have a ComparisonTestSummary
       // for the datasets?
-      const maxDiff = summary !== undefined ? summary.md : undefined
+      const maxDiff = testSummary?.md
       datasetReports.push({
         datasetKey,
         maxDiff

@@ -7,7 +7,7 @@ import { outputVar } from '../check/_mocks/mock-check-dataset'
 import { inputVar } from '../check/_mocks/mock-check-scenario'
 import { createConfig } from '../config/config'
 import type { Config, ConfigOptions } from '../config/config-types'
-import type { SuiteReport } from './suite-report'
+import type { SuiteReport } from './suite-report-types'
 import type { RunSuiteCallbacks } from './suite-runner'
 import { runSuite } from './suite-runner'
 

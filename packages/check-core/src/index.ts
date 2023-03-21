@@ -93,12 +93,11 @@ export type {
 } from './compare/run/compare-diff-graphs'
 export { diffGraphs } from './compare/run/compare-diff-graphs'
 
-export type { CompareDatasetReport, CompareReport } from './compare/run/compare-report'
+export * from './compare/run/comparison-report-types'
+export { comparisonSummaryFromReport } from './compare/run/comparison-reporting'
 
-export type { CompareDatasetSummary, CompareSummary } from './compare/run/compare-summary'
-export { compareSummaryFromReport } from './compare/run/compare-summary'
-
-export { restoreFromTerseSummaries } from './compare/run/compare-terse-summaries'
+export * from './compare/run/comparison-group-types'
+export { categorizeComparisonTestSummaries } from './compare/run/comparison-grouping'
 
 //
 // config
@@ -124,7 +123,6 @@ export { PerfStats } from './perf/perf-stats'
 export type { RunSuiteCallbacks, RunSuiteOptions } from './suite/suite-runner'
 export { runSuite } from './suite/suite-runner'
 
-export type { SuiteReport } from './suite/suite-report'
+export * from './suite/suite-report-types'
 
-export type { SuiteSummary } from './suite/suite-summary'
-export { suiteSummaryFromReport } from './suite/suite-summary'
+export { suiteSummaryFromReport } from './suite/suite-reporting'

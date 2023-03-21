@@ -3,7 +3,7 @@
 import type { DataPlanner } from '../../data/data-planner'
 import type { CompareConfig } from '../config/compare-config'
 import { diffDatasets } from './compare-diff-datasets'
-import type { CompareDatasetReport } from './compare-report'
+import type { ComparisonTestReport } from './comparison-report-types'
 
 /**
  * Prepare all comparison tests and add them to the given data planner.
@@ -17,7 +17,7 @@ export function runCompare(
   compareConfig: CompareConfig,
   dataPlanner: DataPlanner,
   simplifyScenarios: boolean
-): () => CompareDatasetReport[] {
+): () => ComparisonTestReport[] {
   if (simplifyScenarios) {
     console.warn('simplifyScenarios not yet (re)implemented')
   }
@@ -26,7 +26,7 @@ export function runCompare(
   // if memory usage becomes a concern, we can change this to add a wildcard
   // placeholder in the data request and then expand the dataset keys at the
   // time that the request is processed instead of adding them all in advance
-  const datasetReports: CompareDatasetReport[] = []
+  const testReports: ComparisonTestReport[] = []
   for (const scenario of compareConfig.scenarios.getAllScenarios()) {
     // Get the keys of the datasets of interest for this scenario
     const datasetKeys = compareConfig.datasets.getDatasetKeysForScenario(scenario)
@@ -38,7 +38,7 @@ export function runCompare(
       dataPlanner.addRequest(scenario.specL, scenario.specR, datasetKey, datasets => {
         // Diff the two datasets
         const diffReport = diffDatasets(datasets.datasetL, datasets.datasetR)
-        datasetReports.push({
+        testReports.push({
           scenarioKey: scenario.key,
           datasetKey,
           diffReport
@@ -47,10 +47,10 @@ export function runCompare(
     }
   }
 
-  // Return a function that will build the report with the check results; this
+  // Return a function that will build the report with the test results; this
   // should be called only after all data tasks have been processed
   // TODO: This is an unusual approach; should refactor
   return () => {
-    return datasetReports
+    return testReports
   }
 }

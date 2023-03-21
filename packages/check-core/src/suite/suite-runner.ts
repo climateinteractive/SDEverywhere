@@ -13,14 +13,14 @@ import { DataPlanner } from '../data/data-planner'
 import { parseTestYaml } from '../check/check-parser'
 import { runChecks } from '../check/check-runner'
 
-import type { CompareDatasetReport, CompareReport } from '../compare'
-import { runCompare } from '../compare'
+import { runCompare } from '../compare/run/compare-runner'
+import type { ComparisonReport, ComparisonTestReport } from '../compare/run/comparison-report-types'
 
 import type { Config } from '../config/config-types'
 
 import { PerfStats } from '../perf/perf-stats'
 
-import type { SuiteReport } from './suite-report'
+import type { SuiteReport } from './suite-report-types'
 
 export type CancelRunSuite = () => void
 
@@ -90,9 +90,9 @@ class SuiteRunner {
     const buildCheckReport = runChecks(this.config.check, checkSpec, dataPlanner, refDataPlanner, simplifyScenarios)
 
     // Plan the comparisons, if configured
-    let buildCompareDatasetReports: () => CompareDatasetReport[]
+    let buildComparisonTestReports: () => ComparisonTestReport[]
     if (this.config.compare) {
-      buildCompareDatasetReports = runCompare(this.config.compare, dataPlanner, simplifyScenarios)
+      buildComparisonTestReports = runCompare(this.config.compare, dataPlanner, simplifyScenarios)
     }
 
     // When all tasks have been processed, build the report
@@ -105,17 +105,17 @@ class SuiteRunner {
         this.callbacks.onError?.(error)
       } else {
         const checkReport = buildCheckReport()
-        let compareReport: CompareReport
+        let comparisonReport: ComparisonReport
         if (this.config.compare) {
-          compareReport = {
-            datasetReports: buildCompareDatasetReports(),
+          comparisonReport = {
+            testReports: buildComparisonTestReports(),
             perfReportL: this.perfStatsL.toReport(),
             perfReportR: this.perfStatsR.toReport()
           }
         }
         this.callbacks.onComplete?.({
           checkReport,
-          compareReport
+          comparisonReport
         })
       }
     }
@@ -129,10 +129,10 @@ class SuiteRunner {
     if (taskCount === 0) {
       // There are no checks or comparison tests; notify completion callback
       // with empty reports
-      let compareReport: CompareReport
+      let comparisonReport: ComparisonReport
       if (this.config.compare) {
-        compareReport = {
-          datasetReports: [],
+        comparisonReport = {
+          testReports: [],
           perfReportL: this.perfStatsL.toReport(),
           perfReportR: this.perfStatsR.toReport()
         }
@@ -143,7 +143,7 @@ class SuiteRunner {
         checkReport: {
           groups: []
         },
-        compareReport
+        comparisonReport
       })
       return
     }

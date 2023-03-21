@@ -6,13 +6,14 @@ import { ModelInputs } from '../bundle/model-inputs'
 
 import type { CheckConfig } from '../check/check-config'
 
-import type { CompareConfig } from '../compare'
-import { CompareScenarios, resolveCompareSpecsFromSources } from '../compare'
+import type { CompareConfig } from '../compare/config/compare-config'
+import { resolveCompareSpecsFromSources } from '../compare/config/compare-config'
+import { getCompareDatasets } from '../compare/config/compare-datasets'
+import { CompareScenarios } from '../compare/config/compare-scenarios'
 
 import type { Config, ConfigOptions } from './config-types'
 import { synchronizedBundleModel } from './synchronized-model'
 import type { ScenarioSpec } from '../_shared/scenario-spec-types'
-import { getCompareDatasets } from '../compare/config/compare-datasets'
 
 export async function createConfig(options: ConfigOptions): Promise<Config> {
   // Initialize the "current" bundle model (the one being checked)

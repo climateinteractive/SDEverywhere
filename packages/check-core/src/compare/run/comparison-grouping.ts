@@ -6,108 +6,65 @@ import type { CompareConfig } from '../config/compare-config'
 import type { CompareDataset, CompareScenario } from '../_shared/compare-resolved-types'
 
 import { getBucketIndex } from './buckets'
-import type { CompareDatasetSummary } from './compare-summary'
-
-export type ComparisonGroupKind = 'by-dataset' | 'by-scenario'
-export type ComparisonGroupKey = string // DatasetKey | CompareScenarioKey
+import type {
+  ComparisonCategorizedResults,
+  ComparisonGroup,
+  ComparisonGroupDatasetRoot,
+  ComparisonGroupKey,
+  ComparisonGroupKind,
+  ComparisonGroupScenarioRoot,
+  ComparisonGroupScores,
+  ComparisonGroupSummariesByCategory,
+  ComparisonGroupSummary
+} from './comparison-group-types'
+import type { ComparisonTestSummary } from './comparison-report-types'
+import { restoreFromTerseSummaries } from './comparison-reporting'
 
 /**
- * A group of comparison summaries associated with a particular scenario or dataset.
+ * Given a set of terse test summaries (which only includes summaries for tests with non-zero `maxDiff`
+ * scores), restore the full set of summaries and then categorize them.
+ *
+ * @param compareConfig The comparison configuration.
+ * @param terseSummaries The set of terse test summaries.
  */
-export interface ComparisonGroup {
-  /** The kind of group, either 'by-dataset' or 'by-scenario'. */
-  kind: ComparisonGroupKind
-  /**
-   * The unique key for this group (a `DatasetKey` if grouped by dataset, or a
-   * `CompareScenarioKey` if grouped by scenario).
-   */
-  key: ComparisonGroupKey
-  /** The comparison summaries for this group. */
-  summaries: CompareDatasetSummary[]
-}
+export function categorizeComparisonTestSummaries(
+  compareConfig: CompareConfig,
+  terseSummaries: ComparisonTestSummary[]
+): ComparisonCategorizedResults {
+  // Restore the full set of test results
+  const allTestSummaries = restoreFromTerseSummaries(compareConfig, terseSummaries)
 
-/** Metadata for the dataset that is associated with the comparisons in this group. */
-export interface ComparisonGroupDatasetRoot {
-  kind: 'dataset-root'
-  /** The resolved `CompareDataset` associated with the comparisons in this group. */
-  dataset: CompareDataset
-}
+  // Categorize the results by scenario
+  const groupsByScenario = groupComparisonTestSummaries(allTestSummaries, 'by-scenario')
+  const byScenario = categorizeComparisonGroups(compareConfig, [...groupsByScenario.values()])
 
-/** Metadata for the scenario that is associated with the comparisons in this group. */
-export interface ComparisonGroupScenarioRoot {
-  kind: 'scenario-root'
-  /** The resolved `CompareScenario` associated with the comparisons in this group. */
-  scenario: CompareScenario
-}
+  // Categorize the results by dataset
+  const groupsByDataset = groupComparisonTestSummaries(allTestSummaries, 'by-dataset')
+  const byDataset = categorizeComparisonGroups(compareConfig, [...groupsByDataset.values()])
 
-/** Describes the "root" or primary item for a group of comparisons. */
-export type ComparisonGroupRoot = ComparisonGroupDatasetRoot | ComparisonGroupScenarioRoot
-
-/** A summary of scores for a group of comparisons. */
-export interface ComparisonGroupScores {
-  /** The total number of comparisons (sample size) for this group. */
-  totalDiffCount: number
-  /** The sum of the `maxDiff` values for each threshold bucket. */
-  totalMaxDiffByBucket: number[]
-  /** The number of comparisons that fall into each threshold bucket. */
-  diffCountByBucket: number[]
-  /** The percentage of comparisons that fall into each threshold bucket. */
-  diffPercentByBucket: number[]
+  return {
+    byScenario,
+    byDataset
+  }
 }
 
 /**
- * A summary of a group of comparisons that includes the resolved scenario/dataset metadata
- * and score information for the group.
+ * Group the given comparison test summaries, returning one `ComparisonGroup` for each group.
  */
-export interface ComparisonGroupSummary {
-  /** The metadata for the "root" or primary item for this group of comparisons. */
-  root: ComparisonGroupRoot
-  /** The group containing the comparison summaries. */
-  group: ComparisonGroup
-  /** The scores for this group, or undefined if comparisons were not performed for this group. */
-  scores?: ComparisonGroupScores
-}
-
-export interface ComparisonGroupSummariesByCategory {
-  /**
-   * Groups with items that are only valid for the "left" model (for example, datasets that
-   * were removed and no longer available in the "right" model).
-   */
-  onlyInLeft: ComparisonGroupSummary[]
-  /**
-   * Groups with items that are only valid for the "right" model (for example, scenarios
-   * for inputs that were added in the "right" model).
-   */
-  onlyInRight: ComparisonGroupSummary[]
-  /**
-   * Groups with one or more comparisons that have non-zero `maxDiff` scores; the groups
-   * will be sorted by `maxDiff`, with higher scores at the front of the array.
-   */
-  withDiffs: ComparisonGroupSummary[]
-  /**
-   * Groups where all comparisons have `maxDiff` scores of zero (no differences between
-   * "left" and "right").
-   */
-  withoutDiffs: ComparisonGroupSummary[]
-}
-
-/**
- * Group the given comparison summaries, returning one `CompareGroupReport` for each group.
- */
-export function groupComparisonSummaries(
-  datasetSummaries: CompareDatasetSummary[],
+export function groupComparisonTestSummaries(
+  testSummaries: ComparisonTestSummary[],
   groupKind: ComparisonGroupKind
 ): Map<ComparisonGroupKey, ComparisonGroup> {
   const groups: Map<ComparisonGroupKey, ComparisonGroup> = new Map()
 
-  for (const datasetSummary of datasetSummaries) {
+  for (const testSummary of testSummaries) {
     let groupKey: ComparisonGroupKey
     switch (groupKind) {
       case 'by-dataset':
-        groupKey = datasetSummary.d
+        groupKey = testSummary.d
         break
       case 'by-scenario':
-        groupKey = datasetSummary.s
+        groupKey = testSummary.s
         break
       default:
         assertNever(groupKind)
@@ -115,12 +72,12 @@ export function groupComparisonSummaries(
 
     const group = groups.get(groupKey)
     if (group) {
-      group.summaries.push(datasetSummary)
+      group.testSummaries.push(testSummary)
     } else {
       groups.set(groupKey, {
         kind: groupKind,
         key: groupKey,
-        summaries: [datasetSummary]
+        testSummaries: [testSummary]
       })
     }
   }
@@ -271,10 +228,10 @@ function getScoresForGroup(group: ComparisonGroup, thresholds: number[]): Compar
   const diffCountByBucket = Array(thresholds.length + 2).fill(0)
   const totalMaxDiffByBucket = Array(thresholds.length + 2).fill(0)
   let totalDiffCount = 0
-  for (const summary of group.summaries) {
-    const bucketIndex = getBucketIndex(summary.md, thresholds)
+  for (const testSummary of group.testSummaries) {
+    const bucketIndex = getBucketIndex(testSummary.md, thresholds)
     diffCountByBucket[bucketIndex]++
-    totalMaxDiffByBucket[bucketIndex] += summary.md
+    totalMaxDiffByBucket[bucketIndex] += testSummary.md
     totalDiffCount++
   }
 

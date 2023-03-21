@@ -12,11 +12,11 @@ import type { CompareConfig } from '../config/compare-config'
 import { getCompareDatasets } from '../config/compare-datasets'
 import { CompareScenarios } from '../config/compare-scenarios'
 
-import type { ComparisonGroup, ComparisonGroupScores, ComparisonGroupSummary } from './compare-summary-grouping'
-import { categorizeComparisonGroups, groupComparisonSummaries } from './compare-summary-grouping'
-import type { CompareDatasetSummary } from './compare-summary'
+import type { ComparisonGroup, ComparisonGroupScores, ComparisonGroupSummary } from './comparison-group-types'
+import { categorizeComparisonGroups, groupComparisonTestSummaries } from './comparison-grouping'
+import type { ComparisonTestSummary } from './comparison-report-types'
 
-function summary(scenario: CompareScenario, datasetKey: DatasetKey, maxDiff = 0): CompareDatasetSummary {
+function testSummary(scenario: CompareScenario, datasetKey: DatasetKey, maxDiff = 0): ComparisonTestSummary {
   return {
     s: scenario.key,
     d: datasetKey,
@@ -83,7 +83,7 @@ function mockCompareConfig(
   }
 }
 
-describe('groupComparisonSummaries', () => {
+describe('groupComparisonTestSummaries', () => {
   const x = 'Model_x'
   const y = 'Model_y'
 
@@ -106,26 +106,26 @@ describe('groupComparisonSummaries', () => {
   //       - b at {min,max}
   //       - b at 20
   const allSummaries = [
-    summary(baseline, x),
-    summary(baseline, y),
-    summary(aAtMin, x),
-    summary(aAtMin, y, 20),
-    summary(aAtMax, x),
-    summary(aAtMax, y, 10),
-    summary(bAtMin, x),
-    summary(bAtMin, y, 5),
-    summary(bAtMax, x),
-    summary(bAtMax, y, 40),
-    summary(bAt20, x),
-    summary(bAt20, y)
+    testSummary(baseline, x),
+    testSummary(baseline, y),
+    testSummary(aAtMin, x),
+    testSummary(aAtMin, y, 20),
+    testSummary(aAtMax, x),
+    testSummary(aAtMax, y, 10),
+    testSummary(bAtMin, x),
+    testSummary(bAtMin, y, 5),
+    testSummary(bAtMax, x),
+    testSummary(bAtMax, y, 40),
+    testSummary(bAt20, x),
+    testSummary(bAt20, y)
   ]
 
-  it('should group all summaries by scenario', () => {
-    function group(key: CompareScenarioKey, summaries: CompareDatasetSummary[]): ComparisonGroup {
+  it('should group all test summaries by scenario', () => {
+    function group(key: CompareScenarioKey, testSummaries: ComparisonTestSummary[]): ComparisonGroup {
       return {
         kind: 'by-scenario',
         key,
-        summaries
+        testSummaries
       }
     }
 
@@ -136,48 +136,48 @@ describe('groupComparisonSummaries', () => {
     //   input b at min
     //   input b at max
     //   ...
-    const groups = groupComparisonSummaries(allSummaries, 'by-scenario')
+    const groups = groupComparisonTestSummaries(allSummaries, 'by-scenario')
     expect(groups.size).toBe(6)
-    expect(groups.get('1')).toEqual(group('1', [summary(baseline, x), summary(baseline, y)]))
-    expect(groups.get('2')).toEqual(group('2', [summary(aAtMin, x), summary(aAtMin, y, 20)]))
-    expect(groups.get('3')).toEqual(group('3', [summary(aAtMax, x), summary(aAtMax, y, 10)]))
-    expect(groups.get('4')).toEqual(group('4', [summary(bAtMin, x), summary(bAtMin, y, 5)]))
-    expect(groups.get('5')).toEqual(group('5', [summary(bAtMax, x), summary(bAtMax, y, 40)]))
-    expect(groups.get('6')).toEqual(group('6', [summary(bAt20, x), summary(bAt20, y)]))
+    expect(groups.get('1')).toEqual(group('1', [testSummary(baseline, x), testSummary(baseline, y)]))
+    expect(groups.get('2')).toEqual(group('2', [testSummary(aAtMin, x), testSummary(aAtMin, y, 20)]))
+    expect(groups.get('3')).toEqual(group('3', [testSummary(aAtMax, x), testSummary(aAtMax, y, 10)]))
+    expect(groups.get('4')).toEqual(group('4', [testSummary(bAtMin, x), testSummary(bAtMin, y, 5)]))
+    expect(groups.get('5')).toEqual(group('5', [testSummary(bAtMax, x), testSummary(bAtMax, y, 40)]))
+    expect(groups.get('6')).toEqual(group('6', [testSummary(bAt20, x), testSummary(bAt20, y)]))
   })
 
   it('should group all summaries by dataset', () => {
-    function group(key: DatasetKey, summaries: CompareDatasetSummary[]): ComparisonGroup {
+    function group(key: DatasetKey, testSummaries: ComparisonTestSummary[]): ComparisonGroup {
       return {
         kind: 'by-dataset',
         key,
-        summaries
+        testSummaries
       }
     }
 
     // group all comparisons by dataset:
     //   output x  ->  a group with 6 summaries where dataset is "x"
     //   output y  ->  a group with 6 summaries where dataset is "y"
-    const groups = groupComparisonSummaries(allSummaries, 'by-dataset')
+    const groups = groupComparisonTestSummaries(allSummaries, 'by-dataset')
     expect(groups.size).toBe(2)
     expect(groups.get('Model_x')).toEqual(
       group('Model_x', [
-        summary(baseline, x),
-        summary(aAtMin, x),
-        summary(aAtMax, x),
-        summary(bAtMin, x),
-        summary(bAtMax, x),
-        summary(bAt20, x)
+        testSummary(baseline, x),
+        testSummary(aAtMin, x),
+        testSummary(aAtMax, x),
+        testSummary(bAtMin, x),
+        testSummary(bAtMax, x),
+        testSummary(bAt20, x)
       ])
     )
     expect(groups.get('Model_y')).toEqual(
       group('Model_y', [
-        summary(baseline, y),
-        summary(aAtMin, y, 20),
-        summary(aAtMax, y, 10),
-        summary(bAtMin, y, 5),
-        summary(bAtMax, y, 40),
-        summary(bAt20, y)
+        testSummary(baseline, y),
+        testSummary(aAtMin, y, 20),
+        testSummary(aAtMax, y, 10),
+        testSummary(bAtMin, y, 5),
+        testSummary(bAtMax, y, 40),
+        testSummary(bAt20, y)
       ])
     )
   })
@@ -229,49 +229,49 @@ describe('categorizeComparisonGroups', () => {
   //       - b at {min,max}
   //       - b at 20
   const allSummaries = [
-    summary(baseline, w),
-    summary(baseline, x),
-    summary(baseline, y),
-    summary(baseline, z),
-    summary(baseline, v),
+    testSummary(baseline, w),
+    testSummary(baseline, x),
+    testSummary(baseline, y),
+    testSummary(baseline, z),
+    testSummary(baseline, v),
 
     // Note that we simulate maxDiff for w being less than for y to
     // verify that y is sorted ahead of w (since y has higher score)
-    summary(aAtMin, w),
-    summary(aAtMin, x),
-    summary(aAtMin, y, 10),
-    summary(aAtMin, z),
-    summary(aAtMin, v),
+    testSummary(aAtMin, w),
+    testSummary(aAtMin, x),
+    testSummary(aAtMin, y, 10),
+    testSummary(aAtMin, z),
+    testSummary(aAtMin, v),
 
-    summary(aAtMax, w),
-    summary(aAtMax, x),
-    summary(aAtMax, y, 10),
-    summary(aAtMax, z),
-    summary(aAtMax, v),
+    testSummary(aAtMax, w),
+    testSummary(aAtMax, x),
+    testSummary(aAtMax, y, 10),
+    testSummary(aAtMax, z),
+    testSummary(aAtMax, v),
 
-    summary(bAtMin, w, 5),
-    summary(bAtMin, x),
-    summary(bAtMin, y, 5),
-    summary(bAtMin, z),
-    summary(bAtMin, v),
+    testSummary(bAtMin, w, 5),
+    testSummary(bAtMin, x),
+    testSummary(bAtMin, y, 5),
+    testSummary(bAtMin, z),
+    testSummary(bAtMin, v),
 
-    summary(bAtMax, w),
-    summary(bAtMax, x),
-    summary(bAtMax, y, 40),
-    summary(bAtMax, z),
-    summary(bAtMax, v),
+    testSummary(bAtMax, w),
+    testSummary(bAtMax, x),
+    testSummary(bAtMax, y, 40),
+    testSummary(bAtMax, z),
+    testSummary(bAtMax, v),
 
-    summary(bAt20, w),
-    summary(bAt20, x),
-    summary(bAt20, y),
-    summary(bAt20, z),
-    summary(bAt20, v)
+    testSummary(bAt20, w),
+    testSummary(bAt20, x),
+    testSummary(bAt20, y),
+    testSummary(bAt20, z),
+    testSummary(bAt20, v)
   ]
 
-  it.only('should categorize by-scenario groups', () => {
+  it('should categorize by-scenario groups', () => {
     function groupSummary(
       scenarioKey: CompareScenarioKey,
-      summaries: CompareDatasetSummary[],
+      testSummaries: ComparisonTestSummary[],
       scores?: ComparisonGroupScores
     ): ComparisonGroupSummary {
       return {
@@ -282,7 +282,7 @@ describe('categorizeComparisonGroups', () => {
         group: {
           kind: 'by-scenario',
           key: scenarioKey,
-          summaries
+          testSummaries
         },
         scores
       }
@@ -291,7 +291,7 @@ describe('categorizeComparisonGroups', () => {
     // given by-scenario groups, sort comparisons for scenario:
     //   order comparisons by max diff (get percent of each bucket)
     //   put into sections (scenarios added, removed, diffs, no diffs)
-    const groupsByScenario = groupComparisonSummaries(allSummaries, 'by-scenario')
+    const groupsByScenario = groupComparisonTestSummaries(allSummaries, 'by-scenario')
     const groupSummaries = categorizeComparisonGroups(compareConfig, [...groupsByScenario.values()])
 
     // TODO: Test L/R-only scenarios
@@ -301,7 +301,13 @@ describe('categorizeComparisonGroups', () => {
     expect(groupSummaries.withDiffs).toEqual([
       groupSummary(
         '5',
-        [summary(bAtMax, w), summary(bAtMax, x), summary(bAtMax, y, 40), summary(bAtMax, z), summary(bAtMax, v)],
+        [
+          testSummary(bAtMax, w),
+          testSummary(bAtMax, x),
+          testSummary(bAtMax, y, 40),
+          testSummary(bAtMax, z),
+          testSummary(bAtMax, v)
+        ],
         {
           totalDiffCount: 5,
           totalMaxDiffByBucket: [0, 0, 0, 0, 40],
@@ -311,7 +317,13 @@ describe('categorizeComparisonGroups', () => {
       ),
       groupSummary(
         '3',
-        [summary(aAtMax, w), summary(aAtMax, x), summary(aAtMax, y, 10), summary(aAtMax, z), summary(aAtMax, v)],
+        [
+          testSummary(aAtMax, w),
+          testSummary(aAtMax, x),
+          testSummary(aAtMax, y, 10),
+          testSummary(aAtMax, z),
+          testSummary(aAtMax, v)
+        ],
         {
           totalDiffCount: 5,
           totalMaxDiffByBucket: [0, 0, 0, 0, 10],
@@ -321,7 +333,13 @@ describe('categorizeComparisonGroups', () => {
       ),
       groupSummary(
         '2',
-        [summary(aAtMin, w), summary(aAtMin, x), summary(aAtMin, y, 10), summary(aAtMin, z), summary(aAtMin, v)],
+        [
+          testSummary(aAtMin, w),
+          testSummary(aAtMin, x),
+          testSummary(aAtMin, y, 10),
+          testSummary(aAtMin, z),
+          testSummary(aAtMin, v)
+        ],
         {
           totalDiffCount: 5,
           totalMaxDiffByBucket: [0, 0, 0, 0, 10],
@@ -331,7 +349,13 @@ describe('categorizeComparisonGroups', () => {
       ),
       groupSummary(
         '4',
-        [summary(bAtMin, w, 5), summary(bAtMin, x), summary(bAtMin, y, 5), summary(bAtMin, z), summary(bAtMin, v)],
+        [
+          testSummary(bAtMin, w, 5),
+          testSummary(bAtMin, x),
+          testSummary(bAtMin, y, 5),
+          testSummary(bAtMin, z),
+          testSummary(bAtMin, v)
+        ],
         {
           totalDiffCount: 5,
           totalMaxDiffByBucket: [0, 0, 0, 10, 0],
@@ -344,7 +368,13 @@ describe('categorizeComparisonGroups', () => {
     expect(groupSummaries.withoutDiffs).toEqual([
       groupSummary(
         '1',
-        [summary(baseline, w), summary(baseline, x), summary(baseline, y), summary(baseline, z), summary(baseline, v)],
+        [
+          testSummary(baseline, w),
+          testSummary(baseline, x),
+          testSummary(baseline, y),
+          testSummary(baseline, z),
+          testSummary(baseline, v)
+        ],
         {
           totalDiffCount: 5,
           totalMaxDiffByBucket: [0, 0, 0, 0, 0],
@@ -354,7 +384,13 @@ describe('categorizeComparisonGroups', () => {
       ),
       groupSummary(
         '6',
-        [summary(bAt20, w), summary(bAt20, x), summary(bAt20, y), summary(bAt20, z), summary(bAt20, v)],
+        [
+          testSummary(bAt20, w),
+          testSummary(bAt20, x),
+          testSummary(bAt20, y),
+          testSummary(bAt20, z),
+          testSummary(bAt20, v)
+        ],
         {
           totalDiffCount: 5,
           totalMaxDiffByBucket: [0, 0, 0, 0, 0],
@@ -368,7 +404,7 @@ describe('categorizeComparisonGroups', () => {
   it('should categorize by-dataset groups', () => {
     function groupSummary(
       datasetKey: DatasetKey,
-      summaries: CompareDatasetSummary[],
+      testSummaries: ComparisonTestSummary[],
       scores?: ComparisonGroupScores
     ): ComparisonGroupSummary {
       return {
@@ -379,7 +415,7 @@ describe('categorizeComparisonGroups', () => {
         group: {
           kind: 'by-dataset',
           key: datasetKey,
-          summaries
+          testSummaries
         },
         scores
       }
@@ -388,28 +424,28 @@ describe('categorizeComparisonGroups', () => {
     // given by-dataset groups, sort comparisons for dataset:
     //   order comparisons by max diff (get percent of each bucket)
     //   put into sections (datasets added, removed, diffs, no diffs)
-    const groupsByDataset = groupComparisonSummaries(allSummaries, 'by-dataset')
+    const groupsByDataset = groupComparisonTestSummaries(allSummaries, 'by-dataset')
     const groupSummaries = categorizeComparisonGroups(compareConfig, [...groupsByDataset.values()])
 
     expect(groupSummaries.onlyInLeft).toEqual([
       groupSummary('Model_z', [
-        summary(baseline, z),
-        summary(aAtMin, z),
-        summary(aAtMax, z),
-        summary(bAtMin, z),
-        summary(bAtMax, z),
-        summary(bAt20, z)
+        testSummary(baseline, z),
+        testSummary(aAtMin, z),
+        testSummary(aAtMax, z),
+        testSummary(bAtMin, z),
+        testSummary(bAtMax, z),
+        testSummary(bAt20, z)
       ])
     ])
 
     expect(groupSummaries.onlyInRight).toEqual([
       groupSummary('Model_v', [
-        summary(baseline, v),
-        summary(aAtMin, v),
-        summary(aAtMax, v),
-        summary(bAtMin, v),
-        summary(bAtMax, v),
-        summary(bAt20, v)
+        testSummary(baseline, v),
+        testSummary(aAtMin, v),
+        testSummary(aAtMax, v),
+        testSummary(bAtMin, v),
+        testSummary(bAtMax, v),
+        testSummary(bAt20, v)
       ])
     ])
 
@@ -417,12 +453,12 @@ describe('categorizeComparisonGroups', () => {
       groupSummary(
         'Model_y',
         [
-          summary(baseline, y),
-          summary(aAtMin, y, 10),
-          summary(aAtMax, y, 10),
-          summary(bAtMin, y, 5),
-          summary(bAtMax, y, 40),
-          summary(bAt20, y)
+          testSummary(baseline, y),
+          testSummary(aAtMin, y, 10),
+          testSummary(aAtMax, y, 10),
+          testSummary(bAtMin, y, 5),
+          testSummary(bAtMax, y, 40),
+          testSummary(bAt20, y)
         ],
         {
           totalDiffCount: 6,
@@ -434,12 +470,12 @@ describe('categorizeComparisonGroups', () => {
       groupSummary(
         'Model_w',
         [
-          summary(baseline, w),
-          summary(aAtMin, w),
-          summary(aAtMax, w),
-          summary(bAtMin, w, 5),
-          summary(bAtMax, w),
-          summary(bAt20, w)
+          testSummary(baseline, w),
+          testSummary(aAtMin, w),
+          testSummary(aAtMax, w),
+          testSummary(bAtMin, w, 5),
+          testSummary(bAtMax, w),
+          testSummary(bAt20, w)
         ],
         {
           totalDiffCount: 6,
@@ -454,12 +490,12 @@ describe('categorizeComparisonGroups', () => {
       groupSummary(
         'Model_x',
         [
-          summary(baseline, x),
-          summary(aAtMin, x),
-          summary(aAtMax, x),
-          summary(bAtMin, x),
-          summary(bAtMax, x),
-          summary(bAt20, x)
+          testSummary(baseline, x),
+          testSummary(aAtMin, x),
+          testSummary(aAtMax, x),
+          testSummary(bAtMin, x),
+          testSummary(bAtMax, x),
+          testSummary(bAt20, x)
         ],
         {
           totalDiffCount: 6,

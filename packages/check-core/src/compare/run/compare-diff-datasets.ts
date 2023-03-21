@@ -2,7 +2,7 @@
 
 import type { Dataset, DatasetKey, DatasetMap } from '../../_shared/types'
 import type { CompareScenarioKey } from '../_shared/compare-resolved-types'
-import type { CompareDatasetReport } from './compare-report'
+import type { ComparisonTestReport } from './comparison-report-types'
 
 export interface DiffPoint {
   time: number
@@ -130,7 +130,7 @@ export function compareDatasets(
   datasetKey: DatasetKey,
   datasetMapL: DatasetMap,
   datasetMapR: DatasetMap
-): CompareDatasetReport {
+): ComparisonTestReport {
   const datasetL = datasetMapL.get(datasetKey)
   const datasetR = datasetMapR.get(datasetKey)
   const diffReport = diffDatasets(datasetL, datasetR)
