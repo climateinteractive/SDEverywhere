@@ -1,0 +1,84 @@
+# yaml-language-server: $schema=../../../../packages/check-core/schema/compare.schema.json
+
+# TODOyaml-language-server: $schema=../../node_modules/@sdeverywhere/check-core/schema/compare.schema.json
+
+# Input ID exists in both left and right
+# - scenario:
+#     id: S0
+#     with: Input B
+#     at: 10
+# - scenario:
+#     id: S1
+#     with: Input B
+#     at: 90
+
+# Input ID exists in both left and right, but with different variable names
+
+# Input ID exists in both left and right, but with different min/max
+
+# # Variable does not exist in left (input variable was added)
+# - scenario:
+#     id: S1
+#     with: Input B
+#     at: 90
+
+# # Variable does not exist in right (input variable was removed)
+# - scenario:
+#     id: S1
+#     with: Input B
+#     at: 90
+
+# # Variable does not exist in left or right (unknown input)
+# - scenario:
+#     id: S1
+#     with: Input B
+#     at: 90
+
+# - scenario:
+#     title: Input Group 1
+#     subtitle: with low settings (each input at 25)
+#     with:
+#       - input: Input A
+#         at: 25
+#       - input: Input B
+#         at: 25
+
+# - scenario:
+#     title: Input Group 1
+#     subtitle: with high settings (each input at 75)
+#     with:
+#       - input: Input A
+#         at: 75
+#       - input: Input B
+#         at: 75
+
+- scenario_group:
+    id: G0
+    title: Scenario Group 2
+    scenarios:
+      - scenario_ref: S0
+      - scenario_ref: S1
+
+- view_group:
+    title: Group 1
+    views:
+      - view:
+          title: View 1
+          scenario_ref: S0
+          graphs:
+            - '1'
+            - '2'
+      - view:
+          title: View 2
+          scenario_ref: S1
+          graphs:
+            - '3'
+            - '4'
+
+- view_group:
+    title: Group 2
+    scenarios:
+      - scenario_group_ref: G0
+    graphs:
+      - '1'
+      - '2'

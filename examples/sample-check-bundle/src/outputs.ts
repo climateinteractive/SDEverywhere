@@ -1,12 +1,18 @@
 // Copyright (c) 2022 Climate Interactive / New Venture Fund
 
-import type { DatasetKey, OutputVar, RelatedItem, VarId } from '@sdeverywhere/check-core'
+import type { DatasetKey, ImplVar, OutputVar, RelatedItem, VarId } from '@sdeverywhere/check-core'
+
+export interface Outputs {
+  outputVars: Map<DatasetKey, OutputVar>
+  implVars: Map<DatasetKey, ImplVar>
+  datasetGroups: Map<string, DatasetKey[]>
+}
 
 /**
  * Gather the list of output variables (and their related graphs, etc) used
  * in this version of the model.
  */
-export function getOutputVars(modelVersion: number): Map<DatasetKey, OutputVar> {
+export function getOutputs(modelVersion: number): Outputs {
   const outputVars: Map<DatasetKey, OutputVar> = new Map()
 
   // TODO: Typically you would return the actual list of model outputs (for
@@ -64,5 +70,43 @@ export function getOutputVars(modelVersion: number): Map<DatasetKey, OutputVar> 
   addOutput('_static_s', 'Static S', 'StaticData')
   addOutput('_static_t', 'Static T', 'StaticData')
 
-  return outputVars
+  // TODO: For an SDEverywhere-generated model, you could use the JSON file
+  // produced by `sde generate --list` to create an `ImplVar` for each
+  // internal variable used in the model.  For the purposes of this sample
+  // bundle, we will synthesize `ImplVar` instances for the model outputs.
+  const implVarArray = [...outputVars.values()]
+    .filter(outputVar => outputVar.sourceName === undefined)
+    .map((outputVar, index) => {
+      const implVar: ImplVar = {
+        varId: outputVar.varId,
+        varName: outputVar.varName,
+        varIndex: index,
+        dimensions: [],
+        varType: 'aux'
+      }
+      return implVar
+    })
+  const implVars: Map<DatasetKey, ImplVar> = new Map()
+  implVarArray.forEach(implVar => {
+    implVars.set(`ModelImpl${implVar.varId}`, implVar)
+  })
+
+  // Configure dataset groups
+  const keyForVarWithName = (name: string) => {
+    return [...outputVars.entries()].find(e => e[1].varName === name)[0]
+  }
+  const keysForVarsWithSource = (sourceName?: string) => {
+    return [...outputVars.entries()].filter(e => e[1].sourceName === sourceName).map(([k]) => k)
+  }
+  const datasetGroups: Map<string, DatasetKey[]> = new Map([
+    ['All Outputs', keysForVarsWithSource(undefined)],
+    ['Basic Outputs', [keyForVarWithName('Output X'), keyForVarWithName('Output Y'), keyForVarWithName('Output Z')]],
+    ['Static', keysForVarsWithSource('StaticData')]
+  ])
+
+  return {
+    outputVars,
+    implVars,
+    datasetGroups
+  }
 }

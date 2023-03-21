@@ -10,7 +10,7 @@ import type {
   LegendItem,
   LinkItem,
   OutputVar,
-  Scenario
+  ScenarioSpec
 } from '@sdeverywhere/check-core'
 
 const barWidths = [200, 150, 120]
@@ -76,7 +76,7 @@ class SampleGraphData implements BundleGraphData {
  */
 export function getGraphDataForScenario(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  _scenario: Scenario,
+  _scenarioSpec: ScenarioSpec,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _graphId: BundleGraphId
 ): BundleGraphData {
@@ -87,7 +87,7 @@ export function getGraphDataForScenario(
  * Return the links for the given graph.
  */
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export function getGraphLinksForScenario(_scenario: Scenario, _graphId: BundleGraphId): LinkItem[] {
+export function getGraphLinksForScenario(_scenarioSpec: ScenarioSpec, _graphId: BundleGraphId): LinkItem[] {
   return [
     {
       kind: 'url',

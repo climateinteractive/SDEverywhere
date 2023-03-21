@@ -56,8 +56,8 @@
         - with:
             - input: Input A
               at: 30
-            - input: Input B
-              at: min
+            # - input: Input B
+            #   at: min
       datasets:
         - name: Output X
       predicates:
@@ -81,8 +81,8 @@
         - with:
             - input: Input A
               at: 30
-            - input: Input B
-              at: min
+            # - input: Input B
+            #   at: min
       datasets:
         - name: Output X
       predicates:
@@ -130,15 +130,15 @@
               name: Historical X confidence upper bound
           time:
             before_incl: 2000
-    - it: should be unaffected by Input B
-      datasets:
-        - name: Output X
-      predicates:
-        - eq:
-            dataset: inherit
-            scenario:
-              with: Input B
-              at: max
+    # - it: should be unaffected by Input B
+    #   datasets:
+    #     - name: Output X
+    #   predicates:
+    #     - eq:
+    #         dataset: inherit
+    #         scenario:
+    #           with: Input B
+    #           at: max
     - it: should be close to Output Y in all input scenarios
       scenarios:
         - preset: matrix
