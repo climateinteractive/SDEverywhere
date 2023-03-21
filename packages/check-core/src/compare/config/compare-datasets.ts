@@ -1,10 +1,50 @@
-// Copyright (c) 2021-2022 Climate Interactive / New Venture Fund
+// Copyright (c) 2023 Climate Interactive / New Venture Fund
 
-import type { DatasetKey } from '../_shared/types'
-import type { ModelSpec } from '../bundle/bundle-types'
-import type { OutputVar } from '../bundle/var-types'
-import type { CompareScenario } from './_shared/compare-resolved-types'
-import type { CompareDatasetInfo, CompareDatasets } from './compare-datasets'
+import type { ModelSpec } from '../../bundle/bundle-types'
+import type { OutputVar } from '../../bundle/var-types'
+import type { DatasetKey } from '../../_shared/types'
+import type { CompareDataset, CompareScenario } from '../_shared/compare-resolved-types'
+
+/**
+ * Provides access to the set of dataset definitions (`CompareDataset` instances) that are used
+ * when comparing the two models.
+ */
+export interface CompareDatasets {
+  /**
+   * Return all `CompareDataset` instances that are available for comparisons.
+   */
+  getAllDatasets(): IterableIterator<CompareDataset>
+
+  /**
+   * Return the dataset metadata for the given key.
+   *
+   * @param datasetKey The key for the dataset.
+   */
+  getDataset(datasetKey: DatasetKey): CompareDataset | undefined
+
+  /**
+   * Return the keys for the datasets that should be compared for the given scenario.
+   *
+   * @param scenario The scenario definition.
+   */
+  getDatasetKeysForScenario(scenario: CompareScenario): DatasetKey[]
+}
+
+/**
+ * Create an implementation of the `CompareDatasets` interface that sources the output
+ * variables from the given models.
+ *
+ * @param modelSpecL The model spec for the "left" bundle being compared.
+ * @param modelSpecR The model spec for the "right" bundle being compared.
+ * @param renamedDatasetKeys The mapping of renamed dataset keys.
+ */
+export function getCompareDatasets(
+  modelSpecL: ModelSpec,
+  modelSpecR: ModelSpec,
+  renamedDatasetKeys?: Map<DatasetKey, DatasetKey>
+): CompareDatasets {
+  return new CompareDatasetsImpl(modelSpecL, modelSpecR, renamedDatasetKeys)
+}
 
 /**
  * Manages a set of dataset keys (corresponding to the available model outputs
@@ -19,20 +59,17 @@ import type { CompareDatasetInfo, CompareDatasets } from './compare-datasets'
  * a different set of dataset keys that is better suited for the model you
  * are testing.
  */
-export class DatasetManager implements CompareDatasets {
-  public readonly allOutputVarKeys: DatasetKey[]
-  public readonly modelOutputVarKeys: DatasetKey[]
+class CompareDatasetsImpl implements CompareDatasets {
+  private readonly allDatasets: Map<DatasetKey, CompareDataset>
+  private readonly allOutputVarKeys: DatasetKey[]
+  private readonly modelOutputVarKeys: DatasetKey[]
 
   /**
    * @param modelSpecL The model spec for the "left" bundle being compared.
    * @param modelSpecR The model spec for the "right" bundle being compared.
    * @param renamedDatasetKeys The mapping of renamed dataset keys.
    */
-  constructor(
-    private readonly modelSpecL: ModelSpec,
-    private readonly modelSpecR: ModelSpec,
-    public readonly renamedDatasetKeys?: Map<DatasetKey, DatasetKey>
-  ) {
+  constructor(modelSpecL: ModelSpec, modelSpecR: ModelSpec, renamedDatasetKeys?: Map<DatasetKey, DatasetKey>) {
     // Invert the map of renamed keys so that new names are on the left (map
     // keys) old names are on the right (map values)
     const invertedRenamedKeys: Map<DatasetKey, DatasetKey> = new Map()
@@ -62,6 +99,29 @@ export class DatasetManager implements CompareDatasets {
     addOutputVars(modelSpecR.outputVars, true)
     this.allOutputVarKeys = Array.from(allOutputVarKeysSet)
     this.modelOutputVarKeys = Array.from(modelOutputVarKeysSet)
+
+    // Create `CompareDataset` instances for all available keys
+    this.allDatasets = new Map()
+    for (const datasetKeyL of this.allOutputVarKeys) {
+      const datasetKeyR = renamedDatasetKeys?.get(datasetKeyL) || datasetKeyL
+      const outputVarL = modelSpecL.outputVars.get(datasetKeyL)
+      const outputVarR = modelSpecR.outputVars.get(datasetKeyR)
+      this.allDatasets.set(datasetKeyL, {
+        key: datasetKeyL,
+        outputVarL,
+        outputVarR
+      })
+    }
+  }
+
+  // from CompareDatasets interface
+  getAllDatasets(): IterableIterator<CompareDataset> {
+    return this.allDatasets.values()
+  }
+
+  // from CompareDatasets interface
+  getDataset(datasetKey: string): CompareDataset | undefined {
+    return this.allDatasets.get(datasetKey)
   }
 
   // from CompareDatasets interface
@@ -73,43 +133,6 @@ export class DatasetManager implements CompareDatasets {
       // For all other scenarios, only include model variables (since only model
       // outputs are affected by different input scenarios)
       return this.modelOutputVarKeys
-    }
-  }
-
-  // from CompareDatasets interface
-  getDatasetInfo(datasetKey: DatasetKey): CompareDatasetInfo | undefined {
-    // Get the dataset keys accounting for renames
-    const datasetKeyL = datasetKey
-    const datasetKeyR = this.renamedDatasetKeys?.get(datasetKeyL) || datasetKeyL
-
-    // Get the output variable name
-    const outputVarL = this.modelSpecL.outputVars.get(datasetKeyL)
-    const outputVarR = this.modelSpecR.outputVars.get(datasetKeyR)
-    let varName: string
-    let newVarName: string
-    let sourceName: string
-    let newSourceName: string
-    if (outputVarL && outputVarR && outputVarL.varName != outputVarR.varName) {
-      varName = outputVarL.varName
-      newVarName = outputVarR.varName
-    } else {
-      const outputVar = outputVarR || outputVarL
-      varName = outputVar?.varName || 'Unknown'
-    }
-    if (outputVarL && outputVarR && outputVarL.sourceName != outputVarR.sourceName) {
-      sourceName = outputVarL.sourceName
-      newSourceName = outputVarR.sourceName
-    } else {
-      const outputVar = outputVarR || outputVarL
-      sourceName = outputVar?.sourceName
-    }
-
-    return {
-      varName,
-      newVarName,
-      sourceName,
-      newSourceName,
-      relatedItems: outputVarR?.relatedItems || []
     }
   }
 }

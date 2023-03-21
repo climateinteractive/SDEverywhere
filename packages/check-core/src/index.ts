@@ -77,6 +77,7 @@ export * from './compare/_shared/compare-resolved-types'
 export * from './compare/config/compare-spec-types'
 export type { CompareConfig, CompareOptions } from './compare/config/compare-config'
 export type { CompareScenarios } from './compare/config/compare-scenarios'
+export type { CompareDatasets } from './compare/config/compare-datasets'
 
 export type { CompareDataRequestKey } from './compare/run/compare-data-coordinator'
 export { CompareDataCoordinator } from './compare/run/compare-data-coordinator'
@@ -98,11 +99,6 @@ export type { CompareDatasetSummary, CompareSummary } from './compare/run/compar
 export { compareSummaryFromReport } from './compare/run/compare-summary'
 
 export { restoreFromTerseSummaries } from './compare/run/compare-terse-summaries'
-
-// TODO: Organize the following
-export type { CompareItem, CompareGroupInfo, CompareGroup } from './compare/compare-group'
-export type { CompareDatasets, CompareDatasetInfo } from './compare/compare-datasets'
-export { DatasetManager } from './compare/dataset-manager'
 
 //
 // config

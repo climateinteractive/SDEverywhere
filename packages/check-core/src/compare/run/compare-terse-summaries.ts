@@ -25,7 +25,7 @@ export function restoreFromTerseSummaries(
 
   // Get the full set of scenario/dataset pairs
   const allDatasetSummaries: CompareDatasetSummary[] = []
-  for (const scenario of compareConfig.scenarios.values()) {
+  for (const scenario of compareConfig.scenarios.getAllScenarios()) {
     const datasetKeys = compareConfig.datasets.getDatasetKeysForScenario(scenario)
     for (const datasetKey of datasetKeys) {
       // If we have a summary in the array that was passed in, it means

@@ -1,6 +1,7 @@
 // Copyright (c) 2021-2022 Climate Interactive / New Venture Fund
 
 import type { InputPosition, ScenarioSpec } from '../../../_shared/scenario-spec-types'
+import { allInputsAtPositionSpec, inputAtPositionSpec, inputAtValueSpec } from '../../../_shared/scenario-specs'
 import type { VarId } from '../../../_shared/types'
 import type { InputId, InputVar } from '../../../bundle/var-types'
 
@@ -17,7 +18,6 @@ import type {
   CompareViewGroup
 } from '../compare-resolved-types'
 import type { CompareScenarioGroupId, CompareScenarioId, CompareViewGraphId } from '../../config/compare-spec-types'
-import { allInputsAtPositionSpec } from '../../../_shared/scenario-specs'
 
 //
 // SCENARIOS
@@ -130,6 +130,28 @@ export function scenarioWithInput(
 ): CompareScenario {
   const input = resolvedInput(requestedInputName, at, inputVarL, inputVarR)
   return scenarioWithInputs(key, [input], specL, specR, opts)
+}
+
+export function scenarioWithInputVar(
+  key: CompareScenarioKey,
+  inputVar: InputVar,
+  at: InputPosition | number
+): CompareScenario {
+  const input = resolvedInput(inputVar.varName, at, inputVar, inputVar)
+  let spec: ScenarioSpec
+  let subtitle: string
+  if (typeof at === 'string') {
+    spec = inputAtPositionSpec(inputVar.varId, at as InputPosition)
+    subtitle = at.replace('-', ' ')
+  } else {
+    spec = inputAtValueSpec(inputVar.varId, at as number)
+    subtitle = `at ${at}`
+  }
+
+  return scenarioWithInputs(key, [input], spec, spec, {
+    title: inputVar.varName,
+    subtitle
+  })
 }
 
 export function stateForInputVar(

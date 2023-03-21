@@ -1,7 +1,8 @@
 // Copyright (c) 2023 Climate Interactive / New Venture Fund
 
+import type { DatasetKey } from '../../_shared/types'
 import type { InputPosition, ScenarioSpec } from '../../_shared/scenario-spec-types'
-import type { InputVar } from '../../bundle/var-types'
+import type { InputVar, OutputVar } from '../../bundle/var-types'
 import type {
   CompareScenarioGroupId,
   CompareScenarioGroupTitle,
@@ -11,6 +12,26 @@ import type {
   CompareViewSubtitle,
   CompareViewTitle
 } from '../config/compare-spec-types'
+
+//
+// DATASETS
+//
+
+/** A resolved dataset that is being compared. */
+export interface CompareDataset {
+  /** The unique key for the dataset (i.e., output variable or static data). */
+  key: DatasetKey
+  /**
+   * The resolved output variable from the "left" model that corresponds to this dataset,
+   * or undefined if the variable is not defined in the left model.
+   */
+  outputVarL?: OutputVar
+  /**
+   * The resolved output variable from the "right" model that corresponds to this dataset,
+   * or undefined if the variable is not defined in the right model.
+   */
+  outputVarR?: OutputVar
+}
 
 //
 // SCENARIOS

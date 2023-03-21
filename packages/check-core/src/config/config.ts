@@ -12,6 +12,7 @@ import { CompareScenarios, resolveCompareSpecsFromSources } from '../compare'
 import type { Config, ConfigOptions } from './config-types'
 import { synchronizedBundleModel } from './synchronized-model'
 import type { ScenarioSpec } from '../_shared/scenario-spec-types'
+import { getCompareDatasets } from '../compare/config/compare-datasets'
 
 export async function createConfig(options: ConfigOptions): Promise<Config> {
   // Initialize the "current" bundle model (the one being checked)
@@ -31,7 +32,7 @@ export async function createConfig(options: ConfigOptions): Promise<Config> {
 
     // Invert the map of renamed keys so that new names are on the left (map
     // keys) old names are on the right (map values)
-    const renamedDatasetKeys = options.compare.datasets.renamedDatasetKeys
+    const renamedDatasetKeys = options.compare.renamedDatasetKeys
     const invertedRenamedKeys: Map<DatasetKey, DatasetKey> = new Map()
     renamedDatasetKeys?.forEach((newKey, oldKey) => {
       invertedRenamedKeys.set(newKey, oldKey)
@@ -78,8 +79,10 @@ export async function createConfig(options: ConfigOptions): Promise<Config> {
     }
 
     // Combine and resolve the provided comparison specifications
-    const modelInputsL = new ModelInputs(baselineBundle.model.modelSpec)
-    const modelInputsR = new ModelInputs(currentBundle.model.modelSpec)
+    const modelSpecL = baselineBundle.model.modelSpec
+    const modelSpecR = currentBundle.model.modelSpec
+    const modelInputsL = new ModelInputs(modelSpecL)
+    const modelInputsR = new ModelInputs(modelSpecR)
     const compareDefs = resolveCompareSpecsFromSources(modelInputsL, modelInputsR, options.compare.specs)
 
     // Initialize the configuration for comparisons
@@ -89,7 +92,7 @@ export async function createConfig(options: ConfigOptions): Promise<Config> {
       thresholds: options.compare.thresholds,
       scenarios: new CompareScenarios(compareDefs.scenarios),
       viewGroups: compareDefs.viewGroups,
-      datasets: options.compare.datasets
+      datasets: getCompareDatasets(modelSpecL, modelSpecR, options.compare.renamedDatasetKeys)
     }
   }
 

@@ -16,11 +16,19 @@ export class CompareScenarios {
     }
   }
 
-  values(): IterableIterator<CompareScenario> {
+  /**
+   * Return all `CompareScenario` instances that are available for comparisons.
+   */
+  getAllScenarios(): IterableIterator<CompareScenario> {
     return this.scenarioDefs.values()
   }
 
-  get(key: CompareScenarioKey): CompareScenario | undefined {
+  /**
+   * Return the scenario definition for the given key.
+   *
+   * @param key The key for the scenario.
+   */
+  getScenario(key: CompareScenarioKey): CompareScenario | undefined {
     return this.scenarioDefs.get(key)
   }
 }

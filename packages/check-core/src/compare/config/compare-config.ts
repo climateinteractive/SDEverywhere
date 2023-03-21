@@ -1,16 +1,17 @@
 // Copyright (c) 2021-2022 Climate Interactive / New Venture Fund
 
+import type { DatasetKey } from '../../_shared/types'
 import type { LoadedBundle, NamedBundle } from '../../bundle/bundle-types'
 import type { ModelInputs } from '../../bundle/model-inputs'
+
 import type { CompareViewGroup } from '../_shared/compare-resolved-types'
 
-import type { CompareDatasets } from '../compare-datasets'
-
+import type { CompareDatasets } from './compare-datasets'
+import type { CompareScenarios } from './compare-scenarios'
 import type { CompareSpecs, CompareSpecsSource } from './compare-spec-types'
 import { parseCompareSpecs } from './parse/compare-parser'
 import type { CompareResolvedDefs } from './resolve/compare-resolver'
 import { resolveCompareSpecs } from './resolve/compare-resolver'
-import type { CompareScenarios } from './compare-scenarios'
 
 export interface CompareOptions {
   /** The left-side ("baseline") bundle being compared. */
@@ -25,8 +26,11 @@ export interface CompareOptions {
    * specified in YAML or JSON files, or using `Spec` objects.
    */
   specs: (CompareSpecs | CompareSpecsSource)[]
-  /** The set of datasets that will be compared. */
-  datasets: CompareDatasets
+  /**
+   * The mapping of renamed dataset keys (old or "left" name as the map key,
+   * new or "right" name as the value).
+   */
+  renamedDatasetKeys?: Map<DatasetKey, DatasetKey>
 }
 
 export interface CompareConfig {
@@ -39,12 +43,12 @@ export interface CompareConfig {
    * buckets of 0%, 0-1%, 1-5%, 5-10%, and >10%.
    */
   thresholds: number[]
-  /** The set of resolved scenarios. */
+  /** The set of resolved scenarios that will be compared. */
   scenarios: CompareScenarios
+  /** The set of resolved datasets that will be compared. */
+  datasets: CompareDatasets
   /** The set of resolved view groups. */
   viewGroups: CompareViewGroup[]
-  /** The set of datasets that will be compared. */
-  datasets: CompareDatasets
 }
 
 /**

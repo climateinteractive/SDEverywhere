@@ -19,7 +19,7 @@ export function runCompare(
   simplifyScenarios: boolean
 ): () => CompareDatasetReport[] {
   if (simplifyScenarios) {
-    console.warn('simplifyScenarios not yet implemented')
+    console.warn('simplifyScenarios not yet (re)implemented')
   }
 
   // TODO: The following leads to an explosion of scenario/dataset combinations;
@@ -27,7 +27,7 @@ export function runCompare(
   // placeholder in the data request and then expand the dataset keys at the
   // time that the request is processed instead of adding them all in advance
   const datasetReports: CompareDatasetReport[] = []
-  for (const scenario of compareConfig.scenarios.values()) {
+  for (const scenario of compareConfig.scenarios.getAllScenarios()) {
     // Get the keys of the datasets of interest for this scenario
     const datasetKeys = compareConfig.datasets.getDatasetKeysForScenario(scenario)
 
