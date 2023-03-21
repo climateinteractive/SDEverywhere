@@ -14,7 +14,7 @@ import { dirname, resolve as resolvePath } from 'path'
 import { fileURLToPath } from 'url'
 
 import checkSchema from '../src/check/check.schema.js'
-import compareSchema from '../src/compare/config/parse/compare.schema.js'
+import comparisonSchema from '../src/comparison/config/parse/comparison.schema.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
@@ -29,4 +29,4 @@ function writeJsonSchema(schema, name) {
 }
 
 writeJsonSchema(checkSchema, 'check')
-writeJsonSchema(compareSchema, 'compare')
+writeJsonSchema(comparisonSchema, 'compare')

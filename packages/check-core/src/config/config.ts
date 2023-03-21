@@ -1,19 +1,19 @@
 // Copyright (c) 2021-2022 Climate Interactive / New Venture Fund
 
+import type { ScenarioSpec } from '../_shared/scenario-spec-types'
 import type { DatasetKey, DatasetMap } from '../_shared/types'
 import type { BundleModel, LoadedBundle, NamedBundle } from '../bundle/bundle-types'
 import { ModelInputs } from '../bundle/model-inputs'
 
 import type { CheckConfig } from '../check/check-config'
 
-import type { CompareConfig } from '../compare/config/compare-config'
-import { resolveCompareSpecsFromSources } from '../compare/config/compare-config'
-import { getCompareDatasets } from '../compare/config/compare-datasets'
-import { CompareScenarios } from '../compare/config/compare-scenarios'
+import type { ComparisonConfig } from '../comparison/config/comparison-config'
+import { resolveComparisonSpecsFromSources } from '../comparison/config/comparison-config'
+import { getComparisonDatasets } from '../comparison/config/comparison-datasets'
+import { getComparisonScenarios } from '../comparison/config/comparison-scenarios'
 
 import type { Config, ConfigOptions } from './config-types'
 import { synchronizedBundleModel } from './synchronized-model'
-import type { ScenarioSpec } from '../_shared/scenario-spec-types'
 
 export async function createConfig(options: ConfigOptions): Promise<Config> {
   // Initialize the "current" bundle model (the one being checked)
@@ -21,19 +21,19 @@ export async function createConfig(options: ConfigOptions): Promise<Config> {
 
   // Create the comparison configuration, if defined
   let currentBundle: LoadedBundle
-  let compareConfig: CompareConfig
-  if (options.compare === undefined) {
+  let comparisonConfig: ComparisonConfig
+  if (options.comparison === undefined) {
     // When there is no comparison configuration, there are no renames to handle,
     // so use the unmodified "current" bundle
     currentBundle = origCurrentBundle
   } else {
     // Initialize the "baseline" bundle model (the one that "current" will be
     // compared against)
-    const baselineBundle = await loadSynchronized(options.compare.baseline)
+    const baselineBundle = await loadSynchronized(options.comparison.baseline)
 
     // Invert the map of renamed keys so that new names are on the left (map
     // keys) old names are on the right (map values)
-    const renamedDatasetKeys = options.compare.renamedDatasetKeys
+    const renamedDatasetKeys = options.comparison.renamedDatasetKeys
     const invertedRenamedKeys: Map<DatasetKey, DatasetKey> = new Map()
     renamedDatasetKeys?.forEach((newKey, oldKey) => {
       invertedRenamedKeys.set(newKey, oldKey)
@@ -84,16 +84,16 @@ export async function createConfig(options: ConfigOptions): Promise<Config> {
     const modelSpecR = currentBundle.model.modelSpec
     const modelInputsL = new ModelInputs(modelSpecL)
     const modelInputsR = new ModelInputs(modelSpecR)
-    const compareDefs = resolveCompareSpecsFromSources(modelInputsL, modelInputsR, options.compare.specs)
+    const comparisonDefs = resolveComparisonSpecsFromSources(modelInputsL, modelInputsR, options.comparison.specs)
 
     // Initialize the configuration for comparisons
-    compareConfig = {
+    comparisonConfig = {
       bundleL: baselineBundle,
       bundleR: currentBundle,
-      thresholds: options.compare.thresholds,
-      scenarios: new CompareScenarios(compareDefs.scenarios),
-      viewGroups: compareDefs.viewGroups,
-      datasets: getCompareDatasets(modelSpecL, modelSpecR, options.compare.renamedDatasetKeys)
+      thresholds: options.comparison.thresholds,
+      scenarios: getComparisonScenarios(comparisonDefs.scenarios),
+      datasets: getComparisonDatasets(modelSpecL, modelSpecR, options.comparison.renamedDatasetKeys),
+      viewGroups: comparisonDefs.viewGroups
     }
   }
 
@@ -105,7 +105,7 @@ export async function createConfig(options: ConfigOptions): Promise<Config> {
 
   return {
     check: checkConfig,
-    compare: compareConfig
+    comparison: comparisonConfig
   }
 }
 

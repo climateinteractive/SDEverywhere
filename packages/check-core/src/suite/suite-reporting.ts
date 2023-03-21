@@ -1,8 +1,10 @@
 // Copyright (c) 2023 Climate Interactive / New Venture Fund
 
 import { checkSummaryFromReport } from '../check/check-summary'
-import type { ComparisonSummary } from '../compare/run/comparison-report-types'
-import { comparisonSummaryFromReport } from '../compare/run/comparison-reporting'
+
+import type { ComparisonSummary } from '../comparison/report/comparison-report-types'
+import { comparisonSummaryFromReport } from '../comparison/report/comparison-reporting'
+
 import type { SuiteReport, SuiteSummary } from './suite-report-types'
 
 /**

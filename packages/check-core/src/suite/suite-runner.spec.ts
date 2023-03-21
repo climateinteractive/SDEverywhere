@@ -138,7 +138,7 @@ describe('runSuite', () => {
       checkReport: {
         groups: []
       },
-      compareReport: undefined
+      comparisonReport: undefined
     })
     expect(progressPcts).toEqual([0, 1])
   })

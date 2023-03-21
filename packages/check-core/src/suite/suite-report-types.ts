@@ -2,7 +2,7 @@
 
 import type { CheckReport } from '../check/check-report'
 import type { CheckSummary } from '../check/check-summary'
-import type { ComparisonReport, ComparisonSummary } from '../compare/run/comparison-report-types'
+import type { ComparisonReport, ComparisonSummary } from '../comparison/report/comparison-report-types'
 
 /**
  * The report for a single run of the full check+comparison test suite.

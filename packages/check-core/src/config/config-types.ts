@@ -2,12 +2,12 @@
 
 import type { NamedBundle } from '../bundle/bundle-types'
 import type { CheckConfig, CheckOptions } from '../check/check-config'
-import type { CompareConfig, CompareOptions } from '../compare/config/compare-config'
+import type { ComparisonConfig, ComparisonOptions } from '../comparison/config/comparison-config'
 
 export interface ConfigOptions {
   /**
    * The bundle being checked.  This bundle will also be compared against the
-   * "baseline" bundle, if `compare` is defined.
+   * "baseline" bundle, if `comparison` options are defined.
    */
   current: NamedBundle
   /**
@@ -17,12 +17,12 @@ export interface ConfigOptions {
   /**
    * The model comparison options.
    */
-  compare?: CompareOptions
+  comparison?: ComparisonOptions
 }
 
 export interface Config {
   /** The resolved check test configuration. */
   check: CheckConfig
   /** The resolved comparison test configuration. */
-  compare?: CompareConfig
+  comparison?: ComparisonConfig
 }

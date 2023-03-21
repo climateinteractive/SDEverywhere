@@ -69,35 +69,28 @@ export type { CheckPredicateSummary, CheckSummary } from './check/check-summary'
 export { checkSummaryFromReport, checkReportFromSummary } from './check/check-summary'
 
 //
-// compare
+// comparison
 //
 
-export * from './compare/_shared/compare-resolved-types'
+export * from './comparison/_shared/comparison-resolved-types'
 
-export * from './compare/config/compare-spec-types'
-export type { CompareConfig, CompareOptions } from './compare/config/compare-config'
-export type { CompareScenarios } from './compare/config/compare-scenarios'
-export type { CompareDatasets } from './compare/config/compare-datasets'
+export * from './comparison/config/comparison-spec-types'
+export type { ComparisonConfig, ComparisonOptions } from './comparison/config/comparison-config'
+export type { ComparisonScenarios } from './comparison/config/comparison-scenarios'
+export type { ComparisonDatasets } from './comparison/config/comparison-datasets'
 
-export type { CompareDataRequestKey } from './compare/run/compare-data-coordinator'
-export { CompareDataCoordinator } from './compare/run/compare-data-coordinator'
+export type { ComparisonDataRequestKey } from './comparison/run/comparison-data-coordinator'
+export { ComparisonDataCoordinator } from './comparison/run/comparison-data-coordinator'
 
-export type { DiffPoint, DiffReport, DiffValidity } from './compare/run/compare-diff-datasets'
-export { diffDatasets, compareDatasets } from './compare/run/compare-diff-datasets'
+export * from './comparison/diff-datasets/diff-datasets'
 
-export type {
-  GraphDatasetReport,
-  GraphInclusion,
-  GraphMetadataReport,
-  GraphReport
-} from './compare/run/compare-diff-graphs'
-export { diffGraphs } from './compare/run/compare-diff-graphs'
+export * from './comparison/diff-graphs/diff-graphs'
 
-export * from './compare/run/comparison-report-types'
-export { comparisonSummaryFromReport } from './compare/run/comparison-reporting'
+export * from './comparison/report/comparison-report-types'
+export { comparisonSummaryFromReport } from './comparison/report/comparison-reporting'
 
-export * from './compare/run/comparison-group-types'
-export { categorizeComparisonTestSummaries } from './compare/run/comparison-grouping'
+export * from './comparison/report/comparison-group-types'
+export { categorizeComparisonTestSummaries } from './comparison/report/comparison-grouping'
 
 //
 // config

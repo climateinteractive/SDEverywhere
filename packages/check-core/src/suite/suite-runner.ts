@@ -13,8 +13,8 @@ import { DataPlanner } from '../data/data-planner'
 import { parseTestYaml } from '../check/check-parser'
 import { runChecks } from '../check/check-runner'
 
-import { runCompare } from '../compare/run/compare-runner'
-import type { ComparisonReport, ComparisonTestReport } from '../compare/run/comparison-report-types'
+import { runComparisons } from '../comparison/run/comparison-runner'
+import type { ComparisonReport, ComparisonTestReport } from '../comparison/report/comparison-report-types'
 
 import type { Config } from '../config/config-types'
 
@@ -91,8 +91,8 @@ class SuiteRunner {
 
     // Plan the comparisons, if configured
     let buildComparisonTestReports: () => ComparisonTestReport[]
-    if (this.config.compare) {
-      buildComparisonTestReports = runCompare(this.config.compare, dataPlanner, simplifyScenarios)
+    if (this.config.comparison) {
+      buildComparisonTestReports = runComparisons(this.config.comparison, dataPlanner, simplifyScenarios)
     }
 
     // When all tasks have been processed, build the report
@@ -106,7 +106,7 @@ class SuiteRunner {
       } else {
         const checkReport = buildCheckReport()
         let comparisonReport: ComparisonReport
-        if (this.config.compare) {
+        if (this.config.comparison) {
           comparisonReport = {
             testReports: buildComparisonTestReports(),
             perfReportL: this.perfStatsL.toReport(),
@@ -130,7 +130,7 @@ class SuiteRunner {
       // There are no checks or comparison tests; notify completion callback
       // with empty reports
       let comparisonReport: ComparisonReport
-      if (this.config.compare) {
+      if (this.config.comparison) {
         comparisonReport = {
           testReports: [],
           perfReportL: this.perfStatsL.toReport(),
@@ -180,8 +180,8 @@ class SuiteRunner {
     }
 
     // Run the model(s) in parallel and extract the requested datasets
-    const bundleModelL = this.config.compare?.bundleL.model
-    const bundleModelR = this.config.compare?.bundleR.model || this.config.check.bundle.model
+    const bundleModelL = this.config.comparison?.bundleL.model
+    const bundleModelR = this.config.comparison?.bundleR.model || this.config.check.bundle.model
     const [datasetsResultL, datasetsResultR] = await Promise.all([
       getDatasets(bundleModelL, request.scenarioSpecL),
       getDatasets(bundleModelR, request.scenarioSpecR)
