@@ -1,161 +1,192 @@
 // Copyright (c) 2021-2022 Climate Interactive / New Venture Fund
 
-import type { CompareConfig, OutputVar, Scenario } from '@sdeverywhere/check-core'
+import type { ComparisonConfig, ComparisonGroupSummary, ComparisonTestSummary } from '@sdeverywhere/check-core'
+import { categorizeComparisonTestSummaries } from '@sdeverywhere/check-core'
+import assertNever from 'assert-never'
 
-import type { CompareGroupReport, GroupedReports } from '../../../model/reports'
-import type { CompareGraphsViewModel } from '../graphs/compare-graphs-vm'
+// import type { CompareGraphsViewModel } from '../graphs/compare-graphs-vm'
 
 import type { CompareSummaryRowViewModel } from './compare-summary-row-vm'
 
 export interface CompareSummarySectionViewModel {
-  header: string
+  // header: string
+  header: CompareSummaryRowViewModel
   rows: CompareSummaryRowViewModel[]
+}
+
+export interface CompareSummaryViewGroupViewModel {
+  title: string
+  header: CompareSummaryRowViewModel
+  rows: CompareSummaryRowViewModel[]
+}
+
+export interface CompareSummaryViewsSectionViewModel {
+  viewGroups: CompareSummaryViewGroupViewModel[]
 }
 
 export interface CompareSummaryViewModel {
   allRows: CompareSummaryRowViewModel[]
+  viewsSection: CompareSummaryViewsSectionViewModel
   allGraphs?: CompareSummarySectionViewModel
-  datasetsAdded?: CompareSummarySectionViewModel
-  datasetsRemoved?: CompareSummarySectionViewModel
-  datasetsWithDiffs?: CompareSummarySectionViewModel
-  datasetsWithoutDiffs?: CompareSummarySectionViewModel
+  scenariosOnlyInLeft?: CompareSummarySectionViewModel
+  scenariosOnlyInRight?: CompareSummarySectionViewModel
   scenariosWithDiffs?: CompareSummarySectionViewModel
   scenariosWithoutDiffs?: CompareSummarySectionViewModel
+  datasetsOnlyInLeft?: CompareSummarySectionViewModel
+  datasetsOnlyInRight?: CompareSummarySectionViewModel
+  datasetsWithDiffs?: CompareSummarySectionViewModel
+  datasetsWithoutDiffs?: CompareSummarySectionViewModel
 }
 
 export function createCompareSummaryViewModel(
-  compareConfig: CompareConfig,
-  groupedReports: GroupedReports,
-  compareGraphsViewModel: CompareGraphsViewModel | undefined
+  comparisonConfig: ComparisonConfig,
+  terseSummaries: ComparisonTestSummary[]
 ): CompareSummaryViewModel {
-  const modelSpecL = compareConfig.bundleL.model.modelSpec
-  const modelSpecR = compareConfig.bundleR.model.modelSpec
+  // const viewsSection: CompareSummaryViewsSectionViewModel = {
+  //   viewGroups: [
+  //     {
+  //       title: 'HI',
+  //       // Th
+  //       header: rowForView('Baseline', undefined, true),
+  //       rows: [
+  //         rowForView('All Graphs'),
+  //         rowForView('Temperature'),
+  //         rowForView('GHGs'),
+  //         rowForView('Sea Level Rise'),
+  //         rowForView('Energy Demand')
+  //       ]
+  //     },
+  //     {
+  //       title: 'HI',
+  //       header: rowForView('Coal > Squeezing the balloon', undefined, true),
+  //       rows: [
+  //         rowForView('Coal - max subsidy', '(-20 | -15)'),
+  //         rowForView('Coal - baseline', '(0)'),
+  //         rowForView('Coal - low tax', '(10)'),
+  //         rowForView('Coal - medium tax', '(30)'),
+  //         rowForView('Coal - high tax', '(50)'),
+  //         rowForView('Coal - max tax', '(110 | 100)')
+  //       ]
+  //     },
+  //     {
+  //       title: 'HI',
+  //       header: rowForView('Transport Electrification', undefined, true),
+  //       rows: [
+  //         rowForView('Transport Elec - baseline', '(0)'),
+  //         rowForView('Transport Elec - low', '(25)'),
+  //         rowForView('Transport Elec - medium', '(50)'),
+  //         rowForView('Transport Elec - high', '(75)'),
+  //         rowForView('Transport Elec - max', '(100)') // TODO: Flag that id/range has changed?
+  //       ]
+  //     }
+  //   ]
+  // }
 
-  function rowForDataset(
-    outputVar: OutputVar,
-    report: CompareGroupReport,
-    striped = false
-  ): CompareSummaryRowViewModel {
-    return {
-      groupName: outputVar.varName,
-      secondaryName: outputVar.sourceName,
-      diffPercentByBucket: report.diffPercentByBucket,
-      totalScore: report.totalScore,
-      groupKey: report.key,
-      striped
-    }
-  }
+  // const viewGroupViewModels: CompareSummaryViewGroupViewModel[] = []
+  // for (const viewGroup of compareConfig.viewGroups) {
+  //   const viewRows: CompareSummaryRowViewModel[] = viewGroup.views.map(view => {
+  //     return {
+  //       groupName: view.title,
+  //       secondaryName: view.subtitle,
+  //       diffPercentByBucket: [20, 20, 20, 20, 20],
+  //       totalScore: 0,
+  //       groupKey: 'KEY',
+  //       striped: false
+  //     }
+  //   })
 
-  // Put the reports into groups (by dataset)
-  const datasetAddedRows: CompareSummaryRowViewModel[] = []
-  const datasetRemovedRows: CompareSummaryRowViewModel[] = []
-  const datasetWithDiffsRows: CompareSummaryRowViewModel[] = []
-  const datasetWithoutDiffsRows: CompareSummaryRowViewModel[] = []
-  for (const report of groupedReports.byDataset) {
-    const datasetKeyL = report.key
-    const datasetKeyR = compareConfig.datasets.renamedDatasetKeys?.get(datasetKeyL) || datasetKeyL
-    const outputVarL = modelSpecL.outputVars.get(datasetKeyL)
-    const outputVarR = modelSpecR.outputVars.get(datasetKeyR)
-    if (outputVarL && outputVarR) {
-      // The variable exists in both
-      const noDiffs = report.diffCountByBucket[0] === report.totalDiffCount
-      if (noDiffs) {
-        datasetWithoutDiffsRows.push(rowForDataset(outputVarR, report))
-      } else {
-        datasetWithDiffsRows.push(rowForDataset(outputVarR, report))
-      }
-    } else if (outputVarL) {
-      // The variable existed in the left, but was removed in the right
-      datasetRemovedRows.push(rowForDataset(outputVarL, report, true))
-    } else if (outputVarR) {
-      // The variable was added in the right
-      datasetAddedRows.push(rowForDataset(outputVarR, report, true))
-    } else {
-      // The variable is not in either; this should not happen in
-      // practice so treat it as a (soft) error
-      console.error(`ERROR: No variable information for ${datasetKeyL}`)
-      continue
-    }
-  }
+  //   viewGroupViewModels.push({
+  //     title: 'HI',
+  //     header: rowForView(viewGroup.title, undefined, true),
+  //     rows: viewRows
+  //   })
+  // }
 
-  function rowForScenario(scenario: Scenario, report: CompareGroupReport, striped = false): CompareSummaryRowViewModel {
-    const groupInfo = compareConfig.scenarios.getScenarioGroupInfo(scenario.groupKey)
-    const scenarioInfo = compareConfig.scenarios.getScenarioInfo(scenario, scenario.groupKey)
-    return {
-      groupName: groupInfo.title,
-      secondaryName: scenarioInfo.title,
-      diffPercentByBucket: report.diffPercentByBucket,
-      totalScore: report.totalScore,
-      groupKey: report.key,
-      striped
-    }
-  }
-
-  // Put the reports into groups (by scenario)
-  const scenarioWithDiffsRows: CompareSummaryRowViewModel[] = []
-  const scenarioWithoutDiffsRows: CompareSummaryRowViewModel[] = []
-  for (const report of groupedReports.byScenario) {
-    // TODO: Handle renames?
-    const scenarioKey = report.key
-    const scenario = compareConfig.scenarios.getScenario(scenarioKey)
-    if (scenario) {
-      const noDiffs = report.diffCountByBucket[0] === report.totalDiffCount
-      if (noDiffs) {
-        scenarioWithoutDiffsRows.push(rowForScenario(scenario, report))
-      } else {
-        scenarioWithDiffsRows.push(rowForScenario(scenario, report))
-      }
-    }
+  const viewsSection: CompareSummaryViewsSectionViewModel = {
+    viewGroups: [] //viewGroupViewModels
   }
 
-  // Sort reports in each group so that the ones with the most differences
-  // come first, then sort alphabetically
-  function sortDatasetRows(rows: CompareSummaryRowViewModel[]): CompareSummaryRowViewModel[] {
-    return rows.sort((a, b) => {
-      const aScore = a.totalScore
-      const bScore = b.totalScore
-      if (aScore !== bScore) {
-        // Sort by score first
-        return aScore > bScore ? -1 : 1
-      } else {
-        // Sort by variable/source name alphabetically if scores match
-        const aSource = a.secondaryName?.toLowerCase() || ''
-        const bSource = b.secondaryName?.toLowerCase() || ''
-        if (aSource !== bSource) {
-          // Sort by source name (non-model variables follow model variables)
-          return aSource.localeCompare(bSource)
-        } else {
-          // Sort by dataset name alphabetically
-          const aName = a.groupName.toLowerCase()
-          const bName = b.groupName.toLowerCase()
-          return aName.localeCompare(bName)
-        }
-      }
-    })
-  }
-  function sortScenarioRows(rows: CompareSummaryRowViewModel[]): CompareSummaryRowViewModel[] {
-    return rows.sort((a, b) => {
-      const aScore = a.totalScore
-      const bScore = b.totalScore
-      if (aScore !== bScore) {
-        // Sort by score first
-        return aScore > bScore ? -1 : 1
-      } else {
-        // Sort by scenario name alphabetically if scores match
-        const aName = a.groupName.toLowerCase()
-        const bName = b.groupName.toLowerCase()
-        if (aName !== bName) {
-          // Sort by scenario name
-          return aName.localeCompare(bName)
-        } else {
-          // Sort by scenario position alphabetically
-          const aPos = a.secondaryName?.toLowerCase() || ''
-          const bPos = b.secondaryName?.toLowerCase() || ''
-          return aPos.localeCompare(bPos)
-        }
-      }
-    })
-  }
+  // function rowForInputScenario(primary: string, secondary?: string): CompareSummaryRowViewModel {
+  //   return {
+  //     groupName: primary,
+  //     secondaryName: secondary,
+  //     diffPercentByBucket: [0, 0, 0, 0],
+  //     totalScore: 0,
+  //     groupKey: 'KEY',
+  //     striped: true
+  //   }
+  // }
+
+  // const scenarioRows: CompareSummaryRowViewModel[] = [
+  //   rowForInputScenario('Var > Climate Sensitivity to 2x CO2', 'at minimum'),
+  //   rowForInputScenario('Var > Climate Sensitivity to 2x CO2', 'at maximum'),
+  //   rowForInputScenario('Main > Coal', 'at max subsidy'), //, '(-20 | -15)'),
+  //   rowForInputScenario('Main > Coal', 'at baseline'), //, '(0)'),
+  //   rowForInputScenario('Main > Coal', 'at low tax'), //, '(10)'),
+  //   rowForInputScenario('Main > Coal', 'at medium tax'), //, '(30)'),
+  //   rowForInputScenario('Main > Coal', 'at high tax'), //, '(50)')
+  //   rowForInputScenario('Main > Coal', 'at max tax') //, '(110 | 100)'),
+  // ]
+
+  // function message(kind: 'err' | 'warn', s: string): string {
+  //   const statusClass = `status-color-${kind === 'err' ? 'failed' : 'error'}`
+  //   const statusChar = kind === 'err' ? '✗' : '‼'
+  //   return `<span class="message"><span class="${statusClass}">${statusChar}</span>&ensp;${s}</span>`
+  // }
+
+  // function withBundleColor(kind: 'left' | 'right', s: string): string {
+  //   const side = kind === 'left' ? 0 : 1
+  //   return `<span class="dataset-color-${side}">${s}</span>`
+  // }
+
+  // const bundleL = compareConfig.bundleL
+  // const bundleR = compareConfig.bundleR
+  // const scenarioRows: CompareSummaryRowViewModel[] = []
+  // const scenarioRows: CompareSummaryRowViewModel[] = compareConfig.scenarios.map(scenario => {
+  //   // let title: string
+  //   // let subtitle: string
+  //   let valuesPart: string
+  //   let messagesPart: string
+  //   let striped = false
+  //   if (scenario.kind === 'scenario-with-inputs') {
+  //     for (const input of scenario.resolvedInputs) {
+  //       const errL = input.stateL.error?.kind
+  //       const errR = input.stateR.error?.kind
+  //       if (errL === 'unknown-input' || errR === 'unknown-input') {
+  //         // Show warning/status message when input is unknown
+  //         striped = true
+  //         if (errL === 'unknown-input' && errR === 'unknown-input') {
+  //           messagesPart = message('err', 'Unknown input')
+  //         } else if (errL === 'unknown-input') {
+  //           messagesPart = message('warn', `Input only defined in ${withBundleColor('right', bundleR.name)}`)
+  //         } else if (errR === 'unknown-input') {
+  //           messagesPart = message('warn', `Input only defined in ${withBundleColor('left', bundleL.name)}`)
+  //         }
+  //       } else if (errL == 'invalid-value' || errR === 'invalid-value') {
+  //         // TODO: Show warning/status message when input value is out of range
+  //       } else if (input.stateL.inputVar && input.stateR.inputVar) {
+  //         if (input.stateL.inputVar.varName !== input.stateR.inputVar.varName) {
+  //           let msg = 'Variable name changed:'
+  //           msg += ` ${withBundleColor('left', input.stateL.inputVar.varName)}`
+  //           msg += ` → `
+  //           msg += ` ${withBundleColor('right', input.stateR.inputVar.varName)}`
+  //           messagesPart = message('warn', msg)
+  //         }
+  //       }
+  //     }
+  //   }
+
+  //   return {
+  //     groupName: scenario.title,
+  //     secondaryName: scenario.subtitle,
+  //     valuesPart,
+  //     messagesPart,
+  //     diffPercentByBucket: [20, 20, 20, 20, 20],
+  //     totalScore: 0,
+  //     groupKey: 'KEY',
+  //     striped
+  //   }
+  // })
 
   // Helper that prepends the given string with `count` and replaces `<replace>`
   // with `<replace>s` if count is not one
@@ -163,59 +194,91 @@ export function createCompareSummaryViewModel(
     return `${count} ${count !== 1 ? s.replace(replace, `${replace}s`) : s}`
   }
 
+  function rowForGroupSummary(groupSummary: ComparisonGroupSummary): CompareSummaryRowViewModel {
+    let title: string
+    let subtitle: string
+    const root = groupSummary.root
+    switch (root.kind) {
+      case 'dataset-root': {
+        // TODO: Handle renames better
+        const outputVar = root.dataset.outputVarR || root.dataset.outputVarL
+        title = outputVar.varName
+        subtitle = outputVar.sourceName
+        break
+      }
+      case 'scenario-root':
+        title = root.scenario.title
+        subtitle = root.scenario.subtitle
+        break
+      default:
+        assertNever(root)
+    }
+
+    return {
+      title,
+      subtitle,
+      diffPercentByBucket: groupSummary.scores?.diffPercentByBucket,
+      groupSummary,
+      groupKey: groupSummary.group.key
+    }
+  }
+
   function section(
-    rows: CompareSummaryRowViewModel[],
-    header: string,
+    groupSummaries: ComparisonGroupSummary[],
+    headerText: string,
     count = true
   ): CompareSummarySectionViewModel | undefined {
-    if (rows.length > 0) {
-      let sortedRows: CompareSummaryRowViewModel[]
+    if (groupSummaries.length > 0) {
+      const rows: CompareSummaryRowViewModel[] = groupSummaries.map(rowForGroupSummary)
+
       let replace: string
-      if (header.includes('output')) {
-        sortedRows = sortDatasetRows(rows)
-        replace = 'variable'
-      } else {
-        sortedRows = sortScenarioRows(rows)
+      if (headerText.includes('scenario')) {
         replace = 'scenario'
+      } else {
+        replace = 'variable'
       }
+
+      if (count) {
+        headerText = countString(rows.length, headerText, replace)
+      }
+
+      const headerRow: CompareSummaryRowViewModel = {
+        title: headerText,
+        header: true
+      }
+
       return {
-        header: count ? countString(rows.length, header, replace) : header,
-        rows: sortedRows
+        header: headerRow,
+        rows
       }
     } else {
       return undefined
     }
   }
 
-  // Build the special "All Graphs" section
-  let allGraphs: CompareSummarySectionViewModel
-  if (compareGraphsViewModel) {
-    const hasDiffs = compareGraphsViewModel.hasDiffs
-    const row: CompareSummaryRowViewModel = {
-      groupName: 'All Graphs',
-      diffPercentByBucket: compareGraphsViewModel.diffPercentByBucket,
-      totalScore: 0,
-      striped: false
-    }
-    allGraphs = {
-      header: `${hasDiffs ? 'Some' : 'No'} differences detected in graphs…`,
-      rows: [row]
-    }
-  }
+  // Group and categorize the comparison results
+  const comparisonGroups = categorizeComparisonTestSummaries(comparisonConfig, terseSummaries)
+  const groupsByScenario = comparisonGroups.byScenario
+  const groupsByDataset = comparisonGroups.byDataset
 
-  // Build the output/scenario comparison sections
-  const datasetsAdded = section(datasetAddedRows, 'added output variable…')
-  const datasetsRemoved = section(datasetRemovedRows, 'removed output variable…')
-  const datasetsWithDiffs = section(datasetWithDiffsRows, 'output variable with differences…')
-  const datasetsWithoutDiffs = section(
-    datasetWithoutDiffsRows,
-    'No differences detected for the following outputs…',
+  // Build the by-scenario comparison sections
+  // TODO: Replace left and right here
+  const scenariosOnlyInLeft = section(groupsByScenario.onlyInLeft, 'scenario only valid in [left]…')
+  const scenariosOnlyInRight = section(groupsByScenario.onlyInRight, 'scenario only valid in [right]…')
+  const scenariosWithDiffs = section(groupsByScenario.withDiffs, 'scenario producing differences…')
+  const scenariosWithoutDiffs = section(
+    groupsByScenario.withoutDiffs,
+    'No differences produced by the following scenarios…',
     false
   )
-  const scenariosWithDiffs = section(scenarioWithDiffsRows, 'scenario producing differences…')
-  const scenariosWithoutDiffs = section(
-    scenarioWithoutDiffsRows,
-    'No differences produced by the following scenarios…',
+
+  // Build the by-dataset comparison sections
+  const datasetsOnlyInLeft = section(groupsByDataset.onlyInLeft, 'removed output variable…')
+  const datasetsOnlyInRight = section(groupsByDataset.onlyInRight, 'added output variable…')
+  const datasetsWithDiffs = section(groupsByDataset.withDiffs, 'output variable with differences…')
+  const datasetsWithoutDiffs = section(
+    groupsByDataset.withoutDiffs,
+    'No differences detected for the following outputs…',
     false
   )
 
@@ -226,22 +289,26 @@ export function createCompareSummaryViewModel(
       allRows.push(...section.rows)
     }
   }
-  addRows(datasetsAdded)
-  addRows(datasetsRemoved)
-  addRows(datasetsWithDiffs)
-  addRows(datasetsWithoutDiffs)
+  addRows(scenariosOnlyInLeft)
+  addRows(scenariosOnlyInRight)
   addRows(scenariosWithDiffs)
   addRows(scenariosWithoutDiffs)
+  addRows(datasetsOnlyInLeft)
+  addRows(datasetsOnlyInRight)
+  addRows(datasetsWithDiffs)
+  addRows(datasetsWithoutDiffs)
 
   // Build the summary view model
   return {
     allRows,
-    allGraphs,
-    datasetsAdded,
-    datasetsRemoved,
-    datasetsWithDiffs,
-    datasetsWithoutDiffs,
+    viewsSection,
+    scenariosOnlyInLeft,
+    scenariosOnlyInRight,
     scenariosWithDiffs,
-    scenariosWithoutDiffs
+    scenariosWithoutDiffs,
+    datasetsOnlyInLeft,
+    datasetsOnlyInRight,
+    datasetsWithDiffs,
+    datasetsWithoutDiffs
   }
 }

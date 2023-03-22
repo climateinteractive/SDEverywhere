@@ -7,6 +7,13 @@
 mixin section(varname)
   +if(`viewModel.${varname}`)
     .section-container
-      .section-header!= `{ viewModel.${varname}.header }`
+      SummaryRow(viewModel!=`{ viewModel.${varname}.header }`)
       +each(`viewModel.${varname}.rows as rowViewModel`)
+        SummaryRow(on:command viewModel!='{rowViewModel}')
+
+mixin views-section
+  +each(`viewsSection.viewGroups as viewGroupViewModel`)
+    .group-container
+      SummaryRow(viewModel!='{viewGroupViewModel.header}')
+      +each(`viewGroupViewModel.rows as rowViewModel`)
         SummaryRow(on:command viewModel!='{rowViewModel}')

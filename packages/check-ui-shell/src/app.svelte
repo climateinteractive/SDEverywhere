@@ -7,7 +7,6 @@ import FontFaceObserver from 'fontfaceobserver'
 
 import CompareDetail from './components/compare/detail/compare-detail.svelte'
 import type { CompareDetailViewModel } from './components/compare/detail/compare-detail-vm'
-import CompareGraphs from './components/compare/graphs/compare-graphs.svelte'
 import Header from './components/header/header.svelte'
 import type { PerfViewModel } from './components/perf/perf-vm'
 import Perf from './components/perf/perf.svelte'
@@ -22,7 +21,7 @@ const progress = viewModel.progress
 let compareDetailViewModel: CompareDetailViewModel
 let perfViewModel: PerfViewModel
 
-type ViewMode = 'summary' | 'compare-graphs' | 'compare-detail' | 'perf'
+type ViewMode = 'summary' | 'compare-detail' | 'perf'
 let viewMode: ViewMode = 'summary'
 
 // Under normal circumstances, the font face used in graphs might not be fully
@@ -54,9 +53,6 @@ function onCommand(event: CustomEvent) {
     case 'show-summary':
       compareDetailViewModel = undefined
       viewMode = 'summary'
-      break
-    case 'show-compare-graphs':
-      viewMode = 'compare-graphs'
       break
     case 'show-compare-detail':
       compareDetailViewModel = viewModel.createCompareDetailViewModelForSummaryRow(cmdObj.summaryRow)
@@ -96,8 +92,6 @@ function onCommand(event: CustomEvent) {
           .progress {$progress}
         +elseif('viewMode === "compare-detail"')
           CompareDetail(on:command!='{onCommand}' viewModel!='{compareDetailViewModel}')
-        +elseif('viewMode === "compare-graphs"')
-          CompareGraphs(viewModel!='{viewModel.summaryViewModel.compareGraphsViewModel}')
         +elseif('viewMode === "perf"')
           Perf(on:command!='{onCommand}' viewModel!='{perfViewModel}')
         +else

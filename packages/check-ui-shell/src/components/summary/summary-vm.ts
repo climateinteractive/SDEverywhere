@@ -3,12 +3,11 @@
 import type {
   CheckDataCoordinator,
   CheckReport,
-  CompareConfig,
-  CompareDataCoordinator,
-  CompareSummary
+  ComparisonConfig,
+  ComparisonDataCoordinator,
+  ComparisonSummary
 } from '@sdeverywhere/check-core'
-import { allInputsAtPositionScenario } from '@sdeverywhere/check-core'
-import { groupedReportsFromSummaries } from '../../model/reports'
+
 import type { CheckSummaryViewModel } from '../check/summary/check-summary-vm'
 import { createCheckSummaryViewModel } from '../check/summary/check-summary-vm'
 import type { CompareGraphsViewModel } from '../compare/graphs/compare-graphs-vm'
@@ -20,7 +19,7 @@ import { createStatsTableViewModel } from '../stats/stats-table-vm'
 
 export interface SummaryViewModel {
   checkSummaryViewModel: CheckSummaryViewModel
-  compareSummary?: CompareSummary
+  comparisonSummary?: ComparisonSummary
   compareGraphsViewModel?: CompareGraphsViewModel
   compareSummaryViewModel?: CompareSummaryViewModel
   statsTableViewModel?: StatsTableViewModel
@@ -28,10 +27,10 @@ export interface SummaryViewModel {
 
 export function createSummaryViewModel(
   checkDataCoordinator: CheckDataCoordinator,
-  compareDataCoordinator: CompareDataCoordinator,
+  comparisonDataCoordinator: ComparisonDataCoordinator,
   checkReport: CheckReport,
-  compareConfig: CompareConfig | undefined,
-  compareSummary: CompareSummary | undefined,
+  comparisonConfig: ComparisonConfig | undefined,
+  comparisonSummary: ComparisonSummary | undefined,
   simplifyScenarios: boolean
 ): SummaryViewModel {
   const checkSummaryViewModel = createCheckSummaryViewModel(checkDataCoordinator, checkReport)
@@ -39,32 +38,31 @@ export function createSummaryViewModel(
   let compareGraphsViewModel: CompareGraphsViewModel
   let compareSummaryViewModel: CompareSummaryViewModel
   let statsTableViewModel: StatsTableViewModel
-  if (compareConfig && compareSummary) {
-    const graphSpecsL = compareConfig.bundleL.model.modelSpec.graphSpecs
-    const graphSpecsR = compareConfig.bundleR.model.modelSpec.graphSpecs
-    if (graphSpecsL?.length && graphSpecsR?.length) {
-      // TODO: Allow for selecting a scenario
-      const scenario = allInputsAtPositionScenario('at-default')
-      compareGraphsViewModel = createCompareGraphsViewModel(
-        compareConfig,
-        compareDataCoordinator,
-        scenario,
-        compareSummary.datasetSummaries
-      )
-    }
+  if (comparisonConfig && comparisonSummary) {
+    // const graphSpecsL = compareConfig.bundleL.model.modelSpec.graphSpecs
+    // const graphSpecsR = compareConfig.bundleR.model.modelSpec.graphSpecs
+    // if (graphSpecsL?.length && graphSpecsR?.length) {
+    //   // TODO: Allow for selecting a scenario
+    //   const scenario = allInputsAtPositionScenario('at-default')
+    //   compareGraphsViewModel = createCompareGraphsViewModel(
+    //     compareConfig,
+    //     compareDataCoordinator,
+    //     scenario,
+    //     compareSummary.datasetSummaries
+    //   )
+    // }
 
-    const groupedReports = groupedReportsFromSummaries(compareConfig, compareSummary, simplifyScenarios)
-    compareSummaryViewModel = createCompareSummaryViewModel(compareConfig, groupedReports, compareGraphsViewModel)
+    compareSummaryViewModel = createCompareSummaryViewModel(comparisonConfig, comparisonSummary.testSummaries)
     statsTableViewModel = createStatsTableViewModel(
-      compareConfig,
-      compareSummary.perfReportL,
-      compareSummary.perfReportR
+      comparisonConfig,
+      comparisonSummary.perfReportL,
+      comparisonSummary.perfReportR
     )
   }
 
   return {
     checkSummaryViewModel,
-    compareSummary,
+    comparisonSummary,
     compareGraphsViewModel,
     compareSummaryViewModel,
     statsTableViewModel

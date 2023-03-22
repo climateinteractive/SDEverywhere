@@ -1,6 +1,6 @@
 // Copyright (c) 2021-2022 Climate Interactive / New Venture Fund
 
-import type { CompareConfig, PerfReport } from '@sdeverywhere/check-core'
+import type { ComparisonConfig, PerfReport } from '@sdeverywhere/check-core'
 import type { DotPlotViewModel } from '../perf/dot-plot-vm'
 import { createDotPlotViewModel } from '../perf/dot-plot-vm'
 import type { StatsTableRowViewModel } from './stats-table-row-vm'
@@ -12,7 +12,7 @@ export interface StatsTableViewModel {
 }
 
 export function createStatsTableViewModel(
-  compareConfig: CompareConfig,
+  comparisonConfig: ComparisonConfig,
   perfReportL: PerfReport,
   perfReportR: PerfReport
 ): StatsTableViewModel {
@@ -32,8 +32,8 @@ export function createStatsTableViewModel(
     }
   }
 
-  const modelSpecL = compareConfig.bundleL.model.modelSpec
-  const modelSpecR = compareConfig.bundleR.model.modelSpec
+  const modelSpecL = comparisonConfig.bundleL.model.modelSpec
+  const modelSpecR = comparisonConfig.bundleR.model.modelSpec
 
   const inputCountL = modelSpecL.inputVars.size
   const inputCountR = modelSpecR.inputVars.size
@@ -71,7 +71,7 @@ export function createStatsTableViewModel(
   }
 
   const row1: StatsTableRowViewModel = {
-    modelName: compareConfig.bundleL.name,
+    modelName: comparisonConfig.bundleL.name,
     datasetClassIndex: 0,
     inputs: inputCountL.toString(),
     outputs: outputCountL.toString(),
@@ -87,7 +87,7 @@ export function createStatsTableViewModel(
   }
 
   const row2: StatsTableRowViewModel = {
-    modelName: compareConfig.bundleR.name,
+    modelName: comparisonConfig.bundleR.name,
     datasetClassIndex: 1,
     inputs: inputCountR.toString(),
     outputs: outputCountR.toString(),

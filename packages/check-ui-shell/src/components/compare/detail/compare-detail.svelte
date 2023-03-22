@@ -5,6 +5,8 @@
 
 import { createEventDispatcher } from 'svelte'
 
+import GraphsRow from '../graphs/compare-graphs-row.svelte'
+
 import type { CompareDetailViewModel } from './compare-detail-vm'
 import DetailRow from './compare-detail-row.svelte'
 
@@ -71,19 +73,9 @@ svelte:window(on:keydown!='{onKeyDown}')
   .header-container
     .title-row
       .title-container
-        +if('viewModel.newGroupName')
-          .var-name.renamed.dataset-color-0(on:click!='{toggleRelatedItems}') {viewModel.groupName}
-          .var-name.renamed &nbsp;&gt;&nbsp;
-          .var-name.renamed.dataset-color-1(on:click!='{toggleRelatedItems}') {viewModel.newGroupName}
-          +else
-            .var-name(on:click!='{toggleRelatedItems}') {viewModel.groupName}
-        +if('viewModel.secondaryName')
-          +if('viewModel.newSecondaryName')
-            .source-name.renamed.dataset-color-0 {viewModel.secondaryName}
-            .source-name.renamed &nbsp;&gt;&nbsp;
-            .source-name.renamed.dataset-color-1 {viewModel.newSecondaryName}
-            +else
-              .source-name {viewModel.secondaryName}
+        .title(on:click!='{toggleRelatedItems}') { @html viewModel.title }
+        +if('viewModel.subtitle')
+          .subtitle { @html viewModel.subtitle }
       .spacer-flex
       .nav-links.no-selection
         .nav-link(class:disabled!='{viewModel.previousRowIndex === undefined}' on:click!='{() => onNavLink("detail-previous")}') previous
@@ -95,7 +87,8 @@ svelte:window(on:keydown!='{onKeyDown}')
         ul
           +related-items
   .scroll-container(bind:this!='{scrollContainer}')
-    +rows
+    //- +graph-rows
+    +box-rows
 
 </template>
 
@@ -152,23 +145,17 @@ svelte:window(on:keydown!='{onKeyDown}')
   flex-direction: row
   align-items: baseline
 
-.var-name
+.title
   margin-bottom: .4rem
   font-size: 2em
   font-weight: 700
   cursor: pointer
 
-.var-name.renamed
-  font-size: 1.6em
-
-.source-name
+.subtitle
   font-size: 1.2em
   font-weight: 700
   margin-left: 1.2rem
   color: #888
-
-.source-name.renamed
-  font-size: 1em
 
 .related
   font-size: 1em
@@ -192,6 +179,12 @@ ul
   overflow: auto
   padding: 0 1rem
   background-color: #3c3c3c
+
+.section-title
+  font-size: 1.7em
+  font-weight: 700
+  margin-top: 2rem
+  margin-bottom: 1.2rem
 
 .row-container
   margin-top: 2rem

@@ -3,12 +3,10 @@
 import type { Readable, Writable } from 'svelte/store'
 import { get, writable } from 'svelte/store'
 
-import type { CompareSummary, SuiteSummary } from '@sdeverywhere/check-core'
-import { checkReportFromSummary, compareSummaryFromReport, runSuite } from '@sdeverywhere/check-core'
+import type { ComparisonSummary, SuiteSummary } from '@sdeverywhere/check-core'
+import { checkReportFromSummary, comparisonSummaryFromReport, runSuite } from '@sdeverywhere/check-core'
 
 import type { AppModel } from './model/app-model'
-import type { CompareGroupReport } from './model/reports'
-import { groupedReportsFromSummaries } from './model/reports'
 
 import type { CompareDetailViewModel } from './components/compare/detail/compare-detail-vm'
 import { createCompareDetailViewModel } from './components/compare/detail/compare-detail-vm'
@@ -48,7 +46,7 @@ export class AppViewModel {
 
     // Show the "Simplify Scenarios" checkbox if we run checks in the browser
     const includeSimplifyScenarios = suiteSummary === undefined
-    this.headerViewModel = createHeaderViewModel(appModel.config.compare, includeSimplifyScenarios)
+    this.headerViewModel = createHeaderViewModel(appModel.config.comparison, includeSimplifyScenarios)
 
     if (includeSimplifyScenarios) {
       // Re-run the tests when the "Simplify Scenarios" checkbox is toggled
@@ -75,7 +73,7 @@ export class AppViewModel {
     this.writableChecksInProgress.set(true)
     this.writableProgress.set('0%')
 
-    const compareConfig = this.appModel.config.compare
+    const comparisonConfig = this.appModel.config.comparison
     if (this.suiteSummary) {
       // For the case where checks were run ahead of time using the model-check
       // CLI tool, we can display the report immediately instead of running all
@@ -83,13 +81,13 @@ export class AppViewModel {
       const simplifyScenarios = false
       const checkConfig = this.appModel.config.check
       const checkReport = checkReportFromSummary(checkConfig, this.suiteSummary.checkSummary, simplifyScenarios)
-      const compareSummary = this.suiteSummary?.compareSummary
+      const comparisonSummary = this.suiteSummary?.comparisonSummary
       this.summaryViewModel = createSummaryViewModel(
         this.appModel.checkDataCoordinator,
-        this.appModel.compareDataCoordinator,
+        this.appModel.comparisonDataCoordinator,
         checkReport,
-        compareConfig,
-        compareSummary,
+        comparisonConfig,
+        comparisonSummary,
         simplifyScenarios
       )
       this.writableChecksInProgress.set(false)
@@ -104,16 +102,16 @@ export class AppViewModel {
           },
           onComplete: report => {
             const checkReport = report.checkReport
-            let compareSummary: CompareSummary
-            if (report.compareReport) {
-              compareSummary = compareSummaryFromReport(report.compareReport)
+            let comparisonSummary: ComparisonSummary
+            if (report.comparisonReport) {
+              comparisonSummary = comparisonSummaryFromReport(report.comparisonReport)
             }
             this.summaryViewModel = createSummaryViewModel(
               this.appModel.checkDataCoordinator,
-              this.appModel.compareDataCoordinator,
+              this.appModel.comparisonDataCoordinator,
               checkReport,
-              compareConfig,
-              compareSummary,
+              comparisonConfig,
+              comparisonSummary,
               simplifyScenarios
             )
             this.writableChecksInProgress.set(false)
@@ -132,6 +130,7 @@ export class AppViewModel {
 
   createCompareDetailViewModelForSummaryRow(summaryRowViewModel: CompareSummaryRowViewModel): CompareDetailViewModel {
     const compareSummaryViewModel = this.summaryViewModel.compareSummaryViewModel
+    const groupSummary = summaryRowViewModel.groupSummary
     const groupKey = summaryRowViewModel.groupKey
 
     // Determine which rows precede and follow the selected row
@@ -148,23 +147,10 @@ export class AppViewModel {
       }
     }
 
-    // For the detail view, include all scenarios from the configuration (even if
-    // "Simplify Scenarios" is checked); this way the scenarios can be loaded lazily
-    // while scrolling down the detail page
-    const groupedReports = groupedReportsFromSummaries(
-      this.appModel.config.compare,
-      this.summaryViewModel.compareSummary,
-      /*simplifyScenarios=*/ false
-    )
-    let groupReport: CompareGroupReport = groupedReports.byDataset.find(r => r.key === groupKey)
-    if (groupReport === undefined) {
-      groupReport = groupedReports.byScenario.find(r => r.key === groupKey)
-    }
-
     return createCompareDetailViewModel(
-      this.appModel.config.compare,
-      this.appModel.compareDataCoordinator,
-      groupReport,
+      this.appModel.config.comparison,
+      this.appModel.comparisonDataCoordinator,
+      groupSummary,
       previousRowIndex,
       nextRowIndex
     )

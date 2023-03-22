@@ -4,12 +4,12 @@ import assertNever from 'assert-never'
 
 import type {
   BundleGraphId,
-  CompareConfig,
-  CompareDataCoordinator,
-  CompareDatasetSummary,
-  GraphReport,
-  LoadedBundle,
-  Scenario
+  ComparisonConfig,
+  ComparisonDataCoordinator,
+  ComparisonScenario,
+  ComparisonTestSummary,
+  GraphComparisonReport,
+  LoadedBundle
 } from '@sdeverywhere/check-core'
 import { diffGraphs } from '@sdeverywhere/check-core'
 
@@ -35,10 +35,10 @@ export interface CompareGraphsViewModel {
 }
 
 export function createCompareGraphsViewModel(
-  compareConfig: CompareConfig,
-  dataCoordinator: CompareDataCoordinator,
-  scenario: Scenario,
-  datasetSummaries: CompareDatasetSummary[]
+  comparisonConfig: ComparisonConfig,
+  dataCoordinator: ComparisonDataCoordinator,
+  scenario: ComparisonScenario,
+  testSummaries: ComparisonTestSummary[]
 ): CompareGraphsViewModel {
   // Get the union of all graph IDs appearing in either left or right
   const graphIds: Set<BundleGraphId> = new Set()
@@ -49,8 +49,8 @@ export function createCompareGraphsViewModel(
       }
     }
   }
-  addGraphIds(compareConfig.bundleL)
-  addGraphIds(compareConfig.bundleR)
+  addGraphIds(comparisonConfig.bundleL)
+  addGraphIds(comparisonConfig.bundleR)
 
   // Prepare the groups
   const added: CompareGraphsRowViewModel[] = []
@@ -61,13 +61,13 @@ export function createCompareGraphsViewModel(
   const unchanged: CompareGraphsRowViewModel[] = []
 
   // Compare the graphs
-  const diffCountByBucket = Array(compareConfig.thresholds.length + 2).fill(0)
+  const diffCountByBucket = Array(comparisonConfig.thresholds.length + 2).fill(0)
   for (const graphId of graphIds) {
-    const graphL = compareConfig.bundleL.model.modelSpec.graphSpecs?.find(s => s.id === graphId)
-    const graphR = compareConfig.bundleR.model.modelSpec.graphSpecs?.find(s => s.id === graphId)
-    const graphReport = diffGraphs(graphL, graphR, scenario.key, datasetSummaries)
+    const graphL = comparisonConfig.bundleL.model.modelSpec.graphSpecs?.find(s => s.id === graphId)
+    const graphR = comparisonConfig.bundleR.model.modelSpec.graphSpecs?.find(s => s.id === graphId)
+    const graphReport = diffGraphs(graphL, graphR, scenario.key, testSummaries)
     const maxDiffPct = maxDiffPctForGraph(graphReport)
-    const row = createCompareGraphsRowViewModel(compareConfig, dataCoordinator, scenario, graphId, graphReport)
+    const row = createCompareGraphsRowViewModel(comparisonConfig, dataCoordinator, scenario, graphId, graphReport)
 
     // Determine which section the row will be added to
     let bucketIndex: number
@@ -85,7 +85,7 @@ export function createCompareGraphsViewModel(
       case 'both':
         if (maxDiffPct > 0) {
           // Use the appropriate bucket for graphs with dataset changes
-          bucketIndex = getBucketIndex(maxDiffPct, compareConfig.thresholds)
+          bucketIndex = getBucketIndex(maxDiffPct, comparisonConfig.thresholds)
           if (graphReport.metadataReports.length > 0) {
             metadataAndDatasets.push(row)
           } else {
@@ -146,7 +146,7 @@ export function createCompareGraphsViewModel(
   }
 }
 
-function maxDiffPctForGraph(graphReport: GraphReport): number {
+function maxDiffPctForGraph(graphReport: GraphComparisonReport): number {
   let maxDiffPct = 0
   for (const datasetReport of graphReport.datasetReports) {
     if (datasetReport.maxDiff !== undefined && datasetReport.maxDiff > maxDiffPct) {

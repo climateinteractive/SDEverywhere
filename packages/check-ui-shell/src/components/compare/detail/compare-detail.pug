@@ -8,7 +8,15 @@ mixin related-items
   +each('viewModel.relatedItems as relatedItem')
     li.related-item { @html relatedItem }
 
-mixin rows
-  +each('viewModel.rows as rowViewModel')
+mixin graph-rows
+  +if('viewModel.graphRows')
+    .section-title Featured Graphs
+    +each('viewModel.graphRows as graphsRowViewModel')
+      .row-container
+        GraphsRow(viewModel!='{graphsRowViewModel}')
+    .section-title All Datasets
+
+mixin box-rows
+  +each('viewModel.detailRows as detailRowViewModel')
     .row-container
-      DetailRow(viewModel!='{rowViewModel}')
+      DetailRow(viewModel!='{detailRowViewModel}')

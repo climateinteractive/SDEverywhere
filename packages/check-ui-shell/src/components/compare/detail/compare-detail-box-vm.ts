@@ -3,8 +3,17 @@
 import type { Readable, Writable } from 'svelte/store'
 import { writable } from 'svelte/store'
 
-import type { CompareConfig, CompareDataCoordinator, DatasetKey, DiffReport, Scenario } from '@sdeverywhere/check-core'
-import { compareDatasets } from '@sdeverywhere/check-core'
+import type {
+  ComparisonConfig,
+  ComparisonDataCoordinator,
+  ComparisonScenario,
+  ComparisonScenarioKey,
+  ComparisonTestReport,
+  DatasetKey,
+  DatasetMap,
+  DiffReport
+} from '@sdeverywhere/check-core'
+import { diffDatasets } from '@sdeverywhere/check-core'
 
 import { getBucketIndex } from '../../../_shared/buckets'
 
@@ -28,11 +37,11 @@ export class CompareDetailBoxViewModel {
   private dataLoaded = false
 
   constructor(
-    public readonly compareConfig: CompareConfig,
-    public readonly dataCoordinator: CompareDataCoordinator,
+    public readonly comparisonConfig: ComparisonConfig,
+    public readonly dataCoordinator: ComparisonDataCoordinator,
     public readonly title: string,
     public readonly subtitle: string | undefined,
-    public readonly scenario: Scenario,
+    public readonly scenario: ComparisonScenario,
     public readonly datasetKey: DatasetKey
   ) {
     this.requestKey = `detail-box::${requestId++}::${scenario.key}::${datasetKey}`
@@ -48,7 +57,8 @@ export class CompareDetailBoxViewModel {
 
     this.dataCoordinator.requestDatasetMaps(
       this.requestKey,
-      this.scenario,
+      this.scenario.specL,
+      this.scenario.specR,
       [this.datasetKey],
       (datasetMapL, datasetMapR) => {
         if (!this.dataRequested) {
@@ -58,7 +68,7 @@ export class CompareDetailBoxViewModel {
         const datasetReport = compareDatasets(this.scenario.key, this.datasetKey, datasetMapL, datasetMapR)
 
         const dataOnlyDefinedIn = (side: 'left' | 'right') => {
-          const c = this.compareConfig
+          const c = this.comparisonConfig
           const name = side === 'left' ? c.bundleL.name : c.bundleR.name
           const color = side === 'left' ? 0 : 1
           return `Data only defined in <span class="dataset-color-${color}">${name}</span>`
@@ -69,7 +79,7 @@ export class CompareDetailBoxViewModel {
         let message: string
         switch (diffReport.validity) {
           case 'both':
-            bucketIndex = getBucketIndex(diffReport.maxDiff, this.compareConfig.thresholds)
+            bucketIndex = getBucketIndex(diffReport.maxDiff, this.comparisonConfig.thresholds)
             if (diffReport.maxDiff === 0) {
               message = 'No differences'
             } else {
@@ -117,8 +127,8 @@ export class CompareDetailBoxViewModel {
         const comparisonGraphViewModel: ComparisonGraphViewModel = {
           key: this.requestKey,
           refPlots: [],
-          pointsL: pointsFromDataset(datasetMapL.get(this.datasetKey)),
-          pointsR: pointsFromDataset(datasetMapR.get(this.datasetKey)),
+          pointsL: pointsFromDataset(datasetMapL?.get(this.datasetKey)),
+          pointsR: pointsFromDataset(datasetMapR?.get(this.datasetKey)),
           xMin,
           xMax
         }
@@ -143,5 +153,21 @@ export class CompareDetailBoxViewModel {
       this.dataRequested = false
       this.dataLoaded = false
     }
+  }
+}
+
+function compareDatasets(
+  scenarioKey: ComparisonScenarioKey,
+  datasetKey: DatasetKey,
+  datasetMapL: DatasetMap | undefined,
+  datasetMapR: DatasetMap | undefined
+): ComparisonTestReport {
+  const datasetL = datasetMapL?.get(datasetKey)
+  const datasetR = datasetMapR?.get(datasetKey)
+  const diffReport = diffDatasets(datasetL, datasetR)
+  return {
+    scenarioKey,
+    datasetKey,
+    diffReport
   }
 }

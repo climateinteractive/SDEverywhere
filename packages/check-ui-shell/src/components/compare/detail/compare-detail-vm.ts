@@ -2,23 +2,29 @@
 
 import assertNever from 'assert-never'
 
-import type { CompareConfig, CompareDataCoordinator, CompareGroup, CompareItem } from '@sdeverywhere/check-core'
+import type {
+  ComparisonConfig,
+  ComparisonDataCoordinator,
+  ComparisonGroupDatasetRoot,
+  ComparisonGroupScenarioRoot,
+  ComparisonGroupSummary
+} from '@sdeverywhere/check-core'
+// import { diffGraphs } from '@sdeverywhere/check-core'
 
-import { getScenarioGroups } from '../../../model/groups'
-import type { CompareGroupReport } from '../../../model/reports'
+import type { CompareGraphsRowViewModel } from '../graphs/compare-graphs-row-vm'
+// import { createCompareGraphsRowViewModel } from '../graphs/compare-graphs-row-vm'
+
+import type { ComparisonDetailItem } from './compare-detail-item'
+import { groupItemsByTitle } from './compare-detail-item'
 
 import type { CompareDetailRowViewModel } from './compare-detail-row-vm'
 import { createCompareDetailRowViewModel } from './compare-detail-row-vm'
 
 export interface CompareDetailViewModel {
-  /** The group name (either dataset name or scenario name). */
-  groupName: string
-  /** The new group name (used for renamed output variables, for example). */
-  newGroupName?: string
-  /** The secondary name (either dataset source name or scenario position). */
-  secondaryName?: string
-  /** The new secondary name (used for renamed dataset sources, for example). */
-  newSecondaryName?: string
+  /** The title (e.g., output variable name or scenario title). */
+  title: string
+  /** The subtitle (e.g., output variable source name or scenario position). */
+  subtitle?: string
   /** The index of the row before this one. */
   previousRowIndex?: number
   /** The index of the row after this one. */
@@ -27,20 +33,54 @@ export interface CompareDetailViewModel {
   relatedListHeader: string
   /** The related items for the dataset or scenario. */
   relatedItems: string[]
-  /** The rows in this group. */
-  rows: CompareDetailRowViewModel[]
+  /** The compared graph rows in this group. */
+  graphRows: CompareGraphsRowViewModel[]
+  /** The detail box rows in this group. */
+  detailRows: CompareDetailRowViewModel[]
 }
 
-function createCompareDetailViewModelForDataset(
-  compareConfig: CompareConfig,
-  dataCoordinator: CompareDataCoordinator,
-  groupReport: CompareGroupReport,
+export function createCompareDetailViewModel(
+  comparisonConfig: ComparisonConfig,
+  dataCoordinator: ComparisonDataCoordinator,
+  groupSummary: ComparisonGroupSummary,
   previousRowIndex: number | undefined,
   nextRowIndex: number | undefined
 ): CompareDetailViewModel {
-  // Get the output variable and source name
-  const datasetKey = groupReport.key
-  const datasetInfo = compareConfig.datasets.getDatasetInfo(datasetKey)
+  switch (groupSummary.group.kind) {
+    case 'by-dataset':
+      return createCompareDetailViewModelForDataset(
+        comparisonConfig,
+        dataCoordinator,
+        groupSummary,
+        previousRowIndex,
+        nextRowIndex
+      )
+    case 'by-scenario':
+      return createCompareDetailViewModelForScenario(
+        comparisonConfig,
+        dataCoordinator,
+        groupSummary,
+        previousRowIndex,
+        nextRowIndex
+      )
+    default:
+      assertNever(groupSummary.group.kind)
+  }
+}
+
+function createCompareDetailViewModelForDataset(
+  comparisonConfig: ComparisonConfig,
+  dataCoordinator: ComparisonDataCoordinator,
+  groupSummary: ComparisonGroupSummary,
+  previousRowIndex: number | undefined,
+  nextRowIndex: number | undefined
+): CompareDetailViewModel {
+  // Get the primary dataset for the detail view
+  const root = groupSummary.root as ComparisonGroupDatasetRoot
+  // TODO: Show renamed variables in red+blue
+  const outputVar = root.dataset.outputVarR || root.dataset.outputVarL
+  const title = outputVar.varName
+  const subtitle = outputVar.sourceName
 
   // Get the related graphs, etc; we only show the information relative to the "right" model
   const relatedItems: string[] = []
@@ -48,50 +88,53 @@ function createCompareDetailViewModelForDataset(
     const relatedItem = parts.join('&nbsp;<span class="related-sep">&gt;</span>&nbsp;')
     relatedItems.push(relatedItem)
   }
-  for (const relatedItem of datasetInfo.relatedItems) {
+  for (const relatedItem of outputVar.relatedItems) {
     addRelatedItem(relatedItem.locationPath)
   }
 
-  // Put the scenarios into ordered groups
-  const datasetSummaries = groupReport.datasetSummaries
-  const scenarioGroups = getScenarioGroups(compareConfig, datasetSummaries)
-  const rows: CompareDetailRowViewModel[] = scenarioGroups.map(group => {
-    return createCompareDetailRowViewModel(compareConfig, dataCoordinator, group, false)
-  })
+  // Group the scenarios by title (input variable name, typically), then sort by score
+  const groups = groupItemsByTitle(comparisonConfig, groupSummary.group.testSummaries, 'scenario')
+  const detailRows: CompareDetailRowViewModel[] = []
+  for (const group of groups) {
+    // TODO: For now show up to two items
+    // TODO: If more than two items in the row, add more rows
+    const detailRow = createCompareDetailRowViewModel(
+      comparisonConfig,
+      dataCoordinator,
+      'scenarios',
+      group.title, // TODO
+      undefined, // TODO
+      [undefined, group.items[0], group.items[1]]
+    )
+
+    detailRows.push(detailRow)
+  }
+  // TODO: Put all-at-default row at top
 
   return {
-    groupName: datasetInfo.varName,
-    newGroupName: datasetInfo.newVarName,
-    secondaryName: datasetInfo.sourceName,
-    newSecondaryName: datasetInfo.newSourceName,
+    title,
+    subtitle,
     previousRowIndex,
     nextRowIndex,
     relatedListHeader: 'Appears in:',
     relatedItems,
-    rows
+    graphRows: [],
+    detailRows
   }
 }
 
 function createCompareDetailViewModelForScenario(
-  compareConfig: CompareConfig,
-  dataCoordinator: CompareDataCoordinator,
-  groupReport: CompareGroupReport,
+  comparisonConfig: ComparisonConfig,
+  dataCoordinator: ComparisonDataCoordinator,
+  groupSummary: ComparisonGroupSummary,
   previousRowIndex: number | undefined,
   nextRowIndex: number | undefined
 ): CompareDetailViewModel {
-  // Get the scenario for the report
-  const scenario = compareConfig.scenarios.getScenario(groupReport.key)
-  const groupInfo = compareConfig.scenarios.getScenarioGroupInfo(scenario.groupKey)
-  const scenarioInfo = compareConfig.scenarios.getScenarioInfo(scenario, scenario.groupKey)
-
-  // Configure the header
-  const groupName = groupInfo.title
-  let secondaryName: string
-  if (scenarioInfo.subtitle) {
-    secondaryName = `${scenarioInfo.title} ${scenarioInfo.subtitle}`
-  } else {
-    secondaryName = scenarioInfo.title
-  }
+  // Get the primary scenario for the detail view
+  const root = groupSummary.root as ComparisonGroupScenarioRoot
+  const scenario = root.scenario
+  const title = scenario.title
+  const subtitle = scenario.subtitle
 
   // Include the related sliders
   const relatedItems: string[] = []
@@ -99,46 +142,64 @@ function createCompareDetailViewModelForScenario(
     const relatedItem = parts.join('&nbsp;<span class="related-sep">&gt;</span>&nbsp;')
     relatedItems.push(relatedItem)
   }
-  for (const relatedItem of groupInfo.relatedItems) {
-    addRelatedItem(relatedItem.locationPath)
+  if (scenario.settings.kind === 'input-settings') {
+    // For now, show related sliders for the "right" model only
+    for (const input of scenario.settings.inputs) {
+      const inputVar = input.stateR.inputVar
+      if (inputVar) {
+        addRelatedItem(inputVar.relatedItem.locationPath)
+      }
+    }
   }
 
-  // Add one row/box for each dataset in the group
-  const datasetSummaries = groupReport.datasetSummaries
+  // // Add the compared graphs at top (these are always shown in the specified order,
+  // // without extra sorting)
+  // const datasetSummaries = groupReport.datasetSummaries
+  // const graphRows: CompareGraphsRowViewModel[] = []
+  // if (groupInfo.featuredGraphs) {
+  //   for (const graphId of groupInfo.featuredGraphs) {
+  //     const graphL = compareConfig.bundleL.model.modelSpec.graphSpecs?.find(s => s.id === graphId)
+  //     const graphR = compareConfig.bundleR.model.modelSpec.graphSpecs?.find(s => s.id === graphId)
+  //     const graphReport = diffGraphs(graphL, graphR, scenario.key, datasetSummaries)
+  //     graphRows.push(createCompareGraphsRowViewModel(compareConfig, dataCoordinator, scenario, graphId, graphReport))
+  //   }
+  // }
+
+  // Create one box/row for each dataset in the group
   interface Row {
     viewModel: CompareDetailRowViewModel
     maxDiff: number
   }
   const rows: Row[] = []
-  for (const datasetSummary of datasetSummaries) {
-    const scenario = compareConfig.scenarios.getScenario(datasetSummary.s)
+  for (const testSummary of groupSummary.group.testSummaries) {
+    const scenario = comparisonConfig.scenarios.getScenario(testSummary.s)
     if (scenario === undefined) {
       continue
     }
 
-    const datasetKey = datasetSummary.d
-    const datasetInfo = compareConfig.datasets.getDatasetInfo(datasetKey)
+    const dataset = comparisonConfig.datasets.getDataset(testSummary.d)
     // TODO: Include both old and new names here, if applicable
-    const title = datasetInfo.newVarName || datasetInfo.varName
-    const subtitle = datasetInfo.newSourceName || datasetInfo.sourceName
-    const compareItem: CompareItem = {
-      title,
-      subtitle,
+    const outputVar = dataset.outputVarR || dataset.outputVarL
+
+    const detailItem: ComparisonDetailItem = {
+      title: outputVar.varName,
+      subtitle: outputVar.sourceName,
       scenario,
-      datasetKey
-    }
-    const compareGroup: CompareGroup = {
-      info: {
-        title,
-        subtitle,
-        relatedItems: []
-      },
-      items: [compareItem]
+      testSummary
     }
 
+    const rowViewModel = createCompareDetailRowViewModel(
+      comparisonConfig,
+      dataCoordinator,
+      'datasets',
+      title,
+      subtitle,
+      [detailItem]
+    )
+
     rows.push({
-      viewModel: createCompareDetailRowViewModel(compareConfig, dataCoordinator, compareGroup, true),
-      maxDiff: datasetSummary.md
+      viewModel: rowViewModel,
+      maxDiff: testSummary.md
     })
   }
 
@@ -157,43 +218,16 @@ function createCompareDetailViewModelForScenario(
       return aDatasetName.localeCompare(bDatasetName)
     }
   })
+  const detailRows = sortedRows.map(row => row.viewModel)
 
   return {
-    groupName,
-    secondaryName,
+    title,
+    subtitle,
     previousRowIndex,
     nextRowIndex,
     relatedListHeader: 'Related items:',
     relatedItems,
-    rows: sortedRows.map(r => r.viewModel)
-  }
-}
-
-export function createCompareDetailViewModel(
-  compareConfig: CompareConfig,
-  dataCoordinator: CompareDataCoordinator,
-  groupReport: CompareGroupReport,
-  previousRowIndex: number | undefined,
-  nextRowIndex: number | undefined
-): CompareDetailViewModel {
-  switch (groupReport.grouping) {
-    case 'dataset':
-      return createCompareDetailViewModelForDataset(
-        compareConfig,
-        dataCoordinator,
-        groupReport,
-        previousRowIndex,
-        nextRowIndex
-      )
-    case 'scenario':
-      return createCompareDetailViewModelForScenario(
-        compareConfig,
-        dataCoordinator,
-        groupReport,
-        previousRowIndex,
-        nextRowIndex
-      )
-    default:
-      assertNever(groupReport.grouping)
+    graphRows: [],
+    detailRows
   }
 }

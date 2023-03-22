@@ -5,12 +5,12 @@ import { writable } from 'svelte/store'
 import type {
   BundleGraphId,
   BundleGraphSpec,
-  CompareConfig,
-  CompareDataCoordinator,
+  ComparisonConfig,
+  ComparisonDataCoordinator,
+  ComparisonScenario,
   DatasetKey,
-  GraphMetadataReport,
-  GraphReport,
-  Scenario
+  GraphComparisonMetadataReport,
+  GraphComparisonReport
 } from '@sdeverywhere/check-core'
 
 import { getBucketIndex } from '../../../_shared/buckets'
@@ -24,25 +24,25 @@ export interface CompareGraphsRowViewModel {
   graphId: BundleGraphId
   graphL: ContextGraphViewModel
   graphR: ContextGraphViewModel
-  metadataRows: GraphMetadataReport[]
+  metadataRows: GraphComparisonMetadataReport[]
   datasetRows: CompareGraphsDatasetViewModel[]
   maxDiffPct: number
 }
 
 export function createCompareGraphsRowViewModel(
-  compareConfig: CompareConfig,
-  dataCoordinator: CompareDataCoordinator,
-  scenario: Scenario,
+  comparisonConfig: ComparisonConfig,
+  dataCoordinator: ComparisonDataCoordinator,
+  scenario: ComparisonScenario,
   graphId: BundleGraphId,
-  graphReport: GraphReport
+  graphReport: GraphComparisonReport
 ): CompareGraphsRowViewModel {
   const contextGraph = (graphSpec: BundleGraphSpec, bundle: 'left' | 'right') => {
-    return new ContextGraphViewModel(compareConfig, dataCoordinator, bundle, scenario, graphSpec)
+    return new ContextGraphViewModel(comparisonConfig, dataCoordinator, bundle, scenario, graphSpec)
   }
 
   // Create a view model for each graph
-  const graphSpecL = compareConfig.bundleL.model.modelSpec.graphSpecs?.find(s => s.id === graphId)
-  const graphSpecR = compareConfig.bundleR.model.modelSpec.graphSpecs?.find(s => s.id === graphId)
+  const graphSpecL = comparisonConfig.bundleL.model.modelSpec.graphSpecs?.find(s => s.id === graphId)
+  const graphSpecR = comparisonConfig.bundleR.model.modelSpec.graphSpecs?.find(s => s.id === graphId)
   const graphL = contextGraph(graphSpecL, 'left')
   const graphR = contextGraph(graphSpecR, 'right')
 
@@ -88,11 +88,11 @@ export function createCompareGraphsRowViewModel(
         }
       }
 
-      const bucketIndex = getBucketIndex(maxDiff, compareConfig.thresholds)
+      const bucketIndex = getBucketIndex(maxDiff, comparisonConfig.thresholds)
       const bucketClass = `bucket-color-${bucketIndex}`
 
       const detailBoxViewModel = new CompareDetailBoxViewModel(
-        compareConfig,
+        comparisonConfig,
         dataCoordinator,
         '',
         '',

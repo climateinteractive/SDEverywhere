@@ -12,9 +12,9 @@ import type {
   CheckPredicateReport,
   CheckPredicateTimeSpec,
   CheckResult,
+  CheckScenario,
   DatasetKey
 } from '@sdeverywhere/check-core'
-import { allInputsAtPositionScenario /*, runSuite*/ } from '@sdeverywhere/check-core'
 
 import { CheckSummaryGraphBoxViewModel } from '../check/summary/check-summary-graph-box-vm'
 
@@ -42,7 +42,9 @@ export function createPlaygroundViewModel(dataCoordinator: CheckDataCoordinator)
   const timeStart = predicatesCard.timeStart
   const timeEnd = predicatesCard.timeEnd
 
-  const scenario = allInputsAtPositionScenario('at-default')
+  // TODO
+  // const scenario = allInputsAtPositionScenario('at-default')
+  const scenario: CheckScenario = undefined
 
   const graphBox = derived(
     [activeDatasetKey, selectedOp, constantValue, timeStart, timeEnd],
