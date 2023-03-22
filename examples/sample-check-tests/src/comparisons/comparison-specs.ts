@@ -2,9 +2,9 @@
 
 import type {
   Bundle,
-  CompareScenarioInputPosition,
-  CompareScenarioSpec,
-  CompareSpecs,
+  ComparisonScenarioInputPosition,
+  ComparisonScenarioSpec,
+  ComparisonSpecs,
   InputId
 } from '@sdeverywhere/check-core'
 
@@ -14,7 +14,7 @@ import type {
  * basic scenarios for each of the input variables (each input at its minimum and maximum),
  * and then we define custom views on these scenarios in the `compare.yaml` file.
  */
-export function createBaseCompareSpecs(bundleL: Bundle, bundleR: Bundle): CompareSpecs {
+export function createBaseComparisonSpecs(bundleL: Bundle, bundleR: Bundle): ComparisonSpecs {
   // Get the union of all input IDs appearing in left and/or right
   const allInputIds: Set<InputId> = new Set()
   const addInputs = (bundle: Bundle) => {
@@ -26,8 +26,8 @@ export function createBaseCompareSpecs(bundleL: Bundle, bundleR: Bundle): Compar
   addInputs(bundleR)
 
   // Create "input at min/max" scenarios for all inputs (that appear in either "left" or "right")
-  const scenarios: CompareScenarioSpec[] = []
-  const addScenario = (inputId: InputId, position: CompareScenarioInputPosition) => {
+  const scenarios: ComparisonScenarioSpec[] = []
+  const addScenario = (inputId: InputId, position: ComparisonScenarioInputPosition) => {
     scenarios.push({
       kind: 'scenario-with-inputs',
       id: `${inputId}_at_${position}`,

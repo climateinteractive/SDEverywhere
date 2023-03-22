@@ -1,6 +1,6 @@
-# yaml-language-server: $schema=../../../../packages/check-core/schema/compare.schema.json
+# yaml-language-server: $schema=../../../../packages/check-core/schema/comparison.schema.json
 
-# TODOyaml-language-server: $schema=../../node_modules/@sdeverywhere/check-core/schema/compare.schema.json
+# TODOyaml-language-server: $schema=../../node_modules/@sdeverywhere/check-core/schema/comparison.schema.json
 
 # Input ID exists in both left and right
 # - scenario:
