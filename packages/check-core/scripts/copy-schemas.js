@@ -29,4 +29,4 @@ function writeJsonSchema(schema, name) {
 }
 
 writeJsonSchema(checkSchema, 'check')
-writeJsonSchema(comparisonSchema, 'compare')
+writeJsonSchema(comparisonSchema, 'comparison')
