@@ -70,7 +70,6 @@ export async function createConfig(options: ConfigOptions): Promise<Config> {
           modelRunTime: result.modelRunTime
         }
       },
-      getGraphsForDataset: origBundleModelR.getGraphsForDataset?.bind(origBundleModelR),
       getGraphDataForScenario: origBundleModelR.getGraphDataForScenario.bind(origBundleModelR),
       getGraphLinksForScenario: origBundleModelR.getGraphLinksForScenario.bind(origBundleModelR)
     }

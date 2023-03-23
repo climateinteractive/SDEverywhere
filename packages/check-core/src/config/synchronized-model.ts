@@ -32,7 +32,6 @@ export function synchronizedBundleModel(sourceModel: BundleModel): BundleModel {
     getDatasetsForScenario: (scenarioSpec: ScenarioSpec, datasetKeys: DatasetKey[]) => {
       return promiseQueue.add(() => sourceModel.getDatasetsForScenario(scenarioSpec, datasetKeys))
     },
-    getGraphsForDataset: sourceModel.getGraphsForDataset?.bind(sourceModel),
     getGraphDataForScenario: (scenarioSpec: ScenarioSpec, graphId: BundleGraphId) => {
       return promiseQueue.add(() => sourceModel.getGraphDataForScenario(scenarioSpec, graphId))
     },

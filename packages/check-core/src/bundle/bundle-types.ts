@@ -114,11 +114,6 @@ export interface BundleModel extends DataSource {
   /** The spec for the bundled model. */
   modelSpec: ModelSpec
   /**
-   * Return the set of context graphs to be displayed for the given dataset.  If left
-   * undefined, the set of graphs will be determined using the advertised graph specs.
-   */
-  getGraphsForDataset?(datasetKey: DatasetKey): BundleGraphId[]
-  /**
    * Load the data used to display the graph by running the model with inputs
    * configured for the given scenario.
    */
