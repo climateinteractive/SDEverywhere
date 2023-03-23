@@ -18,7 +18,7 @@ describe('CheckPlanner', () => {
   const modelSpec: ModelSpec = {
     modelSizeInBytes: 0,
     dataSizeInBytes: 0,
-    inputVars: new Map([inputVar('I1'), inputVar('I2')]),
+    inputVars: new Map([inputVar('1', 'I1'), inputVar('2', 'I2')]),
     outputVars: new Map([outputVar('V1'), outputVar('V2[A1]')]),
     implVars: new Map([implVar('V1'), implVar('V2', [dimension('A')]), implVar('V3'), implVar('V4', [dimension('A')])])
   }

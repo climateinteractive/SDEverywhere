@@ -8,6 +8,7 @@ export function outputVar(varName: string, source?: string): [DatasetKey, Output
   const varId = `_${varName.toLowerCase()}`
   const datasetKey = `${source || 'Model'}${varId}`
   const v: OutputVar = {
+    datasetKey,
     sourceName: source,
     varId,
     varName

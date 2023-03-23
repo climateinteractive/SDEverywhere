@@ -60,7 +60,7 @@ function mockModelSpec(kind: 'L' | 'R'): ModelSpec {
   //
   const inputVars: Map<VarId, InputVar> = new Map()
   function addVar(inputId: InputId, varName: string, maxValue = 100): void {
-    const [varId, iVar] = inputVar(varName, inputId, maxValue)
+    const [varId, iVar] = inputVar(inputId, varName, maxValue)
     // Add the variable
     inputVars.set(varId, iVar)
   }

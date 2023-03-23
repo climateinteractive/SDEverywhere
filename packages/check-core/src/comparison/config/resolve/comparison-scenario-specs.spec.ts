@@ -25,8 +25,8 @@ describe('scenarioSpecsFromSettings', () => {
   })
 
   it('should create valid ScenarioSpec instances for a "single input at position" scenario', () => {
-    const i1L = inputVar('i1_orig', '1')[1]
-    const i1R = inputVar('i1_renamed', '1')[1]
+    const i1L = inputVar('1', 'i1_orig')[1]
+    const i1R = inputVar('1', 'i1_renamed')[1]
     const [specL, specR] = scenarioSpecsFromSettings({
       kind: 'input-settings',
       inputs: [resolvedInput('i1', 'at-minimum', i1L, i1R)]
@@ -36,8 +36,8 @@ describe('scenarioSpecsFromSettings', () => {
   })
 
   it('should create valid ScenarioSpec instances for a "single input at value" scenario', () => {
-    const i1L = inputVar('i1_orig', '1')[1]
-    const i1R = inputVar('i1_renamed', '1')[1]
+    const i1L = inputVar('1', 'i1_orig')[1]
+    const i1R = inputVar('1', 'i1_renamed')[1]
     const [specL, specR] = scenarioSpecsFromSettings({
       kind: 'input-settings',
       inputs: [resolvedInput('i1', 10, i1L, i1R)]
@@ -47,9 +47,9 @@ describe('scenarioSpecsFromSettings', () => {
   })
 
   it('should create valid ScenarioSpec instances for a "multiple inputs" scenario', () => {
-    const i1L = inputVar('i1_orig', '1')[1]
-    const i1R = inputVar('i1_renamed', '1')[1]
-    const i2 = inputVar('i2', '2')[1]
+    const i1L = inputVar('1', 'i1_orig')[1]
+    const i1R = inputVar('1', 'i1_renamed')[1]
+    const i2 = inputVar('2', 'i2')[1]
     const [specL, specR] = scenarioSpecsFromSettings({
       kind: 'input-settings',
       inputs: [resolvedInput('i1', 10, i1L, i1R), resolvedInput('i2', 'at-maximum', i2, i2)]

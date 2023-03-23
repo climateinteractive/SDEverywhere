@@ -6,9 +6,10 @@ import type { VarId } from '../../_shared/types'
 import type { InputVar } from '../../bundle/var-types'
 import type { CheckScenario, CheckScenarioInputDesc } from '../check-scenario'
 
-export function inputVar(varName: string): [VarId, InputVar] {
+export function inputVar(inputId: string, varName: string): [VarId, InputVar] {
   const varId = `_${varName.toLowerCase()}`
   const v: InputVar = {
+    inputId,
     varId,
     varName,
     defaultValue: 50,

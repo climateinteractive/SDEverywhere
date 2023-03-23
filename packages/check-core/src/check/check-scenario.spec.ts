@@ -11,7 +11,7 @@ import type { CheckScenarioSpec } from './check-spec'
 import { allAtPos, inputAtPos, inputAtValue, inputDesc, inputVar, multipleInputs } from './_mocks/mock-check-scenario'
 
 describe('expandScenarios', () => {
-  const inputVars: Map<VarId, InputVar> = new Map([inputVar('I1'), inputVar('I2'), inputVar('I3')])
+  const inputVars: Map<VarId, InputVar> = new Map([inputVar('1', 'I1'), inputVar('2', 'I2'), inputVar('3', 'I3')])
 
   const i1 = inputVars.get('_i1')
   const i2 = inputVars.get('_i2')

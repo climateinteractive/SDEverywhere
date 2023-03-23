@@ -41,7 +41,7 @@ function mockBundle(mockOptions: MockConfigOptions): Bundle {
   const modelSpec: ModelSpec = {
     modelSizeInBytes: 0,
     dataSizeInBytes: 0,
-    inputVars: new Map([inputVar('I1')]),
+    inputVars: new Map([inputVar('1', 'I1')]),
     outputVars: new Map([outputVar('V1')]),
     implVars: new Map(),
     inputGroups: new Map(),

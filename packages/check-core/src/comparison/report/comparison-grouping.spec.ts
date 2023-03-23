@@ -45,6 +45,7 @@ function outputVar(varName: string, source?: string): [DatasetKey, OutputVar] {
   const varId = `_${varName.toLowerCase().replace(/\s/g, '_')}`
   const datasetKey = `${source || 'Model'}${varId}`
   const v: OutputVar = {
+    datasetKey,
     sourceName: source,
     varId,
     varName
@@ -56,7 +57,7 @@ function mockBundle(name: string, inputVarNames: string[], outputVarNames: strin
   const modelSpec: ModelSpec = {
     modelSizeInBytes: 0,
     dataSizeInBytes: 0,
-    inputVars: new Map(inputVarNames.map(varName => inputVar(varName))),
+    inputVars: new Map(inputVarNames.map((varName, i) => inputVar(`${i}`, varName))),
     outputVars: new Map(outputVarNames.map(varName => outputVar(varName))),
     implVars: new Map()
   }
@@ -87,8 +88,8 @@ describe('groupComparisonTestSummaries', () => {
   const x = 'Model_x'
   const y = 'Model_y'
 
-  const a = inputVar('a', '1')[1]
-  const b = inputVar('b', '2')[1]
+  const a = inputVar('1', 'a')[1]
+  const b = inputVar('2', 'b')[1]
 
   const baseline = allAtPos('1', 'at-default')
   const aAtMin = scenarioWithInputVar('2', a, 'at-minimum')
@@ -206,8 +207,8 @@ describe('categorizeComparisonGroups', () => {
   const v = 'Model_v'
 
   // TODO: Test added/removed/renamed inputs
-  const a = inputVar('a', '1')[1]
-  const b = inputVar('b', '2')[1]
+  const a = inputVar('1', 'a')[1]
+  const b = inputVar('2', 'b')[1]
 
   const baseline = allAtPos('1', 'at-default')
   const aAtMin = scenarioWithInputVar('2', a, 'at-minimum')

@@ -36,7 +36,7 @@ import {
 } from './_mocks/mock-check-report'
 import { allAtPos, inputAtPos, inputAtValue, inputDesc, inputVar, multipleInputs } from './_mocks/mock-check-scenario'
 
-const inputVars = new Map([inputVar('I1'), inputVar('I2')])
+const inputVars = new Map([inputVar('1', 'I1'), inputVar('2', 'I2')])
 const i1 = inputVars.get('_i1')
 const i2 = inputVars.get('_i2')
 

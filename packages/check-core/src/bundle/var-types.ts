@@ -1,6 +1,6 @@
 // Copyright (c) 2021-2022 Climate Interactive / New Venture Fund
 
-import type { SourceName, VarId } from '../_shared/types'
+import type { DatasetKey, SourceName, VarId } from '../_shared/types'
 
 /**
  * Holds information about an item related to a variable used in the model.
@@ -35,7 +35,7 @@ export interface InputVar {
    * the left and "Variable Two" in the right, the inputs can be correlated and
    * compared despite the different variable names.
    */
-  inputId?: InputId
+  inputId: InputId
   /** The variable identifier (typically a simplified/canonical ID, like the form used in SDE). */
   varId: VarId
   /** The full variable name as used in the modeling tool. */
@@ -54,6 +54,8 @@ export interface InputVar {
  * Holds information about an output variable used in the model.
  */
 export interface OutputVar {
+  /** The unique dataset key for this variable (it should include `sourceName` and `varId`). */
+  datasetKey: DatasetKey
   /**
    * The source for the variable (e.g., undefined for a normal model output, "Data" for a variable
    * that is defined in an external data file).

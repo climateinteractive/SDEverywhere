@@ -27,7 +27,7 @@ import type {
 // SCENARIOS
 //
 
-export function inputVar(varName: string, inputId?: InputId, maxValue = 100): [VarId, InputVar] {
+export function inputVar(inputId: InputId, varName: string, maxValue = 100): [VarId, InputVar] {
   const varId = `_${varName.toLowerCase()}`
   const v: InputVar = {
     inputId,

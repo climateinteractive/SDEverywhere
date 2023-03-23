@@ -32,6 +32,7 @@ export function getOutputs(modelVersion: number): Outputs {
     const sourceKey = sourceName || 'Model'
     const datasetKey = `${sourceKey}_${varId}`
     outputVars.set(datasetKey, {
+      datasetKey,
       sourceName,
       varId,
       varName,
