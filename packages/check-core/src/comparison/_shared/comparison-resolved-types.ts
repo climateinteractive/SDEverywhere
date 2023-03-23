@@ -19,6 +19,7 @@ import type {
 
 /** A resolved dataset that is being compared. */
 export interface ComparisonDataset {
+  kind: 'dataset'
   /** The unique key for the dataset (i.e., output variable or static data). */
   key: DatasetKey
   /**

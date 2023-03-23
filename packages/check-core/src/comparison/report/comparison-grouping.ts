@@ -9,10 +9,8 @@ import { getBucketIndex } from './buckets'
 import type {
   ComparisonCategorizedResults,
   ComparisonGroup,
-  ComparisonGroupDatasetRoot,
   ComparisonGroupKey,
   ComparisonGroupKind,
-  ComparisonGroupScenarioRoot,
   ComparisonGroupScores,
   ComparisonGroupSummariesByCategory,
   ComparisonGroupSummary
@@ -109,63 +107,75 @@ export function categorizeComparisonGroups(
   comparisonConfig: ComparisonConfig,
   allGroups: ComparisonGroup[]
 ): ComparisonGroupSummariesByCategory {
+  const allGroupSummaries: Map<ComparisonGroupKey, ComparisonGroupSummary> = new Map()
   const onlyInLeft: ComparisonGroupSummary[] = []
   const onlyInRight: ComparisonGroupSummary[] = []
   let withDiffs: ComparisonGroupSummary[] = []
   const withoutDiffs: ComparisonGroupSummary[] = []
 
-  for (const group of allGroups) {
-    // Get root item for group
+  function addSummaryForGroup(
+    group: ComparisonGroup,
+    root: ComparisonDataset | ComparisonScenario,
+    validInL: boolean,
+    validInR: boolean
+  ): void {
+    if (!validInL && !validInR) {
+      // The dataset/scenario is not in either; this should not happen in practice so treat
+      // it as a (soft) error
+      console.error(`ERROR: Invalid ${root.kind} in categorizeComparisonGroups for key=${group.key}`)
+      return
+    }
+
+    // Compute the scores if the dataset/scenario is valid in both
+    let scores: ComparisonGroupScores
+    if (validInL && validInR) {
+      scores = getScoresForGroup(group, comparisonConfig.thresholds)
+    }
+
+    // Create the group summary
+    const groupSummary: ComparisonGroupSummary = {
+      root,
+      group,
+      scores
+    }
+
+    // Add to the map of all summaries
+    allGroupSummaries.set(group.key, groupSummary)
+
+    // Categorize the group
+    if (validInL && validInR) {
+      // The dataset/scenario is valid in both; see if there were any diffs
+      if (scores.totalDiffCount !== scores.diffCountByBucket[0]) {
+        withDiffs.push(groupSummary)
+      } else {
+        withoutDiffs.push(groupSummary)
+      }
+    } else if (validInL) {
+      // The dataset/scenario is valid in "left" only
+      onlyInLeft.push(groupSummary)
+    } else if (validInR) {
+      // The dataset/scenario is valid in "right" only
+      onlyInRight.push(groupSummary)
+    }
+  }
+
+  // Add a summary for each group
+  for (const group of allGroups.values()) {
     switch (group.kind) {
       case 'by-dataset': {
         // Get the `ComparisonDataset` instance for this dataset key
         const dataset = comparisonConfig.datasets.getDataset(group.key)
-        if (dataset?.outputVarL && dataset?.outputVarR) {
-          // The variable exists in both; see if there were any diffs
-          const scores = getScoresForGroup(group, comparisonConfig.thresholds)
-          const groupSummary = getGroupSummaryForDataset(dataset, group, scores)
-          if (scores.totalDiffCount !== scores.diffCountByBucket[0]) {
-            withDiffs.push(groupSummary)
-          } else {
-            withoutDiffs.push(groupSummary)
-          }
-        } else if (dataset?.outputVarL) {
-          // The variable existed in the left, but was removed in the right
-          onlyInLeft.push(getGroupSummaryForDataset(dataset, group, undefined))
-        } else if (dataset?.outputVarR) {
-          // The variable was added in the right
-          onlyInRight.push(getGroupSummaryForDataset(dataset, group, undefined))
-        } else {
-          // The variable is not in either; this should not happen in
-          // practice so treat it as a (soft) error
-          console.error(`ERROR: No dataset found in categorizeComparisonGroups for key=${group.key}`)
-        }
+        const validInL = dataset?.outputVarL !== undefined
+        const validInR = dataset?.outputVarR !== undefined
+        addSummaryForGroup(group, dataset, validInL, validInR)
         break
       }
       case 'by-scenario': {
-        // TODO: This is almost identical to the case above; should merge them
-        // Get the `ComparisonScenario` instance for this dataset key
+        // Get the `ComparisonScenario` instance for this scenario key
         const scenario = comparisonConfig.scenarios.getScenario(group.key)
-        if (scenario?.specL && scenario?.specR) {
-          // The scenario is valid in both; see if there were any diffs
-          const scores = getScoresForGroup(group, comparisonConfig.thresholds)
-          const groupSummary = getGroupSummaryForScenario(scenario, group, scores)
-          if (scores.totalDiffCount !== scores.diffCountByBucket[0]) {
-            withDiffs.push(groupSummary)
-          } else {
-            withoutDiffs.push(groupSummary)
-          }
-        } else if (scenario?.specL) {
-          // The scenario was valid in the left, but not in the right
-          onlyInLeft.push(getGroupSummaryForScenario(scenario, group, undefined))
-        } else if (scenario?.specR) {
-          // The scenario is only valid in the right
-          onlyInRight.push(getGroupSummaryForScenario(scenario, group, undefined))
-        } else {
-          // The scenario is not valid in either; this should not happen in
-          // practice so treat it as a (soft) error
-          console.error(`ERROR: No scenario found in categorizeComparisonGroups for key=${group.key}`)
-        }
+        const validInL = scenario?.specL !== undefined
+        const validInR = scenario?.specR !== undefined
+        addSummaryForGroup(group, scenario, validInL, validInR)
         break
       }
       default:
@@ -186,40 +196,11 @@ export function categorizeComparisonGroups(
   // in the config
 
   return {
+    allGroupSummaries,
     onlyInLeft,
     onlyInRight,
     withDiffs,
     withoutDiffs
-  }
-}
-
-function getGroupSummaryForDataset(
-  dataset: ComparisonDataset,
-  group: ComparisonGroup,
-  scores: ComparisonGroupScores | undefined
-): ComparisonGroupSummary {
-  return {
-    root: {
-      kind: 'dataset-root',
-      dataset
-    },
-    group,
-    scores
-  }
-}
-
-function getGroupSummaryForScenario(
-  scenario: ComparisonScenario,
-  group: ComparisonGroup,
-  scores: ComparisonGroupScores | undefined
-): ComparisonGroupSummary {
-  return {
-    root: {
-      kind: 'scenario-root',
-      scenario
-    },
-    group,
-    scores
   }
 }
 
@@ -266,8 +247,8 @@ function sortDatasetGroupSummaries(summaries: ComparisonGroupSummary[]): Compari
       // Sort by variable/source name alphabetically if scores match.  Note
       // that we use the "left" name for sorting purposes for now, in the case
       // where a variable was renamed
-      const aVar = (a.root as ComparisonGroupDatasetRoot).dataset.outputVarL
-      const bVar = (b.root as ComparisonGroupDatasetRoot).dataset.outputVarR
+      const aVar = (a.root as ComparisonDataset).outputVarL
+      const bVar = (b.root as ComparisonDataset).outputVarR
       const aSource = aVar.sourceName?.toLowerCase() || ''
       const bSource = bVar.sourceName?.toLowerCase() || ''
       if (aSource !== bSource) {
@@ -295,8 +276,8 @@ function sortScenarioGroupSummaries(summaries: ComparisonGroupSummary[]): Compar
       return -scoreResult
     } else {
       // Sort by scenario title alphabetically if scores match
-      const aScenario = (a.root as ComparisonGroupScenarioRoot).scenario
-      const bScenario = (b.root as ComparisonGroupScenarioRoot).scenario
+      const aScenario = a.root as ComparisonScenario
+      const bScenario = b.root as ComparisonScenario
       const aTitle = aScenario.title.toLowerCase()
       const bTitle = bScenario.title.toLowerCase()
       if (aTitle !== bTitle) {

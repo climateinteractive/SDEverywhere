@@ -275,10 +275,7 @@ describe('categorizeComparisonGroups', () => {
       scores?: ComparisonGroupScores
     ): ComparisonGroupSummary {
       return {
-        root: {
-          kind: 'scenario-root',
-          scenario: comparisonConfig.scenarios.getScenario(scenarioKey)
-        },
+        root: comparisonConfig.scenarios.getScenario(scenarioKey),
         group: {
           kind: 'by-scenario',
           key: scenarioKey,
@@ -408,10 +405,7 @@ describe('categorizeComparisonGroups', () => {
       scores?: ComparisonGroupScores
     ): ComparisonGroupSummary {
       return {
-        root: {
-          kind: 'dataset-root',
-          dataset: comparisonConfig.datasets.getDataset(datasetKey)
-        },
+        root: comparisonConfig.datasets.getDataset(datasetKey),
         group: {
           kind: 'by-dataset',
           key: datasetKey,

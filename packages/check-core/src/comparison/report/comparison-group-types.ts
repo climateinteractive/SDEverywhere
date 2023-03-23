@@ -21,22 +21,8 @@ export interface ComparisonGroup {
   testSummaries: ComparisonTestSummary[]
 }
 
-/** Metadata for the dataset that is associated with the comparisons in this group. */
-export interface ComparisonGroupDatasetRoot {
-  kind: 'dataset-root'
-  /** The resolved `ComparisonDataset` associated with the comparisons in this group. */
-  dataset: ComparisonDataset
-}
-
-/** Metadata for the scenario that is associated with the comparisons in this group. */
-export interface ComparisonGroupScenarioRoot {
-  kind: 'scenario-root'
-  /** The resolved `ComparisonScenario` associated with the comparisons in this group. */
-  scenario: ComparisonScenario
-}
-
 /** Describes the "root" or primary item for a group of comparisons. */
-export type ComparisonGroupRoot = ComparisonGroupDatasetRoot | ComparisonGroupScenarioRoot
+export type ComparisonGroupRoot = ComparisonDataset | ComparisonScenario
 
 /** A summary of scores for a group of comparisons. */
 export interface ComparisonGroupScores {
@@ -67,6 +53,8 @@ export interface ComparisonGroupSummary {
  * Breaks down a set of by-scenario or by-dataset groupings into distinct categories.
  */
 export interface ComparisonGroupSummariesByCategory {
+  /** All groups in a map, keyed by "group key" (either a dataset key or scenario key). */
+  allGroupSummaries: Map<ComparisonGroupKey, ComparisonGroupSummary>
   /**
    * Groups with items that are only valid for the "left" model (for example, datasets that
    * were removed and no longer available in the "right" model).

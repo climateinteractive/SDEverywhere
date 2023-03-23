@@ -107,6 +107,7 @@ class ComparisonDatasetsImpl implements ComparisonDatasets {
       const outputVarL = modelSpecL.outputVars.get(datasetKeyL)
       const outputVarR = modelSpecR.outputVars.get(datasetKeyR)
       this.allDatasets.set(datasetKeyL, {
+        kind: 'dataset',
         key: datasetKeyL,
         outputVarL,
         outputVarR
