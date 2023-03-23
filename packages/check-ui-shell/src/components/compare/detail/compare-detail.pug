@@ -8,12 +8,13 @@ mixin related-items
   +each('viewModel.relatedItems as relatedItem')
     li.related-item { @html relatedItem }
 
-mixin graph-rows
-  +if('viewModel.graphRows')
-    .section-title Featured Graphs
-    +each('viewModel.graphRows as graphsRowViewModel')
-      .row-container
-        GraphsRow(viewModel!='{graphsRowViewModel}')
+mixin graph-sections
+  +if('viewModel.graphSections.length > 0')
+    +each('viewModel.graphSections as graphsSectionViewModel')
+      .section-title { graphsSectionViewModel.title }
+      +each('graphsSectionViewModel.rows as graphsRowViewModel')
+        .row-container
+          GraphsRow(viewModel!='{graphsRowViewModel}' align='left')
     .section-title All Datasets
 
 mixin box-rows

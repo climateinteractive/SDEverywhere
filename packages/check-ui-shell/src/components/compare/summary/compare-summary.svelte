@@ -9,8 +9,6 @@ import type { CompareSummaryViewModel } from './compare-summary-vm'
 
 export let viewModel: CompareSummaryViewModel
 
-const viewsSection = viewModel.viewsSection
-
 </script>
 
 
@@ -22,10 +20,10 @@ const viewsSection = viewModel.viewsSection
 include compare-summary.pug
 
 .compare-summary-container
-  //- +if('viewsSection.viewGroups.length > 0')
-  //-   .section-container
-  //-     .section-header All scenario views
-  //-     +views-section
+  +if('viewModel.viewGroups?.length > 0')
+    .section-container
+      .big-section-header All scenario views
+      +view-group-sections
   .big-section-header Differences by input scenario
   +section('scenariosOnlyInLeft')
   +section('scenariosOnlyInRight')

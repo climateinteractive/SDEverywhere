@@ -3,22 +3,43 @@
 import assertNever from 'assert-never'
 
 import type {
+  BundleGraphId,
   ComparisonConfig,
   ComparisonDataCoordinator,
-  ComparisonGroupDatasetRoot,
-  ComparisonGroupScenarioRoot,
-  ComparisonGroupSummary
+  ComparisonDataset,
+  ComparisonGroupSummary,
+  ComparisonScenario,
+  ComparisonTestSummary,
+  ComparisonView,
+  GraphComparisonReport,
+  LoadedBundle
 } from '@sdeverywhere/check-core'
-// import { diffGraphs } from '@sdeverywhere/check-core'
+import { diffGraphs } from '@sdeverywhere/check-core'
 
-import type { CompareGraphsRowViewModel } from '../graphs/compare-graphs-row-vm'
-// import { createCompareGraphsRowViewModel } from '../graphs/compare-graphs-row-vm'
+import { getBucketIndex } from '../_shared/buckets'
 
 import type { ComparisonDetailItem } from './compare-detail-item'
 import { groupItemsByTitle } from './compare-detail-item'
 
 import type { CompareDetailRowViewModel } from './compare-detail-row-vm'
 import { createCompareDetailRowViewModel } from './compare-detail-row-vm'
+
+import type { CompareGraphsRowViewModel } from './compare-graphs-row-vm'
+import { createCompareGraphsRowViewModel } from './compare-graphs-row-vm'
+
+export interface CompareGraphsSectionViewModel {
+  /** The section title. */
+  title: string
+  /** The row view models. */
+  rows: CompareGraphsRowViewModel[]
+}
+
+export interface CompareAllGraphsSections {
+  /** The section view models. */
+  sections: CompareGraphsSectionViewModel[]
+  /** The breakdown of graph differences per bucket. */
+  diffPercentByBucket: number[]
+}
 
 export interface CompareDetailViewModel {
   /** The title (e.g., output variable name or scenario title). */
@@ -33,8 +54,8 @@ export interface CompareDetailViewModel {
   relatedListHeader: string
   /** The related items for the dataset or scenario. */
   relatedItems: string[]
-  /** The compared graph rows in this group. */
-  graphRows: CompareGraphsRowViewModel[]
+  /** The graph comparison sections in this group. */
+  graphSections: CompareGraphsSectionViewModel[]
   /** The detail box rows in this group. */
   detailRows: CompareDetailRowViewModel[]
 }
@@ -43,6 +64,7 @@ export function createCompareDetailViewModel(
   comparisonConfig: ComparisonConfig,
   dataCoordinator: ComparisonDataCoordinator,
   groupSummary: ComparisonGroupSummary,
+  view: ComparisonView | undefined,
   previousRowIndex: number | undefined,
   nextRowIndex: number | undefined
 ): CompareDetailViewModel {
@@ -60,6 +82,7 @@ export function createCompareDetailViewModel(
         comparisonConfig,
         dataCoordinator,
         groupSummary,
+        view,
         previousRowIndex,
         nextRowIndex
       )
@@ -76,9 +99,9 @@ function createCompareDetailViewModelForDataset(
   nextRowIndex: number | undefined
 ): CompareDetailViewModel {
   // Get the primary dataset for the detail view
-  const root = groupSummary.root as ComparisonGroupDatasetRoot
-  // TODO: Show renamed variables in red+blue
-  const outputVar = root.dataset.outputVarR || root.dataset.outputVarL
+  const dataset = groupSummary.root as ComparisonDataset
+  // TODO: Show renamed variables in red+blue (in header annotations)
+  const outputVar = dataset.outputVarR || dataset.outputVarL
   const title = outputVar.varName
   const subtitle = outputVar.sourceName
 
@@ -118,7 +141,7 @@ function createCompareDetailViewModelForDataset(
     nextRowIndex,
     relatedListHeader: 'Appears in:',
     relatedItems,
-    graphRows: [],
+    graphSections: [],
     detailRows
   }
 }
@@ -127,14 +150,25 @@ function createCompareDetailViewModelForScenario(
   comparisonConfig: ComparisonConfig,
   dataCoordinator: ComparisonDataCoordinator,
   groupSummary: ComparisonGroupSummary,
+  view: ComparisonView | undefined,
   previousRowIndex: number | undefined,
   nextRowIndex: number | undefined
 ): CompareDetailViewModel {
   // Get the primary scenario for the detail view
-  const root = groupSummary.root as ComparisonGroupScenarioRoot
-  const scenario = root.scenario
-  const title = scenario.title
-  const subtitle = scenario.subtitle
+  const scenario = groupSummary.root as ComparisonScenario
+
+  let title: string
+  let subtitle: string
+  if (view) {
+    // This is the detail screen for a user-defined view, so use the title/subtitle from
+    // the view definition
+    title = view.title
+    subtitle = view.subtitle
+  } else {
+    // This is the detail screen for a scenario, so use the title/subtitle from the scenario
+    title = scenario.title
+    subtitle = scenario.subtitle
+  }
 
   // Include the related sliders
   const relatedItems: string[] = []
@@ -151,19 +185,6 @@ function createCompareDetailViewModelForScenario(
       }
     }
   }
-
-  // // Add the compared graphs at top (these are always shown in the specified order,
-  // // without extra sorting)
-  // const datasetSummaries = groupReport.datasetSummaries
-  // const graphRows: CompareGraphsRowViewModel[] = []
-  // if (groupInfo.featuredGraphs) {
-  //   for (const graphId of groupInfo.featuredGraphs) {
-  //     const graphL = compareConfig.bundleL.model.modelSpec.graphSpecs?.find(s => s.id === graphId)
-  //     const graphR = compareConfig.bundleR.model.modelSpec.graphSpecs?.find(s => s.id === graphId)
-  //     const graphReport = diffGraphs(graphL, graphR, scenario.key, datasetSummaries)
-  //     graphRows.push(createCompareGraphsRowViewModel(compareConfig, dataCoordinator, scenario, graphId, graphReport))
-  //   }
-  // }
 
   // Create one box/row for each dataset in the group
   interface Row {
@@ -220,6 +241,15 @@ function createCompareDetailViewModelForScenario(
   })
   const detailRows = sortedRows.map(row => row.viewModel)
 
+  // Add the compared graphs at top, if defined for the given view
+  let graphSections: CompareGraphsSectionViewModel[]
+  if (view?.graphs) {
+    const testSummaries = groupSummary.group.testSummaries
+    graphSections = createCompareGraphsSectionViewModels(comparisonConfig, dataCoordinator, view, testSummaries)
+  } else {
+    graphSections = []
+  }
+
   return {
     title,
     subtitle,
@@ -227,7 +257,166 @@ function createCompareDetailViewModelForScenario(
     nextRowIndex,
     relatedListHeader: 'Related items:',
     relatedItems,
-    graphRows: [],
+    graphSections,
     detailRows
   }
+}
+
+function createCompareGraphsSectionViewModels(
+  comparisonConfig: ComparisonConfig,
+  dataCoordinator: ComparisonDataCoordinator,
+  view: ComparisonView,
+  testSummaries: ComparisonTestSummary[]
+): CompareGraphsSectionViewModel[] {
+  if (view.graphs === 'all') {
+    // For the special "all graphs" case, break the list of graphs into sections
+    const allGraphs = getAllGraphsSections(comparisonConfig, dataCoordinator, view.scenario, testSummaries)
+    return allGraphs.sections
+  }
+
+  // No sections when there are no graphs
+  if (view.graphs.length === 0) {
+    return []
+  }
+
+  // When a specific set of graphs is defined, use a single "Featured graphs" section
+  const graphSpecsL = comparisonConfig.bundleL.model.modelSpec.graphSpecs
+  const graphSpecsR = comparisonConfig.bundleR.model.modelSpec.graphSpecs
+  const scenario = view.scenario
+  const rows: CompareGraphsRowViewModel[] = []
+  for (const graphId of view.graphs) {
+    const graphL = graphSpecsL?.find(s => s.id === graphId)
+    const graphR = graphSpecsR?.find(s => s.id === graphId)
+    const graphReport = diffGraphs(graphL, graphR, scenario.key, testSummaries)
+    rows.push(createCompareGraphsRowViewModel(comparisonConfig, dataCoordinator, scenario, graphId, graphReport))
+  }
+
+  return [
+    {
+      title: 'Featured graphs',
+      rows
+    }
+  ]
+}
+
+export function getAllGraphsSections(
+  comparisonConfig: ComparisonConfig,
+  dataCoordinator: ComparisonDataCoordinator,
+  scenario: ComparisonScenario,
+  testSummaries: ComparisonTestSummary[]
+): CompareAllGraphsSections {
+  // Get the union of all graph IDs appearing in either left or right
+  const graphIds: Set<BundleGraphId> = new Set()
+  function addGraphIds(bundle: LoadedBundle): void {
+    if (bundle.model.modelSpec.graphSpecs) {
+      for (const graphSpec of bundle.model.modelSpec.graphSpecs) {
+        graphIds.add(graphSpec.id)
+      }
+    }
+  }
+  addGraphIds(comparisonConfig.bundleL)
+  addGraphIds(comparisonConfig.bundleR)
+
+  // Prepare the groups
+  const added: CompareGraphsRowViewModel[] = []
+  const removed: CompareGraphsRowViewModel[] = []
+  const metadataAndDatasets: CompareGraphsRowViewModel[] = []
+  const metadataOnly: CompareGraphsRowViewModel[] = []
+  const datasetsOnly: CompareGraphsRowViewModel[] = []
+  const unchanged: CompareGraphsRowViewModel[] = []
+
+  // Compare the graphs
+  const graphSpecsL = comparisonConfig.bundleL.model.modelSpec.graphSpecs
+  const graphSpecsR = comparisonConfig.bundleR.model.modelSpec.graphSpecs
+  const diffCountByBucket = Array(comparisonConfig.thresholds.length + 2).fill(0)
+  for (const graphId of graphIds) {
+    const graphL = graphSpecsL?.find(s => s.id === graphId)
+    const graphR = graphSpecsR?.find(s => s.id === graphId)
+    const graphReport = diffGraphs(graphL, graphR, scenario.key, testSummaries)
+    const maxDiffPct = maxDiffPctForGraph(graphReport)
+    const row = createCompareGraphsRowViewModel(comparisonConfig, dataCoordinator, scenario, graphId, graphReport)
+
+    // Determine which section the row will be added to
+    let bucketIndex: number
+    switch (graphReport.inclusion) {
+      case 'right-only':
+        // Use "yellow" bucket for added graphs
+        bucketIndex = 1
+        added.push(row)
+        break
+      case 'left-only':
+        // Use "yellow" bucket for removed graphs
+        bucketIndex = 1
+        removed.push(row)
+        break
+      case 'both':
+        if (maxDiffPct > 0) {
+          // Use the appropriate bucket for graphs with dataset changes
+          bucketIndex = getBucketIndex(maxDiffPct, comparisonConfig.thresholds)
+          if (graphReport.metadataReports.length > 0) {
+            metadataAndDatasets.push(row)
+          } else {
+            datasetsOnly.push(row)
+          }
+        } else {
+          if (graphReport.metadataReports.length > 0) {
+            // Use "yellow" bucket for graphs with metadata changes only
+            bucketIndex = 1
+            metadataOnly.push(row)
+          } else {
+            // Use "green" bucket for graphs with no changes
+            bucketIndex = 0
+            unchanged.push(row)
+          }
+        }
+        break
+      case 'neither':
+        // This shouldn't happen in practice
+        bucketIndex = 0
+        unchanged.push(row)
+        break
+      default:
+        assertNever(graphReport.inclusion)
+    }
+
+    // Increment the count for the chosen bucket
+    diffCountByBucket[bucketIndex]++
+  }
+
+  // Get the percentage of diffs for each bucket relative to the total number of graphs
+  const totalDiffCount = graphIds.size
+  const diffPercentByBucket = diffCountByBucket.map(count => (count / totalDiffCount) * 100)
+
+  // Add a section for each non-empty group
+  const sections: CompareGraphsSectionViewModel[] = []
+  function addSection(rows: CompareGraphsRowViewModel[], title: string, sort: boolean) {
+    if (rows.length > 0) {
+      const sortedRows = sort ? rows.sort((a, b) => (a.maxDiffPct > b.maxDiffPct ? -1 : 1)) : rows
+      sections.push({
+        title,
+        rows: sortedRows
+      })
+    }
+  }
+  addSection(added, 'Added graphs', false)
+  addSection(removed, 'Removed graphs', false)
+  addSection(metadataAndDatasets, 'Graphs with metadata and dataset changes', true)
+  addSection(metadataOnly, 'Graphs with metadata changes only', false)
+  addSection(datasetsOnly, 'Graphs with dataset changes only', true)
+  addSection(unchanged, 'Unchanged graphs', false)
+
+  return {
+    sections,
+    diffPercentByBucket
+  }
+}
+
+function maxDiffPctForGraph(graphReport: GraphComparisonReport): number {
+  let maxDiffPct = 0
+  for (const datasetReport of graphReport.datasetReports) {
+    if (datasetReport.maxDiff !== undefined && datasetReport.maxDiff > maxDiffPct) {
+      maxDiffPct = datasetReport.maxDiff
+    }
+  }
+  return maxDiffPct
 }

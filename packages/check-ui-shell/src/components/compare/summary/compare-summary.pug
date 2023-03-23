@@ -6,13 +6,13 @@
 
 mixin section(varname)
   +if(`viewModel.${varname}`)
-    .section-container
+    .group-container
       SummaryRow(viewModel!=`{ viewModel.${varname}.header }`)
       +each(`viewModel.${varname}.rows as rowViewModel`)
         SummaryRow(on:command viewModel!='{rowViewModel}')
 
-mixin views-section
-  +each(`viewsSection.viewGroups as viewGroupViewModel`)
+mixin view-group-sections
+  +each(`viewModel.viewGroups as viewGroupViewModel`)
     .group-container
       SummaryRow(viewModel!='{viewGroupViewModel.header}')
       +each(`viewGroupViewModel.rows as rowViewModel`)

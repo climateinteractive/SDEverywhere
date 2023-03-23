@@ -3,7 +3,7 @@
 <!-- SCRIPT -->
 <script lang='ts'>
 
-import DetailBox from '../detail/compare-detail-box.svelte'
+import DetailBox from './compare-detail-box.svelte'
 
 import type { CompareGraphsDatasetViewModel } from './compare-graphs-dataset-vm'
 
@@ -65,6 +65,7 @@ function onDatasetClicked() {
   display: flex
   flex: 1
   align-items: baseline
+  margin-left: .6rem
   cursor: pointer
 
 .dataset-row:hover

@@ -5,10 +5,9 @@
 
 import { createEventDispatcher } from 'svelte'
 
-import GraphsRow from '../graphs/compare-graphs-row.svelte'
-
 import type { CompareDetailViewModel } from './compare-detail-vm'
 import DetailRow from './compare-detail-row.svelte'
+import GraphsRow from './compare-graphs-row.svelte'
 
 export let viewModel: CompareDetailViewModel
 
@@ -87,7 +86,7 @@ svelte:window(on:keydown!='{onKeyDown}')
         ul
           +related-items
   .scroll-container(bind:this!='{scrollContainer}')
-    //- +graph-rows
+    +graph-sections
     +box-rows
 
 </template>

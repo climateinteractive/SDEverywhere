@@ -15,7 +15,7 @@ import type {
 } from '@sdeverywhere/check-core'
 import { diffDatasets } from '@sdeverywhere/check-core'
 
-import { getBucketIndex } from '../../../_shared/buckets'
+import { getBucketIndex } from '../_shared/buckets'
 
 import type { ComparisonGraphViewModel } from '../../graphs/comparison-graph-vm'
 import { pointsFromDataset } from '../../graphs/comparison-graph-vm'

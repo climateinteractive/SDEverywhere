@@ -84,7 +84,6 @@ export class AppViewModel {
       const comparisonSummary = this.suiteSummary?.comparisonSummary
       this.summaryViewModel = createSummaryViewModel(
         this.appModel.checkDataCoordinator,
-        this.appModel.comparisonDataCoordinator,
         checkReport,
         comparisonConfig,
         comparisonSummary,
@@ -108,7 +107,6 @@ export class AppViewModel {
             }
             this.summaryViewModel = createSummaryViewModel(
               this.appModel.checkDataCoordinator,
-              this.appModel.comparisonDataCoordinator,
               checkReport,
               comparisonConfig,
               comparisonSummary,
@@ -132,6 +130,7 @@ export class AppViewModel {
     const compareSummaryViewModel = this.summaryViewModel.compareSummaryViewModel
     const groupSummary = summaryRowViewModel.groupSummary
     const groupKey = summaryRowViewModel.groupKey
+    const view = summaryRowViewModel.view
 
     // Determine which rows precede and follow the selected row
     let previousRowIndex: number
@@ -151,6 +150,7 @@ export class AppViewModel {
       this.appModel.config.comparison,
       this.appModel.comparisonDataCoordinator,
       groupSummary,
+      view,
       previousRowIndex,
       nextRowIndex
     )

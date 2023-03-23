@@ -1,8 +1,18 @@
 // Copyright (c) 2021-2022 Climate Interactive / New Venture Fund
 
-import type { DatasetKey, ComparisonScenarioKey, ComparisonGroupSummary } from '@sdeverywhere/check-core'
+import type {
+  DatasetKey,
+  ComparisonScenarioKey,
+  ComparisonGroupSummary,
+  ComparisonView
+} from '@sdeverywhere/check-core'
+
+// XXX: Views don't currently have a unique key of their own, so we assign them at runtime
+export type ComparisonViewKey = string
 
 export interface CompareSummaryRowViewModel {
+  /** The unique key for the row (can be undefined for a header row). */
+  groupKey?: DatasetKey | ComparisonScenarioKey | ComparisonViewKey
   /** The row title (e.g., output variable name or scenario title). */
   title: string
   /** The row subtitle (e.g., output variable source name or scenario subtitle). */
@@ -15,8 +25,8 @@ export interface CompareSummaryRowViewModel {
   diffPercentByBucket?: number[]
   /** The metadata for the comparison test group. */
   groupSummary?: ComparisonGroupSummary
-  /** The associated group key. */
-  groupKey?: DatasetKey | ComparisonScenarioKey
+  /** The metadata for the view (if this is a view row). */
+  view?: ComparisonView
   /** Whether to use header style for the bar. */
   header?: boolean
 }

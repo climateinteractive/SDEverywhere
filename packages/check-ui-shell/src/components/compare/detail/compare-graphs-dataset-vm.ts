@@ -3,7 +3,8 @@
 import type { Writable } from 'svelte/store'
 
 import type { DatasetKey } from '@sdeverywhere/check-core'
-import type { CompareDetailBoxViewModel } from '../detail/compare-detail-box-vm'
+
+import type { CompareDetailBoxViewModel } from './compare-detail-box-vm'
 
 export interface CompareGraphsDatasetViewModel {
   datasetKey: DatasetKey

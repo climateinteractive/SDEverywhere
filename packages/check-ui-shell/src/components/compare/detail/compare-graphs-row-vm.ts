@@ -13,10 +13,11 @@ import type {
   GraphComparisonReport
 } from '@sdeverywhere/check-core'
 
-import { getBucketIndex } from '../../../_shared/buckets'
+import { getBucketIndex } from '../_shared/buckets'
 
-import { CompareDetailBoxViewModel } from '../detail/compare-detail-box-vm'
 import { ContextGraphViewModel } from '../../graphs/context-graph-vm'
+
+import { CompareDetailBoxViewModel } from './compare-detail-box-vm'
 
 import type { CompareGraphsDatasetViewModel } from './compare-graphs-dataset-vm'
 

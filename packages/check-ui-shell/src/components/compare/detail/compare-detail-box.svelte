@@ -111,6 +111,7 @@ function diffPoint(x: number | undefined | null): string {
   align-items: baseline
 
 .title
+  margin-left: .7rem
   font-size: 1.1em
   font-weight: 700
   cursor: pointer
@@ -136,6 +137,7 @@ function diffPoint(x: number | undefined | null): string {
   padding: .5rem
   border-width: .3rem
   border-style: solid
+  border-radius: .8rem
 
 .graph-container
   position: relative
