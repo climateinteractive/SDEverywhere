@@ -125,11 +125,12 @@ function onLinkClicked() {
   margin-left: .6rem
   color: #aaa
 
-:global(.message)
-  padding: .1rem .3rem
-  background-color: #1c1c1c
-  border: .5px solid #555
-  border-radius: .4rem
+// TODO: Add proper support for annotations
+// :global(.message)
+//   padding: .1rem .3rem
+//   background-color: #1c1c1c
+//   border: .5px solid #555
+//   border-radius: .4rem
 
 .summary-header-row
   display: flex
