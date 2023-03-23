@@ -70,11 +70,14 @@ svelte:window(on:keydown!='{onKeyDown}')
 
 .compare-detail-container
   .header-container
-    .title-row
+    .title-and-links
       .title-container
-        .title(on:click!='{toggleRelatedItems}') { @html viewModel.title }
-        +if('viewModel.subtitle')
-          .subtitle { @html viewModel.subtitle }
+        +if('viewModel.pretitle')
+          .pretitle { @html viewModel.pretitle }
+        .title-and-subtitle
+          .title(on:click!='{toggleRelatedItems}') { @html viewModel.title }
+          +if('viewModel.subtitle')
+            .subtitle { @html viewModel.subtitle }
       .spacer-flex
       .nav-links.no-selection
         .nav-link(class:disabled!='{viewModel.previousRowIndex === undefined}' on:click!='{() => onNavLink("detail-previous")}') previous
@@ -112,13 +115,13 @@ svelte:window(on:keydown!='{onKeyDown}')
   box-shadow: 0 1rem .5rem -.5rem rgba(0,0,0,.5)
   z-index: 1
 
-.title-row
+.title-and-links
   display: flex
   flex-direction: row
   align-items: center
   // XXX: Use a fixed height for now so that it doesn't bounce around when
   // the title wraps to two lines
-  height: 3rem
+  height: 4.5rem
 
 .spacer-flex
   flex: 1
@@ -141,6 +144,16 @@ svelte:window(on:keydown!='{onKeyDown}')
 
 .title-container
   display: flex
+  flex-direction: column
+
+.pretitle
+  margin-bottom: .2rem
+  font-size: .9em
+  font-weight: 700
+  color: #aaa
+
+.title-and-subtitle
+  display: flex
   flex-direction: row
   align-items: baseline
 
@@ -154,7 +167,7 @@ svelte:window(on:keydown!='{onKeyDown}')
   font-size: 1.2em
   font-weight: 700
   margin-left: 1.2rem
-  color: #888
+  color: #aaa
 
 .related
   font-size: 1em
@@ -182,11 +195,14 @@ ul
 .section-title
   font-size: 1.7em
   font-weight: 700
-  margin-top: 2rem
-  margin-bottom: 1.2rem
+  margin-top: 2.5rem
+  margin-bottom: 1.5rem
 
 .row-container
-  margin-top: 2rem
-  margin-bottom: 3rem
+  margin-top: .5rem
+  margin-bottom: 4rem
+
+.row-container:first-child
+  margin-top: 3rem
 
 </style>

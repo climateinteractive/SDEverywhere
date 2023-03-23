@@ -23,7 +23,7 @@ import { pointsFromDataset } from '../../graphs/comparison-graph-vm'
 let requestId = 1
 
 export interface CompareDetailBoxContent {
-  bucketIndex: number
+  bucketClass: string
   message?: string
   diffReport: DiffReport
   comparisonGraphViewModel: ComparisonGraphViewModel
@@ -87,20 +87,20 @@ export class CompareDetailBoxViewModel {
             }
             break
           case 'left-only':
-            // TODO: Use a different color for this case?
-            bucketIndex = 0
+            bucketIndex = undefined
             message = dataOnlyDefinedIn('left')
             break
           case 'right-only':
-            // TODO: Use a different color for this case?
-            bucketIndex = 0
+            bucketIndex = undefined
             message = dataOnlyDefinedIn('right')
             break
           default:
-            // This should not happen in practice, so treat it as an error
-            // TODO: Use a different color for this case?
-            bucketIndex = 4
-            message = 'ERROR: No data'
+            // TODO: This can happen in the case where, for example, we show a dataset that
+            // only exists in "right" for a scenario that only exists in "left".  We should
+            // trap this case earlier in the process so that we don't show a box for this
+            // scenario/dataset pair.
+            bucketIndex = undefined
+            message = 'Dataset not defined for this scenario'
             break
         }
 
@@ -134,7 +134,7 @@ export class CompareDetailBoxViewModel {
         }
 
         this.writableContent.set({
-          bucketIndex,
+          bucketClass: `bucket-border-${bucketIndex !== undefined ? bucketIndex : 'undefined'}`,
           message,
           diffReport,
           comparisonGraphViewModel

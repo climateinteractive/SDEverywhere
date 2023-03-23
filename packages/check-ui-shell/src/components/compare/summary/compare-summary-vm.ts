@@ -69,7 +69,10 @@ export function createCompareSummaryViewModel(
             subtitle: view.subtitle,
             diffPercentByBucket,
             groupSummary,
-            view
+            viewMetadata: {
+              viewGroup,
+              view
+            }
           }
         }
         case 'unresolved-view':

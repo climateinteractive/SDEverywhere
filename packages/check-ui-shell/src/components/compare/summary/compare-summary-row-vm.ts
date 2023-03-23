@@ -4,11 +4,19 @@ import type {
   DatasetKey,
   ComparisonScenarioKey,
   ComparisonGroupSummary,
-  ComparisonView
+  ComparisonView,
+  ComparisonViewGroup
 } from '@sdeverywhere/check-core'
 
 // XXX: Views don't currently have a unique key of their own, so we assign them at runtime
 export type ComparisonViewKey = string
+
+export interface CompareSummaryRowViewMetadata {
+  /** The view group that the view belongs to. */
+  viewGroup: ComparisonViewGroup
+  /** The metadata for the view. */
+  view: ComparisonView
+}
 
 export interface CompareSummaryRowViewModel {
   /** The unique key for the row (can be undefined for a header row). */
@@ -25,8 +33,8 @@ export interface CompareSummaryRowViewModel {
   diffPercentByBucket?: number[]
   /** The metadata for the comparison test group. */
   groupSummary?: ComparisonGroupSummary
-  /** The metadata for the view (if this is a view row). */
-  view?: ComparisonView
+  /** The view-related metadata, if this is a view row. */
+  viewMetadata?: CompareSummaryRowViewMetadata
   /** Whether to use header style for the bar. */
   header?: boolean
 }

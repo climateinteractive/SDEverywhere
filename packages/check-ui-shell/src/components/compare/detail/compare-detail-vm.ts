@@ -11,6 +11,7 @@ import type {
   ComparisonScenario,
   ComparisonTestSummary,
   ComparisonView,
+  ComparisonViewGroup,
   GraphComparisonReport,
   LoadedBundle
 } from '@sdeverywhere/check-core'
@@ -42,7 +43,9 @@ export interface CompareAllGraphsSections {
 }
 
 export interface CompareDetailViewModel {
-  /** The title (e.g., output variable name or scenario title). */
+  /** The pretitle (e.g., view group title). */
+  pretitle?: string
+  /** The title (e.g., output variable name, scenario title, view title). */
   title: string
   /** The subtitle (e.g., output variable source name or scenario position). */
   subtitle?: string
@@ -64,6 +67,7 @@ export function createCompareDetailViewModel(
   comparisonConfig: ComparisonConfig,
   dataCoordinator: ComparisonDataCoordinator,
   groupSummary: ComparisonGroupSummary,
+  viewGroup: ComparisonViewGroup | undefined,
   view: ComparisonView | undefined,
   previousRowIndex: number | undefined,
   nextRowIndex: number | undefined
@@ -82,6 +86,7 @@ export function createCompareDetailViewModel(
         comparisonConfig,
         dataCoordinator,
         groupSummary,
+        viewGroup,
         view,
         previousRowIndex,
         nextRowIndex
@@ -150,6 +155,7 @@ function createCompareDetailViewModelForScenario(
   comparisonConfig: ComparisonConfig,
   dataCoordinator: ComparisonDataCoordinator,
   groupSummary: ComparisonGroupSummary,
+  viewGroup: ComparisonViewGroup | undefined,
   view: ComparisonView | undefined,
   previousRowIndex: number | undefined,
   nextRowIndex: number | undefined
@@ -157,11 +163,13 @@ function createCompareDetailViewModelForScenario(
   // Get the primary scenario for the detail view
   const scenario = groupSummary.root as ComparisonScenario
 
+  let pretitle: string
   let title: string
   let subtitle: string
   if (view) {
     // This is the detail screen for a user-defined view, so use the title/subtitle from
     // the view definition
+    pretitle = viewGroup?.title
     title = view.title
     subtitle = view.subtitle
   } else {
@@ -251,6 +259,7 @@ function createCompareDetailViewModelForScenario(
   }
 
   return {
+    pretitle,
     title,
     subtitle,
     previousRowIndex,

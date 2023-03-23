@@ -58,6 +58,7 @@ sub {
 :root {
   --dataset-0: crimson;
   --dataset-1: deepskyblue;
+  --bucket-undefined: #555;
   --bucket-0: green;
   --bucket-1: orange;
   --bucket-2: orangered;
@@ -73,6 +74,9 @@ sub {
 }
 .dataset-color-1 {
   color: var(--dataset-1);
+}
+.bucket-color-undefined {
+  color: var(--bucket-undefined);
 }
 .bucket-color-0 {
   color: var(--bucket-0);
@@ -105,6 +109,9 @@ sub {
 .dataset-bg-1 {
   background-color: var(--dataset-1);
 }
+.bucket-bg-undefined {
+  background-color: var(--bucket-undefined);
+}
 .bucket-bg-0 {
   background-color: var(--bucket-0);
 }
@@ -135,6 +142,9 @@ sub {
 }
 .dataset-border-1 {
   border-color: var(--dataset-1);
+}
+.bucket-border-undefined {
+  border-color: var(--bucket-undefined);
 }
 .bucket-border-0 {
   border-color: var(--bucket-0);
