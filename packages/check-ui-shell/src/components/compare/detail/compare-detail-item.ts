@@ -79,7 +79,7 @@ export function groupItemsByTitle(
   // Sort the groups by score, with highest scores at the top
   const unsortedGroups = [...groupsByTitle.values()]
   const sortedGroups = unsortedGroups.sort((a, b) => {
-    return a.totalMaxDiff > b.totalMaxDiff ? 1 : a.totalMaxDiff < b.totalMaxDiff ? -1 : 0
+    return a.totalMaxDiff > b.totalMaxDiff ? -1 : a.totalMaxDiff < b.totalMaxDiff ? 1 : 0
   })
 
   return sortedGroups
