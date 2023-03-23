@@ -25,12 +25,21 @@ export function createBaseComparisonSpecs(bundleL: Bundle, bundleR: Bundle): Com
   addInputs(bundleL)
   addInputs(bundleR)
 
-  // Create "input at min/max" scenarios for all inputs (that appear in either "left" or "right")
+  // Create an "all inputs at default" (baseline) scenario
   const scenarios: ComparisonScenarioSpec[] = []
+  scenarios.push({
+    kind: 'scenario-with-all-inputs',
+    id: 'baseline',
+    title: 'All inputs',
+    subtitle: 'at default',
+    position: 'default'
+  })
+
+  // Create "input at min/max" scenarios for all inputs (that appear in either "left" or "right")
   const addScenario = (inputId: InputId, position: ComparisonScenarioInputPosition) => {
     scenarios.push({
       kind: 'scenario-with-inputs',
-      id: `${inputId}_at_${position}`,
+      id: `input_${inputId}_at_${position}`,
       title: `Slider ${inputId}`,
       subtitle: `at ${position}`,
       inputs: [

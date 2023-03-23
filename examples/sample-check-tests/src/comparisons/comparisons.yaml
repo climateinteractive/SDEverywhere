@@ -1,7 +1,5 @@
 # yaml-language-server: $schema=../../../../packages/check-core/schema/comparison.schema.json
 
-# TODOyaml-language-server: $schema=../../node_modules/@sdeverywhere/check-core/schema/comparison.schema.json
-
 # Input ID exists in both left and right
 # - scenario:
 #     id: S0
@@ -34,51 +32,61 @@
 #     with: Input B
 #     at: 90
 
-# - scenario:
-#     title: Input Group 1
-#     subtitle: with low settings (each input at 25)
-#     with:
-#       - input: Input A
-#         at: 25
-#       - input: Input B
-#         at: 25
+- scenario:
+    title: Inputs 1 and 2
+    subtitle: with low settings (each input at 25)
+    with:
+      - input: Input A
+        at: 25
+      - input: Input B
+        at: 25
 
-# - scenario:
-#     title: Input Group 1
-#     subtitle: with high settings (each input at 75)
-#     with:
-#       - input: Input A
-#         at: 75
-#       - input: Input B
-#         at: 75
+- scenario:
+    title: Inputs 1 and 2
+    subtitle: with high settings (each input at 75)
+    with:
+      - input: Input A
+        at: 75
+      - input: Input B
+        at: 75
 
 - scenario_group:
     id: G0
     title: Scenario Group 2
     scenarios:
-      - scenario_ref: S0
-      - scenario_ref: S1
+      - scenario_ref: input_1_at_min
+      - scenario_ref: input_1_at_max
 
 - view_group:
-    title: Group 1
+    title: Baseline
     views:
       - view:
-          title: View 1
-          scenario_ref: S0
+          title: All graphs
+          scenario_ref: baseline
+          graphs: all
+
+- view_group:
+    title: Group 1 (showing graphs 1+2 for different scenarios involving Input 1)
+    views:
+      - view:
+          title: Custom view title 1
+          subtitle: Slider 1 at min
+          scenario_ref: input_1_at_min
           graphs:
             - '1'
             - '2'
       - view:
-          title: View 2
-          scenario_ref: S1
+          title: Custom view title 2
+          subtitle: Slider 2 at min
+          scenario_ref: input_1_at_max
           graphs:
-            - '3'
-            - '4'
+            - '1'
+            - '2'
 
 - view_group:
-    title: Group 2
+    title: Group 2 (showing graphs 3+4 for different scenarios involving Input 1)
     scenarios:
       - scenario_group_ref: G0
     graphs:
-      - '1'
-      - '2'
+      - '3'
+      - '4'
