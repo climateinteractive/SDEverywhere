@@ -20,8 +20,7 @@ export function createSummaryViewModel(
   checkDataCoordinator: CheckDataCoordinator,
   checkReport: CheckReport,
   comparisonConfig: ComparisonConfig | undefined,
-  comparisonSummary: ComparisonSummary | undefined,
-  simplifyScenarios: boolean
+  comparisonSummary: ComparisonSummary | undefined
 ): SummaryViewModel {
   const checkSummaryViewModel = createCheckSummaryViewModel(checkDataCoordinator, checkReport)
 

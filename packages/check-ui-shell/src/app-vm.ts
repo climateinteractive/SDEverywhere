@@ -47,19 +47,6 @@ export class AppViewModel {
     // Show the "Simplify Scenarios" checkbox if we run checks in the browser
     const includeSimplifyScenarios = suiteSummary === undefined
     this.headerViewModel = createHeaderViewModel(appModel.config.comparison, includeSimplifyScenarios)
-
-    if (includeSimplifyScenarios) {
-      // Re-run the tests when the "Simplify Scenarios" checkbox is toggled
-      let firstEvent = true
-      this.headerViewModel.simplifyScenarios.subscribe(() => {
-        // XXX: Ignore the first event when we subscribe
-        if (firstEvent) {
-          firstEvent = false
-        } else {
-          this.runTestSuite()
-        }
-      })
-    }
   }
 
   runTestSuite(): void {
@@ -78,21 +65,24 @@ export class AppViewModel {
       // For the case where checks were run ahead of time using the model-check
       // CLI tool, we can display the report immediately instead of running all
       // the checks in the user's browser
-      const simplifyScenarios = false
       const checkConfig = this.appModel.config.check
-      const checkReport = checkReportFromSummary(checkConfig, this.suiteSummary.checkSummary, simplifyScenarios)
+      const checkReport = checkReportFromSummary(checkConfig, this.suiteSummary.checkSummary)
       const comparisonSummary = this.suiteSummary?.comparisonSummary
       this.summaryViewModel = createSummaryViewModel(
         this.appModel.checkDataCoordinator,
         checkReport,
         comparisonConfig,
-        comparisonSummary,
-        simplifyScenarios
+        comparisonSummary
       )
       this.writableChecksInProgress.set(false)
     } else {
       // For local dev builds, run the test suite in the browser
-      const simplifyScenarios = get(this.headerViewModel.simplifyScenarios)
+      // TODO: Once we resolve checks as part of resolving config options, we won't
+      // need this hack here
+      let simplifyScenarios = false
+      if (this.headerViewModel.simplifyScenarios !== undefined) {
+        simplifyScenarios = get(this.headerViewModel.simplifyScenarios)
+      }
       this.cancelRunSuite = runSuite(
         this.appModel.config,
         {
@@ -109,8 +99,7 @@ export class AppViewModel {
               this.appModel.checkDataCoordinator,
               checkReport,
               comparisonConfig,
-              comparisonSummary,
-              simplifyScenarios
+              comparisonSummary
             )
             this.writableChecksInProgress.set(false)
           },

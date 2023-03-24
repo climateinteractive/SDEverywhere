@@ -20,7 +20,7 @@ export function createHeaderViewModel(
 ): HeaderViewModel {
   let simplifyScenarios: Writable<boolean>
   if (includeSimplifyScenarios) {
-    simplifyScenarios = localStorageWritableBoolean('sde-check-simplify-scenarios', true)
+    simplifyScenarios = localStorageWritableBoolean('sde-check-simplify-scenarios', false)
   } else {
     simplifyScenarios = undefined
   }

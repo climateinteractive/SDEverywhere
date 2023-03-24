@@ -10,18 +10,12 @@ import type { ComparisonTestReport } from '../report/comparison-report-types'
  *
  * @param comparisonConfig The comparison configuration.
  * @param dataPlanner The planner that will plan out data fetches for the compare tests.
- * @param simplifyScenarios If true, only run the "all inputs at default" scenario.
  * @return A function that will build the compare reports after the data requests are all processed.
  */
 export function runComparisons(
   comparisonConfig: ComparisonConfig,
-  dataPlanner: DataPlanner,
-  simplifyScenarios: boolean
+  dataPlanner: DataPlanner
 ): () => ComparisonTestReport[] {
-  if (simplifyScenarios) {
-    console.warn('simplifyScenarios not yet (re)implemented')
-  }
-
   // TODO: The following leads to an explosion of scenario/dataset combinations;
   // if memory usage becomes a concern, we can change this to add a wildcard
   // placeholder in the data request and then expand the dataset keys at the

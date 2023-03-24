@@ -96,7 +96,7 @@ export { categorizeComparisonTestSummaries } from './comparison/report/compariso
 // config
 //
 
-export type { Config, ConfigOptions } from './config/config-types'
+export type { Config, ConfigInitOptions, ConfigOptions } from './config/config-types'
 
 export { createConfig } from './config/config'
 

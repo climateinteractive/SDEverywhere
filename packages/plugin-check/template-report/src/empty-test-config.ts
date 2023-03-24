@@ -6,18 +6,13 @@
  * up using aliases in the Vite config file.)
  */
 
-import type { Bundle, ConfigOptions } from '@sdeverywhere/check-core'
-
-export interface BundleOptions {
-  nameL?: string
-  nameR?: string
-}
+import type { Bundle, ConfigInitOptions, ConfigOptions } from '@sdeverywhere/check-core'
 
 export async function getConfigOptions(
   /* eslint-disable @typescript-eslint/no-unused-vars */
   _bundleL: Bundle | undefined,
   _bundleR: Bundle,
-  _opts: BundleOptions
+  _opts?: ConfigInitOptions
   /* eslint-enable @typescript-eslint/no-unused-vars */
 ): Promise<ConfigOptions> {
   return undefined

@@ -157,33 +157,34 @@ class CheckPlugin implements Plugin {
     // always initialize the "current" bundle.
     const moduleR = await import(relativeToSourcePath(testOptions.currentBundlePath))
     const bundleR = moduleR.createBundle() as Bundle
-    const nameR = testOptions.currentBundleName
+    const bundleNameR = testOptions.currentBundleName
 
     // Only initialize the "baseline" bundle if it is defined and the version
     // is the same as the "current" one.  If the baseline bundle has a different
     // version, we will skip the comparison tests and only run the checks on the
     // current bundle.
     let bundleL: Bundle
-    let nameL: string
+    let bundleNameL: string
     if (this.options?.baseline) {
       const moduleL = await import(relativeToSourcePath(this.options.baseline.path))
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const rawBundleL: any = moduleL.createBundle() as any
       if (rawBundleL.version === bundleR.version) {
         bundleL = rawBundleL as Bundle
-        nameL = this.options.baseline.name
+        bundleNameL = this.options.baseline.name
       }
     }
 
-    // Get the model check/compare configuration
+    // Get the model check/comparison configuration
     const testConfigModule = await import(relativeToSourcePath(testOptions.testConfigPath))
-    const checkOptions = await testConfigModule.getConfigOptions(bundleL, bundleR, {
-      nameL,
-      nameR
-    })
+    const configInitOptions: ConfigInitOptions = {
+      bundleNameL,
+      bundleNameR
+    }
+    const configOptions = await testConfigModule.getConfigOptions(bundleL, bundleR, configInitOptions)
 
     // Run the suite of checks and comparisons
-    const checkConfig = await createConfig(checkOptions)
+    const checkConfig = await createConfig(configOptions)
     const result = await runTestSuite(context, checkConfig, /*verbose=*/ false)
 
     // Build the report (using Vite)
