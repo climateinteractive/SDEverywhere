@@ -4,16 +4,20 @@ import type { CheckDataCoordinator, CheckReport, ComparisonConfig, ComparisonSum
 
 import type { CheckSummaryViewModel } from '../check/summary/check-summary-vm'
 import { createCheckSummaryViewModel } from '../check/summary/check-summary-vm'
-import type { CompareSummaryViewModel } from '../compare/summary/compare-summary-vm'
-import { createCompareSummaryViewModel } from '../compare/summary/compare-summary-vm'
+import type { ComparisonSummaryViewModel } from '../compare/summary/comparison-summary-vm'
+import { createComparisonSummaryViewModels } from '../compare/summary/comparison-summary-vm'
 import type { StatsTableViewModel } from '../stats/stats-table-vm'
 import { createStatsTableViewModel } from '../stats/stats-table-vm'
+import type { TabItemViewModel } from './tab-bar-vm'
+import { TabBarViewModel } from './tab-bar-vm'
 
 export interface SummaryViewModel {
-  checkSummaryViewModel: CheckSummaryViewModel
-  comparisonSummary?: ComparisonSummary
-  compareSummaryViewModel?: CompareSummaryViewModel
   statsTableViewModel?: StatsTableViewModel
+  tabBarViewModel: TabBarViewModel
+  checkSummaryViewModel: CheckSummaryViewModel
+  comparisonViewsSummaryViewModel?: ComparisonSummaryViewModel
+  comparisonsByScenarioSummaryViewModel?: ComparisonSummaryViewModel
+  comparisonsByDatasetSummaryViewModel?: ComparisonSummaryViewModel
 }
 
 export function createSummaryViewModel(
@@ -22,23 +26,59 @@ export function createSummaryViewModel(
   comparisonConfig: ComparisonConfig | undefined,
   comparisonSummary: ComparisonSummary | undefined
 ): SummaryViewModel {
-  const checkSummaryViewModel = createCheckSummaryViewModel(checkDataCoordinator, checkReport)
+  const tabItems: TabItemViewModel[] = []
+  function addTabItem(id: string, title: string, subtitle: string, status: string): void {
+    tabItems.push({
+      id,
+      title,
+      subtitle,
+      subtitleClass: `status-color-${status}`
+    })
+  }
 
-  let compareSummaryViewModel: CompareSummaryViewModel
+  // Always add the check summary tab (if there are no checks defined, it will say "No checks",
+  // which is better than having no content at all)
+  const checkSummaryViewModel = createCheckSummaryViewModel(checkDataCoordinator, checkReport)
+  addTabItem('checks', 'Checks', '4 failed', 'failed')
+
+  // Add stats header and comparison tabs, if comparison tests are defined
   let statsTableViewModel: StatsTableViewModel
+  let comparisonViewsSummaryViewModel: ComparisonSummaryViewModel
+  let comparisonsByScenarioSummaryViewModel: ComparisonSummaryViewModel
+  let comparisonsByDatasetSummaryViewModel: ComparisonSummaryViewModel
   if (comparisonConfig && comparisonSummary) {
-    compareSummaryViewModel = createCompareSummaryViewModel(comparisonConfig, comparisonSummary.testSummaries)
+    // Add stats header
     statsTableViewModel = createStatsTableViewModel(
       comparisonConfig,
       comparisonSummary.perfReportL,
       comparisonSummary.perfReportR
     )
+
+    // Create comparison summary view models
+    const comparisonSummaries = createComparisonSummaryViewModels(comparisonConfig, comparisonSummary.testSummaries)
+
+    // Add tab for comparison views, if some are defined
+    if (comparisonSummaries.views) {
+      comparisonViewsSummaryViewModel = comparisonSummaries.views
+      addTabItem('comp-views', 'Comparison views', '5 changed graphs', 'warning')
+    }
+
+    // Add tab for by-scenario summaries
+    comparisonsByScenarioSummaryViewModel = comparisonSummaries.byScenario
+    addTabItem('comps-by-scenario', 'Comparisons by scenario', '4 scenarios with diffs', 'warning')
+
+    comparisonsByDatasetSummaryViewModel = comparisonSummaries.byDataset
+    addTabItem('comps-by-dataset', 'Comparisons by output', 'all clear', 'passed')
   }
 
+  const tabBarViewModel = new TabBarViewModel(tabItems)
+
   return {
+    statsTableViewModel,
+    tabBarViewModel,
     checkSummaryViewModel,
-    comparisonSummary,
-    compareSummaryViewModel,
-    statsTableViewModel
+    comparisonViewsSummaryViewModel,
+    comparisonsByScenarioSummaryViewModel,
+    comparisonsByDatasetSummaryViewModel
   }
 }

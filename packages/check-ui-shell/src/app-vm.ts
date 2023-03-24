@@ -8,15 +8,18 @@ import { checkReportFromSummary, comparisonSummaryFromReport, runSuite } from '@
 
 import type { AppModel } from './model/app-model'
 
+import type { ComparisonGroupingKind } from './components/compare/_shared/comparison-grouping-kind'
 import type { CompareDetailViewModel } from './components/compare/detail/compare-detail-vm'
 import { createCompareDetailViewModel } from './components/compare/detail/compare-detail-vm'
-import type { CompareSummaryRowViewModel } from './components/compare/summary/compare-summary-row-vm'
+import type { ComparisonSummaryRowViewModel } from './components/compare/summary/comparison-summary-row-vm'
 import type { HeaderViewModel } from './components/header/header-vm'
 import { createHeaderViewModel } from './components/header/header-vm'
 import type { PerfViewModel } from './components/perf/perf-vm'
 import { createPerfViewModel } from './components/perf/perf-vm'
 import type { SummaryViewModel } from './components/summary/summary-vm'
 import { createSummaryViewModel } from './components/summary/summary-vm'
+import assertNever from 'assert-never'
+import type { ComparisonSummaryViewModel } from './components/compare/summary/comparison-summary-vm'
 
 export interface RunSuiteCallbacks {
   onProgress?: (pct: number) => void
@@ -115,8 +118,10 @@ export class AppViewModel {
     }
   }
 
-  createCompareDetailViewModelForSummaryRow(summaryRowViewModel: CompareSummaryRowViewModel): CompareDetailViewModel {
-    const compareSummaryViewModel = this.summaryViewModel.compareSummaryViewModel
+  createCompareDetailViewModelForSummaryRow(
+    summaryRowViewModel: ComparisonSummaryRowViewModel
+  ): CompareDetailViewModel {
+    const comparisonSummaryViewModel = this.getComparisonSummaryViewModel(summaryRowViewModel.kind)
     const groupSummary = summaryRowViewModel.groupSummary
     const groupKey = summaryRowViewModel.groupKey
 
@@ -126,8 +131,8 @@ export class AppViewModel {
     // Determine which rows precede and follow the selected row
     let previousRowIndex: number
     let nextRowIndex: number
-    const rowCount = compareSummaryViewModel.allRows.length
-    const rowIndex = compareSummaryViewModel.allRows.findIndex(row => row.groupKey === groupKey)
+    const rowCount = comparisonSummaryViewModel.allRows.length
+    const rowIndex = comparisonSummaryViewModel.allRows.findIndex(row => row.groupKey === groupKey)
     if (rowIndex >= 0) {
       if (rowIndex > 0) {
         previousRowIndex = rowIndex - 1
@@ -148,10 +153,26 @@ export class AppViewModel {
     )
   }
 
-  createCompareDetailViewModelForSummaryRowIndex(rowIndex: number): CompareDetailViewModel {
-    const compareSummaryViewModel = this.summaryViewModel.compareSummaryViewModel
-    const rowViewModel = compareSummaryViewModel.allRows[rowIndex]
+  createCompareDetailViewModelForSummaryRowIndex(
+    kind: ComparisonGroupingKind,
+    rowIndex: number
+  ): CompareDetailViewModel {
+    const comparisonSummaryViewModel = this.getComparisonSummaryViewModel(kind)
+    const rowViewModel = comparisonSummaryViewModel.allRows[rowIndex]
     return this.createCompareDetailViewModelForSummaryRow(rowViewModel)
+  }
+
+  private getComparisonSummaryViewModel(kind: ComparisonGroupingKind): ComparisonSummaryViewModel {
+    switch (kind) {
+      case 'views':
+        return this.summaryViewModel.comparisonViewsSummaryViewModel
+      case 'by-scenario':
+        return this.summaryViewModel.comparisonsByScenarioSummaryViewModel
+      case 'by-dataset':
+        return this.summaryViewModel.comparisonsByDatasetSummaryViewModel
+      default:
+        assertNever(kind)
+    }
   }
 
   createPerfViewModel(): PerfViewModel {

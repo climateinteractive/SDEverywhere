@@ -5,9 +5,9 @@
 
 import { createEventDispatcher } from 'svelte'
 
-import type { CompareSummaryRowViewModel } from './compare-summary-row-vm'
+import type { ComparisonSummaryRowViewModel } from './comparison-summary-row-vm'
 
-export let viewModel: CompareSummaryRowViewModel
+export let viewModel: ComparisonSummaryRowViewModel
 const bucketPcts = viewModel.diffPercentByBucket
 
 const dispatch = createEventDispatcher()
@@ -15,7 +15,7 @@ const dispatch = createEventDispatcher()
 function onLinkClicked() {
   if (viewModel.groupKey) {
     dispatch('command', {
-      cmd: 'show-compare-detail',
+      cmd: 'show-comparison-detail',
       summaryRow: viewModel
     })
   }
@@ -97,9 +97,9 @@ function onLinkClicked() {
   flex-direction: column
   margin-left: .8rem
 
-.grouping-part
-  font-size: .7em
-  color: #666
+// .grouping-part
+//   font-size: .7em
+//   color: #666
 
 .title-part
   display: flex
@@ -120,10 +120,10 @@ function onLinkClicked() {
   margin-left: .6rem
   color: #aaa
 
-.messages-part
-  font-size: .8em
-  margin-left: .6rem
-  color: #aaa
+// .messages-part
+//   font-size: .8em
+//   margin-left: .6rem
+//   color: #aaa
 
 // TODO: Add proper support for annotations
 // :global(.message)

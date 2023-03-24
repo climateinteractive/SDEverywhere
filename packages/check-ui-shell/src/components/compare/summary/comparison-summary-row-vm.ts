@@ -8,17 +8,20 @@ import type {
   ComparisonViewGroup
 } from '@sdeverywhere/check-core'
 
+import type { ComparisonGroupingKind } from '../_shared/comparison-grouping-kind'
+
 // XXX: Views don't currently have a unique key of their own, so we assign them at runtime
 export type ComparisonViewKey = string
 
-export interface CompareSummaryRowViewMetadata {
+export interface ComparisonSummaryRowViewMetadata {
   /** The view group that the view belongs to. */
   viewGroup: ComparisonViewGroup
   /** The metadata for the view. */
   view: ComparisonView
 }
 
-export interface CompareSummaryRowViewModel {
+export interface ComparisonSummaryRowViewModel {
+  kind: ComparisonGroupingKind
   /** The unique key for the row (can be undefined for a header row). */
   groupKey?: DatasetKey | ComparisonScenarioKey | ComparisonViewKey
   /** The row title (e.g., output variable name or scenario title). */
@@ -34,7 +37,7 @@ export interface CompareSummaryRowViewModel {
   /** The metadata for the comparison test group. */
   groupSummary?: ComparisonGroupSummary
   /** The view-related metadata, if this is a view row. */
-  viewMetadata?: CompareSummaryRowViewMetadata
+  viewMetadata?: ComparisonSummaryRowViewMetadata
   /** Whether to use header style for the bar. */
   header?: boolean
 }

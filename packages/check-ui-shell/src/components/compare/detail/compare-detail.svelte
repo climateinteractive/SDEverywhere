@@ -3,7 +3,7 @@
 <!-- SCRIPT -->
 <script lang='ts'>
 
-import { createEventDispatcher } from 'svelte'
+import { createEventDispatcher, onMount } from 'svelte'
 
 import type { CompareDetailViewModel } from './compare-detail-vm'
 import DetailRow from './compare-detail-row.svelte'
@@ -28,12 +28,20 @@ function onNavLink(cmd: string) {
   switch (cmd) {
     case 'detail-previous':
       if (viewModel.previousRowIndex !== undefined) {
-        dispatch('command', { cmd: 'show-compare-detail-at-index', index: viewModel.previousRowIndex })
+        dispatch('command', {
+          cmd: 'show-comparison-detail-at-index',
+          kind: viewModel.kind,
+          index: viewModel.previousRowIndex
+        })
       }
       break
     case 'detail-next':
       if (viewModel.nextRowIndex !== undefined) {
-        dispatch('command', { cmd: 'show-compare-detail-at-index', index: viewModel.nextRowIndex })
+        dispatch('command', {
+          cmd: 'show-comparison-detail-at-index',
+          kind: viewModel.kind,
+          index: viewModel.nextRowIndex
+        })
       }
       break
     default:
@@ -49,12 +57,22 @@ function onKeyDown(event: KeyboardEvent) {
   } else if (event.key === 'ArrowRight') {
     onNavLink('detail-next')
     event.preventDefault()
+  } else if (event.key === 'ArrowUp') {
+    if (scrollContainer.scrollTop === 0) {
+      onNavLink('show-summary')
+      event.preventDefault()
+    }
   }
 }
 
 function toggleRelatedItems() {
   relatedItemsVisible = !relatedItemsVisible
 }
+
+onMount(() => {
+  // Make the scroll container have focus by default to allow for easier keyboard navigation
+  scrollContainer.focus()
+})
 
 </script>
 
@@ -88,7 +106,7 @@ svelte:window(on:keydown!='{onKeyDown}')
         span { viewModel.relatedListHeader }
         ul
           +related-items
-  .scroll-container(bind:this!='{scrollContainer}')
+  .scroll-container(bind:this!='{scrollContainer}' tabindex='0')
     +graph-sections
     +box-rows
 
@@ -190,6 +208,7 @@ ul
   flex-direction: column
   overflow: auto
   padding: 0 1rem
+  outline: none
   background-color: #3c3c3c
 
 .section-title

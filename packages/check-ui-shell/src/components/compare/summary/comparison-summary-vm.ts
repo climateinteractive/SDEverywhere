@@ -5,31 +5,55 @@ import { assertNever } from 'assert-never'
 import type { ComparisonConfig, ComparisonGroupSummary, ComparisonTestSummary } from '@sdeverywhere/check-core'
 import { categorizeComparisonTestSummaries } from '@sdeverywhere/check-core'
 
-import type { CompareSummaryRowViewModel, ComparisonViewKey } from './compare-summary-row-vm'
+import type { ComparisonGroupingKind } from '../_shared/comparison-grouping-kind'
 import { getAllGraphsSections } from '../detail/compare-detail-vm'
 
-export interface CompareSummarySectionViewModel {
-  header: CompareSummaryRowViewModel
-  rows: CompareSummaryRowViewModel[]
+import type { ComparisonSummaryRowViewModel, ComparisonViewKey } from './comparison-summary-row-vm'
+
+export interface ComparisonSummarySectionViewModel {
+  header: ComparisonSummaryRowViewModel
+  rows: ComparisonSummaryRowViewModel[]
 }
 
-export interface CompareSummaryViewModel {
-  allRows: CompareSummaryRowViewModel[]
-  viewGroups?: CompareSummarySectionViewModel[]
-  scenariosOnlyInLeft?: CompareSummarySectionViewModel
-  scenariosOnlyInRight?: CompareSummarySectionViewModel
-  scenariosWithDiffs?: CompareSummarySectionViewModel
-  scenariosWithoutDiffs?: CompareSummarySectionViewModel
-  datasetsOnlyInLeft?: CompareSummarySectionViewModel
-  datasetsOnlyInRight?: CompareSummarySectionViewModel
-  datasetsWithDiffs?: CompareSummarySectionViewModel
-  datasetsWithoutDiffs?: CompareSummarySectionViewModel
+export interface ComparisonViewsSummaryViewModel {
+  kind: 'views'
+  allRows: ComparisonSummaryRowViewModel[]
+  viewGroups: ComparisonSummarySectionViewModel[]
 }
 
-export function createCompareSummaryViewModel(
+export interface ComparisonsByScenarioSummaryViewModel {
+  kind: 'by-scenario'
+  allRows: ComparisonSummaryRowViewModel[]
+  scenariosOnlyInLeft?: ComparisonSummarySectionViewModel
+  scenariosOnlyInRight?: ComparisonSummarySectionViewModel
+  scenariosWithDiffs?: ComparisonSummarySectionViewModel
+  scenariosWithoutDiffs?: ComparisonSummarySectionViewModel
+}
+
+export interface ComparisonsByDatasetSummaryViewModel {
+  kind: 'by-dataset'
+  allRows: ComparisonSummaryRowViewModel[]
+  datasetsOnlyInLeft?: ComparisonSummarySectionViewModel
+  datasetsOnlyInRight?: ComparisonSummarySectionViewModel
+  datasetsWithDiffs?: ComparisonSummarySectionViewModel
+  datasetsWithoutDiffs?: ComparisonSummarySectionViewModel
+}
+
+export type ComparisonSummaryViewModel =
+  | ComparisonViewsSummaryViewModel
+  | ComparisonsByScenarioSummaryViewModel
+  | ComparisonsByDatasetSummaryViewModel
+
+export interface ComparisonSummaryViewModels {
+  views?: ComparisonViewsSummaryViewModel
+  byScenario: ComparisonsByScenarioSummaryViewModel
+  byDataset: ComparisonsByDatasetSummaryViewModel
+}
+
+export function createComparisonSummaryViewModels(
   comparisonConfig: ComparisonConfig,
   terseSummaries: ComparisonTestSummary[]
-): CompareSummaryViewModel {
+): ComparisonSummaryViewModels {
   // Group and categorize the comparison results
   const comparisonGroups = categorizeComparisonTestSummaries(comparisonConfig, terseSummaries)
   const groupsByScenario = comparisonGroups.byScenario
@@ -41,9 +65,9 @@ export function createCompareSummaryViewModel(
     return `view_${viewId++}`
   }
 
-  const viewGroupSections: CompareSummarySectionViewModel[] = []
+  const viewGroupSections: ComparisonSummarySectionViewModel[] = []
   for (const viewGroup of comparisonConfig.viewGroups) {
-    const viewRows: CompareSummaryRowViewModel[] = viewGroup.views.map(view => {
+    const viewRows: ComparisonSummaryRowViewModel[] = viewGroup.views.map(view => {
       switch (view.kind) {
         case 'view': {
           // Get the comparison test results for the scenario used in this view
@@ -64,6 +88,7 @@ export function createCompareSummaryViewModel(
             diffPercentByBucket = groupSummary.scores?.diffPercentByBucket
           }
           return {
+            kind: 'views',
             groupKey: genViewKey(),
             title: view.title,
             subtitle: view.subtitle,
@@ -78,6 +103,7 @@ export function createCompareSummaryViewModel(
         case 'unresolved-view':
           // TODO: Show proper error message here
           return {
+            kind: 'views',
             groupKey: genViewKey(),
             title: 'Unresolved view'
           }
@@ -86,7 +112,8 @@ export function createCompareSummaryViewModel(
       }
     })
 
-    const headerRow: CompareSummaryRowViewModel = {
+    const headerRow: ComparisonSummaryRowViewModel = {
+      kind: 'views',
       title: viewGroup.title,
       header: true
     }
@@ -103,12 +130,14 @@ export function createCompareSummaryViewModel(
     return `${count} ${count !== 1 ? s.replace(replace, `${replace}s`) : s}`
   }
 
-  function rowForGroupSummary(groupSummary: ComparisonGroupSummary): CompareSummaryRowViewModel {
+  function rowForGroupSummary(groupSummary: ComparisonGroupSummary): ComparisonSummaryRowViewModel {
+    let kind: ComparisonGroupingKind
     let title: string
     let subtitle: string
     const root = groupSummary.root
     switch (root.kind) {
       case 'dataset': {
+        kind = 'by-dataset'
         // TODO: Handle renames better (show changes in an annotation)
         const outputVar = root.outputVarR || root.outputVarL
         title = outputVar.varName
@@ -116,6 +145,7 @@ export function createCompareSummaryViewModel(
         break
       }
       case 'scenario':
+        kind = 'by-scenario'
         title = root.title
         subtitle = root.subtitle
         break
@@ -124,6 +154,7 @@ export function createCompareSummaryViewModel(
     }
 
     return {
+      kind,
       groupKey: groupSummary.group.key,
       title,
       subtitle,
@@ -136,14 +167,17 @@ export function createCompareSummaryViewModel(
     groupSummaries: ComparisonGroupSummary[],
     headerText: string,
     count = true
-  ): CompareSummarySectionViewModel | undefined {
+  ): ComparisonSummarySectionViewModel | undefined {
     if (groupSummaries.length > 0) {
-      const rows: CompareSummaryRowViewModel[] = groupSummaries.map(rowForGroupSummary)
+      const rows: ComparisonSummaryRowViewModel[] = groupSummaries.map(rowForGroupSummary)
 
+      let kind: ComparisonGroupingKind
       let replace: string
       if (headerText.includes('scenario')) {
+        kind = 'by-scenario'
         replace = 'scenario'
       } else {
+        kind = 'by-dataset'
         replace = 'variable'
       }
 
@@ -151,7 +185,8 @@ export function createCompareSummaryViewModel(
         headerText = countString(rows.length, headerText, replace)
       }
 
-      const headerRow: CompareSummaryRowViewModel = {
+      const headerRow: ComparisonSummaryRowViewModel = {
+        kind,
         title: headerText,
         header: true
       }
@@ -186,36 +221,58 @@ export function createCompareSummaryViewModel(
     false
   )
 
-  // Create a flat array of all rows to make it easier to set up the navigation links
-  const allRows: CompareSummaryRowViewModel[] = []
-  function addRows(section?: CompareSummarySectionViewModel): void {
+  // Create a flat array of all rows for each grouping to make it easier to set up the navigation links
+  function addRows(allRows: ComparisonSummaryRowViewModel[], section?: ComparisonSummarySectionViewModel): void {
     if (section) {
       allRows.push(...section.rows)
     }
   }
-  for (const viewGroupSection of viewGroupSections) {
-    addRows(viewGroupSection)
-  }
-  addRows(scenariosOnlyInLeft)
-  addRows(scenariosOnlyInRight)
-  addRows(scenariosWithDiffs)
-  addRows(scenariosWithoutDiffs)
-  addRows(datasetsOnlyInLeft)
-  addRows(datasetsOnlyInRight)
-  addRows(datasetsWithDiffs)
-  addRows(datasetsWithoutDiffs)
 
-  // Build the summary view model
-  return {
-    allRows,
-    viewGroups: viewGroupSections,
+  // Build the summary view models
+  let viewsSummary: ComparisonViewsSummaryViewModel
+  if (viewGroupSections.length > 0) {
+    const allViewRows: ComparisonSummaryRowViewModel[] = []
+    for (const viewGroupSection of viewGroupSections) {
+      allViewRows.push(...viewGroupSection.rows)
+    }
+    viewsSummary = {
+      kind: 'views',
+      allRows: allViewRows,
+      viewGroups: viewGroupSections
+    }
+  }
+
+  const allScenarioRows: ComparisonSummaryRowViewModel[] = []
+  addRows(allScenarioRows, scenariosOnlyInLeft)
+  addRows(allScenarioRows, scenariosOnlyInRight)
+  addRows(allScenarioRows, scenariosWithDiffs)
+  addRows(allScenarioRows, scenariosWithoutDiffs)
+  const byScenarioSummary: ComparisonsByScenarioSummaryViewModel = {
+    kind: 'by-scenario',
+    allRows: allScenarioRows,
     scenariosOnlyInLeft,
     scenariosOnlyInRight,
     scenariosWithDiffs,
-    scenariosWithoutDiffs,
+    scenariosWithoutDiffs
+  }
+
+  const allDatasetRows: ComparisonSummaryRowViewModel[] = []
+  addRows(allDatasetRows, datasetsOnlyInLeft)
+  addRows(allDatasetRows, datasetsOnlyInRight)
+  addRows(allDatasetRows, datasetsWithDiffs)
+  addRows(allDatasetRows, datasetsWithoutDiffs)
+  const byDatasetSummary: ComparisonsByDatasetSummaryViewModel = {
+    kind: 'by-dataset',
+    allRows: allDatasetRows,
     datasetsOnlyInLeft,
     datasetsOnlyInRight,
     datasetsWithDiffs,
     datasetsWithoutDiffs
+  }
+
+  return {
+    views: viewsSummary,
+    byScenario: byScenarioSummary,
+    byDataset: byDatasetSummary
   }
 }

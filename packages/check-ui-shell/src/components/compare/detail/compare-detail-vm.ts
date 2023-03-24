@@ -18,6 +18,7 @@ import type {
 import { diffGraphs } from '@sdeverywhere/check-core'
 
 import { getBucketIndex } from '../_shared/buckets'
+import type { ComparisonGroupingKind } from '../_shared/comparison-grouping-kind'
 
 import type { ComparisonDetailItem } from './compare-detail-item'
 import { groupItemsByTitle } from './compare-detail-item'
@@ -43,6 +44,7 @@ export interface CompareAllGraphsSections {
 }
 
 export interface CompareDetailViewModel {
+  kind: ComparisonGroupingKind
   /** The pretitle (e.g., view group title). */
   pretitle?: string
   /** The title (e.g., output variable name, scenario title, view title). */
@@ -140,6 +142,7 @@ function createCompareDetailViewModelForDataset(
   // TODO: Put all-at-default row at top
 
   return {
+    kind: 'by-dataset',
     title,
     subtitle,
     previousRowIndex,
@@ -163,17 +166,20 @@ function createCompareDetailViewModelForScenario(
   // Get the primary scenario for the detail view
   const scenario = groupSummary.root as ComparisonScenario
 
+  let kind: ComparisonGroupingKind
   let pretitle: string
   let title: string
   let subtitle: string
   if (view) {
     // This is the detail screen for a user-defined view, so use the title/subtitle from
     // the view definition
+    kind = 'views'
     pretitle = viewGroup?.title
     title = view.title
     subtitle = view.subtitle
   } else {
     // This is the detail screen for a scenario, so use the title/subtitle from the scenario
+    kind = 'by-scenario'
     title = scenario.title
     subtitle = scenario.subtitle
   }
@@ -259,6 +265,7 @@ function createCompareDetailViewModelForScenario(
   }
 
   return {
+    kind,
     pretitle,
     title,
     subtitle,

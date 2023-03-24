@@ -64,8 +64,9 @@ sub {
   --bucket-2: orangered;
   --bucket-3: crimson;
   --bucket-4: magenta;
-  --status-passed: green;
+  --status-passed: limegreen;
   --status-failed: crimson;
+  --status-warning: orange;
   --status-error: orangered;
 }
 
@@ -98,6 +99,9 @@ sub {
 }
 .status-color-failed {
   color: var(--status-failed);
+}
+.status-color-warning {
+  color: var(--status-warning);
 }
 .status-color-error {
   color: var(--status-error);
@@ -133,6 +137,9 @@ sub {
 .status-bg-failed {
   background-color: var(--status-failed);
 }
+.status-bg-warning {
+  background-color: var(--status-warning);
+}
 .status-bg-error {
   background-color: var(--status-error);
 }
@@ -166,6 +173,9 @@ sub {
 }
 .status-border-failed {
   border-color: var(--status-failed);
+}
+.status-border-warning {
+  border-color: var(--status-warning);
 }
 .status-border-error {
   border-color: var(--status-error);

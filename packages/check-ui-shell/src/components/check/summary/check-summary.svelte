@@ -7,11 +7,11 @@ import type { CheckSummaryViewModel } from './check-summary-vm'
 import CheckSummaryTest from './check-summary-test.svelte'
 
 export let viewModel: CheckSummaryViewModel
-let showCheckDetail = viewModel.total > 0 && viewModel.total !== viewModel.passed
 
-function onCheckSummaryClicked() {
-  showCheckDetail = !showCheckDetail
-}
+// Previously we allowed for collapsing the whole checks section, but now that we have
+// tabs, that is less useful, so always show them
+// let showCheckDetail = viewModel.total > 0 && viewModel.total !== viewModel.passed
+const showCheckDetail = true
 
 </script>
 
@@ -25,14 +25,14 @@ include check-summary.pug
 
 .check-summary-container
   .summary-bar-row
-    .bar-container(on:click!='{onCheckSummaryClicked}')
+    .bar-container
       +if('viewModel.total > 0')
-        .bar.status-bg-passed(style!='width: {viewModel.percents[0]}%;')
+        .bar.bucket-bg-0(style!='width: {viewModel.percents[0]}%;')
         .bar.status-bg-failed(style!='width: {viewModel.percents[1]}%;')
         .bar.status-bg-error(style!='width: {viewModel.percents[2]}%;')
         +else
           .bar.gray(style!='width: 100%')
-    span.summary-label(on:click!='{onCheckSummaryClicked}')
+    span.summary-label
       +if('viewModel.total === 0')
         span No checks
         +elseif('viewModel.total === viewModel.passed')
@@ -122,18 +122,14 @@ $indent: 1rem
   flex-direction: row
   align-items: baseline
   align-self: flex-start
-  margin-bottom: 1rem
-  opacity: .8
-
-.summary-bar-row:hover
+  margin: 2.6rem 0
   opacity: 1.0
 
 .bar-container
   display: flex
   flex-direction: row
-  width: 30rem
+  width: 20rem
   height: .8rem
-  cursor: pointer
 
 .bar
   height: .8rem
@@ -144,7 +140,6 @@ $indent: 1rem
 .summary-label
   margin-left: .8rem
   color: #fff
-  cursor: pointer
 
 .sep
   color: #777
