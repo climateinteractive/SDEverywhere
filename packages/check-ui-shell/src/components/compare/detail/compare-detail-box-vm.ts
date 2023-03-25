@@ -16,6 +16,7 @@ import type {
 import { diffDatasets } from '@sdeverywhere/check-core'
 
 import { getBucketIndex } from '../_shared/buckets'
+import { datasetSpan } from '../_shared/spans'
 
 import type { ComparisonGraphViewModel } from '../../graphs/comparison-graph-vm'
 import { pointsFromDataset } from '../../graphs/comparison-graph-vm'
@@ -70,8 +71,7 @@ export class CompareDetailBoxViewModel {
         const dataOnlyDefinedIn = (side: 'left' | 'right') => {
           const c = this.comparisonConfig
           const name = side === 'left' ? c.bundleL.name : c.bundleR.name
-          const color = side === 'left' ? 0 : 1
-          return `Data only defined in <span class="dataset-color-${color}">${name}</span>`
+          return `Data only defined in ${datasetSpan(name, side)}`
         }
 
         const diffReport = datasetReport.diffReport

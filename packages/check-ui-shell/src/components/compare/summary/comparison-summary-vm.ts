@@ -9,6 +9,8 @@ import type { ComparisonGroupingKind } from '../_shared/comparison-grouping-kind
 import { getAllGraphsSections } from '../detail/compare-detail-vm'
 
 import type { ComparisonSummaryRowViewModel, ComparisonViewKey } from './comparison-summary-row-vm'
+import { hasSignificantDiffs } from '../_shared/buckets'
+import { datasetSpan } from '../_shared/spans'
 
 export interface ComparisonSummarySectionViewModel {
   header: ComparisonSummaryRowViewModel
@@ -18,12 +20,14 @@ export interface ComparisonSummarySectionViewModel {
 export interface ComparisonViewsSummaryViewModel {
   kind: 'views'
   allRows: ComparisonSummaryRowViewModel[]
+  rowsWithDiffs: number
   viewGroups: ComparisonSummarySectionViewModel[]
 }
 
 export interface ComparisonsByScenarioSummaryViewModel {
   kind: 'by-scenario'
   allRows: ComparisonSummaryRowViewModel[]
+  rowsWithDiffs: number
   scenariosOnlyInLeft?: ComparisonSummarySectionViewModel
   scenariosOnlyInRight?: ComparisonSummarySectionViewModel
   scenariosWithDiffs?: ComparisonSummarySectionViewModel
@@ -33,6 +37,7 @@ export interface ComparisonsByScenarioSummaryViewModel {
 export interface ComparisonsByDatasetSummaryViewModel {
   kind: 'by-dataset'
   allRows: ComparisonSummaryRowViewModel[]
+  rowsWithDiffs: number
   datasetsOnlyInLeft?: ComparisonSummarySectionViewModel
   datasetsOnlyInRight?: ComparisonSummarySectionViewModel
   datasetsWithDiffs?: ComparisonSummarySectionViewModel
@@ -65,6 +70,7 @@ export function createComparisonSummaryViewModels(
     return `view_${viewId++}`
   }
 
+  let viewRowsWithDiffs = 0
   const viewGroupSections: ComparisonSummarySectionViewModel[] = []
   for (const viewGroup of comparisonConfig.viewGroups) {
     const viewRows: ComparisonSummaryRowViewModel[] = viewGroup.views.map(view => {
@@ -74,6 +80,7 @@ export function createComparisonSummaryViewModels(
           const scenario = view.scenario
           const groupSummary = groupsByScenario.allGroupSummaries.get(scenario.key)
           let diffPercentByBucket: number[]
+          let changedGraphCount: number
           if (view.graphs === 'all') {
             // For the special "all graphs" case, use the graph differences (instead of the dataset
             // differences) for the purposes of computing bucket colors for the bar
@@ -82,10 +89,15 @@ export function createComparisonSummaryViewModels(
             const testSummaries = groupSummary.group.testSummaries
             const allGraphs = getAllGraphsSections(comparisonConfig, undefined, scenario, testSummaries)
             diffPercentByBucket = allGraphs.diffPercentByBucket
+            changedGraphCount = allGraphs.nonZeroDiffCount
           } else {
             // Otherwise, use the dataset differences
             // TODO: We should only look at datasets that appear in the specified graphs, not all datasets
             diffPercentByBucket = groupSummary.scores?.diffPercentByBucket
+          }
+          if (hasSignificantDiffs(diffPercentByBucket)) {
+            // If the scenario has issues or has non-zero differences, treat it as a row with diffs
+            viewRowsWithDiffs++
           }
           return {
             kind: 'views',
@@ -96,12 +108,14 @@ export function createComparisonSummaryViewModels(
             groupSummary,
             viewMetadata: {
               viewGroup,
-              view
+              view,
+              changedGraphCount
             }
           }
         }
         case 'unresolved-view':
           // TODO: Show proper error message here
+          viewRowsWithDiffs++
           return {
             kind: 'views',
             groupKey: genViewKey(),
@@ -201,9 +215,10 @@ export function createComparisonSummaryViewModels(
   }
 
   // Build the by-scenario comparison sections
-  // TODO: Replace left and right here
-  const scenariosOnlyInLeft = section(groupsByScenario.onlyInLeft, 'scenario only valid in [left]…')
-  const scenariosOnlyInRight = section(groupsByScenario.onlyInRight, 'scenario only valid in [right]…')
+  const nameL = datasetSpan(comparisonConfig.bundleL.name, 'left')
+  const nameR = datasetSpan(comparisonConfig.bundleR.name, 'right')
+  const scenariosOnlyInLeft = section(groupsByScenario.onlyInLeft, `scenario only valid in ${nameL}…`)
+  const scenariosOnlyInRight = section(groupsByScenario.onlyInRight, `scenario only valid in ${nameR}…`)
   const scenariosWithDiffs = section(groupsByScenario.withDiffs, 'scenario producing differences…')
   const scenariosWithoutDiffs = section(
     groupsByScenario.withoutDiffs,
@@ -222,9 +237,9 @@ export function createComparisonSummaryViewModels(
   )
 
   // Create a flat array of all rows for each grouping to make it easier to set up the navigation links
-  function addRows(allRows: ComparisonSummaryRowViewModel[], section?: ComparisonSummarySectionViewModel): void {
+  function addRows(rows: ComparisonSummaryRowViewModel[], section?: ComparisonSummarySectionViewModel): void {
     if (section) {
-      allRows.push(...section.rows)
+      rows.push(...section.rows)
     }
   }
 
@@ -238,6 +253,7 @@ export function createComparisonSummaryViewModels(
     viewsSummary = {
       kind: 'views',
       allRows: allViewRows,
+      rowsWithDiffs: viewRowsWithDiffs,
       viewGroups: viewGroupSections
     }
   }
@@ -250,6 +266,7 @@ export function createComparisonSummaryViewModels(
   const byScenarioSummary: ComparisonsByScenarioSummaryViewModel = {
     kind: 'by-scenario',
     allRows: allScenarioRows,
+    rowsWithDiffs: allScenarioRows.length - scenariosWithoutDiffs.rows.length,
     scenariosOnlyInLeft,
     scenariosOnlyInRight,
     scenariosWithDiffs,
@@ -264,6 +281,7 @@ export function createComparisonSummaryViewModels(
   const byDatasetSummary: ComparisonsByDatasetSummaryViewModel = {
     kind: 'by-dataset',
     allRows: allDatasetRows,
+    rowsWithDiffs: allScenarioRows.length - datasetsWithoutDiffs.rows.length,
     datasetsOnlyInLeft,
     datasetsOnlyInRight,
     datasetsWithDiffs,

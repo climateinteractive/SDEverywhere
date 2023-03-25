@@ -39,6 +39,8 @@ export interface CompareGraphsSectionViewModel {
 export interface CompareAllGraphsSections {
   /** The section view models. */
   sections: CompareGraphsSectionViewModel[]
+  /** The total number of graphs with changes (non-zero difference). */
+  nonZeroDiffCount: number
   /** The breakdown of graph differences per bucket. */
   diffPercentByBucket: number[]
 }
@@ -400,8 +402,9 @@ export function getAllGraphsSections(
   }
 
   // Get the percentage of diffs for each bucket relative to the total number of graphs
-  const totalDiffCount = graphIds.size
-  const diffPercentByBucket = diffCountByBucket.map(count => (count / totalDiffCount) * 100)
+  const totalGraphCount = graphIds.size
+  const nonZeroDiffCount = totalGraphCount - diffCountByBucket[0]
+  const diffPercentByBucket = diffCountByBucket.map(count => (count / totalGraphCount) * 100)
 
   // Add a section for each non-empty group
   const sections: CompareGraphsSectionViewModel[] = []
@@ -423,6 +426,7 @@ export function getAllGraphsSections(
 
   return {
     sections,
+    nonZeroDiffCount,
     diffPercentByBucket
   }
 }

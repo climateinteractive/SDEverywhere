@@ -18,6 +18,8 @@ export interface ComparisonSummaryRowViewMetadata {
   viewGroup: ComparisonViewGroup
   /** The metadata for the view. */
   view: ComparisonView
+  /** The number of changed graphs, if this is an "all graphs" row. */
+  changedGraphCount?: number
 }
 
 export interface ComparisonSummaryRowViewModel {

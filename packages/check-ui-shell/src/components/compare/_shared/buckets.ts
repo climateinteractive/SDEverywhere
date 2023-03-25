@@ -18,3 +18,18 @@ export function getBucketIndex(diffPct: number, thresholds: number[]): number {
   // put it in the final bucket
   return thresholds.length + 1
 }
+
+/**
+ * Return true if the row has significant differences, i.e., a normal row with at least one test
+ * reporting differences, or an "error" row (a row where tests couldn't be run).
+ */
+export function hasSignificantDiffs(diffPercentByBucket: number[] | undefined): boolean {
+  if (diffPercentByBucket === undefined) {
+    // If there are no scores, it means there are issues, so treat it as a view with diffs
+    return true
+  } else {
+    // If there are any non-zero buckets (other than the first "no differences" bucket), treat
+    // it as a view with diffs
+    return diffPercentByBucket.some((diffsInBucket, index) => index > 0 && diffsInBucket > 0)
+  }
+}
