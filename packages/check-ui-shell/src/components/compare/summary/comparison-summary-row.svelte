@@ -49,11 +49,11 @@ function onLinkClicked() {
         .title-part
           .title(on:click!='{onLinkClicked}') { @html viewModel.title }
           +if('viewModel.subtitle')
-            .subtitle { @html viewModel.subtitle }
-          +if('viewModel.valuesPart')
-            .values-part { @html viewModel.valuesPart }
-          +if('viewModel.messagesPart')
-            .values-part { @html viewModel.messagesPart }
+            .subtitle(on:click!='{onLinkClicked}') { @html viewModel.subtitle }
+          //- +if('viewModel.valuesPart')
+          //-   .values-part { @html viewModel.valuesPart }
+          +if('viewModel.annotations')
+            .annotations { @html viewModel.annotations }
 
 </template>
 
@@ -73,9 +73,6 @@ function onLinkClicked() {
 
 .summary-row:hover
   opacity: 1.0
-
-// .summary-row:nth-child(8), .summary-row:nth-child(11)
-//   margin-top: 1rem
 
 .bar-container
   display: flex
@@ -114,23 +111,24 @@ function onLinkClicked() {
   font-size: .8em
   margin-left: .6rem
   color: #aaa
+  cursor: pointer
 
-.values-part
-  font-size: .8em
-  margin-left: .6rem
-  color: #aaa
-
-// .messages-part
+// .values-part
 //   font-size: .8em
 //   margin-left: .6rem
 //   color: #aaa
 
-// TODO: Add proper support for annotations
-// :global(.message)
-//   padding: .1rem .3rem
-//   background-color: #1c1c1c
-//   border: .5px solid #555
-//   border-radius: .4rem
+.annotations
+  font-size: .8em
+  margin-left: .3rem
+  color: #aaa
+
+.annotations :global(.annotation)
+  margin: 0 .3rem
+  padding: .1rem .3rem
+  background-color: #1c1c1c
+  border: .5px solid #555
+  border-radius: .4rem
 
 .summary-header-row
   display: flex

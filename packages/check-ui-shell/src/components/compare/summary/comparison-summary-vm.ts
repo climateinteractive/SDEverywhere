@@ -11,6 +11,7 @@ import { getAllGraphsSections } from '../detail/compare-detail-vm'
 import type { ComparisonSummaryRowViewModel, ComparisonViewKey } from './comparison-summary-row-vm'
 import { hasSignificantDiffs } from '../_shared/buckets'
 import { datasetSpan } from '../_shared/spans'
+import { getAnnotationsForDataset } from '../_shared/annotations'
 
 export interface ComparisonSummarySectionViewModel {
   header: ComparisonSummaryRowViewModel
@@ -59,6 +60,9 @@ export function createComparisonSummaryViewModels(
   comparisonConfig: ComparisonConfig,
   terseSummaries: ComparisonTestSummary[]
 ): ComparisonSummaryViewModels {
+  const bundleNameL = comparisonConfig.bundleL.name
+  const bundleNameR = comparisonConfig.bundleR.name
+
   // Group and categorize the comparison results
   const comparisonGroups = categorizeComparisonTestSummaries(comparisonConfig, terseSummaries)
   const groupsByScenario = comparisonGroups.byScenario
@@ -148,14 +152,15 @@ export function createComparisonSummaryViewModels(
     let kind: ComparisonGroupingKind
     let title: string
     let subtitle: string
+    let annotations: string
     const root = groupSummary.root
     switch (root.kind) {
       case 'dataset': {
         kind = 'by-dataset'
-        // TODO: Handle renames better (show changes in an annotation)
         const outputVar = root.outputVarR || root.outputVarL
         title = outputVar.varName
         subtitle = outputVar.sourceName
+        annotations = getAnnotationsForDataset(root, bundleNameL, bundleNameR).join(' ')
         break
       }
       case 'scenario':
@@ -172,6 +177,7 @@ export function createComparisonSummaryViewModels(
       groupKey: groupSummary.group.key,
       title,
       subtitle,
+      annotations,
       diffPercentByBucket: groupSummary.scores?.diffPercentByBucket,
       groupSummary
     }
@@ -215,8 +221,8 @@ export function createComparisonSummaryViewModels(
   }
 
   // Build the by-scenario comparison sections
-  const nameL = datasetSpan(comparisonConfig.bundleL.name, 'left')
-  const nameR = datasetSpan(comparisonConfig.bundleR.name, 'right')
+  const nameL = datasetSpan(bundleNameL, 'left')
+  const nameR = datasetSpan(bundleNameR, 'right')
   const scenariosOnlyInLeft = section(groupsByScenario.onlyInLeft, `scenario only valid in ${nameL}…`)
   const scenariosOnlyInRight = section(groupsByScenario.onlyInRight, `scenario only valid in ${nameR}…`)
   const scenariosWithDiffs = section(groupsByScenario.withDiffs, 'scenario producing differences…')

@@ -28,6 +28,7 @@ import { createCompareDetailRowViewModel } from './compare-detail-row-vm'
 
 import type { CompareGraphsRowViewModel } from './compare-graphs-row-vm'
 import { createCompareGraphsRowViewModel } from './compare-graphs-row-vm'
+import { getAnnotationsForDataset } from '../_shared/annotations'
 
 export interface CompareGraphsSectionViewModel {
   /** The section title. */
@@ -53,6 +54,8 @@ export interface CompareDetailViewModel {
   title: string
   /** The subtitle (e.g., output variable source name or scenario position). */
   subtitle?: string
+  /** A string containing HTML `<span>` elements for annotations. */
+  annotations?: string
   /** The index of the row before this one. */
   previousRowIndex?: number
   /** The index of the row after this one. */
@@ -107,12 +110,15 @@ function createCompareDetailViewModelForDataset(
   previousRowIndex: number | undefined,
   nextRowIndex: number | undefined
 ): CompareDetailViewModel {
+  const bundleNameL = comparisonConfig.bundleL.name
+  const bundleNameR = comparisonConfig.bundleR.name
+
   // Get the primary dataset for the detail view
   const dataset = groupSummary.root as ComparisonDataset
-  // TODO: Show renamed variables in red+blue (in header annotations)
   const outputVar = dataset.outputVarR || dataset.outputVarL
   const title = outputVar.varName
   const subtitle = outputVar.sourceName
+  const annotations = getAnnotationsForDataset(dataset, bundleNameL, bundleNameR).join(' ')
 
   // Get the related graphs, etc; we only show the information relative to the "right" model
   const relatedItems: string[] = []
@@ -147,6 +153,7 @@ function createCompareDetailViewModelForDataset(
     kind: 'by-dataset',
     title,
     subtitle,
+    annotations,
     previousRowIndex,
     nextRowIndex,
     relatedListHeader: 'Appears in:',

@@ -32,8 +32,8 @@ export interface ComparisonSummaryRowViewModel {
   subtitle?: string
   /** XXX */
   valuesPart?: string
-  /** XXX */
-  messagesPart?: string
+  /** A string containing HTML `<span>` elements for annotations. */
+  annotations?: string
   /** The percent of diffs for each threshold bucket. */
   diffPercentByBucket?: number[]
   /** The metadata for the comparison test group. */

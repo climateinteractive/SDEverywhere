@@ -96,6 +96,8 @@ svelte:window(on:keydown!='{onKeyDown}')
           .title(on:click!='{toggleRelatedItems}') { @html viewModel.title }
           +if('viewModel.subtitle')
             .subtitle { @html viewModel.subtitle }
+          +if('viewModel.annotations')
+            .annotations { @html viewModel.annotations }
       .spacer-flex
       .nav-links.no-selection
         .nav-link(class:disabled!='{viewModel.previousRowIndex === undefined}' on:click!='{() => onNavLink("detail-previous")}') previous
@@ -186,6 +188,17 @@ svelte:window(on:keydown!='{onKeyDown}')
   font-weight: 700
   margin-left: 1.2rem
   color: #aaa
+
+.annotations
+  margin-left: .3rem
+  color: #aaa
+
+.annotations :global(.annotation)
+  margin: 0 .3rem
+  padding: .1rem .3rem
+  background-color: #222
+  border: .5px solid #555
+  border-radius: .4rem
 
 .related
   font-size: 1em
