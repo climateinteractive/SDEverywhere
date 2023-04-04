@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.7.8](https://github.com/climateinteractive/SDEverywhere/compare/cli-v0.7.7...cli-v0.7.8) (2023-01-26)
+
+
+### Bug Fixes
+
+* read blank lines and blank cells in CSV files ([#309](https://github.com/climateinteractive/SDEverywhere/issues/309)) ([1a9fa37](https://github.com/climateinteractive/SDEverywhere/commit/1a9fa37450301300c04dce05762ca9120a80f2f0)), closes [#308](https://github.com/climateinteractive/SDEverywhere/issues/308)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/compile bumped from ^0.7.4 to ^0.7.5
+
 ## [0.7.7](https://github.com/climateinteractive/SDEverywhere/compare/cli-v0.7.6...cli-v0.7.7) (2022-12-13)
 
 
