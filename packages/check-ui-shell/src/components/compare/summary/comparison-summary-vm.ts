@@ -288,7 +288,7 @@ export function createComparisonSummaryViewModels(
   const byDatasetSummary: ComparisonsByDatasetSummaryViewModel = {
     kind: 'by-dataset',
     allRows: allDatasetRows,
-    rowsWithDiffs: allScenarioRows.length - datasetsWithoutDiffs.rows.length,
+    rowsWithDiffs: allDatasetRows.length - datasetsWithoutDiffs.rows.length,
     datasetsOnlyInLeft,
     datasetsOnlyInRight,
     datasetsWithDiffs,

@@ -112,14 +112,14 @@ export function createSummaryViewModel(
 
     // Add tab for by-dataset summaries
     comparisonsByDatasetSummaryViewModel = comparisonSummaries.byDataset
-    const byDatasetTabInfo = getTabInfo(comparisonsByDatasetSummaryViewModel.rowsWithDiffs, 'scenario')
+    const byDatasetTabInfo = getTabInfo(comparisonsByDatasetSummaryViewModel.rowsWithDiffs, 'dataset')
     addTabItem('comps-by-dataset', 'Comparisons by output', byDatasetTabInfo)
   }
 
   // Select the first tab that has differences by default; if no differences, show the
   // first ("Checks") tab by default
-  const initialTabIndex = tabItems.findIndex(item => item.subtitle !== 'all clear') || 0
-  const tabBarViewModel = new TabBarViewModel(tabItems, initialTabIndex)
+  const initialTabIndex = tabItems.findIndex(item => item.subtitle !== 'all clear')
+  const tabBarViewModel = new TabBarViewModel(tabItems, initialTabIndex >= 0 ? initialTabIndex : 0)
 
   return {
     statsTableViewModel,
