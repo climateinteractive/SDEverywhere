@@ -5,13 +5,14 @@ import { assertNever } from 'assert-never'
 import type { ComparisonConfig, ComparisonGroupSummary, ComparisonTestSummary } from '@sdeverywhere/check-core'
 import { categorizeComparisonTestSummaries } from '@sdeverywhere/check-core'
 
+import { getAnnotationsForDataset } from '../_shared/annotations'
+import { hasSignificantDiffs } from '../_shared/buckets'
 import type { ComparisonGroupingKind } from '../_shared/comparison-grouping-kind'
+import { datasetSpan } from '../_shared/spans'
+
 import { getAllGraphsSections } from '../detail/compare-detail-vm'
 
 import type { ComparisonSummaryRowViewModel, ComparisonViewKey } from './comparison-summary-row-vm'
-import { hasSignificantDiffs } from '../_shared/buckets'
-import { datasetSpan } from '../_shared/spans'
-import { getAnnotationsForDataset } from '../_shared/annotations'
 
 export interface ComparisonSummarySectionViewModel {
   header: ComparisonSummaryRowViewModel
