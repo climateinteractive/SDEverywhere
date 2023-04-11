@@ -87,6 +87,9 @@ export function groupComparisonTestSummaries(
  * Given a set of `ComparisonGroup` instances, organize and sort the groups into the
  * following categories:
  *
+ * withErrors
+ *   groups with items that have errors (are not valid) for both "left" and "right" models
+ *
  * onlyInLeft
  *   groups with items that are only valid for the "left" model (for example, datasets that
  *   were removed and no longer available in the "right" model)
@@ -108,6 +111,7 @@ export function categorizeComparisonGroups(
   allGroups: ComparisonGroup[]
 ): ComparisonGroupSummariesByCategory {
   const allGroupSummaries: Map<ComparisonGroupKey, ComparisonGroupSummary> = new Map()
+  const withErrors: ComparisonGroupSummary[] = []
   const onlyInLeft: ComparisonGroupSummary[] = []
   const onlyInRight: ComparisonGroupSummary[] = []
   let withDiffs: ComparisonGroupSummary[] = []
@@ -119,13 +123,6 @@ export function categorizeComparisonGroups(
     validInL: boolean,
     validInR: boolean
   ): void {
-    if (!validInL && !validInR) {
-      // The dataset/scenario is not in either; this should not happen in practice so treat
-      // it as a (soft) error
-      console.error(`ERROR: Invalid ${root.kind} in categorizeComparisonGroups for key=${group.key}`)
-      return
-    }
-
     // Compute the scores if the dataset/scenario is valid in both
     let scores: ComparisonGroupScores
     if (validInL && validInR) {
@@ -156,6 +153,9 @@ export function categorizeComparisonGroups(
     } else if (validInR) {
       // The dataset/scenario is valid in "right" only
       onlyInRight.push(groupSummary)
+    } else {
+      // The dataset/scenario is not valid in either "left" or "right"
+      withErrors.push(groupSummary)
     }
   }
 
@@ -197,6 +197,7 @@ export function categorizeComparisonGroups(
 
   return {
     allGroupSummaries,
+    withErrors,
     onlyInLeft,
     onlyInRight,
     withDiffs,

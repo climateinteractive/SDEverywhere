@@ -24,11 +24,13 @@ include comparison-summary.pug
   +if('viewModel.kind === "views"')
     +view-group-sections
     +elseif('viewModel.kind === "by-scenario"')
+      +section('scenariosWithErrors')
       +section('scenariosOnlyInLeft')
       +section('scenariosOnlyInRight')
       +section('scenariosWithDiffs')
       +section('scenariosWithoutDiffs')
     +elseif('viewModel.kind === "by-dataset"')
+      +section('datasetsWithErrors')
       +section('datasetsOnlyInLeft')
       +section('datasetsOnlyInRight')
       +section('datasetsWithDiffs')

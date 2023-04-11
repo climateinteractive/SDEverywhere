@@ -3,8 +3,13 @@
 import { describe, expect, it } from 'vitest'
 
 import type { DatasetKey } from '../../_shared/types'
-import type { ComparisonScenario, ComparisonScenarioKey } from '../_shared/comparison-resolved-types'
-import { allAtPos, inputVar, scenarioWithInputVar } from '../_shared/_mocks/mock-resolved-types'
+import type {
+  ComparisonResolverInvalidValueError,
+  ComparisonResolverUnknownInputError,
+  ComparisonScenario,
+  ComparisonScenarioKey
+} from '../_shared/comparison-resolved-types'
+import { allAtPos, inputVar, scenarioWithInput, scenarioWithInputVar } from '../_shared/_mocks/mock-resolved-types'
 import type { BundleModel, LoadedBundle, ModelSpec } from '../../bundle/bundle-types'
 import type { OutputVar } from '../../bundle/var-types'
 
@@ -206,10 +211,12 @@ describe('categorizeComparisonGroups', () => {
   // In R only
   const v = 'Model_v'
 
+  // These inputs are all valid
   // TODO: Test added/removed/renamed inputs
   const a = inputVar('1', 'a')[1]
   const b = inputVar('2', 'b')[1]
 
+  // These input scenarios are all valid
   const baseline = allAtPos('1', 'at-default')
   const aAtMin = scenarioWithInputVar('2', a, 'at-minimum')
   const aAtMax = scenarioWithInputVar('3', a, 'at-maximum')
@@ -217,19 +224,43 @@ describe('categorizeComparisonGroups', () => {
   const bAtMax = scenarioWithInputVar('5', b, 'at-maximum')
   const bAt20 = scenarioWithInputVar('6', b, 20)
 
-  const scenarios = [baseline, aAtMin, aAtMax, bAtMin, bAtMax, bAt20]
+  // This input does not exist, so the scenario should be invalid for both sides
+  const d: ComparisonResolverUnknownInputError = { kind: 'unknown-input' }
+  const dAtMax = scenarioWithInput('7', 'd', 'at-maximum', d, d, undefined, undefined)
+
+  // In this scenario, the input is valid, but the value is out of range, so the scenario should
+  // be invalid for both sides
+  const bInvalid: ComparisonResolverInvalidValueError = { kind: 'invalid-value' }
+  const bAt666 = scenarioWithInput('8', 'b', 666, bInvalid, bInvalid, undefined, undefined)
+
+  const scenarios = [baseline, aAtMin, aAtMax, bAtMin, bAtMax, bAt20, dAtMax, bAt666]
 
   const comparisonConfig = mockComparisonConfig(bundleL, bundleR, scenarios, renamedDatasetKeys)
 
   // For these tests, we assume:
   //   - a few output variables (x, y, z, v, w), see above
   //   - 2 input variables (a, b)
-  //   - 6 scenarios:
+  //   - 6 valid scenarios:
   //       - all inputs at default (aka baseline)
   //       - a at {min,max}
   //       - b at {min,max}
   //       - b at 20
+  //   - 2 invalid scenarios:
+  //       - d at max (input is unknown for both sides)
+  //       - b at 666 (value is invalid for both sides)
   const allSummaries = [
+    testSummary(dAtMax, w),
+    testSummary(dAtMax, x),
+    testSummary(dAtMax, y),
+    testSummary(dAtMax, z),
+    testSummary(dAtMax, v),
+
+    testSummary(bAt666, w),
+    testSummary(bAt666, x),
+    testSummary(bAt666, y),
+    testSummary(bAt666, z),
+    testSummary(bAt666, v),
+
     testSummary(baseline, w),
     testSummary(baseline, x),
     testSummary(baseline, y),
@@ -286,11 +317,29 @@ describe('categorizeComparisonGroups', () => {
       }
     }
 
-    // given by-scenario groups, sort comparisons for scenario:
+    // Given by-scenario groups, sort comparisons for scenario:
     //   order comparisons by max diff (get percent of each bucket)
     //   put into sections (scenarios added, removed, diffs, no diffs)
     const groupsByScenario = groupComparisonTestSummaries(allSummaries, 'by-scenario')
     const groupSummaries = categorizeComparisonGroups(comparisonConfig, [...groupsByScenario.values()])
+
+    // Verify that scenarios with unknown inputs and invalid values get grouped into the "with errors" category
+    expect(groupSummaries.withErrors).toEqual([
+      groupSummary('7', [
+        testSummary(dAtMax, w),
+        testSummary(dAtMax, x),
+        testSummary(dAtMax, y),
+        testSummary(dAtMax, z),
+        testSummary(dAtMax, v)
+      ]),
+      groupSummary('8', [
+        testSummary(bAt666, w),
+        testSummary(bAt666, x),
+        testSummary(bAt666, y),
+        testSummary(bAt666, z),
+        testSummary(bAt666, v)
+      ])
+    ])
 
     // TODO: Test L/R-only scenarios
     expect(groupSummaries.onlyInLeft).toEqual([])
@@ -416,7 +465,7 @@ describe('categorizeComparisonGroups', () => {
       }
     }
 
-    // given by-dataset groups, sort comparisons for dataset:
+    // Given by-dataset groups, sort comparisons for dataset:
     //   order comparisons by max diff (get percent of each bucket)
     //   put into sections (datasets added, removed, diffs, no diffs)
     const groupsByDataset = groupComparisonTestSummaries(allSummaries, 'by-dataset')
@@ -424,6 +473,8 @@ describe('categorizeComparisonGroups', () => {
 
     expect(groupSummaries.onlyInLeft).toEqual([
       groupSummary('Model_z', [
+        testSummary(dAtMax, z),
+        testSummary(bAt666, z),
         testSummary(baseline, z),
         testSummary(aAtMin, z),
         testSummary(aAtMax, z),
@@ -435,6 +486,8 @@ describe('categorizeComparisonGroups', () => {
 
     expect(groupSummaries.onlyInRight).toEqual([
       groupSummary('Model_v', [
+        testSummary(dAtMax, v),
+        testSummary(bAt666, v),
         testSummary(baseline, v),
         testSummary(aAtMin, v),
         testSummary(aAtMax, v),
@@ -448,6 +501,8 @@ describe('categorizeComparisonGroups', () => {
       groupSummary(
         'Model_y',
         [
+          testSummary(dAtMax, y),
+          testSummary(bAt666, y),
           testSummary(baseline, y),
           testSummary(aAtMin, y, 10),
           testSummary(aAtMax, y, 10),
@@ -456,15 +511,17 @@ describe('categorizeComparisonGroups', () => {
           testSummary(bAt20, y)
         ],
         {
-          totalDiffCount: 6,
+          totalDiffCount: 8,
           totalMaxDiffByBucket: [0, 0, 0, 5, 60],
-          diffCountByBucket: [2, 0, 0, 1, 3],
-          diffPercentByBucket: [33.33333333333333, 0, 0, 16.666666666666664, 50]
+          diffCountByBucket: [4, 0, 0, 1, 3],
+          diffPercentByBucket: [50, 0, 0, 12.5, 37.5]
         }
       ),
       groupSummary(
         'Model_w',
         [
+          testSummary(dAtMax, w),
+          testSummary(bAt666, w),
           testSummary(baseline, w),
           testSummary(aAtMin, w),
           testSummary(aAtMax, w),
@@ -473,10 +530,10 @@ describe('categorizeComparisonGroups', () => {
           testSummary(bAt20, w)
         ],
         {
-          totalDiffCount: 6,
+          totalDiffCount: 8,
           totalMaxDiffByBucket: [0, 0, 0, 5, 0],
-          diffCountByBucket: [5, 0, 0, 1, 0],
-          diffPercentByBucket: [83.33333333333334, 0, 0, 16.666666666666664, 0]
+          diffCountByBucket: [7, 0, 0, 1, 0],
+          diffPercentByBucket: [87.5, 0, 0, 12.5, 0]
         }
       )
     ])
@@ -485,6 +542,8 @@ describe('categorizeComparisonGroups', () => {
       groupSummary(
         'Model_x',
         [
+          testSummary(dAtMax, x),
+          testSummary(bAt666, x),
           testSummary(baseline, x),
           testSummary(aAtMin, x),
           testSummary(aAtMax, x),
@@ -493,9 +552,9 @@ describe('categorizeComparisonGroups', () => {
           testSummary(bAt20, x)
         ],
         {
-          totalDiffCount: 6,
+          totalDiffCount: 8,
           totalMaxDiffByBucket: [0, 0, 0, 0, 0],
-          diffCountByBucket: [6, 0, 0, 0, 0],
+          diffCountByBucket: [8, 0, 0, 0, 0],
           diffPercentByBucket: [100, 0, 0, 0, 0]
         }
       )

@@ -17,6 +17,7 @@ import type {
 } from '@sdeverywhere/check-core'
 import { diffGraphs } from '@sdeverywhere/check-core'
 
+import { getAnnotationsForDataset, getAnnotationsForScenario } from '../_shared/annotations'
 import { getBucketIndex } from '../_shared/buckets'
 import type { ComparisonGroupingKind } from '../_shared/comparison-grouping-kind'
 
@@ -28,7 +29,6 @@ import { createCompareDetailRowViewModel } from './compare-detail-row-vm'
 
 import type { CompareGraphsRowViewModel } from './compare-graphs-row-vm'
 import { createCompareGraphsRowViewModel } from './compare-graphs-row-vm'
-import { getAnnotationsForDataset } from '../_shared/annotations'
 
 export interface CompareGraphsSectionViewModel {
   /** The section title. */
@@ -172,8 +172,12 @@ function createCompareDetailViewModelForScenario(
   previousRowIndex: number | undefined,
   nextRowIndex: number | undefined
 ): CompareDetailViewModel {
+  const bundleNameL = comparisonConfig.bundleL.name
+  const bundleNameR = comparisonConfig.bundleR.name
+
   // Get the primary scenario for the detail view
   const scenario = groupSummary.root as ComparisonScenario
+  const annotations = getAnnotationsForScenario(scenario, bundleNameL, bundleNameR).join(' ')
 
   let kind: ComparisonGroupingKind
   let pretitle: string
@@ -278,6 +282,7 @@ function createCompareDetailViewModelForScenario(
     pretitle,
     title,
     subtitle,
+    annotations,
     previousRowIndex,
     nextRowIndex,
     relatedListHeader: 'Related items:',

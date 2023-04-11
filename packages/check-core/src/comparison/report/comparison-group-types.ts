@@ -53,8 +53,14 @@ export interface ComparisonGroupSummary {
  * Breaks down a set of by-scenario or by-dataset groupings into distinct categories.
  */
 export interface ComparisonGroupSummariesByCategory {
-  /** All groups in a map, keyed by "group key" (either a dataset key or scenario key). */
+  /**
+   * All groups in a map, keyed by "group key" (either a dataset key or scenario key).
+   */
   allGroupSummaries: Map<ComparisonGroupKey, ComparisonGroupSummary>
+  /**
+   * Groups with items that have errors (are not valid) for both "left" and "right" models.
+   */
+  withErrors: ComparisonGroupSummary[]
   /**
    * Groups with items that are only valid for the "left" model (for example, datasets that
    * were removed and no longer available in the "right" model).

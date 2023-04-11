@@ -5,7 +5,7 @@ import { assertNever } from 'assert-never'
 import type { ComparisonConfig, ComparisonGroupSummary, ComparisonTestSummary } from '@sdeverywhere/check-core'
 import { categorizeComparisonTestSummaries } from '@sdeverywhere/check-core'
 
-import { getAnnotationsForDataset } from '../_shared/annotations'
+import { getAnnotationsForDataset, getAnnotationsForScenario } from '../_shared/annotations'
 import { hasSignificantDiffs } from '../_shared/buckets'
 import type { ComparisonGroupingKind } from '../_shared/comparison-grouping-kind'
 import { datasetSpan } from '../_shared/spans'
@@ -30,6 +30,7 @@ export interface ComparisonsByScenarioSummaryViewModel {
   kind: 'by-scenario'
   allRows: ComparisonSummaryRowViewModel[]
   rowsWithDiffs: number
+  scenariosWithErrors?: ComparisonSummarySectionViewModel
   scenariosOnlyInLeft?: ComparisonSummarySectionViewModel
   scenariosOnlyInRight?: ComparisonSummarySectionViewModel
   scenariosWithDiffs?: ComparisonSummarySectionViewModel
@@ -40,6 +41,7 @@ export interface ComparisonsByDatasetSummaryViewModel {
   kind: 'by-dataset'
   allRows: ComparisonSummaryRowViewModel[]
   rowsWithDiffs: number
+  datasetsWithErrors?: ComparisonSummarySectionViewModel
   datasetsOnlyInLeft?: ComparisonSummarySectionViewModel
   datasetsOnlyInRight?: ComparisonSummarySectionViewModel
   datasetsWithDiffs?: ComparisonSummarySectionViewModel
@@ -168,6 +170,7 @@ export function createComparisonSummaryViewModels(
         kind = 'by-scenario'
         title = root.title
         subtitle = root.subtitle
+        annotations = getAnnotationsForScenario(root, bundleNameL, bundleNameR).join(' ')
         break
       default:
         assertNever(root)
@@ -224,6 +227,7 @@ export function createComparisonSummaryViewModels(
   // Build the by-scenario comparison sections
   const nameL = datasetSpan(bundleNameL, 'left')
   const nameR = datasetSpan(bundleNameR, 'right')
+  const scenariosWithErrors = section(groupsByScenario.withErrors, 'scenario with errors…')
   const scenariosOnlyInLeft = section(groupsByScenario.onlyInLeft, `scenario only valid in ${nameL}…`)
   const scenariosOnlyInRight = section(groupsByScenario.onlyInRight, `scenario only valid in ${nameR}…`)
   const scenariosWithDiffs = section(groupsByScenario.withDiffs, 'scenario producing differences…')
@@ -234,6 +238,7 @@ export function createComparisonSummaryViewModels(
   )
 
   // Build the by-dataset comparison sections
+  const datasetsWithErrors = section(groupsByDataset.withErrors, 'output variable with errors…')
   const datasetsOnlyInLeft = section(groupsByDataset.onlyInLeft, 'removed output variable…')
   const datasetsOnlyInRight = section(groupsByDataset.onlyInRight, 'added output variable…')
   const datasetsWithDiffs = section(groupsByDataset.withDiffs, 'output variable with differences…')
@@ -266,6 +271,7 @@ export function createComparisonSummaryViewModels(
   }
 
   const allScenarioRows: ComparisonSummaryRowViewModel[] = []
+  addRows(allScenarioRows, scenariosWithErrors)
   addRows(allScenarioRows, scenariosOnlyInLeft)
   addRows(allScenarioRows, scenariosOnlyInRight)
   addRows(allScenarioRows, scenariosWithDiffs)
@@ -274,6 +280,7 @@ export function createComparisonSummaryViewModels(
     kind: 'by-scenario',
     allRows: allScenarioRows,
     rowsWithDiffs: allScenarioRows.length - scenariosWithoutDiffs.rows.length,
+    scenariosWithErrors,
     scenariosOnlyInLeft,
     scenariosOnlyInRight,
     scenariosWithDiffs,
@@ -281,6 +288,7 @@ export function createComparisonSummaryViewModels(
   }
 
   const allDatasetRows: ComparisonSummaryRowViewModel[] = []
+  addRows(allDatasetRows, datasetsWithErrors)
   addRows(allDatasetRows, datasetsOnlyInLeft)
   addRows(allDatasetRows, datasetsOnlyInRight)
   addRows(allDatasetRows, datasetsWithDiffs)
@@ -289,6 +297,7 @@ export function createComparisonSummaryViewModels(
     kind: 'by-dataset',
     allRows: allDatasetRows,
     rowsWithDiffs: allDatasetRows.length - datasetsWithoutDiffs.rows.length,
+    datasetsWithErrors,
     datasetsOnlyInLeft,
     datasetsOnlyInRight,
     datasetsWithDiffs,

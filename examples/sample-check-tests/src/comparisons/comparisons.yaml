@@ -1,32 +1,10 @@
 # yaml-language-server: $schema=../../../../packages/check-core/schema/comparison.schema.json
 
-# Input ID exists in both left and right
+# TODO: Scenario where single input ID exists in both left and right
 # - scenario:
 #     id: S0
 #     with: Input B
 #     at: 10
-# - scenario:
-#     id: S1
-#     with: Input B
-#     at: 90
-
-# Input ID exists in both left and right, but with different variable names
-
-# Input ID exists in both left and right, but with different min/max
-
-# # Variable does not exist in left (input variable was added)
-# - scenario:
-#     id: S1
-#     with: Input B
-#     at: 90
-
-# # Variable does not exist in right (input variable was removed)
-# - scenario:
-#     id: S1
-#     with: Input B
-#     at: 90
-
-# # Variable does not exist in left or right (unknown input)
 # - scenario:
 #     id: S1
 #     with: Input B
@@ -90,3 +68,22 @@
     graphs:
       - '3'
       - '4'
+#
+# TODO: The following can be uncommented to test edge/error cases
+#
+# Variable does not exist in left or right (unknown input)
+- scenario:
+    title: Input Q (unknown)
+    subtitle: at 90
+    with: Input Q
+    at: 90
+
+# Variable exists in left+right, but value is invalid in left+right
+- scenario:
+    title: Input A
+    subtitle: at 666
+    with: Input A
+    at: 666
+# TODO: Input ID exists in both left and right, but with different variable names
+
+# TODO: Input ID exists in both left and right, but with different min/max
