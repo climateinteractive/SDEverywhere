@@ -276,10 +276,11 @@ export function createComparisonSummaryViewModels(
   addRows(allScenarioRows, scenariosOnlyInRight)
   addRows(allScenarioRows, scenariosWithDiffs)
   addRows(allScenarioRows, scenariosWithoutDiffs)
+  const scenariosWithoutDiffsCount = scenariosWithoutDiffs?.rows.length || 0
   const byScenarioSummary: ComparisonsByScenarioSummaryViewModel = {
     kind: 'by-scenario',
     allRows: allScenarioRows,
-    rowsWithDiffs: allScenarioRows.length - scenariosWithoutDiffs.rows.length,
+    rowsWithDiffs: allScenarioRows.length - scenariosWithoutDiffsCount,
     scenariosWithErrors,
     scenariosOnlyInLeft,
     scenariosOnlyInRight,
@@ -293,10 +294,11 @@ export function createComparisonSummaryViewModels(
   addRows(allDatasetRows, datasetsOnlyInRight)
   addRows(allDatasetRows, datasetsWithDiffs)
   addRows(allDatasetRows, datasetsWithoutDiffs)
+  const datasetsWithoutDiffsCount = datasetsWithoutDiffs?.rows.length || 0
   const byDatasetSummary: ComparisonsByDatasetSummaryViewModel = {
     kind: 'by-dataset',
     allRows: allDatasetRows,
-    rowsWithDiffs: allDatasetRows.length - datasetsWithoutDiffs.rows.length,
+    rowsWithDiffs: allDatasetRows.length - datasetsWithoutDiffsCount,
     datasetsWithErrors,
     datasetsOnlyInLeft,
     datasetsOnlyInRight,
