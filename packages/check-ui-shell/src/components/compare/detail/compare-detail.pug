@@ -14,7 +14,10 @@ mixin graph-sections
       .section-title { graphsSectionViewModel.title }
       +each('graphsSectionViewModel.rows as graphsRowViewModel')
         .row-container
-          GraphsRow(viewModel!='{graphsRowViewModel}' align='left')
+          //- XXX: Use `key` to force GraphsRow component to be recreated when the view model changes
+          //- (otherwise the "Dataset differences" section may show outdated items)
+          +key('graphsRowViewModel')
+            GraphsRow(viewModel!='{graphsRowViewModel}' align='left')
     .section-title All Datasets
 
 mixin box-rows
