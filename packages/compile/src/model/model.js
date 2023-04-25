@@ -361,8 +361,9 @@ function removeUnusedVariables(spec) {
     }
   }
 
-  // Filter out unneeded variables so we're left with the minimal set of variables to emit
-  variables = R.filter(v => referencedVarNames.includes(v.varName), variables)
+  // Keep vars with directDatArgs (GET DIRECT DATA and GET DIRECT LOOKUPS) 
+  // and filter out unneeded variables so we're left with the minimal set of variables to emit
+  variables = R.filter(v => !R.isEmpty(v.directDataArgs) || referencedVarNames.includes(v.varName), variables)
 
   // Rebuild the variables-by-name map
   variablesByName.clear()
