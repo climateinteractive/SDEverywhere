@@ -1,110 +1,205 @@
+a[DimA]: aux
+= b[DimB]
+refId(_a)
+families(_dima)
+subscripts(_dima)
+hasInitValue(false)
+refs(_b[_b1], _b[_b2], _b[_b3])
+
 b[DimB]: const (non-apply-to-all)
 = 1,2,3
 refId(_b[_b1])
 families(_dimb)
 subscripts(_b1)
+separationDims(_dimb)
+hasInitValue(false)
 
 b[DimB]: const (non-apply-to-all)
 = 1,2,3
 refId(_b[_b2])
 families(_dimb)
 subscripts(_b2)
+separationDims(_dimb)
+hasInitValue(false)
 
 b[DimB]: const (non-apply-to-all)
 = 1,2,3
 refId(_b[_b3])
 families(_dimb)
 subscripts(_b3)
-
-a[DimA]: aux
-= b[DimB]
-refId(_a)
-families(_dima)
-subscripts(_dima)
+separationDims(_dimb)
+hasInitValue(false)
 
 c[DimB]: aux
 = b[DimB]
 refId(_c)
 families(_dimb)
 subscripts(_dimb)
+hasInitValue(false)
+refs(_b[_b1], _b[_b2], _b[_b3])
 
 d[A1]: aux
 = b[B1]
 refId(_d)
 families(_dima)
 subscripts(_a1)
+hasInitValue(false)
+refs(_b[_b1])
 
 e[B1]: aux
 = b[B1]
 refId(_e)
 families(_dimb)
 subscripts(_b1)
+hasInitValue(false)
+refs(_b[_b1])
 
 f[DimA,B1]: const (non-apply-to-all)
 = 1
 refId(_f[_dima,_b1])
 families(_dima, _dimb)
 subscripts(_dima, _b1)
+hasInitValue(false)
 
 f[DimA,B2]: const (non-apply-to-all)
 = 2
 refId(_f[_dima,_b2])
 families(_dima, _dimb)
 subscripts(_dima, _b2)
+hasInitValue(false)
 
 f[DimA,B3]: const (non-apply-to-all)
 = 3
 refId(_f[_dima,_b3])
 families(_dima, _dimb)
 subscripts(_dima, _b3)
+hasInitValue(false)
+
+FINAL TIME: const
+= 1
+refId(_final_time)
+hasInitValue(false)
 
 g[B1,DimA]: aux (non-apply-to-all)
 = f[DimA,B1]
 refId(_g[_dima,_b1])
 families(_dima, _dimb)
 subscripts(_dima, _b1)
+hasInitValue(false)
+refs(_f[_dima,_b1])
 
 g[B2,DimA]: aux (non-apply-to-all)
 = f[DimA,B2]
 refId(_g[_dima,_b2])
 families(_dima, _dimb)
 subscripts(_dima, _b2)
+hasInitValue(false)
+refs(_f[_dima,_b2])
 
 g[B3,DimA]: aux (non-apply-to-all)
 = f[DimA,B3]
 refId(_g[_dima,_b3])
 families(_dima, _dimb)
 subscripts(_dima, _b3)
+hasInitValue(false)
+refs(_f[_dima,_b3])
+
+INITIAL TIME: const
+= 0
+refId(_initial_time)
+hasInitValue(false)
 
 o[DimA,DimB]: aux
 = f[DimA,DimB]
 refId(_o)
 families(_dima, _dimb)
 subscripts(_dima, _dimb)
+hasInitValue(false)
+refs(_f[_dima,_b1], _f[_dima,_b2], _f[_dima,_b3])
 
 p[DimB,DimA]: aux
 = f[DimA,DimB]
 refId(_p)
 families(_dima, _dimb)
 subscripts(_dima, _dimb)
+hasInitValue(false)
+refs(_f[_dima,_b1], _f[_dima,_b2], _f[_dima,_b3])
 
-FINAL TIME: const
-= 1
-refId(_final_time)
+r[DimA]: aux
+= IF THEN ELSE(DimA=Selected A,1,0)
+refId(_r)
+families(_dima)
+subscripts(_dima)
+hasInitValue(false)
+refs(_selected_a)
 
-INITIAL TIME: const
-= 0
-refId(_initial_time)
+s[DimA]: aux
+= DimB
+refId(_s)
+families(_dima)
+subscripts(_dima)
+hasInitValue(false)
 
 SAVEPER: aux
 = TIME STEP
 refId(_saveper)
+hasInitValue(false)
+refs(_time_step)
 
-TIME STEP: const
+Selected A: const
+= 2
+refId(_selected_a)
+hasInitValue(false)
+
+t[DimC]: const
 = 1
-refId(_time_step)
+refId(_t)
+families(_dimc)
+subscripts(_dimc)
+hasInitValue(false)
 
 Time: const
 = 
 refId(_time)
+hasInitValue(false)
+
+TIME STEP: const
+= 1
+refId(_time_step)
+hasInitValue(false)
+
+u[C1]: const (non-apply-to-all)
+= 1
+refId(_u[_c1])
+families(_dimc)
+subscripts(_c1)
+hasInitValue(false)
+
+u[C2]: const (non-apply-to-all)
+= 2
+refId(_u[_c2])
+families(_dimc)
+subscripts(_c2)
+hasInitValue(false)
+
+u[C3]: const (non-apply-to-all)
+= 3
+refId(_u[_c3])
+families(_dimc)
+subscripts(_c3)
+hasInitValue(false)
+
+u[C4]: const (non-apply-to-all)
+= 4
+refId(_u[_c4])
+families(_dimc)
+subscripts(_c4)
+hasInitValue(false)
+
+u[C5]: const (non-apply-to-all)
+= 5
+refId(_u[_c5])
+families(_dimc)
+subscripts(_c5)
+hasInitValue(false)
 

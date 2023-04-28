@@ -47,6 +47,12 @@ t[DimC] = 1
   ~:SUPPLEMENTARY
 	|
 
+u[C1] = 1 ~~~:SUPPLEMENTARY|
+u[C2] = 2 ~~~:SUPPLEMENTARY|
+u[C3] = 3 ~~~:SUPPLEMENTARY|
+u[C4] = 4 ~~~:SUPPLEMENTARY|
+u[C5] = 5 ~~~:SUPPLEMENTARY|
+
 ********************************************************
 	.Control
 ********************************************************~
