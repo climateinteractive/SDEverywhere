@@ -1042,9 +1042,8 @@ function filteredListedVars() {
   return R.map(v => filterVar(v), allListedVars())
 }
 
-function varIndexInfo() {
-  // Return an array, sorted by `varName`, containing information for each
-  // listed variable:
+function varIndexInfoMap() {
+  // Return a map containing information for each listed variable:
   //   varName
   //   varIndex
   //   subscriptCount
@@ -1075,7 +1074,16 @@ function varIndexInfo() {
     }
   }
 
-  return Array.from(infoMap.values())
+  return infoMap
+}
+
+function varIndexInfo() {
+  // Return an array, sorted by `varName`, containing information for each
+  // listed variable:
+  //   varName
+  //   varIndex
+  //   subscriptCount
+  return Array.from(varIndexInfoMap().values())
 }
 
 function jsonList() {
@@ -1089,21 +1097,14 @@ function jsonList() {
   // Extract a subset of the available info for each variable and put them in eval order
   const sortedVars = filteredListedVars()
 
-  // Get the set of unique variable names, and assign a 1-based index
-  // to each; this matches the index number used in `storeOutput()`
-  // in the generated C code
-  const varNames = R.uniq(R.map(v => v.varName, sortedVars))
-  const varNamesWithIndex = new Map()
-  varNames.forEach((varName, i) => {
-    varNamesWithIndex.set(varName, i + 1)
-  })
+  // Assign a 1-based index for each variable that has data that can be accessed.
+  // This matches the index number used in `storeOutput()` in the generated C code.
+  const infoMap = varIndexInfoMap()
   for (const v of sortedVars) {
-    if (v.varType === 'data' || v.varType === 'lookup') {
-      // Omit the index for data and lookup variables; at this time, the data for these
-      // cannot be output like for other types of variables
-      continue
+    const varInfo = infoMap.get(v.varName)
+    if (varInfo) {
+      v.varIndex = varInfo.varIndex
     }
-    v.varIndex = varNamesWithIndex.get(v.varName)
   }
 
   // Convert to JSON
