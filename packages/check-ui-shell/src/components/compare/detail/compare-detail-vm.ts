@@ -134,22 +134,48 @@ function createCompareDetailViewModelForDataset(
 
   // Group the scenarios by title (input variable name, typically), then sort by score
   const groups = groupItemsByTitle(comparisonConfig, groupSummary.group.testSummaries, 'scenario')
+
+  // Pull out the "all at default" item; for now we make it the first item in each row
+  // TODO: Make this more configurable
+  let allAtDefaultItem: ComparisonDetailItem
+  for (const group of groups) {
+    for (const item of group.items) {
+      if (item.scenario.settings.kind === 'all-inputs-settings' && item.scenario.settings.position === 'at-default') {
+        allAtDefaultItem = item
+        break
+      }
+    }
+  }
+
+  // Create a row for each group
   const detailRows: CompareDetailRowViewModel[] = []
   for (const group of groups) {
     // TODO: For now show up to two items
     // TODO: If more than two items in the row, add more rows
+    let item1: ComparisonDetailItem
+    let item2: ComparisonDetailItem
+    if (group.items[0] !== allAtDefaultItem) {
+      item1 = group.items.length > 0 ? group.items[0] : undefined
+      item2 = group.items.length > 1 ? group.items[1] : undefined
+    }
     const detailRow = createCompareDetailRowViewModel(
       comparisonConfig,
       dataCoordinator,
       'scenarios',
-      group.title, // TODO
-      undefined, // TODO
-      [undefined, group.items[0], group.items[1]]
+      group.title,
+      undefined, // TODO: Subtitle?
+      [allAtDefaultItem, item1, item2]
     )
-
     detailRows.push(detailRow)
   }
-  // TODO: Put all-at-default row at top
+
+  // For now, always put the "all inputs" row at top
+  // TODO: Use a more stable way to identify the row (without using the title)
+  const allInputsRowIndex = detailRows.findIndex(row => row.title === 'All inputs')
+  if (allInputsRowIndex !== undefined) {
+    const allInputsRow = detailRows.splice(allInputsRowIndex, 1)[0]
+    detailRows.unshift(allInputsRow)
+  }
 
   return {
     kind: 'by-dataset',
