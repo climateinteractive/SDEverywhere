@@ -69,7 +69,13 @@ export class ConfigContext {
     this.buildContext.writeStagedFile(srcDir, dstDir, filename, content)
   }
 
-  addInputVariable(inputVarName: string, defaultValue: number, minValue: number, maxValue: number): void {
+  addInputVariable(
+    inputId: string,
+    inputVarName: string,
+    defaultValue: number,
+    minValue: number,
+    maxValue: number
+  ): void {
     // We use the C name as the key to avoid redundant entries in cases where
     // the csv file refers to variables with different capitalization
     const varId = sdeNameForVensimVarName(inputVarName)
@@ -79,6 +85,7 @@ export class ConfigContext {
       console.error(`ERROR: Input variable ${inputVarName} was already added`)
     }
     this.inputSpecs.set(varId, {
+      inputId,
       varName: inputVarName,
       defaultValue,
       minValue,

@@ -129,7 +129,7 @@ function inputSpecFromCsv(r: CsvRow, context: ConfigContext): InputSpec | undefi
       e += `default=${defaultValue} min=${minValue} max=${maxValue}`
       throw new Error(e)
     }
-    context.addInputVariable(varName, defaultValue, minValue, maxValue)
+    context.addInputVariable(inputId, varName, defaultValue, minValue, maxValue)
 
     const format = optionalString(r['format']) || '.0f'
 
@@ -179,7 +179,7 @@ function inputSpecFromCsv(r: CsvRow, context: ConfigContext): InputSpec | undefi
 
     const minValue = Math.min(offValue, onValue)
     const maxValue = Math.max(offValue, onValue)
-    context.addInputVariable(varName, defaultValue, minValue, maxValue)
+    context.addInputVariable(inputId, varName, defaultValue, minValue, maxValue)
 
     // The `controlled input ids` field dictates which rows are active
     // when this switch is on or off.  Examples of the format of this field:
