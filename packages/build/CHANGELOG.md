@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.1](https://github.com/climateinteractive/SDEverywhere/compare/build-v0.3.0...build-v0.3.1) (2023-05-03)
+
+
+### Bug Fixes
+
+* add inputId property to InputSpec interface ([#321](https://github.com/climateinteractive/SDEverywhere/issues/321)) ([f461433](https://github.com/climateinteractive/SDEverywhere/commit/f461433df9ae013e73a76a1103c9cb8a5d22ab52)), closes [#320](https://github.com/climateinteractive/SDEverywhere/issues/320)
+
 ## [0.3.0](https://github.com/climateinteractive/SDEverywhere/compare/build-v0.2.0...build-v0.3.0) (2022-12-10)
 
 
