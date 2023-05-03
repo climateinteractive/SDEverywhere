@@ -1,5 +1,7 @@
 # Changelog
 
+## [0.7.9](https://github.com/climateinteractive/SDEverywhere/compare/cli-v0.7.8...cli-v0.7.9) (2023-05-03)
+
 ### Dependencies
 
 * The following workspace dependencies were updated
