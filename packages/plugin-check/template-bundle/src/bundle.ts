@@ -10,7 +10,7 @@ import type {
   DatasetsResult,
   LinkItem,
   ModelSpec,
-  Scenario
+  ScenarioSpec
 } from '@sdeverywhere/check-core'
 
 import type { InputValue, InputVarId, ModelRunner, Outputs, Point } from '@sdeverywhere/runtime'
@@ -53,7 +53,7 @@ export class BundleModel implements CheckBundleModel {
   }
 
   // from CheckBundleModel interface
-  async getDatasetsForScenario(scenario: Scenario, datasetKeys: DatasetKey[]): Promise<DatasetsResult> {
+  async getDatasetsForScenario(scenario: ScenarioSpec, datasetKeys: DatasetKey[]): Promise<DatasetsResult> {
     const datasetMap: DatasetMap = new Map()
 
     // Set the input values according to the given scenario
