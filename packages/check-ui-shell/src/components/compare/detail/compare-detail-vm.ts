@@ -126,8 +126,10 @@ function createCompareDetailViewModelForDataset(
     const relatedItem = parts.join('&nbsp;<span class="related-sep">&gt;</span>&nbsp;')
     relatedItems.push(relatedItem)
   }
-  for (const relatedItem of outputVar.relatedItems) {
-    addRelatedItem(relatedItem.locationPath)
+  if (outputVar.relatedItems) {
+    for (const relatedItem of outputVar.relatedItems) {
+      addRelatedItem(relatedItem.locationPath)
+    }
   }
 
   // Group the scenarios by title (input variable name, typically), then sort by score
@@ -207,7 +209,7 @@ function createCompareDetailViewModelForScenario(
     // For now, show related sliders for the "right" model only
     for (const input of scenario.settings.inputs) {
       const inputVar = input.stateR.inputVar
-      if (inputVar) {
+      if (inputVar?.relatedItem) {
         addRelatedItem(inputVar.relatedItem.locationPath)
       }
     }
