@@ -12,7 +12,7 @@ import chokidar from 'chokidar'
 
 import type { BuildContext, ModelSpec, Plugin, ResolvedConfig } from '@sdeverywhere/build'
 
-import type { Bundle, SuiteSummary } from '@sdeverywhere/check-core'
+import type { Bundle, ConfigInitOptions, SuiteSummary } from '@sdeverywhere/check-core'
 import { createConfig } from '@sdeverywhere/check-core'
 
 import type { CheckPluginOptions } from './options'
