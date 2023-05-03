@@ -179,7 +179,7 @@ importers:
 
   packages/cli:
     specifiers:
-      '@sdeverywhere/build': ^0.3.0
+      '@sdeverywhere/build': ^0.3.1
       '@sdeverywhere/compile': ^0.7.5
       bufx: ^1.0.5
       byline: ^5.0.0
