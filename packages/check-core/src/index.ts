@@ -75,7 +75,11 @@ export { checkSummaryFromReport, checkReportFromSummary } from './check/check-su
 export * from './comparison/_shared/comparison-resolved-types'
 
 export * from './comparison/config/comparison-spec-types'
-export type { ComparisonConfig, ComparisonOptions } from './comparison/config/comparison-config'
+export type {
+  ComparisonConfig,
+  ComparisonDatasetOptions,
+  ComparisonOptions
+} from './comparison/config/comparison-config'
 export type { ComparisonScenarios } from './comparison/config/comparison-scenarios'
 export type { ComparisonDatasets } from './comparison/config/comparison-datasets'
 

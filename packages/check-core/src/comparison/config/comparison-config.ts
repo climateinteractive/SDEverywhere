@@ -4,7 +4,7 @@ import type { DatasetKey } from '../../_shared/types'
 import type { LoadedBundle, NamedBundle } from '../../bundle/bundle-types'
 import type { ModelInputs } from '../../bundle/model-inputs'
 
-import type { ComparisonViewGroup } from '../_shared/comparison-resolved-types'
+import type { ComparisonScenario, ComparisonViewGroup } from '../_shared/comparison-resolved-types'
 
 import type { ComparisonDatasets } from './comparison-datasets'
 import type { ComparisonScenarios } from './comparison-scenarios'
@@ -12,6 +12,21 @@ import type { ComparisonSpecs, ComparisonSpecsSource } from './comparison-spec-t
 import { parseComparisonSpecs } from './parse/comparison-parser'
 import type { ComparisonResolvedDefs } from './resolve/comparison-resolver'
 import { resolveComparisonSpecs } from './resolve/comparison-resolver'
+
+export interface ComparisonDatasetOptions {
+  /**
+   * The mapping of renamed dataset keys (old or "left" name as the map key,
+   * new or "right" name as the value).
+   */
+  renamedDatasetKeys?: Map<DatasetKey, DatasetKey>
+  /**
+   * An optional function that allows for limiting the datasets that are compared
+   * for a given scenario.  By default, all datasets are compared for a given
+   * scenario, but if a custom function is provided, it can return a subset of
+   * datasets (for example, to omit datasets that are not relevant).
+   */
+  datasetKeysForScenario?: (allDatasetKeys: DatasetKey[], scenario: ComparisonScenario) => DatasetKey[]
+}
 
 export interface ComparisonOptions {
   /** The left-side ("baseline") bundle being compared. */
@@ -26,11 +41,8 @@ export interface ComparisonOptions {
    * specified in YAML or JSON files, or using `Spec` objects.
    */
   specs: (ComparisonSpecs | ComparisonSpecsSource)[]
-  /**
-   * The mapping of renamed dataset keys (old or "left" name as the map key,
-   * new or "right" name as the value).
-   */
-  renamedDatasetKeys?: Map<DatasetKey, DatasetKey>
+  /** Optional configuration for the datasets that are compared for different scenarios. */
+  datasets?: ComparisonDatasetOptions
 }
 
 export interface ComparisonConfig {

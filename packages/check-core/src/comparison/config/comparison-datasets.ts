@@ -4,6 +4,7 @@ import type { ModelSpec } from '../../bundle/bundle-types'
 import type { OutputVar } from '../../bundle/var-types'
 import type { DatasetKey } from '../../_shared/types'
 import type { ComparisonDataset, ComparisonScenario } from '../_shared/comparison-resolved-types'
+import type { ComparisonDatasetOptions } from './comparison-config'
 
 /**
  * Provides access to the set of dataset definitions (`ComparisonDataset` instances) that are used
@@ -36,14 +37,14 @@ export interface ComparisonDatasets {
  *
  * @param modelSpecL The model spec for the "left" bundle being compared.
  * @param modelSpecR The model spec for the "right" bundle being compared.
- * @param renamedDatasetKeys The mapping of renamed dataset keys.
+ * @param datasetOptions The custom configuration for the datasets to be compared.
  */
 export function getComparisonDatasets(
   modelSpecL: ModelSpec,
   modelSpecR: ModelSpec,
-  renamedDatasetKeys?: Map<DatasetKey, DatasetKey>
+  datasetOptions?: ComparisonDatasetOptions
 ): ComparisonDatasets {
-  return new ComparisonDatasetsImpl(modelSpecL, modelSpecR, renamedDatasetKeys)
+  return new ComparisonDatasetsImpl(modelSpecL, modelSpecR, datasetOptions)
 }
 
 /**
@@ -67,11 +68,16 @@ class ComparisonDatasetsImpl implements ComparisonDatasets {
   /**
    * @param modelSpecL The model spec for the "left" bundle being compared.
    * @param modelSpecR The model spec for the "right" bundle being compared.
-   * @param renamedDatasetKeys The mapping of renamed dataset keys.
+   * @param datasetOptions The custom configuration for the datasets to be compared.
    */
-  constructor(modelSpecL: ModelSpec, modelSpecR: ModelSpec, renamedDatasetKeys?: Map<DatasetKey, DatasetKey>) {
+  constructor(
+    modelSpecL: ModelSpec,
+    modelSpecR: ModelSpec,
+    private readonly datasetOptions?: ComparisonDatasetOptions
+  ) {
     // Invert the map of renamed keys so that new names are on the left (map
     // keys) old names are on the right (map values)
+    const renamedDatasetKeys = datasetOptions?.renamedDatasetKeys
     const invertedRenamedKeys: Map<DatasetKey, DatasetKey> = new Map()
     renamedDatasetKeys?.forEach((newKey, oldKey) => {
       invertedRenamedKeys.set(newKey, oldKey)
@@ -127,13 +133,19 @@ class ComparisonDatasetsImpl implements ComparisonDatasets {
 
   // from ComparisonDatasets interface
   getDatasetKeysForScenario(scenario: ComparisonScenario): DatasetKey[] {
-    if (scenario.settings.kind === 'all-inputs-settings' && scenario.settings.position === 'at-default') {
-      // Include both model and static variables for the "all at default" scenario
-      return this.allOutputVarKeys
+    if (this.datasetOptions?.datasetKeysForScenario !== undefined) {
+      // Delegate to the custom filter function
+      return this.datasetOptions.datasetKeysForScenario(this.allOutputVarKeys, scenario)
     } else {
-      // For all other scenarios, only include model variables (since only model
-      // outputs are affected by different input scenarios)
-      return this.modelOutputVarKeys
+      // Use the default filtering
+      if (scenario.settings.kind === 'all-inputs-settings' && scenario.settings.position === 'at-default') {
+        // Include both model and static variables for the "all at default" scenario
+        return this.allOutputVarKeys
+      } else {
+        // For all other scenarios, only include model variables (since only model
+        // outputs are affected by different input scenarios)
+        return this.modelOutputVarKeys
+      }
     }
   }
 }

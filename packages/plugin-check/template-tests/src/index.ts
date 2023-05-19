@@ -59,7 +59,9 @@ export async function getConfigOptions(
       },
       thresholds: [1, 5, 10],
       specs: [baseComparisonSpecs],
-      renamedDatasetKeys
+      datasets: {
+        renamedDatasetKeys
+      }
     }
   }
 

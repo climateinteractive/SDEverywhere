@@ -13,7 +13,7 @@ import { allAtPos, inputVar, scenarioWithInput, scenarioWithInputVar } from '../
 import type { BundleModel, LoadedBundle, ModelSpec } from '../../bundle/bundle-types'
 import type { OutputVar } from '../../bundle/var-types'
 
-import type { ComparisonConfig } from '../config/comparison-config'
+import type { ComparisonConfig, ComparisonDatasetOptions } from '../config/comparison-config'
 import { getComparisonDatasets } from '../config/comparison-datasets'
 import { getComparisonScenarios } from '../config/comparison-scenarios'
 
@@ -79,12 +79,15 @@ function mockComparisonConfig(
   scenarios: ComparisonScenario[],
   renamedDatasetKeys?: Map<DatasetKey, DatasetKey>
 ): ComparisonConfig {
+  const datasetOptions: ComparisonDatasetOptions = {
+    renamedDatasetKeys
+  }
   return {
     bundleL,
     bundleR,
     thresholds: [1, 5, 10],
     scenarios: getComparisonScenarios(scenarios),
-    datasets: getComparisonDatasets(bundleL.model.modelSpec, bundleR.model.modelSpec, renamedDatasetKeys),
+    datasets: getComparisonDatasets(bundleL.model.modelSpec, bundleR.model.modelSpec, datasetOptions),
     viewGroups: []
   }
 }

@@ -33,7 +33,7 @@ export async function createConfig(options: ConfigOptions): Promise<Config> {
 
     // Invert the map of renamed keys so that new names are on the left (map
     // keys) old names are on the right (map values)
-    const renamedDatasetKeys = options.comparison.renamedDatasetKeys
+    const renamedDatasetKeys = options.comparison.datasets?.renamedDatasetKeys
     const invertedRenamedKeys: Map<DatasetKey, DatasetKey> = new Map()
     renamedDatasetKeys?.forEach((newKey, oldKey) => {
       invertedRenamedKeys.set(newKey, oldKey)
@@ -91,7 +91,7 @@ export async function createConfig(options: ConfigOptions): Promise<Config> {
       bundleR: currentBundle,
       thresholds: options.comparison.thresholds,
       scenarios: getComparisonScenarios(comparisonDefs.scenarios),
-      datasets: getComparisonDatasets(modelSpecL, modelSpecR, options.comparison.renamedDatasetKeys),
+      datasets: getComparisonDatasets(modelSpecL, modelSpecR, options.comparison.datasets),
       viewGroups: comparisonDefs.viewGroups
     }
   }
