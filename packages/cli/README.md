@@ -1,6 +1,6 @@
 # @sdeverywhere/cli
 
-This package contains the `sde` command line interface for the SDEverywhere suite of tools.
+This package contains the `sde` command line interface for the [SDEverywhere](https://github.com/climateinteractive/SDEverywhere) suite of tools.
 
 SDEverywhere can be used to translate System Dynamics models from Vensim to C and WebAssembly.
 
@@ -10,13 +10,8 @@ For instructions on using the `sde` command line tool provided in this package, 
 
 ## Quick Start
 
-The quickest way to get started with SDEverywhere is to open your terminal emulator ("Terminal" on macOS or Linux, or "Command Prompt" on Windows) and type:
-
-```sh
-npm create @sdeverywhere
-```
-
-Running that `create` script will install the `cli` package (and the `sde` command line tool) automatically, so you can skip the next section and jump straight to the ["Usage"](#usage) section below.
+The best way to get started with SDEverywhere is to follow the [Quick Start](https://github.com/climateinteractive/SDEverywhere#quick-start) instructions.
+If you follow those instructions, the `@sdeverywhere/cli` package and `sde` tool will be added to your project automatically, in which case you can skip the next section and jump straight to the ["Usage"](#usage) section below.
 
 ## Install
 
@@ -37,7 +32,7 @@ npm install -g @sdeverywhere/cli
 
 If you installed the `cli` package globally (see ["Install"](#install) section above), you can run the `sde` command directly.
 
-If you installed the `cli` package locally (i.e., added it as a dev dependency in your `package.json`), you can run the `sde` command via `npx`, for example:
+If you installed the `cli` package locally (i.e., you followed the "Quick Start" instructions and/or installed it as a dev dependency in your `package.json`), you can run the `sde` command via `npx`, for example:
 
 ```sh
 npx sde <args>
