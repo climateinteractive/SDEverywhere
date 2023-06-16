@@ -91,7 +91,9 @@ For more guidance on designing and building a full-featured web application arou
 
 ## Caveats
 
-SDEverywhere has been used to generate code for complex models with thousands of equations, but your model may use features of Vensim that SDEverywhere cannot translate yet. Please fork our code and contribute! Here are some prominent current limitations.
+SDEverywhere has been used to generate code for complex models with thousands of equations, but your model may use features of Vensim that SDEverywhere cannot translate yet.
+Please fork our code and contribute!
+Here are some prominent current limitations:
 
 - Sketch information, the visual representation of the model, is not converted.
 - Only the most common [Vensim functions](https://www.vensim.com/documentation/index.html?20770.htm) are implemented.
@@ -275,7 +277,8 @@ TODO: model-check
 
 ## Contributing
 
-SDEverywhere covers a subset of the Vensim modeling language used in models that have been deployed with it. There is still much to contribute, for example:
+SDEverywhere covers a subset of the Vensim modeling language used in models that have been deployed with it.
+There is still much to contribute, for example:
 
 - Expand the Vensim parser to cover more of the language syntax, such as documentation strings, `:EXCEPT:` clauses, etc.
 - Enhance the C code generator to produce code for new language features now that you can parse them.
