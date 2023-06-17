@@ -37,7 +37,7 @@ export interface Plugin {
    * @param context The build context (for logging, etc).
    * @param modelSpec The spec that controls how the model is generated.
    */
-  preGenerate?: (context: BuildContext, modelSpec: ModelSpec) => Promise<void>
+  preGenerate?(context: BuildContext, modelSpec: ModelSpec): Promise<void>
 
   /**
    * Called before SDE preprocesses the mdl file (in the case of one mdl file),
@@ -45,7 +45,7 @@ export interface Plugin {
    *
    * @param context The build context (for logging, etc).
    */
-  preProcessMdl?: (context: BuildContext) => Promise<void>
+  preProcessMdl?(context: BuildContext): Promise<void>
 
   /**
    * Called after SDE preprocesses the mdl file (in the case of one mdl file),
@@ -55,14 +55,14 @@ export interface Plugin {
    * @param mdlContent The resulting mdl file content.
    * @return The modified mdl file content (if postprocessing was needed).
    */
-  postProcessMdl?: (context: BuildContext, mdlContent: string) => Promise<string>
+  postProcessMdl?(context: BuildContext, mdlContent: string): Promise<string>
 
   /**
    * Called before SDE generates a C file from the mdl file.
    *
    * @param context The build context (for logging, etc).
    */
-  preGenerateC?: (context: BuildContext) => Promise<void>
+  preGenerateC?(context: BuildContext): Promise<void>
 
   /**
    * Called after SDE generates a C file from the mdl file.
@@ -71,7 +71,7 @@ export interface Plugin {
    * @param cContent The resulting C file content.
    * @return The modified C file content (if postprocessing was needed).
    */
-  postGenerateC?: (context: BuildContext, cContent: string) => Promise<string>
+  postGenerateC?(context: BuildContext, cContent: string): Promise<string>
 
   /**
    * Called after the "generate model" process has completed (but before the staged
@@ -82,7 +82,7 @@ export interface Plugin {
    * @return Whether the plugin succeeded (for example, a plugin that runs tests can
    * return false to indicate that one or more tests failed).
    */
-  postGenerate?: (context: BuildContext, modelSpec: ModelSpec) => Promise<boolean>
+  postGenerate?(context: BuildContext, modelSpec: ModelSpec): Promise<boolean>
 
   /**
    * Called after the model has been generated and after the staged files

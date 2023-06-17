@@ -16,20 +16,13 @@ export interface VitePluginOptions {
      *
      * If left undefined, defaults to 'post-build'.
      *
-     * ```
-     * 'skip':
-     *   Don't run the plugin.
-     * 'post-generate':
-     *   Run "vite build" in the `postGenerate` phase.
-     * 'post-build':
-     *   Run "vite build" in the `postBuild` phase.
-     * 'watch':
-     *   Run "vite build" in the `watch` callback (rebuilds the library when
+     * - `skip`: Don't run the plugin.
+     * - `post-generate`: Run `vite build` in the `postGenerate` phase.
+     * - `post-build`: Run `vite build` in the `postBuild` phase.
+     * - `watch`: Run `vite build` in the `watch` callback (rebuilds the library when
      *   changes are detected in source files); useful for libraries.
-     * 'serve':
-     *   Run "vite dev" (sets up local server and refreshes the app
+     * - `serve`: Run `vite dev` (sets up local server and refreshes the app
      *   automatically when changes are detected); useful for applications.
-     * ```
      */
     development?: 'skip' | 'post-generate' | 'post-build' | 'watch' | 'serve'
 
@@ -38,14 +31,9 @@ export interface VitePluginOptions {
      *
      * If left undefined, defaults to 'post-build'.
      *
-     * ```
-     * 'skip':
-     *   Don't run the plugin.
-     * 'post-generate':
-     *   Run "vite build" in the `postGenerate` phase.
-     * 'post-build':
-     *   Run "vite build" in the `postBuild` phase.
-     * ```
+     * - `skip`: Don't run the plugin.
+     * - `post-generate`: Run `vite build` in the `postGenerate` phase.
+     * - `post-build`: Run `vite build` in the `postBuild` phase.
      */
     production?: 'skip' | 'post-generate' | 'post-build'
   }
