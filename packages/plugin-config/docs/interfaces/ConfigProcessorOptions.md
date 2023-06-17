@@ -19,6 +19,7 @@ ___
 Either a single path to a base output directory (in which case, the recommended
 directory structure will be used) or a `ConfigProcessorOutputPaths` containing specific paths.
 If a single string is provided, the following subdirectories will be used:
+```
   <out-dir>/
     src/
       config/
@@ -26,3 +27,4 @@ If a single string is provided, the following subdirectories will be used:
       model/
         generated/
     strings/
+```

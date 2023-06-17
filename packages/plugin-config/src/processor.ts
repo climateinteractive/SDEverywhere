@@ -30,6 +30,7 @@ export interface ConfigProcessorOptions {
    * Either a single path to a base output directory (in which case, the recommended
    * directory structure will be used) or a `ConfigProcessorOutputPaths` containing specific paths.
    * If a single string is provided, the following subdirectories will be used:
+   * ```
    *   <out-dir>/
    *     src/
    *       config/
@@ -37,6 +38,7 @@ export interface ConfigProcessorOptions {
    *       model/
    *         generated/
    *     strings/
+   * ```
    */
   out?: string | ConfigProcessorOutputPaths
 }
