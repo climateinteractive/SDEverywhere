@@ -11,6 +11,8 @@ This is passed to most plugin functions.
 
  `Readonly` **config**: [`ResolvedConfig`](../interfaces/ResolvedConfig.md)
 
+The resolved configuration.
+
 ## Methods
 
 ### log

@@ -14,21 +14,17 @@ The ID of the associated input variable, as used in SDEverywhere.
 
 ___
 
-### callbacks
-
- **callbacks**: [`InputCallbacks`](InputCallbacks.md)
-
-Callback functions that are called when the input value is changed.
-
-## Methods
-
 ### get
 
-**get**(): `number`
+ **get**: () => `number`
+
+#### Type declaration
+
+(): `number`
 
 Get the current value of the input.
 
-#### Returns
+##### Returns
 
 `number`
 
@@ -36,17 +32,21 @@ ___
 
 ### set
 
-**set**(`value`): `void`
+ **set**: (`value`: `number`) => `void`
+
+#### Type declaration
+
+(`value`): `void`
 
 Set the input to the given value.
 
-#### Parameters
+##### Parameters
 
 | Name | Type |
 | :------ | :------ |
 | `value` | `number` |
 
-#### Returns
+##### Returns
 
 `void`
 
@@ -54,10 +54,22 @@ ___
 
 ### reset
 
-**reset**(): `void`
+ **reset**: () => `void`
+
+#### Type declaration
+
+(): `void`
 
 Reset the input to its default value.
 
-#### Returns
+##### Returns
 
 `void`
+
+___
+
+### callbacks
+
+ **callbacks**: [`InputCallbacks`](InputCallbacks.md)
+
+Callback functions that are called when the input value is changed.
