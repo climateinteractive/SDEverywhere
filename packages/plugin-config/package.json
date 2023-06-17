@@ -29,7 +29,8 @@
     "bundle": "tsup",
     "copy-types": "cp src/spec-types.ts dist",
     "build": "run-s bundle copy-types",
-    "ci:build": "run-s clean lint prettier:check test:ci type-check build"
+    "docs": "../../scripts/gen-docs.js",
+    "ci:build": "run-s clean lint prettier:check test:ci type-check build docs"
   },
   "dependencies": {
     "byline": "^5.0.0",

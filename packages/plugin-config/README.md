@@ -45,12 +45,12 @@ import { configProcessor } from '@sdeverywhere/plugin-config'
 export async function config() {
   return {
     // Specify the Vensim model to read
-    modelFiles: ['sample.mdl'],
+    modelFiles: ['example.mdl'],
 
-    // Read csv files from `config` directory and write to the `generated` directory
+    // Read csv files from `config` directory and write to the recommended output
+    // directory structure.  See `ConfigProcessorOptions` for more details.
     modelSpec: configProcessor({
-      config: configDir,
-      out: genDir
+      config: 'config'
     }),
 
     plugins: [
