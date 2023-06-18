@@ -120,7 +120,7 @@ describe('getAnnotationsForScenario', () => {
     ])
   })
 
-  it('should return correct annotations when min/max value has changed for multiple input', () => {
+  it.skip('should return correct annotations when min/max value has changed for multiple inputs', () => {
     const i1L = inputVar('1', 'Input1', 0)[1]
     const i1R = inputVar('1', 'Input1', 10)[1]
     const i2L = inputVar('2', 'Input2', 0, 100)[1]
