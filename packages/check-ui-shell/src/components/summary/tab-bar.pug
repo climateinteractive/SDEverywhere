@@ -1,0 +1,11 @@
+//- Copyright (c) 2021-2022 Climate Interactive / New Venture Fund
+
+//- Note: These mixins are kept in an external pug file to work around a
+//- Svelte issue related to `each` and TypeScript, see:
+//-   https://github.com/sveltejs/svelte-preprocess/issues/207
+
+mixin items
+  +each(`viewModel.items as item, index`)
+    .tab-item(on:click!='{() => onItemClicked(index)}' class:selected!='{item.id === $selectedItemId}')
+      .tab-title { item.title }
+      .tab-subtitle(class!='{item.subtitleClass}') { item.subtitle }

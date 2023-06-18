@@ -18,11 +18,9 @@ describe('CheckPlanner', () => {
   const modelSpec: ModelSpec = {
     modelSizeInBytes: 0,
     dataSizeInBytes: 0,
-    inputVars: new Map([inputVar('I1'), inputVar('I2')]),
+    inputVars: new Map([inputVar('1', 'I1'), inputVar('2', 'I2')]),
     outputVars: new Map([outputVar('V1'), outputVar('V2[A1]')]),
-    implVars: new Map([implVar('V1'), implVar('V2', [dimension('A')]), implVar('V3'), implVar('V4', [dimension('A')])]),
-    inputGroups: new Map(),
-    datasetGroups: new Map()
+    implVars: new Map([implVar('V1'), implVar('V2', [dimension('A')]), implVar('V3'), implVar('V4', [dimension('A')])])
   }
 
   const i1 = modelSpec.inputVars.get('_i1')
@@ -184,9 +182,9 @@ describe('CheckPlanner', () => {
       scenario: allAtPos('at-default')
     })
 
-    const ref2 = plan.dataRefs.get('input_i1_at_75::ModelImpl_v3')
+    const ref2 = plan.dataRefs.get('inputs__i1_at_75::ModelImpl_v3')
     expect(ref2).toEqual({
-      key: 'input_i1_at_75::ModelImpl_v3',
+      key: 'inputs__i1_at_75::ModelImpl_v3',
       dataset: dataset('ModelImpl', 'V3'),
       scenario: inputAtValue(i1, 75)
     })

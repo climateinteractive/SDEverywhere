@@ -117,7 +117,7 @@ export class CheckPlanner {
         // Build the scenario/dataset/action combinations
         const planScenarios: CheckPlanScenario[] = []
         for (const checkScenario of checkScenarios) {
-          if (checkScenario.scenario === undefined) {
+          if (checkScenario.spec === undefined) {
             // The scenario spec didn't match known inputs; add it to the plan
             // so that it can be reported as an error later
             planScenarios.push({
@@ -296,8 +296,8 @@ export class CheckPlanner {
 
       // Create the data ref that will be used for this predicate/op
       let dataRefKey: CheckDataRefKey
-      if (refScenario.scenario && refDataset.datasetKey) {
-        dataRefKey = `${refScenario.scenario.key}::${refDataset.datasetKey}`
+      if (refScenario.spec && refDataset.datasetKey) {
+        dataRefKey = `${refScenario.spec.uid}::${refDataset.datasetKey}`
       }
       const dataRef: CheckDataRef = {
         key: dataRefKey,

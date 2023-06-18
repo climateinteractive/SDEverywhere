@@ -1,0 +1,19 @@
+//- Copyright (c) 2021-2022 Climate Interactive / New Venture Fund
+
+//- Note: These mixins are kept in an external pug file to work around a
+//- Svelte issue related to `each` and TypeScript, see:
+//-   https://github.com/sveltejs/svelte-preprocess/issues/207
+
+mixin section(varname)
+  +if(`viewModel.${varname}`)
+    .section-container
+      SummaryRow(viewModel!=`{ viewModel.${varname}.header }`)
+      +each(`viewModel.${varname}.rows as rowViewModel`)
+        SummaryRow(on:command viewModel!='{rowViewModel}')
+
+mixin view-group-sections
+  +each(`viewModel.viewGroups as viewGroupViewModel`)
+    .section-container
+      SummaryRow(viewModel!='{viewGroupViewModel.header}')
+      +each(`viewGroupViewModel.rows as rowViewModel`)
+        SummaryRow(on:command viewModel!='{rowViewModel}')

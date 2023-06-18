@@ -35,10 +35,10 @@ export function createCheckSummaryTestViewModel(
       for (const predicate of dataset.predicates) {
         let graphBoxViewModel: CheckSummaryGraphBoxViewModel
         let graphVisible = false
-        if (scenario.checkScenario.scenario && dataset.checkDataset.datasetKey) {
+        if (scenario.checkScenario.spec && dataset.checkDataset.datasetKey) {
           graphBoxViewModel = new CheckSummaryGraphBoxViewModel(
             dataCoordinator,
-            scenario.checkScenario.scenario,
+            scenario.checkScenario,
             dataset.checkDataset.datasetKey,
             predicate
           )

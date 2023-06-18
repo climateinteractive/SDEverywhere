@@ -149,17 +149,19 @@ function matchByName(modelSpec: ModelSpec, datasetName: string, datasetSource: s
 }
 
 function matchByGroup(modelSpec: ModelSpec, groupName: string): ExpandResult {
-  // Ignore case when matching by group
-  const groupToMatch = groupName.toLowerCase()
-
-  // Find the group that matches the given name
   let matchedGroupName: string
   let matchedGroupDatasetKeys: DatasetKey[]
-  for (const [group, datasetKeys] of modelSpec.datasetGroups) {
-    if (group.toLowerCase() === groupToMatch) {
-      matchedGroupName = group
-      matchedGroupDatasetKeys = datasetKeys
-      break
+  if (modelSpec.datasetGroups) {
+    // Ignore case when matching by group
+    const groupToMatch = groupName.toLowerCase()
+
+    // Find the group that matches the given name
+    for (const [group, datasetKeys] of modelSpec.datasetGroups) {
+      if (group.toLowerCase() === groupToMatch) {
+        matchedGroupName = group
+        matchedGroupDatasetKeys = datasetKeys
+        break
+      }
     }
   }
   if (matchedGroupName === undefined) {

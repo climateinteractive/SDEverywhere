@@ -28,7 +28,7 @@ export function parseTestYaml(yamlStrings: string[]): Result<CheckSpec, Error> {
         groups.push(group)
       }
     } else {
-      let msg = 'Failed to parse YAML tests'
+      let msg = 'Failed to parse YAML check definitions'
       for (const error of validate.errors || []) {
         if (error.message) {
           msg += `\n${error.message}`

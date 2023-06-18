@@ -62,5 +62,5 @@ export class PerfViewModel {
 }
 
 export function createPerfViewModel(config: Config): PerfViewModel {
-  return new PerfViewModel(config.compare.bundleL.model, config.compare.bundleR.model)
+  return new PerfViewModel(config.comparison.bundleL.model, config.comparison.bundleR.model)
 }

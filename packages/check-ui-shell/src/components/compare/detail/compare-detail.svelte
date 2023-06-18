@@ -3,10 +3,11 @@
 <!-- SCRIPT -->
 <script lang='ts'>
 
-import { createEventDispatcher } from 'svelte'
+import { createEventDispatcher, onMount } from 'svelte'
 
 import type { CompareDetailViewModel } from './compare-detail-vm'
 import DetailRow from './compare-detail-row.svelte'
+import GraphsRow from './compare-graphs-row.svelte'
 
 export let viewModel: CompareDetailViewModel
 
@@ -27,12 +28,20 @@ function onNavLink(cmd: string) {
   switch (cmd) {
     case 'detail-previous':
       if (viewModel.previousRowIndex !== undefined) {
-        dispatch('command', { cmd: 'show-compare-detail-at-index', index: viewModel.previousRowIndex })
+        dispatch('command', {
+          cmd: 'show-comparison-detail-at-index',
+          kind: viewModel.kind,
+          index: viewModel.previousRowIndex
+        })
       }
       break
     case 'detail-next':
       if (viewModel.nextRowIndex !== undefined) {
-        dispatch('command', { cmd: 'show-compare-detail-at-index', index: viewModel.nextRowIndex })
+        dispatch('command', {
+          cmd: 'show-comparison-detail-at-index',
+          kind: viewModel.kind,
+          index: viewModel.nextRowIndex
+        })
       }
       break
     default:
@@ -48,12 +57,22 @@ function onKeyDown(event: KeyboardEvent) {
   } else if (event.key === 'ArrowRight') {
     onNavLink('detail-next')
     event.preventDefault()
+  } else if (event.key === 'ArrowUp') {
+    if (scrollContainer.scrollTop === 0) {
+      onNavLink('show-summary')
+      event.preventDefault()
+    }
   }
 }
 
 function toggleRelatedItems() {
   relatedItemsVisible = !relatedItemsVisible
 }
+
+onMount(() => {
+  // Make the scroll container have focus by default to allow for easier keyboard navigation
+  scrollContainer.focus()
+})
 
 </script>
 
@@ -69,21 +88,16 @@ svelte:window(on:keydown!='{onKeyDown}')
 
 .compare-detail-container
   .header-container
-    .title-row
+    .title-and-links
       .title-container
-        +if('viewModel.newGroupName')
-          .var-name.renamed.dataset-color-0(on:click!='{toggleRelatedItems}') {viewModel.groupName}
-          .var-name.renamed &nbsp;&gt;&nbsp;
-          .var-name.renamed.dataset-color-1(on:click!='{toggleRelatedItems}') {viewModel.newGroupName}
-          +else
-            .var-name(on:click!='{toggleRelatedItems}') {viewModel.groupName}
-        +if('viewModel.secondaryName')
-          +if('viewModel.newSecondaryName')
-            .source-name.renamed.dataset-color-0 {viewModel.secondaryName}
-            .source-name.renamed &nbsp;&gt;&nbsp;
-            .source-name.renamed.dataset-color-1 {viewModel.newSecondaryName}
-            +else
-              .source-name {viewModel.secondaryName}
+        +if('viewModel.pretitle')
+          .pretitle { @html viewModel.pretitle }
+        .title-and-subtitle
+          .title(on:click!='{toggleRelatedItems}') { @html viewModel.title }
+          +if('viewModel.subtitle')
+            .subtitle { @html viewModel.subtitle }
+          +if('viewModel.annotations')
+            .annotations { @html viewModel.annotations }
       .spacer-flex
       .nav-links.no-selection
         .nav-link(class:disabled!='{viewModel.previousRowIndex === undefined}' on:click!='{() => onNavLink("detail-previous")}') previous
@@ -94,8 +108,9 @@ svelte:window(on:keydown!='{onKeyDown}')
         span { viewModel.relatedListHeader }
         ul
           +related-items
-  .scroll-container(bind:this!='{scrollContainer}')
-    +rows
+  .scroll-container(bind:this!='{scrollContainer}' tabindex='0')
+    +graph-sections
+    +box-rows
 
 </template>
 
@@ -120,13 +135,13 @@ svelte:window(on:keydown!='{onKeyDown}')
   box-shadow: 0 1rem .5rem -.5rem rgba(0,0,0,.5)
   z-index: 1
 
-.title-row
+.title-and-links
   display: flex
   flex-direction: row
   align-items: center
   // XXX: Use a fixed height for now so that it doesn't bounce around when
   // the title wraps to two lines
-  height: 3rem
+  height: 4.5rem
 
 .spacer-flex
   flex: 1
@@ -149,26 +164,41 @@ svelte:window(on:keydown!='{onKeyDown}')
 
 .title-container
   display: flex
+  flex-direction: column
+
+.pretitle
+  margin-bottom: .2rem
+  font-size: .9em
+  font-weight: 700
+  color: #aaa
+
+.title-and-subtitle
+  display: flex
   flex-direction: row
   align-items: baseline
 
-.var-name
+.title
   margin-bottom: .4rem
   font-size: 2em
   font-weight: 700
   cursor: pointer
 
-.var-name.renamed
-  font-size: 1.6em
-
-.source-name
+.subtitle
   font-size: 1.2em
   font-weight: 700
   margin-left: 1.2rem
-  color: #888
+  color: #aaa
 
-.source-name.renamed
-  font-size: 1em
+.annotations
+  margin-left: .3rem
+  color: #aaa
+
+.annotations :global(.annotation)
+  margin: 0 .3rem
+  padding: .1rem .3rem
+  background-color: #222
+  border: .5px solid #555
+  border-radius: .4rem
 
 .related
   font-size: 1em
@@ -191,10 +221,20 @@ ul
   flex-direction: column
   overflow: auto
   padding: 0 1rem
+  outline: none
   background-color: #3c3c3c
 
+.section-title
+  font-size: 1.7em
+  font-weight: 700
+  margin-top: 2.5rem
+  margin-bottom: 1.5rem
+
 .row-container
-  margin-top: 2rem
-  margin-bottom: 3rem
+  margin-top: .5rem
+  margin-bottom: 4rem
+
+.row-container:first-child
+  margin-top: 3rem
 
 </style>

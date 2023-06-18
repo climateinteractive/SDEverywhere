@@ -1,11 +1,11 @@
 // Copyright (c) 2021-2022 Climate Interactive / New Venture Fund
 
-import { allInputsAtPositionScenario } from '../_shared/scenario'
+import { allInputsAtPositionSpec } from '../_shared/scenario-specs'
 import type { CheckDataset } from './check-dataset'
 import type { CheckScenario } from './check-scenario'
 
 /**
- * The key type for data references (in the form `<ScenarioKey::DatasetKey>`).
+ * The key type for data references (in the form `<ScenarioUid::DatasetKey>`).
  */
 export type CheckDataRefKey = string
 
@@ -32,12 +32,12 @@ export interface CheckDataRef {
 export function dataRef(dataset: CheckDataset, scenario?: CheckScenario): CheckDataRef {
   if (!scenario) {
     scenario = {
-      scenario: allInputsAtPositionScenario('at-default'),
+      spec: allInputsAtPositionSpec('at-default'),
       inputDescs: []
     }
   }
   return {
-    key: `${scenario.scenario.key}::${dataset.datasetKey}`,
+    key: `${scenario.spec.uid}::${dataset.datasetKey}`,
     dataset,
     scenario
   }

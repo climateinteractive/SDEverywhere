@@ -73,14 +73,9 @@ export function checkSummaryFromReport(checkReport: CheckReport): CheckSummary {
  *
  * @param checkConfig The config used to reconstruct the check test structure.
  * @param checkSummary The simplified check summary.
- * @param simplifyScenarios If true, reduce the number of scenarios generated for a `matrix`.
  * @return The converted check report.
  */
-export function checkReportFromSummary(
-  checkConfig: CheckConfig,
-  checkSummary: CheckSummary,
-  simplifyScenarios: boolean
-): CheckReport | undefined {
+export function checkReportFromSummary(checkConfig: CheckConfig, checkSummary: CheckSummary): CheckReport | undefined {
   // Parse the tests
   const checkSpecResult = parseTestYaml(checkConfig.tests)
   if (checkSpecResult.isErr()) {
@@ -91,7 +86,7 @@ export function checkReportFromSummary(
 
   // Build the check plan
   const checkPlanner = new CheckPlanner(checkConfig.bundle.model.modelSpec)
-  checkPlanner.addAllChecks(checkSpec, simplifyScenarios)
+  checkPlanner.addAllChecks(checkSpec, false)
   const checkPlan = checkPlanner.buildPlan()
 
   // Put the check results into a map

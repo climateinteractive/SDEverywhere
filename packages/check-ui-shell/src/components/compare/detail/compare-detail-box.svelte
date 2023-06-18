@@ -70,7 +70,7 @@ function diffPoint(x: number | undefined | null): string {
   .content-container
     Lazy(bind:visible!='{visible}')
       +if('$content')
-        .content(class!='bucket-border-{$content.bucketIndex}')
+        .content(class!='{$content.bucketClass}')
           .graph-container
             ComparisonGraph(viewModel!='{$content.comparisonGraphViewModel}' width=30 height=22)
           .message-container
@@ -111,6 +111,7 @@ function diffPoint(x: number | undefined | null): string {
   align-items: baseline
 
 .title
+  margin-left: .7rem
   font-size: 1.1em
   font-weight: 700
   cursor: pointer
@@ -136,6 +137,7 @@ function diffPoint(x: number | undefined | null): string {
   padding: .5rem
   border-width: .3rem
   border-style: solid
+  border-radius: .8rem
 
 .graph-container
   position: relative
@@ -148,7 +150,7 @@ function diffPoint(x: number | undefined | null): string {
   display: flex
   flex-direction: column
   flex: 1
-  justify-content: center
+  justify-content: flex-end
 
 .data-row
   display: flex

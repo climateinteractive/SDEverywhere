@@ -1,6 +1,6 @@
 // Copyright (c) 2022 Climate Interactive / New Venture Fund
 
-import type { Bundle, SuiteSummary } from '@sdeverywhere/check-core'
+import type { Bundle, ConfigInitOptions, SuiteSummary } from '@sdeverywhere/check-core'
 
 import { initAppShell } from '@sdeverywhere/check-ui-shell'
 import '@sdeverywhere/check-ui-shell/dist/style.css'
@@ -13,6 +13,14 @@ import './global.css'
 import { createBundle as createBaselineBundle } from '@_baseline_bundle_'
 import { createBundle as createCurrentBundle } from '@_current_bundle_'
 import { getConfigOptions } from '@_test_config_'
+
+function loadSimplifyScenariosFlag(): boolean {
+  if (import.meta.hot) {
+    return localStorage.getItem('sde-check-simplify-scenarios') === '1'
+  } else {
+    return false
+  }
+}
 
 function loadBundleName(key: string): string | undefined {
   if (import.meta.hot) {
@@ -96,14 +104,15 @@ async function initForProduction(): Promise<void> {
     bundleL = rawBundleL as Bundle
   }
 
-  // Prepare the model check/compare configuration
-  const checkOptions = await getConfigOptions(bundleL, bundleR, {
-    nameL: __BASELINE_NAME__ || undefined,
-    nameR: __CURRENT_NAME__
-  })
+  // Prepare the model check/comparison configuration
+  const configInitOptions: ConfigInitOptions = {
+    bundleNameL: __BASELINE_NAME__ || undefined,
+    bundleNameR: __CURRENT_NAME__
+  }
+  const configOptions = await getConfigOptions(bundleL, bundleR, configInitOptions)
 
   // Initialize the root Svelte component
-  initAppShell(checkOptions, {
+  initAppShell(configOptions, {
     suiteSummary
   })
 }
@@ -130,22 +139,32 @@ async function initForLocal(): Promise<void> {
     return [bundle, bundleName]
   }
 
-  const [bundleL, nameL] = await createBundle(selectedBaselineBundleName)
-  const [bundleR, nameR] = await createBundle(selectedCurrentBundleName)
+  const [bundleL, bundleNameL] = await createBundle(selectedBaselineBundleName)
+  const [bundleR, bundleNameR] = await createBundle(selectedCurrentBundleName)
 
-  // Prepare the model check/compare configuration
-  const checkOptions = await getConfigOptions(bundleL, bundleR, {
-    nameL,
-    nameR
-  })
+  // Prepare the model check/comparison configuration
+  const configInitOptions: ConfigInitOptions = {
+    bundleNameL,
+    bundleNameR,
+    simplifyScenarios: loadSimplifyScenariosFlag()
+  }
+  const configOptions = await getConfigOptions(bundleL, bundleR, configInitOptions)
 
   // Initialize the root Svelte component
-  initAppShell(checkOptions, {
+  initAppShell(configOptions, {
     bundleNames
   })
 }
 
 async function initBundlesAndUI() {
+  // Before switching bundles, clear out the app-shell-container element
+  const container = document.getElementById('app-shell-container')
+  while (container.firstChild) {
+    container.removeChild(container.firstChild)
+  }
+
+  // TODO: Release resources associated with active bundles
+
   // Prepare options differently if in local development mode
   if (import.meta.hot) {
     await initForLocal()
@@ -173,15 +192,13 @@ if (import.meta.hot) {
       selectedCurrentBundleName = info.name
     }
 
-    // Before switching bundles, clear out the app-shell-container element
-    const container = document.getElementById('app-shell-container')
-    while (container.firstChild) {
-      container.removeChild(container.firstChild)
-    }
-
-    // TODO: Release resources associated with active bundles
-
     // Reinitialize using the chosen bundles
+    initBundlesAndUI()
+  })
+
+  // Reload everything when the user toggles the "Simplify Scenarios" checkbox
+  document.addEventListener('sde-check-simplify-scenarios-toggled', () => {
+    // Reinitialize using the new state
     initBundlesAndUI()
   })
 }

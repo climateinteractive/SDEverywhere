@@ -3,22 +3,23 @@
 import type { Readable, Writable } from 'svelte/store'
 import { get, writable } from 'svelte/store'
 
-import type { CompareSummary, SuiteSummary } from '@sdeverywhere/check-core'
-import { checkReportFromSummary, compareSummaryFromReport, runSuite } from '@sdeverywhere/check-core'
+import type { ComparisonSummary, SuiteSummary } from '@sdeverywhere/check-core'
+import { checkReportFromSummary, comparisonSummaryFromReport, runSuite } from '@sdeverywhere/check-core'
 
 import type { AppModel } from './model/app-model'
-import type { CompareGroupReport } from './model/reports'
-import { groupedReportsFromSummaries } from './model/reports'
 
+import type { ComparisonGroupingKind } from './components/compare/_shared/comparison-grouping-kind'
 import type { CompareDetailViewModel } from './components/compare/detail/compare-detail-vm'
 import { createCompareDetailViewModel } from './components/compare/detail/compare-detail-vm'
-import type { CompareSummaryRowViewModel } from './components/compare/summary/compare-summary-row-vm'
+import type { ComparisonSummaryRowViewModel } from './components/compare/summary/comparison-summary-row-vm'
 import type { HeaderViewModel } from './components/header/header-vm'
 import { createHeaderViewModel } from './components/header/header-vm'
 import type { PerfViewModel } from './components/perf/perf-vm'
 import { createPerfViewModel } from './components/perf/perf-vm'
 import type { SummaryViewModel } from './components/summary/summary-vm'
 import { createSummaryViewModel } from './components/summary/summary-vm'
+import assertNever from 'assert-never'
+import type { ComparisonSummaryViewModel } from './components/compare/summary/comparison-summary-vm'
 
 export interface RunSuiteCallbacks {
   onProgress?: (pct: number) => void
@@ -48,20 +49,7 @@ export class AppViewModel {
 
     // Show the "Simplify Scenarios" checkbox if we run checks in the browser
     const includeSimplifyScenarios = suiteSummary === undefined
-    this.headerViewModel = createHeaderViewModel(appModel.config.compare, includeSimplifyScenarios)
-
-    if (includeSimplifyScenarios) {
-      // Re-run the tests when the "Simplify Scenarios" checkbox is toggled
-      let firstEvent = true
-      this.headerViewModel.simplifyScenarios.subscribe(() => {
-        // XXX: Ignore the first event when we subscribe
-        if (firstEvent) {
-          firstEvent = false
-        } else {
-          this.runTestSuite()
-        }
-      })
-    }
+    this.headerViewModel = createHeaderViewModel(appModel.config.comparison, includeSimplifyScenarios)
   }
 
   runTestSuite(): void {
@@ -75,27 +63,29 @@ export class AppViewModel {
     this.writableChecksInProgress.set(true)
     this.writableProgress.set('0%')
 
-    const compareConfig = this.appModel.config.compare
+    const comparisonConfig = this.appModel.config.comparison
     if (this.suiteSummary) {
       // For the case where checks were run ahead of time using the model-check
       // CLI tool, we can display the report immediately instead of running all
       // the checks in the user's browser
-      const simplifyScenarios = false
       const checkConfig = this.appModel.config.check
-      const checkReport = checkReportFromSummary(checkConfig, this.suiteSummary.checkSummary, simplifyScenarios)
-      const compareSummary = this.suiteSummary?.compareSummary
+      const checkReport = checkReportFromSummary(checkConfig, this.suiteSummary.checkSummary)
+      const comparisonSummary = this.suiteSummary?.comparisonSummary
       this.summaryViewModel = createSummaryViewModel(
         this.appModel.checkDataCoordinator,
-        this.appModel.compareDataCoordinator,
         checkReport,
-        compareConfig,
-        compareSummary,
-        simplifyScenarios
+        comparisonConfig,
+        comparisonSummary
       )
       this.writableChecksInProgress.set(false)
     } else {
       // For local dev builds, run the test suite in the browser
-      const simplifyScenarios = get(this.headerViewModel.simplifyScenarios)
+      // TODO: Once we resolve checks as part of resolving config options, we won't
+      // need this hack here
+      let simplifyScenarios = false
+      if (this.headerViewModel.simplifyScenarios !== undefined) {
+        simplifyScenarios = get(this.headerViewModel.simplifyScenarios)
+      }
       this.cancelRunSuite = runSuite(
         this.appModel.config,
         {
@@ -104,17 +94,15 @@ export class AppViewModel {
           },
           onComplete: report => {
             const checkReport = report.checkReport
-            let compareSummary: CompareSummary
-            if (report.compareReport) {
-              compareSummary = compareSummaryFromReport(report.compareReport)
+            let comparisonSummary: ComparisonSummary
+            if (report.comparisonReport) {
+              comparisonSummary = comparisonSummaryFromReport(report.comparisonReport)
             }
             this.summaryViewModel = createSummaryViewModel(
               this.appModel.checkDataCoordinator,
-              this.appModel.compareDataCoordinator,
               checkReport,
-              compareConfig,
-              compareSummary,
-              simplifyScenarios
+              comparisonConfig,
+              comparisonSummary
             )
             this.writableChecksInProgress.set(false)
           },
@@ -130,15 +118,21 @@ export class AppViewModel {
     }
   }
 
-  createCompareDetailViewModelForSummaryRow(summaryRowViewModel: CompareSummaryRowViewModel): CompareDetailViewModel {
-    const compareSummaryViewModel = this.summaryViewModel.compareSummaryViewModel
+  createCompareDetailViewModelForSummaryRow(
+    summaryRowViewModel: ComparisonSummaryRowViewModel
+  ): CompareDetailViewModel {
+    const comparisonSummaryViewModel = this.getComparisonSummaryViewModel(summaryRowViewModel.kind)
+    const groupSummary = summaryRowViewModel.groupSummary
     const groupKey = summaryRowViewModel.groupKey
+
+    const viewGroup = summaryRowViewModel.viewMetadata?.viewGroup
+    const view = summaryRowViewModel.viewMetadata?.view
 
     // Determine which rows precede and follow the selected row
     let previousRowIndex: number
     let nextRowIndex: number
-    const rowCount = compareSummaryViewModel.allRows.length
-    const rowIndex = compareSummaryViewModel.allRows.findIndex(row => row.groupKey === groupKey)
+    const rowCount = comparisonSummaryViewModel.allRows.length
+    const rowIndex = comparisonSummaryViewModel.allRows.findIndex(row => row.groupKey === groupKey)
     if (rowIndex >= 0) {
       if (rowIndex > 0) {
         previousRowIndex = rowIndex - 1
@@ -148,32 +142,37 @@ export class AppViewModel {
       }
     }
 
-    // For the detail view, include all scenarios from the configuration (even if
-    // "Simplify Scenarios" is checked); this way the scenarios can be loaded lazily
-    // while scrolling down the detail page
-    const groupedReports = groupedReportsFromSummaries(
-      this.appModel.config.compare,
-      this.summaryViewModel.compareSummary,
-      /*simplifyScenarios=*/ false
-    )
-    let groupReport: CompareGroupReport = groupedReports.byDataset.find(r => r.key === groupKey)
-    if (groupReport === undefined) {
-      groupReport = groupedReports.byScenario.find(r => r.key === groupKey)
-    }
-
     return createCompareDetailViewModel(
-      this.appModel.config.compare,
-      this.appModel.compareDataCoordinator,
-      groupReport,
+      this.appModel.config.comparison,
+      this.appModel.comparisonDataCoordinator,
+      groupSummary,
+      viewGroup,
+      view,
       previousRowIndex,
       nextRowIndex
     )
   }
 
-  createCompareDetailViewModelForSummaryRowIndex(rowIndex: number): CompareDetailViewModel {
-    const compareSummaryViewModel = this.summaryViewModel.compareSummaryViewModel
-    const rowViewModel = compareSummaryViewModel.allRows[rowIndex]
+  createCompareDetailViewModelForSummaryRowIndex(
+    kind: ComparisonGroupingKind,
+    rowIndex: number
+  ): CompareDetailViewModel {
+    const comparisonSummaryViewModel = this.getComparisonSummaryViewModel(kind)
+    const rowViewModel = comparisonSummaryViewModel.allRows[rowIndex]
     return this.createCompareDetailViewModelForSummaryRow(rowViewModel)
+  }
+
+  private getComparisonSummaryViewModel(kind: ComparisonGroupingKind): ComparisonSummaryViewModel {
+    switch (kind) {
+      case 'views':
+        return this.summaryViewModel.comparisonViewsSummaryViewModel
+      case 'by-scenario':
+        return this.summaryViewModel.comparisonsByScenarioSummaryViewModel
+      case 'by-dataset':
+        return this.summaryViewModel.comparisonsByDatasetSummaryViewModel
+      default:
+        assertNever(kind)
+    }
   }
 
   createPerfViewModel(): PerfViewModel {

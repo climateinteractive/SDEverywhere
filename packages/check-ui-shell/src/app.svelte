@@ -5,15 +5,16 @@
 
 import FontFaceObserver from 'fontfaceobserver'
 
-import CompareDetail from './components/compare/detail/compare-detail.svelte'
+import ComparisonDetail from './components/compare/detail/compare-detail.svelte'
 import type { CompareDetailViewModel } from './components/compare/detail/compare-detail-vm'
-import CompareGraphs from './components/compare/graphs/compare-graphs.svelte'
 import Header from './components/header/header.svelte'
 import type { PerfViewModel } from './components/perf/perf-vm'
 import Perf from './components/perf/perf.svelte'
 import Summary from './components/summary/summary.svelte'
 
 import type { AppViewModel } from './app-vm'
+  import type { ComparisonGroupingKind } from './components/compare/_shared/comparison-grouping-kind'
+  import assertNever from 'assert-never'
 
 export let viewModel: AppViewModel
 const checksInProgress = viewModel.checksInProgress
@@ -22,7 +23,7 @@ const progress = viewModel.progress
 let compareDetailViewModel: CompareDetailViewModel
 let perfViewModel: PerfViewModel
 
-type ViewMode = 'summary' | 'compare-graphs' | 'compare-detail' | 'perf'
+type ViewMode = 'summary' | 'comparison-detail' | 'perf'
 let viewMode: ViewMode = 'summary'
 
 // Under normal circumstances, the font face used in graphs might not be fully
@@ -43,7 +44,7 @@ $: if (graphFontReady) {
   // Set a flag indicating that the view is ready to be displayed
   viewReady = true
 
-  // Run the check/compare test suite
+  // Run the check/comparison test suite
   viewModel.runTestSuite()
 }
 
@@ -55,16 +56,33 @@ function onCommand(event: CustomEvent) {
       compareDetailViewModel = undefined
       viewMode = 'summary'
       break
-    case 'show-compare-graphs':
-      viewMode = 'compare-graphs'
+    case 'enter-tab':
+      if (cmdObj.itemId !== 'checks') {
+        let kind: ComparisonGroupingKind
+        switch (cmdObj.itemId) {
+          case 'comp-views':
+            kind = 'views'
+            break
+          case 'comps-by-scenario':
+            kind = 'by-scenario'
+            break
+          case 'comps-by-dataset':
+            kind = 'by-dataset'
+            break
+          default:
+            return
+        }
+        compareDetailViewModel = viewModel.createCompareDetailViewModelForSummaryRowIndex(kind, 0)
+        viewMode = 'comparison-detail'
+      }
       break
-    case 'show-compare-detail':
+    case 'show-comparison-detail':
       compareDetailViewModel = viewModel.createCompareDetailViewModelForSummaryRow(cmdObj.summaryRow)
-      viewMode = 'compare-detail'
+      viewMode = 'comparison-detail'
       break
-    case 'show-compare-detail-at-index':
-      compareDetailViewModel = viewModel.createCompareDetailViewModelForSummaryRowIndex(cmdObj.index)
-      viewMode = 'compare-detail'
+    case 'show-comparison-detail-at-index':
+      compareDetailViewModel = viewModel.createCompareDetailViewModelForSummaryRowIndex(cmdObj.kind, cmdObj.index)
+      viewMode = 'comparison-detail'
       break
     case 'show-perf':
       if (!perfViewModel) {
@@ -94,10 +112,8 @@ function onCommand(event: CustomEvent) {
       +if('$checksInProgress')
         .progress-container
           .progress {$progress}
-        +elseif('viewMode === "compare-detail"')
-          CompareDetail(on:command!='{onCommand}' viewModel!='{compareDetailViewModel}')
-        +elseif('viewMode === "compare-graphs"')
-          CompareGraphs(viewModel!='{viewModel.summaryViewModel.compareGraphsViewModel}')
+        +elseif('viewMode === "comparison-detail"')
+          ComparisonDetail(on:command!='{onCommand}' viewModel!='{compareDetailViewModel}')
         +elseif('viewMode === "perf"')
           Perf(on:command!='{onCommand}' viewModel!='{perfViewModel}')
         +else

@@ -8,12 +8,12 @@ import type { BuildContext } from '@sdeverywhere/build'
 
 import type {
   Config,
-  CompareReport,
+  ComparisonReport,
   PerfReport,
   RunSuiteCallbacks,
   CheckReport,
   CheckStatus,
-  CompareConfig,
+  ComparisonConfig,
   CheckTestReport,
   SuiteSummary
 } from '@sdeverywhere/check-core'
@@ -59,9 +59,9 @@ export async function runTestSuite(
           // Print check summary to the console
           const allChecksPassed = printCheckSummary(context, report.checkReport, verbose)
 
-          if (report.compareReport) {
+          if (report.comparisonReport) {
             // Print the perf stats to the console
-            printPerfStats(context, config.compare, report.compareReport)
+            printPerfStats(context, config.comparison, report.comparisonReport)
           }
 
           // Convert check and compare reports to terse form that only includes
@@ -163,11 +163,11 @@ function printPerfReportLine(context: BuildContext, perfReport: PerfReport): voi
   context.log('info', `    ${avg} ${min} ${max}`)
 }
 
-function printPerfStats(context: BuildContext, compareConfig: CompareConfig, report: CompareReport): void {
+function printPerfStats(context: BuildContext, comparisonConfig: ComparisonConfig, report: ComparisonReport): void {
   context.log('info', '\nPerformance stats:')
-  context.log('info', `  ${compareConfig.bundleL.name}:`)
+  context.log('info', `  ${comparisonConfig.bundleL.name}:`)
   printPerfReportLine(context, report.perfReportL)
-  context.log('info', `  ${compareConfig.bundleR.name}:`)
+  context.log('info', `  ${comparisonConfig.bundleR.name}:`)
   printPerfReportLine(context, report.perfReportR)
   context.log('info', '')
 }

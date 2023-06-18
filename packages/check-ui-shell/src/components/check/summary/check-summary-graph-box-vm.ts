@@ -9,8 +9,9 @@ import type {
   CheckPredicateOp,
   CheckPredicateReport,
   CheckPredicateTimeOptions,
+  CheckScenario,
   DatasetKey,
-  Scenario
+  ScenarioSpec
 } from '@sdeverywhere/check-core'
 
 import type { ComparisonGraphViewModel, PlotStyle, Point, RefPlot } from '../../graphs/comparison-graph-vm'
@@ -36,7 +37,7 @@ export class CheckSummaryGraphBoxViewModel {
 
   constructor(
     private readonly dataCoordinator: CheckDataCoordinator,
-    private readonly scenario: Scenario,
+    private readonly scenario: CheckScenario,
     private readonly datasetKey: DatasetKey,
     private readonly predicateReport: CheckPredicateReport
   ) {
@@ -58,7 +59,7 @@ export class CheckSummaryGraphBoxViewModel {
 
     // Request the primary dataset that is being checked
     this.expectedDataKeys.push('primary')
-    this.requestDataset('primary', this.scenario, this.datasetKey)
+    this.requestDataset('primary', this.scenario.spec, this.datasetKey)
 
     // Determine which reference datasets need to be fetched
     const addOp = (op: CheckPredicateOp) => {
@@ -80,7 +81,7 @@ export class CheckSummaryGraphBoxViewModel {
           break
         case 'data': {
           // Fetch the reference dataset
-          const refScenario = opRef.dataRef.scenario.scenario
+          const refScenario = opRef.dataRef.scenario.spec
           const refDatasetKey = opRef.dataRef.dataset.datasetKey
           this.requestDataset(op, refScenario, refDatasetKey)
           break
@@ -116,15 +117,15 @@ export class CheckSummaryGraphBoxViewModel {
    * Request a dataset for the given scenario and key.
    *
    * @param dataKey The key used to store the dataset that is received.
-   * @param scenario The scenario to be configured.
+   * @param scenarioSpec The scenario to be configured.
    * @param datasetKey The key for the dataset to be fetched.
    */
-  private requestDataset(dataKey: string, scenario: Scenario, datasetKey: DatasetKey): void {
+  private requestDataset(dataKey: string, scenarioSpec: ScenarioSpec, datasetKey: DatasetKey): void {
     // Create the request key and add it to the set
     const requestKey = `${this.baseRequestKey}::${dataKey}`
     this.requestKeys.push(requestKey)
 
-    this.dataCoordinator.requestDataset(requestKey, scenario, datasetKey, dataset => {
+    this.dataCoordinator.requestDataset(requestKey, scenarioSpec, datasetKey, dataset => {
       if (!this.dataRequested) {
         return
       }

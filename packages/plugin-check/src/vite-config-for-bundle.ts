@@ -27,8 +27,17 @@ const __dirname = dirname(__filename)
 function injectModelSpec(prepDir: string, modelSpec: ModelSpec): VitePlugin {
   // Include the SDE variable ID with each spec
   const inputSpecs = modelSpec.inputs.map(i => {
+    // Use the `inputId` if defined for the `InputSpec`, otherwise use `varId`.  The
+    // latter is less resilient if the variable is renamed between two versions of
+    // the model, but will be sufficient for now.  Note that `plugin-config` defines
+    // a stable `inputId` for each row in the `inputs.csv`, and that is the most
+    // common way to configure a `ModelSpec`, so it will be uncommon for `inputId`
+    // to be undefined here.
+    const varId = sdeNameForVensimVarName(i.varName)
+    const inputId = i.inputId || varId
     return {
-      varId: sdeNameForVensimVarName(i.varName),
+      inputId,
+      varId,
       ...i
     }
   })
