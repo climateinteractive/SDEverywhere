@@ -55,7 +55,9 @@ export function getConfigOptions(bundleL: Bundle, bundleR: Bundle, opts?: Config
       },
       thresholds: [1, 5, 10],
       specs: comparisonSpecs,
-      renamedDatasetKeys
+      datasets: {
+        renamedDatasetKeys
+      }
     }
   }
 }
