@@ -139,7 +139,7 @@ importers:
       '@fortawesome/free-regular-svg-icons': ^6.1.1
       '@fortawesome/free-solid-svg-icons': ^6.1.1
       '@juggle/resize-observer': ^3.3.0
-      '@sdeverywhere/check-core': ^0.1.0
+      '@sdeverywhere/check-core': ^0.1.1
       '@sveltejs/vite-plugin-svelte': ^1.0.8
       '@types/chart.js': ^2.9.34
       '@types/fontfaceobserver': ^0.0.6
@@ -259,8 +259,8 @@ importers:
       '@rollup/plugin-node-resolve': ^13.3.0
       '@rollup/plugin-replace': ^4.0.0
       '@sdeverywhere/build': '*'
-      '@sdeverywhere/check-core': ^0.1.0
-      '@sdeverywhere/check-ui-shell': ^0.2.1
+      '@sdeverywhere/check-core': ^0.1.1
+      '@sdeverywhere/check-ui-shell': ^0.2.2
       '@sdeverywhere/runtime': ^0.2.0
       '@sdeverywhere/runtime-async': ^0.2.0
       '@types/node': ^16.11.7

@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.2.2](https://github.com/climateinteractive/SDEverywhere/compare/check-ui-shell-v0.2.1...check-ui-shell-v0.2.2) (2023-06-18)
+
+
+### Features
+
+* allow for defining model comparison scenarios in YAML files ([#330](https://github.com/climateinteractive/SDEverywhere/issues/330)) ([426eab1](https://github.com/climateinteractive/SDEverywhere/commit/426eab19f98df2ccfa56cf9cc8cc83ceedfe7821)), closes [#315](https://github.com/climateinteractive/SDEverywhere/issues/315)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/check-core bumped from ^0.1.0 to ^0.1.1
+
 ## [0.2.1](https://github.com/climateinteractive/SDEverywhere/compare/check-ui-shell-v0.2.0...check-ui-shell-v0.2.1) (2022-10-29)
 
 
