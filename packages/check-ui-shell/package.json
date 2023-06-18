@@ -22,7 +22,8 @@
     "type-check": "tsc --noEmit -p tsconfig-build.json",
     "build": "vite build",
     "build:watch": "vite build --watch",
-    "ci:build": "run-s clean lint prettier:check test:ci type-check build"
+    "docs": "../../scripts/gen-docs.js",
+    "ci:build": "run-s clean lint prettier:check test:ci type-check build docs"
   },
   "dependencies": {
     "@sdeverywhere/check-core": "^0.1.0",

@@ -11,7 +11,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import type { BuildOptions, ModelSpec, Plugin, UserConfig } from '@sdeverywhere/build'
 import { build } from '@sdeverywhere/build'
 
-import type { ConfigOptions } from './processor'
+import type { ConfigProcessorOptions } from './processor'
 import { configProcessor } from './processor'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
@@ -23,7 +23,7 @@ interface TestEnv {
 }
 
 async function prepareForBuild(
-  optionsFunc: (corePkgDir: string) => ConfigOptions,
+  optionsFunc: (corePkgDir: string) => ConfigProcessorOptions,
   plugins: Plugin[] = []
 ): Promise<TestEnv> {
   const baseTmpDir = await temp.mkdir('sde-plugin-config')

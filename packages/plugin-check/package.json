@@ -33,7 +33,8 @@
     "test:ci": "echo No tests yet",
     "type-check": "tsc --noEmit -p tsconfig-build.json",
     "build": "tsup",
-    "ci:build": "run-s clean lint prettier:check test:ci type-check build"
+    "docs": "../../scripts/gen-docs.js",
+    "ci:build": "run-s clean lint prettier:check test:ci type-check build docs"
   },
   "dependencies": {
     "@rollup/plugin-node-resolve": "^13.3.0",

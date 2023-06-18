@@ -58,6 +58,7 @@ function main() {
 --hideInPageTOC \
 --hideMembersSymbol \
 --allReflectionsHaveOwnDocument \
+--objectLiteralTypeDeclarationStyle list \
 --out docs \
 --cleanOutputDir false \
 src/index.ts`

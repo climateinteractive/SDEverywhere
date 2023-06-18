@@ -23,11 +23,15 @@ A time series of data points for an output variable.
 
  `Readonly` **varId**: `string`
 
+The ID for the output variable (as used by SDEverywhere).
+
 ___
 
 ### points
 
  `Readonly` **points**: [`Point`](../interfaces/Point.md)[]
+
+The data points for the variable, one point per time increment.
 
 ## Methods
 
