@@ -14,6 +14,8 @@ import { getComparisonScenarios } from '../comparison/config/comparison-scenario
 
 import type { Config, ConfigOptions } from './config-types'
 import { synchronizedBundleModel } from './synchronized-model'
+import { parseTestYaml } from '../check/check-parser'
+import type { CheckSpec } from '../check/check-spec'
 
 export async function createConfig(options: ConfigOptions): Promise<Config> {
   // Initialize the "current" bundle model (the one being checked)
@@ -97,9 +99,24 @@ export async function createConfig(options: ConfigOptions): Promise<Config> {
   }
 
   // Create the check configuration
+  // TODO: We currently parse the check tests but do not yet fully resolve them.  We need to update
+  // this code to follow the same pattern used above for comparison tests, where we parse and resolve
+  // the tests before continuing (we should fail fast if parsing or resolving fails).
+  // TODO: Move handling of JSON/YAML files to check-parser
+  const checkYamlStrings = options.check.specs.map(specSource => specSource.content)
+  let checkSpec: CheckSpec
+  const parserResult = parseTestYaml(checkYamlStrings)
+  if (parserResult.isOk()) {
+    checkSpec = parserResult.value
+  } else {
+    // TODO: Fail fast and show error message
+    checkSpec = {
+      groups: []
+    }
+  }
   const checkConfig: CheckConfig = {
     bundle: currentBundle,
-    tests: options.check.tests
+    spec: checkSpec
   }
 
   return {

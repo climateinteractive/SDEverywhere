@@ -3,7 +3,6 @@
 import { assertNever } from 'assert-never'
 import type { CheckConfig } from './check-config'
 import type { CheckResult } from './check-func'
-import { parseTestYaml } from './check-parser'
 import type { CheckKey } from './check-planner'
 import { CheckPlanner } from './check-planner'
 import type { CheckReport } from './check-report'
@@ -76,17 +75,9 @@ export function checkSummaryFromReport(checkReport: CheckReport): CheckSummary {
  * @return The converted check report.
  */
 export function checkReportFromSummary(checkConfig: CheckConfig, checkSummary: CheckSummary): CheckReport | undefined {
-  // Parse the tests
-  const checkSpecResult = parseTestYaml(checkConfig.tests)
-  if (checkSpecResult.isErr()) {
-    // TODO: Use Result type here instead
-    return undefined
-  }
-  const checkSpec = checkSpecResult.value
-
   // Build the check plan
   const checkPlanner = new CheckPlanner(checkConfig.bundle.model.modelSpec)
-  checkPlanner.addAllChecks(checkSpec, false)
+  checkPlanner.addAllChecks(checkConfig.spec, false)
   const checkPlan = checkPlanner.buildPlan()
 
   // Put the check results into a map

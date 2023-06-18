@@ -2,4 +2,5 @@
 
 // These values are injected by Vite at build time, so we need to
 // declare types for them here
-declare const __YAML_PATH__: string
+declare const __CHECKS_YAML_PATH__: string
+declare const __COMPARISONS_YAML_PATH__: string

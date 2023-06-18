@@ -12,16 +12,20 @@ export function createViteConfigForTests(projDir: string, prepDir: string, mode:
   // Use `template-tests` as the root directory for the tests project
   const root = resolvePath(__dirname, '..', 'template-tests')
 
-  // Include `*.check.yaml` files under the configured project root directory.  This
-  // glob path apparently must be a relative path (relative to the `template-tests/src`
-  // directory where the glob is used).
+  // Include YAML files containing checks or comparison tests.  For checks, we look for either
+  // `*.check.yaml` or `checks.yaml`.  For comparisons, we look for `comparisons.yaml`.  We
+  // currently look at files under the configured project root directory.  This glob path
+  // apparently must be a relative path (relative to the `template-tests/src` directory where
+  // the glob is used).
+  // TODO: Use globs/paths defined in options instead of guessing
+  // and for comparisons,  files under the configured project root directory.
   const templateSrcDir = resolvePath(root, 'src')
   const relProjDir = relative(templateSrcDir, projDir)
-  // XXX: The glob pattern must use forward slashes only, so on Windows we need to
+  // XXX: The glob patterns must use forward slashes only, so on Windows we need to
   // convert backslashes to slashes
   const relProjDirPath = relProjDir.replaceAll('\\', '/')
-  // TODO: Use yamlPath from options
-  const yamlPath = `${relProjDirPath}/**/*.check.yaml`
+  const checksYamlPath = `${relProjDirPath}/**/(*.check.yaml|checks.yaml)`
+  const comparisonsYamlPath = `${relProjDirPath}/**/comparisons.yaml`
 
   // // Read the `package.json` for the template project
   // const pkgPath = resolvePath(root, 'package.json')
@@ -47,7 +51,9 @@ export function createViteConfigForTests(projDir: string, prepDir: string, mode:
     // Inject special values into the generated JS
     define: {
       // Inject the glob pattern for matching check yaml files
-      __YAML_PATH__: JSON.stringify(yamlPath)
+      __CHECKS_YAML_PATH__: JSON.stringify(checksYamlPath),
+      // Inject the glob pattern for matching comparison yaml files
+      __COMPARISONS_YAML_PATH__: JSON.stringify(comparisonsYamlPath)
     },
 
     build: {

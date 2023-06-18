@@ -10,7 +10,6 @@ import type { BundleModel } from '../bundle/bundle-types'
 import type { DataRequest } from '../data/data-planner'
 import { DataPlanner } from '../data/data-planner'
 
-import { parseTestYaml } from '../check/check-parser'
 import { runChecks } from '../check/check-runner'
 
 import { runComparisons } from '../comparison/run/comparison-runner'
@@ -77,15 +76,8 @@ class SuiteRunner {
     // checks/predicates that reference them
     const refDataPlanner = new DataPlanner(modelSpec.outputVars.size)
 
-    // Parse the check tests
-    const checkSpecResult = parseTestYaml(this.config.check.tests)
-    if (checkSpecResult.isErr()) {
-      this.callbacks.onError?.(checkSpecResult.error)
-      return
-    }
-    const checkSpec = checkSpecResult.value
-
     // Plan the checks
+    const checkSpec = this.config.check.spec
     const simplifyScenarios = options?.simplifyScenarios === true
     const buildCheckReport = runChecks(this.config.check, checkSpec, dataPlanner, refDataPlanner, simplifyScenarios)
 

@@ -3,6 +3,7 @@
 import { describe, expect, it } from 'vitest'
 
 import type { Bundle, BundleModel, ModelSpec } from '../bundle/bundle-types'
+import type { CheckSpecsSource } from '../check/check-spec'
 import { outputVar } from '../check/_mocks/mock-check-dataset'
 import { inputVar } from '../check/_mocks/mock-check-scenario'
 import { createConfig } from '../config/config'
@@ -57,13 +58,13 @@ function mockBundle(mockOptions: MockConfigOptions): Bundle {
 }
 
 async function mockConfig(mockOptions: MockConfigOptions): Promise<Config> {
-  let tests: string[]
+  let checkSpecs: CheckSpecsSource[]
   if (mockOptions.emptyTests === true) {
-    tests = []
+    checkSpecs = []
   } else if (mockOptions.invalidTests === true) {
-    tests = ['INVALID']
+    checkSpecs = ['INVALID' as unknown as CheckSpecsSource]
   } else {
-    const test = `
+    const specYaml = `
 - describe: group1
   tests:
   - it: test1
@@ -77,7 +78,12 @@ async function mockConfig(mockOptions: MockConfigOptions): Promise<Config> {
     predicates:
       - eq: 0
 `
-    tests = [test]
+    checkSpecs = [
+      {
+        kind: 'yaml',
+        content: specYaml
+      }
+    ]
   }
   const configOptions: ConfigOptions = {
     current: {
@@ -85,7 +91,7 @@ async function mockConfig(mockOptions: MockConfigOptions): Promise<Config> {
       bundle: mockBundle(mockOptions)
     },
     check: {
-      tests
+      specs: checkSpecs
     }
   }
   return createConfig(configOptions)
@@ -144,7 +150,7 @@ describe('runSuite', () => {
   })
 
   it('should notify error callback if there was an error', async () => {
-    const config = await mockConfig({ invalidTests: true })
+    const config = await mockConfig({ throwInCurrentGetDatasets: true })
 
     const sawOnError = await new Promise((resolve, reject) => {
       const callbacks: RunSuiteCallbacks = {

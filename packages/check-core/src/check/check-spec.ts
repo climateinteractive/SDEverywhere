@@ -83,3 +83,12 @@ export interface CheckGroupSpec {
 export interface CheckSpec {
   groups: CheckGroupSpec[]
 }
+
+/** A source of check test specifications. */
+export interface CheckSpecsSource {
+  kind: 'yaml' | 'json'
+  /** The source filename, if known. */
+  filename?: string
+  /** A string containing YAML or JSON content. */
+  content: string
+}

@@ -70,9 +70,7 @@ export async function getConfigOptions(
       name: opts?.bundleNameR || 'current',
       bundle: bundleR
     },
-    check: {
-      tests
-    },
+    check: {},
     comparison: comparisonOptions
   }
 }

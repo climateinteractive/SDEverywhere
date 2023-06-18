@@ -89,7 +89,7 @@ export function resolveComparisonSpecsFromSources(
       if (parseResult.isOk()) {
         specs = parseResult.value
       } else {
-        // TODO: Fail fast instead of logging errors?
+        // TODO: Fail fast instead of logging errors
         const filenamePart = specSource.filename ? ` in ${specSource.filename}` : ''
         console.error(`ERROR: Failed to parse comparison spec${filenamePart}, skipping`)
         continue
