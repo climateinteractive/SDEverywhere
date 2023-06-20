@@ -126,7 +126,7 @@ Tabbed arrays and macros are removed from the model during preprocessing and wri
 ### Live Editing
 
 SDEverywhere provides a live development environment and configuration files that allow you to see your edits in real time.
-Every time you save changes to your Vensim model or to the CSV config files, the local builder automatically rebuilds your changes and the changes appear instantaneously in your browser, no manual reloads required.
+Every time you save changes to your Vensim model or to the CSV config files, the local builder automatically rebuilds your project and the changes appear instantaneously in your browser, no manual reloads required.
 
 The following video demonstrates using a text editor to make simple edits in the CSV config files that affect the appearance and behavior of the generated web application.
 In the video, we tweak the color of a graph plot, change an axis label, and set a new default for a slider.
