@@ -141,7 +141,7 @@ https://github.com/climateinteractive/SDEverywhere/assets/438425/cd495776-5744-4
 SDEverywhere includes extensive QA (quality assurance) tools that you can run locally on your machine as you develop your model or in the cloud in a continuous integration environment.
 There is support for two different kinds of tests:
 
-- **_Checks:_** Check tests can be used to verify that your model behaves according to some guidelines (or conforms to your mental models). For example, you can have checks that verify that stocks are always positive, or that some output variable produces values that are close to some historical reference data.
+- **_Checks:_** Check tests can be used to verify that your model behaves according to some guidelines (or conforms to your mental models). For example, you can have checks that verify that stocks are always positive, or that some output variable produces values that are close to historical reference data.
 - **_Comparisons:_** Comparison tests can be used to track changes to your model between two different versions. For example, you can run your model over thousands of input scenarios and see at a glance how your model outputs differ from a previous version.
 
 In the following video, we demonstrate how the model-check tools can be run alongside Vensim to give you immediate feedback whenever you make changes to your model.
