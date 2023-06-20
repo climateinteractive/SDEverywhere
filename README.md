@@ -61,7 +61,7 @@ If you are already familiar with Node.js and have it installed, note that SDEver
 ## Quick Start
 
 The following video shows what it will look like when you follow the steps in this section.
-In this video, we demonstrate the commands that turn a Vensim model (the SIR model from `examples/sir`) into a web application project.
+In this video, we demonstrate commands that turn a Vensim model (the SIR model from `examples/sir`) into a web application project.
 
 https://github.com/climateinteractive/SDEverywhere/assets/438425/c0c81bcd-f5a5-4cf1-8698-be46118d7c9c
 
@@ -282,11 +282,33 @@ Most users won't need to interact with these implementation packages directly, b
 
 ## Features
 
-TODO: Using `create`
+### Live Editing
 
-TODO: Using config files
+SDEverywhere provides a live development environment and configuration files that allow you to see your edits in real time.
+Every time you save changes to your Vensim model or to the CSV config files, the local builder automatically rebuilds your changes and the changes appear instantaneously in your browser, no manual reloads required.
 
-TODO: model-check
+The following video demonstrates using a text editor to make simple edits in the CSV config files that affect the appearance and behavior of the generated web application.
+In the video, we tweak the color of a graph plot, change an axis label, and set a new default for a slider.
+All of these settings and more can be configured by editing the CSV files in your favorite text editor or in Excel.
+
+https://github.com/climateinteractive/SDEverywhere/assets/438425/cd495776-5744-40b9-a922-8ad5b138106c
+
+### Quality Checks and Comparisons
+
+SDEverywhere includes extensive QA (quality assurance) tools that you can run locally on your machine as you develop your model or in the cloud in a continuous integration environment.
+There is support for two different kinds of tests:
+
+- **_Checks:_** Check tests can be used to verify that your model behaves according to some guidelines (or conforms to your mental models). For example, you can have checks that verify that stocks are always positive, or that some output variable produces values that are close to some historical reference data.
+- **_Comparisons:_** Comparison tests can be used to track changes to your model between two different versions. For example, you can run your model over thousands of input scenarios and see at a glance how your model outputs differ from a previous version.
+
+In the following video, we demonstrate how the model-check tools can be run alongside Vensim to give you immediate feedback whenever you make changes to your model.
+In this example, we have an existing "check" test that verifies that the different population variables always produce values in the range 0 to 10000.
+If we multiply a variable by -1 and save the model file, the builder detects the change and re-runs all the defined check and comparison tests.
+
+Since the "Recovered Population" variable is now producing negative values, there is a failing check that gets flagged in the Model Check report, showing that the data now goes outside the expected (green) range.
+Additionally, the comparison tests show how the new model results differ from the previous ones over many different input scenarios.
+
+https://github.com/climateinteractive/SDEverywhere/assets/438425/b6f05b3f-f18a-48c4-89a9-80f1d8bfbfde
 
 ## SDEverywhere in Production
 
