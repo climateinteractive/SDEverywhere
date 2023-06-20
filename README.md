@@ -7,7 +7,7 @@
 Using SDEverywhere, you can deploy interactive System Dynamics models in mobile, desktop, and web apps for policymakers and the public.
 Or you could perform model analysis using general-purpose languages, running the model as high-performance C code.
 
-By following the ["Quick Start"](#quick-start) instructions below, in minutes you can turn a Vensim model like this:
+By following the ["Quick Start"](#quick-start) instructions below, within minutes you can turn a Vensim model like this:
 
 <img width="500" alt="sde-vensim" src="https://github.com/climateinteractive/SDEverywhere/assets/438425/97e9b89e-54e4-438e-8cbd-51b9cd10a027">
 
