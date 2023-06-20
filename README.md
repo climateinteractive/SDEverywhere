@@ -48,9 +48,12 @@ If you are already familiar with Node.js and have it installed, note that SDEver
 
 ## Quick Start
 
-<video src="https://github.com/climateinteractive/SDEverywhere/assets/438425/c0c81bcd-f5a5-4cf1-8698-be46118d7c9c"></video>
+The following video shows what it will look like when you follow the steps in this section.
+In this video, we demonstrate the commands that turn a Vensim model (the SIR model from `examples/sir`) into a web application project.
 
-The quickest way to get started with SDEverywhere is to open your terminal emulator ("Terminal" on macOS or Linux, or "Command Prompt" on Windows) and type the following commands.
+https://github.com/climateinteractive/SDEverywhere/assets/438425/c0c81bcd-f5a5-4cf1-8698-be46118d7c9c
+
+As shown in the video above, the quickest way to get started with SDEverywhere is to open your terminal emulator ("Terminal" on macOS or Linux, or "Command Prompt" on Windows) and type the commands explained below.
 
 If you already have a directory containing a Vensim `mdl` file, change to that directory first.
 (The script will generate some new files in that directory, so if you would prefer, feel free to create a fresh directory that includes just your `mdl` file.)
