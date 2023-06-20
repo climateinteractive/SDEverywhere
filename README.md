@@ -1,7 +1,5 @@
 # SDEverywhere &nbsp;&nbsp; ![](https://github.com/climateinteractive/SDEverywhere/actions/workflows/build.yaml/badge.svg)
 
-## Introduction
-
 [SDEverywhere](http://sdeverywhere.org/) is a collection of libraries and command line tools that help you transform a [System Dynamics](http://www.systemdynamics.org/what-is-system-dynamics/) model into C, JavaScript, and WebAssembly code.
 
 Using SDEverywhere, you can deploy interactive System Dynamics models in mobile, desktop, and web apps for policymakers and the public.
