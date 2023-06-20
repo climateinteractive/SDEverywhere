@@ -48,6 +48,8 @@ If you are already familiar with Node.js and have it installed, note that SDEver
 
 ## Quick Start
 
+<video src="https://github.com/climateinteractive/SDEverywhere/assets/438425/c0c81bcd-f5a5-4cf1-8698-be46118d7c9c"></video>
+
 The quickest way to get started with SDEverywhere is to open your terminal emulator ("Terminal" on macOS or Linux, or "Command Prompt" on Windows) and type the following commands.
 
 If you already have a directory containing a Vensim `mdl` file, change to that directory first.
