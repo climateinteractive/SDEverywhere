@@ -2,81 +2,92 @@
 
 import { describe, expect, it } from 'vitest'
 
-import { inputAtValueScenario } from '../_shared/scenario'
+import type { ScenarioSpec } from '../_shared/scenario-spec-types'
+import { inputAtValueSpec } from '../_shared/scenario-specs'
+import type { DatasetKey } from '../_shared/types'
+
+import type { DataRequest, DataTask } from './data-planner'
 import { DataPlanner } from './data-planner'
 
-describe('DataPlanner', () => {
-  const noopFunc = () => {
-    /* no-op */
+function noopFunc() {
+  /* no-op */
+}
+
+function noopTask(datasetKey: DatasetKey): DataTask {
+  return {
+    datasetKey,
+    dataAction: noopFunc
   }
+}
+
+function request(
+  scenarioSpecL: ScenarioSpec | undefined,
+  scenarioSpecR: ScenarioSpec | undefined,
+  datasetKeys: DatasetKey[]
+): DataRequest {
+  return {
+    scenarioSpecL,
+    scenarioSpecR,
+    dataTasks: datasetKeys.map(noopTask)
+  }
+}
+
+describe('DataPlanner', () => {
+  const s1 = inputAtValueSpec('i1', 1)
+  const s2 = inputAtValueSpec('i2', 1)
+  const s3 = inputAtValueSpec('i3', 1)
 
   it('should build a basic plan', () => {
     const planner = new DataPlanner(2)
 
-    // The first scenario gets its own request
-    planner.addRequest('compare', inputAtValueScenario('i1', 'i1', 1), 'Model_v1', noopFunc)
+    // The first request accesses s1 in both "L" and "R"; it will get its own request "r1"
+    planner.addRequest(s1, s1, 'Model_v1', noopFunc)
 
-    // The second scenario is different, so it gets its own request
-    planner.addRequest('check', inputAtValueScenario('i2', 'i2', 1), 'Model_v1', noopFunc)
+    // The second request accesses s2 in "R" only; it will get its own request "r2"
+    planner.addRequest(undefined, s2, 'Model_v1', noopFunc)
 
-    // The third scenario is the same (just accesses a different external dataset),
-    // so it reuses the second request
-    planner.addRequest('check', inputAtValueScenario('i2', 'i2', 1), 'External_e1', noopFunc)
+    // The third request is the same as the previous one (same scenario, but accesses a
+    // different external dataset), so it can be grouped with "r2"
+    planner.addRequest(undefined, s2, 'External_e1', noopFunc)
 
-    // The fourth scenario accesses impl datasets, so it needs its own requests
-    // (2 requests because there are 3 impl variables, and batch size is 2)
-    planner.addRequest('check', inputAtValueScenario('i2', 'i2', 1), 'ModelImpl_v1', noopFunc)
-    planner.addRequest('check', inputAtValueScenario('i2', 'i2', 1), 'ModelImpl_v2', noopFunc)
-    planner.addRequest('check', inputAtValueScenario('i2', 'i2', 1), 'ModelImpl_v2', noopFunc)
-    planner.addRequest('check', inputAtValueScenario('i2', 'i2', 1), 'ModelImpl_v3', noopFunc)
+    // The fourth request accesses impl datasets, so it needs to be split among multiple
+    // requests (2 requests because there are 3 impl variables, and batch size is 2)
+    planner.addRequest(undefined, s2, 'ModelImpl_v1', noopFunc)
+    planner.addRequest(undefined, s2, 'ModelImpl_v2', noopFunc)
+    planner.addRequest(undefined, s2, 'ModelImpl_v2', noopFunc)
+    planner.addRequest(undefined, s2, 'ModelImpl_v3', noopFunc)
 
+    // The fifth request accesses s1 in "L" only; it can be grouped with "r1"
+    planner.addRequest(s1, undefined, 'Model_v2', noopFunc)
+
+    // The sixth request accesses s3 in "L" only; since we have a request group with a
+    // "hole" on the left side (the left model is not being used), we can "upgrade"
+    // "r2" to access s3 in "L", which is more efficient than letting the left model
+    // sit idle
+    // TODO: The following case isn't likely to happen much in practice, so it is left
+    // unoptimized for now (will create a new request instead of being merged with another,
+    // as described above)
+    planner.addRequest(s3, undefined, 'Model_v2', noopFunc)
+
+    // Note that `buildPlan` currently produces "LR" requests, followed by "L-only" requests,
+    // followed by "R-only" requests
     const plan = planner.buildPlan()
-    expect(plan.requests.length).toBe(4)
-    expect(plan.requests[0]).toMatchObject({
-      kind: 'compare',
-      scenario: inputAtValueScenario('i1', 'i1', 1),
-      dataTasks: [{ datasetKey: 'Model_v1' }]
-    })
-    expect(plan.requests[1]).toMatchObject({
-      kind: 'check',
-      scenario: inputAtValueScenario('i2', 'i2', 1),
-      dataTasks: [{ datasetKey: 'Model_v1' }, { datasetKey: 'External_e1' }]
-    })
-    expect(plan.requests[2]).toMatchObject({
-      kind: 'check',
-      scenario: inputAtValueScenario('i2', 'i2', 1),
-      dataTasks: [{ datasetKey: 'ModelImpl_v1' }, { datasetKey: 'ModelImpl_v2' }, { datasetKey: 'ModelImpl_v2' }]
-    })
-    expect(plan.requests[3]).toMatchObject({
-      kind: 'check',
-      scenario: inputAtValueScenario('i2', 'i2', 1),
-      dataTasks: [{ datasetKey: 'ModelImpl_v3' }]
-    })
+    expect(plan.requests.length).toBe(5)
+    expect(plan.requests[0]).toMatchObject(request(s1, s1, ['Model_v1', 'Model_v2']))
+    // TODO: See note above about why the next one is not folded into another request with
+    // an empty "left" slot
+    expect(plan.requests[1]).toMatchObject(request(s3, undefined, ['Model_v2']))
+    expect(plan.requests[2]).toMatchObject(request(undefined, s2, ['Model_v1', 'External_e1']))
+    expect(plan.requests[3]).toMatchObject(request(undefined, s2, ['ModelImpl_v1', 'ModelImpl_v2', 'ModelImpl_v2']))
+    expect(plan.requests[4]).toMatchObject(request(undefined, s2, ['ModelImpl_v3']))
   })
 
   it('should include one request when same scenario is added multiple times', () => {
     const planner = new DataPlanner(10)
-    planner.addRequest('check', inputAtValueScenario('i1', 'i1', 1), 'Model_v1', noopFunc)
-    planner.addRequest('check', inputAtValueScenario('i1', 'i1', 1), 'Model_v2', noopFunc)
+    planner.addRequest(s1, s1, 'Model_v1', noopFunc)
+    planner.addRequest(s1, s1, 'Model_v2', noopFunc)
     const plan = planner.buildPlan()
     expect(plan.requests.length).toBe(1)
-    expect(plan.requests[0]).toMatchObject({
-      kind: 'check',
-      scenario: inputAtValueScenario('i1', 'i1', 1),
-      dataTasks: [{ datasetKey: 'Model_v1' }, { datasetKey: 'Model_v2' }]
-    })
-  })
-
-  it('should add compare data request if any request has compare kind', () => {
-    const planner = new DataPlanner(10)
-    planner.addRequest('check', inputAtValueScenario('i1', 'i1', 1), 'Model_v1', noopFunc)
-    planner.addRequest('compare', inputAtValueScenario('i1', 'i1', 1), 'Model_v2', noopFunc)
-    const plan = planner.buildPlan()
-    expect(plan.requests.length).toBe(1)
-    expect(plan.requests[0]).toMatchObject({
-      kind: 'compare',
-      scenario: inputAtValueScenario('i1', 'i1', 1),
-      dataTasks: [{ datasetKey: 'Model_v1' }, { datasetKey: 'Model_v2' }]
-    })
+    expect(plan.requests[0]).toMatchObject(request(s1, s1, ['Model_v1', 'Model_v2']))
   })
 })

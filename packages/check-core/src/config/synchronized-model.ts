@@ -1,7 +1,7 @@
 // Copyright (c) 2021-2022 Climate Interactive / New Venture Fund
 
+import type { ScenarioSpec } from '../_shared/scenario-spec-types'
 import type { BundleGraphId, BundleModel } from '../bundle/bundle-types'
-import type { Scenario } from '../_shared/scenario'
 import type { DatasetKey } from '../_shared/types'
 
 /**
@@ -29,12 +29,11 @@ export function synchronizedBundleModel(sourceModel: BundleModel): BundleModel {
 
   return {
     modelSpec: sourceModel.modelSpec,
-    getDatasetsForScenario: (scenario: Scenario, datasetKeys: DatasetKey[]) => {
-      return promiseQueue.add(() => sourceModel.getDatasetsForScenario(scenario, datasetKeys))
+    getDatasetsForScenario: (scenarioSpec: ScenarioSpec, datasetKeys: DatasetKey[]) => {
+      return promiseQueue.add(() => sourceModel.getDatasetsForScenario(scenarioSpec, datasetKeys))
     },
-    getGraphsForDataset: sourceModel.getGraphsForDataset?.bind(sourceModel),
-    getGraphDataForScenario: (scenario: Scenario, graphId: BundleGraphId) => {
-      return promiseQueue.add(() => sourceModel.getGraphDataForScenario(scenario, graphId))
+    getGraphDataForScenario: (scenarioSpec: ScenarioSpec, graphId: BundleGraphId) => {
+      return promiseQueue.add(() => sourceModel.getGraphDataForScenario(scenarioSpec, graphId))
     },
     getGraphLinksForScenario: sourceModel.getGraphLinksForScenario.bind(sourceModel)
   }

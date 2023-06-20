@@ -1,6 +1,6 @@
 {
   "name": "@sdeverywhere/check-ui-shell",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "files": [
     "dist/**",
     "types/**"
@@ -21,11 +21,12 @@
     "test:ci": "vitest run",
     "type-check": "tsc --noEmit -p tsconfig-build.json",
     "build": "vite build",
+    "build:watch": "vite build --watch",
     "docs": "../../scripts/gen-docs.js",
     "ci:build": "run-s clean lint prettier:check test:ci type-check build docs"
   },
   "dependencies": {
-    "@sdeverywhere/check-core": "^0.1.0",
+    "@sdeverywhere/check-core": "^0.1.1",
     "@fortawesome/free-regular-svg-icons": "^6.1.1",
     "@fortawesome/free-solid-svg-icons": "^6.1.1",
     "@juggle/resize-observer": "^3.3.0",

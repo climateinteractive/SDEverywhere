@@ -3,10 +3,20 @@
 import type { Readable, Writable } from 'svelte/store'
 import { writable } from 'svelte/store'
 
-import type { CompareConfig, CompareDataCoordinator, DatasetKey, DiffReport, Scenario } from '@sdeverywhere/check-core'
-import { compareDatasets } from '@sdeverywhere/check-core'
+import type {
+  ComparisonConfig,
+  ComparisonDataCoordinator,
+  ComparisonScenario,
+  ComparisonScenarioKey,
+  ComparisonTestReport,
+  DatasetKey,
+  DatasetMap,
+  DiffReport
+} from '@sdeverywhere/check-core'
+import { diffDatasets } from '@sdeverywhere/check-core'
 
-import { getBucketIndex } from '../../../_shared/buckets'
+import { getBucketIndex } from '../_shared/buckets'
+import { datasetSpan } from '../_shared/spans'
 
 import type { ComparisonGraphViewModel } from '../../graphs/comparison-graph-vm'
 import { pointsFromDataset } from '../../graphs/comparison-graph-vm'
@@ -14,7 +24,7 @@ import { pointsFromDataset } from '../../graphs/comparison-graph-vm'
 let requestId = 1
 
 export interface CompareDetailBoxContent {
-  bucketIndex: number
+  bucketClass: string
   message?: string
   diffReport: DiffReport
   comparisonGraphViewModel: ComparisonGraphViewModel
@@ -28,11 +38,11 @@ export class CompareDetailBoxViewModel {
   private dataLoaded = false
 
   constructor(
-    public readonly compareConfig: CompareConfig,
-    public readonly dataCoordinator: CompareDataCoordinator,
+    public readonly comparisonConfig: ComparisonConfig,
+    public readonly dataCoordinator: ComparisonDataCoordinator,
     public readonly title: string,
     public readonly subtitle: string | undefined,
-    public readonly scenario: Scenario,
+    public readonly scenario: ComparisonScenario,
     public readonly datasetKey: DatasetKey
   ) {
     this.requestKey = `detail-box::${requestId++}::${scenario.key}::${datasetKey}`
@@ -48,7 +58,8 @@ export class CompareDetailBoxViewModel {
 
     this.dataCoordinator.requestDatasetMaps(
       this.requestKey,
-      this.scenario,
+      this.scenario.specL,
+      this.scenario.specR,
       [this.datasetKey],
       (datasetMapL, datasetMapR) => {
         if (!this.dataRequested) {
@@ -58,10 +69,9 @@ export class CompareDetailBoxViewModel {
         const datasetReport = compareDatasets(this.scenario.key, this.datasetKey, datasetMapL, datasetMapR)
 
         const dataOnlyDefinedIn = (side: 'left' | 'right') => {
-          const c = this.compareConfig
+          const c = this.comparisonConfig
           const name = side === 'left' ? c.bundleL.name : c.bundleR.name
-          const color = side === 'left' ? 0 : 1
-          return `Data only defined in <span class="dataset-color-${color}">${name}</span>`
+          return `Data only defined in ${datasetSpan(name, side)}`
         }
 
         const diffReport = datasetReport.diffReport
@@ -69,7 +79,7 @@ export class CompareDetailBoxViewModel {
         let message: string
         switch (diffReport.validity) {
           case 'both':
-            bucketIndex = getBucketIndex(diffReport.maxDiff, this.compareConfig.thresholds)
+            bucketIndex = getBucketIndex(diffReport.maxDiff, this.comparisonConfig.thresholds)
             if (diffReport.maxDiff === 0) {
               message = 'No differences'
             } else {
@@ -77,20 +87,20 @@ export class CompareDetailBoxViewModel {
             }
             break
           case 'left-only':
-            // TODO: Use a different color for this case?
-            bucketIndex = 0
+            bucketIndex = undefined
             message = dataOnlyDefinedIn('left')
             break
           case 'right-only':
-            // TODO: Use a different color for this case?
-            bucketIndex = 0
+            bucketIndex = undefined
             message = dataOnlyDefinedIn('right')
             break
           default:
-            // This should not happen in practice, so treat it as an error
-            // TODO: Use a different color for this case?
-            bucketIndex = 4
-            message = 'ERROR: No data'
+            // TODO: This can happen in the case where, for example, we show a dataset that
+            // only exists in "right" for a scenario that only exists in "left".  We should
+            // trap this case earlier in the process so that we don't show a box for this
+            // scenario/dataset pair.
+            bucketIndex = undefined
+            message = 'Dataset not defined for this scenario'
             break
         }
 
@@ -117,14 +127,14 @@ export class CompareDetailBoxViewModel {
         const comparisonGraphViewModel: ComparisonGraphViewModel = {
           key: this.requestKey,
           refPlots: [],
-          pointsL: pointsFromDataset(datasetMapL.get(this.datasetKey)),
-          pointsR: pointsFromDataset(datasetMapR.get(this.datasetKey)),
+          pointsL: pointsFromDataset(datasetMapL?.get(this.datasetKey)),
+          pointsR: pointsFromDataset(datasetMapR?.get(this.datasetKey)),
           xMin,
           xMax
         }
 
         this.writableContent.set({
-          bucketIndex,
+          bucketClass: `bucket-border-${bucketIndex !== undefined ? bucketIndex : 'undefined'}`,
           message,
           diffReport,
           comparisonGraphViewModel
@@ -143,5 +153,21 @@ export class CompareDetailBoxViewModel {
       this.dataRequested = false
       this.dataLoaded = false
     }
+  }
+}
+
+function compareDatasets(
+  scenarioKey: ComparisonScenarioKey,
+  datasetKey: DatasetKey,
+  datasetMapL: DatasetMap | undefined,
+  datasetMapR: DatasetMap | undefined
+): ComparisonTestReport {
+  const datasetL = datasetMapL?.get(datasetKey)
+  const datasetR = datasetMapR?.get(datasetKey)
+  const diffReport = diffDatasets(datasetL, datasetR)
+  return {
+    scenarioKey,
+    datasetKey,
+    diffReport
   }
 }

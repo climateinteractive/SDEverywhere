@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.1](https://github.com/climateinteractive/SDEverywhere/compare/check-core-v0.1.0...check-core-v0.1.1) (2023-06-18)
+
+
+### Features
+
+* allow for defining model comparison scenarios in YAML files ([#330](https://github.com/climateinteractive/SDEverywhere/issues/330)) ([426eab1](https://github.com/climateinteractive/SDEverywhere/commit/426eab19f98df2ccfa56cf9cc8cc83ceedfe7821)), closes [#315](https://github.com/climateinteractive/SDEverywhere/issues/315)
+
 ## 0.1.0 (2022-06-28)
 
 

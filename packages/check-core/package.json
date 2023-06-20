@@ -1,6 +1,6 @@
 {
   "name": "@sdeverywhere/check-core",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "files": [
     "dist/**",
     "schema/**"
@@ -25,14 +25,15 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:ci": "vitest run",
+    "type-check": "tsc --noEmit -p tsconfig-test.json",
     "compile": "tsup",
-    "copy-schema": "./scripts/copy-schema.js",
-    "build": "run-s compile copy-schema",
+    "copy-schemas": "./scripts/copy-schemas.js",
+    "build": "run-s compile copy-schemas",
     "docs": "../../scripts/gen-docs.js",
     "ci:build": "run-s clean lint prettier:check test:ci build docs"
   },
   "dependencies": {
-    "ajv": "^8.6.3",
+    "ajv": "^8.12.0",
     "assert-never": "^1.2.1",
     "neverthrow": "^4.2.2",
     "yaml": "^2.1.0"

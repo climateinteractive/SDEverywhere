@@ -1,8 +1,16 @@
 // Copyright (c) 2022 Climate Interactive / New Venture Fund
 
-import type { Bundle, CompareOptions, ConfigOptions, DatasetKey } from '@sdeverywhere/check-core'
-
-import { DatasetManager, ScenarioManager } from '@sdeverywhere/check-core'
+import type {
+  Bundle,
+  ComparisonOptions,
+  ComparisonScenarioSpec,
+  ComparisonSpecs,
+  ConfigInitOptions,
+  ConfigOptions,
+  DatasetKey,
+  InputId,
+  InputVar
+} from '@sdeverywhere/check-core'
 
 // Load the yaml test files
 const yamlGlob = import.meta.glob(__YAML_PATH__, {
@@ -24,56 +32,125 @@ const renamedDatasetKeys: Map<DatasetKey, DatasetKey> = new Map([
   // ['Model_old_name', 'Model_new_name']
 ])
 
-export interface BundleOptions {
-  nameL?: string
-  nameR?: string
-}
-
 // TODO: Make this pluggable (with default implementation similar to below)
 export async function getConfigOptions(
   bundleL: Bundle | undefined,
   bundleR: Bundle,
-  opts: BundleOptions
+  opts?: ConfigInitOptions
 ): Promise<ConfigOptions> {
-  // Only include compare options if the baseline bundle is defined (and
+  // Only include comparison options if the baseline bundle is defined (and
   // has the same version)
-  let compareOptions: CompareOptions
+  let comparisonOptions: ComparisonOptions
   if (bundleL && bundleL.version === bundleR.version) {
     // Configure the set of input scenarios used for comparisons.  This includes
     // the default matrix of scenarios; for any output variable, the model will
     // be run:
     //   - once with all inputs at their default
-    //   - once with all inputs at their minimum
-    //   - once with all inputs at their maximum
     //   - twice for each input
     //       - once with single input at its minimum
     //       - once with single input at its maximum
-    const scenarios = new ScenarioManager(bundleL, bundleR)
-    scenarios.addScenarioMatrix()
+    // TODO: Also read specs from comparison yaml files
+    const baseComparisonSpecs = createBaseComparisonSpecs(bundleL, bundleR)
 
-    // Configure the dataset keys (corresponding to the available model outputs
-    // in the given bundles) that can be used to compare two versions of the model
-    const datasets = new DatasetManager(bundleL, bundleR, renamedDatasetKeys)
-
-    compareOptions = {
+    comparisonOptions = {
       baseline: {
-        name: opts?.nameL || 'baseline',
+        name: opts?.bundleNameL || 'baseline',
         bundle: bundleL
       },
       thresholds: [1, 5, 10],
-      scenarios,
-      datasets
+      specs: [baseComparisonSpecs],
+      datasets: {
+        renamedDatasetKeys
+      }
     }
   }
 
   return {
     current: {
-      name: opts?.nameR || 'current',
+      name: opts?.bundleNameR || 'current',
       bundle: bundleR
     },
     check: {
       tests
     },
-    compare: compareOptions
+    comparison: comparisonOptions
+  }
+}
+
+function createBaseComparisonSpecs(bundleL: Bundle, bundleR: Bundle): ComparisonSpecs {
+  // Get the union of all input IDs appearing in left and/or right
+  const allInputIds: Set<InputId> = new Set()
+  const addInputs = (bundle: Bundle, inputsMap: Map<InputId, InputVar>) => {
+    for (const inputVar of bundle.modelSpec.inputVars.values()) {
+      allInputIds.add(inputVar.inputId)
+      inputsMap.set(inputVar.inputId, inputVar)
+    }
+  }
+  const inputsByIdL: Map<InputId, InputVar> = new Map()
+  const inputsByIdR: Map<InputId, InputVar> = new Map()
+  addInputs(bundleL, inputsByIdL)
+  addInputs(bundleR, inputsByIdR)
+
+  // Create an "all inputs at default" scenario
+  const scenarios: ComparisonScenarioSpec[] = []
+  scenarios.push({
+    kind: 'scenario-with-all-inputs',
+    id: 'all_inputs_at_default',
+    title: 'All inputs',
+    subtitle: 'at default',
+    position: 'default'
+  })
+
+  // Create "input at min/max" scenarios for all inputs (that appear in either "left" or "right")
+  const addScenario = (inputId: InputId, position: 'min' | 'max') => {
+    const inputL = inputsByIdL.get(inputId)
+    const inputR = inputsByIdR.get(inputId)
+    if (inputL === undefined || inputR === undefined) {
+      return
+    }
+
+    // Don't add a scenario if the input's min or max is equal to its default (this is already
+    // covered by the `all_inputs_at_default` scenario from above)
+    if (position === 'min') {
+      if (inputL.minValue === inputL.defaultValue && inputR.minValue === inputR.defaultValue) {
+        return
+      }
+    } else {
+      if (inputL.maxValue === inputL.defaultValue && inputR.maxValue === inputR.defaultValue) {
+        return
+      }
+    }
+
+    // Derive the scenario name from the related slider name (or if not defined, the variable name)
+    const input = inputR || inputL
+    const path = input.relatedItem?.locationPath
+    const title = path ? path[path.length - 1] : input.varName
+
+    scenarios.push({
+      kind: 'scenario-with-inputs',
+      id: `id_${inputId}_at_${position}`,
+      title,
+      subtitle: `at ${position}`,
+      inputs: [
+        {
+          kind: 'input-at-position',
+          inputName: `id ${inputId}`,
+          position
+        }
+      ]
+    })
+  }
+
+  // Add an "at min" and "at max" scenario for each input
+  const inputIds = [...allInputIds]
+  for (const inputId of inputIds) {
+    addScenario(inputId, 'min')
+    addScenario(inputId, 'max')
+  }
+
+  return {
+    scenarios,
+    scenarioGroups: [],
+    viewGroups: []
   }
 }

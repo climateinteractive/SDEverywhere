@@ -58,13 +58,16 @@ sub {
 :root {
   --dataset-0: crimson;
   --dataset-1: deepskyblue;
+  --bucket-undefined: #555;
   --bucket-0: green;
   --bucket-1: orange;
   --bucket-2: orangered;
   --bucket-3: crimson;
   --bucket-4: magenta;
-  --status-passed: green;
+  --status-none: #555;
+  --status-passed: limegreen;
   --status-failed: crimson;
+  --status-warning: orange;
   --status-error: orangered;
 }
 
@@ -73,6 +76,9 @@ sub {
 }
 .dataset-color-1 {
   color: var(--dataset-1);
+}
+.bucket-color-undefined {
+  color: var(--bucket-undefined);
 }
 .bucket-color-0 {
   color: var(--bucket-0);
@@ -89,11 +95,17 @@ sub {
 .bucket-color-4 {
   color: var(--bucket-4);
 }
+.status-color-none {
+  color: var(--status-none);
+}
 .status-color-passed {
   color: var(--status-passed);
 }
 .status-color-failed {
   color: var(--status-failed);
+}
+.status-color-warning {
+  color: var(--status-warning);
 }
 .status-color-error {
   color: var(--status-error);
@@ -104,6 +116,9 @@ sub {
 }
 .dataset-bg-1 {
   background-color: var(--dataset-1);
+}
+.bucket-bg-undefined {
+  background-color: var(--bucket-undefined);
 }
 .bucket-bg-0 {
   background-color: var(--bucket-0);
@@ -120,11 +135,17 @@ sub {
 .bucket-bg-4 {
   background-color: var(--bucket-4);
 }
+.status-bg-none {
+  background-color: var(--status-none);
+}
 .status-bg-passed {
   background-color: var(--status-passed);
 }
 .status-bg-failed {
   background-color: var(--status-failed);
+}
+.status-bg-warning {
+  background-color: var(--status-warning);
 }
 .status-bg-error {
   background-color: var(--status-error);
@@ -135,6 +156,9 @@ sub {
 }
 .dataset-border-1 {
   border-color: var(--dataset-1);
+}
+.bucket-border-undefined {
+  border-color: var(--bucket-undefined);
 }
 .bucket-border-0 {
   border-color: var(--bucket-0);
@@ -151,11 +175,17 @@ sub {
 .bucket-border-4 {
   border-color: var(--bucket-4);
 }
+.status-border-none {
+  border-color: var(--status-none);
+}
 .status-border-passed {
   border-color: var(--status-passed);
 }
 .status-border-failed {
   border-color: var(--status-failed);
+}
+.status-border-warning {
+  border-color: var(--status-warning);
 }
 .status-border-error {
   border-color: var(--status-error);

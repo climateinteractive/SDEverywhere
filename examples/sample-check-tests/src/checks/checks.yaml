@@ -1,0 +1,336 @@
+# yaml-language-server: $schema=../../node_modules/@sdeverywhere/check-core/schema/check.schema.json
+
+- describe: Outputs (referenced by name)
+  tests:
+    - it: should be between 0 and 30
+      scenarios:
+        - preset: matrix
+      datasets:
+        - name: Output X
+        - name: Output Y
+        - name: Output Z
+        - name: Static S
+          source: StaticData
+        - name: Static T
+          source: StaticData
+      predicates:
+        - gt: 0
+          lt: 30
+
+- describe: Outputs (referenced by group)
+  tests:
+    - it: should be between 0 and 30
+      scenarios:
+        - preset: matrix
+      datasets:
+        - group: Basic Outputs
+        - group: Static
+      predicates:
+        - gt: 0
+          lt: 30
+
+- describe: Output X
+  tests:
+    - it: should be ~5 in 1850 when Input A is at max
+      scenarios:
+        - with: Input A
+          at: max
+      datasets:
+        - name: Output X
+      predicates:
+        - approx: 5
+          tolerance: .01
+          time: 1850
+    - it: should be between 5 and 10 in 1900 (scenario with one input)
+      scenarios:
+        - with: Input A
+          at: 30
+      datasets:
+        - name: Output X
+      predicates:
+        - gt: 5
+          lt: 10
+          time: 1900
+    - it: should be between 5 and 10 in 1900 (scenario with multiple inputs)
+      scenarios:
+        - with:
+            - input: Input A
+              at: 30
+            # - input: Input B
+            #   at: min
+      datasets:
+        - name: Output X
+      predicates:
+        - gt: 5
+          lt: 10
+          time: 1900
+    - it: should be between 5 and 10 in 1900 (scenario with inputs in group)
+      scenarios:
+        - with_inputs_in: Input Group 1
+          at: min
+      datasets:
+        - name: Output X
+      predicates:
+        - gt: 5
+          lt: 10
+          time: 1900
+    - it: should be between 5 and 10 in 1900 (single-input and multi-input scenarios in the same test)
+      scenarios:
+        - with: Input A
+          at: 30
+        - with:
+            - input: Input A
+              at: 30
+            # - input: Input B
+            #   at: min
+      datasets:
+        - name: Output X
+      predicates:
+        - gt: 5
+          lt: 10
+          time: 1900
+    - it: should be between 5 and 10 in 1900 (one scenario for each input in the group)
+      scenarios:
+        - scenarios_for_each_input_in: Input Group 1
+          at: max
+      datasets:
+        - name: Output X
+      predicates:
+        - gt: 5
+          lt: 10
+          time: 1900
+    - it: should follow Historical X
+      datasets:
+        - name: Output X
+      predicates:
+        - approx:
+            dataset:
+              name: Historical X
+          tolerance: 0.8
+          time:
+            before_incl: 2000
+    - it: should be >= lower bound of Historical X confidence interval
+      datasets:
+        - name: Output X
+      predicates:
+        - gte:
+            dataset:
+              name: Historical X confidence lower bound
+          time:
+            before_incl: 2000
+    - it: should fit within the Historical X confidence interval
+      datasets:
+        - name: Output X
+      predicates:
+        - gte:
+            dataset:
+              name: Historical X confidence lower bound
+          lte:
+            dataset:
+              name: Historical X confidence upper bound
+          time:
+            before_incl: 2000
+    # - it: should be unaffected by Input B
+    #   datasets:
+    #     - name: Output X
+    #   predicates:
+    #     - eq:
+    #         dataset: inherit
+    #         scenario:
+    #           with: Input B
+    #           at: max
+    - it: should be close to Output Y in all input scenarios
+      scenarios:
+        - preset: matrix
+      datasets:
+        - name: Output X
+      predicates:
+        - approx:
+            dataset:
+              name: Output Y
+            scenario: inherit
+          tolerance: 2
+
+- describe: Output Y with different time options
+  tests:
+    - it: should be >= 5 in all years
+      datasets:
+        - name: Output Y
+      predicates:
+        - gte: 5
+    - it: should be 6 in 1900
+      datasets:
+        - name: Output Y
+      predicates:
+        - eq: 6
+          time: 1900
+    - it: should be ~8 in 1950
+      datasets:
+        - name: Output Y
+      predicates:
+        - approx: 8
+          tolerance: 1
+          time: 1950
+    - it: should be > 10 in 2000
+      datasets:
+        - name: Output Y
+      predicates:
+        - gt: 10
+          time: 2000
+    - it: should be >= 6 and <= 12 in year range [1900, 2000] (inclusive range shorthand)
+      datasets:
+        - name: Output Y
+      predicates:
+        - gte: 6
+          lte: 12
+          time: [1900, 2000]
+    - it: should be >= 6 and <= 12 in year range (1900, 2000] (half open range)
+      datasets:
+        - name: Output Y
+      predicates:
+        - gte: 6
+          lte: 12
+          time:
+            after_excl: 1900
+            before_incl: 2000
+    - it: should be >= 6 and <= 12 in year range [1900, 2000) (half open range)
+      datasets:
+        - name: Output Y
+      predicates:
+        - gte: 6
+          lte: 12
+          time:
+            after_incl: 1900
+            before_excl: 2000
+    - it: should be >= 6 after 1900 (inclusive)
+      datasets:
+        - name: Output Y
+      predicates:
+        - gte: 6
+          time:
+            after_incl: 1900
+    - it: should be >= 6 after 1900 (exclusive)
+      datasets:
+        - name: Output Y
+      predicates:
+        - gte: 6
+          time:
+            after_excl: 1900
+    - it: should be <= 12 before 2000 (inclusive)
+      datasets:
+        - name: Output Y
+      predicates:
+        - lte: 12
+          time:
+            before_incl: 2000
+    - it: should be <= 12 before 2000 (exclusive)
+      datasets:
+        - name: Output Y
+      predicates:
+        - lte: 12
+          time:
+            before_excl: 2000
+#
+# TODO: The following can be uncommented to test error cases
+#
+# - describe: Unknown Variables
+#   tests:
+#     - it: should report error when scenario references one unknown input
+#       scenarios:
+#         - with: Unknown Input
+#           at: max
+#       datasets:
+#         - name: Output X
+#       predicates:
+#         - gt: 0
+#     - it: should report error when scenario references multiple unknown inputs
+#       scenarios:
+#         - with:
+#             - input: Input A
+#               at: max
+#             - input: Unknown Input 1
+#               at: min
+#             - input: Unknown Input 2
+#               at: 666
+#       datasets:
+#         - name: Output X
+#       predicates:
+#         - gt: 0
+#     - it: should report error when scenario references unknown input group
+#       scenarios:
+#         - with_inputs_in: Unknown Input Group
+#           at: max
+#       datasets:
+#         - name: Output X
+#       predicates:
+#         - gt: 0
+#     - it: should report error when scenario references empty input group
+#       scenarios:
+#         - with_inputs_in: Empty Input Group
+#           at: max
+#       datasets:
+#         - name: Output X
+#       predicates:
+#         - gt: 0
+#     - it: should report error when dataset references unknown dataset
+#       scenarios:
+#         - with: Input A
+#           at: max
+#       datasets:
+#         - name: Unknown Output
+#       predicates:
+#         - gt: 0
+#     - it: should report error when dataset group matches no datasets
+#       scenarios:
+#         - with: Input A
+#           at: max
+#       datasets:
+#         - group: Unknown Group
+#       predicates:
+#         - gt: 0
+#     - it: should report error when dataset query matches no datasets
+#       scenarios:
+#         - with: Input A
+#           at: max
+#       datasets:
+#         - matching:
+#             type: unknown
+#       predicates:
+#         - gt: 0
+#     - it: should report error when predicate references unknown dataset
+#       datasets:
+#         - name: Output X
+#       predicates:
+#         - gt:
+#             dataset:
+#               name: Unknown Output
+#     - it: should report error when predicate references unknown input
+#       datasets:
+#         - name: Output X
+#       predicates:
+#         - gt:
+#             dataset:
+#               name: Output Y
+#             scenario:
+#               with: Unknown Input
+#               at: max
+#     - it: should report error when predicate references unknown input group
+#       datasets:
+#         - name: Output X
+#       predicates:
+#         - gt:
+#             dataset:
+#               name: Output Y
+#             scenario:
+#               with_inputs_in: Unknown Input Group
+#               at: max
+#     - it: should report error when predicate references empty input group
+#       datasets:
+#         - name: Output X
+#       predicates:
+#         - gt:
+#             dataset:
+#               name: Output Y
+#             scenario:
+#               with_inputs_in: Empty Input Group
+#               at: max

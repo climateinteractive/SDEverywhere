@@ -1,7 +1,9 @@
 // Copyright (c) 2021-2022 Climate Interactive / New Venture Fund
 
 import assertNever from 'assert-never'
-import type { InputPosition } from '../_shared/scenario'
+
+import type { InputPosition } from '../_shared/scenario-spec-types'
+
 import type { CheckDataRef } from './check-data-ref'
 import type { CheckDataset } from './check-dataset'
 import type { CheckResult } from './check-func'
@@ -75,7 +77,7 @@ export function buildCheckReport(checkPlan: CheckPlan, checkResults: Map<CheckKe
 
       for (const scenarioPlan of testPlan.scenarios) {
         let scenarioStatus: CheckStatus = 'passed'
-        if (scenarioPlan.checkScenario.scenario === undefined) {
+        if (scenarioPlan.checkScenario.spec === undefined) {
           // The scenario spec didn't match known inputs; treat as an error
           testStatus = 'error'
           scenarioStatus = 'error'
@@ -198,14 +200,14 @@ function predicateReport(
         opRef = opDataRef
         opValue = `${sym} '${dataRef.dataset.name}'`
 
-        const refScenario = dataRef.scenario?.scenario
-        if (!refScenario) {
+        const refScenarioSpec = dataRef.scenario?.spec
+        if (!refScenarioSpec) {
           return
         }
         if (predOp.scenario === 'inherit') {
           opValue += ` (w/ same scenario)`
         } else {
-          if (refScenario.kind === 'all-inputs' && refScenario.position === 'at-default') {
+          if (refScenarioSpec.kind === 'all-inputs' && refScenarioSpec.position === 'at-default') {
             opValue += ` (w/ default scenario)`
           } else {
             // TODO: We could include the scenario/input details here, but it might
@@ -252,7 +254,7 @@ function predicateReport(
  */
 export function scenarioMessage(scenario: CheckScenarioReport, bold: StyleFunc): string {
   const checkScenario = scenario.checkScenario
-  if (checkScenario.scenario === undefined) {
+  if (checkScenario.spec === undefined) {
     if (checkScenario.error) {
       switch (checkScenario.error.kind) {
         case 'unknown-input-group':
@@ -295,18 +297,18 @@ export function scenarioMessage(scenario: CheckScenarioReport, bold: StyleFunc):
     return msg
   }
 
-  if (checkScenario.scenario.kind === 'all-inputs') {
+  if (checkScenario.spec.kind === 'all-inputs') {
     // This is an "all inputs" scenario
-    const position = checkScenario.scenario.position
+    const position = checkScenario.spec.position
     return `when ${bold('all inputs')} are at ${bold(positionName(position))}...`
   } else if (checkScenario.inputGroupName) {
     // This is an "all inputs in group" scenario
-    // TODO: Currently we don't have a special `Scenario` kind for the "all inputs
-    // in group" case, so we use a multi-setting `Scenario`; therefore we have to
+    // TODO: Currently we don't have a special `ScenarioSpec` kind for the "all inputs
+    // in group" case, so we use a multi-setting `ScenarioSpec`; therefore we have to
     // dig out the position from the first setting
     let position: InputPosition = 'at-default'
-    if (checkScenario.scenario.settings[0].kind === 'position') {
-      position = checkScenario.scenario.settings[0].position
+    if (checkScenario.spec.settings[0].kind === 'position') {
+      position = checkScenario.spec.settings[0].position
     }
     const groupName = checkScenario.inputGroupName
     return `when all inputs in ${bold(groupName)} are at ${bold(positionName(position))}...`

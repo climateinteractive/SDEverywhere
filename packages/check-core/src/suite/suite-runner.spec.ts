@@ -7,7 +7,7 @@ import { outputVar } from '../check/_mocks/mock-check-dataset'
 import { inputVar } from '../check/_mocks/mock-check-scenario'
 import { createConfig } from '../config/config'
 import type { Config, ConfigOptions } from '../config/config-types'
-import type { SuiteReport } from './suite-report'
+import type { SuiteReport } from './suite-report-types'
 import type { RunSuiteCallbacks } from './suite-runner'
 import { runSuite } from './suite-runner'
 
@@ -41,7 +41,7 @@ function mockBundle(mockOptions: MockConfigOptions): Bundle {
   const modelSpec: ModelSpec = {
     modelSizeInBytes: 0,
     dataSizeInBytes: 0,
-    inputVars: new Map([inputVar('I1')]),
+    inputVars: new Map([inputVar('1', 'I1')]),
     outputVars: new Map([outputVar('V1')]),
     implVars: new Map(),
     inputGroups: new Map(),
@@ -138,7 +138,7 @@ describe('runSuite', () => {
       checkReport: {
         groups: []
       },
-      compareReport: undefined
+      comparisonReport: undefined
     })
     expect(progressPcts).toEqual([0, 1])
   })

@@ -32,6 +32,9 @@ export default defineConfig({
     // Write output file to `dist/index.js`
     outDir: 'dist',
 
+    // TODO: Uncomment for debugging purposes
+    // minify: false,
+
     lib: {
       entry: './src/index.ts',
       formats: ['es'],
