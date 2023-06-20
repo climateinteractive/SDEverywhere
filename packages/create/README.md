@@ -26,10 +26,10 @@ Once you are in the correct folder, run the `create` script:
 
 ```sh
 # Use `npm` to run the "create" script:
-npm create @sdeverywhere
+npm create @sdeverywhere@latest
 
 # Or, if you use pnpm:
-pnpm create @sdeverywhere
+pnpm create @sdeverywhere@latest
 
 # Or, if you use Yarn:
 yarn create @sdeverywhere

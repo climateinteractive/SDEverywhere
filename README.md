@@ -72,10 +72,10 @@ Once you are in the correct folder, run the `create` script:
 
 ```sh
 # Use `npm` to run the "create" script:
-npm create @sdeverywhere
+npm create @sdeverywhere@latest
 
 # Or, if you use pnpm:
-pnpm create @sdeverywhere
+pnpm create @sdeverywhere@latest
 
 # Or, if you use Yarn:
 yarn create @sdeverywhere
@@ -115,7 +115,7 @@ Each package listed in the table below is developed as a separate npm package/li
 All packages are published independently to the [npm registry](https://www.npmjs.com).
 
 If you're new to SDEverywhere, refer to the ["Quick Start"](#quick-start) section above.
-Running the `npm create @sdeverywhere` command described in that section will take care of setting up a recommended project structure and will install/configure the necessary `@sdeverywhere` packages from the table below.
+Running the `npm create @sdeverywhere@latest` command described in that section will take care of setting up a recommended project structure and will install/configure the necessary `@sdeverywhere` packages from the table below.
 
 If you want more control over which packages are installed, or for API documentation and configuration instructions, refer to the links below.
 
