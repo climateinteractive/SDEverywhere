@@ -31,9 +31,9 @@ Support for models in [XMILE](http://docs.oasis-open.org/xmile/xmile/v1.0/xmile-
 
 At its core, SDEverywhere includes a [transpiler](https://en.wikipedia.org/wiki/Source-to-source_compiler) that can read a [Vensim](https://www.vensim.com/documentation/index.html?ref_language.htm) model and generate a high-performance version of that model in the C programming language.
 
-The `sde` command line tool &mdash; in addition to generating C code &mdash; provides a plugin-based build system for extended functionality:
+The [`sde`](./packages/cli) command line tool &mdash; in addition to generating C code &mdash; provides a plugin-based build system for extended functionality:
 
-- [plugin-config](./packages/plugin-config/) allows you to configure your model/library/app using CSV files
+- [plugin-config](./packages/plugin-config) allows you to configure your model/library/app using CSV files
 - [plugin-wasm](./packages/plugin-wasm) converts the generated C model into a fast WebAssembly module for use in a web browser or Node.js application
 - [plugin-worker](./packages/plugin-worker) generates a Web Worker that can be used to run the WebAssembly model in a separate thread for improved user experience
 - [plugin-vite](./packages/plugin-vite) provides integration with [Vite](https://github.com/vitejs/vite) for developing a library or application around your generated model
