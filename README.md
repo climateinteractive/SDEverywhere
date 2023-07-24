@@ -323,7 +323,7 @@ Most users won't need to interact with these implementation packages directly, b
 SDEverywhere covers a subset of the Vensim modeling language used in models that have been deployed with it.
 There is still much to contribute, for example:
 
-- Expand the Vensim parser to cover more of the language syntax, such as documentation strings, `:EXCEPT:` clauses, etc.
+- Expand the Vensim parser to cover more of the language syntax, such as documentation strings.
 - Enhance the C code generator to produce code for new language features now that you can parse them.
 - Implement more Vensim functions. This is the easiest way to help out.
 - Target languages other than C, such as R or Rust. (If you want Python, check out the excellent [PySD](https://github.com/JamesPHoughton/pysd)).
