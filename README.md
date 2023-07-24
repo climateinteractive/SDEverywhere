@@ -323,9 +323,10 @@ Most users won't need to interact with these implementation packages directly, b
 SDEverywhere covers a subset of the Vensim modeling language used in models that have been deployed with it.
 There is still much to contribute, for example:
 
-- Expand the Vensim parser to cover more of the language syntax, such as documentation strings.
+- Expand the Vensim parser to cover more of the language syntax, such as documentation strings. (See the related [antlr4-vensim](https://github.com/climateinteractive/antlr4-vensim) project for more details.)
 - Enhance the C code generator to produce code for new language features now that you can parse them.
 - Implement more Vensim functions. This is the easiest way to help out.
+- Add support for the XMILE file format.
 - Target languages other than C, such as R or Rust. (If you want Python, check out the excellent [PySD](https://github.com/JamesPHoughton/pysd)).
 
 For more guidance on contributing to SDEverywhere, please consult the [wiki](https://github.com/climateinteractive/SDEverywhere/wiki).
