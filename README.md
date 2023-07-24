@@ -30,6 +30,36 @@ Support for models in [XMILE](http://docs.oasis-open.org/xmile/xmile/v1.0/xmile-
 However, our long-term vision is for SDEverywhere to have first-class support for both Vensim and XMILE formats.
 Please get in touch on the [discussion board](https://github.com/climateinteractive/SDEverywhere/discussions) if you are interested in helping to add support for XMILE.
 
+## Features
+
+### Live Editing
+
+SDEverywhere provides a live development environment and configuration files that allow you to see your edits in real time.
+Every time you save changes to your Vensim model or to the CSV config files, the local builder automatically rebuilds your project and the changes appear instantaneously in your browser, no manual reloads required.
+
+The following video demonstrates using a text editor to make simple edits in the CSV config files that affect the appearance and behavior of the generated web application.
+In the video, we tweak the color of a graph plot, change an axis label, and set a new default for a slider.
+All of these settings and more can be configured by editing the CSV files in your favorite text editor or in Excel.
+
+https://github.com/climateinteractive/SDEverywhere/assets/438425/cd495776-5744-40b9-a922-8ad5b138106c
+
+### Quality Checks and Comparisons
+
+SDEverywhere includes extensive QA (quality assurance) tools that you can run locally on your machine as you develop your model or in the cloud in a continuous integration environment.
+There is support for two different kinds of tests:
+
+- **_Checks:_** Check tests can be used to verify that your model behaves according to some guidelines (or conforms to your mental models). For example, you can have checks that verify that stocks are always positive, or that some output variable produces values that are close to historical reference data.
+- **_Comparisons:_** Comparison tests can be used to track changes to your model between two different versions. For example, you can run your model over thousands of input scenarios and see at a glance how your model outputs differ from a previous version.
+
+In the following video, we demonstrate how the model-check tools can be run alongside Vensim to give you immediate feedback whenever you make changes to your model.
+In this example, we have an existing "check" test that verifies that the different population variables always produce values in the range 0 to 10000.
+If we multiply a variable by -1 and save the model file, the builder detects the change and re-runs all the defined check and comparison tests.
+
+Since the "Recovered Population" variable is now producing negative values, there is a failing check that gets flagged in the Model Check report, showing that the data now goes outside the expected (green) range.
+Additionally, the comparison tests show how the new model results differ from the previous ones over many different input scenarios.
+
+https://github.com/climateinteractive/SDEverywhere/assets/438425/b6f05b3f-f18a-48c4-89a9-80f1d8bfbfde
+
 ## Core Functionality
 
 At its core, SDEverywhere includes a [transpiler](https://en.wikipedia.org/wiki/Source-to-source_compiler) that can read a [Vensim](https://www.vensim.com/documentation/index.html?ref_language.htm) model and generate a high-performance version of that model in the C programming language.
@@ -123,36 +153,6 @@ Here are some prominent current limitations:
 - You must rewrite equations that use macros or code them in C.
 
 Tabbed arrays and macros are removed from the model during preprocessing and written to the `removals.txt` file for your reference.
-
-## Features
-
-### Live Editing
-
-SDEverywhere provides a live development environment and configuration files that allow you to see your edits in real time.
-Every time you save changes to your Vensim model or to the CSV config files, the local builder automatically rebuilds your project and the changes appear instantaneously in your browser, no manual reloads required.
-
-The following video demonstrates using a text editor to make simple edits in the CSV config files that affect the appearance and behavior of the generated web application.
-In the video, we tweak the color of a graph plot, change an axis label, and set a new default for a slider.
-All of these settings and more can be configured by editing the CSV files in your favorite text editor or in Excel.
-
-https://github.com/climateinteractive/SDEverywhere/assets/438425/cd495776-5744-40b9-a922-8ad5b138106c
-
-### Quality Checks and Comparisons
-
-SDEverywhere includes extensive QA (quality assurance) tools that you can run locally on your machine as you develop your model or in the cloud in a continuous integration environment.
-There is support for two different kinds of tests:
-
-- **_Checks:_** Check tests can be used to verify that your model behaves according to some guidelines (or conforms to your mental models). For example, you can have checks that verify that stocks are always positive, or that some output variable produces values that are close to historical reference data.
-- **_Comparisons:_** Comparison tests can be used to track changes to your model between two different versions. For example, you can run your model over thousands of input scenarios and see at a glance how your model outputs differ from a previous version.
-
-In the following video, we demonstrate how the model-check tools can be run alongside Vensim to give you immediate feedback whenever you make changes to your model.
-In this example, we have an existing "check" test that verifies that the different population variables always produce values in the range 0 to 10000.
-If we multiply a variable by -1 and save the model file, the builder detects the change and re-runs all the defined check and comparison tests.
-
-Since the "Recovered Population" variable is now producing negative values, there is a failing check that gets flagged in the Model Check report, showing that the data now goes outside the expected (green) range.
-Additionally, the comparison tests show how the new model results differ from the previous ones over many different input scenarios.
-
-https://github.com/climateinteractive/SDEverywhere/assets/438425/b6f05b3f-f18a-48c4-89a9-80f1d8bfbfde
 
 ## SDEverywhere in Production
 
