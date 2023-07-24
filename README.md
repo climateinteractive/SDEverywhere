@@ -159,6 +159,7 @@ Tabbed arrays and macros are removed from the model during preprocessing and wri
 - [Climate Interactive](https://www.climateinteractive.org) has been using SDEverywhere in production since 2019 for their popular simulation tools:
   - [En-ROADS](https://en-roads.climateinteractive.org) &mdash; an online global climate simulator that allows users to explore the impact of policies on hundreds of factors like energy prices, temperature, air quality, and sea level rise
   - [C-ROADS](https://c-roads.climateinteractive.org) &mdash; an online policy simulator (also available as a macOS or Windows desktop application) that helps people understand the long-term climate impacts of national and regional greenhouse gas emission reductions at the global level
+- [Energy Innovation](https://energyinnovation.org/) uses SDEverywhere to produce their [Energy Policy Simulator](https://energypolicy.solutions/).
 
 ## Packages
 
