@@ -25,7 +25,7 @@ cd ./sir
 # Create a new project (you can also use yarn or pnpm here, if preferred).
 # Be sure to choose the "Default" template, which will make use of the
 # existing files in the `config` directory.
-npm create @sdeverywhere
+npm create @sdeverywhere@latest
 
 # Enter development mode for the sample model.  This will start a live
 # development environment that will build a WebAssembly version of the

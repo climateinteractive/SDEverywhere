@@ -19,7 +19,7 @@ to add the `@sdeverywhere/plugin-config` package to your project.)
 ```sh
 # Create a new project (you can also use yarn or pnpm here, if preferred).
 # Be sure to choose the "Minimal" template.
-npm create @sdeverywhere
+npm create @sdeverywhere@latest
 
 # Enter development mode for your model.  This will start a live
 # development environment that will build a WebAssembly version of the
