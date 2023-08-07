@@ -178,8 +178,8 @@ importers:
         specifier: ^4.2.2
         version: 4.3.1
       yaml:
-        specifier: ^2.1.0
-        version: 2.1.1
+        specifier: ^2.2.2
+        version: 2.2.2
 
   packages/check-ui-shell:
     dependencies:
@@ -323,8 +323,8 @@ importers:
         specifier: ^1.1.0
         version: 1.1.0
       yaml:
-        specifier: ^2.1.1
-        version: 2.1.1
+        specifier: ^2.2.2
+        version: 2.2.2
       yargs-parser:
         specifier: ^21.1.1
         version: 21.1.1
@@ -4207,8 +4207,8 @@ packages:
     engines: {node: '>= 6'}
     dev: true
 
-  /yaml@2.1.1:
-    resolution: {integrity: sha512-o96x3OPo8GjWeSLF+wOAbrPfhFOGY0W00GNaxCDv+9hkcDJEnev1yh8S7pgHF0ik6zc8sQLuL8hjHjJULZp8bw==}
+  /yaml@2.2.2:
+    resolution: {integrity: sha512-CBKFWExMn46Foo4cldiChEzn7S7SRV+wqiluAb6xmueD/fGyRHIhX8m14vVGgeFWjN540nKCNVj6P21eQjgTuA==}
     engines: {node: '>= 14'}
     dev: false
 
