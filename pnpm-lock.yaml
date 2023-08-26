@@ -348,6 +348,21 @@ importers:
         specifier: ^21.0.0
         version: 21.0.0
 
+  packages/parse:
+    dependencies:
+      antlr4:
+        specifier: 4.9.2
+        version: 4.9.2
+      antlr4-vensim:
+        specifier: 0.6.0
+        version: 0.6.0
+      assert-never:
+        specifier: ^1.2.1
+        version: 1.2.1
+      split-string:
+        specifier: ^6.1.0
+        version: 6.1.0
+
   packages/plugin-check:
     dependencies:
       '@rollup/plugin-node-resolve':
