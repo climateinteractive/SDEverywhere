@@ -13,12 +13,13 @@ extern "C" {
 //
 // Vensim functions
 // See the Vensim Reference Manual for descriptions of the functions.
-// http://www.vensim.com/documentation/index.html?22300.htm
+// https://www.vensim.com/documentation/22300.html
 //
 #define _ABS(x) fabs(x)
 #define _COS(x) cos(x)
 #define _EXP(x) exp(x)
 #define _GAME(x) (x)
+#define _GAMMA_LN(x) lgamma(x)
 #define _IF_THEN_ELSE(c, t, f) (bool_cond(c) ? (t) : (f))
 #define _INTEG(value, rate) ((value) + (rate) * _time_step)
 #define _INTEGER(x) trunc(x)
