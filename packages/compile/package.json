@@ -3,17 +3,17 @@
   "version": "0.7.5",
   "description": "The core Vensim to C compiler for the SDEverywhere tool suite.",
   "type": "module",
-  "files": [
-    "src/**",
-    "!.DS_Store"
-  ],
   "main": "./src/index.js",
   "scripts": {
     "lint": "eslint . --max-warnings 0",
     "prettier:check": "prettier --check .",
     "prettier:fix": "prettier --write .",
     "precommit": "../../scripts/precommit",
-    "ci:build": "run-s lint prettier:check"
+    "type-check": "tsc --noEmit -p tsconfig-test.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ci": "vitest run",
+    "ci:build": "run-s lint prettier:check type-check test:ci"
   },
   "dependencies": {
     "antlr4": "4.9.2",
