@@ -4,6 +4,21 @@
 
 Represents the outputs from a model run.
 
+## Constructors
+
+### constructor
+
+**new Outputs**(`varIds`, `startTime`, `endTime`, `saveFreq?`)
+
+#### Parameters
+
+| Name | Type | Default value | Description |
+| :------ | :------ | :------ | :------ |
+| `varIds` | `string`[] | `undefined` | The output variable identifiers. |
+| `startTime` | `number` | `undefined` | The start time for the model. |
+| `endTime` | `number` | `undefined` | The end time for the model. |
+| `saveFreq` | `number` | `1` | The frequency with which output values are saved (aka `SAVEPER`). |
+
 ## Properties
 
 ### seriesLength
@@ -51,21 +66,6 @@ ___
  `Readonly` **saveFreq**: `number` = `1`
 
 The frequency with which output values are saved (aka `SAVEPER`).
-
-## Constructors
-
-### constructor
-
-**new Outputs**(`varIds`, `startTime`, `endTime`, `saveFreq?`)
-
-#### Parameters
-
-| Name | Type | Default value | Description |
-| :------ | :------ | :------ | :------ |
-| `varIds` | `string`[] | `undefined` | The output variable identifiers. |
-| `startTime` | `number` | `undefined` | The start time for the model. |
-| `endTime` | `number` | `undefined` | The end time for the model. |
-| `saveFreq` | `number` | `1` | The frequency with which output values are saved (aka `SAVEPER`). |
 
 ## Methods
 
