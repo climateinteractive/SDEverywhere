@@ -63,7 +63,7 @@
   },
   "devDependencies": {
     "@sdeverywhere/build": "*",
-    "@types/node": "^16.11.7"
+    "@types/node": "^20.5.7"
   },
   "author": "Climate Interactive",
   "license": "MIT",
