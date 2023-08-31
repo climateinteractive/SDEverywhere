@@ -11,7 +11,7 @@
     // Enable warnings for transpilation-unsafe code
     "isolatedModules": true,
     // Enable strict enforcement of `import type`
-    "importsNotUsedAsValues": "error",
+    "verbatimModuleSyntax": true,
     // The default list of type definitions
     "types": []
   }
