@@ -21,7 +21,7 @@ const promptMessages = {
 }
 
 function runCreate(args: string[] = []) {
-  const { stdout, stdin } = execa('../bin/create-sde.js', [...args, '--dryrun'], { cwd: testsDir })
+  const { stdout, stdin } = execa('../bin/create-sde.js', [...args, '--dry-run'], { cwd: testsDir })
   return {
     stdin,
     stdout
