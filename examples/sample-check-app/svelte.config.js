@@ -7,6 +7,9 @@ export default {
     if (warning.code === 'a11y-click-events-have-key-events') {
       return
     }
+    if (warning.code === 'a11y-no-noninteractive-tabindex') {
+      return
+    }
 
     // Handle all other warnings normally
     defaultHandler(warning)
