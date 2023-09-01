@@ -1,7 +1,7 @@
 import util from 'util'
 import B from 'bufx'
 import { parse as parseCsv } from 'csv-parse/sync'
-import R from 'ramda'
+import * as R from 'ramda'
 import split from 'split-string'
 import XLSX from 'xlsx'
 

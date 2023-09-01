@@ -1,6 +1,6 @@
 import path from 'path'
 import B from 'bufx'
-import R from 'ramda'
+import * as R from 'ramda'
 import { splitEquations, replaceDelimitedStrings } from '../_shared/helpers.js'
 
 export let preprocessModel = (mdlFilename, spec, profile = 'genc', writeFiles = false, outDecls = []) => {
