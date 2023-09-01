@@ -12,6 +12,20 @@ The `ModelRunner` is pluggable to allow for running the model synchronously
 (on the main JavaScript thread) or asynchronously (in a Web Worker or Node.js
 worker thread).
 
+## Constructors
+
+### constructor
+
+**new ModelScheduler**(`runner`, `userInputs`, `outputs`)
+
+#### Parameters
+
+| Name | Type | Description |
+| :------ | :------ | :------ |
+| `runner` | [`ModelRunner`](../interfaces/ModelRunner.md) | The model runner. |
+| `userInputs` | [`InputValue`](../interfaces/InputValue.md)[] | The input values, in the same order as in the spec file passed to `sde`. |
+| `outputs` | [`Outputs`](Outputs.md) | The structure into which the model outputs will be stored. |
+
 ## Properties
 
 ### onOutputsChanged
@@ -33,17 +47,3 @@ Called when `outputs` has been updated after a model run.
 ##### Returns
 
 `void`
-
-## Constructors
-
-### constructor
-
-**new ModelScheduler**(`runner`, `userInputs`, `outputs`)
-
-#### Parameters
-
-| Name | Type | Description |
-| :------ | :------ | :------ |
-| `runner` | [`ModelRunner`](../interfaces/ModelRunner.md) | The model runner. |
-| `userInputs` | [`InputValue`](../interfaces/InputValue.md)[] | The input values, in the same order as in the spec file passed to `sde`. |
-| `outputs` | [`Outputs`](Outputs.md) | The structure into which the model outputs will be stored. |
