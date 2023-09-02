@@ -23,7 +23,7 @@
     "@sdeverywhere/sample-check-tests": "workspace:*"
   },
   "devDependencies": {
-    "@sveltejs/vite-plugin-svelte": "^1.0.8",
+    "@sveltejs/vite-plugin-svelte": "^1.4.0",
     "postcss": "^8.2.14",
     "pug": "^3.0.1",
     "sass": "^1.34.1",
