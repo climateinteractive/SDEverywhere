@@ -177,8 +177,8 @@ export async function createViteConfigForBundle(prepDir: string, modelSpec: Mode
         // in its Node implementation.  This import ensures that threads.js uses
         // the native `worker_threads` implementation when using the bundle in a
         // Node environment.  When importing the bundle for use in the browser,
-        // Vite will transform this import into an empty module (it does not seem
-        // to be necessary to define a polyfill).
+        // Vite will transform this import into an empty module due to the empty
+        // polyfill that is configured in `vite-config-for-report.ts`.
         output: {
           banner: `
 import * as worker_threads from 'worker_threads'
