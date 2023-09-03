@@ -36,7 +36,7 @@
     "fontfaceobserver": "^2.1.0"
   },
   "devDependencies": {
-    "@sveltejs/vite-plugin-svelte": "^1.4.0",
+    "@sveltejs/vite-plugin-svelte": "^2.4.5",
     "@types/chart.js": "^2.9.34",
     "@types/fontfaceobserver": "^0.0.6",
     "postcss": "^8.2.14",
@@ -46,7 +46,7 @@
     "svelte-awesome": "^3.0.0",
     "svelte-check": "^3.5.1",
     "svelte-preprocess": "^5.0.4",
-    "vite": "^3.2.7"
+    "vite": "^4.4.9"
   },
   "devDependenciesComments": {
     "svelte-awesome": [
