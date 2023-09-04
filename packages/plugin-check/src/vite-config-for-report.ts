@@ -150,6 +150,7 @@ export function createViteConfigForReport(
         // implementation of threads.js; this allows us to use one bundle that works in both
         // Node and browser environments
         noopPolyfillAlias('events'),
+        noopPolyfillAlias('fs'),
         noopPolyfillAlias('os'),
         noopPolyfillAlias('path'),
         noopPolyfillAlias('url'),
