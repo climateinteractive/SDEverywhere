@@ -105,17 +105,17 @@ export function createViteConfigForReport(
       // As a terrible workaround, explicitly include the direct dependencies so
       // that Vite optimizes them; this works for pnpm, yarn, and npm.  We should
       // find a less fragile solution.
-      // include: [
-      //   // from check-core
-      //   'assert-never',
-      //   'ajv',
-      //   'neverthrow',
-      //   'yaml',
-      //   // from check-ui-shell
-      //   'fontfaceobserver',
-      //   'copy-text-to-clipboard',
-      //   'chart.js'
-      // ],
+      include: [
+        // from check-core
+        '@sdeverywhere/check-core > assert-never',
+        '@sdeverywhere/check-core > ajv',
+        '@sdeverywhere/check-core > neverthrow',
+        '@sdeverywhere/check-core > yaml',
+        // from check-ui-shell
+        '@sdeverywhere/check-ui-shell > fontfaceobserver',
+        '@sdeverywhere/check-ui-shell > copy-text-to-clipboard',
+        '@sdeverywhere/check-ui-shell > chart.js'
+      ],
 
       exclude: [
         // XXX: The threads.js implementation references `tiny-worker` as an optional
