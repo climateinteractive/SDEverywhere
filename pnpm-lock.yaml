@@ -248,7 +248,7 @@ importers:
         specifier: ^0.3.1
         version: link:../build
       '@sdeverywhere/compile':
-        specifier: ^0.7.5
+        specifier: ^0.7.6
         version: link:../compile
       bufx:
         specifier: ^1.0.5
@@ -299,7 +299,7 @@ importers:
   packages/create:
     dependencies:
       '@sdeverywhere/compile':
-        specifier: ^0.7.5
+        specifier: ^0.7.6
         version: link:../compile
       degit:
         specifier: ^2.8.4
@@ -360,7 +360,7 @@ importers:
         specifier: ^0.1.1
         version: link:../check-core
       '@sdeverywhere/check-ui-shell':
-        specifier: ^0.2.2
+        specifier: ^0.2.3
         version: link:../check-ui-shell
       '@sdeverywhere/runtime':
         specifier: ^0.2.0
