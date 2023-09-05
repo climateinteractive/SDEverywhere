@@ -1,4 +1,4 @@
-import R from 'ramda'
+import * as R from 'ramda'
 
 import { asort, lines, strlist, abend, mapIndexed } from '../_shared/helpers.js'
 import { sub, allDimensions, allMappings, subscriptFamilies } from '../_shared/subscript.js'

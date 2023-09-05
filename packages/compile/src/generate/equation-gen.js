@@ -1,6 +1,6 @@
 import path from 'path'
 import { ModelLexer, ModelParser } from 'antlr4-vensim'
-import R from 'ramda'
+import * as R from 'ramda'
 import XLSX from 'xlsx'
 
 import {

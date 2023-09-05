@@ -1,6 +1,6 @@
 import B from 'bufx'
 import yaml from 'js-yaml'
-import R from 'ramda'
+import * as R from 'ramda'
 
 import { decanonicalize, isIterable, listConcat, strlist, vlog, vsort } from '../_shared/helpers.js'
 import {

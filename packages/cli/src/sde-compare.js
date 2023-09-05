@@ -1,7 +1,7 @@
 import { existsSync } from 'fs'
 
 import { pr } from 'bufx'
-import R from 'ramda'
+import * as R from 'ramda'
 
 import { readDat } from '@sdeverywhere/compile'
 
