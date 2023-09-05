@@ -2,6 +2,9 @@
 
 ## [0.1.6](https://github.com/climateinteractive/SDEverywhere/compare/plugin-vite-v0.1.5...plugin-vite-v0.1.6) (2023-09-05)
 
+Note: The `peerDependencies` field for the `plugin-vite` package has been updated to allow for either `vite ^3.0.0` or `vite ^4.0.0`.
+While other SDEverywhere packages have been updated to use Vite 4 internally, the `plugin-vite` package should work fine regardless
+of whether your project is configured to use Vite 3 or Vite 4.
 
 ### Bug Fixes
 
