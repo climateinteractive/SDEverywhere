@@ -1,7 +1,7 @@
 import fs from 'fs'
 import B from 'bufx'
 import byline from 'byline'
-import R from 'ramda'
+import * as R from 'ramda'
 
 import { canonicalVensimName } from './helpers.js'
 

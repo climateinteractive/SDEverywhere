@@ -1,4 +1,4 @@
-import R from 'ramda'
+import * as R from 'ramda'
 
 import { canonicalName } from '../_shared/helpers.js'
 import { sub, isDimension } from '../_shared/subscript.js'

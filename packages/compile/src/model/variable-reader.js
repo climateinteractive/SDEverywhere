@@ -1,5 +1,5 @@
 import { ModelParser } from 'antlr4-vensim'
-import R from 'ramda'
+import * as R from 'ramda'
 
 import { canonicalName, vlog, strlist, cartesianProductOf } from '../_shared/helpers.js'
 import {

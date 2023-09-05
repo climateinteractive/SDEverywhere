@@ -3,7 +3,7 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 
 import B from 'bufx'
-import R from 'ramda'
+import * as R from 'ramda'
 import sh from 'shelljs'
 
 import { canonicalName } from '@sdeverywhere/compile'
