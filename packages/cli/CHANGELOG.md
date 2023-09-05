@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.7.10](https://github.com/climateinteractive/SDEverywhere/compare/cli-v0.7.9...cli-v0.7.10) (2023-09-05)
+
+
+### Bug Fixes
+
+* change ramda imports to wildcard style ([#350](https://github.com/climateinteractive/SDEverywhere/issues/350)) ([f132c8d](https://github.com/climateinteractive/SDEverywhere/commit/f132c8d46411257474ec985e92c7a52bf0408542)), closes [#349](https://github.com/climateinteractive/SDEverywhere/issues/349)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/compile bumped from ^0.7.5 to ^0.7.6
+
 ## [0.7.9](https://github.com/climateinteractive/SDEverywhere/compare/cli-v0.7.8...cli-v0.7.9) (2023-05-03)
 
 ### Dependencies

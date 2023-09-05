@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.3.2](https://github.com/climateinteractive/SDEverywhere/compare/plugin-check-v0.3.1...plugin-check-v0.3.2) (2023-09-05)
+
+
+### Bug Fixes
+
+* upgrade to vite 4.4.9 ([#354](https://github.com/climateinteractive/SDEverywhere/issues/354)) ([db975fa](https://github.com/climateinteractive/SDEverywhere/commit/db975fa47705e22005d0c04500567d3480502f52)), closes [#351](https://github.com/climateinteractive/SDEverywhere/issues/351)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/check-ui-shell bumped from ^0.2.2 to ^0.2.3
+
 ## [0.3.1](https://github.com/climateinteractive/SDEverywhere/compare/plugin-check-v0.3.0...plugin-check-v0.3.1) (2023-06-18)
 
 
