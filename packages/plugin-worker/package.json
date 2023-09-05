@@ -31,20 +31,9 @@
     "ci:build": "run-s clean lint prettier:check test:ci type-check build docs"
   },
   "dependencies": {
-    "@rollup/plugin-node-resolve": "^13.3.0",
     "@sdeverywhere/runtime": "^0.2.0",
     "@sdeverywhere/runtime-async": "^0.2.0",
-    "rollup": "^2.76.0",
-    "vite": "^3.1.3"
-  },
-  "dependenciesComments": {
-    "rollup": [
-      "XXX: For now, rollup is listed as a dependency even though it is not actually",
-      "needed since we only use the @rollup plugins with vite.  Those @rollup plugins",
-      "don't technically need rollup to function properly, but they list rollup as a",
-      "required peer dependency.  To avoid making consumers worry about this, we list",
-      "it as a dependency here."
-    ]
+    "vite": "4.4.9"
   },
   "peerDependencies": {
     "@sdeverywhere/build": "^0.3.0"

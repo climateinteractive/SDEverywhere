@@ -38,7 +38,7 @@
   },
   "dependencies": {
     "@rollup/plugin-node-resolve": "^13.3.0",
-    "@rollup/plugin-replace": "^4.0.0",
+    "@rollup/plugin-replace": "^5.0.2",
     "@sdeverywhere/check-core": "^0.1.1",
     "@sdeverywhere/check-ui-shell": "^0.2.2",
     "@sdeverywhere/runtime": "^0.2.0",
@@ -47,7 +47,7 @@
     "chokidar": "^3.5.3",
     "picocolors": "^1.0.0",
     "rollup": "^2.76.0",
-    "vite": "^3.1.3"
+    "vite": "4.4.9"
   },
   "dependenciesComments": {
     "rollup": [

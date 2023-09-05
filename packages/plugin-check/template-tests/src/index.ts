@@ -12,8 +12,11 @@ import type {
   InputVar
 } from '@sdeverywhere/check-core'
 
-// Load the yaml test files
-const yamlGlob = import.meta.glob(__YAML_PATH__, {
+// Load the yaml test files.  The `./__YAML_PATH__` part will be replaced by Vite
+// (see `vite-config-for-tests.ts`).  Note that we provide a placeholder here that
+// looks like a valid glob pattern, since Vite's dependency resolver will report
+// errors if it is invalid (not a literal).
+const yamlGlob = import.meta.glob('./__YAML_PATH__', {
   eager: true,
   as: 'raw'
 })
