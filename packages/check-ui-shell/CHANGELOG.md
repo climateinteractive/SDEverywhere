@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.3](https://github.com/climateinteractive/SDEverywhere/compare/check-ui-shell-v0.2.2...check-ui-shell-v0.2.3) (2023-09-05)
+
+
+### Bug Fixes
+
+* upgrade to vite 4.4.9 ([#354](https://github.com/climateinteractive/SDEverywhere/issues/354)) ([db975fa](https://github.com/climateinteractive/SDEverywhere/commit/db975fa47705e22005d0c04500567d3480502f52)), closes [#351](https://github.com/climateinteractive/SDEverywhere/issues/351)
+
 ## [0.2.2](https://github.com/climateinteractive/SDEverywhere/compare/check-ui-shell-v0.2.1...check-ui-shell-v0.2.2) (2023-06-18)
 
 
