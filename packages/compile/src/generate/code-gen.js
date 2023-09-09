@@ -167,7 +167,7 @@ ${specOutputSection(outputVars)}
 }
 
 void storeOutput(size_t varIndex, size_t subIndex0, size_t subIndex1, size_t subIndex2) {
-#if USE_OUTPUT_INDICES
+#if SDE_USE_OUTPUT_INDICES
   switch (varIndex) {
 ${fullOutputSection(Model.varIndexInfo())}
     default:
@@ -266,9 +266,9 @@ ${postStep}
     } else {
       decls = `const int numOutputs = ${spec.outputVars.length};`
     }
-    decls += `\n#define USE_OUTPUT_INDICES 0`
-    decls += `\n#define MAX_OUTPUT_INDICES 1000`
-    decls += `\nconst int maxOutputIndices = USE_OUTPUT_INDICES ? MAX_OUTPUT_INDICES : 0;`
+    decls += `\n#define SDE_USE_OUTPUT_INDICES 0`
+    decls += `\n#define SDE_MAX_OUTPUT_INDICES 1000`
+    decls += `\nconst int maxOutputIndices = SDE_USE_OUTPUT_INDICES ? SDE_MAX_OUTPUT_INDICES : 0;`
     return decls
   }
   function arrayDimensionsSection() {

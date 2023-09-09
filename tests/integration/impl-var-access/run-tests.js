@@ -11,7 +11,7 @@ import initWasm from './sde-prep/wasm-model.js'
 /*
  * This is a JS-level integration test that verifies that both the synchronous
  * and asynchronous `ModelRunner` implementations work with a wasm model that
- * has the `USE_OUTPUT_INDICES` flag enabled (which allows for accessing
+ * has the `SDE_USE_OUTPUT_INDICES` flag enabled (which allows for accessing
  * internal/impl variables).
  */
 
