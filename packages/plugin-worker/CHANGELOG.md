@@ -1,6 +1,13 @@
 # Changelog
 
 
+## [0.2.1](https://github.com/climateinteractive/SDEverywhere/compare/plugin-worker-v0.2.0...plugin-worker-v0.2.1) (2023-09-05)
+
+
+### Bug Fixes
+
+* upgrade to vite 4.4.9 ([#354](https://github.com/climateinteractive/SDEverywhere/issues/354)) ([db975fa](https://github.com/climateinteractive/SDEverywhere/commit/db975fa47705e22005d0c04500567d3480502f52)), closes [#351](https://github.com/climateinteractive/SDEverywhere/issues/351)
+
 ## [0.2.0](https://github.com/climateinteractive/SDEverywhere/compare/plugin-worker-v0.1.4...plugin-worker-v0.2.0) (2022-12-10)
 
 

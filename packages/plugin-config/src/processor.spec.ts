@@ -8,10 +8,10 @@ import { fileURLToPath } from 'url'
 import temp from 'temp'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
-import type { BuildOptions, UserConfig } from '@sdeverywhere/build'
+import type { BuildOptions, ModelSpec, Plugin, UserConfig } from '@sdeverywhere/build'
 import { build } from '@sdeverywhere/build'
 
-import type { ConfigOptions } from './processor'
+import type { ConfigProcessorOptions } from './processor'
 import { configProcessor } from './processor'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
@@ -22,7 +22,10 @@ interface TestEnv {
   buildOptions: BuildOptions
 }
 
-async function prepareForBuild(optionsFunc: (corePkgDir: string) => ConfigOptions): Promise<TestEnv> {
+async function prepareForBuild(
+  optionsFunc: (corePkgDir: string) => ConfigProcessorOptions,
+  plugins: Plugin[] = []
+): Promise<TestEnv> {
   const baseTmpDir = await temp.mkdir('sde-plugin-config')
   const projDir = joinPath(baseTmpDir, 'proj')
   await mkdir(projDir)
@@ -32,7 +35,8 @@ async function prepareForBuild(optionsFunc: (corePkgDir: string) => ConfigOption
   const config: UserConfig = {
     rootDir: projDir,
     modelFiles: [],
-    modelSpec: configProcessor(optionsFunc(corePkgDir))
+    modelSpec: configProcessor(optionsFunc(corePkgDir)),
+    plugins
   }
 
   const buildOptions: BuildOptions = {
@@ -216,15 +220,52 @@ describe('configProcessor', () => {
   })
 
   it('should write to default directory structure if single out dir is provided', async () => {
+    let capturedModelSpec: ModelSpec
+    const plugin: Plugin = {
+      async preGenerate(_, modelSpec) {
+        capturedModelSpec = modelSpec
+      }
+    }
+
     const configDir = joinPath(__dirname, '__tests__', 'config1')
-    const testEnv = await prepareForBuild(corePkgDir => ({
-      config: configDir,
-      out: corePkgDir
-    }))
+    const testEnv = await prepareForBuild(
+      corePkgDir => ({
+        config: configDir,
+        out: corePkgDir
+      }),
+      [plugin]
+    )
     const result = await build('production', testEnv.buildOptions)
     if (result.isErr()) {
       throw new Error('Expected ok result but got: ' + result.error.message)
     }
+
+    expect(capturedModelSpec).toBeDefined()
+    expect(capturedModelSpec.inputs).toEqual([
+      {
+        inputId: '1',
+        varName: 'Input A',
+        defaultValue: 0,
+        minValue: -50,
+        maxValue: 50
+      },
+      {
+        inputId: '2',
+        varName: 'Input B',
+        defaultValue: 0,
+        minValue: -50,
+        maxValue: 50
+      },
+      {
+        inputId: '3',
+        varName: 'Input C',
+        defaultValue: 0,
+        minValue: 0,
+        maxValue: 1
+      }
+    ])
+    expect(capturedModelSpec.outputs).toEqual([{ varName: 'Var 1' }])
+    expect(capturedModelSpec.datFiles).toEqual(['../Data1.dat', '../Data2.dat'])
 
     const specJsonFile = joinPath(testEnv.projDir, 'sde-prep', 'spec.json')
     expect(await readFile(specJsonFile, 'utf8')).toEqual(specJson1)

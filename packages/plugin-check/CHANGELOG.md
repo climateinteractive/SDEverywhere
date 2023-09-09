@@ -1,5 +1,34 @@
 # Changelog
 
+## [0.3.2](https://github.com/climateinteractive/SDEverywhere/compare/plugin-check-v0.3.1...plugin-check-v0.3.2) (2023-09-05)
+
+
+### Bug Fixes
+
+* upgrade to vite 4.4.9 ([#354](https://github.com/climateinteractive/SDEverywhere/issues/354)) ([db975fa](https://github.com/climateinteractive/SDEverywhere/commit/db975fa47705e22005d0c04500567d3480502f52)), closes [#351](https://github.com/climateinteractive/SDEverywhere/issues/351)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/check-ui-shell bumped from ^0.2.2 to ^0.2.3
+
+## [0.3.1](https://github.com/climateinteractive/SDEverywhere/compare/plugin-check-v0.3.0...plugin-check-v0.3.1) (2023-06-18)
+
+
+### Features
+
+* allow for defining model comparison scenarios in YAML files ([#330](https://github.com/climateinteractive/SDEverywhere/issues/330)) ([426eab1](https://github.com/climateinteractive/SDEverywhere/commit/426eab19f98df2ccfa56cf9cc8cc83ceedfe7821)), closes [#315](https://github.com/climateinteractive/SDEverywhere/issues/315)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/check-core bumped from ^0.1.0 to ^0.1.1
+    * @sdeverywhere/check-ui-shell bumped from ^0.2.1 to ^0.2.2
+
 ## [0.3.0](https://github.com/climateinteractive/SDEverywhere/compare/plugin-check-v0.2.2...plugin-check-v0.3.0) (2022-12-10)
 
 

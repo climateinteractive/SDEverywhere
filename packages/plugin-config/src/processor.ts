@@ -9,7 +9,7 @@ import { createConfigContext } from './context'
 import { writeModelSpec } from './gen-model-spec'
 import { generateConfigSpecs, writeConfigSpecs, writeSpecTypes } from './gen-config-specs'
 
-export interface ConfigOutputPaths {
+export interface ConfigProcessorOutputPaths {
   /** The absolute path to the directory where model spec files will be written. */
   modelSpecsDir?: string
 
@@ -20,7 +20,7 @@ export interface ConfigOutputPaths {
   stringsDir?: string
 }
 
-export interface ConfigOptions {
+export interface ConfigProcessorOptions {
   /**
    * The absolute path to the directory containing the CSV config files.
    */
@@ -28,8 +28,9 @@ export interface ConfigOptions {
 
   /**
    * Either a single path to a base output directory (in which case, the recommended
-   * directory structure will be used) or a `ConfigOutputPaths` containing specific paths.
+   * directory structure will be used) or a `ConfigProcessorOutputPaths` containing specific paths.
    * If a single string is provided, the following subdirectories will be used:
+   * ```
    *   <out-dir>/
    *     src/
    *       config/
@@ -37,8 +38,9 @@ export interface ConfigOptions {
    *       model/
    *         generated/
    *     strings/
+   * ```
    */
-  out?: string | ConfigOutputPaths
+  out?: string | ConfigProcessorOutputPaths
 }
 
 /**
@@ -48,13 +50,13 @@ export interface ConfigOptions {
  *   - writes JS files to the configured output directories
  *   - returns a `ModelSpec` that guides the rest of the `sde` build process
  */
-export function configProcessor(options: ConfigOptions): (buildContext: BuildContext) => Promise<ModelSpec> {
+export function configProcessor(options: ConfigProcessorOptions): (buildContext: BuildContext) => Promise<ModelSpec> {
   return buildContext => {
     return processModelConfig(buildContext, options)
   }
 }
 
-async function processModelConfig(buildContext: BuildContext, options: ConfigOptions): Promise<ModelSpec> {
+async function processModelConfig(buildContext: BuildContext, options: ConfigProcessorOptions): Promise<ModelSpec> {
   const t0 = performance.now()
 
   // Resolve source (config) directory

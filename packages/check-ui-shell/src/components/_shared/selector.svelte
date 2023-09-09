@@ -59,6 +59,6 @@ select
 select > option
   // XXX: Firefox doesn't support @font-face in select menus, so
   // the best we can do is try a similar sans serif font
-  font-family: RobotoCondensed, Helvetica, sans-serif
+  font-family: 'Roboto Condensed', Helvetica, sans-serif
 
 </style>

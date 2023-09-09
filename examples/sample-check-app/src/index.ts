@@ -21,12 +21,42 @@ if (suiteSummaryJson) {
   suiteSummary = JSON.parse(suiteSummaryJson) as SuiteSummary
 }
 
-// Load the bundles and build the model check/compare configuration
-const checkOptions = getConfigOptions(baselineBundle() as Bundle, currentBundle() as Bundle)
+// In local development mode, the app header contains a "Simplify Scenarios" checkbox; if checked,
+// we can create a configuration that includes a simpler set of specs so that the tests run faster
+function loadSimplifyScenariosFlag(): boolean {
+  if (import.meta.hot) {
+    return localStorage.getItem('sde-check-simplify-scenarios') === '1'
+  } else {
+    return false
+  }
+}
 
-// Initialize the root Svelte component
-const appShell = initAppShell(checkOptions, {
-  suiteSummary
-})
+async function initBundlesAndUI() {
+  // Before switching bundles, clear out the app-shell-container element
+  const container = document.getElementById('app-shell-container')
+  while (container.firstChild) {
+    container.removeChild(container.firstChild)
+  }
 
-export default appShell
+  // TODO: Release resources associated with active bundles
+
+  // Load the bundles and build the model check/compare configuration
+  const simplifyScenarios = loadSimplifyScenariosFlag()
+  const configOptions = getConfigOptions(baselineBundle() as Bundle, currentBundle() as Bundle, { simplifyScenarios })
+
+  // Initialize the root Svelte component
+  initAppShell(configOptions, {
+    suiteSummary
+  })
+}
+
+// Initialize the bundles and user interface
+initBundlesAndUI()
+
+if (import.meta.hot) {
+  // Reload everything when the user toggles the "Simplify Scenarios" checkbox
+  document.addEventListener('sde-check-simplify-scenarios-toggled', () => {
+    // Reinitialize using the new state
+    initBundlesAndUI()
+  })
+}

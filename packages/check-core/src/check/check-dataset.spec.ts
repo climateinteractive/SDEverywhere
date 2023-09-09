@@ -52,7 +52,6 @@ describe('expandDatasets', () => {
     inputVars: new Map(),
     outputVars,
     implVars,
-    inputGroups: new Map(),
     datasetGroups
   }
 

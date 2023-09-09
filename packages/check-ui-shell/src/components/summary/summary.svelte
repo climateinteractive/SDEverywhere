@@ -5,11 +5,14 @@
 
 import { createEventDispatcher } from 'svelte'
 import CheckSummary from '../check/summary/check-summary.svelte'
-import CompareSummary from '../compare/summary/compare-summary.svelte'
+import ComparisonSummary from '../compare/summary/comparison-summary.svelte'
 import StatsTable from '../stats/stats-table.svelte'
+
+import TabBar from './tab-bar.svelte'
 import type { SummaryViewModel } from './summary-vm'
 
 export let viewModel: SummaryViewModel
+const selectedTabId = viewModel.tabBarViewModel.selectedItemId
 
 </script>
 
@@ -25,12 +28,15 @@ export let viewModel: SummaryViewModel
       .header-container
         StatsTable(on:command viewModel!='{viewModel.statsTableViewModel}')
       .line
-    .section-title Checks
-    CheckSummary(viewModel!='{viewModel.checkSummaryViewModel}')
-    +if('viewModel.compareSummaryViewModel')
-      .line
-      .section-title Comparisons
-      CompareSummary(on:command viewModel!='{viewModel.compareSummaryViewModel}')
+    TabBar(on:command viewModel!='{viewModel.tabBarViewModel}')
+    +if('$selectedTabId === "checks"')
+      CheckSummary(viewModel!='{viewModel.checkSummaryViewModel}')
+      +elseif('$selectedTabId === "comp-views"')
+        ComparisonSummary(on:command viewModel!='{viewModel.comparisonViewsSummaryViewModel}')
+      +elseif('$selectedTabId === "comps-by-scenario"')
+        ComparisonSummary(on:command viewModel!='{viewModel.comparisonsByScenarioSummaryViewModel}')
+      +elseif('$selectedTabId === "comps-by-dataset"')
+        ComparisonSummary(on:command viewModel!='{viewModel.comparisonsByDatasetSummaryViewModel}')
 
 </template>
 
@@ -46,6 +52,7 @@ export let viewModel: SummaryViewModel
   flex: 1
 
 .scroll-container
+  position: relative
   display: flex
   // XXX: We use 1px here for flex-basis, otherwise in Firefox and Chrome the
   // whole page will scroll instead of just this container.  See also:
@@ -60,12 +67,7 @@ export let viewModel: SummaryViewModel
 
 .line
   min-height: 1px
-  margin-bottom: 1rem
+  margin-bottom: .5rem
   background-color: #555
-
-.section-title
-  font-size: 1.7em
-  font-weight: 700
-  margin-bottom: 1rem
 
 </style>

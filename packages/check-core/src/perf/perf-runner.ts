@@ -3,7 +3,7 @@
 import { assertNever } from 'assert-never'
 
 import { TaskQueue } from '../_shared/task-queue'
-import { allInputsAtPositionScenario } from '../_shared/scenario'
+import { allInputsAtPositionSpec } from '../_shared/scenario-specs'
 
 import type { BundleModel } from '../bundle/bundle-types'
 
@@ -37,27 +37,27 @@ export class PerfRunner {
     public readonly bundleModelR: BundleModel,
     private readonly mode: 'serial' | 'parallel' = 'serial'
   ) {
-    const scenario = allInputsAtPositionScenario('at-default')
+    const scenarioSpec = allInputsAtPositionSpec('at-default')
 
     this.taskQueue = new TaskQueue({
       process: async request => {
         switch (request.kind) {
           case 'left': {
-            const result = await bundleModelL.getDatasetsForScenario(scenario, [])
+            const result = await bundleModelL.getDatasetsForScenario(scenarioSpec, [])
             return {
               runTimeL: result.modelRunTime
             }
           }
           case 'right': {
-            const result = await bundleModelR.getDatasetsForScenario(scenario, [])
+            const result = await bundleModelR.getDatasetsForScenario(scenarioSpec, [])
             return {
               runTimeR: result.modelRunTime
             }
           }
           case 'both': {
             const [resultL, resultR] = await Promise.all([
-              bundleModelL.getDatasetsForScenario(scenario, []),
-              bundleModelR.getDatasetsForScenario(scenario, [])
+              bundleModelL.getDatasetsForScenario(scenarioSpec, []),
+              bundleModelR.getDatasetsForScenario(scenarioSpec, [])
             ])
             return {
               runTimeL: resultL.modelRunTime,

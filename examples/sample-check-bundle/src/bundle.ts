@@ -7,17 +7,15 @@ import type {
   BundleModel as CheckBundleModel,
   DatasetKey,
   DatasetsResult,
-  ImplVar,
-  InputVar,
   LinkItem,
   ModelSpec,
-  Scenario
+  ScenarioSpec
 } from '@sdeverywhere/check-core'
 
 import { getGraphDataForScenario, getGraphLinksForScenario, getGraphSpecs } from './graphs'
-import { getInputVars } from './inputs'
+import { getInputs } from './inputs'
 import { getDatasetsForScenario } from './model-data'
-import { getOutputVars } from './outputs'
+import { getOutputs } from './outputs'
 
 // import modelWorkerJs from './worker.iife.js?raw'
 
@@ -47,18 +45,18 @@ export class BundleModel implements CheckBundleModel {
   constructor(public readonly modelSpec: ModelSpec) {}
 
   // from CheckBundleModel interface
-  async getDatasetsForScenario(scenario: Scenario, datasetKeys: DatasetKey[]): Promise<DatasetsResult> {
-    return getDatasetsForScenario(modelVersion, this.modelSpec, scenario, datasetKeys)
+  async getDatasetsForScenario(scenarioSpec: ScenarioSpec, datasetKeys: DatasetKey[]): Promise<DatasetsResult> {
+    return getDatasetsForScenario(modelVersion, this.modelSpec, scenarioSpec, datasetKeys)
   }
 
   // from CheckBundleModel interface
-  async getGraphDataForScenario(scenario: Scenario, graphId: BundleGraphId): Promise<BundleGraphData> {
-    return getGraphDataForScenario(scenario, graphId)
+  async getGraphDataForScenario(scenarioSpec: ScenarioSpec, graphId: BundleGraphId): Promise<BundleGraphData> {
+    return getGraphDataForScenario(scenarioSpec, graphId)
   }
 
   // from CheckBundleModel interface
-  getGraphLinksForScenario(scenario: Scenario, graphId: BundleGraphId): LinkItem[] {
-    return getGraphLinksForScenario(scenario, graphId)
+  getGraphLinksForScenario(scenarioSpec: ScenarioSpec, graphId: BundleGraphId): LinkItem[] {
+    return getGraphLinksForScenario(scenarioSpec, graphId)
   }
 }
 
@@ -84,61 +82,21 @@ async function initBundleModel(modelSpec: ModelSpec): Promise<BundleModel> {
  */
 export function createBundle(): Bundle {
   // Gather information about the input and output variables used in the model
-  const inputVars = getInputVars()
-  const outputVars = getOutputVars(modelVersion)
-
-  // TODO: For an SDEverywhere-generated model, you could use the JSON file
-  // produced by `sde generate --listjson` to create an `ImplVar` for each
-  // internal variable used in the model.  For the purposes of this sample
-  // bundle, we will synthesize `ImplVar` instances for the model outputs.
-  const implVarArray = [...outputVars.values()]
-    .filter(outputVar => outputVar.sourceName === undefined)
-    .map((outputVar, index) => {
-      const implVar: ImplVar = {
-        varId: outputVar.varId,
-        varName: outputVar.varName,
-        varIndex: index,
-        dimensions: [],
-        varType: 'aux'
-      }
-      return implVar
-    })
-  const implVars: Map<DatasetKey, ImplVar> = new Map()
-  implVarArray.forEach(implVar => {
-    implVars.set(`ModelImpl${implVar.varId}`, implVar)
-  })
-
-  // Configure input groups
-  const inputGroups: Map<string, InputVar[]> = new Map([
-    ['All Inputs', [...inputVars.values()]],
-    ['Input Group 1', [inputVars.get('_input_a'), inputVars.get('_input_b')]],
-    ['Empty Input Group', []]
-  ])
-
-  // Configure dataset groups
-  const keyForVarWithName = (name: string) => {
-    return [...outputVars.entries()].find(e => e[1].varName === name)[0]
-  }
-  const keysForVarsWithSource = (sourceName?: string) => {
-    return [...outputVars.entries()].filter(e => e[1].sourceName === sourceName).map(([k]) => k)
-  }
-  const datasetGroups: Map<string, DatasetKey[]> = new Map([
-    ['All Outputs', keysForVarsWithSource(undefined)],
-    ['Basic Outputs', [keyForVarWithName('Output X'), keyForVarWithName('Output Y'), keyForVarWithName('Output Z')]],
-    ['Static', keysForVarsWithSource('StaticData')]
-  ])
+  const inputs = getInputs(modelVersion)
+  const outputs = getOutputs(modelVersion)
 
   // Configure graphs
-  const graphSpecs = getGraphSpecs(modelVersion, outputVars)
+  const graphSpecs = getGraphSpecs(modelVersion, outputs.outputVars)
 
   const modelSpec: ModelSpec = {
     modelSizeInBytes,
     dataSizeInBytes,
-    inputVars,
-    outputVars,
-    implVars,
-    inputGroups,
-    datasetGroups,
+    inputVars: inputs.inputVars,
+    inputGroups: inputs.inputGroups,
+    inputAliases: inputs.inputAliases,
+    outputVars: outputs.outputVars,
+    implVars: outputs.implVars,
+    datasetGroups: outputs.datasetGroups,
     startTime: 1850,
     endTime: 2100,
     graphSpecs

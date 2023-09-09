@@ -4,28 +4,9 @@
 // _shared
 //
 
-export type { DatasetsResult, DataSource } from './_shared/data-source'
-
-export type {
-  AllInputsScenario,
-  InputPosition,
-  InputSetting,
-  PositionSetting,
-  Scenario,
-  SettingsScenario,
-  ValueSetting
-} from './_shared/scenario'
-export {
-  allInputsAtPositionScenario,
-  inputAtPositionScenario,
-  inputAtValueScenario,
-  matrixScenarios,
-  positionSetting,
-  settingsScenario,
-  valueSetting
-} from './_shared/scenario'
-
-export type { Dataset, DatasetKey, DatasetMap, ScenarioGroupKey, ScenarioKey, SourceName, VarId } from './_shared/types'
+export * from './_shared/data-source'
+export * from './_shared/scenario-spec-types'
+export * from './_shared/types'
 
 //
 // bundle
@@ -46,7 +27,7 @@ export type {
   NamedBundle
 } from './bundle/bundle-types'
 
-export type { Dimension, ImplVar, InputVar, OutputVar, RelatedItem, Subscript } from './bundle/var-types'
+export type { Dimension, ImplVar, InputId, InputVar, OutputVar, RelatedItem, Subscript } from './bundle/var-types'
 
 //
 // check
@@ -75,6 +56,8 @@ export type {
 } from './check/check-report'
 export { scenarioMessage, datasetMessage, predicateMessage } from './check/check-report'
 
+export type { CheckScenario, CheckScenarioError, CheckScenarioInputDesc } from './check/check-scenario'
+
 export type {
   CheckPredicateTimeOptions,
   CheckPredicateTimeRange,
@@ -86,40 +69,40 @@ export type { CheckPredicateSummary, CheckSummary } from './check/check-summary'
 export { checkSummaryFromReport, checkReportFromSummary } from './check/check-summary'
 
 //
-// compare
+// comparison
 //
 
-export type { CompareConfig, CompareDatasets, CompareOptions, CompareScenarios } from './compare/compare-config'
+export * from './comparison/_shared/comparison-resolved-types'
 
-export type { CompareDataRequestKey } from './compare/compare-data-coordinator'
-export { CompareDataCoordinator } from './compare/compare-data-coordinator'
+export * from './comparison/config/comparison-spec-types'
+export type {
+  ComparisonConfig,
+  ComparisonDatasetOptions,
+  ComparisonOptions
+} from './comparison/config/comparison-config'
+export type { ComparisonScenarios } from './comparison/config/comparison-scenarios'
+export type { ComparisonDatasets } from './comparison/config/comparison-datasets'
 
-export type { DiffPoint, DiffReport, DiffValidity } from './compare/compare-datasets'
-export { diffDatasets, compareDatasets } from './compare/compare-datasets'
+export type { ComparisonDataRequestKey } from './comparison/run/comparison-data-coordinator'
+export { ComparisonDataCoordinator } from './comparison/run/comparison-data-coordinator'
 
-export type { GraphDatasetReport, GraphInclusion, GraphMetadataReport, GraphReport } from './compare/compare-graphs'
-export { diffGraphs } from './compare/compare-graphs'
+export * from './comparison/diff-datasets/diff-datasets'
 
-export type { CompareItem, CompareGroupInfo, CompareGroup } from './compare/compare-group'
+export * from './comparison/diff-graphs/diff-graphs'
 
-export type { DatasetInfo, ScenarioInfo } from './compare/compare-info'
+export * from './comparison/report/comparison-report-types'
+export { comparisonSummaryFromReport } from './comparison/report/comparison-reporting'
 
-export type { CompareDatasetReport, CompareReport } from './compare/compare-report'
-
-export type { CompareDatasetSummary, CompareSummary } from './compare/compare-summary'
-export { compareSummaryFromReport } from './compare/compare-summary'
+export * from './comparison/report/comparison-group-types'
+export { categorizeComparisonTestSummaries } from './comparison/report/comparison-grouping'
 
 //
 // config
 //
 
-export type { Config, ConfigOptions } from './config/config-types'
+export type { Config, ConfigInitOptions, ConfigOptions } from './config/config-types'
 
 export { createConfig } from './config/config'
-
-export { DatasetManager } from './config/dataset-manager'
-
-export { ScenarioManager } from './config/scenario-manager'
 
 //
 // perf
@@ -137,7 +120,6 @@ export { PerfStats } from './perf/perf-stats'
 export type { RunSuiteCallbacks, RunSuiteOptions } from './suite/suite-runner'
 export { runSuite } from './suite/suite-runner'
 
-export type { SuiteReport } from './suite/suite-report'
+export * from './suite/suite-report-types'
 
-export type { SuiteSummary } from './suite/suite-summary'
-export { suiteSummaryFromReport } from './suite/suite-summary'
+export { suiteSummaryFromReport } from './suite/suite-reporting'

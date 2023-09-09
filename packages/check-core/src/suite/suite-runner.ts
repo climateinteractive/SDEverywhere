@@ -1,9 +1,11 @@
 // Copyright (c) 2021-2022 Climate Interactive / New Venture Fund
 
-import assertNever from 'assert-never'
-
+import type { DatasetsResult } from '../_shared/data-source'
+import type { ScenarioSpec } from '../_shared/scenario-spec-types'
 import { TaskQueue } from '../_shared/task-queue'
 import type { DatasetKey } from '../_shared/types'
+
+import type { BundleModel } from '../bundle/bundle-types'
 
 import type { DataRequest } from '../data/data-planner'
 import { DataPlanner } from '../data/data-planner'
@@ -11,15 +13,14 @@ import { DataPlanner } from '../data/data-planner'
 import { parseTestYaml } from '../check/check-parser'
 import { runChecks } from '../check/check-runner'
 
-import type { CompareDatasetReport, CompareReport } from '../compare/compare-report'
-import { runCompare } from '../compare/compare-runner'
+import { runComparisons } from '../comparison/run/comparison-runner'
+import type { ComparisonReport, ComparisonTestReport } from '../comparison/report/comparison-report-types'
 
 import type { Config } from '../config/config-types'
 
 import { PerfStats } from '../perf/perf-stats'
 
-import type { SuiteReport } from './suite-report'
-import type { DatasetsResult } from '../_shared/data-source'
+import type { SuiteReport } from './suite-report-types'
 
 export type CancelRunSuite = () => void
 
@@ -89,9 +90,9 @@ class SuiteRunner {
     const buildCheckReport = runChecks(this.config.check, checkSpec, dataPlanner, refDataPlanner, simplifyScenarios)
 
     // Plan the comparisons, if configured
-    let buildCompareDatasetReports: () => CompareDatasetReport[]
-    if (this.config.compare) {
-      buildCompareDatasetReports = runCompare(this.config.compare, dataPlanner, simplifyScenarios)
+    let buildComparisonTestReports: () => ComparisonTestReport[]
+    if (this.config.comparison) {
+      buildComparisonTestReports = runComparisons(this.config.comparison, dataPlanner)
     }
 
     // When all tasks have been processed, build the report
@@ -104,17 +105,17 @@ class SuiteRunner {
         this.callbacks.onError?.(error)
       } else {
         const checkReport = buildCheckReport()
-        let compareReport: CompareReport
-        if (this.config.compare) {
-          compareReport = {
-            datasetReports: buildCompareDatasetReports(),
+        let comparisonReport: ComparisonReport
+        if (this.config.comparison) {
+          comparisonReport = {
+            testReports: buildComparisonTestReports(),
             perfReportL: this.perfStatsL.toReport(),
             perfReportR: this.perfStatsR.toReport()
           }
         }
         this.callbacks.onComplete?.({
           checkReport,
-          compareReport
+          comparisonReport
         })
       }
     }
@@ -128,10 +129,10 @@ class SuiteRunner {
     if (taskCount === 0) {
       // There are no checks or comparison tests; notify completion callback
       // with empty reports
-      let compareReport: CompareReport
-      if (this.config.compare) {
-        compareReport = {
-          datasetReports: [],
+      let comparisonReport: ComparisonReport
+      if (this.config.comparison) {
+        comparisonReport = {
+          testReports: [],
           perfReportL: this.perfStatsL.toReport(),
           perfReportR: this.perfStatsR.toReport()
         }
@@ -142,7 +143,7 @@ class SuiteRunner {
         checkReport: {
           groups: []
         },
-        compareReport
+        comparisonReport
       })
       return
     }
@@ -167,34 +168,26 @@ class SuiteRunner {
     }
     const datasetKeys = [...datasetKeySet]
 
-    // Run the model(s) and extract the requested datasets
-    const scenario = request.scenario
-    let datasetsResultL: DatasetsResult
-    let datasetsResultR: DatasetsResult
-    switch (request.kind) {
-      case 'check': {
-        // Run the "current" model only
-        const bundleModel = this.config.check.bundle.model
-        datasetsResultR = await bundleModel.getDatasetsForScenario(scenario, datasetKeys)
-        break
+    async function getDatasets(
+      bundleModel: BundleModel | undefined,
+      scenarioSpec: ScenarioSpec | undefined
+    ): Promise<DatasetsResult> {
+      if (bundleModel && scenarioSpec) {
+        return bundleModel.getDatasetsForScenario(scenarioSpec, datasetKeys)
+      } else {
+        return undefined
       }
-      case 'compare': {
-        // Run both the "baseline" and "current" models
-        const bundleModelL = this.config.compare.bundleL.model
-        const bundleModelR = this.config.compare.bundleR.model
-        const [resultL, resultR] = await Promise.all([
-          bundleModelL.getDatasetsForScenario(scenario, datasetKeys),
-          bundleModelR.getDatasetsForScenario(scenario, datasetKeys)
-        ])
-        datasetsResultL = resultL
-        datasetsResultR = resultR
-        break
-      }
-      default:
-        assertNever(request.kind)
     }
 
-    // Update the performance stats (only for 'compare' requests)
+    // Run the model(s) in parallel and extract the requested datasets
+    const bundleModelL = this.config.comparison?.bundleL.model
+    const bundleModelR = this.config.comparison?.bundleR.model || this.config.check.bundle.model
+    const [datasetsResultL, datasetsResultR] = await Promise.all([
+      getDatasets(bundleModelL, request.scenarioSpecL),
+      getDatasets(bundleModelR, request.scenarioSpecR)
+    ])
+
+    // Update the performance stats
     if (datasetsResultL?.modelRunTime) {
       this.perfStatsL.addRun(datasetsResultL?.modelRunTime)
     }
@@ -208,7 +201,7 @@ class SuiteRunner {
     for (const dataTask of request.dataTasks) {
       const datasetL = datasetMapL?.get(dataTask.datasetKey)
       const datasetR = datasetMapR?.get(dataTask.datasetKey)
-      dataTask.dataFunc({
+      dataTask.dataAction({
         datasetL,
         datasetR
       })

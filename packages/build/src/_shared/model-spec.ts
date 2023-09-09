@@ -4,6 +4,16 @@
  * Describes a model input variable.
  */
 export interface InputSpec {
+  /**
+   * The stable input identifier.  It is recommended to set this to a value (for example, a
+   * numeric string like what `plugin-config` uses) that is separate from `varName` and is
+   * stable between two versions of the model.  This way, if an input variable is renamed
+   * between two versions of the model, comparisons can still be performed between the two.
+   * If a distinct `inputId` is not available, plugins can infer one from `varName`, but
+   * note that this approach will be less resilient to renames.
+   */
+  inputId?: string
+
   /** The variable name (as used in the modeling tool). */
   varName: string
 

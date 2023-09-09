@@ -1,6 +1,6 @@
 {
   "name": "@sdeverywhere/build",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "files": [
     "dist/**"
   ],
@@ -40,7 +40,7 @@
   "devDependencies": {
     "@types/cross-spawn": "^6.0.2",
     "@types/folder-hash": "^4.0.1",
-    "@types/node": "^16.11.7"
+    "@types/node": "^20.5.7"
   },
   "author": "Climate Interactive",
   "license": "MIT",

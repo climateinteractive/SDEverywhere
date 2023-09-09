@@ -2,7 +2,7 @@
 
 import type { Writable } from 'svelte/store'
 import { writable } from 'svelte/store'
-import type { CompareConfig } from '@sdeverywhere/check-core'
+import type { ComparisonConfig } from '@sdeverywhere/check-core'
 import { localStorageWritableBoolean } from '../../_shared/stores'
 
 export interface HeaderViewModel {
@@ -15,20 +15,20 @@ export interface HeaderViewModel {
 }
 
 export function createHeaderViewModel(
-  compareConfig: CompareConfig | undefined,
+  comparisonConfig: ComparisonConfig | undefined,
   includeSimplifyScenarios: boolean
 ): HeaderViewModel {
   let simplifyScenarios: Writable<boolean>
   if (includeSimplifyScenarios) {
-    simplifyScenarios = localStorageWritableBoolean('sde-check-simplify-scenarios', true)
+    simplifyScenarios = localStorageWritableBoolean('sde-check-simplify-scenarios', false)
   } else {
     simplifyScenarios = undefined
   }
 
-  // Only include the comparison-related header elements if the compare
+  // Only include the comparison-related header elements if the comparison
   // config is defined
-  if (compareConfig) {
-    const thresholds = compareConfig.thresholds
+  if (comparisonConfig) {
+    const thresholds = comparisonConfig.thresholds
     const thresholdStrings: string[] = []
     thresholdStrings.push('no diff')
     for (let i = 0; i < 3; i++) {
@@ -37,10 +37,10 @@ export function createHeaderViewModel(
     thresholdStrings.push(`diff &gt;= ${thresholds[2]}%`)
 
     return {
-      nameL: compareConfig.bundleL.name,
-      nameR: compareConfig.bundleR.name,
-      bundleNamesL: writable([compareConfig.bundleL.name]),
-      bundleNamesR: writable([compareConfig.bundleR.name]),
+      nameL: comparisonConfig.bundleL.name,
+      nameR: comparisonConfig.bundleR.name,
+      bundleNamesL: writable([comparisonConfig.bundleL.name]),
+      bundleNamesR: writable([comparisonConfig.bundleR.name]),
       thresholds: thresholdStrings,
       simplifyScenarios
     }

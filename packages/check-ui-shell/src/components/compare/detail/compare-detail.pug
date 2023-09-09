@@ -8,7 +8,19 @@ mixin related-items
   +each('viewModel.relatedItems as relatedItem')
     li.related-item { @html relatedItem }
 
-mixin rows
-  +each('viewModel.rows as rowViewModel')
+mixin graph-sections
+  +if('viewModel.graphSections.length > 0')
+    +each('viewModel.graphSections as graphsSectionViewModel')
+      .section-title { graphsSectionViewModel.title }
+      +each('graphsSectionViewModel.rows as graphsRowViewModel')
+        .row-container
+          //- XXX: Use `key` to force GraphsRow component to be recreated when the view model changes
+          //- (otherwise the "Dataset differences" section may show outdated items)
+          +key('graphsRowViewModel')
+            GraphsRow(viewModel!='{graphsRowViewModel}' align='left')
+    .section-title All Datasets
+
+mixin box-rows
+  +each('viewModel.detailRows as detailRowViewModel')
     .row-container
-      DetailRow(viewModel!='{rowViewModel}')
+      DetailRow(viewModel!='{detailRowViewModel}')

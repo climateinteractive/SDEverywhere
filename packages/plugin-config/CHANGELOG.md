@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.2.1](https://github.com/climateinteractive/SDEverywhere/compare/plugin-config-v0.2.0...plugin-config-v0.2.1) (2023-05-03)
+
+
+### Bug Fixes
+
+* add inputId property to InputSpec interface ([#321](https://github.com/climateinteractive/SDEverywhere/issues/321)) ([f461433](https://github.com/climateinteractive/SDEverywhere/commit/f461433df9ae013e73a76a1103c9cb8a5d22ab52)), closes [#320](https://github.com/climateinteractive/SDEverywhere/issues/320)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * peerDependencies
+    * @sdeverywhere/build bumped from ^0.3.0 to ^0.3.1
+
 ## [0.2.0](https://github.com/climateinteractive/SDEverywhere/compare/plugin-config-v0.1.1...plugin-config-v0.2.0) (2022-12-10)
 
 

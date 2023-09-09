@@ -3,5 +3,13 @@
 set -e # fail on error
 set -x # include all commands in logs
 
-# Run "ci:int-test" script for all JS-level integration test packages
-pnpm -r ci:int-test
+# Run "ci:int-test" script for all JS-level integration test packages.  We run
+# the tests in parallel using all available CPUs (`--workspace-concurrency=0`)
+# since there are no dependencies between the tests.
+pnpm \
+--parallel \
+--aggregate-output \
+--reporter=append-only \
+--workspace-concurrency=0 \
+-F "./tests/**" \
+-r ci:int-test

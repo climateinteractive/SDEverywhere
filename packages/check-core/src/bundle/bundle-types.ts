@@ -1,7 +1,7 @@
 // Copyright (c) 2021-2022 Climate Interactive / New Venture Fund
 
 import type { DataSource } from '../_shared/data-source'
-import type { Scenario } from '../_shared/scenario'
+import type { ScenarioSpec } from '../_shared/scenario-spec-types'
 import type { DatasetKey, VarId } from '../_shared/types'
 
 import type { ImplVar, InputVar, OutputVar } from './var-types'
@@ -92,10 +92,12 @@ export interface ModelSpec {
   outputVars: Map<DatasetKey, OutputVar>
   /** The map of all variables (both internal and exported) in this version of the model. */
   implVars: Map<DatasetKey, ImplVar>
+  /** The custom input variable aliases defined for this model. */
+  inputAliases?: Map<string, VarId>
   /** The custom input variable groups defined for this model. */
-  inputGroups: Map<string, InputVar[]>
+  inputGroups?: Map<string, InputVar[]>
   /** The custom dataset (output variable) groups defined for this model. */
-  datasetGroups: Map<string, DatasetKey[]>
+  datasetGroups?: Map<string, DatasetKey[]>
   /** The start time (year) for the model. */
   startTime?: number
   /** The end time (year) for the model. */
@@ -112,17 +114,12 @@ export interface BundleModel extends DataSource {
   /** The spec for the bundled model. */
   modelSpec: ModelSpec
   /**
-   * Return the set of context graphs to be displayed for the given dataset.  If left
-   * undefined, the set of graphs will be determined using the advertised graph specs.
-   */
-  getGraphsForDataset?(datasetKey: DatasetKey): BundleGraphId[]
-  /**
    * Load the data used to display the graph by running the model with inputs
    * configured for the given scenario.
    */
-  getGraphDataForScenario(scenario: Scenario, graphId: BundleGraphId): Promise<BundleGraphData>
+  getGraphDataForScenario(scenarioSpec: ScenarioSpec, graphId: BundleGraphId): Promise<BundleGraphData>
   /** Return the links to be displayed for the graph in the given scenario. */
-  getGraphLinksForScenario(scenario: Scenario, graphId: BundleGraphId): LinkItem[]
+  getGraphLinksForScenario(scenarioSpec: ScenarioSpec, graphId: BundleGraphId): LinkItem[]
 }
 
 /**

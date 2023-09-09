@@ -4,9 +4,12 @@
   "extends": "../../tsconfig-common.json",
   "compilerOptions": {
     "outDir": "./dist",
+    // Use "es2020" for import.meta
+    "module": "es2020",
+    "target": "es2020",
+    // Use "es2020" for Object.values()
+    "lib": ["es2020"],
     "allowJs": true,
-    "module": "es6",
-    "target": "es6",
     "noImplicitAny": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,

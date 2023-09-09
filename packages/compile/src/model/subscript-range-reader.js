@@ -1,6 +1,6 @@
 import path from 'path'
 import { ModelParser } from 'antlr4-vensim'
-import R from 'ramda'
+import * as R from 'ramda'
 import XLSX from 'xlsx'
 
 import { cFunctionName, matchRegex, readCsv } from '../_shared/helpers.js'

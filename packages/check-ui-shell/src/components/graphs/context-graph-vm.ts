@@ -6,10 +6,11 @@ import { writable } from 'svelte/store'
 import type {
   BundleGraphData,
   BundleGraphSpec,
-  CompareConfig,
-  CompareDataCoordinator,
+  ComparisonConfig,
+  ComparisonDataCoordinator,
+  ComparisonScenario,
   LinkItem,
-  Scenario
+  ScenarioSpec
 } from '@sdeverywhere/check-core'
 
 let requestId = 1
@@ -29,17 +30,18 @@ export class ContextGraphViewModel {
   private dataLoaded = false
 
   constructor(
-    compareConfig: CompareConfig,
-    private readonly dataCoordinator: CompareDataCoordinator,
+    comparisonConfig: ComparisonConfig,
+    private readonly dataCoordinator: ComparisonDataCoordinator,
     public readonly bundle: 'left' | 'right',
-    public readonly scenario: Scenario,
+    public readonly scenario: ComparisonScenario,
     public readonly graphSpec: BundleGraphSpec | undefined
   ) {
-    const b = bundle === 'right' ? compareConfig.bundleR : compareConfig.bundleL
+    const b = bundle === 'right' ? comparisonConfig.bundleR : comparisonConfig.bundleL
     this.bundleName = b.name
     this.datasetClass = `dataset-color-${bundle === 'right' ? '1' : '0'}`
     if (graphSpec) {
-      this.linkItems = b.model.getGraphLinksForScenario(scenario, graphSpec.id)
+      const scenarioSpec = bundle === 'right' ? scenario.specR : scenario.specL
+      this.linkItems = b.model.getGraphLinksForScenario(scenarioSpec, graphSpec.id)
       this.requestKey = `context-graph::${requestId++}::${bundle}::${graphSpec.id}::${scenario.key}`
       this.writableContent = writable(undefined)
       this.content = this.writableContent
@@ -52,16 +54,27 @@ export class ContextGraphViewModel {
     }
     this.dataRequested = true
 
-    this.dataCoordinator.requestGraphData(this.requestKey, this.bundle, this.scenario, this.graphSpec.id, graphData => {
-      if (!this.dataRequested) {
-        return
-      }
+    // TODO: We currently only fetch data for one side at a time; for the common case where we show
+    // context graphs side-by-side, it would be better to load the data for both sides in parallel
+    const specL: ScenarioSpec = this.bundle === 'left' ? this.scenario.specL : undefined
+    const specR: ScenarioSpec = this.bundle === 'right' ? this.scenario.specR : undefined
+    this.dataCoordinator.requestGraphData(
+      this.requestKey,
+      specL,
+      specR,
+      this.graphSpec.id,
+      (graphDataL, graphDataR) => {
+        if (!this.dataRequested) {
+          return
+        }
 
-      this.writableContent.set({
-        graphData
-      })
-      this.dataLoaded = true
-    })
+        const graphData = specR ? graphDataR : graphDataL
+        this.writableContent.set({
+          graphData
+        })
+        this.dataLoaded = true
+      }
+    )
   }
 
   clearData(): void {

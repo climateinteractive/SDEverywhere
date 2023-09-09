@@ -1,6 +1,6 @@
 {
   "name": "@sdeverywhere/plugin-config",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "files": [
     "dist/**",
     "template-config/**"
@@ -29,7 +29,8 @@
     "bundle": "tsup",
     "copy-types": "cp src/spec-types.ts dist",
     "build": "run-s bundle copy-types",
-    "ci:build": "run-s clean lint prettier:check test:ci type-check build"
+    "docs": "../../scripts/gen-docs.js",
+    "ci:build": "run-s clean lint prettier:check test:ci type-check build docs"
   },
   "dependencies": {
     "byline": "^5.0.0",
@@ -37,14 +38,14 @@
     "sanitize-html": "^2.7.1"
   },
   "peerDependencies": {
-    "@sdeverywhere/build": "^0.3.0"
+    "@sdeverywhere/build": "^0.3.1"
   },
   "devDependencies": {
     "@sdeverywhere/build": "*",
     "@types/byline": "^4.2.33",
     "@types/dedent": "^0.7.0",
     "@types/marked": "^4.0.1",
-    "@types/node": "^16.11.7",
+    "@types/node": "^20.5.7",
     "@types/sanitize-html": "^2.6.2",
     "@types/temp": "^0.9.1",
     "dedent": "^0.7.0",

@@ -1,4 +1,3 @@
-
 <!-- Copyright (c) 2021-2022 Climate Interactive / New Venture Fund -->
 
 <!-- SCRIPT -->
@@ -36,6 +35,16 @@ function onSelectBundleL(e: Event) {
 
 function onSelectBundleR(e: Event) {
   onSelectBundle('right', (e.target as HTMLSelectElement).value)
+}
+
+// XXX: Ignore the first event when we subscribe
+let firstSimplify = true
+$: if ($simplifyScenarios !== undefined) {
+  if (firstSimplify) {
+    firstSimplify = false
+  } else {
+    document.dispatchEvent(new CustomEvent('sde-check-simplify-scenarios-toggled'))
+  }
 }
 
 </script>

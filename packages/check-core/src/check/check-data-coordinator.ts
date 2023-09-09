@@ -1,14 +1,14 @@
 // Copyright (c) 2021-2022 Climate Interactive / New Venture Fund
 
 import { TaskQueue } from '../_shared/task-queue'
-import type { Scenario } from '../_shared/scenario'
+import type { ScenarioSpec } from '../_shared/scenario-spec-types'
 import type { Dataset, DatasetKey } from '../_shared/types'
 import type { BundleModel } from '../bundle/bundle-types'
 
 export type CheckDataRequestKey = string
 
 interface DataRequest {
-  scenario: Scenario
+  scenarioSpec: ScenarioSpec
   datasetKey: DatasetKey
 }
 
@@ -27,7 +27,7 @@ export class CheckDataCoordinator {
     this.taskQueue = new TaskQueue({
       process: async request => {
         // Run the model for this scenario
-        const result = await this.bundleModel.getDatasetsForScenario(request.scenario, [request.datasetKey])
+        const result = await this.bundleModel.getDatasetsForScenario(request.scenarioSpec, [request.datasetKey])
         const dataset = result.datasetMap.get(request.datasetKey)
         return {
           dataset
@@ -38,12 +38,12 @@ export class CheckDataCoordinator {
 
   requestDataset(
     requestKey: CheckDataRequestKey,
-    scenario: Scenario,
+    scenarioSpec: ScenarioSpec,
     datasetKey: DatasetKey,
     onResponse: (dataset: Dataset) => void
   ): void {
     const request: DataRequest = {
-      scenario,
+      scenarioSpec,
       datasetKey
     }
     this.taskQueue.addTask(requestKey, request, response => {
