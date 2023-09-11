@@ -4,12 +4,81 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 PROJ_DIR=$SCRIPT_DIR/..
 
 set -e # fail on error
-set -x # include all commands in logs
+
+# Normally `set -x` will log commands to stderr; the following tells bash to log them
+# to stdout instead
+BASH_XTRACEFD=1
 
 cd "$PROJ_DIR"
 
+function run_in_workspaces {
+  # The mode ("parallel" or "ordered")
+  local mode=$1
+  [[ $mode = "parallel" ]] && parallel_arg="--parallel" || parallel_arg=""
+  # The command to run (e.g., "lint")
+  local cmd=$2
+
+  # Enable printing command in logs
+  set -x
+
+  # Run the command in all matching workspaces.  This will also log the time
+  # it takes to run the commands (the time command prints to stderr by default,
+  # so we redirect to stdout instead).  Note that `--workspace-concurrency=0`
+  # will make pnpm use the number of available CPUs for parallel operations.
+  time ( \
+  pnpm \
+  $parallel_arg \
+  --aggregate-output \
+  --reporter=append-only \
+  --workspace-concurrency=0 \
+  --filter=./packages/** \
+  --filter=./examples/sample-* \
+  -r $cmd \
+  ) 2>&1
+
+  # Disable printing command in logs
+  set +x
+}
+
+function echo_separator {
+  local label=$1
+  echo
+  echo "=========== $label ==========="
+  echo
+}
+
+# Clean all packages
+echo_separator CLEAN
+run_in_workspaces parallel clean
+
+# Build all packages.  Unlike the other steps, we don't use the `--parallel` option
+# but rely on pnpm to do topological sorting (while still using the )
+echo_separator BUILD
+run_in_workspaces ordered build
+
+# Run prettier on the files in the top-level directory, and then in all packages
+echo_separator PRETTIER
 pnpm run prettier-local:check
-pnpm run -r --workspace-concurrency=1 ci:build
+echo
+run_in_workspaces parallel prettier:check
+
+# Run lint command in all packages
+echo_separator LINT
+run_in_workspaces parallel lint
+
+# Run type-check in all packages.  Note that for packages that use `tsup` to generate
+# .d.ts files, the build step will have already performed type checking, but `tsup`
+# doesn't type check the test files, so we do that here just to cover all bases.
+echo_separator "TYPE CHECK"
+run_in_workspaces parallel type-check
+
+# Run test command in all packages
+echo_separator TEST
+run_in_workspaces parallel test:ci
+
+# Generate API docs for all packages
+echo_separator DOCS
+run_in_workspaces parallel docs
 
 # Fail the build if there are any untracked or modified files.  This usually
 # only occurs if the typedoc-generated docs need updating after any API

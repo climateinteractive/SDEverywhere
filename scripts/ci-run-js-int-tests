@@ -9,12 +9,18 @@ set -x # include all commands in logs
 cd "$PROJ_DIR"
 
 # Build the subset of packages that are required for running the JS-level
-# integration tests
-pnpm -F build build
-pnpm -F plugin-wasm build
-pnpm -F plugin-worker build
-pnpm -F runtime build
-pnpm -F runtime-async build
+# integration tests.  We use `--workspace-concurrency=0` to use all
+# available CPUs, but let pnpm handle the topological sorting.
+pnpm \
+--aggregate-output \
+--reporter=append-only \
+--workspace-concurrency=0 \
+-F build \
+-F plugin-wasm \
+-F plugin-worker \
+-F runtime \
+-F runtime-async \
+-r build
 
 # Run the JS-level integration tests that exercise the build and runtime packages
 pnpm run test:js-int

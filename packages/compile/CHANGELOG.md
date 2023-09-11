@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.6](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.5...compile-v0.7.6) (2023-09-05)
+
+
+### Bug Fixes
+
+* change ramda imports to wildcard style ([#350](https://github.com/climateinteractive/SDEverywhere/issues/350)) ([f132c8d](https://github.com/climateinteractive/SDEverywhere/commit/f132c8d46411257474ec985e92c7a52bf0408542)), closes [#349](https://github.com/climateinteractive/SDEverywhere/issues/349)
+
 ## [0.7.5](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.4...compile-v0.7.5) (2023-01-26)
 
 

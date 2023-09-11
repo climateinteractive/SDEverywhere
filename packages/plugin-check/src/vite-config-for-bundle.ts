@@ -1,10 +1,10 @@
 // Copyright (c) 2022 Climate Interactive / New Venture Fund
 
 import { existsSync, statSync } from 'fs'
-import { dirname, join as joinPath, relative, resolve as resolvePath } from 'path'
+import { basename, dirname, join as joinPath, relative, resolve as resolvePath } from 'path'
 import { fileURLToPath } from 'url'
 
-import type { InlineConfig, Plugin as VitePlugin } from 'vite'
+import type { InlineConfig, ResolvedConfig, Plugin as VitePlugin } from 'vite'
 import { nodeResolve } from '@rollup/plugin-node-resolve'
 
 import type { ModelSpec } from '@sdeverywhere/build'
@@ -93,6 +93,55 @@ export const dataSizeInBytes = ${dataSizeInBytes};
   }
 }
 
+/**
+ * XXX: This overrides the built-in `vite:resolve` plugin so that we can intercept `resolveId`
+ * calls for the threads package.
+ */
+function overrideViteResolvePlugin(viteConfig: ResolvedConfig) {
+  const resolvePlugin = viteConfig.plugins.find(p => p.name === 'vite:resolve')
+  if (resolvePlugin === undefined) {
+    throw new Error('Failed to locate the built-in vite:resolve plugin')
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const originalResolveId = resolvePlugin.resolveId as any
+  resolvePlugin.resolveId = async function resolveId(id, importer, options) {
+    if (id.startsWith('./implementation') && importer.includes('threads/dist-esm')) {
+      // XXX: The default resolver behavior will look at the `browser` mappings in
+      // `threads/package.json` and try to resolve `implementation.js` to
+      // `implementation.browser.js` because it thinks we're in a browser-only context.
+      // We don't want that.  Instead we want to keep the generic implementation from
+      // threads that chooses between the Node and browser implementations at runtime.
+      //
+      // If we get here, importer will be something like:
+      //   /.../node_modules/.pnpm/threads@1.7.0/node_modules/threads/dist-esm/{worker,master}/index.js
+      // And id will be:
+      //   ./implementation
+      // So resolve the ID to:
+      //   /.../node_modules/.pnpm/threads@1.7.0/node_modules/threads/dist-esm/{worker,master}/implementation.js
+      //
+      // Or, importer will be:
+      //   /.../node_modules/.pnpm/threads@1.7.0/node_modules/threads/dist-esm/{worker,master}/implementation.js
+      // And id will be one of:
+      //   ./implementation.browser
+      //   ./implementation.node
+      //   ./implementation.worker_threads
+      // So resolve the ID to:
+      //   /.../node_modules/.pnpm/threads@1.7.0/node_modules/threads/dist-esm/{worker,master}/implementation.{...}.js
+      const idFileName = id.replace('./', '')
+      const importerFileName = basename(importer)
+      const resolvedId = importer.replace(importerFileName, `${idFileName}.js`)
+      return {
+        id: resolvedId,
+        moduleSideEffects: false
+      }
+    }
+
+    // For all other cases, fall back on the default resolver
+    return originalResolveId.call(this, id, importer, options)
+  }
+}
+
 export async function createViteConfigForBundle(prepDir: string, modelSpec: ModelSpec): Promise<InlineConfig> {
   // Use `template-bundle` as the root directory for the bundle project
   const root = resolvePath(__dirname, '..', 'template-bundle')
@@ -130,8 +179,15 @@ export async function createViteConfigForBundle(prepDir: string, modelSpec: Mode
         // XXX: Prevent Vite from using the `browser` section of `threads/package.json`
         // since we want to force the use of the general module (under dist-esm) that chooses
         // the correct implementation (Web Worker vs worker_threads) at runtime.  Currently
-        // Vite's library mode is browser focused, so using a `customResolver` seems to be
-        // the easiest way to prevent Vite from picking up the `browser` exports.
+        // Vite's library mode is browser focused and generally chooses the right imports,
+        // except in the case of the threads package where we want to use the generic
+        // `implementation.js` that chooses between Web Worker and worker_threads at runtime.
+        // Note that we could in theory set `resolve.browserField` to false, but that would
+        // make Vite not use the browser field for all other packages, and there is not
+        // currently a way to tell Vite to use the browser field on a case-by-case basis.
+        // So for now we need this workaround here to make it resolve to `dist-esm`, and then
+        // a second workaround in `overrideViteResolvePlugin` to prevent the resolver from
+        // using the browser field when resolving the threads package.
         {
           find: 'threads',
           replacement: 'threads',
@@ -153,7 +209,17 @@ export async function createViteConfigForBundle(prepDir: string, modelSpec: Mode
 
     plugins: [
       // Use a virtual module plugin to inject the model spec values
-      injectModelSpec(prepDir, modelSpec)
+      injectModelSpec(prepDir, modelSpec),
+
+      // XXX: Install a wrapper around the built-in `vite:resolve` plugin so that we can
+      // override the default resolver behavior that tries to resolve the `browser` section
+      // of the `package.json` for the threads package.
+      {
+        name: 'vite-plugin-override-resolve',
+        configResolved(viteConfig) {
+          overrideViteResolvePlugin(viteConfig)
+        }
+      }
     ],
 
     build: {
@@ -161,6 +227,9 @@ export async function createViteConfigForBundle(prepDir: string, modelSpec: Mode
       // note that this must be relative to the project `root`
       outDir,
       emptyOutDir: false,
+
+      // Uncomment for debugging purposes
+      // minify: false,
 
       lib: {
         entry: './src/index.ts',
@@ -177,8 +246,8 @@ export async function createViteConfigForBundle(prepDir: string, modelSpec: Mode
         // in its Node implementation.  This import ensures that threads.js uses
         // the native `worker_threads` implementation when using the bundle in a
         // Node environment.  When importing the bundle for use in the browser,
-        // Vite will transform this import into an empty module (it does not seem
-        // to be necessary to define a polyfill).
+        // Vite will transform this import into an empty module due to the empty
+        // polyfill that is configured in `vite-config-for-report.ts`.
         output: {
           banner: `
 import * as worker_threads from 'worker_threads'

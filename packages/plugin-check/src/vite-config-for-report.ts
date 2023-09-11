@@ -107,26 +107,26 @@ export function createViteConfigForReport(
       // find a less fragile solution.
       include: [
         // from check-core
-        'assert-never',
-        'ajv',
-        'neverthrow',
-        'yaml',
+        '@sdeverywhere/check-core > assert-never',
+        '@sdeverywhere/check-core > ajv',
+        '@sdeverywhere/check-core > neverthrow',
+        '@sdeverywhere/check-core > yaml',
         // from check-ui-shell
-        'fontfaceobserver',
-        'copy-text-to-clipboard',
-        'chart.js'
+        '@sdeverywhere/check-ui-shell > fontfaceobserver',
+        '@sdeverywhere/check-ui-shell > copy-text-to-clipboard',
+        '@sdeverywhere/check-ui-shell > chart.js'
       ],
 
       exclude: [
         // XXX: The threads.js implementation references `tiny-worker` as an optional
         // dependency, but it doesn't get used at runtime, so we can just exclude it
         // so that Vite doesn't complain in dev mode
-        'tiny-worker',
+        'tiny-worker'
 
         // XXX: Similarly, chart.js treats `moment` as an optional dependency, but we
         // don't use it at runtime; we need to exclude it here, otherwise Vite will
         // complain about missing dependencies in dev mode
-        'moment'
+        // 'moment'
       ]
     },
 
@@ -150,9 +150,11 @@ export function createViteConfigForReport(
         // implementation of threads.js; this allows us to use one bundle that works in both
         // Node and browser environments
         noopPolyfillAlias('events'),
+        noopPolyfillAlias('fs'),
         noopPolyfillAlias('os'),
         noopPolyfillAlias('path'),
-        noopPolyfillAlias('url')
+        noopPolyfillAlias('url'),
+        noopPolyfillAlias('worker_threads')
       ]
     },
 
@@ -175,11 +177,12 @@ export function createViteConfigForReport(
       // the glob handler (which requires the glob to be injected as a literal)
       replace({
         preventAssignment: true,
+        delimiters: ['', ''],
         values: {
           // Inject the path for baseline bundles
-          __BASELINE_BUNDLES_PATH__: JSON.stringify(baselinesPath)
+          './__BASELINE_BUNDLES_PATH__': baselinesPath
         }
-      }) as PluginOption
+      }) as unknown as PluginOption
     ],
 
     build: {

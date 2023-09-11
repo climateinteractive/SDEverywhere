@@ -5,6 +5,18 @@
 An interface to the generated WebAssembly model.  Allows for running the model with
 a given set of input values, producing a set of output values.
 
+## Constructors
+
+### constructor
+
+**new WasmModel**(`wasmModule`)
+
+#### Parameters
+
+| Name | Type | Description |
+| :------ | :------ | :------ |
+| `wasmModule` | [`WasmModule`](../interfaces/WasmModule.md) | The `WasmModule` that provides access to the native functions. |
+
 ## Properties
 
 ### startTime
@@ -36,18 +48,6 @@ ___
  `Readonly` **numSavePoints**: `number`
 
 The number of save points for each output.
-
-## Constructors
-
-### constructor
-
-**new WasmModel**(`wasmModule`)
-
-#### Parameters
-
-| Name | Type | Description |
-| :------ | :------ | :------ |
-| `wasmModule` | [`WasmModule`](../interfaces/WasmModule.md) | The `WasmModule` that provides access to the native functions. |
 
 ## Methods
 

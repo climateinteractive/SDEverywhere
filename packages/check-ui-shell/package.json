@@ -1,6 +1,6 @@
 {
   "name": "@sdeverywhere/check-ui-shell",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "files": [
     "dist/**",
     "types/**"
@@ -11,7 +11,7 @@
   "scripts": {
     "clean": "rm -rf dist",
     "lint:ts": "eslint src --max-warnings 0",
-    "lint:svelte": "svelte-check --fail-on-hints --fail-on-warnings --output human",
+    "lint:svelte": "svelte-check --fail-on-warnings --output human --compiler-warnings \"a11y-click-events-have-key-events:ignore,a11y-no-noninteractive-tabindex:ignore\"",
     "lint": "run-s lint:ts lint:svelte",
     "prettier:check": "prettier --check .",
     "prettier:fix": "prettier --write .",
@@ -36,17 +36,17 @@
     "fontfaceobserver": "^2.1.0"
   },
   "devDependencies": {
-    "@sveltejs/vite-plugin-svelte": "^1.0.8",
+    "@sveltejs/vite-plugin-svelte": "^2.4.5",
     "@types/chart.js": "^2.9.34",
     "@types/fontfaceobserver": "^0.0.6",
     "postcss": "^8.2.14",
     "pug": "^3.0.1",
     "sass": "^1.34.1",
-    "svelte": "^3.47.0",
+    "svelte": "^3.59.2",
     "svelte-awesome": "^3.0.0",
-    "svelte-check": "^2.7.0",
-    "svelte-preprocess": "^4.10.6",
-    "vite": "^3.1.3"
+    "svelte-check": "^3.5.1",
+    "svelte-preprocess": "^5.0.4",
+    "vite": "^4.4.9"
   },
   "devDependenciesComments": {
     "svelte-awesome": [

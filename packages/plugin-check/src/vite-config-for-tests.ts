@@ -3,7 +3,8 @@
 import { dirname, relative, resolve as resolvePath } from 'path'
 import { fileURLToPath } from 'url'
 
-import type { InlineConfig } from 'vite'
+import type { InlineConfig, PluginOption } from 'vite'
+import replace from '@rollup/plugin-replace'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
@@ -44,11 +45,20 @@ export function createViteConfigForTests(projDir: string, prepDir: string, mode:
     // TODO: Disable vite output by default?
     // logLevel: 'silent',
 
-    // Inject special values into the generated JS
-    define: {
-      // Inject the glob pattern for matching check yaml files
-      __YAML_PATH__: JSON.stringify(yamlPath)
-    },
+    plugins: [
+      // Inject special values into the generated JS
+      // TODO: We currently have to use `@rollup/plugin-replace` instead of Vite's
+      // built-in `define` feature because the latter does not seem to run before
+      // the glob handler (which requires the glob to be injected as a literal)
+      replace({
+        preventAssignment: true,
+        delimiters: ['', ''],
+        values: {
+          // Inject the glob pattern for matching check yaml files
+          './__YAML_PATH__': yamlPath
+        }
+      }) as unknown as PluginOption
+    ],
 
     build: {
       // Write output files to the configured directory (instead of the default `dist`);

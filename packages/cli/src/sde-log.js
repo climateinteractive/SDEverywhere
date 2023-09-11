@@ -3,7 +3,7 @@ import path from 'path'
 
 import B from 'bufx'
 import byline from 'byline'
-import R from 'ramda'
+import * as R from 'ramda'
 
 import { canonicalName } from '@sdeverywhere/compile'
 
