@@ -4,6 +4,9 @@ import * as R from 'ramda'
 
 import { decanonicalize, isIterable, listConcat, strlist, vlog, vsort } from '../_shared/helpers.js'
 import {
+  addIndex,
+  allAliases,
+  allDimensions,
   indexNamesForSubscript,
   isDimension,
   isIndex,
@@ -14,7 +17,7 @@ import {
 import { createParser } from '../parse/parser.js'
 
 import EquationReader from './equation-reader.js'
-import { readSubscriptRanges, resolveSubscriptRanges } from './read-subscripts.js'
+import SubscriptRangeReader from './subscript-range-reader.js'
 import toposort from './toposort.js'
 import VarNameReader from './var-name-reader.js'
 import Variable from './variable.js'
@@ -35,15 +38,36 @@ const PRINT_INIT_GRAPH = false
 const PRINT_AUX_GRAPH = false
 const PRINT_LEVEL_GRAPH = false
 
+/**
+ * Read the given model parse tree and resolve all subscript and variable/equation definitions.
+ *
+ * Note that this function currently does not return anything and instead stores the parsed subscript
+ * definitions in the `subscript` module and the parsed/analyzed variables in this module.
+ *
+ * @param {import('../parse/parser.js').VensimModelParseTree} parseTree The Vensim parse tree.
+ * @param {*} spec The parsed `spec.json` object.
+ * @param {Map<string, any>} extData The map of datasets from external `.dat` files.
+ * @param {Map<string, any>} directData The mapping of dataset name used in a `GET DIRECT DATA`
+ * call (e.g., `?data`) to the tabular data contained in the loaded data file.
+ * @param {string} modelDirname The path to the directory containing the model (used for resolving data
+ * files for `GET DIRECT SUBSCRIPT`).
+ * @param {*} opts An optional object used by tests to stop the read process after a specific phase.
+ */
 function read(parseTree, spec, extData, directData, modelDirname, opts) {
   // Some arrays need to be separated into variables with individual indices to
   // prevent eval cycles. They are manually added to the spec file.
   let specialSeparationDims = spec.specialSeparationDims
+
   // Subscript ranges must be defined before reading variables that use them.
   readSubscriptRanges(parseTree, modelDirname)
+  if (opts?.stopAfterReadSubscripts) return
   resolveSubscriptRanges(spec.dimensionFamilies)
+  if (opts?.stopAfterResolveSubscripts) return
+
   // Read variables from the model parse tree.
   readVariables(parseTree, specialSeparationDims, directData)
+  if (opts?.stopAfterReadVariables) return
+
   if (spec) {
     // If the spec file contains `input/outputVarNames` (with full Vensim variable names)
     // convert those to C names first.  Otherwise, use `input/outputNames` which are already
@@ -59,17 +83,178 @@ function read(parseTree, spec, extData, directData, modelDirname, opts) {
       inputVars = spec.inputVars
     }
   }
+
   // Analyze model equations to fill in more details about variables.
   analyze()
-  if (opts?.stopAfterAnalyze) {
-    return
-  }
+  if (opts?.stopAfterAnalyze) return
+
   // Check that all input and output vars in the spec actually exist in the model.
   checkSpecVars(spec, extData)
+
   // Remove variables that are not referenced by an input or output variable.
   removeUnusedVariables(spec)
+
   // Resolve duplicate declarations by converting to one variable type.
   resolveDuplicateDeclarations()
+}
+
+/**
+ * Read subscript ranges from the given model.
+ *
+ * Note that this function currently does not return anything and instead stores the parsed subscript
+ * range definitions in the `subscript` module.
+ *
+ * @param {import('../parse/parser.js').VensimModelParseTree} parseTree The Vensim parse tree.
+ * @param {string} modelDirname The path to the directory containing the model (used for resolving data
+ * files for `GET DIRECT SUBSCRIPT`).
+ */
+function readSubscriptRanges(parseTree, modelDirname) {
+  // Read subscript ranges from the model.
+  let subscriptRangeReader = new SubscriptRangeReader(modelDirname)
+  subscriptRangeReader.visitModel(parseTree)
+}
+
+/**
+ * Process the previously read subscript/dimension definitions (stored in the `subscript` module) to
+ * resolve aliases, families, and indices.
+ *
+ * Note that this function currently does not return anything and only updates the set of dimension
+ * and subscript definitions in the `subscript` module.
+ *
+ * @param {Object.<string, string>} dimensionFamilies The optional mapping of dimension name to family name
+ * as provided in a `spec.json` file.
+ */
+function resolveSubscriptRanges(dimensionFamilies) {
+  let allDims = allDimensions()
+
+  // Expand dimensions that appeared in subscript range definitions into indices.
+  // Repeat until there are only indices in dimension values.
+  let dimFoundInValue
+  do {
+    dimFoundInValue = false
+    for (let dim of allDims) {
+      if (dim.value !== '') {
+        let value = R.flatten(
+          R.map(subscript => (isDimension(subscript) ? sub(subscript).value : subscript), dim.value)
+        )
+        if (!R.equals(value, dim.value)) {
+          dimFoundInValue = true
+          dim.value = value
+          dim.size = value.length
+        }
+      }
+    }
+  } while (dimFoundInValue)
+
+  // Fill in subscript aliases from their model families.
+  for (let dim of allAliases()) {
+    if (dim.value === '') {
+      let refDim = sub(dim.family)
+      dim.value = refDim.value
+      dim.size = refDim.size
+      dim.modelValue = refDim.modelValue
+      allDims.push(dim)
+    }
+  }
+
+  // Update the families of dimensions. At this point, all dimensions have their family
+  // provisionally set to their own dimension name.
+  let dimComparator = (dim1, dim2) => {
+    // Sort dimensions by size ascending, by name descending.
+    if (dim1.size < dim2.size) {
+      return -1
+    } else if (dim1.size > dim2.size) {
+      return 1
+    } else if (dim1.name > dim2.name) {
+      return -1
+    } else if (dim1.name < dim2.name) {
+      return 1
+    } else {
+      return 0
+    }
+  }
+  for (let dim of allDims) {
+    // Try looking up the family in the spec file dimension families if they exist.
+    if (dimensionFamilies && dimensionFamilies[dim.name]) {
+      dim.family = dimensionFamilies[dim.name]
+    } else {
+      // Find the dimension in this family with the largest number of values.
+      // This is the "maximal" dimension that serves as the subscript family.
+      // If two dimensions have the same maximal size, choose the one that comes
+      // first in alpha sort order, by convention.
+      // Take the first index in the dimension.
+      let index = dim.value[0]
+      let familyDims = R.sort(
+        dimComparator,
+        R.filter(thisDim => R.contains(index, thisDim.value), allDims)
+      )
+      if (familyDims.length > 0) {
+        dim.family = R.last(familyDims).name
+      } else {
+        console.error(`No family found for dimension ${dim.name}`)
+      }
+    }
+  }
+
+  // Define indices in order from the maximal (family) dimension.
+  // Until now, only dimensions have been defined. We wait until dimension families have been
+  // determined to define indices, so that they will belong to exactly one dimension (the family).
+  for (let dim of allDims) {
+    if (dim.family === dim.name) {
+      for (let i = 0; i < dim.value.length; i++) {
+        addIndex(dim.value[i], i, dim.family)
+      }
+    }
+  }
+
+  // When there is a subscript mapping, the mapping value pulled from the subscript range
+  // in the model is either a map-to dimension with the same cardinality as the map-from
+  // dimension, or a list of subscripts in the map-to dimension with the same cardinality
+  // as the map-from dimension. The mapping value must be transformed into a list of
+  // map-from indices in one-to-one correspondence with the map-to indices.
+  for (let fromDim of allDims) {
+    for (let toDimName in fromDim.mappings) {
+      let toDim = sub(toDimName)
+      let mappingValue = fromDim.mappings[toDimName]
+      let invertedMappingValue = []
+      if (R.isEmpty(mappingValue)) {
+        // When there is no list of map-to subscripts, list fromDim indices.
+        invertedMappingValue = fromDim.value
+      } else {
+        // The mapping value is a list of map-to subscripts.
+        // List fromDim indices in the order in which they map onto toDim indices.
+        // Indices are filled in the mapping value by map-to index number as they
+        // occur in the map-from dimension.
+        let setMappingValue = (toSubName, toIndNumber, fromIndName) => {
+          if (Number.isInteger(toIndNumber) && toIndNumber >= 0 && toIndNumber < toDim.size) {
+            invertedMappingValue[toIndNumber] = fromIndName
+          } else {
+            console.error(
+              `ERROR: map-to index "${toSubName}" not found when mapping from dimension "${fromDim.name}" index "${fromIndName}"`
+            )
+          }
+        }
+        for (let i = 0; i < fromDim.value.length; i++) {
+          let fromIndName = fromDim.value[i]
+          let toSubName = mappingValue[i]
+          let toSub = sub(toSubName)
+          if (isDimension(toSubName)) {
+            // Fill in indices from a dimension in the mapping value.
+            for (let toIndName of toSub.value) {
+              let toIndNumber = toDim.value.indexOf(toIndName)
+              setMappingValue(toSubName, toIndNumber, fromIndName)
+            }
+          } else {
+            // Fill in a single index from an index in the mapping value.
+            let toIndNumber = toDim.value.indexOf(toSub.name)
+            setMappingValue(toSubName, toIndNumber, fromIndName)
+          }
+        }
+      }
+      // Replace toDim subscripts in the mapping value with fromDim subscripts that map to them.
+      fromDim.mappings[toDimName] = invertedMappingValue
+    }
+  }
 }
 
 /**
@@ -924,7 +1109,6 @@ export default {
   printRefIdTest,
   printVarList,
   read,
-  readVariables,
   refIdForVar,
   refIdsWithName,
   resetModelState,

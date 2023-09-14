@@ -3,25 +3,31 @@
 import { describe, expect, it } from 'vitest'
 
 import { allSubscripts, resetSubscriptsAndDimensions } from '../_shared/subscript'
-import { readSubscriptRanges, resolveSubscriptRanges } from './read-subscripts'
+
+import Model from './model'
 
 import { dim, dimMapping, parseVensimModel, sampleModelDir, sub } from './_tests/test-support'
 
 /**
- * This is a shorthand for the following steps used to read the "raw" subscript ranges only
- * (without resolving):
+ * This is a shorthand for the following steps to read (and optionally resolve) subscript ranges:
  *   - parseVensimModel
  *   - readSubscriptRanges
+ *   - resolveSubscriptRanges (if `resolve` is true)
  *   - allSubscripts
  *
  * TODO: Update the return type once type info is added for `allSubscripts`
  */
-function readSubscripts(modelName: string): any[] {
+function readSubscripts(modelName: string, resolve = false): any[] {
   // XXX: This is needed due to subs/dims being in module-level storage
   resetSubscriptsAndDimensions()
+
   const parsedModel = parseVensimModel(modelName)
   const modelDir = sampleModelDir(modelName)
-  readSubscriptRanges(parsedModel, modelDir)
+  Model.read(parsedModel, /*spec=*/ {}, /*extData=*/ undefined, /*directData=*/ undefined, modelDir, {
+    stopAfterReadSubscripts: !resolve,
+    stopAfterResolveSubscripts: true
+  })
+
   return allSubscripts()
 }
 
@@ -35,13 +41,7 @@ function readSubscripts(modelName: string): any[] {
  * TODO: Update the return type once type info is added for `allSubscripts`
  */
 function readAndResolveSubscripts(modelName: string): any[] {
-  // XXX: This is needed due to subs/dims being in module-level storage
-  resetSubscriptsAndDimensions()
-  const parsedModel = parseVensimModel(modelName)
-  const modelDir = sampleModelDir(modelName)
-  readSubscriptRanges(parsedModel, modelDir)
-  resolveSubscriptRanges(undefined)
-  return allSubscripts()
+  return readSubscripts(modelName, /*resolve=*/ true)
 }
 
 describe('readSubscriptRanges + resolveSubscriptRanges', () => {

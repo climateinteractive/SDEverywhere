@@ -2,46 +2,13 @@
 
 import { describe, expect, it } from 'vitest'
 
-import { canonicalName } from '../_shared/helpers'
+import { canonicalName, resetHelperState } from '../_shared/helpers'
 import { resetSubscriptsAndDimensions } from '../_shared/subscript'
 
 import Model from './model'
-import { readSubscriptRanges, resolveSubscriptRanges } from './read-subscripts'
 import { default as VariableImpl } from './variable'
 
-import { parseVensimModel, sampleModelDir } from './_tests/test-support'
-
-type VariableType = 'const' | 'aux' | 'level' | 'data'
-
-// TODO: Some of these default to empty string, could be default to omitted/undefined instead
-interface Variable {
-  modelLHS: string // 'Target Capacity'
-  modelFormula: string // 'ACTIVE INITIAL(Capacity*Utilization Adjustment,Initial Target Capacity)'
-  varName: string // '_target_capacity'
-  subscripts: string[] // TODO: sub type
-  exceptSubscripts: string[] // TODO: This is only used during parsing, doesn't need to be exposed
-  separationDims: string[] // TODO: dim type
-  directDataArgs?: { file: string; tab: string; timeRowOrCol: string; startCell: string }
-  directConstArgs?: { file: string; tab: string; startCell: string }
-  range: any[] // TODO: range type
-  points: any[] // TODO: point type
-  refId: string
-  varType: VariableType
-  // TODO: Remove empty string variant
-  varSubtype: '' | 'fixedDelay' | 'depreciation'
-  references: string[]
-  initReferences: string[]
-  hasInitValue: boolean
-  lookupArgVarName: string
-  smoothVarRefId: string
-  trendVarName: string
-  npvVarName: string
-  delayVarRefId: string
-  delayTimeVarName: string
-  fixedDelayVarName: string
-  depreciationVarName: string
-  includeInOutput: boolean
-}
+import { parseVensimModel, sampleModelDir, type Variable } from './_tests/test-support'
 
 /**
  * This is a shorthand for the following steps to read variables:
@@ -51,15 +18,16 @@ interface Variable {
  *   - readVariables
  */
 function readSubscriptsAndVariables(modelName: string): Variable[] {
-  // XXX: These two steps are needed due to subs/dims and variables being in module-level storage
+  // XXX: These steps are needed due to subs/dims and variables being in module-level storage
+  resetHelperState()
   resetSubscriptsAndDimensions()
   Model.resetModelState()
 
   const parsedModel = parseVensimModel(modelName)
   const modelDir = sampleModelDir(modelName)
-  readSubscriptRanges(parsedModel, modelDir)
-  resolveSubscriptRanges(undefined)
-  Model.readVariables(parsedModel, undefined, undefined)
+  Model.read(parsedModel, /*spec=*/ {}, /*extData=*/ undefined, /*directData=*/ undefined, modelDir, {
+    stopAfterReadVariables: true
+  })
 
   // XXX: Strip out the ANTLR eqnCtx to avoid vitest hang when comparing
   return Model.variables.map(v => {
