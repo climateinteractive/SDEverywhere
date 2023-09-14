@@ -38,6 +38,15 @@ const PRINT_INIT_GRAPH = false
 const PRINT_AUX_GRAPH = false
 const PRINT_LEVEL_GRAPH = false
 
+// XXX: This is needed for tests due to variables being in module-level storage
+function resetModelState() {
+  variables.length = 0
+  inputVars.length = 0
+  variablesByName.clear()
+  constantExprs.clear()
+  nonAtoANames = Object.create(null)
+}
+
 /**
  * Read the given model parse tree and resolve all subscript and variable/equation definitions.
  *
@@ -282,15 +291,6 @@ function readVariables(tree, specialSeparationDims, directData) {
   v.modelLHS = 'Time'
   v.varName = '_time'
   addVariable(v)
-}
-
-// XXX: This is needed for tests due to variables being in module-level storage
-function resetModelState() {
-  variables.length = 0
-  inputVars.length = 0
-  variablesByName.clear()
-  constantExprs.clear()
-  nonAtoANames = Object.create(null)
 }
 
 function analyze() {
