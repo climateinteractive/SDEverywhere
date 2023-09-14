@@ -5,23 +5,27 @@ import { addIndex, allAliases, allDimensions, isDimension, sub } from '../_share
 import SubscriptRangeReader from './subscript-range-reader.js'
 
 /**
- * Read subscript ranges from the given model and then process the subscript/dimension
- * definitions to resolve aliases, families, and indices.
+ * Read subscript ranges from the given model.
  *
- * @param {import('../parse/parser.js').VensimModelParseTree} tree
+ * Note that this function currently does not return anything and instead stores the parsed subscript
+ * range definitions in the `subscript` module.
+ *
+ * @param {import('../parse/parser.js').VensimModelParseTree} parseTree The Vensim parse tree.
  * @param {string} modelDirname The path to the directory containing the model (used for resolving data
  * files for `GET DIRECT SUBSCRIPT`).
  */
-export function readSubscriptRanges(tree, modelDirname) {
+export function readSubscriptRanges(parseTree, modelDirname) {
   // Read subscript ranges from the model.
   let subscriptRangeReader = new SubscriptRangeReader(modelDirname)
-  subscriptRangeReader.visitModel(tree)
+  subscriptRangeReader.visitModel(parseTree)
 }
 
 /**
- * Process the previously read subscript/dimension definitions to resolve aliases, families, and indices.
+ * Process the previously read subscript/dimension definitions (stored in the `subscript` module) to
+ * resolve aliases, families, and indices.
  *
- * @param {Object.<string, string>} dimensionFamilies
+ * @param {Object.<string, string>} dimensionFamilies The optional mapping of dimension name to family name
+ * as provided in a `spec.json` file.
  */
 export function resolveSubscriptRanges(dimensionFamilies) {
   let allDims = allDimensions()

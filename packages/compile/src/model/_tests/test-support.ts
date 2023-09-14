@@ -36,6 +36,49 @@ export interface Dim {
   mappings: DimCMappings // { _dima: ['_b1', '_b2', '_b3'] }
 }
 
+export interface Sub {
+  name: SubCName // '_b1'
+  value: number // 0
+  size: number // 1
+  family: DimCName // '_dima'
+  // TODO: Is mappings ever used for subscripts?  (Currently it always seems to be set to empty object.)
+  mappings: {} // {}
+}
+
+export type VariableType = 'const' | 'aux' | 'level' | 'initial' | 'lookup' | 'data'
+
+// TODO: Some of these default to empty string, could be default to omitted/undefined instead
+export interface Variable {
+  modelLHS: string // 'Target Capacity'
+  modelFormula: string // 'ACTIVE INITIAL(Capacity*Utilization Adjustment,Initial Target Capacity)'
+  varName: string // '_target_capacity'
+  subscripts: string[] // TODO: sub type
+  exceptSubscripts: string[] // TODO: This is only used during parsing, doesn't need to be exposed
+  separationDims: string[] // TODO: dim type
+  directDataArgs?: { file: string; tab: string; timeRowOrCol: string; startCell: string }
+  directConstArgs?: { file: string; tab: string; startCell: string }
+  range: [number, number][]
+  points: [number, number][]
+  refId: string
+  varType: VariableType
+  // TODO: Remove empty string variant
+  varSubtype: '' | 'fixedDelay' | 'depreciation'
+  referencedFunctionNames?: string[]
+  referencedLookupVarNames?: string[]
+  references: string[]
+  initReferences: string[]
+  hasInitValue: boolean
+  lookupArgVarName: string
+  smoothVarRefId: string
+  trendVarName: string
+  npvVarName: string
+  delayVarRefId: string
+  delayTimeVarName: string
+  fixedDelayVarName: string
+  depreciationVarName: string
+  includeInOutput: boolean
+}
+
 export function dimMapping(toDim: DimModelName, value: DimOrSubModelName[] = []): DimModelMapping {
   return {
     toDim,
@@ -84,15 +127,6 @@ export function dim(
   }
 }
 
-export interface Sub {
-  name: SubCName // '_b1'
-  value: number // 0
-  size: number // 1
-  family: DimCName // '_dima'
-  // TODO: Is mappings ever used for subscripts?  (Currently it always seems to be set to empty object.)
-  mappings: {} // {}
-}
-
 export function sub(modelName: SubModelName, family: DimModelName, value: number): Sub {
   return {
     name: canonicalName(modelName),
@@ -112,4 +146,90 @@ export function parseVensimModel(modelName: string): VensimModelParseTree {
   const modelFile = resolve(sampleModelDir(modelName), `${modelName}.mdl`)
   const preprocessed = preprocessModel(modelFile, undefined, 'genc', false)
   return parseModel(preprocessed)
+}
+
+function prettyVar(variable: Variable): string {
+  const stringify = (x: any) => {
+    return JSON.stringify(x)
+  }
+
+  const others = []
+  if (variable.delayTimeVarName.length > 0) {
+    others.push(`delayTimeVarName: ${stringify(variable.delayTimeVarName)}`)
+  }
+  if (variable.delayVarRefId.length > 0) {
+    others.push(`delayVarRefId: ${stringify(variable.delayVarRefId)}`)
+  }
+  if (variable.depreciationVarName.length > 0) {
+    others.push(`depreciationVarName: ${stringify(variable.depreciationVarName)}`)
+  }
+  if (variable.directConstArgs) {
+    others.push(`directConstArgs: ${stringify(variable.directConstArgs)}`)
+  }
+  if (variable.directDataArgs) {
+    others.push(`directDataArgs: ${stringify(variable.directDataArgs)}`)
+  }
+  if (variable.fixedDelayVarName.length > 0) {
+    others.push(`fixedDelayVarName: ${stringify(variable.fixedDelayVarName)}`)
+  }
+  if (variable.hasInitValue) {
+    others.push(`hasInitValue: true`)
+  }
+  if (variable.includeInOutput === false) {
+    others.push(`includeInOutput: false`)
+  }
+  if (variable.initReferences.length > 0) {
+    others.push(`initReferences: ${stringify(variable.initReferences)}`)
+  }
+  if (variable.lookupArgVarName.length > 0) {
+    others.push(`lookupArgVarName: ${stringify(variable.lookupArgVarName)}`)
+  }
+  if (variable.npvVarName.length > 0) {
+    others.push(`npvVarName: ${stringify(variable.npvVarName)}`)
+  }
+  if (variable.points.length > 0) {
+    others.push(`points: ${stringify(variable.points)}`)
+  }
+  if (variable.range.length > 0) {
+    others.push(`range: ${stringify(variable.range)}`)
+  }
+  if (variable.refId.length > 0) {
+    others.push(`refId: ${stringify(variable.refId)}`)
+  }
+  if (variable.referencedFunctionNames?.length > 0) {
+    others.push(`referencedFunctionNames: ${stringify(variable.referencedFunctionNames)}`)
+  }
+  if (variable.referencedLookupVarNames?.length > 0) {
+    others.push(`referencedLookupVarNames: ${stringify(variable.referencedLookupVarNames)}`)
+  }
+  if (variable.references.length > 0) {
+    others.push(`references: ${stringify(variable.references)}`)
+  }
+  if (variable.separationDims.length > 0) {
+    others.push(`separationDims: ${stringify(variable.separationDims)}`)
+  }
+  if (variable.smoothVarRefId.length > 0) {
+    others.push(`smoothVarRefId: ${stringify(variable.smoothVarRefId)}`)
+  }
+  if (variable.subscripts.length > 0) {
+    others.push(`subscripts: ${stringify(variable.subscripts)}`)
+  }
+  if (variable.trendVarName.length > 0) {
+    others.push(`trendVarName: ${stringify(variable.trendVarName)}`)
+  }
+  if (variable.varSubtype.length > 0) {
+    others.push(`varSubtype: ${stringify(variable.varSubtype)}`)
+  }
+  if (variable.varType !== 'aux') {
+    others.push(`varType: ${stringify(variable.varType)}`)
+  }
+  let overrides = ''
+  if (others.length > 0) {
+    overrides = `, {\n${others.join(',\n')} }`
+  }
+  return `v("${variable.modelLHS}", "${variable.modelFormula}"${overrides})`
+}
+
+export function logPrettyVars(variables: Variable[]): void {
+  variables.forEach(v => console.log(`${prettyVar(v)},`))
 }

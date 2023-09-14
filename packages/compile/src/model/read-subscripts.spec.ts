@@ -2,8 +2,8 @@
 
 import { describe, expect, it } from 'vitest'
 
-import { readSubscriptRanges, resolveSubscriptRanges } from './read-subscripts'
 import { allSubscripts, resetSubscriptsAndDimensions } from '../_shared/subscript'
+import { readSubscriptRanges, resolveSubscriptRanges } from './read-subscripts'
 
 import { dim, dimMapping, parseVensimModel, sampleModelDir, sub } from './_tests/test-support'
 
@@ -45,6 +45,10 @@ function readAndResolveSubscripts(modelName: string): any[] {
 }
 
 describe('readSubscriptRanges + resolveSubscriptRanges', () => {
+  it('should work for the most common forms of subscript definitions', () => {
+    // TODO
+  })
+
   it('should work for Vensim "active_initial" model', () => {
     const rawSubs = readSubscripts('active_initial')
     expect(rawSubs).toEqual([])

@@ -35,7 +35,7 @@ const PRINT_INIT_GRAPH = false
 const PRINT_AUX_GRAPH = false
 const PRINT_LEVEL_GRAPH = false
 
-function read(parseTree, spec, extData, directData, modelDirname) {
+function read(parseTree, spec, extData, directData, modelDirname, opts) {
   // Some arrays need to be separated into variables with individual indices to
   // prevent eval cycles. They are manually added to the spec file.
   let specialSeparationDims = spec.specialSeparationDims
@@ -61,6 +61,9 @@ function read(parseTree, spec, extData, directData, modelDirname) {
   }
   // Analyze model equations to fill in more details about variables.
   analyze()
+  if (opts?.stopAfterAnalyze) {
+    return
+  }
   // Check that all input and output vars in the spec actually exist in the model.
   checkSpecVars(spec, extData)
   // Remove variables that are not referenced by an input or output variable.
@@ -68,6 +71,21 @@ function read(parseTree, spec, extData, directData, modelDirname) {
   // Resolve duplicate declarations by converting to one variable type.
   resolveDuplicateDeclarations()
 }
+
+/**
+ * Read equations from the given model and generate `Variable` instances for all variables that
+ * are encountered while parsing.
+ *
+ * Note that this function currently does not return anything and instead stores the parsed
+ * variable definitions in the `model` module.
+ *
+ * @param {import('../parse/parser.js').VensimModelParseTree} tree The Vensim parse tree.
+ * @param {Object.<string, string>} specialSeparationDims The variable names that need to be
+ * separated because of circular references.  A mapping from "C" variable name to "C" dimension
+ * name to separate on.
+ * @param {Map<string, any>} directData The mapping of dataset name used in a `GET DIRECT DATA`
+ * call (e.g., `?data`) to the tabular data contained in the loaded data file.
+ */
 function readVariables(tree, specialSeparationDims, directData) {
   // Read all variables in the model parse tree.
   // This populates the variables table with basic information for each variable
@@ -80,6 +98,16 @@ function readVariables(tree, specialSeparationDims, directData) {
   v.varName = '_time'
   addVariable(v)
 }
+
+// XXX: This is needed for tests due to variables being in module-level storage
+function resetModelState() {
+  variables.length = 0
+  inputVars.length = 0
+  variablesByName.clear()
+  constantExprs.clear()
+  nonAtoANames = Object.create(null)
+}
+
 function analyze() {
   // Analyze the RHS of each equation in stages after all the variables are read.
   // Find non-apply-to-all vars that are defined with more than one equation.
@@ -896,8 +924,10 @@ export default {
   printRefIdTest,
   printVarList,
   read,
+  readVariables,
   refIdForVar,
   refIdsWithName,
+  resetModelState,
   splitRefId,
   variables,
   varNames,
