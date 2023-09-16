@@ -1,5 +1,3 @@
-// Copyright (c) 2023 Climate Interactive / New Venture Fund
-
 import { describe, expect, it } from 'vitest'
 
 import { canonicalName, resetHelperState } from '../_shared/helpers'
@@ -8,7 +6,7 @@ import { resetSubscriptsAndDimensions } from '../_shared/subscript'
 import Model from './model'
 import { default as VariableImpl } from './variable'
 
-import { parseVensimModel, sampleModelDir, type Variable } from './_tests/test-support'
+import { parseVensimModel, sampleModelDir, type Variable } from '../_tests/test-support'
 
 /**
  * This is a shorthand for the following steps to read variables:

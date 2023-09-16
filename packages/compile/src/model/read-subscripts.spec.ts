@@ -1,12 +1,10 @@
-// Copyright (c) 2023 Climate Interactive / New Venture Fund
-
 import { describe, expect, it } from 'vitest'
 
 import { allSubscripts, resetSubscriptsAndDimensions } from '../_shared/subscript'
 
 import Model from './model'
 
-import { dim, dimMapping, parseVensimModel, sampleModelDir, sub } from './_tests/test-support'
+import { dim, dimMapping, parseVensimModel, sampleModelDir, sub } from '../_tests/test-support'
 
 /**
  * This is a shorthand for the following steps to read (and optionally resolve) subscript ranges:

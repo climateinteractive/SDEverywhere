@@ -1,12 +1,10 @@
-// Copyright (c) 2023 Climate Interactive / New Venture Fund
-
 import { resolve } from 'path'
 import { fileURLToPath } from 'url'
 
-import type { VensimModelParseTree } from '../../parse/parser'
-import { parseModel } from '../../parse/parser'
-import { preprocessModel } from '../../preprocess/preprocessor'
-import { canonicalName } from '../../_shared/helpers'
+import type { VensimModelParseTree } from '../parse/parser'
+import { parseModel } from '../parse/parser'
+import { preprocessModel } from '../preprocess/preprocessor'
+import { canonicalName } from '../_shared/helpers'
 
 export type DimModelName = string
 export type DimCName = string
@@ -139,13 +137,17 @@ export function sub(modelName: SubModelName, family: DimModelName, value: number
 
 export function sampleModelDir(modelName: string): string {
   const __dirname = fileURLToPath(new URL('.', import.meta.url))
-  return resolve(__dirname, '..', '..', '..', '..', '..', 'models', modelName)
+  return resolve(__dirname, '..', '..', '..', '..', 'models', modelName)
 }
 
 export function parseVensimModel(modelName: string): VensimModelParseTree {
   const modelFile = resolve(sampleModelDir(modelName), `${modelName}.mdl`)
   const preprocessed = preprocessModel(modelFile, undefined, 'genc', false)
   return parseModel(preprocessed)
+}
+
+export function parseInlineVensimModel(mdl: string): VensimModelParseTree {
+  return parseModel(mdl)
 }
 
 function prettyVar(variable: Variable): string {
