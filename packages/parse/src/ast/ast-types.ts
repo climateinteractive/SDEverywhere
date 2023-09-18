@@ -2,6 +2,12 @@
 
 import { canonicalName, cFunctionName } from '../_shared/names'
 
+export type DimName = string
+export type DimId = string
+
+export type SubName = string
+export type SubId = string
+
 export type DimOrSubName = string
 export type DimOrSubId = string
 
@@ -10,10 +16,21 @@ export interface SubscriptRef {
   subId: DimOrSubId
 }
 
-// TODO
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
+export interface SubscriptMapping {
+  toDimName: DimName
+  toDimId: DimId
+  subscriptRefs: SubscriptRef[]
+}
+
 export interface SubscriptRange {
-  // rhs: Expr
+  dimName: DimName
+  dimId: DimId
+  familyName: DimName
+  familyId: DimId
+  // TODO: Should we use SubscriptRef here?  Should we have different
+  // variants for subscript aliases, etc?
+  subscriptRefs: SubscriptRef[]
+  subscriptMappings: SubscriptMapping[]
 }
 
 export interface NumberValue {
@@ -85,7 +102,6 @@ export type Expr = NumberValue | VariableRef | UnaryOpExpr | BinaryOpExpr | Look
 export interface EquationLhs {
   varRef: VariableRef
   // TODO: :INTERPOLATE:
-  // TODO: :EXCEPT:
 }
 
 export interface EquationRhsExpr {
@@ -99,9 +115,11 @@ export interface EquationRhsConstList {
   text: string
 }
 
+// TODO: A lookup definition equation technically has no RHS, and the lookup data is supplied next to the
+// LHS variable name
 export interface EquationRhsLookup {
   kind: 'lookup'
-  // lookup: Lookup
+  lookupDef: LookupDef
 }
 
 export interface EquationRhsData {
@@ -122,17 +140,41 @@ export interface Model {
   equations: Equation[]
 }
 
+export function subRef(dimOrSubName: DimOrSubName): SubscriptRef {
+  return {
+    subName: dimOrSubName,
+    subId: canonicalName(dimOrSubName)
+  }
+}
+
+export function subMapping(toDimName: DimName, dimOrSubNames: DimOrSubName[] = []): SubscriptMapping {
+  return {
+    toDimName,
+    toDimId: canonicalName(toDimName),
+    subscriptRefs: dimOrSubNames.map(subRef)
+  }
+}
+
+export function subRange(
+  dimName: DimName,
+  familyName: DimName,
+  dimOrSubNames: SubName[],
+  subscriptMappings: SubscriptMapping[] = []
+): SubscriptRange {
+  return {
+    dimName,
+    dimId: canonicalName(dimName),
+    familyName,
+    familyId: canonicalName(familyName),
+    subscriptRefs: dimOrSubNames.map(subRef),
+    subscriptMappings
+  }
+}
+
 export function num(value: number): NumberValue {
   return {
     kind: 'number',
     value
-  }
-}
-
-export function subRef(subName: DimOrSubName): SubscriptRef {
-  return {
-    subName,
-    subId: canonicalName(subName)
   }
 }
 
@@ -214,6 +256,33 @@ export function constListEqn(varRef: VariableRef, constListText: string, units =
     rhs: {
       kind: 'const-list',
       text: constListText
+    },
+    units,
+    comment
+  }
+}
+
+export function dataVarEqn(varRef: VariableRef, units = '', comment = ''): Equation {
+  return {
+    lhs: {
+      varRef
+    },
+    rhs: {
+      kind: 'data'
+    },
+    units,
+    comment
+  }
+}
+
+export function lookupVarEqn(varRef: VariableRef, lookupDef: LookupDef, units = '', comment = ''): Equation {
+  return {
+    lhs: {
+      varRef
+    },
+    rhs: {
+      kind: 'lookup',
+      lookupDef
     },
     units,
     comment

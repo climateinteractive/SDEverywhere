@@ -4,6 +4,7 @@ import antlr4 from 'antlr4'
 import { ModelLexer, ModelParser, ModelVisitor } from 'antlr4-vensim'
 
 import { EquationReader } from './equation-reader'
+import { SubscriptRangeReader } from './subscript-range-reader'
 
 /**
  * Create a `ModelParser` for the given model text, which can be the
@@ -37,6 +38,15 @@ export class ModelReader extends ModelVisitor {
   }
 
   visitModel(ctx) {
+    const subscriptRangesCtx = ctx.subscriptRange()
+    if (subscriptRangesCtx) {
+      const subscriptReader = new SubscriptRangeReader()
+      for (const subscriptRangeCtx of subscriptRangesCtx) {
+        const subscriptRange = subscriptReader.visitSubscriptRange(subscriptRangeCtx)
+        this.subscriptRanges.push(subscriptRange)
+      }
+    }
+
     const equationsCtx = ctx.equation()
     if (equationsCtx) {
       const equationReader = new EquationReader()
@@ -45,9 +55,9 @@ export class ModelReader extends ModelVisitor {
         this.equations.push(equation)
       }
     }
+
     this.model = {
-      // TODO: Handle subscript ranges
-      subscriptRanges: [],
+      subscriptRanges: this.subscriptRanges,
       equations: this.equations
     }
   }

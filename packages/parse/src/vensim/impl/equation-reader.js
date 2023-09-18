@@ -36,6 +36,7 @@ export class EquationReader extends ModelVisitor {
 
   /*public*/ visitEquation(ctx /*: EquationContext*/) /*: Equation*/ {
     this.equationLhs = undefined
+    this.lookupDef = undefined
 
     ctx.lhs().accept(this)
 
@@ -57,10 +58,10 @@ export class EquationReader extends ModelVisitor {
         text: ctx.constList().getText()
       }
     } else if (ctx.lookup()) {
-      // TODO
-      // ctx.lookup().accept(this)
+      ctx.lookup().accept(this)
       equationRhs = {
-        kind: 'lookup'
+        kind: 'lookup',
+        lookupDef: this.lookupDef
       }
     } else {
       equationRhs = {
@@ -136,5 +137,51 @@ export class EquationReader extends ModelVisitor {
         exceptSubscriptRefSets
       }
     }
+  }
+
+  //
+  // LOOKUPS
+  //
+
+  getPoint(lookupPoint) {
+    const exprs = lookupPoint.expr()
+    if (exprs.length >= 2) {
+      return [parseFloat(exprs[0].getText()), parseFloat(exprs[1].getText())]
+    }
+  }
+
+  visitLookup(ctx) {
+    this.lookupRange = undefined
+    this.lookupPoints = undefined
+
+    if (ctx.lookupRange()) {
+      ctx.lookupRange().accept(this)
+    }
+    if (ctx.lookupPointList()) {
+      ctx.lookupPointList().accept(this)
+    }
+
+    let range
+    if (this.lookupRange && this.lookupRange.length === 2) {
+      range = {
+        min: this.lookupRange[0],
+        max: this.lookupRange[1]
+      }
+    }
+    this.lookupDef = {
+      kind: 'lookup-def',
+      range,
+      points: this.lookupPoints
+    }
+  }
+
+  visitLookupRange(ctx) {
+    this.lookupRange = ctx.lookupPoint().map(p => this.getPoint(p))
+    super.visitLookupRange(ctx)
+  }
+
+  visitLookupPointList(ctx) {
+    this.lookupPoints = ctx.lookupPoint().map(p => this.getPoint(p))
+    super.visitLookupPointList(ctx)
   }
 }
