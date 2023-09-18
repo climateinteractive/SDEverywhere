@@ -1,7 +1,7 @@
 import util from 'util'
 import B from 'bufx'
 import { parse as parseCsv } from 'csv-parse/sync'
-import R from 'ramda'
+import * as R from 'ramda'
 import split from 'split-string'
 import XLSX from 'xlsx'
 
@@ -22,8 +22,17 @@ let nextLevelVarSeq = 1
 let nextAuxVarSeq = 1
 // parsed csv data cache
 let csvData = new Map()
-// string table for web apps
-export let strings = []
+
+// XXX: This is needed for tests due to sequence numbers being in module-level storage
+export function resetHelperState() {
+  nextTmpVarSeq = 1
+  nextLookupVarSeq = 1
+  nextFixedDelayVarSeq = 1
+  nextDepreciationVarSeq = 1
+  nextLevelVarSeq = 1
+  nextAuxVarSeq = 1
+  csvData.clear()
+}
 
 export let canonicalName = name => {
   // Format a model variable name into a valid C identifier.
@@ -199,15 +208,6 @@ export let isIterable = obj => {
     return false
   }
   return typeof obj[Symbol.iterator] === 'function'
-}
-export let stringToId = str => {
-  // Look up a string id. Create the id from the string if it is not found.
-  let stringIndex = R.indexOf(str, strings)
-  if (stringIndex < 0) {
-    stringIndex = strings.length
-    strings.push(str)
-  }
-  return `id${stringIndex}`
 }
 // Command helpers
 export let readXlsx = pathname => {

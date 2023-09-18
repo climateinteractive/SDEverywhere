@@ -11,7 +11,7 @@
     // Enable warnings for transpilation-unsafe code
     "isolatedModules": true,
     // Enable strict enforcement of `import type`
-    "importsNotUsedAsValues": "error",
+    "verbatimModuleSyntax": true,
     "noImplicitAny": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,

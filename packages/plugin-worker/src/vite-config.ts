@@ -3,8 +3,7 @@
 import { dirname, resolve as resolvePath } from 'path'
 import { fileURLToPath } from 'url'
 
-import type { InlineConfig, Plugin as VitePlugin, ResolverObject } from 'vite'
-import { nodeResolve } from '@rollup/plugin-node-resolve'
+import type { InlineConfig, Plugin as VitePlugin } from 'vite'
 
 import type { ModelSpec } from '@sdeverywhere/build'
 
@@ -94,19 +93,18 @@ export function createViteConfig(
         {
           find: '@_wasm_',
           replacement: resolvePath(stagedModelDir, modelJsFile)
-        },
-
-        // XXX: Prevent Vite from using the `browser` section of `threads/package.json`
-        // since we want to force the use of the general module (under dist) that chooses
-        // the correct implementation (Web Worker vs worker_threads) at runtime.  Currently
-        // Vite's library mode is browser focused, so using a `customResolver` seems to be
-        // the easiest way to prevent Vite from picking up the `browser` exports.
-        {
-          find: 'threads',
-          replacement: 'threads',
-          customResolver: nodeResolve({ browser: false }) as ResolverObject
         }
-      ]
+      ],
+
+      // XXX: Prevent Vite from using the `browser` section of `threads/package.json`
+      // since we want to force the use of the general module (under dist) that chooses
+      // the correct implementation (Web Worker vs worker_threads) at runtime.  This
+      // gets the job done, but is fragile because it applies to all dependencies even
+      // though we really only need this workaround for the threads package.  Fortunately
+      // the worker template is very simple (only depends on `@sdeverywhere/runtime-async`,
+      // which in turn only depends on `@sdeverywhere/runtime` and `threads`, so we should
+      // be safe to use this workaround for a while.
+      browserField: false
     },
 
     plugins: [

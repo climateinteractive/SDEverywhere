@@ -45,7 +45,7 @@
     "@types/byline": "^4.2.33",
     "@types/dedent": "^0.7.0",
     "@types/marked": "^4.0.1",
-    "@types/node": "^16.11.7",
+    "@types/node": "^20.5.7",
     "@types/sanitize-html": "^2.6.2",
     "@types/temp": "^0.9.1",
     "dedent": "^0.7.0",

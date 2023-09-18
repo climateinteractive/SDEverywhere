@@ -1,7 +1,7 @@
 import util from 'util'
 import B from 'bufx'
 import yaml from 'js-yaml'
-import R from 'ramda'
+import * as R from 'ramda'
 import { canonicalName, asort, vlog } from './helpers.js'
 
 // A subscript is a dimension or an index.
@@ -48,6 +48,11 @@ import { canonicalName, asort, vlog } from './helpers.js'
 // The Subscript module maintains a subscript map with the canonical
 // subscript name as the key and a subscript object as the value.
 let subscripts = new Map()
+
+// XXX: This is needed for tests due to subs/dims being in module-level storage
+export function resetSubscriptsAndDimensions() {
+  subscripts.clear()
+}
 
 export function Subscript(modelName, modelValue = null, modelFamily = null, modelMappings = null) {
   let name = canonicalName(modelName)
