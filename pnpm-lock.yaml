@@ -268,6 +268,9 @@ importers:
 
   packages/compile:
     dependencies:
+      '@sdeverywhere/parse':
+        specifier: ^0.1.0
+        version: link:../parse
       antlr4:
         specifier: 4.9.2
         version: 4.9.2
