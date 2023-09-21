@@ -4,7 +4,8 @@ import { allSubscripts, resetSubscriptsAndDimensions } from '../_shared/subscrip
 
 import Model from './model'
 
-import { dim, dimMapping, parseVensimModel, sampleModelDir, sub } from '../_tests/test-support'
+import { dim, dimMapping, parseInlineVensimModel, parseVensimModel, sampleModelDir, sub } from '../_tests/test-support'
+import type { VensimModelParseTree } from '../parse/parser'
 
 /**
  * This is a shorthand for the following steps to read (and optionally resolve) subscript ranges:
@@ -15,12 +16,31 @@ import { dim, dimMapping, parseVensimModel, sampleModelDir, sub } from '../_test
  *
  * TODO: Update the return type once type info is added for `allSubscripts`
  */
-function readSubscripts(modelName: string, resolve = false): any[] {
+function readSubscriptsFromSource(
+  source: {
+    modelText?: string
+    modelName?: string
+    modelDir?: string
+  },
+  resolve: boolean
+): any[] {
   // XXX: This is needed due to subs/dims being in module-level storage
   resetSubscriptsAndDimensions()
 
-  const parsedModel = parseVensimModel(modelName)
-  const modelDir = sampleModelDir(modelName)
+  let parsedModel: VensimModelParseTree
+  if (source.modelText) {
+    parsedModel = parseInlineVensimModel(source.modelText)
+  } else {
+    parsedModel = parseVensimModel(source.modelName)
+  }
+
+  let modelDir = source.modelDir
+  if (modelDir === undefined) {
+    if (source.modelName) {
+      modelDir = sampleModelDir(source.modelName)
+    }
+  }
+
   Model.read(parsedModel, /*spec=*/ {}, /*extData=*/ undefined, /*directData=*/ undefined, modelDir, {
     stopAfterReadSubscripts: !resolve,
     stopAfterResolveSubscripts: true
@@ -29,23 +49,235 @@ function readSubscripts(modelName: string, resolve = false): any[] {
   return allSubscripts()
 }
 
-/**
- * This is a shorthand for the following steps to read and resolve subscript ranges:
- *   - parseVensimModel
- *   - readSubscriptRanges
- *   - resolveSubscriptRanges
- *   - allSubscripts
- *
- * TODO: Update the return type once type info is added for `allSubscripts`
- */
+function readInlineSubscripts(modelText: string, modelDir?: string): any[] {
+  return readSubscriptsFromSource({ modelText, modelDir }, /*resolve=*/ false)
+}
+
+function readAndResolveInlineSubscripts(modelText: string, modelDir?: string): any[] {
+  return readSubscriptsFromSource({ modelText, modelDir }, /*resolve=*/ true)
+}
+
+function readSubscripts(modelName: string): any[] {
+  return readSubscriptsFromSource({ modelName }, /*resolve=*/ false)
+}
+
 function readAndResolveSubscripts(modelName: string): any[] {
-  return readSubscripts(modelName, /*resolve=*/ true)
+  return readSubscriptsFromSource({ modelName }, /*resolve=*/ true)
 }
 
 describe('readSubscriptRanges + resolveSubscriptRanges', () => {
-  it('should work for the most common forms of subscript definitions', () => {
-    // TODO
+  it('should work for a subscript range with explicit subscripts', () => {
+    const ranges = `DimA: A1, A2, A3 ~~|`
+
+    const rawSubs = readInlineSubscripts(ranges)
+    expect(rawSubs).toEqual([dim('DimA', ['A1', 'A2', 'A3'])])
+
+    const resolvedSubs = readAndResolveInlineSubscripts(ranges)
+    expect(resolvedSubs).toEqual([
+      dim('DimA', ['A1', 'A2', 'A3']),
+      sub('A1', 'DimA', 0),
+      sub('A2', 'DimA', 1),
+      sub('A3', 'DimA', 2)
+    ])
   })
+
+  it('should work for a subscript range with a single numeric range', () => {
+    const range = `DimA: (A1-A3) ~~|`
+
+    const rawSubs = readInlineSubscripts(range)
+    expect(rawSubs).toEqual([dim('DimA', ['A1', 'A2', 'A3'])])
+
+    const resolvedSubs = readAndResolveInlineSubscripts(range)
+    expect(resolvedSubs).toEqual([
+      dim('DimA', ['A1', 'A2', 'A3']),
+      sub('A1', 'DimA', 0),
+      sub('A2', 'DimA', 1),
+      sub('A3', 'DimA', 2)
+    ])
+  })
+
+  // TODO: The antlr grammar doesn't yet support multiple ranges, but it is supported in Vensim:
+  //   https://www.vensim.com/documentation/22090.html
+  // it('should work for a subscript range with a multiple numeric range', () => {
+  //   const ranges = `DimA: (A1-A3),A5,(A7-A8) ~~|`
+
+  //   const rawSubs = readInlineSubscripts(ranges)
+  //   expect(rawSubs).toEqual([dim('DimA', ['A1', 'A2', 'A3', 'A5', 'A7', 'A8'])])
+
+  //   const resolvedSubs = readAndResolveInlineSubscripts(ranges)
+  //   expect(resolvedSubs).toEqual([
+  //     dim('DimA', ['A1', 'A2', 'A3']),
+  //     sub('A1', 'DimA', 0),
+  //     sub('A2', 'DimA', 1),
+  //     sub('A3', 'DimA', 2),
+  //     sub('A5', 'DimA', 3),
+  //     sub('A7', 'DimA', 4),
+  //     sub('A8', 'DimA', 5)
+  //   ])
+  // })
+
+  it('should work for a subscript range with one mapping (to dimension with explicit individual subscripts)', () => {
+    const ranges = `
+      DimA: A1, A2, A3 -> DimB ~~|
+      DimB: B1, B2, B3 ~~|
+    `
+
+    const rawSubs = readInlineSubscripts(ranges)
+    expect(rawSubs).toEqual([
+      dim('DimA', ['A1', 'A2', 'A3'], 'DimA', undefined, [dimMapping('DimB')], {
+        // After resolve phase, this will be filled in with _a1,_a2,_a3
+        _dimb: []
+      }),
+      dim('DimB', ['B1', 'B2', 'B3'])
+    ])
+
+    const resolvedSubs = readAndResolveInlineSubscripts(ranges)
+    expect(resolvedSubs).toEqual([
+      dim('DimA', ['A1', 'A2', 'A3'], 'DimA', undefined, [dimMapping('DimB')], {
+        _dimb: ['_a1', '_a2', '_a3']
+      }),
+      dim('DimB', ['B1', 'B2', 'B3']),
+      sub('A1', 'DimA', 0),
+      sub('A2', 'DimA', 1),
+      sub('A3', 'DimA', 2),
+      sub('B1', 'DimB', 0),
+      sub('B2', 'DimB', 1),
+      sub('B3', 'DimB', 2)
+    ])
+  })
+
+  it('should work for a subscript range with one mapping (to dimension with explicit mix of dimensions and subscripts)', () => {
+    const ranges = `
+      DimA: A1, A2, A3 ~~|
+      SubA: A1, A2 ~~|
+      DimB: B1, B2 -> (DimA: SubA, A3) ~~|
+    `
+
+    const rawSubs = readInlineSubscripts(ranges)
+    expect(rawSubs).toEqual([
+      dim('DimA', ['A1', 'A2', 'A3']),
+      dim('SubA', ['A1', 'A2']),
+      dim('DimB', ['B1', 'B2'], 'DimB', undefined, [dimMapping('DimA', ['SubA', 'A3'])], {
+        // After resolve phase, this will be filled in with _b1,_b2,_b2
+        _dima: ['_suba', '_a3']
+      })
+    ])
+
+    const resolvedSubs = readAndResolveInlineSubscripts(ranges)
+    expect(resolvedSubs).toEqual([
+      dim('DimA', ['A1', 'A2', 'A3']),
+      dim('SubA', ['A1', 'A2'], 'DimA'),
+      dim('DimB', ['B1', 'B2'], 'DimB', undefined, [dimMapping('DimA', ['SubA', 'A3'])], {
+        _dima: ['_b1', '_b1', '_b2']
+      }),
+      sub('A1', 'DimA', 0),
+      sub('A2', 'DimA', 1),
+      sub('A3', 'DimA', 2),
+      sub('B1', 'DimB', 0),
+      sub('B2', 'DimB', 1)
+    ])
+  })
+
+  it('should work for a subscript range with one mapping (to dimension without explicit subscripts)', () => {
+    const ranges = `
+      DimA: SubA, A3 -> DimB ~~|
+      SubA: A1, A2 ~~|
+      DimB: B1, B2, B3 ~~|
+    `
+
+    const rawSubs = readInlineSubscripts(ranges)
+    expect(rawSubs).toEqual([
+      dim('DimA', ['SubA', 'A3'], 'DimA', undefined, [dimMapping('DimB')], {
+        // After resolve phase, this will be filled in with _a1,_a2,_a3
+        _dimb: []
+      }),
+      dim('SubA', ['A1', 'A2']),
+      dim('DimB', ['B1', 'B2', 'B3'])
+    ])
+
+    const resolvedSubs = readAndResolveInlineSubscripts(ranges)
+    expect(resolvedSubs).toEqual([
+      dim('DimA', ['SubA', 'A3'], 'DimA', ['A1', 'A2', 'A3'], [dimMapping('DimB', [])], {
+        _dimb: ['_a1', '_a2', '_a3']
+      }),
+      dim('SubA', ['A1', 'A2'], 'DimA'),
+      dim('DimB', ['B1', 'B2', 'B3']),
+      sub('A1', 'DimA', 0),
+      sub('A2', 'DimA', 1),
+      sub('A3', 'DimA', 2),
+      sub('B1', 'DimB', 0),
+      sub('B2', 'DimB', 1),
+      sub('B3', 'DimB', 2)
+    ])
+  })
+
+  it('should work for a subscript range with two mappings', () => {
+    const ranges = `
+      DimA: A1, A2, A3 -> (DimB: B3, B2, B1), DimC ~~|
+      DimB: B1, B2, B3 ~~|
+      DimC: C1, C2, C3 ~~|
+    `
+
+    const rawSubs = readInlineSubscripts(ranges)
+    expect(rawSubs).toEqual([
+      dim('DimA', ['A1', 'A2', 'A3'], 'DimA', undefined, [dimMapping('DimB', ['B3', 'B2', 'B1']), dimMapping('DimC')], {
+        // After resolve phase, this will be changed to _a3,_a2,_a1
+        _dimb: ['_b3', '_b2', '_b1'],
+        // After resolve phase, this will be filled in with _a1,_a2,_a3
+        _dimc: []
+      }),
+      dim('DimB', ['B1', 'B2', 'B3']),
+      dim('DimC', ['C1', 'C2', 'C3'])
+    ])
+
+    const resolvedSubs = readAndResolveInlineSubscripts(ranges)
+    expect(resolvedSubs).toEqual([
+      dim('DimA', ['A1', 'A2', 'A3'], 'DimA', undefined, [dimMapping('DimB', ['B3', 'B2', 'B1']), dimMapping('DimC')], {
+        _dimb: ['_a3', '_a2', '_a1'],
+        _dimc: ['_a1', '_a2', '_a3']
+      }),
+      dim('DimB', ['B1', 'B2', 'B3']),
+      dim('DimC', ['C1', 'C2', 'C3']),
+      sub('A1', 'DimA', 0),
+      sub('A2', 'DimA', 1),
+      sub('A3', 'DimA', 2),
+      sub('B1', 'DimB', 0),
+      sub('B2', 'DimB', 1),
+      sub('B3', 'DimB', 2),
+      sub('C1', 'DimC', 0),
+      sub('C2', 'DimC', 1),
+      sub('C3', 'DimC', 2)
+    ])
+  })
+
+  it('should work for a subscript range alias (<-> operator)', () => {
+    const ranges = `
+      DimA <-> DimB ~~|
+      DimB: B1, B2, B3 ~~|
+    `
+
+    const rawSubs = readInlineSubscripts(ranges)
+    // TODO: In "unresolved" dimensions, `value` is an empty string instead of an array
+    // (in the case of aliases).  It would be good to fix it so that we don't need to mix types.
+    expect(rawSubs).toEqual([dim('DimA', '', 'DimB'), dim('DimB', ['B1', 'B2', 'B3'])])
+
+    const resolvedSubs = readAndResolveInlineSubscripts(ranges)
+    expect(resolvedSubs).toEqual([
+      dim('DimA', ['B1', 'B2', 'B3']),
+      dim('DimB', ['B1', 'B2', 'B3'], 'DimA'),
+      sub('B1', 'DimA', 0),
+      sub('B2', 'DimA', 1),
+      sub('B3', 'DimA', 2)
+    ])
+  })
+
+  // TODO: `GET DIRECT SUBSCRIPTS` is already covered by the "directsubs" test below.
+  // It would be nice if we had a simpler inline test here, but since it depends on
+  // reading files, it would end up doing the same as the "directsubs" test.  Once
+  // we make it easier to provide in-memory (or mock) data sources, we can consider
+  // implementing this inline test.
+  // it('should work for a subscript range defined with GET DIRECT SUBSCRIPTS', () => {
+  // })
 
   it('should work for Vensim "active_initial" model', () => {
     const rawSubs = readSubscripts('active_initial')
