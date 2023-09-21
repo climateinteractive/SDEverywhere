@@ -27,8 +27,6 @@ export interface SubscriptRange {
   dimId: DimId
   familyName: DimName
   familyId: DimId
-  // TODO: Should we use SubscriptRef here?  Should we have different
-  // variants for subscript aliases, etc?
   subscriptRefs: SubscriptRef[]
   subscriptMappings: SubscriptMapping[]
 }

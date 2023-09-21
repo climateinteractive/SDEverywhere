@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest'
 import { subMapping, subRange } from '../ast/ast-types'
 
 import { parseVensimSubscriptRange } from './parse-vensim-subscript-range'
+import type { VensimParseContext } from './vensim-parse-context'
 
 describe('parseVensimSubscriptRange', () => {
   it('should parse a subscript range with explicit subscripts', () => {
@@ -66,7 +67,21 @@ describe('parseVensimSubscriptRange', () => {
     expect(parseVensimSubscriptRange(range)).toEqual(subRange('DimA', 'DimB', []))
   })
 
+  it('should throw an error if an unsupported function is used in subscript range definition', () => {
+    const range = `DimA: UNKNOWN FUNC(1, 2, 3) ~~|`
+    expect(() => parseVensimSubscriptRange(range)).toThrow(
+      `Only 'GET DIRECT SUBSCRIPT' calls are supported in subscript range definitions, but saw 'UNKNOWN FUNC'`
+    )
+  })
+
   it('should parse a subscript range defined with GET DIRECT SUBSCRIPTS', () => {
-    expect(1).toBe(2)
+    const context: VensimParseContext = {
+      getDirectSubscripts: (/*fileName, tab, firstCell, lastCell, prefix*/) => {
+        // TODO: Verify args
+        return ['A1', 'A2', 'A3']
+      }
+    }
+    const range = `DimA: GET DIRECT SUBSCRIPT('a_subs.csv', ',', 'A2', 'A', '') ~~|`
+    expect(parseVensimSubscriptRange(range, context)).toEqual(subRange('DimA', 'DimA', ['A1', 'A2', 'A3']))
   })
 })

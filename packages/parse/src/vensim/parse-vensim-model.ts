@@ -1,28 +1,36 @@
 // Copyright (c) 2023 Climate Interactive / New Venture Fund
 
 import type { Equation, Model, SubscriptRange } from '../ast/ast-types'
-
-import { ModelReader } from './impl/model-reader'
-
 import { preprocessVensimModel } from './preprocess-vensim'
+import type { VensimParseContext } from './vensim-parse-context'
+import { ModelReader } from './impl/model-reader'
 
 /**
  * TODO: Docs
+ *
  * @param input
+ * @param context The parse context.
+ * @param sort Whether to sort definitions alphabetically during the preprocessing phase.
  * @returns
  */
-export function parseVensimModel(input: string): Model {
+export function parseVensimModel(input: string, context?: VensimParseContext, sort = false): Model {
   const subscriptRanges: SubscriptRange[] = []
   const equations: Equation[] = []
 
-  // TODO: For now, use a model parser on each definition, and
-  // then use the result to see if it was an equation or subscript def
   const defs = preprocessVensimModel(input)
+  if (sort) {
+    // XXX: This sorting is currently only needed for compatibility with the legacy
+    // preprocessor, which sorted definitions alphabetically.  Can consider removing this.
+    defs.sort((a, b) => {
+      return a.key < b.key ? -1 : a.key > b.key ? 1 : 0
+    })
+  }
+
   for (const def of defs) {
     // TODO: Reuse reader instance?
     let parsedModel: Model
     try {
-      const modelReader = new ModelReader()
+      const modelReader = new ModelReader(context)
       parsedModel = modelReader.parse(def.def)
     } catch (e) {
       console.error(`Failed to parse definition:`)

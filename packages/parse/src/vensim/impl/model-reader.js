@@ -24,8 +24,9 @@ function createParser(input /*: string*/) /*: ModelParser*/ {
 }
 
 export class ModelReader extends ModelVisitor {
-  constructor() {
+  constructor(parseContext /*: VensimParseContext*/) {
     super()
+    this.parseContext = parseContext
     this.subscriptRanges = []
     this.equations = []
   }
@@ -40,7 +41,8 @@ export class ModelReader extends ModelVisitor {
   visitModel(ctx) {
     const subscriptRangesCtx = ctx.subscriptRange()
     if (subscriptRangesCtx) {
-      const subscriptReader = new SubscriptRangeReader()
+      // TODO: Can we reuse reader instances?
+      const subscriptReader = new SubscriptRangeReader(this.parseContext)
       for (const subscriptRangeCtx of subscriptRangesCtx) {
         const subscriptRange = subscriptReader.visitSubscriptRange(subscriptRangeCtx)
         this.subscriptRanges.push(subscriptRange)
@@ -49,6 +51,7 @@ export class ModelReader extends ModelVisitor {
 
     const equationsCtx = ctx.equation()
     if (equationsCtx) {
+      // TODO: Can we reuse reader instances?
       const equationReader = new EquationReader()
       for (const equationCtx of equationsCtx) {
         const equation = equationReader.visitEquation(equationCtx)

@@ -3,7 +3,7 @@
 import antlr4 from 'antlr4'
 import { ModelLexer, ModelParser, ModelVisitor } from 'antlr4-vensim'
 
-import { canonicalName } from '../../_shared/names'
+import { canonicalName, cFunctionName } from '../../_shared/names'
 
 /**
  * Create a `ModelParser` for the given model text, which can be the
@@ -23,8 +23,9 @@ function createParser(input /*: string*/) /*: ModelParser*/ {
 }
 
 export class SubscriptRangeReader extends ModelVisitor {
-  constructor() {
+  constructor(parseContext /*: VensimParseContext*/) {
     super()
+    this.parseContext = parseContext
   }
 
   /*public*/ parse(subscriptRangeText /*: string*/) /*: SubscriptRange*/ {
@@ -132,47 +133,35 @@ export class SubscriptRangeReader extends ModelVisitor {
     }
   }
 
-  visitCall(/*ctx*/) {
-    throw new Error('GET DIRECT SUBSCRIPT not yet implemented')
-    // // A subscript range can have a GET DIRECT SUBSCRIPT call on the RHS.
-    // let fn = cFunctionName(ctx.Id().getText())
-    // if (fn === '_GET_DIRECT_SUBSCRIPT') {
-    //   super.visitCall(ctx)
-    // }
+  visitCall(ctx) {
+    // A subscript range can have a `GET DIRECT SUBSCRIPT` call on the RHS
+    const fnName = ctx.Id().getText()
+    const fnId = cFunctionName(fnName)
+    if (fnId === '_GET_DIRECT_SUBSCRIPT') {
+      super.visitCall(ctx)
+    } else {
+      throw new Error(
+        `Only 'GET DIRECT SUBSCRIPT' calls are supported in subscript range definitions, but saw '${fnName}'`
+      )
+    }
   }
-  visitExprList(/*ctx*/) {
-    throw new Error('GET DIRECT SUBSCRIPT not yet implemented')
-    // // We assume the only call that ends up here is GET DIRECT SUBSCRIPT.
-    // let args = R.map(
-    //   arg => matchRegex(arg, /'(.*)'/),
-    //   R.map(expr => expr.getText(), ctx.expr())
-    // )
-    // let pathname = args[0]
-    // let delimiter = args[1]
-    // let firstCell = args[2]
-    // let lastCell = args[3]
-    // // let prefix = args[4]
-    // // If lastCell is a column letter, scan the column, else scan the row.
-    // let dataAddress = XLSX.utils.decode_cell(firstCell)
-    // let col = dataAddress.c
-    // let row = dataAddress.r
-    // let nextCell
-    // if (isNaN(parseInt(lastCell))) {
-    //   nextCell = () => row++
-    // } else {
-    //   nextCell = () => col++
-    // }
-    // // Read subscript names from the CSV file at the given position.
-    // let csvPathname = path.resolve(this.modelDirname, pathname)
-    // let data = readCsv(csvPathname, delimiter)
-    // if (data) {
-    //   let indexName = data[row][col]
-    //   while (indexName != null) {
-    //     this.indNames.push(indexName)
-    //     nextCell()
-    //     indexName = data[row] != null ? data[row][col] : null
-    //   }
-    // }
-    // super.visitExprList(ctx)
+
+  visitExprList(ctx) {
+    // The only call that ends up here is `GET DIRECT SUBSCRIPT`.  The arguments
+    // are all strings that are delimited with single quotes, so strip those before
+    // passing the arguments to the `getDirectSubscripts` function.
+    const args = ctx.expr().map(expr => {
+      const exprText = expr.getText()
+      return exprText.replaceAll("'", '')
+    })
+
+    // Delegate to the context
+    const fileName = args[0]
+    const tabOrDelimiter = args[1]
+    const firstCell = args[2]
+    const lastCell = args[3]
+    const prefix = args[4]
+    this.subscriptNames =
+      this.parseContext?.getDirectSubscripts(fileName, tabOrDelimiter, firstCell, lastCell, prefix) || []
   }
 }
