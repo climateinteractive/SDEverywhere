@@ -39,31 +39,37 @@ $192-192-192,0,Arial|12||0-0-0|0-0-0|0-0-255|-1--1--1|-1--1--1|96,96,5,0
 
     expect(preprocessVensimModel(mdl)).toEqual([
       {
+        key: 'a',
         def: 'A : A1, A2 ~~|',
         units: '',
         comment: ''
       },
       {
+        key: 'b',
         def: 'B : B1, B2 ~~|',
         units: '',
         comment: ''
       },
       {
+        key: 'x[a]',
         def: 'X[A] = 1 ~~|',
         units: '',
         comment: ''
       },
       {
+        key: 'y[b]',
         def: 'Y[B] = 2 ~~|',
         units: '',
         comment: ''
       },
       {
+        key: 'z[a,b]',
         def: 'Z[A,B] = X[A] + Y[B] ~~|',
         units: 'EJ/year',
         comment: 'Comment text is here. And here. Here, too. And on a second line.'
       },
       {
+        key: 'w[a,b] :except: [a1,b1]',
         def: 'W[A,B] :EXCEPT: [A1,B1] = 1 ~~|',
         units: '',
         comment: ''

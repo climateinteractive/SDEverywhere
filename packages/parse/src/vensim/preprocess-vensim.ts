@@ -4,6 +4,11 @@ import split from 'split-string'
 
 export interface VensimDef {
   /**
+   * A simplified key for the LHS of the definition, used for sorting
+   * and/or flattening.
+   */
+  key: string
+  /**
    * The preprocessed equation or subscript range definition (with
    * units and comment replaced with `~~|`).
    */
@@ -142,6 +147,52 @@ function reduceWhitespace(input: string): string {
 }
 
 /**
+ * Create a key from the given definition's LHS that can be used during
+ * flattening and/or sorting.
+ */
+function keyForDef(def: string): string {
+  // Note: The steps in this function were lifted directly from the legacy
+  // preprocessor, mainly so that we would retain compatibility when writing
+  // tests that compare the legacy parser to the new one.
+
+  let key = def
+
+  // Strip the ":INTERPOLATE:"; it should not be included in the key
+  key = key.replace(/:INTERPOLATE:/g, '')
+
+  if (key.includes('=')) {
+    // The line contains an '='; treat this as an equation
+    // kind = 'eqn'
+    key = key.split('=')[0].trim()
+  } else if (key.includes(':')) {
+    // The line contains a ':'; treat this as an subscript declaration
+    // kind = 'sub'
+    key = key.split(':')[0].trim()
+  } else {
+    // Treat this as a general declaration
+    // kind = 'decl'
+  }
+
+  // Ignore double quotes
+  key = key.replace(/"/g, '')
+
+  // Ignore the lookup data if it starts on the first line
+  key = key.split('(')[0]
+
+  // Ignore any whitespace that remains
+  key = key.trim()
+
+  // Remove whitespace on the inside of the brackets
+  key = key.replace(/\[\s*/g, '[')
+  key = key.replace(/\s*\]/g, ']')
+
+  // Ignore case
+  key = key.toLowerCase()
+
+  return key
+}
+
+/**
  * Strip out unnecessary parts of the given raw definition string and
  * return a `VensimDef` containing the processed definition along with
  * the units and comment strings.
@@ -170,8 +221,14 @@ function processDef(input: string): VensimDef | undefined {
   // Split on the comment delimiters
   const parts = input.split('~')
 
+  // Get the raw def as a single line
+  const rawDef = reduceWhitespace(parts[0])
+
+  // Create the key
+  const key = keyForDef(rawDef)
+
   // Rebuild the def with a simple `~~|` ending
-  const def = `${reduceWhitespace(parts[0])} ~~|`
+  const def = `${rawDef} ~~|`
 
   // Extract the units text
   const units = reduceWhitespace(parts[1])
@@ -183,55 +240,9 @@ function processDef(input: string): VensimDef | undefined {
   // TODO: Extract the `:SUPPLEMENTARY:` flags?
 
   return {
+    key,
     def,
     units,
     comment
   }
-
-  // TODO: The following creates a key used during flattening; restore this later
-  // // Remove newlines so that we look at the full equation as a single line
-  // const line = input.replace(/\n/g, ' ').trim()
-  // let kind
-  // let key = line
-
-  // // Remove everything after the comment delimiters
-  // key = key.split('~')[0]
-
-  // // Strip the ":INTERPOLATE:"; it should not be included in the key
-  // key = key.replace(/:INTERPOLATE:/g, '')
-
-  // if (key.includes('=')) {
-  //   // The line contains an '='; treat this as an equation
-  //   kind = 'eqn'
-  //   key = key.split('=')[0].trim()
-  // } else if (key.includes(':')) {
-  //   // The line contains a ':'; treat this as an subscript declaration
-  //   kind = 'sub'
-  //   key = key.split(':')[0].trim()
-  // } else {
-  //   // Treat this as a general declaration
-  //   kind = 'decl'
-  // }
-
-  // // Ignore double quotes
-  // key = key.replace(/"/g, '')
-
-  // // Ignore the lookup data if it starts on the first line
-  // key = key.split('(')[0]
-
-  // // Ignore any whitespace that remains
-  // key = key.trim()
-
-  // // Remove whitespace on the inside of the brackets
-  // key = key.replace(/\[\s*/g, '[')
-  // key = key.replace(/\s*\]/g, ']')
-
-  // // Ignore case
-  // key = key.toLowerCase()
-
-  // unsorted.push({
-  //   key,
-  //   kind,
-  //   originalDecl: eqn
-  // })
 }
