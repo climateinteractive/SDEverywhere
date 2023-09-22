@@ -17,6 +17,8 @@ import {
 import { createParser } from '../parse/parser.js'
 
 import EquationReader from './equation-reader.js'
+import { readSubscripts } from './read-subscripts.js'
+import { readVariables as readVariables2 } from './read-variables.js'
 import SubscriptRangeReader from './subscript-range-reader.js'
 import toposort from './toposort.js'
 import VarNameReader from './var-name-reader.js'
@@ -53,7 +55,8 @@ function resetModelState() {
  * Note that this function currently does not return anything and instead stores the parsed subscript
  * definitions in the `subscript` module and the parsed/analyzed variables in this module.
  *
- * @param {import('../parse/parser.js').VensimModelParseTree} parseTree The Vensim parse tree.
+ * TODO: FIX TYPE
+ * @param {*} parsedModel The parsed model structure.
  * @param {*} spec The parsed `spec.json` object.
  * @param {Map<string, any>} extData The map of datasets from external `.dat` files.
  * @param {Map<string, any>} directData The mapping of dataset name used in a `GET DIRECT DATA`
@@ -62,19 +65,28 @@ function resetModelState() {
  * files for `GET DIRECT SUBSCRIPT`).
  * @param {*} opts An optional object used by tests to stop the read process after a specific phase.
  */
-function read(parseTree, spec, extData, directData, modelDirname, opts) {
+function read(parsedModel, spec, extData, directData, modelDirname, opts) {
   // Some arrays need to be separated into variables with individual indices to
   // prevent eval cycles. They are manually added to the spec file.
   let specialSeparationDims = spec.specialSeparationDims
 
   // Subscript ranges must be defined before reading variables that use them.
-  readSubscriptRanges(parseTree, modelDirname)
+  if (parsedModel.kind === 'vensim-legacy') {
+    readSubscriptRanges(parsedModel.parseTree, modelDirname)
+  } else {
+    readSubscripts(parsedModel, modelDirname)
+  }
   if (opts?.stopAfterReadSubscripts) return
   resolveSubscriptRanges(spec.dimensionFamilies)
   if (opts?.stopAfterResolveSubscripts) return
 
   // Read variables from the model parse tree.
-  readVariables(parseTree, specialSeparationDims, directData)
+  if (parsedModel.kind === 'vensim-legacy') {
+    readVariables(parsedModel.parseTree, specialSeparationDims, directData)
+  } else {
+    const vars = readVariables2(parsedModel, specialSeparationDims)
+    vars.forEach(addVariable)
+  }
   if (opts?.stopAfterReadVariables) return
 
   if (spec) {

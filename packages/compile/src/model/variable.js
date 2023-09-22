@@ -3,8 +3,13 @@ export default class Variable {
     // The equation rule context allows us to generate code by visiting the parse tree.
     this.eqnCtx = eqnCtx
     // Save both sides of the equation text in the model for documentation purposes.
-    this.modelLHS = eqnCtx ? eqnCtx.lhs().getText() : ''
-    this.modelFormula = this.formula(eqnCtx)
+    if (eqnCtx) {
+      this.modelLHS = eqnCtx.lhs().getText()
+      this.modelFormula = this.formula(eqnCtx)
+    } else {
+      this.modelLHS = ''
+      this.modelFormula = ''
+    }
     // An equation defines a variable with a var name, saved in canonical form here.
     this.varName = ''
     // Subscripts are canonical dimension or index names on the LHS in normal order.
