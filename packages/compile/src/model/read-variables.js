@@ -84,6 +84,13 @@ function variablesForEquation(eqn) {
     rhsText = toPrettyString(eqn.rhs.expr, { compact: true })
   } else if (eqn.rhs.kind === 'const-list') {
     rhsText = eqn.rhs.text
+  } else {
+    rhsText = ''
+    if (eqn.rhs.kind === 'data') {
+      // The legacy parser sets the variable's varType to 'data' at this stage,
+      // so we will do the same
+      variable.varType = 'data'
+    }
   }
   variable.modelFormula = rhsText
 
