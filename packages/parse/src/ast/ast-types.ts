@@ -39,6 +39,11 @@ export interface NumberValue {
   text: string
 }
 
+export interface Keyword {
+  kind: 'keyword'
+  text: string
+}
+
 export type VariableName = string
 export type VariableId = string
 
@@ -105,6 +110,7 @@ export interface FunctionCall {
 
 export type Expr =
   | NumberValue
+  | Keyword
   | VariableRef
   | UnaryOpExpr
   | BinaryOpExpr
@@ -190,6 +196,13 @@ export function num(value: number, text?: string): NumberValue {
     kind: 'number',
     value,
     text: text || value.toString()
+  }
+}
+
+export function keyword(text: string): Keyword {
+  return {
+    kind: 'keyword',
+    text
   }
 }
 

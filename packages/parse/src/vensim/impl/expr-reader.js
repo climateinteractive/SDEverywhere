@@ -91,6 +91,18 @@ export class ExprReader extends ModelVisitor {
   }
 
   //
+  // Keywords
+  //
+
+  visitKeyword(ctx) {
+    const text = ctx.Keyword().getText()
+    this.expr = {
+      kind: 'keyword',
+      text
+    }
+  }
+
+  //
   // Function calls and variables
   //
 

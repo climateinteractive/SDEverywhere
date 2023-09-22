@@ -2,7 +2,7 @@
 
 import { describe, expect, it } from 'vitest'
 
-import { binaryOp, call, lookupCall, lookupDef, num, parens, unaryOp, varRef } from '../ast/ast-types'
+import { binaryOp, call, keyword, lookupCall, lookupDef, num, parens, unaryOp, varRef } from '../ast/ast-types'
 
 import { parseVensimExpr } from './parse-vensim-expr'
 
@@ -67,6 +67,10 @@ describe('parseVensimExpr', () => {
 
   it('should parse an expr with binary = op', () => {
     expect(parseVensimExpr('x = y')).toEqual(binaryOp(x, '=', y))
+  })
+
+  it('should parse an expr with binary = op (with :NA: keyword)', () => {
+    expect(parseVensimExpr('x = :NA:')).toEqual(binaryOp(x, '=', keyword(':NA:')))
   })
 
   it('should parse an expr with binary <> op', () => {

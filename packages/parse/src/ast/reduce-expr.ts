@@ -15,6 +15,9 @@ export function reduceExpr(expr: Expr, opts?: ReduceExprOptions): Expr {
     case 'number':
       return expr
 
+    case 'keyword':
+      return expr
+
     case 'variable-ref':
       if (opts?.resolveRef !== undefined) {
         // Note that we assume the resolved expression has already been reduced by
@@ -293,6 +296,9 @@ export function reduceExpr(expr: Expr, opts?: ReduceExprOptions): Expr {
 export function reduceConditionals(expr: Expr, opts?: ReduceExprOptions): Expr {
   switch (expr.kind) {
     case 'number':
+      return expr
+
+    case 'keyword':
       return expr
 
     case 'variable-ref':

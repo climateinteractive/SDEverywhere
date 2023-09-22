@@ -15,6 +15,10 @@ export function debugPrintExpr(expr: Expr, indent = 0): void {
       log(`const: ${expr.text}`)
       break
 
+    case 'keyword':
+      log(`keyword: ${expr.text}`)
+      break
+
     case 'variable-ref':
       log(`ref: ${fullIdForVarRef(expr)}`)
       break
@@ -83,6 +87,9 @@ export function toPrettyString(expr: Expr, opts?: PrettyOpts): string {
 
   switch (expr.kind) {
     case 'number':
+      return expr.text
+
+    case 'keyword':
       return expr.text
 
     case 'variable-ref':
@@ -192,6 +199,10 @@ function getExprStats(expr: Expr, stats: Stats) {
   switch (expr.kind) {
     case 'number':
       stats.constCount++
+      break
+
+    case 'keyword':
+      // TODO: Count this as a constant?  (Currently only used for :NA: values.)
       break
 
     case 'variable-ref':
