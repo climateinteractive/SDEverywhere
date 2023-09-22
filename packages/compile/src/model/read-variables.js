@@ -60,7 +60,18 @@ function variablesForEquation(eqn) {
     // Note that we use the original order of subscripts here, not the "normalized"
     // order as below.  (This is how the legacy parser worked, so we will preserve
     // that behavior for now.)
-    lhsText = `${lhs.varName}[${lhs.subscriptRefs.map(sub => sub.subName).join(',')}]`
+    const subNames = lhs.subscriptRefs.map(sub => sub.subName)
+    let exceptPart
+    if (lhs.exceptSubscriptRefSets) {
+      const exceptSets = lhs.exceptSubscriptRefSets.map(exceptSubRefs => {
+        const exceptSubNames = exceptSubRefs.map(sub => sub.subName)
+        return `[${exceptSubNames.join(',')}]`
+      })
+      exceptPart = `:EXCEPT:${exceptSets.join(',')}`
+    } else {
+      exceptPart = ''
+    }
+    lhsText = `${lhs.varName}[${subNames.join(',')}]${exceptPart}`
   } else {
     lhsText = lhs.varName
   }
@@ -120,7 +131,6 @@ function variablesForEquation(eqn) {
       v.modelFormula = rhsText
       v.subscripts = expansion.subIds
       v.separationDims = expansion.separationDimIds
-      // console.log
       variables.push(v)
     }
     return variables
@@ -226,10 +236,7 @@ function computeExpansions(baseVarId, subIds, exceptSubIdSets, positionsToExpand
   }
 
   const expansions = []
-  console.log(`EXPANSIONS: ${baseVarId}`)
-  console.log(`POSITIONS: ${positionsToExpand}`)
   for (const expandedSubIds of expandedSubIdSets) {
-    console.log(expandedSubIds)
     // Skip expansions that match exception subscripts
     if (!skipExpansion(expandedSubIds)) {
       // Add a new expansion
