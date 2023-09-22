@@ -145,7 +145,7 @@ export function toPrettyString(expr: Expr, opts?: PrettyOpts): string {
       const pointString = (p: [number, number]) => {
         return `(${p[0]},${p[1]})`
       }
-      const points = expr.points.map(pointString).join(', ')
+      const points = expr.points.map(pointString).join(commaSep)
       if (expr.range) {
         const min = pointString(expr.range.min)
         const max = pointString(expr.range.max)
