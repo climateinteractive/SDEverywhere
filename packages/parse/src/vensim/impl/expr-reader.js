@@ -81,10 +81,12 @@ export class ExprReader extends ModelVisitor {
   //
 
   visitConst(ctx) {
-    const value = parseFloat(ctx.Const().getText())
+    const text = ctx.Const().getText()
+    const value = parseFloat(text)
     this.expr = {
       kind: 'number',
-      value
+      value,
+      text
     }
   }
 
@@ -320,5 +322,11 @@ export class ExprReader extends ModelVisitor {
 
   visitParens(ctx) {
     super.visitParens(ctx)
+
+    const child = this.expr
+    this.expr = {
+      kind: 'parens',
+      expr: child
+    }
   }
 }

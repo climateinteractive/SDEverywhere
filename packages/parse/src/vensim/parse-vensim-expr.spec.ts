@@ -2,7 +2,7 @@
 
 import { describe, expect, it } from 'vitest'
 
-import { binaryOp, call, lookupCall, lookupDef, num, unaryOp, varRef } from '../ast/ast-types'
+import { binaryOp, call, lookupCall, lookupDef, num, parens, unaryOp, varRef } from '../ast/ast-types'
 
 import { parseVensimExpr } from './parse-vensim-expr'
 
@@ -17,9 +17,14 @@ describe('parseVensimExpr', () => {
     expect(parseVensimExpr('1')).toEqual(one)
   })
 
+  it('should parse an expr with a single constant and preserve original notation', () => {
+    expect(parseVensimExpr('1e+06')).toEqual(num(1000000, '1e+06'))
+  })
+
   it('should parse an expr with unary + op', () => {
     expect(parseVensimExpr('+1')).toEqual(unaryOp('+', one))
   })
+
   it('should parse an expr with unary - op', () => {
     expect(parseVensimExpr('-1')).toEqual(unaryOp('-', one))
   })
@@ -49,7 +54,7 @@ describe('parseVensimExpr', () => {
   })
 
   it('should parse an expr with explicit parentheses', () => {
-    expect(parseVensimExpr('(1 + 2)')).toEqual(binaryOp(one, '+', two))
+    expect(parseVensimExpr('(1 + 2)')).toEqual(parens(binaryOp(one, '+', two)))
   })
 
   it('should parse multiple math expressions (without parentheses)', () => {
@@ -57,7 +62,7 @@ describe('parseVensimExpr', () => {
   })
 
   it('should parse multiple binary math expressions (with parentheses)', () => {
-    expect(parseVensimExpr('(1 + 2) * 3')).toEqual(binaryOp(binaryOp(one, '+', two), '*', three))
+    expect(parseVensimExpr('(1 + 2) * 3')).toEqual(binaryOp(parens(binaryOp(one, '+', two)), '*', three))
   })
 
   it('should parse an expr with binary = op', () => {

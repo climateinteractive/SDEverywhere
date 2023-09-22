@@ -33,7 +33,10 @@ export interface SubscriptRange {
 
 export interface NumberValue {
   kind: 'number'
+  /** The numeric value. */
   value: number
+  /** The original string representation from the model. */
+  text: string
 }
 
 export type VariableName = string
@@ -62,6 +65,11 @@ export interface BinaryOpExpr {
   lhs: Expr
   op: BinaryOp
   rhs: Expr
+}
+
+export interface ParensExpr {
+  kind: 'parens'
+  expr: Expr
 }
 
 // TODO: The antlr4-vensim grammar accepts any expression for each
@@ -95,7 +103,15 @@ export interface FunctionCall {
   args: Expr[]
 }
 
-export type Expr = NumberValue | VariableRef | UnaryOpExpr | BinaryOpExpr | LookupDef | LookupCall | FunctionCall
+export type Expr =
+  | NumberValue
+  | VariableRef
+  | UnaryOpExpr
+  | BinaryOpExpr
+  | ParensExpr
+  | LookupDef
+  | LookupCall
+  | FunctionCall
 
 export interface EquationLhs {
   varRef: VariableRef
@@ -169,10 +185,11 @@ export function subRange(
   }
 }
 
-export function num(value: number): NumberValue {
+export function num(value: number, text?: string): NumberValue {
   return {
     kind: 'number',
-    value
+    value,
+    text: text || value.toString()
   }
 }
 
@@ -204,6 +221,13 @@ export function binaryOp(lhs: Expr, op: BinaryOp, rhs: Expr): BinaryOpExpr {
     lhs,
     op,
     rhs
+  }
+}
+
+export function parens(expr: Expr): ParensExpr {
+  return {
+    kind: 'parens',
+    expr
   }
 }
 

@@ -3,7 +3,7 @@
 import { assertNever } from 'assert-never'
 
 import type { Expr, NumberValue, VariableId } from './ast-types'
-import { binaryOp, lookupCall, num, unaryOp } from './ast-types'
+import { binaryOp, lookupCall, num, parens, unaryOp } from './ast-types'
 
 export interface ReduceExprOptions {
   /** A callback that returns the possibly reduced expression for the referenced variable. */
@@ -207,6 +207,12 @@ export function reduceExpr(expr: Expr, opts?: ReduceExprOptions): Expr {
       }
     }
 
+    case 'parens': {
+      // TODO: Drop the parens if it reduces to something trivial?
+      const child = reduceExpr(expr.expr, opts)
+      return parens(child)
+    }
+
     case 'lookup-def':
       // TODO: Reduce lookup def?
       return expr
@@ -309,6 +315,12 @@ export function reduceConditionals(expr: Expr, opts?: ReduceExprOptions): Expr {
       const lhs = reduceConditionals(expr.lhs, opts)
       const rhs = reduceConditionals(expr.rhs, opts)
       return binaryOp(lhs, expr.op, rhs)
+    }
+
+    case 'parens': {
+      // TODO: Drop the parens if it reduces to something trivial?
+      const child = reduceConditionals(expr.expr, opts)
+      return parens(child)
     }
 
     case 'lookup-def':

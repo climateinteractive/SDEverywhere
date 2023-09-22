@@ -12,7 +12,7 @@ export function debugPrintExpr(expr: Expr, indent = 0): void {
 
   switch (expr.kind) {
     case 'number':
-      log(`const: ${expr.value}`)
+      log(`const: ${expr.text}`)
       break
 
     case 'variable-ref':
@@ -28,6 +28,11 @@ export function debugPrintExpr(expr: Expr, indent = 0): void {
       log(`binary-op: ${expr.op}`)
       debugPrintExpr(expr.lhs, indent + 1)
       debugPrintExpr(expr.rhs, indent + 1)
+      break
+
+    case 'parens':
+      log('parens')
+      debugPrintExpr(expr.expr, indent + 1)
       break
 
     case 'lookup-def':
@@ -53,21 +58,39 @@ export function debugPrintExpr(expr: Expr, indent = 0): void {
 export type FormatVariableRefFunc = (varRef: VariableRef) => string
 
 export interface PrettyOpts {
+  /**
+   * Whether to use a compact representation without additional spaces.  (The compact form mimics
+   * the behavior of the legacy parser.
+   */
+  compact?: boolean
   html?: boolean
   formatVariableRef?: FormatVariableRefFunc
 }
 
 export function toPrettyString(expr: Expr, opts?: PrettyOpts): string {
+  let lparen: string, rparen: string, spaceSep: string, commaSep: string
+  if (opts?.compact === true) {
+    lparen = '('
+    rparen = ')'
+    spaceSep = ''
+    commaSep = ','
+  } else {
+    lparen = '( '
+    rparen = ' )'
+    spaceSep = ' '
+    commaSep = ', '
+  }
+
   switch (expr.kind) {
     case 'number':
-      return expr.value.toString()
+      return expr.text
 
     case 'variable-ref':
       if (opts?.formatVariableRef) {
         return opts.formatVariableRef(expr)
       } else {
         if (expr.subscriptRefs?.length > 0) {
-          return `${expr.varName}[${expr.subscriptRefs.map(ref => ref.subName).join(', ')}]`
+          return `${expr.varName}[${expr.subscriptRefs.map(ref => ref.subName).join(commaSep)}]`
         } else {
           return expr.varName
         }
@@ -103,8 +126,13 @@ export function toPrettyString(expr: Expr, opts?: PrettyOpts): string {
       } else {
         op = expr.op
       }
-      return `( ${toPrettyString(expr.lhs, opts)} ${op} ${toPrettyString(expr.rhs, opts)} )`
+      const lhs = toPrettyString(expr.lhs, opts)
+      const rhs = toPrettyString(expr.rhs, opts)
+      return `${lhs}${spaceSep}${op}${spaceSep}${rhs}`
     }
+
+    case 'parens':
+      return `${lparen}${toPrettyString(expr.expr, opts)}${rparen}`
 
     case 'lookup-def': {
       const pointString = (p: [number, number]) => {
@@ -114,21 +142,21 @@ export function toPrettyString(expr: Expr, opts?: PrettyOpts): string {
       if (expr.range) {
         const min = pointString(expr.range.min)
         const max = pointString(expr.range.max)
-        return `( [${min}-${max}], ${points} )`
+        return `${lparen}[${min}-${max}]${commaSep}${points}${rparen}`
       } else {
-        return `( ${points} )`
+        return `${lparen}${points}${rparen}`
       }
     }
 
     case 'lookup-call': {
       const varRef = toPrettyString(expr.varRef, opts)
       const arg = toPrettyString(expr.arg, opts)
-      return `${varRef}( ${arg} )`
+      return `${varRef}${lparen}${arg}${rparen}`
     }
 
     case 'function-call': {
       const args = expr.args.map(arg => toPrettyString(arg, opts))
-      return `${expr.fnName}( ${args.join(', ')} )`
+      return `${expr.fnName}${lparen}${args.join(commaSep)}${rparen}`
     }
 
     default:
@@ -179,6 +207,10 @@ function getExprStats(expr: Expr, stats: Stats) {
       getExprStats(expr.lhs, stats)
       getExprStats(expr.rhs, stats)
       increment(stats.binaryOpCounts, expr.op)
+      break
+
+    case 'parens':
+      getExprStats(expr.expr, stats)
       break
 
     case 'lookup-def':
