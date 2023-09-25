@@ -27,9 +27,11 @@ function readSubscriptsAndVariables(modelName: string): Variable[] {
     stopAfterReadVariables: true
   })
 
-  // XXX: Strip out the ANTLR eqnCtx to avoid vitest hang when comparing
   return Model.variables.map(v => {
+    // XXX: Strip out the ANTLR eqnCtx to avoid vitest hang when comparing
     delete v.eqnCtx
+    // XXX: Strip out the new parsedEqn field, since we don't need it for comparing
+    delete v.parsedEqn
     return v
   })
 }

@@ -17,6 +17,7 @@ import {
 import { createParser } from '../parse/parser.js'
 
 import EquationReader from './equation-reader.js'
+import { readEquation } from './read-equations.js'
 import { readSubscripts } from './read-subscripts.js'
 import { readVariables as readVariables2 } from './read-variables.js'
 import SubscriptRangeReader from './subscript-range-reader.js'
@@ -84,7 +85,16 @@ function read(parsedModel, spec, extData, directData, modelDirname, opts) {
   if (parsedModel.kind === 'vensim-legacy') {
     readVariables(parsedModel.parseTree, specialSeparationDims, directData)
   } else {
+    // Read the variables
     const vars = readVariables2(parsedModel, specialSeparationDims)
+
+    // Include a placeholder variable for the exogenous `Time` variable
+    const timeVar = new Variable(null)
+    timeVar.modelLHS = 'Time'
+    timeVar.varName = '_time'
+    vars.push(timeVar)
+
+    // Add the variables to the `Model`
     vars.forEach(addVariable)
   }
   if (opts?.stopAfterReadVariables) return
@@ -106,7 +116,7 @@ function read(parsedModel, spec, extData, directData, modelDirname, opts) {
   }
 
   // Analyze model equations to fill in more details about variables.
-  analyze()
+  analyze(parsedModel.kind)
   if (opts?.stopAfterAnalyze) return
 
   // Check that all input and output vars in the spec actually exist in the model.
@@ -305,14 +315,18 @@ function readVariables(tree, specialSeparationDims, directData) {
   addVariable(v)
 }
 
-function analyze() {
+function analyze(parsedModelKind) {
   // Analyze the RHS of each equation in stages after all the variables are read.
   // Find non-apply-to-all vars that are defined with more than one equation.
   findNonAtoAVars()
   // Set the refId for each variable. Only non-apply-to-all vars include subscripts in the refId.
   setRefIds()
   // Read the RHS to list the refIds of vars that are referenced and set the var type.
-  readEquations()
+  if (parsedModelKind === 'vensim-legacy') {
+    readEquations()
+  } else {
+    variables.forEach(readEquation)
+  }
 }
 
 function checkSpecVars(spec, extData) {

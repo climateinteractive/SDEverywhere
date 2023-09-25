@@ -2,11 +2,12 @@ import { describe, expect, it } from 'vitest'
 
 import { canonicalName, resetHelperState } from '../_shared/helpers'
 import { resetSubscriptsAndDimensions } from '../_shared/subscript'
+import type { VensimModelParseTree } from '../parse/parser'
 
 import Model from './model'
 import { default as VariableImpl } from './variable'
 
-import { parseVensimModel, sampleModelDir, type Variable } from '../_tests/test-support'
+import { parseInlineVensimModel, parseVensimModel, sampleModelDir, type Variable } from '../_tests/test-support'
 
 /**
  * This is a shorthand for the following steps to read equations:
@@ -16,23 +17,52 @@ import { parseVensimModel, sampleModelDir, type Variable } from '../_tests/test-
  *   - readVariables
  *   - analyze (this includes readEquations)
  */
-function readSubscriptsAndEquations(modelName: string): Variable[] {
+function readSubscriptsAndEquationsFromSource(source: {
+  modelText?: string
+  modelName?: string
+  modelDir?: string
+}): Variable[] {
   // XXX: These steps are needed due to subs/dims and variables being in module-level storage
   resetHelperState()
   resetSubscriptsAndDimensions()
   Model.resetModelState()
 
-  const parsedModel = parseVensimModel(modelName)
-  const modelDir = sampleModelDir(modelName)
+  let parsedModel: VensimModelParseTree
+  if (source.modelText) {
+    parsedModel = parseInlineVensimModel(source.modelText)
+  } else {
+    parsedModel = parseVensimModel(source.modelName)
+  }
+
+  let modelDir = source.modelDir
+  if (modelDir === undefined) {
+    if (source.modelName) {
+      modelDir = sampleModelDir(source.modelName)
+    }
+  }
+
   Model.read(parsedModel, /*spec=*/ {}, /*extData=*/ undefined, /*directData=*/ undefined, modelDir, {
     stopAfterAnalyze: true
   })
 
-  // XXX: Strip out the ANTLR eqnCtx to avoid vitest hang when comparing
   return Model.variables.map(v => {
+    // XXX: Strip out the legacy ANTLR eqnCtx to avoid vitest hang when comparing
     delete v.eqnCtx
+    // XXX: Strip out the new parsedEqn field, since we don't need it for comparing
+    delete v.parsedEqn
     return v
   })
+}
+
+function readInlineModel(modelText: string, modelDir?: string): Variable[] {
+  const vars = readSubscriptsAndEquationsFromSource({ modelText, modelDir })
+
+  // Exclude the `Time` variable so that we have one less thing to check
+  return vars.filter(v => v.varName !== '_time')
+}
+
+function readSubscriptsAndEquations(modelName: string): Variable[] {
+  return readSubscriptsAndEquationsFromSource({ modelName })
 }
 
 function v(lhs: string, formula: string, overrides?: Partial<Variable>): Variable {
@@ -55,6 +85,538 @@ function v(lhs: string, formula: string, overrides?: Partial<Variable>): Variabl
 }
 
 describe('readEquations', () => {
+  it('should work for simple equation with explicit parentheses', () => {
+    const vars = readInlineModel(`
+      x = 1 ~~|
+      y = (x + 2) * 3 ~~|
+    `)
+    expect(vars).toEqual([
+      v('x', '1', {
+        refId: '_x',
+        varType: 'const'
+      }),
+      v('y', '(x+2)*3', {
+        refId: '_y',
+        references: ['_x']
+      })
+    ])
+  })
+
+  it('should work for conditional expression with = op', () => {
+    const vars = readInlineModel(`
+      x = 1 ~~|
+      y = IF THEN ELSE(x = time, 1, 0) ~~|
+    `)
+    expect(vars).toEqual([
+      v('x', '1', {
+        refId: '_x',
+        varType: 'const'
+      }),
+      v('y', 'IF THEN ELSE(x=time,1,0)', {
+        refId: '_y',
+        references: ['_x', '_time']
+      })
+    ])
+  })
+
+  it('should work for data variable definition', () => {
+    const vars = readInlineModel(
+      `
+      x ~~|
+      `
+    )
+    expect(vars).toEqual([
+      v('x', '', {
+        refId: '_x',
+        varType: 'data'
+      })
+    ])
+  })
+
+  it('should work for lookup definition', () => {
+    const vars = readInlineModel(`
+      x( [(0,0)-(2,2)], (0,0),(0.1,0.01),(0.5,0.7),(1,1),(1.5,1.2),(2,1.3) ) ~~|
+    `)
+    expect(vars).toEqual([
+      v('x', '', {
+        refId: '_x',
+        varType: 'lookup',
+        range: [
+          [0, 0],
+          [2, 2]
+        ],
+        points: [
+          [0, 0],
+          [0.1, 0.01],
+          [0.5, 0.7],
+          [1, 1],
+          [1.5, 1.2],
+          [2, 1.3]
+        ]
+      })
+    ])
+  })
+
+  it('should work for lookup call', () => {
+    const vars = readInlineModel(`
+      x( (0,0),(2,1.3) ) ~~|
+      y = x(2) ~~|
+    `)
+    expect(vars).toEqual([
+      v('x', '', {
+        refId: '_x',
+        varType: 'lookup',
+        range: [],
+        points: [
+          [0, 0],
+          [2, 1.3]
+        ]
+      }),
+      v('y', 'x(2)', {
+        refId: '_y',
+        referencedFunctionNames: ['__x']
+      })
+    ])
+  })
+
+  it('should work for ACTIVE INITIAL function', () => {
+    const vars = readInlineModel(`
+      Initial Target Capacity = 1 ~~|
+      Capacity = 2 ~~|
+      Target Capacity = ACTIVE INITIAL(Capacity, Initial Target Capacity) ~~|
+    `)
+    expect(vars).toEqual([
+      v('Initial Target Capacity', '1', {
+        refId: '_initial_target_capacity',
+        varType: 'const'
+      }),
+      v('Capacity', '2', {
+        refId: '_capacity',
+        varType: 'const'
+      }),
+      v('Target Capacity', 'ACTIVE INITIAL(Capacity,Initial Target Capacity)', {
+        refId: '_target_capacity',
+        references: ['_capacity'],
+        hasInitValue: true,
+        initReferences: ['_initial_target_capacity'],
+        referencedFunctionNames: ['__active_initial']
+      })
+    ])
+  })
+
+  it('should work for DELAY1 function', () => {
+    const vars = readInlineModel(`
+      x = 1 ~~|
+      y = DELAY1(x, 5) ~~|
+    `)
+    expect(vars).toEqual([
+      v('x', '1', {
+        refId: '_x',
+        varType: 'const'
+      }),
+      v('y', 'DELAY1(x,5)', {
+        refId: '_y',
+        references: ['__level1', '__aux1'],
+        delayVarRefId: '__level1',
+        delayTimeVarName: '__aux1'
+      }),
+      v('_level1', 'INTEG(x-y,x*5)', {
+        refId: '__level1',
+        varType: 'level',
+        includeInOutput: false,
+        references: ['_x', '_y'],
+        hasInitValue: true,
+        initReferences: ['_x'],
+        referencedFunctionNames: ['__integ']
+      }),
+      v('_aux1', '5', {
+        refId: '__aux1',
+        varType: 'const',
+        includeInOutput: false
+      })
+    ])
+  })
+
+  it('should work for DELAY1I function', () => {
+    const vars = readInlineModel(`
+      x = 1 ~~|
+      init = 2 ~~|
+      y = DELAY1I(x, 5, init) ~~|
+    `)
+    expect(vars).toEqual([
+      v('x', '1', {
+        refId: '_x',
+        varType: 'const'
+      }),
+      v('init', '2', {
+        refId: '_init',
+        varType: 'const'
+      }),
+      v('y', 'DELAY1I(x,5,init)', {
+        refId: '_y',
+        references: ['__level1', '__aux1'],
+        delayVarRefId: '__level1',
+        delayTimeVarName: '__aux1'
+      }),
+      v('_level1', 'INTEG(x-y,init*5)', {
+        refId: '__level1',
+        varType: 'level',
+        includeInOutput: false,
+        references: ['_x', '_y'],
+        hasInitValue: true,
+        initReferences: ['_init'],
+        referencedFunctionNames: ['__integ']
+      }),
+      v('_aux1', '5', {
+        refId: '__aux1',
+        varType: 'const',
+        includeInOutput: false
+      })
+    ])
+  })
+
+  it('should work for DELAY1I function (with subscripted variables)', () => {
+    const vars = readInlineModel(`
+      DimA: A1, A2, A3 ~~|
+      input[DimA] = 10, 20, 30 ~~|
+      delay[DimA] = 1, 2, 3 ~~|
+      init[DimA] = 0 ~~|
+      y[DimA] = DELAY1I(input[DimA], delay[DimA], init[DimA]) ~~|
+    `)
+    expect(vars).toEqual([
+      v('input[DimA]', '10,20,30', {
+        refId: '_input[_a1]',
+        separationDims: ['_dima'],
+        subscripts: ['_a1'],
+        varType: 'const'
+      }),
+      v('input[DimA]', '10,20,30', {
+        refId: '_input[_a2]',
+        separationDims: ['_dima'],
+        subscripts: ['_a2'],
+        varType: 'const'
+      }),
+      v('input[DimA]', '10,20,30', {
+        refId: '_input[_a3]',
+        separationDims: ['_dima'],
+        subscripts: ['_a3'],
+        varType: 'const'
+      }),
+      v('delay[DimA]', '1,2,3', {
+        refId: '_delay[_a1]',
+        separationDims: ['_dima'],
+        subscripts: ['_a1'],
+        varType: 'const'
+      }),
+      v('delay[DimA]', '1,2,3', {
+        refId: '_delay[_a2]',
+        separationDims: ['_dima'],
+        subscripts: ['_a2'],
+        varType: 'const'
+      }),
+      v('delay[DimA]', '1,2,3', {
+        refId: '_delay[_a3]',
+        separationDims: ['_dima'],
+        subscripts: ['_a3'],
+        varType: 'const'
+      }),
+      v('init[DimA]', '0', {
+        refId: '_init',
+        subscripts: ['_dima'],
+        varType: 'const'
+      }),
+      v('y[DimA]', 'DELAY1I(input[DimA],delay[DimA],init[DimA])', {
+        delayTimeVarName: '__aux1',
+        delayVarRefId: '__level1',
+        refId: '_y',
+        references: ['__level1', '__aux1[_dima]'],
+        subscripts: ['_dima']
+      }),
+      v('_level1[DimA]', 'INTEG(input[DimA]-y[DimA],init[DimA]*delay[DimA])', {
+        hasInitValue: true,
+        includeInOutput: false,
+        initReferences: ['_init', '_delay[_a1]', '_delay[_a2]', '_delay[_a3]'],
+        refId: '__level1',
+        referencedFunctionNames: ['__integ'],
+        references: ['_input[_a1]', '_input[_a2]', '_input[_a3]', '_y'],
+        subscripts: ['_dima'],
+        varType: 'level'
+      }),
+      v('_aux1[DimA]', 'delay[DimA]', {
+        includeInOutput: false,
+        refId: '__aux1',
+        references: ['_delay[_a1]', '_delay[_a2]', '_delay[_a3]'],
+        subscripts: ['_dima']
+      })
+    ])
+  })
+
+  it('should work for DELAY FIXED function', () => {
+    const vars = readInlineModel(`
+      x = 1 ~~|
+      y = 2 ~~|
+      delay = y + 5 ~~|
+      init = 3 ~~|
+      z = DELAY FIXED(x, delay, init) ~~|
+    `)
+    expect(vars).toEqual([
+      v('x', '1', {
+        refId: '_x',
+        varType: 'const'
+      }),
+      v('y', '2', {
+        refId: '_y',
+        varType: 'const'
+      }),
+      v('delay', 'y+5', {
+        refId: '_delay',
+        references: ['_y']
+      }),
+      v('init', '3', {
+        refId: '_init',
+        varType: 'const'
+      }),
+      v('z', 'DELAY FIXED(x,delay,init)', {
+        refId: '_z',
+        varType: 'level',
+        varSubtype: 'fixedDelay',
+        fixedDelayVarName: '__fixed_delay1',
+        references: ['_x'],
+        hasInitValue: true,
+        initReferences: ['_delay', '_init'],
+        referencedFunctionNames: ['__delay_fixed']
+      })
+    ])
+  })
+
+  it('should work for DEPRECIATE STRAIGHTLINE function', () => {
+    const vars = readInlineModel(`
+      dtime = 20 ~~|
+      fisc = 1 ~~|
+      init = 5 ~~|
+      Capacity Cost = 1000 ~~|
+      New Capacity = 2000 ~~|
+      stream = Capacity Cost * New Capacity ~~|
+      Depreciated Amount = DEPRECIATE STRAIGHTLINE(stream, dtime, fisc, init) ~~|
+    `)
+    expect(vars).toEqual([
+      v('dtime', '20', {
+        refId: '_dtime',
+        varType: 'const'
+      }),
+      v('fisc', '1', {
+        refId: '_fisc',
+        varType: 'const'
+      }),
+      v('init', '5', {
+        refId: '_init',
+        varType: 'const'
+      }),
+      v('Capacity Cost', '1000', {
+        refId: '_capacity_cost',
+        varType: 'const'
+      }),
+      v('New Capacity', '2000', {
+        refId: '_new_capacity',
+        varType: 'const'
+      }),
+      v('stream', 'Capacity Cost*New Capacity', {
+        refId: '_stream',
+        references: ['_capacity_cost', '_new_capacity']
+      }),
+      v('Depreciated Amount', 'DEPRECIATE STRAIGHTLINE(stream,dtime,fisc,init)', {
+        refId: '_depreciated_amount',
+        varSubtype: 'depreciation',
+        depreciationVarName: '__depreciation1',
+        references: ['_stream', '_init'],
+        hasInitValue: true,
+        initReferences: ['_dtime', '_fisc'],
+        referencedFunctionNames: ['__depreciate_straightline']
+      })
+    ])
+  })
+
+  it('should work for IF THEN ELSE function', () => {
+    const vars = readInlineModel(`
+      x = 100 ~~|
+      y = 2 ~~|
+      z = IF THEN ELSE(Time > x, 1, y) ~~|
+    `)
+    expect(vars).toEqual([
+      v('x', '100', {
+        refId: '_x',
+        varType: 'const'
+      }),
+      v('y', '2', {
+        refId: '_y',
+        varType: 'const'
+      }),
+      v('z', 'IF THEN ELSE(Time>x,1,y)', {
+        refId: '_z',
+        references: ['_time', '_x', '_y']
+      })
+    ])
+  })
+
+  it('should work for INITIAL function', () => {
+    const vars = readInlineModel(`
+      x = Time * 2 ~~|
+      y = INITIAL(x) ~~|
+    `)
+    expect(vars).toEqual([
+      v('x', 'Time*2', {
+        refId: '_x',
+        references: ['_time']
+      }),
+      v('y', 'INITIAL(x)', {
+        refId: '_y',
+        varType: 'initial',
+        hasInitValue: true,
+        initReferences: ['_x'],
+        referencedFunctionNames: ['__initial']
+      })
+    ])
+  })
+
+  it('should work for INTEG function', () => {
+    const vars = readInlineModel(`
+      x = Time * 2 ~~|
+      init = 5 ~~|
+      y = INTEG(x, init) ~~|
+    `)
+    expect(vars).toEqual([
+      v('x', 'Time*2', {
+        refId: '_x',
+        references: ['_time']
+      }),
+      v('init', '5', {
+        refId: '_init',
+        varType: 'const'
+      }),
+      v('y', 'INTEG(x,init)', {
+        refId: '_y',
+        varType: 'level',
+        references: ['_x'],
+        hasInitValue: true,
+        initReferences: ['_init'],
+        referencedFunctionNames: ['__integ']
+      })
+    ])
+  })
+
+  it('should work for INTEG function (with nested functions)', () => {
+    const vars = readInlineModel(`
+      x = Time * 2 ~~|
+      init = 5 ~~|
+      y = INTEG(ABS(x), POW(init, 3)) ~~|
+    `)
+    expect(vars).toEqual([
+      v('x', 'Time*2', {
+        refId: '_x',
+        references: ['_time']
+      }),
+      v('init', '5', {
+        refId: '_init',
+        varType: 'const'
+      }),
+      v('y', 'INTEG(ABS(x),POW(init,3))', {
+        refId: '_y',
+        varType: 'level',
+        references: ['_x'],
+        hasInitValue: true,
+        initReferences: ['_init'],
+        referencedFunctionNames: ['__integ', '__abs', '__pow']
+      })
+    ])
+  })
+
+  // TODO: Add a variant where discount rate is defined as (x+1) (old reader did not include
+  // parens and might generate incorrect equation)
+  it('should work for NPV function', () => {
+    const vars = readInlineModel(`
+      stream = 100 ~~|
+      discount rate = 10 ~~|
+      init = 0 ~~|
+      factor = 2 ~~|
+      y = NPV(stream, discount rate, init, factor) ~~|
+    `)
+    expect(vars).toEqual([
+      v('stream', '100', {
+        refId: '_stream',
+        varType: 'const'
+      }),
+      v('discount rate', '10', {
+        refId: '_discount_rate',
+        varType: 'const'
+      }),
+      v('init', '0', {
+        refId: '_init',
+        varType: 'const'
+      }),
+      v('factor', '2', {
+        refId: '_factor',
+        varType: 'const'
+      }),
+      v('y', 'NPV(stream,discount rate,init,factor)', {
+        refId: '_y',
+        references: ['__level2', '__level1', '__aux1'],
+        npvVarName: '__aux1'
+      }),
+      v('_level1', 'INTEG((-_level1*discount rate)/(1+discount rate*TIME STEP),1)', {
+        refId: '__level1',
+        varType: 'level',
+        includeInOutput: false,
+        references: ['_discount_rate', '_time_step'],
+        hasInitValue: true,
+        referencedFunctionNames: ['__integ']
+      }),
+      v('_level2', 'INTEG(stream*_level1,init)', {
+        refId: '__level2',
+        varType: 'level',
+        includeInOutput: false,
+        references: ['_stream', '__level1'],
+        hasInitValue: true,
+        initReferences: ['_init'],
+        referencedFunctionNames: ['__integ']
+      }),
+      v('_aux1', '(_level2+stream*TIME STEP*_level1)*factor', {
+        refId: '__aux1',
+        includeInOutput: false,
+        references: ['__level2', '_stream', '_time_step', '__level1', '_factor']
+      })
+    ])
+  })
+
+  it('should work for SAMPLE IF TRUE function', () => {
+    const vars = readInlineModel(`
+      initial = 10 ~~|
+      input = 5 ~~|
+      x = 1 ~~|
+      y = SAMPLE IF TRUE(Time > x, input, initial) ~~|
+    `)
+    expect(vars).toEqual([
+      v('initial', '10', {
+        refId: '_initial',
+        varType: 'const'
+      }),
+      v('input', '5', {
+        refId: '_input',
+        varType: 'const'
+      }),
+      v('x', '1', {
+        refId: '_x',
+        varType: 'const'
+      }),
+      v('y', 'SAMPLE IF TRUE(Time>x,input,initial)', {
+        refId: '_y',
+        references: ['_time', '_x', '_input'],
+        hasInitValue: true,
+        initReferences: ['_initial'],
+        referencedFunctionNames: ['__sample_if_true']
+      })
+    ])
+  })
+
   it('should work for Vensim "active_initial" model', () => {
     const vars = readSubscriptsAndEquations('active_initial')
     expect(vars).toEqual([

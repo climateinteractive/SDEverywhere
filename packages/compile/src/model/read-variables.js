@@ -29,12 +29,6 @@ export function readVariables(parsedModel) {
     variables.push(...variablesForEquation(eqn))
   }
 
-  // Add a placeholder variable for the exogenous `Time` variable
-  const timeVar = new Variable(null)
-  timeVar.modelLHS = 'Time'
-  timeVar.varName = '_time'
-  variables.push(timeVar)
-
   return variables
 }
 
@@ -50,7 +44,7 @@ export function readVariables(parsedModel) {
  */
 function variablesForEquation(eqn) {
   // Start a new variable defined by this equation
-  const variable = new Variable(undefined)
+  const variable = new Variable(null)
 
   // Fill in the LHS details
   const lhs = eqn.lhs.varRef
@@ -93,6 +87,7 @@ function variablesForEquation(eqn) {
     }
   }
   variable.modelFormula = rhsText
+  variable.parsedEqn = eqn
 
   // If the variable is subscripted, expand on the LHS subscripts
   let expansions = []
@@ -132,10 +127,11 @@ function variablesForEquation(eqn) {
     // Generate variables expanded over subscripts to the model
     const variables = []
     for (const expansion of expansions) {
-      const v = new Variable(undefined)
+      const v = new Variable(null)
       v.varName = baseVarId
       v.modelLHS = lhsText
       v.modelFormula = rhsText
+      v.parsedEqn = eqn
       v.subscripts = expansion.subIds
       v.separationDims = expansion.separationDimIds
       variables.push(v)
