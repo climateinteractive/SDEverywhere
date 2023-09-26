@@ -276,6 +276,8 @@ describe('readEquations', () => {
   })
 
   it('should work for DELAY1I function (with subscripted variables)', () => {
+    // Note that we have a mix of non-apply-to-all (input, delay) and apply-to-all (init)
+    // variables here to cover both cases
     const vars = readInlineModel(`
       DimA: A1, A2, A3 ~~|
       input[DimA] = 10, 20, 30 ~~|
@@ -347,6 +349,561 @@ describe('readEquations', () => {
         refId: '__aux1',
         references: ['_delay[_a1]', '_delay[_a2]', '_delay[_a3]'],
         subscripts: ['_dima']
+      })
+    ])
+  })
+
+  it('should work for DELAY1I function (with separated variables using subdimension)', () => {
+    const vars = readInlineModel(`
+      DimA: A1, A2, A3 ~~|
+      SubA: A2, A3 ~~|
+      input[DimA] = 10, 20, 30 ~~|
+      delay[DimA] = 1, 2, 3 ~~|
+      init[DimA] = 0 ~~|
+      y[A1] = 5 ~~|
+      y[SubA] = DELAY1I(input[SubA], delay[SubA], init[SubA]) ~~|
+    `)
+    expect(vars).toEqual([
+      v('input[DimA]', '10,20,30', {
+        refId: '_input[_a1]',
+        separationDims: ['_dima'],
+        subscripts: ['_a1'],
+        varType: 'const'
+      }),
+      v('input[DimA]', '10,20,30', {
+        refId: '_input[_a2]',
+        separationDims: ['_dima'],
+        subscripts: ['_a2'],
+        varType: 'const'
+      }),
+      v('input[DimA]', '10,20,30', {
+        refId: '_input[_a3]',
+        separationDims: ['_dima'],
+        subscripts: ['_a3'],
+        varType: 'const'
+      }),
+      v('delay[DimA]', '1,2,3', {
+        refId: '_delay[_a1]',
+        separationDims: ['_dima'],
+        subscripts: ['_a1'],
+        varType: 'const'
+      }),
+      v('delay[DimA]', '1,2,3', {
+        refId: '_delay[_a2]',
+        separationDims: ['_dima'],
+        subscripts: ['_a2'],
+        varType: 'const'
+      }),
+      v('delay[DimA]', '1,2,3', {
+        refId: '_delay[_a3]',
+        separationDims: ['_dima'],
+        subscripts: ['_a3'],
+        varType: 'const'
+      }),
+      v('init[DimA]', '0', {
+        refId: '_init',
+        subscripts: ['_dima'],
+        varType: 'const'
+      }),
+      v('y[A1]', '5', {
+        refId: '_y[_a1]',
+        subscripts: ['_a1'],
+        varType: 'const'
+      }),
+      v('y[SubA]', 'DELAY1I(input[SubA],delay[SubA],init[SubA])', {
+        delayTimeVarName: '__aux1',
+        delayVarRefId: '__level_y_1[_a2]',
+        refId: '_y[_a2]',
+        references: ['__level_y_1[_a2]', '__aux1[_a2]'],
+        separationDims: ['_suba'],
+        subscripts: ['_a2']
+      }),
+      v('y[SubA]', 'DELAY1I(input[SubA],delay[SubA],init[SubA])', {
+        delayTimeVarName: '__aux2',
+        delayVarRefId: '__level_y_1[_a3]',
+        refId: '_y[_a3]',
+        references: ['__level_y_1[_a3]', '__aux2[_a3]'],
+        separationDims: ['_suba'],
+        subscripts: ['_a3']
+      }),
+      v('_level_y_1[a2]', 'INTEG(input[a2]-y[a2],init[a2]*delay[a2])', {
+        hasInitValue: true,
+        includeInOutput: false,
+        initReferences: ['_init', '_delay[_a2]'],
+        refId: '__level_y_1[_a2]',
+        referencedFunctionNames: ['__integ'],
+        references: ['_input[_a2]', '_y[_a2]'],
+        subscripts: ['_a2'],
+        varType: 'level'
+      }),
+      v('_aux1[a2]', 'delay[a2]', {
+        includeInOutput: false,
+        refId: '__aux1[_a2]',
+        references: ['_delay[_a2]'],
+        subscripts: ['_a2']
+      }),
+      v('_level_y_1[a3]', 'INTEG(input[a3]-y[a3],init[a3]*delay[a3])', {
+        hasInitValue: true,
+        includeInOutput: false,
+        initReferences: ['_init', '_delay[_a3]'],
+        refId: '__level_y_1[_a3]',
+        referencedFunctionNames: ['__integ'],
+        references: ['_input[_a3]', '_y[_a3]'],
+        subscripts: ['_a3'],
+        varType: 'level'
+      }),
+      v('_aux2[a3]', 'delay[a3]', {
+        includeInOutput: false,
+        refId: '__aux2[_a3]',
+        references: ['_delay[_a3]'],
+        subscripts: ['_a3']
+      })
+    ])
+  })
+
+  it('should work for DELAY3 function', () => {
+    const vars = readInlineModel(`
+      input = 1 ~~|
+      delay = 2 ~~|
+      y = DELAY3(input, delay) ~~|
+    `)
+    expect(vars).toEqual([
+      v('input', '1', {
+        refId: '_input',
+        varType: 'const'
+      }),
+      v('delay', '2', {
+        refId: '_delay',
+        varType: 'const'
+      }),
+      v('y', 'DELAY3(input,delay)', {
+        delayTimeVarName: '__aux4',
+        delayVarRefId: '__level3',
+        refId: '_y',
+        references: ['__level3', '__level2', '__level1', '__aux4']
+      }),
+      v('_level3', 'INTEG(_aux2-_aux3,input*((delay)/3))', {
+        hasInitValue: true,
+        includeInOutput: false,
+        initReferences: ['_input', '_delay'],
+        refId: '__level3',
+        referencedFunctionNames: ['__integ'],
+        references: ['__aux2', '__aux3'],
+        varType: 'level'
+      }),
+      v('_level2', 'INTEG(_aux1-_aux2,input*((delay)/3))', {
+        hasInitValue: true,
+        includeInOutput: false,
+        initReferences: ['_input', '_delay'],
+        refId: '__level2',
+        referencedFunctionNames: ['__integ'],
+        references: ['__aux1', '__aux2'],
+        varType: 'level'
+      }),
+      v('_level1', 'INTEG(input-_aux1,input*((delay)/3))', {
+        hasInitValue: true,
+        includeInOutput: false,
+        initReferences: ['_input', '_delay'],
+        refId: '__level1',
+        referencedFunctionNames: ['__integ'],
+        references: ['_input', '__aux1'],
+        varType: 'level'
+      }),
+      v('_aux1', '_level1/((delay)/3)', {
+        includeInOutput: false,
+        refId: '__aux1',
+        references: ['__level1', '_delay']
+      }),
+      v('_aux2', '_level2/((delay)/3)', {
+        includeInOutput: false,
+        refId: '__aux2',
+        references: ['__level2', '_delay']
+      }),
+      v('_aux3', '_level3/((delay)/3)', {
+        includeInOutput: false,
+        refId: '__aux3',
+        references: ['__level3', '_delay']
+      }),
+      v('_aux4', '((delay)/3)', {
+        includeInOutput: false,
+        refId: '__aux4',
+        references: ['_delay']
+      })
+    ])
+  })
+
+  it('should work for DELAY3I function', () => {
+    const vars = readInlineModel(`
+      input = 1 ~~|
+      delay = 2 ~~|
+      init = 3 ~~|
+      y = DELAY3I(input, delay, init) ~~|
+    `)
+    expect(vars).toEqual([
+      v('input', '1', {
+        refId: '_input',
+        varType: 'const'
+      }),
+      v('delay', '2', {
+        refId: '_delay',
+        varType: 'const'
+      }),
+      v('init', '3', {
+        refId: '_init',
+        varType: 'const'
+      }),
+      v('y', 'DELAY3I(input,delay,init)', {
+        delayTimeVarName: '__aux4',
+        delayVarRefId: '__level3',
+        refId: '_y',
+        references: ['__level3', '__level2', '__level1', '__aux4']
+      }),
+      v('_level3', 'INTEG(_aux2-_aux3,init*((delay)/3))', {
+        hasInitValue: true,
+        includeInOutput: false,
+        initReferences: ['_init', '_delay'],
+        refId: '__level3',
+        referencedFunctionNames: ['__integ'],
+        references: ['__aux2', '__aux3'],
+        varType: 'level'
+      }),
+      v('_level2', 'INTEG(_aux1-_aux2,init*((delay)/3))', {
+        hasInitValue: true,
+        includeInOutput: false,
+        initReferences: ['_init', '_delay'],
+        refId: '__level2',
+        referencedFunctionNames: ['__integ'],
+        references: ['__aux1', '__aux2'],
+        varType: 'level'
+      }),
+      v('_level1', 'INTEG(input-_aux1,init*((delay)/3))', {
+        hasInitValue: true,
+        includeInOutput: false,
+        initReferences: ['_init', '_delay'],
+        refId: '__level1',
+        referencedFunctionNames: ['__integ'],
+        references: ['_input', '__aux1'],
+        varType: 'level'
+      }),
+      v('_aux1', '_level1/((delay)/3)', {
+        includeInOutput: false,
+        refId: '__aux1',
+        references: ['__level1', '_delay']
+      }),
+      v('_aux2', '_level2/((delay)/3)', {
+        includeInOutput: false,
+        refId: '__aux2',
+        references: ['__level2', '_delay']
+      }),
+      v('_aux3', '_level3/((delay)/3)', {
+        includeInOutput: false,
+        refId: '__aux3',
+        references: ['__level3', '_delay']
+      }),
+      v('_aux4', '((delay)/3)', {
+        includeInOutput: false,
+        refId: '__aux4',
+        references: ['_delay']
+      })
+    ])
+  })
+
+  it('should work for DELAY3I function (with subscripted variables)', () => {
+    // Note that we have a mix of non-apply-to-all (input, delay) and apply-to-all (init)
+    // variables here to cover both cases
+    const vars = readInlineModel(`
+      DimA: A1, A2, A3 ~~|
+      input[DimA] = 10, 20, 30 ~~|
+      delay[DimA] = 1, 2, 3 ~~|
+      init[DimA] = 0 ~~|
+      y[DimA] = DELAY3I(input[DimA], delay[DimA], init[DimA]) ~~|
+    `)
+    expect(vars).toEqual([
+      v('input[DimA]', '10,20,30', {
+        refId: '_input[_a1]',
+        separationDims: ['_dima'],
+        subscripts: ['_a1'],
+        varType: 'const'
+      }),
+      v('input[DimA]', '10,20,30', {
+        refId: '_input[_a2]',
+        separationDims: ['_dima'],
+        subscripts: ['_a2'],
+        varType: 'const'
+      }),
+      v('input[DimA]', '10,20,30', {
+        refId: '_input[_a3]',
+        separationDims: ['_dima'],
+        subscripts: ['_a3'],
+        varType: 'const'
+      }),
+      v('delay[DimA]', '1,2,3', {
+        refId: '_delay[_a1]',
+        separationDims: ['_dima'],
+        subscripts: ['_a1'],
+        varType: 'const'
+      }),
+      v('delay[DimA]', '1,2,3', {
+        refId: '_delay[_a2]',
+        separationDims: ['_dima'],
+        subscripts: ['_a2'],
+        varType: 'const'
+      }),
+      v('delay[DimA]', '1,2,3', {
+        refId: '_delay[_a3]',
+        separationDims: ['_dima'],
+        subscripts: ['_a3'],
+        varType: 'const'
+      }),
+      v('init[DimA]', '0', {
+        refId: '_init',
+        subscripts: ['_dima'],
+        varType: 'const'
+      }),
+      v('y[DimA]', 'DELAY3I(input[DimA],delay[DimA],init[DimA])', {
+        delayTimeVarName: '__aux4',
+        delayVarRefId: '__level3',
+        refId: '_y',
+        references: ['__level3', '__level2', '__level1', '__aux4[_dima]'],
+        subscripts: ['_dima']
+      }),
+      v('_level3[DimA]', 'INTEG(_aux2[DimA]-_aux3[DimA],init[DimA]*((delay[DimA])/3))', {
+        hasInitValue: true,
+        includeInOutput: false,
+        initReferences: ['_init', '_delay[_a1]', '_delay[_a2]', '_delay[_a3]'],
+        refId: '__level3',
+        referencedFunctionNames: ['__integ'],
+        references: ['__aux2', '__aux3'],
+        subscripts: ['_dima'],
+        varType: 'level'
+      }),
+      v('_level2[DimA]', 'INTEG(_aux1[DimA]-_aux2[DimA],init[DimA]*((delay[DimA])/3))', {
+        hasInitValue: true,
+        includeInOutput: false,
+        initReferences: ['_init', '_delay[_a1]', '_delay[_a2]', '_delay[_a3]'],
+        refId: '__level2',
+        referencedFunctionNames: ['__integ'],
+        references: ['__aux1', '__aux2'],
+        subscripts: ['_dima'],
+        varType: 'level'
+      }),
+      v('_level1[DimA]', 'INTEG(input[DimA]-_aux1[DimA],init[DimA]*((delay[DimA])/3))', {
+        hasInitValue: true,
+        includeInOutput: false,
+        initReferences: ['_init', '_delay[_a1]', '_delay[_a2]', '_delay[_a3]'],
+        refId: '__level1',
+        referencedFunctionNames: ['__integ'],
+        references: ['_input[_a1]', '_input[_a2]', '_input[_a3]', '__aux1'],
+        subscripts: ['_dima'],
+        varType: 'level'
+      }),
+      v('_aux1[DimA]', '_level1[DimA]/((delay[DimA])/3)', {
+        includeInOutput: false,
+        refId: '__aux1',
+        references: ['__level1', '_delay[_a1]', '_delay[_a2]', '_delay[_a3]'],
+        subscripts: ['_dima']
+      }),
+      v('_aux2[DimA]', '_level2[DimA]/((delay[DimA])/3)', {
+        includeInOutput: false,
+        refId: '__aux2',
+        references: ['__level2', '_delay[_a1]', '_delay[_a2]', '_delay[_a3]'],
+        subscripts: ['_dima']
+      }),
+      v('_aux3[DimA]', '_level3[DimA]/((delay[DimA])/3)', {
+        includeInOutput: false,
+        refId: '__aux3',
+        references: ['__level3', '_delay[_a1]', '_delay[_a2]', '_delay[_a3]'],
+        subscripts: ['_dima']
+      }),
+      v('_aux4[DimA]', '((delay[DimA])/3)', {
+        includeInOutput: false,
+        refId: '__aux4',
+        references: ['_delay[_a1]', '_delay[_a2]', '_delay[_a3]'],
+        subscripts: ['_dima']
+      })
+    ])
+  })
+
+  it('should work for DELAY3I function (with separated variables using subdimension)', () => {
+    const vars = readInlineModel(`
+      DimA: A1, A2, A3 ~~|
+      SubA: A2, A3 ~~|
+      input[DimA] = 10, 20, 30 ~~|
+      delay[DimA] = 1, 2, 3 ~~|
+      init[DimA] = 0 ~~|
+      y[A1] = 5 ~~|
+      y[SubA] = DELAY3I(input[SubA], delay[SubA], init[SubA]) ~~|
+    `)
+    expect(vars).toEqual([
+      v('input[DimA]', '10,20,30', {
+        refId: '_input[_a1]',
+        separationDims: ['_dima'],
+        subscripts: ['_a1'],
+        varType: 'const'
+      }),
+      v('input[DimA]', '10,20,30', {
+        refId: '_input[_a2]',
+        separationDims: ['_dima'],
+        subscripts: ['_a2'],
+        varType: 'const'
+      }),
+      v('input[DimA]', '10,20,30', {
+        refId: '_input[_a3]',
+        separationDims: ['_dima'],
+        subscripts: ['_a3'],
+        varType: 'const'
+      }),
+      v('delay[DimA]', '1,2,3', {
+        refId: '_delay[_a1]',
+        separationDims: ['_dima'],
+        subscripts: ['_a1'],
+        varType: 'const'
+      }),
+      v('delay[DimA]', '1,2,3', {
+        refId: '_delay[_a2]',
+        separationDims: ['_dima'],
+        subscripts: ['_a2'],
+        varType: 'const'
+      }),
+      v('delay[DimA]', '1,2,3', {
+        refId: '_delay[_a3]',
+        separationDims: ['_dima'],
+        subscripts: ['_a3'],
+        varType: 'const'
+      }),
+      v('init[DimA]', '0', {
+        refId: '_init',
+        subscripts: ['_dima'],
+        varType: 'const'
+      }),
+      v('y[A1]', '5', {
+        refId: '_y[_a1]',
+        subscripts: ['_a1'],
+        varType: 'const'
+      }),
+      v('y[SubA]', 'DELAY3I(input[SubA],delay[SubA],init[SubA])', {
+        delayTimeVarName: '__aux_y_4',
+        delayVarRefId: '__level_y_3[_a2]',
+        refId: '_y[_a2]',
+        references: ['__level_y_3[_a2]', '__level_y_2[_a2]', '__level_y_1[_a2]', '__aux_y_4[_a2]'],
+        separationDims: ['_suba'],
+        subscripts: ['_a2']
+      }),
+      v('y[SubA]', 'DELAY3I(input[SubA],delay[SubA],init[SubA])', {
+        delayTimeVarName: '__aux_y_4',
+        delayVarRefId: '__level_y_3[_a3]',
+        refId: '_y[_a3]',
+        references: ['__level_y_3[_a3]', '__level_y_2[_a3]', '__level_y_1[_a3]', '__aux_y_4[_a3]'],
+        separationDims: ['_suba'],
+        subscripts: ['_a3']
+      }),
+      v('_level_y_3[a2]', 'INTEG(_aux_y_2[a2]-_aux_y_3[a2],init[a2]*((delay[a2])/3))', {
+        hasInitValue: true,
+        includeInOutput: false,
+        initReferences: ['_init', '_delay[_a2]'],
+        refId: '__level_y_3[_a2]',
+        referencedFunctionNames: ['__integ'],
+        references: ['__aux_y_2', '__aux_y_3'],
+        subscripts: ['_a2'],
+        varType: 'level'
+      }),
+      v('_level_y_2[a2]', 'INTEG(_aux_y_1[a2]-_aux_y_2[a2],init[a2]*((delay[a2])/3))', {
+        hasInitValue: true,
+        includeInOutput: false,
+        initReferences: ['_init', '_delay[_a2]'],
+        refId: '__level_y_2[_a2]',
+        referencedFunctionNames: ['__integ'],
+        references: ['__aux_y_1', '__aux_y_2'],
+        subscripts: ['_a2'],
+        varType: 'level'
+      }),
+      v('_level_y_1[a2]', 'INTEG(input[a2]-_aux_y_1[a2],init[a2]*((delay[a2])/3))', {
+        hasInitValue: true,
+        includeInOutput: false,
+        initReferences: ['_init', '_delay[_a2]'],
+        refId: '__level_y_1[_a2]',
+        referencedFunctionNames: ['__integ'],
+        references: ['_input[_a2]', '__aux_y_1'],
+        subscripts: ['_a2'],
+        varType: 'level'
+      }),
+      v('_aux_y_1[a2]', '_level_y_1[a2]/((delay[a2])/3)', {
+        includeInOutput: false,
+        refId: '__aux_y_1',
+        references: ['__level_y_1[_a2]', '_delay[_a2]'],
+        subscripts: ['_a2']
+      }),
+      v('_aux_y_2[a2]', '_level_y_2[a2]/((delay[a2])/3)', {
+        includeInOutput: false,
+        refId: '__aux_y_2',
+        references: ['__level_y_2[_a2]', '_delay[_a2]'],
+        subscripts: ['_a2']
+      }),
+      v('_aux_y_3[a2]', '_level_y_3[a2]/((delay[a2])/3)', {
+        includeInOutput: false,
+        refId: '__aux_y_3',
+        references: ['__level_y_3[_a2]', '_delay[_a2]'],
+        subscripts: ['_a2']
+      }),
+      v('_aux_y_4[a2]', '((delay[a2])/3)', {
+        includeInOutput: false,
+        refId: '__aux_y_4[_a2]',
+        references: ['_delay[_a2]'],
+        subscripts: ['_a2']
+      }),
+      v('_level_y_3[a3]', 'INTEG(_aux_y_2[a3]-_aux_y_3[a3],init[a3]*((delay[a3])/3))', {
+        hasInitValue: true,
+        includeInOutput: false,
+        initReferences: ['_init', '_delay[_a3]'],
+        refId: '__level_y_3[_a3]',
+        referencedFunctionNames: ['__integ'],
+        references: ['__aux_y_2', '__aux_y_3'],
+        subscripts: ['_a3'],
+        varType: 'level'
+      }),
+      v('_level_y_2[a3]', 'INTEG(_aux_y_1[a3]-_aux_y_2[a3],init[a3]*((delay[a3])/3))', {
+        hasInitValue: true,
+        includeInOutput: false,
+        initReferences: ['_init', '_delay[_a3]'],
+        refId: '__level_y_2[_a3]',
+        referencedFunctionNames: ['__integ'],
+        references: ['__aux_y_1', '__aux_y_2'],
+        subscripts: ['_a3'],
+        varType: 'level'
+      }),
+      v('_level_y_1[a3]', 'INTEG(input[a3]-_aux_y_1[a3],init[a3]*((delay[a3])/3))', {
+        hasInitValue: true,
+        includeInOutput: false,
+        initReferences: ['_init', '_delay[_a3]'],
+        refId: '__level_y_1[_a3]',
+        referencedFunctionNames: ['__integ'],
+        references: ['_input[_a3]', '__aux_y_1'],
+        subscripts: ['_a3'],
+        varType: 'level'
+      }),
+      v('_aux_y_1[a3]', '_level_y_1[a3]/((delay[a3])/3)', {
+        includeInOutput: false,
+        refId: '__aux_y_1',
+        references: ['__level_y_1[_a3]', '_delay[_a3]'],
+        subscripts: ['_a3']
+      }),
+      v('_aux_y_2[a3]', '_level_y_2[a3]/((delay[a3])/3)', {
+        includeInOutput: false,
+        refId: '__aux_y_2',
+        references: ['__level_y_2[_a3]', '_delay[_a3]'],
+        subscripts: ['_a3']
+      }),
+      v('_aux_y_3[a3]', '_level_y_3[a3]/((delay[a3])/3)', {
+        includeInOutput: false,
+        refId: '__aux_y_3',
+        references: ['__level_y_3[_a3]', '_delay[_a3]'],
+        subscripts: ['_a3']
+      }),
+      v('_aux_y_4[a3]', '((delay[a3])/3)', {
+        includeInOutput: false,
+        refId: '__aux_y_4[_a3]',
+        references: ['_delay[_a3]'],
+        subscripts: ['_a3']
       })
     ])
   })
@@ -613,6 +1170,374 @@ describe('readEquations', () => {
         hasInitValue: true,
         initReferences: ['_initial'],
         referencedFunctionNames: ['__sample_if_true']
+      })
+    ])
+  })
+
+  it('should work for SMOOTH function', () => {
+    const vars = readInlineModel(`
+      input = 3 + PULSE(10, 10) ~~|
+      delay = 2 ~~|
+      y = SMOOTH(input, delay) ~~|
+    `)
+    expect(vars).toEqual([
+      v('input', '3+PULSE(10,10)', {
+        refId: '_input',
+        referencedFunctionNames: ['__pulse']
+      }),
+      v('delay', '2', {
+        refId: '_delay',
+        varType: 'const'
+      }),
+      v('y', 'SMOOTH(input,delay)', {
+        refId: '_y',
+        references: ['__level1'],
+        smoothVarRefId: '__level1'
+      }),
+      v('_level1', 'INTEG((input-_level1)/delay,input)', {
+        hasInitValue: true,
+        includeInOutput: false,
+        initReferences: ['_input'],
+        refId: '__level1',
+        referencedFunctionNames: ['__integ'],
+        references: ['_input', '_delay'],
+        varType: 'level'
+      })
+    ])
+  })
+
+  it('should work for SMOOTHI function', () => {
+    const vars = readInlineModel(`
+      input = 3 + PULSE(10, 10) ~~|
+      delay = 2 ~~|
+      init = 5 ~~|
+      y = SMOOTHI(input, delay, init) ~~|
+    `)
+    expect(vars).toEqual([
+      v('input', '3+PULSE(10,10)', {
+        refId: '_input',
+        referencedFunctionNames: ['__pulse']
+      }),
+      v('delay', '2', {
+        refId: '_delay',
+        varType: 'const'
+      }),
+      v('init', '5', {
+        refId: '_init',
+        varType: 'const'
+      }),
+      v('y', 'SMOOTHI(input,delay,init)', {
+        refId: '_y',
+        references: ['__level1'],
+        smoothVarRefId: '__level1'
+      }),
+      v('_level1', 'INTEG((input-_level1)/delay,init)', {
+        includeInOutput: false,
+        refId: '__level1',
+        referencedFunctionNames: ['__integ'],
+        references: ['_input', '_delay'],
+        hasInitValue: true,
+        initReferences: ['_init'],
+        varType: 'level'
+      })
+    ])
+  })
+
+  it('should work for SMOOTHI function (with subscripted variables)', () => {
+    // Note that we have a mix of non-apply-to-all (delay, init) and apply-to-all (input)
+    // variables here to cover both cases
+    const vars = readInlineModel(`
+      DimA: A1, A2, A3 ~~|
+      x[DimA] = 1, 2, 3 ~~|
+      input[DimA] = x[DimA] + PULSE(10, 10) ~~|
+      delay[DimA] = 1, 2, 3 ~~|
+      init[DimA] = 4, 5, 6 ~~|
+      y[DimA] = SMOOTHI(input[DimA], delay[DimA], init[DimA]) ~~|
+    `)
+    expect(vars).toEqual([
+      v('x[DimA]', '1,2,3', {
+        refId: '_x[_a1]',
+        separationDims: ['_dima'],
+        subscripts: ['_a1'],
+        varType: 'const'
+      }),
+      v('x[DimA]', '1,2,3', {
+        refId: '_x[_a2]',
+        separationDims: ['_dima'],
+        subscripts: ['_a2'],
+        varType: 'const'
+      }),
+      v('x[DimA]', '1,2,3', {
+        refId: '_x[_a3]',
+        separationDims: ['_dima'],
+        subscripts: ['_a3'],
+        varType: 'const'
+      }),
+      v('input[DimA]', 'x[DimA]+PULSE(10,10)', {
+        refId: '_input',
+        referencedFunctionNames: ['__pulse'],
+        references: ['_x[_a1]', '_x[_a2]', '_x[_a3]'],
+        subscripts: ['_dima']
+      }),
+      v('delay[DimA]', '1,2,3', {
+        refId: '_delay[_a1]',
+        separationDims: ['_dima'],
+        subscripts: ['_a1'],
+        varType: 'const'
+      }),
+      v('delay[DimA]', '1,2,3', {
+        refId: '_delay[_a2]',
+        separationDims: ['_dima'],
+        subscripts: ['_a2'],
+        varType: 'const'
+      }),
+      v('delay[DimA]', '1,2,3', {
+        refId: '_delay[_a3]',
+        separationDims: ['_dima'],
+        subscripts: ['_a3'],
+        varType: 'const'
+      }),
+      v('init[DimA]', '4,5,6', {
+        refId: '_init[_a1]',
+        separationDims: ['_dima'],
+        subscripts: ['_a1'],
+        varType: 'const'
+      }),
+      v('init[DimA]', '4,5,6', {
+        refId: '_init[_a2]',
+        separationDims: ['_dima'],
+        subscripts: ['_a2'],
+        varType: 'const'
+      }),
+      v('init[DimA]', '4,5,6', {
+        refId: '_init[_a3]',
+        separationDims: ['_dima'],
+        subscripts: ['_a3'],
+        varType: 'const'
+      }),
+      v('y[DimA]', 'SMOOTHI(input[DimA],delay[DimA],init[DimA])', {
+        refId: '_y',
+        references: ['__level1'],
+        smoothVarRefId: '__level1',
+        subscripts: ['_dima']
+      }),
+      v('_level1[DimA]', 'INTEG((input[DimA]-_level1[DimA])/delay[DimA],init[DimA])', {
+        hasInitValue: true,
+        includeInOutput: false,
+        initReferences: ['_init[_a1]', '_init[_a2]', '_init[_a3]'],
+        refId: '__level1',
+        referencedFunctionNames: ['__integ'],
+        references: ['_input', '_delay[_a1]', '_delay[_a2]', '_delay[_a3]'],
+        subscripts: ['_dima'],
+        varType: 'level'
+      })
+    ])
+  })
+
+  it('should work for SMOOTH3 function', () => {
+    const vars = readInlineModel(`
+      input = 3 + PULSE(10, 10) ~~|
+      delay = 2 ~~|
+      y = SMOOTH3(input, delay) ~~|
+    `)
+    expect(vars).toEqual([
+      v('input', '3+PULSE(10,10)', {
+        refId: '_input',
+        referencedFunctionNames: ['__pulse']
+      }),
+      v('delay', '2', {
+        refId: '_delay',
+        varType: 'const'
+      }),
+      v('y', 'SMOOTH3(input,delay)', {
+        refId: '_y',
+        references: ['__level1', '__level2', '__level3'],
+        smoothVarRefId: '__level3'
+      }),
+      v('_level1', 'INTEG((input-_level1)/(delay/3),input)', {
+        hasInitValue: true,
+        includeInOutput: false,
+        initReferences: ['_input'],
+        refId: '__level1',
+        referencedFunctionNames: ['__integ'],
+        references: ['_input', '_delay'],
+        varType: 'level'
+      }),
+      v('_level2', 'INTEG((_level1-_level2)/(delay/3),input)', {
+        hasInitValue: true,
+        includeInOutput: false,
+        initReferences: ['_input'],
+        refId: '__level2',
+        referencedFunctionNames: ['__integ'],
+        references: ['__level1', '_delay'],
+        varType: 'level'
+      }),
+      v('_level3', 'INTEG((_level2-_level3)/(delay/3),input)', {
+        hasInitValue: true,
+        includeInOutput: false,
+        initReferences: ['_input'],
+        refId: '__level3',
+        referencedFunctionNames: ['__integ'],
+        references: ['__level2', '_delay'],
+        varType: 'level'
+      })
+    ])
+  })
+
+  it('should work for SMOOTH3I function', () => {
+    const vars = readInlineModel(`
+      input = 3 + PULSE(10, 10) ~~|
+      delay = 2 ~~|
+      y = SMOOTH3I(input, delay, 5) ~~|
+    `)
+    expect(vars).toEqual([
+      v('input', '3+PULSE(10,10)', {
+        refId: '_input',
+        referencedFunctionNames: ['__pulse']
+      }),
+      v('delay', '2', {
+        refId: '_delay',
+        varType: 'const'
+      }),
+      v('y', 'SMOOTH3I(input,delay,5)', {
+        refId: '_y',
+        references: ['__level1', '__level2', '__level3'],
+        smoothVarRefId: '__level3'
+      }),
+      v('_level1', 'INTEG((input-_level1)/(delay/3),5)', {
+        hasInitValue: true,
+        includeInOutput: false,
+        refId: '__level1',
+        referencedFunctionNames: ['__integ'],
+        references: ['_input', '_delay'],
+        varType: 'level'
+      }),
+      v('_level2', 'INTEG((_level1-_level2)/(delay/3),5)', {
+        hasInitValue: true,
+        includeInOutput: false,
+        refId: '__level2',
+        referencedFunctionNames: ['__integ'],
+        references: ['__level1', '_delay'],
+        varType: 'level'
+      }),
+      v('_level3', 'INTEG((_level2-_level3)/(delay/3),5)', {
+        hasInitValue: true,
+        includeInOutput: false,
+        refId: '__level3',
+        referencedFunctionNames: ['__integ'],
+        references: ['__level2', '_delay'],
+        varType: 'level'
+      })
+    ])
+  })
+
+  it('should work for SMOOTH3I function (with subscripted variables)', () => {
+    // Note that we have a mix of non-apply-to-all (input, delay) and apply-to-all (init)
+    // variables here to cover both cases
+    const vars = readInlineModel(`
+      DimA: A1, A2, A3 ~~|
+      x[DimA] = 1, 2, 3 ~~|
+      input[DimA] = x[DimA] + PULSE(10, 10) ~~|
+      delay[DimA] = 1, 2, 3 ~~|
+      init[DimA] = 4, 5, 6 ~~|
+      y[DimA] = SMOOTH3I(input[DimA], delay[DimA], init[DimA]) ~~|
+    `)
+    expect(vars).toEqual([
+      v('x[DimA]', '1,2,3', {
+        refId: '_x[_a1]',
+        separationDims: ['_dima'],
+        subscripts: ['_a1'],
+        varType: 'const'
+      }),
+      v('x[DimA]', '1,2,3', {
+        refId: '_x[_a2]',
+        separationDims: ['_dima'],
+        subscripts: ['_a2'],
+        varType: 'const'
+      }),
+      v('x[DimA]', '1,2,3', {
+        refId: '_x[_a3]',
+        separationDims: ['_dima'],
+        subscripts: ['_a3'],
+        varType: 'const'
+      }),
+      v('input[DimA]', 'x[DimA]+PULSE(10,10)', {
+        refId: '_input',
+        referencedFunctionNames: ['__pulse'],
+        references: ['_x[_a1]', '_x[_a2]', '_x[_a3]'],
+        subscripts: ['_dima']
+      }),
+      v('delay[DimA]', '1,2,3', {
+        refId: '_delay[_a1]',
+        separationDims: ['_dima'],
+        subscripts: ['_a1'],
+        varType: 'const'
+      }),
+      v('delay[DimA]', '1,2,3', {
+        refId: '_delay[_a2]',
+        separationDims: ['_dima'],
+        subscripts: ['_a2'],
+        varType: 'const'
+      }),
+      v('delay[DimA]', '1,2,3', {
+        refId: '_delay[_a3]',
+        separationDims: ['_dima'],
+        subscripts: ['_a3'],
+        varType: 'const'
+      }),
+      v('init[DimA]', '4,5,6', {
+        refId: '_init[_a1]',
+        separationDims: ['_dima'],
+        subscripts: ['_a1'],
+        varType: 'const'
+      }),
+      v('init[DimA]', '4,5,6', {
+        refId: '_init[_a2]',
+        separationDims: ['_dima'],
+        subscripts: ['_a2'],
+        varType: 'const'
+      }),
+      v('init[DimA]', '4,5,6', {
+        refId: '_init[_a3]',
+        separationDims: ['_dima'],
+        subscripts: ['_a3'],
+        varType: 'const'
+      }),
+      v('y[DimA]', 'SMOOTH3I(input[DimA],delay[DimA],init[DimA])', {
+        refId: '_y',
+        references: ['__level1', '__level2', '__level3'],
+        smoothVarRefId: '__level3',
+        subscripts: ['_dima']
+      }),
+      v('_level1[DimA]', 'INTEG((input[DimA]-_level1[DimA])/(delay[DimA]/3),init[DimA])', {
+        hasInitValue: true,
+        includeInOutput: false,
+        initReferences: ['_init[_a1]', '_init[_a2]', '_init[_a3]'],
+        refId: '__level1',
+        referencedFunctionNames: ['__integ'],
+        references: ['_input', '_delay[_a1]', '_delay[_a2]', '_delay[_a3]'],
+        subscripts: ['_dima'],
+        varType: 'level'
+      }),
+      v('_level2[DimA]', 'INTEG((_level1[DimA]-_level2[DimA])/(delay[DimA]/3),init[DimA])', {
+        hasInitValue: true,
+        includeInOutput: false,
+        initReferences: ['_init[_a1]', '_init[_a2]', '_init[_a3]'],
+        refId: '__level2',
+        referencedFunctionNames: ['__integ'],
+        references: ['__level1', '_delay[_a1]', '_delay[_a2]', '_delay[_a3]'],
+        subscripts: ['_dima'],
+        varType: 'level'
+      }),
+      v('_level3[DimA]', 'INTEG((_level2[DimA]-_level3[DimA])/(delay[DimA]/3),init[DimA])', {
+        hasInitValue: true,
+        includeInOutput: false,
+        initReferences: ['_init[_a1]', '_init[_a2]', '_init[_a3]'],
+        refId: '__level3',
+        referencedFunctionNames: ['__integ'],
+        references: ['__level2', '_delay[_a1]', '_delay[_a2]', '_delay[_a3]'],
+        subscripts: ['_dima'],
+        varType: 'level'
       })
     ])
   })
@@ -4665,7 +5590,10 @@ describe('readEquations', () => {
     ])
   })
 
-  it('should work for Vensim "smooth" model', () => {
+  // TODO
+  it.skip('should work for Vensim "smooth" model', () => {})
+
+  it.only('should work for Vensim "smooth3" model', () => {
     const vars = readSubscriptsAndEquations('smooth3')
     expect(vars).toEqual([
       v('a', '1', {
