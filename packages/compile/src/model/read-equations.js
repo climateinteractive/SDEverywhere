@@ -7,6 +7,7 @@ import { canonicalName, cartesianProductOf, newDepreciationVarName, newFixedDela
 import {
   extractMarkedDims,
   indexNamesForSubscript,
+  isDimension,
   normalizeSubscripts,
   separatedVariableIndex
 } from '../_shared/subscript.js'
@@ -75,6 +76,7 @@ class Context {
   /**
    * Return the function ID for the parent call.  For example, for the following:
    *   SMOOTH(x, MAX(y, z))
+   * If this is called while evaluating `x`, then this function will return `_SMOOTH`.
    * If this is called while evaluating `y`, then this function will return `_MAX`.
    */
   getParentFnId() {
@@ -153,7 +155,11 @@ export function readEquation(v) {
         // TODO
         break
       case 'data':
-        // Nothing to do here
+        // TODO: For reasons of compatibility with the legacy reader, the new `readVariables`
+        // will set `varType='data'` only when the variable is not expanded.  Once we remove
+        // the legacy reader, we can fix `readVariables` to unconditionally set `varType='data'`
+        // for all variables with 'data' on the RHS.  In the meantime, set it here.
+        v.varType = 'data'
         break
       default:
         throw new Error(`Unhandled equation kind '${rhs.kind}'`)
@@ -233,6 +239,15 @@ function visitExpr(v, expr, context) {
 function visitVariableRef(v, varRefExpr, context) {
   // Mark the RHS as non-constant, since it has a variable reference
   context.rhsNonConst = true
+
+  if (isDimension(varRefExpr.varId)) {
+    // It is possible for a dimension name to be used where a variable would normally
+    // be.  Here is an example taken from the "extdata" sample model:
+    //   Chosen C = 1 ~~|
+    //   C Selection[DimC] = IF THEN ELSE ( DimC = Chosen C , 1 , 0 ) ~~|
+    // If we detect a dimension, don't add it as a normal variable reference.
+    return
+  }
 
   // Determine whether to add references to specific refIds (in the case of separated
   // non-apply-to-all variables) or just a single base refId (in the case of non-subscripted
@@ -397,9 +412,9 @@ function visitFunctionCall(v, callExpr, context) {
       break
   }
 
-  // XXX: The legacy reader skips this step for certain functions (because the call is replaced
-  // by generated variables), so we will do the same
-  let addToReferenced = true
+  // XXX: The legacy reader does not add a reference to a function in certain cases (for example,
+  // because the call is replaced by generated variables), so we will do the same
+  let addFnReference = true
   switch (callExpr.fnId) {
     case '_IF_THEN_ELSE':
     case '_DELAY1':
@@ -411,26 +426,29 @@ function visitFunctionCall(v, callExpr, context) {
     case '_SMOOTH3':
     case '_SMOOTH3I':
     case '_NPV':
-      addToReferenced = false
+      addFnReference = false
       break
     default:
       break
   }
-  // TODO
-  // if (addToReferenced) {
-  //   const parentFnId = context.getParentFnId()
-  //   switch (parentFnId) {
-  //     case '_SMOOTH':
-  //     case '_SMOOTHI':
-  //     case '_SMOOTH3':
-  //     case '_SMOOTH3I':
-  //       addToReferenced = false
-  //       break
-  //     default:
-  //       break
-  //   }
-  // }
-  if (addToReferenced) {
+  if (addFnReference) {
+    const parentFnId = context.getParentFnId()
+    switch (parentFnId) {
+      case '_DELAY1':
+      case '_DELAY1I':
+      case '_DELAY3':
+      case '_DELAY3I':
+      case '_SMOOTH':
+      case '_SMOOTHI':
+      case '_SMOOTH3':
+      case '_SMOOTH3I':
+        addFnReference = false
+        break
+      default:
+        break
+    }
+  }
+  if (addFnReference) {
     // Keep track of all function names referenced in this expression.  Note that lookup
     // variables are sometimes function-like, so they will be included here.  This will be
     // used later to decide whether a lookup variable needs to be included in generated code.
