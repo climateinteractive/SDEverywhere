@@ -1104,6 +1104,105 @@ describe('readVariables', () => {
   })
 
   it('should work for Vensim "smooth" model', () => {
+    const vars = readSubscriptsAndVariables('smooth')
+    expect(vars).toEqual([
+      v('delay', '2'),
+      v('delay 2[SubA]', '2', {
+        separationDims: ['_suba'],
+        subscripts: ['_a2']
+      }),
+      v('delay 2[SubA]', '2', {
+        separationDims: ['_suba'],
+        subscripts: ['_a3']
+      }),
+      v('delay 3[DimA]', '2', {
+        subscripts: ['_dima']
+      }),
+      v('FINAL TIME', '40'),
+      v('INITIAL TIME', '0'),
+      v('input', '3+PULSE(10,10)'),
+      v('input 2[SubA]', '3+PULSE(10,10)', {
+        separationDims: ['_suba'],
+        subscripts: ['_a2']
+      }),
+      v('input 2[SubA]', '3+PULSE(10,10)', {
+        separationDims: ['_suba'],
+        subscripts: ['_a3']
+      }),
+      v('input 2x3[SubA,DimB]', '3+PULSE(10,10)', {
+        separationDims: ['_suba'],
+        subscripts: ['_a2', '_dimb']
+      }),
+      v('input 2x3[SubA,DimB]', '3+PULSE(10,10)', {
+        separationDims: ['_suba'],
+        subscripts: ['_a3', '_dimb']
+      }),
+      v('input 3[DimA]', '3+PULSE(10,10)', {
+        subscripts: ['_dima']
+      }),
+      v('input 3x3[DimA,DimB]', '3+PULSE(10,10)', {
+        subscripts: ['_dima', '_dimb']
+      }),
+      v('s1', 'SMOOTH(input,delay)'),
+      v('s10[SubA,B1]', 'SMOOTH(input 2[SubA],delay)', {
+        separationDims: ['_suba'],
+        subscripts: ['_a2', '_b1']
+      }),
+      v('s10[SubA,B1]', 'SMOOTH(input 2[SubA],delay)', {
+        separationDims: ['_suba'],
+        subscripts: ['_a3', '_b1']
+      }),
+      v('s2[DimA]', 'SMOOTH(input,delay)', {
+        subscripts: ['_dima']
+      }),
+      v('s3[DimA]', 'SMOOTH(input 3[DimA],delay 3[DimA])', {
+        subscripts: ['_dima']
+      }),
+      v('s4[SubA]', 'SMOOTH(input 2[SubA],delay 2[SubA])', {
+        separationDims: ['_suba'],
+        subscripts: ['_a2']
+      }),
+      v('s4[SubA]', 'SMOOTH(input 2[SubA],delay 2[SubA])', {
+        separationDims: ['_suba'],
+        subscripts: ['_a3']
+      }),
+      v('s5[SubA]', 'SMOOTH3(input 2[SubA],delay 2[SubA])', {
+        separationDims: ['_suba'],
+        subscripts: ['_a2']
+      }),
+      v('s5[SubA]', 'SMOOTH3(input 2[SubA],delay 2[SubA])', {
+        separationDims: ['_suba'],
+        subscripts: ['_a3']
+      }),
+      v('s6[DimB]', 'SMOOTH(input 3[DimA],delay 3[DimA])', {
+        subscripts: ['_dimb']
+      }),
+      v('s7[SubB]', 'SMOOTH(input 2[SubA],delay 2[SubA])', {
+        separationDims: ['_subb'],
+        subscripts: ['_b2']
+      }),
+      v('s7[SubB]', 'SMOOTH(input 2[SubA],delay 2[SubA])', {
+        separationDims: ['_subb'],
+        subscripts: ['_b3']
+      }),
+      v('s8[DimA,DimB]', 'SMOOTH(input 3x3[DimA,DimB],delay)', {
+        subscripts: ['_dima', '_dimb']
+      }),
+      v('s9[SubA,DimB]', 'SMOOTH(input 2x3[SubA,DimB],delay)', {
+        separationDims: ['_suba'],
+        subscripts: ['_a2', '_dimb']
+      }),
+      v('s9[SubA,DimB]', 'SMOOTH(input 2x3[SubA,DimB],delay)', {
+        separationDims: ['_suba'],
+        subscripts: ['_a3', '_dimb']
+      }),
+      v('SAVEPER', '1'),
+      v('TIME STEP', '1'),
+      v('Time', '')
+    ])
+  })
+
+  it('should work for Vensim "smooth3" model', () => {
     const vars = readSubscriptsAndVariables('smooth3')
     expect(vars).toEqual([
       v('a', '1'),

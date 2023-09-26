@@ -7,13 +7,7 @@ import type { VensimModelParseTree } from '../parse/parser'
 import Model from './model'
 import { default as VariableImpl } from './variable'
 
-import {
-  logPrettyVars,
-  parseInlineVensimModel,
-  parseVensimModel,
-  sampleModelDir,
-  type Variable
-} from '../_tests/test-support'
+import { parseInlineVensimModel, parseVensimModel, sampleModelDir, type Variable } from '../_tests/test-support'
 
 /**
  * This is a shorthand for the following steps to read equations:
