@@ -213,6 +213,7 @@ export function readEquation(v) {
 function visitExpr(v, expr, context) {
   switch (expr.kind) {
     case 'number':
+    case 'string':
     case 'keyword':
       break
 
@@ -356,6 +357,7 @@ function visitFunctionCall(v, callExpr, context) {
 
   switch (callExpr.fnId) {
     //
+    //
     // 1-argument functions...
     //
     //
@@ -431,27 +433,6 @@ function visitFunctionCall(v, callExpr, context) {
       console.error('ALLOCATE AVAILABLE not yet implemented')
       break
 
-    case '_GET_DIRECT_CONSTANTS':
-      console.error('GET DIRECT CONSTANTS not yet implemented')
-      break
-
-    case '_GET_DIRECT_DATA':
-      console.error('GET DIRECT DATA not yet implemented')
-      break
-
-    case '_GET_DIRECT_LOOKUPS':
-      console.error('GET DIRECT LOOKUPS not yet implemented')
-      break
-
-    case '_INITIAL':
-      validateCallDepth(callExpr, context)
-      validateCallArgs(callExpr, 1)
-      v.varType = 'initial'
-      v.hasInitValue = true
-      // The single argument is used at init time
-      argModes[0] = 'init'
-      break
-
     case '_DELAY1':
     case '_DELAY1I':
     case '_DELAY3':
@@ -488,9 +469,42 @@ function visitFunctionCall(v, callExpr, context) {
       argModes[2] = 'init'
       break
 
+    case '_GET_DIRECT_CONSTANTS': {
+      validateCallDepth(callExpr, context)
+      validateCallArgs(callExpr, 3)
+      validateCallArgType(callExpr, 0, 'string')
+      validateCallArgType(callExpr, 1, 'string')
+      validateCallArgType(callExpr, 2, 'string')
+      addFnReference = false
+      v.varType = 'const'
+      v.directConstArgs = {
+        file: callExpr.args[0].text,
+        tab: callExpr.args[1].text,
+        startCell: callExpr.args[2].text
+      }
+      break
+    }
+
+    case '_GET_DIRECT_DATA':
+      console.error('GET DIRECT DATA not yet implemented')
+      break
+
+    case '_GET_DIRECT_LOOKUPS':
+      console.error('GET DIRECT LOOKUPS not yet implemented')
+      break
+
     case '_IF_THEN_ELSE':
       validateCallArgs(callExpr, 3)
       addFnReference = false
+      break
+
+    case '_INITIAL':
+      validateCallDepth(callExpr, context)
+      validateCallArgs(callExpr, 1)
+      v.varType = 'initial'
+      v.hasInitValue = true
+      // The single argument is used at init time
+      argModes[0] = 'init'
       break
 
     case '_INTEG':
@@ -534,12 +548,11 @@ function visitFunctionCall(v, callExpr, context) {
       generateTrendVariables(v, callExpr, context)
       break
 
-    case '_WITH_LOOKUP': {
+    case '_WITH_LOOKUP':
       validateCallDepth(callExpr, context)
       validateCallArgs(callExpr, 2)
       generateLookup(v, callExpr, context)
       break
-    }
 
     default:
       // TODO: Throw an error (or show a soft warning) if the function is not yet implemented in SDE (and is not
@@ -600,6 +613,18 @@ function validateCallArgs(callExpr, expectedArgCount) {
   if (callExpr.args.length !== expectedArgCount) {
     throw new Error(
       `Expected '${callExpr.fnName}' function call to have ${expectedArgCount} arguments but got ${callExpr.args.length} `
+    )
+  }
+}
+
+/**
+ * Throw an error if the function call argument at the given index does not have the expected type.
+ */
+function validateCallArgType(callExpr, index, expectedKind) {
+  const argKind = callExpr.args[index].kind
+  if (argKind !== expectedKind) {
+    throw new Error(
+      `Expected '${callExpr.fnName}' function call argument at index ${index} to be of type ${expectedKind} arguments but got ${argKind} `
     )
   }
 }
