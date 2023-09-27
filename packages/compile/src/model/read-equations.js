@@ -17,6 +17,7 @@ import { generateDelayVariables } from './read-equation-fn-delay.js'
 import { generateNpvVariables } from './read-equation-fn-npv.js'
 import { generateSmoothVariables } from './read-equation-fn-smooth.js'
 import { generateTrendVariables } from './read-equation-fn-trend.js'
+import { generateLookup } from './read-equation-fn-with-lookup.js'
 import { readVariables } from './read-variables.js'
 
 class Context {
@@ -233,7 +234,10 @@ function visitExpr(v, expr, context) {
       break
 
     case 'lookup-def':
-      visitLookupDef(v, expr)
+      // TODO: Lookup defs in expression position should only occur in the case of `WITH LOOKUP`
+      // function calls, and those are transformed into a generated lookup variable, so there's
+      // nothing else we need to do here, but it would be good to add a check that the current
+      // function is `WITH LOOKUP` (if it is, ignore, but if it is not, throw an error).
       break
 
     case 'lookup-call':
@@ -309,6 +313,17 @@ function visitLookupDef(v, def) {
 function visitLookupCall(v, callExpr, context) {
   // Mark the RHS as non-constant, since it has a lookup call
   context.rhsNonConst = true
+
+  // Add a reference to the lookup variable
+  const lookupVarName = callExpr.varRef.varId
+  if (v.referencedLookupVarNames) {
+    v.referencedLookupVarNames.push(lookupVarName)
+  } else {
+    v.referencedLookupVarNames = [lookupVarName]
+  }
+
+  // Visit the single argument
+  visitExpr(v, callExpr.arg, context)
 }
 
 /**
@@ -340,12 +355,92 @@ function visitFunctionCall(v, callExpr, context) {
   let visitArgs = true
 
   switch (callExpr.fnId) {
+    //
+    // 1-argument functions...
+    //
+    //
+
+    case '_ABS':
+    case '_COS':
+    case '_ELMCOUNT':
+    case '_INTEGER':
+    case '_SIN':
+    case '_SUM':
+    case '_VMAX':
+    case '_VMIN':
+      validateCallArgs(callExpr, 1)
+      break
+
+    //
+    //
+    // 2-argument functions...
+    //
+    //
+
+    case '_LOOKUP_BACKWARD':
+    case '_LOOKUP_FORWARD':
+    case '_MAX':
+    case '_MIN':
+    case '_MODULO':
+    case '_POW':
+    case '_POWER':
+    case '_PULSE':
+    case '_QUANTUM':
+    case '_STEP':
+    case '_VECTOR_ELM_MAP':
+    case '_VECTOR_SORT_ORDER':
+    case '_XIDZ':
+    case '_ZIDZ':
+      validateCallArgs(callExpr, 2)
+      break
+
+    //
+    //
+    // 3-plus-argument functions...
+    //
+    //
+
+    case '_GET_DATA_BETWEEN_TIMES':
+    case '_RAMP':
+      validateCallArgs(callExpr, 3)
+      break
+
+    case '_PULSE_TRAIN':
+      validateCallArgs(callExpr, 4)
+      break
+
+    case '_VECTOR_SELECT':
+      validateCallArgs(callExpr, 5)
+      break
+
+    //
+    //
+    // Complex functions...
+    //
+    //
+
     case '_ACTIVE_INITIAL':
       validateCallDepth(callExpr, context)
       validateCallArgs(callExpr, 2)
       v.hasInitValue = true
       // The 2nd argument is used at init time
       argModes[1] = 'init'
+      break
+
+    case '_ALLOCATE_AVAILABLE':
+      console.error('ALLOCATE AVAILABLE not yet implemented')
+      break
+
+    case '_GET_DIRECT_CONSTANTS':
+      console.error('GET DIRECT CONSTANTS not yet implemented')
+      break
+
+    case '_GET_DIRECT_DATA':
+      console.error('GET DIRECT DATA not yet implemented')
+      break
+
+    case '_GET_DIRECT_LOOKUPS':
+      console.error('GET DIRECT LOOKUPS not yet implemented')
       break
 
     case '_INITIAL':
@@ -439,14 +534,22 @@ function visitFunctionCall(v, callExpr, context) {
       generateTrendVariables(v, callExpr, context)
       break
 
+    case '_WITH_LOOKUP': {
+      validateCallDepth(callExpr, context)
+      validateCallArgs(callExpr, 2)
+      generateLookup(v, callExpr, context)
+      break
+    }
+
     default:
-      // TODO: Show a warning if the function is not yet implemented in SDE (and is not explicitly
-      // declared as a user-implemented macro)
+      // TODO: Throw an error (or show a soft warning) if the function is not yet implemented in SDE (and is not
+      // explicitly declared as a user-implemented macro)
+      // console.error(`WARNING: readEquations doesn't yet handle ${callExpr.fnId}`)
       break
   }
 
   if (addFnReference) {
-    // Keep track of all function names referenced in this expression.  Note that lookup
+    // Keep track of all function names referenced in this equation.  Note that lookup
     // variables are sometimes function-like, so they will be included here.  This will be
     // used later to decide whether a lookup variable needs to be included in generated code.
     // TODO: The legacy `EquationReader` used `canonicalName` redundantly, which caused an
@@ -465,6 +568,10 @@ function visitFunctionCall(v, callExpr, context) {
   if (visitArgs) {
     // Visit each argument
     for (const [index, argExpr] of callExpr.args.entries()) {
+      // XXX: For `WITH LOOKUP` calls, only process the first argument; need to generalize this
+      if (callExpr.fnId === '_WITH_LOOKUP' && index > 1) {
+        break
+      }
       context.setArgIndex(index, argModes[index])
       visitExpr(v, argExpr, context)
     }

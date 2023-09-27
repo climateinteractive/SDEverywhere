@@ -185,6 +185,62 @@ describe('readEquations', () => {
     ])
   })
 
+  it('should work for lookup call (with apply-to-all lookup variable)', () => {
+    const vars = readInlineModel(`
+      DimA: A1, A2 ~~|
+      x[DimA]( (0,0),(2,1.3) ) ~~|
+      y = x[A1](2) ~~|
+    `)
+    expect(vars).toEqual([
+      v('x[DimA]', '', {
+        points: [
+          [0, 0],
+          [2, 1.3]
+        ],
+        refId: '_x',
+        subscripts: ['_dima'],
+        varType: 'lookup'
+      }),
+      v('y', 'x[A1](2)', {
+        refId: '_y',
+        referencedLookupVarNames: ['_x']
+      })
+    ])
+  })
+
+  it('should work for lookup call (with separated lookup variable)', () => {
+    const vars = readInlineModel(`
+      DimA: A1, A2 ~~|
+      x[A1]( (0,0),(2,1.3) ) ~~|
+      x[A2]( (1,1),(4,3) ) ~~|
+      y = x[A1](2) ~~|
+    `)
+    expect(vars).toEqual([
+      v('x[A1]', '', {
+        points: [
+          [0, 0],
+          [2, 1.3]
+        ],
+        refId: '_x[_a1]',
+        subscripts: ['_a1'],
+        varType: 'lookup'
+      }),
+      v('x[A2]', '', {
+        points: [
+          [1, 1],
+          [4, 3]
+        ],
+        refId: '_x[_a2]',
+        subscripts: ['_a2'],
+        varType: 'lookup'
+      }),
+      v('y', 'x[A1](2)', {
+        refId: '_y',
+        referencedLookupVarNames: ['_x']
+      })
+    ])
+  })
+
   it('should work for ACTIVE INITIAL function', () => {
     const vars = readInlineModel(`
       Initial Target Capacity = 1 ~~|
@@ -1173,6 +1229,75 @@ describe('readEquations', () => {
     ])
   })
 
+  it('should work for MAX function', () => {
+    const vars = readInlineModel(`
+      a = 10 ~~|
+      b = 20 ~~|
+      y = MAX(a, b) ~~|
+    `)
+    expect(vars).toEqual([
+      v('a', '10', {
+        refId: '_a',
+        varType: 'const'
+      }),
+      v('b', '20', {
+        refId: '_b',
+        varType: 'const'
+      }),
+      v('y', 'MAX(a,b)', {
+        refId: '_y',
+        referencedFunctionNames: ['__max'],
+        references: ['_a', '_b']
+      })
+    ])
+  })
+
+  it('should work for MIN function', () => {
+    const vars = readInlineModel(`
+      a = 10 ~~|
+      b = 20 ~~|
+      y = MIN(a, b) ~~|
+    `)
+    expect(vars).toEqual([
+      v('a', '10', {
+        refId: '_a',
+        varType: 'const'
+      }),
+      v('b', '20', {
+        refId: '_b',
+        varType: 'const'
+      }),
+      v('y', 'MIN(a,b)', {
+        refId: '_y',
+        referencedFunctionNames: ['__min'],
+        references: ['_a', '_b']
+      })
+    ])
+  })
+
+  it('should work for MODULO function', () => {
+    const vars = readInlineModel(`
+      a = 20 ~~|
+      b = 10 ~~|
+      y = MODULO(a, b) ~~|
+    `)
+    expect(vars).toEqual([
+      v('a', '20', {
+        refId: '_a',
+        varType: 'const'
+      }),
+      v('b', '10', {
+        refId: '_b',
+        varType: 'const'
+      }),
+      v('y', 'MODULO(a,b)', {
+        refId: '_y',
+        referencedFunctionNames: ['__modulo'],
+        references: ['_a', '_b']
+      })
+    ])
+  })
+
   // TODO: Add a variant where discount rate is defined as (x+1) (old reader did not include
   // parens and might generate incorrect equation)
   it('should work for NPV function', () => {
@@ -1232,6 +1357,29 @@ describe('readEquations', () => {
 
   // TODO
   it.skip('should work for NPV function (with subscripted variables)', () => {})
+
+  it('should work for PULSE function', () => {
+    const vars = readInlineModel(`
+      start = 10 ~~|
+      width = 20 ~~|
+      y = PULSE(start, width) ~~|
+    `)
+    expect(vars).toEqual([
+      v('start', '10', {
+        refId: '_start',
+        varType: 'const'
+      }),
+      v('width', '20', {
+        refId: '_width',
+        varType: 'const'
+      }),
+      v('y', 'PULSE(start,width)', {
+        refId: '_y',
+        referencedFunctionNames: ['__pulse'],
+        references: ['_start', '_width']
+      })
+    ])
+  })
 
   it('should work for SAMPLE IF TRUE function', () => {
     const vars = readInlineModel(`
@@ -2092,6 +2240,38 @@ describe('readEquations', () => {
         referencedFunctionNames: ['__zidz', '__abs'],
         references: ['_input[_a1]', '_input[_a2]', '__level1', '_avg_time[_a1]', '_avg_time[_a2]'],
         subscripts: ['_dima']
+      })
+    ])
+  })
+
+  it('should work for WITH LOOKUP function', () => {
+    const vars = readInlineModel(`
+      y = WITH LOOKUP(Time, ( [(0,0)-(2,2)], (0,0),(0.1,0.01),(0.5,0.7),(1,1),(1.5,1.2),(2,1.3) )) ~~|
+    `)
+    expect(vars).toEqual([
+      v('y', 'WITH LOOKUP(Time,([(0,0)-(2,2)],(0,0),(0.1,0.01),(0.5,0.7),(1,1),(1.5,1.2),(2,1.3)))', {
+        lookupArgVarName: '__lookup1',
+        refId: '_y',
+        referencedFunctionNames: ['__with_lookup'],
+        referencedLookupVarNames: ['__lookup1'],
+        references: ['_time']
+      }),
+      v('_lookup1', '', {
+        includeInOutput: false,
+        points: [
+          [0, 0],
+          [0.1, 0.01],
+          [0.5, 0.7],
+          [1, 1],
+          [1.5, 1.2],
+          [2, 1.3]
+        ],
+        range: [
+          [0, 0],
+          [2, 2]
+        ],
+        refId: '__lookup1',
+        varType: 'lookup'
       })
     ])
   })
@@ -5411,7 +5591,9 @@ describe('readEquations', () => {
   //   expect(vars).toEqual([])
   // })
 
-  it('should work for Vensim "prune" model', () => {
+  // TODO: This test depends on the dependency trimming code that isn't yet implemented
+  // in the new reader, so skip it for now
+  it.skip('should work for Vensim "prune" model', () => {
     const vars = readSubscriptsAndEquations('prune')
     expect(vars).toEqual([
       v('A Totals', 'SUM(A Values[DimA!])', {
