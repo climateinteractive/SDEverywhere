@@ -67,7 +67,7 @@ function generateSmoothLevel(v, context, argInput, argDelay, argInit, levelNumbe
   // `equation-reader.js` and modified to work with the AST instead of directly depending
   // on antlr4-vensim constructs.  This logic is pretty complex so we should try to refactor
   // or at least add some more fine-grained unit tests for it.
-  let subs = genSubs(argInput, argDelay, argInit)
+  let subs = context.extractSubscriptsFromVarNames(argInput, argDelay, argInit)
 
   // For SMOOTH3, the previous level is the input for level number 2 and 3. Add RHS subscripts.
   if (levelNumber > 1 && subs.length > 0) {
@@ -130,27 +130,4 @@ function generateSmoothLevel(v, context, argInput, argDelay, argInit, levelNumbe
   context.addVarReference(levelVarRefId)
 
   return [levelVarRefId, levelVarBaseName]
-}
-
-/**
- * Extract the subscripts from one or more variable names and check if they "agree".
- */
-function genSubs(...varNames) {
-  // XXX: This is largely copied from the legacy `equation-reader.js`, consider revisiting
-
-  let result = new Set()
-  const re = /\[[^\]]+\]/g
-  for (let varName of varNames) {
-    let subs = varName.match(re)
-    if (subs) {
-      for (let sub of subs) {
-        result.add(sub.trim())
-      }
-    }
-  }
-
-  if (result.size > 1) {
-    console.error(`ERROR: genSubs subscripts do not agree: ${[...varNames]}`)
-  }
-  return [...result][0] || ''
 }

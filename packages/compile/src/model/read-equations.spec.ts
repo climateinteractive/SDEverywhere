@@ -7,7 +7,13 @@ import type { VensimModelParseTree } from '../parse/parser'
 import Model from './model'
 import { default as VariableImpl } from './variable'
 
-import { parseInlineVensimModel, parseVensimModel, sampleModelDir, type Variable } from '../_tests/test-support'
+import {
+  logPrettyVars,
+  parseInlineVensimModel,
+  parseVensimModel,
+  sampleModelDir,
+  type Variable
+} from '../_tests/test-support'
 
 /**
  * This is a shorthand for the following steps to read equations:
@@ -1224,6 +1230,9 @@ describe('readEquations', () => {
     ])
   })
 
+  // TODO
+  it.skip('should work for NPV function (with subscripted variables)', () => {})
+
   it('should work for SAMPLE IF TRUE function', () => {
     const vars = readInlineModel(`
       initial = 10 ~~|
@@ -1972,6 +1981,117 @@ describe('readEquations', () => {
         references: ['__level_y_2[_a3]', '_delay[_a3]'],
         subscripts: ['_a3'],
         varType: 'level'
+      })
+    ])
+  })
+
+  it('should work for TREND function', () => {
+    const vars = readInlineModel(`
+      input = 1 ~~|
+      avg time = 2 ~~|
+      init = 3 ~~|
+      y = TREND(input, avg time, init) ~~|
+    `)
+    expect(vars).toEqual([
+      v('input', '1', {
+        refId: '_input',
+        varType: 'const'
+      }),
+      v('avg time', '2', {
+        refId: '_avg_time',
+        varType: 'const'
+      }),
+      v('init', '3', {
+        refId: '_init',
+        varType: 'const'
+      }),
+      v('y', 'TREND(input,avg time,init)', {
+        refId: '_y',
+        references: ['__level1', '__aux1'],
+        trendVarName: '__aux1'
+      }),
+      v('_level1', 'INTEG((input-_level1)/avg time,input/(1+init*avg time))', {
+        hasInitValue: true,
+        includeInOutput: false,
+        initReferences: ['_input', '_init', '_avg_time'],
+        refId: '__level1',
+        referencedFunctionNames: ['__integ'],
+        references: ['_input', '_avg_time'],
+        varType: 'level'
+      }),
+      v('_aux1', 'ZIDZ(input-_level1,avg time*ABS(_level1))', {
+        includeInOutput: false,
+        refId: '__aux1',
+        referencedFunctionNames: ['__zidz', '__abs'],
+        references: ['_input', '__level1', '_avg_time']
+      })
+    ])
+  })
+
+  it('should work for TREND function (with subscripted variables)', () => {
+    const vars = readInlineModel(`
+      DimA: A1, A2 ~~|
+      input[DimA] = 1, 2 ~~|
+      avg time[DimA] = 3, 4 ~~|
+      init[DimA] = 5 ~~|
+      y[DimA] = TREND(input[DimA], avg time[DimA], init[DimA]) ~~|
+    `)
+    expect(vars).toEqual([
+      v('input[DimA]', '1,2', {
+        refId: '_input[_a1]',
+        separationDims: ['_dima'],
+        subscripts: ['_a1'],
+        varType: 'const'
+      }),
+      v('input[DimA]', '1,2', {
+        refId: '_input[_a2]',
+        separationDims: ['_dima'],
+        subscripts: ['_a2'],
+        varType: 'const'
+      }),
+      v('avg time[DimA]', '3,4', {
+        refId: '_avg_time[_a1]',
+        separationDims: ['_dima'],
+        subscripts: ['_a1'],
+        varType: 'const'
+      }),
+      v('avg time[DimA]', '3,4', {
+        refId: '_avg_time[_a2]',
+        separationDims: ['_dima'],
+        subscripts: ['_a2'],
+        varType: 'const'
+      }),
+      v('init[DimA]', '5', {
+        refId: '_init',
+        subscripts: ['_dima'],
+        varType: 'const'
+      }),
+      v('y[DimA]', 'TREND(input[DimA],avg time[DimA],init[DimA])', {
+        refId: '_y',
+        references: ['__level1', '__aux1'],
+        subscripts: ['_dima'],
+        trendVarName: '__aux1'
+      }),
+      v(
+        '_level1[DimA]',
+        'INTEG((input[DimA]-_level1[DimA])/avg time[DimA],input[DimA]/(1+init[DimA]*avg time[DimA]))',
+        {
+          hasInitValue: true,
+          includeInOutput: false,
+          initReferences: ['_input[_a1]', '_input[_a2]', '_init', '_avg_time[_a1]', '_avg_time[_a2]'],
+          refId: '__level1',
+          referencedFunctionNames: ['__integ'],
+          references: ['_input[_a1]', '_input[_a2]', '_avg_time[_a1]', '_avg_time[_a2]'],
+          subscripts: ['_dima'],
+          varType: 'level'
+        }
+      ),
+      v('_aux1[DimA]', 'ZIDZ(input[DimA]-_level1[DimA],avg time[DimA]*ABS(_level1[DimA]))', {
+        includeInOutput: false,
+        refId: '__aux1',
+        referencedFunctionNames: ['__zidz', '__abs'],
+        references: ['_input[_a1]', '_input[_a2]', '__level1', '_avg_time[_a1]', '_avg_time[_a2]'],
+        subscripts: ['_dima']
       })
     ])
   })

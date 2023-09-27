@@ -16,6 +16,7 @@ import Model from './model.js'
 import { generateDelayVariables } from './read-equation-fn-delay.js'
 import { generateNpvVariables } from './read-equation-fn-npv.js'
 import { generateSmoothVariables } from './read-equation-fn-smooth.js'
+import { generateTrendVariables } from './read-equation-fn-trend.js'
 import { readVariables } from './read-variables.js'
 
 class Context {
@@ -124,6 +125,29 @@ class Context {
       // Inhibit output for generated variables
       v.includeInOutput = false
     })
+  }
+
+  /**
+   * Extract the subscripts from one or more variable names and check if they "agree".
+   */
+  extractSubscriptsFromVarNames(...varNames) {
+    // XXX: This is largely copied from the legacy `equation-reader.js`, consider revisiting
+
+    let result = new Set()
+    const re = /\[[^\]]+\]/g
+    for (let varName of varNames) {
+      let subs = varName.match(re)
+      if (subs) {
+        for (let sub of subs) {
+          result.add(sub.trim())
+        }
+      }
+    }
+
+    if (result.size > 1) {
+      console.error(`ERROR: Subscripts do not agree in extractSubscriptsFromVarNames: ${[...varNames]}`)
+    }
+    return [...result][0] || ''
   }
 }
 
@@ -301,6 +325,11 @@ function visitFunctionCall(v, callExpr, context) {
   // Enter this function call
   context.enterFunctionCall(callExpr.fnId)
 
+  // By default, we will add this function to the list of functions that are referenced
+  // by the LHS variable, but we will skip this step for function calls like `DELAY` that
+  // are reimplemented in terms of other equations
+  let addFnReference = true
+
   // By default, all arguments are assumed to be used at eval time, but certain functions
   // will override this and mark specific argument positions as being used at init time
   let argModes = Array(callExpr.args.length).fill('eval')
@@ -333,8 +362,7 @@ function visitFunctionCall(v, callExpr, context) {
     case '_DELAY3':
     case '_DELAY3I':
       validateCallArgs(callExpr, callExpr.fnId.endsWith('I') ? 3 : 2)
-      // Don't visit the args now; they will be visited when processing the variables
-      // that are generated to implement this `DELAY` call
+      addFnReference = false
       visitArgs = false
       generateDelayVariables(v, callExpr, context)
       break
@@ -365,6 +393,11 @@ function visitFunctionCall(v, callExpr, context) {
       argModes[2] = 'init'
       break
 
+    case '_IF_THEN_ELSE':
+      validateCallArgs(callExpr, 3)
+      addFnReference = false
+      break
+
     case '_INTEG':
       validateCallDepth(callExpr, context)
       validateCallArgs(callExpr, 2)
@@ -376,8 +409,7 @@ function visitFunctionCall(v, callExpr, context) {
 
     case '_NPV':
       validateCallArgs(callExpr, 4)
-      // Don't visit the args now; they will be visited when processing the variables
-      // that are generated to implement this `NPV` call
+      addFnReference = false
       visitArgs = false
       generateNpvVariables(v, callExpr, context)
       break
@@ -395,35 +427,21 @@ function visitFunctionCall(v, callExpr, context) {
     case '_SMOOTH3':
     case '_SMOOTH3I':
       validateCallArgs(callExpr, callExpr.fnId.endsWith('I') ? 3 : 2)
-      // Don't visit the args now; they will be visited when processing the variables
-      // that are generated to implement this `SMOOTH` call
+      addFnReference = false
       visitArgs = false
       generateSmoothVariables(v, callExpr, context)
+      break
+
+    case '_TREND':
+      validateCallArgs(callExpr, 3)
+      addFnReference = false
+      visitArgs = false
+      generateTrendVariables(v, callExpr, context)
       break
 
     default:
       // TODO: Show a warning if the function is not yet implemented in SDE (and is not explicitly
       // declared as a user-implemented macro)
-      break
-  }
-
-  // XXX: The legacy reader does not add a reference to a function in certain cases (for example,
-  // because the call is replaced by generated variables), so we will do the same
-  let addFnReference = true
-  switch (callExpr.fnId) {
-    case '_IF_THEN_ELSE':
-    case '_DELAY1':
-    case '_DELAY1I':
-    case '_DELAY3':
-    case '_DELAY3I':
-    case '_SMOOTH':
-    case '_SMOOTHI':
-    case '_SMOOTH3':
-    case '_SMOOTH3I':
-    case '_NPV':
-      addFnReference = false
-      break
-    default:
       break
   }
 
