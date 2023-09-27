@@ -54,11 +54,9 @@ class Context {
     // In Vensim a variable can refer to its current value in the state.
     // Do not add self-references to the lists of references.
     // Do not duplicate references.
-    if (mode !== 'none') {
-      const vars = mode === 'init' ? this.referencedInitVars : this.referencedEvalVars
-      if (varRefId !== this.refId && !vars.includes(varRefId)) {
-        vars.push(varRefId)
-      }
+    const vars = mode === 'init' ? this.referencedInitVars : this.referencedEvalVars
+    if (varRefId !== this.refId && !vars.includes(varRefId)) {
+      vars.push(varRefId)
     }
   }
 
@@ -91,10 +89,8 @@ class Context {
    * Set the index of the arg being evaluated in this call stack frame.
    *
    * @param {number} index The zero-based arg index.
-   * @param {'none' | 'init' | 'eval'} mode Whether this is a normal ('eval') arg position,
-   * or an 'init' position (like the second "initial" argument in an INTEG call), or 'none'
-   * (meaning that the references will not be captured at this position, as is the case when
-   * level vars are generated).
+   * @param {'init' | 'eval'} mode Whether this is a normal ('eval') arg position,
+   * or an 'init' position (like the second "initial" argument in an INTEG call).
    */
   setArgIndex(index, mode = 'eval') {
     const frame = this.callStack[this.callStack.length - 1]
@@ -309,6 +305,11 @@ function visitFunctionCall(v, callExpr, context) {
   // will override this and mark specific argument positions as being used at init time
   let argModes = Array(callExpr.args.length).fill('eval')
 
+  // By default, we will visit all arguments, but for certain functions like `DELAY` that
+  // are reimplemented in terms of other equations, we will skip visiting the arguments
+  // (they will be visited when processing the replacement equations)
+  let visitArgs = true
+
   switch (callExpr.fnId) {
     case '_ACTIVE_INITIAL':
       validateCallDepth(callExpr, context)
@@ -332,11 +333,9 @@ function visitFunctionCall(v, callExpr, context) {
     case '_DELAY3':
     case '_DELAY3I':
       validateCallArgs(callExpr, callExpr.fnId.endsWith('I') ? 3 : 2)
-      // Don't set references inside the call, since the arguments will be referenced by new
-      // generated vars
-      for (let i = 0; i < argModes.length; i++) {
-        argModes[i] = 'none'
-      }
+      // Don't visit the args now; they will be visited when processing the variables
+      // that are generated to implement this `DELAY` call
+      visitArgs = false
       generateDelayVariables(v, callExpr, context)
       break
 
@@ -377,11 +376,9 @@ function visitFunctionCall(v, callExpr, context) {
 
     case '_NPV':
       validateCallArgs(callExpr, 4)
-      // Don't set references inside the call, since the arguments will be referenced by new
-      // generated vars
-      for (let i = 0; i < argModes.length; i++) {
-        argModes[i] = 'none'
-      }
+      // Don't visit the args now; they will be visited when processing the variables
+      // that are generated to implement this `NPV` call
+      visitArgs = false
       generateNpvVariables(v, callExpr, context)
       break
 
@@ -398,11 +395,9 @@ function visitFunctionCall(v, callExpr, context) {
     case '_SMOOTH3':
     case '_SMOOTH3I':
       validateCallArgs(callExpr, callExpr.fnId.endsWith('I') ? 3 : 2)
-      // Don't set references inside the call, since the arguments will be referenced by new
-      // generated vars
-      for (let i = 0; i < argModes.length; i++) {
-        argModes[i] = 'none'
-      }
+      // Don't visit the args now; they will be visited when processing the variables
+      // that are generated to implement this `SMOOTH` call
+      visitArgs = false
       generateSmoothVariables(v, callExpr, context)
       break
 
@@ -431,23 +426,7 @@ function visitFunctionCall(v, callExpr, context) {
     default:
       break
   }
-  if (addFnReference) {
-    const parentFnId = context.getParentFnId()
-    switch (parentFnId) {
-      case '_DELAY1':
-      case '_DELAY1I':
-      case '_DELAY3':
-      case '_DELAY3I':
-      case '_SMOOTH':
-      case '_SMOOTHI':
-      case '_SMOOTH3':
-      case '_SMOOTH3I':
-        addFnReference = false
-        break
-      default:
-        break
-    }
-  }
+
   if (addFnReference) {
     // Keep track of all function names referenced in this expression.  Note that lookup
     // variables are sometimes function-like, so they will be included here.  This will be
@@ -465,10 +444,12 @@ function visitFunctionCall(v, callExpr, context) {
     }
   }
 
-  // Visit each argument
-  for (const [index, argExpr] of callExpr.args.entries()) {
-    context.setArgIndex(index, argModes[index])
-    visitExpr(v, argExpr, context)
+  if (visitArgs) {
+    // Visit each argument
+    for (const [index, argExpr] of callExpr.args.entries()) {
+      context.setArgIndex(index, argModes[index])
+      visitExpr(v, argExpr, context)
+    }
   }
 
   // Exit this function call
