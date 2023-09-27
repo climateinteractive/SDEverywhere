@@ -82,11 +82,20 @@ export class ExprReader extends ModelVisitor {
 
   visitConst(ctx) {
     const text = ctx.Const().getText()
-    const value = parseFloat(text)
-    this.expr = {
-      kind: 'number',
-      value,
-      text
+    if (text.startsWith("'") && text.endsWith("'")) {
+      // Treat it as a string
+      this.expr = {
+        kind: 'string',
+        text: text.substr(1, text.length - 2)
+      }
+    } else {
+      // Treat it as a number
+      const value = parseFloat(text)
+      this.expr = {
+        kind: 'number',
+        value,
+        text
+      }
     }
   }
 

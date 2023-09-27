@@ -13,8 +13,7 @@ export interface ReduceExprOptions {
 export function reduceExpr(expr: Expr, opts?: ReduceExprOptions): Expr {
   switch (expr.kind) {
     case 'number':
-      return expr
-
+    case 'string':
     case 'keyword':
       return expr
 
@@ -296,8 +295,7 @@ export function reduceExpr(expr: Expr, opts?: ReduceExprOptions): Expr {
 export function reduceConditionals(expr: Expr, opts?: ReduceExprOptions): Expr {
   switch (expr.kind) {
     case 'number':
-      return expr
-
+    case 'string':
     case 'keyword':
       return expr
 

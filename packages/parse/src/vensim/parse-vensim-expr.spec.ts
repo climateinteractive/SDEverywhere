@@ -2,7 +2,18 @@
 
 import { describe, expect, it } from 'vitest'
 
-import { binaryOp, call, keyword, lookupCall, lookupDef, num, parens, unaryOp, varRef } from '../ast/ast-types'
+import {
+  binaryOp,
+  call,
+  keyword,
+  lookupCall,
+  lookupDef,
+  num,
+  parens,
+  stringLiteral,
+  unaryOp,
+  varRef
+} from '../ast/ast-types'
 
 import { parseVensimExpr } from './parse-vensim-expr'
 
@@ -171,6 +182,12 @@ describe('parseVensimExpr', () => {
           }
         )
       )
+    )
+  })
+
+  it('should parse a "GET DIRECT CONSTANTS" function call (with string arguments)', () => {
+    expect(parseVensimExpr("GET DIRECT CONSTANTS('data/a.csv', ',', 'B2')")).toEqual(
+      call('GET DIRECT CONSTANTS', stringLiteral('data/a.csv'), stringLiteral(','), stringLiteral('B2'))
     )
   })
 })

@@ -39,6 +39,12 @@ export interface NumberValue {
   text: string
 }
 
+export interface StringLiteral {
+  kind: 'string'
+  /** The string value without quotes. */
+  text: string
+}
+
 export interface Keyword {
   kind: 'keyword'
   text: string
@@ -110,6 +116,7 @@ export interface FunctionCall {
 
 export type Expr =
   | NumberValue
+  | StringLiteral
   | Keyword
   | VariableRef
   | UnaryOpExpr
@@ -120,6 +127,13 @@ export type Expr =
   | FunctionCall
 
 export interface EquationLhs {
+  // TODO: Since :EXCEPT: clauses only appear on the LHS, we should have a `VariableDef`
+  // type like this:
+  //   varName: VariableName
+  //   varId: VariableId
+  //   subscriptRefs?: SubscriptRef[]
+  //   exceptSubscriptRefSets?: SubscriptRef[][]
+  // and then remove `exceptSubscriptRefSets` from `VariableRef`
   varRef: VariableRef
   // TODO: :INTERPOLATE:
 }
@@ -196,6 +210,13 @@ export function num(value: number, text?: string): NumberValue {
     kind: 'number',
     value,
     text: text || value.toString()
+  }
+}
+
+export function stringLiteral(text: string): StringLiteral {
+  return {
+    kind: 'string',
+    text
   }
 }
 

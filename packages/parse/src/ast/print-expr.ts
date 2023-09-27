@@ -15,6 +15,10 @@ export function debugPrintExpr(expr: Expr, indent = 0): void {
       log(`const: ${expr.text}`)
       break
 
+    case 'string':
+      log(`string: ${expr.text}`)
+      break
+
     case 'keyword':
       log(`keyword: ${expr.text}`)
       break
@@ -88,6 +92,9 @@ export function toPrettyString(expr: Expr, opts?: PrettyOpts): string {
   switch (expr.kind) {
     case 'number':
       return expr.text
+
+    case 'string':
+      return `'${expr.text}'`
 
     case 'keyword':
       return expr.text
@@ -199,6 +206,10 @@ function getExprStats(expr: Expr, stats: Stats) {
   switch (expr.kind) {
     case 'number':
       stats.constCount++
+      break
+
+    case 'string':
+      // TODO
       break
 
     case 'keyword':
