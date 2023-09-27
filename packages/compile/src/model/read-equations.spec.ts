@@ -1212,6 +1212,130 @@ describe('readEquations', () => {
     ])
   })
 
+  it('should work for GET DIRECT DATA function (single value)', () => {
+    const vars = readInlineModel(`
+      x = GET DIRECT DATA('g_data.csv', ',', 'A', 'B13') ~~|
+      y = x * 10 ~~|
+    `)
+    logPrettyVars(vars)
+    expect(vars).toEqual([
+      v('x', "GET DIRECT DATA('g_data.csv',',','A','B13')", {
+        directDataArgs: { file: 'g_data.csv', tab: ',', timeRowOrCol: 'A', startCell: 'B13' },
+        refId: '_x',
+        varType: 'data'
+      }),
+      v('y', 'x*10', {
+        refId: '_y',
+        references: ['_x']
+      })
+    ])
+  })
+
+  it('should work for GET DIRECT DATA function (1D)', () => {
+    const vars = readInlineModel(`
+      DimA: A1, A2 ~~|
+      x[DimA] = GET DIRECT DATA('e_data.csv', ',', 'A', 'B5') ~~|
+      y = x[A2] * 10 ~~|
+    `)
+    expect(vars).toEqual([
+      v('x[DimA]', "GET DIRECT DATA('e_data.csv',',','A','B5')", {
+        directDataArgs: { file: 'e_data.csv', tab: ',', timeRowOrCol: 'A', startCell: 'B5' },
+        refId: '_x[_a1]',
+        separationDims: ['_dima'],
+        subscripts: ['_a1'],
+        varType: 'data'
+      }),
+      v('x[DimA]', "GET DIRECT DATA('e_data.csv',',','A','B5')", {
+        directDataArgs: { file: 'e_data.csv', tab: ',', timeRowOrCol: 'A', startCell: 'B5' },
+        refId: '_x[_a2]',
+        separationDims: ['_dima'],
+        subscripts: ['_a2'],
+        varType: 'data'
+      }),
+      v('y', 'x[A2]*10', {
+        refId: '_y',
+        references: ['_x[_a2]']
+      })
+    ])
+  })
+
+  it('should work for GET DIRECT DATA function (2D with separate definitions)', () => {
+    const vars = readInlineModel(`
+      DimA: A1, A2 ~~|
+      DimB: B1, B2 ~~|
+      x[A1, DimB] = GET DIRECT DATA('e_data.csv', ',', 'A', 'B5') ~~|
+      x[A2, DimB] = 0 ~~|
+      y = x[A2, B1] * 10 ~~|
+    `)
+    expect(vars).toEqual([
+      v('x[A1,DimB]', "GET DIRECT DATA('e_data.csv',',','A','B5')", {
+        directDataArgs: { file: 'e_data.csv', tab: ',', timeRowOrCol: 'A', startCell: 'B5' },
+        refId: '_x[_a1,_b1]',
+        separationDims: ['_dimb'],
+        subscripts: ['_a1', '_b1'],
+        varType: 'data'
+      }),
+      v('x[A1,DimB]', "GET DIRECT DATA('e_data.csv',',','A','B5')", {
+        directDataArgs: { file: 'e_data.csv', tab: ',', timeRowOrCol: 'A', startCell: 'B5' },
+        refId: '_x[_a1,_b2]',
+        separationDims: ['_dimb'],
+        subscripts: ['_a1', '_b2'],
+        varType: 'data'
+      }),
+      v('x[A2,DimB]', '0', {
+        refId: '_x[_a2,_dimb]',
+        subscripts: ['_a2', '_dimb'],
+        varType: 'const'
+      }),
+      v('y', 'x[A2,B1]*10', {
+        refId: '_y',
+        references: ['_x[_a2,_dimb]']
+      })
+    ])
+  })
+
+  it('should work for GET DIRECT LOOKUPS function', () => {
+    const vars = readInlineModel(`
+      DimA: A1, A2, A3 ~~|
+      x[DimA] = GET DIRECT LOOKUPS('lookup_data.csv', ',', '1', 'AH2') ~~|
+      y[DimA] = x[DimA](Time) ~~|
+      z = y[A2] ~~|
+    `)
+    expect(vars).toEqual([
+      v('x[DimA]', "GET DIRECT LOOKUPS('lookup_data.csv',',','1','AH2')", {
+        directDataArgs: { file: 'lookup_data.csv', tab: ',', timeRowOrCol: '1', startCell: 'AH2' },
+        refId: '_x[_a1]',
+        separationDims: ['_dima'],
+        subscripts: ['_a1'],
+        varType: 'data'
+      }),
+      v('x[DimA]', "GET DIRECT LOOKUPS('lookup_data.csv',',','1','AH2')", {
+        directDataArgs: { file: 'lookup_data.csv', tab: ',', timeRowOrCol: '1', startCell: 'AH2' },
+        refId: '_x[_a2]',
+        separationDims: ['_dima'],
+        subscripts: ['_a2'],
+        varType: 'data'
+      }),
+      v('x[DimA]', "GET DIRECT LOOKUPS('lookup_data.csv',',','1','AH2')", {
+        directDataArgs: { file: 'lookup_data.csv', tab: ',', timeRowOrCol: '1', startCell: 'AH2' },
+        refId: '_x[_a3]',
+        separationDims: ['_dima'],
+        subscripts: ['_a3'],
+        varType: 'data'
+      }),
+      v('y[DimA]', 'x[DimA](Time)', {
+        refId: '_y',
+        referencedLookupVarNames: ['_x'],
+        references: ['_time'],
+        subscripts: ['_dima']
+      }),
+      v('z', 'y[A2]', {
+        refId: '_z',
+        references: ['_y']
+      })
+    ])
+  })
+
   it('should work for IF THEN ELSE function', () => {
     const vars = readInlineModel(`
       x = 100 ~~|

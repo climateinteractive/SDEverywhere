@@ -486,11 +486,21 @@ function visitFunctionCall(v, callExpr, context) {
     }
 
     case '_GET_DIRECT_DATA':
-      console.error('GET DIRECT DATA not yet implemented')
-      break
-
     case '_GET_DIRECT_LOOKUPS':
-      console.error('GET DIRECT LOOKUPS not yet implemented')
+      validateCallDepth(callExpr, context)
+      validateCallArgs(callExpr, 4)
+      validateCallArgType(callExpr, 0, 'string')
+      validateCallArgType(callExpr, 1, 'string')
+      validateCallArgType(callExpr, 2, 'string')
+      validateCallArgType(callExpr, 3, 'string')
+      addFnReference = false
+      v.varType = 'data'
+      v.directDataArgs = {
+        file: callExpr.args[0].text,
+        tab: callExpr.args[1].text,
+        timeRowOrCol: callExpr.args[2].text,
+        startCell: callExpr.args[3].text
+      }
       break
 
     case '_IF_THEN_ELSE':
