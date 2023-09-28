@@ -1,5 +1,6 @@
 import { toPrettyString } from '@sdeverywhere/parse'
-import { canonicalName, newLookupVarName } from '../_shared/helpers'
+
+import { canonicalName, newLookupVarName } from '../_shared/helpers.js'
 
 /**
  * Generate a lookup definition to augment a `WITH LOOKUP` function call.
