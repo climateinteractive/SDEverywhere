@@ -1,6 +1,6 @@
 {
   "name": "@sdeverywhere/plugin-vite",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "files": [
     "dist/**"
   ],
@@ -34,7 +34,7 @@
     "vite": "^3.0.0 || ^4.0.0"
   },
   "devDependencies": {
-    "@sdeverywhere/build": "*",
+    "@sdeverywhere/build": "0.3.2",
     "vite": "^4.4.9"
   },
   "author": "Climate Interactive",

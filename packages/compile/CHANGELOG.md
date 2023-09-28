@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.7](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.6...compile-v0.7.7) (2023-09-28)
+
+
+### Features
+
+* add support for capturing data for any variable at runtime ([#355](https://github.com/climateinteractive/SDEverywhere/issues/355)) ([5d12836](https://github.com/climateinteractive/SDEverywhere/commit/5d1283657ba99f6c7f8e30f8053f1906ac872af3)), closes [#105](https://github.com/climateinteractive/SDEverywhere/issues/105)
+
 ## [0.7.6](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.5...compile-v0.7.6) (2023-09-05)
 
 
