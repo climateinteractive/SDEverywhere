@@ -20,7 +20,6 @@ of whether your project is configured to use Vite 3 or Vite 4.
 
 ## [0.1.4](https://github.com/climateinteractive/SDEverywhere/compare/plugin-vite-v0.1.3...plugin-vite-v0.1.4) (2022-10-25)
 
-
 ### Bug Fixes
 
 * make vite a peer dependency for plugin-vite ([#269](https://github.com/climateinteractive/SDEverywhere/issues/269)) ([eaa02fc](https://github.com/climateinteractive/SDEverywhere/commit/eaa02fcb160735ea591f6074cecb662d1b24289c)), closes [#268](https://github.com/climateinteractive/SDEverywhere/issues/268)
