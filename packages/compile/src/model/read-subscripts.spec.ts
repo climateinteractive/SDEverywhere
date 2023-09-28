@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest'
 
 import { allSubscripts, resetSubscriptsAndDimensions } from '../_shared/subscript'
+import type { VensimModelParseTree } from '../parse/parser'
 
 import Model from './model'
 
 import { dim, dimMapping, parseInlineVensimModel, parseVensimModel, sampleModelDir, sub } from '../_tests/test-support'
-import type { VensimModelParseTree } from '../parse/parser'
 
 /**
  * This is a shorthand for the following steps to read (and optionally resolve) subscript ranges:
