@@ -353,12 +353,10 @@ describe('EquationGen (Vensim -> C)', () => {
     expect(vars.size).toBe(3)
     expect(genC(vars.get('_initial_target_capacity'))).toEqual(['_initial_target_capacity = 1.0;'])
     expect(genC(vars.get('_capacity'))).toEqual(['_capacity = 2.0;'])
-
     expect(genC(vars.get('_target_capacity'), 'init-levels')).toEqual(['_target_capacity = _initial_target_capacity;'])
     expect(genC(vars.get('_target_capacity'), 'eval')).toEqual(['_target_capacity = _capacity;'])
   })
 
-  // TODO: Verify that "ALLOCATE AVAILABLE" is only allowed directly after equals sign
   it('should work for ALLOCATE AVAILABLE function', () => {
     const vars = readInlineModel(`
       branch: Boston, Dayton, Fresno ~~|
@@ -399,6 +397,7 @@ describe('EquationGen (Vensim -> C)', () => {
     expect(genC(vars.get('_y'))).toEqual(['_y = _COS(_x);'])
   })
 
+  // TODO: Subscripted variants
   it('should work for DELAY1 function', () => {
     const vars = readInlineModel(`
       x = 1 ~~|

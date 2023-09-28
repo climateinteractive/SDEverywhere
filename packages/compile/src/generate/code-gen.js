@@ -6,12 +6,13 @@ import Model from '../model/model.js'
 
 import EquationGen from './equation-gen.js'
 import ModelLHSReader from './model-lhs-reader.js'
+import { createParser } from '../parse/parser.js'
 
-export function generateCode(parseTree, opts) {
-  return codeGenerator(parseTree, opts).generate()
+export function generateCode(parsedModel, opts) {
+  return codeGenerator(parsedModel, opts).generate()
 }
 
-let codeGenerator = (parseTree, opts) => {
+let codeGenerator = (parsedModel, opts) => {
   const { spec, operation, extData, directData, modelDirname } = opts
   // Set to 'decl', 'init-lookups', 'eval', etc depending on the section being generated.
   let mode = ''
@@ -31,7 +32,18 @@ let codeGenerator = (parseTree, opts) => {
     // Read variables and subscript ranges from the model parse tree.
     // This is the main entry point for code generation and is called just once.
     try {
-      Model.read(parseTree, spec, extData, directData, modelDirname)
+      Model.read(parsedModel, spec, extData, directData, modelDirname)
+      if (parsedModel.kind === 'vensim') {
+        // XXX: Reparse equation text for all variables using the legacy parser so that
+        // eqnCtx is defined for each one
+        Model.variables.forEach(v => {
+          const eqnLHS = v.modelLHS
+          const eqnRHS = v.modelFormula?.length > 0 ? ` = ${v.modelFormula}` : ''
+          const eqnText = `${eqnLHS}${eqnRHS} ~~|`
+          const parser = createParser(eqnText)
+          v.eqnCtx = parser.equation()
+        })
+      }
       // In list mode, print variables to the console instead of generating code.
       if (operation === 'printRefIdTest') {
         Model.printRefIdTest()
