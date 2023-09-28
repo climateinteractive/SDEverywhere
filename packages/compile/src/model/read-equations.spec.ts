@@ -7,13 +7,7 @@ import type { VensimModelParseTree } from '../parse/parser'
 import Model from './model'
 import { default as VariableImpl } from './variable'
 
-import {
-  logPrettyVars,
-  parseInlineVensimModel,
-  parseVensimModel,
-  sampleModelDir,
-  type Variable
-} from '../_tests/test-support'
+import { parseInlineVensimModel, parseVensimModel, sampleModelDir, type Variable } from '../_tests/test-support'
 
 /**
  * This is a shorthand for the following steps to read equations:
@@ -262,6 +256,72 @@ describe('readEquations', () => {
         hasInitValue: true,
         initReferences: ['_initial_target_capacity'],
         referencedFunctionNames: ['__active_initial']
+      })
+    ])
+  })
+
+  it('should work for ALLOCATE AVAILABLE function', () => {
+    const vars = readInlineModel(`
+      branch: Boston, Dayton ~~|
+      pprofile: ptype, ppriority ~~|
+      supply available = 200 ~~|
+      demand[branch] = 500,300 ~~|
+      priority[Boston,pprofile] = 1,5 ~~|
+      priority[Dayton,pprofile] = 1,7 ~~|
+      shipments[branch] = ALLOCATE AVAILABLE(demand[branch], priority[branch,ptype], supply available) ~~|
+    `)
+    expect(vars).toEqual([
+      v('supply available', '200', {
+        refId: '_supply_available',
+        varType: 'const'
+      }),
+      v('demand[branch]', '500,300', {
+        refId: '_demand[_boston]',
+        separationDims: ['_branch'],
+        subscripts: ['_boston'],
+        varType: 'const'
+      }),
+      v('demand[branch]', '500,300', {
+        refId: '_demand[_dayton]',
+        separationDims: ['_branch'],
+        subscripts: ['_dayton'],
+        varType: 'const'
+      }),
+      v('priority[Boston,pprofile]', '1,5', {
+        refId: '_priority[_boston,_ptype]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_boston', '_ptype'],
+        varType: 'const'
+      }),
+      v('priority[Boston,pprofile]', '1,5', {
+        refId: '_priority[_boston,_ppriority]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_boston', '_ppriority'],
+        varType: 'const'
+      }),
+      v('priority[Dayton,pprofile]', '1,7', {
+        refId: '_priority[_dayton,_ptype]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_dayton', '_ptype'],
+        varType: 'const'
+      }),
+      v('priority[Dayton,pprofile]', '1,7', {
+        refId: '_priority[_dayton,_ppriority]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_dayton', '_ppriority'],
+        varType: 'const'
+      }),
+      v('shipments[branch]', 'ALLOCATE AVAILABLE(demand[branch],priority[branch,ptype],supply available)', {
+        refId: '_shipments',
+        referencedFunctionNames: ['__allocate_available'],
+        references: [
+          '_demand[_boston]',
+          '_demand[_dayton]',
+          '_priority[_boston,_ppriority]',
+          '_priority[_boston,undefined]',
+          '_supply_available'
+        ],
+        subscripts: ['_branch']
       })
     ])
   })
@@ -1169,7 +1229,6 @@ describe('readEquations', () => {
       DimC: C1, C2 ~~|
       x[DimB, DimC] = GET DIRECT CONSTANTS('data/c.csv', ',', 'B2') ~~|
     `)
-    logPrettyVars(vars)
     expect(vars).toEqual([
       v('x[DimB,DimC]', "GET DIRECT CONSTANTS('data/c.csv',',','B2')", {
         directConstArgs: { file: 'data/c.csv', tab: ',', startCell: 'B2' },
@@ -1217,7 +1276,6 @@ describe('readEquations', () => {
       x = GET DIRECT DATA('g_data.csv', ',', 'A', 'B13') ~~|
       y = x * 10 ~~|
     `)
-    logPrettyVars(vars)
     expect(vars).toEqual([
       v('x', "GET DIRECT DATA('g_data.csv',',','A','B13')", {
         directDataArgs: { file: 'g_data.csv', tab: ',', timeRowOrCol: 'A', startCell: 'B13' },

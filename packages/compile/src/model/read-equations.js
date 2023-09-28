@@ -183,7 +183,7 @@ export function readEquation(v) {
         v.varType = 'data'
         break
       default:
-        throw new Error(`Unhandled equation kind '${rhs.kind}'`)
+        throw new Error(`Unhandled equation kind '${rhs.kind}' for ${v.modelLHS}`)
     }
   }
 
@@ -391,7 +391,6 @@ function visitFunctionCall(v, callExpr, context) {
     case '_STEP':
     case '_VECTOR_ELM_MAP':
     case '_VECTOR_SORT_ORDER':
-    case '_XIDZ':
     case '_ZIDZ':
       validateCallArgs(callExpr, 2)
       break
@@ -404,6 +403,7 @@ function visitFunctionCall(v, callExpr, context) {
 
     case '_GET_DATA_BETWEEN_TIMES':
     case '_RAMP':
+    case '_XIDZ':
       validateCallArgs(callExpr, 3)
       break
 
@@ -430,7 +430,8 @@ function visitFunctionCall(v, callExpr, context) {
       break
 
     case '_ALLOCATE_AVAILABLE':
-      console.error('ALLOCATE AVAILABLE not yet implemented')
+      validateCallDepth(callExpr, context)
+      validateCallArgs(callExpr, 3)
       break
 
     case '_DELAY1':
@@ -594,6 +595,20 @@ function visitFunctionCall(v, callExpr, context) {
       // XXX: For `WITH LOOKUP` calls, only process the first argument; need to generalize this
       if (callExpr.fnId === '_WITH_LOOKUP' && index > 1) {
         break
+      } else if (callExpr.fnId === '_ALLOCATE_AVAILABLE' && index === 1) {
+        // TODO
+        // // Reference the second and third elements of the priority profile argument instead of the first one
+        // // that Vensim requires for ALLOCATE AVAILABLE. This is required to get correct dependencies.
+        // let ptypeRefId = this.expandedRefIds[0]
+        // let { subscripts } = Model.splitRefId(ptypeRefId)
+        // let ptypeIndexName = subscripts[1]
+        // let profileElementsDimName = sub(ptypeIndexName).family
+        // let profileElementsDim = sub(profileElementsDimName)
+        // let priorityRefId = ptypeRefId.replace(ptypeIndexName, profileElementsDim.value[1])
+        // let widthRefId = ptypeRefId.replace(ptypeIndexName, profileElementsDim.value[2])
+        // this.expandedRefIds = [priorityRefId, widthRefId]
+        // this.addReferencesToList(this.var.references)
+        continue
       }
       context.setArgIndex(index, argModes[index])
       visitExpr(v, argExpr, context)
