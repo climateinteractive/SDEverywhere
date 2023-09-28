@@ -1,6 +1,6 @@
 {
   "name": "@sdeverywhere/plugin-worker",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "files": [
     "dist/**",
     "template-worker/**"
@@ -31,8 +31,8 @@
     "ci:build": "run-s clean lint prettier:check test:ci type-check build docs"
   },
   "dependencies": {
-    "@sdeverywhere/runtime": "^0.2.1",
-    "@sdeverywhere/runtime-async": "^0.2.1",
+    "@sdeverywhere/runtime": "^0.2.2",
+    "@sdeverywhere/runtime-async": "^0.2.2",
     "vite": "4.4.9"
   },
   "peerDependencies": {
