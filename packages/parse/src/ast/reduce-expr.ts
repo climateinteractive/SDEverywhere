@@ -2,12 +2,12 @@
 
 import { assertNever } from 'assert-never'
 
-import type { Expr, NumberValue, VariableId } from './ast-types'
+import type { Expr, NumberValue, VariableRef } from './ast-types'
 import { binaryOp, lookupCall, num, parens, unaryOp } from './ast-types'
 
 export interface ReduceExprOptions {
   /** A callback that returns the possibly reduced expression for the referenced variable. */
-  resolveRef?: (refId: VariableId) => Expr | undefined
+  resolveVarRef?: (varRef: VariableRef) => Expr | undefined
 }
 
 export function reduceExpr(expr: Expr, opts?: ReduceExprOptions): Expr {
@@ -18,10 +18,10 @@ export function reduceExpr(expr: Expr, opts?: ReduceExprOptions): Expr {
       return expr
 
     case 'variable-ref':
-      if (opts?.resolveRef !== undefined) {
+      if (opts?.resolveVarRef !== undefined) {
         // Note that we assume the resolved expression has already been reduced by
         // the callback, and don't attempt to reduce further
-        const resolvedExpr = opts.resolveRef(expr.varId)
+        const resolvedExpr = opts.resolveVarRef(expr)
         if (resolvedExpr) {
           return resolvedExpr
         }
@@ -210,9 +210,19 @@ export function reduceExpr(expr: Expr, opts?: ReduceExprOptions): Expr {
     }
 
     case 'parens': {
-      // TODO: Drop the parens if it reduces to something trivial?
       const child = reduceExpr(expr.expr, opts)
-      return parens(child)
+      switch (child.kind) {
+        case 'number':
+        case 'string':
+        case 'keyword':
+        case 'variable-ref':
+          // When the child expression resolves to something simple, drop the parens
+          // TODO: Are there other cases where we should drop the parens?
+          return child
+        default:
+          // Otherwise, preserve the parens
+          return parens(child)
+      }
     }
 
     case 'lookup-def':
@@ -300,10 +310,10 @@ export function reduceConditionals(expr: Expr, opts?: ReduceExprOptions): Expr {
       return expr
 
     case 'variable-ref':
-      if (opts?.resolveRef !== undefined) {
+      if (opts?.resolveVarRef !== undefined) {
         // Note that we assume the resolved expression has already been reduced by
         // the callback, and don't attempt to reduce further
-        const resolvedExpr = opts.resolveRef(expr.varId)
+        const resolvedExpr = opts.resolveVarRef(expr)
         if (resolvedExpr) {
           return resolvedExpr
         }
@@ -322,9 +332,19 @@ export function reduceConditionals(expr: Expr, opts?: ReduceExprOptions): Expr {
     }
 
     case 'parens': {
-      // TODO: Drop the parens if it reduces to something trivial?
       const child = reduceConditionals(expr.expr, opts)
-      return parens(child)
+      switch (child.kind) {
+        case 'number':
+        case 'string':
+        case 'keyword':
+        case 'variable-ref':
+          // When the child expression resolves to something simple, drop the parens
+          // TODO: Are there other cases where we should drop the parens?
+          return child
+        default:
+          // Otherwise, preserve the parens
+          return parens(child)
+      }
     }
 
     case 'lookup-def':

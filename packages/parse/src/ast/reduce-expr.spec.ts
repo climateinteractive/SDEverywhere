@@ -2,8 +2,8 @@
 
 import { describe, expect, it } from 'vitest'
 
-import type { Expr } from './ast-types'
-import { binaryOp, call, num, unaryOp, varRef } from './ast-types'
+import type { Expr, VariableRef } from './ast-types'
+import { binaryOp, call, num, parens, unaryOp, varRef } from './ast-types'
 import type { ReduceExprOptions } from './reduce-expr'
 import { reduceConditionals, reduceExpr } from './reduce-expr'
 
@@ -143,14 +143,27 @@ describe('reduceExpr', () => {
   })
 
   it('should reduce binary op expressions recursively', () => {
-    // (2*1) + (v*0) == 2 + 0 == 2
+    // 2*1 + v*0 == 2 + 0 == 2
     expect(reduceExpr(binaryOp(binaryOp(two, '*', one), '+', binaryOp(x, '*', zero)))).toEqual(two)
 
     // (2*1) - x == 2 - x
-    expect(reduceExpr(binaryOp(binaryOp(two, '*', one), '-', x))).toEqual(binaryOp(two, '-', x))
+    expect(reduceExpr(binaryOp(parens(binaryOp(two, '*', one)), '-', x))).toEqual(binaryOp(two, '-', x))
+
+    // 2 - (x*1) == 2 - x
+    expect(reduceExpr(binaryOp(two, '-', parens(binaryOp(x, '*', one))))).toEqual(binaryOp(two, '-', x))
 
     // IF THEN ELSE(x, 2, 0) * 2
     expect(reduceExpr(binaryOp(call('IF THEN ELSE', one, two, zero), '*', two))).toEqual(num(4))
+  })
+
+  it('should not remove parens when the child expression resolves to a constant', () => {
+    // (x*1) == x
+    expect(reduceExpr(parens(binaryOp(x, '*', one)))).toEqual(x)
+  })
+
+  it('should not remove parens when the child expression cannot be reduced further', () => {
+    // (x*2) == (x*2)
+    expect(reduceExpr(parens(binaryOp(x, '*', two)))).toEqual(parens(binaryOp(x, '*', two)))
   })
 
   it('should reduce call arg expressions', () => {
@@ -186,8 +199,8 @@ describe('reduceExpr', () => {
 
     const xVar: Variable = { refId: '_x', expr: one }
 
-    function resolveRef(refId: string): Expr | undefined {
-      if (refId === '_x') {
+    function resolveVarRef(varRef: VariableRef): Expr | undefined {
+      if (varRef.varId === '_x') {
         return xVar.expr
       } else {
         return undefined
@@ -195,7 +208,7 @@ describe('reduceExpr', () => {
     }
 
     const opts: ReduceExprOptions = {
-      resolveRef
+      resolveVarRef
     }
     expect(reduceExpr(varRef('x'), opts)).toEqual(one)
     expect(reduceExpr(varRef('y'), opts)).toEqual(varRef('y'))
