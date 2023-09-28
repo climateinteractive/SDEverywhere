@@ -39,7 +39,7 @@
     "@sdeverywhere/build": "^0.3.0"
   },
   "devDependencies": {
-    "@sdeverywhere/build": "0.3.2",
+    "@sdeverywhere/build": "*",
     "@types/node": "^20.5.7"
   },
   "author": "Climate Interactive",
