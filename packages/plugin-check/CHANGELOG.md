@@ -1,5 +1,7 @@
 # Changelog
 
+## [0.3.4](https://github.com/climateinteractive/SDEverywhere/compare/plugin-check-v0.3.3...plugin-check-v0.3.4) (2023-09-28)
+
 ### Dependencies
 
 * The following workspace dependencies were updated
