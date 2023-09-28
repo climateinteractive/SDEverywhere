@@ -514,6 +514,27 @@ importers:
         specifier: workspace:*
         version: link:../../../packages/runtime-async
 
+  tests/integration/impl-var-access:
+    dependencies:
+      '@sdeverywhere/build':
+        specifier: workspace:*
+        version: link:../../../packages/build
+      '@sdeverywhere/cli':
+        specifier: workspace:*
+        version: link:../../../packages/cli
+      '@sdeverywhere/plugin-wasm':
+        specifier: workspace:*
+        version: link:../../../packages/plugin-wasm
+      '@sdeverywhere/plugin-worker':
+        specifier: workspace:*
+        version: link:../../../packages/plugin-worker
+      '@sdeverywhere/runtime':
+        specifier: workspace:*
+        version: link:../../../packages/runtime
+      '@sdeverywhere/runtime-async':
+        specifier: workspace:*
+        version: link:../../../packages/runtime-async
+
   tests/integration/saveper:
     dependencies:
       '@sdeverywhere/build':
@@ -1610,7 +1631,7 @@ packages:
       normalize-path: 3.0.0
       readdirp: 3.6.0
     optionalDependencies:
-      fsevents: 2.3.2
+      fsevents: 2.3.3
 
   /cli-cursor@4.0.0:
     resolution: {integrity: sha512-VGtlMu3x/4DOtIUwEkRezxUZ2lBacNJCHash0N0WeZDBS+7Ux1dm3XWAgWYxLJFMMdOeXMHXorshEFhbMSGelg==}
@@ -2418,8 +2439,8 @@ packages:
   /fs.realpath@1.0.0:
     resolution: {integrity: sha512-OO0pH2lK6a0hZnAdau5ItzHPI6pUlvI7jMVnxUQRtw4owF2wk8lOSabtGDCTP4Ggrg2MbGnWO9X8K1t4+fGMDw==}
 
-  /fsevents@2.3.2:
-    resolution: {integrity: sha512-xiqMQR4xAeHTuB9uWm+fFRcIOgKBMiOBP+eXiyT7jsgVCq1bkVygt00oASowB7EdtpOHaaPgKt812P9ab+DDKA==}
+  /fsevents@2.3.3:
+    resolution: {integrity: sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==}
     engines: {node: ^8.16.0 || ^10.6.0 || >=11.0.0}
     os: [darwin]
     requiresBuild: true
@@ -2565,7 +2586,7 @@ packages:
       source-map: 0.6.1
       wordwrap: 1.0.0
     optionalDependencies:
-      uglify-js: 3.16.0
+      uglify-js: 3.17.4
     dev: true
 
   /has-bigints@1.0.2:
@@ -3707,7 +3728,7 @@ packages:
     engines: {node: '>=10.0.0'}
     hasBin: true
     optionalDependencies:
-      fsevents: 2.3.2
+      fsevents: 2.3.3
     dev: false
 
   /rollup@2.79.1:
@@ -3715,7 +3736,7 @@ packages:
     engines: {node: '>=10.0.0'}
     hasBin: true
     optionalDependencies:
-      fsevents: 2.3.2
+      fsevents: 2.3.3
     dev: true
 
   /rollup@3.28.1:
@@ -3723,7 +3744,7 @@ packages:
     engines: {node: '>=14.18.0', npm: '>=8.0.0'}
     hasBin: true
     optionalDependencies:
-      fsevents: 2.3.2
+      fsevents: 2.3.3
 
   /run-parallel@1.2.0:
     resolution: {integrity: sha512-5l4VyZR86LZ/lDxZTR6jqL8AFE2S0IFLMP26AbjsLVADxHdhB/c0GUsH+y39UfCi3dzz8OlQuPmnaJOMoDHQBA==}
@@ -4388,8 +4409,8 @@ packages:
     resolution: {integrity: sha512-bRn3CsoojyNStCZe0BG0Mt4Nr/4KF+rhFlnNXybgqt5pXHNFRlqinSoQaTrGyzE4X8aHplSb+TorH+COin9Yxw==}
     dev: true
 
-  /uglify-js@3.16.0:
-    resolution: {integrity: sha512-FEikl6bR30n0T3amyBh3LoiBdqHRy/f4H80+My34HOesOKyHfOsxAPAxOoqC0JUnC1amnO0IwkYC3sko51caSw==}
+  /uglify-js@3.17.4:
+    resolution: {integrity: sha512-T9q82TJI9e/C1TAxYvfb16xO120tMVFZrGA3f9/P4424DNu6ypK103y0GPFVa17yotwSyZW5iYXgjYHkGrJW/g==}
     engines: {node: '>=0.8.0'}
     hasBin: true
     requiresBuild: true
@@ -4479,7 +4500,7 @@ packages:
       resolve: 1.22.1
       rollup: 2.79.1
     optionalDependencies:
-      fsevents: 2.3.2
+      fsevents: 2.3.3
     dev: true
 
   /vite@4.4.9(@types/node@20.5.7):
@@ -4515,7 +4536,7 @@ packages:
       postcss: 8.4.29
       rollup: 3.28.1
     optionalDependencies:
-      fsevents: 2.3.2
+      fsevents: 2.3.3
 
   /vite@4.4.9(sass@1.52.3):
     resolution: {integrity: sha512-2mbUn2LlUmNASWwSCNSJ/EG2HuSRTnVNaydp6vMCm5VIqJsjMfbIWtbH2kDuwUVW5mMUKKZvGPX/rqeqVvv1XA==}
@@ -4550,7 +4571,7 @@ packages:
       rollup: 3.28.1
       sass: 1.52.3
     optionalDependencies:
-      fsevents: 2.3.2
+      fsevents: 2.3.3
     dev: true
 
   /vitefu@0.2.4(vite@4.4.9):

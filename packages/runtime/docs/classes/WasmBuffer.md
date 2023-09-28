@@ -1,6 +1,6 @@
 [@sdeverywhere/runtime](../index.md) / WasmBuffer
 
-# Class: WasmBuffer
+# Class: WasmBuffer<ArrType\>
 
 Wraps a `WebAssembly.Memory` buffer allocated on the wasm heap.
 
@@ -13,30 +13,43 @@ a Web Worker.  When using this class in a worker thread, create a separate
 in the browser's normal JS thread, and then use `getArrayView` to copy into and
 out of the wasm buffer.
 
+## Type parameters
+
+| Name |
+| :------ |
+| `ArrType` |
+
 ## Constructors
 
 ### constructor
 
-**new WasmBuffer**(`wasmModule`, `numElements`)
+**new WasmBuffer**<`ArrType`\>(`wasmModule`, `byteOffset`, `heapArray`)
+
+#### Type parameters
+
+| Name |
+| :------ |
+| `ArrType` |
 
 #### Parameters
 
 | Name | Type | Description |
 | :------ | :------ | :------ |
 | `wasmModule` | [`WasmModule`](../interfaces/WasmModule.md) | The `WasmModule` used to initialize the memory. |
-| `numElements` | `number` | The number of 64-bit `double` elements in the buffer. |
+| `byteOffset` | `number` | The byte offset within the wasm heap. |
+| `heapArray` | `ArrType` | The array view on the underlying heap buffer. |
 
 ## Methods
 
 ### getArrayView
 
-**getArrayView**(): `Float64Array`
+**getArrayView**(): `ArrType`
 
 #### Returns
 
-`Float64Array`
+`ArrType`
 
-A new `Float64Array` view on the underlying heap buffer.
+An `ArrType` view on the underlying heap buffer.
 
 ___
 
