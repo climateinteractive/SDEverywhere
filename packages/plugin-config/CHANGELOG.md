@@ -2,10 +2,8 @@
 
 ## [0.2.3](https://github.com/climateinteractive/SDEverywhere/compare/plugin-config-v0.2.2...plugin-config-v0.2.3) (2023-09-29)
 
+Note: This is a redo of the 0.2.2 release to workaround an npmjs registry issue.  There are no actual changes in this release.
 
-### Bug Fixes
-
-* add trivial changes to correct previous publish failures and force re-publish ([#362](https://github.com/climateinteractive/SDEverywhere/issues/362)) ([544d4da](https://github.com/climateinteractive/SDEverywhere/commit/544d4dac5f5d6d71885f9ba15f95ee9c91e0ec66)), closes [#361](https://github.com/climateinteractive/SDEverywhere/issues/361)
 
 ## [0.2.2](https://github.com/climateinteractive/SDEverywhere/compare/plugin-config-v0.2.1...plugin-config-v0.2.2) (2023-09-28)
 
