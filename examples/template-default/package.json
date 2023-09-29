@@ -4,8 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "sde bundle",
     "dev": "sde dev",
+    "build": "sde bundle",
     "save-baseline": "sde-check baseline --save"
   },
   "workspaces": [

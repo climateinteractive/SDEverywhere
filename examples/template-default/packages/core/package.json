@@ -11,16 +11,14 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "clean": "rm -rf dist",
-    "lint": "eslint src --max-warnings 0",
-    "prettier:check": "prettier --check .",
-    "prettier:fix": "prettier --write .",
-    "precommit": "../scripts/precommit"
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
     "@sdeverywhere/runtime": "^0.2.0",
     "@sdeverywhere/runtime-async": "^0.2.0"
   },
   "devDependencies": {
+    "typescript": "^5.2.2",
     "vite": "^4.4.9"
   }
 }
