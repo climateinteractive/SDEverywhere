@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.8](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.7...compile-v0.7.8) (2023-09-29)
+
+
+### Bug Fixes
+
+* prevent error in JSON listing creation when Time variable is not explicitly referenced in the model ([#368](https://github.com/climateinteractive/SDEverywhere/issues/368)) ([4bf0a39](https://github.com/climateinteractive/SDEverywhere/commit/4bf0a39cbe7c9fce8725269b7bb32a59b9f6e027)), closes [#365](https://github.com/climateinteractive/SDEverywhere/issues/365)
+
 ## [0.7.7](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.6...compile-v0.7.7) (2023-09-28)
 
 
