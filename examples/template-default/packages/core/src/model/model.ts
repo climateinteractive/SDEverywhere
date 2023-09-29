@@ -3,7 +3,8 @@ import { ModelScheduler, Outputs } from '@sdeverywhere/runtime'
 import { spawnAsyncModelRunner } from '@sdeverywhere/runtime-async'
 import type { InputId } from '../config/generated/spec-types'
 import { config } from '../config/config'
-import { createModelInput, createSimpleInputValue, Input } from './inputs'
+import type { Input } from './inputs'
+import { createModelInput, createSimpleInputValue } from './inputs'
 import modelWorkerJs from './generated/worker.js?raw'
 
 /**
