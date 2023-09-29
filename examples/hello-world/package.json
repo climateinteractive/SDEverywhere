@@ -5,10 +5,11 @@
   "type": "module",
   "scripts": {
     "clean": "rm -rf ./sde-prep",
-    "build": "sde bundle",
     "dev": "sde dev",
-    "save-baseline": "sde-check baseline --save",
-    "serve": "sirv ./sde-prep/check-report"
+    "build": "sde bundle",
+    "vite": "vite",
+    "preview": "vite preview --open --outDir ./sde-prep/check-report",
+    "save-baseline": "sde-check baseline --save"
   },
   "dependencies": {
     "@sdeverywhere/build": "^0.3.0",
@@ -16,6 +17,6 @@
     "@sdeverywhere/plugin-check": "^0.3.0",
     "@sdeverywhere/plugin-wasm": "^0.2.0",
     "@sdeverywhere/plugin-worker": "^0.2.0",
-    "sirv-cli": "^2.0.2"
+    "vite": "^4.4.9"
   }
 }

@@ -9,8 +9,9 @@
     "prettier:check": "prettier --check .",
     "prettier:fix": "prettier --write .",
     "precommit": "../scripts/precommit",
+    "dev": "vite",
     "build": "vite build",
-    "dev": "vite"
+    "preview": "vite preview"
   },
   "dependencies": {
     "bootstrap-slider": "10.6.2",
