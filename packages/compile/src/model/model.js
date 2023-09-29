@@ -1023,7 +1023,13 @@ function allListedVars() {
   vars.push(...constVars())
   vars.push(...lookupVars())
   vars.push(...dataVars())
-  vars.push(varWithName('_time'))
+  // The special exogenous `Time` variable may have already been removed by
+  // `removeUnusedVariables` if it is not referenced explicitly in the model,
+  // so we will only include it in the listing if it is defined here
+  const timeVar = varWithName('_time')
+  if (timeVar) {
+    vars.push(timeVar)
+  }
   vars.push(...initVars())
   vars.push(...auxVars())
   // TODO: Also levelVars not covered by initVars?
