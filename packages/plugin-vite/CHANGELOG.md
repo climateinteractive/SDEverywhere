@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.1.8](https://github.com/climateinteractive/SDEverywhere/compare/plugin-vite-v0.1.7...plugin-vite-v0.1.8) (2023-09-29)
+
+Note: This is a redo of the 0.1.7 release to workaround an npmjs registry issue.  There are no actual changes in this release.
+
+
 ## [0.1.7](https://github.com/climateinteractive/SDEverywhere/compare/plugin-vite-v0.1.6...plugin-vite-v0.1.7) (2023-09-28)
 
 
