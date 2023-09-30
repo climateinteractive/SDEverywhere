@@ -433,8 +433,14 @@ function removeUnusedVariables(spec) {
       if (!referencedRefIds.has(refId)) {
         referencedRefIds.add(refId)
         const refVar = varWithRefId(refId)
-        recordUsedVariable(refVar)
-        recordRefsOfVariable(refVar)
+        if (refVar) {
+          recordUsedVariable(refVar)
+          recordRefsOfVariable(refVar)
+        } else {
+          console.error(`No var found for ${refId}`)
+          console.error(v)
+          process.exit(1)
+        }
       }
     }
   }
@@ -1113,6 +1119,111 @@ function printDepsGraph(graph, varType) {
     console.error(`${dep[0]} → ${dep[1]}`)
   }
 }
+
+function allListedVars() {
+  // Put variables into the order that they are evaluated by SDE in the generated model
+  let vars = []
+  vars.push(...constVars())
+  vars.push(...lookupVars())
+  vars.push(...dataVars())
+  // The special exogenous `Time` variable may have already been removed by
+  // `removeUnusedVariables` if it is not referenced explicitly in the model,
+  // so we will only include it in the listing if it is defined here
+  const timeVar = varWithName('_time')
+  if (timeVar) {
+    vars.push(timeVar)
+  }
+  vars.push(...initVars())
+  vars.push(...auxVars())
+  // TODO: Also levelVars not covered by initVars?
+
+  // Filter out data/lookup variables and variables that are generated/used internally
+  const isInternal = v => {
+    return v.refId.startsWith('__level') || v.refId.startsWith('__aux')
+  }
+
+  return R.filter(v => !isInternal(v), vars)
+}
+
+function filteredListedVars() {
+  // Extract a subset of the available info for each variable and sort all variables
+  // according to the order that they are evaluated by SDE in the generated model
+  return R.map(v => filterVar(v), allListedVars())
+}
+
+function varIndexInfoMap() {
+  // Return a map containing information for each listed variable:
+  //   varName
+  //   varIndex
+  //   subscriptCount
+
+  // Get the filtered variables in the order that they are evaluated by SDE in the
+  // generated model
+  const sortedVars = filteredListedVars()
+
+  // Get the set of unique variable names, and assign a 1-based index
+  // to each; this matches the index number used in `storeOutput()`
+  // in the generated C code
+  const infoMap = new Map()
+  let varIndex = 1
+  for (const v of sortedVars) {
+    if (v.varType === 'data' || v.varType === 'lookup') {
+      // Omit the index for data and lookup variables; at this time, the data for these
+      // cannot be output like for other types of variables
+      continue
+    }
+    const varName = v.varName
+    if (!infoMap.get(varName)) {
+      infoMap.set(varName, {
+        varName,
+        varIndex,
+        subscriptCount: v.families ? v.families.length : 0
+      })
+      varIndex++
+    }
+  }
+
+  return infoMap
+}
+
+function varIndexInfo() {
+  // Return an array, sorted by `varName`, containing information for each
+  // listed variable:
+  //   varName
+  //   varIndex
+  //   subscriptCount
+  return Array.from(varIndexInfoMap().values())
+}
+
+function jsonList() {
+  // Return a stringified JSON object containing variable and subscript information
+  // for the model.
+
+  // Get the set of available subscripts
+  const allDims = [...allDimensions()]
+  const sortedDims = allDims.sort((a, b) => a.name.localeCompare(b.name))
+
+  // Extract a subset of the available info for each variable and put them in eval order
+  const sortedVars = filteredListedVars()
+
+  // Assign a 1-based index for each variable that has data that can be accessed.
+  // This matches the index number used in `storeOutput()` in the generated C code.
+  const infoMap = varIndexInfoMap()
+  for (const v of sortedVars) {
+    const varInfo = infoMap.get(v.varName)
+    if (varInfo) {
+      v.varIndex = varInfo.varIndex
+    }
+  }
+
+  // Convert to JSON
+  const obj = {
+    dimensions: sortedDims,
+    variables: sortedVars
+  }
+  return JSON.stringify(obj, null, 2)
+}
+
 export default {
   addConstantExpr,
   addEquation,
@@ -1129,6 +1240,7 @@ export default {
   initVars,
   isInputVar,
   isNonAtoAName,
+  jsonList,
   levelVars,
   lookupVars,
   printRefGraph,
@@ -1140,6 +1252,7 @@ export default {
   resetModelState,
   splitRefId,
   variables,
+  varIndexInfo,
   varNames,
   varsWithName,
   varWithName,

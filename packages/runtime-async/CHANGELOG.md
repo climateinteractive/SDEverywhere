@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.2.2](https://github.com/climateinteractive/SDEverywhere/compare/runtime-async-v0.2.1...runtime-async-v0.2.2) (2023-09-28)
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/runtime bumped from ^0.2.1 to ^0.2.2
+
+## [0.2.1](https://github.com/climateinteractive/SDEverywhere/compare/runtime-async-v0.2.0...runtime-async-v0.2.1) (2023-09-28)
+
+
+### Features
+
+* add support for capturing data for any variable at runtime ([#355](https://github.com/climateinteractive/SDEverywhere/issues/355)) ([5d12836](https://github.com/climateinteractive/SDEverywhere/commit/5d1283657ba99f6c7f8e30f8053f1906ac872af3)), closes [#105](https://github.com/climateinteractive/SDEverywhere/issues/105)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/runtime bumped from ^0.2.0 to ^0.2.1
+
 ## [0.2.0](https://github.com/climateinteractive/SDEverywhere/compare/runtime-async-v0.1.0...runtime-async-v0.2.0) (2022-12-10)
 
 

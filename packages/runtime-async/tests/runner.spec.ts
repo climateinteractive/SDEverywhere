@@ -23,12 +23,15 @@ const { exposeModelWorker } = require('@sdeverywhere/runtime-async')
 function initWasmModel() {
   // This is a mock WasmModule that is sufficient for testing communication between the
   // async runner and worker
-  const heap = new Float64Array(1000)
+  const heapI32 = new Int32Array(1000)
+  const heapF64 = new Float64Array(1000)
   let mallocOffset = 0
   const wasmModule = {
     cwrap: (fname) => {
       // Return a mock implementation of each wrapped C function
       switch (fname) {
+        case 'getMaxOutputIndices':
+          return () => 1000
         case 'getInitialTime':
           return () => 2000
         case 'getFinalTime':
@@ -40,9 +43,9 @@ function initWasmModel() {
             // The outputsAddress is in bytes, so convert to float64 offset
             const outputsOffset = outputsAddress / 8
             // Store a value in 2000 for the first output series
-            heap.set([6], outputsOffset)
+            heapF64.set([6], outputsOffset)
             // Store a value in 2100 for the second output series
-            heap.set([7], outputsOffset + 201)
+            heapF64.set([7], outputsOffset + 201)
           }
         default:
           throw new Error(\`Unhandled call to cwrap with function name '\${fname}'\`)
@@ -54,7 +57,8 @@ function initWasmModel() {
       return currentOffset
     },
     _free: () => undefined,
-    HEAPF64: heap
+    HEAP32: heapI32,
+    HEAPF64: heapF64
   }
   return initWasmModelAndBuffers(wasmModule, 3, ['_output_1', '_output_2'])
 }

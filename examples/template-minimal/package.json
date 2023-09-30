@@ -9,11 +9,11 @@
     "save-baseline": "sde-check baseline --save"
   },
   "dependencies": {
-    "@sdeverywhere/build": "^0.3.0",
-    "@sdeverywhere/check-core": "^0.1.0",
-    "@sdeverywhere/cli": "^0.7.6",
-    "@sdeverywhere/plugin-check": "^0.3.0",
-    "@sdeverywhere/plugin-wasm": "^0.2.0",
-    "@sdeverywhere/plugin-worker": "^0.2.0"
+    "@sdeverywhere/build": "^0.3.2",
+    "@sdeverywhere/check-core": "^0.1.1",
+    "@sdeverywhere/cli": "^0.7.12",
+    "@sdeverywhere/plugin-check": "^0.3.4",
+    "@sdeverywhere/plugin-wasm": "^0.2.1",
+    "@sdeverywhere/plugin-worker": "^0.2.3"
   }
 }

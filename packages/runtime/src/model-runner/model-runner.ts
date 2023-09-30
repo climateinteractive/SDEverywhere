@@ -1,6 +1,7 @@
 // Copyright (c) 2020-2022 Climate Interactive / New Venture Fund
 
 import type { WasmModelInitResult } from '../wasm-model'
+import { updateOutputIndices } from '../wasm-model'
 import type { InputValue } from './inputs'
 import { Outputs } from './outputs'
 import { perfElapsed, perfNow } from './perf'
@@ -58,6 +59,8 @@ export function createWasmModelRunner(wasmResult: WasmModelInitResult): ModelRun
   const inputsArray = inputsBuffer.getArrayView()
   const outputsBuffer = wasmResult.outputsBuffer
   const outputsArray = outputsBuffer.getArrayView()
+  const outputIndicesBuffer = wasmResult.outputIndicesBuffer
+  const outputIndicesArray = outputIndicesBuffer?.getArrayView()
   const rowLength = wasmModel.numSavePoints
 
   // Disallow `runModel` after the runner has been terminated
@@ -70,9 +73,19 @@ export function createWasmModelRunner(wasmResult: WasmModelInitResult): ModelRun
       inputsArray[i++] = input.get()
     }
 
+    // Update the output indices, if needed
+    const outputSpecs = outputs.varSpecs
+    let useIndices: boolean
+    if (outputIndicesArray && outputSpecs !== undefined && outputSpecs.length > 0) {
+      updateOutputIndices(outputIndicesArray, outputSpecs)
+      useIndices = true
+    } else {
+      useIndices = false
+    }
+
     // Run the model
     const t0 = perfNow()
-    wasmModel.runModel(inputsBuffer, outputsBuffer)
+    wasmModel.runModel(inputsBuffer, outputsBuffer, useIndices ? outputIndicesBuffer : undefined)
     outputs.runTimeInMillis = perfElapsed(t0)
 
     // Capture the outputs array by copying the data into the given `Outputs`

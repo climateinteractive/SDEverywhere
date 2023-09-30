@@ -175,7 +175,17 @@ const char* getHeader() {
 }
 
 void storeOutputData() {
-${outputSection(outputVars)}
+${specOutputSection(outputVars)}
+}
+
+void storeOutput(size_t varIndex, size_t subIndex0, size_t subIndex1, size_t subIndex2) {
+#if SDE_USE_OUTPUT_INDICES
+  switch (varIndex) {
+${fullOutputSection(Model.varIndexInfo())}
+    default:
+      break;
+  }
+#endif
 }
 `
   }
@@ -262,11 +272,16 @@ ${postStep}
   }
   function internalVarsSection() {
     // Declare internal variables to run the model.
+    let decls
     if (outputAllVars) {
-      return `const int numOutputs = ${expandedVarNames().length};`
+      decls = `const int numOutputs = ${expandedVarNames().length};`
     } else {
-      return `const int numOutputs = ${spec.outputVars.length};`
+      decls = `const int numOutputs = ${spec.outputVars.length};`
     }
+    decls += `\n#define SDE_USE_OUTPUT_INDICES 0`
+    decls += `\n#define SDE_MAX_OUTPUT_INDICES 1000`
+    decls += `\nconst int maxOutputIndices = SDE_USE_OUTPUT_INDICES ? SDE_MAX_OUTPUT_INDICES : 0;`
+    return decls
   }
   function arrayDimensionsSection() {
     // Emit a declaration for each array dimension's index numbers.
@@ -324,11 +339,33 @@ ${postStep}
   //
   // Input/output section helpers
   //
-  function outputSection(varNames) {
+  function specOutputSection(varNames) {
     // Emit output calls using varNames in C format.
     let code = R.map(varName => `  outputVar(${varName});`)
     let section = R.pipe(code, lines)
     return section(varNames)
+  }
+  function fullOutputSection(varIndexInfo) {
+    // Emit output calls for all variables.
+    const code = R.map(info => {
+      let varAccess = info.varName
+      if (info.subscriptCount > 0) {
+        varAccess += '[subIndex0]'
+      }
+      if (info.subscriptCount > 1) {
+        varAccess += '[subIndex1]'
+      }
+      if (info.subscriptCount > 2) {
+        varAccess += '[subIndex2]'
+      }
+      let c = ''
+      c += `    case ${info.varIndex}:\n`
+      c += `      outputVar(${varAccess});\n`
+      c += `      break;`
+      return c
+    })
+    const section = R.pipe(code, lines)
+    return section(varIndexInfo)
   }
   function inputsFromStringImpl() {
     // If there was an I/O spec file, then emit code to parse input variables.

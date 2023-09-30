@@ -1,0 +1,49 @@
+{UTF-8}
+
+DimA: A1, A2 ~~|
+DimB: B1, B2, B3 ~~|
+
+T = TIME
+  ~ years
+  ~ This is an internal/impl variable.
+  |
+
+X = 0
+  ~ dmnl [-10,10,0.1]
+  ~ This is an input variable.
+  |
+
+Y = X * 3
+  ~ dmnl
+  ~ This is an internal/impl variable.
+  |
+
+Z = T + Y
+  ~ dmnl
+  ~ This is an output variable.
+  |
+
+A[DimA] = 1, 2
+  ~ dmnl
+  ~ This is a subscripted internal/impl variable.
+  |
+
+B[DimB] = 100, 200, 300
+  ~ dmnl
+  ~ This is a subscripted internal/impl variable.
+  |
+
+C[DimA, DimB] = A[DimA] + B[DimB]
+  ~ dmnl
+  ~ This is a subscripted internal/impl variable.
+  |
+
+D[DimA] = X + SUM(C[DimA, DimB!])
+  ~ dmnl
+  ~ This is an output variable.
+  |
+
+INITIAL TIME = 2000 ~~|
+FINAL TIME = 2002 ~~|
+TIME STEP = 1 ~~|
+SAVEPER = TIME STEP ~~|
