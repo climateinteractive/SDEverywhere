@@ -19,27 +19,6 @@ class WasmPlugin implements Plugin {
   async postGenerateC(context: BuildContext, cContent: string): Promise<string> {
     context.log('info', '  Generating WebAssembly module')
 
-    // Locate the Emscripten SDK directory
-    let emsdkDir: string
-    if (this.options?.emsdkDir) {
-      // Try the configured directory
-      emsdkDir = this.options.emsdkDir
-      if (!existsSync(emsdkDir)) {
-        throw new Error(`Invalid emsdk directory '${emsdkDir}'`)
-      }
-    } else {
-      // Walk up the directory structure to find the nearest `emsdk` directory
-      emsdkDir = await findUp('emsdk', { type: 'directory' })
-      if (emsdkDir === undefined) {
-        throw new Error('Could not find emsdk directory')
-      }
-    }
-
-    // XXX: On Windows, we need to use Windows-specific commands; need to revisit
-    const isWin = process.platform === 'win32'
-    const emccCmd = isWin ? 'emcc.bat' : 'emcc'
-    const emccCmdPath = joinPath(emsdkDir, 'upstream', 'emscripten', emccCmd)
-
     // If `outputJsPath` is undefined, write `wasm-model.js` to the prep dir
     const stagedOutputJsFile = 'wasm-model.js'
     let outputJsPath: string
@@ -56,7 +35,7 @@ class WasmPlugin implements Plugin {
     const stagedOutputJsPath = context.prepareStagedFile('model', stagedOutputJsFile, outputJsDir, outputJsFile)
 
     // Generate the Wasm binary (wrapped in a JS file)
-    await buildWasm(context, emccCmdPath, context.config.prepDir, stagedOutputJsPath)
+    await buildWasm(context, context.config.prepDir, stagedOutputJsPath, this.options)
 
     // context.log('info', '  Done!')
 
@@ -69,10 +48,35 @@ class WasmPlugin implements Plugin {
  */
 async function buildWasm(
   context: BuildContext,
-  emccCmdPath: string,
   prepDir: string,
-  outputJsPath: string
+  outputJsPath: string,
+  options?: WasmPluginOptions
 ): Promise<void> {
+  // Locate the Emscripten SDK directory
+  let emsdkDir: string
+  if (options?.emsdkDir) {
+    // Try the configured directory
+    if (typeof options.emsdkDir === 'function') {
+      emsdkDir = options.emsdkDir()
+    } else {
+      emsdkDir = options.emsdkDir
+    }
+    if (!existsSync(emsdkDir)) {
+      throw new Error(`Invalid emsdk directory '${emsdkDir}'`)
+    }
+  } else {
+    // Walk up the directory structure to find the nearest `emsdk` directory
+    emsdkDir = await findUp('emsdk', { type: 'directory' })
+    if (emsdkDir === undefined) {
+      throw new Error('Could not find emsdk directory')
+    }
+  }
+
+  // XXX: On Windows, we need to use Windows-specific commands; need to revisit
+  const isWin = process.platform === 'win32'
+  const emccCmd = isWin ? 'emcc.bat' : 'emcc'
+  const emccCmdPath = joinPath(emsdkDir, 'upstream', 'emscripten', emccCmd)
+
   // Use Emscripten to compile the C model into a Wasm blob packaged inside
   // an ES6 module.  We use `SINGLE_FILE=1` to include the Wasm directly
   // inside the JS file as a base64-encoded string.  This increases the
@@ -98,19 +102,38 @@ async function buildWasm(
   addArg('-Ibuild')
   addArg('-o')
   addArg(outputJsPath)
-  addArg('-Wall')
-  addArg('-Os')
-  addFlag('STRICT=1')
-  addFlag('MALLOC=emmalloc')
-  addFlag('FILESYSTEM=0')
-  addFlag('MODULARIZE=1')
-  addFlag('SINGLE_FILE=1')
-  addFlag('EXPORT_ES6=1')
-  addFlag('USE_ES6_IMPORT_META=0')
-  addFlag(
-    `EXPORTED_FUNCTIONS=['_malloc','_getMaxOutputIndices','_getInitialTime','_getFinalTime','_getSaveper','_runModelWithBuffers']`
-  )
-  addFlag(`EXPORTED_RUNTIME_METHODS=['cwrap']`)
+  if (options?.emccArgs !== undefined) {
+    let argsArray: string[]
+    if (typeof options.emccArgs === 'function') {
+      argsArray = options.emccArgs()
+    } else {
+      argsArray = options.emccArgs
+    }
+    argsArray.forEach(addArg)
+  } else {
+    addArg('-Wall')
+    addArg('-Os')
+    addFlag('STRICT=1')
+    addFlag('MALLOC=emmalloc')
+    addFlag('FILESYSTEM=0')
+    addFlag('MODULARIZE=1')
+    addFlag('SINGLE_FILE=1')
+    addFlag('EXPORT_ES6=1')
+    addFlag('USE_ES6_IMPORT_META=0')
+    // Note: The following argument is used to override the default list of supported environments.
+    // The problem is that the default list includes "node", but we can't use `USE_ES6_IMPORT_META=0`
+    // if "node" is included in the list.  We want `USE_ES6_IMPORT_META=0` because using 1 causes
+    // problems with our init code since we also use `SINGLE_FILE=1` (inlined wasm).  The bottom
+    // line is that if we omit "node" from this list, the wasm will still work fine in both browser
+    // and Node.js contexts (tested in Emscripten 2.0.34 and 3.1.46).
+    addFlag(`ENVIRONMENT='web,webview,worker'`)
+    addFlag(
+      `EXPORTED_FUNCTIONS=['_malloc','_getMaxOutputIndices','_getInitialTime','_getFinalTime','_getSaveper','_runModelWithBuffers']`
+    )
+    addFlag(`EXPORTED_RUNTIME_METHODS=['cwrap']`)
+  }
+
+  // context.log('verbose', `    emcc args: ${args}`)
 
   await context.spawnChild(prepDir, command, args, {
     // Ignore unhelpful Emscripten SDK cache messages
