@@ -26,6 +26,7 @@
     "test:ci": "vitest run",
     "type-check": "tsc --noEmit -p tsconfig-test.json",
     "build": "tsup",
+    "build:watch": "tsup --watch",
     "docs": "../../scripts/gen-docs.js",
     "ci:build": "run-s clean lint prettier:check type-check test:ci build docs"
   },
