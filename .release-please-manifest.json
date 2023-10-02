@@ -6,7 +6,7 @@
   "packages/check-ui-shell": "0.2.3",
   "packages/plugin-check": "0.3.4",
   "packages/plugin-vite": "0.1.8",
-  "packages/plugin-wasm": "0.2.1",
+  "packages/plugin-wasm": "0.2.2",
   "packages/plugin-worker": "0.2.3",
   "packages/runtime": "0.2.2",
   "packages/runtime-async": "0.2.2",
