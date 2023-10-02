@@ -151,7 +151,7 @@ export function reduceExpr(expr: Expr, opts?: ReduceExprOptions): Expr {
               const otherSideRhsNum: number = otherSide.rhs.kind === 'number' ? otherSide.rhs.value : undefined
               const otherSideConstValue = otherSideLhsNum !== undefined ? otherSideLhsNum : otherSideRhsNum
               const otherSideOtherPart = otherSideLhsNum !== undefined ? otherSide.rhs : otherSide.lhs
-              return binaryOp(num(numValue + otherSideConstValue), '*', otherSideOtherPart)
+              return binaryOp(num(numValue * otherSideConstValue), '*', otherSideOtherPart)
             }
             break
           }
@@ -290,7 +290,8 @@ export function reduceExpr(expr: Expr, opts?: ReduceExprOptions): Expr {
     }
 
     default:
-      assertNever(expr)
+      return expr
+    // assertNever(expr)
   }
 }
 

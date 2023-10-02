@@ -79,7 +79,9 @@ describe('reduceExpr', () => {
     expect(reduceExpr(binaryOp(one, '*', x))).toEqual(x)
     expect(reduceExpr(binaryOp(x, '*', two))).toEqual(binaryOp(x, '*', two))
     expect(reduceExpr(binaryOp(two, '*', x))).toEqual(binaryOp(two, '*', x))
-    expect(reduceExpr(binaryOp(two, '*', binaryOp(x, '*', two)))).toEqual(binaryOp(num(4), '*', x))
+
+    // 5 * (x * 2) === 10 * x
+    expect(reduceExpr(binaryOp(num(5), '*', binaryOp(x, '*', two)))).toEqual(binaryOp(num(10), '*', x))
 
     // TODO: We could detect this case and reduce to one
     expect(reduceExpr(binaryOp(x, '/', x))).toEqual(binaryOp(x, '/', x))
