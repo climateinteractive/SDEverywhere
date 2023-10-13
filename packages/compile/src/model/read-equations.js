@@ -153,9 +153,9 @@ class Context {
 }
 
 /**
- * TODO: Docs
+ * TODO: Docs and types
  *
- * @param v The `Variable` instance to process.
+ * @param v {*} The `Variable` instance to process.
  */
 export function readEquation(v) {
   const eqn = v.parsedEqn
@@ -365,7 +365,9 @@ function visitFunctionCall(v, callExpr, context) {
     case '_ABS':
     case '_COS':
     case '_ELMCOUNT':
+    case '_EXP':
     case '_INTEGER':
+    case '_LN':
     case '_SIN':
     case '_SUM':
     case '_VMAX':
@@ -388,6 +390,7 @@ function visitFunctionCall(v, callExpr, context) {
     case '_POWER':
     case '_PULSE':
     case '_QUANTUM':
+    case '_SQRT':
     case '_STEP':
     case '_VECTOR_ELM_MAP':
     case '_VECTOR_SORT_ORDER':

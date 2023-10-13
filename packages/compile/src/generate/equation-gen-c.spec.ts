@@ -8,6 +8,7 @@ import Model from '../model/model'
 import EquationGen from './equation-gen'
 
 import { parseInlineVensimModel, sampleModelDir, type Variable } from '../_tests/test-support'
+import { generateEquation } from './gen-equation'
 
 type ExtData = Map<string, Map<number, number>>
 
@@ -44,9 +45,16 @@ function genC(
     throw new Error(`variable is undefined`)
   }
 
-  const lines = new EquationGen(variable, opts?.extData, /*directData=*/ undefined, mode, opts?.modelDir)
-    .generate()
-    .flat()
+  let lines: string[]
+  if (process.env.SDE_PRIV_USE_NEW_PARSE === '1') {
+    lines = generateEquation(variable, mode, opts?.extData, /*directData=*/ undefined, opts?.modelDir)
+  } else {
+    // TODO: The `flat` call is only needed because the legacy EquationGen adds a nested array unnecessarily
+    // in `generateDirectDataInit`
+    lines = new EquationGen(variable, opts?.extData, /*directData=*/ undefined, mode, opts?.modelDir).generate().flat()
+  }
+
+  console.log(lines)
 
   // Strip the first comment line (containing the Vensim equation)
   if (lines.length > 0 && lines[0].trim().startsWith('//')) {
@@ -58,6 +66,16 @@ function genC(
 }
 
 describe('EquationGen (Vensim -> C)', () => {
+  it('should work for simple equation with unary :NOT: op', () => {
+    const vars = readInlineModel(`
+      x = 1 ~~|
+      y = :NOT: x ~~|
+    `)
+    expect(vars.size).toBe(2)
+    expect(genC(vars.get('_x'))).toEqual(['_x = 1.0;'])
+    expect(genC(vars.get('_y'))).toEqual(['_y = !_x;'])
+  })
+
   it('should work for simple equation with unary + op', () => {
     const vars = readInlineModel(`
       x = 1 ~~|
@@ -265,7 +283,48 @@ describe('EquationGen (Vensim -> C)', () => {
     expect(genC(vars.get('_x'), 'init-lookups')).toEqual(['_x = __new_lookup(6, /*copy=*/false, _x_data_);'])
   })
 
-  it('should work for lookup call', () => {
+  it('should work for lookup definition (one dimension)', () => {
+    const vars = readInlineModel(`
+      DimA: A1, A2 ~~|
+      x[A1]( (0,10), (1,20) ) ~~|
+      x[A2]( (0,30), (1,40) ) ~~|
+    `)
+    expect(vars.size).toBe(2)
+    expect(genC(vars.get('_x[_a1]'), 'decl')).toEqual(['double _x_data__0_[4] = { 0.0, 10.0, 1.0, 20.0 };'])
+    expect(genC(vars.get('_x[_a2]'), 'decl')).toEqual(['double _x_data__1_[4] = { 0.0, 30.0, 1.0, 40.0 };'])
+    expect(genC(vars.get('_x[_a1]'), 'init-lookups')).toEqual(['_x[0] = __new_lookup(2, /*copy=*/false, _x_data__0_);'])
+    expect(genC(vars.get('_x[_a2]'), 'init-lookups')).toEqual(['_x[1] = __new_lookup(2, /*copy=*/false, _x_data__1_);'])
+  })
+
+  it('should work for lookup definition (two dimensions)', () => {
+    const vars = readInlineModel(`
+      DimA: A1, A2 ~~|
+      DimB: B1, B2 ~~|
+      x[A1,B1]( (0,10), (1,20) ) ~~|
+      x[A1,B2]( (0,30), (1,40) ) ~~|
+      x[A2,B1]( (0,50), (1,60) ) ~~|
+      x[A2,B2]( (0,70), (1,80) ) ~~|
+    `)
+    expect(vars.size).toBe(4)
+    expect(genC(vars.get('_x[_a1,_b1]'), 'decl')).toEqual(['double _x_data__0__0_[4] = { 0.0, 10.0, 1.0, 20.0 };'])
+    expect(genC(vars.get('_x[_a1,_b2]'), 'decl')).toEqual(['double _x_data__0__1_[4] = { 0.0, 30.0, 1.0, 40.0 };'])
+    expect(genC(vars.get('_x[_a2,_b1]'), 'decl')).toEqual(['double _x_data__1__0_[4] = { 0.0, 50.0, 1.0, 60.0 };'])
+    expect(genC(vars.get('_x[_a2,_b2]'), 'decl')).toEqual(['double _x_data__1__1_[4] = { 0.0, 70.0, 1.0, 80.0 };'])
+    expect(genC(vars.get('_x[_a1,_b1]'), 'init-lookups')).toEqual([
+      '_x[0][0] = __new_lookup(2, /*copy=*/false, _x_data__0__0_);'
+    ])
+    expect(genC(vars.get('_x[_a1,_b2]'), 'init-lookups')).toEqual([
+      '_x[0][1] = __new_lookup(2, /*copy=*/false, _x_data__0__1_);'
+    ])
+    expect(genC(vars.get('_x[_a2,_b1]'), 'init-lookups')).toEqual([
+      '_x[1][0] = __new_lookup(2, /*copy=*/false, _x_data__1__0_);'
+    ])
+    expect(genC(vars.get('_x[_a2,_b2]'), 'init-lookups')).toEqual([
+      '_x[1][1] = __new_lookup(2, /*copy=*/false, _x_data__1__1_);'
+    ])
+  })
+
+  it.only('should work for lookup call', () => {
     const vars = readInlineModel(`
       x( [(0,0)-(2,2)], (0,0),(0.1,0.01),(0.5,0.7),(1,1),(1.5,1.2),(2,1.3) ) ~~|
       y = x(2) ~~|
@@ -397,7 +456,6 @@ describe('EquationGen (Vensim -> C)', () => {
     expect(genC(vars.get('_y'))).toEqual(['_y = _COS(_x);'])
   })
 
-  // TODO: Subscripted variants
   it('should work for DELAY1 function', () => {
     const vars = readInlineModel(`
       x = 1 ~~|
@@ -466,6 +524,75 @@ describe('EquationGen (Vensim -> C)', () => {
     expect(genC(vars.get('__aux3'), 'eval')).toEqual(['__aux3 = __level3 / ((5.0) / 3.0);'])
     expect(genC(vars.get('__aux4'), 'eval')).toEqual(['__aux4 = ((5.0) / 3.0);'])
     expect(genC(vars.get('_y'))).toEqual(['_y = (__level3 / __aux4);'])
+  })
+
+  it('should work for DELAY3I function (one dimension)', () => {
+    const vars = readInlineModel(`
+      DimA: A1, A2 ~~|
+      x[DimA] = 1, 2 ~~|
+      init[DimA] = 2, 3 ~~|
+      y[DimA] = DELAY3I(x[DimA], 5, init[DimA]) ~~|
+    `)
+    expect(vars.size).toBe(12)
+    expect(genC(vars.get('_x[_a1]'))).toEqual(['_x[0] = 1.0;'])
+    expect(genC(vars.get('_x[_a2]'))).toEqual(['_x[1] = 2.0;'])
+    expect(genC(vars.get('_init[_a1]'))).toEqual(['_init[0] = 2.0;'])
+    expect(genC(vars.get('_init[_a2]'))).toEqual(['_init[1] = 3.0;'])
+    expect(genC(vars.get('__level1'), 'init-levels')).toEqual([
+      'for (size_t i = 0; i < 2; i++) {',
+      '__level1[i] = _init[i] * ((5.0) / 3.0);',
+      '}'
+    ])
+    expect(genC(vars.get('__level1'), 'eval')).toEqual([
+      'for (size_t i = 0; i < 2; i++) {',
+      '__level1[i] = _INTEG(__level1[i], _x[i] - __aux1[i]);',
+      '}'
+    ])
+    expect(genC(vars.get('__level2'), 'init-levels')).toEqual([
+      'for (size_t i = 0; i < 2; i++) {',
+      '__level2[i] = _init[i] * ((5.0) / 3.0);',
+      '}'
+    ])
+    expect(genC(vars.get('__level2'), 'eval')).toEqual([
+      'for (size_t i = 0; i < 2; i++) {',
+      '__level2[i] = _INTEG(__level2[i], __aux1[i] - __aux2[i]);',
+      '}'
+    ])
+    expect(genC(vars.get('__level3'), 'init-levels')).toEqual([
+      'for (size_t i = 0; i < 2; i++) {',
+      '__level3[i] = _init[i] * ((5.0) / 3.0);',
+      '}'
+    ])
+    expect(genC(vars.get('__level3'), 'eval')).toEqual([
+      'for (size_t i = 0; i < 2; i++) {',
+      '__level3[i] = _INTEG(__level3[i], __aux2[i] - __aux3[i]);',
+      '}'
+    ])
+    expect(genC(vars.get('__aux1'), 'eval')).toEqual([
+      'for (size_t i = 0; i < 2; i++) {',
+      '__aux1[i] = __level1[i] / ((5.0) / 3.0);',
+      '}'
+    ])
+    expect(genC(vars.get('__aux2'), 'eval')).toEqual([
+      'for (size_t i = 0; i < 2; i++) {',
+      '__aux2[i] = __level2[i] / ((5.0) / 3.0);',
+      '}'
+    ])
+    expect(genC(vars.get('__aux3'), 'eval')).toEqual([
+      'for (size_t i = 0; i < 2; i++) {',
+      '__aux3[i] = __level3[i] / ((5.0) / 3.0);',
+      '}'
+    ])
+    expect(genC(vars.get('__aux4'), 'eval')).toEqual([
+      'for (size_t i = 0; i < 2; i++) {',
+      '__aux4[i] = ((5.0) / 3.0);',
+      '}'
+    ])
+    expect(genC(vars.get('_y'))).toEqual([
+      'for (size_t i = 0; i < 2; i++) {',
+      '_y[i] = (__level3[i] / __aux4[i]);',
+      '}'
+    ])
   })
 
   it('should work for DELAY FIXED function', () => {
@@ -785,10 +912,59 @@ describe('EquationGen (Vensim -> C)', () => {
       x = Time * 2 ~~|
       y = INTEG(x, 10) ~~|
     `)
+    console.log(vars)
     expect(vars.size).toBe(2)
     expect(genC(vars.get('_x'), 'eval')).toEqual(['_x = _time * 2.0;'])
     expect(genC(vars.get('_y'), 'init-levels')).toEqual(['_y = 10.0;'])
     expect(genC(vars.get('_y'), 'eval')).toEqual(['_y = _INTEG(_y, _x);'])
+  })
+
+  it('should work for INTEG function (with one dimension)', () => {
+    const vars = readInlineModel(`
+      DimA: A1, A2 ~~|
+      rate[DimA] = 10, 20 ~~|
+      init[DimA] = 1, 2 ~~|
+      y[DimA] = INTEG(rate[DimA], init[DimA]) ~~|
+    `)
+    expect(vars.size).toBe(5)
+    expect(genC(vars.get('_rate[_a1]'), 'init-constants')).toEqual(['_rate[0] = 10.0;'])
+    expect(genC(vars.get('_rate[_a2]'), 'init-constants')).toEqual(['_rate[1] = 20.0;'])
+    expect(genC(vars.get('_init[_a1]'), 'init-constants')).toEqual(['_init[0] = 1.0;'])
+    expect(genC(vars.get('_init[_a2]'), 'init-constants')).toEqual(['_init[1] = 2.0;'])
+    expect(genC(vars.get('_y'), 'init-levels')).toEqual(['for (size_t i = 0; i < 2; i++) {', '_y[i] = _init[i];', '}'])
+    expect(genC(vars.get('_y'), 'eval')).toEqual([
+      'for (size_t i = 0; i < 2; i++) {',
+      '_y[i] = _INTEG(_y[i], _rate[i]);',
+      '}'
+    ])
+  })
+
+  it('should work for INTEG function (with SUM used in arguments)', () => {
+    const vars = readInlineModel(`
+      DimA: A1, A2 ~~|
+      rate[DimA] = 10, 20 ~~|
+      init[DimA] = 1, 2 ~~|
+      y = INTEG(SUM(rate[DimA!]), SUM(init[DimA!])) ~~|
+    `)
+    expect(vars.size).toBe(5)
+    expect(genC(vars.get('_rate[_a1]'), 'init-constants')).toEqual(['_rate[0] = 10.0;'])
+    expect(genC(vars.get('_rate[_a2]'), 'init-constants')).toEqual(['_rate[1] = 20.0;'])
+    expect(genC(vars.get('_init[_a1]'), 'init-constants')).toEqual(['_init[0] = 1.0;'])
+    expect(genC(vars.get('_init[_a2]'), 'init-constants')).toEqual(['_init[1] = 2.0;'])
+    expect(genC(vars.get('_y'), 'init-levels')).toEqual([
+      'double __t1 = 0.0;',
+      'for (size_t u = 0; u < 2; u++) {',
+      '__t1 += _init[u];',
+      '}',
+      '_y = __t1;'
+    ])
+    expect(genC(vars.get('_y'), 'eval')).toEqual([
+      'double __t2 = 0.0;',
+      'for (size_t u = 0; u < 2; u++) {',
+      '__t2 += _rate[u];',
+      '}',
+      '_y = _INTEG(_y, __t2);'
+    ])
   })
 
   it('should work for INTEGER function', () => {
@@ -1025,6 +1201,7 @@ describe('EquationGen (Vensim -> C)', () => {
     expect(genC(vars.get('_y'))).toEqual(['_y = __level3;'])
   })
 
+  // TODO: Subscripted variants
   it('should work for SMOOTH3I function', () => {
     const vars = readInlineModel(`
       input = 3 + PULSE(10, 10) ~~|
@@ -1067,6 +1244,57 @@ describe('EquationGen (Vensim -> C)', () => {
     expect(vars.size).toBe(2)
     expect(genC(vars.get('_x'))).toEqual(['_x = 1.0;'])
     expect(genC(vars.get('_y'))).toEqual(['_y = _STEP(_x, 10.0);'])
+  })
+
+  it('should work for SUM function (single call)', () => {
+    const vars = readInlineModel(`
+      DimA: A1, A2 ~~|
+      a[DimA] = 10, 20 ~~|
+      x = SUM(a[DimA!]) + 1 ~~|
+    `)
+    expect(vars.size).toBe(3)
+    expect(genC(vars.get('_a[_a1]'), 'init-constants')).toEqual(['_a[0] = 10.0;'])
+    expect(genC(vars.get('_a[_a2]'), 'init-constants')).toEqual(['_a[1] = 20.0;'])
+    expect(genC(vars.get('_x'))).toEqual([
+      'double __t1 = 0.0;',
+      'for (size_t u = 0; u < 2; u++) {',
+      '__t1 += _a[u];',
+      '}',
+      '_x = __t1 + 1.0;'
+    ])
+  })
+
+  it('should work for SUM function (multiple calls)', () => {
+    const vars = readInlineModel(`
+      DimA: A1, A2 ~~|
+      DimB: B1, B2 ~~|
+      a[DimA] = 10, 20 ~~|
+      b[DimB] = 50, 60 ~~|
+      c[DimA] = 1, 2 ~~|
+      x = SUM(a[DimA!]) + SUM(b[DimB!]) + SUM(c[DimA!]) ~~|
+    `)
+    expect(vars.size).toBe(7)
+    expect(genC(vars.get('_a[_a1]'), 'init-constants')).toEqual(['_a[0] = 10.0;'])
+    expect(genC(vars.get('_a[_a2]'), 'init-constants')).toEqual(['_a[1] = 20.0;'])
+    expect(genC(vars.get('_b[_b1]'), 'init-constants')).toEqual(['_b[0] = 50.0;'])
+    expect(genC(vars.get('_b[_b2]'), 'init-constants')).toEqual(['_b[1] = 60.0;'])
+    expect(genC(vars.get('_c[_a1]'), 'init-constants')).toEqual(['_c[0] = 1.0;'])
+    expect(genC(vars.get('_c[_a2]'), 'init-constants')).toEqual(['_c[1] = 2.0;'])
+    expect(genC(vars.get('_x'))).toEqual([
+      'double __t1 = 0.0;',
+      'for (size_t u = 0; u < 2; u++) {',
+      '__t1 += _a[u];',
+      '}',
+      'double __t2 = 0.0;',
+      'for (size_t v = 0; v < 2; v++) {',
+      '__t2 += _b[v];',
+      '}',
+      'double __t3 = 0.0;',
+      'for (size_t u = 0; u < 2; u++) {',
+      '__t3 += _c[u];',
+      '}',
+      '_x = __t1 + __t2 + __t3;'
+    ])
   })
 
   it('should work for TREND function', () => {

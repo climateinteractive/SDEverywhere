@@ -41,41 +41,6 @@ export class ExprReader extends ModelVisitor {
     return this.expr
   }
 
-  // /**
-  //  * Return the name of the current function on top of the call stack.
-  //  */
-  // /*private*/ currentFunctionName() {
-  //   const n = this.callStack.length
-  //   return n > 0 ? this.callStack[n - 1].fn : ''
-  // }
-
-  // /**
-  //  * Set the argument index in the current function call on top of the call stack.
-  //  * This may be set in the exprList visitor and picked up in the var visitor to
-  //  * facilitate special argument handling.
-  //  */
-  // /*private*/ setArgIndex(argIndex) {
-  //   const n = this.callStack.length
-  //   if (n > 0) {
-  //     this.callStack[n - 1].argIndex = argIndex
-  //   }
-  // }
-
-  // /**
-  //  * Search the call stack for the function name. Return the current argument index
-  //  * or undefined if not found.
-  //  */
-  // /*private*/ argIndexForFunctionName(name) {
-  //   let argIndex
-  //   for (let i = this.callStack.length - 1; i >= 0; i--) {
-  //     if (this.callStack[i].fn === name) {
-  //       argIndex = this.callStack[i].argIndex
-  //       break
-  //     }
-  //   }
-  //   return argIndex
-  // }
-
   //
   // Constants
   //
