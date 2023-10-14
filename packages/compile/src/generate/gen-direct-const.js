@@ -11,7 +11,7 @@ import { indexInSepDim, isDimension, sub } from '../_shared/subscript.js'
  *
  * @param {*} variable The `Variable` instance to process.
  * @param {string} modelDir The path to the directory containing the model (used for resolving data files).
- * @return {string[]} A array of strings containing the generated C code for the variable,
+ * @return {string[]} An array of strings containing the generated C code for the variable,
  * one string per line of code.
  */
 export function generateDirectConstInit(variable, modelDir) {

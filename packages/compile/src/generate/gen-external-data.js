@@ -10,7 +10,7 @@ import { isDimension, sub } from '../_shared/subscript.js'
  * @param {'decl' | 'init-lookups'} mode The code generation mode.
  * @param {Map<string, any>} extData The map of datasets from external `.dat` files.
  * @param {string} varLhs The C code for the LHS variable reference.
- * @return {string[]} A array of strings containing the generated C code for the variable,
+ * @return {string[]} An array of strings containing the generated C code for the variable,
  * one string per line of code.
  */
 export function generateExternalDataInit(variable, mode, extData, varLhs) {

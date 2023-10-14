@@ -1,13 +1,15 @@
 import { cdbl } from '../_shared/helpers.js'
 
-// import Model from '../model/model.js'
+import Model from '../model/model.js'
 
 /**
  * @typedef {Object} GenExprContext The context for a `generateExpr` call.
  * @param {*} variable The `Variable` instance to process.
  * @param {'decl' | 'init-constants' | 'init-lookups' | 'init-levels' | 'eval'} mode The code generation mode.
- * @param {string} varLhs The C code for the LHS variable reference.
- * @param {(varId: string) => string} varWithLhsSubscripts Function that returns a C variable reference that
+ * @param {string} cLhs The C code for the LHS variable reference.
+ * @param {(varRef: VariableRef) => string} cVarRef Function that returns a C variable reference for a variable
+ * referenced in a RHS expression.
+ * @param {(varId: string) => string} cVarRefWithLhsSubscripts Function that returns a C variable reference that
  * takes into account the relevant LHS subscripts.
  */
 
@@ -18,7 +20,7 @@ import { cdbl } from '../_shared/helpers.js'
  *
  * @param {*} expr The expression from the parsed model.
  * @param {GenExprContext} ctx The context used when generating code for the expression.
- * @return {string}
+ * @return {string} The generated C code.
  */
 export function generateExpr(expr, ctx) {
   switch (expr.kind) {
@@ -32,13 +34,7 @@ export function generateExpr(expr, ctx) {
       return expr.text
 
     case 'variable-ref':
-      if (expr.subscriptRefs?.length > 0) {
-        // TODO: Subscripts depend on loop states
-        // return `${expr.varId}[${expr.subscriptRefs.map(ref => ref.subName).join(commaSep)}]`
-        return 'VARIABLE WITH SUBS'
-      } else {
-        return expr.varId
-      }
+      return ctx.cVarRef(expr)
 
     case 'unary-op': {
       let op
@@ -95,10 +91,15 @@ export function generateExpr(expr, ctx) {
       throw new Error(`Unexpected 'lookup-def' when reading ${ctx.variable.modelLHS}`)
 
     case 'lookup-call': {
-      // const varRef = toPrettyString(expr.varRef, opts)
-      // const arg = toPrettyString(expr.arg, opts)
-      // return `${varRef}${lparen}${arg}${rparen}`
-      return 'TODO'
+      // For Vensim models, the antlr4-vensim grammar has separate definitions for lookup
+      // calls and function calls, but in practice they can only be differentiated in the
+      // case where the lookup has subscripts; when there are no subscripts, they get
+      // treated like normal function calls.  Therefore we need to handle these in two
+      // places.  The code here deals with lookup calls that involve a lookup with one
+      // or more dimensions.  The `default` case in `generateFunctionCall` deals with
+      // lookup calls that involve a non-subscripted lookup variable.
+      const lookupVar = Model.varWithName(expr.varRef.varId)
+      return generateLookupCall(lookupVar, expr.arg, ctx)
     }
 
     case 'function-call':
@@ -116,6 +117,7 @@ export function generateExpr(expr, ctx) {
  *
  * @param {*} callExpr The function call expression from the parsed model.
  * @param {GenExprContext} ctx The context used when generating code for the expression.
+ * @return {string} The generated C code.
  */
 function generateFunctionCall(callExpr, ctx) {
   const fnId = callExpr.fnId
@@ -222,9 +224,40 @@ function generateFunctionCall(callExpr, ctx) {
     case '_SMOOTH3I':
       break
 
-    default:
-      break
+    default: {
+      // XXX: See if the function name is actually the name of a lookup variable.  (See
+      // comment for 'lookup-call' case above about why this is needed.)
+      const lookupVar = Model.varWithName(fnId.toLowerCase())
+      if (lookupVar?.isLookup()) {
+        // Transform to a `_LOOKUP` function call
+        return generateLookupCall(lookupVar, callExpr.args[0], ctx)
+      } else {
+        // TODO: For now we throw an error if the function is not yet implemented in SDE.
+        // This is helpful in the short term while we implement the new code generator, but
+        // it does not work in the case of models that use custom macros.  We need to provide
+        // a way for users to disable this error, or explicitly declare a list of function
+        // names to ignore or treat as user-implemented macros.
+        throw new Error(`Unhandled function '${fnId}' when reading ${ctx.variable.modelLHS}`)
+      }
+    }
   }
+}
+
+/**
+ * Generate C code for a lookup call.
+ *
+ * TODO: Types
+ *
+ * @param {*} lookupVar The lookup `Variable` instance.
+ * @param {*} argExpr The parsed `Expr` for the single argument for the lookup.
+ * @param {GenExprContext} ctx The context used when generating code for the expression.
+ * @return {string} The generated C code.
+ */
+function generateLookupCall(lookupVar, argExpr, ctx) {
+  // TODO: Take subscripts into account
+  const varId = lookupVar.varName
+  const arg = generateExpr(argExpr, ctx)
+  return `_LOOKUP(${varId}, ${arg})`
 }
 
 /**
@@ -234,6 +267,7 @@ function generateFunctionCall(callExpr, ctx) {
  *
  * @param {*} callExpr The function call expression from the parsed model.
  * @param {GenExprContext} ctx The context used when generating code for the expression.
+ * @return {string} The generated C code.
  */
 function generateLevelInit(callExpr, ctx) {
   const fnId = callExpr.fnId
@@ -287,6 +321,7 @@ function generateLevelInit(callExpr, ctx) {
  *
  * @param {*} callExpr The function call expression from the parsed model.
  * @param {GenExprContext} ctx The context used when generating code for the expression.
+ * @return {string} The generated C code.
  */
 function generateLevelEval(callExpr, ctx) {
   const fnId = callExpr.fnId
@@ -304,7 +339,7 @@ function generateLevelEval(callExpr, ctx) {
       // For DELAY FIXED, emit the first arg followed by the FixedDelay support var
       const args = []
       args.push(generateExpr(callExpr.args[0], ctx))
-      args.push(ctx.varWithLhsSubscripts(ctx.variable.fixedDelayVarName))
+      args.push(ctx.cVarRefWithLhsSubscripts(ctx.variable.fixedDelayVarName))
       return generateCall(args)
     }
 
@@ -312,7 +347,7 @@ function generateLevelEval(callExpr, ctx) {
       // For DEPRECIATE STRAIGHTLINE, emit the first arg followed by the Depreciation support var
       const args = []
       args.push(generateExpr(callExpr.args[0], ctx))
-      args.push(ctx.varWithLhsSubscripts(ctx.variable.depreciationVarName))
+      args.push(ctx.cVarRefWithLhsSubscripts(ctx.variable.depreciationVarName))
       return generateCall(args)
     }
 
@@ -321,7 +356,7 @@ function generateLevelEval(callExpr, ctx) {
       // At eval time, emit the variable LHS as the first arg, giving the current value for the level.
       // Then emit the remaining arguments.
       const args = []
-      args.push(ctx.varLhs)
+      args.push(ctx.cLhs)
       args.push(generateExpr(callExpr.args[0], ctx))
       if (fnId === '_SAMPLE_IF_TRUE') {
         args.push(generateExpr(callExpr.args[1], ctx))

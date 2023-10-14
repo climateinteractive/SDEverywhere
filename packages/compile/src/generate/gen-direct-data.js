@@ -16,7 +16,7 @@ import { sub } from '../_shared/subscript.js'
  * `?data`) to the tabular data contained in the loaded data file.
  * @param {string} modelDir The path to the directory containing the model (used for resolving data files).
  * @param {string} varLhs The C code for the LHS variable reference.
- * @return {string[]} A array of strings containing the generated C code for the variable,
+ * @return {string[]} An array of strings containing the generated C code for the variable,
  * one string per line of code.
  */
 export function generateDirectDataInit(variable, mode, directData, modelDir, varLhs) {

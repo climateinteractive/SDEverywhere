@@ -173,7 +173,7 @@ export function readEquation(v) {
         visitLookupDef(v, rhs.lookupDef)
         break
       case 'const-list':
-        // TODO
+        // Nothing to do here currently
         break
       case 'data':
         // TODO: For reasons of compatibility with the legacy reader, the new `readVariables`

@@ -324,7 +324,7 @@ describe('EquationGen (Vensim -> C)', () => {
     ])
   })
 
-  it.only('should work for lookup call', () => {
+  it('should work for lookup call', () => {
     const vars = readInlineModel(`
       x( [(0,0)-(2,2)], (0,0),(0.1,0.01),(0.5,0.7),(1,1),(1.5,1.2),(2,1.3) ) ~~|
       y = x(2) ~~|
@@ -335,6 +335,21 @@ describe('EquationGen (Vensim -> C)', () => {
     ])
     expect(genC(vars.get('_x'), 'init-lookups')).toEqual(['_x = __new_lookup(6, /*copy=*/false, _x_data_);'])
     expect(genC(vars.get('_y'))).toEqual(['_y = _LOOKUP(_x, 2.0);'])
+  })
+
+  it('should work for lookup call (with one dimension)', () => {
+    const vars = readInlineModel(`
+      DimA: A1, A2 ~~|
+      x[A1]( [(0,0)-(2,2)], (0,0),(2,1.3) ) ~~|
+      x[A2]( [(0,0)-(2,2)], (0,0.5),(2,1.5) ) ~~|
+      y = x[A1](2) ~~|
+    `)
+    expect(vars.size).toBe(3)
+    expect(genC(vars.get('_x[_a1]'), 'decl')).toEqual(['double _x_data__0_[4] = { 0.0, 0.0, 2.0, 1.3 };'])
+    expect(genC(vars.get('_x[_a2]'), 'decl')).toEqual(['double _x_data__1_[4] = { 0.0, 0.5, 2.0, 1.5 };'])
+    expect(genC(vars.get('_x[_a1]'), 'init-lookups')).toEqual(['_x[0] = __new_lookup(2, /*copy=*/false, _x_data__0_);'])
+    expect(genC(vars.get('_x[_a2]'), 'init-lookups')).toEqual(['_x[1] = __new_lookup(2, /*copy=*/false, _x_data__1_);'])
+    expect(genC(vars.get('_y'))).toEqual(['_y = _LOOKUP(_x[0], 2.0);'])
   })
 
   it('should work for constant definition (with dimension)', () => {

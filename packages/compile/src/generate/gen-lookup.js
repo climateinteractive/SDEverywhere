@@ -11,7 +11,7 @@ import { isDimension, isTrivialDimension, sub } from '../_shared/subscript.js'
  * @param {'decl' | 'init-lookups'} mode The code generation mode.
  * @param {string} varLhs The C code for the LHS variable reference.
  * @param {LoopIndexVars} loopIndexVars The loop index state.
- * @return {string[]} A array of strings containing the generated C code for the variable,
+ * @return {string[]} An array of strings containing the generated C code for the variable,
  * one string per line of code.
  */
 export function generateLookup(variable, mode, varLhs, loopIndexVars) {
@@ -45,17 +45,19 @@ export function generateLookup(variable, mode, varLhs, loopIndexVars) {
  * @return {string} The C array name.
  */
 function generateLookupDataName(subIds, loopIndexVars) {
-  return R.map(subId => {
-    if (isDimension(subId)) {
-      let i = loopIndexVars.index(subId)
-      if (isTrivialDimension(subId)) {
-        // When the dimension is trivial, we can simply emit e.g. `[i]` instead of `[_dim[i]]`
-        return `_${i}_`
+  return subIds
+    .map(subId => {
+      if (isDimension(subId)) {
+        const i = loopIndexVars.index(subId)
+        if (isTrivialDimension(subId)) {
+          // When the dimension is trivial, we can simply emit e.g. `[i]` instead of `[_dim[i]]`
+          return `_${i}_`
+        } else {
+          return `_${subId}_${i}_`
+        }
       } else {
-        return `_${subId}_${i}_`
+        return `_${sub(subId).value}_`
       }
-    } else {
-      return `_${sub(subId).value}_`
-    }
-  }, subIds).join('')
+    })
+    .join('')
 }
