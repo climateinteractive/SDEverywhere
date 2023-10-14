@@ -145,8 +145,10 @@ export interface EquationRhsExpr {
 
 export interface EquationRhsConstList {
   kind: 'const-list'
-  /* @hidden: This is temporary until we add a proper structure including the individual parsed values */
-  text: string
+  // TODO: It would be better if this was a `NumberValue[][]` (one array per dimension) to
+  // better match how it appears in a model, but the antlr4-vensim grammar currently flattens
+  // them into a single list (it doesn't make use of the semicolon separator)
+  constants: NumberValue[]
 }
 
 // TODO: A lookup definition equation technically has no RHS, and the lookup data is supplied next to the
@@ -304,14 +306,14 @@ export function exprEqn(varRef: VariableRef, expr: Expr, units = '', comment = '
   }
 }
 
-export function constListEqn(varRef: VariableRef, constListText: string, units = '', comment = ''): Equation {
+export function constListEqn(varRef: VariableRef, constants: NumberValue[], units = '', comment = ''): Equation {
   return {
     lhs: {
       varRef
     },
     rhs: {
       kind: 'const-list',
-      text: constListText
+      constants
     },
     units,
     comment

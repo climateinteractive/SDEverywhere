@@ -63,12 +63,14 @@ describe('parseVensimEquation', () => {
 
   it('should parse a const list definition (with one dimension)', () => {
     const eqn = `x[a] = 1, 2, 3 ~~|`
-    expect(parseVensimEquation(eqn)).toEqual(constListEqn(varRef('x', ['a']), '1,2,3'))
+    expect(parseVensimEquation(eqn)).toEqual(constListEqn(varRef('x', ['a']), [num(1), num(2), num(3)]))
   })
 
   it('should parse a const list definition (with two dimensions)', () => {
     const eqn = `x[a, b] = 1, 2, 3; 4, 5, 6; ~~|`
-    expect(parseVensimEquation(eqn)).toEqual(constListEqn(varRef('x', ['a', 'b']), '1,2,3;4,5,6;'))
+    expect(parseVensimEquation(eqn)).toEqual(
+      constListEqn(varRef('x', ['a', 'b']), [num(1), num(2), num(3), num(4), num(5), num(6)])
+    )
   })
 
   it('should parse a data variable definition (without subscripts)', () => {

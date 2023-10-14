@@ -50,12 +50,10 @@ export class EquationReader extends ModelVisitor {
         expr
       }
     } else if (ctx.constList()) {
-      // TODO: We should parse the const list into individual components, but for now we include
-      // the raw text
-      // ctx.constList().accept(this)
+      ctx.constList().accept(this)
       equationRhs = {
         kind: 'const-list',
-        text: ctx.constList().getText()
+        constants: this.constants
       }
     } else if (ctx.lookup()) {
       ctx.lookup().accept(this)
@@ -137,6 +135,26 @@ export class EquationReader extends ModelVisitor {
         exceptSubscriptRefSets
       }
     }
+  }
+
+  //
+  // CONST LISTS
+  //
+
+  visitConstList(ctx) {
+    // TODO: It would be better if resolved to a `NumberValue[][]` (one array per dimension) to
+    // better match how it appears in a model, but the antlr4-vensim grammar currently flattens
+    // them into a single list (it doesn't make use of the semicolon separator), so we have to
+    // do the same for now
+    this.constants = ctx.expr().map(expr => {
+      const text = expr.getText()
+      const value = parseFloat(text)
+      return {
+        kind: 'number',
+        value,
+        text
+      }
+    })
   }
 
   //
