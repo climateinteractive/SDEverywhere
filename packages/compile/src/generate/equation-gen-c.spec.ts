@@ -408,6 +408,47 @@ describe('EquationGen (Vensim -> C)', () => {
     expect(genC(vars.get('_y'))).toEqual(['_y = _x[1][2];'])
   })
 
+  it('should work for equation with one dimension', () => {
+    const vars = readInlineModel(`
+      DimA: A1, A2 ~~|
+      x[DimA] = 1, 2 ~~|
+      y[DimA] = (x[DimA] + 2) * MIN(0, x[DimA]) ~~|
+      z = y[A2] ~~|
+    `)
+    expect(vars.size).toBe(4)
+    expect(genC(vars.get('_x[_a1]'), 'init-constants')).toEqual(['_x[0] = 1.0;'])
+    expect(genC(vars.get('_x[_a2]'), 'init-constants')).toEqual(['_x[1] = 2.0;'])
+    expect(genC(vars.get('_y'))).toEqual([
+      'for (size_t i = 0; i < 2; i++) {',
+      '_y[i] = (_x[i] + 2.0) * _MIN(0.0, _x[i]);',
+      '}'
+    ])
+    expect(genC(vars.get('_z'))).toEqual(['_z = _y[1];'])
+  })
+
+  it('should work for equation with two dimensions', () => {
+    const vars = readInlineModel(`
+      DimA: A1, A2 ~~|
+      DimB: B1, B2 ~~|
+      x[DimA, DimB] = 1, 2; 3, 4 ~~|
+      y[DimA, DimB] = (x[DimA, DimB] + 2) * MIN(0, x[DimA, DimB]) ~~|
+      z = y[A2, B1] ~~|
+    `)
+    expect(vars.size).toBe(6)
+    expect(genC(vars.get('_x[_a1,_b1]'), 'init-constants')).toEqual(['_x[0][0] = 1.0;'])
+    expect(genC(vars.get('_x[_a1,_b2]'), 'init-constants')).toEqual(['_x[0][1] = 2.0;'])
+    expect(genC(vars.get('_x[_a2,_b1]'), 'init-constants')).toEqual(['_x[1][0] = 3.0;'])
+    expect(genC(vars.get('_x[_a2,_b2]'), 'init-constants')).toEqual(['_x[1][1] = 4.0;'])
+    expect(genC(vars.get('_y'))).toEqual([
+      'for (size_t i = 0; i < 2; i++) {',
+      'for (size_t j = 0; j < 2; j++) {',
+      '_y[i][j] = (_x[i][j] + 2.0) * _MIN(0.0, _x[i][j]);',
+      '}',
+      '}'
+    ])
+    expect(genC(vars.get('_z'))).toEqual(['_z = _y[1][0];'])
+  })
+
   it('should work for ABS function', () => {
     const vars = readInlineModel(`
       x = 1 ~~|
@@ -1309,6 +1350,24 @@ describe('EquationGen (Vensim -> C)', () => {
       '__t3 += _c[u];',
       '}',
       '_x = __t1 + __t2 + __t3;'
+    ])
+  })
+
+  it('should work for SUM function (with nested function call)', () => {
+    const vars = readInlineModel(`
+      DimA: A1, A2 ~~|
+      a[DimA] = 10, 20 ~~|
+      x = SUM(IF THEN ELSE(a[DimA!] = 10, 0, a[DimA!])) + 1 ~~|
+    `)
+    expect(vars.size).toBe(3)
+    expect(genC(vars.get('_a[_a1]'), 'init-constants')).toEqual(['_a[0] = 10.0;'])
+    expect(genC(vars.get('_a[_a2]'), 'init-constants')).toEqual(['_a[1] = 20.0;'])
+    expect(genC(vars.get('_x'))).toEqual([
+      'double __t1 = 0.0;',
+      'for (size_t u = 0; u < 2; u++) {',
+      '__t1 += _IF_THEN_ELSE(_a[u] == 10.0, 0.0, _a[u]);',
+      '}',
+      '_x = __t1 + 1.0;'
     ])
   })
 

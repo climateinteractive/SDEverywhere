@@ -1,12 +1,19 @@
-import { cdbl } from '../_shared/helpers.js'
+import { cdbl, newTmpVarName } from '../_shared/helpers.js'
+import { extractMarkedDims, sub } from '../_shared/subscript.js'
 
 import Model from '../model/model.js'
 
 /**
  * @typedef {Object} GenExprContext The context for a `generateExpr` call.
+ *
  * @param {*} variable The `Variable` instance to process.
  * @param {'decl' | 'init-constants' | 'init-lookups' | 'init-levels' | 'eval'} mode The code generation mode.
  * @param {string} cLhs The C code for the LHS variable reference.
+ * @param {LoopIndexVars} arrayIndexVars The loop index state used for array functions* (that use marked dimensions).
+ * @param {() => void} resetMarkedDims Function that resets the marked dimension state.
+ * @param {(dimId: string) => void} addMarkedDim Function that adds the given dimension to the set of marked dimensions.
+ * @param {(s: string) => void} emitPre Function that will cause the given code to be appended to the chunk that
+ * precedes the generated equation.
  * @param {(varRef: VariableRef) => string} cVarRef Function that returns a C variable reference for a variable
  * referenced in a RHS expression.
  * @param {(varId: string) => string} cVarRefWithLhsSubscripts Function that returns a C variable reference that
@@ -151,7 +158,6 @@ function generateFunctionCall(callExpr, ctx) {
     case '_SIN':
     case '_SQRT':
     case '_STEP':
-    case '_SUM':
     case '_XIDZ':
     case '_ZIDZ': {
       // For simple functions, emit a C function call with a generated C expression for each argument
@@ -160,7 +166,9 @@ function generateFunctionCall(callExpr, ctx) {
     }
 
     //
+    //
     // Level functions
+    //
     //
 
     case '_ACTIVE_INITIAL':
@@ -178,7 +186,18 @@ function generateFunctionCall(callExpr, ctx) {
       }
 
     //
+    //
+    // Array functions
+    //
+    //
+
+    case '_SUM':
+      return generateSumCall(callExpr, ctx)
+
+    //
+    //
     // Special functions
+    //
     //
 
     case '_GET_DIRECT_CONSTANTS':
@@ -241,23 +260,6 @@ function generateFunctionCall(callExpr, ctx) {
       }
     }
   }
-}
-
-/**
- * Generate C code for a lookup call.
- *
- * TODO: Types
- *
- * @param {*} lookupVar The lookup `Variable` instance.
- * @param {*} argExpr The parsed `Expr` for the single argument for the lookup.
- * @param {GenExprContext} ctx The context used when generating code for the expression.
- * @return {string} The generated C code.
- */
-function generateLookupCall(lookupVar, argExpr, ctx) {
-  // TODO: Take subscripts into account
-  const varId = lookupVar.varName
-  const arg = generateExpr(argExpr, ctx)
-  return `_LOOKUP(${varId}, ${arg})`
 }
 
 /**
@@ -366,5 +368,108 @@ function generateLevelEval(callExpr, ctx) {
 
     default:
       throw new Error(`Unhandled function '${fnId}' in code gen for level variable ${ctx.variable.modelLHS}`)
+  }
+}
+
+/**
+ * Generate C code for a lookup call.
+ *
+ * TODO: Types
+ *
+ * @param {*} lookupVar The lookup `Variable` instance.
+ * @param {*} argExpr The parsed `Expr` for the single argument for the lookup.
+ * @param {GenExprContext} ctx The context used when generating code for the expression.
+ * @return {string} The generated C code.
+ */
+function generateLookupCall(lookupVar, argExpr, ctx) {
+  // TODO: Take subscripts into account
+  const varId = lookupVar.varName
+  const arg = generateExpr(argExpr, ctx)
+  return `_LOOKUP(${varId}, ${arg})`
+}
+
+/**
+ * Generate C code for a `SUM` function call.
+ *
+ * @param {*} callExpr The function call expression from the parsed model.
+ * @param {GenExprContext} ctx The context used when generating code for the expression.
+ * @return {string} The generated C code.
+ */
+function generateSumCall(callExpr, ctx) {
+  // Emit the temporary variable declaration
+  const tmpVar = newTmpVarName()
+  ctx.emitPre(`  double ${tmpVar} = 0.0;`)
+
+  // Find all marked dimensions used in the `SUM` function argument
+  const markedDimIds = new Set()
+  visitVariableRefs(callExpr.args[0], varRef => {
+    if (varRef.subscriptRefs) {
+      const subIds = varRef.subscriptRefs.map(subRef => subRef.subId)
+      extractMarkedDims(subIds).forEach(dimId => markedDimIds.add(dimId))
+    }
+  })
+
+  // Open the array function loop(s)
+  for (const markedDimId of markedDimIds) {
+    ctx.addMarkedDim(markedDimId)
+    const n = sub(markedDimId).size
+    const i = ctx.arrayIndexVars.index(markedDimId)
+    ctx.emitPre(`  for (size_t ${i} = 0; ${i} < ${n}; ${i}++) {`)
+  }
+
+  // Emit the body of the array function loop
+  const arrayFunctionCode = generateExpr(callExpr.args[0], ctx)
+  ctx.emitPre(`    ${tmpVar} += ${arrayFunctionCode};`)
+
+  // Close the array function loop(s)
+  for (let i = 0; i < markedDimIds.size; i++) {
+    ctx.emitPre(`  }`)
+  }
+
+  // Reset marked dim state
+  ctx.resetMarkedDims()
+
+  // Emit the temporary variable into the expression in place of the array function call
+  return tmpVar
+}
+
+/**
+ * Recursively traverse the given expression and call the function when visiting a variable ref.
+ *
+ * @param {*} expr The expression to visit.
+ * @param {*} onVarRef The function that is called when encountering a variable ref.
+ */
+function visitVariableRefs(expr, onVarRef) {
+  switch (expr.kind) {
+    case 'number':
+    case 'string':
+    case 'keyword':
+    case 'lookup-def':
+      break
+
+    case 'variable-ref':
+      onVarRef(expr)
+      break
+
+    case 'parens':
+    case 'unary-op':
+      visitVariableRefs(expr.expr, onVarRef)
+      break
+
+    case 'binary-op':
+      visitVariableRefs(expr.lhs, onVarRef)
+      visitVariableRefs(expr.rhs, onVarRef)
+      break
+
+    case 'lookup-call':
+      visitVariableRefs(expr.arg, onVarRef)
+      break
+
+    case 'function-call':
+      expr.args.forEach(arg => visitVariableRefs(arg, onVarRef))
+      break
+
+    default:
+      throw new Error(`Unhandled expression kind '${expr.kind}' in visitVariableRefs`)
   }
 }

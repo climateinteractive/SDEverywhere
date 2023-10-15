@@ -97,24 +97,28 @@ export function generateEquation(variable, mode, extData, directData, modelDir) 
     closeLoops.push('  }')
   }
 
-  // TODO: Keep track of marked dimensions
-  const markedDimIds = []
+  // Keep a buffer of code that will be included before the generated equation
+  const preLines = []
 
-  // TODO: temporary variables
-  const tmpVars = []
+  // Keep track of marked dimensions
+  const markedDimIds = new Set()
 
   // Generate code for an equation with an expression on the RHS
   const genExprCtx = {
     variable,
     mode,
     cLhs,
+    arrayIndexVars,
+    resetMarkedDims: () => markedDimIds.clear(),
+    addMarkedDim: dimId => markedDimIds.add(dimId),
+    emitPre: s => preLines.push(s),
     cVarRef: varRef => cVarRef(variable, varRef, markedDimIds, loopIndexVars, arrayIndexVars)
   }
   const cRhs = generateExpr(parsedEqn.rhs.expr, genExprCtx)
   const formula = `  ${cLhs} = ${cRhs};`
 
   // Combine all lines of comments and code into a single array
-  return [...comments, ...openLoops, ...tmpVars, formula, ...closeLoops]
+  return [...comments, ...openLoops, ...preLines, formula, ...closeLoops]
 }
 
 /**
@@ -149,7 +153,7 @@ function cLhsForEqn(parsedEqn, loopIndexVars) {
  *
  * @param {*} lhsVariable The LHS `Variable` instance.
  * @param {*} rhsVarRef The `VariableRef` used in a RHS expression.
- * @param {string[]} markedDimIds The array of dimension IDs that are marked for use
+ * @param {Set<string>} markedDimIds The set of dimension IDs that are marked for use
  * in an array function, for example `SUM(x[DimA!])`.
  * @param {LoopIndexVars} loopIndexVars The loop index state.
  * @param {LoopIndexVars} arrayIndexVars The loop index state used for array functions
@@ -165,7 +169,8 @@ function cVarRef(lhsVariable, rhsVarRef, markedDimIds, loopIndexVars, arrayIndex
   // Normalize the RHS subscripts
   let rhsSubIds
   try {
-    rhsSubIds = normalizeSubscripts(rhsVarRef.subscriptRefs.map(subRef => subRef.subId))
+    // XXX: For now, strip the mark here (need to revisit this)
+    rhsSubIds = normalizeSubscripts(rhsVarRef.subscriptRefs.map(subRef => subRef.subId.replace('!', '')))
   } catch (e) {
     throw new Error(`normalizeSubscripts failed in rhsVarRef: refId=${lhsVariable.refId} error=${e}`)
   }
@@ -183,7 +188,7 @@ function cVarRef(lhsVariable, rhsVarRef, markedDimIds, loopIndexVars, arrayIndex
     // Otherwise, this is a dimension. Get the corresponding loop index variable used
     // in the "for" loop.
     let indexName
-    if (markedDimIds.includes(rhsSubId)) {
+    if (markedDimIds.has(rhsSubId)) {
       // This is a marked dimension as used in an array function (e.g., `SUM`), so use
       // the name of the array loop index variable
       indexName = arrayIndexVars.index(rhsSubId)

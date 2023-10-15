@@ -18,7 +18,8 @@ export function generateConstListElement(variable, parsedEqn) {
   const lhsRef = `${lhsVarId}${lhsSubIndexes}`
 
   // Build a list of all combinations of subscripts for the variable
-  // TODO: This won't work if number of subscripts doesn't match number of separationDims
+  // TODO: Can we be certain that variable.subscripts.length always equals separationDims.length
+  // for const lists?
   const subIds = variable.separationDims.map(s => (isDimension(s) ? sub(s).value : [s]))
 
   // Convert to strings to make matching easier
