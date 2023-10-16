@@ -17,7 +17,7 @@
   },
   "dependencies": {
     "antlr4": "4.9.2",
-    "antlr4-vensim": "0.6.0",
+    "antlr4-vensim": "0.6.2",
     "bufx": "^1.0.5",
     "byline": "^5.0.0",
     "csv-parse": "^5.3.3",
