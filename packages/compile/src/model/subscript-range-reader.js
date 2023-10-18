@@ -48,19 +48,29 @@ export default class SubscriptRangeReader extends ModelReader {
     }
   }
   visitSubscriptList(ctx) {
-    // Get the subscripts from each element of the list, which can include both
-    // individual subscript indices and numeric ranges.
+    // Get the subscripts from each subscript index in the list.
     for (let child of ctx.children) {
       if (child.symbol?.type === ModelParser.Id) {
-        let subscript = child.getText()
-        if (ctx.parentCtx.ruleIndex === ModelParser.RULE_subscriptRange) {
-          this.indNames.push(subscript)
-        } else if (ctx.parentCtx.ruleIndex === ModelParser.RULE_subscriptMapping) {
-          this.mappingValue.push(subscript)
-        }
+        this.addSubscriptIndex(ctx, child)
+      }
+    }
+  }
+  visitSubscriptDefList(ctx) {
+    // Subscript range definitions can have indices and numeric subscript sequences.
+    for (let child of ctx.children) {
+      if (child.symbol?.type === ModelParser.Id) {
+        this.addSubscriptIndex(ctx, child)
       } else if (child.ruleIndex === ModelParser.RULE_subscriptSequence) {
         this.visitSubscriptSequence(child)
       }
+    }
+  }
+  addSubscriptIndex(ctx, child) {
+    let subscript = child.getText()
+    if (ctx.parentCtx.ruleIndex === ModelParser.RULE_subscriptRange) {
+      this.indNames.push(subscript)
+    } else if (ctx.parentCtx.ruleIndex === ModelParser.RULE_subscriptMapping) {
+      this.mappingValue.push(subscript)
     }
   }
   visitSubscriptMapping(ctx) {
