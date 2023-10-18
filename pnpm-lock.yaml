@@ -269,11 +269,11 @@ importers:
   packages/compile:
     dependencies:
       antlr4:
-        specifier: 4.9.2
-        version: 4.9.2
+        specifier: 4.12.0
+        version: 4.12.0
       antlr4-vensim:
-        specifier: 0.6.0
-        version: 0.6.0
+        specifier: 0.6.2
+        version: 0.6.2
       bufx:
         specifier: ^1.0.5
         version: 1.0.5
@@ -1411,15 +1411,15 @@ packages:
     engines: {node: '>=10'}
     dev: true
 
-  /antlr4-vensim@0.6.0:
-    resolution: {integrity: sha512-bZFRZ5wpzKEa8N2BeExZaE0xlH9hZqGHDYnCmt+sy5bh0u4L0FyI1dNQin/Ao+MH/80eO9ImgDL1yQ/exoKhmA==}
+  /antlr4-vensim@0.6.2:
+    resolution: {integrity: sha512-NzYwNWUxpiNqIAEgTbSPYkyoXxhe2B3Lbmwd4LtUGCIeHCNPnGYuZVaa0om1zZ1PXilx2c7Xwm74Trin8QqRmg==}
     dependencies:
-      antlr4: 4.9.2
+      antlr4: 4.12.0
     dev: false
 
-  /antlr4@4.9.2:
-    resolution: {integrity: sha512-UjMSlenUORL+a+6g4RNZxRh5LcFWybRi2g0ASDBpgXBY6nlavg0BRVAVEQF0dz8jH6SyX3lV7uP5y/krJzc+Hw==}
-    engines: {node: '>=14'}
+  /antlr4@4.12.0:
+    resolution: {integrity: sha512-23iB5IzXJZRZeK9TigzUyrNc9pSmNqAerJRBcNq1ETrmttMWRgaYZzC561IgEO3ygKsDJTYDTozABXa4b/fTQQ==}
+    engines: {node: '>=16'}
     dev: false
 
   /any-promise@1.3.0:

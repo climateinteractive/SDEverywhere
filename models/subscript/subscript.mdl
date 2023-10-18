@@ -3,6 +3,8 @@ DimA: A1, A2, A3 ~~|
 
 DimB: B1, B2, B3 -> DimA ~~|
 
+DimC: C1, (C2-C4), C5 ~~|
+
 b[DimB] = 1, 2, 3 ~~|
 
 a[DimA] = b[DimB] ~~~:SUPPLEMENTARY|
@@ -38,6 +40,18 @@ s[DimA] = DimB
 	~	mapped dimension name reference in an expression
   ~:SUPPLEMENTARY
 	|
+
+t[DimC] = 1
+	~
+	~	subscript range with an embedded numeric range
+  ~:SUPPLEMENTARY
+	|
+
+u[C1] = 1 ~~~:SUPPLEMENTARY|
+u[C2] = 2 ~~~:SUPPLEMENTARY|
+u[C3] = 3 ~~~:SUPPLEMENTARY|
+u[C4] = 4 ~~~:SUPPLEMENTARY|
+u[C5] = 5 ~~~:SUPPLEMENTARY|
 
 ********************************************************
 	.Control
