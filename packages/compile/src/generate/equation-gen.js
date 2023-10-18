@@ -983,8 +983,9 @@ export default class EquationGen extends ModelReader {
     // Push the var name on the stack and then emit it.
     let id = ctx.Id().getText()
     let varName = canonicalName(id)
+    let functionName = this.currentFunctionName()
     if (isDimension(varName)) {
-      if (this.currentFunctionName() === '_ELMCOUNT') {
+      if (functionName === '_ELMCOUNT') {
         // Emit the size of the dimension in place of the dimension name.
         this.emit(`${sub(varName).size}`)
       } else {
@@ -997,8 +998,8 @@ export default class EquationGen extends ModelReader {
       }
     } else {
       this.varNames.push(varName)
-      if (this.currentFunctionName() === '_VECTOR_SELECT') {
-        let argIndex = this.argIndexForFunctionName('_VECTOR_SELECT')
+      if (functionName === '_VECTOR_SELECT') {
+        let argIndex = this.argIndexForFunctionName(functionName)
         if (argIndex === 0) {
           this.vsSelectionArray = this.currentVarName()
           super.visitVar(ctx)
@@ -1007,30 +1008,42 @@ export default class EquationGen extends ModelReader {
         } else {
           super.visitVar(ctx)
         }
-      } else if (this.currentFunctionName() === '_VECTOR_ELM_MAP') {
-        if (this.argIndexForFunctionName('_VECTOR_ELM_MAP') === 1) {
+      } else if (functionName === '_VECTOR_ELM_MAP') {
+        if (this.argIndexForFunctionName(functionName) === 1) {
           this.vemOffset = this.currentVarName()
         }
         super.visitVar(ctx)
-      } else if (this.currentFunctionName() === '_VECTOR_SORT_ORDER') {
-        if (this.argIndexForFunctionName('_VECTOR_SORT_ORDER') === 0) {
+      } else if (functionName === '_VECTOR_SORT_ORDER') {
+        if (this.argIndexForFunctionName(functionName) === 0) {
           this.vsoVarName = this.currentVarName()
           this.vsoTmpName = newTmpVarName()
           this.emit(this.vsoTmpName)
         }
         super.visitVar(ctx)
-      } else if (this.currentFunctionName() === '_ALLOCATE_AVAILABLE') {
-        if (this.argIndexForFunctionName('_ALLOCATE_AVAILABLE') === 0) {
+      } else if (functionName === '_ALLOCATE_AVAILABLE') {
+        if (this.argIndexForFunctionName(functionName) === 0) {
           this.aaRequestArray = this.currentVarName()
           this.aaTmpName = newTmpVarName()
           this.emit(this.aaTmpName)
-        } else if (this.argIndexForFunctionName('_ALLOCATE_AVAILABLE') === 1) {
+        } else if (this.argIndexForFunctionName(functionName) === 1) {
           this.aaPriorityArray = this.currentVarName()
         }
         super.visitVar(ctx)
-      } else if (this.currentFunctionName() === '_GET_DATA_BETWEEN_TIMES') {
+      } else if (functionName === '_GET_DATA_BETWEEN_TIMES') {
         this.emit(this.currentVarName())
         super.visitVar(ctx)
+      } else if (
+        functionName === '_LOOKUP_FORWARD' ||
+        functionName === '_LOOKUP_BACKWARD' ||
+        functionName === '_LOOKUP_INVERT'
+      ) {
+        let argIndex = this.argIndexForFunctionName(functionName)
+        if (argIndex === 0) {
+          this.emit(this.currentVarName())
+          super.visitVar(ctx)
+        } else {
+          emitVar()
+        }
       } else {
         emitVar()
       }

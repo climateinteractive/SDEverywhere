@@ -1,8 +1,45 @@
 {UTF-8}
 DimA: A1, A2, A3 ~~|
 
-a[DimA] = GET DIRECT LOOKUPS('lookup_data.csv', ',', '1', 'E2') ~~|
-b[DimA] = a[DimA](Time) ~~~:SUPPLEMENTARY|
+a[DimA] = GET DIRECT LOOKUPS('lookup_data.csv', ',', '1', 'E2')
+	~	
+	~	subscript currently required for GET DIRECT LOOKUPS
+  |
+
+b = a[A1](Time)
+	~	
+	~	access the lookup
+	|
+
+c = LOOKUP INVERT(a[A1], 0.5)
+	~	
+	~	look up y for an x value (returns 2035)
+	|
+
+d = LOOKUP FORWARD(a[A1], 2028.1)
+	~	
+	~	look up using the next x without interpolation (returns 0.3)
+	|
+
+e = LOOKUP FORWARD(a[A1], 2028)
+	~	
+	~	no effect when the x value exists in the lookup (returns 0.266667)
+	|
+
+f = a[A1](2028.1)
+	~	
+	~	regular lookups extrapolate by default
+	|
+
+g((0,0),(1,1),(2,2))
+	~	
+	~	lookup definition
+	|
+
+h = LOOKUP FORWARD(g, 1)
+	~	
+	~	non-subscripted look up
+	|
 
 ********************************************************
 	.Control
