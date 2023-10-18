@@ -3,7 +3,7 @@
 import { BlobWorker, spawn, Thread, Transfer, Worker } from 'threads'
 
 import type { ModelRunner } from '@sdeverywhere/runtime'
-import { Outputs } from '@sdeverywhere/runtime'
+import { Outputs, updateOutputIndices } from '@sdeverywhere/runtime'
 
 /**
  * Initialize a `ModelRunner` that runs the model asynchronously in a worker thread.
@@ -59,8 +59,27 @@ async function spawnAsyncModelRunnerWithWorker(worker: Worker): Promise<ModelRun
   const initResult = await modelWorker.initModel()
   let ioBuffer: ArrayBuffer = initResult.ioBuffer
 
+  // The run time is stored in the first 8 bytes of the shared buffer
+  const runTimeOffsetInBytes = 0
+  const runTimeLengthInElements = 1
+  const runTimeLengthInBytes = runTimeLengthInElements * 8
+
+  // The inputs are stored after the run time in the shared buffer
+  const inputsOffsetInBytes = runTimeOffsetInBytes + runTimeLengthInBytes
+  const inputsLengthInElements: number = initResult.inputsLength
+  const inputsLengthInBytes = inputsLengthInElements * 8
+
+  // The outputs are stored after the inputs in the shared buffer
+  const outputsOffsetInBytes = inputsOffsetInBytes + inputsLengthInBytes
+  const outputsLengthInElements: number = initResult.outputsLength
+  const outputsLengthInBytes = outputsLengthInElements * 8
+
+  // The output indices are (optionally) stored after the outputs in the shared buffer
+  const indicesOffsetInBytes = outputsOffsetInBytes + outputsLengthInBytes
+  const indicesLengthInElements: number = initResult.outputIndicesLength
+
   // The row length is the number of elements in each row of the outputs buffer
-  const rowLength = initResult.rowLength
+  const outputRowLength: number = initResult.outputRowLength
 
   // Use a flag to ensure that only one request is made at a time
   let running = false
@@ -82,16 +101,17 @@ async function spawnAsyncModelRunnerWithWorker(worker: Worker): Promise<ModelRun
         running = true
       }
 
-      // The run time is stored in the first 8 bytes
-      const runTimeLengthInElements = 1
-      const runTimeLengthInBytes = runTimeLengthInElements * 8
-
       // Capture the current set of input values into the reusable buffer
-      const inputsLengthInElements = inputs.length
-      const inputsLengthInBytes = inputsLengthInElements * 8
-      const inputsArray = new Float64Array(ioBuffer, runTimeLengthInBytes, inputsLengthInElements)
+      const inputsArray = new Float64Array(ioBuffer, inputsOffsetInBytes, inputsLengthInElements)
       for (let i = 0; i < inputs.length; i++) {
         inputsArray[i] = inputs[i].get()
+      }
+
+      // Update the output indices, if needed
+      if (indicesLengthInElements > 0) {
+        const outputSpecs = outputs.varSpecs || []
+        const indicesArray = new Int32Array(ioBuffer, indicesOffsetInBytes, indicesLengthInElements)
+        updateOutputIndices(indicesArray, outputSpecs)
       }
 
       // Run the model in the worker. We pass the underlying `ArrayBuffer`
@@ -105,14 +125,13 @@ async function spawnAsyncModelRunnerWithWorker(worker: Worker): Promise<ModelRun
       }
 
       // Save the model run time
-      const runTimeBufferArray = new Float64Array(ioBuffer, 0, runTimeLengthInElements)
-      outputs.runTimeInMillis = runTimeBufferArray[0]
+      const runTimeArray = new Float64Array(ioBuffer, runTimeOffsetInBytes, runTimeLengthInElements)
+      outputs.runTimeInMillis = runTimeArray[0]
 
       // Capture the outputs array by copying the data into the given `Outputs`
       // data structure
-      const outputsOffsetInBytes = runTimeLengthInBytes + inputsLengthInBytes
-      const outputsArray = new Float64Array(ioBuffer, outputsOffsetInBytes)
-      outputs.updateFromBuffer(outputsArray, rowLength)
+      const outputsArray = new Float64Array(ioBuffer, outputsOffsetInBytes, outputsLengthInElements)
+      outputs.updateFromBuffer(outputsArray, outputRowLength)
 
       return outputs
     },

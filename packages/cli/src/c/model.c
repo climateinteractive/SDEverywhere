@@ -8,6 +8,14 @@
 struct timespec startTime, finishTime;
 #endif
 
+// For each output variable specified in the indices buffer, there
+// are 4 index values:
+//   varIndex
+//   subIndex0
+//   subIndex1
+//   subIndex2
+#define INDICES_PER_OUTPUT 4
+
 // The special _time variable is not included in .mdl files.
 double _time;
 
@@ -17,6 +25,7 @@ size_t outputIndex = 0;
 
 // Output data buffer used by `runModelWithBuffers`
 double* outputBuffer = NULL;
+int32_t* outputIndexBuffer = NULL;
 size_t outputVarIndex = 0;
 size_t numSavePoints = 0;
 size_t savePointIndex = 0;
@@ -66,6 +75,13 @@ double getSaveper() {
   return _saveper;
 }
 
+/**
+ * Return the constant `maxOutputIndices` value.
+ */
+int getMaxOutputIndices() {
+  return maxOutputIndices;
+}
+
 char* run_model(const char* inputs) {
   // run_model does everything necessary to run the model with the given inputs.
   // It may be called multiple times. Call finish() after all runs are complete.
@@ -102,13 +118,15 @@ char* run_model(const char* inputs) {
  * (where tN is the last time in the range), the second variable outputs will begin,
  * and so on.
  */
-void runModelWithBuffers(double* inputs, double* outputs) {
+void runModelWithBuffers(double* inputs, double* outputs, int32_t* outputIndices) {
   outputBuffer = outputs;
+  outputIndexBuffer = outputIndices;
   initConstants();
   setInputsFromBuffer(inputs);
   initLevels();
   run();
   outputBuffer = NULL;
+  outputIndexBuffer = NULL;
 }
 
 void run() {
@@ -137,7 +155,25 @@ void run() {
         numSavePoints = (size_t)(round((_final_time - _initial_time) / _saveper)) + 1;
       }
       outputVarIndex = 0;
-      storeOutputData();
+      if (outputIndexBuffer != NULL) {
+        // Store the outputs as specified in the current output index buffer
+        for (size_t i = 0; i < maxOutputIndices; i++) {
+          size_t indexBufferOffset = i * INDICES_PER_OUTPUT;
+          size_t varIndex = (size_t)outputIndexBuffer[indexBufferOffset];
+          if (varIndex > 0) {
+            size_t subIndex0 = (size_t)outputIndexBuffer[indexBufferOffset + 1];
+            size_t subIndex1 = (size_t)outputIndexBuffer[indexBufferOffset + 2];
+            size_t subIndex2 = (size_t)outputIndexBuffer[indexBufferOffset + 3];
+            storeOutput(varIndex, subIndex0, subIndex1, subIndex2);
+          } else {
+            // Stop when we reach the first zero index
+            break;
+          }
+        }
+      } else {
+        // Store the normal outputs
+        storeOutputData();
+      }
       savePointIndex++;
     }
     if (step == lastStep) break;

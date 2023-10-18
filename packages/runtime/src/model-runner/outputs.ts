@@ -2,7 +2,7 @@
 
 import type { Result } from 'neverthrow'
 import { ok, err } from 'neverthrow'
-import type { OutputVarId } from '../_shared'
+import type { OutputVarId, OutputVarSpec } from '../_shared'
 
 /** Indicates the type of error encountered when parsing an outputs buffer. */
 export type ParseError = 'invalid-point-count'
@@ -65,6 +65,15 @@ export class Outputs {
   public runTimeInMillis: number
 
   /**
+   * The optional set of specs that dictate which variables from the model will be
+   * stored in this `Outputs` instance.  If undefined, the default set of outputs
+   * will be stored (as configured in `varIds`).
+   * @hidden This is not yet part of the public API; it is exposed here for use
+   * in experimental testing tools.
+   */
+  public varSpecs?: OutputVarSpec[]
+
+  /**
    * @param varIds The output variable identifiers.
    * @param startTime The start time for the model.
    * @param endTime The end time for the model.
@@ -92,6 +101,20 @@ export class Outputs {
       const varId = varIds[i]
       this.varSeries[i] = new Series(varId, points)
     }
+  }
+
+  /**
+   * The optional set of specs that dictate which variables from the model will be
+   * stored in this `Outputs` instance.  If undefined, the default set of outputs
+   * will be stored (as configured in `varIds`).
+   * @hidden This is not yet part of the public API; it is exposed here for use
+   * in experimental testing tools.
+   */
+  setVarSpecs(varSpecs: OutputVarSpec[]) {
+    if (varSpecs.length !== this.varIds.length) {
+      throw new Error('Length of output varSpecs must match that of varIds')
+    }
+    this.varSpecs = varSpecs
   }
 
   /**

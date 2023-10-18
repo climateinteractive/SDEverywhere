@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.7.9](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.8...compile-v0.7.9) (2023-10-18)
+
+
+### Bug Fixes
+
+* allow numeric ranges in subscript range definitions ([#375](https://github.com/climateinteractive/SDEverywhere/issues/375)) ([da13dc4](https://github.com/climateinteractive/SDEverywhere/commit/da13dc407f5f38c5c41501457880e3560c47f7b0)), closes [#318](https://github.com/climateinteractive/SDEverywhere/issues/318)
+* correct handling of lookups defined by GET DIRECT LOOKUPS when used as function call arguments ([#379](https://github.com/climateinteractive/SDEverywhere/issues/379)) ([a032779](https://github.com/climateinteractive/SDEverywhere/commit/a032779aeff986f16043f874aa9fc8b47a98d167)), closes [#378](https://github.com/climateinteractive/SDEverywhere/issues/378)
+
+## [0.7.8](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.7...compile-v0.7.8) (2023-09-29)
+
+
+### Bug Fixes
+
+* prevent error in JSON listing creation when Time variable is not explicitly referenced in the model ([#368](https://github.com/climateinteractive/SDEverywhere/issues/368)) ([4bf0a39](https://github.com/climateinteractive/SDEverywhere/commit/4bf0a39cbe7c9fce8725269b7bb32a59b9f6e027)), closes [#365](https://github.com/climateinteractive/SDEverywhere/issues/365)
+
+## [0.7.7](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.6...compile-v0.7.7) (2023-09-28)
+
+
+### Features
+
+* add support for capturing data for any variable at runtime ([#355](https://github.com/climateinteractive/SDEverywhere/issues/355)) ([5d12836](https://github.com/climateinteractive/SDEverywhere/commit/5d1283657ba99f6c7f8e30f8053f1906ac872af3)), closes [#105](https://github.com/climateinteractive/SDEverywhere/issues/105)
+
 ## [0.7.6](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.5...compile-v0.7.6) (2023-09-05)
 
 

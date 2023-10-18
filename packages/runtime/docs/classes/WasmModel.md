@@ -53,7 +53,7 @@ The number of save points for each output.
 
 ### runModel
 
-**runModel**(`inputs`, `outputs`): `void`
+**runModel**(`inputs`, `outputs`, `outputIndices?`): `void`
 
 Run the model, using inputs from the `inputs` buffer, and writing outputs into
 the `outputs` buffer.
@@ -62,8 +62,9 @@ the `outputs` buffer.
 
 | Name | Type | Description |
 | :------ | :------ | :------ |
-| `inputs` | [`WasmBuffer`](WasmBuffer.md) | The buffer containing inputs in the order expected by the model. |
-| `outputs` | [`WasmBuffer`](WasmBuffer.md) | The buffer into which the model will store output values. |
+| `inputs` | [`WasmBuffer`](WasmBuffer.md)<`Float64Array`\> | The buffer containing inputs in the order expected by the model. |
+| `outputs` | [`WasmBuffer`](WasmBuffer.md)<`Float64Array`\> | The buffer into which the model will store output values. |
+| `outputIndices?` | [`WasmBuffer`](WasmBuffer.md)<`Int32Array`\> | The buffer used to control which variables are written to `outputs`. |
 
 #### Returns
 

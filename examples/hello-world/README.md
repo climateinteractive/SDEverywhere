@@ -53,7 +53,7 @@ pnpm dev
 pnpm build
 
 # Open the generated report in a browser
-pnpm serve
+pnpm preview
 ```
 
 ## License

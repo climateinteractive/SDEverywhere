@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.2.2](https://github.com/climateinteractive/SDEverywhere/compare/runtime-v0.2.1...runtime-v0.2.2) (2023-09-28)
+
+
+### Bug Fixes
+
+* add trivial changes to correct previous publish failures and force re-publish ([#362](https://github.com/climateinteractive/SDEverywhere/issues/362)) ([544d4da](https://github.com/climateinteractive/SDEverywhere/commit/544d4dac5f5d6d71885f9ba15f95ee9c91e0ec66)), closes [#361](https://github.com/climateinteractive/SDEverywhere/issues/361)
+
+## [0.2.1](https://github.com/climateinteractive/SDEverywhere/compare/runtime-v0.2.0...runtime-v0.2.1) (2023-09-28)
+
+### Features
+
+* add support for capturing data for any variable at runtime ([#355](https://github.com/climateinteractive/SDEverywhere/issues/355)) ([5d12836](https://github.com/climateinteractive/SDEverywhere/commit/5d1283657ba99f6c7f8e30f8053f1906ac872af3)), closes [#105](https://github.com/climateinteractive/SDEverywhere/issues/105)
+
 ## [0.2.0](https://github.com/climateinteractive/SDEverywhere/compare/runtime-v0.1.0...runtime-v0.2.0) (2022-12-10)
 
 

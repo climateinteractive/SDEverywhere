@@ -1,5 +1,42 @@
 # Changelog
 
+## [0.7.13](https://github.com/climateinteractive/SDEverywhere/compare/cli-v0.7.12...cli-v0.7.13) (2023-10-18)
+
+
+### Features
+
+* implement GAMMA LN ([#344](https://github.com/climateinteractive/SDEverywhere/issues/344)) ([#376](https://github.com/climateinteractive/SDEverywhere/issues/376)) ([9d557e0](https://github.com/climateinteractive/SDEverywhere/commit/9d557e03c627fd40292f88e7502cca3f9f37da11))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/compile bumped from ^0.7.8 to ^0.7.9
+
+## [0.7.12](https://github.com/climateinteractive/SDEverywhere/compare/cli-v0.7.11...cli-v0.7.12) (2023-09-29)
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/compile bumped from ^0.7.7 to ^0.7.8
+
+## [0.7.11](https://github.com/climateinteractive/SDEverywhere/compare/cli-v0.7.10...cli-v0.7.11) (2023-09-28)
+
+
+### Features
+
+* add support for capturing data for any variable at runtime ([#355](https://github.com/climateinteractive/SDEverywhere/issues/355)) ([5d12836](https://github.com/climateinteractive/SDEverywhere/commit/5d1283657ba99f6c7f8e30f8053f1906ac872af3)), closes [#105](https://github.com/climateinteractive/SDEverywhere/issues/105)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/build bumped from ^0.3.1 to ^0.3.2
+    * @sdeverywhere/compile bumped from ^0.7.6 to ^0.7.7
+
 ## [0.7.10](https://github.com/climateinteractive/SDEverywhere/compare/cli-v0.7.9...cli-v0.7.10) (2023-09-05)
 
 

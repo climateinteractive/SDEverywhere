@@ -48,13 +48,29 @@ export default class SubscriptRangeReader extends ModelReader {
     }
   }
   visitSubscriptList(ctx) {
-    // A subscript list can appear in either a subscript range or mapping.
-    let subscripts = R.map(id => id.getText(), ctx.Id())
-    if (ctx.parentCtx.ruleIndex === ModelParser.RULE_subscriptRange) {
-      this.indNames = subscripts
+    // Get the subscripts from each subscript index in the list.
+    for (let child of ctx.children) {
+      if (child.symbol?.type === ModelParser.Id) {
+        this.addSubscriptIndex(ctx, child)
+      }
     }
-    if (ctx.parentCtx.ruleIndex === ModelParser.RULE_subscriptMapping) {
-      this.mappingValue = subscripts
+  }
+  visitSubscriptDefList(ctx) {
+    // Subscript range definitions can have indices and numeric subscript sequences.
+    for (let child of ctx.children) {
+      if (child.symbol?.type === ModelParser.Id) {
+        this.addSubscriptIndex(ctx, child)
+      } else if (child.ruleIndex === ModelParser.RULE_subscriptSequence) {
+        this.visitSubscriptSequence(child)
+      }
+    }
+  }
+  addSubscriptIndex(ctx, child) {
+    let subscript = child.getText()
+    if (ctx.parentCtx.ruleIndex === ModelParser.RULE_subscriptRange) {
+      this.indNames.push(subscript)
+    } else if (ctx.parentCtx.ruleIndex === ModelParser.RULE_subscriptMapping) {
+      this.mappingValue.push(subscript)
     }
   }
   visitSubscriptMapping(ctx) {
@@ -74,6 +90,7 @@ export default class SubscriptRangeReader extends ModelReader {
       let prefix = matches[0][1]
       let start = parseInt(matches[0][2])
       let end = parseInt(matches[1][2])
+      // TODO get this to work with subscript mappings too
       for (let i = start; i <= end; i++) {
         this.indNames.push(prefix + i)
       }

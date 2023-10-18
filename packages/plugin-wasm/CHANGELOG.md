@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.2.2](https://github.com/climateinteractive/SDEverywhere/compare/plugin-wasm-v0.2.1...plugin-wasm-v0.2.2) (2023-10-02)
+
+
+### Features
+
+* allow for customizing emcc arguments in plugin-wasm ([#372](https://github.com/climateinteractive/SDEverywhere/issues/372)) ([e71992b](https://github.com/climateinteractive/SDEverywhere/commit/e71992b874539c5ecf1785a2d779fdeafa1a4fde)), closes [#371](https://github.com/climateinteractive/SDEverywhere/issues/371)
+
+## [0.2.1](https://github.com/climateinteractive/SDEverywhere/compare/plugin-wasm-v0.2.0...plugin-wasm-v0.2.1) (2023-09-28)
+
+
+### Features
+
+* add support for capturing data for any variable at runtime ([#355](https://github.com/climateinteractive/SDEverywhere/issues/355)) ([5d12836](https://github.com/climateinteractive/SDEverywhere/commit/5d1283657ba99f6c7f8e30f8053f1906ac872af3)), closes [#105](https://github.com/climateinteractive/SDEverywhere/issues/105)
+
+
 ## [0.2.0](https://github.com/climateinteractive/SDEverywhere/compare/plugin-wasm-v0.1.3...plugin-wasm-v0.2.0) (2022-12-10)
 
 

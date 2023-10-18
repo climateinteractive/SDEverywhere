@@ -14,5 +14,7 @@ export interface WasmModule {
   /** @hidden */
   _free: (byteOffset: number) => void
   /** @hidden */
+  HEAP32: Int32Array
+  /** @hidden */
   HEAPF64: Float64Array
 }

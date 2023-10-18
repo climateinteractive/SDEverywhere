@@ -17,7 +17,7 @@ import { generateCode } from './generate/code-gen.js'
  *
  * - If `operation` is 'generateC', the generated C code will be written to `buildDir`.
  * - If `operation` is 'printVarList', variables and subscripts will be written to
- *   txt and yaml files under `buildDir`.
+ *   txt, yaml, and json files under `buildDir`.
  * - If `operation` is 'printRefIdTest', reference identifiers will be printed to the console.
  * - If `operation` is 'convertNames', no output will be generated, but the results of model
  *   analysis will be available.
@@ -85,6 +85,8 @@ export async function parseAndGenerate(input, spec, operation, modelDirname, mod
     writeOutput(`${modelName}_vars.yaml`, Model.yamlVarList())
     // Write subscripts to a YAML file.
     writeOutput(`${modelName}_subs.yaml`, yamlSubsList())
+    // Write variables and subscripts to a JSON file.
+    writeOutput(`${modelName}.json`, Model.jsonList())
   }
 
   return code
