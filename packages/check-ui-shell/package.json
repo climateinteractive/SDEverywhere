@@ -39,7 +39,7 @@
     "@sveltejs/vite-plugin-svelte": "^2.4.5",
     "@types/chart.js": "^2.9.34",
     "@types/fontfaceobserver": "^0.0.6",
-    "postcss": "^8.2.14",
+    "postcss": "^8.4.31",
     "pug": "^3.0.1",
     "sass": "^1.34.1",
     "svelte": "^3.59.2",
