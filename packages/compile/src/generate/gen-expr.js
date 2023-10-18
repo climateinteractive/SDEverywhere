@@ -191,8 +191,11 @@ function generateFunctionCall(callExpr, ctx) {
     //
     //
 
+    case '_VECTOR_SELECT':
+    case '_VMAX':
+    case '_VMIN':
     case '_SUM':
-      return generateSumCall(callExpr, ctx)
+      return generateArrayFunctionCall(callExpr, ctx)
 
     //
     //
@@ -208,10 +211,7 @@ function generateFunctionCall(callExpr, ctx) {
     case '_ELMCOUNT':
     case '_TREND':
     case '_VECTOR_ELM_MAP':
-    case '_VECTOR_SELECT':
     case '_VECTOR_SORT_ORDER':
-    case '_VMAX':
-    case '_VMIN':
     case '_WITH_LOOKUP':
       break
 
@@ -389,25 +389,103 @@ function generateLookupCall(lookupVar, argExpr, ctx) {
 }
 
 /**
- * Generate C code for a `SUM` function call.
+ * Generate C code for an array function call (e.g., `SUM`).
  *
  * @param {*} callExpr The function call expression from the parsed model.
  * @param {GenExprContext} ctx The context used when generating code for the expression.
  * @return {string} The generated C code.
  */
-function generateSumCall(callExpr, ctx) {
-  // Emit the temporary variable declaration
-  const tmpVar = newTmpVarName()
-  ctx.emitPre(`  double ${tmpVar} = 0.0;`)
+function generateArrayFunctionCall(callExpr, ctx) {
+  // Determine the initial value and loop body depending on the function
+  let tmpVar
+  let initValue
+  let loopBodyOp
+  let returnCode
+  let vsAction
+  let vsCondVar
+  switch (callExpr.fnId) {
+    case '_SUM':
+      initValue = '0.0'
+      loopBodyOp = 'sum'
+      break
 
-  // Find all marked dimensions used in the `SUM` function argument
-  const markedDimIds = new Set()
-  visitVariableRefs(callExpr.args[0], varRef => {
-    if (varRef.subscriptRefs) {
-      const subIds = varRef.subscriptRefs.map(subRef => subRef.subId)
-      extractMarkedDims(subIds).forEach(dimId => markedDimIds.add(dimId))
+    case '_VMIN':
+      initValue = 'DBL_MAX'
+      loopBodyOp = 'min'
+      break
+
+    case '_VMAX':
+      initValue = '-DBL_MAX'
+      loopBodyOp = 'max'
+      break
+
+    case '_VECTOR_SELECT': {
+      // For `VECTOR SELECT`, we emit different inner loop code depending on the `numerical_action`
+      // argument, so extract that here first
+      // TODO: We should also implement handling of the `error_action` argument
+      const actionArg = callExpr.args[3]
+      // TODO: We can handle more complex expressions here if necessary if we used `reduceExpr`
+      switch (actionArg.kind) {
+        case 'number':
+          vsAction = actionArg.value
+          break
+        case 'variable-ref':
+          // TODO: Resolve the constant
+          vsAction = 0
+          break
+        default:
+          throw new Error('The numerical_action argument for VECTOR SELECT must resolve to a constant')
+      }
+
+      // TODO: Handle other actions
+      switch (vsAction) {
+        case 0:
+          initValue = '0.0'
+          loopBodyOp = 'sum'
+          break
+        case 3:
+          initValue = '-DBL_MAX'
+          loopBodyOp = 'max'
+          break
+        default:
+          throw new Error(`Unsupported numerical_action value (${vsAction}) for VECTOR SELECT`)
+      }
+
+      // Emit the temporary condition variable declaration
+      vsCondVar = newTmpVarName()
+      ctx.emitPre(`  bool ${vsCondVar} = false;`)
+
+      // this.tmpVarCode.push(`    if (bool_cond(${this.vsSelectionArray})) {`)
+      // this.tmpVarCode.push(`    ${condVar} = true;`)
+      // this.tmpVarCode.push('    }')
+
+      // Define the code that will be emitted in place of the `VECTOR SELECT` call
+      tmpVar = newTmpVarName()
+      const vsNullValue = 'TODO'
+      returnCode = `${vsCondVar} ? ${tmpVar} : ${vsNullValue}`
+      break
     }
-  })
+
+    default:
+      throw new Error(`Unexpected function call '${callExpr.fnId}' when reading ${ctx.variable.modelLHS}`)
+  }
+
+  // Emit the temporary variable declaration
+  if (!tmpVar) {
+    tmpVar = newTmpVarName()
+  }
+  ctx.emitPre(`  double ${tmpVar} = ${initValue};`)
+
+  // Find all marked dimensions used in the array function arguments
+  const markedDimIds = new Set()
+  for (const argExpr of callExpr.args) {
+    visitVariableRefs(argExpr, varRef => {
+      if (varRef.subscriptRefs) {
+        const subIds = varRef.subscriptRefs.map(subRef => subRef.subId)
+        extractMarkedDims(subIds).forEach(dimId => markedDimIds.add(dimId))
+      }
+    })
+  }
 
   // Open the array function loop(s)
   for (const markedDimId of markedDimIds) {
@@ -417,9 +495,23 @@ function generateSumCall(callExpr, ctx) {
     ctx.emitPre(`  for (size_t ${i} = 0; ${i} < ${n}; ${i}++) {`)
   }
 
-  // Emit the body of the array function loop
-  const arrayFunctionCode = generateExpr(callExpr.args[0], ctx)
-  ctx.emitPre(`    ${tmpVar} += ${arrayFunctionCode};`)
+  // Emit the body of the array function loop.  Note that we generate the expression code here
+  // only after resolving the marked dimensions because the code that generates variable references
+  // needs to take the marked dimension state into account.
+  const argCode = generateExpr(callExpr.args[0], ctx)
+  switch (loopBodyOp) {
+    case 'sum':
+      ctx.emitPre(`  ${tmpVar} += ${argCode};`)
+      break
+    case 'min':
+      ctx.emitPre(`  ${tmpVar} = fmin(${tmpVar}, ${argCode});`)
+      break
+    case 'max':
+      ctx.emitPre(`  ${tmpVar} = fmax(${tmpVar}, ${argCode});`)
+      break
+    default:
+      break
+  }
 
   // Close the array function loop(s)
   for (let i = 0; i < markedDimIds.size; i++) {
@@ -429,8 +521,13 @@ function generateSumCall(callExpr, ctx) {
   // Reset marked dim state
   ctx.resetMarkedDims()
 
-  // Emit the temporary variable into the expression in place of the array function call
-  return tmpVar
+  if (returnCode) {
+    // Emit the expression defined above in place of the array function
+    return returnCode
+  } else {
+    // Emit the temporary variable into the expression in place of the array function call
+    return tmpVar
+  }
 }
 
 /**

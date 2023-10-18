@@ -1407,7 +1407,7 @@ describe('EquationGen (Vensim -> C)', () => {
     expect(genC(vars.get('_y'))).toEqual(['_y = _c[0];'])
   })
 
-  it('should work for VECTOR SELECT function (with sum action + zero for missing values)', () => {
+  it.only('should work for VECTOR SELECT function (with sum action + zero for missing values)', () => {
     const vars = readInlineModel(`
       DimA: A1, A2, A3 ~~|
       DimB: B1, B2 ~~|
