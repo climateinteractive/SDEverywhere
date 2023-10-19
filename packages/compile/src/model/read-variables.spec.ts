@@ -450,19 +450,25 @@ describe('readVariables', () => {
     const vars = readSubscriptsAndVariables('directlookups')
     expect(vars).toEqual([
       v('a[DimA]', "GET DIRECT LOOKUPS('lookup_data.csv',',','1','E2')", {
-        subscripts: ['_a1'],
-        separationDims: ['_dima']
+        separationDims: ['_dima'],
+        subscripts: ['_a1']
       }),
       v('a[DimA]', "GET DIRECT LOOKUPS('lookup_data.csv',',','1','E2')", {
-        subscripts: ['_a2'],
-        separationDims: ['_dima']
+        separationDims: ['_dima'],
+        subscripts: ['_a2']
       }),
       v('a[DimA]', "GET DIRECT LOOKUPS('lookup_data.csv',',','1','E2')", {
-        subscripts: ['_a3'],
-        separationDims: ['_dima']
+        separationDims: ['_dima'],
+        subscripts: ['_a3']
       }),
-      v('b[DimA]', 'a[DimA](Time)', { subscripts: ['_dima'] }),
+      v('b', 'a[A1](Time)'),
+      v('c', 'LOOKUP INVERT(a[A1],0.5)'),
+      v('d', 'LOOKUP FORWARD(a[A1],2028.1)'),
+      v('e', 'LOOKUP FORWARD(a[A1],2028)'),
+      v('f', 'a[A1](2028.1)'),
       v('FINAL TIME', '2050'),
+      v('g', ''),
+      v('h', 'LOOKUP FORWARD(g,1)'),
       v('INITIAL TIME', '2020'),
       v('SAVEPER', 'TIME STEP'),
       v('TIME STEP', '1'),
@@ -1267,28 +1273,83 @@ describe('readVariables', () => {
   it('should work for Vensim "subscript" model', () => {
     const vars = readSubscriptsAndVariables('subscript')
     expect(vars).toEqual([
-      v('a[DimA]', 'b[DimB]', { subscripts: ['_dima'] }),
-      v('b[DimB]', '1,2,3', { subscripts: ['_b1'], separationDims: ['_dimb'] }),
-      v('b[DimB]', '1,2,3', { subscripts: ['_b2'], separationDims: ['_dimb'] }),
-      v('b[DimB]', '1,2,3', { subscripts: ['_b3'], separationDims: ['_dimb'] }),
-      v('c[DimB]', 'b[DimB]', { subscripts: ['_dimb'] }),
-      v('d[A1]', 'b[B1]', { subscripts: ['_a1'] }),
-      v('e[B1]', 'b[B1]', { subscripts: ['_b1'] }),
-      v('f[DimA,B1]', '1', { subscripts: ['_dima', '_b1'] }),
-      v('f[DimA,B2]', '2', { subscripts: ['_dima', '_b2'] }),
-      v('f[DimA,B3]', '3', { subscripts: ['_dima', '_b3'] }),
+      v('a[DimA]', 'b[DimB]', {
+        subscripts: ['_dima']
+      }),
+      v('b[DimB]', '1,2,3', {
+        separationDims: ['_dimb'],
+        subscripts: ['_b1']
+      }),
+      v('b[DimB]', '1,2,3', {
+        separationDims: ['_dimb'],
+        subscripts: ['_b2']
+      }),
+      v('b[DimB]', '1,2,3', {
+        separationDims: ['_dimb'],
+        subscripts: ['_b3']
+      }),
+      v('c[DimB]', 'b[DimB]', {
+        subscripts: ['_dimb']
+      }),
+      v('d[A1]', 'b[B1]', {
+        subscripts: ['_a1']
+      }),
+      v('e[B1]', 'b[B1]', {
+        subscripts: ['_b1']
+      }),
+      v('f[DimA,B1]', '1', {
+        subscripts: ['_dima', '_b1']
+      }),
+      v('f[DimA,B2]', '2', {
+        subscripts: ['_dima', '_b2']
+      }),
+      v('f[DimA,B3]', '3', {
+        subscripts: ['_dima', '_b3']
+      }),
       v('FINAL TIME', '1'),
-      v('g[B1,DimA]', 'f[DimA,B1]', { subscripts: ['_dima', '_b1'] }),
-      v('g[B2,DimA]', 'f[DimA,B2]', { subscripts: ['_dima', '_b2'] }),
-      v('g[B3,DimA]', 'f[DimA,B3]', { subscripts: ['_dima', '_b3'] }),
+      v('g[B1,DimA]', 'f[DimA,B1]', {
+        subscripts: ['_dima', '_b1']
+      }),
+      v('g[B2,DimA]', 'f[DimA,B2]', {
+        subscripts: ['_dima', '_b2']
+      }),
+      v('g[B3,DimA]', 'f[DimA,B3]', {
+        subscripts: ['_dima', '_b3']
+      }),
       v('INITIAL TIME', '0'),
-      v('o[DimA,DimB]', 'f[DimA,DimB]', { subscripts: ['_dima', '_dimb'] }),
-      v('p[DimB,DimA]', 'f[DimA,DimB]', { subscripts: ['_dima', '_dimb'] }),
-      v('r[DimA]', 'IF THEN ELSE(DimA=Selected A,1,0)', { subscripts: ['_dima'] }),
-      v('s[DimA]', 'DimB', { subscripts: ['_dima'] }),
+      v('o[DimA,DimB]', 'f[DimA,DimB]', {
+        subscripts: ['_dima', '_dimb']
+      }),
+      v('p[DimB,DimA]', 'f[DimA,DimB]', {
+        subscripts: ['_dima', '_dimb']
+      }),
+      v('r[DimA]', 'IF THEN ELSE(DimA=Selected A,1,0)', {
+        subscripts: ['_dima']
+      }),
+      v('s[DimA]', 'DimB', {
+        subscripts: ['_dima']
+      }),
       v('SAVEPER', 'TIME STEP'),
       v('Selected A', '2'),
+      v('t[DimC]', '1', {
+        subscripts: ['_dimc']
+      }),
       v('TIME STEP', '1'),
+      v('u[C1]', '1', {
+        subscripts: ['_c1']
+      }),
+      v('u[C2]', '2', {
+        subscripts: ['_c2']
+      }),
+      v('u[C3]', '3', {
+        subscripts: ['_c3']
+      }),
+      v('u[C4]', '4', {
+        subscripts: ['_c4']
+      }),
+      v('u[C5]', '5', {
+        subscripts: ['_c5']
+      }),
       v('Time', '')
     ])
   })

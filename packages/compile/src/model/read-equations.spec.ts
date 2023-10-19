@@ -1195,6 +1195,24 @@ describe('readEquations', () => {
     ])
   })
 
+  it('should work for GAMMA LN function', () => {
+    const vars = readInlineModel(`
+      x = 1 ~~|
+      y = GAMMA LN(x) ~~|
+    `)
+    expect(vars).toEqual([
+      v('x', '1', {
+        refId: '_x',
+        varType: 'const'
+      }),
+      v('y', 'GAMMA LN(x)', {
+        refId: '_y',
+        referencedFunctionNames: ['__gamma_ln'],
+        references: ['_x']
+      })
+    ])
+  })
+
   it('should work for GET DIRECT CONSTANTS function (single value)', () => {
     const vars = readInlineModel(`
       x = GET DIRECT CONSTANTS('data/a.csv', ',', 'B2') ~~|
@@ -1484,6 +1502,201 @@ describe('readEquations', () => {
         hasInitValue: true,
         initReferences: ['_init'],
         referencedFunctionNames: ['__integ', '__abs', '__pow']
+      })
+    ])
+  })
+
+  it('should work for LOOKUP BACKWARD function (with lookup defined explicitly)', () => {
+    const vars = readInlineModel(`
+      x( (0,0),(2,1.3) ) ~~|
+      y = LOOKUP BACKWARD(x, 1) ~~|
+    `)
+    expect(vars).toEqual([
+      v('x', '', {
+        refId: '_x',
+        varType: 'lookup',
+        range: [],
+        points: [
+          [0, 0],
+          [2, 1.3]
+        ]
+      }),
+      v('y', 'LOOKUP BACKWARD(x,1)', {
+        refId: '_y',
+        referencedFunctionNames: ['__lookup_backward'],
+        references: ['_x']
+      })
+    ])
+  })
+
+  it('should work for LOOKUP BACKWARD function (with lookup defined using GET DIRECT LOOKUPS)', () => {
+    const vars = readInlineModel(`
+      DimA: A1, A2, A3 ~~|
+      x[DimA] = GET DIRECT LOOKUPS('lookup_data.csv', ',', '1', 'AH2') ~~|
+      y[DimA] = LOOKUP BACKWARD(x[DimA], Time) ~~|
+      z = y[A2] ~~|
+    `)
+    expect(vars).toEqual([
+      v('x[DimA]', "GET DIRECT LOOKUPS('lookup_data.csv',',','1','AH2')", {
+        directDataArgs: { file: 'lookup_data.csv', tab: ',', timeRowOrCol: '1', startCell: 'AH2' },
+        refId: '_x[_a1]',
+        separationDims: ['_dima'],
+        subscripts: ['_a1'],
+        varType: 'data'
+      }),
+      v('x[DimA]', "GET DIRECT LOOKUPS('lookup_data.csv',',','1','AH2')", {
+        directDataArgs: { file: 'lookup_data.csv', tab: ',', timeRowOrCol: '1', startCell: 'AH2' },
+        refId: '_x[_a2]',
+        separationDims: ['_dima'],
+        subscripts: ['_a2'],
+        varType: 'data'
+      }),
+      v('x[DimA]', "GET DIRECT LOOKUPS('lookup_data.csv',',','1','AH2')", {
+        directDataArgs: { file: 'lookup_data.csv', tab: ',', timeRowOrCol: '1', startCell: 'AH2' },
+        refId: '_x[_a3]',
+        separationDims: ['_dima'],
+        subscripts: ['_a3'],
+        varType: 'data'
+      }),
+      v('y[DimA]', 'LOOKUP BACKWARD(x[DimA],Time)', {
+        refId: '_y',
+        referencedFunctionNames: ['__lookup_backward'],
+        references: ['_x[_a1]', '_x[_a2]', '_x[_a3]', '_time'],
+        subscripts: ['_dima']
+      }),
+      v('z', 'y[A2]', {
+        refId: '_z',
+        references: ['_y']
+      })
+    ])
+  })
+
+  it('should work for LOOKUP FORWARD function (with lookup defined explicitly)', () => {
+    const vars = readInlineModel(`
+      x( (0,0),(2,1.3) ) ~~|
+      y = LOOKUP FORWARD(x, 1) ~~|
+    `)
+    expect(vars).toEqual([
+      v('x', '', {
+        refId: '_x',
+        varType: 'lookup',
+        range: [],
+        points: [
+          [0, 0],
+          [2, 1.3]
+        ]
+      }),
+      v('y', 'LOOKUP FORWARD(x,1)', {
+        refId: '_y',
+        referencedFunctionNames: ['__lookup_forward'],
+        references: ['_x']
+      })
+    ])
+  })
+
+  it('should work for LOOKUP FORWARD function (with lookup defined using GET DIRECT LOOKUPS)', () => {
+    const vars = readInlineModel(`
+      DimA: A1, A2, A3 ~~|
+      x[DimA] = GET DIRECT LOOKUPS('lookup_data.csv', ',', '1', 'AH2') ~~|
+      y[DimA] = LOOKUP FORWARD(x[DimA], Time) ~~|
+      z = y[A2] ~~|
+    `)
+    expect(vars).toEqual([
+      v('x[DimA]', "GET DIRECT LOOKUPS('lookup_data.csv',',','1','AH2')", {
+        directDataArgs: { file: 'lookup_data.csv', tab: ',', timeRowOrCol: '1', startCell: 'AH2' },
+        refId: '_x[_a1]',
+        separationDims: ['_dima'],
+        subscripts: ['_a1'],
+        varType: 'data'
+      }),
+      v('x[DimA]', "GET DIRECT LOOKUPS('lookup_data.csv',',','1','AH2')", {
+        directDataArgs: { file: 'lookup_data.csv', tab: ',', timeRowOrCol: '1', startCell: 'AH2' },
+        refId: '_x[_a2]',
+        separationDims: ['_dima'],
+        subscripts: ['_a2'],
+        varType: 'data'
+      }),
+      v('x[DimA]', "GET DIRECT LOOKUPS('lookup_data.csv',',','1','AH2')", {
+        directDataArgs: { file: 'lookup_data.csv', tab: ',', timeRowOrCol: '1', startCell: 'AH2' },
+        refId: '_x[_a3]',
+        separationDims: ['_dima'],
+        subscripts: ['_a3'],
+        varType: 'data'
+      }),
+      v('y[DimA]', 'LOOKUP FORWARD(x[DimA],Time)', {
+        refId: '_y',
+        referencedFunctionNames: ['__lookup_forward'],
+        references: ['_x[_a1]', '_x[_a2]', '_x[_a3]', '_time'],
+        subscripts: ['_dima']
+      }),
+      v('z', 'y[A2]', {
+        refId: '_z',
+        references: ['_y']
+      })
+    ])
+  })
+
+  it('should work for LOOKUP INVERT function (with lookup defined explicitly)', () => {
+    const vars = readInlineModel(`
+      x( (0,0),(2,1.3) ) ~~|
+      y = LOOKUP INVERT(x, 1) ~~|
+    `)
+    expect(vars).toEqual([
+      v('x', '', {
+        refId: '_x',
+        varType: 'lookup',
+        range: [],
+        points: [
+          [0, 0],
+          [2, 1.3]
+        ]
+      }),
+      v('y', 'LOOKUP INVERT(x,1)', {
+        refId: '_y',
+        referencedFunctionNames: ['__lookup_invert'],
+        references: ['_x']
+      })
+    ])
+  })
+
+  it('should work for LOOKUP INVERT function (with lookup defined using GET DIRECT LOOKUPS)', () => {
+    const vars = readInlineModel(`
+      DimA: A1, A2, A3 ~~|
+      x[DimA] = GET DIRECT LOOKUPS('lookup_data.csv', ',', '1', 'AH2') ~~|
+      y[DimA] = LOOKUP INVERT(x[DimA], Time) ~~|
+      z = y[A2] ~~|
+    `)
+    expect(vars).toEqual([
+      v('x[DimA]', "GET DIRECT LOOKUPS('lookup_data.csv',',','1','AH2')", {
+        directDataArgs: { file: 'lookup_data.csv', tab: ',', timeRowOrCol: '1', startCell: 'AH2' },
+        refId: '_x[_a1]',
+        separationDims: ['_dima'],
+        subscripts: ['_a1'],
+        varType: 'data'
+      }),
+      v('x[DimA]', "GET DIRECT LOOKUPS('lookup_data.csv',',','1','AH2')", {
+        directDataArgs: { file: 'lookup_data.csv', tab: ',', timeRowOrCol: '1', startCell: 'AH2' },
+        refId: '_x[_a2]',
+        separationDims: ['_dima'],
+        subscripts: ['_a2'],
+        varType: 'data'
+      }),
+      v('x[DimA]', "GET DIRECT LOOKUPS('lookup_data.csv',',','1','AH2')", {
+        directDataArgs: { file: 'lookup_data.csv', tab: ',', timeRowOrCol: '1', startCell: 'AH2' },
+        refId: '_x[_a3]',
+        separationDims: ['_dima'],
+        subscripts: ['_a3'],
+        varType: 'data'
+      }),
+      v('y[DimA]', 'LOOKUP INVERT(x[DimA],Time)', {
+        refId: '_y',
+        referencedFunctionNames: ['__lookup_invert'],
+        references: ['_x[_a1]', '_x[_a2]', '_x[_a3]', '_time'],
+        subscripts: ['_dima']
+      }),
+      v('z', 'y[A2]', {
+        refId: '_z',
+        references: ['_y']
       })
     ])
   })
@@ -4018,15 +4231,47 @@ describe('readEquations', () => {
         subscripts: ['_a3'],
         varType: 'data'
       }),
-      v('b[DimA]', 'a[DimA](Time)', {
+      v('b', 'a[A1](Time)', {
         refId: '_b',
         referencedLookupVarNames: ['_a'],
-        references: ['_time'],
-        subscripts: ['_dima']
+        references: ['_time']
+      }),
+      v('c', 'LOOKUP INVERT(a[A1],0.5)', {
+        refId: '_c',
+        referencedFunctionNames: ['__lookup_invert'],
+        references: ['_a[_a1]']
+      }),
+      v('d', 'LOOKUP FORWARD(a[A1],2028.1)', {
+        refId: '_d',
+        referencedFunctionNames: ['__lookup_forward'],
+        references: ['_a[_a1]']
+      }),
+      v('e', 'LOOKUP FORWARD(a[A1],2028)', {
+        refId: '_e',
+        referencedFunctionNames: ['__lookup_forward'],
+        references: ['_a[_a1]']
+      }),
+      v('f', 'a[A1](2028.1)', {
+        refId: '_f',
+        referencedLookupVarNames: ['_a']
       }),
       v('FINAL TIME', '2050', {
         refId: '_final_time',
         varType: 'const'
+      }),
+      v('g', '', {
+        points: [
+          [0, 0],
+          [1, 1],
+          [2, 2]
+        ],
+        refId: '_g',
+        varType: 'lookup'
+      }),
+      v('h', 'LOOKUP FORWARD(g,1)', {
+        refId: '_h',
+        referencedFunctionNames: ['__lookup_forward'],
+        references: ['_g']
       }),
       v('INITIAL TIME', '2020', {
         refId: '_initial_time',
@@ -4795,6 +5040,44 @@ describe('readEquations', () => {
   //   logPrettyVars(vars)
   //   expect(vars).toEqual([])
   // })
+
+  it('should work for Vensim "gamma_ln" model', () => {
+    const vars = readSubscriptsAndEquations('gamma_ln')
+    expect(vars).toEqual([
+      v('a', 'GAMMA LN(10)', {
+        refId: '_a',
+        referencedFunctionNames: ['__gamma_ln']
+      }),
+      v('b', 'GAMMA LN(0.5)', {
+        refId: '_b',
+        referencedFunctionNames: ['__gamma_ln']
+      }),
+      v('c', 'GAMMA LN(1)', {
+        refId: '_c',
+        referencedFunctionNames: ['__gamma_ln']
+      }),
+      v('FINAL TIME', '1', {
+        refId: '_final_time',
+        varType: 'const'
+      }),
+      v('INITIAL TIME', '0', {
+        refId: '_initial_time',
+        varType: 'const'
+      }),
+      v('SAVEPER', 'TIME STEP', {
+        refId: '_saveper',
+        references: ['_time_step']
+      }),
+      v('TIME STEP', '1', {
+        refId: '_time_step',
+        varType: 'const'
+      }),
+      v('Time', '', {
+        refId: '_time',
+        varType: 'const'
+      })
+    ])
+  })
 
   it('should work for Vensim "getdata" model', () => {
     const vars = readSubscriptsAndEquations('getdata')
@@ -6420,10 +6703,10 @@ describe('readEquations', () => {
   })
 
   // TODO: This test is sensitive to the dependency trimming code that we don't yet
-  // have in the new reader, so skip it for now.  There's only one place where the
-  // new reader differs from the old (in `IF THEN ELSE(switch=1,1,0)` where the
-  // condition resolves to a constant).  We should add an option to disable the
-  // pruning code so that we can test this more deterministically.
+  // have in the new reader, so we should skip in that case.  There's only one place
+  // where the new reader differs from the old (in `IF THEN ELSE(switch=1,1,0)`
+  // where the condition resolves to a constant).  We should add an option to disable
+  // the pruning code so that we can test this more deterministically.
   it.skip('should work for Vensim "sample" model', () => {
     const vars = readSubscriptsAndEquations('sample')
     expect(vars).toEqual([
@@ -7376,8 +7659,38 @@ describe('readEquations', () => {
         refId: '_selected_a',
         varType: 'const'
       }),
+      v('t[DimC]', '1', {
+        refId: '_t',
+        subscripts: ['_dimc'],
+        varType: 'const'
+      }),
       v('TIME STEP', '1', {
         refId: '_time_step',
+        varType: 'const'
+      }),
+      v('u[C1]', '1', {
+        refId: '_u[_c1]',
+        subscripts: ['_c1'],
+        varType: 'const'
+      }),
+      v('u[C2]', '2', {
+        refId: '_u[_c2]',
+        subscripts: ['_c2'],
+        varType: 'const'
+      }),
+      v('u[C3]', '3', {
+        refId: '_u[_c3]',
+        subscripts: ['_c3'],
+        varType: 'const'
+      }),
+      v('u[C4]', '4', {
+        refId: '_u[_c4]',
+        subscripts: ['_c4'],
+        varType: 'const'
+      }),
+      v('u[C5]', '5', {
+        refId: '_u[_c5]',
+        subscripts: ['_c5'],
         varType: 'const'
       }),
       v('Time', '', {

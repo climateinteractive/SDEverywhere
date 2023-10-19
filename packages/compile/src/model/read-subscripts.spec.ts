@@ -96,25 +96,23 @@ describe('readSubscriptRanges + resolveSubscriptRanges', () => {
     ])
   })
 
-  // TODO: The antlr grammar doesn't yet support multiple ranges, but it is supported in Vensim:
-  //   https://www.vensim.com/documentation/22090.html
-  // it('should work for a subscript range with a multiple numeric range', () => {
-  //   const ranges = `DimA: (A1-A3),A5,(A7-A8) ~~|`
+  it('should work for a subscript range with multiple numeric ranges', () => {
+    const ranges = `DimA: (A1-A3),A5,(A7-A8) ~~|`
 
-  //   const rawSubs = readInlineSubscripts(ranges)
-  //   expect(rawSubs).toEqual([dim('DimA', ['A1', 'A2', 'A3', 'A5', 'A7', 'A8'])])
+    const rawSubs = readInlineSubscripts(ranges)
+    expect(rawSubs).toEqual([dim('DimA', ['A1', 'A2', 'A3', 'A5', 'A7', 'A8'])])
 
-  //   const resolvedSubs = readAndResolveInlineSubscripts(ranges)
-  //   expect(resolvedSubs).toEqual([
-  //     dim('DimA', ['A1', 'A2', 'A3']),
-  //     sub('A1', 'DimA', 0),
-  //     sub('A2', 'DimA', 1),
-  //     sub('A3', 'DimA', 2),
-  //     sub('A5', 'DimA', 3),
-  //     sub('A7', 'DimA', 4),
-  //     sub('A8', 'DimA', 5)
-  //   ])
-  // })
+    const resolvedSubs = readAndResolveInlineSubscripts(ranges)
+    expect(resolvedSubs).toEqual([
+      dim('DimA', ['A1', 'A2', 'A3', 'A5', 'A7', 'A8']),
+      sub('A1', 'DimA', 0),
+      sub('A2', 'DimA', 1),
+      sub('A3', 'DimA', 2),
+      sub('A5', 'DimA', 3),
+      sub('A7', 'DimA', 4),
+      sub('A8', 'DimA', 5)
+    ])
+  })
 
   it('should work for a subscript range with one mapping (to dimension with explicit individual subscripts)', () => {
     const ranges = `
@@ -608,7 +606,8 @@ describe('readSubscriptRanges + resolveSubscriptRanges', () => {
       dim('DimA', ['A1', 'A2', 'A3']),
       dim('DimB', ['B1', 'B2', 'B3'], undefined, undefined, [dimMapping('DimA')], {
         _dima: []
-      })
+      }),
+      dim('DimC', ['C1', 'C2', 'C3', 'C4', 'C5'])
     ])
 
     const resolvedSubs = readAndResolveSubscripts('subscript')
@@ -641,6 +640,7 @@ describe('readSubscriptRanges + resolveSubscriptRanges', () => {
       dim('DimB', ['B1', 'B2', 'B3'], undefined, undefined, [dimMapping('DimA')], {
         _dima: ['_b1', '_b2', '_b3']
       }),
+      dim('DimC', ['C1', 'C2', 'C3', 'C4', 'C5']),
       // { name: '_a1', value: 0, size: 1, family: '_dima', mappings: {} },
       sub('A1', 'DimA', 0),
       // { name: '_a2', value: 1, size: 1, family: '_dima', mappings: {} },
@@ -652,7 +652,12 @@ describe('readSubscriptRanges + resolveSubscriptRanges', () => {
       // { name: '_b2', value: 1, size: 1, family: '_dimb', mappings: {} },
       sub('B2', 'DimB', 1),
       // { name: '_b3', value: 2, size: 1, family: '_dimb', mappings: {} }
-      sub('B3', 'DimB', 2)
+      sub('B3', 'DimB', 2),
+      sub('C1', 'DimC', 0),
+      sub('C2', 'DimC', 1),
+      sub('C3', 'DimC', 2),
+      sub('C4', 'DimC', 3),
+      sub('C5', 'DimC', 4)
     ])
   })
 })
