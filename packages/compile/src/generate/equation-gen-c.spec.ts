@@ -57,7 +57,7 @@ function genC(
   return lines.map(line => line.trim())
 }
 
-describe('EquationGen (Vensim -> C)', () => {
+describe('generateEquation (Vensim -> C)', () => {
   it('should work for simple equation with unary + op', () => {
     const vars = readInlineModel(`
       x = 1 ~~|
@@ -353,12 +353,10 @@ describe('EquationGen (Vensim -> C)', () => {
     expect(vars.size).toBe(3)
     expect(genC(vars.get('_initial_target_capacity'))).toEqual(['_initial_target_capacity = 1.0;'])
     expect(genC(vars.get('_capacity'))).toEqual(['_capacity = 2.0;'])
-
     expect(genC(vars.get('_target_capacity'), 'init-levels')).toEqual(['_target_capacity = _initial_target_capacity;'])
     expect(genC(vars.get('_target_capacity'), 'eval')).toEqual(['_target_capacity = _capacity;'])
   })
 
-  // TODO: Verify that "ALLOCATE AVAILABLE" is only allowed directly after equals sign
   it('should work for ALLOCATE AVAILABLE function', () => {
     const vars = readInlineModel(`
       branch: Boston, Dayton, Fresno ~~|
@@ -399,6 +397,7 @@ describe('EquationGen (Vensim -> C)', () => {
     expect(genC(vars.get('_y'))).toEqual(['_y = _COS(_x);'])
   })
 
+  // TODO: Subscripted variants
   it('should work for DELAY1 function', () => {
     const vars = readInlineModel(`
       x = 1 ~~|
@@ -532,6 +531,16 @@ describe('EquationGen (Vensim -> C)', () => {
     expect(vars.size).toBe(2)
     expect(genC(vars.get('_x'))).toEqual(['_x = 1.0;'])
     expect(genC(vars.get('_y'))).toEqual(['_y = _GAME(_x);'])
+  })
+
+  it('should work for GAMMA LN function', () => {
+    const vars = readInlineModel(`
+      x = 1 ~~|
+      y = GAMMA LN(x) ~~|
+    `)
+    expect(vars.size).toBe(2)
+    expect(genC(vars.get('_x'))).toEqual(['_x = 1.0;'])
+    expect(genC(vars.get('_y'))).toEqual(['_y = _GAMMA_LN(_x);'])
   })
 
   it('should work for GET DATA BETWEEN TIMES function (mode=Interpolate)', () => {
@@ -812,7 +821,7 @@ describe('EquationGen (Vensim -> C)', () => {
     expect(genC(vars.get('_y'))).toEqual(['_y = _LN(_x);'])
   })
 
-  it('should work for LOOKUP BACKWARD function', () => {
+  it('should work for LOOKUP BACKWARD function (with lookup defined explicitly)', () => {
     const vars = readInlineModel(`
       x((0,0),(1,1),(2,2)) ~~|
       y = LOOKUP BACKWARD(x, 1.5) ~~|
@@ -821,6 +830,30 @@ describe('EquationGen (Vensim -> C)', () => {
     expect(genC(vars.get('_x'), 'decl')).toEqual(['double _x_data_[6] = { 0.0, 0.0, 1.0, 1.0, 2.0, 2.0 };'])
     expect(genC(vars.get('_x'), 'init-lookups')).toEqual(['_x = __new_lookup(3, /*copy=*/false, _x_data_);'])
     expect(genC(vars.get('_y'))).toEqual(['_y = _LOOKUP_BACKWARD(_x, 1.5);'])
+  })
+
+  it('should work for LOOKUP BACKWARD function (with lookup defined using GET DIRECT LOOKUPS)', () => {
+    const modelDir = sampleModelDir('directlookups')
+    const vars = readInlineModel(`
+      DimA: A1, A2, A3 ~~|
+      x[DimA] = GET DIRECT LOOKUPS('lookup_data.csv', ',', '1', 'AH2') ~~|
+      y[DimA] = LOOKUP BACKWARD(x[DimA], Time) ~~|
+    `)
+    expect(vars.size).toBe(4)
+    expect(genC(vars.get('_x[_a1]'), 'init-lookups', { modelDir })).toEqual([
+      '_x[0] = __new_lookup(2, /*copy=*/true, (double[]){ 2049.0, 0.966667, 2050.0, 1.0 });'
+    ])
+    expect(genC(vars.get('_x[_a2]'), 'init-lookups', { modelDir })).toEqual([
+      '_x[1] = __new_lookup(2, /*copy=*/true, (double[]){ 2049.0, 0.965517, 2050.0, 1.0 });'
+    ])
+    expect(genC(vars.get('_x[_a3]'), 'init-lookups', { modelDir })).toEqual([
+      '_x[2] = __new_lookup(2, /*copy=*/true, (double[]){ 2049.0, 0.98975, 2050.0, 0.998394 });'
+    ])
+    expect(genC(vars.get('_y'), 'eval', { modelDir })).toEqual([
+      'for (size_t i = 0; i < 3; i++) {',
+      '_y[i] = _LOOKUP_BACKWARD(_x[i], _time);',
+      '}'
+    ])
   })
 
   it('should work for LOOKUP FORWARD function', () => {
@@ -832,6 +865,17 @@ describe('EquationGen (Vensim -> C)', () => {
     expect(genC(vars.get('_x'), 'decl')).toEqual(['double _x_data_[6] = { 0.0, 0.0, 1.0, 1.0, 2.0, 2.0 };'])
     expect(genC(vars.get('_x'), 'init-lookups')).toEqual(['_x = __new_lookup(3, /*copy=*/false, _x_data_);'])
     expect(genC(vars.get('_y'))).toEqual(['_y = _LOOKUP_FORWARD(_x, 1.5);'])
+  })
+
+  it('should work for LOOKUP INVERT function', () => {
+    const vars = readInlineModel(`
+      x((0,0),(1,1),(2,2)) ~~|
+      y = LOOKUP INVERT(x, 1.5) ~~|
+    `)
+    expect(vars.size).toBe(2)
+    expect(genC(vars.get('_x'), 'decl')).toEqual(['double _x_data_[6] = { 0.0, 0.0, 1.0, 1.0, 2.0, 2.0 };'])
+    expect(genC(vars.get('_x'), 'init-lookups')).toEqual(['_x = __new_lookup(3, /*copy=*/false, _x_data_);'])
+    expect(genC(vars.get('_y'))).toEqual(['_y = _LOOKUP_INVERT(_x, 1.5);'])
   })
 
   it('should work for MAX function', () => {
