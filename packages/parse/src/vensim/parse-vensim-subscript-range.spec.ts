@@ -18,12 +18,19 @@ describe('parseVensimSubscriptRange', () => {
     expect(parseVensimSubscriptRange(range)).toEqual(subRange('DimA', 'DimA', ['A1', 'A2', 'A3']))
   })
 
-  // TODO: The antlr grammar doesn't yet support multiple ranges, but it is supported in Vensim:
-  //   https://www.vensim.com/documentation/22090.html
-  // it('should parse a subscript range with a multiple numeric range', () => {
-  //   const range = `DimA: (A1-A3),A5,(A7-A10) ~~|`
-  //   expect(parseVensimSubscriptRange(range)).toEqual(subRange('DimA', 'DimA', ['A1', 'A2', 'A3']))
-  // })
+  it('should parse a subscript range with a mix of indexes and numeric ranges (starting with index)', () => {
+    const range = `DimA: A1, (A3-A5), A6, (A8-A9) ~~|`
+    expect(parseVensimSubscriptRange(range)).toEqual(
+      subRange('DimA', 'DimA', ['A1', 'A3', 'A4', 'A5', 'A6', 'A8', 'A9'])
+    )
+  })
+
+  it('should parse a subscript range with a mix of indexes and numeric ranges (starting with range)', () => {
+    const range = `DimA: (A1-A3),A5,(A7-A10) ~~|`
+    expect(parseVensimSubscriptRange(range)).toEqual(
+      subRange('DimA', 'DimA', ['A1', 'A2', 'A3', 'A5', 'A7', 'A8', 'A9', 'A10'])
+    )
+  })
 
   it('should parse a subscript range with one mapping (to dimension with explicit individual subscripts)', () => {
     // DimA: A1, A2, A3 -> DimB ~~|

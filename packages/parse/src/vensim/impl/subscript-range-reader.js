@@ -84,13 +84,32 @@ export class SubscriptRangeReader extends ModelVisitor {
     }
   }
 
-  visitSubscriptList(ctx) {
-    // A subscript list can appear in either a subscript range or mapping
-    const subscriptNames = ctx.Id().map(id => id.getText())
-    if (ctx.parentCtx.ruleIndex === ModelParser.RULE_subscriptRange) {
-      this.subscriptNames = subscriptNames
-    } else if (ctx.parentCtx.ruleIndex === ModelParser.RULE_subscriptMapping) {
-      this.mappedSubscriptNames = subscriptNames
+  visitSubscriptDefList(ctx) {
+    // A subscript def is either an `Id` (a single subscript name, like "A1") or a numeric range
+    // like "(A1-A3)".  Either form can appear in the list, for example, "A1, (A5-A7), A9".
+    for (const subscriptDef of ctx.children) {
+      if (subscriptDef.symbol?.type === ModelParser.Id) {
+        this.subscriptNames.push(subscriptDef.getText())
+      } else if (subscriptDef.ruleIndex === ModelParser.RULE_subscriptSequence) {
+        this.visitSubscriptSequence(subscriptDef)
+      }
+    }
+  }
+
+  visitSubscriptSequence(ctx) {
+    // This is a subscript sequence (aka numeric range), like "(A1-A3)".
+    // Construct index names from the sequence start and end indices.
+    // This assumes the indices begin with the same string and end with numbers.
+    const re = /^(.*?)(\d+)$/
+    const ids = ctx.Id().map(id => id.getText())
+    const matches = ids.map(id => re.exec(id))
+    if (matches[0][1] === matches[1][1]) {
+      const prefix = matches[0][1]
+      const start = parseInt(matches[0][2])
+      const end = parseInt(matches[1][2])
+      for (let i = start; i <= end; i++) {
+        this.subscriptNames.push(prefix + i)
+      }
     }
   }
 
@@ -117,20 +136,10 @@ export class SubscriptRangeReader extends ModelVisitor {
     })
   }
 
-  visitSubscriptSequence(ctx) {
-    // Construct index names from the sequence start and end indices.
-    // This assumes the indices begin with the same string and end with numbers.
-    const re = /^(.*?)(\d+)$/
-    const ids = ctx.Id().map(id => id.getText())
-    const matches = ids.map(id => re.exec(id))
-    if (matches[0][1] === matches[1][1]) {
-      const prefix = matches[0][1]
-      const start = parseInt(matches[0][2])
-      const end = parseInt(matches[1][2])
-      for (let i = start; i <= end; i++) {
-        this.subscriptNames.push(prefix + i)
-      }
-    }
+  visitSubscriptList(ctx) {
+    // When parsing subscript range definitions, a subscript list is only used in the context
+    // of a subscript mapping.  It contains a list of subscript index names.
+    this.mappedSubscriptNames = ctx.Id().map(id => id.getText())
   }
 
   visitCall(ctx) {
