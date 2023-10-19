@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.7.9](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.8...compile-v0.7.9) (2023-10-18)
+
+
+### Bug Fixes
+
+* allow numeric ranges in subscript range definitions ([#375](https://github.com/climateinteractive/SDEverywhere/issues/375)) ([da13dc4](https://github.com/climateinteractive/SDEverywhere/commit/da13dc407f5f38c5c41501457880e3560c47f7b0)), closes [#318](https://github.com/climateinteractive/SDEverywhere/issues/318)
+* correct handling of lookups defined by GET DIRECT LOOKUPS when used as function call arguments ([#379](https://github.com/climateinteractive/SDEverywhere/issues/379)) ([a032779](https://github.com/climateinteractive/SDEverywhere/commit/a032779aeff986f16043f874aa9fc8b47a98d167)), closes [#378](https://github.com/climateinteractive/SDEverywhere/issues/378)
+
 ## [0.7.8](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.7...compile-v0.7.8) (2023-09-29)
 
 
