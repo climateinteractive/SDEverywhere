@@ -140,12 +140,14 @@ function generateFunctionCall(callExpr, ctx) {
     case '_COS':
     case '_EXP':
     case '_GAME':
+    case '_GAMMA_LN':
     case '_GET_DATA_BETWEEN_TIMES':
     case '_IF_THEN_ELSE':
     case '_INTEGER':
     case '_LN':
     case '_LOOKUP_BACKWARD':
     case '_LOOKUP_FORWARD':
+    case '_LOOKUP_INVERT':
     case '_MAX':
     case '_MIN':
     case '_MODULO':

@@ -366,6 +366,7 @@ function visitFunctionCall(v, callExpr, context) {
     case '_COS':
     case '_ELMCOUNT':
     case '_EXP':
+    case '_GAMMA_LN':
     case '_INTEGER':
     case '_LN':
     case '_SIN':
