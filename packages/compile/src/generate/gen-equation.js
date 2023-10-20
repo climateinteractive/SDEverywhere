@@ -42,7 +42,7 @@ export function generateEquation(variable, mode, extData, directData, modelDir) 
 
   // Apply special handling for const lists
   if (parsedEqn.rhs.kind === 'const-list') {
-    if (mode !== 'init-constants') {
+    if (mode !== 'init-constants' && mode !== 'eval') {
       throw new Error(`Invalid code gen mode '${mode}' for const list variable ${variable.modelLHS}`)
     }
     return generateConstListElement(variable, parsedEqn)

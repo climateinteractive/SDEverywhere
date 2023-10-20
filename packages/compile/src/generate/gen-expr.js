@@ -201,6 +201,48 @@ function generateFunctionCall(callExpr, ctx) {
 
     //
     //
+    // Expanded functions
+    //
+    // Each of these function calls was expanded into multiple implementation variables
+    // during the `generateEquations` phase, so in place of the entire function call, we
+    // emit a reference to the expanded variable.
+    //
+    //
+
+    case '_DELAY1':
+    case '_DELAY1I':
+    case '_DELAY3':
+    case '_DELAY3I': {
+      const delayVar = Model.varWithRefId(ctx.variable.delayVarRefId)
+      const delayVarRef = ctx.cVarRef(delayVar.parsedEqn.lhs.varRef)
+      // TODO: For now, extract the RHS subscripts from the ones that were computed for the
+      // delay variable.  We should add a variant of cVarRef that returns only the RHS subs.
+      // return `(${delayVar.varName}${rhsSubs} / ${ctx.variable.delayTimeVarName}${rhsSubs})`
+      const delayVarParts = delayVarRef.split('[')
+      const rhsSubs = delayVarParts.length > 1 ? `[${delayVarParts[1]}` : ''
+      return `(${delayVarRef} / ${ctx.variable.delayTimeVarName}${rhsSubs})`
+    }
+
+    case '_NPV': {
+      const npvVar = Model.varWithRefId(ctx.variable.npvVarName)
+      return ctx.cVarRef(npvVar.parsedEqn.lhs.varRef)
+    }
+
+    case '_SMOOTH':
+    case '_SMOOTHI':
+    case '_SMOOTH3':
+    case '_SMOOTH3I': {
+      const smoothVar = Model.varWithRefId(ctx.variable.smoothVarRefId)
+      return ctx.cVarRef(smoothVar.parsedEqn.lhs.varRef)
+    }
+
+    case '_TREND': {
+      const trendVar = Model.varWithRefId(ctx.variable.trendVarName)
+      return ctx.cVarRef(trendVar.parsedEqn.lhs.varRef)
+    }
+
+    //
+    //
     // Special functions
     //
     //
@@ -211,38 +253,16 @@ function generateFunctionCall(callExpr, ctx) {
 
     case '_ALLOCATE_AVAILABLE':
     case '_ELMCOUNT':
-    case '_TREND':
     case '_VECTOR_ELM_MAP':
     case '_VECTOR_SORT_ORDER':
     case '_WITH_LOOKUP':
       break
-
-    case '_DELAY1':
-    case '_DELAY1I':
-    case '_DELAY3':
-    case '_DELAY3I': {
-      // // For delay functions, replace the entire call with the expansion variable generated earlier
-      // const delayVar = Model.varWithRefId(ctx.variable.delayVarRefId)
-      // console.log(delayVar)
-      // const rhsSubs = '' // TODO: generateRhsSubscripts(delayVar.subscripts)
-      // return `(${delayVar.varName}${rhsSubs} / ${ctx.variable.delayTimeVarName}${rhsSubs})`
-      return 'TODO'
-    }
 
     case '_GET_DIRECT_DATA':
     case '_GET_DIRECT_LOOKUPS':
       break
 
     case '_INITIAL':
-      break
-
-    case '_NPV':
-      break
-
-    case '_SMOOTH':
-    case '_SMOOTHI':
-    case '_SMOOTH3':
-    case '_SMOOTH3I':
       break
 
     default: {
