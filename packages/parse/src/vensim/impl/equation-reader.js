@@ -53,7 +53,8 @@ export class EquationReader extends ModelVisitor {
       ctx.constList().accept(this)
       equationRhs = {
         kind: 'const-list',
-        constants: this.constants
+        constants: this.constants,
+        text: this.constListText
       }
     } else if (ctx.lookup()) {
       ctx.lookup().accept(this)
@@ -155,6 +156,7 @@ export class EquationReader extends ModelVisitor {
         text
       }
     })
+    this.constListText = ctx.getText()
   }
 
   //

@@ -149,6 +149,13 @@ export interface EquationRhsConstList {
   // better match how it appears in a model, but the antlr4-vensim grammar currently flattens
   // them into a single list (it doesn't make use of the semicolon separator)
   constants: NumberValue[]
+  /**
+   * @hidden The original string representation from the model.  This is only needed for
+   * compatibility with the legacy parser, which includes the original string representation
+   * including semicolons, which is used for the `modelFormula`.  Ideally we could remove this
+   * field if we fix antlr4-vensim to preserve the groupings as described above.
+   */
+  text: string
 }
 
 // TODO: A lookup definition equation technically has no RHS, and the lookup data is supplied next to the
@@ -306,14 +313,20 @@ export function exprEqn(varRef: VariableRef, expr: Expr, units = '', comment = '
   }
 }
 
-export function constListEqn(varRef: VariableRef, constants: NumberValue[], units = '', comment = ''): Equation {
+export function constListEqn(varRef: VariableRef, constants: NumberValue[][], units = '', comment = ''): Equation {
+  // For now, assume that the original text had a trailing semicolon if there are multiple groups
+  let text = constants.map(arr => arr.map(constant => constant.text).join(',')).join(';')
+  if (constants.length > 1) {
+    text += ';'
+  }
   return {
     lhs: {
       varRef
     },
     rhs: {
       kind: 'const-list',
-      constants
+      constants: constants.flat(),
+      text
     },
     units,
     comment
