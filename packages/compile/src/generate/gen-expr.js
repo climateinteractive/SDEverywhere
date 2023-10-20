@@ -403,7 +403,6 @@ function generateArrayFunctionCall(callExpr, ctx) {
   let initValue
   let loopBodyOp
   let returnCode
-  let vsAction
   let vsCondVar
   switch (callExpr.fnId) {
     case '_SUM':
@@ -423,24 +422,40 @@ function generateArrayFunctionCall(callExpr, ctx) {
 
     case '_VECTOR_SELECT': {
       // For `VECTOR SELECT`, we emit different inner loop code depending on the `numerical_action`
-      // argument, so extract that here first
+      // and `missing_vals` arguments, so extract those here first
       // TODO: We should also implement handling of the `error_action` argument
-      const actionArg = callExpr.args[3]
-      // TODO: We can handle more complex expressions here if necessary if we used `reduceExpr`
-      switch (actionArg.kind) {
-        case 'number':
-          vsAction = actionArg.value
-          break
-        case 'variable-ref':
-          // TODO: Resolve the constant
-          vsAction = 0
-          break
-        default:
-          throw new Error('The numerical_action argument for VECTOR SELECT must resolve to a constant')
+
+      const constantValue = argExpr => {
+        // TODO: We can handle more complex expressions here if necessary if we used `reduceExpr`
+        switch (argExpr.kind) {
+          case 'number':
+            return argExpr.value
+          case 'keyword':
+            if (argExpr.text === ':NA:') {
+              return '_NA_'
+            } else {
+              throw new Error(`Unhandled keyword ${argExpr.text} in VECTOR SELECT argument`)
+            }
+          case 'variable-ref': {
+            // TODO: This won't work for subscripted variable references; should fix this
+            const variable = Model.varWithName(argExpr.varId)
+            if (variable && variable.varType === 'const') {
+              return variable.parsedEqn.rhs.expr.value
+            } else {
+              throw new Error(`Failed to resolve variable '${argExpr.varName}' for VECTOR SELECT argument`)
+            }
+          }
+          default:
+            throw new Error('The argument for VECTOR SELECT must resolve to a constant')
+        }
       }
 
+      const missingValsArg = constantValue(callExpr.args[2])
+      const missingValsCode = missingValsArg === '_NA_' ? '_NA_' : cdbl(missingValsArg)
+
       // TODO: Handle other actions
-      switch (vsAction) {
+      const numericalActionArg = constantValue(callExpr.args[3])
+      switch (numericalActionArg) {
         case 0:
           initValue = '0.0'
           loopBodyOp = 'sum'
@@ -450,21 +465,16 @@ function generateArrayFunctionCall(callExpr, ctx) {
           loopBodyOp = 'max'
           break
         default:
-          throw new Error(`Unsupported numerical_action value (${vsAction}) for VECTOR SELECT`)
+          throw new Error(`Unsupported numerical_action value (${numericalActionArg}) for VECTOR SELECT`)
       }
 
       // Emit the temporary condition variable declaration
       vsCondVar = newTmpVarName()
       ctx.emitPre(`  bool ${vsCondVar} = false;`)
 
-      // this.tmpVarCode.push(`    if (bool_cond(${this.vsSelectionArray})) {`)
-      // this.tmpVarCode.push(`    ${condVar} = true;`)
-      // this.tmpVarCode.push('    }')
-
       // Define the code that will be emitted in place of the `VECTOR SELECT` call
       tmpVar = newTmpVarName()
-      const vsNullValue = 'TODO'
-      returnCode = `${vsCondVar} ? ${tmpVar} : ${vsNullValue}`
+      returnCode = `${vsCondVar} ? ${tmpVar} : ${missingValsCode}`
       break
     }
 
@@ -500,19 +510,31 @@ function generateArrayFunctionCall(callExpr, ctx) {
   // Emit the body of the array function loop.  Note that we generate the expression code here
   // only after resolving the marked dimensions because the code that generates variable references
   // needs to take the marked dimension state into account.
-  const argCode = generateExpr(callExpr.args[0], ctx)
-  switch (loopBodyOp) {
-    case 'sum':
-      ctx.emitPre(`  ${tmpVar} += ${argCode};`)
-      break
-    case 'min':
-      ctx.emitPre(`  ${tmpVar} = fmin(${tmpVar}, ${argCode});`)
-      break
-    case 'max':
-      ctx.emitPre(`  ${tmpVar} = fmax(${tmpVar}, ${argCode});`)
-      break
-    default:
-      break
+  function innerStmt(argCode) {
+    switch (loopBodyOp) {
+      case 'sum':
+        return `${tmpVar} += ${argCode};`
+      case 'min':
+        return `${tmpVar} = fmin(${tmpVar}, ${argCode});`
+      case 'max':
+        return `${tmpVar} = fmax(${tmpVar}, ${argCode});`
+      default:
+        throw new Error(`Unexpected loop body op ${loopBodyOp} for VECTOR SELECT`)
+    }
+  }
+
+  if (callExpr.fnId === '_VECTOR_SELECT') {
+    // For `VECTOR SELECT`, the inner loop includes a conditional
+    const selArrayCode = generateExpr(callExpr.args[0], ctx)
+    const exprArrayCode = generateExpr(callExpr.args[1], ctx)
+    ctx.emitPre(`    if (bool_cond(${selArrayCode})) {`)
+    ctx.emitPre(`      ${innerStmt(exprArrayCode)}`)
+    ctx.emitPre(`      ${vsCondVar} = true;`)
+    ctx.emitPre('    }')
+  } else {
+    // For other functions, the inner loop is a simple statement
+    const argCode = generateExpr(callExpr.args[0], ctx)
+    ctx.emitPre(`    ${innerStmt(argCode)}`)
   }
 
   // Close the array function loop(s)
