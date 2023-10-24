@@ -1,5 +1,5 @@
 import { cdbl, newTmpVarName } from '../_shared/helpers.js'
-import { extractMarkedDims, sub } from '../_shared/subscript.js'
+import { extractMarkedDims, isIndex, normalizeSubscripts, sub } from '../_shared/subscript.js'
 
 import Model from '../model/model.js'
 
@@ -253,6 +253,9 @@ function generateFunctionCall(callExpr, ctx) {
     //
     //
 
+    case '_VECTOR_ELM_MAP':
+      return generateVectorElmMapCall(callExpr, ctx)
+
     case '_VECTOR_SORT_ORDER':
       return generateVectorSortOrderCall(callExpr, ctx)
 
@@ -276,7 +279,6 @@ function generateFunctionCall(callExpr, ctx) {
 
     case '_ALLOCATE_AVAILABLE':
     case '_ELMCOUNT':
-    case '_VECTOR_ELM_MAP':
     case '_WITH_LOOKUP':
       break
 
@@ -591,6 +593,58 @@ function generateArrayFunctionCall(callExpr, ctx) {
     // Emit the temporary variable into the expression in place of the array function call
     return tmpVar
   }
+}
+
+/**
+ * Generate C code for a `VECTOR ELM MAP` function call.
+ *
+ * @param {*} callExpr The function call expression from the parsed model.
+ * @param {GenExprContext} ctx The context used when generating code for the expression.
+ * @return {string} The generated C code.
+ */
+function generateVectorElmMapCall(callExpr, ctx) {
+  // Process the vector argument
+  const vecArg = callExpr.args[0]
+  if (vecArg.kind !== 'variable-ref') {
+    throw new Error('First (vector) argument for VECTOR ELM MAP must be a variable reference')
+  }
+  let vecVarRefId = vecArg.varId
+  const vecSubIds = vecArg.subscriptRefs.map(subRef => subRef.subId)
+
+  // The marked dimension is an index in the vector argument
+  let subFamily
+  let subBase
+  for (let subId of vecSubIds) {
+    if (isIndex(subId)) {
+      const index = sub(subId)
+      subFamily = index.family
+      subBase = index.value
+      break
+    }
+  }
+  // TODO: Throw error if no index was found
+
+  // Process the offset argument
+  const offsetArg = callExpr.args[1]
+  if (offsetArg.kind !== 'variable-ref') {
+    throw new Error('Second (offset) argument for VECTOR ELM MAP must be a variable reference')
+  }
+  const offsetVarRefId = ctx.cVarRef(offsetArg)
+
+  // The `VECTOR ELM MAP` function replaces one subscript with a calculated offset from
+  // a base index
+  const rhsSubIds = normalizeSubscripts(vecSubIds)
+  const cSubscripts = rhsSubIds.map(rhsSubId => {
+    if (isIndex(rhsSubId)) {
+      return `[${subFamily}[(size_t)(${subBase} + ${offsetVarRefId})]]`
+    } else {
+      const subIndex = ctx.loopIndexVars.index(rhsSubId)
+      return `[${rhsSubId}[${subIndex}]]`
+    }
+  })
+
+  // Generate the RHS expression
+  return `${vecVarRefId}${cSubscripts.join('')}`
 }
 
 /**
