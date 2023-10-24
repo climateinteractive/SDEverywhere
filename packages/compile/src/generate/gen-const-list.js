@@ -17,13 +17,29 @@ export function generateConstListElement(variable, parsedEqn) {
   const lhsSubIndexes = variable.subscripts.map(subId => `[${sub(subId).value}]`).join('')
   const lhsRef = `${lhsVarId}${lhsSubIndexes}`
 
-  // Build a list of all combinations of subscripts for the variable
-  // TODO: Can we be certain that variable.subscripts.length always equals separationDims.length
-  // for const lists?
-  const subIds = variable.separationDims.map(s => (isDimension(s) ? sub(s).value : [s]))
+  // Build a list of all combinations of subscripts for the variable.  For example, suppose
+  // we have:
+  //   x[A1,DimB] = 1,2 ~~|
+  // The variable will have been separated into:
+  //   x[A1,B1]
+  //   x[A1,B2]
+  // Each one will refer to the original const list.  To determine which element in the
+  // const list goes with which variable instance, we build an array of all subscript
+  // combinations and then find the index of the one that matches the combination used
+  // for the separated variable instance.
+  const subIdArrays = parsedEqn.lhs.varRef.subscriptRefs.map(subRef => {
+    const subOrDimId = subRef.subId
+    if (isDimension(subOrDimId)) {
+      // Use the full array of subscripts (indexes) for the dimension at this position
+      return sub(subOrDimId).value
+    } else {
+      // This is a single subscript (index), so use an array with a single element
+      return [subOrDimId]
+    }
+  })
 
   // Convert to strings to make matching easier
-  const allCombos = cartesianProductOf(subIds).map(combo => combo.map(subId => `[${subId}]`).join(''))
+  const allCombos = cartesianProductOf(subIdArrays).map(combo => combo.map(subId => `[${subId}]`).join(''))
 
   // Find the index of the combination that matches the variable's subscripts
   const constIndex = allCombos.indexOf(lhsSubIds)

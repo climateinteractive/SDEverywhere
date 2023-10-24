@@ -410,6 +410,25 @@ describe('generateEquation (Vensim -> C)', () => {
     expect(genC(vars.get('_y'))).toEqual(['_y = _x[1][2];'])
   })
 
+  it('should work for const list definition (2D separated)', () => {
+    const vars = readInlineModel(`
+      DimA: A1, A2, A3 ~~|
+      DimB: B1, B2 ~~|
+      x[A1, DimB] = 1,2 ~~|
+      x[A2, DimB] = 3,4 ~~|
+      x[A3, DimB] = 5,6 ~~|
+      y = x[A3, B2] ~~|
+    `)
+    expect(vars.size).toBe(7)
+    expect(genC(vars.get('_x[_a1,_b1]'), 'init-constants')).toEqual(['_x[0][0] = 1.0;'])
+    expect(genC(vars.get('_x[_a1,_b2]'), 'init-constants')).toEqual(['_x[0][1] = 2.0;'])
+    expect(genC(vars.get('_x[_a2,_b1]'), 'init-constants')).toEqual(['_x[1][0] = 3.0;'])
+    expect(genC(vars.get('_x[_a2,_b2]'), 'init-constants')).toEqual(['_x[1][1] = 4.0;'])
+    expect(genC(vars.get('_x[_a3,_b1]'), 'init-constants')).toEqual(['_x[2][0] = 5.0;'])
+    expect(genC(vars.get('_x[_a3,_b2]'), 'init-constants')).toEqual(['_x[2][1] = 6.0;'])
+    expect(genC(vars.get('_y'))).toEqual(['_y = _x[2][1];'])
+  })
+
   it('should work for equation with one dimension', () => {
     const vars = readInlineModel(`
       DimA: A1, A2 ~~|
