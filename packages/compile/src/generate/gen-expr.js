@@ -96,9 +96,9 @@ export function generateExpr(expr, ctx) {
 
     case 'lookup-def':
       // Lookup defs in expression position should only occur in the case of `WITH LOOKUP`
-      // function calls, and those are transformed into a generated lookup variable, so
-      // we should never reach here and therefore throw an error to make that clear
-      throw new Error(`Unexpected 'lookup-def' when reading ${ctx.variable.modelLHS}`)
+      // function calls, and those are transformed into a generated lookup variable during
+      // `readEquations`, so replace the def with a reference to the generated variable
+      return ctx.variable.lookupArgVarName
 
     case 'lookup-call': {
       // For Vensim models, the antlr4-vensim grammar has separate definitions for lookup
@@ -166,6 +166,7 @@ function generateFunctionCall(callExpr, ctx) {
     case '_SIN':
     case '_SQRT':
     case '_STEP':
+    case '_WITH_LOOKUP':
     case '_XIDZ':
     case '_ZIDZ': {
       // For simple functions, emit a C function call with a generated C expression for each argument
@@ -279,7 +280,6 @@ function generateFunctionCall(callExpr, ctx) {
 
     case '_ALLOCATE_AVAILABLE':
     case '_ELMCOUNT':
-    case '_WITH_LOOKUP':
       break
 
     case '_GET_DIRECT_DATA':
