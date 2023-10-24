@@ -266,6 +266,16 @@ function generateFunctionCall(callExpr, ctx) {
     //
     //
 
+    case '_ELMCOUNT': {
+      // Emit the size of the dimension in place of the dimension name
+      const dimArg = callExpr.args[0]
+      if (dimArg.kind !== 'variable-ref') {
+        throw new Error('Argument for ELMCOUNT must be a dimension name')
+      }
+      const dimId = dimArg.varId
+      return `${sub(dimId).size}`
+    }
+
     case '_GET_DIRECT_CONSTANTS':
       // TODO: Should not get here (throw error)
       break
@@ -279,7 +289,6 @@ function generateFunctionCall(callExpr, ctx) {
       }
 
     case '_ALLOCATE_AVAILABLE':
-    case '_ELMCOUNT':
       break
 
     case '_GET_DIRECT_DATA':
