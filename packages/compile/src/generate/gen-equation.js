@@ -38,7 +38,7 @@ export function generateEquation(variable, mode, extData, directData, modelDir) 
 
   // Generate the LHS variable reference code
   const parsedEqn = variable.parsedEqn
-  const cLhs = cLhsForEqn(parsedEqn, loopIndexVars)
+  const cLhs = cVarRefWithLhsSubscripts(variable, parsedEqn.lhs.varRef.varId, loopIndexVars)
 
   // Apply special handling for const lists
   if (parsedEqn.rhs.kind === 'const-list') {
@@ -103,6 +103,9 @@ export function generateEquation(variable, mode, extData, directData, modelDir) 
   // Keep a buffer of code that will be included before the generated primary formula
   const preFormulaLines = []
 
+  // Keep a buffer of code that will be included after the generated primary formula
+  const postFormulaLines = []
+
   // Keep track of marked dimensions
   const markedDimIds = new Set()
 
@@ -117,24 +120,28 @@ export function generateEquation(variable, mode, extData, directData, modelDir) 
     addMarkedDim: dimId => markedDimIds.add(dimId),
     emitPreBlock: s => preBlockLines.push(s),
     emitPreFormula: s => preFormulaLines.push(s),
-    cVarRef: varRef => cVarRef(variable, varRef, markedDimIds, loopIndexVars, arrayIndexVars)
+    emitPostFormula: s => postFormulaLines.push(s),
+    cVarRef: varRef => cVarRef(variable, varRef, markedDimIds, loopIndexVars, arrayIndexVars),
+    cVarRefWithLhsSubscripts: baseVarId => cVarRefWithLhsSubscripts(variable, baseVarId, loopIndexVars)
   }
   const cRhs = generateExpr(parsedEqn.rhs.expr, genExprCtx)
   const formula = `  ${cLhs} = ${cRhs};`
 
   // Combine all lines of comments and code into a single array
-  return [...comments, ...preBlockLines, ...openLoops, ...preFormulaLines, formula, ...closeLoops]
+  return [...comments, ...preBlockLines, ...openLoops, ...preFormulaLines, formula, ...postFormulaLines, ...closeLoops]
 }
 
 /**
- * Return the C code for the LHS (i.e., the subscripted variable reference) of the given equation.
+ * Return the C code for a subscripted reference to the given variable using the LHS subscripts
+ * of the given equation.
  *
- * @param {*} parsedEqn The parsed equation.
+ * @param {*} lhsVariable The LHS `Variable` instance.
+ * @param {*} baseVarId The base variable ID to which the subscript parts will be appended.
  * @param {LoopIndexVars} loopIndexVars The loop index state.
  * @return {string} The C variable reference.
  */
-function cLhsForEqn(parsedEqn, loopIndexVars) {
-  const lhsVarRef = parsedEqn.lhs.varRef
+function cVarRefWithLhsSubscripts(lhsVariable, baseVarId, loopIndexVars) {
+  const lhsVarRef = lhsVariable.parsedEqn.lhs.varRef
   const lhsSubRefs = lhsVarRef.subscriptRefs || []
   const cSubParts = lhsSubRefs.map(subRef => {
     const subId = subRef.subId
@@ -150,7 +157,7 @@ function cLhsForEqn(parsedEqn, loopIndexVars) {
       return `[${sub(subId).value}]`
     }
   })
-  return `${lhsVarRef.varId}${cSubParts.join('')}`
+  return `${baseVarId}${cSubParts.join('')}`
 }
 
 /**

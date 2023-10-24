@@ -17,9 +17,11 @@ import Model from '../model/model.js'
  * precedes the generated block of code for the entire equation.
  * @param {(s: string) => void} emitPreFormula Function that will cause the given code to be appended to the chunk that
  * precedes the generated formula (the primary, inner-most part of the equation).
+ * @param {(s: string) => void} emitPostFormula Function that will cause the given code to be appended to the chunk that
+ * follows the generated formula (the primary, inner-most part of the equation).
  * @param {(varRef: VariableRef) => string} cVarRef Function that returns a C variable reference for a variable
  * referenced in a RHS expression.
- * @param {(varId: string) => string} cVarRefWithLhsSubscripts Function that returns a C variable reference that
+ * @param {(baseVarId: string) => string} cVarRefWithLhsSubscripts Function that returns a C variable reference that
  * takes into account the relevant LHS subscripts.
  */
 
@@ -333,39 +335,34 @@ function generateLevelInit(callExpr, ctx) {
     case '_INTEG':
       initialArgIndex = 1
       break
-    case '_DELAY_FIXED':
+    case '_DELAY_FIXED': {
+      // Emit the code that initializes the `FixedDelay` support struct
+      const fixedDelay = ctx.cVarRefWithLhsSubscripts(ctx.variable.fixedDelayVarName)
+      const delayArg = generateExpr(callExpr.args[1], ctx)
+      const initArg = generateExpr(callExpr.args[2], ctx)
+      ctx.emitPostFormula(`${fixedDelay} = __new_fixed_delay(${fixedDelay}, ${delayArg}, ${initArg});`)
+      initialArgIndex = 2
+      break
+    }
     case '_SAMPLE_IF_TRUE':
       initialArgIndex = 2
       break
-    case '_DEPRECIATE_STRAIGHTLINE':
+    case '_DEPRECIATE_STRAIGHTLINE': {
+      // Emit the code that initializes the `FixedDelay` support struct
+      const dep = ctx.cVarRefWithLhsSubscripts(ctx.variable.depreciationVarName)
+      const dtimeArg = generateExpr(callExpr.args[1], ctx)
+      const initArg = generateExpr(callExpr.args[3], ctx)
+      ctx.emitPostFormula(`${dep} = __new_depreciation(${dep}, ${dtimeArg}, ${initArg});`)
       initialArgIndex = 3
       break
+    }
     default:
       throw new Error(`Unhandled function '${fnId}' in code gen for level variable ${ctx.variable.modelLHS}`)
   }
+
+  // Emit the initial value expression
   const initialArg = callExpr.args[initialArgIndex]
   return generateExpr(initialArg, ctx)
-  //   // For DELAY FIXED and DEPRECIATE STRAIGHTLINE, also initialize the support struct
-  //   // out of band, as they are not Vensim vars.
-  //   if (fn === '_DELAY_FIXED') {
-  //     let fixedDelay = `${this.var.fixedDelayVarName}${this.lhsSubscriptGen(this.var.subscripts)}`
-  //     this.emit(`;\n  ${fixedDelay} = __new_fixed_delay(${fixedDelay}, `)
-  //     this.setArgIndex(1)
-  //     exprs[1].accept(this)
-  //     this.emit(', ')
-  //     this.setArgIndex(2)
-  //     exprs[2].accept(this)
-  //     this.emit(')')
-  //   } else if (fn === '_DEPRECIATE_STRAIGHTLINE') {
-  //     let depreciation = `${this.var.depreciationVarName}${this.lhsSubscriptGen(this.var.subscripts)}`
-  //     this.emit(`;\n  ${depreciation} = __new_depreciation(${depreciation}, `)
-  //     this.setArgIndex(1)
-  //     exprs[1].accept(this)
-  //     this.emit(', ')
-  //     this.setArgIndex(2)
-  //     exprs[3].accept(this)
-  //     this.emit(')')
-  //   }
 }
 
 /**

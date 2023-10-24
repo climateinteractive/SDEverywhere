@@ -52,9 +52,11 @@ function genC(
     // TODO: The `flat` call is only needed because the legacy EquationGen adds a nested array unnecessarily
     // in `generateDirectDataInit`
     lines = new EquationGen(variable, opts?.extData, /*directData=*/ undefined, mode, opts?.modelDir).generate().flat()
+    // XXX: The legacy EquationGen sometimes appends code with a line break instead of returning a separate
+    // string for each line, so for now, split on newlines and treat them as separate lines for better
+    // compatibility with the new `generateEquation`
+    lines = lines.map(line => line.split('\n')).flat()
   }
-
-  console.log(lines)
 
   // Strip the first comment line (containing the Vensim equation)
   if (lines.length > 0 && lines[0].trim().startsWith('//')) {
@@ -662,7 +664,8 @@ describe('generateEquation (Vensim -> C)', () => {
     expect(genC(vars.get('_x'))).toEqual(['_x = 1.0;'])
     expect(genC(vars.get('_init'))).toEqual(['_init = 2.0;'])
     expect(genC(vars.get('_y'), 'init-levels')).toEqual([
-      '_y = _init;\n  __fixed_delay1 = __new_fixed_delay(__fixed_delay1, 5.0, _init);'
+      '_y = _init;',
+      '__fixed_delay1 = __new_fixed_delay(__fixed_delay1, 5.0, _init);'
     ])
     expect(genC(vars.get('_y'), 'eval')).toEqual(['_y = _DELAY_FIXED(_x, __fixed_delay1);'])
   })
@@ -681,7 +684,8 @@ describe('generateEquation (Vensim -> C)', () => {
     expect(genC(vars.get('_new_capacity'))).toEqual(['_new_capacity = 2000.0;'])
     expect(genC(vars.get('_stream'))).toEqual(['_stream = _capacity_cost * _new_capacity;'])
     expect(genC(vars.get('_depreciated_amount'), 'init-levels')).toEqual([
-      '_depreciated_amount = 0.0;\n  __depreciation1 = __new_depreciation(__depreciation1, _dtime, 0.0);'
+      '_depreciated_amount = 0.0;',
+      '__depreciation1 = __new_depreciation(__depreciation1, _dtime, 0.0);'
     ])
     expect(genC(vars.get('_depreciated_amount'), 'eval')).toEqual([
       '_depreciated_amount = _DEPRECIATE_STRAIGHTLINE(_stream, __depreciation1);'
