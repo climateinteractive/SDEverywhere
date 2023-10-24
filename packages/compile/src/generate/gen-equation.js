@@ -97,8 +97,11 @@ export function generateEquation(variable, mode, extData, directData, modelDir) 
     closeLoops.push('  }')
   }
 
-  // Keep a buffer of code that will be included before the generated equation
-  const preLines = []
+  // Keep a buffer of code that will be included before the generated block
+  const preBlockLines = []
+
+  // Keep a buffer of code that will be included before the generated primary formula
+  const preFormulaLines = []
 
   // Keep track of marked dimensions
   const markedDimIds = new Set()
@@ -108,17 +111,19 @@ export function generateEquation(variable, mode, extData, directData, modelDir) 
     variable,
     mode,
     cLhs,
+    loopIndexVars,
     arrayIndexVars,
     resetMarkedDims: () => markedDimIds.clear(),
     addMarkedDim: dimId => markedDimIds.add(dimId),
-    emitPre: s => preLines.push(s),
+    emitPreBlock: s => preBlockLines.push(s),
+    emitPreFormula: s => preFormulaLines.push(s),
     cVarRef: varRef => cVarRef(variable, varRef, markedDimIds, loopIndexVars, arrayIndexVars)
   }
   const cRhs = generateExpr(parsedEqn.rhs.expr, genExprCtx)
   const formula = `  ${cLhs} = ${cRhs};`
 
   // Combine all lines of comments and code into a single array
-  return [...comments, ...openLoops, ...preLines, formula, ...closeLoops]
+  return [...comments, ...preBlockLines, ...openLoops, ...preFormulaLines, formula, ...closeLoops]
 }
 
 /**

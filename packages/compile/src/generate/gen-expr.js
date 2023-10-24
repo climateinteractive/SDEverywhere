@@ -9,11 +9,14 @@ import Model from '../model/model.js'
  * @param {*} variable The `Variable` instance to process.
  * @param {'decl' | 'init-constants' | 'init-lookups' | 'init-levels' | 'eval'} mode The code generation mode.
  * @param {string} cLhs The C code for the LHS variable reference.
- * @param {LoopIndexVars} arrayIndexVars The loop index state used for array functions* (that use marked dimensions).
+ * @param {LoopIndexVars} loopIndexVars The loop index state used for LHS dimensions.
+ * @param {LoopIndexVars} arrayIndexVars The loop index state used for array functions (that use marked dimensions).
  * @param {() => void} resetMarkedDims Function that resets the marked dimension state.
  * @param {(dimId: string) => void} addMarkedDim Function that adds the given dimension to the set of marked dimensions.
- * @param {(s: string) => void} emitPre Function that will cause the given code to be appended to the chunk that
- * precedes the generated equation.
+ * @param {(s: string) => void} emitPreBlock Function that will cause the given code to be appended to the chunk that
+ * precedes the generated block of code for the entire equation.
+ * @param {(s: string) => void} emitPreFormula Function that will cause the given code to be appended to the chunk that
+ * precedes the generated formula (the primary, inner-most part of the equation).
  * @param {(varRef: VariableRef) => string} cVarRef Function that returns a C variable reference for a variable
  * referenced in a RHS expression.
  * @param {(varId: string) => string} cVarRefWithLhsSubscripts Function that returns a C variable reference that
@@ -132,7 +135,10 @@ function generateFunctionCall(callExpr, ctx) {
   switch (fnId) {
     //
     //
-    // Simple functions (no special handling required)
+    // Simple functions
+    //
+    // Each of these functions is implemented with a C function or macro, so no further processing
+    // is required other than to emit the C function/macro call.
     //
     //
 
@@ -243,6 +249,15 @@ function generateFunctionCall(callExpr, ctx) {
 
     //
     //
+    // Vector functions
+    //
+    //
+
+    case '_VECTOR_SORT_ORDER':
+      return generateVectorSortOrderCall(callExpr, ctx)
+
+    //
+    //
     // Special functions
     //
     //
@@ -251,18 +266,22 @@ function generateFunctionCall(callExpr, ctx) {
       // TODO: Should not get here (throw error)
       break
 
+    case '_INITIAL':
+      // In init mode, only emit the initial expression without the INITIAL function call
+      if (ctx.mode.startsWith('init')) {
+        return generateExpr(callExpr.args[0], ctx)
+      } else {
+        throw new Error(`Invalid code gen mode '${ctx.mode}' for variable ${ctx.variable.modelLHS} with INITIAL`)
+      }
+
     case '_ALLOCATE_AVAILABLE':
     case '_ELMCOUNT':
     case '_VECTOR_ELM_MAP':
-    case '_VECTOR_SORT_ORDER':
     case '_WITH_LOOKUP':
       break
 
     case '_GET_DIRECT_DATA':
     case '_GET_DIRECT_LOOKUPS':
-      break
-
-    case '_INITIAL':
       break
 
     default: {
@@ -490,7 +509,7 @@ function generateArrayFunctionCall(callExpr, ctx) {
 
       // Emit the temporary condition variable declaration
       vsCondVar = newTmpVarName()
-      ctx.emitPre(`  bool ${vsCondVar} = false;`)
+      ctx.emitPreFormula(`  bool ${vsCondVar} = false;`)
 
       // Define the code that will be emitted in place of the `VECTOR SELECT` call
       tmpVar = newTmpVarName()
@@ -506,7 +525,7 @@ function generateArrayFunctionCall(callExpr, ctx) {
   if (!tmpVar) {
     tmpVar = newTmpVarName()
   }
-  ctx.emitPre(`  double ${tmpVar} = ${initValue};`)
+  ctx.emitPreFormula(`  double ${tmpVar} = ${initValue};`)
 
   // Find all marked dimensions used in the array function arguments
   const markedDimIds = new Set()
@@ -524,7 +543,7 @@ function generateArrayFunctionCall(callExpr, ctx) {
     ctx.addMarkedDim(markedDimId)
     const n = sub(markedDimId).size
     const i = ctx.arrayIndexVars.index(markedDimId)
-    ctx.emitPre(`  for (size_t ${i} = 0; ${i} < ${n}; ${i}++) {`)
+    ctx.emitPreFormula(`  for (size_t ${i} = 0; ${i} < ${n}; ${i}++) {`)
   }
 
   // Emit the body of the array function loop.  Note that we generate the expression code here
@@ -547,19 +566,19 @@ function generateArrayFunctionCall(callExpr, ctx) {
     // For `VECTOR SELECT`, the inner loop includes a conditional
     const selArrayCode = generateExpr(callExpr.args[0], ctx)
     const exprArrayCode = generateExpr(callExpr.args[1], ctx)
-    ctx.emitPre(`    if (bool_cond(${selArrayCode})) {`)
-    ctx.emitPre(`      ${innerStmt(exprArrayCode)}`)
-    ctx.emitPre(`      ${vsCondVar} = true;`)
-    ctx.emitPre('    }')
+    ctx.emitPreFormula(`    if (bool_cond(${selArrayCode})) {`)
+    ctx.emitPreFormula(`      ${innerStmt(exprArrayCode)}`)
+    ctx.emitPreFormula(`      ${vsCondVar} = true;`)
+    ctx.emitPreFormula('    }')
   } else {
     // For other functions, the inner loop is a simple statement
     const argCode = generateExpr(callExpr.args[0], ctx)
-    ctx.emitPre(`    ${innerStmt(argCode)}`)
+    ctx.emitPreFormula(`    ${innerStmt(argCode)}`)
   }
 
   // Close the array function loop(s)
   for (let i = 0; i < markedDimIds.size; i++) {
-    ctx.emitPre(`  }`)
+    ctx.emitPreFormula(`  }`)
   }
 
   // Reset marked dim state
@@ -572,6 +591,46 @@ function generateArrayFunctionCall(callExpr, ctx) {
     // Emit the temporary variable into the expression in place of the array function call
     return tmpVar
   }
+}
+
+/**
+ * Generate C code for a `VECTOR SORT ORDER` function call.
+ *
+ * @param {*} callExpr The function call expression from the parsed model.
+ * @param {GenExprContext} ctx The context used when generating code for the expression.
+ * @return {string} The generated C code.
+ */
+function generateVectorSortOrderCall(callExpr, ctx) {
+  // Process the vector argument
+  const vecArg = callExpr.args[0]
+  if (vecArg.kind !== 'variable-ref') {
+    throw new Error('First (vector) argument for VECTOR SORT ORDER must be a variable reference')
+  }
+  let vecVarRefId = vecArg.varId
+  const vecSubIds = vecArg.subscriptRefs.map(subRef => subRef.subId)
+
+  // Process the sort direction argument
+  const dirArg = generateExpr(callExpr.args[1], ctx)
+
+  // The `VECTOR SORT ORDER` function iterates over the last subscript in the vector
+  // argument, so determine the position of that subscript
+  let dimId = vecSubIds[0]
+  let subIndex = ctx.loopIndexVars.index(dimId)
+  if (vecSubIds.length > 1) {
+    // TODO: This code was from the old EquationGen; it seems to only handle the case of 2
+    // dimensions, but what about other cases?
+    vecVarRefId += `[${vecSubIds[0]}[${subIndex}]]`
+    dimId = vecSubIds[1]
+    subIndex = ctx.loopIndexVars.index(dimId)
+  }
+
+  // Generate the code that is emitted before the entire block (before any loops are opened)
+  const tmpVarId = newTmpVarName()
+  const dimSize = sub(dimId).size
+  ctx.emitPreBlock(`  double* ${tmpVarId} = _VECTOR_SORT_ORDER(${vecVarRefId}, ${dimSize}, ${dirArg});`)
+
+  // Generate the RHS expression used in the inner loop
+  return `${tmpVarId}[${dimId}[${subIndex}]]`
 }
 
 /**
