@@ -9,7 +9,8 @@ import {
   indexNamesForSubscript,
   isDimension,
   normalizeSubscripts,
-  separatedVariableIndex
+  separatedVariableIndex,
+  sub
 } from '../_shared/subscript.js'
 
 import Model from './model.js'
@@ -596,24 +597,33 @@ function visitFunctionCall(v, callExpr, context) {
   if (visitArgs) {
     // Visit each argument
     for (const [index, argExpr] of callExpr.args.entries()) {
-      // XXX: For `WITH LOOKUP` calls, only process the first argument; need to generalize this
       if (callExpr.fnId === '_WITH_LOOKUP' && index > 1) {
+        // XXX: For `WITH LOOKUP` calls, only process the first argument; need to generalize this
         break
       } else if (callExpr.fnId === '_ALLOCATE_AVAILABLE' && index === 1) {
-        // TODO
-        // // Reference the second and third elements of the priority profile argument instead of the first one
-        // // that Vensim requires for ALLOCATE AVAILABLE. This is required to get correct dependencies.
-        // let ptypeRefId = this.expandedRefIds[0]
-        // let { subscripts } = Model.splitRefId(ptypeRefId)
-        // let ptypeIndexName = subscripts[1]
-        // let profileElementsDimName = sub(ptypeIndexName).family
-        // let profileElementsDim = sub(profileElementsDimName)
-        // let priorityRefId = ptypeRefId.replace(ptypeIndexName, profileElementsDim.value[1])
-        // let widthRefId = ptypeRefId.replace(ptypeIndexName, profileElementsDim.value[2])
-        // this.expandedRefIds = [priorityRefId, widthRefId]
-        // this.addReferencesToList(this.var.references)
+        // XXX: Handle `ALLOCATE AVAILABLE` calls specially for now.  This logic is copied from the
+        // legacy reader, but we may want to revisit later.
+        // Reference the second and third elements of the priority profile argument instead of the
+        // first one that Vensim requires for ALLOCATE AVAILABLE.  This is required to pick up
+        // correct dependencies.
+        if (argExpr.kind !== 'variable-ref') {
+          throw new Error(`ALLOCATE AVAILABLE argument 'pp' must be a variable reference`)
+        }
+        const baseRefId = argExpr.varId
+        const subIds = argExpr.subscriptRefs?.map(subRef => subRef.subId) || []
+        const expandedRefIds = expandedRefIdsForVar(v, baseRefId, subIds)
+        const ptypeRefId = expandedRefIds[0]
+        const { subscripts } = Model.splitRefId(ptypeRefId)
+        const ptypeIndexName = subscripts[1]
+        const profileElementsDimName = sub(ptypeIndexName).family
+        const profileElementsDim = sub(profileElementsDimName)
+        const priorityRefId = ptypeRefId.replace(ptypeIndexName, profileElementsDim.value[1])
+        const widthRefId = ptypeRefId.replace(ptypeIndexName, profileElementsDim.value[2])
+        context.addVarReference(priorityRefId)
+        context.addVarReference(widthRefId)
         continue
       }
+
       context.setArgIndex(index, argModes[index])
       visitExpr(v, argExpr, context)
     }
