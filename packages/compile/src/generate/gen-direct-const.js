@@ -37,9 +37,6 @@ export function generateDirectConstInit(variable, modelDir) {
   // Get C subscripts in text form for the LHS in normal order.
   let lhsSubIds = variable.parsedEqn.lhs.varRef.subscriptRefs?.map(s => s.subId) || []
   let modelDimNames = lhsSubIds.filter(s => isDimension(s))
-  // let modelLHSReader = new ModelLHSReader()
-  // modelLHSReader.read(variable.modelLHS)
-  // let modelDimNames = modelLHSReader.modelSubscripts.filter(s => isDimension(s))
 
   // Generate offsets from the start cell in the table corresponding to LHS indices.
   let cellOffsets = []

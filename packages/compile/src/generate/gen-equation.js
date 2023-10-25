@@ -4,6 +4,7 @@ import {
   isIndex,
   isTrivialDimension,
   normalizeSubscripts,
+  separatedVariableIndex,
   sub
 } from '../_shared/subscript.js'
 import { generateConstListElement } from './gen-const-list.js'
@@ -141,10 +142,8 @@ export function generateEquation(variable, mode, extData, directData, modelDir) 
  * @return {string} The C variable reference.
  */
 function cVarRefWithLhsSubscripts(lhsVariable, baseVarId, loopIndexVars) {
-  const lhsVarRef = lhsVariable.parsedEqn.lhs.varRef
-  const lhsSubRefs = lhsVarRef.subscriptRefs || []
-  const cSubParts = lhsSubRefs.map(subRef => {
-    const subId = subRef.subId
+  const lhsSubIds = lhsVariable.subscripts
+  const cSubParts = lhsSubIds.map(subId => {
     if (isDimension(subId)) {
       const i = loopIndexVars.index(subId)
       if (isTrivialDimension(subId)) {
@@ -205,12 +204,11 @@ function cVarRef(lhsVariable, rhsVarRef, markedDimIds, loopIndexVars, arrayIndex
       // the name of the array loop index variable
       indexName = arrayIndexVars.index(rhsSubId)
     } else {
-      // TODO: Implement!
-      // // Use the single index name for a separated variable if it exists.
-      // let separatedIndexName = separatedVariableIndex(rhsSub, this.var, subscripts)
-      // if (separatedIndexName) {
-      //   return `[${sub(separatedIndexName).value}]`
-      // }
+      // Use the single index name for a separated variable if it exists
+      const separatedIndexName = separatedVariableIndex(rhsSubId, lhsVariable, rhsSubIds)
+      if (separatedIndexName) {
+        return `[${sub(separatedIndexName).value}]`
+      }
 
       // See if we need to apply a mapping because the RHS dim is not found on the LHS
       const found = lhsVariable.subscripts.findIndex(lhsSubId => sub(lhsSubId).family === sub(rhsSubId).family)

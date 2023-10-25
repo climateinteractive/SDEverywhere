@@ -354,7 +354,7 @@ describe('generateEquation (Vensim -> C)', () => {
     expect(genC(vars.get('_y'))).toEqual(['_y = _LOOKUP(_x[0], 2.0);'])
   })
 
-  it('should work for constant definition (with dimension)', () => {
+  it('should work for constant definition (with one dimension)', () => {
     const vars = readInlineModel(`
       DimA: A1, A2, A3 ~~|
       x[DimA] = 1 ~~|
@@ -363,6 +363,33 @@ describe('generateEquation (Vensim -> C)', () => {
     expect(vars.size).toBe(2)
     expect(genC(vars.get('_x'), 'init-constants')).toEqual(['for (size_t i = 0; i < 3; i++) {', '_x[i] = 1.0;', '}'])
     expect(genC(vars.get('_y'))).toEqual(['_y = _x[1];'])
+  })
+
+  it('should work for constant definition (with two dimensions)', () => {
+    const vars = readInlineModel(`
+      DimA: A1, A2, A3 ~~|
+      SubA: A2, A3 ~~|
+      DimC: C1, C2 ~~|
+      x[DimC, SubA] = 1 ~~|
+      x[DimC, DimA] :EXCEPT: [DimC, SubA] = 2 ~~|
+    `)
+    expect(vars.size).toBe(3)
+    console.log(vars)
+    expect(genC(vars.get('_x[_a1,_dimc]'), 'init-constants')).toEqual([
+      'for (size_t i = 0; i < 2; i++) {',
+      '_x[0][i] = 2.0;',
+      '}'
+    ])
+    expect(genC(vars.get('_x[_a2,_dimc]'), 'init-constants')).toEqual([
+      'for (size_t i = 0; i < 2; i++) {',
+      '_x[1][i] = 1.0;',
+      '}'
+    ])
+    expect(genC(vars.get('_x[_a3,_dimc]'), 'init-constants')).toEqual([
+      'for (size_t i = 0; i < 2; i++) {',
+      '_x[2][i] = 1.0;',
+      '}'
+    ])
   })
 
   it('should work for constant definition (with separate subscripts)', () => {
