@@ -174,12 +174,12 @@ export function parseVensimModel(modelName: string): ParsedModel {
   return parseModel(mdlContent, modelDir, /*sort=*/ true)
 }
 
-export function parseInlineVensimModel(mdlContent: string): ParsedModel {
+export function parseInlineVensimModel(mdlContent: string, modelDir?: string): ParsedModel {
   // For tests that parse inline model text, in the case of the legacy parser, don't run
   // the preprocess step, and in the case of the new parser (which implicitly runs the
   // preprocess step), don't sort the definitions.  This makes it easier to do apples
   // to apples comparisons on the outputs from the two parser implementations.
-  return parseModel(mdlContent, undefined, /*sort=*/ false)
+  return parseModel(mdlContent, modelDir, /*sort=*/ false)
 }
 
 function prettyVar(variable: Variable): string {

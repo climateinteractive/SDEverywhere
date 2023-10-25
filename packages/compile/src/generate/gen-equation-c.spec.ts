@@ -18,7 +18,7 @@ function readInlineModel(mdlContent: string, opts?: { extData?: ExtData; modelDi
   resetSubscriptsAndDimensions()
   Model.resetModelState()
 
-  const parsedModel = parseInlineVensimModel(mdlContent)
+  const parsedModel = parseInlineVensimModel(mdlContent, opts?.modelDir)
   Model.read(parsedModel, /*spec=*/ {}, opts?.extData, /*directData=*/ undefined, opts?.modelDir, {
     stopAfterAnalyze: true
   })
