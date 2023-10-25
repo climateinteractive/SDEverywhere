@@ -1,5 +1,6 @@
 import {
   dimensionNames,
+  hasMapping,
   isDimension,
   isIndex,
   isTrivialDimension,
@@ -213,15 +214,13 @@ function cVarRef(lhsVariable, rhsVarRef, markedDimIds, loopIndexVars, arrayIndex
       // See if we need to apply a mapping because the RHS dim is not found on the LHS
       const found = lhsVariable.subscripts.findIndex(lhsSubId => sub(lhsSubId).family === sub(rhsSubId).family)
       if (found < 0) {
-        // TODO: Implement!
-        // // Find the mapping from the RHS subscript to a LHS subscript
-        // for (let lhsSub of this.var.subscripts) {
-        //   if (hasMapping(rhsSub, lhsSub)) {
-        //     // console.error(`${this.var.refId} hasMapping ${rhsSub} → ${lhsSub}`);
-        //     i = this.loopIndexVars.index(lhsSub)
-        //     return `[__map${rhsSub}${lhsSub}[${i}]]`
-        //   }
-        // }
+        // Find the mapping from the RHS subscript to a LHS subscript
+        for (const lhsSubId of lhsVariable.subscripts) {
+          if (hasMapping(rhsSubId, lhsSubId)) {
+            indexName = loopIndexVars.index(lhsSubId)
+            return `[__map${rhsSubId}${lhsSubId}[${indexName}]]`
+          }
+        }
       }
 
       // There is no mapping, so use the loop index for this dim family on the LHS

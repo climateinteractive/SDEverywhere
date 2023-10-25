@@ -545,6 +545,33 @@ describe('generateEquation (Vensim -> C)', () => {
     expect(genC(vars.get('_z'))).toEqual(['_z = _y[1][0];'])
   })
 
+  it('should work for variables that rely on subscript mappings', () => {
+    const vars = readInlineModel(`
+      DimA: A1, A2 -> DimB, DimC ~~|
+      DimB: B1, B2 ~~|
+      DimC: C1, C2 ~~|
+      a[DimA] = 10, 20 ~~|
+      b[DimB] = 1, 2 ~~|
+      c[DimC] = a[DimA] + 1 ~~|
+      d = b[B2] ~~|
+      e = c[C1] ~~|
+    `)
+    expect(vars.size).toBe(7)
+    expect(genC(vars.get('_a[_a1]'), 'init-constants')).toEqual(['_a[0] = 10.0;'])
+    expect(genC(vars.get('_a[_a2]'), 'init-constants')).toEqual(['_a[1] = 20.0;'])
+    expect(genC(vars.get('_b[_b1]'), 'init-constants')).toEqual(['_b[0] = 1.0;'])
+    expect(genC(vars.get('_b[_b2]'), 'init-constants')).toEqual(['_b[1] = 2.0;'])
+    expect(genC(vars.get('_b[_b1]'), 'eval')).toEqual(['_b[0] = 1.0;'])
+    expect(genC(vars.get('_b[_b2]'), 'eval')).toEqual(['_b[1] = 2.0;'])
+    expect(genC(vars.get('_c'), 'eval')).toEqual([
+      'for (size_t i = 0; i < 2; i++) {',
+      '_c[i] = _a[__map_dima_dimc[i]] + 1.0;',
+      '}'
+    ])
+    expect(genC(vars.get('_d'), 'eval')).toEqual(['_d = _b[1];'])
+    expect(genC(vars.get('_e'), 'eval')).toEqual(['_e = _c[0];'])
+  })
+
   it('should work for ABS function', () => {
     const vars = readInlineModel(`
       x = 1 ~~|
