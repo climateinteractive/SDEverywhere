@@ -264,9 +264,12 @@ function generateFunctionCall(callExpr, ctx) {
 
     //
     //
-    // Special functions
+    // Uncategorized functions
     //
     //
+
+    case '_ALLOCATE_AVAILABLE':
+      return generateAllocateAvailableCall(callExpr, ctx)
 
     case '_ELMCOUNT': {
       // Emit the size of the dimension in place of the dimension name
@@ -289,9 +292,6 @@ function generateFunctionCall(callExpr, ctx) {
       } else {
         throw new Error(`Invalid code gen mode '${ctx.mode}' for variable ${ctx.variable.modelLHS} with INITIAL`)
       }
-
-    case '_ALLOCATE_AVAILABLE':
-      break
 
     case '_GET_DIRECT_DATA':
     case '_GET_DIRECT_LOOKUPS':
@@ -609,11 +609,17 @@ function generateArrayFunctionCall(callExpr, ctx) {
  * @return {string} The generated C code.
  */
 function generateVectorElmMapCall(callExpr, ctx) {
-  // Process the vector argument
-  const vecArg = callExpr.args[0]
-  if (vecArg.kind !== 'variable-ref') {
-    throw new Error('First (vector) argument for VECTOR ELM MAP must be a variable reference')
+  function validateArg(index, name) {
+    const arg = callExpr.args[index]
+    if (arg.kind === 'variable-ref') {
+      return arg
+    } else {
+      throw new Error(`VECTOR ELM MAP argument '${name}' must be a variable reference`)
+    }
   }
+
+  // Process the vector argument
+  const vecArg = validateArg(0, 'vec')
   let vecVarRefId = vecArg.varId
   const vecSubIds = vecArg.subscriptRefs.map(subRef => subRef.subId)
 
@@ -631,10 +637,7 @@ function generateVectorElmMapCall(callExpr, ctx) {
   // TODO: Throw error if no index was found
 
   // Process the offset argument
-  const offsetArg = callExpr.args[1]
-  if (offsetArg.kind !== 'variable-ref') {
-    throw new Error('Second (offset) argument for VECTOR ELM MAP must be a variable reference')
-  }
+  const offsetArg = validateArg(1, 'offset')
   const offsetVarRefId = ctx.cVarRef(offsetArg)
 
   // The `VECTOR ELM MAP` function replaces one subscript with a calculated offset from
@@ -664,7 +667,7 @@ function generateVectorSortOrderCall(callExpr, ctx) {
   // Process the vector argument
   const vecArg = callExpr.args[0]
   if (vecArg.kind !== 'variable-ref') {
-    throw new Error('First (vector) argument for VECTOR SORT ORDER must be a variable reference')
+    throw new Error(`VECTOR SORT ORDER argument 'vec' must be a variable reference`)
   }
   let vecVarRefId = vecArg.varId
   const vecSubIds = vecArg.subscriptRefs.map(subRef => subRef.subId)
@@ -688,6 +691,52 @@ function generateVectorSortOrderCall(callExpr, ctx) {
   const tmpVarId = newTmpVarName()
   const dimSize = sub(dimId).size
   ctx.emitPreBlock(`  double* ${tmpVarId} = _VECTOR_SORT_ORDER(${vecVarRefId}, ${dimSize}, ${dirArg});`)
+
+  // Generate the RHS expression used in the inner loop
+  return `${tmpVarId}[${dimId}[${subIndex}]]`
+}
+
+/**
+ * Generate C code for an `ALLOCATE AVAILABLE` function call.
+ *
+ * @param {*} callExpr The function call expression from the parsed model.
+ * @param {GenExprContext} ctx The context used when generating code for the expression.
+ * @return {string} The generated C code.
+ */
+function generateAllocateAvailableCall(callExpr, ctx) {
+  function validateArg(index, name) {
+    const arg = callExpr.args[index]
+    if (arg.kind === 'variable-ref') {
+      return arg
+    } else {
+      throw new Error(`ALLOCATE AVAILABLE argument '${name}' must be a variable reference`)
+    }
+  }
+
+  // Process the request argument
+  const reqArg = validateArg(0, 'req')
+  const reqRefId = reqArg.varId
+  const reqSubIds = reqArg.subscriptRefs.map(subRef => subRef.subId)
+
+  // Process the priority argument
+  const priorityArg = validateArg(1, 'priority')
+  const priorityRefId = priorityArg.varId
+
+  // Process the avail argument
+  const availArg = validateArg(2, 'avail')
+  const availRefId = availArg.varId
+
+  // The `ALLOCATE AVAILABLE` function iterates over the subscript in its first arg
+  const dimId = reqSubIds[0]
+  const subIndex = ctx.loopIndexVars.index(dimId)
+
+  // Generate the code that is emitted before the entire block (before any loops are opened)
+  const tmpVarId = newTmpVarName()
+  const dimSize = sub(dimId).size
+  // let dimSize = sub(this.aaTmpDimName).size
+  ctx.emitPreBlock(
+    `  double* ${tmpVarId} = _ALLOCATE_AVAILABLE(${reqRefId}, (double*)${priorityRefId}, ${availRefId}, ${dimSize});`
+  )
 
   // Generate the RHS expression used in the inner loop
   return `${tmpVarId}[${dimId}[${subIndex}]]`

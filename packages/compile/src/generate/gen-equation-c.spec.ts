@@ -451,7 +451,7 @@ describe('generateEquation (Vensim -> C)', () => {
     const vars = readInlineModel(`
       DimA: A1, A2 ~~|
       DimB: B1, B2 ~~|
-      x[DimA, DimB] = 1, 2; 3, 4 ~~|
+      x[DimA, DimB] = 1, 2; 3, 4; ~~|
       y[DimA, DimB] = (x[DimA, DimB] + 2) * MIN(0, x[DimA, DimB]) ~~|
       z = y[A2, B1] ~~|
     `)
@@ -1002,7 +1002,6 @@ describe('generateEquation (Vensim -> C)', () => {
       x = Time * 2 ~~|
       y = INTEG(x, 10) ~~|
     `)
-    console.log(vars)
     expect(vars.size).toBe(2)
     expect(genC(vars.get('_x'), 'eval')).toEqual(['_x = _time * 2.0;'])
     expect(genC(vars.get('_y'), 'init-levels')).toEqual(['_y = 10.0;'])
