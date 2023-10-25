@@ -262,16 +262,65 @@ describe('generateEquation (Vensim -> C)', () => {
     const vars = readInlineModel(
       `
       x ~~|
+      y = x * 10 ~~|
       `,
       { extData }
     )
-    expect(vars.size).toBe(1)
+    expect(vars.size).toBe(2)
     expect(genC(vars.get('_x'), 'decl', { extData })).toEqual([
       'double _x_data_[6] = { 0.0, 0.0, 1.0, 2.0, 2.0, 5.0 };'
     ])
     expect(genC(vars.get('_x'), 'init-lookups', { extData })).toEqual([
       '_x = __new_lookup(3, /*copy=*/false, _x_data_);'
     ])
+    expect(genC(vars.get('_y'), 'eval', { extData })).toEqual(['_y = _LOOKUP(_x, _time) * 10.0;'])
+  })
+
+  it('should work for data variable definition (1D)', () => {
+    const extData: ExtData = new Map([
+      [
+        '_x[_a1]',
+        new Map([
+          [0, 0],
+          [1, 2],
+          [2, 5]
+        ])
+      ],
+      [
+        '_x[_a2]',
+        new Map([
+          [0, 10],
+          [1, 12],
+          [2, 15]
+        ])
+      ]
+    ])
+    const vars = readInlineModel(
+      `
+      DimA: A1, A2 ~~|
+      x[DimA] ~~|
+      y[DimA] = x[DimA] * 10 ~~|
+      z = y[A2] ~~|
+      `,
+      {
+        extData
+      }
+    )
+    expect(vars.size).toBe(3)
+    expect(genC(vars.get('_x'), 'decl', { extData })).toEqual([
+      'double _x_data__0_[6] = { 0.0, 0.0, 1.0, 2.0, 2.0, 5.0 };',
+      'double _x_data__1_[6] = { 0.0, 10.0, 1.0, 12.0, 2.0, 15.0 };'
+    ])
+    expect(genC(vars.get('_x'), 'init-lookups', { extData })).toEqual([
+      '_x[0] = __new_lookup(3, /*copy=*/false, _x_data__0_);',
+      '_x[1] = __new_lookup(3, /*copy=*/false, _x_data__1_);'
+    ])
+    expect(genC(vars.get('_y'), 'eval', { extData })).toEqual([
+      'for (size_t i = 0; i < 2; i++) {',
+      '_y[i] = _LOOKUP(_x[i], _time) * 10.0;',
+      '}'
+    ])
+    expect(genC(vars.get('_z'), 'eval', { extData })).toEqual(['_z = _y[1];'])
   })
 
   it('should work for lookup definition', () => {
@@ -374,7 +423,6 @@ describe('generateEquation (Vensim -> C)', () => {
       x[DimC, DimA] :EXCEPT: [DimC, SubA] = 2 ~~|
     `)
     expect(vars.size).toBe(3)
-    console.log(vars)
     expect(genC(vars.get('_x[_a1,_dimc]'), 'init-constants')).toEqual([
       'for (size_t i = 0; i < 2; i++) {',
       '_x[0][i] = 2.0;',

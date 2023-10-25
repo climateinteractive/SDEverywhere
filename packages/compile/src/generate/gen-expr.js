@@ -45,8 +45,17 @@ export function generateExpr(expr, ctx) {
     case 'keyword':
       return expr.text
 
-    case 'variable-ref':
-      return ctx.cVarRef(expr)
+    case 'variable-ref': {
+      // See if the referenced variable is a data variable
+      const v = Model.varWithName(expr.varId)
+      if (v?.isData()) {
+        // It's a data variable; transform to a `_LOOKUP` function call
+        return `_LOOKUP(${ctx.cVarRef(expr)}, _time)`
+      } else {
+        // It's not a data variable; generate a normal variable reference
+        return ctx.cVarRef(expr)
+      }
+    }
 
     case 'unary-op': {
       let op
@@ -102,7 +111,7 @@ export function generateExpr(expr, ctx) {
       // `readEquations`, so replace the def with a reference to the generated variable
       return ctx.variable.lookupArgVarName
 
-    case 'lookup-call': {
+    case 'lookup-call':
       // For Vensim models, the antlr4-vensim grammar has separate definitions for lookup
       // calls and function calls, but in practice they can only be differentiated in the
       // case where the lookup has subscripts; when there are no subscripts, they get
@@ -110,9 +119,7 @@ export function generateExpr(expr, ctx) {
       // places.  The code here deals with lookup calls that involve a lookup with one
       // or more dimensions.  The `default` case in `generateFunctionCall` deals with
       // lookup calls that involve a non-subscripted lookup variable.
-      const lookupVar = Model.varWithName(expr.varRef.varId)
-      return generateLookupCall(lookupVar, expr.arg, ctx)
-    }
+      return generateLookupCall(expr.varRef, expr.arg, ctx)
 
     case 'function-call':
       return generateFunctionCall(expr, ctx)
@@ -153,9 +160,6 @@ function generateFunctionCall(callExpr, ctx) {
     case '_IF_THEN_ELSE':
     case '_INTEGER':
     case '_LN':
-    case '_LOOKUP_BACKWARD':
-    case '_LOOKUP_FORWARD':
-    case '_LOOKUP_INVERT':
     case '_MAX':
     case '_MIN':
     case '_MODULO':
@@ -174,6 +178,26 @@ function generateFunctionCall(callExpr, ctx) {
       // For simple functions, emit a C function call with a generated C expression for each argument
       const args = callExpr.args.map(argExpr => generateExpr(argExpr, ctx))
       return `${fnId}(${args.join(', ')})`
+    }
+
+    //
+    //
+    // Lookup functions
+    //
+    // Each of these functions is implemented with a C function (like the simple functions above),
+    // but we need to handle the first argument specially, otherwise we would get the default handling
+    // for data variables, which generates a lookup call (see 'variable-ref' case in `generateExpr`).
+    //
+    //
+
+    case '_LOOKUP_BACKWARD':
+    case '_LOOKUP_FORWARD':
+    case '_LOOKUP_INVERT': {
+      // For LOOKUP* functions, the first argument must be a reference to the lookup variable.  Emit
+      // a C function call with a generated C expression for each argument.
+      const cVarRef = ctx.cVarRef(callExpr.args[0])
+      const cArg = generateExpr(callExpr.args[1], ctx)
+      return `${fnId}(${cVarRef}, ${cArg})`
     }
 
     //
@@ -282,8 +306,10 @@ function generateFunctionCall(callExpr, ctx) {
     }
 
     case '_GET_DIRECT_CONSTANTS':
-      // TODO: Should not get here (throw error)
-      break
+    case '_GET_DIRECT_DATA':
+    case '_GET_DIRECT_LOOKUPS':
+      // These functions are handled at a higher level, so we should not get here
+      throw new Error(`Unexpected function ${fnId} in code gen when reading ${ctx.variable.modelLHS}`)
 
     case '_INITIAL':
       // In init mode, only emit the initial expression without the INITIAL function call
@@ -293,24 +319,29 @@ function generateFunctionCall(callExpr, ctx) {
         throw new Error(`Invalid code gen mode '${ctx.mode}' for variable ${ctx.variable.modelLHS} with INITIAL`)
       }
 
-    case '_GET_DIRECT_DATA':
-    case '_GET_DIRECT_LOOKUPS':
-      break
-
     default: {
-      // XXX: See if the function name is actually the name of a lookup variable.  (See
-      // comment for 'lookup-call' case above about why this is needed.)
-      const lookupVar = Model.varWithName(fnId.toLowerCase())
-      if (lookupVar?.isLookup()) {
+      // See if the function name is actually the name of a lookup variable.  (See comment
+      // 'lookup-call' case above about why this is needed.)  Note that if we reach this
+      // point and the function call is actually a lookup call, then we can assume that the
+      // lookup variable reference does not include subscripts, and we can use the base
+      // variable ID only.
+      const varId = fnId.toLowerCase()
+      const v = Model.varWithName(varId)
+      if (v?.isLookup()) {
         // Transform to a `_LOOKUP` function call
-        return generateLookupCall(lookupVar, callExpr.args[0], ctx)
+        const lookupVarRef = {
+          kind: 'variable-ref',
+          varName: callExpr.fnName,
+          varId
+        }
+        return generateLookupCall(lookupVarRef, callExpr.args[0], ctx)
       } else {
         // TODO: For now we throw an error if the function is not yet implemented in SDE.
         // This is helpful in the short term while we implement the new code generator, but
         // it does not work in the case of models that use custom macros.  We need to provide
         // a way for users to disable this error, or explicitly declare a list of function
         // names to ignore or treat as user-implemented macros.
-        throw new Error(`Unhandled function '${fnId}' when reading ${ctx.variable.modelLHS}`)
+        throw new Error(`Unhandled function '${fnId}' in code gen when reading ${ctx.variable.modelLHS}`)
       }
     }
   }
@@ -425,16 +456,15 @@ function generateLevelEval(callExpr, ctx) {
  *
  * TODO: Types
  *
- * @param {*} lookupVar The lookup `Variable` instance.
+ * @param {*} lookupVarRef The lookup `VariableRef`.
  * @param {*} argExpr The parsed `Expr` for the single argument for the lookup.
  * @param {GenExprContext} ctx The context used when generating code for the expression.
  * @return {string} The generated C code.
  */
-function generateLookupCall(lookupVar, argExpr, ctx) {
-  // TODO: Take subscripts into account
-  const varId = lookupVar.varName
-  const arg = generateExpr(argExpr, ctx)
-  return `_LOOKUP(${varId}, ${arg})`
+function generateLookupCall(lookupVarRef, argExpr, ctx) {
+  const cVarRef = ctx.cVarRef(lookupVarRef)
+  const cArg = generateExpr(argExpr, ctx)
+  return `_LOOKUP(${cVarRef}, ${cArg})`
 }
 
 /**
