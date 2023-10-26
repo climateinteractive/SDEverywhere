@@ -30,7 +30,7 @@ let codeGenerator = (parsedModel, opts) => {
     if (parsedModel.kind === 'legacy-vensim') {
       return new EquationGen(v, extData, directData, mode, modelDirname).generate()
     } else {
-      return generateEquation(v)
+      return generateEquation(v, mode, extData, directData, modelDirname)
     }
   })
   let section = R.pipe(generateSection, R.flatten, lines)
