@@ -14,13 +14,21 @@ import { isDimension, sub } from '../_shared/subscript.js'
  * one string per line of code.
  */
 export function generateLookupsFromExternalData(variable, mode, extData, varLhs) {
-  // If there is external data for this variable, copy it from an external file to a lookup.
-  // Just like in generateLookup(), we declare static arrays to hold the data points in the first pass
-  // ("decl" mode), then initialize each `Lookup` using that data in the second pass ("init" mode).
+  if (mode !== 'decl' && mode !== 'init-lookups') {
+    throw new Error(`Invalid code gen mode '${mode}' for data variable ${variable.modelLHS}`)
+  }
 
+  // If there is external data for this variable, copy it from an external file to a lookup.
+  // Just like in `generateLookupFromPoints`, we declare static arrays to hold the data points in
+  // the first pass ("decl" mode), then initialize each `Lookup` using that data in the second pass
+  // ("init" mode).
   const newLookup = (name, lhs, data, subscriptIndexes) => {
     if (!data) {
       throw new Error(`Data for ${name} not found in external data sources`)
+    }
+
+    if (data.size === 0) {
+      throw new Error(`Empty lookup data array for ${lhs}`)
     }
 
     const dataName = variable.varName + '_data_' + R.map(i => `_${i}_`, subscriptIndexes).join('')
@@ -35,9 +43,6 @@ export function generateLookupsFromExternalData(variable, mode, extData, varLhs)
       return `double ${dataName}[${data.size * 2}] = { ${points} };`
     } else if (mode === 'init-lookups') {
       // In init mode, create the `Lookup`, passing in a pointer to the static data array declared in decl mode.
-      if (data.size === 0) {
-        throw new Error(`Empty lookup data array for ${lhs}`)
-      }
       return `  ${lhs} = __new_lookup(${data.size}, /*copy=*/false, ${dataName});`
     } else {
       return []

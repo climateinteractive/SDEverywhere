@@ -86,7 +86,11 @@ export function generateEquation(variable, mode, extData, directData, modelDir) 
       // Note that unlike the other lookup cases, this one needs to include loop open/close code
       // if the variable is subscripted.
       const lookupDef = generateLookupFromPoints(variable, mode, /*copy=*/ true, cLhs, loopIndexVars)
-      return [...openLoops, ...lookupDef, ...closeLoops]
+      if (lookupDef.length > 0) {
+        return [...openLoops, ...lookupDef, ...closeLoops]
+      } else {
+        return []
+      }
     } else if (variable.directDataArgs) {
       // The data is referenced using a `GET DIRECT DATA` call; generate one or more lookups
       // using the data defined in external files

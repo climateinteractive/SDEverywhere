@@ -20,6 +20,13 @@ import { sub } from '../_shared/subscript.js'
  * one string per line of code.
  */
 export function generateLookupsFromDirectData(variable, mode, directData, modelDir, varLhs) {
+  if (mode === 'decl') {
+    // Nothing to emit in decl mode
+    return []
+  } else if (mode !== 'init-lookups') {
+    throw new Error(`Invalid code gen mode '${mode}' for data variable ${variable.modelLHS}`)
+  }
+
   // If direct data exists for this variable, copy it from the workbook into one or more lookups
   let getCellValue
   let { file, tab, timeRowOrCol, startCell } = variable.directDataArgs
