@@ -1,6 +1,8 @@
+import path from 'node:path'
+
 import { describe, expect, it } from 'vitest'
 
-import { resetHelperState } from '../_shared/helpers'
+import { readXlsx, resetHelperState } from '../_shared/helpers'
 import { resetSubscriptsAndDimensions } from '../_shared/subscript'
 
 import Model from '../model/model'
@@ -11,17 +13,16 @@ import { parseInlineVensimModel, sampleModelDir, type Variable } from '../_tests
 import { generateEquation } from './gen-equation'
 
 type ExtData = Map<string, Map<number, number>>
+type DirectDataSpec = Map<string, string>
 
-function readInlineModel(mdlContent: string, opts?: { extData?: ExtData; modelDir?: string }): Map<string, Variable> {
+function readInlineModel(mdlContent: string, opts?: { modelDir?: string; extData?: ExtData }): Map<string, Variable> {
   // XXX: These steps are needed due to subs/dims and variables being in module-level storage
   resetHelperState()
   resetSubscriptsAndDimensions()
   Model.resetModelState()
 
   const parsedModel = parseInlineVensimModel(mdlContent, opts?.modelDir)
-  Model.read(parsedModel, /*spec=*/ {}, opts?.extData, /*directData=*/ undefined, opts?.modelDir, {
-    stopAfterAnalyze: true
-  })
+  Model.read(parsedModel, /*spec=*/ {}, opts?.extData, /*directData=*/ undefined, opts?.modelDir, {})
 
   // Exclude the `Time` variable so that we have one less thing to check
   const map = new Map<string, Variable>()
@@ -37,21 +38,30 @@ function genC(
   variable: Variable,
   mode: 'decl' | 'init-constants' | 'init-lookups' | 'init-levels' | 'eval' = 'eval',
   opts?: {
-    extData?: ExtData
     modelDir?: string
+    extData?: ExtData
+    directDataSpec?: DirectDataSpec
   }
 ): string[] {
   if (variable === undefined) {
     throw new Error(`variable is undefined`)
   }
 
+  const directData = new Map()
+  if (opts?.modelDir && opts?.directDataSpec) {
+    for (const [file, xlsxFilename] of opts.directDataSpec.entries()) {
+      const xlsxPath = path.join(opts.modelDir, xlsxFilename)
+      directData.set(file, readXlsx(xlsxPath))
+    }
+  }
+
   let lines: string[]
   if (process.env.SDE_PRIV_USE_NEW_PARSE === '1') {
-    lines = generateEquation(variable, mode, opts?.extData, /*directData=*/ undefined, opts?.modelDir)
+    lines = generateEquation(variable, mode, opts?.extData, directData, opts?.modelDir)
   } else {
     // TODO: The `flat` call is only needed because the legacy EquationGen adds a nested array unnecessarily
     // in `generateDirectDataInit`
-    lines = new EquationGen(variable, opts?.extData, /*directData=*/ undefined, mode, opts?.modelDir).generate().flat()
+    lines = new EquationGen(variable, opts?.extData, directData, mode, opts?.modelDir).generate().flat()
     // XXX: The legacy EquationGen sometimes appends code with a line break instead of returning a separate
     // string for each line, so for now, split on newlines and treat them as separate lines for better
     // compatibility with the new `generateEquation`
@@ -963,36 +973,48 @@ describe('generateEquation (Vensim -> C)', () => {
 
   it('should work for GET DIRECT DATA function (single value)', () => {
     const modelDir = sampleModelDir('directdata')
+    const opts = {
+      modelDir,
+      directDataSpec: new Map([['?data', 'data.xlsx']])
+    }
     const vars = readInlineModel(`
       x = GET DIRECT DATA('g_data.csv', ',', 'A', 'B13') ~~|
       y = x * 10 ~~|
     `)
     expect(vars.size).toBe(2)
-    expect(genC(vars.get('_x'), 'init-lookups', { modelDir })).toEqual([
+    expect(genC(vars.get('_x'), 'init-lookups', opts)).toEqual([
       '_x = __new_lookup(2, /*copy=*/true, (double[]){ 2045.0, 35.0, 2050.0, 47.0 });'
     ])
-    expect(genC(vars.get('_y'), 'eval', { modelDir })).toEqual(['_y = _LOOKUP(_x, _time) * 10.0;'])
+    expect(genC(vars.get('_y'), 'eval', opts)).toEqual(['_y = _LOOKUP(_x, _time) * 10.0;'])
   })
 
   it('should work for GET DIRECT DATA function (1D)', () => {
     const modelDir = sampleModelDir('directdata')
+    const opts = {
+      modelDir,
+      directDataSpec: new Map([['?data', 'data.xlsx']])
+    }
     const vars = readInlineModel(`
       DimA: A1, A2 ~~|
       x[DimA] = GET DIRECT DATA('e_data.csv', ',', 'A', 'B5') ~~|
       y = x[A2] * 10 ~~|
     `)
     expect(vars.size).toBe(3)
-    expect(genC(vars.get('_x[_a1]'), 'init-lookups', { modelDir })).toEqual([
+    expect(genC(vars.get('_x[_a1]'), 'init-lookups', opts)).toEqual([
       '_x[0] = __new_lookup(2, /*copy=*/true, (double[]){ 2030.0, 593.0, 2050.0, 583.0 });'
     ])
-    expect(genC(vars.get('_x[_a2]'), 'init-lookups', { modelDir })).toEqual([
+    expect(genC(vars.get('_x[_a2]'), 'init-lookups', opts)).toEqual([
       '_x[1] = __new_lookup(2, /*copy=*/true, (double[]){ 2030.0, 185.0, 2050.0, 180.0 });'
     ])
-    expect(genC(vars.get('_y'), 'eval', { modelDir })).toEqual(['_y = _LOOKUP(_x[1], _time) * 10.0;'])
+    expect(genC(vars.get('_y'), 'eval', opts)).toEqual(['_y = _LOOKUP(_x[1], _time) * 10.0;'])
   })
 
   it('should work for GET DIRECT DATA function (2D with separate definitions)', () => {
     const modelDir = sampleModelDir('directdata')
+    const opts = {
+      modelDir,
+      directDataSpec: new Map([['?data', 'data.xlsx']])
+    }
     const vars = readInlineModel(`
       DimA: A1, A2 ~~|
       DimB: B1, B2 ~~|
@@ -1001,18 +1023,18 @@ describe('generateEquation (Vensim -> C)', () => {
       y = x[A2, B1] * 10 ~~|
     `)
     expect(vars.size).toBe(4)
-    expect(genC(vars.get('_x[_a1,_b1]'), 'init-lookups', { modelDir })).toEqual([
+    expect(genC(vars.get('_x[_a1,_b1]'), 'init-lookups', opts)).toEqual([
       '_x[0][0] = __new_lookup(2, /*copy=*/true, (double[]){ 2030.0, 593.0, 2050.0, 583.0 });'
     ])
-    expect(genC(vars.get('_x[_a1,_b2]'), 'init-lookups', { modelDir })).toEqual([
+    expect(genC(vars.get('_x[_a1,_b2]'), 'init-lookups', opts)).toEqual([
       '_x[0][1] = __new_lookup(2, /*copy=*/true, (double[]){ 2030.0, 185.0, 2050.0, 180.0 });'
     ])
-    expect(genC(vars.get('_x[_a2,_dimb]'), 'init-lookups', { modelDir })).toEqual([
+    expect(genC(vars.get('_x[_a2,_dimb]'), 'init-lookups', opts)).toEqual([
       'for (size_t i = 0; i < 2; i++) {',
-      '_x[1][i] = 0.0;',
+      '_x[1][i] = __new_lookup(2, /*copy=*/true, (double[]){ -1e+308, 0.0, 1e+308, 0.0 });;',
       '}'
     ])
-    expect(genC(vars.get('_y'), 'eval', { modelDir })).toEqual(['_y = _LOOKUP(_x[1][0], _time) * 10.0;'])
+    expect(genC(vars.get('_y'), 'eval', opts)).toEqual(['_y = _LOOKUP(_x[1][0], _time) * 10.0;'])
   })
 
   it('should work for GET DIRECT LOOKUPS function', () => {

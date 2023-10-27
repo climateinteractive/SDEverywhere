@@ -83,6 +83,7 @@ function read(parsedModel, spec, extData, directData, modelDirname, opts) {
 
   // Read variables from the model parse tree.
   if (parsedModel.kind === 'vensim-legacy') {
+    // TODO: directData is actually unused in VariableReader
     readVariables(parsedModel.parseTree, specialSeparationDims, directData)
   } else {
     // Read the variables
