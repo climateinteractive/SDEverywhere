@@ -103,7 +103,9 @@ export default class EquationGen extends ModelReader {
     if (this.var.isData()) {
       // If the data var was converted from a const, it will have lookup points.
       // Otherwise, read a data file to get lookup data.
+      console.log(this.var)
       if (R.isEmpty(this.var.points)) {
+        console.log('HERE!')
         if (this.var.directDataArgs) {
           return this.generateDirectDataInit()
         } else {
@@ -651,7 +653,7 @@ export default class EquationGen extends ModelReader {
           throw new Error(`ERROR: lookup size = ${this.var.points.length} in ${this.var.refId}`)
         }
         let lookupData = R.reduce((a, p) => listConcat(a, `${cdbl(p[0])}, ${cdbl(p[1])}`, true), '', this.var.points)
-        this.emit(`__new_lookup(${this.var.points.length}, /*copy=*/true, (double[]){ ${lookupData} });`)
+        this.emit(`__new_lookup(${this.var.points.length}, /*copy=*/true, (double[]){ ${lookupData} })`)
       }
     } else {
       super.visitEquation(ctx)

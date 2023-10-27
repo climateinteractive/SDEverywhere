@@ -1031,7 +1031,7 @@ describe('generateEquation (Vensim -> C)', () => {
     ])
     expect(genC(vars.get('_x[_a2,_dimb]'), 'init-lookups', opts)).toEqual([
       'for (size_t i = 0; i < 2; i++) {',
-      '_x[1][i] = __new_lookup(2, /*copy=*/true, (double[]){ -1e+308, 0.0, 1e+308, 0.0 });;',
+      '_x[1][i] = __new_lookup(2, /*copy=*/true, (double[]){ -1e+308, 0.0, 1e+308, 0.0 });',
       '}'
     ])
     expect(genC(vars.get('_y'), 'eval', opts)).toEqual(['_y = _LOOKUP(_x[1][0], _time) * 10.0;'])
