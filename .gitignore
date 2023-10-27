@@ -1,6 +1,7 @@
 # Project files
 models/**/build*
 models/**/output*
+models/**/compare
 app_spec.json
 removals.txt
 .DS_Store

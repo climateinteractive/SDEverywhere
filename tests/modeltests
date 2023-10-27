@@ -15,6 +15,11 @@ SDE_MAIN="$PROJ_DIR/packages/cli/src/main.js"
 function test {
   MODEL=$1
   echo "Testing the $MODEL model"
+  # if [[ $MODEL == "directdata" || $MODEL == "extdata" || $MODEL == "getdata" || $MODEL == "prune" || $MODEL == "subscript" || $MODEL == "sumif" ]]; then
+  #   echo "Skipping"
+  #   echo
+  #   return
+  # fi
   MODEL_DIR=$MODELS_DIR/$MODEL
 
   # Clean up before
@@ -49,12 +54,43 @@ function test {
   echo
 }
 
-if [[ -n $1 ]]; then
-  # Test the given model against saved Vensim data.
+function compare {
+  MODEL=$1
+  MODEL_DIR=$MODELS_DIR/$MODEL
+
+  COMPARE_DIR=$MODEL_DIR/compare
+  MODEL_OLD_C=$COMPARE_DIR/${MODEL}_old.c
+  MODEL_NEW_C=$COMPARE_DIR/${MODEL}_new.c
+  mkdir -p $COMPARE_DIR
+
+  export SDE_PRIV_USE_NEW_PARSE=0
   test $1
+  cp $MODEL_DIR/build/$MODEL.c $MODEL_OLD_C
+  export SDE_PRIV_USE_NEW_PARSE=1
+  test $1
+  cp $MODEL_DIR/build/$MODEL.c $MODEL_NEW_C
+
+  git diff -w --no-index $MODEL_OLD_C $MODEL_NEW_C
+}
+
+if [[ $1 == "compare" ]]; then
+  if [[ -n $2 ]]; then
+    # Test the given model against saved Vensim data.
+    compare $2
+  else
+    # Test each model against saved Vensim data.
+    for m in $(ls "$MODELS_DIR"); do
+      compare $m
+    done
+  fi
 else
-  # Test each model against saved Vensim data.
-  for m in $(ls "$MODELS_DIR"); do
-    test $m
-  done
+  if [[ -n $1 ]]; then
+    # Test the given model against saved Vensim data.
+    test $1
+  else
+    # Test each model against saved Vensim data.
+    for m in $(ls "$MODELS_DIR"); do
+      test $m
+    done
+  fi
 fi
