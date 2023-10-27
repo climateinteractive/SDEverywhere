@@ -27,7 +27,7 @@ let codeGenerator = (parsedModel, opts) => {
   }
   // Function to generate a section of the code
   let generateSection = R.map(v => {
-    if (parsedModel.kind === 'legacy-vensim') {
+    if (parsedModel.kind === 'vensim-legacy') {
       return new EquationGen(v, extData, directData, mode, modelDirname).generate()
     } else {
       return generateEquation(v, mode, extData, directData, modelDirname)

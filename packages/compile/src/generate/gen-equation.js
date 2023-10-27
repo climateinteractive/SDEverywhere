@@ -42,12 +42,18 @@ export function generateEquation(variable, mode, extData, directData, modelDir) 
   const parsedEqn = variable.parsedEqn
   const cLhs = cVarRefWithLhsSubscripts(variable, parsedEqn.lhs.varRef.varId, loopIndexVars)
 
+  // Include the original model equation in a comment that comes before the generated code
+  // for that equation
+  const comment = `  // ${variable.modelLHS} = ${variable.modelFormula}`
+
   // Apply special handling for const lists
   if (parsedEqn.rhs.kind === 'const-list') {
     if (mode !== 'init-constants' && mode !== 'eval') {
       throw new Error(`Invalid code gen mode '${mode}' for const list variable ${variable.modelLHS}`)
     }
-    return generateConstListElement(variable, parsedEqn)
+    // XXX: The legacy code gen emitted a comment before each init statement, so we will
+    // do the same for now to maintain compatibility
+    return [comment, generateConstListElement(variable, parsedEqn)]
   }
 
   // Apply special handling for data variables
@@ -76,13 +82,10 @@ export function generateEquation(variable, mode, extData, directData, modelDir) 
     return generateLookup(variable, mode, cLhs, loopIndexVars)
   }
 
-  // TODO: include `// [model equation]`
-  const comments = ['  // TODO']
-
   // Emit direct constants individually without separating them first
   if (variable.directConstArgs) {
     const initCode = generateDirectConstInit(variable, modelDir)
-    return [...comments, ...initCode]
+    return [comment, ...initCode]
   }
 
   // Get the dimension IDs for the LHS variable
@@ -130,7 +133,7 @@ export function generateEquation(variable, mode, extData, directData, modelDir) 
   const formula = `  ${cLhs} = ${cRhs};`
 
   // Combine all lines of comments and code into a single array
-  return [...comments, ...preBlockLines, ...openLoops, ...preFormulaLines, formula, ...postFormulaLines, ...closeLoops]
+  return [comment, ...preBlockLines, ...openLoops, ...preFormulaLines, formula, ...postFormulaLines, ...closeLoops]
 }
 
 /**

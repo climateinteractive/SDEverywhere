@@ -48,5 +48,5 @@ export function generateConstListElement(variable, parsedEqn) {
   }
 
   const constValue = cdbl(parsedEqn.rhs.constants[constIndex].value)
-  return [`${lhsRef} = ${constValue};`]
+  return `${lhsRef} = ${constValue};`
 }
