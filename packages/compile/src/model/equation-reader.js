@@ -190,31 +190,36 @@ export default class EquationReader extends ModelReader {
         startCell: args[2]
       }
     } else if (fn === '_IF_THEN_ELSE') {
-      // Evaluate the condition expression of the `IF THEN ELSE`.  If it resolves
-      // to a compile-time constant, we only need to visit one branch, which means
-      // that no references will be recorded for the other branch, therefore allowing
-      // it to be skipped in the unused reference elimination phase and during the
-      // final code generation phase.
-      const condText = ctx.expr(0).getText()
-      const exprReader = new ExprReader()
-      const condExpr = exprReader.read(condText)
-      if (condExpr.constantValue !== undefined) {
-        // Record the conditional expression and its constant value so that
-        // it can be accessed later by EquationGen.  We need to record it
-        // this way because any variables referenced by the expression may
-        // be removed during the unused reference elimination phase.
-        Model.addConstantExpr(condText, condExpr.constantValue)
-        if (condExpr.constantValue !== 0) {
-          // Only visit the "if true" branch
-          this.setArgIndex(1)
-          ctx.expr(1).accept(this)
+      if (process.env.SDE_PRIV_OPTIMIZE_CONDITIONALS !== '0') {
+        // Evaluate the condition expression of the `IF THEN ELSE`.  If it resolves
+        // to a compile-time constant, we only need to visit one branch, which means
+        // that no references will be recorded for the other branch, therefore allowing
+        // it to be skipped in the unused reference elimination phase and during the
+        // final code generation phase.
+        const condText = ctx.expr(0).getText()
+        const exprReader = new ExprReader()
+        const condExpr = exprReader.read(condText)
+        if (condExpr.constantValue !== undefined) {
+          // Record the conditional expression and its constant value so that
+          // it can be accessed later by EquationGen.  We need to record it
+          // this way because any variables referenced by the expression may
+          // be removed during the unused reference elimination phase.
+          Model.addConstantExpr(condText, condExpr.constantValue)
+          if (condExpr.constantValue !== 0) {
+            // Only visit the "if true" branch
+            this.setArgIndex(1)
+            ctx.expr(1).accept(this)
+          } else {
+            // Only visit the "if false" branch
+            this.setArgIndex(2)
+            ctx.expr(2).accept(this)
+          }
         } else {
-          // Only visit the "if false" branch
-          this.setArgIndex(2)
-          ctx.expr(2).accept(this)
+          // Visit the condition and both branches
+          super.visitExprList(ctx)
         }
       } else {
-        // Visit the condition and both branches
+        // Optimization is disabled, visit the condition and both branches
         super.visitExprList(ctx)
       }
     } else {
