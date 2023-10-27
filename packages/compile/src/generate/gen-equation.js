@@ -11,10 +11,10 @@ import {
 import { generateConstListElement } from './gen-const-list.js'
 
 import { generateDirectConstInit } from './gen-direct-const.js'
-import { generateDirectDataInit } from './gen-direct-data.js'
 import { generateExpr } from './gen-expr.js'
-import { generateExternalDataInit } from './gen-external-data.js'
-import { generateLookup } from './gen-lookup.js'
+import { generateLookupsFromDirectData } from './gen-lookup-from-direct.js'
+import { generateLookupsFromExternalData } from './gen-lookup-from-external.js'
+import { generateLookupFromPoints } from './gen-lookup-from-points.js'
 
 import LoopIndexVars from './loop-index-vars.js'
 
@@ -56,32 +56,6 @@ export function generateEquation(variable, mode, extData, directData, modelDir) 
     return [comment, generateConstListElement(variable, parsedEqn)]
   }
 
-  // Apply special handling for data variables
-  if (variable.isData()) {
-    // If the data var was converted from a const, it will have lookup points.
-    // Otherwise, read a data file to get lookup data.
-    if (mode !== 'decl' && mode !== 'init-lookups') {
-      throw new Error(`Invalid code gen mode '${mode}' for data variable ${variable.modelLHS}`)
-    }
-    if (variable.points.length === 0) {
-      if (variable.directDataArgs) {
-        return generateDirectDataInit(variable, mode, directData, modelDir, cLhs)
-      } else {
-        return generateExternalDataInit(variable, mode, extData, cLhs)
-      }
-    } else if (mode === 'decl') {
-      return []
-    }
-  }
-
-  // Apply special handling for lookups
-  if (variable.isLookup()) {
-    if (mode !== 'decl' && mode !== 'init-lookups') {
-      throw new Error(`Invalid code gen mode '${mode}' for lookup ${variable.modelLHS}`)
-    }
-    return generateLookup(variable, mode, cLhs, loopIndexVars)
-  }
-
   // Emit direct constants individually without separating them first
   if (variable.directConstArgs) {
     const initCode = generateDirectConstInit(variable, modelDir)
@@ -100,6 +74,34 @@ export function generateEquation(variable, mode, extData, directData, modelDir) 
     const dimLength = sub(dimId).size
     openLoops.push(`  for (size_t ${indexName} = 0; ${indexName} < ${dimLength}; ${indexName}++) {`)
     closeLoops.push('  }')
+  }
+
+  // Apply special handling for data variables.  The data can be defined in one of three ways:
+  //   - as a set of explicit data points (stored in the `Variable` instance), or
+  //   - from an external file via a `GET DIRECT DATA` call, or
+  //   - from an external data file (i.e., a "normal" data variable)
+  if (variable.isData()) {
+    if (variable.points.length > 0) {
+      // The variable already has data points defined, so generate a new lookup using that data.
+      // Note that unlike the other lookup cases, this one needs to include loop open/close code
+      // if the variable is subscripted.
+      const lookupDef = generateLookupFromPoints(variable, mode, /*copy=*/ true, cLhs, loopIndexVars)
+      return [...openLoops, ...lookupDef, ...closeLoops]
+    } else if (variable.directDataArgs) {
+      // The data is referenced using a `GET DIRECT DATA` call; generate one or more lookups
+      // using the data defined in external files
+      return generateLookupsFromDirectData(variable, mode, directData, modelDir, cLhs)
+    } else {
+      // This is a "normal" data variable; generate one or more lookups using the data defined
+      // in external files
+      return generateLookupsFromExternalData(variable, mode, extData, cLhs)
+    }
+  }
+
+  // Apply special handling for lookup variables.  The data for lookup variables is already
+  // defined as a set of explicit data points (stored in the `Variable` instance).
+  if (variable.isLookup()) {
+    return generateLookupFromPoints(variable, mode, /*copy=*/ false, cLhs, loopIndexVars)
   }
 
   // Keep a buffer of code that will be included before the generated block

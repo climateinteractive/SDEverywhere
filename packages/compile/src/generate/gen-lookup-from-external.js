@@ -13,14 +13,14 @@ import { isDimension, sub } from '../_shared/subscript.js'
  * @return {string[]} An array of strings containing the generated C code for the variable,
  * one string per line of code.
  */
-export function generateExternalDataInit(variable, mode, extData, varLhs) {
+export function generateLookupsFromExternalData(variable, mode, extData, varLhs) {
   // If there is external data for this variable, copy it from an external file to a lookup.
   // Just like in generateLookup(), we declare static arrays to hold the data points in the first pass
   // ("decl" mode), then initialize each `Lookup` using that data in the second pass ("init" mode).
 
   const newLookup = (name, lhs, data, subscriptIndexes) => {
     if (!data) {
-      throw new Error(`ERROR: Data for ${name} not found in external data sources`)
+      throw new Error(`Data for ${name} not found in external data sources`)
     }
 
     const dataName = variable.varName + '_data_' + R.map(i => `_${i}_`, subscriptIndexes).join('')
@@ -35,8 +35,8 @@ export function generateExternalDataInit(variable, mode, extData, varLhs) {
       return `double ${dataName}[${data.size * 2}] = { ${points} };`
     } else if (mode === 'init-lookups') {
       // In init mode, create the `Lookup`, passing in a pointer to the static data array declared in decl mode.
-      if (data.size < 1) {
-        throw new Error(`ERROR: lookup size = ${data.size} in ${lhs}`)
+      if (data.size === 0) {
+        throw new Error(`Empty lookup data array for ${lhs}`)
       }
       return `  ${lhs} = __new_lookup(${data.size}, /*copy=*/false, ${dataName});`
     } else {
@@ -68,7 +68,7 @@ export function generateExternalDataInit(variable, mode, extData, varLhs) {
     // We don't yet handle the case where there are more than one subscript or a mix of
     // subscripts and dimensions
     // TODO: Remove this restriction
-    throw new Error(`ERROR: Data variable ${variable.varName} has >= 2 subscripts; not yet handled`)
+    throw new Error(`Data variable ${variable.varName} has >= 2 subscripts; not yet handled`)
   }
 
   // At this point, we know that we have one or more dimensions; compute all combinations
