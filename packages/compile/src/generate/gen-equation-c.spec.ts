@@ -877,34 +877,52 @@ describe('generateEquation (Vensim -> C)', () => {
     expect(genC(vars.get('_y'))).toEqual(['_y = _GAMMA_LN(_x);'])
   })
 
-  it('should work for GET DATA BETWEEN TIMES function (mode=Interpolate)', () => {
-    const vars = readInlineModel(`
-      x = 1 ~~|
-      y = GET DATA BETWEEN TIMES(x, Time, 0) ~~|
-    `)
-    expect(vars.size).toBe(2)
-    expect(genC(vars.get('_x'))).toEqual(['_x = 1.0;'])
-    expect(genC(vars.get('_y'))).toEqual(['_y = _GET_DATA_BETWEEN_TIMES(_x, _time, 0.0);'])
-  })
+  describe('should work for GET DATA BETWEEN TIMES function', () => {
+    const extData: ExtData = new Map([
+      [
+        '_x',
+        new Map([
+          [0, 0],
+          [1, 2],
+          [2, 5]
+        ])
+      ]
+    ])
 
-  it('should work for GET DATA BETWEEN TIMES function (mode=Forward)', () => {
-    const vars = readInlineModel(`
-      x = 1 ~~|
-      y = GET DATA BETWEEN TIMES(x, Time, 1) ~~|
-    `)
-    expect(vars.size).toBe(2)
-    expect(genC(vars.get('_x'))).toEqual(['_x = 1.0;'])
-    expect(genC(vars.get('_y'))).toEqual(['_y = _GET_DATA_BETWEEN_TIMES(_x, _time, 1.0);'])
-  })
+    function verify(mode: number): void {
+      const vars = readInlineModel(
+        `
+        x ~~|
+        y = GET DATA BETWEEN TIMES(x, Time, ${mode}) ~~|
+      `,
+        { extData }
+      )
+      expect(vars.size).toBe(2)
+      expect(genC(vars.get('_x'), 'decl', { extData })).toEqual([
+        'double _x_data_[6] = { 0.0, 0.0, 1.0, 2.0, 2.0, 5.0 };'
+      ])
+      expect(genC(vars.get('_x'), 'init-lookups', { extData })).toEqual([
+        '_x = __new_lookup(3, /*copy=*/false, _x_data_);'
+      ])
+      expect(genC(vars.get('_y'))).toEqual([`_y = _GET_DATA_BETWEEN_TIMES(_x, _time, ${mode}.0);`])
+    }
 
-  it('should work for GET DATA BETWEEN TIMES function (mode=Backward)', () => {
-    const vars = readInlineModel(`
-      x = 1 ~~|
-      y = GET DATA BETWEEN TIMES(x, Time, -1) ~~|
-    `)
-    expect(vars.size).toBe(2)
-    expect(genC(vars.get('_x'))).toEqual(['_x = 1.0;'])
-    expect(genC(vars.get('_y'))).toEqual(['_y = _GET_DATA_BETWEEN_TIMES(_x, _time, -1.0);'])
+    it('with mode == Interpolate', () => {
+      verify(0)
+    })
+
+    it('with mode == Forward', () => {
+      verify(1)
+    })
+
+    it('with mode == Backward', () => {
+      verify(-1)
+    })
+
+    // TODO: Ideally we would validate the mode argument during the analyze phase
+    // it('with invalid mode', () => {
+    //   verify(42) // should throw error
+    // })
   })
 
   // TODO: Ideally we would validate the mode argument during the analyze phase
