@@ -1,5 +1,5 @@
 import { cdbl, newTmpVarName } from '../_shared/helpers.js'
-import { extractMarkedDims, isIndex, normalizeSubscripts, sub } from '../_shared/subscript.js'
+import { extractMarkedDims, isDimension, isIndex, normalizeSubscripts, sub } from '../_shared/subscript.js'
 
 import Model from '../model/model.js'
 
@@ -46,14 +46,26 @@ export function generateExpr(expr, ctx) {
       return expr.text
 
     case 'variable-ref': {
-      // See if the referenced variable is a data variable
+      // This is a variable or dimension reference.  See if there is a variable defined for the ID.
       const v = Model.varWithName(expr.varId)
-      if (v?.isData()) {
-        // It's a data variable; transform to a `_LOOKUP` function call
-        return `_LOOKUP(${ctx.cVarRef(expr)}, _time)`
+      if (v) {
+        // This is a reference to a known variable
+        if (v.isData()) {
+          // It's a data variable; transform to a `_LOOKUP` function call
+          return `_LOOKUP(${ctx.cVarRef(expr)}, _time)`
+        } else {
+          // It's not a data variable; generate a normal variable reference
+          return ctx.cVarRef(expr)
+        }
+      } else if (isDimension(expr.varId)) {
+        // This is a reference to a dimension that is being used in expression position.
+        // In place of the dimension, emit the current value of the loop index variable
+        // plus one (since Vensim indices are one-based).
+        const dimId = expr.varId
+        const indexName = ctx.loopIndexVars.index(dimId)
+        return `(${indexName} + 1)`
       } else {
-        // It's not a data variable; generate a normal variable reference
-        return ctx.cVarRef(expr)
+        throw new Error(`Unresolved variable reference ${expr.varName} in code gen for ${ctx.variable.modelLHS}`)
       }
     }
 
@@ -309,7 +321,7 @@ function generateFunctionCall(callExpr, ctx) {
     case '_GET_DIRECT_DATA':
     case '_GET_DIRECT_LOOKUPS':
       // These functions are handled at a higher level, so we should not get here
-      throw new Error(`Unexpected function ${fnId} in code gen when reading ${ctx.variable.modelLHS}`)
+      throw new Error(`Unexpected function ${fnId} in code gen for ${ctx.variable.modelLHS}`)
 
     case '_INITIAL':
       // In init mode, only emit the initial expression without the INITIAL function call
@@ -341,7 +353,7 @@ function generateFunctionCall(callExpr, ctx) {
         // it does not work in the case of models that use custom macros.  We need to provide
         // a way for users to disable this error, or explicitly declare a list of function
         // names to ignore or treat as user-implemented macros.
-        throw new Error(`Unhandled function '${fnId}' in code gen when reading ${ctx.variable.modelLHS}`)
+        throw new Error(`Unhandled function '${fnId}' in code gen for ${ctx.variable.modelLHS}`)
       }
     }
   }
