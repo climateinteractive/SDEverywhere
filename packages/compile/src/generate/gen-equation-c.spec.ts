@@ -555,19 +555,43 @@ describe('generateEquation (Vensim -> C)', () => {
     expect(genC(vars.get('_z'))).toEqual(['_z = _y[1][0];'])
   })
 
-  it('should work for equation that uses a dimension name in an expression', () => {
+  it('should work for equation that uses a regular dimension name (trivial case) in an expression', () => {
     const vars = readInlineModel(`
       DimA: A1, A2 ~~|
       Selected A Index = 1 ~~|
-      A[DimA] = IF THEN ELSE ( DimA = Selected A Index, 1, 0 ) ~~|
+      x[DimA] = IF THEN ELSE ( DimA = Selected A Index, 1, 0 ) ~~|
     `)
     expect(vars.size).toBe(2)
     expect(genC(vars.get('_selected_a_index'), 'init-constants')).toEqual(['_selected_a_index = 1.0;'])
-    expect(genC(vars.get('_a'))).toEqual([
+    expect(genC(vars.get('_x'))).toEqual([
       'for (size_t i = 0; i < 2; i++) {',
-      '_a[i] = _IF_THEN_ELSE((i + 1) == _selected_a_index, 1.0, 0.0);',
+      '_x[i] = _IF_THEN_ELSE((i + 1) == _selected_a_index, 1.0, 0.0);',
       '}'
     ])
+  })
+
+  it('should work for equation that uses a regular dimension name (non-trivial case) in an expression', () => {
+    const vars = readInlineModel(`
+      DimA: A1, A2, A3 ~~|
+      SubA: A1, A3 ~~|
+      Selected A Index = 1 ~~|
+      x[SubA] = IF THEN ELSE ( SubA = Selected A Index, 1, 0 ) ~~|
+    `)
+    console.log(vars)
+    expect(vars.size).toBe(3)
+    expect(genC(vars.get('_selected_a_index'), 'init-constants')).toEqual(['_selected_a_index = 1.0;'])
+    expect(genC(vars.get('_x[_a1]'))).toEqual(['_x[0] = _IF_THEN_ELSE((0 + 1) == _selected_a_index, 1.0, 0.0);'])
+    expect(genC(vars.get('_x[_a3]'))).toEqual(['_x[2] = _IF_THEN_ELSE((2 + 1) == _selected_a_index, 1.0, 0.0);'])
+  })
+
+  it('should work for equation that uses a mapped dimension name in an expression', () => {
+    const vars = readInlineModel(`
+      DimA: A1, A2 ~~|
+      DimB: B1, B2 -> DimA ~~|
+      x[DimA] = DimB ~~|
+    `)
+    expect(vars.size).toBe(1)
+    expect(genC(vars.get('_x'))).toEqual(['for (size_t i = 0; i < 2; i++) {', '_x[i] = (__map_dimb_dima[i] + 1);', '}'])
   })
 
   it('should work for variables that rely on subscript mappings', () => {
