@@ -168,7 +168,6 @@ function generateFunctionCall(callExpr, ctx) {
     case '_EXP':
     case '_GAME':
     case '_GAMMA_LN':
-    case '_GET_DATA_BETWEEN_TIMES':
     case '_IF_THEN_ELSE':
     case '_INTEGER':
     case '_LN':
@@ -202,14 +201,15 @@ function generateFunctionCall(callExpr, ctx) {
     //
     //
 
+    case '_GET_DATA_BETWEEN_TIMES':
     case '_LOOKUP_BACKWARD':
     case '_LOOKUP_FORWARD':
     case '_LOOKUP_INVERT': {
       // For LOOKUP* functions, the first argument must be a reference to the lookup variable.  Emit
-      // a C function call with a generated C expression for each argument.
+      // a C function call with a generated C expression for each remaining argument.
       const cVarRef = ctx.cVarRef(callExpr.args[0])
-      const cArg = generateExpr(callExpr.args[1], ctx)
-      return `${fnId}(${cVarRef}, ${cArg})`
+      const cArgs = callExpr.args.slice(1).map(arg => generateExpr(arg, ctx))
+      return `${fnId}(${cVarRef}, ${cArgs.join(', ')})`
     }
 
     //
