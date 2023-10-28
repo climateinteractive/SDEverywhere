@@ -133,7 +133,8 @@ export function generateEquation(variable, mode, extData, directData, modelDir) 
     emitPreFormula: s => preFormulaLines.push(s),
     emitPostFormula: s => postFormulaLines.push(s),
     cVarRef: varRef => cVarRef(variable, varRef, markedDimIds, loopIndexVars, arrayIndexVars),
-    cVarRefWithLhsSubscripts: baseVarId => cVarRefWithLhsSubscripts(variable, baseVarId, loopIndexVars)
+    cVarRefWithLhsSubscripts: baseVarId => cVarRefWithLhsSubscripts(variable, baseVarId, loopIndexVars),
+    cVarIndex: subOrDimId => cVarIndex(variable, [subOrDimId], subOrDimId, markedDimIds, loopIndexVars, arrayIndexVars)
   }
   const cRhs = generateExpr(parsedEqn.rhs.expr, genExprCtx)
   const formula = `  ${cLhs} = ${cRhs};`
@@ -200,50 +201,67 @@ function cVarRef(lhsVariable, rhsVarRef, markedDimIds, loopIndexVars, arrayIndex
   // the RHS variable reference in the model looks like `x[DimA]`, this will convert the
   // `[DimA]` part to `[_dima[i]]` (or simply `[i]` if it is a "trivial" dimension).
   const cSubParts = rhsSubIds.map(rhsSubId => {
-    if (isIndex(rhsSubId)) {
-      // This is a specific subscript (i.e., an index); dereference the array using the index
-      // number of the subscript
-      return `[${sub(rhsSubId).value}]`
-    }
-
-    // Otherwise, this is a dimension. Get the corresponding loop index variable used
-    // in the "for" loop.
-    let indexName
-    if (markedDimIds.has(rhsSubId)) {
-      // This is a marked dimension as used in an array function (e.g., `SUM`), so use
-      // the name of the array loop index variable
-      indexName = arrayIndexVars.index(rhsSubId)
-    } else {
-      // Use the single index name for a separated variable if it exists
-      const separatedIndexName = separatedVariableIndex(rhsSubId, lhsVariable, rhsSubIds)
-      if (separatedIndexName) {
-        return `[${sub(separatedIndexName).value}]`
-      }
-
-      // See if we need to apply a mapping because the RHS dim is not found on the LHS
-      const found = lhsVariable.subscripts.findIndex(lhsSubId => sub(lhsSubId).family === sub(rhsSubId).family)
-      if (found < 0) {
-        // Find the mapping from the RHS subscript to a LHS subscript
-        for (const lhsSubId of lhsVariable.subscripts) {
-          if (hasMapping(rhsSubId, lhsSubId)) {
-            indexName = loopIndexVars.index(lhsSubId)
-            return `[__map${rhsSubId}${lhsSubId}[${indexName}]]`
-          }
-        }
-      }
-
-      // There is no mapping, so use the loop index for this dim family on the LHS
-      indexName = loopIndexVars.index(rhsSubId)
-    }
-
-    // Dereference the array using the corresponding loop index variable
-    if (isTrivialDimension(rhsSubId)) {
-      // When the dimension is trivial, we can emit e.g. `[i]` instead of `[_dim[i]]`
-      return `[${indexName}]`
-    } else {
-      return `[${rhsSubId}[${indexName}]]`
-    }
+    return cVarIndex(lhsVariable, rhsSubIds, rhsSubId, markedDimIds, loopIndexVars, arrayIndexVars)
   })
 
-  return `${rhsVarRef.varId}${cSubParts.join('')}`
+  return `${rhsVarRef.varId}${cSubParts.map(part => `[${part}]`).join('')}`
+}
+
+/**
+ * Return the C code for indexing into a subscripted variable.
+ *
+ * @param {*} lhsVariable The LHS `Variable` instance.
+ * @param {string[]} rhsSubIds The set of all subscript or dimension IDs used on the RHS.
+ * @param {string} rhsSubId The specific subscript or dimension ID being evaluated.
+ * @param {Set<string>} markedDimIds The set of dimension IDs that are marked for use
+ * in an array function, for example `SUM(x[DimA!])`.
+ * @param {LoopIndexVars} loopIndexVars The loop index state.
+ * @param {LoopIndexVars} arrayIndexVars The loop index state used for array functions
+ * (that use marked dimensions).
+ * @returns {string} The C variable reference.
+ */
+function cVarIndex(lhsVariable, rhsSubIds, rhsSubId, markedDimIds, loopIndexVars, arrayIndexVars) {
+  if (isIndex(rhsSubId)) {
+    // This is a specific subscript (i.e., an index); dereference the array using the index
+    // number of the subscript
+    return `${sub(rhsSubId).value}`
+  }
+
+  // Otherwise, this is a dimension. Get the corresponding loop index variable used
+  // in the "for" loop.
+  let indexName
+  if (markedDimIds.has(rhsSubId)) {
+    // This is a marked dimension as used in an array function (e.g., `SUM`), so use
+    // the name of the array loop index variable
+    indexName = arrayIndexVars.index(rhsSubId)
+  } else {
+    // Use the single index name for a separated variable if it exists
+    const separatedIndexName = separatedVariableIndex(rhsSubId, lhsVariable, rhsSubIds)
+    if (separatedIndexName) {
+      return `${sub(separatedIndexName).value}`
+    }
+
+    // See if we need to apply a mapping because the RHS dim is not found on the LHS
+    const found = lhsVariable.subscripts.findIndex(lhsSubId => sub(lhsSubId).family === sub(rhsSubId).family)
+    if (found < 0) {
+      // Find the mapping from the RHS subscript to a LHS subscript
+      for (const lhsSubId of lhsVariable.subscripts) {
+        if (hasMapping(rhsSubId, lhsSubId)) {
+          indexName = loopIndexVars.index(lhsSubId)
+          return `__map${rhsSubId}${lhsSubId}[${indexName}]`
+        }
+      }
+    }
+
+    // There is no mapping, so use the loop index for this dim family on the LHS
+    indexName = loopIndexVars.index(rhsSubId)
+  }
+
+  // Dereference the array using the corresponding loop index variable
+  if (isTrivialDimension(rhsSubId)) {
+    // When the dimension is trivial, we can emit e.g. `[i]` instead of `[_dim[i]]`
+    return `${indexName}`
+  } else {
+    return `${rhsSubId}[${indexName}]`
+  }
 }

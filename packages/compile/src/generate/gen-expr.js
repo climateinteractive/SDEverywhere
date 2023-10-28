@@ -23,6 +23,7 @@ import Model from '../model/model.js'
  * referenced in a RHS expression.
  * @param {(baseVarId: string) => string} cVarRefWithLhsSubscripts Function that returns a C variable reference that
  * takes into account the relevant LHS subscripts.
+ * @param {(subOrDimId: string) => string} cVarIndex Function that returns C code for indexing into a subscripted variable.
  */
 
 /**
@@ -62,8 +63,8 @@ export function generateExpr(expr, ctx) {
         // In place of the dimension, emit the current value of the loop index variable
         // plus one (since Vensim indices are one-based).
         const dimId = expr.varId
-        const indexName = ctx.loopIndexVars.index(dimId)
-        return `(${indexName} + 1)`
+        const indexCode = ctx.cVarIndex(dimId)
+        return `(${indexCode} + 1)`
       } else {
         throw new Error(`Unresolved variable reference ${expr.varName} in code gen for ${ctx.variable.modelLHS}`)
       }
@@ -775,7 +776,6 @@ function generateAllocateAvailableCall(callExpr, ctx) {
   // Generate the code that is emitted before the entire block (before any loops are opened)
   const tmpVarId = newTmpVarName()
   const dimSize = sub(dimId).size
-  // let dimSize = sub(this.aaTmpDimName).size
   ctx.emitPreBlock(
     `  double* ${tmpVarId} = _ALLOCATE_AVAILABLE(${reqRefId}, (double*)${priorityRefId}, ${availRefId}, ${dimSize});`
   )
