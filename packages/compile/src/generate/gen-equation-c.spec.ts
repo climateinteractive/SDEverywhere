@@ -241,21 +241,21 @@ describe('generateEquation (Vensim -> C)', () => {
   it('should work for conditional expression with :OR: op', () => {
     const vars = readInlineModel(`
       x = 1 ~~|
-      y = IF THEN ELSE(z :OR: time, 1, 0) ~~|
+      y = IF THEN ELSE(x :OR: time, 1, 0) ~~|
     `)
     expect(vars.size).toBe(2)
     expect(genC(vars.get('_x'))).toEqual(['_x = 1.0;'])
-    expect(genC(vars.get('_y'))).toEqual(['_y = _IF_THEN_ELSE(_z || _time, 1.0, 0.0);'])
+    expect(genC(vars.get('_y'))).toEqual(['_y = _IF_THEN_ELSE(_x || _time, 1.0, 0.0);'])
   })
 
   it('should work for conditional expression with :NOT: op', () => {
     const vars = readInlineModel(`
       x = 1 ~~|
-      y = IF THEN ELSE(:NOT: z, 1, 0) ~~|
+      y = IF THEN ELSE(:NOT: x, 1, 0) ~~|
     `)
     expect(vars.size).toBe(2)
     expect(genC(vars.get('_x'))).toEqual(['_x = 1.0;'])
-    expect(genC(vars.get('_y'))).toEqual(['_y = _IF_THEN_ELSE(!_z, 1.0, 0.0);'])
+    expect(genC(vars.get('_y'))).toEqual(['_y = _IF_THEN_ELSE(!_x, 1.0, 0.0);'])
   })
 
   it('should work for data variable definition', () => {
@@ -553,6 +553,21 @@ describe('generateEquation (Vensim -> C)', () => {
       '}'
     ])
     expect(genC(vars.get('_z'))).toEqual(['_z = _y[1][0];'])
+  })
+
+  it('should work for equation that uses a dimension name in an expression', () => {
+    const vars = readInlineModel(`
+      DimA: A1, A2 ~~|
+      Selected A Index = 1 ~~|
+      A[DimA] = IF THEN ELSE ( DimA = Selected A Index, 1, 0 ) ~~|
+    `)
+    expect(vars.size).toBe(2)
+    expect(genC(vars.get('_selected_a_index'), 'init-constants')).toEqual(['_selected_a_index = 1.0;'])
+    expect(genC(vars.get('_a'))).toEqual([
+      'for (size_t i = 0; i < 2; i++) {',
+      '_a[i] = _IF_THEN_ELSE((i + 1) == _selected_a_index, 1.0, 0.0);',
+      '}'
+    ])
   })
 
   it('should work for variables that rely on subscript mappings', () => {
@@ -1100,11 +1115,11 @@ describe('generateEquation (Vensim -> C)', () => {
   it('should work for IF THEN ELSE function', () => {
     const vars = readInlineModel(`
       x = 1 ~~|
-      y = IF THEN ELSE(z > 0, 1, x) ~~|
+      y = IF THEN ELSE(x > 0, 1, x) ~~|
     `)
     expect(vars.size).toBe(2)
     expect(genC(vars.get('_x'))).toEqual(['_x = 1.0;'])
-    expect(genC(vars.get('_y'))).toEqual(['_y = _IF_THEN_ELSE(_z > 0.0, 1.0, _x);'])
+    expect(genC(vars.get('_y'))).toEqual(['_y = _IF_THEN_ELSE(_x > 0.0, 1.0, _x);'])
   })
 
   it('should work for INITIAL function', () => {
@@ -1289,13 +1304,14 @@ describe('generateEquation (Vensim -> C)', () => {
 
   it('should work for NPV function', () => {
     const vars = readInlineModel(`
+      time step = 1 ~~|
       stream = 100 ~~|
       discount rate = 10 ~~|
       init = 0 ~~|
       factor = 2 ~~|
       y = NPV(stream, discount rate, init, factor) ~~|
     `)
-    expect(vars.size).toBe(8)
+    expect(vars.size).toBe(9)
     expect(genC(vars.get('_stream'))).toEqual(['_stream = 100.0;'])
     expect(genC(vars.get('_discount_rate'))).toEqual(['_discount_rate = 10.0;'])
     expect(genC(vars.get('_init'))).toEqual(['_init = 0.0;'])
