@@ -1,6 +1,4 @@
-import * as R from 'ramda'
-
-import { cdbl, listConcat } from '../_shared/helpers.js'
+import { cdbl } from '../_shared/helpers.js'
 import { isDimension, isTrivialDimension, sub } from '../_shared/subscript.js'
 
 /**
@@ -27,8 +25,8 @@ export function generateLookupFromPoints(variable, mode, copy, varLhs, loopIndex
       return []
     } else if (mode === 'init-lookups') {
       // In init mode, generate a new lookup using the data points from the variable
-      let lookupData = R.reduce((a, p) => listConcat(a, `${cdbl(p[0])}, ${cdbl(p[1])}`, true), '', variable.points)
-      return [`  ${varLhs} = __new_lookup(${variable.points.length}, /*copy=*/true, (double[]){ ${lookupData} });`]
+      const points = pointsString(variable.points)
+      return [`  ${varLhs} = __new_lookup(${variable.points.length}, /*copy=*/true, (double[]){ ${points} });`]
     }
   } else {
     // Construct the name of the data array, which is based on the associated lookup var name,
@@ -39,8 +37,8 @@ export function generateLookupFromPoints(variable, mode, copy, varLhs, loopIndex
       // at init time. Using static arrays is better for code size, helps us avoid creating a copy of
       // the data in memory, and seems to perform much better when compiled to wasm when compared to the
       // previous approach that used varargs + copying, especially on constrained (e.g. iOS) devices.
-      let data = R.reduce((a, p) => listConcat(a, `${cdbl(p[0])}, ${cdbl(p[1])}`, true), '', variable.points)
-      return [`double ${dataName}[${variable.points.length * 2}] = { ${data} };`]
+      const points = pointsString(variable.points)
+      return [`double ${dataName}[${variable.points.length * 2}] = { ${points} };`]
     } else if (mode === 'init-lookups') {
       // In init mode, create the `Lookup`, passing in a pointer to the static data array declared earlier.
       // TODO: Make use of the lookup range
@@ -49,6 +47,16 @@ export function generateLookupFromPoints(variable, mode, copy, varLhs, loopIndex
   }
 
   throw new Error(`Invalid code gen mode '${mode}' for lookup ${variable.modelLHS}`)
+}
+
+/**
+ * Return a string containing a comma separated list of [x,y] pairs from the given array of points.
+ *
+ * @param {number[][]} points The array of [x,y] tuples.
+ * @return {string} The string containing the comma separated point values.
+ */
+export function pointsString(points) {
+  return points.map(p => `${cdbl(p[0])}, ${cdbl(p[1])}`).join(', ')
 }
 
 /**

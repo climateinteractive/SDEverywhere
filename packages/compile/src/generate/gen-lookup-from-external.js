@@ -1,7 +1,8 @@
 import * as R from 'ramda'
 
-import { cartesianProductOf, cdbl, listConcat, permutationsOf } from '../_shared/helpers.js'
+import { cartesianProductOf, permutationsOf } from '../_shared/helpers.js'
 import { isDimension, sub } from '../_shared/subscript.js'
+import { pointsString } from './gen-lookup-from-points.js'
 
 /**
  * Generate code for a data variable whose data is sourced from an external file (in CSV or Excel format).
@@ -34,12 +35,8 @@ export function generateLookupsFromExternalData(variable, mode, extData, varLhs)
     const dataName = variable.varName + '_data_' + R.map(i => `_${i}_`, subscriptIndexes).join('')
     if (mode === 'decl') {
       // In decl mode, declare a static data array that will be used to create the associated `Lookup`
-      // at init time. See `generateLookup` for more details.
-      const points = R.reduce(
-        (a, p) => listConcat(a, `${cdbl(p[0])}, ${cdbl(p[1])}`, true),
-        '',
-        Array.from(data.entries())
-      )
+      // at init time
+      const points = pointsString(Array.from(data.entries()))
       return `double ${dataName}[${data.size * 2}] = { ${points} };`
     } else if (mode === 'init-lookups') {
       // In init mode, create the `Lookup`, passing in a pointer to the static data array declared in decl mode.
