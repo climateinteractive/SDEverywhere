@@ -44,7 +44,11 @@ export function generateExpr(expr, ctx) {
       return `'${expr.text}'`
 
     case 'keyword':
-      return expr.text
+      if (expr.text === ':NA:') {
+        return '_NA_'
+      } else {
+        throw new Error(`Unhandled keyword ${expr.text} in code gen for ${ctx.variable.modelLHS}`)
+      }
 
     case 'variable-ref': {
       // This is a variable or dimension reference.  See if there is a variable defined for the ID.

@@ -258,6 +258,16 @@ describe('generateEquation (Vensim -> C)', () => {
     expect(genC(vars.get('_y'))).toEqual(['_y = _IF_THEN_ELSE(!_x, 1.0, 0.0);'])
   })
 
+  it('should work for expression using :NA: keyword', () => {
+    const vars = readInlineModel(`
+      x = Time ~~|
+      y = IF THEN ELSE(x <> :NA:, 1, 0) ~~|
+    `)
+    expect(vars.size).toBe(2)
+    expect(genC(vars.get('_x'))).toEqual(['_x = _time;'])
+    expect(genC(vars.get('_y'))).toEqual(['_y = _IF_THEN_ELSE(_x != _NA_, 1.0, 0.0);'])
+  })
+
   it('should work for data variable definition', () => {
     const extData: ExtData = new Map([
       [
