@@ -87,7 +87,7 @@ export function generateEquation(variable, mode, extData, directData, modelDir) 
       // if the variable is subscripted.
       const lookupDef = generateLookupFromPoints(variable, mode, /*copy=*/ true, cLhs, loopIndexVars)
       if (lookupDef.length > 0) {
-        return [...openLoops, ...lookupDef, ...closeLoops]
+        return [comment, ...openLoops, ...lookupDef, ...closeLoops]
       } else {
         return []
       }
