@@ -44,7 +44,7 @@ export function generateEquation(variable, mode, extData, directData, modelDir) 
 
   // Include the original model equation in a comment that comes before the generated code
   // for that equation
-  const comment = `  // ${variable.modelLHS} = ${variable.modelFormula}`
+  const comment = `  // ${variable.modelLHS} = ${variable.modelFormula.replace(/\n/g, '')}`
 
   // Apply special handling for const lists
   if (parsedEqn.rhs.kind === 'const-list') {
