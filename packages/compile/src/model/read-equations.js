@@ -386,6 +386,7 @@ function visitFunctionCall(v, callExpr, context) {
 
     case '_LOOKUP_BACKWARD':
     case '_LOOKUP_FORWARD':
+    case '_LOOKUP_INVERT':
     case '_MAX':
     case '_MIN':
     case '_MODULO':
@@ -573,7 +574,9 @@ function visitFunctionCall(v, callExpr, context) {
     default:
       // TODO: Throw an error (or show a soft warning) if the function is not yet implemented in SDE (and is not
       // explicitly declared as a user-implemented macro)
-      // console.error(`WARNING: readEquations doesn't yet handle ${callExpr.fnId}`)
+      if (process.env.SDE_PRIV_REPORT_UNSUPPORTED_FUNCTIONS === '1') {
+        console.warn(`WARNING: readEquations doesn't yet handle ${callExpr.fnId}`)
+      }
       break
   }
 
