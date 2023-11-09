@@ -587,7 +587,6 @@ describe('generateEquation (Vensim -> C)', () => {
       Selected A Index = 1 ~~|
       x[SubA] = IF THEN ELSE ( SubA = Selected A Index, 1, 0 ) ~~|
     `)
-    console.log(vars)
     expect(vars.size).toBe(3)
     expect(genC(vars.get('_selected_a_index'), 'init-constants')).toEqual(['_selected_a_index = 1.0;'])
     expect(genC(vars.get('_x[_a1]'))).toEqual(['_x[0] = _IF_THEN_ELSE((0 + 1) == _selected_a_index, 1.0, 0.0);'])
@@ -1545,11 +1544,11 @@ describe('generateEquation (Vensim -> C)', () => {
   it('should work for SQRT function', () => {
     const vars = readInlineModel(`
       x = 1 ~~|
-      y = SQRT(x, 2) ~~|
+      y = SQRT(x) ~~|
     `)
     expect(vars.size).toBe(2)
     expect(genC(vars.get('_x'))).toEqual(['_x = 1.0;'])
-    expect(genC(vars.get('_y'))).toEqual(['_y = _SQRT(_x, 2.0);'])
+    expect(genC(vars.get('_y'))).toEqual(['_y = _SQRT(_x);'])
   })
 
   it('should work for STEP function', () => {

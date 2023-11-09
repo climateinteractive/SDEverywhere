@@ -371,6 +371,7 @@ function visitFunctionCall(v, callExpr, context) {
     case '_INTEGER':
     case '_LN':
     case '_SIN':
+    case '_SQRT':
     case '_SUM':
     case '_VMAX':
     case '_VMIN':
@@ -392,7 +393,6 @@ function visitFunctionCall(v, callExpr, context) {
     case '_POWER':
     case '_PULSE':
     case '_QUANTUM':
-    case '_SQRT':
     case '_STEP':
     case '_VECTOR_ELM_MAP':
     case '_VECTOR_SORT_ORDER':
