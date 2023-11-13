@@ -38,14 +38,45 @@ const PRINT_INIT_GRAPH = false
 const PRINT_AUX_GRAPH = false
 const PRINT_LEVEL_GRAPH = false
 
-function read(parseTree, spec, extData, directData, modelDirname) {
+// XXX: This is needed for tests due to variables being in module-level storage
+function resetModelState() {
+  variables.length = 0
+  inputVars.length = 0
+  variablesByName.clear()
+  constantExprs.clear()
+  nonAtoANames = Object.create(null)
+}
+
+/**
+ * Read the given model parse tree and resolve all subscript and variable/equation definitions.
+ *
+ * Note that this function currently does not return anything and instead stores the parsed subscript
+ * definitions in the `subscript` module and the parsed/analyzed variables in this module.
+ *
+ * @param {import('../parse/parser.js').VensimModelParseTree} parseTree The Vensim parse tree.
+ * @param {*} spec The parsed `spec.json` object.
+ * @param {Map<string, any>} extData The map of datasets from external `.dat` files.
+ * @param {Map<string, any>} directData The mapping of dataset name used in a `GET DIRECT DATA`
+ * call (e.g., `?data`) to the tabular data contained in the loaded data file.
+ * @param {string} modelDirname The path to the directory containing the model (used for resolving data
+ * files for `GET DIRECT SUBSCRIPT`).
+ * @param {*} opts An optional object used by tests to stop the read process after a specific phase.
+ */
+function read(parseTree, spec, extData, directData, modelDirname, opts) {
   // Some arrays need to be separated into variables with individual indices to
   // prevent eval cycles. They are manually added to the spec file.
   let specialSeparationDims = spec.specialSeparationDims
+
   // Subscript ranges must be defined before reading variables that use them.
-  readSubscriptRanges(parseTree, spec.dimensionFamilies, spec.indexFamilies, modelDirname)
+  readSubscriptRanges(parseTree, modelDirname)
+  if (opts?.stopAfterReadSubscripts) return
+  resolveSubscriptRanges(spec.dimensionFamilies)
+  if (opts?.stopAfterResolveSubscripts) return
+
   // Read variables from the model parse tree.
   readVariables(parseTree, specialSeparationDims, directData)
+  if (opts?.stopAfterReadVariables) return
+
   if (spec) {
     // If the spec file contains `input/outputVarNames` (with full Vensim variable names)
     // convert those to C names first.  Otherwise, use `input/outputNames` which are already
@@ -61,20 +92,50 @@ function read(parseTree, spec, extData, directData, modelDirname) {
       inputVars = spec.inputVars
     }
   }
+
   // Analyze model equations to fill in more details about variables.
   analyze()
+  if (opts?.stopAfterAnalyze) return
+
   // Check that all input and output vars in the spec actually exist in the model.
   checkSpecVars(spec, extData)
+
   // Remove variables that are not referenced by an input or output variable.
   removeUnusedVariables(spec)
+
   // Resolve duplicate declarations by converting to one variable type.
   resolveDuplicateDeclarations()
 }
-function readSubscriptRanges(tree, dimensionFamilies, indexFamilies, modelDirname) {
+
+/**
+ * Read subscript ranges from the given model.
+ *
+ * Note that this function currently does not return anything and instead stores the parsed subscript
+ * range definitions in the `subscript` module.
+ *
+ * @param {import('../parse/parser.js').VensimModelParseTree} parseTree The Vensim parse tree.
+ * @param {string} modelDirname The path to the directory containing the model (used for resolving data
+ * files for `GET DIRECT SUBSCRIPT`).
+ */
+function readSubscriptRanges(parseTree, modelDirname) {
   // Read subscript ranges from the model.
   let subscriptRangeReader = new SubscriptRangeReader(modelDirname)
-  subscriptRangeReader.visitModel(tree)
+  subscriptRangeReader.visitModel(parseTree)
+}
+
+/**
+ * Process the previously read subscript/dimension definitions (stored in the `subscript` module) to
+ * resolve aliases, families, and indices.
+ *
+ * Note that this function currently does not return anything and only updates the set of dimension
+ * and subscript definitions in the `subscript` module.
+ *
+ * @param {Object.<string, string>} dimensionFamilies The optional mapping of dimension name to family name
+ * as provided in a `spec.json` file.
+ */
+function resolveSubscriptRanges(dimensionFamilies) {
   let allDims = allDimensions()
+
   // Expand dimensions that appeared in subscript range definitions into indices.
   // Repeat until there are only indices in dimension values.
   let dimFoundInValue
@@ -204,6 +265,21 @@ function readSubscriptRanges(tree, dimensionFamilies, indexFamilies, modelDirnam
     }
   }
 }
+
+/**
+ * Read equations from the given model and generate `Variable` instances for all variables that
+ * are encountered while parsing.
+ *
+ * Note that this function currently does not return anything and instead stores the parsed
+ * variable definitions in the `model` module.
+ *
+ * @param {import('../parse/parser.js').VensimModelParseTree} tree The Vensim parse tree.
+ * @param {Object.<string, string>} specialSeparationDims The variable names that need to be
+ * separated because of circular references.  A mapping from "C" variable name to "C" dimension
+ * name to separate on.
+ * @param {Map<string, any>} directData The mapping of dataset name used in a `GET DIRECT DATA`
+ * call (e.g., `?data`) to the tabular data contained in the loaded data file.
+ */
 function readVariables(tree, specialSeparationDims, directData) {
   // Read all variables in the model parse tree.
   // This populates the variables table with basic information for each variable
@@ -216,6 +292,7 @@ function readVariables(tree, specialSeparationDims, directData) {
   v.varName = '_time'
   addVariable(v)
 }
+
 function analyze() {
   // Analyze the RHS of each equation in stages after all the variables are read.
   // Find non-apply-to-all vars that are defined with more than one equation.
@@ -1146,6 +1223,7 @@ export default {
   read,
   refIdForVar,
   refIdsWithName,
+  resetModelState,
   splitRefId,
   variables,
   varIndexInfo,

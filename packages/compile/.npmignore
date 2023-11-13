@@ -1,0 +1,9 @@
+# Exclude all files to start (npm will still include some mandatory files, e.g., package.json, README)
+*
+
+# Include all files under src directory
+!src/**
+
+# Exclude test-related files
+src/**/_tests
+src/**/*.spec.ts

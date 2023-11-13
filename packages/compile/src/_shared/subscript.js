@@ -49,6 +49,11 @@ import { canonicalName, asort, vlog } from './helpers.js'
 // subscript name as the key and a subscript object as the value.
 let subscripts = new Map()
 
+// XXX: This is needed for tests due to subs/dims being in module-level storage
+export function resetSubscriptsAndDimensions() {
+  subscripts.clear()
+}
+
 export function Subscript(modelName, modelValue = null, modelFamily = null, modelMappings = null) {
   let name = canonicalName(modelName)
   if (modelValue === null) {
