@@ -41,6 +41,16 @@ export interface ConfigProcessorOptions {
    * ```
    */
   out?: string | ConfigProcessorOutputPaths
+
+  /**
+   * Additional options included with the SDE `spec.json` file.
+   * @hidden This is not part of the public API because we are aiming to merge
+   * the `spec.json` file format with the `sde.config.js` format.  This is exposed
+   * temporarily to allow for configuring additional settings like `directData`
+   * for which we don't currently have a way to configure via config files.
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  spec?: { [key: string]: any }
 }
 
 /**
@@ -122,6 +132,7 @@ async function processModelConfig(buildContext: BuildContext, options: ConfigPro
   return {
     inputs: context.getOrderedInputs(),
     outputs: context.getOrderedOutputs(),
-    datFiles: context.datFiles
+    datFiles: context.datFiles,
+    options: options.spec
   }
 }
