@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.14](https://github.com/climateinteractive/SDEverywhere/compare/cli-v0.7.13...cli-v0.7.14) (2023-10-26)
+
+
+### Features
+
+* add support for additional trig functions ([#383](https://github.com/climateinteractive/SDEverywhere/issues/383)) ([1dd1e32](https://github.com/climateinteractive/SDEverywhere/commit/1dd1e32ef64f25249876c42403de3cdf45f70dfa)), closes [#382](https://github.com/climateinteractive/SDEverywhere/issues/382)
+
 ## [0.7.13](https://github.com/climateinteractive/SDEverywhere/compare/cli-v0.7.12...cli-v0.7.13) (2023-10-18)
 
 
