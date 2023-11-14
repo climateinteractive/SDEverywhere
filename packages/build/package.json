@@ -23,7 +23,7 @@
     "precommit": "../../scripts/precommit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:ci": "vitest run",
+    "test:ci": "vitest --threads=false --test-timeout=10000 run",
     "type-check": "tsc --noEmit -p tsconfig-build.json",
     "build": "tsup",
     "docs": "../../scripts/gen-docs.js",
