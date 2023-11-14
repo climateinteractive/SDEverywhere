@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.4](https://github.com/climateinteractive/SDEverywhere/compare/plugin-config-v0.2.3...plugin-config-v0.2.4) (2023-11-14)
+
+
+### Bug Fixes
+
+* add a spec field to ConfigProcessorOptions to allow for providing additional spec.json values ([#391](https://github.com/climateinteractive/SDEverywhere/issues/391)) ([82f2d93](https://github.com/climateinteractive/SDEverywhere/commit/82f2d93864d96a455bea7c003604f29ebdadbfb0)), closes [#390](https://github.com/climateinteractive/SDEverywhere/issues/390)
+
 ## [0.2.3](https://github.com/climateinteractive/SDEverywhere/compare/plugin-config-v0.2.2...plugin-config-v0.2.3) (2023-09-29)
 
 Note: This is a redo of the 0.2.2 release to workaround an npmjs registry issue.  There are no actual changes in this release.
