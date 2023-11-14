@@ -115,9 +115,12 @@ export default class SubscriptRangeReader extends ModelReader {
     let lastCell = args[3]
     // let prefix = args[4]
     // If lastCell is a column letter, scan the column, else scan the row.
-    let dataAddress = XLSX.utils.decode_cell(firstCell)
+    let dataAddress = XLSX.utils.decode_cell(firstCell.toUpperCase())
     let col = dataAddress.c
     let row = dataAddress.r
+    if (col < 0 || row < 0) {
+      throw new Error(`Failed to parse 'firstcell' argument for GET DIRECT SUBSCRIPT call: ${firstCell}`)
+    }
     let nextCell
     if (isNaN(parseInt(lastCell))) {
       nextCell = () => row++

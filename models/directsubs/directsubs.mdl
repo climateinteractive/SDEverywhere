@@ -13,11 +13,14 @@ DimC:
 	GET DIRECT SUBSCRIPT(
 	   'c_subs.csv',
 	   ',',
-	   'A2',
+	   'a2',
 	   '2',
 	   ''
 	)
-  ~~|
+  ~
+  ~ This one uses a lowercase letter in the cell reference (atypical, but valid in Vensim).
+  ~ :SUPPLEMENTARY
+  |
 a[DimA] = 10, 20, 30
   ~~|
 b[DimB] = 1, 2, 3

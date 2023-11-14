@@ -18,8 +18,12 @@ b[DimB] =
   GET DIRECT CONSTANTS(
     'data/b.csv',
     ',',
-    'B2*'
-  ) ~~~:SUPPLEMENTARY|
+    'b2*'
+  )
+  ~
+  ~ This one uses a lowercase letter in the cell reference (atypical, but valid in Vensim).
+  ~ :SUPPLEMENTARY
+  |
 
 c[DimB, DimC] =
   GET DIRECT CONSTANTS(
