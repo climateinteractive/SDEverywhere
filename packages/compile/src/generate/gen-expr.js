@@ -69,6 +69,13 @@ export function generateExpr(expr, ctx) {
         const dimId = expr.varId
         const indexCode = ctx.cVarIndex(dimId)
         return `(${indexCode} + 1)`
+      } else if (isIndex(expr.varId)) {
+        // This is a reference to a subscript/index that is being used in expression position.
+        // In place of the subscript, emit the numeric index value of the subscript plus one
+        // (since Vensim indices are one-based).
+        const subId = expr.varId
+        const indexValue = sub(subId).value
+        return `${indexValue + 1}`
       } else {
         throw new Error(`Unresolved variable reference ${expr.varName} in code gen for ${ctx.variable.modelLHS}`)
       }

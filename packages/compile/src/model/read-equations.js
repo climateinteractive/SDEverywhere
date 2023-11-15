@@ -8,6 +8,7 @@ import {
   extractMarkedDims,
   indexNamesForSubscript,
   isDimension,
+  isIndex,
   normalizeSubscripts,
   separatedVariableIndex,
   sub
@@ -266,12 +267,12 @@ function visitVariableRef(v, varRefExpr, context) {
   // Mark the RHS as non-constant, since it has a variable reference
   context.rhsNonConst = true
 
-  if (isDimension(varRefExpr.varId)) {
-    // It is possible for a dimension name to be used where a variable would normally
-    // be.  Here is an example taken from the "extdata" sample model:
+  if (isDimension(varRefExpr.varId) || isIndex(varRefExpr.varId)) {
+    // It is possible for a dimension or subscript/index name to be used where a variable
+    // would normally be.  Here is an example taken from the "extdata" sample model:
     //   Chosen C = 1 ~~|
     //   C Selection[DimC] = IF THEN ELSE ( DimC = Chosen C , 1 , 0 ) ~~|
-    // If we detect a dimension, don't add it as a normal variable reference.
+    // If we detect a dimension or subscript/index, don't add it as a normal variable reference.
     return
   }
 
