@@ -1350,6 +1350,9 @@ describe('readVariables', () => {
       v('u[C5]', '5', {
         subscripts: ['_c5']
       }),
+      v('v[DimA]', 'IF THEN ELSE(DimA=A2,1,0)', {
+        subscripts: ['_dima']
+      }),
       v('Time', '')
     ])
   })
