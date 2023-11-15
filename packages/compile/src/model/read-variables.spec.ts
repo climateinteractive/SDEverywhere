@@ -457,39 +457,39 @@ describe('readVariables', () => {
   it('should work for Vensim "directlookups" model', () => {
     const vars = readSubscriptsAndVariables('directlookups')
     expect(vars).toEqual([
-      v('a from named xlsx[DimA]', "GET DIRECT LOOKUPS('lookup_data.xlsx','a','1','E2')", {
+      v('a from named xlsx[DimA]', "GET DIRECT LOOKUPS('lookups.xlsx','a','1','E2')", {
         separationDims: ['_dima'],
         subscripts: ['_a1']
       }),
-      v('a from named xlsx[DimA]', "GET DIRECT LOOKUPS('lookup_data.xlsx','a','1','E2')", {
+      v('a from named xlsx[DimA]', "GET DIRECT LOOKUPS('lookups.xlsx','a','1','E2')", {
         separationDims: ['_dima'],
         subscripts: ['_a2']
       }),
-      v('a from named xlsx[DimA]', "GET DIRECT LOOKUPS('lookup_data.xlsx','a','1','E2')", {
+      v('a from named xlsx[DimA]', "GET DIRECT LOOKUPS('lookups.xlsx','a','1','E2')", {
         separationDims: ['_dima'],
         subscripts: ['_a3']
       }),
-      v('a from tagged xlsx[DimA]', "GET DIRECT LOOKUPS('?lookup_data','a','1','E2')", {
+      v('a from tagged xlsx[DimA]', "GET DIRECT LOOKUPS('?lookups','a','1','E2')", {
         separationDims: ['_dima'],
         subscripts: ['_a1']
       }),
-      v('a from tagged xlsx[DimA]', "GET DIRECT LOOKUPS('?lookup_data','a','1','E2')", {
+      v('a from tagged xlsx[DimA]', "GET DIRECT LOOKUPS('?lookups','a','1','E2')", {
         separationDims: ['_dima'],
         subscripts: ['_a2']
       }),
-      v('a from tagged xlsx[DimA]', "GET DIRECT LOOKUPS('?lookup_data','a','1','E2')", {
+      v('a from tagged xlsx[DimA]', "GET DIRECT LOOKUPS('?lookups','a','1','E2')", {
         separationDims: ['_dima'],
         subscripts: ['_a3']
       }),
-      v('a[DimA]', "GET DIRECT LOOKUPS('lookup_data.csv',',','1','e2')", {
+      v('a[DimA]', "GET DIRECT LOOKUPS('lookups.CSV',',','1','e2')", {
         separationDims: ['_dima'],
         subscripts: ['_a1']
       }),
-      v('a[DimA]', "GET DIRECT LOOKUPS('lookup_data.csv',',','1','e2')", {
+      v('a[DimA]', "GET DIRECT LOOKUPS('lookups.CSV',',','1','e2')", {
         separationDims: ['_dima'],
         subscripts: ['_a2']
       }),
-      v('a[DimA]', "GET DIRECT LOOKUPS('lookup_data.csv',',','1','e2')", {
+      v('a[DimA]', "GET DIRECT LOOKUPS('lookups.CSV',',','1','e2')", {
         separationDims: ['_dima'],
         subscripts: ['_a3']
       }),

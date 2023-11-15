@@ -851,7 +851,7 @@ describe('generateEquation (Vensim -> C)', () => {
     const modelDir = sampleModelDir('directlookups')
     const vars = readInlineModel(`
       DimA: A1, A2, A3 ~~|
-      x[DimA] = GET DIRECT LOOKUPS('lookup_data.csv', ',', '1', 'AH2') ~~|
+      x[DimA] = GET DIRECT LOOKUPS('lookups.CSV', ',', '1', 'AH2') ~~|
       y[DimA] = x[DimA](Time) ~~|
       z = y[A2] ~~|
     `)
@@ -877,7 +877,7 @@ describe('generateEquation (Vensim -> C)', () => {
     const modelDir = sampleModelDir('directlookups')
     const vars = readInlineModel(`
       DimA: A1, A2, A3 ~~|
-      x[DimA] = GET DIRECT LOOKUPS('lookup_data.xlsx', 'a', '1', 'AH2') ~~|
+      x[DimA] = GET DIRECT LOOKUPS('lookups.xlsx', 'a', '1', 'AH2') ~~|
       y[DimA] = x[DimA](Time) ~~|
       z = y[A2] ~~|
     `)
@@ -903,7 +903,7 @@ describe('generateEquation (Vensim -> C)', () => {
     const modelDir = sampleModelDir('directlookups')
     const opts = {
       modelDir,
-      directDataSpec: new Map([['?a', 'lookup_data.xlsx']])
+      directDataSpec: new Map([['?a', 'lookups.xlsx']])
     }
     const vars = readInlineModel(`
       DimA: A1, A2, A3 ~~|
@@ -933,7 +933,7 @@ describe('generateEquation (Vensim -> C)', () => {
     const modelDir = sampleModelDir('directlookups')
     const vars = readInlineModel(`
       DimA: A1, A2, A3 ~~|
-      x[DimA] = GET DIRECT LOOKUPS('lookup_data.csv', ',', '1', 'ah2') ~~|
+      x[DimA] = GET DIRECT LOOKUPS('lookups.CSV', ',', '1', 'ah2') ~~|
       y[DimA] = x[DimA](Time) ~~|
       z = y[A2] ~~|
     `)
@@ -1060,7 +1060,7 @@ describe('generateEquation (Vensim -> C)', () => {
     const modelDir = sampleModelDir('directlookups')
     const vars = readInlineModel(`
       DimA: A1, A2, A3 ~~|
-      x[DimA] = GET DIRECT LOOKUPS('lookup_data.csv', ',', '1', 'AH2') ~~|
+      x[DimA] = GET DIRECT LOOKUPS('lookups.CSV', ',', '1', 'AH2') ~~|
       y[DimA] = LOOKUP BACKWARD(x[DimA], Time) ~~|
     `)
     expect(vars.size).toBe(4)
