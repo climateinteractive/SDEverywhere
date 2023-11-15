@@ -1,0 +1,6 @@
+{
+  "name": "directconst",
+  "directData": {
+    "?a": "data/a.xlsx"
+  }
+}

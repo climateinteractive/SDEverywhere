@@ -17,6 +17,7 @@ import {
   newTmpVarName,
   permutationsOf,
   readCsv,
+  readXlsx,
   strToConst,
   vlog
 } from '../_shared/helpers.js'
@@ -208,6 +209,56 @@ export default class EquationGen extends ModelReader {
     }
     return value
   }
+  handleExcelWorkbook(fileOrTag, workbook, tab, dataKind, dataSource) {
+    // Return a `getCellValue` function for the given Excel workbook parsed from an XLS[X] file.
+    if (workbook) {
+      let sheet = workbook.Sheets[tab]
+      if (sheet) {
+        return (c, r) => {
+          let cell = sheet[XLSX.utils.encode_cell({ c, r })]
+          return cell != null ? cdbl(cell.v) : null
+        }
+      } else {
+        throw new Error(`Direct ${dataKind} worksheet ${tab} ${dataSource} ${fileOrTag} not found`)
+      }
+    } else {
+      throw new Error(`Direct ${dataKind} workbook ${dataSource} ${fileOrTag} not found`)
+    }
+  }
+  handleCsvFile(file, dataPathname, tab, dataKind) {
+    // Return a `getCellValue` function for the given CSV file.
+    let data = readCsv(dataPathname, tab)
+    if (data) {
+      return (c, r) => {
+        let value = '0.0'
+        try {
+          value = data[r] != null && data[r][c] != null ? cdbl(data[r][c]) : null
+        } catch (error) {
+          console.error(`${error.message} in ${dataPathname}`)
+        }
+        return value
+      }
+    } else {
+      throw new Error(`Direct ${dataKind} file ${file} could not be read`)
+    }
+  }
+  handleExcelOrCsvFile(fileOrTag, tab, dataKind) {
+    // Return a `getCellValue` function that reads the CSV or XLS[X] content.
+    if (fileOrTag.startsWith('?')) {
+      // The file is a tag for an Excel file with data in the directData map.
+      let workbook = this.directData.get(fileOrTag)
+      return this.handleExcelWorkbook(fileOrTag, workbook, tab, dataKind, 'tagged')
+    } else {
+      // The file is a CSV or XLS[X] pathname. Read it now.
+      let dataPathname = path.resolve(this.modelDirname, fileOrTag)
+      if (dataPathname.endsWith('csv')) {
+        return this.handleCsvFile(fileOrTag, dataPathname, tab, dataKind)
+      } else {
+        let workbook = readXlsx(dataPathname)
+        return this.handleExcelWorkbook(fileOrTag, workbook, tab, dataKind, 'file')
+      }
+    }
+  }
   lookupDataNameGen(subscripts) {
     // Construct a name for the static data array associated with a lookup variable.
     return R.map(subscript => {
@@ -360,40 +411,11 @@ export default class EquationGen extends ModelReader {
     // If direct data exists for this variable, copy it from the workbook into one or more lookups.
     let result = []
     if (this.mode === 'init-lookups') {
-      let getCellValue
       let { file, tab, timeRowOrCol, startCell } = this.var.directDataArgs
-      if (file.startsWith('?')) {
-        // The file is a tag for an Excel file with data in the directData map.
-        let workbook = this.directData.get(file)
-        if (workbook) {
-          let sheet = workbook.Sheets[tab]
-          if (sheet) {
-            getCellValue = (c, r) => {
-              let cell = sheet[XLSX.utils.encode_cell({ c, r })]
-              return cell != null ? cdbl(cell.v) : null
-            }
-          } else {
-            throw new Error(`ERROR: Direct data worksheet ${tab} tagged ${file} not found`)
-          }
-        } else {
-          throw new Error(`ERROR: Direct data workbook tagged ${file} not found`)
-        }
-      } else {
-        // The file is a CSV pathname. Read it now.
-        let csvPathname = path.resolve(this.modelDirname, file)
-        let data = readCsv(csvPathname, tab)
-        if (data) {
-          getCellValue = (c, r) => {
-            let value = '0.0'
-            try {
-              value = data[r] != null && data[r][c] != null ? cdbl(data[r][c]) : null
-            } catch (error) {
-              console.error(`${error.message} in ${csvPathname}`)
-            }
-            return value
-          }
-        }
-      }
+
+      // Create a function that reads the CSV or XLS[X] content
+      let getCellValue = this.handleExcelOrCsvFile(file, tab, 'data')
+
       // If the data was found, convert it to a lookup.
       if (getCellValue) {
         let indexNum = 0
@@ -468,18 +490,10 @@ export default class EquationGen extends ModelReader {
     // The subscripts may be indices to pick out a subset of the data.
     let result = this.comments
     let { file, tab, startCell } = this.var.directConstArgs
-    let csvPathname = path.resolve(this.modelDirname, file)
-    let data = readCsv(csvPathname, tab)
-    if (data) {
-      let getCellValue = (c, r) => {
-        let value = '0.0'
-        try {
-          value = data[r] != null && data[r][c] != null ? cdbl(data[r][c]) : null
-        } catch (error) {
-          console.error(`${error.message} in ${csvPathname}`)
-        }
-        return value
-      }
+
+    // Create a function that reads the CSV or XLS[X] content
+    let getCellValue = this.handleExcelOrCsvFile(file, tab, 'constants')
+    if (getCellValue) {
       // Get C subscripts in text form for the LHS in normal order.
       let modelLHSReader = new ModelLHSReader()
       modelLHSReader.read(this.var.modelLHS)
@@ -526,7 +540,7 @@ export default class EquationGen extends ModelReader {
         }
         cellOffsets.push(entry)
       }
-      // Read CSV data into an indexed variable for each cell.
+      // Read tabular data into an indexed variable for each cell.
       let numericSubscripts = lhsIndexSubscripts.map(idx => idx.map(s => sub(s).value))
       let lhsSubscripts = numericSubscripts.map(s => s.reduce((a, v) => a.concat(`[${v}]`), ''))
       let dataAddress = XLSX.utils.decode_cell(startCell)
