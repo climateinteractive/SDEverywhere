@@ -1,38 +1,25 @@
-import path from 'node:path'
-
 import XLSX from 'xlsx'
 
-import { cartesianProductOf, cdbl, readCsv } from '../_shared/helpers.js'
+import { cartesianProductOf } from '../_shared/helpers.js'
 import { indexInSepDim, isDimension, sub } from '../_shared/subscript.js'
+
+import { handleExcelOrCsvFile } from './direct-data-helpers.js'
 
 /**
  * Generate code for a variable that uses `GET DIRECT CONSTANTS` to source constant values from an external
  * file (in CSV or Excel format).
  *
  * @param {*} variable The `Variable` instance to process.
+ * @param {Map<string, any>} directData The mapping of dataset name used in a `GET DIRECT CONSTANTS` call (e.g.,
+ * `?data`) to the tabular data contained in the loaded data file.
  * @param {string} modelDir The path to the directory containing the model (used for resolving data files).
  * @return {string[]} An array of strings containing the generated C code for the variable,
  * one string per line of code.
  */
-export function generateDirectConstInit(variable, modelDir) {
-  // Map zero, one, or two subscripts on the LHS in model order to a table of numbers in a CSV file.
-  // The subscripts may be indices to pick out a subset of the data.
+export function generateDirectConstInit(variable, directData, modelDir) {
+  // Create a function that reads the CSV or XLS[X] content
   let { file, tab, startCell } = variable.directConstArgs
-  let csvPathname = path.resolve(modelDir, file)
-  let data = readCsv(csvPathname, tab)
-  if (!data) {
-    return []
-  }
-
-  let getCellValue = (c, r) => {
-    let value = '0.0'
-    try {
-      value = data[r] != null && data[r][c] != null ? cdbl(data[r][c]) : null
-    } catch (error) {
-      console.error(`${error.message} in ${csvPathname}`)
-    }
-    return value
-  }
+  let getCellValue = handleExcelOrCsvFile(file, tab, 'constants', directData, modelDir)
 
   // Get C subscripts in text form for the LHS in normal order.
   let lhsSubIds = variable.parsedEqn.lhs.varRef.subscriptRefs?.map(s => s.subId) || []
@@ -83,12 +70,15 @@ export function generateDirectConstInit(variable, modelDir) {
     cellOffsets.push(entry)
   }
 
-  // Read CSV data into an indexed variable for each cell.
+  // Read tabular data into an indexed variable for each cell.
   let numericSubscripts = lhsIndexSubscripts.map(idx => idx.map(s => sub(s).value))
   let lhsSubscripts = numericSubscripts.map(s => s.reduce((a, v) => a.concat(`[${v}]`), ''))
-  let dataAddress = XLSX.utils.decode_cell(startCell)
+  let dataAddress = XLSX.utils.decode_cell(startCell.toUpperCase())
   let startCol = dataAddress.c
   let startRow = dataAddress.r
+  if (startCol < 0 || startRow < 0) {
+    throw new Error(`Failed to parse 'cell' argument for GET DIRECT CONSTANTS call for ${variable.refId}: ${startCell}`)
+  }
   for (let i = 0; i < cellOffsets.length; i++) {
     let rowOffset = cellOffsets[i][0] ? cellOffsets[i][0] : 0
     let colOffset = cellOffsets[i][1] ? cellOffsets[i][1] : 0

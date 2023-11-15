@@ -1231,7 +1231,7 @@ describe('generateEquation (Vensim -> C)', () => {
     const modelDir = sampleModelDir('directlookups')
     const vars = readInlineModel(`
       DimA: A1, A2, A3 ~~|
-      x[DimA] = GET DIRECT LOOKUPS('lookup_data.csv', ',', '1', 'AH2') ~~|
+      x[DimA] = GET DIRECT LOOKUPS('lookups.CSV', ',', '1', 'AH2') ~~|
       y[DimA] = x[DimA](Time) ~~|
       z = y[A2] ~~|
     `)

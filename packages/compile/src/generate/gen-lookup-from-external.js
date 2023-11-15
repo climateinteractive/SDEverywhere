@@ -5,7 +5,7 @@ import { isDimension, sub } from '../_shared/subscript.js'
 import { pointsString } from './gen-lookup-from-points.js'
 
 /**
- * Generate code for a data variable whose data is sourced from an external file (in CSV or Excel format).
+ * Generate code for a data variable whose data is sourced from an external file (in DAT format).
  *
  * @param {*} variable The `Variable` instance to process.
  * @param {'decl' | 'init-lookups'} mode The code generation mode.

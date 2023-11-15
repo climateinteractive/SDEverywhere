@@ -58,7 +58,7 @@ export function generateEquation(variable, mode, extData, directData, modelDir) 
 
   // Emit direct constants individually without separating them first
   if (variable.directConstArgs) {
-    const initCode = generateDirectConstInit(variable, modelDir)
+    const initCode = generateDirectConstInit(variable, directData, modelDir)
     return [comment, ...initCode]
   }
 

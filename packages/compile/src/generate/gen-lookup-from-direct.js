@@ -1,10 +1,10 @@
-import path from 'node:path'
-
 import * as R from 'ramda'
 import XLSX from 'xlsx'
 
-import { cdbl, listConcat, readCsv } from '../_shared/helpers.js'
+import { listConcat } from '../_shared/helpers.js'
 import { sub } from '../_shared/subscript.js'
+
+import { handleExcelOrCsvFile } from './direct-data-helpers.js'
 
 /**
  * Generate code for a variable that uses `GET DIRECT DATA` to source data from an external file
@@ -27,69 +27,32 @@ export function generateLookupsFromDirectData(variable, mode, directData, modelD
     throw new Error(`Invalid code gen mode '${mode}' for data variable ${variable.modelLHS}`)
   }
 
+  // Create a function that reads the CSV or XLS[X] content
+  const { file, tab, timeRowOrCol, startCell } = variable.directDataArgs
+  const getCellValue = handleExcelOrCsvFile(file, tab, 'data', directData, modelDir)
+
   // If direct data exists for this variable, copy it from the workbook into one or more lookups
-  let getCellValue
-  let { file, tab, timeRowOrCol, startCell } = variable.directDataArgs
-  if (file.startsWith('?')) {
-    // The file is a tag for an Excel file with data in the directData map
-    let workbook = directData.get(file)
-    if (workbook) {
-      let sheet = workbook.Sheets[tab]
-      if (sheet) {
-        getCellValue = (c, r) => {
-          let cell = sheet[XLSX.utils.encode_cell({ c, r })]
-          return cell != null ? cdbl(cell.v) : null
-        }
-      } else {
-        throw new Error(`Direct data worksheet ${tab} tagged ${file} not found`)
-      }
-    } else {
-      throw new Error(`Direct data workbook tagged ${file} not found`)
+  let indexNum = 0
+  if (!R.isEmpty(variable.separationDims)) {
+    // Generate a lookup for a separated index in the variable's dimension.
+    if (variable.separationDims.length > 1) {
+      console.error(`WARNING: direct data variable ${variable.varName} separated on more than one dimension`)
     }
-  } else {
-    // The file is a CSV pathname. Read it now.
-    let csvPathname = path.resolve(modelDir, file)
-    let data = readCsv(csvPathname, tab)
-    if (data) {
-      getCellValue = (c, r) => {
-        let value = '0.0'
-        try {
-          value = data[r] != null && data[r][c] != null ? cdbl(data[r][c]) : null
-        } catch (error) {
-          console.error(`${error.message} in ${csvPathname}`)
-        }
-        return value
+    let dimName = variable.separationDims[0]
+    for (let subscript of variable.subscripts) {
+      if (sub(subscript).family === dimName) {
+        // Use the index value in the subscript family when that is the separation dimension.
+        indexNum = sub(subscript).value
+        break
+      }
+      if (sub(dimName).value.includes(subscript)) {
+        // Look up the index when the separation dimension is a subdimension.
+        indexNum = sub(dimName).value.indexOf(subscript)
+        break
       }
     }
   }
-
-  // If the data was found, convert it to a lookup
-  const lines = []
-  if (getCellValue) {
-    let indexNum = 0
-    if (!R.isEmpty(variable.separationDims)) {
-      // Generate a lookup for a separated index in the variable's dimension.
-      if (variable.separationDims.length > 1) {
-        console.error(`WARNING: direct data variable ${variable.varName} separated on more than one dimension`)
-      }
-      let dimName = variable.separationDims[0]
-      for (let subscript of variable.subscripts) {
-        if (sub(subscript).family === dimName) {
-          // Use the index value in the subscript family when that is the separation dimension.
-          indexNum = sub(subscript).value
-          break
-        }
-        if (sub(dimName).value.includes(subscript)) {
-          // Look up the index when the separation dimension is a subdimension.
-          indexNum = sub(dimName).value.indexOf(subscript)
-          break
-        }
-      }
-    }
-    lines.push(generateDirectDataLookup(varLhs, getCellValue, timeRowOrCol, startCell, indexNum))
-  }
-
-  return lines
+  return [generateDirectDataLookup(varLhs, getCellValue, timeRowOrCol, startCell, indexNum)]
 }
 
 function generateDirectDataLookup(varLhs, getCellValue, timeRowOrCol, startCell, indexNum) {
@@ -97,14 +60,17 @@ function generateDirectDataLookup(varLhs, getCellValue, timeRowOrCol, startCell,
   // The cell(c,r) function wraps data access by column and row.
   let lookupData = ''
   let lookupSize = 0
-  let dataAddress = XLSX.utils.decode_cell(startCell)
+  let dataAddress = XLSX.utils.decode_cell(startCell.toUpperCase())
   let dataCol = dataAddress.c
   let dataRow = dataAddress.r
+  if (dataCol < 0 || dataRow < 0) {
+    throw new Error(`Failed to parse 'cell' argument for GET DIRECT {DATA,LOOKUPS} call for ${varLhs}: ${startCell}`)
+  }
 
   let timeCol, timeRow, nextCell
   if (isNaN(parseInt(timeRowOrCol))) {
     // Time values are in a column.
-    timeCol = XLSX.utils.decode_col(timeRowOrCol)
+    timeCol = XLSX.utils.decode_col(timeRowOrCol.toUpperCase())
     timeRow = dataRow
     dataCol += indexNum
     nextCell = () => {
