@@ -3968,8 +3968,8 @@ describe('readEquations', () => {
         refId: '_a',
         varType: 'const'
       }),
-      v('b[DimB]', "GET DIRECT CONSTANTS('data/b.csv',',','B2*')", {
-        directConstArgs: { file: 'data/b.csv', tab: ',', startCell: 'B2*' },
+      v('b[DimB]', "GET DIRECT CONSTANTS('data/b.csv',',','b2*')", {
+        directConstArgs: { file: 'data/b.csv', tab: ',', startCell: 'b2*' },
         refId: '_b',
         subscripts: ['_dimb'],
         varType: 'const'
@@ -4068,8 +4068,8 @@ describe('readEquations', () => {
         references: ['_a[_a1]', '_a[_a2]'],
         subscripts: ['_dima']
       }),
-      v('c', "GET DIRECT DATA('?data','C Data','A','B2')", {
-        directDataArgs: { file: '?data', tab: 'C Data', timeRowOrCol: 'A', startCell: 'B2' },
+      v('c', "GET DIRECT DATA('?data','C Data','a','b2')", {
+        directDataArgs: { file: '?data', tab: 'C Data', timeRowOrCol: 'a', startCell: 'b2' },
         refId: '_c',
         varType: 'data'
       }),
@@ -4242,22 +4242,22 @@ describe('readEquations', () => {
   it('should work for Vensim "directlookups" model', () => {
     const vars = readSubscriptsAndEquations('directlookups')
     expect(vars).toEqual([
-      v('a[DimA]', "GET DIRECT LOOKUPS('lookup_data.csv',',','1','E2')", {
-        directDataArgs: { file: 'lookup_data.csv', tab: ',', timeRowOrCol: '1', startCell: 'E2' },
+      v('a[DimA]', "GET DIRECT LOOKUPS('lookup_data.csv',',','1','e2')", {
+        directDataArgs: { file: 'lookup_data.csv', tab: ',', timeRowOrCol: '1', startCell: 'e2' },
         refId: '_a[_a1]',
         separationDims: ['_dima'],
         subscripts: ['_a1'],
         varType: 'data'
       }),
-      v('a[DimA]', "GET DIRECT LOOKUPS('lookup_data.csv',',','1','E2')", {
-        directDataArgs: { file: 'lookup_data.csv', tab: ',', timeRowOrCol: '1', startCell: 'E2' },
+      v('a[DimA]', "GET DIRECT LOOKUPS('lookup_data.csv',',','1','e2')", {
+        directDataArgs: { file: 'lookup_data.csv', tab: ',', timeRowOrCol: '1', startCell: 'e2' },
         refId: '_a[_a2]',
         separationDims: ['_dima'],
         subscripts: ['_a2'],
         varType: 'data'
       }),
-      v('a[DimA]', "GET DIRECT LOOKUPS('lookup_data.csv',',','1','E2')", {
-        directDataArgs: { file: 'lookup_data.csv', tab: ',', timeRowOrCol: '1', startCell: 'E2' },
+      v('a[DimA]', "GET DIRECT LOOKUPS('lookup_data.csv',',','1','e2')", {
+        directDataArgs: { file: 'lookup_data.csv', tab: ',', timeRowOrCol: '1', startCell: 'e2' },
         refId: '_a[_a3]',
         separationDims: ['_dima'],
         subscripts: ['_a3'],

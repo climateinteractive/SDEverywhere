@@ -427,12 +427,17 @@ export default class EquationGen extends ModelReader {
     let dataCol, dataRow, dataValue, timeCol, timeRow, timeValue, nextCell
     let lookupData = ''
     let lookupSize = 0
-    let dataAddress = XLSX.utils.decode_cell(startCell)
+    let dataAddress = XLSX.utils.decode_cell(startCell.toUpperCase())
     dataCol = dataAddress.c
     dataRow = dataAddress.r
+    if (dataCol < 0 || dataRow < 0) {
+      throw new Error(
+        `Failed to parse 'cell' argument for GET DIRECT {DATA,LOOKUPS} call for ${this.lhs}: ${startCell}`
+      )
+    }
     if (isNaN(parseInt(timeRowOrCol))) {
       // Time values are in a column.
-      timeCol = XLSX.utils.decode_col(timeRowOrCol)
+      timeCol = XLSX.utils.decode_col(timeRowOrCol.toUpperCase())
       timeRow = dataRow
       dataCol += indexNum
       nextCell = () => {
@@ -529,9 +534,12 @@ export default class EquationGen extends ModelReader {
       // Read CSV data into an indexed variable for each cell.
       let numericSubscripts = lhsIndexSubscripts.map(idx => idx.map(s => sub(s).value))
       let lhsSubscripts = numericSubscripts.map(s => s.reduce((a, v) => a.concat(`[${v}]`), ''))
-      let dataAddress = XLSX.utils.decode_cell(startCell)
+      let dataAddress = XLSX.utils.decode_cell(startCell.toUpperCase())
       let startCol = dataAddress.c
       let startRow = dataAddress.r
+      if (startCol < 0 || startRow < 0) {
+        throw new Error(`Failed to parse 'cell' argument for GET DIRECT CONSTANTS call for ${this.lhs}: ${startCell}`)
+      }
       for (let i = 0; i < cellOffsets.length; i++) {
         let rowOffset = cellOffsets[i][0] ? cellOffsets[i][0] : 0
         let colOffset = cellOffsets[i][1] ? cellOffsets[i][1] : 0
