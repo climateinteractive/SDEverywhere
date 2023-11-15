@@ -14,12 +14,30 @@ a =
     'B2'
   ) ~~~:SUPPLEMENTARY|
 
+a from named xlsx =
+  GET DIRECT CONSTANTS(
+    'data/a.xlsx',
+    'a',
+    'B2'
+  ) ~~~:SUPPLEMENTARY|
+
+a from tagged xlsx =
+  GET DIRECT CONSTANTS(
+    '?a',
+    'a',
+    'B2'
+  ) ~~~:SUPPLEMENTARY|
+
 b[DimB] =
   GET DIRECT CONSTANTS(
     'data/b.csv',
     ',',
-    'B2*'
-  ) ~~~:SUPPLEMENTARY|
+    'b2*'
+  )
+  ~
+  ~ This one uses a lowercase letter in the cell reference (atypical, but valid in Vensim).
+  ~ :SUPPLEMENTARY
+  |
 
 c[DimB, DimC] =
   GET DIRECT CONSTANTS(

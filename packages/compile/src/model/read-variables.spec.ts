@@ -370,7 +370,9 @@ describe('readVariables', () => {
     const vars = readSubscriptsAndVariables('directconst')
     expect(vars).toEqual([
       v('a', "GET DIRECT CONSTANTS('data/a.csv',',','B2')"),
-      v('b[DimB]', "GET DIRECT CONSTANTS('data/b.csv',',','B2*')", { subscripts: ['_dimb'] }),
+      v('a from named xlsx', "GET DIRECT CONSTANTS('data/a.xlsx','a','B2')"),
+      v('a from tagged xlsx', "GET DIRECT CONSTANTS('?a','a','B2')"),
+      v('b[DimB]', "GET DIRECT CONSTANTS('data/b.csv',',','b2*')", { subscripts: ['_dimb'] }),
       v('c[DimB,DimC]', "GET DIRECT CONSTANTS('data/c.csv',',','B2')", { subscripts: ['_dimb', '_dimc'] }),
       v('d[D1,DimB,DimC]', "GET DIRECT CONSTANTS('data/c.csv',',','B2')", { subscripts: ['_dimb', '_dimc', '_d1'] }),
       v('e[DimC,DimB]', "GET DIRECT CONSTANTS('data/c.csv',',','B2*')", { subscripts: ['_dimb', '_dimc'] }),
@@ -398,10 +400,16 @@ describe('readVariables', () => {
   it('should work for Vensim "directdata" model', () => {
     const vars = readSubscriptsAndVariables('directdata')
     expect(vars).toEqual([
-      v('a[DimA]', "GET DIRECT DATA('?data','A Data','A','B2')", { subscripts: ['_a1'], separationDims: ['_dima'] }),
-      v('a[DimA]', "GET DIRECT DATA('?data','A Data','A','B2')", { subscripts: ['_a2'], separationDims: ['_dima'] }),
+      v('a[DimA]', "GET DIRECT DATA('data.xlsx','A Data','A','B2')", {
+        separationDims: ['_dima'],
+        subscripts: ['_a1']
+      }),
+      v('a[DimA]', "GET DIRECT DATA('data.xlsx','A Data','A','B2')", {
+        subscripts: ['_a2'],
+        separationDims: ['_dima']
+      }),
       v('b[DimA]', 'a[DimA]*10', { subscripts: ['_dima'] }),
-      v('c', "GET DIRECT DATA('?data','C Data','A','B2')"),
+      v('c', "GET DIRECT DATA('?data','C Data','a','b2')"),
       v('d', 'c*10'),
       v('e[DimA]', "GET DIRECT DATA('e_data.csv',',','A','B2')", { subscripts: ['_a1'], separationDims: ['_dima'] }),
       v('e[DimA]', "GET DIRECT DATA('e_data.csv',',','A','B2')", { subscripts: ['_a2'], separationDims: ['_dima'] }),
@@ -449,19 +457,45 @@ describe('readVariables', () => {
   it('should work for Vensim "directlookups" model', () => {
     const vars = readSubscriptsAndVariables('directlookups')
     expect(vars).toEqual([
-      v('a[DimA]', "GET DIRECT LOOKUPS('lookup_data.csv',',','1','E2')", {
+      v('a from named xlsx[DimA]', "GET DIRECT LOOKUPS('lookups.xlsx','a','1','E2')", {
         separationDims: ['_dima'],
         subscripts: ['_a1']
       }),
-      v('a[DimA]', "GET DIRECT LOOKUPS('lookup_data.csv',',','1','E2')", {
+      v('a from named xlsx[DimA]', "GET DIRECT LOOKUPS('lookups.xlsx','a','1','E2')", {
         separationDims: ['_dima'],
         subscripts: ['_a2']
       }),
-      v('a[DimA]', "GET DIRECT LOOKUPS('lookup_data.csv',',','1','E2')", {
+      v('a from named xlsx[DimA]', "GET DIRECT LOOKUPS('lookups.xlsx','a','1','E2')", {
+        separationDims: ['_dima'],
+        subscripts: ['_a3']
+      }),
+      v('a from tagged xlsx[DimA]', "GET DIRECT LOOKUPS('?lookups','a','1','E2')", {
+        separationDims: ['_dima'],
+        subscripts: ['_a1']
+      }),
+      v('a from tagged xlsx[DimA]', "GET DIRECT LOOKUPS('?lookups','a','1','E2')", {
+        separationDims: ['_dima'],
+        subscripts: ['_a2']
+      }),
+      v('a from tagged xlsx[DimA]', "GET DIRECT LOOKUPS('?lookups','a','1','E2')", {
+        separationDims: ['_dima'],
+        subscripts: ['_a3']
+      }),
+      v('a[DimA]', "GET DIRECT LOOKUPS('lookups.CSV',',','1','e2')", {
+        separationDims: ['_dima'],
+        subscripts: ['_a1']
+      }),
+      v('a[DimA]', "GET DIRECT LOOKUPS('lookups.CSV',',','1','e2')", {
+        separationDims: ['_dima'],
+        subscripts: ['_a2']
+      }),
+      v('a[DimA]', "GET DIRECT LOOKUPS('lookups.CSV',',','1','e2')", {
         separationDims: ['_dima'],
         subscripts: ['_a3']
       }),
       v('b', 'a[A1](Time)'),
+      v('b from named xlsx', 'a from named xlsx[A1](Time)'),
+      v('b from tagged xlsx', 'a from tagged xlsx[A1](Time)'),
       v('c', 'LOOKUP INVERT(a[A1],0.5)'),
       v('d', 'LOOKUP FORWARD(a[A1],2028.1)'),
       v('e', 'LOOKUP FORWARD(a[A1],2028)'),
@@ -1349,6 +1383,9 @@ describe('readVariables', () => {
       }),
       v('u[C5]', '5', {
         subscripts: ['_c5']
+      }),
+      v('v[DimA]', 'IF THEN ELSE(DimA=A2,1,0)', {
+        subscripts: ['_dima']
       }),
       v('Time', '')
     ])

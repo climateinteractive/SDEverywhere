@@ -1,8 +1,9 @@
 # SDEverywhere &nbsp;&nbsp; ![](https://github.com/climateinteractive/SDEverywhere/actions/workflows/build.yaml/badge.svg)
 
-[SDEverywhere](http://sdeverywhere.org/) is a collection of libraries and command line tools that help you transform a [System Dynamics](http://www.systemdynamics.org/what-is-system-dynamics/) model into C, JavaScript, and WebAssembly code.
+[SDEverywhere](http://sdeverywhere.org/) is a collection of libraries and command line tools that help you improve the quality and expand the reach of a [System Dynamics](http://www.systemdynamics.org/what-is-system-dynamics/) model.
+SDEverywhere allows for unit testing, continuous integration, the ability to compare model runs, and a toolchain to transform a model into C, JavaScript, and WebAssembly code.
 
-Using SDEverywhere, you can deploy interactive System Dynamics models in mobile, desktop, and web apps for policymakers and the public.
+Using SDEverywhere, you can deploy interactive System Dynamics models on mobile, desktop, and the web for policymakers and the public.
 Or you could perform model analysis using general-purpose languages, running the model as high-performance C code.
 
 By following the ["Quick Start"](#quick-start) instructions below, within minutes you can turn a Vensim model like this:
@@ -146,7 +147,7 @@ Please fork our code and contribute!
 Here are some prominent current limitations:
 
 - Sketch information, the visual representation of the model, is not converted.
-- Only the most common [Vensim functions](https://www.vensim.com/documentation/index.html?20770.htm) are implemented.
+- Only the most common [Vensim functions](https://github.com/climateinteractive/SDEverywhere/wiki/Supported-Vensim-Functions) are implemented.
 - All models run using the Euler integrator.
 - Strings are not supported.
 - You must rewrite tabbed arrays as separate, non-apply-to-all variables.

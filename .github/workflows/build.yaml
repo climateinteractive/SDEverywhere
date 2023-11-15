@@ -14,6 +14,7 @@ on:
   push:
     branches-ignore:
       - main
+  pull_request:
 
 env:
   EM_DIR: 'emsdk'
@@ -24,6 +25,14 @@ env:
 jobs:
   # The `build` job builds and tests all packages in the monorepo
   build:
+    # We want to avoid redundant builds in the more common case where this workflow is running
+    # on a branch in the main SDEverywhere repository.  For that case, we only care about "push"
+    # events.  The "pull_request" events are only useful for contributions from external forks.
+    # Currently there is no way to detect or filter out forks in the `on: pull_request:` section
+    # above, so we use the following logic to filter at the job level.  Only run the job if:
+    #   - this is a "push" event for a branch in the main repository, OR
+    #   - this is a "pull_request" event for an external fork
+    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork)
     runs-on: ${{ matrix.config.os }}
     timeout-minutes: 20
     strategy:
@@ -88,6 +97,7 @@ jobs:
   # the other jobs (which cuts down on overall time to execute the workflow) because it
   # only needs to build a subset of the packages in order to run the integration tests.
   test_c:
+    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork)
     runs-on: ${{ matrix.config.os }}
     timeout-minutes: 20
     strategy:
@@ -152,6 +162,7 @@ jobs:
   # the other jobs (which cuts down on overall time to execute the workflow) because it
   # only needs to build a subset of the packages in order to run the integration tests.
   test_js:
+    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork)
     runs-on: ${{ matrix.config.os }}
     timeout-minutes: 20
     strategy:

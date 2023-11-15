@@ -268,6 +268,34 @@ describe('generateEquation (Vensim -> C)', () => {
     expect(genC(vars.get('_y'))).toEqual(['_y = _IF_THEN_ELSE(_x != _NA_, 1.0, 0.0);'])
   })
 
+  it('should work for conditional expression with reference to dimension', () => {
+    const vars = readInlineModel(`
+      DimA: A1, A2 ~~|
+      x = 1 ~~|
+      y[DimA] = IF THEN ELSE(DimA = x, 1, 0) ~~|
+    `)
+    expect(vars.size).toBe(2)
+    expect(genC(vars.get('_x'))).toEqual(['_x = 1.0;'])
+    expect(genC(vars.get('_y'))).toEqual([
+      'for (size_t i = 0; i < 2; i++) {',
+      '_y[i] = _IF_THEN_ELSE((i + 1) == _x, 1.0, 0.0);',
+      '}'
+    ])
+  })
+
+  it('should work for conditional expression with reference to dimension and subscript/index', () => {
+    const vars = readInlineModel(`
+      DimA: A1, A2 ~~|
+      y[DimA] = IF THEN ELSE(DimA = A2, 1, 0) ~~|
+    `)
+    expect(vars.size).toBe(1)
+    expect(genC(vars.get('_y'))).toEqual([
+      'for (size_t i = 0; i < 2; i++) {',
+      '_y[i] = _IF_THEN_ELSE((i + 1) == 2, 1.0, 0.0);',
+      '}'
+    ])
+  })
+
   it('should work for data variable definition', () => {
     const extData: ExtData = new Map([
       [
@@ -969,7 +997,7 @@ describe('generateEquation (Vensim -> C)', () => {
   //   expect(genC(vars.get('_y'))).toEqual(['_y = _GET_DATA_BETWEEN_TIMES(_x, _time, 42);'])
   // })
 
-  it('should work for GET DIRECT CONSTANTS function (single value)', () => {
+  it('should work for GET DIRECT CONSTANTS function (single value from named csv file)', () => {
     // TODO: Add new csv files for this test so that we don't have to rely on
     // other test models
     const modelDir = sampleModelDir('directconst')
@@ -978,6 +1006,48 @@ describe('generateEquation (Vensim -> C)', () => {
     `)
     expect(vars.size).toBe(1)
     expect(genC(vars.get('_x'), 'init-constants', { modelDir })).toEqual(['_x = 2050.0;'])
+  })
+
+  it('should work for GET DIRECT CONSTANTS function (single value from named xlsx file)', () => {
+    const modelDir = sampleModelDir('directconst')
+    const vars = readInlineModel(`
+      x = GET DIRECT CONSTANTS('data/a.xlsx', 'a', 'B2') ~~|
+    `)
+    expect(vars.size).toBe(1)
+    expect(genC(vars.get('_x'), 'init-constants', { modelDir })).toEqual(['_x = 2050.0;'])
+  })
+
+  it('should work for GET DIRECT CONSTANTS function (single value from tagged xlsx file)', () => {
+    const modelDir = sampleModelDir('directconst')
+    const opts = {
+      modelDir,
+      directDataSpec: new Map([['?a', 'data/a.xlsx']])
+    }
+    const vars = readInlineModel(`
+      x = GET DIRECT CONSTANTS('?a', 'a', 'B2') ~~|
+    `)
+    expect(vars.size).toBe(1)
+    expect(genC(vars.get('_x'), 'init-constants', opts)).toEqual(['_x = 2050.0;'])
+  })
+
+  it('should work for GET DIRECT CONSTANTS function (single value with lowercase cell reference)', () => {
+    const modelDir = sampleModelDir('directconst')
+    const vars = readInlineModel(`
+      x = GET DIRECT CONSTANTS('data/a.csv', ',', 'b2') ~~|
+    `)
+    expect(vars.size).toBe(1)
+    expect(genC(vars.get('_x'), 'init-constants', { modelDir })).toEqual(['_x = 2050.0;'])
+  })
+
+  it('should throw error for GET DIRECT CONSTANTS function (with invalid cell reference)', () => {
+    const modelDir = sampleModelDir('directconst')
+    const vars = readInlineModel(`
+      x = GET DIRECT CONSTANTS('data/a.csv', ',', '++') ~~|
+    `)
+    expect(vars.size).toBe(1)
+    expect(() => genC(vars.get('_x'), 'init-constants', { modelDir })).toThrow(
+      `Failed to parse 'cell' argument for GET DIRECT CONSTANTS call for _x: ++`
+    )
   })
 
   it('should work for GET DIRECT CONSTANTS function (1D)', () => {
@@ -1037,11 +1107,10 @@ describe('generateEquation (Vensim -> C)', () => {
     ])
   })
 
-  it('should work for GET DIRECT DATA function (single value)', () => {
+  it('should work for GET DIRECT DATA function (single value from named csv file)', () => {
     const modelDir = sampleModelDir('directdata')
     const opts = {
-      modelDir,
-      directDataSpec: new Map([['?data', 'data.xlsx']])
+      modelDir
     }
     const vars = readInlineModel(`
       x = GET DIRECT DATA('g_data.csv', ',', 'A', 'B13') ~~|
@@ -1054,25 +1123,80 @@ describe('generateEquation (Vensim -> C)', () => {
     expect(genC(vars.get('_y'), 'eval', opts)).toEqual(['_y = _LOOKUP(_x, _time) * 10.0;'])
   })
 
-  it('should work for GET DIRECT DATA function (1D)', () => {
+  it('should work for GET DIRECT DATA function (single value from tagged xlsx file)', () => {
+    const modelDir = sampleModelDir('directdata')
+    const opts = {
+      modelDir
+    }
+    const vars = readInlineModel(`
+      x = GET DIRECT DATA('data.xlsx', 'C Data', 'A', 'B13') ~~|
+      y = x * 10 ~~|
+    `)
+    expect(vars.size).toBe(2)
+    expect(genC(vars.get('_x'), 'init-lookups', opts)).toEqual([
+      '_x = __new_lookup(2, /*copy=*/true, (double[]){ 2045.0, 35.0, 2050.0, 47.0 });'
+    ])
+    expect(genC(vars.get('_y'), 'eval', opts)).toEqual(['_y = _LOOKUP(_x, _time) * 10.0;'])
+  })
+
+  it('should work for GET DIRECT DATA function (single value from tagged xlsx file)', () => {
     const modelDir = sampleModelDir('directdata')
     const opts = {
       modelDir,
       directDataSpec: new Map([['?data', 'data.xlsx']])
     }
     const vars = readInlineModel(`
+      x = GET DIRECT DATA('?data', 'C Data', 'A', 'B13') ~~|
+      y = x * 10 ~~|
+    `)
+    expect(vars.size).toBe(2)
+    expect(genC(vars.get('_x'), 'init-lookups', opts)).toEqual([
+      '_x = __new_lookup(2, /*copy=*/true, (double[]){ 2045.0, 35.0, 2050.0, 47.0 });'
+    ])
+    expect(genC(vars.get('_y'), 'eval', opts)).toEqual(['_y = _LOOKUP(_x, _time) * 10.0;'])
+  })
+
+  it('should work for GET DIRECT DATA function (single value with lowercase cell reference)', () => {
+    const modelDir = sampleModelDir('directdata')
+    const vars = readInlineModel(`
+      x = GET DIRECT DATA('g_data.csv', ',', 'a', 'b13') ~~|
+      y = x * 10 ~~|
+    `)
+    expect(vars.size).toBe(2)
+    expect(genC(vars.get('_x'), 'init-lookups', { modelDir })).toEqual([
+      '_x = __new_lookup(2, /*copy=*/true, (double[]){ 2045.0, 35.0, 2050.0, 47.0 });'
+    ])
+    expect(genC(vars.get('_y'), 'eval', { modelDir })).toEqual(['_y = _LOOKUP(_x, _time) * 10.0;'])
+  })
+
+  it('should throw error for GET DIRECT DATA function (with invalid cell reference)', () => {
+    const modelDir = sampleModelDir('directdata')
+    const vars = readInlineModel(`
+      x = GET DIRECT DATA('g_data.csv', ',', 'a', '++') ~~|
+      y = x * 10 ~~|
+    `)
+    expect(vars.size).toBe(2)
+    expect(() => genC(vars.get('_x'), 'init-lookups', { modelDir })).toThrow(
+      `Failed to parse 'cell' argument for GET DIRECT {DATA,LOOKUPS} call for _x: ++`
+    )
+    expect(genC(vars.get('_y'), 'eval', { modelDir })).toEqual(['_y = _LOOKUP(_x, _time) * 10.0;'])
+  })
+
+  it('should work for GET DIRECT DATA function (1D)', () => {
+    const modelDir = sampleModelDir('directdata')
+    const vars = readInlineModel(`
       DimA: A1, A2 ~~|
       x[DimA] = GET DIRECT DATA('e_data.csv', ',', 'A', 'B5') ~~|
       y = x[A2] * 10 ~~|
     `)
     expect(vars.size).toBe(3)
-    expect(genC(vars.get('_x[_a1]'), 'init-lookups', opts)).toEqual([
+    expect(genC(vars.get('_x[_a1]'), 'init-lookups', { modelDir })).toEqual([
       '_x[0] = __new_lookup(2, /*copy=*/true, (double[]){ 2030.0, 593.0, 2050.0, 583.0 });'
     ])
-    expect(genC(vars.get('_x[_a2]'), 'init-lookups', opts)).toEqual([
+    expect(genC(vars.get('_x[_a2]'), 'init-lookups', { modelDir })).toEqual([
       '_x[1] = __new_lookup(2, /*copy=*/true, (double[]){ 2030.0, 185.0, 2050.0, 180.0 });'
     ])
-    expect(genC(vars.get('_y'), 'eval', opts)).toEqual(['_y = _LOOKUP(_x[1], _time) * 10.0;'])
+    expect(genC(vars.get('_y'), 'eval', { modelDir })).toEqual(['_y = _LOOKUP(_x[1], _time) * 10.0;'])
   })
 
   it('should work for GET DIRECT DATA function (2D with separate definitions)', () => {
@@ -1131,10 +1255,11 @@ describe('generateEquation (Vensim -> C)', () => {
 
   it('should work for GET DIRECT SUBSCRIPT function', () => {
     const modelDir = sampleModelDir('directsubs')
+    // Note that we test both uppercase (typical) and lowercase (atypical) cell references below
     const vars = readInlineModel(
       `
       DimA: A1, A2, A3 -> DimB, DimC ~~|
-      DimB: GET DIRECT SUBSCRIPT('b_subs.csv', ',', 'A2', 'A', '') ~~|
+      DimB: GET DIRECT SUBSCRIPT('b_subs.csv', ',', 'a2', 'a', '') ~~|
       DimC: GET DIRECT SUBSCRIPT('c_subs.csv', ',', 'A2', '2', '') ~~|
       a[DimA] = 10, 20, 30 ~~|
       b[DimB] = 1, 2, 3 ~~|
@@ -1281,7 +1406,7 @@ describe('generateEquation (Vensim -> C)', () => {
     const modelDir = sampleModelDir('directlookups')
     const vars = readInlineModel(`
       DimA: A1, A2, A3 ~~|
-      x[DimA] = GET DIRECT LOOKUPS('lookup_data.csv', ',', '1', 'AH2') ~~|
+      x[DimA] = GET DIRECT LOOKUPS('lookups.CSV', ',', '1', 'AH2') ~~|
       y[DimA] = LOOKUP BACKWARD(x[DimA], Time) ~~|
     `)
     expect(vars.size).toBe(4)

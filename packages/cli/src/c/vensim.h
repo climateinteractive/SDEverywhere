@@ -16,6 +16,9 @@ extern "C" {
 // https://www.vensim.com/documentation/22300.html
 //
 #define _ABS(x) fabs(x)
+#define _ARCCOS(x) acos(x)
+#define _ARCSIN(x) asin(x)
+#define _ARCTAN(x) atan(x)
 #define _COS(x) cos(x)
 #define _EXP(x) exp(x)
 #define _GAME(x) (x)
@@ -33,6 +36,8 @@ extern "C" {
 #define _SIN(x) sin(x)
 #define _SQRT(x) sqrt(x)
 #define _STEP(height, step_time) (_time + _time_step / 2.0 > (step_time) ? (height) : 0.0)
+#define _TAN(x) tan(x)
+
 
 double* _ALLOCATE_AVAILABLE(double* requested_quantities, double* priority_profiles, double available_resource, size_t num_requesters);
 double _PULSE(double start, double width);

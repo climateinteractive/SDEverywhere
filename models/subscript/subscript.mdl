@@ -53,6 +53,12 @@ u[C3] = 3 ~~~:SUPPLEMENTARY|
 u[C4] = 4 ~~~:SUPPLEMENTARY|
 u[C5] = 5 ~~~:SUPPLEMENTARY|
 
+v[DimA] = IF THEN ELSE (DimA = A2, 1, 0)
+	~
+	~	dimension name and subscript/index name both referenced in an expression
+  ~:SUPPLEMENTARY
+	|
+
 ********************************************************
 	.Control
 ********************************************************~
