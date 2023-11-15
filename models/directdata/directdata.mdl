@@ -8,7 +8,11 @@ SubM: M2, M3 ~~|
 a[DimA] := GET DIRECT DATA('data.xlsx', 'A Data', 'A', 'B2') ~~|
 b[DimA] = a[DimA] * 10 ~~~:SUPPLEMENTARY|
 
-c:= GET DIRECT DATA('?data', 'C Data', 'A', 'B2') ~~|
+c:= GET DIRECT DATA('?data', 'C Data', 'a', 'b2')
+  ~
+  ~ This one uses a lowercase letter in the cell references (atypical, but valid in Vensim).
+  ~ :SUPPLEMENTARY
+  |
 d = c * 10 ~~~:SUPPLEMENTARY|
 
 e[DimA] := GET DIRECT DATA('e_data.csv', ',', 'A', 'B2') ~~|

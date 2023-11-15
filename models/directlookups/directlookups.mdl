@@ -1,9 +1,10 @@
 {UTF-8}
 DimA: A1, A2, A3 ~~|
 
-a[DimA] = GET DIRECT LOOKUPS('lookup_data.csv', ',', '1', 'E2')
+a[DimA] = GET DIRECT LOOKUPS('lookup_data.csv', ',', '1', 'e2')
 	~	
 	~	subscript currently required for GET DIRECT LOOKUPS
+	~	This one uses a lowercase letter in the cell reference (atypical, but valid in Vensim).
   |
 
 a from named xlsx[DimA] = GET DIRECT LOOKUPS('lookup_data.xlsx', 'a', '1', 'E2')

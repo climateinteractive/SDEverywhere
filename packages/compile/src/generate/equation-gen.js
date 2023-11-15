@@ -449,12 +449,17 @@ export default class EquationGen extends ModelReader {
     let dataCol, dataRow, dataValue, timeCol, timeRow, timeValue, nextCell
     let lookupData = ''
     let lookupSize = 0
-    let dataAddress = XLSX.utils.decode_cell(startCell)
+    let dataAddress = XLSX.utils.decode_cell(startCell.toUpperCase())
     dataCol = dataAddress.c
     dataRow = dataAddress.r
+    if (dataCol < 0 || dataRow < 0) {
+      throw new Error(
+        `Failed to parse 'cell' argument for GET DIRECT {DATA,LOOKUPS} call for ${this.lhs}: ${startCell}`
+      )
+    }
     if (isNaN(parseInt(timeRowOrCol))) {
       // Time values are in a column.
-      timeCol = XLSX.utils.decode_col(timeRowOrCol)
+      timeCol = XLSX.utils.decode_col(timeRowOrCol.toUpperCase())
       timeRow = dataRow
       dataCol += indexNum
       nextCell = () => {
@@ -543,9 +548,12 @@ export default class EquationGen extends ModelReader {
       // Read tabular data into an indexed variable for each cell.
       let numericSubscripts = lhsIndexSubscripts.map(idx => idx.map(s => sub(s).value))
       let lhsSubscripts = numericSubscripts.map(s => s.reduce((a, v) => a.concat(`[${v}]`), ''))
-      let dataAddress = XLSX.utils.decode_cell(startCell)
+      let dataAddress = XLSX.utils.decode_cell(startCell.toUpperCase())
       let startCol = dataAddress.c
       let startRow = dataAddress.r
+      if (startCol < 0 || startRow < 0) {
+        throw new Error(`Failed to parse 'cell' argument for GET DIRECT CONSTANTS call for ${this.lhs}: ${startCell}`)
+      }
       for (let i = 0; i < cellOffsets.length; i++) {
         let rowOffset = cellOffsets[i][0] ? cellOffsets[i][0] : 0
         let colOffset = cellOffsets[i][1] ? cellOffsets[i][1] : 0
@@ -1003,13 +1011,18 @@ export default class EquationGen extends ModelReader {
         // Emit the size of the dimension in place of the dimension name.
         this.emit(`${sub(varName).size}`)
       } else {
-        // A subscript masquerading as a variable takes the value of the loop index var plus one
-        // (since Vensim indices are one-based).
+        // A dimension masquerading as a variable (i.e., in expression position) takes the
+        // value of the loop index var plus one (since Vensim indices are one-based).
         let s = this.rhsSubscriptGen([varName])
         // Remove the brackets around the C subscript expression.
         s = s.slice(1, s.length - 1)
         this.emit(`(${s} + 1)`)
       }
+    } else if (isIndex(varName)) {
+      // A subscript masquerading as a variable (i.e., in expression position) takes the
+      // numeric index value plus one (since Vensim indices are one-based).
+      const index = sub(varName).value
+      this.emit(`${index + 1}`)
     } else {
       this.varNames.push(varName)
       if (functionName === '_VECTOR_SELECT') {
