@@ -636,7 +636,6 @@ describe('generateEquation (Vensim -> C)', () => {
     const modelDir = sampleModelDir('directconst')
     const vars = readInlineModel(`
       x = GET DIRECT CONSTANTS('data/a.xlsx', 'a', 'B2') ~~|
-      expect(vars.size).toBe(1)
     `)
     expect(vars.size).toBe(1)
     expect(genC(vars.get('_x'), 'init-constants', { modelDir })).toEqual(['_x = 2050.0;'])
