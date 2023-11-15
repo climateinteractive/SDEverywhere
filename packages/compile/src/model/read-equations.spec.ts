@@ -119,6 +119,38 @@ describe('readEquations', () => {
     ])
   })
 
+  it('should work for conditional expression with reference to dimension', () => {
+    const vars = readInlineModel(`
+      DimA: A1, A2 ~~|
+      x = 1 ~~|
+      y[DimA] = IF THEN ELSE(DimA = x, 1, 0) ~~|
+    `)
+    expect(vars).toEqual([
+      v('x', '1', {
+        refId: '_x',
+        varType: 'const'
+      }),
+      v('y[DimA]', 'IF THEN ELSE(DimA=x,1,0)', {
+        refId: '_y',
+        subscripts: ['_dima'],
+        references: ['_x']
+      })
+    ])
+  })
+
+  it('should work for conditional expression with reference to dimension and subscript/index', () => {
+    const vars = readInlineModel(`
+      DimA: A1, A2 ~~|
+      y[DimA] = IF THEN ELSE(DimA = A2, 1, 0) ~~|
+    `)
+    expect(vars).toEqual([
+      v('y[DimA]', 'IF THEN ELSE(DimA=A2,1,0)', {
+        refId: '_y',
+        subscripts: ['_dima']
+      })
+    ])
+  })
+
   it('should work for data variable definition', () => {
     const vars = readInlineModel(
       `
@@ -7692,6 +7724,10 @@ describe('readEquations', () => {
         refId: '_u[_c5]',
         subscripts: ['_c5'],
         varType: 'const'
+      }),
+      v('v[DimA]', 'IF THEN ELSE(DimA=A2,1,0)', {
+        refId: '_v',
+        subscripts: ['_dima']
       }),
       v('Time', '', {
         refId: '_time',

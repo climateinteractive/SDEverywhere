@@ -22,10 +22,11 @@ import {
 import {
   extractMarkedDims,
   indexNamesForSubscript,
+  isDimension,
+  isIndex,
   normalizeSubscripts,
   separatedVariableIndex,
-  sub,
-  isDimension
+  sub
 } from '../_shared/subscript.js'
 import ModelReader from '../parse/model-reader.js'
 import { createParser } from '../parse/parser.js'
@@ -238,8 +239,8 @@ export default class EquationReader extends ModelReader {
     // Get the var name of a variable in a call and save it as a reference.
     let id = ctx.Id().getText()
     let varName = canonicalName(id)
-    // Do not add a dimension name as a reference.
-    if (!isDimension(varName)) {
+    // Do not add a dimension or index name as a reference.
+    if (!isDimension(varName) && !isIndex(varName)) {
       let fn = this.currentFunctionName()
       this.refId = varName
       this.expandedRefIds = []
