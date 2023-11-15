@@ -219,7 +219,7 @@ export default class EquationGen extends ModelReader {
           return cell != null ? cdbl(cell.v) : null
         }
       } else {
-        throw new Error(`Direct ${dataKind} worksheet ${tab} ${dataSource} ${fileOrTag} not found`)
+        throw new Error(`Direct ${dataKind} worksheet ${tab} in ${dataSource} ${fileOrTag} not found`)
       }
     } else {
       throw new Error(`Direct ${dataKind} workbook ${dataSource} ${fileOrTag} not found`)
