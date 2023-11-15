@@ -228,6 +228,34 @@ describe('generateEquation (Vensim -> C)', () => {
     expect(genC(vars.get('_y'))).toEqual(['_y = _IF_THEN_ELSE(!_z, 1.0, 0.0);'])
   })
 
+  it('should work for conditional expression with reference to dimension', () => {
+    const vars = readInlineModel(`
+      DimA: A1, A2 ~~|
+      x = 1 ~~|
+      y[DimA] = IF THEN ELSE(DimA = x, 1, 0) ~~|
+    `)
+    expect(vars.size).toBe(2)
+    expect(genC(vars.get('_x'))).toEqual(['_x = 1.0;'])
+    expect(genC(vars.get('_y'))).toEqual([
+      'for (size_t i = 0; i < 2; i++) {',
+      '_y[i] = _IF_THEN_ELSE((i + 1) == _x, 1.0, 0.0);',
+      '}'
+    ])
+  })
+
+  it('should work for conditional expression with reference to dimension and subscript/index', () => {
+    const vars = readInlineModel(`
+      DimA: A1, A2 ~~|
+      y[DimA] = IF THEN ELSE(DimA = A2, 1, 0) ~~|
+    `)
+    expect(vars.size).toBe(1)
+    expect(genC(vars.get('_y'))).toEqual([
+      'for (size_t i = 0; i < 2; i++) {',
+      '_y[i] = _IF_THEN_ELSE((i + 1) == 2, 1.0, 0.0);',
+      '}'
+    ])
+  })
+
   it('should work for data variable definition', () => {
     const extData: ExtData = new Map([
       [
