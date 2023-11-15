@@ -251,7 +251,7 @@ export default class EquationGen extends ModelReader {
     } else {
       // The file is a CSV or XLS[X] pathname. Read it now.
       let dataPathname = path.resolve(this.modelDirname, fileOrTag)
-      if (dataPathname.endsWith('csv')) {
+      if (dataPathname.toLowerCase().endsWith('csv')) {
         return this.handleCsvFile(fileOrTag, dataPathname, tab, dataKind)
       } else {
         let workbook = readXlsx(dataPathname)
