@@ -6,7 +6,27 @@ a[DimA] = GET DIRECT LOOKUPS('lookup_data.csv', ',', '1', 'E2')
 	~	subscript currently required for GET DIRECT LOOKUPS
   |
 
+a from named xlsx[DimA] = GET DIRECT LOOKUPS('lookup_data.xlsx', 'a', '1', 'E2')
+	~	
+	~	subscript currently required for GET DIRECT LOOKUPS
+  |
+
+a from tagged xlsx[DimA] = GET DIRECT LOOKUPS('?lookup_data', 'a', '1', 'E2')
+	~	
+	~	subscript currently required for GET DIRECT LOOKUPS
+  |
+
 b = a[A1](Time)
+	~	
+	~	access the lookup
+	|
+
+b from named xlsx = a from named xlsx[A1](Time)
+	~	
+	~	access the lookup
+	|
+
+b from tagged xlsx = a from tagged xlsx[A1](Time)
 	~	
 	~	access the lookup
 	|
