@@ -1,6 +1,6 @@
 {
   "name": "directlookups",
   "directData": {
-    "?lookup_data": "lookup_data.xlsx"
+    "?lookups": "lookups.xlsx"
   }
 }
