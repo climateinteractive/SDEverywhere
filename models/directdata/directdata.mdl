@@ -5,7 +5,7 @@ DimC <-> DimM ~~|
 DimM: M1, M2, M3 ~~|
 SubM: M2, M3 ~~|
 
-a[DimA] := GET DIRECT DATA('?data', 'A Data', 'A', 'B2') ~~|
+a[DimA] := GET DIRECT DATA('data.xlsx', 'A Data', 'A', 'B2') ~~|
 b[DimA] = a[DimA] * 10 ~~~:SUPPLEMENTARY|
 
 c:= GET DIRECT DATA('?data', 'C Data', 'a', 'b2')
