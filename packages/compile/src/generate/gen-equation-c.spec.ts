@@ -717,6 +717,36 @@ describe('generateEquation (Vensim -> C)', () => {
     ])
   })
 
+  it('should work for ARCCOS function', () => {
+    const vars = readInlineModel(`
+      x = 1 ~~|
+      y = ARCCOS(x) ~~|
+    `)
+    expect(vars.size).toBe(2)
+    expect(genC(vars.get('_x'))).toEqual(['_x = 1.0;'])
+    expect(genC(vars.get('_y'))).toEqual(['_y = _ARCCOS(_x);'])
+  })
+
+  it('should work for ARCSIN function', () => {
+    const vars = readInlineModel(`
+      x = 1 ~~|
+      y = ARCSIN(x) ~~|
+    `)
+    expect(vars.size).toBe(2)
+    expect(genC(vars.get('_x'))).toEqual(['_x = 1.0;'])
+    expect(genC(vars.get('_y'))).toEqual(['_y = _ARCSIN(_x);'])
+  })
+
+  it('should work for ARCTAN function', () => {
+    const vars = readInlineModel(`
+      x = 1 ~~|
+      y = ARCTAN(x) ~~|
+    `)
+    expect(vars.size).toBe(2)
+    expect(genC(vars.get('_x'))).toEqual(['_x = 1.0;'])
+    expect(genC(vars.get('_y'))).toEqual(['_y = _ARCTAN(_x);'])
+  })
+
   it('should work for COS function', () => {
     const vars = readInlineModel(`
       x = 1 ~~|
@@ -1762,6 +1792,16 @@ describe('generateEquation (Vensim -> C)', () => {
       '}',
       '_x = __t1 + 1.0;'
     ])
+  })
+
+  it('should work for TAN function', () => {
+    const vars = readInlineModel(`
+      x = 1 ~~|
+      y = TAN(x) ~~|
+    `)
+    expect(vars.size).toBe(2)
+    expect(genC(vars.get('_x'))).toEqual(['_x = 1.0;'])
+    expect(genC(vars.get('_y'))).toEqual(['_y = _TAN(_x);'])
   })
 
   it('should work for TREND function', () => {
