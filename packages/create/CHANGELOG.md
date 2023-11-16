@@ -1,5 +1,7 @@
 # Changelog
 
+## [0.2.7](https://github.com/climateinteractive/SDEverywhere/compare/create-v0.2.6...create-v0.2.7) (2023-11-15)
+
 ### Dependencies
 
 * The following workspace dependencies were updated
