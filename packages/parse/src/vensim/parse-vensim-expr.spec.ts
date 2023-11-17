@@ -13,7 +13,7 @@ import {
   stringLiteral,
   unaryOp,
   varRef
-} from '../ast/ast-types'
+} from '../ast/ast-builders'
 
 import { parseVensimExpr } from './parse-vensim-expr'
 

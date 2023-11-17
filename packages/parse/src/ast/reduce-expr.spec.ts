@@ -2,8 +2,8 @@
 
 import { describe, expect, it } from 'vitest'
 
+import { binaryOp, call, num, parens, unaryOp, varRef } from './ast-builders'
 import type { Expr, VariableRef } from './ast-types'
-import { binaryOp, call, num, parens, unaryOp, varRef } from './ast-types'
 import type { ReduceExprOptions } from './reduce-expr'
 import { reduceConditionals, reduceExpr } from './reduce-expr'
 

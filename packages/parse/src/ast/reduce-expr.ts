@@ -2,8 +2,8 @@
 
 import { assertNever } from 'assert-never'
 
+import { binaryOp, lookupCall, num, parens, unaryOp } from './ast-builders'
 import type { Expr, NumberValue, VariableRef } from './ast-types'
-import { binaryOp, lookupCall, num, parens, unaryOp } from './ast-types'
 
 export interface ReduceExprOptions {
   /** A callback that returns the possibly reduced expression for the referenced variable. */

@@ -2,7 +2,7 @@
 
 import { describe, expect, it } from 'vitest'
 
-import { subMapping, subRange } from '../ast/ast-types'
+import { subMapping, subRange } from '../ast/ast-builders'
 
 import { parseVensimSubscriptRange } from './parse-vensim-subscript-range'
 import type { VensimParseContext } from './vensim-parse-context'

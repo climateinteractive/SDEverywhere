@@ -2,7 +2,7 @@
 
 import { describe, expect, it } from 'vitest'
 
-import { binaryOp, constListEqn, dataVarEqn, exprEqn, lookupDef, lookupVarEqn, num, varRef } from '../ast/ast-types'
+import { binaryOp, constListEqn, dataVarEqn, exprEqn, lookupDef, lookupVarEqn, num, varRef } from '../ast/ast-builders'
 
 import { parseVensimEquation } from './parse-vensim-equation'
 

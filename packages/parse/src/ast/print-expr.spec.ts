@@ -2,7 +2,7 @@
 
 import { describe, expect, it } from 'vitest'
 
-import { binaryOp, call, lookupCall, lookupDef, num, parens, unaryOp, varRef } from './ast-types'
+import { binaryOp, call, lookupCall, lookupDef, num, parens, unaryOp, varRef } from './ast-builders'
 import { toPrettyString } from './print-expr'
 
 const one = num(1)

@@ -2,7 +2,7 @@
 
 import { describe, expect, it } from 'vitest'
 
-import { exprEqn, model, num, subRange, varRef } from '../ast/ast-types'
+import { exprEqn, model, num, subRange, varRef } from '../ast/ast-builders'
 
 import { parseVensimModel } from './parse-vensim-model'
 
