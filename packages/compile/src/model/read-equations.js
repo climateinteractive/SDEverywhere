@@ -185,7 +185,7 @@ export function readEquation(v) {
         v.varType = 'data'
         break
       default:
-        throw new Error(`Unhandled equation kind '${rhs.kind}' for ${v.modelLHS}`)
+        throw new Error(`Unhandled equation kind '${rhs.kind}' for '${v.modelLHS}'`)
     }
   }
 
@@ -252,7 +252,7 @@ function visitExpr(v, expr, context) {
       break
 
     default:
-      throw new Error(`Unhandled expression kind '${expr.kind}' when reading ${v.modelLHS}`)
+      throw new Error(`Unhandled expression kind '${expr.kind}' when reading '${v.modelLHS}'`)
   }
 }
 
@@ -365,6 +365,9 @@ function visitFunctionCall(v, callExpr, context) {
     //
 
     case '_ABS':
+    case '_ARCCOS':
+    case '_ARCSIN':
+    case '_ARCTAN':
     case '_COS':
     case '_ELMCOUNT':
     case '_EXP':
@@ -374,8 +377,19 @@ function visitFunctionCall(v, callExpr, context) {
     case '_SIN':
     case '_SQRT':
     case '_SUM':
+    case '_TAN':
     case '_VMAX':
     case '_VMIN':
+      validateCallArgs(callExpr, 1)
+      break
+
+    // TODO: We do not currently have full support for the GAME function, so report a warning for now
+    case '_GAME':
+      if (process.env.SDE_REPORT_UNSUPPORTED_FUNCTIONS !== '0') {
+        console.warn(
+          `WARNING: The GAME function (used in the definition of '${v.modelLHS}') is currently implemented as a no-op (it returns the input value).`
+        )
+      }
       validateCallArgs(callExpr, 1)
       break
 
@@ -572,13 +586,28 @@ function visitFunctionCall(v, callExpr, context) {
       generateLookup(v, callExpr, context)
       break
 
-    default:
-      // TODO: Throw an error (or show a soft warning) if the function is not yet implemented in SDE (and is not
-      // explicitly declared as a user-implemented macro)
-      if (process.env.SDE_PRIV_REPORT_UNSUPPORTED_FUNCTIONS === '1') {
-        console.warn(`WARNING: readEquations doesn't yet handle ${callExpr.fnId}`)
+    default: {
+      // See if the function name is actually the name of a lookup variable.  For Vensim
+      // models, the antlr4-vensim grammar has separate definitions for lookup calls and
+      // function calls, but in practice they can only be differentiated in the case
+      // where the lookup has subscripts; when there are no subscripts, they get treated
+      // like normal function calls, and in that case we will end up here.  If we find
+      // a variable with the given name, then we will assume it's a lookup call, otherwise
+      // we treat it as a call of an unimplemented function.
+      const varId = callExpr.fnId.toLowerCase()
+      const referencedVar = Model.varWithName(varId)
+      if (referencedVar === undefined || !referencedVar.isLookup()) {
+        // Throw an error if the function is not yet implemented in SDE
+        // TODO: This will report false positives in the case of user-defined macros.  For now
+        // we provide the ability to turn off this check via an environment variable, but we
+        // should consider providing a way for the user to declare the names of any user-defined
+        // macros so that we can skip this check when those macros are detected.
+        if (process.env.SDE_REPORT_UNSUPPORTED_FUNCTIONS !== '0') {
+          throw new Error(`Unhandled function '${callExpr.fnId}' in readEquations for '${v.modelLHS}'`)
+        }
       }
       break
+    }
   }
 
   if (addFnReference) {

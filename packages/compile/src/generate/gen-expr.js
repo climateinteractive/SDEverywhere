@@ -47,7 +47,7 @@ export function generateExpr(expr, ctx) {
       if (expr.text === ':NA:') {
         return '_NA_'
       } else {
-        throw new Error(`Unhandled keyword ${expr.text} in code gen for ${ctx.variable.modelLHS}`)
+        throw new Error(`Unhandled keyword '${expr.text}' in code gen for '${ctx.variable.modelLHS}'`)
       }
 
     case 'variable-ref': {
@@ -77,7 +77,7 @@ export function generateExpr(expr, ctx) {
         const indexValue = sub(subId).value
         return `${indexValue + 1}`
       } else {
-        throw new Error(`Unresolved variable reference ${expr.varName} in code gen for ${ctx.variable.modelLHS}`)
+        throw new Error(`Unresolved variable reference '${expr.varName}' in code gen for '${ctx.variable.modelLHS}'`)
       }
     }
 
@@ -149,7 +149,7 @@ export function generateExpr(expr, ctx) {
       return generateFunctionCall(expr, ctx)
 
     default:
-      throw new Error(`Unhandled expression kind '${expr.kind}' when reading ${ctx.variable.modelLHS}`)
+      throw new Error(`Unhandled expression kind '${expr.kind}' when reading '${ctx.variable.modelLHS}'`)
   }
 }
 
@@ -176,6 +176,9 @@ function generateFunctionCall(callExpr, ctx) {
     //
 
     case '_ABS':
+    case '_ARCCOS':
+    case '_ARCSIN':
+    case '_ARCTAN':
     case '_COS':
     case '_EXP':
     case '_GAME':
@@ -195,6 +198,7 @@ function generateFunctionCall(callExpr, ctx) {
     case '_SIN':
     case '_SQRT':
     case '_STEP':
+    case '_TAN':
     case '_WITH_LOOKUP':
     case '_XIDZ':
     case '_ZIDZ': {
@@ -241,7 +245,7 @@ function generateFunctionCall(callExpr, ctx) {
       } else if (ctx.mode === 'eval') {
         return generateLevelEval(callExpr, ctx)
       } else {
-        throw new Error(`Invalid code gen mode '${ctx.mode}' for level variable ${ctx.variable.modelLHS}`)
+        throw new Error(`Invalid code gen mode '${ctx.mode}' for level variable '${ctx.variable.modelLHS}'`)
       }
 
     //
@@ -333,14 +337,14 @@ function generateFunctionCall(callExpr, ctx) {
     case '_GET_DIRECT_DATA':
     case '_GET_DIRECT_LOOKUPS':
       // These functions are handled at a higher level, so we should not get here
-      throw new Error(`Unexpected function ${fnId} in code gen for ${ctx.variable.modelLHS}`)
+      throw new Error(`Unexpected function '${fnId}' in code gen for '${ctx.variable.modelLHS}'`)
 
     case '_INITIAL':
       // In init mode, only emit the initial expression without the INITIAL function call
       if (ctx.mode.startsWith('init')) {
         return generateExpr(callExpr.args[0], ctx)
       } else {
-        throw new Error(`Invalid code gen mode '${ctx.mode}' for variable ${ctx.variable.modelLHS} with INITIAL`)
+        throw new Error(`Invalid code gen mode '${ctx.mode}' for variable '${ctx.variable.modelLHS}' with INITIAL`)
       }
 
     default: {
@@ -360,12 +364,14 @@ function generateFunctionCall(callExpr, ctx) {
         }
         return generateLookupCall(lookupVarRef, callExpr.args[0], ctx)
       } else {
-        // TODO: For now we throw an error if the function is not yet implemented in SDE.
-        // This is helpful in the short term while we implement the new code generator, but
-        // it does not work in the case of models that use custom macros.  We need to provide
-        // a way for users to disable this error, or explicitly declare a list of function
-        // names to ignore or treat as user-implemented macros.
-        throw new Error(`Unhandled function '${fnId}' in code gen for ${ctx.variable.modelLHS}`)
+        // Throw an error if the function is not yet implemented in SDE
+        // TODO: This will report false positives in the case of user-defined macros.  For now
+        // we provide the ability to turn off this check via an environment variable, but we
+        // should consider providing a way for the user to declare the names of any user-defined
+        // macros so that we can skip this check when those macros are detected.
+        if (process.env.SDE_REPORT_UNSUPPORTED_FUNCTIONS !== '0') {
+          throw new Error(`Unhandled function '${fnId}' in code gen for '${ctx.variable.modelLHS}'`)
+        }
       }
     }
   }
@@ -412,7 +418,7 @@ function generateLevelInit(callExpr, ctx) {
       break
     }
     default:
-      throw new Error(`Unhandled function '${fnId}' in code gen for level variable ${ctx.variable.modelLHS}`)
+      throw new Error(`Unhandled function '${fnId}' in code gen for level variable '${ctx.variable.modelLHS}'`)
   }
 
   // Emit the initial value expression
@@ -471,7 +477,7 @@ function generateLevelEval(callExpr, ctx) {
     }
 
     default:
-      throw new Error(`Unhandled function '${fnId}' in code gen for level variable ${ctx.variable.modelLHS}`)
+      throw new Error(`Unhandled function '${fnId}' in code gen for level variable '${ctx.variable.modelLHS}'`)
   }
 }
 
@@ -580,7 +586,7 @@ function generateArrayFunctionCall(callExpr, ctx) {
     }
 
     default:
-      throw new Error(`Unexpected function call '${callExpr.fnId}' when reading ${ctx.variable.modelLHS}`)
+      throw new Error(`Unexpected function call '${callExpr.fnId}' when reading '${ctx.variable.modelLHS}'`)
   }
 
   // Emit the temporary variable declaration

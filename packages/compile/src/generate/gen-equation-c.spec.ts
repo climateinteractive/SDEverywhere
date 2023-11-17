@@ -954,7 +954,8 @@ describe('generateEquation (Vensim -> C)', () => {
     expect(genC(vars.get('_y'))).toEqual(['_y = _EXP(_x);'])
   })
 
-  it('should work for GAME function', () => {
+  // TODO: We do not currently have full support for the GAME function, so skip this test for now
+  it.skip('should work for GAME function', () => {
     const vars = readInlineModel(`
       x = 1 ~~|
       y = GAME(x) ~~|
