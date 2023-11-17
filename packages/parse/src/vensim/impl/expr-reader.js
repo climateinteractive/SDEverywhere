@@ -1,26 +1,10 @@
 // Copyright (c) 2023 Climate Interactive / New Venture Fund
 
-import antlr4 from 'antlr4'
-import { ModelLexer, ModelParser, ModelVisitor } from 'antlr4-vensim'
+import { ModelLexer, ModelVisitor } from 'antlr4-vensim'
 
 import { canonicalName, cFunctionName } from '../../_shared/names'
 
-/**
- * Create a `ModelParser` for the given model text, which can be the
- * contents of an entire `mdl` file, or a portion of one (e.g., an
- * expression or definition).
- *
- * @param input The string containing the model text.
- * @return A `ModelParser` from which a parse tree can be obtained.
- */
-function createParser(input /*: string*/) /*: ModelParser*/ {
-  const chars = new antlr4.InputStream(input)
-  const lexer = new ModelLexer(chars)
-  const tokens = new antlr4.CommonTokenStream(lexer)
-  const parser = new ModelParser(tokens)
-  parser.buildParseTrees = true
-  return parser
-}
+import { createAntlrParser } from './antlr-parser'
 
 export class ExprReader extends ModelVisitor {
   constructor() {
@@ -31,7 +15,7 @@ export class ExprReader extends ModelVisitor {
   }
 
   /*public*/ parse(exprText /*: string*/) /*: Expr*/ {
-    const parser = createParser(exprText)
+    const parser = createAntlrParser(exprText)
     const exprCtx = parser.expr()
     return this.visitExpr(exprCtx)
   }
