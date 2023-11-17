@@ -17,5 +17,6 @@ declare module 'antlr4-vensim' {
     constructor(tokens: unknown)
     expr(): ExprContext
   }
+
   class ModelVisitor {}
 }
