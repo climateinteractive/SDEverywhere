@@ -239,22 +239,28 @@ describe('generateEquation (Vensim -> C)', () => {
   })
 
   it('should work for conditional expression with :OR: op', () => {
+    // Note that we use `ABS(1)` here to circumvent the constant conditional optimization
+    // code (the legacy `ExprReader` doesn't currently optimize function calls).  This
+    // allows us to verify the generated code without the risk of it being optimized away.
     const vars = readInlineModel(`
-      x = 1 ~~|
+      x = ABS(1) ~~|
       y = IF THEN ELSE(x :OR: time, 1, 0) ~~|
     `)
     expect(vars.size).toBe(2)
-    expect(genC(vars.get('_x'))).toEqual(['_x = 1.0;'])
+    expect(genC(vars.get('_x'))).toEqual(['_x = _ABS(1.0);'])
     expect(genC(vars.get('_y'))).toEqual(['_y = _IF_THEN_ELSE(_x || _time, 1.0, 0.0);'])
   })
 
   it('should work for conditional expression with :NOT: op', () => {
+    // Note that we use `ABS(1)` here to circumvent the constant conditional optimization
+    // code (the legacy `ExprReader` doesn't currently optimize function calls).  This
+    // allows us to verify the generated code without the risk of it being optimized away.
     const vars = readInlineModel(`
-      x = 1 ~~|
+      x = ABS(1) ~~|
       y = IF THEN ELSE(:NOT: x, 1, 0) ~~|
     `)
     expect(vars.size).toBe(2)
-    expect(genC(vars.get('_x'))).toEqual(['_x = 1.0;'])
+    expect(genC(vars.get('_x'))).toEqual(['_x = _ABS(1.0);'])
     expect(genC(vars.get('_y'))).toEqual(['_y = _IF_THEN_ELSE(!_x, 1.0, 0.0);'])
   })
 
@@ -709,6 +715,36 @@ describe('generateEquation (Vensim -> C)', () => {
       '_shipments[i] = __t1[_branch[i]];',
       '}'
     ])
+  })
+
+  it('should work for ARCCOS function', () => {
+    const vars = readInlineModel(`
+      x = 1 ~~|
+      y = ARCCOS(x) ~~|
+    `)
+    expect(vars.size).toBe(2)
+    expect(genC(vars.get('_x'))).toEqual(['_x = 1.0;'])
+    expect(genC(vars.get('_y'))).toEqual(['_y = _ARCCOS(_x);'])
+  })
+
+  it('should work for ARCSIN function', () => {
+    const vars = readInlineModel(`
+      x = 1 ~~|
+      y = ARCSIN(x) ~~|
+    `)
+    expect(vars.size).toBe(2)
+    expect(genC(vars.get('_x'))).toEqual(['_x = 1.0;'])
+    expect(genC(vars.get('_y'))).toEqual(['_y = _ARCSIN(_x);'])
+  })
+
+  it('should work for ARCTAN function', () => {
+    const vars = readInlineModel(`
+      x = 1 ~~|
+      y = ARCTAN(x) ~~|
+    `)
+    expect(vars.size).toBe(2)
+    expect(genC(vars.get('_x'))).toEqual(['_x = 1.0;'])
+    expect(genC(vars.get('_y'))).toEqual(['_y = _ARCTAN(_x);'])
   })
 
   it('should work for COS function', () => {
@@ -1289,12 +1325,15 @@ describe('generateEquation (Vensim -> C)', () => {
   })
 
   it('should work for IF THEN ELSE function', () => {
+    // Note that we use `ABS(1)` here to circumvent the constant conditional optimization
+    // code (the legacy `ExprReader` doesn't currently optimize function calls).  This
+    // allows us to verify the generated code without the risk of it being optimized away.
     const vars = readInlineModel(`
-      x = 1 ~~|
+      x = ABS(1) ~~|
       y = IF THEN ELSE(x > 0, 1, x) ~~|
     `)
     expect(vars.size).toBe(2)
-    expect(genC(vars.get('_x'))).toEqual(['_x = 1.0;'])
+    expect(genC(vars.get('_x'))).toEqual(['_x = _ABS(1.0);'])
     expect(genC(vars.get('_y'))).toEqual(['_y = _IF_THEN_ELSE(_x > 0.0, 1.0, _x);'])
   })
 
@@ -1753,6 +1792,16 @@ describe('generateEquation (Vensim -> C)', () => {
       '}',
       '_x = __t1 + 1.0;'
     ])
+  })
+
+  it('should work for TAN function', () => {
+    const vars = readInlineModel(`
+      x = 1 ~~|
+      y = TAN(x) ~~|
+    `)
+    expect(vars.size).toBe(2)
+    expect(genC(vars.get('_x'))).toEqual(['_x = 1.0;'])
+    expect(genC(vars.get('_y'))).toEqual(['_y = _TAN(_x);'])
   })
 
   it('should work for TREND function', () => {

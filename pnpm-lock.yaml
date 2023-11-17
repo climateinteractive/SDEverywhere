@@ -248,7 +248,7 @@ importers:
         specifier: ^0.3.2
         version: link:../build
       '@sdeverywhere/compile':
-        specifier: ^0.7.9
+        specifier: ^0.7.10
         version: link:../compile
       bufx:
         specifier: ^1.0.5
@@ -302,7 +302,7 @@ importers:
   packages/create:
     dependencies:
       '@sdeverywhere/compile':
-        specifier: ^0.7.9
+        specifier: ^0.7.10
         version: link:../compile
       degit:
         specifier: ^2.8.4

@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.7.10](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.9...compile-v0.7.10) (2023-11-15)
+
+
+### Bug Fixes
+
+* allow lowercase cell reference in GET DIRECT function calls ([#396](https://github.com/climateinteractive/SDEverywhere/issues/396)) ([76f890c](https://github.com/climateinteractive/SDEverywhere/commit/76f890ca7c31eddcfa30df0c8d8300876555d190)), closes [#395](https://github.com/climateinteractive/SDEverywhere/issues/395)
+* handle case where subscript/index appears in expression position ([#398](https://github.com/climateinteractive/SDEverywhere/issues/398)) ([7ff1380](https://github.com/climateinteractive/SDEverywhere/commit/7ff1380b11d259ac55bc26cef69948f35fa367cc)), closes [#397](https://github.com/climateinteractive/SDEverywhere/issues/397)
+* handle XLSX files in GET DIRECT {CONSTANTS,DATA,LOOKUPS} ([#400](https://github.com/climateinteractive/SDEverywhere/issues/400)) ([16b1ddf](https://github.com/climateinteractive/SDEverywhere/commit/16b1ddf85139c8d4ee5791b0447a43481d4ec49c)), closes [#399](https://github.com/climateinteractive/SDEverywhere/issues/399)
+
 ## [0.7.9](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.8...compile-v0.7.9) (2023-10-18)
 
 
