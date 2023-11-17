@@ -15,6 +15,7 @@ pnpm \
 --aggregate-output \
 --reporter=append-only \
 --workspace-concurrency=0 \
+-F parse \
 -F build \
 -F plugin-wasm \
 -F plugin-worker \
