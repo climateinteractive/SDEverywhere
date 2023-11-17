@@ -36,6 +36,9 @@
     "assert-never": "^1.2.1",
     "split-string": "^6.1.0"
   },
+  "devDependencies": {
+    "@types/node": "^20.5.7"
+  },
   "author": "Climate Interactive",
   "license": "MIT",
   "homepage": "https://sdeverywhere.org",

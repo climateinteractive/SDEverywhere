@@ -365,6 +365,10 @@ importers:
       split-string:
         specifier: ^6.1.0
         version: 6.1.0
+    devDependencies:
+      '@types/node':
+        specifier: ^20.5.7
+        version: 20.5.7
 
   packages/plugin-check:
     dependencies:
