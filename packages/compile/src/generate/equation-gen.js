@@ -673,7 +673,7 @@ export default class EquationGen extends ModelReader {
           throw new Error(`ERROR: lookup size = ${this.var.points.length} in ${this.var.refId}`)
         }
         let lookupData = R.reduce((a, p) => listConcat(a, `${cdbl(p[0])}, ${cdbl(p[1])}`, true), '', this.var.points)
-        this.emit(`__new_lookup(${this.var.points.length}, /*copy=*/true, (double[]){ ${lookupData} });`)
+        this.emit(`__new_lookup(${this.var.points.length}, /*copy=*/true, (double[]){ ${lookupData} })`)
       }
     } else {
       super.visitEquation(ctx)
