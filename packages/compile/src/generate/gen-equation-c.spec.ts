@@ -1263,11 +1263,93 @@ describe('generateEquation (Vensim -> C)', () => {
     expect(genC(vars.get('_y'), 'eval', opts)).toEqual(['_y = _LOOKUP(_x[1][0], _time) * 10.0;'])
   })
 
-  it('should work for GET DIRECT LOOKUPS function', () => {
+  it('should work for GET DIRECT LOOKUPS function (from named csv file)', () => {
     const modelDir = sampleModelDir('directlookups')
     const vars = readInlineModel(`
       DimA: A1, A2, A3 ~~|
       x[DimA] = GET DIRECT LOOKUPS('lookups.CSV', ',', '1', 'AH2') ~~|
+      y[DimA] = x[DimA](Time) ~~|
+      z = y[A2] ~~|
+    `)
+    expect(vars.size).toBe(5)
+    expect(genC(vars.get('_x[_a1]'), 'init-lookups', { modelDir })).toEqual([
+      '_x[0] = __new_lookup(2, /*copy=*/true, (double[]){ 2049.0, 0.966667, 2050.0, 1.0 });'
+    ])
+    expect(genC(vars.get('_x[_a2]'), 'init-lookups', { modelDir })).toEqual([
+      '_x[1] = __new_lookup(2, /*copy=*/true, (double[]){ 2049.0, 0.965517, 2050.0, 1.0 });'
+    ])
+    expect(genC(vars.get('_x[_a3]'), 'init-lookups', { modelDir })).toEqual([
+      '_x[2] = __new_lookup(2, /*copy=*/true, (double[]){ 2049.0, 0.98975, 2050.0, 0.998394 });'
+    ])
+    expect(genC(vars.get('_y'), 'eval', { modelDir })).toEqual([
+      'for (size_t i = 0; i < 3; i++) {',
+      '_y[i] = _LOOKUP(_x[i], _time);',
+      '}'
+    ])
+    expect(genC(vars.get('_z'), 'eval', { modelDir })).toEqual(['_z = _y[1];'])
+  })
+
+  it('should work for GET DIRECT LOOKUPS function (from named xlsx file)', () => {
+    const modelDir = sampleModelDir('directlookups')
+    const vars = readInlineModel(`
+      DimA: A1, A2, A3 ~~|
+      x[DimA] = GET DIRECT LOOKUPS('lookups.xlsx', 'a', '1', 'AH2') ~~|
+      y[DimA] = x[DimA](Time) ~~|
+      z = y[A2] ~~|
+    `)
+    expect(vars.size).toBe(5)
+    expect(genC(vars.get('_x[_a1]'), 'init-lookups', { modelDir })).toEqual([
+      '_x[0] = __new_lookup(2, /*copy=*/true, (double[]){ 2049.0, 0.966667, 2050.0, 1.0 });'
+    ])
+    expect(genC(vars.get('_x[_a2]'), 'init-lookups', { modelDir })).toEqual([
+      '_x[1] = __new_lookup(2, /*copy=*/true, (double[]){ 2049.0, 0.965517, 2050.0, 1.0 });'
+    ])
+    expect(genC(vars.get('_x[_a3]'), 'init-lookups', { modelDir })).toEqual([
+      '_x[2] = __new_lookup(2, /*copy=*/true, (double[]){ 2049.0, 0.98975, 2050.0, 0.998394 });'
+    ])
+    expect(genC(vars.get('_y'), 'eval', { modelDir })).toEqual([
+      'for (size_t i = 0; i < 3; i++) {',
+      '_y[i] = _LOOKUP(_x[i], _time);',
+      '}'
+    ])
+    expect(genC(vars.get('_z'), 'eval', { modelDir })).toEqual(['_z = _y[1];'])
+  })
+
+  it('should work for GET DIRECT LOOKUPS function (from tagged xlsx file)', () => {
+    const modelDir = sampleModelDir('directlookups')
+    const opts = {
+      modelDir,
+      directDataSpec: new Map([['?a', 'lookups.xlsx']])
+    }
+    const vars = readInlineModel(`
+      DimA: A1, A2, A3 ~~|
+      x[DimA] = GET DIRECT LOOKUPS('?a', 'a', '1', 'AH2') ~~|
+      y[DimA] = x[DimA](Time) ~~|
+      z = y[A2] ~~|
+    `)
+    expect(vars.size).toBe(5)
+    expect(genC(vars.get('_x[_a1]'), 'init-lookups', opts)).toEqual([
+      '_x[0] = __new_lookup(2, /*copy=*/true, (double[]){ 2049.0, 0.966667, 2050.0, 1.0 });'
+    ])
+    expect(genC(vars.get('_x[_a2]'), 'init-lookups', opts)).toEqual([
+      '_x[1] = __new_lookup(2, /*copy=*/true, (double[]){ 2049.0, 0.965517, 2050.0, 1.0 });'
+    ])
+    expect(genC(vars.get('_x[_a3]'), 'init-lookups', opts)).toEqual([
+      '_x[2] = __new_lookup(2, /*copy=*/true, (double[]){ 2049.0, 0.98975, 2050.0, 0.998394 });'
+    ])
+    expect(genC(vars.get('_y'), 'eval', opts)).toEqual([
+      'for (size_t i = 0; i < 3; i++) {',
+      '_y[i] = _LOOKUP(_x[i], _time);',
+      '}'
+    ])
+    expect(genC(vars.get('_z'), 'eval', opts)).toEqual(['_z = _y[1];'])
+  })
+
+  it('should work for GET DIRECT LOOKUPS function (with lowercase cell reference)', () => {
+    const modelDir = sampleModelDir('directlookups')
+    const vars = readInlineModel(`
+      DimA: A1, A2, A3 ~~|
+      x[DimA] = GET DIRECT LOOKUPS('lookups.CSV', ',', '1', 'ah2') ~~|
       y[DimA] = x[DimA](Time) ~~|
       z = y[A2] ~~|
     `)
