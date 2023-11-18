@@ -55,7 +55,8 @@ export function subRange(
   dimName: DimName,
   familyName: DimName,
   dimOrSubNames: SubName[],
-  subscriptMappings: SubscriptMapping[] = []
+  subscriptMappings: SubscriptMapping[] = [],
+  comment = ''
 ): SubscriptRange {
   return {
     dimName,
@@ -63,7 +64,8 @@ export function subRange(
     familyName,
     familyId: canonicalName(familyName),
     subscriptRefs: dimOrSubNames.map(subRef),
-    subscriptMappings
+    subscriptMappings,
+    comment
   }
 }
 

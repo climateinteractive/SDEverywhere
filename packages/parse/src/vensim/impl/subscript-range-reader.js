@@ -43,6 +43,11 @@ export class SubscriptRangeReader extends ModelVisitor {
     this.subscriptNames = []
     this.subscriptMappings = []
 
+    // TODO: For now, fill in an empty string for tthe comment; this is mainly
+    // for compatibility with unit tests that expect empty string instead of
+    // undefined, but this should be revisited
+    const comment = ''
+
     // A subscript alias has two identifiers, while a regular subscript range definition
     // has just one
     const ids = ctx.Id()
@@ -70,7 +75,8 @@ export class SubscriptRangeReader extends ModelVisitor {
             subId: canonicalName(subName)
           }
         }),
-        subscriptMappings: this.subscriptMappings
+        subscriptMappings: this.subscriptMappings,
+        comment
       }
     } else if (ids.length === 2) {
       // This is a subscript alias (`DimA <-> DimB`)
@@ -84,7 +90,8 @@ export class SubscriptRangeReader extends ModelVisitor {
         familyName,
         familyId,
         subscriptRefs: [],
-        subscriptMappings: []
+        subscriptMappings: [],
+        comment
       }
     }
   }

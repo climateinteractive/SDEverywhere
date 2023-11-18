@@ -8,6 +8,13 @@ import { parseVensimSubscriptRange } from './parse-vensim-subscript-range'
 import type { VensimParseContext } from './vensim-parse-context'
 
 describe('parseVensimSubscriptRange', () => {
+  it('should throw an error if subscript range cannot be parsed', () => {
+    const range = `DimA: = ~~|`
+    expect(() => parseVensimSubscriptRange(range)).toThrow(
+      `mismatched input '=' expecting {'(', ':NOT:', '+', '-', Id, Const, ':NA:'}`
+    )
+  })
+
   it('should parse a subscript range with explicit subscripts', () => {
     const range = `DimA: A1, A2, A3 ~~|`
     expect(parseVensimSubscriptRange(range)).toEqual(subRange('DimA', 'DimA', ['A1', 'A2', 'A3']))

@@ -7,6 +7,10 @@ import { binaryOp, constListEqn, dataVarEqn, exprEqn, lookupDef, lookupVarEqn, n
 import { parseVensimEquation } from './parse-vensim-equation'
 
 describe('parseVensimEquation', () => {
+  it('should throw an error if equation cannot be parsed', () => {
+    expect(() => parseVensimEquation(`x = y ? 5 ~~|`)).toThrow(`token recognition error at: '?'`)
+  })
+
   it('should parse a simple expr equation (without subscripts)', () => {
     const eqn = `x = y + 10 ~~|`
     expect(parseVensimEquation(eqn)).toEqual(exprEqn(varRef('x'), binaryOp(varRef('y'), '+', num(10))))

@@ -27,6 +27,7 @@ export interface SubscriptRange {
   familyId: DimId
   subscriptRefs: SubscriptRef[]
   subscriptMappings: SubscriptMapping[]
+  comment?: string
 }
 
 export interface NumberValue {

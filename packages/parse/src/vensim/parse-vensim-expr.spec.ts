@@ -24,6 +24,10 @@ const x = varRef('x')
 const y = varRef('y')
 
 describe('parseVensimExpr', () => {
+  it('should throw an error if expression cannot be parsed', () => {
+    expect(() => parseVensimExpr(`x ? 5`)).toThrow(`token recognition error at: '?'`)
+  })
+
   it('should parse an expr with a single constant', () => {
     expect(parseVensimExpr('1')).toEqual(one)
   })

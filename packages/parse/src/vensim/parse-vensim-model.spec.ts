@@ -7,9 +7,36 @@ import { exprEqn, model, num, subRange, varRef } from '../ast/ast-builders'
 import { parseVensimModel } from './parse-vensim-model'
 
 describe('parseVensimModel', () => {
+  it('should throw an error if model cannot be parsed', () => {
+    const mdl = `\
+x = 2 ~~|
+
+y = ) 1 ~~|`
+
+    let msg = 'Failed to parse Vensim model definition at line 3, col 4:\n'
+    msg += 'y = ) 1 ~~|'
+    msg += '\n\n'
+    msg += 'Detail:\n'
+    msg += `  extraneous input ')' expecting {'(', ':NOT:', '+', '-', Id, Const, ':NA:'}`
+    expect(() => parseVensimModel(mdl)).toThrow(msg)
+  })
+
   it('should parse a model with subscript range only (no equations)', () => {
     const mdl = `DimA: A1, A2, A3 ~~|`
     expect(parseVensimModel(mdl)).toEqual(model([subRange('DimA', 'DimA', ['A1', 'A2', 'A3'])], []))
+  })
+
+  it('should parse a model with subscript range with comment', () => {
+    const mdl = `\
+
+DimA: A1, A2, A3
+  ~
+  ~ comment is here
+  |
+`
+    expect(parseVensimModel(mdl)).toEqual(
+      model([subRange('DimA', 'DimA', ['A1', 'A2', 'A3'], undefined, 'comment is here')], [])
+    )
   })
 
   it('should parse a model with equation only (no subscript ranges)', () => {

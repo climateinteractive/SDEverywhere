@@ -34,21 +34,33 @@ export function parseVensimModel(input: string, context?: VensimParseContext, so
       const modelReader = new ModelReader(context)
       parsedModel = modelReader.parse(def.def)
     } catch (e) {
-      console.error(`Failed to parse definition:`)
-      console.error(def.def)
-      throw e
-      // console.error(e)
-      // process.exit(1)
+      // Include context such as line/column numbers in the error message if available
+      let linePart = ''
+      if (e.cause?.code === 'VensimParseError') {
+        if (e.cause.line) {
+          // The line number reported by ANTLR is relative to the beginning of the
+          // preprocessed definition (since we parse each definition individually),
+          // so we need to add it to the line of the definition in the original source
+          linePart += ` at line ${e.cause.line - 1 + def.line}`
+          if (e.cause.column) {
+            linePart += `, col ${e.cause.column}`
+          }
+        }
+      }
+      const msg = `Failed to parse Vensim model definition${linePart}:\n${def.def}\n\nDetail:\n  ${e.message}`
+      throw new Error(msg)
     }
 
-    if (parsedModel.subscriptRanges.length > 0) {
-      // TODO: Fold in units and comment?
-      subscriptRanges.push(...parsedModel.subscriptRanges)
+    for (const subscriptRange of parsedModel.subscriptRanges) {
+      // Fold in the comment string that was extracted during preprocessing
+      subscriptRanges.push({
+        ...subscriptRange,
+        comment: def.comment
+      })
     }
 
     for (const equation of parsedModel.equations) {
-      // Fold in the units and comment strings that were extracted
-      // during preprocessing
+      // Fold in the units and comment strings that were extracted during preprocessing
       equations.push({
         ...equation,
         units: def.units,
