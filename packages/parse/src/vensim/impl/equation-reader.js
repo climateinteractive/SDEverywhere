@@ -12,12 +12,27 @@ export class EquationReader extends ModelVisitor {
     super()
   }
 
+  /**
+   * Parse the given Vensim equation definition and return an `Equation` AST node.
+   *
+   * @public
+   * @param {string} equationText A string containing the Vensim equation definition.
+   * @return {import('../../ast/ast-types').Equation} An `Equation` AST node.
+   */
   /*public*/ parse(equationText /*: string*/) /*: Equation*/ {
     const parser = createAntlrParser(equationText)
     const equationCtx = parser.equation()
     return this.visitEquation(equationCtx)
   }
 
+  /**
+   * Process the given ANTLR `EquationContext` from an already parsed Vensim
+   * equation definition.
+   *
+   * @public
+   * @param {import('antlr4-vensim').EquationContext} ctx The ANTLR `EquationContext`.
+   * @returns {import('../../ast/ast-types').Equation} An `Equation` AST node.
+   */
   /*public*/ visitEquation(ctx /*: EquationContext*/) /*: Equation*/ {
     this.equationLhs = undefined
     this.lookupDef = undefined

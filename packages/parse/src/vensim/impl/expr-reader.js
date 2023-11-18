@@ -14,14 +14,29 @@ export class ExprReader extends ModelVisitor {
     this.callStack = []
   }
 
+  /**
+   * Parse the given Vensim expression definition and return an `Expr` AST node.
+   *
+   * @public
+   * @param {string} exprText A string containing the Vensim expression.
+   * @returns {import('../../ast/ast-types').Expr} An `Expr` AST node.
+   */
   /*public*/ parse(exprText /*: string*/) /*: Expr*/ {
     const parser = createAntlrParser(exprText)
     const exprCtx = parser.expr()
     return this.visitExpr(exprCtx)
   }
 
-  /*public*/ visitExpr(exprCtx /*: ExprContext*/) /*: Expr*/ {
-    exprCtx.accept(this)
+  /**
+   * Process the given ANTLR `ExprContext` from an already parsed Vensim
+   * expression definition.
+   *
+   * @public
+   * @param {import('antlr4-vensim').ExprContext} ctx The ANTLR `ExprContext`.
+   * @returns {import('../../ast/ast-types').Expr} An `Expr` AST node.
+   */
+  /*public*/ visitExpr(ctx /*: ExprContext*/) /*: Expr*/ {
+    ctx.accept(this)
     return this.expr
   }
 

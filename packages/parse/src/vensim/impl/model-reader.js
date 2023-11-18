@@ -7,6 +7,12 @@ import { EquationReader } from './equation-reader'
 import { SubscriptRangeReader } from './subscript-range-reader'
 
 export class ModelReader extends ModelVisitor {
+  /**
+   * @public
+   * @param {import('../vensim-parse-context').VensimParseContext} parseContext An object
+   * that provides access to file system resources (such as external data files) that are
+   * referenced during the parse phase.
+   */
   constructor(parseContext /*: VensimParseContext*/) {
     super()
     this.parseContext = parseContext
@@ -14,6 +20,13 @@ export class ModelReader extends ModelVisitor {
     this.equations = []
   }
 
+  /**
+   * Parse the given Vensim model definition and return a `Model` AST node.
+   *
+   * @public
+   * @param {string} modelText A string containing the Vensim model.
+   * @returns {import('../../ast/ast-types').Model} A `Model` AST node.
+   */
   /*public*/ parse(modelText /*: string*/) /*: Model*/ {
     const parser = createAntlrParser(modelText)
     const modelCtx = parser.model()

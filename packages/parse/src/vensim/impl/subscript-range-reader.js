@@ -7,17 +7,38 @@ import { canonicalName, cFunctionName } from '../../_shared/names'
 import { createAntlrParser } from './antlr-parser'
 
 export class SubscriptRangeReader extends ModelVisitor {
+  /**
+   * @public
+   * @param {import('../vensim-parse-context').VensimParseContext} parseContext An object
+   * that provides access to file system resources (such as external data files) that are
+   * referenced during the parse phase.
+   */
   constructor(parseContext /*: VensimParseContext*/) {
     super()
     this.parseContext = parseContext
   }
 
+  /**
+   * Parse the given Vensim subscript range definition and return a `SubscriptRange` AST node.
+   *
+   * @public
+   * @param {string} subscriptRangeText A string containing the Vensim subscript range definition.
+   * @returns {import('../../ast/ast-types').SubscriptRange} A `SubscriptRange` AST node.
+   */
   /*public*/ parse(subscriptRangeText /*: string*/) /*: SubscriptRange*/ {
     const parser = createAntlrParser(subscriptRangeText)
     const subscriptRangeCtx = parser.subscriptRange()
     return this.visitSubscriptRange(subscriptRangeCtx)
   }
 
+  /**
+   * Process the given ANTLR `ExprContext` from an already parsed Vensim
+   * expression definition.
+   *
+   * @public
+   * @param {import('antlr4-vensim').SubscriptRangeContext} ctx The ANTLR `SubscriptRangeContext`.
+   * @returns {import('../../ast/ast-types').Expr} A `SubscriptRange` AST node.
+   */
   /*public*/ visitSubscriptRange(ctx /*: SubscriptRangeContext*/) /*: SubscriptRange*/ {
     this.subscriptNames = []
     this.subscriptMappings = []

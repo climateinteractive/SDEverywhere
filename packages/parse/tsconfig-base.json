@@ -16,5 +16,7 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "types": ["node"]
+    // "strict": true,
+    // "checkJs": true
   }
 }

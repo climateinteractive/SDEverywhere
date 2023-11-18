@@ -7,15 +7,33 @@ declare module 'antlr4-vensim' {
     constructor(input: unknown)
   }
 
+  interface SubscriptRangeContext {
+    accept(visitor: ModelVisitor): unknown
+    subscriptRange(index: number): SubscriptRangeContext
+  }
+
   interface ExprContext {
     accept(visitor: ModelVisitor): unknown
     expr(index: number): ExprContext
   }
 
+  interface EquationContext {
+    accept(visitor: ModelVisitor): unknown
+    equation(index: number): EquationContext
+  }
+
+  interface ModelContext {
+    accept(visitor: ModelVisitor): unknown
+    model(): ModelContext
+  }
+
   class ModelParser {
     buildParseTrees: boolean
     constructor(tokens: unknown)
+    subscriptRange(): SubscriptRangeContext
     expr(): ExprContext
+    equation(): EquationContext
+    model(): ModelContext
   }
 
   class ModelVisitor {}
