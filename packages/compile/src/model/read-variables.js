@@ -47,7 +47,7 @@ function variablesForEquation(eqn) {
   const variable = new Variable(null)
 
   // Fill in the LHS details
-  const lhs = eqn.lhs.varRef
+  const lhs = eqn.lhs.varDef
   const baseVarId = lhs.varId
   let lhsText
   if (lhs.subscriptRefs?.length > 0) {

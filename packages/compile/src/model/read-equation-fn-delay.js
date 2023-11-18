@@ -47,8 +47,8 @@ export function generateDelayVariables(v, callExpr, context) {
   // If the LHS includes subscripts, use those same subscripts when generating
   // the new level and aux variables
   let subs
-  if (context.eqnLHS.varRef.subscriptRefs) {
-    const subNames = context.eqnLHS.varRef.subscriptRefs.map(subRef => subRef.subName)
+  if (context.eqnLhs.varDef.subscriptRefs) {
+    const subNames = context.eqnLhs.varDef.subscriptRefs.map(subRef => subRef.subName)
     subs = `[${subNames.join(',')}]`
   } else {
     subs = ''

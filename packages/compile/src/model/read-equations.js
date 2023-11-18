@@ -23,9 +23,9 @@ import { generateLookup } from './read-equation-fn-with-lookup.js'
 import { readVariables } from './read-variables.js'
 
 class Context {
-  constructor(eqnLHS, refId) {
+  constructor(eqnLhs, refId) {
     // The LHS of the equation being processed
-    this.eqnLHS = eqnLHS
+    this.eqnLhs = eqnLhs
 
     // The refId of the variable being processed
     this.refId = refId

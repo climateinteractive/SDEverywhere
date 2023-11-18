@@ -127,8 +127,8 @@ export class EquationReader extends ModelVisitor {
     this.exceptSubscripts = undefined
 
     this.equationLhs = {
-      varRef: {
-        kind: 'variable-ref',
+      varDef: {
+        kind: 'variable-def',
         varName: lhsVarName,
         varId: lhsVarId,
         subscriptRefs,

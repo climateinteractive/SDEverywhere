@@ -22,7 +22,7 @@ export function generateDirectConstInit(variable, directData, modelDir) {
   let getCellValue = handleExcelOrCsvFile(file, tab, 'constants', directData, modelDir)
 
   // Get C subscripts in text form for the LHS in normal order.
-  let lhsSubIds = variable.parsedEqn.lhs.varRef.subscriptRefs?.map(s => s.subId) || []
+  let lhsSubIds = variable.parsedEqn.lhs.varDef.subscriptRefs?.map(s => s.subId) || []
   let modelDimNames = lhsSubIds.filter(s => isDimension(s))
 
   // Generate offsets from the start cell in the table corresponding to LHS indices.

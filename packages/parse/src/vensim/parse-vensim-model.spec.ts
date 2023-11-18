@@ -2,7 +2,7 @@
 
 import { describe, expect, it } from 'vitest'
 
-import { exprEqn, model, num, subRange, varRef } from '../ast/ast-builders'
+import { exprEqn, model, num, subRange, varDef } from '../ast/ast-builders'
 
 import { parseVensimModel } from './parse-vensim-model'
 
@@ -41,12 +41,12 @@ DimA: A1, A2, A3
 
   it('should parse a model with equation only (no subscript ranges)', () => {
     const mdl = `x = 1 ~~|`
-    expect(parseVensimModel(mdl)).toEqual(model([], [exprEqn(varRef('x'), num(1))]))
+    expect(parseVensimModel(mdl)).toEqual(model([], [exprEqn(varDef('x'), num(1))]))
   })
 
   it('should parse a model with equation with subscripts on LHS', () => {
     const mdl = `y[a, b] = 1 ~~|`
-    expect(parseVensimModel(mdl)).toEqual(model([], [exprEqn(varRef('y', ['a', 'b']), num(1))]))
+    expect(parseVensimModel(mdl)).toEqual(model([], [exprEqn(varDef('y', ['a', 'b']), num(1))]))
   })
 
   it('should parse a model with equation with :EXCEPT: clause on LHS', () => {
@@ -56,7 +56,7 @@ DimA: A1, A2, A3
         [],
         [
           exprEqn(
-            varRef(
+            varDef(
               'y',
               ['a', 'b'],
               [
@@ -87,7 +87,7 @@ x = 1
         ],
         [
           // equations
-          exprEqn(varRef('x'), num(1), 'meters', 'comment is here')
+          exprEqn(varDef('x'), num(1), 'meters', 'comment is here')
         ]
       )
     )
@@ -106,7 +106,7 @@ x = 1
         [],
         [
           exprEqn(
-            varRef('x'),
+            varDef('x'),
             num(1),
             'watt/(meter*meter)',
             'Something, Chapter 6. More things. p.358. More words continued on next line.'

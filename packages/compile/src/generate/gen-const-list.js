@@ -27,7 +27,7 @@ export function generateConstListElement(variable, parsedEqn) {
   // const list goes with which variable instance, we build an array of all subscript
   // combinations and then find the index of the one that matches the combination used
   // for the separated variable instance.
-  const subIdArrays = parsedEqn.lhs.varRef.subscriptRefs.map(subRef => {
+  const subIdArrays = parsedEqn.lhs.varDef.subscriptRefs.map(subRef => {
     const subOrDimId = subRef.subId
     if (isDimension(subOrDimId)) {
       // Use the full array of subscripts (indexes) for the dimension at this position

@@ -57,7 +57,6 @@ export interface VariableRef {
   varName: VariableName
   varId: VariableId
   subscriptRefs?: SubscriptRef[]
-  exceptSubscriptRefSets?: SubscriptRef[][]
 }
 
 export type UnaryOp = '+' | '-' | ':NOT:'
@@ -125,15 +124,25 @@ export type Expr =
   | LookupCall
   | FunctionCall
 
+/**
+ * A variable definition that appears on the LHS of an equation definition.  Note that
+ * this is mostly the same as `VariableRef`, except that a `VariableDef` may contain
+ * an "except" clause whereas a `VariableRef` will not.
+ */
+export interface VariableDef {
+  kind: 'variable-def'
+  varName: VariableName
+  varId: VariableId
+  subscriptRefs?: SubscriptRef[]
+  exceptSubscriptRefSets?: SubscriptRef[][]
+}
+
+/**
+ * The LHS of an equation definition.
+ */
 export interface EquationLhs {
-  // TODO: Since :EXCEPT: clauses only appear on the LHS, we should have a `VariableDef`
-  // type like this:
-  //   varName: VariableName
-  //   varId: VariableId
-  //   subscriptRefs?: SubscriptRef[]
-  //   exceptSubscriptRefSets?: SubscriptRef[][]
-  // and then remove `exceptSubscriptRefSets` from `VariableRef`
-  varRef: VariableRef
+  /** The variable definition that appears on the LHS. */
+  varDef: VariableDef
   // TODO: :INTERPOLATE:
 }
 

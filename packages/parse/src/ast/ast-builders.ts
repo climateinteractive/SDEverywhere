@@ -3,37 +3,42 @@
 import { canonicalName, cFunctionName } from '../_shared/names'
 
 import type {
-  DimOrSubName,
-  SubscriptRef,
-  DimName,
-  SubscriptMapping,
-  SubName,
-  SubscriptRange,
-  NumberValue,
-  StringLiteral,
-  Keyword,
-  VariableName,
-  VariableRef,
-  UnaryOp,
-  Expr,
-  UnaryOpExpr,
   BinaryOp,
   BinaryOpExpr,
-  ParensExpr,
+  DimName,
+  DimOrSubName,
+  Equation,
+  Expr,
+  FunctionCall,
+  FunctionName,
+  Keyword,
+  LookupCall,
+  LookupDef,
   LookupPoint,
   LookupRange,
-  LookupDef,
-  LookupCall,
-  FunctionName,
-  FunctionCall,
-  Equation,
-  Model
+  Model,
+  NumberValue,
+  ParensExpr,
+  StringLiteral,
+  SubName,
+  SubscriptMapping,
+  SubscriptRange,
+  SubscriptRef,
+  UnaryOp,
+  UnaryOpExpr,
+  VariableDef,
+  VariableName,
+  VariableRef
 } from './ast-types'
 
 //
 // NOTE: This file contains functions that allow for tersely defining AST nodes.
 // It is intended for internal use only (primarily in tests), so it is not exported
 // as part of the public API at this time.
+//
+
+//
+// SUBSCRIPT RANGES
 //
 
 export function subRef(dimOrSubName: DimOrSubName): SubscriptRef {
@@ -69,6 +74,10 @@ export function subRange(
   }
 }
 
+//
+// EXPRESSIONS
+//
+
 export function num(value: number, text?: string): NumberValue {
   return {
     kind: 'number',
@@ -91,17 +100,12 @@ export function keyword(text: string): Keyword {
   }
 }
 
-export function varRef(
-  varName: VariableName,
-  subscriptNames?: DimOrSubName[],
-  exceptSubscriptNames?: DimOrSubName[][]
-): VariableRef {
+export function varRef(varName: VariableName, subscriptNames?: DimOrSubName[]): VariableRef {
   return {
     kind: 'variable-ref',
     varName,
     varId: canonicalName(varName),
-    subscriptRefs: subscriptNames?.map(subRef),
-    exceptSubscriptRefSets: exceptSubscriptNames?.map(namesForSet => namesForSet.map(subRef))
+    subscriptRefs: subscriptNames?.map(subRef)
   }
 }
 
@@ -154,10 +158,28 @@ export function call(fnName: FunctionName, ...args: Expr[]): FunctionCall {
   }
 }
 
-export function exprEqn(varRef: VariableRef, expr: Expr, units = '', comment = ''): Equation {
+//
+// EQUATIONS
+//
+
+export function varDef(
+  varName: VariableName,
+  subscriptNames?: DimOrSubName[],
+  exceptSubscriptNames?: DimOrSubName[][]
+): VariableDef {
+  return {
+    kind: 'variable-def',
+    varName,
+    varId: canonicalName(varName),
+    subscriptRefs: subscriptNames?.map(subRef),
+    exceptSubscriptRefSets: exceptSubscriptNames?.map(namesForSet => namesForSet.map(subRef))
+  }
+}
+
+export function exprEqn(varDef: VariableDef, expr: Expr, units = '', comment = ''): Equation {
   return {
     lhs: {
-      varRef
+      varDef
     },
     rhs: {
       kind: 'expr',
@@ -168,7 +190,7 @@ export function exprEqn(varRef: VariableRef, expr: Expr, units = '', comment = '
   }
 }
 
-export function constListEqn(varRef: VariableRef, constants: NumberValue[][], units = '', comment = ''): Equation {
+export function constListEqn(varDef: VariableDef, constants: NumberValue[][], units = '', comment = ''): Equation {
   // For now, assume that the original text had a trailing semicolon if there are multiple groups
   let text = constants.map(arr => arr.map(constant => constant.text).join(',')).join(';')
   if (constants.length > 1) {
@@ -176,7 +198,7 @@ export function constListEqn(varRef: VariableRef, constants: NumberValue[][], un
   }
   return {
     lhs: {
-      varRef
+      varDef
     },
     rhs: {
       kind: 'const-list',
@@ -188,10 +210,10 @@ export function constListEqn(varRef: VariableRef, constants: NumberValue[][], un
   }
 }
 
-export function dataVarEqn(varRef: VariableRef, units = '', comment = ''): Equation {
+export function dataVarEqn(varDef: VariableDef, units = '', comment = ''): Equation {
   return {
     lhs: {
-      varRef
+      varDef
     },
     rhs: {
       kind: 'data'
@@ -201,10 +223,10 @@ export function dataVarEqn(varRef: VariableRef, units = '', comment = ''): Equat
   }
 }
 
-export function lookupVarEqn(varRef: VariableRef, lookupDef: LookupDef, units = '', comment = ''): Equation {
+export function lookupVarEqn(varDef: VariableDef, lookupDef: LookupDef, units = '', comment = ''): Equation {
   return {
     lhs: {
-      varRef
+      varDef
     },
     rhs: {
       kind: 'lookup',
@@ -214,6 +236,10 @@ export function lookupVarEqn(varRef: VariableRef, lookupDef: LookupDef, units = 
     comment
   }
 }
+
+//
+// MODEL
+//
 
 export function model(subscriptRanges: SubscriptRange[], equations: Equation[]): Model {
   return {

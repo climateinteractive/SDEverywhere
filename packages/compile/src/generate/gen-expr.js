@@ -275,7 +275,7 @@ function generateFunctionCall(callExpr, ctx) {
     case '_DELAY3':
     case '_DELAY3I': {
       const delayVar = Model.varWithRefId(ctx.variable.delayVarRefId)
-      const delayVarRef = ctx.cVarRef(delayVar.parsedEqn.lhs.varRef)
+      const delayVarRef = ctx.cVarRef(delayVar.parsedEqn.lhs.varDef)
       // TODO: For now, extract the RHS subscripts from the ones that were computed for the
       // delay variable.  We should add a variant of cVarRef that returns only the RHS subs.
       // return `(${delayVar.varName}${rhsSubs} / ${ctx.variable.delayTimeVarName}${rhsSubs})`
@@ -286,7 +286,7 @@ function generateFunctionCall(callExpr, ctx) {
 
     case '_NPV': {
       const npvVar = Model.varWithRefId(ctx.variable.npvVarName)
-      return ctx.cVarRef(npvVar.parsedEqn.lhs.varRef)
+      return ctx.cVarRef(npvVar.parsedEqn.lhs.varDef)
     }
 
     case '_SMOOTH':
@@ -294,12 +294,12 @@ function generateFunctionCall(callExpr, ctx) {
     case '_SMOOTH3':
     case '_SMOOTH3I': {
       const smoothVar = Model.varWithRefId(ctx.variable.smoothVarRefId)
-      return ctx.cVarRef(smoothVar.parsedEqn.lhs.varRef)
+      return ctx.cVarRef(smoothVar.parsedEqn.lhs.varDef)
     }
 
     case '_TREND': {
       const trendVar = Model.varWithRefId(ctx.variable.trendVarName)
-      return ctx.cVarRef(trendVar.parsedEqn.lhs.varRef)
+      return ctx.cVarRef(trendVar.parsedEqn.lhs.varDef)
     }
 
     //

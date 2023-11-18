@@ -40,7 +40,7 @@ export function generateEquation(variable, mode, extData, directData, modelDir) 
 
   // Generate the LHS variable reference code
   const parsedEqn = variable.parsedEqn
-  const cLhs = cVarRefWithLhsSubscripts(variable, parsedEqn.lhs.varRef.varId, loopIndexVars)
+  const cLhs = cVarRefWithLhsSubscripts(variable, parsedEqn.lhs.varDef.varId, loopIndexVars)
 
   // Include the original model equation in a comment that comes before the generated code
   // for that equation
