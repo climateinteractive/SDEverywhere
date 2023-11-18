@@ -4,9 +4,10 @@ import type { Expr } from '../ast/ast-types'
 import { ExprReader } from './impl/expr-reader'
 
 /**
- * TODO: Docs
- * @param input
- * @returns
+ * Parse the given Vensim expression definition and return an `Expr` AST node.
+ *
+ * @param input A string containing the Vensim expression.
+ * @returns An `Expr` AST node.
  */
 export function parseVensimExpr(input: string): Expr {
   // TODO: Reuse reader instance?

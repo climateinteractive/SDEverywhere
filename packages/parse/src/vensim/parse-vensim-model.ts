@@ -6,12 +6,13 @@ import type { VensimParseContext } from './vensim-parse-context'
 import { ModelReader } from './impl/model-reader'
 
 /**
- * TODO: Docs
+ * Parse the given Vensim model definition and return a `Model` AST node.
  *
- * @param input
- * @param context The parse context.
+ * @param input A string containing the Vensim model.
+ * @param context An object that provides access to file system resources (such as
+ * external data files) that are referenced during the parse phase.
  * @param sort Whether to sort definitions alphabetically during the preprocessing phase.
- * @returns
+ * @returns A `Model` AST node.
  */
 export function parseVensimModel(input: string, context?: VensimParseContext, sort = false): Model {
   const subscriptRanges: SubscriptRange[] = []
