@@ -2,6 +2,11 @@
 
 import split from 'split-string'
 
+/**
+ * A single Vensim definition (either a subscript range definition or an
+ * equation definition).  This contains the definition's text and metadata
+ * that was extracted during preprocessing.
+ */
 export interface VensimDef {
   /**
    * A simplified key for the LHS of the definition, used for sorting
@@ -13,10 +18,34 @@ export interface VensimDef {
    * units and comment replaced with `~~|`).
    */
   def: string
-  /** The units text. */
+  /**
+   * The (1-based) line number where the definition begins.
+   */
+  line: number
+  /**
+   * The units text.
+   */
   units: string
-  /** The comment text. */
+  /**
+   * The comment text.
+   */
   comment: string
+}
+
+/**
+ * A raw definition extracted during preprocessing.  This may or may not
+ * contain an actual definition (for example, it might contain a section
+ * comment).
+ */
+interface RawDef {
+  /**
+   * The text of the raw definition.
+   */
+  text: string
+  /**
+   * The (1-based) line number where the definition begins.
+   */
+  line: number
 }
 
 /**
@@ -44,17 +73,10 @@ export function preprocessVensimModel(input: string): VensimDef[] {
   // Keep only equations and subscript range defintions
   const vensimDefs: VensimDef[] = []
   for (const rawDef of rawDefs) {
-    if (rawDef.includes('\\---/// Sketch')) {
-      // Skip everything starting with the first sketch section
-      break
-    } else if (rawDef.includes('********************************************************')) {
-      // Skip groups
-    } else {
-      // Process the definition
-      const vensimDef = processDef(rawDef)
-      if (vensimDef) {
-        vensimDefs.push(vensimDef)
-      }
+    // Process the definition
+    const vensimDef = processDef(rawDef)
+    if (vensimDef) {
+      vensimDefs.push(vensimDef)
     }
   }
   return vensimDefs
@@ -66,8 +88,47 @@ export function preprocessVensimModel(input: string): VensimDef[] {
  * This will allow "|" to occur in quoted variable names across line breaks.
  * Backslash characters will be retained.
  */
-function splitDefs(input: string): string[] {
-  return split(input, { separator: '|', quotes: ['"'], keep: () => true })
+function splitDefs(input: string): RawDef[] {
+  // Split the full input string into definitions delineated by the "|" separator
+  const defTexts = split(input, { separator: '|', quotes: ['"'], keep: () => true })
+
+  // Calculate starting line number for each definition by accounting for the
+  // number of line breaks in that definition
+  const rawDefs = []
+  let lineNum = 1
+  for (let defText of defTexts) {
+    if (lineNum === 1) {
+      // Strip the encoding (included in first def)
+      defText = defText.replace('{UTF-8}', '')
+    }
+
+    if (defText.includes('\\---/// Sketch')) {
+      // Skip everything starting with the first sketch section
+      break
+    }
+
+    // Split on the first non-whitespace character
+    const parts = defText.match(/(\s*)(.*)/ms)
+
+    // Take leading line breaks into account so that we find the line where the
+    // actual definition begins
+    const leadingLineBreaks = parts[1]?.match(/\r\n|\n|\r/gm)
+    lineNum += leadingLineBreaks?.length || 0
+
+    // Add the def (if it's not a group)
+    if (!defText.includes('********************************************************')) {
+      rawDefs.push({
+        text: defText,
+        line: lineNum
+      })
+    }
+
+    // Increment by the number of line breaks that appear in the definition content
+    const contentLineBreaks = parts[2]?.match(/\r\n|\n|\r/gm)
+    lineNum += contentLineBreaks?.length || 0
+  }
+
+  return rawDefs
 }
 
 /**
@@ -197,9 +258,8 @@ function keyForDef(def: string): string {
  * return a `VensimDef` containing the processed definition along with
  * the units and comment strings.
  */
-function processDef(input: string): VensimDef | undefined {
-  // Strip the encoding (included in first def)
-  input = input.replace('{UTF-8}', '')
+function processDef(rawDef: RawDef): VensimDef | undefined {
+  let input = rawDef.text
 
   // Remove ":RAW:" flag; it is not needed by SDE and causes problems if left in
   input = input.replace(/:RAW:/g, '')
@@ -221,14 +281,19 @@ function processDef(input: string): VensimDef | undefined {
   // Split on the comment delimiters
   const parts = input.split('~')
 
+  // If the definition is malformed, throw an error
+  if (parts.length < 3) {
+    throw new Error(`Found invalid model definition during preprocessing (missing comment delimiters?):\n\n${input}`)
+  }
+
   // Get the raw def as a single line
-  const rawDef = reduceWhitespace(parts[0])
+  const rawDefText = reduceWhitespace(parts[0])
 
   // Create the key
-  const key = keyForDef(rawDef)
+  const key = keyForDef(rawDefText)
 
   // Rebuild the def with a simple `~~|` ending
-  const def = `${rawDef} ~~|`
+  const def = `${rawDefText} ~~|`
 
   // Extract the units text
   const units = reduceWhitespace(parts[1])
@@ -242,6 +307,7 @@ function processDef(input: string): VensimDef | undefined {
   return {
     key,
     def,
+    line: rawDef.line,
     units,
     comment
   }
