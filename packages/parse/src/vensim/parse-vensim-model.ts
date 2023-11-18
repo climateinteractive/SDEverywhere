@@ -18,6 +18,8 @@ export function parseVensimModel(input: string, context?: VensimParseContext, so
   const subscriptRanges: SubscriptRange[] = []
   const equations: Equation[] = []
 
+  // Run the preprocessor on the input (to separate out units, comments, unsupported
+  // sections, etc) so that it can be parsed more easily by `antlr4-vensim`.
   const defs = preprocessVensimModel(input)
   if (sort) {
     // XXX: This sorting is currently only needed for compatibility with the legacy
@@ -27,6 +29,7 @@ export function parseVensimModel(input: string, context?: VensimParseContext, so
     })
   }
 
+  // Parse each subscript range or equation definition
   for (const def of defs) {
     // TODO: Reuse reader instance?
     let parsedModel: Model
