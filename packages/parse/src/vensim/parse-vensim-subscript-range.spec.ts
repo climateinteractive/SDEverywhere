@@ -90,8 +90,12 @@ describe('parseVensimSubscriptRange', () => {
 
   it('should parse a subscript range defined with GET DIRECT SUBSCRIPTS', () => {
     const context: VensimParseContext = {
-      getDirectSubscripts: (/*fileName, tab, firstCell, lastCell, prefix*/) => {
-        // TODO: Verify args
+      getDirectSubscripts: (fileName, tabOrDelimiter, firstCell, lastCell, prefix) => {
+        expect(fileName).toBe('a_subs.csv')
+        expect(tabOrDelimiter).toBe(',')
+        expect(firstCell).toBe('A2')
+        expect(lastCell).toBe('A')
+        expect(prefix).toBe('')
         return ['A1', 'A2', 'A3']
       }
     }
