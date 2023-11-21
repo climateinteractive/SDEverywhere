@@ -3,7 +3,7 @@
 import { assertNever } from 'assert-never'
 
 import { binaryOp, lookupCall, num, parens, unaryOp } from './ast-builders'
-import type { Expr, NumberValue, VariableRef } from './ast-types'
+import type { Expr, NumberLiteral, VariableRef } from './ast-types'
 
 export interface ReduceExprOptions {
   /** A callback that returns the possibly reduced expression for the referenced variable. */
@@ -248,7 +248,7 @@ export function reduceExpr(expr: Expr, opts?: ReduceExprOptions): Expr {
       const allConst = reducedArgs.every(arg => arg.kind === 'number')
       if (allConst) {
         const constArg = (index: number) => {
-          const num = reducedArgs[index] as NumberValue
+          const num = reducedArgs[index] as NumberLiteral
           return num.value
         }
         switch (expr.fnId) {

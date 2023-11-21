@@ -17,7 +17,7 @@ import type {
   LookupPoint,
   LookupRange,
   Model,
-  NumberValue,
+  NumberLiteral,
   ParensExpr,
   StringLiteral,
   SubName,
@@ -78,7 +78,7 @@ export function subRange(
 // EXPRESSIONS
 //
 
-export function num(value: number, text?: string): NumberValue {
+export function num(value: number, text?: string): NumberLiteral {
   return {
     kind: 'number',
     value,
@@ -190,7 +190,7 @@ export function exprEqn(varDef: VariableDef, expr: Expr, units = '', comment = '
   }
 }
 
-export function constListEqn(varDef: VariableDef, constants: NumberValue[][], units = '', comment = ''): Equation {
+export function constListEqn(varDef: VariableDef, constants: NumberLiteral[][], units = '', comment = ''): Equation {
   // For now, assume that the original text had a trailing semicolon if there are multiple groups
   let text = constants.map(arr => arr.map(constant => constant.text).join(',')).join(';')
   if (constants.length > 1) {

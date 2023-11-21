@@ -142,7 +142,7 @@ export class EquationReader extends ModelVisitor {
   //
 
   visitConstList(ctx) {
-    // TODO: It would be better if resolved to a `NumberValue[][]` (one array per dimension) to
+    // TODO: It would be better if resolved to a `NumberLiteral[][]` (one array per dimension) to
     // better match how it appears in a model, but the antlr4-vensim grammar currently flattens
     // them into a single list (it doesn't make use of the semicolon separator), so we have to
     // do the same for now

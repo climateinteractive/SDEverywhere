@@ -123,7 +123,7 @@ export interface SubscriptRange {
 //
 
 /** A number literal that appears in an expression. */
-export interface NumberValue {
+export interface NumberLiteral {
   kind: 'number'
   /** The numeric value. */
   value: number
@@ -265,7 +265,7 @@ export interface FunctionCall {
  * a unique `kind` property that can be used to identify the type of the expression.
  */
 export type Expr =
-  | NumberValue
+  | NumberLiteral
   | StringLiteral
   | Keyword
   | VariableRef
@@ -327,10 +327,10 @@ export interface EquationRhsExpr {
 export interface EquationRhsConstList {
   kind: 'const-list'
   /** The array of constant values. */
-  // TODO: It would be better if this was a `NumberValue[][]` (one array per dimension) to
+  // TODO: It would be better if this was a `NumberLiteral[][]` (one array per dimension) to
   // better match how it appears in a model, but the antlr4-vensim grammar currently flattens
   // them into a single list (it doesn't make use of the semicolon separator)
-  constants: NumberValue[]
+  constants: NumberLiteral[]
   /**
    * @hidden The original string representation from the model.  This is only needed for
    * compatibility with the legacy parser, which includes the original string representation
