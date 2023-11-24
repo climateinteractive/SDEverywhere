@@ -5,7 +5,7 @@ import type { VensimParseContext } from './vensim-parse-context'
 import { SubscriptRangeReader } from './impl/subscript-range-reader'
 
 /**
- * Parse the given Vensim expression definition and return an `SubscriptRange` AST node.
+ * Parse the given Vensim subscript range definition and return a `SubscriptRange` AST node.
  *
  * @param input A string containing the Vensim subscript range definition.
  * @param context An object that provides access to file system resources (such as
