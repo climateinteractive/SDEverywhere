@@ -3,7 +3,7 @@
 import type { XmlElement } from '@rgrove/parse-xml'
 import { parseXml } from '@rgrove/parse-xml'
 
-import type { Equation, Model, SubscriptRange } from '../ast/ast-types'
+import type { DimensionDef, Equation, Model } from '../ast/ast-types'
 
 import { parseXmileDimensionDef } from './parse-xmile-dimension-def'
 import { parseXmileVariableDef } from './parse-xmile-variable-def'
@@ -27,31 +27,31 @@ export function parseXmileModel(input: string): Model {
     throw new Error(msg)
   }
 
-  // Extract <dimensions> -> SubscriptRange[]
-  const subscriptRanges: SubscriptRange[] = parseDimensionDefs(xml.root)
+  // Extract <dimensions> -> DimensionDef[]
+  const dimensions: DimensionDef[] = parseDimensionDefs(xml.root)
 
   // Extract <variables> -> Equation[]
   const equations: Equation[] = parseVariableDefs(xml.root)
 
   return {
-    subscriptRanges,
+    dimensions,
     equations
   }
 }
 
-function parseDimensionDefs(rootElem: XmlElement | undefined): SubscriptRange[] {
-  const subscriptRanges: SubscriptRange[] = []
+function parseDimensionDefs(rootElem: XmlElement | undefined): DimensionDef[] {
+  const dimensionDefs: DimensionDef[] = []
 
   const dimensionsElem = firstElemOf(rootElem, 'dimensions')
   if (dimensionsElem) {
     // Extract <dim> -> SubscriptRange
     const dimElems = elemsOf(dimensionsElem, ['dim'])
     for (const dimElem of dimElems) {
-      subscriptRanges.push(parseXmileDimensionDef(dimElem))
+      dimensionDefs.push(parseXmileDimensionDef(dimElem))
     }
   }
 
-  return subscriptRanges
+  return dimensionDefs
 }
 
 function parseVariableDefs(rootElem: XmlElement | undefined): Equation[] {
