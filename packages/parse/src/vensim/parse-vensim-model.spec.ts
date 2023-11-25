@@ -2,7 +2,7 @@
 
 import { describe, expect, it } from 'vitest'
 
-import { exprEqn, model, num, subRange, varDef } from '../ast/ast-builders'
+import { dimDef, exprEqn, model, num, varDef } from '../ast/ast-builders'
 
 import { parseVensimModel } from './parse-vensim-model'
 
@@ -23,7 +23,7 @@ y = ) 1 ~~|`
 
   it('should parse a model with subscript range only (no equations)', () => {
     const mdl = `DimA: A1, A2, A3 ~~|`
-    expect(parseVensimModel(mdl)).toEqual(model([subRange('DimA', 'DimA', ['A1', 'A2', 'A3'])], []))
+    expect(parseVensimModel(mdl)).toEqual(model([dimDef('DimA', 'DimA', ['A1', 'A2', 'A3'])], []))
   })
 
   it('should parse a model with subscript range with comment', () => {
@@ -35,7 +35,7 @@ DimA: A1, A2, A3
   |
 `
     expect(parseVensimModel(mdl)).toEqual(
-      model([subRange('DimA', 'DimA', ['A1', 'A2', 'A3'], undefined, 'comment is here')], [])
+      model([dimDef('DimA', 'DimA', ['A1', 'A2', 'A3'], undefined, 'comment is here')], [])
     )
   })
 
@@ -82,8 +82,8 @@ x = 1
     expect(parseVensimModel(mdl)).toEqual(
       model(
         [
-          // subscript ranges
-          subRange('DimA', 'DimA', ['A1', 'A2', 'A3'])
+          // dimensions
+          dimDef('DimA', 'DimA', ['A1', 'A2', 'A3'])
         ],
         [
           // equations

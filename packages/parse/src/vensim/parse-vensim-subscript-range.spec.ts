@@ -2,7 +2,7 @@
 
 import { describe, expect, it } from 'vitest'
 
-import { subMapping, subRange } from '../ast/ast-builders'
+import { subMapping, dimDef } from '../ast/ast-builders'
 
 import { parseVensimSubscriptRange } from './parse-vensim-subscript-range'
 import type { VensimParseContext } from './vensim-parse-context'
@@ -17,25 +17,23 @@ describe('parseVensimSubscriptRange', () => {
 
   it('should parse a subscript range with explicit subscripts', () => {
     const range = `DimA: A1, A2, A3 ~~|`
-    expect(parseVensimSubscriptRange(range)).toEqual(subRange('DimA', 'DimA', ['A1', 'A2', 'A3']))
+    expect(parseVensimSubscriptRange(range)).toEqual(dimDef('DimA', 'DimA', ['A1', 'A2', 'A3']))
   })
 
   it('should parse a subscript range with a single numeric range', () => {
     const range = `DimA: (A1-A3) ~~|`
-    expect(parseVensimSubscriptRange(range)).toEqual(subRange('DimA', 'DimA', ['A1', 'A2', 'A3']))
+    expect(parseVensimSubscriptRange(range)).toEqual(dimDef('DimA', 'DimA', ['A1', 'A2', 'A3']))
   })
 
   it('should parse a subscript range with a mix of indexes and numeric ranges (starting with index)', () => {
     const range = `DimA: A1, (A3-A5), A6, (A8-A9) ~~|`
-    expect(parseVensimSubscriptRange(range)).toEqual(
-      subRange('DimA', 'DimA', ['A1', 'A3', 'A4', 'A5', 'A6', 'A8', 'A9'])
-    )
+    expect(parseVensimSubscriptRange(range)).toEqual(dimDef('DimA', 'DimA', ['A1', 'A3', 'A4', 'A5', 'A6', 'A8', 'A9']))
   })
 
   it('should parse a subscript range with a mix of indexes and numeric ranges (starting with range)', () => {
     const range = `DimA: (A1-A3),A5,(A7-A10) ~~|`
     expect(parseVensimSubscriptRange(range)).toEqual(
-      subRange('DimA', 'DimA', ['A1', 'A2', 'A3', 'A5', 'A7', 'A8', 'A9', 'A10'])
+      dimDef('DimA', 'DimA', ['A1', 'A2', 'A3', 'A5', 'A7', 'A8', 'A9', 'A10'])
     )
   })
 
@@ -43,7 +41,7 @@ describe('parseVensimSubscriptRange', () => {
     // DimA: A1, A2, A3 -> DimB ~~|
     // DimB: B1, B2, B3 ~~|
     const range = `DimA: A1, A2, A3 -> DimB ~~|`
-    expect(parseVensimSubscriptRange(range)).toEqual(subRange('DimA', 'DimA', ['A1', 'A2', 'A3'], [subMapping('DimB')]))
+    expect(parseVensimSubscriptRange(range)).toEqual(dimDef('DimA', 'DimA', ['A1', 'A2', 'A3'], [subMapping('DimB')]))
   })
 
   it('should parse a subscript range with one mapping (to dimension with explicit mix of dimensions and subscripts)', () => {
@@ -52,7 +50,7 @@ describe('parseVensimSubscriptRange', () => {
     // DimB: B1, B2 -> (DimA: SubA, A3) ~~|
     const range = `DimB: B1, B2 -> (DimA: SubA, A3) ~~|`
     expect(parseVensimSubscriptRange(range)).toEqual(
-      subRange('DimB', 'DimB', ['B1', 'B2'], [subMapping('DimA', ['SubA', 'A3'])])
+      dimDef('DimB', 'DimB', ['B1', 'B2'], [subMapping('DimA', ['SubA', 'A3'])])
     )
   })
 
@@ -61,7 +59,7 @@ describe('parseVensimSubscriptRange', () => {
     // SubA: A1, A2 ~~|
     // DimB: B1, B2, B3 ~~|
     const range = `DimA: SubA, A3 -> DimB ~~|`
-    expect(parseVensimSubscriptRange(range)).toEqual(subRange('DimA', 'DimA', ['SubA', 'A3'], [subMapping('DimB')]))
+    expect(parseVensimSubscriptRange(range)).toEqual(dimDef('DimA', 'DimA', ['SubA', 'A3'], [subMapping('DimB')]))
   })
 
   it('should parse a subscript range with two mappings', () => {
@@ -70,7 +68,7 @@ describe('parseVensimSubscriptRange', () => {
     // DimC: C1, C2, C3 ~~|
     const range = `DimA: A1, A2, A3 -> (DimB: B3, B2, B1), DimC ~~|`
     expect(parseVensimSubscriptRange(range)).toEqual(
-      subRange('DimA', 'DimA', ['A1', 'A2', 'A3'], [subMapping('DimB', ['B3', 'B2', 'B1']), subMapping('DimC')])
+      dimDef('DimA', 'DimA', ['A1', 'A2', 'A3'], [subMapping('DimB', ['B3', 'B2', 'B1']), subMapping('DimC')])
     )
   })
 
@@ -78,7 +76,7 @@ describe('parseVensimSubscriptRange', () => {
     // DimA <-> DimB ~~|
     // DimB: B1, B2, B3 ~~|
     const range = `DimA <-> DimB ~~|`
-    expect(parseVensimSubscriptRange(range)).toEqual(subRange('DimA', 'DimB', []))
+    expect(parseVensimSubscriptRange(range)).toEqual(dimDef('DimA', 'DimB', []))
   })
 
   it('should throw an error if an unsupported function is used in subscript range definition', () => {
@@ -100,6 +98,6 @@ describe('parseVensimSubscriptRange', () => {
       }
     }
     const range = `DimA: GET DIRECT SUBSCRIPT('a_subs.csv', ',', 'A2', 'A', '') ~~|`
-    expect(parseVensimSubscriptRange(range, context)).toEqual(subRange('DimA', 'DimA', ['A1', 'A2', 'A3']))
+    expect(parseVensimSubscriptRange(range, context)).toEqual(dimDef('DimA', 'DimA', ['A1', 'A2', 'A3']))
   })
 })

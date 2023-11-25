@@ -34,8 +34,8 @@ export type DimOrSubName = string
 export type DimOrSubId = string
 
 /**
- * A reference to a dimension or an individual subscript/index, as used in a subscript
- * range definition or in a variable reference inside an equation definition.
+ * A reference to a dimension or an individual subscript/index, as used in a dimension
+ * definition or in a variable reference inside an equation definition.
  *
  * This type can be used in cases where either a dimension or an individual subscript/index
  * can appear, and more analysis is needed to resolve the reference.
@@ -53,7 +53,7 @@ export interface SubscriptRef {
 }
 
 /**
- * A subscript mapping, as used in a subscript range definition.
+ * A subscript mapping, as used in a dimension definition.
  */
 export interface SubscriptMapping {
   /**
@@ -73,47 +73,45 @@ export interface SubscriptMapping {
 }
 
 /**
- * A subscript range definition.
+ * A definition of a dimension (aka "subscript range" in Vensim).
  */
-export interface SubscriptRange {
+export interface DimensionDef {
   /**
-   * The original name of the subscript range ("dimension") being defined, as it appears in
-   * the model.
+   * The original name of the dimension being defined, as it appears in the model.
    */
   dimName: DimName
   /**
-   * The canonical identifier of the subscript range ("dimension") being defined, as it appears
-   * in generated code.
+   * The canonical identifier of the dimension being defined, as it appears in generated code.
    */
   dimId: DimId
   /**
-   * The original name of the family associated with the subscript range ("dimension") being
-   * defined, as it appears in the model.
+   * The original name of the family associated with the dimension being defined, as it
+   * appears in the model.
    *
-   * For a typical subscript range, the family name is the same as the dimension name, but
-   * in the case of an alias (e.g., in Vensim, `DimA <-> DimB`), this will be the name used
-   * on the right side (e.g., `DimB`).
+   * For a typical dimension, the family name is the same as the dimension name, but in the
+   * case of an alias (e.g., in Vensim, `DimA <-> DimB`), this will be the name used on the
+   * right side (e.g., `DimB`).
    */
   familyName: DimName
   /**
-   * The canonical identifier of the family associated with the subscript range ("dimension")
-   * being defined, as it appears in generated code.
+   * The canonical identifier of the family associated with the dimension being defined, as
+   * it appears in generated code.
    *
-   * For a typical subscript range, the family name is the same as the dimension name, but
-   * in the case of an alias (e.g., in Vensim, `DimA <-> DimB`), this will be the ID used
-   * on the right side (e.g., `_dimb`).
+   * For a typical dimension, the family name is the same as the dimension name, but in the
+   * case of an alias (e.g., in Vensim, `DimA <-> DimB`), this will be the ID used on the
+   * right side (e.g., `_dimb`).
    */
   familyId: DimId
   /**
-   * The array of subscripts/indices that are part of this subscript range ("dimension").
+   * The array of subscripts/indices that make up this dimension.
    */
   subscriptRefs: SubscriptRef[]
   /**
-   * The array of subscript mappings, if defined for this subscript range ("dimension").
+   * The array of subscript mappings, if defined for this dimension.
    */
   subscriptMappings: SubscriptMapping[]
   /**
-   * The optional comment text that accompanies the subscript range definition in the model.
+   * The optional comment text that accompanies the dimension definition in the model.
    */
   comment?: string
 }
@@ -383,10 +381,10 @@ export interface Equation {
 // MODEL
 //
 
-/** A complete model definition, including all defined subscript ranges and equations. */
+/** A complete model definition, including all defined dimensions and equations. */
 export interface Model {
-  /** The array of all subscript ranges defined in the model. */
-  subscriptRanges: SubscriptRange[]
-  /** The array of all equations defined in the model. */
+  /** The array of all dimension definitions in the model. */
+  dimensions: DimensionDef[]
+  /** The array of all variable/equation definitions in the model. */
   equations: Equation[]
 }

@@ -4,19 +4,19 @@ import { readCsv } from '../_shared/helpers.js'
 import { Subscript } from '../_shared/subscript.js'
 
 /**
- * TODO: Docs
+ * Read the dimension definitions from the given model.
  *
  * @param {*} parsedModel TODO: Use ParsedVensimModel type here
  */
-export function readSubscripts(parsedModel) {
-  // Read and process all subscript range definitions from the parsed model
-  for (const subscriptRange of parsedModel.root.subscriptRanges) {
-    const dimName = subscriptRange.dimName
-    const familyName = subscriptRange.familyName
-    if (subscriptRange.subscriptRefs.length > 0) {
-      // This is a normal subscript range definition
-      const subNames = subscriptRange.subscriptRefs.map(ref => ref.subName)
-      const mappings = subscriptRange.subscriptMappings.map(mapping => {
+export function readDimensionDefs(parsedModel) {
+  // Read and process all dimension definitions from the parsed model
+  for (const dimensionDef of parsedModel.root.dimensions) {
+    const dimName = dimensionDef.dimName
+    const familyName = dimensionDef.familyName
+    if (dimensionDef.subscriptRefs.length > 0) {
+      // This is a normal dimension definition
+      const subNames = dimensionDef.subscriptRefs.map(ref => ref.subName)
+      const mappings = dimensionDef.subscriptMappings.map(mapping => {
         // Convert from the AST representation (`SubscriptMapping`) to the structure used
         // by the compiler
         return {
@@ -37,7 +37,7 @@ export function readSubscripts(parsedModel) {
 }
 
 /**
- * Read the subscripts for a `GET DIRECT SUBSCRIPT` call in a subscript range definition.
+ * Read the subscripts for a `GET DIRECT SUBSCRIPT` call in a dimension definition.
  *
  * @param {string} filePath The absolute
  * @param {string} tabOrDelimiter
