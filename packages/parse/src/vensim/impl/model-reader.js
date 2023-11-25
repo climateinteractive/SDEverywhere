@@ -16,7 +16,7 @@ export class ModelReader extends ModelVisitor {
   constructor(parseContext /*: VensimParseContext*/) {
     super()
     this.parseContext = parseContext
-    this.subscriptRanges = []
+    this.dimensions = []
     this.equations = []
   }
 
@@ -40,8 +40,8 @@ export class ModelReader extends ModelVisitor {
       // TODO: Can we reuse reader instances?
       const subscriptReader = new SubscriptRangeReader(this.parseContext)
       for (const subscriptRangeCtx of subscriptRangesCtx) {
-        const subscriptRange = subscriptReader.visitSubscriptRange(subscriptRangeCtx)
-        this.subscriptRanges.push(subscriptRange)
+        const dimensionDef = subscriptReader.visitSubscriptRange(subscriptRangeCtx)
+        this.dimensions.push(dimensionDef)
       }
     }
 
@@ -56,7 +56,7 @@ export class ModelReader extends ModelVisitor {
     }
 
     this.model = {
-      subscriptRanges: this.subscriptRanges,
+      dimensions: this.dimensions,
       equations: this.equations
     }
   }

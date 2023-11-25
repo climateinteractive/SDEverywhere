@@ -1,6 +1,6 @@
 // Copyright (c) 2023 Climate Interactive / New Venture Fund
 
-import type { Equation, Model, SubscriptRange } from '../ast/ast-types'
+import type { DimensionDef, Equation, Model } from '../ast/ast-types'
 import { preprocessVensimModel } from './preprocess-vensim'
 import type { VensimParseContext } from './vensim-parse-context'
 import { ModelReader } from './impl/model-reader'
@@ -15,7 +15,7 @@ import { ModelReader } from './impl/model-reader'
  * @returns A `Model` AST node.
  */
 export function parseVensimModel(input: string, context?: VensimParseContext, sort = false): Model {
-  const subscriptRanges: SubscriptRange[] = []
+  const dimensions: DimensionDef[] = []
   const equations: Equation[] = []
 
   // Run the preprocessor on the input (to separate out units, comments, unsupported
@@ -54,10 +54,10 @@ export function parseVensimModel(input: string, context?: VensimParseContext, so
       throw new Error(msg)
     }
 
-    for (const subscriptRange of parsedModel.subscriptRanges) {
+    for (const dimensionDef of parsedModel.dimensions) {
       // Fold in the comment string that was extracted during preprocessing
-      subscriptRanges.push({
-        ...subscriptRange,
+      dimensions.push({
+        ...dimensionDef,
         comment: def.comment
       })
     }
@@ -73,7 +73,7 @@ export function parseVensimModel(input: string, context?: VensimParseContext, so
   }
 
   return {
-    subscriptRanges,
+    dimensions,
     equations
   }
 }

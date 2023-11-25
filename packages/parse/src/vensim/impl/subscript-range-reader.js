@@ -19,31 +19,31 @@ export class SubscriptRangeReader extends ModelVisitor {
   }
 
   /**
-   * Parse the given Vensim subscript range definition and return a `SubscriptRange` AST node.
+   * Parse the given Vensim subscript range definition and return a `DimensionDef` AST node.
    *
    * @public
    * @param {string} subscriptRangeText A string containing the Vensim subscript range definition.
-   * @returns {import('../../ast/ast-types').SubscriptRange} A `SubscriptRange` AST node.
+   * @returns {import('../../ast/ast-types').DimensionDef} A `DimensionDef` AST node.
    */
-  /*public*/ parse(subscriptRangeText /*: string*/) /*: SubscriptRange*/ {
+  /*public*/ parse(subscriptRangeText /*: string*/) /*: DimensionDef*/ {
     const parser = createAntlrParser(subscriptRangeText)
     const subscriptRangeCtx = parser.subscriptRange()
     return this.visitSubscriptRange(subscriptRangeCtx)
   }
 
   /**
-   * Process the given ANTLR `ExprContext` from an already parsed Vensim
-   * expression definition.
+   * Process the given ANTLR `SubscriptRangeContext` from an already parsed Vensim
+   * subscript range definition.
    *
    * @public
    * @param {import('antlr4-vensim').SubscriptRangeContext} ctx The ANTLR `SubscriptRangeContext`.
    * @returns {import('../../ast/ast-types').Expr} A `SubscriptRange` AST node.
    */
-  /*public*/ visitSubscriptRange(ctx /*: SubscriptRangeContext*/) /*: SubscriptRange*/ {
+  /*public*/ visitSubscriptRange(ctx /*: SubscriptRangeContext*/) /*: DimensionDef*/ {
     this.subscriptNames = []
     this.subscriptMappings = []
 
-    // TODO: For now, fill in an empty string for tthe comment; this is mainly
+    // TODO: For now, fill in an empty string for the comment; this is mainly
     // for compatibility with unit tests that expect empty string instead of
     // undefined, but this should be revisited
     const comment = ''
@@ -59,7 +59,7 @@ export class SubscriptRangeReader extends ModelVisitor {
       // Visit children to fill in the subscript range definition
       super.visitSubscriptRange(ctx)
 
-      // Create a new subscript range definition from Vensim-format names.
+      // Create a new subscript range definition (`DimensionDef`) from Vensim-format names.
       //   - The family is provisionally set to the dimension name.
       //   - It will be updated to the maximal dimension if this is a subdimension.
       //   - The mapping value contains dimensions and indices in the toDim.
@@ -79,7 +79,7 @@ export class SubscriptRangeReader extends ModelVisitor {
         comment
       }
     } else if (ids.length === 2) {
-      // This is a subscript alias (`DimA <-> DimB`)
+      // This is a dimension alias (`DimA <-> DimB`)
       const dimName = ids[0].getText()
       const dimId = canonicalName(dimName)
       const familyName = ids[1].getText()

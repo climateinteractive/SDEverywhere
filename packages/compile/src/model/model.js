@@ -18,7 +18,7 @@ import { createParser } from '../parse/parser.js'
 
 import EquationReader from './equation-reader.js'
 import { readEquation } from './read-equations.js'
-import { readSubscripts } from './read-subscripts.js'
+import { readDimensionDefs } from './read-subscripts.js'
 import { readVariables as readVariables2 } from './read-variables.js'
 import SubscriptRangeReader from './subscript-range-reader.js'
 import toposort from './toposort.js'
@@ -71,14 +71,14 @@ function read(parsedModel, spec, extData, directData, modelDirname, opts) {
   // prevent eval cycles. They are manually added to the spec file.
   let specialSeparationDims = spec.specialSeparationDims
 
-  // Subscript ranges must be defined before reading variables that use them.
+  // Dimensions must be defined before reading variables that use them.
   if (parsedModel.kind === 'vensim-legacy') {
     readSubscriptRanges(parsedModel.parseTree, modelDirname)
   } else {
-    readSubscripts(parsedModel, modelDirname)
+    readDimensionDefs(parsedModel, modelDirname)
   }
   if (opts?.stopAfterReadSubscripts) return
-  resolveSubscriptRanges(spec.dimensionFamilies)
+  resolveDimensions(spec.dimensionFamilies)
   if (opts?.stopAfterResolveSubscripts) return
 
   // Read variables from the model parse tree.
@@ -156,10 +156,10 @@ function readSubscriptRanges(parseTree, modelDirname) {
  * @param {Object.<string, string>} dimensionFamilies The optional mapping of dimension name to family name
  * as provided in a `spec.json` file.
  */
-function resolveSubscriptRanges(dimensionFamilies) {
+function resolveDimensions(dimensionFamilies) {
   let allDims = allDimensions()
 
-  // Expand dimensions that appeared in subscript range definitions into indices.
+  // Expand dimensions that appeared in dimension definitions into subscripts/indices.
   // Repeat until there are only indices in dimension values.
   let dimFoundInValue
   do {
@@ -178,7 +178,7 @@ function resolveSubscriptRanges(dimensionFamilies) {
     }
   } while (dimFoundInValue)
 
-  // Fill in subscript aliases from their model families.
+  // Fill in dimension aliases from their model families.
   for (let dim of allAliases()) {
     if (dim.value === '') {
       let refDim = sub(dim.family)

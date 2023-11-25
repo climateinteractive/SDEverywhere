@@ -5,6 +5,7 @@ import { canonicalName, cFunctionName } from '../_shared/names'
 import type {
   BinaryOp,
   BinaryOpExpr,
+  DimensionDef,
   DimName,
   DimOrSubName,
   Equation,
@@ -22,7 +23,6 @@ import type {
   StringLiteral,
   SubName,
   SubscriptMapping,
-  SubscriptRange,
   SubscriptRef,
   UnaryOp,
   UnaryOpExpr,
@@ -38,7 +38,7 @@ import type {
 //
 
 //
-// SUBSCRIPT RANGES
+// DIMENSIONS + SUBSCRIPTS
 //
 
 export function subRef(dimOrSubName: DimOrSubName): SubscriptRef {
@@ -56,13 +56,13 @@ export function subMapping(toDimName: DimName, dimOrSubNames: DimOrSubName[] = [
   }
 }
 
-export function subRange(
+export function dimDef(
   dimName: DimName,
   familyName: DimName,
   dimOrSubNames: SubName[],
   subscriptMappings: SubscriptMapping[] = [],
   comment = ''
-): SubscriptRange {
+): DimensionDef {
   return {
     dimName,
     dimId: canonicalName(dimName),
@@ -241,9 +241,9 @@ export function lookupVarEqn(varDef: VariableDef, lookupDef: LookupDef, units = 
 // MODEL
 //
 
-export function model(subscriptRanges: SubscriptRange[], equations: Equation[]): Model {
+export function model(dimensions: DimensionDef[], equations: Equation[]): Model {
   return {
-    subscriptRanges,
+    dimensions,
     equations
   }
 }
