@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest'
 
 import { type XmlElement, parseXml } from '@rgrove/parse-xml'
 
-import { subRange } from '../ast/ast-builders'
+import { dimDef } from '../ast/ast-builders'
 
 import { parseXmileDimensionDef } from './parse-xmile-dimension-def'
 
@@ -27,7 +27,7 @@ describe('parseXmileDimensionDef', () => {
         <elem name="A3" />
       </dim>
     `)
-    expect(parseXmileDimensionDef(dim)).toEqual(subRange('DimA', 'DimA', ['A1', 'A2', 'A3']))
+    expect(parseXmileDimensionDef(dim)).toEqual(dimDef('DimA', 'DimA', ['A1', 'A2', 'A3']))
   })
 
   it('should throw an error if dimension name is not defined', () => {

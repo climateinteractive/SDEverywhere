@@ -2,7 +2,7 @@
 
 import { describe, expect, it } from 'vitest'
 
-import { exprEqn, model, num, subRange, varDef } from '../ast/ast-builders'
+import { dimDef, exprEqn, model, num, varDef } from '../ast/ast-builders'
 
 import { parseXmileModel } from './parse-xmile-model'
 
@@ -65,7 +65,7 @@ describe('parseXmileModel', () => {
   <elem name="A3" />
 </dim>`
     const mdl = xmile(dims, '')
-    expect(parseXmileModel(mdl)).toEqual(model([subRange('DimA', 'DimA', ['A1', 'A2', 'A3'])], []))
+    expect(parseXmileModel(mdl)).toEqual(model([dimDef('DimA', 'DimA', ['A1', 'A2', 'A3'])], []))
   })
 
   it('should parse a model with dimension definition with comment', () => {
@@ -78,7 +78,7 @@ describe('parseXmileModel', () => {
 </dim>`
     const mdl = xmile(dims, '')
     expect(parseXmileModel(mdl)).toEqual(
-      model([subRange('DimA', 'DimA', ['A1', 'A2', 'A3'], undefined, 'comment is here')], [])
+      model([dimDef('DimA', 'DimA', ['A1', 'A2', 'A3'], undefined, 'comment is here')], [])
     )
   })
 
@@ -113,7 +113,7 @@ describe('parseXmileModel', () => {
     expect(parseXmileModel(mdl)).toEqual(
       model(
         // dimension definitions
-        [subRange('DimA', 'DimA', ['A1', 'A2', 'A3'], undefined, 'comment is here')],
+        [dimDef('DimA', 'DimA', ['A1', 'A2', 'A3'], undefined, 'comment is here')],
 
         // variable definitions
         [exprEqn(varDef('x', ['DimA']), num(1), 'meters', 'comment is here')]

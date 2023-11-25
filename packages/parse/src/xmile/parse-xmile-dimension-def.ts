@@ -4,17 +4,17 @@ import type { XmlElement } from '@rgrove/parse-xml'
 
 import { canonicalName } from '../_shared/names'
 
-import type { SubscriptRange, SubscriptRef } from '../ast/ast-types'
+import type { DimensionDef, SubscriptRef } from '../ast/ast-types'
 
 import { elemsOf, firstElemOf, xmlError } from './xml'
 
 /**
- * Parse the given XMILE dimension (`<dim>`) definition and return a `SubscriptRange` AST node.
+ * Parse the given XMILE dimension (`<dim>`) definition and return a `DimensionDef` AST node.
  *
  * @param input A string containing the XMILE `<dim>` definition.
- * @returns A `SubscriptRange` AST node.
+ * @returns A `DimensionDef` AST node.
  */
-export function parseXmileDimensionDef(dimElem: XmlElement): SubscriptRange {
+export function parseXmileDimensionDef(dimElem: XmlElement): DimensionDef {
   // Extract <dim name="...">
   const dimName = dimElem.attributes?.name
   if (dimName === undefined) {
