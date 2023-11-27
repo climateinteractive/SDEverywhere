@@ -5,11 +5,17 @@ import { assertNever } from 'assert-never'
 import { binaryOp, lookupCall, num, parens, unaryOp } from './ast-builders'
 import type { Expr, NumberLiteral, VariableRef } from './ast-types'
 
+/**
+ * @hidden This is not yet part of the public API.
+ */
 export interface ReduceExprOptions {
   /** A callback that returns the possibly reduced expression for the referenced variable. */
   resolveVarRef?: (varRef: VariableRef) => Expr | undefined
 }
 
+/**
+ * @hidden This is not yet part of the public API.
+ */
 export function reduceExpr(expr: Expr, opts?: ReduceExprOptions): Expr {
   switch (expr.kind) {
     case 'number':
@@ -299,6 +305,8 @@ export function reduceExpr(expr: Expr, opts?: ReduceExprOptions): Expr {
  * A variant of `reduceExpr` that does not aggressively reduce the expression, but only
  * tries to eliminate the unused branch if a conditional (`IF THEN ELSE`) has a condition
  * that resolves to a constant.
+ *
+ * @hidden This is not yet part of the public API.
  *
  * @param expr The expression to reduce.
  * @param opts The reduce options.

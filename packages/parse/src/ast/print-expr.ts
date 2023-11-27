@@ -4,6 +4,9 @@ import { assertNever } from 'assert-never'
 
 import type { Expr, VariableRef } from '../ast/ast-types'
 
+/**
+ * @hidden This is not yet part of the public API.
+ */
 export function debugPrintExpr(expr: Expr, indent = 0): void {
   const spaces = ' '.repeat(indent * 2)
   const log = (s: string) => {
@@ -63,8 +66,14 @@ export function debugPrintExpr(expr: Expr, indent = 0): void {
   }
 }
 
+/**
+ * @hidden This is not yet part of the public API.
+ */
 export type FormatVariableRefFunc = (varRef: VariableRef) => string
 
+/**
+ * @hidden This is not yet part of the public API.
+ */
 export interface PrettyOpts {
   /**
    * Whether to use a compact representation without additional spaces.  (The compact form mimics
@@ -75,6 +84,9 @@ export interface PrettyOpts {
   formatVariableRef?: FormatVariableRefFunc
 }
 
+/**
+ * @hidden This is not yet part of the public API.
+ */
 export function toPrettyString(expr: Expr, opts?: PrettyOpts): string {
   let lparen: string, rparen: string, spaceSep: string, commaSep: string
   if (opts?.compact === true) {
@@ -178,6 +190,9 @@ export function toPrettyString(expr: Expr, opts?: PrettyOpts): string {
   }
 }
 
+/**
+ * @hidden This is not yet part of the public API.
+ */
 export function prettyPrintExpr(expr: Expr, indent = 0): void {
   const spaces = ' '.repeat(indent * 2)
   const log = (s: string) => {
@@ -254,6 +269,9 @@ function getExprStats(expr: Expr, stats: Stats) {
   }
 }
 
+/**
+ * @hidden This is not yet part of the public API.
+ */
 export function printExprStats(exprs: Expr[]): void {
   const stats = new Stats()
   for (const expr of exprs) {
