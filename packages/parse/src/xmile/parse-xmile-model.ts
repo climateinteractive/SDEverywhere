@@ -63,8 +63,8 @@ function parseVariableDefs(rootElem: XmlElement | undefined): Equation[] {
   const equations: Equation[] = []
   const variablesElem = firstElemOf(modelElem, 'variables')
   if (variablesElem) {
-    // Extract variable definition (e.g., <aux> or <stock> or <flow>) -> Equation[]
-    const varElems = elemsOf(variablesElem, ['aux', 'stock', 'flow'])
+    // Extract variable definition (e.g., <aux>, <stock>, <flow>, <gf>) -> Equation[]
+    const varElems = elemsOf(variablesElem, ['aux', 'stock', 'flow', 'gf'])
     for (const varElem of varElems) {
       const eqns = parseXmileVariableDef(varElem)
       if (eqns) {

@@ -4,8 +4,8 @@ import type { XmlElement } from '@rgrove/parse-xml'
 
 import { canonicalName } from '../_shared/names'
 
-import { call, subRef } from '../ast/ast-builders'
-import type { Equation, Expr, SubscriptRef } from '../ast/ast-types'
+import { call, lookupDef, subRef } from '../ast/ast-builders'
+import type { Equation, Expr, LookupDef, LookupPoint, SubscriptRef } from '../ast/ast-types'
 
 import { parseVensimExpr } from '../vensim/parse-vensim-expr'
 
@@ -25,7 +25,7 @@ const conditionalRegExp = /IF\s+(.*)\s+THEN\s+(.*)\s+ELSE\s+(.*)\s*/gi
 export function parseXmileVariableDef(varElem: XmlElement): Equation[] {
   // Extract required variable name
   const varName = varElem.attributes?.name
-  if (varName === undefined) {
+  if (varName === undefined || varName.length === 0) {
     throw new Error(xmlError(varElem, `<${varElem.name}> name attribute is required`))
   }
   const varId = canonicalName(varName)
@@ -36,8 +36,9 @@ export function parseXmileVariableDef(varElem: XmlElement): Equation[] {
   // Extract optional <doc> -> comment string
   const comment = firstElemOf(varElem, 'doc')?.text || ''
 
-  // Helper function that creates a single `Equation` instance for this variable definition
-  function equation(subscriptRefs: SubscriptRef[] | undefined, expr: Expr): Equation {
+  // Helper function that creates a single `Equation` instance with an expression for
+  // this variable definition
+  function exprEquation(subscriptRefs: SubscriptRef[] | undefined, expr: Expr): Equation {
     return {
       lhs: {
         varDef: {
@@ -56,14 +57,52 @@ export function parseXmileVariableDef(varElem: XmlElement): Equation[] {
     }
   }
 
+  // Helper function that creates a single `Equation` instance with a lookup for
+  // this variable definition
+  function lookupEquation(subscriptRefs: SubscriptRef[] | undefined, lookup: LookupDef): Equation {
+    return {
+      lhs: {
+        varDef: {
+          kind: 'variable-def',
+          varName,
+          varId,
+          subscriptRefs
+        }
+      },
+      rhs: {
+        kind: 'lookup',
+        lookupDef: lookup
+      },
+      units,
+      comment
+    }
+  }
+
+  if (varElem.name === 'gf') {
+    // This is a top-level <gf>
+    // TODO: Are subscripted <gf> elements allowed?  If so, handle them here.
+    const lookup = parseGfElem(varElem)
+    return [lookupEquation(undefined, lookup)]
+  }
+
   // Check for <dimensions>
   const dimensionsElem = firstElemOf(varElem, 'dimensions')
   const equationDefs: Equation[] = []
   if (dimensionsElem === undefined) {
     // This is a non-subscripted variable
-    const expr = parseEqnElem(varElem, varElem)
-    if (expr) {
-      equationDefs.push(equation(undefined, expr))
+    const gfElem = firstElemOf(varElem, 'gf')
+    if (gfElem) {
+      // The variable is defined with a graphical function
+      // TODO: Throw error if this is a <stock> variable (<gf> is only allowed for
+      // <flow> and <aux> variables)
+      const lookup = parseGfPoints(varElem)
+      equationDefs.push(lookupEquation(undefined, lookup))
+    } else {
+      // The variable is defined with an equation
+      const expr = parseEqnElem(varElem, varElem)
+      if (expr) {
+        equationDefs.push(exprEquation(undefined, expr))
+      }
     }
   } else {
     // This is an array (subscripted) variable.  An array variable definition will include
@@ -81,13 +120,14 @@ export function parseXmileVariableDef(varElem: XmlElement): Equation[] {
     // If it is an apply-to-all variable, there will be a single <eqn>.  If it is a
     // non-apply-to-all variable, there will be one or more <element> elements that define
     // the separate equation for each "instance".
+    // TODO: Handle apply-to-all variable defs that contain <gf>?
     const elementElems = elemsOf(varElem, ['element'])
     if (elementElems.length === 0) {
       // This is an apply-to-all variable
       const dimRefs = dimNames.map(subRef)
       const expr = parseEqnElem(varElem, varElem)
       if (expr) {
-        equationDefs.push(equation(dimRefs, expr))
+        equationDefs.push(exprEquation(dimRefs, expr))
       }
     } else {
       // This is a non-apply-to-all variable
@@ -95,6 +135,7 @@ export function parseXmileVariableDef(varElem: XmlElement): Equation[] {
       // name/ID (which we can pull from the <dimensions> section of the variable definition).
       // Until then, we will include the subscript name only (and we do not yet support
       // numeric subscript indices).
+      // TODO: Handle non-apply-to-all variable defs that contain <gf>?
       for (const elementElem of elementElems) {
         const subscriptAttr = elementElem.attributes?.subscript
         if (subscriptAttr === undefined) {
@@ -103,14 +144,14 @@ export function parseXmileVariableDef(varElem: XmlElement): Equation[] {
         const subscriptNames = subscriptAttr.split(',').map(s => s.trim())
         const subRefs: SubscriptRef[] = []
         for (const subscriptName of subscriptNames) {
-          if (parseInt(subscriptAttr)) {
+          if (!isNaN(parseInt(subscriptAttr))) {
             throw new Error(xmlError(varElem, 'Numeric subscript indices are not currently supported'))
           }
           subRefs.push(subRef(subscriptName))
         }
         const expr = parseEqnElem(varElem, elementElem)
         if (expr) {
-          equationDefs.push(equation(subRefs, expr))
+          equationDefs.push(exprEquation(subRefs, expr))
         }
       }
     }
@@ -209,4 +250,70 @@ function parseExpr(exprText: string): Expr {
   // the XMILE form to Vensim form, and then we can use the Vensim expression parser.
   exprText = exprText.replace(conditionalRegExp, 'IF THEN ELSE($1, $2, $3)')
   return parseVensimExpr(exprText)
+}
+
+function parseGfElem(varElem: XmlElement, gfElem: XmlElement): LookupDef {
+  // Parse the required <ypts>
+  const yptsElem = firstElemOf(gfElem, 'ypts')
+  if (yptsElem === undefined) {
+    throw new Error(xmlError(varElem, 'TODO'))
+  }
+  const ypts = parseGfPts(varElem, yptsElem)
+  if (ypts.length === 0) {
+    throw new Error(xmlError(varElem, 'TODO'))
+  }
+
+  // Check for <xpts> or <xscale> (must be one or the other)
+  const xptsElem = firstElemOf(gfElem, 'xpts')
+  const xscaleElem = firstElemOf(gfElem, 'xscale')
+  if (xptsElem && xscaleElem) {
+    throw new Error(xmlError(varElem, 'TODO'))
+  } else if (xptsElem === undefined && xscaleElem === undefined) {
+    throw new Error(xmlError(varElem, 'TODO'))
+  }
+
+  let xpts: number[]
+  if (xPtsElem) {
+    // Parse the <xpts>
+    const ypts = parseGfPts(varElem, yptsElem)
+    if (ypts.length === 0) {
+      throw new Error(xmlError(varElem, 'TODO'))
+    }
+  } else {
+    // Parse the <xscale>
+    // TODO: min and max
+    // }
+  }
+
+  // TODO: Check for same length as <ypts>
+  if (xpts.length !== ypts.length) {
+    throw new Error(xmlError(varElem, 'TODO'))
+  }
+
+  // Zip the arrays
+  const points: LookupPoint[] = []
+  for (let i = 0; i < xpts.length; i++) {
+    points.push([xpts[i], ypts[i]])
+  }
+  return lookupDef(points)
+}
+
+function parseGfPts(varElem: XmlElement, ptsElem: XmlElement): number[] {
+  const ptsText = firstTextOf(ptsElem)?.text
+  if (ptsText === undefined) {
+    return []
+  }
+
+  const sep = ptsElem.attributes?.sep || ','
+  const elems = ptsText.split(sep)
+  const nums: number[] = []
+  for (const elem of elems) {
+    const numText = elem.trim()
+    const num = parseFloat(numText)
+    if (isNaN(num)) {
+      throw new Error(xmlError(varElem, `Invalid number value '${numText}' in <${ptsElem.name}>'`))
+    }
+    nums.push(num)
+  }
+  return nums
 }
