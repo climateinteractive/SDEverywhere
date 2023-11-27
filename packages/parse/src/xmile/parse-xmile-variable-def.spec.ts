@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest'
 import type { XmlElement } from '@rgrove/parse-xml'
 import { parseXml } from '@rgrove/parse-xml'
 
-import { binaryOp, call, exprEqn, num, varDef, varRef } from '../ast/ast-builders'
+import { binaryOp, call, exprEqn, lookupDef, lookupVarEqn, num, varDef, varRef } from '../ast/ast-builders'
 
 import { parseXmileVariableDef } from './parse-xmile-variable-def'
 
@@ -86,6 +86,18 @@ describe('parseXmileVariableDef with <stock>', () => {
     expect(() => parseXmileVariableDef(v)).toThrow('Currently <eqn> is required for a <stock> variable')
   })
 
+  it('should throw an error if stock variable definition has <gf>', () => {
+    const v = xml(`
+      <stock name="x">
+        <gf>
+          <xscale min="0" max="1"/>
+          <ypts>0,0.1,0.5,0.9,1</ypts>
+        </gf>
+      </stock>
+    `)
+    expect(() => parseXmileVariableDef(v)).toThrow('<gf> is not valid within a <stock> variable')
+  })
+
   it('should throw an error if stock variable definition has no <inflow>', () => {
     const v = xml(`
       <stock name="x">
@@ -151,13 +163,59 @@ describe('parseXmileVariableDef with <stock>', () => {
 })
 
 describe('parseXmileVariableDef with <flow>', () => {
-  it('should parse a flow variable definition (without subscripts)', () => {
+  it('should parse a flow variable definition (without subscripts, defined with <eqn>)', () => {
     const v = xml(`
       <flow name="x">
         <eqn>y + 10</eqn>
       </flow>
     `)
     expect(parseXmileVariableDef(v)).toEqual([exprEqn(varDef('x'), binaryOp(varRef('y'), '+', num(10)))])
+  })
+
+  it('should parse a flow variable definition (without subscripts, defined with <gf> and <xscale>)', () => {
+    const v = xml(`
+      <flow name="x">
+        <gf>
+          <xscale min="0" max="1"/>
+          <ypts>0,0.1,0.5,0.9,1</ypts>
+        </gf>
+      </flow>
+    `)
+    expect(parseXmileVariableDef(v)).toEqual([
+      lookupVarEqn(
+        varDef('x'),
+        lookupDef([
+          [0, 0],
+          [0.25, 0.1],
+          [0.5, 0.5],
+          [0.75, 0.9],
+          [1, 1]
+        ])
+      )
+    ])
+  })
+
+  it('should parse a flow variable definition (without subscripts, defined with <gf> and <xpts>)', () => {
+    const v = xml(`
+      <flow name="x">
+        <gf>
+          <ypts>0,0.4,0.5,0.8,1</ypts>
+          <ypts>0,0.1,0.5,0.9,1</ypts>
+        </gf>
+      </flow>
+    `)
+    expect(parseXmileVariableDef(v)).toEqual([
+      lookupVarEqn(
+        varDef('x'),
+        lookupDef([
+          [0, 0],
+          [0.4, 0.1],
+          [0.5, 0.5],
+          [0.8, 0.9],
+          [1, 1]
+        ])
+      )
+    ])
   })
 
   it('should parse a flow variable definition (with one dimension, apply to all)', () => {
@@ -194,12 +252,12 @@ describe('parseXmileVariableDef with <flow>', () => {
     ])
   })
 
-  it('should throw an error if flow variable definition has no <eqn>', () => {
+  it('should throw an error if flow variable definition has no <eqn> or <gf>', () => {
     const v = xml(`
       <flow name="x">
       </flow>
     `)
-    expect(() => parseXmileVariableDef(v)).toThrow('Currently <eqn> is required for a <flow> variable')
+    expect(() => parseXmileVariableDef(v)).toThrow('Currently <eqn> or <gf> is required for a <flow> variable')
   })
 
   // TODO: Support <multiplier>
@@ -444,56 +502,150 @@ describe('parseXmileVariableDef with <aux>', () => {
     `)
     expect(() => parseXmileVariableDef(v)).toThrow('Numeric subscript indices are not currently supported')
   })
+})
 
-  // it('should parse a data variable definition (without subscripts)', () => {
-  //   const eqn = `x ~~|`
-  //   expect(parseXmileVariableDef(v)).toEqual(dataVarEqn(varDef('x')))
-  // })
+describe('parseXmileVariableDef with <gf>', () => {
+  it('should parse a graphical function (with <xscale> and <ypts>', () => {
+    const v = xml(`
+      <gf name="x">
+        <xscale min="0" max="1"/>
+        <ypts>0,0.1,0.5,0.9,1</ypts>
+      </gf>
+    `)
+    expect(parseXmileVariableDef(v)).toEqual([
+      lookupVarEqn(
+        varDef('x'),
+        lookupDef([
+          [0, 0],
+          [0.25, 0.1],
+          [0.5, 0.5],
+          [0.75, 0.9],
+          [1, 1]
+        ])
+      )
+    ])
+  })
 
-  // it('should parse a data variable definition (with one dimension)', () => {
-  //   const eqn = `x[a] ~~|`
-  //   expect(parseXmileVariableDef(v)).toEqual(dataVarEqn(varDef('x', ['a'])))
-  // })
+  it('should parse a graphical function (with <xpts> and <ypts>', () => {
+    const v = xml(`
+      <gf name="x">
+        <xpts>0,0.4,0.5,0.8,1</xpts>
+        <ypts>0,0.1,0.5,0.9,1</ypts>
+      </gf>
+    `)
+    expect(parseXmileVariableDef(v)).toEqual(
+      lookupVarEqn(
+        varDef('x'),
+        lookupDef([
+          [0, 0],
+          [0.4, 0.1],
+          [0.5, 0.5],
+          [0.8, 0.9],
+          [1, 1]
+        ])
+      )
+    )
+  })
 
-  // it('should parse a data variable definition (with two dimensions)', () => {
-  //   const eqn = `x[a, b] ~~|`
-  //   expect(parseXmileVariableDef(v)).toEqual(dataVarEqn(varDef('x', ['a', 'b'])))
-  // })
+  it('should parse a graphical function (with custom separator)', () => {
+    const v = xml(`
+      <gf name="x">
+        <xpts>0,0.4,0.5,0.8,1</xpts>
+        <ypts sep=";">0;0.1;0.5;0.9;1</ypts>
+      </gf>
+    `)
+    expect(parseXmileVariableDef(v)).toEqual(
+      lookupVarEqn(
+        varDef('x'),
+        lookupDef([
+          [0, 0],
+          [0.4, 0.1],
+          [0.5, 0.5],
+          [0.8, 0.9],
+          [1, 1]
+        ])
+      )
+    )
+  })
 
-  // it('should parse a lookup definition (without lookup range)', () => {
-  //   const eqn = `x( (0,0), (1,2), (2,  5)  ) ~~|`
-  //   expect(parseXmileVariableDef(v)).toEqual(
-  //     lookupVarEqn(
-  //       varDef('x'),
-  //       lookupDef([
-  //         [0, 0],
-  //         [1, 2],
-  //         [2, 5]
-  //       ])
-  //     )
-  //   )
-  // })
+  it('should throw an error if name is undefined', () => {
+    const v = xml(`
+      <gf>
+        <xpts>0,0.4,0.5,0.8,1</xpts>
+        <ypts>0,0.1,0.5,0.9,1</ypts>
+      </gf>
+    `)
+    expect(() => parseXmileVariableDef(v)).toThrow('<gf> name attribute is required')
+  })
 
-  // it('should parse a lookup definition (with lookup range)', () => {
-  //   const eqn = `x( [(0,0)-(2,2)], (0,0),(0.1,0.01),(0.5,0.7),(1,1),(1.5,1.2),(2,1.3) ) ~~|`
-  //   expect(parseXmileVariableDef(v)).toEqual(
-  //     lookupVarEqn(
-  //       varDef('x'),
-  //       lookupDef(
-  //         [
-  //           [0, 0],
-  //           [0.1, 0.01],
-  //           [0.5, 0.7],
-  //           [1, 1],
-  //           [1.5, 1.2],
-  //           [2, 1.3]
-  //         ],
-  //         {
-  //           min: [0, 0],
-  //           max: [2, 2]
-  //         }
-  //       )
-  //     )
-  //   )
-  // })
+  it('should throw an error if name is empty', () => {
+    const v = xml(`
+      <gf name="">
+        <xpts>0,0.4,0.5,0.8,1</xpts>
+        <ypts>0,0.1,0.5,0.9,1</ypts>
+      </gf>
+    `)
+    expect(() => parseXmileVariableDef(v)).toThrow('<gf> name attribute is required')
+  })
+
+  // TODO: Support other types (extrapolate and discrete)
+  it('should throw an error if type is defined and is not "continuous"', () => {
+    const v = xml(`
+      <gf name="x" type="extrapolate">
+        <xpts>0,0.4,0.5,0.8,1</xpts>
+        <ypts>0,0.1,0.5,0.9,1</ypts>
+      </gf>
+    `)
+    expect(() => parseXmileVariableDef(v)).toThrow('Currently "continuous" is the only type supported for <gf>')
+  })
+
+  it('should throw an error if <xpts> and <xscale> are both defined', () => {
+    const v = xml(`
+      <gf name="x">
+        <xscale min="0" max="1"/>
+        <xpts>0,0.4,0.5,0.8,1</xpts>
+        <ypts>0,0.1,0.5,0.9,1</ypts>
+      </gf>
+    `)
+    expect(() => parseXmileVariableDef(v)).toThrow('<gf> must contain <xpts> or <xscale> but not both')
+  })
+
+  it('should throw an error if <xpts> is empty', () => {
+    const v = xml(`
+      <gf name="x">
+        <xpts></xpts>
+        <ypts>0,0.1,0.5,0.9,1</ypts>
+      </gf>
+    `)
+    expect(() => parseXmileVariableDef(v)).toThrow('<xpts> must have at least one element')
+  })
+
+  it('should throw an error if <ypts> is undefined', () => {
+    const v = xml(`
+      <gf name="x">
+        <xpts>0,0.4,0.5,0.8,1,666</xpts>
+      </gf>
+    `)
+    expect(() => parseXmileVariableDef(v)).toThrow('<ypts> must be defined')
+  })
+
+  it('should throw an error if <ypts> is empty', () => {
+    const v = xml(`
+      <gf name="x">
+        <xpts>0,0.4,0.5,0.8,1,666</xpts>
+        <ypts></ypts>
+      </gf>
+    `)
+    expect(() => parseXmileVariableDef(v)).toThrow('<ypts> must have at least one element')
+  })
+
+  it('should throw an error if <xpts> and <ypts> have different number of elements', () => {
+    const v = xml(`
+      <gf name="x">
+        <xpts>0,0.4,0.5,0.8,1,666</xpts>
+        <ypts>0,0.1,0.5,0.9,1</ypts>
+      </gf>
+    `)
+    expect(() => parseXmileVariableDef(v)).toThrow('<xpts> and <ypts> must have the same number of elements')
+  })
 })
