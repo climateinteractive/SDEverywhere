@@ -1,5 +1,6 @@
 {
   "packages": {
+    "packages/parse": { "release-as": "0.1.0" },
     "packages/compile": {},
     "packages/build": {},
     "packages/cli": {},
