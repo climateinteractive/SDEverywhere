@@ -296,8 +296,7 @@ export function reduceExpr(expr: Expr, opts?: ReduceExprOptions): Expr {
     }
 
     default:
-      return expr
-    // assertNever(expr)
+      assertNever(expr)
   }
 }
 
@@ -319,14 +318,9 @@ export function reduceConditionals(expr: Expr, opts?: ReduceExprOptions): Expr {
       return expr
 
     case 'variable-ref':
-      if (opts?.resolveVarRef !== undefined) {
-        // Note that we assume the resolved expression has already been reduced by
-        // the callback, and don't attempt to reduce further
-        const resolvedExpr = opts.resolveVarRef(expr)
-        if (resolvedExpr) {
-          return resolvedExpr
-        }
-      }
+      // If we get here, it means that we are processing an expression that is not
+      // inside the condition expression for an `IF THEN ELSE`, so we do not attempt
+      // to resolve the variable reference or reduce it further
       return expr
 
     case 'unary-op': {
@@ -367,9 +361,13 @@ export function reduceConditionals(expr: Expr, opts?: ReduceExprOptions): Expr {
     case 'function-call': {
       if (expr.fnId === '_IF_THEN_ELSE') {
         // Note that (unlike all other places in this function) we use `reduceExpr` here
-        // to aggressively reduce the condition
+        // to aggressively reduce the condition expression (the first argument for the
+        // `IF THEN ELSE` call)
         const conditionExpr = reduceExpr(expr.args[0], opts)
         if (conditionExpr.kind === 'number') {
+          // The condition resolved to a simple numeric constant.  If it is non-zero,
+          // replace the `IF THEN ELSE` call with the "true" branch, otherwise replace
+          // it with the "false" branch.
           return conditionExpr.value !== 0
             ? reduceConditionals(expr.args[1], opts)
             : reduceConditionals(expr.args[2], opts)

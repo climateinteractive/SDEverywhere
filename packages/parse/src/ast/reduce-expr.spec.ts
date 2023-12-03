@@ -232,4 +232,38 @@ describe('reduceConditionals', () => {
       binaryOp(y, '*', zero)
     )
   })
+
+  it('should try to resolve variable refs in the condition but not elsewhere', () => {
+    interface Variable {
+      refId: string
+      expr?: Expr
+    }
+
+    const xVar: Variable = { refId: '_x', expr: one }
+
+    function resolveVarRef(varRef: VariableRef): Expr | undefined {
+      if (varRef.varId === '_x') {
+        return xVar.expr
+      } else {
+        return undefined
+      }
+    }
+
+    // Note that unlike the `reduceExpr` tests above, the `reduceConditionals` function
+    // should not attempt to reduce `variable-ref` expressions outside of the condition
+    // expression, so the `x` variable references below are expected to remain unchanged
+    // (should not be reduced to or replaced with the constant value)
+    const opts: ReduceExprOptions = {
+      resolveVarRef
+    }
+    expect(reduceConditionals(varRef('x'), opts)).toEqual(varRef('x'))
+    expect(reduceConditionals(varRef('y'), opts)).toEqual(varRef('y'))
+
+    // In this example, the `x` used in the condition expression resolves to a constant
+    // value of 1, so the whole `IF THEN ELSE` is expected to be replaced with the "true"
+    // branch expression
+    expect(reduceConditionals(binaryOp(call('IF THEN ELSE', varRef('x'), varRef('x'), zero), '*', two), opts)).toEqual(
+      binaryOp(varRef('x'), '*', two)
+    )
+  })
 })
