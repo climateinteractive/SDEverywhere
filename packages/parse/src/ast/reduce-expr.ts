@@ -217,18 +217,7 @@ export function reduceExpr(expr: Expr, opts?: ReduceExprOptions): Expr {
 
     case 'parens': {
       const child = reduceExpr(expr.expr, opts)
-      switch (child.kind) {
-        case 'number':
-        case 'string':
-        case 'keyword':
-        case 'variable-ref':
-          // When the child expression resolves to something simple, drop the parens
-          // TODO: Are there other cases where we should drop the parens?
-          return child
-        default:
-          // Otherwise, preserve the parens
-          return parens(child)
-      }
+      return applyParens(child)
     }
 
     case 'lookup-def':
@@ -245,7 +234,19 @@ export function reduceExpr(expr: Expr, opts?: ReduceExprOptions): Expr {
         // If condition is a constant, we can eliminate the unused branch
         const conditionExpr = reduceExpr(expr.args[0], opts)
         if (conditionExpr.kind === 'number') {
-          return conditionExpr.value !== 0 ? reduceExpr(expr.args[1], opts) : reduceExpr(expr.args[2], opts)
+          // The condition resolved to a simple numeric constant.  If it is non-zero,
+          // replace the `IF THEN ELSE` call with the "true" branch, otherwise replace
+          // it with the "false" branch.
+          const branchExpr = conditionExpr.value !== 0 ? reduceExpr(expr.args[1], opts) : reduceExpr(expr.args[2], opts)
+
+          // Wrap the branch expression in parentheses if needed to ensure that the intent
+          // of the original expression remains the same.  For example:
+          //   a = IF THEN ELSE(1, b + c, d - e) * 10
+          // In this case, the parentheses are important, and need to be preserved:
+          //   a = (b + c) * 10
+          // If the parentheses are not needed (like when the branch resolve to a simple
+          // constant or variable reference), the parentheses will be dropped.
+          return applyParens(branchExpr)
         }
       }
 
@@ -309,6 +310,7 @@ export function reduceExpr(expr: Expr, opts?: ReduceExprOptions): Expr {
  *
  * @param expr The expression to reduce.
  * @param opts The reduce options.
+ * @returns A possibly reduced expression.
  */
 export function reduceConditionals(expr: Expr, opts?: ReduceExprOptions): Expr {
   switch (expr.kind) {
@@ -336,18 +338,7 @@ export function reduceConditionals(expr: Expr, opts?: ReduceExprOptions): Expr {
 
     case 'parens': {
       const child = reduceConditionals(expr.expr, opts)
-      switch (child.kind) {
-        case 'number':
-        case 'string':
-        case 'keyword':
-        case 'variable-ref':
-          // When the child expression resolves to something simple, drop the parens
-          // TODO: Are there other cases where we should drop the parens?
-          return child
-        default:
-          // Otherwise, preserve the parens
-          return parens(child)
-      }
+      return applyParens(child)
     }
 
     case 'lookup-def':
@@ -368,9 +359,17 @@ export function reduceConditionals(expr: Expr, opts?: ReduceExprOptions): Expr {
           // The condition resolved to a simple numeric constant.  If it is non-zero,
           // replace the `IF THEN ELSE` call with the "true" branch, otherwise replace
           // it with the "false" branch.
-          return conditionExpr.value !== 0
-            ? reduceConditionals(expr.args[1], opts)
-            : reduceConditionals(expr.args[2], opts)
+          const branchExpr =
+            conditionExpr.value !== 0 ? reduceConditionals(expr.args[1], opts) : reduceConditionals(expr.args[2], opts)
+
+          // Wrap the branch expression in parentheses if needed to ensure that the intent
+          // of the original expression remains the same.  For example:
+          //   a = IF THEN ELSE(1, b + c, d - e) * 10
+          // In this case, the parentheses are important, and need to be preserved:
+          //   a = (b + c) * 10
+          // If the parentheses are not needed (like when the branch resolve to a simple
+          // constant or variable reference), the parentheses will be dropped.
+          return applyParens(branchExpr)
         }
       }
 
@@ -386,5 +385,28 @@ export function reduceConditionals(expr: Expr, opts?: ReduceExprOptions): Expr {
 
     default:
       assertNever(expr)
+  }
+}
+
+/**
+ * Reduce the given expression that may need to be wrapped in parentheses.  If the parentheses
+ * are not needed, the given `child` expression will be returned as is, otherwise it will be
+ * wrapped in a "parens" node.
+ *
+ * @param child The child of a parens expression to reduce.
+ * @returns A possibly reduced expression.
+ */
+function applyParens(child: Expr): Expr {
+  switch (child.kind) {
+    case 'number':
+    case 'string':
+    case 'keyword':
+    case 'variable-ref':
+      // When the child expression resolves to something simple, drop the parens
+      // TODO: Are there other cases where we should drop the parens?
+      return child
+    default:
+      // Otherwise, preserve the parens
+      return parens(child)
   }
 }
