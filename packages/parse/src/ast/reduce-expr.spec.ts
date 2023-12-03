@@ -158,7 +158,7 @@ describe('reduceExpr', () => {
     expect(reduceExpr(binaryOp(call('IF THEN ELSE', one, two, zero), '*', two))).toEqual(num(4))
   })
 
-  it('should not remove parens when the child expression resolves to a constant', () => {
+  it('should remove parens when the child expression resolves to a simple value', () => {
     // (x*1) == x
     expect(reduceExpr(parens(binaryOp(x, '*', one)))).toEqual(x)
   })
@@ -172,11 +172,31 @@ describe('reduceExpr', () => {
     expect(reduceExpr(call('MIN', binaryOp(one, '+', one), x))).toEqual(call('MIN', two, x))
   })
 
-  it('should reduce calls involving constants when possible', () => {
+  it('should reduce IF THEN ELSE conditionals involving constants when possible', () => {
     expect(reduceExpr(call('IF THEN ELSE', x, zero, one))).toEqual(call('IF THEN ELSE', x, zero, one))
     expect(reduceExpr(call('IF THEN ELSE', one, x, y))).toEqual(x)
     expect(reduceExpr(call('IF THEN ELSE', zero, x, y))).toEqual(y)
+  })
 
+  it('should remove parens when IF THEN ELSE is reduced and branch expression resolves to a simple value', () => {
+    // IF THEN ELSE(1, x, y + 1) * 2 == x * 2
+    const whenTrue = x
+    const whenFalse = binaryOp(y, '+', one)
+    expect(reduceExpr(binaryOp(call('IF THEN ELSE', one, whenTrue, whenFalse), '*', two))).toEqual(
+      binaryOp(x, '*', two)
+    )
+  })
+
+  it('should not remove parens when IF THEN ELSE is reduced and branch expression cannot be reduced further', () => {
+    // IF THEN ELSE(1, x + y, y + 1) * 2 == (x + 1) * 2
+    const whenTrue = binaryOp(x, '+', y)
+    const whenFalse = binaryOp(y, '+', one)
+    expect(reduceExpr(binaryOp(call('IF THEN ELSE', one, whenTrue, whenFalse), '*', two))).toEqual(
+      binaryOp(parens(binaryOp(x, '+', y)), '*', two)
+    )
+  })
+
+  it('should reduce function calls involving constants when possible', () => {
     expect(reduceExpr(call('ABS', num(-1)))).toEqual(one)
     expect(reduceExpr(call('COS', one))).toEqual(num(Math.cos(1)))
     expect(reduceExpr(call('EXP', two))).toEqual(num(Math.exp(2)))
@@ -230,6 +250,24 @@ describe('reduceConditionals', () => {
     expect(reduceConditionals(binaryOp(call('IF THEN ELSE', one, x, y), '*', zero))).toEqual(binaryOp(x, '*', zero))
     expect(reduceConditionals(binaryOp(call('IF THEN ELSE', binaryOp(zero, '*', two), x, y), '*', zero))).toEqual(
       binaryOp(y, '*', zero)
+    )
+  })
+
+  it('should remove parens when IF THEN ELSE is reduced and branch expression resolves to a simple value', () => {
+    // IF THEN ELSE(1, x, y + 1) * 2 == x * 2
+    const whenTrue = x
+    const whenFalse = binaryOp(y, '+', one)
+    expect(reduceConditionals(binaryOp(call('IF THEN ELSE', one, whenTrue, whenFalse), '*', two))).toEqual(
+      binaryOp(x, '*', two)
+    )
+  })
+
+  it('should not remove parens when IF THEN ELSE is reduced and branch expression cannot be reduced further', () => {
+    // IF THEN ELSE(1, x + y, y + 1) * 2 == (x + 1) * 2
+    const whenTrue = binaryOp(x, '+', y)
+    const whenFalse = binaryOp(y, '+', one)
+    expect(reduceConditionals(binaryOp(call('IF THEN ELSE', one, whenTrue, whenFalse), '*', two))).toEqual(
+      binaryOp(parens(binaryOp(x, '+', y)), '*', two)
     )
   })
 
