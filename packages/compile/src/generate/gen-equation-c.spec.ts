@@ -22,7 +22,9 @@ function readInlineModel(mdlContent: string, opts?: { modelDir?: string; extData
   Model.resetModelState()
 
   const parsedModel = parseInlineVensimModel(mdlContent, opts?.modelDir)
-  Model.read(parsedModel, /*spec=*/ {}, opts?.extData, /*directData=*/ undefined, opts?.modelDir, {})
+  Model.read(parsedModel, /*spec=*/ {}, opts?.extData, /*directData=*/ undefined, opts?.modelDir, {
+    reduceVariables: false
+  })
 
   // Exclude the `Time` variable so that we have one less thing to check
   const map = new Map<string, Variable>()

@@ -20,6 +20,7 @@ import EquationReader from './equation-reader.js'
 import { readEquation } from './read-equations.js'
 import { readDimensionDefs } from './read-subscripts.js'
 import { readVariables as readVariables2 } from './read-variables.js'
+import { reduceVariables } from './reduce-variables.js'
 import SubscriptRangeReader from './subscript-range-reader.js'
 import toposort from './toposort.js'
 import VarNameReader from './var-name-reader.js'
@@ -117,7 +118,7 @@ function read(parsedModel, spec, extData, directData, modelDirname, opts) {
   }
 
   // Analyze model equations to fill in more details about variables.
-  analyze(parsedModel.kind)
+  analyze(parsedModel.kind, spec?.inputVars, opts)
   if (opts?.stopAfterAnalyze) return
 
   // Check that all input and output vars in the spec actually exist in the model.
@@ -315,13 +316,23 @@ function readVariables(tree, specialSeparationDims, directData) {
   v.varName = '_time'
   addVariable(v)
 }
-
-function analyze(parsedModelKind) {
+function analyze(parsedModelKind, inputVars, opts) {
   // Analyze the RHS of each equation in stages after all the variables are read.
   // Find non-apply-to-all vars that are defined with more than one equation.
   findNonAtoAVars()
+
   // Set the refId for each variable. Only non-apply-to-all vars include subscripts in the refId.
   setRefIds()
+
+  // If enabled, reduce expressions used in variable definitions.
+  if (parsedModelKind !== 'vensim-legacy') {
+    if (opts?.reduceVariables !== false && process.env.SDE_PRIV_REDUCE_VARIABLES !== '0') {
+      let reduceMode = opts?.reduceVariables || process.env.SDE_PRIV_REDUCE_VARIABLES || 'default'
+      reduceVariables(variables, inputVars || [], reduceMode)
+    }
+  }
+  if (opts?.stopAfterReduceVariables === true) return
+
   // Read the RHS to list the refIds of vars that are referenced and set the var type.
   if (parsedModelKind === 'vensim-legacy') {
     readEquations()
@@ -689,7 +700,7 @@ function varWithRefId(refId) {
       }
     }
     if (!refVar) {
-      vlog('ERROR: no var found for refId', refId)
+      // vlog('ERROR: no var found for refId', refId)
     }
   }
   return refVar

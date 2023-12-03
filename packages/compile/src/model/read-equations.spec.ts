@@ -42,6 +42,7 @@ function readSubscriptsAndEquationsFromSource(source: {
   }
 
   Model.read(parsedModel, /*spec=*/ {}, /*extData=*/ undefined, /*directData=*/ undefined, modelDir, {
+    reduceVariables: false,
     stopAfterAnalyze: true
   })
 
