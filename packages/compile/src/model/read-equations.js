@@ -596,7 +596,7 @@ function visitFunctionCall(v, callExpr, context) {
       // we treat it as a call of an unimplemented function.
       const varId = callExpr.fnId.toLowerCase()
       const referencedVar = Model.varWithName(varId)
-      if (referencedVar === undefined || !referencedVar.isLookup()) {
+      if (referencedVar === undefined || referencedVar.parsedEqn.rhs.kind !== 'lookup') {
         // Throw an error if the function is not yet implemented in SDE
         // TODO: This will report false positives in the case of user-defined macros.  For now
         // we provide the ability to turn off this check via an environment variable, but we
