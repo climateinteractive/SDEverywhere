@@ -54,8 +54,10 @@ function readSubscriptsAndEquationsFromSource(
   return Model.variables.map(v => {
     // XXX: Strip out the legacy ANTLR eqnCtx to avoid vitest hang when comparing
     delete v.eqnCtx
-    // XXX: Strip out the new parsedEqn field, since we don't need it for comparing
+    // XXX: Strip out the new `parsedEqn` field, since we don't need it for comparing
     delete v.parsedEqn
+    // XXX: Strip out the `origModelFormula` field, since we don't need it for comparing
+    delete v.origModelFormula
     return v
   })
 }

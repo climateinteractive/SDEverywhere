@@ -64,6 +64,7 @@ export type VariableType = 'const' | 'aux' | 'level' | 'initial' | 'lookup' | 'd
 export interface Variable {
   modelLHS: string // 'Target Capacity'
   modelFormula: string // 'ACTIVE INITIAL(Capacity*Utilization Adjustment,Initial Target Capacity)'
+  origModelFormula?: string // 'IF THEN ELSE(cond, x, y)'
   varName: string // '_target_capacity'
   subscripts: string[] // TODO: sub type
   exceptSubscripts: string[] // TODO: This is only used during parsing, doesn't need to be exposed

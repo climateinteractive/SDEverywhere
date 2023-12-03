@@ -90,8 +90,10 @@ export function reduceVariables(variables, inputVarIds, mode) {
     // TODO: Ideally we would leave the `modelFormula` untouched so that when we generate the
     // comment above the generated code, it would show the original equation instead of the
     // reduced one.  But the tests currently rely on `modelFormula` being updated after we
-    // reduce the RHS, so we will leave this as is for now.
+    // reduce the RHS, so we save the original formula to `origModelFormula` and use that when
+    // generating the code comment, and save the reduced formula to `modelFormula`.
     const reducedRhsText = toPrettyString(reducedRhsExpr, { compact: true })
+    v.origModelFormula = v.modelFormula
     v.modelFormula = reducedRhsText
 
     // Set a flag to indicate that the variable has been visited and reduced
