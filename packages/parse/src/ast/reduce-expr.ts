@@ -367,7 +367,7 @@ export function reduceConditionals(expr: Expr, opts?: ReduceExprOptions): Expr {
         if (conditionExpr.kind === 'number') {
           // The condition resolved to a simple numeric constant.  If it is non-zero,
           // replace the `IF THEN ELSE` call with the "true" branch, otherwise replace
-          // it with the "false" branch
+          // it with the "false" branch.
           return conditionExpr.value !== 0
             ? reduceConditionals(expr.args[1], opts)
             : reduceConditionals(expr.args[2], opts)
