@@ -205,10 +205,21 @@ void ${name}${idx}() {
     }
     let funcCalls = R.pipe(mapIndexed(funcCall), lines)
 
-    // Break the vars into chunks of 30; this number was empirically
-    // determined by looking at runtime performance and memory usage
-    // of the En-ROADS model on various devices
-    let chunks = R.splitEvery(30, vars)
+    // Break the vars into chunks.  The default value of 30 was empirically
+    // determined by looking at runtime performance and memory usage of the
+    // En-ROADS model on various devices.
+    let chunkSize
+    if (process.env.SDE_CODE_GEN_CHUNK_SIZE) {
+      chunkSize = parseInt(process.env.SDE_CODE_GEN_CHUNK_SIZE)
+    } else {
+      chunkSize = 30
+    }
+    let chunks
+    if (chunkSize > 0) {
+      chunks = R.splitEvery(chunkSize, vars)
+    } else {
+      chunks = [vars]
+    }
 
     if (!preStep) {
       preStep = ''
