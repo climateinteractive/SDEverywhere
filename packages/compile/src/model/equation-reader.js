@@ -191,7 +191,7 @@ export default class EquationReader extends ModelReader {
         startCell: args[2]
       }
     } else if (fn === '_IF_THEN_ELSE') {
-      if (process.env.SDE_PRIV_OPTIMIZE_CONDITIONALS !== '0') {
+      if (process.env.SDE_PRIV_REDUCE_VARIABLES !== '0') {
         // Evaluate the condition expression of the `IF THEN ELSE`.  If it resolves
         // to a compile-time constant, we only need to visit one branch, which means
         // that no references will be recorded for the other branch, therefore allowing
