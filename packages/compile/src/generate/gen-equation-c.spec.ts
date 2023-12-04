@@ -524,7 +524,7 @@ describe('generateEquation (Vensim -> C)', () => {
     expect(genC(vars.get('_y'))).toEqual(['_y = _x[1];'])
   })
 
-  it('should work for const list definition (2D)', () => {
+  it('should work for const list definition (2D, dimensions in normal/alphabetized order)', () => {
     const vars = readInlineModel(`
       DimA: A1, A2 ~~|
       DimB: B1, B2, B3 ~~|
@@ -541,7 +541,28 @@ describe('generateEquation (Vensim -> C)', () => {
     expect(genC(vars.get('_y'))).toEqual(['_y = _x[1][2];'])
   })
 
-  it('should work for const list definition (2D separated)', () => {
+  it('should work for const list definition (2D, dimensions not in normal/alphabetized order)', () => {
+    const vars = readInlineModel(`
+      DimB: B1, B2, B3 ~~|
+      DimA: A1, A2 ~~|
+      x[DimB, DimA] = 1, 2; 3, 4; 5, 6; ~~|
+      y = x[B3, A2] ~~|
+      z = x[B2, A1] ~~|
+    `)
+    expect(vars.size).toBe(8)
+    // Note that the compiler currently normalizes the subscripts (orders them alphabetically
+    // by dimension name), so the order of subscripts may be surprising here
+    expect(genC(vars.get(/*B1,A1*/ '_x[_a1,_b1]'), 'init-constants')).toEqual(['_x[0][0] = 1.0;'])
+    expect(genC(vars.get(/*B1,A2*/ '_x[_a2,_b1]'), 'init-constants')).toEqual(['_x[1][0] = 2.0;'])
+    expect(genC(vars.get(/*B2,A1*/ '_x[_a1,_b2]'), 'init-constants')).toEqual(['_x[0][1] = 3.0;'])
+    expect(genC(vars.get(/*B2,A2*/ '_x[_a2,_b2]'), 'init-constants')).toEqual(['_x[1][1] = 4.0;'])
+    expect(genC(vars.get(/*B3,A1*/ '_x[_a1,_b3]'), 'init-constants')).toEqual(['_x[0][2] = 5.0;'])
+    expect(genC(vars.get(/*B2,A2*/ '_x[_a2,_b3]'), 'init-constants')).toEqual(['_x[1][2] = 6.0;'])
+    expect(genC(vars.get('_y'))).toEqual(['_y = _x[1][2];'])
+    expect(genC(vars.get('_z'))).toEqual(['_z = _x[0][1];'])
+  })
+
+  it('should work for const list definition (2D separated, dimensions in normal/alphabetized order)', () => {
     const vars = readInlineModel(`
       DimA: A1, A2, A3 ~~|
       DimB: B1, B2 ~~|
@@ -557,6 +578,26 @@ describe('generateEquation (Vensim -> C)', () => {
     expect(genC(vars.get('_x[_a2,_b2]'), 'init-constants')).toEqual(['_x[1][1] = 4.0;'])
     expect(genC(vars.get('_x[_a3,_b1]'), 'init-constants')).toEqual(['_x[2][0] = 5.0;'])
     expect(genC(vars.get('_x[_a3,_b2]'), 'init-constants')).toEqual(['_x[2][1] = 6.0;'])
+    expect(genC(vars.get('_y'))).toEqual(['_y = _x[2][1];'])
+  })
+
+  it('should work for const list definition (2D separated, dimensions not in normal/alphabetized order)', () => {
+    const vars = readInlineModel(`
+      DimA: A1, A2, A3 ~~|
+      DimB: B1, B2 ~~|
+      x[B1, DimA] = 1,2,3 ~~|
+      x[B2, DimA] = 4,5,6 ~~|
+      y = x[B2, A3] ~~|
+    `)
+    expect(vars.size).toBe(7)
+    // Note that the compiler currently normalizes the subscripts (orders them alphabetically
+    // by dimension name), so the order of subscripts may be surprising here
+    expect(genC(vars.get(/*B1,A1*/ '_x[_a1,_b1]'), 'init-constants')).toEqual(['_x[0][0] = 1.0;'])
+    expect(genC(vars.get(/*B1,A2*/ '_x[_a2,_b1]'), 'init-constants')).toEqual(['_x[1][0] = 2.0;'])
+    expect(genC(vars.get(/*B1,A3*/ '_x[_a3,_b1]'), 'init-constants')).toEqual(['_x[2][0] = 3.0;'])
+    expect(genC(vars.get(/*B2,A1*/ '_x[_a1,_b2]'), 'init-constants')).toEqual(['_x[0][1] = 4.0;'])
+    expect(genC(vars.get(/*B2,A2*/ '_x[_a2,_b2]'), 'init-constants')).toEqual(['_x[1][1] = 5.0;'])
+    expect(genC(vars.get(/*B2,A3*/ '_x[_a3,_b2]'), 'init-constants')).toEqual(['_x[2][1] = 6.0;'])
     expect(genC(vars.get('_y'))).toEqual(['_y = _x[2][1];'])
   })
 
