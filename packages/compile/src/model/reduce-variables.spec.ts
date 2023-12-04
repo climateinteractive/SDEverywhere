@@ -108,7 +108,7 @@ describe.skipIf(process.env.SDE_PRIV_USE_NEW_PARSE !== '1')(
         v('x', '1', {
           refId: '_x'
         }),
-        v('y', '(x+2)*3', {
+        v('y', '((x+2)*3)', {
           refId: '_y'
         })
       ])
