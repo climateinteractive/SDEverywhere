@@ -18,6 +18,10 @@ describe('reduceExpr', () => {
     expect(reduceExpr(unaryOp('+', num(3)))).toEqual(num(3))
     expect(reduceExpr(unaryOp('-', num(3)))).toEqual(num(-3))
 
+    expect(reduceExpr(unaryOp(':NOT:', num(2)))).toEqual(num(0))
+    expect(reduceExpr(unaryOp(':NOT:', num(1)))).toEqual(num(0))
+    expect(reduceExpr(unaryOp(':NOT:', num(0)))).toEqual(num(1))
+
     expect(reduceExpr(binaryOp(num(3), '+', num(2)))).toEqual(num(5))
     expect(reduceExpr(binaryOp(num(3), '-', num(2)))).toEqual(num(1))
     expect(reduceExpr(binaryOp(num(3), '*', num(2)))).toEqual(num(6))
