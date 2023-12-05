@@ -674,7 +674,9 @@ function generateVectorElmMapCall(callExpr, ctx) {
     if (arg.kind === 'variable-ref') {
       return arg
     } else {
-      throw new Error(`VECTOR ELM MAP argument '${name}' must be a variable reference`)
+      throw new Error(
+        `VECTOR ELM MAP argument '${name}' must be a variable reference in code gen for '${ctx.variable.modelLHS}'`
+      )
     }
   }
 
@@ -694,18 +696,19 @@ function generateVectorElmMapCall(callExpr, ctx) {
       break
     }
   }
-  // TODO: Throw error if no index was found
+  if (subFamily === undefined) {
+    throw new Error(`Failed to resolve index for VECTOR ELM MAP call in code gen for '${ctx.variable.modelLHS}'`)
+  }
 
   // Process the offset argument
-  const offsetArg = validateArg(1, 'offset')
-  const offsetVarRefId = ctx.cVarRef(offsetArg)
+  const offsetArgCode = generateExpr(callExpr.args[1], ctx)
 
   // The `VECTOR ELM MAP` function replaces one subscript with a calculated offset from
   // a base index
   const rhsSubIds = normalizeSubscripts(vecSubIds)
   const cSubscripts = rhsSubIds.map(rhsSubId => {
     if (isIndex(rhsSubId)) {
-      return `[${subFamily}[(size_t)(${subBase} + ${offsetVarRefId})]]`
+      return `[${subFamily}[(size_t)(${subBase} + ${offsetArgCode})]]`
     } else {
       const subIndex = ctx.loopIndexVars.index(rhsSubId)
       return `[${rhsSubId}[${subIndex}]]`

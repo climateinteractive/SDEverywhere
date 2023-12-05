@@ -1861,7 +1861,7 @@ describe('generateEquation (Vensim -> C)', () => {
     expect(genC(vars.get('_y'))).toEqual(['_y = __aux1;'])
   })
 
-  it('should work for VECTOR ELM MAP function', () => {
+  it('should work for VECTOR ELM MAP function (with variable reference used for offset arg)', () => {
     const vars = readInlineModel(`
       DimA: A1, A2, A3 ~~|
       DimB: B1, B2 ~~|
@@ -1882,6 +1882,27 @@ describe('generateEquation (Vensim -> C)', () => {
       '}'
     ])
     expect(genC(vars.get('_y'))).toEqual(['_y = _c[0];'])
+  })
+
+  it('should work for VECTOR ELM MAP function (with dimension index expression used for offset arg)', () => {
+    const vars = readInlineModel(`
+      DimA: A1, A2, A3 ~~|
+      DimB: B1, B2 ~~|
+      DimX : one, two, three, four, five ~~|
+      x[DimX] = 1, 2, 3, 4, 5 ~~|
+      y[DimA] = VECTOR ELM MAP(x[three], (DimA - 1)) ~~|
+    `)
+    expect(vars.size).toBe(6)
+    expect(genC(vars.get('_x[_one]'), 'init-constants')).toEqual(['_x[0] = 1.0;'])
+    expect(genC(vars.get('_x[_two]'), 'init-constants')).toEqual(['_x[1] = 2.0;'])
+    expect(genC(vars.get('_x[_three]'), 'init-constants')).toEqual(['_x[2] = 3.0;'])
+    expect(genC(vars.get('_x[_four]'), 'init-constants')).toEqual(['_x[3] = 4.0;'])
+    expect(genC(vars.get('_x[_five]'), 'init-constants')).toEqual(['_x[4] = 5.0;'])
+    expect(genC(vars.get('_y'))).toEqual([
+      'for (size_t i = 0; i < 3; i++) {',
+      '_y[i] = _x[_dimx[(size_t)(2 + ((i + 1) - 1.0))]];',
+      '}'
+    ])
   })
 
   it('should work for VECTOR SELECT function (with sum action + zero for missing values)', () => {
