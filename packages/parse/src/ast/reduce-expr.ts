@@ -50,7 +50,15 @@ export function reduceExpr(expr: Expr, opts?: ReduceExprOptions): Expr {
             return unaryOp('-', child)
           }
         case ':NOT:':
-          throw new Error('not yet implemented')
+          if (child.kind === 'number') {
+            // Use the same behavior as C and negate the numeric value.  ("The result of the
+            // logical negation operator ! is 0 if the value of its operand compares unequal
+            // to 0, 1 if the value of its operand compares equal to 0.")
+            return num(child.value === 0 ? 1 : 0)
+          } else {
+            // Cannot simplify further
+            return unaryOp(':NOT:', child)
+          }
         default:
           assertNever(expr)
       }
