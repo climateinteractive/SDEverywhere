@@ -13,8 +13,8 @@ import Model from '../model/model.js'
  * @param {LoopIndexVars} arrayIndexVars The loop index state used for array functions (that use marked dimensions).
  * @param {() => void} resetMarkedDims Function that resets the marked dimension state.
  * @param {(dimId: string) => void} addMarkedDim Function that adds the given dimension to the set of marked dimensions.
- * @param {(s: string) => void} emitPreBlock Function that will cause the given code to be appended to the chunk that
- * precedes the generated block of code for the entire equation.
+ * @param {(s: string) => void} emitPreInnerLoop Function that will cause the given code to be appended to the chunk that
+ * precedes the generated inner loop for the equation.
  * @param {(s: string) => void} emitPreFormula Function that will cause the given code to be appended to the chunk that
  * precedes the generated formula (the primary, inner-most part of the equation).
  * @param {(s: string) => void} emitPostFormula Function that will cause the given code to be appended to the chunk that
@@ -753,7 +753,7 @@ function generateVectorSortOrderCall(callExpr, ctx) {
   // Generate the code that is emitted before the entire block (before any loops are opened)
   const tmpVarId = newTmpVarName()
   const dimSize = sub(dimId).size
-  ctx.emitPreBlock(`  double* ${tmpVarId} = _VECTOR_SORT_ORDER(${vecVarRefId}, ${dimSize}, ${dirArg});`)
+  ctx.emitPreInnerLoop(`  double* ${tmpVarId} = _VECTOR_SORT_ORDER(${vecVarRefId}, ${dimSize}, ${dirArg});`)
 
   // Generate the RHS expression used in the inner loop
   return `${tmpVarId}[${dimId}[${subIndex}]]`
@@ -796,7 +796,7 @@ function generateAllocateAvailableCall(callExpr, ctx) {
   // Generate the code that is emitted before the entire block (before any loops are opened)
   const tmpVarId = newTmpVarName()
   const dimSize = sub(dimId).size
-  ctx.emitPreBlock(
+  ctx.emitPreInnerLoop(
     `  double* ${tmpVarId} = _ALLOCATE_AVAILABLE(${reqRefId}, (double*)${priorityRefId}, ${availRefId}, ${dimSize});`
   )
 

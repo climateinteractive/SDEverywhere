@@ -109,8 +109,8 @@ export function generateEquation(variable, mode, extData, directData, modelDir) 
     return generateLookupFromPoints(variable, mode, /*copy=*/ false, cLhs, loopIndexVars)
   }
 
-  // Keep a buffer of code that will be included before the generated block
-  const preBlockLines = []
+  // Keep a buffer of code that will be included before the innermost loop
+  const preInnerLoopLines = []
 
   // Keep a buffer of code that will be included before the generated primary formula
   const preFormulaLines = []
@@ -130,7 +130,7 @@ export function generateEquation(variable, mode, extData, directData, modelDir) 
     arrayIndexVars,
     resetMarkedDims: () => markedDimIds.clear(),
     addMarkedDim: dimId => markedDimIds.add(dimId),
-    emitPreBlock: s => preBlockLines.push(s),
+    emitPreInnerLoop: s => preInnerLoopLines.push(s),
     emitPreFormula: s => preFormulaLines.push(s),
     emitPostFormula: s => postFormulaLines.push(s),
     cVarRef: varRef => cVarRef(variable, varRef, markedDimIds, loopIndexVars, arrayIndexVars),
@@ -140,8 +140,13 @@ export function generateEquation(variable, mode, extData, directData, modelDir) 
   const cRhs = generateExpr(parsedEqn.rhs.expr, genExprCtx)
   const formula = `  ${cLhs} = ${cRhs};`
 
+  // Insert the pre-inner loop code, if needed
+  if (preInnerLoopLines.length > 0) {
+    openLoops.splice(variable.subscripts.length - 1, 0, ...preInnerLoopLines)
+  }
+
   // Combine all lines of comments and code into a single array
-  return [comment, ...preBlockLines, ...openLoops, ...preFormulaLines, formula, ...postFormulaLines, ...closeLoops]
+  return [comment, ...openLoops, ...preFormulaLines, formula, ...postFormulaLines, ...closeLoops]
 }
 
 /**

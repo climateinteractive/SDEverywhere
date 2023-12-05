@@ -1971,7 +1971,7 @@ describe('generateEquation (Vensim -> C)', () => {
     ])
   })
 
-  it('should work for VECTOR SORT ORDER function', () => {
+  it('should work for VECTOR SORT ORDER function (1D)', () => {
     const vars = readInlineModel(`
       DimA: A1, A2, A3 ~~|
       a[DimA] = 3, 1, 2 ~~|
@@ -1989,6 +1989,35 @@ describe('generateEquation (Vensim -> C)', () => {
       '}'
     ])
     expect(genC(vars.get('_y'))).toEqual(['_y = _x[0];'])
+  })
+
+  it('should work for VECTOR SORT ORDER function (2D)', () => {
+    const vars = readInlineModel(`
+      DimA: A1, A2, A3 ~~|
+      DimB: B1, B2 ~~|
+      x[A1,B1] = 1 ~~|
+      x[A1,B2] = 2 ~~|
+      x[A2,B1] = 4 ~~|
+      x[A2,B2] = 3 ~~|
+      x[A3,B1] = 5 ~~|
+      x[A3,B2] = 5 ~~|
+      y[DimA,DimB] = VECTOR SORT ORDER(x[DimA,DimB], 1) ~~|
+    `)
+    expect(vars.size).toBe(7)
+    expect(genC(vars.get('_x[_a1,_b1]'), 'init-constants')).toEqual(['_x[0][0] = 1.0;'])
+    expect(genC(vars.get('_x[_a1,_b2]'), 'init-constants')).toEqual(['_x[0][1] = 2.0;'])
+    expect(genC(vars.get('_x[_a2,_b1]'), 'init-constants')).toEqual(['_x[1][0] = 4.0;'])
+    expect(genC(vars.get('_x[_a2,_b2]'), 'init-constants')).toEqual(['_x[1][1] = 3.0;'])
+    expect(genC(vars.get('_x[_a3,_b1]'), 'init-constants')).toEqual(['_x[2][0] = 5.0;'])
+    expect(genC(vars.get('_x[_a3,_b2]'), 'init-constants')).toEqual(['_x[2][1] = 5.0;'])
+    expect(genC(vars.get('_y'))).toEqual([
+      'for (size_t i = 0; i < 3; i++) {',
+      'double* __t1 = _VECTOR_SORT_ORDER(_x[_dima[i]], 2, 1.0);',
+      'for (size_t j = 0; j < 2; j++) {',
+      '_y[i][j] = __t1[_dimb[j]];',
+      '}',
+      '}'
+    ])
   })
 
   it('should work for VMAX function (with full range)', () => {
