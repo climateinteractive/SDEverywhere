@@ -370,7 +370,12 @@ function generateFunctionCall(callExpr, ctx) {
         // should consider providing a way for the user to declare the names of any user-defined
         // macros so that we can skip this check when those macros are detected.
         if (process.env.SDE_REPORT_UNSUPPORTED_FUNCTIONS !== '0') {
-          throw new Error(`Unhandled function '${fnId}' in code gen for '${ctx.variable.modelLHS}'`)
+          const msg = `Unhandled function '${fnId}' in code gen for '${ctx.variable.modelLHS}'`
+          if (process.env.SDE_REPORT_UNSUPPORTED_FUNCTIONS === 'warn') {
+            console.warn(`WARNING: ${msg}`)
+          } else {
+            throw new Error(msg)
+          }
         }
       }
     }

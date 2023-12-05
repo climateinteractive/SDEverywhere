@@ -603,7 +603,12 @@ function visitFunctionCall(v, callExpr, context) {
         // should consider providing a way for the user to declare the names of any user-defined
         // macros so that we can skip this check when those macros are detected.
         if (process.env.SDE_REPORT_UNSUPPORTED_FUNCTIONS !== '0') {
-          throw new Error(`Unhandled function '${callExpr.fnId}' in readEquations for '${v.modelLHS}'`)
+          const msg = `Unhandled function '${callExpr.fnId}' in readEquations for '${v.modelLHS}'`
+          if (process.env.SDE_REPORT_UNSUPPORTED_FUNCTIONS === 'warn') {
+            console.warn(`WARNING: ${msg}`)
+          } else {
+            throw new Error(msg)
+          }
         }
       }
       break
