@@ -68,11 +68,11 @@ function compare {
   MODEL_NEW_C=$COMPARE_DIR/${MODEL}_new.c
   mkdir -p $COMPARE_DIR
 
-  export SDE_PRIV_USE_NEW_PARSE=0
+  export SDE_NONPUBLIC_USE_NEW_PARSE=0
   test $1 "with legacy parser"
   cp $MODEL_DIR/build/$MODEL.c $MODEL_OLD_C
 
-  export SDE_PRIV_USE_NEW_PARSE=1
+  export SDE_NONPUBLIC_USE_NEW_PARSE=1
   test $1 "with new parser"
   cp $MODEL_DIR/build/$MODEL.c $MODEL_NEW_C
 

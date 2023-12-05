@@ -160,7 +160,7 @@ export function parseVensimModel(modelName: string): ParsedModel {
   const modelDir = sampleModelDir(modelName)
   const modelFile = resolve(modelDir, `${modelName}.mdl`)
   let mdlContent: string
-  if (process.env.SDE_PRIV_USE_NEW_PARSE === '1') {
+  if (process.env.SDE_NONPUBLIC_USE_NEW_PARSE === '1') {
     // Note that the new parser implicitly runs the preprocessor on the input model text,
     // so we don't need to do that here.  (We should make it configurable so that we can
     // skip the preprocess step in `parse-and-generate.js` when the input model text has
