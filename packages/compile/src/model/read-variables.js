@@ -18,15 +18,18 @@ import Variable from './variable.js'
  * TODO: Docs
  *
  * @param {*} parsedModel TODO: Use ParsedVensimModel type here
+ * @param {Object.<string, string>} [specialSeparationDims] The variable names that need to be
+ * separated because of circular references.  A mapping from "C" variable name to "C" dimension
+ * name to separate on.
  * @returns {*} An array containing all `Variable` instances that were generated from
  * the model equations.
  */
-export function readVariables(parsedModel) {
+export function readVariables(parsedModel, specialSeparationDims) {
   const variables = []
 
   // Add one or more `Variable` definitions for each parsed equation
   for (const eqn of parsedModel.root.equations) {
-    variables.push(...variablesForEquation(eqn))
+    variables.push(...variablesForEquation(eqn, specialSeparationDims || {}))
   }
 
   return variables
@@ -39,10 +42,12 @@ export function readVariables(parsedModel) {
  * TODO: Types
  *
  * @param {*} eqn The parsed equation.
+ * @param {Object.<string, string>} specialSeparationDims The variable names that need to be
+ * separated because of circular references.
  * @returns {*} An array containing all `Variable` instances that were generated from
  * the given equation.
  */
-function variablesForEquation(eqn) {
+function variablesForEquation(eqn, specialSeparationDims) {
   // Start a new variable defined by this equation
   const variable = new Variable(null)
 
@@ -112,8 +117,13 @@ function variablesForEquation(eqn) {
       positionsToExpand = subIds.map(subId => isDimension(subId))
     } else {
       // For other equations, look at the different subscripts and the RHS to determine
-      // which positions to expand
-      positionsToExpand = subscriptPositionsToExpand(subIds, exceptSubIdSets, variable.modelFormula)
+      // which positions to expand.  Note that `specialSeparationDims` in the spec file
+      // can be a single string or an array of strings.
+      let separationDims = specialSeparationDims[baseVarId] || []
+      if (!Array.isArray(separationDims)) {
+        separationDims = [separationDims]
+      }
+      positionsToExpand = subscriptPositionsToExpand(subIds, exceptSubIdSets, separationDims, variable.modelFormula)
     }
 
     // Expand on LHS subscripts
@@ -148,10 +158,12 @@ function variablesForEquation(eqn) {
  *
  * @param {*} subIds The list of subscripts appearing on the LHS in normalized order.
  * @param {*} exceptSubIdSets An array of subscript lists from the :EXCEPT: clause.
+ * @param {string[]} separationDims The variable names that need to be separated for this
+ * variable because of circular references.
  * @param {string} rhsText The text of the RHS of the variable definition.
  * @returns {boolean[]} An array of boolean flags, one for each subscript position.
  */
-function subscriptPositionsToExpand(subIds, exceptSubIdSets, rhsText) {
+function subscriptPositionsToExpand(subIds, exceptSubIdSets, separationDims, rhsText) {
   // Decide whether we need to expand each subscript on the LHS.
   // Construct an array of booleans in each subscript position.
   const expandFlags = new Array(subIds.length).fill(false)
@@ -163,11 +175,9 @@ function subscriptPositionsToExpand(subIds, exceptSubIdSets, rhsText) {
     // Expand a subdimension and special separation dims in the LHS
     if (isDimension(subId)) {
       expand = isSubdimension(subId)
-      // TODO
-      // if (!expand) {
-      //   let specialSeparationDims = this.specialSeparationDims[this.var.varName] || []
-      //   expand = specialSeparationDims.includes(subscript)
-      // }
+      if (!expand) {
+        expand = separationDims.includes(subId)
+      }
     }
 
     if (!expand) {
