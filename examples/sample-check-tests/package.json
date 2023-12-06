@@ -24,7 +24,7 @@
     "assert-never": "^1.2.1"
   },
   "devDependencies": {
-    "vite": "^4.4.9"
+    "vite": "^4.4.12"
   },
   "author": "Climate Interactive",
   "license": "MIT",
