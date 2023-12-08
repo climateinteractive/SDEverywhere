@@ -55,19 +55,23 @@ export function parseVensimModel(input: string, context?: VensimParseContext, so
     }
 
     for (const dimensionDef of parsedModel.dimensions) {
-      // Fold in the comment string that was extracted during preprocessing
+      // Fold in the other strings that were extracted during preprocessing
+      const group = def.group
       dimensions.push({
         ...dimensionDef,
-        comment: def.comment
+        comment: def.comment,
+        ...(group ? { group } : {})
       })
     }
 
     for (const equation of parsedModel.equations) {
-      // Fold in the units and comment strings that were extracted during preprocessing
+      // Fold in the other strings that were extracted during preprocessing
+      const group = def.group
       equations.push({
         ...equation,
         units: def.units,
-        comment: def.comment
+        comment: def.comment,
+        ...(group ? { group } : {})
       })
     }
   }

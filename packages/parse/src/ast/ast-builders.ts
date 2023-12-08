@@ -61,7 +61,8 @@ export function dimDef(
   familyName: DimName,
   dimOrSubNames: SubName[],
   subscriptMappings: SubscriptMapping[] = [],
-  comment = ''
+  comment = '',
+  group?: string
 ): DimensionDef {
   return {
     dimName,
@@ -70,7 +71,8 @@ export function dimDef(
     familyId: canonicalName(familyName),
     subscriptRefs: dimOrSubNames.map(subRef),
     subscriptMappings,
-    comment
+    comment,
+    ...(group ? { group } : {})
   }
 }
 
@@ -176,7 +178,7 @@ export function varDef(
   }
 }
 
-export function exprEqn(varDef: VariableDef, expr: Expr, units = '', comment = ''): Equation {
+export function exprEqn(varDef: VariableDef, expr: Expr, units = '', comment = '', group?: string): Equation {
   return {
     lhs: {
       varDef
@@ -186,7 +188,8 @@ export function exprEqn(varDef: VariableDef, expr: Expr, units = '', comment = '
       expr
     },
     units,
-    comment
+    comment,
+    ...(group ? { group } : {})
   }
 }
 

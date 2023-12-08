@@ -30,6 +30,10 @@ export interface VensimDef {
    * The comment text.
    */
   comment: string
+  /**
+   * The optional group name, if the definition is contained within a group.
+   */
+  group?: string
 }
 
 /**
@@ -46,6 +50,11 @@ interface RawDef {
    * The (1-based) line number where the definition begins.
    */
   line: number
+  /**
+   * The group in which the definition is contained (can be undefined if
+   * the definition is not inside a group).
+   */
+  group?: string
 }
 
 /**
@@ -96,6 +105,7 @@ function splitDefs(input: string): RawDef[] {
   // number of line breaks in that definition
   const rawDefs = []
   let lineNum = 1
+  let currentGroup: string
   for (let defText of defTexts) {
     if (lineNum === 1) {
       // Strip the encoding (included in first def)
@@ -115,11 +125,24 @@ function splitDefs(input: string): RawDef[] {
     const leadingLineBreaks = parts[1]?.match(/\r\n|\n|\r/gm)
     lineNum += leadingLineBreaks?.length || 0
 
-    // Add the def (if it's not a group)
-    if (!defText.includes('********************************************************')) {
+    // See if this is a group header
+    if (defText.includes('********************************************************')) {
+      // This is a group; save the group name
+      const groupLines = splitLines(defText).filter(s => s.trim().length > 0)
+      currentGroup = undefined
+      if (groupLines.length > 1) {
+        const groupNameLine = groupLines[1]
+        const groupNameParts = groupNameLine.match(/^\s*\.(.*)$/)
+        if (groupNameParts) {
+          currentGroup = groupNameParts[1]
+        }
+      }
+    } else {
+      // This is a regular definition; add it
       rawDefs.push({
         text: defText,
-        line: lineNum
+        line: lineNum,
+        group: currentGroup
       })
     }
 
@@ -304,11 +327,15 @@ function processDef(rawDef: RawDef): VensimDef | undefined {
 
   // TODO: Extract the `:SUPPLEMENTARY:` flags?
 
+  // Preserve the group name, if defined
+  const group = rawDef.group
+
   return {
     key,
     def,
     line: rawDef.line,
     units,
-    comment
+    comment,
+    ...(group ? { group } : {})
   }
 }

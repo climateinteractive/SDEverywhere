@@ -115,4 +115,45 @@ x = 1
       )
     )
   })
+
+  it('should preserve group names', () => {
+    const mdl = `\
+{UTF-8}
+
+DimA: A1, A2 ~~|
+x = 1 ~~|
+
+********************************************************
+  .Group name 1
+********************************************************~
+  Group comment here.
+  |
+
+y[DimA] = 1 ~~|
+
+********************************************************
+  .Group name 2
+********************************************************~
+  Group comment here.
+  |
+
+DimB: B1, B2 ~~|
+
+z[DimB] = 1 ~~|
+
+\\\\\\---/// Sketch information - do not modify anything except names
+V301  Do not put anything below this section - it will be ignored
+*XYZ
+`
+    expect(parseVensimModel(mdl)).toEqual(
+      model(
+        [dimDef('DimA', 'DimA', ['A1', 'A2']), dimDef('DimB', 'DimB', ['B1', 'B2'], [], '', 'Group name 2')],
+        [
+          exprEqn(varDef('x'), num(1)),
+          exprEqn(varDef('y', ['DimA']), num(1), '', '', 'Group name 1'),
+          exprEqn(varDef('z', ['DimB']), num(1), '', '', 'Group name 2')
+        ]
+      )
+    )
+  })
 })
