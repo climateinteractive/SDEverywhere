@@ -79,7 +79,8 @@ $192-192-192,0,Arial|12||0-0-0|0-0-0|0-0-255|-1--1--1|-1--1--1|96,96,5,0
         def: 'W[A,B] :EXCEPT: [A1,B1] = 1 ~~|',
         line: 23,
         units: '',
-        comment: ''
+        comment: '',
+        group: 'Group name'
       }
     ])
   })

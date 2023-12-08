@@ -114,6 +114,10 @@ export interface DimensionDef {
    * The optional comment text that accompanies the dimension definition in the model.
    */
   comment?: string
+  /**
+   * The optional group name, if this dimension definition is contained within a group.
+   */
+  group?: string
 }
 
 //
@@ -375,6 +379,10 @@ export interface Equation {
    * The optional comment text that accompanies the equation definition in the model.
    */
   comment?: string
+  /**
+   * The optional group name, if this equation definition is contained within a group.
+   */
+  group?: string
 }
 
 //
