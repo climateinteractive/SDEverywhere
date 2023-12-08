@@ -11,5 +11,6 @@
   "packages/runtime": "0.2.2",
   "packages/runtime-async": "0.2.2",
   "packages/create": "0.2.7",
-  "packages/plugin-config": "0.2.4"
+  "packages/plugin-config": "0.2.4",
+  "packages/parse": "0.1.0"
 }
