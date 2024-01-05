@@ -2,7 +2,7 @@ import B from 'bufx'
 import yaml from 'js-yaml'
 import * as R from 'ramda'
 
-import { decanonicalize, isIterable, listConcat, strlist, vlog, vsort } from '../_shared/helpers.js'
+import { canonicalName, decanonicalize, isIterable, listConcat, strlist, vlog, vsort } from '../_shared/helpers.js'
 import {
   addIndex,
   allAliases,
@@ -342,15 +342,18 @@ function analyze(parsedModelKind, inputVars, opts) {
 }
 
 function checkSpecVars(spec, extData) {
-  // Look up each var in the spec and issue and error message if it does not exist.
+  // Look up each var in the spec and issue and throw error if it does not exist.
 
   function check(varNames, specType) {
     if (isIterable(varNames)) {
       for (let varName of varNames) {
+        // TODO: This code as written does not check variables that include subscripts, but
+        // we should check those as well (and make sure that subscripts or indices are not
+        // out of the valid range)
         if (!R.contains('[', varName)) {
           if (!varWithRefId(varName)) {
             // Look for a variable in external data.
-            if (extData.has(varName)) {
+            if (extData?.has(varName)) {
               // console.error(`found ${specType} ${varName} in extData`)
               // Copy data from an external file to an equation that does a lookup.
               let lookup = R.reduce(
@@ -361,7 +364,9 @@ function checkSpecVars(spec, extData) {
               let modelEquation = `${decanonicalize(varName)} = WITH LOOKUP(Time, (${lookup}))`
               addEquation(modelEquation)
             } else {
-              console.error(`${specType} variable ${varName} not found in the model or external data sources`)
+              throw new Error(
+                `The ${specType} variable ${varName} was declared in spec.json, but no matching variable was found in the model or external data sources`
+              )
             }
           }
         }
@@ -790,7 +795,29 @@ function vensimName(cVarName) {
 function cName(vensimVarName) {
   // Convert a Vensim variable name to a C name.
   // This function requires model analysis to be completed first when the variable has subscripts.
-  return new VarNameReader().read(vensimVarName)
+  if (process.env.SDE_NONPUBLIC_USE_NEW_PARSE !== '1') {
+    // TODO: For now we use the legacy VarNameReader when the old parser is active; this
+    // code will be removed once the old parser is removed
+    return new VarNameReader().read(vensimVarName)
+  }
+  // Split the variable name from the subscripts
+  let matches = vensimVarName.match(/([^[]+)(?:\[([^\]]+)\])?/)
+  if (!matches) {
+    throw new Error(`Invalid variable name '${vensimVarName}' found when converting to C representation`)
+  }
+  let cVarName = canonicalName(matches[1])
+  if (matches[2]) {
+    // The variable name includes subscripts, so split them into individual IDs
+    let cSubIds = matches[2].split(',').map(x => canonicalName(x))
+    cSubIds = normalizeSubscripts(cSubIds)
+    // If a subscript is an index, convert it to an index number to match Vensim data exports
+    let cSubIdParts = cSubIds.map(cSubId => {
+      return isIndex(cSubId) ? `[${sub(cSubId).value}]` : `[${cSubId}]`
+    })
+    // Append the subscript parts to the base variable name to create the full reference
+    cVarName += cSubIdParts.join('')
+  }
+  return cVarName
 }
 function isInputVar(varName) {
   // Return true if the given variable (in canonical form) is included in the list of

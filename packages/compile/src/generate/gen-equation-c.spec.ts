@@ -15,23 +15,40 @@ import { generateEquation } from './gen-equation'
 type ExtData = Map<string, Map<number, number>>
 type DirectDataSpec = Map<string, string>
 
-function readInlineModel(mdlContent: string, opts?: { modelDir?: string; extData?: ExtData }): Map<string, Variable> {
+function readInlineModel(
+  mdlContent: string,
+  opts?: {
+    modelDir?: string
+    extData?: ExtData
+    inputVarNames?: string[]
+    outputVarNames?: string[]
+  }
+): Map<string, Variable> {
   // XXX: These steps are needed due to subs/dims and variables being in module-level storage
   resetHelperState()
   resetSubscriptsAndDimensions()
   Model.resetModelState()
 
+  let spec
+  if (opts?.inputVarNames || opts?.outputVarNames) {
+    spec = {
+      inputVarNames: opts?.inputVarNames || [],
+      outputVarNames: opts?.outputVarNames || []
+    }
+  } else {
+    spec = {}
+  }
+
   const parsedModel = parseInlineVensimModel(mdlContent, opts?.modelDir)
-  Model.read(parsedModel, /*spec=*/ {}, opts?.extData, /*directData=*/ undefined, opts?.modelDir, {
+  Model.read(parsedModel, spec, opts?.extData, /*directData=*/ undefined, opts?.modelDir, {
     reduceVariables: false
   })
 
-  // Exclude the `Time` variable so that we have one less thing to check
+  // Get all variables (note that `allVars` already excludes the `Time` variable, and we want to
+  // exclude that so that we have one less thing to check)
   const map = new Map<string, Variable>()
-  Model.variables.forEach(v => {
-    if (v.varName !== '_time') {
-      map.set(v.refId, v)
-    }
+  Model.allVars().forEach((v: Variable) => {
+    map.set(v.refId, v)
   })
   return map
 }
@@ -82,9 +99,9 @@ function genC(
 describe('generateEquation (Vensim -> C)', () => {
   it('should work for simple equation with unary :NOT: op', () => {
     const vars = readInlineModel(`
-    x = 1 ~~|
-    y = :NOT: x ~~|
-  `)
+      x = 1 ~~|
+      y = :NOT: x ~~|
+    `)
     expect(vars.size).toBe(2)
     expect(genC(vars.get('_x'))).toEqual(['_x = 1.0;'])
     expect(genC(vars.get('_y'))).toEqual(['_y = !_x;'])
@@ -705,6 +722,67 @@ describe('generateEquation (Vensim -> C)', () => {
     ])
     expect(genC(vars.get('_d'), 'eval')).toEqual(['_d = _b[1];'])
     expect(genC(vars.get('_e'), 'eval')).toEqual(['_e = _c[0];'])
+  })
+
+  it('should work when valid input and output variable names are provided in spec file', () => {
+    const vars = readInlineModel(
+      `
+        DimA: A1, A2 ~~|
+        A[DimA] = 10, 20 ~~|
+        B = 30 ~~|
+        C = 40 ~~|
+      `,
+      {
+        inputVarNames: ['B'],
+        outputVarNames: ['A[A1]']
+      }
+    )
+    expect(vars.size).toBe(3)
+    expect(genC(vars.get('_a[_a1]'), 'init-constants')).toEqual(['_a[0] = 10.0;'])
+    expect(genC(vars.get('_a[_a2]'), 'init-constants')).toEqual(['_a[1] = 20.0;'])
+    expect(genC(vars.get('_b'), 'init-constants')).toEqual(['_b = 30.0;'])
+  })
+
+  it('should throw error when unknown input variable name is provided in spec file', () => {
+    expect(() =>
+      readInlineModel(
+        `
+          DimA: A1, A2 ~~|
+          A[DimA] = 10, 20 ~~|
+          B = 30 ~~|
+        `,
+        {
+          // TODO: We should also check that an error is thrown if the input variable
+          // includes subscripts and is invalid, but currently the `checkSpecVars`
+          // function skips those
+          inputVarNames: ['C'],
+          outputVarNames: ['A[A1]']
+        }
+      )
+    ).toThrow(
+      'The input variable _c was declared in spec.json, but no matching variable was found in the model or external data sources'
+    )
+  })
+
+  it('should throw error when unknown output variable name is provided in spec file', () => {
+    expect(() =>
+      readInlineModel(
+        `
+          DimA: A1, A2 ~~|
+          A[DimA] = 10, 20 ~~|
+          B = 30 ~~|
+        `,
+        {
+          inputVarNames: ['B'],
+          // TODO: We should also check that an error is thrown if the output variable
+          // includes subscripts and is invalid, but currently the `checkSpecVars`
+          // function skips those
+          outputVarNames: ['C']
+        }
+      )
+    ).toThrow(
+      'The output variable _c was declared in spec.json, but no matching variable was found in the model or external data sources'
+    )
   })
 
   it('should work for ABS function', () => {
