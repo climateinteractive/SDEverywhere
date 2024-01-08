@@ -17,11 +17,16 @@ import { parseInlineVensimModel, parseVensimModel, sampleModelDir, type Variable
  *   - readVariables
  *   - analyze (this includes readEquations)
  */
-function readSubscriptsAndEquationsFromSource(source: {
-  modelText?: string
-  modelName?: string
-  modelDir?: string
-}): Variable[] {
+function readSubscriptsAndEquationsFromSource(
+  source: {
+    modelText?: string
+    modelName?: string
+    modelDir?: string
+  },
+  opts?: {
+    specialSeparationDims?: { [key: string]: string }
+  }
+): Variable[] {
   // XXX: These steps are needed due to subs/dims and variables being in module-level storage
   resetHelperState()
   resetSubscriptsAndDimensions()
@@ -34,6 +39,10 @@ function readSubscriptsAndEquationsFromSource(source: {
     parsedModel = parseVensimModel(source.modelName)
   }
 
+  const spec = {
+    specialSeparationDims: opts?.specialSeparationDims
+  }
+
   let modelDir = source.modelDir
   if (modelDir === undefined) {
     if (source.modelName) {
@@ -41,7 +50,8 @@ function readSubscriptsAndEquationsFromSource(source: {
     }
   }
 
-  Model.read(parsedModel, /*spec=*/ {}, /*extData=*/ undefined, /*directData=*/ undefined, modelDir, {
+  Model.read(parsedModel, spec, /*extData=*/ undefined, /*directData=*/ undefined, modelDir, {
+    reduceVariables: false,
     stopAfterAnalyze: true
   })
 
@@ -54,8 +64,14 @@ function readSubscriptsAndEquationsFromSource(source: {
   })
 }
 
-function readInlineModel(modelText: string, modelDir?: string): Variable[] {
-  const vars = readSubscriptsAndEquationsFromSource({ modelText, modelDir })
+function readInlineModel(
+  modelText: string,
+  modelDir?: string,
+  opts?: {
+    specialSeparationDims?: { [key: string]: string }
+  }
+): Variable[] {
+  const vars = readSubscriptsAndEquationsFromSource({ modelText, modelDir }, opts)
 
   // Exclude the `Time` variable so that we have one less thing to check
   return vars.filter(v => v.varName !== '_time')
@@ -147,6 +163,35 @@ describe('readEquations', () => {
       v('y[DimA]', 'IF THEN ELSE(DimA=A2,1,0)', {
         refId: '_y',
         subscripts: ['_dima']
+      })
+    ])
+  })
+
+  it('should work for equation that uses specialSeparationDims', () => {
+    const vars = readInlineModel(
+      `
+      DimA: A1, A2 ~~|
+      y[DimA] = 0 ~~|
+    `,
+      undefined,
+      {
+        specialSeparationDims: {
+          _y: '_dima'
+        }
+      }
+    )
+    expect(vars).toEqual([
+      v('y[DimA]', '0', {
+        refId: '_y[_a1]',
+        varType: 'const',
+        separationDims: ['_dima'],
+        subscripts: ['_a1']
+      }),
+      v('y[DimA]', '0', {
+        refId: '_y[_a2]',
+        varType: 'const',
+        separationDims: ['_dima'],
+        subscripts: ['_a2']
       })
     ])
   })
@@ -2854,7 +2899,7 @@ describe('readEquations', () => {
   // where the new reader differs from the old (in `IF THEN ELSE(integer supply, ...)`
   // where the condition resolves to a constant).  We should add an option to disable
   // the pruning code so that we can test this more deterministically.
-  it.skipIf(process.env.SDE_PRIV_USE_NEW_PARSE === '1')('should work for Vensim "allocate" model', () => {
+  it.skipIf(process.env.SDE_NONPUBLIC_USE_NEW_PARSE === '1')('should work for Vensim "allocate" model', () => {
     const vars = readSubscriptsAndEquations('allocate')
     expect(vars).toEqual([
       v('demand[region]', '3,2,4', {
@@ -6234,7 +6279,7 @@ describe('readEquations', () => {
 
   // TODO: This test depends on the dependency trimming code that isn't yet implemented
   // in the new reader, so skip it when `NEW_PARSE` flag is enabled
-  it.skipIf(process.env.SDE_PRIV_USE_NEW_PARSE === '1')('should work for Vensim "prune" model', () => {
+  it.skipIf(process.env.SDE_NONPUBLIC_USE_NEW_PARSE === '1')('should work for Vensim "prune" model', () => {
     const vars = readSubscriptsAndEquations('prune')
     expect(vars).toEqual([
       v('A Totals', 'SUM(A Values[DimA!])', {
@@ -6806,7 +6851,7 @@ describe('readEquations', () => {
   // where the new reader differs from the old (in `IF THEN ELSE(switch=1,1,0)`
   // where the condition resolves to a constant).  We should add an option to disable
   // the pruning code so that we can test this more deterministically.
-  it.skipIf(process.env.SDE_PRIV_USE_NEW_PARSE === '1')('should work for Vensim "sample" model', () => {
+  it.skipIf(process.env.SDE_NONPUBLIC_USE_NEW_PARSE === '1')('should work for Vensim "sample" model', () => {
     const vars = readSubscriptsAndEquations('sample')
     expect(vars).toEqual([
       v('a', 'SAMPLE IF TRUE(MODULO(Time,5)=0,Time,0)', {

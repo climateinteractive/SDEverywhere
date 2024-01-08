@@ -2,7 +2,7 @@ import B from 'bufx'
 import yaml from 'js-yaml'
 import * as R from 'ramda'
 
-import { decanonicalize, isIterable, listConcat, strlist, vlog, vsort } from '../_shared/helpers.js'
+import { canonicalName, decanonicalize, isIterable, listConcat, strlist, vlog, vsort } from '../_shared/helpers.js'
 import {
   addIndex,
   allAliases,
@@ -17,6 +17,10 @@ import {
 import { createParser } from '../parse/parser.js'
 
 import EquationReader from './equation-reader.js'
+import { readEquation } from './read-equations.js'
+import { readDimensionDefs } from './read-subscripts.js'
+import { readVariables as readVariables2 } from './read-variables.js'
+import { reduceVariables } from './reduce-variables.js'
 import SubscriptRangeReader from './subscript-range-reader.js'
 import toposort from './toposort.js'
 import VarNameReader from './var-name-reader.js'
@@ -53,7 +57,8 @@ function resetModelState() {
  * Note that this function currently does not return anything and instead stores the parsed subscript
  * definitions in the `subscript` module and the parsed/analyzed variables in this module.
  *
- * @param {import('../parse/parser.js').VensimModelParseTree} parseTree The Vensim parse tree.
+ * TODO: FIX TYPE
+ * @param {*} parsedModel The parsed model structure.
  * @param {*} spec The parsed `spec.json` object.
  * @param {Map<string, any>} extData The map of datasets from external `.dat` files.
  * @param {Map<string, any>} directData The mapping of dataset name used in a `GET DIRECT DATA`
@@ -62,19 +67,38 @@ function resetModelState() {
  * files for `GET DIRECT SUBSCRIPT`).
  * @param {*} opts An optional object used by tests to stop the read process after a specific phase.
  */
-function read(parseTree, spec, extData, directData, modelDirname, opts) {
+function read(parsedModel, spec, extData, directData, modelDirname, opts) {
   // Some arrays need to be separated into variables with individual indices to
   // prevent eval cycles. They are manually added to the spec file.
   let specialSeparationDims = spec.specialSeparationDims
 
-  // Subscript ranges must be defined before reading variables that use them.
-  readSubscriptRanges(parseTree, modelDirname)
+  // Dimensions must be defined before reading variables that use them.
+  if (parsedModel.kind === 'vensim-legacy') {
+    readSubscriptRanges(parsedModel.parseTree, modelDirname)
+  } else {
+    readDimensionDefs(parsedModel, modelDirname)
+  }
   if (opts?.stopAfterReadSubscripts) return
-  resolveSubscriptRanges(spec.dimensionFamilies)
+  resolveDimensions(spec.dimensionFamilies)
   if (opts?.stopAfterResolveSubscripts) return
 
   // Read variables from the model parse tree.
-  readVariables(parseTree, specialSeparationDims, directData)
+  if (parsedModel.kind === 'vensim-legacy') {
+    // TODO: directData is actually unused in VariableReader
+    readVariables(parsedModel.parseTree, specialSeparationDims, directData)
+  } else {
+    // Read the variables
+    const vars = readVariables2(parsedModel, specialSeparationDims)
+
+    // Include a placeholder variable for the exogenous `Time` variable
+    const timeVar = new Variable(null)
+    timeVar.modelLHS = 'Time'
+    timeVar.varName = '_time'
+    vars.push(timeVar)
+
+    // Add the variables to the `Model`
+    vars.forEach(addVariable)
+  }
   if (opts?.stopAfterReadVariables) return
 
   if (spec) {
@@ -94,7 +118,7 @@ function read(parseTree, spec, extData, directData, modelDirname, opts) {
   }
 
   // Analyze model equations to fill in more details about variables.
-  analyze()
+  analyze(parsedModel.kind, spec?.inputVars, opts)
   if (opts?.stopAfterAnalyze) return
 
   // Check that all input and output vars in the spec actually exist in the model.
@@ -133,10 +157,10 @@ function readSubscriptRanges(parseTree, modelDirname) {
  * @param {Object.<string, string>} dimensionFamilies The optional mapping of dimension name to family name
  * as provided in a `spec.json` file.
  */
-function resolveSubscriptRanges(dimensionFamilies) {
+function resolveDimensions(dimensionFamilies) {
   let allDims = allDimensions()
 
-  // Expand dimensions that appeared in subscript range definitions into indices.
+  // Expand dimensions that appeared in dimension definitions into subscripts/indices.
   // Repeat until there are only indices in dimension values.
   let dimFoundInValue
   do {
@@ -155,7 +179,7 @@ function resolveSubscriptRanges(dimensionFamilies) {
     }
   } while (dimFoundInValue)
 
-  // Fill in subscript aliases from their model families.
+  // Fill in dimension aliases from their model families.
   for (let dim of allAliases()) {
     if (dim.value === '') {
       let refDim = sub(dim.family)
@@ -292,27 +316,44 @@ function readVariables(tree, specialSeparationDims, directData) {
   v.varName = '_time'
   addVariable(v)
 }
-
-function analyze() {
+function analyze(parsedModelKind, inputVars, opts) {
   // Analyze the RHS of each equation in stages after all the variables are read.
   // Find non-apply-to-all vars that are defined with more than one equation.
   findNonAtoAVars()
+
   // Set the refId for each variable. Only non-apply-to-all vars include subscripts in the refId.
   setRefIds()
+
+  // If enabled, reduce expressions used in variable definitions.
+  if (parsedModelKind !== 'vensim-legacy') {
+    if (opts?.reduceVariables !== false && process.env.SDE_NONPUBLIC_REDUCE_VARIABLES !== '0') {
+      let reduceMode = opts?.reduceVariables || process.env.SDE_NONPUBLIC_REDUCE_VARIABLES || 'default'
+      reduceVariables(variables, inputVars || [], reduceMode)
+    }
+  }
+  if (opts?.stopAfterReduceVariables === true) return
+
   // Read the RHS to list the refIds of vars that are referenced and set the var type.
-  readEquations()
+  if (parsedModelKind === 'vensim-legacy') {
+    readEquations()
+  } else {
+    variables.forEach(readEquation)
+  }
 }
 
 function checkSpecVars(spec, extData) {
-  // Look up each var in the spec and issue and error message if it does not exist.
+  // Look up each var in the spec and issue and throw error if it does not exist.
 
   function check(varNames, specType) {
     if (isIterable(varNames)) {
       for (let varName of varNames) {
+        // TODO: This code as written does not check variables that include subscripts, but
+        // we should check those as well (and make sure that subscripts or indices are not
+        // out of the valid range)
         if (!R.contains('[', varName)) {
           if (!varWithRefId(varName)) {
             // Look for a variable in external data.
-            if (extData.has(varName)) {
+            if (extData?.has(varName)) {
               // console.error(`found ${specType} ${varName} in extData`)
               // Copy data from an external file to an equation that does a lookup.
               let lookup = R.reduce(
@@ -323,7 +364,9 @@ function checkSpecVars(spec, extData) {
               let modelEquation = `${decanonicalize(varName)} = WITH LOOKUP(Time, (${lookup}))`
               addEquation(modelEquation)
             } else {
-              console.error(`${specType} variable ${varName} not found in the model or external data sources`)
+              throw new Error(
+                `The ${specType} variable ${varName} was declared in spec.json, but no matching variable was found in the model or external data sources`
+              )
             }
           }
         }
@@ -662,7 +705,7 @@ function varWithRefId(refId) {
       }
     }
     if (!refVar) {
-      vlog('ERROR: no var found for refId', refId)
+      // vlog('ERROR: no var found for refId', refId)
     }
   }
   return refVar
@@ -752,7 +795,29 @@ function vensimName(cVarName) {
 function cName(vensimVarName) {
   // Convert a Vensim variable name to a C name.
   // This function requires model analysis to be completed first when the variable has subscripts.
-  return new VarNameReader().read(vensimVarName)
+  if (process.env.SDE_NONPUBLIC_USE_NEW_PARSE !== '1') {
+    // TODO: For now we use the legacy VarNameReader when the old parser is active; this
+    // code will be removed once the old parser is removed
+    return new VarNameReader().read(vensimVarName)
+  }
+  // Split the variable name from the subscripts
+  let matches = vensimVarName.match(/([^[]+)(?:\[([^\]]+)\])?/)
+  if (!matches) {
+    throw new Error(`Invalid variable name '${vensimVarName}' found when converting to C representation`)
+  }
+  let cVarName = canonicalName(matches[1])
+  if (matches[2]) {
+    // The variable name includes subscripts, so split them into individual IDs
+    let cSubIds = matches[2].split(',').map(x => canonicalName(x))
+    cSubIds = normalizeSubscripts(cSubIds)
+    // If a subscript is an index, convert it to an index number to match Vensim data exports
+    let cSubIdParts = cSubIds.map(cSubId => {
+      return isIndex(cSubId) ? `[${sub(cSubId).value}]` : `[${cSubId}]`
+    })
+    // Append the subscript parts to the base variable name to create the full reference
+    cVarName += cSubIdParts.join('')
+  }
+  return cVarName
 }
 function isInputVar(varName) {
   // Return true if the given variable (in canonical form) is included in the list of

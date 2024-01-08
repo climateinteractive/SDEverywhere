@@ -16,6 +16,7 @@
     "ci:build": "run-s lint prettier:check type-check test:ci"
   },
   "dependencies": {
+    "@sdeverywhere/parse": "^0.1.0",
     "antlr4": "4.12.0",
     "antlr4-vensim": "0.6.2",
     "bufx": "^1.0.5",

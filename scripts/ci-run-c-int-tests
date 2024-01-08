@@ -8,11 +8,18 @@ set -x # include all commands in logs
 
 cd "$PROJ_DIR"
 
-# Build the `@sdeverywhere/build` package, which is the only one that needs to be
-# built prior to running the C-level model tests.  (The model tests do depend on the
-# `compile` and `cli` packages, but those don't currently have a build step since
-# they are pure JavaScript.)
-pnpm -F build build
+# Build the subset of packages that are required for running the C-level
+# integration tests.  (The model tests do also depend on the `compile` and `cli`
+# packages, but those don't currently have a build step since they are pure
+# JavaScript.)  We use `--workspace-concurrency=0` to use all available CPUs,
+# but let pnpm handle the topological sorting.
+pnpm \
+--aggregate-output \
+--reporter=append-only \
+--workspace-concurrency=0 \
+-F parse \
+-F build \
+-r build
 
 # Run the C-level model/integration tests
 pnpm run test:c-int

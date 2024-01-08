@@ -1,10 +1,25 @@
+import { readFileSync } from 'fs'
 import { resolve } from 'path'
 import { fileURLToPath } from 'url'
 
+import type { Model } from '@sdeverywhere/parse'
+
 import type { VensimModelParseTree } from '../parse/parser'
-import { parseModel } from '../parse/parser'
 import { preprocessModel } from '../preprocess/preprocessor'
 import { canonicalName } from '../_shared/helpers'
+import { parseModel } from '../parse-and-generate'
+
+export interface ParsedVensimModel {
+  kind: 'vensim'
+  root: Model
+}
+
+export interface LegacyParsedVensimModel {
+  kind: 'vensim-legacy'
+  parseTree: VensimModelParseTree
+}
+
+export type ParsedModel = ParsedVensimModel | LegacyParsedVensimModel
 
 export type DimModelName = string
 export type DimCName = string
@@ -49,6 +64,7 @@ export type VariableType = 'const' | 'aux' | 'level' | 'initial' | 'lookup' | 'd
 export interface Variable {
   modelLHS: string // 'Target Capacity'
   modelFormula: string // 'ACTIVE INITIAL(Capacity*Utilization Adjustment,Initial Target Capacity)'
+  origModelFormula?: string // 'IF THEN ELSE(cond, x, y)'
   varName: string // '_target_capacity'
   subscripts: string[] // TODO: sub type
   exceptSubscripts: string[] // TODO: This is only used during parsing, doesn't need to be exposed
@@ -140,14 +156,31 @@ export function sampleModelDir(modelName: string): string {
   return resolve(__dirname, '..', '..', '..', '..', 'models', modelName)
 }
 
-export function parseVensimModel(modelName: string): VensimModelParseTree {
-  const modelFile = resolve(sampleModelDir(modelName), `${modelName}.mdl`)
-  const preprocessed = preprocessModel(modelFile, undefined, 'genc', false)
-  return parseModel(preprocessed)
+export function parseVensimModel(modelName: string): ParsedModel {
+  const modelDir = sampleModelDir(modelName)
+  const modelFile = resolve(modelDir, `${modelName}.mdl`)
+  let mdlContent: string
+  if (process.env.SDE_NONPUBLIC_USE_NEW_PARSE === '1') {
+    // Note that the new parser implicitly runs the preprocessor on the input model text,
+    // so we don't need to do that here.  (We should make it configurable so that we can
+    // skip the preprocess step in `parse-and-generate.js` when the input model text has
+    // already been run through a preprocessor.)
+    mdlContent = readFileSync(modelFile, 'utf8')
+  } else {
+    mdlContent = preprocessModel(modelFile, undefined, 'genc', false)
+  }
+  // We currently sort the preprocessed definitions alphabetically for
+  // compatibility with the legacy preprocessor.  Once we drop the legacy code
+  // we could remove this step and update the tests to use the original order.
+  return parseModel(mdlContent, modelDir, /*sort=*/ true)
 }
 
-export function parseInlineVensimModel(mdl: string): VensimModelParseTree {
-  return parseModel(mdl)
+export function parseInlineVensimModel(mdlContent: string, modelDir?: string): ParsedModel {
+  // For tests that parse inline model text, in the case of the legacy parser, don't run
+  // the preprocess step, and in the case of the new parser (which implicitly runs the
+  // preprocess step), don't sort the definitions.  This makes it easier to do apples
+  // to apples comparisons on the outputs from the two parser implementations.
+  return parseModel(mdlContent, modelDir, /*sort=*/ false)
 }
 
 function prettyVar(variable: Variable): string {

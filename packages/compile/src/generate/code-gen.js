@@ -4,14 +4,15 @@ import { asort, lines, strlist, abend, mapIndexed } from '../_shared/helpers.js'
 import { sub, allDimensions, allMappings, subscriptFamilies } from '../_shared/subscript.js'
 import Model from '../model/model.js'
 
+import { generateEquation } from './gen-equation.js'
 import EquationGen from './equation-gen.js'
 import ModelLHSReader from './model-lhs-reader.js'
 
-export function generateCode(parseTree, opts) {
-  return codeGenerator(parseTree, opts).generate()
+export function generateCode(parsedModel, opts) {
+  return codeGenerator(parsedModel, opts).generate()
 }
 
-let codeGenerator = (parseTree, opts) => {
+let codeGenerator = (parsedModel, opts) => {
   const { spec, operation, extData, directData, modelDirname } = opts
   // Set to 'decl', 'init-lookups', 'eval', etc depending on the section being generated.
   let mode = ''
@@ -25,13 +26,19 @@ let codeGenerator = (parseTree, opts) => {
     outputAllVars = true
   }
   // Function to generate a section of the code
-  let generateSection = R.map(v => new EquationGen(v, extData, directData, mode, modelDirname).generate())
+  let generateSection = R.map(v => {
+    if (parsedModel.kind === 'vensim-legacy') {
+      return new EquationGen(v, extData, directData, mode, modelDirname).generate()
+    } else {
+      return generateEquation(v, mode, extData, directData, modelDirname)
+    }
+  })
   let section = R.pipe(generateSection, R.flatten, lines)
   function generate() {
     // Read variables and subscript ranges from the model parse tree.
     // This is the main entry point for code generation and is called just once.
     try {
-      Model.read(parseTree, spec, extData, directData, modelDirname)
+      Model.read(parsedModel, spec, extData, directData, modelDirname)
       // In list mode, print variables to the console instead of generating code.
       if (operation === 'printRefIdTest') {
         Model.printRefIdTest()
@@ -198,10 +205,21 @@ void ${name}${idx}() {
     }
     let funcCalls = R.pipe(mapIndexed(funcCall), lines)
 
-    // Break the vars into chunks of 30; this number was empirically
-    // determined by looking at runtime performance and memory usage
-    // of the En-ROADS model on various devices
-    let chunks = R.splitEvery(30, vars)
+    // Break the vars into chunks.  The default value of 30 was empirically
+    // determined by looking at runtime performance and memory usage of the
+    // En-ROADS model on various devices.
+    let chunkSize
+    if (process.env.SDE_CODE_GEN_CHUNK_SIZE) {
+      chunkSize = parseInt(process.env.SDE_CODE_GEN_CHUNK_SIZE)
+    } else {
+      chunkSize = 30
+    }
+    let chunks
+    if (chunkSize > 0) {
+      chunks = R.splitEvery(chunkSize, vars)
+    } else {
+      chunks = [vars]
+    }
 
     if (!preStep) {
       preStep = ''

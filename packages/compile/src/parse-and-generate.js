@@ -3,11 +3,14 @@
 import path from 'path'
 import B from 'bufx'
 
+import { parseVensimModel } from '@sdeverywhere/parse'
+
 import { readXlsx } from './_shared/helpers.js'
 import { readDat } from './_shared/read-dat.js'
 import { printSubscripts, yamlSubsList } from './_shared/subscript.js'
-import { parseModel } from './parse/parser.js'
+import { parseModel as legacyParseVensimModel } from './parse/parser.js'
 import Model from './model/model.js'
+import { getDirectSubscripts } from './model/read-subscripts.js'
 import { generateCode } from './generate/code-gen.js'
 
 /**
@@ -63,8 +66,8 @@ export async function parseAndGenerate(input, spec, operation, modelDirname, mod
   }
 
   // Parse the model and generate code.
-  let parseTree = parseModel(input)
-  let code = generateCode(parseTree, { spec, operation, extData, directData, modelDirname })
+  let parsedModel = parseModel(input, modelDirname)
+  let code = generateCode(parsedModel, { spec, operation, extData, directData, modelDirname })
 
   function writeOutput(filename, text) {
     let outputPathname = path.join(buildDir, filename)
@@ -113,4 +116,53 @@ export function printNames(namesPathname, operation) {
     }
   }
   B.printBuf()
+}
+
+/**
+ * Read and parse the given model text and return the parsed model structure.
+ *
+ * TODO: Fix return type
+ *
+ * @param {string} input The string containing the model text.
+ * @param {string} modelDir The absolute path to the directory containing the mdl file.
+ * The dat, xlsx, and csv files referenced by the model will be relative to this directory.
+ * @param {boolean} sort Whether to sort definitions alphabetically in the preprocess step.
+ * @return {*} A parsed tree representation of the model.
+ */
+export function parseModel(input, modelDir, sort = false) {
+  if (process.env.SDE_NONPUBLIC_USE_NEW_PARSE !== '1') {
+    // Use the legacy parser
+    return {
+      kind: 'vensim-legacy',
+      parseTree: legacyParseVensimModel(input)
+    }
+  }
+
+  // Prepare the parse context that provides access to external data files
+  let parseContext /*: VensimParseContext*/
+  if (modelDir) {
+    parseContext = {
+      getDirectSubscripts(fileName, tabOrDelimiter, firstCell, lastCell /*, prefix*/) {
+        // Resolve the CSV file relative the model directory
+        const csvPath = path.resolve(modelDir, fileName)
+
+        // Read the subscripts from the CSV file
+        return getDirectSubscripts(csvPath, tabOrDelimiter, firstCell, lastCell)
+      }
+    }
+  }
+
+  // Parse the model
+  // TODO: The `parseVensimModel` function currently implicitly runs the preprocess
+  // step on the input text.  We should make this configurable (because `parseModel`
+  // is currently called after the legacy preprocessor has already been run).
+  // TODO: We currently sort the preprocessed definitions alphabetically for
+  // compatibility with the legacy preprocessor.  Once we drop the legacy code
+  // we could remove this step and update the tests to use the original order.
+  const root = parseVensimModel(input, parseContext, sort)
+
+  return {
+    kind: 'vensim',
+    root
+  }
 }
