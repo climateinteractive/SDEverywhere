@@ -33,7 +33,7 @@
   "dependencies": {
     "@sdeverywhere/runtime": "^0.2.2",
     "@sdeverywhere/runtime-async": "^0.2.2",
-    "vite": "4.4.9"
+    "vite": "4.4.12"
   },
   "peerDependencies": {
     "@sdeverywhere/build": "^0.3.0"
