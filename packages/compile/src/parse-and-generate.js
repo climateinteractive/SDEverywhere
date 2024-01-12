@@ -18,24 +18,25 @@ import { generateCode } from './generate/code-gen.js'
  *
  * This is the primary entrypoint for the `sde generate` command.
  *
- * - If `operation` is 'generateC', the generated C code will be written to `buildDir`.
- * - If `operation` is 'printVarList', variables and subscripts will be written to
+ * - If `operations` has 'generateC', the generated C code will be written to `buildDir`.
+ * - If `operations` has 'printVarList', variables and subscripts will be written to
  *   txt, yaml, and json files under `buildDir`.
- * - If `operation` is 'printRefIdTest', reference identifiers will be printed to the console.
- * - If `operation` is 'convertNames', no output will be generated, but the results of model
+ * - If `operation` has 'printRefIdTest', reference identifiers will be printed to the console.
+ * - If `operation` has 'convertNames', no output will be generated, but the results of model
  *   analysis will be available.
  *
  * @param input The preprocessed Vensim model text.
  * @param spec The model spec (from the JSON file).
- * @param operation Either 'generateC', 'printVarList', 'printRefIdTest', 'convertNames',
- * or empty string.
+ * @param operations The set of operations to perform; can include 'generateC', 'printVarList',
+ * 'printRefIdTest', 'convertNames'.  If the array is empty, the model will be read but no
+ * operation will be performed.
  * @param modelDirname The absolute path to the directory containing the mdl file.
  * The dat and xlsx files referenced by the spec will be relative to this directory.
  * @param modelName The model name (without the mdl extension).
  * @param buildDir The output directory where the C or list files will be written.
  * @return A string containing the generated C code.
  */
-export async function parseAndGenerate(input, spec, operation, modelDirname, modelName, buildDir) {
+export async function parseAndGenerate(input, spec, operations, modelDirname, modelName, buildDir) {
   // Read time series from external DAT files into a single object.
   // externalDatfiles is an array of either filenames or objects
   // giving a variable name prefix as the key and a filename as the value.
@@ -67,19 +68,19 @@ export async function parseAndGenerate(input, spec, operation, modelDirname, mod
 
   // Parse the model and generate code.
   let parsedModel = parseModel(input, modelDirname)
-  let code = generateCode(parsedModel, { spec, operation, extData, directData, modelDirname })
+  let code = generateCode(parsedModel, { spec, operations, extData, directData, modelDirname })
 
   function writeOutput(filename, text) {
     let outputPathname = path.join(buildDir, filename)
     B.write(text, outputPathname)
   }
 
-  if (operation === 'generateC') {
+  if (operations.includes('generateC')) {
     // Write the generated C to a file
     writeOutput(`${modelName}.c`, code)
   }
 
-  if (operation === 'printVarList') {
+  if (operations.includes('printVarList')) {
     // Write variables to a text file.
     writeOutput(`${modelName}_vars.txt`, Model.printVarList())
     // Write subscripts to a text file.

@@ -29,7 +29,7 @@ let names = async (model, namesPathname, opts) => {
   // Preprocess model text into parser input.
   let input = preprocessModel(modelPathname, spec)
   // Parse the model to get variable and subscript information.
-  await parseAndGenerate(input, spec, 'convertNames', modelDirname, modelName, '')
+  await parseAndGenerate(input, spec, ['convertNames'], modelDirname, modelName, '')
   // Read each variable name from the names file and convert it.
   printNames(namesPathname, opts.toc ? 'to-c' : 'to-vensim')
 }
