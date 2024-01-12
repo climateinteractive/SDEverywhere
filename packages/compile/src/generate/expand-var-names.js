@@ -13,7 +13,7 @@ import ModelLHSReader from './model-lhs-reader.js'
  *
  * @param canonical If true, convert names to canonical representation (variable identifiers), otherwise
  * return the original name of each variable as it appears in the model.
- * @return {string[]} An array of variable names or identifiers.
+ * @returns {string[]} An array of variable names or identifiers.
  */
 export function expandVarNames(canonical) {
   const sortedVars = R.sortBy(v => v.varName, Model.variables)
@@ -74,7 +74,7 @@ function namesForVar(v) {
  *
  * @param {string} baseVarName The base name of the variable.
  * @param {string[]} subOrDimNames The array of subscript or dimension names.
- * @return {string[]} An array of string representations of subscripted references,
+ * @returns {string[]} An array of string representations of subscripted references,
  * e.g., `'x[A1,B1]' ,'x[A1,B2]', ...]`.
  */
 function expandDims(baseVarName, subOrDimNames) {
@@ -94,7 +94,7 @@ function expandDims(baseVarName, subOrDimNames) {
  * the given name is a subscript, it will return a single-element array with that
  * subscript name.
  *
- * @param {*} dimName A subscript or dimension name.
+ * @param {string} subOrDimName A subscript or dimension name.
  * @returns {string[]} A (possibly nested) array of subscript names.
  */
 function expandDim(subOrDimName) {
