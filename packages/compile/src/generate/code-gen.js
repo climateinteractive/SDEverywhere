@@ -6,7 +6,7 @@ import Model from '../model/model.js'
 
 import { generateEquation } from './gen-equation.js'
 import EquationGen from './equation-gen.js'
-import ModelLHSReader from './model-lhs-reader.js'
+import { expandVarNames } from './expand-var-names.js'
 
 export function generateCode(parsedModel, opts) {
   return codeGenerator(parsedModel, opts).generate()
@@ -314,33 +314,8 @@ ${postStep}
     // Return a list of var names for all variables except lookups and data variables.
     // The names are in Vensim format if vensimNames is true, otherwise they are in C format.
     // Expand subscripted vars into separate var names with each index.
-    function sortedVars() {
-      // Return a list of all vars sorted by the model LHS var name (without subscripts), case insensitive.
-      return R.sortBy(v => {
-        let modelLHSReader = new ModelLHSReader()
-        modelLHSReader.read(v.modelLHS)
-        return modelLHSReader.varName.toUpperCase()
-      }, Model.variables)
-    }
-    return R.uniq(
-      R.reduce(
-        (a, v) => {
-          if (v.varType !== 'lookup' && v.varType !== 'data' && v.includeInOutput) {
-            let modelLHSReader = new ModelLHSReader()
-            modelLHSReader.read(v.modelLHS)
-            if (vensimNames) {
-              return R.concat(a, modelLHSReader.names())
-            } else {
-              return R.concat(a, R.map(Model.cName, modelLHSReader.names()))
-            }
-          } else {
-            return a
-          }
-        },
-        [],
-        sortedVars()
-      )
-    )
+    const canonicalNames = !vensimNames
+    return expandVarNames(canonicalNames)
   }
   //
   // Input/output section helpers
