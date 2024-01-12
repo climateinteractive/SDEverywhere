@@ -163,19 +163,15 @@ async function flattenMdls(
 async function generateC(context: BuildContext, sdeDir: string, sdeCmdPath: string, prepDir: string): Promise<void> {
   log('verbose', '  Generating C code')
 
-  // Use SDE to generate a C version of the model
+  // Use SDE to generate both a C version of the model (`--genc`) AND a JSON list of all model
+  // dimensions and variables (`--list`)
   const command = sdeCmdPath
-  const gencArgs = ['generate', '--genc', '--spec', 'spec.json', 'processed']
+  const gencArgs = ['generate', '--genc', '--list', '--spec', 'spec.json', 'processed']
   await context.spawnChild(prepDir, command, gencArgs, {
     // By default, ignore lines that start with "WARNING: Data for" since these are often harmless
     // TODO: Don't filter by default, but make it configurable
     // ignoredMessageFilter: 'WARNING: Data for'
   })
-
-  // Use SDE to generate a JSON list of all model dimensions and variables
-  // TODO: Allow --genc and --list in same command so that we only need to process once
-  const listArgs = ['generate', '--list', '--spec', 'spec.json', 'processed']
-  await context.spawnChild(prepDir, command, listArgs, {})
 
   // Copy SDE's supporting C files into the build directory
   const buildDir = joinPath(prepDir, 'build')
