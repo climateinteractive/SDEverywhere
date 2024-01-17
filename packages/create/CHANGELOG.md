@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.2.8](https://github.com/climateinteractive/SDEverywhere/compare/create-v0.2.7...create-v0.2.8) (2024-01-17)
+
+
+### Bug Fixes
+
+* allow `--genc` and `--list` arguments to be used in the same `sde generate` command ([#425](https://github.com/climateinteractive/SDEverywhere/issues/425)) ([9f97332](https://github.com/climateinteractive/SDEverywhere/commit/9f9733245721b7701e20eab8da2a2579834a60c2)), closes [#424](https://github.com/climateinteractive/SDEverywhere/issues/424)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/compile bumped from ^0.7.10 to ^0.7.11
+
 ## [0.2.7](https://github.com/climateinteractive/SDEverywhere/compare/create-v0.2.6...create-v0.2.7) (2023-11-15)
 
 ### Dependencies

@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.7.11](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.10...compile-v0.7.11) (2024-01-17)
+
+
+### Bug Fixes
+
+* add new expandVarNames function that works with both old and new parsers ([#423](https://github.com/climateinteractive/SDEverywhere/issues/423)) ([2964887](https://github.com/climateinteractive/SDEverywhere/commit/296488775b963fd4ff1ff343fea8c4f3f13e2820)), closes [#422](https://github.com/climateinteractive/SDEverywhere/issues/422)
+* add new implementation of read and code gen phases based on `parse` package ([#413](https://github.com/climateinteractive/SDEverywhere/issues/413)) ([5538a4f](https://github.com/climateinteractive/SDEverywhere/commit/5538a4f86ea8d59052d532b47e8077baff084079)), closes [#412](https://github.com/climateinteractive/SDEverywhere/issues/412)
+* allow `--genc` and `--list` arguments to be used in the same `sde generate` command ([#425](https://github.com/climateinteractive/SDEverywhere/issues/425)) ([9f97332](https://github.com/climateinteractive/SDEverywhere/commit/9f9733245721b7701e20eab8da2a2579834a60c2)), closes [#424](https://github.com/climateinteractive/SDEverywhere/issues/424)
+
 ## [0.7.10](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.9...compile-v0.7.10) (2023-11-15)
 
 
