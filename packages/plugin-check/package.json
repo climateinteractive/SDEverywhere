@@ -1,6 +1,6 @@
 {
   "name": "@sdeverywhere/plugin-check",
-  "version": "0.3.5",
+  "version": "0.3.4",
   "files": [
     "bin/**",
     "dist/**",
@@ -62,7 +62,7 @@
     "@sdeverywhere/build": "^0.3.0"
   },
   "devDependencies": {
-    "@sdeverywhere/build": "0.3.3",
+    "@sdeverywhere/build": "*",
     "@types/node": "^20.5.7"
   },
   "author": "Climate Interactive",
