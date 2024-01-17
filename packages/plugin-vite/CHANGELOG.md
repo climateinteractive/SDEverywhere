@@ -1,5 +1,11 @@
 # Changelog
 
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @sdeverywhere/build bumped from * to 0.3.3
+
 ## [0.1.8](https://github.com/climateinteractive/SDEverywhere/compare/plugin-vite-v0.1.7...plugin-vite-v0.1.8) (2023-09-29)
 
 Note: This is a redo of the 0.1.7 release to workaround an npmjs registry issue.  There are no actual changes in this release.

@@ -1,5 +1,11 @@
 # Changelog
 
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @sdeverywhere/build bumped from * to 0.3.3
+
 ## [0.2.2](https://github.com/climateinteractive/SDEverywhere/compare/plugin-wasm-v0.2.1...plugin-wasm-v0.2.2) (2023-10-02)
 
 
