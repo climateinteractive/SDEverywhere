@@ -66,15 +66,17 @@ export let generate = async (model, opts) => {
   }
   // Parse the model and generate code. If no operation is specified, the code generator will
   // read the model and do nothing else. This is required for the list operation.
-  let operation = ''
+  let operations = []
   if (opts.genc) {
-    operation = 'generateC'
-  } else if (opts.list) {
-    operation = 'printVarList'
-  } else if (opts.refidtest) {
-    operation = 'printRefIdTest'
+    operations.push('generateC')
   }
-  await parseAndGenerate(input, spec, operation, modelDirname, modelName, buildDirname)
+  if (opts.list) {
+    operations.push('printVarList')
+  }
+  if (opts.refidtest) {
+    operations.push('printRefIdTest')
+  }
+  await parseAndGenerate(input, spec, operations, modelDirname, modelName, buildDirname)
 }
 
 export default {

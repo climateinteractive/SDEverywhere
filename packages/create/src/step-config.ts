@@ -424,7 +424,7 @@ async function readModelVars(projDir: string, mdlPath: string): Promise<MdlVaria
   // Parse the model and generate the variable list
   const mdlDir = dirname(mdlFile)
   const mdlName = parsePath(mdlFile).name
-  await parseAndGenerate(preprocessed, spec, 'printVarList', mdlDir, mdlName, buildDir)
+  await parseAndGenerate(preprocessed, spec, ['printVarList'], mdlDir, mdlName, buildDir)
 
   // Read `build/{mdl}_vars.yaml`
   // TODO: For now the printVarList code only outputs txt and yaml files; we'll use the

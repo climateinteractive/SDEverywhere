@@ -13,7 +13,7 @@ export function generateCode(parsedModel, opts) {
 }
 
 let codeGenerator = (parsedModel, opts) => {
-  const { spec, operation, extData, directData, modelDirname } = opts
+  const { spec, operations, extData, directData, modelDirname } = opts
   // Set to 'decl', 'init-lookups', 'eval', etc depending on the section being generated.
   let mode = ''
   // Set to true to output all variables when there is no model run spec.
@@ -40,13 +40,16 @@ let codeGenerator = (parsedModel, opts) => {
     try {
       Model.read(parsedModel, spec, extData, directData, modelDirname)
       // In list mode, print variables to the console instead of generating code.
-      if (operation === 'printRefIdTest') {
+      if (operations.includes('printRefIdTest')) {
         Model.printRefIdTest()
-      } else if (operation === 'printRefGraph') {
+      }
+      if (operations.includes('printRefGraph')) {
         Model.printRefGraph(opts.varname)
-      } else if (operation === 'convertNames') {
+      }
+      if (operations.includes('convertNames')) {
         // Do not generate output, but leave the results of model analysis.
-      } else if (operation === 'generateC') {
+      }
+      if (operations.includes('generateC')) {
         // Generate code for each variable in the proper order.
         let code = emitDeclCode()
         code += emitInitLookupsCode()

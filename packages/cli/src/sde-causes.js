@@ -24,8 +24,8 @@ let causes = (model, varname, opts) => {
   let input = preprocessModel(modelPathname, spec)
   // Parse the model to get variable and subscript information.
   let parseTree = parseModel(input)
-  let operation = 'printRefGraph'
-  generateCode(parseTree, { spec, operation, extData, directData, modelDirname, varname })
+  let operations = ['printRefGraph']
+  generateCode(parseTree, { spec, operations, extData, directData, modelDirname, varname })
 }
 export default {
   command,
