@@ -52,7 +52,8 @@ echo_separator CLEAN
 run_in_workspaces parallel clean
 
 # Build all packages.  Unlike the other steps, we don't use the `--parallel` option
-# but rely on pnpm to do topological sorting (while still using the )
+# but rely on pnpm to do topological sorting (while still using `--workspace-concurrency=0`
+# so that the commands do run concurrently when possible).
 echo_separator BUILD
 run_in_workspaces ordered build
 
