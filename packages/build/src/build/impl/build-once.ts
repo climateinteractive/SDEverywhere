@@ -17,7 +17,6 @@ import type { Plugin } from '../../plugin/plugin'
 
 import { generateModel } from './gen-model'
 import { computeInputFilesHash } from './hash-files'
-import type { ModelSpec } from '../../_shared/model-spec'
 
 export interface BuildOnceOptions {
   forceModelGen?: boolean
@@ -47,57 +46,55 @@ export async function buildOnce(
   // Create the build context
   const stagedFiles = new StagedFiles(config.prepDir)
   const context = new BuildContext(config, stagedFiles, options.abortSignal)
+  const modelHashPath = joinPath(config.prepDir, 'model-hash.txt')
 
-  // Get the model spec from the config
-  let modelSpec: ModelSpec
+  // Note that the entire body of this function is wrapped in a try/catch.  Any
+  // errors that are thrown by plugin functions or the core `generateModel`
+  // function will be caught and handled as appropriate.
+  let succeeded = true
   try {
-    modelSpec = await userConfig.modelSpec(context)
+    // Get the model spec from the config
+    const modelSpec = await userConfig.modelSpec(context)
     if (modelSpec === undefined) {
       return err(new Error('The model spec must be defined'))
     }
-  } catch (e) {
-    return err(e)
-  }
 
-  // Run plugins that implement `preGenerate`
-  for (const plugin of plugins) {
-    if (plugin.preGenerate) {
-      plugin.preGenerate(context, modelSpec)
+    // Run plugins that implement `preGenerate`
+    for (const plugin of plugins) {
+      if (plugin.preGenerate) {
+        plugin.preGenerate(context, modelSpec)
+      }
     }
-  }
 
-  // Write the spec file
-  const specJson = {
-    inputVarNames: modelSpec.inputs.map(input => input.varName),
-    outputVarNames: modelSpec.outputs.map(output => output.varName),
-    externalDatfiles: modelSpec.datFiles,
-    ...modelSpec.options
-  }
-  const specPath = joinPath(config.prepDir, 'spec.json')
-  await writeFile(specPath, JSON.stringify(specJson, null, 2))
+    // Write the spec file
+    const specJson = {
+      inputVarNames: modelSpec.inputs.map(input => input.varName),
+      outputVarNames: modelSpec.outputs.map(output => output.varName),
+      externalDatfiles: modelSpec.datFiles,
+      ...modelSpec.options
+    }
+    const specPath = joinPath(config.prepDir, 'spec.json')
+    await writeFile(specPath, JSON.stringify(specJson, null, 2))
 
-  // Read the hash from the last successful model build, if available
-  const modelHashPath = joinPath(config.prepDir, 'model-hash.txt')
-  let previousModelHash: string
-  if (existsSync(modelHashPath)) {
-    previousModelHash = readFileSync(modelHashPath, 'utf8')
-  } else {
-    previousModelHash = 'NONE'
-  }
+    // Read the hash from the last successful model build, if available
+    let previousModelHash: string
+    if (existsSync(modelHashPath)) {
+      previousModelHash = readFileSync(modelHashPath, 'utf8')
+    } else {
+      previousModelHash = 'NONE'
+    }
 
-  // The code gen and Wasm build steps are time consuming, so we avoid rebuilding
-  // it if the build input files are unchanged since the last successful build
-  const inputFilesHash = await computeInputFilesHash(config)
-  let needModelGen: boolean
-  if (options.forceModelGen === true) {
-    needModelGen = true
-  } else {
-    const hashMismatch = inputFilesHash !== previousModelHash
-    needModelGen = hashMismatch
-  }
+    // The code gen and Wasm build steps are time consuming, so we avoid rebuilding
+    // it if the build input files are unchanged since the last successful build
+    const inputFilesHash = await computeInputFilesHash(config)
+    let needModelGen: boolean
+    if (options.forceModelGen === true) {
+      needModelGen = true
+    } else {
+      const hashMismatch = inputFilesHash !== previousModelHash
+      needModelGen = hashMismatch
+    }
 
-  let succeeded = true
-  try {
     if (needModelGen) {
       // Generate the model
       await generateModel(context, plugins)

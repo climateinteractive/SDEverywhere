@@ -1,6 +1,6 @@
 import * as R from 'ramda'
 
-import { asort, lines, strlist, abend, mapIndexed } from '../_shared/helpers.js'
+import { asort, lines, strlist, mapIndexed } from '../_shared/helpers.js'
 import { sub, allDimensions, allMappings, subscriptFamilies } from '../_shared/subscript.js'
 import Model from '../model/model.js'
 
@@ -37,30 +37,26 @@ let codeGenerator = (parsedModel, opts) => {
   function generate() {
     // Read variables and subscript ranges from the model parse tree.
     // This is the main entry point for code generation and is called just once.
-    try {
-      Model.read(parsedModel, spec, extData, directData, modelDirname)
-      // In list mode, print variables to the console instead of generating code.
-      if (operations.includes('printRefIdTest')) {
-        Model.printRefIdTest()
-      }
-      if (operations.includes('printRefGraph')) {
-        Model.printRefGraph(opts.varname)
-      }
-      if (operations.includes('convertNames')) {
-        // Do not generate output, but leave the results of model analysis.
-      }
-      if (operations.includes('generateC')) {
-        // Generate code for each variable in the proper order.
-        let code = emitDeclCode()
-        code += emitInitLookupsCode()
-        code += emitInitConstantsCode()
-        code += emitInitLevelsCode()
-        code += emitEvalCode()
-        code += emitIOCode()
-        return code
-      }
-    } catch (e) {
-      abend(e)
+    Model.read(parsedModel, spec, extData, directData, modelDirname)
+    // In list mode, print variables to the console instead of generating code.
+    if (operations.includes('printRefIdTest')) {
+      Model.printRefIdTest()
+    }
+    if (operations.includes('printRefGraph')) {
+      Model.printRefGraph(opts.varname)
+    }
+    if (operations.includes('convertNames')) {
+      // Do not generate output, but leave the results of model analysis.
+    }
+    if (operations.includes('generateC')) {
+      // Generate code for each variable in the proper order.
+      let code = emitDeclCode()
+      code += emitInitLookupsCode()
+      code += emitInitConstantsCode()
+      code += emitInitLevelsCode()
+      code += emitEvalCode()
+      code += emitIOCode()
+      return code
     }
   }
 

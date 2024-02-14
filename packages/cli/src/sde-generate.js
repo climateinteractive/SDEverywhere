@@ -43,8 +43,13 @@ export let builder = {
     alias: 'r'
   }
 }
-export let handler = argv => {
-  generate(argv.model, argv)
+export let handler = async argv => {
+  try {
+    await generate(argv.model, argv)
+  } catch (e) {
+    console.error(e)
+    process.exit(1)
+  }
 }
 
 export let generate = async (model, opts) => {

@@ -35,8 +35,16 @@ export async function readDat(pathname, prefix = '') {
     }
   }
 
-  return new Promise(resolve => {
-    let stream = byline(fs.createReadStream(pathname, 'utf8'))
+  return new Promise((resolve, reject) => {
+    // Errors from the read stream aren't propagated by the byline package
+    // so we attach the error handler to `readStream` rather than to `stream`
+    let readStream = fs.createReadStream(pathname, 'utf8')
+    let stream = byline(readStream)
+    readStream.on('error', e => {
+      stream.destroy()
+      reject(new Error(`Failed to read dat file: ${e.message}`))
+    })
+
     stream.on('data', line => {
       let values = splitDatLine(line)
       if (values.length === 1) {
@@ -63,6 +71,7 @@ export async function readDat(pathname, prefix = '') {
       lineNum++
       // if (lineNum % 1e5 === 0) console.log(num(lineNum).format('0,0'))
     })
+
     stream.on('end', () => {
       addValues()
       resolve(log)

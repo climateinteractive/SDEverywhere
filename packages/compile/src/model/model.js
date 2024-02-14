@@ -454,9 +454,7 @@ function removeUnusedVariables(spec) {
           recordUsedVariable(refVar)
           recordRefsOfVariable(refVar)
         } else {
-          console.error(`No var found for ${refId}`)
-          console.error(v)
-          process.exit(1)
+          throw new Error(`No var found for ${refId} when recording references for ${v.varName}`)
         }
       }
     }
@@ -877,13 +875,7 @@ function sortVarsOfType(varType) {
   // Sort into an lhs dependency list.
   if (PRINT_AUX_GRAPH) printDepsGraph(graph, 'AUX')
   if (PRINT_LEVEL_GRAPH) printDepsGraph(graph, 'LEVEL')
-  let deps
-  try {
-    deps = toposort(graph).reverse()
-  } catch (e) {
-    console.error(e.message)
-    process.exit(1)
-  }
+  let deps = toposort(graph).reverse()
 
   // Turn the dependency-sorted var name list into a var list.
   let sortedVars = varsOfType(
@@ -978,13 +970,7 @@ function sortInitVars() {
   if (PRINT_INIT_GRAPH) printDepsGraph(graph, 'INIT')
 
   // Sort into a reference id dependency list.
-  let deps
-  try {
-    deps = toposort(graph).reverse()
-  } catch (e) {
-    console.error(e.message)
-    process.exit(1)
-  }
+  let deps = toposort(graph).reverse()
 
   // Turn the reference id list into a var list.
   let sortedVars = R.map(refId => varWithRefId(refId), deps)
