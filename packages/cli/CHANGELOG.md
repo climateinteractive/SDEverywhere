@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.17](https://github.com/climateinteractive/SDEverywhere/compare/cli-v0.7.16...cli-v0.7.17) (2024-02-15)
+
+
+### Bug Fixes
+
+* require Node.js v18 as minimum supported version ([#432](https://github.com/climateinteractive/SDEverywhere/issues/432)) ([f08d608](https://github.com/climateinteractive/SDEverywhere/commit/f08d60891fac47b008d29b24b63d737935f2563d)), closes [#431](https://github.com/climateinteractive/SDEverywhere/issues/431)
+
 ## [0.7.16](https://github.com/climateinteractive/SDEverywhere/compare/cli-v0.7.15...cli-v0.7.16) (2024-01-17)
 
 

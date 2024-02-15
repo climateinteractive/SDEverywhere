@@ -1,6 +1,6 @@
 {
   "packages/compile": "0.7.11",
-  "packages/cli": "0.7.16",
+  "packages/cli": "0.7.17",
   "packages/build": "0.3.3",
   "packages/check-core": "0.1.1",
   "packages/check-ui-shell": "0.2.3",
