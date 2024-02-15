@@ -26,6 +26,9 @@
     "shelljs": "^0.8.3",
     "yargs": "^17.5.1"
   },
+  "engines": {
+    "node": ">=18"
+  },
   "author": "Climate Interactive",
   "license": "MIT",
   "homepage": "https://sdeverywhere.org",
