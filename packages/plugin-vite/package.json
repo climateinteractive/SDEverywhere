@@ -35,7 +35,7 @@
   },
   "devDependencies": {
     "@sdeverywhere/build": "*",
-    "vite": "^4.4.9"
+    "vite": "^4.5.2"
   },
   "author": "Climate Interactive",
   "license": "MIT",
