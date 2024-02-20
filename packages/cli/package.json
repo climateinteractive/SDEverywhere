@@ -1,6 +1,6 @@
 {
   "name": "@sdeverywhere/cli",
-  "version": "0.7.16",
+  "version": "0.7.17",
   "description": "Contains the `sde` command line interface for the SDEverywhere tool suite.",
   "type": "module",
   "files": [
@@ -25,6 +25,9 @@
     "ramda": "^0.27.0",
     "shelljs": "^0.8.3",
     "yargs": "^17.5.1"
+  },
+  "engines": {
+    "node": ">=18"
   },
   "author": "Climate Interactive",
   "license": "MIT",

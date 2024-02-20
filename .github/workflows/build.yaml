@@ -50,17 +50,17 @@ jobs:
           git config --global core.eol lf
 
       - name: Check out repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: 16
+          node-version: 18
 
       # The pnpm caching strategy in the following steps is based on:
       #   https://github.com/pnpm/action-setup#use-cache-to-reduce-installation-time
       - name: Install pnpm
-        uses: pnpm/action-setup@v2.2.4
+        uses: pnpm/action-setup@v3.0.0
         with:
           version: 8
 
@@ -76,7 +76,7 @@ jobs:
         run: echo "pnpm_cache_dir=$(pnpm store path)" >> $GITHUB_OUTPUT
 
       - name: Enable pnpm cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ${{ steps.pnpm-cache.outputs.pnpm_cache_dir }}
           key: pnpm-store-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
@@ -115,17 +115,17 @@ jobs:
           git config --global core.eol lf
 
       - name: Check out repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: 16
+          node-version: 18
 
       # The pnpm caching strategy in the following steps is based on:
       #   https://github.com/pnpm/action-setup#use-cache-to-reduce-installation-time
       - name: Install pnpm
-        uses: pnpm/action-setup@v2.2.4
+        uses: pnpm/action-setup@v3.0.0
         with:
           version: 8
 
@@ -141,7 +141,7 @@ jobs:
         run: echo "pnpm_cache_dir=$(pnpm store path)" >> $GITHUB_OUTPUT
 
       - name: Enable pnpm cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ${{ steps.pnpm-cache.outputs.pnpm_cache_dir }}
           key: pnpm-store-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
@@ -180,23 +180,23 @@ jobs:
           git config --global core.eol lf
 
       - name: Check out repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Enable Emscripten cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ${{env.EM_DIR}}
           key: emsdk-app-${{env.EM_VERSION}}-${{env.EM_KEY}}
 
       - name: Install Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: 16
+          node-version: 18
 
       # The pnpm caching strategy in the following steps is based on:
       #   https://github.com/pnpm/action-setup#use-cache-to-reduce-installation-time
       - name: Install pnpm
-        uses: pnpm/action-setup@v2.2.4
+        uses: pnpm/action-setup@v3.0.0
         with:
           version: 8
 
@@ -212,7 +212,7 @@ jobs:
         run: echo "pnpm_cache_dir=$(pnpm store path)" >> $GITHUB_OUTPUT
 
       - name: Enable pnpm cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ${{ steps.pnpm-cache.outputs.pnpm_cache_dir }}
           key: pnpm-store-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}

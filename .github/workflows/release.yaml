@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Run release-please
-        uses: GoogleCloudPlatform/release-please-action@v3
+        uses: GoogleCloudPlatform/release-please-action@v4
         id: release
         with:
           # Note that we need to use a custom token here because events triggered
@@ -27,21 +27,19 @@ jobs:
           # release-please action to trigger the `build` workflow when it pushes
           # to a `release-please` branch; using a custom token here makes it work.
           token: ${{ secrets.GH_ACCESS_TOKEN }}
-          command: manifest
-          monorepo-tags: true
 
       - name: Check out repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: 16
+          node-version: 18
 
       # The pnpm caching strategy in the following steps is based on:
       #   https://github.com/pnpm/action-setup#use-cache-to-reduce-installation-time
       - name: Install pnpm
-        uses: pnpm/action-setup@v2
+        uses: pnpm/action-setup@v3
         with:
           version: 8
 
@@ -50,7 +48,7 @@ jobs:
         run: echo "pnpm_cache_dir=$(pnpm store path)" >> $GITHUB_OUTPUT
 
       - name: Enable pnpm cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ${{ steps.pnpm-cache.outputs.pnpm_cache_dir }}
           key: pnpm-store-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
@@ -72,6 +70,6 @@ jobs:
           echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_ACCESS_TOKEN }}" > ~/.npmrc
 
       - name: Publish packages
-        if: ${{ steps.release.outputs.releases_created }}
+        if: ${{ steps.release.outputs.releases_created == 'true' }}
         run: |
           pnpm -r publish --access public
