@@ -42,7 +42,8 @@ export let bundle = async (configPath, verbose) => {
     process.exit(result.exitCode)
   } else {
     // Exit with a non-zero code if any step failed
-    console.error(`ERROR: ${result.error.message}\n`)
+    console.error(result.error)
+    console.error()
     process.exit(1)
   }
 }
