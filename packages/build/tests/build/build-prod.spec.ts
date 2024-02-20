@@ -169,8 +169,64 @@ describe('build in production mode', () => {
     it('in postBuild', async () => verify('postBuild'))
   })
 
+  // TODO: Not sure how to cause the preprocessor to fail, so this test is
+  // skipped for now
+  it.skip('should fail if preprocess step throws an error', async () => {
+    const modelSpec: ModelSpec = {
+      inputs: [{ varName: 'Y', defaultValue: 0, minValue: -10, maxValue: 10 }],
+      outputs: [{ varName: 'Z' }],
+      datFiles: []
+    }
+
+    const mdlDir = resolvePath(__dirname, '..', '_shared')
+    const userConfig: UserConfig = {
+      rootDir: resolvePath(__dirname, '..'),
+      prepDir: resolvePath(__dirname, 'sde-prep'),
+      modelFiles: [resolvePath(mdlDir, 'sample.mdl')],
+      modelSpec: async () => {
+        return modelSpec
+      }
+    }
+
+    const result = await build('production', buildOptions(userConfig))
+    if (result.isOk()) {
+      throw new Error('Expected err result but got: ' + result.value)
+    }
+
+    // TODO: This error message isn't helpful, but it's due to the fact that
+    // the `preprocess` function spawns an `sde` process rather than calling
+    // into the compiler directly.  Once we improve it to call into the
+    // compiler, we can improve the error message.
+    expect(result.error.message).toBe(`Failed to flatten mdl files: 'sde flatten' command failed (code=1)`)
+  })
+
   it('should fail if flatten step throws an error', async () => {
-    expect(1 + 1).toBe(3)
+    const modelSpec: ModelSpec = {
+      inputs: [{ varName: 'Y', defaultValue: 0, minValue: -10, maxValue: 10 }],
+      outputs: [{ varName: 'Z' }],
+      datFiles: []
+    }
+
+    const mdlDir = resolvePath(__dirname, '..', '_shared')
+    const userConfig: UserConfig = {
+      rootDir: resolvePath(__dirname, '..'),
+      prepDir: resolvePath(__dirname, 'sde-prep'),
+      modelFiles: [resolvePath(mdlDir, 'submodel1.mdl'), resolvePath(mdlDir, 'submodel2.mdl')],
+      modelSpec: async () => {
+        return modelSpec
+      }
+    }
+
+    const result = await build('production', buildOptions(userConfig))
+    if (result.isOk()) {
+      throw new Error('Expected err result but got: ' + result.value)
+    }
+
+    // TODO: This error message isn't helpful, but it's due to the fact that
+    // the `flatten` function spawns an `sde` process rather than calling
+    // into the compiler directly.  Once we improve it to call into the
+    // compiler, we can improve the error message.
+    expect(result.error.message).toBe(`Failed to flatten mdl files: 'sde flatten' command failed (code=1)`)
   })
 
   it('should fail if generate step throws an error when dat file cannot be read', async () => {
