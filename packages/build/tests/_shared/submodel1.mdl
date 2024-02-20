@@ -8,7 +8,11 @@ Y = 0
   |
 
 Z = X + Y
-  ~~|
+  ~
+  ~ This is used for the "flatten" test in `build-prod.spec.ts`. \
+    It intentionally has a different definition than the Z equation \
+    in `submodel2.mdl` to trigger a flatten error.
+  |
 
 INITIAL TIME = 2000 ~~|
 FINAL TIME = 2100 ~~|
