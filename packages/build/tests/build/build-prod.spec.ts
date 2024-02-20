@@ -130,6 +130,49 @@ describe('build in production mode', () => {
     ])
   })
 
+  describe('should fail if plugin throws error', () => {
+    async function buildSample(plugin: Plugin): Promise<string> {
+      const userConfig: UserConfig = {
+        rootDir: resolvePath(__dirname, '..'),
+        prepDir: resolvePath(__dirname, 'sde-prep'),
+        modelFiles: [resolvePath(__dirname, '..', '_shared', 'sample.mdl')],
+        modelSpec: async () => {
+          return modelSpec
+        },
+        plugins: [plugin]
+      }
+
+      const result = await build('production', buildOptions(userConfig))
+      if (result.isOk()) {
+        throw new Error('Expected err result but got: ' + result.value)
+      }
+
+      return result.error.message
+    }
+
+    async function verify(pluginFunc: keyof Plugin): Promise<void> {
+      const plugin = {} as Plugin
+      plugin[pluginFunc] = async () => {
+        throw new Error(`${pluginFunc} error`)
+      }
+      const msg = await buildSample(plugin)
+      expect(msg).toBe(`${pluginFunc} error`)
+    }
+
+    it('in init', async () => verify('init'))
+    it('in preGenerate', async () => verify('preGenerate'))
+    it('in preProcessMdl', async () => verify('preProcessMdl'))
+    it('in postProcessMdl', async () => verify('postProcessMdl'))
+    it('in preGenerateC', async () => verify('preGenerateC'))
+    it('in postGenerateC', async () => verify('postGenerateC'))
+    it('in postGenerate', async () => verify('postGenerate'))
+    it('in postBuild', async () => verify('postBuild'))
+  })
+
+  it('should fail if flatten step throws an error', async () => {
+    expect(1 + 1).toBe(3)
+  })
+
   it('should fail if generate step throws an error when dat file cannot be read', async () => {
     const modelSpec: ModelSpec = {
       inputs: [{ varName: 'Y', defaultValue: 0, minValue: -10, maxValue: 10 }],
@@ -155,10 +198,6 @@ describe('build in production mode', () => {
     // the `generateC` function spawns an `sde` process rather than calling
     // into the compiler directly.  Once we improve it to call into the
     // compiler, the error message here should be the one from `readDat`.
-    expect(result.error.message).toBe('Child process failed (code=1)')
-  })
-
-  it('should fail if flatten step throws an error', async () => {
-    expect(1 + 1).toBe(3)
+    expect(result.error.message).toBe(`Failed to generate C code: 'sde generate' command failed (code=1)`)
   })
 })

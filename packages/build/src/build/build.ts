@@ -73,16 +73,14 @@ export async function build(mode: BuildMode, options: BuildOptions): Promise<Res
   const overlayEnabled = mode === 'development'
   setOverlayFile(messagesPath, overlayEnabled)
 
-  // Initialize plugins
-  const plugins = userConfig.plugins || []
-  for (const plugin of plugins) {
-    if (plugin.init) {
-      await plugin.init(resolvedConfig)
-    }
-  }
-
   try {
+    // Initialize plugins
     const plugins = userConfig.plugins || []
+    for (const plugin of plugins) {
+      if (plugin.init) {
+        await plugin.init(resolvedConfig)
+      }
+    }
 
     if (mode === 'development') {
       // Enable dev mode (which will rebuild when watched files are changed).

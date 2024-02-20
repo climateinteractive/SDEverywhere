@@ -62,7 +62,7 @@ export async function buildOnce(
     // Run plugins that implement `preGenerate`
     for (const plugin of plugins) {
       if (plugin.preGenerate) {
-        plugin.preGenerate(context, modelSpec)
+        await plugin.preGenerate(context, modelSpec)
       }
     }
 
