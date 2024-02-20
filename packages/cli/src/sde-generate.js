@@ -48,6 +48,7 @@ export let handler = async argv => {
     await generate(argv.model, argv)
   } catch (e) {
     console.error(e)
+    console.error()
     process.exit(1)
   }
 }
