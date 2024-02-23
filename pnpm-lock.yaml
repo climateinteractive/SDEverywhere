@@ -456,7 +456,7 @@ importers:
   packages/plugin-vite:
     devDependencies:
       '@sdeverywhere/build':
-        specifier: 0.3.4
+        specifier: '*'
         version: link:../build
       vite:
         specifier: ^4.4.9
