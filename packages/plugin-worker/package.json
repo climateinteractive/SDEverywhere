@@ -1,6 +1,6 @@
 {
   "name": "@sdeverywhere/plugin-worker",
-  "version": "0.2.4",
+  "version": "0.2.3",
   "files": [
     "dist/**",
     "template-worker/**"
@@ -36,10 +36,10 @@
     "vite": "4.4.9"
   },
   "peerDependencies": {
-    "@sdeverywhere/build": "^0.3.4"
+    "@sdeverywhere/build": "^0.3.0"
   },
   "devDependencies": {
-    "@sdeverywhere/build": "0.3.4",
+    "@sdeverywhere/build": "*",
     "@types/node": "^20.5.7"
   },
   "author": "Climate Interactive",
