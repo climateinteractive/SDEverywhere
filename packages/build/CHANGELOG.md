@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.4](https://github.com/climateinteractive/SDEverywhere/compare/build-v0.3.3...build-v0.3.4) (2024-02-23)
+
+
+### Bug Fixes
+
+* improve error handling/reporting and prevent premature exit in dev mode ([#434](https://github.com/climateinteractive/SDEverywhere/issues/434)) ([98ab523](https://github.com/climateinteractive/SDEverywhere/commit/98ab523907aa8ebe4dfe22eac0179ffb5364cd2a)), closes [#260](https://github.com/climateinteractive/SDEverywhere/issues/260)
+
 ## [0.3.3](https://github.com/climateinteractive/SDEverywhere/compare/build-v0.3.2...build-v0.3.3) (2024-01-17)
 
 

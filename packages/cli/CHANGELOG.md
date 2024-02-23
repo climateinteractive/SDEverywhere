@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.7.18](https://github.com/climateinteractive/SDEverywhere/compare/cli-v0.7.17...cli-v0.7.18) (2024-02-23)
+
+
+### Bug Fixes
+
+* improve error handling/reporting and prevent premature exit in dev mode ([#434](https://github.com/climateinteractive/SDEverywhere/issues/434)) ([98ab523](https://github.com/climateinteractive/SDEverywhere/commit/98ab523907aa8ebe4dfe22eac0179ffb5364cd2a)), closes [#260](https://github.com/climateinteractive/SDEverywhere/issues/260)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/build bumped from ^0.3.3 to ^0.3.4
+    * @sdeverywhere/compile bumped from ^0.7.11 to ^0.7.12
+
 ## [0.7.17](https://github.com/climateinteractive/SDEverywhere/compare/cli-v0.7.16...cli-v0.7.17) (2024-02-15)
 
 
