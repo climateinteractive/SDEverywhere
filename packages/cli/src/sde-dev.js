@@ -40,7 +40,8 @@ export let dev = async (configPath, verbose) => {
   // Exit with a non-zero code if any step failed, otherwise keep the
   // builder process alive
   if (!result.isOk()) {
-    console.error(`ERROR: ${result.error.message}\n`)
+    console.error(result.error)
+    console.error()
     process.exit(1)
   }
 }

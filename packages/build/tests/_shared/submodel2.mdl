@@ -1,0 +1,13 @@
+{UTF-8}
+
+Z = 10
+  ~
+  ~ This is used for the "flatten" test in `build-prod.spec.ts`. \
+    It intentionally has a different definition than the Z equation \
+    in `submodel1.mdl` to trigger a flatten error.
+  |
+
+INITIAL TIME = 2000 ~~|
+FINAL TIME = 2100 ~~|
+TIME STEP = 1 ~~|
+SAVEPER = TIME STEP ~~|

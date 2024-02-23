@@ -375,7 +375,3 @@ export let vlog = (title, value, depth = 1) => {
     console.trace()
   }
 }
-export let abend = error => {
-  console.error(error)
-  process.exit(1)
-}

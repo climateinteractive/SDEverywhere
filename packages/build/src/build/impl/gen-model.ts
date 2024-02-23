@@ -96,7 +96,14 @@ async function preprocessMdl(
   // Use SDE to preprocess the model to strip anything that's not needed to build it
   const command = sdeCmdPath
   const args = ['generate', '--preprocess', 'processed.mdl']
-  await context.spawnChild(prepDir, command, args)
+  const ppOutput = await context.spawnChild(prepDir, command, args, {
+    // The default error message from `spawnChild` is not very informative, so the
+    // following allows us to throw our own error
+    ignoreError: true
+  })
+  if (ppOutput.exitCode !== 0) {
+    throw new Error(`Failed to preprocess mdl file: 'sde generate' command failed (code=${ppOutput.exitCode})`)
+  }
 
   // Copy the processed file back to the prep directory
   await copyFile(joinPath(prepDir, 'build', 'processed.mdl'), joinPath(prepDir, 'processed.mdl'))
@@ -148,9 +155,9 @@ async function flattenMdls(
         log('error', `  ${line}`)
       }
     }
-    throw new Error(`Flatten command failed (code=${output.exitCode})`)
+    throw new Error(`Failed to flatten mdl files: 'sde flatten' command failed (code=${output.exitCode})`)
   } else if (output.exitCode !== 0) {
-    throw new Error(`Flatten command failed (code=${output.exitCode})`)
+    throw new Error(`Failed to flatten mdl files: 'sde flatten' command failed (code=${output.exitCode})`)
   }
 
   // Copy the processed file back to the prep directory
@@ -167,11 +174,17 @@ async function generateC(context: BuildContext, sdeDir: string, sdeCmdPath: stri
   // dimensions and variables (`--list`)
   const command = sdeCmdPath
   const gencArgs = ['generate', '--genc', '--list', '--spec', 'spec.json', 'processed']
-  await context.spawnChild(prepDir, command, gencArgs, {
+  const gencOutput = await context.spawnChild(prepDir, command, gencArgs, {
     // By default, ignore lines that start with "WARNING: Data for" since these are often harmless
     // TODO: Don't filter by default, but make it configurable
     // ignoredMessageFilter: 'WARNING: Data for'
+    // The default error message from `spawnChild` is not very informative, so the
+    // following allows us to throw our own error
+    ignoreError: true
   })
+  if (gencOutput.exitCode !== 0) {
+    throw new Error(`Failed to generate C code: 'sde generate' command failed (code=${gencOutput.exitCode})`)
+  }
 
   // Copy SDE's supporting C files into the build directory
   const buildDir = joinPath(prepDir, 'build')

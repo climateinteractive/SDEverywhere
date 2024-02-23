@@ -135,8 +135,14 @@ async function buildWasm(
 
   // context.log('verbose', `    emcc args: ${args}`)
 
-  await context.spawnChild(prepDir, command, args, {
+  const emccOutput = await context.spawnChild(prepDir, command, args, {
     // Ignore unhelpful Emscripten SDK cache messages
-    ignoredMessageFilter: 'cache:INFO'
+    ignoredMessageFilter: 'cache:INFO',
+    // The default error message from `spawnChild` is not very informative, so the
+    // following allows us to throw our own error
+    ignoreError: true
   })
+  if (emccOutput.exitCode !== 0) {
+    throw new Error(`Failed to compile C model to WebAssembly: emcc command failed (code=${emccOutput.exitCode})`)
+  }
 }
