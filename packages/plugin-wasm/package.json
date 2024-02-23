@@ -33,7 +33,7 @@
     "find-up": "^6.3.0"
   },
   "peerDependencies": {
-    "@sdeverywhere/build": "^0.3.4"
+    "@sdeverywhere/build": "^0.3.0"
   },
   "devDependencies": {
     "@sdeverywhere/build": "*",
