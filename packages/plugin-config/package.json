@@ -35,7 +35,7 @@
   "dependencies": {
     "byline": "^5.0.0",
     "csv-parse": "^5.3.3",
-    "sanitize-html": "^2.7.1"
+    "sanitize-html": "^2.12.1"
   },
   "peerDependencies": {
     "@sdeverywhere/build": "^0.3.1"
