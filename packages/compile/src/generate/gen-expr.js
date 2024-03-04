@@ -8,6 +8,7 @@ import Model from '../model/model.js'
  *
  * @param {*} variable The `Variable` instance to process.
  * @param {'decl' | 'init-constants' | 'init-lookups' | 'init-levels' | 'eval'} mode The code generation mode.
+ * @param {'c' | 'js'} outFormat The output format.
  * @param {string} cLhs The C code for the LHS variable reference.
  * @param {LoopIndexVars} loopIndexVars The loop index state used for LHS dimensions.
  * @param {LoopIndexVars} arrayIndexVars The loop index state used for array functions (that use marked dimensions).
@@ -107,10 +108,10 @@ export function generateExpr(expr, ctx) {
         let op
         switch (expr.op) {
           case '=':
-            op = '=='
+            op = ctx.outFormat === 'js' ? '===' : '=='
             break
           case '<>':
-            op = '!='
+            op = ctx.outFormat === 'js' ? '!==' : '!='
             break
           case ':AND:':
             op = '&&'
@@ -612,11 +613,12 @@ function generateArrayFunctionCall(callExpr, ctx) {
   }
 
   // Open the array function loop(s)
+  const indexDecl = ctx.outFormat === 'js' ? 'let' : 'size_t'
   for (const markedDimId of markedDimIds) {
     ctx.addMarkedDim(markedDimId)
     const n = sub(markedDimId).size
     const i = ctx.arrayIndexVars.index(markedDimId)
-    ctx.emitPreFormula(`  for (size_t ${i} = 0; ${i} < ${n}; ${i}++) {`)
+    ctx.emitPreFormula(`  for (${indexDecl} ${i} = 0; ${i} < ${n}; ${i}++) {`)
   }
 
   // Emit the body of the array function loop.  Note that we generate the expression code here

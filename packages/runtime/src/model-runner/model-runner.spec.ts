@@ -51,6 +51,41 @@ function createMockWasmModel() {
   return initWasmModelAndBuffers(wasmModule, 3, ['_output_1', '_output_2'])
 }
 
+describe('createCoreRunner', () => {
+  let runner: ModelRunner
+
+  beforeEach(async () => {
+    // TODO
+    // runner = createWasmModelRunner(createMockWasmModel())
+  })
+
+  afterEach(async () => {
+    if (runner) {
+      await runner.terminate()
+    }
+  })
+
+  it('should run the model', async () => {
+    expect(runner).toBeDefined()
+    const inputs = [createInputValue('_input_1', 0), createInputValue('_input_2', 0), createInputValue('_input_3', 0)]
+    const inOutputs = runner.createOutputs()
+    const outOutputs = await runner.runModel(inputs, inOutputs)
+    expect(outOutputs).toBeDefined()
+    expect(outOutputs.runTimeInMillis).toBeGreaterThan(0)
+    expect(outOutputs.getSeriesForVar('_output_1').getValueAtTime(2000)).toBe(6)
+    expect(outOutputs.getSeriesForVar('_output_2').getValueAtTime(2100)).toBe(7)
+  })
+
+  it('should throw an error if runModel is called after the runner has been terminated', async () => {
+    expect(runner).toBeDefined()
+
+    await runner.terminate()
+
+    const outputs = runner.createOutputs()
+    await expect(runner.runModel([], outputs)).rejects.toThrow('Model runner has already been terminated')
+  })
+})
+
 describe('createWasmModelRunner', () => {
   let runner: ModelRunner
 

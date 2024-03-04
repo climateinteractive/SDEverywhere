@@ -30,10 +30,11 @@ import LoopIndexVars from './loop-index-vars.js'
  * @param {Map<string, any>} directData The mapping of dataset name used in a `GET DIRECT DATA` call (e.g.,
  * `?data`) to the tabular data contained in the loaded data file.
  * @param {string} modelDir The path to the directory containing the model (used for resolving data files).
+ * @param {'c' | 'js'} outFormat The output format.
  * @return {string[]} An array of strings containing the generated C code for the variable,
  * one string per line of code.
  */
-export function generateEquation(variable, mode, extData, directData, modelDir) {
+export function generateEquation(variable, mode, extData, directData, modelDir, outFormat = 'c') {
   // Maps of LHS subscript families to loop index vars for lookup on the RHS
   const loopIndexVars = new LoopIndexVars(['i', 'j', 'k', 'l', 'm'])
   const arrayIndexVars = new LoopIndexVars(['u', 'v', 'w', 's', 't', 'f', 'g', 'h', 'o', 'p', 'q', 'r'])
@@ -68,12 +69,13 @@ export function generateEquation(variable, mode, extData, directData, modelDir) 
 
   // Turn each dimension ID into a loop with a loop index variable.
   // If the variable has no subscripts, nothing will be emitted here.
+  const indexDecl = outFormat === 'js' ? 'let' : 'size_t'
   const openLoops = []
   const closeLoops = []
   for (const dimId of dimIds) {
     const indexName = loopIndexVars.index(dimId)
     const dimLength = sub(dimId).size
-    openLoops.push(`  for (size_t ${indexName} = 0; ${indexName} < ${dimLength}; ${indexName}++) {`)
+    openLoops.push(`  for (${indexDecl} ${indexName} = 0; ${indexName} < ${dimLength}; ${indexName}++) {`)
     closeLoops.push('  }')
   }
 
@@ -125,6 +127,7 @@ export function generateEquation(variable, mode, extData, directData, modelDir) 
   const genExprCtx = {
     variable,
     mode,
+    outFormat,
     cLhs,
     loopIndexVars,
     arrayIndexVars,
