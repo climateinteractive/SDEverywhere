@@ -4,3 +4,7 @@ export type { InputVarId, OutputVarId, OutputVarSpec } from './_shared'
 export * from './wasm-model'
 export * from './model-runner'
 export * from './model-scheduler'
+
+// XXX
+export * from './model-core/model-core'
+export * from './model-core/model-core-runner'

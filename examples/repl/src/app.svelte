@@ -3,19 +3,20 @@
 
 import './global.css'
 
+import { createCoreRunner } from '@sdeverywhere/runtime'
+
 import type { GraphViewModel } from './components/graph/graph-vm'
 import Graph from './components/graph/graph.svelte'
 
 import type { GeneratedModel } from './app-vm'
 import {
   createModelCore,
-  readInlineModelAndGenerateJS,
-  runModel
+  readInlineModelAndGenerateJS
 } from './app-vm'
 
 const initialTime = 2000
-const finalTime = 2002
-const numSavePoints = finalTime - initialTime + 1
+const finalTime = 2005
+// const numSavePoints = finalTime - initialTime + 1
 const mdl = `\
 x = TIME ~~|
 
@@ -32,7 +33,7 @@ let graphKey = 0
 let graphViewModel: GraphViewModel
 
 async function onGo() {
-  const outputVarNames = ['x', 'y']
+  // const outputVarNames = ['x', 'y']
   // generatedModel = readInlineModelAndGenerateJS(mdl, {
   //   inputVarNames: [],
   //   outputVarNames
@@ -44,27 +45,32 @@ async function onGo() {
   const core = await createModelCore(generatedModel.jsCode)
   console.log(core)
 
-  const inputs: number[] = []
-  const outputs: number[] = Array(outputVarNames.length * numSavePoints)
-  runModel(core, inputs, outputs)
+  const runner = createCoreRunner(core)
+  let outputs = runner.createOutputs()
+  outputs = runner.runModelSync([], outputs)
   console.log(outputs)
+
+  // graphViewModel = {
+  //   key: `${graphKey++}`,
+  //   points: [
+  //     {
+  //       x: 2000,
+  //       y: 100 + Math.random() * 50,
+  //     },
+  //     {
+  //       x: 2001,
+  //       y: 200
+  //     },
+  //     {
+  //       x: 2002,
+  //       y: 180
+  //     }
+  //   ]
+  // }
 
   graphViewModel = {
     key: `${graphKey++}`,
-    points: [
-      {
-        x: 2000,
-        y: 100 + Math.random() * 50,
-      },
-      {
-        x: 2001,
-        y: 200
-      },
-      {
-        x: 2002,
-        y: 180
-      }
-    ]
+    points: outputs.getSeriesForVar('_y').points
   }
 }
 

@@ -57,14 +57,17 @@ function readInlineModelAndGenerateJS(
 }
 
 interface ModelCore {
+  outputVarIds: string[]
+
   getInitialTime(): number
   getFinalTime(): number
   getTimeStep(): number
-  getSaveStep(): number
+  getSaveFreq(): number
+
   setTime(time: number): void
 
-  setInputs(inputs: number[]): void
-  storeOutputs(outputs: number[], storeValue: (value: number) => void): void
+  setInputs(inputValue: (index: number) => number): void
+  storeOutputs(storeValue: (value: number) => void): void
 
   initConstants(): void
   initLevels(): void
@@ -97,12 +100,12 @@ function runModel(core: ModelCore, inputs: number[], outputs: number[]) {
 
   // These values will be initialized after the first call to `evalAux` (see
   // note in main loop below)
-  let saveStep: number
+  let saveFreq: number
   let numSavePoints: number
 
   // Set the user-defined input values.  This needs to happen after `initConstants`
   // since the input values will override the default constant values.
-  core.setInputs(inputs)
+  core.setInputs(index => inputs[index])
 
   // Initialize level variables
   core.initLevels()
@@ -117,16 +120,16 @@ function runModel(core: ModelCore, inputs: number[], outputs: number[]) {
     // Evaluate aux variables
     core.evalAux()
 
-    if (saveStep === undefined) {
+    if (saveFreq === undefined) {
       // Note that many Vensim models set `SAVEPER = TIME STEP`, in which case SDE
       // treats `SAVEPER` as an aux rather than a constant.  Therefore, we need to
       // initialize `numSavePoints` here, after the first `evalAux` call, to be
       // certain that `_saveper` has been initialized before it is used.
-      saveStep = core.getSaveStep()
-      numSavePoints = Math.round((finalTime - initialTime) / saveStep) + 1
+      saveFreq = core.getSaveFreq()
+      numSavePoints = Math.round((finalTime - initialTime) / saveFreq) + 1
     }
 
-    if (time % saveStep < 1e-6) {
+    if (time % saveFreq < 1e-6) {
       outputVarIndex = 0
       if (useOutputIndices) {
         //         // Store the outputs as specified in the current output index buffer
@@ -145,7 +148,7 @@ function runModel(core: ModelCore, inputs: number[], outputs: number[]) {
         //         }
       } else {
         // Store the normal outputs
-        core.storeOutputs(outputs, value => {
+        core.storeOutputs(value => {
           // Write each value into the preallocated buffer; each variable has a "row" that
           // contains `numSavePoints` values, one value for each save point
           const outputBufferIndex = outputVarIndex * numSavePoints + savePointIndex
@@ -174,18 +177,26 @@ function runModel(core: ModelCore, inputs: number[], outputs: number[]) {
 describe('generateCode (Vensim -> JS)', () => {
   it.only('should work for simple model', () => {
     const mdl = `
-      x = 1 ~~|
+      input = 1 ~~|
+      x = input ~~|
       y = :NOT: x ~~|
     `
-    const code = readInlineModelAndGenerateJS(mdl)
+    const code = readInlineModelAndGenerateJS(mdl, {
+      inputVarNames: ['input'],
+      outputVarNames: ['x', 'y']
+    })
     // console.log(code)
     expect(code).toEqual(`\
 // Model variables
+let _input;
 let _x;
 let _y;
 
-// Internal variables
-const numOutputs = 3;
+// Output variable identifiers
+export const outputVarIds = [
+  '_x',
+  '_y'
+]
 
 // Array dimensions
 
@@ -197,21 +208,45 @@ const numOutputs = 3;
 
 
 
-// Control variables
+// Time variable
 let _time;
 export function setTime(time) {
   _time = time;
 }
+
+// Control variables
+let controlParamsInitialized = false;
+function initControlParamsIfNeeded() {
+  if (controlParamsInitialized) {
+    return;
+  }
+
+  // Some models may define the control parameters as variables that are
+  // dependent on other values that are only known at runtime (after running
+  // the initializers and/or one step of the model), so we need to perform
+  // those steps once before the parameters are accessed
+  // TODO: This approach doesn't work if one or more control parameters are
+  // defined in terms of some value that is provided at runtime as an input
+  initConstants();
+  initLevels();
+  _time = _initial_time;
+  evalAux();
+  controlParamsInitialized = true;
+}
 export function getInitialTime() {
+  initControlParamsIfNeeded();
   return _initial_time;
 }
 export function getFinalTime() {
+  initControlParamsIfNeeded();
   return _final_time;
 }
 export function getTimeStep() {
+  initControlParamsIfNeeded();
   return _time_step;
 }
-export function getSaveStep() {
+export function getSaveFreq() {
+  initControlParamsIfNeeded();
   return _saveper;
 }
 
@@ -246,8 +281,8 @@ function initData() {
 
 
 function initConstants0() {
-    // x = 1
-  _x = 1.0;
+    // input = 1
+  _input = 1.0;
 }
 
 
@@ -273,7 +308,9 @@ export function initLevels() {
 
 
 function evalAux0() {
-    // y = :NOT: x
+    // x = input
+  _x = _input;
+  // y = :NOT: x
   _y = !_x;
 }
 
@@ -295,14 +332,15 @@ export function evalLevels() {
 }
     
 
-export function setInputs(inputs /*: number[]*/) {}
-
-function getHeader() {
-  return "Time\\tx\\ty";
+export function setInputs(valueAtIndex /*: (index: number) => number*/) {
+  _input = valueAtIndex(0);
 }
 
-export function storeOutputs(outputs /*: number[]*/, storeValue /*: (value: number) => void*/) {
-  storeValue(_time);
+function getHeader() {
+  return "x\\ty";
+}
+
+export function storeOutputs(storeValue /*: (value: number) => void*/) {
   storeValue(_x);
   storeValue(_y);
 }
@@ -310,10 +348,10 @@ export function storeOutputs(outputs /*: number[]*/, storeValue /*: (value: numb
 export function storeOutput(varIndex, subIndex0, subIndex1, subIndex2, storeValue /*: (value: number) => void*/) {
   switch (varIndex) {
     case 1:
-      storeValue(_x);
+      storeValue(_input);
       break;
     case 2:
-      storeValue(_time);
+      storeValue(_x);
       break;
     case 3:
       storeValue(_y);

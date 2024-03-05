@@ -11,20 +11,24 @@ import type { ModelCore } from './model-core'
  *
  * @param modelCore A `ModelCore` instance.
  */
-export function createCoreRunner(modelCore: ModelCore): ModelRunner {
+export function createCoreRunner(core: ModelCore): ModelRunner {
+  // Track whether the runner has been terminated
   let terminated = false
 
   return {
     createOutputs(): Outputs {
-      // return new Outputs(wasmResult.outputVarIds, wasmModel.startTime, wasmModel.endTime, wasmModel.saveFreq)
-      return new Outputs()
+      const outputVarIds = core.outputVarIds
+      const initialTime = core.getInitialTime()
+      const finalTime = core.getFinalTime()
+      const saveFreq = core.getSaveFreq()
+      return new Outputs(outputVarIds, initialTime, finalTime, saveFreq)
     },
 
     async runModel(inputs: InputValue[], outputs: Outputs): Promise<Outputs> {
       if (terminated) {
         throw new Error('Model runner has already been terminated')
       }
-      runModelSync(inputs, outputs)
+      runModelSync(core, inputs, outputs)
       return outputs
     },
 
@@ -32,7 +36,7 @@ export function createCoreRunner(modelCore: ModelCore): ModelRunner {
       if (terminated) {
         throw new Error('Model runner has already been terminated')
       }
-      runModelSync(inputs, outputs)
+      runModelSync(core, inputs, outputs)
       return outputs
     },
 
@@ -45,33 +49,30 @@ export function createCoreRunner(modelCore: ModelCore): ModelRunner {
   }
 }
 
-function runModelSync(core: ModelCore, inputs: number[], outputs: number[]) {
+function runModelSync(core: ModelCore, inputs: InputValue[], outputs: Outputs) {
   // TODO
   const useOutputIndices = false
 
-  // Initialize constants (including control variables)
-  core.initConstants()
-
-  // Get the control variable values
+  // Get the control variable values.  Note that this step will cause `initConstants`
+  // and `initLevels` and a first `evalAux` pass to ensure that `_saveper` is fully
+  // initialized in the case where it is non-constant.
   const finalTime = core.getFinalTime()
   const initialTime = core.getInitialTime()
   const timeStep = core.getTimeStep()
+  const saveFreq = core.getSaveFreq()
 
   // Initialize time with the required `INITIAL TIME` control variable
   let time = initialTime
   core.setTime(time)
 
-  // These values will be initialized after the first call to `evalAux` (see
-  // note in main loop below)
-  let saveStep: number
-  let numSavePoints: number
-
   // Set the user-defined input values.  This needs to happen after `initConstants`
   // since the input values will override the default constant values.
-  core.setInputs(inputs)
+  core.setInputs(index => inputs[index].get())
 
   // Initialize level variables
-  core.initLevels()
+  // TODO: initLevels should have already been called as part of the control variable
+  // init above, so we don't have to call it again here
+  // core.initLevels()
 
   // Set up a run loop using a fixed number of time steps
   let savePointIndex = 0
@@ -83,16 +84,7 @@ function runModelSync(core: ModelCore, inputs: number[], outputs: number[]) {
     // Evaluate aux variables
     core.evalAux()
 
-    if (saveStep === undefined) {
-      // Note that many Vensim models set `SAVEPER = TIME STEP`, in which case SDE
-      // treats `SAVEPER` as an aux rather than a constant.  Therefore, we need to
-      // initialize `numSavePoints` here, after the first `evalAux` call, to be
-      // certain that `_saveper` has been initialized before it is used.
-      saveStep = core.getSaveStep()
-      numSavePoints = Math.round((finalTime - initialTime) / saveStep) + 1
-    }
-
-    if (time % saveStep < 1e-6) {
+    if (time % saveFreq < 1e-6) {
       outputVarIndex = 0
       if (useOutputIndices) {
         //         // Store the outputs as specified in the current output index buffer
@@ -111,11 +103,11 @@ function runModelSync(core: ModelCore, inputs: number[], outputs: number[]) {
         //         }
       } else {
         // Store the normal outputs
-        core.storeOutputs(outputs, value => {
+        core.storeOutputs(value => {
           // Write each value into the preallocated buffer; each variable has a "row" that
           // contains `numSavePoints` values, one value for each save point
-          const outputBufferIndex = outputVarIndex * numSavePoints + savePointIndex
-          outputs[outputBufferIndex] = value
+          const series = outputs.varSeries[outputVarIndex]
+          series.points[savePointIndex].y = value
           outputVarIndex++
         })
       }

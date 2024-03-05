@@ -71,8 +71,10 @@ let codeGenerator = (parsedModel, opts) => {
 // Model variables
 ${declSection()}
 
-// Internal variables
-${internalVarsSection()}
+// Output variable identifiers
+export const outputVarIds = [
+${outputVarIdsSection()}
+]
 
 // Array dimensions
 ${arrayDimensionsSection()}
@@ -84,21 +86,45 @@ ${dimensionMappingsSection()}
 ${section(Model.lookupVars())}
 ${section(Model.dataVars())}
 
-// Control variables
+// Time variable
 let _time;
 export function setTime(time) {
   _time = time;
 }
+
+// Control variables
+let controlParamsInitialized = false;
+function initControlParamsIfNeeded() {
+  if (controlParamsInitialized) {
+    return;
+  }
+
+  // Some models may define the control parameters as variables that are
+  // dependent on other values that are only known at runtime (after running
+  // the initializers and/or one step of the model), so we need to perform
+  // those steps once before the parameters are accessed
+  // TODO: This approach doesn't work if one or more control parameters are
+  // defined in terms of some value that is provided at runtime as an input
+  initConstants();
+  initLevels();
+  _time = _initial_time;
+  evalAux();
+  controlParamsInitialized = true;
+}
 export function getInitialTime() {
+  initControlParamsIfNeeded();
   return _initial_time;
 }
 export function getFinalTime() {
+  initControlParamsIfNeeded();
   return _final_time;
 }
 export function getTimeStep() {
+  initControlParamsIfNeeded();
   return _time_step;
 }
-export function getSaveStep() {
+export function getSaveFreq() {
+  initControlParamsIfNeeded();
   return _saveper;
 }
 
@@ -186,13 +212,13 @@ ${chunkedFunctions('evalLevels', true, Model.levelVars(), '  // Evaluate levels.
     let outputVars = outputAllVars ? expandedVarNames() : spec.outputVars
     mode = 'io'
     return `
-export function setInputs(inputs /*: number[]*/) {${inputsFromBufferImpl()}}
+export function setInputs(valueAtIndex /*: (index: number) => number*/) {${inputsFromBufferImpl()}}
 
 function getHeader() {
   return "${R.map(varName => headerTitle(varName), headerVars).join('\\t')}";
 }
 
-export function storeOutputs(outputs /*: number[]*/, storeValue /*: (value: number) => void*/) {
+export function storeOutputs(storeValue /*: (value: number) => void*/) {
 ${specOutputSection(outputVars)}
 }
 
@@ -297,20 +323,24 @@ ${postStep}
     )
     return decls(Model.allVars()) + fixedDelayDecls + depreciationDecls
   }
-  function internalVarsSection() {
-    // Declare internal variables to run the model.
-    let decls
-    if (outputAllVars) {
-      decls = `const numOutputs = ${expandedVarNames().length};`
-    } else {
-      decls = `const numOutputs = ${spec.outputVars.length};`
-    }
-    // TODO
-    // decls += `\n#define SDE_USE_OUTPUT_INDICES 0`
-    // decls += `\n#define SDE_MAX_OUTPUT_INDICES 1000`
-    // decls += `\nconst int maxOutputIndices = SDE_USE_OUTPUT_INDICES ? SDE_MAX_OUTPUT_INDICES : 0;`
-    return decls
+  function outputVarIdsSection() {
+    let outputVarIds = outputAllVars ? expandedVarNames() : spec.outputVars
+    return `  ${outputVarIds.map(id => `'${id}'`).join(',\n  ')}`
   }
+  // function internalVarsSection() {
+  //   // Declare internal variables to run the model.
+  //   let decls
+  //   if (outputAllVars) {
+  //     decls = `const numOutputs = ${expandedVarNames().length};`
+  //   } else {
+  //     decls = `const numOutputs = ${spec.outputVars.length};`
+  //   }
+  //   // TODO
+  //   // decls += `\n#define SDE_USE_OUTPUT_INDICES 0`
+  //   // decls += `\n#define SDE_MAX_OUTPUT_INDICES 1000`
+  //   // decls += `\nconst int maxOutputIndices = SDE_USE_OUTPUT_INDICES ? SDE_MAX_OUTPUT_INDICES : 0;`
+  //   return decls
+  // }
   function arrayDimensionsSection() {
     // Emit a declaration for each array dimension's index numbers.
     // These index number arrays will be used to indirectly reference array elements.
@@ -400,7 +430,7 @@ ${postStep}
       inputVars += '\n'
       for (let i = 0; i < spec.inputVars.length; i++) {
         const inputVar = spec.inputVars[i]
-        inputVars += `  ${inputVar} = inputs[${i}];\n`
+        inputVars += `  ${inputVar} = valueAtIndex(${i});\n`
       }
     }
     return inputVars
