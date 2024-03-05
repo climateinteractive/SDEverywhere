@@ -127,17 +127,18 @@ export function printNames(namesPathname, operation) {
  * @param {string} input The string containing the model text.
  * @param {string} modelDir The absolute path to the directory containing the mdl file.
  * The dat, xlsx, and csv files referenced by the model will be relative to this directory.
- * @param {boolean} sort Whether to sort definitions alphabetically in the preprocess step.
+ * @param {Object} options The options that control parsing.
+ * @param {boolean} options.sort Whether to sort definitions alphabetically in the preprocess step.
  * @return {*} A parsed tree representation of the model.
  */
-export function parseModel(input, modelDir, sort = false) {
-  if (process.env.SDE_NONPUBLIC_USE_NEW_PARSE !== '1') {
-    // Use the legacy parser
-    return {
-      kind: 'vensim-legacy',
-      parseTree: legacyParseVensimModel(input)
-    }
-  }
+export function parseModel(input, modelDir, options) {
+  // if (process.env.SDE_NONPUBLIC_USE_NEW_PARSE !== '1') {
+  //   // Use the legacy parser
+  //   return {
+  //     kind: 'vensim-legacy',
+  //     parseTree: legacyParseVensimModel(input)
+  //   }
+  // }
 
   // Prepare the parse context that provides access to external data files
   let parseContext /*: VensimParseContext*/
@@ -160,6 +161,7 @@ export function parseModel(input, modelDir, sort = false) {
   // TODO: We currently sort the preprocessed definitions alphabetically for
   // compatibility with the legacy preprocessor.  Once we drop the legacy code
   // we could remove this step and update the tests to use the original order.
+  const sort = options?.sort === true
   const root = parseVensimModel(input, parseContext, sort)
 
   return {
