@@ -1,4 +1,4 @@
-# SDEverywhere &nbsp;&nbsp; ![](https://github.com/climateinteractive/SDEverywhere/actions/workflows/build.yaml/badge.svg)
+# SDEverywhere &nbsp;&nbsp; [![Build](https://github.com/climateinteractive/SDEverywhere/actions/workflows/release.yaml/badge.svg)](https://github.com/climateinteractive/SDEverywhere/actions/workflows/release.yaml)
 
 [SDEverywhere](http://sdeverywhere.org/) is a collection of libraries and command line tools that help you improve the quality and expand the reach of a [System Dynamics](http://www.systemdynamics.org/what-is-system-dynamics/) model.
 SDEverywhere allows for unit testing, continuous integration, the ability to compare model runs, and a toolchain to transform a model into C, JavaScript, and WebAssembly code.
