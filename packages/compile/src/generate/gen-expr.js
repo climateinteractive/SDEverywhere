@@ -486,7 +486,15 @@ function generateLevelEval(callExpr, ctx) {
       if (fnId === '_SAMPLE_IF_TRUE') {
         args.push(generateExpr(callExpr.args[1], ctx))
       }
-      return generateCall(args)
+      if (ctx.outFormat === 'js' && fnId === '_SAMPLE_IF_TRUE') {
+        // When generating conditional expressions for JS target, since we can't rely on macros like we do for C,
+        // it is better to translate it into a ternary instead of relying on a built-in function (since the latter
+        // would require always evaluating both branches, while the former can be more optimized by the interpreter)
+        return `((${args[1]}) ? (${args[2]}) : (${args[0]}))`
+      } else {
+        // In all other cases, generate a normal call
+        return generateCall(args)
+      }
     }
 
     default:

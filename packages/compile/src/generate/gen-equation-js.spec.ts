@@ -1729,7 +1729,7 @@ describe('generateEquation (Vensim -> JS)', () => {
     expect(genJS(vars.get('_input'))).toEqual(['_input = 5.0;'])
     expect(genJS(vars.get('_x'))).toEqual(['_x = 1.0;'])
     expect(genJS(vars.get('_y'), 'init-levels')).toEqual(['_y = _initial;'])
-    expect(genJS(vars.get('_y'), 'eval')).toEqual(['_y = fns.SAMPLE_IF_TRUE(_y, _time > _x, _input);'])
+    expect(genJS(vars.get('_y'), 'eval')).toEqual(['_y = ((_time > _x) ? (_input) : (_y));'])
   })
 
   it('should work for SIN function', () => {
