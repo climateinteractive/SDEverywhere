@@ -10,11 +10,12 @@ import { pointsString } from './gen-lookup-from-points.js'
  * @param {*} variable The `Variable` instance to process.
  * @param {'decl' | 'init-lookups'} mode The code generation mode.
  * @param {Map<string, any>} extData The map of datasets from external `.dat` files.
- * @param {string} varLhs The C code for the LHS variable reference.
- * @return {string[]} An array of strings containing the generated C code for the variable,
+ * @param {string} varLhs The C/JS code for the LHS variable reference.
+ * @param {'c' | 'js'} outFormat The output format.
+ * @return {string[]} An array of strings containing the generated C/JS code for the variable,
  * one string per line of code.
  */
-export function generateLookupsFromExternalData(variable, mode, extData, varLhs) {
+export function generateLookupsFromExternalData(variable, mode, extData, varLhs, outFormat) {
   if (mode !== 'decl' && mode !== 'init-lookups') {
     throw new Error(`Invalid code gen mode '${mode}' for data variable ${variable.modelLHS}`)
   }
@@ -37,10 +38,24 @@ export function generateLookupsFromExternalData(variable, mode, extData, varLhs)
       // In decl mode, declare a static data array that will be used to create the associated `Lookup`
       // at init time
       const points = pointsString(Array.from(data.entries()))
-      return `double ${dataName}[${data.size * 2}] = { ${points} };`
+      switch (outFormat) {
+        case 'c':
+          return `double ${dataName}[${data.size * 2}] = { ${points} };`
+        case 'js':
+          return `const ${dataName} = [${points}];`
+        default:
+          throw new Error(`Unhandled output format '${outFormat}'`)
+      }
     } else if (mode === 'init-lookups') {
       // In init mode, create the `Lookup`, passing in a pointer to the static data array declared in decl mode.
-      return `  ${lhs} = __new_lookup(${data.size}, /*copy=*/false, ${dataName});`
+      switch (outFormat) {
+        case 'c':
+          return `  ${lhs} = __new_lookup(${data.size}, /*copy=*/false, ${dataName});`
+        case 'js':
+          return `  ${lhs} = fns.createLookup(${data.size}, ${dataName});`
+        default:
+          throw new Error(`Unhandled output format '${outFormat}'`)
+      }
     } else {
       return []
     }

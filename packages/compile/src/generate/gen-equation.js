@@ -88,7 +88,7 @@ export function generateEquation(variable, mode, extData, directData, modelDir, 
       // The variable already has data points defined, so generate a new lookup using that data.
       // Note that unlike the other lookup cases, this one needs to include loop open/close code
       // if the variable is subscripted.
-      const lookupDef = generateLookupFromPoints(variable, mode, /*copy=*/ true, cLhs, loopIndexVars)
+      const lookupDef = generateLookupFromPoints(variable, mode, /*copy=*/ true, cLhs, loopIndexVars, outFormat)
       if (lookupDef.length > 0) {
         return [comment, ...openLoops, ...lookupDef, ...closeLoops]
       } else {
@@ -97,18 +97,18 @@ export function generateEquation(variable, mode, extData, directData, modelDir, 
     } else if (variable.directDataArgs) {
       // The data is referenced using a `GET DIRECT DATA` call; generate one or more lookups
       // using the data defined in external files
-      return generateLookupsFromDirectData(variable, mode, directData, modelDir, cLhs)
+      return generateLookupsFromDirectData(variable, mode, directData, modelDir, cLhs, outFormat)
     } else {
       // This is a "normal" data variable; generate one or more lookups using the data defined
       // in external files
-      return generateLookupsFromExternalData(variable, mode, extData, cLhs)
+      return generateLookupsFromExternalData(variable, mode, extData, cLhs, outFormat)
     }
   }
 
   // Apply special handling for lookup variables.  The data for lookup variables is already
   // defined as a set of explicit data points (stored in the `Variable` instance).
   if (variable.isLookup()) {
-    return generateLookupFromPoints(variable, mode, /*copy=*/ false, cLhs, loopIndexVars)
+    return generateLookupFromPoints(variable, mode, /*copy=*/ false, cLhs, loopIndexVars, outFormat)
   }
 
   // Keep a buffer of code that will be included before the innermost loop

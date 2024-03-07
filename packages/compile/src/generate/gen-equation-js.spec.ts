@@ -328,12 +328,8 @@ describe('generateEquation (Vensim -> JS)', () => {
       { extData }
     )
     expect(vars.size).toBe(2)
-    expect(genJS(vars.get('_x'), 'decl', { extData })).toEqual([
-      'double _x_data_[6] = { 0.0, 0.0, 1.0, 2.0, 2.0, 5.0 };'
-    ])
-    expect(genJS(vars.get('_x'), 'init-lookups', { extData })).toEqual([
-      '_x = __new_lookup(3, /*copy=*/false, _x_data_);'
-    ])
+    expect(genJS(vars.get('_x'), 'decl', { extData })).toEqual(['const _x_data_ = [0.0, 0.0, 1.0, 2.0, 2.0, 5.0];'])
+    expect(genJS(vars.get('_x'), 'init-lookups', { extData })).toEqual(['_x = fns.createLookup(3, _x_data_);'])
     expect(genJS(vars.get('_y'), 'eval', { extData })).toEqual(['_y = fns.LOOKUP(_x, _time) * 10.0;'])
   })
 
@@ -369,12 +365,12 @@ describe('generateEquation (Vensim -> JS)', () => {
     )
     expect(vars.size).toBe(3)
     expect(genJS(vars.get('_x'), 'decl', { extData })).toEqual([
-      'double _x_data__0_[6] = { 0.0, 0.0, 1.0, 2.0, 2.0, 5.0 };',
-      'double _x_data__1_[6] = { 0.0, 10.0, 1.0, 12.0, 2.0, 15.0 };'
+      'const _x_data__0_ = [0.0, 0.0, 1.0, 2.0, 2.0, 5.0];',
+      'const _x_data__1_ = [0.0, 10.0, 1.0, 12.0, 2.0, 15.0];'
     ])
     expect(genJS(vars.get('_x'), 'init-lookups', { extData })).toEqual([
-      '_x[0] = __new_lookup(3, /*copy=*/false, _x_data__0_);',
-      '_x[1] = __new_lookup(3, /*copy=*/false, _x_data__1_);'
+      '_x[0] = fns.createLookup(3, _x_data__0_);',
+      '_x[1] = fns.createLookup(3, _x_data__1_);'
     ])
     expect(genJS(vars.get('_y'), 'eval', { extData })).toEqual([
       'for (let i = 0; i < 2; i++) {',
@@ -390,9 +386,9 @@ describe('generateEquation (Vensim -> JS)', () => {
     `)
     expect(vars.size).toBe(1)
     expect(genJS(vars.get('_x'), 'decl')).toEqual([
-      'double _x_data_[12] = { 0.0, 0.0, 0.1, 0.01, 0.5, 0.7, 1.0, 1.0, 1.5, 1.2, 2.0, 1.3 };'
+      'const _x_data_ = [0.0, 0.0, 0.1, 0.01, 0.5, 0.7, 1.0, 1.0, 1.5, 1.2, 2.0, 1.3];'
     ])
-    expect(genJS(vars.get('_x'), 'init-lookups')).toEqual(['_x = __new_lookup(6, /*copy=*/false, _x_data_);'])
+    expect(genJS(vars.get('_x'), 'init-lookups')).toEqual(['_x = fns.createLookup(6, _x_data_);'])
   })
 
   it('should work for lookup definition (one dimension)', () => {
@@ -402,14 +398,10 @@ describe('generateEquation (Vensim -> JS)', () => {
       x[A2]( (0,30), (1,40) ) ~~|
     `)
     expect(vars.size).toBe(2)
-    expect(genJS(vars.get('_x[_a1]'), 'decl')).toEqual(['double _x_data__0_[4] = { 0.0, 10.0, 1.0, 20.0 };'])
-    expect(genJS(vars.get('_x[_a2]'), 'decl')).toEqual(['double _x_data__1_[4] = { 0.0, 30.0, 1.0, 40.0 };'])
-    expect(genJS(vars.get('_x[_a1]'), 'init-lookups')).toEqual([
-      '_x[0] = __new_lookup(2, /*copy=*/false, _x_data__0_);'
-    ])
-    expect(genJS(vars.get('_x[_a2]'), 'init-lookups')).toEqual([
-      '_x[1] = __new_lookup(2, /*copy=*/false, _x_data__1_);'
-    ])
+    expect(genJS(vars.get('_x[_a1]'), 'decl')).toEqual(['const _x_data__0_ = [0.0, 10.0, 1.0, 20.0];'])
+    expect(genJS(vars.get('_x[_a2]'), 'decl')).toEqual(['const _x_data__1_ = [0.0, 30.0, 1.0, 40.0];'])
+    expect(genJS(vars.get('_x[_a1]'), 'init-lookups')).toEqual(['_x[0] = fns.createLookup(2, _x_data__0_);'])
+    expect(genJS(vars.get('_x[_a2]'), 'init-lookups')).toEqual(['_x[1] = fns.createLookup(2, _x_data__1_);'])
   })
 
   it('should work for lookup definition (two dimensions)', () => {
@@ -422,22 +414,14 @@ describe('generateEquation (Vensim -> JS)', () => {
       x[A2,B2]( (0,70), (1,80) ) ~~|
     `)
     expect(vars.size).toBe(4)
-    expect(genJS(vars.get('_x[_a1,_b1]'), 'decl')).toEqual(['double _x_data__0__0_[4] = { 0.0, 10.0, 1.0, 20.0 };'])
-    expect(genJS(vars.get('_x[_a1,_b2]'), 'decl')).toEqual(['double _x_data__0__1_[4] = { 0.0, 30.0, 1.0, 40.0 };'])
-    expect(genJS(vars.get('_x[_a2,_b1]'), 'decl')).toEqual(['double _x_data__1__0_[4] = { 0.0, 50.0, 1.0, 60.0 };'])
-    expect(genJS(vars.get('_x[_a2,_b2]'), 'decl')).toEqual(['double _x_data__1__1_[4] = { 0.0, 70.0, 1.0, 80.0 };'])
-    expect(genJS(vars.get('_x[_a1,_b1]'), 'init-lookups')).toEqual([
-      '_x[0][0] = __new_lookup(2, /*copy=*/false, _x_data__0__0_);'
-    ])
-    expect(genJS(vars.get('_x[_a1,_b2]'), 'init-lookups')).toEqual([
-      '_x[0][1] = __new_lookup(2, /*copy=*/false, _x_data__0__1_);'
-    ])
-    expect(genJS(vars.get('_x[_a2,_b1]'), 'init-lookups')).toEqual([
-      '_x[1][0] = __new_lookup(2, /*copy=*/false, _x_data__1__0_);'
-    ])
-    expect(genJS(vars.get('_x[_a2,_b2]'), 'init-lookups')).toEqual([
-      '_x[1][1] = __new_lookup(2, /*copy=*/false, _x_data__1__1_);'
-    ])
+    expect(genJS(vars.get('_x[_a1,_b1]'), 'decl')).toEqual(['const _x_data__0__0_ = [0.0, 10.0, 1.0, 20.0];'])
+    expect(genJS(vars.get('_x[_a1,_b2]'), 'decl')).toEqual(['const _x_data__0__1_ = [0.0, 30.0, 1.0, 40.0];'])
+    expect(genJS(vars.get('_x[_a2,_b1]'), 'decl')).toEqual(['const _x_data__1__0_ = [0.0, 50.0, 1.0, 60.0];'])
+    expect(genJS(vars.get('_x[_a2,_b2]'), 'decl')).toEqual(['const _x_data__1__1_ = [0.0, 70.0, 1.0, 80.0];'])
+    expect(genJS(vars.get('_x[_a1,_b1]'), 'init-lookups')).toEqual(['_x[0][0] = fns.createLookup(2, _x_data__0__0_);'])
+    expect(genJS(vars.get('_x[_a1,_b2]'), 'init-lookups')).toEqual(['_x[0][1] = fns.createLookup(2, _x_data__0__1_);'])
+    expect(genJS(vars.get('_x[_a2,_b1]'), 'init-lookups')).toEqual(['_x[1][0] = fns.createLookup(2, _x_data__1__0_);'])
+    expect(genJS(vars.get('_x[_a2,_b2]'), 'init-lookups')).toEqual(['_x[1][1] = fns.createLookup(2, _x_data__1__1_);'])
   })
 
   it('should work for lookup call', () => {
@@ -447,9 +431,9 @@ describe('generateEquation (Vensim -> JS)', () => {
     `)
     expect(vars.size).toBe(2)
     expect(genJS(vars.get('_x'), 'decl')).toEqual([
-      'double _x_data_[12] = { 0.0, 0.0, 0.1, 0.01, 0.5, 0.7, 1.0, 1.0, 1.5, 1.2, 2.0, 1.3 };'
+      'const _x_data_ = [0.0, 0.0, 0.1, 0.01, 0.5, 0.7, 1.0, 1.0, 1.5, 1.2, 2.0, 1.3];'
     ])
-    expect(genJS(vars.get('_x'), 'init-lookups')).toEqual(['_x = __new_lookup(6, /*copy=*/false, _x_data_);'])
+    expect(genJS(vars.get('_x'), 'init-lookups')).toEqual(['_x = fns.createLookup(6, _x_data_);'])
     expect(genJS(vars.get('_y'))).toEqual(['_y = fns.LOOKUP(_x, 2.0);'])
   })
 
@@ -461,14 +445,10 @@ describe('generateEquation (Vensim -> JS)', () => {
       y = x[A1](2) ~~|
     `)
     expect(vars.size).toBe(3)
-    expect(genJS(vars.get('_x[_a1]'), 'decl')).toEqual(['double _x_data__0_[4] = { 0.0, 0.0, 2.0, 1.3 };'])
-    expect(genJS(vars.get('_x[_a2]'), 'decl')).toEqual(['double _x_data__1_[4] = { 0.0, 0.5, 2.0, 1.5 };'])
-    expect(genJS(vars.get('_x[_a1]'), 'init-lookups')).toEqual([
-      '_x[0] = __new_lookup(2, /*copy=*/false, _x_data__0_);'
-    ])
-    expect(genJS(vars.get('_x[_a2]'), 'init-lookups')).toEqual([
-      '_x[1] = __new_lookup(2, /*copy=*/false, _x_data__1_);'
-    ])
+    expect(genJS(vars.get('_x[_a1]'), 'decl')).toEqual(['const _x_data__0_ = [0.0, 0.0, 2.0, 1.3];'])
+    expect(genJS(vars.get('_x[_a2]'), 'decl')).toEqual(['const _x_data__1_ = [0.0, 0.5, 2.0, 1.5];'])
+    expect(genJS(vars.get('_x[_a1]'), 'init-lookups')).toEqual(['_x[0] = fns.createLookup(2, _x_data__0_);'])
+    expect(genJS(vars.get('_x[_a2]'), 'init-lookups')).toEqual(['_x[1] = fns.createLookup(2, _x_data__1_);'])
     expect(genJS(vars.get('_y'))).toEqual(['_y = fns.LOOKUP(_x[0], 2.0);'])
   })
 
@@ -1109,12 +1089,8 @@ describe('generateEquation (Vensim -> JS)', () => {
         { extData }
       )
       expect(vars.size).toBe(2)
-      expect(genJS(vars.get('_x'), 'decl', { extData })).toEqual([
-        'double _x_data_[6] = { 0.0, 0.0, 1.0, 2.0, 2.0, 5.0 };'
-      ])
-      expect(genJS(vars.get('_x'), 'init-lookups', { extData })).toEqual([
-        '_x = __new_lookup(3, /*copy=*/false, _x_data_);'
-      ])
+      expect(genJS(vars.get('_x'), 'decl', { extData })).toEqual(['const _x_data_ = [0.0, 0.0, 1.0, 2.0, 2.0, 5.0];'])
+      expect(genJS(vars.get('_x'), 'init-lookups', { extData })).toEqual(['_x = fns.createLookup(3, _x_data_);'])
       expect(genJS(vars.get('_y'))).toEqual([`_y = fns.GET_DATA_BETWEEN_TIMES(_x, _time, ${mode}.0);`])
     }
 
@@ -1268,7 +1244,7 @@ describe('generateEquation (Vensim -> JS)', () => {
     `)
     expect(vars.size).toBe(2)
     expect(genJS(vars.get('_x'), 'init-lookups', opts)).toEqual([
-      '_x = __new_lookup(2, /*copy=*/true, (double[]){ 2045.0, 35.0, 2050.0, 47.0 });'
+      '_x = fns.createLookup(2, [2045.0, 35.0, 2050.0, 47.0]);'
     ])
     expect(genJS(vars.get('_y'), 'eval', opts)).toEqual(['_y = fns.LOOKUP(_x, _time) * 10.0;'])
   })
@@ -1284,7 +1260,7 @@ describe('generateEquation (Vensim -> JS)', () => {
     `)
     expect(vars.size).toBe(2)
     expect(genJS(vars.get('_x'), 'init-lookups', opts)).toEqual([
-      '_x = __new_lookup(2, /*copy=*/true, (double[]){ 2045.0, 35.0, 2050.0, 47.0 });'
+      '_x = fns.createLookup(2, [2045.0, 35.0, 2050.0, 47.0]);'
     ])
     expect(genJS(vars.get('_y'), 'eval', opts)).toEqual(['_y = fns.LOOKUP(_x, _time) * 10.0;'])
   })
@@ -1301,7 +1277,7 @@ describe('generateEquation (Vensim -> JS)', () => {
     `)
     expect(vars.size).toBe(2)
     expect(genJS(vars.get('_x'), 'init-lookups', opts)).toEqual([
-      '_x = __new_lookup(2, /*copy=*/true, (double[]){ 2045.0, 35.0, 2050.0, 47.0 });'
+      '_x = fns.createLookup(2, [2045.0, 35.0, 2050.0, 47.0]);'
     ])
     expect(genJS(vars.get('_y'), 'eval', opts)).toEqual(['_y = fns.LOOKUP(_x, _time) * 10.0;'])
   })
@@ -1314,7 +1290,7 @@ describe('generateEquation (Vensim -> JS)', () => {
     `)
     expect(vars.size).toBe(2)
     expect(genJS(vars.get('_x'), 'init-lookups', { modelDir })).toEqual([
-      '_x = __new_lookup(2, /*copy=*/true, (double[]){ 2045.0, 35.0, 2050.0, 47.0 });'
+      '_x = fns.createLookup(2, [2045.0, 35.0, 2050.0, 47.0]);'
     ])
     expect(genJS(vars.get('_y'), 'eval', { modelDir })).toEqual(['_y = fns.LOOKUP(_x, _time) * 10.0;'])
   })
@@ -1341,10 +1317,10 @@ describe('generateEquation (Vensim -> JS)', () => {
     `)
     expect(vars.size).toBe(3)
     expect(genJS(vars.get('_x[_a1]'), 'init-lookups', { modelDir })).toEqual([
-      '_x[0] = __new_lookup(2, /*copy=*/true, (double[]){ 2030.0, 593.0, 2050.0, 583.0 });'
+      '_x[0] = fns.createLookup(2, [2030.0, 593.0, 2050.0, 583.0]);'
     ])
     expect(genJS(vars.get('_x[_a2]'), 'init-lookups', { modelDir })).toEqual([
-      '_x[1] = __new_lookup(2, /*copy=*/true, (double[]){ 2030.0, 185.0, 2050.0, 180.0 });'
+      '_x[1] = fns.createLookup(2, [2030.0, 185.0, 2050.0, 180.0]);'
     ])
     expect(genJS(vars.get('_y'), 'eval', { modelDir })).toEqual(['_y = fns.LOOKUP(_x[1], _time) * 10.0;'])
   })
@@ -1364,14 +1340,14 @@ describe('generateEquation (Vensim -> JS)', () => {
     `)
     expect(vars.size).toBe(4)
     expect(genJS(vars.get('_x[_a1,_b1]'), 'init-lookups', opts)).toEqual([
-      '_x[0][0] = __new_lookup(2, /*copy=*/true, (double[]){ 2030.0, 593.0, 2050.0, 583.0 });'
+      '_x[0][0] = fns.createLookup(2, [2030.0, 593.0, 2050.0, 583.0]);'
     ])
     expect(genJS(vars.get('_x[_a1,_b2]'), 'init-lookups', opts)).toEqual([
-      '_x[0][1] = __new_lookup(2, /*copy=*/true, (double[]){ 2030.0, 185.0, 2050.0, 180.0 });'
+      '_x[0][1] = fns.createLookup(2, [2030.0, 185.0, 2050.0, 180.0]);'
     ])
     expect(genJS(vars.get('_x[_a2,_dimb]'), 'init-lookups', opts)).toEqual([
       'for (let i = 0; i < 2; i++) {',
-      '_x[1][i] = __new_lookup(2, /*copy=*/true, (double[]){ -1e+308, 0.0, 1e+308, 0.0 });',
+      '_x[1][i] = fns.createLookup(2, [-1e+308, 0.0, 1e+308, 0.0]);',
       '}'
     ])
     expect(genJS(vars.get('_y'), 'eval', opts)).toEqual(['_y = fns.LOOKUP(_x[1][0], _time) * 10.0;'])
@@ -1387,13 +1363,13 @@ describe('generateEquation (Vensim -> JS)', () => {
     `)
     expect(vars.size).toBe(5)
     expect(genJS(vars.get('_x[_a1]'), 'init-lookups', { modelDir })).toEqual([
-      '_x[0] = __new_lookup(2, /*copy=*/true, (double[]){ 2049.0, 0.966667, 2050.0, 1.0 });'
+      '_x[0] = fns.createLookup(2, [2049.0, 0.966667, 2050.0, 1.0]);'
     ])
     expect(genJS(vars.get('_x[_a2]'), 'init-lookups', { modelDir })).toEqual([
-      '_x[1] = __new_lookup(2, /*copy=*/true, (double[]){ 2049.0, 0.965517, 2050.0, 1.0 });'
+      '_x[1] = fns.createLookup(2, [2049.0, 0.965517, 2050.0, 1.0]);'
     ])
     expect(genJS(vars.get('_x[_a3]'), 'init-lookups', { modelDir })).toEqual([
-      '_x[2] = __new_lookup(2, /*copy=*/true, (double[]){ 2049.0, 0.98975, 2050.0, 0.998394 });'
+      '_x[2] = fns.createLookup(2, [2049.0, 0.98975, 2050.0, 0.998394]);'
     ])
     expect(genJS(vars.get('_y'), 'eval', { modelDir })).toEqual([
       'for (let i = 0; i < 3; i++) {',
@@ -1550,8 +1526,8 @@ describe('generateEquation (Vensim -> JS)', () => {
       y = LOOKUP BACKWARD(x, 1.5) ~~|
     `)
     expect(vars.size).toBe(2)
-    expect(genJS(vars.get('_x'), 'decl')).toEqual(['double _x_data_[6] = { 0.0, 0.0, 1.0, 1.0, 2.0, 2.0 };'])
-    expect(genJS(vars.get('_x'), 'init-lookups')).toEqual(['_x = __new_lookup(3, /*copy=*/false, _x_data_);'])
+    expect(genJS(vars.get('_x'), 'decl')).toEqual(['const _x_data_ = [0.0, 0.0, 1.0, 1.0, 2.0, 2.0];'])
+    expect(genJS(vars.get('_x'), 'init-lookups')).toEqual(['_x = fns.createLookup(3, _x_data_);'])
     expect(genJS(vars.get('_y'))).toEqual(['_y = fns.LOOKUP_BACKWARD(_x, 1.5);'])
   })
 
@@ -1564,13 +1540,13 @@ describe('generateEquation (Vensim -> JS)', () => {
     `)
     expect(vars.size).toBe(4)
     expect(genJS(vars.get('_x[_a1]'), 'init-lookups', { modelDir })).toEqual([
-      '_x[0] = __new_lookup(2, /*copy=*/true, (double[]){ 2049.0, 0.966667, 2050.0, 1.0 });'
+      '_x[0] = fns.createLookup(2, [2049.0, 0.966667, 2050.0, 1.0]);'
     ])
     expect(genJS(vars.get('_x[_a2]'), 'init-lookups', { modelDir })).toEqual([
-      '_x[1] = __new_lookup(2, /*copy=*/true, (double[]){ 2049.0, 0.965517, 2050.0, 1.0 });'
+      '_x[1] = fns.createLookup(2, [2049.0, 0.965517, 2050.0, 1.0]);'
     ])
     expect(genJS(vars.get('_x[_a3]'), 'init-lookups', { modelDir })).toEqual([
-      '_x[2] = __new_lookup(2, /*copy=*/true, (double[]){ 2049.0, 0.98975, 2050.0, 0.998394 });'
+      '_x[2] = fns.createLookup(2, [2049.0, 0.98975, 2050.0, 0.998394]);'
     ])
     expect(genJS(vars.get('_y'), 'eval', { modelDir })).toEqual([
       'for (let i = 0; i < 3; i++) {',
@@ -1585,8 +1561,8 @@ describe('generateEquation (Vensim -> JS)', () => {
       y = LOOKUP FORWARD(x, 1.5) ~~|
     `)
     expect(vars.size).toBe(2)
-    expect(genJS(vars.get('_x'), 'decl')).toEqual(['double _x_data_[6] = { 0.0, 0.0, 1.0, 1.0, 2.0, 2.0 };'])
-    expect(genJS(vars.get('_x'), 'init-lookups')).toEqual(['_x = __new_lookup(3, /*copy=*/false, _x_data_);'])
+    expect(genJS(vars.get('_x'), 'decl')).toEqual(['const _x_data_ = [0.0, 0.0, 1.0, 1.0, 2.0, 2.0];'])
+    expect(genJS(vars.get('_x'), 'init-lookups')).toEqual(['_x = fns.createLookup(3, _x_data_);'])
     expect(genJS(vars.get('_y'))).toEqual(['_y = fns.LOOKUP_FORWARD(_x, 1.5);'])
   })
 
@@ -1596,8 +1572,8 @@ describe('generateEquation (Vensim -> JS)', () => {
       y = LOOKUP INVERT(x, 1.5) ~~|
     `)
     expect(vars.size).toBe(2)
-    expect(genJS(vars.get('_x'), 'decl')).toEqual(['double _x_data_[6] = { 0.0, 0.0, 1.0, 1.0, 2.0, 2.0 };'])
-    expect(genJS(vars.get('_x'), 'init-lookups')).toEqual(['_x = __new_lookup(3, /*copy=*/false, _x_data_);'])
+    expect(genJS(vars.get('_x'), 'decl')).toEqual(['const _x_data_ = [0.0, 0.0, 1.0, 1.0, 2.0, 2.0];'])
+    expect(genJS(vars.get('_x'), 'init-lookups')).toEqual(['_x = fns.createLookup(3, _x_data_);'])
     expect(genJS(vars.get('_y'))).toEqual(['_y = fns.LOOKUP_INVERT(_x, 1.5);'])
   })
 
@@ -2178,11 +2154,9 @@ describe('generateEquation (Vensim -> JS)', () => {
     `)
     expect(vars.size).toBe(2)
     expect(genJS(vars.get('__lookup1'), 'decl')).toEqual([
-      'double __lookup1_data_[12] = { 0.0, 0.0, 0.1, 0.01, 0.5, 0.7, 1.0, 1.0, 1.5, 1.2, 2.0, 1.3 };'
+      'const __lookup1_data_ = [0.0, 0.0, 0.1, 0.01, 0.5, 0.7, 1.0, 1.0, 1.5, 1.2, 2.0, 1.3];'
     ])
-    expect(genJS(vars.get('__lookup1'), 'init-lookups')).toEqual([
-      '__lookup1 = __new_lookup(6, /*copy=*/false, __lookup1_data_);'
-    ])
+    expect(genJS(vars.get('__lookup1'), 'init-lookups')).toEqual(['__lookup1 = fns.createLookup(6, __lookup1_data_);'])
     expect(genJS(vars.get('_y'))).toEqual(['_y = fns.WITH_LOOKUP(_time, __lookup1);'])
   })
 
