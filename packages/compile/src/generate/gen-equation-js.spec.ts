@@ -162,7 +162,7 @@ describe('generateEquation (Vensim -> JS)', () => {
     `)
     expect(vars.size).toBe(2)
     expect(genJS(vars.get('_x'))).toEqual(['_x = 1.0;'])
-    expect(genJS(vars.get('_y'))).toEqual(['_y = pow(_x, 2.0);'])
+    expect(genJS(vars.get('_y'))).toEqual(['_y = fns.POW(_x, 2.0);'])
   })
 
   it('should work for simple equation with explicit parentheses', () => {
@@ -182,7 +182,7 @@ describe('generateEquation (Vensim -> JS)', () => {
     `)
     expect(vars.size).toBe(2)
     expect(genJS(vars.get('_x'))).toEqual(['_x = 1.0;'])
-    expect(genJS(vars.get('_y'))).toEqual(['_y = _IF_THEN_ELSE(_x === _time, 1.0, 0.0);'])
+    expect(genJS(vars.get('_y'))).toEqual(['_y = ((_x === _time) ? (1.0) : (0.0));'])
   })
 
   it('should work for conditional expression with <> op', () => {
@@ -192,7 +192,7 @@ describe('generateEquation (Vensim -> JS)', () => {
     `)
     expect(vars.size).toBe(2)
     expect(genJS(vars.get('_x'))).toEqual(['_x = 1.0;'])
-    expect(genJS(vars.get('_y'))).toEqual(['_y = _IF_THEN_ELSE(_x !== _time, 1.0, 0.0);'])
+    expect(genJS(vars.get('_y'))).toEqual(['_y = ((_x !== _time) ? (1.0) : (0.0));'])
   })
 
   it('should work for conditional expression with < op', () => {
@@ -202,7 +202,7 @@ describe('generateEquation (Vensim -> JS)', () => {
     `)
     expect(vars.size).toBe(2)
     expect(genJS(vars.get('_x'))).toEqual(['_x = 1.0;'])
-    expect(genJS(vars.get('_y'))).toEqual(['_y = _IF_THEN_ELSE(_x < _time, 1.0, 0.0);'])
+    expect(genJS(vars.get('_y'))).toEqual(['_y = ((_x < _time) ? (1.0) : (0.0));'])
   })
 
   it('should work for conditional expression with <= op', () => {
@@ -212,7 +212,7 @@ describe('generateEquation (Vensim -> JS)', () => {
     `)
     expect(vars.size).toBe(2)
     expect(genJS(vars.get('_x'))).toEqual(['_x = 1.0;'])
-    expect(genJS(vars.get('_y'))).toEqual(['_y = _IF_THEN_ELSE(_x <= _time, 1.0, 0.0);'])
+    expect(genJS(vars.get('_y'))).toEqual(['_y = ((_x <= _time) ? (1.0) : (0.0));'])
   })
 
   it('should work for conditional expression with > op', () => {
@@ -222,7 +222,7 @@ describe('generateEquation (Vensim -> JS)', () => {
     `)
     expect(vars.size).toBe(2)
     expect(genJS(vars.get('_x'))).toEqual(['_x = 1.0;'])
-    expect(genJS(vars.get('_y'))).toEqual(['_y = _IF_THEN_ELSE(_x > _time, 1.0, 0.0);'])
+    expect(genJS(vars.get('_y'))).toEqual(['_y = ((_x > _time) ? (1.0) : (0.0));'])
   })
 
   it('should work for conditional expression with >= op', () => {
@@ -232,7 +232,7 @@ describe('generateEquation (Vensim -> JS)', () => {
     `)
     expect(vars.size).toBe(2)
     expect(genJS(vars.get('_x'))).toEqual(['_x = 1.0;'])
-    expect(genJS(vars.get('_y'))).toEqual(['_y = _IF_THEN_ELSE(_x >= _time, 1.0, 0.0);'])
+    expect(genJS(vars.get('_y'))).toEqual(['_y = ((_x >= _time) ? (1.0) : (0.0));'])
   })
 
   it('should work for conditional expression with :AND: op', () => {
@@ -242,7 +242,7 @@ describe('generateEquation (Vensim -> JS)', () => {
     `)
     expect(vars.size).toBe(2)
     expect(genJS(vars.get('_x'))).toEqual(['_x = 1.0;'])
-    expect(genJS(vars.get('_y'))).toEqual(['_y = _IF_THEN_ELSE(_x && _time, 1.0, 0.0);'])
+    expect(genJS(vars.get('_y'))).toEqual(['_y = ((_x && _time) ? (1.0) : (0.0));'])
   })
 
   it('should work for conditional expression with :OR: op', () => {
@@ -254,8 +254,8 @@ describe('generateEquation (Vensim -> JS)', () => {
       y = IF THEN ELSE(x :OR: time, 1, 0) ~~|
     `)
     expect(vars.size).toBe(2)
-    expect(genJS(vars.get('_x'))).toEqual(['_x = _ABS(1.0);'])
-    expect(genJS(vars.get('_y'))).toEqual(['_y = _IF_THEN_ELSE(_x || _time, 1.0, 0.0);'])
+    expect(genJS(vars.get('_x'))).toEqual(['_x = fns.ABS(1.0);'])
+    expect(genJS(vars.get('_y'))).toEqual(['_y = ((_x || _time) ? (1.0) : (0.0));'])
   })
 
   it('should work for conditional expression with :NOT: op', () => {
@@ -267,8 +267,8 @@ describe('generateEquation (Vensim -> JS)', () => {
       y = IF THEN ELSE(:NOT: x, 1, 0) ~~|
     `)
     expect(vars.size).toBe(2)
-    expect(genJS(vars.get('_x'))).toEqual(['_x = _ABS(1.0);'])
-    expect(genJS(vars.get('_y'))).toEqual(['_y = _IF_THEN_ELSE(!_x, 1.0, 0.0);'])
+    expect(genJS(vars.get('_x'))).toEqual(['_x = fns.ABS(1.0);'])
+    expect(genJS(vars.get('_y'))).toEqual(['_y = ((!_x) ? (1.0) : (0.0));'])
   })
 
   it('should work for expression using :NA: keyword', () => {
@@ -278,7 +278,7 @@ describe('generateEquation (Vensim -> JS)', () => {
     `)
     expect(vars.size).toBe(2)
     expect(genJS(vars.get('_x'))).toEqual(['_x = _time;'])
-    expect(genJS(vars.get('_y'))).toEqual(['_y = _IF_THEN_ELSE(_x !== _NA_, 1.0, 0.0);'])
+    expect(genJS(vars.get('_y'))).toEqual(['_y = ((_x !== _NA_) ? (1.0) : (0.0));'])
   })
 
   it('should work for conditional expression with reference to dimension', () => {
@@ -291,7 +291,7 @@ describe('generateEquation (Vensim -> JS)', () => {
     expect(genJS(vars.get('_x'))).toEqual(['_x = 1.0;'])
     expect(genJS(vars.get('_y'))).toEqual([
       'for (let i = 0; i < 2; i++) {',
-      '_y[i] = _IF_THEN_ELSE((i + 1) === _x, 1.0, 0.0);',
+      '_y[i] = (((i + 1) === _x) ? (1.0) : (0.0));',
       '}'
     ])
   })
@@ -304,7 +304,7 @@ describe('generateEquation (Vensim -> JS)', () => {
     expect(vars.size).toBe(1)
     expect(genJS(vars.get('_y'))).toEqual([
       'for (let i = 0; i < 2; i++) {',
-      '_y[i] = _IF_THEN_ELSE((i + 1) === 2, 1.0, 0.0);',
+      '_y[i] = (((i + 1) === 2) ? (1.0) : (0.0));',
       '}'
     ])
   })
@@ -334,7 +334,7 @@ describe('generateEquation (Vensim -> JS)', () => {
     expect(genJS(vars.get('_x'), 'init-lookups', { extData })).toEqual([
       '_x = __new_lookup(3, /*copy=*/false, _x_data_);'
     ])
-    expect(genJS(vars.get('_y'), 'eval', { extData })).toEqual(['_y = _LOOKUP(_x, _time) * 10.0;'])
+    expect(genJS(vars.get('_y'), 'eval', { extData })).toEqual(['_y = fns.LOOKUP(_x, _time) * 10.0;'])
   })
 
   it('should work for data variable definition (1D)', () => {
@@ -378,7 +378,7 @@ describe('generateEquation (Vensim -> JS)', () => {
     ])
     expect(genJS(vars.get('_y'), 'eval', { extData })).toEqual([
       'for (let i = 0; i < 2; i++) {',
-      '_y[i] = _LOOKUP(_x[i], _time) * 10.0;',
+      '_y[i] = fns.LOOKUP(_x[i], _time) * 10.0;',
       '}'
     ])
     expect(genJS(vars.get('_z'), 'eval', { extData })).toEqual(['_z = _y[1];'])
@@ -450,7 +450,7 @@ describe('generateEquation (Vensim -> JS)', () => {
       'double _x_data_[12] = { 0.0, 0.0, 0.1, 0.01, 0.5, 0.7, 1.0, 1.0, 1.5, 1.2, 2.0, 1.3 };'
     ])
     expect(genJS(vars.get('_x'), 'init-lookups')).toEqual(['_x = __new_lookup(6, /*copy=*/false, _x_data_);'])
-    expect(genJS(vars.get('_y'))).toEqual(['_y = _LOOKUP(_x, 2.0);'])
+    expect(genJS(vars.get('_y'))).toEqual(['_y = fns.LOOKUP(_x, 2.0);'])
   })
 
   it('should work for lookup call (with one dimension)', () => {
@@ -469,7 +469,7 @@ describe('generateEquation (Vensim -> JS)', () => {
     expect(genJS(vars.get('_x[_a2]'), 'init-lookups')).toEqual([
       '_x[1] = __new_lookup(2, /*copy=*/false, _x_data__1_);'
     ])
-    expect(genJS(vars.get('_y'))).toEqual(['_y = _LOOKUP(_x[0], 2.0);'])
+    expect(genJS(vars.get('_y'))).toEqual(['_y = fns.LOOKUP(_x[0], 2.0);'])
   })
 
   it('should work for constant definition (with one dimension)', () => {
@@ -626,7 +626,7 @@ describe('generateEquation (Vensim -> JS)', () => {
     expect(genJS(vars.get('_x[_a2]'), 'init-constants')).toEqual(['_x[1] = 2.0;'])
     expect(genJS(vars.get('_y'))).toEqual([
       'for (let i = 0; i < 2; i++) {',
-      '_y[i] = (_x[i] + 2.0) * _MIN(0.0, _x[i]);',
+      '_y[i] = (_x[i] + 2.0) * fns.MIN(0.0, _x[i]);',
       '}'
     ])
     expect(genJS(vars.get('_z'))).toEqual(['_z = _y[1];'])
@@ -648,7 +648,7 @@ describe('generateEquation (Vensim -> JS)', () => {
     expect(genJS(vars.get('_y'))).toEqual([
       'for (let i = 0; i < 2; i++) {',
       'for (let j = 0; j < 2; j++) {',
-      '_y[i][j] = (_x[i][j] + 2.0) * _MIN(0.0, _x[i][j]);',
+      '_y[i][j] = (_x[i][j] + 2.0) * fns.MIN(0.0, _x[i][j]);',
       '}',
       '}'
     ])
@@ -665,7 +665,7 @@ describe('generateEquation (Vensim -> JS)', () => {
     expect(genJS(vars.get('_selected_a_index'), 'init-constants')).toEqual(['_selected_a_index = 1.0;'])
     expect(genJS(vars.get('_x'))).toEqual([
       'for (let i = 0; i < 2; i++) {',
-      '_x[i] = _IF_THEN_ELSE((i + 1) === _selected_a_index, 1.0, 0.0);',
+      '_x[i] = (((i + 1) === _selected_a_index) ? (1.0) : (0.0));',
       '}'
     ])
   })
@@ -679,8 +679,8 @@ describe('generateEquation (Vensim -> JS)', () => {
     `)
     expect(vars.size).toBe(3)
     expect(genJS(vars.get('_selected_a_index'), 'init-constants')).toEqual(['_selected_a_index = 1.0;'])
-    expect(genJS(vars.get('_x[_a1]'))).toEqual(['_x[0] = _IF_THEN_ELSE((0 + 1) === _selected_a_index, 1.0, 0.0);'])
-    expect(genJS(vars.get('_x[_a3]'))).toEqual(['_x[2] = _IF_THEN_ELSE((2 + 1) === _selected_a_index, 1.0, 0.0);'])
+    expect(genJS(vars.get('_x[_a1]'))).toEqual(['_x[0] = (((0 + 1) === _selected_a_index) ? (1.0) : (0.0));'])
+    expect(genJS(vars.get('_x[_a3]'))).toEqual(['_x[2] = (((2 + 1) === _selected_a_index) ? (1.0) : (0.0));'])
   })
 
   it('should work for equation that uses a mapped dimension name in an expression', () => {
@@ -788,7 +788,7 @@ describe('generateEquation (Vensim -> JS)', () => {
     `)
     expect(vars.size).toBe(2)
     expect(genJS(vars.get('_x'))).toEqual(['_x = 1.0;'])
-    expect(genJS(vars.get('_y'))).toEqual(['_y = _ABS(_x);'])
+    expect(genJS(vars.get('_y'))).toEqual(['_y = fns.ABS(_x);'])
   })
 
   it('should work for ACTIVE INITIAL function', () => {
@@ -827,7 +827,7 @@ describe('generateEquation (Vensim -> JS)', () => {
     expect(genJS(vars.get('_priority[_fresno,_ptype]'))).toEqual(['_priority[2][0] = 1.0;'])
     expect(genJS(vars.get('_priority[_fresno,_ppriority]'))).toEqual(['_priority[2][1] = 3.0;'])
     expect(genJS(vars.get('_shipments'))).toEqual([
-      'double* __t1 = _ALLOCATE_AVAILABLE(_demand, (double*)_priority, _supply_available, 3);',
+      'let __t1 = fns.ALLOCATE_AVAILABLE(_demand, _priority, _supply_available, 3);',
       'for (let i = 0; i < 3; i++) {',
       '_shipments[i] = __t1[_branch[i]];',
       '}'
@@ -841,7 +841,7 @@ describe('generateEquation (Vensim -> JS)', () => {
     `)
     expect(vars.size).toBe(2)
     expect(genJS(vars.get('_x'))).toEqual(['_x = 1.0;'])
-    expect(genJS(vars.get('_y'))).toEqual(['_y = _ARCCOS(_x);'])
+    expect(genJS(vars.get('_y'))).toEqual(['_y = fns.ARCCOS(_x);'])
   })
 
   it('should work for ARCSIN function', () => {
@@ -851,7 +851,7 @@ describe('generateEquation (Vensim -> JS)', () => {
     `)
     expect(vars.size).toBe(2)
     expect(genJS(vars.get('_x'))).toEqual(['_x = 1.0;'])
-    expect(genJS(vars.get('_y'))).toEqual(['_y = _ARCSIN(_x);'])
+    expect(genJS(vars.get('_y'))).toEqual(['_y = fns.ARCSIN(_x);'])
   })
 
   it('should work for ARCTAN function', () => {
@@ -861,7 +861,7 @@ describe('generateEquation (Vensim -> JS)', () => {
     `)
     expect(vars.size).toBe(2)
     expect(genJS(vars.get('_x'))).toEqual(['_x = 1.0;'])
-    expect(genJS(vars.get('_y'))).toEqual(['_y = _ARCTAN(_x);'])
+    expect(genJS(vars.get('_y'))).toEqual(['_y = fns.ARCTAN(_x);'])
   })
 
   it('should work for COS function', () => {
@@ -871,7 +871,7 @@ describe('generateEquation (Vensim -> JS)', () => {
     `)
     expect(vars.size).toBe(2)
     expect(genJS(vars.get('_x'))).toEqual(['_x = 1.0;'])
-    expect(genJS(vars.get('_y'))).toEqual(['_y = _COS(_x);'])
+    expect(genJS(vars.get('_y'))).toEqual(['_y = fns.COS(_x);'])
   })
 
   // TODO: Subscripted variants
@@ -883,7 +883,7 @@ describe('generateEquation (Vensim -> JS)', () => {
     expect(vars.size).toBe(4)
     expect(genJS(vars.get('_x'))).toEqual(['_x = 1.0;'])
     expect(genJS(vars.get('__level1'), 'init-levels')).toEqual(['__level1 = _x * 5.0;'])
-    expect(genJS(vars.get('__level1'), 'eval')).toEqual(['__level1 = _INTEG(__level1, _x - _y);'])
+    expect(genJS(vars.get('__level1'), 'eval')).toEqual(['__level1 = fns.INTEG(__level1, _x - _y);'])
     expect(genJS(vars.get('__aux1'), 'eval')).toEqual(['__aux1 = 5.0;'])
     expect(genJS(vars.get('_y'))).toEqual(['_y = (__level1 / __aux1);'])
   })
@@ -898,7 +898,7 @@ describe('generateEquation (Vensim -> JS)', () => {
     expect(genJS(vars.get('_x'))).toEqual(['_x = 1.0;'])
     expect(genJS(vars.get('_init'))).toEqual(['_init = 2.0;'])
     expect(genJS(vars.get('__level1'), 'init-levels')).toEqual(['__level1 = _init * 5.0;'])
-    expect(genJS(vars.get('__level1'), 'eval')).toEqual(['__level1 = _INTEG(__level1, _x - _y);'])
+    expect(genJS(vars.get('__level1'), 'eval')).toEqual(['__level1 = fns.INTEG(__level1, _x - _y);'])
     expect(genJS(vars.get('__aux1'), 'eval')).toEqual(['__aux1 = 5.0;'])
     expect(genJS(vars.get('_y'))).toEqual(['_y = (__level1 / __aux1);'])
   })
@@ -911,11 +911,11 @@ describe('generateEquation (Vensim -> JS)', () => {
     expect(vars.size).toBe(9)
     expect(genJS(vars.get('_x'))).toEqual(['_x = 1.0;'])
     expect(genJS(vars.get('__level1'), 'init-levels')).toEqual(['__level1 = _x * ((5.0) / 3.0);'])
-    expect(genJS(vars.get('__level1'), 'eval')).toEqual(['__level1 = _INTEG(__level1, _x - __aux1);'])
+    expect(genJS(vars.get('__level1'), 'eval')).toEqual(['__level1 = fns.INTEG(__level1, _x - __aux1);'])
     expect(genJS(vars.get('__level2'), 'init-levels')).toEqual(['__level2 = _x * ((5.0) / 3.0);'])
-    expect(genJS(vars.get('__level2'), 'eval')).toEqual(['__level2 = _INTEG(__level2, __aux1 - __aux2);'])
+    expect(genJS(vars.get('__level2'), 'eval')).toEqual(['__level2 = fns.INTEG(__level2, __aux1 - __aux2);'])
     expect(genJS(vars.get('__level3'), 'init-levels')).toEqual(['__level3 = _x * ((5.0) / 3.0);'])
-    expect(genJS(vars.get('__level3'), 'eval')).toEqual(['__level3 = _INTEG(__level3, __aux2 - __aux3);'])
+    expect(genJS(vars.get('__level3'), 'eval')).toEqual(['__level3 = fns.INTEG(__level3, __aux2 - __aux3);'])
     expect(genJS(vars.get('__aux1'), 'eval')).toEqual(['__aux1 = __level1 / ((5.0) / 3.0);'])
     expect(genJS(vars.get('__aux2'), 'eval')).toEqual(['__aux2 = __level2 / ((5.0) / 3.0);'])
     expect(genJS(vars.get('__aux3'), 'eval')).toEqual(['__aux3 = __level3 / ((5.0) / 3.0);'])
@@ -933,11 +933,11 @@ describe('generateEquation (Vensim -> JS)', () => {
     expect(genJS(vars.get('_x'))).toEqual(['_x = 1.0;'])
     expect(genJS(vars.get('_init'))).toEqual(['_init = 2.0;'])
     expect(genJS(vars.get('__level1'), 'init-levels')).toEqual(['__level1 = _init * ((5.0) / 3.0);'])
-    expect(genJS(vars.get('__level1'), 'eval')).toEqual(['__level1 = _INTEG(__level1, _x - __aux1);'])
+    expect(genJS(vars.get('__level1'), 'eval')).toEqual(['__level1 = fns.INTEG(__level1, _x - __aux1);'])
     expect(genJS(vars.get('__level2'), 'init-levels')).toEqual(['__level2 = _init * ((5.0) / 3.0);'])
-    expect(genJS(vars.get('__level2'), 'eval')).toEqual(['__level2 = _INTEG(__level2, __aux1 - __aux2);'])
+    expect(genJS(vars.get('__level2'), 'eval')).toEqual(['__level2 = fns.INTEG(__level2, __aux1 - __aux2);'])
     expect(genJS(vars.get('__level3'), 'init-levels')).toEqual(['__level3 = _init * ((5.0) / 3.0);'])
-    expect(genJS(vars.get('__level3'), 'eval')).toEqual(['__level3 = _INTEG(__level3, __aux2 - __aux3);'])
+    expect(genJS(vars.get('__level3'), 'eval')).toEqual(['__level3 = fns.INTEG(__level3, __aux2 - __aux3);'])
     expect(genJS(vars.get('__aux1'), 'eval')).toEqual(['__aux1 = __level1 / ((5.0) / 3.0);'])
     expect(genJS(vars.get('__aux2'), 'eval')).toEqual(['__aux2 = __level2 / ((5.0) / 3.0);'])
     expect(genJS(vars.get('__aux3'), 'eval')).toEqual(['__aux3 = __level3 / ((5.0) / 3.0);'])
@@ -964,7 +964,7 @@ describe('generateEquation (Vensim -> JS)', () => {
     ])
     expect(genJS(vars.get('__level1'), 'eval')).toEqual([
       'for (let i = 0; i < 2; i++) {',
-      '__level1[i] = _INTEG(__level1[i], _x[i] - __aux1[i]);',
+      '__level1[i] = fns.INTEG(__level1[i], _x[i] - __aux1[i]);',
       '}'
     ])
     expect(genJS(vars.get('__level2'), 'init-levels')).toEqual([
@@ -974,7 +974,7 @@ describe('generateEquation (Vensim -> JS)', () => {
     ])
     expect(genJS(vars.get('__level2'), 'eval')).toEqual([
       'for (let i = 0; i < 2; i++) {',
-      '__level2[i] = _INTEG(__level2[i], __aux1[i] - __aux2[i]);',
+      '__level2[i] = fns.INTEG(__level2[i], __aux1[i] - __aux2[i]);',
       '}'
     ])
     expect(genJS(vars.get('__level3'), 'init-levels')).toEqual([
@@ -984,7 +984,7 @@ describe('generateEquation (Vensim -> JS)', () => {
     ])
     expect(genJS(vars.get('__level3'), 'eval')).toEqual([
       'for (let i = 0; i < 2; i++) {',
-      '__level3[i] = _INTEG(__level3[i], __aux2[i] - __aux3[i]);',
+      '__level3[i] = fns.INTEG(__level3[i], __aux2[i] - __aux3[i]);',
       '}'
     ])
     expect(genJS(vars.get('__aux1'), 'eval')).toEqual([
@@ -1023,7 +1023,7 @@ describe('generateEquation (Vensim -> JS)', () => {
       '_y = _init;',
       '__fixed_delay1 = __new_fixed_delay(__fixed_delay1, 5.0, _init);'
     ])
-    expect(genJS(vars.get('_y'), 'eval')).toEqual(['_y = _DELAY_FIXED(_x, __fixed_delay1);'])
+    expect(genJS(vars.get('_y'), 'eval')).toEqual(['_y = fns.DELAY_FIXED(_x, __fixed_delay1);'])
   })
 
   it('should work for DEPRECIATE STRAIGHTLINE function', () => {
@@ -1044,7 +1044,7 @@ describe('generateEquation (Vensim -> JS)', () => {
       '__depreciation1 = __new_depreciation(__depreciation1, _dtime, 0.0);'
     ])
     expect(genJS(vars.get('_depreciated_amount'), 'eval')).toEqual([
-      '_depreciated_amount = _DEPRECIATE_STRAIGHTLINE(_stream, __depreciation1);'
+      '_depreciated_amount = fns.DEPRECIATE_STRAIGHTLINE(_stream, __depreciation1);'
     ])
   })
 
@@ -1064,7 +1064,7 @@ describe('generateEquation (Vensim -> JS)', () => {
     `)
     expect(vars.size).toBe(2)
     expect(genJS(vars.get('_x'))).toEqual(['_x = 1.0;'])
-    expect(genJS(vars.get('_y'))).toEqual(['_y = _EXP(_x);'])
+    expect(genJS(vars.get('_y'))).toEqual(['_y = fns.EXP(_x);'])
   })
 
   // TODO: We do not currently have full support for the GAME function, so skip this test for now
@@ -1075,7 +1075,7 @@ describe('generateEquation (Vensim -> JS)', () => {
     `)
     expect(vars.size).toBe(2)
     expect(genJS(vars.get('_x'))).toEqual(['_x = 1.0;'])
-    expect(genJS(vars.get('_y'))).toEqual(['_y = _GAME(_x);'])
+    expect(genJS(vars.get('_y'))).toEqual(['_y = fns.GAME(_x);'])
   })
 
   it('should work for GAMMA LN function', () => {
@@ -1085,7 +1085,7 @@ describe('generateEquation (Vensim -> JS)', () => {
     `)
     expect(vars.size).toBe(2)
     expect(genJS(vars.get('_x'))).toEqual(['_x = 1.0;'])
-    expect(genJS(vars.get('_y'))).toEqual(['_y = _GAMMA_LN(_x);'])
+    expect(genJS(vars.get('_y'))).toEqual(['_y = fns.GAMMA_LN(_x);'])
   })
 
   describe('should work for GET DATA BETWEEN TIMES function', () => {
@@ -1115,7 +1115,7 @@ describe('generateEquation (Vensim -> JS)', () => {
       expect(genJS(vars.get('_x'), 'init-lookups', { extData })).toEqual([
         '_x = __new_lookup(3, /*copy=*/false, _x_data_);'
       ])
-      expect(genJS(vars.get('_y'))).toEqual([`_y = _GET_DATA_BETWEEN_TIMES(_x, _time, ${mode}.0);`])
+      expect(genJS(vars.get('_y'))).toEqual([`_y = fns.GET_DATA_BETWEEN_TIMES(_x, _time, ${mode}.0);`])
     }
 
     it('with mode == Interpolate', () => {
@@ -1144,7 +1144,7 @@ describe('generateEquation (Vensim -> JS)', () => {
   //   `)
   //   expect(vars.size).toBe(2)
   //   expect(genJS(vars.get('_x'))).toEqual(['_x = 1.0;'])
-  //   expect(genJS(vars.get('_y'))).toEqual(['_y = _GET_DATA_BETWEEN_TIMES(_x, _time, 42);'])
+  //   expect(genJS(vars.get('_y'))).toEqual(['_y = fns.GET_DATA_BETWEEN_TIMES(_x, _time, 42);'])
   // })
 
   it('should work for GET DIRECT CONSTANTS function (single value from named csv file)', () => {
@@ -1270,7 +1270,7 @@ describe('generateEquation (Vensim -> JS)', () => {
     expect(genJS(vars.get('_x'), 'init-lookups', opts)).toEqual([
       '_x = __new_lookup(2, /*copy=*/true, (double[]){ 2045.0, 35.0, 2050.0, 47.0 });'
     ])
-    expect(genJS(vars.get('_y'), 'eval', opts)).toEqual(['_y = _LOOKUP(_x, _time) * 10.0;'])
+    expect(genJS(vars.get('_y'), 'eval', opts)).toEqual(['_y = fns.LOOKUP(_x, _time) * 10.0;'])
   })
 
   it('should work for GET DIRECT DATA function (single value from tagged xlsx file)', () => {
@@ -1286,7 +1286,7 @@ describe('generateEquation (Vensim -> JS)', () => {
     expect(genJS(vars.get('_x'), 'init-lookups', opts)).toEqual([
       '_x = __new_lookup(2, /*copy=*/true, (double[]){ 2045.0, 35.0, 2050.0, 47.0 });'
     ])
-    expect(genJS(vars.get('_y'), 'eval', opts)).toEqual(['_y = _LOOKUP(_x, _time) * 10.0;'])
+    expect(genJS(vars.get('_y'), 'eval', opts)).toEqual(['_y = fns.LOOKUP(_x, _time) * 10.0;'])
   })
 
   it('should work for GET DIRECT DATA function (single value from tagged xlsx file)', () => {
@@ -1303,7 +1303,7 @@ describe('generateEquation (Vensim -> JS)', () => {
     expect(genJS(vars.get('_x'), 'init-lookups', opts)).toEqual([
       '_x = __new_lookup(2, /*copy=*/true, (double[]){ 2045.0, 35.0, 2050.0, 47.0 });'
     ])
-    expect(genJS(vars.get('_y'), 'eval', opts)).toEqual(['_y = _LOOKUP(_x, _time) * 10.0;'])
+    expect(genJS(vars.get('_y'), 'eval', opts)).toEqual(['_y = fns.LOOKUP(_x, _time) * 10.0;'])
   })
 
   it('should work for GET DIRECT DATA function (single value with lowercase cell reference)', () => {
@@ -1316,7 +1316,7 @@ describe('generateEquation (Vensim -> JS)', () => {
     expect(genJS(vars.get('_x'), 'init-lookups', { modelDir })).toEqual([
       '_x = __new_lookup(2, /*copy=*/true, (double[]){ 2045.0, 35.0, 2050.0, 47.0 });'
     ])
-    expect(genJS(vars.get('_y'), 'eval', { modelDir })).toEqual(['_y = _LOOKUP(_x, _time) * 10.0;'])
+    expect(genJS(vars.get('_y'), 'eval', { modelDir })).toEqual(['_y = fns.LOOKUP(_x, _time) * 10.0;'])
   })
 
   it('should throw error for GET DIRECT DATA function (with invalid cell reference)', () => {
@@ -1329,7 +1329,7 @@ describe('generateEquation (Vensim -> JS)', () => {
     expect(() => genJS(vars.get('_x'), 'init-lookups', { modelDir })).toThrow(
       `Failed to parse 'cell' argument for GET DIRECT {DATA,LOOKUPS} call for _x: ++`
     )
-    expect(genJS(vars.get('_y'), 'eval', { modelDir })).toEqual(['_y = _LOOKUP(_x, _time) * 10.0;'])
+    expect(genJS(vars.get('_y'), 'eval', { modelDir })).toEqual(['_y = fns.LOOKUP(_x, _time) * 10.0;'])
   })
 
   it('should work for GET DIRECT DATA function (1D)', () => {
@@ -1346,7 +1346,7 @@ describe('generateEquation (Vensim -> JS)', () => {
     expect(genJS(vars.get('_x[_a2]'), 'init-lookups', { modelDir })).toEqual([
       '_x[1] = __new_lookup(2, /*copy=*/true, (double[]){ 2030.0, 185.0, 2050.0, 180.0 });'
     ])
-    expect(genJS(vars.get('_y'), 'eval', { modelDir })).toEqual(['_y = _LOOKUP(_x[1], _time) * 10.0;'])
+    expect(genJS(vars.get('_y'), 'eval', { modelDir })).toEqual(['_y = fns.LOOKUP(_x[1], _time) * 10.0;'])
   })
 
   it('should work for GET DIRECT DATA function (2D with separate definitions)', () => {
@@ -1374,7 +1374,7 @@ describe('generateEquation (Vensim -> JS)', () => {
       '_x[1][i] = __new_lookup(2, /*copy=*/true, (double[]){ -1e+308, 0.0, 1e+308, 0.0 });',
       '}'
     ])
-    expect(genJS(vars.get('_y'), 'eval', opts)).toEqual(['_y = _LOOKUP(_x[1][0], _time) * 10.0;'])
+    expect(genJS(vars.get('_y'), 'eval', opts)).toEqual(['_y = fns.LOOKUP(_x[1][0], _time) * 10.0;'])
   })
 
   it('should work for GET DIRECT LOOKUPS function', () => {
@@ -1397,7 +1397,7 @@ describe('generateEquation (Vensim -> JS)', () => {
     ])
     expect(genJS(vars.get('_y'), 'eval', { modelDir })).toEqual([
       'for (let i = 0; i < 3; i++) {',
-      '_y[i] = _LOOKUP(_x[i], _time);',
+      '_y[i] = fns.LOOKUP(_x[i], _time);',
       '}'
     ])
     expect(genJS(vars.get('_z'), 'eval', { modelDir })).toEqual(['_z = _y[1];'])
@@ -1447,8 +1447,8 @@ describe('generateEquation (Vensim -> JS)', () => {
       y = IF THEN ELSE(x > 0, 1, x) ~~|
     `)
     expect(vars.size).toBe(2)
-    expect(genJS(vars.get('_x'))).toEqual(['_x = _ABS(1.0);'])
-    expect(genJS(vars.get('_y'))).toEqual(['_y = _IF_THEN_ELSE(_x > 0.0, 1.0, _x);'])
+    expect(genJS(vars.get('_x'))).toEqual(['_x = fns.ABS(1.0);'])
+    expect(genJS(vars.get('_y'))).toEqual(['_y = ((_x > 0.0) ? (1.0) : (_x));'])
   })
 
   it('should work for INITIAL function', () => {
@@ -1473,7 +1473,7 @@ describe('generateEquation (Vensim -> JS)', () => {
     expect(vars.size).toBe(2)
     expect(genJS(vars.get('_x'), 'eval')).toEqual(['_x = _time * 2.0;'])
     expect(genJS(vars.get('_y'), 'init-levels')).toEqual(['_y = 10.0;'])
-    expect(genJS(vars.get('_y'), 'eval')).toEqual(['_y = _INTEG(_y, _x);'])
+    expect(genJS(vars.get('_y'), 'eval')).toEqual(['_y = fns.INTEG(_y, _x);'])
   })
 
   it('should work for INTEG function (with one dimension)', () => {
@@ -1491,7 +1491,7 @@ describe('generateEquation (Vensim -> JS)', () => {
     expect(genJS(vars.get('_y'), 'init-levels')).toEqual(['for (let i = 0; i < 2; i++) {', '_y[i] = _init[i];', '}'])
     expect(genJS(vars.get('_y'), 'eval')).toEqual([
       'for (let i = 0; i < 2; i++) {',
-      '_y[i] = _INTEG(_y[i], _rate[i]);',
+      '_y[i] = fns.INTEG(_y[i], _rate[i]);',
       '}'
     ])
   })
@@ -1520,7 +1520,7 @@ describe('generateEquation (Vensim -> JS)', () => {
       'for (let u = 0; u < 2; u++) {',
       '__t2 += _rate[u];',
       '}',
-      '_y = _INTEG(_y, __t2);'
+      '_y = fns.INTEG(_y, __t2);'
     ])
   })
 
@@ -1531,7 +1531,7 @@ describe('generateEquation (Vensim -> JS)', () => {
     `)
     expect(vars.size).toBe(2)
     expect(genJS(vars.get('_x'))).toEqual(['_x = 1.0;'])
-    expect(genJS(vars.get('_y'))).toEqual(['_y = _INTEGER(_x);'])
+    expect(genJS(vars.get('_y'))).toEqual(['_y = fns.INTEGER(_x);'])
   })
 
   it('should work for LN function', () => {
@@ -1541,7 +1541,7 @@ describe('generateEquation (Vensim -> JS)', () => {
     `)
     expect(vars.size).toBe(2)
     expect(genJS(vars.get('_x'))).toEqual(['_x = 1.0;'])
-    expect(genJS(vars.get('_y'))).toEqual(['_y = _LN(_x);'])
+    expect(genJS(vars.get('_y'))).toEqual(['_y = fns.LN(_x);'])
   })
 
   it('should work for LOOKUP BACKWARD function (with lookup defined explicitly)', () => {
@@ -1552,7 +1552,7 @@ describe('generateEquation (Vensim -> JS)', () => {
     expect(vars.size).toBe(2)
     expect(genJS(vars.get('_x'), 'decl')).toEqual(['double _x_data_[6] = { 0.0, 0.0, 1.0, 1.0, 2.0, 2.0 };'])
     expect(genJS(vars.get('_x'), 'init-lookups')).toEqual(['_x = __new_lookup(3, /*copy=*/false, _x_data_);'])
-    expect(genJS(vars.get('_y'))).toEqual(['_y = _LOOKUP_BACKWARD(_x, 1.5);'])
+    expect(genJS(vars.get('_y'))).toEqual(['_y = fns.LOOKUP_BACKWARD(_x, 1.5);'])
   })
 
   it('should work for LOOKUP BACKWARD function (with lookup defined using GET DIRECT LOOKUPS)', () => {
@@ -1574,7 +1574,7 @@ describe('generateEquation (Vensim -> JS)', () => {
     ])
     expect(genJS(vars.get('_y'), 'eval', { modelDir })).toEqual([
       'for (let i = 0; i < 3; i++) {',
-      '_y[i] = _LOOKUP_BACKWARD(_x[i], _time);',
+      '_y[i] = fns.LOOKUP_BACKWARD(_x[i], _time);',
       '}'
     ])
   })
@@ -1587,7 +1587,7 @@ describe('generateEquation (Vensim -> JS)', () => {
     expect(vars.size).toBe(2)
     expect(genJS(vars.get('_x'), 'decl')).toEqual(['double _x_data_[6] = { 0.0, 0.0, 1.0, 1.0, 2.0, 2.0 };'])
     expect(genJS(vars.get('_x'), 'init-lookups')).toEqual(['_x = __new_lookup(3, /*copy=*/false, _x_data_);'])
-    expect(genJS(vars.get('_y'))).toEqual(['_y = _LOOKUP_FORWARD(_x, 1.5);'])
+    expect(genJS(vars.get('_y'))).toEqual(['_y = fns.LOOKUP_FORWARD(_x, 1.5);'])
   })
 
   it('should work for LOOKUP INVERT function', () => {
@@ -1598,7 +1598,7 @@ describe('generateEquation (Vensim -> JS)', () => {
     expect(vars.size).toBe(2)
     expect(genJS(vars.get('_x'), 'decl')).toEqual(['double _x_data_[6] = { 0.0, 0.0, 1.0, 1.0, 2.0, 2.0 };'])
     expect(genJS(vars.get('_x'), 'init-lookups')).toEqual(['_x = __new_lookup(3, /*copy=*/false, _x_data_);'])
-    expect(genJS(vars.get('_y'))).toEqual(['_y = _LOOKUP_INVERT(_x, 1.5);'])
+    expect(genJS(vars.get('_y'))).toEqual(['_y = fns.LOOKUP_INVERT(_x, 1.5);'])
   })
 
   it('should work for MAX function', () => {
@@ -1608,7 +1608,7 @@ describe('generateEquation (Vensim -> JS)', () => {
     `)
     expect(vars.size).toBe(2)
     expect(genJS(vars.get('_x'))).toEqual(['_x = 1.0;'])
-    expect(genJS(vars.get('_y'))).toEqual(['_y = _MAX(_x, 0.0);'])
+    expect(genJS(vars.get('_y'))).toEqual(['_y = fns.MAX(_x, 0.0);'])
   })
 
   it('should work for MIN function', () => {
@@ -1618,7 +1618,7 @@ describe('generateEquation (Vensim -> JS)', () => {
     `)
     expect(vars.size).toBe(2)
     expect(genJS(vars.get('_x'))).toEqual(['_x = 1.0;'])
-    expect(genJS(vars.get('_y'))).toEqual(['_y = _MIN(_x, 0.0);'])
+    expect(genJS(vars.get('_y'))).toEqual(['_y = fns.MIN(_x, 0.0);'])
   })
 
   it('should work for MODULO function', () => {
@@ -1628,7 +1628,7 @@ describe('generateEquation (Vensim -> JS)', () => {
     `)
     expect(vars.size).toBe(2)
     expect(genJS(vars.get('_x'))).toEqual(['_x = 1.0;'])
-    expect(genJS(vars.get('_y'))).toEqual(['_y = _MODULO(_x, 2.0);'])
+    expect(genJS(vars.get('_y'))).toEqual(['_y = fns.MODULO(_x, 2.0);'])
   })
 
   it('should work for NPV function', () => {
@@ -1647,10 +1647,10 @@ describe('generateEquation (Vensim -> JS)', () => {
     expect(genJS(vars.get('_factor'))).toEqual(['_factor = 2.0;'])
     expect(genJS(vars.get('__level1'), 'init-levels')).toEqual(['__level1 = 1.0;'])
     expect(genJS(vars.get('__level1'), 'eval')).toEqual([
-      '__level1 = _INTEG(__level1, (-__level1 * _discount_rate) / (1.0 + _discount_rate * _time_step));'
+      '__level1 = fns.INTEG(__level1, (-__level1 * _discount_rate) / (1.0 + _discount_rate * _time_step));'
     ])
     expect(genJS(vars.get('__level2'), 'init-levels')).toEqual(['__level2 = _init;'])
-    expect(genJS(vars.get('__level2'), 'eval')).toEqual(['__level2 = _INTEG(__level2, _stream * __level1);'])
+    expect(genJS(vars.get('__level2'), 'eval')).toEqual(['__level2 = fns.INTEG(__level2, _stream * __level1);'])
     expect(genJS(vars.get('__aux1'), 'eval')).toEqual([
       '__aux1 = (__level2 + _stream * _time_step * __level1) * _factor;'
     ])
@@ -1664,7 +1664,7 @@ describe('generateEquation (Vensim -> JS)', () => {
     `)
     expect(vars.size).toBe(2)
     expect(genJS(vars.get('_x'))).toEqual(['_x = 1.0;'])
-    expect(genJS(vars.get('_y'))).toEqual(['_y = _POWER(_x, 2.0);'])
+    expect(genJS(vars.get('_y'))).toEqual(['_y = fns.POWER(_x, 2.0);'])
   })
 
   it('should work for PULSE function', () => {
@@ -1674,7 +1674,7 @@ describe('generateEquation (Vensim -> JS)', () => {
     `)
     expect(vars.size).toBe(2)
     expect(genJS(vars.get('_x'))).toEqual(['_x = 10.0;'])
-    expect(genJS(vars.get('_y'))).toEqual(['_y = _PULSE(_x, 20.0);'])
+    expect(genJS(vars.get('_y'))).toEqual(['_y = fns.PULSE(_x, 20.0);'])
   })
 
   it('should work for PULSE TRAIN function', () => {
@@ -1690,7 +1690,7 @@ describe('generateEquation (Vensim -> JS)', () => {
     expect(genJS(vars.get('_duration'))).toEqual(['_duration = 1.0;'])
     expect(genJS(vars.get('_repeat'))).toEqual(['_repeat = 5.0;'])
     expect(genJS(vars.get('_last'))).toEqual(['_last = 30.0;'])
-    expect(genJS(vars.get('_y'))).toEqual(['_y = _PULSE_TRAIN(_first, _duration, _repeat, _last);'])
+    expect(genJS(vars.get('_y'))).toEqual(['_y = fns.PULSE_TRAIN(_first, _duration, _repeat, _last);'])
   })
 
   it('should work for QUANTUM function', () => {
@@ -1700,7 +1700,7 @@ describe('generateEquation (Vensim -> JS)', () => {
     `)
     expect(vars.size).toBe(2)
     expect(genJS(vars.get('_x'))).toEqual(['_x = 1.9;'])
-    expect(genJS(vars.get('_y'))).toEqual(['_y = _QUANTUM(_x, 10.0);'])
+    expect(genJS(vars.get('_y'))).toEqual(['_y = fns.QUANTUM(_x, 10.0);'])
   })
 
   it('should work for RAMP function', () => {
@@ -1714,7 +1714,7 @@ describe('generateEquation (Vensim -> JS)', () => {
     expect(genJS(vars.get('_slope'))).toEqual(['_slope = 100.0;'])
     expect(genJS(vars.get('_start'))).toEqual(['_start = 1.0;'])
     expect(genJS(vars.get('_end'))).toEqual(['_end = 10.0;'])
-    expect(genJS(vars.get('_y'))).toEqual(['_y = _RAMP(_slope, _start, _end);'])
+    expect(genJS(vars.get('_y'))).toEqual(['_y = fns.RAMP(_slope, _start, _end);'])
   })
 
   it('should work for SAMPLE IF TRUE function', () => {
@@ -1729,7 +1729,7 @@ describe('generateEquation (Vensim -> JS)', () => {
     expect(genJS(vars.get('_input'))).toEqual(['_input = 5.0;'])
     expect(genJS(vars.get('_x'))).toEqual(['_x = 1.0;'])
     expect(genJS(vars.get('_y'), 'init-levels')).toEqual(['_y = _initial;'])
-    expect(genJS(vars.get('_y'), 'eval')).toEqual(['_y = _SAMPLE_IF_TRUE(_y, _time > _x, _input);'])
+    expect(genJS(vars.get('_y'), 'eval')).toEqual(['_y = fns.SAMPLE_IF_TRUE(_y, _time > _x, _input);'])
   })
 
   it('should work for SIN function', () => {
@@ -1739,7 +1739,7 @@ describe('generateEquation (Vensim -> JS)', () => {
     `)
     expect(vars.size).toBe(2)
     expect(genJS(vars.get('_x'))).toEqual(['_x = 1.0;'])
-    expect(genJS(vars.get('_y'))).toEqual(['_y = _SIN(_x);'])
+    expect(genJS(vars.get('_y'))).toEqual(['_y = fns.SIN(_x);'])
   })
 
   it('should work for SMOOTH function', () => {
@@ -1749,10 +1749,12 @@ describe('generateEquation (Vensim -> JS)', () => {
       y = SMOOTH(input, delay) ~~|
     `)
     expect(vars.size).toBe(4)
-    expect(genJS(vars.get('_input'))).toEqual(['_input = 3.0 + _PULSE(10.0, 10.0);'])
+    expect(genJS(vars.get('_input'))).toEqual(['_input = 3.0 + fns.PULSE(10.0, 10.0);'])
     expect(genJS(vars.get('_delay'))).toEqual(['_delay = 2.0;'])
     expect(genJS(vars.get('__level1'), 'init-levels')).toEqual(['__level1 = _input;'])
-    expect(genJS(vars.get('__level1'), 'eval')).toEqual(['__level1 = _INTEG(__level1, (_input - __level1) / _delay);'])
+    expect(genJS(vars.get('__level1'), 'eval')).toEqual([
+      '__level1 = fns.INTEG(__level1, (_input - __level1) / _delay);'
+    ])
     expect(genJS(vars.get('_y'))).toEqual(['_y = __level1;'])
   })
 
@@ -1763,10 +1765,12 @@ describe('generateEquation (Vensim -> JS)', () => {
       y = SMOOTHI(input, delay, 5) ~~|
     `)
     expect(vars.size).toBe(4)
-    expect(genJS(vars.get('_input'))).toEqual(['_input = 3.0 + _PULSE(10.0, 10.0);'])
+    expect(genJS(vars.get('_input'))).toEqual(['_input = 3.0 + fns.PULSE(10.0, 10.0);'])
     expect(genJS(vars.get('_delay'))).toEqual(['_delay = 2.0;'])
     expect(genJS(vars.get('__level1'), 'init-levels')).toEqual(['__level1 = 5.0;'])
-    expect(genJS(vars.get('__level1'), 'eval')).toEqual(['__level1 = _INTEG(__level1, (_input - __level1) / _delay);'])
+    expect(genJS(vars.get('__level1'), 'eval')).toEqual([
+      '__level1 = fns.INTEG(__level1, (_input - __level1) / _delay);'
+    ])
     expect(genJS(vars.get('_y'))).toEqual(['_y = __level1;'])
   })
 
@@ -1777,19 +1781,19 @@ describe('generateEquation (Vensim -> JS)', () => {
       y = SMOOTH3(input, delay) ~~|
     `)
     expect(vars.size).toBe(6)
-    expect(genJS(vars.get('_input'))).toEqual(['_input = 3.0 + _PULSE(10.0, 10.0);'])
+    expect(genJS(vars.get('_input'))).toEqual(['_input = 3.0 + fns.PULSE(10.0, 10.0);'])
     expect(genJS(vars.get('_delay'))).toEqual(['_delay = 2.0;'])
     expect(genJS(vars.get('__level1'), 'init-levels')).toEqual(['__level1 = _input;'])
     expect(genJS(vars.get('__level1'), 'eval')).toEqual([
-      '__level1 = _INTEG(__level1, (_input - __level1) / (_delay / 3.0));'
+      '__level1 = fns.INTEG(__level1, (_input - __level1) / (_delay / 3.0));'
     ])
     expect(genJS(vars.get('__level2'), 'init-levels')).toEqual(['__level2 = _input;'])
     expect(genJS(vars.get('__level2'), 'eval')).toEqual([
-      '__level2 = _INTEG(__level2, (__level1 - __level2) / (_delay / 3.0));'
+      '__level2 = fns.INTEG(__level2, (__level1 - __level2) / (_delay / 3.0));'
     ])
     expect(genJS(vars.get('__level3'), 'init-levels')).toEqual(['__level3 = _input;'])
     expect(genJS(vars.get('__level3'), 'eval')).toEqual([
-      '__level3 = _INTEG(__level3, (__level2 - __level3) / (_delay / 3.0));'
+      '__level3 = fns.INTEG(__level3, (__level2 - __level3) / (_delay / 3.0));'
     ])
     expect(genJS(vars.get('_y'))).toEqual(['_y = __level3;'])
   })
@@ -1802,19 +1806,19 @@ describe('generateEquation (Vensim -> JS)', () => {
       y = SMOOTH3I(input, delay, 5) ~~|
     `)
     expect(vars.size).toBe(6)
-    expect(genJS(vars.get('_input'))).toEqual(['_input = 3.0 + _PULSE(10.0, 10.0);'])
+    expect(genJS(vars.get('_input'))).toEqual(['_input = 3.0 + fns.PULSE(10.0, 10.0);'])
     expect(genJS(vars.get('_delay'))).toEqual(['_delay = 2.0;'])
     expect(genJS(vars.get('__level1'), 'init-levels')).toEqual(['__level1 = 5.0;'])
     expect(genJS(vars.get('__level1'), 'eval')).toEqual([
-      '__level1 = _INTEG(__level1, (_input - __level1) / (_delay / 3.0));'
+      '__level1 = fns.INTEG(__level1, (_input - __level1) / (_delay / 3.0));'
     ])
     expect(genJS(vars.get('__level2'), 'init-levels')).toEqual(['__level2 = 5.0;'])
     expect(genJS(vars.get('__level2'), 'eval')).toEqual([
-      '__level2 = _INTEG(__level2, (__level1 - __level2) / (_delay / 3.0));'
+      '__level2 = fns.INTEG(__level2, (__level1 - __level2) / (_delay / 3.0));'
     ])
     expect(genJS(vars.get('__level3'), 'init-levels')).toEqual(['__level3 = 5.0;'])
     expect(genJS(vars.get('__level3'), 'eval')).toEqual([
-      '__level3 = _INTEG(__level3, (__level2 - __level3) / (_delay / 3.0));'
+      '__level3 = fns.INTEG(__level3, (__level2 - __level3) / (_delay / 3.0));'
     ])
     expect(genJS(vars.get('_y'))).toEqual(['_y = __level3;'])
   })
@@ -1826,7 +1830,7 @@ describe('generateEquation (Vensim -> JS)', () => {
     `)
     expect(vars.size).toBe(2)
     expect(genJS(vars.get('_x'))).toEqual(['_x = 1.0;'])
-    expect(genJS(vars.get('_y'))).toEqual(['_y = _SQRT(_x);'])
+    expect(genJS(vars.get('_y'))).toEqual(['_y = fns.SQRT(_x);'])
   })
 
   it('should work for STEP function', () => {
@@ -1836,7 +1840,7 @@ describe('generateEquation (Vensim -> JS)', () => {
     `)
     expect(vars.size).toBe(2)
     expect(genJS(vars.get('_x'))).toEqual(['_x = 1.0;'])
-    expect(genJS(vars.get('_y'))).toEqual(['_y = _STEP(_x, 10.0);'])
+    expect(genJS(vars.get('_y'))).toEqual(['_y = fns.STEP(_x, 10.0);'])
   })
 
   it('should work for SUM function (single call)', () => {
@@ -1902,7 +1906,7 @@ describe('generateEquation (Vensim -> JS)', () => {
     expect(genJS(vars.get('_x'))).toEqual([
       'double __t1 = 0.0;',
       'for (let u = 0; u < 2; u++) {',
-      '__t1 += _IF_THEN_ELSE(_a[u] === 10.0, 0.0, _a[u]);',
+      '__t1 += ((_a[u] === 10.0) ? (0.0) : (_a[u]));',
       '}',
       '_x = __t1 + 1.0;'
     ])
@@ -1915,7 +1919,7 @@ describe('generateEquation (Vensim -> JS)', () => {
     `)
     expect(vars.size).toBe(2)
     expect(genJS(vars.get('_x'))).toEqual(['_x = 1.0;'])
-    expect(genJS(vars.get('_y'))).toEqual(['_y = _TAN(_x);'])
+    expect(genJS(vars.get('_y'))).toEqual(['_y = fns.TAN(_x);'])
   })
 
   it('should work for TREND function', () => {
@@ -1926,8 +1930,8 @@ describe('generateEquation (Vensim -> JS)', () => {
     expect(vars.size).toBe(4)
     expect(genJS(vars.get('_x'))).toEqual(['_x = 1.0;'])
     expect(genJS(vars.get('__level1'), 'init-levels')).toEqual(['__level1 = _x / (1.0 + 2.0 * 10.0);'])
-    expect(genJS(vars.get('__level1'), 'eval')).toEqual(['__level1 = _INTEG(__level1, (_x - __level1) / 10.0);'])
-    expect(genJS(vars.get('__aux1'), 'eval')).toEqual(['__aux1 = _ZIDZ(_x - __level1, 10.0 * _ABS(__level1));'])
+    expect(genJS(vars.get('__level1'), 'eval')).toEqual(['__level1 = fns.INTEG(__level1, (_x - __level1) / 10.0);'])
+    expect(genJS(vars.get('__aux1'), 'eval')).toEqual(['__aux1 = fns.ZIDZ(_x - __level1, 10.0 * fns.ABS(__level1));'])
     expect(genJS(vars.get('_y'))).toEqual(['_y = __aux1;'])
   })
 
@@ -2053,7 +2057,7 @@ describe('generateEquation (Vensim -> JS)', () => {
     expect(genJS(vars.get('_a[_a2]'), 'init-constants')).toEqual(['_a[1] = 1.0;'])
     expect(genJS(vars.get('_a[_a3]'), 'init-constants')).toEqual(['_a[2] = 2.0;'])
     expect(genJS(vars.get('_x'))).toEqual([
-      'double* __t1 = _VECTOR_SORT_ORDER(_a, 3, 1.0);',
+      'let __t1 = fns.VECTOR_SORT_ORDER(_a, 3, 1.0);',
       'for (let i = 0; i < 3; i++) {',
       '_x[i] = __t1[_dima[i]];',
       '}'
@@ -2082,7 +2086,7 @@ describe('generateEquation (Vensim -> JS)', () => {
     expect(genJS(vars.get('_x[_a3,_b2]'), 'init-constants')).toEqual(['_x[2][1] = 5.0;'])
     expect(genJS(vars.get('_y'))).toEqual([
       'for (let i = 0; i < 3; i++) {',
-      'double* __t1 = _VECTOR_SORT_ORDER(_x[_dima[i]], 2, 1.0);',
+      'let __t1 = fns.VECTOR_SORT_ORDER(_x[_dima[i]], 2, 1.0);',
       'for (let j = 0; j < 2; j++) {',
       '_y[i][j] = __t1[_dimb[j]];',
       '}',
@@ -2179,7 +2183,7 @@ describe('generateEquation (Vensim -> JS)', () => {
     expect(genJS(vars.get('__lookup1'), 'init-lookups')).toEqual([
       '__lookup1 = __new_lookup(6, /*copy=*/false, __lookup1_data_);'
     ])
-    expect(genJS(vars.get('_y'))).toEqual(['_y = _WITH_LOOKUP(_time, __lookup1);'])
+    expect(genJS(vars.get('_y'))).toEqual(['_y = fns.WITH_LOOKUP(_time, __lookup1);'])
   })
 
   it('should work for XIDZ function', () => {
@@ -2189,7 +2193,7 @@ describe('generateEquation (Vensim -> JS)', () => {
     `)
     expect(vars.size).toBe(2)
     expect(genJS(vars.get('_x'))).toEqual(['_x = 1.0;'])
-    expect(genJS(vars.get('_y'))).toEqual(['_y = _XIDZ(_x, 2.0, 3.0);'])
+    expect(genJS(vars.get('_y'))).toEqual(['_y = fns.XIDZ(_x, 2.0, 3.0);'])
   })
 
   it('should work for ZIDZ function', () => {
@@ -2199,6 +2203,6 @@ describe('generateEquation (Vensim -> JS)', () => {
     `)
     expect(vars.size).toBe(2)
     expect(genJS(vars.get('_x'))).toEqual(['_x = 1.0;'])
-    expect(genJS(vars.get('_y'))).toEqual(['_y = _ZIDZ(_x, 2.0);'])
+    expect(genJS(vars.get('_y'))).toEqual(['_y = fns.ZIDZ(_x, 2.0);'])
   })
 })

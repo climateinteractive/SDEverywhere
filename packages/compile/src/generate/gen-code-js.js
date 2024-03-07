@@ -30,7 +30,7 @@ let codeGenerator = (parsedModel, opts) => {
     if (parsedModel.kind === 'vensim-legacy') {
       return new EquationGen(v, extData, directData, mode, modelDirname).generate()
     } else {
-      return generateEquation(v, mode, extData, directData, modelDirname)
+      return generateEquation(v, mode, extData, directData, modelDirname, 'js')
     }
   })
   let section = R.pipe(generateSection, R.flatten, lines)
@@ -126,6 +126,12 @@ export function getTimeStep() {
 export function getSaveFreq() {
   initControlParamsIfNeeded();
   return _saveper;
+}
+
+// Model functions
+let fns;
+export function setModelFunctions(functions /*: CoreFunctions*/) {
+  fns = functions
 }
 
 `

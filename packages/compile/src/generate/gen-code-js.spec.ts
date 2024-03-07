@@ -64,6 +64,7 @@ interface ModelCore {
   getTimeStep(): number
   getSaveFreq(): number
 
+  setModelFunctions(functions: /*CoreFunctions*/ any): void
   setTime(time: number): void
 
   setInputs(inputValue: (index: number) => number): void
@@ -180,10 +181,11 @@ describe('generateCode (Vensim -> JS)', () => {
       input = 1 ~~|
       x = input ~~|
       y = :NOT: x ~~|
+      z = ABS(y) ~~|
     `
     const code = readInlineModelAndGenerateJS(mdl, {
       inputVarNames: ['input'],
-      outputVarNames: ['x', 'y']
+      outputVarNames: ['x', 'y', 'z']
     })
     // console.log(code)
     expect(code).toEqual(`\
@@ -191,11 +193,13 @@ describe('generateCode (Vensim -> JS)', () => {
 let _input;
 let _x;
 let _y;
+let _z;
 
 // Output variable identifiers
 export const outputVarIds = [
   '_x',
-  '_y'
+  '_y',
+  '_z'
 ]
 
 // Array dimensions
@@ -248,6 +252,12 @@ export function getTimeStep() {
 export function getSaveFreq() {
   initControlParamsIfNeeded();
   return _saveper;
+}
+
+// Model functions
+let fns;
+export function setModelFunctions(functions /*: CoreFunctions*/) {
+  fns = functions
 }
 
 // Internal state
@@ -312,6 +322,8 @@ function evalAux0() {
   _x = _input;
   // y = :NOT: x
   _y = !_x;
+  // z = ABS(y)
+  _z = fns.ABS(_y);
 }
 
 
@@ -337,12 +349,13 @@ export function setInputs(valueAtIndex /*: (index: number) => number*/) {
 }
 
 function getHeader() {
-  return "x\\ty";
+  return "x\\ty\\tz";
 }
 
 export function storeOutputs(storeValue /*: (value: number) => void*/) {
   storeValue(_x);
   storeValue(_y);
+  storeValue(_z);
 }
 
 export function storeOutput(varIndex, subIndex0, subIndex1, subIndex2, storeValue /*: (value: number) => void*/) {
@@ -355,6 +368,9 @@ export function storeOutput(varIndex, subIndex0, subIndex1, subIndex2, storeValu
       break;
     case 3:
       storeValue(_y);
+      break;
+    case 4:
+      storeValue(_z);
       break;
     default:
       break;

@@ -1,5 +1,7 @@
 // Copyright (c) 2024 Climate Interactive / New Venture Fund
 
+import type { CoreFunctions } from './core-functions'
+
 export interface ModelCore {
   outputVarIds: string[]
 
@@ -8,6 +10,7 @@ export interface ModelCore {
   getTimeStep(): number
   getSaveFreq(): number
 
+  setModelFunctions(functions: CoreFunctions): void
   setTime(time: number): void
 
   setInputs(inputValue: (index: number) => number): void

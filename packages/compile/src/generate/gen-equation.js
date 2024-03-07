@@ -34,7 +34,7 @@ import LoopIndexVars from './loop-index-vars.js'
  * @return {string[]} An array of strings containing the generated C code for the variable,
  * one string per line of code.
  */
-export function generateEquation(variable, mode, extData, directData, modelDir, outFormat = 'c') {
+export function generateEquation(variable, mode, extData, directData, modelDir, outFormat) {
   // Maps of LHS subscript families to loop index vars for lookup on the RHS
   const loopIndexVars = new LoopIndexVars(['i', 'j', 'k', 'l', 'm'])
   const arrayIndexVars = new LoopIndexVars(['u', 'v', 'w', 's', 't', 'f', 'g', 'h', 'o', 'p', 'q', 'r'])
