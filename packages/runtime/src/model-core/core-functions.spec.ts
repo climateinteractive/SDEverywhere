@@ -185,12 +185,6 @@ describe('CoreFunctions', () => {
     expect(fns.TAN(Math.PI / 4)).toBeCloseTo(1)
   })
 
-  // TODO
-  it('should expose WITH_LOOKUP', () => {
-    const lookup = [1, 2, 3]
-    expect(() => fns.WITH_LOOKUP(1, lookup)).toThrow('WITH_LOOKUP function not yet implemented for JS target')
-  })
-
   it('should expose XIDZ', () => {
     expect(fns.XIDZ(3, 4, 1)).toBe(0.75)
     expect(fns.XIDZ(3, 0, 1)).toBe(1)
@@ -199,5 +193,56 @@ describe('CoreFunctions', () => {
   it('should expose ZIDZ', () => {
     expect(fns.ZIDZ(3, 4)).toBe(0.75)
     expect(fns.ZIDZ(3, 0)).toBe(0)
+  })
+
+  it('should expose LOOKUP', () => {
+    const lookup = fns.createLookup(2, [1, 2, 3, 6])
+    expect(fns.LOOKUP(lookup, 0)).toBe(2)
+    expect(fns.LOOKUP(lookup, 1)).toBe(2)
+    expect(fns.LOOKUP(lookup, 2)).toBe(4)
+    expect(fns.LOOKUP(lookup, 3)).toBe(6)
+    expect(fns.LOOKUP(lookup, 4)).toBe(6)
+  })
+
+  it('should expose LOOKUP_FORWARD', () => {
+    const lookup = fns.createLookup(2, [1, 2, 3, 6])
+    expect(fns.LOOKUP_FORWARD(lookup, 0)).toBe(2)
+    expect(fns.LOOKUP_FORWARD(lookup, 1)).toBe(2)
+    expect(fns.LOOKUP_FORWARD(lookup, 1.5)).toBe(6)
+    expect(fns.LOOKUP_FORWARD(lookup, 2)).toBe(6)
+    expect(fns.LOOKUP_FORWARD(lookup, 3)).toBe(6)
+    expect(fns.LOOKUP_FORWARD(lookup, 4)).toBe(6)
+  })
+
+  it('should expose LOOKUP_BACKWARD', () => {
+    const lookup = fns.createLookup(2, [1, 2, 3, 6])
+    expect(fns.LOOKUP_BACKWARD(lookup, 0)).toBe(2)
+    expect(fns.LOOKUP_BACKWARD(lookup, 1)).toBe(2)
+    expect(fns.LOOKUP_BACKWARD(lookup, 1.5)).toBe(2)
+    expect(fns.LOOKUP_BACKWARD(lookup, 2)).toBe(2)
+    expect(fns.LOOKUP_BACKWARD(lookup, 3)).toBe(6)
+    expect(fns.LOOKUP_BACKWARD(lookup, 4)).toBe(6)
+  })
+
+  it('should expose LOOKUP_INVERT', () => {
+    // Inverted this looks like [2, 1, 6, 3]
+    const lookup = fns.createLookup(2, [1, 2, 3, 6])
+    expect(fns.LOOKUP_INVERT(lookup, 0)).toBe(1)
+    expect(fns.LOOKUP_INVERT(lookup, 1)).toBe(1)
+    expect(fns.LOOKUP_INVERT(lookup, 2)).toBe(1)
+    expect(fns.LOOKUP_INVERT(lookup, 3)).toBe(1.5)
+    expect(fns.LOOKUP_INVERT(lookup, 4)).toBe(2)
+    expect(fns.LOOKUP_INVERT(lookup, 5)).toBe(2.5)
+    expect(fns.LOOKUP_INVERT(lookup, 6)).toBe(3)
+    expect(fns.LOOKUP_INVERT(lookup, 7)).toBe(3)
+  })
+
+  it('should expose WITH_LOOKUP', () => {
+    const lookup = fns.createLookup(2, [1, 2, 3, 6])
+    expect(fns.WITH_LOOKUP(0, lookup)).toBe(2)
+    expect(fns.WITH_LOOKUP(1, lookup)).toBe(2)
+    expect(fns.WITH_LOOKUP(2, lookup)).toBe(4)
+    expect(fns.WITH_LOOKUP(3, lookup)).toBe(6)
+    expect(fns.WITH_LOOKUP(4, lookup)).toBe(6)
   })
 })

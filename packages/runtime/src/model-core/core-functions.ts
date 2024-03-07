@@ -1,10 +1,10 @@
 // Copyright (c) 2024 Climate Interactive / New Venture Fund
 
+import { Lookup } from './lookup'
+
 // See XIDZ documentation for an explanation of this value:
 //   https://www.vensim.com/documentation/fn_xidz.html
 const EPSILON = 1e-6
-
-export type Lookup = number[]
 
 export interface CoreFunctionContext {
   initialTime: number
@@ -15,6 +15,7 @@ export interface CoreFunctionContext {
 
 export interface CoreFunctions {
   setContext(context: CoreFunctionContext): void
+
   ABS(x: number): number
   ARCCOS(x: number): number
   ARCSIN(x: number): number
@@ -39,9 +40,15 @@ export interface CoreFunctions {
   SQRT(x: number): number
   STEP(height: number, stepTime: number): number
   TAN(x: number): number
-  WITH_LOOKUP(x: number, lookup: Lookup): number
   XIDZ(a: number, b: number, x: number): number
   ZIDZ(a: number, b: number): number
+
+  createLookup(size: number, data: number[]): Lookup
+  LOOKUP(lookup: Lookup, x: number): number
+  LOOKUP_FORWARD(lookup: Lookup, x: number): number
+  LOOKUP_BACKWARD(lookup: Lookup, x: number): number
+  LOOKUP_INVERT(lookup: Lookup, y: number): number
+  WITH_LOOKUP(x: number, lookup: Lookup): number
 }
 
 export function getCoreFunctions(): CoreFunctions {
@@ -166,10 +173,6 @@ export function getCoreFunctions(): CoreFunctions {
       return Math.tan(x)
     },
 
-    WITH_LOOKUP(): number {
-      throw new Error('WITH_LOOKUP function not yet implemented for JS target')
-    },
-
     XIDZ(a: number, b: number, x: number): number {
       return Math.abs(b) < EPSILON ? x : a / b
     },
@@ -180,6 +183,30 @@ export function getCoreFunctions(): CoreFunctions {
       } else {
         return a / b
       }
+    },
+
+    createLookup(size: number, data: number[]): Lookup {
+      return new Lookup(size, data)
+    },
+
+    LOOKUP(lookup: Lookup, x: number): number {
+      return lookup.getValueForX(x, 'interpolate')
+    },
+
+    LOOKUP_FORWARD(lookup: Lookup, x: number): number {
+      return lookup.getValueForX(x, 'forward')
+    },
+
+    LOOKUP_BACKWARD(lookup: Lookup, x: number): number {
+      return lookup.getValueForX(x, 'backward')
+    },
+
+    LOOKUP_INVERT(lookup: Lookup, y: number): number {
+      return lookup.getValueForY(y)
+    },
+
+    WITH_LOOKUP(x: number, lookup: Lookup): number {
+      return lookup.getValueForX(x, 'interpolate')
     }
   }
 }

@@ -176,21 +176,34 @@ function runModel(core: ModelCore, inputs: number[], outputs: number[]) {
 }
 
 describe('generateCode (Vensim -> JS)', () => {
+  //   const vars = readInlineModel(`
+  //   y = WITH LOOKUP(Time, ( [(0,0)-(2,2)], (0,0),(0.1,0.01),(0.5,0.7),(1,1),(1.5,1.2),(2,1.3) )) ~~|
+  // `)
+  // expect(vars.size).toBe(2)
+  // expect(genJS(vars.get('__lookup1'), 'decl')).toEqual([
+  //   'const __lookup1_data_ = [0.0, 0.0, 0.1, 0.01, 0.5, 0.7, 1.0, 1.0, 1.5, 1.2, 2.0, 1.3];'
+  // ])
+  // expect(genJS(vars.get('__lookup1'), 'init-lookups')).toEqual(['__lookup1 = fns.createLookup(6, __lookup1_data_);'])
+  // expect(genJS(vars.get('_y'))).toEqual(['_y = fns.WITH_LOOKUP(_time, __lookup1);'])
+
   it.only('should work for simple model', () => {
     const mdl = `
       input = 1 ~~|
       x = input ~~|
       y = :NOT: x ~~|
       z = ABS(y) ~~|
+      w = WITH LOOKUP(x, ( [(0,0)-(2,2)], (0,0),(0.1,0.01),(0.5,0.7),(1,1),(1.5,1.2),(2,1.3) )) ~~|
     `
     const code = readInlineModelAndGenerateJS(mdl, {
       inputVarNames: ['input'],
-      outputVarNames: ['x', 'y', 'z']
+      outputVarNames: ['x', 'y', 'z', 'w']
     })
     // console.log(code)
     expect(code).toEqual(`\
 // Model variables
+let __lookup1;
 let _input;
+let _w;
 let _x;
 let _y;
 let _z;
@@ -199,7 +212,8 @@ let _z;
 export const outputVarIds = [
   '_x',
   '_y',
-  '_z'
+  '_z',
+  '_w'
 ]
 
 // Array dimensions
@@ -209,7 +223,7 @@ export const outputVarIds = [
 
 
 // Lookup data arrays
-
+const __lookup1_data_ = [0.0, 0.0, 0.1, 0.01, 0.5, 0.7, 1.0, 1.0, 1.5, 1.2, 2.0, 1.3];
 
 
 // Time variable
@@ -265,12 +279,16 @@ let lookups_initialized = false;
 let data_initialized = false;
 
 
+function initLookups0() {
+    __lookup1 = fns.createLookup(6, __lookup1_data_);
+}
+
 
 function initLookups() {
   // Initialize lookups.
   if (!lookups_initialized) {
 
-
+  initLookups0();
       lookups_initialized = true;
   }
 
@@ -320,6 +338,8 @@ export function initLevels() {
 function evalAux0() {
     // x = input
   _x = _input;
+  // w = WITH LOOKUP(x,([(0,0)-(2,2)],(0,0),(0.1,0.01),(0.5,0.7),(1,1),(1.5,1.2),(2,1.3)))
+  _w = fns.WITH_LOOKUP(_x, __lookup1);
   // y = :NOT: x
   _y = !_x;
   // z = ABS(y)
@@ -349,13 +369,14 @@ export function setInputs(valueAtIndex /*: (index: number) => number*/) {
 }
 
 function getHeader() {
-  return "x\\ty\\tz";
+  return "x\\ty\\tz\\tw";
 }
 
 export function storeOutputs(storeValue /*: (value: number) => void*/) {
   storeValue(_x);
   storeValue(_y);
   storeValue(_z);
+  storeValue(_w);
 }
 
 export function storeOutput(varIndex, subIndex0, subIndex1, subIndex2, storeValue /*: (value: number) => void*/) {
@@ -367,9 +388,12 @@ export function storeOutput(varIndex, subIndex0, subIndex1, subIndex2, storeValu
       storeValue(_x);
       break;
     case 3:
-      storeValue(_y);
+      storeValue(_w);
       break;
     case 4:
+      storeValue(_y);
+      break;
+    case 5:
       storeValue(_z);
       break;
     default:
