@@ -47,8 +47,15 @@ describe('CoreFunctions', () => {
     expect(fns.EXP(2)).toBeCloseTo(Math.pow(Math.E, 2))
   })
 
-  // GAME(x: number): number
-  // GAMMA_LN(x: number): number
+  // TODO
+  it('should expose GAME', () => {
+    expect(() => fns.GAME(1)).toThrow('GAME function not yet implemented for JS target')
+  })
+
+  // TODO
+  it('should expose GAMMA_LN', () => {
+    expect(() => fns.GAMMA_LN(1)).toThrow('GAMMA_LN function not yet implemented for JS target')
+  })
 
   it('should expose INTEG', () => {
     const value = 2
@@ -178,7 +185,11 @@ describe('CoreFunctions', () => {
     expect(fns.TAN(Math.PI / 4)).toBeCloseTo(1)
   })
 
-  // WITH_LOOKUP(x: number): number
+  // TODO
+  it('should expose WITH_LOOKUP', () => {
+    const lookup = [1, 2, 3]
+    expect(() => fns.WITH_LOOKUP(1, lookup)).toThrow('WITH_LOOKUP function not yet implemented for JS target')
+  })
 
   it('should expose XIDZ', () => {
     expect(fns.XIDZ(3, 4, 1)).toBe(0.75)

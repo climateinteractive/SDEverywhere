@@ -4,6 +4,8 @@
 //   https://www.vensim.com/documentation/fn_xidz.html
 const EPSILON = 1e-6
 
+export type Lookup = number[]
+
 export interface CoreFunctionContext {
   initialTime: number
   finalTime: number
@@ -19,8 +21,8 @@ export interface CoreFunctions {
   ARCTAN(x: number): number
   COS(x: number): number
   EXP(x: number): number
-  // GAME(x: number): number
-  // GAMMA_LN(x: number): number
+  GAME(x: number): number
+  GAMMA_LN(x: number): number
   INTEG(value: number, rate: number): number
   INTEGER(x: number): number
   LN(x: number): number
@@ -37,7 +39,7 @@ export interface CoreFunctions {
   SQRT(x: number): number
   STEP(height: number, stepTime: number): number
   TAN(x: number): number
-  // WITH_LOOKUP(x: number): number
+  WITH_LOOKUP(x: number, lookup: Lookup): number
   XIDZ(a: number, b: number, x: number): number
   ZIDZ(a: number, b: number): number
 }
@@ -74,9 +76,13 @@ export function getCoreFunctions(): CoreFunctions {
       return Math.exp(x)
     },
 
-    // GAME(x: number): number
+    GAME(): number {
+      throw new Error('GAME function not yet implemented for JS target')
+    },
 
-    // GAMMA_LN(x: number): number
+    GAMMA_LN(): number {
+      throw new Error('GAMMA_LN function not yet implemented for JS target')
+    },
 
     INTEG(value: number, rate: number): number {
       return value + rate * ctx.timeStep
@@ -160,7 +166,9 @@ export function getCoreFunctions(): CoreFunctions {
       return Math.tan(x)
     },
 
-    // WITH_LOOKUP(x: number): number
+    WITH_LOOKUP(): number {
+      throw new Error('WITH_LOOKUP function not yet implemented for JS target')
+    },
 
     XIDZ(a: number, b: number, x: number): number {
       return Math.abs(b) < EPSILON ? x : a / b
