@@ -395,14 +395,12 @@ function removeUnusedVariables(spec) {
   // ensures that we include all subscripts for a variable, which might mean we
   // include some subscripts that aren't needed, but it is safer than trying to
   // eliminate those and possibly omit something that is needed.
-  const referencedVarNames = []
+  const referencedVarNames = new Set()
 
   // Add the given variable name to the list of referenced variables, if it's not
   // already there.
   const recordUsedVarName = varName => {
-    if (!referencedVarNames.includes(varName)) {
-      referencedVarNames.push(varName)
-    }
+    referencedVarNames.add(varName)
   }
 
   // Add the given variable to the list of referenced variables, and do the same for
@@ -443,16 +441,21 @@ function removeUnusedVariables(spec) {
     // that are referenced by this variable, either directly (`v.references`) or
     // in an "INITIAL" expression (`v.initReferences`).  It's OK if we end up with
     // duplicates in this list, because we will examine each reference only once.
-    let refIds = refIdsWithName(v.varName)
-    refIds = refIds.concat(v.references)
-    refIds = refIds.concat(v.initReferences)
-    for (const refId of refIds) {
+    let refStack = []
+    function pushRefs(v) {
+      refStack.push(...refIdsWithName(v.varName))
+      refStack.push(...v.references)
+      refStack.push(...v.initReferences)
+    }
+    pushRefs(v)
+    while (refStack.length > 0) {
+      const refId = refStack.pop()
       if (!referencedRefIds.has(refId)) {
         referencedRefIds.add(refId)
         const refVar = varWithRefId(refId)
         if (refVar) {
           recordUsedVariable(refVar)
-          recordRefsOfVariable(refVar)
+          pushRefs(refVar)
         } else {
           throw new Error(`No var found for ${refId} when recording references for ${v.varName}`)
         }
@@ -486,7 +489,7 @@ function removeUnusedVariables(spec) {
   }
 
   // Filter out unneeded variables so we're left with the minimal set of variables to emit
-  variables = R.filter(v => referencedVarNames.includes(v.varName), variables)
+  variables = R.filter(v => referencedVarNames.has(v.varName), variables)
 
   // Rebuild the variables-by-name map
   variablesByName.clear()
