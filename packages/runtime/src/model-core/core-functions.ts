@@ -1,6 +1,6 @@
 // Copyright (c) 2024 Climate Interactive / New Venture Fund
 
-import { Lookup } from './lookup'
+import { Lookup, type LookupMode } from './lookup'
 
 // See XIDZ documentation for an explanation of this value:
 //   https://www.vensim.com/documentation/fn_xidz.html
@@ -49,6 +49,8 @@ export interface CoreFunctions {
   LOOKUP_BACKWARD(lookup: Lookup, x: number): number
   LOOKUP_INVERT(lookup: Lookup, y: number): number
   WITH_LOOKUP(x: number, lookup: Lookup): number
+
+  GET_DATA_BETWEEN_TIMES(lookup: Lookup, x: number, mode: number): number
 }
 
 export function getCoreFunctions(): CoreFunctions {
@@ -207,6 +209,18 @@ export function getCoreFunctions(): CoreFunctions {
 
     WITH_LOOKUP(x: number, lookup: Lookup): number {
       return lookup.getValueForX(x, 'interpolate')
+    },
+
+    GET_DATA_BETWEEN_TIMES(lookup: Lookup, x: number, mode: number): number {
+      let lookupMode: LookupMode
+      if (mode >= 1) {
+        lookupMode = 'forward'
+      } else if (mode <= -1) {
+        lookupMode = 'backward'
+      } else {
+        lookupMode = 'interpolate'
+      }
+      return lookup.getValueBetweenTimes(x, lookupMode)
     }
   }
 }

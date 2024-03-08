@@ -245,4 +245,75 @@ describe('CoreFunctions', () => {
     expect(fns.WITH_LOOKUP(3, lookup)).toBe(6)
     expect(fns.WITH_LOOKUP(4, lookup)).toBe(6)
   })
+
+  it('should expose GET_DATA_BETWEEN_TIMES', () => {
+    const lookup = fns.createLookup(
+      5,
+      [
+        // t=0
+        0, 0,
+        // t=1
+        1, 10,
+        // t=2
+        2, 20,
+        // t=9
+        9, 70,
+        // t=10
+        10, 80
+      ]
+    )
+
+    // 0 == interpolate
+    // These values were taken from the `getdata` sample model
+    // for `Value for A1 at time plus one year interpolate`
+    expect(fns.GET_DATA_BETWEEN_TIMES(lookup, 0.0, 0)).toBe(0)
+    expect(fns.GET_DATA_BETWEEN_TIMES(lookup, 1.0, 0)).toBe(10)
+    expect(fns.GET_DATA_BETWEEN_TIMES(lookup, 2.0, 0)).toBe(20)
+    expect(fns.GET_DATA_BETWEEN_TIMES(lookup, 3.0, 0)).toBeCloseTo(27.1429)
+    expect(fns.GET_DATA_BETWEEN_TIMES(lookup, 4.0, 0)).toBeCloseTo(34.2857)
+    expect(fns.GET_DATA_BETWEEN_TIMES(lookup, 5.0, 0)).toBeCloseTo(41.4286)
+    expect(fns.GET_DATA_BETWEEN_TIMES(lookup, 6.0, 0)).toBeCloseTo(48.5714)
+    expect(fns.GET_DATA_BETWEEN_TIMES(lookup, 7.0, 0)).toBeCloseTo(55.7143)
+    expect(fns.GET_DATA_BETWEEN_TIMES(lookup, 8.0, 0)).toBeCloseTo(62.8571)
+    expect(fns.GET_DATA_BETWEEN_TIMES(lookup, 9.0, 0)).toBe(70)
+    expect(fns.GET_DATA_BETWEEN_TIMES(lookup, 10.0, 0)).toBe(80)
+
+    // 1 == forward
+    // These values were taken from the `getdata` sample model
+    // for `Value for A1 at time plus one year forward` and
+    // for `Value for A1 at time plus half year forward`
+    expect(fns.GET_DATA_BETWEEN_TIMES(lookup, 0.0, 1)).toBe(0)
+    expect(fns.GET_DATA_BETWEEN_TIMES(lookup, 0.5, 1)).toBe(0)
+    expect(fns.GET_DATA_BETWEEN_TIMES(lookup, 1.0, 1)).toBe(10)
+    expect(fns.GET_DATA_BETWEEN_TIMES(lookup, 1.5, 1)).toBe(10)
+    expect(fns.GET_DATA_BETWEEN_TIMES(lookup, 2.0, 1)).toBe(20)
+    expect(fns.GET_DATA_BETWEEN_TIMES(lookup, 2.5, 1)).toBe(20)
+    expect(fns.GET_DATA_BETWEEN_TIMES(lookup, 3.0, 1)).toBe(70)
+    expect(fns.GET_DATA_BETWEEN_TIMES(lookup, 3.5, 1)).toBe(70)
+    expect(fns.GET_DATA_BETWEEN_TIMES(lookup, 8.0, 1)).toBe(70)
+    expect(fns.GET_DATA_BETWEEN_TIMES(lookup, 8.5, 1)).toBe(70)
+    expect(fns.GET_DATA_BETWEEN_TIMES(lookup, 9.0, 1)).toBe(70)
+    expect(fns.GET_DATA_BETWEEN_TIMES(lookup, 9.5, 1)).toBe(70)
+    expect(fns.GET_DATA_BETWEEN_TIMES(lookup, 10.0, 1)).toBe(80)
+
+    // // -1 == backward
+    // These values were taken from the `getdata` sample model
+    // for `Value for A1 at time plus one year backward` and
+    // for `Value for A1 at time plus half year backward`
+    expect(fns.GET_DATA_BETWEEN_TIMES(lookup, 0.0, -1)).toBe(0)
+    expect(fns.GET_DATA_BETWEEN_TIMES(lookup, 0.5, -1)).toBe(0)
+    expect(fns.GET_DATA_BETWEEN_TIMES(lookup, 1.0, -1)).toBe(0)
+    expect(fns.GET_DATA_BETWEEN_TIMES(lookup, 1.5, -1)).toBe(0)
+    expect(fns.GET_DATA_BETWEEN_TIMES(lookup, 2.0, -1)).toBe(10)
+    expect(fns.GET_DATA_BETWEEN_TIMES(lookup, 2.5, -1)).toBe(10)
+    expect(fns.GET_DATA_BETWEEN_TIMES(lookup, 3.0, -1)).toBe(20)
+    expect(fns.GET_DATA_BETWEEN_TIMES(lookup, 3.5, -1)).toBe(20)
+    expect(fns.GET_DATA_BETWEEN_TIMES(lookup, 8.0, -1)).toBe(20)
+    expect(fns.GET_DATA_BETWEEN_TIMES(lookup, 8.5, -1)).toBe(20)
+    expect(fns.GET_DATA_BETWEEN_TIMES(lookup, 9.0, -1)).toBe(20)
+    expect(fns.GET_DATA_BETWEEN_TIMES(lookup, 9.5, -1)).toBe(20)
+    expect(fns.GET_DATA_BETWEEN_TIMES(lookup, 10.0, -1)).toBe(70)
+    expect(fns.GET_DATA_BETWEEN_TIMES(lookup, 10.5, -1)).toBe(70)
+    expect(fns.GET_DATA_BETWEEN_TIMES(lookup, 11.0, -1)).toBe(70)
+  })
 })
