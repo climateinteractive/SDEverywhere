@@ -62,7 +62,9 @@ interface ModelCore {
   getTimeStep(): number
   getSaveFreq(): number
 
+  getModelFunctions(): /*CoreFunctions*/ any
   setModelFunctions(functions: /*CoreFunctions*/ any): void
+
   setTime(time: number): void
 
   setInputs(inputValue: (index: number) => number): void
@@ -187,7 +189,7 @@ describe('generateCode (Vensim -> JS)', () => {
   // expect(genJS(vars.get('__lookup1'), 'init-lookups')).toEqual(['__lookup1 = fns.createLookup(6, __lookup1_data_);'])
   // expect(genJS(vars.get('_y'))).toEqual(['_y = fns.WITH_LOOKUP(_time, __lookup1);'])
 
-  it.only('should work for simple model', () => {
+  it('should work for simple model', () => {
     const mdl = `
       input = 1 ~~|
       x = input ~~|
@@ -265,73 +267,71 @@ export function getSaveFreq() {
 
 // Model functions
 let fns;
-export function setModelFunctions(functions /*: CoreFunctions*/) {
-  fns = functions
+export function getModelFunctions() {
+  return fns;
 }
+export function setModelFunctions(functions /*: CoreFunctions*/) {
+  fns = functions;
+}
+
+// Internal helper functions
+function multiDimArray(dimLengths) {
+  if (dimLengths.length > 0) {
+    const len = dimLengths[0]
+    const arr = new Array(len)
+    for (let i = 0; i < len; i++) {
+      arr[i] = multiDimArray(dimLengths.slice(1))
+    }
+    return arr
+  } else {
+    return 0
+  }
+}
+
+// Internal constants
+const _NA_ = -Number.MAX_VALUE;
 
 // Internal state
 let lookups_initialized = false;
 let data_initialized = false;
 
-
 function initLookups0() {
-    __lookup1 = fns.createLookup(6, __lookup1_data_);
+  __lookup1 = fns.createLookup(6, __lookup1_data_);
 }
-
 
 function initLookups() {
-  // Initialize lookups.
+  // Initialize lookups
   if (!lookups_initialized) {
-
-  initLookups0();
-      lookups_initialized = true;
+    initLookups0();
+    lookups_initialized = true;
   }
-
 }
-    
-
 
 function initData() {
-  // Initialize data.
+  // Initialize data
   if (!data_initialized) {
-
-
-      data_initialized = true;
+    data_initialized = true;
   }
-
 }
-    
-
 
 function initConstants0() {
-    // input = 1
+  // input = 1
   _input = 1.0;
 }
 
-
 export function initConstants() {
-  // Initialize constants.
+  // Initialize constants
   initConstants0();
   initLookups();
   initData();
 }
-    
-
-
-
 
 export function initLevels() {
-
-  // Initialize variables with initialization values, such as levels, and the variables they depend on.
-
-
+  // Initialize variables with initialization values, such as levels, and the variables they depend on
 }
-    
-
-
 
 function evalAux0() {
-    // x = input
+  // x = input
   _x = _input;
   // w = WITH LOOKUP(x,([(0,0)-(2,2)],(0,0),(0.1,0.01),(0.5,0.7),(1,1),(1.5,1.2),(2,1.3)))
   _w = fns.WITH_LOOKUP(_x, __lookup1);
@@ -341,23 +341,14 @@ function evalAux0() {
   _z = fns.ABS(_y);
 }
 
-
 export function evalAux() {
-  // Evaluate auxiliaries in order from the bottom up.
+  // Evaluate auxiliaries in order from the bottom up
   evalAux0();
-
 }
-    
-
-
-
 
 export function evalLevels() {
-  // Evaluate levels.
-
-
+  // Evaluate levels
 }
-    
 
 export function setInputs(valueAtIndex /*: (index: number) => number*/) {
   _input = valueAtIndex(0);
@@ -428,7 +419,7 @@ export function storeOutput(varIndex, subIndex0, subIndex1, subIndex2, storeValu
     expect(foo).toBe('hi')
   })
 
-  it.only('should run model', async () => {
+  it('should run model', async () => {
     // TODO: Change this test to call each exported function
 
     const initialTime = 2000

@@ -122,9 +122,29 @@ export function getSaveFreq() {
 
 // Model functions
 let fns;
-export function setModelFunctions(functions /*: CoreFunctions*/) {
-  fns = functions
+export function getModelFunctions() {
+  return fns;
 }
+export function setModelFunctions(functions /*: CoreFunctions*/) {
+  fns = functions;
+}
+
+// Internal helper functions
+function multiDimArray(dimLengths) {
+  if (dimLengths.length > 0) {
+    const len = dimLengths[0]
+    const arr = new Array(len)
+    for (let i = 0; i < len; i++) {
+      arr[i] = multiDimArray(dimLengths.slice(1))
+    }
+    return arr
+  } else {
+    return 0
+  }
+}
+
+// Internal constants
+const _NA_ = -Number.MAX_VALUE;
 
 `
   }
@@ -137,28 +157,22 @@ export function setModelFunctions(functions /*: CoreFunctions*/) {
     let code = `// Internal state
 let lookups_initialized = false;
 let data_initialized = false;
+
 `
     code += chunkedFunctions(
       'initLookups',
       false,
       Model.lookupVars(),
-      `  // Initialize lookups.
-  if (!lookups_initialized) {
-`,
-      `      lookups_initialized = true;
-  }
-`
+      '  // Initialize lookups\n  if (!lookups_initialized) {',
+      '    lookups_initialized = true;\n  }'
     )
+    code += '\n'
     code += chunkedFunctions(
       'initData',
       false,
       Model.dataVars(),
-      `  // Initialize data.
-  if (!data_initialized) {
-`,
-      `      data_initialized = true;
-  }
-`
+      '  // Initialize data\n  if (!data_initialized) {',
+      '    data_initialized = true;\n  }'
     )
     return code
   }
@@ -170,10 +184,9 @@ ${chunkedFunctions(
   'initConstants',
   true,
   Model.constVars(),
-  '  // Initialize constants.',
+  '  // Initialize constants',
   '  initLookups();\n  initData();'
-)}
-`
+)}`
   }
 
   function emitInitLevelsCode() {
@@ -183,10 +196,8 @@ ${chunkedFunctions(
   'initLevels',
   true,
   Model.initVars(),
-  `
-  // Initialize variables with initialization values, such as levels, and the variables they depend on.`
-)}
-`
+  '  // Initialize variables with initialization values, such as levels, and the variables they depend on'
+)}`
   }
 
   //
@@ -196,9 +207,8 @@ ${chunkedFunctions(
     mode = 'eval'
 
     return `
-${chunkedFunctions('evalAux', true, Model.auxVars(), '  // Evaluate auxiliaries in order from the bottom up.')}
-
-${chunkedFunctions('evalLevels', true, Model.levelVars(), '  // Evaluate levels.')}
+${chunkedFunctions('evalAux', true, Model.auxVars(), '  // Evaluate auxiliaries in order from the bottom up')}
+${chunkedFunctions('evalLevels', true, Model.levelVars(), '  // Evaluate levels')}
 `
   }
 
@@ -209,7 +219,7 @@ ${chunkedFunctions('evalLevels', true, Model.levelVars(), '  // Evaluate levels.
     let outputVarNames = outputAllVars ? expandedVarNames(true) : spec.outputVars
     let outputVarIds = outputAllVars ? expandedVarNames() : spec.outputVars
     mode = 'io'
-    return `
+    return `\
 export function setInputs(valueAtIndex /*: (index: number) => number*/) {${inputsFromBufferImpl()}}
 
 export function getOutputVarIds() {
@@ -220,7 +230,7 @@ export function getOutputVarIds() {
 
 export function getOutputVarNames() {
   return [
-    ${outputVarNames.map(name => `'${Model.vensimName(name)}'`).join(',\n    ')}
+    ${outputVarNames.map(name => `'${Model.vensimName(name).replace(/'/g, `\\'`)}'`).join(',\n    ')}
   ]
 }
 
@@ -244,17 +254,18 @@ ${fullOutputSection(Model.varIndexInfo())}
   function chunkedFunctions(name, exported, vars, preStep, postStep) {
     // Emit one function for each chunk
     let func = (chunk, idx) => {
-      return `
+      return `\
 function ${name}${idx}() {
-  ${section(chunk)}
+${section(chunk)}
 }
 `
     }
     let funcs = R.pipe(mapIndexed(func), lines)
 
     // Emit one roll-up function that calls the other chunk functions
+    const indent = name === 'initLookups' || name === 'initData' ? 4 : 2
     let funcCall = (chunk, idx) => {
-      return `  ${name}${idx}();`
+      return `${' '.repeat(indent)}${name}${idx}();`
     }
     let funcCalls = R.pipe(mapIndexed(funcCall), lines)
 
@@ -274,22 +285,25 @@ function ${name}${idx}() {
       chunks = [vars]
     }
 
-    if (!preStep) {
-      preStep = ''
-    }
-    if (!postStep) {
-      postStep = ''
-    }
+    const chunkedFuncs = funcs(chunks)
+    const chunkedCalls = funcCalls(chunks)
 
-    return `
-${funcs(chunks)}
-
-${exported ? 'export ' : ''}function ${name}() {
-${preStep}
-${funcCalls(chunks)}
-${postStep}
-}
-    `
+    let code = ''
+    if (chunkedFuncs.length > 0) {
+      code += `${chunkedFuncs}\n`
+    }
+    code += `${exported ? 'export ' : ''}function ${name}() {\n`
+    if (preStep?.length > 0) {
+      code += `${preStep}\n`
+    }
+    if (chunkedCalls.length > 0) {
+      code += `${chunkedCalls}\n`
+    }
+    if (postStep?.length > 0) {
+      code += `${postStep}\n`
+    }
+    code += '}\n'
+    return code
   }
 
   //
@@ -303,26 +317,32 @@ ${postStep}
       // Build a C array declaration for the variable v.
       // This uses the subscript family for each dimension, which may overallocate
       // if the subscript is a subdimension.
-      let varDecl = 'let '
       let families = subscriptFamilies(v.subscripts)
       if (v.isFixedDelay()) {
+        // TODO
         // Add the associated FixedDelay var decl.
         fixedDelayDecls += `\nFixedDelay* ${v.fixedDelayVarName}${R.map(
           family => `[${sub(family).size}]`,
           families
         ).join('')};`
       } else if (v.isDepreciation()) {
+        // TODO
         // Add the associated Depreciation var decl.
         depreciationDecls += `\nDepreciation* ${v.depreciationVarName}${R.map(
           family => `[${sub(family).size}]`,
           families
         ).join('')};`
       }
-      return varDecl + v.varName + R.map(family => `[${sub(family).size}]`, families).join('')
+      if (families.length > 0) {
+        const dimLengths = families.map(family => `${sub(family).size}`).join(', ')
+        return `let ${v.varName} = multiDimArray([${dimLengths}]);`
+      } else {
+        return `let ${v.varName};`
+      }
     }
     // Non-apply-to-all variables are declared multiple times, but coalesce using uniq.
     let decls = R.pipe(
-      R.map(v => `${decl(v)};`),
+      R.map(v => `${decl(v)}`),
       R.uniq,
       asort,
       lines
@@ -347,14 +367,14 @@ ${postStep}
     // Emit a declaration for each array dimension's index numbers.
     // These index number arrays will be used to indirectly reference array elements.
     // The indirection is required to support subdimensions that are a non-contiguous subset of the array elements.
-    let a = R.map(dim => `const size_t ${dim.name}[${dim.size}] = { ${indexNumberList(sub(dim.name).value)} };`)
+    let a = R.map(dim => `const ${dim.name} = [${indexNumberList(sub(dim.name).value)}];`)
     let arrayDims = R.pipe(a, asort, lines)
     return arrayDims(allDimensions())
   }
   function dimensionMappingsSection() {
     // Emit a mapping array for each dimension mapping.
     let a = R.map(m => {
-      return `const size_t __map${m.mapFrom}${m.mapTo}[${sub(m.mapTo).size}] = { ${indexNumberList(m.value)} };`
+      return `const __map${m.mapFrom}${m.mapTo} = [${indexNumberList(m.value)}];`
     })
     let mappingArrays = R.pipe(a, asort, lines)
     return mappingArrays(allMappings())
