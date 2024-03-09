@@ -6,6 +6,11 @@ import { Lookup, type LookupMode } from './lookup'
 //   https://www.vensim.com/documentation/fn_xidz.html
 const EPSILON = 1e-6
 
+// This matches Vensim's definition of `:NA:`.  It is also defined
+// with the same value in the generated `ModelCore`, so make sure
+// these two values are the same.
+const _NA_ = -Number.MAX_VALUE
+
 export interface CoreFunctionContext {
   initialTime: number
   finalTime: number
@@ -203,23 +208,23 @@ export function getCoreFunctions(): CoreFunctions {
     },
 
     LOOKUP(lookup: Lookup, x: number): number {
-      return lookup.getValueForX(x, 'interpolate')
+      return lookup ? lookup.getValueForX(x, 'interpolate') : _NA_
     },
 
     LOOKUP_FORWARD(lookup: Lookup, x: number): number {
-      return lookup.getValueForX(x, 'forward')
+      return lookup ? lookup.getValueForX(x, 'forward') : _NA_
     },
 
     LOOKUP_BACKWARD(lookup: Lookup, x: number): number {
-      return lookup.getValueForX(x, 'backward')
+      return lookup ? lookup.getValueForX(x, 'backward') : _NA_
     },
 
     LOOKUP_INVERT(lookup: Lookup, y: number): number {
-      return lookup.getValueForY(y)
+      return lookup ? lookup.getValueForY(y) : _NA_
     },
 
     WITH_LOOKUP(x: number, lookup: Lookup): number {
-      return lookup.getValueForX(x, 'interpolate')
+      return lookup ? lookup.getValueForX(x, 'interpolate') : _NA_
     },
 
     GET_DATA_BETWEEN_TIMES(lookup: Lookup, x: number, mode: number): number {
@@ -231,7 +236,7 @@ export function getCoreFunctions(): CoreFunctions {
       } else {
         lookupMode = 'interpolate'
       }
-      return lookup.getValueBetweenTimes(x, lookupMode)
+      return lookup ? lookup.getValueBetweenTimes(x, lookupMode) : _NA_
     }
   }
 }
