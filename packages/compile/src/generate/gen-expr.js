@@ -598,7 +598,7 @@ function generateArrayFunctionCall(callExpr, ctx) {
 
       // Emit the temporary condition variable declaration
       vsCondVar = newTmpVarName()
-      ctx.emitPreFormula(`  bool ${vsCondVar} = false;`)
+      ctx.emitPreFormula(varDecl('bool', vsCondVar, 'false', ctx))
 
       // Define the code that will be emitted in place of the `VECTOR SELECT` call
       tmpVar = newTmpVarName()
@@ -614,7 +614,7 @@ function generateArrayFunctionCall(callExpr, ctx) {
   if (!tmpVar) {
     tmpVar = newTmpVarName()
   }
-  ctx.emitPreFormula(`  double ${tmpVar} = ${initValue};`)
+  ctx.emitPreFormula(varDecl('double', tmpVar, initValue, ctx))
 
   // Find all marked dimensions used in the array function arguments
   const markedDimIds = new Set()
@@ -656,7 +656,11 @@ function generateArrayFunctionCall(callExpr, ctx) {
     // For `VECTOR SELECT`, the inner loop includes a conditional
     const selArrayCode = generateExpr(callExpr.args[0], ctx)
     const exprArrayCode = generateExpr(callExpr.args[1], ctx)
-    ctx.emitPreFormula(`    if (bool_cond(${selArrayCode})) {`)
+    if (ctx.outFormat === 'c') {
+      ctx.emitPreFormula(`    if (bool_cond(${selArrayCode})) {`)
+    } else {
+      ctx.emitPreFormula(`    if (${selArrayCode}) {`)
+    }
     ctx.emitPreFormula(`      ${innerStmt(exprArrayCode)}`)
     ctx.emitPreFormula(`      ${vsCondVar} = true;`)
     ctx.emitPreFormula('    }')
@@ -900,6 +904,28 @@ function fnRef(fnId, ctx) {
       return fnId
     case 'js':
       return `fns.${fnId.slice(1)}`
+    default:
+      throw new Error(`Unhandled output format '${ctx.outFormat}'`)
+  }
+}
+
+/**
+ * Return a C or JS variable declaration.
+ *
+ * @param {string} cVarType The variable type (only used for C code generation).
+ * @param {string} varName The variable name.
+ * @param {string} rhs The RHS for the declaration.
+ * @param {GenExprContext} ctx The context used when generating code for the expression.
+ * @return {string} The generated C/JS code.
+ */
+function varDecl(cVarType, varName, rhs, ctx) {
+  switch (ctx.outFormat) {
+    case 'c':
+      ctx.emitPreFormula(`  ${cVarType} ${varName} = ${rhs};`)
+      break
+    case 'js':
+      ctx.emitPreFormula(`  let ${varName} = ${rhs};`)
+      break
     default:
       throw new Error(`Unhandled output format '${ctx.outFormat}'`)
   }
