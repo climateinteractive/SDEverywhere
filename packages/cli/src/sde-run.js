@@ -9,6 +9,11 @@ export let builder = {
     type: 'string',
     alias: 's'
   },
+  genfmt: {
+    describe: 'generated code format',
+    choices: ['c', 'js'],
+    default: 'c'
+  },
   builddir: {
     describe: 'build directory',
     type: 'string',
