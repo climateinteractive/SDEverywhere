@@ -1485,14 +1485,14 @@ describe('generateEquation (Vensim -> JS)', () => {
     expect(genJS(vars.get('_init[_a1]'), 'init-constants')).toEqual(['_init[0] = 1.0;'])
     expect(genJS(vars.get('_init[_a2]'), 'init-constants')).toEqual(['_init[1] = 2.0;'])
     expect(genJS(vars.get('_y'), 'init-levels')).toEqual([
-      'double __t1 = 0.0;',
+      'let __t1 = 0.0;',
       'for (let u = 0; u < 2; u++) {',
       '__t1 += _init[u];',
       '}',
       '_y = __t1;'
     ])
     expect(genJS(vars.get('_y'), 'eval')).toEqual([
-      'double __t2 = 0.0;',
+      'let __t2 = 0.0;',
       'for (let u = 0; u < 2; u++) {',
       '__t2 += _rate[u];',
       '}',
@@ -1829,7 +1829,7 @@ describe('generateEquation (Vensim -> JS)', () => {
     expect(genJS(vars.get('_a[_a1]'), 'init-constants')).toEqual(['_a[0] = 10.0;'])
     expect(genJS(vars.get('_a[_a2]'), 'init-constants')).toEqual(['_a[1] = 20.0;'])
     expect(genJS(vars.get('_x'))).toEqual([
-      'double __t1 = 0.0;',
+      'let __t1 = 0.0;',
       'for (let u = 0; u < 2; u++) {',
       '__t1 += _a[u];',
       '}',
@@ -1854,15 +1854,15 @@ describe('generateEquation (Vensim -> JS)', () => {
     expect(genJS(vars.get('_c[_a1]'), 'init-constants')).toEqual(['_c[0] = 1.0;'])
     expect(genJS(vars.get('_c[_a2]'), 'init-constants')).toEqual(['_c[1] = 2.0;'])
     expect(genJS(vars.get('_x'))).toEqual([
-      'double __t1 = 0.0;',
+      'let __t1 = 0.0;',
       'for (let u = 0; u < 2; u++) {',
       '__t1 += _a[u];',
       '}',
-      'double __t2 = 0.0;',
+      'let __t2 = 0.0;',
       'for (let v = 0; v < 2; v++) {',
       '__t2 += _b[v];',
       '}',
-      'double __t3 = 0.0;',
+      'let __t3 = 0.0;',
       'for (let u = 0; u < 2; u++) {',
       '__t3 += _c[u];',
       '}',
@@ -1880,7 +1880,7 @@ describe('generateEquation (Vensim -> JS)', () => {
     expect(genJS(vars.get('_a[_a1]'), 'init-constants')).toEqual(['_a[0] = 10.0;'])
     expect(genJS(vars.get('_a[_a2]'), 'init-constants')).toEqual(['_a[1] = 20.0;'])
     expect(genJS(vars.get('_x'))).toEqual([
-      'double __t1 = 0.0;',
+      'let __t1 = 0.0;',
       'for (let u = 0; u < 2; u++) {',
       '__t1 += ((_a[u] === 10.0) ? (0.0) : (_a[u]));',
       '}',
@@ -1926,11 +1926,7 @@ describe('generateEquation (Vensim -> JS)', () => {
     expect(genJS(vars.get('_a[_a3]'), 'init-constants')).toEqual(['_a[2] = 1.0;'])
     expect(genJS(vars.get('_b[_b1]'), 'init-constants')).toEqual(['_b[0] = 1.0;'])
     expect(genJS(vars.get('_b[_b2]'), 'init-constants')).toEqual(['_b[1] = 2.0;'])
-    expect(genJS(vars.get('_c'))).toEqual([
-      'for (let i = 0; i < 3; i++) {',
-      '_c[i] = _b[_dimb[(size_t)(0 + _a[i])]];',
-      '}'
-    ])
+    expect(genJS(vars.get('_c'))).toEqual(['for (let i = 0; i < 3; i++) {', '_c[i] = _b[_dimb[0 + _a[i]]];', '}'])
     expect(genJS(vars.get('_y'))).toEqual(['_y = _c[0];'])
   })
 
@@ -1950,7 +1946,7 @@ describe('generateEquation (Vensim -> JS)', () => {
     expect(genJS(vars.get('_x[_five]'), 'init-constants')).toEqual(['_x[4] = 5.0;'])
     expect(genJS(vars.get('_y'))).toEqual([
       'for (let i = 0; i < 3; i++) {',
-      '_y[i] = _x[_dimx[(size_t)(2 + ((i + 1) - 1.0))]];',
+      '_y[i] = _x[_dimx[2 + ((i + 1) - 1.0)]];',
       '}'
     ])
   })
@@ -1974,11 +1970,11 @@ describe('generateEquation (Vensim -> JS)', () => {
     expect(genJS(vars.get('_b[_b1]'), 'init-constants')).toEqual(['_b[0] = 1.0;'])
     expect(genJS(vars.get('_b[_b2]'), 'init-constants')).toEqual(['_b[1] = 2.0;'])
     expect(genJS(vars.get('_c'))).toEqual([
-      'bool __t1 = false;',
-      'double __t2 = 0.0;',
+      'let __t1 = false;',
+      'let __t2 = 0.0;',
       'for (let u = 0; u < 2; u++) {',
       'for (let v = 0; v < 3; v++) {',
-      'if (bool_cond(_b[u])) {',
+      'if (_b[u]) {',
       '__t2 += _a[v];',
       '__t1 = true;',
       '}',
@@ -2007,12 +2003,12 @@ describe('generateEquation (Vensim -> JS)', () => {
     expect(genJS(vars.get('_b[_b1]'), 'init-constants')).toEqual(['_b[0] = 1.0;'])
     expect(genJS(vars.get('_b[_b2]'), 'init-constants')).toEqual(['_b[1] = 2.0;'])
     expect(genJS(vars.get('_c'))).toEqual([
-      'bool __t1 = false;',
-      'double __t2 = -DBL_MAX;',
+      'let __t1 = false;',
+      'let __t2 = -Number.MAX_VALUE;',
       'for (let u = 0; u < 2; u++) {',
       'for (let v = 0; v < 3; v++) {',
-      'if (bool_cond(_b[u])) {',
-      '__t2 = fmax(__t2, _a[v]);',
+      'if (_b[u]) {',
+      '__t2 = Math.max(__t2, _a[v]);',
       '__t1 = true;',
       '}',
       '}',
@@ -2081,9 +2077,9 @@ describe('generateEquation (Vensim -> JS)', () => {
     expect(genJS(vars.get('_x[_a2]'), 'init-constants')).toEqual(['_x[1] = 2.0;'])
     expect(genJS(vars.get('_x[_a3]'), 'init-constants')).toEqual(['_x[2] = 3.0;'])
     expect(genJS(vars.get('_y'))).toEqual([
-      'double __t1 = -DBL_MAX;',
+      'let __t1 = -Number.MAX_VALUE;',
       'for (let u = 0; u < 3; u++) {',
-      '__t1 = fmax(__t1, _x[u]);',
+      '__t1 = Math.max(__t1, _x[u]);',
       '}',
       '_y = __t1;'
     ])
@@ -2101,9 +2097,9 @@ describe('generateEquation (Vensim -> JS)', () => {
     expect(genJS(vars.get('_x[_a2]'), 'init-constants')).toEqual(['_x[1] = 2.0;'])
     expect(genJS(vars.get('_x[_a3]'), 'init-constants')).toEqual(['_x[2] = 3.0;'])
     expect(genJS(vars.get('_y'))).toEqual([
-      'double __t1 = -DBL_MAX;',
+      'let __t1 = -Number.MAX_VALUE;',
       'for (let u = 0; u < 2; u++) {',
-      '__t1 = fmax(__t1, _x[_suba[u]]);',
+      '__t1 = Math.max(__t1, _x[_suba[u]]);',
       '}',
       '_y = __t1;'
     ])
@@ -2120,9 +2116,9 @@ describe('generateEquation (Vensim -> JS)', () => {
     expect(genJS(vars.get('_x[_a2]'), 'init-constants')).toEqual(['_x[1] = 2.0;'])
     expect(genJS(vars.get('_x[_a3]'), 'init-constants')).toEqual(['_x[2] = 3.0;'])
     expect(genJS(vars.get('_y'))).toEqual([
-      'double __t1 = DBL_MAX;',
+      'let __t1 = Number.MAX_VALUE;',
       'for (let u = 0; u < 3; u++) {',
-      '__t1 = fmin(__t1, _x[u]);',
+      '__t1 = Math.min(__t1, _x[u]);',
       '}',
       '_y = __t1;'
     ])
@@ -2140,9 +2136,9 @@ describe('generateEquation (Vensim -> JS)', () => {
     expect(genJS(vars.get('_x[_a2]'), 'init-constants')).toEqual(['_x[1] = 2.0;'])
     expect(genJS(vars.get('_x[_a3]'), 'init-constants')).toEqual(['_x[2] = 3.0;'])
     expect(genJS(vars.get('_y'))).toEqual([
-      'double __t1 = DBL_MAX;',
+      'let __t1 = Number.MAX_VALUE;',
       'for (let u = 0; u < 2; u++) {',
-      '__t1 = fmin(__t1, _x[_suba[u]]);',
+      '__t1 = Math.min(__t1, _x[_suba[u]]);',
       '}',
       '_y = __t1;'
     ])

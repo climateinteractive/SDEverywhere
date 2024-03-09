@@ -539,12 +539,12 @@ function generateArrayFunctionCall(callExpr, ctx) {
       break
 
     case '_VMIN':
-      initValue = 'DBL_MAX'
+      initValue = maxNumber(ctx)
       loopBodyOp = 'min'
       break
 
     case '_VMAX':
-      initValue = '-DBL_MAX'
+      initValue = `-${maxNumber(ctx)}`
       loopBodyOp = 'max'
       break
 
@@ -589,7 +589,7 @@ function generateArrayFunctionCall(callExpr, ctx) {
           loopBodyOp = 'sum'
           break
         case 3:
-          initValue = '-DBL_MAX'
+          initValue = `-${maxNumber(ctx)}`
           loopBodyOp = 'max'
           break
         default:
@@ -598,7 +598,7 @@ function generateArrayFunctionCall(callExpr, ctx) {
 
       // Emit the temporary condition variable declaration
       vsCondVar = newTmpVarName()
-      ctx.emitPreFormula(varDecl('bool', vsCondVar, 'false', ctx))
+      ctx.emitPreFormula(`  ${varDecl('bool', vsCondVar, 'false', ctx)}`)
 
       // Define the code that will be emitted in place of the `VECTOR SELECT` call
       tmpVar = newTmpVarName()
@@ -614,7 +614,7 @@ function generateArrayFunctionCall(callExpr, ctx) {
   if (!tmpVar) {
     tmpVar = newTmpVarName()
   }
-  ctx.emitPreFormula(varDecl('double', tmpVar, initValue, ctx))
+  ctx.emitPreFormula(`  ${varDecl('double', tmpVar, initValue, ctx)}`)
 
   // Find all marked dimensions used in the array function arguments
   const markedDimIds = new Set()
@@ -644,9 +644,9 @@ function generateArrayFunctionCall(callExpr, ctx) {
       case 'sum':
         return `${tmpVar} += ${argCode};`
       case 'min':
-        return `${tmpVar} = fmin(${tmpVar}, ${argCode});`
+        return `${tmpVar} = ${minFunc(ctx)}(${tmpVar}, ${argCode});`
       case 'max':
-        return `${tmpVar} = fmax(${tmpVar}, ${argCode});`
+        return `${tmpVar} = ${maxFunc(ctx)}(${tmpVar}, ${argCode});`
       default:
         throw new Error(`Unexpected loop body op ${loopBodyOp} for VECTOR SELECT`)
     }
@@ -734,7 +734,7 @@ function generateVectorElmMapCall(callExpr, ctx) {
   const rhsSubIds = normalizeSubscripts(vecSubIds)
   const cSubscripts = rhsSubIds.map(rhsSubId => {
     if (isIndex(rhsSubId)) {
-      return `[${subFamily}[(size_t)(${subBase} + ${offsetArgCode})]]`
+      return `[${subFamily}[${subBase} + ${offsetArgCode}]]`
     } else {
       const subIndex = ctx.loopIndexVars.index(rhsSubId)
       return `[${rhsSubId}[${subIndex}]]`
@@ -921,11 +921,60 @@ function fnRef(fnId, ctx) {
 function varDecl(cVarType, varName, rhs, ctx) {
   switch (ctx.outFormat) {
     case 'c':
-      ctx.emitPreFormula(`  ${cVarType} ${varName} = ${rhs};`)
-      break
+      return `${cVarType} ${varName} = ${rhs};`
     case 'js':
-      ctx.emitPreFormula(`  let ${varName} = ${rhs};`)
-      break
+      return `let ${varName} = ${rhs};`
+    default:
+      throw new Error(`Unhandled output format '${ctx.outFormat}'`)
+  }
+}
+
+/**
+ * Return the "max number" constant for C or JS.
+ *
+ * @param {GenExprContext} ctx The context used when generating code for the expression.
+ * @return {string} The generated C/JS code.
+ */
+function maxNumber(ctx) {
+  switch (ctx.outFormat) {
+    case 'c':
+      return 'DBL_MAX'
+    case 'js':
+      return 'Number.MAX_VALUE'
+    default:
+      throw new Error(`Unhandled output format '${ctx.outFormat}'`)
+  }
+}
+
+/**
+ * Return the "max" function for C or JS.
+ *
+ * @param {GenExprContext} ctx The context used when generating code for the expression.
+ * @return {string} The generated C/JS code.
+ */
+function maxFunc(ctx) {
+  switch (ctx.outFormat) {
+    case 'c':
+      return 'fmax'
+    case 'js':
+      return 'Math.max'
+    default:
+      throw new Error(`Unhandled output format '${ctx.outFormat}'`)
+  }
+}
+
+/**
+ * Return the "min" function for C or JS.
+ *
+ * @param {GenExprContext} ctx The context used when generating code for the expression.
+ * @return {string} The generated C/JS code.
+ */
+function minFunc(ctx) {
+  switch (ctx.outFormat) {
+    case 'c':
+      return 'fmin'
+    case 'js':
+      return 'Math.min'
     default:
       throw new Error(`Unhandled output format '${ctx.outFormat}'`)
   }
