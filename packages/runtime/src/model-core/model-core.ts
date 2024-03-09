@@ -3,7 +3,8 @@
 import type { CoreFunctions } from './core-functions'
 
 export interface ModelCore {
-  outputVarIds: string[]
+  getOutputVarNames(): string[]
+  getOutputVarIds(): string[]
 
   getInitialTime(): number
   getFinalTime(): number

@@ -3,13 +3,15 @@
 import type { InputValue } from '../model-runner/inputs'
 import type { ModelRunner } from '../model-runner/model-runner'
 import { Outputs } from '../model-runner/outputs'
+import { perfElapsed, perfNow } from '../model-runner/perf'
+import { getCoreFunctions, type CoreFunctionContext } from './core-functions'
 
 import type { ModelCore } from './model-core'
 
 /**
  * Create a `ModelRunner` that runs the given `ModelCore` on the JS thread.
  *
- * @param modelCore A `ModelCore` instance.
+ * @param core A `ModelCore` instance.
  */
 export function createCoreRunner(core: ModelCore): ModelRunner {
   // Track whether the runner has been terminated
@@ -17,18 +19,14 @@ export function createCoreRunner(core: ModelCore): ModelRunner {
 
   return {
     createOutputs(): Outputs {
-      const outputVarIds = core.outputVarIds
-      const initialTime = core.getInitialTime()
-      const finalTime = core.getFinalTime()
-      const saveFreq = core.getSaveFreq()
-      return new Outputs(outputVarIds, initialTime, finalTime, saveFreq)
+      return createOutputsForCore(core)
     },
 
     async runModel(inputs: InputValue[], outputs: Outputs): Promise<Outputs> {
       if (terminated) {
         throw new Error('Model runner has already been terminated')
       }
-      runModelSync(core, inputs, outputs)
+      runModelCore(core, inputs, outputs)
       return outputs
     },
 
@@ -36,7 +34,7 @@ export function createCoreRunner(core: ModelCore): ModelRunner {
       if (terminated) {
         throw new Error('Model runner has already been terminated')
       }
-      runModelSync(core, inputs, outputs)
+      runModelCore(core, inputs, outputs)
       return outputs
     },
 
@@ -49,13 +47,26 @@ export function createCoreRunner(core: ModelCore): ModelRunner {
   }
 }
 
-function runModelSync(core: ModelCore, inputs: InputValue[], outputs: Outputs) {
+/**
+ * Run the given `ModelCore` synchronously using the provided inputs and store the output values in
+ * the given `Outputs` instance.
+ *
+ * @param core A `ModelCore` instance.
+ * @param inputs The model input values (must be in the same order as in the spec file).
+ * @param outputs The structure into which the model outputs will be stored.
+ * @return The outputs of the run.
+ */
+export function runModelCore(core: ModelCore, inputs?: InputValue[], outputs?: Outputs): Outputs {
+  if (outputs === undefined) {
+    outputs = createOutputsForCore(core)
+  }
+
   // TODO
   const useOutputIndices = false
 
   // Get the control variable values.  Note that this step will cause `initConstants`
-  // and `initLevels` and a first `evalAux` pass to ensure that `_saveper` is fully
-  // initialized in the case where it is non-constant.
+  // to be called to ensure that the control parameters are initialized, so we don't
+  // need to call `initConstants` again before running the model.
   const finalTime = core.getFinalTime()
   const initialTime = core.getInitialTime()
   const timeStep = core.getTimeStep()
@@ -65,14 +76,30 @@ function runModelSync(core: ModelCore, inputs: InputValue[], outputs: Outputs) {
   let time = initialTime
   core.setTime(time)
 
-  // Set the user-defined input values.  This needs to happen after `initConstants`
-  // since the input values will override the default constant values.
-  core.setInputs(index => inputs[index].get())
+  // Configure the functions.  The function context makes the control variable values
+  // available to certain functions that depend on those values.
+  // TODO: Install core functions only if not already provided
+  const fnContext: CoreFunctionContext = {
+    initialTime,
+    finalTime,
+    timeStep,
+    currentTime: time
+  }
+  const fns = getCoreFunctions()
+  fns.setContext(fnContext)
+  core.setModelFunctions(fns)
+
+  if (inputs) {
+    // Set the user-defined input values.  This needs to happen after `initConstants`
+    // since the input values will override the default constant values.
+    core.setInputs(index => inputs[index].get())
+  }
 
   // Initialize level variables
-  // TODO: initLevels should have already been called as part of the control variable
-  // init above, so we don't have to call it again here
-  // core.initLevels()
+  core.initLevels()
+
+  // Capture the start time
+  const t0 = perfNow()
 
   // Set up a run loop using a fixed number of time steps
   let savePointIndex = 0
@@ -87,20 +114,20 @@ function runModelSync(core: ModelCore, inputs: InputValue[], outputs: Outputs) {
     if (time % saveFreq < 1e-6) {
       outputVarIndex = 0
       if (useOutputIndices) {
-        //         // Store the outputs as specified in the current output index buffer
-        //         for (size_t i = 0; i < maxOutputIndices; i++) {
-        //           size_t indexBufferOffset = i * INDICES_PER_OUTPUT;
-        //           size_t varIndex = (size_t)outputIndexBuffer[indexBufferOffset];
-        //           if (varIndex > 0) {
-        //             size_t subIndex0 = (size_t)outputIndexBuffer[indexBufferOffset + 1];
-        //             size_t subIndex1 = (size_t)outputIndexBuffer[indexBufferOffset + 2];
-        //             size_t subIndex2 = (size_t)outputIndexBuffer[indexBufferOffset + 3];
-        //             storeOutput(varIndex, subIndex0, subIndex1, subIndex2);
-        //           } else {
-        //             // Stop when we reach the first zero index
-        //             break;
-        //           }
-        //         }
+        // // Store the outputs as specified in the current output index buffer
+        // for (size_t i = 0; i < maxOutputIndices; i++) {
+        //   size_t indexBufferOffset = i * INDICES_PER_OUTPUT;
+        //   size_t varIndex = (size_t)outputIndexBuffer[indexBufferOffset];
+        //   if (varIndex > 0) {
+        //     size_t subIndex0 = (size_t)outputIndexBuffer[indexBufferOffset + 1];
+        //     size_t subIndex1 = (size_t)outputIndexBuffer[indexBufferOffset + 2];
+        //     size_t subIndex2 = (size_t)outputIndexBuffer[indexBufferOffset + 3];
+        //     storeOutput(varIndex, subIndex0, subIndex1, subIndex2);
+        //   } else {
+        //     // Stop when we reach the first zero index
+        //     break;
+        //   }
+        // }
       } else {
         // Store the normal outputs
         core.storeOutputs(value => {
@@ -125,6 +152,20 @@ function runModelSync(core: ModelCore, inputs: InputValue[], outputs: Outputs) {
     // Advance time by one step
     time += timeStep
     core.setTime(time)
+    fnContext.currentTime = time
     step++
   }
+
+  // Store the elapsed time
+  outputs.runTimeInMillis = perfElapsed(t0)
+
+  return outputs
+}
+
+function createOutputsForCore(core: ModelCore): Outputs {
+  const outputVarIds = core.getOutputVarIds()
+  const initialTime = core.getInitialTime()
+  const finalTime = core.getFinalTime()
+  const saveFreq = core.getSaveFreq()
+  return new Outputs(outputVarIds, initialTime, finalTime, saveFreq)
 }

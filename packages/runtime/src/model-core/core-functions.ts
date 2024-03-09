@@ -43,14 +43,25 @@ export interface CoreFunctions {
   XIDZ(a: number, b: number, x: number): number
   ZIDZ(a: number, b: number): number
 
+  // TODO
+  // double* _ALLOCATE_AVAILABLE(double* requested_quantities, double* priority_profiles, double available_resource, size_t num_requesters);
+  // double* _VECTOR_SORT_ORDER(double* vector, size_t size, double direction);
+
   createLookup(size: number, data: number[]): Lookup
   LOOKUP(lookup: Lookup, x: number): number
   LOOKUP_FORWARD(lookup: Lookup, x: number): number
   LOOKUP_BACKWARD(lookup: Lookup, x: number): number
   LOOKUP_INVERT(lookup: Lookup, y: number): number
   WITH_LOOKUP(x: number, lookup: Lookup): number
-
   GET_DATA_BETWEEN_TIMES(lookup: Lookup, x: number, mode: number): number
+
+  // TODO
+  // createFixedDelay(delayTime: number, initialValue: number): FixedDelay
+  // DELAY_FIXED(input: number, fixedDelay: FixedDelay): number
+
+  // TODO
+  // createDepreciation(dtime: number, initialValue: number): Depreciation
+  // DEPRECIATE_STRAIGHTLINE(input: number, depreciation: Depreciation): number
 }
 
 export function getCoreFunctions(): CoreFunctions {
