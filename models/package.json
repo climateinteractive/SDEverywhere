@@ -1,0 +1,8 @@
+{
+  "name": "sdeverywhere-sample-models",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@sdeverywhere/runtime": "workspace:*"
+  }
+}

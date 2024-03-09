@@ -178,6 +178,12 @@ importers:
         specifier: ^4.4.9
         version: 4.4.9(sass@1.52.3)
 
+  models:
+    dependencies:
+      '@sdeverywhere/runtime':
+        specifier: workspace:*
+        version: link:../packages/runtime
+
   packages/build:
     dependencies:
       chokidar:
