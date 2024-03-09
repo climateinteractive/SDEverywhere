@@ -185,6 +185,11 @@ describe('CoreFunctions', () => {
     expect(fns.TAN(Math.PI / 4)).toBeCloseTo(1)
   })
 
+  it('should expose VECTOR SORT ORDER', () => {
+    expect(fns.VECTOR_SORT_ORDER([2100, 2010, 2020], 3, 1)).toEqual([1, 2, 0])
+    expect(fns.VECTOR_SORT_ORDER([2100, 2010, 2020], 3, -1)).toEqual([0, 2, 1])
+  })
+
   it('should expose XIDZ', () => {
     expect(fns.XIDZ(3, 4, 1)).toBe(0.75)
     expect(fns.XIDZ(3, 0, 1)).toBe(1)

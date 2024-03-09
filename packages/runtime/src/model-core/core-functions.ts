@@ -45,12 +45,12 @@ export interface CoreFunctions {
   SQRT(x: number): number
   STEP(height: number, stepTime: number): number
   TAN(x: number): number
+  VECTOR_SORT_ORDER(vector: number[], size: number, direction: number): number[]
   XIDZ(a: number, b: number, x: number): number
   ZIDZ(a: number, b: number): number
 
   // TODO
   // double* _ALLOCATE_AVAILABLE(double* requested_quantities, double* priority_profiles, double available_resource, size_t num_requesters);
-  // double* _VECTOR_SORT_ORDER(double* vector, size_t size, double direction);
 
   createLookup(size: number, data: number[]): Lookup
   LOOKUP(lookup: Lookup, x: number): number
@@ -71,6 +71,11 @@ export interface CoreFunctions {
 
 export function getCoreFunctions(): CoreFunctions {
   let ctx: CoreFunctionContext
+
+  // The C implementation of `_VECTOR_SORT_ORDER` reuses an array, so we
+  // will do the same for now (one reused array per size)
+  const cachedVectors: Map<number, number[]> = new Map()
+  const cachedSortVectors: Map<number, { x: number; ind: number }[]> = new Map()
 
   return {
     setContext(context: CoreFunctionContext) {
@@ -191,6 +196,57 @@ export function getCoreFunctions(): CoreFunctions {
       return Math.tan(x)
     },
 
+    VECTOR_SORT_ORDER(vector: number[], size: number, direction: number): number[] {
+      // Validate arguments
+      if (size > vector.length) {
+        throw new Error(`VECTOR SORT ORDER input vector length (${vector.length}) must be >= size (${size})`)
+      }
+
+      // Get a cached sort vector
+      let sortVector = cachedSortVectors.get(size)
+      if (sortVector === undefined) {
+        sortVector = Array(size)
+        for (let i = 0; i < size; i++) {
+          sortVector[i] = { x: 0, ind: 0 }
+        }
+        cachedSortVectors.set(size, sortVector)
+      }
+
+      // Get a cached output array
+      let outArray = cachedVectors.get(size)
+      if (outArray === undefined) {
+        outArray = Array(size)
+        cachedVectors.set(size, outArray)
+      }
+
+      // Prepare for sorting
+      for (let i = 0; i < size; i++) {
+        sortVector[i].x = vector[i]
+        sortVector[i].ind = i
+      }
+
+      // Sort in place
+      const sortOrder = direction > 0 ? 1 : -1
+      sortVector.sort((a, b) => {
+        let result: number
+        if (a.x < b.x) {
+          result = -1
+        } else if (a.x > b.x) {
+          result = 1
+        } else {
+          result = 0
+        }
+        return result * sortOrder
+      })
+
+      // Copy the sorted index values into the output array
+      for (let i = 0; i < size; i++) {
+        outArray[i] = sortVector[i].ind
+      }
+
+      return outArray
+    },
+
     XIDZ(a: number, b: number, x: number): number {
       return Math.abs(b) < EPSILON ? x : a / b
     },
@@ -202,6 +258,10 @@ export function getCoreFunctions(): CoreFunctions {
         return a / b
       }
     },
+
+    //
+    // Lookup functions
+    //
 
     createLookup(size: number, data: number[]): Lookup {
       return new Lookup(size, data)
