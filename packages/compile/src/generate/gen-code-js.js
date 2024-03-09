@@ -5,7 +5,6 @@ import { sub, allDimensions, allMappings, subscriptFamilies } from '../_shared/s
 import Model from '../model/model.js'
 
 import { generateEquation } from './gen-equation.js'
-import EquationGen from './equation-gen.js'
 import { expandVarNames } from './expand-var-names.js'
 
 export function generateCode(parsedModel, opts) {
@@ -27,11 +26,7 @@ let codeGenerator = (parsedModel, opts) => {
   }
   // Function to generate a section of the code
   let generateSection = R.map(v => {
-    if (parsedModel.kind === 'vensim-legacy') {
-      return new EquationGen(v, extData, directData, mode, modelDirname).generate()
-    } else {
-      return generateEquation(v, mode, extData, directData, modelDirname, 'js')
-    }
+    return generateEquation(v, mode, extData, directData, modelDirname, 'js')
   })
   let section = R.pipe(generateSection, R.flatten, lines)
   function generate() {
@@ -71,11 +66,6 @@ let codeGenerator = (parsedModel, opts) => {
 // Model variables
 ${declSection()}
 
-// Output variable identifiers
-export const outputVarIds = [
-${outputVarIdsSection()}
-]
-
 // Array dimensions
 ${arrayDimensionsSection()}
 
@@ -99,16 +89,18 @@ function initControlParamsIfNeeded() {
     return;
   }
 
-  // Some models may define the control parameters as variables that are
-  // dependent on other values that are only known at runtime (after running
-  // the initializers and/or one step of the model), so we need to perform
-  // those steps once before the parameters are accessed
-  // TODO: This approach doesn't work if one or more control parameters are
-  // defined in terms of some value that is provided at runtime as an input
+  // Initialize constants to ensure that all control parameters are defined
   initConstants();
-  initLevels();
+  if (_saveper === undefined) {
+    // XXX: Currently we assume that INITIAL TIME, FINAL TIME, and TIME STEP
+    // are all defined as constant values.  SAVEPER is sometimes defined to
+    // be equivalent to TIME STEP, which means that the compiler treats it
+    // as an aux, not a constant.  For now, we assume that if _saveper was
+    // not defined in initConstants(), then set it to _time_step.  We should
+    // change the compiler to enforce this assumption.
+    _saveper = _time_step;
+  }
   _time = _initial_time;
-  evalAux();
   controlParamsInitialized = true;
 }
 export function getInitialTime() {
@@ -214,18 +206,26 @@ ${chunkedFunctions('evalLevels', true, Model.levelVars(), '  // Evaluate levels.
   // Input/output section
   //
   function emitIOCode() {
-    let headerVars = outputAllVars ? expandedVarNames(true) : spec.outputVars
-    let outputVars = outputAllVars ? expandedVarNames() : spec.outputVars
+    let outputVarNames = outputAllVars ? expandedVarNames(true) : spec.outputVars
+    let outputVarIds = outputAllVars ? expandedVarNames() : spec.outputVars
     mode = 'io'
     return `
 export function setInputs(valueAtIndex /*: (index: number) => number*/) {${inputsFromBufferImpl()}}
 
-function getHeader() {
-  return "${R.map(varName => headerTitle(varName), headerVars).join('\\t')}";
+export function getOutputVarIds() {
+  return [
+    ${outputVarIds.map(id => `'${id}'`).join(',\n    ')}
+  ]
+}
+
+export function getOutputVarNames() {
+  return [
+    ${outputVarNames.map(name => `'${Model.vensimName(name)}'`).join(',\n    ')}
+  ]
 }
 
 export function storeOutputs(storeValue /*: (value: number) => void*/) {
-${specOutputSection(outputVars)}
+${specOutputSection(outputVarIds)}
 }
 
 export function storeOutput(varIndex, subIndex0, subIndex1, subIndex2, storeValue /*: (value: number) => void*/) {
@@ -328,10 +328,6 @@ ${postStep}
       lines
     )
     return decls(Model.allVars()) + fixedDelayDecls + depreciationDecls
-  }
-  function outputVarIdsSection() {
-    let outputVarIds = outputAllVars ? expandedVarNames() : spec.outputVars
-    return `  ${outputVarIds.map(id => `'${id}'`).join(',\n  ')}`
   }
   // function internalVarsSection() {
   //   // Declare internal variables to run the model.
@@ -440,9 +436,6 @@ ${postStep}
       }
     }
     return inputVars
-  }
-  function headerTitle(varName) {
-    return Model.vensimName(varName).replace(/"/g, '\\"')
   }
 
   return {

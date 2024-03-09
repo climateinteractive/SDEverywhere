@@ -11,7 +11,7 @@ export { parseAndGenerate, printNames } from './parse-and-generate.js'
 import { resetHelperState } from './_shared/helpers.js'
 import { resetSubscriptsAndDimensions } from './_shared/subscript.js'
 import Model from './model/model.js'
-import { parseModel } from './parse-and-generate'
+import { parseModel } from './parse-and-generate.js'
 export { generateCode as generateJsCode } from './generate/gen-code-js.js'
 
 export function resetState() {

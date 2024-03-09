@@ -57,8 +57,6 @@ function readInlineModelAndGenerateJS(
 }
 
 interface ModelCore {
-  outputVarIds: string[]
-
   getInitialTime(): number
   getFinalTime(): number
   getTimeStep(): number
@@ -68,6 +66,9 @@ interface ModelCore {
   setTime(time: number): void
 
   setInputs(inputValue: (index: number) => number): void
+
+  getOutputVarIds(): string[]
+  getOutputVarNames(): string[]
   storeOutputs(storeValue: (value: number) => void): void
 
   initConstants(): void
@@ -208,14 +209,6 @@ let _x;
 let _y;
 let _z;
 
-// Output variable identifiers
-export const outputVarIds = [
-  '_x',
-  '_y',
-  '_z',
-  '_w'
-]
-
 // Array dimensions
 
 
@@ -239,16 +232,18 @@ function initControlParamsIfNeeded() {
     return;
   }
 
-  // Some models may define the control parameters as variables that are
-  // dependent on other values that are only known at runtime (after running
-  // the initializers and/or one step of the model), so we need to perform
-  // those steps once before the parameters are accessed
-  // TODO: This approach doesn't work if one or more control parameters are
-  // defined in terms of some value that is provided at runtime as an input
+  // Initialize constants to ensure that all control parameters are defined
   initConstants();
-  initLevels();
+  if (_saveper === undefined) {
+    // XXX: Currently we assume that INITIAL TIME, FINAL TIME, and TIME STEP
+    // are all defined as constant values.  SAVEPER is sometimes defined to
+    // be equivalent to TIME STEP, which means that the compiler treats it
+    // as an aux, not a constant.  For now, we assume that if _saveper was
+    // not defined in initConstants(), then set it to _time_step.  We should
+    // change the compiler to enforce this assumption.
+    _saveper = _time_step;
+  }
   _time = _initial_time;
-  evalAux();
   controlParamsInitialized = true;
 }
 export function getInitialTime() {
@@ -368,8 +363,22 @@ export function setInputs(valueAtIndex /*: (index: number) => number*/) {
   _input = valueAtIndex(0);
 }
 
-function getHeader() {
-  return "x\\ty\\tz\\tw";
+export function getOutputVarIds() {
+  return [
+    '_x',
+    '_y',
+    '_z',
+    '_w'
+  ]
+}
+
+export function getOutputVarNames() {
+  return [
+    'x',
+    'y',
+    'z',
+    'w'
+  ]
 }
 
 export function storeOutputs(storeValue /*: (value: number) => void*/) {
