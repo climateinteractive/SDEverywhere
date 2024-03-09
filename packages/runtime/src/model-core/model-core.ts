@@ -3,18 +3,20 @@
 import type { CoreFunctions } from './core-functions'
 
 export interface ModelCore {
-  getOutputVarNames(): string[]
-  getOutputVarIds(): string[]
-
   getInitialTime(): number
   getFinalTime(): number
   getTimeStep(): number
   getSaveFreq(): number
 
+  getModelFunctions(): CoreFunctions
   setModelFunctions(functions: CoreFunctions): void
+
   setTime(time: number): void
 
   setInputs(inputValue: (index: number) => number): void
+
+  getOutputVarIds(): string[]
+  getOutputVarNames(): string[]
   storeOutputs(storeValue: (value: number) => void): void
 
   initConstants(): void

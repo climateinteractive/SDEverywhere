@@ -4,8 +4,8 @@ import type { InputValue } from '../model-runner/inputs'
 import type { ModelRunner } from '../model-runner/model-runner'
 import { Outputs } from '../model-runner/outputs'
 import { perfElapsed, perfNow } from '../model-runner/perf'
-import { getCoreFunctions, type CoreFunctionContext } from './core-functions'
 
+import { getCoreFunctions, type CoreFunctionContext, type CoreFunctions } from './core-functions'
 import type { ModelCore } from './model-core'
 
 /**
@@ -57,12 +57,15 @@ export function createCoreRunner(core: ModelCore): ModelRunner {
  * @return The outputs of the run.
  */
 export function runModelCore(core: ModelCore, inputs?: InputValue[], outputs?: Outputs): Outputs {
-  if (outputs === undefined) {
-    outputs = createOutputsForCore(core)
-  }
-
   // TODO
   const useOutputIndices = false
+
+  // Install the default implementation of model functions if not already provided
+  let fns: CoreFunctions
+  if (core.getModelFunctions() === undefined) {
+    fns = getCoreFunctions()
+    core.setModelFunctions(fns)
+  }
 
   // Get the control variable values.  Note that this step will cause `initConstants`
   // to be called to ensure that the control parameters are initialized, so we don't
@@ -78,21 +81,23 @@ export function runModelCore(core: ModelCore, inputs?: InputValue[], outputs?: O
 
   // Configure the functions.  The function context makes the control variable values
   // available to certain functions that depend on those values.
-  // TODO: Install core functions only if not already provided
   const fnContext: CoreFunctionContext = {
     initialTime,
     finalTime,
     timeStep,
     currentTime: time
   }
-  const fns = getCoreFunctions()
   fns.setContext(fnContext)
-  core.setModelFunctions(fns)
 
   if (inputs) {
     // Set the user-defined input values.  This needs to happen after `initConstants`
     // since the input values will override the default constant values.
     core.setInputs(index => inputs[index].get())
+  }
+
+  // Create an `Outputs` instance if one was not provided
+  if (outputs === undefined) {
+    outputs = createOutputsForCore(core)
   }
 
   // Initialize level variables
