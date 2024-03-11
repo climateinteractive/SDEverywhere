@@ -63,7 +63,68 @@ describe('generateCode (Vensim -> C)', () => {
       y = :NOT: x ~~|
     `
     const code = readInlineModelAndGenerateC(mdl)
-    expect(code).toMatch('#include "sde.h"')
+    expect(code).toMatch(`\
+#include "sde.h"
+
+// Model variables
+double _x;
+double _y;`)
+  })
+
+  it('should work when valid input variable name without subscript is provided in spec file', () => {
+    const mdl = `
+      x = 10 ~~|
+      y = x + 1 ~~|
+    `
+    const code = readInlineModelAndGenerateC(mdl, {
+      inputVarNames: ['x'],
+      outputVarNames: ['y']
+    })
+    expect(code).toMatch(`\
+#include "sde.h"
+
+// Model variables
+double _x;
+double _y;`)
+  })
+
+  it('should work when valid input variable name with subscript (referenced by output variable) is provided in spec file', () => {
+    const mdl = `
+      DimA: A1, A2 ~~|
+      A[DimA] = 10, 20 ~~|
+      B[DimA] = A[DimA] + 1 ~~|
+    `
+    const code = readInlineModelAndGenerateC(mdl, {
+      inputVarNames: ['A[A1]'],
+      outputVarNames: ['B[A1]', 'B[A2]']
+    })
+    expect(code).toMatch(`\
+#include "sde.h"
+
+// Model variables
+double _a[2];
+double _b[2];`)
+  })
+
+  it('should work when valid input variable name with subscript (not referenced by output variable) is provided in spec file', () => {
+    // Note that `A` is specified as an input variable, but `A` is not referenced by output
+    // variable `B`, which is an unusual (but valid) usage scenario, so `A` should not be
+    // pruned by the `removeUnusedVariables` code (see #438)
+    const mdl = `
+      DimA: A1, A2 ~~|
+      A[DimA] = 10, 20 ~~|
+      B[DimA] = 30, 40 ~~|
+    `
+    const code = readInlineModelAndGenerateC(mdl, {
+      inputVarNames: ['A[A1]'],
+      outputVarNames: ['B[A1]', 'B[A2]']
+    })
+    expect(code).toMatch(`\
+#include "sde.h"
+
+// Model variables
+double _a[2];
+double _b[2];`)
   })
 
   it('should throw error when unknown input variable name is provided in spec file', () => {

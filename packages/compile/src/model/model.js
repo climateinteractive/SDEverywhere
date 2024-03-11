@@ -468,7 +468,11 @@ function removeUnusedVariables(spec) {
 
   // Keep all input variables
   for (const inputVarName of spec.inputVars) {
-    for (const v of varsWithName(inputVarName)) {
+    // The inputVars can include a raw index, e.g. `_input_var[0]`,
+    // which isn't an actual "ref id", so we'll just derive the
+    // var name by chopping off the index part.
+    const inputVarBaseName = inputVarName.split('[')[0]
+    for (const v of varsWithName(inputVarBaseName)) {
       recordUsedVariable(v)
     }
   }
