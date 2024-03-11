@@ -127,6 +127,25 @@ double _a[2];
 double _b[2];`)
   })
 
+  // Note that this test takes a while (> 8 seconds) to run, so is skipped by default
+  // TODO: This test has little to do with code gen; we should move this and other similar
+  // tests to a separate file focused on the `removeUnusedVariables` step
+  it.skip('should work without exceeding stack limits when model has deep dependency tree', () => {
+    const n = 50000
+    let mdl = 'x0 = 1 ~~|\n'
+    for (let i = 1; i <= n; i++) {
+      mdl += `x${i} = x${i - 1} + 1 ~~|`
+    }
+
+    const code = readInlineModelAndGenerateC(mdl, {
+      inputVarNames: ['x0'],
+      outputVarNames: [`x${n}`]
+    })
+    for (let i = 0; i <= n; i++) {
+      expect(code).toContain(`double _x${i};`)
+    }
+  })
+
   it('should throw error when unknown input variable name is provided in spec file', () => {
     const mdl = `
       DimA: A1, A2 ~~|
