@@ -46,7 +46,7 @@ describe('expandVarNames', () => {
   // in the EXCEPT clause), it will pick up the `A1` and include it in the set of expanded names
   // even though this doesn't seem appropriate.  We will treat this as a quirk of the legacy
   // reader and therefore skip this test when the legacy code is in use.
-  it.skipIf(process.env.SDE_NONPUBLIC_USE_NEW_PARSE !== '1')(
+  it.skipIf(process.env.SDE_NONPUBLIC_USE_NEW_PARSE === '0')(
     'should return names for a subscripted 1D variable that uses a disjoint EXCEPT clause',
     () => {
       readInlineModel(`

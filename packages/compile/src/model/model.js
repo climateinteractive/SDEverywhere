@@ -800,7 +800,7 @@ function vensimName(cVarName) {
 function cName(vensimVarName) {
   // Convert a Vensim variable name to a C name.
   // This function requires model analysis to be completed first when the variable has subscripts.
-  if (process.env.SDE_NONPUBLIC_USE_NEW_PARSE !== '1') {
+  if (process.env.SDE_NONPUBLIC_USE_NEW_PARSE === '0') {
     // TODO: For now we use the legacy VarNameReader when the old parser is active; this
     // code will be removed once the old parser is removed
     return new VarNameReader().read(vensimVarName)

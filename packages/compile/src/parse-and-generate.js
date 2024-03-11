@@ -131,7 +131,7 @@ export function printNames(namesPathname, operation) {
  * @return {*} A parsed tree representation of the model.
  */
 export function parseModel(input, modelDir, sort = false) {
-  if (process.env.SDE_NONPUBLIC_USE_NEW_PARSE !== '1') {
+  if (process.env.SDE_NONPUBLIC_USE_NEW_PARSE === '0') {
     // Use the legacy parser
     return {
       kind: 'vensim-legacy',

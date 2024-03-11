@@ -75,7 +75,7 @@ function genC(
   }
 
   let lines: string[]
-  if (process.env.SDE_NONPUBLIC_USE_NEW_PARSE === '1') {
+  if (process.env.SDE_NONPUBLIC_USE_NEW_PARSE !== '0') {
     lines = generateEquation(variable, mode, opts?.extData, directData, opts?.modelDir)
   } else {
     // TODO: The `flat` call is only needed because the legacy EquationGen adds a nested array unnecessarily
