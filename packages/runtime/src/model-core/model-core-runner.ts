@@ -5,7 +5,7 @@ import type { ModelRunner } from '../model-runner/model-runner'
 import { Outputs } from '../model-runner/outputs'
 import { perfElapsed, perfNow } from '../model-runner/perf'
 
-import { getCoreFunctions, type CoreFunctionContext, type CoreFunctions } from './core-functions'
+import { getCoreFunctions, type CoreFunctionContext } from './core-functions'
 import type { ModelCore } from './model-core'
 
 /**
@@ -61,8 +61,8 @@ export function runModelCore(core: ModelCore, inputs?: InputValue[], outputs?: O
   const useOutputIndices = false
 
   // Install the default implementation of model functions if not already provided
-  let fns: CoreFunctions
-  if (core.getModelFunctions() === undefined) {
+  let fns = core.getModelFunctions()
+  if (fns === undefined) {
     fns = getCoreFunctions()
     core.setModelFunctions(fns)
   }

@@ -49,9 +49,6 @@ export interface CoreFunctions {
   XIDZ(a: number, b: number, x: number): number
   ZIDZ(a: number, b: number): number
 
-  // TODO
-  // double* _ALLOCATE_AVAILABLE(double* requested_quantities, double* priority_profiles, double available_resource, size_t num_requesters);
-
   createLookup(size: number, data: number[]): Lookup
   LOOKUP(lookup: Lookup, x: number): number
   LOOKUP_FORWARD(lookup: Lookup, x: number): number
