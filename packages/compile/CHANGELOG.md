@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.7.13](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.12...compile-v0.7.13) (2024-03-11)
+
+
+### Bug Fixes
+
+* prevent subscripted input variables from being pruned ([#439](https://github.com/climateinteractive/SDEverywhere/issues/439)) ([876dad7](https://github.com/climateinteractive/SDEverywhere/commit/876dad7b3d058908584fff0fc5eab01e99408099)), closes [#438](https://github.com/climateinteractive/SDEverywhere/issues/438)
+* rewrite recordRefsOfVariable to avoid blowing the stack ([#443](https://github.com/climateinteractive/SDEverywhere/issues/443)) ([a2bbce9](https://github.com/climateinteractive/SDEverywhere/commit/a2bbce9517c7d9f733339d0ef4534a11acdf784c)), closes [#442](https://github.com/climateinteractive/SDEverywhere/issues/442)
+
 ## [0.7.12](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.11...compile-v0.7.12) (2024-02-23)
 
 

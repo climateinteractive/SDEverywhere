@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.7.19](https://github.com/climateinteractive/SDEverywhere/compare/cli-v0.7.18...cli-v0.7.19) (2024-03-11)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/compile bumped from ^0.7.12 to ^0.7.13
+
 ## [0.7.18](https://github.com/climateinteractive/SDEverywhere/compare/cli-v0.7.17...cli-v0.7.18) (2024-02-23)
 
 
