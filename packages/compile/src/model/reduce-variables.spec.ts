@@ -93,7 +93,7 @@ function v(lhs: string, formula: string, overrides?: Partial<Variable>): Variabl
   return variable as Variable
 }
 
-describe.skipIf(process.env.SDE_NONPUBLIC_USE_NEW_PARSE !== '1')(
+describe.skipIf(process.env.SDE_NONPUBLIC_USE_NEW_PARSE === '0')(
   'reduceVariables (default mode: reduce conditionals only)',
   () => {
     it('should reduce a simple equation when the condition resolves to a constant', () => {
@@ -156,7 +156,7 @@ describe.skipIf(process.env.SDE_NONPUBLIC_USE_NEW_PARSE !== '1')(
   }
 )
 
-describe.skipIf(process.env.SDE_NONPUBLIC_USE_NEW_PARSE !== '1')(
+describe.skipIf(process.env.SDE_NONPUBLIC_USE_NEW_PARSE === '0')(
   'reduceVariables (aggressive mode: reduce everything)',
   () => {
     it('should reduce a simple equation to a constant', () => {

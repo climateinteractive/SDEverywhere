@@ -43,7 +43,7 @@ export function expandVarNames(canonical) {
  * @returns {string[]} An array of expanded names for the given variable.
  */
 function namesForVar(v) {
-  if (process.env.SDE_NONPUBLIC_USE_NEW_PARSE !== '1') {
+  if (process.env.SDE_NONPUBLIC_USE_NEW_PARSE === '0') {
     // TODO: When the old parsing code is active, use the old ModelLHSReader.  This code path
     // will be removed when the old parsing code is removed.
     let modelLHSReader = new ModelLHSReader()
