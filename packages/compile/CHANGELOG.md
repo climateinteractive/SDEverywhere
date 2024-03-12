@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.14](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.13...compile-v0.7.14) (2024-03-12)
+
+
+### Bug Fixes
+
+* make new implementation of read and code gen phases the default ([#446](https://github.com/climateinteractive/SDEverywhere/issues/446)) ([e0e6d40](https://github.com/climateinteractive/SDEverywhere/commit/e0e6d40d6365085185f6dd4eff714a268bab5a28)), closes [#445](https://github.com/climateinteractive/SDEverywhere/issues/445)
+
 ## [0.7.13](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.12...compile-v0.7.13) (2024-03-11)
 
 
