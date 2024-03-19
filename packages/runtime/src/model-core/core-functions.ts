@@ -56,6 +56,7 @@ export interface CoreFunctions {
   LOOKUP_INVERT(lookup: Lookup, y: number): number
   WITH_LOOKUP(x: number, lookup: Lookup): number
   GET_DATA_BETWEEN_TIMES(lookup: Lookup, x: number, mode: number): number
+  GET_DATA_LAST_TIME(lookup: Lookup): number
 
   // TODO
   // createFixedDelay(delayTime: number, initialValue: number): FixedDelay
@@ -294,6 +295,10 @@ export function getCoreFunctions(): CoreFunctions {
         lookupMode = 'interpolate'
       }
       return lookup ? lookup.getValueBetweenTimes(x, lookupMode) : _NA_
+    },
+
+    GET_DATA_LAST_TIME(lookup: Lookup): number {
+      return lookup ? lookup.getLastX() : _NA_
     }
   }
 }

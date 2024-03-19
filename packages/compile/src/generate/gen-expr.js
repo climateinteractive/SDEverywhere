@@ -226,6 +226,7 @@ function generateFunctionCall(callExpr, ctx) {
     //
 
     case '_GET_DATA_BETWEEN_TIMES':
+    case '_GET_DATA_LAST_TIME':
     case '_LOOKUP_BACKWARD':
     case '_LOOKUP_FORWARD':
     case '_LOOKUP_INVERT': {
@@ -233,7 +234,11 @@ function generateFunctionCall(callExpr, ctx) {
       // a C function call with a generated C expression for each remaining argument.
       const cVarRef = ctx.cVarRef(callExpr.args[0])
       const cArgs = callExpr.args.slice(1).map(arg => generateExpr(arg, ctx))
-      return `${fnRef(fnId, ctx)}(${cVarRef}, ${cArgs.join(', ')})`
+      let cArgList = cVarRef
+      if (cArgs.length > 0) {
+        cArgList += `, ${cArgs.join(', ')}`
+      }
+      return `${fnRef(fnId, ctx)}(${cArgList})`
     }
 
     //

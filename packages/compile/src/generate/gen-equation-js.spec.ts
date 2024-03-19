@@ -1123,6 +1123,31 @@ describe('generateEquation (Vensim -> JS)', () => {
   //   expect(genJS(vars.get('_y'))).toEqual(['_y = fns.GET_DATA_BETWEEN_TIMES(_x, _time, 42);'])
   // })
 
+  it('should work for GET DATA LAST TIME function', () => {
+    const extData: ExtData = new Map([
+      [
+        '_x',
+        new Map([
+          [0, 0],
+          [1, 2],
+          [2, 5]
+        ])
+      ]
+    ])
+
+    const vars = readInlineModel(
+      `
+      x ~~|
+      y = GET DATA LAST TIME(x) ~~|
+    `,
+      { extData }
+    )
+    expect(vars.size).toBe(2)
+    expect(genJS(vars.get('_x'), 'decl', { extData })).toEqual(['const _x_data_ = [0.0, 0.0, 1.0, 2.0, 2.0, 5.0];'])
+    expect(genJS(vars.get('_x'), 'init-lookups', { extData })).toEqual(['_x = fns.createLookup(3, _x_data_);'])
+    expect(genJS(vars.get('_y'))).toEqual([`_y = fns.GET_DATA_LAST_TIME(_x);`])
+  })
+
   it('should work for GET DIRECT CONSTANTS function (single value from named csv file)', () => {
     // TODO: Add new csv files for this test so that we don't have to rely on
     // other test models

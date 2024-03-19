@@ -15,6 +15,10 @@ export class Lookup {
     this.lastHitIndex = 0
   }
 
+  public getLastX(): number {
+    return this.data[this.n * 2 - 2]
+  }
+
   public getValueForX(x: number, mode: LookupMode): number {
     return this.getValue(x, false, mode)
   }
