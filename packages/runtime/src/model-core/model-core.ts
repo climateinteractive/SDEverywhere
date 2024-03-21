@@ -13,6 +13,8 @@ export interface ModelCore {
 
   setTime(time: number): void
 
+  setData(varIndex: number, points: number[]): void
+
   setInputs(inputValue: (index: number) => number): void
 
   getOutputVarIds(): string[]

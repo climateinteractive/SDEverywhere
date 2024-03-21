@@ -220,6 +220,14 @@ ${chunkedFunctions('evalLevels', true, Model.levelVars(), '  // Evaluate levels'
     let outputVarIds = outputAllVars ? expandedVarNames() : spec.outputVars
     mode = 'io'
     return `\
+export function setData(varIndex, points) {
+  switch (varIndex) {
+${dataOverridesSection(Model.varIndexInfo('data'))}
+    default:
+      break;
+  }
+}
+
 export function setInputs(valueAtIndex /*: (index: number) => number*/) {${inputsFromBufferImpl()}}
 
 export function getOutputVarIds() {
@@ -394,6 +402,30 @@ ${section(chunk)}
   //
   // Input/output section helpers
   //
+  function dataOverridesSection(varIndexInfo) {
+    // Emit data overrides for all data variables.
+    const code = R.map(info => {
+      let varRef = info.varName
+      // TODO: Subscripts
+      // if (info.subscriptCount > 0) {
+      //   varAccess += '[subIndex0]'
+      // }
+      // if (info.subscriptCount > 1) {
+      //   varAccess += '[subIndex1]'
+      // }
+      // if (info.subscriptCount > 2) {
+      //   varAccess += '[subIndex2]'
+      // }
+      let c = ''
+      c += `    case ${info.varIndex}:\n`
+      c += `      ${varRef} = fns.createLookup(points.length / 2, points);\n`
+      c += `      break;`
+      return c
+    })
+    const section = R.pipe(code, lines)
+    // TODO: Filter so that we only include data variables or lookups
+    return section(varIndexInfo)
+  }
   function specOutputSection(varNames) {
     // Emit output calls using varNames in C format.
     let code = R.map(varName => `  storeValue(${varName});`)

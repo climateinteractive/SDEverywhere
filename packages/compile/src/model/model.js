@@ -1176,7 +1176,7 @@ function filteredListedVars() {
   return R.map(v => filterVar(v), allListedVars())
 }
 
-function varIndexInfoMap() {
+function varIndexInfoMap(kind = 'non-data') {
   // Return a map containing information for each listed variable:
   //   varName
   //   varIndex
@@ -1186,16 +1186,26 @@ function varIndexInfoMap() {
   // generated model
   const sortedVars = filteredListedVars()
 
+  // TODO: Need to rethink this so that the correct index values are available for
+  // both data and non-data variables
+
   // Get the set of unique variable names, and assign a 1-based index
   // to each; this matches the index number used in `storeOutput()`
   // in the generated C code
   const infoMap = new Map()
   let varIndex = 1
   for (const v of sortedVars) {
-    if (v.varType === 'data' || v.varType === 'lookup') {
-      // Omit the index for data and lookup variables; at this time, the data for these
-      // cannot be output like for other types of variables
-      continue
+    if (kind === 'data') {
+      if (v.varType !== 'data' && v.varType !== 'lookup') {
+        // Only include the index for data and lookup variables
+        continue
+      }
+    } else if (kind === 'non-data') {
+      if (v.varType === 'data' || v.varType === 'lookup') {
+        // Omit the index for data and lookup variables; at this time, the data for these
+        // cannot be output like for other types of variables
+        continue
+      }
     }
     const varName = v.varName
     if (!infoMap.get(varName)) {
@@ -1211,13 +1221,13 @@ function varIndexInfoMap() {
   return infoMap
 }
 
-function varIndexInfo() {
+function varIndexInfo(kind = 'non-data') {
   // Return an array, sorted by `varName`, containing information for each
   // listed variable:
   //   varName
   //   varIndex
   //   subscriptCount
-  return Array.from(varIndexInfoMap().values())
+  return Array.from(varIndexInfoMap(kind).values())
 }
 
 function jsonList() {

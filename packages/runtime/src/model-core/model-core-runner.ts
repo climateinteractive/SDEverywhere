@@ -54,9 +54,15 @@ export function createCoreRunner(core: ModelCore): ModelRunner {
  * @param core A `ModelCore` instance.
  * @param inputs The model input values (must be in the same order as in the spec file).
  * @param outputs The structure into which the model outputs will be stored.
+ * @param data The data overrides. TODO: EXPLAIN THIS!!!!!
  * @return The outputs of the run.
  */
-export function runModelCore(core: ModelCore, inputs?: InputValue[], outputs?: Outputs): Outputs {
+export function runModelCore(
+  core: ModelCore,
+  inputs?: InputValue[],
+  outputs?: Outputs,
+  data?: Map<number, number[]>
+): Outputs {
   // TODO
   const useOutputIndices = false
 
@@ -88,6 +94,13 @@ export function runModelCore(core: ModelCore, inputs?: InputValue[], outputs?: O
     currentTime: time
   }
   fns.setContext(fnContext)
+
+  if (data) {
+    // TODO: EXPLAIN
+    for (const [varIndex, points] of data.entries()) {
+      core.setData(varIndex, points)
+    }
+  }
 
   if (inputs) {
     // Set the user-defined input values.  This needs to happen after `initConstants`
