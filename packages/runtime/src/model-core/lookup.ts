@@ -19,6 +19,23 @@ export class Lookup {
     return this.data[this.n * 2 - 2]
   }
 
+  /**
+   * Return the y value if there is a data point for the given x value,
+   * otherwise return undefined.
+   * NOTE: The x values are assumed to be monotonically increasing.
+   */
+  public getValueAtTime(x: number): number {
+    // TODO: Optimize this to use binary search
+    const max = this.n * 2
+    for (let xi = 0; xi < max; xi += 2) {
+      const px = this.data[xi]
+      if (px === x) {
+        return this.data[xi + 1]
+      }
+    }
+    return undefined
+  }
+
   public getValueForX(x: number, mode: LookupMode): number {
     return this.getValue(x, false, mode)
   }

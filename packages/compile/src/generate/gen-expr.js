@@ -225,6 +225,7 @@ function generateFunctionCall(callExpr, ctx) {
     //
     //
 
+    case '_GET_DATA_AT_TIME':
     case '_GET_DATA_BETWEEN_TIMES':
     case '_GET_DATA_LAST_TIME':
     case '_LOOKUP_BACKWARD':

@@ -400,6 +400,7 @@ function visitFunctionCall(v, callExpr, context) {
     //
     //
 
+    case '_GET_DATA_AT_TIME':
     case '_LOOKUP_BACKWARD':
     case '_LOOKUP_FORWARD':
     case '_LOOKUP_INVERT':

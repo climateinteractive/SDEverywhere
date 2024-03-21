@@ -55,6 +55,7 @@ export interface CoreFunctions {
   LOOKUP_BACKWARD(lookup: Lookup, x: number): number
   LOOKUP_INVERT(lookup: Lookup, y: number): number
   WITH_LOOKUP(x: number, lookup: Lookup): number
+  GET_DATA_AT_TIME(lookup: Lookup, x: number): number
   GET_DATA_BETWEEN_TIMES(lookup: Lookup, x: number, mode: number): number
   GET_DATA_LAST_TIME(lookup: Lookup): number
 
@@ -283,6 +284,14 @@ export function getCoreFunctions(): CoreFunctions {
 
     WITH_LOOKUP(x: number, lookup: Lookup): number {
       return lookup ? lookup.getValueForX(x, 'interpolate') : _NA_
+    },
+
+    GET_DATA_AT_TIME(lookup: Lookup, x: number): number {
+      let y: number
+      if (lookup) {
+        y = lookup.getValueAtTime(x)
+      }
+      return y !== undefined ? y : _NA_
     },
 
     GET_DATA_BETWEEN_TIMES(lookup: Lookup, x: number, mode: number): number {

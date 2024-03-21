@@ -251,6 +251,25 @@ describe('CoreFunctions', () => {
     expect(fns.WITH_LOOKUP(4, lookup)).toBe(6)
   })
 
+  it('should expose GET_DATA_AT_TIME', () => {
+    const lookup = fns.createLookup(
+      3,
+      [
+        // t=0
+        0, 0,
+        // t=1
+        1, 10,
+        // t=2
+        2, 20
+      ]
+    )
+
+    expect(fns.GET_DATA_AT_TIME(lookup, 0)).toBe(0)
+    expect(fns.GET_DATA_AT_TIME(lookup, 1)).toBe(10)
+    expect(fns.GET_DATA_AT_TIME(lookup, 2)).toBe(20)
+    expect(fns.GET_DATA_AT_TIME(lookup, 1.5)).toBe(-Number.MAX_VALUE)
+  })
+
   it('should expose GET_DATA_BETWEEN_TIMES', () => {
     const lookup = fns.createLookup(
       5,
@@ -320,5 +339,21 @@ describe('CoreFunctions', () => {
     expect(fns.GET_DATA_BETWEEN_TIMES(lookup, 10.0, -1)).toBe(70)
     expect(fns.GET_DATA_BETWEEN_TIMES(lookup, 10.5, -1)).toBe(70)
     expect(fns.GET_DATA_BETWEEN_TIMES(lookup, 11.0, -1)).toBe(70)
+  })
+
+  it('should expose GET_DATA_LAST_TIME', () => {
+    const lookup = fns.createLookup(
+      3,
+      [
+        // t=0
+        0, 0,
+        // t=1
+        1, 10,
+        // t=2
+        2, 20
+      ]
+    )
+
+    expect(fns.GET_DATA_LAST_TIME(lookup)).toBe(2)
   })
 })
