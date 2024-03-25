@@ -1,11 +1,11 @@
 // Copyright (c) 2022 Climate Interactive / New Venture Fund
 
-import type { InputId, InputVar, VarId } from '@sdeverywhere/check-core'
+import type { InputAliasName, InputGroupName, InputId, InputVar, VarId } from '@sdeverywhere/check-core'
 
 export interface Inputs {
   inputVars: Map<VarId, InputVar>
-  inputGroups: Map<string, InputVar[]>
-  inputAliases: Map<string, VarId>
+  inputGroups: Map<InputGroupName, InputVar[]>
+  inputAliases: Map<InputAliasName, VarId>
 }
 
 /**
@@ -13,7 +13,7 @@ export interface Inputs {
  */
 export function getInputs(modelVersion: number): Inputs {
   const inputVars: Map<VarId, InputVar> = new Map()
-  const inputAliases: Map<string, VarId> = new Map()
+  const inputAliases: Map<InputAliasName, VarId> = new Map()
 
   // TODO: Typically you would return the actual list of model inputs (for
   // example, the list used to configure an SDEverywhere-generated model),
@@ -58,7 +58,7 @@ export function getInputs(modelVersion: number): Inputs {
   }
 
   // Configure input groups
-  const inputGroups: Map<string, InputVar[]> = new Map([
+  const inputGroups: Map<InputGroupName, InputVar[]> = new Map([
     ['All Inputs', [...inputVars.values()]],
     // ['Input Group 1', [inputVars.get('_input_a'), inputVars.get('_input_b')]],
     ['Input Group 1', [inputVars.get('_input_a')]],

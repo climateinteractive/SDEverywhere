@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest'
 
 import { inputAtPositionSpec as atPosSpec, inputAtValueSpec as atValSpec } from '../../../_shared/scenario-specs'
 import type { VarId } from '../../../_shared/types'
-import type { ModelSpec } from '../../../bundle/bundle-types'
+import type { InputAliasName, ModelSpec } from '../../../bundle/bundle-types'
 import { ModelInputs } from '../../../bundle/model-inputs'
 import type { InputId, InputVar } from '../../../bundle/var-types'
 
@@ -76,7 +76,7 @@ function mockModelSpec(kind: 'L' | 'R'): ModelSpec {
   }
 
   // Add aliases by slider name
-  const inputAliases: Map<string, VarId> = new Map()
+  const inputAliases: Map<InputAliasName, VarId> = new Map()
   inputAliases.set('S1', '_ivara')
   inputAliases.set('S2', kind === 'L' ? '_ivarb' : '_ivarb_renamed')
   inputAliases.set('S3', kind === 'L' ? '_ivarc' : '_ivard')
