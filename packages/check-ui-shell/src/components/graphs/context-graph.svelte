@@ -69,15 +69,20 @@ include context-graph.pug
   +if('viewModel.graphSpec')
     .graph-and-info
       .graph-title(class!='{viewModel.datasetClass}') { @html viewModel.graphSpec.title }
-      .graph-container
-        Lazy(bind:visible!='{visible}')
-          +if('$content')
-            Graph(viewModel!='{$content.graphData}' config!='{graphConfig}')
-      Legend(graphSpec!='{viewModel.graphSpec}')
-      +links
+      +if('viewModel.requestKey')
+        .graph-container
+          Lazy(bind:visible!='{visible}')
+            +if('$content && $content.graphData')
+              Graph(viewModel!='{$content.graphData}' config!='{graphConfig}')
+        Legend(graphSpec!='{viewModel.graphSpec}')
+        +links
+        +else
+          .message.not-shown
+            span Graph not shown: scenario is invalid in&nbsp;
+            span(class!='{viewModel.datasetClass}') { viewModel.bundleName }
     +else
-      .message
-        span Not included in&nbsp;
+      .message.not-included
+        span Graph not included in&nbsp;
         span(class!='{viewModel.datasetClass}') { viewModel.bundleName }
 
 </template>
@@ -122,8 +127,9 @@ $graph-height: 20rem
   min-height: $graph-height
   align-items: center
   justify-content: center
-  background-color: #555
   color: #aaa
+  &.not-included
+    background-color: #555
 
 .link-container
   display: flex
