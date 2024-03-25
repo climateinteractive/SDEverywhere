@@ -148,6 +148,15 @@ export function getGraphSpecs(modelVersion: number, outputVars: Map<DatasetKey, 
 
   const graphSpecs: BundleGraphSpec[] = []
   for (let i = 1; i <= 8; i++) {
+    if (i === 1 && modelVersion === 1) {
+      // Simulate the case where a graph is not included in version 1 but is added
+      // in version 2
+      continue
+    } else if (i === 2 && modelVersion === 2) {
+      // Simulate the case where a graph is included in version 1 but is removed
+      // in version 2
+      continue
+    }
     graphSpecs.push(graphSpec(`${i}`, `Sample Graph ${i}`))
   }
 

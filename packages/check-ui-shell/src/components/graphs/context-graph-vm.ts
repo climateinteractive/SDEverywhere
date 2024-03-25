@@ -41,14 +41,26 @@ export class ContextGraphViewModel {
     this.datasetClass = `dataset-color-${bundle === 'right' ? '1' : '0'}`
     if (graphSpec) {
       const scenarioSpec = bundle === 'right' ? scenario.specR : scenario.specL
-      this.linkItems = b.model.getGraphLinksForScenario(scenarioSpec, graphSpec.id)
-      this.requestKey = `context-graph::${requestId++}::${bundle}::${graphSpec.id}::${scenario.key}`
+      if (scenarioSpec !== undefined) {
+        this.linkItems = b.model.getGraphLinksForScenario(scenarioSpec, graphSpec.id)
+        this.requestKey = `context-graph::${requestId++}::${bundle}::${graphSpec.id}::${scenario.key}`
+      } else {
+        this.linkItems = []
+      }
       this.writableContent = writable(undefined)
       this.content = this.writableContent
     }
   }
 
   requestData(): void {
+    if (this.requestKey === undefined) {
+      // The request key is undefined when the scenario is invalid or unavailable for the
+      // requested side; in this case, we can set the flags and return early
+      this.dataRequested = true
+      this.dataLoaded = true
+      return
+    }
+
     if (this.dataRequested) {
       return
     }
