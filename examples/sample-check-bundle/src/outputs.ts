@@ -1,5 +1,6 @@
 // Copyright (c) 2022 Climate Interactive / New Venture Fund
 
+import type { DatasetGroupName } from '@sdeverywhere/check-core'
 import type { DatasetKey, ImplVar, OutputVar, RelatedItem, VarId } from '@sdeverywhere/check-core'
 
 export interface Outputs {
