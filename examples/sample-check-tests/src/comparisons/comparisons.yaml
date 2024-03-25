@@ -73,6 +73,7 @@
 #
 # Variable does not exist in left or right (unknown input)
 - scenario:
+    id: input_q_at_90
     title: Input Q (unknown)
     subtitle: at 90
     with: Input Q
@@ -80,10 +81,28 @@
 
 # Variable exists in left+right, but value is invalid in left+right
 - scenario:
+    id: input_a_at_666
     title: Input A
     subtitle: at 666
     with: Input A
     at: 666
+
+# Scenario group that includes error scenarios from above
+- scenario_group:
+    id: G1
+    title: Scenario Group 3
+    scenarios:
+      - scenario_ref: input_q_at_90
+      - scenario_ref: input_a_at_666
+
+# View group refers to scenario that has unknown inputs
+- view_group:
+    title: Group 3 (errors are expected)
+    scenarios:
+      - scenario_group_ref: G1
+    graphs:
+      - '3'
+      - '4'
 # TODO: Input ID exists in both left and right, but with different variable names
 
 # TODO: Input ID exists in both left and right, but with different min/max
