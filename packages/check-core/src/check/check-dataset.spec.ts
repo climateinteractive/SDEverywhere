@@ -3,7 +3,7 @@
 import { describe, expect, it } from 'vitest'
 
 import type { DatasetKey } from '../_shared/types'
-import type { ModelSpec } from '../bundle/bundle-types'
+import type { DatasetGroupName, ModelSpec } from '../bundle/bundle-types'
 import type { ImplVar, OutputVar } from '../bundle/var-types'
 import { expandDatasets } from './check-dataset'
 import type { CheckDatasetSpec } from './check-spec'
@@ -39,7 +39,7 @@ describe('expandDatasets', () => {
     implVar('V6')
   ])
 
-  const datasetGroups: Map<string, DatasetKey[]> = new Map([
+  const datasetGroups: Map<DatasetGroupName, DatasetKey[]> = new Map([
     ['output group 0', []],
     ['output group 1', ['Model_unknown_dataset']],
     ['output group 2', ['Model_v1', 'Model_v6']],

@@ -5,7 +5,7 @@ import type { DatasetKey, ImplVar, OutputVar, RelatedItem, VarId } from '@sdever
 export interface Outputs {
   outputVars: Map<DatasetKey, OutputVar>
   implVars: Map<DatasetKey, ImplVar>
-  datasetGroups: Map<string, DatasetKey[]>
+  datasetGroups: Map<DatasetGroupName, DatasetKey[]>
 }
 
 /**
@@ -99,7 +99,7 @@ export function getOutputs(modelVersion: number): Outputs {
   const keysForVarsWithSource = (sourceName?: string) => {
     return [...outputVars.entries()].filter(e => e[1].sourceName === sourceName).map(([k]) => k)
   }
-  const datasetGroups: Map<string, DatasetKey[]> = new Map([
+  const datasetGroups: Map<DatasetGroupName, DatasetKey[]> = new Map([
     ['All Outputs', keysForVarsWithSource(undefined)],
     ['Basic Outputs', [keyForVarWithName('Output X'), keyForVarWithName('Output Y'), keyForVarWithName('Output Z')]],
     ['Static', keysForVarsWithSource('StaticData')]
