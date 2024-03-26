@@ -44,6 +44,14 @@
           graphs: all
 
 - view_group:
+    title: Extremes
+    views:
+      - view:
+          scenario_ref: extreme_main_sliders_at_best_case
+          graphs:
+            - '1'
+
+- view_group:
     title: Group 1 (showing graphs 1+2 for different scenarios involving Input 1)
     views:
       - view:

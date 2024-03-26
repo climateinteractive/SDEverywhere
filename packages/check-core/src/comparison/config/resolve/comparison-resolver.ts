@@ -2,7 +2,8 @@
 
 import { assertNever } from 'assert-never'
 
-import type { InputPosition } from '../../../_shared/scenario-spec-types'
+import type { InputPosition, InputSetting, ScenarioSpec } from '../../../_shared/scenario-spec-types'
+import { inputSettingsSpec } from '../../../_shared/scenario-specs'
 
 import type { ModelInputs } from '../../../bundle/model-inputs'
 import type { InputId, InputVar } from '../../../bundle/var-types'
@@ -38,7 +39,7 @@ import type {
   ComparisonViewSubtitle,
   ComparisonViewTitle
 } from '../comparison-spec-types'
-import { scenarioSpecsFromSettings } from './comparison-scenario-specs'
+import { inputSettingFromResolvedInputState, scenarioSpecsFromSettings } from './comparison-scenario-specs'
 
 export interface ComparisonResolvedDefs {
   /** The set of resolved scenarios. */
@@ -236,6 +237,23 @@ function resolveScenariosFromSpec(
       ]
     }
 
+    case 'scenario-with-distinct-inputs': {
+      // Create one scenario in which the inputs are configured differently
+      // for the two models
+      return [
+        resolveScenarioForDistinctInputSpecs(
+          modelInputsL,
+          modelInputsR,
+          genKey(),
+          scenarioSpec.id,
+          scenarioSpec.title,
+          scenarioSpec.subtitle,
+          scenarioSpec.inputsL,
+          scenarioSpec.inputsR
+        )
+      ]
+    }
+
     default:
       assertNever(scenarioSpec)
   }
@@ -356,6 +374,101 @@ function resolveScenarioForInputSpecs(
     title,
     subtitle,
     settings,
+    specL,
+    specR
+  }
+}
+
+/**
+ * Return a resolved `ComparisonScenario` for the given settings that are different
+ * for the two models.
+ */
+function resolveScenarioForDistinctInputSpecs(
+  modelInputsL: ModelInputs,
+  modelInputsR: ModelInputs,
+  key: ComparisonScenarioKey,
+  id: ComparisonScenarioId | undefined,
+  title: ComparisonScenarioTitle | undefined,
+  subtitle: ComparisonScenarioSubtitle | undefined,
+  inputSpecsL: ComparisonScenarioInputSpec[],
+  inputSpecsR: ComparisonScenarioInputSpec[]
+): ComparisonScenario {
+  // TODO: Unlike the more typical "scenario with inputs" case, when we have "distinct"
+  // inputs (separate sets of inputs for the two models) we only include the `settings`
+  // array in the resulting `ComparisonScenario` if there are errors in resolving the
+  // inputs.  If all inputs were resolved successfully, then the `settings` array will
+  // be empty.  This is probably fine for now but it could stand to be redesigned.
+  const inputsWithErrors: ComparisonScenarioInput[] = []
+
+  // Resolve the input settings for the left and right sides separately
+  const settingsL: InputSetting[] = []
+  const settingsR: InputSetting[] = []
+
+  // Helper function that resolves an input for the given model/side.  If the input is
+  // resolved successfully, an `InputSetting` will be saved for that side.  Otherwise,
+  // a `ComparisonScenarioInput` describing the error will be saved.
+  function resolveInputSpec(
+    side: 'left' | 'right',
+    modelInputs: ModelInputs,
+    inputSpec: ComparisonScenarioInputSpec
+  ): void {
+    let inputState: ComparisonScenarioInputState
+    switch (inputSpec.kind) {
+      case 'input-at-position':
+        inputState = resolveInputForNameInModel(modelInputs, inputSpec.inputName, inputSpec.position)
+        break
+      case 'input-at-value':
+        inputState = resolveInputForNameInModel(modelInputs, inputSpec.inputName, inputSpec.value)
+        break
+      default:
+        assertNever(inputSpec)
+    }
+
+    if (inputState.error !== undefined) {
+      // The input could not be resolved, so add it to the set of error inputs
+      // TODO: For now we include an empty object (with undefined properties) for the
+      // "other" side.  Maybe we can make the state properties optional, or maybe we
+      // just need a less awkward way of handling these input states in the "distinct"
+      // inputs case.
+      inputsWithErrors.push({
+        requestedName: inputSpec.inputName,
+        stateL: side === 'left' ? inputState : {},
+        stateR: side === 'right' ? inputState : {}
+      })
+    } else {
+      // The input was resolved, so create a scenario that works for this side
+      const inputSetting = inputSettingFromResolvedInputState(inputState)
+      if (side === 'left') {
+        settingsL.push(inputSetting)
+      } else {
+        settingsR.push(inputSetting)
+      }
+    }
+  }
+
+  // Resolve the input settings for the left and right sides separately
+  inputSpecsL.forEach(inputSpec => resolveInputSpec('left', modelInputsL, inputSpec))
+  inputSpecsR.forEach(inputSpec => resolveInputSpec('right', modelInputsR, inputSpec))
+
+  // Create a `ScenarioSpec` for each side if there were no errors
+  let specL: ScenarioSpec
+  let specR: ScenarioSpec
+  if (inputsWithErrors.length === 0) {
+    specL = inputSettingsSpec(settingsL)
+    specR = inputSettingsSpec(settingsR)
+  }
+
+  // Create a `ComparisonScenario` with the resolved inputs
+  return {
+    kind: 'scenario',
+    key,
+    id,
+    title,
+    subtitle,
+    settings: {
+      kind: 'input-settings',
+      inputs: inputsWithErrors
+    },
     specL,
     specR
   }

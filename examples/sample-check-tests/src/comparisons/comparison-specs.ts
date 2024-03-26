@@ -56,6 +56,17 @@ export function createBaseComparisonSpecs(bundleL: Bundle, bundleR: Bundle): Com
     addScenario(inputId, 'max')
   }
 
+  // Create a special scenario that controls a different set of inputs in the "left" model
+  // than in the "right" model
+  scenarios.push({
+    kind: 'scenario-with-distinct-inputs',
+    id: 'extreme_main_sliders_at_best_case',
+    title: 'Main sliders',
+    subtitle: 'at best case',
+    inputsL: [{ kind: 'input-at-value', inputName: 'Input A', value: 75 }],
+    inputsR: [{ kind: 'input-at-value', inputName: 'Input B prime', value: 25 }]
+  })
+
   return {
     scenarios,
     scenarioGroups: [],

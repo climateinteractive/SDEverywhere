@@ -13,6 +13,7 @@ import type {
   ComparisonScenarioRefSpec,
   ComparisonScenarioSpec,
   ComparisonScenarioWithAllInputsSpec,
+  ComparisonScenarioWithDistinctInputsSpec,
   ComparisonScenarioWithInputsSpec,
   ComparisonSpecs,
   ComparisonViewGraphsArraySpec,
@@ -57,6 +58,21 @@ export function scenarioWithInputsSpec(
     title: opts?.title,
     subtitle: opts?.subtitle,
     inputs
+  }
+}
+
+export function scenarioWithDistinctInputsSpec(
+  inputsL: ComparisonScenarioInputSpec[],
+  inputsR: ComparisonScenarioInputSpec[],
+  opts?: { id?: string; title?: string; subtitle?: string }
+): ComparisonScenarioWithDistinctInputsSpec {
+  return {
+    kind: 'scenario-with-distinct-inputs',
+    id: opts?.id,
+    title: opts?.title,
+    subtitle: opts?.subtitle,
+    inputsL,
+    inputsR
   }
 }
 

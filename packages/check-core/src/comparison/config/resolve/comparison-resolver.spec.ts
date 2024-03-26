@@ -10,13 +10,19 @@ import type { InputId, InputVar } from '../../../bundle/var-types'
 
 import type { ComparisonSpecs } from '../comparison-spec-types'
 
-import type { ComparisonScenario, ComparisonScenarioKey } from '../../_shared/comparison-resolved-types'
+import type {
+  ComparisonScenario,
+  ComparisonScenarioInput,
+  ComparisonScenarioInputState,
+  ComparisonScenarioKey
+} from '../../_shared/comparison-resolved-types'
 
 import {
   allAtPos,
   inputVar,
   scenarioGroup,
   scenarioWithInput,
+  scenarioWithInputs,
   unresolvedScenarioRef,
   unresolvedViewForScenarioGroupId,
   unresolvedViewForScenarioId,
@@ -35,6 +41,7 @@ import {
   scenarioMatrixSpec,
   scenarioRefSpec,
   scenarioWithAllInputsSpec,
+  scenarioWithDistinctInputsSpec,
   scenarioWithInputsSpec,
   viewGroupWithScenariosSpec,
   viewGroupWithViewsSpec,
@@ -236,6 +243,67 @@ describe('resolveComparisonSpecs', () => {
             lVar('IVarB'),
             { kind: 'invalid-value' },
             atValSpec('_ivarb', 90),
+            undefined
+          )
+        ],
+        scenarioGroups: [],
+        viewGroups: []
+      })
+    })
+
+    it('should expand distinct model-specific input specs', () => {
+      function resolvedInput(
+        requestedInputName: string,
+        stateL: ComparisonScenarioInputState,
+        stateR: ComparisonScenarioInputState
+      ): ComparisonScenarioInput {
+        return {
+          requestedName: requestedInputName,
+          stateL,
+          stateR
+        }
+      }
+
+      const specs = comparisonSpecs([
+        // Match by variable name
+        scenarioWithDistinctInputsSpec([inputAtValueSpec('ivarA', 20)], [inputAtValueSpec('ivarA', 30)]),
+        // Match by input ID
+        scenarioWithDistinctInputsSpec([inputAtValueSpec('id 2', 40)], [inputAtValueSpec('id 2', 50)]),
+        // Match by alias (slider name)
+        scenarioWithDistinctInputsSpec([inputAtValueSpec('S3', 60)], [inputAtValueSpec('S3', 70)]),
+        // Error if input is not available on requested side
+        scenarioWithDistinctInputsSpec([inputAtValueSpec('ivarA', 20)], [inputAtValueSpec('unknown', 600)]),
+        // Error if value is out of range on both sides
+        scenarioWithDistinctInputsSpec([inputAtValueSpec('ivarA', 500)], [inputAtValueSpec('ivarA', 600)]),
+        // Error if value is out of range on one side
+        scenarioWithDistinctInputsSpec([inputAtValueSpec('id 2', 90)], [inputAtValueSpec('id 2', 600)])
+      ])
+
+      const resolved = resolveComparisonSpecs(modelInputsL, modelInputsR, specs)
+      expect(resolved).toEqual({
+        scenarios: [
+          scenarioWithInputs('1', [], atValSpec('_ivara', 20), atValSpec('_ivara', 30)),
+          scenarioWithInputs('2', [], atValSpec('_ivarb', 40), atValSpec('_ivarb_renamed', 50)),
+          scenarioWithInputs('3', [], atValSpec('_ivarc', 60), atValSpec('_ivard', 70)),
+          scenarioWithInputs(
+            '4',
+            [resolvedInput('unknown', {}, { error: { kind: 'unknown-input' } })],
+            undefined,
+            undefined
+          ),
+          scenarioWithInputs(
+            '5',
+            [
+              resolvedInput('ivarA', { error: { kind: 'invalid-value' } }, {}),
+              resolvedInput('ivarA', {}, { error: { kind: 'invalid-value' } })
+            ],
+            undefined,
+            undefined
+          ),
+          scenarioWithInputs(
+            '6',
+            [resolvedInput('id 2', {}, { error: { kind: 'invalid-value' } })],
+            undefined,
             undefined
           )
         ],
