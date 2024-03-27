@@ -67,12 +67,12 @@ function generateSmoothLevel(v, context, argInput, argDelay, argInit, levelNumbe
   // `equation-reader.js` and modified to work with the AST instead of directly depending
   // on antlr4-vensim constructs.  This logic is pretty complex so we should try to refactor
   // or at least add some more fine-grained unit tests for it.
-  let subs = context.extractSubscriptsFromVarNames(argInput, argDelay, argInit)
 
-  // For SMOOTH3, the previous level is the input for level number 2 and 3. Add RHS subscripts.
-  if (levelNumber > 1 && subs.length > 0) {
-    argInput = `${argInput}${subs}`
-  }
+  // Preserve the original subscript/dimension names that were passed in.  In the case of
+  // separated variables, the `subs` array will be replaced to include the separated subscript
+  // names, but we still need the original subscript/dimension names.
+  let origSubs = context.extractSubscriptsFromVarNames(argInput, argDelay, argInit)
+  let subs = origSubs
 
   let levelVarBaseName
   let levelLHS
@@ -129,5 +129,8 @@ function generateSmoothLevel(v, context, argInput, argDelay, argInit, levelNumbe
   context.defineVariable(levelEqn)
   context.addVarReference(levelVarRefId)
 
-  return [levelVarRefId, levelVarBaseName]
+  // The name of the level variable returned here includes the original subscript/dimension names
+  // (not the separated subscript names) so that the `argInput` is correct for the 2nd and 3rd levels
+  const levelVarFullName = `${levelVarBaseName}${origSubs}`
+  return [levelVarRefId, levelVarFullName]
 }
