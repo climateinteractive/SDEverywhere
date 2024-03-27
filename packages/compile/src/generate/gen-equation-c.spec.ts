@@ -1820,8 +1820,7 @@ describe('generateEquation (Vensim -> C)', () => {
     expect(genC(vars.get('_y'))).toEqual(['_y = __level3;'])
   })
 
-  // TODO: Subscripted variants
-  it('should work for SMOOTH3I function', () => {
+  it('should work for SMOOTH3I function (no dimensions)', () => {
     const vars = readInlineModel(`
       input = 3 + PULSE(10, 10) ~~|
       delay = 2 ~~|
@@ -1843,6 +1842,100 @@ describe('generateEquation (Vensim -> C)', () => {
       '__level3 = _INTEG(__level3, (__level2 - __level3) / (_delay / 3.0));'
     ])
     expect(genC(vars.get('_y'))).toEqual(['_y = __level3;'])
+  })
+
+  it('should work for SMOOTH3I function (1D with subscripted delay parameter)', () => {
+    const vars = readInlineModel(`
+      DimA: A1, A2 ~~|
+      input[DimA] = 3 + PULSE(10, 10) ~~|
+      delay[DimA] = 2 ~~|
+      y[DimA] = SMOOTH3I(input[DimA], delay[DimA], 5) ~~|
+    `)
+    expect(vars.size).toBe(6)
+    expect(genC(vars.get('_input'))).toEqual([
+      'for (size_t i = 0; i < 2; i++) {',
+      '_input[i] = 3.0 + _PULSE(10.0, 10.0);',
+      '}'
+    ])
+    expect(genC(vars.get('_delay'))).toEqual(['for (size_t i = 0; i < 2; i++) {', '_delay[i] = 2.0;', '}'])
+    expect(genC(vars.get('__level1'), 'init-levels')).toEqual([
+      'for (size_t i = 0; i < 2; i++) {',
+      '__level1[i] = 5.0;',
+      '}'
+    ])
+    expect(genC(vars.get('__level1'), 'eval')).toEqual([
+      'for (size_t i = 0; i < 2; i++) {',
+      '__level1[i] = _INTEG(__level1[i], (_input[i] - __level1[i]) / (_delay[i] / 3.0));',
+      '}'
+    ])
+    expect(genC(vars.get('__level2'), 'init-levels')).toEqual([
+      'for (size_t i = 0; i < 2; i++) {',
+      '__level2[i] = 5.0;',
+      '}'
+    ])
+    expect(genC(vars.get('__level2'), 'eval')).toEqual([
+      'for (size_t i = 0; i < 2; i++) {',
+      '__level2[i] = _INTEG(__level2[i], (__level1[i] - __level2[i]) / (_delay[i] / 3.0));',
+      '}'
+    ])
+    expect(genC(vars.get('__level3'), 'init-levels')).toEqual([
+      'for (size_t i = 0; i < 2; i++) {',
+      '__level3[i] = 5.0;',
+      '}'
+    ])
+    expect(genC(vars.get('__level3'), 'eval')).toEqual([
+      'for (size_t i = 0; i < 2; i++) {',
+      '__level3[i] = _INTEG(__level3[i], (__level2[i] - __level3[i]) / (_delay[i] / 3.0));',
+      '}'
+    ])
+    expect(genC(vars.get('_y'))).toEqual(['for (size_t i = 0; i < 2; i++) {', '_y[i] = __level3[i];', '}'])
+  })
+
+  it('should work for SMOOTH3I function (1D with non-subscripted delay parameter)', () => {
+    const vars = readInlineModel(`
+      DimA: A1, A2 ~~|
+      input[DimA] = 3 + PULSE(10, 10) ~~|
+      delay = 2 ~~|
+      y[DimA] = SMOOTH3I(input[DimA], delay, 5) ~~|
+    `)
+    expect(vars.size).toBe(6)
+    expect(genC(vars.get('_input'))).toEqual([
+      'for (size_t i = 0; i < 2; i++) {',
+      '_input[i] = 3.0 + _PULSE(10.0, 10.0);',
+      '}'
+    ])
+    expect(genC(vars.get('_delay'))).toEqual(['_delay = 2.0;'])
+    expect(genC(vars.get('__level1'), 'init-levels')).toEqual([
+      'for (size_t i = 0; i < 2; i++) {',
+      '__level1[i] = 5.0;',
+      '}'
+    ])
+    expect(genC(vars.get('__level1'), 'eval')).toEqual([
+      'for (size_t i = 0; i < 2; i++) {',
+      '__level1[i] = _INTEG(__level1[i], (_input[i] - __level1[i]) / (_delay / 3.0));',
+      '}'
+    ])
+    expect(genC(vars.get('__level2'), 'init-levels')).toEqual([
+      'for (size_t i = 0; i < 2; i++) {',
+      '__level2[i] = 5.0;',
+      '}'
+    ])
+    expect(genC(vars.get('__level2'), 'eval')).toEqual([
+      'for (size_t i = 0; i < 2; i++) {',
+      '__level2[i] = _INTEG(__level2[i], (__level1[i] - __level2[i]) / (_delay / 3.0));',
+      '}'
+    ])
+    expect(genC(vars.get('__level3'), 'init-levels')).toEqual([
+      'for (size_t i = 0; i < 2; i++) {',
+      '__level3[i] = 5.0;',
+      '}'
+    ])
+    expect(genC(vars.get('__level3'), 'eval')).toEqual([
+      'for (size_t i = 0; i < 2; i++) {',
+      '__level3[i] = _INTEG(__level3[i], (__level2[i] - __level3[i]) / (_delay / 3.0));',
+      '}'
+    ])
+    expect(genC(vars.get('_y'))).toEqual(['for (size_t i = 0; i < 2; i++) {', '_y[i] = __level3[i];', '}'])
   })
 
   it('should work for SQRT function', () => {

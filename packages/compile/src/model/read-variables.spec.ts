@@ -1159,6 +1159,10 @@ describe('readVariables', () => {
         subscripts: ['_dima']
       }),
       v('FINAL TIME', '40'),
+      v('initial s', '50'),
+      v('initial s with subscripts[DimA]', '50', {
+        subscripts: ['_dima']
+      }),
       v('INITIAL TIME', '0'),
       v('input', '3+PULSE(10,10)'),
       v('input 2[SubA]', '3+PULSE(10,10)', {
@@ -1191,6 +1195,18 @@ describe('readVariables', () => {
       v('s10[SubA,B1]', 'SMOOTH(input 2[SubA],delay)', {
         separationDims: ['_suba'],
         subscripts: ['_a3', '_b1']
+      }),
+      v('s11[DimA]', 'SMOOTH3(input 3[DimA],delay)', {
+        subscripts: ['_dima']
+      }),
+      v('s12[DimA]', 'SMOOTH3I(input 3[DimA],delay 3[DimA],initial s)', {
+        subscripts: ['_dima']
+      }),
+      v('s13[DimA]', 'SMOOTH3I(input 3[DimA],delay,initial s)', {
+        subscripts: ['_dima']
+      }),
+      v('s14[DimA]', 'SMOOTH3I(input 3[DimA],delay,initial s with subscripts[DimA])', {
+        subscripts: ['_dima']
       }),
       v('s2[DimA]', 'SMOOTH(input,delay)', {
         subscripts: ['_dima']
