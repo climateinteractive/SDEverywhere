@@ -71,7 +71,7 @@ function generateSmoothLevel(v, context, argInput, argDelay, argInit, levelNumbe
   // Preserve the original subscript/dimension names that were passed in.  In the case of
   // separated variables, the `subs` array will be replaced to include the separated subscript
   // names, but we still need the original subscript/dimension names.
-  let origSubs = context.extractSubscriptsFromVarNames(argInput, argDelay, argInit)
+  const origSubs = context.extractSubscriptsFromVarNames(argInput, argDelay, argInit)
   let subs = origSubs
 
   let levelVarBaseName
