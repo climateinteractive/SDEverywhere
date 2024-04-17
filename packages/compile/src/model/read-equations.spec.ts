@@ -1992,6 +1992,86 @@ describe('readEquations', () => {
     ])
   })
 
+  it('should work for SMOOTH function (with subscripted input and subscripted delay)', () => {
+    const vars = readInlineModel(`
+      DimA: A1, A2 ~~|
+      input[DimA] = 3 + PULSE(10, 10) ~~|
+      delay[DimA] = 2, 3 ~~|
+      y[DimA] = SMOOTH(input[DimA], delay[DimA]) ~~|
+    `)
+    expect(vars).toEqual([
+      v('input[DimA]', '3+PULSE(10,10)', {
+        refId: '_input',
+        referencedFunctionNames: ['__pulse'],
+        subscripts: ['_dima']
+      }),
+      v('delay[DimA]', '2,3', {
+        refId: '_delay[_a1]',
+        separationDims: ['_dima'],
+        subscripts: ['_a1'],
+        varType: 'const'
+      }),
+      v('delay[DimA]', '2,3', {
+        refId: '_delay[_a2]',
+        separationDims: ['_dima'],
+        subscripts: ['_a2'],
+        varType: 'const'
+      }),
+      v('y[DimA]', 'SMOOTH(input[DimA],delay[DimA])', {
+        refId: '_y',
+        references: ['__level1'],
+        smoothVarRefId: '__level1',
+        subscripts: ['_dima']
+      }),
+      v('_level1[DimA]', 'INTEG((input[DimA]-_level1[DimA])/delay[DimA],input[DimA])', {
+        hasInitValue: true,
+        includeInOutput: false,
+        initReferences: ['_input'],
+        refId: '__level1',
+        referencedFunctionNames: ['__integ'],
+        references: ['_input', '_delay[_a1]', '_delay[_a2]'],
+        subscripts: ['_dima'],
+        varType: 'level'
+      })
+    ])
+  })
+
+  it('should work for SMOOTH function (with subscripted input and non-subscripted delay)', () => {
+    const vars = readInlineModel(`
+      DimA: A1, A2 ~~|
+      input[DimA] = 3 + PULSE(10, 10) ~~|
+      delay = 2 ~~|
+      y[DimA] = SMOOTH(input[DimA], delay) ~~|
+    `)
+    expect(vars).toEqual([
+      v('input[DimA]', '3+PULSE(10,10)', {
+        refId: '_input',
+        referencedFunctionNames: ['__pulse'],
+        subscripts: ['_dima']
+      }),
+      v('delay', '2', {
+        refId: '_delay',
+        varType: 'const'
+      }),
+      v('y[DimA]', 'SMOOTH(input[DimA],delay)', {
+        refId: '_y',
+        references: ['__level1'],
+        smoothVarRefId: '__level1',
+        subscripts: ['_dima']
+      }),
+      v('_level1[DimA]', 'INTEG((input[DimA]-_level1[DimA])/delay,input[DimA])', {
+        hasInitValue: true,
+        includeInOutput: false,
+        initReferences: ['_input'],
+        refId: '__level1',
+        referencedFunctionNames: ['__integ'],
+        references: ['_input', '_delay'],
+        subscripts: ['_dima'],
+        varType: 'level'
+      })
+    ])
+  })
+
   it('should work for SMOOTHI function', () => {
     const vars = readInlineModel(`
       input = 3 + PULSE(10, 10) ~~|
@@ -2322,6 +2402,126 @@ describe('readEquations', () => {
     ])
   })
 
+  it('should work for SMOOTH3 function (with subscripted input and subscripted delay)', () => {
+    const vars = readInlineModel(`
+      DimA: A1, A2 ~~|
+      input[DimA] = 3 + PULSE(10, 10) ~~|
+      delay[DimA] = 2, 3 ~~|
+      y[DimA] = SMOOTH3(input[DimA], delay[DimA]) ~~|
+    `)
+    expect(vars).toEqual([
+      v('input[DimA]', '3+PULSE(10,10)', {
+        refId: '_input',
+        referencedFunctionNames: ['__pulse'],
+        subscripts: ['_dima']
+      }),
+      v('delay[DimA]', '2,3', {
+        refId: '_delay[_a1]',
+        separationDims: ['_dima'],
+        subscripts: ['_a1'],
+        varType: 'const'
+      }),
+      v('delay[DimA]', '2,3', {
+        refId: '_delay[_a2]',
+        separationDims: ['_dima'],
+        subscripts: ['_a2'],
+        varType: 'const'
+      }),
+      v('y[DimA]', 'SMOOTH3(input[DimA],delay[DimA])', {
+        refId: '_y',
+        references: ['__level1', '__level2', '__level3'],
+        smoothVarRefId: '__level3',
+        subscripts: ['_dima']
+      }),
+      v('_level1[DimA]', 'INTEG((input[DimA]-_level1[DimA])/(delay[DimA]/3),input[DimA])', {
+        hasInitValue: true,
+        includeInOutput: false,
+        initReferences: ['_input'],
+        refId: '__level1',
+        referencedFunctionNames: ['__integ'],
+        references: ['_input', '_delay[_a1]', '_delay[_a2]'],
+        subscripts: ['_dima'],
+        varType: 'level'
+      }),
+      v('_level2[DimA]', 'INTEG((_level1[DimA]-_level2[DimA])/(delay[DimA]/3),input[DimA])', {
+        hasInitValue: true,
+        includeInOutput: false,
+        initReferences: ['_input'],
+        refId: '__level2',
+        referencedFunctionNames: ['__integ'],
+        references: ['__level1', '_delay[_a1]', '_delay[_a2]'],
+        subscripts: ['_dima'],
+        varType: 'level'
+      }),
+      v('_level3[DimA]', 'INTEG((_level2[DimA]-_level3[DimA])/(delay[DimA]/3),input[DimA])', {
+        hasInitValue: true,
+        includeInOutput: false,
+        initReferences: ['_input'],
+        refId: '__level3',
+        referencedFunctionNames: ['__integ'],
+        references: ['__level2', '_delay[_a1]', '_delay[_a2]'],
+        subscripts: ['_dima'],
+        varType: 'level'
+      })
+    ])
+  })
+
+  it('should work for SMOOTH3 function (with subscripted input and non-subscripted delay)', () => {
+    const vars = readInlineModel(`
+      DimA: A1, A2 ~~|
+      input[DimA] = 3 + PULSE(10, 10) ~~|
+      delay = 2 ~~|
+      y[DimA] = SMOOTH3(input[DimA], delay) ~~|
+    `)
+    expect(vars).toEqual([
+      v('input[DimA]', '3+PULSE(10,10)', {
+        refId: '_input',
+        referencedFunctionNames: ['__pulse'],
+        subscripts: ['_dima']
+      }),
+      v('delay', '2', {
+        refId: '_delay',
+        varType: 'const'
+      }),
+      v('y[DimA]', 'SMOOTH3(input[DimA],delay)', {
+        refId: '_y',
+        references: ['__level1', '__level2', '__level3'],
+        smoothVarRefId: '__level3',
+        subscripts: ['_dima']
+      }),
+      v('_level1[DimA]', 'INTEG((input[DimA]-_level1[DimA])/(delay/3),input[DimA])', {
+        hasInitValue: true,
+        includeInOutput: false,
+        initReferences: ['_input'],
+        refId: '__level1',
+        referencedFunctionNames: ['__integ'],
+        references: ['_input', '_delay'],
+        subscripts: ['_dima'],
+        varType: 'level'
+      }),
+      v('_level2[DimA]', 'INTEG((_level1[DimA]-_level2[DimA])/(delay/3),input[DimA])', {
+        hasInitValue: true,
+        includeInOutput: false,
+        initReferences: ['_input'],
+        refId: '__level2',
+        referencedFunctionNames: ['__integ'],
+        references: ['__level1', '_delay'],
+        subscripts: ['_dima'],
+        varType: 'level'
+      }),
+      v('_level3[DimA]', 'INTEG((_level2[DimA]-_level3[DimA])/(delay/3),input[DimA])', {
+        hasInitValue: true,
+        includeInOutput: false,
+        initReferences: ['_input'],
+        refId: '__level3',
+        referencedFunctionNames: ['__integ'],
+        references: ['__level2', '_delay'],
+        subscripts: ['_dima'],
+        varType: 'level'
+      })
+    ])
+  })
+
   it('should work for SMOOTH3I function', () => {
     const vars = readInlineModel(`
       input = 3 + PULSE(10, 10) ~~|
@@ -2535,6 +2735,59 @@ describe('readEquations', () => {
         refId: '__level3',
         referencedFunctionNames: ['__integ'],
         references: ['__level2', '_delay[_a1]', '_delay[_a2]', '_delay[_a3]'],
+        subscripts: ['_dima'],
+        varType: 'level'
+      })
+    ])
+  })
+
+  it('should work for SMOOTH3I function (with subscripted input and non-subscripted delay)', () => {
+    const vars = readInlineModel(`
+      DimA: A1, A2 ~~|
+      input[DimA] = 3 + PULSE(10, 10) ~~|
+      delay = 2 ~~|
+      y[DimA] = SMOOTH3I(input[DimA], delay, 5) ~~|
+    `)
+    expect(vars).toEqual([
+      v('input[DimA]', '3+PULSE(10,10)', {
+        refId: '_input',
+        referencedFunctionNames: ['__pulse'],
+        subscripts: ['_dima']
+      }),
+      v('delay', '2', {
+        refId: '_delay',
+        varType: 'const'
+      }),
+      v('y[DimA]', 'SMOOTH3I(input[DimA],delay,5)', {
+        refId: '_y',
+        references: ['__level1', '__level2', '__level3'],
+        smoothVarRefId: '__level3',
+        subscripts: ['_dima']
+      }),
+      v('_level1[DimA]', 'INTEG((input[DimA]-_level1[DimA])/(delay/3),5)', {
+        hasInitValue: true,
+        includeInOutput: false,
+        refId: '__level1',
+        referencedFunctionNames: ['__integ'],
+        references: ['_input', '_delay'],
+        subscripts: ['_dima'],
+        varType: 'level'
+      }),
+      v('_level2[DimA]', 'INTEG((_level1[DimA]-_level2[DimA])/(delay/3),5)', {
+        hasInitValue: true,
+        includeInOutput: false,
+        refId: '__level2',
+        referencedFunctionNames: ['__integ'],
+        references: ['__level1', '_delay'],
+        subscripts: ['_dima'],
+        varType: 'level'
+      }),
+      v('_level3[DimA]', 'INTEG((_level2[DimA]-_level3[DimA])/(delay/3),5)', {
+        hasInitValue: true,
+        includeInOutput: false,
+        refId: '__level3',
+        referencedFunctionNames: ['__integ'],
+        references: ['__level2', '_delay'],
         subscripts: ['_dima'],
         varType: 'level'
       })
@@ -7045,6 +7298,15 @@ describe('readEquations', () => {
         refId: '_final_time',
         varType: 'const'
       }),
+      v('initial s', '50', {
+        refId: '_initial_s',
+        varType: 'const'
+      }),
+      v('initial s with subscripts[DimA]', '50', {
+        refId: '_initial_s_with_subscripts',
+        subscripts: ['_dima'],
+        varType: 'const'
+      }),
       v('INITIAL TIME', '0', {
         refId: '_initial_time',
         varType: 'const'
@@ -7106,16 +7368,40 @@ describe('readEquations', () => {
         smoothVarRefId: '__level_s10_1[_a3]',
         subscripts: ['_a3', '_b1']
       }),
+      v('s11[DimA]', 'SMOOTH3(input 3[DimA],delay)', {
+        refId: '_s11',
+        references: ['__level2', '__level3', '__level4'],
+        smoothVarRefId: '__level4',
+        subscripts: ['_dima']
+      }),
+      v('s12[DimA]', 'SMOOTH3I(input 3[DimA],delay 3[DimA],initial s)', {
+        refId: '_s12',
+        references: ['__level5', '__level6', '__level7'],
+        smoothVarRefId: '__level7',
+        subscripts: ['_dima']
+      }),
+      v('s13[DimA]', 'SMOOTH3I(input 3[DimA],delay,initial s)', {
+        refId: '_s13',
+        references: ['__level8', '__level9', '__level10'],
+        smoothVarRefId: '__level10',
+        subscripts: ['_dima']
+      }),
+      v('s14[DimA]', 'SMOOTH3I(input 3[DimA],delay,initial s with subscripts[DimA])', {
+        refId: '_s14',
+        references: ['__level11', '__level12', '__level13'],
+        smoothVarRefId: '__level13',
+        subscripts: ['_dima']
+      }),
       v('s2[DimA]', 'SMOOTH(input,delay)', {
         refId: '_s2',
-        references: ['__level2'],
-        smoothVarRefId: '__level2',
+        references: ['__level14'],
+        smoothVarRefId: '__level14',
         subscripts: ['_dima']
       }),
       v('s3[DimA]', 'SMOOTH(input 3[DimA],delay 3[DimA])', {
         refId: '_s3',
-        references: ['__level3'],
-        smoothVarRefId: '__level3',
+        references: ['__level15'],
+        smoothVarRefId: '__level15',
         subscripts: ['_dima']
       }),
       v('s4[SubA]', 'SMOOTH(input 2[SubA],delay 2[SubA])', {
@@ -7148,8 +7434,8 @@ describe('readEquations', () => {
       }),
       v('s6[DimB]', 'SMOOTH(input 3[DimA],delay 3[DimA])', {
         refId: '_s6',
-        references: ['__level4'],
-        smoothVarRefId: '__level4',
+        references: ['__level16'],
+        smoothVarRefId: '__level16',
         subscripts: ['_dimb']
       }),
       v('s7[SubB]', 'SMOOTH(input 2[SubA],delay 2[SubA])', {
@@ -7168,8 +7454,8 @@ describe('readEquations', () => {
       }),
       v('s8[DimA,DimB]', 'SMOOTH(input 3x3[DimA,DimB],delay)', {
         refId: '_s8',
-        references: ['__level5'],
-        smoothVarRefId: '__level5',
+        references: ['__level17'],
+        smoothVarRefId: '__level17',
         subscripts: ['_dima', '_dimb']
       }),
       v('s9[SubA,DimB]', 'SMOOTH(input 2x3[SubA,DimB],delay)', {
@@ -7227,20 +7513,140 @@ describe('readEquations', () => {
         subscripts: ['_a3'],
         varType: 'level'
       }),
-      v('_level2', 'INTEG((input-_level2)/delay,input)', {
+      v('_level2[DimA]', 'INTEG((input 3[DimA]-_level2[DimA])/(delay/3),input 3[DimA])', {
         hasInitValue: true,
         includeInOutput: false,
-        initReferences: ['_input'],
+        initReferences: ['_input_3'],
         refId: '__level2',
         referencedFunctionNames: ['__integ'],
-        references: ['_input', '_delay'],
+        references: ['_input_3', '_delay'],
+        subscripts: ['_dima'],
         varType: 'level'
       }),
-      v('_level3[DimA]', 'INTEG((input 3[DimA]-_level3[DimA])/delay 3[DimA],input 3[DimA])', {
+      v('_level3[DimA]', 'INTEG((_level2[DimA]-_level3[DimA])/(delay/3),input 3[DimA])', {
         hasInitValue: true,
         includeInOutput: false,
         initReferences: ['_input_3'],
         refId: '__level3',
+        referencedFunctionNames: ['__integ'],
+        references: ['__level2', '_delay'],
+        subscripts: ['_dima'],
+        varType: 'level'
+      }),
+      v('_level4[DimA]', 'INTEG((_level3[DimA]-_level4[DimA])/(delay/3),input 3[DimA])', {
+        hasInitValue: true,
+        includeInOutput: false,
+        initReferences: ['_input_3'],
+        refId: '__level4',
+        referencedFunctionNames: ['__integ'],
+        references: ['__level3', '_delay'],
+        subscripts: ['_dima'],
+        varType: 'level'
+      }),
+      v('_level5[DimA]', 'INTEG((input 3[DimA]-_level5[DimA])/(delay 3[DimA]/3),initial s)', {
+        hasInitValue: true,
+        includeInOutput: false,
+        initReferences: ['_initial_s'],
+        refId: '__level5',
+        referencedFunctionNames: ['__integ'],
+        references: ['_input_3', '_delay_3'],
+        subscripts: ['_dima'],
+        varType: 'level'
+      }),
+      v('_level6[DimA]', 'INTEG((_level5[DimA]-_level6[DimA])/(delay 3[DimA]/3),initial s)', {
+        hasInitValue: true,
+        includeInOutput: false,
+        initReferences: ['_initial_s'],
+        refId: '__level6',
+        referencedFunctionNames: ['__integ'],
+        references: ['__level5', '_delay_3'],
+        subscripts: ['_dima'],
+        varType: 'level'
+      }),
+      v('_level7[DimA]', 'INTEG((_level6[DimA]-_level7[DimA])/(delay 3[DimA]/3),initial s)', {
+        hasInitValue: true,
+        includeInOutput: false,
+        initReferences: ['_initial_s'],
+        refId: '__level7',
+        referencedFunctionNames: ['__integ'],
+        references: ['__level6', '_delay_3'],
+        subscripts: ['_dima'],
+        varType: 'level'
+      }),
+      v('_level8[DimA]', 'INTEG((input 3[DimA]-_level8[DimA])/(delay/3),initial s)', {
+        hasInitValue: true,
+        includeInOutput: false,
+        initReferences: ['_initial_s'],
+        refId: '__level8',
+        referencedFunctionNames: ['__integ'],
+        references: ['_input_3', '_delay'],
+        subscripts: ['_dima'],
+        varType: 'level'
+      }),
+      v('_level9[DimA]', 'INTEG((_level8[DimA]-_level9[DimA])/(delay/3),initial s)', {
+        hasInitValue: true,
+        includeInOutput: false,
+        initReferences: ['_initial_s'],
+        refId: '__level9',
+        referencedFunctionNames: ['__integ'],
+        references: ['__level8', '_delay'],
+        subscripts: ['_dima'],
+        varType: 'level'
+      }),
+      v('_level10[DimA]', 'INTEG((_level9[DimA]-_level10[DimA])/(delay/3),initial s)', {
+        hasInitValue: true,
+        includeInOutput: false,
+        initReferences: ['_initial_s'],
+        refId: '__level10',
+        referencedFunctionNames: ['__integ'],
+        references: ['__level9', '_delay'],
+        subscripts: ['_dima'],
+        varType: 'level'
+      }),
+      v('_level11[DimA]', 'INTEG((input 3[DimA]-_level11[DimA])/(delay/3),initial s with subscripts[DimA])', {
+        hasInitValue: true,
+        includeInOutput: false,
+        initReferences: ['_initial_s_with_subscripts'],
+        refId: '__level11',
+        referencedFunctionNames: ['__integ'],
+        references: ['_input_3', '_delay'],
+        subscripts: ['_dima'],
+        varType: 'level'
+      }),
+      v('_level12[DimA]', 'INTEG((_level11[DimA]-_level12[DimA])/(delay/3),initial s with subscripts[DimA])', {
+        hasInitValue: true,
+        includeInOutput: false,
+        initReferences: ['_initial_s_with_subscripts'],
+        refId: '__level12',
+        referencedFunctionNames: ['__integ'],
+        references: ['__level11', '_delay'],
+        subscripts: ['_dima'],
+        varType: 'level'
+      }),
+      v('_level13[DimA]', 'INTEG((_level12[DimA]-_level13[DimA])/(delay/3),initial s with subscripts[DimA])', {
+        hasInitValue: true,
+        includeInOutput: false,
+        initReferences: ['_initial_s_with_subscripts'],
+        refId: '__level13',
+        referencedFunctionNames: ['__integ'],
+        references: ['__level12', '_delay'],
+        subscripts: ['_dima'],
+        varType: 'level'
+      }),
+      v('_level14', 'INTEG((input-_level14)/delay,input)', {
+        hasInitValue: true,
+        includeInOutput: false,
+        initReferences: ['_input'],
+        refId: '__level14',
+        referencedFunctionNames: ['__integ'],
+        references: ['_input', '_delay'],
+        varType: 'level'
+      }),
+      v('_level15[DimA]', 'INTEG((input 3[DimA]-_level15[DimA])/delay 3[DimA],input 3[DimA])', {
+        hasInitValue: true,
+        includeInOutput: false,
+        initReferences: ['_input_3'],
+        refId: '__level15',
         referencedFunctionNames: ['__integ'],
         references: ['_input_3', '_delay_3'],
         subscripts: ['_dima'],
@@ -7326,11 +7732,11 @@ describe('readEquations', () => {
         subscripts: ['_a3'],
         varType: 'level'
       }),
-      v('_level4[DimA]', 'INTEG((input 3[DimA]-_level4[DimA])/delay 3[DimA],input 3[DimA])', {
+      v('_level16[DimA]', 'INTEG((input 3[DimA]-_level16[DimA])/delay 3[DimA],input 3[DimA])', {
         hasInitValue: true,
         includeInOutput: false,
         initReferences: ['_input_3'],
-        refId: '__level4',
+        refId: '__level16',
         referencedFunctionNames: ['__integ'],
         references: ['_input_3', '_delay_3'],
         subscripts: ['_dima'],
@@ -7356,11 +7762,11 @@ describe('readEquations', () => {
         subscripts: ['_a3'],
         varType: 'level'
       }),
-      v('_level5[DimA,DimB]', 'INTEG((input 3x3[DimA,DimB]-_level5[DimA,DimB])/delay,input 3x3[DimA,DimB])', {
+      v('_level17[DimA,DimB]', 'INTEG((input 3x3[DimA,DimB]-_level17[DimA,DimB])/delay,input 3x3[DimA,DimB])', {
         hasInitValue: true,
         includeInOutput: false,
         initReferences: ['_input_3x3'],
-        refId: '__level5',
+        refId: '__level17',
         referencedFunctionNames: ['__integ'],
         references: ['_input_3x3', '_delay'],
         subscripts: ['_dima', '_dimb'],

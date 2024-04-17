@@ -13,6 +13,9 @@ delay = 2 ~~|
 delay 2[SubA] = 2 ~~|
 delay 3[DimA] = 2 ~~|
 
+initial s = 50 ~~|
+initial s with subscripts[DimA] = 50 ~~|
+
 s1 = SMOOTH(input, delay) ~~|
 s2[DimA] = SMOOTH(input, delay) ~~|
 s3[DimA] = SMOOTH(input 3[DimA], delay 3[DimA]) ~~|
@@ -23,6 +26,10 @@ s7[SubB] = SMOOTH(input 2[SubA], delay 2[SubA]) ~~|
 s8[DimA,DimB] = SMOOTH(input 3x3[DimA,DimB], delay) ~~|
 s9[SubA,DimB] = SMOOTH(input 2x3[SubA,DimB], delay) ~~|
 s10[SubA,B1] = SMOOTH(input 2[SubA], delay) ~~|
+s11[DimA] = SMOOTH3(input 3[DimA], delay) ~~|
+s12[DimA] = SMOOTH3I(input 3[DimA], delay 3[DimA], initial s) ~~|
+s13[DimA] = SMOOTH3I(input 3[DimA], delay, initial s) ~~|
+s14[DimA] = SMOOTH3I(input 3[DimA], delay, initial s with subscripts[DimA]) ~~|
 
 INITIAL TIME  = 0 ~~|
 FINAL TIME  = 40 ~~|
