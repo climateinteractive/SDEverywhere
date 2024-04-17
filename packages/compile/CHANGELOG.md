@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.15](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.14...compile-v0.7.15) (2024-04-17)
+
+
+### Bug Fixes
+
+* correct generation of level variables when SMOOTH3[I] input param has subscripts but delay param does not ([#457](https://github.com/climateinteractive/SDEverywhere/issues/457)) ([fd3bfab](https://github.com/climateinteractive/SDEverywhere/commit/fd3bfab25a48bdd90f028573246169acfb8b9d25)), closes [#313](https://github.com/climateinteractive/SDEverywhere/issues/313)
+
 ## [0.7.14](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.13...compile-v0.7.14) (2024-03-12)
 
 
