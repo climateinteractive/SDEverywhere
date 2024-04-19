@@ -1,5 +1,5 @@
 {
   "name": "longeqns",
   "inputVars": [],
-  "outputVars": ["_time", "_result"]
+  "outputVarNames": ["Time", "Result"]
 }
