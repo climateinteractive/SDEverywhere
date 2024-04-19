@@ -1,7 +1,7 @@
 // Copyright (c) 2022 Climate Interactive / New Venture Fund
 
 import { execaCommand } from 'execa'
-import { cyan, dim, green, reset } from 'kleur/colors'
+import { cyan, dim, green, reset, yellow } from 'kleur/colors'
 import ora from 'ora'
 import prompts from 'prompts'
 import type { Arguments } from 'yargs-parser'
@@ -33,6 +33,14 @@ export async function chooseGitInit(projDir: string, args: Arguments): Promise<v
   }
 
   // Init git repo
-  await execaCommand('git init', { cwd: projDir })
-  ora().succeed(green('Git repository initialized!'))
+  try {
+    await execaCommand('git init', { cwd: projDir })
+    ora().succeed(green('Git repository initialized!'))
+  } catch (e) {
+    ora().warn(
+      yellow(
+        `There was a problem initializing the Git repository, but no problem, you can run ${cyan(`git init`)} later.`
+      )
+    )
+  }
 }
