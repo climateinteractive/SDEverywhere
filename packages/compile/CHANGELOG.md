@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.16](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.15...compile-v0.7.16) (2024-04-19)
+
+
+### Bug Fixes
+
+* upgrade to more recent version of xlsx package ([#465](https://github.com/climateinteractive/SDEverywhere/issues/465)) ([8d06b81](https://github.com/climateinteractive/SDEverywhere/commit/8d06b81875a4a86d965ff75ec02c015e3f55653e)), closes [#463](https://github.com/climateinteractive/SDEverywhere/issues/463)
+
 ## [0.7.15](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.14...compile-v0.7.15) (2024-04-17)
 
 
