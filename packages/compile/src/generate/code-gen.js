@@ -165,7 +165,7 @@ ${chunkedFunctions('evalLevels', Model.levelVars(), '  // Evaluate levels.')}
 void setInputsFromBuffer(double* inputData) {${inputsFromBufferImpl()}}
 
 const char* getHeader() {
-  return "${headerVars.join('\\t')}";
+  return "${R.map(varName => varName.replace(/"/g, '\\"'), headerVars).join('\\t')}";
 }
 
 void storeOutputData() {
