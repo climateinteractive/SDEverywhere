@@ -306,8 +306,8 @@ describe('readSubscriptRanges + resolveSubscriptRanges', () => {
     ])
   })
 
-  it('should work for Vensim "arrays_varname" model', () => {
-    const rawSubs = readSubscripts('arrays_varname')
+  it('should work for Vensim "arrays" model', () => {
+    const rawSubs = readSubscripts('arrays')
     expect(rawSubs).toEqual([
       dim('DimA', ['A1', 'A2', 'A3'], 'DimA', undefined, [dimMapping('DimB')], {
         // After resolve phase, this will be filled in with _a1,_a2,_a3
@@ -326,7 +326,7 @@ describe('readSubscriptRanges + resolveSubscriptRanges', () => {
       dim('SubA', ['A2', 'A3'], 'SubA')
     ])
 
-    const resolvedSubs = readAndResolveSubscripts('arrays_varname')
+    const resolvedSubs = readAndResolveSubscripts('arrays')
     expect(resolvedSubs).toEqual([
       dim('DimA', ['A1', 'A2', 'A3'], 'DimA', undefined, [dimMapping('DimB')], {
         _dimb: ['_a1', '_a2', '_a3']
