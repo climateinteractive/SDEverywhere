@@ -1,6 +1,6 @@
 {
   "name": "@sdeverywhere/compile",
-  "version": "0.7.15",
+  "version": "0.7.16",
   "description": "The core Vensim to C compiler for the SDEverywhere tool suite.",
   "type": "module",
   "main": "./src/index.js",
@@ -25,7 +25,7 @@
     "js-yaml": "^3.13.1",
     "ramda": "^0.27.0",
     "split-string": "^6.0.0",
-    "xlsx": "^0.17.0"
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.2/xlsx-0.20.2.tgz"
   },
   "author": "Climate Interactive",
   "license": "MIT",

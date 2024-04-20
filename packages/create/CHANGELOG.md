@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.2.13](https://github.com/climateinteractive/SDEverywhere/compare/create-v0.2.12...create-v0.2.13) (2024-04-19)
+
+
+### Bug Fixes
+
+* replace degit with giget so that `create` package doesn't depend on Git being installed locally ([#467](https://github.com/climateinteractive/SDEverywhere/issues/467)) ([0bf481b](https://github.com/climateinteractive/SDEverywhere/commit/0bf481b005ccb72075a186020098529be4004f9f)), closes [#464](https://github.com/climateinteractive/SDEverywhere/issues/464)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/compile bumped from ^0.7.15 to ^0.7.16
+
 ## [0.2.12](https://github.com/climateinteractive/SDEverywhere/compare/create-v0.2.11...create-v0.2.12) (2024-04-17)
 
 
