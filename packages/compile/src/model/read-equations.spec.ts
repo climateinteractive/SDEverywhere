@@ -2,12 +2,12 @@ import { describe, expect, it } from 'vitest'
 
 import { canonicalName, resetHelperState } from '../_shared/helpers'
 import { resetSubscriptsAndDimensions } from '../_shared/subscript'
-import type { VensimModelParseTree } from '../parse/parser'
 
 import Model from './model'
 import { default as VariableImpl } from './variable'
 
-import { parseInlineVensimModel, parseVensimModel, sampleModelDir, type Variable } from '../_tests/test-support'
+import type { ParsedModel, Variable } from '../_tests/test-support'
+import { parseInlineVensimModel, parseVensimModel, sampleModelDir } from '../_tests/test-support'
 
 /**
  * This is a shorthand for the following steps to read equations:
@@ -32,7 +32,7 @@ function readSubscriptsAndEquationsFromSource(
   resetSubscriptsAndDimensions()
   Model.resetModelState()
 
-  let parsedModel: VensimModelParseTree
+  let parsedModel: ParsedModel
   if (source.modelText) {
     parsedModel = parseInlineVensimModel(source.modelText)
   } else {

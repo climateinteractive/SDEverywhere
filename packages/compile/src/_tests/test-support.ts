@@ -4,7 +4,6 @@ import { fileURLToPath } from 'url'
 
 import type { Model } from '@sdeverywhere/parse'
 
-import type { VensimModelParseTree } from '../parse/parser'
 import { preprocessModel } from '../preprocess/preprocessor'
 import { canonicalName } from '../_shared/helpers'
 import { parseModel } from '../parse-and-generate'
@@ -14,12 +13,7 @@ export interface ParsedVensimModel {
   root: Model
 }
 
-export interface LegacyParsedVensimModel {
-  kind: 'vensim-legacy'
-  parseTree: VensimModelParseTree
-}
-
-export type ParsedModel = ParsedVensimModel | LegacyParsedVensimModel
+export type ParsedModel = ParsedVensimModel
 
 export type DimModelName = string
 export type DimCName = string
