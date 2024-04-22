@@ -3297,8 +3297,8 @@ describe('readEquations', () => {
     ])
   })
 
-  // it('should work for Vensim "arrays_varname" model', () => {
-  //   const vars = readSubscriptsAndEquations('arrays_varname')
+  // it('should work for Vensim "arrays" model', () => {
+  //   const vars = readSubscriptsAndEquations('arrays')
   //   logPrettyVars(vars)
   //   expect(vars).toEqual([])
   // })

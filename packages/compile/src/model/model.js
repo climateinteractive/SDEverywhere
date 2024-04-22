@@ -102,9 +102,8 @@ function read(parsedModel, spec, extData, directData, modelDirname, opts) {
   if (opts?.stopAfterReadVariables) return
 
   if (spec) {
-    // If the spec file contains `input/outputVarNames` (with full Vensim variable names)
-    // convert those to C names first.  Otherwise, use `input/outputNames` which are already
-    // assumed to be valid C names.
+    // If the spec file contains `input/outputVarNames`, convert the full Vensim variable
+    // names to C names first so that later phases only need to work with canonical names
     if (spec.inputVarNames) {
       spec.inputVars = R.map(cName, spec.inputVarNames)
     }

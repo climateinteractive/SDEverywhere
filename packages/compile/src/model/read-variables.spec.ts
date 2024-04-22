@@ -115,7 +115,7 @@ describe('readVariables', () => {
     ])
   })
 
-  it('should work for Vensim "arrays_varname" model', () => {
+  it('should work for Vensim "arrays" model', () => {
     const s = (a: number, d: number) => {
       return v('s[DimA,DimD]', '11,12,13,14;21,22,23,24;31,32,33,34;', {
         subscripts: [`_a${a}`, `_d${d}`],
@@ -151,7 +151,7 @@ describe('readVariables', () => {
       })
     }
 
-    const vars = readSubscriptsAndVariables('arrays_varname')
+    const vars = readSubscriptsAndVariables('arrays')
     expect(vars).toEqual([
       v('a[DimA]', 'inputA[DimA]*10', { subscripts: ['_dima'] }),
       v('b[DimA]', '42', { subscripts: ['_dima'] }),
