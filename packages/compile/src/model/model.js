@@ -290,15 +290,16 @@ function checkSpecVars(spec, extData) {
           if (!varWithRefId(varName)) {
             // Look for a variable in external data.
             if (extData?.has(varName)) {
-              // console.error(`found ${specType} ${varName} in extData`)
-              // Copy data from an external file to an equation that does a lookup.
-              let lookup = R.reduce(
-                (a, p) => listConcat(a, `(${p[0]}, ${p[1]})`, true),
-                '',
-                Array.from(extData.get(varName))
-              )
-              let modelEquation = `${decanonicalize(varName)} = WITH LOOKUP(Time, (${lookup}))`
-              addEquation(modelEquation)
+              throw new Error('Not implemented')
+              //   // console.error(`found ${specType} ${varName} in extData`)
+              //   // Copy data from an external file to an equation that does a lookup.
+              //   let lookup = R.reduce(
+              //     (a, p) => listConcat(a, `(${p[0]}, ${p[1]})`, true),
+              //     '',
+              //     Array.from(extData.get(varName))
+              //   )
+              //   let modelEquation = `${decanonicalize(varName)} = WITH LOOKUP(Time, (${lookup}))`
+              //   addEquation(modelEquation)
             } else {
               throw new Error(
                 `The ${specType} variable ${varName} was declared in spec.json, but no matching variable was found in the model or external data sources`
@@ -505,21 +506,21 @@ function setRefIds() {
     v.refId = refIdForVar(v)
   }, variables)
 }
-function addEquation(modelEquation) {
-  // TODO
-  // // Add an equation in Vensim model format.
-  // let parser = createParser(modelEquation)
-  // let tree = parser.equation()
-  // // Read the var and add it to the Model var table.
-  // let variableReader = new VariableReader()
-  // variableReader.visitEquation(tree)
-  // let v = variableReader.var
-  // // Fill in the refId.
-  // v.refId = refIdForVar(v)
-  // // Finish the variable by parsing the RHS.
-  // let equationReader = new EquationReader(v)
-  // equationReader.read()
-}
+// TODO
+// function addEquation(modelEquation) {
+//   // Add an equation in Vensim model format.
+//   let parser = createParser(modelEquation)
+//   let tree = parser.equation()
+//   // Read the var and add it to the Model var table.
+//   let variableReader = new VariableReader()
+//   variableReader.visitEquation(tree)
+//   let v = variableReader.var
+//   // Fill in the refId.
+//   v.refId = refIdForVar(v)
+//   // Finish the variable by parsing the RHS.
+//   let equationReader = new EquationReader(v)
+//   equationReader.read()
+// }
 //
 // Model API
 //
