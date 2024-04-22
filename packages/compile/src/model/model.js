@@ -267,11 +267,9 @@ function analyze(parsedModelKind, inputVars, opts) {
   setRefIds()
 
   // If enabled, reduce expressions used in variable definitions.
-  if (parsedModelKind !== 'vensim-legacy') {
-    if (opts?.reduceVariables !== false && process.env.SDE_NONPUBLIC_REDUCE_VARIABLES !== '0') {
-      let reduceMode = opts?.reduceVariables || process.env.SDE_NONPUBLIC_REDUCE_VARIABLES || 'default'
-      reduceVariables(variables, inputVars || [], reduceMode)
-    }
+  if (opts?.reduceVariables !== false && process.env.SDE_NONPUBLIC_REDUCE_VARIABLES !== '0') {
+    let reduceMode = opts?.reduceVariables || process.env.SDE_NONPUBLIC_REDUCE_VARIABLES || 'default'
+    reduceVariables(variables, inputVars || [], reduceMode)
   }
   if (opts?.stopAfterReduceVariables === true) return
 
