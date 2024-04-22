@@ -188,8 +188,8 @@ Be sure to include `Time` first among the output variables.
 
 ```json
 {
-  "inputVars": ["Reference predators", "Reference prey"],
-  "outputVars": ["Time", "Predators Y", "Prey X"]
+  "inputVarNames": ["Reference predators", "Reference prey"],
+  "outputVarNames": ["Time", "Predators Y", "Prey X"]
 }
 ```
 
