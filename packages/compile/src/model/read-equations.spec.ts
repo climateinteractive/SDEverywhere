@@ -3148,7 +3148,7 @@ describe('readEquations', () => {
   // where the new reader differs from the old (in `IF THEN ELSE(integer supply, ...)`
   // where the condition resolves to a constant).  We should add an option to disable
   // the pruning code so that we can test this more deterministically.
-  it.skipIf(process.env.SDE_NONPUBLIC_USE_NEW_PARSE !== '0')('should work for Vensim "allocate" model', () => {
+  it.skip('should work for Vensim "allocate" model', () => {
     const vars = readSubscriptsAndEquations('allocate')
     expect(vars).toEqual([
       v('demand[region]', '3,2,4', {
@@ -6527,8 +6527,8 @@ describe('readEquations', () => {
   // })
 
   // TODO: This test depends on the dependency trimming code that isn't yet implemented
-  // in the new reader, so skip it when `NEW_PARSE` flag is enabled
-  it.skipIf(process.env.SDE_NONPUBLIC_USE_NEW_PARSE !== '0')('should work for Vensim "prune" model', () => {
+  // in the new reader, so skip it for now
+  it.skip('should work for Vensim "prune" model', () => {
     const vars = readSubscriptsAndEquations('prune')
     expect(vars).toEqual([
       v('A Totals', 'SUM(A Values[DimA!])', {
@@ -7100,7 +7100,7 @@ describe('readEquations', () => {
   // where the new reader differs from the old (in `IF THEN ELSE(switch=1,1,0)`
   // where the condition resolves to a constant).  We should add an option to disable
   // the pruning code so that we can test this more deterministically.
-  it.skipIf(process.env.SDE_NONPUBLIC_USE_NEW_PARSE !== '0')('should work for Vensim "sample" model', () => {
+  it.skip('should work for Vensim "sample" model', () => {
     const vars = readSubscriptsAndEquations('sample')
     expect(vars).toEqual([
       v('a', 'SAMPLE IF TRUE(MODULO(Time,5)=0,Time,0)', {

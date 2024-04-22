@@ -89,110 +89,104 @@ function v(lhs: string, formula: string, overrides?: Partial<Variable>): Variabl
   return variable as Variable
 }
 
-describe.skipIf(process.env.SDE_NONPUBLIC_USE_NEW_PARSE === '0')(
-  'reduceVariables (default mode: reduce conditionals only)',
-  () => {
-    it('should reduce a simple equation when the condition resolves to a constant', () => {
-      const vars = readInlineModel(
-        'default',
-        `
+describe('reduceVariables (default mode: reduce conditionals only)', () => {
+  it('should reduce a simple equation when the condition resolves to a constant', () => {
+    const vars = readInlineModel(
+      'default',
+      `
         x = 1 ~~|
         y = IF THEN ELSE(x, (x + 2) * 3, 5) ~~|
       `
-      )
-      expect(vars).toEqual([
-        v('x', '1', {
-          refId: '_x'
-        }),
-        v('y', '((x+2)*3)', {
-          refId: '_y'
-        })
-      ])
-    })
+    )
+    expect(vars).toEqual([
+      v('x', '1', {
+        refId: '_x'
+      }),
+      v('y', '((x+2)*3)', {
+        refId: '_y'
+      })
+    ])
+  })
 
-    it('should not reduce an equation that does not involve a conditional', () => {
-      const vars = readInlineModel(
-        'default',
-        `
+  it('should not reduce an equation that does not involve a conditional', () => {
+    const vars = readInlineModel(
+      'default',
+      `
         x = 1 ~~|
         y = (x + 2) * 3 ~~|
       `
-      )
-      expect(vars).toEqual([
-        v('x', '1', {
-          refId: '_x'
-        }),
-        v('y', '(x+2)*3', {
-          refId: '_y'
-        })
-      ])
-    })
+    )
+    expect(vars).toEqual([
+      v('x', '1', {
+        refId: '_x'
+      }),
+      v('y', '(x+2)*3', {
+        refId: '_y'
+      })
+    ])
+  })
 
-    it('should not reduce an equation when the condition cannot be reduced', () => {
-      const vars = readInlineModel(
-        'default',
-        `
+  it('should not reduce an equation when the condition cannot be reduced', () => {
+    const vars = readInlineModel(
+      'default',
+      `
         x = Time ~~|
         y = Time + 2 ~~|
         z = (x + y) * 3 ~~|
       `
-      )
-      expect(vars).toEqual([
-        v('x', 'Time', {
-          refId: '_x'
-        }),
-        v('y', 'Time+2', {
-          refId: '_y'
-        }),
-        v('z', '(x+y)*3', {
-          refId: '_z'
-        })
-      ])
-    })
-  }
-)
+    )
+    expect(vars).toEqual([
+      v('x', 'Time', {
+        refId: '_x'
+      }),
+      v('y', 'Time+2', {
+        refId: '_y'
+      }),
+      v('z', '(x+y)*3', {
+        refId: '_z'
+      })
+    ])
+  })
+})
 
-describe.skipIf(process.env.SDE_NONPUBLIC_USE_NEW_PARSE === '0')(
-  'reduceVariables (aggressive mode: reduce everything)',
-  () => {
-    it('should reduce a simple equation to a constant', () => {
-      const vars = readInlineModel(
-        'aggressive',
-        `
+describe('reduceVariables (aggressive mode: reduce everything)', () => {
+  it('should reduce a simple equation to a constant', () => {
+    const vars = readInlineModel(
+      'aggressive',
+      `
         x = 1 ~~|
         y = (x + 2) * 3 ~~|
       `
-      )
-      expect(vars).toEqual([
-        v('x', '1', {
-          refId: '_x'
-        }),
-        v('y', '9', {
-          refId: '_y'
-        })
-      ])
-    })
+    )
+    expect(vars).toEqual([
+      v('x', '1', {
+        refId: '_x'
+      }),
+      v('y', '9', {
+        refId: '_y'
+      })
+    ])
+  })
 
-    it('should not reduce an equation when variables cannot be reduced', () => {
-      const vars = readInlineModel(
-        'aggressive',
-        `
+  it('should not reduce an equation when variables cannot be reduced', () => {
+    const vars = readInlineModel(
+      'aggressive',
+      `
         x = Time ~~|
         y = Time + 2 ~~|
         z = (x + y) * 3 ~~|
       `
-      )
-      expect(vars).toEqual([
-        v('x', 'Time', {
-          refId: '_x'
-        }),
-        v('y', 'Time+2', {
-          refId: '_y'
-        }),
-        v('z', '(x+y)*3', {
-          refId: '_z'
-        })
-      ])
-    })
-  }
-)
+    )
+    expect(vars).toEqual([
+      v('x', 'Time', {
+        refId: '_x'
+      }),
+      v('y', 'Time+2', {
+        refId: '_y'
+      }),
+      v('z', '(x+y)*3', {
+        refId: '_z'
+      })
+    ])
+  })
+})
