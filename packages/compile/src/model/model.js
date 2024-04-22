@@ -2,7 +2,7 @@ import B from 'bufx'
 import yaml from 'js-yaml'
 import * as R from 'ramda'
 
-import { canonicalName, decanonicalize, isIterable, listConcat, strlist, vlog, vsort } from '../_shared/helpers.js'
+import { canonicalName, decanonicalize, isIterable, /*listConcat,*/ strlist, vlog, vsort } from '../_shared/helpers.js'
 import {
   addIndex,
   allAliases,
