@@ -77,7 +77,7 @@ function read(parsedModel, spec, extData, directData, modelDirname, opts) {
   const vars = readVariables(parsedModel, specialSeparationDims)
 
   // Include a placeholder variable for the exogenous `Time` variable
-  const timeVar = new Variable(null)
+  const timeVar = new Variable()
   timeVar.modelLHS = 'Time'
   timeVar.varName = '_time'
   vars.push(timeVar)
