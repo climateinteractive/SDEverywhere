@@ -17,12 +17,11 @@ import {
 
 import { readEquation } from './read-equations.js'
 import { readDimensionDefs } from './read-subscripts.js'
-import { readVariables as readVariables2 } from './read-variables.js'
+import { readVariables } from './read-variables.js'
 import { reduceVariables } from './reduce-variables.js'
 import SubscriptRangeReader from './subscript-range-reader.js'
 import toposort from './toposort.js'
 import Variable from './variable.js'
-import VariableReader from './variable-reader.js'
 
 let variables = []
 let inputVars = []
@@ -80,22 +79,16 @@ function read(parsedModel, spec, extData, directData, modelDirname, opts) {
   if (opts?.stopAfterResolveSubscripts) return
 
   // Read variables from the model parse tree.
-  if (parsedModel.kind === 'vensim-legacy') {
-    // TODO: directData is actually unused in VariableReader
-    readVariables(parsedModel.parseTree, specialSeparationDims, directData)
-  } else {
-    // Read the variables
-    const vars = readVariables2(parsedModel, specialSeparationDims)
+  const vars = readVariables(parsedModel, specialSeparationDims)
 
-    // Include a placeholder variable for the exogenous `Time` variable
-    const timeVar = new Variable(null)
-    timeVar.modelLHS = 'Time'
-    timeVar.varName = '_time'
-    vars.push(timeVar)
+  // Include a placeholder variable for the exogenous `Time` variable
+  const timeVar = new Variable(null)
+  timeVar.modelLHS = 'Time'
+  timeVar.varName = '_time'
+  vars.push(timeVar)
 
-    // Add the variables to the `Model`
-    vars.forEach(addVariable)
-  }
+  // Add the variables to the `Model`
+  vars.forEach(addVariable)
   if (opts?.stopAfterReadVariables) return
 
   if (spec) {
@@ -286,32 +279,6 @@ function resolveDimensions(dimensionFamilies) {
   }
 }
 
-/**
- * Read equations from the given model and generate `Variable` instances for all variables that
- * are encountered while parsing.
- *
- * Note that this function currently does not return anything and instead stores the parsed
- * variable definitions in the `model` module.
- *
- * @param {import('../parse/parser.js').VensimModelParseTree} tree The Vensim parse tree.
- * @param {Object.<string, string>} specialSeparationDims The variable names that need to be
- * separated because of circular references.  A mapping from "C" variable name to "C" dimension
- * name to separate on.
- * @param {Map<string, any>} directData The mapping of dataset name used in a `GET DIRECT DATA`
- * call (e.g., `?data`) to the tabular data contained in the loaded data file.
- */
-function readVariables(tree, specialSeparationDims, directData) {
-  // Read all variables in the model parse tree.
-  // This populates the variables table with basic information for each variable
-  // such as the var name and subscripts.
-  let variableReader = new VariableReader(specialSeparationDims, directData)
-  variableReader.visitModel(tree)
-  // Add a placeholder variable for the exogenous variable Time.
-  let v = new Variable(null)
-  v.modelLHS = 'Time'
-  v.varName = '_time'
-  addVariable(v)
-}
 function analyze(parsedModelKind, inputVars, opts) {
   // Analyze the RHS of each equation in stages after all the variables are read.
   // Find non-apply-to-all vars that are defined with more than one equation.
