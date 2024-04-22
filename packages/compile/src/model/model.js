@@ -19,7 +19,6 @@ import { readEquation } from './read-equations.js'
 import { readDimensionDefs } from './read-subscripts.js'
 import { readVariables } from './read-variables.js'
 import { reduceVariables } from './reduce-variables.js'
-import SubscriptRangeReader from './subscript-range-reader.js'
 import toposort from './toposort.js'
 import Variable from './variable.js'
 
@@ -69,11 +68,7 @@ function read(parsedModel, spec, extData, directData, modelDirname, opts) {
   let specialSeparationDims = spec.specialSeparationDims
 
   // Dimensions must be defined before reading variables that use them.
-  if (parsedModel.kind === 'vensim-legacy') {
-    readSubscriptRanges(parsedModel.parseTree, modelDirname)
-  } else {
-    readDimensionDefs(parsedModel, modelDirname)
-  }
+  readDimensionDefs(parsedModel, modelDirname)
   if (opts?.stopAfterReadSubscripts) return
   resolveDimensions(spec.dimensionFamilies)
   if (opts?.stopAfterResolveSubscripts) return
@@ -118,22 +113,6 @@ function read(parsedModel, spec, extData, directData, modelDirname, opts) {
 
   // Resolve duplicate declarations by converting to one variable type.
   resolveDuplicateDeclarations()
-}
-
-/**
- * Read subscript ranges from the given model.
- *
- * Note that this function currently does not return anything and instead stores the parsed subscript
- * range definitions in the `subscript` module.
- *
- * @param {import('../parse/parser.js').VensimModelParseTree} parseTree The Vensim parse tree.
- * @param {string} modelDirname The path to the directory containing the model (used for resolving data
- * files for `GET DIRECT SUBSCRIPT`).
- */
-function readSubscriptRanges(parseTree, modelDirname) {
-  // Read subscript ranges from the model.
-  let subscriptRangeReader = new SubscriptRangeReader(modelDirname)
-  subscriptRangeReader.visitModel(parseTree)
 }
 
 /**
