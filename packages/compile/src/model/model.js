@@ -14,9 +14,7 @@ import {
   sub,
   subscriptFamilies
 } from '../_shared/subscript.js'
-import { createParser } from '../parse/parser.js'
 
-import EquationReader from './equation-reader.js'
 import { readEquation } from './read-equations.js'
 import { readDimensionDefs } from './read-subscripts.js'
 import { readVariables as readVariables2 } from './read-variables.js'
@@ -332,11 +330,7 @@ function analyze(parsedModelKind, inputVars, opts) {
   if (opts?.stopAfterReduceVariables === true) return
 
   // Read the RHS to list the refIds of vars that are referenced and set the var type.
-  if (parsedModelKind === 'vensim-legacy') {
-    readEquations()
-  } else {
-    variables.forEach(readEquation)
-  }
+  variables.forEach(readEquation)
 }
 
 function checkSpecVars(spec, extData) {
@@ -567,27 +561,20 @@ function setRefIds() {
     v.refId = refIdForVar(v)
   }, variables)
 }
-function readEquations() {
-  // Augment variables with information from their equations.
-  // This requires a refId for each var so that actual refIds can be resolved for the reference list.
-  R.forEach(v => {
-    let equationReader = new EquationReader(v)
-    equationReader.read()
-  }, variables)
-}
 function addEquation(modelEquation) {
-  // Add an equation in Vensim model format.
-  let parser = createParser(modelEquation)
-  let tree = parser.equation()
-  // Read the var and add it to the Model var table.
-  let variableReader = new VariableReader()
-  variableReader.visitEquation(tree)
-  let v = variableReader.var
-  // Fill in the refId.
-  v.refId = refIdForVar(v)
-  // Finish the variable by parsing the RHS.
-  let equationReader = new EquationReader(v)
-  equationReader.read()
+  // TODO
+  // // Add an equation in Vensim model format.
+  // let parser = createParser(modelEquation)
+  // let tree = parser.equation()
+  // // Read the var and add it to the Model var table.
+  // let variableReader = new VariableReader()
+  // variableReader.visitEquation(tree)
+  // let v = variableReader.var
+  // // Fill in the refId.
+  // v.refId = refIdForVar(v)
+  // // Finish the variable by parsing the RHS.
+  // let equationReader = new EquationReader(v)
+  // equationReader.read()
 }
 //
 // Model API
@@ -1252,7 +1239,6 @@ function jsonList() {
 
 export default {
   addConstantExpr,
-  addEquation,
   addNonAtoAVar,
   addVariable,
   allVars,
