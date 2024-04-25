@@ -1,12 +1,17 @@
 // Copyright (c) 2020-2022 Climate Interactive / New Venture Fund
 
 import type { InputValue } from '../_shared'
-import { Outputs } from '../_shared'
+import { Outputs, updateVarIndices } from '../_shared'
 
 import type { WasmModelInitResult } from '../wasm-model'
-import { updateOutputIndices } from '../wasm-model'
 
 import { perfElapsed, perfNow } from './perf'
+
+/** TODO */
+export interface RunModelOptions {
+  /** TODO */
+  inputIndices?: Int32Array
+}
 
 /**
  * Abstraction that allows for running the wasm model on the JS thread
@@ -79,7 +84,7 @@ export function createWasmModelRunner(wasmResult: WasmModelInitResult): ModelRun
     const outputSpecs = outputs.varSpecs
     let useIndices: boolean
     if (outputIndicesArray && outputSpecs !== undefined && outputSpecs.length > 0) {
-      updateOutputIndices(outputIndicesArray, outputSpecs)
+      updateVarIndices(outputIndicesArray, outputSpecs)
       useIndices = true
     } else {
       useIndices = false

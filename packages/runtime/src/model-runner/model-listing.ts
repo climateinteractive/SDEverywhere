@@ -1,6 +1,6 @@
 // Copyright (c) 2023 Climate Interactive / New Venture Fund
 
-import type { OutputVarId, OutputVarSpec } from '../_shared'
+import type { OutputVarId, VarId, VarSpec } from '../_shared'
 import { Outputs } from '../_shared'
 
 type SubscriptId = string
@@ -35,7 +35,7 @@ interface Dimension {
  * in experimental testing tools.
  */
 export class ModelListing {
-  public readonly varSpecs: Map<OutputVarId, OutputVarSpec> = new Map()
+  public readonly varSpecs: Map<VarId, VarSpec> = new Map()
 
   constructor(modelJsonString: string) {
     // Parse the model listing JSON (as written by `sde generate --list`)
@@ -126,8 +126,8 @@ export class ModelListing {
    * @param varIds The variable IDs to include with the new `Outputs` instance.
    */
   deriveOutputs(normalOutputs: Outputs, varIds: OutputVarId[]): Outputs {
-    // Look up an `OutputVarSpec` for each variable ID
-    const varSpecs: OutputVarSpec[] = []
+    // Look up a `VarSpec` for each variable ID
+    const varSpecs: VarSpec[] = []
     for (const varId of varIds) {
       const varSpec = this.varSpecs.get(varId)
       if (varSpec !== undefined) {

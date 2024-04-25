@@ -3,7 +3,8 @@
 import type { Result } from 'neverthrow'
 import { ok, err } from 'neverthrow'
 
-import type { OutputVarId, OutputVarSpec } from './types'
+import type { OutputVarId } from './types'
+import type { VarSpec } from './var-indices'
 
 /** Indicates the type of error encountered when parsing an outputs buffer. */
 export type ParseError = 'invalid-point-count'
@@ -72,7 +73,7 @@ export class Outputs {
    * @hidden This is not yet part of the public API; it is exposed here for use
    * in experimental testing tools.
    */
-  public varSpecs?: OutputVarSpec[]
+  public varSpecs?: VarSpec[]
 
   /**
    * @param varIds The output variable identifiers.
@@ -111,7 +112,7 @@ export class Outputs {
    * @hidden This is not yet part of the public API; it is exposed here for use
    * in experimental testing tools.
    */
-  setVarSpecs(varSpecs: OutputVarSpec[]) {
+  setVarSpecs(varSpecs: VarSpec[]) {
     if (varSpecs.length !== this.varIds.length) {
       throw new Error('Length of output varSpecs must match that of varIds')
     }

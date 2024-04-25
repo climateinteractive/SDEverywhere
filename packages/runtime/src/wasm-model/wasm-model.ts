@@ -1,18 +1,10 @@
 // Copyright (c) 2020-2022 Climate Interactive / New Venture Fund
 
-import type { OutputVarId, OutputVarSpec } from '../_shared'
+import type { OutputVarId } from '../_shared'
+import { indicesPerVariable } from '../_shared'
 import type { WasmBuffer } from './wasm-buffer'
 import { createFloat64WasmBuffer, createInt32WasmBuffer } from './wasm-buffer'
 import type { WasmModule } from './wasm-module'
-
-// For each output variable specified in the indices buffer, there
-// are 4 index values:
-//   varIndex
-//   subIndex0
-//   subIndex1
-//   subIndex2
-// NOTE: This value needs to match `INDICES_PER_OUTPUT` as defined in SDE's `model.c`
-const indicesPerOutput = 4
 
 /**
  * An interface to the generated WebAssembly model.  Allows for running the model with
@@ -124,7 +116,7 @@ export function initWasmModelAndBuffers(
   // Allocate a buffer for the output indices, if requested (for accessing internal variables)
   let outputIndicesBuffer: WasmBuffer<Int32Array>
   if (model.maxOutputIndices > 0) {
-    outputIndicesBuffer = createInt32WasmBuffer(wasmModule, model.maxOutputIndices * indicesPerOutput)
+    outputIndicesBuffer = createInt32WasmBuffer(wasmModule, model.maxOutputIndices * indicesPerVariable)
   }
 
   return {
@@ -134,28 +126,4 @@ export function initWasmModelAndBuffers(
     outputIndicesBuffer,
     outputVarIds
   }
-}
-
-/**
- * @hidden This is not part of the public API; it is exposed here for use by
- * the synchronous and asynchronous model runner implementations.
- */
-export function updateOutputIndices(indicesArray: Int32Array, outputVarSpecs: OutputVarSpec[]): void {
-  if (indicesArray.length < outputVarSpecs.length * indicesPerOutput) {
-    throw new Error('Length of indicesArray must be large enough to accommodate the given outputVarSpecs')
-  }
-
-  // Write the indices to the buffer
-  let offset = 0
-  for (const outputVarSpec of outputVarSpecs) {
-    const subCount = outputVarSpec.subscriptIndices?.length || 0
-    indicesArray[offset + 0] = outputVarSpec.varIndex
-    indicesArray[offset + 1] = subCount > 0 ? outputVarSpec.subscriptIndices[0] : 0
-    indicesArray[offset + 2] = subCount > 1 ? outputVarSpec.subscriptIndices[1] : 0
-    indicesArray[offset + 3] = subCount > 2 ? outputVarSpec.subscriptIndices[2] : 0
-    offset += indicesPerOutput
-  }
-
-  // Fill the remainder of the buffer with zeros
-  indicesArray.fill(0, offset)
 }
