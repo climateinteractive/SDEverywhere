@@ -24,10 +24,7 @@ const conditionalRegExp = /IF\s+(.*)\s+THEN\s+(.*)\s+ELSE\s+(.*)\s*/gi
  */
 export function parseXmileVariableDef(varElem: XmlElement): Equation[] {
   // Extract required variable name
-  const varName = varElem.attributes?.name
-  if (varName === undefined || varName.length === 0) {
-    throw new Error(xmlError(varElem, `<${varElem.name}> name attribute is required`))
-  }
+  const varName = parseRequiredAttr(varElem, varElem, 'name')
   const varId = canonicalName(varName)
 
   // Extract optional <units> -> units string
@@ -81,7 +78,7 @@ export function parseXmileVariableDef(varElem: XmlElement): Equation[] {
   if (varElem.name === 'gf') {
     // This is a top-level <gf>
     // TODO: Are subscripted <gf> elements allowed?  If so, handle them here.
-    const lookup = parseGfElem(varElem)
+    const lookup = parseGfElem(varElem, varElem)
     return [lookupEquation(undefined, lookup)]
   }
 
@@ -93,9 +90,10 @@ export function parseXmileVariableDef(varElem: XmlElement): Equation[] {
     const gfElem = firstElemOf(varElem, 'gf')
     if (gfElem) {
       // The variable is defined with a graphical function
-      // TODO: Throw error if this is a <stock> variable (<gf> is only allowed for
-      // <flow> and <aux> variables)
-      const lookup = parseGfPoints(varElem)
+      if (varElem.name !== 'flow' && varElem.name !== 'aux') {
+        throw new Error(xmlError(varElem, '<gf> is only allowed for <flow> and <aux> variables'))
+      }
+      const lookup = parseGfElem(varElem, gfElem)
       equationDefs.push(lookupEquation(undefined, lookup))
     } else {
       // The variable is defined with an equation
@@ -211,12 +209,12 @@ function parseEqnElem(varElem: XmlElement, parentElem: XmlElement): Expr {
     }
 
     case 'flow':
-      // <flow> elements are currently translated to a Vensim-style aux
+      // <flow> elements with an <eqn> are currently translated to a Vensim-style aux
       // TODO: The XMILE spec says some <flow> variants must not have an equation (in the case
       // of conveyors or queues).  For now, we don't support those, and we require an <eqn>.
       if (eqnText === undefined) {
         // An <eqn> is currently required for a <stock>
-        throw new Error(xmlError(varElem, 'Currently <eqn> is required for a <flow> variable'))
+        throw new Error(xmlError(varElem, 'Currently <eqn> or <gf> is required for a <flow> variable'))
       }
       // TODO: We currently do not support certain <stock> options, so for now we
       // fail fast if we encounter these
@@ -253,41 +251,61 @@ function parseExpr(exprText: string): Expr {
 }
 
 function parseGfElem(varElem: XmlElement, gfElem: XmlElement): LookupDef {
+  // Parse the optional `type` attribute
+  const typeAttr = parseOptionalAttr(gfElem, 'type')
+  if (typeAttr && typeAttr !== 'continuous') {
+    throw new Error(xmlError(varElem, 'Currently "continuous" is the only type supported for <gf>'))
+  }
+
   // Parse the required <ypts>
   const yptsElem = firstElemOf(gfElem, 'ypts')
   if (yptsElem === undefined) {
-    throw new Error(xmlError(varElem, 'TODO'))
+    throw new Error(xmlError(varElem, '<ypts> must be defined for a <gf>'))
   }
   const ypts = parseGfPts(varElem, yptsElem)
   if (ypts.length === 0) {
-    throw new Error(xmlError(varElem, 'TODO'))
+    throw new Error(xmlError(varElem, '<ypts> must have at least one element'))
   }
 
   // Check for <xpts> or <xscale> (must be one or the other)
   const xptsElem = firstElemOf(gfElem, 'xpts')
   const xscaleElem = firstElemOf(gfElem, 'xscale')
   if (xptsElem && xscaleElem) {
-    throw new Error(xmlError(varElem, 'TODO'))
+    throw new Error(xmlError(varElem, '<gf> must contain <xpts> or <xscale> but not both'))
   } else if (xptsElem === undefined && xscaleElem === undefined) {
-    throw new Error(xmlError(varElem, 'TODO'))
+    throw new Error(xmlError(varElem, '<gf> must contain either <xpts> or <xscale>'))
   }
 
   let xpts: number[]
-  if (xPtsElem) {
+  if (xptsElem) {
     // Parse the <xpts>
-    const ypts = parseGfPts(varElem, yptsElem)
-    if (ypts.length === 0) {
-      throw new Error(xmlError(varElem, 'TODO'))
+    xpts = parseGfPts(varElem, xptsElem)
+    if (xpts.length === 0) {
+      throw new Error(xmlError(varElem, '<xpts> must have at least one element'))
     }
   } else {
     // Parse the <xscale>
-    // TODO: min and max
-    // }
+    const xMin = parseFloatAttr(varElem, xscaleElem, 'min')
+    const xMax = parseFloatAttr(varElem, xscaleElem, 'max')
+    if (xMin > xMax) {
+      throw new Error(xmlError(varElem, '<xscale> max attribute must be > min attribute'))
+    }
+    xpts = Array(ypts.length)
+    const xRange = xMax - xMin
+    if (ypts.length === 1) {
+      // TODO: Error?
+      xpts[0] = 0
+    } else {
+      for (let i = 0; i < ypts.length; i++) {
+        const frac = i / (ypts.length - 1)
+        xpts[i] = xMin + xRange * frac
+      }
+    }
   }
 
-  // TODO: Check for same length as <ypts>
+  // Check for same length as <ypts>
   if (xpts.length !== ypts.length) {
-    throw new Error(xmlError(varElem, 'TODO'))
+    throw new Error(xmlError(varElem, '<xpts> and <ypts> must have the same number of elements'))
   }
 
   // Zip the arrays
@@ -311,9 +329,33 @@ function parseGfPts(varElem: XmlElement, ptsElem: XmlElement): number[] {
     const numText = elem.trim()
     const num = parseFloat(numText)
     if (isNaN(num)) {
+      console.log(JSON.stringify(ptsElem))
       throw new Error(xmlError(varElem, `Invalid number value '${numText}' in <${ptsElem.name}>'`))
     }
     nums.push(num)
   }
   return nums
+}
+
+function parseRequiredAttr(varElem: XmlElement, elem: XmlElement, attrName: string): string {
+  let s = elem.attributes && elem.attributes[attrName]
+  s = s?.trim()
+  if (s === undefined || s.length === 0) {
+    throw new Error(xmlError(varElem, `<${elem.name}> ${attrName} attribute is required`))
+  }
+  return s
+}
+
+function parseOptionalAttr(elem: XmlElement, attrName: string): string {
+  const s = elem.attributes && elem.attributes[attrName]
+  return s?.trim()
+}
+
+function parseFloatAttr(varElem: XmlElement, elem: XmlElement, attrName: string): number {
+  const s = parseRequiredAttr(varElem, elem, attrName)
+  const num = parseFloat(s)
+  if (isNaN(num)) {
+    throw new Error(xmlError(varElem, `Invalid number value '${s}' for <${elem.name}> ${attrName} attribute'`))
+  }
+  return num
 }

@@ -95,7 +95,7 @@ describe('parseXmileVariableDef with <stock>', () => {
         </gf>
       </stock>
     `)
-    expect(() => parseXmileVariableDef(v)).toThrow('<gf> is not valid within a <stock> variable')
+    expect(() => parseXmileVariableDef(v)).toThrow('<gf> is only allowed for <flow> and <aux> variables')
   })
 
   it('should throw an error if stock variable definition has no <inflow>', () => {
@@ -199,7 +199,7 @@ describe('parseXmileVariableDef with <flow>', () => {
     const v = xml(`
       <flow name="x">
         <gf>
-          <ypts>0,0.4,0.5,0.8,1</ypts>
+          <xpts>0,0.4,0.5,0.8,1</xpts>
           <ypts>0,0.1,0.5,0.9,1</ypts>
         </gf>
       </flow>
@@ -526,14 +526,14 @@ describe('parseXmileVariableDef with <gf>', () => {
     ])
   })
 
-  it('should parse a graphical function (with <xpts> and <ypts>', () => {
+  it('should parse a graphical function (with <xpts> and <ypts> and explicit type)', () => {
     const v = xml(`
-      <gf name="x">
+      <gf name="x" type="continuous">
         <xpts>0,0.4,0.5,0.8,1</xpts>
         <ypts>0,0.1,0.5,0.9,1</ypts>
       </gf>
     `)
-    expect(parseXmileVariableDef(v)).toEqual(
+    expect(parseXmileVariableDef(v)).toEqual([
       lookupVarEqn(
         varDef('x'),
         lookupDef([
@@ -544,7 +544,7 @@ describe('parseXmileVariableDef with <gf>', () => {
           [1, 1]
         ])
       )
-    )
+    ])
   })
 
   it('should parse a graphical function (with custom separator)', () => {
@@ -554,7 +554,7 @@ describe('parseXmileVariableDef with <gf>', () => {
         <ypts sep=";">0;0.1;0.5;0.9;1</ypts>
       </gf>
     `)
-    expect(parseXmileVariableDef(v)).toEqual(
+    expect(parseXmileVariableDef(v)).toEqual([
       lookupVarEqn(
         varDef('x'),
         lookupDef([
@@ -565,7 +565,7 @@ describe('parseXmileVariableDef with <gf>', () => {
           [1, 1]
         ])
       )
-    )
+    ])
   })
 
   it('should throw an error if name is undefined', () => {
@@ -599,6 +599,15 @@ describe('parseXmileVariableDef with <gf>', () => {
     expect(() => parseXmileVariableDef(v)).toThrow('Currently "continuous" is the only type supported for <gf>')
   })
 
+  it('should throw an error if neither <xpts> nor <xscale> is defined', () => {
+    const v = xml(`
+      <gf name="x">
+        <ypts>0,0.1,0.5,0.9,1</ypts>
+      </gf>
+    `)
+    expect(() => parseXmileVariableDef(v)).toThrow('<gf> must contain either <xpts> or <xscale>')
+  })
+
   it('should throw an error if <xpts> and <xscale> are both defined', () => {
     const v = xml(`
       <gf name="x">
@@ -608,6 +617,36 @@ describe('parseXmileVariableDef with <gf>', () => {
       </gf>
     `)
     expect(() => parseXmileVariableDef(v)).toThrow('<gf> must contain <xpts> or <xscale> but not both')
+  })
+
+  it('should throw an error if <xscale> min is undefined', () => {
+    const v = xml(`
+      <gf name="x">
+        <xscale max="1"/>
+        <ypts>0,0.1,0.5,0.9,1</ypts>
+      </gf>
+    `)
+    expect(() => parseXmileVariableDef(v)).toThrow('<xscale> min attribute is required')
+  })
+
+  it('should throw an error if <xscale> max is undefined', () => {
+    const v = xml(`
+      <gf name="x">
+        <xscale min="0"/>
+        <ypts>0,0.1,0.5,0.9,1</ypts>
+      </gf>
+    `)
+    expect(() => parseXmileVariableDef(v)).toThrow('<xscale> max attribute is required')
+  })
+
+  it('should throw an error if <xscale> min >= max', () => {
+    const v = xml(`
+      <gf name="x">
+        <xscale min="0" max="-1"/>
+        <ypts>0,0.1,0.5,0.9,1</ypts>
+      </gf>
+    `)
+    expect(() => parseXmileVariableDef(v)).toThrow('<xscale> max attribute must be > min attribute')
   })
 
   it('should throw an error if <xpts> is empty', () => {
@@ -626,7 +665,7 @@ describe('parseXmileVariableDef with <gf>', () => {
         <xpts>0,0.4,0.5,0.8,1,666</xpts>
       </gf>
     `)
-    expect(() => parseXmileVariableDef(v)).toThrow('<ypts> must be defined')
+    expect(() => parseXmileVariableDef(v)).toThrow('<ypts> must be defined for a <gf>')
   })
 
   it('should throw an error if <ypts> is empty', () => {
