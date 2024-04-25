@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.17](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.16...compile-v0.7.17) (2024-04-22)
+
+
+### Bug Fixes
+
+* use original Vensim names in generated headers for spec output vars ([#462](https://github.com/climateinteractive/SDEverywhere/issues/462)) ([966066a](https://github.com/climateinteractive/SDEverywhere/commit/966066ac9a5a3f005acf491f3c77637199a1b1ad)), closes [#461](https://github.com/climateinteractive/SDEverywhere/issues/461)
+
 ## [0.7.16](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.15...compile-v0.7.16) (2024-04-19)
 
 
