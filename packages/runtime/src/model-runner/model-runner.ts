@@ -1,9 +1,11 @@
 // Copyright (c) 2020-2022 Climate Interactive / New Venture Fund
 
+import type { InputValue } from '../_shared'
+import { Outputs } from '../_shared'
+
 import type { WasmModelInitResult } from '../wasm-model'
 import { updateOutputIndices } from '../wasm-model'
-import type { InputValue } from './inputs'
-import { Outputs } from './outputs'
+
 import { perfElapsed, perfNow } from './perf'
 
 /**

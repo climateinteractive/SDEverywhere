@@ -2,12 +2,13 @@
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
-import type { WasmModule } from '../wasm-model'
-import { initWasmModelAndBuffers } from '../wasm-model'
+import { createInputValue } from '../_shared'
 
-import { createInputValue } from './inputs'
 import type { ModelRunner } from './model-runner'
 import { createWasmModelRunner } from './model-runner'
+
+import type { WasmModule } from '../wasm-model'
+import { initWasmModelAndBuffers } from '../wasm-model'
 
 function createMockWasmModel() {
   // This is a mock WasmModule that is sufficient for testing the synchronous runner implementation

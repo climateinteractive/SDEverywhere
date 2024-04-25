@@ -2,10 +2,8 @@
 
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { createInputValue } from '../model-runner/inputs'
-import type { ModelRunner } from '../model-runner/model-runner'
-import { Outputs } from '../model-runner/outputs'
-
+import { createInputValue, Outputs } from '../_shared'
+import type { ModelRunner } from '../model-runner'
 import { ModelScheduler } from './model-scheduler'
 
 describe('ModelScheduler', () => {

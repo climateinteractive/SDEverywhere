@@ -2,7 +2,8 @@
 
 import type { Result } from 'neverthrow'
 import { ok, err } from 'neverthrow'
-import type { OutputVarId, OutputVarSpec } from '../_shared'
+
+import type { OutputVarId, OutputVarSpec } from './types'
 
 /** Indicates the type of error encountered when parsing an outputs buffer. */
 export type ParseError = 'invalid-point-count'

@@ -1,7 +1,7 @@
 // Copyright (c) 2023 Climate Interactive / New Venture Fund
 
 import type { OutputVarId, OutputVarSpec } from '../_shared'
-import { Outputs } from './outputs'
+import { Outputs } from '../_shared'
 
 type SubscriptId = string
 type DimensionId = string
