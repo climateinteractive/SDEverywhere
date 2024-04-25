@@ -271,12 +271,6 @@ importers:
       '@sdeverywhere/parse':
         specifier: ^0.1.0
         version: link:../parse
-      antlr4:
-        specifier: 4.12.0
-        version: 4.12.0
-      antlr4-vensim:
-        specifier: 0.6.2
-        version: 0.6.2
       bufx:
         specifier: ^1.0.5
         version: 1.0.5
