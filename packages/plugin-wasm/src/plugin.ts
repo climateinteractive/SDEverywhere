@@ -127,7 +127,9 @@ async function buildWasm(
     // line is that if we omit "node" from this list, the wasm will still work fine in both browser
     // and Node.js contexts (tested in Emscripten 2.0.34 and 3.1.46).
     addFlag(`ENVIRONMENT='web,webview,worker'`)
-    addFlag(`EXPORTED_FUNCTIONS=['_malloc','_getInitialTime','_getFinalTime','_getSaveper','_runModelWithBuffers']`)
+    addFlag(
+      `EXPORTED_FUNCTIONS=['_malloc','_getMaxOutputIndices','_getInitialTime','_getFinalTime','_getSaveper','_runModelWithBuffers']`
+    )
     addFlag(`EXPORTED_RUNTIME_METHODS=['cwrap']`)
   }
 
