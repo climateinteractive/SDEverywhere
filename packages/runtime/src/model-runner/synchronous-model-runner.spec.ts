@@ -4,11 +4,11 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
 import { createInputValue } from '../_shared'
 
-import type { ModelRunner } from './model-runner'
-import { createWasmModelRunner } from './model-runner'
-
 import type { WasmModule } from '../wasm-model'
-import { initWasmModelAndBuffers } from '../wasm-model'
+import { initWasmModel } from '../wasm-model'
+
+import type { ModelRunner } from './model-runner'
+import { createSynchronousModelRunner } from './synchronous-model-runner'
 
 function createMockWasmModel() {
   // This is a mock WasmModule that is sufficient for testing the synchronous runner implementation
@@ -19,8 +19,6 @@ function createMockWasmModel() {
     cwrap: fname => {
       // Return a mock implementation of each wrapped C function
       switch (fname) {
-        case 'getMaxOutputIndices':
-          return () => 0
         case 'getInitialTime':
           return () => 2000
         case 'getFinalTime':
@@ -49,14 +47,14 @@ function createMockWasmModel() {
     HEAP32: heapI32,
     HEAPF64: heapF64
   }
-  return initWasmModelAndBuffers(wasmModule, 3, ['_output_1', '_output_2'])
+  return initWasmModel(wasmModule, ['_output_1', '_output_2'])
 }
 
-describe('createWasmModelRunner', () => {
+describe('createSynchronousModelRunner', () => {
   let runner: ModelRunner
 
   beforeEach(async () => {
-    runner = createWasmModelRunner(createMockWasmModel())
+    runner = createSynchronousModelRunner(createMockWasmModel())
   })
 
   afterEach(async () => {
@@ -65,7 +63,7 @@ describe('createWasmModelRunner', () => {
     }
   })
 
-  it('should run the model', async () => {
+  it('should run the model (with inputs specified with InputValue array)', async () => {
     expect(runner).toBeDefined()
     const inputs = [createInputValue('_input_1', 0), createInputValue('_input_2', 0), createInputValue('_input_3', 0)]
     const inOutputs = runner.createOutputs()
@@ -74,6 +72,18 @@ describe('createWasmModelRunner', () => {
     expect(outOutputs.runTimeInMillis).toBeGreaterThan(0)
     expect(outOutputs.getSeriesForVar('_output_1').getValueAtTime(2000)).toBe(6)
     expect(outOutputs.getSeriesForVar('_output_2').getValueAtTime(2100)).toBe(7)
+  })
+
+  it('should run the model (with inputs specified with number array)', async () => {
+    throw new Error('not yet implemented')
+  })
+
+  it('should run the model (with input indices buffer)', async () => {
+    throw new Error('not yet implemented')
+  })
+
+  it('should run the model (with output indices buffer)', async () => {
+    throw new Error('not yet implemented')
   })
 
   it('should throw an error if runModel is called after the runner has been terminated', async () => {

@@ -3,7 +3,7 @@
 import { BlobWorker, spawn, Thread, Transfer, Worker } from 'threads'
 
 import type { ModelRunner } from '@sdeverywhere/runtime'
-import { Outputs, updateOutputIndices } from '@sdeverywhere/runtime'
+import { Outputs, updateVarIndices } from '@sdeverywhere/runtime'
 
 /**
  * Initialize a `ModelRunner` that runs the model asynchronously in a worker thread.
@@ -111,7 +111,7 @@ async function spawnAsyncModelRunnerWithWorker(worker: Worker): Promise<ModelRun
       if (indicesLengthInElements > 0) {
         const outputSpecs = outputs.varSpecs || []
         const indicesArray = new Int32Array(ioBuffer, indicesOffsetInBytes, indicesLengthInElements)
-        updateOutputIndices(indicesArray, outputSpecs)
+        updateVarIndices(indicesArray, outputSpecs)
       }
 
       // Run the model in the worker. We pass the underlying `ArrayBuffer`

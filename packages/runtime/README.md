@@ -29,6 +29,7 @@ and you can work directly with a `ModelRunner` and/or `ModelScheduler` instance.
 
 ### 1. Initialize the `WasmModel`
 
+TODO
 In your application, load the wasm module using the wrapper produced by
 Emscripten, then pass it to `initWasmModelAndBuffers`.
 This will create the `WasmModel` and `WasmBuffer` instances that will be
@@ -39,6 +40,7 @@ import { initWasmModelAndBuffers, WasmModelInitResult } from '@sdeverywhere/runt
 import loadWasm from './generated/mymodel'
 
 // These are the same lists (and must be in the same order) as the spec file passed to `sde`.
+// TODO
 const inputVarNames = [] // from spec.json
 const outputVarNames = [] // from spec.json
 
@@ -47,6 +49,7 @@ async function initWasmModel(): Promise<WasmModelInitResult> {
   const wasmModule = await loadWasm()
 
   // Initialize the wasm model and its associated buffers
+  // TODO
   return initWasmModelAndBuffers(wasmModule, inputVarNames.length, outputVarNames)
 }
 ```
@@ -58,7 +61,7 @@ the process of running a `WasmModel` with a given set of inputs and
 parsing the outputs.
 The `ModelRunner` produces an `Outputs` instance that provides easy
 access to time series data for each output variable in the model.
-The `createWasmModelRunner` function is the simplest way to create
+TODO: The `createWasmModelRunner` function is the simplest way to create
 a `ModelRunner` that works with your `WasmModel`:
 
 ```ts
