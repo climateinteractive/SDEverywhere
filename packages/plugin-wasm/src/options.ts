@@ -22,7 +22,7 @@ export interface WasmPluginOptions {
    *   -s EXPORT_ES6=1
    *   -s USE_ES6_IMPORT_META=0
    *   -s ENVIRONMENT='web,webview,worker'
-   *   -s EXPORTED_FUNCTIONS=['_malloc','_getMaxOutputIndices','_getInitialTime','_getFinalTime','_getSaveper','_runModelWithBuffers']
+   *   -s EXPORTED_FUNCTIONS=['_malloc','_getInitialTime','_getFinalTime','_getSaveper','_runModelWithBuffers']
    *   -s EXPORTED_RUNTIME_METHODS=['cwrap']
    * ```
    */

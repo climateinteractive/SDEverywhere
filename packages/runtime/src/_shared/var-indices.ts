@@ -6,7 +6,7 @@
  *   subIndex0
  *   subIndex1
  *   subIndex2
- * NOTE: This value needs to match `INDICES_PER_OUTPUT` as defined in SDE's `model.c`.
+ * NOTE: This value needs to match `INDICES_PER_VARIABLE` as defined in SDE's `model.c`.
  * @hidden This is not part of the public API.
  */
 export const indicesPerVariable = 4

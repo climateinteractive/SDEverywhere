@@ -6,20 +6,21 @@
 
 ### emsdkDir
 
- `Optional` **emsdkDir**: `string` \| () => `string`
+`Optional` **emsdkDir**: `string` \| () => `string`
 
-The path to the Emscripten SDK.  If undefined, the plugin will walk up the directory
+The path to the Emscripten SDK. If undefined, the plugin will walk up the directory
 structure to find the nearest `emsdk` directory.
 
-___
+---
 
 ### emccArgs
 
- `Optional` **emccArgs**: `string`[] \| () => `string`[]
+`Optional` **emccArgs**: `string`[] \| () => `string`[]
 
-The array of additional arguments to pass to `emcc`.  If undefined, the plugin will
+The array of additional arguments to pass to `emcc`. If undefined, the plugin will
 use the following default set of arguments, which are tuned for (and known to work
 with) Emscripten versions 2.0.34 and 3.1.46, among others.
+
 ```
   -Wall
   -Os
@@ -31,15 +32,15 @@ with) Emscripten versions 2.0.34 and 3.1.46, among others.
   -s EXPORT_ES6=1
   -s USE_ES6_IMPORT_META=0
   -s ENVIRONMENT='web,webview,worker'
-  -s EXPORTED_FUNCTIONS=['_malloc','_getMaxOutputIndices','_getInitialTime','_getFinalTime','_getSaveper','_runModelWithBuffers']
+  -s EXPORTED_FUNCTIONS=['_malloc','_getInitialTime','_getFinalTime','_getSaveper','_runModelWithBuffers']
   -s EXPORTED_RUNTIME_METHODS=['cwrap']
 ```
 
-___
+---
 
 ### outputJsPath
 
- `Optional` **outputJsPath**: `string`
+`Optional` **outputJsPath**: `string`
 
-The path of the resulting JS file (containing the embedded Wasm model).  If undefined,
+The path of the resulting JS file (containing the embedded Wasm model). If undefined,
 the plugin will write `wasm-model.js` to the configured `prepDir`.

@@ -8,13 +8,12 @@
 struct timespec startTime, finishTime;
 #endif
 
-// For each output variable specified in the indices buffer, there
-// are 4 index values:
+// For each variable specified in an index buffer, there are 4 index values:
 //   varIndex
 //   subIndex0
 //   subIndex1
 //   subIndex2
-#define INDICES_PER_OUTPUT 4
+#define INDICES_PER_VARIABLE 4
 
 // The special _time variable is not included in .mdl files.
 double _time;
@@ -75,13 +74,6 @@ double getSaveper() {
   return _saveper;
 }
 
-/**
- * Return the constant `maxOutputIndices` value.
- */
-int getMaxOutputIndices() {
-  return maxOutputIndices;
-}
-
 char* run_model(const char* inputs) {
   // run_model does everything necessary to run the model with the given inputs.
   // It may be called multiple times. Call finish() after all runs are complete.
@@ -102,8 +94,13 @@ char* run_model(const char* inputs) {
  * This function performs the same steps as the original `run_model` function,
  * except that it uses the provided pre-allocated buffers.
  *
- * The `inputs` buffer is assumed to have one double value for each input variable;
- * they must be in exactly the same order as the variables are listed in the spec file.
+ * When `inputIndices` is NULL, the `inputs` buffer is assumed to have one double value
+ * for each input variable; they must be in exactly the same order as the variables are
+ * listed in the spec file.  When `inputIndices` is not NULL, those index values will
+ * control how the `inputs` buffer is interpreted.  In this case, one value from the
+ * `inputs` buffer will be taken for each non-zero value in the `inputIndices` buffer,
+ * and that input value will override the specified constant value.  Processing of
+ * the inputs will continue until the first zero value is seen in `inputIndices`.
  *
  * After each step of the run, the `outputs` buffer will be updated with the output
  * variables.  The buffer needs to be at least as large as:
@@ -118,7 +115,7 @@ char* run_model(const char* inputs) {
  * (where tN is the last time in the range), the second variable outputs will begin,
  * and so on.
  */
-void runModelWithBuffers(double* inputs, double* outputs, int32_t* outputIndices) {
+void runModelWithBuffers(double* inputs, double* outputs, int32_t* inputIndices, int32_t* outputIndices) {
   outputBuffer = outputs;
   outputIndexBuffer = outputIndices;
   initConstants();
@@ -157,14 +154,16 @@ void run() {
       outputVarIndex = 0;
       if (outputIndexBuffer != NULL) {
         // Store the outputs as specified in the current output index buffer
-        for (size_t i = 0; i < maxOutputIndices; i++) {
-          size_t indexBufferOffset = i * INDICES_PER_OUTPUT;
+        size_t i = 0;
+        while (true) {
+          size_t indexBufferOffset = i * INDICES_PER_VARIABLE;
           size_t varIndex = (size_t)outputIndexBuffer[indexBufferOffset];
           if (varIndex > 0) {
             size_t subIndex0 = (size_t)outputIndexBuffer[indexBufferOffset + 1];
             size_t subIndex1 = (size_t)outputIndexBuffer[indexBufferOffset + 2];
             size_t subIndex2 = (size_t)outputIndexBuffer[indexBufferOffset + 3];
             storeOutput(varIndex, subIndex0, subIndex1, subIndex2);
+            i++;
           } else {
             // Stop when we reach the first zero index
             break;

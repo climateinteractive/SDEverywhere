@@ -30,8 +30,6 @@ function initWasmModel() {
     cwrap: (fname) => {
       // Return a mock implementation of each wrapped C function
       switch (fname) {
-        case 'getMaxOutputIndices':
-          return () => 1000
         case 'getInitialTime':
           return () => 2000
         case 'getFinalTime':
