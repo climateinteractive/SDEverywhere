@@ -3,11 +3,15 @@
 import type { TransferDescriptor } from 'threads'
 import { expose, Transfer } from 'threads/worker'
 
-import type { RunnableModel } from '@sdeverywhere/runtime'
+import type { RunnableModel, WasmModelInitResult } from '@sdeverywhere/runtime'
 import { BufferedRunModelParams } from '@sdeverywhere/runtime'
 
+// TODO: To avoid breaking existing code that returns `WasmModelInitResult`
+// from this init function, we allow it to return either `WasmModelInitResult`
+// or the newer `RunnableModel`.  We will remove the `WasmModelInitResult` part
+// in a future set of changes.
 /** @hidden */
-let initRunnableModel: () => Promise<RunnableModel>
+let initRunnableModel: () => Promise<RunnableModel | WasmModelInitResult>
 
 /** @hidden */
 let runnableModel: RunnableModel
@@ -35,7 +39,21 @@ const modelWorker = {
     }
 
     // Initialize the runnable model
-    runnableModel = await initRunnableModel()
+    // TODO: To avoid breaking existing code that returns `WasmModelInitResult`
+    // from this init function, we allow it to return either `WasmModelInitResult`
+    // or the newer `RunnableModel`.  We will remove the `WasmModelInitResult` part
+    // in a future set of changes.
+    const initResult = await initRunnableModel()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if ((initResult as any).model !== undefined) {
+      // The result is a `WasmModelInitResult`, so extract the `WasmModel` (which implements
+      // the `RunnableModel` interface)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      runnableModel = (initResult as any).model as RunnableModel
+    } else {
+      // Otherwise, we assume the result is a `RunnableModel`
+      runnableModel = initResult as RunnableModel
+    }
 
     // Transfer the model metadata to the runner
     return {
@@ -73,7 +91,7 @@ const modelWorker = {
  * @param init The function that initializes the `RunnableModel` instance that
  * is used in the worker thread.
  */
-export function exposeModelWorker(init: () => Promise<RunnableModel>): void {
+export function exposeModelWorker(init: () => Promise<RunnableModel | WasmModelInitResult>): void {
   // Save the initializer, which will be used when the runner calls `initModel`
   // on the worker
   initRunnableModel = init
