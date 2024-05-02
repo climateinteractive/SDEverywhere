@@ -2,6 +2,6 @@
 
 # Type alias: OutputVarId
 
- **OutputVarId**: `string`
+ **OutputVarId**: [`VarId`](VarId.md)
 
 An output variable identifier string, as used in SDEverywhere.

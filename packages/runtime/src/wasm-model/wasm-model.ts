@@ -9,8 +9,6 @@ import type { WasmModule } from './wasm-module'
 /**
  * An interface to the generated WebAssembly model.  Allows for running the model with
  * a given set of input values, producing a set of output values.
- *
- * @hidden This is not part of the public API; only the `RunnableModel` type is public.
  */
 export class WasmModel implements RunnableModel {
   /** The start time for the model (aka `INITIAL TIME`). */
@@ -122,10 +120,45 @@ export class WasmModel implements RunnableModel {
 /**
  * Initialize the wasm model.
  *
+ * @hidden This is the new replacement for `createWasmModelRunner`; this will be
+ * exposed (and the old one deprecated) in a separate set of changes.
+ *
  * @param wasmModule The `WasmModule` that wraps the `wasm` binary.
  * @param outputVarIds The output variable IDs, per the spec file passed to `sde`.
  * @return The initialized `WasmModel` instance.
  */
 export function initWasmModel(wasmModule: WasmModule, outputVarIds: OutputVarId[]): RunnableModel {
   return new WasmModel(wasmModule, outputVarIds)
+}
+
+/**
+ * The result of model initialization.
+ */
+export interface WasmModelInitResult {
+  /** The wasm model. */
+  model: WasmModel
+  /** The number of input variables. */
+  numInputs: number
+  /** The output variable IDs. */
+  outputVarIds: OutputVarId[]
+}
+
+/**
+ * Initialize the wasm model and buffers.
+ *
+ * @param wasmModule The `WasmModule` that wraps the `wasm` binary.
+ * @param numInputs The number of input variables, per the spec file passed to `sde`.
+ * @param outputVarIds The output variable IDs, per the spec file passed to `sde`.
+ */
+export function initWasmModelAndBuffers(
+  wasmModule: WasmModule,
+  numInputs: number,
+  outputVarIds: OutputVarId[]
+): WasmModelInitResult {
+  const model = new WasmModel(wasmModule, outputVarIds)
+  return {
+    model,
+    numInputs,
+    outputVarIds
+  }
 }

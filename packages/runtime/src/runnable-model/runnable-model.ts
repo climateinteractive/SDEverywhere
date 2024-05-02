@@ -8,6 +8,9 @@ import type { RunModelParams } from './run-model-params'
  * exposes the properties and functions that allow a `ModelRunner` implementation to run
  * the generated model for a set of parameters, either on the main JavaScript thread or in
  * a worker thread.
+ *
+ * @hidden This is not yet exposed in the public API; it is currently only used by
+ * the implementations of the `RunnableModel` interface.
  */
 export interface RunnableModel {
   /** The start time for the model (aka `INITIAL TIME`). */
