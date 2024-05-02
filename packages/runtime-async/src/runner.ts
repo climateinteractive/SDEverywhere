@@ -88,20 +88,22 @@ async function spawnAsyncModelRunnerWithWorker(worker: Worker): Promise<ModelRun
       // instance back to the worker wrapped in a `Transfer` to make it
       // no-copy transferable, and then the worker will return it back
       // to us.
+      let ioBuffer: ArrayBuffer
       try {
-        await modelWorker.runModel(Transfer(params.getEncodedBuffer()))
+        ioBuffer = await modelWorker.runModel(Transfer(params.getEncodedBuffer()))
       } finally {
         running = false
       }
 
-      // Save the model run time
-      outputs.runTimeInMillis = params.getElapsedTime()
+      // Once the buffer is transferred to the worker, the buffer in the
+      // `BufferedRunModelParams` becomes "detached" and is no longer usable.
+      // After the buffer is transferred back from the worker, we need to
+      // restore the state of the object to use the new buffer.
+      params.updateFromEncodedBuffer(ioBuffer)
 
-      // Copy the output values from the I/O buffer into the `Outputs` instance
-      const result = outputs.updateFromBuffer(params.getOutputs(), initResult.outputRowLength)
-      if (result.isErr()) {
-        throw new Error(`Failed to store outputs: ${result.error}`)
-      }
+      // Copy the output values and elapsed time from the buffer to the
+      // `Outputs` instance
+      params.finalizeOutputs(outputs)
 
       return outputs
     },
