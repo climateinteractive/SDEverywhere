@@ -7,6 +7,9 @@ import type { RunModelParams } from './run-model-params'
  * An implementation of `RunModelParams` that keeps references to the `inputs` and
  * `outputs` parameters that are passed to the `runModel` function.  This implementation
  * is best used with a synchronous `ModelRunner`.
+ *
+ * @hidden This is not yet exposed in the public API; it is currently only used by
+ * the implementations of the `RunnableModel` interface.
  */
 export class ReferencedRunModelParams implements RunModelParams {
   private inputs: (number | InputValue)[]
@@ -132,11 +135,5 @@ export class ReferencedRunModelParams implements RunModelParams {
       // Don't use the output indices buffer when output var specs are not provided
       this.outputIndicesLengthInElements = 0
     }
-
-    // // Allocate an array that is large enough to hold the series data for each output variable
-    // const requiredOutputsLength = outputs.varIds.length * outputs.seriesLength
-    // if (this.outputs === undefined || this.outputs.length < requiredOutputsLength) {
-    //   this.outputs = new Float64Array(requiredOutputsLength)
-    // }
   }
 }

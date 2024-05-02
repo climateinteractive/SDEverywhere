@@ -49,6 +49,9 @@ class Float64Section implements Section<Float64Array> {
  * combined buffer.  This implementation is designed to work with an asynchronous `ModelRunner`
  * implementation because the buffer can be transferred to/from a Web Worker or Node.js worker
  * thread without copying (if it is marked `Transferable`).
+ *
+ * @hidden This is not yet exposed in the public API; it is currently only used by
+ * the implementations of the `RunnableModel` interface.
  */
 export class BufferedRunModelParams implements RunModelParams {
   /**
