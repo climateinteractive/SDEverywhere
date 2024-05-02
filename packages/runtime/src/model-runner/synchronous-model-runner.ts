@@ -24,18 +24,6 @@ export function createSynchronousModelRunner(model: RunnableModel): ModelRunner 
     // Run the model synchronously using those parameters
     model.runModel(params)
 
-    // If `getOutputs` returns undefined, it means that the model already wrote
-    // directly into the `Outputs` instance, so it is already updated.  If it
-    // returns an array, then we need to copy the output values from that array
-    // into the provided `Outputs` instance.
-    // const outputsArray = params.getOutputs()
-    // if (outputsArray !== undefined) {
-    // const result = outputs.updateFromBuffer(outputsArray, model.numSavePoints)
-    // if (result.isErr()) {
-    //   throw new Error(`Failed to store outputs: ${result.error}`)
-    // }
-    // }
-
     return outputs
   }
 
