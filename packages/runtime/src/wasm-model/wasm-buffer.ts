@@ -48,7 +48,7 @@ export class WasmBuffer<ArrType> {
    */
   dispose(): void {
     if (this.heapArray) {
-      this.wasmModule._free(this.byteOffset)
+      this.wasmModule._free?.(this.byteOffset)
       this.numElements = undefined
       this.heapArray = undefined
       this.byteOffset = undefined
