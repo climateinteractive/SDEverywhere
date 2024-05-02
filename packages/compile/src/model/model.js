@@ -106,7 +106,7 @@ function read(parsedModel, spec, extData, directData, modelDirname, opts) {
   if (opts?.stopAfterAnalyze) return
 
   // Check that all input and output vars in the spec actually exist in the model.
-  checkSpecVars(spec, extData)
+  checkSpecVars(spec)
 
   // Remove variables that are not referenced by an input or output variable.
   removeUnusedVariables(spec)
@@ -277,7 +277,7 @@ function analyze(parsedModelKind, inputVars, opts) {
   variables.forEach(readEquation)
 }
 
-function checkSpecVars(spec, extData) {
+function checkSpecVars(spec) {
   // Look up each var in the spec and issue and throw error if it does not exist.
 
   function check(varNames, specType) {
@@ -288,23 +288,9 @@ function checkSpecVars(spec, extData) {
         // out of the valid range)
         if (!R.contains('[', varName)) {
           if (!varWithRefId(varName)) {
-            // Look for a variable in external data.
-            if (extData?.has(varName)) {
-              throw new Error('Not implemented')
-              //   // console.error(`found ${specType} ${varName} in extData`)
-              //   // Copy data from an external file to an equation that does a lookup.
-              //   let lookup = R.reduce(
-              //     (a, p) => listConcat(a, `(${p[0]}, ${p[1]})`, true),
-              //     '',
-              //     Array.from(extData.get(varName))
-              //   )
-              //   let modelEquation = `${decanonicalize(varName)} = WITH LOOKUP(Time, (${lookup}))`
-              //   addEquation(modelEquation)
-            } else {
-              throw new Error(
-                `The ${specType} variable ${varName} was declared in spec.json, but no matching variable was found in the model or external data sources`
-              )
-            }
+            throw new Error(
+              `The ${specType} variable ${varName} was declared in spec.json, but no matching variable was found in the model or external data sources`
+            )
           }
         }
       }
@@ -506,21 +492,6 @@ function setRefIds() {
     v.refId = refIdForVar(v)
   }, variables)
 }
-// TODO
-// function addEquation(modelEquation) {
-//   // Add an equation in Vensim model format.
-//   let parser = createParser(modelEquation)
-//   let tree = parser.equation()
-//   // Read the var and add it to the Model var table.
-//   let variableReader = new VariableReader()
-//   variableReader.visitEquation(tree)
-//   let v = variableReader.var
-//   // Fill in the refId.
-//   v.refId = refIdForVar(v)
-//   // Finish the variable by parsing the RHS.
-//   let equationReader = new EquationReader(v)
-//   equationReader.read()
-// }
 //
 // Model API
 //
