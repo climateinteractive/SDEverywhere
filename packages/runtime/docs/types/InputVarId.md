@@ -2,6 +2,6 @@
 
 # Type alias: InputVarId
 
- **InputVarId**: [`VarId`](VarId.md)
+ **InputVarId**: `string`
 
 An input variable identifier string, as used in SDEverywhere.
