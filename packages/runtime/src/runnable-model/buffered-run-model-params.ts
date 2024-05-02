@@ -166,6 +166,23 @@ export class BufferedRunModelParams implements RunModelParams {
   }
 
   /**
+   * Copy the outputs buffer to the given `Outputs` instance.  This should be called
+   * after the `runModel` call has completed so that the output values are copied from
+   * the internal buffer to the `Outputs` instance that was passed to `runModel`.
+   *
+   * @param outputs The `Outputs` instance into which the output values will be copied.
+   */
+  finalizeOutputs(outputs: Outputs): void {
+    // Copy the output values to the `Outputs` instance
+    if (this.outputs.view) {
+      outputs.updateFromBuffer(this.outputs.view, outputs.seriesLength)
+    }
+
+    // Store the elapsed time value in the `Outputs` instance
+    outputs.runTimeInMillis = this.getElapsedTime()
+  }
+
+  /**
    * Update this instance using the parameters that are passed to a `runModel` call.
    *
    * @param inputs The model input values (must be in the same order as in the spec file).

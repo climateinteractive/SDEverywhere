@@ -36,6 +36,13 @@ const json = `
 }
 `
 
+const p = (x: number, y: number) => {
+  return {
+    x,
+    y
+  }
+}
+
 describe('ReferencedRunModelParams', () => {
   it('should return correct values from accessors', () => {
     const inputs = [1, 2, 3]
@@ -152,12 +159,6 @@ describe('ReferencedRunModelParams', () => {
 
     // Verify that the `Outputs` instance is updated with the correct values
     expect(outputs.varIds).toEqual(['_x', '_y'])
-    const p = (x: number, y: number) => {
-      return {
-        x,
-        y
-      }
-    }
     expect(outputs.getSeriesForVar('_x').points).toEqual([p(2000, 1), p(2001, 2), p(2002, 3)])
     expect(outputs.getSeriesForVar('_y').points).toEqual([p(2000, 4), p(2001, 5), p(2002, 6)])
   })

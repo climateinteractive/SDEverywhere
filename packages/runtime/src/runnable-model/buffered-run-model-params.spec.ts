@@ -36,6 +36,13 @@ const json = `
 }
 `
 
+const p = (x: number, y: number) => {
+  return {
+    x,
+    y
+  }
+}
+
 describe('BufferedRunModelParams', () => {
   it('should update buffer (simple case with inputs and outputs only)', () => {
     const inputs = [1, 2, 3]
@@ -234,5 +241,11 @@ describe('BufferedRunModelParams', () => {
 
     // Verify that the outputs buffer in the runner params contains the correct values
     expect(runnerParams.getOutputs()).toEqual(new Float64Array([1, 2, 3, 4, 5, 6]))
+
+    // Copy the outputs buffer to the `Outputs` instance and verify the values
+    runnerParams.finalizeOutputs(outputs)
+    expect(outputs.getSeriesForVar('_x').points).toEqual([p(2000, 1), p(2001, 2), p(2002, 3)])
+    expect(outputs.getSeriesForVar('_y').points).toEqual([p(2000, 4), p(2001, 5), p(2002, 6)])
+    expect(outputs.runTimeInMillis).toBe(42)
   })
 })
