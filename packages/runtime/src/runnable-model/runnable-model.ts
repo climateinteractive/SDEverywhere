@@ -31,4 +31,10 @@ export interface RunnableModel {
    * @param params The parameters that control the model run.
    */
   runModel(params: RunModelParams): void
+
+  /**
+   * Terminate the runner by releasing underlying resources (e.g., the worker thread or
+   * Wasm module/buffers).
+   */
+  terminate(): void
 }

@@ -1,7 +1,6 @@
 // Copyright (c) 2020-2022 Climate Interactive / New Venture Fund
 
 import type { InputValue, Outputs } from '../_shared'
-import type { RunModelOptions } from '../runnable-model'
 
 /**
  * Abstraction that allows for running the wasm model on the JS thread
@@ -19,27 +18,23 @@ export interface ModelRunner {
   /**
    * Run the model.
    *
-   * @param inputs The model input values. Unless `options.inputVarSpecs` is defined, these
-   * input values must be in the same order as in the spec file.
+   * @param inputs The model input values (must be in the same order as in the spec file).
    * @param outputs The structure into which the model outputs will be stored.
-   * @param options Additional options that influence the model run.
    * @return A promise that resolves with the outputs when the model run is complete.
    */
-  runModel(inputs: (number | InputValue)[], outputs: Outputs, options?: RunModelOptions): Promise<Outputs>
+  runModel(inputs: (number | InputValue)[], outputs: Outputs): Promise<Outputs>
 
   /**
    * Run the model synchronously.
    *
-   * @param inputs The model input values. Unless `options.inputVarSpecs` is defined, these
-   * input values must be in the same order as in the spec file.
+   * @param inputs The model input values (must be in the same order as in the spec file).
    * @param outputs The structure into which the model outputs will be stored.
-   * @param options Additional options that influence the model run.
    * @return The outputs of the run.
    *
    * @hidden This is only intended for internal use; some implementations may not support
    * running the model synchronously, in which case this will be undefined.
    */
-  runModelSync?(inputs: (number | InputValue)[], outputs: Outputs, options?: RunModelOptions): Outputs
+  runModelSync?(inputs: (number | InputValue)[], outputs: Outputs): Outputs
 
   /**
    * Terminate the runner by releasing underlying resources (e.g., the worker thread or
