@@ -719,6 +719,24 @@ describe('generateEquation (Vensim -> JS)', () => {
     expect(genJS(vars.get('_b'), 'init-constants')).toEqual(['_b = 30.0;'])
   })
 
+  it('should work when valid input variable name with subscript is provided in spec file', () => {
+    const vars = readInlineModel(
+      `
+        DimA: A1, A2 ~~|
+        A[DimA] = 10, 20 ~~|
+        B[DimA] = A[DimA] + 1 ~~|
+      `,
+      {
+        inputVarNames: ['A[A1]'],
+        outputVarNames: ['B[A1]', 'B[A2]']
+      }
+    )
+    expect(vars.size).toBe(3)
+    expect(genJS(vars.get('_a[_a1]'), 'init-constants')).toEqual(['_a[0] = 10.0;'])
+    expect(genJS(vars.get('_a[_a2]'), 'init-constants')).toEqual(['_a[1] = 20.0;'])
+    expect(genJS(vars.get('_b'), 'eval')).toEqual(['for (let i = 0; i < 2; i++) {', '_b[i] = _a[i] + 1.0;', '}'])
+  })
+
   it('should throw error when unknown input variable name is provided in spec file', () => {
     expect(() =>
       readInlineModel(
