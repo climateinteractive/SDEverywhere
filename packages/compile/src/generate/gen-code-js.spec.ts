@@ -8,7 +8,7 @@ import { resetSubscriptsAndDimensions } from '../_shared/subscript'
 import Model from '../model/model'
 
 import { parseInlineVensimModel } from '../_tests/test-support'
-import { generateCode } from './gen-code-js'
+import { generateJS } from './gen-code-js'
 
 type ExtData = Map<string, Map<number, number>>
 type DirectDataSpec = Map<string, string>
@@ -47,7 +47,7 @@ function readInlineModelAndGenerateJS(
   }
 
   const parsedModel = parseInlineVensimModel(mdlContent, opts?.modelDir)
-  return generateCode(parsedModel, {
+  return generateJS(parsedModel, {
     spec,
     operations: ['generateJS'],
     extData: opts?.extData,
@@ -178,17 +178,7 @@ function runModel(core: ModelCore, inputs: number[], outputs: number[]) {
   }
 }
 
-describe('generateCode (Vensim -> JS)', () => {
-  //   const vars = readInlineModel(`
-  //   y = WITH LOOKUP(Time, ( [(0,0)-(2,2)], (0,0),(0.1,0.01),(0.5,0.7),(1,1),(1.5,1.2),(2,1.3) )) ~~|
-  // `)
-  // expect(vars.size).toBe(2)
-  // expect(genJS(vars.get('__lookup1'), 'decl')).toEqual([
-  //   'const __lookup1_data_ = [0.0, 0.0, 0.1, 0.01, 0.5, 0.7, 1.0, 1.0, 1.5, 1.2, 2.0, 1.3];'
-  // ])
-  // expect(genJS(vars.get('__lookup1'), 'init-lookups')).toEqual(['__lookup1 = fns.createLookup(6, __lookup1_data_);'])
-  // expect(genJS(vars.get('_y'))).toEqual(['_y = fns.WITH_LOOKUP(_time, __lookup1);'])
-
+describe('generateJS (Vensim -> JS)', () => {
   it('should work for simple model', () => {
     const mdl = `
       input = 1 ~~|
@@ -201,7 +191,6 @@ describe('generateCode (Vensim -> JS)', () => {
       inputVarNames: ['input'],
       outputVarNames: ['x', 'y', 'z', 'w']
     })
-    // console.log(code)
     expect(code).toEqual(`\
 // Model variables
 let __lookup1;
@@ -401,22 +390,6 @@ export function storeOutput(varIndex, subIndex0, subIndex1, subIndex2, storeValu
   }
 }
 `)
-  })
-
-  it.skip('test', async () => {
-    // const code = 'export default function hello() { console.log("Hello World"); }'
-    const code = `export function hello() { console.log("Hello World"); return 'hi' }`
-    // const objectURL = URL.createObjectURL(new Blob([code], { type: 'text/javascript' }))
-    // const module = await import(objectURL)
-    // console.log(module)
-    // const myHello = module.default
-    // myHello()
-
-    const dataUri = 'data:text/javascript;charset=utf-8,' + encodeURIComponent(code)
-    const module = await import(dataUri)
-    // console.log(module)
-    const foo = module.hello()
-    expect(foo).toBe('hi')
   })
 
   it('should run model', async () => {

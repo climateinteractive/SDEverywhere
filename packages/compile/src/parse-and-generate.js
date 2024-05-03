@@ -11,8 +11,8 @@ import { printSubscripts, yamlSubsList } from './_shared/subscript.js'
 import { parseModel as legacyParseVensimModel } from './parse/parser.js'
 import Model from './model/model.js'
 import { getDirectSubscripts } from './model/read-subscripts.js'
-import { generateCode as generateC } from './generate/code-gen.js'
-import { generateCode as generateJS } from './generate/gen-code-js.js'
+import { generateC } from './generate/gen-code-c.js'
+import { generateJS } from './generate/gen-code-js.js'
 
 /**
  * Parse a Vensim model and generate C code.

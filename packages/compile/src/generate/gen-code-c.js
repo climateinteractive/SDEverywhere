@@ -8,7 +8,7 @@ import { generateEquation } from './gen-equation.js'
 import EquationGen from './equation-gen.js'
 import { expandVarNames } from './expand-var-names.js'
 
-export function generateCode(parsedModel, opts) {
+export function generateC(parsedModel, opts) {
   return codeGenerator(parsedModel, opts).generate()
 }
 

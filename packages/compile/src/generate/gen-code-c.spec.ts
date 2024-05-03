@@ -8,7 +8,7 @@ import { resetSubscriptsAndDimensions } from '../_shared/subscript'
 import Model from '../model/model'
 
 import { parseInlineVensimModel } from '../_tests/test-support'
-import { generateCode } from './code-gen'
+import { generateC } from './gen-code-c'
 
 type ExtData = Map<string, Map<number, number>>
 type DirectDataSpec = Map<string, string>
@@ -47,7 +47,7 @@ function readInlineModelAndGenerateC(
   }
 
   const parsedModel = parseInlineVensimModel(mdlContent, opts?.modelDir)
-  return generateCode(parsedModel, {
+  return generateC(parsedModel, {
     spec,
     operations: ['generateC'],
     extData: opts?.extData,
@@ -56,7 +56,7 @@ function readInlineModelAndGenerateC(
   })
 }
 
-describe('generateCode (Vensim -> C)', () => {
+describe('generateC (Vensim -> C)', () => {
   it('should work for simple model', () => {
     const mdl = `
       x = 1 ~~|

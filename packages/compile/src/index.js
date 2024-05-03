@@ -4,7 +4,8 @@ export { canonicalName } from './_shared/helpers.js'
 export { readDat } from './_shared/read-dat.js'
 export { preprocessModel } from './preprocess/preprocessor.js'
 export { parseModel } from './parse/parser.js'
-export { generateCode } from './generate/code-gen.js'
+export { generateC } from './generate/gen-code-c.js'
+export { generateJS } from './generate/gen-code-js.js'
 export { parseAndGenerate, printNames } from './parse-and-generate.js'
 
 // XXX
@@ -12,7 +13,6 @@ import { resetHelperState } from './_shared/helpers.js'
 import { resetSubscriptsAndDimensions } from './_shared/subscript.js'
 import Model from './model/model.js'
 import { parseModel } from './parse-and-generate.js'
-export { generateCode as generateJsCode } from './generate/gen-code-js.js'
 
 export function resetState() {
   // XXX: These steps are needed due to subs/dims and variables being in module-level storage

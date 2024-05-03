@@ -1,4 +1,4 @@
-import { generateCode, parseModel, preprocessModel } from '@sdeverywhere/compile'
+import { generateC, parseModel, preprocessModel } from '@sdeverywhere/compile'
 
 import { modelPathProps, parseSpec } from './utils.js'
 
@@ -25,7 +25,7 @@ let causes = (model, varname, opts) => {
   // Parse the model to get variable and subscript information.
   let parseTree = parseModel(input)
   let operations = ['printRefGraph']
-  generateCode(parseTree, { spec, operations, extData, directData, modelDirname, varname })
+  generateC(parseTree, { spec, operations, extData, directData, modelDirname, varname })
 }
 export default {
   command,

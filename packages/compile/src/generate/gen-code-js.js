@@ -7,7 +7,7 @@ import Model from '../model/model.js'
 import { generateEquation } from './gen-equation.js'
 import { expandVarNames } from './expand-var-names.js'
 
-export function generateCode(parsedModel, opts) {
+export function generateJS(parsedModel, opts) {
   return codeGenerator(parsedModel, opts).generate()
 }
 
