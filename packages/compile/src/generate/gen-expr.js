@@ -734,7 +734,18 @@ function generateVectorElmMapCall(callExpr, ctx) {
   const rhsSubIds = normalizeSubscripts(vecSubIds)
   const cSubscripts = rhsSubIds.map(rhsSubId => {
     if (isIndex(rhsSubId)) {
-      return `[${subFamily}[${subBase} + ${offsetArgCode}]]`
+      let indexDecl
+      switch (ctx.outFormat) {
+        case 'c':
+          indexDecl = `(size_t)(${subBase} + ${offsetArgCode})`
+          break
+        case 'js':
+          indexDecl = `${subBase} + ${offsetArgCode}`
+          break
+        default:
+          throw new Error(`Unhandled output format '${ctx.outFormat}'`)
+      }
+      return `[${subFamily}[${indexDecl}]]`
     } else {
       const subIndex = ctx.loopIndexVars.index(rhsSubId)
       return `[${rhsSubId}[${subIndex}]]`
