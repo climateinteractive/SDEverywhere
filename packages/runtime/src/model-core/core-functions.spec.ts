@@ -47,15 +47,14 @@ describe('CoreFunctions', () => {
     expect(fns.EXP(2)).toBeCloseTo(Math.pow(Math.E, 2))
   })
 
-  // TODO
   it('should expose GAME', () => {
-    expect(() => fns.GAME(1)).toThrow('GAME function not yet implemented for JS target')
+    expect(fns.GAME(1)).toBe(1)
   })
 
   // TODO
-  it('should expose GAMMA_LN', () => {
-    expect(() => fns.GAMMA_LN(1)).toThrow('GAMMA_LN function not yet implemented for JS target')
-  })
+  // it('should expose GAMMA_LN', () => {
+  //   expect(() => fns.GAMMA_LN(1)).toThrow('GAMMA_LN function not yet implemented for JS target')
+  // })
 
   it('should expose INTEG', () => {
     const value = 2

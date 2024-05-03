@@ -28,7 +28,8 @@ export interface CoreFunctions {
   COS(x: number): number
   EXP(x: number): number
   GAME(x: number): number
-  GAMMA_LN(x: number): number
+  // TODO
+  // GAMMA_LN(x: number): number
   INTEG(value: number, rate: number): number
   INTEGER(x: number): number
   LN(x: number): number
@@ -103,13 +104,14 @@ export function getCoreFunctions(): CoreFunctions {
       return Math.exp(x)
     },
 
-    GAME(): number {
-      throw new Error('GAME function not yet implemented for JS target')
+    GAME(x: number): number {
+      // TODO: For now, the GAME function is a no-op (returns the input value)
+      return x
     },
 
-    GAMMA_LN(): number {
-      throw new Error('GAMMA_LN function not yet implemented for JS target')
-    },
+    // GAMMA_LN(): number {
+    //   throw new Error('GAMMA_LN function not yet implemented for JS target')
+    // },
 
     INTEG(value: number, rate: number): number {
       return value + rate * ctx.timeStep
