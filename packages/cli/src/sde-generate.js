@@ -8,13 +8,13 @@ import { buildDir, modelPathProps, parseSpec } from './utils.js'
 export let command = 'generate [options] <model>'
 export let describe = 'generate model code'
 export let builder = {
-  // TODO: The old `--genc` option is deprecated and replaced by `--code=c`
+  // TODO: The old `--genc` option is deprecated and replaced by `--outformat=c`
   genc: {
     describe: 'generate C code for the model',
     type: 'boolean',
     hidden: true
   },
-  code: {
+  outformat: {
     describe: 'write generated code in the given format',
     choices: ['c', 'js']
   },
@@ -79,13 +79,13 @@ export let generate = async (model, opts) => {
   // Parse the model and generate code. If no operation is specified, the code generator will
   // read the model and do nothing else. This is required for the list operation.
   let operations = []
-  if (opts.genc || opts.code === 'c') {
+  if (opts.genc || opts.outformat === 'c') {
     if (opts.genc) {
-      console.warn(`WARNING: --genc option is deprecated for the 'sde generate' command; use --code=c instead`)
+      console.warn(`WARNING: --genc option is deprecated for the 'sde generate' command; use --outformat=c instead`)
     }
     operations.push('generateC')
   }
-  if (opts.code === 'js') {
+  if (opts.outformat === 'js') {
     operations.push('generateJS')
   }
   if (opts.list) {

@@ -9,7 +9,7 @@ export let builder = {
     type: 'string',
     alias: 's'
   },
-  genfmt: {
+  genformat: {
     describe: 'generated code format',
     choices: ['c', 'js'],
     default: 'c'
