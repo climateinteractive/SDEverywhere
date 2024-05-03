@@ -6,7 +6,7 @@ import { runModelCore } from './model-core-runner'
 /**
  * Run the given model and log the output values to the console in TSV (tab-separated values) format.
  *
- * This is mainly intended for use in implementing the `sde run` command.
+ * This is mainly intended for use in implementing the `sde exec` command.
  *
  * @param core A `ModelCore` instance.
  */
