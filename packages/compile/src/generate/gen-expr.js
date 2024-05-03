@@ -204,6 +204,9 @@ function generateFunctionCall(callExpr, ctx) {
     case '_XIDZ':
     case '_ZIDZ': {
       const args = callExpr.args.map(argExpr => generateExpr(argExpr, ctx))
+      if (ctx.outFormat === 'js' && fnId === '_GAMMA_LN') {
+        throw new Error(`${callExpr.fnName} function not yet implemented for JS code gen`)
+      }
       if (ctx.outFormat === 'js' && fnId === '_IF_THEN_ELSE') {
         // When generating conditional expressions for JS target, since we can't rely on macros like we do for C,
         // it is better to translate it into a ternary instead of relying on a built-in function (since the latter
@@ -248,6 +251,9 @@ function generateFunctionCall(callExpr, ctx) {
     case '_SAMPLE_IF_TRUE':
     case '_INTEG':
       // Split level functions into init and eval expressions
+      if (ctx.outFormat === 'js' && (fnId === '_DELAY_FIXED' || fnId === '_DEPRECIATE_STRAIGHTLINE')) {
+        throw new Error(`${callExpr.fnName} function not yet implemented for JS code gen`)
+      }
       if (ctx.mode.startsWith('init')) {
         return generateLevelInit(callExpr, ctx)
       } else if (ctx.mode === 'eval') {
@@ -329,6 +335,9 @@ function generateFunctionCall(callExpr, ctx) {
     //
 
     case '_ALLOCATE_AVAILABLE':
+      if (ctx.outFormat === 'js') {
+        throw new Error(`${callExpr.fnName} function not yet implemented for JS code gen`)
+      }
       return generateAllocateAvailableCall(callExpr, ctx)
 
     case '_ELMCOUNT': {

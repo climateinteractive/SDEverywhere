@@ -824,12 +824,15 @@ describe('generateEquation (Vensim -> JS)', () => {
     expect(genJS(vars.get('_priority[_dayton,_ppriority]'))).toEqual(['_priority[1][1] = 7.0;'])
     expect(genJS(vars.get('_priority[_fresno,_ptype]'))).toEqual(['_priority[2][0] = 1.0;'])
     expect(genJS(vars.get('_priority[_fresno,_ppriority]'))).toEqual(['_priority[2][1] = 3.0;'])
-    expect(genJS(vars.get('_shipments'))).toEqual([
-      'let __t1 = fns.ALLOCATE_AVAILABLE(_demand, _priority, _supply_available, 3);',
-      'for (let i = 0; i < 3; i++) {',
-      '_shipments[i] = __t1[_branch[i]];',
-      '}'
-    ])
+    // expect(genJS(vars.get('_shipments'))).toEqual([
+    //   'let __t1 = fns.ALLOCATE_AVAILABLE(_demand, _priority, _supply_available, 3);',
+    //   'for (let i = 0; i < 3; i++) {',
+    //   '_shipments[i] = __t1[_branch[i]];',
+    //   '}'
+    // ])
+    expect(() => genJS(vars.get('_shipments'))).toThrow(
+      'ALLOCATE AVAILABLE function not yet implemented for JS code gen'
+    )
   })
 
   it('should work for ARCCOS function', () => {
@@ -1017,11 +1020,15 @@ describe('generateEquation (Vensim -> JS)', () => {
     expect(vars.size).toBe(3)
     expect(genJS(vars.get('_x'))).toEqual(['_x = 1.0;'])
     expect(genJS(vars.get('_init'))).toEqual(['_init = 2.0;'])
-    expect(genJS(vars.get('_y'), 'init-levels')).toEqual([
-      '_y = _init;',
-      '__fixed_delay1 = __new_fixed_delay(__fixed_delay1, 5.0, _init);'
-    ])
-    expect(genJS(vars.get('_y'), 'eval')).toEqual(['_y = fns.DELAY_FIXED(_x, __fixed_delay1);'])
+    // expect(genJS(vars.get('_y'), 'init-levels')).toEqual([
+    //   '_y = _init;',
+    //   '__fixed_delay1 = __new_fixed_delay(__fixed_delay1, 5.0, _init);'
+    // ])
+    // expect(genJS(vars.get('_y'), 'eval')).toEqual(['_y = fns.DELAY_FIXED(_x, __fixed_delay1);'])
+    expect(() => genJS(vars.get('_y'), 'init-levels')).toThrow(
+      'DELAY FIXED function not yet implemented for JS code gen'
+    )
+    expect(() => genJS(vars.get('_y'), 'eval')).toThrow('DELAY FIXED function not yet implemented for JS code gen')
   })
 
   it('should work for DEPRECIATE STRAIGHTLINE function', () => {
@@ -1037,13 +1044,19 @@ describe('generateEquation (Vensim -> JS)', () => {
     expect(genJS(vars.get('_capacity_cost'))).toEqual(['_capacity_cost = 1000.0;'])
     expect(genJS(vars.get('_new_capacity'))).toEqual(['_new_capacity = 2000.0;'])
     expect(genJS(vars.get('_stream'))).toEqual(['_stream = _capacity_cost * _new_capacity;'])
-    expect(genJS(vars.get('_depreciated_amount'), 'init-levels')).toEqual([
-      '_depreciated_amount = 0.0;',
-      '__depreciation1 = __new_depreciation(__depreciation1, _dtime, 0.0);'
-    ])
-    expect(genJS(vars.get('_depreciated_amount'), 'eval')).toEqual([
-      '_depreciated_amount = fns.DEPRECIATE_STRAIGHTLINE(_stream, __depreciation1);'
-    ])
+    // expect(genJS(vars.get('_depreciated_amount'), 'init-levels')).toEqual([
+    //   '_depreciated_amount = 0.0;',
+    //   '__depreciation1 = __new_depreciation(__depreciation1, _dtime, 0.0);'
+    // ])
+    // expect(genJS(vars.get('_depreciated_amount'), 'eval')).toEqual([
+    //   '_depreciated_amount = fns.DEPRECIATE_STRAIGHTLINE(_stream, __depreciation1);'
+    // ])
+    expect(() => genJS(vars.get('_depreciated_amount'), 'init-levels')).toThrow(
+      'DEPRECIATE STRAIGHTLINE function not yet implemented for JS code gen'
+    )
+    expect(() => genJS(vars.get('_depreciated_amount'), 'eval')).toThrow(
+      'DEPRECIATE STRAIGHTLINE function not yet implemented for JS code gen'
+    )
   })
 
   it('should work for ELMCOUNT function', () => {
@@ -1083,7 +1096,8 @@ describe('generateEquation (Vensim -> JS)', () => {
     `)
     expect(vars.size).toBe(2)
     expect(genJS(vars.get('_x'))).toEqual(['_x = 1.0;'])
-    expect(genJS(vars.get('_y'))).toEqual(['_y = fns.GAMMA_LN(_x);'])
+    // expect(genJS(vars.get('_y'))).toEqual(['_y = fns.GAMMA_LN(_x);'])
+    expect(() => genJS(vars.get('_y'))).toThrow('GAMMA LN function not yet implemented for JS code gen')
   })
 
   describe('should work for GET DATA BETWEEN TIMES function', () => {
