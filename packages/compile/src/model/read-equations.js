@@ -148,7 +148,7 @@ class Context {
     }
 
     if (result.size > 1) {
-      console.error(`ERROR: Subscripts do not agree in extractSubscriptsFromVarNames: ${[...varNames]}`)
+      throw new Error(`Subscripts do not agree in extractSubscriptsFromVarNames: ${[...varNames]}`)
     }
     return [...result][0] || ''
   }

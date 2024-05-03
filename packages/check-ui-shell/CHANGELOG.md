@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.2.4](https://github.com/climateinteractive/SDEverywhere/compare/check-ui-shell-v0.2.3...check-ui-shell-v0.2.4) (2024-03-26)
+
+
+### Bug Fixes
+
+* correct handling of the case where comparison scenario is not valid for one side ([#451](https://github.com/climateinteractive/SDEverywhere/issues/451)) ([a9d2e34](https://github.com/climateinteractive/SDEverywhere/commit/a9d2e341eced2d062b39ed832b2ecdbd7526aec0)), closes [#450](https://github.com/climateinteractive/SDEverywhere/issues/450)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/check-core bumped from ^0.1.1 to ^0.1.2
+
 ## [0.2.3](https://github.com/climateinteractive/SDEverywhere/compare/check-ui-shell-v0.2.2...check-ui-shell-v0.2.3) (2023-09-05)
 
 

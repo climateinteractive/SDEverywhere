@@ -57,6 +57,24 @@ export interface ComparisonScenarioWithInputsSpec {
 }
 
 /**
+ * Specifies a single scenario that configures inputs differently for the two
+ * model instances.
+ */
+export interface ComparisonScenarioWithDistinctInputsSpec {
+  kind: 'scenario-with-distinct-inputs'
+  /** The unique identifier for the scenario. */
+  id?: ComparisonScenarioId
+  /** The title of the scenario. */
+  title?: ComparisonScenarioTitle
+  /** The subtitle of the scenario. */
+  subtitle?: ComparisonScenarioSubtitle
+  /** The input settings for this scenario when run with the "left" model. */
+  inputsL: ComparisonScenarioInputSpec[]
+  /** The input settings for this scenario when run with the "right" model. */
+  inputsR: ComparisonScenarioInputSpec[]
+}
+
+/**
  * Specifies a single scenario that sets all available inputs to position.
  */
 export interface ComparisonScenarioWithAllInputsSpec {
@@ -88,6 +106,7 @@ export interface ComparisonScenarioPresetMatrixSpec {
  */
 export type ComparisonScenarioSpec =
   | ComparisonScenarioWithInputsSpec
+  | ComparisonScenarioWithDistinctInputsSpec
   | ComparisonScenarioWithAllInputsSpec
   | ComparisonScenarioPresetMatrixSpec
 

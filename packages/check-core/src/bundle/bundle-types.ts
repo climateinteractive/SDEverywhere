@@ -6,6 +6,15 @@ import type { DatasetKey, VarId } from '../_shared/types'
 
 import type { ImplVar, InputVar, OutputVar } from './var-types'
 
+/** The human-readable name for a group of inputs. */
+export type InputGroupName = string
+
+/** The alias name for an input. */
+export type InputAliasName = string
+
+/** The human-readable name for a group of dataset. */
+export type DatasetGroupName = string
+
 /**
  * Includes the properties needed to display a legend item in the UI.
  */
@@ -28,6 +37,7 @@ export interface LinkItem {
   content: string
 }
 
+/** The identifier for a bundle-specific graph. */
 export type BundleGraphId = string
 
 /**
@@ -93,11 +103,11 @@ export interface ModelSpec {
   /** The map of all variables (both internal and exported) in this version of the model. */
   implVars: Map<DatasetKey, ImplVar>
   /** The custom input variable aliases defined for this model. */
-  inputAliases?: Map<string, VarId>
+  inputAliases?: Map<InputAliasName, VarId>
   /** The custom input variable groups defined for this model. */
-  inputGroups?: Map<string, InputVar[]>
+  inputGroups?: Map<InputGroupName, InputVar[]>
   /** The custom dataset (output variable) groups defined for this model. */
-  datasetGroups?: Map<string, DatasetKey[]>
+  datasetGroups?: Map<DatasetGroupName, DatasetKey[]>
   /** The start time (year) for the model. */
   startTime?: number
   /** The end time (year) for the model. */

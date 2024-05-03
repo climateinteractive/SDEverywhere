@@ -1,5 +1,41 @@
 # Changelog
 
+## [0.7.17](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.16...compile-v0.7.17) (2024-04-22)
+
+
+### Bug Fixes
+
+* use original Vensim names in generated headers for spec output vars ([#462](https://github.com/climateinteractive/SDEverywhere/issues/462)) ([966066a](https://github.com/climateinteractive/SDEverywhere/commit/966066ac9a5a3f005acf491f3c77637199a1b1ad)), closes [#461](https://github.com/climateinteractive/SDEverywhere/issues/461)
+
+## [0.7.16](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.15...compile-v0.7.16) (2024-04-19)
+
+
+### Bug Fixes
+
+* upgrade to more recent version of xlsx package ([#465](https://github.com/climateinteractive/SDEverywhere/issues/465)) ([8d06b81](https://github.com/climateinteractive/SDEverywhere/commit/8d06b81875a4a86d965ff75ec02c015e3f55653e)), closes [#463](https://github.com/climateinteractive/SDEverywhere/issues/463)
+
+## [0.7.15](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.14...compile-v0.7.15) (2024-04-17)
+
+
+### Bug Fixes
+
+* correct generation of level variables when SMOOTH3[I] input param has subscripts but delay param does not ([#457](https://github.com/climateinteractive/SDEverywhere/issues/457)) ([fd3bfab](https://github.com/climateinteractive/SDEverywhere/commit/fd3bfab25a48bdd90f028573246169acfb8b9d25)), closes [#313](https://github.com/climateinteractive/SDEverywhere/issues/313)
+
+## [0.7.14](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.13...compile-v0.7.14) (2024-03-12)
+
+
+### Bug Fixes
+
+* make new implementation of read and code gen phases the default ([#446](https://github.com/climateinteractive/SDEverywhere/issues/446)) ([e0e6d40](https://github.com/climateinteractive/SDEverywhere/commit/e0e6d40d6365085185f6dd4eff714a268bab5a28)), closes [#445](https://github.com/climateinteractive/SDEverywhere/issues/445)
+
+## [0.7.13](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.12...compile-v0.7.13) (2024-03-11)
+
+
+### Bug Fixes
+
+* prevent subscripted input variables from being pruned ([#439](https://github.com/climateinteractive/SDEverywhere/issues/439)) ([876dad7](https://github.com/climateinteractive/SDEverywhere/commit/876dad7b3d058908584fff0fc5eab01e99408099)), closes [#438](https://github.com/climateinteractive/SDEverywhere/issues/438)
+* rewrite recordRefsOfVariable to avoid blowing the stack ([#443](https://github.com/climateinteractive/SDEverywhere/issues/443)) ([a2bbce9](https://github.com/climateinteractive/SDEverywhere/commit/a2bbce9517c7d9f733339d0ef4534a11acdf784c)), closes [#442](https://github.com/climateinteractive/SDEverywhere/issues/442)
+
 ## [0.7.12](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.11...compile-v0.7.12) (2024-02-23)
 
 

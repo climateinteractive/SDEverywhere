@@ -1,3 +1,4 @@
+import * as fs from 'node:fs'
 import util from 'util'
 import B from 'bufx'
 import { parse as parseCsv } from 'csv-parse/sync'
@@ -22,6 +23,10 @@ let nextLevelVarSeq = 1
 let nextAuxVarSeq = 1
 // parsed csv data cache
 let csvData = new Map()
+
+// Newer versions of the xlsx package require manually setting the `fs` instance
+// before using the `XLSX.readFile` function
+XLSX.set_fs(fs)
 
 // XXX: This is needed for tests due to sequence numbers being in module-level storage
 export function resetHelperState() {

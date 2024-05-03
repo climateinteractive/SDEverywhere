@@ -1,5 +1,55 @@
 # Changelog
 
+## [0.7.23](https://github.com/climateinteractive/SDEverywhere/compare/cli-v0.7.22...cli-v0.7.23) (2024-04-22)
+
+
+### Bug Fixes
+
+* use original Vensim names in generated headers for spec output vars ([#462](https://github.com/climateinteractive/SDEverywhere/issues/462)) ([966066a](https://github.com/climateinteractive/SDEverywhere/commit/966066ac9a5a3f005acf491f3c77637199a1b1ad)), closes [#461](https://github.com/climateinteractive/SDEverywhere/issues/461)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/compile bumped from ^0.7.16 to ^0.7.17
+
+## [0.7.22](https://github.com/climateinteractive/SDEverywhere/compare/cli-v0.7.21...cli-v0.7.22) (2024-04-19)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/compile bumped from ^0.7.15 to ^0.7.16
+
+## [0.7.21](https://github.com/climateinteractive/SDEverywhere/compare/cli-v0.7.20...cli-v0.7.21) (2024-04-17)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/compile bumped from ^0.7.14 to ^0.7.15
+
+## [0.7.20](https://github.com/climateinteractive/SDEverywhere/compare/cli-v0.7.19...cli-v0.7.20) (2024-03-12)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/compile bumped from ^0.7.13 to ^0.7.14
+
+## [0.7.19](https://github.com/climateinteractive/SDEverywhere/compare/cli-v0.7.18...cli-v0.7.19) (2024-03-11)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/compile bumped from ^0.7.12 to ^0.7.13
+
 ## [0.7.18](https://github.com/climateinteractive/SDEverywhere/compare/cli-v0.7.17...cli-v0.7.18) (2024-02-23)
 
 

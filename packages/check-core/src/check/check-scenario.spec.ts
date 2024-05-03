@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest'
 
 import { inputSettingsSpec, positionSetting, valueSetting } from '../_shared/scenario-specs'
 import type { VarId } from '../_shared/types'
-import type { ModelSpec } from '../bundle/bundle-types'
+import type { InputGroupName, ModelSpec } from '../bundle/bundle-types'
 import type { InputVar } from '../bundle/var-types'
 import { expandScenarios } from './check-scenario'
 import type { CheckScenarioSpec } from './check-spec'
@@ -17,7 +17,7 @@ describe('expandScenarios', () => {
   const i2 = inputVars.get('_i2')
   const i3 = inputVars.get('_i3')
 
-  const inputGroups: Map<string, InputVar[]> = new Map([
+  const inputGroups: Map<InputGroupName, InputVar[]> = new Map([
     ['input group 1', [i1, i2]],
     ['Input Group 2', [i2, i3]],
     ['input group 3', []]

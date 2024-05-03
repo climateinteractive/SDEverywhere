@@ -102,9 +102,8 @@ function read(parsedModel, spec, extData, directData, modelDirname, opts) {
   if (opts?.stopAfterReadVariables) return
 
   if (spec) {
-    // If the spec file contains `input/outputVarNames` (with full Vensim variable names)
-    // convert those to C names first.  Otherwise, use `input/outputNames` which are already
-    // assumed to be valid C names.
+    // If the spec file contains `input/outputVarNames`, convert the full Vensim variable
+    // names to C names first so that later phases only need to work with canonical names
     if (spec.inputVarNames) {
       spec.inputVars = R.map(cName, spec.inputVarNames)
     }
@@ -395,14 +394,12 @@ function removeUnusedVariables(spec) {
   // ensures that we include all subscripts for a variable, which might mean we
   // include some subscripts that aren't needed, but it is safer than trying to
   // eliminate those and possibly omit something that is needed.
-  const referencedVarNames = []
+  const referencedVarNames = new Set()
 
   // Add the given variable name to the list of referenced variables, if it's not
   // already there.
   const recordUsedVarName = varName => {
-    if (!referencedVarNames.includes(varName)) {
-      referencedVarNames.push(varName)
-    }
+    referencedVarNames.add(varName)
   }
 
   // Add the given variable to the list of referenced variables, and do the same for
@@ -443,16 +440,21 @@ function removeUnusedVariables(spec) {
     // that are referenced by this variable, either directly (`v.references`) or
     // in an "INITIAL" expression (`v.initReferences`).  It's OK if we end up with
     // duplicates in this list, because we will examine each reference only once.
-    let refIds = refIdsWithName(v.varName)
-    refIds = refIds.concat(v.references)
-    refIds = refIds.concat(v.initReferences)
-    for (const refId of refIds) {
+    let refStack = []
+    function pushRefs(v) {
+      refStack.push(...refIdsWithName(v.varName))
+      refStack.push(...v.references)
+      refStack.push(...v.initReferences)
+    }
+    pushRefs(v)
+    while (refStack.length > 0) {
+      const refId = refStack.pop()
       if (!referencedRefIds.has(refId)) {
         referencedRefIds.add(refId)
         const refVar = varWithRefId(refId)
         if (refVar) {
           recordUsedVariable(refVar)
-          recordRefsOfVariable(refVar)
+          pushRefs(refVar)
         } else {
           throw new Error(`No var found for ${refId} when recording references for ${v.varName}`)
         }
@@ -468,7 +470,11 @@ function removeUnusedVariables(spec) {
 
   // Keep all input variables
   for (const inputVarName of spec.inputVars) {
-    for (const v of varsWithName(inputVarName)) {
+    // The inputVars can include a raw index, e.g. `_input_var[0]`,
+    // which isn't an actual "ref id", so we'll just derive the
+    // var name by chopping off the index part.
+    const inputVarBaseName = inputVarName.split('[')[0]
+    for (const v of varsWithName(inputVarBaseName)) {
       recordUsedVariable(v)
     }
   }
@@ -486,7 +492,7 @@ function removeUnusedVariables(spec) {
   }
 
   // Filter out unneeded variables so we're left with the minimal set of variables to emit
-  variables = R.filter(v => referencedVarNames.includes(v.varName), variables)
+  variables = R.filter(v => referencedVarNames.has(v.varName), variables)
 
   // Rebuild the variables-by-name map
   variablesByName.clear()
@@ -793,7 +799,7 @@ function vensimName(cVarName) {
 function cName(vensimVarName) {
   // Convert a Vensim variable name to a C name.
   // This function requires model analysis to be completed first when the variable has subscripts.
-  if (process.env.SDE_NONPUBLIC_USE_NEW_PARSE !== '1') {
+  if (process.env.SDE_NONPUBLIC_USE_NEW_PARSE === '0') {
     // TODO: For now we use the legacy VarNameReader when the old parser is active; this
     // code will be removed once the old parser is removed
     return new VarNameReader().read(vensimVarName)

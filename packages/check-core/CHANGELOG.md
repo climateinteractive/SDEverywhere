@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.1.2](https://github.com/climateinteractive/SDEverywhere/compare/check-core-v0.1.1...check-core-v0.1.2) (2024-03-26)
+
+
+### Features
+
+* add support for comparison scenarios that have different input settings in the two models ([#456](https://github.com/climateinteractive/SDEverywhere/issues/456)) ([e250cdf](https://github.com/climateinteractive/SDEverywhere/commit/e250cdf5a2642cfb66fe217735bcfcb807b028d4)), closes [#453](https://github.com/climateinteractive/SDEverywhere/issues/453)
+
+
+### Bug Fixes
+
+* define type aliases for some map keys ([#455](https://github.com/climateinteractive/SDEverywhere/issues/455)) ([65560ef](https://github.com/climateinteractive/SDEverywhere/commit/65560efa635c1c4e68f8fb9b5cd9c44a498b598d)), closes [#454](https://github.com/climateinteractive/SDEverywhere/issues/454)
+
 ## [0.1.1](https://github.com/climateinteractive/SDEverywhere/compare/check-core-v0.1.0...check-core-v0.1.1) (2023-06-18)
 
 

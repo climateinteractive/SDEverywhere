@@ -10,7 +10,11 @@ import {
   valueSetting
 } from '../../../_shared/scenario-specs'
 
-import type { ComparisonScenarioInput, ComparisonScenarioSettings } from '../../_shared/comparison-resolved-types'
+import type {
+  ComparisonScenarioInput,
+  ComparisonScenarioInputState,
+  ComparisonScenarioSettings
+} from '../../_shared/comparison-resolved-types'
 
 /**
  * Create a pair of `ScenarioSpec` instances that can be used to run each model given a
@@ -37,6 +41,10 @@ export function scenarioSpecsFromSettings(
   }
 }
 
+/**
+ * Create a `ScenarioSpec` instance that can be used to run a specific model for the
+ * given input settings.
+ */
 function scenarioSpecFromInputs(inputs: ComparisonScenarioInput[], side: 'left' | 'right'): ScenarioSpec | undefined {
   const settings: InputSetting[] = []
 
@@ -51,13 +59,21 @@ function scenarioSpecFromInputs(inputs: ComparisonScenarioInput[], side: 'left' 
     }
 
     // Create a scenario setting for this input
-    const varId = state.inputVar.varId
-    if (state.position) {
-      settings.push(positionSetting(varId, state.position))
-    } else {
-      settings.push(valueSetting(varId, state.value as number))
-    }
+    settings.push(inputSettingFromResolvedInputState(state))
   }
 
   return inputSettingsSpec(settings)
+}
+
+/**
+ * Create an `InputSetting` instance for the given resolved input that can be used to
+ * build a `ScenarioSpec`.
+ */
+export function inputSettingFromResolvedInputState(state: ComparisonScenarioInputState): InputSetting {
+  const varId = state.inputVar.varId
+  if (state.position) {
+    return positionSetting(varId, state.position)
+  } else {
+    return valueSetting(varId, state.value as number)
+  }
 }
