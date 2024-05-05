@@ -1,5 +1,4 @@
 import { checkPlugin } from '@sdeverywhere/plugin-check'
-import { wasmPlugin } from '@sdeverywhere/plugin-wasm'
 import { workerPlugin } from '@sdeverywhere/plugin-worker'
 
 export async function config() {
@@ -15,9 +14,6 @@ export async function config() {
     },
 
     plugins: [
-      // Generate a `wasm-model.js` file containing the Wasm model
-      wasmPlugin(),
-
       // Generate a `worker.js` file that runs the Wasm model in a worker
       workerPlugin(),
 

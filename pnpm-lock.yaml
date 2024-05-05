@@ -62,9 +62,6 @@ importers:
       '@sdeverywhere/plugin-check':
         specifier: ^0.3.0
         version: link:../../packages/plugin-check
-      '@sdeverywhere/plugin-wasm':
-        specifier: ^0.2.0
-        version: link:../../packages/plugin-wasm
       '@sdeverywhere/plugin-worker':
         specifier: ^0.2.0
         version: link:../../packages/plugin-worker
