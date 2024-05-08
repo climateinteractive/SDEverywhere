@@ -23,7 +23,7 @@ export async function chooseInstallEmsdk(projDir: string, args: Arguments): Prom
     {
       type: 'select',
       name: 'install',
-      message: `Would you like to install the Emscripten SDK?`,
+      message: `Would you like to install the Emscripten SDK that is used to generate WebAssembly?`,
       choices: [
         // ${reset(dim('(recommended)'))
         {
