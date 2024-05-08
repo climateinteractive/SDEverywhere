@@ -1,7 +1,7 @@
 // Copyright (c) 2020-2022 Climate Interactive / New Venture Fund
 
-import type { InputVarId } from '../_shared'
-import type { InputValue, ModelRunner, Outputs } from '../model-runner'
+import type { InputValue, InputVarId, Outputs } from '../_shared'
+import type { ModelRunner } from '../model-runner'
 
 /**
  * A high-level interface that schedules running of the underlying `WasmModel`.

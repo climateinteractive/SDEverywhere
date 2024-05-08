@@ -2,10 +2,8 @@
 
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { createInputValue } from '../model-runner/inputs'
-import type { ModelRunner } from '../model-runner/model-runner'
-import { Outputs } from '../model-runner/outputs'
-
+import { createInputValue, Outputs, type InputValue } from '../_shared'
+import type { ModelRunner } from '../model-runner'
 import { ModelScheduler } from './model-scheduler'
 
 describe('ModelScheduler', () => {
@@ -20,8 +18,9 @@ describe('ModelScheduler', () => {
         return new Outputs(['_output_1', '_output_2'], 2000, 2100, 1)
       },
       runModel: async (inputs, outputs) => {
-        const input1 = inputs.find(i => i.varId === '_input_1')
-        const input2 = inputs.find(i => i.varId === '_input_2')
+        // TODO: Update this when we change ModelScheduler to pass number[] instead of InputValue[]
+        const input1 = inputs[0] as InputValue
+        const input2 = inputs[1] as InputValue
         outputs.getSeriesForVar('_output_1').points[0].y = input1.get()
         outputs.getSeriesForVar('_output_2').points[100].y = input2.get() * 2
         return outputs
@@ -72,8 +71,9 @@ describe('ModelScheduler', () => {
         // over timing (pretend that the model takes 20ms to run)
         return new Promise(resolve => {
           setTimeout(() => {
-            const input1 = inputs.find(i => i.varId === '_input_1')
-            const input2 = inputs.find(i => i.varId === '_input_2')
+            // TODO: Update this when we change ModelScheduler to pass number[] instead of InputValue[]
+            const input1 = inputs[0] as InputValue
+            const input2 = inputs[1] as InputValue
             outputs.getSeriesForVar('_output_1').points[0].y = input1.get()
             outputs.getSeriesForVar('_output_2').points[100].y = input2.get() * 2
             resolve(outputs)

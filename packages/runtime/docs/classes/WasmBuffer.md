@@ -23,7 +23,7 @@ out of the wasm buffer.
 
 ### constructor
 
-**new WasmBuffer**<`ArrType`\>(`wasmModule`, `byteOffset`, `heapArray`)
+**new WasmBuffer**<`ArrType`\>(`wasmModule`, `numElements`, `byteOffset`, `heapArray`)
 
 #### Type parameters
 
@@ -36,8 +36,17 @@ out of the wasm buffer.
 | Name | Type | Description |
 | :------ | :------ | :------ |
 | `wasmModule` | [`WasmModule`](../interfaces/WasmModule.md) | The `WasmModule` used to initialize the memory. |
+| `numElements` | `number` | The number of elements in the buffer. |
 | `byteOffset` | `number` | The byte offset within the wasm heap. |
 | `heapArray` | `ArrType` | The array view on the underlying heap buffer. |
+
+## Properties
+
+### numElements
+
+ **numElements**: `number`
+
+The number of elements in the buffer.
 
 ## Methods
 
