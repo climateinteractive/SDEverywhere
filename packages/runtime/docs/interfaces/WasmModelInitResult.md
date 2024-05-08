@@ -14,19 +14,11 @@ The wasm model.
 
 ___
 
-### inputsBuffer
+### numInputs
 
- **inputsBuffer**: [`WasmBuffer`](../classes/WasmBuffer.md)<`Float64Array`\>
+ **numInputs**: `number`
 
-The buffer used to pass input values to the model.
-
-___
-
-### outputsBuffer
-
- **outputsBuffer**: [`WasmBuffer`](../classes/WasmBuffer.md)<`Float64Array`\>
-
-The buffer used to receive output values from the model.
+The number of input variables.
 
 ___
 
