@@ -54,19 +54,19 @@ importers:
   examples/hello-world:
     dependencies:
       '@sdeverywhere/build':
-        specifier: ^0.3.0
+        specifier: ^0.3.4
         version: link:../../packages/build
       '@sdeverywhere/cli':
-        specifier: ^0.7.6
+        specifier: ^0.7.23
         version: link:../../packages/cli
       '@sdeverywhere/plugin-check':
-        specifier: ^0.3.0
+        specifier: ^0.3.5
         version: link:../../packages/plugin-check
       '@sdeverywhere/plugin-wasm':
-        specifier: ^0.2.0
+        specifier: ^0.2.3
         version: link:../../packages/plugin-wasm
       '@sdeverywhere/plugin-worker':
-        specifier: ^0.2.0
+        specifier: ^0.2.3
         version: link:../../packages/plugin-worker
       vite:
         specifier: ^4.4.9
@@ -277,12 +277,6 @@ importers:
       '@sdeverywhere/parse':
         specifier: ^0.1.0
         version: link:../parse
-      antlr4:
-        specifier: 4.12.0
-        version: 4.12.0
-      antlr4-vensim:
-        specifier: 0.6.2
-        version: 0.6.2
       bufx:
         specifier: ^1.0.5
         version: 1.0.5

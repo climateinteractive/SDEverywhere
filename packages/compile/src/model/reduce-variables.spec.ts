@@ -2,12 +2,12 @@ import { describe, expect, it } from 'vitest'
 
 import { canonicalName, resetHelperState } from '../_shared/helpers'
 import { resetSubscriptsAndDimensions } from '../_shared/subscript'
-import type { VensimModelParseTree } from '../parse/parser'
 
 import Model from './model'
 import { default as VariableImpl } from './variable'
 
-import { parseInlineVensimModel, parseVensimModel, sampleModelDir, type Variable } from '../_tests/test-support'
+import type { ParsedModel, Variable } from '../_tests/test-support'
+import { parseInlineVensimModel, parseVensimModel, sampleModelDir } from '../_tests/test-support'
 
 /**
  * This is a shorthand for the following steps to read equations:
@@ -31,7 +31,7 @@ function readSubscriptsAndEquationsFromSource(
   resetSubscriptsAndDimensions()
   Model.resetModelState()
 
-  let parsedModel: VensimModelParseTree
+  let parsedModel: ParsedModel
   if (source.modelText) {
     parsedModel = parseInlineVensimModel(source.modelText)
   } else {
@@ -52,8 +52,6 @@ function readSubscriptsAndEquationsFromSource(
   })
 
   return Model.variables.map(v => {
-    // XXX: Strip out the legacy ANTLR eqnCtx to avoid vitest hang when comparing
-    delete v.eqnCtx
     // XXX: Strip out the new `parsedEqn` field, since we don't need it for comparing
     delete v.parsedEqn
     // XXX: Strip out the `origModelFormula` field, since we don't need it for comparing
@@ -74,9 +72,7 @@ function readInlineModel(reduceVariables: 'default' | 'aggressive', modelText: s
 // }
 
 function v(lhs: string, formula: string, overrides?: Partial<Variable>): Variable {
-  const variable = new VariableImpl(undefined)
-  // XXX: Strip out the ANTLR eqnCtx to avoid vitest hang when comparing
-  delete variable.eqnCtx
+  const variable = new VariableImpl()
   variable.modelLHS = lhs
   variable.modelFormula = formula
   variable.varName = canonicalName(lhs.split('[')[0])
@@ -93,110 +89,104 @@ function v(lhs: string, formula: string, overrides?: Partial<Variable>): Variabl
   return variable as Variable
 }
 
-describe.skipIf(process.env.SDE_NONPUBLIC_USE_NEW_PARSE === '0')(
-  'reduceVariables (default mode: reduce conditionals only)',
-  () => {
-    it('should reduce a simple equation when the condition resolves to a constant', () => {
-      const vars = readInlineModel(
-        'default',
-        `
+describe('reduceVariables (default mode: reduce conditionals only)', () => {
+  it('should reduce a simple equation when the condition resolves to a constant', () => {
+    const vars = readInlineModel(
+      'default',
+      `
         x = 1 ~~|
         y = IF THEN ELSE(x, (x + 2) * 3, 5) ~~|
       `
-      )
-      expect(vars).toEqual([
-        v('x', '1', {
-          refId: '_x'
-        }),
-        v('y', '((x+2)*3)', {
-          refId: '_y'
-        })
-      ])
-    })
+    )
+    expect(vars).toEqual([
+      v('x', '1', {
+        refId: '_x'
+      }),
+      v('y', '((x+2)*3)', {
+        refId: '_y'
+      })
+    ])
+  })
 
-    it('should not reduce an equation that does not involve a conditional', () => {
-      const vars = readInlineModel(
-        'default',
-        `
+  it('should not reduce an equation that does not involve a conditional', () => {
+    const vars = readInlineModel(
+      'default',
+      `
         x = 1 ~~|
         y = (x + 2) * 3 ~~|
       `
-      )
-      expect(vars).toEqual([
-        v('x', '1', {
-          refId: '_x'
-        }),
-        v('y', '(x+2)*3', {
-          refId: '_y'
-        })
-      ])
-    })
+    )
+    expect(vars).toEqual([
+      v('x', '1', {
+        refId: '_x'
+      }),
+      v('y', '(x+2)*3', {
+        refId: '_y'
+      })
+    ])
+  })
 
-    it('should not reduce an equation when the condition cannot be reduced', () => {
-      const vars = readInlineModel(
-        'default',
-        `
+  it('should not reduce an equation when the condition cannot be reduced', () => {
+    const vars = readInlineModel(
+      'default',
+      `
         x = Time ~~|
         y = Time + 2 ~~|
         z = (x + y) * 3 ~~|
       `
-      )
-      expect(vars).toEqual([
-        v('x', 'Time', {
-          refId: '_x'
-        }),
-        v('y', 'Time+2', {
-          refId: '_y'
-        }),
-        v('z', '(x+y)*3', {
-          refId: '_z'
-        })
-      ])
-    })
-  }
-)
+    )
+    expect(vars).toEqual([
+      v('x', 'Time', {
+        refId: '_x'
+      }),
+      v('y', 'Time+2', {
+        refId: '_y'
+      }),
+      v('z', '(x+y)*3', {
+        refId: '_z'
+      })
+    ])
+  })
+})
 
-describe.skipIf(process.env.SDE_NONPUBLIC_USE_NEW_PARSE === '0')(
-  'reduceVariables (aggressive mode: reduce everything)',
-  () => {
-    it('should reduce a simple equation to a constant', () => {
-      const vars = readInlineModel(
-        'aggressive',
-        `
+describe('reduceVariables (aggressive mode: reduce everything)', () => {
+  it('should reduce a simple equation to a constant', () => {
+    const vars = readInlineModel(
+      'aggressive',
+      `
         x = 1 ~~|
         y = (x + 2) * 3 ~~|
       `
-      )
-      expect(vars).toEqual([
-        v('x', '1', {
-          refId: '_x'
-        }),
-        v('y', '9', {
-          refId: '_y'
-        })
-      ])
-    })
+    )
+    expect(vars).toEqual([
+      v('x', '1', {
+        refId: '_x'
+      }),
+      v('y', '9', {
+        refId: '_y'
+      })
+    ])
+  })
 
-    it('should not reduce an equation when variables cannot be reduced', () => {
-      const vars = readInlineModel(
-        'aggressive',
-        `
+  it('should not reduce an equation when variables cannot be reduced', () => {
+    const vars = readInlineModel(
+      'aggressive',
+      `
         x = Time ~~|
         y = Time + 2 ~~|
         z = (x + y) * 3 ~~|
       `
-      )
-      expect(vars).toEqual([
-        v('x', 'Time', {
-          refId: '_x'
-        }),
-        v('y', 'Time+2', {
-          refId: '_y'
-        }),
-        v('z', '(x+y)*3', {
-          refId: '_z'
-        })
-      ])
-    })
-  }
-)
+    )
+    expect(vars).toEqual([
+      v('x', 'Time', {
+        refId: '_x'
+      }),
+      v('y', 'Time+2', {
+        refId: '_y'
+      }),
+      v('z', '(x+y)*3', {
+        refId: '_z'
+      })
+    ])
+  })
+})

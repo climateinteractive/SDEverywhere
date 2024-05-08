@@ -75,11 +75,15 @@ function compare {
   MODEL_NEW_C=$COMPARE_DIR/${MODEL}_new.c
   mkdir -p $COMPARE_DIR
 
-  export SDE_NONPUBLIC_USE_NEW_PARSE=0
+  # TODO: We no longer have an environment variable to switch between the old
+  # and new parser implementations, so this code is not useful in its current
+  # form but is being left here as a guide for the future in case we want to
+  # be able to compare compiler output for two different code paths
+  #export SDE_NONPUBLIC_USE_NEW_PARSE=0
   test $1 "with legacy parser"
   cp $MODEL_DIR/build/$MODEL.c $MODEL_OLD_C
 
-  export SDE_NONPUBLIC_USE_NEW_PARSE=1
+  #export SDE_NONPUBLIC_USE_NEW_PARSE=1
   test $1 "with new parser"
   cp $MODEL_DIR/build/$MODEL.c $MODEL_NEW_C
 

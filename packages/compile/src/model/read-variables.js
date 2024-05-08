@@ -49,7 +49,7 @@ export function readVariables(parsedModel, specialSeparationDims) {
  */
 function variablesForEquation(eqn, specialSeparationDims) {
   // Start a new variable defined by this equation
-  const variable = new Variable(null)
+  const variable = new Variable()
 
   // Fill in the LHS details
   const lhs = eqn.lhs.varDef
@@ -137,7 +137,7 @@ function variablesForEquation(eqn, specialSeparationDims) {
     // Generate variables expanded over subscripts to the model
     const variables = []
     for (const expansion of expansions) {
-      const v = new Variable(null)
+      const v = new Variable()
       v.varName = baseVarId
       v.modelLHS = lhsText
       v.modelFormula = rhsText

@@ -5,7 +5,6 @@ import { sub, allDimensions, allMappings, subscriptFamilies } from '../_shared/s
 import Model from '../model/model.js'
 
 import { generateEquation } from './gen-equation.js'
-import EquationGen from './equation-gen.js'
 import { expandVarNames } from './expand-var-names.js'
 
 export function generateC(parsedModel, opts) {
@@ -20,11 +19,7 @@ let codeGenerator = (parsedModel, opts) => {
   let outputAllVars = spec.outputVarNames === undefined || spec.outputVarNames.length === 0
   // Function to generate a section of the code
   let generateSection = R.map(v => {
-    if (parsedModel.kind === 'vensim-legacy') {
-      return new EquationGen(v, extData, directData, mode, modelDirname).generate()
-    } else {
-      return generateEquation(v, mode, extData, directData, modelDirname, 'c')
-    }
+    return generateEquation(v, mode, extData, directData, modelDirname, 'c')
   })
   let section = R.pipe(generateSection, R.flatten, lines)
   function generate() {
