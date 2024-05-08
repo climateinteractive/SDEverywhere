@@ -162,7 +162,7 @@ export function parseVensimModel(modelName: string): ParsedModel {
   // We currently sort the preprocessed definitions alphabetically for
   // compatibility with the legacy preprocessor.  Once we drop the legacy code
   // we could remove this step and update the tests to use the original order.
-  return parseModel(mdlContent, modelDir, /*sort=*/ true)
+  return parseModel(mdlContent, modelDir, { sort: true })
 }
 
 export function parseInlineVensimModel(mdlContent: string, modelDir?: string): ParsedModel {
@@ -170,7 +170,7 @@ export function parseInlineVensimModel(mdlContent: string, modelDir?: string): P
   // the preprocess step, and in the case of the new parser (which implicitly runs the
   // preprocess step), don't sort the definitions.  This makes it easier to do apples
   // to apples comparisons on the outputs from the two parser implementations.
-  return parseModel(mdlContent, modelDir, /*sort=*/ false)
+  return parseModel(mdlContent, modelDir, { sort: false })
 }
 
 function prettyVar(variable: Variable): string {

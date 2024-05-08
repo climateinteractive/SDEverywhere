@@ -7,7 +7,7 @@ import Model from '../model/model.js'
 import { generateEquation } from './gen-equation.js'
 import { expandVarNames } from './expand-var-names.js'
 
-export function generateCode(parsedModel, opts) {
+export function generateC(parsedModel, opts) {
   return codeGenerator(parsedModel, opts).generate()
 }
 
@@ -19,7 +19,7 @@ let codeGenerator = (parsedModel, opts) => {
   let outputAllVars = spec.outputVarNames === undefined || spec.outputVarNames.length === 0
   // Function to generate a section of the code
   let generateSection = R.map(v => {
-    return generateEquation(v, mode, extData, directData, modelDirname)
+    return generateEquation(v, mode, extData, directData, modelDirname, 'c')
   })
   let section = R.pipe(generateSection, R.flatten, lines)
   function generate() {
