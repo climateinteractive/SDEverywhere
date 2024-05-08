@@ -1,5 +1,5 @@
 import {
-  generateJsCode,
+  generateJS,
   getModelListing,
   parseInlineVensimModel,
   resetState as resetCompileState
@@ -53,7 +53,7 @@ export function readInlineModelAndGenerateJS(
   // console.log(parsedModel)
 
   // Generate JS code
-  const jsCode = generateJsCode(parsedModel, {
+  const jsCode = generateJS(parsedModel, {
     spec,
     operations: ['generateJS']
     // extData: opts?.extData,
