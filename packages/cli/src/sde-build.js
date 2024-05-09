@@ -66,8 +66,8 @@ let writeMainJs = (model, opts) => {
   const mainJsFile = resolve(buildDirname, 'main.js')
   let mainJs = ''
   mainJs += '#!/usr/bin/env node\n'
-  mainJs += `import { execModel } from '@sdeverywhere/runtime'\n`
-  mainJs += `import * as core from './${modelName}.js'\n`
-  mainJs += 'execModel(core)\n'
+  mainJs += `import { execJsModel } from '@sdeverywhere/runtime'\n`
+  mainJs += `import loadJsModel from './${modelName}.js'\n`
+  mainJs += 'execJsModel(await loadJsModel())\n'
   writeFileSync(mainJsFile, mainJs, { mode: 0o755 })
 }
