@@ -21,6 +21,8 @@ export function createRunnableModel(generatedModel: JsModel | WasmModule): Runna
     return initJsModel(generatedModel as JsModel)
   } else {
     // Otherwise, assume it's a `WasmModule`
-    return initWasmModel(generatedModel as WasmModule)
+    // TODO: Remove the second parameter once plugin-wasm is updated to include
+    // outputVarIds in the generated WasmModule
+    return initWasmModel(generatedModel as WasmModule, [])
   }
 }
