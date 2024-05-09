@@ -96,22 +96,21 @@ function runJsModel(model: JsModel, inputs: number[], outputs: number[]) {
   // TODO
   const useOutputIndices = false
 
-  // Initialize constants (including control variables)
-  model.initConstants()
+  // Configure the functions (this can be an empty object for the purposes
+  // of this test)
+  model.setModelFunctions({})
 
-  // Get the control variable values
-  const finalTime = model.getFinalTime()
+  // Get the control variable values.  Once the first 4 control variables are known,
+  // we can compute `numSavePoints` here.
   const initialTime = model.getInitialTime()
+  const finalTime = model.getFinalTime()
   const timeStep = model.getTimeStep()
+  const saveFreq = model.getSaveFreq()
+  const numSavePoints = Math.round((finalTime - initialTime) / saveFreq) + 1
 
   // Initialize time with the required `INITIAL TIME` control variable
   let time = initialTime
   model.setTime(time)
-
-  // These values will be initialized after the first call to `evalAux` (see
-  // note in main loop below)
-  let saveFreq: number
-  let numSavePoints: number
 
   // Set the user-defined input values.  This needs to happen after `initConstants`
   // since the input values will override the default constant values.
@@ -122,22 +121,12 @@ function runJsModel(model: JsModel, inputs: number[], outputs: number[]) {
 
   // Set up a run loop using a fixed number of time steps
   let savePointIndex = 0
-  // let outputIndex = 0
   let outputVarIndex = 0
   const lastStep = Math.round((finalTime - initialTime) / timeStep)
   let step = 0
   while (step <= lastStep) {
     // Evaluate aux variables
     model.evalAux()
-
-    if (saveFreq === undefined) {
-      // Note that many Vensim models set `SAVEPER = TIME STEP`, in which case SDE
-      // treats `SAVEPER` as an aux rather than a constant.  Therefore, we need to
-      // initialize `numSavePoints` here, after the first `evalAux` call, to be
-      // certain that `_saveper` has been initialized before it is used.
-      saveFreq = model.getSaveFreq()
-      numSavePoints = Math.round((finalTime - initialTime) / saveFreq) + 1
-    }
 
     if (time % saveFreq < 1e-6) {
       outputVarIndex = 0
@@ -216,16 +205,47 @@ function initControlParamsIfNeeded() {
     return;
   }
 
-  // Some models may define the control parameters as variables that are
-  // dependent on other values that are only known at runtime (after running
-  // the initializers and/or one step of the model), so we need to perform
-  // those steps once before the parameters are accessed
-  // TODO: This approach doesn't work if one or more control parameters are
-  // defined in terms of some value that is provided at runtime as an input
+  if (fns === undefined) {
+    throw new Error('Must call setModelFunctions() before running the model');
+  }
+
+  // We currently require INITIAL TIME, FINAL TIME, and TIME STEP to be
+  // defined as constant values.  Some models may define SAVEPER in terms
+  // of TIME STEP, which means that the compiler may treat it as an aux,
+  // not as a constant.  We call initConstants() to ensure that we have
+  // initial values for these control parameters.
   initConstants();
-  initLevels();
-  setTime(_initial_time);
-  evalAux();
+  if (_initial_time === undefined) {
+    throw new Error('INITIAL TIME must be defined as a constant value');
+  }
+  if (_final_time === undefined) {
+    throw new Error('FINAL TIME must be defined as a constant value');
+  }
+  if (_time_step === undefined) {
+    throw new Error('TIME STEP must be defined as a constant value');
+  }
+
+  if (_saveper === undefined) {
+    // If _saveper is undefined after calling initConstants(), it means it
+    // is defined as an aux, in which case we perform an initial step of
+    // the run loop in order to initialize that value.  First, set the
+    // time and initial function context.
+    setTime(_initial_time);
+    fns.setContext({
+      initialTime: _initial_time,
+      finalTime: _final_time,
+      timeStep: _time_step,
+      currentTime: _time
+    });
+
+    // Perform initial step to initialize _saveper
+    initLevels();
+    evalAux();
+    if (_saveper === undefined) {
+      throw new Error('SAVEPER must be defined');
+    }
+  }
+
   controlParamsInitialized = true;
 }
 /*export*/ function getInitialTime() {

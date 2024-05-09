@@ -90,16 +90,47 @@ function initControlParamsIfNeeded() {
     return;
   }
 
-  // Some models may define the control parameters as variables that are
-  // dependent on other values that are only known at runtime (after running
-  // the initializers and/or one step of the model), so we need to perform
-  // those steps once before the parameters are accessed
-  // TODO: This approach doesn't work if one or more control parameters are
-  // defined in terms of some value that is provided at runtime as an input
+  if (fns === undefined) {
+    throw new Error('Must call setModelFunctions() before running the model');
+  }
+
+  // We currently require INITIAL TIME, FINAL TIME, and TIME STEP to be
+  // defined as constant values.  Some models may define SAVEPER in terms
+  // of TIME STEP, which means that the compiler may treat it as an aux,
+  // not as a constant.  We call initConstants() to ensure that we have
+  // initial values for these control parameters.
   initConstants();
-  initLevels();
-  setTime(_initial_time);
-  evalAux();
+  if (_initial_time === undefined) {
+    throw new Error('INITIAL TIME must be defined as a constant value');
+  }
+  if (_final_time === undefined) {
+    throw new Error('FINAL TIME must be defined as a constant value');
+  }
+  if (_time_step === undefined) {
+    throw new Error('TIME STEP must be defined as a constant value');
+  }
+
+  if (_saveper === undefined) {
+    // If _saveper is undefined after calling initConstants(), it means it
+    // is defined as an aux, in which case we perform an initial step of
+    // the run loop in order to initialize that value.  First, set the
+    // time and initial function context.
+    setTime(_initial_time);
+    fns.setContext({
+      initialTime: _initial_time,
+      finalTime: _final_time,
+      timeStep: _time_step,
+      currentTime: _time
+    });
+
+    // Perform initial step to initialize _saveper
+    initLevels();
+    evalAux();
+    if (_saveper === undefined) {
+      throw new Error('SAVEPER must be defined');
+    }
+  }
+
   controlParamsInitialized = true;
 }
 /*export*/ function getInitialTime() {
