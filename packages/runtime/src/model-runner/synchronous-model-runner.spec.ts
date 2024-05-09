@@ -8,7 +8,7 @@ import type { WasmModule } from '../wasm-model'
 import { initWasmModel } from '../wasm-model'
 
 import type { RunnableModel } from '../runnable-model'
-import { MockRunnableModel } from '../runnable-model/mock-runnable-model'
+import { BaseRunnableModel } from '../runnable-model/base-runnable-model'
 
 import type { ModelRunner } from './model-runner'
 import { createSynchronousModelRunner } from './synchronous-model-runner'
@@ -81,40 +81,40 @@ function createMockWasmModel() {
   return initWasmModel(wasmModule, ['_output_1', '_output_2'])
 }
 
-function createMockRunnableModel(): RunnableModel {
-  const model = new MockRunnableModel({
+function createMockJsRunnableModel(): RunnableModel {
+  const model = new BaseRunnableModel({
     startTime: 2000,
     endTime: 2002,
     saveFreq: 1,
     numSavePoints: 3,
-    outputVarIds: ['_output_1', '_output_2']
-  })
-  model.onRunModel = (inputs, outputs, outputIndices) => {
-    // Verify inputs
-    expect(inputs).toEqual(new Float64Array([7, 8, 9]))
+    outputVarIds: ['_output_1', '_output_2'],
+    onRunModel: (inputs, outputs, outputIndices) => {
+      // Verify inputs
+      expect(inputs).toEqual(new Float64Array([7, 8, 9]))
 
-    if (outputIndices === undefined) {
-      // Store 3 values for the _output_1, and 3 for _output_2
-      outputs.set([1, 2, 3, 4, 5, 6])
-    } else {
-      // Verify output indices
-      expect(outputIndices).toEqual(
-        new Int32Array([
-          // _x
-          3, 0, 0, 0,
-          // _output_2
-          2, 0, 0, 0,
-          // _output_1
-          1, 0, 0, 0,
-          // (zero terminator)
-          0, 0, 0, 0
-        ])
-      )
+      if (outputIndices === undefined) {
+        // Store 3 values for the _output_1, and 3 for _output_2
+        outputs.set([1, 2, 3, 4, 5, 6])
+      } else {
+        // Verify output indices
+        expect(outputIndices).toEqual(
+          new Int32Array([
+            // _x
+            3, 0, 0, 0,
+            // _output_2
+            2, 0, 0, 0,
+            // _output_1
+            1, 0, 0, 0,
+            // (zero terminator)
+            0, 0, 0, 0
+          ])
+        )
 
-      // Store 3 values for each of the three variables
-      outputs.set([7, 8, 9, 4, 5, 6, 1, 2, 3])
+        // Store 3 values for each of the three variables
+        outputs.set([7, 8, 9, 4, 5, 6, 1, 2, 3])
+      }
     }
-  }
+  })
   return model
 }
 
@@ -127,7 +127,7 @@ const p = (x: number, y: number) => {
 
 describe.each([
   { kind: 'WasmModel', model: createMockWasmModel() },
-  { kind: 'RunnableModel', model: createMockRunnableModel() }
+  { kind: 'JsModel', model: createMockJsRunnableModel() }
 ])('createSynchronousModelRunner (with mock $kind)', ({ model }) => {
   let runner: ModelRunner
 

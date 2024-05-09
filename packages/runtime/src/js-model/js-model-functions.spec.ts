@@ -1,11 +1,11 @@
 // Copyright (c) 2024 Climate Interactive / New Venture Fund
 
 import { beforeEach, describe, expect, it } from 'vitest'
-import { getCoreFunctions, type CoreFunctionContext, type CoreFunctions } from './core-functions'
+import { getJsModelFunctions, type JsModelFunctionContext, type JsModelFunctions } from './js-model-functions'
 
-describe('CoreFunctions', () => {
-  const fns = getCoreFunctions()
-  const ctx: CoreFunctionContext = {
+describe('JsModelFunctions', () => {
+  const fns = getJsModelFunctions()
+  const ctx: JsModelFunctionContext = {
     initialTime: 0,
     finalTime: 10,
     timeStep: 1,
@@ -18,7 +18,7 @@ describe('CoreFunctions', () => {
     fns.setContext(ctx)
   })
 
-  function fnsAtTime(t: number): CoreFunctions {
+  function fnsAtTime(t: number): JsModelFunctions {
     ctx.currentTime = t
     return fns
   }

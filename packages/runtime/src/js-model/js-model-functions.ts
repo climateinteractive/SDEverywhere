@@ -1,25 +1,31 @@
 // Copyright (c) 2024 Climate Interactive / New Venture Fund
 
-import { Lookup, type LookupMode } from './lookup'
+import { JsModelLookup, type JsModelLookupMode } from './js-model-lookup'
 
 // See XIDZ documentation for an explanation of this value:
 //   https://www.vensim.com/documentation/fn_xidz.html
 const EPSILON = 1e-6
 
 // This matches Vensim's definition of `:NA:`.  It is also defined
-// with the same value in the generated `ModelCore`, so make sure
+// with the same value in the generated `JsModel`, so make sure
 // these two values are the same.
 const _NA_ = -Number.MAX_VALUE
 
-export interface CoreFunctionContext {
+/**
+ * TODO: Docs
+ */
+export interface JsModelFunctionContext {
   initialTime: number
   finalTime: number
   timeStep: number
   currentTime: number
 }
 
-export interface CoreFunctions {
-  setContext(context: CoreFunctionContext): void
+/**
+ * TODO: Docs
+ */
+export interface JsModelFunctions {
+  setContext(context: JsModelFunctionContext): void
 
   ABS(x: number): number
   ARCCOS(x: number): number
@@ -50,13 +56,13 @@ export interface CoreFunctions {
   XIDZ(a: number, b: number, x: number): number
   ZIDZ(a: number, b: number): number
 
-  createLookup(size: number, data: number[]): Lookup
-  LOOKUP(lookup: Lookup, x: number): number
-  LOOKUP_FORWARD(lookup: Lookup, x: number): number
-  LOOKUP_BACKWARD(lookup: Lookup, x: number): number
-  LOOKUP_INVERT(lookup: Lookup, y: number): number
-  WITH_LOOKUP(x: number, lookup: Lookup): number
-  GET_DATA_BETWEEN_TIMES(lookup: Lookup, x: number, mode: number): number
+  createLookup(size: number, data: number[]): JsModelLookup
+  LOOKUP(lookup: JsModelLookup, x: number): number
+  LOOKUP_FORWARD(lookup: JsModelLookup, x: number): number
+  LOOKUP_BACKWARD(lookup: JsModelLookup, x: number): number
+  LOOKUP_INVERT(lookup: JsModelLookup, y: number): number
+  WITH_LOOKUP(x: number, lookup: JsModelLookup): number
+  GET_DATA_BETWEEN_TIMES(lookup: JsModelLookup, x: number, mode: number): number
 
   // TODO
   // createFixedDelay(delayTime: number, initialValue: number): FixedDelay
@@ -67,8 +73,8 @@ export interface CoreFunctions {
   // DEPRECIATE_STRAIGHTLINE(input: number, depreciation: Depreciation): number
 }
 
-export function getCoreFunctions(): CoreFunctions {
-  let ctx: CoreFunctionContext
+export function getJsModelFunctions(): JsModelFunctions {
+  let ctx: JsModelFunctionContext
 
   // The C implementation of `_VECTOR_SORT_ORDER` reuses an array, so we
   // will do the same for now (one reused array per size)
@@ -76,7 +82,7 @@ export function getCoreFunctions(): CoreFunctions {
   const cachedSortVectors: Map<number, { x: number; ind: number }[]> = new Map()
 
   return {
-    setContext(context: CoreFunctionContext) {
+    setContext(context: JsModelFunctionContext) {
       ctx = context
     },
 
@@ -262,32 +268,32 @@ export function getCoreFunctions(): CoreFunctions {
     // Lookup functions
     //
 
-    createLookup(size: number, data: number[]): Lookup {
-      return new Lookup(size, data)
+    createLookup(size: number, data: number[]): JsModelLookup {
+      return new JsModelLookup(size, data)
     },
 
-    LOOKUP(lookup: Lookup, x: number): number {
+    LOOKUP(lookup: JsModelLookup, x: number): number {
       return lookup ? lookup.getValueForX(x, 'interpolate') : _NA_
     },
 
-    LOOKUP_FORWARD(lookup: Lookup, x: number): number {
+    LOOKUP_FORWARD(lookup: JsModelLookup, x: number): number {
       return lookup ? lookup.getValueForX(x, 'forward') : _NA_
     },
 
-    LOOKUP_BACKWARD(lookup: Lookup, x: number): number {
+    LOOKUP_BACKWARD(lookup: JsModelLookup, x: number): number {
       return lookup ? lookup.getValueForX(x, 'backward') : _NA_
     },
 
-    LOOKUP_INVERT(lookup: Lookup, y: number): number {
+    LOOKUP_INVERT(lookup: JsModelLookup, y: number): number {
       return lookup ? lookup.getValueForY(y) : _NA_
     },
 
-    WITH_LOOKUP(x: number, lookup: Lookup): number {
+    WITH_LOOKUP(x: number, lookup: JsModelLookup): number {
       return lookup ? lookup.getValueForX(x, 'interpolate') : _NA_
     },
 
-    GET_DATA_BETWEEN_TIMES(lookup: Lookup, x: number, mode: number): number {
-      let lookupMode: LookupMode
+    GET_DATA_BETWEEN_TIMES(lookup: JsModelLookup, x: number, mode: number): number {
+      let lookupMode: JsModelLookupMode
       if (mode >= 1) {
         lookupMode = 'forward'
       } else if (mode <= -1) {
@@ -300,7 +306,7 @@ export function getCoreFunctions(): CoreFunctions {
   }
 }
 
-function pulse(ctx: CoreFunctionContext, start: number, width: number): number {
+function pulse(ctx: JsModelFunctionContext, start: number, width: number): number {
   const timePlus = ctx.currentTime + ctx.timeStep / 2.0
   if (width === 0.0) {
     width = ctx.timeStep
