@@ -8,7 +8,8 @@ import { initJsModel, type JsModel } from './js-model'
  * Run the given model synchronously and log the output values to the console in
  * TSV (tab-separated values) format.
  *
- * This is mainly intended for use in implementing the `sde exec` command.
+ * @hidden This is mainly intended for use in implementing the `sde exec` command,
+ * so isn't exposed in the public API at this time.
  *
  * @param jsModel A `JsModel` instance.
  */

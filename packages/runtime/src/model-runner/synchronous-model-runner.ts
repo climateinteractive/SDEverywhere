@@ -3,14 +3,10 @@
 import { type InputValue, Outputs } from '../_shared'
 import { ReferencedRunModelParams } from '../runnable-model'
 import type { RunnableModel } from '../runnable-model'
-import type { WasmModelInitResult } from '../wasm-model'
 import type { ModelRunner } from './model-runner'
 
 /**
  * Create a `ModelRunner` that runs the given model on the JS thread.
- *
- * @hidden This is the new replacement for `createWasmModelRunner`; this will be
- * exposed (and the old one deprecated) in a separate set of changes.
  *
  * @param model The runnable model instance.
  */
@@ -57,13 +53,4 @@ export function createSynchronousModelRunner(model: RunnableModel): ModelRunner 
       }
     }
   }
-}
-
-/**
- * Create a `ModelRunner` that runs the given wasm model on the JS thread.
- *
- * @param wasmResult The result of initializing the wasm model.
- */
-export function createWasmModelRunner(wasmResult: WasmModelInitResult): ModelRunner {
-  return createSynchronousModelRunner(wasmResult.model)
 }

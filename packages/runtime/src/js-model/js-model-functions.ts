@@ -12,7 +12,11 @@ const EPSILON = 1e-6
 const _NA_ = -Number.MAX_VALUE
 
 /**
- * TODO: Docs
+ * Provides access to the minimal set of control parameters that are used in the
+ * implementation of certain model functions.
+ *
+ * @hidden This is not yet part of the public API; for internal use by generated
+ * `JsModel` implementations.
  */
 export interface JsModelFunctionContext {
   initialTime: number
@@ -22,7 +26,10 @@ export interface JsModelFunctionContext {
 }
 
 /**
- * TODO: Docs
+ * Exposes all the model function implementations that are called by a `JsModel` at runtime.
+ *
+ * @hidden This is not yet part of the public API; for internal use by generated
+ * `JsModel` implementations.
  */
 export interface JsModelFunctions {
   setContext(context: JsModelFunctionContext): void
@@ -73,6 +80,14 @@ export interface JsModelFunctions {
   // DEPRECIATE_STRAIGHTLINE(input: number, depreciation: Depreciation): number
 }
 
+/**
+ * Returns a default implementation of the `JsModelFunctions` interface.  If needed,
+ * you can provide a custom implementation of any exposed function by overriding
+ * (setting) a new function implementation on the returned instance.
+ *
+ * @hidden This is not yet part of the public API; for internal use by generated
+ * `JsModel` implementations.
+ */
 export function getJsModelFunctions(): JsModelFunctions {
   let ctx: JsModelFunctionContext
 
