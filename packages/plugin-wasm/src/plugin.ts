@@ -1,13 +1,16 @@
 // Copyright (c) 2022 Climate Interactive / New Venture Fund
 
-import { existsSync } from 'fs'
+import { existsSync, mkdirSync } from 'fs'
+import { writeFile } from 'fs/promises'
+
 import { basename, dirname, join as joinPath } from 'path'
 
 import { findUp } from 'find-up'
 
-import type { BuildContext, Plugin } from '@sdeverywhere/build'
+import type { BuildContext, ModelSpec, Plugin } from '@sdeverywhere/build'
 
 import type { WasmPluginOptions } from './options'
+import { sdeNameForVensimVarName } from './var-names'
 
 export function wasmPlugin(options?: WasmPluginOptions): Plugin {
   return new WasmPlugin(options)
@@ -15,6 +18,20 @@ export function wasmPlugin(options?: WasmPluginOptions): Plugin {
 
 class WasmPlugin implements Plugin {
   constructor(private readonly options?: WasmPluginOptions) {}
+
+  async preGenerate(context: BuildContext, modelSpec: ModelSpec): Promise<void> {
+    // Ensure that the build directory exists before we generate a file into it
+    const buildDir = joinPath(context.config.prepDir, 'build')
+    if (!existsSync(buildDir)) {
+      mkdirSync(buildDir, { recursive: true })
+    }
+
+    // Write a file that will be folded into the generated Wasm module
+    const outputVarsFile = joinPath(buildDir, 'processed_outputs.js')
+    const outputVarIds = modelSpec.outputs.map(o => sdeNameForVensimVarName(o.varName))
+    const content = `Module["outputVarIds"] = ${JSON.stringify(outputVarIds)};`
+    await writeFile(outputVarsFile, content)
+  }
 
   async postGenerateCode(context: BuildContext, format: 'js' | 'c', content: string): Promise<string> {
     if (format !== 'c') {
@@ -103,6 +120,8 @@ async function buildWasm(
   addInput('macros.c')
   addInput('model.c')
   addInput('vensim.c')
+  addArg('--pre-js')
+  addArg('build/processed_outputs.js')
   addArg('-Ibuild')
   addArg('-o')
   addArg(outputJsPath)

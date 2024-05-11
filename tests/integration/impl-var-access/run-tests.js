@@ -99,12 +99,23 @@ async function createSynchronousRunner() {
   // fix the generated `wasm-model.js` file so that it works for either ESM or CommonJS.
   global.__dirname = '.'
 
+  // Load the generated Wasm module and verify that it exposes `outputVarIds`
   const wasmModule = await initWasm()
-  const wasmResult = initWasmModelAndBuffers(wasmModule, 1, ['_z', '_d[_a1]'])
+  const actualVarIds = wasmModule.outputVarIds || []
+  const expectedVarIds = ['_z', '_d[_a1]']
+  if (actualVarIds.length !== expectedVarIds.length || !actualVarIds.every((v, i) => v === expectedVarIds[i])) {
+    throw new Error(
+      `Test failed: outputVarIds [${actualVarIds}] in generated Wasm module don't match expected values [${expectedVarIds}]`
+    )
+  }
+
+  // Initialize the synchronous `ModelRunner` that drives the Wasm model
+  const wasmResult = initWasmModelAndBuffers(wasmModule, 1, wasmModule.outputVarIds)
   return createWasmModelRunner(wasmResult)
 }
 
 async function createAsynchronousRunner() {
+  // Initialize the asynchronous `ModelRunner` that drives the Wasm model
   const modelWorkerJs = await readFile(joinPath('sde-prep', 'worker.js'), 'utf8')
   return await spawnAsyncModelRunner({ source: modelWorkerJs })
 }
