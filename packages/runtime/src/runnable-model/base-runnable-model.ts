@@ -6,20 +6,35 @@ import type { RunModelParams } from './run-model-params'
 import type { RunnableModel } from './runnable-model'
 
 /**
- * @hidden This is not part of the public API; for testing purposes only.
+ * @hidden This is not part of the public API; for internal use only.
  */
-export class MockRunnableModel implements RunnableModel {
+export type OnRunModelFunc = (
+  inputs: Float64Array,
+  outputs: Float64Array,
+  outputIndices: Int32Array | undefined
+) => void
+
+/**
+ * A base implementation of the `RunnableModel` interface that takes care
+ * of managing internal buffers and copying values to/from the `RunModelParams`.
+ *
+ * The `onRunModel` function allows an implementation of the core model run loop
+ * to deal with typed arrays only.
+ *
+ * @hidden This is not part of the public API; for internal use only.
+ */
+export class BaseRunnableModel implements RunnableModel {
   public readonly startTime: number
   public readonly endTime: number
   public readonly saveFreq: number
   public readonly numSavePoints: number
   public readonly outputVarIds: OutputVarId[]
 
+  private readonly onRunModel: OnRunModelFunc
+
   private inputs: Float64Array
   private outputs: Float64Array
   private outputIndices: Int32Array
-
-  public onRunModel: (inputs: Float64Array, outputs: Float64Array, outputIndices: Int32Array | undefined) => void
 
   constructor(options: {
     startTime: number
@@ -27,12 +42,14 @@ export class MockRunnableModel implements RunnableModel {
     saveFreq: number
     numSavePoints: number
     outputVarIds: OutputVarId[]
+    onRunModel: OnRunModelFunc
   }) {
     this.startTime = options.startTime
     this.endTime = options.endTime
     this.saveFreq = options.saveFreq
     this.numSavePoints = options.numSavePoints
     this.outputVarIds = options.outputVarIds
+    this.onRunModel = options.onRunModel
   }
 
   // from RunnableModel interface
