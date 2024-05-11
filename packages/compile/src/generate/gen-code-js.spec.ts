@@ -56,14 +56,17 @@ function readInlineModelAndGenerateJS(
   })
 }
 
-interface ModelCore {
+// Note: This should be kept in sync with the code that is generated
+// by `generateJS` and also with the "real" `JsModel` interface that
+// is exported by the runtime package.
+interface JsModel {
   getInitialTime(): number
   getFinalTime(): number
   getTimeStep(): number
   getSaveFreq(): number
 
-  getModelFunctions(): /*CoreFunctions*/ any
-  setModelFunctions(functions: /*CoreFunctions*/ any): void
+  getModelFunctions(): /*JsModelFunctions*/ any
+  setModelFunctions(functions: /*JsModelFunctions*/ any): void
 
   setTime(time: number): void
 
@@ -79,80 +82,59 @@ interface ModelCore {
   evalLevels(): void
 }
 
-async function createModelCore(modelJs: string): Promise<ModelCore> {
-  const dataUri = 'data:text/javascript;charset=utf-8,' + encodeURIComponent(modelJs)
+async function initJsModel(generatedJsCode: string): Promise<JsModel> {
+  const dataUri = 'data:text/javascript;charset=utf-8,' + encodeURIComponent(generatedJsCode)
   const module = await import(dataUri)
   // console.log(module)
-  return module as ModelCore
+  return (await module.default()) as JsModel
 }
 
-function runModel(core: ModelCore, inputs: number[], outputs: number[]) {
+// Note: This function roughly matches the "real" code in the runtime package
+// that runs a generated JS model.  It is implemented here so that we can exercise
+// the generated code in tests without pulling in the runtime package.
+function runJsModel(model: JsModel, inputs: number[], outputs: number[]) {
   // TODO
   const useOutputIndices = false
 
-  // Initialize constants (including control variables)
-  core.initConstants()
+  // Configure the functions (this can be an empty object for the purposes
+  // of this test)
+  model.setModelFunctions({})
 
-  // Get the control variable values
-  const finalTime = core.getFinalTime()
-  const initialTime = core.getInitialTime()
-  const timeStep = core.getTimeStep()
+  // Get the control variable values.  Once the first 4 control variables are known,
+  // we can compute `numSavePoints` here.
+  const initialTime = model.getInitialTime()
+  const finalTime = model.getFinalTime()
+  const timeStep = model.getTimeStep()
+  const saveFreq = model.getSaveFreq()
+  const numSavePoints = Math.round((finalTime - initialTime) / saveFreq) + 1
 
   // Initialize time with the required `INITIAL TIME` control variable
   let time = initialTime
-  core.setTime(time)
-
-  // These values will be initialized after the first call to `evalAux` (see
-  // note in main loop below)
-  let saveFreq: number
-  let numSavePoints: number
+  model.setTime(time)
 
   // Set the user-defined input values.  This needs to happen after `initConstants`
   // since the input values will override the default constant values.
-  core.setInputs(index => inputs[index])
+  model.setInputs(index => inputs[index])
 
   // Initialize level variables
-  core.initLevels()
+  model.initLevels()
 
   // Set up a run loop using a fixed number of time steps
   let savePointIndex = 0
-  // let outputIndex = 0
   let outputVarIndex = 0
   const lastStep = Math.round((finalTime - initialTime) / timeStep)
   let step = 0
   while (step <= lastStep) {
     // Evaluate aux variables
-    core.evalAux()
-
-    if (saveFreq === undefined) {
-      // Note that many Vensim models set `SAVEPER = TIME STEP`, in which case SDE
-      // treats `SAVEPER` as an aux rather than a constant.  Therefore, we need to
-      // initialize `numSavePoints` here, after the first `evalAux` call, to be
-      // certain that `_saveper` has been initialized before it is used.
-      saveFreq = core.getSaveFreq()
-      numSavePoints = Math.round((finalTime - initialTime) / saveFreq) + 1
-    }
+    model.evalAux()
 
     if (time % saveFreq < 1e-6) {
       outputVarIndex = 0
       if (useOutputIndices) {
-        //         // Store the outputs as specified in the current output index buffer
-        //         for (size_t i = 0; i < maxOutputIndices; i++) {
-        //           size_t indexBufferOffset = i * INDICES_PER_OUTPUT;
-        //           size_t varIndex = (size_t)outputIndexBuffer[indexBufferOffset];
-        //           if (varIndex > 0) {
-        //             size_t subIndex0 = (size_t)outputIndexBuffer[indexBufferOffset + 1];
-        //             size_t subIndex1 = (size_t)outputIndexBuffer[indexBufferOffset + 2];
-        //             size_t subIndex2 = (size_t)outputIndexBuffer[indexBufferOffset + 3];
-        //             storeOutput(varIndex, subIndex0, subIndex1, subIndex2);
-        //           } else {
-        //             // Stop when we reach the first zero index
-        //             break;
-        //           }
-        //         }
+        throw new Error('Not yet implemented')
       } else {
         // Store the normal outputs
-        core.storeOutputs(value => {
+        model.storeOutputs(value => {
           // Write each value into the preallocated buffer; each variable has a "row" that
           // contains `numSavePoints` values, one value for each save point
           const outputBufferIndex = outputVarIndex * numSavePoints + savePointIndex
@@ -169,17 +151,17 @@ function runModel(core: ModelCore, inputs: number[], outputs: number[]) {
     }
 
     // Propagate levels for the next time step
-    core.evalLevels()
+    model.evalLevels()
 
     // Advance time by one step
     time += timeStep
-    core.setTime(time)
+    model.setTime(time)
     step++
   }
 }
 
 describe('generateJS (Vensim -> JS)', () => {
-  it('should work for simple model', () => {
+  it('should generate code for a simple model', () => {
     const mdl = `
       input = 1 ~~|
       x = input ~~|
@@ -212,7 +194,7 @@ const __lookup1_data_ = [0.0, 0.0, 0.1, 0.01, 0.5, 0.7, 1.0, 1.0, 1.5, 1.2, 2.0,
 
 // Time variable
 let _time;
-export function setTime(time) {
+/*export*/ function setTime(time) {
   _time = time;
 }
 
@@ -223,43 +205,72 @@ function initControlParamsIfNeeded() {
     return;
   }
 
-  // Initialize constants to ensure that all control parameters are defined
-  initConstants();
-  if (_saveper === undefined) {
-    // XXX: Currently we assume that INITIAL TIME, FINAL TIME, and TIME STEP
-    // are all defined as constant values.  SAVEPER is sometimes defined to
-    // be equivalent to TIME STEP, which means that the compiler treats it
-    // as an aux, not a constant.  For now, we assume that if _saveper was
-    // not defined in initConstants(), then set it to _time_step.  We should
-    // change the compiler to enforce this assumption.
-    _saveper = _time_step;
+  if (fns === undefined) {
+    throw new Error('Must call setModelFunctions() before running the model');
   }
-  _time = _initial_time;
+
+  // We currently require INITIAL TIME, FINAL TIME, and TIME STEP to be
+  // defined as constant values.  Some models may define SAVEPER in terms
+  // of TIME STEP, which means that the compiler may treat it as an aux,
+  // not as a constant.  We call initConstants() to ensure that we have
+  // initial values for these control parameters.
+  initConstants();
+  if (_initial_time === undefined) {
+    throw new Error('INITIAL TIME must be defined as a constant value');
+  }
+  if (_final_time === undefined) {
+    throw new Error('FINAL TIME must be defined as a constant value');
+  }
+  if (_time_step === undefined) {
+    throw new Error('TIME STEP must be defined as a constant value');
+  }
+
+  if (_saveper === undefined) {
+    // If _saveper is undefined after calling initConstants(), it means it
+    // is defined as an aux, in which case we perform an initial step of
+    // the run loop in order to initialize that value.  First, set the
+    // time and initial function context.
+    setTime(_initial_time);
+    fns.setContext({
+      initialTime: _initial_time,
+      finalTime: _final_time,
+      timeStep: _time_step,
+      currentTime: _time
+    });
+
+    // Perform initial step to initialize _saveper
+    initLevels();
+    evalAux();
+    if (_saveper === undefined) {
+      throw new Error('SAVEPER must be defined');
+    }
+  }
+
   controlParamsInitialized = true;
 }
-export function getInitialTime() {
+/*export*/ function getInitialTime() {
   initControlParamsIfNeeded();
   return _initial_time;
 }
-export function getFinalTime() {
+/*export*/ function getFinalTime() {
   initControlParamsIfNeeded();
   return _final_time;
 }
-export function getTimeStep() {
+/*export*/ function getTimeStep() {
   initControlParamsIfNeeded();
   return _time_step;
 }
-export function getSaveFreq() {
+/*export*/ function getSaveFreq() {
   initControlParamsIfNeeded();
   return _saveper;
 }
 
 // Model functions
 let fns;
-export function getModelFunctions() {
+/*export*/ function getModelFunctions() {
   return fns;
 }
-export function setModelFunctions(functions /*: CoreFunctions*/) {
+/*export*/ function setModelFunctions(functions /*: JsModelFunctions*/) {
   fns = functions;
 }
 
@@ -308,14 +319,14 @@ function initConstants0() {
   _input = 1.0;
 }
 
-export function initConstants() {
+/*export*/ function initConstants() {
   // Initialize constants
   initConstants0();
   initLookups();
   initData();
 }
 
-export function initLevels() {
+/*export*/ function initLevels() {
   // Initialize variables with initialization values, such as levels, and the variables they depend on
 }
 
@@ -330,20 +341,20 @@ function evalAux0() {
   _z = fns.ABS(_y);
 }
 
-export function evalAux() {
+/*export*/ function evalAux() {
   // Evaluate auxiliaries in order from the bottom up
   evalAux0();
 }
 
-export function evalLevels() {
+/*export*/ function evalLevels() {
   // Evaluate levels
 }
 
-export function setInputs(valueAtIndex /*: (index: number) => number*/) {
+/*export*/ function setInputs(valueAtIndex /*: (index: number) => number*/) {
   _input = valueAtIndex(0);
 }
 
-export function getOutputVarIds() {
+/*export*/ function getOutputVarIds() {
   return [
     '_x',
     '_y',
@@ -352,7 +363,7 @@ export function getOutputVarIds() {
   ]
 }
 
-export function getOutputVarNames() {
+/*export*/ function getOutputVarNames() {
   return [
     'x',
     'y',
@@ -361,14 +372,14 @@ export function getOutputVarNames() {
   ]
 }
 
-export function storeOutputs(storeValue /*: (value: number) => void*/) {
+/*export*/ function storeOutputs(storeValue /*: (value: number) => void*/) {
   storeValue(_x);
   storeValue(_y);
   storeValue(_z);
   storeValue(_w);
 }
 
-export function storeOutput(varIndex, subIndex0, subIndex1, subIndex2, storeValue /*: (value: number) => void*/) {
+/*export*/ function storeOutput(varIndex, subIndex0, subIndex1, subIndex2, storeValue /*: (value: number) => void*/) {
   switch (varIndex) {
     case 1:
       storeValue(_input);
@@ -389,10 +400,35 @@ export function storeOutput(varIndex, subIndex0, subIndex1, subIndex2, storeValu
       break;
   }
 }
+
+export default async function () {
+  return {
+    getInitialTime,
+    getFinalTime,
+    getTimeStep,
+    getSaveFreq,
+
+    getModelFunctions,
+    setModelFunctions,
+
+    setTime,
+
+    setInputs,
+
+    getOutputVarIds,
+    getOutputVarNames,
+    storeOutputs,
+
+    initConstants,
+    initLevels,
+    evalAux,
+    evalLevels
+  }
+}
 `)
   })
 
-  it('should run model', async () => {
+  it('should generate a model that can be run', async () => {
     // TODO: Change this test to call each exported function
 
     const initialTime = 2000
@@ -411,10 +447,10 @@ export function storeOutput(varIndex, subIndex0, subIndex1, subIndex2, storeValu
       inputVarNames: [],
       outputVarNames
     })
-    const core = await createModelCore(code)
+    const jsModel = await initJsModel(code)
     const inputs: number[] = []
     const outputs: number[] = Array(outputVarNames.length * numSavePoints)
-    runModel(core, inputs, outputs)
+    runJsModel(jsModel, inputs, outputs)
     expect(outputs).toEqual([
       // x values
       2000, 2001, 2002,

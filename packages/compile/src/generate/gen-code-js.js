@@ -51,6 +51,7 @@ let codeGenerator = (parsedModel, opts) => {
       code += emitInitLevelsCode()
       code += emitEvalCode()
       code += emitIOCode()
+      code += emitDefaultFunction()
       return code
     }
   }
@@ -78,7 +79,7 @@ ${section(Model.dataVars())}
 
 // Time variable
 let _time;
-export function setTime(time) {
+/*export*/ function setTime(time) {
   _time = time;
 }
 
@@ -89,43 +90,72 @@ function initControlParamsIfNeeded() {
     return;
   }
 
-  // Initialize constants to ensure that all control parameters are defined
-  initConstants();
-  if (_saveper === undefined) {
-    // XXX: Currently we assume that INITIAL TIME, FINAL TIME, and TIME STEP
-    // are all defined as constant values.  SAVEPER is sometimes defined to
-    // be equivalent to TIME STEP, which means that the compiler treats it
-    // as an aux, not a constant.  For now, we assume that if _saveper was
-    // not defined in initConstants(), then set it to _time_step.  We should
-    // change the compiler to enforce this assumption.
-    _saveper = _time_step;
+  if (fns === undefined) {
+    throw new Error('Must call setModelFunctions() before running the model');
   }
-  _time = _initial_time;
+
+  // We currently require INITIAL TIME, FINAL TIME, and TIME STEP to be
+  // defined as constant values.  Some models may define SAVEPER in terms
+  // of TIME STEP, which means that the compiler may treat it as an aux,
+  // not as a constant.  We call initConstants() to ensure that we have
+  // initial values for these control parameters.
+  initConstants();
+  if (_initial_time === undefined) {
+    throw new Error('INITIAL TIME must be defined as a constant value');
+  }
+  if (_final_time === undefined) {
+    throw new Error('FINAL TIME must be defined as a constant value');
+  }
+  if (_time_step === undefined) {
+    throw new Error('TIME STEP must be defined as a constant value');
+  }
+
+  if (_saveper === undefined) {
+    // If _saveper is undefined after calling initConstants(), it means it
+    // is defined as an aux, in which case we perform an initial step of
+    // the run loop in order to initialize that value.  First, set the
+    // time and initial function context.
+    setTime(_initial_time);
+    fns.setContext({
+      initialTime: _initial_time,
+      finalTime: _final_time,
+      timeStep: _time_step,
+      currentTime: _time
+    });
+
+    // Perform initial step to initialize _saveper
+    initLevels();
+    evalAux();
+    if (_saveper === undefined) {
+      throw new Error('SAVEPER must be defined');
+    }
+  }
+
   controlParamsInitialized = true;
 }
-export function getInitialTime() {
+/*export*/ function getInitialTime() {
   initControlParamsIfNeeded();
   return _initial_time;
 }
-export function getFinalTime() {
+/*export*/ function getFinalTime() {
   initControlParamsIfNeeded();
   return _final_time;
 }
-export function getTimeStep() {
+/*export*/ function getTimeStep() {
   initControlParamsIfNeeded();
   return _time_step;
 }
-export function getSaveFreq() {
+/*export*/ function getSaveFreq() {
   initControlParamsIfNeeded();
   return _saveper;
 }
 
 // Model functions
 let fns;
-export function getModelFunctions() {
+/*export*/ function getModelFunctions() {
   return fns;
 }
-export function setModelFunctions(functions /*: CoreFunctions*/) {
+/*export*/ function setModelFunctions(functions /*: JsModelFunctions*/) {
   fns = functions;
 }
 
@@ -220,31 +250,32 @@ ${chunkedFunctions('evalLevels', true, Model.levelVars(), '  // Evaluate levels'
     let outputVarIds = outputAllVars ? expandedVarNames() : spec.outputVars
     mode = 'io'
     return `\
-export function setInputs(valueAtIndex /*: (index: number) => number*/) {${inputsFromBufferImpl()}}
+/*export*/ function setInputs(valueAtIndex /*: (index: number) => number*/) {${inputsFromBufferImpl()}}
 
-export function getOutputVarIds() {
+/*export*/ function getOutputVarIds() {
   return [
     ${outputVarIds.map(id => `'${id}'`).join(',\n    ')}
   ]
 }
 
-export function getOutputVarNames() {
+/*export*/ function getOutputVarNames() {
   return [
     ${outputVarNames.map(name => `'${Model.vensimName(name).replace(/'/g, `\\'`)}'`).join(',\n    ')}
   ]
 }
 
-export function storeOutputs(storeValue /*: (value: number) => void*/) {
+/*export*/ function storeOutputs(storeValue /*: (value: number) => void*/) {
 ${specOutputSection(outputVarIds)}
 }
 
-export function storeOutput(varIndex, subIndex0, subIndex1, subIndex2, storeValue /*: (value: number) => void*/) {
+/*export*/ function storeOutput(varIndex, subIndex0, subIndex1, subIndex2, storeValue /*: (value: number) => void*/) {
   switch (varIndex) {
 ${fullOutputSection(Model.varIndexInfo())}
     default:
       break;
   }
 }
+
 `
   }
 
@@ -292,7 +323,7 @@ ${section(chunk)}
     if (chunkedFuncs.length > 0) {
       code += `${chunkedFuncs}\n`
     }
-    code += `${exported ? 'export ' : ''}function ${name}() {\n`
+    code += `${exported ? '/*export*/ ' : ''}function ${name}() {\n`
     if (preStep?.length > 0) {
       code += `${preStep}\n`
     }
@@ -391,6 +422,7 @@ ${section(chunk)}
     const canonicalNames = !vensimNames
     return expandVarNames(canonicalNames)
   }
+
   //
   // Input/output section helpers
   //
@@ -422,30 +454,6 @@ ${section(chunk)}
     const section = R.pipe(code, lines)
     return section(varIndexInfo)
   }
-  //   function inputsFromStringImpl() {
-  //     // If there was an I/O spec file, then emit code to parse input variables.
-  //     // The user can replace this with a parser for a different serialization format.
-  //     let inputVars = ''
-  //     if (spec.inputVars && spec.inputVars.length > 0) {
-  //       let inputVarPtrs = R.reduce((a, inputVar) => R.concat(a, `    &${inputVar},\n`), '', spec.inputVars)
-  //       inputVars = `
-  //   static double* inputVarPtrs[] = {\n${inputVarPtrs}  };
-  //   char* inputs = (char*)inputData;
-  //   char* token = strtok(inputs, " ");
-  //   while (token) {
-  //     char* p = strchr(token, ':');
-  //     if (p) {
-  //       *p = '\\0';
-  //       int modelVarIndex = atoi(token);
-  //       double value = atof(p+1);
-  //       *inputVarPtrs[modelVarIndex] = value;
-  //     }
-  //     token = strtok(NULL, " ");
-  //   }
-  // `
-  //     }
-  //     return inputVars
-  //   }
   function inputsFromBufferImpl() {
     let inputVars = ''
     if (spec.inputVars && spec.inputVars.length > 0) {
@@ -460,5 +468,47 @@ ${section(chunk)}
 
   return {
     generate: generate
+  }
+
+  //
+  // Module exports
+  //
+  function emitDefaultFunction() {
+    // TODO: For now, the default function returns an object that has the shape of the
+    // `JsModel` interface.  It is an async function for future proofing and so that it
+    // has the same signature as the default function exported in a generated `WasmModule`.
+    // One issue with the current implementation is that the generated code uses
+    // module-level storage for variables, so if one were to call this default function
+    // more than once, the returned objects would share the same underlying variables
+    // (they are not distinct instances).  We can fix this by changing the code generator
+    // to output a class, or some other approach that allows for creating distinct
+    // instances.  This is unlikely to be a problem in practice though, so it isn't
+    // high priority.
+    return `\
+export default async function () {
+  return {
+    getInitialTime,
+    getFinalTime,
+    getTimeStep,
+    getSaveFreq,
+
+    getModelFunctions,
+    setModelFunctions,
+
+    setTime,
+
+    setInputs,
+
+    getOutputVarIds,
+    getOutputVarNames,
+    storeOutputs,
+
+    initConstants,
+    initLevels,
+    evalAux,
+    evalLevels
+  }
+}
+`
   }
 }

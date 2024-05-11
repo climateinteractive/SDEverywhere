@@ -1,8 +1,11 @@
 // Copyright (c) 2024 Climate Interactive / New Venture Fund
 
-export type LookupMode = 'interpolate' | 'forward' | 'backward'
+export type JsModelLookupMode = 'interpolate' | 'forward' | 'backward'
 
-export class Lookup {
+/**
+ * TODO: Docs
+ */
+export class JsModelLookup {
   private invertedData?: number[]
   private lastInput: number
   private lastHitIndex: number
@@ -15,7 +18,7 @@ export class Lookup {
     this.lastHitIndex = 0
   }
 
-  public getValueForX(x: number, mode: LookupMode): number {
+  public getValueForX(x: number, mode: JsModelLookupMode): number {
     return this.getValue(x, false, mode)
   }
 
@@ -38,7 +41,7 @@ export class Lookup {
    * Interpolate the y value from the array of (x,y) pairs.
    * NOTE: The x values are assumed to be monotonically increasing.
    */
-  private getValue(input: number, useInvertedData: boolean, mode: LookupMode): number {
+  private getValue(input: number, useInvertedData: boolean, mode: JsModelLookupMode): number {
     const data = useInvertedData ? this.invertedData : this.data
     const max = this.n * 2
 
@@ -106,7 +109,7 @@ export class Lookup {
    * the `GET DATA BETWEEN TIMES` function that differ in unexpected ways from normal
    * lookup behavior, so we implement it as a separate method here.
    */
-  public getValueBetweenTimes(input: number, mode: LookupMode): number {
+  public getValueBetweenTimes(input: number, mode: JsModelLookupMode): number {
     const max = this.n * 2
 
     switch (mode) {
