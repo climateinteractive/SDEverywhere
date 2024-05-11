@@ -47,10 +47,13 @@ const sampleCheckContent = `\
         - gt: 0
 `
 
-export async function updateSdeConfig(projDir: string, mdlPath: string): Promise<void> {
+export async function updateSdeConfig(projDir: string, mdlPath: string, genFormat: string): Promise<void> {
   // Read the `sde.config.js` file from the template
   const configPath = joinPath(projDir, 'sde.config.js')
   let configText = await readFile(configPath, 'utf8')
+
+  // Set the code generation format to the chosen format
+  configText = configText.replace(`const genFormat = 'js'`, `const genFormat = '${genFormat}'`)
 
   // Replace instances of `MODEL_NAME.mdl` with the path to the chosen mdl file
   configText = configText.replaceAll('MODEL_NAME.mdl', mdlPath)
@@ -418,7 +421,10 @@ async function readModelVars(projDir: string, mdlPath: string): Promise<MdlVaria
   // object in a specified format.
 
   // Read and preprocess the model
+  // TODO: We can skip the preprocess step once parseAndGenerate calls
+  // the new parser that has preprocessing built-in
   const mdlFile = resolvePath(projDir, mdlPath)
+  // TODO: Change genc to runnable after merging in latest changes
   const preprocessed = preprocessModel(mdlFile, spec, 'genc', /*writeFiles=*/ false)
 
   // Parse the model and generate the variable list

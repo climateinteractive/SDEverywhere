@@ -41,6 +41,14 @@ export interface UserConfig {
   watchPaths?: string[]
 
   /**
+   * The code format to generate.  If 'js', the model will be compiled to a JavaScript
+   * file.  If 'c', the model will be compiled to a C file (in which case an additional
+   * plugin will be needed to convert the C code to a WebAssembly module).  If undefined,
+   * defaults to 'js'.
+   */
+  genFormat?: 'js' | 'c'
+
+  /**
    * The array of plugins that are used to customize the build process.  These will be
    * executed in the order defined here.
    */

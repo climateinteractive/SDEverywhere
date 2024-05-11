@@ -16,7 +16,7 @@ export async function config() {
     plugins: [
       // Include a custom plugin that applies post-processing steps
       {
-        postGenerateC: (_, cContent) => {
+        postGenerateCode: (_, _, cContent) => {
           // Edit the generated C code so that it enables the `SDE_USE_OUTPUT_INDICES` flag; this is
           // required in order to access impl (non-exported) model variables
           return cContent.replace('#define SDE_USE_OUTPUT_INDICES 0', '#define SDE_USE_OUTPUT_INDICES 1')

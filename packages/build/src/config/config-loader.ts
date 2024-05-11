@@ -157,6 +157,20 @@ function resolveUserConfig(
     watchPaths = modelFiles
   }
 
+  // Validate the code generation format
+  const rawGenFormat = userConfig.genFormat || 'js'
+  let genFormat: 'js' | 'c'
+  switch (rawGenFormat) {
+    case 'js':
+      genFormat = 'js'
+      break
+    case 'c':
+      genFormat = 'c'
+      break
+    default:
+      throw new Error(`The configured genFormat value is invalid; must be either 'js' or 'c'`)
+  }
+
   return {
     mode,
     rootDir,
@@ -164,6 +178,7 @@ function resolveUserConfig(
     modelFiles,
     modelInputPaths,
     watchPaths,
+    genFormat,
     sdeDir,
     sdeCmdPath
   }

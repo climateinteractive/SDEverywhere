@@ -58,19 +58,20 @@ export async function generateModel(context: BuildContext, plugins: Plugin[]): P
     }
   }
 
-  // Generate the C file
+  // Generate the JS or C file
   for (const plugin of plugins) {
-    if (plugin.preGenerateC) {
-      await plugin.preGenerateC(context)
+    if (plugin.preGenerateCode) {
+      await plugin.preGenerateCode(context, config.genFormat)
     }
   }
-  await generateC(context, config.sdeDir, sdeCmdPath, prepDir)
+  await generateCode(context, config.sdeDir, sdeCmdPath, prepDir)
   for (const plugin of plugins) {
-    if (plugin.postGenerateC) {
-      const cPath = joinPath(prepDir, 'build', 'processed.c')
-      let cContent = await readFile(cPath, 'utf8')
-      cContent = await plugin.postGenerateC(context, cContent)
-      await writeFile(cPath, cContent)
+    if (plugin.postGenerateCode) {
+      const generatedCodeFile = `processed.${config.genFormat}`
+      const generatedCodePath = joinPath(prepDir, 'build', generatedCodeFile)
+      let generatedCodeContent = await readFile(generatedCodePath, 'utf8')
+      generatedCodeContent = await plugin.postGenerateC(context, generatedCodeContent)
+      await writeFile(generatedCodePath, generatedCodeContent)
     }
   }
 
@@ -165,15 +166,18 @@ async function flattenMdls(
 }
 
 /**
- * Generate a C file from the `processed.mdl` file.
+ * Generate a JS or C file from the `processed.mdl` file.
  */
-async function generateC(context: BuildContext, sdeDir: string, sdeCmdPath: string, prepDir: string): Promise<void> {
-  log('verbose', '  Generating C code')
+async function generateCode(context: BuildContext, sdeDir: string, sdeCmdPath: string, prepDir: string): Promise<void> {
+  const genFormat = context.config.genFormat
+  const genFormatName = genFormat.toUpperCase()
+  log('verbose', `  Generating ${genFormatName} code`)
 
-  // Use SDE to generate both a C version of the model (`--genc`) AND a JSON list of all model
+  // Use SDE to generate both a JS/C version of the model (`--outformat`) AND a JSON list of all model
   // dimensions and variables (`--list`)
   const command = sdeCmdPath
-  const gencArgs = ['generate', '--genc', '--list', '--spec', 'spec.json', 'processed']
+  const outFormat = `--outformat=${genFormat}`
+  const gencArgs = ['generate', outFormat, '--list', '--spec', 'spec.json', 'processed']
   const gencOutput = await context.spawnChild(prepDir, command, gencArgs, {
     // By default, ignore lines that start with "WARNING: Data for" since these are often harmless
     // TODO: Don't filter by default, but make it configurable
@@ -183,18 +187,22 @@ async function generateC(context: BuildContext, sdeDir: string, sdeCmdPath: stri
     ignoreError: true
   })
   if (gencOutput.exitCode !== 0) {
-    throw new Error(`Failed to generate C code: 'sde generate' command failed (code=${gencOutput.exitCode})`)
+    throw new Error(
+      `Failed to generate ${genFormatName} code: 'sde generate' command failed (code=${gencOutput.exitCode})`
+    )
   }
 
-  // Copy SDE's supporting C files into the build directory
-  const buildDir = joinPath(prepDir, 'build')
-  const sdeCDir = joinPath(sdeDir, 'src', 'c')
-  const files = await readdir(sdeCDir)
-  const copyOps = []
-  for (const file of files) {
-    if (file.endsWith('.c') || file.endsWith('.h')) {
-      copyOps.push(copyFile(joinPath(sdeCDir, file), joinPath(buildDir, file)))
+  if (genFormat === 'c') {
+    // Copy SDE's supporting C files into the build directory
+    const buildDir = joinPath(prepDir, 'build')
+    const sdeCDir = joinPath(sdeDir, 'src', 'c')
+    const files = await readdir(sdeCDir)
+    const copyOps = []
+    for (const file of files) {
+      if (file.endsWith('.c') || file.endsWith('.h')) {
+        copyOps.push(copyFile(joinPath(sdeCDir, file), joinPath(buildDir, file)))
+      }
     }
+    await Promise.all(copyOps)
   }
-  await Promise.all(copyOps)
 }

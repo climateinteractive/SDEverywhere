@@ -16,8 +16,8 @@ import type { BuildContext } from '../context/context'
  *   - preGenerate
  *       - preProcessMdl
  *       - postProcessMdl
- *       - preGenerateC
- *       - postGenerateC
+ *       - preGenerateCode
+ *       - postGenerateCode
  *   - postGenerate
  *   - postBuild
  *   - watch (only called once after initial build steps when mode==development)
@@ -58,20 +58,22 @@ export interface Plugin {
   postProcessMdl?(context: BuildContext, mdlContent: string): Promise<string>
 
   /**
-   * Called before SDE generates a C file from the mdl file.
+   * Called before SDE generates a JS or C file from the mdl file.
    *
    * @param context The build context (for logging, etc).
+   * @param format The generated code format, either 'js' or 'c'.
    */
-  preGenerateC?(context: BuildContext): Promise<void>
+  preGenerateCode?(context: BuildContext, format: 'js' | 'c'): Promise<void>
 
   /**
-   * Called after SDE generates a C file from the mdl file.
+   * Called after SDE generates a JS or C file from the mdl file.
    *
    * @param context The build context (for logging, etc).
-   * @param cContent The resulting C file content.
-   * @return The modified C file content (if postprocessing was needed).
+   * @param format The generated code format, either 'js' or 'c'.
+   * @param content The resulting JS or C file content.
+   * @return The modified JS or C file content (if postprocessing was needed).
    */
-  postGenerateC?(context: BuildContext, cContent: string): Promise<string>
+  postGenerateCode?(context: BuildContext, format: 'js' | 'c', content: string): Promise<string>
 
   /**
    * Called after the "generate model" process has completed (but before the staged
