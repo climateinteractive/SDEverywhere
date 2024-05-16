@@ -3,76 +3,23 @@
 
 import './global.css'
 
-import { createCoreRunner } from '@sdeverywhere/runtime'
-
-import type { GraphViewModel } from './components/graph/graph-vm'
+import Selector from './components/_shared/selector.svelte'
 import Graph from './components/graph/graph.svelte'
 
-import type { GeneratedModel } from './app-vm'
-import {
-  createModelCore,
-  readInlineModelAndGenerateJS
-} from './app-vm'
+import { AppViewModel } from './app-vm'
 
-const initialTime = 2000
-const finalTime = 2005
-// const numSavePoints = finalTime - initialTime + 1
-const mdl = `\
-x = TIME ~~|
+const appViewModel = new AppViewModel()
+const sourceModel = appViewModel.sourceModel
+const generatedModelInfo = appViewModel.generatedModelInfo
+const varSelectorViewModel = appViewModel.varSelector
+const selectedVarGraphViewModel = appViewModel.selectedVarGraph
 
-y = x + 1 ~~|
+// let textareaElem: HTMLTextAreaElement
 
-INITIAL TIME = ${initialTime} ~~|
-FINAL TIME = ${finalTime} ~~|
-TIME STEP = 1 ~~|
-SAVEPER = 1 ~~|
-`
-let generatedModel: GeneratedModel
-
-let graphKey = 0
-let graphViewModel: GraphViewModel
-
-async function onGo() {
-  // const outputVarNames = ['x', 'y']
-  // generatedModel = readInlineModelAndGenerateJS(mdl, {
-  //   inputVarNames: [],
-  //   outputVarNames
-  // })
-  generatedModel = readInlineModelAndGenerateJS(mdl)
-  // console.log(code)
-  // console.log(generatedModel.outputVars)
-
-  const core = await createModelCore(generatedModel.jsCode)
-  console.log(core)
-
-  const runner = createCoreRunner(core)
-  let outputs = runner.createOutputs()
-  outputs = runner.runModelSync([], outputs)
-  console.log(outputs)
-
-  // graphViewModel = {
-  //   key: `${graphKey++}`,
-  //   points: [
-  //     {
-  //       x: 2000,
-  //       y: 100 + Math.random() * 50,
-  //     },
-  //     {
-  //       x: 2001,
-  //       y: 200
-  //     },
-  //     {
-  //       x: 2002,
-  //       y: 180
-  //     }
-  //   ]
-  // }
-
-  graphViewModel = {
-    key: `${graphKey++}`,
-    points: outputs.getSeriesForVar('_y').points
-  }
-}
+// async function onGo() {
+//   const mdl = textareaElem.value
+//   await appViewModel.setSourceModel(mdl)
+// }
 
 </script>
 
@@ -84,21 +31,25 @@ async function onGo() {
 
 <div class="app-container">
   <div class="column">
-    <textarea spellcheck="false">{mdl}</textarea>
-    <button on:click={onGo}>Go</button>
+    <textarea bind:value={$sourceModel} spellcheck="false" />
   </div>
 
-  <div class="column">
-    <textarea disabled>{generatedModel?.jsCode || ''}</textarea>
-  </div>
-
-  <div class="column">
-    <div class="graph-container">
-      {#if graphViewModel}
-        <Graph viewModel={graphViewModel} width={400} height={300}/>
-      {/if}
+  {#if $generatedModelInfo}
+    <div class="column">
+      <textarea disabled>{$generatedModelInfo.jsCode || ''}</textarea>
     </div>
-  </div>
+
+    <div class="column">
+      {#if $varSelectorViewModel}
+        <Selector viewModel={$varSelectorViewModel}/>
+      {/if}
+      <div class="graph-container">
+        {#if $selectedVarGraphViewModel}
+          <Graph viewModel={$selectedVarGraphViewModel} width={400} height={300}/>
+        {/if}
+      </div>
+    </div>
+  {/if}
 </div>
 
 </template>
@@ -135,5 +86,6 @@ button
   position: relative
   width: 400px
   height: 300px
+  margin-top: 20px
 
 </style>
