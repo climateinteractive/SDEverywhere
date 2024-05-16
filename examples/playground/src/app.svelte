@@ -14,13 +14,6 @@ const generatedModelInfo = appViewModel.generatedModelInfo
 const varSelectorViewModel = appViewModel.varSelector
 const selectedVarGraphViewModel = appViewModel.selectedVarGraph
 
-// let textareaElem: HTMLTextAreaElement
-
-// async function onGo() {
-//   const mdl = textareaElem.value
-//   await appViewModel.setSourceModel(mdl)
-// }
-
 </script>
 
 
@@ -78,9 +71,6 @@ textarea
   border: none
   border-radius: 8px
   padding: 8px
-
-button
-  margin-top: 10px
 
 .graph-container
   position: relative
