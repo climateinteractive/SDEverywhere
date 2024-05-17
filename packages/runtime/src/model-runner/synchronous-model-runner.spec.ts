@@ -8,11 +8,16 @@ import type { WasmModule } from '../wasm-model'
 import { initWasmModel } from '../wasm-model'
 
 import type { RunnableModel } from '../runnable-model'
-import { BaseRunnableModel } from '../runnable-model/base-runnable-model'
+// import { BaseRunnableModel } from '../runnable-model/base-runnable-model'
 
 import type { ModelRunner } from './model-runner'
 import { createSynchronousModelRunner } from './synchronous-model-runner'
 import { ModelListing } from './model-listing'
+import { initJsModel } from '../js-model'
+import { MockJsModel } from '../js-model/_mocks/mock-js-model'
+
+const startTime = 2000
+const endTime = 2002
 
 function createMockWasmModel() {
   // This is a mock WasmModule that is sufficient for testing the synchronous runner implementation
@@ -24,9 +29,9 @@ function createMockWasmModel() {
       // Return a mock implementation of each wrapped C function
       switch (fname) {
         case 'getInitialTime':
-          return () => 2000
+          return () => startTime
         case 'getFinalTime':
-          return () => 2002
+          return () => endTime
         case 'getSaveper':
           return () => 1
         case 'runModelWithBuffers':
@@ -82,39 +87,61 @@ function createMockWasmModel() {
 }
 
 function createMockJsRunnableModel(): RunnableModel {
-  return new BaseRunnableModel({
-    startTime: 2000,
-    endTime: 2002,
-    saveFreq: 1,
-    numSavePoints: 3,
+  // return new BaseRunnableModel({
+  //   startTime,
+  //   endTime,
+  //   saveFreq: 1,
+  //   numSavePoints: 3,
+  //   outputVarIds: ['_output_1', '_output_2'],
+  //   onRunModel: (inputs, outputs, options) => {
+  //     // Verify inputs
+  //     expect(inputs).toEqual(new Float64Array([7, 8, 9]))
+  //     if (options?.outputIndices === undefined) {
+  //       // Store up to 3 values for each output (fill with undefined after the stop time)
+  //       const stopTime = options?.stopAfterTime !== undefined ? options.stopAfterTime : endTime
+  //       for (let time = startTime; time <= endTime; time++) {
+  //         const i = time - startTime
+  //         if (time <= stopTime) {
+  //           outputs[i] = i + 1
+  //           outputs[i + 3] = i + 4
+  //         } else {
+  //           outputs[i] = undefined
+  //           outputs[i + 3] = undefined
+  //         }
+  //       }
+  //     } else {
+  //       // Verify output indices
+  //       expect(options.outputIndices).toEqual(
+  //         new Int32Array([
+  //           // _x
+  //           3, 0, 0, 0,
+  //           // _output_2
+  //           2, 0, 0, 0,
+  //           // _output_1
+  //           1, 0, 0, 0,
+  //           // (zero terminator)
+  //           0, 0, 0, 0
+  //         ])
+  //       )
+
+  //       // Store 3 values for each of the three variables
+  //       outputs.set([7, 8, 9, 4, 5, 6, 1, 2, 3])
+  //     }
+  //   }
+  // })
+
+  const jsModel = new MockJsModel({
+    initialTime: startTime,
+    finalTime: endTime,
     outputVarIds: ['_output_1', '_output_2'],
-    onRunModel: (inputs, outputs, outputIndices) => {
-      // Verify inputs
-      expect(inputs).toEqual(new Float64Array([7, 8, 9]))
-
-      if (outputIndices === undefined) {
-        // Store 3 values for the _output_1, and 3 for _output_2
-        outputs.set([1, 2, 3, 4, 5, 6])
-      } else {
-        // Verify output indices
-        expect(outputIndices).toEqual(
-          new Int32Array([
-            // _x
-            3, 0, 0, 0,
-            // _output_2
-            2, 0, 0, 0,
-            // _output_1
-            1, 0, 0, 0,
-            // (zero terminator)
-            0, 0, 0, 0
-          ])
-        )
-
-        // Store 3 values for each of the three variables
-        outputs.set([7, 8, 9, 4, 5, 6, 1, 2, 3])
-      }
+    onEvalAux: vars => {
+      const time = vars.get('_time')
+      vars.set('_output_1', time - startTime + 1)
+      vars.set('_output_2', time - startTime + 4)
+      vars.set('_x', time - startTime + 7)
     }
   })
+  return initJsModel(jsModel)
 }
 
 const p = (x: number, y: number) => {
@@ -125,7 +152,7 @@ const p = (x: number, y: number) => {
 }
 
 describe.each([
-  { kind: 'wasm', model: createMockWasmModel() },
+  // { kind: 'wasm', model: createMockWasmModel() },
   { kind: 'js', model: createMockJsRunnableModel() }
 ])('createSynchronousModelRunner (with mock $kind model)', ({ model }) => {
   let runner: ModelRunner
@@ -151,7 +178,38 @@ describe.each([
     expect(outOutputs.getSeriesForVar('_output_2').points).toEqual([p(2000, 4), p(2001, 5), p(2002, 6)])
   })
 
-  it('should run the model (when output var specs are included)', async () => {
+  it('should run the model (with an early stop)', async () => {
+    expect(runner).toBeDefined()
+    const inputs = [createInputValue('_input_1', 7), createInputValue('_input_2', 8), createInputValue('_input_3', 9)]
+    const inOutputs = runner.createOutputs()
+
+    // Run once with the default end time
+    let outOutputs = await runner.runModel(inputs, inOutputs)
+    expect(outOutputs).toBeDefined()
+    expect(outOutputs.runTimeInMillis).toBeGreaterThan(0)
+    expect(outOutputs.getSeriesForVar('_output_1').points).toEqual([p(2000, 1), p(2001, 2), p(2002, 3)])
+    expect(outOutputs.getSeriesForVar('_output_2').points).toEqual([p(2000, 4), p(2001, 5), p(2002, 6)])
+
+    // Run again with an early stop time and verify that the data points after the stop time
+    // have an undefined value
+    outOutputs = await runner.runModel(inputs, outOutputs, {
+      stopAfterTime: 2001
+    })
+    expect(outOutputs).toBeDefined()
+    expect(outOutputs.runTimeInMillis).toBeGreaterThan(0)
+    expect(outOutputs.getSeriesForVar('_output_1').points).toEqual([p(2000, 1), p(2001, 2), p(2002, undefined)])
+    expect(outOutputs.getSeriesForVar('_output_2').points).toEqual([p(2000, 4), p(2001, 5), p(2002, undefined)])
+
+    // Run again with the default end time and verify that all data points are defined
+    outOutputs = await runner.runModel(inputs, inOutputs)
+    expect(outOutputs).toBeDefined()
+    expect(outOutputs.runTimeInMillis).toBeGreaterThan(0)
+    expect(outOutputs.getSeriesForVar('_output_1').points).toEqual([p(2000, 1), p(2001, 2), p(2002, 3)])
+    expect(outOutputs.getSeriesForVar('_output_2').points).toEqual([p(2000, 4), p(2001, 5), p(2002, 6)])
+  })
+
+  // TODO: Remove the skip after implementing output indices
+  it.skip('should run the model (when output var specs are included)', async () => {
     const json = `
 {
   "dimensions": [

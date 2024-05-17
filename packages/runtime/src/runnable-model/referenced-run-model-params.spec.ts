@@ -162,4 +162,23 @@ describe('ReferencedRunModelParams', () => {
     expect(outputs.getSeriesForVar('_x').points).toEqual([p(2000, 1), p(2001, 2), p(2002, 3)])
     expect(outputs.getSeriesForVar('_y').points).toEqual([p(2000, 4), p(2001, 5), p(2002, 6)])
   })
+
+  it('should store the "stop after time" value', () => {
+    const inputs = [1, 2, 3]
+    const outputs = new Outputs(['_x', '_y'], 2000, 2002, 1)
+
+    const runnerParams = new ReferencedRunModelParams()
+
+    // Verify that `stopAfterTime` is undefined when not included in options
+    runnerParams.updateFromParams(inputs, outputs)
+    expect(runnerParams.getStopAfterTime()).toBeUndefined()
+
+    // Verify that `stopAfterTime` is saved when included in options
+    runnerParams.updateFromParams(inputs, outputs, { stopAfterTime: 2001 })
+    expect(runnerParams.getStopAfterTime()).toBe(2001)
+
+    // Verify that `stopAfterTime` is undefined once again when not included in options
+    runnerParams.updateFromParams(inputs, outputs)
+    expect(runnerParams.getStopAfterTime()).toBeUndefined()
+  })
 })

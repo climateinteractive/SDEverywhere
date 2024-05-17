@@ -1,10 +1,11 @@
 // Copyright (c) 2024 Climate Interactive / New Venture Fund
 
 import { indicesPerVariable, updateVarIndices, type InputValue, type Outputs } from '../_shared'
+import type { RunModelOptions } from './run-model-options'
 import type { RunModelParams } from './run-model-params'
 
 const headerLengthInElements = 16
-const extrasLengthInElements = 1
+const extrasLengthInElements = 2
 
 interface Section<ArrayType> {
   /** The view on the section of the `encoded` buffer, or undefined if the section is empty. */
@@ -155,6 +156,12 @@ export class BufferedRunModelParams implements RunModelParams {
   }
 
   // from RunModelParams interface
+  getStopAfterTime(): number | undefined {
+    const t = this.extras.view[1]
+    return isNaN(t) ? undefined : t
+  }
+
+  // from RunModelParams interface
   getElapsedTime(): number {
     return this.extras.view[0]
   }
@@ -187,8 +194,9 @@ export class BufferedRunModelParams implements RunModelParams {
    *
    * @param inputs The model input values (must be in the same order as in the spec file).
    * @param outputs The structure into which the model outputs will be stored.
+   * @param options Additional options that influence the model run.
    */
-  updateFromParams(inputs: (number | InputValue)[], outputs: Outputs): void {
+  updateFromParams(inputs: (number | InputValue)[], outputs: Outputs, options?: RunModelOptions): void {
     // Determine the number of elements in each section
     const inputsLengthInElements = inputs.length
     const outputsLengthInElements = outputs.varIds.length * outputs.seriesLength
@@ -278,6 +286,9 @@ export class BufferedRunModelParams implements RunModelParams {
     if (this.outputIndices.view) {
       updateVarIndices(this.outputIndices.view, outputVarSpecs)
     }
+
+    // Set the `stopAfterTime` value into the extras buffer
+    this.extras.view[1] = options?.stopAfterTime !== undefined ? options.stopAfterTime : Number.NaN
   }
 
   /**

@@ -11,7 +11,10 @@ import type { RunnableModel } from './runnable-model'
 export type OnRunModelFunc = (
   inputs: Float64Array,
   outputs: Float64Array,
-  outputIndices: Int32Array | undefined
+  options?: {
+    outputIndices?: Int32Array
+    stopAfterTime?: number
+  }
 ) => void
 
 /**
@@ -87,7 +90,10 @@ export class BaseRunnableModel implements RunnableModel {
 
     // Run the model
     const t0 = perfNow()
-    this.onRunModel?.(inputsArray, outputsArray, outputIndicesArray)
+    this.onRunModel?.(inputsArray, outputsArray, {
+      outputIndices: outputIndicesArray,
+      stopAfterTime: params.getStopAfterTime()
+    })
     const elapsed = perfElapsed(t0)
 
     // Copy the outputs that were stored into our array back to the `RunModelParams`
