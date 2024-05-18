@@ -314,7 +314,10 @@ ${postStep}
     return section(varNames)
   }
   function fullOutputSection(varIndexInfo) {
-    // Emit output calls for all variables.
+    // Emit `storeValue` calls for all variables that can be accessed as an output.
+    // This excludes data and lookup variables; at this time, the data for these
+    // cannot be output like for other types of variables.
+    const outputVars = R.filter(info => info.varType !== 'lookup' && info.varType !== 'data')
     const code = R.map(info => {
       let varAccess = info.varName
       if (info.subscriptCount > 0) {
@@ -332,7 +335,7 @@ ${postStep}
       c += `      break;`
       return c
     })
-    const section = R.pipe(code, lines)
+    const section = R.pipe(outputVars, code, lines)
     return section(varIndexInfo)
   }
   function inputsFromStringImpl() {
