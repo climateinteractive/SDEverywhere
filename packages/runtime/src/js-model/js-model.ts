@@ -1,5 +1,6 @@
 // Copyright (c) 2024 Climate Interactive / New Venture Fund
 
+import type { LookupDef, VarSpec } from '../_shared'
 import type { RunnableModel } from '../runnable-model'
 import { BaseRunnableModel } from '../runnable-model/base-runnable-model'
 
@@ -26,12 +27,13 @@ export interface JsModel {
   setModelFunctions(functions: JsModelFunctions): void
 
   setTime(time: number): void
-
   setInputs(inputValue: (index: number) => number): void
+  setLookup(varSpec: VarSpec, points: Float64Array): void
 
   getOutputVarIds(): string[]
   getOutputVarNames(): string[]
   storeOutputs(storeValue: (value: number) => void): void
+  storeOutput(varSpec: VarSpec, storeValue: (value: number) => void): void
 
   initConstants(): void
   initLevels(): void
@@ -79,6 +81,7 @@ export function initJsModel(model: JsModel): RunnableModel {
         inputs,
         outputs,
         options?.outputIndices,
+        options?.lookups,
         options?.stopAfterTime
       )
     }
@@ -95,6 +98,7 @@ function runJsModel(
   inputs: Float64Array,
   outputs: Float64Array,
   outputIndices: Int32Array | undefined,
+  lookups: LookupDef[] | undefined,
   stopAfterTime: number | undefined
 ): void {
   // Initialize time with the required `INITIAL TIME` control variable
@@ -113,6 +117,13 @@ function runJsModel(
 
   // Initialize constants to their default values
   model.initConstants()
+
+  // Apply lookup overrides, if provided
+  if (lookups !== undefined) {
+    for (const lookupDef of lookups) {
+      model.setLookup(lookupDef.varSpec, lookupDef.points)
+    }
+  }
 
   if (inputs.length > 0) {
     // Set the user-defined input values.  This needs to happen after `initConstants`

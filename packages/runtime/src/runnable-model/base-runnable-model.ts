@@ -1,6 +1,6 @@
 // Copyright (c) 2024 Climate Interactive / New Venture Fund
 
-import type { OutputVarId } from '../_shared'
+import type { LookupDef, OutputVarId } from '../_shared'
 import { perfElapsed, perfNow } from '../perf'
 import type { RunModelParams } from './run-model-params'
 import type { RunnableModel } from './runnable-model'
@@ -13,6 +13,7 @@ export type OnRunModelFunc = (
   outputs: Float64Array,
   options?: {
     outputIndices?: Int32Array
+    lookups?: LookupDef[]
     stopAfterTime?: number
   }
 ) => void
@@ -92,6 +93,7 @@ export class BaseRunnableModel implements RunnableModel {
     const t0 = perfNow()
     this.onRunModel?.(inputsArray, outputsArray, {
       outputIndices: outputIndicesArray,
+      lookups: params.getLookups(),
       stopAfterTime: params.getStopAfterTime()
     })
     const elapsed = perfElapsed(t0)

@@ -1,6 +1,6 @@
 // Copyright (c) 2024 Climate Interactive / New Venture Fund
 
-import type { OutputVarId, VarId } from '../../_shared'
+import type { OutputVarId, VarId /*, VarSpec*/ } from '../../_shared'
 import type { JsModel } from '../js-model'
 import type { JsModelFunctions } from '../js-model-functions'
 
@@ -69,6 +69,11 @@ export class MockJsModel implements JsModel {
   }
 
   // from JsModel interface
+  setLookup(/*varSpec: VarSpec, points: Float64Array*/): void {
+    throw new Error('Not yet implemented')
+  }
+
+  // from JsModel interface
   getOutputVarIds(): string[] {
     return this.outputVarIds
   }
@@ -83,6 +88,11 @@ export class MockJsModel implements JsModel {
     for (const varId of this.outputVarIds) {
       storeValue(this.vars.get(varId))
     }
+  }
+
+  // from JsModel interface
+  storeOutput(/*varSpec: VarSpec, storeValue: (value: number) => void*/): void {
+    throw new Error('Not yet implemented')
   }
 
   // from JsModel interface
