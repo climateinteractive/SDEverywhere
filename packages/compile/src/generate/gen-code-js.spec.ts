@@ -69,12 +69,13 @@ interface JsModel {
   setModelFunctions(functions: /*JsModelFunctions*/ any): void
 
   setTime(time: number): void
-
   setInputs(inputValue: (index: number) => number): void
+  setLookup(varSpec: /*VarSpec*/ any, lookup: /*Lookup*/ any): void
 
   getOutputVarIds(): string[]
   getOutputVarNames(): string[]
   storeOutputs(storeValue: (value: number) => void): void
+  storeOutput(varSpec: /*VarSpec*/ any, storeValue: (value: number) => void): void
 
   initConstants(): void
   initLevels(): void
@@ -162,21 +163,45 @@ function runJsModel(model: JsModel, inputs: number[], outputs: number[]) {
 
 describe('generateJS (Vensim -> JS)', () => {
   it('should generate code for a simple model', () => {
+    const extData: ExtData = new Map([
+      [
+        '_v_data',
+        new Map([
+          [0, 0],
+          [1, 2],
+          [2, 5]
+        ])
+      ]
+    ])
     const mdl = `
       input = 1 ~~|
       x = input ~~|
       y = :NOT: x ~~|
       z = ABS(y) ~~|
+      v data ~~|
+      v = v data ~~|
       w = WITH LOOKUP(x, ( [(0,0)-(2,2)], (0,0),(0.1,0.01),(0.5,0.7),(1,1),(1.5,1.2),(2,1.3) )) ~~|
+      INITIAL TIME = 0 ~~|
+      FINAL TIME = 2 ~~|
+      TIME STEP = 1 ~~|
+      SAVEPER = 1 ~~|
     `
     const code = readInlineModelAndGenerateJS(mdl, {
       inputVarNames: ['input'],
-      outputVarNames: ['x', 'y', 'z', 'w']
+      outputVarNames: ['x', 'y', 'z', 'v', 'w'],
+      extData
     })
+    // console.log(code)
     expect(code).toEqual(`\
 // Model variables
 let __lookup1;
+let _final_time;
+let _initial_time;
 let _input;
+let _saveper;
+let _time_step;
+let _v;
+let _v_data;
 let _w;
 let _x;
 let _y;
@@ -190,7 +215,7 @@ let _z;
 
 // Lookup data arrays
 const __lookup1_data_ = [0.0, 0.0, 0.1, 0.01, 0.5, 0.7, 1.0, 1.0, 1.5, 1.2, 2.0, 1.3];
-
+const _v_data_data_ = [0.0, 0.0, 1.0, 2.0, 2.0, 5.0];
 
 // Time variable
 let _time;
@@ -307,14 +332,27 @@ function initLookups() {
   }
 }
 
+function initData0() {
+  _v_data = fns.createLookup(3, _v_data_data_);
+}
+
 function initData() {
   // Initialize data
   if (!data_initialized) {
+    initData0();
     data_initialized = true;
   }
 }
 
 function initConstants0() {
+  // FINAL TIME = 2
+  _final_time = 2.0;
+  // INITIAL TIME = 0
+  _initial_time = 0.0;
+  // SAVEPER = 1
+  _saveper = 1.0;
+  // TIME STEP = 1
+  _time_step = 1.0;
   // input = 1
   _input = 1.0;
 }
@@ -331,6 +369,8 @@ function initConstants0() {
 }
 
 function evalAux0() {
+  // v = v data
+  _v = fns.LOOKUP(_v_data, _time);
   // x = input
   _x = _input;
   // w = WITH LOOKUP(x,([(0,0)-(2,2)],(0,0),(0.1,0.01),(0.5,0.7),(1,1),(1.5,1.2),(2,1.3)))
@@ -354,11 +394,27 @@ function evalAux0() {
   _input = valueAtIndex(0);
 }
 
+/*export*/ function setLookup(varSpec /*: VarSpec*/, points /*: Float64Array*/) {
+  if (!varSpec) {
+    throw new Error('Got undefined varSpec in setLookup');
+  }
+  const varIndex = varSpec.varIndex;
+  const subs = varSpec.subscriptIndices;
+  switch (varIndex) {
+    case 6:
+      _v_data = fns.createLookup(points.length / 2, points);
+      break;
+    default:
+      break;
+  }
+}
+
 /*export*/ function getOutputVarIds() {
   return [
     '_x',
     '_y',
     '_z',
+    '_v',
     '_w'
   ]
 }
@@ -368,6 +424,7 @@ function evalAux0() {
     'x',
     'y',
     'z',
+    'v',
     'w'
   ]
 }
@@ -376,24 +433,45 @@ function evalAux0() {
   storeValue(_x);
   storeValue(_y);
   storeValue(_z);
+  storeValue(_v);
   storeValue(_w);
 }
 
-/*export*/ function storeOutput(varIndex, subIndex0, subIndex1, subIndex2, storeValue /*: (value: number) => void*/) {
+/*export*/ function storeOutput(varSpec /*: VarSpec*/, storeValue /*: (value: number) => void*/) {
+  if (!varSpec) {
+    throw new Error('Got undefined varSpec in storeOutput');
+  }
+  const varIndex = varSpec.varIndex;
+  const subs = varSpec.subscriptIndices;
   switch (varIndex) {
     case 1:
-      storeValue(_input);
+      storeValue(_final_time);
       break;
     case 2:
-      storeValue(_x);
+      storeValue(_initial_time);
       break;
     case 3:
-      storeValue(_w);
+      storeValue(_saveper);
       break;
     case 4:
-      storeValue(_y);
+      storeValue(_time_step);
       break;
     case 5:
+      storeValue(_input);
+      break;
+    case 7:
+      storeValue(_v);
+      break;
+    case 8:
+      storeValue(_x);
+      break;
+    case 9:
+      storeValue(_w);
+      break;
+    case 10:
+      storeValue(_y);
+      break;
+    case 11:
       storeValue(_z);
       break;
     default:
@@ -412,8 +490,8 @@ export default async function () {
     setModelFunctions,
 
     setTime,
-
     setInputs,
+    setLookup,
 
     getOutputVarIds,
     getOutputVarNames,
