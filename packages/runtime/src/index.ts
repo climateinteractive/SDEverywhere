@@ -1,6 +1,7 @@
 // Copyright (c) 2020-2022 Climate Interactive / New Venture Fund
 
 export * from './_shared'
+export * from './model-listing'
 export * from './runnable-model'
 export * from './js-model'
 export * from './wasm-model'
