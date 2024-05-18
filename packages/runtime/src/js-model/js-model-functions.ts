@@ -63,7 +63,7 @@ export interface JsModelFunctions {
   XIDZ(a: number, b: number, x: number): number
   ZIDZ(a: number, b: number): number
 
-  createLookup(size: number, data: number[]): JsModelLookup
+  createLookup(size: number, data: number[] | Float64Array): JsModelLookup
   LOOKUP(lookup: JsModelLookup, x: number): number
   LOOKUP_FORWARD(lookup: JsModelLookup, x: number): number
   LOOKUP_BACKWARD(lookup: JsModelLookup, x: number): number
@@ -283,7 +283,7 @@ export function getJsModelFunctions(): JsModelFunctions {
     // Lookup functions
     //
 
-    createLookup(size: number, data: number[]): JsModelLookup {
+    createLookup(size: number, data: number[] | Float64Array): JsModelLookup {
       return new JsModelLookup(size, data)
     },
 
