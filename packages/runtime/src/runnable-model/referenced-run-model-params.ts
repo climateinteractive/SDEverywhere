@@ -1,6 +1,6 @@
 // Copyright (c) 2024 Climate Interactive / New Venture Fund
 
-import { indicesPerVariable, updateVarIndices, type InputValue, type Outputs } from '../_shared'
+import { indicesPerVariable, updateVarIndices, type InputValue, type LookupDef, type Outputs } from '../_shared'
 import type { RunModelOptions } from './run-model-options'
 import type { RunModelParams } from './run-model-params'
 
@@ -17,6 +17,7 @@ export class ReferencedRunModelParams implements RunModelParams {
   private outputs: Outputs
   private outputsLengthInElements = 0
   private outputIndicesLengthInElements = 0
+  private lookups: LookupDef[]
   private stopAfterTime: number
 
   // from RunModelParams interface
@@ -102,6 +103,15 @@ export class ReferencedRunModelParams implements RunModelParams {
   }
 
   // from RunModelParams interface
+  getLookups(): LookupDef[] | undefined {
+    if (this.lookups !== undefined && this.lookups.length > 0) {
+      return this.lookups
+    } else {
+      return undefined
+    }
+  }
+
+  // from RunModelParams interface
   getStopAfterTime(): number | undefined {
     return this.stopAfterTime
   }
@@ -132,6 +142,7 @@ export class ReferencedRunModelParams implements RunModelParams {
     this.inputs = inputs
     this.outputs = outputs
     this.outputsLengthInElements = outputs.varIds.length * outputs.seriesLength
+    this.lookups = options?.lookups
     this.stopAfterTime = options?.stopAfterTime
 
     // See if the output indices are needed
