@@ -1068,7 +1068,7 @@ function allListedVars() {
 
   // Filter out data/lookup variables and variables that are generated/used internally
   const isInternal = v => {
-    return v.refId.startsWith('__level') || v.refId.startsWith('__aux')
+    return v.includeInOutput === false
   }
 
   return R.filter(v => !isInternal(v), vars)
@@ -1083,6 +1083,7 @@ function filteredListedVars() {
 function varIndexInfoMap() {
   // Return a map containing information for each listed variable:
   //   varName
+  //   varType
   //   varIndex
   //   subscriptCount
 
@@ -1096,15 +1097,11 @@ function varIndexInfoMap() {
   const infoMap = new Map()
   let varIndex = 1
   for (const v of sortedVars) {
-    if (v.varType === 'data' || v.varType === 'lookup') {
-      // Omit the index for data and lookup variables; at this time, the data for these
-      // cannot be output like for other types of variables
-      continue
-    }
     const varName = v.varName
     if (!infoMap.get(varName)) {
       infoMap.set(varName, {
         varName,
+        varType: v.varType,
         varIndex,
         subscriptCount: v.families ? v.families.length : 0
       })
@@ -1119,6 +1116,7 @@ function varIndexInfo() {
   // Return an array, sorted by `varName`, containing information for each
   // listed variable:
   //   varName
+  //   varType
   //   varIndex
   //   subscriptCount
   return Array.from(varIndexInfoMap().values())
@@ -1136,7 +1134,7 @@ function jsonList() {
   const sortedVars = filteredListedVars()
 
   // Assign a 1-based index for each variable that has data that can be accessed.
-  // This matches the index number used in `storeOutput()` in the generated C code.
+  // This matches the index number used in `storeOutput()` in the generated C/JS code.
   const infoMap = varIndexInfoMap()
   for (const v of sortedVars) {
     const varInfo = infoMap.get(v.varName)
