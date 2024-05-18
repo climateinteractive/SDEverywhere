@@ -1,0 +1,22 @@
+{
+  "name": "override-lookups",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "clean": "rm -rf sde-prep",
+    "build": "sde bundle",
+    "dev": "sde dev",
+    "run-tests": "./run-tests.js",
+    "test": "run-s build run-tests",
+    "ci:int-test": "run-s clean test"
+  },
+  "dependencies": {
+    "@sdeverywhere/build": "workspace:*",
+    "@sdeverywhere/cli": "workspace:*",
+    "@sdeverywhere/plugin-wasm": "workspace:*",
+    "@sdeverywhere/plugin-worker": "workspace:*",
+    "@sdeverywhere/runtime": "workspace:*",
+    "@sdeverywhere/runtime-async": "workspace:*"
+  }
+}
