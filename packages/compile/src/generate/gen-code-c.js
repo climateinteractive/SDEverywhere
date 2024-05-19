@@ -81,51 +81,54 @@ ${section(Model.dataVars())}
   //
   function emitInitLookupsCode() {
     mode = 'init-lookups'
-    let code = `// Internal state
+    let code = `\
+// Internal state
 bool lookups_initialized = false;
 bool data_initialized = false;
+
 `
     code += chunkedFunctions(
       'initLookups',
       Model.lookupVars(),
-      `  // Initialize lookups.
-  if (!lookups_initialized) {
-`,
-      `      lookups_initialized = true;
-  }
-`
+      `\
+  // Initialize lookups.
+  if (lookups_initialized) {
+    return;
+  }`,
+      '  lookups_initialized = true;'
     )
     code += chunkedFunctions(
       'initData',
       Model.dataVars(),
-      `  // Initialize data.
-  if (!data_initialized) {
-`,
-      `      data_initialized = true;
-  }
-`
+      `\
+  // Initialize data.
+  if (data_initialized) {
+    return;
+  }`,
+      '  data_initialized = true;'
     )
     return code
   }
 
   function emitInitConstantsCode() {
     mode = 'init-constants'
-    return `
-${chunkedFunctions('initConstants', Model.constVars(), '  // Initialize constants.', '  initLookups();\n  initData();')}
-`
+    return chunkedFunctions(
+      'initConstants',
+      Model.constVars(),
+      '  // Initialize constants.',
+      '  initLookups();\n  initData();'
+    )
   }
 
   function emitInitLevelsCode() {
     mode = 'init-levels'
-    return `
-${chunkedFunctions(
-  'initLevels',
-  Model.initVars(),
-  `
+    return chunkedFunctions(
+      'initLevels',
+      Model.initVars(),
+      `\
   // Initialize variables with initialization values, such as levels, and the variables they depend on.
   _time = _initial_time;`
-)}
-`
+    )
   }
 
   //
@@ -134,11 +137,9 @@ ${chunkedFunctions(
   function emitEvalCode() {
     mode = 'eval'
 
-    return `
-${chunkedFunctions('evalAux', Model.auxVars(), '  // Evaluate auxiliaries in order from the bottom up.')}
-
-${chunkedFunctions('evalLevels', Model.levelVars(), '  // Evaluate levels.')}
-`
+    return `\
+${chunkedFunctions('evalAux', Model.auxVars(), '  // Evaluate auxiliaries in order from the bottom up.')}\
+${chunkedFunctions('evalLevels', Model.levelVars(), '  // Evaluate levels.')}`
   }
 
   //
@@ -148,7 +149,8 @@ ${chunkedFunctions('evalLevels', Model.levelVars(), '  // Evaluate levels.')}
     let headerVarNames = outputAllVars ? expandedVarNames(true) : spec.outputVarNames
     let outputVarIds = outputAllVars ? expandedVarNames() : spec.outputVars
     mode = 'io'
-    return `void setInputs(const char* inputData) {${inputsFromStringImpl()}}
+    return `\
+void setInputs(const char* inputData) {${inputsFromStringImpl()}}
 
 void setInputsFromBuffer(double* inputData) {${inputsFromBufferImpl()}}
 
@@ -178,9 +180,9 @@ ${fullOutputSection(Model.varIndexInfo())}
   function chunkedFunctions(name, vars, preStep, postStep) {
     // Emit one function for each chunk
     let func = (chunk, idx) => {
-      return `
+      return `\
 void ${name}${idx}() {
-  ${section(chunk)}
+${section(chunk)}
 }
 `
     }
@@ -208,22 +210,25 @@ void ${name}${idx}() {
       chunks = [vars]
     }
 
-    if (!preStep) {
-      preStep = ''
-    }
-    if (!postStep) {
-      postStep = ''
-    }
+    let funcsPart = funcs(chunks)
+    let callsPart = funcCalls(chunks)
 
-    return `
-${funcs(chunks)}
-
-void ${name}() {
-${preStep}
-${funcCalls(chunks)}
-${postStep}
-}
-    `
+    let out = ''
+    if (funcsPart.length > 0) {
+      out += funcsPart + '\n'
+    }
+    out += `void ${name}() {\n`
+    if (preStep) {
+      out += preStep + '\n'
+    }
+    if (callsPart.length > 0) {
+      out += callsPart + '\n'
+    }
+    if (postStep) {
+      out += postStep + '\n'
+    }
+    out += '}\n\n'
+    return out
   }
 
   //
