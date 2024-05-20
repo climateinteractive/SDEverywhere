@@ -150,9 +150,34 @@ ${chunkedFunctions('evalLevels', Model.levelVars(), '  // Evaluate levels.')}`
     let outputVarIds = outputAllVars ? expandedVarNames() : spec.outputVars
     mode = 'io'
     return `\
-void setInputs(const char* inputData) {${inputsFromStringImpl()}}
+void setInputs(const char* inputData) {
+${inputsFromStringImpl()}
+}
 
-void setInputsFromBuffer(double* inputData) {${inputsFromBufferImpl()}}
+void setInputsFromBuffer(double* inputData) {
+${inputsFromBufferImpl()}
+}
+
+void replaceLookup(Lookup** lookup, double* points, size_t numPoints) {
+  if (lookup == NULL) {
+    return;
+  }
+  if (*lookup != NULL) {
+    __delete_lookup(*lookup);
+    *lookup = NULL;
+  }
+  if (points != NULL) {
+    *lookup = __new_lookup(numPoints, /*copy=*/true, points);
+  }
+}
+
+void setLookup(size_t varIndex, size_t* subIndices, double* points, size_t numPoints) {
+  switch (varIndex) {
+${setLookupImpl(Model.varIndexInfo())}
+    default:
+      break;
+  }
+}
 
 const char* getHeader() {
   return "${R.map(varName => varName.replace(/"/g, '\\"'), headerVarNames).join('\\t')}";
@@ -334,11 +359,10 @@ ${section(chunk)}
       if (info.subscriptCount > 2) {
         varAccess += '[subIndex2]'
       }
-      let c = ''
-      c += `    case ${info.varIndex}:\n`
-      c += `      outputVar(${varAccess});\n`
-      c += `      break;`
-      return c
+      return `\
+    case ${info.varIndex}:
+      outputVar(${varAccess});
+      break;`
     })
     const section = R.pipe(outputVars, code, lines)
     return section(varIndexInfo)
@@ -349,7 +373,7 @@ ${section(chunk)}
     let inputVars = ''
     if (spec.inputVars && spec.inputVars.length > 0) {
       let inputVarPtrs = R.reduce((a, inputVar) => R.concat(a, `    &${inputVar},\n`), '', spec.inputVars)
-      inputVars = `
+      inputVars = `\
   static double* inputVarPtrs[] = {\n${inputVarPtrs}  };
   char* inputs = (char*)inputData;
   char* token = strtok(inputs, " ");
@@ -362,21 +386,37 @@ ${section(chunk)}
       *inputVarPtrs[modelVarIndex] = value;
     }
     token = strtok(NULL, " ");
-  }
-`
+  }`
     }
     return inputVars
   }
   function inputsFromBufferImpl() {
-    let inputVars = ''
+    let inputVars = []
     if (spec.inputVars && spec.inputVars.length > 0) {
-      inputVars += '\n'
       for (let i = 0; i < spec.inputVars.length; i++) {
         const inputVar = spec.inputVars[i]
-        inputVars += `  ${inputVar} = inputData[${i}];\n`
+        inputVars.push(`  ${inputVar} = inputData[${i}];`)
       }
     }
-    return inputVars
+    return inputVars.join('\n')
+  }
+  function setLookupImpl(varIndexInfo) {
+    // Emit `createLookup` calls for all lookups and data variables that can be overridden
+    // at runtime
+    const lookupAndDataVars = R.filter(info => info.varType === 'lookup' || info.varType === 'data')
+    const code = R.map(info => {
+      let lookupVar = info.varName
+      for (let i = 0; i < info.subscriptCount; i++) {
+        lookupVar += `[subIndices[${i}]]`
+      }
+      let c = ''
+      c += `    case ${info.varIndex}:\n`
+      c += `      replaceLookup(&${lookupVar}, points, numPoints);\n`
+      c += `      break;`
+      return c
+    })
+    const section = R.pipe(lookupAndDataVars, code, lines)
+    return section(varIndexInfo)
   }
 
   return {

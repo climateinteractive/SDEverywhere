@@ -191,7 +191,6 @@ describe('generateJS (Vensim -> JS)', () => {
       outputVarNames: ['x', 'y', 'z', 'v', 'w'],
       extData
     })
-    // console.log(code)
     expect(code).toEqual(`\
 // Model variables
 let __lookup1;
