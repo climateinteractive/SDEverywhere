@@ -2,4 +2,4 @@
 
 export * from './wasm-buffer'
 export * from './wasm-model'
-export type { WasmModule } from './wasm-module'
+export * from './wasm-module'
