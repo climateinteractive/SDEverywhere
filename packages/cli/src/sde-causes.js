@@ -21,11 +21,15 @@ let causes = (model, varname, opts) => {
   let directData = new Map()
   let spec = parseSpec(opts.spec)
   // Preprocess model text into parser input.
+  // TODO: The legacy `parseModel` function previously required the `preprocessModel`
+  // step to be performed first, but the new `parseModel` runs the preprocessor
+  // implicitly, so we can remove this step (and can simplify this code to use
+  // `parseAndGenerate` instead)
   let input = preprocessModel(modelPathname, spec)
   // Parse the model to get variable and subscript information.
-  let parseTree = parseModel(input)
+  let parsedModel = parseModel(input, modelDirname)
   let operations = ['printRefGraph']
-  generateCode(parseTree, { spec, operations, extData, directData, modelDirname, varname })
+  generateCode(parsedModel, { spec, operations, extData, directData, modelDirname, varname })
 }
 export default {
   command,

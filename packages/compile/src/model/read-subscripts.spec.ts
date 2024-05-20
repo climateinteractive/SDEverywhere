@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest'
 
 import { allSubscripts, resetSubscriptsAndDimensions } from '../_shared/subscript'
-import type { VensimModelParseTree } from '../parse/parser'
 
 import Model from './model'
 
+import type { ParsedModel } from '../_tests/test-support'
 import { dim, dimMapping, parseInlineVensimModel, parseVensimModel, sampleModelDir, sub } from '../_tests/test-support'
 
 /**
@@ -27,7 +27,7 @@ function readSubscriptsFromSource(
   // XXX: This is needed due to subs/dims being in module-level storage
   resetSubscriptsAndDimensions()
 
-  let parsedModel: VensimModelParseTree
+  let parsedModel: ParsedModel
   if (source.modelText) {
     parsedModel = parseInlineVensimModel(source.modelText)
   } else {
