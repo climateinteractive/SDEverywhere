@@ -16,7 +16,8 @@ import { type WasmModule, initWasmModel } from './wasm-model'
  * SDEverywhere transpiler/builder.
  */
 export function createRunnableModel(generatedModel: JsModel | WasmModule): RunnableModel {
-  if (Object.prototype.hasOwnProperty.call(generatedModel, 'setModelFunctions')) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  if ((generatedModel as any)['setModelFunctions'] !== undefined) {
     // Assume it's a `JsModel`
     return initJsModel(generatedModel as JsModel)
   } else {

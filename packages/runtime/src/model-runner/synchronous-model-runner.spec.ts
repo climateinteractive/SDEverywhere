@@ -82,7 +82,7 @@ function createMockWasmModel() {
 }
 
 function createMockJsRunnableModel(): RunnableModel {
-  const model = new BaseRunnableModel({
+  return new BaseRunnableModel({
     startTime: 2000,
     endTime: 2002,
     saveFreq: 1,
@@ -115,7 +115,6 @@ function createMockJsRunnableModel(): RunnableModel {
       }
     }
   })
-  return model
 }
 
 const p = (x: number, y: number) => {
@@ -126,9 +125,9 @@ const p = (x: number, y: number) => {
 }
 
 describe.each([
-  { kind: 'WasmModel', model: createMockWasmModel() },
-  { kind: 'JsModel', model: createMockJsRunnableModel() }
-])('createSynchronousModelRunner (with mock $kind)', ({ model }) => {
+  { kind: 'wasm', model: createMockWasmModel() },
+  { kind: 'js', model: createMockJsRunnableModel() }
+])('createSynchronousModelRunner (with mock $kind model)', ({ model }) => {
   let runner: ModelRunner
 
   beforeEach(async () => {
