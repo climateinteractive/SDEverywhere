@@ -8,7 +8,6 @@ import { parseVensimModel } from '@sdeverywhere/parse'
 import { readXlsx } from './_shared/helpers.js'
 import { readDat } from './_shared/read-dat.js'
 import { printSubscripts, yamlSubsList } from './_shared/subscript.js'
-import { parseModel as legacyParseVensimModel } from './parse/parser.js'
 import Model from './model/model.js'
 import { getDirectSubscripts } from './model/read-subscripts.js'
 import { generateCode } from './generate/code-gen.js'
@@ -131,14 +130,6 @@ export function printNames(namesPathname, operation) {
  * @return {*} A parsed tree representation of the model.
  */
 export function parseModel(input, modelDir, sort = false) {
-  if (process.env.SDE_NONPUBLIC_USE_NEW_PARSE === '0') {
-    // Use the legacy parser
-    return {
-      kind: 'vensim-legacy',
-      parseTree: legacyParseVensimModel(input)
-    }
-  }
-
   // Prepare the parse context that provides access to external data files
   let parseContext /*: VensimParseContext*/
   if (modelDir) {

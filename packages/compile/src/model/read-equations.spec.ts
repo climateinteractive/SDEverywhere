@@ -2,12 +2,12 @@ import { describe, expect, it } from 'vitest'
 
 import { canonicalName, resetHelperState } from '../_shared/helpers'
 import { resetSubscriptsAndDimensions } from '../_shared/subscript'
-import type { VensimModelParseTree } from '../parse/parser'
 
 import Model from './model'
 import { default as VariableImpl } from './variable'
 
-import { parseInlineVensimModel, parseVensimModel, sampleModelDir, type Variable } from '../_tests/test-support'
+import type { ParsedModel, Variable } from '../_tests/test-support'
+import { parseInlineVensimModel, parseVensimModel, sampleModelDir } from '../_tests/test-support'
 
 /**
  * This is a shorthand for the following steps to read equations:
@@ -32,7 +32,7 @@ function readSubscriptsAndEquationsFromSource(
   resetSubscriptsAndDimensions()
   Model.resetModelState()
 
-  let parsedModel: VensimModelParseTree
+  let parsedModel: ParsedModel
   if (source.modelText) {
     parsedModel = parseInlineVensimModel(source.modelText)
   } else {
@@ -56,8 +56,6 @@ function readSubscriptsAndEquationsFromSource(
   })
 
   return Model.variables.map(v => {
-    // XXX: Strip out the legacy ANTLR eqnCtx to avoid vitest hang when comparing
-    delete v.eqnCtx
     // XXX: Strip out the new parsedEqn field, since we don't need it for comparing
     delete v.parsedEqn
     return v
@@ -82,9 +80,7 @@ function readSubscriptsAndEquations(modelName: string): Variable[] {
 }
 
 function v(lhs: string, formula: string, overrides?: Partial<Variable>): Variable {
-  const variable = new VariableImpl(undefined)
-  // XXX: Strip out the ANTLR eqnCtx to avoid vitest hang when comparing
-  delete variable.eqnCtx
+  const variable = new VariableImpl()
   variable.modelLHS = lhs
   variable.modelFormula = formula
   variable.varName = canonicalName(lhs.split('[')[0])
@@ -3152,7 +3148,7 @@ describe('readEquations', () => {
   // where the new reader differs from the old (in `IF THEN ELSE(integer supply, ...)`
   // where the condition resolves to a constant).  We should add an option to disable
   // the pruning code so that we can test this more deterministically.
-  it.skipIf(process.env.SDE_NONPUBLIC_USE_NEW_PARSE !== '0')('should work for Vensim "allocate" model', () => {
+  it.skip('should work for Vensim "allocate" model', () => {
     const vars = readSubscriptsAndEquations('allocate')
     expect(vars).toEqual([
       v('demand[region]', '3,2,4', {
@@ -6531,8 +6527,8 @@ describe('readEquations', () => {
   // })
 
   // TODO: This test depends on the dependency trimming code that isn't yet implemented
-  // in the new reader, so skip it when `NEW_PARSE` flag is enabled
-  it.skipIf(process.env.SDE_NONPUBLIC_USE_NEW_PARSE !== '0')('should work for Vensim "prune" model', () => {
+  // in the new reader, so skip it for now
+  it.skip('should work for Vensim "prune" model', () => {
     const vars = readSubscriptsAndEquations('prune')
     expect(vars).toEqual([
       v('A Totals', 'SUM(A Values[DimA!])', {
@@ -7104,7 +7100,7 @@ describe('readEquations', () => {
   // where the new reader differs from the old (in `IF THEN ELSE(switch=1,1,0)`
   // where the condition resolves to a constant).  We should add an option to disable
   // the pruning code so that we can test this more deterministically.
-  it.skipIf(process.env.SDE_NONPUBLIC_USE_NEW_PARSE !== '0')('should work for Vensim "sample" model', () => {
+  it.skip('should work for Vensim "sample" model', () => {
     const vars = readSubscriptsAndEquations('sample')
     expect(vars).toEqual([
       v('a', 'SAMPLE IF TRUE(MODULO(Time,5)=0,Time,0)', {

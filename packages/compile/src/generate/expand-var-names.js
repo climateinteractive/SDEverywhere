@@ -5,8 +5,6 @@ import { sub, isDimension } from '../_shared/subscript.js'
 
 import Model from '../model/model.js'
 
-import ModelLHSReader from './model-lhs-reader.js'
-
 /**
  * Return an array of names for all variable in the model, sorted alphabetically and expanded to
  * include the full set of subscripted variants for variables that include subscripts.
@@ -43,14 +41,6 @@ export function expandVarNames(canonical) {
  * @returns {string[]} An array of expanded names for the given variable.
  */
 function namesForVar(v) {
-  if (process.env.SDE_NONPUBLIC_USE_NEW_PARSE === '0') {
-    // TODO: When the old parsing code is active, use the old ModelLHSReader.  This code path
-    // will be removed when the old parsing code is removed.
-    let modelLHSReader = new ModelLHSReader()
-    modelLHSReader.read(v.modelLHS)
-    return modelLHSReader.names()
-  }
-
   if (v.parsedEqn === undefined) {
     // XXX: The special `Time` variable does not have a `parsedEqn`, so use the raw LHS
     return [v.modelLHS]
