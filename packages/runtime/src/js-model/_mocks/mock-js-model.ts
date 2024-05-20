@@ -80,14 +80,7 @@ export class MockJsModel implements JsModel {
 
   // from JsModel interface
   setLookup(varSpec: VarSpec, points: Float64Array): void {
-    let varId: VarId
-    for (const [listingVarId, listingSpec] of this.listing.varSpecs) {
-      // TODO: This doesn't compare subscripts yet
-      if (listingSpec.varIndex === varSpec.varIndex) {
-        varId = listingVarId
-        break
-      }
-    }
+    const varId = this.varIdForSpec(varSpec)
     if (varId === undefined) {
       throw new Error(`No lookup variable found for spec ${varSpec}`)
     }
@@ -112,8 +105,12 @@ export class MockJsModel implements JsModel {
   }
 
   // from JsModel interface
-  storeOutput(/*varSpec: VarSpec, storeValue: (value: number) => void*/): void {
-    throw new Error('Not yet implemented')
+  storeOutput(varSpec: VarSpec, storeValue: (value: number) => void): void {
+    const varId = this.varIdForSpec(varSpec)
+    if (varId === undefined) {
+      throw new Error(`No output variable found for spec ${varSpec}`)
+    }
+    storeValue(this.vars.get(varId))
   }
 
   // from JsModel interface
@@ -129,4 +126,14 @@ export class MockJsModel implements JsModel {
 
   // from JsModel interface
   evalLevels(): void {}
+
+  private varIdForSpec(varSpec: VarSpec): VarId | undefined {
+    for (const [listingVarId, listingSpec] of this.listing.varSpecs) {
+      // TODO: This doesn't compare subscripts yet
+      if (listingSpec.varIndex === varSpec.varIndex) {
+        return listingVarId
+      }
+    }
+    return undefined
+  }
 }

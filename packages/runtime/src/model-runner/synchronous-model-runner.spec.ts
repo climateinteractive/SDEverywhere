@@ -62,49 +62,6 @@ function createMockWasmModule(): MockWasmModule {
 }
 
 function createMockJsModel(): MockJsModel {
-  // return new BaseRunnableModel({
-  //   startTime,
-  //   endTime,
-  //   saveFreq: 1,
-  //   numSavePoints: 3,
-  //   outputVarIds: ['_output_1', '_output_2'],
-  //   onRunModel: (inputs, outputs, options) => {
-  //     // Verify inputs
-  //     expect(inputs).toEqual(new Float64Array([7, 8, 9]))
-  //     if (options?.outputIndices === undefined) {
-  //       // Store up to 3 values for each output (fill with undefined after the stop time)
-  //       const stopTime = options?.stopAfterTime !== undefined ? options.stopAfterTime : endTime
-  //       for (let time = startTime; time <= endTime; time++) {
-  //         const i = time - startTime
-  //         if (time <= stopTime) {
-  //           outputs[i] = i + 1
-  //           outputs[i + 3] = i + 4
-  //         } else {
-  //           outputs[i] = undefined
-  //           outputs[i + 3] = undefined
-  //         }
-  //       }
-  //     } else {
-  //       // Verify output indices
-  //       expect(options.outputIndices).toEqual(
-  //         new Int32Array([
-  //           // _x
-  //           3, 0, 0, 0,
-  //           // _output_2
-  //           2, 0, 0, 0,
-  //           // _output_1
-  //           1, 0, 0, 0,
-  //           // (zero terminator)
-  //           0, 0, 0, 0
-  //         ])
-  //       )
-
-  //       // Store 3 values for each of the three variables
-  //       outputs.set([7, 8, 9, 4, 5, 6, 1, 2, 3])
-  //     }
-  //   }
-  // })
-
   return new MockJsModel({
     initialTime: startTime,
     finalTime: endTime,
@@ -134,36 +91,46 @@ const p = (x: number, y: number) => {
   }
 }
 
-describe.each([
-  { kind: 'wasm', mock: createMockWasmModule() },
-  { kind: 'js', mock: createMockJsModel() }
-])('createSynchronousModelRunner (with mock $kind model)', ({ mock }) => {
-  let runner: ModelRunner
+describe.each([{ kind: 'js' }, { kind: 'wasm' }])(
+  'createSynchronousModelRunner (with mock $kind model)',
+  ({ kind }) => {
+    let mock: MockJsModel | MockWasmModule
+    let runner: ModelRunner
 
-  beforeEach(() => {
-    const runnableModel = createRunnableModel(mock)
-    runner = createSynchronousModelRunner(runnableModel)
-  })
+    beforeEach(() => {
+      switch (kind) {
+        case 'js':
+          mock = createMockJsModel()
+          break
+        case 'wasm':
+          mock = createMockWasmModule()
+          break
+        default:
+          throw new Error('Unhandled mock kind')
+      }
+      const runnableModel = createRunnableModel(mock)
+      runner = createSynchronousModelRunner(runnableModel)
+    })
 
-  afterEach(async () => {
-    if (runner) {
-      await runner.terminate()
-    }
-  })
+    afterEach(async () => {
+      if (runner) {
+        await runner.terminate()
+      }
+    })
 
-  it('should run the model (simple case with inputs and outputs only)', async () => {
-    expect(runner).toBeDefined()
-    const inputs = [createInputValue('_input_1', 7), createInputValue('_input_2', 8), createInputValue('_input_3', 9)]
-    const inOutputs = runner.createOutputs()
-    const outOutputs = await runner.runModel(inputs, inOutputs)
-    expect(outOutputs).toBeDefined()
-    expect(outOutputs.runTimeInMillis).toBeGreaterThan(0)
-    expect(outOutputs.getSeriesForVar('_output_1').points).toEqual([p(2000, 1), p(2001, 2), p(2002, 3)])
-    expect(outOutputs.getSeriesForVar('_output_2').points).toEqual([p(2000, 4), p(2001, 5), p(2002, 6)])
-  })
+    it('should run the model (simple case with inputs and outputs only)', async () => {
+      expect(runner).toBeDefined()
+      const inputs = [createInputValue('_input_1', 7), createInputValue('_input_2', 8), createInputValue('_input_3', 9)]
+      const inOutputs = runner.createOutputs()
+      const outOutputs = await runner.runModel(inputs, inOutputs)
+      expect(outOutputs).toBeDefined()
+      expect(outOutputs.runTimeInMillis).toBeGreaterThan(0)
+      expect(outOutputs.getSeriesForVar('_output_1').points).toEqual([p(2000, 1), p(2001, 2), p(2002, 3)])
+      expect(outOutputs.getSeriesForVar('_output_2').points).toEqual([p(2000, 4), p(2001, 5), p(2002, 6)])
+    })
 
-  it('should run the model (with lookup overrides)', async () => {
-    const json = `
+    it('should run the model (with lookup overrides)', async () => {
+      const json = `
     {
       "dimensions": [
       ],
@@ -192,75 +159,74 @@ describe.each([
     }
     `
 
-    const listing = new ModelListing(json)
-    mock.setListing(listing)
+      const listing = new ModelListing(json)
+      mock.setListing(listing)
 
-    const inputs = [createInputValue('_input_1', 7), createInputValue('_input_2', 8), createInputValue('_input_3', 9)]
-    let outputs = runner.createOutputs()
+      const inputs = [createInputValue('_input_1', 7), createInputValue('_input_2', 8), createInputValue('_input_3', 9)]
+      let outputs = runner.createOutputs()
 
-    // Run once without lookup overrides
-    outputs = await runner.runModel(inputs, outputs)
+      // Run once without lookup overrides
+      outputs = await runner.runModel(inputs, outputs)
 
-    // Verify that outputs contain the original values
-    expect(outputs.getSeriesForVar('_output_1').points).toEqual([p(2000, 1), p(2001, 2), p(2002, 3)])
-    expect(outputs.getSeriesForVar('_output_2').points).toEqual([p(2000, 4), p(2001, 5), p(2002, 6)])
+      // Verify that outputs contain the original values
+      expect(outputs.getSeriesForVar('_output_1').points).toEqual([p(2000, 1), p(2001, 2), p(2002, 3)])
+      expect(outputs.getSeriesForVar('_output_2').points).toEqual([p(2000, 4), p(2001, 5), p(2002, 6)])
 
-    // Run again, this time with lookup overrides
-    const lookup1Points = [p(2000, 101), p(2001, 102), p(2002, 103)]
-    const lookup2Points = [p(2000, 104), p(2001, 105), p(2002, 106)]
-    outputs = await runner.runModel(inputs, outputs, {
-      lookups: [
-        createLookupDef(listing.varSpecs.get('_output_1_data'), lookup1Points),
-        createLookupDef(listing.varSpecs.get('_output_2_data'), lookup2Points)
-      ]
+      // Run again, this time with lookup overrides
+      const lookup1Points = [p(2000, 101), p(2001, 102), p(2002, 103)]
+      const lookup2Points = [p(2000, 104), p(2001, 105), p(2002, 106)]
+      outputs = await runner.runModel(inputs, outputs, {
+        lookups: [
+          createLookupDef(listing.varSpecs.get('_output_1_data'), lookup1Points),
+          createLookupDef(listing.varSpecs.get('_output_2_data'), lookup2Points)
+        ]
+      })
+
+      // Verify that outputs contain the values from the overridden lookups
+      expect(outputs.getSeriesForVar('_output_1').points).toEqual(lookup1Points)
+      expect(outputs.getSeriesForVar('_output_2').points).toEqual(lookup2Points)
+
+      // Run again without lookup overrides
+      outputs = await runner.runModel(inputs, outputs)
+
+      // Verify that the lookup overrides are still in effect from the previous run
+      expect(outputs.getSeriesForVar('_output_1').points).toEqual(lookup1Points)
+      expect(outputs.getSeriesForVar('_output_2').points).toEqual(lookup2Points)
     })
 
-    // Verify that outputs contain the values from the overridden lookups
-    expect(outputs.getSeriesForVar('_output_1').points).toEqual(lookup1Points)
-    expect(outputs.getSeriesForVar('_output_2').points).toEqual(lookup2Points)
+    // TODO: Unskip this
+    it.skip('should run the model (with an early stop)', async () => {
+      expect(runner).toBeDefined()
+      const inputs = [createInputValue('_input_1', 7), createInputValue('_input_2', 8), createInputValue('_input_3', 9)]
+      let outputs = runner.createOutputs()
 
-    // Run again without lookup overrides
-    outputs = await runner.runModel(inputs, outputs)
+      // Run once with the default end time
+      outputs = await runner.runModel(inputs, outputs)
+      expect(outputs).toBeDefined()
+      expect(outputs.runTimeInMillis).toBeGreaterThan(0)
+      expect(outputs.getSeriesForVar('_output_1').points).toEqual([p(2000, 1), p(2001, 2), p(2002, 3)])
+      expect(outputs.getSeriesForVar('_output_2').points).toEqual([p(2000, 4), p(2001, 5), p(2002, 6)])
 
-    // Verify that the lookup overrides are still in effect from the previous run
-    expect(outputs.getSeriesForVar('_output_1').points).toEqual(lookup1Points)
-    expect(outputs.getSeriesForVar('_output_2').points).toEqual(lookup2Points)
-  })
+      // Run again with an early stop time and verify that the data points after the stop time
+      // have an undefined value
+      outputs = await runner.runModel(inputs, outputs, {
+        stopAfterTime: 2001
+      })
+      expect(outputs).toBeDefined()
+      expect(outputs.runTimeInMillis).toBeGreaterThan(0)
+      expect(outputs.getSeriesForVar('_output_1').points).toEqual([p(2000, 1), p(2001, 2), p(2002, undefined)])
+      expect(outputs.getSeriesForVar('_output_2').points).toEqual([p(2000, 4), p(2001, 5), p(2002, undefined)])
 
-  // TODO: Unskip this
-  it.skip('should run the model (with an early stop)', async () => {
-    expect(runner).toBeDefined()
-    const inputs = [createInputValue('_input_1', 7), createInputValue('_input_2', 8), createInputValue('_input_3', 9)]
-    let outputs = runner.createOutputs()
-
-    // Run once with the default end time
-    outputs = await runner.runModel(inputs, outputs)
-    expect(outputs).toBeDefined()
-    expect(outputs.runTimeInMillis).toBeGreaterThan(0)
-    expect(outputs.getSeriesForVar('_output_1').points).toEqual([p(2000, 1), p(2001, 2), p(2002, 3)])
-    expect(outputs.getSeriesForVar('_output_2').points).toEqual([p(2000, 4), p(2001, 5), p(2002, 6)])
-
-    // Run again with an early stop time and verify that the data points after the stop time
-    // have an undefined value
-    outputs = await runner.runModel(inputs, outputs, {
-      stopAfterTime: 2001
+      // Run again with the default end time and verify that all data points are defined
+      outputs = await runner.runModel(inputs, outputs)
+      expect(outputs).toBeDefined()
+      expect(outputs.runTimeInMillis).toBeGreaterThan(0)
+      expect(outputs.getSeriesForVar('_output_1').points).toEqual([p(2000, 1), p(2001, 2), p(2002, 3)])
+      expect(outputs.getSeriesForVar('_output_2').points).toEqual([p(2000, 4), p(2001, 5), p(2002, 6)])
     })
-    expect(outputs).toBeDefined()
-    expect(outputs.runTimeInMillis).toBeGreaterThan(0)
-    expect(outputs.getSeriesForVar('_output_1').points).toEqual([p(2000, 1), p(2001, 2), p(2002, undefined)])
-    expect(outputs.getSeriesForVar('_output_2').points).toEqual([p(2000, 4), p(2001, 5), p(2002, undefined)])
 
-    // Run again with the default end time and verify that all data points are defined
-    outputs = await runner.runModel(inputs, outputs)
-    expect(outputs).toBeDefined()
-    expect(outputs.runTimeInMillis).toBeGreaterThan(0)
-    expect(outputs.getSeriesForVar('_output_1').points).toEqual([p(2000, 1), p(2001, 2), p(2002, 3)])
-    expect(outputs.getSeriesForVar('_output_2').points).toEqual([p(2000, 4), p(2001, 5), p(2002, 6)])
-  })
-
-  // TODO: Remove the skip after implementing output indices
-  it.only('should run the model (when output var specs are included)', async () => {
-    const json = `
+    it('should run the model (when output var specs are included)', async () => {
+      const json = `
 {
   "dimensions": [
   ],
@@ -284,24 +250,27 @@ describe.each([
 }
 `
 
-    const listing = new ModelListing(json)
-    const inputs = [7, 8, 9]
-    const normalOutputs = runner.createOutputs()
-    const implOutputs = listing.deriveOutputs(normalOutputs, ['_x', '_output_2', '_output_1'])
-    const outOutputs = await runner.runModel(inputs, implOutputs)
-    expect(outOutputs).toBeDefined()
-    expect(outOutputs.runTimeInMillis).toBeGreaterThan(0)
-    expect(outOutputs.getSeriesForVar('_x').points).toEqual([p(2000, 7), p(2001, 8), p(2002, 9)])
-    expect(outOutputs.getSeriesForVar('_output_2').points).toEqual([p(2000, 4), p(2001, 5), p(2002, 6)])
-    expect(outOutputs.getSeriesForVar('_output_1').points).toEqual([p(2000, 1), p(2001, 2), p(2002, 3)])
-  })
+      const listing = new ModelListing(json)
+      mock.setListing(listing)
 
-  it('should throw an error if runModel is called after the runner has been terminated', async () => {
-    expect(runner).toBeDefined()
+      const inputs = [7, 8, 9]
+      const normalOutputs = runner.createOutputs()
+      const implOutputs = listing.deriveOutputs(normalOutputs, ['_x', '_output_2', '_output_1'])
+      const outOutputs = await runner.runModel(inputs, implOutputs)
+      expect(outOutputs).toBeDefined()
+      expect(outOutputs.runTimeInMillis).toBeGreaterThan(0)
+      expect(outOutputs.getSeriesForVar('_x').points).toEqual([p(2000, 7), p(2001, 8), p(2002, 9)])
+      expect(outOutputs.getSeriesForVar('_output_2').points).toEqual([p(2000, 4), p(2001, 5), p(2002, 6)])
+      expect(outOutputs.getSeriesForVar('_output_1').points).toEqual([p(2000, 1), p(2001, 2), p(2002, 3)])
+    })
 
-    await runner.terminate()
+    it('should throw an error if runModel is called after the runner has been terminated', async () => {
+      expect(runner).toBeDefined()
 
-    const outputs = runner.createOutputs()
-    await expect(runner.runModel([], outputs)).rejects.toThrow('Model runner has already been terminated')
-  })
-})
+      await runner.terminate()
+
+      const outputs = runner.createOutputs()
+      await expect(runner.runModel([], outputs)).rejects.toThrow('Model runner has already been terminated')
+    })
+  }
+)
