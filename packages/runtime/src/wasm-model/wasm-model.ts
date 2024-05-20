@@ -19,20 +19,30 @@ class WasmModel implements RunnableModel {
   public readonly saveFreq: number
   /** The number of save points for each output. */
   public readonly numSavePoints: number
+  /** The output variable IDs for this model. */
+  public readonly outputVarIds: OutputVarId[]
 
   // Reuse the wasm buffers.  These buffers are allocated on demand and grown
   // (reallocated) as needed.
   private inputsBuffer: WasmBuffer<Float64Array>
   private outputsBuffer: WasmBuffer<Float64Array>
   private outputIndicesBuffer: WasmBuffer<Int32Array>
+  private lookupDataBuffer: WasmBuffer<Float64Array>
+  private lookupSubIndicesBuffer: WasmBuffer<Int32Array>
 
+  private readonly wasmSetLookup: (
+    varIndex: number,
+    subIndicesAddress: number,
+    pointsAddress: number,
+    numPoints: number
+  ) => void
   private readonly wasmRunModel: (inputsAddress: number, outputsAddress: number, outputIndicesAddress: number) => void
 
   /**
    * @param wasmModule The `WasmModule` that provides access to the native functions.
    * @param outputVarIds The output variable IDs for this model.
    */
-  constructor(private readonly wasmModule: WasmModule, public readonly outputVarIds: OutputVarId[]) {
+  constructor(private readonly wasmModule: WasmModule) {
     function getNumberValue(funcName: string): number {
       const wasmGetValue: () => number = wasmModule.cwrap(funcName, 'number', [])
       return wasmGetValue()
@@ -44,8 +54,10 @@ class WasmModel implements RunnableModel {
     // Each series will include one data point per "save", inclusive of the
     // start and end times
     this.numSavePoints = Math.round((this.endTime - this.startTime) / this.saveFreq) + 1
+    this.outputVarIds = wasmModule.outputVarIds
 
-    // Make the native `runModelWithBuffers` function callable
+    // Make the native functions callable
+    this.wasmSetLookup = wasmModule.cwrap('setLookup', null, ['number', 'number', 'number', 'number'])
     this.wasmRunModel = wasmModule.cwrap('runModelWithBuffers', null, ['number', 'number', 'number'])
   }
 
@@ -54,6 +66,45 @@ class WasmModel implements RunnableModel {
     // Note that for wasm models, we always need to allocate `WasmBuffer` instances to
     // and copy data to/from them because only that kind of buffer can be passed to
     // the `wasmRunModel` function.
+
+    // Apply lookup overrides, if provided
+    const lookups = params.getLookups()
+    if (lookups !== undefined) {
+      for (const lookupDef of lookups) {
+        // Copy the subscript index values to the `WasmBuffer`.  If we don't have an
+        // existing `WasmBuffer`, or the existing one is not big enough, allocate a new one.
+        const numSubElements = lookupDef.varSpec.subscriptIndices?.length || 0
+        let subIndicesAddress: number
+        if (numSubElements > 0) {
+          if (this.lookupSubIndicesBuffer === undefined || this.lookupSubIndicesBuffer.numElements < numSubElements) {
+            this.lookupSubIndicesBuffer?.dispose()
+            this.lookupSubIndicesBuffer = createInt32WasmBuffer(this.wasmModule, numSubElements)
+          }
+          this.lookupSubIndicesBuffer.getArrayView().set(lookupDef.varSpec.subscriptIndices)
+          subIndicesAddress = this.lookupSubIndicesBuffer.getAddress()
+        } else {
+          subIndicesAddress = 0
+        }
+
+        // Copy the lookup data to the `WasmBuffer`.  If we don't have an existing `WasmBuffer`,
+        // or the existing one is not big enough, allocate a new one.
+        const numLookupElements = lookupDef.points.length
+        if (this.lookupDataBuffer === undefined || this.lookupDataBuffer.numElements < numLookupElements) {
+          this.lookupDataBuffer?.dispose()
+          this.lookupDataBuffer = createFloat64WasmBuffer(this.wasmModule, numLookupElements)
+        }
+        this.lookupDataBuffer.getArrayView().set(lookupDef.points)
+        const pointsAddress = this.lookupDataBuffer.getAddress()
+
+        // Note that the native `numPoints` argument is the number of (x,y) pairs, but so divide
+        // the length of the flat points array by two
+        const numPoints = numLookupElements / 2
+
+        // Call the native `setLookup` function
+        const varIndex = lookupDef.varSpec.varIndex
+        this.wasmSetLookup(varIndex, subIndicesAddress, pointsAddress, numPoints)
+      }
+    }
 
     // Copy the inputs to the `WasmBuffer`.  If we don't have an existing `WasmBuffer`,
     // or the existing one is not big enough, the callback will allocate a new one.
@@ -124,9 +175,8 @@ class WasmModel implements RunnableModel {
  * function is exposed in the public API.
  *
  * @param wasmModule The `WasmModule` that wraps the `wasm` binary.
- * @param outputVarIds The output variable IDs, per the spec file passed to `sde`.
  * @return The initialized `WasmModel` instance.
  */
-export function initWasmModel(wasmModule: WasmModule, outputVarIds: OutputVarId[]): RunnableModel {
-  return new WasmModel(wasmModule, outputVarIds)
+export function initWasmModel(wasmModule: WasmModule): RunnableModel {
+  return new WasmModel(wasmModule)
 }

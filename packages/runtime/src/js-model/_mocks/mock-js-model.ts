@@ -1,8 +1,10 @@
 // Copyright (c) 2024 Climate Interactive / New Venture Fund
 
-import type { OutputVarId, VarId /*, VarSpec*/ } from '../../_shared'
+import type { OutputVarId, VarId, VarSpec } from '../../_shared'
+import type { ModelListing } from '../../model-listing'
 import type { JsModel } from '../js-model'
 import type { JsModelFunctions } from '../js-model-functions'
+import { JsModelLookup } from '../js-model-lookup'
 
 export class MockJsModel implements JsModel {
   private readonly initialTime: number
@@ -11,22 +13,29 @@ export class MockJsModel implements JsModel {
   private readonly outputVarIds: OutputVarId[]
 
   private readonly vars: Map<VarId, number> = new Map()
+  private readonly lookups: Map<VarId, JsModelLookup> = new Map()
   private fns: JsModelFunctions
 
-  public onEvalAux: (vars: Map<VarId, number>) => void
+  private listing: ModelListing
+
+  public readonly onEvalAux: (vars: Map<VarId, number>, lookups: Map<VarId, JsModelLookup>) => void
 
   constructor(options: {
     initialTime: number
     finalTime: number
     // inputVarIds?: string[]
     outputVarIds: string[]
-    onEvalAux: (vars: Map<VarId, number>) => void
+    onEvalAux: (vars: Map<VarId, number>, lookups: Map<VarId, JsModelLookup>) => void
   }) {
     this.initialTime = options.initialTime
     this.finalTime = options.finalTime
     // this.inputVarIds = options.inputVarIds
     this.outputVarIds = options.outputVarIds
     this.onEvalAux = options.onEvalAux
+  }
+
+  setListing(listing: ModelListing) {
+    this.listing = listing
   }
 
   // from JsModel interface
@@ -49,11 +58,12 @@ export class MockJsModel implements JsModel {
     return 1
   }
 
-  // Model functions
+  // from JsModel interface
   getModelFunctions(): JsModelFunctions {
     return this.fns
   }
 
+  // from JsModel interface
   setModelFunctions(fns: JsModelFunctions) {
     this.fns = fns
   }
@@ -69,8 +79,19 @@ export class MockJsModel implements JsModel {
   }
 
   // from JsModel interface
-  setLookup(/*varSpec: VarSpec, points: Float64Array*/): void {
-    throw new Error('Not yet implemented')
+  setLookup(varSpec: VarSpec, points: Float64Array): void {
+    let varId: VarId
+    for (const [listingVarId, listingSpec] of this.listing.varSpecs) {
+      // TODO: This doesn't compare subscripts yet
+      if (listingSpec.varIndex === varSpec.varIndex) {
+        varId = listingVarId
+        break
+      }
+    }
+    if (varId === undefined) {
+      throw new Error(`No lookup variable found for spec ${varSpec}`)
+    }
+    this.lookups.set(varId, new JsModelLookup(points.length / 2, points))
   }
 
   // from JsModel interface
@@ -103,7 +124,7 @@ export class MockJsModel implements JsModel {
 
   // from JsModel interface
   evalAux(): void {
-    this.onEvalAux?.(this.vars)
+    this.onEvalAux?.(this.vars, this.lookups)
   }
 
   // from JsModel interface

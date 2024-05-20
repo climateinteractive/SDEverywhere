@@ -128,7 +128,7 @@ $ emcc \
 build/<mymodel>.c build/macros.c build/model.c build/vensim.c \
 -Ibuild -o ./output/<mymodel>.js -Wall -Os \
 -s STRICT=1 -s MALLOC=emmalloc -s FILESYSTEM=0 -s MODULARIZE=1 \
--s EXPORTED_FUNCTIONS="['_malloc','_free','_getInitialTime','_getFinalTime','_getSaveper','_runModelWithBuffers']" \
+-s EXPORTED_FUNCTIONS="['_malloc','_free','_getInitialTime','_getFinalTime','_getSaveper','_setLookup','_runModelWithBuffers']" \
 -s EXPORTED_RUNTIME_METHODS="['cwrap']"
 ```
 
@@ -139,6 +139,7 @@ Note that the generated module must export the following functions at minimum:
 - `_getInitialTime`
 - `_getFinalTime`
 - `_getSaveper`
+- `_setLookup`
 - `_runModelWithBuffers`
 - `cwrap`
 

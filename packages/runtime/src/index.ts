@@ -17,13 +17,12 @@ import { type WasmModule, initWasmModel } from './wasm-model'
  * SDEverywhere transpiler/builder.
  */
 export function createRunnableModel(generatedModel: JsModel | WasmModule): RunnableModel {
-  if (Object.prototype.hasOwnProperty.call(generatedModel, 'setModelFunctions')) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  if ((generatedModel as any)['setModelFunctions']) {
     // Assume it's a `JsModel`
     return initJsModel(generatedModel as JsModel)
   } else {
     // Otherwise, assume it's a `WasmModule`
-    // TODO: Remove the second parameter once plugin-wasm is updated to include
-    // outputVarIds in the generated WasmModule
-    return initWasmModel(generatedModel as WasmModule, [])
+    return initWasmModel(generatedModel as WasmModule)
   }
 }
