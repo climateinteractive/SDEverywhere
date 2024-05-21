@@ -10,8 +10,7 @@ import { readDat } from './_shared/read-dat.js'
 import { printSubscripts, yamlSubsList } from './_shared/subscript.js'
 import Model from './model/model.js'
 import { getDirectSubscripts } from './model/read-subscripts.js'
-import { generateC } from './generate/gen-code-c.js'
-import { generateJS } from './generate/gen-code-js.js'
+import { generateCode } from './generate/gen-code.js'
 
 /**
  * Parse a Vensim model and generate C code.
@@ -22,8 +21,8 @@ import { generateJS } from './generate/gen-code-js.js'
  * - If `operations` has 'generateJS', the generated JS code will be written to `buildDir`.
  * - If `operations` has 'printVarList', variables and subscripts will be written to
  *   txt, yaml, and json files under `buildDir`.
- * - If `operation` has 'printRefIdTest', reference identifiers will be printed to the console.
- * - If `operation` has 'convertNames', no output will be generated, but the results of model
+ * - If `operations` has 'printRefIdTest', reference identifiers will be printed to the console.
+ * - If `operations` has 'convertNames', no output will be generated, but the results of model
  *   analysis will be available.
  *
  * @param input The preprocessed Vensim model text.
@@ -67,17 +66,9 @@ export async function parseAndGenerate(input, spec, operations, modelDirname, mo
     }
   }
 
-  // Parse the model and generate code.  The two `generate` functions perform the
-  // same steps (other than the difference in output format), so we will use
-  // `generateJS` if JS is requested as the output format, otherwise we will use
-  // `generateC`.
+  // Parse the model and generate code
   let parsedModel = parseModel(input, modelDirname)
-  let code
-  if (operations.includes('generateJS')) {
-    code = generateJS(parsedModel, { spec, operations, extData, directData, modelDirname })
-  } else {
-    code = generateC(parsedModel, { spec, operations, extData, directData, modelDirname })
-  }
+  let code = generateCode(parsedModel, { spec, operations, extData, directData, modelDirname })
 
   function writeOutput(filename, text) {
     let outputPathname = path.join(buildDir, filename)
