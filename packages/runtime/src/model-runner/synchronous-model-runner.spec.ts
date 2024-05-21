@@ -1,97 +1,40 @@
-// Copyright (c) 2022 Climate Interactive / New Venture Fund
+// Copyright (c) 2024 Climate Interactive / New Venture Fund
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
-import { createInputValue } from '../_shared'
+import { createInputValue /*, createLookupDef*/ } from '../_shared'
 
-import type { WasmModule } from '../wasm-model'
-import { initWasmModel } from '../wasm-model'
+import { ModelListing } from '../model-listing'
 
-import type { RunnableModel } from '../runnable-model'
-import { BaseRunnableModel } from '../runnable-model/base-runnable-model'
+import { MockJsModel } from '../js-model/_mocks/mock-js-model'
+import { MockWasmModule } from '../wasm-model/_mocks/mock-wasm-module'
 
 import type { ModelRunner } from './model-runner'
 import { createSynchronousModelRunner } from './synchronous-model-runner'
-import { ModelListing } from './model-listing'
 
-function createMockWasmModel() {
-  // This is a mock WasmModule that is sufficient for testing the synchronous runner implementation
-  const heapI32 = new Int32Array(1000)
-  const heapF64 = new Float64Array(1000)
-  let mallocOffset = 0
-  const wasmModule: WasmModule = {
-    cwrap: fname => {
-      // Return a mock implementation of each wrapped C function
-      switch (fname) {
-        case 'getInitialTime':
-          return () => 2000
-        case 'getFinalTime':
-          return () => 2002
-        case 'getSaveper':
-          return () => 1
-        case 'runModelWithBuffers':
-          return (inputsAddress: number, outputsAddress: number, outputIndicesAddress: number) => {
-            // These address values are in bytes, so convert to float64 offset
-            const inputsOffset = inputsAddress / 8
-            const outputsOffset = outputsAddress / 8
+const startTime = 2000
+const endTime = 2002
 
-            // This address is in bytes too, so convert to int32 offset
-            const outputIndicesOffset = outputIndicesAddress / 4
-
-            // Verify inputs
-            const inputs = heapF64.slice(inputsOffset, inputsOffset + 3)
-            expect(inputs).toEqual(new Float64Array([7, 8, 9]))
-
-            if (outputIndicesAddress === 0) {
-              // Store 3 values for the _output_1, and 3 for _output_2
-              heapF64.set([1, 2, 3, 4, 5, 6], outputsOffset)
-            } else {
-              // Verify output indices
-              const outputIndices = heapI32.slice(outputIndicesOffset, outputIndicesOffset + 4 * 4)
-              expect(outputIndices).toEqual(
-                new Int32Array([
-                  // _x
-                  3, 0, 0, 0,
-                  // _output_2
-                  2, 0, 0, 0,
-                  // _output_1
-                  1, 0, 0, 0,
-                  // (zero terminator)
-                  0, 0, 0, 0
-                ])
-              )
-
-              // Store 3 values for each of the three variables
-              heapF64.set([7, 8, 9, 4, 5, 6, 1, 2, 3], outputsOffset)
-            }
-          }
-        default:
-          throw new Error(`Unhandled call to cwrap with function name '${fname}'`)
-      }
-    },
-    _malloc: lengthInBytes => {
-      const currentOffset = mallocOffset
-      mallocOffset += lengthInBytes
-      return currentOffset
-    },
-    _free: () => undefined,
-    HEAP32: heapI32,
-    HEAPF64: heapF64
-  }
-  return initWasmModel(wasmModule, ['_output_1', '_output_2'])
-}
-
-function createMockJsRunnableModel(): RunnableModel {
-  return new BaseRunnableModel({
-    startTime: 2000,
-    endTime: 2002,
-    saveFreq: 1,
-    numSavePoints: 3,
+function createMockWasmModule(): MockWasmModule {
+  return new MockWasmModule({
+    initialTime: startTime,
+    finalTime: endTime,
     outputVarIds: ['_output_1', '_output_2'],
-    onRunModel: (inputs, outputs, outputIndices) => {
+    onRunModel: (inputs, outputs, /*lookups,*/ outputIndices) => {
       // Verify inputs
       expect(inputs).toEqual(new Float64Array([7, 8, 9]))
 
+      // if (lookups.size > 0) {
+      //   // Pretend that outputs are derived from lookup data
+      //   const lookup1 = lookups.get('_output_1_data')
+      //   const lookup2 = lookups.get('_output_2_data')
+      //   expect(lookup1).toBeDefined()
+      //   expect(lookup2).toBeDefined()
+      //   for (let i = 0; i < 3; i++) {
+      //     outputs[i] = lookup1.getValueForX(2000 + i, 'interpolate')
+      //     outputs[i + 3] = lookup2.getValueForX(2000 + i, 'interpolate')
+      //   }
+      // } else {
       if (outputIndices === undefined) {
         // Store 3 values for the _output_1, and 3 for _output_2
         outputs.set([1, 2, 3, 4, 5, 6])
@@ -109,10 +52,33 @@ function createMockJsRunnableModel(): RunnableModel {
             0, 0, 0, 0
           ])
         )
-
         // Store 3 values for each of the three variables
         outputs.set([7, 8, 9, 4, 5, 6, 1, 2, 3])
       }
+      // }
+    }
+  })
+}
+
+function createMockJsModel(): MockJsModel {
+  return new MockJsModel({
+    initialTime: startTime,
+    finalTime: endTime,
+    outputVarIds: ['_output_1', '_output_2'],
+    onEvalAux: (vars /*, lookups*/) => {
+      const time = vars.get('_time')
+      // if (lookups.size > 0) {
+      //   const lookup1 = lookups.get('_output_1_data')
+      //   const lookup2 = lookups.get('_output_2_data')
+      //   expect(lookup1).toBeDefined()
+      //   expect(lookup2).toBeDefined()
+      //   vars.set('_output_1', lookup1.getValueForX(time, 'interpolate'))
+      //   vars.set('_output_2', lookup2.getValueForX(time, 'interpolate'))
+      // } else {
+      vars.set('_output_1', time - startTime + 1)
+      vars.set('_output_2', time - startTime + 4)
+      vars.set('_x', time - startTime + 7)
+      // }
     }
   })
 }
@@ -125,13 +91,26 @@ const p = (x: number, y: number) => {
 }
 
 describe.each([
-  { kind: 'wasm', model: createMockWasmModel() },
-  { kind: 'js', model: createMockJsRunnableModel() }
-])('createSynchronousModelRunner (with mock $kind model)', ({ model }) => {
+  // Run the tests once with a mock JS model
+  { kind: 'js' },
+  // Run the tests once with a mock Wasm module
+  { kind: 'wasm' }
+])('createSynchronousModelRunner (with mock $kind model)', ({ kind }) => {
+  let mock: MockJsModel | MockWasmModule
   let runner: ModelRunner
 
-  beforeEach(async () => {
-    runner = createSynchronousModelRunner(model)
+  beforeEach(() => {
+    switch (kind) {
+      case 'js':
+        mock = createMockJsModel()
+        break
+      case 'wasm':
+        mock = createMockWasmModule()
+        break
+      default:
+        throw new Error('Unhandled mock kind')
+    }
+    runner = createSynchronousModelRunner(mock)
   })
 
   afterEach(async () => {
@@ -177,6 +156,8 @@ describe.each([
 `
 
     const listing = new ModelListing(json)
+    mock.setListing(listing)
+
     const inputs = [7, 8, 9]
     const normalOutputs = runner.createOutputs()
     const implOutputs = listing.deriveOutputs(normalOutputs, ['_x', '_output_2', '_output_1'])
