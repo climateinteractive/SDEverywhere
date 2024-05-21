@@ -1,5 +1,6 @@
 // Copyright (c) 2024 Climate Interactive / New Venture Fund
 
+import { indicesPerVariable, type VarSpec } from '../_shared'
 import type { RunnableModel } from '../runnable-model'
 import { BaseRunnableModel } from '../runnable-model/base-runnable-model'
 
@@ -32,12 +33,12 @@ export interface JsModel {
   setModelFunctions(functions: JsModelFunctions): void
 
   setTime(time: number): void
-
   setInputs(inputValue: (index: number) => number): void
 
   getOutputVarIds(): string[]
   getOutputVarNames(): string[]
   storeOutputs(storeValue: (value: number) => void): void
+  storeOutput(varSpec: VarSpec, storeValue: (value: number) => void): void
 
   initConstants(): void
   initLevels(): void
@@ -118,33 +119,46 @@ function runJsModel(
   model.initLevels()
 
   // Set up a run loop using a fixed number of time steps
-  let savePointIndex = 0
-  let outputVarIndex = 0
   const lastStep = Math.round((finalTime - initialTime) / timeStep)
   let step = 0
+  let savePointIndex = 0
+  let outputVarIndex = 0
   while (step <= lastStep) {
     // Evaluate aux variables
     model.evalAux()
 
     if (time % saveFreq < 1e-6) {
       outputVarIndex = 0
+      const storeValue = (value: number) => {
+        // Write each value into the preallocated buffer; each variable has a "row" that
+        // contains `numSavePoints` values, one value for each save point
+        const outputBufferIndex = outputVarIndex * numSavePoints + savePointIndex
+        outputs[outputBufferIndex] = value
+        outputVarIndex++
+      }
       if (outputIndices !== undefined) {
         // Store the outputs as specified in the current output indices buffer.  This
         // iterates over the output indices buffer until we reach the first zero index.
+        let i = 0
         // eslint-disable-next-line no-constant-condition
         while (true) {
-          // const indexBufferOffset = i * INDICES_PER_OUTPUT
-          // const varIndex = outputIndices[indexBufferOffset]
-          if (outputVarIndex > 0) {
-            throw new Error('Not yet implemented')
-            // const subIndex0 = outputIndices[indexBufferOffset + 1]
-            // const subIndex1 = outputIndices[indexBufferOffset + 2]
-            // const subIndex2 = outputIndices[indexBufferOffset + 3]
-            // storeOutput(varIndex, subIndex0, subIndex1, subIndex2)
+          const indexBufferOffset = i * indicesPerVariable
+          const varIndex = outputIndices[indexBufferOffset]
+          if (varIndex > 0) {
+            const subscriptIndices: number[] = Array(3)
+            subscriptIndices[0] = outputIndices[indexBufferOffset + 1]
+            subscriptIndices[1] = outputIndices[indexBufferOffset + 2]
+            subscriptIndices[2] = outputIndices[indexBufferOffset + 3]
+            const varSpec: VarSpec = {
+              varIndex,
+              subscriptIndices
+            }
+            model.storeOutput(varSpec, storeValue)
           } else {
             // Stop when we reach the first zero index
             break
           }
+          i++
         }
       } else {
         // Store the normal outputs
@@ -161,19 +175,13 @@ function runJsModel(
         //     outputVarIndex++
         //   })
         // } else {
-        model.storeOutputs(value => {
-          // Write each value into the preallocated buffer; each variable has a "row" that
-          // contains `numSavePoints` values, one value for each save point
-          const outputBufferIndex = outputVarIndex * numSavePoints + savePointIndex
-          outputs[outputBufferIndex] = value
-          outputVarIndex++
-        })
+        model.storeOutputs(storeValue)
         // }
       }
       savePointIndex++
     }
 
-    if (step == lastStep) {
+    if (step === lastStep) {
       // This is the last step, so we are done
       break
     }
