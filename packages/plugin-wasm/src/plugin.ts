@@ -36,8 +36,8 @@ class WasmPlugin implements Plugin {
   async postGenerateC(context: BuildContext, cContent: string): Promise<string> {
     context.log('info', '  Generating WebAssembly module')
 
-    // If `outputJsPath` is undefined, write `wasm-model.js` to the prep dir
-    const stagedOutputJsFile = 'wasm-model.js'
+    // If `outputJsPath` is undefined, write `generated-model.js` to the prep dir
+    const stagedOutputJsFile = 'generated-model.js'
     let outputJsPath: string
     if (this.options?.outputJsPath) {
       outputJsPath = this.options.outputJsPath
