@@ -13,7 +13,7 @@ sending the outputs back to the main thread.
 
 | Name | Type | Description |
 | :------ | :------ | :------ |
-| `init` | () => `Promise`<`JsModel` \| `WasmModule`\> | The function that initializes the generated model instance that is used in the worker thread. |
+| `init` | () => `Promise`<`GeneratedModel`\> | The function that initializes the generated model instance that is used in the worker thread. |
 
 #### Returns
 
