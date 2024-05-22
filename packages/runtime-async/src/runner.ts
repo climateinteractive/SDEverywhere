@@ -12,15 +12,10 @@ import { BufferedRunModelParams, Outputs } from '@sdeverywhere/runtime'
  * initializes the model worker in the context of the Web Worker:
  *
  * ```js
- * import { initWasmModelAndBuffers } from '@sdeverywhere/runtime'
  * import { exposeModelWorker } from '@sdeverywhere/runtime-async/worker'
+ * import loadWasm from './wasm-model.js'
  *
- * async function initWasmModel() {
- *   const wasmModules = loadWasm()
- *   return initWasmModelAndBuffers(...)
- * }
- *
- * exposeModelWorker(initWasmModel)
+ * exposeModelWorker(loadWasm)
  * ```
  *
  * Then, in your web app, call the `spawnAsyncModelRunner` function, which

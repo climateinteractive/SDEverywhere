@@ -15,18 +15,18 @@ import { spawnAsyncModelRunner } from '../src/runner'
 // run only after the `runtime` and `runtime-async` have been built.
 //
 
-const workerSource = `
+const workerSource = `\
 const path = require('path')
-const { initWasmModelAndBuffers } = require('@sdeverywhere/runtime')
 const { exposeModelWorker } = require('@sdeverywhere/runtime-async')
 
-function initWasmModel() {
+async function initWasmModule() {
   // This is a mock WasmModule that is sufficient for testing communication between the
   // async runner and worker
   const heapI32 = new Int32Array(1000)
   const heapF64 = new Float64Array(1000)
   let mallocOffset = 0
   const wasmModule = {
+    outputVarIds: ['_output_1', '_output_2'],
     cwrap: (fname) => {
       // Return a mock implementation of each wrapped C function
       switch (fname) {
@@ -66,9 +66,9 @@ function initWasmModel() {
     HEAP32: heapI32,
     HEAPF64: heapF64
   }
-  return initWasmModelAndBuffers(wasmModule, 3, ['_output_1', '_output_2'])
+  return wasmModule
 }
-exposeModelWorker(initWasmModel)
+exposeModelWorker(initWasmModule)
 `
 
 const p = (x: number, y: number) => {
