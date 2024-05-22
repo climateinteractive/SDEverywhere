@@ -101,7 +101,7 @@ async function createSynchronousRunner() {
 
   // Load the generated model and verify that it exposes `outputVarIds`
   const generatedModel = await loadGeneratedModel()
-  const actualVarIds = generatedModule.outputVarIds || []
+  const actualVarIds = generatedModel.outputVarIds || []
   const expectedVarIds = ['_z', '_d[_a1]']
   if (actualVarIds.length !== expectedVarIds.length || !actualVarIds.every((v, i) => v === expectedVarIds[i])) {
     throw new Error(
