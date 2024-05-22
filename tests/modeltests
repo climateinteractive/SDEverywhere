@@ -114,8 +114,8 @@ if [[ -n $mdl ]]; then
 else
   # Test all models in the models directory
   for m in $(ls "$MODELS_DIR"); do
-    # Skip the node_modules directory
-    if [[ $m == "node_modules" ]]; then
+    # Skip node_modules directory and other non-model files like package.json
+    if [[ $m == "node_modules" || ! -d "$MODELS_DIR/$m" ]]; then
       continue
     fi
 
