@@ -57,11 +57,11 @@ function injectModelSpec(prepDir: string, modelSpec: ModelSpec): VitePlugin {
     }
   }
 
-  // The size (in bytes) of the `wasm-model.js` file
-  // TODO: Ideally we would measure the size of the raw WASM binary, but currently
+  // The size (in bytes) of the `generated-model.js` file
+  // TODO: Ideally we would measure the size of the raw Wasm binary, but currently
   // we inline it as a base64 blob inside the JS file, so we take the size of the
   // whole JS file as the second best option
-  const modelSizeInBytes = stagedFileSize('wasm-model.js')
+  const modelSizeInBytes = stagedFileSize('generated-model.js')
 
   // The size (in bytes) of the `static-data.ts` file
   // TODO: Ideally we would measure the size of the minified JS file here, or
