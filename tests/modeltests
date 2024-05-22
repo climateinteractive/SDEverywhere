@@ -6,7 +6,7 @@ MODELS_DIR=$PROJ_DIR/models
 
 # If GEN_FORMAT is not set, default to "c"
 if [[ -z $GEN_FORMAT ]]; then
-  GEN_FORMAT=c
+  export GEN_FORMAT=c
 fi
 
 set -e # fail on error
@@ -44,10 +44,12 @@ function test {
     node "$SDE_MAIN" test $TEST_ARGS --genformat=$GEN_FORMAT -p $PRECISION "$MODEL_DIR/$MODEL"
   fi
 
-  if [[ $GEN_FORMAT == "c" ]]; then
-    # Run additional script to validate output
-    VALIDATE_SCRIPT=$MODEL_DIR/${MODEL}_check.sh
-    if [[ -f $VALIDATE_SCRIPT ]]; then
+  # Run additional script to validate output
+  VALIDATE_SCRIPT=$MODEL_DIR/${MODEL}_check.sh
+  if [[ -f $VALIDATE_SCRIPT ]]; then
+    if [[ $MODEL == "prune" && $GEN_FORMAT == "js" ]]; then
+      echo "Skipping validation checks for prune model (not yet updated for JS target)"
+    else
       echo "Performing additional validation checks on $MODEL"
       $VALIDATE_SCRIPT
     fi
