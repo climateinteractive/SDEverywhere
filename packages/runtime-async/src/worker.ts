@@ -3,11 +3,11 @@
 import type { TransferDescriptor } from 'threads'
 import { expose, Transfer } from 'threads/worker'
 
-import type { JsModel, RunnableModel, WasmModule } from '@sdeverywhere/runtime'
+import type { GeneratedModel, RunnableModel } from '@sdeverywhere/runtime'
 import { BufferedRunModelParams, createRunnableModel } from '@sdeverywhere/runtime'
 
 /** @hidden */
-let initGeneratedModel: () => Promise<JsModel | WasmModule>
+let initGeneratedModel: () => Promise<GeneratedModel>
 
 /** @hidden */
 let runnableModel: RunnableModel
@@ -74,7 +74,7 @@ const modelWorker = {
  * @param init The function that initializes the generated model instance that
  * is used in the worker thread.
  */
-export function exposeModelWorker(init: () => Promise<JsModel | WasmModule>): void {
+export function exposeModelWorker(init: () => Promise<GeneratedModel>): void {
   // Save the initializer, which will be used when the runner calls `initModel`
   // on the worker
   initGeneratedModel = init

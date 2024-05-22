@@ -22,6 +22,9 @@ export type OnRunModel = (
  */
 export class MockWasmModule implements WasmModule {
   // from WasmModule interface
+  public readonly kind = 'wasm'
+
+  // from WasmModule interface
   public readonly outputVarIds: OutputVarId[]
 
   private readonly initialTime: number

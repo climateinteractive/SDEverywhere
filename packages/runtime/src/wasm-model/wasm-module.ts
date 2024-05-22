@@ -8,8 +8,8 @@ import type { OutputVarId } from '../_shared'
  * set of fields needed by the SDEverywhere runtime.
  */
 export interface WasmModule {
-  /** @hidden */
-  outputVarIds: OutputVarId[]
+  readonly kind: 'wasm'
+  readonly outputVarIds: OutputVarId[]
   /** @hidden */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   cwrap: (fname: string, rettype: string, argtypes: string[]) => any
