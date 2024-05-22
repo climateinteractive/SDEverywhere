@@ -60,6 +60,10 @@ function readInlineModelAndGenerateJS(
 // by `generateJS` and also with the "real" `JsModel` interface that
 // is exported by the runtime package.
 interface JsModel {
+  readonly kind: 'js'
+  readonly outputVarIds: string[]
+  readonly outputVarNames: string[]
+
   getInitialTime(): number
   getFinalTime(): number
   getTimeStep(): number
@@ -69,12 +73,10 @@ interface JsModel {
   setModelFunctions(functions: /*JsModelFunctions*/ any): void
 
   setTime(time: number): void
-
   setInputs(inputValue: (index: number) => number): void
 
-  getOutputVarIds(): string[]
-  getOutputVarNames(): string[]
   storeOutputs(storeValue: (value: number) => void): void
+  storeOutput(varSpec: /*VarSpec*/ any, storeValue: (value: number) => void): void
 
   initConstants(): void
   initLevels(): void
@@ -85,7 +87,6 @@ interface JsModel {
 async function initJsModel(generatedJsCode: string): Promise<JsModel> {
   const dataUri = 'data:text/javascript;charset=utf-8,' + encodeURIComponent(generatedJsCode)
   const module = await import(dataUri)
-  // console.log(module)
   return (await module.default()) as JsModel
 }
 
@@ -354,23 +355,19 @@ function evalAux0() {
   _input = valueAtIndex(0);
 }
 
-/*export*/ function getOutputVarIds() {
-  return [
-    '_x',
-    '_y',
-    '_z',
-    '_w'
-  ]
-}
+/*export*/ const outputVarIds = [
+  '_x',
+  '_y',
+  '_z',
+  '_w'
+];
 
-/*export*/ function getOutputVarNames() {
-  return [
-    'x',
-    'y',
-    'z',
-    'w'
-  ]
-}
+/*export*/ const outputVarNames = [
+  'x',
+  'y',
+  'z',
+  'w'
+];
 
 /*export*/ function storeOutputs(storeValue /*: (value: number) => void*/) {
   storeValue(_x);
@@ -379,8 +376,8 @@ function evalAux0() {
   storeValue(_w);
 }
 
-/*export*/ function storeOutput(varIndex, subIndex0, subIndex1, subIndex2, storeValue /*: (value: number) => void*/) {
-  switch (varIndex) {
+/*export*/ function storeOutput(varSpec /*: VarSpec*/, storeValue /*: (value: number) => void*/) {
+  switch (varSpec.varIndex) {
     case 1:
       storeValue(_input);
       break;
@@ -403,6 +400,10 @@ function evalAux0() {
 
 export default async function () {
   return {
+    kind: 'js',
+    outputVarIds,
+    outputVarNames,
+
     getInitialTime,
     getFinalTime,
     getTimeStep,
@@ -412,12 +413,10 @@ export default async function () {
     setModelFunctions,
 
     setTime,
-
     setInputs,
 
-    getOutputVarIds,
-    getOutputVarNames,
     storeOutputs,
+    storeOutput,
 
     initConstants,
     initLevels,

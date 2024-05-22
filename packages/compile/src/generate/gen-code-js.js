@@ -246,30 +246,30 @@ ${chunkedFunctions('evalLevels', true, Model.levelVars(), '  // Evaluate levels'
   // Input/output section
   //
   function emitIOCode() {
-    let outputVarNames = outputAllVars ? expandedVarNames(true) : spec.outputVars
-    let outputVarIds = outputAllVars ? expandedVarNames() : spec.outputVars
+    const outputVarIds = outputAllVars ? expandedVarNames() : spec.outputVars
+    const outputVarNames = outputAllVars ? expandedVarNames(true) : spec.outputVars
+    const outputVarIdElems = outputVarIds.map(id => `'${id}'`).join(',\n  ')
+    const outputVarNameElems = outputVarNames
+      .map(name => `'${Model.vensimName(name).replace(/'/g, `\\'`)}'`)
+      .join(',\n  ')
     mode = 'io'
     return `\
 /*export*/ function setInputs(valueAtIndex /*: (index: number) => number*/) {${inputsFromBufferImpl()}}
 
-/*export*/ function getOutputVarIds() {
-  return [
-    ${outputVarIds.map(id => `'${id}'`).join(',\n    ')}
-  ]
-}
+/*export*/ const outputVarIds = [
+  ${outputVarIdElems}
+];
 
-/*export*/ function getOutputVarNames() {
-  return [
-    ${outputVarNames.map(name => `'${Model.vensimName(name).replace(/'/g, `\\'`)}'`).join(',\n    ')}
-  ]
-}
+/*export*/ const outputVarNames = [
+  ${outputVarNameElems}
+];
 
 /*export*/ function storeOutputs(storeValue /*: (value: number) => void*/) {
 ${specOutputSection(outputVarIds)}
 }
 
-/*export*/ function storeOutput(varIndex, subIndex0, subIndex1, subIndex2, storeValue /*: (value: number) => void*/) {
-  switch (varIndex) {
+/*export*/ function storeOutput(varSpec /*: VarSpec*/, storeValue /*: (value: number) => void*/) {
+  switch (varSpec.varIndex) {
 ${fullOutputSection(Model.varIndexInfo())}
     default:
       break;
@@ -437,13 +437,13 @@ ${section(chunk)}
     const code = R.map(info => {
       let varAccess = info.varName
       if (info.subscriptCount > 0) {
-        varAccess += '[subIndex0]'
+        varAccess += '[varSpec.subscriptIndices[0]]'
       }
       if (info.subscriptCount > 1) {
-        varAccess += '[subIndex1]'
+        varAccess += '[varSpec.subscriptIndices[1]]'
       }
       if (info.subscriptCount > 2) {
-        varAccess += '[subIndex2]'
+        varAccess += '[varSpec.subscriptIndices[2]]'
       }
       let c = ''
       c += `    case ${info.varIndex}:\n`
@@ -487,6 +487,10 @@ ${section(chunk)}
     return `\
 export default async function () {
   return {
+    kind: 'js',
+    outputVarIds,
+    outputVarNames,
+
     getInitialTime,
     getFinalTime,
     getTimeStep,
@@ -496,12 +500,10 @@ export default async function () {
     setModelFunctions,
 
     setTime,
-
     setInputs,
 
-    getOutputVarIds,
-    getOutputVarNames,
     storeOutputs,
+    storeOutput,
 
     initConstants,
     initLevels,
