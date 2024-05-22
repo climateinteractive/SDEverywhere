@@ -38,6 +38,7 @@ export interface JsModel {
   getOutputVarIds(): string[]
   getOutputVarNames(): string[]
   storeOutputs(storeValue: (value: number) => void): void
+  /** @hidden */
   storeOutput(varSpec: VarSpec, storeValue: (value: number) => void): void
 
   initConstants(): void

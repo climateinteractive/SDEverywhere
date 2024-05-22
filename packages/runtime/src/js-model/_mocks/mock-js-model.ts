@@ -5,8 +5,22 @@ import type { ModelListing } from '../../model-listing'
 import type { JsModel } from '../js-model'
 import type { JsModelFunctions } from '../js-model-functions'
 
+/**
+ * @hidden This type is not part of the public API; it is exposed only for use in
+ * tests in the runtime-async package.
+ */
+export type VarIdForSpec = (varSpec: VarSpec) => VarId | undefined
+
+/**
+ * @hidden This type is not part of the public API; it is exposed only for use in
+ * tests in the runtime-async package.
+ */
 export type OnEvalAux = (vars: Map<VarId, number> /*, lookups: Map<VarId, JsModelLookup>*/) => void
 
+/**
+ * @hidden This type is not part of the public API; it is exposed only for use in
+ * tests in the runtime-async package.
+ */
 export class MockJsModel implements JsModel {
   private readonly initialTime: number
   private readonly finalTime: number
@@ -20,18 +34,35 @@ export class MockJsModel implements JsModel {
   private listing: ModelListing
 
   public readonly onEvalAux: OnEvalAux
+  public readonly varIdForSpec: VarIdForSpec
 
   constructor(options: {
     initialTime: number
     finalTime: number
     // inputVarIds?: string[]
     outputVarIds: string[]
+    varIdForSpec?: VarIdForSpec
     onEvalAux: OnEvalAux
   }) {
     this.initialTime = options.initialTime
     this.finalTime = options.finalTime
     // this.inputVarIds = options.inputVarIds
     this.outputVarIds = options.outputVarIds
+    if (options.varIdForSpec) {
+      // Use the provided lookup function
+      this.varIdForSpec = options.varIdForSpec
+    } else {
+      // Use a default lookup function that relies on the `ModelListing`
+      this.varIdForSpec = (varSpec: VarSpec) => {
+        for (const [listingVarId, listingSpec] of this.listing.varSpecs) {
+          // TODO: This doesn't compare subscripts yet
+          if (listingSpec.varIndex === varSpec.varIndex) {
+            return listingVarId
+          }
+        }
+        return undefined
+      }
+    }
     this.onEvalAux = options.onEvalAux
   }
 
@@ -127,14 +158,4 @@ export class MockJsModel implements JsModel {
 
   // from JsModel interface
   evalLevels(): void {}
-
-  private varIdForSpec(varSpec: VarSpec): VarId | undefined {
-    for (const [listingVarId, listingSpec] of this.listing.varSpecs) {
-      // TODO: This doesn't compare subscripts yet
-      if (listingSpec.varIndex === varSpec.varIndex) {
-        return listingVarId
-      }
-    }
-    return undefined
-  }
 }

@@ -15,6 +15,29 @@ import { createSynchronousModelRunner } from './synchronous-model-runner'
 const startTime = 2000
 const endTime = 2002
 
+function createMockJsModel(): MockJsModel {
+  return new MockJsModel({
+    initialTime: startTime,
+    finalTime: endTime,
+    outputVarIds: ['_output_1', '_output_2'],
+    onEvalAux: (vars /*, lookups*/) => {
+      const time = vars.get('_time')
+      // if (lookups.size > 0) {
+      //   const lookup1 = lookups.get('_output_1_data')
+      //   const lookup2 = lookups.get('_output_2_data')
+      //   expect(lookup1).toBeDefined()
+      //   expect(lookup2).toBeDefined()
+      //   vars.set('_output_1', lookup1.getValueForX(time, 'interpolate'))
+      //   vars.set('_output_2', lookup2.getValueForX(time, 'interpolate'))
+      // } else {
+      vars.set('_output_1', time - startTime + 1)
+      vars.set('_output_2', time - startTime + 4)
+      vars.set('_x', time - startTime + 7)
+      // }
+    }
+  })
+}
+
 function createMockWasmModule(): MockWasmModule {
   return new MockWasmModule({
     initialTime: startTime,
@@ -55,29 +78,6 @@ function createMockWasmModule(): MockWasmModule {
         // Store 3 values for each of the three variables
         outputs.set([7, 8, 9, 4, 5, 6, 1, 2, 3])
       }
-      // }
-    }
-  })
-}
-
-function createMockJsModel(): MockJsModel {
-  return new MockJsModel({
-    initialTime: startTime,
-    finalTime: endTime,
-    outputVarIds: ['_output_1', '_output_2'],
-    onEvalAux: (vars /*, lookups*/) => {
-      const time = vars.get('_time')
-      // if (lookups.size > 0) {
-      //   const lookup1 = lookups.get('_output_1_data')
-      //   const lookup2 = lookups.get('_output_2_data')
-      //   expect(lookup1).toBeDefined()
-      //   expect(lookup2).toBeDefined()
-      //   vars.set('_output_1', lookup1.getValueForX(time, 'interpolate'))
-      //   vars.set('_output_2', lookup2.getValueForX(time, 'interpolate'))
-      // } else {
-      vars.set('_output_1', time - startTime + 1)
-      vars.set('_output_2', time - startTime + 4)
-      vars.set('_x', time - startTime + 7)
       // }
     }
   })

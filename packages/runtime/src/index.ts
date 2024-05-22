@@ -2,6 +2,7 @@
 
 export * from './_shared'
 export * from './model-listing'
+export * from './runnable-model'
 export * from './js-model'
 export * from './wasm-model'
 export * from './model-runner'

@@ -5,6 +5,10 @@ import type { OutputVarId /*, VarId*/ } from '../../_shared'
 import type { ModelListing } from '../../model-listing'
 import type { WasmModule } from '../wasm-module'
 
+/**
+ * @hidden This type is not part of the public API; it is exposed only for use in
+ * tests in the runtime-async package.
+ */
 export type OnRunModel = (
   inputs: Float64Array,
   outputs: Float64Array,
@@ -12,6 +16,10 @@ export type OnRunModel = (
   outputIndices?: Int32Array
 ) => void
 
+/**
+ * @hidden This type is not part of the public API; it is exposed only for use in
+ * tests in the runtime-async package.
+ */
 export class MockWasmModule implements WasmModule {
   // from WasmModule interface
   public readonly outputVarIds: OutputVarId[]
