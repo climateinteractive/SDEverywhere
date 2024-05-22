@@ -1,5 +1,5 @@
-import { generateC } from './gen-code-c'
-import { generateJS } from './gen-code-js'
+import { generateC } from './gen-code-c.js'
+import { generateJS } from './gen-code-js.js'
 
 /**
  * Generate code from the given parsed model.
