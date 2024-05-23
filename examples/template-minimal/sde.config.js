@@ -48,7 +48,8 @@ export async function config() {
       // containing the Wasm model
       genFormat === 'c' && wasmPlugin(),
 
-      // Generate a `worker.js` file that runs the Wasm model in a worker
+      // Generate a `worker.js` file that runs the model asynchronously on a
+      // worker thread for improved responsiveness
       workerPlugin(),
 
       // Run model check
