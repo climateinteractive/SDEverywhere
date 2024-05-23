@@ -6,7 +6,6 @@ export { preprocessModel } from './preprocess/preprocessor.js'
 export { generateCode } from './generate/gen-code.js'
 export { parseAndGenerate, parseModel, printNames } from './parse-and-generate.js'
 
-// XXX
 import { resetHelperState } from './_shared/helpers.js'
 import { resetSubscriptsAndDimensions } from './_shared/subscript.js'
 import Model from './model/model.js'

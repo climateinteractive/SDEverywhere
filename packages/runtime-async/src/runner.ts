@@ -9,7 +9,7 @@ import { BufferedRunModelParams, Outputs } from '@sdeverywhere/runtime'
  * Initialize a `ModelRunner` that runs the model asynchronously in a worker thread.
  *
  * In your app project, define a JavaScript file, called `worker.js` for example, that
- * initializes the generated model in the context of the Web Worker.
+ * initializes the generated model in the context of the Web Worker:
  *
  * ```js
  * import { exposeModelWorker } from '@sdeverywhere/runtime-async/worker'

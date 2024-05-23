@@ -20,7 +20,7 @@ class WorkerPlugin implements Plugin {
     const log = context.log
     log('info', 'Building worker')
 
-    // Locate the input (Wasm) file in the staged directory.  Note that this
+    // Locate the generated model file in the staged directory.  Note that this
     // relies on the `build` package writing the JS model (or the `plugin-wasm`
     // package writing the Wasm model) to a file called `generated-model.js`
     // in the `staged/model` directory.
