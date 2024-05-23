@@ -177,8 +177,8 @@ async function generateCode(context: BuildContext, sdeDir: string, sdeCmdPath: s
   // dimensions and variables (`--list`)
   const command = sdeCmdPath
   const outFormat = `--outformat=${genFormat}`
-  const gencArgs = ['generate', outFormat, '--list', '--spec', 'spec.json', 'processed']
-  const gencOutput = await context.spawnChild(prepDir, command, gencArgs, {
+  const genCmdArgs = ['generate', outFormat, '--list', '--spec', 'spec.json', 'processed']
+  const genCmdOutput = await context.spawnChild(prepDir, command, genCmdArgs, {
     // By default, ignore lines that start with "WARNING: Data for" since these are often harmless
     // TODO: Don't filter by default, but make it configurable
     // ignoredMessageFilter: 'WARNING: Data for'
@@ -186,9 +186,9 @@ async function generateCode(context: BuildContext, sdeDir: string, sdeCmdPath: s
     // following allows us to throw our own error
     ignoreError: true
   })
-  if (gencOutput.exitCode !== 0) {
+  if (genCmdOutput.exitCode !== 0) {
     throw new Error(
-      `Failed to generate ${genFormatName} code: 'sde generate' command failed (code=${gencOutput.exitCode})`
+      `Failed to generate ${genFormatName} code: 'sde generate' command failed (code=${genCmdOutput.exitCode})`
     )
   }
 
