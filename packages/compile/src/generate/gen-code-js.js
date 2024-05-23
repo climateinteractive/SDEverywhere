@@ -1,6 +1,6 @@
 import * as R from 'ramda'
 
-import { asort, lines, strlist, mapIndexed } from '../_shared/helpers.js'
+import { asort, canonicalVensimName, lines, strlist, mapIndexed } from '../_shared/helpers.js'
 import { sub, allDimensions, allMappings, subscriptFamilies } from '../_shared/subscript.js'
 import Model from '../model/model.js'
 
@@ -239,13 +239,28 @@ ${chunkedFunctions('evalLevels', true, Model.levelVars(), '  // Evaluate levels'
   // Input/output section
   //
   function emitIOCode() {
-    const outputVarIds = outputAllVars ? expandedVarNames() : spec.outputVars
+    mode = 'io'
+
+    // This is the list of original output variable names (as supplied by the user in
+    // the `spec.json` file), for example, `a[A2,B1]`.  These are exported mainly for
+    // use in the implementation of the `sde exec` command, which generates a TSV file
+    // with a header line that includes the original variable names for all outputs.
     const outputVarNames = outputAllVars ? expandedVarNames(true) : spec.outputVarNames
-    const outputVarIdElems = outputVarIds.map(id => `'${id}'`).join(',\n  ')
     const outputVarNameElems = outputVarNames
       .map(name => `'${Model.vensimName(name).replace(/'/g, `\\'`)}'`)
       .join(',\n  ')
-    mode = 'io'
+
+    // This is the list of output variable identifiers (in canonical format), for
+    // example, `_a[_a2,_b2]`.  These are exported for use in the runtime package
+    // for having a canonical identifier associated with the data for each output.
+    const outputVarIds = outputVarNames.map(canonicalVensimName)
+    const outputVarIdElems = outputVarIds.map(id => `'${id}'`).join(',\n  ')
+
+    // This is the list of output variable access declarations, which are in valid
+    // C code format, with subscripts mapped to C index form, for example,
+    // `_a[1][0]`.  These are used in the implementation of `storeOutputs`.
+    const outputVarAccesses = outputAllVars ? expandedVarNames() : spec.outputVars
+
     return `\
 /*export*/ function setInputs(valueAtIndex /*: (index: number) => number*/) {${inputsFromBufferImpl()}}
 
@@ -258,7 +273,7 @@ ${chunkedFunctions('evalLevels', true, Model.levelVars(), '  // Evaluate levels'
 ];
 
 /*export*/ function storeOutputs(storeValue /*: (value: number) => void*/) {
-${specOutputSection(outputVarIds)}
+${specOutputSection(outputVarAccesses)}
 }
 
 /*export*/ function storeOutput(varSpec /*: VarSpec*/, storeValue /*: (value: number) => void*/) {

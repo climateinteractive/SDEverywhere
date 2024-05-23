@@ -375,7 +375,7 @@ function evalAux0() {
 
 /*export*/ const outputVarIds = [
   '_a[_a1]',
-  '_b[_a2][_b1]',
+  '_b[_a2,_b1]',
   '_x',
   '_y',
   '_z',
