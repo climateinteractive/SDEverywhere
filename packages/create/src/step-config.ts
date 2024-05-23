@@ -424,8 +424,7 @@ async function readModelVars(projDir: string, mdlPath: string): Promise<MdlVaria
   // TODO: We can skip the preprocess step once parseAndGenerate calls
   // the new parser that has preprocessing built-in
   const mdlFile = resolvePath(projDir, mdlPath)
-  // TODO: Change genc to runnable after merging in latest changes
-  const preprocessed = preprocessModel(mdlFile, spec, 'genc', /*writeFiles=*/ false)
+  const preprocessed = preprocessModel(mdlFile, spec, 'runnable', /*writeFiles=*/ false)
 
   // Parse the model and generate the variable list
   const mdlDir = dirname(mdlFile)
