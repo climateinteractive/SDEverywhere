@@ -10,7 +10,7 @@ import type { RunModelParams } from './run-model-params'
  * set of input and output parameters.
  *
  * @hidden This is not yet exposed in the public API; it is currently only used by
- * the implementations of the `RunnableModel` interface.
+ * the internal implementations of this interface, and from the runtime-async package.
  */
 export interface RunnableModel {
   /** The start time for the model (aka `INITIAL TIME`). */

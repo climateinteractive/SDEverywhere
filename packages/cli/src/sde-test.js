@@ -13,6 +13,11 @@ export let builder = {
     type: 'string',
     alias: 's'
   },
+  genformat: {
+    describe: 'generated code format',
+    choices: ['js', 'c'],
+    default: 'js'
+  },
   builddir: {
     describe: 'build directory',
     type: 'string',

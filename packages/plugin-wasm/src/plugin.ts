@@ -27,17 +27,20 @@ class WasmPlugin implements Plugin {
     }
 
     // Write a file that will be folded into the generated Wasm module
-    const outputVarsFile = joinPath(buildDir, 'processed_outputs.js')
+    const preJsFile = joinPath(buildDir, 'processed_extras.js')
     const outputVarIds = modelSpec.outputs.map(o => sdeNameForVensimVarName(o.varName))
-    const content = `Module["outputVarIds"] = ${JSON.stringify(outputVarIds)};`
-    await writeFile(outputVarsFile, content)
+    const content = `\
+Module["kind"] = "wasm";
+Module["outputVarIds"] = ${JSON.stringify(outputVarIds)};
+`
+    await writeFile(preJsFile, content)
   }
 
   async postGenerateC(context: BuildContext, cContent: string): Promise<string> {
     context.log('info', '  Generating WebAssembly module')
 
-    // If `outputJsPath` is undefined, write `wasm-model.js` to the prep dir
-    const stagedOutputJsFile = 'wasm-model.js'
+    // If `outputJsPath` is undefined, write `generated-model.js` to the prep dir
+    const stagedOutputJsFile = 'generated-model.js'
     let outputJsPath: string
     if (this.options?.outputJsPath) {
       outputJsPath = this.options.outputJsPath
@@ -117,7 +120,7 @@ async function buildWasm(
   addInput('model.c')
   addInput('vensim.c')
   addArg('--pre-js')
-  addArg('build/processed_outputs.js')
+  addArg('build/processed_extras.js')
   addArg('-Ibuild')
   addArg('-o')
   addArg(outputJsPath)

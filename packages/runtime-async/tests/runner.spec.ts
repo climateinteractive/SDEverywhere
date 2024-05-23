@@ -15,60 +15,86 @@ import { spawnAsyncModelRunner } from '../src/runner'
 // run only after the `runtime` and `runtime-async` have been built.
 //
 
-const workerSource = `
+const workerWithMockJsModel = `\
 const path = require('path')
-const { initWasmModelAndBuffers } = require('@sdeverywhere/runtime')
+const { MockJsModel } = require('@sdeverywhere/runtime')
 const { exposeModelWorker } = require('@sdeverywhere/runtime-async')
 
-function initWasmModel() {
-  // This is a mock WasmModule that is sufficient for testing communication between the
-  // async runner and worker
-  const heapI32 = new Int32Array(1000)
-  const heapF64 = new Float64Array(1000)
-  let mallocOffset = 0
-  const wasmModule = {
-    cwrap: (fname) => {
-      // Return a mock implementation of each wrapped C function
-      switch (fname) {
-        case 'getInitialTime':
-          return () => 2000
-        case 'getFinalTime':
-          return () => 2002
-        case 'getSaveper':
-          return () => 1
-        case 'runModelWithBuffers':
-          return (inputsAddress, outputsAddress, outputIndicesAddress) => {
-            // These address values are in bytes, so convert to float64 offset
-            const inputsOffset = inputsAddress / 8
-            const outputsOffset = outputsAddress / 8
+const startTime = 2000
+const endTime = 2002
 
-            // This address is in bytes too, so convert to int32 offset
-            const outputIndicesOffset = outputIndicesAddress / 4
-
-            if (outputIndicesAddress === 0) {
-              // Store 3 values for the _output_1, and 3 for _output_2
-              heapF64.set([1, 2, 3, 4, 5, 6], outputsOffset)
-            } else {
-              // Store 3 values for each of the three variables
-              heapF64.set([7, 8, 9, 4, 5, 6, 1, 2, 3], outputsOffset)
-            }
-          }
-        default:
-          throw new Error(\`Unhandled call to cwrap with function name '\${fname}'\`)
+function createMockJsModel() {
+  return new MockJsModel({
+    initialTime: startTime,
+    finalTime: endTime,
+    outputVarIds: ['_output_1', '_output_2'],
+    varIdForSpec: varSpec => {
+      switch (varSpec.varIndex) {
+        case 1: return '_output_1'
+        case 2: return '_output_2'
+        case 3: return '_x'
+        default: throw new Error('No var id found for index')
       }
     },
-    _malloc: lengthInBytes => {
-      const currentOffset = mallocOffset
-      mallocOffset += lengthInBytes
-      return currentOffset
-    },
-    _free: () => undefined,
-    HEAP32: heapI32,
-    HEAPF64: heapF64
-  }
-  return initWasmModelAndBuffers(wasmModule, 3, ['_output_1', '_output_2'])
+    onEvalAux: (vars /*, lookups*/) => {
+      const time = vars.get('_time')
+      // if (lookups.size > 0) {
+      //   const lookup1 = lookups.get('_output_1_data')
+      //   const lookup2 = lookups.get('_output_2_data')
+      //   expect(lookup1).toBeDefined()
+      //   expect(lookup2).toBeDefined()
+      //   vars.set('_output_1', lookup1.getValueForX(time, 'interpolate'))
+      //   vars.set('_output_2', lookup2.getValueForX(time, 'interpolate'))
+      // } else {
+      vars.set('_output_1', time - startTime + 1)
+      vars.set('_output_2', time - startTime + 4)
+      vars.set('_x', time - startTime + 7)
+      // }
+    }
+  })
 }
-exposeModelWorker(initWasmModel)
+
+exposeModelWorker(createMockJsModel)
+`
+
+const workerWithMockWasmModule = `\
+const path = require('path')
+const { MockWasmModule } = require('@sdeverywhere/runtime')
+const { exposeModelWorker } = require('@sdeverywhere/runtime-async')
+
+const startTime = 2000
+const endTime = 2002
+
+async function createMockWasmModule() {
+  return new MockWasmModule({
+    initialTime: startTime,
+    finalTime: endTime,
+    outputVarIds: ['_output_1', '_output_2'],
+    onRunModel: (inputs, outputs, /*lookups,*/ outputIndices) => {
+      // if (lookups.size > 0) {
+      //   // Pretend that outputs are derived from lookup data
+      //   const lookup1 = lookups.get('_output_1_data')
+      //   const lookup2 = lookups.get('_output_2_data')
+      //   expect(lookup1).toBeDefined()
+      //   expect(lookup2).toBeDefined()
+      //   for (let i = 0; i < 3; i++) {
+      //     outputs[i] = lookup1.getValueForX(2000 + i, 'interpolate')
+      //     outputs[i + 3] = lookup2.getValueForX(2000 + i, 'interpolate')
+      //   }
+      // } else {
+      if (outputIndices === undefined) {
+        // Store 3 values for the _output_1, and 3 for _output_2
+        outputs.set([1, 2, 3, 4, 5, 6])
+      } else {
+        // Store 3 values for each of the three variables
+        outputs.set([7, 8, 9, 4, 5, 6, 1, 2, 3])
+      }
+      // }
+    }
+  })
+}
+
+exposeModelWorker(createMockWasmModule)
 `
 
 const p = (x: number, y: number) => {
@@ -78,10 +104,26 @@ const p = (x: number, y: number) => {
   }
 }
 
-describe('spawnAsyncModelRunner', () => {
+describe.each([
+  // Run the tests once with a mock JS model
+  { kind: 'js' },
+  // Run the tests once with a mock Wasm module
+  { kind: 'wasm' }
+])('spawnAsyncModelRunner (with mock $kind model)', ({ kind }) => {
   let runner: ModelRunner
 
   beforeEach(async () => {
+    let workerSource: string
+    switch (kind) {
+      case 'js':
+        workerSource = workerWithMockJsModel
+        break
+      case 'wasm':
+        workerSource = workerWithMockWasmModule
+        break
+      default:
+        throw new Error('Unhandled mock kind')
+    }
     runner = await spawnAsyncModelRunner({ source: workerSource })
   })
 

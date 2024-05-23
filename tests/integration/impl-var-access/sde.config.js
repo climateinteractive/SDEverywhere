@@ -23,10 +23,10 @@ export async function config() {
         }
       },
 
-      // Generate a `wasm-model.js` file containing the Wasm model
+      // Generate a `generated-model.js` file containing the Wasm model
       wasmPlugin(),
 
-      // Generate a `worker.js` file that runs the Wasm model in a worker
+      // Generate a `worker.js` file that runs the generated model in a worker
       workerPlugin()
     ]
   }

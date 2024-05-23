@@ -23,12 +23,6 @@ export interface VarSpec {
 }
 
 /**
- * @hidden This is a temporary type alias to allow existing code that used the old `OutputVarSpec`
- * to continue to work with the renamed `VarSpec` type.
- */
-export type OutputVarSpec = VarSpec
-
-/**
  * @hidden This is not part of the public API; it is exposed here for use by
  * the synchronous and asynchronous model runner implementations.
  */

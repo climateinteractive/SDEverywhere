@@ -3,10 +3,10 @@
 import { readFile } from 'fs/promises'
 import { join as joinPath } from 'path'
 
-import { createInputValue, createWasmModelRunner, initWasmModelAndBuffers, ModelListing } from '@sdeverywhere/runtime'
+import { createInputValue, createSynchronousModelRunner, ModelListing } from '@sdeverywhere/runtime'
 import { spawnAsyncModelRunner } from '@sdeverywhere/runtime-async'
 
-import initWasm from './sde-prep/wasm-model.js'
+import loadGeneratedModel from './sde-prep/generated-model.js'
 
 /*
  * This is a JS-level integration test that is largely the same as the `impl-var-access`
@@ -94,17 +94,18 @@ async function runTests(runnerKind, modelRunner) {
 
 async function createSynchronousRunner() {
   // TODO: This test app is using ESM-style modules, and `__dirname` is not defined
-  // in an ESM context.  The `wasm-model.js` file (containing the embedded wasm model)
-  // contains a reference to `__dirname`, so we need to define it here.  We should
-  // fix the generated `wasm-model.js` file so that it works for either ESM or CommonJS.
+  // in an ESM context.  The `generated-model.js` file (if it contains a Wasm model)
+  // may contain a reference to `__dirname`, so we need to define it here.  We should
+  // fix the generated Wasm file so that it works for either ESM or CommonJS.
   global.__dirname = '.'
 
-  const wasmModule = await initWasm()
-  const wasmResult = initWasmModelAndBuffers(wasmModule, 1, ['_z', '_d[_a1]'])
-  return createWasmModelRunner(wasmResult)
+  // Initialize the synchronous `ModelRunner` that drives the generated model
+  const generatedModel = await loadGeneratedModel()
+  return createSynchronousModelRunner(generatedModel)
 }
 
 async function createAsynchronousRunner() {
+  // Initialize the asynchronous `ModelRunner` that drives the generated model
   const modelWorkerJs = await readFile(joinPath('sde-prep', 'worker.js'), 'utf8')
   return await spawnAsyncModelRunner({ source: modelWorkerJs })
 }

@@ -1,11 +1,15 @@
 #!/bin/bash
 
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+PROJ_DIR=$SCRIPT_DIR/..
+
 set -e # fail on error
 set -x # include all commands in logs
 
-# Run "ci:int-test" script for all JS-level integration test packages.  We run
-# the tests in parallel using all available CPUs (`--workspace-concurrency=0`)
-# since there are no dependencies between the tests.
+# Run "ci:int-test" script for all JS-level integration test packages.  These
+# integration tests exercise the build and runtime packages.  We run the tests
+# in parallel using all available CPUs (`--workspace-concurrency=0`) since there
+# are no dependencies between the tests.
 pnpm \
 --parallel \
 --aggregate-output \
@@ -13,3 +17,9 @@ pnpm \
 --workspace-concurrency=0 \
 -F "./tests/**" \
 -r ci:int-test
+
+# Run the model tests with JS as the code gen target.  For each sample model,
+# we will generate JS code, execute the generated model, and compare its output
+# to Vensim outputs.
+cd $PROJ_DIR
+GEN_FORMAT=js ./tests/modeltests

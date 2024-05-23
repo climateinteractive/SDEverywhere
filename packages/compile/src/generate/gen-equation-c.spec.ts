@@ -73,7 +73,7 @@ function genC(
     }
   }
 
-  const lines = generateEquation(variable, mode, opts?.extData, directData, opts?.modelDir)
+  const lines = generateEquation(variable, mode, opts?.extData, directData, opts?.modelDir, 'c')
 
   // Strip the first comment line (containing the Vensim equation)
   if (lines.length > 0 && lines[0].trim().startsWith('//')) {

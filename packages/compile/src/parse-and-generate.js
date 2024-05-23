@@ -10,7 +10,7 @@ import { readDat } from './_shared/read-dat.js'
 import { printSubscripts, yamlSubsList } from './_shared/subscript.js'
 import Model from './model/model.js'
 import { getDirectSubscripts } from './model/read-subscripts.js'
-import { generateCode } from './generate/code-gen.js'
+import { generateCode } from './generate/gen-code.js'
 
 /**
  * Parse a Vensim model and generate C code.
@@ -18,17 +18,18 @@ import { generateCode } from './generate/code-gen.js'
  * This is the primary entrypoint for the `sde generate` command.
  *
  * - If `operations` has 'generateC', the generated C code will be written to `buildDir`.
+ * - If `operations` has 'generateJS', the generated JS code will be written to `buildDir`.
  * - If `operations` has 'printVarList', variables and subscripts will be written to
  *   txt, yaml, and json files under `buildDir`.
- * - If `operation` has 'printRefIdTest', reference identifiers will be printed to the console.
- * - If `operation` has 'convertNames', no output will be generated, but the results of model
+ * - If `operations` has 'printRefIdTest', reference identifiers will be printed to the console.
+ * - If `operations` has 'convertNames', no output will be generated, but the results of model
  *   analysis will be available.
  *
  * @param input The preprocessed Vensim model text.
  * @param spec The model spec (from the JSON file).
- * @param operations The set of operations to perform; can include 'generateC', 'printVarList',
- * 'printRefIdTest', 'convertNames'.  If the array is empty, the model will be read but no
- * operation will be performed.
+ * @param operations The set of operations to perform; can include 'generateC', 'generateJS',
+ * 'printVarList', 'printRefIdTest', 'convertNames'.  If the array is empty, the model will be
+ * read but no operation will be performed.
  * @param modelDirname The absolute path to the directory containing the mdl file.
  * The dat and xlsx files referenced by the spec will be relative to this directory.
  * @param modelName The model name (without the mdl extension).
@@ -65,7 +66,7 @@ export async function parseAndGenerate(input, spec, operations, modelDirname, mo
     }
   }
 
-  // Parse the model and generate code.
+  // Parse the model and generate code
   let parsedModel = parseModel(input, modelDirname)
   let code = generateCode(parsedModel, { spec, operations, extData, directData, modelDirname })
 
@@ -77,6 +78,11 @@ export async function parseAndGenerate(input, spec, operations, modelDirname, mo
   if (operations.includes('generateC')) {
     // Write the generated C to a file
     writeOutput(`${modelName}.c`, code)
+  }
+
+  if (operations.includes('generateJS')) {
+    // Write the generated JS to a file
+    writeOutput(`${modelName}.js`, code)
   }
 
   if (operations.includes('printVarList')) {
@@ -126,10 +132,11 @@ export function printNames(namesPathname, operation) {
  * @param {string} input The string containing the model text.
  * @param {string} modelDir The absolute path to the directory containing the mdl file.
  * The dat, xlsx, and csv files referenced by the model will be relative to this directory.
- * @param {boolean} sort Whether to sort definitions alphabetically in the preprocess step.
+ * @param {Object} options The options that control parsing.
+ * @param {boolean} options.sort Whether to sort definitions alphabetically in the preprocess step.
  * @return {*} A parsed tree representation of the model.
  */
-export function parseModel(input, modelDir, sort = false) {
+export function parseModel(input, modelDir, options) {
   // Prepare the parse context that provides access to external data files
   let parseContext /*: VensimParseContext*/
   if (modelDir) {
@@ -151,6 +158,7 @@ export function parseModel(input, modelDir, sort = false) {
   // TODO: We currently sort the preprocessed definitions alphabetically for
   // compatibility with the legacy preprocessor.  Once we drop the legacy code
   // we could remove this step and update the tests to use the original order.
+  const sort = options?.sort === true
   const root = parseVensimModel(input, parseContext, sort)
 
   return {

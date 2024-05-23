@@ -3,9 +3,9 @@
 import { describe, expect, it } from 'vitest'
 
 import { Outputs } from '../_shared'
+import { ModelListing } from '../model-listing'
 
 import { ReferencedRunModelParams } from './referenced-run-model-params'
-import { ModelListing } from '../model-runner'
 
 const json = `
 {
