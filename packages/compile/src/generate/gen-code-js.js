@@ -16,14 +16,7 @@ let codeGenerator = (parsedModel, opts) => {
   // Set to 'decl', 'init-lookups', 'eval', etc depending on the section being generated.
   let mode = ''
   // Set to true to output all variables when there is no model run spec.
-  let outputAllVars
-  if (spec.outputVars && spec.outputVars.length > 0) {
-    outputAllVars = false
-  } else if (spec.outputVarNames && spec.outputVarNames.length > 0) {
-    outputAllVars = false
-  } else {
-    outputAllVars = true
-  }
+  let outputAllVars = spec.outputVarNames === undefined || spec.outputVarNames.length === 0
   // Function to generate a section of the code
   let generateSection = R.map(v => {
     return generateEquation(v, mode, extData, directData, modelDirname, 'js')
@@ -247,7 +240,7 @@ ${chunkedFunctions('evalLevels', true, Model.levelVars(), '  // Evaluate levels'
   //
   function emitIOCode() {
     const outputVarIds = outputAllVars ? expandedVarNames() : spec.outputVars
-    const outputVarNames = outputAllVars ? expandedVarNames(true) : spec.outputVars
+    const outputVarNames = outputAllVars ? expandedVarNames(true) : spec.outputVarNames
     const outputVarIdElems = outputVarIds.map(id => `'${id}'`).join(',\n  ')
     const outputVarNameElems = outputVarNames
       .map(name => `'${Model.vensimName(name).replace(/'/g, `\\'`)}'`)
