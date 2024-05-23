@@ -42,4 +42,4 @@ ___
  `Optional` **outputJsPath**: `string`
 
 The path of the resulting JS file (containing the embedded Wasm model).  If undefined,
-the plugin will write `wasm-model.js` to the configured `prepDir`.
+the plugin will write `generated-model.js` to the configured `prepDir`.

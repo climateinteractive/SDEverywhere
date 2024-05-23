@@ -2,7 +2,7 @@
 
 import { describe, expect, it } from 'vitest'
 import { ModelListing } from './model-listing'
-import { Outputs } from './outputs'
+import { Outputs } from '../_shared/outputs'
 
 const json = `
 {

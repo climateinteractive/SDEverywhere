@@ -7,7 +7,6 @@ import { resetSubscriptsAndDimensions } from '../_shared/subscript'
 
 import Model from '../model/model'
 // import { default as VariableImpl } from '../model/variable'
-import EquationGen from './equation-gen'
 
 import { parseInlineVensimModel, sampleModelDir, type Variable } from '../_tests/test-support'
 import { generateEquation } from './gen-equation'
@@ -74,18 +73,7 @@ function genC(
     }
   }
 
-  let lines: string[]
-  if (process.env.SDE_NONPUBLIC_USE_NEW_PARSE !== '0') {
-    lines = generateEquation(variable, mode, opts?.extData, directData, opts?.modelDir)
-  } else {
-    // TODO: The `flat` call is only needed because the legacy EquationGen adds a nested array unnecessarily
-    // in `generateDirectDataInit`
-    lines = new EquationGen(variable, opts?.extData, directData, mode, opts?.modelDir).generate().flat()
-    // XXX: The legacy EquationGen sometimes appends code with a line break instead of returning a separate
-    // string for each line, so for now, split on newlines and treat them as separate lines for better
-    // compatibility with the new `generateEquation`
-    lines = lines.map(line => line.split('\n')).flat()
-  }
+  const lines = generateEquation(variable, mode, opts?.extData, directData, opts?.modelDir, 'c')
 
   // Strip the first comment line (containing the Vensim equation)
   if (lines.length > 0 && lines[0].trim().startsWith('//')) {

@@ -54,16 +54,16 @@ importers:
   examples/hello-world:
     dependencies:
       '@sdeverywhere/build':
-        specifier: ^0.3.0
+        specifier: ^0.3.4
         version: link:../../packages/build
       '@sdeverywhere/cli':
-        specifier: ^0.7.6
+        specifier: ^0.7.23
         version: link:../../packages/cli
       '@sdeverywhere/plugin-check':
-        specifier: ^0.3.0
+        specifier: ^0.3.5
         version: link:../../packages/plugin-check
       '@sdeverywhere/plugin-worker':
-        specifier: ^0.2.0
+        specifier: ^0.2.3
         version: link:../../packages/plugin-worker
       vite:
         specifier: ^4.4.9
@@ -131,6 +131,12 @@ importers:
       vite:
         specifier: ^4.4.9
         version: 4.4.9(sass@1.52.3)
+
+  models:
+    dependencies:
+      '@sdeverywhere/runtime':
+        specifier: workspace:*
+        version: link:../packages/runtime
 
   packages/build:
     dependencies:
@@ -268,12 +274,6 @@ importers:
       '@sdeverywhere/parse':
         specifier: ^0.1.0
         version: link:../parse
-      antlr4:
-        specifier: 4.12.0
-        version: 4.12.0
-      antlr4-vensim:
-        specifier: 0.6.2
-        version: 0.6.2
       bufx:
         specifier: ^1.0.5
         version: 1.0.5
@@ -3516,14 +3516,6 @@ packages:
       yaml: 2.2.2
     dev: true
 
-  /postcss@8.4.29:
-    resolution: {integrity: sha512-cbI+jaqIeu/VGqXEarWkRCCffhjgXc0qjBtXpqJhTBohMUjUQnbBr0xqX3vEKudc4iviTewcJo5ajcec5+wdJw==}
-    engines: {node: ^10 || ^12 || >=14}
-    dependencies:
-      nanoid: 3.3.6
-      picocolors: 1.0.0
-      source-map-js: 1.0.2
-
   /postcss@8.4.31:
     resolution: {integrity: sha512-PS08Iboia9mts/2ygV3eLpY5ghnUcfLV/EXTOW1E2qYxJKGGBUtNjN76FYHnMs36RmARn41bC0AZmn+rR0OVpQ==}
     engines: {node: ^10 || ^12 || >=14}
@@ -4568,7 +4560,7 @@ packages:
     dependencies:
       '@types/node': 20.5.7
       esbuild: 0.18.20
-      postcss: 8.4.29
+      postcss: 8.4.31
       rollup: 3.28.1
     optionalDependencies:
       fsevents: 2.3.3
@@ -4602,7 +4594,7 @@ packages:
         optional: true
     dependencies:
       esbuild: 0.18.20
-      postcss: 8.4.29
+      postcss: 8.4.31
       rollup: 3.28.1
       sass: 1.52.3
     optionalDependencies:

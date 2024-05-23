@@ -15,11 +15,12 @@ import { handleExcelOrCsvFile } from './direct-data-helpers.js'
  * @param {Map<string, any>} directData The mapping of dataset name used in a `GET DIRECT DATA` call (e.g.,
  * `?data`) to the tabular data contained in the loaded data file.
  * @param {string} modelDir The path to the directory containing the model (used for resolving data files).
- * @param {string} varLhs The C code for the LHS variable reference.
- * @return {string[]} An array of strings containing the generated C code for the variable,
+ * @param {string} varLhs The C/JS code for the LHS variable reference.
+ * @param {'c' | 'js'} outFormat The output format.
+ * @return {string[]} An array of strings containing the generated C/JS code for the variable,
  * one string per line of code.
  */
-export function generateLookupsFromDirectData(variable, mode, directData, modelDir, varLhs) {
+export function generateLookupsFromDirectData(variable, mode, directData, modelDir, varLhs, outFormat) {
   if (mode === 'decl') {
     // Nothing to emit in decl mode
     return []
@@ -52,10 +53,10 @@ export function generateLookupsFromDirectData(variable, mode, directData, modelD
       }
     }
   }
-  return [generateDirectDataLookup(varLhs, getCellValue, timeRowOrCol, startCell, indexNum)]
+  return [generateDirectDataLookup(varLhs, getCellValue, timeRowOrCol, startCell, indexNum, outFormat)]
 }
 
-function generateDirectDataLookup(varLhs, getCellValue, timeRowOrCol, startCell, indexNum) {
+function generateDirectDataLookup(varLhs, getCellValue, timeRowOrCol, startCell, indexNum, outFormat) {
   // Read a row or column of data as (time, value) pairs from the worksheet.
   // The cell(c,r) function wraps data access by column and row.
   let lookupData = ''
@@ -101,5 +102,12 @@ function generateDirectDataLookup(varLhs, getCellValue, timeRowOrCol, startCell,
     throw new Error(`Empty lookup data array for ${varLhs}`)
   }
 
-  return `  ${varLhs} = __new_lookup(${lookupSize}, /*copy=*/true, (double[]){ ${lookupData} });`
+  switch (outFormat) {
+    case 'c':
+      return `  ${varLhs} = __new_lookup(${lookupSize}, /*copy=*/true, (double[]){ ${lookupData} });`
+    case 'js':
+      return `  ${varLhs} = fns.createLookup(${lookupSize}, [${lookupData}]);`
+    default:
+      throw new Error(`Unhandled output format '${outFormat}'`)
+  }
 }

@@ -1,15 +1,8 @@
 export default class Variable {
-  constructor(eqnCtx) {
-    // The equation rule context allows us to generate code by visiting the parse tree.
-    this.eqnCtx = eqnCtx
+  constructor() {
     // Save both sides of the equation text in the model for documentation purposes.
-    if (eqnCtx) {
-      this.modelLHS = eqnCtx.lhs().getText()
-      this.modelFormula = this.formula(eqnCtx)
-    } else {
-      this.modelLHS = ''
-      this.modelFormula = ''
-    }
+    this.modelLHS = ''
+    this.modelFormula = ''
     // An equation defines a variable with a var name, saved in canonical form here.
     this.varName = ''
     // Subscripts are canonical dimension or index names on the LHS in normal order.
@@ -57,7 +50,6 @@ export default class Variable {
   }
   copy() {
     let c = new Variable()
-    c.eqnCtx = this.eqnCtx
     c.modelLHS = this.modelLHS
     c.modelFormula = this.modelFormula
     c.varName = this.varName
@@ -77,16 +69,6 @@ export default class Variable {
     c.delayTimeVarName = this.delayTimeVarName
     c.includeInOutput = this.includeInOutput
     return c
-  }
-  formula(eqnCtx) {
-    if (eqnCtx) {
-      if (eqnCtx.expr()) {
-        return eqnCtx.expr().getText()
-      } else if (eqnCtx.constList()) {
-        return eqnCtx.constList().getText()
-      }
-    }
-    return ''
   }
   hasSubscripts() {
     return this.subscripts.length > 0

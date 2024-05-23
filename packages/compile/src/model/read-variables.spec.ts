@@ -28,8 +28,6 @@ function readSubscriptsAndVariables(modelName: string): Variable[] {
   })
 
   return Model.variables.map(v => {
-    // XXX: Strip out the ANTLR eqnCtx to avoid vitest hang when comparing
-    delete v.eqnCtx
     // XXX: Strip out the new parsedEqn field, since we don't need it for comparing
     delete v.parsedEqn
     return v
@@ -37,9 +35,7 @@ function readSubscriptsAndVariables(modelName: string): Variable[] {
 }
 
 function v(lhs: string, formula: string, overrides?: Partial<Variable>): Variable {
-  const variable = new VariableImpl(undefined)
-  // XXX: Strip out the ANTLR eqnCtx to avoid vitest hang when comparing
-  delete variable.eqnCtx
+  const variable = new VariableImpl()
   variable.modelLHS = lhs
   variable.modelFormula = formula
   variable.varName = canonicalName(lhs.split('[')[0])

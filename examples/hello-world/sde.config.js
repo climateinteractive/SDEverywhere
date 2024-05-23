@@ -14,7 +14,7 @@ export async function config() {
     },
 
     plugins: [
-      // Generate a `worker.js` file that runs the Wasm model in a worker
+      // Generate a `worker.js` file that runs the generated model in a worker
       workerPlugin(),
 
       // Run model check

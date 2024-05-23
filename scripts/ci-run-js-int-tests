@@ -23,7 +23,7 @@ pnpm \
 -F runtime-async \
 -r build
 
-# Run the JS-level integration tests that exercise the build and runtime packages
+# Run the JS-level integration tests
 pnpm run test:js-int
 
 # Fail the build if there are any untracked or modified files.  This usually

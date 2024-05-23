@@ -3,14 +3,14 @@ import B from 'bufx'
 import * as R from 'ramda'
 import { splitEquations, replaceDelimitedStrings } from '../_shared/helpers.js'
 
-export let preprocessModel = (mdlFilename, spec, profile = 'genc', writeFiles = false, outDecls = []) => {
+export let preprocessModel = (mdlFilename, spec, profile = 'runnable', writeFiles = false, outDecls = []) => {
   const MACROS_FILENAME = 'macros.txt'
   const REMOVALS_FILENAME = 'removals.txt'
   const INSERTIONS_FILENAME = 'mdl-edits.txt'
   const ENCODING = '{UTF-8}'
   let profiles = {
     // simplified but still runnable model
-    genc: {
+    runnable: {
       emitEncoding: true,
       emitCommentMarkers: true,
       joinFormulaLines: false

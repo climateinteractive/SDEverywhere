@@ -1,6 +1,6 @@
 // Copyright (c) 2020-2022 Climate Interactive / New Venture Fund
 
-import type { InputVarId } from '../_shared'
+import type { InputVarId } from './types'
 
 /** Callback functions that are called when the input value is changed. */
 export interface InputCallbacks {
