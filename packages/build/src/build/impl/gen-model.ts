@@ -70,7 +70,7 @@ export async function generateModel(context: BuildContext, plugins: Plugin[]): P
       const generatedCodeFile = `processed.${config.genFormat}`
       const generatedCodePath = joinPath(prepDir, 'build', generatedCodeFile)
       let generatedCodeContent = await readFile(generatedCodePath, 'utf8')
-      generatedCodeContent = await plugin.postGenerateC(context, generatedCodeContent)
+      generatedCodeContent = await plugin.postGenerateCode(context, config.genFormat, generatedCodeContent)
       await writeFile(generatedCodePath, generatedCodeContent)
     }
   }
