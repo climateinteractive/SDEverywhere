@@ -87,38 +87,37 @@ function initControlParamsIfNeeded() {
     throw new Error('Must call setModelFunctions() before running the model');
   }
 
-  // We currently require INITIAL TIME, FINAL TIME, and TIME STEP to be
-  // defined as constant values.  Some models may define SAVEPER in terms
-  // of TIME STEP, which means that the compiler may treat it as an aux,
-  // not as a constant.  We call initConstants() to ensure that we have
-  // initial values for these control parameters.
+  // We currently require INITIAL TIME and TIME STEP to be defined
+  // as constant values.  Some models may define SAVEPER in terms of
+  // TIME STEP (or FINAL TIME in terms of INITIAL TIME), which means
+  // that the compiler may treat them as an aux, not as a constant.
+  // We call initConstants() to ensure that we have initial values
+  // for these control parameters.
   initConstants();
   if (_initial_time === undefined) {
     throw new Error('INITIAL TIME must be defined as a constant value');
-  }
-  if (_final_time === undefined) {
-    throw new Error('FINAL TIME must be defined as a constant value');
   }
   if (_time_step === undefined) {
     throw new Error('TIME STEP must be defined as a constant value');
   }
 
-  if (_saveper === undefined) {
-    // If _saveper is undefined after calling initConstants(), it means it
-    // is defined as an aux, in which case we perform an initial step of
-    // the run loop in order to initialize that value.  First, set the
-    // time and initial function context.
+  if (_final_time === undefined || _saveper === undefined) {
+    // If _final_time or _saveper is undefined after calling initConstants(),
+    // it means one or both is defined as an aux, in which case we perform
+    // an initial step of the run loop in order to initialize the value(s).
+    // First, set the time and initial function context.
     setTime(_initial_time);
     fns.setContext({
-      initialTime: _initial_time,
-      finalTime: _final_time,
       timeStep: _time_step,
       currentTime: _time
     });
 
-    // Perform initial step to initialize _saveper
+    // Perform initial step to initialize _final_time and/or _saveper
     initLevels();
     evalAux();
+    if (_final_time === undefined) {
+      throw new Error('FINAL TIME must be defined');
+    }
     if (_saveper === undefined) {
       throw new Error('SAVEPER must be defined');
     }
