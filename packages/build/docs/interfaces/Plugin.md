@@ -13,8 +13,8 @@ listed below:
   - preGenerate
       - preProcessMdl
       - postProcessMdl
-      - preGenerateC
-      - postGenerateC
+      - preGenerateCode
+      - postGenerateCode
   - postGenerate
   - postBuild
   - watch (only called once after initial build steps when mode==development)
@@ -100,17 +100,18 @@ The modified mdl file content (if postprocessing was needed).
 
 ___
 
-### preGenerateC
+### preGenerateCode
 
-`Optional` **preGenerateC**(`context`): `Promise`<`void`\>
+`Optional` **preGenerateCode**(`context`, `format`): `Promise`<`void`\>
 
-Called before SDE generates a C file from the mdl file.
+Called before SDE generates a JS or C file from the mdl file.
 
 #### Parameters
 
 | Name | Type | Description |
 | :------ | :------ | :------ |
 | `context` | [`BuildContext`](../classes/BuildContext.md) | The build context (for logging, etc). |
+| `format` | ``"js"`` \| ``"c"`` | The generated code format, either 'js' or 'c'. |
 
 #### Returns
 
@@ -118,24 +119,25 @@ Called before SDE generates a C file from the mdl file.
 
 ___
 
-### postGenerateC
+### postGenerateCode
 
-`Optional` **postGenerateC**(`context`, `cContent`): `Promise`<`string`\>
+`Optional` **postGenerateCode**(`context`, `format`, `content`): `Promise`<`string`\>
 
-Called after SDE generates a C file from the mdl file.
+Called after SDE generates a JS or C file from the mdl file.
 
 #### Parameters
 
 | Name | Type | Description |
 | :------ | :------ | :------ |
 | `context` | [`BuildContext`](../classes/BuildContext.md) | The build context (for logging, etc). |
-| `cContent` | `string` | The resulting C file content. |
+| `format` | ``"js"`` \| ``"c"`` | The generated code format, either 'js' or 'c'. |
+| `content` | `string` | The resulting JS or C file content. |
 
 #### Returns
 
 `Promise`<`string`\>
 
-The modified C file content (if postprocessing was needed).
+The modified JS or C file content (if postprocessing was needed).
 
 ___
 
