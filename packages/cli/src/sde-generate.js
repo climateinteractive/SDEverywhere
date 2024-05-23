@@ -83,9 +83,9 @@ export let generate = async (model, opts) => {
     operations.push('generateJS')
   }
   if (opts.genc || opts.outformat === 'c') {
-    // if (opts.genc) {
-    //   console.warn(`WARNING: --genc option is deprecated for the 'sde generate' command; use --outformat=c instead`)
-    // }
+    if (opts.genc) {
+      console.warn(`WARNING: --genc option is deprecated for the 'sde generate' command; use --outformat=c instead`)
+    }
     operations.push('generateC')
   }
   if (opts.list) {
