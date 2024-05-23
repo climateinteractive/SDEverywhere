@@ -43,6 +43,9 @@ function verifyDeclaredOutputs(runnerKind, outputs, inputX) {
   // D[DimA] = X + SUM(C[DimA, DimB!])
   // D[A1] = X + (A[A1] + B[B1]) + (A[A1] + B[B2]) + (A[A1] + B[B3])
   verify(runnerKind, outputs, inputX, '_d[_a1]', (_, inputX) => inputX + 1 + 100 + 1 + 200 + 1 + 300)
+
+  // E[DimA, DimB] = D[DimA] + B[DimB]
+  verify(runnerKind, outputs, inputX, '_e[_a2,_b1]', () => 2 + 100)
 }
 
 function verifyImplOutputs(runnerKind, outputs, inputX) {
@@ -102,7 +105,7 @@ async function createSynchronousRunner() {
   // Load the generated model and verify that it exposes `outputVarIds`
   const generatedModel = await loadGeneratedModel()
   const actualVarIds = generatedModel.outputVarIds || []
-  const expectedVarIds = ['_z', '_d[_a1]']
+  const expectedVarIds = ['_z', '_d[_a1]', '_e[_a2,_b1]']
   if (actualVarIds.length !== expectedVarIds.length || !actualVarIds.every((v, i) => v === expectedVarIds[i])) {
     throw new Error(
       `Test failed: outputVarIds [${actualVarIds}] in generated model don't match expected values [${expectedVarIds}]`

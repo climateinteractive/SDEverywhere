@@ -11,7 +11,7 @@ export async function config() {
     modelSpec: async () => {
       return {
         inputs: [{ varName: 'X', defaultValue: 0, minValue: -10, maxValue: 10 }],
-        outputs: [{ varName: 'Z' }, { varName: 'D[A1]' }],
+        outputs: [{ varName: 'Z' }, { varName: 'D[A1]' }, { varName: 'E[A2,B1]' }],
         datFiles: []
       }
     },
