@@ -297,6 +297,15 @@ Most users won't need to interact with these implementation packages directly, b
     </td>
   </tr>
   <tr>
+    <td><a href="./packages/parse">@sdeverywhere/parse</a> *</td>
+    <td><a href="https://www.npmjs.com/package/@sdeverywhere/parse"><img style="vertical-align:middle;" src="https://img.shields.io/npm/v/@sdeverywhere/parse.svg?label=%20"></a></td>
+    <td>
+      <a href="./packages/parse">Source</a>&nbsp;|&nbsp;
+      <a href="./packages/parse/README.md">Docs</a>&nbsp;|&nbsp;
+      <a href="./packages/parse/CHANGELOG.md">Changelog</a>
+    </td>
+  </tr>
+  <tr>
     <td colspan="3"><em>`model-check` implementation</em></td>
   </tr>
   <tr>
