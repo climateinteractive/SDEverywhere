@@ -88,9 +88,6 @@ export let generate = async (model, opts) => {
     }
     operations.push('generateC')
   }
-  if (opts.outformat === 'js') {
-    operations.push('generateJS')
-  }
   if (opts.list) {
     operations.push('printVarList')
   }
