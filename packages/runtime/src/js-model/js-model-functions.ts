@@ -19,8 +19,6 @@ const _NA_ = -Number.MAX_VALUE
  * `JsModel` implementations.
  */
 export interface JsModelFunctionContext {
-  initialTime: number
-  finalTime: number
   timeStep: number
   currentTime: number
 }

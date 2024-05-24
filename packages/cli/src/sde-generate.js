@@ -16,7 +16,7 @@ export let builder = {
   },
   outformat: {
     describe: 'write generated code in the given format',
-    choices: ['c', 'js']
+    choices: ['js', 'c']
   },
   list: {
     describe: 'write a file that lists model variables',
@@ -79,6 +79,9 @@ export let generate = async (model, opts) => {
   // Parse the model and generate code. If no operation is specified, the code generator will
   // read the model and do nothing else. This is required for the list operation.
   let operations = []
+  if (opts.outformat === 'js') {
+    operations.push('generateJS')
+  }
   if (opts.genc || opts.outformat === 'c') {
     if (opts.genc) {
       console.warn(`WARNING: --genc option is deprecated for the 'sde generate' command; use --outformat=c instead`)

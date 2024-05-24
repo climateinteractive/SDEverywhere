@@ -16,8 +16,8 @@ export let builder = {
   },
   genformat: {
     describe: 'generated code format',
-    choices: ['c', 'js'],
-    default: 'c'
+    choices: ['js', 'c'],
+    default: 'js'
   },
   builddir: {
     describe: 'build directory',
@@ -30,16 +30,16 @@ export let handler = argv => {
 }
 export let build = async (model, opts) => {
   try {
-    // Generate code in C or JS format
-    opts.outformat = opts.genformat || 'c'
+    // Generate code in JS or C format
+    opts.outformat = opts.genformat || 'js'
     await generate(model, opts)
-    if (opts.outformat === 'c') {
-      // Compile the generated C code to a native executable
-      compile(model, opts)
-    } else if (opts.outformat === 'js') {
+    if (opts.outformat === 'js') {
       // Write a `main.js` file that can be used by `sde exec` to execute the model
       // on the command line using Node.js
       writeMainJs(model, opts)
+    } else if (opts.outformat === 'c') {
+      // Compile the generated C code to a native executable
+      compile(model, opts)
     }
   } catch (e) {
     // Exit with a non-zero error code if any step failed

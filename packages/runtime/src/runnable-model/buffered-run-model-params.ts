@@ -1,13 +1,7 @@
 // Copyright (c) 2024 Climate Interactive / New Venture Fund
 
-import {
-  indicesPerVariable,
-  updateVarIndices,
-  type InputValue,
-  type LookupDef,
-  type Outputs,
-  type VarSpec
-} from '../_shared'
+import { indicesPerVariable, updateVarIndices } from '../_shared'
+import type { InputValue, LookupDef, Outputs, VarSpec } from '../_shared'
 import type { RunModelOptions } from './run-model-options'
 import type { RunModelParams } from './run-model-params'
 

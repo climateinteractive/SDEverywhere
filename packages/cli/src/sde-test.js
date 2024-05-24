@@ -15,8 +15,8 @@ export let builder = {
   },
   genformat: {
     describe: 'generated code format',
-    choices: ['c', 'js'],
-    default: 'c'
+    choices: ['js', 'c'],
+    default: 'js'
   },
   builddir: {
     describe: 'build directory',

@@ -2,5 +2,9 @@
 {
   "extends": "./tsconfig-base.json",
   "include": ["src/**/*"],
-  "exclude": ["src/**/_mocks/**/*", "**/*.spec.ts"]
+  // TODO: For now we keep mocks included in the built package because they
+  // are used by the runtime-async tests.  Consider moving these to a separate
+  // internal package so that we can keep them out of the published runtime package.
+  // "exclude": ["src/**/_mocks/**/*", "**/*.spec.ts"]
+  "exclude": ["**/*.spec.ts"]
 }

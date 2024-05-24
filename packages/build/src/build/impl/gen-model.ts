@@ -65,14 +65,26 @@ export async function generateModel(context: BuildContext, plugins: Plugin[]): P
     }
   }
   await generateCode(context, config.sdeDir, sdeCmdPath, prepDir)
+  const generatedCodeFile = `processed.${config.genFormat}`
+  const generatedCodePath = joinPath(prepDir, 'build', generatedCodeFile)
   for (const plugin of plugins) {
     if (plugin.postGenerateCode) {
-      const generatedCodeFile = `processed.${config.genFormat}`
-      const generatedCodePath = joinPath(prepDir, 'build', generatedCodeFile)
       let generatedCodeContent = await readFile(generatedCodePath, 'utf8')
-      generatedCodeContent = await plugin.postGenerateC(context, generatedCodeContent)
+      generatedCodeContent = await plugin.postGenerateCode(context, config.genFormat, generatedCodeContent)
       await writeFile(generatedCodePath, generatedCodeContent)
     }
+  }
+
+  if (config.genFormat === 'js') {
+    // When generating JS code, copy the generated JS file to the `staged/model`
+    // directory, because that's where plugin-worker expects to find it, but also
+    // set it up to be copied to the `prepDir`, which is where other code expects
+    // to find it
+    // TODO: Maybe we can change plugin-worker to use the one in `prepDir`, and/or
+    // add a build config setting to allow for customizing the output location
+    const outputJsFile = 'generated-model.js'
+    const stagedOutputJsPath = context.prepareStagedFile('model', outputJsFile, prepDir, outputJsFile)
+    await copyFile(generatedCodePath, stagedOutputJsPath)
   }
 
   const t1 = performance.now()
@@ -177,8 +189,8 @@ async function generateCode(context: BuildContext, sdeDir: string, sdeCmdPath: s
   // dimensions and variables (`--list`)
   const command = sdeCmdPath
   const outFormat = `--outformat=${genFormat}`
-  const gencArgs = ['generate', outFormat, '--list', '--spec', 'spec.json', 'processed']
-  const gencOutput = await context.spawnChild(prepDir, command, gencArgs, {
+  const genCmdArgs = ['generate', outFormat, '--list', '--spec', 'spec.json', 'processed']
+  const genCmdOutput = await context.spawnChild(prepDir, command, genCmdArgs, {
     // By default, ignore lines that start with "WARNING: Data for" since these are often harmless
     // TODO: Don't filter by default, but make it configurable
     // ignoredMessageFilter: 'WARNING: Data for'
@@ -186,9 +198,9 @@ async function generateCode(context: BuildContext, sdeDir: string, sdeCmdPath: s
     // following allows us to throw our own error
     ignoreError: true
   })
-  if (gencOutput.exitCode !== 0) {
+  if (genCmdOutput.exitCode !== 0) {
     throw new Error(
-      `Failed to generate ${genFormatName} code: 'sde generate' command failed (code=${gencOutput.exitCode})`
+      `Failed to generate ${genFormatName} code: 'sde generate' command failed (code=${genCmdOutput.exitCode})`
     )
   }
 

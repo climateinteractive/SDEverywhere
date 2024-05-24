@@ -7,18 +7,13 @@
 Initialize a [`ModelRunner`](../../../runtime/docs/interfaces/ModelRunner.md) that runs the model asynchronously in a worker thread.
 
 In your app project, define a JavaScript file, called `worker.js` for example, that
-initializes the model worker in the context of the Web Worker:
+initializes the generated model in the context of the Web Worker:
 
 ```js
-import { initWasmModelAndBuffers } from '@sdeverywhere/runtime'
 import { exposeModelWorker } from '@sdeverywhere/runtime-async/worker'
+import loadGeneratedModel from './sde-prep/generated-model.js'
 
-async function initWasmModel() {
-  const wasmModules = loadWasm()
-  return initWasmModelAndBuffers(...)
-}
-
-exposeModelWorker(initWasmModel)
+exposeModelWorker(loadGeneratedModel)
 ```
 
 Then, in your web app, call the `spawnAsyncModelRunner` function, which

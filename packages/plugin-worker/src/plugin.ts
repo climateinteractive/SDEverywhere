@@ -4,7 +4,7 @@ import { basename, dirname, join as joinPath } from 'path'
 
 import { build } from 'vite'
 
-import type { BuildContext, ModelSpec, Plugin } from '@sdeverywhere/build'
+import type { BuildContext, Plugin } from '@sdeverywhere/build'
 
 import type { WorkerPluginOptions } from './options'
 import { createViteConfig } from './vite-config'
@@ -16,17 +16,19 @@ export function workerPlugin(options?: WorkerPluginOptions): Plugin {
 class WorkerPlugin implements Plugin {
   constructor(private readonly options?: WorkerPluginOptions) {}
 
-  async postGenerate(context: BuildContext, modelSpec: ModelSpec): Promise<boolean> {
+  async postGenerate(context: BuildContext): Promise<boolean> {
     const log = context.log
     log('info', 'Building worker')
 
-    // Locate the input (model JS/Wasm) file in the staged directory.  Note
-    // that this relies on the `plugin-wasm` package writing a file called
-    // `wasm-model.js` to the `staged/model` directory.
+    // Locate the generated model file in the staged directory.  Note that this
+    // relies on the `build` package writing the JS model (or the `plugin-wasm`
+    // package writing the Wasm model) to a file called `generated-model.js`
+    // in the `staged/model` directory.
+    // TODO: Allow for customizing the file name/path
     const prepDir = context.config.prepDir
     const srcDir = 'model'
     const stagedModelDir = joinPath(prepDir, 'staged', srcDir)
-    const inModelJsFile = 'wasm-model.js'
+    const inModelJsFile = 'generated-model.js'
     const outWorkerJsFile = 'worker.js'
 
     // If `outputPaths` is undefined, write the `worker.js` to the prep dir
@@ -46,7 +48,7 @@ class WorkerPlugin implements Plugin {
     }
 
     // Build the worker and write generated file to the `staged/model` directory
-    const viteConfig = createViteConfig(stagedModelDir, inModelJsFile, modelSpec, outWorkerJsFile)
+    const viteConfig = createViteConfig(stagedModelDir, inModelJsFile, outWorkerJsFile)
     await build(viteConfig)
 
     // log('info', 'Done!')

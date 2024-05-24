@@ -3,7 +3,7 @@
 import type { Result } from 'neverthrow'
 import { ok, err } from 'neverthrow'
 
-import type { OutputVarId, Point } from './types'
+import type { OutputVarId } from './types'
 import type { VarSpec } from './var-indices'
 
 /** Indicates the type of error encountered when parsing an outputs buffer. */

@@ -22,7 +22,7 @@ export function execJsModel(jsModel: JsModel): void {
   const inputs: number[] = []
 
   // Create the `Outputs` instance into which the model outputs will be stored
-  const outputVarIds = jsModel.getOutputVarIds()
+  const outputVarIds = jsModel.outputVarIds
   const startTime = jsModel.getInitialTime()
   const endTime = jsModel.getFinalTime()
   const saveFreq = jsModel.getSaveFreq()
@@ -34,7 +34,7 @@ export function execJsModel(jsModel: JsModel): void {
   runnableModel.runModel(params)
 
   // Write the header (escaping quotes as needed)
-  const outputVarNames = jsModel.getOutputVarNames().map(name => name.replace(/"/g, '\\"'))
+  const outputVarNames = jsModel.outputVarNames.map(name => name.replace(/"/g, '\\"'))
   const header = outputVarNames.join('\t')
   console.log(header)
 

@@ -33,7 +33,7 @@ const plugin = (num: number, calls: string[]) => {
       record('postProcessMdl')
       return mdlContent
     },
-    preGenerateCode: async format => {
+    preGenerateCode: async (_, format) => {
       record(`preGenerateCode ${format}`)
     },
     postGenerateCode: async (_, format, content) => {

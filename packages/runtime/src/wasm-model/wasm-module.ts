@@ -8,6 +8,8 @@ import type { OutputVarId } from '../_shared'
  * set of fields needed by the SDEverywhere runtime.
  */
 export interface WasmModule {
+  readonly kind: 'wasm'
+  readonly outputVarIds: OutputVarId[]
   /** @hidden */
   outputVarIds: OutputVarId[]
   /** @hidden */

@@ -3,50 +3,10 @@
 import { dirname, resolve as resolvePath } from 'path'
 import { fileURLToPath } from 'url'
 
-import type { InlineConfig /*, Plugin as VitePlugin*/ } from 'vite'
-
-import type { ModelSpec } from '@sdeverywhere/build'
-
-// import { sdeNameForVensimVarName } from './var-names'
+import type { InlineConfig } from 'vite'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
-
-// /**
-//  * This is a virtual module plugin used to inject model-specific configuration
-//  * values into the generated worker bundle.
-//  *
-//  * This follows the "Virtual Modules Convention" described here:
-//  *   https://vitejs.dev/guide/api-plugin.html#virtual-modules-convention
-//  *
-//  * TODO: This could be simplified by using `vite-plugin-virtual` but that
-//  * doesn't seem to be working correctly in an ESM setting
-//  */
-// function injectModelSpec(modelSpec: ModelSpec): VitePlugin {
-//   const outputVarIds = modelSpec.outputs.map(o => sdeNameForVensimVarName(o.varName))
-
-//   const moduleSrc = `
-// export const numInputs = ${modelSpec.inputs.length};
-// export const outputVarIds = ${JSON.stringify(outputVarIds)};
-// `
-
-//   const virtualModuleId = 'virtual:model-spec'
-//   const resolvedVirtualModuleId = '\0' + virtualModuleId
-
-//   return {
-//     name: 'vite-plugin-virtual-custom',
-//     resolveId(id: string) {
-//       if (id === virtualModuleId) {
-//         return resolvedVirtualModuleId
-//       }
-//     },
-//     load(id: string) {
-//       if (id === resolvedVirtualModuleId) {
-//         return moduleSrc
-//       }
-//     }
-//   }
-// }
 
 /**
  * Create a Vite `InlineConfig` that can be used to build a complete
@@ -54,17 +14,11 @@ const __dirname = dirname(__filename)
  * Web Worker or Node worker thread.
  *
  * @param stagedModelDir The `staged` directory under the `sde-prep` directory.
- * @param modelJsFile The name of the JS file containing the embedded Wasm.
- * @param modelSpec The model spec generated earlier in the build process.
+ * @param modelJsFile The name of the JS file containing the generated JS or Wasm model.
  * @param outputFile The name of the generated worker JS file.
  * @return An `InlineConfig` instance that can be passed to Vite's `build` function.
  */
-export function createViteConfig(
-  stagedModelDir: string,
-  modelJsFile: string,
-  modelSpec: ModelSpec,
-  outputFile: string
-): InlineConfig {
+export function createViteConfig(stagedModelDir: string, modelJsFile: string, outputFile: string): InlineConfig {
   // Use `staged/model` as the root directory for the worker build
   const root = stagedModelDir
 
@@ -88,12 +42,10 @@ export function createViteConfig(
     // Configure path aliases
     resolve: {
       alias: [
-        // In the template, we use `@_generatedModuleFile_` as an alias for the file
-        // that contains the generated model, which is either a pure JS model (if
-        // `genFormat` is 'js') or a WebAssembly module (if `genFormat` is 'c' and
-        // plugin-wasm is used to generate WebAssembly from that C file)
+        // In the template, we use `@_generatedModelFile_` as an alias for the model
+        // file containing the generated JS or Wasm model
         {
-          find: '@_generatedModuleFile_',
+          find: '@_generatedModelFile_',
           replacement: resolvePath(stagedModelDir, modelJsFile)
         }
       ],
@@ -108,11 +60,6 @@ export function createViteConfig(
       // be safe to use this workaround for a while.
       browserField: false
     },
-
-    // plugins: [
-    //   // Use a virtual module plugin to inject the model spec values
-    //   injectModelSpec(modelSpec)
-    // ],
 
     build: {
       // Write output file to the `staged/model` directory; note that this path is

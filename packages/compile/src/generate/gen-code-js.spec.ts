@@ -60,6 +60,10 @@ function readInlineModelAndGenerateJS(
 // by `generateJS` and also with the "real" `JsModel` interface that
 // is exported by the runtime package.
 interface JsModel {
+  readonly kind: 'js'
+  readonly outputVarIds: string[]
+  readonly outputVarNames: string[]
+
   getInitialTime(): number
   getFinalTime(): number
   getTimeStep(): number
@@ -72,8 +76,6 @@ interface JsModel {
   setInputs(inputValue: (index: number) => number): void
   setLookup(varSpec: /*VarSpec*/ any, lookup: /*Lookup*/ any): void
 
-  getOutputVarIds(): string[]
-  getOutputVarNames(): string[]
   storeOutputs(storeValue: (value: number) => void): void
   storeOutput(varSpec: /*VarSpec*/ any, storeValue: (value: number) => void): void
 
@@ -86,7 +88,6 @@ interface JsModel {
 async function initJsModel(generatedJsCode: string): Promise<JsModel> {
   const dataUri = 'data:text/javascript;charset=utf-8,' + encodeURIComponent(generatedJsCode)
   const module = await import(dataUri)
-  // console.log(module)
   return (await module.default()) as JsModel
 }
 
@@ -174,6 +175,8 @@ describe('generateJS (Vensim -> JS)', () => {
       ]
     ])
     const mdl = `
+      DimA: A1, A2 ~~|
+      DimB: B1, B2 ~~|
       input = 1 ~~|
       x = input ~~|
       y = :NOT: x ~~|
@@ -181,6 +184,8 @@ describe('generateJS (Vensim -> JS)', () => {
       v data ~~|
       v = v data ~~|
       w = WITH LOOKUP(x, ( [(0,0)-(2,2)], (0,0),(0.1,0.01),(0.5,0.7),(1,1),(1.5,1.2),(2,1.3) )) ~~|
+      a[DimA] = 0, 1 ~~|
+      b[DimA, DimB] = 5 ~~|
       INITIAL TIME = 0 ~~|
       FINAL TIME = 2 ~~|
       TIME STEP = 1 ~~|
@@ -188,12 +193,14 @@ describe('generateJS (Vensim -> JS)', () => {
     `
     const code = readInlineModelAndGenerateJS(mdl, {
       inputVarNames: ['input'],
-      outputVarNames: ['x', 'y', 'z', 'v', 'w'],
+      outputVarNames: ['a[A1]', 'b[A2,B1]', 'x', 'y', 'z', 'w']
       extData
     })
     expect(code).toEqual(`\
 // Model variables
 let __lookup1;
+let _a = multiDimArray([2]);
+let _b = multiDimArray([2, 2]);
 let _final_time;
 let _initial_time;
 let _input;
@@ -207,7 +214,8 @@ let _y;
 let _z;
 
 // Array dimensions
-
+const _dima = [0, 1];
+const _dimb = [0, 1];
 
 // Dimension mappings
 
@@ -233,38 +241,37 @@ function initControlParamsIfNeeded() {
     throw new Error('Must call setModelFunctions() before running the model');
   }
 
-  // We currently require INITIAL TIME, FINAL TIME, and TIME STEP to be
-  // defined as constant values.  Some models may define SAVEPER in terms
-  // of TIME STEP, which means that the compiler may treat it as an aux,
-  // not as a constant.  We call initConstants() to ensure that we have
-  // initial values for these control parameters.
+  // We currently require INITIAL TIME and TIME STEP to be defined
+  // as constant values.  Some models may define SAVEPER in terms of
+  // TIME STEP (or FINAL TIME in terms of INITIAL TIME), which means
+  // that the compiler may treat them as an aux, not as a constant.
+  // We call initConstants() to ensure that we have initial values
+  // for these control parameters.
   initConstants();
   if (_initial_time === undefined) {
     throw new Error('INITIAL TIME must be defined as a constant value');
-  }
-  if (_final_time === undefined) {
-    throw new Error('FINAL TIME must be defined as a constant value');
   }
   if (_time_step === undefined) {
     throw new Error('TIME STEP must be defined as a constant value');
   }
 
-  if (_saveper === undefined) {
-    // If _saveper is undefined after calling initConstants(), it means it
-    // is defined as an aux, in which case we perform an initial step of
-    // the run loop in order to initialize that value.  First, set the
-    // time and initial function context.
+  if (_final_time === undefined || _saveper === undefined) {
+    // If _final_time or _saveper is undefined after calling initConstants(),
+    // it means one or both is defined as an aux, in which case we perform
+    // an initial step of the run loop in order to initialize the value(s).
+    // First, set the time and initial function context.
     setTime(_initial_time);
     fns.setContext({
-      initialTime: _initial_time,
-      finalTime: _final_time,
       timeStep: _time_step,
       currentTime: _time
     });
 
-    // Perform initial step to initialize _saveper
+    // Perform initial step to initialize _final_time and/or _saveper
     initLevels();
     evalAux();
+    if (_final_time === undefined) {
+      throw new Error('FINAL TIME must be defined');
+    }
     if (_saveper === undefined) {
       throw new Error('SAVEPER must be defined');
     }
@@ -352,6 +359,16 @@ function initConstants0() {
   _saveper = 1.0;
   // TIME STEP = 1
   _time_step = 1.0;
+  // a[DimA] = 0,1
+  _a[0] = 0.0;
+  // a[DimA] = 0,1
+  _a[1] = 1.0;
+  // b[DimA,DimB] = 5
+  for (let i = 0; i < 2; i++) {
+  for (let j = 0; j < 2; j++) {
+  _b[i][j] = 5.0;
+  }
+  }
   // input = 1
   _input = 1.0;
 }
@@ -408,32 +425,33 @@ function evalAux0() {
   }
 }
 
-/*export*/ function getOutputVarIds() {
-  return [
-    '_x',
-    '_y',
-    '_z',
-    '_v',
-    '_w'
-  ]
-}
 
-/*export*/ function getOutputVarNames() {
-  return [
-    'x',
-    'y',
-    'z',
-    'v',
-    'w'
-  ]
-}
+/*export*/ const outputVarIds = [
+  '_a[_a1]',
+  '_b[_a2,_b1]',
+  '_x',
+  '_y',
+  '_z',
+  '_w'
+];
+
+/*export*/ const outputVarNames = [
+  'a[A1]',
+  'b[A2,B1]',
+  'x',
+  'y',
+  'z',
+  'w'
+];
 
 /*export*/ function storeOutputs(storeValue /*: (value: number) => void*/) {
+  storeValue(_a[0]);
+  storeValue(_b[1][0]);
+  storeValue(_v);
+  storeValue(_w);
   storeValue(_x);
   storeValue(_y);
   storeValue(_z);
-  storeValue(_v);
-  storeValue(_w);
 }
 
 /*export*/ function storeOutput(varSpec /*: VarSpec*/, storeValue /*: (value: number) => void*/) {
@@ -443,43 +461,15 @@ function evalAux0() {
   const varIndex = varSpec.varIndex;
   const subs = varSpec.subscriptIndices;
   switch (varIndex) {
-    case 1:
-      storeValue(_final_time);
-      break;
-    case 2:
-      storeValue(_initial_time);
-      break;
-    case 3:
-      storeValue(_saveper);
-      break;
-    case 4:
-      storeValue(_time_step);
-      break;
-    case 5:
-      storeValue(_input);
-      break;
-    case 7:
-      storeValue(_v);
-      break;
-    case 8:
-      storeValue(_x);
-      break;
-    case 9:
-      storeValue(_w);
-      break;
-    case 10:
-      storeValue(_y);
-      break;
-    case 11:
-      storeValue(_z);
-      break;
-    default:
-      break;
   }
 }
 
 export default async function () {
   return {
+    kind: 'js',
+    outputVarIds,
+    outputVarNames,
+
     getInitialTime,
     getFinalTime,
     getTimeStep,
@@ -492,9 +482,8 @@ export default async function () {
     setInputs,
     setLookup,
 
-    getOutputVarIds,
-    getOutputVarNames,
     storeOutputs,
+    storeOutput,
 
     initConstants,
     initLevels,

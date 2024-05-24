@@ -3,7 +3,7 @@
 export type JsModelLookupMode = 'interpolate' | 'forward' | 'backward'
 
 /**
- * TODO: Docs
+ * @hidden This is not yet part of the public API; for internal use only.
  */
 export class JsModelLookup {
   private invertedData?: number[]
