@@ -1,0 +1,23 @@
+{
+  "name": "stop-after-time",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "clean": "rm -rf sde-prep",
+    "build-js": "GEN_FORMAT=js sde bundle",
+    "build-wasm": "GEN_FORMAT=c sde bundle",
+    "run-tests": "./run-tests.js",
+    "test-js": "run-s build-js run-tests",
+    "test-wasm": "run-s build-wasm run-tests",
+    "ci:int-test": "run-s clean test-js clean test-wasm"
+  },
+  "dependencies": {
+    "@sdeverywhere/build": "workspace:*",
+    "@sdeverywhere/cli": "workspace:*",
+    "@sdeverywhere/plugin-wasm": "workspace:*",
+    "@sdeverywhere/plugin-worker": "workspace:*",
+    "@sdeverywhere/runtime": "workspace:*",
+    "@sdeverywhere/runtime-async": "workspace:*"
+  }
+}
