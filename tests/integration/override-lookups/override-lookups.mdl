@@ -15,7 +15,7 @@ A data[DimA]
 
 A[DimA] = X + A data[DimA]
   ~ dmnl
-  ~ This is an output variable.
+  ~ This is a 1D subscripted output variable.
   |
 
 B data[DimA, DimB]
@@ -25,7 +25,17 @@ B data[DimA, DimB]
 
 B[DimA, DimB] = X + B data[DimA, DimB]
   ~ dmnl
-  ~ This is an output variable.
+  ~ This is a 2D subscripted output variable.
+  |
+
+C data
+  ~ dmnl
+  ~ This is a non-subscripted data variable.
+  |
+
+C = X + C data
+  ~ dmnl
+  ~ This is a non-subscripted output variable.
   |
 
 INITIAL TIME = 2000 ~~|

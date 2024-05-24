@@ -3,16 +3,10 @@
 import { readFile } from 'fs/promises'
 import { join as joinPath } from 'path'
 
-import {
-  createInputValue,
-  createLookupDef,
-  createRunnableModel,
-  createSynchronousModelRunner,
-  ModelListing
-} from '@sdeverywhere/runtime'
-// import { spawnAsyncModelRunner } from '@sdeverywhere/runtime-async'
+import { createInputValue, createLookupDef, createSynchronousModelRunner, ModelListing } from '@sdeverywhere/runtime'
+import { spawnAsyncModelRunner } from '@sdeverywhere/runtime-async'
 
-import loadJsModel from './sde-prep/build/processed.js'
+import loadGeneratedModel from './sde-prep/generated-model.js'
 
 /*
  * This is a JS-level integration test that verifies that both the synchronous
@@ -41,14 +35,15 @@ function verify(runnerKind, run, outputs, inputX, varId, checkValue) {
 
 function verifyDeclaredOutputs(runnerKind, run, outputs, inputX, dataOffset) {
   const expect = offset => (time, inputX) => inputX + (time - 2000 + 1) * 100 + offset
-  verify(runnerKind, run, outputs, inputX, '_a[0]', expect(0 + dataOffset))
-  verify(runnerKind, run, outputs, inputX, '_a[1]', expect(1))
-  verify(runnerKind, run, outputs, inputX, '_b[0][0]', expect(2))
-  verify(runnerKind, run, outputs, inputX, '_b[0][1]', expect(3))
-  verify(runnerKind, run, outputs, inputX, '_b[0][2]', expect(4))
-  verify(runnerKind, run, outputs, inputX, '_b[1][0]', expect(5 + dataOffset))
-  verify(runnerKind, run, outputs, inputX, '_b[1][1]', expect(6))
-  verify(runnerKind, run, outputs, inputX, '_b[1][2]', expect(7))
+  verify(runnerKind, run, outputs, inputX, '_a[_a1]', expect(0 + dataOffset))
+  verify(runnerKind, run, outputs, inputX, '_a[_a2]', expect(1))
+  verify(runnerKind, run, outputs, inputX, '_b[_a1,_b1]', expect(2))
+  verify(runnerKind, run, outputs, inputX, '_b[_a1,_b2]', expect(3))
+  verify(runnerKind, run, outputs, inputX, '_b[_a1,_b3]', expect(4))
+  verify(runnerKind, run, outputs, inputX, '_b[_a2,_b1]', expect(5 + dataOffset))
+  verify(runnerKind, run, outputs, inputX, '_b[_a2,_b2]', expect(6))
+  verify(runnerKind, run, outputs, inputX, '_b[_a2,_b3]', expect(7))
+  verify(runnerKind, run, outputs, inputX, '_c', expect(10))
 }
 
 async function runTests(runnerKind, modelRunner) {
@@ -92,26 +87,43 @@ async function runTests(runnerKind, modelRunner) {
 }
 
 async function createSynchronousRunner() {
-  // Load the generated JS model
-  const jsModel = await loadJsModel()
-  const actualVarIds = jsModel.getOutputVarIds() || []
-  const expectedVarIds = ['_a[0]', '_a[1]', '_b[0][0]', '_b[0][1]', '_b[0][2]', '_b[1][0]', '_b[1][1]', '_b[1][2]']
+  // TODO: This test app is using ESM-style modules, and `__dirname` is not defined
+  // in an ESM context.  The `generated-model.js` file (if it contains a Wasm model)
+  // may contain a reference to `__dirname`, so we need to define it here.  We should
+  // fix the generated Wasm file so that it works for either ESM or CommonJS.
+  global.__dirname = '.'
+
+  // Load the generated model and verify that it exposes `outputVarIds`
+  const generatedModel = await loadGeneratedModel()
+  const actualVarIds = generatedModel.outputVarIds || []
+  const expectedVarIds = [
+    '_a[_a1]',
+    '_a[_a2]',
+    '_b[_a1,_b1]',
+    '_b[_a1,_b2]',
+    '_b[_a1,_b3]',
+    '_b[_a2,_b1]',
+    '_b[_a2,_b2]',
+    '_b[_a2,_b3]',
+    '_c'
+  ]
   if (actualVarIds.length !== expectedVarIds.length || !actualVarIds.every((v, i) => v === expectedVarIds[i])) {
+    const expected = JSON.stringify(expectedVarIds, null, 2)
+    const actual = JSON.stringify(actualVarIds, null, 2)
     throw new Error(
-      `Test failed: outputVarIds [${actualVarIds}] in generated JS model don't match expected values [${expectedVarIds}]`
+      `Test failed: outputVarIds in generated JS model don't match expected values\nexpected=${expected}\nactual=${actual}`
     )
   }
 
   // Initialize the synchronous `ModelRunner` that drives the model
-  const runnableModel = createRunnableModel(jsModel)
-  return createSynchronousModelRunner(runnableModel)
+  return createSynchronousModelRunner(generatedModel)
 }
 
-// async function createAsynchronousRunner() {
-//   // Initialize the asynchronous `ModelRunner` that drives the Wasm model
-//   const modelWorkerJs = await readFile(joinPath('sde-prep', 'worker.js'), 'utf8')
-//   return await spawnAsyncModelRunner({ source: modelWorkerJs })
-// }
+async function createAsynchronousRunner() {
+  // Initialize the aynchronous `ModelRunner` that drives the generated model
+  const modelWorkerJs = await readFile(joinPath('sde-prep', 'worker.js'), 'utf8')
+  return await spawnAsyncModelRunner({ source: modelWorkerJs })
+}
 
 async function main() {
   // TODO: Verify JSON
@@ -120,9 +132,9 @@ async function main() {
   const syncRunner = await createSynchronousRunner()
   await runTests('synchronous', syncRunner)
 
-  // TODO: Verify with the asynchronous model runner
-  // const asyncRunner = await createAsynchronousRunner()
-  // await runTests('asynchronous', asyncRunner)
+  // Verify with the asynchronous model runner
+  const asyncRunner = await createAsynchronousRunner()
+  await runTests('asynchronous', asyncRunner)
 
   console.log('Tests passed!\n')
 }
