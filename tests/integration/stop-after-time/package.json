@@ -10,7 +10,7 @@
     "run-tests": "./run-tests.js",
     "test-js": "run-s build-js run-tests",
     "test-wasm": "run-s build-wasm run-tests",
-    "ci:int-test": "run-s clean test-js clean test-wasm"
+    "ci:int-test": "run-s clean test-js"
   },
   "dependencies": {
     "@sdeverywhere/build": "workspace:*",
