@@ -1,6 +1,6 @@
 import * as R from 'ramda'
 
-import { asort, lines, strlist, mapIndexed } from '../_shared/helpers.js'
+import { asort, canonicalVensimName, lines, strlist, mapIndexed } from '../_shared/helpers.js'
 import { sub, allDimensions, allMappings, subscriptFamilies } from '../_shared/subscript.js'
 import Model from '../model/model.js'
 
@@ -16,14 +16,7 @@ let codeGenerator = (parsedModel, opts) => {
   // Set to 'decl', 'init-lookups', 'eval', etc depending on the section being generated.
   let mode = ''
   // Set to true to output all variables when there is no model run spec.
-  let outputAllVars
-  if (spec.outputVars && spec.outputVars.length > 0) {
-    outputAllVars = false
-  } else if (spec.outputVarNames && spec.outputVarNames.length > 0) {
-    outputAllVars = false
-  } else {
-    outputAllVars = true
-  }
+  let outputAllVars = spec.outputVarNames === undefined || spec.outputVarNames.length === 0
   // Function to generate a section of the code
   let generateSection = R.map(v => {
     return generateEquation(v, mode, extData, directData, modelDirname, 'js')
@@ -94,38 +87,37 @@ function initControlParamsIfNeeded() {
     throw new Error('Must call setModelFunctions() before running the model');
   }
 
-  // We currently require INITIAL TIME, FINAL TIME, and TIME STEP to be
-  // defined as constant values.  Some models may define SAVEPER in terms
-  // of TIME STEP, which means that the compiler may treat it as an aux,
-  // not as a constant.  We call initConstants() to ensure that we have
-  // initial values for these control parameters.
+  // We currently require INITIAL TIME and TIME STEP to be defined
+  // as constant values.  Some models may define SAVEPER in terms of
+  // TIME STEP (or FINAL TIME in terms of INITIAL TIME), which means
+  // that the compiler may treat them as an aux, not as a constant.
+  // We call initConstants() to ensure that we have initial values
+  // for these control parameters.
   initConstants();
   if (_initial_time === undefined) {
     throw new Error('INITIAL TIME must be defined as a constant value');
-  }
-  if (_final_time === undefined) {
-    throw new Error('FINAL TIME must be defined as a constant value');
   }
   if (_time_step === undefined) {
     throw new Error('TIME STEP must be defined as a constant value');
   }
 
-  if (_saveper === undefined) {
-    // If _saveper is undefined after calling initConstants(), it means it
-    // is defined as an aux, in which case we perform an initial step of
-    // the run loop in order to initialize that value.  First, set the
-    // time and initial function context.
+  if (_final_time === undefined || _saveper === undefined) {
+    // If _final_time or _saveper is undefined after calling initConstants(),
+    // it means one or both is defined as an aux, in which case we perform
+    // an initial step of the run loop in order to initialize the value(s).
+    // First, set the time and initial function context.
     setTime(_initial_time);
     fns.setContext({
-      initialTime: _initial_time,
-      finalTime: _final_time,
       timeStep: _time_step,
       currentTime: _time
     });
 
-    // Perform initial step to initialize _saveper
+    // Perform initial step to initialize _final_time and/or _saveper
     initLevels();
     evalAux();
+    if (_final_time === undefined) {
+      throw new Error('FINAL TIME must be defined');
+    }
     if (_saveper === undefined) {
       throw new Error('SAVEPER must be defined');
     }
@@ -246,13 +238,28 @@ ${chunkedFunctions('evalLevels', true, Model.levelVars(), '  // Evaluate levels'
   // Input/output section
   //
   function emitIOCode() {
-    const outputVarIds = outputAllVars ? expandedVarNames() : spec.outputVars
-    const outputVarNames = outputAllVars ? expandedVarNames(true) : spec.outputVars
-    const outputVarIdElems = outputVarIds.map(id => `'${id}'`).join(',\n  ')
+    mode = 'io'
+
+    // This is the list of original output variable names (as supplied by the user in
+    // the `spec.json` file), for example, `a[A2,B1]`.  These are exported mainly for
+    // use in the implementation of the `sde exec` command, which generates a TSV file
+    // with a header line that includes the original variable names for all outputs.
+    const outputVarNames = outputAllVars ? expandedVarNames(true) : spec.outputVarNames
     const outputVarNameElems = outputVarNames
       .map(name => `'${Model.vensimName(name).replace(/'/g, `\\'`)}'`)
       .join(',\n  ')
-    mode = 'io'
+
+    // This is the list of output variable identifiers (in canonical format), for
+    // example, `_a[_a2,_b2]`.  These are exported for use in the runtime package
+    // for having a canonical identifier associated with the data for each output.
+    const outputVarIds = outputVarNames.map(canonicalVensimName)
+    const outputVarIdElems = outputVarIds.map(id => `'${id}'`).join(',\n  ')
+
+    // This is the list of output variable access declarations, which are in valid
+    // C code format, with subscripts mapped to C index form, for example,
+    // `_a[1][0]`.  These are used in the implementation of `storeOutputs`.
+    const outputVarAccesses = outputAllVars ? expandedVarNames() : spec.outputVars
+
     return `\
 /*export*/ function setInputs(valueAtIndex /*: (index: number) => number*/) {${inputsFromBufferImpl()}}
 
@@ -265,7 +272,7 @@ ${chunkedFunctions('evalLevels', true, Model.levelVars(), '  // Evaluate levels'
 ];
 
 /*export*/ function storeOutputs(storeValue /*: (value: number) => void*/) {
-${specOutputSection(outputVarIds)}
+${specOutputSection(outputVarAccesses)}
 }
 
 /*export*/ function storeOutput(varSpec /*: VarSpec*/, storeValue /*: (value: number) => void*/) {

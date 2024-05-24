@@ -36,7 +36,11 @@ Module["outputVarIds"] = ${JSON.stringify(outputVarIds)};
     await writeFile(preJsFile, content)
   }
 
-  async postGenerateC(context: BuildContext, cContent: string): Promise<string> {
+  async postGenerateCode(context: BuildContext, format: 'js' | 'c', content: string): Promise<string> {
+    if (format !== 'c') {
+      throw new Error("When using plugin-wasm, you must set `genFormat` to 'c' in your `sde.config.js` file")
+    }
+
     context.log('info', '  Generating WebAssembly module')
 
     // If `outputJsPath` is undefined, write `generated-model.js` to the prep dir
@@ -59,7 +63,7 @@ Module["outputVarIds"] = ${JSON.stringify(outputVarIds)};
 
     // context.log('info', '  Done!')
 
-    return cContent
+    return content
   }
 }
 

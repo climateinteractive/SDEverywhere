@@ -33,12 +33,12 @@ const plugin = (num: number, calls: string[]) => {
       record('postProcessMdl')
       return mdlContent
     },
-    preGenerateC: async () => {
-      record('preGenerateC')
+    preGenerateCode: async (_, format) => {
+      record(`preGenerateCode ${format}`)
     },
-    postGenerateC: async (_, cContent) => {
-      record('postGenerateC')
-      return cContent
+    postGenerateCode: async (_, format, content) => {
+      record(`postGenerateCode ${format}`)
+      return content
     },
     postGenerate: async () => {
       record('postGenerate')
@@ -60,6 +60,7 @@ describe('build in production mode', () => {
     const calls: string[] = []
 
     const userConfig: UserConfig = {
+      genFormat: 'c',
       rootDir: resolvePath(__dirname, '..'),
       prepDir: resolvePath(__dirname, 'sde-prep'),
       modelFiles: [],
@@ -119,10 +120,10 @@ describe('build in production mode', () => {
       'plugin 2: preProcessMdl',
       'plugin 1: postProcessMdl',
       'plugin 2: postProcessMdl',
-      'plugin 1: preGenerateC',
-      'plugin 2: preGenerateC',
-      'plugin 1: postGenerateC',
-      'plugin 2: postGenerateC',
+      'plugin 1: preGenerateCode js',
+      'plugin 2: preGenerateCode js',
+      'plugin 1: postGenerateCode js',
+      'plugin 2: postGenerateCode js',
       'plugin 1: postGenerate',
       'plugin 2: postGenerate',
       'plugin 1: postBuild',
@@ -163,8 +164,8 @@ describe('build in production mode', () => {
     it('in preGenerate', async () => verify('preGenerate'))
     it('in preProcessMdl', async () => verify('preProcessMdl'))
     it('in postProcessMdl', async () => verify('postProcessMdl'))
-    it('in preGenerateC', async () => verify('preGenerateC'))
-    it('in postGenerateC', async () => verify('postGenerateC'))
+    it('in preGenerateCode', async () => verify('preGenerateCode'))
+    it('in postGenerateCode', async () => verify('postGenerateCode'))
     it('in postGenerate', async () => verify('postGenerate'))
     it('in postBuild', async () => verify('postBuild'))
   })
@@ -237,6 +238,7 @@ describe('build in production mode', () => {
     }
 
     const userConfig: UserConfig = {
+      genFormat: 'c',
       rootDir: resolvePath(__dirname, '..'),
       prepDir: resolvePath(__dirname, 'sde-prep'),
       modelFiles: [resolvePath(__dirname, '..', '_shared', 'sample.mdl')],
@@ -251,7 +253,7 @@ describe('build in production mode', () => {
     }
 
     // TODO: This error message isn't helpful, but it's due to the fact that
-    // the `generateC` function spawns an `sde` process rather than calling
+    // the `generateCode` function spawns an `sde` process rather than calling
     // into the compiler directly.  Once we improve it to call into the
     // compiler, the error message here should be the one from `readDat`.
     expect(result.error.message).toBe(`Failed to generate C code: 'sde generate' command failed (code=1)`)

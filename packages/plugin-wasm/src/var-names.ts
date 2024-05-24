@@ -39,7 +39,7 @@ export function sdeNameForVensimVarName(varName: string): string {
   let id = sdeNameForVensimName(m[1])
   if (m[2]) {
     const subscripts = m[2].split(',').map(x => sdeNameForVensimName(x))
-    id += `[${subscripts.join('][')}]`
+    id += `[${subscripts.join(',')}]`
   }
 
   return id

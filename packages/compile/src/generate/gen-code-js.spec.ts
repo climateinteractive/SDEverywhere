@@ -164,19 +164,25 @@ function runJsModel(model: JsModel, inputs: number[], outputs: number[]) {
 describe('generateJS (Vensim -> JS)', () => {
   it('should generate code for a simple model', () => {
     const mdl = `
+      DimA: A1, A2 ~~|
+      DimB: B1, B2 ~~|
       input = 1 ~~|
       x = input ~~|
       y = :NOT: x ~~|
       z = ABS(y) ~~|
       w = WITH LOOKUP(x, ( [(0,0)-(2,2)], (0,0),(0.1,0.01),(0.5,0.7),(1,1),(1.5,1.2),(2,1.3) )) ~~|
+      a[DimA] = 0, 1 ~~|
+      b[DimA, DimB] = 5 ~~|
     `
     const code = readInlineModelAndGenerateJS(mdl, {
       inputVarNames: ['input'],
-      outputVarNames: ['x', 'y', 'z', 'w']
+      outputVarNames: ['a[A1]', 'b[A2,B1]', 'x', 'y', 'z', 'w']
     })
     expect(code).toEqual(`\
 // Model variables
 let __lookup1;
+let _a = multiDimArray([2]);
+let _b = multiDimArray([2, 2]);
 let _input;
 let _w;
 let _x;
@@ -184,7 +190,8 @@ let _y;
 let _z;
 
 // Array dimensions
-
+const _dima = [0, 1];
+const _dimb = [0, 1];
 
 // Dimension mappings
 
@@ -210,38 +217,37 @@ function initControlParamsIfNeeded() {
     throw new Error('Must call setModelFunctions() before running the model');
   }
 
-  // We currently require INITIAL TIME, FINAL TIME, and TIME STEP to be
-  // defined as constant values.  Some models may define SAVEPER in terms
-  // of TIME STEP, which means that the compiler may treat it as an aux,
-  // not as a constant.  We call initConstants() to ensure that we have
-  // initial values for these control parameters.
+  // We currently require INITIAL TIME and TIME STEP to be defined
+  // as constant values.  Some models may define SAVEPER in terms of
+  // TIME STEP (or FINAL TIME in terms of INITIAL TIME), which means
+  // that the compiler may treat them as an aux, not as a constant.
+  // We call initConstants() to ensure that we have initial values
+  // for these control parameters.
   initConstants();
   if (_initial_time === undefined) {
     throw new Error('INITIAL TIME must be defined as a constant value');
-  }
-  if (_final_time === undefined) {
-    throw new Error('FINAL TIME must be defined as a constant value');
   }
   if (_time_step === undefined) {
     throw new Error('TIME STEP must be defined as a constant value');
   }
 
-  if (_saveper === undefined) {
-    // If _saveper is undefined after calling initConstants(), it means it
-    // is defined as an aux, in which case we perform an initial step of
-    // the run loop in order to initialize that value.  First, set the
-    // time and initial function context.
+  if (_final_time === undefined || _saveper === undefined) {
+    // If _final_time or _saveper is undefined after calling initConstants(),
+    // it means one or both is defined as an aux, in which case we perform
+    // an initial step of the run loop in order to initialize the value(s).
+    // First, set the time and initial function context.
     setTime(_initial_time);
     fns.setContext({
-      initialTime: _initial_time,
-      finalTime: _final_time,
       timeStep: _time_step,
       currentTime: _time
     });
 
-    // Perform initial step to initialize _saveper
+    // Perform initial step to initialize _final_time and/or _saveper
     initLevels();
     evalAux();
+    if (_final_time === undefined) {
+      throw new Error('FINAL TIME must be defined');
+    }
     if (_saveper === undefined) {
       throw new Error('SAVEPER must be defined');
     }
@@ -316,6 +322,16 @@ function initData() {
 }
 
 function initConstants0() {
+  // a[DimA] = 0,1
+  _a[0] = 0.0;
+  // a[DimA] = 0,1
+  _a[1] = 1.0;
+  // b[DimA,DimB] = 5
+  for (let i = 0; i < 2; i++) {
+  for (let j = 0; j < 2; j++) {
+  _b[i][j] = 5.0;
+  }
+  }
   // input = 1
   _input = 1.0;
 }
@@ -356,6 +372,8 @@ function evalAux0() {
 }
 
 /*export*/ const outputVarIds = [
+  '_a[_a1]',
+  '_b[_a2,_b1]',
   '_x',
   '_y',
   '_z',
@@ -363,6 +381,8 @@ function evalAux0() {
 ];
 
 /*export*/ const outputVarNames = [
+  'a[A1]',
+  'b[A2,B1]',
   'x',
   'y',
   'z',
@@ -370,6 +390,8 @@ function evalAux0() {
 ];
 
 /*export*/ function storeOutputs(storeValue /*: (value: number) => void*/) {
+  storeValue(_a[0]);
+  storeValue(_b[1][0]);
   storeValue(_x);
   storeValue(_y);
   storeValue(_z);
@@ -379,18 +401,24 @@ function evalAux0() {
 /*export*/ function storeOutput(varSpec /*: VarSpec*/, storeValue /*: (value: number) => void*/) {
   switch (varSpec.varIndex) {
     case 1:
-      storeValue(_input);
+      storeValue(_a[varSpec.subscriptIndices[0]]);
       break;
     case 2:
-      storeValue(_x);
+      storeValue(_b[varSpec.subscriptIndices[0]][varSpec.subscriptIndices[1]]);
       break;
     case 3:
-      storeValue(_w);
+      storeValue(_input);
       break;
     case 4:
-      storeValue(_y);
+      storeValue(_x);
       break;
     case 5:
+      storeValue(_w);
+      break;
+    case 6:
+      storeValue(_y);
+      break;
+    case 7:
       storeValue(_z);
       break;
     default:

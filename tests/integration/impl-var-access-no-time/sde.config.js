@@ -1,8 +1,11 @@
 import { wasmPlugin } from '@sdeverywhere/plugin-wasm'
 import { workerPlugin } from '@sdeverywhere/plugin-worker'
 
+const genFormat = process.env.GEN_FORMAT === 'c' ? 'c' : 'js'
+
 export async function config() {
   return {
+    genFormat,
     modelFiles: ['impl-var-access-no-time.mdl'],
 
     modelSpec: async () => {
@@ -16,15 +19,20 @@ export async function config() {
     plugins: [
       // Include a custom plugin that applies post-processing steps
       {
-        postGenerateC: (_, cContent) => {
-          // Edit the generated C code so that it enables the `SDE_USE_OUTPUT_INDICES` flag; this is
-          // required in order to access impl (non-exported) model variables
-          return cContent.replace('#define SDE_USE_OUTPUT_INDICES 0', '#define SDE_USE_OUTPUT_INDICES 1')
+        postGenerateCode: (_, format, content) => {
+          if (format === 'c') {
+            // Edit the generated C code so that it enables the `SDE_USE_OUTPUT_INDICES` flag; this is
+            // required in order to access impl (non-exported) model variables
+            return content.replace('#define SDE_USE_OUTPUT_INDICES 0', '#define SDE_USE_OUTPUT_INDICES 1')
+          } else {
+            return content
+          }
         }
       },
 
-      // Generate a `generated-model.js` file containing the Wasm model
-      wasmPlugin(),
+      // If targeting WebAssembly, generate a `generated-model.js` file
+      // containing the Wasm model
+      genFormat === 'c' && wasmPlugin(),
 
       // Generate a `worker.js` file that runs the generated model in a worker
       workerPlugin()

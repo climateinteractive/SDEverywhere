@@ -15,7 +15,6 @@
     "@sdeverywhere/build": "^0.3.4",
     "@sdeverywhere/cli": "^0.7.23",
     "@sdeverywhere/plugin-check": "^0.3.5",
-    "@sdeverywhere/plugin-wasm": "^0.2.3",
     "@sdeverywhere/plugin-worker": "^0.2.3",
     "vite": "^4.4.9"
   }

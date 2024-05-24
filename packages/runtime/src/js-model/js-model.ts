@@ -102,8 +102,6 @@ function runJsModel(
   // Configure the functions.  The function context makes the control variable values
   // available to certain functions that depend on those values.
   const fnContext: JsModelFunctionContext = {
-    initialTime,
-    finalTime,
     timeStep,
     currentTime: time
   }
