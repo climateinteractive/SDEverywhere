@@ -164,16 +164,24 @@ function runJsModel(model: JsModel, inputs: number[], outputs: number[]) {
 
 describe('generateJS (Vensim -> JS)', () => {
   it('should generate code for a simple model', () => {
-    const extData: ExtData = new Map([
-      [
-        '_v_data',
+    const extData: ExtData = new Map()
+    function addData(varId: string) {
+      extData.set(
+        varId,
         new Map([
           [0, 0],
           [1, 2],
           [2, 5]
         ])
-      ]
-    ])
+      )
+    }
+    addData('_a_data[_a1]')
+    addData('_a_data[_a2]')
+    addData('_b_data[_a1,_b1]')
+    addData('_b_data[_a1,_b2]')
+    addData('_b_data[_a2,_b1]')
+    addData('_b_data[_a2,_b2]')
+    addData('_c_data')
     const mdl = `
       DimA: A1, A2 ~~|
       DimB: B1, B2 ~~|
@@ -181,11 +189,13 @@ describe('generateJS (Vensim -> JS)', () => {
       x = input ~~|
       y = :NOT: x ~~|
       z = ABS(y) ~~|
-      v data ~~|
-      v = v data ~~|
+      a data[DimA] ~~|
+      a[DimA] = a data[DimA] ~~|
+      b data[DimA, DimB] ~~|
+      b[DimA, DimB] = b data[DimA, DimB] ~~|
+      c data ~~|
+      c = c data ~~|
       w = WITH LOOKUP(x, ( [(0,0)-(2,2)], (0,0),(0.1,0.01),(0.5,0.7),(1,1),(1.5,1.2),(2,1.3) )) ~~|
-      a[DimA] = 0, 1 ~~|
-      b[DimA, DimB] = 5 ~~|
       INITIAL TIME = 0 ~~|
       FINAL TIME = 2 ~~|
       TIME STEP = 1 ~~|
@@ -193,21 +203,23 @@ describe('generateJS (Vensim -> JS)', () => {
     `
     const code = readInlineModelAndGenerateJS(mdl, {
       inputVarNames: ['input'],
-      outputVarNames: ['a[A1]', 'b[A2,B1]', 'x', 'y', 'z', 'v', 'w'],
+      outputVarNames: ['x', 'y', 'z', 'a[A1]', 'b[A2,B1]', 'c', 'w'],
       extData
     })
     expect(code).toEqual(`\
 // Model variables
 let __lookup1;
 let _a = multiDimArray([2]);
+let _a_data = multiDimArray([2]);
 let _b = multiDimArray([2, 2]);
+let _b_data = multiDimArray([2, 2]);
+let _c;
+let _c_data;
 let _final_time;
 let _initial_time;
 let _input;
 let _saveper;
 let _time_step;
-let _v;
-let _v_data;
 let _w;
 let _x;
 let _y;
@@ -222,7 +234,13 @@ const _dimb = [0, 1];
 
 // Lookup data arrays
 const __lookup1_data_ = [0.0, 0.0, 0.1, 0.01, 0.5, 0.7, 1.0, 1.0, 1.5, 1.2, 2.0, 1.3];
-const _v_data_data_ = [0.0, 0.0, 1.0, 2.0, 2.0, 5.0];
+const _a_data_data__0_ = [0.0, 0.0, 1.0, 2.0, 2.0, 5.0];
+const _a_data_data__1_ = [0.0, 0.0, 1.0, 2.0, 2.0, 5.0];
+const _b_data_data__0__0_ = [0.0, 0.0, 1.0, 2.0, 2.0, 5.0];
+const _b_data_data__0__1_ = [0.0, 0.0, 1.0, 2.0, 2.0, 5.0];
+const _b_data_data__1__0_ = [0.0, 0.0, 1.0, 2.0, 2.0, 5.0];
+const _b_data_data__1__1_ = [0.0, 0.0, 1.0, 2.0, 2.0, 5.0];
+const _c_data_data_ = [0.0, 0.0, 1.0, 2.0, 2.0, 5.0];
 
 // Time variable
 let _time;
@@ -339,7 +357,13 @@ function initLookups() {
 }
 
 function initData0() {
-  _v_data = fns.createLookup(3, _v_data_data_);
+  _a_data[0] = fns.createLookup(3, _a_data_data__0_);
+  _a_data[1] = fns.createLookup(3, _a_data_data__1_);
+  _b_data[0][0] = fns.createLookup(3, _b_data_data__0__0_);
+  _b_data[0][1] = fns.createLookup(3, _b_data_data__0__1_);
+  _b_data[1][0] = fns.createLookup(3, _b_data_data__1__0_);
+  _b_data[1][1] = fns.createLookup(3, _b_data_data__1__1_);
+  _c_data = fns.createLookup(3, _c_data_data_);
 }
 
 function initData() {
@@ -359,16 +383,6 @@ function initConstants0() {
   _saveper = 1.0;
   // TIME STEP = 1
   _time_step = 1.0;
-  // a[DimA] = 0,1
-  _a[0] = 0.0;
-  // a[DimA] = 0,1
-  _a[1] = 1.0;
-  // b[DimA,DimB] = 5
-  for (let i = 0; i < 2; i++) {
-  for (let j = 0; j < 2; j++) {
-  _b[i][j] = 5.0;
-  }
-  }
   // input = 1
   _input = 1.0;
 }
@@ -385,8 +399,18 @@ function initConstants0() {
 }
 
 function evalAux0() {
-  // v = v data
-  _v = fns.LOOKUP(_v_data, _time);
+  // a[DimA] = a data[DimA]
+  for (let i = 0; i < 2; i++) {
+  _a[i] = fns.LOOKUP(_a_data[i], _time);
+  }
+  // b[DimA,DimB] = b data[DimA,DimB]
+  for (let i = 0; i < 2; i++) {
+  for (let j = 0; j < 2; j++) {
+  _b[i][j] = fns.LOOKUP(_b_data[i][j], _time);
+  }
+  }
+  // c = c data
+  _c = fns.LOOKUP(_c_data, _time);
   // x = input
   _x = _input;
   // w = WITH LOOKUP(x,([(0,0)-(2,2)],(0,0),(0.1,0.01),(0.5,0.7),(1,1),(1.5,1.2),(2,1.3)))
@@ -417,8 +441,14 @@ function evalAux0() {
   const varIndex = varSpec.varIndex;
   const subs = varSpec.subscriptIndices;
   switch (varIndex) {
+    case 6:
+      _a_data[subs[0]] = fns.createLookup(points.length / 2, points);
+      break;
+    case 7:
+      _b_data[subs[0]][subs[1]] = fns.createLookup(points.length / 2, points);
+      break;
     case 8:
-      _v_data = fns.createLookup(points.length / 2, points);
+      _c_data = fns.createLookup(points.length / 2, points);
       break;
     default:
       break;
@@ -426,32 +456,32 @@ function evalAux0() {
 }
 
 /*export*/ const outputVarIds = [
-  '_a[_a1]',
-  '_b[_a2,_b1]',
   '_x',
   '_y',
   '_z',
-  '_v',
+  '_a[_a1]',
+  '_b[_a2,_b1]',
+  '_c',
   '_w'
 ];
 
 /*export*/ const outputVarNames = [
-  'a[A1]',
-  'b[A2,B1]',
   'x',
   'y',
   'z',
-  'v',
+  'a[A1]',
+  'b[A2,B1]',
+  'c',
   'w'
 ];
 
 /*export*/ function storeOutputs(storeValue /*: (value: number) => void*/) {
-  storeValue(_a[0]);
-  storeValue(_b[1][0]);
   storeValue(_x);
   storeValue(_y);
   storeValue(_z);
-  storeValue(_v);
+  storeValue(_a[0]);
+  storeValue(_b[1][0]);
+  storeValue(_c);
   storeValue(_w);
 }
 
@@ -475,27 +505,27 @@ function evalAux0() {
       storeValue(_time_step);
       break;
     case 5:
-      storeValue(_a[subs[0]]);
-      break;
-    case 6:
-      storeValue(_b[subs[0]][subs[1]]);
-      break;
-    case 7:
       storeValue(_input);
       break;
     case 9:
-      storeValue(_v);
+      storeValue(_a[subs[0]]);
       break;
     case 10:
-      storeValue(_x);
+      storeValue(_b[subs[0]][subs[1]]);
       break;
     case 11:
-      storeValue(_w);
+      storeValue(_c);
       break;
     case 12:
-      storeValue(_y);
+      storeValue(_x);
       break;
     case 13:
+      storeValue(_w);
+      break;
+    case 14:
+      storeValue(_y);
+      break;
+    case 15:
       storeValue(_z);
       break;
     default:
