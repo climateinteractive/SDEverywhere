@@ -292,7 +292,9 @@ ${specOutputSection(outputVarAccesses)}
   if (!varSpec) {
     throw new Error('Got undefined varSpec in storeOutput');
   }
-  switch (varSpec.varIndex) {
+  const varIndex = varSpec.varIndex;
+  const subs = varSpec.subscriptIndices;
+  switch (varIndex) {
 ${fullOutputSection(Model.varIndexInfo())}
     default:
       break;

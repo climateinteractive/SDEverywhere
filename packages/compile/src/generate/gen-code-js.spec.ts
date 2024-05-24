@@ -193,7 +193,7 @@ describe('generateJS (Vensim -> JS)', () => {
     `
     const code = readInlineModelAndGenerateJS(mdl, {
       inputVarNames: ['input'],
-      outputVarNames: ['a[A1]', 'b[A2,B1]', 'x', 'y', 'z', 'w'],
+      outputVarNames: ['a[A1]', 'b[A2,B1]', 'x', 'y', 'z', 'v', 'w'],
       extData
     })
     expect(code).toEqual(`\
@@ -417,7 +417,7 @@ function evalAux0() {
   const varIndex = varSpec.varIndex;
   const subs = varSpec.subscriptIndices;
   switch (varIndex) {
-    case 6:
+    case 8:
       _v_data = fns.createLookup(points.length / 2, points);
       break;
     default:
@@ -425,13 +425,13 @@ function evalAux0() {
   }
 }
 
-
 /*export*/ const outputVarIds = [
   '_a[_a1]',
   '_b[_a2,_b1]',
   '_x',
   '_y',
   '_z',
+  '_v',
   '_w'
 ];
 
@@ -441,17 +441,18 @@ function evalAux0() {
   'x',
   'y',
   'z',
+  'v',
   'w'
 ];
 
 /*export*/ function storeOutputs(storeValue /*: (value: number) => void*/) {
   storeValue(_a[0]);
   storeValue(_b[1][0]);
-  storeValue(_v);
-  storeValue(_w);
   storeValue(_x);
   storeValue(_y);
   storeValue(_z);
+  storeValue(_v);
+  storeValue(_w);
 }
 
 /*export*/ function storeOutput(varSpec /*: VarSpec*/, storeValue /*: (value: number) => void*/) {
@@ -461,6 +462,44 @@ function evalAux0() {
   const varIndex = varSpec.varIndex;
   const subs = varSpec.subscriptIndices;
   switch (varIndex) {
+    case 1:
+      storeValue(_final_time);
+      break;
+    case 2:
+      storeValue(_initial_time);
+      break;
+    case 3:
+      storeValue(_saveper);
+      break;
+    case 4:
+      storeValue(_time_step);
+      break;
+    case 5:
+      storeValue(_a[subs[0]]);
+      break;
+    case 6:
+      storeValue(_b[subs[0]][subs[1]]);
+      break;
+    case 7:
+      storeValue(_input);
+      break;
+    case 9:
+      storeValue(_v);
+      break;
+    case 10:
+      storeValue(_x);
+      break;
+    case 11:
+      storeValue(_w);
+      break;
+    case 12:
+      storeValue(_y);
+      break;
+    case 13:
+      storeValue(_z);
+      break;
+    default:
+      break;
   }
 }
 
