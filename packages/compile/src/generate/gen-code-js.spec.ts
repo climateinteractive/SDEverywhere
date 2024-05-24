@@ -193,7 +193,7 @@ describe('generateJS (Vensim -> JS)', () => {
     `
     const code = readInlineModelAndGenerateJS(mdl, {
       inputVarNames: ['input'],
-      outputVarNames: ['a[A1]', 'b[A2,B1]', 'x', 'y', 'z', 'w']
+      outputVarNames: ['a[A1]', 'b[A2,B1]', 'x', 'y', 'z', 'w'],
       extData
     })
     expect(code).toEqual(`\

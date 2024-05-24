@@ -4,6 +4,7 @@ import type { OutputVarId, VarId, VarSpec } from '../../_shared'
 import type { ModelListing } from '../../model-listing'
 import type { JsModel } from '../js-model'
 import type { JsModelFunctions } from '../js-model-functions'
+import { JsModelLookup } from '../js-model-lookup'
 
 /**
  * @hidden This type is not part of the public API; it is exposed only for use in

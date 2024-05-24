@@ -11,8 +11,6 @@ export interface WasmModule {
   readonly kind: 'wasm'
   readonly outputVarIds: OutputVarId[]
   /** @hidden */
-  outputVarIds: OutputVarId[]
-  /** @hidden */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   cwrap: (fname: string, rettype: string, argtypes: string[]) => any
   /** @hidden */
