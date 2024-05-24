@@ -2,7 +2,7 @@
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
-import { createInputValue /*, createLookupDef*/ } from '../_shared'
+import { createInputValue, createLookupDef } from '../_shared'
 
 import { ModelListing } from '../model-listing'
 
@@ -20,20 +20,20 @@ function createMockJsModel(): MockJsModel {
     initialTime: startTime,
     finalTime: endTime,
     outputVarIds: ['_output_1', '_output_2'],
-    onEvalAux: (vars /*, lookups*/) => {
+    onEvalAux: (vars, lookups) => {
       const time = vars.get('_time')
-      // if (lookups.size > 0) {
-      //   const lookup1 = lookups.get('_output_1_data')
-      //   const lookup2 = lookups.get('_output_2_data')
-      //   expect(lookup1).toBeDefined()
-      //   expect(lookup2).toBeDefined()
-      //   vars.set('_output_1', lookup1.getValueForX(time, 'interpolate'))
-      //   vars.set('_output_2', lookup2.getValueForX(time, 'interpolate'))
-      // } else {
-      vars.set('_output_1', time - startTime + 1)
-      vars.set('_output_2', time - startTime + 4)
-      vars.set('_x', time - startTime + 7)
-      // }
+      if (lookups.size > 0) {
+        const lookup1 = lookups.get('_output_1_data')
+        const lookup2 = lookups.get('_output_2_data')
+        expect(lookup1).toBeDefined()
+        expect(lookup2).toBeDefined()
+        vars.set('_output_1', lookup1.getValueForX(time, 'interpolate'))
+        vars.set('_output_2', lookup2.getValueForX(time, 'interpolate'))
+      } else {
+        vars.set('_output_1', time - startTime + 1)
+        vars.set('_output_2', time - startTime + 4)
+        vars.set('_x', time - startTime + 7)
+      }
     }
   })
 }
@@ -43,42 +43,42 @@ function createMockWasmModule(): MockWasmModule {
     initialTime: startTime,
     finalTime: endTime,
     outputVarIds: ['_output_1', '_output_2'],
-    onRunModel: (inputs, outputs, /*lookups,*/ outputIndices) => {
+    onRunModel: (inputs, outputs, lookups, outputIndices) => {
       // Verify inputs
       expect(inputs).toEqual(new Float64Array([7, 8, 9]))
 
-      // if (lookups.size > 0) {
-      //   // Pretend that outputs are derived from lookup data
-      //   const lookup1 = lookups.get('_output_1_data')
-      //   const lookup2 = lookups.get('_output_2_data')
-      //   expect(lookup1).toBeDefined()
-      //   expect(lookup2).toBeDefined()
-      //   for (let i = 0; i < 3; i++) {
-      //     outputs[i] = lookup1.getValueForX(2000 + i, 'interpolate')
-      //     outputs[i + 3] = lookup2.getValueForX(2000 + i, 'interpolate')
-      //   }
-      // } else {
-      if (outputIndices === undefined) {
-        // Store 3 values for the _output_1, and 3 for _output_2
-        outputs.set([1, 2, 3, 4, 5, 6])
+      if (lookups.size > 0) {
+        // Pretend that outputs are derived from lookup data
+        const lookup1 = lookups.get('_output_1_data')
+        const lookup2 = lookups.get('_output_2_data')
+        expect(lookup1).toBeDefined()
+        expect(lookup2).toBeDefined()
+        for (let i = 0; i < 3; i++) {
+          outputs[i] = lookup1.getValueForX(2000 + i, 'interpolate')
+          outputs[i + 3] = lookup2.getValueForX(2000 + i, 'interpolate')
+        }
       } else {
-        // Verify output indices
-        expect(outputIndices).toEqual(
-          new Int32Array([
-            // _x
-            3, 0, 0, 0,
-            // _output_2
-            2, 0, 0, 0,
-            // _output_1
-            1, 0, 0, 0,
-            // (zero terminator)
-            0, 0, 0, 0
-          ])
-        )
-        // Store 3 values for each of the three variables
-        outputs.set([7, 8, 9, 4, 5, 6, 1, 2, 3])
+        if (outputIndices === undefined) {
+          // Store 3 values for the _output_1, and 3 for _output_2
+          outputs.set([1, 2, 3, 4, 5, 6])
+        } else {
+          // Verify output indices
+          expect(outputIndices).toEqual(
+            new Int32Array([
+              // _x
+              3, 0, 0, 0,
+              // _output_2
+              2, 0, 0, 0,
+              // _output_1
+              1, 0, 0, 0,
+              // (zero terminator)
+              0, 0, 0, 0
+            ])
+          )
+          // Store 3 values for each of the three variables
+          outputs.set([7, 8, 9, 4, 5, 6, 1, 2, 3])
+        }
       }
-      // }
     }
   })
 }
@@ -177,10 +177,10 @@ describe.each([
     const lookup1Points = [p(2000, 101), p(2001, 102), p(2002, 103)]
     const lookup2Points = [p(2000, 104), p(2001, 105), p(2002, 106)]
     outputs = await runner.runModel(inputs, outputs, {
-      // lookups: [
-      //   createLookupDef(listing.varSpecs.get('_output_1_data'), lookup1Points),
-      //   createLookupDef(listing.varSpecs.get('_output_2_data'), lookup2Points)
-      // ]
+      lookups: [
+        createLookupDef(listing.varSpecs.get('_output_1_data'), lookup1Points),
+        createLookupDef(listing.varSpecs.get('_output_2_data'), lookup2Points)
+      ]
     })
 
     // Verify that outputs contain the values from the overridden lookups
