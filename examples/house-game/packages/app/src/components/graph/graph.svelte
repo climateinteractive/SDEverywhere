@@ -5,7 +5,6 @@ import { onMount } from 'svelte'
 
 import type { GraphViewModel } from './graph-vm'
 import { GraphView } from './graph-view'
-  import type { Readable } from 'svelte/store'
 
 /** The view model. */
 export let viewModel: GraphViewModel
@@ -66,9 +65,9 @@ onMount(() => {
 
 
 <!-- TEMPLATE -->
-<template lang='pug'>
+<template>
 
-.graph-inner-container(bind:this!='{container}' style!='{containerStyle}')
+<div class="graph-inner-container" bind:this={container} style={containerStyle} />
 
 </template>
 
