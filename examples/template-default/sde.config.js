@@ -27,7 +27,10 @@ const corePath = (...parts) => packagePath('core', ...parts)
 // If `genFormat` is 'js', the sde compiler will generate JavaScript code that runs
 // in the browser or in Node.js without the additional Emscripten build step.
 //
-const genFormat = 'js'
+// TODO: Until new `@sdeverywhere` packages that support JS code generation are
+// published on the npm registry, the only working option here is 'c'.  The default
+// value will be set to 'js' once those new packages are published.
+const genFormat = 'c'
 
 export async function config() {
   return {
