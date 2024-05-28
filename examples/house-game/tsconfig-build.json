@@ -1,9 +1,0 @@
-// This contains the TypeScript configuration for production builds.
-{
-  "extends": "./tsconfig-base.json",
-  "compilerOptions": {
-    "skipLibCheck": true
-  },
-  "include": ["src/**/*"],
-  "exclude": ["**/*.spec.ts"]
-}

@@ -71,12 +71,30 @@ importers:
 
   examples/house-game:
     dependencies:
-      '@sdeverywhere/compile':
-        specifier: workspace:*
-        version: link:../../packages/compile
+      '@sdeverywhere/build':
+        specifier: ^0.3.4
+        version: link:../../packages/build
+      '@sdeverywhere/cli':
+        specifier: ^0.7.23
+        version: link:../../packages/cli
+      '@sdeverywhere/plugin-config':
+        specifier: ^0.2.4
+        version: link:../../packages/plugin-config
+      '@sdeverywhere/plugin-vite':
+        specifier: ^0.1.8
+        version: link:../../packages/plugin-vite
+      '@sdeverywhere/plugin-worker':
+        specifier: ^0.2.3
+        version: link:../../packages/plugin-worker
+
+  examples/house-game/packages/app:
+    dependencies:
       '@sdeverywhere/runtime':
-        specifier: workspace:*
-        version: link:../../packages/runtime
+        specifier: ^0.2.2
+        version: link:../../../../packages/runtime
+      '@sdeverywhere/runtime-async':
+        specifier: ^0.2.2
+        version: link:../../../../packages/runtime-async
       chart.js:
         specifier: ^2.9.4
         version: 2.9.4
@@ -90,9 +108,6 @@ importers:
       postcss:
         specifier: ^8.4.31
         version: 8.4.31
-      pug:
-        specifier: ^3.0.1
-        version: 3.0.2
       sass:
         specifier: ^1.34.1
         version: 1.52.3
@@ -108,9 +123,6 @@ importers:
       vite:
         specifier: ^4.4.9
         version: 4.4.9(sass@1.52.3)
-      vite-plugin-node-polyfills:
-        specifier: ^0.21.0
-        version: 0.21.0(vite@4.4.9)
 
   examples/sample-check-app:
     dependencies:

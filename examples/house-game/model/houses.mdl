@@ -1,173 +1,96 @@
 {UTF-8}
 replacement houses = demolishing
-	~	house/Month
-	~		|
+  ~  house/Month
+  ~    |
 
-planning=
-	GAME( MAX( 0, replacement houses + (gap in houses / time to respond to gap)) )
-	~	house/Month
-	~		|
+planning data ~~|
 
-average house life = 1200
-	~	Month
-	~		|
+planning = planning data
+  ~  house/Month
+  ~ Originally: GAME( MAX( 0, replacement houses + (gap in houses / time to respond to gap)) )
+  ~    |
+
+average house life = 600
+  ~  Month
+  ~    |
 
 building = Planned Houses / time to plan to build
-	~	house/Month
-	~		|
+  ~  house/Month
+  ~    |
 
 completing = Houses In Construction / time to build houses
-	~	house/Month
-	~		|
+  ~  house/Month
+  ~    |
 
 demolishing = Houses Completed / average house life
-	~	house/Month
-	~		|
+  ~  house/Month
+  ~    |
 
-gap in houses = number of houses required - Houses Completed
-	~	house
-	~		|
+gap in houses = (number of houses required - Houses Completed) * -1
+  ~  house
+  ~    |
 
-Houses Completed = INTEG(+completing-demolishing, 5000)
-	~	house
-	~		|
+Houses Completed = INTEG(+completing-demolishing, initial houses)
+  ~  house
+  ~    |
 
 Houses In Construction = INTEG(building-completing, building * time to build houses)
-	~	house
-	~		|
+  ~  house
+  ~    |
 
-number of houses required=
-	 5000 + STEP ( 50, 10 )
-	~	house
-	~		|
+initial houses = 1000
+  ~  house
+  ~    |
+
+additional houses required at t 40 = 0
+  ~  house
+  ~    |
+
+number of houses required =
+   initial houses + STEP ( additional houses required at t 40, 40 )
+  ~  house
+  ~    |
 
 Planned Houses = INTEG(+planning - building, planning * time to plan to build)
-	~	house
-	~		|
+  ~  house
+  ~    |
 
 time to build houses = 6
-	~	Month
-	~		|
+  ~  Month
+  ~    |
 
 time to plan to build=
-	 3
-	~	Month
-	~		|
+   3
+  ~  Month
+  ~    |
 
 time to respond to gap=
-	 8
-	~	Month
-	~		|
+   8
+  ~  Month
+  ~    |
 
 ********************************************************
-	.Control
+  .Control
 ********************************************************~
-		Simulation Control Paramaters
-	|
+    Simulation Control Paramaters
+  |
 
 FINAL TIME  = 100
-	~	Month
-	~		The final time for the simulation.
-	|
+  ~  Month
+  ~    The final time for the simulation.
+  |
 
 INITIAL TIME  = 0
-	~	Month
-	~		The initial time for the simulation.
-	|
+  ~  Month
+  ~    The initial time for the simulation.
+  |
 
-SAVEPER  = 
-        TIME STEP
-	~	Month
-	~		The frequency with which output is stored.
-	|
+SAVEPER  = 1
+  ~  Month
+  ~    The frequency with which output is stored.
+  |
 
-TIME STEP  = 0.5
-	~	Month
-	~		The time step for the simulation.
-	|
-
-\\\---/// Sketch information - do not modify anything except names
-V300  Do not put anything below this section - it will be ignored
-*View 1
-$192-192-192,0,Arial|14||0-0-0|92-92-92|160-160-160|-1--1--1|255-255-255|96,96,100,0
-10,1,Planned Houses,357,169,49,33,3,131,0,16,0,0,0,0,0-0-0,0-0-0,|14|B|0-0-0
-10,2,Houses In Construction,580,172,65,33,3,131,0,16,0,0,0,0,0-0-0,0-0-0,|14|B|0-0-0
-10,3,Houses Completed,813,168,53,32,3,131,0,16,0,0,0,0,0-0-0,0-0-0,|14|B|0-0-0
-12,4,48,219,173,13,11,0,3,0,0,-1,0,0,0
-11,5,48,264,169,7,8,34,3,0,0,1,0,0,0
-10,6,planning,264,189,39,12,32,3,0,0,0,0,0,0
-11,7,204,456,172,7,8,34,3,0,0,1,0,0,0
-10,8,building,456,192,35,12,32,3,0,0,0,0,0,0
-11,9,284,701,172,7,8,34,3,0,0,1,0,0,0
-10,10,completing,701,192,48,12,32,3,0,0,0,0,0,0
-12,11,48,1011,169,13,11,0,3,0,0,-1,0,0,0
-11,12,48,929,169,7,8,34,3,0,0,1,0,0,0
-10,13,demolishing,929,189,53,12,32,3,0,0,0,0,0,0
-10,14,average house life,821,77,79,12,0,3,0,2,-1,0,0,0,0-0-0,0-0-0,|14||64-128-128
-10,15,time to build houses,572,80,87,12,0,3,0,2,-1,0,0,0,0-0-0,0-0-0,|14||64-128-128
-10,16,time to plan to build,353,81,84,12,0,3,0,2,-1,0,0,0,0-0-0,0-0-0,|14||64-128-128
-10,17,gap in houses,605,257,61,12,0,3,0,0,-1,0,0,0
-10,18,number of houses required,688,311,115,12,0,3,0,2,-1,0,0,0,0-0-0,0-0-0,|14||64-128-128
-10,19,time to respond to gap,139,83,96,12,0,3,0,2,0,0,0,0,0-0-0,0-0-0,|14||64-128-128
-10,20,replacement houses,653,351,87,12,0,3,0,0,-1,0,0,0
-1,21,5,1,4,0,0,22,0,0,0,-1--1--1,,1|(289,169)|
-1,22,5,4,100,0,0,22,0,0,0,-1--1--1,,1|(244,169)|
-1,23,7,2,4,0,0,22,0,0,0,-1--1--1,,1|(488,172)|
-1,24,7,1,100,0,0,22,0,0,0,-1--1--1,,1|(428,172)|
-1,25,9,3,4,0,0,22,0,0,0,-1--1--1,,1|(733,172)|
-1,26,9,2,100,0,0,22,0,0,0,-1--1--1,,1|(669,172)|
-1,27,12,11,4,0,0,22,0,0,0,-1--1--1,,1|(967,169)|
-1,28,12,3,100,0,0,22,0,0,0,-1--1--1,,1|(895,169)|
-1,29,16,7,2,0,0,0,0,0,0,-1--1--1,,1|(437,125)|
-1,30,15,9,2,0,0,0,0,0,0,-1--1--1,,1|(680,144)|
-1,31,14,12,2,0,0,0,0,0,0,-1--1--1,,1|(903,133)|
-1,32,3,17,2,0,0,0,0,0,0,-1--1--1,,1|(715,245)|
-1,33,18,17,2,0,0,0,0,0,0,-1--1--1,,1|(659,280)|
-1,34,17,6,2,0,0,0,0,0,0,-1--1--1,,1|(357,232)|
-1,35,1,8,2,0,0,0,0,0,0,-1--1--1,,1|(429,216)|
-1,36,2,10,2,0,0,0,0,0,0,-1--1--1,,1|(667,220)|
-1,37,3,13,2,0,0,0,0,0,0,-1--1--1,,1|(839,216)|
-1,38,16,1,1,1,0,0,0,0,1,-1--1--1,,1|(384,104)|
-1,39,15,2,1,1,0,0,0,0,1,-1--1--1,,1|(589,97)|
-1,40,19,5,1,0,0,0,0,0,0,-1--1--1,,1|(248,129)|
-1,41,13,20,2,0,0,0,0,0,0,-1--1--1,,1|(797,339)|
-1,42,20,6,2,0,0,0,0,0,0,-1--1--1,,1|(369,288)|
-12,43,0,235,529,213,200,3,188,0,0,1,0,0,0
-REAL_ESTATE_GAME
-///---\\\
-:GRAPH REAL_ESTATE_GAME
-:TITLE Real Estate Game
-:WIP
-:X-MIN 0
-:X-MAX 100
-:MAX-POINTS 200
-:SCALE
-:VAR Houses Completed
-:Y-MIN 5000
-:Y-MAX 5150
-:DATASET *
-:LINE-WIDTH 2
-:SCALE
-:VAR planning
-:Y-MIN 0
-:Y-MAX 20
-:DATASET *
-:LINE-WIDTH 2
-:SCALE
-:VAR gap in houses
-:Y-MIN -100
-:Y-MAX 100
-:DATASET *
-:LINE-WIDTH 3
-:L<%^E!@
-1:Game1.vdf
-9:Game1
-15:0,0,0,0,0,0
-19:100,0
-27:0,
-34:0,
-4:Time
-5:Houses Completed
-24:0
-25:100
-26:100
+TIME STEP  = 0.25
+  ~  Month
+  ~    The time step for the simulation.
+  |

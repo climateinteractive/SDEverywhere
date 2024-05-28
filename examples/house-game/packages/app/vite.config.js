@@ -3,7 +3,6 @@ import { fileURLToPath } from 'url'
 
 import { defineConfig } from 'vite'
 import { svelte } from '@sveltejs/vite-plugin-svelte'
-import { nodePolyfills } from 'vite-plugin-node-polyfills'
 
 const production = process.env.NODE_ENV === 'production'
 
@@ -13,12 +12,15 @@ const production = process.env.NODE_ENV === 'production'
 const appDir = dirname(fileURLToPath(import.meta.url))
 
 function localPackage(...subpath) {
-  return resolvePath(appDir, '..', '..', 'packages', ...subpath)
+  return resolvePath(appDir, '..', '..', '..', '..', 'packages', ...subpath)
 }
 
 export default defineConfig({
   // Don't clear the screen in dev mode so that we can see builder output
   clearScreen: false,
+
+  // Use this directory as the root directory for the app project
+  root: appDir,
 
   // Use `.` as the base directory (instead of the default `/`); this controls
   // how the path to the js/css files are generated in `index.html`
@@ -28,12 +30,11 @@ export default defineConfig({
   publicDir: 'static',
 
   // Configure path aliases; these should match the corresponding lines in `tsconfig-base.json`
-  resolve: {
-    alias: {
-      '@sdeverywhere/compile': localPackage('compile', 'src'),
-      '@sdeverywhere/runtime': localPackage('runtime', 'src')
-    }
-  },
+  // resolve: {
+  //   alias: {
+  //     '@sdeverywhere/runtime': localPackage('runtime', 'src')
+  //   }
+  // },
 
   // Inject special values into the generated JS
   define: {
@@ -69,11 +70,7 @@ export default defineConfig({
 
   plugins: [
     // Process Svelte files
-    svelte(),
-
-    // XXX: Polyfill certain Node.js core modules until the compile package is
-    // updated to have a browser-friendly implementation
-    nodePolyfills()
+    svelte()
   ],
 
   server: {
