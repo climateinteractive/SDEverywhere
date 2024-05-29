@@ -111,20 +111,20 @@ export class AppModel {
 
     // Update the lookup data to reflect the values for the given state
     const stateInputs = state.modelInputs
-    if (stateInputs.useRateFromUser !== true) {
-      // Reset the lookup data to include the initial rate from the state
+    if (stateInputs.useRateFromUser === true) {
+      // Add the current rate set by the user
+      this.gameLookupPoints.push({
+        x: this.internalCurrentTime,
+        y: stateInputs.currentRate
+      })
+    } else {
+      // Otherwise, reset the lookup data to include the initial rate from the state
       this.gameLookupPoints = [
         {
           x: 0,
           y: stateInputs.currentRate || 0
         }
       ]
-    } else {
-      // Add the current rate set by the user
-      this.gameLookupPoints.push({
-        x: this.internalCurrentTime,
-        y: stateInputs.currentRate
-      })
     }
     const gameDataVarSpec = this.listing.varSpecs.get('_planning_data')
     const gameLookup = createLookupDef(gameDataVarSpec, this.gameLookupPoints)

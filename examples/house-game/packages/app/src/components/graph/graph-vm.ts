@@ -3,6 +3,7 @@ import type { OutputVarId, Point } from '@sdeverywhere/runtime'
 
 export interface GraphDatasetSpec {
   varId: OutputVarId
+  label: string
   color: string
   lineStyle?: 'wide' | 'scatter' | 'none'
 }
