@@ -28,7 +28,7 @@ $: if (graphView) {
 
 // When the data changes, update the view
 $: if ($dataChanged) {
-  graphView?.updateData()
+  graphView?.updateData(/*animated=*/ false)
 }
 
 function initGraphView() {
