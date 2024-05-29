@@ -58,10 +58,10 @@ export class AppModel {
     this.currentTime = this.writableCurrentTime
 
     this.currentStateIndex = 0
-    this.writableState = writable(stateForIndex(0))
+    this.writableState = writable(stateForIndex(0, this.internalCurrentTime))
     this.state = this.writableState
 
-    this.writableUserInputValue = writable(2)
+    this.writableUserInputValue = writable(1.7)
   }
 
   /**
@@ -72,8 +72,10 @@ export class AppModel {
     this.writableCurrentTime.set(0)
 
     this.currentStateIndex = 0
-    const state = stateForIndex(this.currentStateIndex)
+    const state = stateForIndex(this.currentStateIndex, this.internalCurrentTime)
     this.writableState.set(state)
+
+    this.writableUserInputValue.set(1.7)
 
     this.runModelAndAnimate(state)
   }
@@ -85,14 +87,14 @@ export class AppModel {
     this.currentStateIndex++
 
     // TODO: Clean up this logic
-    if (this.currentStateIndex === 4) {
-      this.internalCurrentTime = 30
+    if (this.currentStateIndex === 3) {
+      this.internalCurrentTime = 20
       this.writableCurrentTime.set(this.internalCurrentTime)
-    } else if (this.currentStateIndex > 4) {
+    } else if (this.currentStateIndex > 3) {
       this.internalCurrentTime += 5
       this.writableCurrentTime.set(this.internalCurrentTime)
     }
-    const state = stateForIndex(this.currentStateIndex)
+    const state = stateForIndex(this.currentStateIndex, this.internalCurrentTime)
     if (state.modelInputs.useRateFromUser) {
       state.modelInputs.currentRate = get(this.writableUserInputValue)
     }

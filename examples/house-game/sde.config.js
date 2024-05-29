@@ -34,7 +34,7 @@ export async function config() {
     modelSpec: async () => {
       return {
         inputs: [
-          input('additional houses required at t 40', 0),
+          input('additional houses required value', 0),
           input('average house life', 0),
           input('time to plan to build', 3),
           input('time to build houses', 6),

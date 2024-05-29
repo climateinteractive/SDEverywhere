@@ -42,12 +42,16 @@ initial houses = 1000
   ~  house
   ~    |
 
-additional houses required at t 40 = 0
+additional houses required time = 30
+  ~  Month
+  ~    |
+
+additional houses required value = 40
   ~  house
   ~    |
 
 number of houses required =
-   initial houses + STEP ( additional houses required at t 40, 40 )
+   initial houses + STEP ( additional houses required value, additional houses required time )
   ~  house
   ~    |
 

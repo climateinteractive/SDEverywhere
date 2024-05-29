@@ -16,7 +16,7 @@ export interface AppState {
   showUserInput: boolean
 }
 
-export function stateForIndex(stateIndex: number): AppState {
+export function stateForIndex(stateIndex: number, currentTime: number): AppState {
   let msg = ''
   let modelInputs: ModelInputs
   let minGraphTime: number
@@ -68,23 +68,25 @@ export function stateForIndex(stateIndex: number): AppState {
         timeToRespond: 8
       }
       minGraphTime = 0
-      maxGraphTime = 30
+      maxGraphTime = 20
       break
     case 4:
-      msg += `But suddenly, the House Planner has decided to retire, and the town `
-      msg += `has assigned the role of House Planner to YOU.<br><br>`
-      msg += `Every 5 months, you will decide the rate of house building.`
+      msg += `But now, the House Planner is retiring and has `
+      msg += `passed the role of House Planner to YOU.<br><br>`
+      msg += `Starting now, and again every 5 months, you must decide the rate of house building.`
       modelInputs = {
         avgLife: 600,
-        currentRate: 1.7,
+        useRateFromUser: true,
         timeToPlan: 3,
         timeToBuild: 6,
         timeToRespond: 8
       }
-      minGraphTime = 30
-      maxGraphTime = 35
+      minGraphTime = 20
+      maxGraphTime = 25
+      showUserInput = true
       break
     case 5:
+      msg += `It is now month ${currentTime}.<br><br>`
       msg += `The biggest company in town has decided to double its workforce. `
       msg += `The town suddenly needs 400 more houses.<br><br>`
       msg += `Set a new rate to help close the gap between `
@@ -93,17 +95,18 @@ export function stateForIndex(stateIndex: number): AppState {
       modelInputs = {
         addlRequired: 400,
         avgLife: 600,
-        currentRate: 1.7,
+        useRateFromUser: true,
         timeToPlan: 3,
         timeToBuild: 6,
         timeToRespond: 8
       }
-      minGraphTime = 35
-      maxGraphTime = 40
+      minGraphTime = 25
+      maxGraphTime = 30
       showUserInput = true
       break
     default:
       if (stateIndex >= 6) {
+        msg += `It is now month ${currentTime}.<br><br>`
         msg += `Set a new rate to help close the gap between `
         msg += `<span class="supply">supply</span> and `
         msg += `<span class="demand">demand</span>.`
@@ -115,7 +118,7 @@ export function stateForIndex(stateIndex: number): AppState {
           timeToBuild: 6,
           timeToRespond: 8
         }
-        minGraphTime = 40 + (stateIndex - 6) * 5
+        minGraphTime = 30 + (stateIndex - 6) * 5
         maxGraphTime = minGraphTime + 5
         showUserInput = true
       }
