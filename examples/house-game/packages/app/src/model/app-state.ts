@@ -2,6 +2,7 @@ export interface ModelInputs {
   addlRequired?: number
   avgLife?: number
   currentRate?: number
+  useRateFromUser?: boolean
   timeToBuild?: number
   timeToPlan?: number
   timeToRespond?: number
@@ -105,7 +106,7 @@ export function stateForIndex(stateIndex: number): AppState {
         modelInputs = {
           addlRequired: 500,
           avgLife: 600,
-          currentRate: 2.5,
+          useRateFromUser: true,
           timeToPlan: 3,
           timeToBuild: 6,
           timeToRespond: 8
@@ -122,4 +123,21 @@ export function stateForIndex(stateIndex: number): AppState {
     minGraphTime,
     maxGraphTime
   }
+}
+
+export function inputValuesForState(state: AppState): number[] {
+  const modelInputs = state.modelInputs
+  const inputValues: number[] = []
+
+  inputValues.push(modelInputs.addlRequired ? modelInputs.addlRequired : 0)
+  if (isFinite(modelInputs.avgLife) && modelInputs.avgLife >= 0) {
+    inputValues.push(modelInputs.avgLife)
+  } else {
+    inputValues.push(1e12)
+  }
+  inputValues.push(modelInputs.timeToPlan ? modelInputs.timeToPlan : 3)
+  inputValues.push(modelInputs.timeToBuild ? modelInputs.timeToBuild : 6)
+  inputValues.push(modelInputs.timeToRespond ? modelInputs.timeToRespond : 8)
+
+  return inputValues
 }

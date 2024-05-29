@@ -35,7 +35,7 @@ function onReset() {
   <div class="left-container">
     <div class="text-container">
       <div class="message">{@html $message}</div>
-      {#if $currentTime > 100}
+      {#if $currentTime > 30}
         <input class="cell-value" type="number" bind:value={$currentValue} min="0" max="20" />
       {/if}
       <div class="spacer-flex" />

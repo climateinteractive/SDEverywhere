@@ -1,40 +1,54 @@
-import type { LookupDef, ModelRunner, OutputVarId, Series } from '@sdeverywhere/runtime'
-import { Outputs } from '@sdeverywhere/runtime'
+import type { LookupDef, ModelRunner, OutputVarId, Point, Series } from '@sdeverywhere/runtime'
+import { ModelListing, Outputs, createLookupDef } from '@sdeverywhere/runtime'
 
 import { spawnAsyncModelRunner } from '@sdeverywhere/runtime-async'
 
+import modelListingJson from './generated/listing.json?raw'
 import modelWorkerJs from './generated/worker.js?raw'
+
+/**
+ * Create an `AppModel` instance.
+ */
+export async function createAppModel(): Promise<AppModel> {
+  // Load the model listing
+  const listing = new ModelListing(modelListingJson)
+
+  // Initialize the generated model asynchronously.  We inline the worker code in the
+  // rolled-up bundle, so that we don't have to fetch a separate `worker.js` file.
+  const runner = await spawnAsyncModelRunner({ source: modelWorkerJs })
+  const outputs = runner.createOutputs()
+
+  // Create the `AppModel` instance
+  return new AppModel(listing, runner, outputs)
+}
 
 /**
  * High-level interface to the runnable model.
  *
  * When an asynchronous model run has completed, the output data will be saved
- * (accessible using the `getSeriesForVar` function), and `onOutputsChanged` is
- * called to notify that new data is available.
+ * (accessible using the `getSeriesForVar` method).
  */
 export class AppModel {
-  /**
-   * The structure into which the model outputs will be stored.
-   */
-  private outputs: Outputs
+  constructor(
+    private readonly listing: ModelListing,
+    private readonly runner: ModelRunner,
+    private readonly outputs: Outputs
+  ) {}
 
   /**
-   * Called when the outputs have been updated after a model run.
+   * Create a `LookupDef` for the data variable that is updated at runtime.
    */
-  public onOutputsChanged?: () => void
-
-  constructor(private readonly runner: ModelRunner) {
-    this.outputs = runner.createOutputs()
+  public createLookupDef(points: Point[]): LookupDef {
+    const varSpec = this.listing.varSpecs.get('_planning_data')
+    return createLookupDef(varSpec, points)
   }
 
   /**
-   * Schedule an asynchronous model run.  When the run completes, the `onOutputsChanged`
-   * function will be called to notify that new data is available.
+   * Schedule an asynchronous model run.  When the run completes, the data can be
+   * accessed using the `getSeriesForVar` method.
    */
-  public runModel(inputs: number[], lookups?: LookupDef[]): void {
-    this.runner.runModel(inputs, this.outputs, { lookups }).then(() => {
-      this.onOutputsChanged?.()
-    })
+  public async runModel(inputs: number[], lookups?: LookupDef[]): Promise<void> {
+    await this.runner.runModel(inputs, this.outputs, { lookups })
   }
 
   /**
@@ -46,16 +60,4 @@ export class AppModel {
     // Return the latest model output data
     return this.outputs.getSeriesForVar(varId)
   }
-}
-
-/**
- * Create an `AppModel` instance.
- */
-export async function createAppModel(): Promise<AppModel> {
-  // Initialize the generated model asynchronously.  We inline the worker code in the
-  // rolled-up bundle, so that we don't have to fetch a separate `worker.js` file.
-  const runner = await spawnAsyncModelRunner({ source: modelWorkerJs })
-
-  // Create the `AppModel` instance
-  return new AppModel(runner)
 }
