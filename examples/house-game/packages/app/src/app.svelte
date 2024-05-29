@@ -36,7 +36,10 @@ function onContinue() {
     <div class="text-container">
       <div class="message">{@html $message}</div>
       {#if $showUserInput}
-        <input class="cell-value" type="number" bind:value={$userInputValue} min="0" max="20" />
+        <div class="input-row">
+          <input class="cell-value" type="number" bind:value={$userInputValue} min="0" max="20" />
+          <div>houses/month</div>
+        </div>
       {/if}
       <div class="spacer-flex" />
       <div class="buttons">
@@ -83,7 +86,7 @@ function onContinue() {
   display: flex
   flex-direction: column
   width: 250px
-  height: 220px
+  height: 240px
   flex-shrink: 0
   align-items: flex-start
   gap: 10px
@@ -96,12 +99,19 @@ function onContinue() {
   font-size: 14px
   line-height: 1.4
 .message :global(.supply)
-  // color: #1fe074
   color: magenta
   font-weight: 700
 .message :global(.demand)
   color: #4080e0
   font-weight: 700
+
+.input-row
+  display: flex
+  flex-direction: row
+  align-items: baseline
+  gap: 8px
+  font-size: 14px
+  line-height: 1.4
 
 .spacer-flex
   flex: 1
@@ -132,7 +142,7 @@ button
     background-color: rgba(128, 128, 128, 0.2)
 
 .text-container.assumptions
-  height: 180px
+  height: 160px
   gap: 4px
   color: #777
 
