@@ -1,3 +1,4 @@
+import { copyFile } from 'fs/promises'
 import { dirname, join as joinPath } from 'path'
 import { fileURLToPath } from 'url'
 
@@ -7,6 +8,7 @@ import { workerPlugin } from '@sdeverywhere/plugin-worker'
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const packagePath = (...parts) => joinPath(__dirname, 'packages', ...parts)
 const appPath = (...parts) => packagePath('app', ...parts)
+const generatedFilePath = (...parts) => appPath('src', 'model', 'generated', ...parts)
 
 function input(varName, defaultValue) {
   return {
@@ -44,9 +46,21 @@ export async function config() {
     },
 
     plugins: [
+      // Copy the generated model listing to the app so that it can be loaded
+      // at runtime
+      {
+        postGenerate: async context => {
+          const srcPath = joinPath(context.config.prepDir, 'build', 'processed.json')
+          const dstName = 'listing.json'
+          const stagedFilePath = context.prepareStagedFile('model', dstName, generatedFilePath(), dstName)
+          await copyFile(srcPath, stagedFilePath)
+          return true
+        }
+      },
+
       // Generate a `worker.js` file that runs the generated model in a worker
       workerPlugin({
-        outputPaths: [appPath('src', 'model', 'generated', 'worker.js')]
+        outputPaths: [generatedFilePath('worker.js')]
       }),
 
       // Build or serve the app
