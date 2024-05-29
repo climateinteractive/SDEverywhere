@@ -5,7 +5,7 @@ replacement houses = demolishing
 
 planning data ~~|
 
-planning = planning data
+planning = GET DATA BETWEEN TIMES(planning data, Time, -1)
   ~  house/Month
   ~ Originally: GAME( MAX( 0, replacement houses + (gap in houses / time to respond to gap)) )
   ~    |
@@ -85,7 +85,7 @@ INITIAL TIME  = 0
   ~    The initial time for the simulation.
   |
 
-SAVEPER  = 1
+SAVEPER  = 0.5
   ~  Month
   ~    The frequency with which output is stored.
   |
