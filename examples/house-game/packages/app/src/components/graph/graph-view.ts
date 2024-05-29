@@ -192,7 +192,7 @@ function updateLineChartJsData(viewModel: GraphViewModel, chartData: ChartData):
     if (points !== undefined) {
       chartData.datasets[varIndex].data = points
     } else {
-      console.error(`ERROR: No data available for ${varId}`)
+      // console.error(`ERROR: No data available for ${varId}`)
     }
   }
 }
