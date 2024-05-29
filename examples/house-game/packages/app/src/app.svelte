@@ -12,15 +12,15 @@ export let viewModel: AppViewModel
 const busy = viewModel.busy
 const message = viewModel.message
 const assumptionsViewModel = viewModel.assumptions
-const currentTime = viewModel.currentTime
-const currentValue = viewModel.writableCurrentValue
-
-function onContinue() {
-  viewModel.nextStep()
-}
+const showUserInput = viewModel.showUserInput
+const userInputValue = viewModel.writableUserInputValue
 
 function onReset() {
   viewModel.reset()
+}
+
+function onContinue() {
+  viewModel.nextStep()
 }
 
 </script>
@@ -35,8 +35,8 @@ function onReset() {
   <div class="left-container">
     <div class="text-container">
       <div class="message">{@html $message}</div>
-      {#if $currentTime > 30}
-        <input class="cell-value" type="number" bind:value={$currentValue} min="0" max="20" />
+      {#if $showUserInput}
+        <input class="cell-value" type="number" bind:value={$userInputValue} min="0" max="20" />
       {/if}
       <div class="spacer-flex" />
       <div class="buttons">

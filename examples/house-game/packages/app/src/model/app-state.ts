@@ -13,6 +13,7 @@ export interface AppState {
   modelInputs: ModelInputs
   minGraphTime: number
   maxGraphTime: number
+  showUserInput: boolean
 }
 
 export function stateForIndex(stateIndex: number): AppState {
@@ -20,10 +21,12 @@ export function stateForIndex(stateIndex: number): AppState {
   let modelInputs: ModelInputs
   let minGraphTime: number
   let maxGraphTime: number
+  let showUserInput = false
 
   switch (stateIndex) {
     case 0:
-      msg += `Welcome to Alphaville.  In Alphaville, we make sure that everyone gets a house. `
+      msg += `Welcome to Alphaville.<br><br>`
+      msg += `In Alphaville, we make sure that everyone gets a house.<br><br>`
       msg += `This takes some planning.`
       modelInputs = {
         avgLife: -1
@@ -83,12 +86,12 @@ export function stateForIndex(stateIndex: number): AppState {
       break
     case 5:
       msg += `The biggest company in town has decided to double its workforce. `
-      msg += `The town suddenly needs 500 more houses.<br><br>`
+      msg += `The town suddenly needs 400 more houses.<br><br>`
       msg += `Set a new rate to help close the gap between `
       msg += `<span class="supply">supply</span> and `
       msg += `<span class="demand">demand</span>.`
       modelInputs = {
-        addlRequired: 500,
+        addlRequired: 400,
         avgLife: 600,
         currentRate: 1.7,
         timeToPlan: 3,
@@ -97,6 +100,7 @@ export function stateForIndex(stateIndex: number): AppState {
       }
       minGraphTime = 35
       maxGraphTime = 40
+      showUserInput = true
       break
     default:
       if (stateIndex >= 6) {
@@ -104,7 +108,7 @@ export function stateForIndex(stateIndex: number): AppState {
         msg += `<span class="supply">supply</span> and `
         msg += `<span class="demand">demand</span>.`
         modelInputs = {
-          addlRequired: 500,
+          addlRequired: 400,
           avgLife: 600,
           useRateFromUser: true,
           timeToPlan: 3,
@@ -113,6 +117,7 @@ export function stateForIndex(stateIndex: number): AppState {
         }
         minGraphTime = 40 + (stateIndex - 6) * 5
         maxGraphTime = minGraphTime + 5
+        showUserInput = true
       }
       break
   }
@@ -121,7 +126,8 @@ export function stateForIndex(stateIndex: number): AppState {
     message: msg,
     modelInputs: modelInputs,
     minGraphTime,
-    maxGraphTime
+    maxGraphTime,
+    showUserInput
   }
 }
 
