@@ -51,9 +51,8 @@ function createChart(canvas: HTMLCanvasElement, viewModel: GraphViewModel /*, op
   chartJsConfig.options.responsive = true
   chartJsConfig.options.maintainAspectRatio = false
 
-  // Disable the built-in title and legend
+  // Disable the built-in title
   chartJsConfig.options.title = { display: false }
-  chartJsConfig.options.legend = { display: false }
 
   // Don't show points
   chartJsConfig.options.elements = {
@@ -128,6 +127,14 @@ function lineChartJsConfig(viewModel: GraphViewModel, data: ChartData): ChartCon
           }
         ]
       },
+      legend: {
+        display: true,
+        position: 'bottom',
+        labels: {
+          padding: 20,
+          boxWidth: 8
+        }
+      },
       tooltips: {
         enabled: false // TODO: Make configurable
       }
@@ -174,6 +181,8 @@ function createLineChartJsData(spec: GraphSpec): ChartData {
 
     chartDataset.pointHitRadius = 3
     chartDataset.pointHoverRadius = 0
+
+    chartDataset.label = specDataset.label
 
     chartDatasets.push(chartDataset)
   }

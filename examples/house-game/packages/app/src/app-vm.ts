@@ -60,10 +60,12 @@ export class AppViewModel {
         datasets: [
           {
             varId: '_houses_completed',
+            label: 'Supply',
             color: 'magenta'
           },
           {
             varId: '_number_of_houses_required',
+            label: 'Demand',
             color: '#4080e0',
             lineStyle: 'wide'
           }
