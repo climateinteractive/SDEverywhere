@@ -1062,11 +1062,10 @@ function allListedVars() {
   if (timeVar) {
     vars.push(timeVar)
   }
-  vars.push(...initVars())
   vars.push(...auxVars())
-  // TODO: Also levelVars not covered by initVars?
+  vars.push(...levelVars())
 
-  // Filter out data/lookup variables and variables that are generated/used internally
+  // Filter out variables that are generated/used internally
   const isInternal = v => {
     return v.includeInOutput === false
   }
