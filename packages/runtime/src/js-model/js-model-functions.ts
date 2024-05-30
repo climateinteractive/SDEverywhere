@@ -1,15 +1,11 @@
 // Copyright (c) 2024 Climate Interactive / New Venture Fund
 
+import { _NA_ } from './js-model-constants'
 import { JsModelLookup, type JsModelLookupMode } from './js-model-lookup'
 
 // See XIDZ documentation for an explanation of this value:
 //   https://www.vensim.com/documentation/fn_xidz.html
 const EPSILON = 1e-6
-
-// This matches Vensim's definition of `:NA:`.  It is also defined
-// with the same value in the generated `JsModel`, so make sure
-// these two values are the same.
-const _NA_ = -Number.MAX_VALUE
 
 /**
  * Provides access to the minimal set of control parameters that are used in the

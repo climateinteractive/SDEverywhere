@@ -1,5 +1,7 @@
 // Copyright (c) 2024 Climate Interactive / New Venture Fund
 
+import { _NA_ } from './js-model-constants'
+
 export type JsModelLookupMode = 'interpolate' | 'forward' | 'backward'
 
 /**
@@ -51,6 +53,10 @@ export class JsModelLookup {
    * NOTE: The x values are assumed to be monotonically increasing.
    */
   private getValue(input: number, useInvertedData: boolean, mode: JsModelLookupMode): number {
+    if (this.n === 0) {
+      return _NA_
+    }
+
     const data = useInvertedData ? this.invertedData : this.data
     const max = this.n * 2
 
@@ -119,6 +125,10 @@ export class JsModelLookup {
    * lookup behavior, so we implement it as a separate method here.
    */
   public getValueBetweenTimes(input: number, mode: JsModelLookupMode): number {
+    if (this.n === 0) {
+      return _NA_
+    }
+
     const max = this.n * 2
 
     switch (mode) {
