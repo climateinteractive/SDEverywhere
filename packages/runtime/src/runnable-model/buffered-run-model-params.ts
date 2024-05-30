@@ -6,7 +6,7 @@ import type { RunModelOptions } from './run-model-options'
 import type { RunModelParams } from './run-model-params'
 
 const headerLengthInElements = 16
-const extrasLengthInElements = 2
+const extrasLengthInElements = 1
 
 interface Section<ArrayType> {
   /** The view on the section of the `encoded` buffer, or undefined if the section is empty. */
@@ -176,12 +176,6 @@ export class BufferedRunModelParams implements RunModelParams {
   }
 
   // from RunModelParams interface
-  getStopAfterTime(): number | undefined {
-    const t = this.extras.view[1]
-    return isNaN(t) ? undefined : t
-  }
-
-  // from RunModelParams interface
   getElapsedTime(): number {
     return this.extras.view[0]
   }
@@ -335,9 +329,6 @@ export class BufferedRunModelParams implements RunModelParams {
     if (lookupIndicesLengthInElements > 0) {
       encodeLookups(options.lookups, this.lookups.view, this.lookupIndices.view)
     }
-
-    // Set the `stopAfterTime` value into the extras buffer
-    this.extras.view[1] = options?.stopAfterTime !== undefined ? options.stopAfterTime : Number.NaN
   }
 
   /**

@@ -81,12 +81,6 @@ export interface RunModelParams {
   getLookups(): LookupDef[] | undefined
 
   /**
-   * Return the "stop after" time for the model run, or undefined if the model should run
-   * to its normal end time.
-   */
-  getStopAfterTime(): number | undefined
-
-  /**
    * Return the elapsed time (in milliseconds) of the model run.
    */
   getElapsedTime(): number

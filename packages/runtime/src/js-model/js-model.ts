@@ -92,7 +92,7 @@ export function initJsModel(model: JsModel): RunnableModel {
         outputs,
         options?.outputIndices,
         options?.lookups,
-        options?.stopAfterTime
+        undefined
       )
     }
   })

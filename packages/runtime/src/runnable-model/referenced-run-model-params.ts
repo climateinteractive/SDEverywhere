@@ -19,7 +19,6 @@ export class ReferencedRunModelParams implements RunModelParams {
   private outputsLengthInElements = 0
   private outputIndicesLengthInElements = 0
   private lookups: LookupDef[]
-  private stopAfterTime: number
 
   // from RunModelParams interface
   getInputs(): Float64Array | undefined {
@@ -113,11 +112,6 @@ export class ReferencedRunModelParams implements RunModelParams {
   }
 
   // from RunModelParams interface
-  getStopAfterTime(): number | undefined {
-    return this.stopAfterTime
-  }
-
-  // from RunModelParams interface
   getElapsedTime(): number {
     return this.outputs?.runTimeInMillis
   }
@@ -144,7 +138,6 @@ export class ReferencedRunModelParams implements RunModelParams {
     this.outputs = outputs
     this.outputsLengthInElements = outputs.varIds.length * outputs.seriesLength
     this.lookups = options?.lookups
-    this.stopAfterTime = options?.stopAfterTime
 
     // See if the output indices are needed
     const outputVarSpecs = outputs.varSpecs

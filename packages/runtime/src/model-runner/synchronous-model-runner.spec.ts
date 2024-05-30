@@ -195,37 +195,6 @@ describe.each([
     expect(outputs.getSeriesForVar('_output_2').points).toEqual(lookup2Points)
   })
 
-  // TODO: Unskip this
-  it.skip('should run the model (with an early stop)', async () => {
-    expect(runner).toBeDefined()
-    const inputs = [createInputValue('_input_1', 7), createInputValue('_input_2', 8), createInputValue('_input_3', 9)]
-    let outputs = runner.createOutputs()
-
-    // Run once with the default end time
-    outputs = await runner.runModel(inputs, outputs)
-    expect(outputs).toBeDefined()
-    expect(outputs.runTimeInMillis).toBeGreaterThan(0)
-    expect(outputs.getSeriesForVar('_output_1').points).toEqual([p(2000, 1), p(2001, 2), p(2002, 3)])
-    expect(outputs.getSeriesForVar('_output_2').points).toEqual([p(2000, 4), p(2001, 5), p(2002, 6)])
-
-    // Run again with an early stop time and verify that the data points after the stop time
-    // have an undefined value
-    outputs = await runner.runModel(inputs, outputs, {
-      stopAfterTime: 2001
-    })
-    expect(outputs).toBeDefined()
-    expect(outputs.runTimeInMillis).toBeGreaterThan(0)
-    expect(outputs.getSeriesForVar('_output_1').points).toEqual([p(2000, 1), p(2001, 2), p(2002, undefined)])
-    expect(outputs.getSeriesForVar('_output_2').points).toEqual([p(2000, 4), p(2001, 5), p(2002, undefined)])
-
-    // Run again with the default end time and verify that all data points are defined
-    outputs = await runner.runModel(inputs, outputs)
-    expect(outputs).toBeDefined()
-    expect(outputs.runTimeInMillis).toBeGreaterThan(0)
-    expect(outputs.getSeriesForVar('_output_1').points).toEqual([p(2000, 1), p(2001, 2), p(2002, 3)])
-    expect(outputs.getSeriesForVar('_output_2').points).toEqual([p(2000, 4), p(2001, 5), p(2002, 6)])
-  })
-
   it('should run the model (when output var specs are included)', async () => {
     const json = `
 {

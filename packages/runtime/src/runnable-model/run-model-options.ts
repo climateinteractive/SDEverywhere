@@ -7,13 +7,6 @@ import type { LookupDef } from '../_shared'
  */
 export interface RunModelOptions {
   /**
-   * If defined, the model will run up to and including the given time instead of
-   * running to the normal "final time" defined in the model.  When this is defined,
-   * values will be set to `undefined` for data points after this stop time.
-   */
-  stopAfterTime?: number
-
-  /**
    * If defined, override the data for the specified lookups and/or data variables.
    *
    * If data was already defined in the generated model, the data provided in a

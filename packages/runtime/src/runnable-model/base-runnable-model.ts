@@ -14,7 +14,6 @@ export type OnRunModelFunc = (
   options?: {
     outputIndices?: Int32Array
     lookups?: LookupDef[]
-    stopAfterTime?: number
   }
 ) => void
 
@@ -93,8 +92,7 @@ export class BaseRunnableModel implements RunnableModel {
     const t0 = perfNow()
     this.onRunModel?.(inputsArray, outputsArray, {
       outputIndices: outputIndicesArray,
-      lookups: params.getLookups(),
-      stopAfterTime: params.getStopAfterTime()
+      lookups: params.getLookups()
     })
     const elapsed = perfElapsed(t0)
 
