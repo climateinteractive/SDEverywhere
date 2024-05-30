@@ -108,6 +108,23 @@ ___
 
 ___
 
+### setLookup
+
+**setLookup**(`varSpec`, `points`): `void`
+
+#### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `varSpec` | [`VarSpec`](VarSpec.md) |
+| `points` | `Float64Array` |
+
+#### Returns
+
+`void`
+
+___
+
 ### storeOutputs
 
 **storeOutputs**(`storeValue`): `void`
@@ -116,6 +133,23 @@ ___
 
 | Name | Type |
 | :------ | :------ |
+| `storeValue` | (`value`: `number`) => `void` |
+
+#### Returns
+
+`void`
+
+___
+
+### storeOutput
+
+**storeOutput**(`varSpec`, `storeValue`): `void`
+
+#### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `varSpec` | [`VarSpec`](VarSpec.md) |
 | `storeValue` | (`value`: `number`) => `void` |
 
 #### Returns

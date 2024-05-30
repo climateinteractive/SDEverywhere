@@ -8,7 +8,7 @@ Specifies the data that will be used to set or override a lookup definition.
 
 ### varSpec
 
- **varSpec**: `VarSpec`
+ **varSpec**: [`VarSpec`](VarSpec.md)
 
 The spec for the lookup or data variable to be modified.
 

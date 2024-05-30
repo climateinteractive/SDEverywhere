@@ -12,13 +12,13 @@
 export const indicesPerVariable = 4
 
 /**
- * The variable index values for use with the optional input/output indices buffer.
- * @hidden This is not yet part of the public API; it is exposed here for use in testing tools.
+ * The variable index metadata that is used to identify a specific instance of a
+ * variable in a generated model.
  */
 export interface VarSpec {
-  /** The variable index as used in the generated C code. */
+  /** The variable index as used in the generated C/JS code. */
   varIndex: number
-  /** The subscript index values as used in the generated C code. */
+  /** The subscript index values as used in the generated C/JS code. */
   subscriptIndices?: number[]
 }
 

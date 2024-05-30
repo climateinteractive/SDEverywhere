@@ -10,7 +10,7 @@ Create a `LookupDef` instance from the given array of `Point` objects.
 
 | Name | Type | Description |
 | :------ | :------ | :------ |
-| `varSpec` | `VarSpec` | The spec for the lookup or data variable to be modified. |
+| `varSpec` | [`VarSpec`](../interfaces/VarSpec.md) | The spec for the lookup or data variable to be modified. |
 | `points` | [`Point`](../interfaces/Point.md)[] | The lookup data as an array of `Point` objects. |
 
 #### Returns

@@ -38,11 +38,9 @@ export interface JsModel {
 
   setTime(time: number): void
   setInputs(inputValue: (index: number) => number): void
-  /** @hidden */
   setLookup(varSpec: VarSpec, points: Float64Array): void
 
   storeOutputs(storeValue: (value: number) => void): void
-  /** @hidden */
   storeOutput(varSpec: VarSpec, storeValue: (value: number) => void): void
 
   initConstants(): void
