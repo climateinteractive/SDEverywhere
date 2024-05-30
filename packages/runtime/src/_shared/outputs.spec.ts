@@ -2,8 +2,8 @@
 
 import { describe, expect, it } from 'vitest'
 
-import type { Point } from './outputs'
 import { Outputs, Series } from './outputs'
+import type { Point } from './types'
 
 function p(x: number, y: number): Point {
   return { x, y }
