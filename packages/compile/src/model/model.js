@@ -1090,9 +1090,9 @@ function varIndexInfoMap() {
   // generated model
   const sortedVars = filteredListedVars()
 
-  // Get the set of unique variable names, and assign a 1-based index
-  // to each; this matches the index number used in `storeOutput()`
-  // in the generated C code
+  // Get the set of unique variable names, and assign a 1-based index to each.
+  // This matches the index number used in `storeOutput` and `setLookup` in the
+  // generated C/JS code
   const infoMap = new Map()
   let varIndex = 1
   for (const v of sortedVars) {
@@ -1133,7 +1133,8 @@ function jsonList() {
   const sortedVars = filteredListedVars()
 
   // Assign a 1-based index for each variable that has data that can be accessed.
-  // This matches the index number used in `storeOutput()` in the generated C/JS code.
+  // This matches the index number used in `storeOutput` and `setLookup` in the
+  // generated C/JS code
   const infoMap = varIndexInfoMap()
   for (const v of sortedVars) {
     const varInfo = infoMap.get(v.varName)
