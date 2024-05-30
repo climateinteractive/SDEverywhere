@@ -1,19 +1,13 @@
 import { derived, writable, type Readable, type Writable } from 'svelte/store'
 
 import {
-  generateJS,
+  generateCode,
   getModelListing,
   parseInlineVensimModel,
   resetState as resetCompileState
 } from '@sdeverywhere/compile'
 
-import {
-  createRunnableModel,
-  createSynchronousModelRunner,
-  type JsModel,
-  type ModelRunner,
-  type Outputs
-} from '@sdeverywhere/runtime'
+import { createSynchronousModelRunner, type JsModel, type ModelRunner, type Outputs } from '@sdeverywhere/runtime'
 
 import { SelectorOptionViewModel, SelectorViewModel } from './components/_shared/selector-vm'
 import type { GraphViewModel } from './components/graph/graph-vm'
@@ -22,6 +16,10 @@ const initialMdl = `\
 x = TIME ~~|
 
 y = x * x ~~|
+
+z data ~~|
+
+z = z data + 2 ~~|
 
 INITIAL TIME = 0 ~~|
 FINAL TIME = 5 ~~|
@@ -161,11 +159,29 @@ function readInlineModelAndGenerateJS(
   // Parse the Vensim model
   const parsedModel = parseInlineVensimModel(mdlContent /*, opts?.modelDir*/)
 
+  // Look for data variables in the parsed model.  For now we don't allow the user to
+  // supply a CSV or DAT file containing that data, but the compiler will not be able
+  // to process the model if there is no data defined for those variables, so we will
+  // fill the map with dummy data for now.
+  const extData = new Map()
+  for (const equation of parsedModel.root.equations) {
+    if (equation.rhs.kind === 'data') {
+      // TODO: Handle subscripted data variables
+      const varId = equation.lhs.varDef.varId
+      const points = new Map()
+      // TODO: Set default data points for start and end times
+      points.set(0, 0)
+      points.set(3, 2)
+      points.set(5, 1)
+      extData.set(varId, points)
+    }
+  }
+
   // Generate JS code
-  const jsCode = generateJS(parsedModel, {
+  const jsCode = generateCode(parsedModel, {
     spec,
-    operations: ['generateJS']
-    // extData: opts?.extData,
+    operations: ['generateJS'],
+    extData
     // directData,
     // modelDirname: opts?.modelDir
   })
@@ -212,7 +228,5 @@ async function initModelRunner(modelJs: string): Promise<ModelRunner> {
   // TODO: Fix this so that we don't need the vite-ignore
   const generatedModule = await import(/* @vite-ignore */ dataUri)
   const generatedModel = (await generatedModule.default()) as JsModel
-  // console.log(generatedModel)
-  const runnableModel = createRunnableModel(generatedModel)
-  return createSynchronousModelRunner(runnableModel)
+  return createSynchronousModelRunner(generatedModel)
 }
