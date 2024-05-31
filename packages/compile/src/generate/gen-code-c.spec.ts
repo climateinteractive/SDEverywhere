@@ -57,18 +57,296 @@ function readInlineModelAndGenerateC(
 }
 
 describe('generateC (Vensim -> C)', () => {
-  it('should work for simple model', () => {
+  it('should generate code for a simple model', () => {
+    const extData: ExtData = new Map()
+    function addData(varId: string) {
+      extData.set(
+        varId,
+        new Map([
+          [0, 0],
+          [1, 2],
+          [2, 5]
+        ])
+      )
+    }
+    addData('_a_data[_a1]')
+    addData('_a_data[_a2]')
+    addData('_b_data[_a1,_b1]')
+    addData('_b_data[_a1,_b2]')
+    addData('_b_data[_a2,_b1]')
+    addData('_b_data[_a2,_b2]')
+    addData('_c_data')
     const mdl = `
-      x = 1 ~~|
+      DimA: A1, A2 ~~|
+      DimB: B1, B2 ~~|
+      input = 1 ~~|
+      x = input ~~|
       y = :NOT: x ~~|
+      z = ABS(y) ~~|
+      a data[DimA] ~~|
+      a[DimA] = a data[DimA] ~~|
+      b data[DimA, DimB] ~~|
+      b[DimA, DimB] = b data[DimA, DimB] ~~|
+      c data ~~|
+      c = c data ~~|
+      w = WITH LOOKUP(x, ( [(0,0)-(2,2)], (0,0),(0.1,0.01),(0.5,0.7),(1,1),(1.5,1.2),(2,1.3) )) ~~|
+      INITIAL TIME = 0 ~~|
+      FINAL TIME = 2 ~~|
+      TIME STEP = 1 ~~|
+      SAVEPER = 1 ~~|
     `
-    const code = readInlineModelAndGenerateC(mdl)
-    expect(code).toMatch(`\
+    const code = readInlineModelAndGenerateC(mdl, {
+      inputVarNames: ['input'],
+      outputVarNames: ['x', 'y', 'z', 'a[A1]', 'b[A2,B1]', 'c', 'w'],
+      extData
+    })
+    expect(code).toEqual(`\
 #include "sde.h"
 
 // Model variables
+Lookup* __lookup1;
+Lookup* _a_data[2];
+Lookup* _b_data[2][2];
+Lookup* _c_data;
+double _a[2];
+double _b[2][2];
+double _c;
+double _final_time;
+double _initial_time;
+double _input;
+double _saveper;
+double _time_step;
+double _w;
 double _x;
-double _y;`)
+double _y;
+double _z;
+
+// Internal variables
+const int numOutputs = 7;
+#define SDE_USE_OUTPUT_INDICES 0
+#define SDE_MAX_OUTPUT_INDICES 1000
+const int maxOutputIndices = SDE_USE_OUTPUT_INDICES ? SDE_MAX_OUTPUT_INDICES : 0;
+
+// Array dimensions
+const size_t _dima[2] = { 0, 1 };
+const size_t _dimb[2] = { 0, 1 };
+
+// Dimension mappings
+
+
+// Lookup data arrays
+double __lookup1_data_[12] = { 0.0, 0.0, 0.1, 0.01, 0.5, 0.7, 1.0, 1.0, 1.5, 1.2, 2.0, 1.3 };
+double _a_data_data__0_[6] = { 0.0, 0.0, 1.0, 2.0, 2.0, 5.0 };
+double _a_data_data__1_[6] = { 0.0, 0.0, 1.0, 2.0, 2.0, 5.0 };
+double _b_data_data__0__0_[6] = { 0.0, 0.0, 1.0, 2.0, 2.0, 5.0 };
+double _b_data_data__0__1_[6] = { 0.0, 0.0, 1.0, 2.0, 2.0, 5.0 };
+double _b_data_data__1__0_[6] = { 0.0, 0.0, 1.0, 2.0, 2.0, 5.0 };
+double _b_data_data__1__1_[6] = { 0.0, 0.0, 1.0, 2.0, 2.0, 5.0 };
+double _c_data_data_[6] = { 0.0, 0.0, 1.0, 2.0, 2.0, 5.0 };
+
+// Internal state
+bool lookups_initialized = false;
+bool data_initialized = false;
+
+void initLookups0() {
+  __lookup1 = __new_lookup(6, /*copy=*/false, __lookup1_data_);
+}
+
+void initLookups() {
+  // Initialize lookups.
+  if (lookups_initialized) {
+    return;
+  }
+  initLookups0();
+  lookups_initialized = true;
+}
+
+void initData0() {
+  _a_data[0] = __new_lookup(3, /*copy=*/false, _a_data_data__0_);
+  _a_data[1] = __new_lookup(3, /*copy=*/false, _a_data_data__1_);
+  _b_data[0][0] = __new_lookup(3, /*copy=*/false, _b_data_data__0__0_);
+  _b_data[0][1] = __new_lookup(3, /*copy=*/false, _b_data_data__0__1_);
+  _b_data[1][0] = __new_lookup(3, /*copy=*/false, _b_data_data__1__0_);
+  _b_data[1][1] = __new_lookup(3, /*copy=*/false, _b_data_data__1__1_);
+  _c_data = __new_lookup(3, /*copy=*/false, _c_data_data_);
+}
+
+void initData() {
+  // Initialize data.
+  if (data_initialized) {
+    return;
+  }
+  initData0();
+  data_initialized = true;
+}
+
+void initConstants0() {
+  // FINAL TIME = 2
+  _final_time = 2.0;
+  // INITIAL TIME = 0
+  _initial_time = 0.0;
+  // SAVEPER = 1
+  _saveper = 1.0;
+  // TIME STEP = 1
+  _time_step = 1.0;
+  // input = 1
+  _input = 1.0;
+}
+
+void initConstants() {
+  // Initialize constants.
+  initConstants0();
+  initLookups();
+  initData();
+}
+
+void initLevels() {
+  // Initialize variables with initialization values, such as levels, and the variables they depend on.
+  _time = _initial_time;
+}
+
+void evalAux0() {
+  // a[DimA] = a data[DimA]
+  for (size_t i = 0; i < 2; i++) {
+  _a[i] = _LOOKUP(_a_data[i], _time);
+  }
+  // b[DimA,DimB] = b data[DimA,DimB]
+  for (size_t i = 0; i < 2; i++) {
+  for (size_t j = 0; j < 2; j++) {
+  _b[i][j] = _LOOKUP(_b_data[i][j], _time);
+  }
+  }
+  // c = c data
+  _c = _LOOKUP(_c_data, _time);
+  // x = input
+  _x = _input;
+  // w = WITH LOOKUP(x,([(0,0)-(2,2)],(0,0),(0.1,0.01),(0.5,0.7),(1,1),(1.5,1.2),(2,1.3)))
+  _w = _WITH_LOOKUP(_x, __lookup1);
+  // y = :NOT: x
+  _y = !_x;
+  // z = ABS(y)
+  _z = _ABS(_y);
+}
+
+void evalAux() {
+  // Evaluate auxiliaries in order from the bottom up.
+  evalAux0();
+}
+
+void evalLevels() {
+  // Evaluate levels.
+}
+
+void setInputs(const char* inputData) {
+  static double* inputVarPtrs[] = {
+    &_input,
+  };
+  char* inputs = (char*)inputData;
+  char* token = strtok(inputs, " ");
+  while (token) {
+    char* p = strchr(token, ':');
+    if (p) {
+      *p = '\\0';
+      int modelVarIndex = atoi(token);
+      double value = atof(p+1);
+      *inputVarPtrs[modelVarIndex] = value;
+    }
+    token = strtok(NULL, " ");
+  }
+}
+
+void setInputsFromBuffer(double* inputData) {
+  _input = inputData[0];
+}
+
+void replaceLookup(Lookup** lookup, double* points, size_t numPoints) {
+  if (lookup == NULL) {
+    return;
+  }
+  if (*lookup != NULL) {
+    __delete_lookup(*lookup);
+    *lookup = NULL;
+  }
+  if (points != NULL) {
+    *lookup = __new_lookup(numPoints, /*copy=*/true, points);
+  }
+}
+
+void setLookup(size_t varIndex, size_t* subIndices, double* points, size_t numPoints) {
+  switch (varIndex) {
+    case 6:
+      replaceLookup(&_a_data[subIndices[0]], points, numPoints);
+      break;
+    case 7:
+      replaceLookup(&_b_data[subIndices[0]][subIndices[1]], points, numPoints);
+      break;
+    case 8:
+      replaceLookup(&_c_data, points, numPoints);
+      break;
+    default:
+      break;
+  }
+}
+
+const char* getHeader() {
+  return "x\\ty\\tz\\ta[A1]\\tb[A2,B1]\\tc\\tw";
+}
+
+void storeOutputData() {
+  outputVar(_x);
+  outputVar(_y);
+  outputVar(_z);
+  outputVar(_a[0]);
+  outputVar(_b[1][0]);
+  outputVar(_c);
+  outputVar(_w);
+}
+
+void storeOutput(size_t varIndex, size_t subIndex0, size_t subIndex1, size_t subIndex2) {
+#if SDE_USE_OUTPUT_INDICES
+  switch (varIndex) {
+    case 1:
+      outputVar(_final_time);
+      break;
+    case 2:
+      outputVar(_initial_time);
+      break;
+    case 3:
+      outputVar(_saveper);
+      break;
+    case 4:
+      outputVar(_time_step);
+      break;
+    case 5:
+      outputVar(_input);
+      break;
+    case 9:
+      outputVar(_a[subIndex0]);
+      break;
+    case 10:
+      outputVar(_b[subIndex0][subIndex1]);
+      break;
+    case 11:
+      outputVar(_c);
+      break;
+    case 12:
+      outputVar(_x);
+      break;
+    case 13:
+      outputVar(_w);
+      break;
+    case 14:
+      outputVar(_y);
+      break;
+    case 15:
+      outputVar(_z);
+      break;
+    default:
+      break;
+  }
+#endif
+}
+`)
   })
 
   it('should work when valid input variable name without subscript is provided in spec file', () => {

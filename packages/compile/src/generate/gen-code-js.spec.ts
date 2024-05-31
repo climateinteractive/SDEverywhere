@@ -74,6 +74,7 @@ interface JsModel {
 
   setTime(time: number): void
   setInputs(inputValue: (index: number) => number): void
+  setLookup(varSpec: /*VarSpec*/ any, lookup: /*Lookup*/ any): void
 
   storeOutputs(storeValue: (value: number) => void): void
   storeOutput(varSpec: /*VarSpec*/ any, storeValue: (value: number) => void): void
@@ -163,6 +164,24 @@ function runJsModel(model: JsModel, inputs: number[], outputs: number[]) {
 
 describe('generateJS (Vensim -> JS)', () => {
   it('should generate code for a simple model', () => {
+    const extData: ExtData = new Map()
+    function addData(varId: string) {
+      extData.set(
+        varId,
+        new Map([
+          [0, 0],
+          [1, 2],
+          [2, 5]
+        ])
+      )
+    }
+    addData('_a_data[_a1]')
+    addData('_a_data[_a2]')
+    addData('_b_data[_a1,_b1]')
+    addData('_b_data[_a1,_b2]')
+    addData('_b_data[_a2,_b1]')
+    addData('_b_data[_a2,_b2]')
+    addData('_c_data')
     const mdl = `
       DimA: A1, A2 ~~|
       DimB: B1, B2 ~~|
@@ -170,20 +189,37 @@ describe('generateJS (Vensim -> JS)', () => {
       x = input ~~|
       y = :NOT: x ~~|
       z = ABS(y) ~~|
+      a data[DimA] ~~|
+      a[DimA] = a data[DimA] ~~|
+      b data[DimA, DimB] ~~|
+      b[DimA, DimB] = b data[DimA, DimB] ~~|
+      c data ~~|
+      c = c data ~~|
       w = WITH LOOKUP(x, ( [(0,0)-(2,2)], (0,0),(0.1,0.01),(0.5,0.7),(1,1),(1.5,1.2),(2,1.3) )) ~~|
-      a[DimA] = 0, 1 ~~|
-      b[DimA, DimB] = 5 ~~|
+      INITIAL TIME = 0 ~~|
+      FINAL TIME = 2 ~~|
+      TIME STEP = 1 ~~|
+      SAVEPER = 1 ~~|
     `
     const code = readInlineModelAndGenerateJS(mdl, {
       inputVarNames: ['input'],
-      outputVarNames: ['a[A1]', 'b[A2,B1]', 'x', 'y', 'z', 'w']
+      outputVarNames: ['x', 'y', 'z', 'a[A1]', 'b[A2,B1]', 'c', 'w'],
+      extData
     })
     expect(code).toEqual(`\
 // Model variables
 let __lookup1;
 let _a = multiDimArray([2]);
+let _a_data = multiDimArray([2]);
 let _b = multiDimArray([2, 2]);
+let _b_data = multiDimArray([2, 2]);
+let _c;
+let _c_data;
+let _final_time;
+let _initial_time;
 let _input;
+let _saveper;
+let _time_step;
 let _w;
 let _x;
 let _y;
@@ -198,7 +234,13 @@ const _dimb = [0, 1];
 
 // Lookup data arrays
 const __lookup1_data_ = [0.0, 0.0, 0.1, 0.01, 0.5, 0.7, 1.0, 1.0, 1.5, 1.2, 2.0, 1.3];
-
+const _a_data_data__0_ = [0.0, 0.0, 1.0, 2.0, 2.0, 5.0];
+const _a_data_data__1_ = [0.0, 0.0, 1.0, 2.0, 2.0, 5.0];
+const _b_data_data__0__0_ = [0.0, 0.0, 1.0, 2.0, 2.0, 5.0];
+const _b_data_data__0__1_ = [0.0, 0.0, 1.0, 2.0, 2.0, 5.0];
+const _b_data_data__1__0_ = [0.0, 0.0, 1.0, 2.0, 2.0, 5.0];
+const _b_data_data__1__1_ = [0.0, 0.0, 1.0, 2.0, 2.0, 5.0];
+const _c_data_data_ = [0.0, 0.0, 1.0, 2.0, 2.0, 5.0];
 
 // Time variable
 let _time;
@@ -314,24 +356,33 @@ function initLookups() {
   }
 }
 
+function initData0() {
+  _a_data[0] = fns.createLookup(3, _a_data_data__0_);
+  _a_data[1] = fns.createLookup(3, _a_data_data__1_);
+  _b_data[0][0] = fns.createLookup(3, _b_data_data__0__0_);
+  _b_data[0][1] = fns.createLookup(3, _b_data_data__0__1_);
+  _b_data[1][0] = fns.createLookup(3, _b_data_data__1__0_);
+  _b_data[1][1] = fns.createLookup(3, _b_data_data__1__1_);
+  _c_data = fns.createLookup(3, _c_data_data_);
+}
+
 function initData() {
   // Initialize data
   if (!data_initialized) {
+    initData0();
     data_initialized = true;
   }
 }
 
 function initConstants0() {
-  // a[DimA] = 0,1
-  _a[0] = 0.0;
-  // a[DimA] = 0,1
-  _a[1] = 1.0;
-  // b[DimA,DimB] = 5
-  for (let i = 0; i < 2; i++) {
-  for (let j = 0; j < 2; j++) {
-  _b[i][j] = 5.0;
-  }
-  }
+  // FINAL TIME = 2
+  _final_time = 2.0;
+  // INITIAL TIME = 0
+  _initial_time = 0.0;
+  // SAVEPER = 1
+  _saveper = 1.0;
+  // TIME STEP = 1
+  _time_step = 1.0;
   // input = 1
   _input = 1.0;
 }
@@ -348,6 +399,18 @@ function initConstants0() {
 }
 
 function evalAux0() {
+  // a[DimA] = a data[DimA]
+  for (let i = 0; i < 2; i++) {
+  _a[i] = fns.LOOKUP(_a_data[i], _time);
+  }
+  // b[DimA,DimB] = b data[DimA,DimB]
+  for (let i = 0; i < 2; i++) {
+  for (let j = 0; j < 2; j++) {
+  _b[i][j] = fns.LOOKUP(_b_data[i][j], _time);
+  }
+  }
+  // c = c data
+  _c = fns.LOOKUP(_c_data, _time);
   // x = input
   _x = _input;
   // w = WITH LOOKUP(x,([(0,0)-(2,2)],(0,0),(0.1,0.01),(0.5,0.7),(1,1),(1.5,1.2),(2,1.3)))
@@ -371,54 +434,98 @@ function evalAux0() {
   _input = valueAtIndex(0);
 }
 
+/*export*/ function setLookup(varSpec /*: VarSpec*/, points /*: Float64Array*/) {
+  if (!varSpec) {
+    throw new Error('Got undefined varSpec in setLookup');
+  }
+  const varIndex = varSpec.varIndex;
+  const subs = varSpec.subscriptIndices;
+  switch (varIndex) {
+    case 6:
+      _a_data[subs[0]] = fns.createLookup(points.length / 2, points);
+      break;
+    case 7:
+      _b_data[subs[0]][subs[1]] = fns.createLookup(points.length / 2, points);
+      break;
+    case 8:
+      _c_data = fns.createLookup(points.length / 2, points);
+      break;
+    default:
+      break;
+  }
+}
+
 /*export*/ const outputVarIds = [
-  '_a[_a1]',
-  '_b[_a2,_b1]',
   '_x',
   '_y',
   '_z',
+  '_a[_a1]',
+  '_b[_a2,_b1]',
+  '_c',
   '_w'
 ];
 
 /*export*/ const outputVarNames = [
-  'a[A1]',
-  'b[A2,B1]',
   'x',
   'y',
   'z',
+  'a[A1]',
+  'b[A2,B1]',
+  'c',
   'w'
 ];
 
 /*export*/ function storeOutputs(storeValue /*: (value: number) => void*/) {
-  storeValue(_a[0]);
-  storeValue(_b[1][0]);
   storeValue(_x);
   storeValue(_y);
   storeValue(_z);
+  storeValue(_a[0]);
+  storeValue(_b[1][0]);
+  storeValue(_c);
   storeValue(_w);
 }
 
 /*export*/ function storeOutput(varSpec /*: VarSpec*/, storeValue /*: (value: number) => void*/) {
-  switch (varSpec.varIndex) {
+  if (!varSpec) {
+    throw new Error('Got undefined varSpec in storeOutput');
+  }
+  const varIndex = varSpec.varIndex;
+  const subs = varSpec.subscriptIndices;
+  switch (varIndex) {
     case 1:
-      storeValue(_a[varSpec.subscriptIndices[0]]);
+      storeValue(_final_time);
       break;
     case 2:
-      storeValue(_b[varSpec.subscriptIndices[0]][varSpec.subscriptIndices[1]]);
+      storeValue(_initial_time);
       break;
     case 3:
-      storeValue(_input);
+      storeValue(_saveper);
       break;
     case 4:
-      storeValue(_x);
+      storeValue(_time_step);
       break;
     case 5:
+      storeValue(_input);
+      break;
+    case 9:
+      storeValue(_a[subs[0]]);
+      break;
+    case 10:
+      storeValue(_b[subs[0]][subs[1]]);
+      break;
+    case 11:
+      storeValue(_c);
+      break;
+    case 12:
+      storeValue(_x);
+      break;
+    case 13:
       storeValue(_w);
       break;
-    case 6:
+    case 14:
       storeValue(_y);
       break;
-    case 7:
+    case 15:
       storeValue(_z);
       break;
     default:
@@ -442,6 +549,7 @@ export default async function () {
 
     setTime,
     setInputs,
+    setLookup,
 
     storeOutputs,
     storeOutput,

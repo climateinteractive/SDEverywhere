@@ -1,6 +1,6 @@
 // Copyright (c) 2024 Climate Interactive / New Venture Fund
 
-import type { OutputVarId } from '../_shared'
+import type { LookupDef, OutputVarId } from '../_shared'
 import { perfElapsed, perfNow } from '../perf'
 import type { RunModelParams } from './run-model-params'
 import type { RunnableModel } from './runnable-model'
@@ -11,7 +11,10 @@ import type { RunnableModel } from './runnable-model'
 export type OnRunModelFunc = (
   inputs: Float64Array,
   outputs: Float64Array,
-  outputIndices: Int32Array | undefined
+  options?: {
+    outputIndices?: Int32Array
+    lookups?: LookupDef[]
+  }
 ) => void
 
 /**
@@ -87,7 +90,10 @@ export class BaseRunnableModel implements RunnableModel {
 
     // Run the model
     const t0 = perfNow()
-    this.onRunModel?.(inputsArray, outputsArray, outputIndicesArray)
+    this.onRunModel?.(inputsArray, outputsArray, {
+      outputIndices: outputIndicesArray,
+      lookups: params.getLookups()
+    })
     const elapsed = perfElapsed(t0)
 
     // Copy the outputs that were stored into our array back to the `RunModelParams`

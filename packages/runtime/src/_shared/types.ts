@@ -8,3 +8,11 @@ export type InputVarId = string
 
 /** An output variable identifier string, as used in SDEverywhere. */
 export type OutputVarId = string
+
+/** A data point. */
+export interface Point {
+  /** The x value (typically a time value). */
+  x: number
+  /** The y value. */
+  y: number
+}

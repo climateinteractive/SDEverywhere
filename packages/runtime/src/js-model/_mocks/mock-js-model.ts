@@ -4,18 +4,13 @@ import type { OutputVarId, VarId, VarSpec } from '../../_shared'
 import type { ModelListing } from '../../model-listing'
 import type { JsModel } from '../js-model'
 import type { JsModelFunctions } from '../js-model-functions'
+import { JsModelLookup } from '../js-model-lookup'
 
 /**
  * @hidden This type is not part of the public API; it is exposed only for use in
  * tests in the runtime-async package.
  */
-export type VarIdForSpec = (varSpec: VarSpec) => VarId | undefined
-
-/**
- * @hidden This type is not part of the public API; it is exposed only for use in
- * tests in the runtime-async package.
- */
-export type OnEvalAux = (vars: Map<VarId, number> /*, lookups: Map<VarId, JsModelLookup>*/) => void
+export type OnEvalAux = (vars: Map<VarId, number>, lookups: Map<VarId, JsModelLookup>) => void
 
 /**
  * @hidden This type is not part of the public API; it is exposed only for use in
@@ -35,19 +30,18 @@ export class MockJsModel implements JsModel {
   private readonly finalTime: number
 
   private readonly vars: Map<VarId, number> = new Map()
-  // private readonly lookups: Map<VarId, JsModelLookup> = new Map()
+  private readonly lookups: Map<VarId, JsModelLookup> = new Map()
   private fns: JsModelFunctions
 
   private listing: ModelListing
 
   public readonly onEvalAux: OnEvalAux
-  public readonly varIdForSpec: VarIdForSpec
 
   constructor(options: {
     initialTime: number
     finalTime: number
     outputVarIds: OutputVarId[]
-    varIdForSpec?: VarIdForSpec
+    listing?: ModelListing
     onEvalAux: OnEvalAux
   }) {
     this.outputVarIds = options.outputVarIds
@@ -55,26 +49,22 @@ export class MockJsModel implements JsModel {
     this.initialTime = options.initialTime
     this.finalTime = options.finalTime
     this.outputVarIds = options.outputVarIds
-    if (options.varIdForSpec) {
-      // Use the provided lookup function
-      this.varIdForSpec = options.varIdForSpec
-    } else {
-      // Use a default lookup function that relies on the `ModelListing`
-      this.varIdForSpec = (varSpec: VarSpec) => {
-        for (const [listingVarId, listingSpec] of this.listing.varSpecs) {
-          // TODO: This doesn't compare subscripts yet
-          if (listingSpec.varIndex === varSpec.varIndex) {
-            return listingVarId
-          }
-        }
-        return undefined
-      }
-    }
+    this.listing = options.listing
     this.onEvalAux = options.onEvalAux
   }
 
   setListing(listing: ModelListing) {
     this.listing = listing
+  }
+
+  varIdForSpec(varSpec: VarSpec): VarId {
+    for (const [listingVarId, listingSpec] of this.listing.varSpecs) {
+      // TODO: This doesn't compare subscripts yet
+      if (listingSpec.varIndex === varSpec.varIndex) {
+        return listingVarId
+      }
+    }
+    return undefined
   }
 
   // from JsModel interface
@@ -117,14 +107,14 @@ export class MockJsModel implements JsModel {
     // TODO
   }
 
-  // // from JsModel interface
-  // setLookup(varSpec: VarSpec, points: Float64Array): void {
-  //   const varId = this.varIdForSpec(varSpec)
-  //   if (varId === undefined) {
-  //     throw new Error(`No lookup variable found for spec ${varSpec}`)
-  //   }
-  //   this.lookups.set(varId, new JsModelLookup(points.length / 2, points))
-  // }
+  // from JsModel interface
+  setLookup(varSpec: VarSpec, points: Float64Array): void {
+    const varId = this.varIdForSpec(varSpec)
+    if (varId === undefined) {
+      throw new Error(`No lookup variable found for spec ${varSpec}`)
+    }
+    this.lookups.set(varId, new JsModelLookup(points.length / 2, points))
+  }
 
   // from JsModel interface
   storeOutputs(storeValue: (value: number) => void): void {
@@ -150,7 +140,7 @@ export class MockJsModel implements JsModel {
 
   // from JsModel interface
   evalAux(): void {
-    this.onEvalAux?.(this.vars /*, this.lookups*/)
+    this.onEvalAux?.(this.vars, this.lookups)
   }
 
   // from JsModel interface

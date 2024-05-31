@@ -2,10 +2,10 @@
 
 import { describe, expect, it } from 'vitest'
 
-import { Outputs } from '../_shared'
-import { ModelListing } from '../model-listing'
+import { Outputs, createLookupDef, type LookupDef } from '../_shared'
 
 import { BufferedRunModelParams } from './buffered-run-model-params'
+import { ModelListing } from '../model-listing'
 
 const json = `
 {
@@ -247,5 +247,51 @@ describe('BufferedRunModelParams', () => {
     expect(outputs.getSeriesForVar('_x').points).toEqual([p(2000, 1), p(2001, 2), p(2002, 3)])
     expect(outputs.getSeriesForVar('_y').points).toEqual([p(2000, 4), p(2001, 5), p(2002, 6)])
     expect(outputs.runTimeInMillis).toBe(42)
+  })
+
+  it('should copy lookups', () => {
+    const listing = new ModelListing(json)
+
+    const inputs = [1, 2, 3]
+    const outputs = new Outputs(['_x', '_y'], 2000, 2002, 1)
+
+    const lookups: LookupDef[] = [
+      createLookupDef(listing.varSpecs.get('_a'), [p(2000, 0), p(2001, 1), p(2002, 2)]),
+      createLookupDef(listing.varSpecs.get('_b'), [p(2000, 5), p(2001, 6), p(2002, 7)])
+    ]
+
+    const runnerParams = new BufferedRunModelParams()
+    const workerParams = new BufferedRunModelParams()
+
+    // Run once without providing lookups
+    runnerParams.updateFromParams(inputs, outputs)
+    workerParams.updateFromEncodedBuffer(runnerParams.getEncodedBuffer())
+
+    // Verify that lookups array is undefined
+    expect(workerParams.getLookups()).toBeUndefined()
+
+    // Run again with lookups
+    runnerParams.updateFromParams(inputs, outputs, { lookups })
+    workerParams.updateFromEncodedBuffer(runnerParams.getEncodedBuffer())
+
+    // Verify that lookups array on the worker side contains the expected values
+    expect(workerParams.getLookups()).toEqual(lookups)
+
+    // Run again without lookups
+    runnerParams.updateFromParams(inputs, outputs)
+    workerParams.updateFromEncodedBuffer(runnerParams.getEncodedBuffer())
+
+    // Verify that lookups array is undefined
+    expect(workerParams.getLookups()).toBeUndefined()
+
+    // Run again with an empty lookup
+    const emptyLookup = createLookupDef(listing.varSpecs.get('_a'), [])
+    runnerParams.updateFromParams(inputs, outputs, {
+      lookups: [emptyLookup]
+    })
+    workerParams.updateFromEncodedBuffer(runnerParams.getEncodedBuffer())
+
+    // Verify that lookups array on the worker side contains the expected values
+    expect(workerParams.getLookups()).toEqual([emptyLookup])
   })
 })

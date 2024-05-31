@@ -154,7 +154,7 @@ async function buildWasm(
     // and Node.js contexts (tested in Emscripten 2.0.34 and 3.1.46).
     addFlag(`ENVIRONMENT='web,webview,worker'`)
     addFlag(
-      `EXPORTED_FUNCTIONS=['_malloc','_free','_getMaxOutputIndices','_getInitialTime','_getFinalTime','_getSaveper','_runModelWithBuffers']`
+      `EXPORTED_FUNCTIONS=['_malloc','_free','_getMaxOutputIndices','_getInitialTime','_getFinalTime','_getSaveper','_setLookup','_runModelWithBuffers']`
     )
     addFlag(`EXPORTED_RUNTIME_METHODS=['cwrap']`)
   }

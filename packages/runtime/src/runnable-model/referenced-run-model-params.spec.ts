@@ -2,10 +2,10 @@
 
 import { describe, expect, it } from 'vitest'
 
-import { Outputs } from '../_shared'
-import { ModelListing } from '../model-listing'
+import { Outputs, createLookupDef, type LookupDef } from '../_shared'
 
 import { ReferencedRunModelParams } from './referenced-run-model-params'
+import { ModelListing } from '../model-listing'
 
 const json = `
 {
@@ -161,5 +161,46 @@ describe('ReferencedRunModelParams', () => {
     expect(outputs.varIds).toEqual(['_x', '_y'])
     expect(outputs.getSeriesForVar('_x').points).toEqual([p(2000, 1), p(2001, 2), p(2002, 3)])
     expect(outputs.getSeriesForVar('_y').points).toEqual([p(2000, 4), p(2001, 5), p(2002, 6)])
+  })
+
+  it('should copy lookups', () => {
+    const listing = new ModelListing(json)
+
+    const inputs = [1, 2, 3]
+    const outputs = new Outputs(['_x', '_y'], 2000, 2002, 1)
+
+    const lookups: LookupDef[] = [
+      createLookupDef(listing.varSpecs.get('_a'), [p(2000, 0), p(2001, 1), p(2002, 2)]),
+      createLookupDef(listing.varSpecs.get('_b'), [p(2000, 5), p(2001, 6), p(2002, 7)])
+    ]
+
+    const params = new ReferencedRunModelParams()
+
+    // Run once without providing lookups
+    params.updateFromParams(inputs, outputs)
+
+    // Verify that lookups array is undefined
+    expect(params.getLookups()).toBeUndefined()
+
+    // Run again with lookups
+    params.updateFromParams(inputs, outputs, { lookups })
+
+    // Verify that lookups array contains the expected values
+    expect(params.getLookups()).toEqual(lookups)
+
+    // Run again without lookups
+    params.updateFromParams(inputs, outputs)
+
+    // Verify that lookups array is undefined
+    expect(params.getLookups()).toBeUndefined()
+
+    // Run again with an empty lookup
+    const emptyLookup = createLookupDef(listing.varSpecs.get('_a'), [])
+    params.updateFromParams(inputs, outputs, {
+      lookups: [emptyLookup]
+    })
+
+    // Verify that lookups array contains the expected values
+    expect(params.getLookups()).toEqual([emptyLookup])
   })
 })

@@ -81,51 +81,54 @@ ${section(Model.dataVars())}
   //
   function emitInitLookupsCode() {
     mode = 'init-lookups'
-    let code = `// Internal state
+    let code = `\
+// Internal state
 bool lookups_initialized = false;
 bool data_initialized = false;
+
 `
     code += chunkedFunctions(
       'initLookups',
       Model.lookupVars(),
-      `  // Initialize lookups.
-  if (!lookups_initialized) {
-`,
-      `      lookups_initialized = true;
-  }
-`
+      `\
+  // Initialize lookups.
+  if (lookups_initialized) {
+    return;
+  }`,
+      '  lookups_initialized = true;'
     )
     code += chunkedFunctions(
       'initData',
       Model.dataVars(),
-      `  // Initialize data.
-  if (!data_initialized) {
-`,
-      `      data_initialized = true;
-  }
-`
+      `\
+  // Initialize data.
+  if (data_initialized) {
+    return;
+  }`,
+      '  data_initialized = true;'
     )
     return code
   }
 
   function emitInitConstantsCode() {
     mode = 'init-constants'
-    return `
-${chunkedFunctions('initConstants', Model.constVars(), '  // Initialize constants.', '  initLookups();\n  initData();')}
-`
+    return chunkedFunctions(
+      'initConstants',
+      Model.constVars(),
+      '  // Initialize constants.',
+      '  initLookups();\n  initData();'
+    )
   }
 
   function emitInitLevelsCode() {
     mode = 'init-levels'
-    return `
-${chunkedFunctions(
-  'initLevels',
-  Model.initVars(),
-  `
+    return chunkedFunctions(
+      'initLevels',
+      Model.initVars(),
+      `\
   // Initialize variables with initialization values, such as levels, and the variables they depend on.
   _time = _initial_time;`
-)}
-`
+    )
   }
 
   //
@@ -134,11 +137,9 @@ ${chunkedFunctions(
   function emitEvalCode() {
     mode = 'eval'
 
-    return `
-${chunkedFunctions('evalAux', Model.auxVars(), '  // Evaluate auxiliaries in order from the bottom up.')}
-
-${chunkedFunctions('evalLevels', Model.levelVars(), '  // Evaluate levels.')}
-`
+    return `\
+${chunkedFunctions('evalAux', Model.auxVars(), '  // Evaluate auxiliaries in order from the bottom up.')}\
+${chunkedFunctions('evalLevels', Model.levelVars(), '  // Evaluate levels.')}`
   }
 
   //
@@ -148,9 +149,35 @@ ${chunkedFunctions('evalLevels', Model.levelVars(), '  // Evaluate levels.')}
     let headerVarNames = outputAllVars ? expandedVarNames(true) : spec.outputVarNames
     let outputVarIds = outputAllVars ? expandedVarNames() : spec.outputVars
     mode = 'io'
-    return `void setInputs(const char* inputData) {${inputsFromStringImpl()}}
+    return `\
+void setInputs(const char* inputData) {
+${inputsFromStringImpl()}
+}
 
-void setInputsFromBuffer(double* inputData) {${inputsFromBufferImpl()}}
+void setInputsFromBuffer(double* inputData) {
+${inputsFromBufferImpl()}
+}
+
+void replaceLookup(Lookup** lookup, double* points, size_t numPoints) {
+  if (lookup == NULL) {
+    return;
+  }
+  if (*lookup != NULL) {
+    __delete_lookup(*lookup);
+    *lookup = NULL;
+  }
+  if (points != NULL) {
+    *lookup = __new_lookup(numPoints, /*copy=*/true, points);
+  }
+}
+
+void setLookup(size_t varIndex, size_t* subIndices, double* points, size_t numPoints) {
+  switch (varIndex) {
+${setLookupImpl(Model.varIndexInfo())}
+    default:
+      break;
+  }
+}
 
 const char* getHeader() {
   return "${R.map(varName => varName.replace(/"/g, '\\"'), headerVarNames).join('\\t')}";
@@ -178,9 +205,9 @@ ${fullOutputSection(Model.varIndexInfo())}
   function chunkedFunctions(name, vars, preStep, postStep) {
     // Emit one function for each chunk
     let func = (chunk, idx) => {
-      return `
+      return `\
 void ${name}${idx}() {
-  ${section(chunk)}
+${section(chunk)}
 }
 `
     }
@@ -208,22 +235,25 @@ void ${name}${idx}() {
       chunks = [vars]
     }
 
-    if (!preStep) {
-      preStep = ''
-    }
-    if (!postStep) {
-      postStep = ''
-    }
+    let funcsPart = funcs(chunks)
+    let callsPart = funcCalls(chunks)
 
-    return `
-${funcs(chunks)}
-
-void ${name}() {
-${preStep}
-${funcCalls(chunks)}
-${postStep}
-}
-    `
+    let out = ''
+    if (funcsPart.length > 0) {
+      out += funcsPart + '\n'
+    }
+    out += `void ${name}() {\n`
+    if (preStep) {
+      out += preStep + '\n'
+    }
+    if (callsPart.length > 0) {
+      out += callsPart + '\n'
+    }
+    if (postStep) {
+      out += postStep + '\n'
+    }
+    out += '}\n\n'
+    return out
   }
 
   //
@@ -314,7 +344,10 @@ ${postStep}
     return section(varNames)
   }
   function fullOutputSection(varIndexInfo) {
-    // Emit output calls for all variables.
+    // Emit `storeValue` calls for all variables that can be accessed as an output.
+    // This excludes data and lookup variables; at this time, the data for these
+    // cannot be output like for other types of variables.
+    const outputVars = R.filter(info => info.varType !== 'lookup' && info.varType !== 'data')
     const code = R.map(info => {
       let varAccess = info.varName
       if (info.subscriptCount > 0) {
@@ -326,13 +359,12 @@ ${postStep}
       if (info.subscriptCount > 2) {
         varAccess += '[subIndex2]'
       }
-      let c = ''
-      c += `    case ${info.varIndex}:\n`
-      c += `      outputVar(${varAccess});\n`
-      c += `      break;`
-      return c
+      return `\
+    case ${info.varIndex}:
+      outputVar(${varAccess});
+      break;`
     })
-    const section = R.pipe(code, lines)
+    const section = R.pipe(outputVars, code, lines)
     return section(varIndexInfo)
   }
   function inputsFromStringImpl() {
@@ -341,7 +373,7 @@ ${postStep}
     let inputVars = ''
     if (spec.inputVars && spec.inputVars.length > 0) {
       let inputVarPtrs = R.reduce((a, inputVar) => R.concat(a, `    &${inputVar},\n`), '', spec.inputVars)
-      inputVars = `
+      inputVars = `\
   static double* inputVarPtrs[] = {\n${inputVarPtrs}  };
   char* inputs = (char*)inputData;
   char* token = strtok(inputs, " ");
@@ -354,21 +386,37 @@ ${postStep}
       *inputVarPtrs[modelVarIndex] = value;
     }
     token = strtok(NULL, " ");
-  }
-`
+  }`
     }
     return inputVars
   }
   function inputsFromBufferImpl() {
-    let inputVars = ''
+    let inputVars = []
     if (spec.inputVars && spec.inputVars.length > 0) {
-      inputVars += '\n'
       for (let i = 0; i < spec.inputVars.length; i++) {
         const inputVar = spec.inputVars[i]
-        inputVars += `  ${inputVar} = inputData[${i}];\n`
+        inputVars.push(`  ${inputVar} = inputData[${i}];`)
       }
     }
-    return inputVars
+    return inputVars.join('\n')
+  }
+  function setLookupImpl(varIndexInfo) {
+    // Emit `createLookup` calls for all lookups and data variables that can be overridden
+    // at runtime
+    const lookupAndDataVars = R.filter(info => info.varType === 'lookup' || info.varType === 'data')
+    const code = R.map(info => {
+      let lookupVar = info.varName
+      for (let i = 0; i < info.subscriptCount; i++) {
+        lookupVar += `[subIndices[${i}]]`
+      }
+      let c = ''
+      c += `    case ${info.varIndex}:\n`
+      c += `      replaceLookup(&${lookupVar}, points, numPoints);\n`
+      c += `      break;`
+      return c
+    })
+    const section = R.pipe(lookupAndDataVars, code, lines)
+    return section(varIndexInfo)
   }
 
   return {

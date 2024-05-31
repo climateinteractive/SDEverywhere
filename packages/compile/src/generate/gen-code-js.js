@@ -263,6 +263,19 @@ ${chunkedFunctions('evalLevels', true, Model.levelVars(), '  // Evaluate levels'
     return `\
 /*export*/ function setInputs(valueAtIndex /*: (index: number) => number*/) {${inputsFromBufferImpl()}}
 
+/*export*/ function setLookup(varSpec /*: VarSpec*/, points /*: Float64Array*/) {
+  if (!varSpec) {
+    throw new Error('Got undefined varSpec in setLookup');
+  }
+  const varIndex = varSpec.varIndex;
+  const subs = varSpec.subscriptIndices;
+  switch (varIndex) {
+${setLookupImpl(Model.varIndexInfo())}
+    default:
+      break;
+  }
+}
+
 /*export*/ const outputVarIds = [
   ${outputVarIdElems}
 ];
@@ -276,7 +289,12 @@ ${specOutputSection(outputVarAccesses)}
 }
 
 /*export*/ function storeOutput(varSpec /*: VarSpec*/, storeValue /*: (value: number) => void*/) {
-  switch (varSpec.varIndex) {
+  if (!varSpec) {
+    throw new Error('Got undefined varSpec in storeOutput');
+  }
+  const varIndex = varSpec.varIndex;
+  const subs = varSpec.subscriptIndices;
+  switch (varIndex) {
 ${fullOutputSection(Model.varIndexInfo())}
     default:
       break;
@@ -440,17 +458,14 @@ ${section(chunk)}
     return section(varNames)
   }
   function fullOutputSection(varIndexInfo) {
-    // Emit output calls for all variables.
+    // Emit `storeValue` calls for all variables that can be accessed as an output.
+    // This excludes data and lookup variables; at this time, the data for these
+    // cannot be output like for other types of variables.
+    const outputVars = R.filter(info => info.varType !== 'lookup' && info.varType !== 'data')
     const code = R.map(info => {
       let varAccess = info.varName
-      if (info.subscriptCount > 0) {
-        varAccess += '[varSpec.subscriptIndices[0]]'
-      }
-      if (info.subscriptCount > 1) {
-        varAccess += '[varSpec.subscriptIndices[1]]'
-      }
-      if (info.subscriptCount > 2) {
-        varAccess += '[varSpec.subscriptIndices[2]]'
+      for (let i = 0; i < info.subscriptCount; i++) {
+        varAccess += `[subs[${i}]]`
       }
       let c = ''
       c += `    case ${info.varIndex}:\n`
@@ -458,7 +473,7 @@ ${section(chunk)}
       c += `      break;`
       return c
     })
-    const section = R.pipe(code, lines)
+    const section = R.pipe(outputVars, code, lines)
     return section(varIndexInfo)
   }
   function inputsFromBufferImpl() {
@@ -471,6 +486,24 @@ ${section(chunk)}
       }
     }
     return inputVars
+  }
+  function setLookupImpl(varIndexInfo) {
+    // Emit `createLookup` calls for all lookups and data variables that can be overridden
+    // at runtime
+    const lookupAndDataVars = R.filter(info => info.varType === 'lookup' || info.varType === 'data')
+    const code = R.map(info => {
+      let lookupVar = info.varName
+      for (let i = 0; i < info.subscriptCount; i++) {
+        lookupVar += `[subs[${i}]]`
+      }
+      let c = ''
+      c += `    case ${info.varIndex}:\n`
+      c += `      ${lookupVar} = fns.createLookup(points.length / 2, points);\n`
+      c += `      break;`
+      return c
+    })
+    const section = R.pipe(lookupAndDataVars, code, lines)
+    return section(varIndexInfo)
   }
 
   return {
@@ -508,6 +541,7 @@ export default async function () {
 
     setTime,
     setInputs,
+    setLookup,
 
     storeOutputs,
     storeOutput,

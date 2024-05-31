@@ -572,6 +572,27 @@ importers:
         specifier: workspace:*
         version: link:../../../packages/runtime-async
 
+  tests/integration/override-lookups:
+    dependencies:
+      '@sdeverywhere/build':
+        specifier: workspace:*
+        version: link:../../../packages/build
+      '@sdeverywhere/cli':
+        specifier: workspace:*
+        version: link:../../../packages/cli
+      '@sdeverywhere/plugin-wasm':
+        specifier: workspace:*
+        version: link:../../../packages/plugin-wasm
+      '@sdeverywhere/plugin-worker':
+        specifier: workspace:*
+        version: link:../../../packages/plugin-worker
+      '@sdeverywhere/runtime':
+        specifier: workspace:*
+        version: link:../../../packages/runtime
+      '@sdeverywhere/runtime-async':
+        specifier: workspace:*
+        version: link:../../../packages/runtime-async
+
   tests/integration/saveper:
     dependencies:
       '@sdeverywhere/build':

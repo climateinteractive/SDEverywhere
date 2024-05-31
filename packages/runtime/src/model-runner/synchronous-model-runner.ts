@@ -4,7 +4,8 @@ import { type InputValue, Outputs } from '../_shared'
 
 import { type JsModel, initJsModel } from '../js-model'
 import { type WasmModule, initWasmModel } from '../wasm-model'
-import { type RunnableModel, ReferencedRunModelParams } from '../runnable-model'
+import type { RunnableModel, RunModelOptions } from '../runnable-model'
+import { ReferencedRunModelParams } from '../runnable-model'
 
 import type { ModelRunner } from './model-runner'
 
@@ -53,9 +54,9 @@ function createRunnerFromRunnableModel(model: RunnableModel): ModelRunner {
   // Disallow `runModel` after the runner has been terminated
   let terminated = false
 
-  const runModelSync = (inputs: (InputValue | number)[], outputs: Outputs) => {
+  const runModelSync = (inputs: (InputValue | number)[], outputs: Outputs, options: RunModelOptions | undefined) => {
     // Update the I/O parameters
-    params.updateFromParams(inputs, outputs)
+    params.updateFromParams(inputs, outputs, options)
 
     // Run the model synchronously using those parameters
     model.runModel(params)
@@ -68,18 +69,18 @@ function createRunnerFromRunnableModel(model: RunnableModel): ModelRunner {
       return new Outputs(model.outputVarIds, model.startTime, model.endTime, model.saveFreq)
     },
 
-    runModel: (inputs, outputs) => {
+    runModel: (inputs, outputs, options) => {
       if (terminated) {
         return Promise.reject(new Error('Model runner has already been terminated'))
       }
-      return Promise.resolve(runModelSync(inputs, outputs))
+      return Promise.resolve(runModelSync(inputs, outputs, options))
     },
 
-    runModelSync: (inputs, outputs) => {
+    runModelSync: (inputs, outputs, options) => {
       if (terminated) {
         throw new Error('Model runner has already been terminated')
       }
-      return runModelSync(inputs, outputs)
+      return runModelSync(inputs, outputs, options)
     },
 
     terminate: async () => {

@@ -1,8 +1,8 @@
 // Copyright (c) 2023 Climate Interactive / New Venture Fund
 
 import { describe, expect, it } from 'vitest'
-import { ModelListing } from './model-listing'
 import { Outputs } from '../_shared/outputs'
+import { ModelListing } from './model-listing'
 
 const json = `
 {

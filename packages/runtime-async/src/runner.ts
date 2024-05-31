@@ -6,10 +6,12 @@ import type { ModelRunner } from '@sdeverywhere/runtime'
 import { BufferedRunModelParams, Outputs } from '@sdeverywhere/runtime'
 
 /**
- * Initialize a `ModelRunner` that runs the model asynchronously in a worker thread.
+ * Initialize a `ModelRunner` that runs the model asynchronously in a worker
+ * (a Web Worker when running in a browser environment, or a worker thread
+ * when running in a Node.js environment).
  *
- * In your app project, define a JavaScript file, called `worker.js` for example, that
- * initializes the generated model in the context of the Web Worker:
+ * In your app project, define a JavaScript file, called `worker.js` for example,
+ * that initializes the generated model in the context of a worker thread:
  *
  * ```js
  * import { exposeModelWorker } from '@sdeverywhere/runtime-async/worker'
@@ -19,7 +21,7 @@ import { BufferedRunModelParams, Outputs } from '@sdeverywhere/runtime'
  * ```
  *
  * Then, in your web app, call the `spawnAsyncModelRunner` function, which
- * will spawn the Web Worker and initialize the `ModelRunner` that communicates
+ * will spawn the worker thread and initialize the `ModelRunner` that communicates
  * with the worker:
  *
  * ```js
@@ -67,7 +69,7 @@ async function spawnAsyncModelRunnerWithWorker(worker: Worker): Promise<ModelRun
       return new Outputs(initResult.outputVarIds, initResult.startTime, initResult.endTime, initResult.saveFreq)
     },
 
-    runModel: async (inputs, outputs) => {
+    runModel: async (inputs, outputs, options) => {
       if (terminated) {
         throw new Error('Async model runner has already been terminated')
       } else if (running) {
@@ -77,7 +79,7 @@ async function spawnAsyncModelRunnerWithWorker(worker: Worker): Promise<ModelRun
       }
 
       // Update the I/O parameters
-      params.updateFromParams(inputs, outputs)
+      params.updateFromParams(inputs, outputs, options)
 
       // Run the model in the worker. We pass the underlying `ArrayBuffer`
       // instance back to the worker wrapped in a `Transfer` to make it

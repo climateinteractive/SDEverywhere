@@ -1,6 +1,6 @@
 // Copyright (c) 2024 Climate Interactive / New Venture Fund
 
-import { indicesPerVariable, type VarSpec } from '../_shared'
+import { indicesPerVariable, type LookupDef, type VarSpec } from '../_shared'
 import type { RunnableModel } from '../runnable-model'
 import { BaseRunnableModel } from '../runnable-model/base-runnable-model'
 
@@ -38,9 +38,9 @@ export interface JsModel {
 
   setTime(time: number): void
   setInputs(inputValue: (index: number) => number): void
+  setLookup(varSpec: VarSpec, points: Float64Array): void
 
   storeOutputs(storeValue: (value: number) => void): void
-  /** @hidden */
   storeOutput(varSpec: VarSpec, storeValue: (value: number) => void): void
 
   initConstants(): void
@@ -78,8 +78,20 @@ export function initJsModel(model: JsModel): RunnableModel {
     saveFreq: saveFreq,
     numSavePoints,
     outputVarIds: model.outputVarIds,
-    onRunModel: (inputs, outputs, outputIndices) => {
-      runJsModel(model, initialTime, finalTime, timeStep, saveFreq, numSavePoints, inputs, outputs, outputIndices)
+    onRunModel: (inputs, outputs, options) => {
+      runJsModel(
+        model,
+        initialTime,
+        finalTime,
+        timeStep,
+        saveFreq,
+        numSavePoints,
+        inputs,
+        outputs,
+        options?.outputIndices,
+        options?.lookups,
+        undefined
+      )
     }
   })
 }
@@ -93,7 +105,9 @@ function runJsModel(
   numSavePoints: number,
   inputs: Float64Array,
   outputs: Float64Array,
-  outputIndices: Int32Array | undefined
+  outputIndices: Int32Array | undefined,
+  lookups: LookupDef[] | undefined,
+  stopAfterTime: number | undefined
 ): void {
   // Initialize time with the required `INITIAL TIME` control variable
   let time = initialTime
@@ -110,6 +124,13 @@ function runJsModel(
   // Initialize constants to their default values
   model.initConstants()
 
+  // Apply lookup overrides, if provided
+  if (lookups !== undefined) {
+    for (const lookupDef of lookups) {
+      model.setLookup(lookupDef.varSpec, lookupDef.points)
+    }
+  }
+
   if (inputs.length > 0) {
     // Set the user-defined input values.  This needs to happen after `initConstants`
     // since the input values will override the default constant values.
@@ -120,7 +141,12 @@ function runJsModel(
   model.initLevels()
 
   // Set up a run loop using a fixed number of time steps
+  // TODO: For now we run up to and including `finalTime` (even when `stopAfterTime`
+  // is defined), storing undefined for values after passing the `stopAfterTime`.
+  // We should change this to instead stop running the model after passing the
+  // `stopAfterTime` and have a simpler loop that stores undefined values.
   const lastStep = Math.round((finalTime - initialTime) / timeStep)
+  const stopTime = stopAfterTime !== undefined ? stopAfterTime : finalTime
   let step = 0
   let savePointIndex = 0
   let outputVarIndex = 0
@@ -134,7 +160,7 @@ function runJsModel(
         // Write each value into the preallocated buffer; each variable has a "row" that
         // contains `numSavePoints` values, one value for each save point
         const outputBufferIndex = outputVarIndex * numSavePoints + savePointIndex
-        outputs[outputBufferIndex] = value
+        outputs[outputBufferIndex] = time <= stopTime ? value : undefined
         outputVarIndex++
       }
       if (outputIndices !== undefined) {

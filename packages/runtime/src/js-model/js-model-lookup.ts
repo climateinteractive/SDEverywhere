@@ -1,5 +1,7 @@
 // Copyright (c) 2024 Climate Interactive / New Venture Fund
 
+import { _NA_ } from './js-model-constants'
+
 export type JsModelLookupMode = 'interpolate' | 'forward' | 'backward'
 
 /**
@@ -10,10 +12,19 @@ export class JsModelLookup {
   private lastInput: number
   private lastHitIndex: number
 
-  constructor(private readonly n: number, private readonly data: number[]) {
+  /**
+   * @param n The number of (x,y) pairs in the lookup.
+   * @param data The lookup data, as (x,y) pairs.  The length of the array must be
+   * >= 2*n.  Note that the data will be stored by reference, so if there is a chance
+   * that the array will be reused or modified by other code, be sure to pass in a
+   * copy of the array.
+   */
+  constructor(private readonly n: number, private readonly data: number[] | Float64Array) {
+    // Note that we reference the provided data without copying (assumed to be owned elsewhere)
     if (data.length < n * 2) {
       throw new Error(`Lookup data array length must be >= 2*size (length=${data.length} size=${n}`)
     }
+
     this.lastInput = Number.MAX_VALUE
     this.lastHitIndex = 0
   }
@@ -42,6 +53,10 @@ export class JsModelLookup {
    * NOTE: The x values are assumed to be monotonically increasing.
    */
   private getValue(input: number, useInvertedData: boolean, mode: JsModelLookupMode): number {
+    if (this.n === 0) {
+      return _NA_
+    }
+
     const data = useInvertedData ? this.invertedData : this.data
     const max = this.n * 2
 
@@ -110,6 +125,10 @@ export class JsModelLookup {
    * lookup behavior, so we implement it as a separate method here.
    */
   public getValueBetweenTimes(input: number, mode: JsModelLookupMode): number {
+    if (this.n === 0) {
+      return _NA_
+    }
+
     const max = this.n * 2
 
     switch (mode) {

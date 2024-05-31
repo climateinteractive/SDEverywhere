@@ -4,10 +4,12 @@
 
 **spawnAsyncModelRunner**(`workerSpec`): `Promise`<[`ModelRunner`](../../../runtime/docs/interfaces/ModelRunner.md)\>
 
-Initialize a [`ModelRunner`](../../../runtime/docs/interfaces/ModelRunner.md) that runs the model asynchronously in a worker thread.
+Initialize a [`ModelRunner`](../../../runtime/docs/interfaces/ModelRunner.md) that runs the model asynchronously in a worker
+(a Web Worker when running in a browser environment, or a worker thread
+when running in a Node.js environment).
 
-In your app project, define a JavaScript file, called `worker.js` for example, that
-initializes the generated model in the context of the Web Worker:
+In your app project, define a JavaScript file, called `worker.js` for example,
+that initializes the generated model in the context of a worker thread:
 
 ```js
 import { exposeModelWorker } from '@sdeverywhere/runtime-async/worker'
@@ -17,7 +19,7 @@ exposeModelWorker(loadGeneratedModel)
 ```
 
 Then, in your web app, call the `spawnAsyncModelRunner` function, which
-will spawn the Web Worker and initialize the [`ModelRunner`](../../../runtime/docs/interfaces/ModelRunner.md) that communicates
+will spawn the worker thread and initialize the [`ModelRunner`](../../../runtime/docs/interfaces/ModelRunner.md) that communicates
 with the worker:
 
 ```js
