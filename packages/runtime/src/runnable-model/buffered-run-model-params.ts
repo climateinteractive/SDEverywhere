@@ -435,10 +435,15 @@ function getEncodedLookupBufferLengths(lookupDefs: LookupDef[]): {
  * Encode lookup data and indices to the given buffer views.
  *
  * @param lookupDefs The `LookupDef` instances to encode.
- * @param lookupsView The view on the lookup data buffer.
+ * @param lookupsView The view on the lookup data buffer.  This can be undefined in
+ * the case where the data for the lookup(s) is empty.
  * @param lookupIndicesView The view on the lookup indices buffer.
  */
-function encodeLookups(lookupDefs: LookupDef[], lookupsView: Float64Array, lookupIndicesView: Int32Array): void {
+function encodeLookups(
+  lookupDefs: LookupDef[],
+  lookupsView: Float64Array | undefined,
+  lookupIndicesView: Int32Array
+): void {
   // Store the total lookup count
   let li = 0
   lookupIndicesView[li++] = lookupDefs.length
@@ -456,8 +461,9 @@ function encodeLookups(lookupDefs: LookupDef[], lookupsView: Float64Array, looku
     lookupIndicesView[li++] = lookupDataOffset
     lookupIndicesView[li++] = lookupDef.points.length
 
-    // Store lookup data
-    lookupsView.set(lookupDef.points, lookupDataOffset)
+    // Store lookup data.  Note that `lookupsView` can be undefined in the case
+    // where the lookup data is empty.
+    lookupsView?.set(lookupDef.points, lookupDataOffset)
     lookupDataOffset += lookupDef.points.length
   }
 }
@@ -466,10 +472,11 @@ function encodeLookups(lookupDefs: LookupDef[], lookupsView: Float64Array, looku
  * Decode lookup data and indices from the given buffer views and return the
  * reconstruct `LookupDef` instances.
  *
- * @param lookupsView The view on the lookup data buffer.
+ * @param lookupsView The view on the lookup data buffer.  This can be undefined in
+ * the case where the data for the lookup(s) is empty.
  * @param lookupIndicesView The view on the lookup indices buffer.
  */
-function decodeLookups(lookupsView: Float64Array, lookupIndicesView: Int32Array): LookupDef[] {
+function decodeLookups(lookupsView: Float64Array | undefined, lookupIndicesView: Int32Array): LookupDef[] {
   const lookupDefs: LookupDef[] = []
 
   let li = 0
@@ -491,10 +498,16 @@ function decodeLookups(lookupsView: Float64Array, lookupIndicesView: Int32Array)
       subscriptIndices
     }
 
-    // Copy the data from the lookup data buffer
+    // Copy the data from the lookup data buffer.  Note that `lookupsView` can be undefined
+    // in the case where the lookup data is empty.
     // TODO: We can use `subarray` here instead of `slice` and let the model implementations
     // copy the data if needed on their side
-    const points = lookupsView.slice(lookupDataOffset, lookupDataOffset + lookupDataLength)
+    let points: Float64Array
+    if (lookupsView) {
+      points = lookupsView.slice(lookupDataOffset, lookupDataOffset + lookupDataLength)
+    } else {
+      points = new Float64Array(0)
+    }
     lookupDefs.push({
       varSpec,
       points

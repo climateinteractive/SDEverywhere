@@ -35,7 +35,11 @@ function verify(runnerKind, run, outputs, inputX, varId, checkValue) {
 
 function verifyDeclaredOutputs(runnerKind, run, outputs, inputX, dataOffset) {
   const expect = offset => (time, inputX) => inputX + (time - 2000 + 1) * 100 + offset
-  verify(runnerKind, run, outputs, inputX, '_a[_a1]', expect(0 + dataOffset))
+  if (run === 4) {
+    verify(runnerKind, run, outputs, inputX, '_a[_a1]', () => undefined)
+  } else {
+    verify(runnerKind, run, outputs, inputX, '_a[_a1]', expect(0 + dataOffset))
+  }
   verify(runnerKind, run, outputs, inputX, '_a[_a2]', expect(1))
   verify(runnerKind, run, outputs, inputX, '_b[_a1,_b1]', expect(2))
   verify(runnerKind, run, outputs, inputX, '_b[_a1,_b2]', expect(3))
@@ -81,6 +85,14 @@ async function runTests(runnerKind, modelRunner) {
 
   // Verify that the data overrides are still in effect
   verifyDeclaredOutputs(runnerKind, 3, outputs, 0, 60)
+
+  // Run the model with empty data override for one variable
+  outputs = await modelRunner.runModel(inputs, outputs, {
+    lookups: [createLookupDef(listing.varSpecs.get('_a_data[_a1]'), [])]
+  })
+
+  // Verify that the empty data override is in effect
+  verifyDeclaredOutputs(runnerKind, 4, outputs, 0, 60)
 
   // Terminate the model runner
   await modelRunner.terminate()

@@ -193,5 +193,14 @@ describe('ReferencedRunModelParams', () => {
 
     // Verify that lookups array is undefined
     expect(params.getLookups()).toBeUndefined()
+
+    // Run again with an empty lookup
+    const emptyLookup = createLookupDef(listing.varSpecs.get('_a'), [])
+    params.updateFromParams(inputs, outputs, {
+      lookups: [emptyLookup]
+    })
+
+    // Verify that lookups array contains the expected values
+    expect(params.getLookups()).toEqual([emptyLookup])
   })
 })

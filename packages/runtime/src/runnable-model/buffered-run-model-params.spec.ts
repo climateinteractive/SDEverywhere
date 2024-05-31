@@ -283,5 +283,15 @@ describe('BufferedRunModelParams', () => {
 
     // Verify that lookups array is undefined
     expect(workerParams.getLookups()).toBeUndefined()
+
+    // Run again with an empty lookup
+    const emptyLookup = createLookupDef(listing.varSpecs.get('_a'), [])
+    runnerParams.updateFromParams(inputs, outputs, {
+      lookups: [emptyLookup]
+    })
+    workerParams.updateFromEncodedBuffer(runnerParams.getEncodedBuffer())
+
+    // Verify that lookups array on the worker side contains the expected values
+    expect(workerParams.getLookups()).toEqual([emptyLookup])
   })
 })
