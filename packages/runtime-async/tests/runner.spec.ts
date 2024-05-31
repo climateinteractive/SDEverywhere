@@ -3,9 +3,43 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
 import type { ModelRunner } from '@sdeverywhere/runtime'
-import { ModelListing, createInputValue } from '@sdeverywhere/runtime'
+import { ModelListing, createInputValue, createLookupDef } from '@sdeverywhere/runtime'
 
 import { spawnAsyncModelRunner } from '../src/runner'
+
+const json = `
+{
+  "dimensions": [
+  ],
+  "variables": [
+    {
+      "refId": "_output_1",
+      "varName": "_output_1",
+      "varIndex": 1
+    },
+    {
+      "refId": "_output_2",
+      "varName": "_output_2",
+      "varIndex": 2
+    },
+    {
+      "refId": "_x",
+      "varName": "_x",
+      "varIndex": 3
+    },
+    {
+      "refId": "_output_1_data",
+      "varName": "_output_1_data",
+      "varIndex": 4
+    },
+    {
+      "refId": "_output_2_data",
+      "varName": "_output_2_data",
+      "varIndex": 5
+    }
+  ]
+}
+`
 
 //
 // Note that the Node worker implementation below must use `require` and relies
@@ -17,7 +51,7 @@ import { spawnAsyncModelRunner } from '../src/runner'
 
 const workerWithMockJsModel = `\
 const path = require('path')
-const { MockJsModel } = require('@sdeverywhere/runtime')
+const { MockJsModel, ModelListing } = require('@sdeverywhere/runtime')
 const { exposeModelWorker } = require('@sdeverywhere/runtime-async')
 
 const startTime = 2000
@@ -28,14 +62,7 @@ function createMockJsModel() {
     initialTime: startTime,
     finalTime: endTime,
     outputVarIds: ['_output_1', '_output_2'],
-    varIdForSpec: varSpec => {
-      switch (varSpec.varIndex) {
-        case 1: return '_output_1'
-        case 2: return '_output_2'
-        case 3: return '_x'
-        default: throw new Error('No var id found for index')
-      }
-    },
+    listing: new ModelListing(\`${json}\`),
     onEvalAux: (vars, lookups) => {
       const time = vars.get('_time')
       if (lookups.size > 0) {
@@ -59,7 +86,7 @@ exposeModelWorker(createMockJsModel)
 
 const workerWithMockWasmModule = `\
 const path = require('path')
-const { MockWasmModule } = require('@sdeverywhere/runtime')
+const { MockWasmModule, ModelListing } = require('@sdeverywhere/runtime')
 const { exposeModelWorker } = require('@sdeverywhere/runtime-async')
 
 const startTime = 2000
@@ -70,6 +97,7 @@ async function createMockWasmModule() {
     initialTime: startTime,
     finalTime: endTime,
     outputVarIds: ['_output_1', '_output_2'],
+    listing: new ModelListing(\`${json}\`),
     onRunModel: (inputs, outputs, lookups, outputIndices) => {
       if (lookups.size > 0) {
         // Pretend that outputs are derived from lookup data
@@ -144,31 +172,42 @@ describe.each([
     expect(outOutputs.getSeriesForVar('_output_2')!.points).toEqual([p(2000, 4), p(2001, 5), p(2002, 6)])
   })
 
-  it('should run the model in a worker (when output var specs are included)', async () => {
-    const json = `
-{
-  "dimensions": [
-  ],
-  "variables": [
-    {
-      "refId": "_output_1",
-      "varName": "_output_1",
-      "varIndex": 1
-    },
-    {
-      "refId": "_output_2",
-      "varName": "_output_2",
-      "varIndex": 2
-    },
-    {
-      "refId": "_x",
-      "varName": "_x",
-      "varIndex": 3
-    }
-  ]
-}
-`
+  it('should run the model (with lookup overrides)', async () => {
+    const listing = new ModelListing(json)
 
+    const inputs = [createInputValue('_input_1', 7), createInputValue('_input_2', 8), createInputValue('_input_3', 9)]
+    let outputs = runner.createOutputs()
+
+    // Run once without lookup overrides
+    outputs = await runner.runModel(inputs, outputs)
+
+    // Verify that outputs contain the original values
+    expect(outputs.getSeriesForVar('_output_1')!.points).toEqual([p(2000, 1), p(2001, 2), p(2002, 3)])
+    expect(outputs.getSeriesForVar('_output_2')!.points).toEqual([p(2000, 4), p(2001, 5), p(2002, 6)])
+
+    // Run again, this time with lookup overrides
+    const lookup1Points = [p(2000, 101), p(2001, 102), p(2002, 103)]
+    const lookup2Points = [p(2000, 104), p(2001, 105), p(2002, 106)]
+    outputs = await runner.runModel(inputs, outputs, {
+      lookups: [
+        createLookupDef(listing.varSpecs.get('_output_1_data')!, lookup1Points),
+        createLookupDef(listing.varSpecs.get('_output_2_data')!, lookup2Points)
+      ]
+    })
+
+    // Verify that outputs contain the values from the overridden lookups
+    expect(outputs.getSeriesForVar('_output_1')!.points).toEqual(lookup1Points)
+    expect(outputs.getSeriesForVar('_output_2')!.points).toEqual(lookup2Points)
+
+    // Run again without lookup overrides
+    outputs = await runner.runModel(inputs, outputs)
+
+    // Verify that the lookup overrides are still in effect from the previous run
+    expect(outputs.getSeriesForVar('_output_1')!.points).toEqual(lookup1Points)
+    expect(outputs.getSeriesForVar('_output_2')!.points).toEqual(lookup2Points)
+  })
+
+  it('should run the model in a worker (when output var specs are included)', async () => {
     const listing = new ModelListing(json)
     const inputs = [7, 8, 9]
     const normalOutputs = runner.createOutputs()
