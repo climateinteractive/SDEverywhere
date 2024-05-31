@@ -1,6 +1,6 @@
 // Copyright (c) 2024 Climate Interactive / New Venture Fund
 
-import type { OutputVarId, VarId } from '../../_shared'
+import type { OutputVarId, VarId, VarSpec } from '../../_shared'
 import { JsModelLookup } from '../../js-model/js-model-lookup'
 import type { ModelListing } from '../../model-listing'
 import type { WasmModule } from '../wasm-module'
@@ -43,14 +43,22 @@ export class MockWasmModule implements WasmModule {
   private readonly allocs: Map<number, number> = new Map()
 
   private readonly lookups: Map<VarId, JsModelLookup> = new Map()
+
   private listing: ModelListing
 
   public readonly onRunModel: OnRunModel
 
-  constructor(options: { initialTime: number; finalTime: number; outputVarIds: string[]; onRunModel: OnRunModel }) {
+  constructor(options: {
+    initialTime: number
+    finalTime: number
+    outputVarIds: string[]
+    listing?: ModelListing
+    onRunModel: OnRunModel
+  }) {
     this.initialTime = options.initialTime
     this.finalTime = options.finalTime
     this.outputVarIds = options.outputVarIds
+    this.listing = options.listing
     this.onRunModel = options.onRunModel
 
     this.heap = new ArrayBuffer(8192)
@@ -60,6 +68,16 @@ export class MockWasmModule implements WasmModule {
 
   setListing(listing: ModelListing) {
     this.listing = listing
+  }
+
+  varIdForSpec(varSpec: VarSpec): VarId {
+    for (const [listingVarId, listingSpec] of this.listing.varSpecs) {
+      // TODO: This doesn't compare subscripts yet
+      if (listingSpec.varIndex === varSpec.varIndex) {
+        return listingVarId
+      }
+    }
+    return undefined
   }
 
   // from WasmModule interface
@@ -74,16 +92,10 @@ export class MockWasmModule implements WasmModule {
         return () => 1
       case 'setLookup':
         return (varIndex: number, _subIndicesAddress: number, pointsAddress: number, numPoints: number) => {
-          let varId: VarId
-          for (const [listingVarId, listingSpec] of this.listing.varSpecs) {
-            // TODO: This doesn't compare subscripts yet
-            if (listingSpec.varIndex === varIndex) {
-              varId = listingVarId
-              break
-            }
-          }
+          // TODO: This doesn't check subIndices yet
+          const varId = this.varIdForSpec({ varIndex })
           if (varId === undefined) {
-            throw new Error(`No lookup variable found for index ${varIndex}`)
+            throw new Error(`No lookup variable found for var index ${varIndex}`)
           }
           // Note that we create a copy of the points array, since it may be reused
           const points = new Float64Array(this.getHeapView('float64', pointsAddress) as Float64Array)

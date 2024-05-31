@@ -10,12 +10,6 @@ import { JsModelLookup } from '../js-model-lookup'
  * @hidden This type is not part of the public API; it is exposed only for use in
  * tests in the runtime-async package.
  */
-export type VarIdForSpec = (varSpec: VarSpec) => VarId | undefined
-
-/**
- * @hidden This type is not part of the public API; it is exposed only for use in
- * tests in the runtime-async package.
- */
 export type OnEvalAux = (vars: Map<VarId, number>, lookups: Map<VarId, JsModelLookup>) => void
 
 /**
@@ -42,13 +36,12 @@ export class MockJsModel implements JsModel {
   private listing: ModelListing
 
   public readonly onEvalAux: OnEvalAux
-  public readonly varIdForSpec: VarIdForSpec
 
   constructor(options: {
     initialTime: number
     finalTime: number
     outputVarIds: OutputVarId[]
-    varIdForSpec?: VarIdForSpec
+    listing?: ModelListing
     onEvalAux: OnEvalAux
   }) {
     this.outputVarIds = options.outputVarIds
@@ -56,26 +49,22 @@ export class MockJsModel implements JsModel {
     this.initialTime = options.initialTime
     this.finalTime = options.finalTime
     this.outputVarIds = options.outputVarIds
-    if (options.varIdForSpec) {
-      // Use the provided lookup function
-      this.varIdForSpec = options.varIdForSpec
-    } else {
-      // Use a default lookup function that relies on the `ModelListing`
-      this.varIdForSpec = (varSpec: VarSpec) => {
-        for (const [listingVarId, listingSpec] of this.listing.varSpecs) {
-          // TODO: This doesn't compare subscripts yet
-          if (listingSpec.varIndex === varSpec.varIndex) {
-            return listingVarId
-          }
-        }
-        return undefined
-      }
-    }
+    this.listing = options.listing
     this.onEvalAux = options.onEvalAux
   }
 
   setListing(listing: ModelListing) {
     this.listing = listing
+  }
+
+  varIdForSpec(varSpec: VarSpec): VarId {
+    for (const [listingVarId, listingSpec] of this.listing.varSpecs) {
+      // TODO: This doesn't compare subscripts yet
+      if (listingSpec.varIndex === varSpec.varIndex) {
+        return listingVarId
+      }
+    }
+    return undefined
   }
 
   // from JsModel interface
