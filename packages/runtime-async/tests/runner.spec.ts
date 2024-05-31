@@ -36,20 +36,20 @@ function createMockJsModel() {
         default: throw new Error('No var id found for index')
       }
     },
-    onEvalAux: (vars /*, lookups*/) => {
+    onEvalAux: (vars, lookups) => {
       const time = vars.get('_time')
-      // if (lookups.size > 0) {
-      //   const lookup1 = lookups.get('_output_1_data')
-      //   const lookup2 = lookups.get('_output_2_data')
-      //   expect(lookup1).toBeDefined()
-      //   expect(lookup2).toBeDefined()
-      //   vars.set('_output_1', lookup1.getValueForX(time, 'interpolate'))
-      //   vars.set('_output_2', lookup2.getValueForX(time, 'interpolate'))
-      // } else {
-      vars.set('_output_1', time - startTime + 1)
-      vars.set('_output_2', time - startTime + 4)
-      vars.set('_x', time - startTime + 7)
-      // }
+      if (lookups.size > 0) {
+        const lookup1 = lookups.get('_output_1_data')
+        const lookup2 = lookups.get('_output_2_data')
+        // expect(lookup1).toBeDefined()
+        // expect(lookup2).toBeDefined()
+        vars.set('_output_1', lookup1.getValueForX(time, 'interpolate'))
+        vars.set('_output_2', lookup2.getValueForX(time, 'interpolate'))
+      } else {
+        vars.set('_output_1', time - startTime + 1)
+        vars.set('_output_2', time - startTime + 4)
+        vars.set('_x', time - startTime + 7)
+      }
     }
   })
 }
@@ -70,26 +70,26 @@ async function createMockWasmModule() {
     initialTime: startTime,
     finalTime: endTime,
     outputVarIds: ['_output_1', '_output_2'],
-    onRunModel: (inputs, outputs, /*lookups,*/ outputIndices) => {
-      // if (lookups.size > 0) {
-      //   // Pretend that outputs are derived from lookup data
-      //   const lookup1 = lookups.get('_output_1_data')
-      //   const lookup2 = lookups.get('_output_2_data')
-      //   expect(lookup1).toBeDefined()
-      //   expect(lookup2).toBeDefined()
-      //   for (let i = 0; i < 3; i++) {
-      //     outputs[i] = lookup1.getValueForX(2000 + i, 'interpolate')
-      //     outputs[i + 3] = lookup2.getValueForX(2000 + i, 'interpolate')
-      //   }
-      // } else {
-      if (outputIndices === undefined) {
-        // Store 3 values for the _output_1, and 3 for _output_2
-        outputs.set([1, 2, 3, 4, 5, 6])
+    onRunModel: (inputs, outputs, lookups, outputIndices) => {
+      if (lookups.size > 0) {
+        // Pretend that outputs are derived from lookup data
+        const lookup1 = lookups.get('_output_1_data')
+        const lookup2 = lookups.get('_output_2_data')
+        // expect(lookup1).toBeDefined()
+        // expect(lookup2).toBeDefined()
+        for (let i = 0; i < 3; i++) {
+          outputs[i] = lookup1.getValueForX(2000 + i, 'interpolate')
+          outputs[i + 3] = lookup2.getValueForX(2000 + i, 'interpolate')
+        }
       } else {
-        // Store 3 values for each of the three variables
-        outputs.set([7, 8, 9, 4, 5, 6, 1, 2, 3])
+        if (outputIndices === undefined) {
+          // Store 3 values for the _output_1, and 3 for _output_2
+          outputs.set([1, 2, 3, 4, 5, 6])
+        } else {
+          // Store 3 values for each of the three variables
+          outputs.set([7, 8, 9, 4, 5, 6, 1, 2, 3])
+        }
       }
-      // }
     }
   })
 }
