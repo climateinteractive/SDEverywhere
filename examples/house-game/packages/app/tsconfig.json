@@ -1,0 +1,28 @@
+{
+  "compilerOptions": {
+    // We specify the top-level directory as the root, since TypeScript requires
+    // all referenced files to live underneath the root directory
+    "rootDir": "../..",
+    // Make `paths` in the tsconfig files relative to the `app` directory
+    "baseUrl": ".",
+    // Configure path aliases
+    "paths": {
+      // The following lines enable path aliases within the app
+      "@prep/*": ["../../sde-prep/*"]
+    },
+    // XXX: The following two lines work around a TS/VSCode issue where this config
+    // file shows an error ("Cannot write file appcfg.js because it would overwrite
+    // input file")
+    "outDir": "/dev/shm",
+    "noEmit": true,
+    "declaration": false,
+    "target": "esnext",
+    "module": "esnext",
+    "moduleResolution": "node",
+    "allowJs": true,
+    "noImplicitAny": false,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "types": ["svelte", "vite/client"]
+  }
+}

@@ -1,0 +1,100 @@
+{UTF-8}
+replacement houses = demolishing
+  ~  house/Month
+  ~    |
+
+planning data ~~|
+
+planning = GET DATA BETWEEN TIMES(planning data, Time, -1)
+  ~  house/Month
+  ~ Originally: GAME( MAX( 0, replacement houses + (gap in houses / time to respond to gap)) )
+  ~    |
+
+average house life = 600
+  ~  Month
+  ~    |
+
+building = Planned Houses / time to plan to build
+  ~  house/Month
+  ~    |
+
+completing = Houses In Construction / time to build houses
+  ~  house/Month
+  ~    |
+
+demolishing = Houses Completed / average house life
+  ~  house/Month
+  ~    |
+
+gap in houses = (number of houses required - Houses Completed) * -1
+  ~  house
+  ~    |
+
+Houses Completed = INTEG(+completing-demolishing, initial houses)
+  ~  house
+  ~    |
+
+Houses In Construction = INTEG(building-completing, building * time to build houses)
+  ~  house
+  ~    |
+
+initial houses = 1000
+  ~  house
+  ~    |
+
+additional houses required time = 30
+  ~  Month
+  ~    |
+
+additional houses required value = 40
+  ~  house
+  ~    |
+
+number of houses required =
+   initial houses + STEP ( additional houses required value, additional houses required time )
+  ~  house
+  ~    |
+
+Planned Houses = INTEG(+planning - building, planning * time to plan to build)
+  ~  house
+  ~    |
+
+time to build houses = 6
+  ~  Month
+  ~    |
+
+time to plan to build=
+   3
+  ~  Month
+  ~    |
+
+time to respond to gap=
+   8
+  ~  Month
+  ~    |
+
+********************************************************
+  .Control
+********************************************************~
+    Simulation Control Paramaters
+  |
+
+FINAL TIME  = 100
+  ~  Month
+  ~    The final time for the simulation.
+  |
+
+INITIAL TIME  = 0
+  ~  Month
+  ~    The initial time for the simulation.
+  |
+
+SAVEPER  = 0.5
+  ~  Month
+  ~    The frequency with which output is stored.
+  |
+
+TIME STEP  = 0.25
+  ~  Month
+  ~    The time step for the simulation.
+  |
