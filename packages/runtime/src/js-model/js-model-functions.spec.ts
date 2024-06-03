@@ -48,7 +48,32 @@ describe('JsModelFunctions', () => {
   })
 
   it('should expose GAME', () => {
-    expect(fns.GAME(1)).toBe(1)
+    // Verify that it returns the `x` value when `inputs` is undefined
+    expect(fns.GAME(undefined, 10)).toBe(10)
+
+    // Verify that it returns the `x` value when `inputs` is empty
+    const empty = fns.createLookup(0, [])
+    expect(fns.GAME(empty, 10)).toBe(10)
+
+    // Verify that it returns the `x` value when current time is earlier than the
+    // first defined input point
+    const lookup = fns.createLookup(2, [1, 2, 3, 6])
+    expect(fnsAtTime(0.0).GAME(lookup, 10)).toBe(10)
+    expect(fnsAtTime(0.5).GAME(lookup, 10)).toBe(10)
+
+    // Verify that it returns the correct value from `inputs` when the time
+    // is within the range of the lookup points
+    expect(fnsAtTime(1.0).GAME(lookup, 10)).toBe(2)
+    expect(fnsAtTime(1.5).GAME(lookup, 10)).toBe(2)
+    expect(fnsAtTime(2.0).GAME(lookup, 10)).toBe(2)
+    expect(fnsAtTime(2.5).GAME(lookup, 10)).toBe(2)
+    expect(fnsAtTime(3.0).GAME(lookup, 10)).toBe(6)
+
+    // Verify that it holds the last value when the time is greater than the
+    // last defined input point
+    expect(fnsAtTime(3.5).GAME(lookup, 10)).toBe(6)
+    expect(fnsAtTime(4.0).GAME(lookup, 10)).toBe(6)
+    expect(fnsAtTime(100).GAME(lookup, 10)).toBe(6)
   })
 
   // TODO

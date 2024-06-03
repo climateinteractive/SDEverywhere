@@ -34,7 +34,7 @@ export interface JsModelFunctions {
   ARCTAN(x: number): number
   COS(x: number): number
   EXP(x: number): number
-  GAME(x: number): number
+  GAME(inputs: JsModelLookup, x: number): number
   // TODO
   // GAMMA_LN(x: number): number
   INTEG(value: number, rate: number): number
@@ -119,9 +119,8 @@ export function getJsModelFunctions(): JsModelFunctions {
       return Math.exp(x)
     },
 
-    GAME(x: number): number {
-      // TODO: For now, the GAME function is a no-op (returns the input value)
-      return x
+    GAME(inputs: JsModelLookup, x: number): number {
+      return inputs ? inputs.getValueForGameTime(ctx.currentTime, x) : x
     },
 
     // GAMMA_LN(): number {
