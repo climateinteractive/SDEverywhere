@@ -16,6 +16,7 @@ import {
 
 import Model from './model.js'
 import { generateDelayVariables } from './read-equation-fn-delay.js'
+import { generateGameVariables } from './read-equation-fn-game.js'
 import { generateNpvVariables } from './read-equation-fn-npv.js'
 import { generateSmoothVariables } from './read-equation-fn-smooth.js'
 import { generateTrendVariables } from './read-equation-fn-trend.js'
@@ -483,47 +484,11 @@ function visitFunctionCall(v, callExpr, context) {
       argModes[2] = 'init'
       break
 
-    case '_GAME': {
+    case '_GAME':
       validateCallDepth(callExpr, context)
       validateCallArgs(callExpr, 1)
-
-      // If the LHS includes subscripts, use those same subscripts when generating
-      // the new lookup variable
-      let subs
-      if (context.eqnLhs.varDef.subscriptRefs) {
-        const subNames = context.eqnLhs.varDef.subscriptRefs.map(subRef => subRef.subName)
-        subs = `[${subNames.join(',')}]`
-      } else {
-        subs = ''
-      }
-
-      // Add a reference to the synthesized game inputs lookup
-      const gameLookupVarName = context.eqnLhs.varDef.varName + ' game inputs'
-      const gameLookupVarId = canonicalName(gameLookupVarName)
-      v.gameLookupVarName = gameLookupVarId
-      if (v.referencedLookupVarNames) {
-        v.referencedLookupVarNames.push(gameLookupVarId)
-      } else {
-        v.referencedLookupVarNames = [gameLookupVarId]
-      }
-
-      // Define a variable for the synthesized game inputs lookup
-      const gameLookupVars = context.defineVariable(`${gameLookupVarName}${subs} ~~|`)
-
-      // Normally `defineVariable` sets `includeInOutput` to false for generated
-      // variables, but we want the generated lookup variable to appear in the
-      // model listing so that the user can reference it, so set `includeInOutput`
-      // to true.  Also change the `varType` to 'lookup' instead of 'data'.  We
-      // will declare a `Lookup` variable in the generated code, but unlike a
-      // normal lookup, we won't initialize it with data by default (it can only
-      // be updated at runtime).
-      gameLookupVars.forEach(v => {
-        v.includeInOutput = true
-        v.varType = 'lookup'
-        v.varSubtype = 'gameInputs'
-      })
+      generateGameVariables(v, callExpr, context)
       break
-    }
 
     case '_GET_DIRECT_CONSTANTS': {
       validateCallDepth(callExpr, context)
