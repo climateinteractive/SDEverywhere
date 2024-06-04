@@ -1078,15 +1078,52 @@ describe('generateEquation (Vensim -> JS)', () => {
     expect(genJS(vars.get('_y'))).toEqual(['_y = fns.EXP(_x);'])
   })
 
-  // TODO: We do not currently have full support for the GAME function, so skip this test for now
-  it.skip('should work for GAME function', () => {
+  it('should work for GAME function (no dimensions)', () => {
     const vars = readInlineModel(`
       x = 1 ~~|
       y = GAME(x) ~~|
     `)
-    expect(vars.size).toBe(2)
+    expect(vars.size).toBe(3)
     expect(genJS(vars.get('_x'))).toEqual(['_x = 1.0;'])
-    expect(genJS(vars.get('_y'))).toEqual(['_y = fns.GAME(_x);'])
+    expect(genJS(vars.get('_y'))).toEqual(['_y = fns.GAME(_y_game_inputs, _x);'])
+  })
+
+  it('should work for GAME function (1D)', () => {
+    const vars = readInlineModel(`
+      DimA: A1, A2 ~~|
+      x[DimA] = 1, 2 ~~|
+      y[DimA] = GAME(x[DimA]) ~~|
+    `)
+    expect(vars.size).toBe(4)
+    expect(genJS(vars.get('_x[_a1]'))).toEqual(['_x[0] = 1.0;'])
+    expect(genJS(vars.get('_x[_a2]'))).toEqual(['_x[1] = 2.0;'])
+    expect(genJS(vars.get('_y'))).toEqual([
+      'for (let i = 0; i < 2; i++) {',
+      '_y[i] = fns.GAME(_y_game_inputs[i], _x[i]);',
+      '}'
+    ])
+  })
+
+  it('should work for GAME function (2D)', () => {
+    const vars = readInlineModel(`
+      DimA: A1, A2 ~~|
+      DimB: B1, B2 ~~|
+      a[DimA] = 1, 2 ~~|
+      b[DimB] = 1, 2 ~~|
+      y[DimA, DimB] = GAME(a[DimA] + b[DimB]) ~~|
+    `)
+    expect(vars.size).toBe(6)
+    expect(genJS(vars.get('_a[_a1]'))).toEqual(['_a[0] = 1.0;'])
+    expect(genJS(vars.get('_a[_a2]'))).toEqual(['_a[1] = 2.0;'])
+    expect(genJS(vars.get('_b[_b1]'))).toEqual(['_b[0] = 1.0;'])
+    expect(genJS(vars.get('_b[_b2]'))).toEqual(['_b[1] = 2.0;'])
+    expect(genJS(vars.get('_y'))).toEqual([
+      'for (let i = 0; i < 2; i++) {',
+      'for (let j = 0; j < 2; j++) {',
+      '_y[i][j] = fns.GAME(_y_game_inputs[i][j], _a[i] + _b[j]);',
+      '}',
+      '}'
+    ])
   })
 
   it('should work for GAMMA LN function', () => {

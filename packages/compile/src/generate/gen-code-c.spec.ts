@@ -89,6 +89,7 @@ describe('generateC (Vensim -> C)', () => {
       b[DimA, DimB] = b data[DimA, DimB] ~~|
       c data ~~|
       c = c data ~~|
+      d[DimA] = GAME(x) ~~|
       w = WITH LOOKUP(x, ( [(0,0)-(2,2)], (0,0),(0.1,0.01),(0.5,0.7),(1,1),(1.5,1.2),(2,1.3) )) ~~|
       INITIAL TIME = 0 ~~|
       FINAL TIME = 2 ~~|
@@ -97,7 +98,7 @@ describe('generateC (Vensim -> C)', () => {
     `
     const code = readInlineModelAndGenerateC(mdl, {
       inputVarNames: ['input'],
-      outputVarNames: ['x', 'y', 'z', 'a[A1]', 'b[A2,B1]', 'c', 'w'],
+      outputVarNames: ['x', 'y', 'z', 'a[A1]', 'b[A2,B1]', 'c', 'd[A1]', 'w'],
       extData
     })
     expect(code).toEqual(`\
@@ -108,9 +109,11 @@ Lookup* __lookup1;
 Lookup* _a_data[2];
 Lookup* _b_data[2][2];
 Lookup* _c_data;
+Lookup* _d_game_inputs[2];
 double _a[2];
 double _b[2][2];
 double _c;
+double _d[2];
 double _final_time;
 double _initial_time;
 double _input;
@@ -122,7 +125,7 @@ double _y;
 double _z;
 
 // Internal variables
-const int numOutputs = 7;
+const int numOutputs = 8;
 #define SDE_USE_OUTPUT_INDICES 0
 #define SDE_MAX_OUTPUT_INDICES 1000
 const int maxOutputIndices = SDE_USE_OUTPUT_INDICES ? SDE_MAX_OUTPUT_INDICES : 0;
@@ -222,6 +225,10 @@ void evalAux0() {
   _x = _input;
   // w = WITH LOOKUP(x,([(0,0)-(2,2)],(0,0),(0.1,0.01),(0.5,0.7),(1,1),(1.5,1.2),(2,1.3)))
   _w = _WITH_LOOKUP(_x, __lookup1);
+  // d[DimA] = GAME(x)
+  for (size_t i = 0; i < 2; i++) {
+  _d[i] = _GAME(_d_game_inputs[i], _x);
+  }
   // y = :NOT: x
   _y = !_x;
   // z = ABS(y)
@@ -275,12 +282,15 @@ void replaceLookup(Lookup** lookup, double* points, size_t numPoints) {
 void setLookup(size_t varIndex, size_t* subIndices, double* points, size_t numPoints) {
   switch (varIndex) {
     case 6:
-      replaceLookup(&_a_data[subIndices[0]], points, numPoints);
+      replaceLookup(&_d_game_inputs[subIndices[0]], points, numPoints);
       break;
     case 7:
-      replaceLookup(&_b_data[subIndices[0]][subIndices[1]], points, numPoints);
+      replaceLookup(&_a_data[subIndices[0]], points, numPoints);
       break;
     case 8:
+      replaceLookup(&_b_data[subIndices[0]][subIndices[1]], points, numPoints);
+      break;
+    case 9:
       replaceLookup(&_c_data, points, numPoints);
       break;
     default:
@@ -289,7 +299,7 @@ void setLookup(size_t varIndex, size_t* subIndices, double* points, size_t numPo
 }
 
 const char* getHeader() {
-  return "x\\ty\\tz\\ta[A1]\\tb[A2,B1]\\tc\\tw";
+  return "x\\ty\\tz\\ta[A1]\\tb[A2,B1]\\tc\\td[A1]\\tw";
 }
 
 void storeOutputData() {
@@ -299,6 +309,7 @@ void storeOutputData() {
   outputVar(_a[0]);
   outputVar(_b[1][0]);
   outputVar(_c);
+  outputVar(_d[0]);
   outputVar(_w);
 }
 
@@ -320,25 +331,28 @@ void storeOutput(size_t varIndex, size_t subIndex0, size_t subIndex1, size_t sub
     case 5:
       outputVar(_input);
       break;
-    case 9:
+    case 10:
       outputVar(_a[subIndex0]);
       break;
-    case 10:
+    case 11:
       outputVar(_b[subIndex0][subIndex1]);
       break;
-    case 11:
+    case 12:
       outputVar(_c);
       break;
-    case 12:
+    case 13:
       outputVar(_x);
       break;
-    case 13:
+    case 14:
       outputVar(_w);
       break;
-    case 14:
+    case 15:
+      outputVar(_d[subIndex0]);
+      break;
+    case 16:
       outputVar(_y);
       break;
-    case 15:
+    case 17:
       outputVar(_z);
       break;
     default:

@@ -182,7 +182,6 @@ function generateFunctionCall(callExpr, ctx) {
     case '_ARCTAN':
     case '_COS':
     case '_EXP':
-    case '_GAME':
     case '_GAMMA_LN':
     case '_IF_THEN_ELSE':
     case '_INTEGER':
@@ -222,7 +221,7 @@ function generateFunctionCall(callExpr, ctx) {
     //
     // Lookup functions
     //
-    // Each of these functions is implemented with a C function (like the simple functions above),
+    // Each of these functions is implemented with a C/JS function (like the simple functions above),
     // but we need to handle the first argument specially, otherwise we would get the default handling
     // for data variables, which generates a lookup call (see 'variable-ref' case in `generateExpr`).
     //
@@ -233,10 +232,18 @@ function generateFunctionCall(callExpr, ctx) {
     case '_LOOKUP_FORWARD':
     case '_LOOKUP_INVERT': {
       // For LOOKUP* functions, the first argument must be a reference to the lookup variable.  Emit
-      // a C function call with a generated C expression for each remaining argument.
+      // a C/JS function call with a generated C/JS expression for each remaining argument.
       const cVarRef = ctx.cVarRef(callExpr.args[0])
       const cArgs = callExpr.args.slice(1).map(arg => generateExpr(arg, ctx))
       return `${fnRef(fnId, ctx)}(${cVarRef}, ${cArgs.join(', ')})`
+    }
+
+    case '_GAME': {
+      // For the GAME function, emit a C/JS function call that has the synthesized game inputs lookup
+      // as the first argument, followed by the default value argument from the function call
+      const cLookupArg = ctx.cVarRefWithLhsSubscripts(ctx.variable.gameLookupVarName)
+      const cDefaultArg = generateExpr(callExpr.args[0], ctx)
+      return `${fnRef(fnId, ctx)}(${cLookupArg}, ${cDefaultArg})`
     }
 
     //

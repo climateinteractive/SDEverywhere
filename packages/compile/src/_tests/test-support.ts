@@ -69,7 +69,7 @@ export interface Variable {
   refId: string
   varType: VariableType
   // TODO: Remove empty string variant
-  varSubtype: '' | 'fixedDelay' | 'depreciation'
+  varSubtype: '' | 'fixedDelay' | 'depreciation' | 'gameInputs'
   referencedFunctionNames?: string[]
   referencedLookupVarNames?: string[]
   references: string[]
@@ -83,6 +83,7 @@ export interface Variable {
   delayTimeVarName: string
   fixedDelayVarName: string
   depreciationVarName: string
+  gameLookupVarName: string
   includeInOutput: boolean
 }
 

@@ -128,6 +128,8 @@ class Context {
       // Inhibit output for generated variables
       v.includeInOutput = false
     })
+
+    return vars
   }
 
   /**
@@ -383,16 +385,6 @@ function visitFunctionCall(v, callExpr, context) {
       validateCallArgs(callExpr, 1)
       break
 
-    // TODO: We do not currently have full support for the GAME function, so report a warning for now
-    case '_GAME':
-      if (process.env.SDE_REPORT_UNSUPPORTED_FUNCTIONS !== '0') {
-        console.warn(
-          `WARNING: The GAME function (used in the definition of '${v.modelLHS}') is currently implemented as a no-op (it returns the input value).`
-        )
-      }
-      validateCallArgs(callExpr, 1)
-      break
-
     //
     //
     // 2-argument functions...
@@ -490,6 +482,48 @@ function visitFunctionCall(v, callExpr, context) {
       argModes[1] = 'init'
       argModes[2] = 'init'
       break
+
+    case '_GAME': {
+      validateCallDepth(callExpr, context)
+      validateCallArgs(callExpr, 1)
+
+      // If the LHS includes subscripts, use those same subscripts when generating
+      // the new lookup variable
+      let subs
+      if (context.eqnLhs.varDef.subscriptRefs) {
+        const subNames = context.eqnLhs.varDef.subscriptRefs.map(subRef => subRef.subName)
+        subs = `[${subNames.join(',')}]`
+      } else {
+        subs = ''
+      }
+
+      // Add a reference to the synthesized game inputs lookup
+      const gameLookupVarName = context.eqnLhs.varDef.varName + ' game inputs'
+      const gameLookupVarId = canonicalName(gameLookupVarName)
+      v.gameLookupVarName = gameLookupVarId
+      if (v.referencedLookupVarNames) {
+        v.referencedLookupVarNames.push(gameLookupVarId)
+      } else {
+        v.referencedLookupVarNames = [gameLookupVarId]
+      }
+
+      // Define a variable for the synthesized game inputs lookup
+      const gameLookupVars = context.defineVariable(`${gameLookupVarName}${subs} ~~|`)
+
+      // Normally `defineVariable` sets `includeInOutput` to false for generated
+      // variables, but we want the generated lookup variable to appear in the
+      // model listing so that the user can reference it, so set `includeInOutput`
+      // to true.  Also change the `varType` to 'lookup' instead of 'data'.  We
+      // will declare a `Lookup` variable in the generated code, but unlike a
+      // normal lookup, we won't initialize it with data by default (it can only
+      // be updated at runtime).
+      gameLookupVars.forEach(v => {
+        v.includeInOutput = true
+        v.varType = 'lookup'
+        v.varSubtype = 'gameInputs'
+      })
+      break
+    }
 
     case '_GET_DIRECT_CONSTANTS': {
       validateCallDepth(callExpr, context)

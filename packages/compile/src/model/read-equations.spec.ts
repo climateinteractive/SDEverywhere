@@ -1268,6 +1268,117 @@ describe('readEquations', () => {
     ])
   })
 
+  it('should work for GAME function (no dimensions)', () => {
+    const vars = readInlineModel(`
+      x = 1 ~~|
+      y = GAME(x) ~~|
+    `)
+    expect(vars).toEqual([
+      v('x', '1', {
+        refId: '_x',
+        varType: 'const'
+      }),
+      v('y', 'GAME(x)', {
+        gameLookupVarName: '_y_game_inputs',
+        refId: '_y',
+        referencedFunctionNames: ['__game'],
+        referencedLookupVarNames: ['_y_game_inputs'],
+        references: ['_x']
+      }),
+      v('y game inputs', '', {
+        refId: '_y_game_inputs',
+        varType: 'lookup',
+        varSubtype: 'gameInputs'
+      })
+    ])
+  })
+
+  it('should work for GAME function (1D)', () => {
+    const vars = readInlineModel(`
+      DimA: A1, A2 ~~|
+      x[DimA] = 1, 2 ~~|
+      y[DimA] = GAME(x[DimA]) ~~|
+    `)
+    expect(vars).toEqual([
+      v('x[DimA]', '1,2', {
+        refId: '_x[_a1]',
+        separationDims: ['_dima'],
+        subscripts: ['_a1'],
+        varType: 'const'
+      }),
+      v('x[DimA]', '1,2', {
+        refId: '_x[_a2]',
+        separationDims: ['_dima'],
+        subscripts: ['_a2'],
+        varType: 'const'
+      }),
+      v('y[DimA]', 'GAME(x[DimA])', {
+        gameLookupVarName: '_y_game_inputs',
+        refId: '_y',
+        referencedFunctionNames: ['__game'],
+        referencedLookupVarNames: ['_y_game_inputs'],
+        references: ['_x[_a1]', '_x[_a2]'],
+        subscripts: ['_dima']
+      }),
+      v('y game inputs[DimA]', '', {
+        refId: '_y_game_inputs',
+        subscripts: ['_dima'],
+        varType: 'lookup',
+        varSubtype: 'gameInputs'
+      })
+    ])
+  })
+
+  it('should work for GAME function (2D)', () => {
+    const vars = readInlineModel(`
+      DimA: A1, A2 ~~|
+      DimB: B1, B2 ~~|
+      a[DimA] = 1, 2 ~~|
+      b[DimB] = 1, 2 ~~|
+      y[DimA, DimB] = GAME(a[DimA] + b[DimB]) ~~|
+    `)
+    expect(vars).toEqual([
+      v('a[DimA]', '1,2', {
+        refId: '_a[_a1]',
+        separationDims: ['_dima'],
+        subscripts: ['_a1'],
+        varType: 'const'
+      }),
+      v('a[DimA]', '1,2', {
+        refId: '_a[_a2]',
+        separationDims: ['_dima'],
+        subscripts: ['_a2'],
+        varType: 'const'
+      }),
+      v('b[DimB]', '1,2', {
+        refId: '_b[_b1]',
+        separationDims: ['_dimb'],
+        subscripts: ['_b1'],
+        varType: 'const'
+      }),
+      v('b[DimB]', '1,2', {
+        refId: '_b[_b2]',
+        separationDims: ['_dimb'],
+        subscripts: ['_b2'],
+        varType: 'const'
+      }),
+      v('y[DimA,DimB]', 'GAME(a[DimA]+b[DimB])', {
+        gameLookupVarName: '_y_game_inputs',
+        refId: '_y',
+        referencedFunctionNames: ['__game'],
+        referencedLookupVarNames: ['_y_game_inputs'],
+        references: ['_a[_a1]', '_a[_a2]', '_b[_b1]', '_b[_b2]'],
+        subscripts: ['_dima', '_dimb']
+      }),
+      v('y game inputs[DimA,DimB]', '', {
+        refId: '_y_game_inputs',
+        subscripts: ['_dima', '_dimb'],
+        varType: 'lookup',
+        varSubtype: 'gameInputs'
+      })
+    ])
+  })
+
   it('should work for GAMMA LN function', () => {
     const vars = readInlineModel(`
       x = 1 ~~|
