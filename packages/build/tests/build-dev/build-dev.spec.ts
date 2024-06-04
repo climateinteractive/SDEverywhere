@@ -1,13 +1,15 @@
 // Copyright (c) 2022 Climate Interactive / New Venture Fund
 
-import { resolve as resolvePath } from 'path'
+import { rmSync } from 'node:fs'
+import { resolve as resolvePath } from 'node:path'
 
-import { describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 
 import type { ModelSpec, UserConfig } from '../../src'
 import { build } from '../../src'
 
 import { buildOptions } from '../_shared/build-options'
+import {} from 'vitest'
 
 const modelSpec: ModelSpec = {
   inputs: [{ varName: 'Y', defaultValue: 0, minValue: -10, maxValue: 10 }],
@@ -16,6 +18,11 @@ const modelSpec: ModelSpec = {
 }
 
 describe('build in development mode', () => {
+  beforeEach(() => {
+    const prepDir = resolvePath(__dirname, 'sde-prep')
+    rmSync(prepDir, { recursive: true, force: true })
+  })
+
   it('should return undefined exit code', async () => {
     const userConfig: UserConfig = {
       rootDir: resolvePath(__dirname, '..'),

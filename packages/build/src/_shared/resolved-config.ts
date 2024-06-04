@@ -50,6 +50,12 @@ export interface ResolvedConfig {
   genFormat: 'js' | 'c'
 
   /**
+   * The absolute path to the JSON file that will be written by the build process that
+   * lists all dimensions and variables in the model.
+   */
+  outListingFile?: string
+
+  /**
    * The path to the `@sdeverywhere/cli` package.  This is currently only used to get
    * access to the files in the `src/c` directory.
    * @hidden This should be removed once we have tighter integration with the `cli` package.
