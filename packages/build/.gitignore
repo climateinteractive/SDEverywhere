@@ -1,3 +1,4 @@
 dist
 docs/entry.md
 sde-prep
+tests/build-prod/outputs

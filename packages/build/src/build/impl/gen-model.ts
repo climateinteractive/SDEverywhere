@@ -1,7 +1,7 @@
 // Copyright (c) 2022 Climate Interactive / New Venture Fund
 
 import { copyFile, readdir, readFile, writeFile } from 'fs/promises'
-import { join as joinPath } from 'path'
+import { basename, dirname, join as joinPath } from 'path'
 
 import { log } from '../../_shared/log'
 
@@ -85,6 +85,17 @@ export async function generateModel(context: BuildContext, plugins: Plugin[]): P
     const outputJsFile = 'generated-model.js'
     const stagedOutputJsPath = context.prepareStagedFile('model', outputJsFile, prepDir, outputJsFile)
     await copyFile(generatedCodePath, stagedOutputJsPath)
+  }
+
+  if (config.outListingFile) {
+    // Copy the model listing file
+    const srcListingJsonPath = joinPath(prepDir, 'build', 'processed.json')
+    const stagedDir = 'model'
+    const stagedFile = 'listing.json'
+    const dstDir = dirname(config.outListingFile)
+    const dstFile = basename(config.outListingFile)
+    const stagedListingJsonPath = context.prepareStagedFile(stagedDir, stagedFile, dstDir, dstFile)
+    await copyFile(srcListingJsonPath, stagedListingJsonPath)
   }
 
   const t1 = performance.now()

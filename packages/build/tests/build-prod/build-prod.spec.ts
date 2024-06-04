@@ -1,8 +1,9 @@
 // Copyright (c) 2022 Climate Interactive / New Venture Fund
 
-import { resolve as resolvePath } from 'path'
+import { existsSync, rmSync } from 'node:fs'
+import { join as joinPath, resolve as resolvePath } from 'node:path'
 
-import { describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 
 import type { ModelSpec, Plugin, UserConfig } from '../../src'
 import { build } from '../../src'
@@ -56,6 +57,59 @@ const plugin = (num: number, calls: string[]) => {
 }
 
 describe('build in production mode', () => {
+  beforeEach(() => {
+    const prepDir = resolvePath(__dirname, 'sde-prep')
+    rmSync(prepDir, { recursive: true, force: true })
+
+    const outputsDir = resolvePath(__dirname, 'outputs')
+    rmSync(outputsDir, { recursive: true, force: true })
+  })
+
+  it('should write listing.json file (when absolute path is provided)', async () => {
+    const userConfig: UserConfig = {
+      genFormat: 'c',
+      rootDir: resolvePath(__dirname, '..'),
+      prepDir: resolvePath(__dirname, 'sde-prep'),
+      modelFiles: [resolvePath(__dirname, '..', '_shared', 'sample.mdl')],
+      // Note that `outListingFile` is specified with an absolute path here
+      outListingFile: resolvePath(__dirname, 'outputs', 'listing.json'),
+      modelSpec: async () => {
+        return modelSpec
+      }
+    }
+
+    const result = await build('production', buildOptions(userConfig))
+    if (result.isErr()) {
+      throw new Error('Expected ok result but got: ' + result.error.message)
+    }
+
+    expect(result.value.exitCode).toBe(0)
+    expect(existsSync(resolvePath(__dirname, 'outputs', 'listing.json'))).toBe(true)
+  })
+
+  it('should write listing.json file (when relative path is provided)', async () => {
+    const userConfig: UserConfig = {
+      genFormat: 'c',
+      rootDir: resolvePath(__dirname, '..'),
+      prepDir: resolvePath(__dirname, 'sde-prep'),
+      modelFiles: [resolvePath(__dirname, '..', '_shared', 'sample.mdl')],
+      // Note that `outListingFile` is specified with a relative path here, which
+      // will be resolved relative to `rootDir`
+      outListingFile: joinPath('build-prod', 'outputs', 'listing.json'),
+      modelSpec: async () => {
+        return modelSpec
+      }
+    }
+
+    const result = await build('production', buildOptions(userConfig))
+    if (result.isErr()) {
+      throw new Error('Expected ok result but got: ' + result.error.message)
+    }
+
+    expect(result.value.exitCode).toBe(0)
+    expect(existsSync(resolvePath(__dirname, 'outputs', 'listing.json'))).toBe(true)
+  })
+
   it('should skip certain callbacks if model files array is empty', async () => {
     const calls: string[] = []
 
