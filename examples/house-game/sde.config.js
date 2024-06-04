@@ -45,19 +45,11 @@ export async function config() {
       }
     },
 
-    plugins: [
-      // Copy the generated model listing to the app so that it can be loaded
-      // at runtime
-      {
-        postGenerate: async context => {
-          const srcPath = joinPath(context.config.prepDir, 'build', 'processed.json')
-          const dstName = 'listing.json'
-          const stagedFilePath = context.prepareStagedFile('model', dstName, generatedFilePath(), dstName)
-          await copyFile(srcPath, stagedFilePath)
-          return true
-        }
-      },
+    // Copy the generated model listing to the app so that it can be loaded
+    // at runtime
+    outListingFile: generatedFilePath('listing.json'),
 
+    plugins: [
       // Generate a `worker.js` file that runs the generated model in a worker
       workerPlugin({
         outputPaths: [generatedFilePath('worker.js')]
