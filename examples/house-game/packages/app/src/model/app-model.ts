@@ -128,7 +128,7 @@ export class AppModel {
         }
       ]
     }
-    const gameDataVarSpec = this.listing.varSpecs.get('_planning_data')
+    const gameDataVarSpec = this.listing.varSpecs.get('_planning_game_inputs')
     const gameLookup = createLookupDef(gameDataVarSpec, this.gameLookupPoints)
     const lookups = [gameLookup]
 

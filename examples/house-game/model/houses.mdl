@@ -3,11 +3,12 @@ replacement houses = demolishing
   ~  house/Month
   ~    |
 
-planning data ~~|
-
-planning = GET DATA BETWEEN TIMES(planning data, Time, -1)
+initial planning = INITIAL ( MAX( 0, replacement houses + (gap in houses / time to respond to gap) ) )
   ~  house/Month
-  ~ Originally: GAME( MAX( 0, replacement houses + (gap in houses / time to respond to gap)) )
+  ~    |
+
+planning = GAME(initial planning)
+  ~  house/Month
   ~    |
 
 average house life = 600

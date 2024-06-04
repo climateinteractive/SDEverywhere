@@ -41,7 +41,7 @@ export async function config() {
           input('time to respond to gap', 8)
         ],
         outputs: [output('number of houses required'), output('houses completed')],
-        datFiles: ['../model/houses.dat']
+        datFiles: []
       }
     },
 
