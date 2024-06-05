@@ -15,7 +15,7 @@
     "precommit": "../../scripts/precommit",
     "test": "echo No tests yet",
     "test:ci": "echo No tests yet",
-    "type-check": "tsc --noEmit -p tsconfig-build.json",
+    "type-check": "tsc --noEmit -p tsconfig-test.json",
     "build-v1": "MODEL_VERSION=1 vite build",
     "build-v2": "MODEL_VERSION=2 vite build",
     "build": "run-s build-v1 build-v2",

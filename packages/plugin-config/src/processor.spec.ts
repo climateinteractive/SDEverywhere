@@ -8,7 +8,7 @@ import { fileURLToPath } from 'url'
 import temp from 'temp'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
-import type { BuildOptions, ModelSpec, Plugin, UserConfig } from '@sdeverywhere/build'
+import type { BuildOptions, Plugin, ResolvedModelSpec, UserConfig } from '@sdeverywhere/build'
 import { build } from '@sdeverywhere/build'
 
 import type { ConfigProcessorOptions } from './processor'
@@ -241,7 +241,7 @@ describe('configProcessor', () => {
   })
 
   it('should write to default directory structure if single out dir is provided', async () => {
-    let capturedModelSpec: ModelSpec
+    let capturedModelSpec: ResolvedModelSpec
     const plugin: Plugin = {
       async preGenerate(_, modelSpec) {
         capturedModelSpec = modelSpec
