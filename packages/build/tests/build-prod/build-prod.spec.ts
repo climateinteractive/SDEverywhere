@@ -303,8 +303,7 @@ describe('build in production mode', () => {
   it.skip('should fail if preprocess step throws an error', async () => {
     const modelSpec: ModelSpec = {
       inputs: [{ varName: 'Y', defaultValue: 0, minValue: -10, maxValue: 10 }],
-      outputs: [{ varName: 'Z' }],
-      datFiles: []
+      outputs: [{ varName: 'Z' }]
     }
 
     const mdlDir = resolvePath(__dirname, '..', '_shared')
@@ -332,8 +331,7 @@ describe('build in production mode', () => {
   it('should fail if flatten step throws an error', async () => {
     const modelSpec: ModelSpec = {
       inputs: [{ varName: 'Y', defaultValue: 0, minValue: -10, maxValue: 10 }],
-      outputs: [{ varName: 'Z' }],
-      datFiles: []
+      outputs: [{ varName: 'Z' }]
     }
 
     const mdlDir = resolvePath(__dirname, '..', '_shared')
