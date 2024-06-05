@@ -8,8 +8,7 @@ export async function config() {
     modelSpec: async () => {
       return {
         inputs: [{ varName: 'Y', defaultValue: 0, minValue: -10, maxValue: 10 }],
-        outputs: [{ varName: 'Z' }],
-        datFiles: []
+        outputs: [{ varName: 'Z' }]
       }
     },
 

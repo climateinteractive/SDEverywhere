@@ -10,7 +10,7 @@ import { build, createServer } from 'vite'
 
 import chokidar from 'chokidar'
 
-import type { BuildContext, ModelSpec, Plugin, ResolvedConfig } from '@sdeverywhere/build'
+import type { BuildContext, Plugin, ResolvedConfig, ResolvedModelSpec } from '@sdeverywhere/build'
 
 import type { Bundle, ConfigInitOptions, SuiteSummary } from '@sdeverywhere/check-core'
 import { createConfig } from '@sdeverywhere/check-core'
@@ -81,7 +81,7 @@ class CheckPlugin implements Plugin {
   // staged files are copied to their final destination(s).  We should probably
   // make it configurable so that it can either be run as a `postGenerate` or a
   // `postBuild` step.
-  async postBuild(context: BuildContext, modelSpec: ModelSpec): Promise<boolean> {
+  async postBuild(context: BuildContext, modelSpec: ResolvedModelSpec): Promise<boolean> {
     const firstBuild = this.firstBuild
     this.firstBuild = false
 
@@ -137,7 +137,7 @@ class CheckPlugin implements Plugin {
     }
   }
 
-  private async genCurrentBundle(config: ResolvedConfig, modelSpec: ModelSpec): Promise<void> {
+  private async genCurrentBundle(config: ResolvedConfig, modelSpec: ResolvedModelSpec): Promise<void> {
     const prepDir = config.prepDir
     const viteConfig = await createViteConfigForBundle(prepDir, modelSpec)
     await build(viteConfig)

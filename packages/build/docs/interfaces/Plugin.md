@@ -51,7 +51,7 @@ Called before the "generate model" steps are performed.
 | Name | Type | Description |
 | :------ | :------ | :------ |
 | `context` | [`BuildContext`](../classes/BuildContext.md) | The build context (for logging, etc). |
-| `modelSpec` | [`ModelSpec`](ModelSpec.md) | The spec that controls how the model is generated. |
+| `modelSpec` | [`ResolvedModelSpec`](ResolvedModelSpec.md) | The spec that controls how the model is generated. |
 
 #### Returns
 
@@ -153,7 +153,7 @@ files are copied to their destination).
 | Name | Type | Description |
 | :------ | :------ | :------ |
 | `context` | [`BuildContext`](../classes/BuildContext.md) | The build context (for logging, etc). |
-| `modelSpec` | [`ModelSpec`](ModelSpec.md) | The spec that controls how the model is generated. |
+| `modelSpec` | [`ResolvedModelSpec`](ResolvedModelSpec.md) | The spec that controls how the model is generated. |
 
 #### Returns
 
@@ -176,7 +176,7 @@ have been copied to their destination.
 | Name | Type | Description |
 | :------ | :------ | :------ |
 | `context` | [`BuildContext`](../classes/BuildContext.md) | The build context (for logging, etc). |
-| `modelSpec` | [`ModelSpec`](ModelSpec.md) | The spec that controls how the model is generated. |
+| `modelSpec` | [`ResolvedModelSpec`](ResolvedModelSpec.md) | The spec that controls how the model is generated. |
 
 #### Returns
 

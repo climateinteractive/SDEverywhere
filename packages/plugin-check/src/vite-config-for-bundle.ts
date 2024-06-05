@@ -7,7 +7,7 @@ import { fileURLToPath } from 'url'
 import type { InlineConfig, ResolvedConfig, Plugin as VitePlugin } from 'vite'
 import { nodeResolve } from '@rollup/plugin-node-resolve'
 
-import type { ModelSpec } from '@sdeverywhere/build'
+import type { ResolvedModelSpec } from '@sdeverywhere/build'
 
 import { sdeNameForVensimVarName } from './var-names'
 
@@ -24,23 +24,42 @@ const __dirname = dirname(__filename)
  * TODO: This could be simplified by using `vite-plugin-virtual` but that
  * doesn't seem to be working correctly in an ESM setting
  */
-function injectModelSpec(prepDir: string, modelSpec: ModelSpec): VitePlugin {
+function injectModelSpec(prepDir: string, modelSpec: ResolvedModelSpec): VitePlugin {
   // Include the SDE variable ID with each spec
-  const inputSpecs = modelSpec.inputs.map(i => {
+  const inputSpecs = []
+  for (const modelInputSpec of modelSpec.inputs) {
+    // Note that the `InputSpec` interface in the `@sdeverywhere/build` package
+    // allows the default/min/max values to be undefined, which can be the case
+    // if the user doesn't return full `InputSpec` instances in the `ModelSpec`.
+    // We will log a warning and skip the input if these values are not defined.
+    if (
+      modelInputSpec.defaultValue === undefined ||
+      modelInputSpec.minValue === undefined ||
+      modelInputSpec.maxValue === undefined
+    ) {
+      let msg = ''
+      msg += `WARNING: The {defaultValue,minValue,maxValue} properties are required by plugin-check, `
+      msg += `but are undefined in the InputSpec for '${modelInputSpec.varName}'. `
+      msg += `This input variable will be excluded from the model-check bundle until those properties `
+      msg += `are defined.`
+      console.warn(msg)
+      continue
+    }
+
     // Use the `inputId` if defined for the `InputSpec`, otherwise use `varId`.  The
     // latter is less resilient if the variable is renamed between two versions of
     // the model, but will be sufficient for now.  Note that `plugin-config` defines
     // a stable `inputId` for each row in the `inputs.csv`, and that is the most
     // common way to configure a `ModelSpec`, so it will be uncommon for `inputId`
     // to be undefined here.
-    const varId = sdeNameForVensimVarName(i.varName)
-    const inputId = i.inputId || varId
-    return {
+    const varId = sdeNameForVensimVarName(modelInputSpec.varName)
+    const inputId = modelInputSpec.inputId || varId
+    inputSpecs.push({
       inputId,
       varId,
-      ...i
-    }
-  })
+      ...modelInputSpec
+    })
+  }
   const outputSpecs = modelSpec.outputs.map(o => {
     return {
       varId: sdeNameForVensimVarName(o.varName),
@@ -142,7 +161,7 @@ function overrideViteResolvePlugin(viteConfig: ResolvedConfig) {
   }
 }
 
-export async function createViteConfigForBundle(prepDir: string, modelSpec: ModelSpec): Promise<InlineConfig> {
+export async function createViteConfigForBundle(prepDir: string, modelSpec: ResolvedModelSpec): Promise<InlineConfig> {
   // Use `template-bundle` as the root directory for the bundle project
   const root = resolvePath(__dirname, '..', 'template-bundle')
 
