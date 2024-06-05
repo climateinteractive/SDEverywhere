@@ -7,7 +7,7 @@ import { basename, dirname, join as joinPath } from 'path'
 
 import { findUp } from 'find-up'
 
-import type { BuildContext, ModelSpec, Plugin } from '@sdeverywhere/build'
+import type { BuildContext, ResolvedModelSpec, Plugin } from '@sdeverywhere/build'
 
 import type { WasmPluginOptions } from './options'
 import { sdeNameForVensimVarName } from './var-names'
@@ -19,7 +19,7 @@ export function wasmPlugin(options?: WasmPluginOptions): Plugin {
 class WasmPlugin implements Plugin {
   constructor(private readonly options?: WasmPluginOptions) {}
 
-  async preGenerate(context: BuildContext, modelSpec: ModelSpec): Promise<void> {
+  async preGenerate(context: BuildContext, modelSpec: ResolvedModelSpec): Promise<void> {
     // Ensure that the build directory exists before we generate a file into it
     const buildDir = joinPath(context.config.prepDir, 'build')
     if (!existsSync(buildDir)) {
