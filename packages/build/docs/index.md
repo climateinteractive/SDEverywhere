@@ -41,3 +41,4 @@ export async function config() {
 - [Plugin](interfaces/Plugin.md)
 - [BuildContext](classes/BuildContext.md)
 - [ResolvedConfig](interfaces/ResolvedConfig.md)
+- [ResolvedModelSpec](interfaces/ResolvedModelSpec.md)
