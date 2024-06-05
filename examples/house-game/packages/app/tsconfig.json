@@ -19,6 +19,7 @@
     "target": "esnext",
     "module": "esnext",
     "moduleResolution": "node",
+    "skipLibCheck": true,
     "allowJs": true,
     "noImplicitAny": false,
     "noUnusedLocals": false,
