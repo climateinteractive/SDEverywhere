@@ -8,6 +8,7 @@ import type { Result } from 'neverthrow'
 import { err, ok } from 'neverthrow'
 
 import { clearOverlay, log } from '../../_shared/log'
+import type { InputSpec, ModelSpec, OutputSpec, ResolvedModelSpec, VarName } from '../../_shared/model-spec'
 import type { ResolvedConfig } from '../../_shared/resolved-config'
 
 import type { UserConfig } from '../../config/user-config'
@@ -54,10 +55,13 @@ export async function buildOnce(
   let succeeded = true
   try {
     // Get the model spec from the config
-    const modelSpec = await userConfig.modelSpec(context)
-    if (modelSpec === undefined) {
+    const userModelSpec = await userConfig.modelSpec(context)
+    if (userModelSpec === undefined) {
       return err(new Error('The model spec must be defined'))
     }
+
+    // Resolve the model spec
+    const modelSpec = resolveModelSpec(userModelSpec)
 
     // Run plugins that implement `preGenerate`
     for (const plugin of plugins) {
@@ -68,8 +72,8 @@ export async function buildOnce(
 
     // Write the spec file
     const specJson = {
-      inputVarNames: modelSpec.inputs.map(input => input.varName),
-      outputVarNames: modelSpec.outputs.map(output => output.varName),
+      inputVarNames: modelSpec.inputVarNames,
+      outputVarNames: modelSpec.outputVarNames,
       externalDatfiles: modelSpec.datFiles,
       ...modelSpec.options
     }
@@ -159,4 +163,66 @@ export async function buildOnce(
   }
 
   return ok(succeeded)
+}
+
+/**
+ * Convert a `ModelSpec` instance to a `ResolvedModelSpec` instance.
+ *
+ * @param modelSpec The `ModelSpec` instance returned by the `UserConfig`.
+ */
+function resolveModelSpec(modelSpec: ModelSpec): ResolvedModelSpec {
+  let inputVarNames: VarName[]
+  let inputSpecs: InputSpec[]
+  if (modelSpec.inputs.length > 0) {
+    const item = modelSpec.inputs[0]
+    if (typeof item === 'string') {
+      // The array contains variable names; derive `InputSpec` instances
+      inputVarNames = modelSpec.inputs as VarName[]
+      inputSpecs = inputVarNames.map(varName => {
+        return {
+          varName
+        }
+      })
+    } else {
+      // The array contains `InputSpec` objects; derive variable names
+      inputSpecs = modelSpec.inputs as InputSpec[]
+      inputVarNames = inputSpecs.map(spec => spec.varName)
+    }
+  } else {
+    // The inputs array is empty, so return empty arrays
+    inputVarNames = []
+    inputSpecs = []
+  }
+
+  let outputVarNames: VarName[]
+  let outputSpecs: OutputSpec[]
+  if (modelSpec.outputs.length > 0) {
+    const item = modelSpec.outputs[0]
+    if (typeof item === 'string') {
+      // The array contains variable names; derive `OutputSpec` instances
+      outputVarNames = modelSpec.outputs as VarName[]
+      outputSpecs = outputVarNames.map(varName => {
+        return {
+          varName
+        }
+      })
+    } else {
+      // The array contains `OutputSpec` objects; derive variable names
+      outputSpecs = modelSpec.outputs as OutputSpec[]
+      outputVarNames = outputSpecs.map(spec => spec.varName)
+    }
+  } else {
+    // The outputs array is empty, so return empty arrays
+    outputVarNames = []
+    outputSpecs = []
+  }
+
+  return {
+    inputVarNames,
+    inputs: inputSpecs,
+    outputVarNames,
+    outputs: outputSpecs,
+    datFiles: modelSpec.datFiles || [],
+    options: modelSpec.options
+  }
 }
