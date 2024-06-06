@@ -117,7 +117,15 @@ export class MockWasmModule implements WasmModule {
   _malloc(lengthInBytes: number): number {
     const currentOffset = this.mallocOffset
     this.allocs.set(currentOffset, lengthInBytes)
-    this.mallocOffset += lengthInBytes
+    if (lengthInBytes > 0) {
+      // Update the offset so that the next allocation starts after this one
+      this.mallocOffset += lengthInBytes
+    } else {
+      // In the case where the length is zero, add a little padding so that
+      // the next allocation is recorded at a different start address than
+      // this one
+      this.mallocOffset += 8
+    }
     return currentOffset
   }
 

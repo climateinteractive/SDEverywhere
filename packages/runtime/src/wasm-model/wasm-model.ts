@@ -141,7 +141,7 @@ class WasmModel implements RunnableModel {
     // Run the model
     const t0 = perfNow()
     this.wasmRunModel(
-      this.inputsBuffer.getAddress(),
+      this.inputsBuffer?.getAddress() || 0,
       this.outputsBuffer.getAddress(),
       outputIndicesBuffer?.getAddress() || 0
     )

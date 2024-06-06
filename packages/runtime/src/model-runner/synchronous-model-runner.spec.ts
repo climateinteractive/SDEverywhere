@@ -45,7 +45,9 @@ function createMockWasmModule(): MockWasmModule {
     outputVarIds: ['_output_1', '_output_2'],
     onRunModel: (inputs, outputs, lookups, outputIndices) => {
       // Verify inputs
-      expect(inputs).toEqual(new Float64Array([7, 8, 9]))
+      if (inputs.length > 0) {
+        expect(inputs).toEqual(new Float64Array([7, 8, 9]))
+      }
 
       if (lookups.size > 0) {
         // Pretend that outputs are derived from lookup data
@@ -124,6 +126,16 @@ describe.each([
     const inputs = [createInputValue('_input_1', 7), createInputValue('_input_2', 8), createInputValue('_input_3', 9)]
     const inOutputs = runner.createOutputs()
     const outOutputs = await runner.runModel(inputs, inOutputs)
+    expect(outOutputs).toBeDefined()
+    expect(outOutputs.runTimeInMillis).toBeGreaterThan(0)
+    expect(outOutputs.getSeriesForVar('_output_1').points).toEqual([p(2000, 1), p(2001, 2), p(2002, 3)])
+    expect(outOutputs.getSeriesForVar('_output_2').points).toEqual([p(2000, 4), p(2001, 5), p(2002, 6)])
+  })
+
+  it('should run the model (with empty inputs array)', async () => {
+    expect(runner).toBeDefined()
+    const inOutputs = runner.createOutputs()
+    const outOutputs = await runner.runModel([], inOutputs)
     expect(outOutputs).toBeDefined()
     expect(outOutputs.runTimeInMillis).toBeGreaterThan(0)
     expect(outOutputs.getSeriesForVar('_output_1').points).toEqual([p(2000, 1), p(2001, 2), p(2002, 3)])

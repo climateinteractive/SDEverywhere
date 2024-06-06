@@ -103,7 +103,7 @@ function runJsModel(
   timeStep: number,
   saveFreq: number,
   numSavePoints: number,
-  inputs: Float64Array,
+  inputs: Float64Array | undefined,
   outputs: Float64Array,
   outputIndices: Int32Array | undefined,
   lookups: LookupDef[] | undefined,
@@ -131,7 +131,7 @@ function runJsModel(
     }
   }
 
-  if (inputs.length > 0) {
+  if (inputs?.length > 0) {
     // Set the user-defined input values.  This needs to happen after `initConstants`
     // since the input values will override the default constant values.
     model.setInputs(index => inputs[index])
