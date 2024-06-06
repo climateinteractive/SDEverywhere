@@ -142,8 +142,11 @@ describe('BufferedRunModelParams', () => {
     const inputs = [1, 2, 3]
     const outputs = new Outputs(['_x', '_y'], 2000, 2002, 1)
 
-    const params = new BufferedRunModelParams()
-    params.updateFromParams(inputs, outputs)
+    const runnerParams = new BufferedRunModelParams()
+    const workerParams = new BufferedRunModelParams()
+
+    runnerParams.updateFromParams(inputs, outputs)
+    workerParams.updateFromEncodedBuffer(runnerParams.getEncodedBuffer())
 
     let array: Float64Array
     const create = (numElements: number) => {
@@ -152,17 +155,27 @@ describe('BufferedRunModelParams', () => {
     }
 
     // Verify case where existing array is undefined
-    params.copyInputs(undefined, create)
+    workerParams.copyInputs(undefined, create)
     expect(array).toEqual(new Float64Array([1, 2, 3]))
 
     // Verify case where existing array is too small
     array = new Float64Array(2)
-    params.copyInputs(array, create)
+    workerParams.copyInputs(array, create)
     expect(array).toEqual(new Float64Array([1, 2, 3]))
 
     // Verify case where existing array is large enough
     array = new Float64Array([6, 6, 6, 6])
-    params.copyInputs(array, create)
+    workerParams.copyInputs(array, create)
+    expect(array).toEqual(new Float64Array([1, 2, 3, 6]))
+
+    // Verify case where params are updated with an empty inputs array.  Note that
+    // it is expected that the existing data is retained in the destination array;
+    // it is up to the calling code to clear or ignore that existing data.
+    runnerParams.updateFromParams([], outputs)
+    runnerParams.copyInputs(array, create)
+    expect(array).toEqual(new Float64Array([1, 2, 3, 6]))
+    workerParams.updateFromEncodedBuffer(runnerParams.getEncodedBuffer())
+    workerParams.copyInputs(array, create)
     expect(array).toEqual(new Float64Array([1, 2, 3, 6]))
   })
 
@@ -172,8 +185,11 @@ describe('BufferedRunModelParams', () => {
     const normalOutputs = new Outputs(['_x', '_y'], 2000, 2002, 1)
     const implOutputs = listing.deriveOutputs(normalOutputs, ['_x', '_a', '_b'])
 
-    const params = new BufferedRunModelParams()
-    params.updateFromParams(inputs, implOutputs)
+    const runnerParams = new BufferedRunModelParams()
+    const workerParams = new BufferedRunModelParams()
+
+    runnerParams.updateFromParams(inputs, implOutputs)
+    workerParams.updateFromEncodedBuffer(runnerParams.getEncodedBuffer())
 
     const expectedIndices = new Int32Array([
       // _x
@@ -193,17 +209,17 @@ describe('BufferedRunModelParams', () => {
     }
 
     // Verify case where existing array is undefined
-    params.copyOutputIndices(undefined, create)
+    workerParams.copyOutputIndices(undefined, create)
     expect(array).toEqual(expectedIndices)
 
     // Verify case where existing array is too small
     array = new Int32Array(2)
-    params.copyOutputIndices(array, create)
+    workerParams.copyOutputIndices(array, create)
     expect(array).toEqual(expectedIndices)
 
     // Verify case where existing array is large enough
     array = new Int32Array(20).fill(6)
-    params.copyOutputIndices(array, create)
+    workerParams.copyOutputIndices(array, create)
     expect(array).toEqual(
       new Int32Array([
         // _x
@@ -225,9 +241,10 @@ describe('BufferedRunModelParams', () => {
     const outputs = new Outputs(['_x', '_y'], 2000, 2002, 1)
 
     const runnerParams = new BufferedRunModelParams()
-    runnerParams.updateFromParams(inputs, outputs)
-
     const workerParams = new BufferedRunModelParams()
+
+    // Run once
+    runnerParams.updateFromParams(inputs, outputs)
     workerParams.updateFromEncodedBuffer(runnerParams.getEncodedBuffer())
 
     // Pretend that the model writes the following values to its outputs buffer then

@@ -107,6 +107,12 @@ export class BufferedRunModelParams implements RunModelParams {
 
   // from RunModelParams interface
   copyInputs(array: Float64Array | undefined, create: (numElements: number) => Float64Array): void {
+    if (this.inputs.lengthInElements === 0) {
+      // Note that the inputs section will be empty if the inputs parameter is empty,
+      // so we can skip copying in this case
+      return
+    }
+
     // Allocate (or reallocate) an array, if needed
     if (array === undefined || array.length < this.inputs.lengthInElements) {
       array = create(this.inputs.lengthInElements)
@@ -129,6 +135,8 @@ export class BufferedRunModelParams implements RunModelParams {
   // from RunModelParams interface
   copyOutputIndices(array: Int32Array | undefined, create: (numElements: number) => Int32Array): void {
     if (this.outputIndices.lengthInElements === 0) {
+      // Note that the output indices section can be empty if the output indices are
+      // not provided, so we can skip copying in this case
       return
     }
 

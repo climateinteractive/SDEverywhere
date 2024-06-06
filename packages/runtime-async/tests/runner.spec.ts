@@ -172,6 +172,16 @@ describe.each([
     expect(outOutputs.getSeriesForVar('_output_2')!.points).toEqual([p(2000, 4), p(2001, 5), p(2002, 6)])
   })
 
+  it('should run the model (with empty inputs array)', async () => {
+    expect(runner).toBeDefined()
+    const inOutputs = runner.createOutputs()
+    const outOutputs = await runner.runModel([], inOutputs)
+    expect(outOutputs).toBeDefined()
+    expect(outOutputs.runTimeInMillis).toBeGreaterThan(0)
+    expect(outOutputs.getSeriesForVar('_output_1')!.points).toEqual([p(2000, 1), p(2001, 2), p(2002, 3)])
+    expect(outOutputs.getSeriesForVar('_output_2')!.points).toEqual([p(2000, 4), p(2001, 5), p(2002, 6)])
+  })
+
   it('should run the model (with lookup overrides)', async () => {
     const listing = new ModelListing(json)
 

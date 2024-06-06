@@ -87,6 +87,13 @@ describe('ReferencedRunModelParams', () => {
     array = new Float64Array([6, 6, 6, 6])
     params.copyInputs(array, create)
     expect(array).toEqual(new Float64Array([1, 2, 3, 6]))
+
+    // Verify case where params are updated with an empty inputs array.  Note that
+    // it is expected that the existing data is retained in the destination array;
+    // it is up to the calling code to clear or ignore that existing data.
+    params.updateFromParams([], outputs)
+    params.copyInputs(array, create)
+    expect(array).toEqual(new Float64Array([1, 2, 3, 6]))
   })
 
   it('should copy output indices', () => {

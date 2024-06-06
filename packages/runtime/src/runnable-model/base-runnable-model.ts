@@ -9,7 +9,7 @@ import type { RunnableModel } from './runnable-model'
  * @hidden This is not part of the public API; for internal use only.
  */
 export type OnRunModelFunc = (
-  inputs: Float64Array,
+  inputs: Float64Array | undefined,
   outputs: Float64Array,
   options?: {
     outputIndices?: Int32Array
