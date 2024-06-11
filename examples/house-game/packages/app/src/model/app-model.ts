@@ -120,7 +120,7 @@ export class AppModel {
         }
       ]
     }
-    const gameLookup = createLookupDef('planning data', this.gameLookupPoints)
+    const gameLookup = createLookupDef({ varName: 'planning data' }, this.gameLookupPoints)
     const lookups = [gameLookup]
 
     // Set the "busy" flag (to put the UI into a non-editable state)
