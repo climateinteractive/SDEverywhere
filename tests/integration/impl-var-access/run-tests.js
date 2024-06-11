@@ -61,8 +61,8 @@ function verifyImplOutputs(runnerKind, outputs, inputX) {
 
 async function runTests(runnerKind, modelRunner) {
   // Read the JSON model listing
-  const listingJson = await readFile(joinPath('sde-prep', 'build', 'processed.json'), 'utf8')
-  const listing = new ModelListing(listingJson)
+  const listingJson = await readFile(joinPath('sde-prep', 'build', 'processed_min.json'), 'utf8')
+  const listing = new ModelListing(JSON.parse(listingJson))
 
   // Create the set of inputs
   const inputX = createInputValue('_x', 0)
