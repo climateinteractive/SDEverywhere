@@ -1,6 +1,7 @@
 // Copyright (c) 2024 Climate Interactive / New Venture Fund
 
 import type { OutputVarId, VarId, VarSpec } from '../../_shared'
+import { ModelListing } from '../../model-listing'
 import type { JsModel } from '../js-model'
 import type { JsModelFunctions } from '../js-model-functions'
 import { JsModelLookup } from '../js-model-lookup'
@@ -27,7 +28,8 @@ export class MockJsModel implements JsModel {
 
   // from JsModel interface
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  public readonly modelListing: /*ModelListingSpecs*/ any
+  public readonly modelListing?: /*ModelListingSpecs*/ any
+  private readonly internalListing?: ModelListing
 
   private readonly initialTime: number
   private readonly finalTime: number
@@ -50,12 +52,15 @@ export class MockJsModel implements JsModel {
     this.initialTime = options.initialTime
     this.finalTime = options.finalTime
     this.outputVarIds = options.outputVarIds
-    this.modelListing = options.listingJson ? JSON.parse(options.listingJson) : undefined
+    if (options.listingJson) {
+      this.modelListing = JSON.parse(options.listingJson)
+      this.internalListing = new ModelListing(this.modelListing)
+    }
     this.onEvalAux = options.onEvalAux
   }
 
   varIdForSpec(varSpec: VarSpec): VarId {
-    for (const [listingVarId, listingSpec] of this.modelListing.varSpecs) {
+    for (const [listingVarId, listingSpec] of this.internalListing.varSpecs) {
       // TODO: This doesn't compare subscripts yet
       if (listingSpec.varIndex === varSpec.varIndex) {
         return listingVarId

@@ -29,8 +29,8 @@ export class MockWasmModule implements WasmModule {
 
   // from WasmModule interface
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  public readonly modelListing: any
-  private readonly internalListing: ModelListing
+  public readonly modelListing?: any
+  private readonly internalListing?: ModelListing
 
   private readonly initialTime: number
   private readonly finalTime: number
@@ -61,8 +61,10 @@ export class MockWasmModule implements WasmModule {
     this.initialTime = options.initialTime
     this.finalTime = options.finalTime
     this.outputVarIds = options.outputVarIds
-    this.modelListing = options.listingJson ? JSON.parse(options.listingJson) : undefined
-    this.internalListing = this.modelListing ? new ModelListing(this.modelListing) : undefined
+    if (options.listingJson) {
+      this.modelListing = JSON.parse(options.listingJson)
+      this.internalListing = new ModelListing(this.modelListing)
+    }
     this.onRunModel = options.onRunModel
 
     this.heap = new ArrayBuffer(8192)

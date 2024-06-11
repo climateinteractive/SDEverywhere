@@ -1,7 +1,6 @@
 // Copyright (c) 2024 Climate Interactive / New Venture Fund
 
 import { indicesPerVariable, type LookupDef, type VarSpec } from '../_shared'
-import { ModelListing } from '../model-listing'
 import type { RunnableModel } from '../runnable-model'
 import { BaseRunnableModel } from '../runnable-model/base-runnable-model'
 
@@ -91,16 +90,13 @@ export function initJsModel(model: JsModel): RunnableModel {
   const saveFreq = model.getSaveFreq()
   const numSavePoints = Math.round((finalTime - initialTime) / saveFreq) + 1
 
-  // Create a `ModelListing` instance if the listing was defined in the model
-  const modelListing = model.modelListing ? new ModelListing(model.modelListing) : undefined
-
   return new BaseRunnableModel({
     startTime: initialTime,
     endTime: finalTime,
     saveFreq: saveFreq,
     numSavePoints,
     outputVarIds: model.outputVarIds,
-    modelListing,
+    modelListing: model.modelListing,
     onRunModel: (inputs, outputs, options) => {
       runJsModel(
         model,

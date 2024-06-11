@@ -21,6 +21,8 @@ const params = new BufferedRunModelParams()
 
 interface InitResult {
   outputVarIds: string[]
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  modelListing?: /*ModelListingSpecs*/ any
   startTime: number
   endTime: number
   saveFreq: number
@@ -41,6 +43,7 @@ const modelWorker = {
     // Transfer the model metadata to the runner
     return {
       outputVarIds: runnableModel.outputVarIds,
+      modelListing: runnableModel.modelListing,
       startTime: runnableModel.startTime,
       endTime: runnableModel.endTime,
       saveFreq: runnableModel.saveFreq,

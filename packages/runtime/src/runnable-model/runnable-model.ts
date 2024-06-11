@@ -1,7 +1,6 @@
 // Copyright (c) 2024 Climate Interactive / New Venture Fund
 
 import type { OutputVarId } from '../_shared'
-import type { ModelListing } from '../model-listing'
 import type { RunModelParams } from './run-model-params'
 
 /**
@@ -34,7 +33,8 @@ export interface RunnableModel {
    * in which case variables cannot be referenced by name or identifier, and can only
    * be referenced using a valid `VarSpec`.
    */
-  readonly modelListing?: ModelListing
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  readonly modelListing?: /*ModelListingSpecs*/ any
 
   /**
    * Run the model synchronously on the current thread.

@@ -99,9 +99,9 @@ function createMockWasmModule(): MockWasmModule {
           expect(outputIndices).toEqual(
             new Int32Array([
               // _x
-              3, 0, 0, 0,
+              5, 0, 0, 0,
               // _output_2
-              2, 0, 0, 0,
+              3, 0, 0, 0,
               // _output_1
               1, 0, 0, 0,
               // (zero terminator)

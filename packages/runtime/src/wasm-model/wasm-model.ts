@@ -1,7 +1,6 @@
 // Copyright (c) 2020-2022 Climate Interactive / New Venture Fund
 
 import type { OutputVarId } from '../_shared'
-import { ModelListing } from '../model-listing'
 import type { RunModelParams, RunnableModel } from '../runnable-model'
 import { perfElapsed, perfNow } from '../perf'
 import { createFloat64WasmBuffer, createInt32WasmBuffer, type WasmBuffer } from './wasm-buffer'
@@ -24,7 +23,8 @@ class WasmModel implements RunnableModel {
   // from RunnableModel interface
   public readonly outputVarIds: OutputVarId[]
   // from RunnableModel interface
-  public readonly modelListing?: ModelListing
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  public readonly modelListing?: any
 
   // Reuse the wasm buffers.  These buffers are allocated on demand and grown
   // (reallocated) as needed.
@@ -61,9 +61,7 @@ class WasmModel implements RunnableModel {
     this.outputVarIds = wasmModule.outputVarIds
 
     // Expose the model listing, if it was bundled with the generated module
-    if (wasmModule.modelListing) {
-      this.modelListing = new ModelListing(wasmModule.modelListing)
-    }
+    this.modelListing = wasmModule.modelListing
 
     // Make the native functions callable
     this.wasmSetLookup = wasmModule.cwrap('setLookup', null, ['number', 'number', 'number', 'number'])

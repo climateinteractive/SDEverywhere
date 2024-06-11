@@ -33,7 +33,8 @@ export class BaseRunnableModel implements RunnableModel {
   public readonly saveFreq: number
   public readonly numSavePoints: number
   public readonly outputVarIds: OutputVarId[]
-  public readonly modelListing?: ModelListing
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  public readonly modelListing?: /*ModelListingSpecs*/ any
 
   private readonly onRunModel: OnRunModelFunc
 
