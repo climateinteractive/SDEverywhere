@@ -4,19 +4,19 @@ import { describe, expect, it } from 'vitest'
 import { Outputs } from '../_shared/outputs'
 import { ModelListing } from './model-listing'
 
-const json = `
+const listingJson = `
 {
   "dimensions": [
     {
-      "name": "_dima",
-      "value": [
+      "id": "_dima",
+      "subIds": [
         "_a1",
         "_a2"
       ]
     },
     {
-      "name": "_dimb",
-      "value": [
+      "id": "_dimb",
+      "subIds": [
         "_b1",
         "_b2",
         "_b3"
@@ -25,55 +25,30 @@ const json = `
   ],
   "variables": [
     {
-      "refId": "_a[_a1]",
-      "varName": "_a",
-      "subscripts": [
-        "_a1"
-      ],
-      "families": [
+      "id": "_a",
+      "dimIds": [
         "_dima"
       ],
-      "varIndex": 1
+      "index": 1
     },
     {
-      "refId": "_a[_a2]",
-      "varName": "_a",
-      "subscripts": [
-        "_a2"
-      ],
-      "families": [
+      "id": "_d",
+      "dimIds": [
         "_dima"
       ],
-      "varIndex": 1
+      "index": 2
     },
     {
-      "refId": "_d",
-      "varName": "_d",
-      "subscripts": [
-        "_dima"
-      ],
-      "families": [
-        "_dima"
-      ],
-      "varIndex": 2
-    },
-    {
-      "refId": "_e",
-      "varName": "_e",
-      "subscripts": [
+      "id": "_e",
+      "dimIds": [
         "_dima",
         "_dimb"
       ],
-      "families": [
-        "_dima",
-        "_dimb"
-      ],
-      "varIndex": 3
+      "index": 3
     },
     {
-      "refId": "_x",
-      "varName": "_x",
-      "varIndex": 4
+      "id": "_x",
+      "index": 4
     }
   ]
 }
@@ -82,7 +57,7 @@ const json = `
 describe('ModelListing', () => {
   describe('deriveOutputs', () => {
     it('should return Outputs that can accept the specified internal variables', () => {
-      const listing = new ModelListing(json)
+      const listing = new ModelListing(JSON.parse(listingJson))
       const normalOutputs = new Outputs(['_d'], 2000, 2002, 0.5)
       const implOutputs = listing.deriveOutputs(normalOutputs, ['_x', '_d[_a2]', '_e[_a1,_b3]'])
       expect(implOutputs.startTime).toBe(normalOutputs.startTime)

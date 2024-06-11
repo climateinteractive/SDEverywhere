@@ -49,12 +49,12 @@ export function createSynchronousModelRunner(generatedModel: GeneratedModel): Mo
  */
 function createRunnerFromRunnableModel(model: RunnableModel): ModelRunner {
   // Maintain a `ReferencedRunModelParams` instance that holds the I/O parameters
-  const params = new ReferencedRunModelParams()
+  const params = new ReferencedRunModelParams(model.modelListing)
 
   // Disallow `runModel` after the runner has been terminated
   let terminated = false
 
-  const runModelSync = (inputs: (InputValue | number)[], outputs: Outputs, options: RunModelOptions | undefined) => {
+  const runModelSync = (inputs: number[] | InputValue[], outputs: Outputs, options: RunModelOptions | undefined) => {
     // Update the I/O parameters
     params.updateFromParams(inputs, outputs, options)
 

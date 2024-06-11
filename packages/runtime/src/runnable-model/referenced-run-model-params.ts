@@ -2,6 +2,8 @@
 
 import type { InputValue, LookupDef, Outputs } from '../_shared'
 import { indicesPerVariable, updateVarIndices } from '../_shared'
+import type { ModelListing } from '../model-listing'
+import { resolveVarRef } from './resolve-var-ref'
 import type { RunModelOptions } from './run-model-options'
 import type { RunModelParams } from './run-model-params'
 
@@ -19,6 +21,13 @@ export class ReferencedRunModelParams implements RunModelParams {
   private outputsLengthInElements = 0
   private outputIndicesLengthInElements = 0
   private lookups: LookupDef[]
+
+  /**
+   * @param listing The model listing that is used to locate a variable that is referenced by
+   * name or identifier.  If undefined, variables cannot be referenced by name or identifier,
+   * and can only be referenced using a valid `VarSpec`.
+   */
+  constructor(private readonly listing?: ModelListing) {}
 
   // from RunModelParams interface
   getInputs(): Float64Array | undefined {
@@ -138,6 +147,14 @@ export class ReferencedRunModelParams implements RunModelParams {
     this.outputs = outputs
     this.outputsLengthInElements = outputs.varIds.length * outputs.seriesLength
     this.lookups = options?.lookups
+
+    if (this.lookups) {
+      // Resolve the `varSpec` for each `LookupDef`.  If the variable can be resolved, this
+      // will fill in the `varSpec` for the `LookupDef`, otherwise it will throw an error.
+      for (const lookupDef of this.lookups) {
+        resolveVarRef(this.listing, lookupDef.varRef, 'lookup')
+      }
+    }
 
     // See if the output indices are needed
     const outputVarSpecs = outputs.varSpecs

@@ -15,11 +15,41 @@ import { createSynchronousModelRunner } from './synchronous-model-runner'
 const startTime = 2000
 const endTime = 2002
 
+const listingJson = `
+{
+  "dimensions": [
+  ],
+  "variables": [
+    {
+      "id": "_output_1",
+      "index": 1
+    },
+    {
+      "id": "_output_1_data",
+      "index": 2
+    },
+    {
+      "id": "_output_2",
+      "index": 3
+    },
+    {
+      "id": "_output_2_data",
+      "index": 4
+    },
+    {
+      "id": "_x",
+      "index": 5
+    }
+  ]
+}
+`
+
 function createMockJsModel(): MockJsModel {
   return new MockJsModel({
     initialTime: startTime,
     finalTime: endTime,
     outputVarIds: ['_output_1', '_output_2'],
+    listingJson,
     onEvalAux: (vars, lookups) => {
       const time = vars.get('_time')
       if (lookups.size > 0) {
@@ -43,6 +73,7 @@ function createMockWasmModule(): MockWasmModule {
     initialTime: startTime,
     finalTime: endTime,
     outputVarIds: ['_output_1', '_output_2'],
+    listingJson,
     onRunModel: (inputs, outputs, lookups, outputIndices) => {
       // Verify inputs
       if (inputs.length > 0) {
@@ -143,38 +174,6 @@ describe.each([
   })
 
   it('should run the model (with lookup overrides)', async () => {
-    const json = `
-{
-  "dimensions": [
-  ],
-  "variables": [
-    {
-      "refId": "_output_1",
-      "varName": "_output_1",
-      "varIndex": 1
-    },
-    {
-      "refId": "_output_1_data",
-      "varName": "_output_1_data",
-      "varIndex": 2
-    },
-    {
-      "refId": "_output_2",
-      "varName": "_output_2",
-      "varIndex": 3
-    },
-    {
-      "refId": "_output_2_data",
-      "varName": "_output_2_data",
-      "varIndex": 4
-    }
-  ]
-}
-`
-
-    const listing = new ModelListing(json)
-    mock.setListing(listing)
-
     const inputs = [createInputValue('_input_1', 7), createInputValue('_input_2', 8), createInputValue('_input_3', 9)]
     let outputs = runner.createOutputs()
 
@@ -190,8 +189,10 @@ describe.each([
     const lookup2Points = [p(2000, 104), p(2001, 105), p(2002, 106)]
     outputs = await runner.runModel(inputs, outputs, {
       lookups: [
-        createLookupDef(listing.varSpecs.get('_output_1_data'), lookup1Points),
-        createLookupDef(listing.varSpecs.get('_output_2_data'), lookup2Points)
+        // Reference the first variable by name
+        createLookupDef({ varName: 'output 1 data' }, lookup1Points),
+        // Reference the second variable by ID
+        createLookupDef({ varId: '_output_2_data' }, lookup2Points)
       ]
     })
 
@@ -208,33 +209,7 @@ describe.each([
   })
 
   it('should run the model (when output var specs are included)', async () => {
-    const json = `
-{
-  "dimensions": [
-  ],
-  "variables": [
-    {
-      "refId": "_output_1",
-      "varName": "_output_1",
-      "varIndex": 1
-    },
-    {
-      "refId": "_output_2",
-      "varName": "_output_2",
-      "varIndex": 2
-    },
-    {
-      "refId": "_x",
-      "varName": "_x",
-      "varIndex": 3
-    }
-  ]
-}
-`
-
-    const listing = new ModelListing(json)
-    mock.setListing(listing)
-
+    const listing = new ModelListing(JSON.parse(listingJson))
     const inputs = [7, 8, 9]
     const normalOutputs = runner.createOutputs()
     const implOutputs = listing.deriveOutputs(normalOutputs, ['_x', '_output_2', '_output_1'])

@@ -1,6 +1,7 @@
 // Copyright (c) 2024 Climate Interactive / New Venture Fund
 
 import { indicesPerVariable, type LookupDef, type VarSpec } from '../_shared'
+import { ModelListing } from '../model-listing'
 import type { RunnableModel } from '../runnable-model'
 import { BaseRunnableModel } from '../runnable-model/base-runnable-model'
 
@@ -23,12 +24,20 @@ import { getJsModelFunctions, type JsModelFunctionContext, type JsModelFunctions
  */
 export interface JsModel {
   readonly kind: 'js'
+
   readonly outputVarIds: string[]
   readonly outputVarNames: string[]
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  readonly modelListing?: /*ModelListingSpecs*/ any
+
+  /** @hidden */
   getInitialTime(): number
+  /** @hidden */
   getFinalTime(): number
+  /** @hidden */
   getTimeStep(): number
+  /** @hidden */
   getSaveFreq(): number
 
   /** @hidden */
@@ -36,16 +45,26 @@ export interface JsModel {
   /** @hidden */
   setModelFunctions(functions: JsModelFunctions): void
 
+  /** @hidden */
   setTime(time: number): void
+  /** @hidden */
   setInputs(inputValue: (index: number) => number): void
+
+  /** @hidden */
   setLookup(varSpec: VarSpec, points: Float64Array): void
 
+  /** @hidden */
   storeOutputs(storeValue: (value: number) => void): void
+  /** @hidden */
   storeOutput(varSpec: VarSpec, storeValue: (value: number) => void): void
 
+  /** @hidden */
   initConstants(): void
+  /** @hidden */
   initLevels(): void
+  /** @hidden */
   evalAux(): void
+  /** @hidden */
   evalLevels(): void
 }
 
@@ -72,12 +91,16 @@ export function initJsModel(model: JsModel): RunnableModel {
   const saveFreq = model.getSaveFreq()
   const numSavePoints = Math.round((finalTime - initialTime) / saveFreq) + 1
 
+  // Create a `ModelListing` instance if the listing was defined in the model
+  const modelListing = model.modelListing ? new ModelListing(model.modelListing) : undefined
+
   return new BaseRunnableModel({
     startTime: initialTime,
     endTime: finalTime,
     saveFreq: saveFreq,
     numSavePoints,
     outputVarIds: model.outputVarIds,
+    modelListing,
     onRunModel: (inputs, outputs, options) => {
       runJsModel(
         model,
@@ -127,7 +150,7 @@ function runJsModel(
   // Apply lookup overrides, if provided
   if (lookups !== undefined) {
     for (const lookupDef of lookups) {
-      model.setLookup(lookupDef.varSpec, lookupDef.points)
+      model.setLookup(lookupDef.varRef.varSpec, lookupDef.points)
     }
   }
 

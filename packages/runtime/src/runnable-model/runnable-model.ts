@@ -1,6 +1,7 @@
 // Copyright (c) 2024 Climate Interactive / New Venture Fund
 
 import type { OutputVarId } from '../_shared'
+import type { ModelListing } from '../model-listing'
 import type { RunModelParams } from './run-model-params'
 
 /**
@@ -27,6 +28,13 @@ export interface RunnableModel {
 
   /** The output variable IDs for this model. */
   readonly outputVarIds: OutputVarId[]
+
+  /**
+   * The model listing that is used to resolve variables.  This can be undefined,
+   * in which case variables cannot be referenced by name or identifier, and can only
+   * be referenced using a valid `VarSpec`.
+   */
+  readonly modelListing?: ModelListing
 
   /**
    * Run the model synchronously on the current thread.
