@@ -6,11 +6,11 @@ Specifies the data that will be used to set or override a lookup definition.
 
 ## Properties
 
-### varSpec
+### varRef
 
- **varSpec**: [`VarSpec`](VarSpec.md)
+ **varRef**: [`VarRef`](VarRef.md)
 
-The spec for the lookup or data variable to be modified.
+The reference that identifies the lookup or data variable to be modified.
 
 ___
 
