@@ -29,10 +29,6 @@ export async function config() {
       }
     },
 
-    // Copy the generated model listing to the app so that it can be loaded
-    // at runtime
-    outListingFile: generatedFilePath('listing.json'),
-
     plugins: [
       // Generate a `worker.js` file that runs the generated model in a worker
       workerPlugin({
