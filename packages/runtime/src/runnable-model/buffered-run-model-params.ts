@@ -218,7 +218,7 @@ export class BufferedRunModelParams implements RunModelParams {
    * @param outputs The structure into which the model outputs will be stored.
    * @param options Additional options that influence the model run.
    */
-  updateFromParams(inputs: (number | InputValue)[], outputs: Outputs, options?: RunModelOptions): void {
+  updateFromParams(inputs: number[] | InputValue[], outputs: Outputs, options?: RunModelOptions): void {
     // Determine the number of elements in the input and output sections
     const inputsLengthInElements = inputs.length
     const outputsLengthInElements = outputs.varIds.length * outputs.seriesLength

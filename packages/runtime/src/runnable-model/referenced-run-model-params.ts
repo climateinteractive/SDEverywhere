@@ -14,7 +14,7 @@ import type { RunModelParams } from './run-model-params'
  * the implementations of the `RunnableModel` interface.
  */
 export class ReferencedRunModelParams implements RunModelParams {
-  private inputs: (number | InputValue)[]
+  private inputs: number[] | InputValue[]
   private outputs: Outputs
   private outputsLengthInElements = 0
   private outputIndicesLengthInElements = 0
@@ -131,7 +131,7 @@ export class ReferencedRunModelParams implements RunModelParams {
    * @param outputs The structure into which the model outputs will be stored.
    * @param options Additional options that influence the model run.
    */
-  updateFromParams(inputs: (number | InputValue)[], outputs: Outputs, options?: RunModelOptions): void {
+  updateFromParams(inputs: number[] | InputValue[], outputs: Outputs, options?: RunModelOptions): void {
     // Save the latest parameters; these values will be accessed by the `RunnableModel`
     // on demand (e.g., in the `copyInputs` method)
     this.inputs = inputs

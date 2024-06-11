@@ -24,7 +24,7 @@ export interface ModelRunner {
    * @param options Additional options that influence the model run.
    * @return A promise that resolves with the outputs when the model run is complete.
    */
-  runModel(inputs: (number | InputValue)[], outputs: Outputs, options?: RunModelOptions): Promise<Outputs>
+  runModel(inputs: number[] | InputValue[], outputs: Outputs, options?: RunModelOptions): Promise<Outputs>
 
   /**
    * Run the model synchronously.
@@ -37,7 +37,7 @@ export interface ModelRunner {
    * @hidden This is only intended for internal use; some implementations may not support
    * running the model synchronously, in which case this will be undefined.
    */
-  runModelSync?(inputs: (number | InputValue)[], outputs: Outputs, options?: RunModelOptions): Outputs
+  runModelSync?(inputs: number[] | InputValue[], outputs: Outputs, options?: RunModelOptions): Outputs
 
   /**
    * Terminate the runner by releasing underlying resources (e.g., the worker thread or
