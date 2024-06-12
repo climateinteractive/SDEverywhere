@@ -3,7 +3,7 @@
 import { readFile } from 'fs/promises'
 import { join as joinPath } from 'path'
 
-import { createInputValue, createLookupDef, createSynchronousModelRunner, ModelListing } from '@sdeverywhere/runtime'
+import { createInputValue, createLookupDef, createSynchronousModelRunner } from '@sdeverywhere/runtime'
 import { spawnAsyncModelRunner } from '@sdeverywhere/runtime-async'
 
 import loadGeneratedModel from './sde-prep/generated-model.js'
@@ -51,10 +51,6 @@ function verifyDeclaredOutputs(runnerKind, run, outputs, inputX, dataOffset) {
 }
 
 async function runTests(runnerKind, modelRunner) {
-  // Read the JSON model listing
-  const listingJson = await readFile(joinPath('sde-prep', 'build', 'processed.json'), 'utf8')
-  const listing = new ModelListing(listingJson)
-
   // Create the set of inputs
   const inputX = createInputValue('_x', 0)
   const inputs = [inputX]
@@ -72,8 +68,10 @@ async function runTests(runnerKind, modelRunner) {
   const p = (x, y) => ({ x, y })
   outputs = await modelRunner.runModel(inputs, outputs, {
     lookups: [
-      createLookupDef(listing.varSpecs.get('_a_data[_a1]'), [p(2000, 160), p(2001, 260), p(2002, 360)]),
-      createLookupDef(listing.varSpecs.get('_b_data[_a2,_b1]'), [p(2000, 165), p(2001, 265), p(2002, 365)])
+      // Reference the first variable by name
+      createLookupDef({ varName: 'A data[A1]' }, [p(2000, 160), p(2001, 260), p(2002, 360)]),
+      // Reference the second variable by ID
+      createLookupDef({ varId: '_b_data[_a2,_b1]' }, [p(2000, 165), p(2001, 265), p(2002, 365)])
     ]
   })
 
@@ -88,7 +86,7 @@ async function runTests(runnerKind, modelRunner) {
 
   // Run the model with empty data override for one variable
   outputs = await modelRunner.runModel(inputs, outputs, {
-    lookups: [createLookupDef(listing.varSpecs.get('_a_data[_a1]'), [])]
+    lookups: [createLookupDef({ varId: '_a_data[_a1]' }, [])]
   })
 
   // Verify that the empty data override is in effect

@@ -7,30 +7,26 @@ import { Outputs, createLookupDef, type LookupDef } from '../_shared'
 import { BufferedRunModelParams } from './buffered-run-model-params'
 import { ModelListing } from '../model-listing'
 
-const json = `
+const listingJson = `
 {
   "dimensions": [
   ],
   "variables": [
     {
-      "refId": "_a",
-      "varName": "_a",
-      "varIndex": 1
+      "id": "_a",
+      "index": 1
     },
     {
-      "refId": "_b",
-      "varName": "_b",
-      "varIndex": 2
+      "id": "_b",
+      "index": 2
     },
     {
-      "refId": "_x",
-      "varName": "_x",
-      "varIndex": 3
+      "id": "_x",
+      "index": 3
     },
     {
-      "refId": "_y",
-      "varName": "_y",
-      "varIndex": 4
+      "id": "_y",
+      "index": 4
     }
   ]
 }
@@ -75,7 +71,7 @@ describe('BufferedRunModelParams', () => {
   })
 
   it('should update buffer (when output var specs are included)', () => {
-    const listing = new ModelListing(json)
+    const listing = new ModelListing(JSON.parse(listingJson))
 
     const inputs = [1, 2, 3]
     const normalOutputs = new Outputs(['_x', '_y'], 2000, 2002, 1)
@@ -180,7 +176,7 @@ describe('BufferedRunModelParams', () => {
   })
 
   it('should copy output indices', () => {
-    const listing = new ModelListing(json)
+    const listing = new ModelListing(JSON.parse(listingJson))
     const inputs = [1, 2, 3]
     const normalOutputs = new Outputs(['_x', '_y'], 2000, 2002, 1)
     const implOutputs = listing.deriveOutputs(normalOutputs, ['_x', '_a', '_b'])
@@ -267,18 +263,20 @@ describe('BufferedRunModelParams', () => {
   })
 
   it('should copy lookups', () => {
-    const listing = new ModelListing(json)
+    const listing = new ModelListing(JSON.parse(listingJson))
 
     const inputs = [1, 2, 3]
     const outputs = new Outputs(['_x', '_y'], 2000, 2002, 1)
 
     const lookups: LookupDef[] = [
-      createLookupDef(listing.varSpecs.get('_a'), [p(2000, 0), p(2001, 1), p(2002, 2)]),
-      createLookupDef(listing.varSpecs.get('_b'), [p(2000, 5), p(2001, 6), p(2002, 7)])
+      // Reference the first variable by name
+      createLookupDef({ varName: 'A' }, [p(2000, 0), p(2001, 1), p(2002, 2)]),
+      // Reference the second variable by ID
+      createLookupDef({ varId: '_b' }, [p(2000, 5), p(2001, 6), p(2002, 7)])
     ]
 
-    const runnerParams = new BufferedRunModelParams()
-    const workerParams = new BufferedRunModelParams()
+    const runnerParams = new BufferedRunModelParams(listing)
+    const workerParams = new BufferedRunModelParams(listing)
 
     // Run once without providing lookups
     runnerParams.updateFromParams(inputs, outputs)
@@ -292,7 +290,10 @@ describe('BufferedRunModelParams', () => {
     workerParams.updateFromEncodedBuffer(runnerParams.getEncodedBuffer())
 
     // Verify that lookups array on the worker side contains the expected values
-    expect(workerParams.getLookups()).toEqual(lookups)
+    expect(workerParams.getLookups()).toEqual([
+      createLookupDef({ varSpec: { varIndex: 1 } }, [p(2000, 0), p(2001, 1), p(2002, 2)]),
+      createLookupDef({ varSpec: { varIndex: 2 } }, [p(2000, 5), p(2001, 6), p(2002, 7)])
+    ])
 
     // Run again without lookups
     runnerParams.updateFromParams(inputs, outputs)
@@ -301,8 +302,8 @@ describe('BufferedRunModelParams', () => {
     // Verify that lookups array is undefined
     expect(workerParams.getLookups()).toBeUndefined()
 
-    // Run again with an empty lookup
-    const emptyLookup = createLookupDef(listing.varSpecs.get('_a'), [])
+    // Run again with an empty lookup.  This time we reference the variable by spec.
+    const emptyLookup = createLookupDef({ varSpec: listing.varSpecs.get('_a') }, [])
     runnerParams.updateFromParams(inputs, outputs, {
       lookups: [emptyLookup]
     })

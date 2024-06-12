@@ -1,6 +1,7 @@
 // Copyright (c) 2024 Climate Interactive / New Venture Fund
 
 import type { LookupDef, OutputVarId } from '../_shared'
+import type { ModelListing } from '../model-listing'
 import { perfElapsed, perfNow } from '../perf'
 import type { RunModelParams } from './run-model-params'
 import type { RunnableModel } from './runnable-model'
@@ -32,6 +33,8 @@ export class BaseRunnableModel implements RunnableModel {
   public readonly saveFreq: number
   public readonly numSavePoints: number
   public readonly outputVarIds: OutputVarId[]
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  public readonly modelListing?: /*ModelListingSpecs*/ any
 
   private readonly onRunModel: OnRunModelFunc
 
@@ -45,6 +48,7 @@ export class BaseRunnableModel implements RunnableModel {
     saveFreq: number
     numSavePoints: number
     outputVarIds: OutputVarId[]
+    modelListing?: ModelListing
     onRunModel: OnRunModelFunc
   }) {
     this.startTime = options.startTime
@@ -52,6 +56,7 @@ export class BaseRunnableModel implements RunnableModel {
     this.saveFreq = options.saveFreq
     this.numSavePoints = options.numSavePoints
     this.outputVarIds = options.outputVarIds
+    this.modelListing = options.modelListing
     this.onRunModel = options.onRunModel
   }
 

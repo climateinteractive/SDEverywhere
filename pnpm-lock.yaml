@@ -77,9 +77,6 @@ importers:
       '@sdeverywhere/cli':
         specifier: ^0.7.23
         version: link:../../packages/cli
-      '@sdeverywhere/plugin-config':
-        specifier: ^0.2.4
-        version: link:../../packages/plugin-config
       '@sdeverywhere/plugin-vite':
         specifier: ^0.1.8
         version: link:../../packages/plugin-vite

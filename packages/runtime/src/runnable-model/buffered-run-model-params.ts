@@ -2,6 +2,8 @@
 
 import { indicesPerVariable, updateVarIndices } from '../_shared'
 import type { InputValue, LookupDef, Outputs, VarSpec } from '../_shared'
+import type { ModelListing } from '../model-listing'
+import { resolveVarRef } from './resolve-var-ref'
 import type { RunModelOptions } from './run-model-options'
 import type { RunModelParams } from './run-model-params'
 
@@ -92,6 +94,13 @@ export class BufferedRunModelParams implements RunModelParams {
 
   /** The lookup indices section of the `encoded` buffer. */
   private readonly lookupIndices = new Int32Section()
+
+  /**
+   * @param listing The model listing that is used to locate a variable that is referenced by
+   * name or identifier.  If undefined, variables cannot be referenced by name or identifier,
+   * and can only be referenced using a valid `VarSpec`.
+   */
+  constructor(private readonly listing?: ModelListing) {}
 
   /**
    * Return the encoded buffer from this instance, which can be passed to `updateFromEncodedBuffer`.
@@ -218,7 +227,7 @@ export class BufferedRunModelParams implements RunModelParams {
    * @param outputs The structure into which the model outputs will be stored.
    * @param options Additional options that influence the model run.
    */
-  updateFromParams(inputs: (number | InputValue)[], outputs: Outputs, options?: RunModelOptions): void {
+  updateFromParams(inputs: number[] | InputValue[], outputs: Outputs, options?: RunModelOptions): void {
     // Determine the number of elements in the input and output sections
     const inputsLengthInElements = inputs.length
     const outputsLengthInElements = outputs.varIds.length * outputs.seriesLength
@@ -239,6 +248,12 @@ export class BufferedRunModelParams implements RunModelParams {
     let lookupsLengthInElements: number
     let lookupIndicesLengthInElements: number
     if (options?.lookups !== undefined && options.lookups.length > 0) {
+      // Resolve the `varSpec` for each `LookupDef`.  If the variable can be resolved, this
+      // will fill in the `varSpec` for the `LookupDef`, otherwise it will throw an error.
+      for (const lookupDef of options.lookups) {
+        resolveVarRef(this.listing, lookupDef.varRef, 'lookup')
+      }
+
       // Compute the required lengths
       const encodedLengths = getEncodedLookupBufferLengths(options.lookups)
       lookupsLengthInElements = encodedLengths.lookupsLength
@@ -426,6 +441,7 @@ function getEncodedLookupBufferLengths(lookupDefs: LookupDef[]): {
   //   lookupN data length (in float64 elements)
   //   ... (repeat for each lookup)
   const numIndexElementsForTotalCount = 1
+  // TODO: Update this once we support > 3 subscripts
   const numIndexElementsPerLookup = 6
   let lookupsLength = 0
   let lookupIndicesLength = numIndexElementsForTotalCount
@@ -460,9 +476,11 @@ function encodeLookups(
   let lookupDataOffset = 0
   for (const lookupDef of lookupDefs) {
     // Store lookup indices
-    const subs = lookupDef.varSpec.subscriptIndices
-    const subCount = lookupDef.varSpec.subscriptIndices?.length || 0
-    lookupIndicesView[li++] = lookupDef.varSpec.varIndex
+    const varSpec = lookupDef.varRef.varSpec
+    const subs = varSpec.subscriptIndices
+    const subCount = varSpec.subscriptIndices?.length || 0
+    lookupIndicesView[li++] = varSpec.varIndex
+    // TODO: Update this once we support > 3 subscripts
     lookupIndicesView[li++] = subCount > 0 ? subs[0] : -1
     lookupIndicesView[li++] = subCount > 1 ? subs[1] : -1
     lookupIndicesView[li++] = subCount > 2 ? subs[2] : -1
@@ -492,6 +510,7 @@ function decodeLookups(lookupsView: Float64Array | undefined, lookupIndicesView:
   for (let i = 0; i < lookupCount; i++) {
     // Read the metadata from the lookup indices buffer
     const varIndex = lookupIndicesView[li++]
+    // TODO: Update this once we support > 3 subscripts
     const subIndex0 = lookupIndicesView[li++]
     const subIndex1 = lookupIndicesView[li++]
     const subIndex2 = lookupIndicesView[li++]
@@ -517,7 +536,9 @@ function decodeLookups(lookupsView: Float64Array | undefined, lookupIndicesView:
       points = new Float64Array(0)
     }
     lookupDefs.push({
-      varSpec,
+      varRef: {
+        varSpec
+      },
       points
     })
   }

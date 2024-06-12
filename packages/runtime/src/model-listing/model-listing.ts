@@ -1,6 +1,6 @@
 // Copyright (c) 2023 Climate Interactive / New Venture Fund
 
-import type { OutputVarId, VarId, VarSpec } from '../_shared'
+import type { OutputVarId, VarId, VarName, VarSpec } from '../_shared'
 import { Outputs } from '../_shared'
 
 type SubscriptId = string
@@ -12,8 +12,6 @@ type DimensionId = string
 interface Subscript {
   /** The subscript identifier, as used in SDE. */
   id: SubscriptId
-  // /** The original subscript name, as used in the modeling tool. */
-  // name: string
   /* The zero-based index for the subscript within the dimension. */
   index: number
 }
@@ -24,10 +22,28 @@ interface Subscript {
 interface Dimension {
   /** The dimension identifier, as used in SDE. */
   id: DimensionId
-  // /** The original dimension name, as used in the modeling tool. */
-  // name: string
   /** The set of subscripts in this dimension. */
   subscripts: Subscript[]
+}
+
+/**
+ * This matches the shape of the minimal model `listing_min.json` that is generated
+ * by the `sde generate --list` command.
+ *
+ * @hidden This is not yet part of the public API; it is exposed here for
+ * internal use only.
+ */
+export interface ModelListingSpecs {
+  dimensions: {
+    id: DimensionId
+    subIds: SubscriptId[]
+  }[]
+
+  variables: {
+    id: VarId
+    index: number
+    dimIds?: DimensionId[]
+  }[]
 }
 
 /**
@@ -37,25 +53,20 @@ interface Dimension {
 export class ModelListing {
   public readonly varSpecs: Map<VarId, VarSpec> = new Map()
 
-  constructor(modelJsonString: string) {
-    // Parse the model listing JSON (as written by `sde generate --list`)
-    const modelJson = JSON.parse(modelJsonString)
-
+  constructor(listingObj: ModelListingSpecs) {
     // Put dimension info into a map for easier access
     const dimensions: Map<DimensionId, Dimension> = new Map()
-    for (const dimInfo of modelJson.dimensions) {
-      const dimId = dimInfo.name
+    for (const dimInfo of listingObj.dimensions) {
+      const dimId = dimInfo.id
       const subscripts: Subscript[] = []
-      for (let i = 0; i < dimInfo.value.length; i++) {
+      for (let i = 0; i < dimInfo.subIds.length; i++) {
         subscripts.push({
-          id: dimInfo.value[i],
-          // name: dimInfo.modelValue[i]
+          id: dimInfo.subIds[i],
           index: i
         })
       }
       dimensions.set(dimId, {
         id: dimId,
-        // name: dimInfo.modelName,
         subscripts
       })
     }
@@ -71,22 +82,18 @@ export class ModelListing {
     // Gather the set of unique variables (consolidating refs that have different
     // subscripts but refer to the same variable)
     const baseVarIds: Set<OutputVarId> = new Set()
-    for (const v of modelJson.variables) {
+    for (const v of listingObj.variables) {
       // Get the base name of the variable (without subscripts)
-      const baseVarId = varIdWithoutSubscripts(v.varName)
+      const baseVarId = varIdWithoutSubscripts(v.id)
 
       if (!baseVarIds.has(baseVarId)) {
         // Look up dimensions from the map
-        const dimIds: DimensionId[] = v.families || []
+        const dimIds: DimensionId[] = v.dimIds || []
         const dimensions = dimIds.map(dimensionForId)
 
         // Expand and add all combinations of subscripts
         if (dimensions.length > 0) {
           // The variable is subscripted
-          if (dimensions.length > 3) {
-            // TODO: Add support for variables with more than 3 dimensions
-            throw new Error('Variables with more than 3 dimensions not currently supported')
-          }
           const dimSubs: Subscript[][] = []
           for (const dim of dimensions) {
             // For each dimension, get the array of subscripts;
@@ -101,14 +108,14 @@ export class ModelListing {
             const subIndices = combo.map(sub => sub.index)
             const fullVarId = `${baseVarId}[${subs}]`
             this.varSpecs.set(fullVarId, {
-              varIndex: v.varIndex,
+              varIndex: v.index,
               subscriptIndices: subIndices
             })
           }
         } else {
           // The variable is not subscripted
           this.varSpecs.set(baseVarId, {
-            varIndex: v.varIndex
+            varIndex: v.index
           })
         }
 
@@ -116,6 +123,23 @@ export class ModelListing {
         baseVarIds.add(baseVarId)
       }
     }
+  }
+
+  /**
+   * Return the `VarSpec` for the given variable ID, or undefined if there is no spec defined
+   * in the listing for that variable.
+   */
+  getSpecForVarId(varId: VarId): VarSpec | undefined {
+    return this.varSpecs.get(varId)
+  }
+
+  /**
+   * Return the `VarSpec` for the given variable name, or undefined if there is no spec defined
+   * in the listing for that variable.
+   */
+  getSpecForVarName(varName: VarName): VarSpec | undefined {
+    const varId = sdeVarIdForVensimVarName(varName)
+    return this.varSpecs.get(varId)
   }
 
   /**
@@ -176,4 +200,49 @@ function cartesianProductOf<T>(arr: T[][]): T[][] {
     },
     [[]]
   )
+}
+
+/**
+ * Helper function that converts a Vensim variable or subscript name
+ * into a valid C identifier as used by SDE.
+ * TODO: Import helper function from `compile` package instead
+ */
+function sdeVarIdForVensimName(name: string): string {
+  return (
+    '_' +
+    name
+      .trim()
+      .replace(/"/g, '_')
+      .replace(/\s+!$/g, '!')
+      .replace(/\s/g, '_')
+      .replace(/,/g, '_')
+      .replace(/-/g, '_')
+      .replace(/\./g, '_')
+      .replace(/\$/g, '_')
+      .replace(/'/g, '_')
+      .replace(/&/g, '_')
+      .replace(/%/g, '_')
+      .replace(/\//g, '_')
+      .replace(/\|/g, '_')
+      .toLowerCase()
+  )
+}
+
+/**
+ * Helper function that converts a Vensim variable name (possibly containing
+ * subscripts) into a valid C identifier as used by SDE.
+ * TODO: Import helper function from `compile` package instead
+ */
+function sdeVarIdForVensimVarName(varName: string): string {
+  const m = varName.match(/([^[]+)(?:\[([^\]]+)\])?/)
+  if (!m) {
+    throw new Error(`Invalid Vensim name: ${varName}`)
+  }
+  let id = sdeVarIdForVensimName(m[1])
+  if (m[2]) {
+    const subscripts = m[2].split(',').map(x => sdeVarIdForVensimName(x))
+    id += `[${subscripts.join(',')}]`
+  }
+
+  return id
 }

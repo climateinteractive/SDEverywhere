@@ -9,7 +9,12 @@ import type { OutputVarId } from '../_shared'
  */
 export interface WasmModule {
   readonly kind: 'wasm'
+
   readonly outputVarIds: OutputVarId[]
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  readonly modelListing?: /*ModelListingSpecs*/ any
+
   /** @hidden */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   cwrap: (fname: string, rettype: string, argtypes: string[]) => any

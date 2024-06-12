@@ -25,7 +25,7 @@ function readSubscriptsAndEquationsFromSource(
   opts?: {
     specialSeparationDims?: { [key: string]: string }
   }
-): any {
+): { full: any; minimal: any } {
   // XXX: These steps are needed due to subs/dims and variables being in module-level storage
   resetHelperState()
   resetSubscriptsAndDimensions()
@@ -54,7 +54,7 @@ function readSubscriptsAndEquationsFromSource(
     stopAfterAnalyze: true
   })
 
-  return JSON.parse(Model.jsonList())
+  return Model.jsonList()
 }
 
 function readInlineModel(
@@ -70,7 +70,7 @@ function readInlineModel(
 describe('Model', () => {
   describe('jsonList', () => {
     it('should expose accessible variables', () => {
-      const json = readInlineModel(`
+      const listing = readInlineModel(`
         DimA: A1, A2 ~~|
         DimB: B1, B2 ~~|
         input = 1 ~~|
@@ -92,7 +92,8 @@ describe('Model', () => {
         TIME STEP = 1 ~~|
         SAVEPER = 1 ~~|
       `)
-      expect(json).toEqual({
+
+      expect(listing.full).toEqual({
         dimensions: [
           {
             modelName: 'DimA',
@@ -318,6 +319,102 @@ describe('Model', () => {
             modelLHS: 'level',
             modelFormula: 'INTEG(x,level init)',
             varIndex: 19
+          }
+        ]
+      })
+
+      expect(listing.minimal).toEqual({
+        dimensions: [
+          {
+            id: '_dima',
+            subIds: ['_a1', '_a2']
+          },
+          {
+            id: '_dimb',
+            subIds: ['_b1', '_b2']
+          }
+        ],
+        variables: [
+          {
+            id: '_final_time',
+            index: 1
+          },
+          {
+            id: '_initial_time',
+            index: 2
+          },
+          {
+            id: '_saveper',
+            index: 3
+          },
+          {
+            id: '_time_step',
+            index: 4
+          },
+          {
+            id: '_d',
+            dimIds: ['_dima'],
+            index: 5
+          },
+          {
+            id: '_input',
+            index: 6
+          },
+          {
+            id: '_level_init',
+            index: 7
+          },
+          {
+            id: '_a_data',
+            dimIds: ['_dima'],
+            index: 8
+          },
+          {
+            id: '_b_data',
+            dimIds: ['_dima', '_dimb'],
+            index: 9
+          },
+          {
+            id: '_c_data',
+            index: 10
+          },
+          {
+            id: '_time',
+            index: 11
+          },
+          {
+            id: '_a',
+            dimIds: ['_dima'],
+            index: 12
+          },
+          {
+            id: '_b',
+            dimIds: ['_dima', '_dimb'],
+            index: 13
+          },
+          {
+            id: '_c',
+            index: 14
+          },
+          {
+            id: '_x',
+            index: 15
+          },
+          {
+            id: '_w',
+            index: 16
+          },
+          {
+            id: '_y',
+            index: 17
+          },
+          {
+            id: '_z',
+            index: 18
+          },
+          {
+            id: '_level',
+            index: 19
           }
         ]
       })

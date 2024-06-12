@@ -3,8 +3,7 @@
 import type { Result } from 'neverthrow'
 import { ok, err } from 'neverthrow'
 
-import type { OutputVarId, Point } from './types'
-import type { VarSpec } from './var-indices'
+import type { OutputVarId, Point, VarSpec } from './types'
 
 /** Indicates the type of error encountered when parsing an outputs buffer. */
 export type ParseError = 'invalid-point-count'

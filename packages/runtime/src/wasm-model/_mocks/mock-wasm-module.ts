@@ -2,7 +2,7 @@
 
 import type { OutputVarId, VarId, VarSpec } from '../../_shared'
 import { JsModelLookup } from '../../js-model/js-model-lookup'
-import type { ModelListing } from '../../model-listing'
+import { ModelListing } from '../../model-listing'
 import type { WasmModule } from '../wasm-module'
 
 /**
@@ -27,6 +27,11 @@ export class MockWasmModule implements WasmModule {
   // from WasmModule interface
   public readonly outputVarIds: OutputVarId[]
 
+  // from WasmModule interface
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  public readonly modelListing?: any
+  private readonly internalListing?: ModelListing
+
   private readonly initialTime: number
   private readonly finalTime: number
 
@@ -44,21 +49,22 @@ export class MockWasmModule implements WasmModule {
 
   private readonly lookups: Map<VarId, JsModelLookup> = new Map()
 
-  private listing: ModelListing
-
   public readonly onRunModel: OnRunModel
 
   constructor(options: {
     initialTime: number
     finalTime: number
     outputVarIds: string[]
-    listing?: ModelListing
+    listingJson?: string
     onRunModel: OnRunModel
   }) {
     this.initialTime = options.initialTime
     this.finalTime = options.finalTime
     this.outputVarIds = options.outputVarIds
-    this.listing = options.listing
+    if (options.listingJson) {
+      this.modelListing = JSON.parse(options.listingJson)
+      this.internalListing = new ModelListing(this.modelListing)
+    }
     this.onRunModel = options.onRunModel
 
     this.heap = new ArrayBuffer(8192)
@@ -66,12 +72,8 @@ export class MockWasmModule implements WasmModule {
     this.HEAPF64 = new Float64Array(this.heap)
   }
 
-  setListing(listing: ModelListing) {
-    this.listing = listing
-  }
-
   varIdForSpec(varSpec: VarSpec): VarId {
-    for (const [listingVarId, listingSpec] of this.listing.varSpecs) {
+    for (const [listingVarId, listingSpec] of this.internalListing.varSpecs) {
       // TODO: This doesn't compare subscripts yet
       if (listingSpec.varIndex === varSpec.varIndex) {
         return listingVarId

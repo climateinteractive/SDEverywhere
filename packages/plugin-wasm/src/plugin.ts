@@ -1,7 +1,7 @@
 // Copyright (c) 2022 Climate Interactive / New Venture Fund
 
-import { existsSync, mkdirSync } from 'fs'
-import { writeFile } from 'fs/promises'
+import { existsSync } from 'fs'
+import { readFile, writeFile } from 'fs/promises'
 
 import { basename, dirname, join as joinPath } from 'path'
 
@@ -17,23 +17,14 @@ export function wasmPlugin(options?: WasmPluginOptions): Plugin {
 }
 
 class WasmPlugin implements Plugin {
+  /** The output var IDs captured in `preGenerate`. */
+  private outputVarIds: string[]
+
   constructor(private readonly options?: WasmPluginOptions) {}
 
-  async preGenerate(context: BuildContext, modelSpec: ResolvedModelSpec): Promise<void> {
-    // Ensure that the build directory exists before we generate a file into it
-    const buildDir = joinPath(context.config.prepDir, 'build')
-    if (!existsSync(buildDir)) {
-      mkdirSync(buildDir, { recursive: true })
-    }
-
-    // Write a file that will be folded into the generated Wasm module
-    const preJsFile = joinPath(buildDir, 'processed_extras.js')
-    const outputVarIds = modelSpec.outputs.map(o => sdeNameForVensimVarName(o.varName))
-    const content = `\
-Module["kind"] = "wasm";
-Module["outputVarIds"] = ${JSON.stringify(outputVarIds)};
-`
-    await writeFile(preJsFile, content)
+  async preGenerate(_context: BuildContext, modelSpec: ResolvedModelSpec): Promise<void> {
+    // Save the output var IDs for later processing
+    this.outputVarIds = modelSpec.outputs.map(o => sdeNameForVensimVarName(o.varName))
   }
 
   async postGenerateCode(context: BuildContext, format: 'js' | 'c', content: string): Promise<string> {
@@ -42,6 +33,22 @@ Module["outputVarIds"] = ${JSON.stringify(outputVarIds)};
     }
 
     context.log('info', '  Generating WebAssembly module')
+
+    // Read the minimal model listing
+    const buildDir = joinPath(context.config.prepDir, 'build')
+    const modelListingPath = joinPath(buildDir, 'processed_min.json')
+    const modelListingJson = await readFile(modelListingPath, 'utf8')
+    const modelListingObj = JSON.parse(modelListingJson)
+    const modelListingJs = JSON.stringify(modelListingObj).replace(/"(\w+)"\s*:/g, '$1:')
+
+    // Write a file that will be folded into the generated Wasm module
+    const preJsFile = joinPath(buildDir, 'processed_extras.js')
+    const preJsContent = `\
+Module["kind"] = "wasm";
+Module["outputVarIds"] = ${JSON.stringify(this.outputVarIds)};
+Module["modelListing"] = ${modelListingJs}
+`
+    await writeFile(preJsFile, preJsContent)
 
     // If `outputJsPath` is undefined, write `generated-model.js` to the prep dir
     const stagedOutputJsFile = 'generated-model.js'

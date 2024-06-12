@@ -32,7 +32,7 @@ Run the model.
 
 | Name | Type | Description |
 | :------ | :------ | :------ |
-| `inputs` | (`number` \| [`InputValue`](InputValue.md))[] | The model input values (must be in the same order as in the spec file). |
+| `inputs` | `number`[] \| [`InputValue`](InputValue.md)[] | The model input values (must be in the same order as in the spec file). |
 | `outputs` | [`Outputs`](../classes/Outputs.md) | The structure into which the model outputs will be stored. |
 | `options?` | [`RunModelOptions`](RunModelOptions.md) | Additional options that influence the model run. |
 
