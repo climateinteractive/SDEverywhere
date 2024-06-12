@@ -3,17 +3,14 @@ import { workerPlugin } from '@sdeverywhere/plugin-worker'
 
 const genFormat = process.env.GEN_FORMAT === 'c' ? 'c' : 'js'
 
-const outputVarNames = ['Y[A1]', 'Y[A2]']
-
 export async function config() {
   return {
     genFormat,
     modelFiles: ['game-inputs.mdl'],
     modelSpec: async () => {
       return {
-        inputs: [{ varName: 'X', defaultValue: 0, minValue: -10, maxValue: 10 }],
-        outputs: outputVarNames.map(varName => ({ varName })),
-        datFiles: []
+        inputs: ['X'],
+        outputs: ['Y[A1]', 'Y[A2]']
       }
     },
 

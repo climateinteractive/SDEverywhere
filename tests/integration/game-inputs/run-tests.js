@@ -3,7 +3,7 @@
 import { readFile } from 'fs/promises'
 import { join as joinPath } from 'path'
 
-import { createInputValue, createLookupDef, createSynchronousModelRunner, ModelListing } from '@sdeverywhere/runtime'
+import { createInputValue, createLookupDef, createSynchronousModelRunner } from '@sdeverywhere/runtime'
 import { spawnAsyncModelRunner } from '@sdeverywhere/runtime-async'
 
 import loadGeneratedModel from './sde-prep/generated-model.js'
@@ -34,10 +34,6 @@ function verify(runnerKind, run, outputs, varId, expectedValues) {
 }
 
 async function runTests(runnerKind, modelRunner) {
-  // Read the JSON model listing
-  const listingJson = await readFile(joinPath('sde-prep', 'build', 'processed.json'), 'utf8')
-  const listing = new ModelListing(listingJson)
-
   // Create the set of inputs
   const inputX = createInputValue('_x', 0)
   const inputs = [inputX]
@@ -58,7 +54,7 @@ async function runTests(runnerKind, modelRunner) {
   // that year.
   const p = (x, y) => ({ x, y })
   outputs = await modelRunner.runModel(inputs, outputs, {
-    lookups: [createLookupDef(listing.varSpecs.get('_y_game_inputs[_a1]'), [p(2001, 260), p(2002, 360)])]
+    lookups: [createLookupDef({ varName: 'Y game inputs[A1]' }, [p(2001, 260), p(2002, 360)])]
   })
 
   // Verify that the game inputs are reflected in the first output variable
@@ -75,7 +71,7 @@ async function runTests(runnerKind, modelRunner) {
 
   // Run the model with empty game inputs for the one variable
   outputs = await modelRunner.runModel(inputs, outputs, {
-    lookups: [createLookupDef(listing.varSpecs.get('_y_game_inputs[_a1]'), [])]
+    lookups: [createLookupDef({ varName: 'Y game inputs[A1]' }, [])]
   })
 
   // Verify that the empty game inputs lookup is in effect
