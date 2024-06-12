@@ -1,4 +1,3 @@
-import { copyFile } from 'fs/promises'
 import { dirname, join as joinPath } from 'path'
 import { fileURLToPath } from 'url'
 
@@ -10,21 +9,6 @@ const packagePath = (...parts) => joinPath(__dirname, 'packages', ...parts)
 const appPath = (...parts) => packagePath('app', ...parts)
 const generatedFilePath = (...parts) => appPath('src', 'model', 'generated', ...parts)
 
-function input(varName, defaultValue) {
-  return {
-    varName,
-    defaultValue,
-    minValue: defaultValue,
-    maxValue: defaultValue
-  }
-}
-
-function output(varName) {
-  return {
-    varName
-  }
-}
-
 export async function config() {
   return {
     // Specify the Vensim model to read
@@ -34,30 +18,17 @@ export async function config() {
     modelSpec: async () => {
       return {
         inputs: [
-          input('additional houses required value', 0),
-          input('average house life', 0),
-          input('time to plan to build', 3),
-          input('time to build houses', 6),
-          input('time to respond to gap', 8)
+          'additional houses required value',
+          'average house life',
+          'time to plan to build',
+          'time to build houses',
+          'time to respond to gap'
         ],
-        outputs: [output('number of houses required'), output('houses completed')],
-        datFiles: []
+        outputs: ['number of houses required', 'houses completed']
       }
     },
 
     plugins: [
-      // Copy the generated model listing to the app so that it can be loaded
-      // at runtime
-      {
-        postGenerate: async context => {
-          const srcPath = joinPath(context.config.prepDir, 'build', 'processed.json')
-          const dstName = 'listing.json'
-          const stagedFilePath = context.prepareStagedFile('model', dstName, generatedFilePath(), dstName)
-          await copyFile(srcPath, stagedFilePath)
-          return true
-        }
-      },
-
       // Generate a `worker.js` file that runs the generated model in a worker
       workerPlugin({
         outputPaths: [generatedFilePath('worker.js')]

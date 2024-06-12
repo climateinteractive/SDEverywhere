@@ -549,11 +549,107 @@ function evalAux0() {
   }
 }
 
+/*export*/ const modelListing = {
+  dimensions: [
+    {
+      id: '_dima',
+      subIds: [
+        '_a1',
+        '_a2'
+      ]
+    },
+    {
+      id: '_dimb',
+      subIds: [
+        '_b1',
+        '_b2'
+      ]
+    }
+  ],
+  variables: [
+    {
+      id: '_final_time',
+      index: 1
+    },
+    {
+      id: '_initial_time',
+      index: 2
+    },
+    {
+      id: '_saveper',
+      index: 3
+    },
+    {
+      id: '_time_step',
+      index: 4
+    },
+    {
+      id: '_input',
+      index: 5
+    },
+    {
+      id: '_a_data',
+      dimIds: [
+        '_dima'
+      ],
+      index: 6
+    },
+    {
+      id: '_b_data',
+      dimIds: [
+        '_dima',
+        '_dimb'
+      ],
+      index: 7
+    },
+    {
+      id: '_c_data',
+      index: 8
+    },
+    {
+      id: '_a',
+      dimIds: [
+        '_dima'
+      ],
+      index: 9
+    },
+    {
+      id: '_b',
+      dimIds: [
+        '_dima',
+        '_dimb'
+      ],
+      index: 10
+    },
+    {
+      id: '_c',
+      index: 11
+    },
+    {
+      id: '_x',
+      index: 12
+    },
+    {
+      id: '_w',
+      index: 13
+    },
+    {
+      id: '_y',
+      index: 14
+    },
+    {
+      id: '_z',
+      index: 15
+    }
+  ]
+}
+
 export default async function () {
   return {
     kind: 'js',
     outputVarIds,
     outputVarNames,
+    modelListing,
 
     getInitialTime,
     getFinalTime,

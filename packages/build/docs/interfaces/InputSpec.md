@@ -6,6 +6,14 @@ Describes a model input variable.
 
 ## Properties
 
+### varName
+
+ **varName**: `string`
+
+The variable name (as used in the modeling tool).
+
+___
+
 ### inputId
 
  `Optional` **inputId**: `string`
@@ -19,17 +27,9 @@ note that this approach will be less resilient to renames.
 
 ___
 
-### varName
-
- **varName**: `string`
-
-The variable name (as used in the modeling tool).
-
-___
-
 ### defaultValue
 
- **defaultValue**: `number`
+ `Optional` **defaultValue**: `number`
 
 The default value for the input.
 
@@ -37,7 +37,7 @@ ___
 
 ### minValue
 
- **minValue**: `number`
+ `Optional` **minValue**: `number`
 
 The minimum value for the input.
 
@@ -45,6 +45,6 @@ ___
 
 ### maxValue
 
- **maxValue**: `number`
+ `Optional` **maxValue**: `number`
 
 The maximum value for the input.

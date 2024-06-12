@@ -2,6 +2,8 @@
 
 import type { InputValue, LookupDef, Outputs } from '../_shared'
 import { indicesPerVariable, updateVarIndices } from '../_shared'
+import type { ModelListing } from '../model-listing'
+import { resolveVarRef } from './resolve-var-ref'
 import type { RunModelOptions } from './run-model-options'
 import type { RunModelParams } from './run-model-params'
 
@@ -14,11 +16,18 @@ import type { RunModelParams } from './run-model-params'
  * the implementations of the `RunnableModel` interface.
  */
 export class ReferencedRunModelParams implements RunModelParams {
-  private inputs: (number | InputValue)[]
+  private inputs: number[] | InputValue[]
   private outputs: Outputs
   private outputsLengthInElements = 0
   private outputIndicesLengthInElements = 0
   private lookups: LookupDef[]
+
+  /**
+   * @param listing The model listing that is used to locate a variable that is referenced by
+   * name or identifier.  If undefined, variables cannot be referenced by name or identifier,
+   * and can only be referenced using a valid `VarSpec`.
+   */
+  constructor(private readonly listing?: ModelListing) {}
 
   // from RunModelParams interface
   getInputs(): Float64Array | undefined {
@@ -131,13 +140,21 @@ export class ReferencedRunModelParams implements RunModelParams {
    * @param outputs The structure into which the model outputs will be stored.
    * @param options Additional options that influence the model run.
    */
-  updateFromParams(inputs: (number | InputValue)[], outputs: Outputs, options?: RunModelOptions): void {
+  updateFromParams(inputs: number[] | InputValue[], outputs: Outputs, options?: RunModelOptions): void {
     // Save the latest parameters; these values will be accessed by the `RunnableModel`
     // on demand (e.g., in the `copyInputs` method)
     this.inputs = inputs
     this.outputs = outputs
     this.outputsLengthInElements = outputs.varIds.length * outputs.seriesLength
     this.lookups = options?.lookups
+
+    if (this.lookups) {
+      // Resolve the `varSpec` for each `LookupDef`.  If the variable can be resolved, this
+      // will fill in the `varSpec` for the `LookupDef`, otherwise it will throw an error.
+      for (const lookupDef of this.lookups) {
+        resolveVarRef(this.listing, lookupDef.varRef, 'lookup')
+      }
+    }
 
     // See if the output indices are needed
     const outputVarSpecs = outputs.varSpecs

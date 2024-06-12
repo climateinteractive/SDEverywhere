@@ -29,6 +29,14 @@ export interface RunnableModel {
   readonly outputVarIds: OutputVarId[]
 
   /**
+   * The model listing that is used to resolve variables.  This can be undefined,
+   * in which case variables cannot be referenced by name or identifier, and can only
+   * be referenced using a valid `VarSpec`.
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  readonly modelListing?: /*ModelListingSpecs*/ any
+
+  /**
    * Run the model synchronously on the current thread.
    *
    * @param params The parameters that control the model run.

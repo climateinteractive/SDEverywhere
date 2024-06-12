@@ -1,11 +1,10 @@
 import { Readable, Writable, get, writable } from 'svelte/store'
 
 import type { ModelRunner, Point } from '@sdeverywhere/runtime'
-import { ModelListing, Outputs, createLookupDef } from '@sdeverywhere/runtime'
+import { Outputs, createLookupDef } from '@sdeverywhere/runtime'
 
 import { spawnAsyncModelRunner } from '@sdeverywhere/runtime-async'
 
-import modelListingJson from './generated/listing.json?raw'
 import modelWorkerJs from './generated/worker.js?raw'
 import { AppState, inputValuesForState, stateForIndex } from './app-state'
 
@@ -13,16 +12,13 @@ import { AppState, inputValuesForState, stateForIndex } from './app-state'
  * Create an `AppModel` instance.
  */
 export async function createAppModel(): Promise<AppModel> {
-  // Load the model listing
-  const listing = new ModelListing(modelListingJson)
-
   // Initialize the generated model asynchronously.  We inline the worker code in the
   // rolled-up bundle, so that we don't have to fetch a separate `worker.js` file.
   const runner = await spawnAsyncModelRunner({ source: modelWorkerJs })
   const outputs = runner.createOutputs()
 
   // Create the `AppModel` instance
-  return new AppModel(listing, runner, outputs)
+  return new AppModel(runner, outputs)
 }
 
 /**
@@ -45,11 +41,7 @@ export class AppModel {
 
   public onDataUpdated: (outputs: Outputs, maxTime: number) => void
 
-  constructor(
-    private readonly listing: ModelListing,
-    private readonly runner: ModelRunner,
-    private readonly outputs: Outputs
-  ) {
+  constructor(private readonly runner: ModelRunner, private readonly outputs: Outputs) {
     this.writableBusy = writable(false)
     this.busy = this.writableBusy
 
@@ -128,8 +120,7 @@ export class AppModel {
         }
       ]
     }
-    const gameDataVarSpec = this.listing.varSpecs.get('_planning_game_inputs')
-    const gameLookup = createLookupDef(gameDataVarSpec, this.gameLookupPoints)
+    const gameLookup = createLookupDef({ varName: 'planning game inputs' }, this.gameLookupPoints)
     const lookups = [gameLookup]
 
     // Set the "busy" flag (to put the UI into a non-editable state)

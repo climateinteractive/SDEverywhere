@@ -64,6 +64,16 @@ defaults to 'js'.
 
 ___
 
+### outListingFile
+
+ `Optional` **outListingFile**: `string`
+
+If defined, the build process will write a JSON file to the provided path that lists
+all dimensions and variables in the model.  This can be an absolute path, or if it
+is a relative path it will be resolved relative to the `rootDir` for the project.
+
+___
+
 ### plugins
 
  `Optional` **plugins**: [`Plugin`](Plugin.md)[]

@@ -2,7 +2,7 @@
 
 # Function: createLookupDef
 
-**createLookupDef**(`varSpec`, `points`): [`LookupDef`](../interfaces/LookupDef.md)
+**createLookupDef**(`varRef`, `points`): [`LookupDef`](../interfaces/LookupDef.md)
 
 Create a `LookupDef` instance from the given array of `Point` objects.
 
@@ -10,7 +10,7 @@ Create a `LookupDef` instance from the given array of `Point` objects.
 
 | Name | Type | Description |
 | :------ | :------ | :------ |
-| `varSpec` | [`VarSpec`](../interfaces/VarSpec.md) | The spec for the lookup or data variable to be modified. |
+| `varRef` | [`VarRef`](../interfaces/VarRef.md) | The reference to the lookup or data variable to be modified. |
 | `points` | [`Point`](../interfaces/Point.md)[] | The lookup data as an array of `Point` objects. |
 
 #### Returns

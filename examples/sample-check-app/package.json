@@ -12,7 +12,7 @@
     "prettier:fix": "prettier --write .",
     "precommit": "../../scripts/precommit",
     "test": "echo No tests yet",
-    "type-check": "tsc --noEmit -p tsconfig-build.json",
+    "type-check": "tsc --noEmit -p tsconfig-test.json",
     "build": "vite build",
     "dev": "vite",
     "ci:build": "run-s clean lint prettier:check type-check build"

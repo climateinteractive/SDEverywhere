@@ -7,30 +7,26 @@ import { Outputs, createLookupDef, type LookupDef } from '../_shared'
 import { BufferedRunModelParams } from './buffered-run-model-params'
 import { ModelListing } from '../model-listing'
 
-const json = `
+const listingJson = `
 {
   "dimensions": [
   ],
   "variables": [
     {
-      "refId": "_a",
-      "varName": "_a",
-      "varIndex": 1
+      "id": "_a",
+      "index": 1
     },
     {
-      "refId": "_b",
-      "varName": "_b",
-      "varIndex": 2
+      "id": "_b",
+      "index": 2
     },
     {
-      "refId": "_x",
-      "varName": "_x",
-      "varIndex": 3
+      "id": "_x",
+      "index": 3
     },
     {
-      "refId": "_y",
-      "varName": "_y",
-      "varIndex": 4
+      "id": "_y",
+      "index": 4
     }
   ]
 }
@@ -75,7 +71,7 @@ describe('BufferedRunModelParams', () => {
   })
 
   it('should update buffer (when output var specs are included)', () => {
-    const listing = new ModelListing(json)
+    const listing = new ModelListing(JSON.parse(listingJson))
 
     const inputs = [1, 2, 3]
     const normalOutputs = new Outputs(['_x', '_y'], 2000, 2002, 1)
@@ -142,8 +138,11 @@ describe('BufferedRunModelParams', () => {
     const inputs = [1, 2, 3]
     const outputs = new Outputs(['_x', '_y'], 2000, 2002, 1)
 
-    const params = new BufferedRunModelParams()
-    params.updateFromParams(inputs, outputs)
+    const runnerParams = new BufferedRunModelParams()
+    const workerParams = new BufferedRunModelParams()
+
+    runnerParams.updateFromParams(inputs, outputs)
+    workerParams.updateFromEncodedBuffer(runnerParams.getEncodedBuffer())
 
     let array: Float64Array
     const create = (numElements: number) => {
@@ -152,28 +151,41 @@ describe('BufferedRunModelParams', () => {
     }
 
     // Verify case where existing array is undefined
-    params.copyInputs(undefined, create)
+    workerParams.copyInputs(undefined, create)
     expect(array).toEqual(new Float64Array([1, 2, 3]))
 
     // Verify case where existing array is too small
     array = new Float64Array(2)
-    params.copyInputs(array, create)
+    workerParams.copyInputs(array, create)
     expect(array).toEqual(new Float64Array([1, 2, 3]))
 
     // Verify case where existing array is large enough
     array = new Float64Array([6, 6, 6, 6])
-    params.copyInputs(array, create)
+    workerParams.copyInputs(array, create)
+    expect(array).toEqual(new Float64Array([1, 2, 3, 6]))
+
+    // Verify case where params are updated with an empty inputs array.  Note that
+    // it is expected that the existing data is retained in the destination array;
+    // it is up to the calling code to clear or ignore that existing data.
+    runnerParams.updateFromParams([], outputs)
+    runnerParams.copyInputs(array, create)
+    expect(array).toEqual(new Float64Array([1, 2, 3, 6]))
+    workerParams.updateFromEncodedBuffer(runnerParams.getEncodedBuffer())
+    workerParams.copyInputs(array, create)
     expect(array).toEqual(new Float64Array([1, 2, 3, 6]))
   })
 
   it('should copy output indices', () => {
-    const listing = new ModelListing(json)
+    const listing = new ModelListing(JSON.parse(listingJson))
     const inputs = [1, 2, 3]
     const normalOutputs = new Outputs(['_x', '_y'], 2000, 2002, 1)
     const implOutputs = listing.deriveOutputs(normalOutputs, ['_x', '_a', '_b'])
 
-    const params = new BufferedRunModelParams()
-    params.updateFromParams(inputs, implOutputs)
+    const runnerParams = new BufferedRunModelParams()
+    const workerParams = new BufferedRunModelParams()
+
+    runnerParams.updateFromParams(inputs, implOutputs)
+    workerParams.updateFromEncodedBuffer(runnerParams.getEncodedBuffer())
 
     const expectedIndices = new Int32Array([
       // _x
@@ -193,17 +205,17 @@ describe('BufferedRunModelParams', () => {
     }
 
     // Verify case where existing array is undefined
-    params.copyOutputIndices(undefined, create)
+    workerParams.copyOutputIndices(undefined, create)
     expect(array).toEqual(expectedIndices)
 
     // Verify case where existing array is too small
     array = new Int32Array(2)
-    params.copyOutputIndices(array, create)
+    workerParams.copyOutputIndices(array, create)
     expect(array).toEqual(expectedIndices)
 
     // Verify case where existing array is large enough
     array = new Int32Array(20).fill(6)
-    params.copyOutputIndices(array, create)
+    workerParams.copyOutputIndices(array, create)
     expect(array).toEqual(
       new Int32Array([
         // _x
@@ -225,9 +237,10 @@ describe('BufferedRunModelParams', () => {
     const outputs = new Outputs(['_x', '_y'], 2000, 2002, 1)
 
     const runnerParams = new BufferedRunModelParams()
-    runnerParams.updateFromParams(inputs, outputs)
-
     const workerParams = new BufferedRunModelParams()
+
+    // Run once
+    runnerParams.updateFromParams(inputs, outputs)
     workerParams.updateFromEncodedBuffer(runnerParams.getEncodedBuffer())
 
     // Pretend that the model writes the following values to its outputs buffer then
@@ -250,18 +263,20 @@ describe('BufferedRunModelParams', () => {
   })
 
   it('should copy lookups', () => {
-    const listing = new ModelListing(json)
+    const listing = new ModelListing(JSON.parse(listingJson))
 
     const inputs = [1, 2, 3]
     const outputs = new Outputs(['_x', '_y'], 2000, 2002, 1)
 
     const lookups: LookupDef[] = [
-      createLookupDef(listing.varSpecs.get('_a'), [p(2000, 0), p(2001, 1), p(2002, 2)]),
-      createLookupDef(listing.varSpecs.get('_b'), [p(2000, 5), p(2001, 6), p(2002, 7)])
+      // Reference the first variable by name
+      createLookupDef({ varName: 'A' }, [p(2000, 0), p(2001, 1), p(2002, 2)]),
+      // Reference the second variable by ID
+      createLookupDef({ varId: '_b' }, [p(2000, 5), p(2001, 6), p(2002, 7)])
     ]
 
-    const runnerParams = new BufferedRunModelParams()
-    const workerParams = new BufferedRunModelParams()
+    const runnerParams = new BufferedRunModelParams(listing)
+    const workerParams = new BufferedRunModelParams(listing)
 
     // Run once without providing lookups
     runnerParams.updateFromParams(inputs, outputs)
@@ -275,7 +290,10 @@ describe('BufferedRunModelParams', () => {
     workerParams.updateFromEncodedBuffer(runnerParams.getEncodedBuffer())
 
     // Verify that lookups array on the worker side contains the expected values
-    expect(workerParams.getLookups()).toEqual(lookups)
+    expect(workerParams.getLookups()).toEqual([
+      createLookupDef({ varSpec: { varIndex: 1 } }, [p(2000, 0), p(2001, 1), p(2002, 2)]),
+      createLookupDef({ varSpec: { varIndex: 2 } }, [p(2000, 5), p(2001, 6), p(2002, 7)])
+    ])
 
     // Run again without lookups
     runnerParams.updateFromParams(inputs, outputs)
@@ -284,8 +302,8 @@ describe('BufferedRunModelParams', () => {
     // Verify that lookups array is undefined
     expect(workerParams.getLookups()).toBeUndefined()
 
-    // Run again with an empty lookup
-    const emptyLookup = createLookupDef(listing.varSpecs.get('_a'), [])
+    // Run again with an empty lookup.  This time we reference the variable by spec.
+    const emptyLookup = createLookupDef({ varSpec: listing.varSpecs.get('_a') }, [])
     runnerParams.updateFromParams(inputs, outputs, {
       lookups: [emptyLookup]
     })

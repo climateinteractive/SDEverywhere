@@ -7,7 +7,7 @@
 
 export type { LogLevel } from './_shared/log'
 export type { BuildMode } from './_shared/mode'
-export type { InputSpec, ModelSpec, OutputSpec } from './_shared/model-spec'
+export type { InputSpec, ModelSpec, OutputSpec, ResolvedModelSpec, VarName } from './_shared/model-spec'
 export type { ResolvedConfig } from './_shared/resolved-config'
 
 export type { BuildContext } from './context/context'

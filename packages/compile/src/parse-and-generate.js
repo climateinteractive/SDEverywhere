@@ -95,7 +95,11 @@ export async function parseAndGenerate(input, spec, operations, modelDirname, mo
     // Write subscripts to a YAML file.
     writeOutput(`${modelName}_subs.yaml`, yamlSubsList())
     // Write variables and subscripts to a JSON file.
-    writeOutput(`${modelName}.json`, Model.jsonList())
+    const jsonList = Model.jsonList()
+    writeOutput(`${modelName}.json`, JSON.stringify(jsonList.full, null, 2))
+    // Write minimal variable index and dimension specs to a JSON file used
+    // by the runtime package to initialize a `ModelListing` instance).
+    writeOutput(`${modelName}_min.json`, JSON.stringify(jsonList.minimal, null, 2))
   }
 
   return code

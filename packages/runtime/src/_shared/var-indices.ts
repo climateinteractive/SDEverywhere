@@ -1,5 +1,7 @@
 // Copyright (c) 2024 Climate Interactive / New Venture Fund
 
+import type { VarSpec } from './types'
+
 /**
  * For each variable specified in an indices buffer, there are 4 index values:
  *   varIndex
@@ -10,17 +12,6 @@
  * @hidden This is not part of the public API.
  */
 export const indicesPerVariable = 4
-
-/**
- * The variable index metadata that is used to identify a specific instance of a
- * variable in a generated model.
- */
-export interface VarSpec {
-  /** The variable index as used in the generated C/JS code. */
-  varIndex: number
-  /** The subscript index values as used in the generated C/JS code. */
-  subscriptIndices?: number[]
-}
 
 /**
  * @hidden This is not part of the public API; it is exposed here for use by

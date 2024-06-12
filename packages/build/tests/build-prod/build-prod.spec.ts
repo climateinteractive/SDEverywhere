@@ -1,10 +1,11 @@
 // Copyright (c) 2022 Climate Interactive / New Venture Fund
 
-import { resolve as resolvePath } from 'path'
+import { existsSync, rmSync } from 'node:fs'
+import { join as joinPath, resolve as resolvePath } from 'node:path'
 
-import { describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 
-import type { ModelSpec, Plugin, UserConfig } from '../../src'
+import type { ModelSpec, Plugin, ResolvedModelSpec, UserConfig } from '../../src'
 import { build } from '../../src'
 
 import { buildOptions } from '../_shared/build-options'
@@ -56,6 +57,133 @@ const plugin = (num: number, calls: string[]) => {
 }
 
 describe('build in production mode', () => {
+  beforeEach(() => {
+    const prepDir = resolvePath(__dirname, 'sde-prep')
+    rmSync(prepDir, { recursive: true, force: true })
+
+    const outputsDir = resolvePath(__dirname, 'outputs')
+    rmSync(outputsDir, { recursive: true, force: true })
+  })
+
+  it('should resolve model spec (when input/output specs are provided)', async () => {
+    let resolvedModelSpec: ResolvedModelSpec
+    const userConfig: UserConfig = {
+      genFormat: 'c',
+      rootDir: resolvePath(__dirname, '..'),
+      prepDir: resolvePath(__dirname, 'sde-prep'),
+      modelFiles: [resolvePath(__dirname, '..', '_shared', 'sample.mdl')],
+      modelSpec: async () => {
+        // Note that we return full spec instances here
+        return {
+          inputs: [{ varName: 'Y', defaultValue: 0, minValue: -10, maxValue: 10 }],
+          outputs: [{ varName: 'Z' }]
+        }
+      },
+      plugins: [
+        {
+          preGenerate: async (_context, modelSpec) => {
+            resolvedModelSpec = modelSpec
+          }
+        }
+      ]
+    }
+
+    const result = await build('production', buildOptions(userConfig))
+    if (result.isErr()) {
+      throw new Error('Expected ok result but got: ' + result.error.message)
+    }
+
+    expect(result.value.exitCode).toBe(0)
+    expect(resolvedModelSpec!).toBeDefined()
+    expect(resolvedModelSpec!.inputVarNames).toEqual(['Y'])
+    expect(resolvedModelSpec!.inputs).toEqual([{ varName: 'Y', defaultValue: 0, minValue: -10, maxValue: 10 }])
+    expect(resolvedModelSpec!.outputVarNames).toEqual(['Z'])
+    expect(resolvedModelSpec!.outputs).toEqual([{ varName: 'Z' }])
+    expect(resolvedModelSpec!.datFiles).toEqual([])
+  })
+
+  it('should resolve model spec (when input/output var names are provided)', async () => {
+    let resolvedModelSpec: ResolvedModelSpec
+    const userConfig: UserConfig = {
+      genFormat: 'c',
+      rootDir: resolvePath(__dirname, '..'),
+      prepDir: resolvePath(__dirname, 'sde-prep'),
+      modelFiles: [resolvePath(__dirname, '..', '_shared', 'sample.mdl')],
+      modelSpec: async () => {
+        // Note that we return only variable names here
+        return {
+          inputs: ['Y'],
+          outputs: ['Z']
+        }
+      },
+      plugins: [
+        {
+          preGenerate: async (_context, modelSpec) => {
+            resolvedModelSpec = modelSpec
+          }
+        }
+      ]
+    }
+
+    const result = await build('production', buildOptions(userConfig))
+    if (result.isErr()) {
+      throw new Error('Expected ok result but got: ' + result.error.message)
+    }
+
+    expect(result.value.exitCode).toBe(0)
+    expect(resolvedModelSpec!).toBeDefined()
+    expect(resolvedModelSpec!.inputVarNames).toEqual(['Y'])
+    expect(resolvedModelSpec!.inputs).toEqual([{ varName: 'Y' }])
+    expect(resolvedModelSpec!.outputVarNames).toEqual(['Z'])
+    expect(resolvedModelSpec!.outputs).toEqual([{ varName: 'Z' }])
+    expect(resolvedModelSpec!.datFiles).toEqual([])
+  })
+
+  it('should write listing.json file (when absolute path is provided)', async () => {
+    const userConfig: UserConfig = {
+      genFormat: 'c',
+      rootDir: resolvePath(__dirname, '..'),
+      prepDir: resolvePath(__dirname, 'sde-prep'),
+      modelFiles: [resolvePath(__dirname, '..', '_shared', 'sample.mdl')],
+      // Note that `outListingFile` is specified with an absolute path here
+      outListingFile: resolvePath(__dirname, 'outputs', 'listing.json'),
+      modelSpec: async () => {
+        return modelSpec
+      }
+    }
+
+    const result = await build('production', buildOptions(userConfig))
+    if (result.isErr()) {
+      throw new Error('Expected ok result but got: ' + result.error.message)
+    }
+
+    expect(result.value.exitCode).toBe(0)
+    expect(existsSync(resolvePath(__dirname, 'outputs', 'listing.json'))).toBe(true)
+  })
+
+  it('should write listing.json file (when relative path is provided)', async () => {
+    const userConfig: UserConfig = {
+      genFormat: 'c',
+      rootDir: resolvePath(__dirname, '..'),
+      prepDir: resolvePath(__dirname, 'sde-prep'),
+      modelFiles: [resolvePath(__dirname, '..', '_shared', 'sample.mdl')],
+      // Note that `outListingFile` is specified with a relative path here, which
+      // will be resolved relative to `rootDir`
+      outListingFile: joinPath('build-prod', 'outputs', 'listing.json'),
+      modelSpec: async () => {
+        return modelSpec
+      }
+    }
+
+    const result = await build('production', buildOptions(userConfig))
+    if (result.isErr()) {
+      throw new Error('Expected ok result but got: ' + result.error.message)
+    }
+
+    expect(result.value.exitCode).toBe(0)
+    expect(existsSync(resolvePath(__dirname, 'outputs', 'listing.json'))).toBe(true)
+  })
+
   it('should skip certain callbacks if model files array is empty', async () => {
     const calls: string[] = []
 
@@ -175,8 +303,7 @@ describe('build in production mode', () => {
   it.skip('should fail if preprocess step throws an error', async () => {
     const modelSpec: ModelSpec = {
       inputs: [{ varName: 'Y', defaultValue: 0, minValue: -10, maxValue: 10 }],
-      outputs: [{ varName: 'Z' }],
-      datFiles: []
+      outputs: [{ varName: 'Z' }]
     }
 
     const mdlDir = resolvePath(__dirname, '..', '_shared')
@@ -204,8 +331,7 @@ describe('build in production mode', () => {
   it('should fail if flatten step throws an error', async () => {
     const modelSpec: ModelSpec = {
       inputs: [{ varName: 'Y', defaultValue: 0, minValue: -10, maxValue: 10 }],
-      outputs: [{ varName: 'Z' }],
-      datFiles: []
+      outputs: [{ varName: 'Z' }]
     }
 
     const mdlDir = resolvePath(__dirname, '..', '_shared')

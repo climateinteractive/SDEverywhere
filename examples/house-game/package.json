@@ -13,7 +13,6 @@
   "dependencies": {
     "@sdeverywhere/build": "^0.3.4",
     "@sdeverywhere/cli": "^0.7.23",
-    "@sdeverywhere/plugin-config": "^0.2.4",
     "@sdeverywhere/plugin-vite": "^0.1.8",
     "@sdeverywhere/plugin-worker": "^0.2.3"
   }

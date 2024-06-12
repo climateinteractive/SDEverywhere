@@ -23,12 +23,20 @@ import { getJsModelFunctions, type JsModelFunctionContext, type JsModelFunctions
  */
 export interface JsModel {
   readonly kind: 'js'
+
   readonly outputVarIds: string[]
   readonly outputVarNames: string[]
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  readonly modelListing?: /*ModelListingSpecs*/ any
+
+  /** @hidden */
   getInitialTime(): number
+  /** @hidden */
   getFinalTime(): number
+  /** @hidden */
   getTimeStep(): number
+  /** @hidden */
   getSaveFreq(): number
 
   /** @hidden */
@@ -36,16 +44,26 @@ export interface JsModel {
   /** @hidden */
   setModelFunctions(functions: JsModelFunctions): void
 
+  /** @hidden */
   setTime(time: number): void
+  /** @hidden */
   setInputs(inputValue: (index: number) => number): void
+
+  /** @hidden */
   setLookup(varSpec: VarSpec, points: Float64Array): void
 
+  /** @hidden */
   storeOutputs(storeValue: (value: number) => void): void
+  /** @hidden */
   storeOutput(varSpec: VarSpec, storeValue: (value: number) => void): void
 
+  /** @hidden */
   initConstants(): void
+  /** @hidden */
   initLevels(): void
+  /** @hidden */
   evalAux(): void
+  /** @hidden */
   evalLevels(): void
 }
 
@@ -78,6 +96,7 @@ export function initJsModel(model: JsModel): RunnableModel {
     saveFreq: saveFreq,
     numSavePoints,
     outputVarIds: model.outputVarIds,
+    modelListing: model.modelListing,
     onRunModel: (inputs, outputs, options) => {
       runJsModel(
         model,
@@ -103,7 +122,7 @@ function runJsModel(
   timeStep: number,
   saveFreq: number,
   numSavePoints: number,
-  inputs: Float64Array,
+  inputs: Float64Array | undefined,
   outputs: Float64Array,
   outputIndices: Int32Array | undefined,
   lookups: LookupDef[] | undefined,
@@ -127,11 +146,11 @@ function runJsModel(
   // Apply lookup overrides, if provided
   if (lookups !== undefined) {
     for (const lookupDef of lookups) {
-      model.setLookup(lookupDef.varSpec, lookupDef.points)
+      model.setLookup(lookupDef.varRef.varSpec, lookupDef.points)
     }
   }
 
-  if (inputs.length > 0) {
+  if (inputs?.length > 0) {
     // Set the user-defined input values.  This needs to happen after `initConstants`
     // since the input values will override the default constant values.
     model.setInputs(index => inputs[index])

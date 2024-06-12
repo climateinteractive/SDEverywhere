@@ -12,16 +12,19 @@ import type { WasmModule } from './wasm-module'
  * a set of output values.
  */
 class WasmModel implements RunnableModel {
-  /** The start time for the model (aka `INITIAL TIME`). */
+  // from RunnableModel interface
   public readonly startTime: number
-  /** The end time for the model (aka `FINAL TIME`). */
+  // from RunnableModel interface
   public readonly endTime: number
-  /** The frequency with which output values are saved (aka `SAVEPER`). */
+  // from RunnableModel interface
   public readonly saveFreq: number
-  /** The number of save points for each output. */
+  // from RunnableModel interface
   public readonly numSavePoints: number
-  /** The output variable IDs for this model. */
+  // from RunnableModel interface
   public readonly outputVarIds: OutputVarId[]
+  // from RunnableModel interface
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  public readonly modelListing?: any
 
   // Reuse the wasm buffers.  These buffers are allocated on demand and grown
   // (reallocated) as needed.
@@ -57,6 +60,9 @@ class WasmModel implements RunnableModel {
     this.numSavePoints = Math.round((this.endTime - this.startTime) / this.saveFreq) + 1
     this.outputVarIds = wasmModule.outputVarIds
 
+    // Expose the model listing, if it was bundled with the generated module
+    this.modelListing = wasmModule.modelListing
+
     // Make the native functions callable
     this.wasmSetLookup = wasmModule.cwrap('setLookup', null, ['number', 'number', 'number', 'number'])
     this.wasmRunModel = wasmModule.cwrap('runModelWithBuffers', null, ['number', 'number', 'number'])
@@ -74,14 +80,15 @@ class WasmModel implements RunnableModel {
       for (const lookupDef of lookups) {
         // Copy the subscript index values to the `WasmBuffer`.  If we don't have an
         // existing `WasmBuffer`, or the existing one is not big enough, allocate a new one.
-        const numSubElements = lookupDef.varSpec.subscriptIndices?.length || 0
+        const varSpec = lookupDef.varRef.varSpec
+        const numSubElements = varSpec.subscriptIndices?.length || 0
         let subIndicesAddress: number
         if (numSubElements > 0) {
           if (this.lookupSubIndicesBuffer === undefined || this.lookupSubIndicesBuffer.numElements < numSubElements) {
             this.lookupSubIndicesBuffer?.dispose()
             this.lookupSubIndicesBuffer = createInt32WasmBuffer(this.wasmModule, numSubElements)
           }
-          this.lookupSubIndicesBuffer.getArrayView().set(lookupDef.varSpec.subscriptIndices)
+          this.lookupSubIndicesBuffer.getArrayView().set(varSpec.subscriptIndices)
           subIndicesAddress = this.lookupSubIndicesBuffer.getAddress()
         } else {
           subIndicesAddress = 0
@@ -102,7 +109,7 @@ class WasmModel implements RunnableModel {
         const numPoints = numLookupElements / 2
 
         // Call the native `setLookup` function
-        const varIndex = lookupDef.varSpec.varIndex
+        const varIndex = varSpec.varIndex
         this.wasmSetLookup(varIndex, subIndicesAddress, pointsAddress, numPoints)
       }
     }
@@ -141,7 +148,7 @@ class WasmModel implements RunnableModel {
     // Run the model
     const t0 = perfNow()
     this.wasmRunModel(
-      this.inputsBuffer.getAddress(),
+      this.inputsBuffer?.getAddress() || 0,
       this.outputsBuffer.getAddress(),
       outputIndicesBuffer?.getAddress() || 0
     )

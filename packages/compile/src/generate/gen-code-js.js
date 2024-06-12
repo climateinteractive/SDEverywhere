@@ -44,6 +44,7 @@ let codeGenerator = (parsedModel, opts) => {
       code += emitInitLevelsCode()
       code += emitEvalCode()
       code += emitIOCode()
+      code += emitModelListing()
       code += emitDefaultFunction()
       return code
     }
@@ -513,6 +514,14 @@ ${section(chunk)}
   //
   // Module exports
   //
+  function emitModelListing() {
+    const minimalListingJson = JSON.stringify(Model.jsonList().minimal, null, 2)
+    const minimalListingJs = minimalListingJson.replace(/"(\w+)"\s*:/g, '$1:').replaceAll('"', "'")
+    return `\
+/*export*/ const modelListing = ${minimalListingJs}
+
+`
+  }
   function emitDefaultFunction() {
     // TODO: For now, the default function returns an object that has the shape of the
     // `JsModel` interface.  It is an async function for future proofing and so that it
@@ -530,6 +539,7 @@ export default async function () {
     kind: 'js',
     outputVarIds,
     outputVarNames,
+    modelListing,
 
     getInitialTime,
     getFinalTime,

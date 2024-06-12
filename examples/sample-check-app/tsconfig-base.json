@@ -8,6 +8,7 @@
     "resolveJsonModule": true,
     "module": "esnext",
     "target": "esnext",
+    "skipLibCheck": true,
     "noImplicitAny": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,

@@ -3,8 +3,6 @@ import { workerPlugin } from '@sdeverywhere/plugin-worker'
 
 const genFormat = process.env.GEN_FORMAT === 'c' ? 'c' : 'js'
 
-const outputVarNames = ['A[A1]', 'A[A2]', 'B[A1,B1]', 'B[A1,B2]', 'B[A1,B3]', 'B[A2,B1]', 'B[A2,B2]', 'B[A2,B3]', 'C']
-
 export async function config() {
   return {
     genFormat,
@@ -12,8 +10,8 @@ export async function config() {
     modelInputPaths: ['*.dat'],
     modelSpec: async () => {
       return {
-        inputs: [{ varName: 'X', defaultValue: 0, minValue: -10, maxValue: 10 }],
-        outputs: outputVarNames.map(varName => ({ varName })),
+        inputs: ['X'],
+        outputs: ['A[A1]', 'A[A2]', 'B[A1,B1]', 'B[A1,B2]', 'B[A1,B3]', 'B[A2,B1]', 'B[A2,B2]', 'B[A2,B3]', 'C'],
         datFiles: ['../override-lookups.dat']
       }
     },

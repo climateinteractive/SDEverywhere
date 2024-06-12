@@ -9,6 +9,7 @@
     "target": "es2020",
     // Use "es2020" for Object.values()
     "lib": ["es2020"],
+    "skipLibCheck": true,
     "allowJs": true,
     "noImplicitAny": true,
     "noUnusedLocals": true,

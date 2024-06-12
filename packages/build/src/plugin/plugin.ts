@@ -1,6 +1,6 @@
 // Copyright (c) 2022 Climate Interactive / New Venture Fund
 
-import type { ModelSpec } from '../_shared/model-spec'
+import type { ResolvedModelSpec } from '../_shared/model-spec'
 import type { ResolvedConfig } from '../_shared/resolved-config'
 import type { BuildContext } from '../context/context'
 
@@ -37,7 +37,7 @@ export interface Plugin {
    * @param context The build context (for logging, etc).
    * @param modelSpec The spec that controls how the model is generated.
    */
-  preGenerate?(context: BuildContext, modelSpec: ModelSpec): Promise<void>
+  preGenerate?(context: BuildContext, modelSpec: ResolvedModelSpec): Promise<void>
 
   /**
    * Called before SDE preprocesses the mdl file (in the case of one mdl file),
@@ -84,7 +84,7 @@ export interface Plugin {
    * @return Whether the plugin succeeded (for example, a plugin that runs tests can
    * return false to indicate that one or more tests failed).
    */
-  postGenerate?(context: BuildContext, modelSpec: ModelSpec): Promise<boolean>
+  postGenerate?(context: BuildContext, modelSpec: ResolvedModelSpec): Promise<boolean>
 
   /**
    * Called after the model has been generated and after the staged files
@@ -95,7 +95,7 @@ export interface Plugin {
    * @return Whether the plugin succeeded (for example, a plugin that runs tests can
    * return false to indicate that one or more tests failed).
    */
-  postBuild?(context: BuildContext, modelSpec: ModelSpec): Promise<boolean>
+  postBuild?(context: BuildContext, modelSpec: ResolvedModelSpec): Promise<boolean>
 
   /**
    * Called in development/watch mode after the initial build has completed

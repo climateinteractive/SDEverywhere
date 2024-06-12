@@ -1,14 +1,20 @@
 // Copyright (c) 2022 Climate Interactive / New Venture Fund
 
-import { join as joinPath } from 'path'
+import { rmSync } from 'node:fs'
+import { join as joinPath } from 'node:path'
 
-import { describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 
 import { build } from '../../src'
 
 import { buildOptions } from '../_shared/build-options'
 
 describe('build config file loading', () => {
+  beforeEach(() => {
+    const prepDir = joinPath(__dirname, 'sde-prep')
+    rmSync(prepDir, { recursive: true, force: true })
+  })
+
   it('should fail if config file cannot be found', async () => {
     const configPath = joinPath(__dirname, 'sde.unknown.js')
     const result = await build('production', buildOptions(configPath))
