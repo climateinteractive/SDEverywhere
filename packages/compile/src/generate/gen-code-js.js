@@ -44,7 +44,7 @@ let codeGenerator = (parsedModel, opts) => {
       code += emitInitLevelsCode()
       code += emitEvalCode()
       code += emitIOCode()
-      code += emitModelListing()
+      code += emitModelListing(spec.bundleListing)
       code += emitDefaultFunction()
       return code
     }
@@ -514,9 +514,14 @@ ${section(chunk)}
   //
   // Module exports
   //
-  function emitModelListing() {
-    const minimalListingJson = JSON.stringify(Model.jsonList().minimal, null, 2)
-    const minimalListingJs = minimalListingJson.replace(/"(\w+)"\s*:/g, '$1:').replaceAll('"', "'")
+  function emitModelListing(bundleListing) {
+    let minimalListingJs
+    if (bundleListing !== false) {
+      const minimalListingJson = JSON.stringify(Model.jsonList().minimal, null, 2)
+      minimalListingJs = minimalListingJson.replace(/"(\w+)"\s*:/g, '$1:').replaceAll('"', "'")
+    } else {
+      minimalListingJs = 'undefined;'
+    }
     return `\
 /*export*/ const modelListing = ${minimalListingJs}
 

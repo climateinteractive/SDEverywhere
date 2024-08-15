@@ -34,12 +34,18 @@ class WasmPlugin implements Plugin {
 
     context.log('info', '  Generating WebAssembly module')
 
-    // Read the minimal model listing
     const buildDir = joinPath(context.config.prepDir, 'build')
-    const modelListingPath = joinPath(buildDir, 'processed_min.json')
-    const modelListingJson = await readFile(modelListingPath, 'utf8')
-    const modelListingObj = JSON.parse(modelListingJson)
-    const modelListingJs = JSON.stringify(modelListingObj).replace(/"(\w+)"\s*:/g, '$1:')
+    let modelListingJs: string
+    if (context.config.bundleListing === true) {
+      // Include the minimal model listing
+      const modelListingPath = joinPath(buildDir, 'processed_min.json')
+      const modelListingJson = await readFile(modelListingPath, 'utf8')
+      const modelListingObj = JSON.parse(modelListingJson)
+      modelListingJs = JSON.stringify(modelListingObj).replace(/"(\w+)"\s*:/g, '$1:')
+    } else {
+      // Omit the minimal model listing
+      modelListingJs = 'undefined;'
+    }
 
     // Write a file that will be folded into the generated Wasm module
     const preJsFile = joinPath(buildDir, 'processed_extras.js')

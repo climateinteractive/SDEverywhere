@@ -21,6 +21,7 @@ function readInlineModelAndGenerateJS(
     directDataSpec?: DirectDataSpec
     inputVarNames?: string[]
     outputVarNames?: string[]
+    bundleListing?: boolean
   }
 ): string {
   // XXX: These steps are needed due to subs/dims and variables being in module-level storage
@@ -28,7 +29,7 @@ function readInlineModelAndGenerateJS(
   resetSubscriptsAndDimensions()
   Model.resetModelState()
 
-  let spec
+  let spec: any
   if (opts?.inputVarNames || opts?.outputVarNames) {
     spec = {
       inputVarNames: opts?.inputVarNames || [],
@@ -37,6 +38,7 @@ function readInlineModelAndGenerateJS(
   } else {
     spec = {}
   }
+  spec.bundleListing = opts?.bundleListing
 
   const directData = new Map()
   if (opts?.modelDir && opts?.directDataSpec) {
@@ -63,6 +65,7 @@ interface JsModel {
   readonly kind: 'js'
   readonly outputVarIds: string[]
   readonly outputVarNames: string[]
+  readonly modelListing?: any
 
   getInitialTime(): number
   getFinalTime(): number
@@ -204,6 +207,7 @@ describe('generateJS (Vensim -> JS)', () => {
     const code = readInlineModelAndGenerateJS(mdl, {
       inputVarNames: ['input'],
       outputVarNames: ['x', 'y', 'z', 'a[A1]', 'b[A2,B1]', 'c', 'w'],
+      bundleListing: true,
       extData
     })
     expect(code).toEqual(`\
@@ -657,6 +661,22 @@ export default async function () {
   }
 }
 `)
+  })
+
+  it('should generate code without listing when listing is disabled', () => {
+    const mdl = `
+      x = 1 ~~|
+      INITIAL TIME = 0 ~~|
+      FINAL TIME = 2 ~~|
+      TIME STEP = 1 ~~|
+      SAVEPER = 1 ~~|
+    `
+    const code = readInlineModelAndGenerateJS(mdl, {
+      inputVarNames: [],
+      outputVarNames: ['x'],
+      bundleListing: false
+    })
+    expect(code).toMatch(`/*export*/ const modelListing = undefined;`)
   })
 
   it('should generate a model that can be run', async () => {

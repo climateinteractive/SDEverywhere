@@ -72,6 +72,7 @@ export async function buildOnce(
 
     // Write the spec file
     const specJson = {
+      bundleListing: config.bundleListing,
       inputVarNames: modelSpec.inputVarNames,
       outputVarNames: modelSpec.outputVarNames,
       externalDatfiles: modelSpec.datFiles,

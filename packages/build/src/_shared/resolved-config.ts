@@ -56,6 +56,15 @@ export interface ResolvedConfig {
   outListingFile?: string
 
   /**
+   * Whether to bundle a model listing with the generated model.  If undefined, defaults
+   * to false.  When this is true, a model listing will be bundled with the generated model
+   * to allow the `runtime` package to resolve variables that are referenced by name or
+   * identifier.  This listing will increase the size of the generated model, so it is
+   * recommended to set this to true only if it is needed.
+   */
+  bundleListing?: boolean
+
+  /**
    * The path to the `@sdeverywhere/cli` package.  This is currently only used to get
    * access to the files in the `src/c` directory.
    * @hidden This should be removed once we have tighter integration with the `cli` package.
