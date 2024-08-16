@@ -11,24 +11,12 @@ export async function config() {
     modelSpec: async () => {
       return {
         inputs: ['X'],
-        outputs: ['Z', 'D[A1]', 'E[A2,B1]']
+        outputs: ['Z', 'D[A1]', 'E[A2,B1]'],
+        customOutputs: true
       }
     },
 
     plugins: [
-      // Include a custom plugin that applies post-processing steps
-      {
-        postGenerateCode: (_, format, content) => {
-          if (format === 'c') {
-            // Edit the generated C code so that it enables the `SDE_USE_OUTPUT_INDICES` flag; this is
-            // required in order to access impl (non-exported) model variables
-            return content.replace('#define SDE_USE_OUTPUT_INDICES 0', '#define SDE_USE_OUTPUT_INDICES 1')
-          } else {
-            return content
-          }
-        }
-      },
-
       // If targeting WebAssembly, generate a `generated-model.js` file
       // containing the Wasm model
       genFormat === 'c' && wasmPlugin(),

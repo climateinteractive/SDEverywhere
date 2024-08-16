@@ -124,9 +124,6 @@ double _z;
 
 // Internal variables
 const int numOutputs = 7;
-#define SDE_USE_OUTPUT_INDICES 0
-#define SDE_MAX_OUTPUT_INDICES 1000
-const int maxOutputIndices = SDE_USE_OUTPUT_INDICES ? SDE_MAX_OUTPUT_INDICES : 0;
 
 // Array dimensions
 const size_t _dima[2] = { 0, 1 };
