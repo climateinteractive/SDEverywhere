@@ -1,2 +1,2 @@
 graph default min time,graph default max time,model dat files,bundle listing,custom lookups,custom outputs
-0,100,Data1.dat;Data2.dat,false,false,false
+0,200,,true,true,true
