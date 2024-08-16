@@ -117,6 +117,40 @@ export class JsModelLookup {
   }
 
   /**
+   * Return the most appropriate y value from the array of (x,y) pairs when
+   * this instance is used to provide inputs for the `GAME` function.
+   *
+   * NOTE: The x values are assumed to be monotonically increasing.
+   *
+   * This method is similar to `getValueForX` in concept, except that this one
+   * returns the provided `defaultValue` if the `time` parameter is earlier than
+   * the first data point in the lookup.  Also, this method always uses the
+   * `backward` interpolation mode, meaning that it holds the "current" value
+   * constant instead of interpolating.
+   *
+   * @param time The time that is used to select the data point that has an
+   * `x` value less than or equal to the provided time.
+   * @param defaultValue The value that is returned if this lookup is empty (has
+   * no points) or if the provided time is earlier than the first data point.
+   */
+  public getValueForGameTime(time: number, defaultValue: number): number {
+    if (this.n <= 0) {
+      // The lookup is empty, so return the default value
+      return defaultValue
+    }
+
+    const x0 = this.data[0]
+    if (time < x0) {
+      // The provided time is earlier than the first data point, so return the
+      // default value
+      return defaultValue
+    }
+
+    // For all other cases, we can use `getValue` with `backward` mode
+    return this.getValue(time, false, 'backward')
+  }
+
+  /**
    * Interpolate the y value from the array of (x,y) pairs.
    * NOTE: The x values are assumed to be monotonically increasing.
    *

@@ -41,6 +41,8 @@ export default class Variable {
     // DELAY3* calls are expanded into new level vars and substituted during code generation.
     this.delayVarRefId = ''
     this.delayTimeVarName = ''
+    // GAME calls generate a Lookup support var.
+    this.gameLookupVarName = ''
     // DELAY FIXED calls generate a FixedDelay support var.
     this.fixedDelayVarName = ''
     // DEPRECIATE STRAIGHTLINE calls generate a Depreciation support var.
@@ -67,6 +69,7 @@ export default class Variable {
     c.trendVarName = this.trendVarName
     c.delayVarRefId = this.delayVarRefId
     c.delayTimeVarName = this.delayTimeVarName
+    c.gameLookupVarName = this.gameLookupVarName
     c.includeInOutput = this.includeInOutput
     return c
   }

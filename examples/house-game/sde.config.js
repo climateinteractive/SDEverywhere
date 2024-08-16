@@ -25,7 +25,8 @@ export async function config() {
           'time to respond to gap'
         ],
         outputs: ['number of houses required', 'houses completed'],
-        datFiles: ['../model/houses.dat']
+        bundleListing: true,
+        customLookups: ['planning game inputs']
       }
     },
 

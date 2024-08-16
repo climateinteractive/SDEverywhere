@@ -197,6 +197,7 @@ describe('generateJS (Vensim -> JS)', () => {
       b[DimA, DimB] = b data[DimA, DimB] ~~|
       c data ~~|
       c = c data ~~|
+      d[DimA] = GAME(x) ~~|
       w = WITH LOOKUP(x, ( [(0,0)-(2,2)], (0,0),(0.1,0.01),(0.5,0.7),(1,1),(1.5,1.2),(2,1.3) )) ~~|
       INITIAL TIME = 0 ~~|
       FINAL TIME = 2 ~~|
@@ -206,7 +207,7 @@ describe('generateJS (Vensim -> JS)', () => {
     const code = readInlineModelAndGenerateJS(mdl, {
       extData,
       inputVarNames: ['input'],
-      outputVarNames: ['x', 'y', 'z', 'a[A1]', 'b[A2,B1]', 'c', 'w'],
+      outputVarNames: ['x', 'y', 'z', 'a[A1]', 'b[A2,B1]', 'c', 'd[A1]', 'w'],
       bundleListing: true,
       customLookups: true,
       customOutputs: true
@@ -220,6 +221,8 @@ let _b = multiDimArray([2, 2]);
 let _b_data = multiDimArray([2, 2]);
 let _c;
 let _c_data;
+let _d = multiDimArray([2]);
+let _d_game_inputs = multiDimArray([2]);
 let _final_time;
 let _initial_time;
 let _input;
@@ -420,6 +423,10 @@ function evalAux0() {
   _x = _input;
   // w = WITH LOOKUP(x,([(0,0)-(2,2)],(0,0),(0.1,0.01),(0.5,0.7),(1,1),(1.5,1.2),(2,1.3)))
   _w = fns.WITH_LOOKUP(_x, __lookup1);
+  // d[DimA] = GAME(x)
+  for (let i = 0; i < 2; i++) {
+  _d[i] = fns.GAME(_d_game_inputs[i], _x);
+  }
   // y = :NOT: x
   _y = !_x;
   // z = ABS(y)
@@ -447,12 +454,15 @@ function evalAux0() {
   const subs = varSpec.subscriptIndices;
   switch (varIndex) {
     case 6:
-      _a_data[subs[0]] = fns.createLookup(points.length / 2, points);
+      _d_game_inputs[subs[0]] = fns.createLookup(points.length / 2, points);
       break;
     case 7:
-      _b_data[subs[0]][subs[1]] = fns.createLookup(points.length / 2, points);
+      _a_data[subs[0]] = fns.createLookup(points.length / 2, points);
       break;
     case 8:
+      _b_data[subs[0]][subs[1]] = fns.createLookup(points.length / 2, points);
+      break;
+    case 9:
       _c_data = fns.createLookup(points.length / 2, points);
       break;
     default:
@@ -467,6 +477,7 @@ function evalAux0() {
   '_a[_a1]',
   '_b[_a2,_b1]',
   '_c',
+  '_d[_a1]',
   '_w'
 ];
 
@@ -477,6 +488,7 @@ function evalAux0() {
   'a[A1]',
   'b[A2,B1]',
   'c',
+  'd[A1]',
   'w'
 ];
 
@@ -487,6 +499,7 @@ function evalAux0() {
   storeValue(_a[0]);
   storeValue(_b[1][0]);
   storeValue(_c);
+  storeValue(_d[0]);
   storeValue(_w);
 }
 
@@ -512,25 +525,28 @@ function evalAux0() {
     case 5:
       storeValue(_input);
       break;
-    case 9:
+    case 10:
       storeValue(_a[subs[0]]);
       break;
-    case 10:
+    case 11:
       storeValue(_b[subs[0]][subs[1]]);
       break;
-    case 11:
+    case 12:
       storeValue(_c);
       break;
-    case 12:
+    case 13:
       storeValue(_x);
       break;
-    case 13:
+    case 14:
       storeValue(_w);
       break;
-    case 14:
+    case 15:
+      storeValue(_d[subs[0]]);
+      break;
+    case 16:
       storeValue(_y);
       break;
-    case 15:
+    case 17:
       storeValue(_z);
       break;
     default:
@@ -577,11 +593,18 @@ function evalAux0() {
       index: 5
     },
     {
-      id: '_a_data',
+      id: '_d_game_inputs',
       dimIds: [
         '_dima'
       ],
       index: 6
+    },
+    {
+      id: '_a_data',
+      dimIds: [
+        '_dima'
+      ],
+      index: 7
     },
     {
       id: '_b_data',
@@ -589,18 +612,18 @@ function evalAux0() {
         '_dima',
         '_dimb'
       ],
-      index: 7
+      index: 8
     },
     {
       id: '_c_data',
-      index: 8
+      index: 9
     },
     {
       id: '_a',
       dimIds: [
         '_dima'
       ],
-      index: 9
+      index: 10
     },
     {
       id: '_b',
@@ -608,27 +631,34 @@ function evalAux0() {
         '_dima',
         '_dimb'
       ],
-      index: 10
-    },
-    {
-      id: '_c',
       index: 11
     },
     {
-      id: '_x',
+      id: '_c',
       index: 12
     },
     {
-      id: '_w',
+      id: '_x',
       index: 13
     },
     {
-      id: '_y',
+      id: '_w',
       index: 14
     },
     {
-      id: '_z',
+      id: '_d',
+      dimIds: [
+        '_dima'
+      ],
       index: 15
+    },
+    {
+      id: '_y',
+      index: 16
+    },
+    {
+      id: '_z',
+      index: 17
     }
   ]
 }
