@@ -10,7 +10,9 @@ export async function config() {
     modelSpec: async () => {
       return {
         inputs: ['X'],
-        outputs: ['Y[A1]', 'Y[A2]']
+        outputs: ['Y[A1]', 'Y[A2]'],
+        bundleListing: true,
+        customLookups: true
       }
     },
 
