@@ -588,11 +588,18 @@ function evalAux0() {
       index: 5
     },
     {
-      id: '_a_data',
+      id: '_d_game_inputs',
       dimIds: [
         '_dima'
       ],
       index: 6
+    },
+    {
+      id: '_a_data',
+      dimIds: [
+        '_dima'
+      ],
+      index: 7
     },
     {
       id: '_b_data',
@@ -600,18 +607,18 @@ function evalAux0() {
         '_dima',
         '_dimb'
       ],
-      index: 7
+      index: 8
     },
     {
       id: '_c_data',
-      index: 8
+      index: 9
     },
     {
       id: '_a',
       dimIds: [
         '_dima'
       ],
-      index: 9
+      index: 10
     },
     {
       id: '_b',
@@ -619,27 +626,34 @@ function evalAux0() {
         '_dima',
         '_dimb'
       ],
-      index: 10
-    },
-    {
-      id: '_c',
       index: 11
     },
     {
-      id: '_x',
+      id: '_c',
       index: 12
     },
     {
-      id: '_w',
+      id: '_x',
       index: 13
     },
     {
-      id: '_y',
+      id: '_w',
       index: 14
     },
     {
-      id: '_z',
+      id: '_d',
+      dimIds: [
+        '_dima'
+      ],
       index: 15
+    },
+    {
+      id: '_y',
+      index: 16
+    },
+    {
+      id: '_z',
+      index: 17
     }
   ]
 }
