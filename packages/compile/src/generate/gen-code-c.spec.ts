@@ -98,7 +98,8 @@ describe('generateC (Vensim -> C)', () => {
       extData,
       inputVarNames: ['input'],
       outputVarNames: ['x', 'y', 'z', 'a[A1]', 'b[A2,B1]', 'c', 'w'],
-      customLookups: true
+      customLookups: true,
+      customOutputs: true
     })
     expect(code).toEqual(`\
 #include "sde.h"
@@ -304,7 +305,6 @@ void storeOutputData() {
 }
 
 void storeOutput(size_t varIndex, size_t subIndex0, size_t subIndex1, size_t subIndex2) {
-#if SDE_USE_OUTPUT_INDICES
   switch (varIndex) {
     case 1:
       outputVar(_final_time);
@@ -343,14 +343,14 @@ void storeOutput(size_t varIndex, size_t subIndex0, size_t subIndex1, size_t sub
       outputVar(_z);
       break;
     default:
+      fprintf(stderr, "No variable found for var index %zu in storeOutput", varIndex);
       break;
   }
-#endif
 }
 `)
   })
 
-  it('should generate setLookup that throws error when customLookups is disabled', () => {
+  it('should generate setLookup that reports error when customLookups is disabled', () => {
     const mdl = `
       x = 1 ~~|
       y = WITH LOOKUP(x, ( [(0,0)-(2,2)], (0,0),(2,1.3) )) ~~|
@@ -381,14 +381,19 @@ void setLookup(size_t varIndex, size_t* subIndices, double* points, size_t numPo
         ])
       )
     }
-    addData('_y_data')
+    addData('_y_data[_a1]')
+    addData('_y_data[_a2]')
     addData('_z_data')
+    addData('_q_data')
     const mdl = `
+      DimA: A1, A2 ~~|
       x = 1 ~~|
-      y data ~~|
-      y = y data ~~|
+      y data[DimA] ~~|
+      y[DimA] = y data[DimA] ~~|
       z data ~~|
       z = z data ~~|
+      q data ~~|
+      q = q data ~~|
       INITIAL TIME = 0 ~~|
       FINAL TIME = 2 ~~|
       TIME STEP = 1 ~~|
@@ -397,17 +402,72 @@ void setLookup(size_t varIndex, size_t* subIndices, double* points, size_t numPo
     const code = readInlineModelAndGenerateC(mdl, {
       extData,
       inputVarNames: [],
-      outputVarNames: ['x', 'y', 'z'],
-      customLookups: ['y data']
+      outputVarNames: ['x', 'y[A1]', 'z', 'q'],
+      customLookups: ['y data[A1]', 'q data']
     })
     expect(code).toMatch(`\
 void setLookup(size_t varIndex, size_t* subIndices, double* points, size_t numPoints) {
   switch (varIndex) {
     case 6:
-      replaceLookup(&_y_data, points, numPoints);
+      replaceLookup(&_q_data, points, numPoints);
+      break;
+    case 7:
+      replaceLookup(&_y_data[subIndices[0]], points, numPoints);
       break;
     default:
       fprintf(stderr, "No lookup found for var index %zu in setLookup", varIndex);
+      break;
+  }
+}`)
+  })
+
+  it('should generate storeOutput that reports error when customOutputs is disabled', () => {
+    const mdl = `
+      x = 1 ~~|
+      y = x ~~|
+      INITIAL TIME = 0 ~~|
+      FINAL TIME = 2 ~~|
+      TIME STEP = 1 ~~|
+      SAVEPER = 1 ~~|
+    `
+    const code = readInlineModelAndGenerateC(mdl, {
+      inputVarNames: [],
+      outputVarNames: ['y']
+    })
+    expect(code).toMatch(`\
+void storeOutput(size_t varIndex, size_t subIndex0, size_t subIndex1, size_t subIndex2) {
+  fprintf(stderr, "The storeOutput function was not enabled for the generated model. Set the customOutputs property in the spec/config file to allow for capturing arbitrary variables at runtime.");
+}`)
+  })
+
+  it('should generate storeOutput that includes a subset of cases when customOutputs is an array', () => {
+    const mdl = `
+      DimA: A1, A2 ~~|
+      u[DimA] = 10, 20 ~~|
+      v[DimA] = u[DimA] + 1 ~~|
+      x = 1 ~~|
+      y = x ~~|
+      INITIAL TIME = 0 ~~|
+      FINAL TIME = 2 ~~|
+      TIME STEP = 1 ~~|
+      SAVEPER = 1 ~~|
+    `
+    const code = readInlineModelAndGenerateC(mdl, {
+      inputVarNames: [],
+      outputVarNames: ['v[A1]', 'y'],
+      customOutputs: ['u[A1]', 'x']
+    })
+    expect(code).toMatch(`\
+void storeOutput(size_t varIndex, size_t subIndex0, size_t subIndex1, size_t subIndex2) {
+  switch (varIndex) {
+    case 5:
+      outputVar(_u[subIndex0]);
+      break;
+    case 6:
+      outputVar(_x);
+      break;
+    default:
+      fprintf(stderr, "No variable found for var index %zu in storeOutput", varIndex);
       break;
   }
 }`)

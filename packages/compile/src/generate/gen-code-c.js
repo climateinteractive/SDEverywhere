@@ -166,8 +166,30 @@ ${setLookupImpl(Model.varIndexInfo(), spec.customLookups)}
   fprintf(stderr, "${msg}");`
     }
 
+    // Configure the output variables that appear in the generated `getHeader`
+    // and `storeOutputData` functions
     let headerVarNames = outputAllVars ? expandedVarNames(true) : spec.outputVarNames
     let outputVarIds = outputAllVars ? expandedVarNames() : spec.outputVars
+
+    // Configure the body of the `storeOutput` function depending on the value
+    // of the `customOutputs` property in the spec file
+    let storeOutputBody
+    if (spec.customOutputs === true || Array.isArray(spec.customOutputs)) {
+      storeOutputBody = `\
+  switch (varIndex) {
+${customOutputSection(Model.varIndexInfo(), spec.customOutputs)}
+    default:
+      fprintf(stderr, "No variable found for var index %zu in storeOutput", varIndex);
+      break;
+  }`
+    } else {
+      let msg = 'The storeOutput function was not enabled for the generated model. '
+      msg +=
+        'Set the customOutputs property in the spec/config file to allow for capturing arbitrary variables at runtime.'
+      storeOutputBody = `\
+  fprintf(stderr, "${msg}");`
+    }
+
     mode = 'io'
     return `\
 void setInputs(const char* inputData) {
@@ -204,13 +226,7 @@ ${specOutputSection(outputVarIds)}
 }
 
 void storeOutput(size_t varIndex, size_t subIndex0, size_t subIndex1, size_t subIndex2) {
-#if SDE_USE_OUTPUT_INDICES
-  switch (varIndex) {
-${fullOutputSection(Model.varIndexInfo())}
-    default:
-      break;
-  }
-#endif
+${storeOutputBody}
 }
 `
   }
@@ -354,16 +370,33 @@ ${section(chunk)}
   // Input/output section helpers
   //
   function specOutputSection(varNames) {
-    // Emit output calls using varNames in C format.
+    // Emit `outputVar` calls for all variables listed in the `outputVarNames`
+    // array in the spec file using varNames in C format.
     let code = R.map(varName => `  outputVar(${varName});`)
     let section = R.pipe(code, lines)
     return section(varNames)
   }
-  function fullOutputSection(varIndexInfo) {
-    // Emit `storeValue` calls for all variables that can be accessed as an output.
+  function customOutputSection(varIndexInfo, customOutputs) {
+    // Emit `outputVar` calls for all variables that can be accessed as an output.
     // This excludes data and lookup variables; at this time, the data for these
     // cannot be output like for other types of variables.
-    const outputVars = R.filter(info => info.varType !== 'lookup' && info.varType !== 'data')
+    let includeCase
+    if (Array.isArray(customOutputs)) {
+      // Only include a case statement if the variable was explicitly included
+      // in the `customOutputs` array in the spec file
+      const customOutputVarNames = customOutputs.map(varName => {
+        // The developer might specify a variable name that includes subscripts,
+        // but we will ignore the subscript part and only match on the base name
+        return canonicalVensimName(varName.split('[')[0])
+      })
+      includeCase = varName => customOutputVarNames.includes(varName)
+    } else {
+      // Include a case statement for all accessible variables
+      includeCase = () => true
+    }
+    const outputVars = R.filter(info => {
+      return info.varType !== 'lookup' && info.varType !== 'data' && includeCase(info.varName)
+    })
     const code = R.map(info => {
       let varAccess = info.varName
       if (info.subscriptCount > 0) {
@@ -417,9 +450,9 @@ ${section(chunk)}
     return inputVars.join('\n')
   }
   function setLookupImpl(varIndexInfo, customLookups) {
-    // Emit `createLookup` calls for all lookups and data variables that can be overridden
+    // Emit `replaceLookup` calls for all lookups and data variables that can be overridden
     // at runtime
-    let overrideAllowed
+    let includeCase
     if (Array.isArray(customLookups)) {
       // Only include a case statement if the variable was explicitly included
       // in the `customLookups` array in the spec file
@@ -428,13 +461,13 @@ ${section(chunk)}
         // but we will ignore the subscript part and only match on the base name
         return canonicalVensimName(varName.split('[')[0])
       })
-      overrideAllowed = varName => customLookupVarNames.includes(varName)
+      includeCase = varName => customLookupVarNames.includes(varName)
     } else {
       // Include a case statement for all lookup and data variables
-      overrideAllowed = () => true
+      includeCase = () => true
     }
     const lookupAndDataVars = R.filter(info => {
-      return (info.varType === 'lookup' || info.varType === 'data') && overrideAllowed(info.varName)
+      return (info.varType === 'lookup' || info.varType === 'data') && includeCase(info.varName)
     })
     const code = R.map(info => {
       let lookupVar = info.varName
