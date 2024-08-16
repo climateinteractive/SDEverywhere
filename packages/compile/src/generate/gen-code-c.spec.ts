@@ -282,7 +282,7 @@ void setLookup(size_t varIndex, size_t* subIndices, double* points, size_t numPo
       replaceLookup(&_c_data, points, numPoints);
       break;
     default:
-      fprintf(stderr, "No lookup found for var index %zu in setLookup", varIndex);
+      fprintf(stderr, "No lookup found for var index %zu in setLookup\\n", varIndex);
       break;
   }
 }
@@ -340,7 +340,7 @@ void storeOutput(size_t varIndex, size_t subIndex0, size_t subIndex1, size_t sub
       outputVar(_z);
       break;
     default:
-      fprintf(stderr, "No variable found for var index %zu in storeOutput", varIndex);
+      fprintf(stderr, "No variable found for var index %zu in storeOutput\\n", varIndex);
       break;
   }
 }
@@ -362,7 +362,7 @@ void storeOutput(size_t varIndex, size_t subIndex0, size_t subIndex1, size_t sub
     })
     expect(code).toMatch(`\
 void setLookup(size_t varIndex, size_t* subIndices, double* points, size_t numPoints) {
-  fprintf(stderr, "The setLookup function was not enabled for the generated model. Set the customLookups property in the spec/config file to allow for overriding lookups at runtime.");
+  fprintf(stderr, "The setLookup function was not enabled for the generated model. Set the customLookups property in the spec/config file to allow for overriding lookups at runtime.\\n");
 }`)
   })
 
@@ -412,7 +412,7 @@ void setLookup(size_t varIndex, size_t* subIndices, double* points, size_t numPo
       replaceLookup(&_y_data[subIndices[0]], points, numPoints);
       break;
     default:
-      fprintf(stderr, "No lookup found for var index %zu in setLookup", varIndex);
+      fprintf(stderr, "No lookup found for var index %zu in setLookup\\n", varIndex);
       break;
   }
 }`)
@@ -433,7 +433,7 @@ void setLookup(size_t varIndex, size_t* subIndices, double* points, size_t numPo
     })
     expect(code).toMatch(`\
 void storeOutput(size_t varIndex, size_t subIndex0, size_t subIndex1, size_t subIndex2) {
-  fprintf(stderr, "The storeOutput function was not enabled for the generated model. Set the customOutputs property in the spec/config file to allow for capturing arbitrary variables at runtime.");
+  fprintf(stderr, "The storeOutput function was not enabled for the generated model. Set the customOutputs property in the spec/config file to allow for capturing arbitrary variables at runtime.\\n");
 }`)
   })
 
@@ -464,7 +464,7 @@ void storeOutput(size_t varIndex, size_t subIndex0, size_t subIndex1, size_t sub
       outputVar(_x);
       break;
     default:
-      fprintf(stderr, "No variable found for var index %zu in storeOutput", varIndex);
+      fprintf(stderr, "No variable found for var index %zu in storeOutput\\n", varIndex);
       break;
   }
 }`)

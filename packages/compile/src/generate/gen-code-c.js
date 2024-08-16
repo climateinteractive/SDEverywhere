@@ -156,14 +156,14 @@ ${chunkedFunctions('evalLevels', Model.levelVars(), '  // Evaluate levels.')}`
   switch (varIndex) {
 ${setLookupImpl(Model.varIndexInfo(), spec.customLookups)}
     default:
-      fprintf(stderr, "No lookup found for var index %zu in setLookup", varIndex);
+      fprintf(stderr, "No lookup found for var index %zu in setLookup\\n", varIndex);
       break;
   }`
     } else {
       let msg = 'The setLookup function was not enabled for the generated model. '
       msg += 'Set the customLookups property in the spec/config file to allow for overriding lookups at runtime.'
       setLookupBody = `\
-  fprintf(stderr, "${msg}");`
+  fprintf(stderr, "${msg}\\n");`
     }
 
     // Configure the output variables that appear in the generated `getHeader`
@@ -179,7 +179,7 @@ ${setLookupImpl(Model.varIndexInfo(), spec.customLookups)}
   switch (varIndex) {
 ${customOutputSection(Model.varIndexInfo(), spec.customOutputs)}
     default:
-      fprintf(stderr, "No variable found for var index %zu in storeOutput", varIndex);
+      fprintf(stderr, "No variable found for var index %zu in storeOutput\\n", varIndex);
       break;
   }`
     } else {
@@ -187,7 +187,7 @@ ${customOutputSection(Model.varIndexInfo(), spec.customOutputs)}
       msg +=
         'Set the customOutputs property in the spec/config file to allow for capturing arbitrary variables at runtime.'
       storeOutputBody = `\
-  fprintf(stderr, "${msg}");`
+  fprintf(stderr, "${msg}\\n");`
     }
 
     mode = 'io'
