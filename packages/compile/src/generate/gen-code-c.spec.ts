@@ -21,6 +21,8 @@ function readInlineModelAndGenerateC(
     directDataSpec?: DirectDataSpec
     inputVarNames?: string[]
     outputVarNames?: string[]
+    customLookups?: boolean | string[]
+    customOutputs?: boolean | string[]
   }
 ): string {
   // XXX: These steps are needed due to subs/dims and variables being in module-level storage
@@ -28,14 +30,11 @@ function readInlineModelAndGenerateC(
   resetSubscriptsAndDimensions()
   Model.resetModelState()
 
-  let spec
-  if (opts?.inputVarNames || opts?.outputVarNames) {
-    spec = {
-      inputVarNames: opts?.inputVarNames || [],
-      outputVarNames: opts?.outputVarNames || []
-    }
-  } else {
-    spec = {}
+  const spec = {
+    inputVarNames: opts?.inputVarNames,
+    outputVarNames: opts?.outputVarNames,
+    customLookups: opts?.customLookups,
+    customOutputs: opts?.customOutputs
   }
 
   const directData = new Map()
@@ -96,9 +95,11 @@ describe('generateC (Vensim -> C)', () => {
       SAVEPER = 1 ~~|
     `
     const code = readInlineModelAndGenerateC(mdl, {
+      extData,
       inputVarNames: ['input'],
       outputVarNames: ['x', 'y', 'z', 'a[A1]', 'b[A2,B1]', 'c', 'w'],
-      extData
+      customLookups: true,
+      customOutputs: true
     })
     expect(code).toEqual(`\
 #include "sde.h"
@@ -123,9 +124,6 @@ double _z;
 
 // Internal variables
 const int numOutputs = 7;
-#define SDE_USE_OUTPUT_INDICES 0
-#define SDE_MAX_OUTPUT_INDICES 1000
-const int maxOutputIndices = SDE_USE_OUTPUT_INDICES ? SDE_MAX_OUTPUT_INDICES : 0;
 
 // Array dimensions
 const size_t _dima[2] = { 0, 1 };
@@ -284,6 +282,7 @@ void setLookup(size_t varIndex, size_t* subIndices, double* points, size_t numPo
       replaceLookup(&_c_data, points, numPoints);
       break;
     default:
+      fprintf(stderr, "No lookup found for var index %zu in setLookup\\n", varIndex);
       break;
   }
 }
@@ -303,7 +302,6 @@ void storeOutputData() {
 }
 
 void storeOutput(size_t varIndex, size_t subIndex0, size_t subIndex1, size_t subIndex2) {
-#if SDE_USE_OUTPUT_INDICES
   switch (varIndex) {
     case 1:
       outputVar(_final_time);
@@ -342,11 +340,134 @@ void storeOutput(size_t varIndex, size_t subIndex0, size_t subIndex1, size_t sub
       outputVar(_z);
       break;
     default:
+      fprintf(stderr, "No variable found for var index %zu in storeOutput\\n", varIndex);
       break;
   }
-#endif
 }
 `)
+  })
+
+  it('should generate setLookup that reports error when customLookups is disabled', () => {
+    const mdl = `
+      x = 1 ~~|
+      y = WITH LOOKUP(x, ( [(0,0)-(2,2)], (0,0),(2,1.3) )) ~~|
+      INITIAL TIME = 0 ~~|
+      FINAL TIME = 2 ~~|
+      TIME STEP = 1 ~~|
+      SAVEPER = 1 ~~|
+    `
+    const code = readInlineModelAndGenerateC(mdl, {
+      inputVarNames: [],
+      outputVarNames: ['x', 'y']
+    })
+    expect(code).toMatch(`\
+void setLookup(size_t varIndex, size_t* subIndices, double* points, size_t numPoints) {
+  fprintf(stderr, "The setLookup function was not enabled for the generated model. Set the customLookups property in the spec/config file to allow for overriding lookups at runtime.\\n");
+}`)
+  })
+
+  it('should generate setLookup that includes a subset of cases when customLookups is an array', () => {
+    const extData: ExtData = new Map()
+    function addData(varId: string) {
+      extData.set(
+        varId,
+        new Map([
+          [0, 0],
+          [1, 2],
+          [2, 5]
+        ])
+      )
+    }
+    addData('_y_data[_a1]')
+    addData('_y_data[_a2]')
+    addData('_z_data')
+    addData('_q_data')
+    const mdl = `
+      DimA: A1, A2 ~~|
+      x = 1 ~~|
+      y data[DimA] ~~|
+      y[DimA] = y data[DimA] ~~|
+      z data ~~|
+      z = z data ~~|
+      q data ~~|
+      q = q data ~~|
+      INITIAL TIME = 0 ~~|
+      FINAL TIME = 2 ~~|
+      TIME STEP = 1 ~~|
+      SAVEPER = 1 ~~|
+    `
+    const code = readInlineModelAndGenerateC(mdl, {
+      extData,
+      inputVarNames: [],
+      outputVarNames: ['x', 'y[A1]', 'z', 'q'],
+      customLookups: ['y data[A1]', 'q data']
+    })
+    expect(code).toMatch(`\
+void setLookup(size_t varIndex, size_t* subIndices, double* points, size_t numPoints) {
+  switch (varIndex) {
+    case 6:
+      replaceLookup(&_q_data, points, numPoints);
+      break;
+    case 7:
+      replaceLookup(&_y_data[subIndices[0]], points, numPoints);
+      break;
+    default:
+      fprintf(stderr, "No lookup found for var index %zu in setLookup\\n", varIndex);
+      break;
+  }
+}`)
+  })
+
+  it('should generate storeOutput that reports error when customOutputs is disabled', () => {
+    const mdl = `
+      x = 1 ~~|
+      y = x ~~|
+      INITIAL TIME = 0 ~~|
+      FINAL TIME = 2 ~~|
+      TIME STEP = 1 ~~|
+      SAVEPER = 1 ~~|
+    `
+    const code = readInlineModelAndGenerateC(mdl, {
+      inputVarNames: [],
+      outputVarNames: ['y']
+    })
+    expect(code).toMatch(`\
+void storeOutput(size_t varIndex, size_t subIndex0, size_t subIndex1, size_t subIndex2) {
+  fprintf(stderr, "The storeOutput function was not enabled for the generated model. Set the customOutputs property in the spec/config file to allow for capturing arbitrary variables at runtime.\\n");
+}`)
+  })
+
+  it('should generate storeOutput that includes a subset of cases when customOutputs is an array', () => {
+    const mdl = `
+      DimA: A1, A2 ~~|
+      u[DimA] = 10, 20 ~~|
+      v[DimA] = u[DimA] + 1 ~~|
+      x = 1 ~~|
+      y = x ~~|
+      INITIAL TIME = 0 ~~|
+      FINAL TIME = 2 ~~|
+      TIME STEP = 1 ~~|
+      SAVEPER = 1 ~~|
+    `
+    const code = readInlineModelAndGenerateC(mdl, {
+      inputVarNames: [],
+      outputVarNames: ['v[A1]', 'y'],
+      customOutputs: ['u[A1]', 'x']
+    })
+    expect(code).toMatch(`\
+void storeOutput(size_t varIndex, size_t subIndex0, size_t subIndex1, size_t subIndex2) {
+  switch (varIndex) {
+    case 5:
+      outputVar(_u[subIndex0]);
+      break;
+    case 6:
+      outputVar(_x);
+      break;
+    default:
+      fprintf(stderr, "No variable found for var index %zu in storeOutput\\n", varIndex);
+      break;
+  }
+}`)
   })
 
   it('should work when valid input variable name without subscript is provided in spec file', () => {

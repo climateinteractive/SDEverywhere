@@ -44,7 +44,7 @@ let codeGenerator = (parsedModel, opts) => {
       code += emitInitLevelsCode()
       code += emitEvalCode()
       code += emitIOCode()
-      code += emitModelListing()
+      code += emitModelListing(spec.bundleListing)
       code += emitDefaultFunction()
       return code
     }
@@ -241,6 +241,27 @@ ${chunkedFunctions('evalLevels', true, Model.levelVars(), '  // Evaluate levels'
   function emitIOCode() {
     mode = 'io'
 
+    // Configure the body of the `setLookup` function depending on the value
+    // of the `customLookups` property in the spec file
+    let setLookupBody
+    if (spec.customLookups === true || Array.isArray(spec.customLookups)) {
+      setLookupBody = `\
+  if (!varSpec) {
+    throw new Error('Got undefined varSpec in setLookup');
+  }
+  const varIndex = varSpec.varIndex;
+  const subs = varSpec.subscriptIndices;
+  switch (varIndex) {
+${setLookupImpl(Model.varIndexInfo(), spec.customLookups)}
+    default:
+      throw new Error(\`No lookup found for var index \${varIndex} in setLookup\`);
+  }`
+    } else {
+      let msg = 'The setLookup function was not enabled for the generated model. '
+      msg += 'Set the customLookups property in the spec/config file to allow for overriding lookups at runtime.'
+      setLookupBody = `  throw new Error('${msg}');`
+    }
+
     // This is the list of original output variable names (as supplied by the user in
     // the `spec.json` file), for example, `a[A2,B1]`.  These are exported mainly for
     // use in the implementation of the `sde exec` command, which generates a TSV file
@@ -261,20 +282,33 @@ ${chunkedFunctions('evalLevels', true, Model.levelVars(), '  // Evaluate levels'
     // `_a[1][0]`.  These are used in the implementation of `storeOutputs`.
     const outputVarAccesses = outputAllVars ? expandedVarNames() : spec.outputVars
 
-    return `\
-/*export*/ function setInputs(valueAtIndex /*: (index: number) => number*/) {${inputsFromBufferImpl()}}
-
-/*export*/ function setLookup(varSpec /*: VarSpec*/, points /*: Float64Array*/) {
+    // Configure the body of the `storeOutput` function depending on the value
+    // of the `customOutputs` property in the spec file
+    let storeOutputBody
+    if (spec.customOutputs === true || Array.isArray(spec.customOutputs)) {
+      storeOutputBody = `\
   if (!varSpec) {
-    throw new Error('Got undefined varSpec in setLookup');
+    throw new Error('Got undefined varSpec in storeOutput');
   }
   const varIndex = varSpec.varIndex;
   const subs = varSpec.subscriptIndices;
   switch (varIndex) {
-${setLookupImpl(Model.varIndexInfo())}
+${customOutputSection(Model.varIndexInfo(), spec.customOutputs)}
     default:
-      break;
-  }
+      throw new Error(\`No variable found for var index \${varIndex} in storeOutput\`);
+  }`
+    } else {
+      let msg = 'The storeOutput function was not enabled for the generated model. '
+      msg +=
+        'Set the customOutputs property in the spec/config file to allow for capturing arbitrary variables at runtime.'
+      storeOutputBody = `  throw new Error('${msg}');`
+    }
+
+    return `\
+/*export*/ function setInputs(valueAtIndex /*: (index: number) => number*/) {${inputsFromBufferImpl()}}
+
+/*export*/ function setLookup(varSpec /*: VarSpec*/, points /*: Float64Array*/) {
+${setLookupBody}
 }
 
 /*export*/ const outputVarIds = [
@@ -290,16 +324,7 @@ ${specOutputSection(outputVarAccesses)}
 }
 
 /*export*/ function storeOutput(varSpec /*: VarSpec*/, storeValue /*: (value: number) => void*/) {
-  if (!varSpec) {
-    throw new Error('Got undefined varSpec in storeOutput');
-  }
-  const varIndex = varSpec.varIndex;
-  const subs = varSpec.subscriptIndices;
-  switch (varIndex) {
-${fullOutputSection(Model.varIndexInfo())}
-    default:
-      break;
-  }
+${storeOutputBody}
 }
 
 `
@@ -406,20 +431,6 @@ ${section(chunk)}
     )
     return decls(Model.allVars()) + fixedDelayDecls + depreciationDecls
   }
-  // function internalVarsSection() {
-  //   // Declare internal variables to run the model.
-  //   let decls
-  //   if (outputAllVars) {
-  //     decls = `const numOutputs = ${expandedVarNames().length};`
-  //   } else {
-  //     decls = `const numOutputs = ${spec.outputVars.length};`
-  //   }
-  //   // TODO
-  //   // decls += `\n#define SDE_USE_OUTPUT_INDICES 0`
-  //   // decls += `\n#define SDE_MAX_OUTPUT_INDICES 1000`
-  //   // decls += `\nconst int maxOutputIndices = SDE_USE_OUTPUT_INDICES ? SDE_MAX_OUTPUT_INDICES : 0;`
-  //   return decls
-  // }
   function arrayDimensionsSection() {
     // Emit a declaration for each array dimension's index numbers.
     // These index number arrays will be used to indirectly reference array elements.
@@ -453,16 +464,33 @@ ${section(chunk)}
   // Input/output section helpers
   //
   function specOutputSection(varNames) {
-    // Emit output calls using varNames in C format.
+    // Emit `storeValue` calls for all variables listed in the `outputVarNames`
+    // array in the spec file using varNames in C/JS format.
     let code = R.map(varName => `  storeValue(${varName});`)
     let section = R.pipe(code, lines)
     return section(varNames)
   }
-  function fullOutputSection(varIndexInfo) {
+  function customOutputSection(varIndexInfo, customOutputs) {
     // Emit `storeValue` calls for all variables that can be accessed as an output.
     // This excludes data and lookup variables; at this time, the data for these
     // cannot be output like for other types of variables.
-    const outputVars = R.filter(info => info.varType !== 'lookup' && info.varType !== 'data')
+    let includeCase
+    if (Array.isArray(customOutputs)) {
+      // Only include a case statement if the variable was explicitly included
+      // in the `customOutputs` array in the spec file
+      const customOutputVarNames = customOutputs.map(varName => {
+        // The developer might specify a variable name that includes subscripts,
+        // but we will ignore the subscript part and only match on the base name
+        return canonicalVensimName(varName.split('[')[0])
+      })
+      includeCase = varName => customOutputVarNames.includes(varName)
+    } else {
+      // Include a case statement for all accessible variables
+      includeCase = () => true
+    }
+    const outputVars = R.filter(info => {
+      return info.varType !== 'lookup' && info.varType !== 'data' && includeCase(info.varName)
+    })
     const code = R.map(info => {
       let varAccess = info.varName
       for (let i = 0; i < info.subscriptCount; i++) {
@@ -488,10 +516,26 @@ ${section(chunk)}
     }
     return inputVars
   }
-  function setLookupImpl(varIndexInfo) {
+  function setLookupImpl(varIndexInfo, customLookups) {
     // Emit `createLookup` calls for all lookups and data variables that can be overridden
     // at runtime
-    const lookupAndDataVars = R.filter(info => info.varType === 'lookup' || info.varType === 'data')
+    let overrideAllowed
+    if (Array.isArray(customLookups)) {
+      // Only include a case statement if the variable was explicitly included
+      // in the `customLookups` array in the spec file
+      const customLookupVarNames = customLookups.map(varName => {
+        // The developer might specify a variable name that includes subscripts,
+        // but we will ignore the subscript part and only match on the base name
+        return canonicalVensimName(varName.split('[')[0])
+      })
+      overrideAllowed = varName => customLookupVarNames.includes(varName)
+    } else {
+      // Include a case statement for all lookup and data variables
+      overrideAllowed = () => true
+    }
+    const lookupAndDataVars = R.filter(info => {
+      return (info.varType === 'lookup' || info.varType === 'data') && overrideAllowed(info.varName)
+    })
     const code = R.map(info => {
       let lookupVar = info.varName
       for (let i = 0; i < info.subscriptCount; i++) {
@@ -514,9 +558,14 @@ ${section(chunk)}
   //
   // Module exports
   //
-  function emitModelListing() {
-    const minimalListingJson = JSON.stringify(Model.jsonList().minimal, null, 2)
-    const minimalListingJs = minimalListingJson.replace(/"(\w+)"\s*:/g, '$1:').replaceAll('"', "'")
+  function emitModelListing(bundleListing) {
+    let minimalListingJs
+    if (bundleListing !== false) {
+      const minimalListingJson = JSON.stringify(Model.jsonList().minimal, null, 2)
+      minimalListingJs = minimalListingJson.replace(/"(\w+)"\s*:/g, '$1:').replaceAll('"', "'")
+    } else {
+      minimalListingJs = 'undefined;'
+    }
     return `\
 /*export*/ const modelListing = ${minimalListingJs}
 

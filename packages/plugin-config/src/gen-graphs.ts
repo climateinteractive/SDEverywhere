@@ -150,8 +150,9 @@ function graphSpecFromCsv(g: CsvRow, context: ConfigContext): GraphSpec | undefi
     }
   }
 
-  const xMin = optionalNumber(g['x axis min']) || context.graphDefaultMinTime
-  const xMax = optionalNumber(g['x axis max']) || context.graphDefaultMaxTime
+  const modelOptions = context.modelOptions
+  const xMin = optionalNumber(g['x axis min']) || modelOptions.graphDefaultMinTime
+  const xMax = optionalNumber(g['x axis max']) || modelOptions.graphDefaultMaxTime
   const xAxisLabel = optionalString(g['x axis label'])
   let xAxisLabelKey: StringKey
   if (xAxisLabel) {

@@ -58,6 +58,57 @@ model.
 
 ___
 
+### bundleListing
+
+ **bundleListing**: `boolean`
+
+Whether to bundle a model listing with the generated model.
+
+When this is true, a model listing will be bundled with the generated
+model to allow the `runtime` package to resolve variables that are
+referenced by name or identifier.  This listing will increase the size
+of the generated model, so it is recommended to set this to true only
+if it is needed.
+
+___
+
+### customLookups
+
+ **customLookups**: `boolean` \| `string`[]
+
+Whether to allow lookups to be overridden at runtime using `setLookup`.
+
+If false, the generated model will contain a `setLookup` function that
+throws an error, meaning that lookups cannot be overridden at runtime.
+
+If true, all lookups in the generated model will be available to be
+overridden.
+
+If an array is provided, only those variable names in the array will
+be available to be overridden.
+
+___
+
+### customOutputs
+
+ **customOutputs**: `boolean` \| `string`[]
+
+Whether to allow for capturing the data for arbitrary variables at
+runtime (including variables that are not configured in the `outputs`
+array).
+
+If false, the generated model will contain a `storeOutput` function
+that throws an error, meaning that the data for arbitrary variables
+cannot be captured at runtime.
+
+If true, all variables in the generated model will be available to be
+captured at runtime.
+
+If an array is provided, only those variable names in the array will
+be available to be captured at runtime.
+
+___
+
 ### options
 
  `Optional` **options**: `Object`

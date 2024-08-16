@@ -104,6 +104,7 @@ async function processModelConfig(buildContext: BuildContext, options: ConfigPro
 
   // Create a container for strings, variables, etc
   const context = createConfigContext(buildContext, options.config)
+  const modelOptions = context.modelOptions
 
   // Write the generated files
   context.log('info', 'Generating files...')
@@ -132,7 +133,10 @@ async function processModelConfig(buildContext: BuildContext, options: ConfigPro
   return {
     inputs: context.getOrderedInputs(),
     outputs: context.getOrderedOutputs(),
-    datFiles: context.datFiles,
+    datFiles: modelOptions.datFiles,
+    bundleListing: modelOptions.bundleListing,
+    customLookups: modelOptions.customLookups,
+    customOutputs: modelOptions.customOutputs,
     options: options.spec
   }
 }
