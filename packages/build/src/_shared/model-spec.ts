@@ -64,6 +64,37 @@ export interface ModelSpec {
    */
   datFiles?: string[]
 
+  /**
+   * Whether to allow lookups to be overridden at runtime using `setLookup`.
+   *
+   * If undefined or false, the generated model will implement `setLookup`
+   * as a no-op, meaning that lookups cannot be overridden at runtime.
+   *
+   * If true, all lookups in the generated model will be available to be
+   * overridden.
+   *
+   * If an array is provided, only those variable names in the array will
+   * be available to be overridden.
+   */
+  customLookups?: boolean | VarName[]
+
+  /**
+   * Whether to allow for capturing the data for arbitrary variables at
+   * runtime (including variables that are not configured in the `outputs`
+   * array).
+   *
+   * If undefined or false, the generated model will implement `storeOutput`
+   * as a no-op, meaning that the data for arbitrary variables cannot be
+   * captured at runtime.
+   *
+   * If true, all variables in the generated model will be available to be
+   * captured at runtime.
+   *
+   * If an array is provided, only those variable names in the array will
+   * be available to be captured at runtime.
+   */
+  customOutputs?: boolean | VarName[]
+
   /** Additional options included with the SDE `spec.json` file. */
   // TODO: Remove references to `spec.json`
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -110,6 +141,37 @@ export interface ResolvedModelSpec {
    * model.
    */
   datFiles: string[]
+
+  /**
+   * Whether to allow lookups to be overridden at runtime using `setLookup`.
+   *
+   * If false, the generated model will contain a `setLookup` function that
+   * throws an error, meaning that lookups cannot be overridden at runtime.
+   *
+   * If true, all lookups in the generated model will be available to be
+   * overridden.
+   *
+   * If an array is provided, only those variable names in the array will
+   * be available to be overridden.
+   */
+  customLookups: boolean | VarName[]
+
+  /**
+   * Whether to allow for capturing the data for arbitrary variables at
+   * runtime (including variables that are not configured in the `outputs`
+   * array).
+   *
+   * If false, the generated model will contain a `storeOutput` function
+   * that throws an error, meaning that the data for arbitrary variables
+   * cannot be captured at runtime.
+   *
+   * If true, all variables in the generated model will be available to be
+   * captured at runtime.
+   *
+   * If an array is provided, only those variable names in the array will
+   * be available to be captured at runtime.
+   */
+  customOutputs: boolean | VarName[]
 
   /** Additional options included with the SDE `spec.json` file. */
   // TODO: Remove references to `spec.json`
