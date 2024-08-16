@@ -24,7 +24,9 @@ export async function config() {
           'time to build houses',
           'time to respond to gap'
         ],
-        outputs: ['number of houses required', 'houses completed']
+        outputs: ['number of houses required', 'houses completed'],
+        bundleListing: true,
+        customLookups: ['planning game inputs']
       }
     },
 
