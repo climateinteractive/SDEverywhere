@@ -208,7 +208,8 @@ describe('generateJS (Vensim -> JS)', () => {
       inputVarNames: ['input'],
       outputVarNames: ['x', 'y', 'z', 'a[A1]', 'b[A2,B1]', 'c', 'w'],
       bundleListing: true,
-      customLookups: true
+      customLookups: true,
+      customOutputs: true
     })
     expect(code).toEqual(`\
 // Model variables
@@ -533,7 +534,7 @@ function evalAux0() {
       storeValue(_z);
       break;
     default:
-      break;
+      throw new Error(\`No variable found for var index \${varIndex} in storeOutput\`);
   }
 }
 
@@ -711,14 +712,19 @@ export default async function () {
         ])
       )
     }
-    addData('_y_data')
+    addData('_y_data[_a1]')
+    addData('_y_data[_a2]')
     addData('_z_data')
+    addData('_q_data')
     const mdl = `
+      DimA: A1, A2 ~~|
       x = 1 ~~|
-      y data ~~|
-      y = y data ~~|
+      y data[DimA] ~~|
+      y[DimA] = y data[DimA] ~~|
       z data ~~|
       z = z data ~~|
+      q data ~~|
+      q = q data ~~|
       INITIAL TIME = 0 ~~|
       FINAL TIME = 2 ~~|
       TIME STEP = 1 ~~|
@@ -727,9 +733,8 @@ export default async function () {
     const code = readInlineModelAndGenerateJS(mdl, {
       extData,
       inputVarNames: [],
-      outputVarNames: ['x', 'y', 'z'],
-      bundleListing: true,
-      customLookups: ['y data']
+      outputVarNames: ['x', 'y[A1]', 'z', 'q'],
+      customLookups: ['y data[A1]', 'q data']
     })
     expect(code).toMatch(`\
 /*export*/ function setLookup(varSpec /*: VarSpec*/, points /*: Float64Array*/) {
@@ -740,10 +745,69 @@ export default async function () {
   const subs = varSpec.subscriptIndices;
   switch (varIndex) {
     case 6:
-      _y_data = fns.createLookup(points.length / 2, points);
+      _q_data = fns.createLookup(points.length / 2, points);
+      break;
+    case 7:
+      _y_data[subs[0]] = fns.createLookup(points.length / 2, points);
       break;
     default:
       throw new Error(\`No lookup found for var index \${varIndex} in setLookup\`);
+  }
+}`)
+  })
+
+  it('should generate storeOutput that reports error when customOutputs is disabled', () => {
+    const mdl = `
+      x = 1 ~~|
+      y = x ~~|
+      INITIAL TIME = 0 ~~|
+      FINAL TIME = 2 ~~|
+      TIME STEP = 1 ~~|
+      SAVEPER = 1 ~~|
+    `
+    const code = readInlineModelAndGenerateJS(mdl, {
+      inputVarNames: [],
+      outputVarNames: ['y']
+    })
+    expect(code).toMatch(`\
+/*export*/ function storeOutput(varSpec /*: VarSpec*/, storeValue /*: (value: number) => void*/) {
+  throw new Error('The storeOutput function was not enabled for the generated model. Set the customOutputs property in the spec/config file to allow for capturing arbitrary variables at runtime.');
+}`)
+  })
+
+  it('should generate storeOutput that includes a subset of cases when customOutputs is an array', () => {
+    const mdl = `
+      DimA: A1, A2 ~~|
+      u[DimA] = 10, 20 ~~|
+      v[DimA] = u[DimA] + 1 ~~|
+      x = 1 ~~|
+      y = x ~~|
+      INITIAL TIME = 0 ~~|
+      FINAL TIME = 2 ~~|
+      TIME STEP = 1 ~~|
+      SAVEPER = 1 ~~|
+    `
+    const code = readInlineModelAndGenerateJS(mdl, {
+      inputVarNames: [],
+      outputVarNames: ['v[A1]', 'y'],
+      customOutputs: ['u[A1]', 'x']
+    })
+    expect(code).toMatch(`\
+/*export*/ function storeOutput(varSpec /*: VarSpec*/, storeValue /*: (value: number) => void*/) {
+  if (!varSpec) {
+    throw new Error('Got undefined varSpec in storeOutput');
+  }
+  const varIndex = varSpec.varIndex;
+  const subs = varSpec.subscriptIndices;
+  switch (varIndex) {
+    case 5:
+      storeValue(_u[subs[0]]);
+      break;
+    case 6:
+      storeValue(_x);
+      break;
+    default:
+      throw new Error(\`No variable found for var index \${varIndex} in storeOutput\`);
   }
 }`)
   })
