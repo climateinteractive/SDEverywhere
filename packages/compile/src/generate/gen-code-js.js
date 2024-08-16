@@ -241,6 +241,27 @@ ${chunkedFunctions('evalLevels', true, Model.levelVars(), '  // Evaluate levels'
   function emitIOCode() {
     mode = 'io'
 
+    // Configure the body of the `setLookup` function depending on the value
+    // of the `customLookups` property in the spec file
+    let setLookupBody
+    if (spec.customLookups === true || Array.isArray(spec.customLookups)) {
+      setLookupBody = `\
+  if (!varSpec) {
+    throw new Error('Got undefined varSpec in setLookup');
+  }
+  const varIndex = varSpec.varIndex;
+  const subs = varSpec.subscriptIndices;
+  switch (varIndex) {
+${setLookupImpl(Model.varIndexInfo(), spec.customLookups)}
+    default:
+      throw new Error(\`No lookup found for var index \${varIndex} in setLookup\`);
+  }`
+    } else {
+      let msg = 'The setLookup function was not enabled for the generated model. '
+      msg += 'Set the customLookups property in the spec/config file to allow for overriding lookups at runtime.'
+      setLookupBody = `  throw new Error('${msg}');`
+    }
+
     // This is the list of original output variable names (as supplied by the user in
     // the `spec.json` file), for example, `a[A2,B1]`.  These are exported mainly for
     // use in the implementation of the `sde exec` command, which generates a TSV file
@@ -265,16 +286,7 @@ ${chunkedFunctions('evalLevels', true, Model.levelVars(), '  // Evaluate levels'
 /*export*/ function setInputs(valueAtIndex /*: (index: number) => number*/) {${inputsFromBufferImpl()}}
 
 /*export*/ function setLookup(varSpec /*: VarSpec*/, points /*: Float64Array*/) {
-  if (!varSpec) {
-    throw new Error('Got undefined varSpec in setLookup');
-  }
-  const varIndex = varSpec.varIndex;
-  const subs = varSpec.subscriptIndices;
-  switch (varIndex) {
-${setLookupImpl(Model.varIndexInfo())}
-    default:
-      break;
-  }
+${setLookupBody}
 }
 
 /*export*/ const outputVarIds = [
@@ -488,10 +500,26 @@ ${section(chunk)}
     }
     return inputVars
   }
-  function setLookupImpl(varIndexInfo) {
+  function setLookupImpl(varIndexInfo, customLookups) {
     // Emit `createLookup` calls for all lookups and data variables that can be overridden
     // at runtime
-    const lookupAndDataVars = R.filter(info => info.varType === 'lookup' || info.varType === 'data')
+    let overrideAllowed
+    if (Array.isArray(customLookups)) {
+      // Only include a case statement if the variable was explicitly included
+      // in the `customLookups` array in the spec file
+      const customLookupVarNames = customLookups.map(varName => {
+        // The developer might specify a variable name that includes subscripts,
+        // but we will ignore the subscript part and only match on the base name
+        return canonicalVensimName(varName.split('[')[0])
+      })
+      overrideAllowed = varName => customLookupVarNames.includes(varName)
+    } else {
+      // Include a case statement for all lookup and data variables
+      overrideAllowed = () => true
+    }
+    const lookupAndDataVars = R.filter(info => {
+      return (info.varType === 'lookup' || info.varType === 'data') && overrideAllowed(info.varName)
+    })
     const code = R.map(info => {
       let lookupVar = info.varName
       for (let i = 0; i < info.subscriptCount; i++) {

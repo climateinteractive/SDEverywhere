@@ -22,6 +22,8 @@ function readInlineModelAndGenerateJS(
     inputVarNames?: string[]
     outputVarNames?: string[]
     bundleListing?: boolean
+    customLookups?: boolean | string[]
+    customOutputs?: boolean | string[]
   }
 ): string {
   // XXX: These steps are needed due to subs/dims and variables being in module-level storage
@@ -29,16 +31,13 @@ function readInlineModelAndGenerateJS(
   resetSubscriptsAndDimensions()
   Model.resetModelState()
 
-  let spec: any
-  if (opts?.inputVarNames || opts?.outputVarNames) {
-    spec = {
-      inputVarNames: opts?.inputVarNames || [],
-      outputVarNames: opts?.outputVarNames || []
-    }
-  } else {
-    spec = {}
+  const spec = {
+    inputVarNames: opts?.inputVarNames,
+    outputVarNames: opts?.outputVarNames,
+    bundleListing: opts?.bundleListing,
+    customLookups: opts?.customLookups,
+    customOutputs: opts?.customOutputs
   }
-  spec.bundleListing = opts?.bundleListing
 
   const directData = new Map()
   if (opts?.modelDir && opts?.directDataSpec) {
@@ -205,10 +204,11 @@ describe('generateJS (Vensim -> JS)', () => {
       SAVEPER = 1 ~~|
     `
     const code = readInlineModelAndGenerateJS(mdl, {
+      extData,
       inputVarNames: ['input'],
       outputVarNames: ['x', 'y', 'z', 'a[A1]', 'b[A2,B1]', 'c', 'w'],
       bundleListing: true,
-      extData
+      customLookups: true
     })
     expect(code).toEqual(`\
 // Model variables
@@ -455,7 +455,7 @@ function evalAux0() {
       _c_data = fns.createLookup(points.length / 2, points);
       break;
     default:
-      break;
+      throw new Error(\`No lookup found for var index \${varIndex} in setLookup\`);
   }
 }
 
@@ -663,7 +663,7 @@ export default async function () {
 `)
   })
 
-  it('should generate code without listing when listing is disabled', () => {
+  it('should generate undefined modelListing when bundleListing is disabled', () => {
     const mdl = `
       x = 1 ~~|
       INITIAL TIME = 0 ~~|
@@ -677,6 +677,75 @@ export default async function () {
       bundleListing: false
     })
     expect(code).toMatch(`/*export*/ const modelListing = undefined;`)
+  })
+
+  it('should generate setLookup that throws error when customLookups is disabled', () => {
+    const mdl = `
+      x = 1 ~~|
+      y = WITH LOOKUP(x, ( [(0,0)-(2,2)], (0,0),(2,1.3) )) ~~|
+      INITIAL TIME = 0 ~~|
+      FINAL TIME = 2 ~~|
+      TIME STEP = 1 ~~|
+      SAVEPER = 1 ~~|
+    `
+    const code = readInlineModelAndGenerateJS(mdl, {
+      inputVarNames: [],
+      outputVarNames: ['x', 'y'],
+      bundleListing: false
+    })
+    expect(code).toMatch(`\
+/*export*/ function setLookup(varSpec /*: VarSpec*/, points /*: Float64Array*/) {
+  throw new Error('The setLookup function was not enabled for the generated model. Set the customLookups property in the spec/config file to allow for overriding lookups at runtime.');
+}`)
+  })
+
+  it('should generate setLookup that includes a subset of cases when customLookups is an array', () => {
+    const extData: ExtData = new Map()
+    function addData(varId: string) {
+      extData.set(
+        varId,
+        new Map([
+          [0, 0],
+          [1, 2],
+          [2, 5]
+        ])
+      )
+    }
+    addData('_y_data')
+    addData('_z_data')
+    const mdl = `
+      x = 1 ~~|
+      y data ~~|
+      y = y data ~~|
+      z data ~~|
+      z = z data ~~|
+      INITIAL TIME = 0 ~~|
+      FINAL TIME = 2 ~~|
+      TIME STEP = 1 ~~|
+      SAVEPER = 1 ~~|
+    `
+    const code = readInlineModelAndGenerateJS(mdl, {
+      extData,
+      inputVarNames: [],
+      outputVarNames: ['x', 'y', 'z'],
+      bundleListing: false,
+      customLookups: ['y data']
+    })
+    expect(code).toMatch(`\
+/*export*/ function setLookup(varSpec /*: VarSpec*/, points /*: Float64Array*/) {
+  if (!varSpec) {
+    throw new Error('Got undefined varSpec in setLookup');
+  }
+  const varIndex = varSpec.varIndex;
+  const subs = varSpec.subscriptIndices;
+  switch (varIndex) {
+    case 6:
+      _y_data = fns.createLookup(points.length / 2, points);
+      break;
+    default:
+      throw new Error(\`No lookup found for var index \${varIndex} in setLookup\`);
+  }
+}`)
   })
 
   it('should generate a model that can be run', async () => {
