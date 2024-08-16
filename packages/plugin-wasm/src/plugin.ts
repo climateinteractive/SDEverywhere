@@ -17,14 +17,18 @@ export function wasmPlugin(options?: WasmPluginOptions): Plugin {
 }
 
 class WasmPlugin implements Plugin {
-  /** The output var IDs captured in `preGenerate`. */
+  // The properties from `modelSpec` captured in `preGenerate`
   private outputVarIds: string[]
+  private bundleListing: boolean
 
   constructor(private readonly options?: WasmPluginOptions) {}
 
   async preGenerate(_context: BuildContext, modelSpec: ResolvedModelSpec): Promise<void> {
-    // Save the output var IDs for later processing
+    // Save some properties for later processing.  This is a workaround for the fact
+    // that `modelSpec` is not passed to `postGenerateCode`, so we need to capture
+    // these values here.
     this.outputVarIds = modelSpec.outputs.map(o => sdeNameForVensimVarName(o.varName))
+    this.bundleListing = modelSpec.bundleListing
   }
 
   async postGenerateCode(context: BuildContext, format: 'js' | 'c', content: string): Promise<string> {
@@ -36,7 +40,7 @@ class WasmPlugin implements Plugin {
 
     const buildDir = joinPath(context.config.prepDir, 'build')
     let modelListingJs: string
-    if (context.config.bundleListing === true) {
+    if (this.bundleListing === true) {
       // Include the minimal model listing
       const modelListingPath = joinPath(buildDir, 'processed_min.json')
       const modelListingJson = await readFile(modelListingPath, 'utf8')
