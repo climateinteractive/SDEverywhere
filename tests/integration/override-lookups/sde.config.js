@@ -12,7 +12,9 @@ export async function config() {
       return {
         inputs: ['X'],
         outputs: ['A[A1]', 'A[A2]', 'B[A1,B1]', 'B[A1,B2]', 'B[A1,B3]', 'B[A2,B1]', 'B[A2,B2]', 'B[A2,B3]', 'C'],
-        datFiles: ['../override-lookups.dat']
+        datFiles: ['../override-lookups.dat'],
+        bundleListing: true,
+        customLookups: true
       }
     },
 
