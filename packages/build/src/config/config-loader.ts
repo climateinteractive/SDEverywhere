@@ -182,9 +182,6 @@ function resolveUserConfig(
     }
   }
 
-  // Resolve the `bundleListing` property
-  const bundleListing = userConfig.bundleListing
-
   return {
     mode,
     rootDir,
@@ -194,7 +191,6 @@ function resolveUserConfig(
     watchPaths,
     genFormat,
     outListingFile,
-    bundleListing,
     sdeDir,
     sdeCmdPath
   }

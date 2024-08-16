@@ -72,10 +72,12 @@ export async function buildOnce(
 
     // Write the spec file
     const specJson = {
-      bundleListing: config.bundleListing,
       inputVarNames: modelSpec.inputVarNames,
       outputVarNames: modelSpec.outputVarNames,
       externalDatfiles: modelSpec.datFiles,
+      bundleListing: modelSpec.bundleListing,
+      customLookups: modelSpec.customLookups,
+      customOutputs: modelSpec.customOutputs,
       ...modelSpec.options
     }
     const specPath = joinPath(config.prepDir, 'spec.json')
@@ -218,12 +220,29 @@ function resolveModelSpec(modelSpec: ModelSpec): ResolvedModelSpec {
     outputSpecs = []
   }
 
+  let customLookups: boolean | VarName[]
+  if (modelSpec.customLookups !== undefined) {
+    customLookups = modelSpec.customLookups
+  } else {
+    customLookups = false
+  }
+
+  let customOutputs: boolean | VarName[]
+  if (modelSpec.customOutputs !== undefined) {
+    customOutputs = modelSpec.customOutputs
+  } else {
+    customOutputs = false
+  }
+
   return {
     inputVarNames,
     inputs: inputSpecs,
     outputVarNames,
     outputs: outputSpecs,
     datFiles: modelSpec.datFiles || [],
+    bundleListing: modelSpec.bundleListing === true,
+    customLookups,
+    customOutputs,
     options: modelSpec.options
   }
 }

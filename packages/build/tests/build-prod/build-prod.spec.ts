@@ -100,6 +100,9 @@ describe('build in production mode', () => {
     expect(resolvedModelSpec!.outputVarNames).toEqual(['Z'])
     expect(resolvedModelSpec!.outputs).toEqual([{ varName: 'Z' }])
     expect(resolvedModelSpec!.datFiles).toEqual([])
+    expect(resolvedModelSpec!.bundleListing).toBe(false)
+    expect(resolvedModelSpec!.customLookups).toBe(false)
+    expect(resolvedModelSpec!.customOutputs).toBe(false)
   })
 
   it('should resolve model spec (when input/output var names are provided)', async () => {
@@ -113,7 +116,10 @@ describe('build in production mode', () => {
         // Note that we return only variable names here
         return {
           inputs: ['Y'],
-          outputs: ['Z']
+          outputs: ['Z'],
+          bundleListing: true,
+          customLookups: ['lookup1'],
+          customOutputs: ['output1']
         }
       },
       plugins: [
@@ -137,6 +143,47 @@ describe('build in production mode', () => {
     expect(resolvedModelSpec!.outputVarNames).toEqual(['Z'])
     expect(resolvedModelSpec!.outputs).toEqual([{ varName: 'Z' }])
     expect(resolvedModelSpec!.datFiles).toEqual([])
+    expect(resolvedModelSpec!.bundleListing).toBe(true)
+    expect(resolvedModelSpec!.customLookups).toEqual(['lookup1'])
+    expect(resolvedModelSpec!.customOutputs).toEqual(['output1'])
+  })
+
+  it('should resolve model spec (when boolean is provided for customLookups and customOutputs)', async () => {
+    let resolvedModelSpec: ResolvedModelSpec
+    const userConfig: UserConfig = {
+      genFormat: 'c',
+      rootDir: resolvePath(__dirname, '..'),
+      prepDir: resolvePath(__dirname, 'sde-prep'),
+      modelFiles: [resolvePath(__dirname, '..', '_shared', 'sample.mdl')],
+      modelSpec: async () => {
+        // Note that we return only variable names here
+        return {
+          inputs: ['Y'],
+          outputs: ['Z'],
+          bundleListing: true,
+          customLookups: true,
+          customOutputs: true
+        }
+      },
+      plugins: [
+        {
+          preGenerate: async (_context, modelSpec) => {
+            resolvedModelSpec = modelSpec
+          }
+        }
+      ]
+    }
+
+    const result = await build('production', buildOptions(userConfig))
+    if (result.isErr()) {
+      throw new Error('Expected ok result but got: ' + result.error.message)
+    }
+
+    expect(result.value.exitCode).toBe(0)
+    expect(resolvedModelSpec!).toBeDefined()
+    expect(resolvedModelSpec!.bundleListing).toBe(true)
+    expect(resolvedModelSpec!.customLookups).toEqual(true)
+    expect(resolvedModelSpec!.customOutputs).toEqual(true)
   })
 
   it('should write listing.json file (when absolute path is provided)', async () => {

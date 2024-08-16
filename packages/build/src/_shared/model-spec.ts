@@ -65,6 +65,19 @@ export interface ModelSpec {
   datFiles?: string[]
 
   /**
+   * Whether to bundle a model listing with the generated model.
+   *
+   * If undefined, defaults to false.
+   *
+   * When this is true, a model listing will be bundled with the generated
+   * model to allow the `runtime` package to resolve variables that are
+   * referenced by name or identifier.  This listing will increase the size
+   * of the generated model, so it is recommended to set this to true only
+   * if it is needed.
+   */
+  bundleListing?: boolean
+
+  /**
    * Whether to allow lookups to be overridden at runtime using `setLookup`.
    *
    * If undefined or false, the generated model will implement `setLookup`
@@ -141,6 +154,17 @@ export interface ResolvedModelSpec {
    * model.
    */
   datFiles: string[]
+
+  /**
+   * Whether to bundle a model listing with the generated model.
+   *
+   * When this is true, a model listing will be bundled with the generated
+   * model to allow the `runtime` package to resolve variables that are
+   * referenced by name or identifier.  This listing will increase the size
+   * of the generated model, so it is recommended to set this to true only
+   * if it is needed.
+   */
+  bundleListing: boolean
 
   /**
    * Whether to allow lookups to be overridden at runtime using `setLookup`.
