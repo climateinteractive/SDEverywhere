@@ -11,8 +11,8 @@ import loadGeneratedModel from './sde-prep/generated-model.js'
 /*
  * This is a JS-level integration test that verifies that both the synchronous
  * and asynchronous `ModelRunner` implementations work with a generated model that
- * has the `SDE_USE_OUTPUT_INDICES` flag enabled (which allows for accessing
- * internal/impl variables).
+ * allows for accessing internal/impl variables (i.e., was generated with the
+ * `customOutputs` flag enabled in the model spec).
  */
 
 function verify(runnerKind, outputs, inputX, varId, checkValue) {

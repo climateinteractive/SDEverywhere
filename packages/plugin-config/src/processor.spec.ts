@@ -67,7 +67,10 @@ const specJson1 = `\
   "externalDatfiles": [
     "../Data1.dat",
     "../Data2.dat"
-  ]
+  ],
+  "bundleListing": false,
+  "customLookups": false,
+  "customOutputs": false
 }\
 `
 
@@ -85,10 +88,28 @@ const specJson2 = `\
     "../Data1.dat",
     "../Data2.dat"
   ],
+  "bundleListing": false,
+  "customLookups": false,
+  "customOutputs": false,
   "directData": {
     "?data1": "data1.xlsx",
     "?data2": "data2.xlsx"
   }
+}\
+`
+
+const specJson3 = `\
+{
+  "inputVarNames": [
+    "Input A"
+  ],
+  "outputVarNames": [
+    "Var 1"
+  ],
+  "externalDatfiles": [],
+  "bundleListing": true,
+  "customLookups": true,
+  "customOutputs": true
 }\
 `
 
@@ -358,5 +379,24 @@ describe('configProcessor', () => {
 
     const specJsonFile = joinPath(testEnv.projDir, 'sde-prep', 'spec.json')
     expect(await readFile(specJsonFile, 'utf8')).toEqual(specJson2)
+  })
+
+  it('should include other options from model.csv', async () => {
+    const configDir = joinPath(__dirname, '__tests__', 'config2')
+    const testEnv = await prepareForBuild(corePkgDir => ({
+      config: configDir,
+      out: {
+        modelSpecsDir: joinPath(corePkgDir, 'mgen'),
+        configSpecsDir: joinPath(corePkgDir, 'cgen'),
+        stringsDir: joinPath(corePkgDir, 'sgen')
+      }
+    }))
+    const result = await build('production', testEnv.buildOptions)
+    if (result.isErr()) {
+      throw new Error('Expected ok result but got: ' + result.error.message)
+    }
+
+    const specJsonFile = joinPath(testEnv.projDir, 'sde-prep', 'spec.json')
+    expect(await readFile(specJsonFile, 'utf8')).toEqual(specJson3)
   })
 })

@@ -42,7 +42,6 @@ EXTERN double _epsilon;
 
 // Internal variables
 EXTERN const int numOutputs;
-EXTERN const int maxOutputIndices;
 
 // Standard simulation control parameters
 EXTERN double _time;

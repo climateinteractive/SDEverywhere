@@ -17,14 +17,18 @@ export function wasmPlugin(options?: WasmPluginOptions): Plugin {
 }
 
 class WasmPlugin implements Plugin {
-  /** The output var IDs captured in `preGenerate`. */
+  // The properties from `modelSpec` captured in `preGenerate`
   private outputVarIds: string[]
+  private bundleListing: boolean
 
   constructor(private readonly options?: WasmPluginOptions) {}
 
   async preGenerate(_context: BuildContext, modelSpec: ResolvedModelSpec): Promise<void> {
-    // Save the output var IDs for later processing
+    // Save some properties for later processing.  This is a workaround for the fact
+    // that `modelSpec` is not passed to `postGenerateCode`, so we need to capture
+    // these values here.
     this.outputVarIds = modelSpec.outputs.map(o => sdeNameForVensimVarName(o.varName))
+    this.bundleListing = modelSpec.bundleListing
   }
 
   async postGenerateCode(context: BuildContext, format: 'js' | 'c', content: string): Promise<string> {
@@ -34,12 +38,18 @@ class WasmPlugin implements Plugin {
 
     context.log('info', '  Generating WebAssembly module')
 
-    // Read the minimal model listing
     const buildDir = joinPath(context.config.prepDir, 'build')
-    const modelListingPath = joinPath(buildDir, 'processed_min.json')
-    const modelListingJson = await readFile(modelListingPath, 'utf8')
-    const modelListingObj = JSON.parse(modelListingJson)
-    const modelListingJs = JSON.stringify(modelListingObj).replace(/"(\w+)"\s*:/g, '$1:')
+    let modelListingJs: string
+    if (this.bundleListing === true) {
+      // Include the minimal model listing
+      const modelListingPath = joinPath(buildDir, 'processed_min.json')
+      const modelListingJson = await readFile(modelListingPath, 'utf8')
+      const modelListingObj = JSON.parse(modelListingJson)
+      modelListingJs = JSON.stringify(modelListingObj).replace(/"(\w+)"\s*:/g, '$1:')
+    } else {
+      // Omit the minimal model listing
+      modelListingJs = 'undefined;'
+    }
 
     // Write a file that will be folded into the generated Wasm module
     const preJsFile = joinPath(buildDir, 'processed_extras.js')
@@ -161,7 +171,7 @@ async function buildWasm(
     // and Node.js contexts (tested in Emscripten 2.0.34 and 3.1.46).
     addFlag(`ENVIRONMENT='web,webview,worker'`)
     addFlag(
-      `EXPORTED_FUNCTIONS=['_malloc','_free','_getMaxOutputIndices','_getInitialTime','_getFinalTime','_getSaveper','_setLookup','_runModelWithBuffers']`
+      `EXPORTED_FUNCTIONS=['_malloc','_free','_getInitialTime','_getFinalTime','_getSaveper','_setLookup','_runModelWithBuffers']`
     )
     addFlag(`EXPORTED_RUNTIME_METHODS=['cwrap']`)
   }
