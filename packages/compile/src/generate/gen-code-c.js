@@ -1,6 +1,6 @@
 import * as R from 'ramda'
 
-import { asort, lines, strlist, mapIndexed } from '../_shared/helpers.js'
+import { asort, canonicalVensimName, lines, strlist, mapIndexed } from '../_shared/helpers.js'
 import { sub, allDimensions, allMappings, subscriptFamilies } from '../_shared/subscript.js'
 import Model from '../model/model.js'
 
@@ -146,6 +146,26 @@ ${chunkedFunctions('evalLevels', Model.levelVars(), '  // Evaluate levels.')}`
   // Input/output section
   //
   function emitIOCode() {
+    // Configure the body of the `setLookup` function depending on the value
+    // of the `customLookups` property in the spec file
+    // TODO: The fprintf calls should be replaced with a mechanism that throws
+    // an error (we could add a wrapper function at the JS level)
+    let setLookupBody
+    if (spec.customLookups === true || Array.isArray(spec.customLookups)) {
+      setLookupBody = `\
+  switch (varIndex) {
+${setLookupImpl(Model.varIndexInfo(), spec.customLookups)}
+    default:
+      fprintf(stderr, "No lookup found for var index %zu in setLookup", varIndex);
+      break;
+  }`
+    } else {
+      let msg = 'The setLookup function was not enabled for the generated model. '
+      msg += 'Set the customLookups property in the spec/config file to allow for overriding lookups at runtime.'
+      setLookupBody = `\
+  fprintf(stderr, "${msg}");`
+    }
+
     let headerVarNames = outputAllVars ? expandedVarNames(true) : spec.outputVarNames
     let outputVarIds = outputAllVars ? expandedVarNames() : spec.outputVars
     mode = 'io'
@@ -172,11 +192,7 @@ void replaceLookup(Lookup** lookup, double* points, size_t numPoints) {
 }
 
 void setLookup(size_t varIndex, size_t* subIndices, double* points, size_t numPoints) {
-  switch (varIndex) {
-${setLookupImpl(Model.varIndexInfo())}
-    default:
-      break;
-  }
+${setLookupBody}
 }
 
 const char* getHeader() {
@@ -400,10 +416,26 @@ ${section(chunk)}
     }
     return inputVars.join('\n')
   }
-  function setLookupImpl(varIndexInfo) {
+  function setLookupImpl(varIndexInfo, customLookups) {
     // Emit `createLookup` calls for all lookups and data variables that can be overridden
     // at runtime
-    const lookupAndDataVars = R.filter(info => info.varType === 'lookup' || info.varType === 'data')
+    let overrideAllowed
+    if (Array.isArray(customLookups)) {
+      // Only include a case statement if the variable was explicitly included
+      // in the `customLookups` array in the spec file
+      const customLookupVarNames = customLookups.map(varName => {
+        // The developer might specify a variable name that includes subscripts,
+        // but we will ignore the subscript part and only match on the base name
+        return canonicalVensimName(varName.split('[')[0])
+      })
+      overrideAllowed = varName => customLookupVarNames.includes(varName)
+    } else {
+      // Include a case statement for all lookup and data variables
+      overrideAllowed = () => true
+    }
+    const lookupAndDataVars = R.filter(info => {
+      return (info.varType === 'lookup' || info.varType === 'data') && overrideAllowed(info.varName)
+    })
     const code = R.map(info => {
       let lookupVar = info.varName
       for (let i = 0; i < info.subscriptCount; i++) {

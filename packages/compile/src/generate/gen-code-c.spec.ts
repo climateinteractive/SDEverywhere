@@ -21,6 +21,8 @@ function readInlineModelAndGenerateC(
     directDataSpec?: DirectDataSpec
     inputVarNames?: string[]
     outputVarNames?: string[]
+    customLookups?: boolean | string[]
+    customOutputs?: boolean | string[]
   }
 ): string {
   // XXX: These steps are needed due to subs/dims and variables being in module-level storage
@@ -28,14 +30,11 @@ function readInlineModelAndGenerateC(
   resetSubscriptsAndDimensions()
   Model.resetModelState()
 
-  let spec
-  if (opts?.inputVarNames || opts?.outputVarNames) {
-    spec = {
-      inputVarNames: opts?.inputVarNames || [],
-      outputVarNames: opts?.outputVarNames || []
-    }
-  } else {
-    spec = {}
+  const spec = {
+    inputVarNames: opts?.inputVarNames,
+    outputVarNames: opts?.outputVarNames,
+    customLookups: opts?.customLookups,
+    customOutputs: opts?.customOutputs
   }
 
   const directData = new Map()
@@ -96,9 +95,10 @@ describe('generateC (Vensim -> C)', () => {
       SAVEPER = 1 ~~|
     `
     const code = readInlineModelAndGenerateC(mdl, {
+      extData,
       inputVarNames: ['input'],
       outputVarNames: ['x', 'y', 'z', 'a[A1]', 'b[A2,B1]', 'c', 'w'],
-      extData
+      customLookups: true
     })
     expect(code).toEqual(`\
 #include "sde.h"
@@ -284,6 +284,7 @@ void setLookup(size_t varIndex, size_t* subIndices, double* points, size_t numPo
       replaceLookup(&_c_data, points, numPoints);
       break;
     default:
+      fprintf(stderr, "No lookup found for var index %zu in setLookup", varIndex);
       break;
   }
 }
@@ -347,6 +348,69 @@ void storeOutput(size_t varIndex, size_t subIndex0, size_t subIndex1, size_t sub
 #endif
 }
 `)
+  })
+
+  it('should generate setLookup that throws error when customLookups is disabled', () => {
+    const mdl = `
+      x = 1 ~~|
+      y = WITH LOOKUP(x, ( [(0,0)-(2,2)], (0,0),(2,1.3) )) ~~|
+      INITIAL TIME = 0 ~~|
+      FINAL TIME = 2 ~~|
+      TIME STEP = 1 ~~|
+      SAVEPER = 1 ~~|
+    `
+    const code = readInlineModelAndGenerateC(mdl, {
+      inputVarNames: [],
+      outputVarNames: ['x', 'y']
+    })
+    expect(code).toMatch(`\
+void setLookup(size_t varIndex, size_t* subIndices, double* points, size_t numPoints) {
+  fprintf(stderr, "The setLookup function was not enabled for the generated model. Set the customLookups property in the spec/config file to allow for overriding lookups at runtime.");
+}`)
+  })
+
+  it('should generate setLookup that includes a subset of cases when customLookups is an array', () => {
+    const extData: ExtData = new Map()
+    function addData(varId: string) {
+      extData.set(
+        varId,
+        new Map([
+          [0, 0],
+          [1, 2],
+          [2, 5]
+        ])
+      )
+    }
+    addData('_y_data')
+    addData('_z_data')
+    const mdl = `
+      x = 1 ~~|
+      y data ~~|
+      y = y data ~~|
+      z data ~~|
+      z = z data ~~|
+      INITIAL TIME = 0 ~~|
+      FINAL TIME = 2 ~~|
+      TIME STEP = 1 ~~|
+      SAVEPER = 1 ~~|
+    `
+    const code = readInlineModelAndGenerateC(mdl, {
+      extData,
+      inputVarNames: [],
+      outputVarNames: ['x', 'y', 'z'],
+      customLookups: ['y data']
+    })
+    expect(code).toMatch(`\
+void setLookup(size_t varIndex, size_t* subIndices, double* points, size_t numPoints) {
+  switch (varIndex) {
+    case 6:
+      replaceLookup(&_y_data, points, numPoints);
+      break;
+    default:
+      fprintf(stderr, "No lookup found for var index %zu in setLookup", varIndex);
+      break;
+  }
+}`)
   })
 
   it('should work when valid input variable name without subscript is provided in spec file', () => {

@@ -691,7 +691,7 @@ export default async function () {
     const code = readInlineModelAndGenerateJS(mdl, {
       inputVarNames: [],
       outputVarNames: ['x', 'y'],
-      bundleListing: false
+      bundleListing: true
     })
     expect(code).toMatch(`\
 /*export*/ function setLookup(varSpec /*: VarSpec*/, points /*: Float64Array*/) {
@@ -728,7 +728,7 @@ export default async function () {
       extData,
       inputVarNames: [],
       outputVarNames: ['x', 'y', 'z'],
-      bundleListing: false,
+      bundleListing: true,
       customLookups: ['y data']
     })
     expect(code).toMatch(`\
