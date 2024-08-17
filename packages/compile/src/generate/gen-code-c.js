@@ -225,7 +225,7 @@ void storeOutputData() {
 ${specOutputSection(outputVarIds)}
 }
 
-void storeOutput(size_t varIndex, size_t subIndex0, size_t subIndex1, size_t subIndex2) {
+void storeOutput(size_t varIndex, size_t* subIndices) {
 ${storeOutputBody}
 }
 `
@@ -396,14 +396,8 @@ ${section(chunk)}
     })
     const code = R.map(info => {
       let varAccess = info.varName
-      if (info.subscriptCount > 0) {
-        varAccess += '[subIndex0]'
-      }
-      if (info.subscriptCount > 1) {
-        varAccess += '[subIndex1]'
-      }
-      if (info.subscriptCount > 2) {
-        varAccess += '[subIndex2]'
+      for (let i = 0; i < info.subscriptCount; i++) {
+        varAccess += `[subIndices[${i}]]`
       }
       return `\
     case ${info.varIndex}:

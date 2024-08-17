@@ -1,6 +1,6 @@
 // Copyright (c) 2024 Climate Interactive / New Venture Fund
 
-import { indicesPerVariable, type LookupDef, type VarSpec } from '../_shared'
+import { type LookupDef, type VarSpec } from '../_shared'
 import type { RunnableModel } from '../runnable-model'
 import { BaseRunnableModel } from '../runnable-model/base-runnable-model'
 
@@ -183,28 +183,22 @@ function runJsModel(
         outputVarIndex++
       }
       if (outputIndices !== undefined) {
-        // Store the outputs as specified in the current output indices buffer.  This
-        // iterates over the output indices buffer until we reach the first zero index.
-        let i = 0
-        // eslint-disable-next-line no-constant-condition
-        while (true) {
-          const indexBufferOffset = i * indicesPerVariable
-          const varIndex = outputIndices[indexBufferOffset]
-          if (varIndex > 0) {
-            const subscriptIndices: number[] = Array(3)
-            subscriptIndices[0] = outputIndices[indexBufferOffset + 1]
-            subscriptIndices[1] = outputIndices[indexBufferOffset + 2]
-            subscriptIndices[2] = outputIndices[indexBufferOffset + 3]
-            const varSpec: VarSpec = {
-              varIndex,
-              subscriptIndices
-            }
-            model.storeOutput(varSpec, storeValue)
-          } else {
-            // Stop when we reach the first zero index
-            break
+        // Store the outputs as specified in the current output indices buffer
+        let indexBufferOffset = 0
+        const outputCount = outputIndices[indexBufferOffset++]
+        for (let i = 0; i < outputCount; i++) {
+          const varIndex = outputIndices[indexBufferOffset++]
+          const subCount = outputIndices[indexBufferOffset++]
+          let subscriptIndices: Int32Array
+          if (subCount > 0) {
+            subscriptIndices = outputIndices.subarray(indexBufferOffset, indexBufferOffset + subCount)
+            indexBufferOffset += subCount
           }
-          i++
+          const varSpec: VarSpec = {
+            varIndex,
+            subscriptIndices
+          }
+          model.storeOutput(varSpec, storeValue)
         }
       } else {
         // Store the normal outputs
