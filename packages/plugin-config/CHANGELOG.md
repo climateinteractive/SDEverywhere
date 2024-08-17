@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.2.5](https://github.com/climateinteractive/SDEverywhere/compare/plugin-config-v0.2.4...plugin-config-v0.2.5) (2024-08-17)
+
+
+### Features
+
+* add bundleListing, customLookups, and customOutputs settings to control code generation ([#504](https://github.com/climateinteractive/SDEverywhere/issues/504)) ([fcea642](https://github.com/climateinteractive/SDEverywhere/commit/fcea642a8e0bcd23e3ebf07983f1f30415b4f81d)), closes [#503](https://github.com/climateinteractive/SDEverywhere/issues/503)
+
+
+### Bug Fixes
+
+* update build and plugin packages to support JS code generation ([#487](https://github.com/climateinteractive/SDEverywhere/issues/487)) ([18b0873](https://github.com/climateinteractive/SDEverywhere/commit/18b0873e74facea772e56f59a1ba4470ebb1fdd6)), closes [#479](https://github.com/climateinteractive/SDEverywhere/issues/479)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * peerDependencies
+    * @sdeverywhere/build bumped from ^0.3.1 to ^0.3.5
+
 ## [0.2.4](https://github.com/climateinteractive/SDEverywhere/compare/plugin-config-v0.2.3...plugin-config-v0.2.4) (2023-11-14)
 
 

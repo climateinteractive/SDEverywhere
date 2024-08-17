@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.2.15](https://github.com/climateinteractive/SDEverywhere/compare/create-v0.2.14...create-v0.2.15) (2024-08-17)
+
+
+### Bug Fixes
+
+* update build and plugin packages to support JS code generation ([#487](https://github.com/climateinteractive/SDEverywhere/issues/487)) ([18b0873](https://github.com/climateinteractive/SDEverywhere/commit/18b0873e74facea772e56f59a1ba4470ebb1fdd6)), closes [#479](https://github.com/climateinteractive/SDEverywhere/issues/479)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/compile bumped from ^0.7.17 to ^0.7.18
+
 ## [0.2.14](https://github.com/climateinteractive/SDEverywhere/compare/create-v0.2.13...create-v0.2.14) (2024-04-22)
 
 
