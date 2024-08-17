@@ -1,5 +1,32 @@
 # Changelog
 
+## [0.2.4](https://github.com/climateinteractive/SDEverywhere/compare/plugin-wasm-v0.2.3...plugin-wasm-v0.2.4) (2024-08-17)
+
+
+### Features
+
+* add bundleListing, customLookups, and customOutputs settings to control code generation ([#504](https://github.com/climateinteractive/SDEverywhere/issues/504)) ([fcea642](https://github.com/climateinteractive/SDEverywhere/commit/fcea642a8e0bcd23e3ebf07983f1f30415b4f81d)), closes [#503](https://github.com/climateinteractive/SDEverywhere/issues/503)
+* add compiler and runtime support for generating pure JS models ([#486](https://github.com/climateinteractive/SDEverywhere/issues/486)) ([42d4dc6](https://github.com/climateinteractive/SDEverywhere/commit/42d4dc6da2fba3b34474c634374e07bc56d72868)), closes [#437](https://github.com/climateinteractive/SDEverywhere/issues/437)
+* allow for creating a LookupDef without manually initializing a ModelListing ([#502](https://github.com/climateinteractive/SDEverywhere/issues/502)) ([5690055](https://github.com/climateinteractive/SDEverywhere/commit/569005502d2240a22b6a31284215b89ec1f8de05)), closes [#501](https://github.com/climateinteractive/SDEverywhere/issues/501)
+* allow for overriding data variables and lookups at runtime ([#490](https://github.com/climateinteractive/SDEverywhere/issues/490)) ([6c888e8](https://github.com/climateinteractive/SDEverywhere/commit/6c888e887336e7b874dbde7e318e993936296c48)), closes [#472](https://github.com/climateinteractive/SDEverywhere/issues/472)
+* change ModelSpec to allow for simple array of input/output var names ([#495](https://github.com/climateinteractive/SDEverywhere/issues/495)) ([3130901](https://github.com/climateinteractive/SDEverywhere/commit/31309017e207ac6ce0d0bcd20499b12b5b918bb9)), closes [#494](https://github.com/climateinteractive/SDEverywhere/issues/494)
+
+
+### Bug Fixes
+
+* change plugin-wasm to expose outputVarIds in the generated module ([#482](https://github.com/climateinteractive/SDEverywhere/issues/482)) ([9c2f7d1](https://github.com/climateinteractive/SDEverywhere/commit/9c2f7d1ae953f7de3a55dc3ef7a7f35a3422069e)), closes [#481](https://github.com/climateinteractive/SDEverywhere/issues/481)
+* update build and plugin packages to support JS code generation ([#487](https://github.com/climateinteractive/SDEverywhere/issues/487)) ([18b0873](https://github.com/climateinteractive/SDEverywhere/commit/18b0873e74facea772e56f59a1ba4470ebb1fdd6)), closes [#479](https://github.com/climateinteractive/SDEverywhere/issues/479)
+* update plugin-wasm to export `_free` function ([#475](https://github.com/climateinteractive/SDEverywhere/issues/475)) ([1a77eed](https://github.com/climateinteractive/SDEverywhere/commit/1a77eedd3143568ad3b4659f6b78dd9b60737b53)), closes [#474](https://github.com/climateinteractive/SDEverywhere/issues/474)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @sdeverywhere/build bumped from * to 0.3.5
+  * peerDependencies
+    * @sdeverywhere/build bumped from ^0.3.0 to ^0.3.5
+
 ## [0.2.3](https://github.com/climateinteractive/SDEverywhere/compare/plugin-wasm-v0.2.2...plugin-wasm-v0.2.3) (2024-02-23)
 
 

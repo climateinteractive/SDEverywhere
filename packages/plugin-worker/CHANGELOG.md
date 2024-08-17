@@ -1,5 +1,29 @@
 # Changelog
 
+## [0.2.4](https://github.com/climateinteractive/SDEverywhere/compare/plugin-worker-v0.2.3...plugin-worker-v0.2.4) (2024-08-17)
+
+
+### Features
+
+* add compiler and runtime support for generating pure JS models ([#486](https://github.com/climateinteractive/SDEverywhere/issues/486)) ([42d4dc6](https://github.com/climateinteractive/SDEverywhere/commit/42d4dc6da2fba3b34474c634374e07bc56d72868)), closes [#437](https://github.com/climateinteractive/SDEverywhere/issues/437)
+
+
+### Bug Fixes
+
+* update build and plugin packages to support JS code generation ([#487](https://github.com/climateinteractive/SDEverywhere/issues/487)) ([18b0873](https://github.com/climateinteractive/SDEverywhere/commit/18b0873e74facea772e56f59a1ba4470ebb1fdd6)), closes [#479](https://github.com/climateinteractive/SDEverywhere/issues/479)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/runtime bumped from ^0.2.2 to ^0.2.3
+    * @sdeverywhere/runtime-async bumped from ^0.2.2 to ^0.2.3
+  * devDependencies
+    * @sdeverywhere/build bumped from * to 0.3.5
+  * peerDependencies
+    * @sdeverywhere/build bumped from ^0.3.0 to ^0.3.5
+
 ## [0.2.3](https://github.com/climateinteractive/SDEverywhere/compare/plugin-worker-v0.2.2...plugin-worker-v0.2.3) (2023-09-28)
 
 ### Dependencies

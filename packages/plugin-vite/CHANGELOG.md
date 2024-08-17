@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.1.9](https://github.com/climateinteractive/SDEverywhere/compare/plugin-vite-v0.1.8...plugin-vite-v0.1.9) (2024-08-17)
+
+
+### Features
+
+* add compiler and runtime support for generating pure JS models ([#486](https://github.com/climateinteractive/SDEverywhere/issues/486)) ([42d4dc6](https://github.com/climateinteractive/SDEverywhere/commit/42d4dc6da2fba3b34474c634374e07bc56d72868)), closes [#437](https://github.com/climateinteractive/SDEverywhere/issues/437)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @sdeverywhere/build bumped from * to 0.3.5
+  * peerDependencies
+    * @sdeverywhere/build bumped from ^0.3.0 to ^0.3.5
+
 ## [0.1.8](https://github.com/climateinteractive/SDEverywhere/compare/plugin-vite-v0.1.7...plugin-vite-v0.1.8) (2023-09-29)
 
 Note: This is a redo of the 0.1.7 release to workaround an npmjs registry issue.  There are no actual changes in this release.
