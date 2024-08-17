@@ -98,14 +98,14 @@ function createMockWasmModule(): MockWasmModule {
           // Verify output indices
           expect(outputIndices).toEqual(
             new Int32Array([
+              // variable count
+              3,
               // _x
-              5, 0, 0, 0,
+              5, 0,
               // _output_2
-              3, 0, 0, 0,
+              3, 0,
               // _output_1
-              1, 0, 0, 0,
-              // (zero terminator)
-              0, 0, 0, 0
+              1, 0
             ])
           )
           // Store 3 values for each of the three variables

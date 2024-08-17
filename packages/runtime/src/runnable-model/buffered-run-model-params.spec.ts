@@ -10,6 +10,21 @@ import { ModelListing } from '../model-listing'
 const listingJson = `
 {
   "dimensions": [
+    {
+      "id": "_dima",
+      "subIds": [
+        "_a1",
+        "_a2"
+      ]
+    },
+    {
+      "id": "_dimb",
+      "subIds": [
+        "_b1",
+        "_b2",
+        "_b3"
+      ]
+    }
   ],
   "variables": [
     {
@@ -27,6 +42,14 @@ const listingJson = `
     {
       "id": "_y",
       "index": 4
+    },
+    {
+      "id": "_z",
+      "dimIds": [
+        "_dima",
+        "_dimb"
+      ],
+      "index": 5
     }
   ]
 }
@@ -75,7 +98,7 @@ describe('BufferedRunModelParams', () => {
 
     const inputs = [1, 2, 3]
     const normalOutputs = new Outputs(['_x', '_y'], 2000, 2002, 1)
-    const implOutputs = listing.deriveOutputs(normalOutputs, ['_x', '_a', '_b'])
+    const implOutputs = listing.deriveOutputs(normalOutputs, ['_x', '_z[_a2,_b1]', '_b'])
 
     // Update using the normal outputs (which includes only 2 variables)
     const params1 = new BufferedRunModelParams()
@@ -108,14 +131,14 @@ describe('BufferedRunModelParams', () => {
     expect(params1.getOutputsLength()).toEqual(9)
     expect(params1.getOutputIndices()).toEqual(
       new Int32Array([
+        // variable count
+        3,
         // _x
-        3, 0, 0, 0,
-        // _a
-        1, 0, 0, 0,
+        3, 0,
+        // _z[_a2,_b1]
+        5, 2, 1, 0,
         // _b
-        2, 0, 0, 0,
-        // (zero terminator)
-        0, 0, 0, 0
+        2, 0
       ])
     )
 
@@ -179,7 +202,7 @@ describe('BufferedRunModelParams', () => {
     const listing = new ModelListing(JSON.parse(listingJson))
     const inputs = [1, 2, 3]
     const normalOutputs = new Outputs(['_x', '_y'], 2000, 2002, 1)
-    const implOutputs = listing.deriveOutputs(normalOutputs, ['_x', '_a', '_b'])
+    const implOutputs = listing.deriveOutputs(normalOutputs, ['_x', '_z[_a2,_b3]', '_z[_a1,_b1]', '_b'])
 
     const runnerParams = new BufferedRunModelParams()
     const workerParams = new BufferedRunModelParams()
@@ -188,14 +211,16 @@ describe('BufferedRunModelParams', () => {
     workerParams.updateFromEncodedBuffer(runnerParams.getEncodedBuffer())
 
     const expectedIndices = new Int32Array([
+      // variable count
+      4,
       // _x
-      3, 0, 0, 0,
-      // _a
-      1, 0, 0, 0,
+      3, 0,
+      // _z[_a2,_b3]
+      5, 2, 1, 2,
+      // _z[_a1,_b1]
+      5, 2, 0, 0,
       // _b
-      2, 0, 0, 0,
-      // (zero terminator)
-      0, 0, 0, 0
+      2, 0
     ])
 
     let array: Int32Array
@@ -214,18 +239,20 @@ describe('BufferedRunModelParams', () => {
     expect(array).toEqual(expectedIndices)
 
     // Verify case where existing array is large enough
-    array = new Int32Array(20).fill(6)
+    array = new Int32Array(17).fill(6)
     workerParams.copyOutputIndices(array, create)
     expect(array).toEqual(
       new Int32Array([
+        // variable count
+        4,
         // _x
-        3, 0, 0, 0,
-        // _a
-        1, 0, 0, 0,
+        3, 0,
+        // _z[_a2,_b3]
+        5, 2, 1, 2,
+        // _z[_a1,_b1]
+        5, 2, 0, 0,
         // _b
-        2, 0, 0, 0,
-        // (zero terminator)
-        0, 0, 0, 0,
+        2, 0,
         // (existing data)
         6, 6, 6, 6
       ])

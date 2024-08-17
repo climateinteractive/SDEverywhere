@@ -312,7 +312,7 @@ void storeOutputData() {
   outputVar(_w);
 }
 
-void storeOutput(size_t varIndex, size_t subIndex0, size_t subIndex1, size_t subIndex2) {
+void storeOutput(size_t varIndex, size_t* subIndices) {
   switch (varIndex) {
     case 1:
       outputVar(_final_time);
@@ -330,10 +330,10 @@ void storeOutput(size_t varIndex, size_t subIndex0, size_t subIndex1, size_t sub
       outputVar(_input);
       break;
     case 10:
-      outputVar(_a[subIndex0]);
+      outputVar(_a[subIndices[0]]);
       break;
     case 11:
-      outputVar(_b[subIndex0][subIndex1]);
+      outputVar(_b[subIndices[0]][subIndices[1]]);
       break;
     case 12:
       outputVar(_c);
@@ -345,7 +345,7 @@ void storeOutput(size_t varIndex, size_t subIndex0, size_t subIndex1, size_t sub
       outputVar(_w);
       break;
     case 15:
-      outputVar(_d[subIndex0]);
+      outputVar(_d[subIndices[0]]);
       break;
     case 16:
       outputVar(_y);
@@ -446,7 +446,7 @@ void setLookup(size_t varIndex, size_t* subIndices, double* points, size_t numPo
       outputVarNames: ['y']
     })
     expect(code).toMatch(`\
-void storeOutput(size_t varIndex, size_t subIndex0, size_t subIndex1, size_t subIndex2) {
+void storeOutput(size_t varIndex, size_t* subIndices) {
   fprintf(stderr, "The storeOutput function was not enabled for the generated model. Set the customOutputs property in the spec/config file to allow for capturing arbitrary variables at runtime.\\n");
 }`)
   })
@@ -469,10 +469,10 @@ void storeOutput(size_t varIndex, size_t subIndex0, size_t subIndex1, size_t sub
       customOutputs: ['u[A1]', 'x']
     })
     expect(code).toMatch(`\
-void storeOutput(size_t varIndex, size_t subIndex0, size_t subIndex1, size_t subIndex2) {
+void storeOutput(size_t varIndex, size_t* subIndices) {
   switch (varIndex) {
     case 5:
-      outputVar(_u[subIndex0]);
+      outputVar(_u[subIndices[0]]);
       break;
     case 6:
       outputVar(_x);

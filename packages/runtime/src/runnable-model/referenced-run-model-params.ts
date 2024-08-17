@@ -1,7 +1,7 @@
 // Copyright (c) 2024 Climate Interactive / New Venture Fund
 
 import type { InputValue, LookupDef, Outputs } from '../_shared'
-import { indicesPerVariable, updateVarIndices } from '../_shared'
+import { encodeVarIndices, getEncodedVarIndicesLength } from '../_shared'
 import type { ModelListing } from '../model-listing'
 import { resolveVarRef } from './resolve-var-ref'
 import type { RunModelOptions } from './run-model-options'
@@ -81,7 +81,7 @@ export class ReferencedRunModelParams implements RunModelParams {
     }
 
     // Copy the output indices to the provided array
-    updateVarIndices(array, this.outputs.varSpecs)
+    encodeVarIndices(this.outputs.varSpecs, array)
   }
 
   // from RunModelParams interface
@@ -159,9 +159,8 @@ export class ReferencedRunModelParams implements RunModelParams {
     // See if the output indices are needed
     const outputVarSpecs = outputs.varSpecs
     if (outputVarSpecs !== undefined && outputVarSpecs.length > 0) {
-      // The output indices buffer needs to include N elements for each var spec plus one
-      // additional "zero" element as a terminator
-      this.outputIndicesLengthInElements = (outputVarSpecs.length + 1) * indicesPerVariable
+      // Compute the required length of the output indices buffer
+      this.outputIndicesLengthInElements = getEncodedVarIndicesLength(outputVarSpecs)
     } else {
       // Don't use the output indices buffer when output var specs are not provided
       this.outputIndicesLengthInElements = 0

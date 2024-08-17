@@ -22,7 +22,7 @@ export interface VarSpec {
   /** The variable index as used in the generated C/JS code. */
   varIndex: number
   /** The subscript index values as used in the generated C/JS code. */
-  subscriptIndices?: number[]
+  subscriptIndices?: number[] | Int32Array
 }
 
 /**

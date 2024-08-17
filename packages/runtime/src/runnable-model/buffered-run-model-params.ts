@@ -1,7 +1,13 @@
 // Copyright (c) 2024 Climate Interactive / New Venture Fund
 
-import { indicesPerVariable, updateVarIndices } from '../_shared'
-import type { InputValue, LookupDef, Outputs, VarSpec } from '../_shared'
+import {
+  decodeLookups,
+  encodeLookups,
+  encodeVarIndices,
+  getEncodedLookupBufferLengths,
+  getEncodedVarIndicesLength
+} from '../_shared'
+import type { InputValue, LookupDef, Outputs } from '../_shared'
 import type { ModelListing } from '../model-listing'
 import { resolveVarRef } from './resolve-var-ref'
 import type { RunModelOptions } from './run-model-options'
@@ -189,7 +195,7 @@ export class BufferedRunModelParams implements RunModelParams {
 
     // Reconstruct the `LookupDef` instances using the data from the lookup data and
     // indices buffers
-    return decodeLookups(this.lookups.view, this.lookupIndices.view)
+    return decodeLookups(this.lookupIndices.view, this.lookups.view)
   }
 
   // from RunModelParams interface
@@ -236,9 +242,8 @@ export class BufferedRunModelParams implements RunModelParams {
     let outputIndicesLengthInElements: number
     const outputVarSpecs = outputs.varSpecs
     if (outputVarSpecs !== undefined && outputVarSpecs.length > 0) {
-      // The output indices buffer needs to include N elements for each var spec plus one
-      // additional "zero" element as a terminator
-      outputIndicesLengthInElements = (outputVarSpecs.length + 1) * indicesPerVariable
+      // Compute the required length of the output indices buffer
+      outputIndicesLengthInElements = getEncodedVarIndicesLength(outputVarSpecs)
     } else {
       // Don't use the output indices buffer when output var specs are not provided
       outputIndicesLengthInElements = 0
@@ -345,12 +350,12 @@ export class BufferedRunModelParams implements RunModelParams {
 
     // Copy the the output indices into the internal buffer, if needed
     if (this.outputIndices.view) {
-      updateVarIndices(this.outputIndices.view, outputVarSpecs)
+      encodeVarIndices(outputVarSpecs, this.outputIndices.view)
     }
 
     // Copy the lookup data and indices into the internal buffers, if needed
     if (lookupIndicesLengthInElements > 0) {
-      encodeLookups(options.lookups, this.lookups.view, this.lookupIndices.view)
+      encodeLookups(options.lookups, this.lookupIndices.view, this.lookups.view)
     }
   }
 
@@ -417,131 +422,4 @@ export class BufferedRunModelParams implements RunModelParams {
     this.lookups.update(this.encoded, lookupsOffsetInBytes, lookupsLengthInElements)
     this.lookupIndices.update(this.encoded, lookupIndicesOffsetInBytes, lookupIndicesLengthInElements)
   }
-}
-
-/**
- * Return the lengths of the arrays that are required to store the lookup data and indices for
- * the given `LookupDef` instances.
- *
- * @param lookupDefs The `LookupDef` instances to encode.
- */
-function getEncodedLookupBufferLengths(lookupDefs: LookupDef[]): {
-  lookupsLength: number
-  lookupIndicesLength: number
-} {
-  // The lookups buffer includes all data points for the provided lookup overrides
-  // (added sequentially, with no padding between datasets).  The lookup indices
-  // buffer has the following format:
-  //   lookup count
-  //   lookupN var index
-  //   lookupN sub0 index
-  //   lookupN sub1 index
-  //   lookupN sub2 index
-  //   lookupN data offset (relative to the start of the lookups buffer, in float64 elements)
-  //   lookupN data length (in float64 elements)
-  //   ... (repeat for each lookup)
-  const numIndexElementsForTotalCount = 1
-  // TODO: Update this once we support > 3 subscripts
-  const numIndexElementsPerLookup = 6
-  let lookupsLength = 0
-  let lookupIndicesLength = numIndexElementsForTotalCount
-  for (const lookupDef of lookupDefs) {
-    lookupsLength += lookupDef.points.length
-    lookupIndicesLength += numIndexElementsPerLookup
-  }
-  return {
-    lookupsLength,
-    lookupIndicesLength
-  }
-}
-
-/**
- * Encode lookup data and indices to the given buffer views.
- *
- * @param lookupDefs The `LookupDef` instances to encode.
- * @param lookupsView The view on the lookup data buffer.  This can be undefined in
- * the case where the data for the lookup(s) is empty.
- * @param lookupIndicesView The view on the lookup indices buffer.
- */
-function encodeLookups(
-  lookupDefs: LookupDef[],
-  lookupsView: Float64Array | undefined,
-  lookupIndicesView: Int32Array
-): void {
-  // Store the total lookup count
-  let li = 0
-  lookupIndicesView[li++] = lookupDefs.length
-
-  // Store the data and indices for each lookup
-  let lookupDataOffset = 0
-  for (const lookupDef of lookupDefs) {
-    // Store lookup indices
-    const varSpec = lookupDef.varRef.varSpec
-    const subs = varSpec.subscriptIndices
-    const subCount = varSpec.subscriptIndices?.length || 0
-    lookupIndicesView[li++] = varSpec.varIndex
-    // TODO: Update this once we support > 3 subscripts
-    lookupIndicesView[li++] = subCount > 0 ? subs[0] : -1
-    lookupIndicesView[li++] = subCount > 1 ? subs[1] : -1
-    lookupIndicesView[li++] = subCount > 2 ? subs[2] : -1
-    lookupIndicesView[li++] = lookupDataOffset
-    lookupIndicesView[li++] = lookupDef.points.length
-
-    // Store lookup data.  Note that `lookupsView` can be undefined in the case
-    // where the lookup data is empty.
-    lookupsView?.set(lookupDef.points, lookupDataOffset)
-    lookupDataOffset += lookupDef.points.length
-  }
-}
-
-/**
- * Decode lookup data and indices from the given buffer views and return the
- * reconstruct `LookupDef` instances.
- *
- * @param lookupsView The view on the lookup data buffer.  This can be undefined in
- * the case where the data for the lookup(s) is empty.
- * @param lookupIndicesView The view on the lookup indices buffer.
- */
-function decodeLookups(lookupsView: Float64Array | undefined, lookupIndicesView: Int32Array): LookupDef[] {
-  const lookupDefs: LookupDef[] = []
-
-  let li = 0
-  const lookupCount = lookupIndicesView[li++]
-  for (let i = 0; i < lookupCount; i++) {
-    // Read the metadata from the lookup indices buffer
-    const varIndex = lookupIndicesView[li++]
-    // TODO: Update this once we support > 3 subscripts
-    const subIndex0 = lookupIndicesView[li++]
-    const subIndex1 = lookupIndicesView[li++]
-    const subIndex2 = lookupIndicesView[li++]
-    const lookupDataOffset = lookupIndicesView[li++]
-    const lookupDataLength = lookupIndicesView[li++]
-    const subscriptIndices: number[] = subIndex0 >= 0 ? [] : undefined
-    if (subIndex0 >= 0) subscriptIndices.push(subIndex0)
-    if (subIndex1 >= 0) subscriptIndices.push(subIndex1)
-    if (subIndex2 >= 0) subscriptIndices.push(subIndex2)
-    const varSpec: VarSpec = {
-      varIndex,
-      subscriptIndices
-    }
-
-    // Copy the data from the lookup data buffer.  Note that `lookupsView` can be undefined
-    // in the case where the lookup data is empty.
-    // TODO: We can use `subarray` here instead of `slice` and let the model implementations
-    // copy the data if needed on their side
-    let points: Float64Array
-    if (lookupsView) {
-      points = lookupsView.slice(lookupDataOffset, lookupDataOffset + lookupDataLength)
-    } else {
-      points = new Float64Array(0)
-    }
-    lookupDefs.push({
-      varRef: {
-        varSpec
-      },
-      points
-    })
-  }
-
-  return lookupDefs
 }
