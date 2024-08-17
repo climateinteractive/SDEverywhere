@@ -19,8 +19,6 @@
   * dependencies
     * @sdeverywhere/runtime bumped from ^0.2.2 to ^0.2.3
     * @sdeverywhere/runtime-async bumped from ^0.2.2 to ^0.2.3
-  * devDependencies
-    * @sdeverywhere/build bumped from * to 0.3.5
   * peerDependencies
     * @sdeverywhere/build bumped from ^0.3.0 to ^0.3.5
 
