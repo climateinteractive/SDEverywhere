@@ -43,15 +43,14 @@ export async function main(): Promise<void> {
 
   // Prompt the user to select a code generation format
   const genFormat = await chooseCodeFormat()
-  console.log()
 
   // Update the `sde.config.js` file to use the chosen mdl file and
   // generate a sample `.check.yaml` file
   if (!args.dryRun) {
     await updateSdeConfig(projDir, mdlPath, genFormat)
     await generateCheckYaml(projDir, mdlPath)
-    console.log()
   }
+  console.log()
 
   // If the user chose the default template, offer to set up CSV files
   if (templateName === 'template-default' && !args.dryRun) {
