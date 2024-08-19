@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.16](https://github.com/climateinteractive/SDEverywhere/compare/create-v0.2.15...create-v0.2.16) (2024-08-19)
+
+
+### Bug Fixes
+
+* include new columns in generated model.csv file ([#511](https://github.com/climateinteractive/SDEverywhere/issues/511)) ([d7bb0ad](https://github.com/climateinteractive/SDEverywhere/commit/d7bb0ad883e7e8eca4b53490af65981941f4b4a6)), closes [#510](https://github.com/climateinteractive/SDEverywhere/issues/510)
+
 ## [0.2.15](https://github.com/climateinteractive/SDEverywhere/compare/create-v0.2.14...create-v0.2.15) (2024-08-17)
 
 
