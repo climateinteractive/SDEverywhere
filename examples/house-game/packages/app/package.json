@@ -13,9 +13,9 @@
     "precommit": "../../scripts/precommit",
     "test": "echo No tests yet",
     "type-check": "tsc --noEmit",
-    "build": "vite build",
+    "bundle": "vite build",
     "dev": "vite",
-    "ci:build": "run-s clean lint prettier:check type-check build"
+    "ci:build": "run-s clean lint prettier:check type-check bundle"
   },
   "dependencies": {
     "@sdeverywhere/runtime": "^0.2.2",
