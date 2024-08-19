@@ -1,8 +1,8 @@
 import { derived, writable, type Readable, type Writable } from 'svelte/store'
 
-import { AppModel, createAppModel } from './model/app-model'
+import { type AppModel, createAppModel } from './model/app-model'
 
-import { AssumptionsViewModel, createAssumptionsViewModel } from './components/assumptions/assumptions-vm'
+import { type AssumptionsViewModel, createAssumptionsViewModel } from './components/assumptions/assumptions-vm'
 import type { GraphViewModel } from './components/graph/graph-vm'
 
 export async function createAppViewModel(): Promise<AppViewModel> {
