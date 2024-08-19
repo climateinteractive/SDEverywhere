@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "clean": "rm -rf ./sde-prep",
     "dev": "sde dev",
     "build": "sde bundle"
   },

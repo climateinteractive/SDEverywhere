@@ -1,12 +1,15 @@
-import { Readable, Writable, get, writable } from 'svelte/store'
+import type { Readable, Writable } from 'svelte/store'
+import { get, writable } from 'svelte/store'
 
-import type { ModelRunner, Point } from '@sdeverywhere/runtime'
-import { Outputs, createLookupDef } from '@sdeverywhere/runtime'
+import type { ModelRunner, Outputs, Point } from '@sdeverywhere/runtime'
+import { createLookupDef } from '@sdeverywhere/runtime'
 
 import { spawnAsyncModelRunner } from '@sdeverywhere/runtime-async'
 
+import type { AppState } from './app-state'
+import { inputValuesForState, stateForIndex } from './app-state'
+
 import modelWorkerJs from './generated/worker.js?raw'
-import { AppState, inputValuesForState, stateForIndex } from './app-state'
 
 /**
  * Create an `AppModel` instance.

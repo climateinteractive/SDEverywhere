@@ -1,4 +1,4 @@
-import { ModelInputs } from '../../model/app-state'
+import type { ModelInputs } from '../../model/app-state'
 
 export interface AssumptionRow {
   label: string
