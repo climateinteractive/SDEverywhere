@@ -154,8 +154,13 @@ export async function chooseGenConfig(projDir: string, mdlPath: string): Promise
   const origModelCsvContent = await readFile(modelCsvFile, 'utf8')
   const modelCsvHeader = origModelCsvContent.split('\n')[0]
 
+  // Disable bundled listing and customization features by default
+  const bundleListing = 'false'
+  const customLookups = 'false'
+  const customOutputs = 'false'
+
   // Add line and write out updated `model.csv`
-  const modelCsvLine = `${initialTime},${finalTime},${datPart}`
+  const modelCsvLine = `${initialTime},${finalTime},${datPart},${bundleListing},${customLookups},${customOutputs}`
   const newModelCsvContent = `${modelCsvHeader}\n${modelCsvLine}\n`
   await writeFile(modelCsvFile, newModelCsvContent)
 
