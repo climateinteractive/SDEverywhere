@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.4](https://github.com/climateinteractive/SDEverywhere/compare/runtime-v0.2.3...runtime-v0.2.4) (2024-08-21)
+
+
+### Bug Fixes
+
+* restore exports of non-public perf functions in runtime package ([#515](https://github.com/climateinteractive/SDEverywhere/issues/515)) ([14bb055](https://github.com/climateinteractive/SDEverywhere/commit/14bb05533c606abe2a180398c934ec1c4e29eff5)), closes [#514](https://github.com/climateinteractive/SDEverywhere/issues/514)
+
 ## [0.2.3](https://github.com/climateinteractive/SDEverywhere/compare/runtime-v0.2.2...runtime-v0.2.3) (2024-08-17)
 
 

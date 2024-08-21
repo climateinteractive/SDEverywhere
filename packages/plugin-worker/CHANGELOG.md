@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.2.5](https://github.com/climateinteractive/SDEverywhere/compare/plugin-worker-v0.2.4...plugin-worker-v0.2.5) (2024-08-21)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/runtime bumped from ^0.2.3 to ^0.2.4
+    * @sdeverywhere/runtime-async bumped from ^0.2.3 to ^0.2.4
+
 ## [0.2.4](https://github.com/climateinteractive/SDEverywhere/compare/plugin-worker-v0.2.3...plugin-worker-v0.2.4) (2024-08-17)
 
 

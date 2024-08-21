@@ -1,6 +1,6 @@
 {
   "name": "@sdeverywhere/runtime-async",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "files": [
     "dist/**"
   ],
@@ -40,7 +40,7 @@
     "ci:build": "run-s clean lint prettier:check type-check build test:ci docs"
   },
   "dependencies": {
-    "@sdeverywhere/runtime": "^0.2.3",
+    "@sdeverywhere/runtime": "^0.2.4",
     "threads": "1.7.0"
   },
   "author": "Climate Interactive",
