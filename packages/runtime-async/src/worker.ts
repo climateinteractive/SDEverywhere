@@ -3,15 +3,11 @@
 import type { TransferDescriptor } from 'threads'
 import { expose, Transfer } from 'threads/worker'
 
-import type { RunnableModel, WasmModelInitResult } from '@sdeverywhere/runtime'
-import { BufferedRunModelParams } from '@sdeverywhere/runtime'
+import type { GeneratedModel, RunnableModel } from '@sdeverywhere/runtime'
+import { BufferedRunModelParams, createRunnableModel } from '@sdeverywhere/runtime'
 
-// TODO: To avoid breaking existing code that returns `WasmModelInitResult`
-// from this init function, we allow it to return either `WasmModelInitResult`
-// or the newer `RunnableModel`.  We will remove the `WasmModelInitResult` part
-// in a future set of changes.
 /** @hidden */
-let initRunnableModel: () => Promise<RunnableModel | WasmModelInitResult>
+let initGeneratedModel: () => Promise<GeneratedModel>
 
 /** @hidden */
 let runnableModel: RunnableModel
@@ -25,6 +21,8 @@ const params = new BufferedRunModelParams()
 
 interface InitResult {
   outputVarIds: string[]
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  modelListing?: /*ModelListingSpecs*/ any
   startTime: number
   endTime: number
   saveFreq: number
@@ -39,25 +37,13 @@ const modelWorker = {
     }
 
     // Initialize the runnable model
-    // TODO: To avoid breaking existing code that returns `WasmModelInitResult`
-    // from this init function, we allow it to return either `WasmModelInitResult`
-    // or the newer `RunnableModel`.  We will remove the `WasmModelInitResult` part
-    // in a future set of changes.
-    const initResult = await initRunnableModel()
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    if ((initResult as any).model !== undefined) {
-      // The result is a `WasmModelInitResult`, so extract the `WasmModel` (which implements
-      // the `RunnableModel` interface)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      runnableModel = (initResult as any).model as RunnableModel
-    } else {
-      // Otherwise, we assume the result is a `RunnableModel`
-      runnableModel = initResult as RunnableModel
-    }
+    const generatedModel = await initGeneratedModel()
+    runnableModel = createRunnableModel(generatedModel)
 
     // Transfer the model metadata to the runner
     return {
       outputVarIds: runnableModel.outputVarIds,
+      modelListing: runnableModel.modelListing,
       startTime: runnableModel.startTime,
       endTime: runnableModel.endTime,
       saveFreq: runnableModel.saveFreq,
@@ -85,16 +71,16 @@ const modelWorker = {
 /**
  * Expose an object in the current worker thread that communicates with the
  * `ModelRunner` instance running in the main thread.  The exposed worker
- * object will take care of running the `RunnableModel` on the worker thread
- * and sending the outputs back to the main thread.
+ * object will take care of running the model on the worker thread and
+ * sending the outputs back to the main thread.
  *
- * @param init The function that initializes the `RunnableModel` instance that
+ * @param init The function that initializes the generated model instance that
  * is used in the worker thread.
  */
-export function exposeModelWorker(init: () => Promise<RunnableModel | WasmModelInitResult>): void {
+export function exposeModelWorker(init: () => Promise<GeneratedModel>): void {
   // Save the initializer, which will be used when the runner calls `initModel`
   // on the worker
-  initRunnableModel = init
+  initGeneratedModel = init
 
   // Expose the worker implementation to `threads.js`
   expose(modelWorker)

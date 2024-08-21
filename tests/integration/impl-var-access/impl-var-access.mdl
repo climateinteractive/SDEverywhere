@@ -40,7 +40,12 @@ C[DimA, DimB] = A[DimA] + B[DimB]
 
 D[DimA] = X + SUM(C[DimA, DimB!])
   ~ dmnl
-  ~ This is an output variable.
+  ~ This is a 1D subscripted output variable.
+  |
+
+E[DimA, DimB] = A[DimA] + B[DimB]
+  ~ dmnl
+  ~ This is a 2D subscripted output variable.
   |
 
 INITIAL TIME = 2000 ~~|

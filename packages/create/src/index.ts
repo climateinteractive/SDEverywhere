@@ -8,6 +8,7 @@ import prompts from 'prompts'
 import detectPackageManager from 'which-pm-runs'
 import yargs from 'yargs-parser'
 
+import { chooseCodeFormat } from './step-code-format'
 import { chooseGenConfig, generateCheckYaml, updateSdeConfig } from './step-config'
 import { chooseInstallDeps } from './step-deps'
 import { chooseProjectDir } from './step-directory'
@@ -38,11 +39,17 @@ export async function main(): Promise<void> {
 
   // Prompt the user to select an mdl file
   const mdlPath = await chooseMdlFile(projDir)
+  console.log()
+
+  // Prompt the user to select a code generation format
+  const genFormat = await chooseCodeFormat()
 
   // Update the `sde.config.js` file to use the chosen mdl file and
   // generate a sample `.check.yaml` file
-  await updateSdeConfig(projDir, mdlPath)
-  await generateCheckYaml(projDir, mdlPath)
+  if (!args.dryRun) {
+    await updateSdeConfig(projDir, mdlPath, genFormat)
+    await generateCheckYaml(projDir, mdlPath)
+  }
   console.log()
 
   // If the user chose the default template, offer to set up CSV files
@@ -51,9 +58,12 @@ export async function main(): Promise<void> {
     console.log()
   }
 
-  // Prompt the user to install Emscripten SDK
-  await chooseInstallEmsdk(projDir, args)
-  console.log()
+  // If the user chose C as the code generation format, prompt the user to
+  // install Emscripten SDK
+  if (genFormat === 'c') {
+    await chooseInstallEmsdk(projDir, args)
+    console.log()
+  }
 
   // Prompt the user to install dependencies
   await chooseInstallDeps(projDir, args, pkgManager)

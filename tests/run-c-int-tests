@@ -1,0 +1,13 @@
+#!/bin/bash
+
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+PROJ_DIR=$SCRIPT_DIR/..
+
+set -e # fail on error
+set -x # include all commands in logs
+
+# Run the model tests with C as the code gen target.  For each sample model,
+# we will generate C code, execute the generated model, and compare its output
+# to Vensim outputs.
+cd $PROJ_DIR
+GEN_FORMAT=c ./tests/modeltests

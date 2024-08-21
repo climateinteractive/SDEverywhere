@@ -1,6 +1,6 @@
 {
   "name": "@sdeverywhere/plugin-worker",
-  "version": "0.2.3",
+  "version": "0.2.5",
   "files": [
     "dist/**",
     "template-worker/**"
@@ -25,18 +25,18 @@
     "test": "echo No tests yet",
     "test:watch": "echo No tests yet",
     "test:ci": "echo No tests yet",
-    "type-check": "tsc --noEmit -p tsconfig-build.json",
+    "type-check": "tsc --noEmit -p tsconfig-test.json",
     "build": "tsup",
     "docs": "../../scripts/gen-docs.js",
     "ci:build": "run-s clean lint prettier:check test:ci type-check build docs"
   },
   "dependencies": {
-    "@sdeverywhere/runtime": "^0.2.2",
-    "@sdeverywhere/runtime-async": "^0.2.2",
+    "@sdeverywhere/runtime": "^0.2.4",
+    "@sdeverywhere/runtime-async": "^0.2.4",
     "vite": "4.4.9"
   },
   "peerDependencies": {
-    "@sdeverywhere/build": "^0.3.0"
+    "@sdeverywhere/build": "^0.3.5"
   },
   "devDependencies": {
     "@sdeverywhere/build": "*",

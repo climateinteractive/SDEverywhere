@@ -94,7 +94,7 @@ double __lookup(Lookup* lookup, double input, bool use_inverted_data, LookupMode
   // Interpolate the y value from an array of (x,y) pairs.
   // NOTE: The x values are assumed to be monotonically increasing.
 
-  if (lookup == NULL) {
+  if (lookup == NULL || lookup->n == 0) {
     return _NA_;
   }
 
@@ -162,9 +162,16 @@ double __lookup(Lookup* lookup, double input, bool use_inverted_data, LookupMode
 // This function is similar to `__lookup` in concept, but Vensim produces results for
 // the GET DATA BETWEEN TIMES function that differ in unexpected ways from normal lookup
 // behavior, so we implement it as a separate function here.
-double __get_data_between_times(double* data, size_t n, double input, LookupMode mode) {
+double __get_data_between_times(Lookup* lookup, double input, LookupMode mode) {
   // Interpolate the y value from an array of (x,y) pairs.
   // NOTE: The x values are assumed to be monotonically increasing.
+
+  if (lookup == NULL || lookup->n == 0) {
+    return _NA_;
+  }
+
+  const double* data = lookup->data;
+  const size_t n = lookup->n;
   const size_t max = n * 2;
 
   switch (mode) {
@@ -251,6 +258,23 @@ double _LOOKUP_INVERT(Lookup* lookup, double y) {
     }
   }
   return __lookup(lookup, y, true, Interpolate);
+}
+
+double _GAME(Lookup* lookup, double default_value) {
+  if (lookup == NULL || lookup->n <= 0) {
+    // The lookup is NULL or empty, so return the default value
+    return default_value;
+  }
+
+  double x0 = lookup->data[0];
+  if (_time < x0) {
+    // The current time is earlier than the first data point, so return the
+    // default value
+    return default_value;
+  }
+
+  // For all other cases, we can use `__lookup` with `Backward` mode
+  return __lookup(lookup, _time, false, Backward);
 }
 
 typedef struct {

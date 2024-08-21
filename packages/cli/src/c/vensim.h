@@ -21,7 +21,6 @@ extern "C" {
 #define _ARCTAN(x) atan(x)
 #define _COS(x) cos(x)
 #define _EXP(x) exp(x)
-#define _GAME(x) (x)
 #define _GAMMA_LN(x) lgamma(x)
 #define _IF_THEN_ELSE(c, t, f) (bool_cond(c) ? (t) : (f))
 #define _INTEG(value, rate) ((value) + (rate) * _time_step)
@@ -74,9 +73,11 @@ double __lookup(Lookup *lookup, double input, bool use_inverted_data, LookupMode
 #define _WITH_LOOKUP(x, lookup) __lookup(lookup, x, false, Interpolate)
 double _LOOKUP_INVERT(Lookup* lookup, double y);
 
-double __get_data_between_times(double *data, size_t n, double input, LookupMode mode);
+double __get_data_between_times(Lookup* lookup, double input, LookupMode mode);
 #define _GET_DATA_MODE_TO_LOOKUP_MODE(mode) ((mode) >= 1) ? Forward : (((mode) <= -1) ? Backward : Interpolate)
-#define _GET_DATA_BETWEEN_TIMES(lookup, x, mode) __get_data_between_times((lookup)->data, (lookup)->n, x, _GET_DATA_MODE_TO_LOOKUP_MODE(mode))
+#define _GET_DATA_BETWEEN_TIMES(lookup, x, mode) __get_data_between_times(lookup, x, _GET_DATA_MODE_TO_LOOKUP_MODE(mode))
+
+double _GAME(Lookup* lookup, double default_value);
 
 //
 // DELAY FIXED

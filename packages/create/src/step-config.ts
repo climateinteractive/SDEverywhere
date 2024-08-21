@@ -47,10 +47,13 @@ const sampleCheckContent = `\
         - gt: 0
 `
 
-export async function updateSdeConfig(projDir: string, mdlPath: string): Promise<void> {
+export async function updateSdeConfig(projDir: string, mdlPath: string, genFormat: string): Promise<void> {
   // Read the `sde.config.js` file from the template
   const configPath = joinPath(projDir, 'sde.config.js')
   let configText = await readFile(configPath, 'utf8')
+
+  // Set the code generation format to the chosen format
+  configText = configText.replace(`const genFormat = 'js'`, `const genFormat = '${genFormat}'`)
 
   // Replace instances of `MODEL_NAME.mdl` with the path to the chosen mdl file
   configText = configText.replaceAll('MODEL_NAME.mdl', mdlPath)
@@ -151,8 +154,13 @@ export async function chooseGenConfig(projDir: string, mdlPath: string): Promise
   const origModelCsvContent = await readFile(modelCsvFile, 'utf8')
   const modelCsvHeader = origModelCsvContent.split('\n')[0]
 
+  // Disable bundled listing and customization features by default
+  const bundleListing = 'false'
+  const customLookups = 'false'
+  const customOutputs = 'false'
+
   // Add line and write out updated `model.csv`
-  const modelCsvLine = `${initialTime},${finalTime},${datPart}`
+  const modelCsvLine = `${initialTime},${finalTime},${datPart},${bundleListing},${customLookups},${customOutputs}`
   const newModelCsvContent = `${modelCsvHeader}\n${modelCsvLine}\n`
   await writeFile(modelCsvFile, newModelCsvContent)
 
@@ -418,8 +426,10 @@ async function readModelVars(projDir: string, mdlPath: string): Promise<MdlVaria
   // object in a specified format.
 
   // Read and preprocess the model
+  // TODO: We can skip the preprocess step once parseAndGenerate calls
+  // the new parser that has preprocessing built-in
   const mdlFile = resolvePath(projDir, mdlPath)
-  const preprocessed = preprocessModel(mdlFile, spec, 'genc', /*writeFiles=*/ false)
+  const preprocessed = preprocessModel(mdlFile, spec, 'runnable', /*writeFiles=*/ false)
 
   // Parse the model and generate the variable list
   const mdlDir = dirname(mdlFile)

@@ -1,53 +1,238 @@
 // Copyright (c) 2024 Climate Interactive / New Venture Fund
 
-/**
- * For each variable specified in an indices buffer, there are 4 index values:
- *   varIndex
- *   subIndex0
- *   subIndex1
- *   subIndex2
- * NOTE: This value needs to match `INDICES_PER_VARIABLE` as defined in SDE's `model.c`.
- * @hidden This is not part of the public API.
- */
-export const indicesPerVariable = 4
+import type { LookupDef } from './lookup-def'
+import type { VarSpec } from './types'
 
 /**
- * The variable index values for use with the optional input/output indices buffer.
- * @hidden This is not yet part of the public API; it is exposed here for use in testing tools.
+ * Return the length of the array that is required to store the variable
+ * indices for the given `VarSpec` instances.
+ *
+ * @hidden This is not part of the public API; it is exposed here for use by
+ * the synchronous and asynchronous model runner implementations.
+ *
+ * @param varSpecs The `VarSpec` instances to encode.
  */
-export interface VarSpec {
-  /** The variable index as used in the generated C code. */
-  varIndex: number
-  /** The subscript index values as used in the generated C code. */
-  subscriptIndices?: number[]
+export function getEncodedVarIndicesLength(varSpecs: VarSpec[]): number {
+  // The indices buffer has the following format:
+  //   variable count
+  //   varN index
+  //   varN subscript count
+  //   varN sub1 index
+  //   varN sub2 index
+  //   ...
+  //   varN subM index
+  //   ... (repeat for each var spec)
+
+  // Start with one element for the total variable count
+  let length = 1
+
+  for (const varSpec of varSpecs) {
+    // Include one element for the variable index and one for the subscript count
+    length += 2
+
+    // Include one element for each subscript
+    const subCount = varSpec.subscriptIndices?.length || 0
+    length += subCount
+  }
+
+  return length
 }
 
 /**
- * @hidden This is a temporary type alias to allow existing code that used the old `OutputVarSpec`
- * to continue to work with the renamed `VarSpec` type.
- */
-export type OutputVarSpec = VarSpec
-
-/**
+ * Encode variable indices to the given array.
+ *
  * @hidden This is not part of the public API; it is exposed here for use by
  * the synchronous and asynchronous model runner implementations.
+ *
+ * @param varSpecs The `VarSpec` instances to encode.
  */
-export function updateVarIndices(indicesArray: Int32Array, varSpecs: VarSpec[]): void {
-  if (indicesArray.length < varSpecs.length * indicesPerVariable) {
-    throw new Error('Length of indicesArray must be large enough to accommodate the given varSpecs')
-  }
-
-  // Write the indices to the buffer
+export function encodeVarIndices(varSpecs: VarSpec[], indicesArray: Int32Array): void {
+  // Write the variable count
   let offset = 0
+  indicesArray[offset++] = varSpecs.length
+
+  // Write the indices for each variable
   for (const varSpec of varSpecs) {
+    // Write the variable index
+    indicesArray[offset++] = varSpec.varIndex
+
+    // Write the subscript count
+    const subs = varSpec.subscriptIndices
+    const subCount = subs?.length || 0
+    indicesArray[offset++] = subCount
+
+    // Write the subscript indices
+    for (let i = 0; i < subCount; i++) {
+      indicesArray[offset++] = subs[i]
+    }
+  }
+}
+
+/**
+ * Return the lengths of the arrays that are required to store the lookup data
+ * and indices for the given `LookupDef` instances.
+ *
+ * @hidden This is not part of the public API; it is exposed here for use by
+ * the synchronous and asynchronous model runner implementations.
+ *
+ * @param lookupDefs The `LookupDef` instances to encode.
+ */
+export function getEncodedLookupBufferLengths(lookupDefs: LookupDef[]): {
+  lookupIndicesLength: number
+  lookupsLength: number
+} {
+  // The lookups buffer includes all data points for the provided lookup overrides
+  // (added sequentially, with no padding between datasets).  The lookup indices
+  // buffer has the following format:
+  //   lookup count
+  //   lookupN var index
+  //   lookupN subscript count
+  //   lookupN sub1 index
+  //   lookupN sub2 index
+  //   ...
+  //   lookupN subM index
+  //   lookupN data offset (relative to the start of the lookups buffer, in float64 elements)
+  //   lookupN data length (in float64 elements)
+  //   ... (repeat for each lookup)
+
+  // Start with one element for the total lookup variable count
+  let lookupIndicesLength = 1
+  let lookupsLength = 0
+
+  for (const lookupDef of lookupDefs) {
+    // Ensure that the var spec has already been resolved
+    const varSpec = lookupDef.varRef.varSpec
+    if (varSpec === undefined) {
+      throw new Error('Cannot compute lookup buffer lengths until all lookup var specs are defined')
+    }
+
+    // Include one element for the variable index and one for the subscript count
+    lookupIndicesLength += 2
+
+    // Include one element for each subscript
     const subCount = varSpec.subscriptIndices?.length || 0
-    indicesArray[offset + 0] = varSpec.varIndex
-    indicesArray[offset + 1] = subCount > 0 ? varSpec.subscriptIndices[0] : 0
-    indicesArray[offset + 2] = subCount > 1 ? varSpec.subscriptIndices[1] : 0
-    indicesArray[offset + 3] = subCount > 2 ? varSpec.subscriptIndices[2] : 0
-    offset += indicesPerVariable
+    lookupIndicesLength += subCount
+
+    // Include one element for the data offset and one element for the data length
+    lookupIndicesLength += 2
+
+    // Add the length of the lookup points array
+    lookupsLength += lookupDef.points.length
   }
 
-  // Fill the remainder of the buffer with zeros
-  indicesArray.fill(0, offset)
+  return {
+    lookupIndicesLength,
+    lookupsLength
+  }
+}
+
+/**
+ * Encode lookup data and indices to the given arrays.
+ *
+ * @hidden This is not part of the public API; it is exposed here for use by
+ * the synchronous and asynchronous model runner implementations.
+ *
+ * @param lookupDefs The `LookupDef` instances to encode.
+ * @param lookupIndicesArray The view on the lookup indices buffer.
+ * @param lookupsArray The view on the lookup data buffer.  This can be undefined in
+ * the case where the data for the lookup(s) is empty.
+ */
+export function encodeLookups(
+  lookupDefs: LookupDef[],
+  lookupIndicesArray: Int32Array,
+  lookupsArray: Float64Array | undefined
+): void {
+  // Write the lookup variable count
+  let li = 0
+  lookupIndicesArray[li++] = lookupDefs.length
+
+  // Write the indices and data for each lookup
+  let lookupDataOffset = 0
+  for (const lookupDef of lookupDefs) {
+    // Write the lookup variable index
+    const varSpec = lookupDef.varRef.varSpec
+    lookupIndicesArray[li++] = varSpec.varIndex
+
+    // Write the subscript count
+    const subs = varSpec.subscriptIndices
+    const subCount = subs?.length || 0
+    lookupIndicesArray[li++] = subCount
+
+    // Write the subscript indices
+    for (let i = 0; i < subCount; i++) {
+      lookupIndicesArray[li++] = subs[i]
+    }
+
+    // Write the lookup data offset and length for this variable
+    lookupIndicesArray[li++] = lookupDataOffset
+    lookupIndicesArray[li++] = lookupDef.points.length
+
+    // Write the lookup data.  Note that `lookupsView` can be undefined in the case
+    // where the lookup data is empty.
+    lookupsArray?.set(lookupDef.points, lookupDataOffset)
+    lookupDataOffset += lookupDef.points.length
+  }
+}
+
+/**
+ * Decode lookup data and indices from the given buffer views and return the
+ * reconstructed `LookupDef` instances.
+ *
+ * @hidden This is not part of the public API; it is exposed here for use by
+ * the synchronous and asynchronous model runner implementations.
+ *
+ * @param lookupIndicesArray The view on the lookup indices buffer.
+ * @param lookupsArray The view on the lookup data buffer.  This can be undefined in
+ * the case where the data for the lookup(s) is empty.
+ */
+export function decodeLookups(lookupIndicesArray: Int32Array, lookupsArray: Float64Array | undefined): LookupDef[] {
+  const lookupDefs: LookupDef[] = []
+  let li = 0
+
+  // Read the lookup variable count
+  const lookupCount = lookupIndicesArray[li++]
+
+  // Read the metadata for each variable from the lookup indices buffer
+  for (let i = 0; i < lookupCount; i++) {
+    // Read the lookup variable index
+    const varIndex = lookupIndicesArray[li++]
+
+    // Read the subscript count
+    const subCount = lookupIndicesArray[li++]
+
+    // Read the subscript indices
+    const subscriptIndices: number[] = subCount > 0 ? Array(subCount) : undefined
+    for (let subIndex = 0; subIndex < subCount; subIndex++) {
+      subscriptIndices[subIndex] = lookupIndicesArray[li++]
+    }
+
+    // Read the lookup data offset and length for this variable
+    const lookupDataOffset = lookupIndicesArray[li++]
+    const lookupDataLength = lookupIndicesArray[li++]
+
+    // Create a `VarSpec` for the variable
+    const varSpec: VarSpec = {
+      varIndex,
+      subscriptIndices
+    }
+
+    // Copy the data from the lookup data buffer.  Note that `lookupsArray` can be undefined
+    // in the case where the lookup data is empty.
+    // TODO: We can use `subarray` here instead of `slice` and let the model implementations
+    // copy the data if needed on their side
+    let points: Float64Array
+    if (lookupsArray) {
+      points = lookupsArray.slice(lookupDataOffset, lookupDataOffset + lookupDataLength)
+    } else {
+      points = new Float64Array(0)
+    }
+    lookupDefs.push({
+      varRef: {
+        varSpec
+      },
+      points
+    })
+  }
+
+  return lookupDefs
 }

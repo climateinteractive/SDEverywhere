@@ -46,7 +46,7 @@ const flatten = async (outFile, inFiles, opts) => {
 
     // Preprocess the mdl file and extract the equations
     const decls = []
-    preprocessModel(inModelProps.modelPathname, undefined, 'genc', false, decls)
+    preprocessModel(inModelProps.modelPathname, undefined, 'runnable', false, decls)
 
     // Associate each declaration with the name of the model from which it came
     for (const decl of decls) {

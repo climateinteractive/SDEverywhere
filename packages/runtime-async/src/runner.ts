@@ -3,28 +3,25 @@
 import { BlobWorker, spawn, Thread, Transfer, Worker } from 'threads'
 
 import type { ModelRunner } from '@sdeverywhere/runtime'
-import { BufferedRunModelParams, Outputs } from '@sdeverywhere/runtime'
+import { BufferedRunModelParams, ModelListing, Outputs } from '@sdeverywhere/runtime'
 
 /**
- * Initialize a `ModelRunner` that runs the model asynchronously in a worker thread.
+ * Initialize a `ModelRunner` that runs the model asynchronously in a worker
+ * (a Web Worker when running in a browser environment, or a worker thread
+ * when running in a Node.js environment).
  *
- * In your app project, define a JavaScript file, called `worker.js` for example, that
- * initializes the model worker in the context of the Web Worker:
+ * In your app project, define a JavaScript file, called `worker.js` for example,
+ * that initializes the generated model in the context of a worker thread:
  *
  * ```js
- * import { initWasmModelAndBuffers } from '@sdeverywhere/runtime'
  * import { exposeModelWorker } from '@sdeverywhere/runtime-async/worker'
+ * import loadGeneratedModel from './sde-prep/generated-model.js'
  *
- * async function initWasmModel() {
- *   const wasmModules = loadWasm()
- *   return initWasmModelAndBuffers(...)
- * }
- *
- * exposeModelWorker(initWasmModel)
+ * exposeModelWorker(loadGeneratedModel)
  * ```
  *
  * Then, in your web app, call the `spawnAsyncModelRunner` function, which
- * will spawn the Web Worker and initialize the `ModelRunner` that communicates
+ * will spawn the worker thread and initialize the `ModelRunner` that communicates
  * with the worker:
  *
  * ```js
@@ -58,8 +55,11 @@ async function spawnAsyncModelRunnerWithWorker(worker: Worker): Promise<ModelRun
   // Wait for the worker to initialize the wasm model (in the worker thread)
   const initResult = await modelWorker.initModel()
 
+  // Create a `ModelListing` instance if the listing was defined in the generated model
+  const modelListing = initResult.modelListing ? new ModelListing(initResult.modelListing) : undefined
+
   // Maintain a `BufferedRunModelParams` instance that holds the I/O parameters
-  const params = new BufferedRunModelParams()
+  const params = new BufferedRunModelParams(modelListing)
 
   // Use a flag to ensure that only one request is made at a time
   let running = false
@@ -72,7 +72,7 @@ async function spawnAsyncModelRunnerWithWorker(worker: Worker): Promise<ModelRun
       return new Outputs(initResult.outputVarIds, initResult.startTime, initResult.endTime, initResult.saveFreq)
     },
 
-    runModel: async (inputs, outputs) => {
+    runModel: async (inputs, outputs, options) => {
       if (terminated) {
         throw new Error('Async model runner has already been terminated')
       } else if (running) {
@@ -82,7 +82,7 @@ async function spawnAsyncModelRunnerWithWorker(worker: Worker): Promise<ModelRun
       }
 
       // Update the I/O parameters
-      params.updateFromParams(inputs, outputs)
+      params.updateFromParams(inputs, outputs, options)
 
       // Run the model in the worker. We pass the underlying `ArrayBuffer`
       // instance back to the worker wrapped in a `Transfer` to make it

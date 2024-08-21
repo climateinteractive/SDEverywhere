@@ -1,0 +1,44 @@
+{UTF-8}
+
+DimA: A1, A2 ~~|
+DimB: B1, B2, B3 ~~|
+
+X = 0
+  ~ dmnl [-10,10,0.1]
+  ~ This is an input variable.
+  |
+
+A data[DimA]
+  ~ dmnl
+  ~ This is a 1D subscripted data variable.
+  |
+
+A[DimA] = X + A data[DimA]
+  ~ dmnl
+  ~ This is a 1D subscripted output variable.
+  |
+
+B data[DimA, DimB]
+  ~ dmnl
+  ~ This is a 2D subscripted data variable.
+  |
+
+B[DimA, DimB] = X + B data[DimA, DimB]
+  ~ dmnl
+  ~ This is a 2D subscripted output variable.
+  |
+
+C data
+  ~ dmnl
+  ~ This is a non-subscripted data variable.
+  |
+
+C = X + C data
+  ~ dmnl
+  ~ This is a non-subscripted output variable.
+  |
+
+INITIAL TIME = 2000 ~~|
+FINAL TIME = 2002 ~~|
+TIME STEP = 1 ~~|
+SAVEPER = TIME STEP ~~|

@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.2.16](https://github.com/climateinteractive/SDEverywhere/compare/create-v0.2.15...create-v0.2.16) (2024-08-19)
+
+
+### Bug Fixes
+
+* include new columns in generated model.csv file ([#511](https://github.com/climateinteractive/SDEverywhere/issues/511)) ([d7bb0ad](https://github.com/climateinteractive/SDEverywhere/commit/d7bb0ad883e7e8eca4b53490af65981941f4b4a6)), closes [#510](https://github.com/climateinteractive/SDEverywhere/issues/510)
+
+## [0.2.15](https://github.com/climateinteractive/SDEverywhere/compare/create-v0.2.14...create-v0.2.15) (2024-08-17)
+
+
+### Bug Fixes
+
+* update build and plugin packages to support JS code generation ([#487](https://github.com/climateinteractive/SDEverywhere/issues/487)) ([18b0873](https://github.com/climateinteractive/SDEverywhere/commit/18b0873e74facea772e56f59a1ba4470ebb1fdd6)), closes [#479](https://github.com/climateinteractive/SDEverywhere/issues/479)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/compile bumped from ^0.7.17 to ^0.7.18
+
 ## [0.2.14](https://github.com/climateinteractive/SDEverywhere/compare/create-v0.2.13...create-v0.2.14) (2024-04-22)
 
 

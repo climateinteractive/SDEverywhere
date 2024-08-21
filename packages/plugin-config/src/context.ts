@@ -15,6 +15,15 @@ import { sdeNameForVensimVarName } from './var-names'
 export type CsvRow = { [key: string]: string }
 export type ColorId = string
 
+export interface ModelOptions {
+  readonly graphDefaultMinTime: number
+  readonly graphDefaultMaxTime: number
+  readonly datFiles: string[]
+  readonly bundleListing: boolean
+  readonly customLookups: boolean
+  readonly customOutputs: boolean
+}
+
 export class ConfigContext {
   private readonly inputSpecs: Map<InputVarId, InputSpec> = new Map()
   private readonly outputVarNames: Map<OutputVarId, string> = new Map()
@@ -25,9 +34,7 @@ export class ConfigContext {
     private readonly configDir: string,
     public readonly strings: Strings,
     private readonly colorMap: Map<ColorId, HexColor>,
-    public readonly graphDefaultMinTime: number,
-    public readonly graphDefaultMaxTime: number,
-    public readonly datFiles: string[]
+    public readonly modelOptions: ModelOptions
   ) {}
 
   /**
@@ -156,6 +163,23 @@ export function createConfigContext(buildContext: BuildContext, configDir: strin
   const projDir = buildContext.config.rootDir
   const datFiles = origDatFiles.map(f => joinPath(relative(prepDir, projDir), f))
 
+  // Read other boolean properties from `model.csv`
+  // TODO: If customLookups is true, see if there is a `config/custom-lookups.csv` file
+  // and if so, make an array of variable names instead of setting a boolean in `spec.json`.
+  // (Same thing for customOutputs.)
+  const bundleListing = modelCsv['bundle listing'] === 'true'
+  const customLookups = modelCsv['custom lookups'] === 'true'
+  const customOutputs = modelCsv['custom outputs'] === 'true'
+
+  const modelOptions: ModelOptions = {
+    graphDefaultMinTime,
+    graphDefaultMaxTime,
+    datFiles,
+    bundleListing,
+    customLookups,
+    customOutputs
+  }
+
   // Read the static strings from `strings.csv`
   const strings = readStringsCsv(configDir)
 
@@ -168,7 +192,7 @@ export function createConfigContext(buildContext: BuildContext, configDir: strin
     colors.set(colorId, hexColor)
   }
 
-  return new ConfigContext(buildContext, configDir, strings, colors, graphDefaultMinTime, graphDefaultMaxTime, datFiles)
+  return new ConfigContext(buildContext, configDir, strings, colors, modelOptions)
 }
 
 function configFilePath(configDir: string, name: string, ext: string): string {

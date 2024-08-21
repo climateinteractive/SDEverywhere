@@ -8,14 +8,6 @@
 struct timespec startTime, finishTime;
 #endif
 
-// For each output variable specified in the indices buffer, there
-// are 4 index values:
-//   varIndex
-//   subIndex0
-//   subIndex1
-//   subIndex2
-#define INDICES_PER_OUTPUT 4
-
 // The special _time variable is not included in .mdl files.
 double _time;
 
@@ -73,13 +65,6 @@ double getFinalTime() {
 double getSaveper() {
   initControlParamsIfNeeded();
   return _saveper;
-}
-
-/**
- * Return the constant `maxOutputIndices` value.
- */
-int getMaxOutputIndices() {
-  return maxOutputIndices;
 }
 
 char* run_model(const char* inputs) {
@@ -157,18 +142,19 @@ void run() {
       outputVarIndex = 0;
       if (outputIndexBuffer != NULL) {
         // Store the outputs as specified in the current output index buffer
-        for (size_t i = 0; i < maxOutputIndices; i++) {
-          size_t indexBufferOffset = i * INDICES_PER_OUTPUT;
-          size_t varIndex = (size_t)outputIndexBuffer[indexBufferOffset];
-          if (varIndex > 0) {
-            size_t subIndex0 = (size_t)outputIndexBuffer[indexBufferOffset + 1];
-            size_t subIndex1 = (size_t)outputIndexBuffer[indexBufferOffset + 2];
-            size_t subIndex2 = (size_t)outputIndexBuffer[indexBufferOffset + 3];
-            storeOutput(varIndex, subIndex0, subIndex1, subIndex2);
+        size_t indexBufferOffset = 0;
+        size_t outputCount = (size_t)outputIndexBuffer[indexBufferOffset++];
+        for (size_t i = 0; i < outputCount; i++) {
+          size_t varIndex = (size_t)outputIndexBuffer[indexBufferOffset++];
+          size_t subCount = (size_t)outputIndexBuffer[indexBufferOffset++];
+          size_t* subIndices;
+          if (subCount > 0) {
+            subIndices = (size_t*)(outputIndexBuffer + indexBufferOffset);
           } else {
-            // Stop when we reach the first zero index
-            break;
+            subIndices = NULL;
           }
+          indexBufferOffset += subCount;
+          storeOutput(varIndex, subIndices);
         }
       } else {
         // Store the normal outputs

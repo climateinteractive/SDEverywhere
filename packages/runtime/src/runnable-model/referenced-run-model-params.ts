@@ -1,6 +1,10 @@
 // Copyright (c) 2024 Climate Interactive / New Venture Fund
 
-import { indicesPerVariable, updateVarIndices, type InputValue, type Outputs } from '../_shared'
+import type { InputValue, LookupDef, Outputs } from '../_shared'
+import { encodeVarIndices, getEncodedVarIndicesLength } from '../_shared'
+import type { ModelListing } from '../model-listing'
+import { resolveVarRef } from './resolve-var-ref'
+import type { RunModelOptions } from './run-model-options'
 import type { RunModelParams } from './run-model-params'
 
 /**
@@ -12,10 +16,18 @@ import type { RunModelParams } from './run-model-params'
  * the implementations of the `RunnableModel` interface.
  */
 export class ReferencedRunModelParams implements RunModelParams {
-  private inputs: (number | InputValue)[]
+  private inputs: number[] | InputValue[]
   private outputs: Outputs
   private outputsLengthInElements = 0
   private outputIndicesLengthInElements = 0
+  private lookups: LookupDef[]
+
+  /**
+   * @param listing The model listing that is used to locate a variable that is referenced by
+   * name or identifier.  If undefined, variables cannot be referenced by name or identifier,
+   * and can only be referenced using a valid `VarSpec`.
+   */
+  constructor(private readonly listing?: ModelListing) {}
 
   // from RunModelParams interface
   getInputs(): Float64Array | undefined {
@@ -69,7 +81,7 @@ export class ReferencedRunModelParams implements RunModelParams {
     }
 
     // Copy the output indices to the provided array
-    updateVarIndices(array, this.outputs.varSpecs)
+    encodeVarIndices(this.outputs.varSpecs, array)
   }
 
   // from RunModelParams interface
@@ -100,6 +112,15 @@ export class ReferencedRunModelParams implements RunModelParams {
   }
 
   // from RunModelParams interface
+  getLookups(): LookupDef[] | undefined {
+    if (this.lookups !== undefined && this.lookups.length > 0) {
+      return this.lookups
+    } else {
+      return undefined
+    }
+  }
+
+  // from RunModelParams interface
   getElapsedTime(): number {
     return this.outputs?.runTimeInMillis
   }
@@ -117,20 +138,29 @@ export class ReferencedRunModelParams implements RunModelParams {
    *
    * @param inputs The model input values (must be in the same order as in the spec file).
    * @param outputs The structure into which the model outputs will be stored.
+   * @param options Additional options that influence the model run.
    */
-  updateFromParams(inputs: (number | InputValue)[], outputs: Outputs): void {
+  updateFromParams(inputs: number[] | InputValue[], outputs: Outputs, options?: RunModelOptions): void {
     // Save the latest parameters; these values will be accessed by the `RunnableModel`
     // on demand (e.g., in the `copyInputs` method)
     this.inputs = inputs
     this.outputs = outputs
     this.outputsLengthInElements = outputs.varIds.length * outputs.seriesLength
+    this.lookups = options?.lookups
+
+    if (this.lookups) {
+      // Resolve the `varSpec` for each `LookupDef`.  If the variable can be resolved, this
+      // will fill in the `varSpec` for the `LookupDef`, otherwise it will throw an error.
+      for (const lookupDef of this.lookups) {
+        resolveVarRef(this.listing, lookupDef.varRef, 'lookup')
+      }
+    }
 
     // See if the output indices are needed
     const outputVarSpecs = outputs.varSpecs
     if (outputVarSpecs !== undefined && outputVarSpecs.length > 0) {
-      // The output indices buffer needs to include N elements for each var spec plus one
-      // additional "zero" element as a terminator
-      this.outputIndicesLengthInElements = (outputVarSpecs.length + 1) * indicesPerVariable
+      // Compute the required length of the output indices buffer
+      this.outputIndicesLengthInElements = getEncodedVarIndicesLength(outputVarSpecs)
     } else {
       // Don't use the output indices buffer when output var specs are not provided
       this.outputIndicesLengthInElements = 0

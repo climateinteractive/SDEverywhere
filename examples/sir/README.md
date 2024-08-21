@@ -1,6 +1,6 @@
 # sir
 
-This example directory contains the class SIR (Susceptible-Infectious-Recovered) model of
+This example directory contains the classic SIR (Susceptible-Infectious-Recovered) model of
 infectious disease.
 It is intended to demonstrate the use of the `@sdeverywhere/create` package to quickly
 set up a new project that uses the provided config files to generate a simple web application.

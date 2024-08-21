@@ -1,6 +1,6 @@
 {
   "name": "@sdeverywhere/plugin-wasm",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "files": [
     "dist/**"
   ],
@@ -24,7 +24,7 @@
     "test": "echo No tests yet",
     "test:watch": "echo No tests yet",
     "test:ci": "echo No tests yet",
-    "type-check": "tsc --noEmit -p tsconfig-build.json",
+    "type-check": "tsc --noEmit -p tsconfig-test.json",
     "build": "tsup",
     "docs": "../../scripts/gen-docs.js",
     "ci:build": "run-s clean lint prettier:check test:ci type-check build docs"
@@ -33,7 +33,7 @@
     "find-up": "^6.3.0"
   },
   "peerDependencies": {
-    "@sdeverywhere/build": "^0.3.0"
+    "@sdeverywhere/build": "^0.3.5"
   },
   "devDependencies": {
     "@sdeverywhere/build": "*",

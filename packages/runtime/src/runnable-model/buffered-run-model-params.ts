@@ -1,6 +1,16 @@
 // Copyright (c) 2024 Climate Interactive / New Venture Fund
 
-import { indicesPerVariable, updateVarIndices, type InputValue, type Outputs } from '../_shared'
+import {
+  decodeLookups,
+  encodeLookups,
+  encodeVarIndices,
+  getEncodedLookupBufferLengths,
+  getEncodedVarIndicesLength
+} from '../_shared'
+import type { InputValue, LookupDef, Outputs } from '../_shared'
+import type { ModelListing } from '../model-listing'
+import { resolveVarRef } from './resolve-var-ref'
+import type { RunModelOptions } from './run-model-options'
 import type { RunModelParams } from './run-model-params'
 
 const headerLengthInElements = 16
@@ -62,6 +72,8 @@ export class BufferedRunModelParams implements RunModelParams {
    *   inputs
    *   outputs
    *   outputIndices
+   *   lookups (data)
+   *   lookupIndices
    */
   private encoded: ArrayBuffer
 
@@ -83,6 +95,19 @@ export class BufferedRunModelParams implements RunModelParams {
   /** The output indices section of the `encoded` buffer. */
   private readonly outputIndices = new Int32Section()
 
+  /** The lookup data section of the `encoded` buffer. */
+  private readonly lookups = new Float64Section()
+
+  /** The lookup indices section of the `encoded` buffer. */
+  private readonly lookupIndices = new Int32Section()
+
+  /**
+   * @param listing The model listing that is used to locate a variable that is referenced by
+   * name or identifier.  If undefined, variables cannot be referenced by name or identifier,
+   * and can only be referenced using a valid `VarSpec`.
+   */
+  constructor(private readonly listing?: ModelListing) {}
+
   /**
    * Return the encoded buffer from this instance, which can be passed to `updateFromEncodedBuffer`.
    */
@@ -97,6 +122,12 @@ export class BufferedRunModelParams implements RunModelParams {
 
   // from RunModelParams interface
   copyInputs(array: Float64Array | undefined, create: (numElements: number) => Float64Array): void {
+    if (this.inputs.lengthInElements === 0) {
+      // Note that the inputs section will be empty if the inputs parameter is empty,
+      // so we can skip copying in this case
+      return
+    }
+
     // Allocate (or reallocate) an array, if needed
     if (array === undefined || array.length < this.inputs.lengthInElements) {
       array = create(this.inputs.lengthInElements)
@@ -119,6 +150,8 @@ export class BufferedRunModelParams implements RunModelParams {
   // from RunModelParams interface
   copyOutputIndices(array: Int32Array | undefined, create: (numElements: number) => Int32Array): void {
     if (this.outputIndices.lengthInElements === 0) {
+      // Note that the output indices section can be empty if the output indices are
+      // not provided, so we can skip copying in this case
       return
     }
 
@@ -155,6 +188,17 @@ export class BufferedRunModelParams implements RunModelParams {
   }
 
   // from RunModelParams interface
+  getLookups(): LookupDef[] | undefined {
+    if (this.lookupIndices.lengthInElements === 0) {
+      return undefined
+    }
+
+    // Reconstruct the `LookupDef` instances using the data from the lookup data and
+    // indices buffers
+    return decodeLookups(this.lookupIndices.view, this.lookups.view)
+  }
+
+  // from RunModelParams interface
   getElapsedTime(): number {
     return this.extras.view[0]
   }
@@ -187,20 +231,42 @@ export class BufferedRunModelParams implements RunModelParams {
    *
    * @param inputs The model input values (must be in the same order as in the spec file).
    * @param outputs The structure into which the model outputs will be stored.
+   * @param options Additional options that influence the model run.
    */
-  updateFromParams(inputs: (number | InputValue)[], outputs: Outputs): void {
-    // Determine the number of elements in each section
+  updateFromParams(inputs: number[] | InputValue[], outputs: Outputs, options?: RunModelOptions): void {
+    // Determine the number of elements in the input and output sections
     const inputsLengthInElements = inputs.length
     const outputsLengthInElements = outputs.varIds.length * outputs.seriesLength
+
+    // Determine the number of elements in the output indices section
     let outputIndicesLengthInElements: number
     const outputVarSpecs = outputs.varSpecs
     if (outputVarSpecs !== undefined && outputVarSpecs.length > 0) {
-      // The output indices buffer needs to include N elements for each var spec plus one
-      // additional "zero" element as a terminator
-      outputIndicesLengthInElements = (outputVarSpecs.length + 1) * indicesPerVariable
+      // Compute the required length of the output indices buffer
+      outputIndicesLengthInElements = getEncodedVarIndicesLength(outputVarSpecs)
     } else {
       // Don't use the output indices buffer when output var specs are not provided
       outputIndicesLengthInElements = 0
+    }
+
+    // Determine the number of elements in the lookup data and indices sections
+    let lookupsLengthInElements: number
+    let lookupIndicesLengthInElements: number
+    if (options?.lookups !== undefined && options.lookups.length > 0) {
+      // Resolve the `varSpec` for each `LookupDef`.  If the variable can be resolved, this
+      // will fill in the `varSpec` for the `LookupDef`, otherwise it will throw an error.
+      for (const lookupDef of options.lookups) {
+        resolveVarRef(this.listing, lookupDef.varRef, 'lookup')
+      }
+
+      // Compute the required lengths
+      const encodedLengths = getEncodedLookupBufferLengths(options.lookups)
+      lookupsLengthInElements = encodedLengths.lookupsLength
+      lookupIndicesLengthInElements = encodedLengths.lookupIndicesLength
+    } else {
+      // Don't use the lookup data and indices buffers when lookup overrides are not provided
+      lookupsLengthInElements = 0
+      lookupIndicesLengthInElements = 0
     }
 
     // Compute the byte offset and byte length of each section
@@ -222,6 +288,8 @@ export class BufferedRunModelParams implements RunModelParams {
     const inputsOffsetInBytes = section('float64', inputsLengthInElements)
     const outputsOffsetInBytes = section('float64', outputsLengthInElements)
     const outputIndicesOffsetInBytes = section('int32', outputIndicesLengthInElements)
+    const lookupsOffsetInBytes = section('float64', lookupsLengthInElements)
+    const lookupIndicesOffsetInBytes = section('int32', lookupIndicesLengthInElements)
 
     // Get the total byte length
     const requiredLengthInBytes = byteOffset
@@ -248,6 +316,10 @@ export class BufferedRunModelParams implements RunModelParams {
     headerView[headerIndex++] = outputsLengthInElements
     headerView[headerIndex++] = outputIndicesOffsetInBytes
     headerView[headerIndex++] = outputIndicesLengthInElements
+    headerView[headerIndex++] = lookupsOffsetInBytes
+    headerView[headerIndex++] = lookupsLengthInElements
+    headerView[headerIndex++] = lookupIndicesOffsetInBytes
+    headerView[headerIndex++] = lookupIndicesLengthInElements
 
     // Update the views
     // TODO: We can avoid recreating the views every time if buffer and section offset/length
@@ -256,6 +328,8 @@ export class BufferedRunModelParams implements RunModelParams {
     this.extras.update(this.encoded, extrasOffsetInBytes, extrasLengthInElements)
     this.outputs.update(this.encoded, outputsOffsetInBytes, outputsLengthInElements)
     this.outputIndices.update(this.encoded, outputIndicesOffsetInBytes, outputIndicesLengthInElements)
+    this.lookups.update(this.encoded, lookupsOffsetInBytes, lookupsLengthInElements)
+    this.lookupIndices.update(this.encoded, lookupIndicesOffsetInBytes, lookupIndicesLengthInElements)
 
     // Copy the input values into the internal buffer
     // TODO: Throw an error if inputs.length is less than number of inputs declared
@@ -276,7 +350,12 @@ export class BufferedRunModelParams implements RunModelParams {
 
     // Copy the the output indices into the internal buffer, if needed
     if (this.outputIndices.view) {
-      updateVarIndices(this.outputIndices.view, outputVarSpecs)
+      encodeVarIndices(outputVarSpecs, this.outputIndices.view)
+    }
+
+    // Copy the lookup data and indices into the internal buffers, if needed
+    if (lookupIndicesLengthInElements > 0) {
+      encodeLookups(options.lookups, this.lookupIndices.view, this.lookups.view)
     }
   }
 
@@ -311,18 +390,26 @@ export class BufferedRunModelParams implements RunModelParams {
     const outputsLengthInElements = headerView[headerIndex++]
     const outputIndicesOffsetInBytes = headerView[headerIndex++]
     const outputIndicesLengthInElements = headerView[headerIndex++]
+    const lookupsOffsetInBytes = headerView[headerIndex++]
+    const lookupsLengthInElements = headerView[headerIndex++]
+    const lookupIndicesOffsetInBytes = headerView[headerIndex++]
+    const lookupIndicesLengthInElements = headerView[headerIndex++]
 
     // Verify that the buffer is long enough to contain all sections
     const extrasLengthInBytes = extrasLengthInElements * Float64Array.BYTES_PER_ELEMENT
     const inputsLengthInBytes = inputsLengthInElements * Float64Array.BYTES_PER_ELEMENT
     const outputsLengthInBytes = outputsLengthInElements * Float64Array.BYTES_PER_ELEMENT
     const outputIndicesLengthInBytes = outputIndicesLengthInElements * Int32Array.BYTES_PER_ELEMENT
+    const lookupsLengthInBytes = lookupsLengthInElements * Float64Array.BYTES_PER_ELEMENT
+    const lookupIndicesLengthInBytes = lookupIndicesLengthInElements * Int32Array.BYTES_PER_ELEMENT
     const requiredLengthInBytes =
       headerLengthInBytes +
       extrasLengthInBytes +
       inputsLengthInBytes +
       outputsLengthInBytes +
-      outputIndicesLengthInBytes
+      outputIndicesLengthInBytes +
+      lookupsLengthInBytes +
+      lookupIndicesLengthInBytes
     if (buffer.byteLength < requiredLengthInBytes) {
       throw new Error('Buffer must be long enough to contain sections declared in header')
     }
@@ -332,5 +419,7 @@ export class BufferedRunModelParams implements RunModelParams {
     this.inputs.update(this.encoded, inputsOffsetInBytes, inputsLengthInElements)
     this.outputs.update(this.encoded, outputsOffsetInBytes, outputsLengthInElements)
     this.outputIndices.update(this.encoded, outputIndicesOffsetInBytes, outputIndicesLengthInElements)
+    this.lookups.update(this.encoded, lookupsOffsetInBytes, lookupsLengthInElements)
+    this.lookupIndices.update(this.encoded, lookupIndicesOffsetInBytes, lookupIndicesLengthInElements)
   }
 }

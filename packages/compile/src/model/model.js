@@ -25,6 +25,8 @@ import Variable from './variable.js'
 let variables = []
 let inputVars = []
 let constantExprs = new Map()
+let cachedVarIndexInfo
+let cachedJsonList
 
 // Also keep variables in a map (with `varName` as key) for faster lookup
 const variablesByName = new Map()
@@ -44,6 +46,8 @@ function resetModelState() {
   variablesByName.clear()
   constantExprs.clear()
   nonAtoANames = Object.create(null)
+  cachedVarIndexInfo = undefined
+  cachedJsonList = undefined
 }
 
 /**
@@ -1062,13 +1066,12 @@ function allListedVars() {
   if (timeVar) {
     vars.push(timeVar)
   }
-  vars.push(...initVars())
   vars.push(...auxVars())
-  // TODO: Also levelVars not covered by initVars?
+  vars.push(...levelVars())
 
-  // Filter out data/lookup variables and variables that are generated/used internally
+  // Filter out variables that are generated/used internally
   const isInternal = v => {
-    return v.refId.startsWith('__level') || v.refId.startsWith('__aux')
+    return v.includeInOutput === false
   }
 
   return R.filter(v => !isInternal(v), vars)
@@ -1083,6 +1086,7 @@ function filteredListedVars() {
 function varIndexInfoMap() {
   // Return a map containing information for each listed variable:
   //   varName
+  //   varType
   //   varIndex
   //   subscriptCount
 
@@ -1090,21 +1094,17 @@ function varIndexInfoMap() {
   // generated model
   const sortedVars = filteredListedVars()
 
-  // Get the set of unique variable names, and assign a 1-based index
-  // to each; this matches the index number used in `storeOutput()`
-  // in the generated C code
+  // Get the set of unique variable names, and assign a 1-based index to each.
+  // This matches the index number used in `storeOutput` and `setLookup` in the
+  // generated C/JS code
   const infoMap = new Map()
   let varIndex = 1
   for (const v of sortedVars) {
-    if (v.varType === 'data' || v.varType === 'lookup') {
-      // Omit the index for data and lookup variables; at this time, the data for these
-      // cannot be output like for other types of variables
-      continue
-    }
     const varName = v.varName
     if (!infoMap.get(varName)) {
       infoMap.set(varName, {
         varName,
+        varType: v.varType,
         varIndex,
         subscriptCount: v.families ? v.families.length : 0
       })
@@ -1119,38 +1119,85 @@ function varIndexInfo() {
   // Return an array, sorted by `varName`, containing information for each
   // listed variable:
   //   varName
+  //   varType
   //   varIndex
   //   subscriptCount
-  return Array.from(varIndexInfoMap().values())
+  if (cachedVarIndexInfo) {
+    return cachedVarIndexInfo
+  }
+  cachedVarIndexInfo = Array.from(varIndexInfoMap().values())
+  return cachedVarIndexInfo
 }
 
 function jsonList() {
-  // Return a stringified JSON object containing variable and subscript information
-  // for the model.
+  // Return an object containing variable and subscript information for the model
+  // that will be used to write the JSON model listing files.
+  if (cachedJsonList) {
+    return cachedJsonList
+  }
 
   // Get the set of available subscripts
   const allDims = [...allDimensions()]
-  const sortedDims = allDims.sort((a, b) => a.name.localeCompare(b.name))
+  const sortedFullDims = allDims.sort((a, b) => a.name.localeCompare(b.name))
 
   // Extract a subset of the available info for each variable and put them in eval order
-  const sortedVars = filteredListedVars()
+  const sortedFullVars = filteredListedVars()
 
   // Assign a 1-based index for each variable that has data that can be accessed.
-  // This matches the index number used in `storeOutput()` in the generated C code.
+  // This matches the index number used in `storeOutput` and `setLookup` in the
+  // generated C/JS code
   const infoMap = varIndexInfoMap()
-  for (const v of sortedVars) {
+  for (const v of sortedFullVars) {
     const varInfo = infoMap.get(v.varName)
     if (varInfo) {
       v.varIndex = varInfo.varIndex
     }
   }
 
-  // Convert to JSON
-  const obj = {
-    dimensions: sortedDims,
-    variables: sortedVars
+  // Derive minimal versions of the full arrays; these only contain the minimal
+  // subset of fields that are needed by the `ModelListing` class from the
+  // runtime package.  The property names in the minimal objects are slightly
+  // different than the full ones to better match the latest naming used in the
+  // compile and runtime packages.
+  const sortedMinimalDims = sortedFullDims.map(d => {
+    return {
+      id: d.name,
+      subIds: d.value
+    }
+  })
+
+  // Note that `sortedFullVars` may contain duplicates in the case of separated
+  // variables, but for the minimal listing we only want to have one entry per
+  // index (i.e., one entry for each base variable ID), so we filter out the
+  // duplicates here.
+  const baseIds = new Set()
+  const sortedMinimalVars = []
+  for (const v of sortedFullVars) {
+    const baseId = v.varName
+    if (!baseIds.has(baseId)) {
+      baseIds.add(baseId)
+
+      const varInfo = {}
+      varInfo.id = baseId
+      if (v.families) {
+        varInfo.dimIds = v.families
+      }
+      varInfo.index = v.varIndex
+      sortedMinimalVars.push(varInfo)
+    }
   }
-  return JSON.stringify(obj, null, 2)
+
+  cachedJsonList = {
+    full: {
+      dimensions: sortedFullDims,
+      variables: sortedFullVars
+    },
+    minimal: {
+      dimensions: sortedMinimalDims,
+      variables: sortedMinimalVars
+    }
+  }
+  return cachedJsonList
 }
 
 export default {

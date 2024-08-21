@@ -1,0 +1,18 @@
+{UTF-8}
+
+DimA: A1, A2 ~~|
+
+X = 0
+  ~ dmnl [-10,10,0.1]
+  ~ This is an input variable.
+  |
+
+Y[DimA] = GAME(X + 100 * (Time - INITIAL TIME + 1))
+  ~ dmnl
+  ~ This is a 1D subscripted output variable.
+  |
+
+INITIAL TIME = 2000 ~~|
+FINAL TIME = 2002 ~~|
+TIME STEP = 1 ~~|
+SAVEPER = TIME STEP ~~|

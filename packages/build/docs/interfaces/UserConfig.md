@@ -53,6 +53,27 @@ If left undefined, this will resolve to the `modelFiles` array.
 
 ___
 
+### genFormat
+
+ `Optional` **genFormat**: ``"js"`` \| ``"c"``
+
+The code format to generate.  If 'js', the model will be compiled to a JavaScript
+file.  If 'c', the model will be compiled to a C file (in which case an additional
+plugin will be needed to convert the C code to a WebAssembly module).  If undefined,
+defaults to 'js'.
+
+___
+
+### outListingFile
+
+ `Optional` **outListingFile**: `string`
+
+If defined, the build process will write a JSON file to the provided path that lists
+all dimensions and variables in the model.  This can be an absolute path, or if it
+is a relative path it will be resolved relative to the `rootDir` for the project.
+
+___
+
 ### plugins
 
  `Optional` **plugins**: [`Plugin`](Plugin.md)[]

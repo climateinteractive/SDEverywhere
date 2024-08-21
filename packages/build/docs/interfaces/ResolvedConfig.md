@@ -57,3 +57,22 @@ ___
 
 Paths to files that when changed will trigger a rebuild in watch mode.  These
 can be paths to files or glob patterns (relative to the project directory).
+
+___
+
+### genFormat
+
+ **genFormat**: ``"js"`` \| ``"c"``
+
+The code format to generate.  If 'js', the model will be compiled to a JavaScript
+file.  If 'c', the model will be compiled to a C file (in which case an additional
+plugin will be needed to convert the C code to a WebAssembly module).
+
+___
+
+### outListingFile
+
+ `Optional` **outListingFile**: `string`
+
+The absolute path to the JSON file that will be written by the build process that
+lists all dimensions and variables in the model.

@@ -1,5 +1,38 @@
 # Changelog
 
+## [0.3.7](https://github.com/climateinteractive/SDEverywhere/compare/plugin-check-v0.3.6...plugin-check-v0.3.7) (2024-08-21)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/runtime bumped from ^0.2.3 to ^0.2.4
+    * @sdeverywhere/runtime-async bumped from ^0.2.3 to ^0.2.4
+
+## [0.3.6](https://github.com/climateinteractive/SDEverywhere/compare/plugin-check-v0.3.5...plugin-check-v0.3.6) (2024-08-17)
+
+
+### Features
+
+* add compiler and runtime support for generating pure JS models ([#486](https://github.com/climateinteractive/SDEverywhere/issues/486)) ([42d4dc6](https://github.com/climateinteractive/SDEverywhere/commit/42d4dc6da2fba3b34474c634374e07bc56d72868)), closes [#437](https://github.com/climateinteractive/SDEverywhere/issues/437)
+* change ModelSpec to allow for simple array of input/output var names ([#495](https://github.com/climateinteractive/SDEverywhere/issues/495)) ([3130901](https://github.com/climateinteractive/SDEverywhere/commit/31309017e207ac6ce0d0bcd20499b12b5b918bb9)), closes [#494](https://github.com/climateinteractive/SDEverywhere/issues/494)
+
+
+### Bug Fixes
+
+* update build and plugin packages to support JS code generation ([#487](https://github.com/climateinteractive/SDEverywhere/issues/487)) ([18b0873](https://github.com/climateinteractive/SDEverywhere/commit/18b0873e74facea772e56f59a1ba4470ebb1fdd6)), closes [#479](https://github.com/climateinteractive/SDEverywhere/issues/479)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/runtime bumped from ^0.2.2 to ^0.2.3
+    * @sdeverywhere/runtime-async bumped from ^0.2.2 to ^0.2.3
+  * peerDependencies
+    * @sdeverywhere/build bumped from ^0.3.0 to ^0.3.5
+
 ## [0.3.5](https://github.com/climateinteractive/SDEverywhere/compare/plugin-check-v0.3.4...plugin-check-v0.3.5) (2024-03-26)
 
 

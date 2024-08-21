@@ -43,6 +43,19 @@ export interface ResolvedConfig {
   watchPaths: string[]
 
   /**
+   * The code format to generate.  If 'js', the model will be compiled to a JavaScript
+   * file.  If 'c', the model will be compiled to a C file (in which case an additional
+   * plugin will be needed to convert the C code to a WebAssembly module).
+   */
+  genFormat: 'js' | 'c'
+
+  /**
+   * The absolute path to the JSON file that will be written by the build process that
+   * lists all dimensions and variables in the model.
+   */
+  outListingFile?: string
+
+  /**
    * The path to the `@sdeverywhere/cli` package.  This is currently only used to get
    * access to the files in the `src/c` directory.
    * @hidden This should be removed once we have tighter integration with the `cli` package.

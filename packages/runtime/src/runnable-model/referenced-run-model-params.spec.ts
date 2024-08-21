@@ -2,35 +2,54 @@
 
 import { describe, expect, it } from 'vitest'
 
-import { Outputs } from '../_shared'
+import { Outputs, createLookupDef, type LookupDef } from '../_shared'
 
 import { ReferencedRunModelParams } from './referenced-run-model-params'
-import { ModelListing } from '../model-runner'
+import { ModelListing } from '../model-listing'
 
-const json = `
+const listingJson = `
 {
   "dimensions": [
+    {
+      "id": "_dima",
+      "subIds": [
+        "_a1",
+        "_a2"
+      ]
+    },
+    {
+      "id": "_dimb",
+      "subIds": [
+        "_b1",
+        "_b2",
+        "_b3"
+      ]
+    }
   ],
   "variables": [
     {
-      "refId": "_a",
-      "varName": "_a",
-      "varIndex": 1
+      "id": "_a",
+      "index": 1
     },
     {
-      "refId": "_b",
-      "varName": "_b",
-      "varIndex": 2
+      "id": "_b",
+      "index": 2
     },
     {
-      "refId": "_x",
-      "varName": "_x",
-      "varIndex": 3
+      "id": "_x",
+      "index": 3
     },
     {
-      "refId": "_y",
-      "varName": "_y",
-      "varIndex": 4
+      "id": "_y",
+      "index": 4
+    },
+    {
+      "id": "_z",
+      "dimIds": [
+        "_dima",
+        "_dimb"
+      ],
+      "index": 5
     }
   ]
 }
@@ -87,26 +106,35 @@ describe('ReferencedRunModelParams', () => {
     array = new Float64Array([6, 6, 6, 6])
     params.copyInputs(array, create)
     expect(array).toEqual(new Float64Array([1, 2, 3, 6]))
+
+    // Verify case where params are updated with an empty inputs array.  Note that
+    // it is expected that the existing data is retained in the destination array;
+    // it is up to the calling code to clear or ignore that existing data.
+    params.updateFromParams([], outputs)
+    params.copyInputs(array, create)
+    expect(array).toEqual(new Float64Array([1, 2, 3, 6]))
   })
 
   it('should copy output indices', () => {
-    const listing = new ModelListing(json)
+    const listing = new ModelListing(JSON.parse(listingJson))
     const inputs = [1, 2, 3]
     const normalOutputs = new Outputs(['_x', '_y'], 2000, 2002, 1)
-    const implOutputs = listing.deriveOutputs(normalOutputs, ['_x', '_a', '_b'])
+    const implOutputs = listing.deriveOutputs(normalOutputs, ['_x', '_z[_a2,_b3]', '_z[_a1,_b1]', '_b'])
 
     const params = new ReferencedRunModelParams()
     params.updateFromParams(inputs, implOutputs)
 
     const expectedIndices = new Int32Array([
+      // variable count
+      4,
       // _x
-      3, 0, 0, 0,
-      // _a
-      1, 0, 0, 0,
+      3, 0,
+      // _z[_a2,_b3]
+      5, 2, 1, 2,
+      // _z[_a1,_b1]
+      5, 2, 0, 0,
       // _b
-      2, 0, 0, 0,
-      // (zero terminator)
-      0, 0, 0, 0
+      2, 0
     ])
 
     let array: Int32Array
@@ -125,18 +153,22 @@ describe('ReferencedRunModelParams', () => {
     expect(array).toEqual(expectedIndices)
 
     // Verify case where existing array is large enough
-    array = new Int32Array(20).fill(6)
+    array = new Int32Array(17).fill(6)
     params.copyOutputIndices(array, create)
     expect(array).toEqual(
       new Int32Array([
+        // variable count
+        4,
         // _x
-        3, 0, 0, 0,
-        // _a
-        1, 0, 0, 0,
+        3, 0,
+        // _z[_a2,_b3]
+        5, 2, 1, 2,
+        // _z[_a1,_b1]
+        5, 2, 0, 0,
         // _b
-        2, 0, 0, 0,
-        // (zero terminators)
-        0, 0, 0, 0, 0, 0, 0, 0
+        2, 0,
+        // (existing data)
+        6, 6, 6, 6
       ])
     )
   })
@@ -161,5 +193,51 @@ describe('ReferencedRunModelParams', () => {
     expect(outputs.varIds).toEqual(['_x', '_y'])
     expect(outputs.getSeriesForVar('_x').points).toEqual([p(2000, 1), p(2001, 2), p(2002, 3)])
     expect(outputs.getSeriesForVar('_y').points).toEqual([p(2000, 4), p(2001, 5), p(2002, 6)])
+  })
+
+  it('should copy lookups', () => {
+    const listing = new ModelListing(JSON.parse(listingJson))
+
+    const inputs = [1, 2, 3]
+    const outputs = new Outputs(['_x', '_y'], 2000, 2002, 1)
+
+    const lookups: LookupDef[] = [
+      // Reference the first variable by name
+      createLookupDef({ varName: 'A' }, [p(2000, 0), p(2001, 1), p(2002, 2)]),
+      // Reference the second variable by ID
+      createLookupDef({ varId: '_b' }, [p(2000, 5), p(2001, 6), p(2002, 7)])
+    ]
+
+    const params = new ReferencedRunModelParams(listing)
+
+    // Run once without providing lookups
+    params.updateFromParams(inputs, outputs)
+
+    // Verify that lookups array is undefined
+    expect(params.getLookups()).toBeUndefined()
+
+    // Run again with lookups
+    params.updateFromParams(inputs, outputs, { lookups })
+
+    // Verify that lookups array contains the expected values
+    expect(params.getLookups()).toEqual([
+      createLookupDef({ varName: 'A', varSpec: { varIndex: 1 } }, [p(2000, 0), p(2001, 1), p(2002, 2)]),
+      createLookupDef({ varId: '_b', varSpec: { varIndex: 2 } }, [p(2000, 5), p(2001, 6), p(2002, 7)])
+    ])
+
+    // Run again without lookups
+    params.updateFromParams(inputs, outputs)
+
+    // Verify that lookups array is undefined
+    expect(params.getLookups()).toBeUndefined()
+
+    // Run again with an empty lookup.  This time we reference the variable by spec.
+    const emptyLookup = createLookupDef({ varSpec: listing.varSpecs.get('_a') }, [])
+    params.updateFromParams(inputs, outputs, {
+      lookups: [emptyLookup]
+    })
+
+    // Verify that lookups array contains the expected values
+    expect(params.getLookups()).toEqual([emptyLookup])
   })
 })

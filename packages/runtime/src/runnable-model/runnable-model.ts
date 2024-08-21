@@ -10,7 +10,7 @@ import type { RunModelParams } from './run-model-params'
  * set of input and output parameters.
  *
  * @hidden This is not yet exposed in the public API; it is currently only used by
- * the implementations of the `RunnableModel` interface.
+ * the internal implementations of this interface, and from the runtime-async package.
  */
 export interface RunnableModel {
   /** The start time for the model (aka `INITIAL TIME`). */
@@ -27,6 +27,14 @@ export interface RunnableModel {
 
   /** The output variable IDs for this model. */
   readonly outputVarIds: OutputVarId[]
+
+  /**
+   * The model listing that is used to resolve variables.  This can be undefined,
+   * in which case variables cannot be referenced by name or identifier, and can only
+   * be referenced using a valid `VarSpec`.
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  readonly modelListing?: /*ModelListingSpecs*/ any
 
   /**
    * Run the model synchronously on the current thread.

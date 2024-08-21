@@ -1,6 +1,6 @@
 {
   "name": "@sdeverywhere/create",
-  "version": "0.2.14",
+  "version": "0.2.16",
   "description": "Create a new SDEverywhere project with minimal configuration",
   "type": "module",
   "files": [
@@ -19,13 +19,13 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:ci": "vitest run",
-    "type-check": "tsc --noEmit -p tsconfig-build.json",
+    "type-check": "tsc --noEmit -p tsconfig-test.json",
     "build": "tsup",
     "start": "./bin/create-sde.js",
     "ci:build": "run-s clean lint prettier:check type-check build test:ci"
   },
   "dependencies": {
-    "@sdeverywhere/compile": "^0.7.17",
+    "@sdeverywhere/compile": "^0.7.18",
     "execa": "^6.1.0",
     "fs-extra": "^10.1.0",
     "giget": "^1.2.3",

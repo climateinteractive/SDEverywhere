@@ -3,19 +3,10 @@
 import type { Result } from 'neverthrow'
 import { ok, err } from 'neverthrow'
 
-import type { OutputVarId } from './types'
-import type { VarSpec } from './var-indices'
+import type { OutputVarId, Point, VarSpec } from './types'
 
 /** Indicates the type of error encountered when parsing an outputs buffer. */
 export type ParseError = 'invalid-point-count'
-
-/** A data point. */
-export interface Point {
-  /** The x value (typically a time value). */
-  x: number
-  /** The y value. */
-  y: number
-}
 
 /**
  * A time series of data points for an output variable.

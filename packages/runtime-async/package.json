@@ -1,6 +1,6 @@
 {
   "name": "@sdeverywhere/runtime-async",
-  "version": "0.2.2",
+  "version": "0.2.4",
   "files": [
     "dist/**"
   ],
@@ -34,13 +34,13 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:ci": "vitest run",
-    "type-check": "tsc --noEmit -p tsconfig-build.json",
+    "type-check": "tsc --noEmit -p tsconfig-test.json",
     "build": "tsup",
     "docs": "../../scripts/gen-docs.js",
     "ci:build": "run-s clean lint prettier:check type-check build test:ci docs"
   },
   "dependencies": {
-    "@sdeverywhere/runtime": "^0.2.2",
+    "@sdeverywhere/runtime": "^0.2.4",
     "threads": "1.7.0"
   },
   "author": "Climate Interactive",

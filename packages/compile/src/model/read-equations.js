@@ -16,6 +16,7 @@ import {
 
 import Model from './model.js'
 import { generateDelayVariables } from './read-equation-fn-delay.js'
+import { generateGameVariables } from './read-equation-fn-game.js'
 import { generateNpvVariables } from './read-equation-fn-npv.js'
 import { generateSmoothVariables } from './read-equation-fn-smooth.js'
 import { generateTrendVariables } from './read-equation-fn-trend.js'
@@ -128,6 +129,8 @@ class Context {
       // Inhibit output for generated variables
       v.includeInOutput = false
     })
+
+    return vars
   }
 
   /**
@@ -383,16 +386,6 @@ function visitFunctionCall(v, callExpr, context) {
       validateCallArgs(callExpr, 1)
       break
 
-    // TODO: We do not currently have full support for the GAME function, so report a warning for now
-    case '_GAME':
-      if (process.env.SDE_REPORT_UNSUPPORTED_FUNCTIONS !== '0') {
-        console.warn(
-          `WARNING: The GAME function (used in the definition of '${v.modelLHS}') is currently implemented as a no-op (it returns the input value).`
-        )
-      }
-      validateCallArgs(callExpr, 1)
-      break
-
     //
     //
     // 2-argument functions...
@@ -489,6 +482,12 @@ function visitFunctionCall(v, callExpr, context) {
       // not treated as 'init' in the legacy reader.)
       argModes[1] = 'init'
       argModes[2] = 'init'
+      break
+
+    case '_GAME':
+      validateCallDepth(callExpr, context)
+      validateCallArgs(callExpr, 1)
+      generateGameVariables(v, callExpr, context)
       break
 
     case '_GET_DIRECT_CONSTANTS': {

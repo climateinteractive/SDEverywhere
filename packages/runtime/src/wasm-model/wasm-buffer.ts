@@ -13,6 +13,8 @@ import type { WasmModule } from './wasm-module'
  * `Float64Array` that can be transferred between the worker and the client running
  * in the browser's normal JS thread, and then use `getArrayView` to copy into and
  * out of the wasm buffer.
+ *
+ * @hidden For internal use only.
  */
 export class WasmBuffer<ArrType> {
   /**

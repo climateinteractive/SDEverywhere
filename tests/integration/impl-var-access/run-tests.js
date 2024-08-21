@@ -3,16 +3,16 @@
 import { readFile } from 'fs/promises'
 import { join as joinPath } from 'path'
 
-import { createInputValue, createWasmModelRunner, initWasmModelAndBuffers, ModelListing } from '@sdeverywhere/runtime'
+import { createInputValue, createSynchronousModelRunner, ModelListing } from '@sdeverywhere/runtime'
 import { spawnAsyncModelRunner } from '@sdeverywhere/runtime-async'
 
-import initWasm from './sde-prep/wasm-model.js'
+import loadGeneratedModel from './sde-prep/generated-model.js'
 
 /*
  * This is a JS-level integration test that verifies that both the synchronous
- * and asynchronous `ModelRunner` implementations work with a wasm model that
- * has the `SDE_USE_OUTPUT_INDICES` flag enabled (which allows for accessing
- * internal/impl variables).
+ * and asynchronous `ModelRunner` implementations work with a generated model that
+ * allows for accessing internal/impl variables (i.e., was generated with the
+ * `customOutputs` flag enabled in the model spec).
  */
 
 function verify(runnerKind, outputs, inputX, varId, checkValue) {
@@ -43,6 +43,9 @@ function verifyDeclaredOutputs(runnerKind, outputs, inputX) {
   // D[DimA] = X + SUM(C[DimA, DimB!])
   // D[A1] = X + (A[A1] + B[B1]) + (A[A1] + B[B2]) + (A[A1] + B[B3])
   verify(runnerKind, outputs, inputX, '_d[_a1]', (_, inputX) => inputX + 1 + 100 + 1 + 200 + 1 + 300)
+
+  // E[DimA, DimB] = D[DimA] + B[DimB]
+  verify(runnerKind, outputs, inputX, '_e[_a2,_b1]', () => 2 + 100)
 }
 
 function verifyImplOutputs(runnerKind, outputs, inputX) {
@@ -58,8 +61,8 @@ function verifyImplOutputs(runnerKind, outputs, inputX) {
 
 async function runTests(runnerKind, modelRunner) {
   // Read the JSON model listing
-  const listingJson = await readFile(joinPath('sde-prep', 'build', 'processed.json'), 'utf8')
-  const listing = new ModelListing(listingJson)
+  const listingJson = await readFile(joinPath('sde-prep', 'build', 'processed_min.json'), 'utf8')
+  const listing = new ModelListing(JSON.parse(listingJson))
 
   // Create the set of inputs
   const inputX = createInputValue('_x', 0)
@@ -94,28 +97,27 @@ async function runTests(runnerKind, modelRunner) {
 
 async function createSynchronousRunner() {
   // TODO: This test app is using ESM-style modules, and `__dirname` is not defined
-  // in an ESM context.  The `wasm-model.js` file (containing the embedded wasm model)
-  // contains a reference to `__dirname`, so we need to define it here.  We should
-  // fix the generated `wasm-model.js` file so that it works for either ESM or CommonJS.
+  // in an ESM context.  The `generated-model.js` file (if it contains a Wasm model)
+  // may contain a reference to `__dirname`, so we need to define it here.  We should
+  // fix the generated Wasm file so that it works for either ESM or CommonJS.
   global.__dirname = '.'
 
-  // Load the generated Wasm module and verify that it exposes `outputVarIds`
-  const wasmModule = await initWasm()
-  const actualVarIds = wasmModule.outputVarIds || []
-  const expectedVarIds = ['_z', '_d[_a1]']
+  // Load the generated model and verify that it exposes `outputVarIds`
+  const generatedModel = await loadGeneratedModel()
+  const actualVarIds = generatedModel.outputVarIds || []
+  const expectedVarIds = ['_z', '_d[_a1]', '_e[_a2,_b1]']
   if (actualVarIds.length !== expectedVarIds.length || !actualVarIds.every((v, i) => v === expectedVarIds[i])) {
     throw new Error(
-      `Test failed: outputVarIds [${actualVarIds}] in generated Wasm module don't match expected values [${expectedVarIds}]`
+      `Test failed: outputVarIds [${actualVarIds}] in generated model don't match expected values [${expectedVarIds}]`
     )
   }
 
-  // Initialize the synchronous `ModelRunner` that drives the Wasm model
-  const wasmResult = initWasmModelAndBuffers(wasmModule, 1, wasmModule.outputVarIds)
-  return createWasmModelRunner(wasmResult)
+  // Initialize the synchronous `ModelRunner` that drives the generated model
+  return createSynchronousModelRunner(generatedModel)
 }
 
 async function createAsynchronousRunner() {
-  // Initialize the asynchronous `ModelRunner` that drives the Wasm model
+  // Initialize the asynchronous `ModelRunner` that drives the generated model
   const modelWorkerJs = await readFile(joinPath('sde-prep', 'worker.js'), 'utf8')
   return await spawnAsyncModelRunner({ source: modelWorkerJs })
 }

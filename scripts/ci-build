@@ -31,8 +31,8 @@ function run_in_workspaces {
   --aggregate-output \
   --reporter=append-only \
   --workspace-concurrency=0 \
-  --filter=./packages/** \
-  --filter=./examples/sample-* \
+  --filter="./packages/*" \
+  --filter="./examples/**" \
   -r $cmd \
   ) 2>&1
 

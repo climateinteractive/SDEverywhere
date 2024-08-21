@@ -42,7 +42,6 @@ EXTERN double _epsilon;
 
 // Internal variables
 EXTERN const int numOutputs;
-EXTERN const int maxOutputIndices;
 
 // Standard simulation control parameters
 EXTERN double _time;
@@ -67,10 +66,11 @@ void initConstants(void);
 void initLevels(void);
 void setInputs(const char* inputData);
 void setInputsFromBuffer(double *inputData);
+void setLookup(size_t varIndex, size_t* subIndices, double* points, size_t numPoints);
 void evalAux(void);
 void evalLevels(void);
 void storeOutputData(void);
-void storeOutput(size_t varIndex, size_t subIndex0, size_t subIndex1, size_t subIndex2);
+void storeOutput(size_t varIndex, size_t* subIndices);
 const char* getHeader(void);
 
 #ifdef __cplusplus
