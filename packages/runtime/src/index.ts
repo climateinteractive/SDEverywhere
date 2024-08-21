@@ -7,3 +7,6 @@ export * from './js-model'
 export * from './wasm-model'
 export * from './model-runner'
 export * from './model-scheduler'
+
+/** @hidden The `perf` module is not part of the public API, but is exposed for use in performance tools. */
+export * from './perf'
