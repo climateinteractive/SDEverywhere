@@ -13,8 +13,6 @@
 * The following workspace dependencies were updated
   * dependencies
     * @sdeverywhere/check-ui-shell bumped from ^0.2.4 to ^0.2.5
-  * devDependencies
-    * @sdeverywhere/build bumped from * to 0.3.6
   * peerDependencies
     * @sdeverywhere/build bumped from ^0.3.5 to ^0.3.6
 

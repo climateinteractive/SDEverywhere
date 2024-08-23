@@ -6,8 +6,6 @@
 ### Dependencies
 
 * The following workspace dependencies were updated
-  * devDependencies
-    * @sdeverywhere/build bumped from * to 0.3.6
   * peerDependencies
     * @sdeverywhere/build bumped from ^0.3.5 to ^0.3.6
 
