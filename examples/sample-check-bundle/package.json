@@ -5,6 +5,7 @@
   "files": [
     "dist/**"
   ],
+  "type": "module",
   "module": "dist/index.js",
   "types": "types/index.d.ts",
   "scripts": {
