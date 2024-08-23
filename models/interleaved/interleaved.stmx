@@ -2,7 +2,7 @@
 <xmile version="1.0" xmlns="http://docs.oasis-open.org/xmile/ns/XMILE/v1.0" xmlns:isee="http://iseesystems.com/XMILE">
 	<header>
 		<smile version="1.0" namespace="std, isee" uses_arrays="1"/>
-		<name>interleaved.smtx</name>
+		<name>interleaved</name>
 		<uuid>6da3c604-908a-4a01-97a8-62b795e95851</uuid>
 		<vendor>isee systems, inc.</vendor>
 		<product version="3.7" isee:build_number="development" isee:saved_by_v1="true" lang="en">Stella Architect</product>
