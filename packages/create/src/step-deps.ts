@@ -57,7 +57,7 @@ export async function chooseInstallDeps(projDir: string, args: Arguments, pkgMan
     })
     installSpinner.text = green('Packages installed!')
     installSpinner.succeed()
-  } catch (e) {
+  } catch {
     installSpinner.text = yellow(
       `There was an error installing packages. Try running ${cyan(
         `${pkgManager} install`

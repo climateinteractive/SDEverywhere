@@ -12,6 +12,8 @@
     "isolatedModules": true,
     // Enable strict enforcement of `import type`
     "verbatimModuleSyntax": true,
+    // XXX: Workaround for https://github.com/vitest-dev/vitest/issues/4567
+    "skipLibCheck": true,
     // The default list of type definitions
     "types": []
   }

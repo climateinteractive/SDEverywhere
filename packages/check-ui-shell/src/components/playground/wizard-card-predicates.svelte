@@ -4,7 +4,7 @@
 <script lang='ts'>
 
 import { slide } from 'svelte/transition'
-import Icon from 'svelte-awesome'
+import Icon from 'svelte-awesome/components/Icon.svelte'
 import { faCircleCheck } from '@fortawesome/free-regular-svg-icons'
 
 import Selector from '../_shared/selector.svelte'

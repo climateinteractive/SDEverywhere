@@ -30,10 +30,10 @@ Specifies the behavior of the plugin for different `sde` build modes.
 
 | Name | Type |
 | :------ | :------ |
-| `development?` | ``"serve"`` \| ``"watch"`` \| ``"skip"`` \| ``"post-generate"`` \| ``"post-build"`` |
+| `development?` | ``"skip"`` \| ``"post-generate"`` \| ``"post-build"`` \| ``"watch"`` \| ``"serve"`` |
 | `production?` | ``"skip"`` \| ``"post-generate"`` \| ``"post-build"`` |
 
-**development?**: ``"serve"`` \| ``"watch"`` \| ``"skip"`` \| ``"post-generate"`` \| ``"post-build"``
+**development?**: ``"skip"`` \| ``"post-generate"`` \| ``"post-build"`` \| ``"watch"`` \| ``"serve"``
 
 The behavior of the plugin when sde is configured for development mode.
 

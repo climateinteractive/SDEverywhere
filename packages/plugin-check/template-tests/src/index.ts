@@ -18,7 +18,8 @@ import type {
 // errors if it is invalid (not a literal).
 const yamlGlob = import.meta.glob('./__YAML_PATH__', {
   eager: true,
-  as: 'raw'
+  query: '?raw',
+  import: 'default'
 })
 const tests: string[] = []
 for (const yamlKey of Object.keys(yamlGlob)) {
