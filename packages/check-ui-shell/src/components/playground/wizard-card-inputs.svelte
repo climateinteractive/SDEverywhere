@@ -4,7 +4,7 @@
 <script lang='ts'>
 
 import { slide } from 'svelte/transition'
-import Icon from 'svelte-awesome'
+import Icon from 'svelte-awesome/components/Icon.svelte'
 import { faArrowRightToBracket } from '@fortawesome/free-solid-svg-icons'
 
 import type { WizardCardInputsViewModel } from './wizard-card-inputs-vm'
