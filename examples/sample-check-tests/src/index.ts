@@ -11,15 +11,15 @@ import type {
 
 import { createBaseComparisonSpecs } from './comparisons/comparison-specs'
 
-const checksYamlGlob = import.meta.glob('./checks/*.yaml', { eager: true, as: 'raw' })
-const checksYaml = Object.values(checksYamlGlob)
+const checksYamlGlob = import.meta.glob('./checks/*.yaml', { eager: true, query: '?raw', import: 'default' })
+const checksYaml = Object.values(checksYamlGlob) as string[]
 
-const comparisonsYamlGlob = import.meta.glob('./comparisons/*.yaml', { eager: true, as: 'raw' })
+const comparisonsYamlGlob = import.meta.glob('./comparisons/*.yaml', { eager: true, query: '?raw', import: 'default' })
 const comparisonsYaml: ComparisonSpecsSource[] = Object.entries(comparisonsYamlGlob).map(entry => {
   return {
     kind: 'yaml',
     filename: entry[0],
-    content: entry[1]
+    content: entry[1] as string
   }
 })
 
