@@ -57,8 +57,10 @@ export function createViteConfig(stagedModelDir: string, modelJsFile: string, ou
       // though we really only need this workaround for the threads package.  Fortunately
       // the worker template is very simple (only depends on `@sdeverywhere/runtime-async`,
       // which in turn only depends on `@sdeverywhere/runtime` and `threads`, so we should
-      // be safe to use this workaround for a while.
-      browserField: false
+      // be safe to use this workaround for a while.  Note that the default value of this
+      // property is `['browser', 'module', 'jsnext:main', 'jsnext']`, so we override it
+      // to omit the 'browser' item.
+      mainFields: ['module', 'jsnext:main', 'jsnext']
     },
 
     build: {
