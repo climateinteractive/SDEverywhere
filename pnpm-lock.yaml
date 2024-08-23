@@ -300,7 +300,7 @@ importers:
   packages/cli:
     dependencies:
       '@sdeverywhere/build':
-        specifier: ^0.3.5
+        specifier: ^0.3.6
         version: link:../build
       '@sdeverywhere/compile':
         specifier: ^0.7.18
@@ -428,7 +428,7 @@ importers:
         specifier: ^0.1.2
         version: link:../check-core
       '@sdeverywhere/check-ui-shell':
-        specifier: ^0.2.4
+        specifier: ^0.2.5
         version: link:../check-ui-shell
       '@sdeverywhere/runtime':
         specifier: ^0.2.4
