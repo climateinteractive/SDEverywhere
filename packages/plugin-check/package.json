@@ -1,6 +1,6 @@
 {
   "name": "@sdeverywhere/plugin-check",
-  "version": "0.3.7",
+  "version": "0.3.8",
   "files": [
     "bin/**",
     "dist/**",
@@ -40,7 +40,7 @@
     "@rollup/plugin-node-resolve": "^13.3.0",
     "@rollup/plugin-replace": "^5.0.2",
     "@sdeverywhere/check-core": "^0.1.2",
-    "@sdeverywhere/check-ui-shell": "^0.2.4",
+    "@sdeverywhere/check-ui-shell": "^0.2.5",
     "@sdeverywhere/runtime": "^0.2.4",
     "@sdeverywhere/runtime-async": "^0.2.4",
     "assert-never": "^1.2.1",
@@ -62,7 +62,7 @@
     "@sdeverywhere/build": "^0.3.5"
   },
   "devDependencies": {
-    "@sdeverywhere/build": "*",
+    "@sdeverywhere/build": "0.3.6",
     "@types/node": "^20.5.7"
   },
   "author": "Climate Interactive",
