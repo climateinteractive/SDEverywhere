@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.6](https://github.com/climateinteractive/SDEverywhere/compare/build-v0.3.5...build-v0.3.6) (2024-08-23)
+
+
+### Bug Fixes
+
+* upgrade to vite 5.x + upgrade related packages ([#519](https://github.com/climateinteractive/SDEverywhere/issues/519)) ([b89d013](https://github.com/climateinteractive/SDEverywhere/commit/b89d01319c355fc087b382fd299a7231bf942fc2)), closes [#518](https://github.com/climateinteractive/SDEverywhere/issues/518)
+
 ## [0.3.5](https://github.com/climateinteractive/SDEverywhere/compare/build-v0.3.4...build-v0.3.5) (2024-08-17)
 
 

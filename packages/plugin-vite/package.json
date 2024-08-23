@@ -1,6 +1,6 @@
 {
   "name": "@sdeverywhere/plugin-vite",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "files": [
     "dist/**"
   ],
@@ -30,7 +30,7 @@
     "ci:build": "run-s clean lint prettier:check test:ci type-check build docs"
   },
   "peerDependencies": {
-    "@sdeverywhere/build": "^0.3.5",
+    "@sdeverywhere/build": "^0.3.6",
     "vite": "^3.0.0 || ^4.0.0 || ^5.0.0"
   },
   "devDependencies": {

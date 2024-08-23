@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.17](https://github.com/climateinteractive/SDEverywhere/compare/create-v0.2.16...create-v0.2.17) (2024-08-23)
+
+
+### Bug Fixes
+
+* upgrade to vite 5.x + upgrade related packages ([#519](https://github.com/climateinteractive/SDEverywhere/issues/519)) ([b89d013](https://github.com/climateinteractive/SDEverywhere/commit/b89d01319c355fc087b382fd299a7231bf942fc2)), closes [#518](https://github.com/climateinteractive/SDEverywhere/issues/518)
+
 ## [0.2.16](https://github.com/climateinteractive/SDEverywhere/compare/create-v0.2.15...create-v0.2.16) (2024-08-19)
 
 

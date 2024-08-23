@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.1.10](https://github.com/climateinteractive/SDEverywhere/compare/plugin-vite-v0.1.9...plugin-vite-v0.1.10) (2024-08-23)
+
+
+### Bug Fixes
+
+* upgrade to vite 5.x + upgrade related packages ([#519](https://github.com/climateinteractive/SDEverywhere/issues/519)) ([b89d013](https://github.com/climateinteractive/SDEverywhere/commit/b89d01319c355fc087b382fd299a7231bf942fc2)), closes [#518](https://github.com/climateinteractive/SDEverywhere/issues/518)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * peerDependencies
+    * @sdeverywhere/build bumped from ^0.3.5 to ^0.3.6
+
 ## [0.1.9](https://github.com/climateinteractive/SDEverywhere/compare/plugin-vite-v0.1.8...plugin-vite-v0.1.9) (2024-08-17)
 
 
