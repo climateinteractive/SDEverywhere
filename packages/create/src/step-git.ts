@@ -36,7 +36,7 @@ export async function chooseGitInit(projDir: string, args: Arguments): Promise<v
   try {
     await execaCommand('git init', { cwd: projDir })
     ora().succeed(green('Git repository initialized!'))
-  } catch (e) {
+  } catch {
     ora().warn(
       yellow(
         `There was a problem initializing the Git repository, but no problem, you can run ${cyan(`git init`)} later.`
