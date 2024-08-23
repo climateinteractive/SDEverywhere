@@ -23,7 +23,7 @@
     "chart.js": "^2.9.4"
   },
   "devDependencies": {
-    "@sveltejs/vite-plugin-svelte": "^2.4.5",
+    "@sveltejs/vite-plugin-svelte": "^3.1.2",
     "@types/chart.js": "^2.9.34",
     "postcss": "^8.4.31",
     "sass": "^1.34.1",
