@@ -27,7 +27,7 @@
 	<isee:number_format_extenders/>
 	<default_format/>
 	<data>
-		<export resource="r../coments.csv" interval="DT" precomputed="false" isee:format="numbers">
+		<export resource="r../comments.csv" interval="DT" precomputed="false" isee:format="numbers">
 			<all/>
 		</export>
 	</data>
