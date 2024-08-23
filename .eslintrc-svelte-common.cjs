@@ -1,12 +1,12 @@
 module.exports = {
   extends: ['./.eslintrc-ts-common.cjs'],
-  plugins: ['svelte3'],
+  plugins: ['svelte'],
   overrides: [
     {
       files: ['*.svelte'],
-      processor: 'svelte3/svelte3',
+      processor: 'svelte/svelte',
       rules: {
-        // XXX: Until `eslint-plugin-svelte3` supports the preprocessors that we use
+        // XXX: Until `eslint-plugin-svelte` supports the preprocessors that we use
         // (i.e., Pug and Sass), we need to ignore all warnings related to unused
         // variables, etc.  Currently the svelte3 plugin doesn't understand that
         // TypeScript variables in the script section are actually used in the Pug
@@ -21,9 +21,9 @@ module.exports = {
     }
   ],
   settings: {
-    'svelte3/typescript': true,
+    'svelte/typescript': true,
     // XXX: See comment above regarding svelte3 warnings
-    'svelte3/ignore-warnings': () => true,
-    'svelte3/ignore-styles': () => true
+    'svelte/ignore-warnings': () => true,
+    'svelte/ignore-styles': () => true
   }
 }
