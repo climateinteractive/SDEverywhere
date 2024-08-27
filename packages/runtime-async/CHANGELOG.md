@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.2.5](https://github.com/climateinteractive/SDEverywhere/compare/runtime-async-v0.2.4...runtime-async-v0.2.5) (2024-08-27)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/runtime bumped from ^0.2.4 to ^0.2.5
+
 ## [0.2.4](https://github.com/climateinteractive/SDEverywhere/compare/runtime-async-v0.2.3...runtime-async-v0.2.4) (2024-08-21)
 
 
