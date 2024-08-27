@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.5](https://github.com/climateinteractive/SDEverywhere/compare/runtime-v0.2.4...runtime-v0.2.5) (2024-08-27)
+
+
+### Bug Fixes
+
+* prevent error when model outputs buffer is larger than the RunModelParams internal buffer ([#525](https://github.com/climateinteractive/SDEverywhere/issues/525)) ([beed1f5](https://github.com/climateinteractive/SDEverywhere/commit/beed1f5082ed0884bf983f72c54f08d4ba3f70d8)), closes [#524](https://github.com/climateinteractive/SDEverywhere/issues/524)
+
 ## [0.2.4](https://github.com/climateinteractive/SDEverywhere/compare/runtime-v0.2.3...runtime-v0.2.4) (2024-08-21)
 
 
