@@ -35,6 +35,7 @@ function verifyDeclaredOutputs(runnerKind, outputs, inputX) {
   // X = 0 [-10,10]
   // Y = X * 3
   // Z = T + Y
+  verify(runnerKind, outputs, inputX, '_y', () => inputX * 3)
   verify(runnerKind, outputs, inputX, '_z', (time, inputX) => time + inputX * 3)
 
   // A[DimA] = 1, 2
@@ -48,7 +49,7 @@ function verifyDeclaredOutputs(runnerKind, outputs, inputX) {
   verify(runnerKind, outputs, inputX, '_e[_a2,_b1]', () => 2 + 100)
 }
 
-function verifyImplOutputs(runnerKind, outputs, inputX) {
+function verifyImplOutputs(runnerKind, outputs, inputX, subset) {
   // Y = X * 3
   verify(runnerKind, outputs, inputX, '_y', () => inputX * 3)
 
@@ -57,6 +58,11 @@ function verifyImplOutputs(runnerKind, outputs, inputX) {
   // C[DimA, DimB] = A[DimA] + B[DimB]
   verify(runnerKind, outputs, inputX, '_c[_a2,_b2]', () => 2 + 200)
   verify(runnerKind, outputs, inputX, '_c[_a2,_b3]', () => 2 + 300)
+
+  if (subset > 1) {
+    verify(runnerKind, outputs, inputX, '_a[_a1]', () => 1)
+    verify(runnerKind, outputs, inputX, '_a[_a2]', () => 2)
+  }
 }
 
 async function runTests(runnerKind, modelRunner) {
@@ -75,21 +81,35 @@ async function runTests(runnerKind, modelRunner) {
   outputs = await modelRunner.runModel(inputs, outputs)
 
   // Verify declared output variables
-  verifyDeclaredOutputs(runnerKind, outputs, 0)
+  verifyDeclaredOutputs(runnerKind, outputs, /*inputX=*/ 0)
 
   // Run the model with input at 1
   inputX.set(1)
   outputs = await modelRunner.runModel(inputs, outputs)
 
   // Verify declared output variables
-  verifyDeclaredOutputs(runnerKind, outputs, 1)
+  verifyDeclaredOutputs(runnerKind, outputs, /*inputX=*/ 1)
 
-  // Run the model again and capture impl variables
+  // Run the model again and capture impl variables.  This first subset includes
+  // fewer variables (3) than the declared outputs (4).  This tests the case where
+  // the model allocates an internal outputs buffer of a certain length, and then
+  // is run again reusing that same buffer, which is longer than necessary.
   let outputsWithImpls1 = listing.deriveOutputs(outputs, ['_y', '_c[_a2,_b2]', '_c[_a2,_b3]'])
   outputsWithImpls1 = await modelRunner.runModel(inputs, outputsWithImpls1)
 
-  // Verify impl variables
-  verifyImplOutputs(runnerKind, outputsWithImpls1, 1)
+  // Verify impl variables (first subset)
+  verifyImplOutputs(runnerKind, outputsWithImpls1, /*inputX=*/ 1, /*subset=*/ 1)
+
+  // Run the model again and capture impl variables.  This second subset includes
+  // more variables (5) than the declared outputs (4).  This tests the case where
+  // the model allocates an internal outputs buffer of a certain length, and then
+  // is run again and needs to allocate a larger internal buffer to hold the new
+  // amount of outputs.
+  let outputsWithImpls2 = listing.deriveOutputs(outputs, ['_y', '_c[_a2,_b2]', '_c[_a2,_b3]', '_a[_a1]', '_a[_a2]'])
+  outputsWithImpls2 = await modelRunner.runModel(inputs, outputsWithImpls2)
+
+  // Verify impl variables (second subset)
+  verifyImplOutputs(runnerKind, outputsWithImpls2, /*inputX=*/ 1, /*subset=*/ 2)
 
   // Terminate the model runner
   await modelRunner.terminate()
@@ -105,7 +125,7 @@ async function createSynchronousRunner() {
   // Load the generated model and verify that it exposes `outputVarIds`
   const generatedModel = await loadGeneratedModel()
   const actualVarIds = generatedModel.outputVarIds || []
-  const expectedVarIds = ['_z', '_d[_a1]', '_e[_a2,_b1]']
+  const expectedVarIds = ['_y', '_z', '_d[_a1]', '_e[_a2,_b1]']
   if (actualVarIds.length !== expectedVarIds.length || !actualVarIds.every((v, i) => v === expectedVarIds[i])) {
     throw new Error(
       `Test failed: outputVarIds [${actualVarIds}] in generated model don't match expected values [${expectedVarIds}]`

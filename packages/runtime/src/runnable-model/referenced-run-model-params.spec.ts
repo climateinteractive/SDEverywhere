@@ -173,7 +173,7 @@ describe('ReferencedRunModelParams', () => {
     )
   })
 
-  it('should store output values from the model run', () => {
+  it('should store output values from the model run (when model outputs buffer length is same as outputs instance length)', () => {
     const inputs = [1, 2, 3]
     const outputs = new Outputs(['_x', '_y'], 2000, 2002, 1)
 
@@ -183,6 +183,33 @@ describe('ReferencedRunModelParams', () => {
     // Pretend that the model writes the following values to its buffer then
     // calls the `store` methods
     const outputsArray = new Float64Array([1, 2, 3, 4, 5, 6])
+    params.storeElapsedTime(42)
+    params.storeOutputs(outputsArray)
+
+    // Verify that the elapsed time can be accessed
+    expect(params.getElapsedTime()).toBe(42)
+
+    // Verify that the `Outputs` instance is updated with the correct values
+    expect(outputs.varIds).toEqual(['_x', '_y'])
+    expect(outputs.getSeriesForVar('_x').points).toEqual([p(2000, 1), p(2001, 2), p(2002, 3)])
+    expect(outputs.getSeriesForVar('_y').points).toEqual([p(2000, 4), p(2001, 5), p(2002, 6)])
+  })
+
+  it('should store output values from the model run (when model outputs buffer is longer than outputs instance)', () => {
+    const inputs = [1, 2, 3]
+    const outputs = new Outputs(['_x', '_y'], 2000, 2002, 1)
+
+    const params = new ReferencedRunModelParams()
+    params.updateFromParams(inputs, outputs)
+
+    // Pretend that the model writes the following values to its buffer then
+    // calls the `store` methods
+    const outputsArray = new Float64Array([
+      // actual outputs
+      1, 2, 3, 4, 5, 6,
+      // extra values (should be ignored)
+      9, 9, 9
+    ])
     params.storeElapsedTime(42)
     params.storeOutputs(outputsArray)
 
