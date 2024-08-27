@@ -259,7 +259,7 @@ describe('BufferedRunModelParams', () => {
     )
   })
 
-  it('should store output values from the model run', () => {
+  it('should store output values from the model run (when model outputs buffer length is same as internal buffer length)', () => {
     const inputs = [1, 2, 3]
     const outputs = new Outputs(['_x', '_y'], 2000, 2002, 1)
 
@@ -273,6 +273,47 @@ describe('BufferedRunModelParams', () => {
     // Pretend that the model writes the following values to its outputs buffer then
     // calls the `store` methods
     const outputsArray = new Float64Array([1, 2, 3, 4, 5, 6])
+    workerParams.storeElapsedTime(42)
+    workerParams.storeOutputs(outputsArray)
+
+    // Verify that the elapsed time can be accessed in the runner params
+    expect(runnerParams.getElapsedTime()).toBe(42)
+
+    // Verify that the outputs buffer in the runner params contains the correct values
+    expect(runnerParams.getOutputs()).toEqual(new Float64Array([1, 2, 3, 4, 5, 6]))
+
+    // Copy the outputs buffer to the `Outputs` instance and verify the values
+    runnerParams.finalizeOutputs(outputs)
+    expect(outputs.getSeriesForVar('_x').points).toEqual([p(2000, 1), p(2001, 2), p(2002, 3)])
+    expect(outputs.getSeriesForVar('_y').points).toEqual([p(2000, 4), p(2001, 5), p(2002, 6)])
+    expect(outputs.runTimeInMillis).toBe(42)
+  })
+
+  it('should store output values from the model run (when model outputs buffer is longer than internal buffer)', () => {
+    const inputs = [1, 2, 3]
+    const outputs = new Outputs(['_x', '_y'], 2000, 2002, 1)
+
+    const runnerParams = new BufferedRunModelParams()
+    const workerParams = new BufferedRunModelParams()
+
+    // Run once
+    runnerParams.updateFromParams(inputs, outputs)
+    workerParams.updateFromEncodedBuffer(runnerParams.getEncodedBuffer())
+
+    // Pretend that the model writes the following values to its outputs buffer (which is
+    // longer than necessary and contains unused/extra values at the end) then calls the
+    // `store` methods.  This simulates the case where the wasm model allocates an outputs
+    // buffer of length N on one model run, and then another model run is done with a
+    // smaller set of save points.  In this case, the wasm model will use the already
+    // allocated buffer of length N, but the internal `outputs` view in the
+    // `BufferedRunModelParams` instance will have length less than N.  We verify that
+    // the `storeOutputs` method only copies a subset of the outputs buffer.
+    const outputsArray = new Float64Array([
+      // actual outputs
+      1, 2, 3, 4, 5, 6,
+      // extra values (should be ignored)
+      9, 9, 9
+    ])
     workerParams.storeElapsedTime(42)
     workerParams.storeOutputs(outputsArray)
 

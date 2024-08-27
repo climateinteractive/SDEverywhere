@@ -183,8 +183,21 @@ export class BufferedRunModelParams implements RunModelParams {
 
   // from RunModelParams interface
   storeOutputs(array: Float64Array): void {
-    // Copy from the given array to the internal buffer
-    this.outputs.view?.set(array)
+    if (this.outputs.view === undefined) {
+      return
+    }
+
+    // Copy from the given array to the internal buffer.  Note that the given array
+    // can be longer than the internal buffer.  This can happen in the case where the
+    // model has an outputs buffer already allocated that was sized to accommodate a
+    // certain amount of outputs, and then a later model run used a smaller amount of
+    // outputs.  In this case, the model may choose to keep the reuse the buffer
+    // rather than reallocate/shrink the buffer, so we need to copy a subset here.
+    if (array.length > this.outputs.view.length) {
+      this.outputs.view.set(array.subarray(0, this.outputs.view.length))
+    } else {
+      this.outputs.view.set(array)
+    }
   }
 
   // from RunModelParams interface

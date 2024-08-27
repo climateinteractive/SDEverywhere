@@ -11,7 +11,7 @@ export async function config() {
     modelSpec: async () => {
       return {
         inputs: ['X'],
-        outputs: ['Z', 'D[A1]', 'E[A2,B1]'],
+        outputs: ['Y', 'Z', 'D[A1]', 'E[A2,B1]'],
         customOutputs: true
       }
     },
