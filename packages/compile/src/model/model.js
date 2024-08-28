@@ -25,6 +25,7 @@ import Variable from './variable.js'
 let variables = []
 let inputVars = []
 let constantExprs = new Map()
+let cachedSortedVarsByType = new Map()
 let cachedVarIndexInfo
 let cachedJsonList
 
@@ -46,6 +47,7 @@ function resetModelState() {
   variablesByName.clear()
   constantExprs.clear()
   nonAtoANames = Object.create(null)
+  cachedSortedVarsByType.clear()
   cachedVarIndexInfo = undefined
   cachedJsonList = undefined
 }
@@ -439,8 +441,8 @@ function resolveDuplicateDeclarations() {
   // Least and greatest safe double values in C rounded to convenient consts
   const MIN_SAFE_DBL = -1e308
   const MAX_SAFE_DBL = 1e308
-  let data = dataVars()
-  for (let constVar of constVars()) {
+  let data = varsOfType('data')
+  for (let constVar of varsOfType('const')) {
     if (data.find(d => d.varName === constVar.varName)) {
       // Change the var type from const to data and add lookup data points.
       // For a constant, the equivalent lookup has the same value over the entire x axis.
@@ -524,30 +526,53 @@ function allVars() {
   }
   return R.filter(isNotPlaceholderVar, variables)
 }
+function cachedSortedVars(varType, generate) {
+  // Return the cached array of sorted variables for the given type if
+  // available, otherwise call the `generate` function to generate the
+  // array and cache it in the map.
+  let vars = cachedSortedVarsByType.get(varType)
+  if (!vars) {
+    vars = generate()
+    cachedSortedVarsByType.set(varType, vars)
+  }
+  return vars
+}
 function constVars() {
   // Return an array of vars of type `const`, sorted by LHS variable name.
-  return vsort(varsOfType('const'))
+  // Note that this caches the result, so should only be called after the
+  // model has been fully read and analyzed.
+  return cachedSortedVars('const', () => vsort(varsOfType('const')))
 }
 function lookupVars() {
   // Return an array of vars of type `lookup`, sorted by LHS variable name.
-  return vsort(varsOfType('lookup'))
+  // Note that this caches the result, so should only be called after the
+  // model has been fully read and analyzed.
+  return cachedSortedVars('lookup', () => vsort(varsOfType('lookup')))
 }
 function dataVars() {
   // Return an array of vars of type `data`, sorted by LHS variable name.
-  return vsort(varsOfType('data'))
+  // Note that this caches the result, so should only be called after the
+  // model has been fully read and analyzed.
+  return cachedSortedVars('data', () => vsort(varsOfType('data')))
 }
 function auxVars() {
   // Return an array of vars of type `aux`, sorted according to the dependency graph.
-  return sortVarsOfType('aux')
+  // Note that this caches the result, so should only be called after the
+  // model has been fully read and analyzed.
+  return cachedSortedVars('aux', () => sortVarsOfType('aux'))
 }
 function levelVars() {
   // Return an array of vars of type `level`, sorted according to the dependency graph.
-  return sortVarsOfType('level')
+  // Note that this caches the result, so should only be called after the
+  // model has been fully read and analyzed.
+  return cachedSortedVars('level', () => sortVarsOfType('level'))
 }
 function initVars() {
   // Return an array of all vars that have the `hasInitValue` flag set to true,
   // sorted according to the dependency graph.
-  return sortInitVars()
+  // Note that this caches the result, so should only be called after the
+  // model has been fully read and analyzed.
+  return cachedSortedVars('init', () => sortInitVars())
 }
 function varWithRefId(refId) {
   const findVarWithRefId = rid => {
