@@ -525,24 +525,28 @@ function allVars() {
   return R.filter(isNotPlaceholderVar, variables)
 }
 function constVars() {
+  // Return an array of vars of type `const`, sorted by LHS variable name.
   return vsort(varsOfType('const'))
 }
 function lookupVars() {
+  // Return an array of vars of type `lookup`, sorted by LHS variable name.
   return vsort(varsOfType('lookup'))
 }
 function dataVars() {
+  // Return an array of vars of type `data`, sorted by LHS variable name.
   return vsort(varsOfType('data'))
 }
 function auxVars() {
-  // console.error('AUX VARS');
+  // Return an array of vars of type `aux`, sorted according to the dependency graph.
   return sortVarsOfType('aux')
 }
 function levelVars() {
-  // console.error('LEVEL VARS');
+  // Return an array of vars of type `level`, sorted according to the dependency graph.
   return sortVarsOfType('level')
 }
 function initVars() {
-  // console.error('INIT VARS');
+  // Return an array of all vars that have the `hasInitValue` flag set to true,
+  // sorted according to the dependency graph.
   return sortInitVars()
 }
 function varWithRefId(refId) {
@@ -1055,26 +1059,52 @@ function printDepsGraph(graph, varType) {
 
 function allListedVars() {
   // Put variables into the order that they are evaluated by SDE in the generated model
-  let vars = []
-  vars.push(...constVars())
-  vars.push(...lookupVars())
-  vars.push(...dataVars())
+  const listedVars = []
+  const visitedRefIds = new Set()
+  function addUnique(vars) {
+    for (const v of vars) {
+      // Skip variables that have already been visited
+      if (visitedRefIds.has(v.refId)) {
+        continue
+      }
+      visitedRefIds.add(v.refId)
+
+      // Filter out variables that are generated/used internally
+      if (v.includeInOutput === false) {
+        continue
+      }
+
+      // Include the variable
+      listedVars.push(v)
+    }
+  }
+
+  // The order of execution/evaluation in the generated model is:
+  //   initConstants (vars of type `const` only)
+  //   initLookups (vars of type `lookup` only)
+  //   initData (vars of type `data` only)
+  //   initLevels (vars returned by `initVars`, a mix of initial, aux, and level vars)
+  //   evalAux (vars of type `aux` only)
+  //   evalLevels (vars of type `level` only)
+  // So to make the ordering in the listing better match the order of evaluation,
+  // we emit variables in the above order, but filter to avoid having duplicates.
+  addUnique(constVars())
+  addUnique(lookupVars())
+  addUnique(dataVars())
   // The special exogenous `Time` variable may have already been removed by
   // `removeUnusedVariables` if it is not referenced explicitly in the model,
-  // so we will only include it in the listing if it is defined here
+  // so we will only include it in the listing if it is defined here.  Note
+  // that `_time` is set to `_initial_time` as the first step in the
+  // `initLevels` function, which is why it is included here.
   const timeVar = varWithName('_time')
   if (timeVar) {
-    vars.push(timeVar)
+    addUnique([timeVar])
   }
-  vars.push(...auxVars())
-  vars.push(...levelVars())
+  addUnique(initVars())
+  addUnique(auxVars())
+  addUnique(levelVars())
 
-  // Filter out variables that are generated/used internally
-  const isInternal = v => {
-    return v.includeInOutput === false
-  }
-
-  return R.filter(v => !isInternal(v), vars)
+  return listedVars
 }
 
 function filteredListedVars() {

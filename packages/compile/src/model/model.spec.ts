@@ -69,7 +69,7 @@ function readInlineModel(
 
 describe('Model', () => {
   describe('jsonList', () => {
-    it('should expose accessible variables', () => {
+    it('should expose accessible variables sorted in order of execution', () => {
       const listing = readInlineModel(`
         DimA: A1, A2 ~~|
         DimB: B1, B2 ~~|
@@ -84,6 +84,7 @@ describe('Model', () => {
         c data ~~|
         c = c data ~~|
         d[DimA] = 10, 11 ~~|
+        e = INITIAL(c) ~~|
         level init = 5 ~~|
         level = INTEG(x, level init) ~~|
         w = WITH LOOKUP(x, ( [(0,0)-(2,2)], (0,0),(0.1,0.01),(0.5,0.7),(1,1),(1.5,1.2),(2,1.3) )) ~~|
@@ -92,7 +93,6 @@ describe('Model', () => {
         TIME STEP = 1 ~~|
         SAVEPER = 1 ~~|
       `)
-
       expect(listing.full).toEqual({
         dimensions: [
           {
@@ -236,6 +236,37 @@ describe('Model', () => {
             varIndex: 11
           },
           {
+            refId: '_c',
+            varName: '_c',
+            references: ['_c_data'],
+            hasInitValue: false,
+            varType: 'aux',
+            modelLHS: 'c',
+            modelFormula: 'c data',
+            varIndex: 12
+          },
+          {
+            refId: '_e',
+            varName: '_e',
+            hasInitValue: true,
+            initReferences: ['_c'],
+            varType: 'initial',
+            modelLHS: 'e',
+            modelFormula: 'INITIAL(c)',
+            varIndex: 13
+          },
+          {
+            refId: '_level',
+            varName: '_level',
+            references: ['_x'],
+            hasInitValue: true,
+            initReferences: ['_level_init'],
+            varType: 'level',
+            modelLHS: 'level',
+            modelFormula: 'INTEG(x,level init)',
+            varIndex: 14
+          },
+          {
             refId: '_a',
             varName: '_a',
             subscripts: ['_dima'],
@@ -245,7 +276,7 @@ describe('Model', () => {
             varType: 'aux',
             modelLHS: 'a[DimA]',
             modelFormula: 'a data[DimA]',
-            varIndex: 12
+            varIndex: 15
           },
           {
             refId: '_b',
@@ -257,17 +288,7 @@ describe('Model', () => {
             varType: 'aux',
             modelLHS: 'b[DimA,DimB]',
             modelFormula: 'b data[DimA,DimB]',
-            varIndex: 13
-          },
-          {
-            refId: '_c',
-            varName: '_c',
-            references: ['_c_data'],
-            hasInitValue: false,
-            varType: 'aux',
-            modelLHS: 'c',
-            modelFormula: 'c data',
-            varIndex: 14
+            varIndex: 16
           },
           {
             refId: '_x',
@@ -277,7 +298,7 @@ describe('Model', () => {
             varType: 'aux',
             modelLHS: 'x',
             modelFormula: 'input',
-            varIndex: 15
+            varIndex: 17
           },
           {
             refId: '_w',
@@ -287,7 +308,7 @@ describe('Model', () => {
             varType: 'aux',
             modelLHS: 'w',
             modelFormula: 'WITH LOOKUP(x,([(0,0)-(2,2)],(0,0),(0.1,0.01),(0.5,0.7),(1,1),(1.5,1.2),(2,1.3)))',
-            varIndex: 16
+            varIndex: 18
           },
           {
             refId: '_y',
@@ -297,7 +318,7 @@ describe('Model', () => {
             varType: 'aux',
             modelLHS: 'y',
             modelFormula: ':NOT: x',
-            varIndex: 17
+            varIndex: 19
           },
           {
             refId: '_z',
@@ -307,18 +328,7 @@ describe('Model', () => {
             varType: 'aux',
             modelLHS: 'z',
             modelFormula: 'ABS(y)',
-            varIndex: 18
-          },
-          {
-            refId: '_level',
-            varName: '_level',
-            references: ['_x'],
-            hasInitValue: true,
-            initReferences: ['_level_init'],
-            varType: 'level',
-            modelLHS: 'level',
-            modelFormula: 'INTEG(x,level init)',
-            varIndex: 19
+            varIndex: 20
           }
         ]
       })
@@ -383,38 +393,42 @@ describe('Model', () => {
             index: 11
           },
           {
+            id: '_c',
+            index: 12
+          },
+          {
+            id: '_e',
+            index: 13
+          },
+          {
+            id: '_level',
+            index: 14
+          },
+          {
             id: '_a',
             dimIds: ['_dima'],
-            index: 12
+            index: 15
           },
           {
             id: '_b',
             dimIds: ['_dima', '_dimb'],
-            index: 13
-          },
-          {
-            id: '_c',
-            index: 14
-          },
-          {
-            id: '_x',
-            index: 15
-          },
-          {
-            id: '_w',
             index: 16
           },
           {
-            id: '_y',
+            id: '_x',
             index: 17
           },
           {
-            id: '_z',
+            id: '_w',
             index: 18
           },
           {
-            id: '_level',
+            id: '_y',
             index: 19
+          },
+          {
+            id: '_z',
+            index: 20
           }
         ]
       })
