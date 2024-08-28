@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.7.19](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.18...compile-v0.7.19) (2024-08-28)
+
+
+### Bug Fixes
+
+* cache sorted variables to improve compile performance ([#531](https://github.com/climateinteractive/SDEverywhere/issues/531)) ([0c359c8](https://github.com/climateinteractive/SDEverywhere/commit/0c359c842d0692e78df54f16f559d13f9ee713b9)), closes [#528](https://github.com/climateinteractive/SDEverywhere/issues/528)
+* include 'initial' variables in JSON model listing ([#529](https://github.com/climateinteractive/SDEverywhere/issues/529)) ([2e1a004](https://github.com/climateinteractive/SDEverywhere/commit/2e1a004555c9d30658179900bca099d1ad4820ea)), closes [#527](https://github.com/climateinteractive/SDEverywhere/issues/527)
+
 ## [0.7.18](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.17...compile-v0.7.18) (2024-08-17)
 
 
