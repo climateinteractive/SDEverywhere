@@ -37,6 +37,9 @@
     "vitest": "^2.0.5"
   },
   "pnpm": {
+    "overrides": {
+      "antlr4-vensim": "climateinteractive/gitpkg-registry-public#antlr4-vensim-d95075f"
+    },
     "peerDependencyRules": {
       "ignoreMissing": [
         "eslint",
