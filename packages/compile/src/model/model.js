@@ -423,7 +423,13 @@ function removeUnusedVariables(spec) {
   }
 
   // Filter out unneeded variables so we're left with the minimal set of variables to emit
-  variables = R.filter(v => referencedVarNames.has(v.varName), variables)
+  const filteredVariables = R.filter(v => referencedVarNames.has(v.varName), variables)
+  // TODO: Note that we reuse the same `variables` array instance here instead of reassigning
+  // to it because some code (like in `code-gen/expand-var-names.js` and in some tests) uses
+  // the `variables` array (from module-level storage) directly.  We need to fix those uses
+  // to use accessors to avoid these subtle issues.
+  variables.length = 0
+  variables.push(...filteredVariables)
 
   // Rebuild the variables-by-name map
   variablesByName.clear()
