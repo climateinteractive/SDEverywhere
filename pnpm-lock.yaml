@@ -403,8 +403,8 @@ importers:
         specifier: 4.12.0
         version: 4.12.0
       antlr4-vensim:
-        specifier: 0.6.2
-        version: 0.6.2
+        specifier: 0.6.3
+        version: 0.6.3
       assert-never:
         specifier: ^1.2.1
         version: 1.2.1
@@ -667,6 +667,27 @@ importers:
         version: link:../../../packages/runtime-async
 
   tests/integration/saveper:
+    dependencies:
+      '@sdeverywhere/build':
+        specifier: workspace:*
+        version: link:../../../packages/build
+      '@sdeverywhere/cli':
+        specifier: workspace:*
+        version: link:../../../packages/cli
+      '@sdeverywhere/plugin-wasm':
+        specifier: workspace:*
+        version: link:../../../packages/plugin-wasm
+      '@sdeverywhere/plugin-worker':
+        specifier: workspace:*
+        version: link:../../../packages/plugin-worker
+      '@sdeverywhere/runtime':
+        specifier: workspace:*
+        version: link:../../../packages/runtime
+      '@sdeverywhere/runtime-async':
+        specifier: workspace:*
+        version: link:../../../packages/runtime-async
+
+  tests/integration/unicode:
     dependencies:
       '@sdeverywhere/build':
         specifier: workspace:*
@@ -1848,8 +1869,8 @@ packages:
     engines: {node: '>=12'}
     dev: true
 
-  /antlr4-vensim@0.6.2:
-    resolution: {integrity: sha512-NzYwNWUxpiNqIAEgTbSPYkyoXxhe2B3Lbmwd4LtUGCIeHCNPnGYuZVaa0om1zZ1PXilx2c7Xwm74Trin8QqRmg==}
+  /antlr4-vensim@0.6.3:
+    resolution: {integrity: sha512-xDjUXNjeDEj2ahCFIIxOIlA6Jf/YtBMngugH1AyvVeg4qKttTFmof13j7lXvE24hHcW9sa0ACs6JmgR+/x8c+A==}
     dependencies:
       antlr4: 4.12.0
     dev: false
