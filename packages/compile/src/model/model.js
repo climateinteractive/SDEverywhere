@@ -62,12 +62,12 @@ function resetModelState() {
  * TODO: FIX TYPE
  * @param {*} parsedModel The parsed model structure.
  * @param {*} spec The parsed `spec.json` object.
- * @param {Map<string, any>} extData The map of datasets from external `.dat` files.
- * @param {Map<string, any>} directData The mapping of dataset name used in a `GET DIRECT DATA`
+ * @param {Map<string, any>} [extData] The map of datasets from external `.dat` files.
+ * @param {Map<string, any>} [directData] The mapping of dataset name used in a `GET DIRECT DATA`
  * call (e.g., `?data`) to the tabular data contained in the loaded data file.
- * @param {string} modelDirname The path to the directory containing the model (used for resolving data
+ * @param {string} [modelDirname] The path to the directory containing the model (used for resolving data
  * files for `GET DIRECT SUBSCRIPT`).
- * @param {*} opts An optional object used by tests to stop the read process after a specific phase.
+ * @param {*} [opts] An optional object used by tests to stop the read process after a specific phase.
  */
 function read(parsedModel, spec, extData, directData, modelDirname, opts) {
   // Some arrays need to be separated into variables with individual indices to
