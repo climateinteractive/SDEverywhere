@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.1](https://github.com/climateinteractive/SDEverywhere/compare/parse-v0.1.0...parse-v0.1.1) (2024-09-15)
+
+
+### Bug Fixes
+
+* update to latest antlr4-vensim with support for Unicode characters in variable names ([#533](https://github.com/climateinteractive/SDEverywhere/issues/533)) ([c921657](https://github.com/climateinteractive/SDEverywhere/commit/c921657e12b4b996ab64be84a7af20826ca8350d)), closes [#532](https://github.com/climateinteractive/SDEverywhere/issues/532)
+
 ## 0.1.0 (2023-12-11)
 
 

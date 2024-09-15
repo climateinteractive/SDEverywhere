@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.7.20](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.19...compile-v0.7.20) (2024-09-15)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/parse bumped from ^0.1.0 to ^0.1.1
+
 ## [0.7.19](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.18...compile-v0.7.19) (2024-08-28)
 
 
