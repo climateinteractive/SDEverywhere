@@ -2,7 +2,7 @@ import B from 'bufx'
 import yaml from 'js-yaml'
 import * as R from 'ramda'
 
-import { canonicalName, decanonicalize, isIterable, /*listConcat,*/ strlist, vlog, vsort } from '../_shared/helpers.js'
+import { canonicalVensimName, decanonicalize, isIterable, strlist, vlog, vsort } from '../_shared/helpers.js'
 import {
   addIndex,
   allAliases,
@@ -16,6 +16,7 @@ import {
 } from '../_shared/subscript.js'
 import { cName } from '../_shared/var-names.js'
 
+import { expandVar } from './expand-var-instances.js'
 import { readEquation } from './read-equations.js'
 import { readDimensionDefs } from './read-subscripts.js'
 import { readVariables } from './read-variables.js'
@@ -1089,12 +1090,13 @@ function allListedVars() {
   }
 
   // The order of execution/evaluation in the generated model is:
-  //   initConstants (vars of type `const` only)
-  //   initLookups (vars of type `lookup` only)
-  //   initData (vars of type `data` only)
-  //   initLevels (vars returned by `initVars`, a mix of initial, aux, and level vars)
-  //   evalAux (vars of type `aux` only)
-  //   evalLevels (vars of type `level` only)
+  //   initConstants (vars of type `const` only; called for t=0 only)
+  //   initLookups (vars of type `lookup` only; called for t=0 only)
+  //   initData (vars of type `data` only; called for t=0 only)
+  //   initLevels (vars returned by `initVars`, a mix of initial, aux, and level vars;
+  //     called for t=0 only)
+  //   evalAux (vars of type `aux` only; called for t>=0)
+  //   evalLevels (vars of type `level` only; called before `evalAux` for t>0)
   // So to make the ordering in the listing better match the order of evaluation,
   // we emit variables in the above order, but filter to avoid having duplicates.
   addUnique(constVars())
@@ -1135,7 +1137,7 @@ function varIndexInfoMap() {
 
   // Get the set of unique variable names, and assign a 1-based index to each.
   // This matches the index number used in `storeOutput` and `setLookup` in the
-  // generated C/JS code
+  // generated C/JS code.
   const infoMap = new Map()
   let varIndex = 1
   for (const v of sortedVars) {
@@ -1193,6 +1195,73 @@ function jsonList() {
     }
   }
 
+  //
+  // We include a `varInstances` object in the generated JSON listing that
+  // includes an array of expanded variable items (one item for every "instance"
+  // of a variable, including subscripted variables) in the same order that they
+  // are evaluated (assigned) in the generated model.
+  //
+  // Each object contains the following minimal set of fields that are needed
+  // for accessing the data for a single variable instance at runtime:
+  //   varId (e.g., '_variable_name')
+  //   varName (e.g., 'Variable Name')
+  //   varType ('const', 'data', 'lookup', 'initial', 'level', 'aux')
+  //   varIndex
+  //   subIndices
+  //
+  // The order of execution/evaluation in the generated model is:
+  //   initConstants (vars of type `const` only, called for t=0 only)
+  //   initLookups (vars of type `lookup` only, called for t=0 only)
+  //   initData (vars of type `data` only, called for t=0 only)
+  //   initLevels (vars returned by `initVars`, a mix of initial, aux, and level vars,
+  //     called for t=0 only)
+  //   evalAux (vars of type `aux` only; called for t>=0)
+  //   evalLevels (vars of type `level` only; called before `evalAux` for t>0)
+  //
+  function expandedVarItems(vars) {
+    const expandedVars = []
+
+    for (const v of vars) {
+      // Filter out variables that are generated/used internally
+      if (v.includeInOutput === false) {
+        continue
+      }
+
+      const varInstances = expandVar(v)
+      for (const { varName, subIndices } of varInstances) {
+        const varId = canonicalVensimName(varName)
+        const varItem = {
+          varId,
+          varName,
+          varType: v.varType
+        }
+        const varInfo = infoMap.get(v.varName)
+        if (varInfo) {
+          varItem.varIndex = varInfo.varIndex
+          if (subIndices?.length > 0) {
+            varItem.subIndices = subIndices
+          }
+        }
+        expandedVars.push(varItem)
+      }
+    }
+
+    return expandedVars
+  }
+  const expandedConstants = expandedVarItems(constVars())
+  const expandedLookupVars = expandedVarItems(lookupVars())
+  const expandedDataVars = expandedVarItems(dataVars())
+  // The special exogenous `Time` variable may have already been removed by
+  // `removeUnusedVariables` if it is not referenced explicitly in the model,
+  // so we will only include it in the listing if it is defined here.  Note
+  // that `_time` is set to `_initial_time` as the first step in the
+  // `initLevels` function, which is why it is included in the "init" group.
+  const timeVar = varWithName('_time')
+  const specialInitVars = timeVar ? [timeVar] : []
+  const expandedInitVars = expandedVarItems([...specialInitVars, ...initVars()])
+  const expandedLevelVars = expandedVarItems(levelVars())
+  const expandedAuxVars = expandedVarItems(auxVars())
+
   // Derive minimal versions of the full arrays; these only contain the minimal
   // subset of fields that are needed by the `ModelListing` class from the
   // runtime package.  The property names in the minimal objects are slightly
@@ -1229,7 +1298,15 @@ function jsonList() {
   cachedJsonList = {
     full: {
       dimensions: sortedFullDims,
-      variables: sortedFullVars
+      variables: sortedFullVars,
+      varInstances: {
+        constants: expandedConstants,
+        lookupVars: expandedLookupVars,
+        dataVars: expandedDataVars,
+        initVars: expandedInitVars,
+        levelVars: expandedLevelVars,
+        auxVars: expandedAuxVars
+      }
     },
     minimal: {
       dimensions: sortedMinimalDims,
