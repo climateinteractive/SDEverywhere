@@ -8,6 +8,7 @@ import { parseVensimModel } from '@sdeverywhere/parse'
 import { readXlsx } from './_shared/helpers.js'
 import { readDat } from './_shared/read-dat.js'
 import { printSubscripts, yamlSubsList } from './_shared/subscript.js'
+import { cName } from './_shared/var-names.js'
 import Model from './model/model.js'
 import { getDirectSubscripts } from './model/read-subscripts.js'
 import { generateCode } from './generate/gen-code.js'
@@ -119,7 +120,7 @@ export function printNames(namesPathname, operation) {
   for (let line of lines) {
     if (line.length > 0) {
       if (operation === 'to-c') {
-        B.emitLine(Model.cName(line))
+        B.emitLine(cName(line))
       } else {
         B.emitLine(Model.vensimName(line))
       }
