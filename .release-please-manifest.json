@@ -1,8 +1,8 @@
 {
-  "packages/parse": "0.1.0",
-  "packages/compile": "0.7.19",
+  "packages/parse": "0.1.1",
+  "packages/compile": "0.7.20",
   "packages/build": "0.3.6",
-  "packages/cli": "0.7.26",
+  "packages/cli": "0.7.27",
   "packages/check-core": "0.1.2",
   "packages/check-ui-shell": "0.2.5",
   "packages/plugin-check": "0.3.9",
@@ -12,5 +12,5 @@
   "packages/plugin-worker": "0.2.7",
   "packages/runtime": "0.2.5",
   "packages/runtime-async": "0.2.5",
-  "packages/create": "0.2.18"
+  "packages/create": "0.2.19"
 }
