@@ -28,8 +28,8 @@ export function expandVar(v) {
 
   // Expand each subscript position to get the names of all subscripted variants
   const lhsVarDef = v.parsedEqn.lhs.varDef
-  const lhsSubIds = v.subscripts
-  if (lhsSubIds === undefined || lhsSubIds.length === 0) {
+  const lhsSubOrDimIds = v.subscripts
+  if (lhsSubOrDimIds === undefined || lhsSubOrDimIds.length === 0) {
     // No subscripts, so include a single variable name
     return [
       {
@@ -39,50 +39,26 @@ export function expandVar(v) {
   }
 
   // At each position, expand any dimensions or use a subscript (index) directly
-  const subOrDimNames = lhsSubIds.map(subOrDimId => {
-    const subOrDimObj = sub(subOrDimId)
-    if (subOrDimObj.modelName !== undefined) {
-      return subOrDimObj.modelName
-    } else {
-      // XXX: Currently, the object returned by `sub` will not include the `modelName`
-      // for subscripts (it's only defined for dimensions?), so if we don't have the
-      // `modelName`, find it using the parent dimension object
-      const dimObj = sub(subOrDimObj.family)
-      if (dimObj !== undefined) {
-        const subName = dimObj.modelValue[subOrDimObj.value]
-        if (subName !== undefined) {
-          return subName
-        } else {
-          throw new Error(`Failed to resolve name of subscript ${subOrDimId} for variable ${v.refId}`)
-        }
-      } else {
-        throw new Error(
-          `Failed to resolve dimension ${subOrDimObj.family} of subscript ${subOrDimId} for variable ${v.refId}`
-        )
-      }
-    }
-  })
-
-  return expandDims(lhsVarDef.varName, subOrDimNames)
+  return expandDims(lhsVarDef.varName, lhsSubOrDimIds)
 }
 
 /**
  * Return an array of all expanded subscript combinations.
  *
  * @param {string} baseVarName The base name of the variable.
- * @param {string[]} subOrDimNames The array of subscript or dimension names.
+ * @param {string[]} subOrDimIds The array of subscript or dimension IDs.
  * @returns {VarInstance[]} An array of `VarInstance` objects with string representations of
  * subscripted references, e.g., `'x[A1,B1]', 'x[A1,B2]', ...`.
  */
-function expandDims(baseVarName, subOrDimNames) {
+function expandDims(baseVarName, subOrDimIds) {
   // Expand the dimension for each position
-  const expanded = subOrDimNames.map(name => expandDim(name).flat(Infinity))
+  const expanded = subOrDimIds.map(id => expandSubSpecs(id).flat(Infinity))
 
   // Expand these into the set of all combinations of subscripts for the variable
   const origCombos = cartesianProductOf(expanded)
   return origCombos.map(combo => {
-    const subNames = combo.map(desc => desc.name).join(',')
-    const subIndices = combo.map(desc => desc.index)
+    const subNames = combo.map(spec => spec.name).join(',')
+    const subIndices = combo.map(spec => spec.index)
     return {
       varName: `${baseVarName}[${subNames}]`,
       subIndices
@@ -92,38 +68,72 @@ function expandDims(baseVarName, subOrDimNames) {
 
 /**
  * Pairs a subscript name with its index.
- * @typedef {Object} SubDesc
+ * @typedef {Object} SubSpec
  * @property {string} name The name of the subscript, e.g., "A1".
  * @property {number} index The subscript index relative to its parent dimension.
  */
 
 /**
- * Return an array containing all subscript (index) names in the given dimension.  If
- * the given name is a subscript, it will return a single-element array with that
- * subscript name.
+ * Return an array containing all subscript specs in the given dimension.  If
+ * the given ID is a subscript, it will return a single-element array with that
+ * subscript name and index.
  *
- * @param {string} subOrDimName A subscript or dimension name.
- * @returns {SubDesc[]} A (possibly nested) array of `SubDesc` objects.
+ * @param {string} subOrDimId A subscript or dimension ID (e.g., '_a1', '_dima').
+ * @returns {SubSpec[]} A (possibly nested) array of `SubSpec` objects.
  */
-function expandDim(subOrDimName) {
-  // Convert the name to an ID
-  const subOrDimId = canonicalName(subOrDimName)
-
+function expandSubSpecs(subOrDimId) {
   if (isDimension(subOrDimId)) {
     // Get the object for the dimension
     const dimObj = sub(subOrDimId)
 
     // The dimension may contain a mix of individual subscripts (indices) and/or subdimensions,
     // so recursively expand them
-    return dimObj.modelValue.map(expandDim)
+    return dimObj.value.map(expandSubSpecs)
   } else {
     // This is an individual subscript (index), so return its name and index value
+    // XXX: Currently, the object returned by `sub` will not include the `modelName`
+    // for subscripts (it's only defined for dimensions?), so if we don't have the
+    // `modelName`, find it using the parent dimension object.  This could be avoided
+    // if subscript objects maintained their original model name.
     const subObj = sub(subOrDimId)
+    const dimSubNames = expandSubNamesForDim(subObj.family).flat(Infinity)
+    const subName = dimSubNames[subObj.value]
+    if (subName === undefined) {
+      throw new Error(`Failed to resolve name of subscript ${subOrDimId} in dimension ${subObj.family}`)
+    }
     return [
       {
-        name: subOrDimName,
+        name: subName,
         index: subObj.value
       }
     ]
   }
+}
+
+/**
+ * Return an array containing all subscript (index) names in the given dimension,
+ * expanding subdimensions as needed.  If the given ID is a subscript, it will return
+ * single-element array with that subscript name.
+ *
+ * @param {string} dimId A dimension ID (e.g., '_dima').
+ * @returns {string[]} A (possibly nested) array of subscript names (e.g., 'A1').
+ */
+function expandSubNamesForDim(dimId) {
+  if (!isDimension(dimId)) {
+    throw new Error('expandSubNames should only be called with a dimension ID')
+  }
+
+  // Get the object for the dimension
+  const dimObj = sub(dimId)
+
+  // The dimension may contain a mix of individual subscripts (indices) and/or
+  // subdimensions, so recursively expand them
+  return dimObj.modelValue.map(subOrDimName => {
+    const subOrDimId = canonicalName(subOrDimName)
+    if (isDimension(subOrDimId)) {
+      return expandSubNamesForDim(subOrDimId)
+    } else {
+      return [subOrDimName]
+    }
+  })
 }

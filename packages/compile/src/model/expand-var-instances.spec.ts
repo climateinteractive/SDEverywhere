@@ -92,6 +92,33 @@ describe('expandVar', () => {
     ])
   })
 
+  it('should return instances for a subscripted 1D variable that refers to a mapped dimension', () => {
+    const vars = readInlineModel(`
+      DimA: SubA, A3 -> DimB ~~|
+      SubA: A1, A2 ~~|
+      DimB: B1, B2, B3 ~~|
+      X[DimA] = 1, 2, 3 ~~|
+    `)
+    expect(expandVar(vars[0])).toEqual([instance('X[A1]', [0])])
+    expect(expandVar(vars[1])).toEqual([instance('X[A2]', [1])])
+    expect(expandVar(vars[2])).toEqual([instance('X[A3]', [2])])
+  })
+
+  it('should return instances for a subscripted 1D variable that refers to an aliased dimension', () => {
+    const vars = readInlineModel(`
+      DimA <-> DimB ~~|
+      DimB: B1, B2, B3 ~~|
+      X[DimA] = 1, 2, 3 ~~|
+      Y[DimB] = 1, 2, 3 ~~|
+    `)
+    expect(expandVar(vars[0])).toEqual([instance('X[B1]', [0])])
+    expect(expandVar(vars[1])).toEqual([instance('X[B2]', [1])])
+    expect(expandVar(vars[2])).toEqual([instance('X[B3]', [2])])
+    expect(expandVar(vars[3])).toEqual([instance('Y[B1]', [0])])
+    expect(expandVar(vars[4])).toEqual([instance('Y[B2]', [1])])
+    expect(expandVar(vars[5])).toEqual([instance('Y[B3]', [2])])
+  })
+
   it('should return instances for a subscripted 2D non-apply-to-all variable (const list)', () => {
     const vars = readInlineModel(`
       DimA: A1, A2 ~~|
