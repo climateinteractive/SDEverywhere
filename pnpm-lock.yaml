@@ -4,9 +4,6 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
-overrides:
-  antlr4-vensim: climateinteractive/gitpkg-registry-public#antlr4-vensim-d95075f
-
 importers:
 
   .:
@@ -406,8 +403,8 @@ importers:
         specifier: 4.12.0
         version: 4.12.0
       antlr4-vensim:
-        specifier: climateinteractive/gitpkg-registry-public#antlr4-vensim-d95075f
-        version: github.com/climateinteractive/gitpkg-registry-public/3162ef2eedd46efc3008fdcfc9e54bfcab303aae
+        specifier: 0.6.3
+        version: 0.6.3
       assert-never:
         specifier: ^1.2.1
         version: 1.2.1
@@ -1871,6 +1868,12 @@ packages:
     resolution: {integrity: sha512-bN798gFfQX+viw3R7yrGWRqnrN2oRkEkUjjl4JNn4E8GxxbjtG3FbrEIIY3l8/hrwUwIeCZvi4QuOTP4MErVug==}
     engines: {node: '>=12'}
     dev: true
+
+  /antlr4-vensim@0.6.3:
+    resolution: {integrity: sha512-xDjUXNjeDEj2ahCFIIxOIlA6Jf/YtBMngugH1AyvVeg4qKttTFmof13j7lXvE24hHcW9sa0ACs6JmgR+/x8c+A==}
+    dependencies:
+      antlr4: 4.12.0
+    dev: false
 
   /antlr4@4.12.0:
     resolution: {integrity: sha512-23iB5IzXJZRZeK9TigzUyrNc9pSmNqAerJRBcNq1ETrmttMWRgaYZzC561IgEO3ygKsDJTYDTozABXa4b/fTQQ==}
@@ -5249,12 +5252,4 @@ packages:
     version: 0.20.2
     engines: {node: '>=0.8'}
     hasBin: true
-    dev: false
-
-  github.com/climateinteractive/gitpkg-registry-public/3162ef2eedd46efc3008fdcfc9e54bfcab303aae:
-    resolution: {tarball: https://codeload.github.com/climateinteractive/gitpkg-registry-public/tar.gz/3162ef2eedd46efc3008fdcfc9e54bfcab303aae}
-    name: antlr4-vensim
-    version: 0.6.2
-    dependencies:
-      antlr4: 4.12.0
     dev: false
