@@ -12,8 +12,28 @@ export type InputGroupName = string
 /** The alias name for an input. */
 export type InputAliasName = string
 
-/** The human-readable name for a group of dataset. */
+/** The human-readable name for a group of datasets. */
 export type DatasetGroupName = string
+
+/**
+ * Describes a group of implementation variables.
+ */
+export interface ImplVarGroup {
+  /** The group title. */
+  title: string
+  /**
+   * The function name in the generated model that is associated with
+   * this group.  This can be used when displaying the group to change
+   * the appearance of the items in the section.
+   */
+  fn?: string
+  /**
+   * The keys of the variables in this group (corresponding to the
+   * `implVars` map keys).  It is recommended to provide these in the
+   * order that the variables are evaluated in the generated model.
+   */
+  datasetKeys: DatasetKey[]
+}
 
 /**
  * Includes the properties needed to display a legend item in the UI.
@@ -102,6 +122,8 @@ export interface ModelSpec {
   outputVars: Map<DatasetKey, OutputVar>
   /** The map of all variables (both internal and exported) in this version of the model. */
   implVars: Map<DatasetKey, ImplVar>
+  /** The groupings of internal/implementation variables in this version of the model. */
+  implVarGroups?: ImplVarGroup[]
   /** The custom input variable aliases defined for this model. */
   inputAliases?: Map<InputAliasName, VarId>
   /** The custom input variable groups defined for this model. */

@@ -1,5 +1,7 @@
 // Copyright (c) 2021-2022 Climate Interactive / New Venture Fund
 
+import assertNever from 'assert-never'
+
 import type { Readable, Writable } from 'svelte/store'
 import { get, writable } from 'svelte/store'
 
@@ -12,14 +14,15 @@ import type { ComparisonGroupingKind } from './components/compare/_shared/compar
 import type { CompareDetailViewModel } from './components/compare/detail/compare-detail-vm'
 import { createCompareDetailViewModel } from './components/compare/detail/compare-detail-vm'
 import type { ComparisonSummaryRowViewModel } from './components/compare/summary/comparison-summary-row-vm'
+import type { ComparisonSummaryViewModel } from './components/compare/summary/comparison-summary-vm'
 import type { HeaderViewModel } from './components/header/header-vm'
 import { createHeaderViewModel } from './components/header/header-vm'
 import type { PerfViewModel } from './components/perf/perf-vm'
 import { createPerfViewModel } from './components/perf/perf-vm'
 import type { SummaryViewModel } from './components/summary/summary-vm'
 import { createSummaryViewModel } from './components/summary/summary-vm'
-import assertNever from 'assert-never'
-import type { ComparisonSummaryViewModel } from './components/compare/summary/comparison-summary-vm'
+import type { TraceViewModel } from './components/trace/trace-vm'
+import { createTraceViewModel } from './components/trace/trace-vm'
 
 export interface RunSuiteCallbacks {
   onProgress?: (pct: number) => void
@@ -177,6 +180,10 @@ export class AppViewModel {
 
   createPerfViewModel(): PerfViewModel {
     return createPerfViewModel(this.appModel.config)
+  }
+
+  createTraceViewModel(): TraceViewModel {
+    return createTraceViewModel(this.appModel.config)
   }
 }
 

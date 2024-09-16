@@ -3,18 +3,20 @@
 <!-- SCRIPT -->
 <script lang='ts'>
 
+import assertNever from 'assert-never'
 import FontFaceObserver from 'fontfaceobserver'
 
+import type { ComparisonGroupingKind } from './components/compare/_shared/comparison-grouping-kind'
 import ComparisonDetail from './components/compare/detail/compare-detail.svelte'
 import type { CompareDetailViewModel } from './components/compare/detail/compare-detail-vm'
 import Header from './components/header/header.svelte'
 import type { PerfViewModel } from './components/perf/perf-vm'
 import Perf from './components/perf/perf.svelte'
+import type { TraceViewModel } from './components/trace/trace-vm'
+import Trace from './components/trace/trace.svelte'
 import Summary from './components/summary/summary.svelte'
 
 import type { AppViewModel } from './app-vm'
-  import type { ComparisonGroupingKind } from './components/compare/_shared/comparison-grouping-kind'
-  import assertNever from 'assert-never'
 
 export let viewModel: AppViewModel
 const checksInProgress = viewModel.checksInProgress
@@ -22,8 +24,9 @@ const progress = viewModel.progress
 
 let compareDetailViewModel: CompareDetailViewModel
 let perfViewModel: PerfViewModel
+let traceViewModel: TraceViewModel
 
-type ViewMode = 'summary' | 'comparison-detail' | 'perf'
+type ViewMode = 'summary' | 'comparison-detail' | 'perf' | 'trace'
 let viewMode: ViewMode = 'summary'
 
 // Under normal circumstances, the font face used in graphs might not be fully
@@ -96,6 +99,16 @@ function onCommand(event: CustomEvent) {
   }
 }
 
+function onKeyDown(event: KeyboardEvent) {
+  if (event.key === 't') {
+    if (!traceViewModel) {
+      traceViewModel = viewModel.createTraceViewModel()
+    }
+    viewMode = 'trace'
+    event.preventDefault()
+  }
+}
+
 </script>
 
 
@@ -103,6 +116,8 @@ function onCommand(event: CustomEvent) {
 
 <!-- TEMPLATE -->
 <template lang='pug'>
+
+svelte:window(on:keydown!='{onKeyDown}')
 
 +await('viewReady')
   .loading-container
@@ -116,6 +131,8 @@ function onCommand(event: CustomEvent) {
           ComparisonDetail(on:command!='{onCommand}' viewModel!='{compareDetailViewModel}')
         +elseif('viewMode === "perf"')
           Perf(on:command!='{onCommand}' viewModel!='{perfViewModel}')
+        +elseif('viewMode === "trace"')
+          Trace(on:command!='{onCommand}' viewModel!='{traceViewModel}')
         +else
           Summary(on:command!='{onCommand}' viewModel!='{viewModel.summaryViewModel}')
 

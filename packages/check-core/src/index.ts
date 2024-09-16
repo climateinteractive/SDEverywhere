@@ -21,6 +21,7 @@ export type {
   BundleGraphView,
   BundleModel,
   DatasetGroupName,
+  ImplVarGroup,
   InputAliasName,
   InputGroupName,
   LegendItem,
@@ -115,6 +116,14 @@ export { PerfRunner } from './perf/perf-runner'
 
 export type { PerfReport } from './perf/perf-stats'
 export { PerfStats } from './perf/perf-stats'
+
+//
+// trace
+//
+
+export { TraceRunner } from './trace/trace-runner'
+
+export type { TraceDatasetReport, TraceReport } from './trace/trace-report'
 
 //
 // suite
