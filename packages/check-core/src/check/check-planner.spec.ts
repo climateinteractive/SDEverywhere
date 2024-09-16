@@ -10,7 +10,7 @@ import { parseTestYaml } from './check-parser'
 import type { CheckPlanPredicate } from './check-planner'
 import { CheckPlanner } from './check-planner'
 import type { CheckPredicateOp } from './check-predicate'
-import { dataset, dimension, implVar, outputVar } from './_mocks/mock-check-dataset'
+import { dataset, implVar, outputVar } from './_mocks/mock-check-dataset'
 import { datasetPlan, groupPlan, predPlan, scenarioPlan, testPlan } from './_mocks/mock-check-plan'
 import { allAtPos, inputAtPos, inputAtValue, inputVar } from './_mocks/mock-check-scenario'
 
@@ -20,7 +20,14 @@ describe('CheckPlanner', () => {
     dataSizeInBytes: 0,
     inputVars: new Map([inputVar('1', 'I1'), inputVar('2', 'I2')]),
     outputVars: new Map([outputVar('V1'), outputVar('V2[A1]')]),
-    implVars: new Map([implVar('V1'), implVar('V2', [dimension('A')]), implVar('V3'), implVar('V4', [dimension('A')])])
+    implVars: new Map([
+      implVar('V1'),
+      implVar('V2[A1]', [0]),
+      implVar('V2[A2]', [1]),
+      implVar('V3'),
+      implVar('V4[A1]', [0]),
+      implVar('V4[A2]', [1])
+    ])
   }
 
   const i1 = modelSpec.inputVars.get('_i1')
@@ -40,7 +47,8 @@ describe('CheckPlanner', () => {
       scenarios:
         - preset: matrix
       datasets:
-        - name: v4
+        - name: v4[a1]
+        - name: v4[A2]
       predicates:
         - gte: 2
         - lte: 4
@@ -105,40 +113,40 @@ describe('CheckPlanner', () => {
     const expectedGroup = JSON.parse(
       JSON.stringify(
         groupPlan('group1', [
-          testPlan('test1', [scenarioPlan(allAtPos('at-default'), [datasetPlan('Model', 'V1', [], predPlans1(1, 2))])]),
+          testPlan('test1', [scenarioPlan(allAtPos('at-default'), [datasetPlan('Model', 'V1', predPlans1(1, 2))])]),
           testPlan('test2', [
             scenarioPlan(allAtPos('at-default'), [
-              datasetPlan('ModelImpl', 'V4', ['A1'], predPlans2(3, 4)),
-              datasetPlan('ModelImpl', 'V4', ['A2'], predPlans2(5, 6))
+              datasetPlan('ModelImpl', 'V4[A1]', predPlans2(3, 4)),
+              datasetPlan('ModelImpl', 'V4[A2]', predPlans2(5, 6))
             ]),
             scenarioPlan(allAtPos('at-minimum'), [
-              datasetPlan('ModelImpl', 'V4', ['A1'], predPlans2(7, 8)),
-              datasetPlan('ModelImpl', 'V4', ['A2'], predPlans2(9, 10))
+              datasetPlan('ModelImpl', 'V4[A1]', predPlans2(7, 8)),
+              datasetPlan('ModelImpl', 'V4[A2]', predPlans2(9, 10))
             ]),
             scenarioPlan(allAtPos('at-maximum'), [
-              datasetPlan('ModelImpl', 'V4', ['A1'], predPlans2(11, 12)),
-              datasetPlan('ModelImpl', 'V4', ['A2'], predPlans2(13, 14))
+              datasetPlan('ModelImpl', 'V4[A1]', predPlans2(11, 12)),
+              datasetPlan('ModelImpl', 'V4[A2]', predPlans2(13, 14))
             ]),
             scenarioPlan(inputAtPos(i1, 'at-minimum'), [
-              datasetPlan('ModelImpl', 'V4', ['A1'], predPlans2(15, 16)),
-              datasetPlan('ModelImpl', 'V4', ['A2'], predPlans2(17, 18))
+              datasetPlan('ModelImpl', 'V4[A1]', predPlans2(15, 16)),
+              datasetPlan('ModelImpl', 'V4[A2]', predPlans2(17, 18))
             ]),
             scenarioPlan(inputAtPos(i1, 'at-maximum'), [
-              datasetPlan('ModelImpl', 'V4', ['A1'], predPlans2(19, 20)),
-              datasetPlan('ModelImpl', 'V4', ['A2'], predPlans2(21, 22))
+              datasetPlan('ModelImpl', 'V4[A1]', predPlans2(19, 20)),
+              datasetPlan('ModelImpl', 'V4[A2]', predPlans2(21, 22))
             ]),
             scenarioPlan(inputAtPos(i2, 'at-minimum'), [
-              datasetPlan('ModelImpl', 'V4', ['A1'], predPlans2(23, 24)),
-              datasetPlan('ModelImpl', 'V4', ['A2'], predPlans2(25, 26))
+              datasetPlan('ModelImpl', 'V4[A1]', predPlans2(23, 24)),
+              datasetPlan('ModelImpl', 'V4[A2]', predPlans2(25, 26))
             ]),
             scenarioPlan(inputAtPos(i2, 'at-maximum'), [
-              datasetPlan('ModelImpl', 'V4', ['A1'], predPlans2(27, 28)),
-              datasetPlan('ModelImpl', 'V4', ['A2'], predPlans2(29, 30))
+              datasetPlan('ModelImpl', 'V4[A1]', predPlans2(27, 28)),
+              datasetPlan('ModelImpl', 'V4[A2]', predPlans2(29, 30))
             ])
           ]),
-          testPlan('test3', [scenarioPlan(inputAtValue(i1, 75), [datasetPlan('ModelImpl', 'V3', [], predPlans3(31))])]),
-          testPlan('test4', [scenarioPlan(allAtPos('at-default'), [datasetPlan('Model', 'V1', [], predPlans4(32))])]),
-          testPlan('test5', [scenarioPlan(inputAtValue(i1, 75), [datasetPlan('Model', 'V1', [], predPlans5(33))])])
+          testPlan('test3', [scenarioPlan(inputAtValue(i1, 75), [datasetPlan('ModelImpl', 'V3', predPlans3(31))])]),
+          testPlan('test4', [scenarioPlan(allAtPos('at-default'), [datasetPlan('Model', 'V1', predPlans4(32))])]),
+          testPlan('test5', [scenarioPlan(inputAtValue(i1, 75), [datasetPlan('Model', 'V1', predPlans5(33))])])
         ])
       )
     )

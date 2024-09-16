@@ -30,7 +30,7 @@ export type {
   NamedBundle
 } from './bundle/bundle-types'
 
-export type { Dimension, ImplVar, InputId, InputVar, OutputVar, RelatedItem, Subscript } from './bundle/var-types'
+export type { ImplVar, InputId, InputVar, OutputVar, RelatedItem } from './bundle/var-types'
 
 //
 // check

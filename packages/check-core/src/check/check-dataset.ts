@@ -4,7 +4,6 @@ import type { DatasetKey } from '../_shared/types'
 import type { ModelSpec } from '../bundle/bundle-types'
 import type { CheckDatasetSpec } from './check-spec'
 import type { ImplVar, OutputVar } from '../bundle/var-types'
-import { cartesianProductOf } from '../_shared/combo'
 
 export type CheckDatasetError = 'no-matches-for-dataset' | 'no-matches-for-group' | 'no-matches-for-type'
 
@@ -63,7 +62,7 @@ export function expandDatasets(modelSpec: ModelSpec, datasetSpec: CheckDatasetSp
     ]
   }
 
-  // Expand dimensions for each match
+  // Convert matches to `CheckDataset` instances
   const matches: Match[] = result.matches
   const checkDatasets: CheckDataset[] = []
   for (const match of matches) {
@@ -74,29 +73,11 @@ export function expandDatasets(modelSpec: ModelSpec, datasetSpec: CheckDatasetSp
         name: match.outputVar.varName
       })
     } else if (match.implVar) {
-      // Impl vars with dimensions need to be expanded so that we have
-      // one dataset for each subscript combination
-      const implVar = match.implVar
-      if (implVar.dimensions.length > 0) {
-        // The variable is subscripted, so expand all combinations
-        const baseDatasetKey = match.datasetKey
-        const subscripts = [...implVar.dimensions.map(dim => dim.subscripts)]
-        const subscriptCombos = cartesianProductOf(subscripts)
-        for (const subscriptCombo of subscriptCombos) {
-          const subIdParts = subscriptCombo.map(sub => `[${sub.id}]`).join('')
-          const subNameParts = subscriptCombo.map(sub => sub.name).join(',')
-          checkDatasets.push({
-            datasetKey: `${baseDatasetKey}${subIdParts}`,
-            name: `${implVar.varName}[${subNameParts}]`
-          })
-        }
-      } else {
-        // The variable is not subscripted
-        checkDatasets.push({
-          datasetKey: match.datasetKey,
-          name: implVar.varName
-        })
-      }
+      // Impl vars are already expanded
+      checkDatasets.push({
+        datasetKey: match.datasetKey,
+        name: match.implVar.varName
+      })
     }
   }
 
