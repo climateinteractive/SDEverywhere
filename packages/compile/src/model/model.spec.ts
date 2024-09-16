@@ -69,7 +69,7 @@ function readInlineModel(
 
 describe('Model', () => {
   describe('jsonList', () => {
-    it('should expose accessible variables sorted in order of execution', () => {
+    it('should expose accessible variables sorted in order of evaluation', () => {
       const listing = readInlineModel(`
         DimA: A1, A2 ~~|
         DimB: B1, B2 ~~|
@@ -83,8 +83,12 @@ describe('Model', () => {
         b[DimA, DimB] = b data[DimA, DimB] ~~|
         c data ~~|
         c = c data ~~|
-        d[DimA] = 10, 11 ~~|
-        e = INITIAL(c) ~~|
+        d = INITIAL(c) ~~|
+        e[DimA] = 1 ~~|
+        f[DimA] = 10, 11 ~~|
+        g[DimA, DimB] = 1 ~~|
+        h[DimA, DimB] = 1, 2; 3, 4; ~~|
+        i lookup((0,0), (1,1)) ~~|
         level init = 5 ~~|
         level = INTEG(x, level init) ~~|
         w = WITH LOOKUP(x, ( [(0,0)-(2,2)], (0,0),(0.1,0.01),(0.5,0.7),(1,1),(1.5,1.2),(2,1.3) )) ~~|
@@ -154,28 +158,98 @@ describe('Model', () => {
             varIndex: 4
           },
           {
-            refId: '_d[_a1]',
-            varName: '_d',
+            refId: '_e',
+            varName: '_e',
+            subscripts: ['_dima'],
+            families: ['_dima'],
+            hasInitValue: false,
+            varType: 'const',
+            modelLHS: 'e[DimA]',
+            modelFormula: '1',
+            varIndex: 5
+          },
+          {
+            refId: '_f[_a1]',
+            varName: '_f',
             subscripts: ['_a1'],
             families: ['_dima'],
             hasInitValue: false,
             varType: 'const',
             separationDims: ['_dima'],
-            modelLHS: 'd[DimA]',
+            modelLHS: 'f[DimA]',
             modelFormula: '10,11',
-            varIndex: 5
+            varIndex: 6
           },
           {
-            refId: '_d[_a2]',
-            varName: '_d',
+            refId: '_f[_a2]',
+            varName: '_f',
             subscripts: ['_a2'],
             families: ['_dima'],
             hasInitValue: false,
             varType: 'const',
             separationDims: ['_dima'],
-            modelLHS: 'd[DimA]',
+            modelLHS: 'f[DimA]',
             modelFormula: '10,11',
-            varIndex: 5
+            varIndex: 6
+          },
+          {
+            refId: '_g',
+            varName: '_g',
+            subscripts: ['_dima', '_dimb'],
+            families: ['_dima', '_dimb'],
+            hasInitValue: false,
+            varType: 'const',
+            modelLHS: 'g[DimA,DimB]',
+            modelFormula: '1',
+            varIndex: 7
+          },
+          {
+            refId: '_h[_a1,_b1]',
+            varName: '_h',
+            subscripts: ['_a1', '_b1'],
+            families: ['_dima', '_dimb'],
+            hasInitValue: false,
+            varType: 'const',
+            separationDims: ['_dima', '_dimb'],
+            modelLHS: 'h[DimA,DimB]',
+            modelFormula: '1,2;3,4;',
+            varIndex: 8
+          },
+          {
+            refId: '_h[_a1,_b2]',
+            varName: '_h',
+            subscripts: ['_a1', '_b2'],
+            families: ['_dima', '_dimb'],
+            hasInitValue: false,
+            varType: 'const',
+            separationDims: ['_dima', '_dimb'],
+            modelLHS: 'h[DimA,DimB]',
+            modelFormula: '1,2;3,4;',
+            varIndex: 8
+          },
+          {
+            refId: '_h[_a2,_b1]',
+            varName: '_h',
+            subscripts: ['_a2', '_b1'],
+            families: ['_dima', '_dimb'],
+            hasInitValue: false,
+            varType: 'const',
+            separationDims: ['_dima', '_dimb'],
+            modelLHS: 'h[DimA,DimB]',
+            modelFormula: '1,2;3,4;',
+            varIndex: 8
+          },
+          {
+            refId: '_h[_a2,_b2]',
+            varName: '_h',
+            subscripts: ['_a2', '_b2'],
+            families: ['_dima', '_dimb'],
+            hasInitValue: false,
+            varType: 'const',
+            separationDims: ['_dima', '_dimb'],
+            modelLHS: 'h[DimA,DimB]',
+            modelFormula: '1,2;3,4;',
+            varIndex: 8
           },
           {
             refId: '_input',
@@ -184,7 +258,7 @@ describe('Model', () => {
             varType: 'const',
             modelLHS: 'input',
             modelFormula: '1',
-            varIndex: 6
+            varIndex: 9
           },
           {
             refId: '_level_init',
@@ -193,7 +267,16 @@ describe('Model', () => {
             varType: 'const',
             modelLHS: 'level init',
             modelFormula: '5',
-            varIndex: 7
+            varIndex: 10
+          },
+          {
+            refId: '_i_lookup',
+            varName: '_i_lookup',
+            hasInitValue: false,
+            varType: 'lookup',
+            modelLHS: 'i lookup',
+            modelFormula: '',
+            varIndex: 11
           },
           {
             refId: '_a_data',
@@ -204,7 +287,7 @@ describe('Model', () => {
             varType: 'data',
             modelLHS: 'a data[DimA]',
             modelFormula: '',
-            varIndex: 8
+            varIndex: 12
           },
           {
             refId: '_b_data',
@@ -215,7 +298,7 @@ describe('Model', () => {
             varType: 'data',
             modelLHS: 'b data[DimA,DimB]',
             modelFormula: '',
-            varIndex: 9
+            varIndex: 13
           },
           {
             refId: '_c_data',
@@ -224,7 +307,7 @@ describe('Model', () => {
             varType: 'data',
             modelLHS: 'c data',
             modelFormula: '',
-            varIndex: 10
+            varIndex: 14
           },
           {
             refId: '_time',
@@ -233,7 +316,7 @@ describe('Model', () => {
             varType: 'const',
             modelLHS: 'Time',
             modelFormula: '',
-            varIndex: 11
+            varIndex: 15
           },
           {
             refId: '_c',
@@ -243,17 +326,17 @@ describe('Model', () => {
             varType: 'aux',
             modelLHS: 'c',
             modelFormula: 'c data',
-            varIndex: 12
+            varIndex: 16
           },
           {
-            refId: '_e',
-            varName: '_e',
+            refId: '_d',
+            varName: '_d',
             hasInitValue: true,
             initReferences: ['_c'],
             varType: 'initial',
-            modelLHS: 'e',
+            modelLHS: 'd',
             modelFormula: 'INITIAL(c)',
-            varIndex: 13
+            varIndex: 17
           },
           {
             refId: '_level',
@@ -264,7 +347,7 @@ describe('Model', () => {
             varType: 'level',
             modelLHS: 'level',
             modelFormula: 'INTEG(x,level init)',
-            varIndex: 14
+            varIndex: 18
           },
           {
             refId: '_a',
@@ -276,7 +359,7 @@ describe('Model', () => {
             varType: 'aux',
             modelLHS: 'a[DimA]',
             modelFormula: 'a data[DimA]',
-            varIndex: 15
+            varIndex: 19
           },
           {
             refId: '_b',
@@ -288,7 +371,7 @@ describe('Model', () => {
             varType: 'aux',
             modelLHS: 'b[DimA,DimB]',
             modelFormula: 'b data[DimA,DimB]',
-            varIndex: 16
+            varIndex: 20
           },
           {
             refId: '_x',
@@ -298,7 +381,7 @@ describe('Model', () => {
             varType: 'aux',
             modelLHS: 'x',
             modelFormula: 'input',
-            varIndex: 17
+            varIndex: 21
           },
           {
             refId: '_w',
@@ -308,7 +391,7 @@ describe('Model', () => {
             varType: 'aux',
             modelLHS: 'w',
             modelFormula: 'WITH LOOKUP(x,([(0,0)-(2,2)],(0,0),(0.1,0.01),(0.5,0.7),(1,1),(1.5,1.2),(2,1.3)))',
-            varIndex: 18
+            varIndex: 22
           },
           {
             refId: '_y',
@@ -318,7 +401,7 @@ describe('Model', () => {
             varType: 'aux',
             modelLHS: 'y',
             modelFormula: ':NOT: x',
-            varIndex: 19
+            varIndex: 23
           },
           {
             refId: '_z',
@@ -328,9 +411,299 @@ describe('Model', () => {
             varType: 'aux',
             modelLHS: 'z',
             modelFormula: 'ABS(y)',
-            varIndex: 20
+            varIndex: 24
           }
-        ]
+        ],
+        varInstances: {
+          constants: [
+            {
+              varId: '_final_time',
+              varName: 'FINAL TIME',
+              varType: 'const',
+              varIndex: 1
+            },
+            {
+              varId: '_initial_time',
+              varName: 'INITIAL TIME',
+              varType: 'const',
+              varIndex: 2
+            },
+            {
+              varId: '_saveper',
+              varName: 'SAVEPER',
+              varType: 'const',
+              varIndex: 3
+            },
+            {
+              varId: '_time_step',
+              varName: 'TIME STEP',
+              varType: 'const',
+              varIndex: 4
+            },
+            {
+              varId: '_e[_a1]',
+              varName: 'e[A1]',
+              varType: 'const',
+              varIndex: 5,
+              subIndices: [0]
+            },
+            {
+              varId: '_e[_a2]',
+              varName: 'e[A2]',
+              varType: 'const',
+              varIndex: 5,
+              subIndices: [1]
+            },
+            {
+              varId: '_f[_a1]',
+              varName: 'f[A1]',
+              varType: 'const',
+              varIndex: 6,
+              subIndices: [0]
+            },
+            {
+              varId: '_f[_a2]',
+              varName: 'f[A2]',
+              varType: 'const',
+              varIndex: 6,
+              subIndices: [1]
+            },
+            {
+              varId: '_g[_a1,_b1]',
+              varName: 'g[A1,B1]',
+              varType: 'const',
+              varIndex: 7,
+              subIndices: [0, 0]
+            },
+            {
+              varId: '_g[_a1,_b2]',
+              varName: 'g[A1,B2]',
+              varType: 'const',
+              varIndex: 7,
+              subIndices: [0, 1]
+            },
+            {
+              varId: '_g[_a2,_b1]',
+              varName: 'g[A2,B1]',
+              varType: 'const',
+              varIndex: 7,
+              subIndices: [1, 0]
+            },
+            {
+              varId: '_g[_a2,_b2]',
+              varName: 'g[A2,B2]',
+              varType: 'const',
+              varIndex: 7,
+              subIndices: [1, 1]
+            },
+            {
+              varId: '_h[_a1,_b1]',
+              varName: 'h[A1,B1]',
+              varType: 'const',
+              varIndex: 8,
+              subIndices: [0, 0]
+            },
+            {
+              varId: '_h[_a1,_b2]',
+              varName: 'h[A1,B2]',
+              varType: 'const',
+              varIndex: 8,
+              subIndices: [0, 1]
+            },
+            {
+              varId: '_h[_a2,_b1]',
+              varName: 'h[A2,B1]',
+              varType: 'const',
+              varIndex: 8,
+              subIndices: [1, 0]
+            },
+            {
+              varId: '_h[_a2,_b2]',
+              varName: 'h[A2,B2]',
+              varType: 'const',
+              varIndex: 8,
+              subIndices: [1, 1]
+            },
+            {
+              varId: '_input',
+              varName: 'input',
+              varType: 'const',
+              varIndex: 9
+            },
+            {
+              varId: '_level_init',
+              varName: 'level init',
+              varType: 'const',
+              varIndex: 10
+            }
+          ],
+          lookupVars: [
+            {
+              varId: '_i_lookup',
+              varName: 'i lookup',
+              varType: 'lookup',
+              varIndex: 11
+            }
+          ],
+          dataVars: [
+            {
+              varId: '_a_data[_a1]',
+              varName: 'a data[A1]',
+              varType: 'data',
+              varIndex: 12,
+              subIndices: [0]
+            },
+            {
+              varId: '_a_data[_a2]',
+              varName: 'a data[A2]',
+              varType: 'data',
+              varIndex: 12,
+              subIndices: [1]
+            },
+            {
+              varId: '_b_data[_a1,_b1]',
+              varName: 'b data[A1,B1]',
+              varType: 'data',
+              varIndex: 13,
+              subIndices: [0, 0]
+            },
+            {
+              varId: '_b_data[_a1,_b2]',
+              varName: 'b data[A1,B2]',
+              varType: 'data',
+              varIndex: 13,
+              subIndices: [0, 1]
+            },
+            {
+              varId: '_b_data[_a2,_b1]',
+              varName: 'b data[A2,B1]',
+              varType: 'data',
+              varIndex: 13,
+              subIndices: [1, 0]
+            },
+            {
+              varId: '_b_data[_a2,_b2]',
+              varName: 'b data[A2,B2]',
+              varType: 'data',
+              varIndex: 13,
+              subIndices: [1, 1]
+            },
+            {
+              varId: '_c_data',
+              varName: 'c data',
+              varType: 'data',
+              varIndex: 14
+            }
+          ],
+          initVars: [
+            {
+              varId: '_time',
+              varName: 'Time',
+              varType: 'const',
+              varIndex: 15
+            },
+            {
+              varId: '_c',
+              varName: 'c',
+              varType: 'aux',
+              varIndex: 16
+            },
+            {
+              varId: '_d',
+              varName: 'd',
+              varType: 'initial',
+              varIndex: 17
+            },
+            {
+              varId: '_level',
+              varName: 'level',
+              varType: 'level',
+              varIndex: 18
+            }
+          ],
+          levelVars: [
+            {
+              varId: '_level',
+              varName: 'level',
+              varType: 'level',
+              varIndex: 18
+            }
+          ],
+          auxVars: [
+            {
+              varId: '_a[_a1]',
+              varName: 'a[A1]',
+              varType: 'aux',
+              varIndex: 19,
+              subIndices: [0]
+            },
+            {
+              varId: '_a[_a2]',
+              varName: 'a[A2]',
+              varType: 'aux',
+              varIndex: 19,
+              subIndices: [1]
+            },
+            {
+              varId: '_b[_a1,_b1]',
+              varName: 'b[A1,B1]',
+              varType: 'aux',
+              varIndex: 20,
+              subIndices: [0, 0]
+            },
+            {
+              varId: '_b[_a1,_b2]',
+              varName: 'b[A1,B2]',
+              varType: 'aux',
+              varIndex: 20,
+              subIndices: [0, 1]
+            },
+            {
+              varId: '_b[_a2,_b1]',
+              varName: 'b[A2,B1]',
+              varType: 'aux',
+              varIndex: 20,
+              subIndices: [1, 0]
+            },
+            {
+              varId: '_b[_a2,_b2]',
+              varName: 'b[A2,B2]',
+              varType: 'aux',
+              varIndex: 20,
+              subIndices: [1, 1]
+            },
+            {
+              varId: '_c',
+              varName: 'c',
+              varType: 'aux',
+              varIndex: 16
+            },
+            {
+              varId: '_x',
+              varName: 'x',
+              varType: 'aux',
+              varIndex: 21
+            },
+            {
+              varId: '_w',
+              varName: 'w',
+              varType: 'aux',
+              varIndex: 22
+            },
+            {
+              varId: '_y',
+              varName: 'y',
+              varType: 'aux',
+              varIndex: 23
+            },
+            {
+              varId: '_z',
+              varName: 'z',
+              varType: 'aux',
+              varIndex: 24
+            }
+          ]
+        }
       })
 
       expect(listing.minimal).toEqual({
@@ -362,73 +735,92 @@ describe('Model', () => {
             index: 4
           },
           {
-            id: '_d',
+            id: '_e',
             dimIds: ['_dima'],
             index: 5
           },
           {
-            id: '_input',
+            id: '_f',
+            dimIds: ['_dima'],
             index: 6
           },
           {
-            id: '_level_init',
+            id: '_g',
+            dimIds: ['_dima', '_dimb'],
             index: 7
+          },
+          {
+            id: '_h',
+            dimIds: ['_dima', '_dimb'],
+            index: 8
+          },
+          {
+            id: '_input',
+            index: 9
+          },
+          {
+            id: '_level_init',
+            index: 10
+          },
+          {
+            id: '_i_lookup',
+            index: 11
           },
           {
             id: '_a_data',
             dimIds: ['_dima'],
-            index: 8
+            index: 12
           },
           {
             id: '_b_data',
             dimIds: ['_dima', '_dimb'],
-            index: 9
-          },
-          {
-            id: '_c_data',
-            index: 10
-          },
-          {
-            id: '_time',
-            index: 11
-          },
-          {
-            id: '_c',
-            index: 12
-          },
-          {
-            id: '_e',
             index: 13
           },
           {
-            id: '_level',
+            id: '_c_data',
             index: 14
+          },
+          {
+            id: '_time',
+            index: 15
+          },
+          {
+            id: '_c',
+            index: 16
+          },
+          {
+            id: '_d',
+            index: 17
+          },
+          {
+            id: '_level',
+            index: 18
           },
           {
             id: '_a',
             dimIds: ['_dima'],
-            index: 15
+            index: 19
           },
           {
             id: '_b',
             dimIds: ['_dima', '_dimb'],
-            index: 16
+            index: 20
           },
           {
             id: '_x',
-            index: 17
+            index: 21
           },
           {
             id: '_w',
-            index: 18
+            index: 22
           },
           {
             id: '_y',
-            index: 19
+            index: 23
           },
           {
             id: '_z',
-            index: 20
+            index: 24
           }
         ]
       })

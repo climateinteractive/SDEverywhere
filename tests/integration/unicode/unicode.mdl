@@ -1,0 +1,16 @@
+{UTF-8}
+
+中文变量名 X = TIME ~~|
+
+中文变量名 Y = 0
+  ~ [-10,10,0.1]
+  ~
+  |
+
+中文输出变量 Z = 中文变量名 X + 中文变量名 Y
+  ~~|
+
+INITIAL TIME = 2000 ~~|
+FINAL TIME = 2002 ~~|
+TIME STEP = 1 ~~|
+SAVEPER = TIME STEP ~~|
