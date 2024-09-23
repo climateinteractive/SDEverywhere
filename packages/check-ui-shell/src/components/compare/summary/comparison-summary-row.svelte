@@ -4,21 +4,28 @@
 <script lang='ts'>
 
 import { createEventDispatcher } from 'svelte'
+import Icon from 'svelte-awesome/components/Icon.svelte'
+import { faThumbtack } from '@fortawesome/free-solid-svg-icons'
 
 import type { ComparisonSummaryRowViewModel } from './comparison-summary-row-vm'
 
 export let viewModel: ComparisonSummaryRowViewModel
 const bucketPcts = viewModel.diffPercentByBucket
+const pinned = viewModel.pinned
 
 const dispatch = createEventDispatcher()
 
 function onLinkClicked() {
-  if (viewModel.groupKey) {
+  if (viewModel.key) {
     dispatch('command', {
       cmd: 'show-comparison-detail',
       summaryRow: viewModel
     })
   }
+}
+
+function onTogglePinned() {
+  dispatch('toggle-item-pinned')
 }
 
 </script>
@@ -35,6 +42,11 @@ function onLinkClicked() {
     .header-title { @html viewModel.title }
   +else
     .summary-row
+      +if('pinned')
+        .pin-button(class:pinned!='{$pinned}' on:click!='{onTogglePinned}')
+          Icon(class='pin-icon' data!='{faThumbtack}')
+        +else
+          .pin-button-placeholder
       .bar-container(on:click!='{onLinkClicked}')
         +if('viewModel.diffPercentByBucket === undefined')
           .bar.striped
@@ -63,6 +75,10 @@ function onLinkClicked() {
 <!-- STYLE -->
 <style lang='sass'>
 
+$bar-width: 13rem
+$icon-size: .8rem
+$icon-margin: .4rem
+
 .summary-row
   display: flex
   flex-direction: row
@@ -77,7 +93,7 @@ function onLinkClicked() {
 .bar-container
   display: flex
   flex-direction: row
-  width: 20rem
+  width: $bar-width
   height: .8rem
   margin-bottom: .25rem
   cursor: pointer
@@ -88,6 +104,21 @@ function onLinkClicked() {
 .bar.striped
   width: 100%
   background: repeating-linear-gradient(-45deg, goldenrod, goldenrod .4rem, darkgoldenrod .4rem, darkgoldenrod 1rem)
+
+.pin-button
+  margin-right: $icon-margin
+  cursor: pointer
+  color: #555
+
+.pin-button.pinned
+  color: #ccc
+
+.pin-button :global(.pin-icon)
+  width: $icon-size
+  height: $icon-size
+
+.pin-button-placeholder
+  width: $icon-size + $icon-margin
 
 .title-container
   display: flex
@@ -140,7 +171,7 @@ function onLinkClicked() {
 // XXX: Merge with other bar classes
 .header-bar
   display: flex
-  width: 20rem
+  width: $bar-width + $icon-size + $icon-margin
   height: 1px
   background-color: #555
 

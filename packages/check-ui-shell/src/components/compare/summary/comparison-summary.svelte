@@ -4,11 +4,30 @@
 <script lang='ts'>
 
 import { createEventDispatcher } from 'svelte'
+import { flip } from 'svelte/animate'
+import { dndzone } from 'svelte-dnd-action'
 
+import PinnedSection from './comparison-summary-pinned.svelte'
+import type { ComparisonSummaryRowViewModel } from './comparison-summary-row-vm'
 import SummaryRow from './comparison-summary-row.svelte'
 import type { ComparisonSummaryViewModel } from './comparison-summary-vm'
 
 export let viewModel: ComparisonSummaryViewModel
+const pinnedKind = viewModel.kind === 'by-item' && viewModel.itemKind === 'scenario' ? 'scenarios' : 'outputs'
+const pinnedTitle = `Pinned ${pinnedKind}…`
+const pinnedRows = viewModel.kind === 'by-item' ? viewModel.pinnedRows : undefined
+
+function onToggleItemPinned(row: ComparisonSummaryRowViewModel): void {
+  if (viewModel.kind === 'by-item') {
+    viewModel.toggleItemPinned(row)
+  }
+}
+
+function onPinnedItemsReordered(rows: ComparisonSummaryRowViewModel[]): void {
+  if (viewModel.kind === 'by-item') {
+    viewModel.setPinnedItems(rows)
+  }
+}
 
 </script>
 
@@ -23,18 +42,16 @@ include comparison-summary.pug
 .comparison-summary-container
   +if('viewModel.kind === "views"')
     +view-group-sections
-    +elseif('viewModel.kind === "by-scenario"')
-      +section('scenariosWithErrors')
-      +section('scenariosOnlyInLeft')
-      +section('scenariosOnlyInRight')
-      +section('scenariosWithDiffs')
-      +section('scenariosWithoutDiffs')
-    +elseif('viewModel.kind === "by-dataset"')
-      +section('datasetsWithErrors')
-      +section('datasetsOnlyInLeft')
-      +section('datasetsOnlyInRight')
-      +section('datasetsWithDiffs')
-      +section('datasetsWithoutDiffs')
+    +else
+      +if('$pinnedRows.length > 0')
+        .section-container
+          SummaryRow(viewModel!=`{{ title: pinnedTitle, header: true }}`)
+          PinnedSection(rows!='{viewModel.pinnedRows}' on:toggle!='{e => onToggleItemPinned(e.detail.row)}' on:reordered!='{e => onPinnedItemsReordered(e.detail.rows)}')
+      +section('withErrors')
+      +section('onlyInLeft')
+      +section('onlyInRight')
+      +section('withDiffs')
+      +section('withoutDiffs')
   .footer
 
 </template>
