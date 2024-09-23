@@ -1,5 +1,11 @@
 {
   "eslint.workingDirectories": ["./packages/*"],
+  // XXX: Silence some Svelte warnings until they can be investigated further
+  "svelte.plugin.svelte.compilerWarnings": {
+    "a11y-click-events-have-key-events": "ignore",
+    "a11y-no-noninteractive-tabindex": "ignore",
+    "a11y-no-static-element-interactions": "ignore"
+  },
   "psi-header.config": {
     "forceToTop": true,
     "company": "Climate Interactive / New Venture Fund"
