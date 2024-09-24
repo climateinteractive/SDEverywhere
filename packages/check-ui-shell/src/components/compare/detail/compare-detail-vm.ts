@@ -9,9 +9,11 @@ import type {
   ComparisonDataset,
   ComparisonGroupSummary,
   ComparisonScenario,
+  ComparisonScenarioKey,
   ComparisonTestSummary,
   ComparisonView,
   ComparisonViewGroup,
+  DatasetKey,
   GraphComparisonReport,
   LoadedBundle
 } from '@sdeverywhere/check-core'
@@ -25,7 +27,7 @@ import type { ComparisonDetailItem } from './compare-detail-item'
 import { groupItemsByTitle } from './compare-detail-item'
 
 import type { CompareDetailRowViewModel } from './compare-detail-row-vm'
-import { createCompareDetailRowViewModel } from './compare-detail-row-vm'
+import { createCompareDetailRowViewModel, createCompareDetailSeparatorRowViewModel } from './compare-detail-row-vm'
 
 import type { CompareGraphsRowViewModel } from './compare-graphs-row-vm'
 import { createCompareGraphsRowViewModel } from './compare-graphs-row-vm'
@@ -74,11 +76,18 @@ export function createCompareDetailViewModel(
   dataCoordinator: ComparisonDataCoordinator,
   groupSummary: ComparisonGroupSummary,
   viewGroup: ComparisonViewGroup | undefined,
-  view: ComparisonView | undefined
+  view: ComparisonView | undefined,
+  pinnedItemKeys: string[] | undefined
 ): CompareDetailViewModel {
   switch (groupSummary.group.kind) {
     case 'by-dataset':
-      return createCompareDetailViewModelForDataset(summaryRowKey, comparisonConfig, dataCoordinator, groupSummary)
+      return createCompareDetailViewModelForDataset(
+        summaryRowKey,
+        comparisonConfig,
+        dataCoordinator,
+        groupSummary,
+        pinnedItemKeys
+      )
     case 'by-scenario':
       return createCompareDetailViewModelForScenario(
         summaryRowKey,
@@ -86,7 +95,8 @@ export function createCompareDetailViewModel(
         dataCoordinator,
         groupSummary,
         viewGroup,
-        view
+        view,
+        pinnedItemKeys
       )
     default:
       assertNever(groupSummary.group.kind)
@@ -97,7 +107,8 @@ function createCompareDetailViewModelForDataset(
   summaryRowKey: string,
   comparisonConfig: ComparisonConfig,
   dataCoordinator: ComparisonDataCoordinator,
-  groupSummary: ComparisonGroupSummary
+  groupSummary: ComparisonGroupSummary,
+  pinnedScenarioKeys: ComparisonScenarioKey[] | undefined
 ): CompareDetailViewModel {
   const bundleNameL = comparisonConfig.bundleL.name
   const bundleNameR = comparisonConfig.bundleR.name
@@ -166,6 +177,49 @@ function createCompareDetailViewModelForDataset(
     detailRows.unshift(allInputsRow)
   }
 
+  // Add rows at the top of the view for the pinned items
+  type GroupTitleAndDetailItem = [string, ComparisonDetailItem]
+  function groupTitleAndDetailItemForScenarioKey(
+    scenarioKey: ComparisonScenarioKey
+  ): GroupTitleAndDetailItem | undefined {
+    // TODO: Improve efficiency of looking up detail items
+    for (const group of groups) {
+      for (const item of group.items) {
+        if (item.scenario.key === scenarioKey) {
+          return [group.title, item]
+        }
+      }
+    }
+    return undefined
+  }
+  if (pinnedScenarioKeys?.length > 0) {
+    const pinnedDetailRows: CompareDetailRowViewModel[] = []
+    for (const scenarioKey of pinnedScenarioKeys) {
+      // Find the item for this scenario key
+      const item = groupTitleAndDetailItemForScenarioKey(scenarioKey)
+      if (item) {
+        pinnedDetailRows.push(
+          createCompareDetailRowViewModel(
+            comparisonConfig,
+            dataCoordinator,
+            'scenarios',
+            item[0],
+            undefined, // TODO: Subtitle?
+            [item[1]]
+          )
+        )
+      }
+    }
+    // TODO: If the test config customizes which scenarios are displayed in this detail view,
+    // the pinned scenarios may not be available.  For now, in this case, we won't show any
+    // pinned scenarios, but should we?  Or at least show an empty row to keep a consistent
+    // position?
+    if (pinnedDetailRows.length > 0) {
+      pinnedDetailRows.push(createCompareDetailSeparatorRowViewModel())
+      detailRows.unshift(...pinnedDetailRows)
+    }
+  }
+
   return {
     kind: 'by-dataset',
     summaryRowKey,
@@ -185,7 +239,8 @@ function createCompareDetailViewModelForScenario(
   dataCoordinator: ComparisonDataCoordinator,
   groupSummary: ComparisonGroupSummary,
   viewGroup: ComparisonViewGroup | undefined,
-  view: ComparisonView | undefined
+  view: ComparisonView | undefined,
+  pinnedDatasetKeys: DatasetKey[] | undefined
 ): CompareDetailViewModel {
   const bundleNameL = comparisonConfig.bundleL.name
   const bundleNameR = comparisonConfig.bundleR.name
@@ -231,6 +286,7 @@ function createCompareDetailViewModelForScenario(
   // Create one box/row for each dataset in the group
   interface Row {
     viewModel: CompareDetailRowViewModel
+    detailItem: ComparisonDetailItem
     maxDiff: number
   }
   const rows: Row[] = []
@@ -262,6 +318,7 @@ function createCompareDetailViewModelForScenario(
 
     rows.push({
       viewModel: rowViewModel,
+      detailItem,
       maxDiff: testSummary.md
     })
   }
@@ -281,7 +338,35 @@ function createCompareDetailViewModelForScenario(
       return aDatasetName.localeCompare(bDatasetName)
     }
   })
-  const detailRows = sortedRows.map(row => row.viewModel)
+  const normalDetailRows = sortedRows.map(row => row.viewModel)
+
+  // Add rows at the top of the view for the pinned items
+  function detailRowForDatasetKey(datasetKey: DatasetKey): Row | undefined {
+    // TODO: Improve efficiency of looking up detail items
+    for (const row of rows) {
+      if (row.detailItem.testSummary.d === datasetKey) {
+        return row
+      }
+    }
+    return undefined
+  }
+  const pinnedDetailRows: CompareDetailRowViewModel[] = []
+  if (pinnedDatasetKeys?.length > 0) {
+    for (const datasetKey of pinnedDatasetKeys) {
+      // Find the item for this dataset key
+      const detailRow = detailRowForDatasetKey(datasetKey)
+      if (detailRow) {
+        pinnedDetailRows.push(detailRow.viewModel)
+      }
+    }
+    if (pinnedDetailRows.length > 0) {
+      pinnedDetailRows.push(createCompareDetailSeparatorRowViewModel())
+    }
+  }
+
+  // Add the normal rows after the pinned rows
+  const detailRows = pinnedDetailRows.length > 0 ? pinnedDetailRows : []
+  detailRows.push(...normalDetailRows)
 
   // Add the compared graphs at top, if defined for the given view
   let graphSections: CompareGraphsSectionViewModel[]

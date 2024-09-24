@@ -227,4 +227,10 @@ ul
 .row-container:first-child
   margin-top: 3rem
 
+.separator
+  width: 100%
+  min-height: 1px
+  margin: 2rem 0 5rem 0
+  background-color: #888
+
 </style>

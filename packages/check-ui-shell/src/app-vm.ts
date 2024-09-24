@@ -14,7 +14,10 @@ import type { ComparisonGroupingKind } from './components/compare/_shared/compar
 import type { CompareDetailViewModel } from './components/compare/detail/compare-detail-vm'
 import { createCompareDetailViewModel } from './components/compare/detail/compare-detail-vm'
 import type { ComparisonSummaryRowViewModel } from './components/compare/summary/comparison-summary-row-vm'
-import type { ComparisonSummaryViewModel } from './components/compare/summary/comparison-summary-vm'
+import type {
+  ComparisonsByItemSummaryViewModel,
+  ComparisonSummaryViewModel
+} from './components/compare/summary/comparison-summary-vm'
 import type { HeaderViewModel } from './components/header/header-vm'
 import { createHeaderViewModel } from './components/header/header-vm'
 import type { PerfViewModel } from './components/perf/perf-vm'
@@ -127,13 +130,25 @@ export class AppViewModel {
     const viewGroup = summaryRowViewModel.viewMetadata?.viewGroup
     const view = summaryRowViewModel.viewMetadata?.view
 
+    let summaryViewModel: ComparisonsByItemSummaryViewModel
+    if (groupSummary.group.kind === 'by-dataset') {
+      // Show pinned scenarios at the top of the detail view
+      summaryViewModel = this.summaryViewModel
+        .comparisonsByScenarioSummaryViewModel as ComparisonsByItemSummaryViewModel
+    } else {
+      // Show pinned datasets at the top of the detail view
+      summaryViewModel = this.summaryViewModel.comparisonsByDatasetSummaryViewModel as ComparisonsByItemSummaryViewModel
+    }
+    const pinnedItemKeys = get(summaryViewModel.pinnedRows).map(row => row.key.replace('pinned_', ''))
+
     return createCompareDetailViewModel(
       summaryRowViewModel.key,
       this.appModel.config.comparison,
       this.appModel.comparisonDataCoordinator,
       groupSummary,
       viewGroup,
-      view
+      view,
+      pinnedItemKeys
     )
   }
 
