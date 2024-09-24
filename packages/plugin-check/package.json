@@ -46,7 +46,7 @@
     "assert-never": "^1.2.1",
     "chokidar": "^3.5.3",
     "picocolors": "^1.0.0",
-    "rollup": "^2.76.0",
+    "rollup": "^3.29.5",
     "vite": "5.4.2"
   },
   "dependenciesComments": {
