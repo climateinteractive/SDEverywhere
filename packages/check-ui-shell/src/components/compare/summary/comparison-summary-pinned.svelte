@@ -40,7 +40,9 @@ function onDndFinalize(e: CustomEvent): void {
 }
 
 function onToggleItemPinned(row: ComparisonSummaryRowViewModel): void {
-  dispatch('toggle', { row })
+  dispatch('toggle', {
+    row
+  })
 }
 
 </script>

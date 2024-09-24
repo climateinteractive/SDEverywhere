@@ -48,6 +48,8 @@ export interface CompareAllGraphsSections {
 
 export interface CompareDetailViewModel {
   kind: ComparisonGroupingKind
+  /** The unique key for the associated summary view row. */
+  summaryRowKey: string
   /** The pretitle (e.g., view group title). */
   pretitle?: string
   /** The title (e.g., output variable name, scenario title, view title). */
@@ -56,10 +58,6 @@ export interface CompareDetailViewModel {
   subtitle?: string
   /** A string containing HTML `<span>` elements for annotations. */
   annotations?: string
-  /** The index of the row before this one. */
-  previousRowIndex?: number
-  /** The index of the row after this one. */
-  nextRowIndex?: number
   /** The string displayed above the list of related items. */
   relatedListHeader: string
   /** The related items for the dataset or scenario. */
@@ -71,32 +69,24 @@ export interface CompareDetailViewModel {
 }
 
 export function createCompareDetailViewModel(
+  summaryRowKey: string,
   comparisonConfig: ComparisonConfig,
   dataCoordinator: ComparisonDataCoordinator,
   groupSummary: ComparisonGroupSummary,
   viewGroup: ComparisonViewGroup | undefined,
-  view: ComparisonView | undefined,
-  previousRowIndex: number | undefined,
-  nextRowIndex: number | undefined
+  view: ComparisonView | undefined
 ): CompareDetailViewModel {
   switch (groupSummary.group.kind) {
     case 'by-dataset':
-      return createCompareDetailViewModelForDataset(
-        comparisonConfig,
-        dataCoordinator,
-        groupSummary,
-        previousRowIndex,
-        nextRowIndex
-      )
+      return createCompareDetailViewModelForDataset(summaryRowKey, comparisonConfig, dataCoordinator, groupSummary)
     case 'by-scenario':
       return createCompareDetailViewModelForScenario(
+        summaryRowKey,
         comparisonConfig,
         dataCoordinator,
         groupSummary,
         viewGroup,
-        view,
-        previousRowIndex,
-        nextRowIndex
+        view
       )
     default:
       assertNever(groupSummary.group.kind)
@@ -104,11 +94,10 @@ export function createCompareDetailViewModel(
 }
 
 function createCompareDetailViewModelForDataset(
+  summaryRowKey: string,
   comparisonConfig: ComparisonConfig,
   dataCoordinator: ComparisonDataCoordinator,
-  groupSummary: ComparisonGroupSummary,
-  previousRowIndex: number | undefined,
-  nextRowIndex: number | undefined
+  groupSummary: ComparisonGroupSummary
 ): CompareDetailViewModel {
   const bundleNameL = comparisonConfig.bundleL.name
   const bundleNameR = comparisonConfig.bundleR.name
@@ -179,11 +168,10 @@ function createCompareDetailViewModelForDataset(
 
   return {
     kind: 'by-dataset',
+    summaryRowKey,
     title,
     subtitle,
     annotations,
-    previousRowIndex,
-    nextRowIndex,
     relatedListHeader: 'Appears in:',
     relatedItems,
     graphSections: [],
@@ -192,13 +180,12 @@ function createCompareDetailViewModelForDataset(
 }
 
 function createCompareDetailViewModelForScenario(
+  summaryRowKey: string,
   comparisonConfig: ComparisonConfig,
   dataCoordinator: ComparisonDataCoordinator,
   groupSummary: ComparisonGroupSummary,
   viewGroup: ComparisonViewGroup | undefined,
-  view: ComparisonView | undefined,
-  previousRowIndex: number | undefined,
-  nextRowIndex: number | undefined
+  view: ComparisonView | undefined
 ): CompareDetailViewModel {
   const bundleNameL = comparisonConfig.bundleL.name
   const bundleNameR = comparisonConfig.bundleR.name
@@ -307,12 +294,11 @@ function createCompareDetailViewModelForScenario(
 
   return {
     kind,
+    summaryRowKey,
     pretitle,
     title,
     subtitle,
     annotations,
-    previousRowIndex,
-    nextRowIndex,
     relatedListHeader: 'Related items:',
     relatedItems,
     graphSections,

@@ -27,22 +27,12 @@ const dispatch = createEventDispatcher()
 function onNavLink(cmd: string) {
   switch (cmd) {
     case 'detail-previous':
-      if (viewModel.previousRowIndex !== undefined) {
-        dispatch('command', {
-          cmd: 'show-comparison-detail-at-index',
-          kind: viewModel.kind,
-          index: viewModel.previousRowIndex
-        })
-      }
-      break
     case 'detail-next':
-      if (viewModel.nextRowIndex !== undefined) {
-        dispatch('command', {
-          cmd: 'show-comparison-detail-at-index',
-          kind: viewModel.kind,
-          index: viewModel.nextRowIndex
-        })
-      }
+      dispatch('command', {
+        cmd: cmd === 'detail-previous' ? 'show-comparison-detail-for-previous' : 'show-comparison-detail-for-next',
+        kind: viewModel.kind,
+        summaryRowKey: viewModel.summaryRowKey
+      })
       break
     default:
       dispatch('command', { cmd })
@@ -100,9 +90,9 @@ svelte:window(on:keydown!='{onKeyDown}')
             .annotations { @html viewModel.annotations }
       .spacer-flex
       .nav-links.no-selection
-        .nav-link(class:disabled!='{viewModel.previousRowIndex === undefined}' on:click!='{() => onNavLink("detail-previous")}') previous
+        .nav-link(on:click!='{() => onNavLink("detail-previous")}') previous
         .nav-link-sep &nbsp;|&nbsp;
-        .nav-link(class:disabled!='{viewModel.nextRowIndex === undefined}' on:click!='{() => onNavLink("detail-next")}') next
+        .nav-link(on:click!='{() => onNavLink("detail-next")}') next
     +if('relatedItemsVisible && viewModel.relatedItems.length > 0')
       .related
         span { viewModel.relatedListHeader }
@@ -158,9 +148,9 @@ svelte:window(on:keydown!='{onKeyDown}')
   cursor: pointer
   color: #777
 
-.nav-link.disabled
-  cursor: not-allowed
-  color: #555
+// .nav-link.disabled
+//   cursor: not-allowed
+//   color: #555
 
 .title-container
   display: flex

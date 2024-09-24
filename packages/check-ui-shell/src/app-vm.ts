@@ -1,5 +1,7 @@
 // Copyright (c) 2021-2022 Climate Interactive / New Venture Fund
 
+import assertNever from 'assert-never'
+
 import type { Readable, Writable } from 'svelte/store'
 import { get, writable } from 'svelte/store'
 
@@ -12,14 +14,13 @@ import type { ComparisonGroupingKind } from './components/compare/_shared/compar
 import type { CompareDetailViewModel } from './components/compare/detail/compare-detail-vm'
 import { createCompareDetailViewModel } from './components/compare/detail/compare-detail-vm'
 import type { ComparisonSummaryRowViewModel } from './components/compare/summary/comparison-summary-row-vm'
+import type { ComparisonSummaryViewModel } from './components/compare/summary/comparison-summary-vm'
 import type { HeaderViewModel } from './components/header/header-vm'
 import { createHeaderViewModel } from './components/header/header-vm'
 import type { PerfViewModel } from './components/perf/perf-vm'
 import { createPerfViewModel } from './components/perf/perf-vm'
 import type { SummaryViewModel } from './components/summary/summary-vm'
 import { createSummaryViewModel } from './components/summary/summary-vm'
-import assertNever from 'assert-never'
-import type { ComparisonSummaryViewModel } from './components/compare/summary/comparison-summary-vm'
 
 export interface RunSuiteCallbacks {
   onProgress?: (pct: number) => void
@@ -121,45 +122,66 @@ export class AppViewModel {
   createCompareDetailViewModelForSummaryRow(
     summaryRowViewModel: ComparisonSummaryRowViewModel
   ): CompareDetailViewModel {
-    const comparisonSummaryViewModel = this.getComparisonSummaryViewModel(summaryRowViewModel.kind)
     const groupSummary = summaryRowViewModel.groupSummary
-    const groupKey = summaryRowViewModel.groupKey
 
     const viewGroup = summaryRowViewModel.viewMetadata?.viewGroup
     const view = summaryRowViewModel.viewMetadata?.view
 
-    // Determine which rows precede and follow the selected row
-    let previousRowIndex: number
-    let nextRowIndex: number
-    const rowCount = comparisonSummaryViewModel.allRows.length
-    const rowIndex = comparisonSummaryViewModel.allRows.findIndex(row => row.groupKey === groupKey)
-    if (rowIndex >= 0) {
-      if (rowIndex > 0) {
-        previousRowIndex = rowIndex - 1
-      }
-      if (rowIndex < rowCount - 1) {
-        nextRowIndex = rowIndex + 1
-      }
-    }
-
     return createCompareDetailViewModel(
+      summaryRowViewModel.key,
       this.appModel.config.comparison,
       this.appModel.comparisonDataCoordinator,
       groupSummary,
       viewGroup,
-      view,
-      previousRowIndex,
-      nextRowIndex
+      view
     )
   }
 
-  createCompareDetailViewModelForSummaryRowIndex(
-    kind: ComparisonGroupingKind,
-    rowIndex: number
-  ): CompareDetailViewModel {
+  createCompareDetailViewModelForFirstSummaryRow(kind: ComparisonGroupingKind): CompareDetailViewModel | undefined {
+    // Get the index of the associated row in the context of the summary view
     const comparisonSummaryViewModel = this.getComparisonSummaryViewModel(kind)
-    const rowViewModel = comparisonSummaryViewModel.allRows[rowIndex]
-    return this.createCompareDetailViewModelForSummaryRow(rowViewModel)
+    const allRows = comparisonSummaryViewModel.allRows
+    if (allRows.length > 0) {
+      // Create a detail view for the first row
+      const prevRow = allRows[0]
+      return this.createCompareDetailViewModelForSummaryRow(prevRow)
+    } else {
+      return undefined
+    }
+  }
+
+  createCompareDetailViewModelForSummaryRowBefore(
+    kind: ComparisonGroupingKind,
+    summaryRowKey: string
+  ): CompareDetailViewModel | undefined {
+    // Get the index of the associated row in the context of the summary view
+    const comparisonSummaryViewModel = this.getComparisonSummaryViewModel(kind)
+    const allRows = comparisonSummaryViewModel.allRows
+    const rowIndex = allRows.findIndex(row => row.key === summaryRowKey)
+    if (rowIndex > 0) {
+      // Create a detail view for the previous row
+      const prevRow = allRows[rowIndex - 1]
+      return this.createCompareDetailViewModelForSummaryRow(prevRow)
+    } else {
+      return undefined
+    }
+  }
+
+  createCompareDetailViewModelForSummaryRowAfter(
+    kind: ComparisonGroupingKind,
+    summaryRowKey: string
+  ): CompareDetailViewModel | undefined {
+    // Get the index of the associated row in the context of the summary view
+    const comparisonSummaryViewModel = this.getComparisonSummaryViewModel(kind)
+    const allRows = comparisonSummaryViewModel.allRows
+    const rowIndex = allRows.findIndex(row => row.key === summaryRowKey)
+    if (rowIndex >= 0 && rowIndex < allRows.length - 1) {
+      // Create a detail view for the next row
+      const nextRow = allRows[rowIndex + 1]
+      return this.createCompareDetailViewModelForSummaryRow(nextRow)
+    } else {
+      return undefined
+    }
   }
 
   private getComparisonSummaryViewModel(kind: ComparisonGroupingKind): ComparisonSummaryViewModel {

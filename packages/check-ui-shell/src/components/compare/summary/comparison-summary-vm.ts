@@ -36,7 +36,6 @@ export class ComparisonsByItemSummaryViewModel {
   public allRows: ComparisonSummaryRowViewModel[]
   private readonly writablePinnedRows: Writable<ComparisonSummaryRowViewModel[]>
   public readonly pinnedRows: Readable<ComparisonSummaryRowViewModel[]>
-  // pinnedRows?: ComparisonSummarySectionViewModel
 
   constructor(
     public readonly itemKind: 'scenario' | 'dataset',
@@ -62,6 +61,9 @@ export class ComparisonsByItemSummaryViewModel {
     // TODO: Get initial state from local storage
     this.writablePinnedRows = writable([])
     this.pinnedRows = this.writablePinnedRows
+
+    // Build the initial `allRows` array
+    this.rebuildAllRows()
   }
 
   public toggleItemPinned(row: ComparisonSummaryRowViewModel): void {
@@ -83,7 +85,7 @@ export class ComparisonsByItemSummaryViewModel {
   public setPinnedItems(rows: ComparisonSummaryRowViewModel[]): void {
     // Use the new order of items that resulted from a drag-and-drop operation
     this.writablePinnedRows.set(rows)
-    // TODO: Update local storage
+    this.postUpdatePinnedRows()
   }
 
   private addPinnedItem(row: ComparisonSummaryRowViewModel): void {
@@ -97,7 +99,7 @@ export class ComparisonsByItemSummaryViewModel {
       rows.push(pinnedRow)
       return rows
     })
-    // TODO: Update local storage
+    this.postUpdatePinnedRows()
   }
 
   private removePinnedItem(row: ComparisonSummaryRowViewModel): void {
@@ -111,7 +113,34 @@ export class ComparisonsByItemSummaryViewModel {
       }
       return rows
     })
+    this.postUpdatePinnedRows()
+  }
+
+  private postUpdatePinnedRows(): void {
+    // Rebuild the `allRows` array whenever there are changes to the pinned rows
+    this.rebuildAllRows()
+
     // TODO: Update local storage
+  }
+
+  private rebuildAllRows(): void {
+    // Rebuild the `allRows` array to include pinned rows plus all normal rows
+    const allRows: ComparisonSummaryRowViewModel[] = []
+    const addRows = (section?: ComparisonSummarySectionViewModel) => {
+      if (section?.rows.length > 0) {
+        allRows.push(...section.rows)
+      }
+    }
+    const pinnedRows = get(this.writablePinnedRows)
+    if (pinnedRows.length > 0) {
+      allRows.push(...pinnedRows)
+    }
+    addRows(this.withErrors)
+    addRows(this.onlyInLeft)
+    addRows(this.onlyInRight)
+    addRows(this.withDiffs)
+    addRows(this.withoutDiffs)
+    this.allRows = allRows
   }
 }
 

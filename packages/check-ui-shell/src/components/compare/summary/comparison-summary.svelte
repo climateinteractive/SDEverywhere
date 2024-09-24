@@ -46,7 +46,7 @@ include comparison-summary.pug
       +if('$pinnedRows.length > 0')
         .section-container
           SummaryRow(viewModel!=`{{ title: pinnedTitle, header: true }}`)
-          PinnedSection(rows!='{viewModel.pinnedRows}' on:toggle!='{e => onToggleItemPinned(e.detail.row)}' on:reordered!='{e => onPinnedItemsReordered(e.detail.rows)}')
+          PinnedSection(rows!='{viewModel.pinnedRows}' on:toggle!='{e => onToggleItemPinned(e.detail.row)}' on:reordered!='{e => onPinnedItemsReordered(e.detail.rows)}' on:command)
       +section('withErrors')
       +section('onlyInLeft')
       +section('onlyInRight')
