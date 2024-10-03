@@ -4,10 +4,11 @@ import type { DatasetKey } from '../../_shared/types'
 import type { InputPosition, ScenarioSpec } from '../../_shared/scenario-spec-types'
 import type { InputVar, OutputVar } from '../../bundle/var-types'
 import type {
+  ComparisonGraphId,
   ComparisonScenarioGroupId,
   ComparisonScenarioGroupTitle,
   ComparisonScenarioId,
-  ComparisonViewGraphId,
+  ComparisonViewGraphOrder,
   ComparisonViewGroupTitle,
   ComparisonViewSubtitle,
   ComparisonViewTitle
@@ -131,7 +132,7 @@ export interface ComparisonScenarioGroup {
   /** The title of the group. */
   title: ComparisonScenarioGroupTitle
   /**
-   * The scenarios that are included in this group.  This includes scenario that were successfully
+   * The scenarios that are included in this group.  This includes scenarios that were successfully
    * resolved as well as scenario references that could not be resolved.
    */
   scenarios: (ComparisonScenario | ComparisonUnresolvedScenarioRef)[]
@@ -142,6 +143,19 @@ export interface ComparisonUnresolvedScenarioGroupRef {
   kind: 'unresolved-scenario-group-ref'
   /** The ID of the referenced scenario group that could not be resolved. */
   scenarioGroupId: ComparisonScenarioGroupId
+}
+
+//
+// GRAPH GROUPS
+//
+
+/** A resolved group of graphs. */
+export interface ComparisonGraphGroup {
+  kind: 'graph-group'
+  /** The unique identifier for the group. */
+  id: ComparisonScenarioGroupId
+  /** The graphs that are included in this group. */
+  graphIds: ComparisonGraphId[]
 }
 
 //
@@ -158,7 +172,9 @@ export interface ComparisonView {
   /** The resolved scenario to be shown in the view. */
   scenario: ComparisonScenario
   /** The graphs to be shown for each scenario view. */
-  graphs: 'all' | ComparisonViewGraphId[]
+  graphIds: ComparisonGraphId[]
+  /** The order in which the graphs will be displayed. */
+  graphOrder: ComparisonViewGraphOrder
 }
 
 /** An unresolved view. */

@@ -18,9 +18,10 @@ import type {
   ComparisonViewGroup
 } from '../comparison-resolved-types'
 import type {
+  ComparisonGraphId,
   ComparisonScenarioGroupId,
   ComparisonScenarioId,
-  ComparisonViewGraphId
+  ComparisonViewGraphOrder
 } from '../../config/comparison-spec-types'
 
 //
@@ -224,14 +225,16 @@ export function view(
   title: string,
   subtitle: string | undefined,
   scenario: ComparisonScenario,
-  graphs: 'all' | ComparisonViewGraphId[]
+  graphIds: ComparisonGraphId[],
+  graphOrder?: ComparisonViewGraphOrder
 ): ComparisonView {
   return {
     kind: 'view',
     title,
     subtitle,
     scenario,
-    graphs
+    graphIds,
+    graphOrder: graphOrder || 'default'
   }
 }
 

@@ -1,6 +1,12 @@
 // Copyright (c) 2023 Climate Interactive / New Venture Fund
 
 import type {
+  ComparisonGraphGroupId,
+  ComparisonGraphGroupRefSpec,
+  ComparisonGraphGroupSpec,
+  ComparisonGraphId,
+  ComparisonGraphsArraySpec,
+  ComparisonGraphsPresetSpec,
   ComparisonScenarioGroupId,
   ComparisonScenarioGroupRefSpec,
   ComparisonScenarioGroupSpec,
@@ -16,8 +22,7 @@ import type {
   ComparisonScenarioWithDistinctInputsSpec,
   ComparisonScenarioWithInputsSpec,
   ComparisonSpecs,
-  ComparisonViewGraphsArraySpec,
-  ComparisonViewGraphsPresetSpec,
+  ComparisonViewGraphOrder,
   ComparisonViewGraphsSpec,
   ComparisonViewGroupSpec,
   ComparisonViewGroupWithScenariosSpec,
@@ -133,6 +138,43 @@ export function scenarioGroupRefSpec(groupId: ComparisonScenarioGroupId): Compar
 }
 
 //
+// GRAPHS
+//
+
+export function graphsPresetSpec(preset: 'all'): ComparisonGraphsPresetSpec {
+  return {
+    kind: 'graphs-preset',
+    preset
+  }
+}
+
+export function graphsArraySpec(graphIds: ComparisonGraphId[]): ComparisonGraphsArraySpec {
+  return {
+    kind: 'graphs-array',
+    graphIds
+  }
+}
+
+//
+// GRAPH GROUPS
+//
+
+export function graphGroupSpec(id: ComparisonGraphGroupId, graphIds: ComparisonGraphId[]): ComparisonGraphGroupSpec {
+  return {
+    kind: 'graph-group',
+    id,
+    graphIds
+  }
+}
+
+export function graphGroupRefSpec(groupId: ComparisonGraphGroupId): ComparisonGraphGroupRefSpec {
+  return {
+    kind: 'graph-group-ref',
+    groupId
+  }
+}
+
+//
 // VIEWS
 //
 
@@ -140,28 +182,16 @@ export function viewSpec(
   title: string | undefined,
   subtitle: string | undefined,
   scenarioId: ComparisonScenarioId,
-  graphs: ComparisonViewGraphsSpec
+  graphs: ComparisonViewGraphsSpec,
+  graphOrder?: ComparisonViewGraphOrder
 ): ComparisonViewSpec {
   return {
     kind: 'view',
     title,
     subtitle,
     scenarioId,
-    graphs
-  }
-}
-
-export function graphsPresetSpec(preset: 'all'): ComparisonViewGraphsPresetSpec {
-  return {
-    kind: 'graphs-preset',
-    preset
-  }
-}
-
-export function graphsArraySpec(graphIds: string[]): ComparisonViewGraphsArraySpec {
-  return {
-    kind: 'graphs-array',
-    graphIds
+    graphs,
+    graphOrder
   }
 }
 
@@ -180,13 +210,15 @@ export function viewGroupWithViewsSpec(title: string, views: ComparisonViewSpec[
 export function viewGroupWithScenariosSpec(
   title: string,
   scenarios: (ComparisonScenarioRefSpec | ComparisonScenarioGroupRefSpec)[],
-  graphs: ComparisonViewGraphsSpec
+  graphs: ComparisonViewGraphsSpec,
+  graphOrder?: ComparisonViewGraphOrder
 ): ComparisonViewGroupWithScenariosSpec {
   return {
     kind: 'view-group-with-scenarios',
     title,
     scenarios,
-    graphs
+    graphs,
+    graphOrder
   }
 }
 

@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest'
 
 import { inputAtPositionSpec as atPosSpec, inputAtValueSpec as atValSpec } from '../../../_shared/scenario-specs'
 import type { VarId } from '../../../_shared/types'
-import type { InputAliasName, ModelSpec } from '../../../bundle/bundle-types'
+import type { BundleGraphId, BundleGraphSpec, InputAliasName, ModelSpec } from '../../../bundle/bundle-types'
 import { ModelInputs } from '../../../bundle/model-inputs'
 import type { InputId, InputVar } from '../../../bundle/var-types'
 
@@ -32,6 +32,8 @@ import {
 
 import {
   comparisonSpecs,
+  graphGroupRefSpec,
+  graphGroupSpec,
   graphsArraySpec,
   graphsPresetSpec,
   inputAtPositionSpec,
@@ -88,6 +90,20 @@ function mockModelSpec(kind: 'L' | 'R'): ModelSpec {
   inputAliases.set('S2', kind === 'L' ? '_ivarb' : '_ivarb_renamed')
   inputAliases.set('S3', kind === 'L' ? '_ivarc' : '_ivard')
 
+  // Add graphs
+  const graphSpecs: BundleGraphSpec[] = []
+  function addGraph(graphId: BundleGraphId): void {
+    graphSpecs.push({
+      id: graphId,
+      title: `Graph ${graphId}`,
+      datasets: [],
+      legendItems: [],
+      metadata: new Map()
+    })
+  }
+  addGraph('1')
+  addGraph('2')
+
   // TODO: Test input groups
 
   return {
@@ -96,13 +112,17 @@ function mockModelSpec(kind: 'L' | 'R'): ModelSpec {
     inputVars,
     outputVars: new Map(),
     implVars: new Map(),
-    inputAliases
+    inputAliases,
+    graphSpecs
   }
 }
 
 describe('resolveComparisonSpecs', () => {
-  const modelInputsL = new ModelInputs(mockModelSpec('L'))
-  const modelInputsR = new ModelInputs(mockModelSpec('R'))
+  const modelSpecL = mockModelSpec('L')
+  const modelSpecR = mockModelSpec('R')
+
+  const modelInputsL = new ModelInputs(modelSpecL)
+  const modelInputsR = new ModelInputs(modelSpecR)
 
   const lVar = (name: string) => modelInputsL.getInputVarForName(name)
   const rVar = (name: string) => modelInputsR.getInputVarForName(name)
@@ -128,7 +148,7 @@ describe('resolveComparisonSpecs', () => {
         scenarioWithInputsSpec([inputAtPositionSpec('ivarX', 'min')])
       ])
 
-      const resolved = resolveComparisonSpecs(modelInputsL, modelInputsR, specs)
+      const resolved = resolveComparisonSpecs(modelSpecL, modelSpecR, specs)
       expect(resolved).toEqual({
         scenarios: [
           scenarioWithInput(
@@ -197,7 +217,7 @@ describe('resolveComparisonSpecs', () => {
         scenarioWithInputsSpec([inputAtValueSpec('id 2', 90)])
       ])
 
-      const resolved = resolveComparisonSpecs(modelInputsL, modelInputsR, specs)
+      const resolved = resolveComparisonSpecs(modelSpecL, modelSpecR, specs)
       expect(resolved).toEqual({
         scenarios: [
           scenarioWithInput(
@@ -279,7 +299,7 @@ describe('resolveComparisonSpecs', () => {
         scenarioWithDistinctInputsSpec([inputAtValueSpec('id 2', 90)], [inputAtValueSpec('id 2', 600)])
       ])
 
-      const resolved = resolveComparisonSpecs(modelInputsL, modelInputsR, specs)
+      const resolved = resolveComparisonSpecs(modelSpecL, modelSpecR, specs)
       expect(resolved).toEqual({
         scenarios: [
           scenarioWithInputs('1', [], atValSpec('_ivara', 20), atValSpec('_ivara', 30)),
@@ -341,7 +361,7 @@ describe('resolveComparisonSpecs', () => {
         scenarioWithAllInputsSpec('max')
       ])
 
-      const resolved = resolveComparisonSpecs(modelInputsL, modelInputsR, specs)
+      const resolved = resolveComparisonSpecs(modelSpecL, modelSpecR, specs)
       expect(resolved).toEqual({
         scenarios: [allAtPos('1', 'at-default'), allAtPos('2', 'at-minimum'), allAtPos('3', 'at-maximum')],
         scenarioGroups: [],
@@ -427,7 +447,7 @@ describe('resolveComparisonSpecs', () => {
 
       const specs = comparisonSpecs([scenarioMatrixSpec()])
 
-      const resolved = resolveComparisonSpecs(modelInputsL, modelInputsR, specs)
+      const resolved = resolveComparisonSpecs(modelSpecL, modelSpecR, specs)
       expect(resolved).toEqual({
         scenarios: [
           allAtPos('1', 'at-default'),
@@ -483,7 +503,7 @@ describe('resolveComparisonSpecs', () => {
         atPosSpec('_ivarb_renamed', 'at-maximum')
       )
 
-      const resolved = resolveComparisonSpecs(modelInputsL, modelInputsR, specs)
+      const resolved = resolveComparisonSpecs(modelSpecL, modelSpecR, specs)
       expect(resolved).toEqual({
         scenarios: [expectedId1AtMax, expectedId2AtMax],
         scenarioGroups: [scenarioGroup('Group with two vars at max', [expectedId1AtMax, expectedId2AtMax])],
@@ -507,7 +527,7 @@ describe('resolveComparisonSpecs', () => {
         atPosSpec('_ivara', 'at-maximum')
       )
 
-      const resolved = resolveComparisonSpecs(modelInputsL, modelInputsR, specs)
+      const resolved = resolveComparisonSpecs(modelSpecL, modelSpecR, specs)
       expect(resolved).toEqual({
         scenarios: [expectedId1AtMax],
         scenarioGroups: [scenarioGroup('Group with invalid ref', [unresolvedScenarioRef('unknown')])],
@@ -536,9 +556,10 @@ describe('resolveComparisonSpecs', () => {
             scenarioWithInputsSpec([inputAtPositionSpec('id 2', 'max')], { id: 'id_2_at_max' })
           ])
         ],
+        graphGroups: [graphGroupSpec('GG1', ['1', '2'])],
         viewGroups: [
           viewGroupWithViewsSpec('View group 1', [
-            viewSpec('View with all graphs', undefined, 'id_1_at_max', graphsPresetSpec('all'))
+            viewSpec('View with all graphs', undefined, 'id_1_at_max', graphsPresetSpec('all'), 'grouped-by-diffs')
           ]),
           viewGroupWithViewsSpec('View group 2', [
             viewSpec(
@@ -546,7 +567,8 @@ describe('resolveComparisonSpecs', () => {
               'View with specific graphs',
               undefined,
               'id_1_at_max',
-              graphsArraySpec(['1', '2'])
+              graphGroupRefSpec('GG1'),
+              'grouped-by-diffs'
             ),
             viewSpec(
               // This view has no explicit title/subtitle, so it should be inferred from the scenario title/subtitle (which are defined)
@@ -594,14 +616,16 @@ describe('resolveComparisonSpecs', () => {
         }
       )
 
-      const resolved = resolveComparisonSpecs(modelInputsL, modelInputsR, specs)
+      const resolved = resolveComparisonSpecs(modelSpecL, modelSpecR, specs)
       expect(resolved).toEqual({
         scenarios: [expectedId1AtMax, expectedId2AtMax],
         scenarioGroups: [scenarioGroup('Group with two vars at max', [expectedId1AtMax, expectedId2AtMax])],
         viewGroups: [
-          viewGroup('View group 1', [view('View with all graphs', undefined, expectedId1AtMax, 'all')]),
+          viewGroup('View group 1', [
+            view('View with all graphs', undefined, expectedId1AtMax, ['1', '2'], 'grouped-by-diffs')
+          ]),
           viewGroup('View group 2', [
-            view('View with specific graphs', undefined, expectedId1AtMax, ['1', '2']),
+            view('View with specific graphs', undefined, expectedId1AtMax, ['1', '2'], 'grouped-by-diffs'),
             view('input id 1', 'at max', expectedId1AtMax, ['1', '2']),
             view('Untitled view', undefined, expectedId2AtMax, ['1', '2'])
           ])
@@ -657,7 +681,8 @@ describe('resolveComparisonSpecs', () => {
                 'id 1 at min subtitle override from view group'
               )
             ],
-            graphsPresetSpec('all')
+            graphsPresetSpec('all'),
+            'grouped-by-diffs'
           ),
           viewGroupWithScenariosSpec('View group 2', [scenarioGroupRefSpec('group_1')], graphsArraySpec(['1', '2']))
         ]
@@ -706,7 +731,7 @@ describe('resolveComparisonSpecs', () => {
         }
       )
 
-      const resolved = resolveComparisonSpecs(modelInputsL, modelInputsR, specs)
+      const resolved = resolveComparisonSpecs(modelSpecL, modelSpecR, specs)
       expect(resolved.scenarios).toEqual([expectedId1AtMax, expectedId1AtMin, expectedId2AtMax])
       expect(resolved.scenarioGroups).toEqual([
         scenarioGroup('Group', [expectedId1AtMax, expectedId1AtMinWithScenarioGroupOverride, expectedId2AtMax], {
@@ -719,13 +744,15 @@ describe('resolveComparisonSpecs', () => {
             'id 1 at max title override from view group',
             'id 1 at max subtitle override from view group',
             expectedId1AtMax,
-            'all'
+            ['1', '2'],
+            'grouped-by-diffs'
           ),
           view(
             'id 1 at min title override from view group',
             'id 1 at min subtitle override from view group',
             expectedId1AtMin,
-            'all'
+            ['1', '2'],
+            'grouped-by-diffs'
           )
         ]),
         viewGroup('View group 2', [
@@ -750,7 +777,7 @@ describe('resolveComparisonSpecs', () => {
         ]
       }
 
-      const resolved = resolveComparisonSpecs(modelInputsL, modelInputsR, specs)
+      const resolved = resolveComparisonSpecs(modelSpecL, modelSpecR, specs)
       expect(resolved).toEqual({
         scenarios: [],
         scenarioGroups: [],
@@ -767,7 +794,7 @@ describe('resolveComparisonSpecs', () => {
         ]
       }
 
-      const resolved = resolveComparisonSpecs(modelInputsL, modelInputsR, specs)
+      const resolved = resolveComparisonSpecs(modelSpecL, modelSpecR, specs)
       expect(resolved).toEqual({
         scenarios: [],
         scenarioGroups: [],
@@ -792,7 +819,7 @@ describe('resolveComparisonSpecs', () => {
         ]
       }
 
-      const resolved = resolveComparisonSpecs(modelInputsL, modelInputsR, specs)
+      const resolved = resolveComparisonSpecs(modelSpecL, modelSpecR, specs)
       expect(resolved).toEqual({
         scenarios: [],
         scenarioGroups: [

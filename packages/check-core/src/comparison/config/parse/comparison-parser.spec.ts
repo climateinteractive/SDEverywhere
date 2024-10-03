@@ -4,6 +4,8 @@ import { describe, expect, it } from 'vitest'
 
 import { parseComparisonSpecs } from './comparison-parser'
 import {
+  graphGroupRefSpec,
+  graphGroupSpec,
   graphsArraySpec,
   graphsPresetSpec,
   inputAtPositionSpec,
@@ -83,6 +85,12 @@ describe('parseComparisonSpecs', () => {
             - input: Input3
               at: max
 
+- graph_group:
+    id: GraphGroup1
+    graphs:
+      - '86'
+      - '87'
+
 - view_group:
     title: Baseline
     views:
@@ -105,8 +113,7 @@ describe('parseComparisonSpecs', () => {
           subtitle: Subtitle goes here
           scenario_ref: S1
           graphs:
-            - '86'
-            - '87'
+            graph_group_ref: GraphGroup1
 
 - view_group:
     title: Temp (shorthand)
@@ -148,11 +155,13 @@ describe('parseComparisonSpecs', () => {
       )
     ])
 
+    expect(comparisonSpecs.graphGroups).toEqual([graphGroupSpec('GraphGroup1', ['86', '87'])])
+
     expect(comparisonSpecs.viewGroups).toEqual([
       viewGroupWithViewsSpec('Baseline', [viewSpec('All graphs', undefined, 'S0', graphsPresetSpec('all'))]),
       viewGroupWithViewsSpec('Temp (explicit views)', [
         viewSpec('Temp for Scenario_0', undefined, 'S0', graphsArraySpec(['86', '87'])),
-        viewSpec('Temp for Scenario_1', 'Subtitle goes here', 'S1', graphsArraySpec(['86', '87']))
+        viewSpec('Temp for Scenario_1', 'Subtitle goes here', 'S1', graphGroupRefSpec('GraphGroup1'))
       ]),
       viewGroupWithScenariosSpec(
         'Temp (shorthand)',

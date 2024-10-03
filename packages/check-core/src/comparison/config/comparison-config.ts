@@ -1,8 +1,7 @@
 // Copyright (c) 2021-2022 Climate Interactive / New Venture Fund
 
 import type { DatasetKey } from '../../_shared/types'
-import type { LoadedBundle, NamedBundle } from '../../bundle/bundle-types'
-import type { ModelInputs } from '../../bundle/model-inputs'
+import type { BundleGraphId, LoadedBundle, ModelSpec, NamedBundle } from '../../bundle/bundle-types'
 
 import type { ComparisonScenario, ComparisonViewGroup } from '../_shared/comparison-resolved-types'
 
@@ -28,6 +27,16 @@ export interface ComparisonDatasetOptions {
   datasetKeysForScenario?: (allDatasetKeys: DatasetKey[], scenario: ComparisonScenario) => DatasetKey[]
 }
 
+export interface ComparisonGraphOptions {
+  /**
+   * An optional function that allows for limiting the graphs that are compared
+   * for a given scenario.  By default, all graphs are compared for a given
+   * scenario, but if a custom function is provided, it can return a subset of
+   * graphs (for example, to omit graphs that are not relevant under that scenario).
+   */
+  graphIdsForScenario?: (scenario: ComparisonScenario) => BundleGraphId[]
+}
+
 export interface ComparisonOptions {
   /** The left-side ("baseline") bundle being compared. */
   baseline: NamedBundle
@@ -43,6 +52,8 @@ export interface ComparisonOptions {
   specs: (ComparisonSpecs | ComparisonSpecsSource)[]
   /** Optional configuration for the datasets that are compared for different scenarios. */
   datasets?: ComparisonDatasetOptions
+  // /** Optional configuration for the graphs that are compared for different scenarios. */
+  // graphs?: ComparisonGraphOptions
 }
 
 export interface ComparisonConfig {
@@ -67,18 +78,19 @@ export interface ComparisonConfig {
  * Expand and resolve all the scenario and view specs in the provided sources, which can
  * be a mix of YAML, JSON, and object specs.
  *
- * @param modelInputsL The model inputs for the "left" bundle being compared.
- * @param modelInputsR The model inputs for the "right" bundle being compared.
+ * @param modelSpecL The model spec for the "left" bundle being compared.
+ * @param modelSpecR The model spec for the "right" bundle being compared.
  * @param specSources The scenario and view spec sources.
  */
 export function resolveComparisonSpecsFromSources(
-  modelInputsL: ModelInputs,
-  modelInputsR: ModelInputs,
+  modelSpecL: ModelSpec,
+  modelSpecR: ModelSpec,
   specSources: (ComparisonSpecs | ComparisonSpecsSource)[]
 ): ComparisonResolvedDefs {
   const combinedSpecs: ComparisonSpecs = {
     scenarios: [],
     scenarioGroups: [],
+    graphGroups: [],
     viewGroups: []
   }
 
@@ -97,10 +109,11 @@ export function resolveComparisonSpecsFromSources(
     } else {
       specs = specSource
     }
-    combinedSpecs.scenarios.push(...specs.scenarios)
-    combinedSpecs.scenarioGroups.push(...specs.scenarioGroups)
-    combinedSpecs.viewGroups.push(...specs.viewGroups)
+    combinedSpecs.scenarios.push(...(specs.scenarios || []))
+    combinedSpecs.scenarioGroups.push(...(specs.scenarioGroups || []))
+    combinedSpecs.graphGroups.push(...(specs.graphGroups || []))
+    combinedSpecs.viewGroups.push(...(specs.viewGroups || []))
   }
 
-  return resolveComparisonSpecs(modelInputsL, modelInputsR, combinedSpecs)
+  return resolveComparisonSpecs(modelSpecL, modelSpecR, combinedSpecs)
 }

@@ -5,7 +5,7 @@ import { assertNever } from 'assert-never'
 import type { InputPosition, InputSetting, ScenarioSpec } from '../../../_shared/scenario-spec-types'
 import { inputSettingsSpec } from '../../../_shared/scenario-specs'
 
-import type { ModelInputs } from '../../../bundle/model-inputs'
+import { ModelInputs } from '../../../bundle/model-inputs'
 import type { InputId, InputVar } from '../../../bundle/var-types'
 
 import type {
@@ -23,6 +23,9 @@ import type {
 } from '../../_shared/comparison-resolved-types'
 
 import type {
+  ComparisonGraphGroupId,
+  ComparisonGraphGroupSpec,
+  ComparisonGraphId,
   ComparisonScenarioGroupId,
   ComparisonScenarioGroupSpec,
   ComparisonScenarioId,
@@ -33,13 +36,14 @@ import type {
   ComparisonScenarioSubtitle,
   ComparisonScenarioTitle,
   ComparisonSpecs,
-  ComparisonViewGraphId,
+  ComparisonViewGraphOrder,
   ComparisonViewGraphsSpec,
   ComparisonViewGroupSpec,
   ComparisonViewSubtitle,
   ComparisonViewTitle
 } from '../comparison-spec-types'
 import { inputSettingFromResolvedInputState, scenarioSpecsFromSettings } from './comparison-scenario-specs'
+import type { BundleGraphId, ModelSpec } from '../../../bundle/bundle-types'
 
 export interface ComparisonResolvedDefs {
   /** The set of resolved scenarios. */
@@ -57,13 +61,13 @@ type GenKey = () => ComparisonScenarioKey
  * requested specs, resolve references to input variables and scenarios, and then return
  * the definitions for the fully resolved scenarios and views.
  *
- * @param modelInputsL The model inputs for the "left" bundle being compared.
- * @param modelInputsR The model inputs for the "right" bundle being compared.
+ * @param modelSpecL The model spec for the "left" bundle being compared.
+ * @param modelSpecR The model spec for the "right" bundle being compared.
  * @param specs The scenario and view specs that were parsed from YAML/JSON definitions.
  */
 export function resolveComparisonSpecs(
-  modelInputsL: ModelInputs,
-  modelInputsR: ModelInputs,
+  modelSpecL: ModelSpec,
+  modelSpecR: ModelSpec,
   specs: ComparisonSpecs
 ): ComparisonResolvedDefs {
   let key = 1
@@ -71,9 +75,13 @@ export function resolveComparisonSpecs(
     return `${key++}` as ComparisonScenarioKey
   }
 
+  // Create `ModelInputs` instances to make lookups easier
+  const modelInputsL = new ModelInputs(modelSpecL)
+  const modelInputsR = new ModelInputs(modelSpecR)
+
   // Resolve the top-level scenario specs and convert to `ComparisonScenario` instances
   const resolvedScenarios = new ResolvedScenarios()
-  for (const scenarioSpec of specs.scenarios) {
+  for (const scenarioSpec of specs.scenarios || []) {
     resolvedScenarios.add(resolveScenariosFromSpec(modelInputsL, modelInputsR, scenarioSpec, genKey))
   }
 
@@ -85,7 +93,7 @@ export function resolveComparisonSpecs(
     scenarios: (ComparisonScenario | ComparisonScenarioRefSpec)[]
   }
   const partiallyResolvedScenarioGroups: PartiallyResolvedScenarioGroup[] = []
-  for (const scenarioGroupSpec of specs.scenarioGroups) {
+  for (const scenarioGroupSpec of specs.scenarioGroups || []) {
     const scenariosForGroup: (ComparisonScenario | ComparisonScenarioRefSpec)[] = []
     for (const scenarioItem of scenarioGroupSpec.scenarios) {
       if (scenarioItem.kind === 'scenario-ref') {
@@ -143,10 +151,23 @@ export function resolveComparisonSpecs(
     })
   }
 
+  // Resolve the top-level graph group specs
+  const resolvedGraphGroups = new ResolvedGraphGroups()
+  for (const graphGroupSpec of specs.graphGroups || []) {
+    resolvedGraphGroups.add(graphGroupSpec)
+  }
+
   // Resolve the view groups
   const resolvedViewGroups: ComparisonViewGroup[] = []
-  for (const viewGroupSpec of specs.viewGroups) {
-    const resolvedViewGroup = resolveViewGroupFromSpec(resolvedScenarios, resolvedScenarioGroups, viewGroupSpec)
+  for (const viewGroupSpec of specs.viewGroups || []) {
+    const resolvedViewGroup = resolveViewGroupFromSpec(
+      modelSpecL,
+      modelSpecR,
+      resolvedScenarios,
+      resolvedScenarioGroups,
+      resolvedGraphGroups,
+      viewGroupSpec
+    )
     resolvedViewGroups.push(resolvedViewGroup)
   }
 
@@ -633,18 +654,84 @@ class ResolvedScenarioGroups {
 }
 
 //
+// GRAPH GROUPS
+//
+
+// TODO: This doesn't currently check that the referenced graph IDs are available in one or both
+// model specs
+class ResolvedGraphGroups {
+  /** The array of all resolved graph groups. */
+  private readonly resolvedGroups: ComparisonGraphGroupSpec[] = []
+
+  /** The set of resolved graph groups, keyed by ID. */
+  private readonly resolvedGroupsById: Map<ComparisonGraphGroupId, ComparisonGraphGroupSpec> = new Map()
+
+  add(group: ComparisonGraphGroupSpec): void {
+    // Add the group to the general set
+    this.resolvedGroups.push(group)
+
+    // Also add to the map of groups with an ID
+    // TODO: Mark this as an error in the interface rather than throwing
+    if (this.resolvedGroupsById.has(group.id)) {
+      throw new Error(`Multiple graph groups defined with the same id (${group.id})`)
+    }
+    this.resolvedGroupsById.set(group.id, group)
+  }
+
+  getAll(): ComparisonGraphGroupSpec[] {
+    return this.resolvedGroups
+  }
+
+  getGroupForId(id: ComparisonGraphGroupId): ComparisonGraphGroupSpec | undefined {
+    return this.resolvedGroupsById.get(id)
+  }
+}
+
+//
 // VIEWS
 //
 
 /**
  * Return the graphs "all" preset or the graph IDs from a view graphs spec.
  */
-function resolveGraphsFromSpec(graphsSpec: ComparisonViewGraphsSpec): 'all' | ComparisonViewGraphId[] {
+function resolveGraphsFromSpec(
+  modelSpecL: ModelSpec,
+  modelSpecR: ModelSpec,
+  resolvedGraphGroups: ResolvedGraphGroups,
+  graphsSpec: ComparisonViewGraphsSpec
+): ComparisonGraphId[] {
   switch (graphsSpec.kind) {
-    case 'graphs-preset':
-      return 'all'
+    case 'graphs-preset': {
+      switch (graphsSpec.preset) {
+        case 'all': {
+          // Get the union of all graph IDs appearing in either left or right
+          const graphIds: Set<BundleGraphId> = new Set()
+          const addGraphIds = (modelSpec: ModelSpec) => {
+            if (modelSpec.graphSpecs) {
+              for (const graphSpec of modelSpec.graphSpecs) {
+                graphIds.add(graphSpec.id)
+              }
+            }
+          }
+          addGraphIds(modelSpecL)
+          addGraphIds(modelSpecR)
+          return [...graphIds]
+        }
+        default:
+          assertNever(graphsSpec.preset)
+      }
+    }
+    // eslint-disable-next-line no-fallthrough
     case 'graphs-array':
       return graphsSpec.graphIds
+    case 'graph-group-ref': {
+      const groupSpec = resolvedGraphGroups.getGroupForId(graphsSpec.groupId)
+      if (groupSpec === undefined) {
+        // TODO: Mark this as an error in the interface rather than throwing
+        throw new Error(`No graph group found for id ${graphsSpec.groupId}`)
+      }
+      return groupSpec.graphIds
+    }
     default:
       assertNever(graphsSpec)
   }
@@ -655,12 +742,13 @@ function resolveViewForScenarioId(
   viewTitle: ComparisonViewTitle | undefined,
   viewSubtitle: ComparisonViewSubtitle | undefined,
   scenarioId: ComparisonScenarioId,
-  graphs: 'all' | ComparisonViewGraphId[]
+  graphIds: ComparisonGraphId[],
+  graphOrder: ComparisonViewGraphOrder
 ): ComparisonView | ComparisonUnresolvedView {
   const resolvedScenario = resolvedScenarios.getScenarioForId(scenarioId)
   if (resolvedScenario) {
     // Add the resolved view
-    return resolveViewForScenario(viewTitle, viewSubtitle, resolvedScenario, graphs)
+    return resolveViewForScenario(viewTitle, viewSubtitle, resolvedScenario, graphIds, graphOrder)
   } else {
     // Add the unresolved view
     return unresolvedViewForScenarioId(viewTitle, viewSubtitle, scenarioId)
@@ -670,12 +758,13 @@ function resolveViewForScenarioId(
 function resolveViewForScenarioRefSpec(
   resolvedScenarios: ResolvedScenarios,
   refSpec: ComparisonScenarioRefSpec,
-  graphs: 'all' | ComparisonViewGraphId[]
+  graphIds: ComparisonGraphId[],
+  graphOrder: ComparisonViewGraphOrder
 ): ComparisonView | ComparisonUnresolvedView {
   const resolvedScenario = resolvedScenarios.getScenarioForId(refSpec.scenarioId)
   if (resolvedScenario) {
     // Add the resolved view
-    return resolveViewForScenario(refSpec.title, refSpec.subtitle, resolvedScenario, graphs)
+    return resolveViewForScenario(refSpec.title, refSpec.subtitle, resolvedScenario, graphIds, graphOrder)
   } else {
     // Add the unresolved view
     return unresolvedViewForScenarioId(undefined, undefined, refSpec.scenarioId)
@@ -686,7 +775,8 @@ function resolveViewForScenario(
   viewTitle: ComparisonViewTitle | undefined,
   viewSubtitle: ComparisonViewSubtitle | undefined,
   resolvedScenario: ComparisonScenario,
-  graphs: 'all' | ComparisonViewGraphId[]
+  graphIds: ComparisonGraphId[],
+  graphOrder: ComparisonViewGraphOrder
 ): ComparisonView {
   // If explicit title/subtitle were not provided for the view, infer them from the scenario
   // TODO: For now we only infer the subtitle if an explicit title was also not provided; this might
@@ -706,7 +796,8 @@ function resolveViewForScenario(
     title: viewTitle,
     subtitle: viewSubtitle,
     scenario: resolvedScenario,
-    graphs
+    graphIds,
+    graphOrder
   }
 }
 
@@ -744,8 +835,11 @@ function unresolvedViewForScenarioGroupId(
  * Return a resolved `ComparisonViewGroup` instance for the given view group spec.
  */
 function resolveViewGroupFromSpec(
+  modelSpecL: ModelSpec,
+  modelSpecR: ModelSpec,
   resolvedScenarios: ResolvedScenarios,
   resolvedScenarioGroups: ResolvedScenarioGroups,
+  resolvedGraphGroups: ResolvedGraphGroups,
   viewGroupSpec: ComparisonViewGroupSpec
 ): ComparisonViewGroup {
   let views: (ComparisonView | ComparisonUnresolvedView)[]
@@ -754,26 +848,28 @@ function resolveViewGroupFromSpec(
     case 'view-group-with-views': {
       // Resolve each view
       views = viewGroupSpec.views.map(viewSpec => {
-        const graphs = resolveGraphsFromSpec(viewSpec.graphs)
+        const graphIds = resolveGraphsFromSpec(modelSpecL, modelSpecR, resolvedGraphGroups, viewSpec.graphs)
         return resolveViewForScenarioId(
           resolvedScenarios,
           viewSpec.title,
           viewSpec.subtitle,
           viewSpec.scenarioId,
-          graphs
+          graphIds,
+          viewSpec.graphOrder || 'default'
         )
       })
       break
     }
     case 'view-group-with-scenarios': {
       // Resolve to one view for each scenario (with the same set of graphs for each view)
-      const graphs = resolveGraphsFromSpec(viewGroupSpec.graphs)
+      const graphIds = resolveGraphsFromSpec(modelSpecL, modelSpecR, resolvedGraphGroups, viewGroupSpec.graphs)
+      const graphOrder = viewGroupSpec.graphOrder || 'default'
       views = []
       for (const refSpec of viewGroupSpec.scenarios) {
         switch (refSpec.kind) {
           case 'scenario-ref':
             // Add a view for the scenario
-            views.push(resolveViewForScenarioRefSpec(resolvedScenarios, refSpec, graphs))
+            views.push(resolveViewForScenarioRefSpec(resolvedScenarios, refSpec, graphIds, graphOrder))
             break
           case 'scenario-group-ref': {
             const resolvedGroup = resolvedScenarioGroups.getGroupForId(refSpec.groupId)
@@ -785,7 +881,7 @@ function resolveViewGroupFromSpec(
                     views.push(unresolvedViewForScenarioId(undefined, undefined, scenario.scenarioId))
                     break
                   case 'scenario':
-                    views.push(resolveViewForScenario(undefined, undefined, scenario, graphs))
+                    views.push(resolveViewForScenario(undefined, undefined, scenario, graphIds, graphOrder))
                     break
                   default:
                     assertNever(scenario)
