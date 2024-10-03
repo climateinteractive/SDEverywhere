@@ -420,7 +420,7 @@
       "type": "string",
       "enum": [
         "default",
-        "group-by-diffs"
+        "grouped-by-diffs"
       ]
     },
     "view_group_array_item": {

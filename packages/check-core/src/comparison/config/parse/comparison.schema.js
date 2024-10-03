@@ -374,7 +374,7 @@ export default {
 
     view_graph_order: {
       type: 'string',
-      enum: ['default', 'group-by-diffs']
+      enum: ['default', 'grouped-by-diffs']
     },
 
     //
