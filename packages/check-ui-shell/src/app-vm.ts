@@ -11,18 +11,17 @@ import { checkReportFromSummary, comparisonSummaryFromReport, runSuite } from '@
 import type { AppModel } from './model/app-model'
 
 import type { ComparisonGroupingKind } from './components/compare/_shared/comparison-grouping-kind'
-import type { CompareDetailViewModel } from './components/compare/detail/compare-detail-vm'
-import { createCompareDetailViewModel } from './components/compare/detail/compare-detail-vm'
+import {
+  type CompareDetailViewModel,
+  createCompareDetailViewModel
+} from './components/compare/detail/compare-detail-vm'
 import type { ComparisonSummaryRowViewModel } from './components/compare/summary/comparison-summary-row-vm'
 import type { ComparisonSummaryViewModel } from './components/compare/summary/comparison-summary-vm'
-import type { HeaderViewModel } from './components/header/header-vm'
-import { createHeaderViewModel } from './components/header/header-vm'
-import type { PerfViewModel } from './components/perf/perf-vm'
-import { createPerfViewModel } from './components/perf/perf-vm'
-import type { SummaryViewModel } from './components/summary/summary-vm'
-import { createSummaryViewModel } from './components/summary/summary-vm'
-import type { TraceViewModel } from './components/trace/trace-vm'
-import { createTraceViewModel } from './components/trace/trace-vm'
+import { type FreeformViewModel, createFreeformViewModel } from './components/freeform/freeform-vm'
+import { type HeaderViewModel, createHeaderViewModel } from './components/header/header-vm'
+import { type PerfViewModel, createPerfViewModel } from './components/perf/perf-vm'
+import { type SummaryViewModel, createSummaryViewModel } from './components/summary/summary-vm'
+import { type TraceViewModel, createTraceViewModel } from './components/trace/trace-vm'
 
 export interface RunSuiteCallbacks {
   onProgress?: (pct: number) => void
@@ -180,6 +179,14 @@ export class AppViewModel {
 
   createPerfViewModel(): PerfViewModel {
     return createPerfViewModel(this.appModel.config)
+  }
+
+  createFreeformViewModel(): FreeformViewModel {
+    if (this.appModel.config.comparison === undefined) {
+      // TODO: Error message
+      return
+    }
+    return createFreeformViewModel(this.appModel.config.comparison, this.appModel.comparisonDataCoordinator)
   }
 
   createTraceViewModel(): TraceViewModel {

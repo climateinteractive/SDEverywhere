@@ -9,6 +9,8 @@ import FontFaceObserver from 'fontfaceobserver'
 import type { ComparisonGroupingKind } from './components/compare/_shared/comparison-grouping-kind'
 import ComparisonDetail from './components/compare/detail/compare-detail.svelte'
 import type { CompareDetailViewModel } from './components/compare/detail/compare-detail-vm'
+import type { FreeformViewModel } from './components/freeform/freeform-vm'
+import Freeform from './components/freeform/freeform.svelte'
 import Header from './components/header/header.svelte'
 import type { PerfViewModel } from './components/perf/perf-vm'
 import Perf from './components/perf/perf.svelte'
@@ -24,9 +26,10 @@ const progress = viewModel.progress
 
 let compareDetailViewModel: CompareDetailViewModel
 let perfViewModel: PerfViewModel
+let freeformViewModel: FreeformViewModel
 let traceViewModel: TraceViewModel
 
-type ViewMode = 'summary' | 'comparison-detail' | 'perf' | 'trace'
+type ViewMode = 'summary' | 'comparison-detail' | 'perf' | 'freeform' | 'trace'
 let viewMode: ViewMode = 'summary'
 
 // Under normal circumstances, the font face used in graphs might not be fully
@@ -100,12 +103,23 @@ function onCommand(event: CustomEvent) {
 }
 
 function onKeyDown(event: KeyboardEvent) {
-  if (event.key === 't') {
-    if (!traceViewModel) {
-      traceViewModel = viewModel.createTraceViewModel()
-    }
-    viewMode = 'trace'
-    event.preventDefault()
+  switch (event.key) {
+    case 'f':
+      if (!freeformViewModel) {
+        freeformViewModel = viewModel.createFreeformViewModel()
+      }
+      viewMode = 'freeform'
+      event.preventDefault()
+      break
+    case 't':
+      if (!traceViewModel) {
+        traceViewModel = viewModel.createTraceViewModel()
+      }
+      viewMode = 'trace'
+      event.preventDefault()
+      break
+    default:
+      break
   }
 }
 
@@ -129,6 +143,8 @@ svelte:window(on:keydown!='{onKeyDown}')
           .progress {$progress}
         +elseif('viewMode === "comparison-detail"')
           ComparisonDetail(on:command!='{onCommand}' viewModel!='{compareDetailViewModel}')
+        +elseif('viewMode === "freeform"')
+          Freeform(on:command!='{onCommand}' viewModel!='{freeformViewModel}')
         +elseif('viewMode === "perf"')
           Perf(on:command!='{onCommand}' viewModel!='{perfViewModel}')
         +elseif('viewMode === "trace"')

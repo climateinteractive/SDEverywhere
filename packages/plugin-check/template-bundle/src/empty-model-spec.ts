@@ -7,9 +7,12 @@
  */
 
 import type { InputSpec } from './inputs'
+import type { ModelImplSpec } from './impl-vars'
 import type { OutputSpec } from './outputs'
 
 export const inputSpecs: InputSpec[] = []
 export const outputSpecs: OutputSpec[] = []
+export const modelImplSpec: ModelImplSpec = undefined
+
 export const modelSizeInBytes = 0
 export const dataSizeInBytes = 0

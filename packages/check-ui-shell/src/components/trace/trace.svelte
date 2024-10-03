@@ -23,20 +23,23 @@ function onRun() {
 <template>
 
 <div class="trace-container">
-  {#if !$running}
-    <button class="run" on:click={onRun} disabled={$running}>Run</button>
-  {:else}
-    <div>Running comparisons, please wait…</div>
-  {/if}
-
-  {#each $groups as group}
-    <div class="trace-group">
-      <div class="trace-group-title">{group.title}</div>
-      {#each group.rows as row}
-        <Row viewModel={row} />
-      {/each}
-    </div>
-  {/each}
+  <div class="trace-header-container">
+    {#if !$running}
+      <button class="run" on:click={onRun} disabled={$running}>Run</button>
+    {:else}
+      <div>Running comparisons, please wait…</div>
+    {/if}
+  </div>
+  <div class="trace-scroll-container">
+    {#each $groups as group}
+      <div class="trace-group">
+        <div class="trace-group-title">{group.title}</div>
+        {#each group.rows as row}
+          <Row viewModel={row} />
+        {/each}
+      </div>
+    {/each}
+  </div>
 </div>
 
 </template>
@@ -50,8 +53,31 @@ function onRun() {
 .trace-container
   display: flex
   flex-direction: column
+  flex: 1
+
+.trace-header-container
+  display: flex
+  flex-direction: column
   align-items: flex-start
-  padding: 0 1rem
+  // XXX: Use negative margin to make the shadow stretch all the way
+  // across, then use extra padding to compensate
+  margin: 0 -1rem
+  padding: 0 2rem 1rem 2rem
+  box-shadow: 0 1rem .5rem -.5rem rgba(0,0,0,.5)
+  z-index: 1
+
+.trace-scroll-container
+  display: flex
+  // XXX: We use 1px here for flex-basis, otherwise in Firefox and Chrome the
+  // whole page will scroll instead of just this container.  See also:
+  //   https://stackoverflow.com/a/52489012
+  flex: 1 1 1px
+  flex-direction: column
+  overflow: auto
+  padding: 1rem
+  align-items: flex-start
+  outline: none
+  background-color: #3c3c3c
 
 .trace-group
   display: flex

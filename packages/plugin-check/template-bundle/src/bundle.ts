@@ -20,7 +20,7 @@ import type { Input } from './inputs'
 import { getInputVars, setInputsForScenario } from './inputs'
 import { getOutputVars } from './outputs'
 
-import { inputSpecs, outputSpecs, modelSizeInBytes, dataSizeInBytes } from 'virtual:model-spec'
+import { inputSpecs, implVarSpecs, outputSpecs, modelSizeInBytes, dataSizeInBytes } from 'virtual:model-spec'
 
 import modelWorkerJs from '@_model_worker_/worker.js?raw'
 
@@ -140,12 +140,16 @@ export function createBundle(): Bundle {
   const inputVars = getInputVars(inputSpecs)
   const outputVars = getOutputVars(outputSpecs)
 
+  // Gather information about internal/implementation variables
+  const implVars = getImplVars()
+
   const modelSpec: ModelSpec = {
     modelSizeInBytes,
     dataSizeInBytes,
     inputVars,
     outputVars,
-    implVars: new Map()
+    implVars,
+    implVarGroups
     // TODO: startTime and endTime are optional; the comparison graphs work OK if
     // they are undefined.  The main benefit of using these is to set a specific
     // range for the x-axis on the comparison graphs, so maybe we should find

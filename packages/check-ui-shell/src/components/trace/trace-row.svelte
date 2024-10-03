@@ -16,7 +16,9 @@ export let viewModel: TraceRowViewModel
 <template>
 
 <div class="trace-row">
-  <div class="trace-var-name">{viewModel.varName}</div>
+  <div class="trace-var-name-container">
+    <div class="trace-var-name">{viewModel.varName}</div>
+  </div>
   <div class="trace-points">
     {#each viewModel.points as point}
       <div class="trace-point" class:empty={point.empty} style="background-color: {point.color}"></div>
@@ -36,11 +38,26 @@ export let viewModel: TraceRowViewModel
   display: flex
   flex-direction: row
 
-.trace-var-name
+.trace-var-name-container
+  display: flex
+  flex-wrap: nowrap
   font-size: 10px
   color: #fff
-  width: 100px
-  max-width: 100px
+  width: 250px
+  max-width: 250px
+  margin-right: 10px
+
+.trace-var-name
+  display: flex
+  flex-wrap: nowrap
+  font-size: 10px
+  color: #fff
+  white-space: nowrap
+  overflow: hidden
+  z-index: 1000
+  &:hover
+    overflow: unset
+    background-color: #222
 
 .trace-points
   display: flex
