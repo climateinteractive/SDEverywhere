@@ -660,26 +660,16 @@ class ResolvedScenarioGroups {
 // TODO: This doesn't currently check that the referenced graph IDs are available in one or both
 // model specs
 class ResolvedGraphGroups {
-  /** The array of all resolved graph groups. */
-  private readonly resolvedGroups: ComparisonGraphGroupSpec[] = []
-
   /** The set of resolved graph groups, keyed by ID. */
   private readonly resolvedGroupsById: Map<ComparisonGraphGroupId, ComparisonGraphGroupSpec> = new Map()
 
   add(group: ComparisonGraphGroupSpec): void {
-    // Add the group to the general set
-    this.resolvedGroups.push(group)
-
-    // Also add to the map of groups with an ID
-    // TODO: Mark this as an error in the interface rather than throwing
+    // Add to the map of groups
     if (this.resolvedGroupsById.has(group.id)) {
+      // TODO: Mark this as an error in the interface rather than throwing
       throw new Error(`Multiple graph groups defined with the same id (${group.id})`)
     }
     this.resolvedGroupsById.set(group.id, group)
-  }
-
-  getAll(): ComparisonGraphGroupSpec[] {
-    return this.resolvedGroups
   }
 
   getGroupForId(id: ComparisonGraphGroupId): ComparisonGraphGroupSpec | undefined {
