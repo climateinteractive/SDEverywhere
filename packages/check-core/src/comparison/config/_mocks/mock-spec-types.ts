@@ -21,10 +21,8 @@ import type {
   ComparisonScenarioWithAllInputsSpec,
   ComparisonScenarioWithDistinctInputsSpec,
   ComparisonScenarioWithInputsSpec,
-  ComparisonSpecs,
   ComparisonViewGraphOrder,
   ComparisonViewGraphsSpec,
-  ComparisonViewGroupSpec,
   ComparisonViewGroupWithScenariosSpec,
   ComparisonViewGroupWithViewsSpec,
   ComparisonViewSpec
@@ -219,21 +217,5 @@ export function viewGroupWithScenariosSpec(
     scenarios,
     graphs,
     graphOrder
-  }
-}
-
-//
-// TOP-LEVEL TYPES
-//
-
-export function comparisonSpecs(
-  scenarios: ComparisonScenarioSpec[],
-  scenarioGroups: ComparisonScenarioGroupSpec[] = [],
-  viewGroups: ComparisonViewGroupSpec[] = []
-): ComparisonSpecs {
-  return {
-    scenarios,
-    scenarioGroups,
-    viewGroups
   }
 }

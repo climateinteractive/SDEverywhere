@@ -31,7 +31,6 @@ import {
 } from '../../_shared/_mocks/mock-resolved-types'
 
 import {
-  comparisonSpecs,
   graphGroupRefSpec,
   graphGroupSpec,
   graphsArraySpec,
@@ -133,20 +132,22 @@ describe('resolveComparisonSpecs', () => {
 
   describe('with scenario specs', () => {
     it('should expand "with: input" at position specs', () => {
-      const specs = comparisonSpecs([
-        // Match by variable name
-        scenarioWithInputsSpec([inputAtPositionSpec('ivarA', 'default')]),
-        // Match by input ID
-        scenarioWithInputsSpec([inputAtPositionSpec('id 2', 'min')]),
-        // Match by alias (slider name)
-        scenarioWithInputsSpec([inputAtPositionSpec('s3', 'max')]),
-        // Error if name can only be resolved on left side
-        scenarioWithInputsSpec([inputAtPositionSpec('ivarB', 'min')]),
-        // Error if name can only be resolved on right side
-        scenarioWithInputsSpec([inputAtPositionSpec('ivarD', 'min')]),
-        // Error if name can't be resolved on either side
-        scenarioWithInputsSpec([inputAtPositionSpec('ivarX', 'min')])
-      ])
+      const specs: ComparisonSpecs = {
+        scenarios: [
+          // Match by variable name
+          scenarioWithInputsSpec([inputAtPositionSpec('ivarA', 'default')]),
+          // Match by input ID
+          scenarioWithInputsSpec([inputAtPositionSpec('id 2', 'min')]),
+          // Match by alias (slider name)
+          scenarioWithInputsSpec([inputAtPositionSpec('s3', 'max')]),
+          // Error if name can only be resolved on left side
+          scenarioWithInputsSpec([inputAtPositionSpec('ivarB', 'min')]),
+          // Error if name can only be resolved on right side
+          scenarioWithInputsSpec([inputAtPositionSpec('ivarD', 'min')]),
+          // Error if name can't be resolved on either side
+          scenarioWithInputsSpec([inputAtPositionSpec('ivarX', 'min')])
+        ]
+      }
 
       const resolved = resolveComparisonSpecs(modelSpecL, modelSpecR, specs)
       expect(resolved).toEqual({
@@ -204,18 +205,20 @@ describe('resolveComparisonSpecs', () => {
     })
 
     it('should expand "with: input" at value specs', () => {
-      const specs = comparisonSpecs([
-        // Match by variable name
-        scenarioWithInputsSpec([inputAtValueSpec('ivarA', 20)]),
-        // Match by input ID
-        scenarioWithInputsSpec([inputAtValueSpec('id 2', 40)]),
-        // Match by alias (slider name)
-        scenarioWithInputsSpec([inputAtValueSpec('S3', 60)]),
-        // Error if value is out of range on both sides
-        scenarioWithInputsSpec([inputAtValueSpec('ivarA', 500)]),
-        // Error if value is out of range on one side
-        scenarioWithInputsSpec([inputAtValueSpec('id 2', 90)])
-      ])
+      const specs: ComparisonSpecs = {
+        scenarios: [
+          // Match by variable name
+          scenarioWithInputsSpec([inputAtValueSpec('ivarA', 20)]),
+          // Match by input ID
+          scenarioWithInputsSpec([inputAtValueSpec('id 2', 40)]),
+          // Match by alias (slider name)
+          scenarioWithInputsSpec([inputAtValueSpec('S3', 60)]),
+          // Error if value is out of range on both sides
+          scenarioWithInputsSpec([inputAtValueSpec('ivarA', 500)]),
+          // Error if value is out of range on one side
+          scenarioWithInputsSpec([inputAtValueSpec('id 2', 90)])
+        ]
+      }
 
       const resolved = resolveComparisonSpecs(modelSpecL, modelSpecR, specs)
       expect(resolved).toEqual({
@@ -284,20 +287,22 @@ describe('resolveComparisonSpecs', () => {
         }
       }
 
-      const specs = comparisonSpecs([
-        // Match by variable name
-        scenarioWithDistinctInputsSpec([inputAtValueSpec('ivarA', 20)], [inputAtValueSpec('ivarA', 30)]),
-        // Match by input ID
-        scenarioWithDistinctInputsSpec([inputAtValueSpec('id 2', 40)], [inputAtValueSpec('id 2', 50)]),
-        // Match by alias (slider name)
-        scenarioWithDistinctInputsSpec([inputAtValueSpec('S3', 60)], [inputAtValueSpec('S3', 70)]),
-        // Error if input is not available on requested side
-        scenarioWithDistinctInputsSpec([inputAtValueSpec('ivarA', 20)], [inputAtValueSpec('unknown', 600)]),
-        // Error if value is out of range on both sides
-        scenarioWithDistinctInputsSpec([inputAtValueSpec('ivarA', 500)], [inputAtValueSpec('ivarA', 600)]),
-        // Error if value is out of range on one side
-        scenarioWithDistinctInputsSpec([inputAtValueSpec('id 2', 90)], [inputAtValueSpec('id 2', 600)])
-      ])
+      const specs: ComparisonSpecs = {
+        scenarios: [
+          // Match by variable name
+          scenarioWithDistinctInputsSpec([inputAtValueSpec('ivarA', 20)], [inputAtValueSpec('ivarA', 30)]),
+          // Match by input ID
+          scenarioWithDistinctInputsSpec([inputAtValueSpec('id 2', 40)], [inputAtValueSpec('id 2', 50)]),
+          // Match by alias (slider name)
+          scenarioWithDistinctInputsSpec([inputAtValueSpec('S3', 60)], [inputAtValueSpec('S3', 70)]),
+          // Error if input is not available on requested side
+          scenarioWithDistinctInputsSpec([inputAtValueSpec('ivarA', 20)], [inputAtValueSpec('unknown', 600)]),
+          // Error if value is out of range on both sides
+          scenarioWithDistinctInputsSpec([inputAtValueSpec('ivarA', 500)], [inputAtValueSpec('ivarA', 600)]),
+          // Error if value is out of range on one side
+          scenarioWithDistinctInputsSpec([inputAtValueSpec('id 2', 90)], [inputAtValueSpec('id 2', 600)])
+        ]
+      }
 
       const resolved = resolveComparisonSpecs(modelSpecL, modelSpecR, specs)
       expect(resolved).toEqual({
@@ -355,11 +360,13 @@ describe('resolveComparisonSpecs', () => {
     // })
 
     it('should expand "with_inputs: all" at position specs', () => {
-      const specs = comparisonSpecs([
-        scenarioWithAllInputsSpec('default'),
-        scenarioWithAllInputsSpec('min'),
-        scenarioWithAllInputsSpec('max')
-      ])
+      const specs: ComparisonSpecs = {
+        scenarios: [
+          scenarioWithAllInputsSpec('default'),
+          scenarioWithAllInputsSpec('min'),
+          scenarioWithAllInputsSpec('max')
+        ]
+      }
 
       const resolved = resolveComparisonSpecs(modelSpecL, modelSpecR, specs)
       expect(resolved).toEqual({
@@ -445,7 +452,9 @@ describe('resolveComparisonSpecs', () => {
         )
       }
 
-      const specs = comparisonSpecs([scenarioMatrixSpec()])
+      const specs: ComparisonSpecs = {
+        scenarios: [scenarioMatrixSpec()]
+      }
 
       const resolved = resolveComparisonSpecs(modelSpecL, modelSpecR, specs)
       expect(resolved).toEqual({
@@ -472,15 +481,15 @@ describe('resolveComparisonSpecs', () => {
 
   describe('with scenario group specs', () => {
     it('should resolve a scenario group with valid scenarios and refs', () => {
-      const specs = comparisonSpecs(
-        [scenarioWithInputsSpec([inputAtPositionSpec('id 1', 'max')], { id: 'id_1_at_max' })],
-        [
+      const specs: ComparisonSpecs = {
+        scenarios: [scenarioWithInputsSpec([inputAtPositionSpec('id 1', 'max')], { id: 'id_1_at_max' })],
+        scenarioGroups: [
           scenarioGroupSpec('Group with two vars at max', [
             scenarioRefSpec('id_1_at_max'),
             scenarioWithInputsSpec([inputAtPositionSpec('id 2', 'max')])
           ])
         ]
-      )
+      }
 
       const expectedId1AtMax = scenarioWithInput(
         '1',
@@ -512,10 +521,10 @@ describe('resolveComparisonSpecs', () => {
     })
 
     it('should resolve a scenario group that refers to an unknown scenario', () => {
-      const specs = comparisonSpecs(
-        [scenarioWithInputsSpec([inputAtPositionSpec('id 1', 'max')])],
-        [scenarioGroupSpec('Group with invalid ref', [scenarioRefSpec('unknown')])]
-      )
+      const specs: ComparisonSpecs = {
+        scenarios: [scenarioWithInputsSpec([inputAtPositionSpec('id 1', 'max')])],
+        scenarioGroups: [scenarioGroupSpec('Group with invalid ref', [scenarioRefSpec('unknown')])]
+      }
 
       const expectedId1AtMax = scenarioWithInput(
         '1',
