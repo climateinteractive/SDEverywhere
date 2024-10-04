@@ -15,6 +15,7 @@
     "type-check": "tsc --noEmit -p tsconfig-test.json",
     "build": "vite build",
     "dev": "vite",
+    "preview": "vite preview",
     "ci:build": "run-s clean lint prettier:check type-check build"
   },
   "dependencies": {
