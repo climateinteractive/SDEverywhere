@@ -1,7 +1,7 @@
 // Copyright (c) 2021-2022 Climate Interactive / New Venture Fund
 
 import type { DatasetKey } from '../../_shared/types'
-import type { BundleGraphId, LoadedBundle, ModelSpec, NamedBundle } from '../../bundle/bundle-types'
+import type { LoadedBundle, ModelSpec, NamedBundle } from '../../bundle/bundle-types'
 
 import type { ComparisonScenario, ComparisonViewGroup } from '../_shared/comparison-resolved-types'
 
@@ -27,16 +27,6 @@ export interface ComparisonDatasetOptions {
   datasetKeysForScenario?: (allDatasetKeys: DatasetKey[], scenario: ComparisonScenario) => DatasetKey[]
 }
 
-export interface ComparisonGraphOptions {
-  /**
-   * An optional function that allows for limiting the graphs that are compared
-   * for a given scenario.  By default, all graphs are compared for a given
-   * scenario, but if a custom function is provided, it can return a subset of
-   * graphs (for example, to omit graphs that are not relevant under that scenario).
-   */
-  graphIdsForScenario?: (scenario: ComparisonScenario) => BundleGraphId[]
-}
-
 export interface ComparisonOptions {
   /** The left-side ("baseline") bundle being compared. */
   baseline: NamedBundle
@@ -52,8 +42,6 @@ export interface ComparisonOptions {
   specs: (ComparisonSpecs | ComparisonSpecsSource)[]
   /** Optional configuration for the datasets that are compared for different scenarios. */
   datasets?: ComparisonDatasetOptions
-  // /** Optional configuration for the graphs that are compared for different scenarios. */
-  // graphs?: ComparisonGraphOptions
 }
 
 export interface ComparisonConfig {
