@@ -7,6 +7,7 @@ import { err, ok } from 'neverthrow'
 import yaml from 'yaml'
 
 import type {
+  ComparisonGraphGroupSpec,
   ComparisonScenarioGroupRefSpec,
   ComparisonScenarioGroupSpec,
   ComparisonScenarioInputPosition,
@@ -15,6 +16,7 @@ import type {
   ComparisonScenarioSpec,
   ComparisonSpecs,
   ComparisonSpecsSource,
+  ComparisonViewGraphOrder,
   ComparisonViewGraphsSpec,
   ComparisonViewGroupSpec,
   ComparisonViewSpec
@@ -121,17 +123,46 @@ interface ParsedScenarioGroupRef {
 }
 
 //
+// GRAPHS
+//
+
+type ParsedGraphsPreset = 'all'
+
+type ParsedGraphId = string
+
+//
+// GRAPH GROUPS
+//
+
+type ParsedGraphGroupId = string
+
+/**
+ * A definition of a group of graphs.  Multiple graphs can be grouped together and can later be
+ * referenced by group ID in a view definition.
+ */
+interface ParsedGraphGroup {
+  id: ParsedGraphGroupId
+  graphs: ParsedGraphId[]
+}
+
+/** A single item in an array of graph group definitions. */
+interface ParsedGraphGroupArrayItem {
+  graph_group: ParsedGraphGroup
+}
+
+/** A reference to a graph group definition. */
+interface ParsedGraphGroupRef {
+  graph_group_ref: ParsedGraphGroupId
+}
+
+//
 // VIEWS
 //
 
 type ParsedViewTitle = string
 type ParsedViewSubtitle = string
 
-type ParsedViewGraphsPreset = 'all'
-
-type ParsedViewGraphId = string
-
-type ParsedViewGraphs = ParsedViewGraphsPreset | ParsedViewGraphId[]
+type ParsedViewGraphs = ParsedGraphsPreset | ParsedGraphId[] | ParsedGraphGroupRef
 
 /**
  * A definition of a view.  A view presents a set of graphs for a single input scenario.  This
@@ -143,6 +174,7 @@ interface ParsedView {
   // desc?: string
   scenario_ref?: ParsedScenarioId
   graphs?: ParsedViewGraphs
+  graph_order?: ComparisonViewGraphOrder
 }
 
 //
@@ -165,6 +197,7 @@ interface ParsedViewGroup {
   views?: ParsedViewGroupViewsItem[]
   scenarios?: ParsedViewGroupScenariosItem[]
   graphs?: ParsedViewGraphs
+  graph_order?: ComparisonViewGraphOrder
 }
 
 /** A single item in an array of view definitions. */
@@ -176,7 +209,11 @@ interface ParsedViewGroupArrayItem {
 // TOP-LEVEL DEFS
 //
 
-type ParsedTopLevelDefItem = ParsedScenarioArrayItem | ParsedScenarioGroupArrayItem | ParsedViewGroupArrayItem
+type ParsedTopLevelDefItem =
+  | ParsedScenarioArrayItem
+  | ParsedScenarioGroupArrayItem
+  | ParsedGraphGroupArrayItem
+  | ParsedViewGroupArrayItem
 
 /**
  * Parse the comparison test definitions in the given JSON or YAML strings.
@@ -186,6 +223,7 @@ type ParsedTopLevelDefItem = ParsedScenarioArrayItem | ParsedScenarioGroupArrayI
 export function parseComparisonSpecs(specSource: ComparisonSpecsSource): Result<ComparisonSpecs, Error> {
   const scenarios: ComparisonScenarioSpec[] = []
   const scenarioGroups: ComparisonScenarioGroupSpec[] = []
+  const graphGroups: ComparisonGraphGroupSpec[] = []
   const viewGroups: ComparisonViewGroupSpec[] = []
 
   // Prepare the JSON validator
@@ -215,6 +253,8 @@ export function parseComparisonSpecs(specSource: ComparisonSpecsSource): Result<
         scenarios.push(scenarioSpecFromParsed(specItem.scenario))
       } else if ('scenario_group' in specItem) {
         scenarioGroups.push(scenarioGroupSpecFromParsed(specItem.scenario_group))
+      } else if ('graph_group' in specItem) {
+        graphGroups.push(graphGroupSpecFromParsed(specItem.graph_group))
       } else if ('view_group' in specItem) {
         viewGroups.push(viewGroupSpecFromParsed(specItem.view_group))
       }
@@ -232,6 +272,7 @@ export function parseComparisonSpecs(specSource: ComparisonSpecsSource): Result<
   return ok({
     scenarios,
     scenarioGroups,
+    graphGroups,
     viewGroups
   })
 }
@@ -364,6 +405,18 @@ function scenarioGroupRefSpecFromParsed(parsedGroupRef: ParsedScenarioGroupRef):
 }
 
 //
+// GRAPH GROUPS
+//
+
+function graphGroupSpecFromParsed(parsedGraphGroup: ParsedGraphGroup): ComparisonGraphGroupSpec {
+  return {
+    kind: 'graph-group',
+    id: parsedGraphGroup.id,
+    graphIds: parsedGraphGroup.graphs
+  }
+}
+
+//
 // VIEWS
 //
 
@@ -373,7 +426,8 @@ function viewSpecFromParsed(parsedView: ParsedView): ComparisonViewSpec {
     title: parsedView.title,
     subtitle: parsedView.subtitle,
     scenarioId: parsedView.scenario_ref,
-    graphs: viewGraphsSpecFromParsed(parsedView.graphs)
+    graphs: viewGraphsSpecFromParsed(parsedView.graphs),
+    graphOrder: parsedView.graph_order
   }
 }
 
@@ -383,11 +437,19 @@ function viewGraphsSpecFromParsed(parsedGraphs: ParsedViewGraphs): ComparisonVie
       kind: 'graphs-preset',
       preset: 'all'
     }
-  } else {
+  } else if (Array.isArray(parsedGraphs)) {
     return {
       kind: 'graphs-array',
       graphIds: parsedGraphs
     }
+  } else if ('graph_group_ref' in parsedGraphs) {
+    return {
+      kind: 'graph-group-ref',
+      groupId: parsedGraphs.graph_group_ref
+    }
+  } else {
+    // Internal error (this should have already been rejected by the validator)
+    throw new Error('Invalid graphs spec in comparison view')
   }
 }
 
