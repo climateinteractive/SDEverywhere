@@ -35,6 +35,18 @@
       - scenario_ref: input_1_at_min
       - scenario_ref: input_1_at_max
 
+- graph_group:
+    id: GraphGroup1
+    graphs:
+      - '1'
+      - '2'
+
+- graph_group:
+    id: GraphGroup2
+    graphs:
+      - '3'
+      - '4'
+
 - view_group:
     title: Baseline
     views:
@@ -42,6 +54,7 @@
           title: All graphs
           scenario_ref: baseline
           graphs: all
+          graph_order: grouped-by-diffs
 
 - view_group:
     title: Extremes
@@ -66,16 +79,14 @@
           subtitle: Slider 2 at min
           scenario_ref: input_1_at_max
           graphs:
-            - '1'
-            - '2'
+            graph_group_ref: GraphGroup1
 
 - view_group:
     title: Group 2 (showing graphs 3+4 for different scenarios involving Input 1)
     scenarios:
       - scenario_group_ref: G0
     graphs:
-      - '3'
-      - '4'
+      graph_group_ref: GraphGroup2
 #
 # TODO: The following can be uncommented to test edge/error cases
 #
