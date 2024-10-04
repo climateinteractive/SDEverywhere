@@ -91,12 +91,19 @@ export function createSummaryViewModel(
     if (comparisonSummaries.views) {
       comparisonViewsSummaryViewModel = comparisonSummaries.views
 
-      // For now, if we have an "all graphs" view, report the number of changed graphs.  If no graph differences, report
-      // the number of views (scenarios) with differences.
+      // For now, if we have one or more views that show graphs grouped by diffs, report the
+      // number of changed graphs.  If no graph differences, report the number of views
+      // (scenarios) with differences.
       let viewsTabInfo: TabInfo
-      const allViewRows = comparisonSummaries.views.allRows
-      const allGraphsRow = allViewRows.find(row => row.viewMetadata?.view.graphs === 'all')
-      const changedGraphCount = allGraphsRow?.viewMetadata?.changedGraphCount || 0
+      let changedGraphCount = 0
+      for (const row of comparisonSummaries.views.allRows) {
+        // TODO: We may end up counting the same graph here multiple times if there are multiple
+        // views that use "grouped-by-diffs" mode and display the same subset of graphs in each.
+        // Ideally we would get the number of unique graphs with changes here instead.
+        if (row.viewMetadata?.view.graphOrder === 'grouped-by-diffs') {
+          changedGraphCount += row?.viewMetadata?.changedGraphCount || 0
+        }
+      }
       if (changedGraphCount > 0) {
         viewsTabInfo = getTabInfo(changedGraphCount, 'graph')
       } else {
