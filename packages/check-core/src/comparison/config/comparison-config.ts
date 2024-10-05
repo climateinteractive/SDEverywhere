@@ -1,9 +1,9 @@
 // Copyright (c) 2021-2022 Climate Interactive / New Venture Fund
 
 import type { DatasetKey } from '../../_shared/types'
-import type { LoadedBundle, ModelSpec, NamedBundle } from '../../bundle/bundle-types'
+import type { BundleGraphId, LoadedBundle, ModelSpec, NamedBundle } from '../../bundle/bundle-types'
 
-import type { ComparisonScenario, ComparisonViewGroup } from '../_shared/comparison-resolved-types'
+import type { ComparisonDataset, ComparisonScenario, ComparisonViewGroup } from '../_shared/comparison-resolved-types'
 
 import type { ComparisonDatasets } from './comparison-datasets'
 import type { ComparisonScenarios } from './comparison-scenarios'
@@ -25,6 +25,14 @@ export interface ComparisonDatasetOptions {
    * datasets (for example, to omit datasets that are not relevant).
    */
   datasetKeysForScenario?: (allDatasetKeys: DatasetKey[], scenario: ComparisonScenario) => DatasetKey[]
+  /**
+   * An optional function that allows for customizing the set of context graphs
+   * that are shown for a given dataset and scenario.  By default, all graphs in
+   * which the dataset appears will be shown, but if a custom function is provided,
+   * it can return a different set of graphs (for example, to omit graphs that are
+   * not relevant under the given scenario).
+   */
+  contextGraphIdsForDataset?: (dataset: ComparisonDataset, scenario: ComparisonScenario) => BundleGraphId[]
 }
 
 export interface ComparisonOptions {

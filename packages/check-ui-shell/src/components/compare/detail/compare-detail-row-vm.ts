@@ -1,13 +1,10 @@
 // Copyright (c) 2021-2022 Climate Interactive / New Venture Fund
 
 import type {
-  BundleGraphId,
   BundleGraphSpec,
-  BundleModel,
   ComparisonConfig,
   ComparisonDataCoordinator,
-  ComparisonScenario,
-  OutputVar
+  ComparisonScenario
 } from '@sdeverywhere/check-core'
 
 import { ContextGraphViewModel } from '../../graphs/context-graph-vm'
@@ -74,34 +71,20 @@ export function createContextGraphRows(box: CompareDetailBoxViewModel): CompareD
   const bundleModelL = dataCoordinator.bundleModelL
   const bundleModelR = dataCoordinator.bundleModelR
 
-  const contextGraph = (scenario: ComparisonScenario, graphSpec: BundleGraphSpec, bundle: 'left' | 'right') => {
+  function contextGraph(
+    scenario: ComparisonScenario,
+    graphSpec: BundleGraphSpec | undefined,
+    bundle: 'left' | 'right'
+  ): ContextGraphViewModel {
     return new ContextGraphViewModel(comparisonConfig, dataCoordinator, bundle, scenario, graphSpec)
   }
 
   // Get the context graphs that are related to this output variable
-  const relatedGraphIds: Set<BundleGraphId> = new Set()
-  const addGraphs = (outputVar: OutputVar, bundleModel: BundleModel) => {
-    // Use the graph specs advertised by the bundle to determine which
-    // graphs to display
-    if (bundleModel.modelSpec.graphSpecs === undefined) {
-      return
-    }
-    for (const graphSpec of bundleModel.modelSpec.graphSpecs) {
-      for (const graphDatasetSpec of graphSpec.datasets) {
-        if (graphDatasetSpec.datasetKey === outputVar.datasetKey) {
-          relatedGraphIds.add(graphSpec.id)
-          break
-        }
-      }
-    }
-  }
-  const dataset = comparisonConfig.datasets.getDataset(box.datasetKey)
-  addGraphs(dataset.outputVarL, bundleModelL)
-  addGraphs(dataset.outputVarR, bundleModelR)
+  const graphIds = comparisonConfig.datasets.getContextGraphIdsForDataset(box.datasetKey, box.scenario)
 
   // Prepare context graphs for this box
   const contextGraphRows: CompareDetailContextGraphRowViewModel[] = []
-  for (const graphId of relatedGraphIds) {
+  for (const graphId of graphIds) {
     const graphSpecL = bundleModelL.modelSpec.graphSpecs?.find(s => s.id === graphId)
     const graphSpecR = bundleModelR.modelSpec.graphSpecs?.find(s => s.id === graphId)
     contextGraphRows.push({
