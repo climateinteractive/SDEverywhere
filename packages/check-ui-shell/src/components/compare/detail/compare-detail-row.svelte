@@ -39,6 +39,19 @@ function onToggle(index: number): void {
   }
 }
 
+function getContextGraphPadding(index: number): number {
+  if (index === undefined) {
+    return 0
+  }
+
+  if (viewModel.boxes.length > 0) {
+    // Calculate the center of the box as a percentage of the width of the row
+    return ((index + 0.5) / (viewModel.boxes.length)) * 100
+  } else {
+    return 0
+  }
+}
+
 </script>
 
 
@@ -70,17 +83,18 @@ function onToggle(index: number): void {
 
   {#if expandedIndex !== undefined}
     <div class="context-graphs-container">
-      {#if contextGraphRows}
-        {#each contextGraphRows as rowViewModel}
-          <div class="context-graph-row">
-            <div class="spacer-flex"></div>
-            <ContextGraph viewModel={rowViewModel.graphL} />
-            <div class="context-graph-spacer"></div>
-            <ContextGraph viewModel={rowViewModel.graphR} />
-            <div class="spacer-flex"></div>
-          </div>
-        {/each}
-      {/if}
+      <div style="min-width: max(0%, min(calc({getContextGraphPadding(expandedIndex)}% - 38.75rem), calc(100% - 77.5rem)))"></div>
+      <div class="context-graphs-column">
+        {#if contextGraphRows}
+          {#each contextGraphRows as rowViewModel}
+            <div class="context-graph-row">
+              <ContextGraph viewModel={rowViewModel.graphL} />
+              <div class="context-graph-spacer"></div>
+              <ContextGraph viewModel={rowViewModel.graphR} />
+            </div>
+          {/each}
+        {/if}
+      </div>
     </div>
   {/if}
 </div>
@@ -121,20 +135,26 @@ function onToggle(index: number): void {
   opacity: 0.2
 
 .spacer-fixed
-  width: 1.5rem
+  min-width: 1.5rem
 
 .context-graphs-container
   display: inline-flex
-  flex-direction: column
+  flex-direction: row
   margin-top: 1rem
   background-color: #555
+
+.context-graphs-column
+  display: inline-flex
+  flex-direction: column
 
 .context-graph-row
   display: flex
   flex-direction: row
+  // XXX: Remove this hardcoded value
+  width: 77.5rem
   margin: 1rem 0
 
 .context-graph-spacer
-  flex: 0 0 2rem
+  min-width: 1.5rem
 
 </style>
