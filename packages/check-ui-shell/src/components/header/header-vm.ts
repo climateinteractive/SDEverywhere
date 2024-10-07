@@ -12,6 +12,7 @@ export interface HeaderViewModel {
   bundleNamesR: Writable<string[]>
   thresholds?: string[]
   simplifyScenarios?: Writable<boolean>
+  controlsVisible: Writable<boolean>
   zoom: Writable<number>
 }
 
@@ -26,6 +27,7 @@ export function createHeaderViewModel(
     simplifyScenarios = undefined
   }
 
+  const controlsVisible = writable(false)
   const zoom = localStorageWritableNumber('sde-check-graph-zoom', 1)
 
   // Only include the comparison-related header elements if the comparison
@@ -46,6 +48,7 @@ export function createHeaderViewModel(
       bundleNamesR: writable([comparisonConfig.bundleR.name]),
       thresholds: thresholdStrings,
       simplifyScenarios,
+      controlsVisible,
       zoom
     }
   } else {
@@ -53,6 +56,7 @@ export function createHeaderViewModel(
       bundleNamesL: writable([]),
       bundleNamesR: writable([]),
       simplifyScenarios,
+      controlsVisible,
       zoom
     }
   }

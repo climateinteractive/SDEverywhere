@@ -14,9 +14,9 @@ const simplifyScenarios = viewModel.simplifyScenarios
 const thresholds = viewModel.thresholds
 const bundleNamesL = viewModel.bundleNamesL
 const bundleNamesR = viewModel.bundleNamesR
+const controlsVisible = viewModel.controlsVisible
 const zoom = viewModel.zoom
 
-let showControls = false
 
 const dispatch = createEventDispatcher()
 
@@ -25,7 +25,7 @@ function onHome() {
 }
 
 function onToggleControls() {
-  showControls = !showControls
+  viewModel.controlsVisible.update(v => !v)
 }
 
 function onSelectBundle(kind: string, name: string): void {
@@ -102,7 +102,7 @@ include header.pug
       .header-group
         .icon-button.controls(on:click!='{onToggleControls}')
           Icon(class='icon' data!='{faCog}')
-  +if('showControls')
+  +if('$controlsVisible')
     .header-controls
       .spacer-flex
       .control-label Graph Zoom:

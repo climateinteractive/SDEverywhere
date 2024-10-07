@@ -51,13 +51,17 @@ $: if (graphFontReady) {
   viewModel.runTestSuite()
 }
 
+function showSummary(): void {
+  compareDetailViewModel = undefined
+  viewMode = 'summary'
+}
+
 function onCommand(event: CustomEvent) {
   const cmdObj = event.detail
   const cmd = cmdObj.cmd
   switch (cmd) {
     case 'show-summary':
-      compareDetailViewModel = undefined
-      viewMode = 'summary'
+      showSummary()
       break
     case 'enter-tab':
       if (cmdObj.itemId !== 'checks') {
@@ -99,6 +103,26 @@ function onCommand(event: CustomEvent) {
   }
 }
 
+function onKeyDown(event: KeyboardEvent) {
+  // Ignore events when there is a modifier key involved
+  if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey || event.isComposing) {
+    return
+  }
+
+  switch (event.key) {
+    case 'c':
+      viewModel.headerViewModel.controlsVisible.update(v => !v)
+      event.preventDefault()
+      break
+    case 'h':
+      showSummary()
+      event.preventDefault()
+      break
+    default:
+      break
+  }
+}
+
 </script>
 
 
@@ -106,6 +130,8 @@ function onCommand(event: CustomEvent) {
 
 <!-- TEMPLATE -->
 <template lang='pug'>
+
+svelte:window(on:keydown!='{onKeyDown}')
 
 +await('viewReady')
   .loading-container
