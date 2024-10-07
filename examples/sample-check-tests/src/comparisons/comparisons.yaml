@@ -35,6 +35,46 @@
       - scenario_ref: input_1_at_min
       - scenario_ref: input_1_at_max
 
+- scenario_group:
+    id: G4
+    title: Scenario Group 4
+    scenarios:
+      - scenario:
+          title: Input A
+          subtitle: at 10
+          with: Input A
+          at: 10
+      - scenario:
+          title: Input A
+          subtitle: at 20
+          with: Input A
+          at: 20
+      - scenario:
+          title: Input A
+          subtitle: at 30
+          with: Input A
+          at: 30
+      - scenario:
+          title: Input A
+          subtitle: at 40
+          with: Input A
+          at: 40
+      - scenario:
+          title: Input A
+          subtitle: at 50
+          with: Input A
+          at: 50
+      - scenario:
+          title: Input A
+          subtitle: at 60
+          with: Input A
+          at: 60
+      - scenario:
+          title: Input A
+          subtitle: at 70
+          with: Input A
+          at: 70
+
 - graph_group:
     id: GraphGroup1
     graphs:
