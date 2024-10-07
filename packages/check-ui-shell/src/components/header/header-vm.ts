@@ -3,7 +3,7 @@
 import type { Writable } from 'svelte/store'
 import { writable } from 'svelte/store'
 import type { ComparisonConfig } from '@sdeverywhere/check-core'
-import { localStorageWritableBoolean } from '../../_shared/stores'
+import { localStorageWritableBoolean, localStorageWritableNumber } from '../../_shared/stores'
 
 export interface HeaderViewModel {
   nameL?: string
@@ -26,7 +26,7 @@ export function createHeaderViewModel(
     simplifyScenarios = undefined
   }
 
-  const zoom = writable(1)
+  const zoom = localStorageWritableNumber('sde-check-graph-zoom', 1)
 
   // Only include the comparison-related header elements if the comparison
   // config is defined

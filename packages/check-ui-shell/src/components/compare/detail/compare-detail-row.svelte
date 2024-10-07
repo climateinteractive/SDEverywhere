@@ -141,6 +141,7 @@ function getContextGraphPadding(index: number): number {
   display: inline-flex
   flex-direction: row
   margin-top: 1rem
+  padding: 0 1rem
   background-color: #555
 
 .context-graphs-column
