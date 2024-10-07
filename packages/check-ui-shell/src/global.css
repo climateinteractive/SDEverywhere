@@ -1,11 +1,3 @@
-:root {
-  /*
-   * This variable is set to 1vh by default, but can be overridden to
-   * work around `100vh` issues in mobile Safari and Chrome.
-   */
-  --vh: 1vh;
-}
-
 html,
 body {
   box-sizing: border-box;
@@ -15,9 +7,9 @@ body {
   background-color: #272727;
   color: #fff;
   font-family: Roboto;
-  font-weight: 500;
-  /* 1rem == 1% of the app width */
-  font-size: 1vw;
+  font-weight: 400;
+  /* 1rem == 12px */
+  font-size: 12px;
   /* Disable scrolling on the body; it can be re-enabled for specific children */
   overflow: hidden;
 }
