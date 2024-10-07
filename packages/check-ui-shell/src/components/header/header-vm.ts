@@ -12,6 +12,7 @@ export interface HeaderViewModel {
   bundleNamesR: Writable<string[]>
   thresholds?: string[]
   simplifyScenarios?: Writable<boolean>
+  zoom: Writable<number>
 }
 
 export function createHeaderViewModel(
@@ -24,6 +25,8 @@ export function createHeaderViewModel(
   } else {
     simplifyScenarios = undefined
   }
+
+  const zoom = writable(1)
 
   // Only include the comparison-related header elements if the comparison
   // config is defined
@@ -42,13 +45,15 @@ export function createHeaderViewModel(
       bundleNamesL: writable([comparisonConfig.bundleL.name]),
       bundleNamesR: writable([comparisonConfig.bundleR.name]),
       thresholds: thresholdStrings,
-      simplifyScenarios
+      simplifyScenarios,
+      zoom
     }
   } else {
     return {
       bundleNamesL: writable([]),
       bundleNamesR: writable([]),
-      simplifyScenarios
+      simplifyScenarios,
+      zoom
     }
   }
 }

@@ -149,21 +149,18 @@ function createCompareDetailViewModelForDataset(
   // Create a row for each group
   const detailRows: CompareDetailRowViewModel[] = []
   for (const group of groups) {
-    // TODO: For now show up to two items
-    // TODO: If more than two items in the row, add more rows
-    let item1: ComparisonDetailItem
-    let item2: ComparisonDetailItem
-    if (group.items[0] !== allAtDefaultItem) {
-      item1 = group.items.length > 0 ? group.items[0] : undefined
-      item2 = group.items.length > 1 ? group.items[1] : undefined
-    }
+    // TODO: For now put all grouped items in the same row, and make the "all at
+    // default" item always be the first item in the row.  Later we should make
+    // this configurable so that items can be put in a different order or split
+    // out into multiple rows.
+    const items = group.items[0] !== allAtDefaultItem ? [allAtDefaultItem, ...group.items] : group.items
     const detailRow = createCompareDetailRowViewModel(
       comparisonConfig,
       dataCoordinator,
       'scenarios',
       group.title,
       undefined, // TODO: Subtitle?
-      [allAtDefaultItem, item1, item2]
+      items
     )
     detailRows.push(detailRow)
   }

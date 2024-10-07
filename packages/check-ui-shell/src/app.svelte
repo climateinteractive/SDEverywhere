@@ -3,8 +3,10 @@
 <!-- SCRIPT -->
 <script lang='ts'>
 
+import assertNever from 'assert-never'
 import FontFaceObserver from 'fontfaceobserver'
 
+import type { ComparisonGroupingKind } from './components/compare/_shared/comparison-grouping-kind'
 import ComparisonDetail from './components/compare/detail/compare-detail.svelte'
 import type { CompareDetailViewModel } from './components/compare/detail/compare-detail-vm'
 import Header from './components/header/header.svelte'
@@ -13,18 +15,19 @@ import Perf from './components/perf/perf.svelte'
 import Summary from './components/summary/summary.svelte'
 
 import type { AppViewModel } from './app-vm'
-  import type { ComparisonGroupingKind } from './components/compare/_shared/comparison-grouping-kind'
-  import assertNever from 'assert-never'
 
 export let viewModel: AppViewModel
 const checksInProgress = viewModel.checksInProgress
 const progress = viewModel.progress
+const zoom = viewModel.headerViewModel.zoom
 
 let compareDetailViewModel: CompareDetailViewModel
 let perfViewModel: PerfViewModel
 
 type ViewMode = 'summary' | 'comparison-detail' | 'perf'
 let viewMode: ViewMode = 'summary'
+
+$: appStyle = `--graph-zoom: ${$zoom}`
 
 // Under normal circumstances, the font face used in graphs might not be fully
 // loaded by the browser before one or more graphs are rendered for the first time,
@@ -107,7 +110,7 @@ function onCommand(event: CustomEvent) {
 +await('viewReady')
   .loading-container
   +then('ignored')
-    .app-container
+    .app-container(style!='{appStyle}')
       Header(on:command!='{onCommand}' viewModel!='{viewModel.headerViewModel}')
       +if('$checksInProgress')
         .progress-container

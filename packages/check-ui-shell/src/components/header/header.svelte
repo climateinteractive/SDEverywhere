@@ -12,6 +12,7 @@ const simplifyScenarios = viewModel.simplifyScenarios
 const thresholds = viewModel.thresholds
 const bundleNamesL = viewModel.bundleNamesL
 const bundleNamesR = viewModel.bundleNamesR
+const zoom = viewModel.zoom
 
 const dispatch = createEventDispatcher()
 
@@ -88,6 +89,9 @@ include header.pug
         .label.bucket-color-2 { @html thresholds[2] }
         .label.bucket-color-3 { @html thresholds[3] }
         .label.bucket-color-4 { @html thresholds[4] }
+  .header-controls
+    .spacer-flex
+    input(type="range" min="0.3" max="2.5" step="0.1" bind:value!='{$zoom}')
   .line
 
 </template>
@@ -101,7 +105,9 @@ include header.pug
 .header-container
   display: flex
   flex-direction: column
-  margin: 0 1rem
+  box-sizing: border-box
+  width: 100vw
+  padding: 0 1rem
   color: #aaa
 
 .header-content
@@ -118,7 +124,7 @@ include header.pug
   flex: 1
 
 .spacer-fixed
-  flex: 0 0 4rem
+  flex: 0 0 2rem
 
 .label.home
   color: #ddd
@@ -147,6 +153,14 @@ select
   background-color: #353535
   border: none
   border-radius: .4rem
+
+.header-controls
+  display: flex
+  flex-direction: row
+  margin: .4rem 0
+
+input[type=range]
+  width: 10rem
 
 .line
   min-height: 1px
