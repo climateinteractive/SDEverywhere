@@ -1,10 +1,10 @@
 // Copyright (c) 2023 Climate Interactive / New Venture Fund
 
-import type { ModelSpec } from '../../bundle/bundle-types'
+import type { BundleGraphId, ModelSpec } from '../../bundle/bundle-types'
 import type { OutputVar } from '../../bundle/var-types'
 import type { DatasetKey } from '../../_shared/types'
 import type { ComparisonDataset, ComparisonScenario } from '../_shared/comparison-resolved-types'
-import type { ComparisonDatasetOptions } from './comparison-config'
+import type { ComparisonDatasetOptions, ComparisonPlot } from './comparison-config'
 
 /**
  * Provides access to the set of dataset definitions (`ComparisonDataset` instances) that are used
@@ -29,6 +29,23 @@ export interface ComparisonDatasets {
    * @param scenario The scenario definition.
    */
   getDatasetKeysForScenario(scenario: ComparisonScenario): DatasetKey[]
+
+  /**
+   * Return the reference plots that should be shown in the comparison graph for the
+   * given dataset and scenario.
+   *
+   * @param datasetKey The key for the dataset.
+   * @param scenario The scenario for which the dataset will be displayed.
+   */
+  getReferencePlotsForDataset(datasetKey: DatasetKey, scenario: ComparisonScenario): ComparisonPlot[]
+
+  /**
+   * Return the context graph IDs that should be shown for the given dataset and scenario.
+   *
+   * @param datasetKey The key for the dataset.
+   * @param scenario The scenario for which the dataset will be displayed.
+   */
+  getContextGraphIdsForDataset(datasetKey: DatasetKey, scenario: ComparisonScenario): BundleGraphId[]
 }
 
 /**
@@ -71,8 +88,8 @@ class ComparisonDatasetsImpl implements ComparisonDatasets {
    * @param datasetOptions The custom configuration for the datasets to be compared.
    */
   constructor(
-    modelSpecL: ModelSpec,
-    modelSpecR: ModelSpec,
+    private readonly modelSpecL: ModelSpec,
+    private readonly modelSpecR: ModelSpec,
     private readonly datasetOptions?: ComparisonDatasetOptions
   ) {
     // Invert the map of renamed keys so that new names are on the left (map
@@ -148,4 +165,55 @@ class ComparisonDatasetsImpl implements ComparisonDatasets {
       }
     }
   }
+
+  // from ComparisonDatasets interface
+  getReferencePlotsForDataset(datasetKey: DatasetKey, scenario: ComparisonScenario): ComparisonPlot[] {
+    if (this.datasetOptions?.referencePlotsForDataset !== undefined) {
+      // Delegate to the custom function
+      const dataset = this.getDataset(datasetKey)
+      if (dataset !== undefined) {
+        return this.datasetOptions.referencePlotsForDataset(dataset, scenario)
+      }
+    }
+    return []
+  }
+
+  // from ComparisonDatasets interface
+  getContextGraphIdsForDataset(datasetKey: DatasetKey, scenario: ComparisonScenario): BundleGraphId[] {
+    const dataset = this.getDataset(datasetKey)
+    if (dataset === undefined) {
+      return []
+    }
+    if (this.datasetOptions?.contextGraphIdsForDataset !== undefined) {
+      // Delegate to the custom filter function
+      return this.datasetOptions.contextGraphIdsForDataset(dataset, scenario)
+    } else {
+      // Use the default filtering, which uses the graph specs advertised by the bundles
+      // to determine which context graphs are associated with the given dataset
+      return getContextGraphIdsForDataset(this.modelSpecL, this.modelSpecR, dataset)
+    }
+  }
+}
+
+function getContextGraphIdsForDataset(
+  modelSpecL: ModelSpec,
+  modelSpecR: ModelSpec,
+  dataset: ComparisonDataset
+): BundleGraphId[] {
+  // Get the union of all graph IDs (appearing in either left or right) in which this
+  // dataset appears
+  const contextGraphIds: Set<BundleGraphId> = new Set()
+  function addGraphs(modelSpec: ModelSpec, outputVar: OutputVar | undefined): void {
+    for (const graphSpec of modelSpec.graphSpecs || []) {
+      for (const graphDatasetSpec of graphSpec.datasets) {
+        if (graphDatasetSpec.datasetKey === outputVar?.datasetKey) {
+          contextGraphIds.add(graphSpec.id)
+          break
+        }
+      }
+    }
+  }
+  addGraphs(modelSpecL, dataset.outputVarL)
+  addGraphs(modelSpecR, dataset.outputVarR)
+  return [...contextGraphIds]
 }

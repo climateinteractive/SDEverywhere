@@ -56,7 +56,6 @@ onMount(() => {
 .lazy-container
   position: relative
   display: flex
-  flex: 1
   height: 100%
 
 </style>

@@ -3,7 +3,6 @@
 import type { ScenarioSpec } from '../_shared/scenario-spec-types'
 import type { DatasetKey, DatasetMap } from '../_shared/types'
 import type { BundleModel, LoadedBundle, NamedBundle } from '../bundle/bundle-types'
-import { ModelInputs } from '../bundle/model-inputs'
 
 import type { CheckConfig } from '../check/check-config'
 
@@ -81,9 +80,7 @@ export async function createConfig(options: ConfigOptions): Promise<Config> {
     // Combine and resolve the provided comparison specifications
     const modelSpecL = baselineBundle.model.modelSpec
     const modelSpecR = currentBundle.model.modelSpec
-    const modelInputsL = new ModelInputs(modelSpecL)
-    const modelInputsR = new ModelInputs(modelSpecR)
-    const comparisonDefs = resolveComparisonSpecsFromSources(modelInputsL, modelInputsR, options.comparison.specs)
+    const comparisonDefs = resolveComparisonSpecsFromSources(modelSpecL, modelSpecR, options.comparison.specs)
 
     // Initialize the configuration for comparisons
     comparisonConfig = {

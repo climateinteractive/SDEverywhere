@@ -3,10 +3,10 @@
 import assertNever from 'assert-never'
 
 import type {
-  BundleGraphId,
   ComparisonConfig,
   ComparisonDataCoordinator,
   ComparisonDataset,
+  ComparisonGraphId,
   ComparisonGroupSummary,
   ComparisonScenario,
   ComparisonScenarioKey,
@@ -14,10 +14,11 @@ import type {
   ComparisonView,
   ComparisonViewGroup,
   DatasetKey,
-  GraphComparisonReport,
-  LoadedBundle
+  GraphComparisonReport
 } from '@sdeverywhere/check-core'
 import { diffGraphs } from '@sdeverywhere/check-core'
+
+import type { UserPrefs } from '../../../_shared/user-prefs'
 
 import { getAnnotationsForDataset, getAnnotationsForScenario } from '../_shared/annotations'
 import { getBucketIndex } from '../_shared/buckets'
@@ -39,7 +40,7 @@ export interface CompareGraphsSectionViewModel {
   rows: CompareGraphsRowViewModel[]
 }
 
-export interface CompareAllGraphsSections {
+export interface CompareGraphsGroupedByDiffs {
   /** The section view models. */
   sections: CompareGraphsSectionViewModel[]
   /** The total number of graphs with changes (non-zero difference). */
@@ -74,6 +75,7 @@ export function createCompareDetailViewModel(
   summaryRowKey: string,
   comparisonConfig: ComparisonConfig,
   dataCoordinator: ComparisonDataCoordinator,
+  userPrefs: UserPrefs,
   groupSummary: ComparisonGroupSummary,
   viewGroup: ComparisonViewGroup | undefined,
   view: ComparisonView | undefined,
@@ -85,6 +87,7 @@ export function createCompareDetailViewModel(
         summaryRowKey,
         comparisonConfig,
         dataCoordinator,
+        userPrefs,
         groupSummary,
         pinnedItemKeys
       )
@@ -93,6 +96,7 @@ export function createCompareDetailViewModel(
         summaryRowKey,
         comparisonConfig,
         dataCoordinator,
+        userPrefs,
         groupSummary,
         viewGroup,
         view,
@@ -107,6 +111,7 @@ function createCompareDetailViewModelForDataset(
   summaryRowKey: string,
   comparisonConfig: ComparisonConfig,
   dataCoordinator: ComparisonDataCoordinator,
+  userPrefs: UserPrefs,
   groupSummary: ComparisonGroupSummary,
   pinnedScenarioKeys: ComparisonScenarioKey[] | undefined
 ): CompareDetailViewModel {
@@ -150,21 +155,19 @@ function createCompareDetailViewModelForDataset(
   // Create a row for each group
   const detailRows: CompareDetailRowViewModel[] = []
   for (const group of groups) {
-    // TODO: For now show up to two items
-    // TODO: If more than two items in the row, add more rows
-    let item1: ComparisonDetailItem
-    let item2: ComparisonDetailItem
-    if (group.items[0] !== allAtDefaultItem) {
-      item1 = group.items.length > 0 ? group.items[0] : undefined
-      item2 = group.items.length > 1 ? group.items[1] : undefined
-    }
+    // TODO: For now put all grouped items in the same row, and make the "all at
+    // default" item always be the first item in the row.  Later we should make
+    // this configurable so that items can be put in a different order or split
+    // out into multiple rows.
+    const items = group.items[0] !== allAtDefaultItem ? [allAtDefaultItem, ...group.items] : group.items
     const detailRow = createCompareDetailRowViewModel(
       comparisonConfig,
       dataCoordinator,
+      userPrefs,
       'scenarios',
       group.title,
       undefined, // TODO: Subtitle?
-      [allAtDefaultItem, item1, item2]
+      items
     )
     detailRows.push(detailRow)
   }
@@ -202,6 +205,7 @@ function createCompareDetailViewModelForDataset(
           createCompareDetailRowViewModel(
             comparisonConfig,
             dataCoordinator,
+            userPrefs,
             'scenarios',
             item[0],
             undefined, // TODO: Subtitle?
@@ -237,6 +241,7 @@ function createCompareDetailViewModelForScenario(
   summaryRowKey: string,
   comparisonConfig: ComparisonConfig,
   dataCoordinator: ComparisonDataCoordinator,
+  userPrefs: UserPrefs,
   groupSummary: ComparisonGroupSummary,
   viewGroup: ComparisonViewGroup | undefined,
   view: ComparisonView | undefined,
@@ -310,6 +315,7 @@ function createCompareDetailViewModelForScenario(
     const rowViewModel = createCompareDetailRowViewModel(
       comparisonConfig,
       dataCoordinator,
+      userPrefs,
       'datasets',
       title,
       subtitle,
@@ -370,7 +376,7 @@ function createCompareDetailViewModelForScenario(
 
   // Add the compared graphs at top, if defined for the given view
   let graphSections: CompareGraphsSectionViewModel[]
-  if (view?.graphs) {
+  if (view) {
     const testSummaries = groupSummary.group.testSummaries
     graphSections = createCompareGraphsSectionViewModels(comparisonConfig, dataCoordinator, view, testSummaries)
   } else {
@@ -397,55 +403,50 @@ function createCompareGraphsSectionViewModels(
   view: ComparisonView,
   testSummaries: ComparisonTestSummary[]
 ): CompareGraphsSectionViewModel[] {
-  if (view.graphs === 'all') {
-    // For the special "all graphs" case, break the list of graphs into sections
-    const allGraphs = getAllGraphsSections(comparisonConfig, dataCoordinator, view.scenario, testSummaries)
-    return allGraphs.sections
-  }
-
   // No sections when there are no graphs
-  if (view.graphs.length === 0) {
+  if (view.graphIds.length === 0) {
     return []
   }
 
-  // When a specific set of graphs is defined, use a single "Featured graphs" section
-  const graphSpecsL = comparisonConfig.bundleL.model.modelSpec.graphSpecs
-  const graphSpecsR = comparisonConfig.bundleR.model.modelSpec.graphSpecs
-  const scenario = view.scenario
-  const rows: CompareGraphsRowViewModel[] = []
-  for (const graphId of view.graphs) {
-    const graphL = graphSpecsL?.find(s => s.id === graphId)
-    const graphR = graphSpecsR?.find(s => s.id === graphId)
-    const graphReport = diffGraphs(graphL, graphR, scenario.key, testSummaries)
-    rows.push(createCompareGraphsRowViewModel(comparisonConfig, dataCoordinator, scenario, graphId, graphReport))
-  }
-
-  return [
-    {
-      title: 'Featured graphs',
-      rows
+  if (view.graphOrder === 'grouped-by-diffs') {
+    // Group the graphs into sections (added, removed, etc) and order by the number/magnitude
+    // of differences
+    const grouped = getGraphsGroupedByDiffs(
+      comparisonConfig,
+      dataCoordinator,
+      view.scenario,
+      testSummaries,
+      view.graphIds
+    )
+    return grouped.sections
+  } else {
+    // Show the graphs in a single "Featured graphs" section
+    const graphSpecsL = comparisonConfig.bundleL.model.modelSpec.graphSpecs
+    const graphSpecsR = comparisonConfig.bundleR.model.modelSpec.graphSpecs
+    const scenario = view.scenario
+    const rows: CompareGraphsRowViewModel[] = []
+    for (const graphId of view.graphIds) {
+      const graphL = graphSpecsL?.find(s => s.id === graphId)
+      const graphR = graphSpecsR?.find(s => s.id === graphId)
+      const graphReport = diffGraphs(graphL, graphR, scenario.key, testSummaries)
+      rows.push(createCompareGraphsRowViewModel(comparisonConfig, dataCoordinator, scenario, graphId, graphReport))
     }
-  ]
+    return [
+      {
+        title: 'Featured graphs',
+        rows
+      }
+    ]
+  }
 }
 
-export function getAllGraphsSections(
+export function getGraphsGroupedByDiffs(
   comparisonConfig: ComparisonConfig,
   dataCoordinator: ComparisonDataCoordinator,
   scenario: ComparisonScenario,
-  testSummaries: ComparisonTestSummary[]
-): CompareAllGraphsSections {
-  // Get the union of all graph IDs appearing in either left or right
-  const graphIds: Set<BundleGraphId> = new Set()
-  function addGraphIds(bundle: LoadedBundle): void {
-    if (bundle.model.modelSpec.graphSpecs) {
-      for (const graphSpec of bundle.model.modelSpec.graphSpecs) {
-        graphIds.add(graphSpec.id)
-      }
-    }
-  }
-  addGraphIds(comparisonConfig.bundleL)
-  addGraphIds(comparisonConfig.bundleR)
-
+  testSummaries: ComparisonTestSummary[],
+  graphIds: ComparisonGraphId[]
+): CompareGraphsGroupedByDiffs {
   // Prepare the groups
   const added: CompareGraphsRowViewModel[] = []
   const removed: CompareGraphsRowViewModel[] = []
@@ -513,7 +514,7 @@ export function getAllGraphsSections(
   }
 
   // Get the percentage of diffs for each bucket relative to the total number of graphs
-  const totalGraphCount = graphIds.size
+  const totalGraphCount = graphIds.length
   const nonZeroDiffCount = totalGraphCount - diffCountByBucket[0]
   const diffPercentByBucket = diffCountByBucket.map(count => (count / totalGraphCount) * 100)
 

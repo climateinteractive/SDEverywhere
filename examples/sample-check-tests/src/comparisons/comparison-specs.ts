@@ -68,8 +68,6 @@ export function createBaseComparisonSpecs(bundleL: Bundle, bundleR: Bundle): Com
   })
 
   return {
-    scenarios,
-    scenarioGroups: [],
-    viewGroups: []
+    scenarios
   }
 }

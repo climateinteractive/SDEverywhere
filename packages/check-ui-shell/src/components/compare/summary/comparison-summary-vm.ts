@@ -12,7 +12,7 @@ import { hasSignificantDiffs } from '../_shared/buckets'
 import type { ComparisonGroupingKind } from '../_shared/comparison-grouping-kind'
 import { datasetSpan } from '../_shared/spans'
 
-import { getAllGraphsSections } from '../detail/compare-detail-vm'
+import { getGraphsGroupedByDiffs } from '../detail/compare-detail-vm'
 
 import type { ComparisonSummaryRowViewModel, ComparisonViewKey } from './comparison-summary-row-vm'
 
@@ -181,15 +181,15 @@ export function createComparisonSummaryViewModels(
           const groupSummary = groupsByScenario.allGroupSummaries.get(scenario.key)
           let diffPercentByBucket: number[]
           let changedGraphCount: number
-          if (view.graphs === 'all') {
-            // For the special "all graphs" case, use the graph differences (instead of the dataset
-            // differences) for the purposes of computing bucket colors for the bar
+          if (view.graphOrder === 'grouped-by-diffs') {
+            // Use the graph differences (instead of the dataset differences) for the purposes of computing
+            // bucket colors for the bar
             // TODO: We should save the result of this comparison; currently we do it once here,
             // and then again when the detail view is shown
             const testSummaries = groupSummary.group.testSummaries
-            const allGraphs = getAllGraphsSections(comparisonConfig, undefined, scenario, testSummaries)
-            diffPercentByBucket = allGraphs.diffPercentByBucket
-            changedGraphCount = allGraphs.nonZeroDiffCount
+            const grouped = getGraphsGroupedByDiffs(comparisonConfig, undefined, scenario, testSummaries, view.graphIds)
+            diffPercentByBucket = grouped.diffPercentByBucket
+            changedGraphCount = grouped.nonZeroDiffCount
           } else {
             // Otherwise, use the dataset differences
             // TODO: We should only look at datasets that appear in the specified graphs, not all datasets

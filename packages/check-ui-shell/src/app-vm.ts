@@ -8,6 +8,9 @@ import { get, writable } from 'svelte/store'
 import type { ComparisonSummary, SuiteSummary } from '@sdeverywhere/check-core'
 import { checkReportFromSummary, comparisonSummaryFromReport, runSuite } from '@sdeverywhere/check-core'
 
+import { localStorageWritableBoolean, localStorageWritableNumber } from './_shared/stores'
+import type { UserPrefs } from './_shared/user-prefs'
+
 import type { AppModel } from './model/app-model'
 
 import type { ComparisonGroupingKind } from './components/compare/_shared/comparison-grouping-kind'
@@ -35,6 +38,7 @@ export class AppViewModel {
   public readonly checksInProgress: Readable<boolean>
   private readonly writableProgress: Writable<string>
   public readonly progress: Readable<string>
+  public readonly userPrefs: UserPrefs
   public readonly headerViewModel: HeaderViewModel
   public summaryViewModel: SummaryViewModel
   private cancelRunSuite: () => void
@@ -52,8 +56,23 @@ export class AppViewModel {
     this.progress = this.writableProgress
 
     // Show the "Simplify Scenarios" checkbox if we run checks in the browser
-    const includeSimplifyScenarios = suiteSummary === undefined
-    this.headerViewModel = createHeaderViewModel(appModel.config.comparison, includeSimplifyScenarios)
+    let simplifyScenarios: Writable<boolean>
+    if (suiteSummary === undefined) {
+      simplifyScenarios = localStorageWritableBoolean('sde-check-simplify-scenarios', false)
+    } else {
+      simplifyScenarios = undefined
+    }
+
+    // Create the `UserPrefs` object that is passed down to the component hierarchy
+    const zoom = localStorageWritableNumber('sde-check-graph-zoom', 1)
+    const consistentYRange = localStorageWritableBoolean('sde-check-consistent-y-range', false)
+    this.userPrefs = {
+      zoom,
+      consistentYRange
+    }
+
+    // Create the header view model
+    this.headerViewModel = createHeaderViewModel(appModel.config.comparison, simplifyScenarios, zoom, consistentYRange)
   }
 
   runTestSuite(): void {
@@ -145,6 +164,7 @@ export class AppViewModel {
       summaryRowViewModel.key,
       this.appModel.config.comparison,
       this.appModel.comparisonDataCoordinator,
+      this.userPrefs,
       groupSummary,
       viewGroup,
       view,

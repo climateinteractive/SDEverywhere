@@ -40,7 +40,7 @@ $: if (visible !== previousVisible || viewModel.baseRequestKey !== previousViewM
 Lazy(bind:visible!='{visible}')
   +if('$content')
     .graph-container
-      ComparisonGraph(viewModel!='{$content.comparisonGraphViewModel}' width=36 height=22)
+      ComparisonGraph(viewModel!='{$content.comparisonGraphViewModel}')
 
 </template>
 

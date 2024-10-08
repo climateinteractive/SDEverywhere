@@ -18,6 +18,7 @@ export default {
       oneOf: [
         { $ref: '#/$defs/scenario_array_item' },
         { $ref: '#/$defs/scenario_group_array_item' },
+        { $ref: '#/$defs/graph_group_array_item' },
         { $ref: '#/$defs/view_group_array_item' }
       ]
     },
@@ -284,6 +285,63 @@ export default {
     },
 
     //
+    // GRAPHS
+    //
+
+    graphs_preset: {
+      type: 'string',
+      enum: ['all']
+    },
+
+    graphs_array: {
+      type: 'array',
+      items: {
+        type: 'string'
+      },
+      minItems: 1
+    },
+
+    graph_group_ref: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        graph_group_ref: {
+          type: 'string'
+        }
+      },
+      required: ['graph_group_ref']
+    },
+
+    //
+    // GRAPH GROUPS
+    //
+
+    graph_group_array_item: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        graph_group: {
+          $ref: '#/$defs/graph_group'
+        }
+      },
+      required: ['graph_group']
+    },
+
+    graph_group: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        id: {
+          type: 'string'
+        },
+        graphs: {
+          $ref: '#/$defs/graphs_array'
+        }
+      },
+      required: ['id', 'graphs']
+    },
+
+    //
     // VIEWS
     //
 
@@ -302,26 +360,21 @@ export default {
         },
         graphs: {
           $ref: '#/$defs/view_graphs'
+        },
+        graph_order: {
+          $ref: '#/$defs/view_graph_order'
         }
       },
       required: ['scenario_ref', 'graphs']
     },
 
     view_graphs: {
-      oneOf: [{ $ref: '#/$defs/view_graphs_preset' }, { $ref: '#/$defs/view_graphs_array' }]
+      oneOf: [{ $ref: '#/$defs/graphs_preset' }, { $ref: '#/$defs/graphs_array' }, { $ref: '#/$defs/graph_group_ref' }]
     },
 
-    view_graphs_preset: {
+    view_graph_order: {
       type: 'string',
-      enum: ['all']
-    },
-
-    view_graphs_array: {
-      type: 'array',
-      items: {
-        type: 'string'
-      },
-      minItems: 1
+      enum: ['default', 'grouped-by-diffs']
     },
 
     //

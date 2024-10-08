@@ -1,4 +1,4 @@
-import { dirname, resolve as resolvePath } from 'path'
+import { dirname } from 'path'
 import { fileURLToPath } from 'url'
 
 import { defineConfig } from 'vite'
@@ -10,10 +10,6 @@ const production = process.env.NODE_ENV === 'production'
 // Node will complain ("ERROR: __dirname is not defined in ES module scope") so
 // we use our own special name here
 const appDir = dirname(fileURLToPath(import.meta.url))
-
-function localPackage(...subpath) {
-  return resolvePath(appDir, '..', '..', '..', '..', 'packages', ...subpath)
-}
 
 export default defineConfig({
   // Don't clear the screen in dev mode so that we can see builder output
