@@ -1,5 +1,7 @@
 // Copyright (c) 2021-2022 Climate Interactive / New Venture Fund
 
+import { derived, type Readable } from 'svelte/store'
+
 import type {
   BundleGraphSpec,
   ComparisonConfig,
@@ -7,9 +9,11 @@ import type {
   ComparisonScenario
 } from '@sdeverywhere/check-core'
 
+import type { UserPrefs } from '../../../_shared/user-prefs'
+
 import { ContextGraphViewModel } from '../../graphs/context-graph-vm'
 
-import { CompareDetailBoxViewModel } from './compare-detail-box-vm'
+import { CompareDetailBoxViewModel, type AxisRange } from './compare-detail-box-vm'
 import type { ComparisonDetailItem } from './compare-detail-item'
 
 export interface CompareDetailContextGraphRowViewModel {
@@ -27,6 +31,7 @@ export interface CompareDetailRowViewModel {
 export function createCompareDetailRowViewModel(
   comparisonConfig: ComparisonConfig,
   dataCoordinator: ComparisonDataCoordinator,
+  userPrefs: UserPrefs,
   kind: 'scenarios' | 'datasets',
   title: string | undefined,
   subtitle: string | undefined,
@@ -56,6 +61,45 @@ export function createCompareDetailRowViewModel(
       )
     )
   }
+
+  // This resolves the overall min and max values for all boxes; this will be updated
+  // asynchronously (N times for a row of N boxes) as the data is loaded for each box
+  const yRangeForRow: Readable<AxisRange> = derived(
+    boxes.map(b => b.yRange),
+    yRanges => {
+      let min = Number.POSITIVE_INFINITY
+      let max = Number.NEGATIVE_INFINITY
+      for (const range of yRanges) {
+        if (range?.min < min) {
+          min = range.min
+        }
+        if (range?.max > max) {
+          max = range.max
+        }
+      }
+      return {
+        min,
+        max
+      }
+    }
+  )
+
+  // This resolves to either `yRangeForRow` or undefined, depending on whether the
+  // user has the "Consistent Y-Axis Range" checkbox enabled
+  const activeYRangeForRow: Readable<AxisRange | undefined> = derived(
+    [userPrefs.consistentYRange, yRangeForRow],
+    ([$enabled, $yRange]) => {
+      return $enabled ? $yRange : undefined
+    }
+  )
+
+  // Update the boxes to use the active y-axis range values
+  // TODO: Unsubscribe when the component is unmounted
+  activeYRangeForRow.subscribe(yRange => {
+    for (const box of boxes) {
+      box.updateYAxisRange(yRange)
+    }
+  })
 
   return {
     title,

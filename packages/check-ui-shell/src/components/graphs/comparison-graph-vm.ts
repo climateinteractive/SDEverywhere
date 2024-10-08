@@ -21,6 +21,9 @@ export interface ComparisonGraphViewModel {
   pointsR: Point[]
   xMin?: number
   xMax?: number
+  yMin?: number
+  yMax?: number
+  onUpdated?: () => void
 }
 
 /**

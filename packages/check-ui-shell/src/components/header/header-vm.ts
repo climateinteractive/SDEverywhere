@@ -3,7 +3,6 @@
 import type { Writable } from 'svelte/store'
 import { writable } from 'svelte/store'
 import type { ComparisonConfig } from '@sdeverywhere/check-core'
-import { localStorageWritableBoolean, localStorageWritableNumber } from '../../_shared/stores'
 
 export interface HeaderViewModel {
   nameL?: string
@@ -14,21 +13,16 @@ export interface HeaderViewModel {
   simplifyScenarios?: Writable<boolean>
   controlsVisible: Writable<boolean>
   zoom: Writable<number>
+  consistentYRange: Writable<boolean>
 }
 
 export function createHeaderViewModel(
   comparisonConfig: ComparisonConfig | undefined,
-  includeSimplifyScenarios: boolean
+  simplifyScenarios: Writable<boolean> | undefined,
+  zoom: Writable<number>,
+  consistentYRange: Writable<boolean>
 ): HeaderViewModel {
-  let simplifyScenarios: Writable<boolean>
-  if (includeSimplifyScenarios) {
-    simplifyScenarios = localStorageWritableBoolean('sde-check-simplify-scenarios', false)
-  } else {
-    simplifyScenarios = undefined
-  }
-
   const controlsVisible = writable(false)
-  const zoom = localStorageWritableNumber('sde-check-graph-zoom', 1)
 
   // Only include the comparison-related header elements if the comparison
   // config is defined
@@ -49,7 +43,8 @@ export function createHeaderViewModel(
       thresholds: thresholdStrings,
       simplifyScenarios,
       controlsVisible,
-      zoom
+      zoom,
+      consistentYRange
     }
   } else {
     return {
@@ -57,7 +52,8 @@ export function createHeaderViewModel(
       bundleNamesR: writable([]),
       simplifyScenarios,
       controlsVisible,
-      zoom
+      zoom,
+      consistentYRange
     }
   }
 }

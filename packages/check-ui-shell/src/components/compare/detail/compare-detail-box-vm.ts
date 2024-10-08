@@ -18,7 +18,7 @@ import { diffDatasets } from '@sdeverywhere/check-core'
 import { getBucketIndex } from '../_shared/buckets'
 import { datasetSpan } from '../_shared/spans'
 
-import type { ComparisonGraphViewModel } from '../../graphs/comparison-graph-vm'
+import type { ComparisonGraphViewModel, Point } from '../../graphs/comparison-graph-vm'
 import { pointsFromDataset } from '../../graphs/comparison-graph-vm'
 
 let requestId = 1
@@ -30,10 +30,21 @@ export interface CompareDetailBoxContent {
   comparisonGraphViewModel: ComparisonGraphViewModel
 }
 
+export interface AxisRange {
+  min: number
+  max: number
+}
+
 export class CompareDetailBoxViewModel {
   public readonly requestKey: string
+  private localContent: CompareDetailBoxContent
   private readonly writableContent: Writable<CompareDetailBoxContent>
   public readonly content: Readable<CompareDetailBoxContent>
+  private readonly writableYRange: Writable<AxisRange>
+  public readonly yRange: Readable<AxisRange>
+  private activeYMin: number
+  private activeYMax: number
+
   private dataRequested = false
   private dataLoaded = false
 
@@ -48,6 +59,8 @@ export class CompareDetailBoxViewModel {
     this.requestKey = `detail-box::${requestId++}::${scenario.key}::${datasetKey}`
     this.writableContent = writable(undefined)
     this.content = this.writableContent
+    this.writableYRange = writable(undefined)
+    this.yRange = this.writableYRange
   }
 
   requestData(): void {
@@ -124,28 +137,68 @@ export class CompareDetailBoxViewModel {
           }
         }
 
+        // Extract the data points
+        const pointsL = pointsFromDataset(datasetMapL?.get(this.datasetKey))
+        const pointsR = pointsFromDataset(datasetMapR?.get(this.datasetKey))
+
+        // Find the min and max y values for all datasets
+        let yMin = Number.POSITIVE_INFINITY
+        let yMax = Number.NEGATIVE_INFINITY
+        function setExtents(points: Point[]): void {
+          for (const p of points) {
+            if (p.y < yMin) {
+              yMin = p.y
+            }
+            if (p.y > yMax) {
+              yMax = p.y
+            }
+          }
+        }
+        setExtents(pointsL)
+        setExtents(pointsR)
+        this.writableYRange.set({
+          min: yMin,
+          max: yMax
+        })
+
+        // Create the graph view model
         const comparisonGraphViewModel: ComparisonGraphViewModel = {
           key: this.requestKey,
           refPlots: [],
-          pointsL: pointsFromDataset(datasetMapL?.get(this.datasetKey)),
-          pointsR: pointsFromDataset(datasetMapR?.get(this.datasetKey)),
+          pointsL,
+          pointsR,
           xMin,
-          xMax
+          xMax,
+          yMin: this.activeYMin,
+          yMax: this.activeYMax
         }
 
-        this.writableContent.set({
+        this.localContent = {
           bucketClass: `bucket-border-${bucketIndex !== undefined ? bucketIndex : 'undefined'}`,
           message,
           diffReport,
           comparisonGraphViewModel
-        })
+        }
+        this.writableContent.set(this.localContent)
         this.dataLoaded = true
       }
     )
   }
 
+  updateYAxisRange(yRange: AxisRange | undefined): void {
+    this.activeYMin = yRange?.min
+    this.activeYMax = yRange?.max
+    if (this.localContent) {
+      const graphViewModel = this.localContent.comparisonGraphViewModel
+      graphViewModel.yMin = this.activeYMin
+      graphViewModel.yMax = this.activeYMax
+      graphViewModel.onUpdated?.()
+    }
+  }
+
   clearData(): void {
     if (this.dataRequested) {
+      this.localContent = undefined
       this.writableContent.set(undefined)
       if (!this.dataLoaded) {
         this.dataCoordinator.cancelRequest(this.requestKey)

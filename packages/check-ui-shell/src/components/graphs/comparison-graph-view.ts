@@ -9,6 +9,8 @@ const fontFamily = 'Roboto Condensed'
 const fontSize = 14
 const fontColor = '#777'
 
+const TRANSPARENT = 'rgba(0, 0, 0, 0)'
+
 // XXX: When a single-point ref plot uses "fill between/above/below", Chart.js doesn't
 // fill the region, so we use a custom plugin to handle this case
 const singlePointFillToNextPlugin: Chart.PluginServiceRegistrationOptions = {
@@ -70,6 +72,27 @@ export class ComparisonGraphView {
   }
 
   /**
+   * Update the view when one or more "mutable" properties in the view model has changed.
+   */
+  update(): void {
+    // Currently the only properties that are expected to change after initialization
+    // are the y-axis min/max values
+    const chart = this.chart
+    function updateHiddenScatterPoint(label: string, y: number | undefined): void {
+      const dataset = chart.data.datasets.find(d => d.label === label)
+      if (dataset) {
+        const p = dataset.data[0] as Point
+        p.y = y
+      }
+    }
+    if (chart) {
+      updateHiddenScatterPoint('hidden-y-min', this.viewModel.yMin)
+      updateHiddenScatterPoint('hidden-y-max', this.viewModel.yMax)
+      chart.update()
+    }
+  }
+
+  /**
    * Destroy the chart and any associated resources.
    */
   destroy(): void {
@@ -81,6 +104,21 @@ export class ComparisonGraphView {
 function createChart(canvas: HTMLCanvasElement, viewModel: ComparisonGraphViewModel): Chart {
   const datasets: ChartDataSets[] = []
 
+  const addHiddenScatterPoint = (label: string, x: number, y: number | undefined) => {
+    datasets.push({
+      label,
+      type: 'scatter',
+      fill: false,
+      borderColor: TRANSPARENT,
+      backgroundColor: TRANSPARENT,
+      pointHitRadius: 0,
+      pointHoverRadius: 0,
+      pointRadius: 0,
+      data: [{ x, y }]
+    })
+  }
+
+  let dataMaxX = Number.NEGATIVE_INFINITY
   function addPlot(points: Point[], color: string, style?: PlotStyle): void {
     const normalWidth = 3
     let borderWidth = normalWidth
@@ -125,6 +163,13 @@ function createChart(canvas: HTMLCanvasElement, viewModel: ComparisonGraphViewMo
       pointBackgroundColor = color
     }
 
+    // Find the maximum x value in the datasets
+    for (const p of points) {
+      if (p.x > dataMaxX) {
+        dataMaxX = p.x
+      }
+    }
+
     datasets.push({
       data: points,
       borderColor: color,
@@ -155,6 +200,12 @@ function createChart(canvas: HTMLCanvasElement, viewModel: ComparisonGraphViewMo
   const xMax = viewModel.xMax
   // XXX: Omit the 1990 label to avoid overlap issues
   const omitFirstTick = xMin === 1990
+
+  // Add two hidden scatter points that can be used to ensure consistent y-axis min/max
+  // for all graphs in a row of graphs.  The values can be updated later as needed.
+  const hiddenPointX = xMax !== undefined ? xMax : dataMaxX
+  addHiddenScatterPoint('hidden-y-min', hiddenPointX, viewModel.yMin)
+  addHiddenScatterPoint('hidden-y-max', hiddenPointX, viewModel.yMax)
 
   return new Chart(canvas, {
     type: 'line',
