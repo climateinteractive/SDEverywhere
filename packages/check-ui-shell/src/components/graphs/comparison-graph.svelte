@@ -37,6 +37,11 @@ function initGraphView() {
   // Create the graph view that wraps the canvas element
   previousKey = viewModel.key
   graphView = new ComparisonGraphView(canvas, viewModel)
+
+  // Update the view when the view model is changed
+  viewModel.onUpdated = () => {
+    graphView?.update()
+  }
 }
 
 onMount(() => {

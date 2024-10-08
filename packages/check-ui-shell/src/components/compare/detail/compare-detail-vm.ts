@@ -16,6 +16,8 @@ import type {
 } from '@sdeverywhere/check-core'
 import { diffGraphs } from '@sdeverywhere/check-core'
 
+import type { UserPrefs } from '../../../_shared/user-prefs'
+
 import { getAnnotationsForDataset, getAnnotationsForScenario } from '../_shared/annotations'
 import { getBucketIndex } from '../_shared/buckets'
 import type { ComparisonGroupingKind } from '../_shared/comparison-grouping-kind'
@@ -72,6 +74,7 @@ export interface CompareDetailViewModel {
 export function createCompareDetailViewModel(
   comparisonConfig: ComparisonConfig,
   dataCoordinator: ComparisonDataCoordinator,
+  userPrefs: UserPrefs,
   groupSummary: ComparisonGroupSummary,
   viewGroup: ComparisonViewGroup | undefined,
   view: ComparisonView | undefined,
@@ -83,6 +86,7 @@ export function createCompareDetailViewModel(
       return createCompareDetailViewModelForDataset(
         comparisonConfig,
         dataCoordinator,
+        userPrefs,
         groupSummary,
         previousRowIndex,
         nextRowIndex
@@ -91,6 +95,7 @@ export function createCompareDetailViewModel(
       return createCompareDetailViewModelForScenario(
         comparisonConfig,
         dataCoordinator,
+        userPrefs,
         groupSummary,
         viewGroup,
         view,
@@ -105,6 +110,7 @@ export function createCompareDetailViewModel(
 function createCompareDetailViewModelForDataset(
   comparisonConfig: ComparisonConfig,
   dataCoordinator: ComparisonDataCoordinator,
+  userPrefs: UserPrefs,
   groupSummary: ComparisonGroupSummary,
   previousRowIndex: number | undefined,
   nextRowIndex: number | undefined
@@ -157,6 +163,7 @@ function createCompareDetailViewModelForDataset(
     const detailRow = createCompareDetailRowViewModel(
       comparisonConfig,
       dataCoordinator,
+      userPrefs,
       'scenarios',
       group.title,
       undefined, // TODO: Subtitle?
@@ -190,6 +197,7 @@ function createCompareDetailViewModelForDataset(
 function createCompareDetailViewModelForScenario(
   comparisonConfig: ComparisonConfig,
   dataCoordinator: ComparisonDataCoordinator,
+  userPrefs: UserPrefs,
   groupSummary: ComparisonGroupSummary,
   viewGroup: ComparisonViewGroup | undefined,
   view: ComparisonView | undefined,
@@ -263,6 +271,7 @@ function createCompareDetailViewModelForScenario(
     const rowViewModel = createCompareDetailRowViewModel(
       comparisonConfig,
       dataCoordinator,
+      userPrefs,
       'datasets',
       title,
       subtitle,

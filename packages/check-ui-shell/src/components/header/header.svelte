@@ -16,7 +16,7 @@ const bundleNamesL = viewModel.bundleNamesL
 const bundleNamesR = viewModel.bundleNamesR
 const controlsVisible = viewModel.controlsVisible
 const zoom = viewModel.zoom
-
+const consistentYRange = viewModel.consistentYRange
 
 const dispatch = createEventDispatcher()
 
@@ -105,6 +105,9 @@ include header.pug
   +if('$controlsVisible')
     .header-controls
       .spacer-flex
+      input.checkbox(type='checkbox' name='toggle-consistent-y-range' bind:checked!='{$consistentYRange}')
+      label(for='toggle-consistent-y-range') Consistent Y-Axis Ranges
+      .spacer-fixed
       .control-label Graph Zoom:
       input(type="range" min="0.3" max="2.5" step="0.1" bind:value!='{$zoom}')
       .control-label { `${$zoom.toFixed(1)}x` }
