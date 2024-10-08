@@ -109,8 +109,9 @@ svelte:window(on:keydown!='{onKeyDown}')
         ul
           +related-items
   .scroll-container(bind:this!='{scrollContainer}' tabindex='0')
-    +graph-sections
-    +box-rows
+    .scroll-content
+      +graph-sections
+      +box-rows
 
 </template>
 
@@ -128,8 +129,9 @@ svelte:window(on:keydown!='{onKeyDown}')
 .header-container
   display: flex
   flex-direction: column
-  // XXX: Use negative margin to make the shadow stretch all the way 
+  // XXX: Use negative margin to make the shadow stretch all the way
   // across, then use extra padding to compensate
+  width: calc(100vw - 2rem)
   margin: 0 -1rem
   padding: 0 2rem
   box-shadow: 0 1rem .5rem -.5rem rgba(0,0,0,.5)
@@ -214,13 +216,10 @@ ul
 
 .scroll-container
   display: flex
-  // XXX: We use 1px here for flex-basis, otherwise in Firefox and Chrome the
-  // whole page will scroll instead of just this container.  See also:
-  //   https://stackoverflow.com/a/52489012
-  flex: 1 1 1px
-  flex-direction: column
+  flex-direction: row
+  max-width: 100vw
+  flex: 1 0 1px
   overflow: auto
-  padding: 0 1rem
   outline: none
   background-color: #3c3c3c
 
@@ -229,10 +228,15 @@ ul
   font-weight: 700
   margin-top: 2.5rem
   margin-bottom: 1.5rem
+  padding: 0 1rem
 
 .row-container
+  display: flex
+  flex-direction: row
   margin-top: .5rem
   margin-bottom: 4rem
+  margin-left: 1rem
+  margin-right: 1rem
 
 .row-container:first-child
   margin-top: 3rem

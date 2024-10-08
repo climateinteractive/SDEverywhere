@@ -4,6 +4,8 @@
 <script lang='ts'>
 
 import { createEventDispatcher } from 'svelte'
+import Icon from 'svelte-awesome/components/Icon.svelte'
+import { faCog, faHome } from '@fortawesome/free-solid-svg-icons'
 
 import type { HeaderViewModel } from './header-vm'
 
@@ -12,11 +14,18 @@ const simplifyScenarios = viewModel.simplifyScenarios
 const thresholds = viewModel.thresholds
 const bundleNamesL = viewModel.bundleNamesL
 const bundleNamesR = viewModel.bundleNamesR
+const controlsVisible = viewModel.controlsVisible
+const zoom = viewModel.zoom
+
 
 const dispatch = createEventDispatcher()
 
 function onHome() {
   dispatch('command', { cmd: 'show-summary' })
+}
+
+function onToggleControls() {
+  viewModel.controlsVisible.update(v => !v)
 }
 
 function onSelectBundle(kind: string, name: string): void {
@@ -60,7 +69,8 @@ include header.pug
 .header-container
   .header-content
     .header-group
-      .label.home.no-selection(on:click!='{onHome}') Home
+      .icon-button.home(on:click!='{onHome}')
+        Icon(class='icon' data!='{faHome}')
     .spacer-flex
     +if('simplifyScenarios !== undefined')
       .header-group
@@ -88,6 +98,16 @@ include header.pug
         .label.bucket-color-2 { @html thresholds[2] }
         .label.bucket-color-3 { @html thresholds[3] }
         .label.bucket-color-4 { @html thresholds[4] }
+      .spacer-fixed
+      .header-group
+        .icon-button.controls(on:click!='{onToggleControls}')
+          Icon(class='icon' data!='{faCog}')
+  +if('$controlsVisible')
+    .header-controls
+      .spacer-flex
+      .control-label Graph Zoom:
+      input(type="range" min="0.3" max="2.5" step="0.1" bind:value!='{$zoom}')
+      .control-label { `${$zoom.toFixed(1)}x` }
   .line
 
 </template>
@@ -101,7 +121,9 @@ include header.pug
 .header-container
   display: flex
   flex-direction: column
-  margin: 0 1rem
+  box-sizing: border-box
+  width: 100vw
+  padding: 0 1rem
   color: #aaa
 
 .header-content
@@ -118,13 +140,13 @@ include header.pug
   flex: 1
 
 .spacer-fixed
-  flex: 0 0 4rem
+  width: 2rem
 
-.label.home
-  color: #ddd
+.icon-button
+  color: #bbb
   cursor: pointer
 
-.label.home:hover
+.icon-button:hover
   color: #fff
 
 .label:not(:last-child)
@@ -147,6 +169,16 @@ select
   background-color: #353535
   border: none
   border-radius: .4rem
+
+.header-controls
+  display: flex
+  flex-direction: row
+  margin: .4rem 0
+  align-items: center
+
+input[type=range]
+  width: 10rem
+  margin: 0 .4rem
 
 .line
   min-height: 1px

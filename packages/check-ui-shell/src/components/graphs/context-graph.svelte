@@ -128,6 +128,7 @@ $graph-height: 20rem
   align-items: center
   justify-content: center
   color: #aaa
+  border: solid 1px #fff
   &.not-included
     background-color: #555
 
