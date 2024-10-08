@@ -14,7 +14,12 @@ import type {
   ScenarioSpec
 } from '@sdeverywhere/check-core'
 
-import type { ComparisonGraphViewModel, PlotStyle, Point, RefPlot } from '../../graphs/comparison-graph-vm'
+import type {
+  ComparisonGraphPlot,
+  ComparisonGraphPlotStyle,
+  ComparisonGraphViewModel,
+  Point
+} from '../../graphs/comparison-graph-vm'
 import { pointsFromDataset } from '../../graphs/comparison-graph-vm'
 
 let requestId = 1
@@ -219,26 +224,45 @@ export class CheckSummaryGraphBoxViewModel {
       }
     }
 
-    // Add reference lines
-    const refPlots: RefPlot[] = []
+    // Add the primary plot
+    const plots: ComparisonGraphPlot[] = []
+    plots.push({
+      points: primaryPoints,
+      color: 'deepskyblue',
+      style: 'normal'
+    })
 
-    const addRefPlot = (op: CheckPredicateOp, style: PlotStyle | undefined, delta = 0) => {
+    // Add the primary and reference plots
+    const addRefPlot = (
+      op: CheckPredicateOp,
+      style: ComparisonGraphPlotStyle | undefined,
+      delta = 0,
+      lineWidth?: number
+    ) => {
+      const color = 'green'
+      if (lineWidth === undefined) {
+        lineWidth = 1
+      }
       const constantRef = this.opConstantRefs.get(op)
       if (constantRef !== undefined) {
         if (minPredTime === maxPredTime) {
           // Add a single point
-          refPlots.push({
+          plots.push({
             points: [{ x: minPredTime, y: constantRef + delta }],
-            style
+            color,
+            style,
+            lineWidth
           })
         } else {
           // Add a line segment for the constant
-          refPlots.push({
+          plots.push({
             points: [
               { x: minPredTime, y: constantRef + delta },
               { x: maxPredTime, y: constantRef + delta }
             ],
-            style
+            color,
+            style,
+            lineWidth
           })
         }
         return
@@ -254,9 +278,11 @@ export class CheckSummaryGraphBoxViewModel {
             return { x: p.x, y: p.y + delta }
           })
         }
-        refPlots.push({
+        plots.push({
           points: filtered,
-          style
+          color,
+          style,
+          lineWidth
         })
       }
     }
@@ -271,21 +297,19 @@ export class CheckSummaryGraphBoxViewModel {
     addRefPlot('gte', hasLt ? 'fill-to-next' : 'fill-above')
     addRefPlot('lt', hasGt ? 'normal' : 'fill-below')
     addRefPlot('lte', hasGt ? 'normal' : 'fill-below')
-    addRefPlot('eq', 'wide')
+    addRefPlot('eq', 'normal', 0, 5)
 
     // Handle `approx` specially by adding two reference lines (one for the
     // lower bound and one for the upper bound)
     const tolerance = this.predicateReport.tolerance || 0.1
     addRefPlot('approx', 'fill-to-next', -tolerance)
     addRefPlot('approx', 'normal', tolerance)
-    addRefPlot('approx', 'dashed')
+    addRefPlot('approx', 'dashed', 0)
 
     // Create the comparison graph view model
     const comparisonGraphViewModel: ComparisonGraphViewModel = {
       key: this.baseRequestKey,
-      refPlots,
-      pointsL: [],
-      pointsR: primaryPoints,
+      plots,
       xMin: undefined,
       xMax: undefined
     }

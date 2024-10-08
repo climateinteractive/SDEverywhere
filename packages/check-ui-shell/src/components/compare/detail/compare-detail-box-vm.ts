@@ -18,7 +18,12 @@ import { diffDatasets } from '@sdeverywhere/check-core'
 import { getBucketIndex } from '../_shared/buckets'
 import { datasetSpan } from '../_shared/spans'
 
-import type { ComparisonGraphViewModel, Point } from '../../graphs/comparison-graph-vm'
+import type {
+  ComparisonGraphPlot,
+  ComparisonGraphPlotStyle,
+  ComparisonGraphViewModel,
+  Point
+} from '../../graphs/comparison-graph-vm'
 import { pointsFromDataset } from '../../graphs/comparison-graph-vm'
 
 let requestId = 1
@@ -69,11 +74,15 @@ export class CompareDetailBoxViewModel {
     }
     this.dataRequested = true
 
+    const datasetKeys: DatasetKey[] = [this.datasetKey]
+    const refPlots = this.comparisonConfig.datasets.getReferencePlotsForDataset(this.datasetKey, this.scenario)
+    datasetKeys.push(...refPlots.map(plot => plot.datasetKey))
+
     this.dataCoordinator.requestDatasetMaps(
       this.requestKey,
       this.scenario.specL,
       this.scenario.specR,
-      [this.datasetKey],
+      datasetKeys,
       (datasetMapL, datasetMapR) => {
         if (!this.dataRequested) {
           return
@@ -141,6 +150,31 @@ export class CompareDetailBoxViewModel {
         const pointsL = pointsFromDataset(datasetMapL?.get(this.datasetKey))
         const pointsR = pointsFromDataset(datasetMapR?.get(this.datasetKey))
 
+        const plots: ComparisonGraphPlot[] = []
+        function addPlot(points: Point[], color: string, style?: ComparisonGraphPlotStyle, lineWidth?: number): void {
+          plots.push({
+            points,
+            color,
+            style: style || 'normal',
+            lineWidth
+          })
+        }
+
+        // Add the primary plots.  We add the right data points first so that they are drawn
+        // on top of the left data points.
+        // TODO: Use the colors defined in CSS (or make them configurable through other means);
+        // these should not be hardcoded here
+        addPlot(pointsR, 'deepskyblue')
+        addPlot(pointsL, 'crimson')
+
+        // Add the secondary/reference plots
+        // TODO: Currently these are always shown behind the primary plots; might need to make
+        // this configurable
+        for (const refPlot of refPlots) {
+          const points = pointsFromDataset(datasetMapR?.get(refPlot.datasetKey))
+          addPlot(points, refPlot.color, refPlot.style, refPlot.lineWidth)
+        }
+
         // Find the min and max y values for all datasets
         let yMin = Number.POSITIVE_INFINITY
         let yMax = Number.NEGATIVE_INFINITY
@@ -154,8 +188,9 @@ export class CompareDetailBoxViewModel {
             }
           }
         }
-        setExtents(pointsL)
-        setExtents(pointsR)
+        for (const plot of plots) {
+          setExtents(plot.points)
+        }
         this.writableYRange.set({
           min: yMin,
           max: yMax
@@ -164,9 +199,7 @@ export class CompareDetailBoxViewModel {
         // Create the graph view model
         const comparisonGraphViewModel: ComparisonGraphViewModel = {
           key: this.requestKey,
-          refPlots: [],
-          pointsL,
-          pointsR,
+          plots,
           xMin,
           xMax,
           yMin: this.activeYMin,

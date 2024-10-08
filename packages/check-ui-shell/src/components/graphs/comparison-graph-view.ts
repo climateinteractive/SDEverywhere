@@ -2,7 +2,7 @@
 
 import type { ChartDataSets } from 'chart.js'
 import { Chart } from 'chart.js'
-import type { ComparisonGraphViewModel, PlotStyle, Point } from './comparison-graph-vm'
+import type { ComparisonGraphPlot, ComparisonGraphViewModel, Point } from './comparison-graph-vm'
 
 const gridColor = '#444'
 const fontFamily = 'Roboto Condensed'
@@ -119,20 +119,10 @@ function createChart(canvas: HTMLCanvasElement, viewModel: ComparisonGraphViewMo
   }
 
   let dataMaxX = Number.NEGATIVE_INFINITY
-  function addPlot(points: Point[], color: string, style?: PlotStyle): void {
-    const normalWidth = 3
-    let borderWidth = normalWidth
-    if (style) {
-      // Use thin reference lines
-      borderWidth = 1
-    }
-
+  function addPlot(plot: ComparisonGraphPlot): void {
     let borderDash: number[]
     let fill: string | boolean = false
-    switch (style) {
-      case 'wide':
-        borderWidth = normalWidth * 2
-        break
+    switch (plot.style) {
       case 'dashed':
         borderDash = [8, 2]
         break
@@ -152,28 +142,28 @@ function createChart(canvas: HTMLCanvasElement, viewModel: ComparisonGraphViewMo
     let backgroundColor = undefined
     if (fill !== false) {
       // Make the fill less translucent when there is only a single point
-      const opacity = points.length > 1 ? 0.1 : 0.3
+      const opacity = plot.points.length > 1 ? 0.1 : 0.3
       backgroundColor = `rgba(0, 128, 0, ${opacity})`
     }
 
     let pointRadius = 0
     let pointBackgroundColor = undefined
-    if (points.length === 1 && style !== 'dashed') {
+    if (plot.points.length === 1 && plot.style !== 'dashed') {
       pointRadius = 5
-      pointBackgroundColor = color
+      pointBackgroundColor = plot.color
     }
 
     // Find the maximum x value in the datasets
-    for (const p of points) {
+    for (const p of plot.points) {
       if (p.x > dataMaxX) {
         dataMaxX = p.x
       }
     }
 
     datasets.push({
-      data: points,
-      borderColor: color,
-      borderWidth,
+      data: plot.points,
+      borderColor: plot.color,
+      borderWidth: plot.lineWidth !== undefined ? plot.lineWidth : 3,
       borderDash,
       backgroundColor,
       fill,
@@ -187,12 +177,8 @@ function createChart(canvas: HTMLCanvasElement, viewModel: ComparisonGraphViewMo
 
   // Add the right data points first so that they are drawn on top of the
   // left data points
-  // TODO: Use the colors defined in CSS (or make them configurable through other means);
-  // these should not be hardcoded here
-  addPlot(viewModel.pointsR, 'deepskyblue')
-  addPlot(viewModel.pointsL, 'crimson')
-  for (const refPlot of viewModel.refPlots) {
-    addPlot(refPlot.points, 'green', refPlot.style || 'normal')
+  for (const plot of viewModel.plots) {
+    addPlot(plot)
   }
 
   // Customize the x-axis range

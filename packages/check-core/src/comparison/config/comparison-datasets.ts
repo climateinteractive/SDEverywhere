@@ -4,7 +4,7 @@ import type { BundleGraphId, ModelSpec } from '../../bundle/bundle-types'
 import type { OutputVar } from '../../bundle/var-types'
 import type { DatasetKey } from '../../_shared/types'
 import type { ComparisonDataset, ComparisonScenario } from '../_shared/comparison-resolved-types'
-import type { ComparisonDatasetOptions } from './comparison-config'
+import type { ComparisonDatasetOptions, ComparisonPlot } from './comparison-config'
 
 /**
  * Provides access to the set of dataset definitions (`ComparisonDataset` instances) that are used
@@ -29,6 +29,15 @@ export interface ComparisonDatasets {
    * @param scenario The scenario definition.
    */
   getDatasetKeysForScenario(scenario: ComparisonScenario): DatasetKey[]
+
+  /**
+   * Return the reference plots that should be shown in the comparison graph for the
+   * given dataset and scenario.
+   *
+   * @param datasetKey The key for the dataset.
+   * @param scenario The scenario for which the dataset will be displayed.
+   */
+  getReferencePlotsForDataset(datasetKey: DatasetKey, scenario: ComparisonScenario): ComparisonPlot[]
 
   /**
    * Return the context graph IDs that should be shown for the given dataset and scenario.
@@ -155,6 +164,18 @@ class ComparisonDatasetsImpl implements ComparisonDatasets {
         return this.modelOutputVarKeys
       }
     }
+  }
+
+  // from ComparisonDatasets interface
+  getReferencePlotsForDataset(datasetKey: DatasetKey, scenario: ComparisonScenario): ComparisonPlot[] {
+    if (this.datasetOptions?.referencePlotsForDataset !== undefined) {
+      // Delegate to the custom function
+      const dataset = this.getDataset(datasetKey)
+      if (dataset !== undefined) {
+        return this.datasetOptions.referencePlotsForDataset(dataset, scenario)
+      }
+    }
+    return []
   }
 
   // from ComparisonDatasets interface

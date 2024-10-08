@@ -12,6 +12,20 @@ import { parseComparisonSpecs } from './parse/comparison-parser'
 import type { ComparisonResolvedDefs } from './resolve/comparison-resolver'
 import { resolveComparisonSpecs } from './resolve/comparison-resolver'
 
+/**
+ * Describes an extra plot to be shown in a comparison graph.
+ */
+export interface ComparisonPlot {
+  /** The dataset key for the plot. */
+  datasetKey: DatasetKey
+  /** The plot color. */
+  color: string
+  /** The plot style.  If undefined, defaults to 'normal'. */
+  style?: 'normal' | 'dashed'
+  /** The plot line width, in px units.  If undefined, a default width will be used. */
+  lineWidth?: number
+}
+
 export interface ComparisonDatasetOptions {
   /**
    * The mapping of renamed dataset keys (old or "left" name as the map key,
@@ -25,6 +39,13 @@ export interface ComparisonDatasetOptions {
    * datasets (for example, to omit datasets that are not relevant).
    */
   datasetKeysForScenario?: (allDatasetKeys: DatasetKey[], scenario: ComparisonScenario) => DatasetKey[]
+  /**
+   * An optional function that allows for including additional reference plots
+   * on a comparison graph for a given dataset and scenario.  By default, no
+   * additional reference plots are included, but if a custom function is
+   * provided, it can return an array of `ComparisonPlot` objects.
+   */
+  referencePlotsForDataset?: (dataset: ComparisonDataset, scenario: ComparisonScenario) => ComparisonPlot[]
   /**
    * An optional function that allows for customizing the set of context graphs
    * that are shown for a given dataset and scenario.  By default, all graphs in
