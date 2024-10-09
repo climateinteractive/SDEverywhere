@@ -4,6 +4,8 @@
 <script lang='ts'>
 
 import { createEventDispatcher } from 'svelte'
+import Icon from 'svelte-awesome/components/Icon.svelte'
+import { faThumbtack } from '@fortawesome/free-solid-svg-icons'
 
 import Lazy from '../../_shared/lazy.svelte'
 import ComparisonGraph from '../../graphs/comparison-graph.svelte'
@@ -12,6 +14,7 @@ import type { CompareDetailBoxContent, CompareDetailBoxViewModel } from './compa
 
 export let viewModel: CompareDetailBoxViewModel
 let content = viewModel.content
+let pinned = viewModel.pinned
 let visible = false
 
 // Rebuild the view state when the view model changes
@@ -24,6 +27,7 @@ $: if (visible !== previousVisible || viewModel.requestKey !== previousViewModel
   previousVisible = visible
   previousViewModel = viewModel
   content = viewModel.content
+  pinned = viewModel.pinned
 
   // Load the data when this view becomes visible
   if (visible) {
@@ -34,7 +38,11 @@ $: if (visible !== previousVisible || viewModel.requestKey !== previousViewModel
 const dispatch = createEventDispatcher()
 
 function onTitleClicked() {
-  dispatch('toggle')
+  dispatch('toggle-context')
+}
+
+function onTogglePinned() {
+  dispatch('toggle-pinned')
 }
 
 function diffPct(x: number | undefined | null): string {
@@ -118,6 +126,9 @@ $padding-w-2x: $padding-w * 2
 
 $stats-h: 4rem
 
+$icon-size: .8rem
+$icon-margin: .4rem
+
 .detail-box
   display: flex
   flex-direction: column
@@ -153,6 +164,21 @@ $stats-h: 4rem
   color: #aaa
   margin-left: .4rem
   margin-right: .7rem
+
+.pin-button
+  margin-left: $icon-margin
+  cursor: pointer
+  color: #555
+
+.pin-button.pinned
+  color: #ccc
+
+.pin-button :global(.pin-icon)
+  width: $icon-size
+  height: $icon-size
+
+// .pin-button-placeholder
+//   width: $icon-size + $icon-margin
 
 .content-container
   display: flex

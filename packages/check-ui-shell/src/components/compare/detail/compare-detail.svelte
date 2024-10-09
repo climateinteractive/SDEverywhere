@@ -4,18 +4,24 @@
 <script lang='ts'>
 
 import { createEventDispatcher, onMount } from 'svelte'
+import type { Readable } from 'svelte/store'
 
 import type { CompareDetailViewModel } from './compare-detail-vm'
+import type { CompareDetailRowViewModel } from './compare-detail-row-vm'
 import DetailRow from './compare-detail-row.svelte'
 import GraphsRow from './compare-graphs-row.svelte'
 
 export let viewModel: CompareDetailViewModel
+let itemKind: string
+let pinnedDetailRows: Readable<CompareDetailRowViewModel[]>
 
 let scrollContainer: HTMLElement
 let relatedItemsVisible = false
 
 // Rebuild the view state when the view model changes
 $: if (viewModel) {
+  itemKind = viewModel.kind === 'by-dataset' ? 'Scenarios' : 'Datasets'
+  pinnedDetailRows = viewModel.pinnedDetailRows
   if (scrollContainer) {
     scrollContainer.scrollTop = 0
   }
@@ -101,7 +107,8 @@ svelte:window(on:keydown!='{onKeyDown}')
   .scroll-container(bind:this!='{scrollContainer}' tabindex='0')
     .scroll-content
       +graph-sections
-      +box-rows
+      +pinned-box-rows
+      +regular-box-rows
 
 </template>
 
@@ -214,17 +221,17 @@ ul
   background-color: #3c3c3c
 
 .section-title
-  font-size: 1.7em
+  font-size: 2em
   font-weight: 700
-  margin-top: 2.5rem
-  margin-bottom: 1.5rem
+  margin-top: 2rem
+  margin-bottom: 2rem
   padding: 0 1rem
 
 .row-container
   display: flex
   flex-direction: row
   margin-top: .5rem
-  margin-bottom: 4rem
+  margin-bottom: 3rem
   margin-left: 1rem
   margin-right: 1rem
 
@@ -232,9 +239,9 @@ ul
   margin-top: 3rem
 
 .separator
-  width: 100%
+  width: calc(100vw - 2rem)
   min-height: 1px
-  margin: 2rem 0 5rem 0
+  margin: 4rem 1rem 4rem 1rem
   background-color: #888
 
 </style>

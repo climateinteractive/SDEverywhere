@@ -4,7 +4,7 @@ import type { Writable } from 'svelte/store'
 import { writable } from 'svelte/store'
 
 /**
- * Return a Svelte writable store that is backed by local storage.
+ * Return a Svelte writable number store that is backed by local storage.
  */
 export function localStorageWritableNumber(key: string, defaultValue: number): Writable<number> {
   const initialStringValue = localStorage.getItem(key)
@@ -37,9 +37,10 @@ export function localStorageWritableNumber(key: string, defaultValue: number): W
 }
 
 /**
- * Return a Svelte writable store that is backed by local storage.
+ * Return a Svelte writable boolean store that is backed by local storage.
  */
 export function localStorageWritableBoolean(key: string, defaultValue: boolean): Writable<boolean> {
+  // TODO: Update callers to use `localStore` and then remove this variant
   const initialStringValue = localStorage.getItem(key)
   let initialValue: boolean
   if (initialStringValue !== null) {

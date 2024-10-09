@@ -3,6 +3,8 @@
 <!-- SCRIPT -->
 <script lang='ts'>
 
+// import { createEventDispatcher } from 'svelte'
+
 import ContextGraph from '../../graphs/context-graph.svelte'
 
 import type {
@@ -13,7 +15,6 @@ import { createContextGraphRows } from './compare-detail-row-vm'
 import DetailBox from './compare-detail-box.svelte'
 
 export let viewModel: CompareDetailRowViewModel
-
 let expandedIndex: number
 let contextGraphRows: CompareDetailContextGraphRowViewModel[]
 
@@ -27,7 +28,16 @@ function isDimmed(index: number, expanded: number): boolean {
   return expanded !== undefined && index !== expanded
 }
 
-function onToggle(index: number): void {
+// const dispatch = createEventDispatcher()
+
+// function onTogglePinned(index: number): void {
+//   dispatch('toggle-item-pinned', {
+//     // TODO
+
+//   })
+// }
+
+function onToggleContext(index: number): void {
   if (index === expandedIndex) {
     // This box is already expanded, so collapse it
     expandedIndex = undefined
@@ -76,7 +86,7 @@ function getContextGraphPadding(index: number): number {
         <div class="spacer-fixed"></div>
       {/if}
       <div class="box-container" class:dimmed={isDimmed(i, expandedIndex)}>
-        <DetailBox viewModel={boxViewModel} on:toggle={() => onToggle(i)} />
+        <DetailBox viewModel={boxViewModel} on:toggle-context={() => onToggleContext(i)} />
       </div>
     {/each}
   </div>
@@ -117,7 +127,7 @@ function getContextGraphPadding(index: number): number {
 
 .title
   margin-right: .8rem
-  font-size: 1.6em
+  font-size: 1.5em
   font-weight: 700
 
 .subtitle

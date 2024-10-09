@@ -45,10 +45,13 @@ export class CompareDetailBoxViewModel {
   private localContent: CompareDetailBoxContent
   private readonly writableContent: Writable<CompareDetailBoxContent>
   public readonly content: Readable<CompareDetailBoxContent>
+
   private readonly writableYRange: Writable<AxisRange>
   public readonly yRange: Readable<AxisRange>
   private activeYMin: number
   private activeYMax: number
+
+  public readonly pinned: Readable<boolean>
 
   private dataRequested = false
   private dataLoaded = false
@@ -62,10 +65,14 @@ export class CompareDetailBoxViewModel {
     public readonly datasetKey: DatasetKey
   ) {
     this.requestKey = `detail-box::${requestId++}::${scenario.key}::${datasetKey}`
+
     this.writableContent = writable(undefined)
     this.content = this.writableContent
+
     this.writableYRange = writable(undefined)
     this.yRange = this.writableYRange
+
+    this.pinned = writable(false) // TODO!!!!!
   }
 
   requestData(): void {

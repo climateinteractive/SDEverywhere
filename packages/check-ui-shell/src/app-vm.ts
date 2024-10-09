@@ -3,7 +3,7 @@
 import assertNever from 'assert-never'
 
 import type { Readable, Writable } from 'svelte/store'
-import { get, writable } from 'svelte/store'
+import { derived, get, writable } from 'svelte/store'
 
 import type { ComparisonSummary, SuiteSummary } from '@sdeverywhere/check-core'
 import { checkReportFromSummary, comparisonSummaryFromReport, runSuite } from '@sdeverywhere/check-core'
@@ -158,7 +158,9 @@ export class AppViewModel {
       // Show pinned datasets at the top of the detail view
       summaryViewModel = this.summaryViewModel.comparisonsByDatasetSummaryViewModel as ComparisonsByItemSummaryViewModel
     }
-    const pinnedItemKeys = get(summaryViewModel.pinnedRows).map(row => row.key.replace('pinned_', ''))
+    const pinnedItemKeys = derived(summaryViewModel.pinnedRows, $pinnedRows => {
+      return $pinnedRows.map(row => row.key.replace('pinned_', ''))
+    })
 
     return createCompareDetailViewModel(
       summaryRowViewModel.key,

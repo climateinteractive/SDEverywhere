@@ -18,10 +18,25 @@ mixin graph-sections
           //- (otherwise the "Dataset differences" section may show outdated items)
           +key('graphsRowViewModel')
             GraphsRow(viewModel!='{graphsRowViewModel}' align='left')
-    .section-title All Datasets
+    .separator
+    +if('$pinnedDetailRows.length === 0')
+      .section-title All { itemKind }
 
-mixin box-rows
-  +each('viewModel.detailRows as detailRowViewModel')
+mixin pinned-box-rows
+  +if('$pinnedDetailRows.length > 0')
+    .section-title Pinned { itemKind }
+    +each('$pinnedDetailRows as detailRowViewModel')
+      +if('detailRowViewModel.boxes.length > 0')
+        .row-container
+          DetailRow(viewModel!='{detailRowViewModel}')
+        +else
+          .separator
+
+mixin regular-box-rows
+  +if('$pinnedDetailRows.length > 0')
+    .separator
+    .section-title All { itemKind }
+  +each('viewModel.regularDetailRows as detailRowViewModel')
     +if('detailRowViewModel.boxes.length > 0')
       .row-container
         DetailRow(viewModel!='{detailRowViewModel}')
