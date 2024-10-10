@@ -68,14 +68,25 @@ function onShowContextMenu(e: CustomEvent) {
       const pinned = get(viewModel.pinnedItemState.getPinned(pinnedItemKey))
       const action = pinned ? 'Unpin' : 'Pin'
       const kind = eventSourceKind === 'row' ? 'Row' : itemKind
-      const displayText = `${action} ${kind}`
       contextMenuSourceKey = pinnedItemKey
       contextMenuItems = [
         {
           key: 'toggle-item-pinned',
-          displayText
+          displayText: `${action} ${kind}`
         }
       ]
+      // Include the "Move Item to Top" option if:
+      //   - the item is already pinned
+      //   - the item isn't already at the top
+      if (pinned) {
+        const orderedKeys = get(viewModel.pinnedItemState.orderedKeys)
+        if (orderedKeys.length > 1 && orderedKeys[0] !== pinnedItemKey) {
+          contextMenuItems.push({
+            key: 'move-item-to-top',
+            displayText: `Move ${kind} to Top`
+          })
+        }
+      }
       contextMenuEvent = e.detail.clickEvent
       break
     }
@@ -96,11 +107,14 @@ function onContextMenuItemSelected(e: CustomEvent) {
   contextMenuEvent = undefined
 
   // Handle the command
+  const key = contextMenuSourceKey
   const cmd = e.detail
   switch (cmd) {
     case 'toggle-item-pinned':
-      const key = contextMenuSourceKey
       viewModel.pinnedItemState.toggleItemPinned(key)
+      break
+    case 'move-item-to-top':
+      viewModel.pinnedItemState.moveItemToTop(key)
       break
     default:
       console.error(`ERROR: Unhandled context menu command '${cmd}'`)

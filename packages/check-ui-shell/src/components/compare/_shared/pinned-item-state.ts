@@ -72,6 +72,18 @@ export class PinnedItemState {
     })
   }
 
+  public moveItemToTop(key: PinnedItemKey): void {
+    validateKey(key)
+    this.writableOrderedKeys.update(keys => {
+      const index = keys.findIndex(k => k === key)
+      if (index >= 0) {
+        keys.splice(index, 1)
+        keys.unshift(key)
+      }
+      return keys
+    })
+  }
+
   public setItemOrder(keys: PinnedItemKey[]): void {
     // Use the new order of items that resulted from a drag-and-drop operation
     keys.forEach(validateKey)

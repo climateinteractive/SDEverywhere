@@ -9,8 +9,9 @@ Based on example code by @dukenmarga from:
 
 export interface ContextMenuItem {
   key: string
-  iconClass?: string
   displayText: string
+  iconClass?: string
+  disabled?: boolean
 }
 
 </script>
@@ -58,7 +59,7 @@ function onItemSelected(cmd: string) {
           {#if item.key == "hr"}
             <hr>
           {:else}
-            <li><button on:click={() => onItemSelected(item.key)}><i class={item.iconClass}></i>{item.displayText}</button></li>
+            <li><button class:disabled={item.disabled === true} on:click={() => onItemSelected(item.key)}><i class={item.iconClass}></i>{item.displayText}</button></li>
           {/if}
         {/each}
       </ul>
@@ -77,12 +78,12 @@ nav
 
 .navbar
   display: inline-flex
-  border: 1px #999 solid
+  flex-direction: column
   width: 170px
   background-color: #fff
-  border-radius: 10px
+  border-radius: .4rem
+  box-shadow: 0 .2rem .4rem rgba(0,0,0,.8)
   overflow: hidden
-  flex-direction: column
 
 .navbar ul
   margin: 6px
@@ -103,10 +104,14 @@ ul li button
   border: 0px
   background-color: #fff
 
-ul li button:hover
+ul li button.disabled
+  color: #888
+  pointer-events: none
+
+ul li button:not(.disabled):hover
   color: #000
   text-align: left
-  border-radius: 5px
+  border-radius: .3rem
   background-color: #eee
 
 ul li button i
