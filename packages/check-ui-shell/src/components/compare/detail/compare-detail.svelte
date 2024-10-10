@@ -6,6 +6,7 @@
 import { createEventDispatcher, onMount } from 'svelte'
 import { get, type Readable } from 'svelte/store'
 
+import type { ContextMenuItem } from '../../_shared/context-menu.svelte'
 import ContextMenu from '../../_shared/context-menu.svelte'
 
 import type { CompareDetailViewModel } from './compare-detail-vm'
@@ -28,7 +29,7 @@ interface ContextMenuBoxSource {
 type ContextMenuSource = ContextMenuBoxSource
 
 let contextMenuSource: ContextMenuSource
-let contextMenuItems: any[] = []
+let contextMenuItems: ContextMenuItem[] = []
 let contextMenuEvent: Event
 let relatedItemsVisible = false
 

@@ -5,13 +5,23 @@ Based on example code by @dukenmarga from:
   https://svelte.dev/repl/6fb90919e24942b2b47d9ad154386b0c?version=3.49.0
 -->
 
+<script context="module" lang="ts">
+
+export interface ContextMenuItem {
+  key: string
+  iconClass?: string
+  displayText: string
+}
+
+</script>
+
 <script lang="ts">
 
 import { createEventDispatcher } from 'svelte'
 
 import { clickOutside } from './click-outside'
 
-export let items /*: Item[] */
+export let items: ContextMenuItem[]
 export let parentElem: HTMLElement
 export let initialEvent: MouseEvent
 
@@ -48,7 +58,7 @@ function onItemSelected(cmd: string) {
           {#if item.key == "hr"}
             <hr>
           {:else}
-            <li><button on:click={() => onItemSelected(item.key)}><i class={item.class}></i>{item.displayText}</button></li>
+            <li><button on:click={() => onItemSelected(item.key)}><i class={item.iconClass}></i>{item.displayText}</button></li>
           {/if}
         {/each}
       </ul>
