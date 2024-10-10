@@ -18,7 +18,6 @@ mixin graph-sections
           //- (otherwise the "Dataset differences" section may show outdated items)
           +key('graphsRowViewModel')
             GraphsRow(viewModel!='{graphsRowViewModel}' align='left')
-    .separator
     +if('$pinnedDetailRows.length === 0')
       .section-title All { itemKindPlural }
 
@@ -31,7 +30,6 @@ mixin pinned-box-rows
 
 mixin regular-box-rows
   +if('$pinnedDetailRows.length > 0')
-    .separator
     .section-title All { itemKindPlural }
   +each('viewModel.regularDetailRows as detailRowViewModel')
     .row-container

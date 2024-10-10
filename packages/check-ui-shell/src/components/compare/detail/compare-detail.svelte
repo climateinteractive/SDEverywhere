@@ -301,11 +301,15 @@ ul
   position: relative
 
 .section-title
-  font-size: 2em
+  width: calc(100vw - 2rem)
+  margin: 1.5rem 1rem 2rem 1rem
+  padding: .2rem 0
+  border-bottom: solid 1px #555
+  color: #ccc
+  font-size: 1.4em
   font-weight: 700
-  margin-top: 2rem
-  margin-bottom: 2rem
-  padding: 0 1rem
+  &:not(:first-child)
+    margin-top: 5rem
 
 .row-container
   display: flex
@@ -317,11 +321,5 @@ ul
 
 .row-container:first-child
   margin-top: 3rem
-
-.separator
-  width: calc(100vw - 2rem)
-  min-height: 1px
-  margin: 4rem 1rem 4rem 1rem
-  background-color: #888
 
 </style>
