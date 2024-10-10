@@ -98,6 +98,7 @@ export function createCompareGraphsRowViewModel(
         '',
         '',
         scenario,
+        datasetKey,
         datasetKey
       )
 
