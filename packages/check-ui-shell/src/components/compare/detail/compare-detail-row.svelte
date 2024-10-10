@@ -3,8 +3,6 @@
 <!-- SCRIPT -->
 <script lang='ts'>
 
-// import { createEventDispatcher } from 'svelte'
-
 import ContextGraph from '../../graphs/context-graph.svelte'
 
 import type {
@@ -27,15 +25,6 @@ $: if (viewModel) {
 function isDimmed(index: number, expanded: number): boolean {
   return expanded !== undefined && index !== expanded
 }
-
-// const dispatch = createEventDispatcher()
-
-// function onTogglePinned(index: number): void {
-//   dispatch('toggle-item-pinned', {
-//     // TODO
-
-//   })
-// }
 
 function onToggleContext(index: number): void {
   if (index === expandedIndex) {
@@ -86,7 +75,7 @@ function getContextGraphPadding(index: number): number {
         <div class="spacer-fixed"></div>
       {/if}
       <div class="box-container" class:dimmed={isDimmed(i, expandedIndex)}>
-        <DetailBox viewModel={boxViewModel} on:toggle-context={() => onToggleContext(i)} />
+        <DetailBox viewModel={boxViewModel} on:toggle-context={() => onToggleContext(i)} on:show-context-menu />
       </div>
     {/each}
   </div>

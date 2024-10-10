@@ -4,9 +4,12 @@
 <script lang='ts'>
 
 import { createEventDispatcher, onMount } from 'svelte'
-import type { Readable } from 'svelte/store'
+import { get, type Readable } from 'svelte/store'
+
+import ContextMenu from '../../_shared/context-menu.svelte'
 
 import type { CompareDetailViewModel } from './compare-detail-vm'
+import type { CompareDetailBoxViewModel } from './compare-detail-box-vm'
 import type { CompareDetailRowViewModel } from './compare-detail-row-vm'
 import DetailRow from './compare-detail-row.svelte'
 import GraphsRow from './compare-graphs-row.svelte'
@@ -16,6 +19,17 @@ let itemKind: string
 let pinnedDetailRows: Readable<CompareDetailRowViewModel[]>
 
 let scrollContainer: HTMLElement
+let scrollContent: HTMLElement
+
+interface ContextMenuBoxSource {
+  kind: 'box'
+  boxViewModel: CompareDetailBoxViewModel
+}
+type ContextMenuSource = ContextMenuBoxSource
+
+let contextMenuSource: ContextMenuSource
+let contextMenuItems: any[] = []
+let contextMenuEvent: Event
 let relatedItemsVisible = false
 
 // Rebuild the view state when the view model changes
@@ -42,6 +56,49 @@ function onNavLink(cmd: string) {
       break
     default:
       dispatch('command', { cmd })
+      break
+  }
+}
+
+function onShowContextMenu(e: CustomEvent) {
+  // TODO: Customize menu depending on kind of item
+  if (e.detail.kind === 'box') {
+    const pinnedItemKey = e.detail.boxViewModel.pinnedItemKey
+    const pinned = get(viewModel.pinnedItemState.getPinned(pinnedItemKey))
+    contextMenuSource = e.detail
+    contextMenuItems = [
+      {
+        key: 'toggle-box-pinned',
+        displayText: pinned ? 'Unpin Item' : 'Pin Item',
+      }
+    ]
+    contextMenuEvent = e.detail.clickEvent
+  } else {
+    contextMenuSource = undefined
+    contextMenuItems = []
+    contextMenuEvent = undefined
+  }
+}
+
+function onHideContextMenu() {
+  contextMenuEvent = undefined
+}
+
+function onContextMenuItemSelected(e: CustomEvent) {
+  // Hide the context menu
+  contextMenuEvent = undefined
+
+  // Handle the command
+  const cmd = e.detail
+  switch (cmd) {
+    case 'toggle-box-pinned':
+      if (contextMenuSource?.kind === 'box') {
+        const key = contextMenuSource.boxViewModel.pinnedItemKey
+        viewModel.pinnedItemState.toggleItemPinned(key)
+      }
+      break
+    default:
+      console.error(`ERROR: Unhandled context menu command '${cmd}'`)
       break
   }
 }
@@ -105,10 +162,11 @@ svelte:window(on:keydown!='{onKeyDown}')
         ul
           +related-items
   .scroll-container(bind:this!='{scrollContainer}' tabindex='0')
-    .scroll-content
+    .scroll-content(bind:this!='{scrollContent}')
       +graph-sections
       +pinned-box-rows
       +regular-box-rows
+      ContextMenu(items!='{contextMenuItems}' parentElem!='{scrollContent}' initialEvent!='{contextMenuEvent}' on:item-selected!='{onContextMenuItemSelected}' on:clickout!='{onHideContextMenu}')
 
 </template>
 
@@ -219,6 +277,9 @@ ul
   overflow: auto
   outline: none
   background-color: #3c3c3c
+
+.scroll-content
+  position: relative
 
 .section-title
   font-size: 2em

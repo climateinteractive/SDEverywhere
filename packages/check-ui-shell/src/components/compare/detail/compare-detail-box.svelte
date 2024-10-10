@@ -14,7 +14,6 @@ import type { CompareDetailBoxContent, CompareDetailBoxViewModel } from './compa
 
 export let viewModel: CompareDetailBoxViewModel
 let content = viewModel.content
-let pinned = viewModel.pinned
 let visible = false
 
 // Rebuild the view state when the view model changes
@@ -27,7 +26,6 @@ $: if (visible !== previousVisible || viewModel.requestKey !== previousViewModel
   previousVisible = visible
   previousViewModel = viewModel
   content = viewModel.content
-  pinned = viewModel.pinned
 
   // Load the data when this view becomes visible
   if (visible) {
@@ -41,8 +39,12 @@ function onTitleClicked() {
   dispatch('toggle-context')
 }
 
-function onTogglePinned() {
-  dispatch('toggle-pinned')
+function onContextMenu(e: Event) {
+  dispatch('show-context-menu', {
+    kind: 'box',
+    boxViewModel: viewModel,
+    clickEvent: e
+  })
 }
 
 function diffPct(x: number | undefined | null): string {
@@ -85,7 +87,7 @@ function getMaxDiffSpan(content: CompareDetailBoxContent): string {
 
 .detail-box
   +if('viewModel.title')
-    .title-row.no-selection(on:click!='{onTitleClicked}')
+    .title-row.no-selection(on:click!='{onTitleClicked}' on:contextmenu|preventDefault!='{onContextMenu}')
       .title-content
         span.title {@html viewModel.title}
         +if('viewModel.subtitle')

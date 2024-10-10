@@ -25,6 +25,7 @@ import type { UserPrefs } from '../../../_shared/user-prefs'
 import { getAnnotationsForDataset, getAnnotationsForScenario } from '../_shared/annotations'
 import { getBucketIndex } from '../_shared/buckets'
 import type { ComparisonGroupingKind } from '../_shared/comparison-grouping-kind'
+import type { PinnedItemState } from '../_shared/pinned-item-state'
 
 import type { ComparisonDetailItem } from './compare-detail-item'
 import { groupItemsByTitle } from './compare-detail-item'
@@ -73,6 +74,8 @@ export interface CompareDetailViewModel {
   regularDetailRows: CompareDetailRowViewModel[]
   /** The pinned detail box rows in this group. */
   pinnedDetailRows: Readable<CompareDetailRowViewModel[]>
+  /** The shared pinned item state for this view. */
+  pinnedItemState: PinnedItemState
 }
 
 export function createCompareDetailViewModel(
@@ -83,7 +86,7 @@ export function createCompareDetailViewModel(
   groupSummary: ComparisonGroupSummary,
   viewGroup: ComparisonViewGroup | undefined,
   view: ComparisonView | undefined,
-  pinnedItemKeys: Readable<string[]>
+  pinnedItemState: PinnedItemState
 ): CompareDetailViewModel {
   switch (groupSummary.group.kind) {
     case 'by-dataset':
@@ -93,7 +96,7 @@ export function createCompareDetailViewModel(
         dataCoordinator,
         userPrefs,
         groupSummary,
-        pinnedItemKeys
+        pinnedItemState
       )
     case 'by-scenario':
       return createCompareDetailViewModelForScenario(
@@ -104,7 +107,7 @@ export function createCompareDetailViewModel(
         groupSummary,
         viewGroup,
         view,
-        pinnedItemKeys
+        pinnedItemState
       )
     default:
       assertNever(groupSummary.group.kind)
@@ -117,7 +120,7 @@ function createCompareDetailViewModelForDataset(
   dataCoordinator: ComparisonDataCoordinator,
   userPrefs: UserPrefs,
   groupSummary: ComparisonGroupSummary,
-  pinnedItemKeys: Readable<string[]>
+  pinnedItemState: PinnedItemState
 ): CompareDetailViewModel {
   const bundleNameL = comparisonConfig.bundleL.name
   const bundleNameR = comparisonConfig.bundleR.name
@@ -199,7 +202,7 @@ function createCompareDetailViewModelForDataset(
     }
     return undefined
   }
-  const pinnedDetailRows = derived(pinnedItemKeys, $pinnedItemKeys => {
+  const pinnedDetailRows = derived(pinnedItemState.orderedKeys, $pinnedItemKeys => {
     const rows: CompareDetailRowViewModel[] = []
     for (const scenarioKey of $pinnedItemKeys) {
       // Find the item for this scenario key
@@ -231,7 +234,8 @@ function createCompareDetailViewModelForDataset(
     relatedItems,
     graphSections: [],
     regularDetailRows,
-    pinnedDetailRows
+    pinnedDetailRows,
+    pinnedItemState
   }
 }
 
@@ -243,7 +247,7 @@ function createCompareDetailViewModelForScenario(
   groupSummary: ComparisonGroupSummary,
   viewGroup: ComparisonViewGroup | undefined,
   view: ComparisonView | undefined,
-  pinnedItemKeys: Readable<string[]>
+  pinnedItemState: PinnedItemState
 ): CompareDetailViewModel {
   const bundleNameL = comparisonConfig.bundleL.name
   const bundleNameR = comparisonConfig.bundleR.name
@@ -354,13 +358,23 @@ function createCompareDetailViewModelForScenario(
     }
     return undefined
   }
-  const pinnedDetailRows = derived(pinnedItemKeys, $pinnedDatasetKeys => {
+  const pinnedDetailRows = derived(pinnedItemState.orderedKeys, $pinnedDatasetKeys => {
     const rows: CompareDetailRowViewModel[] = []
     for (const datasetKey of $pinnedDatasetKeys) {
       // Find the item for this dataset key
-      const detailRow = detailRowForDatasetKey(datasetKey)
-      if (detailRow) {
-        rows.push(detailRow.viewModel)
+      const regularRow = detailRowForDatasetKey(datasetKey)
+      if (regularRow) {
+        // Clone the regular row view model so the pinned row view model is distinct
+        const pinnedRowViewModel = createCompareDetailRowViewModel(
+          comparisonConfig,
+          dataCoordinator,
+          userPrefs,
+          'datasets',
+          title,
+          subtitle,
+          [regularRow.detailItem]
+        )
+        rows.push(pinnedRowViewModel)
       }
     }
     return rows
@@ -386,7 +400,8 @@ function createCompareDetailViewModelForScenario(
     relatedItems,
     graphSections,
     regularDetailRows,
-    pinnedDetailRows
+    pinnedDetailRows,
+    pinnedItemState
   }
 }
 

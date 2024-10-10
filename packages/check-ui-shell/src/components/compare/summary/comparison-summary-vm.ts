@@ -2,7 +2,7 @@
 
 import { assertNever } from 'assert-never'
 
-import { get, writable, type Readable, type Writable } from 'svelte/store'
+import { derived, writable, type Readable } from 'svelte/store'
 
 import type { ComparisonConfig, ComparisonGroupSummary, ComparisonTestSummary } from '@sdeverywhere/check-core'
 import { categorizeComparisonTestSummaries } from '@sdeverywhere/check-core'
@@ -10,6 +10,7 @@ import { categorizeComparisonTestSummaries } from '@sdeverywhere/check-core'
 import { getAnnotationsForDataset, getAnnotationsForScenario } from '../_shared/annotations'
 import { hasSignificantDiffs } from '../_shared/buckets'
 import type { ComparisonGroupingKind } from '../_shared/comparison-grouping-kind'
+import type { PinnedItemState, PinnedItemStates } from '../_shared/pinned-item-state'
 import { datasetSpan } from '../_shared/spans'
 
 import { getGraphsGroupedByDiffs } from '../detail/compare-detail-vm'
@@ -23,8 +24,8 @@ export interface ComparisonSummarySectionViewModel {
 
 export interface ComparisonViewsSummaryViewModel {
   kind: 'views'
-  allRows: ComparisonSummaryRowViewModel[]
   rowsWithDiffs: number
+  allRows: Readable<ComparisonSummaryRowViewModel[]>
   viewGroups: ComparisonSummarySectionViewModel[]
 }
 
@@ -33,11 +34,12 @@ export class ComparisonsByItemSummaryViewModel {
 
   public readonly rowsWithDiffs: number
 
-  public allRows: ComparisonSummaryRowViewModel[]
-  private readonly writablePinnedRows: Writable<ComparisonSummaryRowViewModel[]>
+  private readonly regularRows: ComparisonSummaryRowViewModel[]
   public readonly pinnedRows: Readable<ComparisonSummaryRowViewModel[]>
+  public readonly allRows: Readable<ComparisonSummaryRowViewModel[]>
 
   constructor(
+    private readonly pinnedItemState: PinnedItemState,
     public readonly itemKind: 'scenario' | 'dataset',
     public readonly withErrors?: ComparisonSummarySectionViewModel,
     public readonly onlyInLeft?: ComparisonSummarySectionViewModel,
@@ -45,102 +47,57 @@ export class ComparisonsByItemSummaryViewModel {
     public readonly withDiffs?: ComparisonSummarySectionViewModel,
     public readonly withoutDiffs?: ComparisonSummarySectionViewModel
   ) {
-    // Determine the number of rows with differences
+    // Create an array that holds all regular rows and determine the number
+    // of rows with differences
     let rowsWithDiffs = 0
-    const count = (section?: ComparisonSummarySectionViewModel) => {
-      const rowCount = section?.rows.length || 0
-      rowsWithDiffs += rowCount
+    const regularRows: ComparisonSummaryRowViewModel[] = []
+    const addRows = (section?: ComparisonSummarySectionViewModel) => {
+      if (section?.rows.length > 0) {
+        rowsWithDiffs += section.rows.length
+        regularRows.push(...section.rows)
+      }
     }
-    count(withErrors)
-    count(onlyInLeft)
-    count(onlyInRight)
-    count(withDiffs)
+    addRows(withErrors)
+    addRows(onlyInLeft)
+    addRows(onlyInRight)
+    addRows(withDiffs)
+    addRows(withoutDiffs)
     this.rowsWithDiffs = rowsWithDiffs
+    this.regularRows = regularRows
 
-    // Create a writable store to hold the pinned rows
-    // TODO: Get initial state from local storage
-    this.writablePinnedRows = writable([])
-    this.pinnedRows = this.writablePinnedRows
+    // Derive the pinned row view models from the pinned item state
+    this.pinnedRows = derived(pinnedItemState.orderedKeys, $orderedKeys => {
+      return $orderedKeys.map(itemKey => {
+        // The pinned row is a clone of the original row, except that the pinned one has
+        // a key with 'pinned_' in the front to differentiate it from the normal row
+        const regularRow = this.regularRows.find(row => row.key === itemKey)
+        if (regularRow === undefined) {
+          throw new Error(`No regular row found for key=${itemKey}`)
+        }
+        const pinnedRow: ComparisonSummaryRowViewModel = {
+          ...regularRow,
+          key: `pinned_${regularRow.key}`
+        }
+        return pinnedRow
+      })
+    })
 
-    // Build the initial `allRows` array
-    this.rebuildAllRows()
+    // Derive the array of all rows (pinned rows + regular rows)
+    this.allRows = derived(this.pinnedRows, $pinnedRows => {
+      return [...$pinnedRows, ...this.regularRows]
+    })
   }
 
   public toggleItemPinned(row: ComparisonSummaryRowViewModel): void {
-    const writablePinned = row.pinned as Writable<boolean>
-    const isPinned = get(writablePinned)
-    if (isPinned) {
-      // The item is currently pinned, so remove it from the array of pinned items and
-      // clear the pinned flag on the item
-      writablePinned.set(false)
-      this.removePinnedItem(row)
-    } else {
-      // The item is not currently pinned, so add it to the end of the array of pinned
-      // items and set the pinned flag on the item
-      writablePinned.set(true)
-      this.addPinnedItem(row)
-    }
+    // Note that `row` can either be a normal row or a pinned row (since they both
+    // have a toggle button), so we need to get the key for the regular row here
+    const key = row.key.startsWith('pinned_') ? row.key.replace('pinned_', '') : row.key
+    this.pinnedItemState.toggleItemPinned(key)
   }
 
-  public setPinnedItems(rows: ComparisonSummaryRowViewModel[]): void {
+  public setReorderedPinnedItems(rows: ComparisonSummaryRowViewModel[]): void {
     // Use the new order of items that resulted from a drag-and-drop operation
-    this.writablePinnedRows.set(rows)
-    this.postUpdatePinnedRows()
-  }
-
-  private addPinnedItem(row: ComparisonSummaryRowViewModel): void {
-    this.writablePinnedRows.update(rows => {
-      // The pinned row is a clone of the original row, except that the pinned one has
-      // a key with 'pinned_' in the front to differentiate it from the normal row
-      const pinnedRow: ComparisonSummaryRowViewModel = {
-        ...row,
-        key: `pinned_${row.key}`
-      }
-      rows.push(pinnedRow)
-      return rows
-    })
-    this.postUpdatePinnedRows()
-  }
-
-  private removePinnedItem(row: ComparisonSummaryRowViewModel): void {
-    this.writablePinnedRows.update(rows => {
-      // Note that `row` can either be a normal row or a pinned row (since they both
-      // have a toggle button), so we need to get the key for the pinned row here
-      const pinnedRowKey = row.key.startsWith('pinned_') ? row.key : `pinned_${row.key}`
-      const index = rows.findIndex(r => r.key === pinnedRowKey)
-      if (index >= 0) {
-        rows.splice(index, 1)
-      }
-      return rows
-    })
-    this.postUpdatePinnedRows()
-  }
-
-  private postUpdatePinnedRows(): void {
-    // Rebuild the `allRows` array whenever there are changes to the pinned rows
-    this.rebuildAllRows()
-
-    // TODO: Update local storage
-  }
-
-  private rebuildAllRows(): void {
-    // Rebuild the `allRows` array to include pinned rows plus all normal rows
-    const allRows: ComparisonSummaryRowViewModel[] = []
-    const addRows = (section?: ComparisonSummarySectionViewModel) => {
-      if (section?.rows.length > 0) {
-        allRows.push(...section.rows)
-      }
-    }
-    const pinnedRows = get(this.writablePinnedRows)
-    if (pinnedRows.length > 0) {
-      allRows.push(...pinnedRows)
-    }
-    addRows(this.withErrors)
-    addRows(this.onlyInLeft)
-    addRows(this.onlyInRight)
-    addRows(this.withDiffs)
-    addRows(this.withoutDiffs)
-    this.allRows = allRows
+    this.pinnedItemState.setItemOrder(rows.map(row => row.key.replace('pinned_', '')))
   }
 }
 
@@ -154,6 +111,7 @@ export interface ComparisonSummaryViewModels {
 
 export function createComparisonSummaryViewModels(
   comparisonConfig: ComparisonConfig,
+  pinnedItemStates: PinnedItemStates,
   terseSummaries: ComparisonTestSummary[]
 ): ComparisonSummaryViewModels {
   const bundleNameL = comparisonConfig.bundleL.name
@@ -249,6 +207,7 @@ export function createComparisonSummaryViewModels(
     let title: string
     let subtitle: string
     let annotations: string
+    let pinned: Readable<boolean>
     const root = groupSummary.root
     switch (root.kind) {
       case 'dataset': {
@@ -257,6 +216,7 @@ export function createComparisonSummaryViewModels(
         title = outputVar.varName
         subtitle = outputVar.sourceName
         annotations = getAnnotationsForDataset(root, bundleNameL, bundleNameR).join(' ')
+        pinned = pinnedItemStates.byDataset.getPinned(outputVar.datasetKey)
         break
       }
       case 'scenario':
@@ -264,13 +224,11 @@ export function createComparisonSummaryViewModels(
         title = root.title
         subtitle = root.subtitle
         annotations = getAnnotationsForScenario(root, bundleNameL, bundleNameR).join(' ')
+        pinned = pinnedItemStates.byScenario.getPinned(root.key)
         break
       default:
         assertNever(root)
     }
-
-    // TODO: Get initial pinned state from local storage
-    const pinned = writable(false)
 
     return {
       kind,
@@ -324,7 +282,6 @@ export function createComparisonSummaryViewModels(
   // Build the by-scenario comparison sections
   const nameL = datasetSpan(bundleNameL, 'left')
   const nameR = datasetSpan(bundleNameR, 'right')
-  // const pinnedScenarios = section(groupsByScenario.withoutDiffs, 'pinned scenario…')
   const scenariosWithErrors = section(groupsByScenario.withErrors, 'scenario with errors…')
   const scenariosOnlyInLeft = section(groupsByScenario.onlyInLeft, `scenario only valid in ${nameL}…`)
   const scenariosOnlyInRight = section(groupsByScenario.onlyInRight, `scenario only valid in ${nameR}…`)
@@ -355,13 +312,14 @@ export function createComparisonSummaryViewModels(
     }
     viewsSummary = {
       kind: 'views',
-      allRows: allViewRows,
+      allRows: writable(allViewRows),
       rowsWithDiffs: viewRowsWithDiffs,
       viewGroups: viewGroupSections
     }
   }
 
   const byScenarioSummary = new ComparisonsByItemSummaryViewModel(
+    pinnedItemStates.byScenario,
     'scenario',
     scenariosWithErrors,
     scenariosOnlyInLeft,
@@ -371,6 +329,7 @@ export function createComparisonSummaryViewModels(
   )
 
   const byDatasetSummary = new ComparisonsByItemSummaryViewModel(
+    pinnedItemStates.byDataset,
     'dataset',
     datasetsWithErrors,
     datasetsOnlyInLeft,

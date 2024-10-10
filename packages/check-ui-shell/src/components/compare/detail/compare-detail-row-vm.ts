@@ -13,6 +13,8 @@ import type { UserPrefs } from '../../../_shared/user-prefs'
 
 import { ContextGraphViewModel } from '../../graphs/context-graph-vm'
 
+import type { PinnedItemKey } from '../_shared/pinned-item-state'
+
 import { CompareDetailBoxViewModel, type AxisRange } from './compare-detail-box-vm'
 import type { ComparisonDetailItem } from './compare-detail-item'
 
@@ -50,6 +52,14 @@ export function createCompareDetailRowViewModel(
     // TODO
     const boxTitle = kind === 'scenarios' ? `…${item.subtitle}` : item.title
 
+    // The pinned item key is either the scenario key or the dataset key
+    let pinnedItemKey: PinnedItemKey
+    if (kind === 'scenarios') {
+      pinnedItemKey = item.scenario.key
+    } else {
+      pinnedItemKey = item.testSummary.d
+    }
+
     boxes.push(
       new CompareDetailBoxViewModel(
         comparisonConfig,
@@ -57,7 +67,8 @@ export function createCompareDetailRowViewModel(
         boxTitle,
         undefined, //item.subtitle,
         item.scenario,
-        item.testSummary.d
+        item.testSummary.d,
+        pinnedItemKey
       )
     )
   }

@@ -1,9 +1,12 @@
 // Copyright (c) 2021-2022 Climate Interactive / New Venture Fund
 
+import { get } from 'svelte/store'
+
 import type { CheckDataCoordinator, CheckReport, ComparisonConfig, ComparisonSummary } from '@sdeverywhere/check-core'
 
 import type { CheckSummaryViewModel } from '../check/summary/check-summary-vm'
 import { createCheckSummaryViewModel } from '../check/summary/check-summary-vm'
+import type { PinnedItemStates } from '../compare/_shared/pinned-item-state'
 import type { ComparisonSummaryViewModel } from '../compare/summary/comparison-summary-vm'
 import { createComparisonSummaryViewModels } from '../compare/summary/comparison-summary-vm'
 import type { StatsTableViewModel } from '../stats/stats-table-vm'
@@ -24,7 +27,8 @@ export function createSummaryViewModel(
   checkDataCoordinator: CheckDataCoordinator,
   checkReport: CheckReport,
   comparisonConfig: ComparisonConfig | undefined,
-  comparisonSummary: ComparisonSummary | undefined
+  comparisonSummary: ComparisonSummary | undefined,
+  pinnedItemStates: PinnedItemStates
 ): SummaryViewModel {
   type TabInfo = [subtitle: string, status: string]
 
@@ -85,7 +89,11 @@ export function createSummaryViewModel(
     )
 
     // Create comparison summary view models
-    const comparisonSummaries = createComparisonSummaryViewModels(comparisonConfig, comparisonSummary.testSummaries)
+    const comparisonSummaries = createComparisonSummaryViewModels(
+      comparisonConfig,
+      pinnedItemStates,
+      comparisonSummary.testSummaries
+    )
 
     // Add tab for comparison views, if some are defined
     if (comparisonSummaries.views) {
@@ -96,7 +104,7 @@ export function createSummaryViewModel(
       // (scenarios) with differences.
       let viewsTabInfo: TabInfo
       let changedGraphCount = 0
-      for (const row of comparisonSummaries.views.allRows) {
+      for (const row of get(comparisonSummaries.views.allRows)) {
         // TODO: We may end up counting the same graph here multiple times if there are multiple
         // views that use "grouped-by-diffs" mode and display the same subset of graphs in each.
         // Ideally we would get the number of unique graphs with changes here instead.

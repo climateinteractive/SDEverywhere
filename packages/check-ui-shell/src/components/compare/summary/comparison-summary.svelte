@@ -25,7 +25,7 @@ function onToggleItemPinned(row: ComparisonSummaryRowViewModel): void {
 
 function onPinnedItemsReordered(rows: ComparisonSummaryRowViewModel[]): void {
   if (viewModel.kind === 'by-item') {
-    viewModel.setPinnedItems(rows)
+    viewModel.setReorderedPinnedItems(rows)
   }
 }
 

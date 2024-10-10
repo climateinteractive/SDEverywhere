@@ -3,7 +3,7 @@
 import assertNever from 'assert-never'
 
 import type { Readable, Writable } from 'svelte/store'
-import { derived, get, writable } from 'svelte/store'
+import { get, writable } from 'svelte/store'
 
 import type { ComparisonSummary, SuiteSummary } from '@sdeverywhere/check-core'
 import { checkReportFromSummary, comparisonSummaryFromReport, runSuite } from '@sdeverywhere/check-core'
@@ -14,13 +14,12 @@ import type { UserPrefs } from './_shared/user-prefs'
 import type { AppModel } from './model/app-model'
 
 import type { ComparisonGroupingKind } from './components/compare/_shared/comparison-grouping-kind'
+import type { PinnedItemState, PinnedItemStates } from './components/compare/_shared/pinned-item-state'
+import { createPinnedItemStates } from './components/compare/_shared/pinned-item-state'
 import type { CompareDetailViewModel } from './components/compare/detail/compare-detail-vm'
 import { createCompareDetailViewModel } from './components/compare/detail/compare-detail-vm'
 import type { ComparisonSummaryRowViewModel } from './components/compare/summary/comparison-summary-row-vm'
-import type {
-  ComparisonsByItemSummaryViewModel,
-  ComparisonSummaryViewModel
-} from './components/compare/summary/comparison-summary-vm'
+import type { ComparisonSummaryViewModel } from './components/compare/summary/comparison-summary-vm'
 import type { HeaderViewModel } from './components/header/header-vm'
 import { createHeaderViewModel } from './components/header/header-vm'
 import type { PerfViewModel } from './components/perf/perf-vm'
@@ -40,6 +39,7 @@ export class AppViewModel {
   public readonly progress: Readable<string>
   public readonly userPrefs: UserPrefs
   public readonly headerViewModel: HeaderViewModel
+  private readonly pinnedItemStates: PinnedItemStates
   public summaryViewModel: SummaryViewModel
   private cancelRunSuite: () => void
 
@@ -73,6 +73,9 @@ export class AppViewModel {
 
     // Create the header view model
     this.headerViewModel = createHeaderViewModel(appModel.config.comparison, simplifyScenarios, zoom, consistentYRange)
+
+    // Create the object that manages pinned items states
+    this.pinnedItemStates = createPinnedItemStates()
   }
 
   runTestSuite(): void {
@@ -98,7 +101,8 @@ export class AppViewModel {
         this.appModel.checkDataCoordinator,
         checkReport,
         comparisonConfig,
-        comparisonSummary
+        comparisonSummary,
+        this.pinnedItemStates
       )
       this.writableChecksInProgress.set(false)
     } else {
@@ -125,7 +129,8 @@ export class AppViewModel {
               this.appModel.checkDataCoordinator,
               checkReport,
               comparisonConfig,
-              comparisonSummary
+              comparisonSummary,
+              this.pinnedItemStates
             )
             this.writableChecksInProgress.set(false)
           },
@@ -149,18 +154,14 @@ export class AppViewModel {
     const viewGroup = summaryRowViewModel.viewMetadata?.viewGroup
     const view = summaryRowViewModel.viewMetadata?.view
 
-    let summaryViewModel: ComparisonsByItemSummaryViewModel
+    let pinnedItemState: PinnedItemState
     if (groupSummary.group.kind === 'by-dataset') {
       // Show pinned scenarios at the top of the detail view
-      summaryViewModel = this.summaryViewModel
-        .comparisonsByScenarioSummaryViewModel as ComparisonsByItemSummaryViewModel
+      pinnedItemState = this.pinnedItemStates.byScenario
     } else {
       // Show pinned datasets at the top of the detail view
-      summaryViewModel = this.summaryViewModel.comparisonsByDatasetSummaryViewModel as ComparisonsByItemSummaryViewModel
+      pinnedItemState = this.pinnedItemStates.byDataset
     }
-    const pinnedItemKeys = derived(summaryViewModel.pinnedRows, $pinnedRows => {
-      return $pinnedRows.map(row => row.key.replace('pinned_', ''))
-    })
 
     return createCompareDetailViewModel(
       summaryRowViewModel.key,
@@ -170,14 +171,14 @@ export class AppViewModel {
       groupSummary,
       viewGroup,
       view,
-      pinnedItemKeys
+      pinnedItemState
     )
   }
 
   createCompareDetailViewModelForFirstSummaryRow(kind: ComparisonGroupingKind): CompareDetailViewModel | undefined {
     // Get the index of the associated row in the context of the summary view
     const comparisonSummaryViewModel = this.getComparisonSummaryViewModel(kind)
-    const allRows = comparisonSummaryViewModel.allRows
+    const allRows = get(comparisonSummaryViewModel.allRows)
     if (allRows.length > 0) {
       // Create a detail view for the first row
       const prevRow = allRows[0]
@@ -193,7 +194,7 @@ export class AppViewModel {
   ): CompareDetailViewModel | undefined {
     // Get the index of the associated row in the context of the summary view
     const comparisonSummaryViewModel = this.getComparisonSummaryViewModel(kind)
-    const allRows = comparisonSummaryViewModel.allRows
+    const allRows = get(comparisonSummaryViewModel.allRows)
     const rowIndex = allRows.findIndex(row => row.key === summaryRowKey)
     if (rowIndex > 0) {
       // Create a detail view for the previous row
@@ -210,7 +211,7 @@ export class AppViewModel {
   ): CompareDetailViewModel | undefined {
     // Get the index of the associated row in the context of the summary view
     const comparisonSummaryViewModel = this.getComparisonSummaryViewModel(kind)
-    const allRows = comparisonSummaryViewModel.allRows
+    const allRows = get(comparisonSummaryViewModel.allRows)
     const rowIndex = allRows.findIndex(row => row.key === summaryRowKey)
     if (rowIndex >= 0 && rowIndex < allRows.length - 1) {
       // Create a detail view for the next row
