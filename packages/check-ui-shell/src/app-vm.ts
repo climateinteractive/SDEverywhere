@@ -188,35 +188,20 @@ export class AppViewModel {
     }
   }
 
-  createCompareDetailViewModelForSummaryRowBefore(
+  createCompareDetailViewModelForSummaryRowWithDelta(
     kind: ComparisonGroupingKind,
-    summaryRowKey: string
+    summaryRowKey: string,
+    delta: -1 | 1
   ): CompareDetailViewModel | undefined {
     // Get the index of the associated row in the context of the summary view
     const comparisonSummaryViewModel = this.getComparisonSummaryViewModel(kind)
     const allRows = get(comparisonSummaryViewModel.allRows)
     const rowIndex = allRows.findIndex(row => row.key === summaryRowKey)
-    if (rowIndex > 0) {
-      // Create a detail view for the previous row
-      const prevRow = allRows[rowIndex - 1]
+    const adjRowIndex = rowIndex + delta
+    if (adjRowIndex >= 0 && adjRowIndex < allRows.length) {
+      // Create a detail view for the adjacent row
+      const prevRow = allRows[adjRowIndex]
       return this.createCompareDetailViewModelForSummaryRow(prevRow)
-    } else {
-      return undefined
-    }
-  }
-
-  createCompareDetailViewModelForSummaryRowAfter(
-    kind: ComparisonGroupingKind,
-    summaryRowKey: string
-  ): CompareDetailViewModel | undefined {
-    // Get the index of the associated row in the context of the summary view
-    const comparisonSummaryViewModel = this.getComparisonSummaryViewModel(kind)
-    const allRows = get(comparisonSummaryViewModel.allRows)
-    const rowIndex = allRows.findIndex(row => row.key === summaryRowKey)
-    if (rowIndex >= 0 && rowIndex < allRows.length - 1) {
-      // Create a detail view for the next row
-      const nextRow = allRows[rowIndex + 1]
-      return this.createCompareDetailViewModelForSummaryRow(nextRow)
     } else {
       return undefined
     }

@@ -90,18 +90,12 @@ function onCommand(event: CustomEvent) {
       compareDetailViewModel = viewModel.createCompareDetailViewModelForSummaryRow(cmdObj.summaryRow)
       viewMode = 'comparison-detail'
       break
-    case 'show-comparison-detail-for-previous': {
-      const previous = viewModel.createCompareDetailViewModelForSummaryRowBefore(cmdObj.kind, cmdObj.summaryRowKey)
-      if (previous) {
-        compareDetailViewModel = previous
-        viewMode = 'comparison-detail'
-      }
-      break
-    }
+    case 'show-comparison-detail-for-previous':
     case 'show-comparison-detail-for-next': {
-      const next = viewModel.createCompareDetailViewModelForSummaryRowAfter(cmdObj.kind, cmdObj.summaryRowKey)
-      if (next) {
-        compareDetailViewModel = next
+      const delta = cmd === 'show-comparison-detail-for-previous' ? -1 : +1
+      const adjacent = viewModel.createCompareDetailViewModelForSummaryRowWithDelta(cmdObj.kind, cmdObj.summaryRowKey, delta)
+      if (adjacent) {
+        compareDetailViewModel = adjacent
         viewMode = 'comparison-detail'
       }
       break
