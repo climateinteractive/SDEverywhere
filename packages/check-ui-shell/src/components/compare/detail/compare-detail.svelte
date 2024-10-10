@@ -9,6 +9,8 @@ import { get, type Readable } from 'svelte/store'
 import type { ContextMenuItem } from '../../_shared/context-menu.svelte'
 import ContextMenu from '../../_shared/context-menu.svelte'
 
+import type { PinnedItemKey } from '../_shared/pinned-item-state'
+
 import type { CompareDetailViewModel } from './compare-detail-vm'
 import type { CompareDetailBoxViewModel } from './compare-detail-box-vm'
 import type { CompareDetailRowViewModel } from './compare-detail-row-vm'
@@ -23,13 +25,7 @@ let pinnedDetailRows: Readable<CompareDetailRowViewModel[]>
 let scrollContainer: HTMLElement
 let scrollContent: HTMLElement
 
-interface ContextMenuBoxSource {
-  kind: 'box'
-  boxViewModel: CompareDetailBoxViewModel
-}
-type ContextMenuSource = ContextMenuBoxSource
-
-let contextMenuSource: ContextMenuSource
+let contextMenuSourceKey: PinnedItemKey
 let contextMenuItems: ContextMenuItem[] = []
 let contextMenuEvent: Event
 let relatedItemsVisible = false
@@ -64,24 +60,30 @@ function onNavLink(cmd: string) {
 }
 
 function onShowContextMenu(e: CustomEvent) {
-  // TODO: Customize menu depending on kind of item
-  if (e.detail.kind === 'box') {
-    const pinnedItemKey = e.detail.boxViewModel.pinnedItemKey
-    const pinned = get(viewModel.pinnedItemState.getPinned(pinnedItemKey))
-    const action = pinned ? 'Unpin' : 'Pin'
-    const displayText = `${action} ${itemKind}`
-    contextMenuSource = e.detail
-    contextMenuItems = [
-      {
-        key: 'toggle-box-pinned',
-        displayText
-      }
-    ]
-    contextMenuEvent = e.detail.clickEvent
-  } else {
-    contextMenuSource = undefined
-    contextMenuItems = []
-    contextMenuEvent = undefined
+  const eventSourceKind = e.detail?.kind
+  switch (eventSourceKind) {
+    case 'box':
+    case 'row': {
+      const pinnedItemKey = e.detail.itemKey
+      const pinned = get(viewModel.pinnedItemState.getPinned(pinnedItemKey))
+      const action = pinned ? 'Unpin' : 'Pin'
+      const kind = eventSourceKind === 'row' ? 'Row' : itemKind
+      const displayText = `${action} ${kind}`
+      contextMenuSourceKey = pinnedItemKey
+      contextMenuItems = [
+        {
+          key: 'toggle-item-pinned',
+          displayText
+        }
+      ]
+      contextMenuEvent = e.detail.clickEvent
+      break
+    }
+    default:
+      contextMenuSourceKey = undefined
+      contextMenuItems = []
+      contextMenuEvent = undefined
+      break
   }
 }
 
@@ -96,11 +98,9 @@ function onContextMenuItemSelected(e: CustomEvent) {
   // Handle the command
   const cmd = e.detail
   switch (cmd) {
-    case 'toggle-box-pinned':
-      if (contextMenuSource?.kind === 'box') {
-        const key = contextMenuSource.boxViewModel.pinnedItemKey
-        viewModel.pinnedItemState.toggleItemPinned(key)
-      }
+    case 'toggle-item-pinned':
+      const key = contextMenuSourceKey
+      viewModel.pinnedItemState.toggleItemPinned(key)
       break
     default:
       console.error(`ERROR: Unhandled context menu command '${cmd}'`)

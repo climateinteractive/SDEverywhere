@@ -5,8 +5,8 @@ import { get, writable, type Readable, type Writable } from 'svelte/store'
 export type PinnedItemKey = string
 
 export interface PinnedItemStates {
-  byDataset: PinnedItemState
-  byScenario: PinnedItemState
+  pinnedDatasets: PinnedItemState
+  pinnedScenarios: PinnedItemState
 }
 
 export class PinnedItemState {
@@ -89,7 +89,7 @@ function validateKey(key: PinnedItemKey): void {
 
 export function createPinnedItemStates(): PinnedItemStates {
   return {
-    byDataset: new PinnedItemState(),
-    byScenario: new PinnedItemState()
+    pinnedDatasets: new PinnedItemState(),
+    pinnedScenarios: new PinnedItemState()
   }
 }

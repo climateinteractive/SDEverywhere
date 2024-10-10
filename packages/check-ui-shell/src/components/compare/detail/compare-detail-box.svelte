@@ -4,8 +4,6 @@
 <script lang='ts'>
 
 import { createEventDispatcher } from 'svelte'
-import Icon from 'svelte-awesome/components/Icon.svelte'
-import { faThumbtack } from '@fortawesome/free-solid-svg-icons'
 
 import Lazy from '../../_shared/lazy.svelte'
 import ComparisonGraph from '../../graphs/comparison-graph.svelte'
@@ -42,7 +40,7 @@ function onTitleClicked() {
 function onContextMenu(e: Event) {
   dispatch('show-context-menu', {
     kind: 'box',
-    boxViewModel: viewModel,
+    itemKey: viewModel.pinnedItemKey,
     clickEvent: e
   })
 }

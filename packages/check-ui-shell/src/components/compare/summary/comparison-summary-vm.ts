@@ -67,19 +67,26 @@ export class ComparisonsByItemSummaryViewModel {
 
     // Derive the pinned row view models from the pinned item state
     this.pinnedRows = derived(pinnedItemState.orderedKeys, $orderedKeys => {
-      return $orderedKeys.map(itemKey => {
+      const pinnedRows: ComparisonSummaryRowViewModel[] = []
+      for (const itemKey of $orderedKeys) {
+        // XXX: On the "Comparisons by Scenario" view, we don't currently have a good
+        // way to display "scenario group" rows that were pinned in the detail view,
+        // so exclude them for now
+        if (itemKey.startsWith('row')) {
+          continue
+        }
         // The pinned row is a clone of the original row, except that the pinned one has
         // a key with 'pinned_' in the front to differentiate it from the normal row
         const regularRow = this.regularRows.find(row => row.key === itemKey)
         if (regularRow === undefined) {
           throw new Error(`No regular row found for key=${itemKey}`)
         }
-        const pinnedRow: ComparisonSummaryRowViewModel = {
+        pinnedRows.push({
           ...regularRow,
           key: `pinned_${regularRow.key}`
-        }
-        return pinnedRow
-      })
+        })
+      }
+      return pinnedRows
     })
 
     // Derive the array of all rows (pinned rows + regular rows)
@@ -319,7 +326,7 @@ export function createComparisonSummaryViewModels(
   }
 
   const byScenarioSummary = new ComparisonsByItemSummaryViewModel(
-    pinnedItemStates.byScenario,
+    pinnedItemStates.pinnedScenarios,
     'scenario',
     scenariosWithErrors,
     scenariosOnlyInLeft,
@@ -329,7 +336,7 @@ export function createComparisonSummaryViewModels(
   )
 
   const byDatasetSummary = new ComparisonsByItemSummaryViewModel(
-    pinnedItemStates.byDataset,
+    pinnedItemStates.pinnedDatasets,
     'dataset',
     datasetsWithErrors,
     datasetsOnlyInLeft,

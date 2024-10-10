@@ -187,7 +187,7 @@ function createCompareDetailViewModelForDataset(
     regularDetailRows.unshift(allInputsRow)
   }
 
-  // Add rows at the top of the view for the pinned items
+  // Helper function that finds a detail item for a given scenario key
   type GroupTitleAndDetailItem = [string, ComparisonDetailItem]
   function groupTitleAndDetailItemForScenarioKey(
     scenarioKey: ComparisonScenarioKey
@@ -202,23 +202,33 @@ function createCompareDetailViewModelForDataset(
     }
     return undefined
   }
+
+  // Add rows at the top of the view for the pinned items
   const pinnedDetailRows = derived(pinnedItemState.orderedKeys, $pinnedItemKeys => {
     const rows: CompareDetailRowViewModel[] = []
-    for (const scenarioKey of $pinnedItemKeys) {
-      // Find the item for this scenario key
-      const item = groupTitleAndDetailItemForScenarioKey(scenarioKey)
-      if (item) {
-        rows.push(
-          createCompareDetailRowViewModel(
-            comparisonConfig,
-            dataCoordinator,
-            userPrefs,
-            'scenarios',
-            item[0],
-            undefined, // TODO: Subtitle?
-            [item[1]]
+    for (const pinnedItemKey of $pinnedItemKeys) {
+      if (pinnedItemKey.startsWith('row')) {
+        // Find the regular row for this key and clone it
+        const regularRow = regularDetailRows.find(row => row.pinnedItemKey === pinnedItemKey)
+        if (regularRow) {
+          rows.push(cloneDetailRowViewModel(comparisonConfig, dataCoordinator, userPrefs, regularRow))
+        }
+      } else {
+        // Find the scenario item for this key and create a row with a single scenario
+        const item = groupTitleAndDetailItemForScenarioKey(pinnedItemKey)
+        if (item) {
+          rows.push(
+            createCompareDetailRowViewModel(
+              comparisonConfig,
+              dataCoordinator,
+              userPrefs,
+              'scenarios',
+              item[0],
+              undefined, // TODO: Subtitle?
+              [item[1]]
+            )
           )
-        )
+        }
       }
     }
     return rows
@@ -349,14 +359,9 @@ function createCompareDetailViewModelForScenario(
   const regularDetailRows = sortedRows.map(row => row.viewModel)
 
   // Add rows at the top of the view for the pinned items
-  function detailRowForDatasetKey(datasetKey: DatasetKey): Row | undefined {
+  function detailRowForDatasetKey(datasetKey: DatasetKey): CompareDetailRowViewModel | undefined {
     // TODO: Improve efficiency of looking up detail items
-    for (const row of rows) {
-      if (row.detailItem.testSummary.d === datasetKey) {
-        return row
-      }
-    }
-    return undefined
+    return regularDetailRows.find(row => row.items[0].testSummary.d === datasetKey)
   }
   const pinnedDetailRows = derived(pinnedItemState.orderedKeys, $pinnedDatasetKeys => {
     const rows: CompareDetailRowViewModel[] = []
@@ -365,16 +370,7 @@ function createCompareDetailViewModelForScenario(
       const regularRow = detailRowForDatasetKey(datasetKey)
       if (regularRow) {
         // Clone the regular row view model so the pinned row view model is distinct
-        const pinnedRowViewModel = createCompareDetailRowViewModel(
-          comparisonConfig,
-          dataCoordinator,
-          userPrefs,
-          'datasets',
-          title,
-          subtitle,
-          [regularRow.detailItem]
-        )
-        rows.push(pinnedRowViewModel)
+        rows.push(cloneDetailRowViewModel(comparisonConfig, dataCoordinator, userPrefs, regularRow))
       }
     }
     return rows
@@ -559,4 +555,21 @@ function maxDiffPctForGraph(graphReport: GraphComparisonReport): number {
     }
   }
   return maxDiffPct
+}
+
+function cloneDetailRowViewModel(
+  comparisonConfig: ComparisonConfig,
+  dataCoordinator: ComparisonDataCoordinator,
+  userPrefs: UserPrefs,
+  row: CompareDetailRowViewModel
+): CompareDetailRowViewModel {
+  return createCompareDetailRowViewModel(
+    comparisonConfig,
+    dataCoordinator,
+    userPrefs,
+    row.kind,
+    row.title,
+    row.subtitle,
+    row.items
+  )
 }

@@ -24,10 +24,13 @@ export interface CompareDetailContextGraphRowViewModel {
 }
 
 export interface CompareDetailRowViewModel {
+  kind: 'scenarios' | 'datasets'
   title?: string
   subtitle?: string
   showTitle: boolean
+  items: ComparisonDetailItem[]
   boxes: CompareDetailBoxViewModel[]
+  pinnedItemKey: string
 }
 
 export function createCompareDetailRowViewModel(
@@ -112,11 +115,18 @@ export function createCompareDetailRowViewModel(
     }
   })
 
+  // Derive the key for the row from the individual box keys
+  const boxKeys = boxes.map(box => box.pinnedItemKey)
+  const pinnedItemKey = `row_${boxKeys.join('_')}`
+
   return {
+    kind,
     title,
     subtitle,
     showTitle: kind === 'scenarios',
-    boxes
+    items,
+    boxes,
+    pinnedItemKey
   }
 }
 

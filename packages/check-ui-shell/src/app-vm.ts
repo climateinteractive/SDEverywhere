@@ -157,10 +157,14 @@ export class AppViewModel {
     let pinnedItemState: PinnedItemState
     if (groupSummary.group.kind === 'by-dataset') {
       // Show pinned scenarios at the top of the detail view
-      pinnedItemState = this.pinnedItemStates.byScenario
+      pinnedItemState = this.pinnedItemStates.pinnedScenarios
+      console.log('pinned state by scenario')
+      console.log(pinnedItemState)
     } else {
       // Show pinned datasets at the top of the detail view
-      pinnedItemState = this.pinnedItemStates.byDataset
+      pinnedItemState = this.pinnedItemStates.pinnedDatasets
+      console.log('pinned state by dataset')
+      console.log(pinnedItemState)
     }
 
     return createCompareDetailViewModel(
@@ -181,8 +185,8 @@ export class AppViewModel {
     const allRows = get(comparisonSummaryViewModel.allRows)
     if (allRows.length > 0) {
       // Create a detail view for the first row
-      const prevRow = allRows[0]
-      return this.createCompareDetailViewModelForSummaryRow(prevRow)
+      const firstRow = allRows[0]
+      return this.createCompareDetailViewModelForSummaryRow(firstRow)
     } else {
       return undefined
     }

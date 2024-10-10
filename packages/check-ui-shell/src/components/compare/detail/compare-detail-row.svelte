@@ -3,6 +3,8 @@
 <!-- SCRIPT -->
 <script lang='ts'>
 
+import { createEventDispatcher } from 'svelte'
+
 import ContextGraph from '../../graphs/context-graph.svelte'
 
 import type {
@@ -20,6 +22,16 @@ let contextGraphRows: CompareDetailContextGraphRowViewModel[]
 $: if (viewModel) {
   expandedIndex = undefined
   contextGraphRows = undefined
+}
+
+const dispatch = createEventDispatcher()
+
+function onContextMenu(e: Event) {
+  dispatch('show-context-menu', {
+    kind: 'row',
+    itemKey: viewModel.pinnedItemKey,
+    clickEvent: e
+  })
 }
 
 function isDimmed(index: number, expanded: number): boolean {
@@ -61,7 +73,7 @@ function getContextGraphPadding(index: number): number {
 
 <div class="detail-row">
   {#if viewModel.showTitle}
-    <div class="title-row">
+    <div class="title-row" on:contextmenu|preventDefault={onContextMenu}>
       <div class="title">{ @html viewModel.title }</div>
       {#if viewModel.subtitle}
         <div class="subtitle">{ @html viewModel.subtitle }</div>
