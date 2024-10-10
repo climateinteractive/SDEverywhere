@@ -1,7 +1,5 @@
 // Copyright (c) 2021-2022 Climate Interactive / New Venture Fund
 
-import type { Readable } from 'svelte/store'
-
 import type {
   DatasetKey,
   ComparisonScenarioKey,
@@ -44,6 +42,4 @@ export interface ComparisonSummaryRowViewModel {
   viewMetadata?: ComparisonSummaryRowViewMetadata
   /** Whether to use header style for the bar. */
   header?: boolean
-  /** Whether the item is pinned. */
-  pinned?: Readable<boolean>
 }

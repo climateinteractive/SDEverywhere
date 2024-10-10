@@ -88,6 +88,8 @@ export class ComparisonsByItemSummaryViewModel {
     })
   }
 
+  // TODO: This is only used in `comparison-summary-pinned.svelte` and can be removed
+  // if we decide to not use that component
   public toggleItemPinned(row: ComparisonSummaryRowViewModel): void {
     // Note that `row` can either be a normal row or a pinned row (since they both
     // have a toggle button), so we need to get the key for the regular row here
@@ -95,6 +97,8 @@ export class ComparisonsByItemSummaryViewModel {
     this.pinnedItemState.toggleItemPinned(key)
   }
 
+  // TODO: This is only used in `comparison-summary-pinned.svelte` and can be removed
+  // if we decide to not use that component
   public setReorderedPinnedItems(rows: ComparisonSummaryRowViewModel[]): void {
     // Use the new order of items that resulted from a drag-and-drop operation
     this.pinnedItemState.setItemOrder(rows.map(row => row.key.replace('pinned_', '')))
@@ -207,7 +211,6 @@ export function createComparisonSummaryViewModels(
     let title: string
     let subtitle: string
     let annotations: string
-    let pinned: Readable<boolean>
     const root = groupSummary.root
     switch (root.kind) {
       case 'dataset': {
@@ -216,7 +219,6 @@ export function createComparisonSummaryViewModels(
         title = outputVar.varName
         subtitle = outputVar.sourceName
         annotations = getAnnotationsForDataset(root, bundleNameL, bundleNameR).join(' ')
-        pinned = pinnedItemStates.byDataset.getPinned(outputVar.datasetKey)
         break
       }
       case 'scenario':
@@ -224,7 +226,6 @@ export function createComparisonSummaryViewModels(
         title = root.title
         subtitle = root.subtitle
         annotations = getAnnotationsForScenario(root, bundleNameL, bundleNameR).join(' ')
-        pinned = pinnedItemStates.byScenario.getPinned(root.key)
         break
       default:
         assertNever(root)
@@ -237,8 +238,7 @@ export function createComparisonSummaryViewModels(
       subtitle,
       annotations,
       diffPercentByBucket: groupSummary.scores?.diffPercentByBucket,
-      groupSummary,
-      pinned
+      groupSummary
     }
   }
 

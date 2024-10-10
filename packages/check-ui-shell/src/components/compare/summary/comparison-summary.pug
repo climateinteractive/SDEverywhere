@@ -9,7 +9,7 @@ mixin section(varname)
     .section-container
       SummaryRow(viewModel!=`{ viewModel.${varname}.header }`)
       +each(`viewModel.${varname}.rows as rowViewModel`)
-        SummaryRow(viewModel!='{rowViewModel}' on:toggle-item-pinned!='{() => onToggleItemPinned(rowViewModel)}' on:command)
+        SummaryRow(viewModel!='{rowViewModel}' on:command)
 
 mixin view-group-sections
   +each(`viewModel.viewGroups as viewGroupViewModel`)
