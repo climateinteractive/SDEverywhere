@@ -120,14 +120,6 @@ export function createCompareDetailRowViewModel(
   }
 }
 
-export function createCompareDetailSeparatorRowViewModel(): CompareDetailRowViewModel {
-  return {
-    title: '',
-    showTitle: false,
-    boxes: []
-  }
-}
-
 export function createContextGraphRows(box: CompareDetailBoxViewModel): CompareDetailContextGraphRowViewModel[] {
   const comparisonConfig = box.comparisonConfig
   const dataCoordinator = box.dataCoordinator

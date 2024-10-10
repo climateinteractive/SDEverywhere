@@ -26,19 +26,13 @@ mixin pinned-box-rows
   +if('$pinnedDetailRows.length > 0')
     .section-title Pinned { itemKind }
     +each('$pinnedDetailRows as detailRowViewModel')
-      +if('detailRowViewModel.boxes.length > 0')
-        .row-container
-          DetailRow(viewModel!='{detailRowViewModel}' on:show-context-menu!='{onShowContextMenu}')
-        +else
-          .separator
+      .row-container
+        DetailRow(viewModel!='{detailRowViewModel}' on:show-context-menu!='{onShowContextMenu}')
 
 mixin regular-box-rows
   +if('$pinnedDetailRows.length > 0')
     .separator
     .section-title All { itemKind }
   +each('viewModel.regularDetailRows as detailRowViewModel')
-    +if('detailRowViewModel.boxes.length > 0')
-      .row-container
-        DetailRow(viewModel!='{detailRowViewModel}' on:show-context-menu!='{onShowContextMenu}')
-      +else
-        .separator
+    .row-container
+      DetailRow(viewModel!='{detailRowViewModel}' on:show-context-menu!='{onShowContextMenu}')
