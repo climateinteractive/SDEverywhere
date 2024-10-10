@@ -17,6 +17,7 @@ import GraphsRow from './compare-graphs-row.svelte'
 
 export let viewModel: CompareDetailViewModel
 let itemKind: string
+let itemKindPlural: string
 let pinnedDetailRows: Readable<CompareDetailRowViewModel[]>
 
 let scrollContainer: HTMLElement
@@ -35,7 +36,8 @@ let relatedItemsVisible = false
 
 // Rebuild the view state when the view model changes
 $: if (viewModel) {
-  itemKind = viewModel.kind === 'by-dataset' ? 'Scenarios' : 'Datasets'
+  itemKind = viewModel.kind === 'by-dataset' ? 'Scenario' : 'Dataset'
+  itemKindPlural = `${itemKind}s`
   pinnedDetailRows = viewModel.pinnedDetailRows
   if (scrollContainer) {
     scrollContainer.scrollTop = 0
@@ -66,11 +68,13 @@ function onShowContextMenu(e: CustomEvent) {
   if (e.detail.kind === 'box') {
     const pinnedItemKey = e.detail.boxViewModel.pinnedItemKey
     const pinned = get(viewModel.pinnedItemState.getPinned(pinnedItemKey))
+    const action = pinned ? 'Unpin' : 'Pin'
+    const displayText = `${action} ${itemKind}`
     contextMenuSource = e.detail
     contextMenuItems = [
       {
         key: 'toggle-box-pinned',
-        displayText: pinned ? 'Unpin Item' : 'Pin Item',
+        displayText
       }
     ]
     contextMenuEvent = e.detail.clickEvent

@@ -20,11 +20,11 @@ mixin graph-sections
             GraphsRow(viewModel!='{graphsRowViewModel}' align='left')
     .separator
     +if('$pinnedDetailRows.length === 0')
-      .section-title All { itemKind }
+      .section-title All { itemKindPlural }
 
 mixin pinned-box-rows
   +if('$pinnedDetailRows.length > 0')
-    .section-title Pinned { itemKind }
+    .section-title Pinned { itemKindPlural }
     +each('$pinnedDetailRows as detailRowViewModel')
       .row-container
         DetailRow(viewModel!='{detailRowViewModel}' on:show-context-menu!='{onShowContextMenu}')
@@ -32,7 +32,7 @@ mixin pinned-box-rows
 mixin regular-box-rows
   +if('$pinnedDetailRows.length > 0')
     .separator
-    .section-title All { itemKind }
+    .section-title All { itemKindPlural }
   +each('viewModel.regularDetailRows as detailRowViewModel')
     .row-container
       DetailRow(viewModel!='{detailRowViewModel}' on:show-context-menu!='{onShowContextMenu}')
