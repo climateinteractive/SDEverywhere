@@ -36,7 +36,7 @@ $: if (visible !== previousVisible || viewModel.requestKey !== previousViewModel
 const dispatch = createEventDispatcher()
 
 function onTitleClicked() {
-  dispatch('toggle-context')
+  dispatch('toggle-context-graphs')
 }
 
 function onContextMenu(e: Event) {
@@ -128,9 +128,6 @@ $padding-w-2x: $padding-w * 2
 
 $stats-h: 4rem
 
-$icon-size: .8rem
-$icon-margin: .4rem
-
 .detail-box
   display: flex
   flex-direction: column
@@ -166,21 +163,6 @@ $icon-margin: .4rem
   color: #aaa
   margin-left: .4rem
   margin-right: .7rem
-
-.pin-button
-  margin-left: $icon-margin
-  cursor: pointer
-  color: #555
-
-.pin-button.pinned
-  color: #ccc
-
-.pin-button :global(.pin-icon)
-  width: $icon-size
-  height: $icon-size
-
-// .pin-button-placeholder
-//   width: $icon-size + $icon-margin
 
 .content-container
   display: flex

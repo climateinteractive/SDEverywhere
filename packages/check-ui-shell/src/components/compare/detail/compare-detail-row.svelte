@@ -26,7 +26,7 @@ function isDimmed(index: number, expanded: number): boolean {
   return expanded !== undefined && index !== expanded
 }
 
-function onToggleContext(index: number): void {
+function onToggleContextGraphs(index: number): void {
   if (index === expandedIndex) {
     // This box is already expanded, so collapse it
     expandedIndex = undefined
@@ -75,7 +75,7 @@ function getContextGraphPadding(index: number): number {
         <div class="spacer-fixed"></div>
       {/if}
       <div class="box-container" class:dimmed={isDimmed(i, expandedIndex)}>
-        <DetailBox viewModel={boxViewModel} on:toggle-context={() => onToggleContext(i)} on:show-context-menu />
+        <DetailBox viewModel={boxViewModel} on:toggle-context-graphs={() => onToggleContextGraphs(i)} on:show-context-menu />
       </div>
     {/each}
   </div>
