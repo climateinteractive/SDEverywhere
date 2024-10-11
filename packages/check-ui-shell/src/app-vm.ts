@@ -158,13 +158,9 @@ export class AppViewModel {
     if (groupSummary.group.kind === 'by-dataset') {
       // Show pinned scenarios at the top of the detail view
       pinnedItemState = this.pinnedItemStates.pinnedScenarios
-      console.log('pinned state by scenario')
-      console.log(pinnedItemState)
     } else {
       // Show pinned datasets at the top of the detail view
       pinnedItemState = this.pinnedItemStates.pinnedDatasets
-      console.log('pinned state by dataset')
-      console.log(pinnedItemState)
     }
 
     return createCompareDetailViewModel(
