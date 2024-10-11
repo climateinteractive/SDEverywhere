@@ -21,9 +21,9 @@ function onLinkClicked() {
   }
 }
 
-function onTogglePinned() {
-  dispatch('toggle-item-pinned')
-}
+// function onTogglePinned() {
+//   dispatch('toggle-item-pinned')
+// }
 
 </script>
 
