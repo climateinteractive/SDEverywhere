@@ -1,4 +1,4 @@
-<!-- Copyright (c) 2021-2022 Climate Interactive / New Venture Fund -->
+<!-- Copyright (c) 2024 Climate Interactive / New Venture Fund -->
 
 <!--
 Based on example code by @dukenmarga from:

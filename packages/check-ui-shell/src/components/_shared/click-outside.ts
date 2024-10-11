@@ -1,4 +1,4 @@
-// Copyright (c) 2020-2022 Climate Interactive / New Venture Fund. All rights reserved.
+// Copyright (c) 2024 Climate Interactive / New Venture Fund. All rights reserved.
 
 /** Dispatch an event when click event occurs outside of the given element. */
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
