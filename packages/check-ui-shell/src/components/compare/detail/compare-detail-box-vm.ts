@@ -16,6 +16,7 @@ import type {
 import { diffDatasets } from '@sdeverywhere/check-core'
 
 import { getBucketIndex } from '../_shared/buckets'
+import type { PinnedItemKey } from '../_shared/pinned-item-state'
 import { datasetSpan } from '../_shared/spans'
 
 import type {
@@ -45,6 +46,7 @@ export class CompareDetailBoxViewModel {
   private localContent: CompareDetailBoxContent
   private readonly writableContent: Writable<CompareDetailBoxContent>
   public readonly content: Readable<CompareDetailBoxContent>
+
   private readonly writableYRange: Writable<AxisRange>
   public readonly yRange: Readable<AxisRange>
   private activeYMin: number
@@ -59,11 +61,14 @@ export class CompareDetailBoxViewModel {
     public readonly title: string,
     public readonly subtitle: string | undefined,
     public readonly scenario: ComparisonScenario,
-    public readonly datasetKey: DatasetKey
+    public readonly datasetKey: DatasetKey,
+    public readonly pinnedItemKey: PinnedItemKey
   ) {
     this.requestKey = `detail-box::${requestId++}::${scenario.key}::${datasetKey}`
+
     this.writableContent = writable(undefined)
     this.content = this.writableContent
+
     this.writableYRange = writable(undefined)
     this.yRange = this.writableYRange
   }

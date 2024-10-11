@@ -79,18 +79,27 @@ function onCommand(event: CustomEvent) {
           default:
             return
         }
-        compareDetailViewModel = viewModel.createCompareDetailViewModelForSummaryRowIndex(kind, 0)
-        viewMode = 'comparison-detail'
+        const first = viewModel.createCompareDetailViewModelForFirstSummaryRow(kind)
+        if (first) {
+          compareDetailViewModel = first
+          viewMode = 'comparison-detail'
+        }
       }
       break
     case 'show-comparison-detail':
       compareDetailViewModel = viewModel.createCompareDetailViewModelForSummaryRow(cmdObj.summaryRow)
       viewMode = 'comparison-detail'
       break
-    case 'show-comparison-detail-at-index':
-      compareDetailViewModel = viewModel.createCompareDetailViewModelForSummaryRowIndex(cmdObj.kind, cmdObj.index)
-      viewMode = 'comparison-detail'
+    case 'show-comparison-detail-for-previous':
+    case 'show-comparison-detail-for-next': {
+      const delta = cmd === 'show-comparison-detail-for-previous' ? -1 : +1
+      const adjacent = viewModel.createCompareDetailViewModelForSummaryRowWithDelta(cmdObj.kind, cmdObj.summaryRowKey, delta)
+      if (adjacent) {
+        compareDetailViewModel = adjacent
+        viewMode = 'comparison-detail'
+      }
       break
+    }
     case 'show-perf':
       if (!perfViewModel) {
         perfViewModel = viewModel.createPerfViewModel()

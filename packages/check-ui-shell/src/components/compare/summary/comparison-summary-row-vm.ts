@@ -25,7 +25,7 @@ export interface ComparisonSummaryRowViewMetadata {
 export interface ComparisonSummaryRowViewModel {
   kind: ComparisonGroupingKind
   /** The unique key for the row (can be undefined for a header row). */
-  groupKey?: DatasetKey | ComparisonScenarioKey | ComparisonViewKey
+  key?: DatasetKey | ComparisonScenarioKey | ComparisonViewKey
   /** The row title (e.g., output variable name or scenario title). */
   title: string
   /** The row subtitle (e.g., output variable source name or scenario subtitle). */

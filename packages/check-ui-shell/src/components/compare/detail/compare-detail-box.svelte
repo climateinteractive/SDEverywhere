@@ -34,7 +34,15 @@ $: if (visible !== previousVisible || viewModel.requestKey !== previousViewModel
 const dispatch = createEventDispatcher()
 
 function onTitleClicked() {
-  dispatch('toggle')
+  dispatch('toggle-context-graphs')
+}
+
+function onContextMenu(e: Event) {
+  dispatch('show-context-menu', {
+    kind: 'box',
+    itemKey: viewModel.pinnedItemKey,
+    clickEvent: e
+  })
 }
 
 function diffPct(x: number | undefined | null): string {
@@ -77,7 +85,7 @@ function getMaxDiffSpan(content: CompareDetailBoxContent): string {
 
 .detail-box
   +if('viewModel.title')
-    .title-row.no-selection(on:click!='{onTitleClicked}')
+    .title-row.no-selection(on:click!='{onTitleClicked}' on:contextmenu|preventDefault!='{onContextMenu}')
       .title-content
         span.title {@html viewModel.title}
         +if('viewModel.subtitle')

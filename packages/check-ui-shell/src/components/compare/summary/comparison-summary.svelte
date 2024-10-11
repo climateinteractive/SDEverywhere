@@ -3,8 +3,6 @@
 <!-- SCRIPT -->
 <script lang='ts'>
 
-import { createEventDispatcher } from 'svelte'
-
 import SummaryRow from './comparison-summary-row.svelte'
 import type { ComparisonSummaryViewModel } from './comparison-summary-vm'
 
@@ -23,18 +21,12 @@ include comparison-summary.pug
 .comparison-summary-container
   +if('viewModel.kind === "views"')
     +view-group-sections
-    +elseif('viewModel.kind === "by-scenario"')
-      +section('scenariosWithErrors')
-      +section('scenariosOnlyInLeft')
-      +section('scenariosOnlyInRight')
-      +section('scenariosWithDiffs')
-      +section('scenariosWithoutDiffs')
-    +elseif('viewModel.kind === "by-dataset"')
-      +section('datasetsWithErrors')
-      +section('datasetsOnlyInLeft')
-      +section('datasetsOnlyInRight')
-      +section('datasetsWithDiffs')
-      +section('datasetsWithoutDiffs')
+    +else
+      +section('withErrors')
+      +section('onlyInLeft')
+      +section('onlyInRight')
+      +section('withDiffs')
+      +section('withoutDiffs')
   .footer
 
 </template>

@@ -13,6 +13,8 @@ import type { UserPrefs } from '../../../_shared/user-prefs'
 
 import { ContextGraphViewModel } from '../../graphs/context-graph-vm'
 
+import type { PinnedItemKey } from '../_shared/pinned-item-state'
+
 import { CompareDetailBoxViewModel, type AxisRange } from './compare-detail-box-vm'
 import type { ComparisonDetailItem } from './compare-detail-item'
 
@@ -22,10 +24,13 @@ export interface CompareDetailContextGraphRowViewModel {
 }
 
 export interface CompareDetailRowViewModel {
+  kind: 'scenarios' | 'datasets'
   title?: string
   subtitle?: string
   showTitle: boolean
+  items: ComparisonDetailItem[]
   boxes: CompareDetailBoxViewModel[]
+  pinnedItemKey: string
 }
 
 export function createCompareDetailRowViewModel(
@@ -50,6 +55,14 @@ export function createCompareDetailRowViewModel(
     // TODO
     const boxTitle = kind === 'scenarios' ? `…${item.subtitle}` : item.title
 
+    // The pinned item key is either the scenario key or the dataset key
+    let pinnedItemKey: PinnedItemKey
+    if (kind === 'scenarios') {
+      pinnedItemKey = item.scenario.key
+    } else {
+      pinnedItemKey = item.testSummary.d
+    }
+
     boxes.push(
       new CompareDetailBoxViewModel(
         comparisonConfig,
@@ -57,7 +70,8 @@ export function createCompareDetailRowViewModel(
         boxTitle,
         undefined, //item.subtitle,
         item.scenario,
-        item.testSummary.d
+        item.testSummary.d,
+        pinnedItemKey
       )
     )
   }
@@ -101,11 +115,18 @@ export function createCompareDetailRowViewModel(
     }
   })
 
+  // Derive the key for the row from the individual box keys
+  const boxKeys = boxes.map(box => box.pinnedItemKey)
+  const pinnedItemKey = `row_${boxKeys.join('_')}`
+
   return {
+    kind,
     title,
     subtitle,
     showTitle: kind === 'scenarios',
-    boxes
+    items,
+    boxes,
+    pinnedItemKey
   }
 }
 

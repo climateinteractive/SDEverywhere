@@ -13,13 +13,17 @@ const bucketPcts = viewModel.diffPercentByBucket
 const dispatch = createEventDispatcher()
 
 function onLinkClicked() {
-  if (viewModel.groupKey) {
+  if (viewModel.key) {
     dispatch('command', {
       cmd: 'show-comparison-detail',
       summaryRow: viewModel
     })
   }
 }
+
+// function onTogglePinned() {
+//   dispatch('toggle-item-pinned')
+// }
 
 </script>
 
@@ -63,6 +67,8 @@ function onLinkClicked() {
 <!-- STYLE -->
 <style lang='sass'>
 
+$bar-width: 15rem
+
 .summary-row
   display: flex
   flex-direction: row
@@ -77,7 +83,7 @@ function onLinkClicked() {
 .bar-container
   display: flex
   flex-direction: row
-  width: 20rem
+  width: $bar-width
   height: .8rem
   margin-bottom: .25rem
   cursor: pointer
@@ -140,7 +146,7 @@ function onLinkClicked() {
 // XXX: Merge with other bar classes
 .header-bar
   display: flex
-  width: 20rem
+  width: $bar-width
   height: 1px
   background-color: #555
 

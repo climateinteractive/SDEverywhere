@@ -3,6 +3,8 @@
 <!-- SCRIPT -->
 <script lang='ts'>
 
+import { createEventDispatcher } from 'svelte'
+
 import ContextGraph from '../../graphs/context-graph.svelte'
 
 import type {
@@ -13,7 +15,6 @@ import { createContextGraphRows } from './compare-detail-row-vm'
 import DetailBox from './compare-detail-box.svelte'
 
 export let viewModel: CompareDetailRowViewModel
-
 let expandedIndex: number
 let contextGraphRows: CompareDetailContextGraphRowViewModel[]
 
@@ -23,11 +24,21 @@ $: if (viewModel) {
   contextGraphRows = undefined
 }
 
+const dispatch = createEventDispatcher()
+
+function onContextMenu(e: Event) {
+  dispatch('show-context-menu', {
+    kind: 'row',
+    itemKey: viewModel.pinnedItemKey,
+    clickEvent: e
+  })
+}
+
 function isDimmed(index: number, expanded: number): boolean {
   return expanded !== undefined && index !== expanded
 }
 
-function onToggle(index: number): void {
+function onToggleContextGraphs(index: number): void {
   if (index === expandedIndex) {
     // This box is already expanded, so collapse it
     expandedIndex = undefined
@@ -62,7 +73,7 @@ function getContextGraphPadding(index: number): number {
 
 <div class="detail-row">
   {#if viewModel.showTitle}
-    <div class="title-row">
+    <div class="title-row" on:contextmenu|preventDefault={onContextMenu}>
       <div class="title">{ @html viewModel.title }</div>
       {#if viewModel.subtitle}
         <div class="subtitle">{ @html viewModel.subtitle }</div>
@@ -76,7 +87,7 @@ function getContextGraphPadding(index: number): number {
         <div class="spacer-fixed"></div>
       {/if}
       <div class="box-container" class:dimmed={isDimmed(i, expandedIndex)}>
-        <DetailBox viewModel={boxViewModel} on:toggle={() => onToggle(i)} />
+        <DetailBox viewModel={boxViewModel} on:toggle-context-graphs={() => onToggleContextGraphs(i)} on:show-context-menu />
       </div>
     {/each}
   </div>
@@ -117,7 +128,7 @@ function getContextGraphPadding(index: number): number {
 
 .title
   margin-right: .8rem
-  font-size: 1.6em
+  font-size: 1.5em
   font-weight: 700
 
 .subtitle

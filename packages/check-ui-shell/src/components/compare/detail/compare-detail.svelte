@@ -4,18 +4,37 @@
 <script lang='ts'>
 
 import { createEventDispatcher, onMount } from 'svelte'
+import { get, type Readable } from 'svelte/store'
+
+import type { ContextMenuItem } from '../../_shared/context-menu.svelte'
+import ContextMenu from '../../_shared/context-menu.svelte'
+
+import type { PinnedItemKey } from '../_shared/pinned-item-state'
 
 import type { CompareDetailViewModel } from './compare-detail-vm'
+import type { CompareDetailBoxViewModel } from './compare-detail-box-vm'
+import type { CompareDetailRowViewModel } from './compare-detail-row-vm'
 import DetailRow from './compare-detail-row.svelte'
 import GraphsRow from './compare-graphs-row.svelte'
 
 export let viewModel: CompareDetailViewModel
+let itemKind: string
+let itemKindPlural: string
+let pinnedDetailRows: Readable<CompareDetailRowViewModel[]>
 
 let scrollContainer: HTMLElement
+let scrollContent: HTMLElement
+
+let contextMenuSourceKey: PinnedItemKey
+let contextMenuItems: ContextMenuItem[] = []
+let contextMenuEvent: Event
 let relatedItemsVisible = false
 
 // Rebuild the view state when the view model changes
 $: if (viewModel) {
+  itemKind = viewModel.kind === 'by-dataset' ? 'Scenario' : 'Dataset'
+  itemKindPlural = `${itemKind}s`
+  pinnedDetailRows = viewModel.pinnedDetailRows
   if (scrollContainer) {
     scrollContainer.scrollTop = 0
   }
@@ -27,25 +46,78 @@ const dispatch = createEventDispatcher()
 function onNavLink(cmd: string) {
   switch (cmd) {
     case 'detail-previous':
-      if (viewModel.previousRowIndex !== undefined) {
-        dispatch('command', {
-          cmd: 'show-comparison-detail-at-index',
-          kind: viewModel.kind,
-          index: viewModel.previousRowIndex
-        })
-      }
-      break
     case 'detail-next':
-      if (viewModel.nextRowIndex !== undefined) {
-        dispatch('command', {
-          cmd: 'show-comparison-detail-at-index',
-          kind: viewModel.kind,
-          index: viewModel.nextRowIndex
-        })
-      }
+      dispatch('command', {
+        cmd: cmd === 'detail-previous' ? 'show-comparison-detail-for-previous' : 'show-comparison-detail-for-next',
+        kind: viewModel.kind,
+        summaryRowKey: viewModel.summaryRowKey
+      })
       break
     default:
       dispatch('command', { cmd })
+      break
+  }
+}
+
+function onShowContextMenu(e: CustomEvent) {
+  const eventSourceKind = e.detail?.kind
+  switch (eventSourceKind) {
+    case 'box':
+    case 'row': {
+      const pinnedItemKey = e.detail.itemKey
+      const pinned = get(viewModel.pinnedItemState.getPinned(pinnedItemKey))
+      const action = pinned ? 'Unpin' : 'Pin'
+      const kind = eventSourceKind === 'row' ? 'Row' : itemKind
+      contextMenuSourceKey = pinnedItemKey
+      contextMenuItems = [
+        {
+          key: 'toggle-item-pinned',
+          displayText: `${action} ${kind}`
+        }
+      ]
+      // Include the "Move Item to Top" option if:
+      //   - the item is already pinned
+      //   - the item isn't already at the top
+      if (pinned) {
+        const orderedKeys = get(viewModel.pinnedItemState.orderedKeys)
+        if (orderedKeys.length > 1 && orderedKeys[0] !== pinnedItemKey) {
+          contextMenuItems.push({
+            key: 'move-item-to-top',
+            displayText: `Move ${kind} to Top`
+          })
+        }
+      }
+      contextMenuEvent = e.detail.clickEvent
+      break
+    }
+    default:
+      contextMenuSourceKey = undefined
+      contextMenuItems = []
+      contextMenuEvent = undefined
+      break
+  }
+}
+
+function onHideContextMenu() {
+  contextMenuEvent = undefined
+}
+
+function onContextMenuItemSelected(e: CustomEvent) {
+  // Hide the context menu
+  contextMenuEvent = undefined
+
+  // Handle the command
+  const key = contextMenuSourceKey
+  const cmd = e.detail
+  switch (cmd) {
+    case 'toggle-item-pinned':
+      viewModel.pinnedItemState.toggleItemPinned(key)
+      break
+    case 'move-item-to-top':
+      viewModel.pinnedItemState.moveItemToTop(key)
+      break
+    default:
+      console.error(`ERROR: Unhandled context menu command '${cmd}'`)
       break
   }
 }
@@ -100,18 +172,20 @@ svelte:window(on:keydown!='{onKeyDown}')
             .annotations { @html viewModel.annotations }
       .spacer-flex
       .nav-links.no-selection
-        .nav-link(class:disabled!='{viewModel.previousRowIndex === undefined}' on:click!='{() => onNavLink("detail-previous")}') previous
+        .nav-link(on:click!='{() => onNavLink("detail-previous")}') previous
         .nav-link-sep &nbsp;|&nbsp;
-        .nav-link(class:disabled!='{viewModel.nextRowIndex === undefined}' on:click!='{() => onNavLink("detail-next")}') next
+        .nav-link(on:click!='{() => onNavLink("detail-next")}') next
     +if('relatedItemsVisible && viewModel.relatedItems.length > 0')
       .related
         span { viewModel.relatedListHeader }
         ul
           +related-items
   .scroll-container(bind:this!='{scrollContainer}' tabindex='0')
-    .scroll-content
+    .scroll-content(bind:this!='{scrollContent}')
       +graph-sections
-      +box-rows
+      +pinned-box-rows
+      +regular-box-rows
+      ContextMenu(items!='{contextMenuItems}' parentElem!='{scrollContent}' initialEvent!='{contextMenuEvent}' on:item-selected!='{onContextMenuItemSelected}' on:clickout!='{onHideContextMenu}')
 
 </template>
 
@@ -160,9 +234,9 @@ svelte:window(on:keydown!='{onKeyDown}')
   cursor: pointer
   color: #777
 
-.nav-link.disabled
-  cursor: not-allowed
-  color: #555
+// .nav-link.disabled
+//   cursor: not-allowed
+//   color: #555
 
 .title-container
   display: flex
@@ -223,18 +297,25 @@ ul
   outline: none
   background-color: #3c3c3c
 
+.scroll-content
+  position: relative
+
 .section-title
-  font-size: 1.7em
+  width: calc(100vw - 2rem)
+  margin: 1.5rem 1rem 2rem 1rem
+  padding: .2rem 0
+  border-bottom: solid 1px #555
+  color: #ccc
+  font-size: 1.4em
   font-weight: 700
-  margin-top: 2.5rem
-  margin-bottom: 1.5rem
-  padding: 0 1rem
+  &:not(:first-child)
+    margin-top: 5rem
 
 .row-container
   display: flex
   flex-direction: row
   margin-top: .5rem
-  margin-bottom: 4rem
+  margin-bottom: 3rem
   margin-left: 1rem
   margin-right: 1rem
 
