@@ -407,6 +407,11 @@ function createCompareGraphsSectionViewModels(
   view: ComparisonView,
   testSummaries: ComparisonTestSummary[]
 ): CompareGraphsSectionViewModel[] {
+  // XXX
+  if (view.rows !== undefined) {
+    throw new Error('View with freeform rows not yet supported')
+  }
+
   // No sections when there are no graphs
   if (view.graphIds.length === 0) {
     return []

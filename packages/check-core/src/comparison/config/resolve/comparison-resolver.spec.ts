@@ -3,10 +3,10 @@
 import { describe, expect, it } from 'vitest'
 
 import { inputAtPositionSpec as atPosSpec, inputAtValueSpec as atValSpec } from '../../../_shared/scenario-specs'
-import type { VarId } from '../../../_shared/types'
+import type { DatasetKey, VarId } from '../../../_shared/types'
 import type { BundleGraphId, BundleGraphSpec, InputAliasName, ModelSpec } from '../../../bundle/bundle-types'
 import { ModelInputs } from '../../../bundle/model-inputs'
-import type { InputId, InputVar } from '../../../bundle/var-types'
+import type { InputId, InputVar, OutputVar } from '../../../bundle/var-types'
 
 import type { ComparisonSpecs } from '../comparison-spec-types'
 
@@ -19,18 +19,24 @@ import type {
 
 import {
   allAtPos,
+  dataset,
   inputVar,
+  outputVar,
   scenarioGroup,
   scenarioWithInput,
   scenarioWithInputs,
   unresolvedScenarioRef,
   unresolvedViewForScenarioGroupId,
   unresolvedViewForScenarioId,
-  view,
-  viewGroup
+  viewBox,
+  viewGroup,
+  viewRow,
+  viewWithRows,
+  viewWithScenario
 } from '../../_shared/_mocks/mock-resolved-types'
 
 import {
+  datasetSpec,
   graphGroupRefSpec,
   graphGroupSpec,
   graphsArraySpec,
@@ -44,16 +50,30 @@ import {
   scenarioWithAllInputsSpec,
   scenarioWithDistinctInputsSpec,
   scenarioWithInputsSpec,
+  viewBoxSpec,
   viewGroupWithScenariosSpec,
   viewGroupWithViewsSpec,
-  viewSpec
+  viewRowSpec,
+  viewWithRowsSpec,
+  viewWithScenarioSpec
 } from '../_mocks/mock-spec-types'
 
 import { resolveComparisonSpecs } from './comparison-resolver'
 
 function mockModelSpec(kind: 'L' | 'R'): ModelSpec {
   //
-  // VARIABLES
+  // OUTPUT VARIABLES
+  //
+  const outputVars: Map<VarId, OutputVar> = new Map()
+  function addOutputVar(varName: string, source?: string): void {
+    const [varId, oVar] = outputVar(varName, source)
+    outputVars.set(varId, oVar)
+  }
+  addOutputVar('Var X')
+  addOutputVar('Var Y')
+
+  //
+  // INPUT VARIABLES
   // L             R
   // id=1 IVarA    id=1 IVarA
   // id=2 IVarB    id=2 IVarB_Renamed
@@ -67,20 +87,19 @@ function mockModelSpec(kind: 'L' | 'R'): ModelSpec {
   // S3 -> IVarC   S3 -> IVarD
   //
   const inputVars: Map<VarId, InputVar> = new Map()
-  function addVar(inputId: InputId, varName: string, maxValue = 100): void {
+  function addInputVar(inputId: InputId, varName: string, maxValue = 100): void {
     const [varId, iVar] = inputVar(inputId, varName, maxValue)
-    // Add the variable
     inputVars.set(varId, iVar)
   }
-  addVar('1', 'IVarA')
+  addInputVar('1', 'IVarA')
   if (kind === 'L') {
-    addVar('2', 'IVarB', 100)
-    addVar('3', 'IVarC')
+    addInputVar('2', 'IVarB', 100)
+    addInputVar('3', 'IVarC')
   } else {
     // Use a different value for this input on the right side so that we can test
     // flagging of out-of-range values
-    addVar('2', 'IVarB_Renamed', 60)
-    addVar('4', 'IVarD')
+    addInputVar('2', 'IVarB_Renamed', 60)
+    addInputVar('4', 'IVarD')
   }
 
   // Add aliases by slider name
@@ -109,7 +128,7 @@ function mockModelSpec(kind: 'L' | 'R'): ModelSpec {
     modelSizeInBytes: 0,
     dataSizeInBytes: 0,
     inputVars,
-    outputVars: new Map(),
+    outputVars,
     implVars: new Map(),
     inputAliases,
     graphSpecs
@@ -568,10 +587,16 @@ describe('resolveComparisonSpecs', () => {
         graphGroups: [graphGroupSpec('GG1', ['1', '2'])],
         viewGroups: [
           viewGroupWithViewsSpec('View group 1', [
-            viewSpec('View with all graphs', undefined, 'id_1_at_max', graphsPresetSpec('all'), 'grouped-by-diffs')
+            viewWithScenarioSpec(
+              'View with all graphs',
+              undefined,
+              'id_1_at_max',
+              graphsPresetSpec('all'),
+              'grouped-by-diffs'
+            )
           ]),
           viewGroupWithViewsSpec('View group 2', [
-            viewSpec(
+            viewWithScenarioSpec(
               // This view has an explicit title and subtitle
               'View with specific graphs',
               undefined,
@@ -579,20 +604,28 @@ describe('resolveComparisonSpecs', () => {
               graphGroupRefSpec('GG1'),
               'grouped-by-diffs'
             ),
-            viewSpec(
+            viewWithScenarioSpec(
               // This view has no explicit title/subtitle, so it should be inferred from the scenario title/subtitle (which are defined)
               undefined,
               undefined,
               'id_1_at_max',
               graphsArraySpec(['1', '2'])
             ),
-            viewSpec(
+            viewWithScenarioSpec(
               // This view has no explicit title and its scenario title is also undefined, so it should resolve to "Untitled view"
               undefined,
               undefined,
               'id_2_at_max',
               graphsArraySpec(['1', '2'])
             )
+          ]),
+          viewGroupWithViewsSpec('View group 3', [
+            viewWithRowsSpec('View with rows', 'Subtitle', [
+              viewRowSpec('Row 1', 'Subtitle goes here', [
+                viewBoxSpec('Var X', 'with Slider 1 at max', datasetSpec('Var X'), 'id_1_at_max'),
+                viewBoxSpec('Var Y', 'with Slider 2 at max', datasetSpec('Var Y'), 'id_2_at_max')
+              ])
+            ])
           ])
         ]
       }
@@ -625,18 +658,33 @@ describe('resolveComparisonSpecs', () => {
         }
       )
 
+      const outVar = (modelSpec: ModelSpec, datasetKey: DatasetKey) => {
+        return modelSpec.outputVars.get(datasetKey)
+      }
+      const expectedOutVar = (datasetKey: DatasetKey) => {
+        return dataset(datasetKey, outVar(modelSpecL, datasetKey), outVar(modelSpecR, datasetKey))
+      }
+
       const resolved = resolveComparisonSpecs(modelSpecL, modelSpecR, specs)
       expect(resolved).toEqual({
         scenarios: [expectedId1AtMax, expectedId2AtMax],
         scenarioGroups: [scenarioGroup('Group with two vars at max', [expectedId1AtMax, expectedId2AtMax])],
         viewGroups: [
           viewGroup('View group 1', [
-            view('View with all graphs', undefined, expectedId1AtMax, ['1', '2'], 'grouped-by-diffs')
+            viewWithScenario('View with all graphs', undefined, expectedId1AtMax, ['1', '2'], 'grouped-by-diffs')
           ]),
           viewGroup('View group 2', [
-            view('View with specific graphs', undefined, expectedId1AtMax, ['1', '2'], 'grouped-by-diffs'),
-            view('input id 1', 'at max', expectedId1AtMax, ['1', '2']),
-            view('Untitled view', undefined, expectedId2AtMax, ['1', '2'])
+            viewWithScenario('View with specific graphs', undefined, expectedId1AtMax, ['1', '2'], 'grouped-by-diffs'),
+            viewWithScenario('input id 1', 'at max', expectedId1AtMax, ['1', '2']),
+            viewWithScenario('Untitled view', undefined, expectedId2AtMax, ['1', '2'])
+          ]),
+          viewGroup('View group 3', [
+            viewWithRows('View with rows', 'Subtitle', [
+              viewRow('Row 1', 'Subtitle goes here', [
+                viewBox('Var X', 'with Slider 1 at max', expectedOutVar('Model__var_x'), expectedId1AtMax),
+                viewBox('Var Y', 'with Slider 2 at max', expectedOutVar('Model__var_y'), expectedId2AtMax)
+              ])
+            ])
           ])
         ]
       })
@@ -749,14 +797,14 @@ describe('resolveComparisonSpecs', () => {
       ])
       expect(resolved.viewGroups).toEqual([
         viewGroup('View group 1', [
-          view(
+          viewWithScenario(
             'id 1 at max title override from view group',
             'id 1 at max subtitle override from view group',
             expectedId1AtMax,
             ['1', '2'],
             'grouped-by-diffs'
           ),
-          view(
+          viewWithScenario(
             'id 1 at min title override from view group',
             'id 1 at min subtitle override from view group',
             expectedId1AtMin,
@@ -765,14 +813,14 @@ describe('resolveComparisonSpecs', () => {
           )
         ]),
         viewGroup('View group 2', [
-          view('id 1 at max default title', 'id 1 at max default subtitle', expectedId1AtMax, ['1', '2']),
-          view(
+          viewWithScenario('id 1 at max default title', 'id 1 at max default subtitle', expectedId1AtMax, ['1', '2']),
+          viewWithScenario(
             'id 1 at min title override from scenario group',
             'id 1 at min subtitle override from scenario group',
             expectedId1AtMinWithScenarioGroupOverride,
             ['1', '2']
           ),
-          view('input id 2', 'at max', expectedId2AtMax, ['1', '2'])
+          viewWithScenario('input id 2', 'at max', expectedId2AtMax, ['1', '2'])
         ])
       ])
     })

@@ -1,6 +1,9 @@
 // Copyright (c) 2023 Climate Interactive / New Venture Fund
 
 import type {
+  ComparisonDatasetName,
+  ComparisonDatasetSource,
+  ComparisonDatasetSpec,
   ComparisonGraphGroupId,
   ComparisonGraphGroupRefSpec,
   ComparisonGraphGroupSpec,
@@ -21,12 +24,26 @@ import type {
   ComparisonScenarioWithAllInputsSpec,
   ComparisonScenarioWithDistinctInputsSpec,
   ComparisonScenarioWithInputsSpec,
+  ComparisonViewBoxSpec,
   ComparisonViewGraphOrder,
   ComparisonViewGraphsSpec,
   ComparisonViewGroupWithScenariosSpec,
   ComparisonViewGroupWithViewsSpec,
+  ComparisonViewRowSpec,
   ComparisonViewSpec
 } from '../comparison-spec-types'
+
+//
+// DATASETS
+//
+
+export function datasetSpec(name: ComparisonDatasetName, source?: ComparisonDatasetSource): ComparisonDatasetSpec {
+  return {
+    kind: 'dataset',
+    name,
+    source
+  }
+}
 
 //
 // SCENARIOS
@@ -176,11 +193,11 @@ export function graphGroupRefSpec(groupId: ComparisonGraphGroupId): ComparisonGr
 // VIEWS
 //
 
-export function viewSpec(
+export function viewWithScenarioSpec(
   title: string | undefined,
   subtitle: string | undefined,
   scenarioId: ComparisonScenarioId,
-  graphs: ComparisonViewGraphsSpec,
+  graphs?: ComparisonViewGraphsSpec,
   graphOrder?: ComparisonViewGraphOrder
 ): ComparisonViewSpec {
   return {
@@ -190,6 +207,47 @@ export function viewSpec(
     scenarioId,
     graphs,
     graphOrder
+  }
+}
+
+export function viewWithRowsSpec(
+  title: string | undefined,
+  subtitle: string | undefined,
+  rows: ComparisonViewRowSpec[]
+): ComparisonViewSpec {
+  return {
+    kind: 'view',
+    title,
+    subtitle,
+    rows
+  }
+}
+
+export function viewRowSpec(
+  title: string,
+  subtitle: string | undefined,
+  boxes: ComparisonViewBoxSpec[]
+): ComparisonViewRowSpec {
+  return {
+    kind: 'view-row',
+    title,
+    subtitle,
+    boxes
+  }
+}
+
+export function viewBoxSpec(
+  title: string,
+  subtitle: string | undefined,
+  dataset: ComparisonDatasetSpec,
+  scenarioId: ComparisonScenarioId
+): ComparisonViewBoxSpec {
+  return {
+    kind: 'view-box',
+    title,
+    subtitle,
+    dataset,
+    scenarioId
   }
 }
 

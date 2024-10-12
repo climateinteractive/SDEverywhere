@@ -7,18 +7,22 @@ import { err, ok } from 'neverthrow'
 import yaml from 'yaml'
 
 import type {
+  ComparisonDatasetSpec,
   ComparisonGraphGroupSpec,
   ComparisonScenarioGroupRefSpec,
   ComparisonScenarioGroupSpec,
+  ComparisonScenarioId,
   ComparisonScenarioInputPosition,
   ComparisonScenarioInputSpec,
   ComparisonScenarioRefSpec,
   ComparisonScenarioSpec,
   ComparisonSpecs,
   ComparisonSpecsSource,
+  ComparisonViewBoxSpec,
   ComparisonViewGraphOrder,
   ComparisonViewGraphsSpec,
   ComparisonViewGroupSpec,
+  ComparisonViewRowSpec,
   ComparisonViewSpec
 } from '../comparison-spec-types'
 
@@ -36,6 +40,18 @@ import jsonSchema from './comparison.schema'
  *
  * TODO: Share the parsing types and code with the `check` module.
  */
+
+//
+// DATASETS
+//
+
+type ParsedDatasetName = string
+type ParsedDatasetSource = string
+
+interface ParsedDataset {
+  name?: ParsedDatasetName
+  source?: ParsedDatasetSource
+}
 
 //
 // SCENARIOS
@@ -162,17 +178,48 @@ interface ParsedGraphGroupRef {
 type ParsedViewTitle = string
 type ParsedViewSubtitle = string
 
+type ParsedViewRowTitle = string
+type ParsedViewRowSubtitle = string
+
+type ParsedViewBoxTitle = string
+type ParsedViewBoxSubtitle = string
+
 type ParsedViewGraphs = ParsedGraphsPreset | ParsedGraphId[] | ParsedGraphGroupRef
 
+/** A definition of a comparison (dataset + scenario) box. */
+interface ParsedViewBox {
+  title: ParsedViewBoxTitle
+  subtitle?: ParsedViewBoxSubtitle
+  dataset: ParsedDataset
+  scenario_ref: ParsedScenarioId
+}
+
+/** A single comparison box in an array of view comparison box definitions. */
+interface ParsedViewRowBoxesItem {
+  box: ParsedViewBox
+}
+
+/** A definition of a row of comparison boxes. */
+interface ParsedViewRow {
+  title: ParsedViewRowTitle
+  subtitle?: ParsedViewRowSubtitle
+  boxes: ParsedViewRowBoxesItem[]
+}
+
+/** A single row item in an array of view row definitions. */
+interface ParsedViewRowsItem {
+  row: ParsedViewRow
+}
+
 /**
- * A definition of a view.  A view presents a set of graphs for a single input scenario.  This
- * definition allows for specifying a set of graphs to be shown in a number of different scenarios.
+ * A definition of a view.  A view presents a set of graphs, either for a single input scenario
+ * or for a mix of different dataset/scenario combinations.
  */
 interface ParsedView {
   title?: ParsedViewTitle
   subtitle?: ParsedViewSubtitle
-  // desc?: string
   scenario_ref?: ParsedScenarioId
+  rows?: ParsedViewRowsItem[]
   graphs?: ParsedViewGraphs
   graph_order?: ComparisonViewGraphOrder
 }
@@ -189,9 +236,7 @@ interface ParsedViewGroupViewsItem {
 
 type ParsedViewGroupScenariosItem = ParsedScenarioRef | ParsedScenarioGroupRef
 
-/**
- * A definition of a group of views.
- */
+/** A definition of a group of views. */
 interface ParsedViewGroup {
   title: ParsedViewGroupTitle
   views?: ParsedViewGroupViewsItem[]
@@ -275,6 +320,18 @@ export function parseComparisonSpecs(specSource: ComparisonSpecsSource): Result<
     graphGroups,
     viewGroups
   })
+}
+
+//
+// DATASETS
+//
+
+function datasetSpecFromParsed(parsedDataset: ParsedDataset): ComparisonDatasetSpec {
+  return {
+    kind: 'dataset',
+    name: parsedDataset.name,
+    source: parsedDataset.source
+  }
 }
 
 //
@@ -421,13 +478,46 @@ function graphGroupSpecFromParsed(parsedGraphGroup: ParsedGraphGroup): Compariso
 //
 
 function viewSpecFromParsed(parsedView: ParsedView): ComparisonViewSpec {
+  let scenarioId: ComparisonScenarioId
+  let rows: ComparisonViewRowSpec[]
+  if (parsedView.scenario_ref !== undefined) {
+    scenarioId = parsedView.scenario_ref
+  } else if (parsedView.rows !== undefined) {
+    rows = parsedView.rows.map(item => viewRowSpecFromParsed(item.row))
+  }
+
+  let graphs: ComparisonViewGraphsSpec
+  if (parsedView.graphs !== undefined) {
+    graphs = viewGraphsSpecFromParsed(parsedView.graphs)
+  }
+
   return {
     kind: 'view',
     title: parsedView.title,
     subtitle: parsedView.subtitle,
-    scenarioId: parsedView.scenario_ref,
-    graphs: viewGraphsSpecFromParsed(parsedView.graphs),
+    scenarioId,
+    rows,
+    graphs,
     graphOrder: parsedView.graph_order
+  }
+}
+
+function viewRowSpecFromParsed(parsedRow: ParsedViewRow): ComparisonViewRowSpec {
+  return {
+    kind: 'view-row',
+    title: parsedRow.title,
+    subtitle: parsedRow.subtitle,
+    boxes: parsedRow.boxes.map(item => viewBoxSpecFromParsed(item.box))
+  }
+}
+
+function viewBoxSpecFromParsed(parsedBox: ParsedViewBox): ComparisonViewBoxSpec {
+  return {
+    kind: 'view-box',
+    title: parsedBox.title,
+    subtitle: parsedBox.subtitle,
+    dataset: datasetSpecFromParsed(parsedBox.dataset),
+    scenarioId: parsedBox.scenario_ref
   }
 }
 

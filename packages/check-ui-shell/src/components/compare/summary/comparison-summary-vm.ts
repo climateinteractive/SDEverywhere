@@ -145,6 +145,10 @@ export function createComparisonSummaryViewModels(
     const viewRows: ComparisonSummaryRowViewModel[] = viewGroup.views.map(view => {
       switch (view.kind) {
         case 'view': {
+          // XXX
+          if (view.rows !== undefined) {
+            throw new Error('View with freeform rows not yet supported')
+          }
           // Get the comparison test results for the scenario used in this view
           const scenario = view.scenario
           const groupSummary = groupsByScenario.allGroupSummaries.get(scenario.key)

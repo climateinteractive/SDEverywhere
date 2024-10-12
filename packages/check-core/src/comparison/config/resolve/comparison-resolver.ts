@@ -5,10 +5,12 @@ import { assertNever } from 'assert-never'
 import type { InputPosition, InputSetting, ScenarioSpec } from '../../../_shared/scenario-spec-types'
 import { inputSettingsSpec } from '../../../_shared/scenario-specs'
 
+import type { BundleGraphId, ModelSpec } from '../../../bundle/bundle-types'
 import { ModelInputs } from '../../../bundle/model-inputs'
-import type { InputId, InputVar } from '../../../bundle/var-types'
+import type { InputId, InputVar, OutputVar } from '../../../bundle/var-types'
 
 import type {
+  ComparisonDataset,
   ComparisonScenario,
   ComparisonScenarioAllInputsSettings,
   ComparisonScenarioGroup,
@@ -19,10 +21,14 @@ import type {
   ComparisonUnresolvedScenarioRef,
   ComparisonUnresolvedView,
   ComparisonView,
-  ComparisonViewGroup
+  ComparisonViewBox,
+  ComparisonViewGroup,
+  ComparisonViewRow
 } from '../../_shared/comparison-resolved-types'
 
 import type {
+  ComparisonDatasetName,
+  ComparisonDatasetSource,
   ComparisonGraphGroupId,
   ComparisonGraphGroupSpec,
   ComparisonGraphId,
@@ -36,14 +42,15 @@ import type {
   ComparisonScenarioSubtitle,
   ComparisonScenarioTitle,
   ComparisonSpecs,
+  ComparisonViewBoxSpec,
   ComparisonViewGraphOrder,
   ComparisonViewGraphsSpec,
   ComparisonViewGroupSpec,
+  ComparisonViewRowSpec,
   ComparisonViewSubtitle,
   ComparisonViewTitle
 } from '../comparison-spec-types'
 import { inputSettingFromResolvedInputState, scenarioSpecsFromSettings } from './comparison-scenario-specs'
-import type { BundleGraphId, ModelSpec } from '../../../bundle/bundle-types'
 
 export interface ComparisonResolvedDefs {
   /** The set of resolved scenarios. */
@@ -78,6 +85,9 @@ export function resolveComparisonSpecs(
   // Create `ModelInputs` instances to make lookups easier
   const modelInputsL = new ModelInputs(modelSpecL)
   const modelInputsR = new ModelInputs(modelSpecR)
+
+  // Create a `ModelOutputs` instance to make lookups easier
+  const modelOutputs = new ModelOutputs(modelSpecL, modelSpecR)
 
   // Resolve the top-level scenario specs and convert to `ComparisonScenario` instances
   const resolvedScenarios = new ResolvedScenarios()
@@ -163,6 +173,7 @@ export function resolveComparisonSpecs(
     const resolvedViewGroup = resolveViewGroupFromSpec(
       modelSpecL,
       modelSpecR,
+      modelOutputs,
       resolvedScenarios,
       resolvedScenarioGroups,
       resolvedGraphGroups,
@@ -175,6 +186,47 @@ export function resolveComparisonSpecs(
     scenarios: resolvedScenarios.getAll(),
     scenarioGroups: resolvedScenarioGroups.getAll(),
     viewGroups: resolvedViewGroups
+  }
+}
+
+//
+// DATASETS
+//
+
+// TODO: This isn't very efficient because it iterates over all datasets to match by
+// variable and source name, but it likely is not used as much as scenario lookup; it
+// is probably OK for now but should be improved eventually
+class ModelOutputs {
+  constructor(private readonly modelSpecL: ModelSpec, private readonly modelSpecR: ModelSpec) {}
+
+  getDatasetForName(name: ComparisonDatasetName, source?: ComparisonDatasetSource): ComparisonDataset | undefined {
+    // TODO: This doesn't currently handle renames; ideally this would delegate to the
+    // existing `ComparisonDatasets` type, which does account for renamed variables.
+    // For now, only look in the "right" model spec, and get the variable from the "left"
+    // model spec if the keys match.
+    function findOutputVar(modelSpec: ModelSpec): OutputVar | undefined {
+      for (const outputVar of modelSpec.outputVars.values()) {
+        if (outputVar.varName === name && outputVar.sourceName === source) {
+          return outputVar
+        }
+      }
+      return undefined
+    }
+
+    const outputVarR = findOutputVar(this.modelSpecR)
+    if (outputVarR) {
+      // XXX: See if there is a matching item in the "left" model spec
+      const datasetKey = outputVarR.datasetKey
+      const outputVarL = this.modelSpecL.outputVars.get(datasetKey)
+      return {
+        kind: 'dataset',
+        key: datasetKey,
+        outputVarL,
+        outputVarR
+      }
+    } else {
+      return undefined
+    }
   }
 }
 
@@ -791,16 +843,114 @@ function resolveViewForScenario(
   }
 }
 
+interface ComparisonUnresolvedViewBox {
+  kind: 'unresolved-view-box'
+  datasetName?: ComparisonDatasetName
+  datasetSource?: ComparisonDatasetSource
+  scenarioId?: ComparisonScenarioId
+}
+
+function resolveViewBoxForSpec(
+  modelOutputs: ModelOutputs,
+  resolvedScenarios: ResolvedScenarios,
+  boxSpec: ComparisonViewBoxSpec
+): ComparisonViewBox | ComparisonUnresolvedViewBox {
+  const resolvedDataset = modelOutputs.getDatasetForName(boxSpec.dataset.name, boxSpec.dataset.source)
+  if (resolvedDataset === undefined) {
+    return {
+      kind: 'unresolved-view-box',
+      datasetName: boxSpec.dataset.name,
+      datasetSource: boxSpec.dataset.source
+    }
+  }
+
+  const resolvedScenario = resolvedScenarios.getScenarioForId(boxSpec.scenarioId)
+  if (resolvedScenario === undefined) {
+    return {
+      kind: 'unresolved-view-box',
+      scenarioId: boxSpec.scenarioId
+    }
+  }
+
+  return {
+    kind: 'view-box',
+    title: boxSpec.title,
+    subtitle: boxSpec.subtitle,
+    dataset: resolvedDataset,
+    scenario: resolvedScenario
+  }
+}
+
+function resolveViewRowForSpec(
+  modelOutputs: ModelOutputs,
+  resolvedScenarios: ResolvedScenarios,
+  rowSpec: ComparisonViewRowSpec
+): ComparisonViewRow | ComparisonUnresolvedViewBox {
+  const resolvedBoxes: ComparisonViewBox[] = []
+  for (const boxSpec of rowSpec.boxes) {
+    const box = resolveViewBoxForSpec(modelOutputs, resolvedScenarios, boxSpec)
+    if (box.kind === 'view-box') {
+      resolvedBoxes.push(box)
+    } else {
+      return box
+    }
+  }
+
+  return {
+    kind: 'view-row',
+    title: rowSpec.title,
+    subtitle: rowSpec.subtitle,
+    boxes: resolvedBoxes
+  }
+}
+
+function resolveViewWithRowSpecs(
+  modelOutputs: ModelOutputs,
+  resolvedScenarios: ResolvedScenarios,
+  viewTitle: ComparisonViewTitle | undefined,
+  viewSubtitle: ComparisonViewSubtitle | undefined,
+  rowSpecs: ComparisonViewRowSpec[]
+): ComparisonView | ComparisonUnresolvedView {
+  const resolvedRows: ComparisonViewRow[] = []
+  for (const rowSpec of rowSpecs) {
+    const row = resolveViewRowForSpec(modelOutputs, resolvedScenarios, rowSpec)
+    if (row.kind === 'view-row') {
+      resolvedRows.push(row)
+    } else {
+      return unresolvedViewForScenarioId(viewTitle, viewSubtitle, row.scenarioId, row.datasetName, row.datasetSource)
+    }
+  }
+
+  if (viewTitle === undefined) {
+    viewTitle = 'Untitled view'
+  }
+
+  return {
+    kind: 'view',
+    title: viewTitle,
+    subtitle: viewSubtitle,
+    rows: resolvedRows,
+    // TODO: The schema doesn't currently allow for graphs in a view that is defined
+    // with rows.  Probably we should have different view types to make this more clear.
+    graphIds: [],
+    graphOrder: 'default'
+  }
+}
+
 function unresolvedViewForScenarioId(
   viewTitle: ComparisonViewTitle | undefined,
   viewSubtitle: ComparisonViewSubtitle | undefined,
-  scenarioId: ComparisonScenarioId
+  scenarioId?: ComparisonScenarioId,
+  datasetName?: ComparisonDatasetName,
+  datasetSource?: ComparisonDatasetSource
 ): ComparisonUnresolvedView {
   return {
     kind: 'unresolved-view',
     title: viewTitle,
     subtitle: viewSubtitle,
-    scenarioId
+    scenarioId,
+    datasetName,
+    datasetSource
   }
 }
 
@@ -827,6 +977,7 @@ function unresolvedViewForScenarioGroupId(
 function resolveViewGroupFromSpec(
   modelSpecL: ModelSpec,
   modelSpecR: ModelSpec,
+  modelOutputs: ModelOutputs,
   resolvedScenarios: ResolvedScenarios,
   resolvedScenarioGroups: ResolvedScenarioGroups,
   resolvedGraphGroups: ResolvedGraphGroups,
@@ -838,15 +989,30 @@ function resolveViewGroupFromSpec(
     case 'view-group-with-views': {
       // Resolve each view
       views = viewGroupSpec.views.map(viewSpec => {
-        const graphIds = resolveGraphsFromSpec(modelSpecL, modelSpecR, resolvedGraphGroups, viewSpec.graphs)
-        return resolveViewForScenarioId(
-          resolvedScenarios,
-          viewSpec.title,
-          viewSpec.subtitle,
-          viewSpec.scenarioId,
-          graphIds,
-          viewSpec.graphOrder || 'default'
-        )
+        if (viewSpec.scenarioId) {
+          let graphIds: ComparisonGraphId[]
+          if (viewSpec.graphs) {
+            graphIds = resolveGraphsFromSpec(modelSpecL, modelSpecR, resolvedGraphGroups, viewSpec.graphs)
+          } else {
+            graphIds = []
+          }
+          return resolveViewForScenarioId(
+            resolvedScenarios,
+            viewSpec.title,
+            viewSpec.subtitle,
+            viewSpec.scenarioId,
+            graphIds,
+            viewSpec.graphOrder || 'default'
+          )
+        } else {
+          return resolveViewWithRowSpecs(
+            modelOutputs,
+            resolvedScenarios,
+            viewSpec.title,
+            viewSpec.subtitle,
+            viewSpec.rows
+          )
+        }
       })
       break
     }

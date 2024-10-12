@@ -144,7 +144,7 @@ class ComparisonDatasetsImpl implements ComparisonDatasets {
   }
 
   // from ComparisonDatasets interface
-  getDataset(datasetKey: string): ComparisonDataset | undefined {
+  getDataset(datasetKey: DatasetKey): ComparisonDataset | undefined {
     return this.allDatasets.get(datasetKey)
   }
 
