@@ -97,17 +97,17 @@ export function createCompareDetailViewModelForFreeformView(
         title: boxSpec.title,
         subtitle: boxSpec.subtitle,
         scenario: boxSpec.scenario,
-        // TODO: Find this in all test summaries
+        // XXX: For now we don't need to use the real test summary here (we can use
+        // `md: 0` since the data and comparison will be loaded/performed on demand)
         testSummary: {
           d: boxSpec.dataset.key,
           s: boxSpec.scenario.key,
-          md: 0 // TODO: Get the actual maxDiff
+          md: 0
         }
       }
       items.push(detailItem)
     }
 
-    // const items = group.items[0] !== allAtDefaultItem ? [allAtDefaultItem, ...group.items] : group.items
     const detailRow = createCompareDetailRowViewModel(
       comparisonConfig,
       dataCoordinator,
@@ -446,9 +446,11 @@ function createCompareGraphsSectionViewModels(
   view: ComparisonView,
   testSummaries: ComparisonTestSummary[]
 ): CompareGraphsSectionViewModel[] {
-  // XXX
+  // TODO: We don't yet support including user graphs in a freeform view, so treat this
+  // as an error for now.  Technically it is possible to support this, but we would need
+  // to change the schema to allow for specifying which scenario to use for each graph.
   if (view.rows !== undefined) {
-    throw new Error('View with freeform rows not yet supported')
+    throw new Error('Graphs section is not yet supported in a freeform view')
   }
 
   // No sections when there are no graphs

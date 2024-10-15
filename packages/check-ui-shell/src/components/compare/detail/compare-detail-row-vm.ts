@@ -1,5 +1,7 @@
 // Copyright (c) 2021-2022 Climate Interactive / New Venture Fund
 
+import assertNever from 'assert-never'
+
 import { derived, type Readable } from 'svelte/store'
 
 import type {
@@ -17,7 +19,6 @@ import type { PinnedItemKey } from '../_shared/pinned-item-state'
 
 import { CompareDetailBoxViewModel, type AxisRange } from './compare-detail-box-vm'
 import type { ComparisonDetailItem } from './compare-detail-item'
-import assertNever from 'assert-never'
 
 export interface CompareDetailContextGraphRowViewModel {
   graphL: ContextGraphViewModel
