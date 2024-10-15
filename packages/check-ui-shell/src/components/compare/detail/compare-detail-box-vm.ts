@@ -62,7 +62,7 @@ export class CompareDetailBoxViewModel {
     public readonly subtitle: string | undefined,
     public readonly scenario: ComparisonScenario,
     public readonly datasetKey: DatasetKey,
-    public readonly pinnedItemKey: PinnedItemKey
+    public readonly pinnedItemKey: PinnedItemKey | undefined
   ) {
     this.requestKey = `detail-box::${requestId++}::${scenario.key}::${datasetKey}`
 

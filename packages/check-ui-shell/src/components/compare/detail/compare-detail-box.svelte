@@ -38,6 +38,12 @@ function onTitleClicked() {
 }
 
 function onContextMenu(e: Event) {
+  // If the box cannot be pinned (as is the case for boxes in freeform rows),
+  // don't show a context menu for now
+  if (viewModel.pinnedItemKey === undefined) {
+    return
+  }
+
   dispatch('show-context-menu', {
     kind: 'box',
     itemKey: viewModel.pinnedItemKey,

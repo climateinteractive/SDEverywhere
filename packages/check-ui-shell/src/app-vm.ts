@@ -14,10 +14,14 @@ import type { UserPrefs } from './_shared/user-prefs'
 import type { AppModel } from './model/app-model'
 
 import type { ComparisonGroupingKind } from './components/compare/_shared/comparison-grouping-kind'
-import type { PinnedItemState, PinnedItemStates } from './components/compare/_shared/pinned-item-state'
+import { PinnedItemState, type PinnedItemStates } from './components/compare/_shared/pinned-item-state'
 import { createPinnedItemStates } from './components/compare/_shared/pinned-item-state'
 import type { CompareDetailViewModel } from './components/compare/detail/compare-detail-vm'
-import { createCompareDetailViewModel } from './components/compare/detail/compare-detail-vm'
+import {
+  createCompareDetailViewModelForScenario,
+  createCompareDetailViewModelForDataset,
+  createCompareDetailViewModelForFreeformView
+} from './components/compare/detail/compare-detail-vm'
 import type { ComparisonSummaryRowViewModel } from './components/compare/summary/comparison-summary-row-vm'
 import type { ComparisonSummaryViewModel } from './components/compare/summary/comparison-summary-vm'
 import type { HeaderViewModel } from './components/header/header-vm'
@@ -154,25 +158,46 @@ export class AppViewModel {
     const viewGroup = summaryRowViewModel.viewMetadata?.viewGroup
     const view = summaryRowViewModel.viewMetadata?.view
 
-    let pinnedItemState: PinnedItemState
-    if (groupSummary.group.kind === 'by-dataset') {
-      // Show pinned scenarios at the top of the detail view
-      pinnedItemState = this.pinnedItemStates.pinnedScenarios
+    if (groupSummary !== undefined) {
+      if (groupSummary.group.kind === 'by-dataset') {
+        // Show the detail view for the given dataset summary item, with pinned
+        // scenarios at the top of the detail view
+        return createCompareDetailViewModelForDataset(
+          summaryRowViewModel.key,
+          this.appModel.config.comparison,
+          this.appModel.comparisonDataCoordinator,
+          this.userPrefs,
+          groupSummary,
+          this.pinnedItemStates.pinnedScenarios
+        )
+      } else {
+        // Show the detail view for the given scenario (or view) summary item,
+        // with pinned datasets at the top of the detail view
+        return createCompareDetailViewModelForScenario(
+          summaryRowViewModel.key,
+          this.appModel.config.comparison,
+          this.appModel.comparisonDataCoordinator,
+          this.userPrefs,
+          groupSummary,
+          viewGroup,
+          view,
+          this.pinnedItemStates.pinnedDatasets
+        )
+      }
     } else {
-      // Show pinned datasets at the top of the detail view
-      pinnedItemState = this.pinnedItemStates.pinnedDatasets
+      // Show the detail view for the given freeform view
+      // TODO: Create a separate PinnedItemState for pinned freeform rows
+      const pinnedItemState = new PinnedItemState()
+      return createCompareDetailViewModelForFreeformView(
+        summaryRowViewModel.key,
+        this.appModel.config.comparison,
+        this.appModel.comparisonDataCoordinator,
+        this.userPrefs,
+        viewGroup,
+        view,
+        pinnedItemState
+      )
     }
-
-    return createCompareDetailViewModel(
-      summaryRowViewModel.key,
-      this.appModel.config.comparison,
-      this.appModel.comparisonDataCoordinator,
-      this.userPrefs,
-      groupSummary,
-      viewGroup,
-      view,
-      pinnedItemState
-    )
   }
 
   createCompareDetailViewModelForFirstSummaryRow(kind: ComparisonGroupingKind): CompareDetailViewModel | undefined {

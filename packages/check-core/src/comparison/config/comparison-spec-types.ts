@@ -12,8 +12,12 @@ export type ComparisonDatasetSource = string
  */
 export interface ComparisonDatasetSpec {
   kind: 'dataset'
-  /** The  */
+  /** The name of the dataset (variable). */
   name: ComparisonDatasetName
+  /**
+   * The source of the dataset, if it is from an external data file.  If
+   * undefined, the dataset is assumed to be a model output.
+   */
   source?: ComparisonDatasetSource
 }
 

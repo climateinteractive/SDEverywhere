@@ -17,14 +17,17 @@ import type { PinnedItemKey } from '../_shared/pinned-item-state'
 
 import { CompareDetailBoxViewModel, type AxisRange } from './compare-detail-box-vm'
 import type { ComparisonDetailItem } from './compare-detail-item'
+import assertNever from 'assert-never'
 
 export interface CompareDetailContextGraphRowViewModel {
   graphL: ContextGraphViewModel
   graphR: ContextGraphViewModel
 }
 
+export type CompareDetailRowKind = 'scenarios' | 'datasets' | 'freeform'
+
 export interface CompareDetailRowViewModel {
-  kind: 'scenarios' | 'datasets'
+  kind: CompareDetailRowKind
   title?: string
   subtitle?: string
   showTitle: boolean
@@ -37,7 +40,7 @@ export function createCompareDetailRowViewModel(
   comparisonConfig: ComparisonConfig,
   dataCoordinator: ComparisonDataCoordinator,
   userPrefs: UserPrefs,
-  kind: 'scenarios' | 'datasets',
+  kind: CompareDetailRowKind,
   title: string | undefined,
   subtitle: string | undefined,
   items: ComparisonDetailItem[]
@@ -52,15 +55,40 @@ export function createCompareDetailRowViewModel(
       continue
     }
 
-    // TODO
-    const boxTitle = kind === 'scenarios' ? `…${item.subtitle}` : item.title
+    // Determine which title/subtitle to show above the box based on the row kind
+    let boxTitle: string
+    let boxSubtitle: string
+    switch (kind) {
+      case 'scenarios':
+        boxTitle = `…${item.subtitle}`
+        break
+      case 'datasets':
+        boxTitle = item.title
+        break
+      case 'freeform':
+        boxTitle = item.title
+        boxSubtitle = item.subtitle
+        break
+      default:
+        assertNever(kind)
+    }
 
-    // The pinned item key is either the scenario key or the dataset key
+    // Determine which key to use as the pinned item key.  Currently,
+    // individual boxes in a freeform row cannot be pinned, so we use
+    // undefined in that case.
     let pinnedItemKey: PinnedItemKey
-    if (kind === 'scenarios') {
-      pinnedItemKey = item.scenario.key
-    } else {
-      pinnedItemKey = item.testSummary.d
+    switch (kind) {
+      case 'scenarios':
+        pinnedItemKey = item.scenario.key
+        break
+      case 'datasets':
+        pinnedItemKey = item.testSummary.d
+        break
+      case 'freeform':
+        pinnedItemKey = undefined
+        break
+      default:
+        assertNever(kind)
     }
 
     boxes.push(
@@ -68,7 +96,7 @@ export function createCompareDetailRowViewModel(
         comparisonConfig,
         dataCoordinator,
         boxTitle,
-        undefined, //item.subtitle,
+        boxSubtitle,
         item.scenario,
         item.testSummary.d,
         pinnedItemKey
@@ -123,7 +151,7 @@ export function createCompareDetailRowViewModel(
     kind,
     title,
     subtitle,
-    showTitle: kind === 'scenarios',
+    showTitle: kind !== 'datasets',
     items,
     boxes,
     pinnedItemKey

@@ -87,6 +87,8 @@ export interface ComparisonGroupSummariesByCategory {
  * Rolls up all by-scenario and by-dataset groupings.
  */
 export interface ComparisonCategorizedResults {
+  /** All summaries for the comparison tests that were performed. */
+  allTestSummaries: ComparisonTestSummary[]
   /** The full set of by-scenario groupings. */
   byScenario: ComparisonGroupSummariesByCategory
   /** The full set of by-dataset groupings. */

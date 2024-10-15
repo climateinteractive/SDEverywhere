@@ -24,7 +24,6 @@ import type { UserPrefs } from '../../../_shared/user-prefs'
 
 import { getAnnotationsForDataset, getAnnotationsForScenario } from '../_shared/annotations'
 import { getBucketIndex } from '../_shared/buckets'
-import type { ComparisonGroupingKind } from '../_shared/comparison-grouping-kind'
 import type { PinnedItemState } from '../_shared/pinned-item-state'
 
 import type { ComparisonDetailItem } from './compare-detail-item'
@@ -52,8 +51,10 @@ export interface CompareGraphsGroupedByDiffs {
   diffPercentByBucket: number[]
 }
 
+export type CompareDetailViewKind = 'scenario-view' | 'freeform-view' | 'scenario' | 'dataset'
+
 export interface CompareDetailViewModel {
-  kind: ComparisonGroupingKind
+  kind: CompareDetailViewKind
   /** The unique key for the associated summary view row. */
   summaryRowKey: string
   /** The pretitle (e.g., view group title). */
@@ -78,43 +79,79 @@ export interface CompareDetailViewModel {
   pinnedItemState: PinnedItemState
 }
 
-export function createCompareDetailViewModel(
+export function createCompareDetailViewModelForFreeformView(
   summaryRowKey: string,
   comparisonConfig: ComparisonConfig,
   dataCoordinator: ComparisonDataCoordinator,
   userPrefs: UserPrefs,
-  groupSummary: ComparisonGroupSummary,
   viewGroup: ComparisonViewGroup | undefined,
   view: ComparisonView | undefined,
   pinnedItemState: PinnedItemState
 ): CompareDetailViewModel {
-  switch (groupSummary.group.kind) {
-    case 'by-dataset':
-      return createCompareDetailViewModelForDataset(
-        summaryRowKey,
-        comparisonConfig,
-        dataCoordinator,
-        userPrefs,
-        groupSummary,
-        pinnedItemState
-      )
-    case 'by-scenario':
-      return createCompareDetailViewModelForScenario(
-        summaryRowKey,
-        comparisonConfig,
-        dataCoordinator,
-        userPrefs,
-        groupSummary,
-        viewGroup,
-        view,
-        pinnedItemState
-      )
-    default:
-      assertNever(groupSummary.group.kind)
+  // Create a detail row for each row spec
+  const regularDetailRows: CompareDetailRowViewModel[] = []
+  for (const rowSpec of view.rows || []) {
+    const items: ComparisonDetailItem[] = []
+    for (const boxSpec of rowSpec.boxes) {
+      const detailItem: ComparisonDetailItem = {
+        title: boxSpec.title,
+        subtitle: boxSpec.subtitle,
+        scenario: boxSpec.scenario,
+        // TODO: Find this in all test summaries
+        testSummary: {
+          d: boxSpec.dataset.key,
+          s: boxSpec.scenario.key,
+          md: 0 // TODO: Get the actual maxDiff
+        }
+      }
+      items.push(detailItem)
+    }
+
+    // const items = group.items[0] !== allAtDefaultItem ? [allAtDefaultItem, ...group.items] : group.items
+    const detailRow = createCompareDetailRowViewModel(
+      comparisonConfig,
+      dataCoordinator,
+      userPrefs,
+      'freeform',
+      rowSpec.title,
+      rowSpec.subtitle,
+      items
+    )
+    regularDetailRows.push(detailRow)
+  }
+
+  // Add rows at the top of the view for the pinned items
+  const pinnedDetailRows = derived(pinnedItemState.orderedKeys, $pinnedItemKeys => {
+    const rows: CompareDetailRowViewModel[] = []
+    for (const pinnedItemKey of $pinnedItemKeys) {
+      if (pinnedItemKey.startsWith('row')) {
+        // Find the regular row for this key and clone it
+        const regularRow = regularDetailRows.find(row => row.pinnedItemKey === pinnedItemKey)
+        if (regularRow) {
+          rows.push(cloneDetailRowViewModel(comparisonConfig, dataCoordinator, userPrefs, regularRow))
+        }
+      }
+    }
+    return rows
+  })
+
+  return {
+    kind: 'freeform-view',
+    summaryRowKey,
+    pretitle: viewGroup?.title,
+    title: view.title,
+    subtitle: view.subtitle,
+    annotations: undefined, // TODO
+    relatedListHeader: '', // TODO
+    relatedItems: [], // TODO
+    graphSections: [],
+    regularDetailRows,
+    pinnedDetailRows,
+    pinnedItemState
   }
 }
 
-function createCompareDetailViewModelForDataset(
+export function createCompareDetailViewModelForDataset(
   summaryRowKey: string,
   comparisonConfig: ComparisonConfig,
   dataCoordinator: ComparisonDataCoordinator,
@@ -217,15 +254,17 @@ function createCompareDetailViewModelForDataset(
         // Find the scenario item for this key and create a row with a single scenario
         const item = groupTitleAndDetailItemForScenarioKey(pinnedItemKey)
         if (item) {
+          const groupTitle = item[0]
+          const detailItem = item[1]
           rows.push(
             createCompareDetailRowViewModel(
               comparisonConfig,
               dataCoordinator,
               userPrefs,
               'scenarios',
-              item[0],
+              groupTitle,
               undefined, // TODO: Subtitle?
-              [item[1]]
+              [detailItem]
             )
           )
         }
@@ -235,7 +274,7 @@ function createCompareDetailViewModelForDataset(
   })
 
   return {
-    kind: 'by-dataset',
+    kind: 'dataset',
     summaryRowKey,
     title,
     subtitle,
@@ -249,7 +288,7 @@ function createCompareDetailViewModelForDataset(
   }
 }
 
-function createCompareDetailViewModelForScenario(
+export function createCompareDetailViewModelForScenario(
   summaryRowKey: string,
   comparisonConfig: ComparisonConfig,
   dataCoordinator: ComparisonDataCoordinator,
@@ -266,20 +305,20 @@ function createCompareDetailViewModelForScenario(
   const scenario = groupSummary.root as ComparisonScenario
   const annotations = getAnnotationsForScenario(scenario, bundleNameL, bundleNameR).join(' ')
 
-  let kind: ComparisonGroupingKind
+  let kind: CompareDetailViewKind
   let pretitle: string
   let title: string
   let subtitle: string
   if (view) {
     // This is the detail screen for a user-defined view, so use the title/subtitle from
     // the view definition
-    kind = 'views'
+    kind = 'scenario-view'
     pretitle = viewGroup?.title
     title = view.title
     subtitle = view.subtitle
   } else {
     // This is the detail screen for a scenario, so use the title/subtitle from the scenario
-    kind = 'by-scenario'
+    kind = 'scenario'
     title = scenario.title
     subtitle = scenario.subtitle
   }

@@ -3,12 +3,15 @@
 <!-- SCRIPT -->
 <script lang='ts'>
 
+import assertNever from 'assert-never'
+
 import { createEventDispatcher, onMount } from 'svelte'
 import { get, type Readable } from 'svelte/store'
 
 import type { ContextMenuItem } from '../../_shared/context-menu.svelte'
 import ContextMenu from '../../_shared/context-menu.svelte'
 
+import type { ComparisonGroupingKind } from '../_shared/comparison-grouping-kind'
 import type { PinnedItemKey } from '../_shared/pinned-item-state'
 
 import type { CompareDetailViewModel } from './compare-detail-vm'
@@ -32,7 +35,21 @@ let relatedItemsVisible = false
 
 // Rebuild the view state when the view model changes
 $: if (viewModel) {
-  itemKind = viewModel.kind === 'by-dataset' ? 'Scenario' : 'Dataset'
+  switch (viewModel.kind) {
+    case 'freeform-view':
+      itemKind = 'Row'
+      break
+    case 'scenario':
+    case 'scenario-view':
+      itemKind = 'Dataset'
+      break
+    case 'dataset':
+      itemKind = 'Scenario'
+      break
+    default:
+      itemKind = 'Item'
+      break
+  }
   itemKindPlural = `${itemKind}s`
   pinnedDetailRows = viewModel.pinnedDetailRows
   if (scrollContainer) {
@@ -46,13 +63,29 @@ const dispatch = createEventDispatcher()
 function onNavLink(cmd: string) {
   switch (cmd) {
     case 'detail-previous':
-    case 'detail-next':
+    case 'detail-next': {
+      let groupingKind: ComparisonGroupingKind
+      switch (viewModel.kind) {
+        case 'freeform-view':
+        case 'scenario-view':
+          groupingKind = 'views'
+          break
+        case 'scenario':
+          groupingKind = 'by-scenario'
+          break
+        case 'dataset':
+          groupingKind = 'by-dataset'
+          break
+        default:
+          assertNever(viewModel.kind)
+      }
       dispatch('command', {
         cmd: cmd === 'detail-previous' ? 'show-comparison-detail-for-previous' : 'show-comparison-detail-for-next',
-        kind: viewModel.kind,
+        kind: groupingKind,
         summaryRowKey: viewModel.summaryRowKey
       })
       break
+    }
     default:
       dispatch('command', { cmd })
       break

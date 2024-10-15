@@ -5,7 +5,6 @@ import { assertNever } from 'assert-never'
 import type { ComparisonConfig } from '../config/comparison-config'
 import type { ComparisonDataset, ComparisonScenario } from '../_shared/comparison-resolved-types'
 
-import { getBucketIndex } from './buckets'
 import type {
   ComparisonCategorizedResults,
   ComparisonGroup,
@@ -17,6 +16,7 @@ import type {
 } from './comparison-group-types'
 import type { ComparisonTestSummary } from './comparison-report-types'
 import { restoreFromTerseSummaries } from './comparison-reporting'
+import { getScoresForTestSummaries } from './comparison-group-scores'
 
 /**
  * Given a set of terse test summaries (which only includes summaries for tests with non-zero `maxDiff`
@@ -41,6 +41,7 @@ export function categorizeComparisonTestSummaries(
   const byDataset = categorizeComparisonGroups(comparisonConfig, [...groupsByDataset.values()])
 
   return {
+    allTestSummaries,
     byScenario,
     byDataset
   }
@@ -126,7 +127,7 @@ export function categorizeComparisonGroups(
     // Compute the scores if the dataset/scenario is valid in both
     let scores: ComparisonGroupScores
     if (validInL && validInR) {
-      scores = getScoresForGroup(group, comparisonConfig.thresholds)
+      scores = getScoresForTestSummaries(group.testSummaries, comparisonConfig.thresholds)
     }
 
     // Create the group summary
@@ -202,35 +203,6 @@ export function categorizeComparisonGroups(
     onlyInRight,
     withDiffs,
     withoutDiffs
-  }
-}
-
-function getScoresForGroup(group: ComparisonGroup, thresholds: number[]): ComparisonGroupScores {
-  // Add up scores and group them into buckets
-  const diffCountByBucket = Array(thresholds.length + 2).fill(0)
-  const totalMaxDiffByBucket = Array(thresholds.length + 2).fill(0)
-  let totalDiffCount = 0
-  for (const testSummary of group.testSummaries) {
-    const bucketIndex = getBucketIndex(testSummary.md, thresholds)
-    diffCountByBucket[bucketIndex]++
-    totalMaxDiffByBucket[bucketIndex] += testSummary.md
-    totalDiffCount++
-  }
-
-  // Get the percentage of diffs for each bucket relative to the total number
-  // of scenarios for this output variable
-  let diffPercentByBucket: number[]
-  if (totalDiffCount > 0) {
-    diffPercentByBucket = diffCountByBucket.map(count => (count / totalDiffCount) * 100)
-  } else {
-    diffPercentByBucket = []
-  }
-
-  return {
-    totalDiffCount,
-    totalMaxDiffByBucket,
-    diffCountByBucket,
-    diffPercentByBucket
   }
 }
 
