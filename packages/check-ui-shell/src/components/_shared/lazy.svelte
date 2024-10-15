@@ -6,6 +6,7 @@
 import { onMount } from 'svelte'
 
 export let visible = false
+export let syncInit = false
 
 let container: HTMLElement
 
@@ -16,6 +17,19 @@ onMount(() => {
   const rootContainer = container.closest('.scroll-container')
   if (rootContainer === undefined) {
     throw new Error(`Lazy component requires an ancestor marked with the 'scroll-container' class`)
+  }
+
+  // Helper function that does a synchronous bounds test of this child component
+  // against the root container (viewport)
+  function syncIntersects(): boolean {
+    const rootBounds = rootContainer.getBoundingClientRect()
+    const childBounds = container.getBoundingClientRect()
+    const intersects =
+      childBounds.bottom > rootBounds.top &&
+      childBounds.top < rootBounds.bottom &&
+      childBounds.right > rootBounds.left &&
+      childBounds.left < rootBounds.right
+    return intersects
   }
 
   // Wait for the container to become visible before loading the child component
@@ -43,6 +57,14 @@ onMount(() => {
     rootMargin: '100% 200% 200% 100%'
   })
   observer.observe(container)
+
+  if (syncInit) {
+    // Avoid flashing by doing a synchronous bounds check when the component is
+    // first mounted
+    if (syncIntersects()) {
+      visible = true
+    }
+  }
 
   return () => {
     // Stop observing visibility changes when the component is unmounted
