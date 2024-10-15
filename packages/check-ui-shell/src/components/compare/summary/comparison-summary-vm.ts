@@ -249,7 +249,11 @@ export function createComparisonSummaryViewModels(
           return {
             kind: 'views',
             key: genViewKey(),
-            title: 'Unresolved view'
+            title: 'Unresolved view',
+            viewMetadata: {
+              viewGroup,
+              view
+            }
           }
         default:
           assertNever(view)

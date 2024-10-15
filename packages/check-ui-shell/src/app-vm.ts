@@ -20,7 +20,8 @@ import type { CompareDetailViewModel } from './components/compare/detail/compare
 import {
   createCompareDetailViewModelForScenario,
   createCompareDetailViewModelForDataset,
-  createCompareDetailViewModelForFreeformView
+  createCompareDetailViewModelForFreeformView,
+  createCompareDetailViewModelForUnresolvedView
 } from './components/compare/detail/compare-detail-vm'
 import type { ComparisonSummaryRowViewModel } from './components/compare/summary/comparison-summary-row-vm'
 import type { ComparisonSummaryViewModel } from './components/compare/summary/comparison-summary-vm'
@@ -157,6 +158,10 @@ export class AppViewModel {
 
     const viewGroup = summaryRowViewModel.viewMetadata?.viewGroup
     const view = summaryRowViewModel.viewMetadata?.view
+
+    if (view?.kind === 'unresolved-view') {
+      return createCompareDetailViewModelForUnresolvedView(summaryRowViewModel.key, viewGroup, view)
+    }
 
     if (groupSummary !== undefined) {
       if (groupSummary.group.kind === 'by-dataset') {

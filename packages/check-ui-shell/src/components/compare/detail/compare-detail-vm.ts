@@ -2,7 +2,7 @@
 
 import assertNever from 'assert-never'
 
-import { derived, type Readable } from 'svelte/store'
+import { derived, writable, type Readable } from 'svelte/store'
 
 import type {
   ComparisonConfig,
@@ -13,6 +13,7 @@ import type {
   ComparisonScenario,
   ComparisonScenarioKey,
   ComparisonTestSummary,
+  ComparisonUnresolvedView,
   ComparisonView,
   ComparisonViewGroup,
   DatasetKey,
@@ -77,6 +78,27 @@ export interface CompareDetailViewModel {
   pinnedDetailRows: Readable<CompareDetailRowViewModel[]>
   /** The shared pinned item state for this view. */
   pinnedItemState: PinnedItemState
+}
+
+export function createCompareDetailViewModelForUnresolvedView(
+  summaryRowKey: string,
+  viewGroup: ComparisonViewGroup,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _view: ComparisonUnresolvedView
+): CompareDetailViewModel {
+  return {
+    kind: 'freeform-view',
+    summaryRowKey,
+    pretitle: viewGroup?.title,
+    title: 'Unresolved view',
+    annotations: undefined,
+    relatedListHeader: '',
+    relatedItems: [],
+    graphSections: [],
+    regularDetailRows: [],
+    pinnedDetailRows: writable([]),
+    pinnedItemState: undefined
+  }
 }
 
 export function createCompareDetailViewModelForFreeformView(
