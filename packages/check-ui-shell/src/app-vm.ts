@@ -191,8 +191,6 @@ export class AppViewModel {
       }
     } else {
       // Show the detail view for the given freeform view
-      // TODO: Create a separate PinnedItemState for pinned freeform rows
-      const pinnedItemState = new PinnedItemState()
       return createCompareDetailViewModelForFreeformView(
         summaryRowViewModel.key,
         this.appModel.config.comparison,
@@ -200,7 +198,7 @@ export class AppViewModel {
         this.userPrefs,
         viewGroup,
         view,
-        pinnedItemState
+        this.pinnedItemStates.pinnedFreeformRows
       )
     }
   }

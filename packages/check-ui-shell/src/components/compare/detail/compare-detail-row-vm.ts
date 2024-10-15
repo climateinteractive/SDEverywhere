@@ -17,7 +17,7 @@ import { ContextGraphViewModel } from '../../graphs/context-graph-vm'
 
 import type { PinnedItemKey } from '../_shared/pinned-item-state'
 
-import { CompareDetailBoxViewModel, type AxisRange } from './compare-detail-box-vm'
+import { CompareDetailBoxViewModel, type AxisRange, type CompareDetailBoxKind } from './compare-detail-box-vm'
 import type { ComparisonDetailItem } from './compare-detail-item'
 
 export interface CompareDetailContextGraphRowViewModel {
@@ -74,19 +74,24 @@ export function createCompareDetailRowViewModel(
         assertNever(kind)
     }
 
-    // Determine which key to use as the pinned item key.  Currently,
-    // individual boxes in a freeform row cannot be pinned, so we use
-    // undefined in that case.
+    // Determine which key to use as the pinned item key
+    let boxKind: CompareDetailBoxKind
     let pinnedItemKey: PinnedItemKey
     switch (kind) {
       case 'scenarios':
+        boxKind = 'scenario'
         pinnedItemKey = item.scenario.key
         break
       case 'datasets':
+        boxKind = 'dataset'
         pinnedItemKey = item.testSummary.d
         break
       case 'freeform':
-        pinnedItemKey = undefined
+        // Note that boxes in freeform rows can't currently be pinned (because there's
+        // not as much of a use case for this, so we only create the `pinnedItemKey`
+        // here for the purposes of building a `pinnedItemKey` for the whole row)
+        boxKind = 'freeform'
+        pinnedItemKey = `${item.scenario.key}::${item.testSummary.d}`
         break
       default:
         assertNever(kind)
@@ -96,6 +101,7 @@ export function createCompareDetailRowViewModel(
       new CompareDetailBoxViewModel(
         comparisonConfig,
         dataCoordinator,
+        boxKind,
         boxTitle,
         boxSubtitle,
         item.scenario,

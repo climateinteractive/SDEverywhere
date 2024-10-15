@@ -36,6 +36,8 @@ export interface CompareDetailBoxContent {
   comparisonGraphViewModel: ComparisonGraphViewModel
 }
 
+export type CompareDetailBoxKind = 'scenario' | 'dataset' | 'freeform'
+
 export interface AxisRange {
   min: number
   max: number
@@ -58,6 +60,7 @@ export class CompareDetailBoxViewModel {
   constructor(
     public readonly comparisonConfig: ComparisonConfig,
     public readonly dataCoordinator: ComparisonDataCoordinator,
+    public readonly kind: CompareDetailBoxKind,
     public readonly title: string,
     public readonly subtitle: string | undefined,
     public readonly scenario: ComparisonScenario,

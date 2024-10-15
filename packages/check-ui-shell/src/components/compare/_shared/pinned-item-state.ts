@@ -7,6 +7,7 @@ export type PinnedItemKey = string
 export interface PinnedItemStates {
   pinnedDatasets: PinnedItemState
   pinnedScenarios: PinnedItemState
+  pinnedFreeformRows: PinnedItemState
 }
 
 export class PinnedItemState {
@@ -102,6 +103,7 @@ function validateKey(key: PinnedItemKey): void {
 export function createPinnedItemStates(): PinnedItemStates {
   return {
     pinnedDatasets: new PinnedItemState(),
-    pinnedScenarios: new PinnedItemState()
+    pinnedScenarios: new PinnedItemState(),
+    pinnedFreeformRows: new PinnedItemState()
   }
 }
