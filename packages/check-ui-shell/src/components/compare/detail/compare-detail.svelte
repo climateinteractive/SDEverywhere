@@ -332,6 +332,7 @@ ul
 
 .scroll-content
   position: relative
+  margin-bottom: 2rem
 
 .section-title
   width: calc(100vw - 2rem)
