@@ -14,7 +14,7 @@ import type { UserPrefs } from './_shared/user-prefs'
 import type { AppModel } from './model/app-model'
 
 import type { ComparisonGroupingKind } from './components/compare/_shared/comparison-grouping-kind'
-import { PinnedItemState, type PinnedItemStates } from './components/compare/_shared/pinned-item-state'
+import { type PinnedItemStates } from './components/compare/_shared/pinned-item-state'
 import { createPinnedItemStates } from './components/compare/_shared/pinned-item-state'
 import type { CompareDetailViewModel } from './components/compare/detail/compare-detail-vm'
 import {
