@@ -248,7 +248,7 @@ importers:
         specifier: ^3.4.0
         version: 3.4.0
       '@sdeverywhere/check-core':
-        specifier: ^0.1.2
+        specifier: ^0.1.3
         version: link:../check-core
       assert-never:
         specifier: ^1.2.1
@@ -428,10 +428,10 @@ importers:
         specifier: ^5.0.2
         version: 5.0.2(rollup@2.76.0)
       '@sdeverywhere/check-core':
-        specifier: ^0.1.2
+        specifier: ^0.1.3
         version: link:../check-core
       '@sdeverywhere/check-ui-shell':
-        specifier: ^0.2.5
+        specifier: ^0.2.6
         version: link:../check-ui-shell
       '@sdeverywhere/runtime':
         specifier: ^0.2.5
