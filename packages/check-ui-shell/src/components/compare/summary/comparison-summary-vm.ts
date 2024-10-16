@@ -53,13 +53,10 @@ export class ComparisonsByItemSummaryViewModel {
     public readonly withDiffs?: ComparisonSummarySectionViewModel,
     public readonly withoutDiffs?: ComparisonSummarySectionViewModel
   ) {
-    // Create an array that holds all regular rows and determine the number
-    // of rows with differences
-    let rowsWithDiffs = 0
+    // Create an array that holds all regular rows
     const regularRows: ComparisonSummaryRowViewModel[] = []
     const addRows = (section?: ComparisonSummarySectionViewModel) => {
       if (section?.rows.length > 0) {
-        rowsWithDiffs += section.rows.length
         regularRows.push(...section.rows)
       }
     }
@@ -68,8 +65,11 @@ export class ComparisonsByItemSummaryViewModel {
     addRows(onlyInRight)
     addRows(withDiffs)
     addRows(withoutDiffs)
-    this.rowsWithDiffs = rowsWithDiffs
     this.regularRows = regularRows
+
+    // Determine the number of rows with differences
+    const rowsWithoutDiffsCount = withoutDiffs?.rows.length || 0
+    this.rowsWithDiffs = regularRows.length - rowsWithoutDiffsCount
 
     // Derive the pinned row view models from the pinned item state
     this.pinnedRows = derived(pinnedItemState.orderedKeys, $orderedKeys => {
