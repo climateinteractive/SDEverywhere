@@ -4,8 +4,14 @@ import { assertNever } from 'assert-never'
 
 import { derived, writable, type Readable } from 'svelte/store'
 
-import type { ComparisonConfig, ComparisonGroupSummary, ComparisonTestSummary } from '@sdeverywhere/check-core'
-import { categorizeComparisonTestSummaries } from '@sdeverywhere/check-core'
+import type {
+  ComparisonConfig,
+  ComparisonGroupSummary,
+  ComparisonTestSummary,
+  ComparisonView,
+  ComparisonViewGroup
+} from '@sdeverywhere/check-core'
+import { categorizeComparisonTestSummaries, getScoresForTestSummaries } from '@sdeverywhere/check-core'
 
 import { getAnnotationsForDataset, getAnnotationsForScenario } from '../_shared/annotations'
 import { hasSignificantDiffs } from '../_shared/buckets'
@@ -130,6 +136,7 @@ export function createComparisonSummaryViewModels(
 
   // Group and categorize the comparison results
   const comparisonGroups = categorizeComparisonTestSummaries(comparisonConfig, terseSummaries)
+  const allTestSummaries = comparisonGroups.allTestSummaries
   const groupsByScenario = comparisonGroups.byScenario
   const groupsByDataset = comparisonGroups.byDataset
 
@@ -139,68 +146,119 @@ export function createComparisonSummaryViewModels(
     return `view_${viewId++}`
   }
 
+  // Helper function that creates a summary row view model for a single-scenario comparison view
+  function rowForViewWithScenario(view: ComparisonView, viewGroup: ComparisonViewGroup): ComparisonSummaryRowViewModel {
+    // Get the comparison test results for the scenario used in this view
+    const scenario = view.scenario
+    const groupSummary = groupsByScenario.allGroupSummaries.get(scenario.key)
+    let diffPercentByBucket: number[]
+    let changedGraphCount: number
+    if (view.graphOrder === 'grouped-by-diffs') {
+      // Use the graph differences (instead of the dataset differences) for the purposes of computing
+      // bucket colors for the bar
+      // TODO: We should save the result of this comparison; currently we do it once here,
+      // and then again when the detail view is shown
+      const testSummaries = groupSummary.group.testSummaries
+      const grouped = getGraphsGroupedByDiffs(comparisonConfig, undefined, scenario, testSummaries, view.graphIds)
+      diffPercentByBucket = grouped.diffPercentByBucket
+      changedGraphCount = grouped.nonZeroDiffCount
+    } else {
+      // Otherwise, use the dataset differences
+      // TODO: We should only look at datasets that appear in the specified graphs, not all datasets
+      diffPercentByBucket = groupSummary.scores?.diffPercentByBucket
+    }
+    return {
+      kind: 'views',
+      key: genViewKey(),
+      title: view.title,
+      subtitle: view.subtitle,
+      diffPercentByBucket,
+      groupSummary,
+      viewMetadata: {
+        viewGroup,
+        view,
+        changedGraphCount
+      }
+    }
+  }
+
+  // Helper function that creates a summary row view model for a comparison view with freeform rows
+  function rowForViewWithFreeformRows(
+    view: ComparisonView,
+    viewGroup: ComparisonViewGroup
+  ): ComparisonSummaryRowViewModel {
+    // Get the comparison test results for the boxes used in this view
+    const testSummariesForView: ComparisonTestSummary[] = []
+    for (const row of view.rows) {
+      for (const box of row.boxes) {
+        // TODO: For now we assume that we only show boxes that have a fully resolved dataset/scenario
+        // pairing.  If we change that assumption, this code may need to change to only include the
+        // results where both sides are valid/resolved.
+        const testSummary = allTestSummaries.find(s => s.d === box.dataset.key && s.s === box.scenario.key)
+        if (testSummary) {
+          testSummariesForView.push(testSummary)
+        }
+      }
+    }
+
+    // Determine the number of differences per bucket
+    const scoresForView = getScoresForTestSummaries(testSummariesForView, comparisonConfig.thresholds)
+    const diffPercentByBucket = scoresForView.diffPercentByBucket
+
+    return {
+      kind: 'views',
+      key: genViewKey(),
+      title: view.title,
+      subtitle: view.subtitle,
+      diffPercentByBucket,
+      viewMetadata: {
+        viewGroup,
+        view
+      }
+    }
+  }
+
+  // Create summary row view models for each comparison view
   let viewRowsWithDiffs = 0
   const viewGroupSections: ComparisonSummarySectionViewModel[] = []
   for (const viewGroup of comparisonConfig.viewGroups) {
-    const viewRows: ComparisonSummaryRowViewModel[] = viewGroup.views.map(view => {
-      switch (view.kind) {
-        case 'view': {
-          // Get the comparison test results for the scenario used in this view
-          const scenario = view.scenario
-          const groupSummary = groupsByScenario.allGroupSummaries.get(scenario.key)
-          let diffPercentByBucket: number[]
-          let changedGraphCount: number
-          if (view.graphOrder === 'grouped-by-diffs') {
-            // Use the graph differences (instead of the dataset differences) for the purposes of computing
-            // bucket colors for the bar
-            // TODO: We should save the result of this comparison; currently we do it once here,
-            // and then again when the detail view is shown
-            const testSummaries = groupSummary.group.testSummaries
-            const grouped = getGraphsGroupedByDiffs(comparisonConfig, undefined, scenario, testSummaries, view.graphIds)
-            diffPercentByBucket = grouped.diffPercentByBucket
-            changedGraphCount = grouped.nonZeroDiffCount
-          } else {
-            // Otherwise, use the dataset differences
-            // TODO: We should only look at datasets that appear in the specified graphs, not all datasets
-            diffPercentByBucket = groupSummary.scores?.diffPercentByBucket
-          }
-          if (hasSignificantDiffs(diffPercentByBucket)) {
-            // If the scenario has issues or has non-zero differences, treat it as a row with diffs
-            viewRowsWithDiffs++
-          }
-          return {
-            kind: 'views',
-            key: genViewKey(),
-            title: view.title,
-            subtitle: view.subtitle,
-            diffPercentByBucket,
-            groupSummary,
-            viewMetadata: {
-              viewGroup,
-              view,
-              changedGraphCount
-            }
-          }
-        }
-        case 'unresolved-view':
-          // TODO: Show proper error message here
-          viewRowsWithDiffs++
-          return {
-            kind: 'views',
-            key: genViewKey(),
-            title: 'Unresolved view'
-          }
-        default:
-          assertNever(view)
-      }
-    })
-
     const headerRow: ComparisonSummaryRowViewModel = {
       kind: 'views',
       title: viewGroup.title,
       header: true
     }
-
+    const viewRows: ComparisonSummaryRowViewModel[] = viewGroup.views.map(view => {
+      switch (view.kind) {
+        case 'view': {
+          let summaryRow: ComparisonSummaryRowViewModel
+          if (view.scenario) {
+            summaryRow = rowForViewWithScenario(view, viewGroup)
+          } else {
+            summaryRow = rowForViewWithFreeformRows(view, viewGroup)
+          }
+          if (hasSignificantDiffs(summaryRow.diffPercentByBucket)) {
+            // If the scenario has issues or has non-zero differences, treat it as a row with diffs
+            viewRowsWithDiffs++
+          }
+          return summaryRow
+        }
+        case 'unresolved-view':
+          // If the view is unresolved, treat it as a row with diffs
+          viewRowsWithDiffs++
+          // TODO: Show proper error message here
+          return {
+            kind: 'views',
+            key: genViewKey(),
+            title: 'Unresolved view',
+            viewMetadata: {
+              viewGroup,
+              view
+            }
+          }
+        default:
+          assertNever(view)
+      }
+    })
     viewGroupSections.push({
       header: headerRow,
       rows: viewRows

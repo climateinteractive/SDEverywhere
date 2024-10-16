@@ -97,6 +97,57 @@
           graph_order: grouped-by-diffs
 
 - view_group:
+    title: Freeform (views defined with a mix of datasets and scenarios)
+    views:
+      - view:
+          title: Calibration
+          rows:
+            - row:
+                title: Outputs X and Y
+                subtitle: with sliders at min
+                boxes:
+                  - box:
+                      title: Output X
+                      subtitle: with input 1 at min
+                      dataset:
+                        name: Output X
+                      scenario_ref: input_1_at_min
+                  - box:
+                      title: Output X
+                      subtitle: with input 2 at min
+                      dataset:
+                        name: Output X
+                      scenario_ref: input_2_at_min
+                  - box:
+                      title: Output Y
+                      subtitle: with input 1 at min
+                      dataset:
+                        name: Output Y
+                      scenario_ref: input_1_at_min
+                  - box:
+                      title: Output Y
+                      subtitle: with input 2 at min
+                      dataset:
+                        name: Output Y
+                      scenario_ref: input_2_at_min
+            - row:
+                title: Outputs X
+                subtitle: with sliders at max
+                boxes:
+                  - box:
+                      title: Output X
+                      subtitle: with input 1 at max
+                      dataset:
+                        name: Output X
+                      scenario_ref: input_1_at_max
+                  - box:
+                      title: Output X
+                      subtitle: with input 2 at max
+                      dataset:
+                        name: Output X
+                      scenario_ref: input_2_at_max
+
+- view_group:
     title: Extremes
     views:
       - view:

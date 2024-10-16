@@ -24,6 +24,24 @@ export default {
     },
 
     //
+    // DATASETS
+    //
+
+    dataset: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        name: {
+          type: 'string'
+        },
+        source: {
+          type: 'string'
+        }
+      },
+      required: ['name']
+    },
+
+    //
     // SCENARIOS
     //
 
@@ -346,6 +364,10 @@ export default {
     //
 
     view: {
+      oneOf: [{ $ref: '#/$defs/view_with_scenario' }, { $ref: '#/$defs/view_with_rows' }]
+    },
+
+    view_with_scenario: {
       type: 'object',
       additionalProperties: false,
       properties: {
@@ -365,7 +387,97 @@ export default {
           $ref: '#/$defs/view_graph_order'
         }
       },
-      required: ['scenario_ref', 'graphs']
+      required: ['scenario_ref']
+    },
+
+    view_with_rows: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        title: {
+          type: 'string'
+        },
+        subtitle: {
+          type: 'string'
+        },
+        rows: {
+          $ref: '#/$defs/view_rows_array'
+        }
+      },
+      required: ['title', 'rows']
+    },
+
+    view_rows_array: {
+      type: 'array',
+      items: {
+        $ref: '#/$defs/view_rows_array_item'
+      },
+      minItems: 1
+    },
+
+    view_rows_array_item: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        row: {
+          $ref: '#/$defs/view_row'
+        }
+      }
+    },
+
+    view_row: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        title: {
+          type: 'string'
+        },
+        subtitle: {
+          type: 'string'
+        },
+        boxes: {
+          $ref: '#/$defs/view_boxes_array'
+        }
+      },
+      required: ['title', 'boxes']
+    },
+
+    view_boxes_array: {
+      type: 'array',
+      items: {
+        $ref: '#/$defs/view_boxes_array_item'
+      },
+      minItems: 1
+    },
+
+    view_boxes_array_item: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        box: {
+          $ref: '#/$defs/view_box'
+        }
+      }
+    },
+
+    view_box: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        title: {
+          type: 'string'
+        },
+        subtitle: {
+          type: 'string'
+        },
+        dataset: {
+          $ref: '#/$defs/dataset'
+        },
+        scenario_ref: {
+          $ref: '#/$defs/scenario_ref_id'
+        }
+      },
+      required: ['title', 'dataset', 'scenario_ref']
     },
 
     view_graphs: {

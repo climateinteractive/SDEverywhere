@@ -4,6 +4,7 @@ import type {
   DatasetKey,
   ComparisonScenarioKey,
   ComparisonGroupSummary,
+  ComparisonUnresolvedView,
   ComparisonView,
   ComparisonViewGroup
 } from '@sdeverywhere/check-core'
@@ -17,7 +18,7 @@ export interface ComparisonSummaryRowViewMetadata {
   /** The view group that the view belongs to. */
   viewGroup: ComparisonViewGroup
   /** The metadata for the view. */
-  view: ComparisonView
+  view: ComparisonView | ComparisonUnresolvedView
   /** The number of changed graphs, if this is an "all graphs" row. */
   changedGraphCount?: number
 }

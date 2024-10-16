@@ -108,7 +108,8 @@ export function createSummaryViewModel(
         // TODO: We may end up counting the same graph here multiple times if there are multiple
         // views that use "grouped-by-diffs" mode and display the same subset of graphs in each.
         // Ideally we would get the number of unique graphs with changes here instead.
-        if (row.viewMetadata?.view.graphOrder === 'grouped-by-diffs') {
+        const view = row.viewMetadata?.view
+        if (view?.kind === 'view' && view.graphOrder === 'grouped-by-diffs') {
           changedGraphCount += row?.viewMetadata?.changedGraphCount || 0
         }
       }

@@ -1,5 +1,7 @@
 // Copyright (c) 2021-2022 Climate Interactive / New Venture Fund
 
+import assertNever from 'assert-never'
+
 import { derived, type Readable } from 'svelte/store'
 
 import type {
@@ -15,7 +17,7 @@ import { ContextGraphViewModel } from '../../graphs/context-graph-vm'
 
 import type { PinnedItemKey } from '../_shared/pinned-item-state'
 
-import { CompareDetailBoxViewModel, type AxisRange } from './compare-detail-box-vm'
+import { CompareDetailBoxViewModel, type AxisRange, type CompareDetailBoxKind } from './compare-detail-box-vm'
 import type { ComparisonDetailItem } from './compare-detail-item'
 
 export interface CompareDetailContextGraphRowViewModel {
@@ -23,8 +25,10 @@ export interface CompareDetailContextGraphRowViewModel {
   graphR: ContextGraphViewModel
 }
 
+export type CompareDetailRowKind = 'scenarios' | 'datasets' | 'freeform'
+
 export interface CompareDetailRowViewModel {
-  kind: 'scenarios' | 'datasets'
+  kind: CompareDetailRowKind
   title?: string
   subtitle?: string
   showTitle: boolean
@@ -37,7 +41,7 @@ export function createCompareDetailRowViewModel(
   comparisonConfig: ComparisonConfig,
   dataCoordinator: ComparisonDataCoordinator,
   userPrefs: UserPrefs,
-  kind: 'scenarios' | 'datasets',
+  kind: CompareDetailRowKind,
   title: string | undefined,
   subtitle: string | undefined,
   items: ComparisonDetailItem[]
@@ -52,23 +56,54 @@ export function createCompareDetailRowViewModel(
       continue
     }
 
-    // TODO
-    const boxTitle = kind === 'scenarios' ? `…${item.subtitle}` : item.title
+    // Determine which title/subtitle to show above the box based on the row kind
+    let boxTitle: string
+    let boxSubtitle: string
+    switch (kind) {
+      case 'scenarios':
+        boxTitle = `…${item.subtitle}`
+        break
+      case 'datasets':
+        boxTitle = item.title
+        break
+      case 'freeform':
+        boxTitle = item.title
+        boxSubtitle = item.subtitle
+        break
+      default:
+        assertNever(kind)
+    }
 
-    // The pinned item key is either the scenario key or the dataset key
+    // Determine which key to use as the pinned item key
+    let boxKind: CompareDetailBoxKind
     let pinnedItemKey: PinnedItemKey
-    if (kind === 'scenarios') {
-      pinnedItemKey = item.scenario.key
-    } else {
-      pinnedItemKey = item.testSummary.d
+    switch (kind) {
+      case 'scenarios':
+        boxKind = 'scenario'
+        pinnedItemKey = item.scenario.key
+        break
+      case 'datasets':
+        boxKind = 'dataset'
+        pinnedItemKey = item.testSummary.d
+        break
+      case 'freeform':
+        // Note that boxes in freeform rows can't currently be pinned (because there's
+        // not as much of a use case for this, so we only create the `pinnedItemKey`
+        // here for the purposes of building a `pinnedItemKey` for the whole row)
+        boxKind = 'freeform'
+        pinnedItemKey = `${item.scenario.key}::${item.testSummary.d}`
+        break
+      default:
+        assertNever(kind)
     }
 
     boxes.push(
       new CompareDetailBoxViewModel(
         comparisonConfig,
         dataCoordinator,
+        boxKind,
         boxTitle,
-        undefined, //item.subtitle,
+        boxSubtitle,
         item.scenario,
         item.testSummary.d,
         pinnedItemKey
@@ -123,7 +158,7 @@ export function createCompareDetailRowViewModel(
     kind,
     title,
     subtitle,
-    showTitle: kind === 'scenarios',
+    showTitle: kind !== 'datasets',
     items,
     boxes,
     pinnedItemKey
