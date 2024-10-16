@@ -1,6 +1,6 @@
 {
   "name": "@sdeverywhere/plugin-check",
-  "version": "0.3.10",
+  "version": "0.3.11",
   "files": [
     "bin/**",
     "dist/**",
@@ -40,7 +40,7 @@
     "@rollup/plugin-node-resolve": "^13.3.0",
     "@rollup/plugin-replace": "^5.0.2",
     "@sdeverywhere/check-core": "^0.1.3",
-    "@sdeverywhere/check-ui-shell": "^0.2.6",
+    "@sdeverywhere/check-ui-shell": "^0.2.7",
     "@sdeverywhere/runtime": "^0.2.5",
     "@sdeverywhere/runtime-async": "^0.2.5",
     "assert-never": "^1.2.1",

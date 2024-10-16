@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.7](https://github.com/climateinteractive/SDEverywhere/compare/check-ui-shell-v0.2.6...check-ui-shell-v0.2.7) (2024-10-16)
+
+
+### Bug Fixes
+
+* correct the calculation of the number of rows with differences for a summary tab ([#555](https://github.com/climateinteractive/SDEverywhere/issues/555)) ([dda4d69](https://github.com/climateinteractive/SDEverywhere/commit/dda4d690d7cc2e5b20f4fffd5cdd31d1c4f9bd73)), closes [#554](https://github.com/climateinteractive/SDEverywhere/issues/554)
+
 ## [0.2.6](https://github.com/climateinteractive/SDEverywhere/compare/check-ui-shell-v0.2.5...check-ui-shell-v0.2.6) (2024-10-16)
 
 
