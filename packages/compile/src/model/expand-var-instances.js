@@ -5,7 +5,7 @@ import { isDimension, sub } from '../_shared/subscript.js'
  * A single instance of a variable.
  * @typedef {Object} VarInstance
  * @property {string} varName The full name of the variable instance, e.g., "Variable Name[SubA, SubB]".
- * @property {number[]} [subIndices] The array of subscript indices; only defined if this variable
+ * @property {number[]} [subscriptIndices] The array of subscript indices; only defined if this variable
  * has subscripts.
  */
 
@@ -61,7 +61,7 @@ function expandDims(baseVarName, subOrDimIds) {
     const subIndices = combo.map(spec => spec.index)
     return {
       varName: `${baseVarName}[${subNames}]`,
-      subIndices
+      subscriptIndices: subIndices
     }
   })
 }

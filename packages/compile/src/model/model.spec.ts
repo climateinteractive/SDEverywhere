@@ -445,84 +445,84 @@ describe('Model', () => {
               varName: 'e[A1]',
               varType: 'const',
               varIndex: 5,
-              subIndices: [0]
+              subscriptIndices: [0]
             },
             {
               varId: '_e[_a2]',
               varName: 'e[A2]',
               varType: 'const',
               varIndex: 5,
-              subIndices: [1]
+              subscriptIndices: [1]
             },
             {
               varId: '_f[_a1]',
               varName: 'f[A1]',
               varType: 'const',
               varIndex: 6,
-              subIndices: [0]
+              subscriptIndices: [0]
             },
             {
               varId: '_f[_a2]',
               varName: 'f[A2]',
               varType: 'const',
               varIndex: 6,
-              subIndices: [1]
+              subscriptIndices: [1]
             },
             {
               varId: '_g[_a1,_b1]',
               varName: 'g[A1,B1]',
               varType: 'const',
               varIndex: 7,
-              subIndices: [0, 0]
+              subscriptIndices: [0, 0]
             },
             {
               varId: '_g[_a1,_b2]',
               varName: 'g[A1,B2]',
               varType: 'const',
               varIndex: 7,
-              subIndices: [0, 1]
+              subscriptIndices: [0, 1]
             },
             {
               varId: '_g[_a2,_b1]',
               varName: 'g[A2,B1]',
               varType: 'const',
               varIndex: 7,
-              subIndices: [1, 0]
+              subscriptIndices: [1, 0]
             },
             {
               varId: '_g[_a2,_b2]',
               varName: 'g[A2,B2]',
               varType: 'const',
               varIndex: 7,
-              subIndices: [1, 1]
+              subscriptIndices: [1, 1]
             },
             {
               varId: '_h[_a1,_b1]',
               varName: 'h[A1,B1]',
               varType: 'const',
               varIndex: 8,
-              subIndices: [0, 0]
+              subscriptIndices: [0, 0]
             },
             {
               varId: '_h[_a1,_b2]',
               varName: 'h[A1,B2]',
               varType: 'const',
               varIndex: 8,
-              subIndices: [0, 1]
+              subscriptIndices: [0, 1]
             },
             {
               varId: '_h[_a2,_b1]',
               varName: 'h[A2,B1]',
               varType: 'const',
               varIndex: 8,
-              subIndices: [1, 0]
+              subscriptIndices: [1, 0]
             },
             {
               varId: '_h[_a2,_b2]',
               varName: 'h[A2,B2]',
               varType: 'const',
               varIndex: 8,
-              subIndices: [1, 1]
+              subscriptIndices: [1, 1]
             },
             {
               varId: '_input',
@@ -551,42 +551,42 @@ describe('Model', () => {
               varName: 'a data[A1]',
               varType: 'data',
               varIndex: 12,
-              subIndices: [0]
+              subscriptIndices: [0]
             },
             {
               varId: '_a_data[_a2]',
               varName: 'a data[A2]',
               varType: 'data',
               varIndex: 12,
-              subIndices: [1]
+              subscriptIndices: [1]
             },
             {
               varId: '_b_data[_a1,_b1]',
               varName: 'b data[A1,B1]',
               varType: 'data',
               varIndex: 13,
-              subIndices: [0, 0]
+              subscriptIndices: [0, 0]
             },
             {
               varId: '_b_data[_a1,_b2]',
               varName: 'b data[A1,B2]',
               varType: 'data',
               varIndex: 13,
-              subIndices: [0, 1]
+              subscriptIndices: [0, 1]
             },
             {
               varId: '_b_data[_a2,_b1]',
               varName: 'b data[A2,B1]',
               varType: 'data',
               varIndex: 13,
-              subIndices: [1, 0]
+              subscriptIndices: [1, 0]
             },
             {
               varId: '_b_data[_a2,_b2]',
               varName: 'b data[A2,B2]',
               varType: 'data',
               varIndex: 13,
-              subIndices: [1, 1]
+              subscriptIndices: [1, 1]
             },
             {
               varId: '_c_data',
@@ -635,42 +635,42 @@ describe('Model', () => {
               varName: 'a[A1]',
               varType: 'aux',
               varIndex: 19,
-              subIndices: [0]
+              subscriptIndices: [0]
             },
             {
               varId: '_a[_a2]',
               varName: 'a[A2]',
               varType: 'aux',
               varIndex: 19,
-              subIndices: [1]
+              subscriptIndices: [1]
             },
             {
               varId: '_b[_a1,_b1]',
               varName: 'b[A1,B1]',
               varType: 'aux',
               varIndex: 20,
-              subIndices: [0, 0]
+              subscriptIndices: [0, 0]
             },
             {
               varId: '_b[_a1,_b2]',
               varName: 'b[A1,B2]',
               varType: 'aux',
               varIndex: 20,
-              subIndices: [0, 1]
+              subscriptIndices: [0, 1]
             },
             {
               varId: '_b[_a2,_b1]',
               varName: 'b[A2,B1]',
               varType: 'aux',
               varIndex: 20,
-              subIndices: [1, 0]
+              subscriptIndices: [1, 0]
             },
             {
               varId: '_b[_a2,_b2]',
               varName: 'b[A2,B2]',
               varType: 'aux',
               varIndex: 20,
-              subIndices: [1, 1]
+              subscriptIndices: [1, 1]
             },
             {
               varId: '_c',

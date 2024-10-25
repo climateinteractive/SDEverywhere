@@ -1207,7 +1207,7 @@ function jsonList() {
   //   varName (e.g., 'Variable Name')
   //   varType ('const', 'data', 'lookup', 'initial', 'level', 'aux')
   //   varIndex
-  //   subIndices
+  //   subscriptIndices
   //
   // The order of execution/evaluation in the generated model is:
   //   initConstants (vars of type `const` only, called for t=0 only)
@@ -1228,7 +1228,7 @@ function jsonList() {
       }
 
       const varInstances = expandVar(v)
-      for (const { varName, subIndices } of varInstances) {
+      for (const { varName, subscriptIndices } of varInstances) {
         const varId = canonicalVensimName(varName)
         const varItem = {
           varId,
@@ -1238,8 +1238,8 @@ function jsonList() {
         const varInfo = infoMap.get(v.varName)
         if (varInfo) {
           varItem.varIndex = varInfo.varIndex
-          if (subIndices?.length > 0) {
-            varItem.subIndices = subIndices
+          if (subscriptIndices?.length > 0) {
+            varItem.subscriptIndices = subscriptIndices
           }
         }
         expandedVars.push(varItem)

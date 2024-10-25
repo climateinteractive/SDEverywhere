@@ -23,10 +23,10 @@ function readInlineModel(mdlContent: string) {
   return Model.variables
 }
 
-const instance = (varName: string, subIndices?: number[]) => {
+const instance = (varName: string, subscriptIndices?: number[]) => {
   return {
     varName,
-    subIndices
+    subscriptIndices
   }
 }
 
