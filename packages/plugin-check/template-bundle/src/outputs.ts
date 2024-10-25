@@ -22,6 +22,7 @@ export function getOutputVars(outputSpecs: OutputSpec[]): Map<DatasetKey, Output
     const varId = outputSpec.varId
     const datasetKey = datasetKeyForOutputVar(undefined, varId)
     outputVars.set(datasetKey, {
+      datasetKey,
       sourceName: undefined,
       varId,
       varName: outputSpec.varName
