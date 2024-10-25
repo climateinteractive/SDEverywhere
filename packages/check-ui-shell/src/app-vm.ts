@@ -253,13 +253,13 @@ export class AppViewModel {
     return createPerfViewModel(this.appModel.config)
   }
 
-  createFreeformViewModel(): FreeformViewModel {
-    if (this.appModel.config.comparison === undefined) {
-      // TODO: Error message
-      return
-    }
-    return createFreeformViewModel(this.appModel.config.comparison, this.appModel.comparisonDataCoordinator)
-  }
+  // createFreeformViewModel(): FreeformViewModel {
+  //   if (this.appModel.config.comparison === undefined) {
+  //     // TODO: Error message
+  //     return
+  //   }
+  //   return createFreeformViewModel(this.appModel.config.comparison, this.appModel.comparisonDataCoordinator)
+  // }
 
   createTraceViewModel(): TraceViewModel {
     return createTraceViewModel(this.appModel.config)
