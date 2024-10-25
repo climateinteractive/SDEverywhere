@@ -28,6 +28,7 @@ export class TraceRunner {
   public onError?: (error: Error) => void
 
   constructor(public readonly bundleModelL: BundleModel, public readonly bundleModelR: BundleModel) {
+    // TODO: Allow for creating a TraceRunner instance with a specific scenario
     const scenarioSpec = allInputsAtPositionSpec('at-default')
 
     this.taskQueue = new TaskQueue({
