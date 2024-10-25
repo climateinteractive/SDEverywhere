@@ -82,7 +82,8 @@ export * from './comparison/config/comparison-spec-types'
 export type {
   ComparisonConfig,
   ComparisonDatasetOptions,
-  ComparisonOptions
+  ComparisonOptions,
+  ComparisonPlot
 } from './comparison/config/comparison-config'
 export type { ComparisonScenarios } from './comparison/config/comparison-scenarios'
 export type { ComparisonDatasets } from './comparison/config/comparison-datasets'
@@ -98,6 +99,7 @@ export * from './comparison/report/comparison-report-types'
 export { comparisonSummaryFromReport } from './comparison/report/comparison-reporting'
 
 export * from './comparison/report/comparison-group-types'
+export * from './comparison/report/comparison-group-scores'
 export { categorizeComparisonTestSummaries } from './comparison/report/comparison-grouping'
 
 //

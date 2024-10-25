@@ -3,10 +3,10 @@
 import { describe, expect, it } from 'vitest'
 
 import { inputAtPositionSpec as atPosSpec, inputAtValueSpec as atValSpec } from '../../../_shared/scenario-specs'
-import type { VarId } from '../../../_shared/types'
-import type { InputAliasName, ModelSpec } from '../../../bundle/bundle-types'
+import type { DatasetKey, VarId } from '../../../_shared/types'
+import type { BundleGraphId, BundleGraphSpec, InputAliasName, ModelSpec } from '../../../bundle/bundle-types'
 import { ModelInputs } from '../../../bundle/model-inputs'
-import type { InputId, InputVar } from '../../../bundle/var-types'
+import type { InputId, InputVar, OutputVar } from '../../../bundle/var-types'
 
 import type { ComparisonSpecs } from '../comparison-spec-types'
 
@@ -19,19 +19,26 @@ import type {
 
 import {
   allAtPos,
+  dataset,
   inputVar,
+  outputVar,
   scenarioGroup,
   scenarioWithInput,
   scenarioWithInputs,
   unresolvedScenarioRef,
   unresolvedViewForScenarioGroupId,
   unresolvedViewForScenarioId,
-  view,
-  viewGroup
+  viewBox,
+  viewGroup,
+  viewRow,
+  viewWithRows,
+  viewWithScenario
 } from '../../_shared/_mocks/mock-resolved-types'
 
 import {
-  comparisonSpecs,
+  datasetSpec,
+  graphGroupRefSpec,
+  graphGroupSpec,
   graphsArraySpec,
   graphsPresetSpec,
   inputAtPositionSpec,
@@ -43,16 +50,30 @@ import {
   scenarioWithAllInputsSpec,
   scenarioWithDistinctInputsSpec,
   scenarioWithInputsSpec,
+  viewBoxSpec,
   viewGroupWithScenariosSpec,
   viewGroupWithViewsSpec,
-  viewSpec
+  viewRowSpec,
+  viewWithRowsSpec,
+  viewWithScenarioSpec
 } from '../_mocks/mock-spec-types'
 
 import { resolveComparisonSpecs } from './comparison-resolver'
 
 function mockModelSpec(kind: 'L' | 'R'): ModelSpec {
   //
-  // VARIABLES
+  // OUTPUT VARIABLES
+  //
+  const outputVars: Map<VarId, OutputVar> = new Map()
+  function addOutputVar(varName: string, source?: string): void {
+    const [varId, oVar] = outputVar(varName, source)
+    outputVars.set(varId, oVar)
+  }
+  addOutputVar('Var X')
+  addOutputVar('Var Y')
+
+  //
+  // INPUT VARIABLES
   // L             R
   // id=1 IVarA    id=1 IVarA
   // id=2 IVarB    id=2 IVarB_Renamed
@@ -66,20 +87,19 @@ function mockModelSpec(kind: 'L' | 'R'): ModelSpec {
   // S3 -> IVarC   S3 -> IVarD
   //
   const inputVars: Map<VarId, InputVar> = new Map()
-  function addVar(inputId: InputId, varName: string, maxValue = 100): void {
+  function addInputVar(inputId: InputId, varName: string, maxValue = 100): void {
     const [varId, iVar] = inputVar(inputId, varName, maxValue)
-    // Add the variable
     inputVars.set(varId, iVar)
   }
-  addVar('1', 'IVarA')
+  addInputVar('1', 'IVarA')
   if (kind === 'L') {
-    addVar('2', 'IVarB', 100)
-    addVar('3', 'IVarC')
+    addInputVar('2', 'IVarB', 100)
+    addInputVar('3', 'IVarC')
   } else {
     // Use a different value for this input on the right side so that we can test
     // flagging of out-of-range values
-    addVar('2', 'IVarB_Renamed', 60)
-    addVar('4', 'IVarD')
+    addInputVar('2', 'IVarB_Renamed', 60)
+    addInputVar('4', 'IVarD')
   }
 
   // Add aliases by slider name
@@ -88,21 +108,39 @@ function mockModelSpec(kind: 'L' | 'R'): ModelSpec {
   inputAliases.set('S2', kind === 'L' ? '_ivarb' : '_ivarb_renamed')
   inputAliases.set('S3', kind === 'L' ? '_ivarc' : '_ivard')
 
+  // Add graphs
+  const graphSpecs: BundleGraphSpec[] = []
+  function addGraph(graphId: BundleGraphId): void {
+    graphSpecs.push({
+      id: graphId,
+      title: `Graph ${graphId}`,
+      datasets: [],
+      legendItems: [],
+      metadata: new Map()
+    })
+  }
+  addGraph('1')
+  addGraph('2')
+
   // TODO: Test input groups
 
   return {
     modelSizeInBytes: 0,
     dataSizeInBytes: 0,
     inputVars,
-    outputVars: new Map(),
+    outputVars,
     implVars: new Map(),
-    inputAliases
+    inputAliases,
+    graphSpecs
   }
 }
 
 describe('resolveComparisonSpecs', () => {
-  const modelInputsL = new ModelInputs(mockModelSpec('L'))
-  const modelInputsR = new ModelInputs(mockModelSpec('R'))
+  const modelSpecL = mockModelSpec('L')
+  const modelSpecR = mockModelSpec('R')
+
+  const modelInputsL = new ModelInputs(modelSpecL)
+  const modelInputsR = new ModelInputs(modelSpecR)
 
   const lVar = (name: string) => modelInputsL.getInputVarForName(name)
   const rVar = (name: string) => modelInputsR.getInputVarForName(name)
@@ -113,22 +151,24 @@ describe('resolveComparisonSpecs', () => {
 
   describe('with scenario specs', () => {
     it('should expand "with: input" at position specs', () => {
-      const specs = comparisonSpecs([
-        // Match by variable name
-        scenarioWithInputsSpec([inputAtPositionSpec('ivarA', 'default')]),
-        // Match by input ID
-        scenarioWithInputsSpec([inputAtPositionSpec('id 2', 'min')]),
-        // Match by alias (slider name)
-        scenarioWithInputsSpec([inputAtPositionSpec('s3', 'max')]),
-        // Error if name can only be resolved on left side
-        scenarioWithInputsSpec([inputAtPositionSpec('ivarB', 'min')]),
-        // Error if name can only be resolved on right side
-        scenarioWithInputsSpec([inputAtPositionSpec('ivarD', 'min')]),
-        // Error if name can't be resolved on either side
-        scenarioWithInputsSpec([inputAtPositionSpec('ivarX', 'min')])
-      ])
+      const specs: ComparisonSpecs = {
+        scenarios: [
+          // Match by variable name
+          scenarioWithInputsSpec([inputAtPositionSpec('ivarA', 'default')]),
+          // Match by input ID
+          scenarioWithInputsSpec([inputAtPositionSpec('id 2', 'min')]),
+          // Match by alias (slider name)
+          scenarioWithInputsSpec([inputAtPositionSpec('s3', 'max')]),
+          // Error if name can only be resolved on left side
+          scenarioWithInputsSpec([inputAtPositionSpec('ivarB', 'min')]),
+          // Error if name can only be resolved on right side
+          scenarioWithInputsSpec([inputAtPositionSpec('ivarD', 'min')]),
+          // Error if name can't be resolved on either side
+          scenarioWithInputsSpec([inputAtPositionSpec('ivarX', 'min')])
+        ]
+      }
 
-      const resolved = resolveComparisonSpecs(modelInputsL, modelInputsR, specs)
+      const resolved = resolveComparisonSpecs(modelSpecL, modelSpecR, specs)
       expect(resolved).toEqual({
         scenarios: [
           scenarioWithInput(
@@ -184,20 +224,22 @@ describe('resolveComparisonSpecs', () => {
     })
 
     it('should expand "with: input" at value specs', () => {
-      const specs = comparisonSpecs([
-        // Match by variable name
-        scenarioWithInputsSpec([inputAtValueSpec('ivarA', 20)]),
-        // Match by input ID
-        scenarioWithInputsSpec([inputAtValueSpec('id 2', 40)]),
-        // Match by alias (slider name)
-        scenarioWithInputsSpec([inputAtValueSpec('S3', 60)]),
-        // Error if value is out of range on both sides
-        scenarioWithInputsSpec([inputAtValueSpec('ivarA', 500)]),
-        // Error if value is out of range on one side
-        scenarioWithInputsSpec([inputAtValueSpec('id 2', 90)])
-      ])
+      const specs: ComparisonSpecs = {
+        scenarios: [
+          // Match by variable name
+          scenarioWithInputsSpec([inputAtValueSpec('ivarA', 20)]),
+          // Match by input ID
+          scenarioWithInputsSpec([inputAtValueSpec('id 2', 40)]),
+          // Match by alias (slider name)
+          scenarioWithInputsSpec([inputAtValueSpec('S3', 60)]),
+          // Error if value is out of range on both sides
+          scenarioWithInputsSpec([inputAtValueSpec('ivarA', 500)]),
+          // Error if value is out of range on one side
+          scenarioWithInputsSpec([inputAtValueSpec('id 2', 90)])
+        ]
+      }
 
-      const resolved = resolveComparisonSpecs(modelInputsL, modelInputsR, specs)
+      const resolved = resolveComparisonSpecs(modelSpecL, modelSpecR, specs)
       expect(resolved).toEqual({
         scenarios: [
           scenarioWithInput(
@@ -264,22 +306,24 @@ describe('resolveComparisonSpecs', () => {
         }
       }
 
-      const specs = comparisonSpecs([
-        // Match by variable name
-        scenarioWithDistinctInputsSpec([inputAtValueSpec('ivarA', 20)], [inputAtValueSpec('ivarA', 30)]),
-        // Match by input ID
-        scenarioWithDistinctInputsSpec([inputAtValueSpec('id 2', 40)], [inputAtValueSpec('id 2', 50)]),
-        // Match by alias (slider name)
-        scenarioWithDistinctInputsSpec([inputAtValueSpec('S3', 60)], [inputAtValueSpec('S3', 70)]),
-        // Error if input is not available on requested side
-        scenarioWithDistinctInputsSpec([inputAtValueSpec('ivarA', 20)], [inputAtValueSpec('unknown', 600)]),
-        // Error if value is out of range on both sides
-        scenarioWithDistinctInputsSpec([inputAtValueSpec('ivarA', 500)], [inputAtValueSpec('ivarA', 600)]),
-        // Error if value is out of range on one side
-        scenarioWithDistinctInputsSpec([inputAtValueSpec('id 2', 90)], [inputAtValueSpec('id 2', 600)])
-      ])
+      const specs: ComparisonSpecs = {
+        scenarios: [
+          // Match by variable name
+          scenarioWithDistinctInputsSpec([inputAtValueSpec('ivarA', 20)], [inputAtValueSpec('ivarA', 30)]),
+          // Match by input ID
+          scenarioWithDistinctInputsSpec([inputAtValueSpec('id 2', 40)], [inputAtValueSpec('id 2', 50)]),
+          // Match by alias (slider name)
+          scenarioWithDistinctInputsSpec([inputAtValueSpec('S3', 60)], [inputAtValueSpec('S3', 70)]),
+          // Error if input is not available on requested side
+          scenarioWithDistinctInputsSpec([inputAtValueSpec('ivarA', 20)], [inputAtValueSpec('unknown', 600)]),
+          // Error if value is out of range on both sides
+          scenarioWithDistinctInputsSpec([inputAtValueSpec('ivarA', 500)], [inputAtValueSpec('ivarA', 600)]),
+          // Error if value is out of range on one side
+          scenarioWithDistinctInputsSpec([inputAtValueSpec('id 2', 90)], [inputAtValueSpec('id 2', 600)])
+        ]
+      }
 
-      const resolved = resolveComparisonSpecs(modelInputsL, modelInputsR, specs)
+      const resolved = resolveComparisonSpecs(modelSpecL, modelSpecR, specs)
       expect(resolved).toEqual({
         scenarios: [
           scenarioWithInputs('1', [], atValSpec('_ivara', 20), atValSpec('_ivara', 30)),
@@ -335,13 +379,15 @@ describe('resolveComparisonSpecs', () => {
     // })
 
     it('should expand "with_inputs: all" at position specs', () => {
-      const specs = comparisonSpecs([
-        scenarioWithAllInputsSpec('default'),
-        scenarioWithAllInputsSpec('min'),
-        scenarioWithAllInputsSpec('max')
-      ])
+      const specs: ComparisonSpecs = {
+        scenarios: [
+          scenarioWithAllInputsSpec('default'),
+          scenarioWithAllInputsSpec('min'),
+          scenarioWithAllInputsSpec('max')
+        ]
+      }
 
-      const resolved = resolveComparisonSpecs(modelInputsL, modelInputsR, specs)
+      const resolved = resolveComparisonSpecs(modelSpecL, modelSpecR, specs)
       expect(resolved).toEqual({
         scenarios: [allAtPos('1', 'at-default'), allAtPos('2', 'at-minimum'), allAtPos('3', 'at-maximum')],
         scenarioGroups: [],
@@ -425,9 +471,11 @@ describe('resolveComparisonSpecs', () => {
         )
       }
 
-      const specs = comparisonSpecs([scenarioMatrixSpec()])
+      const specs: ComparisonSpecs = {
+        scenarios: [scenarioMatrixSpec()]
+      }
 
-      const resolved = resolveComparisonSpecs(modelInputsL, modelInputsR, specs)
+      const resolved = resolveComparisonSpecs(modelSpecL, modelSpecR, specs)
       expect(resolved).toEqual({
         scenarios: [
           allAtPos('1', 'at-default'),
@@ -452,15 +500,15 @@ describe('resolveComparisonSpecs', () => {
 
   describe('with scenario group specs', () => {
     it('should resolve a scenario group with valid scenarios and refs', () => {
-      const specs = comparisonSpecs(
-        [scenarioWithInputsSpec([inputAtPositionSpec('id 1', 'max')], { id: 'id_1_at_max' })],
-        [
+      const specs: ComparisonSpecs = {
+        scenarios: [scenarioWithInputsSpec([inputAtPositionSpec('id 1', 'max')], { id: 'id_1_at_max' })],
+        scenarioGroups: [
           scenarioGroupSpec('Group with two vars at max', [
             scenarioRefSpec('id_1_at_max'),
             scenarioWithInputsSpec([inputAtPositionSpec('id 2', 'max')])
           ])
         ]
-      )
+      }
 
       const expectedId1AtMax = scenarioWithInput(
         '1',
@@ -483,7 +531,7 @@ describe('resolveComparisonSpecs', () => {
         atPosSpec('_ivarb_renamed', 'at-maximum')
       )
 
-      const resolved = resolveComparisonSpecs(modelInputsL, modelInputsR, specs)
+      const resolved = resolveComparisonSpecs(modelSpecL, modelSpecR, specs)
       expect(resolved).toEqual({
         scenarios: [expectedId1AtMax, expectedId2AtMax],
         scenarioGroups: [scenarioGroup('Group with two vars at max', [expectedId1AtMax, expectedId2AtMax])],
@@ -492,10 +540,10 @@ describe('resolveComparisonSpecs', () => {
     })
 
     it('should resolve a scenario group that refers to an unknown scenario', () => {
-      const specs = comparisonSpecs(
-        [scenarioWithInputsSpec([inputAtPositionSpec('id 1', 'max')])],
-        [scenarioGroupSpec('Group with invalid ref', [scenarioRefSpec('unknown')])]
-      )
+      const specs: ComparisonSpecs = {
+        scenarios: [scenarioWithInputsSpec([inputAtPositionSpec('id 1', 'max')])],
+        scenarioGroups: [scenarioGroupSpec('Group with invalid ref', [scenarioRefSpec('unknown')])]
+      }
 
       const expectedId1AtMax = scenarioWithInput(
         '1',
@@ -507,7 +555,7 @@ describe('resolveComparisonSpecs', () => {
         atPosSpec('_ivara', 'at-maximum')
       )
 
-      const resolved = resolveComparisonSpecs(modelInputsL, modelInputsR, specs)
+      const resolved = resolveComparisonSpecs(modelSpecL, modelSpecR, specs)
       expect(resolved).toEqual({
         scenarios: [expectedId1AtMax],
         scenarioGroups: [scenarioGroup('Group with invalid ref', [unresolvedScenarioRef('unknown')])],
@@ -536,32 +584,48 @@ describe('resolveComparisonSpecs', () => {
             scenarioWithInputsSpec([inputAtPositionSpec('id 2', 'max')], { id: 'id_2_at_max' })
           ])
         ],
+        graphGroups: [graphGroupSpec('GG1', ['1', '2'])],
         viewGroups: [
           viewGroupWithViewsSpec('View group 1', [
-            viewSpec('View with all graphs', undefined, 'id_1_at_max', graphsPresetSpec('all'))
+            viewWithScenarioSpec(
+              'View with all graphs',
+              undefined,
+              'id_1_at_max',
+              graphsPresetSpec('all'),
+              'grouped-by-diffs'
+            )
           ]),
           viewGroupWithViewsSpec('View group 2', [
-            viewSpec(
+            viewWithScenarioSpec(
               // This view has an explicit title and subtitle
               'View with specific graphs',
               undefined,
               'id_1_at_max',
-              graphsArraySpec(['1', '2'])
+              graphGroupRefSpec('GG1'),
+              'grouped-by-diffs'
             ),
-            viewSpec(
+            viewWithScenarioSpec(
               // This view has no explicit title/subtitle, so it should be inferred from the scenario title/subtitle (which are defined)
               undefined,
               undefined,
               'id_1_at_max',
               graphsArraySpec(['1', '2'])
             ),
-            viewSpec(
+            viewWithScenarioSpec(
               // This view has no explicit title and its scenario title is also undefined, so it should resolve to "Untitled view"
               undefined,
               undefined,
               'id_2_at_max',
               graphsArraySpec(['1', '2'])
             )
+          ]),
+          viewGroupWithViewsSpec('View group 3', [
+            viewWithRowsSpec('View with rows', 'Subtitle', [
+              viewRowSpec('Row 1', 'Subtitle goes here', [
+                viewBoxSpec('Var X', 'with Slider 1 at max', datasetSpec('Var X'), 'id_1_at_max'),
+                viewBoxSpec('Var Y', 'with Slider 2 at max', datasetSpec('Var Y'), 'id_2_at_max')
+              ])
+            ])
           ])
         ]
       }
@@ -594,16 +658,33 @@ describe('resolveComparisonSpecs', () => {
         }
       )
 
-      const resolved = resolveComparisonSpecs(modelInputsL, modelInputsR, specs)
+      const outVar = (modelSpec: ModelSpec, datasetKey: DatasetKey) => {
+        return modelSpec.outputVars.get(datasetKey)
+      }
+      const expectedOutVar = (datasetKey: DatasetKey) => {
+        return dataset(datasetKey, outVar(modelSpecL, datasetKey), outVar(modelSpecR, datasetKey))
+      }
+
+      const resolved = resolveComparisonSpecs(modelSpecL, modelSpecR, specs)
       expect(resolved).toEqual({
         scenarios: [expectedId1AtMax, expectedId2AtMax],
         scenarioGroups: [scenarioGroup('Group with two vars at max', [expectedId1AtMax, expectedId2AtMax])],
         viewGroups: [
-          viewGroup('View group 1', [view('View with all graphs', undefined, expectedId1AtMax, 'all')]),
+          viewGroup('View group 1', [
+            viewWithScenario('View with all graphs', undefined, expectedId1AtMax, ['1', '2'], 'grouped-by-diffs')
+          ]),
           viewGroup('View group 2', [
-            view('View with specific graphs', undefined, expectedId1AtMax, ['1', '2']),
-            view('input id 1', 'at max', expectedId1AtMax, ['1', '2']),
-            view('Untitled view', undefined, expectedId2AtMax, ['1', '2'])
+            viewWithScenario('View with specific graphs', undefined, expectedId1AtMax, ['1', '2'], 'grouped-by-diffs'),
+            viewWithScenario('input id 1', 'at max', expectedId1AtMax, ['1', '2']),
+            viewWithScenario('Untitled view', undefined, expectedId2AtMax, ['1', '2'])
+          ]),
+          viewGroup('View group 3', [
+            viewWithRows('View with rows', 'Subtitle', [
+              viewRow('Row 1', 'Subtitle goes here', [
+                viewBox('Var X', 'with Slider 1 at max', expectedOutVar('Model__var_x'), expectedId1AtMax),
+                viewBox('Var Y', 'with Slider 2 at max', expectedOutVar('Model__var_y'), expectedId2AtMax)
+              ])
+            ])
           ])
         ]
       })
@@ -657,7 +738,8 @@ describe('resolveComparisonSpecs', () => {
                 'id 1 at min subtitle override from view group'
               )
             ],
-            graphsPresetSpec('all')
+            graphsPresetSpec('all'),
+            'grouped-by-diffs'
           ),
           viewGroupWithScenariosSpec('View group 2', [scenarioGroupRefSpec('group_1')], graphsArraySpec(['1', '2']))
         ]
@@ -706,7 +788,7 @@ describe('resolveComparisonSpecs', () => {
         }
       )
 
-      const resolved = resolveComparisonSpecs(modelInputsL, modelInputsR, specs)
+      const resolved = resolveComparisonSpecs(modelSpecL, modelSpecR, specs)
       expect(resolved.scenarios).toEqual([expectedId1AtMax, expectedId1AtMin, expectedId2AtMax])
       expect(resolved.scenarioGroups).toEqual([
         scenarioGroup('Group', [expectedId1AtMax, expectedId1AtMinWithScenarioGroupOverride, expectedId2AtMax], {
@@ -715,28 +797,30 @@ describe('resolveComparisonSpecs', () => {
       ])
       expect(resolved.viewGroups).toEqual([
         viewGroup('View group 1', [
-          view(
+          viewWithScenario(
             'id 1 at max title override from view group',
             'id 1 at max subtitle override from view group',
             expectedId1AtMax,
-            'all'
+            ['1', '2'],
+            'grouped-by-diffs'
           ),
-          view(
+          viewWithScenario(
             'id 1 at min title override from view group',
             'id 1 at min subtitle override from view group',
             expectedId1AtMin,
-            'all'
+            ['1', '2'],
+            'grouped-by-diffs'
           )
         ]),
         viewGroup('View group 2', [
-          view('id 1 at max default title', 'id 1 at max default subtitle', expectedId1AtMax, ['1', '2']),
-          view(
+          viewWithScenario('id 1 at max default title', 'id 1 at max default subtitle', expectedId1AtMax, ['1', '2']),
+          viewWithScenario(
             'id 1 at min title override from scenario group',
             'id 1 at min subtitle override from scenario group',
             expectedId1AtMinWithScenarioGroupOverride,
             ['1', '2']
           ),
-          view('input id 2', 'at max', expectedId2AtMax, ['1', '2'])
+          viewWithScenario('input id 2', 'at max', expectedId2AtMax, ['1', '2'])
         ])
       ])
     })
@@ -750,7 +834,7 @@ describe('resolveComparisonSpecs', () => {
         ]
       }
 
-      const resolved = resolveComparisonSpecs(modelInputsL, modelInputsR, specs)
+      const resolved = resolveComparisonSpecs(modelSpecL, modelSpecR, specs)
       expect(resolved).toEqual({
         scenarios: [],
         scenarioGroups: [],
@@ -767,7 +851,7 @@ describe('resolveComparisonSpecs', () => {
         ]
       }
 
-      const resolved = resolveComparisonSpecs(modelInputsL, modelInputsR, specs)
+      const resolved = resolveComparisonSpecs(modelSpecL, modelSpecR, specs)
       expect(resolved).toEqual({
         scenarios: [],
         scenarioGroups: [],
@@ -792,7 +876,7 @@ describe('resolveComparisonSpecs', () => {
         ]
       }
 
-      const resolved = resolveComparisonSpecs(modelInputsL, modelInputsR, specs)
+      const resolved = resolveComparisonSpecs(modelSpecL, modelSpecR, specs)
       expect(resolved).toEqual({
         scenarios: [],
         scenarioGroups: [

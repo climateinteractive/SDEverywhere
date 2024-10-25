@@ -56,7 +56,20 @@ export function getConfigOptions(bundleL: Bundle, bundleR: Bundle, opts?: Config
       thresholds: [1, 5, 10],
       specs: comparisonSpecs,
       datasets: {
-        renamedDatasetKeys
+        renamedDatasetKeys,
+        referencePlotsForDataset: (dataset, scenario) => {
+          if (dataset.key === 'Model__output_x' && scenario.title.startsWith('Input A')) {
+            return [
+              {
+                datasetKey: 'StaticData__static_s',
+                color: 'orange',
+                style: 'dashed',
+                lineWidth: 2
+              }
+            ]
+          }
+          return []
+        }
       }
     }
   }

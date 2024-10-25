@@ -73,6 +73,10 @@ td
 
 .name
   padding-right: 3rem
+  max-width: 20rem
+  white-space: nowrap
+  overflow: hidden
+  text-overflow: ellipsis
 
 :global(.row-header)
   color: #aaa
@@ -99,7 +103,7 @@ td
   font-size: .8em
 
 .plot
-  width: 20rem
+  width: 12rem
   padding-left: 2rem
   padding-right: 2rem
   cursor: pointer

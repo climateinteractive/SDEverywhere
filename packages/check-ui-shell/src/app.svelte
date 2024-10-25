@@ -23,6 +23,7 @@ import type { AppViewModel } from './app-vm'
 export let viewModel: AppViewModel
 const checksInProgress = viewModel.checksInProgress
 const progress = viewModel.progress
+const zoom = viewModel.headerViewModel.zoom
 
 let compareDetailViewModel: CompareDetailViewModel
 let perfViewModel: PerfViewModel
@@ -31,6 +32,8 @@ let traceViewModel: TraceViewModel
 
 type ViewMode = 'summary' | 'comparison-detail' | 'perf' | 'freeform' | 'trace'
 let viewMode: ViewMode = 'summary'
+
+$: appStyle = `--graph-zoom: ${$zoom}`
 
 // Under normal circumstances, the font face used in graphs might not be fully
 // loaded by the browser before one or more graphs are rendered for the first time,
@@ -54,13 +57,17 @@ $: if (graphFontReady) {
   viewModel.runTestSuite()
 }
 
+function showSummary(): void {
+  compareDetailViewModel = undefined
+  viewMode = 'summary'
+}
+
 function onCommand(event: CustomEvent) {
   const cmdObj = event.detail
   const cmd = cmdObj.cmd
   switch (cmd) {
     case 'show-summary':
-      compareDetailViewModel = undefined
-      viewMode = 'summary'
+      showSummary()
       break
     case 'enter-tab':
       if (cmdObj.itemId !== 'checks') {
@@ -78,18 +85,27 @@ function onCommand(event: CustomEvent) {
           default:
             return
         }
-        compareDetailViewModel = viewModel.createCompareDetailViewModelForSummaryRowIndex(kind, 0)
-        viewMode = 'comparison-detail'
+        const first = viewModel.createCompareDetailViewModelForFirstSummaryRow(kind)
+        if (first) {
+          compareDetailViewModel = first
+          viewMode = 'comparison-detail'
+        }
       }
       break
     case 'show-comparison-detail':
       compareDetailViewModel = viewModel.createCompareDetailViewModelForSummaryRow(cmdObj.summaryRow)
       viewMode = 'comparison-detail'
       break
-    case 'show-comparison-detail-at-index':
-      compareDetailViewModel = viewModel.createCompareDetailViewModelForSummaryRowIndex(cmdObj.kind, cmdObj.index)
-      viewMode = 'comparison-detail'
+    case 'show-comparison-detail-for-previous':
+    case 'show-comparison-detail-for-next': {
+      const delta = cmd === 'show-comparison-detail-for-previous' ? -1 : +1
+      const adjacent = viewModel.createCompareDetailViewModelForSummaryRowWithDelta(cmdObj.kind, cmdObj.summaryRowKey, delta)
+      if (adjacent) {
+        compareDetailViewModel = adjacent
+        viewMode = 'comparison-detail'
+      }
       break
+    }
     case 'show-perf':
       if (!perfViewModel) {
         perfViewModel = viewModel.createPerfViewModel()
@@ -103,21 +119,33 @@ function onCommand(event: CustomEvent) {
 }
 
 function onKeyDown(event: KeyboardEvent) {
+  // Ignore events when there is a modifier key involved
+  if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey || event.isComposing) {
+    return
+  }
+
   switch (event.key) {
-    case 'f':
-      if (!freeformViewModel) {
-        freeformViewModel = viewModel.createFreeformViewModel()
-      }
-      viewMode = 'freeform'
+    case 'c':
+      viewModel.headerViewModel.controlsVisible.update(v => !v)
       event.preventDefault()
       break
+    case 'h':
+      showSummary()
+      event.preventDefault()
+      break
+    // case 'f':
+    //   if (!freeformViewModel) {
+    //     freeformViewModel = viewModel.createFreeformViewModel()
+    //   }
+    //   viewMode = 'freeform'
+    //   event.preventDefault()
+    //   break
     case 't':
       if (!traceViewModel) {
         traceViewModel = viewModel.createTraceViewModel()
       }
       viewMode = 'trace'
       event.preventDefault()
-      break
     default:
       break
   }
@@ -136,7 +164,7 @@ svelte:window(on:keydown!='{onKeyDown}')
 +await('viewReady')
   .loading-container
   +then('ignored')
-    .app-container
+    .app-container(style!='{appStyle}')
       Header(on:command!='{onCommand}' viewModel!='{viewModel.headerViewModel}')
       +if('$checksInProgress')
         .progress-container

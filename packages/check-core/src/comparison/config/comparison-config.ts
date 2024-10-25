@@ -1,10 +1,9 @@
 // Copyright (c) 2021-2022 Climate Interactive / New Venture Fund
 
 import type { DatasetKey } from '../../_shared/types'
-import type { LoadedBundle, NamedBundle } from '../../bundle/bundle-types'
-import type { ModelInputs } from '../../bundle/model-inputs'
+import type { BundleGraphId, LoadedBundle, ModelSpec, NamedBundle } from '../../bundle/bundle-types'
 
-import type { ComparisonScenario, ComparisonViewGroup } from '../_shared/comparison-resolved-types'
+import type { ComparisonDataset, ComparisonScenario, ComparisonViewGroup } from '../_shared/comparison-resolved-types'
 
 import type { ComparisonDatasets } from './comparison-datasets'
 import type { ComparisonScenarios } from './comparison-scenarios'
@@ -12,6 +11,20 @@ import type { ComparisonSpecs, ComparisonSpecsSource } from './comparison-spec-t
 import { parseComparisonSpecs } from './parse/comparison-parser'
 import type { ComparisonResolvedDefs } from './resolve/comparison-resolver'
 import { resolveComparisonSpecs } from './resolve/comparison-resolver'
+
+/**
+ * Describes an extra plot to be shown in a comparison graph.
+ */
+export interface ComparisonPlot {
+  /** The dataset key for the plot. */
+  datasetKey: DatasetKey
+  /** The plot color. */
+  color: string
+  /** The plot style.  If undefined, defaults to 'normal'. */
+  style?: 'normal' | 'dashed'
+  /** The plot line width, in px units.  If undefined, a default width will be used. */
+  lineWidth?: number
+}
 
 export interface ComparisonDatasetOptions {
   /**
@@ -26,6 +39,21 @@ export interface ComparisonDatasetOptions {
    * datasets (for example, to omit datasets that are not relevant).
    */
   datasetKeysForScenario?: (allDatasetKeys: DatasetKey[], scenario: ComparisonScenario) => DatasetKey[]
+  /**
+   * An optional function that allows for including additional reference plots
+   * on a comparison graph for a given dataset and scenario.  By default, no
+   * additional reference plots are included, but if a custom function is
+   * provided, it can return an array of `ComparisonPlot` objects.
+   */
+  referencePlotsForDataset?: (dataset: ComparisonDataset, scenario: ComparisonScenario) => ComparisonPlot[]
+  /**
+   * An optional function that allows for customizing the set of context graphs
+   * that are shown for a given dataset and scenario.  By default, all graphs in
+   * which the dataset appears will be shown, but if a custom function is provided,
+   * it can return a different set of graphs (for example, to omit graphs that are
+   * not relevant under the given scenario).
+   */
+  contextGraphIdsForDataset?: (dataset: ComparisonDataset, scenario: ComparisonScenario) => BundleGraphId[]
 }
 
 export interface ComparisonOptions {
@@ -67,18 +95,19 @@ export interface ComparisonConfig {
  * Expand and resolve all the scenario and view specs in the provided sources, which can
  * be a mix of YAML, JSON, and object specs.
  *
- * @param modelInputsL The model inputs for the "left" bundle being compared.
- * @param modelInputsR The model inputs for the "right" bundle being compared.
+ * @param modelSpecL The model spec for the "left" bundle being compared.
+ * @param modelSpecR The model spec for the "right" bundle being compared.
  * @param specSources The scenario and view spec sources.
  */
 export function resolveComparisonSpecsFromSources(
-  modelInputsL: ModelInputs,
-  modelInputsR: ModelInputs,
+  modelSpecL: ModelSpec,
+  modelSpecR: ModelSpec,
   specSources: (ComparisonSpecs | ComparisonSpecsSource)[]
 ): ComparisonResolvedDefs {
   const combinedSpecs: ComparisonSpecs = {
     scenarios: [],
     scenarioGroups: [],
+    graphGroups: [],
     viewGroups: []
   }
 
@@ -97,10 +126,11 @@ export function resolveComparisonSpecsFromSources(
     } else {
       specs = specSource
     }
-    combinedSpecs.scenarios.push(...specs.scenarios)
-    combinedSpecs.scenarioGroups.push(...specs.scenarioGroups)
-    combinedSpecs.viewGroups.push(...specs.viewGroups)
+    combinedSpecs.scenarios.push(...(specs.scenarios || []))
+    combinedSpecs.scenarioGroups.push(...(specs.scenarioGroups || []))
+    combinedSpecs.graphGroups.push(...(specs.graphGroups || []))
+    combinedSpecs.viewGroups.push(...(specs.viewGroups || []))
   }
 
-  return resolveComparisonSpecs(modelInputsL, modelInputsR, combinedSpecs)
+  return resolveComparisonSpecs(modelSpecL, modelSpecR, combinedSpecs)
 }

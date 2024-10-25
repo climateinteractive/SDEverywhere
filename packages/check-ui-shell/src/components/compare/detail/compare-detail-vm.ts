@@ -2,24 +2,30 @@
 
 import assertNever from 'assert-never'
 
+import { derived, writable, type Readable } from 'svelte/store'
+
 import type {
-  BundleGraphId,
   ComparisonConfig,
   ComparisonDataCoordinator,
   ComparisonDataset,
+  ComparisonGraphId,
   ComparisonGroupSummary,
   ComparisonScenario,
+  ComparisonScenarioKey,
   ComparisonTestSummary,
+  ComparisonUnresolvedView,
   ComparisonView,
   ComparisonViewGroup,
-  GraphComparisonReport,
-  LoadedBundle
+  DatasetKey,
+  GraphComparisonReport
 } from '@sdeverywhere/check-core'
 import { diffGraphs } from '@sdeverywhere/check-core'
 
+import type { UserPrefs } from '../../../_shared/user-prefs'
+
 import { getAnnotationsForDataset, getAnnotationsForScenario } from '../_shared/annotations'
 import { getBucketIndex } from '../_shared/buckets'
-import type { ComparisonGroupingKind } from '../_shared/comparison-grouping-kind'
+import type { PinnedItemState } from '../_shared/pinned-item-state'
 
 import type { ComparisonDetailItem } from './compare-detail-item'
 import { groupItemsByTitle } from './compare-detail-item'
@@ -37,7 +43,7 @@ export interface CompareGraphsSectionViewModel {
   rows: CompareGraphsRowViewModel[]
 }
 
-export interface CompareAllGraphsSections {
+export interface CompareGraphsGroupedByDiffs {
   /** The section view models. */
   sections: CompareGraphsSectionViewModel[]
   /** The total number of graphs with changes (non-zero difference). */
@@ -46,8 +52,12 @@ export interface CompareAllGraphsSections {
   diffPercentByBucket: number[]
 }
 
+export type CompareDetailViewKind = 'scenario-view' | 'freeform-view' | 'scenario' | 'dataset'
+
 export interface CompareDetailViewModel {
-  kind: ComparisonGroupingKind
+  kind: CompareDetailViewKind
+  /** The unique key for the associated summary view row. */
+  summaryRowKey: string
   /** The pretitle (e.g., view group title). */
   pretitle?: string
   /** The title (e.g., output variable name, scenario title, view title). */
@@ -56,59 +66,120 @@ export interface CompareDetailViewModel {
   subtitle?: string
   /** A string containing HTML `<span>` elements for annotations. */
   annotations?: string
-  /** The index of the row before this one. */
-  previousRowIndex?: number
-  /** The index of the row after this one. */
-  nextRowIndex?: number
   /** The string displayed above the list of related items. */
   relatedListHeader: string
   /** The related items for the dataset or scenario. */
   relatedItems: string[]
   /** The graph comparison sections in this group. */
   graphSections: CompareGraphsSectionViewModel[]
-  /** The detail box rows in this group. */
-  detailRows: CompareDetailRowViewModel[]
+  /** The regular detail box rows in this group. */
+  regularDetailRows: CompareDetailRowViewModel[]
+  /** The pinned detail box rows in this group. */
+  pinnedDetailRows: Readable<CompareDetailRowViewModel[]>
+  /** The shared pinned item state for this view. */
+  pinnedItemState: PinnedItemState
 }
 
-export function createCompareDetailViewModel(
-  comparisonConfig: ComparisonConfig,
-  dataCoordinator: ComparisonDataCoordinator,
-  groupSummary: ComparisonGroupSummary,
-  viewGroup: ComparisonViewGroup | undefined,
-  view: ComparisonView | undefined,
-  previousRowIndex: number | undefined,
-  nextRowIndex: number | undefined
+export function createCompareDetailViewModelForUnresolvedView(
+  summaryRowKey: string,
+  viewGroup: ComparisonViewGroup,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _view: ComparisonUnresolvedView
 ): CompareDetailViewModel {
-  switch (groupSummary.group.kind) {
-    case 'by-dataset':
-      return createCompareDetailViewModelForDataset(
-        comparisonConfig,
-        dataCoordinator,
-        groupSummary,
-        previousRowIndex,
-        nextRowIndex
-      )
-    case 'by-scenario':
-      return createCompareDetailViewModelForScenario(
-        comparisonConfig,
-        dataCoordinator,
-        groupSummary,
-        viewGroup,
-        view,
-        previousRowIndex,
-        nextRowIndex
-      )
-    default:
-      assertNever(groupSummary.group.kind)
+  return {
+    kind: 'freeform-view',
+    summaryRowKey,
+    pretitle: viewGroup?.title,
+    title: 'Unresolved view',
+    annotations: undefined,
+    relatedListHeader: '',
+    relatedItems: [],
+    graphSections: [],
+    regularDetailRows: [],
+    pinnedDetailRows: writable([]),
+    pinnedItemState: undefined
   }
 }
 
-function createCompareDetailViewModelForDataset(
+export function createCompareDetailViewModelForFreeformView(
+  summaryRowKey: string,
   comparisonConfig: ComparisonConfig,
   dataCoordinator: ComparisonDataCoordinator,
+  userPrefs: UserPrefs,
+  viewGroup: ComparisonViewGroup | undefined,
+  view: ComparisonView | undefined,
+  pinnedItemState: PinnedItemState
+): CompareDetailViewModel {
+  // Create a detail row for each row spec
+  const regularDetailRows: CompareDetailRowViewModel[] = []
+  for (const rowSpec of view.rows || []) {
+    const items: ComparisonDetailItem[] = []
+    for (const boxSpec of rowSpec.boxes) {
+      const detailItem: ComparisonDetailItem = {
+        title: boxSpec.title,
+        subtitle: boxSpec.subtitle,
+        scenario: boxSpec.scenario,
+        // XXX: For now we don't need to use the real test summary here (we can use
+        // `md: 0` since the data and comparison will be loaded/performed on demand)
+        testSummary: {
+          d: boxSpec.dataset.key,
+          s: boxSpec.scenario.key,
+          md: 0
+        }
+      }
+      items.push(detailItem)
+    }
+
+    const detailRow = createCompareDetailRowViewModel(
+      comparisonConfig,
+      dataCoordinator,
+      userPrefs,
+      'freeform',
+      rowSpec.title,
+      rowSpec.subtitle,
+      items
+    )
+    regularDetailRows.push(detailRow)
+  }
+
+  // Add rows at the top of the view for the pinned items
+  const pinnedDetailRows = derived(pinnedItemState.orderedKeys, $pinnedItemKeys => {
+    const rows: CompareDetailRowViewModel[] = []
+    for (const pinnedItemKey of $pinnedItemKeys) {
+      if (pinnedItemKey.startsWith('row')) {
+        // Find the regular row for this key and clone it
+        const regularRow = regularDetailRows.find(row => row.pinnedItemKey === pinnedItemKey)
+        if (regularRow) {
+          rows.push(cloneDetailRowViewModel(comparisonConfig, dataCoordinator, userPrefs, regularRow))
+        }
+      }
+    }
+    return rows
+  })
+
+  return {
+    kind: 'freeform-view',
+    summaryRowKey,
+    pretitle: viewGroup?.title,
+    title: view.title,
+    subtitle: view.subtitle,
+    annotations: undefined, // TODO
+    relatedListHeader: '', // TODO
+    relatedItems: [], // TODO
+    graphSections: [],
+    regularDetailRows,
+    pinnedDetailRows,
+    pinnedItemState
+  }
+}
+
+export function createCompareDetailViewModelForDataset(
+  summaryRowKey: string,
+  comparisonConfig: ComparisonConfig,
+  dataCoordinator: ComparisonDataCoordinator,
+  userPrefs: UserPrefs,
   groupSummary: ComparisonGroupSummary,
-  previousRowIndex: number | undefined,
-  nextRowIndex: number | undefined
+  pinnedItemState: PinnedItemState
 ): CompareDetailViewModel {
   const bundleNameL = comparisonConfig.bundleL.name
   const bundleNameR = comparisonConfig.bundleR.name
@@ -148,57 +219,106 @@ function createCompareDetailViewModelForDataset(
   }
 
   // Create a row for each group
-  const detailRows: CompareDetailRowViewModel[] = []
+  const regularDetailRows: CompareDetailRowViewModel[] = []
   for (const group of groups) {
-    // TODO: For now show up to two items
-    // TODO: If more than two items in the row, add more rows
-    let item1: ComparisonDetailItem
-    let item2: ComparisonDetailItem
-    if (group.items[0] !== allAtDefaultItem) {
-      item1 = group.items.length > 0 ? group.items[0] : undefined
-      item2 = group.items.length > 1 ? group.items[1] : undefined
-    }
+    // TODO: For now put all grouped items in the same row, and make the "all at
+    // default" item always be the first item in the row.  Later we should make
+    // this configurable so that items can be put in a different order or split
+    // out into multiple rows.
+    const items = group.items[0] !== allAtDefaultItem ? [allAtDefaultItem, ...group.items] : group.items
     const detailRow = createCompareDetailRowViewModel(
       comparisonConfig,
       dataCoordinator,
+      userPrefs,
       'scenarios',
       group.title,
       undefined, // TODO: Subtitle?
-      [allAtDefaultItem, item1, item2]
+      items
     )
-    detailRows.push(detailRow)
+    regularDetailRows.push(detailRow)
   }
 
   // For now, always put the "all inputs" row at top
   // TODO: Use a more stable way to identify the row (without using the title)
-  const allInputsRowIndex = detailRows.findIndex(row => row.title === 'All inputs')
+  const allInputsRowIndex = regularDetailRows.findIndex(row => row.title === 'All inputs')
   if (allInputsRowIndex !== undefined) {
-    const allInputsRow = detailRows.splice(allInputsRowIndex, 1)[0]
-    detailRows.unshift(allInputsRow)
+    const allInputsRow = regularDetailRows.splice(allInputsRowIndex, 1)[0]
+    regularDetailRows.unshift(allInputsRow)
   }
 
+  // Helper function that finds a detail item for a given scenario key
+  type GroupTitleAndDetailItem = [string, ComparisonDetailItem]
+  function groupTitleAndDetailItemForScenarioKey(
+    scenarioKey: ComparisonScenarioKey
+  ): GroupTitleAndDetailItem | undefined {
+    // TODO: Improve efficiency of looking up detail items
+    for (const group of groups) {
+      for (const item of group.items) {
+        if (item.scenario.key === scenarioKey) {
+          return [group.title, item]
+        }
+      }
+    }
+    return undefined
+  }
+
+  // Add rows at the top of the view for the pinned items
+  const pinnedDetailRows = derived(pinnedItemState.orderedKeys, $pinnedItemKeys => {
+    const rows: CompareDetailRowViewModel[] = []
+    for (const pinnedItemKey of $pinnedItemKeys) {
+      if (pinnedItemKey.startsWith('row')) {
+        // Find the regular row for this key and clone it
+        const regularRow = regularDetailRows.find(row => row.pinnedItemKey === pinnedItemKey)
+        if (regularRow) {
+          rows.push(cloneDetailRowViewModel(comparisonConfig, dataCoordinator, userPrefs, regularRow))
+        }
+      } else {
+        // Find the scenario item for this key and create a row with a single scenario
+        const item = groupTitleAndDetailItemForScenarioKey(pinnedItemKey)
+        if (item) {
+          const groupTitle = item[0]
+          const detailItem = item[1]
+          rows.push(
+            createCompareDetailRowViewModel(
+              comparisonConfig,
+              dataCoordinator,
+              userPrefs,
+              'scenarios',
+              groupTitle,
+              undefined, // TODO: Subtitle?
+              [detailItem]
+            )
+          )
+        }
+      }
+    }
+    return rows
+  })
+
   return {
-    kind: 'by-dataset',
+    kind: 'dataset',
+    summaryRowKey,
     title,
     subtitle,
     annotations,
-    previousRowIndex,
-    nextRowIndex,
     relatedListHeader: 'Appears in:',
     relatedItems,
     graphSections: [],
-    detailRows
+    regularDetailRows,
+    pinnedDetailRows,
+    pinnedItemState
   }
 }
 
-function createCompareDetailViewModelForScenario(
+export function createCompareDetailViewModelForScenario(
+  summaryRowKey: string,
   comparisonConfig: ComparisonConfig,
   dataCoordinator: ComparisonDataCoordinator,
+  userPrefs: UserPrefs,
   groupSummary: ComparisonGroupSummary,
   viewGroup: ComparisonViewGroup | undefined,
   view: ComparisonView | undefined,
-  previousRowIndex: number | undefined,
-  nextRowIndex: number | undefined
+  pinnedItemState: PinnedItemState
 ): CompareDetailViewModel {
   const bundleNameL = comparisonConfig.bundleL.name
   const bundleNameR = comparisonConfig.bundleR.name
@@ -207,20 +327,20 @@ function createCompareDetailViewModelForScenario(
   const scenario = groupSummary.root as ComparisonScenario
   const annotations = getAnnotationsForScenario(scenario, bundleNameL, bundleNameR).join(' ')
 
-  let kind: ComparisonGroupingKind
+  let kind: CompareDetailViewKind
   let pretitle: string
   let title: string
   let subtitle: string
   if (view) {
     // This is the detail screen for a user-defined view, so use the title/subtitle from
     // the view definition
-    kind = 'views'
+    kind = 'scenario-view'
     pretitle = viewGroup?.title
     title = view.title
     subtitle = view.subtitle
   } else {
     // This is the detail screen for a scenario, so use the title/subtitle from the scenario
-    kind = 'by-scenario'
+    kind = 'scenario'
     title = scenario.title
     subtitle = scenario.subtitle
   }
@@ -244,6 +364,7 @@ function createCompareDetailViewModelForScenario(
   // Create one box/row for each dataset in the group
   interface Row {
     viewModel: CompareDetailRowViewModel
+    detailItem: ComparisonDetailItem
     maxDiff: number
   }
   const rows: Row[] = []
@@ -267,6 +388,7 @@ function createCompareDetailViewModelForScenario(
     const rowViewModel = createCompareDetailRowViewModel(
       comparisonConfig,
       dataCoordinator,
+      userPrefs,
       'datasets',
       title,
       subtitle,
@@ -275,6 +397,7 @@ function createCompareDetailViewModelForScenario(
 
     rows.push({
       viewModel: rowViewModel,
+      detailItem,
       maxDiff: testSummary.md
     })
   }
@@ -294,11 +417,29 @@ function createCompareDetailViewModelForScenario(
       return aDatasetName.localeCompare(bDatasetName)
     }
   })
-  const detailRows = sortedRows.map(row => row.viewModel)
+  const regularDetailRows = sortedRows.map(row => row.viewModel)
+
+  // Add rows at the top of the view for the pinned items
+  function detailRowForDatasetKey(datasetKey: DatasetKey): CompareDetailRowViewModel | undefined {
+    // TODO: Improve efficiency of looking up detail items
+    return regularDetailRows.find(row => row.items[0].testSummary.d === datasetKey)
+  }
+  const pinnedDetailRows = derived(pinnedItemState.orderedKeys, $pinnedDatasetKeys => {
+    const rows: CompareDetailRowViewModel[] = []
+    for (const datasetKey of $pinnedDatasetKeys) {
+      // Find the item for this dataset key
+      const regularRow = detailRowForDatasetKey(datasetKey)
+      if (regularRow) {
+        // Clone the regular row view model so the pinned row view model is distinct
+        rows.push(cloneDetailRowViewModel(comparisonConfig, dataCoordinator, userPrefs, regularRow))
+      }
+    }
+    return rows
+  })
 
   // Add the compared graphs at top, if defined for the given view
   let graphSections: CompareGraphsSectionViewModel[]
-  if (view?.graphs) {
+  if (view) {
     const testSummaries = groupSummary.group.testSummaries
     graphSections = createCompareGraphsSectionViewModels(comparisonConfig, dataCoordinator, view, testSummaries)
   } else {
@@ -307,16 +448,17 @@ function createCompareDetailViewModelForScenario(
 
   return {
     kind,
+    summaryRowKey,
     pretitle,
     title,
     subtitle,
     annotations,
-    previousRowIndex,
-    nextRowIndex,
     relatedListHeader: 'Related items:',
     relatedItems,
     graphSections,
-    detailRows
+    regularDetailRows,
+    pinnedDetailRows,
+    pinnedItemState
   }
 }
 
@@ -326,55 +468,57 @@ function createCompareGraphsSectionViewModels(
   view: ComparisonView,
   testSummaries: ComparisonTestSummary[]
 ): CompareGraphsSectionViewModel[] {
-  if (view.graphs === 'all') {
-    // For the special "all graphs" case, break the list of graphs into sections
-    const allGraphs = getAllGraphsSections(comparisonConfig, dataCoordinator, view.scenario, testSummaries)
-    return allGraphs.sections
+  // TODO: We don't yet support including user graphs in a freeform view, so treat this
+  // as an error for now.  Technically it is possible to support this, but we would need
+  // to change the schema to allow for specifying which scenario to use for each graph.
+  if (view.rows !== undefined) {
+    throw new Error('Graphs section is not yet supported in a freeform view')
   }
 
   // No sections when there are no graphs
-  if (view.graphs.length === 0) {
+  if (view.graphIds.length === 0) {
     return []
   }
 
-  // When a specific set of graphs is defined, use a single "Featured graphs" section
-  const graphSpecsL = comparisonConfig.bundleL.model.modelSpec.graphSpecs
-  const graphSpecsR = comparisonConfig.bundleR.model.modelSpec.graphSpecs
-  const scenario = view.scenario
-  const rows: CompareGraphsRowViewModel[] = []
-  for (const graphId of view.graphs) {
-    const graphL = graphSpecsL?.find(s => s.id === graphId)
-    const graphR = graphSpecsR?.find(s => s.id === graphId)
-    const graphReport = diffGraphs(graphL, graphR, scenario.key, testSummaries)
-    rows.push(createCompareGraphsRowViewModel(comparisonConfig, dataCoordinator, scenario, graphId, graphReport))
-  }
-
-  return [
-    {
-      title: 'Featured graphs',
-      rows
+  if (view.graphOrder === 'grouped-by-diffs') {
+    // Group the graphs into sections (added, removed, etc) and order by the number/magnitude
+    // of differences
+    const grouped = getGraphsGroupedByDiffs(
+      comparisonConfig,
+      dataCoordinator,
+      view.scenario,
+      testSummaries,
+      view.graphIds
+    )
+    return grouped.sections
+  } else {
+    // Show the graphs in a single "Featured graphs" section
+    const graphSpecsL = comparisonConfig.bundleL.model.modelSpec.graphSpecs
+    const graphSpecsR = comparisonConfig.bundleR.model.modelSpec.graphSpecs
+    const scenario = view.scenario
+    const rows: CompareGraphsRowViewModel[] = []
+    for (const graphId of view.graphIds) {
+      const graphL = graphSpecsL?.find(s => s.id === graphId)
+      const graphR = graphSpecsR?.find(s => s.id === graphId)
+      const graphReport = diffGraphs(graphL, graphR, scenario.key, testSummaries)
+      rows.push(createCompareGraphsRowViewModel(comparisonConfig, dataCoordinator, scenario, graphId, graphReport))
     }
-  ]
+    return [
+      {
+        title: 'Featured graphs',
+        rows
+      }
+    ]
+  }
 }
 
-export function getAllGraphsSections(
+export function getGraphsGroupedByDiffs(
   comparisonConfig: ComparisonConfig,
   dataCoordinator: ComparisonDataCoordinator,
   scenario: ComparisonScenario,
-  testSummaries: ComparisonTestSummary[]
-): CompareAllGraphsSections {
-  // Get the union of all graph IDs appearing in either left or right
-  const graphIds: Set<BundleGraphId> = new Set()
-  function addGraphIds(bundle: LoadedBundle): void {
-    if (bundle.model.modelSpec.graphSpecs) {
-      for (const graphSpec of bundle.model.modelSpec.graphSpecs) {
-        graphIds.add(graphSpec.id)
-      }
-    }
-  }
-  addGraphIds(comparisonConfig.bundleL)
-  addGraphIds(comparisonConfig.bundleR)
-
+  testSummaries: ComparisonTestSummary[],
+  graphIds: ComparisonGraphId[]
+): CompareGraphsGroupedByDiffs {
   // Prepare the groups
   const added: CompareGraphsRowViewModel[] = []
   const removed: CompareGraphsRowViewModel[] = []
@@ -442,7 +586,7 @@ export function getAllGraphsSections(
   }
 
   // Get the percentage of diffs for each bucket relative to the total number of graphs
-  const totalGraphCount = graphIds.size
+  const totalGraphCount = graphIds.length
   const nonZeroDiffCount = totalGraphCount - diffCountByBucket[0]
   const diffPercentByBucket = diffCountByBucket.map(count => (count / totalGraphCount) * 100)
 
@@ -479,4 +623,21 @@ function maxDiffPctForGraph(graphReport: GraphComparisonReport): number {
     }
   }
   return maxDiffPct
+}
+
+function cloneDetailRowViewModel(
+  comparisonConfig: ComparisonConfig,
+  dataCoordinator: ComparisonDataCoordinator,
+  userPrefs: UserPrefs,
+  row: CompareDetailRowViewModel
+): CompareDetailRowViewModel {
+  return createCompareDetailRowViewModel(
+    comparisonConfig,
+    dataCoordinator,
+    userPrefs,
+    row.kind,
+    row.title,
+    row.subtitle,
+    row.items
+  )
 }

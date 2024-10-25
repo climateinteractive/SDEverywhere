@@ -4,6 +4,9 @@ import { describe, expect, it } from 'vitest'
 
 import { parseComparisonSpecs } from './comparison-parser'
 import {
+  datasetSpec,
+  graphGroupRefSpec,
+  graphGroupSpec,
   graphsArraySpec,
   graphsPresetSpec,
   inputAtPositionSpec,
@@ -14,9 +17,12 @@ import {
   scenarioRefSpec,
   scenarioWithAllInputsSpec,
   scenarioWithInputsSpec,
+  viewBoxSpec,
   viewGroupWithScenariosSpec,
   viewGroupWithViewsSpec,
-  viewSpec
+  viewRowSpec,
+  viewWithRowsSpec,
+  viewWithScenarioSpec
 } from '../_mocks/mock-spec-types'
 
 describe('parseComparisonSpecs', () => {
@@ -83,6 +89,12 @@ describe('parseComparisonSpecs', () => {
             - input: Input3
               at: max
 
+- graph_group:
+    id: GraphGroup1
+    graphs:
+      - '86'
+      - '87'
+
 - view_group:
     title: Baseline
     views:
@@ -101,12 +113,15 @@ describe('parseComparisonSpecs', () => {
             - '86'
             - '87'
       - view:
-          title: Temp for Scenario_1
+          title: Temp for Scenario_1 (with graph group)
           subtitle: Subtitle goes here
           scenario_ref: S1
           graphs:
-            - '86'
-            - '87'
+            graph_group_ref: GraphGroup1
+      - view:
+          title: Temp for Scenario_1 (no graphs)
+          subtitle: Subtitle goes here
+          scenario_ref: S1
 
 - view_group:
     title: Temp (shorthand)
@@ -117,12 +132,59 @@ describe('parseComparisonSpecs', () => {
     graphs:
       - '86'
       - '87'
+
+- view_group:
+    title: Calibration (explicit view with freeform rows)
+    views:
+      - view:
+          title: Calibration Scenarios (mix of datasets and scenarios per row)
+          rows:
+            - row:
+                title: Row 1
+                subtitle: Subtitle goes here
+                boxes:
+                  - box:
+                      title: Output X
+                      subtitle: with Scenario 0
+                      dataset:
+                        name: Output X
+                      scenario_ref: S0
+                  - box:
+                      title: Output Y
+                      subtitle: with Scenario 1
+                      dataset:
+                        name: Output Y
+                      scenario_ref: S1
+            - row:
+                title: Row 2
+                boxes:
+                  - box:
+                      title: Output Z
+                      subtitle: with Scenario 2
+                      dataset:
+                        name: Output Z
+                        source: External
+                      scenario_ref: S2
 `
 
+    // TODO: Add support for shorthand with same dataset repeated across the row
+    // - view:
+    //     title: Calibration Scenarios (one dataset per row)
+    //     rows:
+    //       - dataset:
+    //           name: Output X
+    //         scenarios:
+    //           - scenario_ref: S0
+    //           - scenario_ref: S1
+    //       - dataset:
+    //           name: Output Y
+    //         scenarios:
+    //           - scenario_ref: S0
+    //           - scenario_ref: S1
+
     const result = parseComparisonSpecs({ kind: 'yaml', content: yaml })
-    expect(result.isOk()).toBe(true)
-    if (!result.isOk()) {
-      return
+    if (result.isErr()) {
+      throw result.error
     }
 
     const comparisonSpecs = result.value
@@ -148,17 +210,38 @@ describe('parseComparisonSpecs', () => {
       )
     ])
 
+    expect(comparisonSpecs.graphGroups).toEqual([graphGroupSpec('GraphGroup1', ['86', '87'])])
+
     expect(comparisonSpecs.viewGroups).toEqual([
-      viewGroupWithViewsSpec('Baseline', [viewSpec('All graphs', undefined, 'S0', graphsPresetSpec('all'))]),
+      viewGroupWithViewsSpec('Baseline', [
+        viewWithScenarioSpec('All graphs', undefined, 'S0', graphsPresetSpec('all'))
+      ]),
       viewGroupWithViewsSpec('Temp (explicit views)', [
-        viewSpec('Temp for Scenario_0', undefined, 'S0', graphsArraySpec(['86', '87'])),
-        viewSpec('Temp for Scenario_1', 'Subtitle goes here', 'S1', graphsArraySpec(['86', '87']))
+        viewWithScenarioSpec('Temp for Scenario_0', undefined, 'S0', graphsArraySpec(['86', '87'])),
+        viewWithScenarioSpec(
+          'Temp for Scenario_1 (with graph group)',
+          'Subtitle goes here',
+          'S1',
+          graphGroupRefSpec('GraphGroup1')
+        ),
+        viewWithScenarioSpec('Temp for Scenario_1 (no graphs)', 'Subtitle goes here', 'S1')
       ]),
       viewGroupWithScenariosSpec(
         'Temp (shorthand)',
         [scenarioRefSpec('S0'), scenarioRefSpec('S1'), scenarioGroupRefSpec('G1')],
         graphsArraySpec(['86', '87'])
-      )
+      ),
+      viewGroupWithViewsSpec('Calibration (explicit view with freeform rows)', [
+        viewWithRowsSpec('Calibration Scenarios (mix of datasets and scenarios per row)', undefined, [
+          viewRowSpec('Row 1', 'Subtitle goes here', [
+            viewBoxSpec('Output X', 'with Scenario 0', datasetSpec('Output X'), 'S0'),
+            viewBoxSpec('Output Y', 'with Scenario 1', datasetSpec('Output Y'), 'S1')
+          ]),
+          viewRowSpec('Row 2', undefined, [
+            viewBoxSpec('Output Z', 'with Scenario 2', datasetSpec('Output Z', 'External'), 'S2')
+          ])
+        ])
+      ])
     ])
   })
 

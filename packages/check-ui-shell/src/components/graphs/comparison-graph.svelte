@@ -11,15 +11,7 @@ import { ComparisonGraphView } from './comparison-graph-view'
 /** The view model. */
 export let viewModel: ComparisonGraphViewModel
 
-/** The fixed width (in rem). */
-export let width: number
-
-/** The fixed height (in rem). */
-export let height: number
-
 let container: HTMLElement
-let containerStyle = `width: ${width}rem; height: ${height}rem;`
-
 let graphView: ComparisonGraphView
 
 // When the view model changes, rebuild the graph view
@@ -45,6 +37,11 @@ function initGraphView() {
   // Create the graph view that wraps the canvas element
   previousKey = viewModel.key
   graphView = new ComparisonGraphView(canvas, viewModel)
+
+  // Update the view when the view model is changed
+  viewModel.onUpdated = () => {
+    graphView?.update()
+  }
 }
 
 onMount(() => {
@@ -65,7 +62,7 @@ onMount(() => {
 <!-- TEMPLATE -->
 <template lang='pug'>
 
-.graph-inner-container(bind:this!='{container}' style!='{containerStyle}')
+.graph-inner-container(bind:this!='{container}')
 
 </template>
 

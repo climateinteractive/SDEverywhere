@@ -9,11 +9,11 @@ mixin section(varname)
     .section-container
       SummaryRow(viewModel!=`{ viewModel.${varname}.header }`)
       +each(`viewModel.${varname}.rows as rowViewModel`)
-        SummaryRow(on:command viewModel!='{rowViewModel}')
+        SummaryRow(viewModel!='{rowViewModel}' on:command)
 
 mixin view-group-sections
   +each(`viewModel.viewGroups as viewGroupViewModel`)
     .section-container
       SummaryRow(viewModel!='{viewGroupViewModel.header}')
       +each(`viewGroupViewModel.rows as rowViewModel`)
-        SummaryRow(on:command viewModel!='{rowViewModel}')
+        SummaryRow(viewModel!='{rowViewModel}' on:command)

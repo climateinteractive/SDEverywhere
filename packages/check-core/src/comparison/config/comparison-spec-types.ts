@@ -1,6 +1,27 @@
 // Copyright (c) 2023 Climate Interactive / New Venture Fund
 
 //
+// DATASETS
+//
+
+export type ComparisonDatasetName = string
+export type ComparisonDatasetSource = string
+
+/**
+ * Specifies a dataset (variable) used for comparison.
+ */
+export interface ComparisonDatasetSpec {
+  kind: 'dataset'
+  /** The name of the dataset (variable). */
+  name: ComparisonDatasetName
+  /**
+   * The source of the dataset, if it is from an external data file.  If
+   * undefined, the dataset is assumed to be a model output.
+   */
+  source?: ComparisonDatasetSource
+}
+
+//
 // SCENARIOS
 //
 
@@ -151,50 +172,126 @@ export interface ComparisonScenarioGroupRefSpec {
 }
 
 //
+// GRAPHS
+//
+
+export type ComparisonGraphId = string
+
+/**
+ * Specifies a list of graphs to be shown in a view.
+ */
+export interface ComparisonGraphsArraySpec {
+  kind: 'graphs-array'
+  /** The array of IDs for graphs to show. */
+  graphIds: ComparisonGraphId[]
+}
+
+/**
+ * Specifies a preset list of graphs to be shown in a view.
+ */
+export interface ComparisonGraphsPresetSpec {
+  kind: 'graphs-preset'
+  /** The preset (currently only "all" is supported, which shows all available graphs). */
+  preset: 'all'
+}
+
+//
+// GRAPH GROUPS
+//
+
+export type ComparisonGraphGroupId = string
+
+/**
+ * A definition of a group of graphs to be shown in a view.  Multiple graphs can be grouped together
+ * under a single ID, and can later be referenced by group ID in a view definition.
+ */
+export interface ComparisonGraphGroupSpec {
+  kind: 'graph-group'
+  /** The unique identifier for the group. */
+  id: ComparisonGraphGroupId
+  /** The graphs that are included in this group. */
+  graphIds: ComparisonGraphId[]
+}
+
+/** A reference to a graph group definition. */
+export interface ComparisonGraphGroupRefSpec {
+  kind: 'graph-group-ref'
+  /** The ID of the graph group that is referenced. */
+  groupId: ComparisonGraphGroupId
+}
+
+//
 // VIEWS
 //
 
 export type ComparisonViewTitle = string
 export type ComparisonViewSubtitle = string
 
-export type ComparisonViewGraphId = string
+export type ComparisonViewRowTitle = string
+export type ComparisonViewRowSubtitle = string
+
+export type ComparisonViewItemTitle = string
+export type ComparisonViewItemSubtitle = string
+
+export type ComparisonViewGraphOrder = 'default' | 'grouped-by-diffs'
 
 /**
- * Specifies a list of graphs to be shown in a view.
+ * Specifies a single comparison box to be shown in a view.
  */
-export interface ComparisonViewGraphsArraySpec {
-  kind: 'graphs-array'
-  /** The array of IDs for graphs to show. */
-  graphIds: ComparisonViewGraphId[]
+export interface ComparisonViewBoxSpec {
+  kind: 'view-box'
+  /** The title of the box. */
+  title: ComparisonViewItemTitle
+  /** The subtitle of the box. */
+  subtitle?: ComparisonViewItemSubtitle
+  /** The dataset shown in this comparison box. */
+  dataset: ComparisonDatasetSpec
+  /** The scenario shown in this comparison box. */
+  scenarioId: ComparisonScenarioId
 }
 
 /**
- * Specifies a preset list of graphs to be shown in a view.
+ * Specifies a row of comparison boxes to be shown in a view.
  */
-export interface ComparisonViewGraphsPresetSpec {
-  kind: 'graphs-preset'
-  /** The preset (currently only "all" is supported, which shows all available graphs). */
-  preset: 'all'
+export interface ComparisonViewRowSpec {
+  kind: 'view-row'
+  /** The title of the row. */
+  title: ComparisonViewRowTitle
+  /** The subtitle of the row. */
+  subtitle?: ComparisonViewRowSubtitle
+  /** The array of boxes to be shown in the row. */
+  boxes: ComparisonViewBoxSpec[]
 }
 
 /**
  * Specifies a set of graphs to be shown in a view.
  */
-export type ComparisonViewGraphsSpec = ComparisonViewGraphsArraySpec | ComparisonViewGraphsPresetSpec
+export type ComparisonViewGraphsSpec =
+  | ComparisonGraphsPresetSpec
+  | ComparisonGraphsArraySpec
+  | ComparisonGraphGroupRefSpec
 
 /**
- * A definition of a view.  A view presents a set of graphs for a single input scenario.
+ * A definition of a view.  A view presents a set of graphs, either for a single input scenario
+ * or for a mix of different dataset/scenario combinations.
  */
 export interface ComparisonViewSpec {
   kind: 'view'
   /** The title of the view.  If undefined, the title will be inferred from the scenario. */
   title?: ComparisonViewTitle
   /** The subtitle of the view.  If undefined, the subtitle will be inferred from the scenario. */
-  subtitle?: ComparisonViewGroupTitle
-  /** The scenario to be shown in the view. */
-  scenarioId: ComparisonScenarioId
-  /** The graphs to be shown for each scenario view. */
-  graphs: ComparisonViewGraphsSpec
+  subtitle?: ComparisonViewSubtitle
+  /** The scenario to be shown in the view if this is a single-scenario view. */
+  scenarioId?: ComparisonScenarioId
+  /** The array of rows to be shown in the view if this is a freeform view. */
+  rows?: ComparisonViewRowSpec[]
+  /** The graphs to be shown in the view. */
+  graphs?: ComparisonViewGraphsSpec
+  /**
+   * The order in which the graphs will be displayed.  If undefined, the graphs will be
+   * displayed in the "default" order, i.e., in the same order that the IDs were specified.
+   */
+  graphOrder?: ComparisonViewGraphOrder
 }
 
 //
@@ -226,6 +323,11 @@ export interface ComparisonViewGroupWithScenariosSpec {
   scenarios: (ComparisonScenarioRefSpec | ComparisonScenarioGroupRefSpec)[]
   /** The graphs to be shown for each scenario view. */
   graphs: ComparisonViewGraphsSpec
+  /**
+   * The order in which the graphs will be displayed.  If undefined, the graphs will be
+   * displayed in the "default" order, i.e., in the same order that the IDs were specified.
+   */
+  graphOrder?: ComparisonViewGraphOrder
 }
 
 /**
@@ -244,11 +346,13 @@ export type ComparisonViewGroupSpec = ComparisonViewGroupWithViewsSpec | Compari
  */
 export interface ComparisonSpecs {
   /** The requested scenarios. */
-  scenarios: ComparisonScenarioSpec[]
+  scenarios?: ComparisonScenarioSpec[]
   /** The requested scenario groups. */
-  scenarioGroups: ComparisonScenarioGroupSpec[]
+  scenarioGroups?: ComparisonScenarioGroupSpec[]
+  /** The requested graph groups. */
+  graphGroups?: ComparisonGraphGroupSpec[]
   /** The requested view groups. */
-  viewGroups: ComparisonViewGroupSpec[]
+  viewGroups?: ComparisonViewGroupSpec[]
 }
 
 /** A source of comparison scenario and specifications. */

@@ -2,10 +2,11 @@
 
 import type { InputPosition, ScenarioSpec } from '../../../_shared/scenario-spec-types'
 import { allInputsAtPositionSpec, inputAtPositionSpec, inputAtValueSpec } from '../../../_shared/scenario-specs'
-import type { VarId } from '../../../_shared/types'
-import type { InputId, InputVar } from '../../../bundle/var-types'
+import type { DatasetKey, VarId } from '../../../_shared/types'
+import type { InputId, InputVar, OutputVar } from '../../../bundle/var-types'
 
 import type {
+  ComparisonDataset,
   ComparisonResolverError,
   ComparisonScenario,
   ComparisonScenarioGroup,
@@ -15,13 +16,40 @@ import type {
   ComparisonUnresolvedScenarioRef,
   ComparisonUnresolvedView,
   ComparisonView,
-  ComparisonViewGroup
+  ComparisonViewBox,
+  ComparisonViewGroup,
+  ComparisonViewRow
 } from '../comparison-resolved-types'
 import type {
+  ComparisonGraphId,
   ComparisonScenarioGroupId,
   ComparisonScenarioId,
-  ComparisonViewGraphId
+  ComparisonViewGraphOrder
 } from '../../config/comparison-spec-types'
+
+//
+// DATASETS
+//
+
+export function outputVar(varName: string, source?: string): [VarId, OutputVar] {
+  const varId = `_${varName.toLowerCase().replace(' ', '_')}`
+  const datasetKey = `${source || 'Model'}_${varId}`
+  const v: OutputVar = {
+    datasetKey,
+    varId,
+    varName
+  }
+  return [datasetKey, v]
+}
+
+export function dataset(key: DatasetKey, outputVarL: OutputVar, outputVarR: OutputVar): ComparisonDataset {
+  return {
+    kind: 'dataset',
+    key,
+    outputVarL,
+    outputVarR
+  }
+}
 
 //
 // SCENARIOS
@@ -220,18 +248,55 @@ export function scenarioGroup(
 // VIEWS
 //
 
-export function view(
+export function viewWithScenario(
   title: string,
   subtitle: string | undefined,
   scenario: ComparisonScenario,
-  graphs: 'all' | ComparisonViewGraphId[]
+  graphIds: ComparisonGraphId[],
+  graphOrder?: ComparisonViewGraphOrder
 ): ComparisonView {
   return {
     kind: 'view',
     title,
     subtitle,
     scenario,
-    graphs
+    graphIds,
+    graphOrder: graphOrder || 'default'
+  }
+}
+
+export function viewWithRows(title: string, subtitle: string | undefined, rows: ComparisonViewRow[]): ComparisonView {
+  return {
+    kind: 'view',
+    title,
+    subtitle,
+    rows,
+    graphIds: [],
+    graphOrder: 'default'
+  }
+}
+
+export function viewRow(title: string, subtitle: string | undefined, boxes: ComparisonViewBox[]): ComparisonViewRow {
+  return {
+    kind: 'view-row',
+    title,
+    subtitle,
+    boxes
+  }
+}
+
+export function viewBox(
+  title: string,
+  subtitle: string | undefined,
+  dataset: ComparisonDataset,
+  scenario: ComparisonScenario
+): ComparisonViewBox {
+  return {
+    kind: 'view-box',
+    title,
+    subtitle,
+    dataset,
+    scenario
   }
 }
 
