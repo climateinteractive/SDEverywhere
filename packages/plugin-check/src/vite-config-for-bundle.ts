@@ -1,6 +1,6 @@
 // Copyright (c) 2022 Climate Interactive / New Venture Fund
 
-import { existsSync, statSync } from 'fs'
+import { existsSync, readFileSync, statSync } from 'fs'
 import { basename, dirname, join as joinPath, relative, resolve as resolvePath } from 'path'
 import { fileURLToPath } from 'url'
 
@@ -25,7 +25,7 @@ const __dirname = dirname(__filename)
  * doesn't seem to be working correctly in an ESM setting
  */
 function injectModelSpec(prepDir: string, modelSpec: ResolvedModelSpec): VitePlugin {
-  // Include the SDE variable ID with each spec
+  // Include the SDE variable ID with each input variable spec
   const inputSpecs = []
   for (const modelInputSpec of modelSpec.inputs) {
     // Note that the `InputSpec` interface in the `@sdeverywhere/build` package
@@ -60,12 +60,29 @@ function injectModelSpec(prepDir: string, modelSpec: ResolvedModelSpec): VitePlu
       ...modelInputSpec
     })
   }
+
+  // Include the SDE variable ID with each output variable spec
   const outputSpecs = modelSpec.outputs.map(o => {
     return {
       varId: sdeNameForVensimVarName(o.varName),
       ...o
     }
   })
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  function readJsonListing(): any {
+    const path = joinPath(prepDir, 'build', 'processed.json')
+    if (existsSync(path)) {
+      const json = readFileSync(path, 'utf8')
+      return JSON.parse(json)
+    } else {
+      return {}
+    }
+  }
+
+  // Read the JSON model listing and include impl var specs from `varInstances`
+  const listing = readJsonListing()
+  const varInstances = listing.varInstances || {}
 
   function stagedFileSize(filename: string): number {
     const path = joinPath(prepDir, 'staged', 'model', filename)
@@ -90,6 +107,7 @@ function injectModelSpec(prepDir: string, modelSpec: ResolvedModelSpec): VitePlu
   const moduleSrc = `
 export const inputSpecs = ${JSON.stringify(inputSpecs)};
 export const outputSpecs = ${JSON.stringify(outputSpecs)};
+export const implSpec = ${JSON.stringify(varInstances)};
 export const modelSizeInBytes = ${modelSizeInBytes};
 export const dataSizeInBytes = ${dataSizeInBytes};
 `
