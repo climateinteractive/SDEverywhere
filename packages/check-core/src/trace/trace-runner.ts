@@ -4,7 +4,7 @@ import { assertNever } from 'assert-never'
 
 import { allInputsAtPositionSpec } from '../_shared/scenario-specs'
 import { TaskQueue } from '../_shared/task-queue'
-import type { Dataset, DatasetKey } from '../_shared/types'
+import type { Dataset, DatasetKey, DatasetMap } from '../_shared/types'
 
 import type { BundleModel } from '../bundle/bundle-types'
 
@@ -16,6 +16,7 @@ type TraceRequestKind = 'compare-to-left' | 'compare-to-ext-data'
 interface TraceRequest {
   kind: TraceRequestKind
   datasetKeys: DatasetKey[]
+  extData?: DatasetMap
 }
 
 interface TraceResponse {
@@ -50,8 +51,40 @@ export class TraceRunner {
               datasetReports
             }
           }
-          case 'compare-to-ext-data':
-            throw new Error('Not yet implemented')
+          case 'compare-to-ext-data': {
+            const resultR = await bundleModelR.getDatasetsForScenario(scenarioSpec, request.datasetKeys)
+            const datasetReports: TraceDatasetReport[] = []
+            for (const datasetKey of request.datasetKeys) {
+              let datasetL = request.extData.get(datasetKey)
+              if (datasetL === undefined) {
+                // The dat file can have the subscripts in a different order than the normalized ones
+                // used by SDE, we try the other possible permutations
+                const datasetKeyParts = datasetKey.split('[')
+                if (datasetKeyParts.length === 2) {
+                  const baseKey = datasetKeyParts[0]
+                  const keySubParts = datasetKeyParts[1].replace(']', '')
+                  const keySubIds = keySubParts.split(',')
+                  const subIdPermutations = permutationsOf(keySubIds)
+                  for (const subIds of subIdPermutations) {
+                    const datDatasetKey = `${baseKey}[${subIds.join(',')}]`
+                    datasetL = request.extData.get(datDatasetKey)
+                    if (datasetL !== undefined) {
+                      break
+                    }
+                  }
+                }
+                if (datasetL === undefined) {
+                  console.warn(`WARNING: Failed to find data in dat file for key=${datasetKey}`)
+                }
+              }
+              const datasetR = resultR.datasetMap.get(datasetKey)
+              const datasetReport = diffDatasets(datasetKey, datasetL, datasetR)
+              datasetReports.push(datasetReport)
+            }
+            return {
+              datasetReports
+            }
+          }
           default:
             assertNever(request.kind)
         }
@@ -59,7 +92,7 @@ export class TraceRunner {
     })
   }
 
-  start(): void {
+  start(extData?: DatasetMap): void {
     // Gather all dataset reports into a single map
     const allDatasetReports: Map<DatasetKey, TraceDatasetReport> = new Map()
 
@@ -76,11 +109,13 @@ export class TraceRunner {
 
     const taskQueue = this.taskQueue
     let index = 1
-    function addTask(kind: TraceRequestKind, datasetKeys: DatasetKey[]) {
+    function addTask(datasetKeys: DatasetKey[]) {
+      const kind: TraceRequestKind = extData !== undefined ? 'compare-to-ext-data' : 'compare-to-left'
       const key = `${kind}-${index++}`
       const request: TraceRequest = {
         kind,
-        datasetKeys
+        datasetKeys,
+        extData
       }
       taskQueue.addTask(key, request, response => {
         // Add the dataset comparison reports to the rollup map
@@ -95,15 +130,15 @@ export class TraceRunner {
     console.log('ALL:')
     console.log(allDatasetKeys)
 
-    // Break the dataset requests into batches, with up to 1000 variables
+    // Break the dataset requests into batches, with up to 2000 variables
     // in each batch
-    const batchSize = 1000
+    const batchSize = 2000
     for (let i = 0; i < allDatasetKeys.length; i += batchSize) {
       const datasetKeysForBatch = allDatasetKeys.slice(i, i + batchSize)
       // TODO: Implement comparison to external data
       console.log('BATCH:')
       console.log(datasetKeysForBatch)
-      addTask('compare-to-left', datasetKeysForBatch)
+      addTask(datasetKeysForBatch)
     }
   }
 }
@@ -140,8 +175,11 @@ function diffDatasets(
         if (valueL > maxValue) maxValue = valueL
       }
 
-      const valueR = datasetR.get(t)
-      if (valueR !== undefined) {
+      // TODO: Explain
+      let valueR: number
+      const rawValueR = datasetR.get(t)
+      if (rawValueR !== undefined) {
+        valueR = valueL !== undefined ? matchPrecision(rawValueR, valueL) : rawValueR
         if (valueR < minValueR) minValueR = valueR
         if (valueR > maxValueR) maxValueR = valueR
         if (valueR < minValue) minValue = valueR
@@ -150,6 +188,7 @@ function diffDatasets(
 
       if (valueL === undefined || valueR === undefined) {
         // Only include diffs if we have a value from both datasets at this time
+        // console.error(`ERROR: Missing data for ${datasetKey}`)
         continue
       }
 
@@ -221,4 +260,64 @@ function diffDatasets(
     maxDiff,
     maxDiffPoint
   }
+}
+
+/**
+ * Change the precision of `x` to match that of `baseline`.  For example,
+ * if `x` is 30.20000004 and `baseline is `30.2`, this will return `30.2`.
+ */
+function matchPrecision(x: number, baseline: number): number {
+  const s = baseline.toString()
+  if (s.includes('e')) {
+    // TODO: This won't work for numbers with exponent notation
+    return x
+  }
+
+  // TODO: This assumes English locale
+  const parts = s.split('.')
+  if (parts.length < 2) {
+    return x
+  }
+
+  // Remove leading zeros
+  const a = parts[0].replace(/^0+/, '')
+  const b = parts[1].replace(/^0+/, '')
+
+  const sigDigits = a.length + b.length
+  if (sigDigits > 21) {
+    return x
+  }
+
+  return parseFloat(x.toPrecision(sigDigits))
+}
+
+/**
+ * Return all possible permutations of the given array elements.
+ *
+ * For example, if we have an array of numbers:
+ *   [1,2,3]
+ * this function will return all the permutations, e.g.:
+ *   [ [1,2,3], [1,3,2], [2,1,3], [2,3,1], [3,1,2], [3,2,1] ]
+ *
+ * Based on:
+ *   https://stackoverflow.com/a/20871714
+ */
+function permutationsOf<T>(inputArr: T[]): T[][] {
+  const result: T[][] = []
+
+  const permute = (arr: T[], m: T[] = []) => {
+    if (arr.length === 0) {
+      result.push(m)
+    } else {
+      for (let i = 0; i < arr.length; i++) {
+        const curr = arr.slice()
+        const next = curr.splice(i, 1)
+        permute(curr.slice(), m.concat(next))
+      }
+    }
+  }
+
+  permute(inputArr)
+
+  return result
 }

@@ -10,9 +10,23 @@ export let viewModel: TraceViewModel
 const running = viewModel.running
 const groups = viewModel.groups
 
-function onRun() {
-  viewModel.run()
+let datText: string
+let files: FileList
+$: if (files && files[0]) {
+  const file = files[0]
+  // console.log(file)
+  const reader = new FileReader()
+  reader.onload = () => {
+    datText = reader.result as string
+    viewModel.run(datText)
+    // console.log(datText)
+  }
+  reader.readAsText(file)
 }
+
+// function onRun() {
+//   viewModel.run(datText)
+// }
 
 </script>
 
@@ -25,7 +39,8 @@ function onRun() {
 <div class="trace-container">
   <div class="trace-header-container">
     {#if !$running}
-      <button class="run" on:click={onRun} disabled={$running}>Run</button>
+      <input bind:files type="file" id="trace-dat-file" name="trace-dat-file" accept=".dat" />
+      <!-- <button class="run" on:click={onRun} disabled={$running}>Run</button> -->
     {:else}
       <div>Running comparisons, please wait…</div>
     {/if}

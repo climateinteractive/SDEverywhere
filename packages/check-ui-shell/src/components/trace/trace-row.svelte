@@ -3,9 +3,13 @@
 <!-- SCRIPT -->
 <script lang='ts'>
 
-import type { TraceRowViewModel } from './trace-row-vm'
+import type { TracePointViewModel, TraceRowViewModel } from './trace-row-vm'
 
 export let viewModel: TraceRowViewModel
+
+function onHover(pointViewModel: TracePointViewModel): void {
+  console.log(pointViewModel.diffPoint)
+}
 
 </script>
 
@@ -21,7 +25,13 @@ export let viewModel: TraceRowViewModel
   </div>
   <div class="trace-points">
     {#each viewModel.points as point}
-      <div class="trace-point" class:empty={point.empty} style="background-color: {point.color}"></div>
+      <!-- svelte-ignore a11y-mouse-events-have-key-events -->
+      <div
+        class="trace-point"
+        class:empty={point.empty}
+        style="background-color: {point.color}"
+        on:mouseover={() => onHover(point)}>
+      </div>
     {/each}
   </div>
 </div>

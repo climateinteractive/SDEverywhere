@@ -3,10 +3,18 @@
 import type { Readable, Writable } from 'svelte/store'
 import { writable } from 'svelte/store'
 
-import type { BundleModel, Config, ImplVar, TraceDatasetReport, TraceReport } from '@sdeverywhere/check-core'
+import type {
+  BundleModel,
+  Config,
+  DatasetMap,
+  ImplVar,
+  TraceDatasetReport,
+  TraceReport
+} from '@sdeverywhere/check-core'
 import { TraceRunner } from '@sdeverywhere/check-core'
 
 import type { TracePointViewModel, TraceRowViewModel } from './trace-row-vm'
+import { readDat } from './read-dat'
 
 export interface TraceGroupViewModel {
   title: string
@@ -28,10 +36,18 @@ export class TraceViewModel {
     this.running = this.writableRunning
   }
 
-  public run(): void {
+  public run(datText?: string): void {
+    // If comparing to a dat file, parse the dat file and convert to a `DatasetMap`
+    let extData: DatasetMap
+    if (datText) {
+      extData = readDat(datText, 'ModelImpl_')
+      // console.log(extData)
+    }
+
     this.writableGroups.set([])
     this.writableRunning.set(true)
 
+    // TODO: Get this value from the UI
     const threshold = 1
     const traceRunner = new TraceRunner(this.bundleModelL, this.bundleModelR)
     traceRunner.onComplete = report => {
@@ -44,7 +60,7 @@ export class TraceViewModel {
       console.error(error)
       this.writableRunning.set(false)
     }
-    traceRunner.start()
+    traceRunner.start(extData)
   }
 }
 
@@ -85,24 +101,33 @@ function groupsFromReport(
   }
 
   function point(datasetReport: TraceDatasetReport, time: number): TracePointViewModel {
-    const p = datasetReport.points.get(time)
+    const points = datasetReport.points
+    const p = points.get(time)
+    let color: string
+    let empty = false
     if (p) {
       const rawDiff = Math.abs(p.valueR - p.valueL)
       if (rawDiff === 0) {
-        return { color: 'green' }
+        color = 'green'
       } else {
         // TODO: Revisit handling of comparisons against zero.  For now if the reference
         // (left) value is zero, treat any difference as 100%.
         const diff = p.valueL !== 0 ? Math.abs(rawDiff / p.valueL) : 1
         const pctDiff = diff * 100
         if (pctDiff < threshold) {
-          return { color: 'orange' }
+          color = 'orange'
         } else {
-          return { color: 'crimson' }
+          color = 'crimson'
         }
       }
     } else {
-      return { color: 'crimson', empty: true }
+      color = 'crimson'
+      empty = true
+    }
+    return {
+      color,
+      empty,
+      diffPoint: p
     }
   }
 
