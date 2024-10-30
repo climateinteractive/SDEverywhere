@@ -635,7 +635,34 @@ describe('generateEquation (Vensim -> JS)', () => {
     expect(genJS(vars.get('_z'))).toEqual(['_z = _y[1][0];'])
   })
 
-  it('should work for equation that uses a regular dimension name (trivial case) in an expression', () => {
+  it('should work for 1D equation with one mapped dimension name used in expression position', () => {
+    const vars = readInlineModel(`
+      DimA: A1, A2 ~~|
+      DimB: B1, B2 -> DimA ~~|
+      x[DimA] = DimB ~~|
+    `)
+    expect(vars.size).toBe(1)
+    expect(genJS(vars.get('_x'))).toEqual(['for (let i = 0; i < 2; i++) {', '_x[i] = (__map_dimb_dima[i] + 1);', '}'])
+  })
+
+  it('should work for 1D equation with one mapped dimension name used in subscript position (separated/non-apply-to-all)', () => {
+    const vars = readInlineModel(`
+      DimA: A1, A2, A3 ~~|
+      SubA: A2, A3 ~~|
+      DimD: D1, D2 -> (DimA: SubA, A1) ~~|
+      a[DimA] = 1 ~~|
+      j[DimD] = 10, 20 ~~|
+      k[DimA] :EXCEPT: [A1] = a[DimA] + j[DimD] ~~|
+    `)
+    expect(vars.size).toBe(5)
+    expect(genJS(vars.get('_a'), 'init-constants')).toEqual(['for (let i = 0; i < 3; i++) {', '_a[i] = 1.0;', '}'])
+    expect(genJS(vars.get('_j[_d1]'), 'init-constants')).toEqual(['_j[0] = 10.0;'])
+    expect(genJS(vars.get('_j[_d2]'), 'init-constants')).toEqual(['_j[1] = 20.0;'])
+    expect(genJS(vars.get('_k[_a2]'))).toEqual(['_k[1] = _a[1] + _j[0];'])
+    expect(genJS(vars.get('_k[_a3]'))).toEqual(['_k[2] = _a[2] + _j[0];'])
+  })
+
+  it('should work for 1D equation with one dimension used in expression position (apply-to-all)', () => {
     const vars = readInlineModel(`
       DimA: A1, A2 ~~|
       Selected A Index = 1 ~~|
@@ -650,7 +677,7 @@ describe('generateEquation (Vensim -> JS)', () => {
     ])
   })
 
-  it('should work for equation that uses a regular dimension name (non-trivial case) in an expression', () => {
+  it('should work for 1D equation with one subdimension used in expression position (separated/non-apply-to-all)', () => {
     const vars = readInlineModel(`
       DimA: A1, A2, A3 ~~|
       SubA: A1, A3 ~~|
@@ -663,17 +690,112 @@ describe('generateEquation (Vensim -> JS)', () => {
     expect(genJS(vars.get('_x[_a3]'))).toEqual(['_x[2] = (((2 + 1) === _selected_a_index) ? (1.0) : (0.0));'])
   })
 
-  it('should work for equation that uses a mapped dimension name in an expression', () => {
+  it('should work for 2D equation with two distinct dimensions used in expression position (apply-to-all)', () => {
     const vars = readInlineModel(`
       DimA: A1, A2 ~~|
-      DimB: B1, B2 -> DimA ~~|
-      x[DimA] = DimB ~~|
+      DimB: B1, B2 ~~|
+      x[DimA, DimB] = (DimA * 10) + DimB ~~|
     `)
     expect(vars.size).toBe(1)
-    expect(genJS(vars.get('_x'))).toEqual(['for (let i = 0; i < 2; i++) {', '_x[i] = (__map_dimb_dima[i] + 1);', '}'])
+    expect(genJS(vars.get('_x'))).toEqual([
+      'for (let i = 0; i < 2; i++) {',
+      'for (let j = 0; j < 2; j++) {',
+      '_x[i][j] = ((i + 1) * 10.0) + (j + 1);',
+      '}',
+      '}'
+    ])
   })
 
-  it('should work for variables that rely on subscript mappings', () => {
+  it('should work for 2D equation with two distinct dimensions used in expression position (separated/non-apply-to-all)', () => {
+    const vars = readInlineModel(`
+      DimA: A1, A2 ~~|
+      DimB: B1, B2 ~~|
+      x[A1, B1] = 0 ~~|
+      x[DimA, DimB] :EXCEPT: [A1, B1] = (DimA * 10) + DimB ~~|
+    `)
+    expect(vars.size).toBe(4)
+    expect(genJS(vars.get('_x[_a1,_b1]'))).toEqual(['_x[0][0] = 0.0;'])
+    expect(genJS(vars.get('_x[_a1,_b2]'))).toEqual(['_x[0][1] = ((0 + 1) * 10.0) + (1 + 1);'])
+    expect(genJS(vars.get('_x[_a2,_b1]'))).toEqual(['_x[1][0] = ((1 + 1) * 10.0) + (0 + 1);'])
+    expect(genJS(vars.get('_x[_a2,_b2]'))).toEqual(['_x[1][1] = ((1 + 1) * 10.0) + (1 + 1);'])
+  })
+
+  it('should work for 2D equation with two dimensions that resolve to the same family used in expression position (apply-to-all)', () => {
+    const vars = readInlineModel(`
+      DimA: A1, A2 ~~|
+      DimB <-> DimA ~~|
+      x[DimA, DimB] = (DimA * 10) + DimB ~~|
+    `)
+    expect(vars.size).toBe(1)
+    expect(genJS(vars.get('_x'))).toEqual([
+      'for (let i = 0; i < 2; i++) {',
+      'for (let j = 0; j < 2; j++) {',
+      '_x[i][j] = ((i + 1) * 10.0) + (j + 1);',
+      '}',
+      '}'
+    ])
+  })
+
+  it('should work for 2D equation with two dimensions that resolve to the same family used in expression position (separated/non-apply-to-all)', () => {
+    const vars = readInlineModel(`
+      DimA: A1, A2 ~~|
+      DimB <-> DimA ~~|
+      x[A1, A1] = 0 ~~|
+      x[DimA, DimB] :EXCEPT: [A1, A1] = (DimA * 10) + DimB ~~|
+    `)
+    expect(vars.size).toBe(4)
+    expect(genJS(vars.get('_x[_a1,_a1]'))).toEqual(['_x[0][0] = 0.0;'])
+    expect(genJS(vars.get('_x[_a1,_a2]'))).toEqual(['_x[0][1] = ((0 + 1) * 10.0) + (1 + 1);'])
+    expect(genJS(vars.get('_x[_a2,_a1]'))).toEqual(['_x[1][0] = ((1 + 1) * 10.0) + (0 + 1);'])
+    expect(genJS(vars.get('_x[_a2,_a2]'))).toEqual(['_x[1][1] = ((1 + 1) * 10.0) + (1 + 1);'])
+  })
+
+  it('should work for 2D equation with two dimensions (including one subdimension) that resolve to the same family used in expression position (separated/non-apply-to-all)', () => {
+    const vars = readInlineModel(`
+      DimA: A1, A2, A3 ~~|
+      SubA: A1, A3 ~~|
+      DimB <-> DimA ~~|
+      x[A1, A1] = 0 ~~|
+      x[SubA, DimB] :EXCEPT: [A1, A1] = (SubA * 10) + DimB ~~|
+    `)
+    expect(vars.size).toBe(6)
+    expect(genJS(vars.get('_x[_a1,_a1]'))).toEqual(['_x[0][0] = 0.0;'])
+    expect(genJS(vars.get('_x[_a1,_a2]'))).toEqual(['_x[0][1] = ((0 + 1) * 10.0) + (1 + 1);'])
+    expect(genJS(vars.get('_x[_a1,_a3]'))).toEqual(['_x[0][2] = ((0 + 1) * 10.0) + (2 + 1);'])
+    expect(genJS(vars.get('_x[_a3,_a1]'))).toEqual(['_x[2][0] = ((2 + 1) * 10.0) + (0 + 1);'])
+    expect(genJS(vars.get('_x[_a3,_a2]'))).toEqual(['_x[2][1] = ((2 + 1) * 10.0) + (1 + 1);'])
+    expect(genJS(vars.get('_x[_a3,_a3]'))).toEqual(['_x[2][2] = ((2 + 1) * 10.0) + (2 + 1);'])
+  })
+
+  it('should work for 2D equation with mapped dimensions (separated/non-apply-to-all)', () => {
+    // This is taken from the `smooth` sample model.  This test exercises the case where all dimensions
+    // resolve to the same family (DimA), and the variables are partially separated (the first dimension
+    // SubA is separated, but the second dimension DimB uses a loop).
+    const vars = readInlineModel(`
+      DimA: A1, A2, A3 -> DimB ~~|
+      SubA: A2, A3 -> SubB ~~|
+      DimB: B1, B2, B3 ~~|
+      SubB: B2, B3 ~~|
+      x[SubA,DimB] = 3 + PULSE(10, 10) ~~|
+      y[SubA,DimB] = x[SubA,DimB] ~~|
+    `)
+    expect(vars.size).toBe(4)
+    console.log(vars)
+    expect(genJS(vars.get('_x[_a2,_dimb]'))).toEqual([
+      'for (let i = 0; i < 3; i++) {',
+      '_x[1][i] = 3.0 + fns.PULSE(10.0, 10.0);',
+      '}'
+    ])
+    expect(genJS(vars.get('_x[_a3,_dimb]'))).toEqual([
+      'for (let i = 0; i < 3; i++) {',
+      '_x[2][i] = 3.0 + fns.PULSE(10.0, 10.0);',
+      '}'
+    ])
+    expect(genJS(vars.get('_y[_a2,_dimb]'))).toEqual(['for (let i = 0; i < 3; i++) {', '_y[1][i] = _x[1][i];', '}'])
+    expect(genJS(vars.get('_y[_a3,_dimb]'))).toEqual(['for (let i = 0; i < 3; i++) {', '_y[2][i] = _x[2][i];', '}'])
+  })
+
+  it('should work for multiple equations that rely on subscript mappings', () => {
     const vars = readInlineModel(`
       DimA: A1, A2 -> DimB, DimC ~~|
       DimB: B1, B2 ~~|

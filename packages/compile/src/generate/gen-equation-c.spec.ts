@@ -647,7 +647,7 @@ describe('generateEquation (Vensim -> C)', () => {
     expect(genC(vars.get('_z'))).toEqual(['_z = _y[1][0];'])
   })
 
-  it('should work for equation that uses a regular dimension name (trivial case) in an expression', () => {
+  it('should work for 1D equation with one dimension used in expression position (apply-to-all)', () => {
     const vars = readInlineModel(`
       DimA: A1, A2 ~~|
       Selected A Index = 1 ~~|
@@ -662,7 +662,7 @@ describe('generateEquation (Vensim -> C)', () => {
     ])
   })
 
-  it('should work for equation that uses a regular dimension name (non-trivial case) in an expression', () => {
+  it('should work for 1D equation with one subdimension used in expression position (separated/non-apply-to-all)', () => {
     const vars = readInlineModel(`
       DimA: A1, A2, A3 ~~|
       SubA: A1, A3 ~~|
@@ -673,6 +673,83 @@ describe('generateEquation (Vensim -> C)', () => {
     expect(genC(vars.get('_selected_a_index'), 'init-constants')).toEqual(['_selected_a_index = 1.0;'])
     expect(genC(vars.get('_x[_a1]'))).toEqual(['_x[0] = _IF_THEN_ELSE((0 + 1) == _selected_a_index, 1.0, 0.0);'])
     expect(genC(vars.get('_x[_a3]'))).toEqual(['_x[2] = _IF_THEN_ELSE((2 + 1) == _selected_a_index, 1.0, 0.0);'])
+  })
+
+  it('should work for 2D equation with two distinct dimensions used in expression position (apply-to-all)', () => {
+    const vars = readInlineModel(`
+      DimA: A1, A2 ~~|
+      DimB: B1, B2 ~~|
+      x[DimA, DimB] = (DimA * 10) + DimB ~~|
+    `)
+    expect(vars.size).toBe(1)
+    expect(genC(vars.get('_x'))).toEqual([
+      'for (size_t i = 0; i < 2; i++) {',
+      'for (size_t j = 0; j < 2; j++) {',
+      '_x[i][j] = ((i + 1) * 10.0) + (j + 1);',
+      '}',
+      '}'
+    ])
+  })
+
+  it('should work for 2D equation with two distinct dimensions used in expression position (separated/non-apply-to-all)', () => {
+    const vars = readInlineModel(`
+      DimA: A1, A2 ~~|
+      DimB: B1, B2 ~~|
+      x[A1, B1] = 0 ~~|
+      x[DimA, DimB] :EXCEPT: [A1, B1] = (DimA * 10) + DimB ~~|
+    `)
+    expect(vars.size).toBe(4)
+    expect(genC(vars.get('_x[_a1,_b1]'))).toEqual(['_x[0][0] = 0.0;'])
+    expect(genC(vars.get('_x[_a1,_b2]'))).toEqual(['_x[0][1] = ((0 + 1) * 10.0) + (1 + 1);'])
+    expect(genC(vars.get('_x[_a2,_b1]'))).toEqual(['_x[1][0] = ((1 + 1) * 10.0) + (0 + 1);'])
+    expect(genC(vars.get('_x[_a2,_b2]'))).toEqual(['_x[1][1] = ((1 + 1) * 10.0) + (1 + 1);'])
+  })
+
+  it('should work for 2D equation with two dimensions that resolve to the same family used in expression position (apply-to-all)', () => {
+    const vars = readInlineModel(`
+      DimA: A1, A2 ~~|
+      DimB <-> DimA ~~|
+      x[DimA, DimB] = (DimA * 10) + DimB ~~|
+    `)
+    expect(vars.size).toBe(1)
+    expect(genC(vars.get('_x'))).toEqual([
+      'for (size_t i = 0; i < 2; i++) {',
+      'for (size_t j = 0; j < 2; j++) {',
+      '_x[i][j] = ((i + 1) * 10.0) + (j + 1);',
+      '}',
+      '}'
+    ])
+  })
+
+  it('should work for 2D equation with two dimensions that resolve to the same family used in expression position (separated/non-apply-to-all)', () => {
+    const vars = readInlineModel(`
+      DimA: A1, A2 ~~|
+      DimB <-> DimA ~~|
+      x[A1, A1] = 0 ~~|
+      x[DimA, DimB] :EXCEPT: [A1, A1] = (DimA * 10) + DimB ~~|
+    `)
+    expect(vars.size).toBe(4)
+    expect(genC(vars.get('_x[_a1,_a1]'))).toEqual(['_x[0][0] = 0.0;'])
+    expect(genC(vars.get('_x[_a1,_a2]'))).toEqual(['_x[0][1] = ((0 + 1) * 10.0) + (1 + 1);'])
+    expect(genC(vars.get('_x[_a2,_a1]'))).toEqual(['_x[1][0] = ((1 + 1) * 10.0) + (0 + 1);'])
+    expect(genC(vars.get('_x[_a2,_a2]'))).toEqual(['_x[1][1] = ((1 + 1) * 10.0) + (1 + 1);'])
+  })
+
+  it('should work for 2D equation with two dimensions (including one subdimension) that resolve to the same family used in expression position (separated/non-apply-to-all)', () => {
+    const vars = readInlineModel(`
+      DimA: A1, A2, A3 ~~|
+      SubA: A1, A3 ~~|
+      DimB <-> DimA ~~|
+      x[A1, A1] = 0 ~~|
+      x[SubA, DimB] :EXCEPT: [A1, A1] = (SubA * 10) + DimB ~~|
+    `)
+    expect(vars.size).toBe(6)
+    expect(genC(vars.get('_x[_a1,_a1]'))).toEqual(['_x[0][0] = 0.0;'])
+    expect(genC(vars.get('_x[_a1,_a2]'))).toEqual(['_x[0][1] = ((0 + 1) * 10.0) + (1 + 1);'])
+    expect(genC(vars.get('_x[_a1,_a3]'))).toEqual(['_x[0][2] = ((0 + 1) * 10.0) + (2 + 1);'])
+    expect(genC(vars.get('_x[_a3,_a1]'))).toEqual(['_x[2][0] = ((2 + 1) * 10.0) + (0 + 1);'])
+    expect(genC(vars.get('_x[_a3,_a2]'))).toEqual(['_x[2][1] = ((2 + 1) * 10.0) + (1 + 1);'])
+    expect(genC(vars.get('_x[_a3,_a3]'))).toEqual(['_x[2][2] = ((2 + 1) * 10.0) + (2 + 1);'])
   })
 
   it('should work for equation that uses a mapped dimension name in an expression', () => {
