@@ -1452,22 +1452,22 @@ describe('readEquations', () => {
     expect(vars).toEqual([
       v('x[DimC,SubA]', "GET DIRECT CONSTANTS('data/f.csv',',','B2')", {
         directConstArgs: { file: 'data/f.csv', tab: ',', startCell: 'B2' },
-        refId: '_x[_a2,_dimc]',
+        refId: '_x[_dimc,_a2]',
         separationDims: ['_suba'],
-        subscripts: ['_a2', '_dimc'],
+        subscripts: ['_dimc', '_a2'],
         varType: 'const'
       }),
       v('x[DimC,SubA]', "GET DIRECT CONSTANTS('data/f.csv',',','B2')", {
         directConstArgs: { file: 'data/f.csv', tab: ',', startCell: 'B2' },
-        refId: '_x[_a3,_dimc]',
+        refId: '_x[_dimc,_a3]',
         separationDims: ['_suba'],
-        subscripts: ['_a3', '_dimc'],
+        subscripts: ['_dimc', '_a3'],
         varType: 'const'
       }),
       v('x[DimC,DimA]:EXCEPT:[DimC,SubA]', '0', {
-        refId: '_x[_a1,_dimc]',
+        refId: '_x[_dimc,_a1]',
         separationDims: ['_dima'],
-        subscripts: ['_a1', '_dimc'],
+        subscripts: ['_dimc', '_a1'],
         varType: 'const'
       })
     ])
@@ -4403,33 +4403,33 @@ describe('readEquations', () => {
       v('d[D1,DimB,DimC]', "GET DIRECT CONSTANTS('data/c.csv',',','B2')", {
         directConstArgs: { file: 'data/c.csv', tab: ',', startCell: 'B2' },
         refId: '_d',
-        subscripts: ['_dimb', '_dimc', '_d1'],
+        subscripts: ['_d1', '_dimb', '_dimc'],
         varType: 'const'
       }),
       v('e[DimC,DimB]', "GET DIRECT CONSTANTS('data/c.csv',',','B2*')", {
         directConstArgs: { file: 'data/c.csv', tab: ',', startCell: 'B2*' },
         refId: '_e',
-        subscripts: ['_dimb', '_dimc'],
+        subscripts: ['_dimc', '_dimb'],
         varType: 'const'
       }),
       v('f[DimC,DimA]:EXCEPT:[DimC,SubA]', '0', {
-        refId: '_f[_a1,_dimc]',
+        refId: '_f[_dimc,_a1]',
         separationDims: ['_dima'],
-        subscripts: ['_a1', '_dimc'],
+        subscripts: ['_dimc', '_a1'],
         varType: 'const'
       }),
       v('f[DimC,SubA]', "GET DIRECT CONSTANTS('data/f.csv',',','B2')", {
         directConstArgs: { file: 'data/f.csv', tab: ',', startCell: 'B2' },
-        refId: '_f[_a2,_dimc]',
+        refId: '_f[_dimc,_a2]',
         separationDims: ['_suba'],
-        subscripts: ['_a2', '_dimc'],
+        subscripts: ['_dimc', '_a2'],
         varType: 'const'
       }),
       v('f[DimC,SubA]', "GET DIRECT CONSTANTS('data/f.csv',',','B2')", {
         directConstArgs: { file: 'data/f.csv', tab: ',', startCell: 'B2' },
-        refId: '_f[_a3,_dimc]',
+        refId: '_f[_dimc,_a3]',
         separationDims: ['_suba'],
-        subscripts: ['_a3', '_dimc'],
+        subscripts: ['_dimc', '_a3'],
         varType: 'const'
       }),
       v('FINAL TIME', '1', {
@@ -5468,7 +5468,7 @@ describe('readEquations', () => {
       }),
       v('EBC Values[DimE,DimB,DimC]', '', {
         refId: '_ebc_values',
-        subscripts: ['_dimb', '_dimc', '_dime'],
+        subscripts: ['_dime', '_dimb', '_dimc'],
         varType: 'data'
       }),
       v('FINAL TIME', '10', {
@@ -5521,7 +5521,7 @@ describe('readEquations', () => {
           refId: '_total_ebc_for_selected_c',
           referencedFunctionNames: ['__vector_select'],
           references: ['_c_selection', '_ebc_values', '_vssum', '_vserratleastone'],
-          subscripts: ['_dimb', '_dime']
+          subscripts: ['_dime', '_dimb']
         }
       ),
       v('VSERRATLEASTONE', '1', {
@@ -6008,7 +6008,7 @@ describe('readEquations', () => {
       }),
       v('EqnB[DimX,DimW]', '1', {
         refId: '_eqnb',
-        subscripts: ['_dimw', '_dimx'],
+        subscripts: ['_dimx', '_dimw'],
         varType: 'const'
       }),
       v(
@@ -8271,19 +8271,19 @@ describe('readEquations', () => {
         varType: 'const'
       }),
       v('g[B1,DimA]', 'f[DimA,B1]', {
-        refId: '_g[_dima,_b1]',
+        refId: '_g[_b1,_dima]',
         references: ['_f[_dima,_b1]'],
-        subscripts: ['_dima', '_b1']
+        subscripts: ['_b1', '_dima']
       }),
       v('g[B2,DimA]', 'f[DimA,B2]', {
-        refId: '_g[_dima,_b2]',
+        refId: '_g[_b2,_dima]',
         references: ['_f[_dima,_b2]'],
-        subscripts: ['_dima', '_b2']
+        subscripts: ['_b2', '_dima']
       }),
       v('g[B3,DimA]', 'f[DimA,B3]', {
-        refId: '_g[_dima,_b3]',
+        refId: '_g[_b3,_dima]',
         references: ['_f[_dima,_b3]'],
-        subscripts: ['_dima', '_b3']
+        subscripts: ['_b3', '_dima']
       }),
       v('INITIAL TIME', '0', {
         refId: '_initial_time',
@@ -8297,7 +8297,7 @@ describe('readEquations', () => {
       v('p[DimB,DimA]', 'f[DimA,DimB]', {
         refId: '_p',
         references: ['_f[_dima,_b1]', '_f[_dima,_b2]', '_f[_dima,_b3]'],
-        subscripts: ['_dima', '_dimb']
+        subscripts: ['_dimb', '_dima']
       }),
       v('r[DimA]', 'IF THEN ELSE(DimA=Selected A,1,0)', {
         refId: '_r',

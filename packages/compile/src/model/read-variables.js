@@ -3,14 +3,7 @@ import * as R from 'ramda'
 import { toPrettyString } from '@sdeverywhere/parse'
 
 import { cartesianProductOf } from '../_shared/helpers.js'
-import {
-  isDimension,
-  isIndex,
-  isSubdimension,
-  normalizeSubscripts,
-  sub,
-  subscriptsMatch
-} from '../_shared/subscript.js'
+import { isDimension, isIndex, isSubdimension, sub, subscriptsMatch } from '../_shared/subscript.js'
 
 import Variable from './variable.js'
 
@@ -56,12 +49,11 @@ function variablesForEquation(eqn, specialSeparationDims) {
   const baseVarId = lhs.varId
   let lhsText
   if (lhs.subscriptRefs?.length > 0) {
-    // Note that we use the original order of subscripts here, not the "normalized"
-    // order as below.  (This is how the legacy parser worked, so we will preserve
-    // that behavior for now.)
+    // Get the LHS subscript/dimension names
     const subNames = lhs.subscriptRefs.map(sub => sub.subName)
     let exceptPart
     if (lhs.exceptSubscriptRefSets) {
+      // Get the LHS "except" subscript/dimension names
       const exceptSets = lhs.exceptSubscriptRefSets.map(exceptSubRefs => {
         const exceptSubNames = exceptSubRefs.map(sub => sub.subName)
         return `[${exceptSubNames.join(',')}]`
@@ -97,20 +89,20 @@ function variablesForEquation(eqn, specialSeparationDims) {
   // If the variable is subscripted, expand on the LHS subscripts
   let expansions = []
   if (lhs.subscriptRefs?.length > 0) {
-    // XXX: We use `normalizeSubscripts` here so that we are compatible with
-    // the legacy parser.  It normalizes by putting the subscripts in alphabetical
-    // order by family.  This approach to ordering may lead to issues in cases where
-    // there are multiple dimensions used that resolve to the same family, so we
-    // should revisit this.
-    const subIds = normalizeSubscripts(lhs.subscriptRefs.map(ref => ref.subId))
+    // Get the LHS subscript/dimension IDs
+    const subIds = lhs.subscriptRefs.map(ref => ref.subId)
     const exceptSubIdSets = []
     if (lhs.exceptSubscriptRefSets?.length > 0) {
+      // Get the LHS "except" subscript/dimension IDs
       for (const exceptSubRefs of lhs.exceptSubscriptRefSets) {
-        exceptSubIdSets.push(normalizeSubscripts(exceptSubRefs.map(ref => ref.subId)))
+        exceptSubIdSets.push(exceptSubRefs.map(ref => ref.subId))
       }
     }
 
-    // Determine which positions we will expand
+    // At this point, we need to decide how to deal with each subscript/dimension position,
+    // i.e., whether to expand to multiple non-apply-to-all variable instances (that are
+    // evaluated independently at runtime), or to have one apply-to-all variable instance
+    // (that can be evaluated using loops at runtime)
     let positionsToExpand
     if (eqn.rhs.kind === 'const-list') {
       // For const lists, we expand on all dimensions (unconditionally)
@@ -156,7 +148,7 @@ function variablesForEquation(eqn, specialSeparationDims) {
  *
  * TODO: Use correct types here
  *
- * @param {*} subIds The list of subscripts appearing on the LHS in normalized order.
+ * @param {*} subIds The list of subscripts appearing on the LHS in the original order.
  * @param {*} exceptSubIdSets An array of subscript lists from the :EXCEPT: clause.
  * @param {string[]} separationDims The variable names that need to be separated for this
  * variable because of circular references.
@@ -209,7 +201,7 @@ function subscriptPositionsToExpand(subIds, exceptSubIdSets, separationDims, rhs
  * TODO: Use correct types here
  *
  * @param {string} baseVarId The canonical base name of the variable.
- * @param {*} subIds The list of subscripts appearing on the LHS in normalized order.
+ * @param {*} subIds The list of subscripts appearing on the LHS in original order.
  * @param {*} exceptSubIdSets An array of subscript lists from the :EXCEPT: clause.
  * @param {*} positionsToExpand An array of boolean flags, one for each subscript position.
  * @returns {*} An array of objects containing the `subIds` and `separationDims` for each expansion.

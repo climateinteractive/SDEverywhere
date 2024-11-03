@@ -9,7 +9,6 @@ import {
   indexNamesForSubscript,
   isDimension,
   isIndex,
-  normalizeSubscripts,
   separatedVariableIndex,
   sub
 } from '../_shared/subscript.js'
@@ -715,14 +714,12 @@ function validateCallArgType(callExpr, index, expectedKind) {
  * for it.
  */
 function expandedRefIdsForVar(lhsVariable, baseRefId, subscripts) {
-  // Remove dimension subscripts marked with ! and save them for later.
-  let markedDims = extractMarkedDims(subscripts)
-  subscripts = normalizeSubscripts(subscripts)
-  // console.error(`${this.var.refId} → ${this.refId} [ ${subscripts} ]`);
-
   if (subscripts.length === 0) {
     return []
   }
+
+  // Remove dimension subscripts marked with ! and save them for later.
+  let markedDims = extractMarkedDims(subscripts)
 
   // See if this variable is non-apply-to-all. At this point, the refId is just the var name.
   // References to apply-to-all variables do not need subscripts since they refer to the whole array.

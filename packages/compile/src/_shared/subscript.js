@@ -233,18 +233,6 @@ export function loadSubscriptsFromYaml(yamlSubs) {
     subscripts.set(k, subs[k])
   }
 }
-export function normalizeSubscripts(subscripts) {
-  // Sort a list of subscript names already in canonical form according to the subscript family.
-  let subs = R.map(name => sub(name), subscripts)
-  subs = R.sortBy(R.prop('family'), subs)
-  let normalizedSubs
-  try {
-    normalizedSubs = R.map(R.prop('name'), subs)
-  } catch (e) {
-    console.error(`normalizeSubscripts fails for ${subscripts}`)
-  }
-  return normalizedSubs
-}
 export function extractMarkedDims(subscripts) {
   // Extract all marked dimensions and update subscripts.
   let dims = []

@@ -543,14 +543,12 @@ describe('generateEquation (Vensim -> JS)', () => {
       z = x[B2, A1] ~~|
     `)
     expect(vars.size).toBe(8)
-    // Note that the compiler currently normalizes the subscripts (orders them alphabetically
-    // by dimension name), so the order of subscripts may be surprising here
-    expect(genJS(vars.get(/*B1,A1*/ '_x[_a1,_b1]'), 'init-constants')).toEqual(['_x[0][0] = 1.0;'])
-    expect(genJS(vars.get(/*B1,A2*/ '_x[_a2,_b1]'), 'init-constants')).toEqual(['_x[1][0] = 2.0;'])
-    expect(genJS(vars.get(/*B2,A1*/ '_x[_a1,_b2]'), 'init-constants')).toEqual(['_x[0][1] = 3.0;'])
-    expect(genJS(vars.get(/*B2,A2*/ '_x[_a2,_b2]'), 'init-constants')).toEqual(['_x[1][1] = 4.0;'])
-    expect(genJS(vars.get(/*B3,A1*/ '_x[_a1,_b3]'), 'init-constants')).toEqual(['_x[0][2] = 5.0;'])
-    expect(genJS(vars.get(/*B2,A2*/ '_x[_a2,_b3]'), 'init-constants')).toEqual(['_x[1][2] = 6.0;'])
+    expect(genJS(vars.get('_x[_b1,_a1]'), 'init-constants')).toEqual(['_x[0][0] = 1.0;'])
+    expect(genJS(vars.get('_x[_b1,_a2]'), 'init-constants')).toEqual(['_x[0][1] = 2.0;'])
+    expect(genJS(vars.get('_x[_b2,_a1]'), 'init-constants')).toEqual(['_x[1][0] = 3.0;'])
+    expect(genJS(vars.get('_x[_b2,_a2]'), 'init-constants')).toEqual(['_x[1][1] = 4.0;'])
+    expect(genJS(vars.get('_x[_b3,_a1]'), 'init-constants')).toEqual(['_x[2][0] = 5.0;'])
+    expect(genJS(vars.get('_x[_b3,_a2]'), 'init-constants')).toEqual(['_x[2][1] = 6.0;'])
     expect(genJS(vars.get('_y'))).toEqual(['_y = _x[1][2];'])
     expect(genJS(vars.get('_z'))).toEqual(['_z = _x[0][1];'])
   })
@@ -583,15 +581,13 @@ describe('generateEquation (Vensim -> JS)', () => {
       y = x[B2, A3] ~~|
     `)
     expect(vars.size).toBe(7)
-    // Note that the compiler currently normalizes the subscripts (orders them alphabetically
-    // by dimension name), so the order of subscripts may be surprising here
-    expect(genJS(vars.get(/*B1,A1*/ '_x[_a1,_b1]'), 'init-constants')).toEqual(['_x[0][0] = 1.0;'])
-    expect(genJS(vars.get(/*B1,A2*/ '_x[_a2,_b1]'), 'init-constants')).toEqual(['_x[1][0] = 2.0;'])
-    expect(genJS(vars.get(/*B1,A3*/ '_x[_a3,_b1]'), 'init-constants')).toEqual(['_x[2][0] = 3.0;'])
-    expect(genJS(vars.get(/*B2,A1*/ '_x[_a1,_b2]'), 'init-constants')).toEqual(['_x[0][1] = 4.0;'])
-    expect(genJS(vars.get(/*B2,A2*/ '_x[_a2,_b2]'), 'init-constants')).toEqual(['_x[1][1] = 5.0;'])
-    expect(genJS(vars.get(/*B2,A3*/ '_x[_a3,_b2]'), 'init-constants')).toEqual(['_x[2][1] = 6.0;'])
-    expect(genJS(vars.get('_y'))).toEqual(['_y = _x[2][1];'])
+    expect(genJS(vars.get('_x[_b1,_a1]'), 'init-constants')).toEqual(['_x[0][0] = 1.0;'])
+    expect(genJS(vars.get('_x[_b1,_a2]'), 'init-constants')).toEqual(['_x[0][1] = 2.0;'])
+    expect(genJS(vars.get('_x[_b1,_b3]'), 'init-constants')).toEqual(['_x[0][2] = 3.0;'])
+    expect(genJS(vars.get('_x[_b2,_a1]'), 'init-constants')).toEqual(['_x[1][0] = 4.0;'])
+    expect(genJS(vars.get('_x[_b2,_a2]'), 'init-constants')).toEqual(['_x[1][1] = 5.0;'])
+    expect(genJS(vars.get('_x[_b2,_a3]'), 'init-constants')).toEqual(['_x[1][2] = 6.0;'])
+    expect(genJS(vars.get('_y'))).toEqual(['_y = _x[1][2];'])
   })
 
   it('should work for equation with one dimension', () => {

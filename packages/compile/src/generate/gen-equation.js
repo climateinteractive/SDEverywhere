@@ -4,7 +4,6 @@ import {
   isDimension,
   isIndex,
   isTrivialDimension,
-  normalizeSubscripts,
   separatedVariableIndex,
   sub
 } from '../_shared/subscript.js'
@@ -204,14 +203,9 @@ function cVarRef(lhsVariable, rhsVarRef, markedDimIds, loopIndexVars, arrayIndex
     return rhsVarRef.varId
   }
 
-  // Normalize the RHS subscripts
-  let rhsSubIds
-  try {
-    // XXX: For now, strip the mark here (need to revisit this)
-    rhsSubIds = normalizeSubscripts(rhsVarRef.subscriptRefs.map(subRef => subRef.subId.replace('!', '')))
-  } catch (e) {
-    throw new Error(`normalizeSubscripts failed in rhsVarRef: refId=${lhsVariable.refId} error=${e}`)
-  }
+  // Get the RHS subscripts
+  // XXX: For now, strip the mark here (need to revisit this)
+  const rhsSubIds = rhsVarRef.subscriptRefs.map(subRef => subRef.subId.replace('!', ''))
 
   // Determine the subscript code (array lookup) for each dimension.  For example, if
   // the RHS variable reference in the model looks like `x[DimA]`, this will convert the
