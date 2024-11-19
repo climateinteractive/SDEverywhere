@@ -130,6 +130,11 @@ yarn create @sdeverywhere
 
 Answer a few questions, and within minutes you can have a functional web application that runs your model!
 
+If you don't have a `config` folder, you can keep all default answers.
+
+If you have a pre-existing `config` folder, answer "no" to both questions asking to configure a graph and a few sliders to get you started.  
+> If you answer "yes" with a pre-existing `config` folder, one of those will add a new graph (with ID "1") to the existing `graphs.csv` file, and another will add a new slider (with ID "1") to the existing `inputs.csv` file. The values in the "id" column in those csv files need to be unique, thus you will be getting an error message such as `More than one string with key={a_duplicated_key}`.
+
 ## Documentation
 
 Detailed API and usage documentation for each `@sdeverywhere` package can be found in the ["Packages"](#packages) section below.
