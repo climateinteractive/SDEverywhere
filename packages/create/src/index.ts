@@ -1,8 +1,9 @@
 // Copyright (c) 2022 Climate Interactive / New Venture Fund
 
-import { relative } from 'path'
+import { existsSync } from 'fs'
+import { relative, resolve as resolvePath } from 'path'
 
-import { bgCyan, black, bold, cyan, green } from 'kleur/colors'
+import { bgCyan, black, bold, cyan, dim, green } from 'kleur/colors'
 import ora from 'ora'
 import prompts from 'prompts'
 import detectPackageManager from 'which-pm-runs'
@@ -25,6 +26,11 @@ export async function main(): Promise<void> {
   const args = yargs(process.argv)
   prompts.override(args)
 
+  if (args.dryRun) {
+    console.log()
+    ora().info(dim(`--dry-run enabled, no files will be written.`))
+  }
+
   // Display welcome message
   console.log(`\n${bold('Welcome to SDEverywhere!')}`)
   console.log(`Let's create a new SDEverywhere project for your model.\n`)
@@ -32,6 +38,9 @@ export async function main(): Promise<void> {
   // Prompt the user to select a project directory
   const projDir = await chooseProjectDir(args)
   console.log()
+
+  // See if there is a pre-existing `config` directory
+  const configDirExisted = existsSync(resolvePath(projDir, 'config'))
 
   // Prompt the user to select a template
   const templateName = await chooseTemplate(projDir, args, pkgManager)
@@ -52,10 +61,21 @@ export async function main(): Promise<void> {
   }
   console.log()
 
-  // If the user chose the default template, offer to set up CSV files
-  if (templateName === 'template-default' && !args.dryRun) {
-    await chooseGenConfig(projDir, mdlPath)
-    console.log()
+  // If the user chose the default template, and there isn't already an
+  // existing `config` directory, offer to set up CSV files
+  if (templateName === 'template-default') {
+    if (configDirExisted) {
+      ora().succeed(`Found existing "${bold('config')}" directory.`)
+      ora().info(
+        dim(`You can edit the files in the "${cyan('config')}" directory later to configure graphs and sliders.`)
+      )
+      console.log()
+    } else {
+      if (!args.dryRun) {
+        await chooseGenConfig(projDir, mdlPath)
+        console.log()
+      }
+    }
   }
 
   // If the user chose C as the code generation format, prompt the user to

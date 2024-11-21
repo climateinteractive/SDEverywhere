@@ -27,6 +27,7 @@
   "dependencies": {
     "@sdeverywhere/compile": "^0.7.20",
     "execa": "^6.1.0",
+    "find-up": "^6.3.0",
     "fs-extra": "^10.1.0",
     "giget": "^1.2.3",
     "kleur": "^4.1.5",

@@ -359,6 +359,9 @@ importers:
       execa:
         specifier: ^6.1.0
         version: 6.1.0
+      find-up:
+        specifier: ^6.3.0
+        version: 6.3.0
       fs-extra:
         specifier: ^10.1.0
         version: 10.1.0
