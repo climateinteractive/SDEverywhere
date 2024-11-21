@@ -128,12 +128,13 @@ pnpm create @sdeverywhere@latest
 yarn create @sdeverywhere
 ```
 
-Answer a few questions, and within minutes you can have a functional web application that runs your model!
+The `create` script will ask you a few questions.
+The default answers have been chosen to get you up and running quickly.
+If at any step you are unsure of the best option, simply hit the "enter" key to select the default answer.
+You can always change the configuration for your project after it has been created by editing the `sde.config.js` file and the other files in the `config` directory.
 
-If you don't have a `config` folder, you can keep all default answers.
-
-If you have a pre-existing `config` folder, answer "no" to both questions asking to configure a graph and a few sliders to get you started.  
-> If you answer "yes" with a pre-existing `config` folder, one of those will add a new graph (with ID "1") to the existing `graphs.csv` file, and another will add a new slider (with ID "1") to the existing `inputs.csv` file. The values in the "id" column in those csv files need to be unique, thus you will be getting an error message such as `More than one string with key={a_duplicated_key}`.
+After answering all questions, you will have a functional web application that runs your model!
+For more guidance on configuring your project, refer to [Creating a Web Application](https://github.com/climateinteractive/SDEverywhere/wiki/Creating-a-Web-Application) in the [SDEverywhere wiki](https://github.com/climateinteractive/SDEverywhere/wiki).
 
 ## Documentation
 
