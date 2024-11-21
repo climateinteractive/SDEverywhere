@@ -24,7 +24,8 @@ cd ./sir
 
 # Create a new project (you can also use yarn or pnpm here, if preferred).
 # Be sure to choose the "Default" template, which will make use of the
-# existing files in the `config` directory.
+# existing files in the `sir/config` directory that have been
+# pre-configured with some graphs and sliders.
 npm create @sdeverywhere@latest
 
 # Enter development mode for the sample model.  This will start a live

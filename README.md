@@ -128,7 +128,13 @@ pnpm create @sdeverywhere@latest
 yarn create @sdeverywhere
 ```
 
-Answer a few questions, and within minutes you can have a functional web application that runs your model!
+The `create` script will ask you a few questions.
+The default answers have been chosen to get you up and running quickly.
+If at any step you are unsure of the best option, simply hit the "enter" key to select the default answer.
+You can always change the configuration for your project after it has been created by editing the `sde.config.js` file and the other files in the `config` directory.
+
+After answering all questions, you will have a functional web application that runs your model!
+For more guidance on configuring your project, refer to [Creating a Web Application](https://github.com/climateinteractive/SDEverywhere/wiki/Creating-a-Web-Application) in the [SDEverywhere wiki](https://github.com/climateinteractive/SDEverywhere/wiki).
 
 ## Documentation
 
