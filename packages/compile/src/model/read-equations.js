@@ -259,11 +259,29 @@ function visitExpr(v, expr, context) {
 }
 
 /**
- * TODO: Docs
+ * Visit a RHS variable reference and add the referenced variable instance(s) to the
+ * set of references.
  *
- * @param {*} v
- * @param {*} varRefExpr
- * @param {*} context
+ * If the referenced variable does not have subscripts, or is an apply-to-all variable,
+ * this will add a single reference:
+ *
+ * Example 1: RHS variable has no subscripts (`_y` has a single reference to `_x`)
+ *   y = x ~~|
+ *
+ * Example 2: RHS variable is apply-to-all (`_y` has a single reference to `_x`)
+ *   x[DimA] = 1 ~~|
+ *   y[DimA] = x[DimA] ~~|
+ *
+ * If the referenced variable is a non-apply-to-all (separated) variable, this will
+ * add one reference for each variable instance:
+ *
+ * Example 3: RHS variable is non-apply-to-all (`_y` has references to `_x[_a1]`, `_x[_a2]`, etc)
+ *   x[DimA] = 1, 2 ~~|
+ *   y[DimA] = x[DimA] ~~|
+ *
+ * @param {*} v The parsed variable.
+ * @param {*} varRefExpr The variable reference that appears on the RHS of the `v` equation.
+ * @param {*} context The read context.
  */
 function visitVariableRef(v, varRefExpr, context) {
   // Mark the RHS as non-constant, since it has a variable reference
@@ -281,15 +299,13 @@ function visitVariableRef(v, varRefExpr, context) {
   // Determine whether to add references to specific refIds (in the case of separated
   // non-apply-to-all variables) or just a single base refId (in the case of non-subscripted
   // or apply-to-all variables)
-  const baseRefId = varRefExpr.varId
-  const subIds = varRefExpr.subscriptRefs?.map(subRef => subRef.subId) || []
-  const expandedRefIds = expandedRefIdsForVar(v, baseRefId, subIds)
-  if (expandedRefIds.length > 0) {
-    // Add a reference to each instance of the non-apply-to-all variable
-    expandedRefIds.forEach(refId => context.addVarReference(refId))
-  } else {
-    // Add the single variable refId to the list of referenced variables
-    context.addVarReference(baseRefId)
+  const rhsBaseRefId = varRefExpr.varId
+  const rhsSubIds = varRefExpr.subscriptRefs?.map(subRef => subRef.subId) || []
+
+  // Record each instance of the referenced variable
+  const expandedRefIds = expandedRefIdsForVar(v, rhsBaseRefId, rhsSubIds)
+  for (const refId of expandedRefIds) {
+    context.addVarReference(refId)
   }
 }
 
@@ -645,9 +661,9 @@ function visitFunctionCall(v, callExpr, context) {
         if (argExpr.kind !== 'variable-ref') {
           throw new Error(`ALLOCATE AVAILABLE argument 'pp' must be a variable reference`)
         }
-        const baseRefId = argExpr.varId
-        const subIds = argExpr.subscriptRefs?.map(subRef => subRef.subId) || []
-        const expandedRefIds = expandedRefIdsForVar(v, baseRefId, subIds)
+        const rhsVarBaseRefId = argExpr.varId
+        const rhsVarSubIds = argExpr.subscriptRefs?.map(subRef => subRef.subId) || []
+        const expandedRefIds = expandedRefIdsForVar(v, rhsVarBaseRefId, rhsVarSubIds)
         const ptypeRefId = expandedRefIds[0]
         const { subscripts } = Model.splitRefId(ptypeRefId)
         const ptypeIndexName = subscripts[1]
@@ -705,54 +721,63 @@ function validateCallArgType(callExpr, index, expectedKind) {
 }
 
 /**
- * When an equation references a non-apply-to-all array, add its subscripts to the array
- * var's refId.
- *
- * XXX: This is largely copied from the legacy `equation-reader.js` and modified to work
- * with the AST instead of directly depending on antlr4-vensim constructs.  This is pretty
- * complex so we should try to refactor or at least add some more fine-grained unit tests
- * for it.
+ * Return an array of `refId`s for the variables that are referenced on the RHS of the
+ * equation for `lhsVariable`.
  */
-function expandedRefIdsForVar(lhsVariable, baseRefId, subscripts) {
-  if (subscripts.length === 0) {
-    return []
+function expandedRefIdsForVar(lhsVariable, rhsBaseRefId, rhsSubIds) {
+  if (rhsSubIds.length === 0) {
+    // The reference is to non-subscripted variable, so return a single reference to the
+    // base variable ID
+    return [rhsBaseRefId]
   }
 
   // Remove dimension subscripts marked with ! and save them for later.
-  let markedDims = extractMarkedDims(subscripts)
+  let markedDims = extractMarkedDims(rhsSubIds)
 
-  // See if this variable is non-apply-to-all. At this point, the refId is just the var name.
-  // References to apply-to-all variables do not need subscripts since they refer to the whole array.
-  let expansionFlags = Model.expansionFlags(baseRefId)
+  //
+  // See if this variable is non-apply-to-all.  This will return a boolean for each
+  // subscript position of the referenced variable.
+  //
+  // Example 1: Suppose we have a 3D non-apply-to-all variable (that is separated
+  // over the middle dimension):
+  //   x[DimA, SubB, DimC] = 1 ~~|
+  // In this case, `expansionFlags` will return [false, true, false].
+  //
+  // Example 2: Suppose we have a 3D apply-to-all variable:
+  //   x[DimA, DimB, DimC] = 1 ~~|
+  // In this case, `expansionFlags` will return `undefined` because the referenced
+  // variable is apply-to-all.
+  //
+  let expansionFlags = Model.expansionFlags(rhsBaseRefId)
   if (!expansionFlags) {
-    // The reference is to a non-subscripted or apply-to-all variable
-    return []
+    // The reference is to an apply-to-all variable, so return a single reference to the
+    // base variable ID
+    return [rhsBaseRefId]
   }
 
   // The reference is to a non-apply-to-all variable.
   // Find the refIds of the vars that include the indices in the reference.
   // Get the vars with the var name of the reference. We will choose from these vars.
-  let varsWithRefName = Model.varsWithName(baseRefId)
+  let varsWithRefName = Model.varsWithName(rhsBaseRefId)
 
   // The refIds of actual vars containing the indices will accumulate with possible duplicates.
   let expandedRefIds = []
-  let iSub
 
   // Accumulate an array of lists of the separated index names at each position.
   let indexNames = []
-  for (iSub = 0; iSub < expansionFlags.length; iSub++) {
+  for (let iSub = 0; iSub < expansionFlags.length; iSub++) {
     if (expansionFlags[iSub]) {
       // For each index name at the subscript position, find refIds for vars that include the index.
       // This process ensures that we generate references to vars that are in the var table.
       let indexNamesAtPos
       // Use the single index name for a separated variable if it exists.
       // But don't do this if the subscript is a marked dimension in a vector function.
-      let separatedIndexName = separatedVariableIndex(subscripts[iSub], lhsVariable, subscripts)
-      if (!markedDims.includes(subscripts[iSub]) && separatedIndexName) {
+      let separatedIndexName = separatedVariableIndex(rhsSubIds[iSub], lhsVariable, rhsSubIds)
+      if (!markedDims.includes(rhsSubIds[iSub]) && separatedIndexName) {
         indexNamesAtPos = [separatedIndexName]
       } else {
         // Generate references to all the indices for the subscript.
-        indexNamesAtPos = indexNamesForSubscript(subscripts[iSub])
+        indexNamesAtPos = indexNamesForSubscript(rhsSubIds[iSub])
       }
       indexNames.push(indexNamesAtPos)
     }
@@ -765,6 +790,7 @@ function expandedRefIdsForVar(lhsVariable, baseRefId, subscripts) {
     // Consider each var with the same name as the reference in the equation.
     for (let refVar of varsWithRefName) {
       let iSeparatedIndex = 0
+      let iSub
       for (iSub = 0; iSub < expansionFlags.length; iSub++) {
         if (expansionFlags[iSub]) {
           let refVarIndexNames = indexNamesForSubscript(refVar.subscripts[iSub])
