@@ -308,6 +308,1232 @@ describe('readEquations', () => {
     ])
   })
 
+  //
+  // NOTE: The following "should work for {0,1,2,3}D variable" tests are aligned with the ones
+  // in `gen-equation-{c,js}.spec.ts` (they exercise the same test models/equations).  Having both
+  // sets of tests makes it easier to see whether a bug is in the "read equations" phase or
+  // in the "code gen" phase or both.
+  //
+
+  describe('when LHS has no subscripts', () => {
+    it('should work when RHS variable has no subscripts', () => {
+      const vars = readInlineModel(`
+        x = 1 ~~|
+        y = x ~~|
+      `)
+      expect(vars).toEqual([
+        v('x', '1', {
+          refId: '_x',
+          varType: 'const'
+        }),
+        // refIdsForRhsVarRef(_y, '_x', [])
+        //   -> ['_x']
+        v('y', 'x', {
+          refId: '_y',
+          references: ['_x']
+        })
+      ])
+    })
+
+    it('should work when RHS variable is apply-to-all (1D) and is accessed with specific subscript', () => {
+      const vars = readInlineModel(`
+        DimA: A1, A2 ~~|
+        x[DimA] = 1 ~~|
+        y = x[A1] ~~|
+      `)
+      expect(vars).toEqual([
+        v('x[DimA]', '1', {
+          refId: '_x',
+          subscripts: ['_dima'],
+          varType: 'const'
+        }),
+        // refIdsForRhsVarRef(_y, '_x', ['_a1'])
+        //   -> ['_x']
+        v('y', 'x[A1]', {
+          refId: '_y',
+          references: ['_x']
+        })
+      ])
+    })
+
+    it('should work when RHS variable is NON-apply-to-all (1D) and is accessed with specific subscript', () => {
+      const vars = readInlineModel(`
+        DimA: A1, A2 ~~|
+        x[DimA] = 1, 2 ~~|
+        y = x[A1] ~~|
+      `)
+      expect(vars).toEqual([
+        v('x[DimA]', '1,2', {
+          refId: '_x[_a1]',
+          separationDims: ['_dima'],
+          subscripts: ['_a1'],
+          varType: 'const'
+        }),
+        v('x[DimA]', '1,2', {
+          refId: '_x[_a2]',
+          separationDims: ['_dima'],
+          subscripts: ['_a2'],
+          varType: 'const'
+        }),
+        // refIdsForRhsVarRef(_y, '_x', ['_a1'])
+        //   -> ['_x[_a1]']
+        v('y', 'x[A1]', {
+          refId: '_y',
+          references: ['_x[_a1]']
+        })
+      ])
+    })
+
+    it('should work when RHS variable is apply-to-all (2D) and is accessed with specific subscripts', () => {
+      const vars = readInlineModel(`
+        DimA: A1, A2 ~~|
+        DimB: B1, B2 ~~|
+        x[DimA, DimB] = 1 ~~|
+        y = x[A1, B2] ~~|
+      `)
+      expect(vars).toEqual([
+        v('x[DimA,DimB]', '1', {
+          refId: '_x',
+          subscripts: ['_dima', '_dimb'],
+          varType: 'const'
+        }),
+        // refIdsForRhsVarRef(_y, '_x', ['_a1', '_b2'])
+        //   -> ['_x']
+        v('y', 'x[A1,B2]', {
+          refId: '_y',
+          references: ['_x']
+        })
+      ])
+    })
+
+    it('should work when RHS variable is NON-apply-to-all (2D) and is accessed with specific subscripts', () => {
+      const vars = readInlineModel(`
+        DimA: A1, A2 ~~|
+        DimB: B1, B2 ~~|
+        x[DimA, DimB] = 1, 2; 3, 4; ~~|
+        y = x[A1, B2] ~~|
+      `)
+      expect(vars).toEqual([
+        v('x[DimA,DimB]', '1,2;3,4;', {
+          refId: '_x[_a1,_b1]',
+          separationDims: ['_dima', '_dimb'],
+          subscripts: ['_a1', '_b1'],
+          varType: 'const'
+        }),
+        v('x[DimA,DimB]', '1,2;3,4;', {
+          refId: '_x[_a1,_b2]',
+          separationDims: ['_dima', '_dimb'],
+          subscripts: ['_a1', '_b2'],
+          varType: 'const'
+        }),
+        v('x[DimA,DimB]', '1,2;3,4;', {
+          refId: '_x[_a2,_b1]',
+          separationDims: ['_dima', '_dimb'],
+          subscripts: ['_a2', '_b1'],
+          varType: 'const'
+        }),
+        v('x[DimA,DimB]', '1,2;3,4;', {
+          refId: '_x[_a2,_b2]',
+          separationDims: ['_dima', '_dimb'],
+          subscripts: ['_a2', '_b2'],
+          varType: 'const'
+        }),
+        // refIdsForRhsVarRef(_y, '_x', ['_a1', '_b2'])
+        //   -> ['_x[_a1,_b2]']
+        v('y', 'x[A1,B2]', {
+          refId: '_y',
+          references: ['_x[_a1,_b2]']
+        })
+      ])
+    })
+
+    it('should work when RHS variable is apply-to-all (3D) and is accessed with specific subscripts', () => {
+      const vars = readInlineModel(`
+        DimA: A1, A2 ~~|
+        DimB: B1, B2 ~~|
+        DimC: C1, C2 ~~|
+        x[DimA, DimC, DimB] = 1 ~~|
+        y = x[A1, C2, B2] ~~|
+      `)
+      expect(vars).toEqual([
+        v('x[DimA,DimC,DimB]', '1', {
+          refId: '_x',
+          subscripts: ['_dima', '_dimc', '_dimb'],
+          varType: 'const'
+        }),
+        // refIdsForRhsVarRef(_y, '_x', ['_a1', '_c2', '_b2'])
+        //   -> ['_x']
+        v('y', 'x[A1,C2,B2]', {
+          refId: '_y',
+          references: ['_x']
+        })
+      ])
+    })
+
+    it('should work when RHS variable is NON-apply-to-all (3D) and is accessed with specific subscripts', () => {
+      const vars = readInlineModel(`
+        DimA: A1, A2 ~~|
+        DimB: B1, B2 ~~|
+        DimC: C1, C2 ~~|
+        x[DimA, DimC, DimB] :EXCEPT: [DimA, DimC, B1] = 1 ~~|
+        x[DimA, DimC, B1] = 2 ~~|
+        y = x[A1, C2, B2] ~~|
+      `)
+      expect(vars).toEqual([
+        v('x[DimA,DimC,DimB]:EXCEPT:[DimA,DimC,B1]', '1', {
+          refId: '_x[_dima,_dimc,_b2]',
+          separationDims: ['_dimb'],
+          subscripts: ['_dima', '_dimc', '_b2'],
+          varType: 'const'
+        }),
+        v('x[DimA,DimC,B1]', '2', {
+          refId: '_x[_dima,_dimc,_b1]',
+          subscripts: ['_dima', '_dimc', '_b1'],
+          varType: 'const'
+        }),
+        // refIdsForRhsVarRef(_y, '_x', ['_a1', '_c2', '_b2'])
+        //   -> ['_x[_dima,_dimc,_b2]']
+        v('y', 'x[A1,C2,B2]', {
+          refId: '_y',
+          references: ['_x[_dima,_dimc,_b2]']
+        })
+      ])
+    })
+  })
+
+  describe('when LHS is apply-to-all (1D)', () => {
+    it('should work when RHS variable has no subscripts', () => {
+      const vars = readInlineModel(`
+        DimA: A1, A2, A3 ~~|
+        x = 1 ~~|
+        y[DimA] = x ~~|
+      `)
+      expect(vars).toEqual([
+        v('x', '1', {
+          refId: '_x',
+          varType: 'const'
+        }),
+        // refIdsForRhsVarRef(_y, '_x', [])
+        //   -> ['_x']
+        v('y[DimA]', 'x', {
+          refId: '_y',
+          subscripts: ['_dima'],
+          references: ['_x']
+        })
+      ])
+    })
+
+    it('should work when RHS variable is apply-to-all (1D) and is accessed with specific subscript', () => {
+      const vars = readInlineModel(`
+        DimA: A1, A2, A3 ~~|
+        x[DimA] = 1 ~~|
+        y[DimA] = x[A2] ~~|
+      `)
+      expect(vars).toEqual([
+        v('x[DimA]', '1', {
+          refId: '_x',
+          subscripts: ['_dima'],
+          varType: 'const'
+        }),
+        // refIdsForRhsVarRef(_y, '_x', ['_a2'])
+        //   -> ['_x']
+        v('y[DimA]', 'x[A2]', {
+          refId: '_y',
+          subscripts: ['_dima'],
+          references: ['_x']
+        })
+      ])
+    })
+
+    it('should work when RHS variable is apply-to-all (1D) and is accessed with same dimension that appears in LHS', () => {
+      const vars = readInlineModel(`
+        DimA: A1, A2, A3 ~~|
+        x[DimA] = 1 ~~|
+        y[DimA] = x[DimA] ~~|
+      `)
+      expect(vars).toEqual([
+        v('x[DimA]', '1', {
+          refId: '_x',
+          subscripts: ['_dima'],
+          varType: 'const'
+        }),
+        // expansionFlags === undefined
+        // expandedRefIds === ['_x']
+        // refIdsForRhsVarRef(_y, '_x', ['_dima'])
+        //   -> ['_x']
+        v('y[DimA]', 'x[DimA]', {
+          refId: '_y',
+          subscripts: ['_dima'],
+          references: ['_x']
+        })
+      ])
+    })
+
+    it('should work when RHS variable is NON-apply-to-all (1D) and is accessed with specific subscript', () => {
+      const vars = readInlineModel(`
+        DimA: A1, A2, A3 ~~|
+        x[DimA] = 1, 2, 3 ~~|
+        y[DimA] = x[A2] ~~|
+      `)
+      expect(vars).toEqual([
+        v('x[DimA]', '1,2,3', {
+          refId: '_x[_a1]',
+          separationDims: ['_dima'],
+          subscripts: ['_a1'],
+          varType: 'const'
+        }),
+        v('x[DimA]', '1,2,3', {
+          refId: '_x[_a2]',
+          separationDims: ['_dima'],
+          subscripts: ['_a2'],
+          varType: 'const'
+        }),
+        v('x[DimA]', '1,2,3', {
+          refId: '_x[_a3]',
+          separationDims: ['_dima'],
+          subscripts: ['_a3'],
+          varType: 'const'
+        }),
+        // refIdsForRhsVarRef(_y, '_x', ['_a2'])
+        //   -> ['_x[_a2]']
+        v('y[DimA]', 'x[A2]', {
+          refId: '_y',
+          subscripts: ['_dima'],
+          references: ['_x[_a2]']
+        })
+      ])
+    })
+
+    it('should work when RHS variable is NON-apply-to-all (1D) and is accessed with same dimension that appears in LHS', () => {
+      const vars = readInlineModel(`
+        DimA: A1, A2, A3 ~~|
+        x[DimA] = 1, 2, 3 ~~|
+        y[DimA] = x[DimA] ~~|
+      `)
+      expect(vars).toEqual([
+        v('x[DimA]', '1,2,3', {
+          refId: '_x[_a1]',
+          separationDims: ['_dima'],
+          subscripts: ['_a1'],
+          varType: 'const'
+        }),
+        v('x[DimA]', '1,2,3', {
+          refId: '_x[_a2]',
+          separationDims: ['_dima'],
+          subscripts: ['_a2'],
+          varType: 'const'
+        }),
+        v('x[DimA]', '1,2,3', {
+          refId: '_x[_a3]',
+          separationDims: ['_dima'],
+          subscripts: ['_a3'],
+          varType: 'const'
+        }),
+        // expansionFlags === [true]
+        // expandedRefIds === ['_x[_a1]', '_x[_a2]', '_x[_a3]']
+        // refIdsForRhsVarRef(_y, '_x', ['_dima'])
+        //   -> ['_x[_a1]', '_x[_a2]', '_x[_a3]']
+        v('y[DimA]', 'x[DimA]', {
+          refId: '_y',
+          subscripts: ['_dima'],
+          references: ['_x[_a1]', '_x[_a2]', '_x[_a3]']
+        })
+      ])
+    })
+
+    it('should work when RHS variable is NON-apply-to-all (1D) with separated definitions and is accessed with same dimension that appears in LHS', () => {
+      const vars = readInlineModel(`
+        DimA: A1, A2 ~~|
+        x[A1] = 1 ~~|
+        x[A2] = 2 ~~|
+        y[DimA] = x[DimA] ~~|
+      `)
+      expect(vars).toEqual([
+        v('x[A1]', '1', {
+          refId: '_x[_a1]',
+          subscripts: ['_a1'],
+          varType: 'const'
+        }),
+        v('x[A2]', '2', {
+          refId: '_x[_a2]',
+          subscripts: ['_a2'],
+          varType: 'const'
+        }),
+        // expansionFlags === [true]
+        // expandedRefIds === ['_x[_a1]', '_x[_a2]']
+        // refIdsForRhsVarRef(_y, '_x', ['_dima'])
+        //   -> ['_x[_a1]', '_x[_a2]']
+        v('y[DimA]', 'x[DimA]', {
+          refId: '_y',
+          subscripts: ['_dima'],
+          references: ['_x[_a1]', '_x[_a2]']
+        })
+      ])
+    })
+
+    // it('should work when RHS variable is apply-to-all (2D) and is accessed with specific subscripts', () => {
+    //   // TODO
+    // })
+
+    // it('should work when RHS variable is NON-apply-to-all (2D) and is accessed with specific subscripts', () => {
+    //   // TODO
+    // })
+
+    // it('should work when RHS variable is apply-to-all (3D) and is accessed with specific subscripts', () => {
+    //   // TODO
+    // })
+
+    // it('should work when RHS variable is NON-apply-to-all (3D) and is accessed with specific subscripts', () => {
+    //   // TODO
+    // })
+  })
+
+  describe('when LHS is NON-apply-to-all (1D)', () => {
+    it('should work when RHS variable has no subscripts', () => {
+      const vars = readInlineModel(`
+        DimA: A1, A2, A3 ~~|
+        x = 1 ~~|
+        y[DimA] :EXCEPT: [A1] = x ~~|
+      `)
+      expect(vars).toEqual([
+        v('x', '1', {
+          refId: '_x',
+          varType: 'const'
+        }),
+        // refIdsForRhsVarRef(_y[_a2], '_x', [])
+        //   -> ['_x']
+        v('y[DimA]:EXCEPT:[A1]', 'x', {
+          refId: '_y[_a2]',
+          separationDims: ['_dima'],
+          subscripts: ['_a2'],
+          references: ['_x']
+        }),
+        // refIdsForRhsVarRef(_y[_a3], '_x', [])
+        //   -> ['_x']
+        v('y[DimA]:EXCEPT:[A1]', 'x', {
+          refId: '_y[_a3]',
+          separationDims: ['_dima'],
+          subscripts: ['_a3'],
+          references: ['_x']
+        })
+      ])
+    })
+
+    it('should work when RHS variable is apply-to-all (1D) and is accessed with specific subscript', () => {
+      const vars = readInlineModel(`
+        DimA: A1, A2, A3 ~~|
+        x[DimA] = 1 ~~|
+        y[DimA] :EXCEPT: [A1] = x[A2] ~~|
+      `)
+      expect(vars).toEqual([
+        v('x[DimA]', '1', {
+          refId: '_x',
+          subscripts: ['_dima'],
+          varType: 'const'
+        }),
+        // refIdsForRhsVarRef(_y[_a2], '_x', ['_a2'])
+        //   -> ['_x']
+        v('y[DimA]:EXCEPT:[A1]', 'x[A2]', {
+          refId: '_y[_a2]',
+          separationDims: ['_dima'],
+          subscripts: ['_a2'],
+          references: ['_x']
+        }),
+        // refIdsForRhsVarRef(_y[_a3], '_x', ['_a2'])
+        //   -> ['_x']
+        v('y[DimA]:EXCEPT:[A1]', 'x[A2]', {
+          refId: '_y[_a3]',
+          separationDims: ['_dima'],
+          subscripts: ['_a3'],
+          references: ['_x']
+        })
+      ])
+    })
+
+    it('should work when RHS variable is apply-to-all (1D) and is accessed with same dimension that appears in LHS', () => {
+      const vars = readInlineModel(`
+        DimA: A1, A2, A3 ~~|
+        x[DimA] = 1 ~~|
+        y[DimA] :EXCEPT: [A1] = x[DimA] ~~|
+      `)
+      expect(vars).toEqual([
+        v('x[DimA]', '1', {
+          refId: '_x',
+          subscripts: ['_dima'],
+          varType: 'const'
+        }),
+        // refIdsForRhsVarRef(_y[_a2], '_x', ['_dima'])
+        //   -> ['_x']
+        v('y[DimA]:EXCEPT:[A1]', 'x[DimA]', {
+          refId: '_y[_a2]',
+          separationDims: ['_dima'],
+          subscripts: ['_a2'],
+          references: ['_x']
+        }),
+        // refIdsForRhsVarRef(_y[_a3], '_x', ['_dima'])
+        //   -> ['_x']
+        v('y[DimA]:EXCEPT:[A1]', 'x[DimA]', {
+          refId: '_y[_a3]',
+          separationDims: ['_dima'],
+          subscripts: ['_a3'],
+          references: ['_x']
+        })
+      ])
+    })
+
+    it('should work when RHS variable is NON-apply-to-all (1D) and is accessed with specific subscript', () => {
+      const vars = readInlineModel(`
+        DimA: A1, A2, A3 ~~|
+        x[DimA] = 1, 2, 3 ~~|
+        y[DimA] :EXCEPT: [A1] = x[A2] ~~|
+      `)
+      expect(vars).toEqual([
+        v('x[DimA]', '1,2,3', {
+          refId: '_x[_a1]',
+          separationDims: ['_dima'],
+          subscripts: ['_a1'],
+          varType: 'const'
+        }),
+        v('x[DimA]', '1,2,3', {
+          refId: '_x[_a2]',
+          separationDims: ['_dima'],
+          subscripts: ['_a2'],
+          varType: 'const'
+        }),
+        v('x[DimA]', '1,2,3', {
+          refId: '_x[_a3]',
+          separationDims: ['_dima'],
+          subscripts: ['_a3'],
+          varType: 'const'
+        }),
+        // refIdsForRhsVarRef(_y[_a2], '_x', ['_a2'])
+        //   -> ['_x[_a2]']
+        v('y[DimA]:EXCEPT:[A1]', 'x[A2]', {
+          refId: '_y[_a2]',
+          separationDims: ['_dima'],
+          subscripts: ['_a2'],
+          references: ['_x[_a2]']
+        }),
+        // refIdsForRhsVarRef(_y[_a3], '_x', ['_a2'])
+        //   -> ['_x[_a2]']
+        v('y[DimA]:EXCEPT:[A1]', 'x[A2]', {
+          refId: '_y[_a3]',
+          separationDims: ['_dima'],
+          subscripts: ['_a3'],
+          references: ['_x[_a2]']
+        })
+      ])
+    })
+
+    it('should work when RHS variable is NON-apply-to-all (1D) and is accessed with same dimension that appears in LHS', () => {
+      const vars = readInlineModel(`
+        DimA: A1, A2, A3 ~~|
+        x[DimA] = 1, 2, 3 ~~|
+        y[DimA] :EXCEPT: [A1] = x[DimA] ~~|
+      `)
+      expect(vars).toEqual([
+        v('x[DimA]', '1,2,3', {
+          refId: '_x[_a1]',
+          separationDims: ['_dima'],
+          subscripts: ['_a1'],
+          varType: 'const'
+        }),
+        v('x[DimA]', '1,2,3', {
+          refId: '_x[_a2]',
+          separationDims: ['_dima'],
+          subscripts: ['_a2'],
+          varType: 'const'
+        }),
+        v('x[DimA]', '1,2,3', {
+          refId: '_x[_a3]',
+          separationDims: ['_dima'],
+          subscripts: ['_a3'],
+          varType: 'const'
+        }),
+        // refIdsForRhsVarRef(_y[_a2], '_x', ['_dima'])
+        //   -> ['_x[_a2]']
+        v('y[DimA]:EXCEPT:[A1]', 'x[DimA]', {
+          refId: '_y[_a2]',
+          separationDims: ['_dima'],
+          subscripts: ['_a2'],
+          references: ['_x[_a2]']
+        }),
+        // refIdsForRhsVarRef(_y[_a3], '_x', ['_dima'])
+        //   -> ['_x[_a3]']
+        v('y[DimA]:EXCEPT:[A1]', 'x[DimA]', {
+          refId: '_y[_a3]',
+          separationDims: ['_dima'],
+          subscripts: ['_a3'],
+          references: ['_x[_a3]']
+        })
+      ])
+    })
+
+    // This is adapted from the "except" sample model (see equation for `k`)
+    it('should work when RHS variable is NON-apply-to-all (1D) and is accessed with mapped version of LHS dimension', () => {
+      const vars = readInlineModel(`
+        DimA: A1, A2, A3 ~~|
+        SubA: A2, A3 ~~|
+        DimB: B1, B2 -> (DimA: SubA, A1) ~~|
+        a[DimA] = 1, 2, 3 ~~|
+        b[DimB] = 4, 5 ~~|
+        y[DimA] :EXCEPT: [A1] = a[DimA] + b[DimB] ~~|
+      `)
+      expect(vars).toEqual([
+        v('a[DimA]', '1,2,3', {
+          refId: '_a[_a1]',
+          separationDims: ['_dima'],
+          subscripts: ['_a1'],
+          varType: 'const'
+        }),
+        v('a[DimA]', '1,2,3', {
+          refId: '_a[_a2]',
+          separationDims: ['_dima'],
+          subscripts: ['_a2'],
+          varType: 'const'
+        }),
+        v('a[DimA]', '1,2,3', {
+          refId: '_a[_a3]',
+          separationDims: ['_dima'],
+          subscripts: ['_a3'],
+          varType: 'const'
+        }),
+        v('b[DimB]', '4,5', {
+          refId: '_b[_b1]',
+          separationDims: ['_dimb'],
+          subscripts: ['_b1'],
+          varType: 'const'
+        }),
+        v('b[DimB]', '4,5', {
+          refId: '_b[_b2]',
+          separationDims: ['_dimb'],
+          subscripts: ['_b2'],
+          varType: 'const'
+        }),
+        // refIdsForRhsVarRef(_y[_a2], '_a', ['_dima'])
+        //   -> ['_a[_a2]']
+        // refIdsForRhsVarRef(_y[_a2], '_b', ['_dimb'])
+        //   -> ['_b[_b1]']
+        v('y[DimA]:EXCEPT:[A1]', 'a[DimA]+b[DimB]', {
+          refId: '_y[_a2]',
+          separationDims: ['_dima'],
+          subscripts: ['_a2'],
+          references: ['_a[_a2]', '_b[_b1]']
+        }),
+        // refIdsForRhsVarRef(_y[_a3], '_a', ['_dima'])
+        //   -> ['_a[_a3]']
+        // refIdsForRhsVarRef(_y[_a3], '_b', ['_dimb'])
+        //   -> ['_b[_b1]']
+        v('y[DimA]:EXCEPT:[A1]', 'a[DimA]+b[DimB]', {
+          refId: '_y[_a3]',
+          separationDims: ['_dima'],
+          subscripts: ['_a3'],
+          references: ['_a[_a3]', '_b[_b1]']
+        })
+      ])
+    })
+  })
+
+  describe('when LHS is apply-to-all (2D)', () => {
+    // it('should work when RHS variable has no subscripts', () => {
+    //   // TODO
+    // })
+
+    // it('should work when RHS variable is apply-to-all (1D) and is accessed with specific subscript', () => {
+    //   // TODO
+    // })
+
+    // it('should work when RHS variable is NON-apply-to-all (1D) and is accessed with specific subscript', () => {
+    //   // TODO
+    // })
+
+    it('should work when RHS variable is NON-apply-to-all (1D) and is accessed with LHS dimensions that resolve to the same family', () => {
+      const vars = readInlineModel(`
+        DimA: A1, A2 ~~|
+        DimB <-> DimA ~~|
+        x[DimA] = 1, 2 ~~|
+        y[DimA, DimB] = x[DimA] + x[DimB] ~~|
+      `)
+      expect(vars).toEqual([
+        v('x[DimA]', '1,2', {
+          refId: '_x[_a1]',
+          separationDims: ['_dima'],
+          subscripts: ['_a1'],
+          varType: 'const'
+        }),
+        v('x[DimA]', '1,2', {
+          refId: '_x[_a2]',
+          separationDims: ['_dima'],
+          subscripts: ['_a2'],
+          varType: 'const'
+        }),
+        // expansionFlags for x[DimA] in RHS === [true]
+        // expandedRefIds for x[DimA] in RHS === ['_x[_a1]', '_x[_a2]']
+        // refIdsForRhsVarRef(_y[_dima,_dimb], '_x', ['_dima'])
+        //   -> ['_x[_a1]', '_x[_a2]']
+        // expansionFlags for x[DimB] in RHS === [true]
+        // expandedRefIds for x[DimB] in RHS === ['_x[_a1]', '_x[_a2]']
+        // refIdsForRhsVarRef(_y[_dima,_dimb], '_x', ['_dimb'])
+        //   -> ['_x[_a1]', '_x[_a2]']
+        v('y[DimA,DimB]', 'x[DimA]+x[DimB]', {
+          refId: '_y',
+          subscripts: ['_dima', '_dimb'],
+          references: ['_x[_a1]', '_x[_a2]']
+        })
+      ])
+    })
+
+    // it('should work when RHS variable is apply-to-all (2D) and is accessed with specific subscripts', () => {
+    //   // TODO
+    // })
+
+    // it('should work when RHS variable is NON-apply-to-all (2D) and is accessed with specific subscripts', () => {
+    //   // TODO
+    // })
+
+    it('should work when RHS variable is apply-to-all (2D) and is accessed with same dimensions that appear in LHS', () => {
+      const vars = readInlineModel(`
+        DimA: A1, A2 ~~|
+        DimB: B1, B2 ~~|
+        x[DimA, DimB] = 1 ~~|
+        y[DimB, DimA] = x[DimA, DimB] ~~|
+      `)
+      expect(vars).toEqual([
+        v('x[DimA,DimB]', '1', {
+          refId: '_x',
+          subscripts: ['_dima', '_dimb'],
+          varType: 'const'
+        }),
+        // expansionFlags === undefined
+        // expandedRefIds === ['_x']
+        // refIdsForRhsVarRef(_y[_dimb,_dima], '_x', ['_dima', '_dimb'])
+        //   -> ['_x']
+        v('y[DimB,DimA]', 'x[DimA,DimB]', {
+          refId: '_y',
+          subscripts: ['_dimb', '_dima'],
+          references: ['_x']
+        })
+      ])
+    })
+
+    it('should work when RHS variable is apply-to-all (2D) and is accessed with LHS dimensions that resolve to the same family', () => {
+      const vars = readInlineModel(`
+        DimA: A1, A2 ~~|
+        DimB <-> DimA ~~|
+        x[DimA, DimB] = 1 ~~|
+        y[DimB, DimA] = x[DimA, DimB] ~~|
+      `)
+      expect(vars).toEqual([
+        v('x[DimA,DimB]', '1', {
+          refId: '_x',
+          subscripts: ['_dima', '_dimb'],
+          varType: 'const'
+        }),
+        // expansionFlags === undefined
+        // expandedRefIds === ['_x']
+        // refIdsForRhsVarRef(_y[_dimb,_dima], '_x', ['_dima', '_dimb'])
+        //   -> ['_x']
+        v('y[DimB,DimA]', 'x[DimA,DimB]', {
+          refId: '_y',
+          subscripts: ['_dimb', '_dima'],
+          references: ['_x']
+        })
+      ])
+    })
+
+    it('should work when RHS variable is NON-apply-to-all (2D) and is accessed with same dimensions that appear in LHS', () => {
+      const vars = readInlineModel(`
+        DimA: A1, A2 ~~|
+        DimB: B1, B2 ~~|
+        x[DimA, DimB] = 1, 2; 3, 4; ~~|
+        y[DimB, DimA] = x[DimA, DimB] ~~|
+      `)
+      expect(vars).toEqual([
+        v('x[DimA,DimB]', '1,2;3,4;', {
+          refId: '_x[_a1,_b1]',
+          separationDims: ['_dima', '_dimb'],
+          subscripts: ['_a1', '_b1'],
+          varType: 'const'
+        }),
+        v('x[DimA,DimB]', '1,2;3,4;', {
+          refId: '_x[_a1,_b2]',
+          separationDims: ['_dima', '_dimb'],
+          subscripts: ['_a1', '_b2'],
+          varType: 'const'
+        }),
+        v('x[DimA,DimB]', '1,2;3,4;', {
+          refId: '_x[_a2,_b1]',
+          separationDims: ['_dima', '_dimb'],
+          subscripts: ['_a2', '_b1'],
+          varType: 'const'
+        }),
+        v('x[DimA,DimB]', '1,2;3,4;', {
+          refId: '_x[_a2,_b2]',
+          separationDims: ['_dima', '_dimb'],
+          subscripts: ['_a2', '_b2'],
+          varType: 'const'
+        }),
+        // expansionFlags === [true, true]
+        // expandedRefIds === ['_x[_a1,_b1]', '_x[_a1,_b2]', '_x[_a2,_b1]', '_x[_a2,_b2]']
+        // refIdsForRhsVarRef(_y[_dimb,_dima], '_x', ['_dima', '_dimb'])
+        //   -> ['_x[_a1,_b1]', '_x[_a1,_b2]', '_x[_a2,_b1]', '_x[_a2,_b2]']
+        v('y[DimB,DimA]', 'x[DimA,DimB]', {
+          refId: '_y',
+          subscripts: ['_dimb', '_dima'],
+          references: ['_x[_a1,_b1]', '_x[_a1,_b2]', '_x[_a2,_b1]', '_x[_a2,_b2]']
+        })
+      ])
+    })
+
+    it('should work when RHS variable is NON-apply-to-all (2D) with separated definitions (for subscript in first position) and is accessed with same dimensions that appear in LHS', () => {
+      const vars = readInlineModel(`
+        DimA: A1, A2 ~~|
+        DimB: B1, B2 ~~|
+        x[A1, DimB] = 1 ~~|
+        x[A2, DimB] = 2 ~~|
+        y[DimB, DimA] = x[DimA, DimB] ~~|
+      `)
+      expect(vars).toEqual([
+        v('x[A1,DimB]', '1', {
+          refId: '_x[_a1,_dimb]',
+          subscripts: ['_a1', '_dimb'],
+          varType: 'const'
+        }),
+        v('x[A2,DimB]', '2', {
+          refId: '_x[_a2,_dimb]',
+          subscripts: ['_a2', '_dimb'],
+          varType: 'const'
+        }),
+        // expansionFlags === [true, false]
+        // expandedRefIds === ['_x[_a1,_dimb]', '_x[_a2,_dimb]']
+        // refIdsForRhsVarRef(_y[_dimb,_dima], '_x', ['_dima', '_dimb'])
+        //   -> ['_x[_a1,_dimb]', '_x[_a2,_dimb]']
+        v('y[DimB,DimA]', 'x[DimA,DimB]', {
+          refId: '_y',
+          subscripts: ['_dimb', '_dima'],
+          references: ['_x[_a1,_dimb]', '_x[_a2,_dimb]']
+        })
+      ])
+    })
+
+    // it('should work when RHS variable is apply-to-all (3D) and is accessed with specific subscripts', () => {
+    //   // TODO
+    // })
+
+    // it('should work when RHS variable is NON-apply-to-all (3D) and is accessed with specific subscripts', () => {
+    //   // TODO
+    // })
+  })
+
+  describe('when LHS is NON-apply-to-all (2D)', () => {
+    // The LHS in this test is partially separated (expanded only for first dimension position)
+    it('should work when RHS variable is apply-to-all (2D) and is accessed with same dimensions that appear in LHS', () => {
+      const vars = readInlineModel(`
+        DimA: A1, A2, A3 ~~|
+        SubA: A1, A2 ~~|
+        DimB: B1, B2 ~~|
+        x[DimA, DimB] = 1 ~~|
+        y[SubA, DimB] = x[SubA, DimB] ~~|
+      `)
+      expect(vars).toEqual([
+        v('x[DimA,DimB]', '1', {
+          refId: '_x',
+          subscripts: ['_dima', '_dimb'],
+          varType: 'const'
+        }),
+        // expansionFlags === undefined
+        // expandedRefIds === ['_x']
+        // refIdsForRhsVarRef(_y[_a1,_dimb], '_x', ['_suba', '_dimb'])
+        //   -> ['_x']
+        v('y[SubA,DimB]', 'x[SubA,DimB]', {
+          refId: '_y[_a1,_dimb]',
+          separationDims: ['_suba'],
+          subscripts: ['_a1', '_dimb'],
+          references: ['_x']
+        }),
+        // expansionFlags === undefined
+        // expandedRefIds === ['_x']
+        // refIdsForRhsVarRef(_y[_a2,_dimb], '_x', ['_suba', '_dimb'])
+        //   -> ['_x']
+        v('y[SubA,DimB]', 'x[SubA,DimB]', {
+          refId: '_y[_a2,_dimb]',
+          separationDims: ['_suba'],
+          subscripts: ['_a2', '_dimb'],
+          references: ['_x']
+        })
+      ])
+    })
+
+    // This test is based on the example from #179 (simplified to use subdimensions to ensure separation)
+    // TODO: This test is disabled until the fix for #179 is implemented
+    it.skip('should work when RHS variable is NON-apply-to-all (1D) and is accessed with 2 different dimensions from LHS that map to the same family', () => {
+      const vars = readInlineModel(`
+        DimA: A1, A2, A3 ~~|
+        SubA: A1, A2 ~~|
+        SubB <-> SubA ~~|
+        x[SubA] = 1, 2 ~~|
+        y[SubA, SubB] = x[SubA] + x[SubB] ~~|
+      `)
+      expect(vars).toEqual([
+        v('x[SubA]', '1,2', {
+          refId: '_x[_a1]',
+          separationDims: ['_suba'],
+          subscripts: ['_a1'],
+          varType: 'const'
+        }),
+        v('x[SubA]', '1,2', {
+          refId: '_x[_a2]',
+          separationDims: ['_suba'],
+          subscripts: ['_a2'],
+          varType: 'const'
+        }),
+        // expansionFlags for x[SubA]  in RHS === [true]
+        // expandedRefIds for x[SubA]  in RHS === ['_x[_a1]', '_x[_a2]']
+        // refIdsForRhsVarRef(_y[_a1,_a1], '_x', ['_suba'])
+        //   -> ['_x[_a1]']
+        // expansionFlags for x[SubB] in RHS === [true]
+        // expandedRefIds for x[SubB] in RHS === ['_x[_a1]', '_x[_a2]']
+        // refIdsForRhsVarRef(_y[_a1,_a1], '_x', ['_subb'])
+        //   -> ['_x[_a1]']
+        v('y[SubA,SubB]', 'x[SubA]+x[SubB]', {
+          refId: '_y[_a1,_a1]',
+          separationDims: ['_suba', '_subb'],
+          subscripts: ['_a1', '_a1'],
+          references: ['_x[_a1]']
+        }),
+        // expansionFlags for x[SubA]  in RHS === [true]
+        // expandedRefIds for x[SubA]  in RHS === ['_x[_a1]', '_x[_a2]']
+        // refIdsForRhsVarRef(_y[_a1,_a2], '_x', ['_suba'])
+        //   -> ['_x[_a1]']
+        // expansionFlags for x[SubB] in RHS === [true]
+        // expandedRefIds for x[SubB] in RHS === ['_x[_a1]', '_x[_a2]']
+        // refIdsForRhsVarRef(_y[_a1,_a2], '_x', ['_subb'])
+        //   -> ['_x[_a2]']
+        v('y[SubA,SubB]', 'x[SubA]+x[SubB]', {
+          refId: '_y[_a1,_a2]',
+          separationDims: ['_suba', '_subb'],
+          subscripts: ['_a1', '_a2'],
+          references: ['_x[_a1]', '_x[_a2]'] // BUG: Actual value only includes _x[a1]
+        }),
+        // expansionFlags for x[SubA]  in RHS === [true]
+        // expandedRefIds for x[SubA]  in RHS === ['_x[_a1]', '_x[_a2]']
+        // refIdsForRhsVarRef(_y[_a2,_a1], '_x', ['_suba'])
+        //   -> ['_x[_a2]']
+        // expansionFlags for x[SubB] in RHS === [true]
+        // expandedRefIds for x[SubB] in RHS === ['_x[_a1]', '_x[_a2]']
+        // refIdsForRhsVarRef(_y[_a2,_a1], '_x', ['_subb'])
+        //   -> ['_x[_a1]']
+        v('y[SubA,SubB]', 'x[SubA]+x[SubB]', {
+          refId: '_y[_a2,_a1]',
+          separationDims: ['_suba', '_subb'],
+          subscripts: ['_a2', '_a1'],
+          references: ['_x[_a1]', '_x[_a2]'] // BUG: Actual value only includes _x[a2]
+        }),
+        // expansionFlags for x[SubA]  in RHS === [true]
+        // expandedRefIds for x[SubA]  in RHS === ['_x[_a1]', '_x[_a2]']
+        // refIdsForRhsVarRef(_y[_a2,_a2], '_x', ['_suba'])
+        //   -> ['_x[_a2]']
+        // expansionFlags for x[SubB] in RHS === [true]
+        // expandedRefIds for x[SubB] in RHS === ['_x[_a1]', '_x[_a2]']
+        // refIdsForRhsVarRef(_y[_a2,_a2], '_x', ['_subb'])
+        //   -> ['_x[_a2]']
+        v('y[SubA,SubB]', 'x[SubA]+x[SubB]', {
+          refId: '_y[_a2,_a2]',
+          separationDims: ['_suba', '_subb'],
+          subscripts: ['_a2', '_a2'],
+          references: ['_x[_a2]']
+        })
+      ])
+    })
+
+    // This test is based on the example from #179 (simplified to use subdimensions to ensure separation).
+    // It is similar to the previous one, except in this one, `x` is apply-to-all (and refers to the parent
+    // dimension).
+    it('should work when RHS variable is apply-to-all (1D) and is accessed with 2 different dimensions from LHS that map to the same family', () => {
+      const vars = readInlineModel(`
+        DimA: A1, A2, A3 ~~|
+        SubA: A1, A2 ~~|
+        SubB <-> SubA ~~|
+        x[DimA] = 1 ~~|
+        y[SubA, SubB] = x[SubA] + x[SubB] ~~|
+      `)
+      expect(vars).toEqual([
+        v('x[DimA]', '1', {
+          refId: '_x',
+          subscripts: ['_dima'],
+          varType: 'const'
+        }),
+        // For all 4 instances of `y`, the following should hold true:
+        // expansionFlags for x[SubA] in RHS === undefined
+        // expandedRefIds for x[SubA] in RHS === ['_x']
+        // refIdsForRhsVarRef(_y[_a1,_a1], '_x', ['_suba'])
+        //   -> ['_x']
+        // expansionFlags for x[SubB] in RHS === undefined
+        // expandedRefIds for x[SubB] in RHS === ['_x']
+        // refIdsForRhsVarRef(_y[_a1,_a1], '_x', ['_subb'])
+        //   -> ['_x']
+        v('y[SubA,SubB]', 'x[SubA]+x[SubB]', {
+          refId: '_y[_a1,_a1]',
+          separationDims: ['_suba', '_subb'],
+          subscripts: ['_a1', '_a1'],
+          references: ['_x']
+        }),
+        v('y[SubA,SubB]', 'x[SubA]+x[SubB]', {
+          refId: '_y[_a1,_a2]',
+          separationDims: ['_suba', '_subb'],
+          subscripts: ['_a1', '_a2'],
+          references: ['_x']
+        }),
+        v('y[SubA,SubB]', 'x[SubA]+x[SubB]', {
+          refId: '_y[_a2,_a1]',
+          separationDims: ['_suba', '_subb'],
+          subscripts: ['_a2', '_a1'],
+          references: ['_x']
+        }),
+        v('y[SubA,SubB]', 'x[SubA]+x[SubB]', {
+          refId: '_y[_a2,_a2]',
+          separationDims: ['_suba', '_subb'],
+          subscripts: ['_a2', '_a2'],
+          references: ['_x']
+        })
+      ])
+    })
+  })
+
+  describe('when LHS is apply-to-all (3D)', () => {
+    it('should work when RHS variable is apply-to-all (3D) and is accessed with same dimensions that appear in LHS (but in a different order)', () => {
+      const vars = readInlineModel(`
+        DimA: A1, A2 ~~|
+        DimB: B1, B2 ~~|
+        DimC: C1, C2 ~~|
+        x[DimA, DimC, DimB] = 1 ~~|
+        y[DimC, DimB, DimA] = x[DimA, DimC, DimB] ~~|
+      `)
+      expect(vars).toEqual([
+        v('x[DimA,DimC,DimB]', '1', {
+          refId: '_x',
+          subscripts: ['_dima', '_dimc', '_dimb'],
+          varType: 'const'
+        }),
+        // expansionFlags === undefined
+        // expandedRefIds === ['_x']
+        // refIdsForRhsVarRef(_y, '_x', ['_dima', '_dimc', '_dimb'])
+        //   -> ['_x']
+        v('y[DimC,DimB,DimA]', 'x[DimA,DimC,DimB]', {
+          refId: '_y',
+          subscripts: ['_dimc', '_dimb', '_dima'],
+          references: ['_x']
+        })
+      ])
+    })
+
+    it('should work when RHS variable is NON-apply-to-all (3D) and is accessed with same dimensions that appear in LHS (but in a different order)', () => {
+      const vars = readInlineModel(`
+        DimA: A1, A2 ~~|
+        DimB: B1, B2 ~~|
+        DimC: C1, C2 ~~|
+        x[DimA, C1, DimB] = 1 ~~|
+        x[DimA, C2, DimB] = 2 ~~|
+        y[DimC, DimB, DimA] = x[DimA, DimC, DimB] ~~|
+      `)
+      expect(vars).toEqual([
+        v('x[DimA,C1,DimB]', '1', {
+          refId: '_x[_dima,_c1,_dimb]',
+          subscripts: ['_dima', '_c1', '_dimb'],
+          varType: 'const'
+        }),
+        v('x[DimA,C2,DimB]', '2', {
+          refId: '_x[_dima,_c2,_dimb]',
+          subscripts: ['_dima', '_c2', '_dimb'],
+          varType: 'const'
+        }),
+        // expansionFlags === [false, true, false]
+        // expandedRefIds === ['_x[_dima,_c1,_dimb]', '_x[_dima,_c2,_dimb]']
+        // refIdsForRhsVarRef(_y, '_x', ['_dima', '_dimc', '_dimb'])
+        //   -> ['_x[_dima,_c1,_dimb]', '_x[_dima,_c2,_dimb]']
+        v('y[DimC,DimB,DimA]', 'x[DimA,DimC,DimB]', {
+          refId: '_y',
+          subscripts: ['_dimc', '_dimb', '_dima'],
+          references: ['_x[_dima,_c1,_dimb]', '_x[_dima,_c2,_dimb]']
+        })
+      ])
+    })
+  })
+
+  describe('when LHS is NON-apply-to-all (3D)', () => {
+    it('should work when RHS variable is apply-to-all (3D) and is accessed with same dimensions that appear in LHS (but in a different order)', () => {
+      const vars = readInlineModel(`
+        DimA: A1, A2 ~~|
+        DimB: B1, B2 ~~|
+        DimC: C1, C2, C3 ~~|
+        SubC: C2, C3 ~~|
+        x[DimA, DimC, DimB] = 1 ~~|
+        y[SubC, DimB, DimA] = x[DimA, SubC, DimB] ~~|
+      `)
+      expect(vars).toEqual([
+        v('x[DimA,DimC,DimB]', '1', {
+          refId: '_x',
+          subscripts: ['_dima', '_dimc', '_dimb'],
+          varType: 'const'
+        }),
+        // expansionFlags === undefined
+        // expandedRefIds === ['_x']
+        // refIdsForRhsVarRef(_y[_c2,_dimb,_dima], '_x', ['_dima', '_dimc', '_dimb'])
+        //   -> ['_x']
+        v('y[SubC,DimB,DimA]', 'x[DimA,SubC,DimB]', {
+          refId: '_y[_c2,_dimb,_dima]',
+          separationDims: ['_subc'],
+          subscripts: ['_c2', '_dimb', '_dima'],
+          references: ['_x']
+        }),
+        // expansionFlags === undefined
+        // expandedRefIds === ['_x']
+        // refIdsForRhsVarRef(_y[_c3,_dimb,_dima], '_x', ['_dima', '_dimc', '_dimb'])
+        //   -> ['_x']
+        v('y[SubC,DimB,DimA]', 'x[DimA,SubC,DimB]', {
+          refId: '_y[_c3,_dimb,_dima]',
+          separationDims: ['_subc'],
+          subscripts: ['_c3', '_dimb', '_dima'],
+          references: ['_x']
+        })
+      ])
+    })
+
+    // This test is based on the example from #278
+    // TODO: This test is disabled until the fix for #278 is implemented
+    it.skip('should work when RHS variable is NON-apply-to-all (2D) and is accessed with 2 different dimensions from LHS that map to the same family', () => {
+      const vars = readInlineModel(`
+      Scenario: S1, S2 ~~|
+      Sector: A1, A2, A3 ~~|
+      Supplying Sector: A1, A2 -> Producing Sector ~~|
+      Producing Sector: A1, A2 -> Supplying Sector ~~|
+      x[A1,A1] = 101 ~~|
+      x[A1,A2] = 102 ~~|
+      x[A1,A3] = 103 ~~|
+      x[A2,A1] = 201 ~~|
+      x[A2,A2] = 202 ~~|
+      x[A2,A3] = 203 ~~|
+      x[A3,A1] = 301 ~~|
+      x[A3,A2] = 302 ~~|
+      x[A3,A3] = 303 ~~|
+      y[S1] = 1000 ~~|
+      y[S2] = 2000 ~~|
+      z[Scenario, Supplying Sector, Producing Sector] =
+        y[Scenario] + x[Supplying Sector, Producing Sector]
+        ~~|
+    `)
+      expect(vars).toEqual([
+        v('x[A1,A1]', '101', {
+          refId: '_x[_a1,_a1]',
+          subscripts: ['_a1', '_a1'],
+          varType: 'const'
+        }),
+        v('x[A1,A2]', '102', {
+          refId: '_x[_a1,_a2]',
+          subscripts: ['_a1', '_a2'],
+          varType: 'const'
+        }),
+        v('x[A1,A3]', '103', {
+          refId: '_x[_a1,_a3]',
+          subscripts: ['_a1', '_a3'],
+          varType: 'const'
+        }),
+        v('x[A2,A1]', '201', {
+          refId: '_x[_a2,_a1]',
+          subscripts: ['_a2', '_a1'],
+          varType: 'const'
+        }),
+        v('x[A2,A2]', '202', {
+          refId: '_x[_a2,_a2]',
+          subscripts: ['_a2', '_a2'],
+          varType: 'const'
+        }),
+        v('x[A2,A3]', '203', {
+          refId: '_x[_a2,_a3]',
+          subscripts: ['_a2', '_a3'],
+          varType: 'const'
+        }),
+        v('x[A3,A1]', '301', {
+          refId: '_x[_a3,_a1]',
+          subscripts: ['_a3', '_a1'],
+          varType: 'const'
+        }),
+        v('x[A3,A2]', '302', {
+          refId: '_x[_a3,_a2]',
+          subscripts: ['_a3', '_a2'],
+          varType: 'const'
+        }),
+        v('x[A3,A3]', '303', {
+          refId: '_x[_a3,_a3]',
+          subscripts: ['_a3', '_a3'],
+          varType: 'const'
+        }),
+        v('y[S1]', '1000', {
+          refId: '_y[_s1]',
+          subscripts: ['_s1'],
+          varType: 'const'
+        }),
+        v('y[S2]', '2000', {
+          refId: '_y[_s2]',
+          subscripts: ['_s2'],
+          varType: 'const'
+        }),
+        // expected expansionFlags for y in RHS === [true]
+        // expected expandedRefIds for y in RHS === ['_y[_s1]', '_y[_s2]']
+        // refIdsForRhsVarRef(_z[_scenario,_a1,_a1], '_y', ['_scenario'])
+        //   -> ['_y[_s1]', '_y[_s2]']
+        // expected expansionFlags for x in RHS === [true, true]
+        // expected expandedRefIds for x in RHS === ['_x[_a1,_a1]']
+        // refIdsForRhsVarRef(_z[_scenario,_a1,_a1], '_x', ['_supplying_sector', '_producing_sector'])
+        //   -> ['_x[_a1,_a1]']
+        v('z[Scenario,Supplying Sector,Producing Sector]', 'y[Scenario]+x[Supplying Sector,Producing Sector]', {
+          refId: '_z[_scenario,_a1,_a1]',
+          subscripts: ['_scenario', '_a1', '_a1'],
+          separationDims: ['_supplying_sector', '_producing_sector'],
+          references: ['_y[_s1]', '_y[_s2]', '_x[_a1,_a1]'],
+          varType: 'aux'
+        }),
+        // expected expansionFlags for x in RHS === [true, true]
+        // expected expandedRefIds for x in RHS === ['_x[_a1,_a2]'] // BUG: Actual value is '_x[a1,_a1]'
+        // refIdsForRhsVarRef(_z[_scenario,_a1,_a2], '_x', ['_supplying_sector', '_producing_sector'])
+        //   -> ['_x[_a1,_a2]']
+        v('z[Scenario,Supplying Sector,Producing Sector]', 'y[Scenario]+x[Supplying Sector,Producing Sector]', {
+          refId: '_z[_scenario,_a1,_a2]',
+          subscripts: ['_scenario', '_a1', '_a2'],
+          separationDims: ['_supplying_sector', '_producing_sector'],
+          references: ['_y[_s1]', '_y[_s2]', '_x[_a1,_a2]'], // BUG: Actual value is '_x[a1,_a1]'
+          varType: 'aux'
+        }),
+        // expected expansionFlags for x in RHS === [true, true]
+        // expected expandedRefIds for x in RHS === ['_x[_a2,_a1]'] // BUG: Actual value is '_x[a2,_a2]'
+        // refIdsForRhsVarRef(_z[_scenario,_a2,_a1], '_x', ['_supplying_sector', '_producing_sector'])
+        //   -> ['_x[_a2,_a1]']
+        v('z[Scenario,Supplying Sector,Producing Sector]', 'y[Scenario]+x[Supplying Sector,Producing Sector]', {
+          refId: '_z[_scenario,_a2,_a1]',
+          subscripts: ['_scenario', '_a2', '_a1'],
+          separationDims: ['_supplying_sector', '_producing_sector'],
+          references: ['_y[_s1]', '_y[_s2]', '_x[_a2,_a1]'], // BUG: Actual value is '_x[a2,_a2]'
+          varType: 'aux'
+        }),
+        // expected expansionFlags for x in RHS === [true, true]
+        // expected expandedRefIds for x in RHS === ['_x[_a2,_a2]']
+        // refIdsForRhsVarRef(_z[_scenario,_a2,_a2], '_x', ['_supplying_sector', '_producing_sector'])
+        //   -> ['_x[_a2,_a2]']
+        v('z[Scenario,Supplying Sector,Producing Sector]', 'y[Scenario]+x[Supplying Sector,Producing Sector]', {
+          refId: '_z[_scenario,_a2,_a2]',
+          subscripts: ['_scenario', '_a2', '_a2'],
+          separationDims: ['_supplying_sector', '_producing_sector'],
+          references: ['_y[_s1]', '_y[_s2]', '_x[_a2,_a2]'],
+          varType: 'aux'
+        })
+      ])
+    })
+  })
+
+  //
+  // NOTE: This is the end of the "should work for {0,1,2,3}D variable" tests.
+  //
+
   it('should work for ACTIVE INITIAL function', () => {
     const vars = readInlineModel(`
       Initial Target Capacity = 1 ~~|
@@ -391,7 +1617,7 @@ describe('readEquations', () => {
           '_demand[_boston]',
           '_demand[_dayton]',
           '_priority[_boston,_ppriority]',
-          '_priority[_boston,undefined]',
+          '_priority[_boston,undefined]', // TODO: This looks incorrect
           '_supply_available'
         ],
         subscripts: ['_branch']
