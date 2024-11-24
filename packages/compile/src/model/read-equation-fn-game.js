@@ -33,9 +33,9 @@ export function generateGameVariables(v, callExpr, context) {
   }
 
   // Define a variable for the synthesized game inputs lookup
-  const gameLookupVars = context.defineVariable(`${gameLookupVarName}${subs} ~~|`)
+  const gameLookupVars = context.defineVariables([`${gameLookupVarName}${subs} ~~|`])
 
-  // Normally `defineVariable` sets `includeInOutput` to false for generated
+  // Normally `defineVariables` sets `includeInOutput` to false for generated
   // variables, but we want the generated lookup variable to appear in the
   // model listing so that the user can reference it, so set `includeInOutput`
   // to true.  Also change the `varType` to 'lookup' instead of 'data'.  We

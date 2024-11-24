@@ -23,7 +23,7 @@ export function generateLookup(v, callExpr, context) {
   const lookupVarName = newLookupVarName()
   const lookupDef = toPrettyString(lookupArg, { compact: true })
   const lookupEqn = `${lookupVarName}${lookupDef} ~~|`
-  context.defineVariable(lookupEqn)
+  context.defineVariables([lookupEqn])
 
   // Keep track of all lookup variables that are referenced.  This will be used later to decide
   // whether a lookup variable needs to be included in generated code.

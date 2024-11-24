@@ -81,12 +81,13 @@ export function generateDelayVariables(v, callExpr, context) {
 }
 
 /**
- * Generate a single level variable that is used to implement a `DELAY` function call.
+ * Generate equation text for a single level variable that is used to implement a `DELAY`
+ * function call, and add a reference to `levelRefId`.
  */
 function generateDelayLevel(context, levelLHS, levelRefId, input, aux, init) {
   const levelEqn = `${levelLHS} = INTEG(${input} - ${aux}, ${init}) ~~|`
-  context.defineVariable(levelEqn)
   context.addVarReference(levelRefId)
+  return levelEqn
 }
 
 //
@@ -94,7 +95,8 @@ function generateDelayLevel(context, levelLHS, levelRefId, input, aux, init) {
 //
 
 /**
- * TODO: Docs
+ * Generate and define variables that are needed to implement a `DELAY1[I]` function call
+ * for a non-subscripted or apply-to-all variable.
  */
 function generateDelay1VarsForNormalVar(v, context, subs, argInput, argDelay, argInit) {
   // Generate a single level variable instance
@@ -103,17 +105,23 @@ function generateDelay1VarsForNormalVar(v, context, subs, argInput, argDelay, ar
   const levelVarRefId = canonicalName(levelVarBaseName)
   const levelLHS = `${levelVarBaseName}${subs}`
 
+  // Generate the equation text for the delay level variable
+  const eqns = []
   // TODO: There should be parens around the factors in this init expression
   const argInitTimesDelay = `${argInit} * ${argDelay}`
-  generateDelayLevel(context, levelLHS, levelVarRefId, argInput, varLHS, argInitTimesDelay)
+  eqns.push(generateDelayLevel(context, levelLHS, levelVarRefId, argInput, varLHS, argInitTimesDelay))
   v.delayVarRefId = levelVarRefId
 
   // Generate an aux variable to hold the delay time expression
-  generateDelay1Aux(v, context, subs, argDelay)
+  eqns.push(generateDelay1Aux(v, context, subs, argDelay))
+
+  // Add the generated variables to the model
+  context.defineVariables(eqns)
 }
 
 /**
- * TODO: Docs
+ * Generate and define variables that are needed to implement a `DELAY1[I]` function call
+ * for a non-apply-to-all variable.
  */
 function generateDelay1VarsForSeparatedVar(v, context, subs, argInput, argDelay, argInit) {
   // XXX: This code that deals with separated variables is largely copied from the legacy
@@ -151,17 +159,23 @@ function generateDelay1VarsForSeparatedVar(v, context, subs, argInput, argDelay,
   const levelVarRefId = canonicalVensimName(levelLHS)
   Model.addNonAtoAVar(canonicalName(levelVarBaseName), [true])
 
+  // Generate the equation text for the delay level variable
+  const eqns = []
   // TODO: There should be parens around the factors in this init expression
   const argInitTimesDelay = `${argInit} * ${argDelay}`
-  generateDelayLevel(context, levelLHS, levelVarRefId, argInput, varLHS, argInitTimesDelay)
+  eqns.push(generateDelayLevel(context, levelLHS, levelVarRefId, argInput, varLHS, argInitTimesDelay))
   v.delayVarRefId = levelVarRefId
 
   // Generate an aux variable to hold the delay time expression
-  generateDelay1Aux(v, context, subs, argDelay)
+  eqns.push(generateDelay1Aux(v, context, subs, argDelay))
+
+  // Add the generated variables to the model
+  context.defineVariables(eqns)
 }
 
 /**
- * TODO: Docs
+ * Generate equation text for a single "delay time" aux variable that is used to implement
+ * a `DELAY1[I]` function call, and add a reference to the delay time variable.
  */
 function generateDelay1Aux(v, context, subs, argDelay) {
   const delayTimeVarName = newAuxVarName()
@@ -176,8 +190,8 @@ function generateDelay1Aux(v, context, subs, argDelay) {
   }
 
   const delayTimeEqn = `${delayTimeLHS} = ${argDelay} ~~|`
-  context.defineVariable(delayTimeEqn)
   context.addVarReference(delayTimeVarRefId)
+  return delayTimeEqn
 }
 
 //
@@ -185,7 +199,8 @@ function generateDelay1Aux(v, context, subs, argDelay) {
 //
 
 /**
- * TODO: Docs
+ * Generate and define variables that are needed to implement a `DELAY3[I]` function call
+ * for a non-subscripted or apply-to-all variable.
  */
 function generateDelay3VarsForNormalVar(v, context, subs, argInput, argDelay, argInit) {
   // Generate names for the 3 level variables and 4 aux variables
@@ -208,28 +223,33 @@ function generateDelay3VarsForNormalVar(v, context, subs, argInput, argDelay, ar
   const level3RefId = canonicalName(level3)
 
   // Generate level variables
+  const eqns = []
   const delay3Val = `((${argDelay}) / 3)`
   // TODO: There should be parens around these factors
   const initArg = `${argInit} * ${delay3Val}`
-  generateDelayLevel(context, level3LHS, level3RefId, aux2LHS, aux3LHS, initArg)
-  generateDelayLevel(context, level2LHS, level2RefId, aux1LHS, aux2LHS, initArg)
-  generateDelayLevel(context, level1LHS, level1RefId, argInput, aux1LHS, initArg)
+  eqns.push(generateDelayLevel(context, level3LHS, level3RefId, aux2LHS, aux3LHS, initArg))
+  eqns.push(generateDelayLevel(context, level2LHS, level2RefId, aux1LHS, aux2LHS, initArg))
+  eqns.push(generateDelayLevel(context, level1LHS, level1RefId, argInput, aux1LHS, initArg))
   v.delayVarRefId = canonicalName(level3)
 
   // Generate aux variable equations using the subs in the generated level vars
-  context.defineVariable(`${aux1LHS} = ${level1LHS} / ${delay3Val} ~~|`)
-  context.defineVariable(`${aux2LHS} = ${level2LHS} / ${delay3Val} ~~|`)
-  context.defineVariable(`${aux3LHS} = ${level3LHS} / ${delay3Val} ~~|`)
+  eqns.push(`${aux1LHS} = ${level1LHS} / ${delay3Val} ~~|`)
+  eqns.push(`${aux2LHS} = ${level2LHS} / ${delay3Val} ~~|`)
+  eqns.push(`${aux3LHS} = ${level3LHS} / ${delay3Val} ~~|`)
 
   // Generate an aux variable to hold the delay time expression
   v.delayTimeVarName = canonicalName(aux4)
   const delayTimeVarRefId = canonicalVensimName(aux4LHS)
-  context.defineVariable(`${aux4LHS} = ${delay3Val} ~~|`)
+  eqns.push(`${aux4LHS} = ${delay3Val} ~~|`)
   context.addVarReference(delayTimeVarRefId)
+
+  // Add the generated variables to the model
+  context.defineVariables(eqns)
 }
 
 /**
- * TODO: Docs
+ * Generate and define variables that are needed to implement a `DELAY3[I]` function call
+ * for a non-apply-to-all variable.
  */
 function generateDelay3VarsForSeparatedVar(v, context, subs, argInput, argDelay, argInit) {
   // XXX: This code that deals with separated variables is largely copied from the legacy
@@ -291,15 +311,16 @@ function generateDelay3VarsForSeparatedVar(v, context, subs, argInput, argDelay,
   Model.addNonAtoAVar(canonicalName(level3), [true])
 
   // Generate level variables
-  generateDelayLevel(context, level3LHS, level3RefId, aux2LHS, aux3LHS, initArg)
-  generateDelayLevel(context, level2LHS, level2RefId, aux1LHS, aux2LHS, initArg)
-  generateDelayLevel(context, level1LHS, level1RefId, argInput, aux1LHS, initArg)
+  const eqns = []
+  eqns.push(generateDelayLevel(context, level3LHS, level3RefId, aux2LHS, aux3LHS, initArg))
+  eqns.push(generateDelayLevel(context, level2LHS, level2RefId, aux1LHS, aux2LHS, initArg))
+  eqns.push(generateDelayLevel(context, level1LHS, level1RefId, argInput, aux1LHS, initArg))
   v.delayVarRefId = level3RefId
 
   // Generate aux variable equations using the subs in the generated level vars
-  context.defineVariable(`${aux1LHS} = ${level1LHS} / ${delay3Val} ~~|`)
-  context.defineVariable(`${aux2LHS} = ${level2LHS} / ${delay3Val} ~~|`)
-  context.defineVariable(`${aux3LHS} = ${level3LHS} / ${delay3Val} ~~|`)
+  eqns.push(`${aux1LHS} = ${level1LHS} / ${delay3Val} ~~|`)
+  eqns.push(`${aux2LHS} = ${level2LHS} / ${delay3Val} ~~|`)
+  eqns.push(`${aux3LHS} = ${level3LHS} / ${delay3Val} ~~|`)
 
   // Generate an aux variable to hold the delay time expression
   v.delayTimeVarName = canonicalName(aux4)
@@ -307,6 +328,9 @@ function generateDelay3VarsForSeparatedVar(v, context, subs, argInput, argDelay,
     Model.addNonAtoAVar(v.delayTimeVarName, [true])
   }
   const delayTimeVarRefId = canonicalVensimName(aux4LHS)
-  context.defineVariable(`${aux4LHS} = ${delay3Val} ~~|`)
+  eqns.push(`${aux4LHS} = ${delay3Val} ~~|`)
   context.addVarReference(delayTimeVarRefId)
+
+  // Add the generated variables to the model
+  context.defineVariables(eqns)
 }

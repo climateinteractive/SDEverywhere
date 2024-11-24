@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.20](https://github.com/climateinteractive/SDEverywhere/compare/create-v0.2.19...create-v0.2.20) (2024-11-21)
+
+
+### Bug Fixes
+
+* skip questions in create script if config and/or emsdk directories exist ([#562](https://github.com/climateinteractive/SDEverywhere/issues/562)) ([4b37db0](https://github.com/climateinteractive/SDEverywhere/commit/4b37db0f41192aaed9ff2d33254d6a9a0451862e)), closes [#335](https://github.com/climateinteractive/SDEverywhere/issues/335)
+
 ## [0.2.19](https://github.com/climateinteractive/SDEverywhere/compare/create-v0.2.18...create-v0.2.19) (2024-09-15)
 
 
