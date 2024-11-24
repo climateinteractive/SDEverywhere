@@ -104,16 +104,26 @@ class Context {
   }
 
   /**
-   * Define a new variable with the given equation.  This will add the variable to the `Model`
-   * and then perform the same `readEquation` step that is applied to all other regular variables.
+   * Define new variables for the given equations that are generated at compile time.  This will
+   * add the variables for the given equations to the `Model` first, and after they are added,
+   * it will perform the* same `readEquation` step on each that is applied to all other regular
+   * variables.
    *
-   * @param {*} eqnText The equation in Vensim format.
+   * NOTE: In the case where multiple equations are generated at compile time for the purposes
+   * of implementing a complex function (e.g., `DELAY3`), this should be called once only after
+   * the equation text for those generated variables is known.  This ensures that all variables
+   * are defined in the model before `readEquation` performs further processing, similar to the
+   * process we use when reading the original model (we first call `readVariables` on all
+   * model variable definitions before calling `readEquation` on each).
+   *
+   * @param {string[]} eqnStrings An array of individual equation strings in Vensim format.
    */
-  defineVariable(eqnText) {
+  defineVariables(eqnStrings) {
     // Parse the equation text
+    const eqnText = eqnStrings.join('\n')
     const parsedModel = { kind: 'vensim', root: parseVensimModel(eqnText) }
 
-    // Create one or more `Variable` instances from the equation
+    // Create one or more `Variable` instances from the equations
     const vars = readVariables(parsedModel)
 
     // Add the variables to the `Model`
