@@ -1,5 +1,4 @@
 import {
-  dimensionNames,
   hasMapping,
   isDimension,
   isIndex,
@@ -16,6 +15,9 @@ import { generateLookupsFromExternalData } from './gen-lookup-from-external.js'
 import { generateLookupFromPoints } from './gen-lookup-from-points.js'
 
 import LoopIndexVars from './loop-index-vars.js'
+
+const loopIndexVarNames = ['i', 'j', 'k', 'l', 'm']
+const arrayIndexVarNames = ['u', 'v', 'w', 's', 't', 'f', 'g', 'h', 'o', 'p', 'q', 'r']
 
 /**
  * Generate C code for the given model equation.
@@ -35,8 +37,22 @@ import LoopIndexVars from './loop-index-vars.js'
  */
 export function generateEquation(variable, mode, extData, directData, modelDir, outFormat) {
   // Maps of LHS subscript families to loop index vars for lookup on the RHS
-  const loopIndexVars = new LoopIndexVars(['i', 'j', 'k', 'l', 'm'])
-  const arrayIndexVars = new LoopIndexVars(['u', 'v', 'w', 's', 't', 'f', 'g', 'h', 'o', 'p', 'q', 'r'])
+  const loopIndexVars = new LoopIndexVars(loopIndexVarNames)
+  const arrayIndexVars = new LoopIndexVars(arrayIndexVarNames)
+
+  // Make the generated loops easier to follow by eagerly determining the order of index
+  // variables based on the order of the LHS dimension names.  For example, if we have:
+  //   x[DimA, DimC, DimB] = y[DimB, DimC, DimA] ~~|
+  // This will generate loop index variable mappings in the following order:
+  //   DimA -> i
+  //   DimC -> j
+  //   DimB -> k
+  const lhsDimIds = variable.subscripts.filter(isDimension)
+  for (const lhsDimId of lhsDimIds) {
+    // We ignore the return value here.  Calling `index` will make `LoopIndexVars` eagerly
+    // set up a mapping from the dimension ID to the loop index variable name.
+    loopIndexVars.index(lhsDimId)
+  }
 
   // Generate the LHS variable reference code
   const parsedEqn = variable.parsedEqn
@@ -63,17 +79,14 @@ export function generateEquation(variable, mode, extData, directData, modelDir, 
     return [comment, ...initCode]
   }
 
-  // Get the dimension IDs for the LHS variable
-  const dimIds = dimensionNames(variable.subscripts)
-
   // Turn each dimension ID into a loop with a loop index variable.
   // If the variable has no subscripts, nothing will be emitted here.
   const indexDecl = outFormat === 'js' ? 'let' : 'size_t'
   const openLoops = []
   const closeLoops = []
-  for (const dimId of dimIds) {
-    const indexName = loopIndexVars.index(dimId)
-    const dimLength = sub(dimId).size
+  for (const lhsDimId of lhsDimIds) {
+    const indexName = loopIndexVars.index(lhsDimId)
+    const dimLength = sub(lhsDimId).size
     openLoops.push(`  for (${indexDecl} ${indexName} = 0; ${indexName} < ${dimLength}; ${indexName}++) {`)
     closeLoops.push('  }')
   }

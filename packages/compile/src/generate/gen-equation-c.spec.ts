@@ -914,11 +914,10 @@ describe('generateEquation (Vensim -> C)', () => {
         y = x[A1, C2, B2] ~~|
       `)
       expect(vars.size).toBe(2)
-      // BUG: This currently emits the loops in a different order than expected
       expect(genC(vars.get('_x'), 'init-constants')).toEqual([
         'for (size_t i = 0; i < 2; i++) {',
-        'for (size_t k = 0; k < 2; k++) {',
         'for (size_t j = 0; j < 2; j++) {',
+        'for (size_t k = 0; k < 2; k++) {',
         '_x[i][j][k] = 1.0;',
         '}',
         '}',
@@ -1229,10 +1228,9 @@ describe('generateEquation (Vensim -> C)', () => {
         '}',
         '}'
       ])
-      // BUG: This currently emits the loops in a different order than expected (actual is "j then i")
       expect(genC(vars.get('_y'))).toEqual([
-        'for (size_t j = 0; j < 2; j++) {',
         'for (size_t i = 0; i < 2; i++) {',
+        'for (size_t j = 0; j < 2; j++) {',
         '_y[i][j] = _x[j][i];',
         '}',
         '}'
@@ -1254,10 +1252,9 @@ describe('generateEquation (Vensim -> C)', () => {
         '}',
         '}'
       ])
-      // BUG: This currently emits the loops in a different order than expected (actual is "j then i")
       expect(genC(vars.get('_y'))).toEqual([
-        'for (size_t j = 0; j < 2; j++) {',
         'for (size_t i = 0; i < 2; i++) {',
+        'for (size_t j = 0; j < 2; j++) {',
         '_y[i][j] = _x[j][i];',
         '}',
         '}'
@@ -1276,10 +1273,9 @@ describe('generateEquation (Vensim -> C)', () => {
       expect(genC(vars.get('_x[_a1,_b2]'))).toEqual(['_x[0][1] = 2.0;'])
       expect(genC(vars.get('_x[_a2,_b1]'))).toEqual(['_x[1][0] = 3.0;'])
       expect(genC(vars.get('_x[_a2,_b2]'))).toEqual(['_x[1][1] = 4.0;'])
-      // BUG: This currently emits the loops in a different order than expected (actual is "j then i")
       expect(genC(vars.get('_y'))).toEqual([
-        'for (size_t j = 0; j < 2; j++) {',
         'for (size_t i = 0; i < 2; i++) {',
+        'for (size_t j = 0; j < 2; j++) {',
         '_y[i][j] = _x[j][i];',
         '}',
         '}'
@@ -1305,10 +1301,9 @@ describe('generateEquation (Vensim -> C)', () => {
         '_x[1][i] = 2.0;',
         '}'
       ])
-      // BUG: This currently emits the loops in a different order than expected (actual is "j then i")
       expect(genC(vars.get('_y'))).toEqual([
-        'for (size_t j = 0; j < 2; j++) {',
         'for (size_t i = 0; i < 2; i++) {',
+        'for (size_t j = 0; j < 2; j++) {',
         '_y[i][j] = _x[j][i];',
         '}',
         '}'
@@ -1396,21 +1391,19 @@ describe('generateEquation (Vensim -> C)', () => {
         y[DimC, DimB, DimA] = x[DimA, DimC, DimB] ~~|
       `)
       expect(vars.size).toBe(2)
-      // BUG: This currently emits the loops in a different order than expected
       expect(genC(vars.get('_x'), 'init-constants')).toEqual([
         'for (size_t i = 0; i < 2; i++) {',
-        'for (size_t k = 0; k < 2; k++) {',
         'for (size_t j = 0; j < 2; j++) {',
+        'for (size_t k = 0; k < 2; k++) {',
         '_x[i][j][k] = 1.0;',
         '}',
         '}',
         '}'
       ])
-      // BUG: This currently emits the loops in a different order than expected
       expect(genC(vars.get('_y'))).toEqual([
-        'for (size_t k = 0; k < 2; k++) {',
-        'for (size_t j = 0; j < 2; j++) {',
         'for (size_t i = 0; i < 2; i++) {',
+        'for (size_t j = 0; j < 2; j++) {',
+        'for (size_t k = 0; k < 2; k++) {',
         '_y[i][j][k] = _x[k][i][j];',
         '}',
         '}',
@@ -1442,11 +1435,10 @@ describe('generateEquation (Vensim -> C)', () => {
         '}',
         '}'
       ])
-      // BUG: This currently emits the loops in a different order than expected
       expect(genC(vars.get('_y'))).toEqual([
-        'for (size_t k = 0; k < 2; k++) {',
-        'for (size_t j = 0; j < 2; j++) {',
         'for (size_t i = 0; i < 2; i++) {',
+        'for (size_t j = 0; j < 2; j++) {',
+        'for (size_t k = 0; k < 2; k++) {',
         '_y[i][j][k] = _x[k][i][j];',
         '}',
         '}',
@@ -1466,28 +1458,25 @@ describe('generateEquation (Vensim -> C)', () => {
         y[SubC, DimB, DimA] = x[DimA, SubC, DimB] ~~|
       `)
       expect(vars.size).toBe(3)
-      // BUG: This currently emits the loops in a different order than expected
       expect(genC(vars.get('_x'), 'init-constants')).toEqual([
         'for (size_t i = 0; i < 2; i++) {',
-        'for (size_t k = 0; k < 2; k++) {',
         'for (size_t j = 0; j < 3; j++) {',
+        'for (size_t k = 0; k < 2; k++) {',
         '_x[i][j][k] = 1.0;',
         '}',
         '}',
         '}'
       ])
-      // BUG: This currently emits the loops in a different order than expected
       expect(genC(vars.get('_y[_c2,_dimb,_dima]'), 'init-constants')).toEqual([
-        'for (size_t j = 0; j < 2; j++) {',
         'for (size_t i = 0; i < 2; i++) {',
+        'for (size_t j = 0; j < 2; j++) {',
         '_y[1][i][j] = _x[j][1][i];',
         '}',
         '}'
       ])
-      // BUG: This currently emits the loops in a different order than expected
       expect(genC(vars.get('_y[_c3,_dimb,_dima]'), 'init-constants')).toEqual([
-        'for (size_t j = 0; j < 2; j++) {',
         'for (size_t i = 0; i < 2; i++) {',
+        'for (size_t j = 0; j < 2; j++) {',
         '_y[2][i][j] = _x[j][2][i];',
         '}',
         '}'

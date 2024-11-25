@@ -2,7 +2,7 @@ import util from 'util'
 import B from 'bufx'
 import yaml from 'js-yaml'
 import * as R from 'ramda'
-import { canonicalName, asort, vlog } from './helpers.js'
+import { canonicalName, vlog } from './helpers.js'
 
 // A subscript is a dimension or an index.
 // Both have the same properties: model name, canonical name, family, values.
@@ -354,13 +354,3 @@ export function separatedVariableIndex(rhsSub, variable, rhsSubscripts) {
   }
   return null
 }
-// Function to filter canonical dimension names from a list of names
-export let dimensionNames = R.pipe(
-  R.filter(subscript => isDimension(subscript)),
-  asort
-)
-// Function to filter canonical index names from a list of names
-export let indexNames = R.pipe(
-  R.filter(subscript => isIndex(subscript)),
-  asort
-)
