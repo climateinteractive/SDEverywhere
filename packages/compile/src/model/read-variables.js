@@ -201,7 +201,7 @@ function subscriptPositionsToExpand(subIds, exceptSubIdSets, separationDims, rhs
  * TODO: Use correct types here
  *
  * @param {string} baseVarId The canonical base name of the variable.
- * @param {*} subIds The list of subscripts appearing on the LHS in original order.
+ * @param {*} subIds The list of subscripts appearing on the LHS in the original order.
  * @param {*} exceptSubIdSets An array of subscript lists from the :EXCEPT: clause.
  * @param {*} positionsToExpand An array of boolean flags, one for each subscript position.
  * @returns {*} An array of objects containing the `subIds` and `separationDims` for each expansion.
