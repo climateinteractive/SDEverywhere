@@ -1,17 +1,8 @@
-import * as R from 'ramda'
-
 import { parseVensimModel } from '@sdeverywhere/parse'
 
 import { canonicalName, cartesianProductOf, newDepreciationVarName, newFixedDelayVarName } from '../_shared/helpers.js'
 
-import {
-  extractMarkedDims,
-  indexNamesForSubscript,
-  isDimension,
-  isIndex,
-  separatedVariableIndex,
-  sub
-} from '../_shared/subscript.js'
+import { hasMapping, indexNamesForSubscript, isDimension, isIndex, sub } from '../_shared/subscript.js'
 
 import Model from './model.js'
 import { generateDelayVariables } from './read-equation-fn-delay.js'
@@ -735,97 +726,201 @@ function validateCallArgType(callExpr, index, expectedKind) {
 }
 
 /**
- * Return an array of `refId`s for the variables that are referenced on the RHS of the
+ * Return an array of `refId`s for a variable that is referenced on the RHS of the
  * equation for `lhsVariable`.
+ *
+ * If the referenced variable is non-subscripted or is apply-to-all, this will return
+ * an array with a single `refId`.
+ *
+ * If the referenced variable is non-apply-to-all (i.e., it has more than one instance),
+ * this will return an array of `refId`s that are relevant for the given `lhsVariable`.
+ *
+ * @param {*} lhsVariable The LHS variable instance that has an equation that references
+ * the given `rhsBaseVarRefId` variable on the RHS.
+ * @param {string} rhsBaseRefId The base variable ID of the variable referenced on the RHS.
+ * @param {string[]} rhsSubIds The array of parsed subscript/dimension IDs that are included
+ * in the RHS variable reference.
  */
 function expandedRefIdsForVar(lhsVariable, rhsBaseRefId, rhsSubIds) {
   if (rhsSubIds.length === 0) {
-    // The reference is to non-subscripted variable, so return a single reference to the
-    // base variable ID
+    // The RHS reference is to non-subscripted variable, so return a single `refId`
     return [rhsBaseRefId]
   }
 
-  // Remove dimension subscripts marked with ! and save them for later.
-  let markedDims = extractMarkedDims(rhsSubIds)
-
-  //
-  // See if this variable is non-apply-to-all.  This will return a boolean for each
-  // subscript position of the referenced variable.
-  //
-  // Example 1: Suppose we have a 3D non-apply-to-all variable (that is separated
-  // over the middle dimension):
-  //   x[DimA, SubB, DimC] = 1 ~~|
-  // In this case, `expansionFlags` will return [false, true, false].
-  //
-  // Example 2: Suppose we have a 3D apply-to-all variable:
-  //   x[DimA, DimB, DimC] = 1 ~~|
-  // In this case, `expansionFlags` will return `undefined` because the referenced
-  // variable is apply-to-all.
-  //
-  let expansionFlags = Model.expansionFlags(rhsBaseRefId)
-  if (!expansionFlags) {
-    // The reference is to an apply-to-all variable, so return a single reference to the
-    // base variable ID
-    return [rhsBaseRefId]
+  // Get all variable instances for the referenced RHS variable
+  const rhsVarInstances = Model.varsWithName(rhsBaseRefId)
+  if (rhsVarInstances.length === 0) {
+    // The referenced variable is unknown; throw an error
+    throw new Error(`No variable found for ${rhsBaseRefId}, which was referenced by ${lhsVariable.refId}`)
   }
 
-  // The reference is to a non-apply-to-all variable.
-  // Find the refIds of the vars that include the indices in the reference.
-  // Get the vars with the var name of the reference. We will choose from these vars.
-  let varsWithRefName = Model.varsWithName(rhsBaseRefId)
+  //
+  // At this point we know that there are multiple instances of the referenced variable, so
+  // it must be non-apply-to-all.  The goal now is to determine which instances (refIds) are
+  // relevant for the given `lhsVariable` context.
+  //
+  // First, get all combinations of the LHS subscripts that map to the subscripts/dimensions
+  // in the RHS variable reference.  For example:
+  //   y[DimA,DimB,DimC] :EXCEPT: [DimA,DimB,C1] = x[DimA,DimC,DimB]
+  // In this case the `DimC` on the RHS is only "accessed" by `C2` from the LHS, so we would
+  // build an array of strings representing the possible subset of combinations, like this:
+  //   _a1,_c2,_b1
+  //   _a1,_c2,_b2
+  //   _a2,_c2,_b1
+  //   _a2,_c2,_b2
+  //
+  // Then, for each RHS variable instance:
+  //   - get all combinations of RHS subscripts that can be accepted by that RHS instance
+  //     (build an array of strings, e.g., ['_a1,_c1,_b1', '_a1,_c1,_b1', ...])
+  //   - see if any of the LHS subscript combos match any of the RHS subscript combos; if
+  //     so, then add the RHS `refId` to the array of variables referenced by the LHS
+  //
+  // In the following examples, suppose the referenced RHS variable is non-apply-to-all and
+  // has two instances:
+  //   _x[_dima,_c1,_dimb]
+  //   _x[_dima,_c2,_dimb]
+  //
+  // Example 1: Suppose we have the following equation, where the LHS variable is apply-to-all:
+  //   y[DimA,DimB,DimC] = x[DimA,DimC,DimB]
+  // In this case, the LHS variable will reference all instances of `x`, so this function will
+  // return two refIds:
+  //   _x[_dima,_c1,_dimb]
+  //   _x[_dima,_c2,_dimb]
+  //
+  // Example 2: Suppose we have the following equation, where the LHS variable is apply-to-all,
+  // but the RHS reference is for a specific instance:
+  //   y[DimA,DimB,DimC] = x[DimA,C1,DimB]
+  // In this case, the LHS variable will reference only one instance of `x`, so this function
+  // will return one refId:
+  //   _x[_dima,_c1,_dimb]
+  //
+  // Example 3: Suppose we have the following equation, where the LHS variable is NON-apply-to-all:
+  //   y[DimA,DimB,DimC] :EXCEPT: [DimA,DimB,C1] = x[DimA,DimC,DimB]
+  // The LHS variable will already have been separated into multiple instances (due to the "except"
+  // clause), and the specific instance of the LHS variable in this case will be:
+  //   _y[_dima,_dimb,_c2]
+  // In this case, this instance of the LHS variable will reference only one instance of `x`,
+  // so this function will return one refId:
+  //   _x[_dima,_c2,_dimb]
+  //
 
-  // The refIds of actual vars containing the indices will accumulate with possible duplicates.
-  let expandedRefIds = []
-
-  // Accumulate an array of lists of the separated index names at each position.
-  let indexNames = []
-  for (let iSub = 0; iSub < expansionFlags.length; iSub++) {
-    if (expansionFlags[iSub]) {
-      // For each index name at the subscript position, find refIds for vars that include the index.
-      // This process ensures that we generate references to vars that are in the var table.
-      let indexNamesAtPos
-      // Use the single index name for a separated variable if it exists.
-      // But don't do this if the subscript is a marked dimension in a vector function.
-      let separatedIndexName = separatedVariableIndex(rhsSubIds[iSub], lhsVariable, rhsSubIds)
-      if (!markedDims.includes(rhsSubIds[iSub]) && separatedIndexName) {
-        indexNamesAtPos = [separatedIndexName]
+  // Step 1: Get all combinations of the LHS subscripts that map to the subscripts/dimensions
+  // in the RHS variable reference.   by figuring out which LHS subscripts/dimensions are relevant
+  // for the RHS subscripts/dimensions given the context of the LHS variable (which may have
+  // been separated/expanded).
+  const lhsSubRefs = lhsVariable.parsedEqn.lhs.varDef.subscriptRefs
+  const lhsSubIds = lhsSubRefs?.map(subRef => subRef.subId) || []
+  const mappedLhsSubIds = []
+  // Here `rhsSubIds` is the array of parsed subscript/dimension IDs that appear in the
+  // RHS variable reference
+  for (const rhsSubId of rhsSubIds) {
+    if (rhsSubId.includes('!')) {
+      // The dimension ID at this position is "marked", indicating that the vector function
+      // (e.g., `SUM`) should operate over the elements in this dimension.  This implies
+      // that the LHS depends on all instances of the RHS variable; we will use that RHS
+      // dimension so that all subscripts within that dimension are expanded in Step 2.
+      const rhsDimId = rhsSubId.replace('!', '')
+      mappedLhsSubIds.push(rhsDimId)
+    } else if (isIndex(rhsSubId)) {
+      // The ID at this position is for a subscript/index, so we will use that directly
+      mappedLhsSubIds.push(rhsSubId)
+    } else {
+      // The ID at this position is for a dimension; figure out which LHS subscript/dimension
+      // is a match.  First see if there is an exact match.
+      const lhsDimIndex = lhsSubIds.findIndex(lhsSubId => lhsSubId === rhsSubId)
+      if (lhsDimIndex >= 0) {
+        // There is a match.  If the LHS variable is separated, use the separated subscript
+        // ID at this position (i.e., the value from the `subscripts` array), otherwise we
+        // use the dimension ID at this position.
+        mappedLhsSubIds.push(lhsVariable.subscripts[lhsDimIndex])
       } else {
-        // Generate references to all the indices for the subscript.
-        indexNamesAtPos = indexNamesForSubscript(rhsSubIds[iSub])
+        // There isn't an exact match; in this case, find the position of the LHS dimension that
+        // has a mapping to the RHS dimension
+        const mappedLhsDimIndex = lhsSubIds.findIndex(lhsSubId => hasMapping(rhsSubId, lhsSubId))
+        if (mappedLhsDimIndex >= 0) {
+          // There is a match.  If the LHS variable is separated, use the _mapped_ separated
+          // subscript ID at this position (i.e., the value from the `subscripts` array),
+          // otherwise we use the _mapped_ dimension ID at this position.
+          const mappedLhsSubOrDimId = lhsVariable.subscripts[mappedLhsDimIndex]
+          if (isIndex(mappedLhsSubOrDimId)) {
+            // Determine the mapped subscript.  For example, suppose we have:
+            //   Dim: (t1-t3) ~~|
+            //   SubA: (t2-t3) -> SubB ~~|
+            //   SubB: (t1-t2) -> SubA ~~|
+            //   y[SubA] = x[SubB] ~~|
+            // Note that `y` will be separated.  Suppose we are evaluating the first instance
+            // of `y`, i.e., `_y[_t2]`.  We get the object/metadata for each dimension, which
+            // will look like the following (unrelated properties are omitted):
+            //   lhsDim == {
+            //     name: '_suba',
+            //     value: [ '_t2', '_t3' ],
+            //     family: '_dim',
+            //     mappings: { _subb: [ '_t2', '_t3' ] }
+            //   }
+            //   rhsDim == {
+            //     name: '_subb',
+            //     value: [ '_t1', '_t2' ],
+            //     family: '_dim',
+            //     mappings: { _suba: [ '_t1', '_t2' ] }
+            //   }
+            // The separated LHS subscript in this case is `_t2`, so we need to figure out
+            // the corresponding subscript in the mapped RHS dimension, which is `_t1`.
+            const mappedLhsSubId = mappedLhsSubOrDimId
+            const mappedLhsDimId = lhsSubIds[mappedLhsDimIndex]
+            const lhsDim = sub(mappedLhsDimId)
+            const rhsDim = sub(rhsSubId)
+            const lhsSubIndex = lhsDim.value.indexOf(mappedLhsSubId)
+            if (lhsSubIndex >= 0) {
+              const chosenSubId = rhsDim.mappings[mappedLhsDimId][lhsSubIndex]
+              mappedLhsSubIds.push(chosenSubId)
+            } else {
+              throw new Error(`Failed to find mapped LHS subscript ${mappedLhsSubId} in RHS dimension ${rhsSubId}`)
+            }
+          } else {
+            // TODO: Need to explain this case better
+            mappedLhsSubIds.push(rhsSubId)
+          }
+        } else {
+          throw new Error(
+            `Failed to find LHS dimension for RHS dimension: lhs=${lhsVariable.refId} rhs=${rhsBaseRefId} sub=${rhsSubId}`
+          )
+        }
       }
-      indexNames.push(indexNamesAtPos)
     }
   }
 
-  // Flatten the arrays of index names at each position into an array of index name combinations.
-  let separatedIndices = cartesianProductOf(indexNames)
-  // Find a separated variable for each combination of indices.
-  for (let separatedIndex of separatedIndices) {
-    // Consider each var with the same name as the reference in the equation.
-    for (let refVar of varsWithRefName) {
-      let iSeparatedIndex = 0
-      let iSub
-      for (iSub = 0; iSub < expansionFlags.length; iSub++) {
-        if (expansionFlags[iSub]) {
-          let refVarIndexNames = indexNamesForSubscript(refVar.subscripts[iSub])
-          if (refVarIndexNames.length === 0) {
-            console.error(
-              `ERROR: no subscript at subscript position ${iSub} for var ${refVar.refId} with subscripts ${refVar.subscripts}`
-            )
-          }
-          if (!refVarIndexNames.includes(separatedIndex[iSeparatedIndex++])) {
-            break
-          }
-        }
-      }
-      if (iSub >= expansionFlags.length) {
-        // All separated index names matched index names in the var, so add it as a reference.
-        expandedRefIds.push(refVar.refId)
+  // Step 2: Build an array of mapped LHS subscript combos (one string of comma-separated
+  // subscript IDs for each combo)
+  const mappedLhsSubIdsPerPosition = []
+  for (const subId of mappedLhsSubIds) {
+    mappedLhsSubIdsPerPosition.push(indexNamesForSubscript(subId))
+  }
+  const mappedLhsCombos = cartesianProductOf(mappedLhsSubIdsPerPosition).map(combo => combo.join(','))
+
+  // Step 3: For each RHS variable instance, get all combinations of RHS subscripts that can
+  // be accepted by that particular RHS instance
+  const rhsRefIds = []
+  for (const rhsVarInstance of rhsVarInstances) {
+    // Build RHS subscript combos (one string of comma-separated subscript IDs for each combo)
+    const rhsVarInstanceSubIdsPerPosition = []
+    for (const subId of rhsVarInstance.subscripts) {
+      rhsVarInstanceSubIdsPerPosition.push(indexNamesForSubscript(subId))
+    }
+    const rhsCombos = cartesianProductOf(rhsVarInstanceSubIdsPerPosition).map(combo => combo.join(','))
+
+    // See if any of the LHS subscript combos match any of the RHS subscript combos
+    for (const lhsCombo of mappedLhsCombos) {
+      if (rhsCombos.includes(lhsCombo)) {
+        // There was a match; add the refId and break out of the inner loop
+        rhsRefIds.push(rhsVarInstance.refId)
         break
       }
     }
   }
 
-  // Sort the expandedRefIds and eliminate duplicates.
-  return R.uniq(expandedRefIds.sort())
+  // Return the sorted array of relevant refIds
+  // TODO: Sorting is not essential here, but the legacy reader sorted so we will keep that
+  // behavior now to avoid invalidating tests.  Later we should remove this `sort` call and
+  // update the tests accordingly.
+  return rhsRefIds.sort()
 }
