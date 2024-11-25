@@ -671,6 +671,59 @@ describe('readEquations', () => {
       ])
     })
 
+    // This is adapted from the "except" sample model (see equation for `k`)
+    it('should work when RHS variable is NON-apply-to-all (1D) and is accessed with mapped version of LHS dimension', () => {
+      const vars = readInlineModel(`
+        DimA: A1, A2, A3 ~~|
+        SubA: A2, A3 ~~|
+        DimB: B1, B2 -> (DimA: SubA, A1) ~~|
+        a[DimA] = 1, 2, 3 ~~|
+        b[DimB] = 4, 5 ~~|
+        y[DimA] = a[DimA] + b[DimB] ~~|
+      `)
+      expect(vars).toEqual([
+        v('a[DimA]', '1,2,3', {
+          refId: '_a[_a1]',
+          separationDims: ['_dima'],
+          subscripts: ['_a1'],
+          varType: 'const'
+        }),
+        v('a[DimA]', '1,2,3', {
+          refId: '_a[_a2]',
+          separationDims: ['_dima'],
+          subscripts: ['_a2'],
+          varType: 'const'
+        }),
+        v('a[DimA]', '1,2,3', {
+          refId: '_a[_a3]',
+          separationDims: ['_dima'],
+          subscripts: ['_a3'],
+          varType: 'const'
+        }),
+        v('b[DimB]', '4,5', {
+          refId: '_b[_b1]',
+          separationDims: ['_dimb'],
+          subscripts: ['_b1'],
+          varType: 'const'
+        }),
+        v('b[DimB]', '4,5', {
+          refId: '_b[_b2]',
+          separationDims: ['_dimb'],
+          subscripts: ['_b2'],
+          varType: 'const'
+        }),
+        // refIdsForRhsVarRef(_y, '_a', ['_dima'])
+        //   -> ['_a[_a1]', '_a[_a2]', '_a[_a3]']
+        // refIdsForRhsVarRef(_y, '_b', ['_dimb'])
+        //   -> ['_b[_b1]', '_b[_b2]']
+        v('y[DimA]', 'a[DimA]+b[DimB]', {
+          refId: '_y',
+          subscripts: ['_dima'],
+          references: ['_a[_a1]', '_a[_a2]', '_a[_a3]', '_b[_b1]', '_b[_b2]']
+        })
+      ])
+    })
+
     // it('should work when RHS variable is apply-to-all (2D) and is accessed with specific subscripts', () => {
     //   // TODO
     // })
@@ -932,6 +985,55 @@ describe('readEquations', () => {
         })
       ])
     })
+
+    // This is adapted from the "ref" sample model (with updated naming for clarity)
+    it('should work for complex mapping example', () => {
+      const vars = readInlineModel(`
+        Target: (t1-t3) ~~|
+        tNext: (t2-t3) -> tPrev ~~|
+        tPrev: (t1-t2) -> tNext ~~|
+        x[t1] = y[t1] + 1 ~~|
+        x[tNext] = y[tNext] + 1 ~~|
+        y[t1] = 1 ~~|
+        y[tNext] = x[tPrev] + 1 ~~|
+      `)
+      expect(vars).toEqual([
+        v('x[t1]', 'y[t1]+1', {
+          refId: '_x[_t1]',
+          subscripts: ['_t1'],
+          references: ['_y[_t1]']
+        }),
+        v('x[tNext]', 'y[tNext]+1', {
+          refId: '_x[_t2]',
+          separationDims: ['_tnext'],
+          subscripts: ['_t2'],
+          references: ['_y[_t2]']
+        }),
+        v('x[tNext]', 'y[tNext]+1', {
+          refId: '_x[_t3]',
+          separationDims: ['_tnext'],
+          subscripts: ['_t3'],
+          references: ['_y[_t3]']
+        }),
+        v('y[t1]', '1', {
+          refId: '_y[_t1]',
+          subscripts: ['_t1'],
+          varType: 'const'
+        }),
+        v('y[tNext]', 'x[tPrev]+1', {
+          refId: '_y[_t2]',
+          references: ['_x[_t1]'],
+          separationDims: ['_tnext'],
+          subscripts: ['_t2']
+        }),
+        v('y[tNext]', 'x[tPrev]+1', {
+          refId: '_y[_t3]',
+          references: ['_x[_t2]'],
+          separationDims: ['_tnext'],
+          subscripts: ['_t3']
+        })
+      ])
+    })
   })
 
   describe('when LHS is apply-to-all (2D)', () => {
@@ -1166,7 +1268,7 @@ describe('readEquations', () => {
 
     // This test is based on the example from #179 (simplified to use subdimensions to ensure separation)
     // TODO: This test is disabled until the fix for #179 is implemented
-    it.skip('should work when RHS variable is NON-apply-to-all (1D) and is accessed with 2 different dimensions from LHS that map to the same family', () => {
+    it('should work when RHS variable is NON-apply-to-all (1D) and is accessed with 2 different dimensions from LHS that map to the same family', () => {
       const vars = readInlineModel(`
         DimA: A1, A2, A3 ~~|
         SubA: A1, A2 ~~|
@@ -1213,7 +1315,7 @@ describe('readEquations', () => {
           refId: '_y[_a1,_a2]',
           separationDims: ['_suba', '_subb'],
           subscripts: ['_a1', '_a2'],
-          references: ['_x[_a1]', '_x[_a2]'] // BUG: Actual value only includes _x[a1]
+          references: ['_x[_a1]', '_x[_a2]']
         }),
         // expansionFlags for x[SubA]  in RHS === [true]
         // expandedRefIds for x[SubA]  in RHS === ['_x[_a1]', '_x[_a2]']
@@ -1227,7 +1329,7 @@ describe('readEquations', () => {
           refId: '_y[_a2,_a1]',
           separationDims: ['_suba', '_subb'],
           subscripts: ['_a2', '_a1'],
-          references: ['_x[_a1]', '_x[_a2]'] // BUG: Actual value only includes _x[a2]
+          references: ['_x[_a2]', '_x[_a1]']
         }),
         // expansionFlags for x[SubA]  in RHS === [true]
         // expandedRefIds for x[SubA]  in RHS === ['_x[_a1]', '_x[_a2]']
@@ -1501,7 +1603,7 @@ describe('readEquations', () => {
           refId: '_z[_scenario,_a1,_a2]',
           subscripts: ['_scenario', '_a1', '_a2'],
           separationDims: ['_supplying_sector', '_producing_sector'],
-          references: ['_y[_s1]', '_y[_s2]', '_x[_a1,_a2]'], // BUG: Actual value is '_x[a1,_a1]'
+          references: ['_y[_s1]', '_y[_s2]', '_x[_a1,_a2]'],
           varType: 'aux'
         }),
         // expected expansionFlags for x in RHS === [true, true]
@@ -1512,7 +1614,7 @@ describe('readEquations', () => {
           refId: '_z[_scenario,_a2,_a1]',
           subscripts: ['_scenario', '_a2', '_a1'],
           separationDims: ['_supplying_sector', '_producing_sector'],
-          references: ['_y[_s1]', '_y[_s2]', '_x[_a2,_a1]'], // BUG: Actual value is '_x[a2,_a2]'
+          references: ['_y[_s1]', '_y[_s2]', '_x[_a2,_a1]'],
           varType: 'aux'
         }),
         // expected expansionFlags for x in RHS === [true, true]
@@ -2165,7 +2267,7 @@ describe('readEquations', () => {
         delayTimeVarName: '__aux4',
         delayVarRefId: '__level3',
         refId: '_y',
-        references: ['__level3', '__level2', '__level1', '__aux4[_dima]'],
+        references: ['__level3', '__level2', '__level1', '__aux4[_dima]'], // TODO: The last one is suspicious
         subscripts: ['_dima']
       }),
       v('_level3[DimA]', 'INTEG(_aux2[DimA]-_aux3[DimA],init[DimA]*((delay[DimA])/3))', {
@@ -2304,7 +2406,7 @@ describe('readEquations', () => {
         initReferences: ['_init', '_delay[_a2]'],
         refId: '__level_y_3[_a2]',
         referencedFunctionNames: ['__integ'],
-        references: ['__aux_y_2', '__aux_y_3'],
+        references: ['__aux_y_2[_a2]', '__aux_y_3[_a2]'],
         subscripts: ['_a2'],
         varType: 'level'
       }),
@@ -2314,7 +2416,7 @@ describe('readEquations', () => {
         initReferences: ['_init', '_delay[_a2]'],
         refId: '__level_y_2[_a2]',
         referencedFunctionNames: ['__integ'],
-        references: ['__aux_y_1', '__aux_y_2'],
+        references: ['__aux_y_1[_a2]', '__aux_y_2[_a2]'],
         subscripts: ['_a2'],
         varType: 'level'
       }),
@@ -2324,25 +2426,25 @@ describe('readEquations', () => {
         initReferences: ['_init', '_delay[_a2]'],
         refId: '__level_y_1[_a2]',
         referencedFunctionNames: ['__integ'],
-        references: ['_input[_a2]', '__aux_y_1'],
+        references: ['_input[_a2]', '__aux_y_1[_a2]'],
         subscripts: ['_a2'],
         varType: 'level'
       }),
       v('_aux_y_1[a2]', '_level_y_1[a2]/((delay[a2])/3)', {
         includeInOutput: false,
-        refId: '__aux_y_1',
+        refId: '__aux_y_1[_a2]',
         references: ['__level_y_1[_a2]', '_delay[_a2]'],
         subscripts: ['_a2']
       }),
       v('_aux_y_2[a2]', '_level_y_2[a2]/((delay[a2])/3)', {
         includeInOutput: false,
-        refId: '__aux_y_2',
+        refId: '__aux_y_2[_a2]',
         references: ['__level_y_2[_a2]', '_delay[_a2]'],
         subscripts: ['_a2']
       }),
       v('_aux_y_3[a2]', '_level_y_3[a2]/((delay[a2])/3)', {
         includeInOutput: false,
-        refId: '__aux_y_3',
+        refId: '__aux_y_3[_a2]',
         references: ['__level_y_3[_a2]', '_delay[_a2]'],
         subscripts: ['_a2']
       }),
@@ -2358,7 +2460,7 @@ describe('readEquations', () => {
         initReferences: ['_init', '_delay[_a3]'],
         refId: '__level_y_3[_a3]',
         referencedFunctionNames: ['__integ'],
-        references: ['__aux_y_2', '__aux_y_3'],
+        references: ['__aux_y_2[_a3]', '__aux_y_3[_a3]'],
         subscripts: ['_a3'],
         varType: 'level'
       }),
@@ -2368,7 +2470,7 @@ describe('readEquations', () => {
         initReferences: ['_init', '_delay[_a3]'],
         refId: '__level_y_2[_a3]',
         referencedFunctionNames: ['__integ'],
-        references: ['__aux_y_1', '__aux_y_2'],
+        references: ['__aux_y_1[_a3]', '__aux_y_2[_a3]'],
         subscripts: ['_a3'],
         varType: 'level'
       }),
@@ -2378,25 +2480,25 @@ describe('readEquations', () => {
         initReferences: ['_init', '_delay[_a3]'],
         refId: '__level_y_1[_a3]',
         referencedFunctionNames: ['__integ'],
-        references: ['_input[_a3]', '__aux_y_1'],
+        references: ['_input[_a3]', '__aux_y_1[_a3]'],
         subscripts: ['_a3'],
         varType: 'level'
       }),
       v('_aux_y_1[a3]', '_level_y_1[a3]/((delay[a3])/3)', {
         includeInOutput: false,
-        refId: '__aux_y_1',
+        refId: '__aux_y_1[_a3]',
         references: ['__level_y_1[_a3]', '_delay[_a3]'],
         subscripts: ['_a3']
       }),
       v('_aux_y_2[a3]', '_level_y_2[a3]/((delay[a3])/3)', {
         includeInOutput: false,
-        refId: '__aux_y_2',
+        refId: '__aux_y_2[_a3]',
         references: ['__level_y_2[_a3]', '_delay[_a3]'],
         subscripts: ['_a3']
       }),
       v('_aux_y_3[a3]', '_level_y_3[a3]/((delay[a3])/3)', {
         includeInOutput: false,
-        refId: '__aux_y_3',
+        refId: '__aux_y_3[_a3]',
         references: ['__level_y_3[_a3]', '_delay[_a3]'],
         subscripts: ['_a3']
       }),
@@ -4973,7 +5075,7 @@ describe('readEquations', () => {
         initReferences: ['_init_2[_a2]', '_delay_2'],
         refId: '__level_d12_3[_a2]',
         referencedFunctionNames: ['__integ'],
-        references: ['__aux_d12_2', '__aux_d12_3'],
+        references: ['__aux_d12_2[_a2]', '__aux_d12_3[_a2]'],
         subscripts: ['_a2'],
         varType: 'level'
       }),
@@ -4983,7 +5085,7 @@ describe('readEquations', () => {
         initReferences: ['_init_2[_a2]', '_delay_2'],
         refId: '__level_d12_2[_a2]',
         referencedFunctionNames: ['__integ'],
-        references: ['__aux_d12_1', '__aux_d12_2'],
+        references: ['__aux_d12_1[_a2]', '__aux_d12_2[_a2]'],
         subscripts: ['_a2'],
         varType: 'level'
       }),
@@ -4993,25 +5095,25 @@ describe('readEquations', () => {
         initReferences: ['_init_2[_a2]', '_delay_2'],
         refId: '__level_d12_1[_a2]',
         referencedFunctionNames: ['__integ'],
-        references: ['_input_2[_a2]', '__aux_d12_1'],
+        references: ['_input_2[_a2]', '__aux_d12_1[_a2]'],
         subscripts: ['_a2'],
         varType: 'level'
       }),
       v('_aux_d12_1[a2]', '_level_d12_1[a2]/((delay 2)/3)', {
         includeInOutput: false,
-        refId: '__aux_d12_1',
+        refId: '__aux_d12_1[_a2]',
         references: ['__level_d12_1[_a2]', '_delay_2'],
         subscripts: ['_a2']
       }),
       v('_aux_d12_2[a2]', '_level_d12_2[a2]/((delay 2)/3)', {
         includeInOutput: false,
-        refId: '__aux_d12_2',
+        refId: '__aux_d12_2[_a2]',
         references: ['__level_d12_2[_a2]', '_delay_2'],
         subscripts: ['_a2']
       }),
       v('_aux_d12_3[a2]', '_level_d12_3[a2]/((delay 2)/3)', {
         includeInOutput: false,
-        refId: '__aux_d12_3',
+        refId: '__aux_d12_3[_a2]',
         references: ['__level_d12_3[_a2]', '_delay_2'],
         subscripts: ['_a2']
       }),
@@ -5027,7 +5129,7 @@ describe('readEquations', () => {
         initReferences: ['_init_2[_a3]', '_delay_2'],
         refId: '__level_d12_3[_a3]',
         referencedFunctionNames: ['__integ'],
-        references: ['__aux_d12_2', '__aux_d12_3'],
+        references: ['__aux_d12_2[_a3]', '__aux_d12_3[_a3]'],
         subscripts: ['_a3'],
         varType: 'level'
       }),
@@ -5037,7 +5139,7 @@ describe('readEquations', () => {
         initReferences: ['_init_2[_a3]', '_delay_2'],
         refId: '__level_d12_2[_a3]',
         referencedFunctionNames: ['__integ'],
-        references: ['__aux_d12_1', '__aux_d12_2'],
+        references: ['__aux_d12_1[_a3]', '__aux_d12_2[_a3]'],
         subscripts: ['_a3'],
         varType: 'level'
       }),
@@ -5047,25 +5149,25 @@ describe('readEquations', () => {
         initReferences: ['_init_2[_a3]', '_delay_2'],
         refId: '__level_d12_1[_a3]',
         referencedFunctionNames: ['__integ'],
-        references: ['_input_2[_a3]', '__aux_d12_1'],
+        references: ['_input_2[_a3]', '__aux_d12_1[_a3]'],
         subscripts: ['_a3'],
         varType: 'level'
       }),
       v('_aux_d12_1[a3]', '_level_d12_1[a3]/((delay 2)/3)', {
         includeInOutput: false,
-        refId: '__aux_d12_1',
+        refId: '__aux_d12_1[_a3]',
         references: ['__level_d12_1[_a3]', '_delay_2'],
         subscripts: ['_a3']
       }),
       v('_aux_d12_2[a3]', '_level_d12_2[a3]/((delay 2)/3)', {
         includeInOutput: false,
-        refId: '__aux_d12_2',
+        refId: '__aux_d12_2[_a3]',
         references: ['__level_d12_2[_a3]', '_delay_2'],
         subscripts: ['_a3']
       }),
       v('_aux_d12_3[a3]', '_level_d12_3[a3]/((delay 2)/3)', {
         includeInOutput: false,
-        refId: '__aux_d12_3',
+        refId: '__aux_d12_3[_a3]',
         references: ['__level_d12_3[_a3]', '_delay_2'],
         subscripts: ['_a3']
       }),
@@ -5278,7 +5380,7 @@ describe('readEquations', () => {
         initReferences: ['_init_2[_a2]', '_delay_2'],
         refId: '__level_d9_3[_a2]',
         referencedFunctionNames: ['__integ'],
-        references: ['__aux_d9_2', '__aux_d9_3'],
+        references: ['__aux_d9_2[_a2]', '__aux_d9_3[_a2]'],
         subscripts: ['_a2'],
         varType: 'level'
       }),
@@ -5288,7 +5390,7 @@ describe('readEquations', () => {
         initReferences: ['_init_2[_a2]', '_delay_2'],
         refId: '__level_d9_2[_a2]',
         referencedFunctionNames: ['__integ'],
-        references: ['__aux_d9_1', '__aux_d9_2'],
+        references: ['__aux_d9_1[_a2]', '__aux_d9_2[_a2]'],
         subscripts: ['_a2'],
         varType: 'level'
       }),
@@ -5298,25 +5400,25 @@ describe('readEquations', () => {
         initReferences: ['_init_2[_a2]', '_delay_2'],
         refId: '__level_d9_1[_a2]',
         referencedFunctionNames: ['__integ'],
-        references: ['_input_2[_a2]', '__aux_d9_1'],
+        references: ['_input_2[_a2]', '__aux_d9_1[_a2]'],
         subscripts: ['_a2'],
         varType: 'level'
       }),
       v('_aux_d9_1[a2]', '_level_d9_1[a2]/((delay 2)/3)', {
         includeInOutput: false,
-        refId: '__aux_d9_1',
+        refId: '__aux_d9_1[_a2]',
         references: ['__level_d9_1[_a2]', '_delay_2'],
         subscripts: ['_a2']
       }),
       v('_aux_d9_2[a2]', '_level_d9_2[a2]/((delay 2)/3)', {
         includeInOutput: false,
-        refId: '__aux_d9_2',
+        refId: '__aux_d9_2[_a2]',
         references: ['__level_d9_2[_a2]', '_delay_2'],
         subscripts: ['_a2']
       }),
       v('_aux_d9_3[a2]', '_level_d9_3[a2]/((delay 2)/3)', {
         includeInOutput: false,
-        refId: '__aux_d9_3',
+        refId: '__aux_d9_3[_a2]',
         references: ['__level_d9_3[_a2]', '_delay_2'],
         subscripts: ['_a2']
       }),
@@ -5332,7 +5434,7 @@ describe('readEquations', () => {
         initReferences: ['_init_2[_a3]', '_delay_2'],
         refId: '__level_d9_3[_a3]',
         referencedFunctionNames: ['__integ'],
-        references: ['__aux_d9_2', '__aux_d9_3'],
+        references: ['__aux_d9_2[_a3]', '__aux_d9_3[_a3]'],
         subscripts: ['_a3'],
         varType: 'level'
       }),
@@ -5342,7 +5444,7 @@ describe('readEquations', () => {
         initReferences: ['_init_2[_a3]', '_delay_2'],
         refId: '__level_d9_2[_a3]',
         referencedFunctionNames: ['__integ'],
-        references: ['__aux_d9_1', '__aux_d9_2'],
+        references: ['__aux_d9_1[_a3]', '__aux_d9_2[_a3]'],
         subscripts: ['_a3'],
         varType: 'level'
       }),
@@ -5352,25 +5454,25 @@ describe('readEquations', () => {
         initReferences: ['_init_2[_a3]', '_delay_2'],
         refId: '__level_d9_1[_a3]',
         referencedFunctionNames: ['__integ'],
-        references: ['_input_2[_a3]', '__aux_d9_1'],
+        references: ['_input_2[_a3]', '__aux_d9_1[_a3]'],
         subscripts: ['_a3'],
         varType: 'level'
       }),
       v('_aux_d9_1[a3]', '_level_d9_1[a3]/((delay 2)/3)', {
         includeInOutput: false,
-        refId: '__aux_d9_1',
+        refId: '__aux_d9_1[_a3]',
         references: ['__level_d9_1[_a3]', '_delay_2'],
         subscripts: ['_a3']
       }),
       v('_aux_d9_2[a3]', '_level_d9_2[a3]/((delay 2)/3)', {
         includeInOutput: false,
-        refId: '__aux_d9_2',
+        refId: '__aux_d9_2[_a3]',
         references: ['__level_d9_2[_a3]', '_delay_2'],
         subscripts: ['_a3']
       }),
       v('_aux_d9_3[a3]', '_level_d9_3[a3]/((delay 2)/3)', {
         includeInOutput: false,
-        refId: '__aux_d9_3',
+        refId: '__aux_d9_3[_a3]',
         references: ['__level_d9_3[_a3]', '_delay_2'],
         subscripts: ['_a3']
       }),

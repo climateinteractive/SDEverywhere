@@ -1016,6 +1016,29 @@ describe('generateEquation (Vensim -> JS)', () => {
       expect(genJS(vars.get('_y'))).toEqual(['for (let i = 0; i < 2; i++) {', '_y[i] = _x[i];', '}'])
     })
 
+    // This is adapted from the "except" sample model (see equation for `k`)
+    it('should work when RHS variable is NON-apply-to-all (1D) and is accessed with mapped version of LHS dimension', () => {
+      const vars = readInlineModel(`
+        DimA: A1, A2, A3 ~~|
+        SubA: A2, A3 ~~|
+        DimB: B1, B2 -> (DimA: SubA, A1) ~~|
+        a[DimA] = 1, 2, 3 ~~|
+        b[DimB] = 4, 5 ~~|
+        y[DimA] = a[DimA] + b[DimB] ~~|
+      `)
+      expect(vars.size).toBe(6)
+      expect(genJS(vars.get('_a[_a1]'))).toEqual(['_a[0] = 1.0;'])
+      expect(genJS(vars.get('_a[_a2]'))).toEqual(['_a[1] = 2.0;'])
+      expect(genJS(vars.get('_a[_a3]'))).toEqual(['_a[2] = 3.0;'])
+      expect(genJS(vars.get('_b[_b1]'))).toEqual(['_b[0] = 4.0;'])
+      expect(genJS(vars.get('_b[_b2]'))).toEqual(['_b[1] = 5.0;'])
+      expect(genJS(vars.get('_y'))).toEqual([
+        'for (let i = 0; i < 3; i++) {',
+        '_y[i] = _a[i] + _b[__map_dimb_dima[i]];',
+        '}'
+      ])
+    })
+
     // it('should work when RHS variable is apply-to-all (2D) and is accessed with specific subscripts', () => {
     //   // TODO
     // })
@@ -1116,6 +1139,26 @@ describe('generateEquation (Vensim -> JS)', () => {
       expect(genJS(vars.get('_b[_b2]'))).toEqual(['_b[1] = 5.0;'])
       expect(genJS(vars.get('_y[_a2]'))).toEqual(['_y[1] = _a[1] + _b[0];'])
       expect(genJS(vars.get('_y[_a3]'))).toEqual(['_y[2] = _a[2] + _b[0];'])
+    })
+
+    // This is adapted from the "ref" sample model (with updated naming for clarity)
+    it('should work for complex mapping example', () => {
+      const vars = readInlineModel(`
+        Target: (t1-t3) ~~|
+        tNext: (t2-t3) -> tPrev ~~|
+        tPrev: (t1-t2) -> tNext ~~|
+        x[t1] = y[t1] + 1 ~~|
+        x[tNext] = y[tNext] + 1 ~~|
+        y[t1] = 1 ~~|
+        y[tNext] = x[tPrev] + 1 ~~|
+      `)
+      expect(vars.size).toBe(6)
+      expect(genJS(vars.get('_y[_t1]'))).toEqual(['_y[0] = 1.0;'])
+      expect(genJS(vars.get('_x[_t1]'))).toEqual(['_x[0] = _y[0] + 1.0;'])
+      expect(genJS(vars.get('_y[_t2]'))).toEqual(['_y[1] = _x[0] + 1.0;'])
+      expect(genJS(vars.get('_x[_t2]'))).toEqual(['_x[1] = _y[1] + 1.0;'])
+      expect(genJS(vars.get('_y[_t3]'))).toEqual(['_y[2] = _x[1] + 1.0;'])
+      expect(genJS(vars.get('_x[_t3]'))).toEqual(['_x[2] = _y[2] + 1.0;'])
     })
   })
 
