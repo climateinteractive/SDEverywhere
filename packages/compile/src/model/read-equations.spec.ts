@@ -326,7 +326,7 @@ describe('readEquations', () => {
           refId: '_x',
           varType: 'const'
         }),
-        // refIdsForRhsVarRef(_y, '_x', [])
+        // expandedRefIdsForVar(_y, '_x', [])
         //   -> ['_x']
         v('y', 'x', {
           refId: '_y',
@@ -347,7 +347,7 @@ describe('readEquations', () => {
           subscripts: ['_dima'],
           varType: 'const'
         }),
-        // refIdsForRhsVarRef(_y, '_x', ['_a1'])
+        // expandedRefIdsForVar(_y, '_x', ['_a1'])
         //   -> ['_x']
         v('y', 'x[A1]', {
           refId: '_y',
@@ -375,7 +375,7 @@ describe('readEquations', () => {
           subscripts: ['_a2'],
           varType: 'const'
         }),
-        // refIdsForRhsVarRef(_y, '_x', ['_a1'])
+        // expandedRefIdsForVar(_y, '_x', ['_a1'])
         //   -> ['_x[_a1]']
         v('y', 'x[A1]', {
           refId: '_y',
@@ -397,7 +397,7 @@ describe('readEquations', () => {
           subscripts: ['_dima', '_dimb'],
           varType: 'const'
         }),
-        // refIdsForRhsVarRef(_y, '_x', ['_a1', '_b2'])
+        // expandedRefIdsForVar(_y, '_x', ['_a1', '_b2'])
         //   -> ['_x']
         v('y', 'x[A1,B2]', {
           refId: '_y',
@@ -438,7 +438,7 @@ describe('readEquations', () => {
           subscripts: ['_a2', '_b2'],
           varType: 'const'
         }),
-        // refIdsForRhsVarRef(_y, '_x', ['_a1', '_b2'])
+        // expandedRefIdsForVar(_y, '_x', ['_a1', '_b2'])
         //   -> ['_x[_a1,_b2]']
         v('y', 'x[A1,B2]', {
           refId: '_y',
@@ -461,7 +461,7 @@ describe('readEquations', () => {
           subscripts: ['_dima', '_dimc', '_dimb'],
           varType: 'const'
         }),
-        // refIdsForRhsVarRef(_y, '_x', ['_a1', '_c2', '_b2'])
+        // expandedRefIdsForVar(_y, '_x', ['_a1', '_c2', '_b2'])
         //   -> ['_x']
         v('y', 'x[A1,C2,B2]', {
           refId: '_y',
@@ -491,7 +491,7 @@ describe('readEquations', () => {
           subscripts: ['_dima', '_dimc', '_b1'],
           varType: 'const'
         }),
-        // refIdsForRhsVarRef(_y, '_x', ['_a1', '_c2', '_b2'])
+        // expandedRefIdsForVar(_y, '_x', ['_a1', '_c2', '_b2'])
         //   -> ['_x[_dima,_dimc,_b2]']
         v('y', 'x[A1,C2,B2]', {
           refId: '_y',
@@ -513,7 +513,7 @@ describe('readEquations', () => {
           refId: '_x',
           varType: 'const'
         }),
-        // refIdsForRhsVarRef(_y, '_x', [])
+        // expandedRefIdsForVar(_y, '_x', [])
         //   -> ['_x']
         v('y[DimA]', 'x', {
           refId: '_y',
@@ -535,7 +535,7 @@ describe('readEquations', () => {
           subscripts: ['_dima'],
           varType: 'const'
         }),
-        // refIdsForRhsVarRef(_y, '_x', ['_a2'])
+        // expandedRefIdsForVar(_y, '_x', ['_a2'])
         //   -> ['_x']
         v('y[DimA]', 'x[A2]', {
           refId: '_y',
@@ -557,9 +557,7 @@ describe('readEquations', () => {
           subscripts: ['_dima'],
           varType: 'const'
         }),
-        // expansionFlags === undefined
-        // expandedRefIds === ['_x']
-        // refIdsForRhsVarRef(_y, '_x', ['_dima'])
+        // expandedRefIdsForVar(_y, '_x', ['_dima'])
         //   -> ['_x']
         v('y[DimA]', 'x[DimA]', {
           refId: '_y',
@@ -594,7 +592,7 @@ describe('readEquations', () => {
           subscripts: ['_a3'],
           varType: 'const'
         }),
-        // refIdsForRhsVarRef(_y, '_x', ['_a2'])
+        // expandedRefIdsForVar(_y, '_x', ['_a2'])
         //   -> ['_x[_a2]']
         v('y[DimA]', 'x[A2]', {
           refId: '_y',
@@ -629,9 +627,7 @@ describe('readEquations', () => {
           subscripts: ['_a3'],
           varType: 'const'
         }),
-        // expansionFlags === [true]
-        // expandedRefIds === ['_x[_a1]', '_x[_a2]', '_x[_a3]']
-        // refIdsForRhsVarRef(_y, '_x', ['_dima'])
+        // expandedRefIdsForVar(_y, '_x', ['_dima'])
         //   -> ['_x[_a1]', '_x[_a2]', '_x[_a3]']
         v('y[DimA]', 'x[DimA]', {
           refId: '_y',
@@ -659,9 +655,7 @@ describe('readEquations', () => {
           subscripts: ['_a2'],
           varType: 'const'
         }),
-        // expansionFlags === [true]
-        // expandedRefIds === ['_x[_a1]', '_x[_a2]']
-        // refIdsForRhsVarRef(_y, '_x', ['_dima'])
+        // expandedRefIdsForVar(_y, '_x', ['_dima'])
         //   -> ['_x[_a1]', '_x[_a2]']
         v('y[DimA]', 'x[DimA]', {
           refId: '_y',
@@ -712,9 +706,9 @@ describe('readEquations', () => {
           subscripts: ['_b2'],
           varType: 'const'
         }),
-        // refIdsForRhsVarRef(_y, '_a', ['_dima'])
+        // expandedRefIdsForVar(_y, '_a', ['_dima'])
         //   -> ['_a[_a1]', '_a[_a2]', '_a[_a3]']
-        // refIdsForRhsVarRef(_y, '_b', ['_dimb'])
+        // expandedRefIdsForVar(_y, '_b', ['_dimb'])
         //   -> ['_b[_b1]', '_b[_b2]']
         v('y[DimA]', 'a[DimA]+b[DimB]', {
           refId: '_y',
@@ -753,7 +747,7 @@ describe('readEquations', () => {
           refId: '_x',
           varType: 'const'
         }),
-        // refIdsForRhsVarRef(_y[_a2], '_x', [])
+        // expandedRefIdsForVar(_y[_a2], '_x', [])
         //   -> ['_x']
         v('y[DimA]:EXCEPT:[A1]', 'x', {
           refId: '_y[_a2]',
@@ -761,7 +755,7 @@ describe('readEquations', () => {
           subscripts: ['_a2'],
           references: ['_x']
         }),
-        // refIdsForRhsVarRef(_y[_a3], '_x', [])
+        // expandedRefIdsForVar(_y[_a3], '_x', [])
         //   -> ['_x']
         v('y[DimA]:EXCEPT:[A1]', 'x', {
           refId: '_y[_a3]',
@@ -784,7 +778,7 @@ describe('readEquations', () => {
           subscripts: ['_dima'],
           varType: 'const'
         }),
-        // refIdsForRhsVarRef(_y[_a2], '_x', ['_a2'])
+        // expandedRefIdsForVar(_y[_a2], '_x', ['_a2'])
         //   -> ['_x']
         v('y[DimA]:EXCEPT:[A1]', 'x[A2]', {
           refId: '_y[_a2]',
@@ -792,7 +786,7 @@ describe('readEquations', () => {
           subscripts: ['_a2'],
           references: ['_x']
         }),
-        // refIdsForRhsVarRef(_y[_a3], '_x', ['_a2'])
+        // expandedRefIdsForVar(_y[_a3], '_x', ['_a2'])
         //   -> ['_x']
         v('y[DimA]:EXCEPT:[A1]', 'x[A2]', {
           refId: '_y[_a3]',
@@ -815,7 +809,7 @@ describe('readEquations', () => {
           subscripts: ['_dima'],
           varType: 'const'
         }),
-        // refIdsForRhsVarRef(_y[_a2], '_x', ['_dima'])
+        // expandedRefIdsForVar(_y[_a2], '_x', ['_dima'])
         //   -> ['_x']
         v('y[DimA]:EXCEPT:[A1]', 'x[DimA]', {
           refId: '_y[_a2]',
@@ -823,7 +817,7 @@ describe('readEquations', () => {
           subscripts: ['_a2'],
           references: ['_x']
         }),
-        // refIdsForRhsVarRef(_y[_a3], '_x', ['_dima'])
+        // expandedRefIdsForVar(_y[_a3], '_x', ['_dima'])
         //   -> ['_x']
         v('y[DimA]:EXCEPT:[A1]', 'x[DimA]', {
           refId: '_y[_a3]',
@@ -859,7 +853,7 @@ describe('readEquations', () => {
           subscripts: ['_a3'],
           varType: 'const'
         }),
-        // refIdsForRhsVarRef(_y[_a2], '_x', ['_a2'])
+        // expandedRefIdsForVar(_y[_a2], '_x', ['_a2'])
         //   -> ['_x[_a2]']
         v('y[DimA]:EXCEPT:[A1]', 'x[A2]', {
           refId: '_y[_a2]',
@@ -867,7 +861,7 @@ describe('readEquations', () => {
           subscripts: ['_a2'],
           references: ['_x[_a2]']
         }),
-        // refIdsForRhsVarRef(_y[_a3], '_x', ['_a2'])
+        // expandedRefIdsForVar(_y[_a3], '_x', ['_a2'])
         //   -> ['_x[_a2]']
         v('y[DimA]:EXCEPT:[A1]', 'x[A2]', {
           refId: '_y[_a3]',
@@ -903,7 +897,7 @@ describe('readEquations', () => {
           subscripts: ['_a3'],
           varType: 'const'
         }),
-        // refIdsForRhsVarRef(_y[_a2], '_x', ['_dima'])
+        // expandedRefIdsForVar(_y[_a2], '_x', ['_dima'])
         //   -> ['_x[_a2]']
         v('y[DimA]:EXCEPT:[A1]', 'x[DimA]', {
           refId: '_y[_a2]',
@@ -911,7 +905,7 @@ describe('readEquations', () => {
           subscripts: ['_a2'],
           references: ['_x[_a2]']
         }),
-        // refIdsForRhsVarRef(_y[_a3], '_x', ['_dima'])
+        // expandedRefIdsForVar(_y[_a3], '_x', ['_dima'])
         //   -> ['_x[_a3]']
         v('y[DimA]:EXCEPT:[A1]', 'x[DimA]', {
           refId: '_y[_a3]',
@@ -963,9 +957,9 @@ describe('readEquations', () => {
           subscripts: ['_b2'],
           varType: 'const'
         }),
-        // refIdsForRhsVarRef(_y[_a2], '_a', ['_dima'])
+        // expandedRefIdsForVar(_y[_a2], '_a', ['_dima'])
         //   -> ['_a[_a2]']
-        // refIdsForRhsVarRef(_y[_a2], '_b', ['_dimb'])
+        // expandedRefIdsForVar(_y[_a2], '_b', ['_dimb'])
         //   -> ['_b[_b1]']
         v('y[DimA]:EXCEPT:[A1]', 'a[DimA]+b[DimB]', {
           refId: '_y[_a2]',
@@ -973,9 +967,9 @@ describe('readEquations', () => {
           subscripts: ['_a2'],
           references: ['_a[_a2]', '_b[_b1]']
         }),
-        // refIdsForRhsVarRef(_y[_a3], '_a', ['_dima'])
+        // expandedRefIdsForVar(_y[_a3], '_a', ['_dima'])
         //   -> ['_a[_a3]']
-        // refIdsForRhsVarRef(_y[_a3], '_b', ['_dimb'])
+        // expandedRefIdsForVar(_y[_a3], '_b', ['_dimb'])
         //   -> ['_b[_b1]']
         v('y[DimA]:EXCEPT:[A1]', 'a[DimA]+b[DimB]', {
           refId: '_y[_a3]',
@@ -1069,13 +1063,9 @@ describe('readEquations', () => {
           subscripts: ['_a2'],
           varType: 'const'
         }),
-        // expansionFlags for x[DimA] in RHS === [true]
-        // expandedRefIds for x[DimA] in RHS === ['_x[_a1]', '_x[_a2]']
-        // refIdsForRhsVarRef(_y[_dima,_dimb], '_x', ['_dima'])
+        // expandedRefIdsForVar(_y[_dima,_dimb], '_x', ['_dima'])
         //   -> ['_x[_a1]', '_x[_a2]']
-        // expansionFlags for x[DimB] in RHS === [true]
-        // expandedRefIds for x[DimB] in RHS === ['_x[_a1]', '_x[_a2]']
-        // refIdsForRhsVarRef(_y[_dima,_dimb], '_x', ['_dimb'])
+        // expandedRefIdsForVar(_y[_dima,_dimb], '_x', ['_dimb'])
         //   -> ['_x[_a1]', '_x[_a2]']
         v('y[DimA,DimB]', 'x[DimA]+x[DimB]', {
           refId: '_y',
@@ -1106,9 +1096,7 @@ describe('readEquations', () => {
           subscripts: ['_dima', '_dimb'],
           varType: 'const'
         }),
-        // expansionFlags === undefined
-        // expandedRefIds === ['_x']
-        // refIdsForRhsVarRef(_y[_dimb,_dima], '_x', ['_dima', '_dimb'])
+        // expandedRefIdsForVar(_y[_dimb,_dima], '_x', ['_dima', '_dimb'])
         //   -> ['_x']
         v('y[DimB,DimA]', 'x[DimA,DimB]', {
           refId: '_y',
@@ -1131,9 +1119,7 @@ describe('readEquations', () => {
           subscripts: ['_dima', '_dimb'],
           varType: 'const'
         }),
-        // expansionFlags === undefined
-        // expandedRefIds === ['_x']
-        // refIdsForRhsVarRef(_y[_dimb,_dima], '_x', ['_dima', '_dimb'])
+        // expandedRefIdsForVar(_y[_dimb,_dima], '_x', ['_dima', '_dimb'])
         //   -> ['_x']
         v('y[DimB,DimA]', 'x[DimA,DimB]', {
           refId: '_y',
@@ -1175,9 +1161,7 @@ describe('readEquations', () => {
           subscripts: ['_a2', '_b2'],
           varType: 'const'
         }),
-        // expansionFlags === [true, true]
-        // expandedRefIds === ['_x[_a1,_b1]', '_x[_a1,_b2]', '_x[_a2,_b1]', '_x[_a2,_b2]']
-        // refIdsForRhsVarRef(_y[_dimb,_dima], '_x', ['_dima', '_dimb'])
+        // expandedRefIdsForVar(_y[_dimb,_dima], '_x', ['_dima', '_dimb'])
         //   -> ['_x[_a1,_b1]', '_x[_a1,_b2]', '_x[_a2,_b1]', '_x[_a2,_b2]']
         v('y[DimB,DimA]', 'x[DimA,DimB]', {
           refId: '_y',
@@ -1206,9 +1190,7 @@ describe('readEquations', () => {
           subscripts: ['_a2', '_dimb'],
           varType: 'const'
         }),
-        // expansionFlags === [true, false]
-        // expandedRefIds === ['_x[_a1,_dimb]', '_x[_a2,_dimb]']
-        // refIdsForRhsVarRef(_y[_dimb,_dima], '_x', ['_dima', '_dimb'])
+        // expandedRefIdsForVar(_y[_dimb,_dima], '_x', ['_dima', '_dimb'])
         //   -> ['_x[_a1,_dimb]', '_x[_a2,_dimb]']
         v('y[DimB,DimA]', 'x[DimA,DimB]', {
           refId: '_y',
@@ -1243,9 +1225,7 @@ describe('readEquations', () => {
           subscripts: ['_dima', '_dimb'],
           varType: 'const'
         }),
-        // expansionFlags === undefined
-        // expandedRefIds === ['_x']
-        // refIdsForRhsVarRef(_y[_a1,_dimb], '_x', ['_suba', '_dimb'])
+        // expandedRefIdsForVar(_y[_a1,_dimb], '_x', ['_suba', '_dimb'])
         //   -> ['_x']
         v('y[SubA,DimB]', 'x[SubA,DimB]', {
           refId: '_y[_a1,_dimb]',
@@ -1253,9 +1233,7 @@ describe('readEquations', () => {
           subscripts: ['_a1', '_dimb'],
           references: ['_x']
         }),
-        // expansionFlags === undefined
-        // expandedRefIds === ['_x']
-        // refIdsForRhsVarRef(_y[_a2,_dimb], '_x', ['_suba', '_dimb'])
+        // expandedRefIdsForVar(_y[_a2,_dimb], '_x', ['_suba', '_dimb'])
         //   -> ['_x']
         v('y[SubA,DimB]', 'x[SubA,DimB]', {
           refId: '_y[_a2,_dimb]',
@@ -1289,13 +1267,9 @@ describe('readEquations', () => {
           subscripts: ['_a2'],
           varType: 'const'
         }),
-        // expansionFlags for x[SubA]  in RHS === [true]
-        // expandedRefIds for x[SubA]  in RHS === ['_x[_a1]', '_x[_a2]']
-        // refIdsForRhsVarRef(_y[_a1,_a1], '_x', ['_suba'])
+        // expandedRefIdsForVar(_y[_a1,_a1], '_x', ['_suba'])
         //   -> ['_x[_a1]']
-        // expansionFlags for x[SubB] in RHS === [true]
-        // expandedRefIds for x[SubB] in RHS === ['_x[_a1]', '_x[_a2]']
-        // refIdsForRhsVarRef(_y[_a1,_a1], '_x', ['_subb'])
+        // expandedRefIdsForVar(_y[_a1,_a1], '_x', ['_subb'])
         //   -> ['_x[_a1]']
         v('y[SubA,SubB]', 'x[SubA]+x[SubB]', {
           refId: '_y[_a1,_a1]',
@@ -1303,13 +1277,9 @@ describe('readEquations', () => {
           subscripts: ['_a1', '_a1'],
           references: ['_x[_a1]']
         }),
-        // expansionFlags for x[SubA]  in RHS === [true]
-        // expandedRefIds for x[SubA]  in RHS === ['_x[_a1]', '_x[_a2]']
-        // refIdsForRhsVarRef(_y[_a1,_a2], '_x', ['_suba'])
+        // expandedRefIdsForVar(_y[_a1,_a2], '_x', ['_suba'])
         //   -> ['_x[_a1]']
-        // expansionFlags for x[SubB] in RHS === [true]
-        // expandedRefIds for x[SubB] in RHS === ['_x[_a1]', '_x[_a2]']
-        // refIdsForRhsVarRef(_y[_a1,_a2], '_x', ['_subb'])
+        // expandedRefIdsForVar(_y[_a1,_a2], '_x', ['_subb'])
         //   -> ['_x[_a2]']
         v('y[SubA,SubB]', 'x[SubA]+x[SubB]', {
           refId: '_y[_a1,_a2]',
@@ -1317,13 +1287,9 @@ describe('readEquations', () => {
           subscripts: ['_a1', '_a2'],
           references: ['_x[_a1]', '_x[_a2]']
         }),
-        // expansionFlags for x[SubA]  in RHS === [true]
-        // expandedRefIds for x[SubA]  in RHS === ['_x[_a1]', '_x[_a2]']
-        // refIdsForRhsVarRef(_y[_a2,_a1], '_x', ['_suba'])
+        // expandedRefIdsForVar(_y[_a2,_a1], '_x', ['_suba'])
         //   -> ['_x[_a2]']
-        // expansionFlags for x[SubB] in RHS === [true]
-        // expandedRefIds for x[SubB] in RHS === ['_x[_a1]', '_x[_a2]']
-        // refIdsForRhsVarRef(_y[_a2,_a1], '_x', ['_subb'])
+        // expandedRefIdsForVar(_y[_a2,_a1], '_x', ['_subb'])
         //   -> ['_x[_a1]']
         v('y[SubA,SubB]', 'x[SubA]+x[SubB]', {
           refId: '_y[_a2,_a1]',
@@ -1331,13 +1297,9 @@ describe('readEquations', () => {
           subscripts: ['_a2', '_a1'],
           references: ['_x[_a2]', '_x[_a1]']
         }),
-        // expansionFlags for x[SubA]  in RHS === [true]
-        // expandedRefIds for x[SubA]  in RHS === ['_x[_a1]', '_x[_a2]']
-        // refIdsForRhsVarRef(_y[_a2,_a2], '_x', ['_suba'])
+        // expandedRefIdsForVar(_y[_a2,_a2], '_x', ['_suba'])
         //   -> ['_x[_a2]']
-        // expansionFlags for x[SubB] in RHS === [true]
-        // expandedRefIds for x[SubB] in RHS === ['_x[_a1]', '_x[_a2]']
-        // refIdsForRhsVarRef(_y[_a2,_a2], '_x', ['_subb'])
+        // expandedRefIdsForVar(_y[_a2,_a2], '_x', ['_subb'])
         //   -> ['_x[_a2]']
         v('y[SubA,SubB]', 'x[SubA]+x[SubB]', {
           refId: '_y[_a2,_a2]',
@@ -1366,13 +1328,9 @@ describe('readEquations', () => {
           varType: 'const'
         }),
         // For all 4 instances of `y`, the following should hold true:
-        // expansionFlags for x[SubA] in RHS === undefined
-        // expandedRefIds for x[SubA] in RHS === ['_x']
-        // refIdsForRhsVarRef(_y[_a1,_a1], '_x', ['_suba'])
+        // expandedRefIdsForVar(_y[_aN,_aN], '_x', ['_suba'])
         //   -> ['_x']
-        // expansionFlags for x[SubB] in RHS === undefined
-        // expandedRefIds for x[SubB] in RHS === ['_x']
-        // refIdsForRhsVarRef(_y[_a1,_a1], '_x', ['_subb'])
+        // expandedRefIdsForVar(_y[_aN,_aN], '_x', ['_subb'])
         //   -> ['_x']
         v('y[SubA,SubB]', 'x[SubA]+x[SubB]', {
           refId: '_y[_a1,_a1]',
@@ -1417,9 +1375,7 @@ describe('readEquations', () => {
           subscripts: ['_dima', '_dimc', '_dimb'],
           varType: 'const'
         }),
-        // expansionFlags === undefined
-        // expandedRefIds === ['_x']
-        // refIdsForRhsVarRef(_y, '_x', ['_dima', '_dimc', '_dimb'])
+        // expandedRefIdsForVar(_y, '_x', ['_dima', '_dimc', '_dimb'])
         //   -> ['_x']
         v('y[DimC,DimB,DimA]', 'x[DimA,DimC,DimB]', {
           refId: '_y',
@@ -1449,9 +1405,7 @@ describe('readEquations', () => {
           subscripts: ['_dima', '_c2', '_dimb'],
           varType: 'const'
         }),
-        // expansionFlags === [false, true, false]
-        // expandedRefIds === ['_x[_dima,_c1,_dimb]', '_x[_dima,_c2,_dimb]']
-        // refIdsForRhsVarRef(_y, '_x', ['_dima', '_dimc', '_dimb'])
+        // expandedRefIdsForVar(_y, '_x', ['_dima', '_dimc', '_dimb'])
         //   -> ['_x[_dima,_c1,_dimb]', '_x[_dima,_c2,_dimb]']
         v('y[DimC,DimB,DimA]', 'x[DimA,DimC,DimB]', {
           refId: '_y',
@@ -1478,9 +1432,7 @@ describe('readEquations', () => {
           subscripts: ['_dima', '_dimc', '_dimb'],
           varType: 'const'
         }),
-        // expansionFlags === undefined
-        // expandedRefIds === ['_x']
-        // refIdsForRhsVarRef(_y[_c2,_dimb,_dima], '_x', ['_dima', '_dimc', '_dimb'])
+        // expandedRefIdsForVar(_y[_c2,_dimb,_dima], '_x', ['_dima', '_dimc', '_dimb'])
         //   -> ['_x']
         v('y[SubC,DimB,DimA]', 'x[DimA,SubC,DimB]', {
           refId: '_y[_c2,_dimb,_dima]',
@@ -1488,9 +1440,7 @@ describe('readEquations', () => {
           subscripts: ['_c2', '_dimb', '_dima'],
           references: ['_x']
         }),
-        // expansionFlags === undefined
-        // expandedRefIds === ['_x']
-        // refIdsForRhsVarRef(_y[_c3,_dimb,_dima], '_x', ['_dima', '_dimc', '_dimb'])
+        // expandedRefIdsForVar(_y[_c3,_dimb,_dima], '_x', ['_dima', '_dimc', '_dimb'])
         //   -> ['_x']
         v('y[SubC,DimB,DimA]', 'x[DimA,SubC,DimB]', {
           refId: '_y[_c3,_dimb,_dima]',
@@ -1579,13 +1529,9 @@ describe('readEquations', () => {
           subscripts: ['_s2'],
           varType: 'const'
         }),
-        // expected expansionFlags for y in RHS === [true]
-        // expected expandedRefIds for y in RHS === ['_y[_s1]', '_y[_s2]']
-        // refIdsForRhsVarRef(_z[_scenario,_a1,_a1], '_y', ['_scenario'])
+        // expandedRefIdsForVar(_z[_scenario,_a1,_a1], '_y', ['_scenario'])
         //   -> ['_y[_s1]', '_y[_s2]']
-        // expected expansionFlags for x in RHS === [true, true]
-        // expected expandedRefIds for x in RHS === ['_x[_a1,_a1]']
-        // refIdsForRhsVarRef(_z[_scenario,_a1,_a1], '_x', ['_supplying_sector', '_producing_sector'])
+        // expandedRefIdsForVar(_z[_scenario,_a1,_a1], '_x', ['_supplying_sector', '_producing_sector'])
         //   -> ['_x[_a1,_a1]']
         v('z[Scenario,Supplying Sector,Producing Sector]', 'y[Scenario]+x[Supplying Sector,Producing Sector]', {
           refId: '_z[_scenario,_a1,_a1]',
@@ -1594,9 +1540,7 @@ describe('readEquations', () => {
           references: ['_y[_s1]', '_y[_s2]', '_x[_a1,_a1]'],
           varType: 'aux'
         }),
-        // expected expansionFlags for x in RHS === [true, true]
-        // expected expandedRefIds for x in RHS === ['_x[_a1,_a2]']
-        // refIdsForRhsVarRef(_z[_scenario,_a1,_a2], '_x', ['_supplying_sector', '_producing_sector'])
+        // expandedRefIdsForVar(_z[_scenario,_a1,_a2], '_x', ['_supplying_sector', '_producing_sector'])
         //   -> ['_x[_a1,_a2]']
         v('z[Scenario,Supplying Sector,Producing Sector]', 'y[Scenario]+x[Supplying Sector,Producing Sector]', {
           refId: '_z[_scenario,_a1,_a2]',
@@ -1605,9 +1549,7 @@ describe('readEquations', () => {
           references: ['_y[_s1]', '_y[_s2]', '_x[_a1,_a2]'],
           varType: 'aux'
         }),
-        // expected expansionFlags for x in RHS === [true, true]
-        // expected expandedRefIds for x in RHS === ['_x[_a2,_a1]']
-        // refIdsForRhsVarRef(_z[_scenario,_a2,_a1], '_x', ['_supplying_sector', '_producing_sector'])
+        // expandedRefIdsForVar(_z[_scenario,_a2,_a1], '_x', ['_supplying_sector', '_producing_sector'])
         //   -> ['_x[_a2,_a1]']
         v('z[Scenario,Supplying Sector,Producing Sector]', 'y[Scenario]+x[Supplying Sector,Producing Sector]', {
           refId: '_z[_scenario,_a2,_a1]',
@@ -1616,9 +1558,7 @@ describe('readEquations', () => {
           references: ['_y[_s1]', '_y[_s2]', '_x[_a2,_a1]'],
           varType: 'aux'
         }),
-        // expected expansionFlags for x in RHS === [true, true]
-        // expected expandedRefIds for x in RHS === ['_x[_a2,_a2]']
-        // refIdsForRhsVarRef(_z[_scenario,_a2,_a2], '_x', ['_supplying_sector', '_producing_sector'])
+        // expandedRefIdsForVar(_z[_scenario,_a2,_a2], '_x', ['_supplying_sector', '_producing_sector'])
         //   -> ['_x[_a2,_a2]']
         v('z[Scenario,Supplying Sector,Producing Sector]', 'y[Scenario]+x[Supplying Sector,Producing Sector]', {
           refId: '_z[_scenario,_a2,_a2]',
