@@ -128,10 +128,14 @@ class Context {
     // Add the variables to the `Model`
     vars.forEach(v => Model.addVariable(v))
 
+    // Define the refId for each variable.  Note that the refIds for all added variables
+    // need to be defined before we proceed to the next step that calls `readEquation`
+    // for each variable.
     vars.forEach(v => {
-      // Define the refId for the variable
       v.refId = Model.refIdForVar(v)
+    })
 
+    vars.forEach(v => {
       // Process each variable using the same process as above
       readEquation(v)
 
