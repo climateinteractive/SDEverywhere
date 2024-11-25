@@ -1502,28 +1502,27 @@ describe('readEquations', () => {
     })
 
     // This test is based on the example from #278
-    // TODO: This test is disabled until the fix for #278 is implemented
-    it.skip('should work when RHS variable is NON-apply-to-all (2D) and is accessed with 2 different dimensions from LHS that map to the same family', () => {
+    it('should work when RHS variable is NON-apply-to-all (2D) and is accessed with 2 different dimensions from LHS that map to the same family', () => {
       const vars = readInlineModel(`
-      Scenario: S1, S2 ~~|
-      Sector: A1, A2, A3 ~~|
-      Supplying Sector: A1, A2 -> Producing Sector ~~|
-      Producing Sector: A1, A2 -> Supplying Sector ~~|
-      x[A1,A1] = 101 ~~|
-      x[A1,A2] = 102 ~~|
-      x[A1,A3] = 103 ~~|
-      x[A2,A1] = 201 ~~|
-      x[A2,A2] = 202 ~~|
-      x[A2,A3] = 203 ~~|
-      x[A3,A1] = 301 ~~|
-      x[A3,A2] = 302 ~~|
-      x[A3,A3] = 303 ~~|
-      y[S1] = 1000 ~~|
-      y[S2] = 2000 ~~|
-      z[Scenario, Supplying Sector, Producing Sector] =
-        y[Scenario] + x[Supplying Sector, Producing Sector]
-        ~~|
-    `)
+        Scenario: S1, S2 ~~|
+        Sector: A1, A2, A3 ~~|
+        Supplying Sector: A1, A2 -> Producing Sector ~~|
+        Producing Sector: A1, A2 -> Supplying Sector ~~|
+        x[A1,A1] = 101 ~~|
+        x[A1,A2] = 102 ~~|
+        x[A1,A3] = 103 ~~|
+        x[A2,A1] = 201 ~~|
+        x[A2,A2] = 202 ~~|
+        x[A2,A3] = 203 ~~|
+        x[A3,A1] = 301 ~~|
+        x[A3,A2] = 302 ~~|
+        x[A3,A3] = 303 ~~|
+        y[S1] = 1000 ~~|
+        y[S2] = 2000 ~~|
+        z[Scenario, Supplying Sector, Producing Sector] =
+          y[Scenario] + x[Supplying Sector, Producing Sector]
+          ~~|
+      `)
       expect(vars).toEqual([
         v('x[A1,A1]', '101', {
           refId: '_x[_a1,_a1]',
@@ -1596,7 +1595,7 @@ describe('readEquations', () => {
           varType: 'aux'
         }),
         // expected expansionFlags for x in RHS === [true, true]
-        // expected expandedRefIds for x in RHS === ['_x[_a1,_a2]'] // BUG: Actual value is '_x[a1,_a1]'
+        // expected expandedRefIds for x in RHS === ['_x[_a1,_a2]']
         // refIdsForRhsVarRef(_z[_scenario,_a1,_a2], '_x', ['_supplying_sector', '_producing_sector'])
         //   -> ['_x[_a1,_a2]']
         v('z[Scenario,Supplying Sector,Producing Sector]', 'y[Scenario]+x[Supplying Sector,Producing Sector]', {
@@ -1607,7 +1606,7 @@ describe('readEquations', () => {
           varType: 'aux'
         }),
         // expected expansionFlags for x in RHS === [true, true]
-        // expected expandedRefIds for x in RHS === ['_x[_a2,_a1]'] // BUG: Actual value is '_x[a2,_a2]'
+        // expected expandedRefIds for x in RHS === ['_x[_a2,_a1]']
         // refIdsForRhsVarRef(_z[_scenario,_a2,_a1], '_x', ['_supplying_sector', '_producing_sector'])
         //   -> ['_x[_a2,_a1]']
         v('z[Scenario,Supplying Sector,Producing Sector]', 'y[Scenario]+x[Supplying Sector,Producing Sector]', {
