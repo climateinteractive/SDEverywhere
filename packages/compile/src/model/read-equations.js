@@ -661,7 +661,7 @@ function visitFunctionCall(v, callExpr, context) {
         const expandedRefIds = expandedRefIdsForVar(v, baseRefId, subIds)
         const ptypeRefId = expandedRefIds[0]
         const { subscripts } = Model.splitRefId(ptypeRefId)
-        const ptypeIndexName = subscripts[1]
+        const ptypeIndexName = subscripts[subscripts.length - 1]
         const profileElementsDimName = sub(ptypeIndexName).family
         const profileElementsDim = sub(profileElementsDimName)
         const priorityRefId = ptypeRefId.replace(ptypeIndexName, profileElementsDim.value[1])
