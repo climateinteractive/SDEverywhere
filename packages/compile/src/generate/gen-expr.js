@@ -69,14 +69,14 @@ export function generateExpr(expr, ctx) {
         // plus one (since Vensim indices are one-based).
         const dimId = expr.varId
         const indexCode = ctx.cVarIndex(dimId)
-        return `(${indexCode} + 1)`
+        return `(${indexExpr(indexCode, ctx)} + 1)`
       } else if (isIndex(expr.varId)) {
         // This is a reference to a subscript/index that is being used in expression position.
         // In place of the subscript, emit the numeric index value of the subscript plus one
         // (since Vensim indices are one-based).
         const subId = expr.varId
         const indexValue = sub(subId).value
-        return `${indexValue + 1}`
+        return indexExpr(`${indexValue + 1}`, ctx)
       } else {
         throw new Error(`Unresolved variable reference '${expr.varName}' in code gen for '${ctx.variable.modelLHS}'`)
       }
@@ -1002,6 +1002,29 @@ function minFunc(ctx) {
       return 'fmin'
     case 'js':
       return 'Math.min'
+    default:
+      throw new Error(`Unhandled output format '${ctx.outFormat}'`)
+  }
+}
+
+/**
+ * Return the C or JS code for a subscript or dimension (loop index variable) used in
+ * expression position.
+ *
+ * @param {string} indexValue The index number or code.
+ * @param {GenExprContext} ctx The context used when generating code for the expression.
+ * @return {string} The generated C/JS code.
+ */
+function indexExpr(indexValue, ctx) {
+  switch (ctx.outFormat) {
+    case 'c':
+      // In the C case, we need to cast to double since the index variable will be
+      // of type `size_t`, which is an unsigned type, but we want a signed type for
+      // the rare cases where math is involved that makes it go negative
+      return `((double)${indexValue})`
+    case 'js':
+      // In the JS case, no cast is necessary
+      return indexValue
     default:
       throw new Error(`Unhandled output format '${ctx.outFormat}'`)
   }
