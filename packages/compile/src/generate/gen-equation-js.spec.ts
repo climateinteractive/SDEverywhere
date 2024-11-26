@@ -732,8 +732,7 @@ describe('generateEquation (Vensim -> JS)', () => {
     ])
   })
 
-  // TODO: This test is disabled until the fix for #179 is implemented
-  it.skip('should work for 2D equation with two dimensions that resolve to the same family used in expression position (separated/non-apply-to-all)', () => {
+  it('should work for 2D equation with two dimensions that resolve to the same family used in expression position (separated/non-apply-to-all)', () => {
     const vars = readInlineModel(`
       DimA: A1, A2 ~~|
       DimB <-> DimA ~~|
@@ -742,13 +741,12 @@ describe('generateEquation (Vensim -> JS)', () => {
     `)
     expect(vars.size).toBe(4)
     expect(genJS(vars.get('_x[_a1,_a1]'))).toEqual(['_x[0][0] = 0.0;'])
-    expect(genJS(vars.get('_x[_a1,_a2]'))).toEqual(['_x[0][1] = ((0 + 1) * 10.0) + (1 + 1);']) // BUG: RHS is generated as ((0 + 1) * 10.0) + (0 + 1)` (related to #179)
-    expect(genJS(vars.get('_x[_a2,_a1]'))).toEqual(['_x[1][0] = ((1 + 1) * 10.0) + (0 + 1);']) // BUG: RHS is generated as ((0 + 1) * 10.0) + (1 + 1)` (related to #179)
+    expect(genJS(vars.get('_x[_a1,_a2]'))).toEqual(['_x[0][1] = ((0 + 1) * 10.0) + (1 + 1);'])
+    expect(genJS(vars.get('_x[_a2,_a1]'))).toEqual(['_x[1][0] = ((1 + 1) * 10.0) + (0 + 1);'])
     expect(genJS(vars.get('_x[_a2,_a2]'))).toEqual(['_x[1][1] = ((1 + 1) * 10.0) + (1 + 1);'])
   })
 
-  // TODO: This test is disabled until the fix for #179 is implemented
-  it.skip('should work for 2D equation with two dimensions (including one subdimension) that resolve to the same family used in expression position (separated/non-apply-to-all)', () => {
+  it('should work for 2D equation with two dimensions (including one subdimension) that resolve to the same family used in expression position (separated/non-apply-to-all)', () => {
     const vars = readInlineModel(`
       DimA: A1, A2, A3 ~~|
       SubA: A1, A3 ~~|
@@ -758,10 +756,10 @@ describe('generateEquation (Vensim -> JS)', () => {
     `)
     expect(vars.size).toBe(6)
     expect(genJS(vars.get('_x[_a1,_a1]'))).toEqual(['_x[0][0] = 0.0;'])
-    expect(genJS(vars.get('_x[_a1,_a2]'))).toEqual(['_x[0][1] = ((0 + 1) * 10.0) + (1 + 1);']) // BUG: RHS is generated as ((0 + 1) * 10.0) + (0 + 1)` (related to #179)
-    expect(genJS(vars.get('_x[_a1,_a3]'))).toEqual(['_x[0][2] = ((0 + 1) * 10.0) + (2 + 1);']) // BUG: RHS is generated as ((0 + 1) * 10.0) + (0 + 1)` (related to #179)
-    expect(genJS(vars.get('_x[_a3,_a1]'))).toEqual(['_x[2][0] = ((2 + 1) * 10.0) + (0 + 1);']) // BUG: RHS is generated as ((2 + 1) * 10.0) + (2 + 1)` (related to #179)
-    expect(genJS(vars.get('_x[_a3,_a2]'))).toEqual(['_x[2][1] = ((2 + 1) * 10.0) + (1 + 1);']) // BUG: RHS is generated as ((2 + 1) * 10.0) + (2 + 1)` (related to #179)
+    expect(genJS(vars.get('_x[_a1,_a2]'))).toEqual(['_x[0][1] = ((0 + 1) * 10.0) + (1 + 1);'])
+    expect(genJS(vars.get('_x[_a1,_a3]'))).toEqual(['_x[0][2] = ((0 + 1) * 10.0) + (2 + 1);'])
+    expect(genJS(vars.get('_x[_a3,_a1]'))).toEqual(['_x[2][0] = ((2 + 1) * 10.0) + (0 + 1);'])
+    expect(genJS(vars.get('_x[_a3,_a2]'))).toEqual(['_x[2][1] = ((2 + 1) * 10.0) + (1 + 1);'])
     expect(genJS(vars.get('_x[_a3,_a3]'))).toEqual(['_x[2][2] = ((2 + 1) * 10.0) + (2 + 1);'])
   })
 
@@ -1330,8 +1328,7 @@ describe('generateEquation (Vensim -> JS)', () => {
     })
 
     // This test is based on the example from #179 (simplified to use subdimensions to ensure separation)
-    // TODO: This test is disabled until the fix for #179 is implemented
-    it.skip('should work when RHS variable is NON-apply-to-all (1D) and is accessed with 2 different dimensions from LHS that map to the same family', () => {
+    it('should work when RHS variable is NON-apply-to-all (1D) and is accessed with 2 different dimensions from LHS that map to the same family', () => {
       const vars = readInlineModel(`
         DimA: A1, A2, A3 ~~|
         SubA: A1, A2 ~~|
@@ -1343,16 +1340,15 @@ describe('generateEquation (Vensim -> JS)', () => {
       expect(genJS(vars.get('_x[_a1]')), 'init-constants').toEqual(['_x[0] = 1.0;'])
       expect(genJS(vars.get('_x[_a2]')), 'init-constants').toEqual(['_x[1] = 2.0;'])
       expect(genJS(vars.get('_y[_a1,_a1]'))).toEqual(['_y[0][0] = _x[0] + _x[0];'])
-      expect(genJS(vars.get('_y[_a1,_a2]'))).toEqual(['_y[0][1] = _x[0] + _x[1];']) // BUG: RHS is generated as `_x[0] + _x[0]`
-      expect(genJS(vars.get('_y[_a2,_a1]'))).toEqual(['_y[1][0] = _x[1] + _x[0];']) // BUG: RHS is generated as `_x[1] + _x[1]`
+      expect(genJS(vars.get('_y[_a1,_a2]'))).toEqual(['_y[0][1] = _x[0] + _x[1];'])
+      expect(genJS(vars.get('_y[_a2,_a1]'))).toEqual(['_y[1][0] = _x[1] + _x[0];'])
       expect(genJS(vars.get('_y[_a2,_a2]'))).toEqual(['_y[1][1] = _x[1] + _x[1];'])
     })
 
     // This test is based on the example from #179 (simplified to use subdimensions to ensure separation).
     // It is similar to the previous one, except in this one, `x` is apply-to-all (and refers to the parent
     // dimension).
-    // TODO: This test is disabled until the fix for #179 is implemented
-    it.skip('should work when RHS variable is apply-to-all (1D) and is accessed with 2 different dimensions from LHS that map to the same family', () => {
+    it('should work when RHS variable is apply-to-all (1D) and is accessed with 2 different dimensions from LHS that map to the same family', () => {
       const vars = readInlineModel(`
         DimA: A1, A2, A3 ~~|
         SubA: A1, A2 ~~|
@@ -1363,8 +1359,8 @@ describe('generateEquation (Vensim -> JS)', () => {
       expect(vars.size).toBe(5)
       expect(genJS(vars.get('_x'))).toEqual(['for (let i = 0; i < 3; i++) {', '_x[i] = 1.0;', '}'])
       expect(genJS(vars.get('_y[_a1,_a1]'))).toEqual(['_y[0][0] = _x[0] + _x[0];'])
-      expect(genJS(vars.get('_y[_a1,_a2]'))).toEqual(['_y[0][1] = _x[0] + _x[1];']) // BUG: RHS is generated as `_x[0] + _x[0]`
-      expect(genJS(vars.get('_y[_a2,_a1]'))).toEqual(['_y[1][0] = _x[1] + _x[0];']) // BUG: RHS is generated as `_x[1] + _x[1]`
+      expect(genJS(vars.get('_y[_a1,_a2]'))).toEqual(['_y[0][1] = _x[0] + _x[1];'])
+      expect(genJS(vars.get('_y[_a2,_a1]'))).toEqual(['_y[1][0] = _x[1] + _x[0];'])
       expect(genJS(vars.get('_y[_a2,_a2]'))).toEqual(['_y[1][1] = _x[1] + _x[1];'])
     })
   })
@@ -1472,8 +1468,7 @@ describe('generateEquation (Vensim -> JS)', () => {
     })
 
     // This test is based on the example from #278
-    // TODO: This test is disabled until the fix for #278 is implemented
-    it.skip('should work when RHS variable is NON-apply-to-all (2D) and is accessed with 2 different dimensions from LHS that map to the same family', () => {
+    it('should work when RHS variable is NON-apply-to-all (2D) and is accessed with 2 different dimensions from LHS that map to the same family', () => {
       const vars = readInlineModel(`
         Scenario: S1, S2 ~~|
         Sector: A1, A2, A3 ~~|
@@ -1513,12 +1508,12 @@ describe('generateEquation (Vensim -> JS)', () => {
       ])
       expect(genJS(vars.get('_z[_scenario,_a1,_a2]'))).toEqual([
         'for (let i = 0; i < 2; i++) {',
-        '_z[i][0][1] = _y[i] + _x[0][1];', // BUG: RHS is generated as `_x[0][0]`
+        '_z[i][0][1] = _y[i] + _x[0][1];',
         '}'
       ])
       expect(genJS(vars.get('_z[_scenario,_a2,_a1]'))).toEqual([
         'for (let i = 0; i < 2; i++) {',
-        '_z[i][1][0] = _y[i] + _x[1][0];', // BUG: RHS is generated as `_x[1][1]`
+        '_z[i][1][0] = _y[i] + _x[1][0];',
         '}'
       ])
       expect(genJS(vars.get('_z[_scenario,_a2,_a2]'))).toEqual([
