@@ -805,96 +805,17 @@ function expandedRefIdsForVar(lhsVariable, rhsBaseRefId, rhsSubIds) {
   //
 
   // Step 1: Get all combinations of the LHS subscripts that map to the subscripts/dimensions
-  // in the RHS variable reference.   by figuring out which LHS subscripts/dimensions are relevant
-  // for the RHS subscripts/dimensions given the context of the LHS variable (which may have
-  // been separated/expanded).
+  // in the RHS variable reference.  Here `rhsSubIds` is the array of parsed subscript/dimension
+  // IDs that appear in the RHS variable reference.  We figure out which LHS subscripts/dimensions
+  // are relevant for the RHS subscripts/dimensions given the context of the LHS variable (which
+  // may have been separated/expanded).
   const lhsSubRefs = lhsVariable.parsedEqn.lhs.varDef.subscriptRefs
   const lhsSubIds = lhsSubRefs?.map(subRef => subRef.subId) || []
-  const mappedLhsSubIds = []
-  // Here `rhsSubIds` is the array of parsed subscript/dimension IDs that appear in the
-  // RHS variable reference
-  for (const rhsSubId of rhsSubIds) {
-    if (rhsSubId.includes('!')) {
-      // The dimension ID at this position is "marked", indicating that the vector function
-      // (e.g., `SUM`) should operate over the elements in this dimension.  This implies
-      // that the LHS depends on all instances of the RHS variable; we will use that RHS
-      // dimension so that all subscripts within that dimension are expanded in Step 2.
-      const rhsDimId = rhsSubId.replace('!', '')
-      mappedLhsSubIds.push(rhsDimId)
-    } else if (isIndex(rhsSubId)) {
-      // The ID at this position is for a subscript/index, so we will use that directly
-      mappedLhsSubIds.push(rhsSubId)
-    } else {
-      // The ID at this position is for a dimension; figure out which LHS subscript/dimension
-      // is a match.  First see if there is an exact match.
-      const lhsDimIndex = lhsSubIds.findIndex(lhsSubId => lhsSubId === rhsSubId)
-      if (lhsDimIndex >= 0) {
-        // There is a match.  If the LHS variable is separated, use the separated subscript
-        // ID at this position (i.e., the value from the `subscripts` array), otherwise we
-        // use the dimension ID at this position.
-        mappedLhsSubIds.push(lhsVariable.subscripts[lhsDimIndex])
-      } else {
-        // There isn't an exact match; in this case, find the position of the LHS dimension that
-        // has a mapping to the RHS dimension
-        const mappedLhsDimIndex = lhsSubIds.findIndex(lhsSubId => hasMapping(rhsSubId, lhsSubId))
-        if (mappedLhsDimIndex >= 0) {
-          // There is a match.  If the LHS variable is separated, use the _mapped_ separated
-          // subscript ID at this position (i.e., the value from the `subscripts` array),
-          // otherwise we use the _mapped_ dimension ID at this position.
-          const mappedLhsSubOrDimId = lhsVariable.subscripts[mappedLhsDimIndex]
-          if (isIndex(mappedLhsSubOrDimId)) {
-            // Determine the mapped subscript.  For example, suppose we have:
-            //   Dim: (t1-t3) ~~|
-            //   SubA: (t2-t3) -> SubB ~~|
-            //   SubB: (t1-t2) -> SubA ~~|
-            //   y[SubA] = x[SubB] ~~|
-            // Note that `y` will be separated.  Suppose we are evaluating the first instance
-            // of `y`, i.e., `_y[_t2]`.  We get the object/metadata for each dimension, which
-            // will look like the following (unrelated properties are omitted):
-            //   lhsDim == {
-            //     name: '_suba',
-            //     value: [ '_t2', '_t3' ],
-            //     family: '_dim',
-            //     mappings: { _subb: [ '_t2', '_t3' ] }
-            //   }
-            //   rhsDim == {
-            //     name: '_subb',
-            //     value: [ '_t1', '_t2' ],
-            //     family: '_dim',
-            //     mappings: { _suba: [ '_t1', '_t2' ] }
-            //   }
-            // The separated LHS subscript in this case is `_t2`, so we need to figure out
-            // the corresponding subscript in the mapped RHS dimension, which is `_t1`.
-            const mappedLhsSubId = mappedLhsSubOrDimId
-            const mappedLhsDimId = lhsSubIds[mappedLhsDimIndex]
-            const lhsDim = sub(mappedLhsDimId)
-            const rhsDim = sub(rhsSubId)
-            const lhsSubIndex = lhsDim.value.indexOf(mappedLhsSubId)
-            if (lhsSubIndex >= 0) {
-              const chosenSubId = rhsDim.mappings[mappedLhsDimId][lhsSubIndex]
-              mappedLhsSubIds.push(chosenSubId)
-            } else {
-              throw new Error(`Failed to find mapped LHS subscript ${mappedLhsSubId} in RHS dimension ${rhsSubId}`)
-            }
-          } else {
-            // TODO: Need to explain this case better
-            mappedLhsSubIds.push(rhsSubId)
-          }
-        } else {
-          throw new Error(
-            `Failed to find LHS dimension for RHS dimension: lhs=${lhsVariable.refId} rhs=${rhsBaseRefId} sub=${rhsSubId}`
-          )
-        }
-      }
-    }
-  }
+  const mappedLhsSubIds = rhsSubIds.map(rhsSubId => resolveRhsSubOrDim(lhsVariable, lhsSubIds, rhsSubId))
 
   // Step 2: Build an array of mapped LHS subscript combos (one string of comma-separated
   // subscript IDs for each combo)
-  const mappedLhsSubIdsPerPosition = []
-  for (const subId of mappedLhsSubIds) {
-    mappedLhsSubIdsPerPosition.push(indexNamesForSubscript(subId))
-  }
+  const mappedLhsSubIdsPerPosition = mappedLhsSubIds.map(indexNamesForSubscript)
   const mappedLhsCombos = cartesianProductOf(mappedLhsSubIdsPerPosition).map(combo => combo.join(','))
 
   // Step 3: For each RHS variable instance, get all combinations of RHS subscripts that can
@@ -902,10 +823,7 @@ function expandedRefIdsForVar(lhsVariable, rhsBaseRefId, rhsSubIds) {
   const rhsRefIds = []
   for (const rhsVarInstance of rhsVarInstances) {
     // Build RHS subscript combos (one string of comma-separated subscript IDs for each combo)
-    const rhsVarInstanceSubIdsPerPosition = []
-    for (const subId of rhsVarInstance.subscripts) {
-      rhsVarInstanceSubIdsPerPosition.push(indexNamesForSubscript(subId))
-    }
+    const rhsVarInstanceSubIdsPerPosition = rhsVarInstance.subscripts.map(indexNamesForSubscript)
     const rhsCombos = cartesianProductOf(rhsVarInstanceSubIdsPerPosition).map(combo => combo.join(','))
 
     // See if any of the LHS subscript combos match any of the RHS subscript combos
@@ -923,4 +841,92 @@ function expandedRefIdsForVar(lhsVariable, rhsBaseRefId, rhsSubIds) {
   // behavior now to avoid invalidating tests.  Later we should remove this `sort` call and
   // update the tests accordingly.
   return rhsRefIds.sort()
+}
+
+/**
+ * Return the LHS dimension or subscript that is associated with the given RHS subscript
+ * or dimension ID appearing on the RHS of an equation.
+ *
+ * @param {*} lhsVariable The LHS variable instance that has an equation that references
+ * a variable on the RHS.
+ * @param {string[]} lhsSubIds The array of original (parsed) subscript or dimension IDs
+ * for the LHS variable definition.
+ * @param {string} rhsSubId The dimension or subscript ID appearing in a variable reference
+ * on the RHS of an equation.
+ * @return A single dimension or subscript ID.
+ */
+function resolveRhsSubOrDim(lhsVariable, lhsSubIds, rhsSubId) {
+  if (rhsSubId.includes('!')) {
+    // The dimension ID at this position is "marked", indicating that the vector function
+    // (e.g., `SUM`) should operate over the elements in this dimension.  This implies
+    // that the LHS depends on all instances of the RHS variable; we will use that RHS
+    // dimension so that all subscripts within that dimension are expanded in Step 2.
+    return rhsSubId.replace('!', '')
+  }
+
+  if (isIndex(rhsSubId)) {
+    // The ID at this position is for a subscript/index, so we will use that directly
+    return rhsSubId
+  }
+
+  // The ID at this position is for a dimension; figure out which LHS subscript/dimension
+  // is a match.  First see if there is an exact match.
+  const lhsDimIndex = lhsSubIds.findIndex(lhsSubId => lhsSubId === rhsSubId)
+  if (lhsDimIndex >= 0) {
+    // There is a match.  If the LHS variable is separated, use the separated subscript
+    // ID at this position (i.e., the value from the `subscripts` array), otherwise we
+    // use the dimension ID at this position.
+    return lhsVariable.subscripts[lhsDimIndex]
+  }
+
+  // There isn't an exact match; in this case, find the position of the LHS dimension that
+  // has a mapping to the RHS dimension
+  const mappedLhsDimIndex = lhsSubIds.findIndex(lhsSubId => hasMapping(rhsSubId, lhsSubId))
+  if (mappedLhsDimIndex >= 0) {
+    // There is a match.  If the LHS variable is separated, use the _mapped_ separated
+    // subscript ID at this position (i.e., the value from the `subscripts` array),
+    // otherwise we use the _mapped_ dimension ID at this position.
+    const mappedLhsSubOrDimId = lhsVariable.subscripts[mappedLhsDimIndex]
+    if (isIndex(mappedLhsSubOrDimId)) {
+      // Determine the mapped subscript.  For example, suppose we have:
+      //   Dim: (t1-t3) ~~|
+      //   SubA: (t2-t3) -> SubB ~~|
+      //   SubB: (t1-t2) -> SubA ~~|
+      //   y[SubA] = x[SubB] ~~|
+      // Note that `y` will be separated.  Suppose we are evaluating the first instance
+      // of `y`, i.e., `_y[_t2]`.  We get the object/metadata for each dimension, which
+      // will look like the following (unrelated properties are omitted):
+      //   lhsDim == {
+      //     name: '_suba',
+      //     value: [ '_t2', '_t3' ],
+      //     family: '_dim',
+      //     mappings: { _subb: [ '_t2', '_t3' ] }
+      //   }
+      //   rhsDim == {
+      //     name: '_subb',
+      //     value: [ '_t1', '_t2' ],
+      //     family: '_dim',
+      //     mappings: { _suba: [ '_t1', '_t2' ] }
+      //   }
+      // The separated LHS subscript in this case is `_t2`, so we need to figure out
+      // the corresponding subscript in the mapped RHS dimension, which is `_t1`.
+      const mappedLhsSubId = mappedLhsSubOrDimId
+      const mappedLhsDimId = lhsSubIds[mappedLhsDimIndex]
+      const lhsDim = sub(mappedLhsDimId)
+      const rhsDim = sub(rhsSubId)
+      const lhsSubIndex = lhsDim.value.indexOf(mappedLhsSubId)
+      if (lhsSubIndex >= 0) {
+        return rhsDim.mappings[mappedLhsDimId][lhsSubIndex]
+      } else {
+        throw new Error(
+          `Failed to find mapped LHS subscript ${mappedLhsSubId} for RHS dimension ${rhsSubId} in lhs=${lhsVariable.refId}`
+        )
+      }
+    } else {
+      // TODO: Need to explain this case better
+      return rhsSubId
+    }
+  } else {
+    throw new Error(`Failed to find LHS dimension for RHS dimension ${rhsSubId} in lhs=${lhsVariable.refId}`)
+  }
 }
