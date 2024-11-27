@@ -1,5 +1,5 @@
 import { cdbl, newTmpVarName } from '../_shared/helpers.js'
-import { extractMarkedDims, isDimension, isIndex, normalizeSubscripts, sub } from '../_shared/subscript.js'
+import { extractMarkedDims, isDimension, isIndex, sub } from '../_shared/subscript.js'
 
 import Model from '../model/model.js'
 
@@ -747,7 +747,7 @@ function generateVectorElmMapCall(callExpr, ctx) {
 
   // The `VECTOR ELM MAP` function replaces one subscript with a calculated offset from
   // a base index
-  const rhsSubIds = normalizeSubscripts(vecSubIds)
+  const rhsSubIds = vecSubIds
   const cSubscripts = rhsSubIds.map(rhsSubId => {
     if (isIndex(rhsSubId)) {
       let indexDecl
