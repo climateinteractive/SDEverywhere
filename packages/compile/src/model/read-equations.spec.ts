@@ -333,7 +333,7 @@ describe('readEquations', () => {
     ])
   })
 
-  it('should work for ALLOCATE AVAILABLE function', () => {
+  it('should work for ALLOCATE AVAILABLE function (1D LHS, 1D demand, 2D pp, non-subscripted avail)', () => {
     const vars = readInlineModel(`
       branch: Boston, Dayton ~~|
       pprofile: ptype, ppriority ~~|
@@ -391,13 +391,159 @@ describe('readEquations', () => {
           '_demand[_boston]',
           '_demand[_dayton]',
           '_priority[_boston,_ppriority]',
-          '_priority[_boston,undefined]',
+          '_priority[_boston,_ptype]',
           '_supply_available'
         ],
         subscripts: ['_branch']
       })
     ])
   })
+
+  it('should work for ALLOCATE AVAILABLE function (1D LHS, 1D demand, 3D pp, non-subscripted avail)', () => {
+    // XXX: Renamed item to aitem here to avoid issues with normalization; can change this back to item
+    // once normalizeSubscripts is removed in the other branch
+    const vars = readInlineModel(`
+      branch: Boston, Dayton, Fresno ~~|
+      aitem: Item1, Item2 ~~|
+      pprofile: ptype, ppriority ~~|
+      supply available = 200 ~~|
+      demand[branch] = 500,300,750 ~~|
+      priority[Item1,Boston,pprofile] = 3,5 ~~|
+      priority[Item1,Dayton,pprofile] = 3,7 ~~|
+      priority[Item1,Fresno,pprofile] = 3,3 ~~|
+      priority[Item2,Boston,pprofile] = 3,6 ~~|
+      priority[Item2,Dayton,pprofile] = 3,8 ~~|
+      priority[Item2,Fresno,pprofile] = 3,4 ~~|
+      shipments[branch] = ALLOCATE AVAILABLE(demand[branch], priority[aitem,branch,ptype], supply available) ~~|
+    `)
+    expect(vars).toEqual([
+      v('supply available', '200', {
+        refId: '_supply_available',
+        varType: 'const'
+      }),
+      v('demand[branch]', '500,300,750', {
+        refId: '_demand[_boston]',
+        separationDims: ['_branch'],
+        subscripts: ['_boston'],
+        varType: 'const'
+      }),
+      v('demand[branch]', '500,300,750', {
+        refId: '_demand[_dayton]',
+        separationDims: ['_branch'],
+        subscripts: ['_dayton'],
+        varType: 'const'
+      }),
+      v('demand[branch]', '500,300,750', {
+        refId: '_demand[_fresno]',
+        separationDims: ['_branch'],
+        subscripts: ['_fresno'],
+        varType: 'const'
+      }),
+      v('priority[Item1,Boston,pprofile]', '3,5', {
+        refId: '_priority[_item1,_boston,_ptype]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_item1', '_boston', '_ptype'],
+        varType: 'const'
+      }),
+      v('priority[Item1,Boston,pprofile]', '3,5', {
+        refId: '_priority[_item1,_boston,_ppriority]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_item1', '_boston', '_ppriority'],
+        varType: 'const'
+      }),
+      v('priority[Item1,Dayton,pprofile]', '3,7', {
+        refId: '_priority[_item1,_dayton,_ptype]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_item1', '_dayton', '_ptype'],
+        varType: 'const'
+      }),
+      v('priority[Item1,Dayton,pprofile]', '3,7', {
+        refId: '_priority[_item1,_dayton,_ppriority]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_item1', '_dayton', '_ppriority'],
+        varType: 'const'
+      }),
+      v('priority[Item1,Fresno,pprofile]', '3,3', {
+        refId: '_priority[_item1,_fresno,_ptype]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_item1', '_fresno', '_ptype'],
+        varType: 'const'
+      }),
+      v('priority[Item1,Fresno,pprofile]', '3,3', {
+        refId: '_priority[_item1,_fresno,_ppriority]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_item1', '_fresno', '_ppriority'],
+        varType: 'const'
+      }),
+      v('priority[Item2,Boston,pprofile]', '3,6', {
+        refId: '_priority[_item2,_boston,_ptype]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_item2', '_boston', '_ptype'],
+        varType: 'const'
+      }),
+      v('priority[Item2,Boston,pprofile]', '3,6', {
+        refId: '_priority[_item2,_boston,_ppriority]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_item2', '_boston', '_ppriority'],
+        varType: 'const'
+      }),
+      v('priority[Item2,Dayton,pprofile]', '3,8', {
+        refId: '_priority[_item2,_dayton,_ptype]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_item2', '_dayton', '_ptype'],
+        varType: 'const'
+      }),
+      v('priority[Item2,Dayton,pprofile]', '3,8', {
+        refId: '_priority[_item2,_dayton,_ppriority]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_item2', '_dayton', '_ppriority'],
+        varType: 'const'
+      }),
+      v('priority[Item2,Fresno,pprofile]', '3,4', {
+        refId: '_priority[_item2,_fresno,_ptype]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_item2', '_fresno', '_ptype'],
+        varType: 'const'
+      }),
+      v('priority[Item2,Fresno,pprofile]', '3,4', {
+        refId: '_priority[_item2,_fresno,_ppriority]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_item2', '_fresno', '_ppriority'],
+        varType: 'const'
+      }),
+      v('shipments[branch]', 'ALLOCATE AVAILABLE(demand[branch],priority[aitem,branch,ptype],supply available)', {
+        refId: '_shipments',
+        referencedFunctionNames: ['__allocate_available'],
+        references: [
+          '_demand[_boston]',
+          '_demand[_dayton]',
+          '_demand[_fresno]',
+          '_priority[_item1,_boston,_ppriority]',
+          '_priority[_item1,_boston,_ptype]',
+          '_priority[_item1,_dayton,_ppriority]',
+          '_priority[_item1,_dayton,_ptype]',
+          '_priority[_item1,_fresno,_ppriority]',
+          '_priority[_item1,_fresno,_ptype]',
+          '_priority[_item2,_boston,_ppriority]',
+          '_priority[_item2,_boston,_ptype]',
+          '_priority[_item2,_dayton,_ppriority]',
+          '_priority[_item2,_dayton,_ptype]',
+          '_priority[_item2,_fresno,_ppriority]',
+          '_priority[_item2,_fresno,_ptype]',
+          '_supply_available'
+        ],
+        subscripts: ['_branch']
+      })
+    ])
+  })
+
+  // it('should work for ALLOCATE AVAILABLE function (2D LHS, 2D demand, 2D pp, non-subscripted avail)', () => {
+  //   // TODO
+  // })
+
+  // it('should work for ALLOCATE AVAILABLE function (2D LHS, 2D demand, 3D pp, 1D avail)', () => {
+  //   // TODO
+  // })
 
   it('should work for DELAY1 function', () => {
     const vars = readInlineModel(`

@@ -802,6 +802,7 @@ describe('generateEquation (Vensim -> JS)', () => {
     expect(genJS(vars.get('_target_capacity'), 'eval')).toEqual(['_target_capacity = _capacity;'])
   })
 
+  // TODO: Copy new tests from gen-equation-c.spec.ts
   it('should work for ALLOCATE AVAILABLE function', () => {
     const vars = readInlineModel(`
       branch: Boston, Dayton, Fresno ~~|
