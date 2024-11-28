@@ -658,26 +658,42 @@ function visitFunctionCall(v, callExpr, context) {
         // XXX: For `WITH LOOKUP` calls, only process the first argument; need to generalize this
         break
       } else if (callExpr.fnId === '_ALLOCATE_AVAILABLE' && index === 1) {
-        // XXX: Handle `ALLOCATE AVAILABLE` calls specially for now.  This logic is copied from the
-        // legacy reader, but we may want to revisit later.
-        // Reference the second and third elements of the priority profile argument instead of the
-        // first one that Vensim requires for ALLOCATE AVAILABLE.  This is required to pick up
-        // correct dependencies.
+        // Handle the second (`pp` or priority profile) argument of `ALLOCATE AVAILABLE` calls
+        // specially.  An example call with a 2D `pp` looks like this:
+        //   shipments[branch] = ALLOCATE AVAILABLE(demand[branch], priority[branch,ptype], avail) ~~|
+        // Or a 3D `pp` with a dimension:
+        //   shipments[item,branch] = ALLOCATE AVAILABLE(demand[branch], priority[item,branch,ptype], avail) ~~|
+        // Or a 3D `pp` with a specific subscript:
+        //   shipments[branch] = ALLOCATE AVAILABLE(demand[branch], priority[item1,branch,ptype], avail) ~~|
+        // Vensim requires passing a reference with `ptype` as the last subscript, but the function
+        // implementation uses the `ppriority` and `pwidth` values (the `ptype` is currently assumed
+        // to be 3).  Therefore we need to add references to all variants of the variable, not just
+        // the ones for `ptype`.
         if (argExpr.kind !== 'variable-ref') {
           throw new Error(`ALLOCATE AVAILABLE argument 'pp' must be a variable reference`)
         }
+        // TODO: Throw an error if the last dimension of arg0 does not match last dimension of LHS
+        // TODO: Throw an error if the second-to-last dimension of arg1 does not match last dimension of LHS
+        // TODO: Throw an error if the last subscript of arg1 does not have the "shape" of a `ppriority` dimension
+        // TODO: Throw an error if the `ptype` value is not 3
+        // Get the RHS subscript/dimension IDs
         const rhsVarBaseRefId = argExpr.varId
         const rhsVarSubIds = argExpr.subscriptRefs?.map(subRef => subRef.subId) || []
-        const expandedRefIds = expandedRefIdsForVar(v, rhsVarBaseRefId, rhsVarSubIds)
-        const ptypeRefId = expandedRefIds[0]
-        const { subscripts } = Model.splitRefId(ptypeRefId)
-        const ptypeIndexName = subscripts[subscripts.length - 1]
-        const profileElementsDimName = sub(ptypeIndexName).family
-        const profileElementsDim = sub(profileElementsDimName)
-        const priorityRefId = ptypeRefId.replace(ptypeIndexName, profileElementsDim.value[1])
-        const widthRefId = ptypeRefId.replace(ptypeIndexName, profileElementsDim.value[2])
-        context.addVarReference(priorityRefId)
-        context.addVarReference(widthRefId)
+        // Extract the `ptype` subscript and get its parent dimension/family ID
+        const ptypeSubId = rhsVarSubIds[rhsVarSubIds.length - 1]
+        const profileDimId = sub(ptypeSubId).family
+        const profileDim = sub(profileDimId)
+        // Get all refIds for the referenced variable for each of the `profile` subscripts
+        for (const profileSubId of profileDim.value) {
+          // Replace the last `ptype` subscript with the ID of the parent dimension so that
+          // `expandedRefIdsForVar` will return refIds for that last subscript
+          rhsVarSubIds[rhsVarSubIds.length - 1] = profileSubId
+          const expandedRefIds = expandedRefIdsForVar(v, rhsVarBaseRefId, rhsVarSubIds)
+          // Record each instance of the referenced variable
+          for (const refId of expandedRefIds) {
+            context.addVarReference(refId)
+          }
+        }
         continue
       }
 
