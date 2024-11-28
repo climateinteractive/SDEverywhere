@@ -12,8 +12,6 @@ import Model from '../model/model.js'
  * @param {string} cLhs The C/JS code for the LHS variable reference.
  * @param {LoopIndexVars} loopIndexVars The loop index state used for LHS dimensions.
  * @param {LoopIndexVars} arrayIndexVars The loop index state used for array functions (that use marked dimensions).
- * @param {() => void} resetMarkedDims Function that resets the marked dimension state.
- * @param {(dimId: string) => void} addMarkedDim Function that adds the given dimension to the set of marked dimensions.
  * @param {(s: string) => void} emitPreInnerLoop Function that will cause the given code to be appended to the chunk that
  * precedes the generated inner loop for the equation.
  * @param {(s: string) => void} emitPreFormula Function that will cause the given code to be appended to the chunk that
@@ -646,7 +644,6 @@ function generateArrayFunctionCall(callExpr, ctx) {
   // Open the array function loop(s)
   const indexDecl = ctx.outFormat === 'js' ? 'let' : 'size_t'
   for (const markedDimId of markedDimIds) {
-    ctx.addMarkedDim(markedDimId)
     const n = sub(markedDimId).size
     const i = ctx.arrayIndexVars.index(markedDimId)
     ctx.emitPreFormula(`  for (${indexDecl} ${i} = 0; ${i} < ${n}; ${i}++) {`)
@@ -690,9 +687,6 @@ function generateArrayFunctionCall(callExpr, ctx) {
   for (let i = 0; i < markedDimIds.size; i++) {
     ctx.emitPreFormula(`  }`)
   }
-
-  // Reset marked dim state
-  ctx.resetMarkedDims()
 
   if (returnCode) {
     // Emit the expression defined above in place of the array function
