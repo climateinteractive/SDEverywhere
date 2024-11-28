@@ -132,9 +132,6 @@ export function generateEquation(variable, mode, extData, directData, modelDir, 
   // Keep a buffer of code that will be included after the generated primary formula
   const postFormulaLines = []
 
-  // Keep track of marked dimensions
-  const markedDimIds = new Set()
-
   // Generate code for an equation with an expression on the RHS
   const genExprCtx = {
     variable,
@@ -143,12 +140,10 @@ export function generateEquation(variable, mode, extData, directData, modelDir, 
     cLhs,
     loopIndexVars,
     arrayIndexVars,
-    resetMarkedDims: () => markedDimIds.clear(),
-    addMarkedDim: dimId => markedDimIds.add(dimId),
     emitPreInnerLoop: s => preInnerLoopLines.push(s),
     emitPreFormula: s => preFormulaLines.push(s),
     emitPostFormula: s => postFormulaLines.push(s),
-    cVarRef: varRef => cVarRef(variable, varRef, markedDimIds, loopIndexVars, arrayIndexVars),
+    cVarRef: varRef => cVarRef(variable, varRef, loopIndexVars, arrayIndexVars),
     cVarRefWithLhsSubscripts: baseVarId => cVarRefWithLhsSubscripts(variable, baseVarId, loopIndexVars),
     cVarIndex: subOrDimId => cVarIndex(variable, subOrDimId, loopIndexVars, arrayIndexVars)
   }
@@ -199,14 +194,12 @@ function cVarRefWithLhsSubscripts(lhsVariable, baseVarId, loopIndexVars) {
  *
  * @param {*} lhsVariable The LHS `Variable` instance.
  * @param {*} rhsVarRef The `VariableRef` used in a RHS expression.
- * @param {Set<string>} markedDimIds The set of dimension IDs that are marked for use
- * in an array function, for example `SUM(x[DimA!])`.
  * @param {LoopIndexVars} loopIndexVars The loop index state.
  * @param {LoopIndexVars} arrayIndexVars The loop index state used for array functions
  * (that use marked dimensions).
  * @returns {string} The C variable reference.
  */
-function cVarRef(lhsVariable, rhsVarRef, markedDimIds, loopIndexVars, arrayIndexVars) {
+function cVarRef(lhsVariable, rhsVarRef, loopIndexVars, arrayIndexVars) {
   if (rhsVarRef.subscriptRefs === undefined) {
     // No subscripts, so return the base variable ID
     return rhsVarRef.varId
