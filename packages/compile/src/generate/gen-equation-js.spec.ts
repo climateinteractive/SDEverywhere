@@ -1630,7 +1630,6 @@ describe('generateEquation (Vensim -> JS)', () => {
     expect(genJS(vars.get('_target_capacity'), 'eval')).toEqual(['_target_capacity = _capacity;'])
   })
 
-  // TODO: Copy new tests from gen-equation-c.spec.ts
   it('should work for ALLOCATE AVAILABLE function', () => {
     const vars = readInlineModel(`
       branch: Boston, Dayton, Fresno ~~|
@@ -1663,6 +1662,9 @@ describe('generateEquation (Vensim -> JS)', () => {
       'ALLOCATE AVAILABLE function not yet implemented for JS code gen'
     )
   })
+
+  // TODO: Copy more tests from gen-equation-c.spec.ts once we implement ALLOCATE AVAILABLE
+  // for JS code gen
 
   it('should work for ARCCOS function', () => {
     const vars = readInlineModel(`
