@@ -30,12 +30,17 @@ interface MdlLevelVariable {
 
 type MdlVariable = MdlConstVariable | MdlAuxVariable | MdlLevelVariable
 
-const sampleCheckContent = `\
+const sampleChecksContent = `\
 # yaml-language-server: $schema=SCHEMA_PATH
 
-# NOTE: This is just a simple check to get you started.  Replace "Some output" with
-# the name of some variable you'd like to test.  Additional tests can be developed
-# in the "playground" (beta) inside the model-check report.
+#
+# This file contains "check" tests that exercise your model under different input
+# scenarios.  For more guidance, consult this wiki page:
+#   https://github.com/climateinteractive/SDEverywhere/wiki/Testing-and-Comparing-Your-Model
+#
+
+# NOTE: The following is an example of a simple check just to get you started.
+# Replace "Some output" with the name of some variable you'd like to test.
 - describe: Some output
   tests:
     - it: should be > 0 for all input scenarios
@@ -45,6 +50,29 @@ const sampleCheckContent = `\
         - name: Some output
       predicates:
         - gt: 0
+`
+
+const sampleComparisonsContent = `\
+# yaml-language-server: $schema=SCHEMA_PATH
+
+#
+# This file contains definitions of custom comparison scenarios, which allow you to see
+# how the behavior of the model compares to that of previous versions.  For more guidance,
+# consult the following wiki page:
+#   https://github.com/climateinteractive/SDEverywhere/wiki/Testing-and-Comparing-Your-Model
+#
+
+# NOTE: The following is an example of a custom scenario just to get you started.
+# Replace "Some input" and "Another input" with the names of some variables you'd
+# like to test.
+- scenario:
+    title: Custom scenario
+    subtitle: gradual ramp-up
+    with:
+      - input: Some input
+        at: 10
+      - input: Another input
+        at: 20
 `
 
 export async function updateSdeConfig(projDir: string, mdlPath: string, genFormat: string): Promise<void> {
@@ -62,17 +90,18 @@ export async function updateSdeConfig(projDir: string, mdlPath: string, genForma
   await writeFile(configPath, configText)
 }
 
-export async function generateCheckYaml(projDir: string, mdlPath: string): Promise<void> {
-  // Generate a sample `{mdl}.check.yaml` file if one doesn't already exist
-  // TODO: Make this optional (ask user first)?
-  const checkYamlFile = mdlPath.replace('.mdl', '.check.yaml')
-  const checkYamlPath = joinPath(projDir, checkYamlFile)
-  if (!existsSync(checkYamlPath)) {
+async function generateYaml(projDir: string, kind: 'checks' | 'comparisons', template: string): Promise<void> {
+  const yamlDir = joinPath(projDir, 'model', kind)
+  const yamlPath = joinPath(yamlDir, `${kind}.yaml`)
+  if (!existsSync(yamlPath)) {
     // Get relative path from yaml file parent dir to project dir
-    let relProjPath = relative(dirname(checkYamlPath), projDir)
+    let relProjPath = relative(dirname(yamlPath), projDir)
     if (relProjPath.length === 0) {
       relProjPath = './'
     }
+
+    // Create the directory for the yaml file, if needed
+    await mkdir(yamlDir, { recursive: true })
 
     // TODO: This path is normally different depending on whether using npm/yarn or
     // pnpm. For npm/yarn, `check-core` is hoisted under top-level `node_modules`,
@@ -82,11 +111,20 @@ export async function generateCheckYaml(projDir: string, mdlPath: string): Promi
     // suffice).  This allows us to use the same path here that works for all
     // three package managers.
     const nodeModulesPart = joinPath(relProjPath, 'node_modules')
-    const checkCorePart = '@sdeverywhere/check-core/schema/check.schema.json'
+    const schemaName = kind === 'checks' ? 'check' : 'comparison'
+    const checkCorePart = `@sdeverywhere/check-core/schema/${schemaName}.schema.json`
     const schemaPath = `${nodeModulesPart}/${checkCorePart}`
-    const checkContent = sampleCheckContent.replace('SCHEMA_PATH', schemaPath)
-    await writeFile(checkYamlPath, checkContent)
+    const yamlContent = template.replace('SCHEMA_PATH', schemaPath)
+    await writeFile(yamlPath, yamlContent)
   }
+}
+
+export async function generateSampleYamlFiles(projDir: string): Promise<void> {
+  // Generate a sample `checks.yaml` file if one doesn't already exist
+  await generateYaml(projDir, 'checks', sampleChecksContent)
+
+  // Generate a sample `comparisons.yaml` file if one doesn't already exist
+  await generateYaml(projDir, 'comparisons', sampleComparisonsContent)
 }
 
 export async function chooseGenConfig(projDir: string, mdlPath: string): Promise<void> {

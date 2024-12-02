@@ -1,0 +1,27 @@
+# yaml-language-server: $schema=../../node_modules/@sdeverywhere/plugin-check/node_modules/@sdeverywhere/check-core/schema/check.schema.json
+
+#
+# This is a simple example of "check" tests that exercise the model under different
+# input scenarios.  For more guidance, consult the following wiki page:
+#   https://github.com/climateinteractive/SDEverywhere/wiki/Testing-and-Comparing-Your-Model
+#
+
+- describe: Total inventory
+  tests:
+    - it: should be constant for years <= 2020 for all input scenarios
+      scenarios:
+        - preset: matrix
+      datasets:
+        - name: Total inventory
+      predicates:
+        - eq: 1000
+          time:
+            before_incl: 2020
+    - it: should be in the range [1000,1300] for all input scenarios
+      scenarios:
+        - preset: matrix
+      datasets:
+        - name: Total inventory
+      predicates:
+        - gte: 1000
+          lte: 1300

@@ -10,7 +10,7 @@ import detectPackageManager from 'which-pm-runs'
 import yargs from 'yargs-parser'
 
 import { chooseCodeFormat } from './step-code-format'
-import { chooseGenConfig, generateCheckYaml, updateSdeConfig } from './step-config'
+import { chooseGenConfig, generateSampleYamlFiles, updateSdeConfig } from './step-config'
 import { chooseInstallDeps } from './step-deps'
 import { chooseProjectDir } from './step-directory'
 import { chooseInstallEmsdk } from './step-emsdk'
@@ -54,10 +54,10 @@ export async function main(): Promise<void> {
   const genFormat = await chooseCodeFormat()
 
   // Update the `sde.config.js` file to use the chosen mdl file and
-  // generate a sample `.check.yaml` file
+  // generate sample `checks.yaml` and `comparisons.yaml` files
   if (!args.dryRun) {
     await updateSdeConfig(projDir, mdlPath, genFormat)
-    await generateCheckYaml(projDir, mdlPath)
+    await generateSampleYamlFiles(projDir)
   }
   console.log()
 

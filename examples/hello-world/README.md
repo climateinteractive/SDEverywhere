@@ -24,9 +24,11 @@ cd ./hello-world
 npm install
 
 # Enter development mode for the sample model.  This will start a live
-# development environment that will build a WebAssembly version of the
-# sample model and run checks on it any time you make changes to the
-# Vensim model file (sample.mdl) or the checks file (sample.check.yaml).
+# development environment that will build a JavaScript version of the
+# sample model and run checks on it any time you make changes to:
+#   - the Vensim model file (sample.mdl)
+#   - the model check definitions (model/checks/*.yaml)
+#   - the model comparison definitions (model/comparisons/*.yaml)
 npm run dev
 ```
 
