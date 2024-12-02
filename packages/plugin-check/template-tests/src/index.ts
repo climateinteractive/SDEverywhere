@@ -70,6 +70,8 @@ export async function getConfigOptions(
     //       - once with single input at its minimum
     //       - once with single input at its maximum
     const baseComparisonSpecs = createBaseComparisonSpecs(bundleL, bundleR)
+
+    // Also include custom scenarios defined in the `comparisons/*.yaml` files
     const comparisonSpecs = [baseComparisonSpecs, ...yamlComparisonSpecFiles]
 
     comparisonOptions = {
