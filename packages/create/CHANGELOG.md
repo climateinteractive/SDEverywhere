@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.21](https://github.com/climateinteractive/SDEverywhere/compare/create-v0.2.20...create-v0.2.21) (2024-12-02)
+
+
+### Bug Fixes
+
+* update default plugin-check configuration to include comparison yaml files ([#574](https://github.com/climateinteractive/SDEverywhere/issues/574)) ([24f5e56](https://github.com/climateinteractive/SDEverywhere/commit/24f5e56a473cf5cf696fb26e9d21a26441bb2c56)), closes [#571](https://github.com/climateinteractive/SDEverywhere/issues/571)
+
 ## [0.2.20](https://github.com/climateinteractive/SDEverywhere/compare/create-v0.2.19...create-v0.2.20) (2024-11-21)
 
 
