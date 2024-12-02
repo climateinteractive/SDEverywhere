@@ -7,8 +7,12 @@ export async function config() {
 
     modelSpec: async () => {
       return {
-        inputs: [{ varName: 'Y', defaultValue: 0, minValue: -10, maxValue: 10 }],
-        outputs: [{ varName: 'Z' }]
+        inputs: [
+          { varName: 'Production slope', defaultValue: 1, minValue: 1, maxValue: 10 },
+          { varName: 'Production start year', defaultValue: 2020, minValue: 2020, maxValue: 2070 },
+          { varName: 'Production years', defaultValue: 10, minValue: 0, maxValue: 30 }
+        ],
+        outputs: [{ varName: 'Total inventory' }]
       }
     },
 
