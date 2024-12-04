@@ -38,16 +38,16 @@ Other[DimAB1] = 10 ~~|
 Other[DimAB2] = INITIAL ( Something[A2] * 2 ) ~~|
 Other[DimAB3] = INITIAL ( Something[A3] * 3 ) ~~|
 
-Intensity Diff[DimA,DimA']  = 
+Intensity Diff[DimA,DimA']  =
   IF THEN ELSE (
-    Rank[DimA] >= Rank[DimA'] , 
+    Rank[DimA] >= Rank[DimA'] ,
     ABS ( Intensity[DimA] - Other[DimA'] ),
     666
   )
   ~~|
-Intensity Diff[DimB,DimB']  = 
+Intensity Diff[DimB,DimB']  =
   IF THEN ELSE (
-    Rank[DimB] >= Rank[DimB'] , 
+    Rank[DimB] >= Rank[DimB'] ,
     ABS ( Intensity[DimB] - Other[DimB'] ),
     777
   )
