@@ -109,9 +109,9 @@ function preprocessModel(mdlContent) {
   const { defs } = preprocessVensimModel(mdlContent)
 
   // Join the preprocessed definitions into a single string
-  let text = '{UTF-8}\n\n'
+  let text = '{UTF-8}\n'
   for (const def of defs) {
-    text += `${def.def}\n\n`
+    text += `\n${def.def}\n`
   }
 
   return text
