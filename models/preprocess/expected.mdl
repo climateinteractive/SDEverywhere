@@ -1,65 +1,43 @@
 {UTF-8}
 
-Apple 1  = 1
-	~~|
+" quotes 2 with extra whitespace " = 1 ~~|
 
-Apple 2  = 1
-	~~|
+"Quotes 1" = 1 ~~|
 
-apple 3  = 1
-	~~|
+"quotes 3 with | pipe character " = 2 ~~|
 
-Banana 1  = 1
-	~~|
+apple 3 = 1 ~~|
 
-Banana 2  = 1
-	~~|
+Carrot 3 Data 2 ~~|
 
-banana 3  =
-  Banana 1
-    * Banana 2
-	~~|
+banana 3 = Banana 1 * Banana 2 ~~|
 
-carrot 1  = 1
-	~~|
+carrot 3 Data 1 ~~|
 
-carrot 2  = 1
-	~~|
+carrot 2 = 1 ~~|
 
-carrot 3 Data 1
-	~~|
+Look2((0,0),(1,1),(2,2)) ~~|
 
-Carrot 3 Data 2
-	~~|
+Look1((0,0),(1,1),(2,2)) ~~|
 
-DimA: A1, A2, A3
-	~~|
+Apple 2 = 1 ~~|
 
-dimB: B1, B2, B3
-	~~|
+carrot 1 = 1 ~~|
 
-FINAL TIME  = 10
-	~~|
+Banana 2 = 1 ~~|
 
-INITIAL TIME  = 0
-	~~|
+Banana 1 = 1 ~~|
 
-Look1((0,0),(1,1),(2,2))
-	~~|
+Apple 1 = 1 ~~|
 
-Look2((0,0),(1,1),(2,2))
-	~~|
+dimB: B1, B2 ~~|
 
-"Quotes 1"  = 1
-	~~|
+DimA: A1, A2 ~~|
 
-" quotes 2 with extra whitespace "  = 1
-	~~|
+FINAL TIME = 10 ~~|
 
-SAVEPER  =
-        TIME STEP
-	~~|
+INITIAL TIME = 0 ~~|
 
-TIME STEP  = 1
-	~~|
+SAVEPER = TIME STEP ~~|
 
+TIME STEP = 1 ~~|
