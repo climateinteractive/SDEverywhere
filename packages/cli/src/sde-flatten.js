@@ -1,8 +1,9 @@
+import { readFileSync } from 'fs'
 import path from 'path'
 
 import B from 'bufx'
 
-import { preprocessModel } from '@sdeverywhere/compile'
+import { preprocessVensimModel } from '@sdeverywhere/compile'
 
 import { buildDir, modelPathProps } from './utils.js'
 
@@ -44,16 +45,23 @@ const flatten = async (outFile, inFiles, opts) => {
     // Get the path and short name of the input mdl file
     const inModelProps = modelPathProps(inFile)
 
-    // Preprocess the mdl file and extract the equations
-    const decls = []
-    preprocessModel(inModelProps.modelPathname, undefined, 'runnable', false, decls)
+    // Read the mdl file content
+    const mdlContent = readFileSync(inModelProps.modelPathname, 'utf8')
 
-    // Associate each declaration with the name of the model from which it came
-    for (const decl of decls) {
-      decl.sourceModelName = inModelProps.modelName
+    // Preprocess the mdl file and extract the equations and subscript range definitions
+    const { defs } = preprocessVensimModel(mdlContent)
+
+    for (const def of defs) {
+      // Associate each definition with the name of the model from which it came
+      def.sourceModelName = inModelProps.modelName
+
+      // The object contains the preprocessed definition in a `def` property; copy this
+      // to a `processedDecl` property for clarity (since the existing code used that
+      // property name).
+      def.processedDecl = def.def
     }
 
-    fileDecls[inModelProps.modelName] = decls
+    fileDecls[inModelProps.modelName] = defs
   }
 
   // Collapse so that we have only one equation or declaration per key.
