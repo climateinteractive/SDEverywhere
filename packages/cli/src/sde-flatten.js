@@ -184,9 +184,8 @@ const flatten = async (outFile, inFiles, opts) => {
   B.open('pp')
   const ENCODING = '{UTF-8}'
   B.emitLine(ENCODING, 'pp')
-  B.emitLine('', 'pp')
   for (const decl of sorted) {
-    B.emitLine(`${decl.processedDecl}\n`, 'pp')
+    B.emitLine(`\n${decl.processedDecl}`, 'pp')
   }
 
   // Write the flattened mdl file to the build directory
