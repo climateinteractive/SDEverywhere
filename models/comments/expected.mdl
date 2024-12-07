@@ -1,36 +1,21 @@
 {UTF-8}
 
-a[DimA]=
-  0,
-  1,
-  2
-	~~|
+DimA: A1, A2, A3 ~~|
 
-b = 3
-	~~|
+a[DimA]= 0, 1, 2 ~~|
 
-c = 4
-	~~|
+b = 3 ~~|
 
-d=
-  8760
-	~~|
+c = 4 ~~|
 
-DimA: A1, A2, A3
-	~~|
+d= 8760 ~~|
 
-e = 41  + 1
-	~~|
+e = 41 + 1 ~~|
 
-FINAL TIME  = 1
-	~~|
+INITIAL TIME = 0 ~~|
 
-INITIAL TIME  = 0
-	~~|
+FINAL TIME = 1 ~~|
 
-SAVEPER  = 1
-	~~|
+SAVEPER = 1 ~~|
 
-TIME STEP  = 1
-	~~|
-
+TIME STEP = 1 ~~|

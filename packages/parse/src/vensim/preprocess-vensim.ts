@@ -19,6 +19,12 @@ export interface VensimDef {
    */
   def: string
   /**
+   * The kind of definition; either 'eqn' for an equation containing an equals
+   * sign, 'dim' for a dimension (subscript range) definition, or 'decl' for
+   * all other declarations (e.g., a lookup or data variable definition).
+   */
+  kind: 'eqn' | 'dim' | 'decl'
+  /**
    * The (1-based) line number where the definition begins.
    */
   line: number
@@ -34,6 +40,26 @@ export interface VensimDef {
    * The optional group name, if the definition is contained within a group.
    */
   group?: string
+}
+
+/**
+ * Result type for the `preprocessVensimModel` function.
+ */
+export interface PreprocessedVensimModel {
+  /**
+   * The preprocessed definitions that were preserved.
+   */
+  defs: VensimDef[]
+  /**
+   * The macros that were removed by the preprocessor.
+   */
+  removedMacros: string[]
+  /**
+   * The text blocks that were removed by the preprocessor.  These include
+   * unsupported functions (such as `TABBED ARRAY`) and other definitions
+   * that were requested for removal.
+   */
+  removedBlocks: string[]
 }
 
 /**
@@ -61,6 +87,9 @@ interface RawDef {
  * Process the given Vensim model content so that it can be parsed
  * by `antlr4-vensim`.  This will:
  *   - strip out group markers
+ *   - remove macro definitions, which are currently unsupported
+ *   - remove equations that reference certain unsupported functions
+ *     (e.g., `TABBED ARRAY`)
  *   - remove everything in the private Vensim sketch section
  *   - join lines that are separated by a continuation (backslash)
  *   - split the input into distinct definitions (equations and
@@ -72,23 +101,65 @@ interface RawDef {
  * `antlr4-vensim` to process.
  *
  * @param input The original Vensim mdl file content.
- * @return An array of preprocessed Vensim definitions.
+ * @param options The options that control preprocessing.
+ * @return A `PreprocessedVensimModel` instance containing the preprocessed
+ * Vensim definitions.
  */
-export function preprocessVensimModel(input: string): VensimDef[] {
+export function preprocessVensimModel(input: string, options?: { removalKeys?: string[] }): PreprocessedVensimModel {
+  // Helper function that returns true if the given def should be removed
+  const removalKeys = options?.removalKeys
+  function shouldRemove(text: string): boolean {
+    // Remove definitions that include `TABBED ARRAY`
+    if (text.includes('TABBED ARRAY')) {
+      return true
+    }
+
+    // Remove definitions that include one of the provided removal keys
+    if (removalKeys) {
+      for (const key of removalKeys) {
+        if (text.includes(key)) {
+          return true
+        }
+      }
+    }
+
+    // Otherwise, don't remove
+    return false
+  }
+
+  // Remove macro definitions since they are not currently supported.  We replace
+  // the text in the input string with blank lines where the macro definition
+  // appeared so that line numbers for definitions that follow are unaffected.
+  const macrosResult = removeMacros(input)
+  input = macrosResult.processed
+
   // Split the model into an array of definitions (includes equations,
   // subscript ranges, and groups)
   const rawDefs = splitDefs(input)
 
   // Keep only equations and subscript range defintions
   const vensimDefs: VensimDef[] = []
+  const removedBlocks: string[] = []
   for (const rawDef of rawDefs) {
+    // Remove definitions that include `TABBED ARRAY` or one of the requested
+    // removal keys
+    if (shouldRemove(rawDef.text)) {
+      removedBlocks.push(rawDef.text.trim() + '|')
+      continue
+    }
+
     // Process the definition
     const vensimDef = processDef(rawDef)
     if (vensimDef) {
       vensimDefs.push(vensimDef)
     }
   }
-  return vensimDefs
+
+  return {
+    defs: vensimDefs,
+    removedMacros: macrosResult.removed,
+    removedBlocks: removedBlocks
+  }
 }
 
 /**
@@ -98,7 +169,10 @@ export function preprocessVensimModel(input: string): VensimDef[] {
  * Backslash characters will be retained.
  */
 function splitDefs(input: string): RawDef[] {
-  // Split the full input string into definitions delineated by the "|" separator
+  // Split the full input string into definitions delineated by the "|" separator.
+  // Note that we use the `quotes` option so that the `split` function will not
+  // split on "|" characters that appear inside a quoted variable name, for example:
+  //   "quoted variable name with | pipe" = 5 ~~|
   const defTexts = split(input, { separator: '|', quotes: ['"'], keep: () => true })
 
   // Calculate starting line number for each definition by accounting for the
@@ -232,9 +306,9 @@ function reduceWhitespace(input: string): string {
 
 /**
  * Create a key from the given definition's LHS that can be used during
- * flattening and/or sorting.
+ * flattening and/or sorting, and include the kind.
  */
-function keyForDef(def: string): string {
+function keyForDef(def: string): { key: string; kind: 'eqn' | 'dim' | 'decl' } {
   // Note: The steps in this function were lifted directly from the legacy
   // preprocessor, mainly so that we would retain compatibility when writing
   // tests that compare the legacy parser to the new one.
@@ -244,17 +318,18 @@ function keyForDef(def: string): string {
   // Strip the ":INTERPOLATE:"; it should not be included in the key
   key = key.replace(/:INTERPOLATE:/g, '')
 
+  let kind: 'eqn' | 'dim' | 'decl'
   if (key.includes('=')) {
     // The line contains an '='; treat this as an equation
-    // kind = 'eqn'
+    kind = 'eqn'
     key = key.split('=')[0].trim()
   } else if (key.includes(':')) {
-    // The line contains a ':'; treat this as an subscript declaration
-    // kind = 'sub'
+    // The line contains a ':'; treat this as a subscript range (dimension)
+    kind = 'dim'
     key = key.split(':')[0].trim()
   } else {
     // Treat this as a general declaration
-    // kind = 'decl'
+    kind = 'decl'
   }
 
   // Ignore double quotes
@@ -273,7 +348,7 @@ function keyForDef(def: string): string {
   // Ignore case
   key = key.toLowerCase()
 
-  return key
+  return { key, kind }
 }
 
 /**
@@ -313,7 +388,7 @@ function processDef(rawDef: RawDef): VensimDef | undefined {
   const rawDefText = reduceWhitespace(parts[0])
 
   // Create the key
-  const key = keyForDef(rawDefText)
+  const { key, kind } = keyForDef(rawDefText)
 
   // Rebuild the def with a simple `~~|` ending
   const def = `${rawDefText} ~~|`
@@ -333,9 +408,39 @@ function processDef(rawDef: RawDef): VensimDef | undefined {
   return {
     key,
     def,
+    kind,
     line: rawDef.line,
     units,
     comment,
     ...(group ? { group } : {})
+  }
+}
+
+/**
+ * Remove macro definitions from the input string.  We replace the text in the input
+ * string with blank lines where the macro definition appeared so that line numbers
+ * for definitions that follow are unaffected.
+ *
+ * @param input The original Vensim mdl file content.
+ * @return The processed string and the text blocks that were removed.
+ */
+function removeMacros(input: string): { processed: string; removed: string[] } {
+  // Keep an array of removed strings
+  const removed: string[] = []
+
+  // Find all macro definitions
+  const processed = input.replace(/:MACRO:.*:END OF MACRO:/gms, match => {
+    // Add the removed macro to the array
+    removed.push(match)
+
+    // Replace each macro definition with blank lines so that line numbers for
+    // definitions that follow are unaffected
+    const numBreaks = match.split(/\r\n|\n|\r/gms).length - 1
+    return numBreaks > 0 ? '\n'.repeat(numBreaks) : ''
+  })
+
+  return {
+    processed,
+    removed
   }
 }

@@ -10,7 +10,7 @@ import type { Choice } from 'prompts'
 import prompts from 'prompts'
 import yaml from 'yaml'
 
-import { parseAndGenerate, preprocessModel } from '@sdeverywhere/compile'
+import { parseAndGenerate } from '@sdeverywhere/compile'
 
 interface MdlConstVariable {
   kind: 'const'
@@ -463,16 +463,14 @@ async function readModelVars(projDir: string, mdlPath: string): Promise<MdlVaria
   // Ideally we'd use an API that does not write files but instead returns an in-memory
   // object in a specified format.
 
-  // Read and preprocess the model
-  // TODO: We can skip the preprocess step once parseAndGenerate calls
-  // the new parser that has preprocessing built-in
+  // Read the model file
   const mdlFile = resolvePath(projDir, mdlPath)
-  const preprocessed = preprocessModel(mdlFile, spec, 'runnable', /*writeFiles=*/ false)
+  const mdlContent = await readFile(mdlFile, 'utf8')
 
   // Parse the model and generate the variable list
   const mdlDir = dirname(mdlFile)
   const mdlName = parsePath(mdlFile).name
-  await parseAndGenerate(preprocessed, spec, ['printVarList'], mdlDir, mdlName, buildDir)
+  await parseAndGenerate(mdlContent, spec, ['printVarList'], mdlDir, mdlName, buildDir)
 
   // Read `build/{mdl}_vars.yaml`
   // TODO: For now the printVarList code only outputs txt and yaml files; we'll use the

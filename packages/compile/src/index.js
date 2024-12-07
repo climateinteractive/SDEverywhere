@@ -1,8 +1,12 @@
 // Copyright (c) 2022 Climate Interactive / New Venture Fund
 
+// XXX: For now we re-export the preprocess function from the parse package
+// mainly for use by the cli package (so that we don't need to have the cli
+// package directly depend on the parse package)
+export { preprocessVensimModel } from '@sdeverywhere/parse'
+
 export { canonicalName } from './_shared/helpers.js'
 export { readDat } from './_shared/read-dat.js'
-export { preprocessModel } from './preprocess/preprocessor.js'
 export { generateCode } from './generate/gen-code.js'
 export { parseAndGenerate, parseModel, printNames } from './parse-and-generate.js'
 
