@@ -1,6 +1,6 @@
 // Copyright (c) 2023 Climate Interactive / New Venture Fund
 
-import { canonicalName, cFunctionName } from '../_shared/names'
+import { canonicalFunctionId, canonicalId } from '../_shared/canonical-id'
 
 import type {
   BinaryOp,
@@ -44,14 +44,14 @@ import type {
 export function subRef(dimOrSubName: DimOrSubName): SubscriptRef {
   return {
     subName: dimOrSubName,
-    subId: canonicalName(dimOrSubName)
+    subId: canonicalId(dimOrSubName)
   }
 }
 
 export function subMapping(toDimName: DimName, dimOrSubNames: DimOrSubName[] = []): SubscriptMapping {
   return {
     toDimName,
-    toDimId: canonicalName(toDimName),
+    toDimId: canonicalId(toDimName),
     subscriptRefs: dimOrSubNames.map(subRef)
   }
 }
@@ -66,9 +66,9 @@ export function dimDef(
 ): DimensionDef {
   return {
     dimName,
-    dimId: canonicalName(dimName),
+    dimId: canonicalId(dimName),
     familyName,
-    familyId: canonicalName(familyName),
+    familyId: canonicalId(familyName),
     subscriptRefs: dimOrSubNames.map(subRef),
     subscriptMappings,
     comment,
@@ -106,7 +106,7 @@ export function varRef(varName: VariableName, subscriptNames?: DimOrSubName[]): 
   return {
     kind: 'variable-ref',
     varName,
-    varId: canonicalName(varName),
+    varId: canonicalId(varName),
     subscriptRefs: subscriptNames?.map(subRef)
   }
 }
@@ -155,7 +155,7 @@ export function call(fnName: FunctionName, ...args: Expr[]): FunctionCall {
   return {
     kind: 'function-call',
     fnName,
-    fnId: cFunctionName(fnName),
+    fnId: canonicalFunctionId(fnName),
     args
   }
 }
@@ -172,7 +172,7 @@ export function varDef(
   return {
     kind: 'variable-def',
     varName,
-    varId: canonicalName(varName),
+    varId: canonicalId(varName),
     subscriptRefs: subscriptNames?.map(subRef),
     exceptSubscriptRefSets: exceptSubscriptNames?.map(namesForSet => namesForSet.map(subRef))
   }

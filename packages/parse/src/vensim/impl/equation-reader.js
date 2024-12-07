@@ -2,7 +2,7 @@
 
 import { ModelVisitor } from 'antlr4-vensim'
 
-import { canonicalName } from '../../_shared/names'
+import { canonicalId } from '../../_shared/canonical-id'
 
 import { createAntlrParser } from './antlr-parser'
 import { ExprReader } from './expr-reader'
@@ -101,7 +101,7 @@ export class EquationReader extends ModelVisitor {
   visitLhs(ctx) {
     // Process the variable name
     const lhsVarName = ctx.Id().getText()
-    const lhsVarId = canonicalName(lhsVarName)
+    const lhsVarId = canonicalId(lhsVarName)
 
     // Process any subscripts that follow the variable name
     super.visitLhs(ctx)
@@ -109,7 +109,7 @@ export class EquationReader extends ModelVisitor {
     const subscriptRefs = subscriptNames?.map(name => {
       return {
         subName: name,
-        subId: canonicalName(name)
+        subId: canonicalId(name)
       }
     })
 
@@ -119,7 +119,7 @@ export class EquationReader extends ModelVisitor {
       return subscriptSet.map(name => {
         return {
           subName: name,
-          subId: canonicalName(name)
+          subId: canonicalId(name)
         }
       })
     })
