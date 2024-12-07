@@ -21,7 +21,7 @@ Vsmooth = INTEG((input - Vsmooth)/SMOOTH TIME, input)
 :END OF MACRO:
 
 X[A]  = 1 ~~|  Y[B]  = 2 ~~|
-Z[A,B]  = 
+Z[  A,  B  ]  = 
   X[A] +
     Y[B]
   ~ EJ/year
@@ -48,7 +48,11 @@ Another to remove = 3 ~~|
   Group comment here.
   |
 
-W[A,B] :EXCEPT: [A1,B1]  = 1 ~~|
+W[ A,B] :EXCEPT: [  A1 , B1 ]  = 1 ~~|
+
+"Quoted with parentheses (1) lorem ipsum"  = 1 ~~|
+
+"Quoted with __ parentheses (2) lookup" ((0,0),(1,1)) ~~|
 
 \\\\\\---/// Sketch information - do not modify anything except names
 V301  Do not put anything below this section - it will be ignored
@@ -94,17 +98,35 @@ $192-192-192,0,Arial|12||0-0-0|0-0-0|0-0-255|-1--1--1|-1--1--1|96,96,5,0
         },
         {
           key: 'z[a,b]',
-          def: 'Z[A,B] = X[A] + Y[B] ~~|',
+          def: 'Z[ A, B ] = X[A] + Y[B] ~~|',
           kind: 'eqn',
           line: 15,
           units: 'EJ/year',
           comment: 'Comment text is here. And here. Here, too. And on a second line.'
         },
         {
-          key: 'w[a,b] :except: [a1,b1]',
-          def: 'W[A,B] :EXCEPT: [A1,B1] = 1 ~~|',
+          key: 'w[a,b]_:except:_[a1,b1]',
+          def: 'W[ A,B] :EXCEPT: [ A1 , B1 ] = 1 ~~|',
           kind: 'eqn',
           line: 42,
+          units: '',
+          comment: '',
+          group: 'Group name'
+        },
+        {
+          key: 'quoted_with_parentheses_(1)_lorem_ipsum',
+          def: '"Quoted with parentheses (1) lorem ipsum" = 1 ~~|',
+          kind: 'eqn',
+          line: 44,
+          units: '',
+          comment: '',
+          group: 'Group name'
+        },
+        {
+          key: 'quoted_with_parentheses_(2)_lookup',
+          def: '"Quoted with __ parentheses (2) lookup" ((0,0),(1,1)) ~~|',
+          kind: 'decl',
+          line: 46,
           units: '',
           comment: '',
           group: 'Group name'

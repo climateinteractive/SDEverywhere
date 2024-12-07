@@ -237,6 +237,17 @@ function splitLines(input: string): string[] {
 }
 
 /**
+ * Split a string on the given separator character.  This will not split
+ * if the character appears inside a quoted variable name.  For example,
+ * this will not split on '(' when it appears in the variable name, but
+ * will split the '(' in the lookup expression
+ *   "quoted variable (name)" ((0,0),(1,1)) ~~|
+ */
+function splitExceptInQuoted(input: string, sep: string): string[] {
+  return split(input, { separator: sep, quotes: ['"'] })
+}
+
+/**
  * Join lines that are separated by a continuation (backslash) character.
  */
 function processBackslashes(input: string): string {
@@ -304,6 +315,9 @@ function reduceWhitespace(input: string): string {
   return input.replace(/\s\s+/g, ' ').trim()
 }
 
+// Detect one or more consecutive whitespace or underscore characters
+const reWhitespace = new RegExp('(\\s|_)+', 'g')
+
 /**
  * Create a key from the given definition's LHS that can be used during
  * flattening and/or sorting, and include the kind.
@@ -332,18 +346,22 @@ function keyForDef(def: string): { key: string; kind: 'eqn' | 'dim' | 'decl' } {
     kind = 'decl'
   }
 
+  // Ignore the lookup data if it starts on the first line
+  key = splitExceptInQuoted(key, '(')[0]
+
   // Ignore double quotes
   key = key.replace(/"/g, '')
 
-  // Ignore the lookup data if it starts on the first line
-  key = key.split('(')[0]
-
-  // Ignore any whitespace that remains
+  // Ignore any leading or trailing whitespace that remains
   key = key.trim()
 
   // Remove whitespace on the inside of the brackets
-  key = key.replace(/\[\s*/g, '[')
-  key = key.replace(/\s*\]/g, ']')
+  key = key.replace(/(?<=\[).*?(?=\])/g, match => match.replace(/\s/g, ''))
+
+  // Replace one or more consecutive whitespace or underscore characters with a single
+  // underscore character; this matches the behavior of Vensim documented here:
+  //   https://www.vensim.com/documentation/ref_variable_names.html
+  key = key.replace(reWhitespace, '_')
 
   // Ignore case
   key = key.toLowerCase()
