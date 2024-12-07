@@ -29,9 +29,8 @@ describe('canonicalId', () => {
     add('slash', '/')
     // TODO: Handle backslashes
     // add('bslash', '\\')
-    // TODO: Handle parentheses
-    // add('lparen', '(')
-    // add('rparen', ')')
+    add('lparen', '(')
+    add('rparen', ')')
     input += ' characters"'
     expected += '_characters_'
     expect(canonicalId(input)).toBe(expected)
