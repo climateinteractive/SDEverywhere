@@ -1,5 +1,6 @@
 // Copyright (c) 2022 Climate Interactive / New Venture Fund
 
+import { canonicalVarId } from '@sdeverywhere/parse'
 import type { LogLevel } from '../_shared/log'
 import { log } from '../_shared/log'
 
@@ -83,5 +84,17 @@ export class BuildContext {
    */
   spawnChild(cwd: string, command: string, args: string[], opts?: ProcessOptions): Promise<ProcessOutput> {
     return spawnChild(cwd, command, args, this.abortSignal, opts)
+  }
+
+  /**
+   * Format a (subscripted or non-subscripted) model variable name into a canonical
+   * identifier (with special characters converted to underscore, and subscript/dimension
+   * parts separated by commas).
+   *
+   * @param name The name of the variable in the source model, e.g., `Variable name[DimA, B2]`.
+   * @returns The canonical identifier for the given name, e.g., `_variable_name[_dima,_b2]`.
+   */
+  canonicalVarId(name: string): string {
+    return canonicalVarId(name)
   }
 }
