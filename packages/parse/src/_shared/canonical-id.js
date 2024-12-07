@@ -1,9 +1,12 @@
 // Copyright (c) 2023 Climate Interactive / New Venture Fund
 
-// Replace one or more consecutive whitespace or underscore characters with a single underscore
+// Detect '!' at the end of a marked dimension when preceded by whitespace
+const reTrailingMark = new RegExp('\\s+!$', 'g')
+
+// Detect one or more consecutive whitespace or underscore characters
 const reWhitespace = new RegExp('(\\s|_)+', 'g')
 
-// Replace each special character in the following set with an underscore
+// Detect special punctuation characters
 // TODO: We do not currently include '!' characters in this set; we should only replace these
 // when they don't appear at the end of a (marked) dimension
 const reSpecialChars = new RegExp(`['"\\.,\\-\\$&%\\/\\|]`, 'g')
@@ -22,7 +25,23 @@ const reSpecialChars = new RegExp(`['"\\.,\\-\\$&%\\/\\|]`, 'g')
  * @returns {string} The C identifier for the given name, e.g., "_variable_name".
  */
 export function canonicalId(name) {
-  return '_' + name.trim().replace(reWhitespace, '_').replace(reSpecialChars, '_').toLowerCase()
+  return (
+    '_' +
+    name
+      // Ignore any leading or trailing whitespace
+      .trim()
+      // When a '!' character appears at the end of a marked dimension, preserve the mark
+      // but remove any preceding whitespace
+      .replace(reTrailingMark, '!')
+      // Replace one or more consecutive whitespace or underscore characters with a single
+      // underscore character; this matches the behavior of Vensim documented here:
+      //   https://www.vensim.com/documentation/ref_variable_names.html
+      .replace(reWhitespace, '_')
+      // Replace each special punctuation character with an underscore
+      .replace(reSpecialChars, '_')
+      // Convert to lower case
+      .toLowerCase()
+  )
 }
 
 /**

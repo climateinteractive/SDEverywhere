@@ -43,6 +43,17 @@ describe('canonicalId', () => {
     // expect(canonicalId('"The \\"Final\\" Frontier"')).toBe('')
     expect(canonicalId("érosion d'action")).toBe('_érosion_d_action')
   })
+
+  it('should preserve mark when preceded by whitespace', () => {
+    expect(canonicalVarId(`DimA  !`)).toBe('_dima!')
+  })
+
+  it('should preserve mark when split over multiple lines', () => {
+    const name = `DimA
+!
+`
+    expect(canonicalVarId(name)).toBe('_dima!')
+  })
 })
 
 describe('canonicalVarId', () => {
