@@ -10,6 +10,21 @@
 	~ Comment
 	|
 
+"Quotes 3 with parentheses (1) lorem ipsum"  = 1
+	~ dmnl
+	~ Comment
+	|
+
+"Quotes 3 with parentheses (2) lookup"  ((0,0),(1,1))
+	~ dmnl
+	~ Comment
+	|
+
+Using lookup = "Quotes 3 with parentheses (2) lookup" (0)
+	~ dmnl
+	~ Comment
+	|
+
 apple 3  = 1
 	~ dmnl
 	~ Comment

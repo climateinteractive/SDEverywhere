@@ -42,6 +42,10 @@ Look2((0,0),(1,1),(2,2)) ~~|
 
 " quotes 2 with extra whitespace " = 1 ~~|
 
+"Quotes 3 with parentheses (1) lorem ipsum" = 1 ~~|
+
+"Quotes 3 with parentheses (2) lookup" ((0,0),(1,1)) ~~|
+
 SAVEPER = TIME STEP ~~|
 
 TIME STEP = 1 ~~|
@@ -49,3 +53,5 @@ TIME STEP = 1 ~~|
 Using equation with backslashes[DimA] = Equation with backslashes[DimA] * 2 ~~|
 
 Using equation without backslashes[DimA] = Equation without backslashes[DimA] * 2 ~~|
+
+Using lookup = "Quotes 3 with parentheses (2) lookup" (0) ~~|
