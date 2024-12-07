@@ -192,6 +192,9 @@ importers:
 
   packages/build:
     dependencies:
+      '@sdeverywhere/parse':
+        specifier: ^0.1.1
+        version: link:../parse
       chokidar:
         specifier: ^3.5.3
         version: 3.5.3
