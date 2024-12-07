@@ -3,7 +3,6 @@ import util from 'util'
 import B from 'bufx'
 import { parse as parseCsv } from 'csv-parse/sync'
 import * as R from 'ramda'
-import split from 'split-string'
 import XLSX from 'xlsx'
 
 // Set true to print a stack trace in vlog
@@ -254,12 +253,6 @@ export let canonicalVensimName = vname => {
     }
   }
   return result
-}
-// Split a model string into an array of equations without the "|" terminator.
-// Allow "|" to occur in quoted variable names across line breaks.
-// Retain the backslash character.
-export let splitEquations = mdl => {
-  return split(mdl, { separator: '|', quotes: ['"'], keep: () => true })
 }
 // Function to map over lists's value and index
 export let mapIndexed = R.addIndex(R.map)
