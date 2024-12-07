@@ -98,7 +98,7 @@ class CheckPlugin implements Plugin {
         await this.copyPreviousBundle(context.config)
       }
       context.log('info', 'Generating model check bundle...')
-      await this.genCurrentBundle(context.config, modelSpec)
+      await this.genCurrentBundle(context, modelSpec)
     }
 
     // For production builds (and for the initial build in local development mode),
@@ -137,9 +137,8 @@ class CheckPlugin implements Plugin {
     }
   }
 
-  private async genCurrentBundle(config: ResolvedConfig, modelSpec: ResolvedModelSpec): Promise<void> {
-    const prepDir = config.prepDir
-    const viteConfig = await createViteConfigForBundle(prepDir, modelSpec)
+  private async genCurrentBundle(context: BuildContext, modelSpec: ResolvedModelSpec): Promise<void> {
+    const viteConfig = await createViteConfigForBundle(context, modelSpec)
     await build(viteConfig)
   }
 

@@ -10,7 +10,6 @@ import { findUp } from 'find-up'
 import type { BuildContext, ResolvedModelSpec, Plugin } from '@sdeverywhere/build'
 
 import type { WasmPluginOptions } from './options'
-import { sdeNameForVensimVarName } from './var-names'
 
 export function wasmPlugin(options?: WasmPluginOptions): Plugin {
   return new WasmPlugin(options)
@@ -23,11 +22,11 @@ class WasmPlugin implements Plugin {
 
   constructor(private readonly options?: WasmPluginOptions) {}
 
-  async preGenerate(_context: BuildContext, modelSpec: ResolvedModelSpec): Promise<void> {
+  async preGenerate(context: BuildContext, modelSpec: ResolvedModelSpec): Promise<void> {
     // Save some properties for later processing.  This is a workaround for the fact
     // that `modelSpec` is not passed to `postGenerateCode`, so we need to capture
     // these values here.
-    this.outputVarIds = modelSpec.outputs.map(o => sdeNameForVensimVarName(o.varName))
+    this.outputVarIds = modelSpec.outputs.map(o => context.canonicalVarId(o.varName))
     this.bundleListing = modelSpec.bundleListing
   }
 
