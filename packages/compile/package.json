@@ -11,7 +11,7 @@
     "precommit": "../../scripts/precommit",
     "type-check": "tsc --noEmit -p tsconfig-test.json",
     "test": "vitest run",
-    "test:watch": "vitest",
+    "test:watch": "vitest --hideSkippedTests",
     "test:ci": "vitest run",
     "ci:build": "run-s lint prettier:check type-check test:ci"
   },
