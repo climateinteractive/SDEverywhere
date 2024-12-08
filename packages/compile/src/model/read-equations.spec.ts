@@ -3208,25 +3208,13 @@ describe('readEquations', () => {
         refId: '_capacity_utilization',
         references: ['_production', '_capacity']
       }),
-      v('FINAL TIME', '100', {
-        refId: '_final_time',
-        varType: 'const'
-      }),
       v('Initial Target Capacity', '100', {
         refId: '_initial_target_capacity',
-        varType: 'const'
-      }),
-      v('INITIAL TIME', '0', {
-        refId: '_initial_time',
         varType: 'const'
       }),
       v('Production', '100+STEP(100,10)', {
         refId: '_production',
         referencedFunctionNames: ['__step']
-      }),
-      v('SAVEPER', 'TIME STEP', {
-        refId: '_saveper',
-        references: ['_time_step']
       }),
       v('Target Capacity', 'ACTIVE INITIAL(Capacity*Utilization Adjustment,Initial Target Capacity)', {
         hasInitValue: true,
@@ -3234,10 +3222,6 @@ describe('readEquations', () => {
         refId: '_target_capacity',
         referencedFunctionNames: ['__active_initial'],
         references: ['_capacity', '_utilization_adjustment']
-      }),
-      v('TIME STEP', '1', {
-        refId: '_time_step',
-        varType: 'const'
       }),
       v('Utilization Adjustment', 'Capacity Utilization^Utilization Sensitivity', {
         refId: '_utilization_adjustment',
@@ -3247,6 +3231,22 @@ describe('readEquations', () => {
         refId: '_utilization_sensitivity',
         varType: 'const'
       }),
+      v('FINAL TIME', '100', {
+        refId: '_final_time',
+        varType: 'const'
+      }),
+      v('INITIAL TIME', '0', {
+        refId: '_initial_time',
+        varType: 'const'
+      }),
+      v('SAVEPER', 'TIME STEP', {
+        refId: '_saveper',
+        references: ['_time_step']
+      }),
+      v('TIME STEP', '1', {
+        refId: '_time_step',
+        varType: 'const'
+      }),
       v('Time', '', {
         refId: '_time',
         varType: 'const'
@@ -3254,86 +3254,51 @@ describe('readEquations', () => {
     ])
   })
 
-  // TODO: This test is sensitive to the dependency trimming code that we don't yet
-  // have in the new reader, so we skip it in that case.  There's only one place
-  // where the new reader differs from the old (in `IF THEN ELSE(integer supply, ...)`
-  // where the condition resolves to a constant).  We should add an option to disable
-  // the pruning code so that we can test this more deterministically.
-  it.skip('should work for Vensim "allocate" model', () => {
+  it('should work for Vensim "allocate" model', () => {
     const vars = readSubscriptsAndEquations('allocate')
     expect(vars).toEqual([
-      v('demand[region]', '3,2,4', {
-        refId: '_demand[_boston]',
-        separationDims: ['_region'],
-        subscripts: ['_boston'],
-        varType: 'const'
-      }),
-      v('demand[region]', '3,2,4', {
-        refId: '_demand[_dayton]',
-        separationDims: ['_region'],
-        subscripts: ['_dayton'],
-        varType: 'const'
-      }),
-      v('demand[region]', '3,2,4', {
-        refId: '_demand[_fresno]',
-        separationDims: ['_region'],
-        subscripts: ['_fresno'],
-        varType: 'const'
-      }),
-      v('extra', '1', {
-        refId: '_extra',
-        varType: 'const'
-      }),
-      v('Final Supply', '10', {
-        refId: '_final_supply',
-        varType: 'const'
-      }),
-      v('FINAL TIME', '12', {
-        refId: '_final_time',
-        varType: 'const'
-      }),
-      v('Initial Supply', '0', {
-        refId: '_initial_supply',
-        varType: 'const'
-      }),
-      v('INITIAL TIME', '0', {
-        refId: '_initial_time',
-        varType: 'const'
-      }),
+      v(
+        'shipments[region]',
+        'ALLOCATE AVAILABLE(demand[region],priority vector[region,ptype],total supply available)',
+        {
+          refId: '_shipments',
+          referencedFunctionNames: ['__allocate_available'],
+          references: [
+            '_demand[_boston]',
+            '_demand[_dayton]',
+            '_demand[_fresno]',
+            '_priority_vector[_region,_ppriority]',
+            '_priority_vector[_region,_pwidth]',
+            '_total_supply_available'
+          ],
+          subscripts: ['_region']
+        }
+      ),
+      v(
+        'total supply available',
+        'IF THEN ELSE(integer supply,INTEGER(Initial Supply+(Final Supply-Initial Supply)*(Time-INITIAL TIME)/(FINAL TIME-INITIAL TIME)),Initial Supply+(Final Supply-Initial Supply)*(Time-INITIAL TIME)/(FINAL TIME-INITIAL TIME))',
+        {
+          refId: '_total_supply_available',
+          referencedFunctionNames: ['__integer'],
+          references: ['_integer_supply', '_initial_supply', '_final_supply', '_time', '_initial_time', '_final_time']
+        }
+      ),
       v('integer supply', '0', {
         refId: '_integer_supply',
         varType: 'const'
       }),
-      v('integer type', '0', {
-        refId: '_integer_type',
-        varType: 'const'
+      v('total demand', 'SUM(demand[region!])', {
+        refId: '_total_demand',
+        referencedFunctionNames: ['__sum'],
+        references: ['_demand[_boston]', '_demand[_dayton]', '_demand[_fresno]']
       }),
-      v('priority type', '3', {
-        refId: '_priority_type',
-        varType: 'const'
+      v('total shipments', 'SUM(shipments[region!])', {
+        refId: '_total_shipments',
+        referencedFunctionNames: ['__sum'],
+        references: ['_shipments']
       }),
-      v('priority vector[region,pextra]', 'extra', {
-        refId: '_priority_vector[_region,_pextra]',
-        references: ['_extra'],
-        subscripts: ['_region', '_pextra']
-      }),
-      v('priority vector[region,ppriority]', 'priority[region]', {
-        refId: '_priority_vector[_region,_ppriority]',
-        references: ['_priority[_boston]', '_priority[_dayton]', '_priority[_fresno]'],
-        subscripts: ['_region', '_ppriority']
-      }),
-      v('priority vector[region,ptype]', 'priority type+integer type', {
-        refId: '_priority_vector[_region,_ptype]',
-        references: ['_priority_type', '_integer_type'],
-        subscripts: ['_region', '_ptype']
-      }),
-      v('priority vector[region,pwidth]', 'priority width', {
-        refId: '_priority_vector[_region,_pwidth]',
-        references: ['_priority_width'],
-        subscripts: ['_region', '_pwidth']
-      }),
-      v('priority width', '1', {
-        refId: '_priority_width',
+      v('extra', '1', {
+        refId: '_extra',
         varType: 'const'
       }),
       v('priority[region]', '1,2,3', {
@@ -3354,49 +3319,80 @@ describe('readEquations', () => {
         subscripts: ['_fresno'],
         varType: 'const'
       }),
+      v('Final Supply', '10', {
+        refId: '_final_supply',
+        varType: 'const'
+      }),
+      v('Initial Supply', '0', {
+        refId: '_initial_supply',
+        varType: 'const'
+      }),
+      v('integer type', '0', {
+        refId: '_integer_type',
+        varType: 'const'
+      }),
+      v('demand[region]', '3,2,4', {
+        refId: '_demand[_boston]',
+        separationDims: ['_region'],
+        subscripts: ['_boston'],
+        varType: 'const'
+      }),
+      v('demand[region]', '3,2,4', {
+        refId: '_demand[_dayton]',
+        separationDims: ['_region'],
+        subscripts: ['_dayton'],
+        varType: 'const'
+      }),
+      v('demand[region]', '3,2,4', {
+        refId: '_demand[_fresno]',
+        separationDims: ['_region'],
+        subscripts: ['_fresno'],
+        varType: 'const'
+      }),
+      v('priority vector[region,ptype]', 'priority type+integer type', {
+        refId: '_priority_vector[_region,_ptype]',
+        references: ['_priority_type', '_integer_type'],
+        subscripts: ['_region', '_ptype']
+      }),
+      v('priority vector[region,ppriority]', 'priority[region]', {
+        refId: '_priority_vector[_region,_ppriority]',
+        references: ['_priority[_boston]', '_priority[_dayton]', '_priority[_fresno]'],
+        subscripts: ['_region', '_ppriority']
+      }),
+      v('priority vector[region,pwidth]', 'priority width', {
+        refId: '_priority_vector[_region,_pwidth]',
+        references: ['_priority_width'],
+        subscripts: ['_region', '_pwidth']
+      }),
+      v('priority vector[region,pextra]', 'extra', {
+        refId: '_priority_vector[_region,_pextra]',
+        references: ['_extra'],
+        subscripts: ['_region', '_pextra']
+      }),
+      v('priority width', '1', {
+        refId: '_priority_width',
+        varType: 'const'
+      }),
+      v('priority type', '3', {
+        refId: '_priority_type',
+        varType: 'const'
+      }),
+      v('FINAL TIME', '12', {
+        refId: '_final_time',
+        varType: 'const'
+      }),
+      v('INITIAL TIME', '0', {
+        refId: '_initial_time',
+        varType: 'const'
+      }),
       v('SAVEPER', 'TIME STEP', {
         refId: '_saveper',
         references: ['_time_step']
       }),
-      v(
-        'shipments[region]',
-        'ALLOCATE AVAILABLE(demand[region],priority vector[region,ptype],total supply available)',
-        {
-          refId: '_shipments',
-          referencedFunctionNames: ['__allocate_available'],
-          references: [
-            '_demand[_boston]',
-            '_demand[_dayton]',
-            '_demand[_fresno]',
-            '_priority_vector[_region,_ppriority]',
-            '_priority_vector[_region,_pwidth]',
-            '_total_supply_available'
-          ],
-          subscripts: ['_region']
-        }
-      ),
       v('TIME STEP', '0.125', {
         refId: '_time_step',
         varType: 'const'
       }),
-      v('total demand', 'SUM(demand[region!])', {
-        refId: '_total_demand',
-        referencedFunctionNames: ['__sum'],
-        references: ['_demand[_boston]', '_demand[_dayton]', '_demand[_fresno]']
-      }),
-      v('total shipments', 'SUM(shipments[region!])', {
-        refId: '_total_shipments',
-        referencedFunctionNames: ['__sum'],
-        references: ['_shipments']
-      }),
-      v(
-        'total supply available',
-        'IF THEN ELSE(integer supply,INTEGER(Initial Supply+(Final Supply-Initial Supply)*(Time-INITIAL TIME)/(FINAL TIME-INITIAL TIME)),Initial Supply+(Final Supply-Initial Supply)*(Time-INITIAL TIME)/(FINAL TIME-INITIAL TIME))',
-        {
-          refId: '_total_supply_available',
-          references: ['_initial_supply', '_final_supply', '_time', '_initial_time', '_final_time']
-        }
-      ),
       v('Time', '', {
         refId: '_time',
         varType: 'const'
@@ -3413,183 +3409,16 @@ describe('readEquations', () => {
   it('should work for Vensim "delay" model', () => {
     const vars = readSubscriptsAndEquations('delay')
     expect(vars).toEqual([
-      v('d1', 'DELAY1(input,delay)', {
-        delayTimeVarName: '__aux1',
-        delayVarRefId: '__level1',
-        refId: '_d1',
-        references: ['__level1', '__aux1']
-      }),
-      v('d10', 'k*DELAY3(input,delay)', {
-        delayTimeVarName: '__aux5',
-        delayVarRefId: '__level4',
-        refId: '_d10',
-        references: ['_k', '__level4', '__level3', '__level2', '__aux5']
-      }),
-      v('d11[DimA]', 'k*DELAY3(input,delay a[DimA])', {
-        delayTimeVarName: '__aux9',
-        delayVarRefId: '__level7',
-        refId: '_d11',
-        references: ['_k', '__level7', '__level6', '__level5', '__aux9[_dima]'],
-        subscripts: ['_dima']
-      }),
-      v('d12[SubA]', 'k*DELAY3I(input 2[SubA],delay 2,init 2[SubA])', {
-        delayTimeVarName: '__aux_d12_4',
-        delayVarRefId: '__level_d12_3[_a2]',
-        refId: '_d12[_a2]',
-        references: ['_k', '__level_d12_3[_a2]', '__level_d12_2[_a2]', '__level_d12_1[_a2]', '__aux_d12_4[_a2]'],
-        separationDims: ['_suba'],
-        subscripts: ['_a2']
-      }),
-      v('d12[SubA]', 'k*DELAY3I(input 2[SubA],delay 2,init 2[SubA])', {
-        delayTimeVarName: '__aux_d12_4',
-        delayVarRefId: '__level_d12_3[_a3]',
-        refId: '_d12[_a3]',
-        references: ['_k', '__level_d12_3[_a3]', '__level_d12_2[_a3]', '__level_d12_1[_a3]', '__aux_d12_4[_a3]'],
-        separationDims: ['_suba'],
-        subscripts: ['_a3']
-      }),
-      v('d2[DimA]', 'DELAY1I(input a[DimA],delay,init 1)', {
-        delayTimeVarName: '__aux10',
-        delayVarRefId: '__level8',
-        refId: '_d2',
-        references: ['__level8', '__aux10[_dima]'],
-        subscripts: ['_dima']
-      }),
-      v('d3[DimA]', 'DELAY1I(input,delay a[DimA],init 1)', {
-        delayTimeVarName: '__aux11',
-        delayVarRefId: '__level9',
-        refId: '_d3',
-        references: ['__level9', '__aux11[_dima]'],
-        subscripts: ['_dima']
-      }),
-      v('d4[DimA]', 'DELAY1I(input,delay,init a[DimA])', {
-        delayTimeVarName: '__aux12',
-        delayVarRefId: '__level10',
-        refId: '_d4',
-        references: ['__level10', '__aux12[_dima]'],
-        subscripts: ['_dima']
-      }),
-      v('d5[DimA]', 'DELAY1I(input a[DimA],delay a[DimA],init a[DimA])', {
-        delayTimeVarName: '__aux13',
-        delayVarRefId: '__level11',
-        refId: '_d5',
-        references: ['__level11', '__aux13[_dima]'],
-        subscripts: ['_dima']
-      }),
-      v('d6[SubA]', 'DELAY1I(input 2[SubA],delay 2,init 2[SubA])', {
-        delayTimeVarName: '__aux14',
-        delayVarRefId: '__level_d6_1[_a2]',
-        refId: '_d6[_a2]',
-        references: ['__level_d6_1[_a2]', '__aux14[_a2]'],
-        separationDims: ['_suba'],
-        subscripts: ['_a2']
-      }),
-      v('d6[SubA]', 'DELAY1I(input 2[SubA],delay 2,init 2[SubA])', {
-        delayTimeVarName: '__aux15',
-        delayVarRefId: '__level_d6_1[_a3]',
-        refId: '_d6[_a3]',
-        references: ['__level_d6_1[_a3]', '__aux15[_a3]'],
-        separationDims: ['_suba'],
-        subscripts: ['_a3']
-      }),
-      v('d7', 'DELAY3(input,delay)', {
-        delayTimeVarName: '__aux19',
-        delayVarRefId: '__level14',
-        refId: '_d7',
-        references: ['__level14', '__level13', '__level12', '__aux19']
-      }),
-      v('d8[DimA]', 'DELAY3(input,delay a[DimA])', {
-        delayTimeVarName: '__aux23',
-        delayVarRefId: '__level17',
-        refId: '_d8',
-        references: ['__level17', '__level16', '__level15', '__aux23[_dima]'],
-        subscripts: ['_dima']
-      }),
-      v('d9[SubA]', 'DELAY3I(input 2[SubA],delay 2,init 2[SubA])', {
-        delayTimeVarName: '__aux_d9_4',
-        delayVarRefId: '__level_d9_3[_a2]',
-        refId: '_d9[_a2]',
-        references: ['__level_d9_3[_a2]', '__level_d9_2[_a2]', '__level_d9_1[_a2]', '__aux_d9_4[_a2]'],
-        separationDims: ['_suba'],
-        subscripts: ['_a2']
-      }),
-      v('d9[SubA]', 'DELAY3I(input 2[SubA],delay 2,init 2[SubA])', {
-        delayTimeVarName: '__aux_d9_4',
-        delayVarRefId: '__level_d9_3[_a3]',
-        refId: '_d9[_a3]',
-        references: ['__level_d9_3[_a3]', '__level_d9_2[_a3]', '__level_d9_1[_a3]', '__aux_d9_4[_a3]'],
-        separationDims: ['_suba'],
-        subscripts: ['_a3']
+      v('input', 'STEP(10,0)-STEP(10,4)', {
+        refId: '_input',
+        referencedFunctionNames: ['__step']
       }),
       v('delay', '5', {
         refId: '_delay',
         varType: 'const'
       }),
-      v('delay 2', '5', {
-        refId: '_delay_2',
-        varType: 'const'
-      }),
-      v('delay a[DimA]', '1,2,3', {
-        refId: '_delay_a[_a1]',
-        separationDims: ['_dima'],
-        subscripts: ['_a1'],
-        varType: 'const'
-      }),
-      v('delay a[DimA]', '1,2,3', {
-        refId: '_delay_a[_a2]',
-        separationDims: ['_dima'],
-        subscripts: ['_a2'],
-        varType: 'const'
-      }),
-      v('delay a[DimA]', '1,2,3', {
-        refId: '_delay_a[_a3]',
-        separationDims: ['_dima'],
-        subscripts: ['_a3'],
-        varType: 'const'
-      }),
-      v('FINAL TIME', '10', {
-        refId: '_final_time',
-        varType: 'const'
-      }),
       v('init 1', '0', {
         refId: '_init_1',
-        varType: 'const'
-      }),
-      v('init 2[SubA]', '0', {
-        refId: '_init_2[_a2]',
-        separationDims: ['_suba'],
-        subscripts: ['_a2'],
-        varType: 'const'
-      }),
-      v('init 2[SubA]', '0', {
-        refId: '_init_2[_a3]',
-        separationDims: ['_suba'],
-        subscripts: ['_a3'],
-        varType: 'const'
-      }),
-      v('init a[DimA]', '0', {
-        refId: '_init_a',
-        subscripts: ['_dima'],
-        varType: 'const'
-      }),
-      v('INITIAL TIME', '0', {
-        refId: '_initial_time',
-        varType: 'const'
-      }),
-      v('input', 'STEP(10,0)-STEP(10,4)', {
-        refId: '_input',
-        referencedFunctionNames: ['__step']
-      }),
-      v('input 2[SubA]', '20,30', {
-        refId: '_input_2[_a2]',
-        separationDims: ['_suba'],
-        subscripts: ['_a2'],
-        varType: 'const'
-      }),
-      v('input 2[SubA]', '20,30', {
-        refId: '_input_2[_a3]',
-        separationDims: ['_suba'],
-        subscripts: ['_a3'],
         varType: 'const'
       }),
       v('input a[DimA]', '10,20,30', {
@@ -3610,17 +3439,184 @@ describe('readEquations', () => {
         subscripts: ['_a3'],
         varType: 'const'
       }),
+      v('delay a[DimA]', '1,2,3', {
+        refId: '_delay_a[_a1]',
+        separationDims: ['_dima'],
+        subscripts: ['_a1'],
+        varType: 'const'
+      }),
+      v('delay a[DimA]', '1,2,3', {
+        refId: '_delay_a[_a2]',
+        separationDims: ['_dima'],
+        subscripts: ['_a2'],
+        varType: 'const'
+      }),
+      v('delay a[DimA]', '1,2,3', {
+        refId: '_delay_a[_a3]',
+        separationDims: ['_dima'],
+        subscripts: ['_a3'],
+        varType: 'const'
+      }),
+      v('init a[DimA]', '0', {
+        refId: '_init_a',
+        subscripts: ['_dima'],
+        varType: 'const'
+      }),
+      v('input 2[SubA]', '20,30', {
+        refId: '_input_2[_a2]',
+        separationDims: ['_suba'],
+        subscripts: ['_a2'],
+        varType: 'const'
+      }),
+      v('input 2[SubA]', '20,30', {
+        refId: '_input_2[_a3]',
+        separationDims: ['_suba'],
+        subscripts: ['_a3'],
+        varType: 'const'
+      }),
+      v('delay 2', '5', {
+        refId: '_delay_2',
+        varType: 'const'
+      }),
+      v('init 2[SubA]', '0', {
+        refId: '_init_2[_a2]',
+        separationDims: ['_suba'],
+        subscripts: ['_a2'],
+        varType: 'const'
+      }),
+      v('init 2[SubA]', '0', {
+        refId: '_init_2[_a3]',
+        separationDims: ['_suba'],
+        subscripts: ['_a3'],
+        varType: 'const'
+      }),
       v('k', '42', {
         refId: '_k',
+        varType: 'const'
+      }),
+      v('d1', 'DELAY1(input,delay)', {
+        delayTimeVarName: '__aux1',
+        delayVarRefId: '__level1',
+        refId: '_d1',
+        references: ['__level1', '__aux1']
+      }),
+      v('d2[DimA]', 'DELAY1I(input a[DimA],delay,init 1)', {
+        delayTimeVarName: '__aux2',
+        delayVarRefId: '__level2',
+        refId: '_d2',
+        references: ['__level2', '__aux2[_dima]'],
+        subscripts: ['_dima']
+      }),
+      v('d3[DimA]', 'DELAY1I(input,delay a[DimA],init 1)', {
+        delayTimeVarName: '__aux3',
+        delayVarRefId: '__level3',
+        refId: '_d3',
+        references: ['__level3', '__aux3[_dima]'],
+        subscripts: ['_dima']
+      }),
+      v('d4[DimA]', 'DELAY1I(input,delay,init a[DimA])', {
+        delayTimeVarName: '__aux4',
+        delayVarRefId: '__level4',
+        refId: '_d4',
+        references: ['__level4', '__aux4[_dima]'],
+        subscripts: ['_dima']
+      }),
+      v('d5[DimA]', 'DELAY1I(input a[DimA],delay a[DimA],init a[DimA])', {
+        delayTimeVarName: '__aux5',
+        delayVarRefId: '__level5',
+        refId: '_d5',
+        references: ['__level5', '__aux5[_dima]'],
+        subscripts: ['_dima']
+      }),
+      v('d6[SubA]', 'DELAY1I(input 2[SubA],delay 2,init 2[SubA])', {
+        delayTimeVarName: '__aux6',
+        delayVarRefId: '__level_d6_1[_a2]',
+        refId: '_d6[_a2]',
+        references: ['__level_d6_1[_a2]', '__aux6[_a2]'],
+        separationDims: ['_suba'],
+        subscripts: ['_a2']
+      }),
+      v('d6[SubA]', 'DELAY1I(input 2[SubA],delay 2,init 2[SubA])', {
+        delayTimeVarName: '__aux7',
+        delayVarRefId: '__level_d6_1[_a3]',
+        refId: '_d6[_a3]',
+        references: ['__level_d6_1[_a3]', '__aux7[_a3]'],
+        separationDims: ['_suba'],
+        subscripts: ['_a3']
+      }),
+      v('d7', 'DELAY3(input,delay)', {
+        delayTimeVarName: '__aux11',
+        delayVarRefId: '__level8',
+        refId: '_d7',
+        references: ['__level8', '__level7', '__level6', '__aux11']
+      }),
+      v('d8[DimA]', 'DELAY3(input,delay a[DimA])', {
+        delayTimeVarName: '__aux15',
+        delayVarRefId: '__level11',
+        refId: '_d8',
+        references: ['__level11', '__level10', '__level9', '__aux15[_dima]'],
+        subscripts: ['_dima']
+      }),
+      v('d9[SubA]', 'DELAY3I(input 2[SubA],delay 2,init 2[SubA])', {
+        delayTimeVarName: '__aux_d9_4',
+        delayVarRefId: '__level_d9_3[_a2]',
+        refId: '_d9[_a2]',
+        references: ['__level_d9_3[_a2]', '__level_d9_2[_a2]', '__level_d9_1[_a2]', '__aux_d9_4[_a2]'],
+        separationDims: ['_suba'],
+        subscripts: ['_a2']
+      }),
+      v('d9[SubA]', 'DELAY3I(input 2[SubA],delay 2,init 2[SubA])', {
+        delayTimeVarName: '__aux_d9_4',
+        delayVarRefId: '__level_d9_3[_a3]',
+        refId: '_d9[_a3]',
+        references: ['__level_d9_3[_a3]', '__level_d9_2[_a3]', '__level_d9_1[_a3]', '__aux_d9_4[_a3]'],
+        separationDims: ['_suba'],
+        subscripts: ['_a3']
+      }),
+      v('d10', 'k*DELAY3(input,delay)', {
+        delayTimeVarName: '__aux19',
+        delayVarRefId: '__level14',
+        refId: '_d10',
+        references: ['_k', '__level14', '__level13', '__level12', '__aux19']
+      }),
+      v('d11[DimA]', 'k*DELAY3(input,delay a[DimA])', {
+        delayTimeVarName: '__aux23',
+        delayVarRefId: '__level17',
+        refId: '_d11',
+        references: ['_k', '__level17', '__level16', '__level15', '__aux23[_dima]'],
+        subscripts: ['_dima']
+      }),
+      v('d12[SubA]', 'k*DELAY3I(input 2[SubA],delay 2,init 2[SubA])', {
+        delayTimeVarName: '__aux_d12_4',
+        delayVarRefId: '__level_d12_3[_a2]',
+        refId: '_d12[_a2]',
+        references: ['_k', '__level_d12_3[_a2]', '__level_d12_2[_a2]', '__level_d12_1[_a2]', '__aux_d12_4[_a2]'],
+        separationDims: ['_suba'],
+        subscripts: ['_a2']
+      }),
+      v('d12[SubA]', 'k*DELAY3I(input 2[SubA],delay 2,init 2[SubA])', {
+        delayTimeVarName: '__aux_d12_4',
+        delayVarRefId: '__level_d12_3[_a3]',
+        refId: '_d12[_a3]',
+        references: ['_k', '__level_d12_3[_a3]', '__level_d12_2[_a3]', '__level_d12_1[_a3]', '__aux_d12_4[_a3]'],
+        separationDims: ['_suba'],
+        subscripts: ['_a3']
+      }),
+      v('INITIAL TIME', '0', {
+        refId: '_initial_time',
+        varType: 'const'
+      }),
+      v('FINAL TIME', '10', {
+        refId: '_final_time',
+        varType: 'const'
+      }),
+      v('TIME STEP', '1', {
+        refId: '_time_step',
         varType: 'const'
       }),
       v('SAVEPER', 'TIME STEP', {
         refId: '_saveper',
         references: ['_time_step']
-      }),
-      v('TIME STEP', '1', {
-        refId: '_time_step',
-        varType: 'const'
       }),
       v('Time', '', {
         refId: '_time',
@@ -3640,276 +3636,67 @@ describe('readEquations', () => {
         refId: '__aux1',
         references: ['_delay']
       }),
-      v('_level4', 'INTEG(_aux3-_aux4,input*((delay)/3))', {
-        hasInitValue: true,
-        includeInOutput: false,
-        initReferences: ['_input', '_delay'],
-        refId: '__level4',
-        referencedFunctionNames: ['__integ'],
-        references: ['__aux3', '__aux4'],
-        varType: 'level'
-      }),
-      v('_level3', 'INTEG(_aux2-_aux3,input*((delay)/3))', {
-        hasInitValue: true,
-        includeInOutput: false,
-        initReferences: ['_input', '_delay'],
-        refId: '__level3',
-        referencedFunctionNames: ['__integ'],
-        references: ['__aux2', '__aux3'],
-        varType: 'level'
-      }),
-      v('_level2', 'INTEG(input-_aux2,input*((delay)/3))', {
-        hasInitValue: true,
-        includeInOutput: false,
-        initReferences: ['_input', '_delay'],
-        refId: '__level2',
-        referencedFunctionNames: ['__integ'],
-        references: ['_input', '__aux2'],
-        varType: 'level'
-      }),
-      v('_aux2', '_level2/((delay)/3)', {
-        includeInOutput: false,
-        refId: '__aux2',
-        references: ['__level2', '_delay']
-      }),
-      v('_aux3', '_level3/((delay)/3)', {
-        includeInOutput: false,
-        refId: '__aux3',
-        references: ['__level3', '_delay']
-      }),
-      v('_aux4', '_level4/((delay)/3)', {
-        includeInOutput: false,
-        refId: '__aux4',
-        references: ['__level4', '_delay']
-      }),
-      v('_aux5', '((delay)/3)', {
-        includeInOutput: false,
-        refId: '__aux5',
-        references: ['_delay']
-      }),
-      v('_level7[DimA]', 'INTEG(_aux7[DimA]-_aux8[DimA],input*((delay a[DimA])/3))', {
-        hasInitValue: true,
-        includeInOutput: false,
-        initReferences: ['_input', '_delay_a[_a1]', '_delay_a[_a2]', '_delay_a[_a3]'],
-        refId: '__level7',
-        referencedFunctionNames: ['__integ'],
-        references: ['__aux7', '__aux8'],
-        subscripts: ['_dima'],
-        varType: 'level'
-      }),
-      v('_level6[DimA]', 'INTEG(_aux6[DimA]-_aux7[DimA],input*((delay a[DimA])/3))', {
-        hasInitValue: true,
-        includeInOutput: false,
-        initReferences: ['_input', '_delay_a[_a1]', '_delay_a[_a2]', '_delay_a[_a3]'],
-        refId: '__level6',
-        referencedFunctionNames: ['__integ'],
-        references: ['__aux6', '__aux7'],
-        subscripts: ['_dima'],
-        varType: 'level'
-      }),
-      v('_level5[DimA]', 'INTEG(input-_aux6[DimA],input*((delay a[DimA])/3))', {
-        hasInitValue: true,
-        includeInOutput: false,
-        initReferences: ['_input', '_delay_a[_a1]', '_delay_a[_a2]', '_delay_a[_a3]'],
-        refId: '__level5',
-        referencedFunctionNames: ['__integ'],
-        references: ['_input', '__aux6'],
-        subscripts: ['_dima'],
-        varType: 'level'
-      }),
-      v('_aux6[DimA]', '_level5[DimA]/((delay a[DimA])/3)', {
-        includeInOutput: false,
-        refId: '__aux6',
-        references: ['__level5', '_delay_a[_a1]', '_delay_a[_a2]', '_delay_a[_a3]'],
-        subscripts: ['_dima']
-      }),
-      v('_aux7[DimA]', '_level6[DimA]/((delay a[DimA])/3)', {
-        includeInOutput: false,
-        refId: '__aux7',
-        references: ['__level6', '_delay_a[_a1]', '_delay_a[_a2]', '_delay_a[_a3]'],
-        subscripts: ['_dima']
-      }),
-      v('_aux8[DimA]', '_level7[DimA]/((delay a[DimA])/3)', {
-        includeInOutput: false,
-        refId: '__aux8',
-        references: ['__level7', '_delay_a[_a1]', '_delay_a[_a2]', '_delay_a[_a3]'],
-        subscripts: ['_dima']
-      }),
-      v('_aux9[DimA]', '((delay a[DimA])/3)', {
-        includeInOutput: false,
-        refId: '__aux9',
-        references: ['_delay_a[_a1]', '_delay_a[_a2]', '_delay_a[_a3]'],
-        subscripts: ['_dima']
-      }),
-      v('_level_d12_3[a2]', 'INTEG(_aux_d12_2[a2]-_aux_d12_3[a2],init 2[a2]*((delay 2)/3))', {
-        hasInitValue: true,
-        includeInOutput: false,
-        initReferences: ['_init_2[_a2]', '_delay_2'],
-        refId: '__level_d12_3[_a2]',
-        referencedFunctionNames: ['__integ'],
-        references: ['__aux_d12_2', '__aux_d12_3'],
-        subscripts: ['_a2'],
-        varType: 'level'
-      }),
-      v('_level_d12_2[a2]', 'INTEG(_aux_d12_1[a2]-_aux_d12_2[a2],init 2[a2]*((delay 2)/3))', {
-        hasInitValue: true,
-        includeInOutput: false,
-        initReferences: ['_init_2[_a2]', '_delay_2'],
-        refId: '__level_d12_2[_a2]',
-        referencedFunctionNames: ['__integ'],
-        references: ['__aux_d12_1', '__aux_d12_2'],
-        subscripts: ['_a2'],
-        varType: 'level'
-      }),
-      v('_level_d12_1[a2]', 'INTEG(input 2[a2]-_aux_d12_1[a2],init 2[a2]*((delay 2)/3))', {
-        hasInitValue: true,
-        includeInOutput: false,
-        initReferences: ['_init_2[_a2]', '_delay_2'],
-        refId: '__level_d12_1[_a2]',
-        referencedFunctionNames: ['__integ'],
-        references: ['_input_2[_a2]', '__aux_d12_1'],
-        subscripts: ['_a2'],
-        varType: 'level'
-      }),
-      v('_aux_d12_1[a2]', '_level_d12_1[a2]/((delay 2)/3)', {
-        includeInOutput: false,
-        refId: '__aux_d12_1',
-        references: ['__level_d12_1[_a2]', '_delay_2'],
-        subscripts: ['_a2']
-      }),
-      v('_aux_d12_2[a2]', '_level_d12_2[a2]/((delay 2)/3)', {
-        includeInOutput: false,
-        refId: '__aux_d12_2',
-        references: ['__level_d12_2[_a2]', '_delay_2'],
-        subscripts: ['_a2']
-      }),
-      v('_aux_d12_3[a2]', '_level_d12_3[a2]/((delay 2)/3)', {
-        includeInOutput: false,
-        refId: '__aux_d12_3',
-        references: ['__level_d12_3[_a2]', '_delay_2'],
-        subscripts: ['_a2']
-      }),
-      v('_aux_d12_4[a2]', '((delay 2)/3)', {
-        includeInOutput: false,
-        refId: '__aux_d12_4[_a2]',
-        references: ['_delay_2'],
-        subscripts: ['_a2']
-      }),
-      v('_level_d12_3[a3]', 'INTEG(_aux_d12_2[a3]-_aux_d12_3[a3],init 2[a3]*((delay 2)/3))', {
-        hasInitValue: true,
-        includeInOutput: false,
-        initReferences: ['_init_2[_a3]', '_delay_2'],
-        refId: '__level_d12_3[_a3]',
-        referencedFunctionNames: ['__integ'],
-        references: ['__aux_d12_2', '__aux_d12_3'],
-        subscripts: ['_a3'],
-        varType: 'level'
-      }),
-      v('_level_d12_2[a3]', 'INTEG(_aux_d12_1[a3]-_aux_d12_2[a3],init 2[a3]*((delay 2)/3))', {
-        hasInitValue: true,
-        includeInOutput: false,
-        initReferences: ['_init_2[_a3]', '_delay_2'],
-        refId: '__level_d12_2[_a3]',
-        referencedFunctionNames: ['__integ'],
-        references: ['__aux_d12_1', '__aux_d12_2'],
-        subscripts: ['_a3'],
-        varType: 'level'
-      }),
-      v('_level_d12_1[a3]', 'INTEG(input 2[a3]-_aux_d12_1[a3],init 2[a3]*((delay 2)/3))', {
-        hasInitValue: true,
-        includeInOutput: false,
-        initReferences: ['_init_2[_a3]', '_delay_2'],
-        refId: '__level_d12_1[_a3]',
-        referencedFunctionNames: ['__integ'],
-        references: ['_input_2[_a3]', '__aux_d12_1'],
-        subscripts: ['_a3'],
-        varType: 'level'
-      }),
-      v('_aux_d12_1[a3]', '_level_d12_1[a3]/((delay 2)/3)', {
-        includeInOutput: false,
-        refId: '__aux_d12_1',
-        references: ['__level_d12_1[_a3]', '_delay_2'],
-        subscripts: ['_a3']
-      }),
-      v('_aux_d12_2[a3]', '_level_d12_2[a3]/((delay 2)/3)', {
-        includeInOutput: false,
-        refId: '__aux_d12_2',
-        references: ['__level_d12_2[_a3]', '_delay_2'],
-        subscripts: ['_a3']
-      }),
-      v('_aux_d12_3[a3]', '_level_d12_3[a3]/((delay 2)/3)', {
-        includeInOutput: false,
-        refId: '__aux_d12_3',
-        references: ['__level_d12_3[_a3]', '_delay_2'],
-        subscripts: ['_a3']
-      }),
-      v('_aux_d12_4[a3]', '((delay 2)/3)', {
-        includeInOutput: false,
-        refId: '__aux_d12_4[_a3]',
-        references: ['_delay_2'],
-        subscripts: ['_a3']
-      }),
-      v('_level8[DimA]', 'INTEG(input a[DimA]-d2[DimA],init 1*delay)', {
+      v('_level2[DimA]', 'INTEG(input a[DimA]-d2[DimA],init 1*delay)', {
         hasInitValue: true,
         includeInOutput: false,
         initReferences: ['_init_1', '_delay'],
-        refId: '__level8',
+        refId: '__level2',
         referencedFunctionNames: ['__integ'],
         references: ['_input_a[_a1]', '_input_a[_a2]', '_input_a[_a3]', '_d2'],
         subscripts: ['_dima'],
         varType: 'level'
       }),
-      v('_aux10[DimA]', 'delay', {
+      v('_aux2[DimA]', 'delay', {
         includeInOutput: false,
-        refId: '__aux10',
+        refId: '__aux2',
         references: ['_delay'],
         subscripts: ['_dima']
       }),
-      v('_level9[DimA]', 'INTEG(input-d3[DimA],init 1*delay a[DimA])', {
+      v('_level3[DimA]', 'INTEG(input-d3[DimA],init 1*delay a[DimA])', {
         hasInitValue: true,
         includeInOutput: false,
         initReferences: ['_init_1', '_delay_a[_a1]', '_delay_a[_a2]', '_delay_a[_a3]'],
-        refId: '__level9',
+        refId: '__level3',
         referencedFunctionNames: ['__integ'],
         references: ['_input', '_d3'],
         subscripts: ['_dima'],
         varType: 'level'
       }),
-      v('_aux11[DimA]', 'delay a[DimA]', {
+      v('_aux3[DimA]', 'delay a[DimA]', {
         includeInOutput: false,
-        refId: '__aux11',
+        refId: '__aux3',
         references: ['_delay_a[_a1]', '_delay_a[_a2]', '_delay_a[_a3]'],
         subscripts: ['_dima']
       }),
-      v('_level10[DimA]', 'INTEG(input-d4[DimA],init a[DimA]*delay)', {
+      v('_level4[DimA]', 'INTEG(input-d4[DimA],init a[DimA]*delay)', {
         hasInitValue: true,
         includeInOutput: false,
         initReferences: ['_init_a', '_delay'],
-        refId: '__level10',
+        refId: '__level4',
         referencedFunctionNames: ['__integ'],
         references: ['_input', '_d4'],
         subscripts: ['_dima'],
         varType: 'level'
       }),
-      v('_aux12[DimA]', 'delay', {
+      v('_aux4[DimA]', 'delay', {
         includeInOutput: false,
-        refId: '__aux12',
+        refId: '__aux4',
         references: ['_delay'],
         subscripts: ['_dima']
       }),
-      v('_level11[DimA]', 'INTEG(input a[DimA]-d5[DimA],init a[DimA]*delay a[DimA])', {
+      v('_level5[DimA]', 'INTEG(input a[DimA]-d5[DimA],init a[DimA]*delay a[DimA])', {
         hasInitValue: true,
         includeInOutput: false,
         initReferences: ['_init_a', '_delay_a[_a1]', '_delay_a[_a2]', '_delay_a[_a3]'],
-        refId: '__level11',
+        refId: '__level5',
         referencedFunctionNames: ['__integ'],
         references: ['_input_a[_a1]', '_input_a[_a2]', '_input_a[_a3]', '_d5'],
         subscripts: ['_dima'],
         varType: 'level'
       }),
-      v('_aux13[DimA]', 'delay a[DimA]', {
+      v('_aux5[DimA]', 'delay a[DimA]', {
         includeInOutput: false,
-        refId: '__aux13',
+        refId: '__aux5',
         references: ['_delay_a[_a1]', '_delay_a[_a2]', '_delay_a[_a3]'],
         subscripts: ['_dima']
       }),
@@ -3923,9 +3710,9 @@ describe('readEquations', () => {
         subscripts: ['_a2'],
         varType: 'level'
       }),
-      v('_aux14[a2]', 'delay 2', {
+      v('_aux6[a2]', 'delay 2', {
         includeInOutput: false,
-        refId: '__aux14[_a2]',
+        refId: '__aux6[_a2]',
         references: ['_delay_2'],
         subscripts: ['_a2']
       }),
@@ -3939,110 +3726,110 @@ describe('readEquations', () => {
         subscripts: ['_a3'],
         varType: 'level'
       }),
-      v('_aux15[a3]', 'delay 2', {
+      v('_aux7[a3]', 'delay 2', {
         includeInOutput: false,
-        refId: '__aux15[_a3]',
+        refId: '__aux7[_a3]',
         references: ['_delay_2'],
         subscripts: ['_a3']
       }),
-      v('_level14', 'INTEG(_aux17-_aux18,input*((delay)/3))', {
+      v('_level8', 'INTEG(_aux9-_aux10,input*((delay)/3))', {
         hasInitValue: true,
         includeInOutput: false,
         initReferences: ['_input', '_delay'],
-        refId: '__level14',
+        refId: '__level8',
         referencedFunctionNames: ['__integ'],
-        references: ['__aux17', '__aux18'],
+        references: ['__aux9', '__aux10'],
         varType: 'level'
       }),
-      v('_level13', 'INTEG(_aux16-_aux17,input*((delay)/3))', {
+      v('_level7', 'INTEG(_aux8-_aux9,input*((delay)/3))', {
         hasInitValue: true,
         includeInOutput: false,
         initReferences: ['_input', '_delay'],
-        refId: '__level13',
+        refId: '__level7',
         referencedFunctionNames: ['__integ'],
-        references: ['__aux16', '__aux17'],
+        references: ['__aux8', '__aux9'],
         varType: 'level'
       }),
-      v('_level12', 'INTEG(input-_aux16,input*((delay)/3))', {
+      v('_level6', 'INTEG(input-_aux8,input*((delay)/3))', {
         hasInitValue: true,
         includeInOutput: false,
         initReferences: ['_input', '_delay'],
-        refId: '__level12',
+        refId: '__level6',
         referencedFunctionNames: ['__integ'],
-        references: ['_input', '__aux16'],
+        references: ['_input', '__aux8'],
         varType: 'level'
       }),
-      v('_aux16', '_level12/((delay)/3)', {
+      v('_aux8', '_level6/((delay)/3)', {
         includeInOutput: false,
-        refId: '__aux16',
-        references: ['__level12', '_delay']
+        refId: '__aux8',
+        references: ['__level6', '_delay']
       }),
-      v('_aux17', '_level13/((delay)/3)', {
+      v('_aux9', '_level7/((delay)/3)', {
         includeInOutput: false,
-        refId: '__aux17',
-        references: ['__level13', '_delay']
+        refId: '__aux9',
+        references: ['__level7', '_delay']
       }),
-      v('_aux18', '_level14/((delay)/3)', {
+      v('_aux10', '_level8/((delay)/3)', {
         includeInOutput: false,
-        refId: '__aux18',
-        references: ['__level14', '_delay']
+        refId: '__aux10',
+        references: ['__level8', '_delay']
       }),
-      v('_aux19', '((delay)/3)', {
+      v('_aux11', '((delay)/3)', {
         includeInOutput: false,
-        refId: '__aux19',
+        refId: '__aux11',
         references: ['_delay']
       }),
-      v('_level17[DimA]', 'INTEG(_aux21[DimA]-_aux22[DimA],input*((delay a[DimA])/3))', {
+      v('_level11[DimA]', 'INTEG(_aux13[DimA]-_aux14[DimA],input*((delay a[DimA])/3))', {
         hasInitValue: true,
         includeInOutput: false,
         initReferences: ['_input', '_delay_a[_a1]', '_delay_a[_a2]', '_delay_a[_a3]'],
-        refId: '__level17',
+        refId: '__level11',
         referencedFunctionNames: ['__integ'],
-        references: ['__aux21', '__aux22'],
+        references: ['__aux13', '__aux14'],
         subscripts: ['_dima'],
         varType: 'level'
       }),
-      v('_level16[DimA]', 'INTEG(_aux20[DimA]-_aux21[DimA],input*((delay a[DimA])/3))', {
+      v('_level10[DimA]', 'INTEG(_aux12[DimA]-_aux13[DimA],input*((delay a[DimA])/3))', {
         hasInitValue: true,
         includeInOutput: false,
         initReferences: ['_input', '_delay_a[_a1]', '_delay_a[_a2]', '_delay_a[_a3]'],
-        refId: '__level16',
+        refId: '__level10',
         referencedFunctionNames: ['__integ'],
-        references: ['__aux20', '__aux21'],
+        references: ['__aux12', '__aux13'],
         subscripts: ['_dima'],
         varType: 'level'
       }),
-      v('_level15[DimA]', 'INTEG(input-_aux20[DimA],input*((delay a[DimA])/3))', {
+      v('_level9[DimA]', 'INTEG(input-_aux12[DimA],input*((delay a[DimA])/3))', {
         hasInitValue: true,
         includeInOutput: false,
         initReferences: ['_input', '_delay_a[_a1]', '_delay_a[_a2]', '_delay_a[_a3]'],
-        refId: '__level15',
+        refId: '__level9',
         referencedFunctionNames: ['__integ'],
-        references: ['_input', '__aux20'],
+        references: ['_input', '__aux12'],
         subscripts: ['_dima'],
         varType: 'level'
       }),
-      v('_aux20[DimA]', '_level15[DimA]/((delay a[DimA])/3)', {
+      v('_aux12[DimA]', '_level9[DimA]/((delay a[DimA])/3)', {
         includeInOutput: false,
-        refId: '__aux20',
-        references: ['__level15', '_delay_a[_a1]', '_delay_a[_a2]', '_delay_a[_a3]'],
+        refId: '__aux12',
+        references: ['__level9', '_delay_a[_a1]', '_delay_a[_a2]', '_delay_a[_a3]'],
         subscripts: ['_dima']
       }),
-      v('_aux21[DimA]', '_level16[DimA]/((delay a[DimA])/3)', {
+      v('_aux13[DimA]', '_level10[DimA]/((delay a[DimA])/3)', {
         includeInOutput: false,
-        refId: '__aux21',
-        references: ['__level16', '_delay_a[_a1]', '_delay_a[_a2]', '_delay_a[_a3]'],
+        refId: '__aux13',
+        references: ['__level10', '_delay_a[_a1]', '_delay_a[_a2]', '_delay_a[_a3]'],
         subscripts: ['_dima']
       }),
-      v('_aux22[DimA]', '_level17[DimA]/((delay a[DimA])/3)', {
+      v('_aux14[DimA]', '_level11[DimA]/((delay a[DimA])/3)', {
         includeInOutput: false,
-        refId: '__aux22',
-        references: ['__level17', '_delay_a[_a1]', '_delay_a[_a2]', '_delay_a[_a3]'],
+        refId: '__aux14',
+        references: ['__level11', '_delay_a[_a1]', '_delay_a[_a2]', '_delay_a[_a3]'],
         subscripts: ['_dima']
       }),
-      v('_aux23[DimA]', '((delay a[DimA])/3)', {
+      v('_aux15[DimA]', '((delay a[DimA])/3)', {
         includeInOutput: false,
-        refId: '__aux23',
+        refId: '__aux15',
         references: ['_delay_a[_a1]', '_delay_a[_a2]', '_delay_a[_a3]'],
         subscripts: ['_dima']
       }),
@@ -4153,6 +3940,215 @@ describe('readEquations', () => {
         refId: '__aux_d9_4[_a3]',
         references: ['_delay_2'],
         subscripts: ['_a3']
+      }),
+      v('_level14', 'INTEG(_aux17-_aux18,input*((delay)/3))', {
+        hasInitValue: true,
+        includeInOutput: false,
+        initReferences: ['_input', '_delay'],
+        refId: '__level14',
+        referencedFunctionNames: ['__integ'],
+        references: ['__aux17', '__aux18'],
+        varType: 'level'
+      }),
+      v('_level13', 'INTEG(_aux16-_aux17,input*((delay)/3))', {
+        hasInitValue: true,
+        includeInOutput: false,
+        initReferences: ['_input', '_delay'],
+        refId: '__level13',
+        referencedFunctionNames: ['__integ'],
+        references: ['__aux16', '__aux17'],
+        varType: 'level'
+      }),
+      v('_level12', 'INTEG(input-_aux16,input*((delay)/3))', {
+        hasInitValue: true,
+        includeInOutput: false,
+        initReferences: ['_input', '_delay'],
+        refId: '__level12',
+        referencedFunctionNames: ['__integ'],
+        references: ['_input', '__aux16'],
+        varType: 'level'
+      }),
+      v('_aux16', '_level12/((delay)/3)', {
+        includeInOutput: false,
+        refId: '__aux16',
+        references: ['__level12', '_delay']
+      }),
+      v('_aux17', '_level13/((delay)/3)', {
+        includeInOutput: false,
+        refId: '__aux17',
+        references: ['__level13', '_delay']
+      }),
+      v('_aux18', '_level14/((delay)/3)', {
+        includeInOutput: false,
+        refId: '__aux18',
+        references: ['__level14', '_delay']
+      }),
+      v('_aux19', '((delay)/3)', {
+        includeInOutput: false,
+        refId: '__aux19',
+        references: ['_delay']
+      }),
+      v('_level17[DimA]', 'INTEG(_aux21[DimA]-_aux22[DimA],input*((delay a[DimA])/3))', {
+        hasInitValue: true,
+        includeInOutput: false,
+        initReferences: ['_input', '_delay_a[_a1]', '_delay_a[_a2]', '_delay_a[_a3]'],
+        refId: '__level17',
+        referencedFunctionNames: ['__integ'],
+        references: ['__aux21', '__aux22'],
+        subscripts: ['_dima'],
+        varType: 'level'
+      }),
+      v('_level16[DimA]', 'INTEG(_aux20[DimA]-_aux21[DimA],input*((delay a[DimA])/3))', {
+        hasInitValue: true,
+        includeInOutput: false,
+        initReferences: ['_input', '_delay_a[_a1]', '_delay_a[_a2]', '_delay_a[_a3]'],
+        refId: '__level16',
+        referencedFunctionNames: ['__integ'],
+        references: ['__aux20', '__aux21'],
+        subscripts: ['_dima'],
+        varType: 'level'
+      }),
+      v('_level15[DimA]', 'INTEG(input-_aux20[DimA],input*((delay a[DimA])/3))', {
+        hasInitValue: true,
+        includeInOutput: false,
+        initReferences: ['_input', '_delay_a[_a1]', '_delay_a[_a2]', '_delay_a[_a3]'],
+        refId: '__level15',
+        referencedFunctionNames: ['__integ'],
+        references: ['_input', '__aux20'],
+        subscripts: ['_dima'],
+        varType: 'level'
+      }),
+      v('_aux20[DimA]', '_level15[DimA]/((delay a[DimA])/3)', {
+        includeInOutput: false,
+        refId: '__aux20',
+        references: ['__level15', '_delay_a[_a1]', '_delay_a[_a2]', '_delay_a[_a3]'],
+        subscripts: ['_dima']
+      }),
+      v('_aux21[DimA]', '_level16[DimA]/((delay a[DimA])/3)', {
+        includeInOutput: false,
+        refId: '__aux21',
+        references: ['__level16', '_delay_a[_a1]', '_delay_a[_a2]', '_delay_a[_a3]'],
+        subscripts: ['_dima']
+      }),
+      v('_aux22[DimA]', '_level17[DimA]/((delay a[DimA])/3)', {
+        includeInOutput: false,
+        refId: '__aux22',
+        references: ['__level17', '_delay_a[_a1]', '_delay_a[_a2]', '_delay_a[_a3]'],
+        subscripts: ['_dima']
+      }),
+      v('_aux23[DimA]', '((delay a[DimA])/3)', {
+        includeInOutput: false,
+        refId: '__aux23',
+        references: ['_delay_a[_a1]', '_delay_a[_a2]', '_delay_a[_a3]'],
+        subscripts: ['_dima']
+      }),
+      v('_level_d12_3[a2]', 'INTEG(_aux_d12_2[a2]-_aux_d12_3[a2],init 2[a2]*((delay 2)/3))', {
+        hasInitValue: true,
+        includeInOutput: false,
+        initReferences: ['_init_2[_a2]', '_delay_2'],
+        refId: '__level_d12_3[_a2]',
+        referencedFunctionNames: ['__integ'],
+        references: ['__aux_d12_2', '__aux_d12_3'],
+        subscripts: ['_a2'],
+        varType: 'level'
+      }),
+      v('_level_d12_2[a2]', 'INTEG(_aux_d12_1[a2]-_aux_d12_2[a2],init 2[a2]*((delay 2)/3))', {
+        hasInitValue: true,
+        includeInOutput: false,
+        initReferences: ['_init_2[_a2]', '_delay_2'],
+        refId: '__level_d12_2[_a2]',
+        referencedFunctionNames: ['__integ'],
+        references: ['__aux_d12_1', '__aux_d12_2'],
+        subscripts: ['_a2'],
+        varType: 'level'
+      }),
+      v('_level_d12_1[a2]', 'INTEG(input 2[a2]-_aux_d12_1[a2],init 2[a2]*((delay 2)/3))', {
+        hasInitValue: true,
+        includeInOutput: false,
+        initReferences: ['_init_2[_a2]', '_delay_2'],
+        refId: '__level_d12_1[_a2]',
+        referencedFunctionNames: ['__integ'],
+        references: ['_input_2[_a2]', '__aux_d12_1'],
+        subscripts: ['_a2'],
+        varType: 'level'
+      }),
+      v('_aux_d12_1[a2]', '_level_d12_1[a2]/((delay 2)/3)', {
+        includeInOutput: false,
+        refId: '__aux_d12_1',
+        references: ['__level_d12_1[_a2]', '_delay_2'],
+        subscripts: ['_a2']
+      }),
+      v('_aux_d12_2[a2]', '_level_d12_2[a2]/((delay 2)/3)', {
+        includeInOutput: false,
+        refId: '__aux_d12_2',
+        references: ['__level_d12_2[_a2]', '_delay_2'],
+        subscripts: ['_a2']
+      }),
+      v('_aux_d12_3[a2]', '_level_d12_3[a2]/((delay 2)/3)', {
+        includeInOutput: false,
+        refId: '__aux_d12_3',
+        references: ['__level_d12_3[_a2]', '_delay_2'],
+        subscripts: ['_a2']
+      }),
+      v('_aux_d12_4[a2]', '((delay 2)/3)', {
+        includeInOutput: false,
+        refId: '__aux_d12_4[_a2]',
+        references: ['_delay_2'],
+        subscripts: ['_a2']
+      }),
+      v('_level_d12_3[a3]', 'INTEG(_aux_d12_2[a3]-_aux_d12_3[a3],init 2[a3]*((delay 2)/3))', {
+        hasInitValue: true,
+        includeInOutput: false,
+        initReferences: ['_init_2[_a3]', '_delay_2'],
+        refId: '__level_d12_3[_a3]',
+        referencedFunctionNames: ['__integ'],
+        references: ['__aux_d12_2', '__aux_d12_3'],
+        subscripts: ['_a3'],
+        varType: 'level'
+      }),
+      v('_level_d12_2[a3]', 'INTEG(_aux_d12_1[a3]-_aux_d12_2[a3],init 2[a3]*((delay 2)/3))', {
+        hasInitValue: true,
+        includeInOutput: false,
+        initReferences: ['_init_2[_a3]', '_delay_2'],
+        refId: '__level_d12_2[_a3]',
+        referencedFunctionNames: ['__integ'],
+        references: ['__aux_d12_1', '__aux_d12_2'],
+        subscripts: ['_a3'],
+        varType: 'level'
+      }),
+      v('_level_d12_1[a3]', 'INTEG(input 2[a3]-_aux_d12_1[a3],init 2[a3]*((delay 2)/3))', {
+        hasInitValue: true,
+        includeInOutput: false,
+        initReferences: ['_init_2[_a3]', '_delay_2'],
+        refId: '__level_d12_1[_a3]',
+        referencedFunctionNames: ['__integ'],
+        references: ['_input_2[_a3]', '__aux_d12_1'],
+        subscripts: ['_a3'],
+        varType: 'level'
+      }),
+      v('_aux_d12_1[a3]', '_level_d12_1[a3]/((delay 2)/3)', {
+        includeInOutput: false,
+        refId: '__aux_d12_1',
+        references: ['__level_d12_1[_a3]', '_delay_2'],
+        subscripts: ['_a3']
+      }),
+      v('_aux_d12_2[a3]', '_level_d12_2[a3]/((delay 2)/3)', {
+        includeInOutput: false,
+        refId: '__aux_d12_2',
+        references: ['__level_d12_2[_a3]', '_delay_2'],
+        subscripts: ['_a3']
+      }),
+      v('_aux_d12_3[a3]', '_level_d12_3[a3]/((delay 2)/3)', {
+        includeInOutput: false,
+        refId: '__aux_d12_3',
+        references: ['__level_d12_3[_a3]', '_delay_2'],
+        subscripts: ['_a3']
+      }),
+      v('_aux_d12_4[a3]', '((delay 2)/3)', {
+        includeInOutput: false,
+        refId: '__aux_d12_4[_a3]',
+        references: ['_delay_2'],
+        subscripts: ['_a3']
       })
     ])
   })
@@ -4160,41 +4156,36 @@ describe('readEquations', () => {
   it('should work for Vensim "delayfixed" model', () => {
     const vars = readSubscriptsAndEquations('delayfixed')
     expect(vars).toEqual([
-      v('a', 'DELAY FIXED(input[A1]+1,a delay time,0)', {
+      v('receiving', 'DELAY FIXED(shipping,shipping time,shipping)', {
         fixedDelayVarName: '__fixed_delay1',
         hasInitValue: true,
-        initReferences: ['_a_delay_time'],
-        refId: '_a',
+        initReferences: ['_shipping_time', '_shipping'],
+        refId: '_receiving',
         referencedFunctionNames: ['__delay_fixed'],
-        references: ['_input[_a1]'],
+        references: ['_shipping'],
         varSubtype: 'fixedDelay',
         varType: 'level'
       }),
-      v('a delay time', '0', {
-        refId: '_a_delay_time',
+      v('shipping', 'STEP(reference shipping rate,10)-STEP(reference shipping rate,20)', {
+        refId: '_shipping',
+        referencedFunctionNames: ['__step'],
+        references: ['_reference_shipping_rate']
+      }),
+      v('shipping time', '20', {
+        refId: '_shipping_time',
         varType: 'const'
       }),
-      v('b', 'DELAY FIXED(input[A1]+1,b delay time,0)', {
-        fixedDelayVarName: '__fixed_delay2',
+      v('reference shipping rate', '1', {
+        refId: '_reference_shipping_rate',
+        varType: 'const'
+      }),
+      v('shipments in transit', 'INTEG(shipping-receiving,shipping*shipping time)', {
         hasInitValue: true,
-        initReferences: ['_b_delay_time'],
-        refId: '_b',
-        referencedFunctionNames: ['__delay_fixed'],
-        references: ['_input[_a1]'],
-        varSubtype: 'fixedDelay',
+        initReferences: ['_shipping', '_shipping_time'],
+        refId: '_shipments_in_transit',
+        referencedFunctionNames: ['__integ'],
+        references: ['_shipping', '_receiving'],
         varType: 'level'
-      }),
-      v('b delay time', '1', {
-        refId: '_b_delay_time',
-        varType: 'const'
-      }),
-      v('FINAL TIME', '50', {
-        refId: '_final_time',
-        varType: 'const'
-      }),
-      v('INITIAL TIME', '0', {
-        refId: '_initial_time',
-        varType: 'const'
       }),
       v('input[A1]', '10*TIME', {
         refId: '_input[_a1]',
@@ -4212,7 +4203,7 @@ describe('readEquations', () => {
         subscripts: ['_a3']
       }),
       v('output[DimA]', 'DELAY FIXED(input[DimA],1,0)', {
-        fixedDelayVarName: '__fixed_delay3',
+        fixedDelayVarName: '__fixed_delay2',
         hasInitValue: true,
         refId: '_output',
         referencedFunctionNames: ['__delay_fixed'],
@@ -4221,44 +4212,49 @@ describe('readEquations', () => {
         varSubtype: 'fixedDelay',
         varType: 'level'
       }),
-      v('receiving', 'DELAY FIXED(shipping,shipping time,shipping)', {
-        fixedDelayVarName: '__fixed_delay4',
+      v('a delay time', '0', {
+        refId: '_a_delay_time',
+        varType: 'const'
+      }),
+      v('a', 'DELAY FIXED(input[A1]+1,a delay time,0)', {
+        fixedDelayVarName: '__fixed_delay3',
         hasInitValue: true,
-        initReferences: ['_shipping_time', '_shipping'],
-        refId: '_receiving',
+        initReferences: ['_a_delay_time'],
+        refId: '_a',
         referencedFunctionNames: ['__delay_fixed'],
-        references: ['_shipping'],
+        references: ['_input[_a1]'],
         varSubtype: 'fixedDelay',
         varType: 'level'
       }),
-      v('reference shipping rate', '1', {
-        refId: '_reference_shipping_rate',
+      v('b delay time', '1', {
+        refId: '_b_delay_time',
         varType: 'const'
       }),
-      v('SAVEPER', 'TIME STEP', {
-        refId: '_saveper',
-        references: ['_time_step']
-      }),
-      v('shipments in transit', 'INTEG(shipping-receiving,shipping*shipping time)', {
+      v('b', 'DELAY FIXED(input[A1]+1,b delay time,0)', {
+        fixedDelayVarName: '__fixed_delay4',
         hasInitValue: true,
-        initReferences: ['_shipping', '_shipping_time'],
-        refId: '_shipments_in_transit',
-        referencedFunctionNames: ['__integ'],
-        references: ['_shipping', '_receiving'],
+        initReferences: ['_b_delay_time'],
+        refId: '_b',
+        referencedFunctionNames: ['__delay_fixed'],
+        references: ['_input[_a1]'],
+        varSubtype: 'fixedDelay',
         varType: 'level'
       }),
-      v('shipping', 'STEP(reference shipping rate,10)-STEP(reference shipping rate,20)', {
-        refId: '_shipping',
-        referencedFunctionNames: ['__step'],
-        references: ['_reference_shipping_rate']
+      v('INITIAL TIME', '0', {
+        refId: '_initial_time',
+        varType: 'const'
       }),
-      v('shipping time', '20', {
-        refId: '_shipping_time',
+      v('FINAL TIME', '50', {
+        refId: '_final_time',
         varType: 'const'
       }),
       v('TIME STEP', '1', {
         refId: '_time_step',
         varType: 'const'
+      }),
+      v('SAVEPER', 'TIME STEP', {
+        refId: '_saveper',
+        references: ['_time_step']
       }),
       v('Time', '', {
         refId: '_time',
@@ -4270,20 +4266,8 @@ describe('readEquations', () => {
   it('should work for Vensim "delayfixed2" model', () => {
     const vars = readSubscriptsAndEquations('delayfixed2')
     expect(vars).toEqual([
-      v('FINAL TIME', '20', {
-        refId: '_final_time',
-        varType: 'const'
-      }),
-      v('INITIAL TIME', '10', {
-        refId: '_initial_time',
-        varType: 'const'
-      }),
       v('input1', '10*TIME+10', {
         refId: '_input1',
-        references: ['_time']
-      }),
-      v('input2', '10*TIME+10', {
-        refId: '_input2',
         references: ['_time']
       }),
       v('output1', 'DELAY FIXED(input1,1,0)', {
@@ -4295,6 +4279,10 @@ describe('readEquations', () => {
         varSubtype: 'fixedDelay',
         varType: 'level'
       }),
+      v('input2', '10*TIME+10', {
+        refId: '_input2',
+        references: ['_time']
+      }),
       v('output2', 'DELAY FIXED(input2,5,0)', {
         fixedDelayVarName: '__fixed_delay2',
         hasInitValue: true,
@@ -4304,13 +4292,21 @@ describe('readEquations', () => {
         varSubtype: 'fixedDelay',
         varType: 'level'
       }),
-      v('SAVEPER', 'TIME STEP', {
-        refId: '_saveper',
-        references: ['_time_step']
+      v('INITIAL TIME', '10', {
+        refId: '_initial_time',
+        varType: 'const'
+      }),
+      v('FINAL TIME', '20', {
+        refId: '_final_time',
+        varType: 'const'
       }),
       v('TIME STEP', '1', {
         refId: '_time_step',
         varType: 'const'
+      }),
+      v('SAVEPER', 'TIME STEP', {
+        refId: '_saveper',
+        references: ['_time_step']
       }),
       v('Time', '', {
         refId: '_time',
@@ -4322,9 +4318,21 @@ describe('readEquations', () => {
   it('should work for Vensim "depreciate" model', () => {
     const vars = readSubscriptsAndEquations('depreciate')
     expect(vars).toEqual([
+      v('dtime', '20', {
+        refId: '_dtime',
+        varType: 'const'
+      }),
       v('Capacity Cost', '1e+06', {
         refId: '_capacity_cost',
         varType: 'const'
+      }),
+      v('New Capacity', 'IF THEN ELSE(Time=2022,1000,IF THEN ELSE(Time=2026,2500,0))', {
+        refId: '_new_capacity',
+        references: ['_time']
+      }),
+      v('str', 'Capacity Cost*New Capacity', {
+        refId: '_str',
+        references: ['_capacity_cost', '_new_capacity']
       }),
       v('Depreciated Amount', 'DEPRECIATE STRAIGHTLINE(str,dtime,1,0)', {
         depreciationVarName: '__depreciation1',
@@ -4335,10 +4343,6 @@ describe('readEquations', () => {
         references: ['_str'],
         varSubtype: 'depreciation'
       }),
-      v('dtime', '20', {
-        refId: '_dtime',
-        varType: 'const'
-      }),
       v('FINAL TIME', '2050', {
         refId: '_final_time',
         varType: 'const'
@@ -4347,17 +4351,9 @@ describe('readEquations', () => {
         refId: '_initial_time',
         varType: 'const'
       }),
-      v('New Capacity', 'IF THEN ELSE(Time=2022,1000,IF THEN ELSE(Time=2026,2500,0))', {
-        refId: '_new_capacity',
-        references: ['_time']
-      }),
       v('SAVEPER', 'TIME STEP', {
         refId: '_saveper',
         references: ['_time_step']
-      }),
-      v('str', 'Capacity Cost*New Capacity', {
-        refId: '_str',
-        references: ['_capacity_cost', '_new_capacity']
       }),
       v('TIME STEP', '1', {
         refId: '_time_step',
@@ -4412,12 +4408,6 @@ describe('readEquations', () => {
         subscripts: ['_dimb', '_dimc'],
         varType: 'const'
       }),
-      v('f[DimC,DimA]:EXCEPT:[DimC,SubA]', '0', {
-        refId: '_f[_a1,_dimc]',
-        separationDims: ['_dima'],
-        subscripts: ['_a1', '_dimc'],
-        varType: 'const'
-      }),
       v('f[DimC,SubA]', "GET DIRECT CONSTANTS('data/f.csv',',','B2')", {
         directConstArgs: { file: 'data/f.csv', tab: ',', startCell: 'B2' },
         refId: '_f[_a2,_dimc]',
@@ -4432,8 +4422,10 @@ describe('readEquations', () => {
         subscripts: ['_a3', '_dimc'],
         varType: 'const'
       }),
-      v('FINAL TIME', '1', {
-        refId: '_final_time',
+      v('f[DimC,DimA]:EXCEPT:[DimC,SubA]', '0', {
+        refId: '_f[_a1,_dimc]',
+        separationDims: ['_dima'],
+        subscripts: ['_a1', '_dimc'],
         varType: 'const'
       }),
       v('g[From DimC,To DimC]', "GET DIRECT CONSTANTS('data/g.csv',',','B2')", {
@@ -4451,13 +4443,17 @@ describe('readEquations', () => {
         refId: '_initial_time',
         varType: 'const'
       }),
-      v('SAVEPER', 'TIME STEP', {
-        refId: '_saveper',
-        references: ['_time_step']
+      v('FINAL TIME', '1', {
+        refId: '_final_time',
+        varType: 'const'
       }),
       v('TIME STEP', '1', {
         refId: '_time_step',
         varType: 'const'
+      }),
+      v('SAVEPER', 'TIME STEP', {
+        refId: '_saveper',
+        references: ['_time_step']
       }),
       v('Time', '', {
         refId: '_time',
@@ -4516,10 +4512,6 @@ describe('readEquations', () => {
         references: ['_e[_a1]', '_e[_a2]'],
         subscripts: ['_dima']
       }),
-      v('FINAL TIME', '2050', {
-        refId: '_final_time',
-        varType: 'const'
-      }),
       v('g', "GET DIRECT DATA('g_data.csv',',','A','B2')", {
         directDataArgs: { file: 'g_data.csv', tab: ',', timeRowOrCol: 'A', startCell: 'B2' },
         refId: '_g',
@@ -4542,10 +4534,6 @@ describe('readEquations', () => {
         separationDims: ['_dimb'],
         subscripts: ['_a1', '_b2'],
         varType: 'data'
-      }),
-      v('INITIAL TIME', '1990', {
-        refId: '_initial_time',
-        varType: 'const'
       }),
       v('j[A1,DimB]', 'i[A1,DimB]', {
         refId: '_j',
@@ -4644,13 +4632,21 @@ describe('readEquations', () => {
         refId: '_r',
         references: ['_q[_m3]']
       }),
-      v('SAVEPER', 'TIME STEP', {
-        refId: '_saveper',
-        references: ['_time_step']
+      v('INITIAL TIME', '1990', {
+        refId: '_initial_time',
+        varType: 'const'
+      }),
+      v('FINAL TIME', '2050', {
+        refId: '_final_time',
+        varType: 'const'
       }),
       v('TIME STEP', '1', {
         refId: '_time_step',
         varType: 'const'
+      }),
+      v('SAVEPER', 'TIME STEP', {
+        refId: '_saveper',
+        references: ['_time_step']
       }),
       v('Time', '', {
         refId: '_time',
@@ -4662,6 +4658,27 @@ describe('readEquations', () => {
   it('should work for Vensim "directlookups" model', () => {
     const vars = readSubscriptsAndEquations('directlookups')
     expect(vars).toEqual([
+      v('a[DimA]', "GET DIRECT LOOKUPS('lookups.CSV',',','1','e2')", {
+        directDataArgs: { file: 'lookups.CSV', tab: ',', timeRowOrCol: '1', startCell: 'e2' },
+        refId: '_a[_a1]',
+        separationDims: ['_dima'],
+        subscripts: ['_a1'],
+        varType: 'data'
+      }),
+      v('a[DimA]', "GET DIRECT LOOKUPS('lookups.CSV',',','1','e2')", {
+        directDataArgs: { file: 'lookups.CSV', tab: ',', timeRowOrCol: '1', startCell: 'e2' },
+        refId: '_a[_a2]',
+        separationDims: ['_dima'],
+        subscripts: ['_a2'],
+        varType: 'data'
+      }),
+      v('a[DimA]', "GET DIRECT LOOKUPS('lookups.CSV',',','1','e2')", {
+        directDataArgs: { file: 'lookups.CSV', tab: ',', timeRowOrCol: '1', startCell: 'e2' },
+        refId: '_a[_a3]',
+        separationDims: ['_dima'],
+        subscripts: ['_a3'],
+        varType: 'data'
+      }),
       v('a from named xlsx[DimA]', "GET DIRECT LOOKUPS('lookups.xlsx','a','1','E2')", {
         directDataArgs: { file: 'lookups.xlsx', tab: 'a', timeRowOrCol: '1', startCell: 'E2' },
         refId: '_a_from_named_xlsx[_a1]',
@@ -4704,27 +4721,6 @@ describe('readEquations', () => {
         subscripts: ['_a3'],
         varType: 'data'
       }),
-      v('a[DimA]', "GET DIRECT LOOKUPS('lookups.CSV',',','1','e2')", {
-        directDataArgs: { file: 'lookups.CSV', tab: ',', timeRowOrCol: '1', startCell: 'e2' },
-        refId: '_a[_a1]',
-        separationDims: ['_dima'],
-        subscripts: ['_a1'],
-        varType: 'data'
-      }),
-      v('a[DimA]', "GET DIRECT LOOKUPS('lookups.CSV',',','1','e2')", {
-        directDataArgs: { file: 'lookups.CSV', tab: ',', timeRowOrCol: '1', startCell: 'e2' },
-        refId: '_a[_a2]',
-        separationDims: ['_dima'],
-        subscripts: ['_a2'],
-        varType: 'data'
-      }),
-      v('a[DimA]', "GET DIRECT LOOKUPS('lookups.CSV',',','1','e2')", {
-        directDataArgs: { file: 'lookups.CSV', tab: ',', timeRowOrCol: '1', startCell: 'e2' },
-        refId: '_a[_a3]',
-        separationDims: ['_dima'],
-        subscripts: ['_a3'],
-        varType: 'data'
-      }),
       v('b', 'a[A1](Time)', {
         refId: '_b',
         referencedLookupVarNames: ['_a'],
@@ -4759,10 +4755,6 @@ describe('readEquations', () => {
         refId: '_f',
         referencedLookupVarNames: ['_a']
       }),
-      v('FINAL TIME', '2050', {
-        refId: '_final_time',
-        varType: 'const'
-      }),
       v('g', '', {
         points: [
           [0, 0],
@@ -4781,13 +4773,17 @@ describe('readEquations', () => {
         refId: '_initial_time',
         varType: 'const'
       }),
-      v('SAVEPER', 'TIME STEP', {
-        refId: '_saveper',
-        references: ['_time_step']
+      v('FINAL TIME', '2050', {
+        refId: '_final_time',
+        varType: 'const'
       }),
       v('TIME STEP', '1', {
         refId: '_time_step',
         varType: 'const'
+      }),
+      v('SAVEPER', 'TIME STEP', {
+        refId: '_saveper',
+        references: ['_time_step']
       }),
       v('Time', '', {
         refId: '_time',
@@ -4876,21 +4872,21 @@ describe('readEquations', () => {
         references: ['_a'],
         subscripts: ['_dima']
       }),
+      v('INITIAL TIME', '0', {
+        refId: '_initial_time',
+        varType: 'const'
+      }),
       v('FINAL TIME', '1', {
         refId: '_final_time',
         varType: 'const'
       }),
-      v('INITIAL TIME', '0', {
-        refId: '_initial_time',
+      v('TIME STEP', '1', {
+        refId: '_time_step',
         varType: 'const'
       }),
       v('SAVEPER', 'TIME STEP', {
         refId: '_saveper',
         references: ['_time_step']
-      }),
-      v('TIME STEP', '1', {
-        refId: '_time_step',
-        varType: 'const'
       }),
       v('Time', '', {
         refId: '_time',
@@ -4948,145 +4944,9 @@ describe('readEquations', () => {
         subscripts: ['_dima', '_c3'],
         varType: 'const'
       }),
-      v('except3[DimE,DimF,DimG]:EXCEPT:[E2,F2,G2]', '3', {
-        refId: '_except3[_e1,_f1,_g1]',
-        separationDims: ['_dime', '_dimf', '_dimg'],
-        subscripts: ['_e1', '_f1', '_g1'],
-        varType: 'const'
-      }),
-      v('except3[DimE,DimF,DimG]:EXCEPT:[E2,F2,G2]', '3', {
-        refId: '_except3[_e1,_f1,_g2]',
-        separationDims: ['_dime', '_dimf', '_dimg'],
-        subscripts: ['_e1', '_f1', '_g2'],
-        varType: 'const'
-      }),
-      v('except3[DimE,DimF,DimG]:EXCEPT:[E2,F2,G2]', '3', {
-        refId: '_except3[_e1,_f2,_g1]',
-        separationDims: ['_dime', '_dimf', '_dimg'],
-        subscripts: ['_e1', '_f2', '_g1'],
-        varType: 'const'
-      }),
-      v('except3[DimE,DimF,DimG]:EXCEPT:[E2,F2,G2]', '3', {
-        refId: '_except3[_e1,_f2,_g2]',
-        separationDims: ['_dime', '_dimf', '_dimg'],
-        subscripts: ['_e1', '_f2', '_g2'],
-        varType: 'const'
-      }),
-      v('except3[DimE,DimF,DimG]:EXCEPT:[E2,F2,G2]', '3', {
-        refId: '_except3[_e2,_f1,_g1]',
-        separationDims: ['_dime', '_dimf', '_dimg'],
-        subscripts: ['_e2', '_f1', '_g1'],
-        varType: 'const'
-      }),
-      v('except3[DimE,DimF,DimG]:EXCEPT:[E2,F2,G2]', '3', {
-        refId: '_except3[_e2,_f1,_g2]',
-        separationDims: ['_dime', '_dimf', '_dimg'],
-        subscripts: ['_e2', '_f1', '_g2'],
-        varType: 'const'
-      }),
-      v('except3[DimE,DimF,DimG]:EXCEPT:[E2,F2,G2]', '3', {
-        refId: '_except3[_e2,_f2,_g1]',
-        separationDims: ['_dime', '_dimf', '_dimg'],
-        subscripts: ['_e2', '_f2', '_g1'],
-        varType: 'const'
-      }),
-      v('except4[DimE,DimF,DimG,DimH]:EXCEPT:[E2,F2,G2,H2]', '4', {
-        refId: '_except4[_e1,_f1,_g1,_h1]',
-        separationDims: ['_dime', '_dimf', '_dimg', '_dimh'],
-        subscripts: ['_e1', '_f1', '_g1', '_h1'],
-        varType: 'const'
-      }),
-      v('except4[DimE,DimF,DimG,DimH]:EXCEPT:[E2,F2,G2,H2]', '4', {
-        refId: '_except4[_e1,_f1,_g1,_h2]',
-        separationDims: ['_dime', '_dimf', '_dimg', '_dimh'],
-        subscripts: ['_e1', '_f1', '_g1', '_h2'],
-        varType: 'const'
-      }),
-      v('except4[DimE,DimF,DimG,DimH]:EXCEPT:[E2,F2,G2,H2]', '4', {
-        refId: '_except4[_e1,_f1,_g2,_h1]',
-        separationDims: ['_dime', '_dimf', '_dimg', '_dimh'],
-        subscripts: ['_e1', '_f1', '_g2', '_h1'],
-        varType: 'const'
-      }),
-      v('except4[DimE,DimF,DimG,DimH]:EXCEPT:[E2,F2,G2,H2]', '4', {
-        refId: '_except4[_e1,_f1,_g2,_h2]',
-        separationDims: ['_dime', '_dimf', '_dimg', '_dimh'],
-        subscripts: ['_e1', '_f1', '_g2', '_h2'],
-        varType: 'const'
-      }),
-      v('except4[DimE,DimF,DimG,DimH]:EXCEPT:[E2,F2,G2,H2]', '4', {
-        refId: '_except4[_e1,_f2,_g1,_h1]',
-        separationDims: ['_dime', '_dimf', '_dimg', '_dimh'],
-        subscripts: ['_e1', '_f2', '_g1', '_h1'],
-        varType: 'const'
-      }),
-      v('except4[DimE,DimF,DimG,DimH]:EXCEPT:[E2,F2,G2,H2]', '4', {
-        refId: '_except4[_e1,_f2,_g1,_h2]',
-        separationDims: ['_dime', '_dimf', '_dimg', '_dimh'],
-        subscripts: ['_e1', '_f2', '_g1', '_h2'],
-        varType: 'const'
-      }),
-      v('except4[DimE,DimF,DimG,DimH]:EXCEPT:[E2,F2,G2,H2]', '4', {
-        refId: '_except4[_e1,_f2,_g2,_h1]',
-        separationDims: ['_dime', '_dimf', '_dimg', '_dimh'],
-        subscripts: ['_e1', '_f2', '_g2', '_h1'],
-        varType: 'const'
-      }),
-      v('except4[DimE,DimF,DimG,DimH]:EXCEPT:[E2,F2,G2,H2]', '4', {
-        refId: '_except4[_e1,_f2,_g2,_h2]',
-        separationDims: ['_dime', '_dimf', '_dimg', '_dimh'],
-        subscripts: ['_e1', '_f2', '_g2', '_h2'],
-        varType: 'const'
-      }),
-      v('except4[DimE,DimF,DimG,DimH]:EXCEPT:[E2,F2,G2,H2]', '4', {
-        refId: '_except4[_e2,_f1,_g1,_h1]',
-        separationDims: ['_dime', '_dimf', '_dimg', '_dimh'],
-        subscripts: ['_e2', '_f1', '_g1', '_h1'],
-        varType: 'const'
-      }),
-      v('except4[DimE,DimF,DimG,DimH]:EXCEPT:[E2,F2,G2,H2]', '4', {
-        refId: '_except4[_e2,_f1,_g1,_h2]',
-        separationDims: ['_dime', '_dimf', '_dimg', '_dimh'],
-        subscripts: ['_e2', '_f1', '_g1', '_h2'],
-        varType: 'const'
-      }),
-      v('except4[DimE,DimF,DimG,DimH]:EXCEPT:[E2,F2,G2,H2]', '4', {
-        refId: '_except4[_e2,_f1,_g2,_h1]',
-        separationDims: ['_dime', '_dimf', '_dimg', '_dimh'],
-        subscripts: ['_e2', '_f1', '_g2', '_h1'],
-        varType: 'const'
-      }),
-      v('except4[DimE,DimF,DimG,DimH]:EXCEPT:[E2,F2,G2,H2]', '4', {
-        refId: '_except4[_e2,_f1,_g2,_h2]',
-        separationDims: ['_dime', '_dimf', '_dimg', '_dimh'],
-        subscripts: ['_e2', '_f1', '_g2', '_h2'],
-        varType: 'const'
-      }),
-      v('except4[DimE,DimF,DimG,DimH]:EXCEPT:[E2,F2,G2,H2]', '4', {
-        refId: '_except4[_e2,_f2,_g1,_h1]',
-        separationDims: ['_dime', '_dimf', '_dimg', '_dimh'],
-        subscripts: ['_e2', '_f2', '_g1', '_h1'],
-        varType: 'const'
-      }),
-      v('except4[DimE,DimF,DimG,DimH]:EXCEPT:[E2,F2,G2,H2]', '4', {
-        refId: '_except4[_e2,_f2,_g1,_h2]',
-        separationDims: ['_dime', '_dimf', '_dimg', '_dimh'],
-        subscripts: ['_e2', '_f2', '_g1', '_h2'],
-        varType: 'const'
-      }),
-      v('except4[DimE,DimF,DimG,DimH]:EXCEPT:[E2,F2,G2,H2]', '4', {
-        refId: '_except4[_e2,_f2,_g2,_h1]',
-        separationDims: ['_dime', '_dimf', '_dimg', '_dimh'],
-        subscripts: ['_e2', '_f2', '_g2', '_h1'],
-        varType: 'const'
-      }),
       v('f[A1,C1]', '6', {
         refId: '_f',
         subscripts: ['_a1', '_c1'],
-        varType: 'const'
-      }),
-      v('FINAL TIME', '1', {
-        refId: '_final_time',
         varType: 'const'
       }),
       v('g[DimA]:EXCEPT:[A1]', '7', {
@@ -5105,14 +4965,6 @@ describe('readEquations', () => {
         refId: '_h',
         separationDims: ['_dima'],
         subscripts: ['_a1'],
-        varType: 'const'
-      }),
-      v('INITIAL TIME', '0', {
-        refId: '_initial_time',
-        varType: 'const'
-      }),
-      v('input', '0', {
-        refId: '_input',
         varType: 'const'
       }),
       v('j[DimD]', '10,20', {
@@ -5258,10 +5110,6 @@ describe('readEquations', () => {
         subscripts: ['_a2'],
         varType: 'const'
       }),
-      v('SAVEPER', '1', {
-        refId: '_saveper',
-        varType: 'const'
-      }),
       v('t[SubA,SubC]', '15', {
         refId: '_t[_a2,_c2]',
         separationDims: ['_suba', '_subc'],
@@ -5284,10 +5132,6 @@ describe('readEquations', () => {
         refId: '_t[_a3,_c3]',
         separationDims: ['_suba', '_subc'],
         subscripts: ['_a3', '_c3'],
-        varType: 'const'
-      }),
-      v('TIME STEP', '1', {
-        refId: '_time_step',
         varType: 'const'
       }),
       v('u[DimA]:EXCEPT:[A1]', 'a[DimA]', {
@@ -5344,23 +5188,148 @@ describe('readEquations', () => {
         separationDims: ['_suba', '_subc'],
         subscripts: ['_a3', '_c2']
       }),
+      v('except3[DimE,DimF,DimG]:EXCEPT:[E2,F2,G2]', '3', {
+        refId: '_except3[_e1,_f1,_g1]',
+        separationDims: ['_dime', '_dimf', '_dimg'],
+        subscripts: ['_e1', '_f1', '_g1'],
+        varType: 'const'
+      }),
+      v('except3[DimE,DimF,DimG]:EXCEPT:[E2,F2,G2]', '3', {
+        refId: '_except3[_e1,_f1,_g2]',
+        separationDims: ['_dime', '_dimf', '_dimg'],
+        subscripts: ['_e1', '_f1', '_g2'],
+        varType: 'const'
+      }),
+      v('except3[DimE,DimF,DimG]:EXCEPT:[E2,F2,G2]', '3', {
+        refId: '_except3[_e1,_f2,_g1]',
+        separationDims: ['_dime', '_dimf', '_dimg'],
+        subscripts: ['_e1', '_f2', '_g1'],
+        varType: 'const'
+      }),
+      v('except3[DimE,DimF,DimG]:EXCEPT:[E2,F2,G2]', '3', {
+        refId: '_except3[_e1,_f2,_g2]',
+        separationDims: ['_dime', '_dimf', '_dimg'],
+        subscripts: ['_e1', '_f2', '_g2'],
+        varType: 'const'
+      }),
+      v('except3[DimE,DimF,DimG]:EXCEPT:[E2,F2,G2]', '3', {
+        refId: '_except3[_e2,_f1,_g1]',
+        separationDims: ['_dime', '_dimf', '_dimg'],
+        subscripts: ['_e2', '_f1', '_g1'],
+        varType: 'const'
+      }),
+      v('except3[DimE,DimF,DimG]:EXCEPT:[E2,F2,G2]', '3', {
+        refId: '_except3[_e2,_f1,_g2]',
+        separationDims: ['_dime', '_dimf', '_dimg'],
+        subscripts: ['_e2', '_f1', '_g2'],
+        varType: 'const'
+      }),
+      v('except3[DimE,DimF,DimG]:EXCEPT:[E2,F2,G2]', '3', {
+        refId: '_except3[_e2,_f2,_g1]',
+        separationDims: ['_dime', '_dimf', '_dimg'],
+        subscripts: ['_e2', '_f2', '_g1'],
+        varType: 'const'
+      }),
+      v('except4[DimE,DimF,DimG,DimH]:EXCEPT:[E2,F2,G2,H2]', '4', {
+        refId: '_except4[_e1,_f1,_g1,_h1]',
+        separationDims: ['_dime', '_dimf', '_dimg', '_dimh'],
+        subscripts: ['_e1', '_f1', '_g1', '_h1'],
+        varType: 'const'
+      }),
+      v('except4[DimE,DimF,DimG,DimH]:EXCEPT:[E2,F2,G2,H2]', '4', {
+        refId: '_except4[_e1,_f1,_g1,_h2]',
+        separationDims: ['_dime', '_dimf', '_dimg', '_dimh'],
+        subscripts: ['_e1', '_f1', '_g1', '_h2'],
+        varType: 'const'
+      }),
+      v('except4[DimE,DimF,DimG,DimH]:EXCEPT:[E2,F2,G2,H2]', '4', {
+        refId: '_except4[_e1,_f1,_g2,_h1]',
+        separationDims: ['_dime', '_dimf', '_dimg', '_dimh'],
+        subscripts: ['_e1', '_f1', '_g2', '_h1'],
+        varType: 'const'
+      }),
+      v('except4[DimE,DimF,DimG,DimH]:EXCEPT:[E2,F2,G2,H2]', '4', {
+        refId: '_except4[_e1,_f1,_g2,_h2]',
+        separationDims: ['_dime', '_dimf', '_dimg', '_dimh'],
+        subscripts: ['_e1', '_f1', '_g2', '_h2'],
+        varType: 'const'
+      }),
+      v('except4[DimE,DimF,DimG,DimH]:EXCEPT:[E2,F2,G2,H2]', '4', {
+        refId: '_except4[_e1,_f2,_g1,_h1]',
+        separationDims: ['_dime', '_dimf', '_dimg', '_dimh'],
+        subscripts: ['_e1', '_f2', '_g1', '_h1'],
+        varType: 'const'
+      }),
+      v('except4[DimE,DimF,DimG,DimH]:EXCEPT:[E2,F2,G2,H2]', '4', {
+        refId: '_except4[_e1,_f2,_g1,_h2]',
+        separationDims: ['_dime', '_dimf', '_dimg', '_dimh'],
+        subscripts: ['_e1', '_f2', '_g1', '_h2'],
+        varType: 'const'
+      }),
+      v('except4[DimE,DimF,DimG,DimH]:EXCEPT:[E2,F2,G2,H2]', '4', {
+        refId: '_except4[_e1,_f2,_g2,_h1]',
+        separationDims: ['_dime', '_dimf', '_dimg', '_dimh'],
+        subscripts: ['_e1', '_f2', '_g2', '_h1'],
+        varType: 'const'
+      }),
+      v('except4[DimE,DimF,DimG,DimH]:EXCEPT:[E2,F2,G2,H2]', '4', {
+        refId: '_except4[_e1,_f2,_g2,_h2]',
+        separationDims: ['_dime', '_dimf', '_dimg', '_dimh'],
+        subscripts: ['_e1', '_f2', '_g2', '_h2'],
+        varType: 'const'
+      }),
+      v('except4[DimE,DimF,DimG,DimH]:EXCEPT:[E2,F2,G2,H2]', '4', {
+        refId: '_except4[_e2,_f1,_g1,_h1]',
+        separationDims: ['_dime', '_dimf', '_dimg', '_dimh'],
+        subscripts: ['_e2', '_f1', '_g1', '_h1'],
+        varType: 'const'
+      }),
+      v('except4[DimE,DimF,DimG,DimH]:EXCEPT:[E2,F2,G2,H2]', '4', {
+        refId: '_except4[_e2,_f1,_g1,_h2]',
+        separationDims: ['_dime', '_dimf', '_dimg', '_dimh'],
+        subscripts: ['_e2', '_f1', '_g1', '_h2'],
+        varType: 'const'
+      }),
+      v('except4[DimE,DimF,DimG,DimH]:EXCEPT:[E2,F2,G2,H2]', '4', {
+        refId: '_except4[_e2,_f1,_g2,_h1]',
+        separationDims: ['_dime', '_dimf', '_dimg', '_dimh'],
+        subscripts: ['_e2', '_f1', '_g2', '_h1'],
+        varType: 'const'
+      }),
+      v('except4[DimE,DimF,DimG,DimH]:EXCEPT:[E2,F2,G2,H2]', '4', {
+        refId: '_except4[_e2,_f1,_g2,_h2]',
+        separationDims: ['_dime', '_dimf', '_dimg', '_dimh'],
+        subscripts: ['_e2', '_f1', '_g2', '_h2'],
+        varType: 'const'
+      }),
+      v('except4[DimE,DimF,DimG,DimH]:EXCEPT:[E2,F2,G2,H2]', '4', {
+        refId: '_except4[_e2,_f2,_g1,_h1]',
+        separationDims: ['_dime', '_dimf', '_dimg', '_dimh'],
+        subscripts: ['_e2', '_f2', '_g1', '_h1'],
+        varType: 'const'
+      }),
+      v('except4[DimE,DimF,DimG,DimH]:EXCEPT:[E2,F2,G2,H2]', '4', {
+        refId: '_except4[_e2,_f2,_g1,_h2]',
+        separationDims: ['_dime', '_dimf', '_dimg', '_dimh'],
+        subscripts: ['_e2', '_f2', '_g1', '_h2'],
+        varType: 'const'
+      }),
+      v('except4[DimE,DimF,DimG,DimH]:EXCEPT:[E2,F2,G2,H2]', '4', {
+        refId: '_except4[_e2,_f2,_g2,_h1]',
+        separationDims: ['_dime', '_dimf', '_dimg', '_dimh'],
+        subscripts: ['_e2', '_f2', '_g2', '_h1'],
+        varType: 'const'
+      }),
+      v('input', '0', {
+        refId: '_input',
+        varType: 'const'
+      }),
       v('z ref a', '25', {
         refId: '_z_ref_a',
         varType: 'const'
       }),
       v('z ref b', '5', {
         refId: '_z_ref_b',
-        varType: 'const'
-      }),
-      v('z total', 'SUM(z[SubA!])', {
-        refId: '_z_total',
-        referencedFunctionNames: ['__sum'],
-        references: ['_z[_a2]', '_z[_a3]']
-      }),
-      v('z[DimA]:EXCEPT:[SubA]', '10', {
-        refId: '_z[_a1]',
-        separationDims: ['_dima'],
-        subscripts: ['_a1'],
         varType: 'const'
       }),
       v('z[SubA]', 'z ref a*z ref b', {
@@ -5374,6 +5343,33 @@ describe('readEquations', () => {
         references: ['_z_ref_a', '_z_ref_b'],
         separationDims: ['_suba'],
         subscripts: ['_a3']
+      }),
+      v('z[DimA]:EXCEPT:[SubA]', '10', {
+        refId: '_z[_a1]',
+        separationDims: ['_dima'],
+        subscripts: ['_a1'],
+        varType: 'const'
+      }),
+      v('z total', 'SUM(z[SubA!])', {
+        refId: '_z_total',
+        referencedFunctionNames: ['__sum'],
+        references: ['_z[_a2]', '_z[_a3]']
+      }),
+      v('INITIAL TIME', '0', {
+        refId: '_initial_time',
+        varType: 'const'
+      }),
+      v('FINAL TIME', '1', {
+        refId: '_final_time',
+        varType: 'const'
+      }),
+      v('SAVEPER', '1', {
+        refId: '_saveper',
+        varType: 'const'
+      }),
+      v('TIME STEP', '1', {
+        refId: '_time_step',
+        varType: 'const'
       }),
       v('Time', '', {
         refId: '_time',
@@ -5391,62 +5387,28 @@ describe('readEquations', () => {
   it('should work for Vensim "extdata" model', () => {
     const vars = readSubscriptsAndEquations('extdata')
     expect(vars).toEqual([
-      v('A Totals', 'SUM(A Values[DimA!])', {
-        refId: '_a_totals',
-        referencedFunctionNames: ['__sum'],
-        references: ['_a_values']
+      v('Simple 1', '', {
+        refId: '_simple_1',
+        varType: 'data'
+      }),
+      v('Simple 2', '', {
+        refId: '_simple_2',
+        varType: 'data'
       }),
       v('A Values[DimA]', '', {
         refId: '_a_values',
         subscripts: ['_dima'],
         varType: 'data'
       }),
-      v('B Selection[DimB]', 'IF THEN ELSE(DimB=Chosen B,1,0)', {
-        refId: '_b_selection',
-        references: ['_chosen_b'],
-        subscripts: ['_dimb']
-      }),
-      v('B1 Totals', 'SUM(BC Values[B1,DimC!])', {
-        refId: '_b1_totals',
-        referencedFunctionNames: ['__sum'],
-        references: ['_bc_values']
-      }),
       v('BC Values[DimB,DimC]', '', {
         refId: '_bc_values',
         subscripts: ['_dimb', '_dimc'],
         varType: 'data'
       }),
-      v('C Selection[DimC]', 'IF THEN ELSE(DimC=Chosen C,1,0)', {
-        refId: '_c_selection',
-        references: ['_chosen_c'],
-        subscripts: ['_dimc']
-      }),
-      v('Chosen B', '3', {
-        refId: '_chosen_b',
-        varType: 'const'
-      }),
-      v('Chosen C', '1', {
-        refId: '_chosen_c',
-        varType: 'const'
-      }),
-      v('Chosen E', '2', {
-        refId: '_chosen_e',
-        varType: 'const'
-      }),
-      v('D Totals', 'SUM(D Values[DimD!])', {
-        refId: '_d_totals',
-        referencedFunctionNames: ['__sum'],
-        references: ['_d_values']
-      }),
       v('D Values[DimD]', '', {
         refId: '_d_values',
         subscripts: ['_dimd'],
         varType: 'data'
-      }),
-      v('E Selection[DimE]', 'IF THEN ELSE(DimE=Chosen E,1,0)', {
-        refId: '_e_selection',
-        references: ['_chosen_e'],
-        subscripts: ['_dime']
       }),
       v('E Values[E1]', '', {
         refId: '_e_values[_e1]',
@@ -5458,6 +5420,30 @@ describe('readEquations', () => {
         subscripts: ['_e2'],
         varType: 'data'
       }),
+      v('EBC Values[DimE,DimB,DimC]', '', {
+        refId: '_ebc_values',
+        subscripts: ['_dimb', '_dimc', '_dime'],
+        varType: 'data'
+      }),
+      v('Simple Totals', 'Simple 1+Simple 2', {
+        refId: '_simple_totals',
+        references: ['_simple_1', '_simple_2']
+      }),
+      v('A Totals', 'SUM(A Values[DimA!])', {
+        refId: '_a_totals',
+        referencedFunctionNames: ['__sum'],
+        references: ['_a_values']
+      }),
+      v('B1 Totals', 'SUM(BC Values[B1,DimC!])', {
+        refId: '_b1_totals',
+        referencedFunctionNames: ['__sum'],
+        references: ['_bc_values']
+      }),
+      v('D Totals', 'SUM(D Values[DimD!])', {
+        refId: '_d_totals',
+        referencedFunctionNames: ['__sum'],
+        references: ['_d_values']
+      }),
       v('E1 Values', 'E Values[E1]', {
         refId: '_e1_values',
         references: ['_e_values[_e1]']
@@ -5466,10 +5452,65 @@ describe('readEquations', () => {
         refId: '_e2_values',
         references: ['_e_values[_e2]']
       }),
-      v('EBC Values[DimE,DimB,DimC]', '', {
-        refId: '_ebc_values',
-        subscripts: ['_dimb', '_dimc', '_dime'],
-        varType: 'data'
+      v('Chosen E', '2', {
+        refId: '_chosen_e',
+        varType: 'const'
+      }),
+      v('Chosen B', '3', {
+        refId: '_chosen_b',
+        varType: 'const'
+      }),
+      v('Chosen C', '1', {
+        refId: '_chosen_c',
+        varType: 'const'
+      }),
+      v('E Selection[DimE]', 'IF THEN ELSE(DimE=Chosen E,1,0)', {
+        refId: '_e_selection',
+        references: ['_chosen_e'],
+        subscripts: ['_dime']
+      }),
+      v('B Selection[DimB]', 'IF THEN ELSE(DimB=Chosen B,1,0)', {
+        refId: '_b_selection',
+        references: ['_chosen_b'],
+        subscripts: ['_dimb']
+      }),
+      v('C Selection[DimC]', 'IF THEN ELSE(DimC=Chosen C,1,0)', {
+        refId: '_c_selection',
+        references: ['_chosen_c'],
+        subscripts: ['_dimc']
+      }),
+      v(
+        'Total EBC for Selected C[DimE,DimB]',
+        'VECTOR SELECT(C Selection[DimC!],EBC Values[DimE,DimB,DimC!],0,VSSUM,VSERRATLEASTONE)',
+        {
+          refId: '_total_ebc_for_selected_c',
+          referencedFunctionNames: ['__vector_select'],
+          references: ['_c_selection', '_ebc_values', '_vssum', '_vserratleastone'],
+          subscripts: ['_dimb', '_dime']
+        }
+      ),
+      v(
+        'Total EBC for Selected BC[DimE]',
+        'VECTOR SELECT(B Selection[DimB!],Total EBC for Selected C[DimE,DimB!],0,VSSUM,VSERRATLEASTONE)',
+        {
+          refId: '_total_ebc_for_selected_bc',
+          referencedFunctionNames: ['__vector_select'],
+          references: ['_b_selection', '_total_ebc_for_selected_c', '_vssum', '_vserratleastone'],
+          subscripts: ['_dime']
+        }
+      ),
+      v('Total EBC', 'VECTOR SELECT(E Selection[DimE!],Total EBC for Selected BC[DimE!],0,VSSUM,VSERRATLEASTONE)', {
+        refId: '_total_ebc',
+        referencedFunctionNames: ['__vector_select'],
+        references: ['_e_selection', '_total_ebc_for_selected_bc', '_vssum', '_vserratleastone']
+      }),
+      v('VSERRATLEASTONE', '1', {
+        refId: '_vserratleastone',
+        varType: 'const'
+      }),
+      v('VSSUM', '0', {
+        refId: '_vssum',
+        varType: 'const'
       }),
       v('FINAL TIME', '10', {
         refId: '_final_time',
@@ -5483,53 +5524,8 @@ describe('readEquations', () => {
         refId: '_saveper',
         references: ['_time_step']
       }),
-      v('Simple 1', '', {
-        refId: '_simple_1',
-        varType: 'data'
-      }),
-      v('Simple 2', '', {
-        refId: '_simple_2',
-        varType: 'data'
-      }),
-      v('Simple Totals', 'Simple 1+Simple 2', {
-        refId: '_simple_totals',
-        references: ['_simple_1', '_simple_2']
-      }),
       v('TIME STEP', '1', {
         refId: '_time_step',
-        varType: 'const'
-      }),
-      v('Total EBC', 'VECTOR SELECT(E Selection[DimE!],Total EBC for Selected BC[DimE!],0,VSSUM,VSERRATLEASTONE)', {
-        refId: '_total_ebc',
-        referencedFunctionNames: ['__vector_select'],
-        references: ['_e_selection', '_total_ebc_for_selected_bc', '_vssum', '_vserratleastone']
-      }),
-      v(
-        'Total EBC for Selected BC[DimE]',
-        'VECTOR SELECT(B Selection[DimB!],Total EBC for Selected C[DimE,DimB!],0,VSSUM,VSERRATLEASTONE)',
-        {
-          refId: '_total_ebc_for_selected_bc',
-          referencedFunctionNames: ['__vector_select'],
-          references: ['_b_selection', '_total_ebc_for_selected_c', '_vssum', '_vserratleastone'],
-          subscripts: ['_dime']
-        }
-      ),
-      v(
-        'Total EBC for Selected C[DimE,DimB]',
-        'VECTOR SELECT(C Selection[DimC!],EBC Values[DimE,DimB,DimC!],0,VSSUM,VSERRATLEASTONE)',
-        {
-          refId: '_total_ebc_for_selected_c',
-          referencedFunctionNames: ['__vector_select'],
-          references: ['_c_selection', '_ebc_values', '_vssum', '_vserratleastone'],
-          subscripts: ['_dimb', '_dime']
-        }
-      ),
-      v('VSERRATLEASTONE', '1', {
-        refId: '_vserratleastone',
-        varType: 'const'
-      }),
-      v('VSSUM', '0', {
-        refId: '_vssum',
         varType: 'const'
       }),
       v('Time', '', {
@@ -5560,21 +5556,21 @@ describe('readEquations', () => {
         refId: '_c',
         referencedFunctionNames: ['__gamma_ln']
       }),
+      v('INITIAL TIME', '0', {
+        refId: '_initial_time',
+        varType: 'const'
+      }),
       v('FINAL TIME', '1', {
         refId: '_final_time',
         varType: 'const'
       }),
-      v('INITIAL TIME', '0', {
-        refId: '_initial_time',
+      v('TIME STEP', '1', {
+        refId: '_time_step',
         varType: 'const'
       }),
       v('SAVEPER', 'TIME STEP', {
         refId: '_saveper',
         references: ['_time_step']
-      }),
-      v('TIME STEP', '1', {
-        refId: '_time_step',
-        varType: 'const'
       }),
       v('Time', '', {
         refId: '_time',
@@ -5586,33 +5582,178 @@ describe('readEquations', () => {
   it('should work for Vensim "getdata" model', () => {
     const vars = readSubscriptsAndEquations('getdata')
     expect(vars).toEqual([
-      v('Backward', '-1', {
-        refId: '_backward',
-        varType: 'const'
+      v('Values[DimA]', '', {
+        refId: '_values',
+        subscripts: ['_dima'],
+        varType: 'data'
       }),
-      v('FINAL TIME', '10', {
-        refId: '_final_time',
-        varType: 'const'
-      }),
-      v('Forward', '1', {
-        refId: '_forward',
+      v('One year', '1', {
+        refId: '_one_year',
         varType: 'const'
       }),
       v('Half year', '0.5', {
         refId: '_half_year',
         varType: 'const'
       }),
-      v('INITIAL TIME', '0', {
-        refId: '_initial_time',
+      v('Interpolate', '0', {
+        refId: '_interpolate',
+        varType: 'const'
+      }),
+      v('Forward', '1', {
+        refId: '_forward',
+        varType: 'const'
+      }),
+      v('Backward', '-1', {
+        refId: '_backward',
         varType: 'const'
       }),
       v(
-        'Initial value at time plus one year backward[DimA]',
-        'INITIAL(GET DATA BETWEEN TIMES(Values[DimA],MIN(FINAL TIME,Time+One year),Backward))',
+        'Value for A1 at time minus one year interpolate',
+        'GET DATA BETWEEN TIMES(Values[A1],MAX(INITIAL TIME,Time-One year),Interpolate)',
+        {
+          refId: '_value_for_a1_at_time_minus_one_year_interpolate',
+          referencedFunctionNames: ['__get_data_between_times', '__max'],
+          references: ['_values', '_initial_time', '_time', '_one_year', '_interpolate']
+        }
+      ),
+      v(
+        'Value for A1 at time minus one year forward',
+        'GET DATA BETWEEN TIMES(Values[A1],MAX(INITIAL TIME,Time-One year),Forward)',
+        {
+          refId: '_value_for_a1_at_time_minus_one_year_forward',
+          referencedFunctionNames: ['__get_data_between_times', '__max'],
+          references: ['_values', '_initial_time', '_time', '_one_year', '_forward']
+        }
+      ),
+      v(
+        'Value for A1 at time minus one year backward',
+        'GET DATA BETWEEN TIMES(Values[A1],MAX(INITIAL TIME,Time-One year),Backward)',
+        {
+          refId: '_value_for_a1_at_time_minus_one_year_backward',
+          referencedFunctionNames: ['__get_data_between_times', '__max'],
+          references: ['_values', '_initial_time', '_time', '_one_year', '_backward']
+        }
+      ),
+      v(
+        'Value for A1 at time minus half year forward',
+        'GET DATA BETWEEN TIMES(Values[A1],MAX(INITIAL TIME,Time-Half year),Forward)',
+        {
+          refId: '_value_for_a1_at_time_minus_half_year_forward',
+          referencedFunctionNames: ['__get_data_between_times', '__max'],
+          references: ['_values', '_initial_time', '_time', '_half_year', '_forward']
+        }
+      ),
+      v(
+        'Value for A1 at time minus half year backward',
+        'GET DATA BETWEEN TIMES(Values[A1],MAX(INITIAL TIME,Time-Half year),Backward)',
+        {
+          refId: '_value_for_a1_at_time_minus_half_year_backward',
+          referencedFunctionNames: ['__get_data_between_times', '__max'],
+          references: ['_values', '_initial_time', '_time', '_half_year', '_backward']
+        }
+      ),
+      v(
+        'Value for A1 at time plus half year forward',
+        'GET DATA BETWEEN TIMES(Values[A1],MIN(FINAL TIME,Time+Half year),Forward)',
+        {
+          refId: '_value_for_a1_at_time_plus_half_year_forward',
+          referencedFunctionNames: ['__get_data_between_times', '__min'],
+          references: ['_values', '_final_time', '_time', '_half_year', '_forward']
+        }
+      ),
+      v(
+        'Value for A1 at time plus half year backward',
+        'GET DATA BETWEEN TIMES(Values[A1],MIN(FINAL TIME,Time+Half year),Backward)',
+        {
+          refId: '_value_for_a1_at_time_plus_half_year_backward',
+          referencedFunctionNames: ['__get_data_between_times', '__min'],
+          references: ['_values', '_final_time', '_time', '_half_year', '_backward']
+        }
+      ),
+      v(
+        'Value for A1 at time plus one year interpolate',
+        'GET DATA BETWEEN TIMES(Values[A1],MIN(FINAL TIME,Time+One year),Interpolate)',
+        {
+          refId: '_value_for_a1_at_time_plus_one_year_interpolate',
+          referencedFunctionNames: ['__get_data_between_times', '__min'],
+          references: ['_values', '_final_time', '_time', '_one_year', '_interpolate']
+        }
+      ),
+      v(
+        'Value for A1 at time plus one year forward',
+        'GET DATA BETWEEN TIMES(Values[A1],MIN(FINAL TIME,Time+One year),Forward)',
+        {
+          refId: '_value_for_a1_at_time_plus_one_year_forward',
+          referencedFunctionNames: ['__get_data_between_times', '__min'],
+          references: ['_values', '_final_time', '_time', '_one_year', '_forward']
+        }
+      ),
+      v(
+        'Value for A1 at time plus one year backward',
+        'GET DATA BETWEEN TIMES(Values[A1],MIN(FINAL TIME,Time+One year),Backward)',
+        {
+          refId: '_value_for_a1_at_time_plus_one_year_backward',
+          referencedFunctionNames: ['__get_data_between_times', '__min'],
+          references: ['_values', '_final_time', '_time', '_one_year', '_backward']
+        }
+      ),
+      v(
+        'Value at time plus half year forward[DimA]',
+        'GET DATA BETWEEN TIMES(Values[DimA],MIN(FINAL TIME,Time+Half year),Forward)',
+        {
+          refId: '_value_at_time_plus_half_year_forward',
+          referencedFunctionNames: ['__get_data_between_times', '__min'],
+          references: ['_values', '_final_time', '_time', '_half_year', '_forward'],
+          subscripts: ['_dima']
+        }
+      ),
+      v(
+        'Value at time plus half year backward[DimA]',
+        'GET DATA BETWEEN TIMES(Values[DimA],MIN(FINAL TIME,Time+Half year),Backward)',
+        {
+          refId: '_value_at_time_plus_half_year_backward',
+          referencedFunctionNames: ['__get_data_between_times', '__min'],
+          references: ['_values', '_final_time', '_time', '_half_year', '_backward'],
+          subscripts: ['_dima']
+        }
+      ),
+      v(
+        'Value at time plus one year interpolate[DimA]',
+        'GET DATA BETWEEN TIMES(Values[DimA],MIN(FINAL TIME,Time+One year),Interpolate)',
+        {
+          refId: '_value_at_time_plus_one_year_interpolate',
+          referencedFunctionNames: ['__get_data_between_times', '__min'],
+          references: ['_values', '_final_time', '_time', '_one_year', '_interpolate'],
+          subscripts: ['_dima']
+        }
+      ),
+      v(
+        'Value at time plus one year forward[DimA]',
+        'GET DATA BETWEEN TIMES(Values[DimA],MIN(FINAL TIME,Time+One year),Forward)',
+        {
+          refId: '_value_at_time_plus_one_year_forward',
+          referencedFunctionNames: ['__get_data_between_times', '__min'],
+          references: ['_values', '_final_time', '_time', '_one_year', '_forward'],
+          subscripts: ['_dima']
+        }
+      ),
+      v(
+        'Value at time plus one year backward[DimA]',
+        'GET DATA BETWEEN TIMES(Values[DimA],MIN(FINAL TIME,Time+One year),Backward)',
+        {
+          refId: '_value_at_time_plus_one_year_backward',
+          referencedFunctionNames: ['__get_data_between_times', '__min'],
+          references: ['_values', '_final_time', '_time', '_one_year', '_backward'],
+          subscripts: ['_dima']
+        }
+      ),
+      v(
+        'Initial value at time plus one year interpolate[DimA]',
+        'INITIAL(GET DATA BETWEEN TIMES(Values[DimA],MIN(FINAL TIME,Time+One year),Interpolate))',
         {
           hasInitValue: true,
-          initReferences: ['_values', '_final_time', '_time', '_one_year', '_backward'],
-          refId: '_initial_value_at_time_plus_one_year_backward',
+          initReferences: ['_values', '_final_time', '_time', '_one_year', '_interpolate'],
+          refId: '_initial_value_at_time_plus_one_year_interpolate',
           referencedFunctionNames: ['__initial', '__get_data_between_times', '__min'],
           subscripts: ['_dima'],
           varType: 'initial'
@@ -5631,24 +5772,24 @@ describe('readEquations', () => {
         }
       ),
       v(
-        'Initial value at time plus one year interpolate[DimA]',
-        'INITIAL(GET DATA BETWEEN TIMES(Values[DimA],MIN(FINAL TIME,Time+One year),Interpolate))',
+        'Initial value at time plus one year backward[DimA]',
+        'INITIAL(GET DATA BETWEEN TIMES(Values[DimA],MIN(FINAL TIME,Time+One year),Backward))',
         {
           hasInitValue: true,
-          initReferences: ['_values', '_final_time', '_time', '_one_year', '_interpolate'],
-          refId: '_initial_value_at_time_plus_one_year_interpolate',
+          initReferences: ['_values', '_final_time', '_time', '_one_year', '_backward'],
+          refId: '_initial_value_at_time_plus_one_year_backward',
           referencedFunctionNames: ['__initial', '__get_data_between_times', '__min'],
           subscripts: ['_dima'],
           varType: 'initial'
         }
       ),
       v(
-        'Initial value for A1 at time plus one year backward',
-        'INITIAL(GET DATA BETWEEN TIMES(Values[A1],MIN(FINAL TIME,Time+One year),Backward))',
+        'Initial value for A1 at time plus one year interpolate',
+        'INITIAL(GET DATA BETWEEN TIMES(Values[A1],MIN(FINAL TIME,Time+One year),Interpolate))',
         {
           hasInitValue: true,
-          initReferences: ['_values', '_final_time', '_time', '_one_year', '_backward'],
-          refId: '_initial_value_for_a1_at_time_plus_one_year_backward',
+          initReferences: ['_values', '_final_time', '_time', '_one_year', '_interpolate'],
+          refId: '_initial_value_for_a1_at_time_plus_one_year_interpolate',
           referencedFunctionNames: ['__initial', '__get_data_between_times', '__min'],
           varType: 'initial'
         }
@@ -5665,22 +5806,22 @@ describe('readEquations', () => {
         }
       ),
       v(
-        'Initial value for A1 at time plus one year interpolate',
-        'INITIAL(GET DATA BETWEEN TIMES(Values[A1],MIN(FINAL TIME,Time+One year),Interpolate))',
+        'Initial value for A1 at time plus one year backward',
+        'INITIAL(GET DATA BETWEEN TIMES(Values[A1],MIN(FINAL TIME,Time+One year),Backward))',
         {
           hasInitValue: true,
-          initReferences: ['_values', '_final_time', '_time', '_one_year', '_interpolate'],
-          refId: '_initial_value_for_a1_at_time_plus_one_year_interpolate',
+          initReferences: ['_values', '_final_time', '_time', '_one_year', '_backward'],
+          refId: '_initial_value_for_a1_at_time_plus_one_year_backward',
           referencedFunctionNames: ['__initial', '__get_data_between_times', '__min'],
           varType: 'initial'
         }
       ),
-      v('Interpolate', '0', {
-        refId: '_interpolate',
+      v('FINAL TIME', '10', {
+        refId: '_final_time',
         varType: 'const'
       }),
-      v('One year', '1', {
-        refId: '_one_year',
+      v('INITIAL TIME', '0', {
+        refId: '_initial_time',
         varType: 'const'
       }),
       v('SAVEPER', 'TIME STEP', {
@@ -5690,151 +5831,6 @@ describe('readEquations', () => {
       v('TIME STEP', '1', {
         refId: '_time_step',
         varType: 'const'
-      }),
-      v(
-        'Value at time plus half year backward[DimA]',
-        'GET DATA BETWEEN TIMES(Values[DimA],MIN(FINAL TIME,Time+Half year),Backward)',
-        {
-          refId: '_value_at_time_plus_half_year_backward',
-          referencedFunctionNames: ['__get_data_between_times', '__min'],
-          references: ['_values', '_final_time', '_time', '_half_year', '_backward'],
-          subscripts: ['_dima']
-        }
-      ),
-      v(
-        'Value at time plus half year forward[DimA]',
-        'GET DATA BETWEEN TIMES(Values[DimA],MIN(FINAL TIME,Time+Half year),Forward)',
-        {
-          refId: '_value_at_time_plus_half_year_forward',
-          referencedFunctionNames: ['__get_data_between_times', '__min'],
-          references: ['_values', '_final_time', '_time', '_half_year', '_forward'],
-          subscripts: ['_dima']
-        }
-      ),
-      v(
-        'Value at time plus one year backward[DimA]',
-        'GET DATA BETWEEN TIMES(Values[DimA],MIN(FINAL TIME,Time+One year),Backward)',
-        {
-          refId: '_value_at_time_plus_one_year_backward',
-          referencedFunctionNames: ['__get_data_between_times', '__min'],
-          references: ['_values', '_final_time', '_time', '_one_year', '_backward'],
-          subscripts: ['_dima']
-        }
-      ),
-      v(
-        'Value at time plus one year forward[DimA]',
-        'GET DATA BETWEEN TIMES(Values[DimA],MIN(FINAL TIME,Time+One year),Forward)',
-        {
-          refId: '_value_at_time_plus_one_year_forward',
-          referencedFunctionNames: ['__get_data_between_times', '__min'],
-          references: ['_values', '_final_time', '_time', '_one_year', '_forward'],
-          subscripts: ['_dima']
-        }
-      ),
-      v(
-        'Value at time plus one year interpolate[DimA]',
-        'GET DATA BETWEEN TIMES(Values[DimA],MIN(FINAL TIME,Time+One year),Interpolate)',
-        {
-          refId: '_value_at_time_plus_one_year_interpolate',
-          referencedFunctionNames: ['__get_data_between_times', '__min'],
-          references: ['_values', '_final_time', '_time', '_one_year', '_interpolate'],
-          subscripts: ['_dima']
-        }
-      ),
-      v(
-        'Value for A1 at time minus half year backward',
-        'GET DATA BETWEEN TIMES(Values[A1],MAX(INITIAL TIME,Time-Half year),Backward)',
-        {
-          refId: '_value_for_a1_at_time_minus_half_year_backward',
-          referencedFunctionNames: ['__get_data_between_times', '__max'],
-          references: ['_values', '_initial_time', '_time', '_half_year', '_backward']
-        }
-      ),
-      v(
-        'Value for A1 at time minus half year forward',
-        'GET DATA BETWEEN TIMES(Values[A1],MAX(INITIAL TIME,Time-Half year),Forward)',
-        {
-          refId: '_value_for_a1_at_time_minus_half_year_forward',
-          referencedFunctionNames: ['__get_data_between_times', '__max'],
-          references: ['_values', '_initial_time', '_time', '_half_year', '_forward']
-        }
-      ),
-      v(
-        'Value for A1 at time minus one year backward',
-        'GET DATA BETWEEN TIMES(Values[A1],MAX(INITIAL TIME,Time-One year),Backward)',
-        {
-          refId: '_value_for_a1_at_time_minus_one_year_backward',
-          referencedFunctionNames: ['__get_data_between_times', '__max'],
-          references: ['_values', '_initial_time', '_time', '_one_year', '_backward']
-        }
-      ),
-      v(
-        'Value for A1 at time minus one year forward',
-        'GET DATA BETWEEN TIMES(Values[A1],MAX(INITIAL TIME,Time-One year),Forward)',
-        {
-          refId: '_value_for_a1_at_time_minus_one_year_forward',
-          referencedFunctionNames: ['__get_data_between_times', '__max'],
-          references: ['_values', '_initial_time', '_time', '_one_year', '_forward']
-        }
-      ),
-      v(
-        'Value for A1 at time minus one year interpolate',
-        'GET DATA BETWEEN TIMES(Values[A1],MAX(INITIAL TIME,Time-One year),Interpolate)',
-        {
-          refId: '_value_for_a1_at_time_minus_one_year_interpolate',
-          referencedFunctionNames: ['__get_data_between_times', '__max'],
-          references: ['_values', '_initial_time', '_time', '_one_year', '_interpolate']
-        }
-      ),
-      v(
-        'Value for A1 at time plus half year backward',
-        'GET DATA BETWEEN TIMES(Values[A1],MIN(FINAL TIME,Time+Half year),Backward)',
-        {
-          refId: '_value_for_a1_at_time_plus_half_year_backward',
-          referencedFunctionNames: ['__get_data_between_times', '__min'],
-          references: ['_values', '_final_time', '_time', '_half_year', '_backward']
-        }
-      ),
-      v(
-        'Value for A1 at time plus half year forward',
-        'GET DATA BETWEEN TIMES(Values[A1],MIN(FINAL TIME,Time+Half year),Forward)',
-        {
-          refId: '_value_for_a1_at_time_plus_half_year_forward',
-          referencedFunctionNames: ['__get_data_between_times', '__min'],
-          references: ['_values', '_final_time', '_time', '_half_year', '_forward']
-        }
-      ),
-      v(
-        'Value for A1 at time plus one year backward',
-        'GET DATA BETWEEN TIMES(Values[A1],MIN(FINAL TIME,Time+One year),Backward)',
-        {
-          refId: '_value_for_a1_at_time_plus_one_year_backward',
-          referencedFunctionNames: ['__get_data_between_times', '__min'],
-          references: ['_values', '_final_time', '_time', '_one_year', '_backward']
-        }
-      ),
-      v(
-        'Value for A1 at time plus one year forward',
-        'GET DATA BETWEEN TIMES(Values[A1],MIN(FINAL TIME,Time+One year),Forward)',
-        {
-          refId: '_value_for_a1_at_time_plus_one_year_forward',
-          referencedFunctionNames: ['__get_data_between_times', '__min'],
-          references: ['_values', '_final_time', '_time', '_one_year', '_forward']
-        }
-      ),
-      v(
-        'Value for A1 at time plus one year interpolate',
-        'GET DATA BETWEEN TIMES(Values[A1],MIN(FINAL TIME,Time+One year),Interpolate)',
-        {
-          refId: '_value_for_a1_at_time_plus_one_year_interpolate',
-          referencedFunctionNames: ['__get_data_between_times', '__min'],
-          references: ['_values', '_final_time', '_time', '_one_year', '_interpolate']
-        }
-      ),
-      v('Values[DimA]', '', {
-        refId: '_values',
-        subscripts: ['_dima'],
-        varType: 'data'
       }),
       v('Time', '', {
         refId: '_time',
@@ -5906,13 +5902,18 @@ describe('readEquations', () => {
         refId: '_amplitude',
         varType: 'const'
       }),
-      v('FINAL TIME', '100', {
-        refId: '_final_time',
+      v('Period', '20', {
+        refId: '_period',
         varType: 'const'
       }),
-      v('INITIAL TIME', '0', {
-        refId: '_initial_time',
-        varType: 'const'
+      v('x', 'amplitude*COS(6.28*Time/Period)', {
+        refId: '_x',
+        referencedFunctionNames: ['__cos'],
+        references: ['_amplitude', '_time', '_period']
+      }),
+      v('relative x', 'x/INITIAL x', {
+        refId: '_relative_x',
+        references: ['_x', '_initial_x']
       }),
       v('INITIAL x', 'INITIAL(x)', {
         hasInitValue: true,
@@ -5921,13 +5922,13 @@ describe('readEquations', () => {
         referencedFunctionNames: ['__initial'],
         varType: 'initial'
       }),
-      v('Period', '20', {
-        refId: '_period',
+      v('FINAL TIME', '100', {
+        refId: '_final_time',
         varType: 'const'
       }),
-      v('relative x', 'x/INITIAL x', {
-        refId: '_relative_x',
-        references: ['_x', '_initial_x']
+      v('INITIAL TIME', '0', {
+        refId: '_initial_time',
+        varType: 'const'
       }),
       v('SAVEPER', 'TIME STEP', {
         refId: '_saveper',
@@ -5936,11 +5937,6 @@ describe('readEquations', () => {
       v('TIME STEP', '1', {
         refId: '_time_step',
         varType: 'const'
-      }),
-      v('x', 'amplitude*COS(6.28*Time/Period)', {
-        refId: '_x',
-        referencedFunctionNames: ['__cos'],
-        references: ['_amplitude', '_time', '_period']
       }),
       v('Time', '', {
         refId: '_time',
@@ -5952,6 +5948,10 @@ describe('readEquations', () => {
   it('should work for Vensim "interleaved" model', () => {
     const vars = readSubscriptsAndEquations('interleaved')
     expect(vars).toEqual([
+      v('x', '1', {
+        refId: '_x',
+        varType: 'const'
+      }),
       v('a[A1]', 'x', {
         refId: '_a[_a1]',
         references: ['_x'],
@@ -5961,6 +5961,10 @@ describe('readEquations', () => {
         refId: '_a[_a2]',
         references: ['_y'],
         subscripts: ['_a2']
+      }),
+      v('y', 'a[A1]', {
+        refId: '_y',
+        references: ['_a[_a1]']
       }),
       v('b[DimA]', 'a[DimA]', {
         refId: '_b',
@@ -5982,14 +5986,6 @@ describe('readEquations', () => {
       v('TIME STEP', '1', {
         refId: '_time_step',
         varType: 'const'
-      }),
-      v('x', '1', {
-        refId: '_x',
-        varType: 'const'
-      }),
-      v('y', 'a[A1]', {
-        refId: '_y',
-        references: ['_a[_a1]']
       }),
       v('Time', '', {
         refId: '_time',
@@ -6021,25 +6017,25 @@ describe('readEquations', () => {
           subscripts: ['_dimx', '_dimy', '_dimz']
         }
       ),
-      v('FINAL TIME', '1', {
-        refId: '_final_time',
-        varType: 'const'
+      v('Result', 'EqnC[X1,Y1,Z1]', {
+        refId: '_result',
+        references: ['_eqnc']
       }),
       v('INITIAL TIME', '0', {
         refId: '_initial_time',
         varType: 'const'
       }),
-      v('Result', 'EqnC[X1,Y1,Z1]', {
-        refId: '_result',
-        references: ['_eqnc']
-      }),
-      v('SAVEPER', 'TIME STEP', {
-        refId: '_saveper',
-        references: ['_time_step']
+      v('FINAL TIME', '1', {
+        refId: '_final_time',
+        varType: 'const'
       }),
       v('TIME STEP', '1', {
         refId: '_time_step',
         varType: 'const'
+      }),
+      v('SAVEPER', 'TIME STEP', {
+        refId: '_saveper',
+        references: ['_time_step']
       }),
       v('Time', '', {
         refId: '_time',
@@ -6071,6 +6067,10 @@ describe('readEquations', () => {
         refId: '_b',
         referencedFunctionNames: ['__a'],
         references: ['_i']
+      }),
+      v('i', 'Time/10', {
+        refId: '_i',
+        references: ['_time']
       }),
       v('c[A1]', '', {
         points: [
@@ -6117,10 +6117,6 @@ describe('readEquations', () => {
         referencedLookupVarNames: ['_c'],
         references: ['_i']
       }),
-      v('FINAL TIME', '10', {
-        refId: '_final_time',
-        varType: 'const'
-      }),
       v('g', '', {
         points: [
           [0, 0],
@@ -6130,9 +6126,9 @@ describe('readEquations', () => {
         refId: '_g',
         varType: 'lookup'
       }),
-      v('g at 0 backward', 'LOOKUP BACKWARD(g,0)', {
-        refId: '_g_at_0_backward',
-        referencedFunctionNames: ['__lookup_backward'],
+      v('g at minus 1 forward', 'LOOKUP FORWARD(g,-1)', {
+        refId: '_g_at_minus_1_forward',
+        referencedFunctionNames: ['__lookup_forward'],
         references: ['_g']
       }),
       v('g at 0 forward', 'LOOKUP FORWARD(g,0)', {
@@ -6140,19 +6136,9 @@ describe('readEquations', () => {
         referencedFunctionNames: ['__lookup_forward'],
         references: ['_g']
       }),
-      v('g at 0pt5 backward', 'LOOKUP BACKWARD(g,0.5)', {
-        refId: '_g_at_0pt5_backward',
-        referencedFunctionNames: ['__lookup_backward'],
-        references: ['_g']
-      }),
       v('g at 0pt5 forward', 'LOOKUP FORWARD(g,0.5)', {
         refId: '_g_at_0pt5_forward',
         referencedFunctionNames: ['__lookup_forward'],
-        references: ['_g']
-      }),
-      v('g at 1pt0 backward', 'LOOKUP BACKWARD(g,1.0)', {
-        refId: '_g_at_1pt0_backward',
-        referencedFunctionNames: ['__lookup_backward'],
         references: ['_g']
       }),
       v('g at 1pt0 forward', 'LOOKUP FORWARD(g,1.0)', {
@@ -6160,29 +6146,14 @@ describe('readEquations', () => {
         referencedFunctionNames: ['__lookup_forward'],
         references: ['_g']
       }),
-      v('g at 1pt5 backward', 'LOOKUP BACKWARD(g,1.5)', {
-        refId: '_g_at_1pt5_backward',
-        referencedFunctionNames: ['__lookup_backward'],
-        references: ['_g']
-      }),
       v('g at 1pt5 forward', 'LOOKUP FORWARD(g,1.5)', {
         refId: '_g_at_1pt5_forward',
         referencedFunctionNames: ['__lookup_forward'],
         references: ['_g']
       }),
-      v('g at 2pt0 backward', 'LOOKUP BACKWARD(g,2.0)', {
-        refId: '_g_at_2pt0_backward',
-        referencedFunctionNames: ['__lookup_backward'],
-        references: ['_g']
-      }),
       v('g at 2pt0 forward', 'LOOKUP FORWARD(g,2.0)', {
         refId: '_g_at_2pt0_forward',
         referencedFunctionNames: ['__lookup_forward'],
-        references: ['_g']
-      }),
-      v('g at 2pt5 backward', 'LOOKUP BACKWARD(g,2.5)', {
-        refId: '_g_at_2pt5_backward',
-        referencedFunctionNames: ['__lookup_backward'],
         references: ['_g']
       }),
       v('g at 2pt5 forward', 'LOOKUP FORWARD(g,2.5)', {
@@ -6195,14 +6166,81 @@ describe('readEquations', () => {
         referencedFunctionNames: ['__lookup_backward'],
         references: ['_g']
       }),
-      v('g at minus 1 forward', 'LOOKUP FORWARD(g,-1)', {
-        refId: '_g_at_minus_1_forward',
-        referencedFunctionNames: ['__lookup_forward'],
+      v('g at 0 backward', 'LOOKUP BACKWARD(g,0)', {
+        refId: '_g_at_0_backward',
+        referencedFunctionNames: ['__lookup_backward'],
         references: ['_g']
       }),
-      v('i', 'Time/10', {
-        refId: '_i',
-        references: ['_time']
+      v('g at 0pt5 backward', 'LOOKUP BACKWARD(g,0.5)', {
+        refId: '_g_at_0pt5_backward',
+        referencedFunctionNames: ['__lookup_backward'],
+        references: ['_g']
+      }),
+      v('g at 1pt0 backward', 'LOOKUP BACKWARD(g,1.0)', {
+        refId: '_g_at_1pt0_backward',
+        referencedFunctionNames: ['__lookup_backward'],
+        references: ['_g']
+      }),
+      v('g at 1pt5 backward', 'LOOKUP BACKWARD(g,1.5)', {
+        refId: '_g_at_1pt5_backward',
+        referencedFunctionNames: ['__lookup_backward'],
+        references: ['_g']
+      }),
+      v('g at 2pt0 backward', 'LOOKUP BACKWARD(g,2.0)', {
+        refId: '_g_at_2pt0_backward',
+        referencedFunctionNames: ['__lookup_backward'],
+        references: ['_g']
+      }),
+      v('g at 2pt5 backward', 'LOOKUP BACKWARD(g,2.5)', {
+        refId: '_g_at_2pt5_backward',
+        referencedFunctionNames: ['__lookup_backward'],
+        references: ['_g']
+      }),
+      v('withlookup at minus 1', 'WITH LOOKUP(-1,([(0,0)-(2,2)],(0,0),(1,1),(2,2)))', {
+        lookupArgVarName: '__lookup2',
+        refId: '_withlookup_at_minus_1',
+        referencedFunctionNames: ['__with_lookup'],
+        referencedLookupVarNames: ['__lookup2']
+      }),
+      v('withlookup at 0', 'WITH LOOKUP(0,([(0,0)-(2,2)],(0,0),(1,1),(2,2)))', {
+        lookupArgVarName: '__lookup3',
+        refId: '_withlookup_at_0',
+        referencedFunctionNames: ['__with_lookup'],
+        referencedLookupVarNames: ['__lookup3']
+      }),
+      v('withlookup at 0pt5', 'WITH LOOKUP(0.5,([(0,0)-(2,2)],(0,0),(1,1),(2,2)))', {
+        lookupArgVarName: '__lookup4',
+        refId: '_withlookup_at_0pt5',
+        referencedFunctionNames: ['__with_lookup'],
+        referencedLookupVarNames: ['__lookup4']
+      }),
+      v('withlookup at 1pt0', 'WITH LOOKUP(1.0,([(0,0)-(2,2)],(0,0),(1,1),(2,2)))', {
+        lookupArgVarName: '__lookup5',
+        refId: '_withlookup_at_1pt0',
+        referencedFunctionNames: ['__with_lookup'],
+        referencedLookupVarNames: ['__lookup5']
+      }),
+      v('withlookup at 1pt5', 'WITH LOOKUP(1.5,([(0,0)-(2,2)],(0,0),(1,1),(2,2)))', {
+        lookupArgVarName: '__lookup6',
+        refId: '_withlookup_at_1pt5',
+        referencedFunctionNames: ['__with_lookup'],
+        referencedLookupVarNames: ['__lookup6']
+      }),
+      v('withlookup at 2pt0', 'WITH LOOKUP(2.0,([(0,0)-(2,2)],(0,0),(1,1),(2,2)))', {
+        lookupArgVarName: '__lookup7',
+        refId: '_withlookup_at_2pt0',
+        referencedFunctionNames: ['__with_lookup'],
+        referencedLookupVarNames: ['__lookup7']
+      }),
+      v('withlookup at 2pt5', 'WITH LOOKUP(2.5,([(0,0)-(2,2)],(0,0),(1,1),(2,2)))', {
+        lookupArgVarName: '__lookup8',
+        refId: '_withlookup_at_2pt5',
+        referencedFunctionNames: ['__with_lookup'],
+        referencedLookupVarNames: ['__lookup8']
+      }),
+      v('FINAL TIME', '10', {
+        refId: '_final_time',
+        varType: 'const'
       }),
       v('INITIAL TIME', '0', {
         refId: '_initial_time',
@@ -6215,48 +6253,6 @@ describe('readEquations', () => {
       v('TIME STEP', '1', {
         refId: '_time_step',
         varType: 'const'
-      }),
-      v('withlookup at 0', 'WITH LOOKUP(0,([(0,0)-(2,2)],(0,0),(1,1),(2,2)))', {
-        lookupArgVarName: '__lookup2',
-        refId: '_withlookup_at_0',
-        referencedFunctionNames: ['__with_lookup'],
-        referencedLookupVarNames: ['__lookup2']
-      }),
-      v('withlookup at 0pt5', 'WITH LOOKUP(0.5,([(0,0)-(2,2)],(0,0),(1,1),(2,2)))', {
-        lookupArgVarName: '__lookup3',
-        refId: '_withlookup_at_0pt5',
-        referencedFunctionNames: ['__with_lookup'],
-        referencedLookupVarNames: ['__lookup3']
-      }),
-      v('withlookup at 1pt0', 'WITH LOOKUP(1.0,([(0,0)-(2,2)],(0,0),(1,1),(2,2)))', {
-        lookupArgVarName: '__lookup4',
-        refId: '_withlookup_at_1pt0',
-        referencedFunctionNames: ['__with_lookup'],
-        referencedLookupVarNames: ['__lookup4']
-      }),
-      v('withlookup at 1pt5', 'WITH LOOKUP(1.5,([(0,0)-(2,2)],(0,0),(1,1),(2,2)))', {
-        lookupArgVarName: '__lookup5',
-        refId: '_withlookup_at_1pt5',
-        referencedFunctionNames: ['__with_lookup'],
-        referencedLookupVarNames: ['__lookup5']
-      }),
-      v('withlookup at 2pt0', 'WITH LOOKUP(2.0,([(0,0)-(2,2)],(0,0),(1,1),(2,2)))', {
-        lookupArgVarName: '__lookup6',
-        refId: '_withlookup_at_2pt0',
-        referencedFunctionNames: ['__with_lookup'],
-        referencedLookupVarNames: ['__lookup6']
-      }),
-      v('withlookup at 2pt5', 'WITH LOOKUP(2.5,([(0,0)-(2,2)],(0,0),(1,1),(2,2)))', {
-        lookupArgVarName: '__lookup7',
-        refId: '_withlookup_at_2pt5',
-        referencedFunctionNames: ['__with_lookup'],
-        referencedLookupVarNames: ['__lookup7']
-      }),
-      v('withlookup at minus 1', 'WITH LOOKUP(-1,([(0,0)-(2,2)],(0,0),(1,1),(2,2)))', {
-        lookupArgVarName: '__lookup8',
-        refId: '_withlookup_at_minus_1',
-        referencedFunctionNames: ['__with_lookup'],
-        referencedLookupVarNames: ['__lookup8']
       }),
       v('Time', '', {
         refId: '_time',
@@ -6383,11 +6379,6 @@ describe('readEquations', () => {
   it('should work for Vensim "mapping" model', () => {
     const vars = readSubscriptsAndEquations('mapping')
     expect(vars).toEqual([
-      v('a[DimA]', 'b[DimB]*10', {
-        refId: '_a',
-        references: ['_b[_b1]', '_b[_b2]'],
-        subscripts: ['_dima']
-      }),
       v('b[DimB]', '1,2', {
         refId: '_b[_b1]',
         separationDims: ['_dimb'],
@@ -6399,6 +6390,11 @@ describe('readEquations', () => {
         separationDims: ['_dimb'],
         subscripts: ['_b2'],
         varType: 'const'
+      }),
+      v('a[DimA]', 'b[DimB]*10', {
+        refId: '_a',
+        references: ['_b[_b1]', '_b[_b2]'],
+        subscripts: ['_dima']
       }),
       v('c[DimC]', '1,2,3', {
         refId: '_c[_c1]',
@@ -6423,21 +6419,21 @@ describe('readEquations', () => {
         references: ['_c[_c1]', '_c[_c2]', '_c[_c3]'],
         subscripts: ['_dimd']
       }),
+      v('INITIAL TIME', '0', {
+        refId: '_initial_time',
+        varType: 'const'
+      }),
       v('FINAL TIME', '1', {
         refId: '_final_time',
         varType: 'const'
       }),
-      v('INITIAL TIME', '0', {
-        refId: '_initial_time',
+      v('TIME STEP', '1', {
+        refId: '_time_step',
         varType: 'const'
       }),
       v('SAVEPER', 'TIME STEP', {
         refId: '_saveper',
         references: ['_time_step']
-      }),
-      v('TIME STEP', '1', {
-        refId: '_time_step',
-        varType: 'const'
       }),
       v('Time', '', {
         refId: '_time',
@@ -6477,12 +6473,12 @@ describe('readEquations', () => {
         references: ['_a[_a1]', '_a[_a2]', '_a[_a3]'],
         subscripts: ['_dimc']
       }),
-      v('FINAL TIME', '1', {
-        refId: '_final_time',
-        varType: 'const'
-      }),
       v('INITIAL TIME', '0', {
         refId: '_initial_time',
+        varType: 'const'
+      }),
+      v('FINAL TIME', '1', {
+        refId: '_final_time',
         varType: 'const'
       }),
       v('SAVEPER', '1', {
@@ -6503,49 +6499,20 @@ describe('readEquations', () => {
   it('should work for Vensim "npv" model', () => {
     const vars = readSubscriptsAndEquations('npv')
     expect(vars).toEqual([
-      v('discount rate', 'interest rate/12/100', {
-        refId: '_discount_rate',
-        references: ['_interest_rate']
-      }),
-      v('factor', '1', {
-        refId: '_factor',
-        varType: 'const'
-      }),
-      v('FINAL TIME', '100', {
-        refId: '_final_time',
-        varType: 'const'
-      }),
-      v('init val', '0', {
-        refId: '_init_val',
-        varType: 'const'
-      }),
-      v('INITIAL TIME', '0', {
-        refId: '_initial_time',
-        varType: 'const'
-      }),
-      v('interest rate', '10', {
-        refId: '_interest_rate',
-        varType: 'const'
-      }),
       v('investment', '100', {
         refId: '_investment',
         varType: 'const'
       }),
-      v('NPV vs initial time', 'NPV(stream,discount rate,init val,factor)', {
-        npvVarName: '__aux1',
-        refId: '_npv_vs_initial_time',
-        references: ['__level2', '__level1', '__aux1']
+      v('start time', '12', {
+        refId: '_start_time',
+        varType: 'const'
       }),
       v('revenue', '3', {
         refId: '_revenue',
         varType: 'const'
       }),
-      v('SAVEPER', 'TIME STEP', {
-        refId: '_saveper',
-        references: ['_time_step']
-      }),
-      v('start time', '12', {
-        refId: '_start_time',
+      v('interest rate', '10', {
+        refId: '_interest_rate',
         varType: 'const'
       }),
       v('stream', '-investment/TIME STEP*PULSE(start time,TIME STEP)+STEP(revenue,start time)', {
@@ -6553,9 +6520,38 @@ describe('readEquations', () => {
         referencedFunctionNames: ['__pulse', '__step'],
         references: ['_investment', '_time_step', '_start_time', '_revenue']
       }),
+      v('discount rate', 'interest rate/12/100', {
+        refId: '_discount_rate',
+        references: ['_interest_rate']
+      }),
+      v('init val', '0', {
+        refId: '_init_val',
+        varType: 'const'
+      }),
+      v('factor', '1', {
+        refId: '_factor',
+        varType: 'const'
+      }),
+      v('NPV vs initial time', 'NPV(stream,discount rate,init val,factor)', {
+        npvVarName: '__aux1',
+        refId: '_npv_vs_initial_time',
+        references: ['__level2', '__level1', '__aux1']
+      }),
+      v('INITIAL TIME', '0', {
+        refId: '_initial_time',
+        varType: 'const'
+      }),
+      v('FINAL TIME', '100', {
+        refId: '_final_time',
+        varType: 'const'
+      }),
       v('TIME STEP', '1', {
         refId: '_time_step',
         varType: 'const'
+      }),
+      v('SAVEPER', 'TIME STEP', {
+        refId: '_saveper',
+        references: ['_time_step']
       }),
       v('Time', '', {
         refId: '_time',
@@ -6589,6 +6585,10 @@ describe('readEquations', () => {
   it('should work for Vensim "power" model', () => {
     const vars = readSubscriptsAndEquations('power')
     expect(vars).toEqual([
+      v('base', '2', {
+        refId: '_base',
+        varType: 'const'
+      }),
       v('a', 'POWER(base,2)', {
         refId: '_a',
         referencedFunctionNames: ['__power'],
@@ -6599,30 +6599,26 @@ describe('readEquations', () => {
         referencedFunctionNames: ['__power'],
         references: ['_base']
       }),
-      v('base', '2', {
-        refId: '_base',
-        varType: 'const'
-      }),
       v('c', 'POWER(base,1.5)', {
         refId: '_c',
         referencedFunctionNames: ['__power'],
         references: ['_base']
       }),
+      v('INITIAL TIME', '0', {
+        refId: '_initial_time',
+        varType: 'const'
+      }),
       v('FINAL TIME', '1', {
         refId: '_final_time',
         varType: 'const'
       }),
-      v('INITIAL TIME', '0', {
-        refId: '_initial_time',
+      v('TIME STEP', '1', {
+        refId: '_time_step',
         varType: 'const'
       }),
       v('SAVEPER', 'TIME STEP', {
         refId: '_saveper',
         references: ['_time_step']
-      }),
-      v('TIME STEP', '1', {
-        refId: '_time_step',
-        varType: 'const'
       }),
       v('Time', '', {
         refId: '_time',
@@ -6637,43 +6633,26 @@ describe('readEquations', () => {
   //   expect(vars).toEqual([])
   // })
 
-  // TODO: This test depends on the dependency trimming code that isn't yet implemented
-  // in the new reader, so skip it for now
-  it.skip('should work for Vensim "prune" model', () => {
+  it('should work for Vensim "prune" model', () => {
     const vars = readSubscriptsAndEquations('prune')
     expect(vars).toEqual([
-      v('A Totals', 'SUM(A Values[DimA!])', {
-        refId: '_a_totals',
-        referencedFunctionNames: ['__sum'],
-        references: ['_a_values']
+      v('Simple 1', '', {
+        refId: '_simple_1',
+        varType: 'data'
+      }),
+      v('Simple 2', '', {
+        refId: '_simple_2',
+        varType: 'data'
       }),
       v('A Values[DimA]', '', {
         refId: '_a_values',
         subscripts: ['_dima'],
         varType: 'data'
       }),
-      v('B1 Totals', 'SUM(BC Values[B1,DimC!])', {
-        refId: '_b1_totals',
-        referencedFunctionNames: ['__sum'],
-        references: ['_bc_values']
-      }),
       v('BC Values[DimB,DimC]', '', {
         refId: '_bc_values',
         subscripts: ['_dimb', '_dimc'],
         varType: 'data'
-      }),
-      v('Constant Partial 1', '1', {
-        refId: '_constant_partial_1',
-        varType: 'const'
-      }),
-      v('Constant Partial 2', '2', {
-        refId: '_constant_partial_2',
-        varType: 'const'
-      }),
-      v('D Totals', 'SUM(D Values[DimD!])', {
-        refId: '_d_totals',
-        referencedFunctionNames: ['__sum'],
-        references: ['_d_values']
       }),
       v('D Values[DimD]', '', {
         refId: '_d_values',
@@ -6690,6 +6669,55 @@ describe('readEquations', () => {
         subscripts: ['_e2'],
         varType: 'data'
       }),
+      v('Look1', '', {
+        points: [
+          [0, 0],
+          [1, 1],
+          [2, 2]
+        ],
+        refId: '_look1',
+        varType: 'lookup'
+      }),
+      v('Look2', '', {
+        points: [
+          [0, 0],
+          [1, 1],
+          [2, 2]
+        ],
+        refId: '_look2',
+        varType: 'lookup'
+      }),
+      v('Input 1', '10', {
+        refId: '_input_1',
+        varType: 'const'
+      }),
+      v('Input 2', '20', {
+        refId: '_input_2',
+        varType: 'const'
+      }),
+      v('Input 3', '30', {
+        refId: '_input_3',
+        varType: 'const'
+      }),
+      v('Simple Totals', 'Simple 1+Simple 2', {
+        refId: '_simple_totals',
+        references: ['_simple_1', '_simple_2']
+      }),
+      v('A Totals', 'SUM(A Values[DimA!])', {
+        refId: '_a_totals',
+        referencedFunctionNames: ['__sum'],
+        references: ['_a_values']
+      }),
+      v('B1 Totals', 'SUM(BC Values[B1,DimC!])', {
+        refId: '_b1_totals',
+        referencedFunctionNames: ['__sum'],
+        references: ['_bc_values']
+      }),
+      v('D Totals', 'SUM(D Values[DimD!])', {
+        refId: '_d_totals',
+        referencedFunctionNames: ['__sum'],
+        references: ['_d_values']
+      }),
       v('E1 Values', 'E Values[E1]', {
         refId: '_e1_values',
         references: ['_e_values[_e1]']
@@ -6698,8 +6726,40 @@ describe('readEquations', () => {
         refId: '_e2_values',
         references: ['_e_values[_e2]']
       }),
-      v('FINAL TIME', '10', {
-        refId: '_final_time',
+      v('Input 1 and 2 Total', 'Input 1+Input 2', {
+        refId: '_input_1_and_2_total',
+        references: ['_input_1', '_input_2']
+      }),
+      v('Input 2 and 3 Total', 'Input 2+Input 3', {
+        refId: '_input_2_and_3_total',
+        references: ['_input_2', '_input_3']
+      }),
+      v('Look1 Value at t1', 'Look1(1)', {
+        refId: '_look1_value_at_t1',
+        referencedFunctionNames: ['__look1']
+      }),
+      v('Look2 Value at t1', 'Look2(1)', {
+        refId: '_look2_value_at_t1',
+        referencedFunctionNames: ['__look2']
+      }),
+      v('With Look1 at t1', 'WITH LOOKUP(1,([(0,0)-(2,2)],(0,0),(1,1),(2,2)))', {
+        lookupArgVarName: '__lookup1',
+        refId: '_with_look1_at_t1',
+        referencedFunctionNames: ['__with_lookup'],
+        referencedLookupVarNames: ['__lookup1']
+      }),
+      v('With Look2 at t1', 'WITH LOOKUP(1,([(0,0)-(2,2)],(0,0),(1,1),(2,2)))', {
+        lookupArgVarName: '__lookup2',
+        refId: '_with_look2_at_t1',
+        referencedFunctionNames: ['__with_lookup'],
+        referencedLookupVarNames: ['__lookup2']
+      }),
+      v('Constant Partial 1', '1', {
+        refId: '_constant_partial_1',
+        varType: 'const'
+      }),
+      v('Constant Partial 2', '2', {
+        refId: '_constant_partial_2',
         varType: 'const'
       }),
       v('Initial Partial[C1]', 'INITIAL(Constant Partial 1)', {
@@ -6718,76 +6778,14 @@ describe('readEquations', () => {
         subscripts: ['_c2'],
         varType: 'initial'
       }),
-      v('INITIAL TIME', '0', {
-        refId: '_initial_time',
-        varType: 'const'
-      }),
-      v('Input 1', '10', {
-        refId: '_input_1',
-        varType: 'const'
-      }),
-      v('Input 1 and 2 Total', 'Input 1+Input 2', {
-        refId: '_input_1_and_2_total',
-        references: ['_input_1', '_input_2']
-      }),
-      v('Input 2', '20', {
-        refId: '_input_2',
-        varType: 'const'
-      }),
-      v('Input 2 and 3 Total', 'Input 2+Input 3', {
-        refId: '_input_2_and_3_total',
-        references: ['_input_2', '_input_3']
-      }),
-      v('Input 3', '30', {
-        refId: '_input_3',
-        varType: 'const'
-      }),
-      v('Look1', '', {
-        points: [
-          [0, 0],
-          [1, 1],
-          [2, 2]
-        ],
-        refId: '_look1',
-        varType: 'lookup'
-      }),
-      v('Look1 Value at t1', 'Look1(1)', {
-        refId: '_look1_value_at_t1',
-        referencedFunctionNames: ['__look1']
-      }),
-      v('Look2', '', {
-        points: [
-          [0, 0],
-          [1, 1],
-          [2, 2]
-        ],
-        refId: '_look2',
-        varType: 'lookup'
-      }),
-      v('Look2 Value at t1', 'Look2(1)', {
-        refId: '_look2_value_at_t1',
-        referencedFunctionNames: ['__look2']
-      }),
       v('Partial[C2]', 'Initial Partial[C2]', {
         refId: '_partial',
         references: ['_initial_partial[_c2]'],
         subscripts: ['_c2']
       }),
-      v('SAVEPER', 'TIME STEP', {
-        refId: '_saveper',
-        references: ['_time_step']
-      }),
-      v('Simple 1', '', {
-        refId: '_simple_1',
-        varType: 'data'
-      }),
-      v('Simple 2', '', {
-        refId: '_simple_2',
-        varType: 'data'
-      }),
-      v('Simple Totals', 'Simple 1+Simple 2', {
-        refId: '_simple_totals',
-        references: ['_simple_1', '_simple_2']
+      v('Test 1 T', '1', {
+        refId: '_test_1_t',
+        varType: 'const'
       }),
       v('Test 1 F', '2', {
         refId: '_test_1_f',
@@ -6795,14 +6793,134 @@ describe('readEquations', () => {
       }),
       v('Test 1 Result', 'IF THEN ELSE(Input 1=10,Test 1 T,Test 1 F)', {
         refId: '_test_1_result',
-        references: ['_test_1_t']
+        references: ['_input_1', '_test_1_t', '_test_1_f']
       }),
-      v('Test 1 T', '1', {
-        refId: '_test_1_t',
+      v('Test 2 T', '1', {
+        refId: '_test_2_t',
         varType: 'const'
+      }),
+      v('Test 2 F', '2', {
+        refId: '_test_2_f',
+        varType: 'const'
+      }),
+      v('Test 2 Result', 'IF THEN ELSE(0,Test 2 T,Test 2 F)', {
+        refId: '_test_2_result',
+        references: ['_test_2_t', '_test_2_f']
+      }),
+      v('Test 3 T', '1', {
+        refId: '_test_3_t',
+        varType: 'const'
+      }),
+      v('Test 3 F', '2', {
+        refId: '_test_3_f',
+        varType: 'const'
+      }),
+      v('Test 3 Result', 'IF THEN ELSE(1,Test 3 T,Test 3 F)', {
+        refId: '_test_3_result',
+        references: ['_test_3_t', '_test_3_f']
+      }),
+      v('Test 4 Cond', '0', {
+        refId: '_test_4_cond',
+        varType: 'const'
+      }),
+      v('Test 4 T', '1', {
+        refId: '_test_4_t',
+        varType: 'const'
+      }),
+      v('Test 4 F', '2', {
+        refId: '_test_4_f',
+        varType: 'const'
+      }),
+      v('Test 4 Result', 'IF THEN ELSE(Test 4 Cond,Test 4 T,Test 4 F)', {
+        refId: '_test_4_result',
+        references: ['_test_4_cond', '_test_4_t', '_test_4_f']
+      }),
+      v('Test 5 Cond', '1', {
+        refId: '_test_5_cond',
+        varType: 'const'
+      }),
+      v('Test 5 T', '1', {
+        refId: '_test_5_t',
+        varType: 'const'
+      }),
+      v('Test 5 F', '2', {
+        refId: '_test_5_f',
+        varType: 'const'
+      }),
+      v('Test 5 Result', 'IF THEN ELSE(Test 5 Cond,Test 5 T,Test 5 F)', {
+        refId: '_test_5_result',
+        references: ['_test_5_cond', '_test_5_t', '_test_5_f']
+      }),
+      v('Test 6 Cond', '0', {
+        refId: '_test_6_cond',
+        varType: 'const'
+      }),
+      v('Test 6 T', '1', {
+        refId: '_test_6_t',
+        varType: 'const'
+      }),
+      v('Test 6 F', '2', {
+        refId: '_test_6_f',
+        varType: 'const'
+      }),
+      v('Test 6 Result', 'IF THEN ELSE(Test 6 Cond=1,Test 6 T,Test 6 F)', {
+        refId: '_test_6_result',
+        references: ['_test_6_cond', '_test_6_t', '_test_6_f']
+      }),
+      v('Test 7 Cond', '1', {
+        refId: '_test_7_cond',
+        varType: 'const'
+      }),
+      v('Test 7 T', '1', {
+        refId: '_test_7_t',
+        varType: 'const'
+      }),
+      v('Test 7 F', '2', {
+        refId: '_test_7_f',
+        varType: 'const'
+      }),
+      v('Test 7 Result', 'IF THEN ELSE(Test 7 Cond=1,Test 7 T,Test 7 F)', {
+        refId: '_test_7_result',
+        references: ['_test_7_cond', '_test_7_t', '_test_7_f']
+      }),
+      v('Test 8 Cond', '0', {
+        refId: '_test_8_cond',
+        varType: 'const'
+      }),
+      v('Test 8 T', '1', {
+        refId: '_test_8_t',
+        varType: 'const'
+      }),
+      v('Test 8 F', '2', {
+        refId: '_test_8_f',
+        varType: 'const'
+      }),
+      v('Test 8 Result', 'IF THEN ELSE(Test 8 Cond>0,Test 8 T,Test 8 F)', {
+        refId: '_test_8_result',
+        references: ['_test_8_cond', '_test_8_t', '_test_8_f']
+      }),
+      v('Test 9 Cond', '1', {
+        refId: '_test_9_cond',
+        varType: 'const'
+      }),
+      v('Test 9 T', '1', {
+        refId: '_test_9_t',
+        varType: 'const'
+      }),
+      v('Test 9 F', '2', {
+        refId: '_test_9_f',
+        varType: 'const'
+      }),
+      v('Test 9 Result', 'IF THEN ELSE(Test 9 Cond>0,Test 9 T,Test 9 F)', {
+        refId: '_test_9_result',
+        references: ['_test_9_cond', '_test_9_t', '_test_9_f']
       }),
       v('Test 10 Cond', '1', {
         refId: '_test_10_cond',
+        varType: 'const'
+      }),
+      v('Test 10 T', '1', {
+        refId: '_test_10_t',
         varType: 'const'
       }),
       v('Test 10 F', '2', {
@@ -6814,12 +6932,12 @@ describe('readEquations', () => {
         referencedFunctionNames: ['__abs'],
         references: ['_test_10_cond', '_test_10_t', '_test_10_f']
       }),
-      v('Test 10 T', '1', {
-        refId: '_test_10_t',
-        varType: 'const'
-      }),
       v('Test 11 Cond', '0', {
         refId: '_test_11_cond',
+        varType: 'const'
+      }),
+      v('Test 11 T', '1', {
+        refId: '_test_11_t',
         varType: 'const'
       }),
       v('Test 11 F', '2', {
@@ -6828,14 +6946,15 @@ describe('readEquations', () => {
       }),
       v('Test 11 Result', 'IF THEN ELSE(Test 11 Cond:AND:ABS(Test 11 Cond),Test 11 T,Test 11 F)', {
         refId: '_test_11_result',
-        references: ['_test_11_f']
-      }),
-      v('Test 11 T', '1', {
-        refId: '_test_11_t',
-        varType: 'const'
+        referencedFunctionNames: ['__abs'],
+        references: ['_test_11_cond', '_test_11_t', '_test_11_f']
       }),
       v('Test 12 Cond', '1', {
         refId: '_test_12_cond',
+        varType: 'const'
+      }),
+      v('Test 12 T', '1', {
+        refId: '_test_12_t',
         varType: 'const'
       }),
       v('Test 12 F', '2', {
@@ -6844,23 +6963,12 @@ describe('readEquations', () => {
       }),
       v('Test 12 Result', 'IF THEN ELSE(Test 12 Cond:OR:ABS(Test 12 Cond),Test 12 T,Test 12 F)', {
         refId: '_test_12_result',
-        references: ['_test_12_t']
-      }),
-      v('Test 12 T', '1', {
-        refId: '_test_12_t',
-        varType: 'const'
+        referencedFunctionNames: ['__abs'],
+        references: ['_test_12_cond', '_test_12_t', '_test_12_f']
       }),
       v('Test 13 Cond', '1', {
         refId: '_test_13_cond',
         varType: 'const'
-      }),
-      v('Test 13 F', '2', {
-        refId: '_test_13_f',
-        varType: 'const'
-      }),
-      v('Test 13 Result', 'IF THEN ELSE(Test 13 Cond,Test 13 T1+Test 13 T2,Test 13 F)*10.0', {
-        refId: '_test_13_result',
-        references: ['_test_13_t1', '_test_13_t2']
       }),
       v('Test 13 T1', '1', {
         refId: '_test_13_t1',
@@ -6870,141 +6978,29 @@ describe('readEquations', () => {
         refId: '_test_13_t2',
         varType: 'const'
       }),
-      v('Test 2 F', '2', {
-        refId: '_test_2_f',
+      v('Test 13 F', '2', {
+        refId: '_test_13_f',
         varType: 'const'
       }),
-      v('Test 2 Result', 'IF THEN ELSE(0,Test 2 T,Test 2 F)', {
-        refId: '_test_2_result',
-        references: ['_test_2_f']
+      v('Test 13 Result', 'IF THEN ELSE(Test 13 Cond,Test 13 T1+Test 13 T2,Test 13 F)*10.0', {
+        refId: '_test_13_result',
+        references: ['_test_13_cond', '_test_13_t1', '_test_13_t2', '_test_13_f']
       }),
-      v('Test 2 T', '1', {
-        refId: '_test_2_t',
+      v('FINAL TIME', '10', {
+        refId: '_final_time',
         varType: 'const'
       }),
-      v('Test 3 F', '2', {
-        refId: '_test_3_f',
+      v('INITIAL TIME', '0', {
+        refId: '_initial_time',
         varType: 'const'
       }),
-      v('Test 3 Result', 'IF THEN ELSE(1,Test 3 T,Test 3 F)', {
-        refId: '_test_3_result',
-        references: ['_test_3_t']
-      }),
-      v('Test 3 T', '1', {
-        refId: '_test_3_t',
-        varType: 'const'
-      }),
-      v('Test 4 Cond', '0', {
-        refId: '_test_4_cond',
-        varType: 'const'
-      }),
-      v('Test 4 F', '2', {
-        refId: '_test_4_f',
-        varType: 'const'
-      }),
-      v('Test 4 Result', 'IF THEN ELSE(Test 4 Cond,Test 4 T,Test 4 F)', {
-        refId: '_test_4_result',
-        references: ['_test_4_f']
-      }),
-      v('Test 4 T', '1', {
-        refId: '_test_4_t',
-        varType: 'const'
-      }),
-      v('Test 5 Cond', '1', {
-        refId: '_test_5_cond',
-        varType: 'const'
-      }),
-      v('Test 5 F', '2', {
-        refId: '_test_5_f',
-        varType: 'const'
-      }),
-      v('Test 5 Result', 'IF THEN ELSE(Test 5 Cond,Test 5 T,Test 5 F)', {
-        refId: '_test_5_result',
-        references: ['_test_5_t']
-      }),
-      v('Test 5 T', '1', {
-        refId: '_test_5_t',
-        varType: 'const'
-      }),
-      v('Test 6 Cond', '0', {
-        refId: '_test_6_cond',
-        varType: 'const'
-      }),
-      v('Test 6 F', '2', {
-        refId: '_test_6_f',
-        varType: 'const'
-      }),
-      v('Test 6 Result', 'IF THEN ELSE(Test 6 Cond=1,Test 6 T,Test 6 F)', {
-        refId: '_test_6_result',
-        references: ['_test_6_f']
-      }),
-      v('Test 6 T', '1', {
-        refId: '_test_6_t',
-        varType: 'const'
-      }),
-      v('Test 7 Cond', '1', {
-        refId: '_test_7_cond',
-        varType: 'const'
-      }),
-      v('Test 7 F', '2', {
-        refId: '_test_7_f',
-        varType: 'const'
-      }),
-      v('Test 7 Result', 'IF THEN ELSE(Test 7 Cond=1,Test 7 T,Test 7 F)', {
-        refId: '_test_7_result',
-        references: ['_test_7_t']
-      }),
-      v('Test 7 T', '1', {
-        refId: '_test_7_t',
-        varType: 'const'
-      }),
-      v('Test 8 Cond', '0', {
-        refId: '_test_8_cond',
-        varType: 'const'
-      }),
-      v('Test 8 F', '2', {
-        refId: '_test_8_f',
-        varType: 'const'
-      }),
-      v('Test 8 Result', 'IF THEN ELSE(Test 8 Cond>0,Test 8 T,Test 8 F)', {
-        refId: '_test_8_result',
-        references: ['_test_8_f']
-      }),
-      v('Test 8 T', '1', {
-        refId: '_test_8_t',
-        varType: 'const'
-      }),
-      v('Test 9 Cond', '1', {
-        refId: '_test_9_cond',
-        varType: 'const'
-      }),
-      v('Test 9 F', '2', {
-        refId: '_test_9_f',
-        varType: 'const'
-      }),
-      v('Test 9 Result', 'IF THEN ELSE(Test 9 Cond>0,Test 9 T,Test 9 F)', {
-        refId: '_test_9_result',
-        references: ['_test_9_t']
-      }),
-      v('Test 9 T', '1', {
-        refId: '_test_9_t',
-        varType: 'const'
+      v('SAVEPER', 'TIME STEP', {
+        refId: '_saveper',
+        references: ['_time_step']
       }),
       v('TIME STEP', '1', {
         refId: '_time_step',
         varType: 'const'
-      }),
-      v('With Look1 at t1', 'WITH LOOKUP(1,([(0,0)-(2,2)],(0,0),(1,1),(2,2)))', {
-        lookupArgVarName: '__lookup1',
-        refId: '_with_look1_at_t1',
-        referencedFunctionNames: ['__with_lookup'],
-        referencedLookupVarNames: ['__lookup1']
-      }),
-      v('With Look2 at t1', 'WITH LOOKUP(1,([(0,0)-(2,2)],(0,0),(1,1),(2,2)))', {
-        lookupArgVarName: '__lookup2',
-        refId: '_with_look2_at_t1',
-        referencedFunctionNames: ['__with_lookup'],
-        referencedLookupVarNames: ['__lookup2']
       }),
       v('Time', '', {
         refId: '_time',
@@ -7041,53 +7037,6 @@ describe('readEquations', () => {
     ])
   })
 
-  it('should work for Vensim "pulsetrain" model', () => {
-    const vars = readSubscriptsAndEquations('pulsetrain')
-    expect(vars).toEqual([
-      v('duration', '1', {
-        refId: '_duration',
-        varType: 'const'
-      }),
-      v('FINAL TIME', '40', {
-        refId: '_final_time',
-        varType: 'const'
-      }),
-      v('first pulse time', '10', {
-        refId: '_first_pulse_time',
-        varType: 'const'
-      }),
-      v('INITIAL TIME', '0', {
-        refId: '_initial_time',
-        varType: 'const'
-      }),
-      v('last pulse time', '30', {
-        refId: '_last_pulse_time',
-        varType: 'const'
-      }),
-      v('p', 'PULSE TRAIN(first pulse time,duration,repeat interval,last pulse time)', {
-        refId: '_p',
-        referencedFunctionNames: ['__pulse_train'],
-        references: ['_first_pulse_time', '_duration', '_repeat_interval', '_last_pulse_time']
-      }),
-      v('repeat interval', '5', {
-        refId: '_repeat_interval',
-        varType: 'const'
-      }),
-      v('SAVEPER', 'TIME STEP', {
-        refId: '_saveper',
-        references: ['_time_step']
-      }),
-      v('TIME STEP', '0.25', {
-        refId: '_time_step',
-        varType: 'const'
-      }),
-      v('Time', '', {
-        refId: '_time',
-        varType: 'const'
-      })
-    ])
-  })
-
   it('should work for Vensim "quantum" model', () => {
     const vars = readSubscriptsAndEquations('quantum')
     expect(vars).toEqual([
@@ -7115,10 +7064,6 @@ describe('readEquations', () => {
         refId: '_f',
         referencedFunctionNames: ['__quantum']
       }),
-      v('FINAL TIME', '1', {
-        refId: '_final_time',
-        varType: 'const'
-      }),
       v('g', 'QUANTUM(423,63)', {
         refId: '_g',
         referencedFunctionNames: ['__quantum']
@@ -7131,13 +7076,17 @@ describe('readEquations', () => {
         refId: '_initial_time',
         varType: 'const'
       }),
-      v('SAVEPER', 'TIME STEP', {
-        refId: '_saveper',
-        references: ['_time_step']
+      v('FINAL TIME', '1', {
+        refId: '_final_time',
+        varType: 'const'
       }),
       v('TIME STEP', '1', {
         refId: '_time_step',
         varType: 'const'
+      }),
+      v('SAVEPER', 'TIME STEP', {
+        refId: '_saveper',
+        references: ['_time_step']
       }),
       v('Time', '', {
         refId: '_time',
@@ -7149,23 +7098,6 @@ describe('readEquations', () => {
   it('should work for Vensim "ref" model', () => {
     const vars = readSubscriptsAndEquations('ref')
     expect(vars).toEqual([
-      v('ce[t1]', '1', {
-        refId: '_ce[_t1]',
-        subscripts: ['_t1'],
-        varType: 'const'
-      }),
-      v('ce[tNext]', 'ecc[tPrev]+1', {
-        refId: '_ce[_t2]',
-        references: ['_ecc[_t1]'],
-        separationDims: ['_tnext'],
-        subscripts: ['_t2']
-      }),
-      v('ce[tNext]', 'ecc[tPrev]+1', {
-        refId: '_ce[_t3]',
-        references: ['_ecc[_t2]'],
-        separationDims: ['_tnext'],
-        subscripts: ['_t3']
-      }),
       v('ecc[t1]', 'ce[t1]+1', {
         refId: '_ecc[_t1]',
         references: ['_ce[_t1]'],
@@ -7183,6 +7115,23 @@ describe('readEquations', () => {
         separationDims: ['_tnext'],
         subscripts: ['_t3']
       }),
+      v('ce[t1]', '1', {
+        refId: '_ce[_t1]',
+        subscripts: ['_t1'],
+        varType: 'const'
+      }),
+      v('ce[tNext]', 'ecc[tPrev]+1', {
+        refId: '_ce[_t2]',
+        references: ['_ecc[_t1]'],
+        separationDims: ['_tnext'],
+        subscripts: ['_t2']
+      }),
+      v('ce[tNext]', 'ecc[tPrev]+1', {
+        refId: '_ce[_t3]',
+        references: ['_ecc[_t2]'],
+        separationDims: ['_tnext'],
+        subscripts: ['_t3']
+      }),
       v('FINAL TIME', '1', {
         refId: '_final_time',
         varType: 'const'
@@ -7206,12 +7155,7 @@ describe('readEquations', () => {
     ])
   })
 
-  // TODO: This test is sensitive to the dependency trimming code that we don't yet
-  // have in the new reader, so we skip it in that case.  There's only one place
-  // where the new reader differs from the old (in `IF THEN ELSE(switch=1,1,0)`
-  // where the condition resolves to a constant).  We should add an option to disable
-  // the pruning code so that we can test this more deterministically.
-  it.skip('should work for Vensim "sample" model', () => {
+  it('should work for Vensim "sample" model', () => {
     const vars = readSubscriptsAndEquations('sample')
     expect(vars).toEqual([
       v('a', 'SAMPLE IF TRUE(MODULO(Time,5)=0,Time,0)', {
@@ -7226,13 +7170,10 @@ describe('readEquations', () => {
       }),
       v('F', 'SAMPLE IF TRUE(Time=5,2,IF THEN ELSE(switch=1,1,0))', {
         hasInitValue: true,
+        initReferences: ['_switch'],
         refId: '_f',
         referencedFunctionNames: ['__sample_if_true'],
         references: ['_time']
-      }),
-      v('FINAL TIME', '10', {
-        refId: '_final_time',
-        varType: 'const'
       }),
       v('G', 'INTEG(rate,2*COS(scale))', {
         hasInitValue: true,
@@ -7242,17 +7183,9 @@ describe('readEquations', () => {
         references: ['_rate'],
         varType: 'level'
       }),
-      v('INITIAL TIME', '0', {
-        refId: '_initial_time',
-        varType: 'const'
-      }),
       v('rate', 'STEP(10,10)', {
         refId: '_rate',
         referencedFunctionNames: ['__step']
-      }),
-      v('SAVEPER', 'TIME STEP', {
-        refId: '_saveper',
-        references: ['_time_step']
       }),
       v('scale', '1', {
         refId: '_scale',
@@ -7261,6 +7194,18 @@ describe('readEquations', () => {
       v('switch', '1', {
         refId: '_switch',
         varType: 'const'
+      }),
+      v('FINAL TIME', '10', {
+        refId: '_final_time',
+        varType: 'const'
+      }),
+      v('INITIAL TIME', '0', {
+        refId: '_initial_time',
+        varType: 'const'
+      }),
+      v('SAVEPER', 'TIME STEP', {
+        refId: '_saveper',
+        references: ['_time_step']
       }),
       v('TIME STEP', '1', {
         refId: '_time_step',
@@ -7276,16 +7221,37 @@ describe('readEquations', () => {
   it('should work for Vensim "sir" model', () => {
     const vars = readSubscriptsAndEquations('sir')
     expect(vars).toEqual([
-      v('Average Duration of Illness d', '2', {
-        refId: '_average_duration_of_illness_d',
+      v('Infectious Population I', 'INTEG(Infection Rate-Recovery Rate,1)', {
+        hasInitValue: true,
+        refId: '_infectious_population_i',
+        referencedFunctionNames: ['__integ'],
+        references: ['_infection_rate', '_recovery_rate'],
+        varType: 'level'
+      }),
+      v('Initial Contact Rate', '2.5', {
+        refId: '_initial_contact_rate',
         varType: 'const'
       }),
       v('Contact Rate c', 'Initial Contact Rate', {
         refId: '_contact_rate_c',
         references: ['_initial_contact_rate']
       }),
-      v('FINAL TIME', '200', {
-        refId: '_final_time',
+      v(
+        'Reproduction Rate',
+        'Contact Rate c*Infectivity i*Average Duration of Illness d*Susceptible Population S/Total Population P',
+        {
+          refId: '_reproduction_rate',
+          references: [
+            '_contact_rate_c',
+            '_infectivity_i',
+            '_average_duration_of_illness_d',
+            '_susceptible_population_s',
+            '_total_population_p'
+          ]
+        }
+      ),
+      v('Total Population P', '10000', {
+        refId: '_total_population_p',
         varType: 'const'
       }),
       v(
@@ -7302,23 +7268,8 @@ describe('readEquations', () => {
           ]
         }
       ),
-      v('Infectious Population I', 'INTEG(Infection Rate-Recovery Rate,1)', {
-        hasInitValue: true,
-        refId: '_infectious_population_i',
-        referencedFunctionNames: ['__integ'],
-        references: ['_infection_rate', '_recovery_rate'],
-        varType: 'level'
-      }),
-      v('Infectivity i', '0.25', {
-        refId: '_infectivity_i',
-        varType: 'const'
-      }),
-      v('Initial Contact Rate', '2.5', {
-        refId: '_initial_contact_rate',
-        varType: 'const'
-      }),
-      v('INITIAL TIME', '0', {
-        refId: '_initial_time',
+      v('Average Duration of Illness d', '2', {
+        refId: '_average_duration_of_illness_d',
         varType: 'const'
       }),
       v('Recovered Population R', 'INTEG(Recovery Rate,0)', {
@@ -7332,22 +7283,8 @@ describe('readEquations', () => {
         refId: '_recovery_rate',
         references: ['_infectious_population_i', '_average_duration_of_illness_d']
       }),
-      v(
-        'Reproduction Rate',
-        'Contact Rate c*Infectivity i*Average Duration of Illness d*Susceptible Population S/Total Population P',
-        {
-          refId: '_reproduction_rate',
-          references: [
-            '_contact_rate_c',
-            '_infectivity_i',
-            '_average_duration_of_illness_d',
-            '_susceptible_population_s',
-            '_total_population_p'
-          ]
-        }
-      ),
-      v('SAVEPER', '2', {
-        refId: '_saveper',
+      v('Infectivity i', '0.25', {
+        refId: '_infectivity_i',
         varType: 'const'
       }),
       v(
@@ -7362,12 +7299,20 @@ describe('readEquations', () => {
           varType: 'level'
         }
       ),
-      v('TIME STEP', '0.0625', {
-        refId: '_time_step',
+      v('FINAL TIME', '200', {
+        refId: '_final_time',
         varType: 'const'
       }),
-      v('Total Population P', '10000', {
-        refId: '_total_population_p',
+      v('INITIAL TIME', '0', {
+        refId: '_initial_time',
+        varType: 'const'
+      }),
+      v('SAVEPER', '2', {
+        refId: '_saveper',
+        varType: 'const'
+      }),
+      v('TIME STEP', '0.0625', {
+        refId: '_time_step',
         varType: 'const'
       }),
       v('Time', '', {
@@ -7380,6 +7325,44 @@ describe('readEquations', () => {
   it('should work for Vensim "smooth" model', () => {
     const vars = readSubscriptsAndEquations('smooth')
     expect(vars).toEqual([
+      v('input', '3+PULSE(10,10)', {
+        refId: '_input',
+        referencedFunctionNames: ['__pulse']
+      }),
+      v('input 2[SubA]', '3+PULSE(10,10)', {
+        refId: '_input_2[_a2]',
+        referencedFunctionNames: ['__pulse'],
+        separationDims: ['_suba'],
+        subscripts: ['_a2']
+      }),
+      v('input 2[SubA]', '3+PULSE(10,10)', {
+        refId: '_input_2[_a3]',
+        referencedFunctionNames: ['__pulse'],
+        separationDims: ['_suba'],
+        subscripts: ['_a3']
+      }),
+      v('input 3[DimA]', '3+PULSE(10,10)', {
+        refId: '_input_3',
+        referencedFunctionNames: ['__pulse'],
+        subscripts: ['_dima']
+      }),
+      v('input 3x3[DimA,DimB]', '3+PULSE(10,10)', {
+        refId: '_input_3x3',
+        referencedFunctionNames: ['__pulse'],
+        subscripts: ['_dima', '_dimb']
+      }),
+      v('input 2x3[SubA,DimB]', '3+PULSE(10,10)', {
+        refId: '_input_2x3[_a2,_dimb]',
+        referencedFunctionNames: ['__pulse'],
+        separationDims: ['_suba'],
+        subscripts: ['_a2', '_dimb']
+      }),
+      v('input 2x3[SubA,DimB]', '3+PULSE(10,10)', {
+        refId: '_input_2x3[_a3,_dimb]',
+        referencedFunctionNames: ['__pulse'],
+        separationDims: ['_suba'],
+        subscripts: ['_a3', '_dimb']
+      }),
       v('delay', '2', {
         refId: '_delay',
         varType: 'const'
@@ -7401,10 +7384,6 @@ describe('readEquations', () => {
         subscripts: ['_dima'],
         varType: 'const'
       }),
-      v('FINAL TIME', '40', {
-        refId: '_final_time',
-        varType: 'const'
-      }),
       v('initial s', '50', {
         refId: '_initial_s',
         varType: 'const'
@@ -7414,101 +7393,21 @@ describe('readEquations', () => {
         subscripts: ['_dima'],
         varType: 'const'
       }),
-      v('INITIAL TIME', '0', {
-        refId: '_initial_time',
-        varType: 'const'
-      }),
-      v('input', '3+PULSE(10,10)', {
-        refId: '_input',
-        referencedFunctionNames: ['__pulse']
-      }),
-      v('input 2[SubA]', '3+PULSE(10,10)', {
-        refId: '_input_2[_a2]',
-        referencedFunctionNames: ['__pulse'],
-        separationDims: ['_suba'],
-        subscripts: ['_a2']
-      }),
-      v('input 2[SubA]', '3+PULSE(10,10)', {
-        refId: '_input_2[_a3]',
-        referencedFunctionNames: ['__pulse'],
-        separationDims: ['_suba'],
-        subscripts: ['_a3']
-      }),
-      v('input 2x3[SubA,DimB]', '3+PULSE(10,10)', {
-        refId: '_input_2x3[_a2,_dimb]',
-        referencedFunctionNames: ['__pulse'],
-        separationDims: ['_suba'],
-        subscripts: ['_a2', '_dimb']
-      }),
-      v('input 2x3[SubA,DimB]', '3+PULSE(10,10)', {
-        refId: '_input_2x3[_a3,_dimb]',
-        referencedFunctionNames: ['__pulse'],
-        separationDims: ['_suba'],
-        subscripts: ['_a3', '_dimb']
-      }),
-      v('input 3[DimA]', '3+PULSE(10,10)', {
-        refId: '_input_3',
-        referencedFunctionNames: ['__pulse'],
-        subscripts: ['_dima']
-      }),
-      v('input 3x3[DimA,DimB]', '3+PULSE(10,10)', {
-        refId: '_input_3x3',
-        referencedFunctionNames: ['__pulse'],
-        subscripts: ['_dima', '_dimb']
-      }),
       v('s1', 'SMOOTH(input,delay)', {
         refId: '_s1',
         references: ['__level1'],
         smoothVarRefId: '__level1'
       }),
-      v('s10[SubA,B1]', 'SMOOTH(input 2[SubA],delay)', {
-        refId: '_s10[_a2,_b1]',
-        references: ['__level_s10_1[_a2]'],
-        separationDims: ['_suba'],
-        smoothVarRefId: '__level_s10_1[_a2]',
-        subscripts: ['_a2', '_b1']
-      }),
-      v('s10[SubA,B1]', 'SMOOTH(input 2[SubA],delay)', {
-        refId: '_s10[_a3,_b1]',
-        references: ['__level_s10_1[_a3]'],
-        separationDims: ['_suba'],
-        smoothVarRefId: '__level_s10_1[_a3]',
-        subscripts: ['_a3', '_b1']
-      }),
-      v('s11[DimA]', 'SMOOTH3(input 3[DimA],delay)', {
-        refId: '_s11',
-        references: ['__level2', '__level3', '__level4'],
-        smoothVarRefId: '__level4',
-        subscripts: ['_dima']
-      }),
-      v('s12[DimA]', 'SMOOTH3I(input 3[DimA],delay 3[DimA],initial s)', {
-        refId: '_s12',
-        references: ['__level5', '__level6', '__level7'],
-        smoothVarRefId: '__level7',
-        subscripts: ['_dima']
-      }),
-      v('s13[DimA]', 'SMOOTH3I(input 3[DimA],delay,initial s)', {
-        refId: '_s13',
-        references: ['__level8', '__level9', '__level10'],
-        smoothVarRefId: '__level10',
-        subscripts: ['_dima']
-      }),
-      v('s14[DimA]', 'SMOOTH3I(input 3[DimA],delay,initial s with subscripts[DimA])', {
-        refId: '_s14',
-        references: ['__level11', '__level12', '__level13'],
-        smoothVarRefId: '__level13',
-        subscripts: ['_dima']
-      }),
       v('s2[DimA]', 'SMOOTH(input,delay)', {
         refId: '_s2',
-        references: ['__level14'],
-        smoothVarRefId: '__level14',
+        references: ['__level2'],
+        smoothVarRefId: '__level2',
         subscripts: ['_dima']
       }),
       v('s3[DimA]', 'SMOOTH(input 3[DimA],delay 3[DimA])', {
         refId: '_s3',
-        references: ['__level15'],
-        smoothVarRefId: '__level15',
+        references: ['__level3'],
+        smoothVarRefId: '__level3',
         subscripts: ['_dima']
       }),
       v('s4[SubA]', 'SMOOTH(input 2[SubA],delay 2[SubA])', {
@@ -7541,8 +7440,8 @@ describe('readEquations', () => {
       }),
       v('s6[DimB]', 'SMOOTH(input 3[DimA],delay 3[DimA])', {
         refId: '_s6',
-        references: ['__level16'],
-        smoothVarRefId: '__level16',
+        references: ['__level4'],
+        smoothVarRefId: '__level4',
         subscripts: ['_dimb']
       }),
       v('s7[SubB]', 'SMOOTH(input 2[SubA],delay 2[SubA])', {
@@ -7561,8 +7460,8 @@ describe('readEquations', () => {
       }),
       v('s8[DimA,DimB]', 'SMOOTH(input 3x3[DimA,DimB],delay)', {
         refId: '_s8',
-        references: ['__level17'],
-        smoothVarRefId: '__level17',
+        references: ['__level5'],
+        smoothVarRefId: '__level5',
         subscripts: ['_dima', '_dimb']
       }),
       v('s9[SubA,DimB]', 'SMOOTH(input 2x3[SubA,DimB],delay)', {
@@ -7578,6 +7477,52 @@ describe('readEquations', () => {
         separationDims: ['_suba'],
         smoothVarRefId: '__level_s9_1[_a3,_dimb]',
         subscripts: ['_a3', '_dimb']
+      }),
+      v('s10[SubA,B1]', 'SMOOTH(input 2[SubA],delay)', {
+        refId: '_s10[_a2,_b1]',
+        references: ['__level_s10_1[_a2]'],
+        separationDims: ['_suba'],
+        smoothVarRefId: '__level_s10_1[_a2]',
+        subscripts: ['_a2', '_b1']
+      }),
+      v('s10[SubA,B1]', 'SMOOTH(input 2[SubA],delay)', {
+        refId: '_s10[_a3,_b1]',
+        references: ['__level_s10_1[_a3]'],
+        separationDims: ['_suba'],
+        smoothVarRefId: '__level_s10_1[_a3]',
+        subscripts: ['_a3', '_b1']
+      }),
+      v('s11[DimA]', 'SMOOTH3(input 3[DimA],delay)', {
+        refId: '_s11',
+        references: ['__level6', '__level7', '__level8'],
+        smoothVarRefId: '__level8',
+        subscripts: ['_dima']
+      }),
+      v('s12[DimA]', 'SMOOTH3I(input 3[DimA],delay 3[DimA],initial s)', {
+        refId: '_s12',
+        references: ['__level9', '__level10', '__level11'],
+        smoothVarRefId: '__level11',
+        subscripts: ['_dima']
+      }),
+      v('s13[DimA]', 'SMOOTH3I(input 3[DimA],delay,initial s)', {
+        refId: '_s13',
+        references: ['__level12', '__level13', '__level14'],
+        smoothVarRefId: '__level14',
+        subscripts: ['_dima']
+      }),
+      v('s14[DimA]', 'SMOOTH3I(input 3[DimA],delay,initial s with subscripts[DimA])', {
+        refId: '_s14',
+        references: ['__level15', '__level16', '__level17'],
+        smoothVarRefId: '__level17',
+        subscripts: ['_dima']
+      }),
+      v('INITIAL TIME', '0', {
+        refId: '_initial_time',
+        varType: 'const'
+      }),
+      v('FINAL TIME', '40', {
+        refId: '_final_time',
+        varType: 'const'
       }),
       v('SAVEPER', '1', {
         refId: '_saveper',
@@ -7600,160 +7545,20 @@ describe('readEquations', () => {
         references: ['_input', '_delay'],
         varType: 'level'
       }),
-      v('_level_s10_1[a2]', 'INTEG((input 2[a2]-_level_s10_1[a2])/delay,input 2[a2])', {
-        hasInitValue: true,
-        includeInOutput: false,
-        initReferences: ['_input_2[_a2]'],
-        refId: '__level_s10_1[_a2]',
-        referencedFunctionNames: ['__integ'],
-        references: ['_input_2[_a2]', '_delay'],
-        subscripts: ['_a2'],
-        varType: 'level'
-      }),
-      v('_level_s10_1[a3]', 'INTEG((input 2[a3]-_level_s10_1[a3])/delay,input 2[a3])', {
-        hasInitValue: true,
-        includeInOutput: false,
-        initReferences: ['_input_2[_a3]'],
-        refId: '__level_s10_1[_a3]',
-        referencedFunctionNames: ['__integ'],
-        references: ['_input_2[_a3]', '_delay'],
-        subscripts: ['_a3'],
-        varType: 'level'
-      }),
-      v('_level2[DimA]', 'INTEG((input 3[DimA]-_level2[DimA])/(delay/3),input 3[DimA])', {
-        hasInitValue: true,
-        includeInOutput: false,
-        initReferences: ['_input_3'],
-        refId: '__level2',
-        referencedFunctionNames: ['__integ'],
-        references: ['_input_3', '_delay'],
-        subscripts: ['_dima'],
-        varType: 'level'
-      }),
-      v('_level3[DimA]', 'INTEG((_level2[DimA]-_level3[DimA])/(delay/3),input 3[DimA])', {
-        hasInitValue: true,
-        includeInOutput: false,
-        initReferences: ['_input_3'],
-        refId: '__level3',
-        referencedFunctionNames: ['__integ'],
-        references: ['__level2', '_delay'],
-        subscripts: ['_dima'],
-        varType: 'level'
-      }),
-      v('_level4[DimA]', 'INTEG((_level3[DimA]-_level4[DimA])/(delay/3),input 3[DimA])', {
-        hasInitValue: true,
-        includeInOutput: false,
-        initReferences: ['_input_3'],
-        refId: '__level4',
-        referencedFunctionNames: ['__integ'],
-        references: ['__level3', '_delay'],
-        subscripts: ['_dima'],
-        varType: 'level'
-      }),
-      v('_level5[DimA]', 'INTEG((input 3[DimA]-_level5[DimA])/(delay 3[DimA]/3),initial s)', {
-        hasInitValue: true,
-        includeInOutput: false,
-        initReferences: ['_initial_s'],
-        refId: '__level5',
-        referencedFunctionNames: ['__integ'],
-        references: ['_input_3', '_delay_3'],
-        subscripts: ['_dima'],
-        varType: 'level'
-      }),
-      v('_level6[DimA]', 'INTEG((_level5[DimA]-_level6[DimA])/(delay 3[DimA]/3),initial s)', {
-        hasInitValue: true,
-        includeInOutput: false,
-        initReferences: ['_initial_s'],
-        refId: '__level6',
-        referencedFunctionNames: ['__integ'],
-        references: ['__level5', '_delay_3'],
-        subscripts: ['_dima'],
-        varType: 'level'
-      }),
-      v('_level7[DimA]', 'INTEG((_level6[DimA]-_level7[DimA])/(delay 3[DimA]/3),initial s)', {
-        hasInitValue: true,
-        includeInOutput: false,
-        initReferences: ['_initial_s'],
-        refId: '__level7',
-        referencedFunctionNames: ['__integ'],
-        references: ['__level6', '_delay_3'],
-        subscripts: ['_dima'],
-        varType: 'level'
-      }),
-      v('_level8[DimA]', 'INTEG((input 3[DimA]-_level8[DimA])/(delay/3),initial s)', {
-        hasInitValue: true,
-        includeInOutput: false,
-        initReferences: ['_initial_s'],
-        refId: '__level8',
-        referencedFunctionNames: ['__integ'],
-        references: ['_input_3', '_delay'],
-        subscripts: ['_dima'],
-        varType: 'level'
-      }),
-      v('_level9[DimA]', 'INTEG((_level8[DimA]-_level9[DimA])/(delay/3),initial s)', {
-        hasInitValue: true,
-        includeInOutput: false,
-        initReferences: ['_initial_s'],
-        refId: '__level9',
-        referencedFunctionNames: ['__integ'],
-        references: ['__level8', '_delay'],
-        subscripts: ['_dima'],
-        varType: 'level'
-      }),
-      v('_level10[DimA]', 'INTEG((_level9[DimA]-_level10[DimA])/(delay/3),initial s)', {
-        hasInitValue: true,
-        includeInOutput: false,
-        initReferences: ['_initial_s'],
-        refId: '__level10',
-        referencedFunctionNames: ['__integ'],
-        references: ['__level9', '_delay'],
-        subscripts: ['_dima'],
-        varType: 'level'
-      }),
-      v('_level11[DimA]', 'INTEG((input 3[DimA]-_level11[DimA])/(delay/3),initial s with subscripts[DimA])', {
-        hasInitValue: true,
-        includeInOutput: false,
-        initReferences: ['_initial_s_with_subscripts'],
-        refId: '__level11',
-        referencedFunctionNames: ['__integ'],
-        references: ['_input_3', '_delay'],
-        subscripts: ['_dima'],
-        varType: 'level'
-      }),
-      v('_level12[DimA]', 'INTEG((_level11[DimA]-_level12[DimA])/(delay/3),initial s with subscripts[DimA])', {
-        hasInitValue: true,
-        includeInOutput: false,
-        initReferences: ['_initial_s_with_subscripts'],
-        refId: '__level12',
-        referencedFunctionNames: ['__integ'],
-        references: ['__level11', '_delay'],
-        subscripts: ['_dima'],
-        varType: 'level'
-      }),
-      v('_level13[DimA]', 'INTEG((_level12[DimA]-_level13[DimA])/(delay/3),initial s with subscripts[DimA])', {
-        hasInitValue: true,
-        includeInOutput: false,
-        initReferences: ['_initial_s_with_subscripts'],
-        refId: '__level13',
-        referencedFunctionNames: ['__integ'],
-        references: ['__level12', '_delay'],
-        subscripts: ['_dima'],
-        varType: 'level'
-      }),
-      v('_level14', 'INTEG((input-_level14)/delay,input)', {
+      v('_level2', 'INTEG((input-_level2)/delay,input)', {
         hasInitValue: true,
         includeInOutput: false,
         initReferences: ['_input'],
-        refId: '__level14',
+        refId: '__level2',
         referencedFunctionNames: ['__integ'],
         references: ['_input', '_delay'],
         varType: 'level'
       }),
-      v('_level15[DimA]', 'INTEG((input 3[DimA]-_level15[DimA])/delay 3[DimA],input 3[DimA])', {
+      v('_level3[DimA]', 'INTEG((input 3[DimA]-_level3[DimA])/delay 3[DimA],input 3[DimA])', {
         hasInitValue: true,
         includeInOutput: false,
         initReferences: ['_input_3'],
-        refId: '__level15',
+        refId: '__level3',
         referencedFunctionNames: ['__integ'],
         references: ['_input_3', '_delay_3'],
         subscripts: ['_dima'],
@@ -7839,11 +7644,11 @@ describe('readEquations', () => {
         subscripts: ['_a3'],
         varType: 'level'
       }),
-      v('_level16[DimA]', 'INTEG((input 3[DimA]-_level16[DimA])/delay 3[DimA],input 3[DimA])', {
+      v('_level4[DimA]', 'INTEG((input 3[DimA]-_level4[DimA])/delay 3[DimA],input 3[DimA])', {
         hasInitValue: true,
         includeInOutput: false,
         initReferences: ['_input_3'],
-        refId: '__level16',
+        refId: '__level4',
         referencedFunctionNames: ['__integ'],
         references: ['_input_3', '_delay_3'],
         subscripts: ['_dima'],
@@ -7869,11 +7674,11 @@ describe('readEquations', () => {
         subscripts: ['_a3'],
         varType: 'level'
       }),
-      v('_level17[DimA,DimB]', 'INTEG((input 3x3[DimA,DimB]-_level17[DimA,DimB])/delay,input 3x3[DimA,DimB])', {
+      v('_level5[DimA,DimB]', 'INTEG((input 3x3[DimA,DimB]-_level5[DimA,DimB])/delay,input 3x3[DimA,DimB])', {
         hasInitValue: true,
         includeInOutput: false,
         initReferences: ['_input_3x3'],
-        refId: '__level17',
+        refId: '__level5',
         referencedFunctionNames: ['__integ'],
         references: ['_input_3x3', '_delay'],
         subscripts: ['_dima', '_dimb'],
@@ -7898,6 +7703,146 @@ describe('readEquations', () => {
         references: ['_input_2x3[_a3,_dimb]', '_delay'],
         subscripts: ['_a3', '_dimb'],
         varType: 'level'
+      }),
+      v('_level_s10_1[a2]', 'INTEG((input 2[a2]-_level_s10_1[a2])/delay,input 2[a2])', {
+        hasInitValue: true,
+        includeInOutput: false,
+        initReferences: ['_input_2[_a2]'],
+        refId: '__level_s10_1[_a2]',
+        referencedFunctionNames: ['__integ'],
+        references: ['_input_2[_a2]', '_delay'],
+        subscripts: ['_a2'],
+        varType: 'level'
+      }),
+      v('_level_s10_1[a3]', 'INTEG((input 2[a3]-_level_s10_1[a3])/delay,input 2[a3])', {
+        hasInitValue: true,
+        includeInOutput: false,
+        initReferences: ['_input_2[_a3]'],
+        refId: '__level_s10_1[_a3]',
+        referencedFunctionNames: ['__integ'],
+        references: ['_input_2[_a3]', '_delay'],
+        subscripts: ['_a3'],
+        varType: 'level'
+      }),
+      v('_level6[DimA]', 'INTEG((input 3[DimA]-_level6[DimA])/(delay/3),input 3[DimA])', {
+        hasInitValue: true,
+        includeInOutput: false,
+        initReferences: ['_input_3'],
+        refId: '__level6',
+        referencedFunctionNames: ['__integ'],
+        references: ['_input_3', '_delay'],
+        subscripts: ['_dima'],
+        varType: 'level'
+      }),
+      v('_level7[DimA]', 'INTEG((_level6[DimA]-_level7[DimA])/(delay/3),input 3[DimA])', {
+        hasInitValue: true,
+        includeInOutput: false,
+        initReferences: ['_input_3'],
+        refId: '__level7',
+        referencedFunctionNames: ['__integ'],
+        references: ['__level6', '_delay'],
+        subscripts: ['_dima'],
+        varType: 'level'
+      }),
+      v('_level8[DimA]', 'INTEG((_level7[DimA]-_level8[DimA])/(delay/3),input 3[DimA])', {
+        hasInitValue: true,
+        includeInOutput: false,
+        initReferences: ['_input_3'],
+        refId: '__level8',
+        referencedFunctionNames: ['__integ'],
+        references: ['__level7', '_delay'],
+        subscripts: ['_dima'],
+        varType: 'level'
+      }),
+      v('_level9[DimA]', 'INTEG((input 3[DimA]-_level9[DimA])/(delay 3[DimA]/3),initial s)', {
+        hasInitValue: true,
+        includeInOutput: false,
+        initReferences: ['_initial_s'],
+        refId: '__level9',
+        referencedFunctionNames: ['__integ'],
+        references: ['_input_3', '_delay_3'],
+        subscripts: ['_dima'],
+        varType: 'level'
+      }),
+      v('_level10[DimA]', 'INTEG((_level9[DimA]-_level10[DimA])/(delay 3[DimA]/3),initial s)', {
+        hasInitValue: true,
+        includeInOutput: false,
+        initReferences: ['_initial_s'],
+        refId: '__level10',
+        referencedFunctionNames: ['__integ'],
+        references: ['__level9', '_delay_3'],
+        subscripts: ['_dima'],
+        varType: 'level'
+      }),
+      v('_level11[DimA]', 'INTEG((_level10[DimA]-_level11[DimA])/(delay 3[DimA]/3),initial s)', {
+        hasInitValue: true,
+        includeInOutput: false,
+        initReferences: ['_initial_s'],
+        refId: '__level11',
+        referencedFunctionNames: ['__integ'],
+        references: ['__level10', '_delay_3'],
+        subscripts: ['_dima'],
+        varType: 'level'
+      }),
+      v('_level12[DimA]', 'INTEG((input 3[DimA]-_level12[DimA])/(delay/3),initial s)', {
+        hasInitValue: true,
+        includeInOutput: false,
+        initReferences: ['_initial_s'],
+        refId: '__level12',
+        referencedFunctionNames: ['__integ'],
+        references: ['_input_3', '_delay'],
+        subscripts: ['_dima'],
+        varType: 'level'
+      }),
+      v('_level13[DimA]', 'INTEG((_level12[DimA]-_level13[DimA])/(delay/3),initial s)', {
+        hasInitValue: true,
+        includeInOutput: false,
+        initReferences: ['_initial_s'],
+        refId: '__level13',
+        referencedFunctionNames: ['__integ'],
+        references: ['__level12', '_delay'],
+        subscripts: ['_dima'],
+        varType: 'level'
+      }),
+      v('_level14[DimA]', 'INTEG((_level13[DimA]-_level14[DimA])/(delay/3),initial s)', {
+        hasInitValue: true,
+        includeInOutput: false,
+        initReferences: ['_initial_s'],
+        refId: '__level14',
+        referencedFunctionNames: ['__integ'],
+        references: ['__level13', '_delay'],
+        subscripts: ['_dima'],
+        varType: 'level'
+      }),
+      v('_level15[DimA]', 'INTEG((input 3[DimA]-_level15[DimA])/(delay/3),initial s with subscripts[DimA])', {
+        hasInitValue: true,
+        includeInOutput: false,
+        initReferences: ['_initial_s_with_subscripts'],
+        refId: '__level15',
+        referencedFunctionNames: ['__integ'],
+        references: ['_input_3', '_delay'],
+        subscripts: ['_dima'],
+        varType: 'level'
+      }),
+      v('_level16[DimA]', 'INTEG((_level15[DimA]-_level16[DimA])/(delay/3),initial s with subscripts[DimA])', {
+        hasInitValue: true,
+        includeInOutput: false,
+        initReferences: ['_initial_s_with_subscripts'],
+        refId: '__level16',
+        referencedFunctionNames: ['__integ'],
+        references: ['__level15', '_delay'],
+        subscripts: ['_dima'],
+        varType: 'level'
+      }),
+      v('_level17[DimA]', 'INTEG((_level16[DimA]-_level17[DimA])/(delay/3),initial s with subscripts[DimA])', {
+        hasInitValue: true,
+        includeInOutput: false,
+        initReferences: ['_initial_s_with_subscripts'],
+        refId: '__level17',
+        referencedFunctionNames: ['__integ'],
+        references: ['__level16', '_delay'],
+        subscripts: ['_dima'],
+        varType: 'level'
       })
     ])
   })
@@ -7909,12 +7854,21 @@ describe('readEquations', () => {
         refId: '_a',
         varType: 'const'
       }),
-      v('apt', '1', {
-        refId: '_apt',
-        varType: 'const'
+      v('S3', 'SMOOTH3(s3 input,MAX(a,b))', {
+        refId: '_s3',
+        references: ['__level1', '__level2', '__level3'],
+        smoothVarRefId: '__level3'
       }),
       v('b', '2', {
         refId: '_b',
+        varType: 'const'
+      }),
+      v('s3 input', '3+PULSE(10,10)', {
+        refId: '_s3_input',
+        referencedFunctionNames: ['__pulse']
+      }),
+      v('apt', '1', {
+        refId: '_apt',
         varType: 'const'
       }),
       v('ca[A1]', '1000+RAMP(100,1,10)', {
@@ -7935,38 +7889,14 @@ describe('readEquations', () => {
       v('cs[DimA]', 'MIN(SMOOTH3(sr,apt),ca[DimA]/TIME STEP)', {
         refId: '_cs',
         referencedFunctionNames: ['__min'],
-        references: ['__level1', '__level2', '__level3', '_ca[_a1]', '_ca[_a2]', '_ca[_a3]', '_time_step'],
-        smoothVarRefId: '__level3',
+        references: ['__level4', '__level5', '__level6', '_ca[_a1]', '_ca[_a2]', '_ca[_a3]', '_time_step'],
+        smoothVarRefId: '__level6',
         subscripts: ['_dima']
       }),
-      v('delay', '2', {
-        refId: '_delay',
-        varType: 'const'
-      }),
-      v('FINAL TIME', '40', {
-        refId: '_final_time',
-        varType: 'const'
-      }),
-      v('INITIAL TIME', '0', {
-        refId: '_initial_time',
-        varType: 'const'
-      }),
-      v('input', '3+PULSE(10,10)', {
-        refId: '_input',
-        referencedFunctionNames: ['__pulse']
-      }),
-      v('S1', 'scale*SMOOTH3(input,delay)', {
-        refId: '_s1',
-        references: ['_scale', '__level4', '__level5', '__level6'],
-        smoothVarRefId: '__level6'
-      }),
-      v('S2', 'scale*S2 Level 3', {
-        refId: '_s2',
-        references: ['_scale', '_s2_level_3']
-      }),
-      v('S2 Delay', 'delay/3', {
-        refId: '_s2_delay',
-        references: ['_delay']
+      v('sr', 'COS(Time/5)', {
+        refId: '_sr',
+        referencedFunctionNames: ['__cos'],
+        references: ['_time']
       }),
       v('S2 Level 1', 'INTEG((input-S2 Level 1)/S2 Delay,input)', {
         hasInitValue: true,
@@ -7974,6 +7904,18 @@ describe('readEquations', () => {
         refId: '_s2_level_1',
         referencedFunctionNames: ['__integ'],
         references: ['_input', '_s2_delay'],
+        varType: 'level'
+      }),
+      v('S2', 'scale*S2 Level 3', {
+        refId: '_s2',
+        references: ['_scale', '_s2_level_3']
+      }),
+      v('S2 Level 3', 'INTEG((S2 Level 2-S2 Level 3)/S2 Delay,input)', {
+        hasInitValue: true,
+        initReferences: ['_input'],
+        refId: '_s2_level_3',
+        referencedFunctionNames: ['__integ'],
+        references: ['_s2_level_2', '_s2_delay'],
         varType: 'level'
       }),
       v('S2 Level 2', 'INTEG((S2 Level 1-S2 Level 2)/S2 Delay,input)', {
@@ -7984,35 +7926,38 @@ describe('readEquations', () => {
         references: ['_s2_level_1', '_s2_delay'],
         varType: 'level'
       }),
-      v('S2 Level 3', 'INTEG((S2 Level 2-S2 Level 3)/S2 Delay,input)', {
-        hasInitValue: true,
-        initReferences: ['_input'],
-        refId: '_s2_level_3',
-        referencedFunctionNames: ['__integ'],
-        references: ['_s2_level_2', '_s2_delay'],
-        varType: 'level'
+      v('S2 Delay', 'delay/3', {
+        refId: '_s2_delay',
+        references: ['_delay']
       }),
-      v('S3', 'SMOOTH3(s3 input,MAX(a,b))', {
-        refId: '_s3',
-        references: ['__level7', '__level8', '__level9'],
-        smoothVarRefId: '__level9'
+      v('delay', '2', {
+        refId: '_delay',
+        varType: 'const'
       }),
-      v('s3 input', '3+PULSE(10,10)', {
-        refId: '_s3_input',
+      v('input', '3+PULSE(10,10)', {
+        refId: '_input',
         referencedFunctionNames: ['__pulse']
       }),
-      v('SAVEPER', 'TIME STEP', {
-        refId: '_saveper',
-        references: ['_time_step']
+      v('S1', 'scale*SMOOTH3(input,delay)', {
+        refId: '_s1',
+        references: ['_scale', '__level7', '__level8', '__level9'],
+        smoothVarRefId: '__level9'
       }),
       v('scale', '6', {
         refId: '_scale',
         varType: 'const'
       }),
-      v('sr', 'COS(Time/5)', {
-        refId: '_sr',
-        referencedFunctionNames: ['__cos'],
-        references: ['_time']
+      v('FINAL TIME', '40', {
+        refId: '_final_time',
+        varType: 'const'
+      }),
+      v('INITIAL TIME', '0', {
+        refId: '_initial_time',
+        varType: 'const'
+      }),
+      v('SAVEPER', 'TIME STEP', {
+        refId: '_saveper',
+        references: ['_time_step']
       }),
       v('TIME STEP', '1', {
         refId: '_time_step',
@@ -8022,85 +7967,85 @@ describe('readEquations', () => {
         refId: '_time',
         varType: 'const'
       }),
-      v('_level1', 'INTEG((sr-_level1)/(apt/3),sr)', {
-        hasInitValue: true,
-        includeInOutput: false,
-        initReferences: ['_sr'],
-        refId: '__level1',
-        referencedFunctionNames: ['__integ'],
-        references: ['_sr', '_apt'],
-        varType: 'level'
-      }),
-      v('_level2', 'INTEG((_level1-_level2)/(apt/3),sr)', {
-        hasInitValue: true,
-        includeInOutput: false,
-        initReferences: ['_sr'],
-        refId: '__level2',
-        referencedFunctionNames: ['__integ'],
-        references: ['__level1', '_apt'],
-        varType: 'level'
-      }),
-      v('_level3', 'INTEG((_level2-_level3)/(apt/3),sr)', {
-        hasInitValue: true,
-        includeInOutput: false,
-        initReferences: ['_sr'],
-        refId: '__level3',
-        referencedFunctionNames: ['__integ'],
-        references: ['__level2', '_apt'],
-        varType: 'level'
-      }),
-      v('_level4', 'INTEG((input-_level4)/(delay/3),input)', {
-        hasInitValue: true,
-        includeInOutput: false,
-        initReferences: ['_input'],
-        refId: '__level4',
-        referencedFunctionNames: ['__integ'],
-        references: ['_input', '_delay'],
-        varType: 'level'
-      }),
-      v('_level5', 'INTEG((_level4-_level5)/(delay/3),input)', {
-        hasInitValue: true,
-        includeInOutput: false,
-        initReferences: ['_input'],
-        refId: '__level5',
-        referencedFunctionNames: ['__integ'],
-        references: ['__level4', '_delay'],
-        varType: 'level'
-      }),
-      v('_level6', 'INTEG((_level5-_level6)/(delay/3),input)', {
-        hasInitValue: true,
-        includeInOutput: false,
-        initReferences: ['_input'],
-        refId: '__level6',
-        referencedFunctionNames: ['__integ'],
-        references: ['__level5', '_delay'],
-        varType: 'level'
-      }),
-      v('_level7', 'INTEG((s3 input-_level7)/(MAX(a,b)/3),s3 input)', {
+      v('_level1', 'INTEG((s3 input-_level1)/(MAX(a,b)/3),s3 input)', {
         hasInitValue: true,
         includeInOutput: false,
         initReferences: ['_s3_input'],
-        refId: '__level7',
+        refId: '__level1',
         referencedFunctionNames: ['__integ', '__max'],
         references: ['_s3_input', '_a', '_b'],
         varType: 'level'
       }),
-      v('_level8', 'INTEG((_level7-_level8)/(MAX(a,b)/3),s3 input)', {
+      v('_level2', 'INTEG((_level1-_level2)/(MAX(a,b)/3),s3 input)', {
         hasInitValue: true,
         includeInOutput: false,
         initReferences: ['_s3_input'],
-        refId: '__level8',
+        refId: '__level2',
         referencedFunctionNames: ['__integ', '__max'],
-        references: ['__level7', '_a', '_b'],
+        references: ['__level1', '_a', '_b'],
         varType: 'level'
       }),
-      v('_level9', 'INTEG((_level8-_level9)/(MAX(a,b)/3),s3 input)', {
+      v('_level3', 'INTEG((_level2-_level3)/(MAX(a,b)/3),s3 input)', {
         hasInitValue: true,
         includeInOutput: false,
         initReferences: ['_s3_input'],
-        refId: '__level9',
+        refId: '__level3',
         referencedFunctionNames: ['__integ', '__max'],
-        references: ['__level8', '_a', '_b'],
+        references: ['__level2', '_a', '_b'],
+        varType: 'level'
+      }),
+      v('_level4', 'INTEG((sr-_level4)/(apt/3),sr)', {
+        hasInitValue: true,
+        includeInOutput: false,
+        initReferences: ['_sr'],
+        refId: '__level4',
+        referencedFunctionNames: ['__integ'],
+        references: ['_sr', '_apt'],
+        varType: 'level'
+      }),
+      v('_level5', 'INTEG((_level4-_level5)/(apt/3),sr)', {
+        hasInitValue: true,
+        includeInOutput: false,
+        initReferences: ['_sr'],
+        refId: '__level5',
+        referencedFunctionNames: ['__integ'],
+        references: ['__level4', '_apt'],
+        varType: 'level'
+      }),
+      v('_level6', 'INTEG((_level5-_level6)/(apt/3),sr)', {
+        hasInitValue: true,
+        includeInOutput: false,
+        initReferences: ['_sr'],
+        refId: '__level6',
+        referencedFunctionNames: ['__integ'],
+        references: ['__level5', '_apt'],
+        varType: 'level'
+      }),
+      v('_level7', 'INTEG((input-_level7)/(delay/3),input)', {
+        hasInitValue: true,
+        includeInOutput: false,
+        initReferences: ['_input'],
+        refId: '__level7',
+        referencedFunctionNames: ['__integ'],
+        references: ['_input', '_delay'],
+        varType: 'level'
+      }),
+      v('_level8', 'INTEG((_level7-_level8)/(delay/3),input)', {
+        hasInitValue: true,
+        includeInOutput: false,
+        initReferences: ['_input'],
+        refId: '__level8',
+        referencedFunctionNames: ['__integ'],
+        references: ['__level7', '_delay'],
+        varType: 'level'
+      }),
+      v('_level9', 'INTEG((_level8-_level9)/(delay/3),input)', {
+        hasInitValue: true,
+        includeInOutput: false,
+        initReferences: ['_input'],
+        refId: '__level9',
+        referencedFunctionNames: ['__integ'],
+        references: ['__level8', '_delay'],
         varType: 'level'
       })
     ])
@@ -8109,37 +8054,37 @@ describe('readEquations', () => {
   it('should work for Vensim "specialchars" model', () => {
     const vars = readSubscriptsAndEquations('specialchars')
     expect(vars).toEqual([
-      v('"100% true"', '4', {
-        refId: '__100__true_',
-        varType: 'const'
-      }),
       v('DOLLAR SIGN$', '1', {
         refId: '_dollar_sign_',
         varType: 'const'
       }),
-      v('FINAL TIME', '1', {
-        refId: '_final_time',
-        varType: 'const'
-      }),
-      v('INITIAL TIME', '0', {
-        refId: '_initial_time',
+      v("time's up", '2', {
+        refId: '_time_s_up',
         varType: 'const'
       }),
       v('"M&Ms"', '3', {
         refId: '__m_ms_',
         varType: 'const'
       }),
-      v('SAVEPER', 'TIME STEP', {
-        refId: '_saveper',
-        references: ['_time_step']
+      v('"100% true"', '4', {
+        refId: '__100__true_',
+        varType: 'const'
+      }),
+      v('INITIAL TIME', '0', {
+        refId: '_initial_time',
+        varType: 'const'
+      }),
+      v('FINAL TIME', '1', {
+        refId: '_final_time',
+        varType: 'const'
       }),
       v('TIME STEP', '1', {
         refId: '_time_step',
         varType: 'const'
       }),
-      v("time's up", '2', {
-        refId: '_time_s_up',
-        varType: 'const'
+      v('SAVEPER', 'TIME STEP', {
+        refId: '_saveper',
+        references: ['_time_step']
       }),
       v('Time', '', {
         refId: '_time',
@@ -8187,21 +8132,21 @@ describe('readEquations', () => {
         subscripts: ['_f3'],
         varType: 'const'
       }),
+      v('INITIAL TIME', '0', {
+        refId: '_initial_time',
+        varType: 'const'
+      }),
       v('FINAL TIME', '1', {
         refId: '_final_time',
         varType: 'const'
       }),
-      v('INITIAL TIME', '0', {
-        refId: '_initial_time',
+      v('TIME STEP', '1', {
+        refId: '_time_step',
         varType: 'const'
       }),
       v('SAVEPER', 'TIME STEP', {
         refId: '_saveper',
         references: ['_time_step']
-      }),
-      v('TIME STEP', '1', {
-        refId: '_time_step',
-        varType: 'const'
       }),
       v('Time', '', {
         refId: '_time',
@@ -8213,11 +8158,6 @@ describe('readEquations', () => {
   it('should work for Vensim "subscript" model', () => {
     const vars = readSubscriptsAndEquations('subscript')
     expect(vars).toEqual([
-      v('a[DimA]', 'b[DimB]', {
-        refId: '_a',
-        references: ['_b[_b1]', '_b[_b2]', '_b[_b3]'],
-        subscripts: ['_dima']
-      }),
       v('b[DimB]', '1,2,3', {
         refId: '_b[_b1]',
         separationDims: ['_dimb'],
@@ -8235,6 +8175,11 @@ describe('readEquations', () => {
         separationDims: ['_dimb'],
         subscripts: ['_b3'],
         varType: 'const'
+      }),
+      v('a[DimA]', 'b[DimB]', {
+        refId: '_a',
+        references: ['_b[_b1]', '_b[_b2]', '_b[_b3]'],
+        subscripts: ['_dima']
       }),
       v('c[DimB]', 'b[DimB]', {
         refId: '_c',
@@ -8266,10 +8211,6 @@ describe('readEquations', () => {
         subscripts: ['_dima', '_b3'],
         varType: 'const'
       }),
-      v('FINAL TIME', '1', {
-        refId: '_final_time',
-        varType: 'const'
-      }),
       v('g[B1,DimA]', 'f[DimA,B1]', {
         refId: '_g[_dima,_b1]',
         references: ['_f[_dima,_b1]'],
@@ -8284,10 +8225,6 @@ describe('readEquations', () => {
         refId: '_g[_dima,_b3]',
         references: ['_f[_dima,_b3]'],
         subscripts: ['_dima', '_b3']
-      }),
-      v('INITIAL TIME', '0', {
-        refId: '_initial_time',
-        varType: 'const'
       }),
       v('o[DimA,DimB]', 'f[DimA,DimB]', {
         refId: '_o',
@@ -8304,25 +8241,17 @@ describe('readEquations', () => {
         references: ['_selected_a'],
         subscripts: ['_dima']
       }),
-      v('s[DimA]', 'DimB', {
-        refId: '_s',
-        subscripts: ['_dima']
-      }),
-      v('SAVEPER', 'TIME STEP', {
-        refId: '_saveper',
-        references: ['_time_step']
-      }),
       v('Selected A', '2', {
         refId: '_selected_a',
         varType: 'const'
       }),
+      v('s[DimA]', 'DimB', {
+        refId: '_s',
+        subscripts: ['_dima']
+      }),
       v('t[DimC]', '1', {
         refId: '_t',
         subscripts: ['_dimc'],
-        varType: 'const'
-      }),
-      v('TIME STEP', '1', {
-        refId: '_time_step',
         varType: 'const'
       }),
       v('u[C1]', '1', {
@@ -8354,6 +8283,22 @@ describe('readEquations', () => {
         refId: '_v',
         subscripts: ['_dima']
       }),
+      v('FINAL TIME', '1', {
+        refId: '_final_time',
+        varType: 'const'
+      }),
+      v('INITIAL TIME', '0', {
+        refId: '_initial_time',
+        varType: 'const'
+      }),
+      v('SAVEPER', 'TIME STEP', {
+        refId: '_saveper',
+        references: ['_time_step']
+      }),
+      v('TIME STEP', '1', {
+        refId: '_time_step',
+        varType: 'const'
+      }),
       v('Time', '', {
         refId: '_time',
         varType: 'const'
@@ -8364,18 +8309,6 @@ describe('readEquations', () => {
   it('should work for Vensim "sum" model', () => {
     const vars = readSubscriptsAndEquations('sum')
     expect(vars).toEqual([
-      v('a 2[SubA]', '1,2', {
-        refId: '_a_2[_a2]',
-        separationDims: ['_suba'],
-        subscripts: ['_a2'],
-        varType: 'const'
-      }),
-      v('a 2[SubA]', '1,2', {
-        refId: '_a_2[_a3]',
-        separationDims: ['_suba'],
-        subscripts: ['_a3'],
-        varType: 'const'
-      }),
       v('a[DimA]', '1,2,3', {
         refId: '_a[_a1]',
         separationDims: ['_dima'],
@@ -8391,18 +8324,6 @@ describe('readEquations', () => {
       v('a[DimA]', '1,2,3', {
         refId: '_a[_a3]',
         separationDims: ['_dima'],
-        subscripts: ['_a3'],
-        varType: 'const'
-      }),
-      v('b 2[SubA]', '4,5', {
-        refId: '_b_2[_a2]',
-        separationDims: ['_suba'],
-        subscripts: ['_a2'],
-        varType: 'const'
-      }),
-      v('b 2[SubA]', '4,5', {
-        refId: '_b_2[_a3]',
-        separationDims: ['_suba'],
         subscripts: ['_a3'],
         varType: 'const'
       }),
@@ -8424,6 +8345,30 @@ describe('readEquations', () => {
         subscripts: ['_a3'],
         varType: 'const'
       }),
+      v('a 2[SubA]', '1,2', {
+        refId: '_a_2[_a2]',
+        separationDims: ['_suba'],
+        subscripts: ['_a2'],
+        varType: 'const'
+      }),
+      v('a 2[SubA]', '1,2', {
+        refId: '_a_2[_a3]',
+        separationDims: ['_suba'],
+        subscripts: ['_a3'],
+        varType: 'const'
+      }),
+      v('b 2[SubA]', '4,5', {
+        refId: '_b_2[_a2]',
+        separationDims: ['_suba'],
+        subscripts: ['_a2'],
+        varType: 'const'
+      }),
+      v('b 2[SubA]', '4,5', {
+        refId: '_b_2[_a3]',
+        separationDims: ['_suba'],
+        subscripts: ['_a3'],
+        varType: 'const'
+      }),
       v('c', 'SUM(a[DimA!])+1', {
         refId: '_c',
         referencedFunctionNames: ['__sum'],
@@ -8442,10 +8387,6 @@ describe('readEquations', () => {
       v('f[DimA,DimC]', '1', {
         refId: '_f',
         subscripts: ['_dima', '_dimc'],
-        varType: 'const'
-      }),
-      v('FINAL TIME', '1', {
-        refId: '_final_time',
         varType: 'const'
       }),
       v('g[DimA,DimC]', 'SUM(f[DimA!,DimC!])', {
@@ -8476,10 +8417,6 @@ describe('readEquations', () => {
         refId: '_i',
         referencedFunctionNames: ['__sum'],
         references: ['_a[_a1]', '_a[_a2]', '_a[_a3]', '_h[_c1]', '_h[_c2]', '_h[_c3]']
-      }),
-      v('INITIAL TIME', '0', {
-        refId: '_initial_time',
-        varType: 'const'
       }),
       v('j[DimA]', 'a[DimA]/SUM(b[DimA!])', {
         refId: '_j',
@@ -8622,13 +8559,21 @@ describe('readEquations', () => {
         references: ['_o[_d1,_dime,_f1]', '_o[_d1,_dime,_f2]', '_o[_d2,_dime,_f1]', '_o[_d2,_dime,_f2]'],
         subscripts: ['_dimd', '_dime']
       }),
-      v('SAVEPER', 'TIME STEP', {
-        refId: '_saveper',
-        references: ['_time_step']
+      v('INITIAL TIME', '0', {
+        refId: '_initial_time',
+        varType: 'const'
+      }),
+      v('FINAL TIME', '1', {
+        refId: '_final_time',
+        varType: 'const'
       }),
       v('TIME STEP', '1', {
         refId: '_time_step',
         varType: 'const'
+      }),
+      v('SAVEPER', 'TIME STEP', {
+        refId: '_saveper',
+        references: ['_time_step']
       }),
       v('Time', '', {
         refId: '_time',
@@ -8640,6 +8585,16 @@ describe('readEquations', () => {
   it('should work for Vensim "sumif" model', () => {
     const vars = readSubscriptsAndEquations('sumif')
     expect(vars).toEqual([
+      v('A Values[DimA]', '', {
+        refId: '_a_values',
+        subscripts: ['_dima'],
+        varType: 'data'
+      }),
+      v('A Values Total', 'SUM(A Values[DimA!])', {
+        refId: '_a_values_total',
+        referencedFunctionNames: ['__sum'],
+        references: ['_a_values']
+      }),
       v(
         'A Values Avg',
         'ZIDZ(SUM(IF THEN ELSE(A Values[DimA!]=:NA:,0,A Values[DimA!])),SUM(IF THEN ELSE(A Values[DimA!]=:NA:,0,1)))',
@@ -8649,16 +8604,6 @@ describe('readEquations', () => {
           references: ['_a_values']
         }
       ),
-      v('A Values Total', 'SUM(A Values[DimA!])', {
-        refId: '_a_values_total',
-        referencedFunctionNames: ['__sum'],
-        references: ['_a_values']
-      }),
-      v('A Values[DimA]', '', {
-        refId: '_a_values',
-        subscripts: ['_dima'],
-        varType: 'data'
-      }),
       v('FINAL TIME', '10', {
         refId: '_final_time',
         varType: 'const'
@@ -8685,32 +8630,8 @@ describe('readEquations', () => {
   it('should work for Vensim "trend" model', () => {
     const vars = readSubscriptsAndEquations('trend')
     expect(vars).toEqual([
-      v('average time', '6', {
-        refId: '_average_time',
-        varType: 'const'
-      }),
-      v('average value', 'INTEG((input-average value)/average time,input/(1+initial trend*average time))', {
-        hasInitValue: true,
-        initReferences: ['_input', '_initial_trend', '_average_time'],
-        refId: '_average_value',
-        referencedFunctionNames: ['__integ'],
-        references: ['_input', '_average_time'],
-        varType: 'level'
-      }),
       v('description', '0', {
         refId: '_description',
-        varType: 'const'
-      }),
-      v('FINAL TIME', '100', {
-        refId: '_final_time',
-        varType: 'const'
-      }),
-      v('INITIAL TIME', '0', {
-        refId: '_initial_time',
-        varType: 'const'
-      }),
-      v('initial trend', '10', {
-        refId: '_initial_trend',
         varType: 'const'
       }),
       v('input', '1+0.5*SIN(2*3.14159*Time/period)', {
@@ -8718,16 +8639,16 @@ describe('readEquations', () => {
         referencedFunctionNames: ['__sin'],
         references: ['_time', '_period']
       }),
-      v('period', '20', {
-        refId: '_period',
+      v('average time', '6', {
+        refId: '_average_time',
         varType: 'const'
       }),
-      v('SAVEPER', 'TIME STEP', {
-        refId: '_saveper',
-        references: ['_time_step']
+      v('initial trend', '10', {
+        refId: '_initial_trend',
+        varType: 'const'
       }),
-      v('TIME STEP', '1', {
-        refId: '_time_step',
+      v('period', '20', {
+        refId: '_period',
         varType: 'const'
       }),
       v('TREND of input', 'TREND(input,average time,initial trend)', {
@@ -8739,6 +8660,30 @@ describe('readEquations', () => {
         refId: '_trend1',
         referencedFunctionNames: ['__zidz', '__abs'],
         references: ['_input', '_average_value', '_average_time']
+      }),
+      v('average value', 'INTEG((input-average value)/average time,input/(1+initial trend*average time))', {
+        hasInitValue: true,
+        initReferences: ['_input', '_initial_trend', '_average_time'],
+        refId: '_average_value',
+        referencedFunctionNames: ['__integ'],
+        references: ['_input', '_average_time'],
+        varType: 'level'
+      }),
+      v('INITIAL TIME', '0', {
+        refId: '_initial_time',
+        varType: 'const'
+      }),
+      v('FINAL TIME', '100', {
+        refId: '_final_time',
+        varType: 'const'
+      }),
+      v('TIME STEP', '1', {
+        refId: '_time_step',
+        varType: 'const'
+      }),
+      v('SAVEPER', 'TIME STEP', {
+        refId: '_saveper',
+        references: ['_time_step']
       }),
       v('Time', '', {
         refId: '_time',
@@ -8765,6 +8710,30 @@ describe('readEquations', () => {
   it('should work for Vensim "vector" model', () => {
     const vars = readSubscriptsAndEquations('vector')
     expect(vars).toEqual([
+      v('ASCENDING', '1', {
+        refId: '_ascending',
+        varType: 'const'
+      }),
+      v('DESCENDING', '0', {
+        refId: '_descending',
+        varType: 'const'
+      }),
+      v('VSSUM', '0', {
+        refId: '_vssum',
+        varType: 'const'
+      }),
+      v('VSMAX', '3', {
+        refId: '_vsmax',
+        varType: 'const'
+      }),
+      v('VSERRNONE', '0', {
+        refId: '_vserrnone',
+        varType: 'const'
+      }),
+      v('VSERRATLEASTONE', '1', {
+        refId: '_vserratleastone',
+        varType: 'const'
+      }),
       v('a[DimA]', '0,1,1', {
         refId: '_a[_a1]',
         separationDims: ['_dima'],
@@ -8781,10 +8750,6 @@ describe('readEquations', () => {
         refId: '_a[_a3]',
         separationDims: ['_dima'],
         subscripts: ['_a3'],
-        varType: 'const'
-      }),
-      v('ASCENDING', '1', {
-        refId: '_ascending',
         varType: 'const'
       }),
       v('b[DimB]', '1,2', {
@@ -8810,19 +8775,9 @@ describe('readEquations', () => {
         subscripts: ['_a1', '_b1'],
         varType: 'const'
       }),
-      v('d[A1,B2]', '4', {
-        refId: '_d[_a1,_b2]',
-        subscripts: ['_a1', '_b2'],
-        varType: 'const'
-      }),
       v('d[A2,B1]', '2', {
         refId: '_d[_a2,_b1]',
         subscripts: ['_a2', '_b1'],
-        varType: 'const'
-      }),
-      v('d[A2,B2]', '5', {
-        refId: '_d[_a2,_b2]',
-        subscripts: ['_a2', '_b2'],
         varType: 'const'
       }),
       v('d[A3,B1]', '3', {
@@ -8830,13 +8785,19 @@ describe('readEquations', () => {
         subscripts: ['_a3', '_b1'],
         varType: 'const'
       }),
+      v('d[A1,B2]', '4', {
+        refId: '_d[_a1,_b2]',
+        subscripts: ['_a1', '_b2'],
+        varType: 'const'
+      }),
+      v('d[A2,B2]', '5', {
+        refId: '_d[_a2,_b2]',
+        subscripts: ['_a2', '_b2'],
+        varType: 'const'
+      }),
       v('d[A3,B2]', '6', {
         refId: '_d[_a3,_b2]',
         subscripts: ['_a3', '_b2'],
-        varType: 'const'
-      }),
-      v('DESCENDING', '0', {
-        refId: '_descending',
         varType: 'const'
       }),
       v('e[A1,B1]', '0', {
@@ -8844,24 +8805,24 @@ describe('readEquations', () => {
         subscripts: ['_a1', '_b1'],
         varType: 'const'
       }),
-      v('e[A1,B2]', '1', {
-        refId: '_e[_a1,_b2]',
-        subscripts: ['_a1', '_b2'],
-        varType: 'const'
-      }),
       v('e[A2,B1]', '1', {
         refId: '_e[_a2,_b1]',
         subscripts: ['_a2', '_b1'],
         varType: 'const'
       }),
-      v('e[A2,B2]', '0', {
-        refId: '_e[_a2,_b2]',
-        subscripts: ['_a2', '_b2'],
-        varType: 'const'
-      }),
       v('e[A3,B1]', '0', {
         refId: '_e[_a3,_b1]',
         subscripts: ['_a3', '_b1'],
+        varType: 'const'
+      }),
+      v('e[A1,B2]', '1', {
+        refId: '_e[_a1,_b2]',
+        subscripts: ['_a1', '_b2'],
+        varType: 'const'
+      }),
+      v('e[A2,B2]', '0', {
+        refId: '_e[_a2,_b2]',
+        subscripts: ['_a2', '_b2'],
         varType: 'const'
       }),
       v('e[A3,B2]', '1', {
@@ -8874,10 +8835,6 @@ describe('readEquations', () => {
         referencedFunctionNames: ['__vector_elm_map'],
         references: ['_d[_a1,_b1]', '_d[_a2,_b1]', '_d[_a3,_b1]', '_a[_a1]', '_a[_a2]', '_a[_a3]'],
         subscripts: ['_dima', '_dimb']
-      }),
-      v('FINAL TIME', '1', {
-        refId: '_final_time',
-        varType: 'const'
       }),
       v('g[DimA,DimB]', 'VECTOR ELM MAP(d[DimA,B1],e[DimA,DimB])', {
         refId: '_g',
@@ -8911,10 +8868,6 @@ describe('readEquations', () => {
         refId: '_h[_a3]',
         separationDims: ['_dima'],
         subscripts: ['_a3'],
-        varType: 'const'
-      }),
-      v('INITIAL TIME', '0', {
-        refId: '_initial_time',
         varType: 'const'
       }),
       v('l[DimA]', 'VECTOR SORT ORDER(h[DimA],ASCENDING)', {
@@ -9016,14 +8969,6 @@ describe('readEquations', () => {
         references: ['_c', '_e[_a1,_b1]', '_e[_a1,_b2]', '_e[_a2,_b1]', '_e[_a2,_b2]', '_e[_a3,_b1]', '_e[_a3,_b2]'],
         subscripts: ['_dimb']
       }),
-      v('SAVEPER', 'TIME STEP', {
-        refId: '_saveper',
-        references: ['_time_step']
-      }),
-      v('TIME STEP', '1', {
-        refId: '_time_step',
-        varType: 'const'
-      }),
       v('u', 'VMAX(x[DimX!])', {
         refId: '_u',
         referencedFunctionNames: ['__vmax'],
@@ -9033,22 +8978,6 @@ describe('readEquations', () => {
         refId: '_v',
         referencedFunctionNames: ['__vmax'],
         references: ['_x[_four]', '_x[_three]', '_x[_two]']
-      }),
-      v('VSERRATLEASTONE', '1', {
-        refId: '_vserratleastone',
-        varType: 'const'
-      }),
-      v('VSERRNONE', '0', {
-        refId: '_vserrnone',
-        varType: 'const'
-      }),
-      v('VSMAX', '3', {
-        refId: '_vsmax',
-        varType: 'const'
-      }),
-      v('VSSUM', '0', {
-        refId: '_vssum',
-        varType: 'const'
       }),
       v('w', 'VMIN(x[DimX!])', {
         refId: '_w',
@@ -9090,6 +9019,22 @@ describe('readEquations', () => {
         referencedFunctionNames: ['__vector_elm_map'],
         references: ['_x[_three]'],
         subscripts: ['_dima']
+      }),
+      v('INITIAL TIME', '0', {
+        refId: '_initial_time',
+        varType: 'const'
+      }),
+      v('FINAL TIME', '1', {
+        refId: '_final_time',
+        varType: 'const'
+      }),
+      v('TIME STEP', '1', {
+        refId: '_time_step',
+        varType: 'const'
+      }),
+      v('SAVEPER', 'TIME STEP', {
+        refId: '_saveper',
+        references: ['_time_step']
       }),
       v('Time', '', {
         refId: '_time',
