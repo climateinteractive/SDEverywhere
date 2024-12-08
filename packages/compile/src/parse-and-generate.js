@@ -25,18 +25,19 @@ import { generateCode } from './generate/gen-code.js'
  * - If `operations` has 'convertNames', no output will be generated, but the results of model
  *   analysis will be available.
  *
- * @param input The preprocessed Vensim model text.
- * @param spec The model spec (from the JSON file).
- * @param operations The set of operations to perform; can include 'generateC', 'generateJS',
+ * @param {string} input The preprocessed Vensim model text.
+ * @param {*} spec The model spec (from the JSON file).
+ * @param {string[]} operations The set of operations to perform; can include 'generateC', 'generateJS',
  * 'printVarList', 'printRefIdTest', 'convertNames'.  If the array is empty, the model will be
  * read but no operation will be performed.
- * @param modelDirname The absolute path to the directory containing the mdl file.
+ * @param {string} modelDirname The absolute path to the directory containing the mdl file.
  * The dat and xlsx files referenced by the spec will be relative to this directory.
- * @param modelName The model name (without the mdl extension).
- * @param buildDir The output directory where the C or list files will be written.
+ * @param {string} modelName The model name (without the mdl extension).
+ * @param {string} buildDir The output directory where the C or list files will be written.
+ * @param {string} [varname] The variable name passed to the 'sde causes' command.
  * @return A string containing the generated C code.
  */
-export async function parseAndGenerate(input, spec, operations, modelDirname, modelName, buildDir) {
+export async function parseAndGenerate(input, spec, operations, modelDirname, modelName, buildDir, varname) {
   // Read time series from external DAT files into a single object.
   // externalDatfiles is an array of either filenames or objects
   // giving a variable name prefix as the key and a filename as the value.
@@ -68,7 +69,7 @@ export async function parseAndGenerate(input, spec, operations, modelDirname, mo
 
   // Parse the model and generate code
   let parsedModel = parseModel(input, modelDirname)
-  let code = generateCode(parsedModel, { spec, operations, extData, directData, modelDirname })
+  let code = generateCode(parsedModel, { spec, operations, extData, directData, modelDirname, varname })
 
   function writeOutput(filename, text) {
     let outputPathname = path.join(buildDir, filename)
@@ -136,7 +137,7 @@ export function printNames(namesPathname, operation) {
  * @param {string} input The string containing the model text.
  * @param {string} modelDir The absolute path to the directory containing the mdl file.
  * The dat, xlsx, and csv files referenced by the model will be relative to this directory.
- * @param {Object} options The options that control parsing.
+ * @param {Object} [options] The options that control parsing.
  * @param {boolean} options.sort Whether to sort definitions alphabetically in the preprocess step.
  * @return {*} A parsed tree representation of the model.
  */
@@ -156,12 +157,6 @@ export function parseModel(input, modelDir, options) {
   }
 
   // Parse the model
-  // TODO: The `parseVensimModel` function currently implicitly runs the preprocess
-  // step on the input text.  We should make this configurable (because `parseModel`
-  // is currently called after the legacy preprocessor has already been run).
-  // TODO: We currently sort the preprocessed definitions alphabetically for
-  // compatibility with the legacy preprocessor.  Once we drop the legacy code
-  // we could remove this step and update the tests to use the original order.
   const sort = options?.sort === true
   const root = parseVensimModel(input, parseContext, sort)
 

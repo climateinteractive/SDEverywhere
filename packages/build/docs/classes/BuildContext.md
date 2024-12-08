@@ -107,3 +107,25 @@ Spawn a child process that runs the given command.
 `Promise`<`ProcessOutput`\>
 
 The output of the process.
+
+___
+
+### canonicalVarId
+
+**canonicalVarId**(`name`): `string`
+
+Format a (subscripted or non-subscripted) model variable name into a canonical
+identifier (with special characters converted to underscore, and subscript/dimension
+parts separated by commas).
+
+#### Parameters
+
+| Name | Type | Description |
+| :------ | :------ | :------ |
+| `name` | `string` | The name of the variable in the source model, e.g., `Variable name[DimA, B2]`. |
+
+#### Returns
+
+`string`
+
+The canonical identifier for the given name, e.g., `_variable_name[_dima,_b2]`.

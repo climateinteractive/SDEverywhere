@@ -1,0 +1,26 @@
+# yaml-language-server: $schema=../../node_modules/@sdeverywhere/plugin-check/node_modules/@sdeverywhere/check-core/schema/comparison.schema.json
+
+#
+# This is a simple example of defining custom comparison scenarios, which allow you to see
+# how the behavior of the model compares to that of previous versions.  For more guidance,
+# consult the following wiki page:
+#   https://github.com/climateinteractive/SDEverywhere/wiki/Testing-and-Comparing-Your-Model
+#
+
+- scenario:
+    title: Custom scenario
+    subtitle: with avg duration=4 and contact rate=2
+    with:
+      - input: Average Duration of Illness d
+        at: 4
+      - input: Initial contact rate
+        at: 2
+
+- scenario:
+    title: Custom scenario
+    subtitle: with avg duration=4 and contact rate=4
+    with:
+      - input: Average Duration of Illness d
+        at: 4
+      - input: Initial contact rate
+        at: 4

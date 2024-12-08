@@ -1,4 +1,6 @@
-import { generateCode, parseModel, preprocessModel } from '@sdeverywhere/compile'
+import { readFileSync } from 'fs'
+
+import { parseAndGenerate } from '@sdeverywhere/compile'
 
 import { modelPathProps, parseSpec } from './utils.js'
 
@@ -14,22 +16,13 @@ let builder = {
 let handler = argv => {
   causes(argv.model, argv.c_varname, argv)
 }
-let causes = (model, varname, opts) => {
+let causes = async (model, varname, opts) => {
   // Get the model name and directory from the model argument.
-  let { modelDirname, modelPathname } = modelPathProps(model)
-  let extData = new Map()
-  let directData = new Map()
+  let { modelDirname, modelPathname, modelName } = modelPathProps(model)
   let spec = parseSpec(opts.spec)
-  // Preprocess model text into parser input.
-  // TODO: The legacy `parseModel` function previously required the `preprocessModel`
-  // step to be performed first, but the new `parseModel` runs the preprocessor
-  // implicitly, so we can remove this step (and can simplify this code to use
-  // `parseAndGenerate` instead)
-  let input = preprocessModel(modelPathname, spec)
   // Parse the model to get variable and subscript information.
-  let parsedModel = parseModel(input, modelDirname)
-  let operations = ['printRefGraph']
-  generateCode(parsedModel, { spec, operations, extData, directData, modelDirname, varname })
+  let input = readFileSync(modelPathname, 'utf8')
+  await parseAndGenerate(input, spec, ['printRefGraph'], modelDirname, modelName, '', varname)
 }
 export default {
   command,

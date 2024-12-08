@@ -3,8 +3,9 @@ import util from 'util'
 import B from 'bufx'
 import { parse as parseCsv } from 'csv-parse/sync'
 import * as R from 'ramda'
-import split from 'split-string'
 import XLSX from 'xlsx'
+
+import { canonicalId, canonicalVarId } from '@sdeverywhere/parse'
 
 // Set true to print a stack trace in vlog
 export const PRINT_VLOG_TRACE = false
@@ -40,25 +41,11 @@ export function resetHelperState() {
 }
 
 export let canonicalName = name => {
-  // Format a model variable name into a valid C identifier.
-  return (
-    '_' +
-    name
-      .trim()
-      .replace(/"/g, '_')
-      .replace(/\s+!$/g, '!')
-      .replace(/\s/g, '_')
-      .replace(/,/g, '_')
-      .replace(/-/g, '_')
-      .replace(/\./g, '_')
-      .replace(/\$/g, '_')
-      .replace(/'/g, '_')
-      .replace(/&/g, '_')
-      .replace(/%/g, '_')
-      .replace(/\//g, '_')
-      .replace(/\|/g, '_')
-      .toLowerCase()
-  )
+  // Format a model variable or subscript/dimension name into a valid C identifier.
+  // In the case where you have a full variable name that includes subscripts/dimensions
+  // (e.g., 'Variable name[DimA,B2]'), use `canonicalVensimName` to convert the
+  // base variable name and subscript/dimension parts to canonical form indepdendently.
+  return canonicalId(name)
 }
 export let decanonicalize = name => {
   // Decanonicalize the var name.
@@ -70,9 +57,6 @@ export let decanonicalize = name => {
     name = `"${name}"`
   }
   return name
-}
-export let cFunctionName = name => {
-  return canonicalName(name).toUpperCase()
 }
 export let isSeparatedVar = v => {
   return v.separationDims.length > 0
@@ -244,22 +228,7 @@ export let readCsv = (pathname, delimiter = ',') => {
 }
 // Convert the var name and subscript names to canonical form separately.
 export let canonicalVensimName = vname => {
-  let result = vname
-  let m = vname.match(/([^[]+)(?:\[([^\]]+)\])?/)
-  if (m) {
-    result = canonicalName(m[1])
-    if (m[2]) {
-      let subscripts = m[2].split(',').map(x => canonicalName(x))
-      result += `[${subscripts.join(',')}]`
-    }
-  }
-  return result
-}
-// Split a model string into an array of equations without the "|" terminator.
-// Allow "|" to occur in quoted variable names across line breaks.
-// Retain the backslash character.
-export let splitEquations = mdl => {
-  return split(mdl, { separator: '|', quotes: ['"'], keep: () => true })
+  return canonicalVarId(vname)
 }
 // Function to map over lists's value and index
 export let mapIndexed = R.addIndex(R.map)

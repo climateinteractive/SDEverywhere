@@ -13,20 +13,25 @@ export function createViteConfigForTests(projDir: string, prepDir: string, mode:
   // Use `template-tests` as the root directory for the tests project
   const root = resolvePath(__dirname, '..', 'template-tests')
 
-  // Include `*.check.yaml` files under the configured project root directory.  This
-  // glob path apparently must be a relative path (relative to the `template-tests/src`
-  // directory where the glob is used).
+  // Get the base glob path; apparently this must be a relative path (relative to
+  // the `template-tests/src` directory where the glob is used)
   const templateSrcDir = resolvePath(root, 'src')
   const relProjDir = relative(templateSrcDir, projDir)
   // XXX: The glob pattern must use forward slashes only, so on Windows we need to
   // convert backslashes to slashes
   const relProjDirPath = relProjDir.replaceAll('\\', '/')
-  // TODO: Use yamlPath from options
-  const yamlPath = `${relProjDirPath}/**/*.check.yaml`
 
-  // // Read the `package.json` for the template project
-  // const pkgPath = resolvePath(root, 'package.json')
-  // const pkg = JSON.parse(readFileSync(pkgPath, 'utf8'))
+  // Include check test definitions in files matching `checks/*.yaml` under
+  // the configured project root directory.  We also include `*.check.yaml`,
+  // which was the naming used in earlier versions of the create package and
+  // related examples.
+  // TODO: Use yaml path/pattern from options
+  const yamlCheckGlobPatterns = `['${relProjDirPath}/**/checks/*.yaml', '${relProjDirPath}/**/*.check.yaml']`
+
+  // Include comparison test definitions in files matching `comparisons/*.yaml`
+  // under the configured project root directory
+  // TODO: Use yaml path/pattern from options
+  const yamlComparisonGlobPatterns = `['${relProjDirPath}/**/comparisons/*.yaml']`
 
   // Calculate output directory relative to the template root
   // TODO: For now we write it to `prepDir`; make this configurable?
@@ -54,8 +59,10 @@ export function createViteConfigForTests(projDir: string, prepDir: string, mode:
         preventAssignment: true,
         delimiters: ['', ''],
         values: {
-          // Inject the glob pattern for matching check yaml files
-          './__YAML_PATH__': yamlPath
+          // Inject the glob patterns for matching model check yaml files
+          '"./__YAML_CHECK_GLOB_PATTERNS__"': yamlCheckGlobPatterns,
+          // Inject the glob patterns for matching model comparison yaml files
+          '"./__YAML_COMPARISON_GLOB_PATTERNS__"': yamlComparisonGlobPatterns
         }
       }) as unknown as PluginOption
     ],

@@ -1,0 +1,41 @@
+# yaml-language-server: $schema=../../node_modules/@sdeverywhere/plugin-check/node_modules/@sdeverywhere/check-core/schema/comparison.schema.json
+
+#
+# This is a simple example of defining custom comparison scenarios, which allow you to see
+# how the behavior of the model compares to that of previous versions.  For more guidance,
+# consult the following wiki page:
+#   https://github.com/climateinteractive/SDEverywhere/wiki/Testing-and-Comparing-Your-Model
+#
+
+- scenario:
+    title: Custom production scenario
+    subtitle: early/gradual ramp-up
+    with:
+      - input: Production start year
+        at: 2020
+      - input: Production years
+        at: 25
+      - input: Production slope
+        at: 2
+
+- scenario:
+    title: Custom production scenario
+    subtitle: delayed/faster ramp-up
+    with:
+      - input: Production start year
+        at: 2040
+      - input: Production years
+        at: 30
+      - input: Production slope
+        at: 5
+
+- scenario:
+    title: Custom production scenario
+    subtitle: late/fast ramp-up
+    with:
+      - input: Production start year
+        at: 2070
+      - input: Production years
+        at: 10
+      - input: Production slope
+        at: 10

@@ -1,7 +1,8 @@
 import path from 'path'
+import { readFileSync } from 'fs'
 import B from 'bufx'
 
-import { parseAndGenerate, preprocessModel } from '@sdeverywhere/compile'
+import { parseAndGenerate, preprocessVensimModel } from '@sdeverywhere/compile'
 
 import { buildDir, modelPathProps, parseSpec } from './utils.js'
 
@@ -27,11 +28,6 @@ export let builder = {
     describe: 'write a preprocessed model that runs in Vensim',
     type: 'boolean',
     alias: 'p'
-  },
-  analysis: {
-    describe: 'write a nonexecutable preprocessed model for analysis',
-    type: 'boolean',
-    alias: 'a'
   },
   spec: {
     describe: 'pathname of the I/O specification JSON file',
@@ -64,16 +60,13 @@ export let generate = async (model, opts) => {
   let { modelDirname, modelName, modelPathname } = modelPathProps(model)
   // Ensure the build directory exists.
   let buildDirname = buildDir(opts.builddir, modelDirname)
-  // Preprocess model text into parser input. Stop now if that's all we're doing.
   let spec = parseSpec(opts.spec)
-  // Produce a runnable model with the "runnable" and "preprocess" options.
-  let profile = opts.analysis ? 'analysis' : 'runnable'
-  // Write the preprocessed model and removals if the option is "analysis" or "preprocess".
-  let writeFiles = opts.analysis || opts.preprocess
-  let input = preprocessModel(modelPathname, spec, profile, writeFiles)
-  if (writeFiles) {
+  let mdlContent = readFileSync(modelPathname, 'utf8')
+  if (opts.preprocess) {
+    // Only run the preprocessor.
+    let preprocessed = preprocessModel(mdlContent)
     let outputPathname = path.join(buildDirname, `${modelName}.mdl`)
-    B.write(input, outputPathname)
+    B.write(preprocessed, outputPathname)
     process.exit(0)
   }
   // Parse the model and generate code. If no operation is specified, the code generator will
@@ -94,7 +87,7 @@ export let generate = async (model, opts) => {
   if (opts.refidtest) {
     operations.push('printRefIdTest')
   }
-  await parseAndGenerate(input, spec, operations, modelDirname, modelName, buildDirname)
+  await parseAndGenerate(mdlContent, spec, operations, modelDirname, modelName, buildDirname)
 }
 
 export default {
@@ -103,4 +96,30 @@ export default {
   builder,
   handler,
   generate
+}
+
+/**
+ * Read and preprocess the given Vensim model content.
+ *
+ * @param {string} mdlContent The mdl content.
+ * @return {string} The preprocessed mdl text.
+ */
+function preprocessModel(mdlContent) {
+  // Run the preprocessor
+  const { defs } = preprocessVensimModel(mdlContent)
+
+  // Sort the definitions alphabetically by key.  This mainly exists for compatibility
+  // with the legacy `sde generate --preprocess` command, which was changed in #55 to
+  // sort definitions alphabetically.
+  defs.sort((a, b) => {
+    return a.key < b.key ? -1 : a.key > b.key ? 1 : 0
+  })
+
+  // Join the preprocessed definitions into a single string
+  let text = '{UTF-8}\n'
+  for (const def of defs) {
+    text += `\n${def.def}\n`
+  }
+
+  return text
 }
