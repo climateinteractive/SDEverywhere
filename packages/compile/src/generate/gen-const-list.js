@@ -1,5 +1,5 @@
 import { cartesianProductOf, cdbl } from '../_shared/helpers.js'
-import { isDimension, normalizeSubscripts, sub } from '../_shared/subscript.js'
+import { isDimension, sub } from '../_shared/subscript.js'
 
 /**
  * Generate code for a single element in a const list definition.
@@ -12,12 +12,10 @@ import { isDimension, normalizeSubscripts, sub } from '../_shared/subscript.js'
 export function generateConstListElement(variable, parsedEqn) {
   // In the "read variables" phase, const lists are expanded into separated variable
   // definitions, so `variable` here will have `subscripts` that represent specific
-  // subscript indices in normalized order (alphabetized by parent dimension/family
-  // name).  However, we need to consult the LHS subscripts/dimensions, which will
-  // be in the original order from the model equation.
+  // subscript indices that are ordered according to the dimension positions from the
+  // variable definition.
   //
-  // In the following example,
-  // we have a 2D variable whose original dimensions are not in normal order:
+  // In the following example, we have a 2D variable whose original dimensions are:
   //   DimA: A1, A2 ~~|
   //   DimB: B1, B2, B3 ~~|
   //   x[DimB, DimA] = 1, 2; 3, 4; 5, 6; ~~|
@@ -53,25 +51,17 @@ export function generateConstListElement(variable, parsedEqn) {
   // order of the dimensions from the equation LHS.
   const origCombos = cartesianProductOf(subIdArrays)
 
-  // Now we have the combinations in original order:
+  // Convert to strings to make matching easier.  Now we have the combinations in
+  // original order.
   //   [_b1,_a1]
   //   [_b1,_a2]
   //   [_b2,_a1]
   //   ...
-  // But we need to put them into normalized order so that we can find the index of
-  // `variable.subscripts` (which is already in normalized order).
-  const normalizedCombos = origCombos.map(normalizeSubscripts)
-
-  // Convert to strings to make matching easier.  Now we have the strings in normalized order:
-  //   [_a1,_b1]
-  //   [_a2,_b1]
-  //   [_a1,_b2]
-  //   ...
-  const comboStrings = normalizedCombos.map(combo => combo.map(subId => `[${subId}]`).join(''))
+  const comboStrings = origCombos.map(combo => combo.map(subId => `[${subId}]`).join(''))
 
   // Convert `variable.subscripts` into the same format so that we can do an array lookup,
-  // for example if this separated variable instance is x[_a2,_b1], this will be:
-  //   [_a2,_b1]
+  // for example if this separated variable instance is x[_b1,_a2], this will be:
+  //   [_b1,_a2]
   const lhsComboString = variable.subscripts.map(subId => `[${subId}]`).join('')
 
   // Find the index of the combination that matches `variable.subscripts`

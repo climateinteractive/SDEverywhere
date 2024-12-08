@@ -1,0 +1,59 @@
+{UTF-8}
+
+DimA: A1, A2, A3
+  ~~|
+DimA' <-> DimA
+  ~~|
+
+DimB: B1, B2, B3
+  ~~|
+DimB' <-> DimB
+  ~~|
+
+DimAB1: A1, B1
+  ~~|
+DimAB2: A2, B2
+  ~~|
+DimAB3: A3, B3
+  ~~|
+
+DimAB: DimAB1, DimAB2, DimAB3
+  ~~|
+
+DimABC: A1, A2, A3, B1, B2, B3, C1, C2, C3
+  ~~|
+
+Rank[DimA] = 1, 2, 3
+  ~~|
+Rank[DimB] = 1, 2, 3
+  ~~|
+
+Intensity[DimAB] = 1000 ~~|
+
+Something[A1] = 100 ~~|
+Something[A2] = 200 ~~|
+Something[A3] = 300 ~~|
+
+Other[DimAB1] = 10 ~~|
+Other[DimAB2] = INITIAL ( Something[A2] * 2 ) ~~|
+Other[DimAB3] = INITIAL ( Something[A3] * 3 ) ~~|
+
+Intensity Diff[DimA,DimA']  =
+  IF THEN ELSE (
+    Rank[DimA] >= Rank[DimA'] ,
+    ABS ( Intensity[DimA] - Other[DimA'] ),
+    666
+  )
+  ~~|
+Intensity Diff[DimB,DimB']  =
+  IF THEN ELSE (
+    Rank[DimB] >= Rank[DimB'] ,
+    ABS ( Intensity[DimB] - Other[DimB'] ),
+    777
+  )
+  ~~|
+
+INITIAL TIME = 0 ~~|
+FINAL TIME = 1 ~~|
+TIME STEP = 1 ~~|
+SAVEPER = TIME STEP ~~|

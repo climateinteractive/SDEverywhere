@@ -156,21 +156,21 @@ describe('readVariables', () => {
 
     const y = (d: number, a: number) => {
       return v('y[DimD,DimA]', '11,12,13;21,22,23;31,32,33;41,42,43;', {
-        subscripts: [`_a${a}`, `_d${d}`],
-        separationDims: ['_dima', '_dimd']
+        subscripts: [`_d${d}`, `_a${a}`],
+        separationDims: ['_dimd', '_dima']
       })
     }
 
     const zC1 = (a: number, b: number) => {
       return v(`z[C1,DimA,DimB]`, '110,111,112;120,121,122;130,131,132;', {
-        subscripts: [`_a${a}`, `_b${b}`, '_c1'],
+        subscripts: ['_c1', `_a${a}`, `_b${b}`],
         separationDims: ['_dima', '_dimb']
       })
     }
 
     const zC2 = (a: number, b: number) => {
       return v(`z[C2,DimA,DimB]`, '210,211,212;220,221,222;230,231,232;', {
-        subscripts: [`_a${a}`, `_b${b}`, '_c2'],
+        subscripts: ['_c2', `_a${a}`, `_b${b}`],
         separationDims: ['_dima', '_dimb']
       })
     }
@@ -363,16 +363,16 @@ describe('readVariables', () => {
         subscripts: ['_a1']
       }),
       y(1, 1),
-      y(2, 1),
-      y(3, 1),
-      y(4, 1),
       y(1, 2),
-      y(2, 2),
-      y(3, 2),
-      y(4, 2),
       y(1, 3),
+      y(2, 1),
+      y(2, 2),
       y(2, 3),
+      y(3, 1),
+      y(3, 2),
       y(3, 3),
+      y(4, 1),
+      y(4, 2),
       y(4, 3),
       zC1(1, 1),
       zC1(1, 2),
@@ -583,22 +583,22 @@ describe('readVariables', () => {
         subscripts: ['_dimb', '_dimc']
       }),
       v('d[D1,DimB,DimC]', "GET DIRECT CONSTANTS('data/c.csv',',','B2')", {
-        subscripts: ['_dimb', '_dimc', '_d1']
+        subscripts: ['_d1', '_dimb', '_dimc']
       }),
       v('e[DimC,DimB]', "GET DIRECT CONSTANTS('data/c.csv',',','B2*')", {
-        subscripts: ['_dimb', '_dimc']
+        subscripts: ['_dimc', '_dimb']
       }),
       v('f[DimC,SubA]', "GET DIRECT CONSTANTS('data/f.csv',',','B2')", {
         separationDims: ['_suba'],
-        subscripts: ['_a2', '_dimc']
+        subscripts: ['_dimc', '_a2']
       }),
       v('f[DimC,SubA]', "GET DIRECT CONSTANTS('data/f.csv',',','B2')", {
         separationDims: ['_suba'],
-        subscripts: ['_a3', '_dimc']
+        subscripts: ['_dimc', '_a3']
       }),
       v('f[DimC,DimA]:EXCEPT:[DimC,SubA]', '0', {
         separationDims: ['_dima'],
-        subscripts: ['_a1', '_dimc']
+        subscripts: ['_dimc', '_a1']
       }),
       v('g[From DimC,To DimC]', "GET DIRECT CONSTANTS('data/g.csv',',','B2')", {
         subscripts: ['_from_dimc', '_to_dimc']
@@ -1136,7 +1136,7 @@ describe('readVariables', () => {
         subscripts: ['_e2']
       }),
       v('EBC Values[DimE,DimB,DimC]', '', {
-        subscripts: ['_dimb', '_dimc', '_dime']
+        subscripts: ['_dime', '_dimb', '_dimc']
       }),
       v('Simple Totals', 'Simple 1+Simple 2'),
       v('A Totals', 'SUM(A Values[DimA!])'),
@@ -1160,7 +1160,7 @@ describe('readVariables', () => {
         'Total EBC for Selected C[DimE,DimB]',
         'VECTOR SELECT(C Selection[DimC!],EBC Values[DimE,DimB,DimC!],0,VSSUM,VSERRATLEASTONE)',
         {
-          subscripts: ['_dimb', '_dime']
+          subscripts: ['_dime', '_dimb']
         }
       ),
       v(
@@ -1252,7 +1252,7 @@ describe('readVariables', () => {
     const vars = readSubscriptsAndVariables('longeqns')
     expect(vars).toEqual([
       v('EqnA[DimX,DimY]', '1', { subscripts: ['_dimx', '_dimy'] }),
-      v('EqnB[DimX,DimW]', '1', { subscripts: ['_dimw', '_dimx'] }),
+      v('EqnB[DimX,DimW]', '1', { subscripts: ['_dimx', '_dimw'] }),
       v(
         'EqnC[DimX,DimY,DimZ]',
         'EqnA[DimX,DimY]*(-SUM(EqnB[DimX,DimW\n!])-(SUM(EqnB[DimX,DimW!])-SUM(EqnB[DimX,DimW\n!]))*EqnA[DimX,DimY])',
@@ -1891,19 +1891,19 @@ describe('readVariables', () => {
         subscripts: ['_dima', '_b3']
       }),
       v('g[B1,DimA]', 'f[DimA,B1]', {
-        subscripts: ['_dima', '_b1']
+        subscripts: ['_b1', '_dima']
       }),
       v('g[B2,DimA]', 'f[DimA,B2]', {
-        subscripts: ['_dima', '_b2']
+        subscripts: ['_b2', '_dima']
       }),
       v('g[B3,DimA]', 'f[DimA,B3]', {
-        subscripts: ['_dima', '_b3']
+        subscripts: ['_b3', '_dima']
       }),
       v('o[DimA,DimB]', 'f[DimA,DimB]', {
         subscripts: ['_dima', '_dimb']
       }),
       v('p[DimB,DimA]', 'f[DimA,DimB]', {
-        subscripts: ['_dima', '_dimb']
+        subscripts: ['_dimb', '_dima']
       }),
       v('r[DimA]', 'IF THEN ELSE(DimA=Selected A,1,0)', {
         subscripts: ['_dima']
@@ -2081,6 +2081,45 @@ describe('readVariables', () => {
       }),
       v('osum[DimD,DimE]', 'SUM(o[DimD,DimE,DimF!])', {
         subscripts: ['_dimd', '_dime']
+      }),
+      v('t[DimT]', '1,2', {
+        separationDims: ['_dimt'],
+        subscripts: ['_t1']
+      }),
+      v('t[DimT]', '1,2', {
+        separationDims: ['_dimt'],
+        subscripts: ['_t2']
+      }),
+      v('u[DimU]', '10,20,30,40', {
+        separationDims: ['_dimu'],
+        subscripts: ['_u1']
+      }),
+      v('u[DimU]', '10,20,30,40', {
+        separationDims: ['_dimu'],
+        subscripts: ['_u2']
+      }),
+      v('u[DimU]', '10,20,30,40', {
+        separationDims: ['_dimu'],
+        subscripts: ['_u3']
+      }),
+      v('u[DimU]', '10,20,30,40', {
+        separationDims: ['_dimu'],
+        subscripts: ['_u4']
+      }),
+      v("t two dim[DimT,DimT']", "(10*t[DimT])+t[DimT']", {
+        subscripts: ['_dimt', '_dimt_']
+      }),
+      v("t two dim with u[DimT,DimT',DimU]", "(10*u[DimU])+(10*t[DimT])+t[DimT']", {
+        subscripts: ['_dimt', '_dimt_', '_dimu']
+      }),
+      v('v[DimT]', 'SUM(t two dim[DimT,DimT!])', {
+        subscripts: ['_dimt']
+      }),
+      v('w[DimT,DimU]', 'u[DimU]*SUM(t two dim[DimT,DimT!])', {
+        subscripts: ['_dimt', '_dimu']
+      }),
+      v('x[DimT,DimU]', 'SUM(t two dim with u[DimT,DimT!,DimU])', {
+        subscripts: ['_dimt', '_dimu']
       }),
       v('INITIAL TIME', '0'),
       v('FINAL TIME', '1'),

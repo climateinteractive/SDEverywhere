@@ -10,7 +10,6 @@ import {
   indexNamesForSubscript,
   isDimension,
   isIndex,
-  normalizeSubscripts,
   sub,
   subscriptFamilies
 } from '../_shared/subscript.js'
@@ -465,7 +464,7 @@ function findNonAtoAVars() {
   // Find variables with multiple instances with the same var name, which makes them
   // elements in a non-apply-to-all array. This function constructs the nonAtoANames list.
   function areSubsEqual(vars, i) {
-    // Scan the subscripts for each var at position i in normal order.
+    // Scan the subscripts for each var at position i in the original order.
     // Return true if the subscript is the same for all vars with that name.
     let subscript = vars[0].subscripts[i]
     for (let v of vars) {
@@ -478,7 +477,7 @@ function findNonAtoAVars() {
   R.forEach(name => {
     let vars = varsWithName(name)
     if (vars.length > 1) {
-      // This is a non-apply-to-all array. Construct the exansion dims array for it.
+      // This is a non-apply-to-all array. Construct the expansion dims array for it.
       // The expansion dim is true at each dim position where the subscript varies.
       let numDims = vars[0].subscripts.length
       let expansionDims = []
@@ -665,8 +664,6 @@ function splitRefId(refId) {
       varName = m[0]
     }
   }
-  // Put subscripts in normal order.
-  subscripts = normalizeSubscripts(subscripts)
   return { varName, subscripts }
 }
 function varWithName(varName) {
@@ -744,7 +741,6 @@ function cName(vensimVarName) {
   if (matches[2]) {
     // The variable name includes subscripts, so split them into individual IDs
     let cSubIds = matches[2].split(',').map(x => canonicalName(x))
-    cSubIds = normalizeSubscripts(cSubIds)
     // If a subscript is an index, convert it to an index number to match Vensim data exports
     let cSubIdParts = cSubIds.map(cSubId => {
       return isIndex(cSubId) ? `[${sub(cSubId).value}]` : `[${cSubId}]`

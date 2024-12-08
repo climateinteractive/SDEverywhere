@@ -179,5 +179,131 @@ osum[D2,E2]
 SAVEPER
 0	1
 1	1
+t[T1]
+0	1
+t[T2]
+0	2
+t two dim[T1,T1]
+0	11
+1	11
+t two dim[T1,T2]
+0	12
+1	12
+t two dim[T2,T1]
+0	21
+1	21
+t two dim[T2,T2]
+0	22
+1	22
+t two dim with u[T1,T1,U1]
+0	111
+1	111
+t two dim with u[T1,T1,U2]
+0	211
+1	211
+t two dim with u[T1,T1,U3]
+0	311
+1	311
+t two dim with u[T1,T1,U4]
+0	411
+1	411
+t two dim with u[T1,T2,U1]
+0	112
+1	112
+t two dim with u[T1,T2,U2]
+0	212
+1	212
+t two dim with u[T1,T2,U3]
+0	312
+1	312
+t two dim with u[T1,T2,U4]
+0	412
+1	412
+t two dim with u[T2,T1,U1]
+0	121
+1	121
+t two dim with u[T2,T1,U2]
+0	221
+1	221
+t two dim with u[T2,T1,U3]
+0	321
+1	321
+t two dim with u[T2,T1,U4]
+0	421
+1	421
+t two dim with u[T2,T2,U1]
+0	122
+1	122
+t two dim with u[T2,T2,U2]
+0	222
+1	222
+t two dim with u[T2,T2,U3]
+0	322
+1	322
+t two dim with u[T2,T2,U4]
+0	422
+1	422
 TIME STEP
 0	1
+u[U1]
+0	10
+u[U2]
+0	20
+u[U3]
+0	30
+u[U4]
+0	40
+v[T1]
+0	23
+1	23
+v[T2]
+0	43
+1	43
+w[T1,U1]
+0	230
+1	230
+w[T1,U2]
+0	460
+1	460
+w[T1,U3]
+0	690
+1	690
+w[T1,U4]
+0	920
+1	920
+w[T2,U1]
+0	430
+1	430
+w[T2,U2]
+0	860
+1	860
+w[T2,U3]
+0	1290
+1	1290
+w[T2,U4]
+0	1720
+1	1720
+x[T1,U1]
+0	223
+1	223
+x[T1,U2]
+0	423
+1	423
+x[T1,U3]
+0	623
+1	623
+x[T1,U4]
+0	823
+1	823
+x[T2,U1]
+0	243
+1	243
+x[T2,U2]
+0	443
+1	443
+x[T2,U3]
+0	643
+1	643
+x[T2,U4]
+0	843
+1	843

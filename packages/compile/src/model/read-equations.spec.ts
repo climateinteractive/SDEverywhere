@@ -308,6 +308,1456 @@ describe('readEquations', () => {
     ])
   })
 
+  //
+  // NOTE: The following "should work for {0,1,2,3}D variable" tests are aligned with the ones
+  // in `gen-equation-{c,js}.spec.ts` (they exercise the same test models/equations).  Having both
+  // sets of tests makes it easier to see whether a bug is in the "read equations" phase or
+  // in the "code gen" phase or both.
+  //
+
+  describe('when LHS has no subscripts', () => {
+    it('should work when RHS variable has no subscripts', () => {
+      const vars = readInlineModel(`
+        x = 1 ~~|
+        y = x ~~|
+      `)
+      expect(vars).toEqual([
+        v('x', '1', {
+          refId: '_x',
+          varType: 'const'
+        }),
+        // expandedRefIdsForVar(_y, '_x', [])
+        //   -> ['_x']
+        v('y', 'x', {
+          refId: '_y',
+          references: ['_x']
+        })
+      ])
+    })
+
+    it('should work when RHS variable is apply-to-all (1D) and is accessed with specific subscript', () => {
+      const vars = readInlineModel(`
+        DimA: A1, A2 ~~|
+        x[DimA] = 1 ~~|
+        y = x[A1] ~~|
+      `)
+      expect(vars).toEqual([
+        v('x[DimA]', '1', {
+          refId: '_x',
+          subscripts: ['_dima'],
+          varType: 'const'
+        }),
+        // expandedRefIdsForVar(_y, '_x', ['_a1'])
+        //   -> ['_x']
+        v('y', 'x[A1]', {
+          refId: '_y',
+          references: ['_x']
+        })
+      ])
+    })
+
+    it('should work when RHS variable is NON-apply-to-all (1D) and is accessed with specific subscript', () => {
+      const vars = readInlineModel(`
+        DimA: A1, A2 ~~|
+        x[DimA] = 1, 2 ~~|
+        y = x[A1] ~~|
+      `)
+      expect(vars).toEqual([
+        v('x[DimA]', '1,2', {
+          refId: '_x[_a1]',
+          separationDims: ['_dima'],
+          subscripts: ['_a1'],
+          varType: 'const'
+        }),
+        v('x[DimA]', '1,2', {
+          refId: '_x[_a2]',
+          separationDims: ['_dima'],
+          subscripts: ['_a2'],
+          varType: 'const'
+        }),
+        // expandedRefIdsForVar(_y, '_x', ['_a1'])
+        //   -> ['_x[_a1]']
+        v('y', 'x[A1]', {
+          refId: '_y',
+          references: ['_x[_a1]']
+        })
+      ])
+    })
+
+    it('should work when RHS variable is apply-to-all (1D) and is accessed with marked dimension', () => {
+      const vars = readInlineModel(`
+        DimA: A1, A2 ~~|
+        x[DimA] = 1 ~~|
+        y = SUM(x[DimA!]) ~~|
+      `)
+      expect(vars).toEqual([
+        v('x[DimA]', '1', {
+          refId: '_x',
+          subscripts: ['_dima'],
+          varType: 'const'
+        }),
+        // expandedRefIdsForVar(_y, '_x', ['_dima!'])
+        //   -> ['_x']
+        v('y', 'SUM(x[DimA!])', {
+          refId: '_y',
+          referencedFunctionNames: ['__sum'],
+          references: ['_x']
+        })
+      ])
+    })
+
+    it('should work when RHS variable is NON-apply-to-all (1D) and is accessed with marked dimension', () => {
+      const vars = readInlineModel(`
+        DimA: A1, A2 ~~|
+        x[DimA] = 1, 2 ~~|
+        y = SUM(x[DimA!]) ~~|
+      `)
+      expect(vars).toEqual([
+        v('x[DimA]', '1,2', {
+          refId: '_x[_a1]',
+          separationDims: ['_dima'],
+          subscripts: ['_a1'],
+          varType: 'const'
+        }),
+        v('x[DimA]', '1,2', {
+          refId: '_x[_a2]',
+          separationDims: ['_dima'],
+          subscripts: ['_a2'],
+          varType: 'const'
+        }),
+        // expandedRefIdsForVar(_y, '_x', ['_dima!'])
+        //   -> ['_x[_a1]', '_x[_a2]']
+        v('y', 'SUM(x[DimA!])', {
+          refId: '_y',
+          referencedFunctionNames: ['__sum'],
+          references: ['_x[_a1]', '_x[_a2]']
+        })
+      ])
+    })
+
+    it('should work when RHS variable is apply-to-all (2D) and is accessed with specific subscripts', () => {
+      const vars = readInlineModel(`
+        DimA: A1, A2 ~~|
+        DimB: B1, B2 ~~|
+        x[DimA, DimB] = 1 ~~|
+        y = x[A1, B2] ~~|
+      `)
+      expect(vars).toEqual([
+        v('x[DimA,DimB]', '1', {
+          refId: '_x',
+          subscripts: ['_dima', '_dimb'],
+          varType: 'const'
+        }),
+        // expandedRefIdsForVar(_y, '_x', ['_a1', '_b2'])
+        //   -> ['_x']
+        v('y', 'x[A1,B2]', {
+          refId: '_y',
+          references: ['_x']
+        })
+      ])
+    })
+
+    it('should work when RHS variable is NON-apply-to-all (2D) and is accessed with specific subscripts', () => {
+      const vars = readInlineModel(`
+        DimA: A1, A2 ~~|
+        DimB: B1, B2 ~~|
+        x[DimA, DimB] = 1, 2; 3, 4; ~~|
+        y = x[A1, B2] ~~|
+      `)
+      expect(vars).toEqual([
+        v('x[DimA,DimB]', '1,2;3,4;', {
+          refId: '_x[_a1,_b1]',
+          separationDims: ['_dima', '_dimb'],
+          subscripts: ['_a1', '_b1'],
+          varType: 'const'
+        }),
+        v('x[DimA,DimB]', '1,2;3,4;', {
+          refId: '_x[_a1,_b2]',
+          separationDims: ['_dima', '_dimb'],
+          subscripts: ['_a1', '_b2'],
+          varType: 'const'
+        }),
+        v('x[DimA,DimB]', '1,2;3,4;', {
+          refId: '_x[_a2,_b1]',
+          separationDims: ['_dima', '_dimb'],
+          subscripts: ['_a2', '_b1'],
+          varType: 'const'
+        }),
+        v('x[DimA,DimB]', '1,2;3,4;', {
+          refId: '_x[_a2,_b2]',
+          separationDims: ['_dima', '_dimb'],
+          subscripts: ['_a2', '_b2'],
+          varType: 'const'
+        }),
+        // expandedRefIdsForVar(_y, '_x', ['_a1', '_b2'])
+        //   -> ['_x[_a1,_b2]']
+        v('y', 'x[A1,B2]', {
+          refId: '_y',
+          references: ['_x[_a1,_b2]']
+        })
+      ])
+    })
+
+    it('should work when RHS variable is apply-to-all (3D) and is accessed with specific subscripts', () => {
+      const vars = readInlineModel(`
+        DimA: A1, A2 ~~|
+        DimB: B1, B2 ~~|
+        DimC: C1, C2 ~~|
+        x[DimA, DimC, DimB] = 1 ~~|
+        y = x[A1, C2, B2] ~~|
+      `)
+      expect(vars).toEqual([
+        v('x[DimA,DimC,DimB]', '1', {
+          refId: '_x',
+          subscripts: ['_dima', '_dimc', '_dimb'],
+          varType: 'const'
+        }),
+        // expandedRefIdsForVar(_y, '_x', ['_a1', '_c2', '_b2'])
+        //   -> ['_x']
+        v('y', 'x[A1,C2,B2]', {
+          refId: '_y',
+          references: ['_x']
+        })
+      ])
+    })
+
+    it('should work when RHS variable is NON-apply-to-all (3D) and is accessed with specific subscripts', () => {
+      const vars = readInlineModel(`
+        DimA: A1, A2 ~~|
+        DimB: B1, B2 ~~|
+        DimC: C1, C2 ~~|
+        x[DimA, DimC, DimB] :EXCEPT: [DimA, DimC, B1] = 1 ~~|
+        x[DimA, DimC, B1] = 2 ~~|
+        y = x[A1, C2, B2] ~~|
+      `)
+      expect(vars).toEqual([
+        v('x[DimA,DimC,DimB]:EXCEPT:[DimA,DimC,B1]', '1', {
+          refId: '_x[_dima,_dimc,_b2]',
+          separationDims: ['_dimb'],
+          subscripts: ['_dima', '_dimc', '_b2'],
+          varType: 'const'
+        }),
+        v('x[DimA,DimC,B1]', '2', {
+          refId: '_x[_dima,_dimc,_b1]',
+          subscripts: ['_dima', '_dimc', '_b1'],
+          varType: 'const'
+        }),
+        // expandedRefIdsForVar(_y, '_x', ['_a1', '_c2', '_b2'])
+        //   -> ['_x[_dima,_dimc,_b2]']
+        v('y', 'x[A1,C2,B2]', {
+          refId: '_y',
+          references: ['_x[_dima,_dimc,_b2]']
+        })
+      ])
+    })
+  })
+
+  describe('when LHS is apply-to-all (1D)', () => {
+    it('should work when RHS variable has no subscripts', () => {
+      const vars = readInlineModel(`
+        DimA: A1, A2, A3 ~~|
+        x = 1 ~~|
+        y[DimA] = x ~~|
+      `)
+      expect(vars).toEqual([
+        v('x', '1', {
+          refId: '_x',
+          varType: 'const'
+        }),
+        // expandedRefIdsForVar(_y, '_x', [])
+        //   -> ['_x']
+        v('y[DimA]', 'x', {
+          refId: '_y',
+          subscripts: ['_dima'],
+          references: ['_x']
+        })
+      ])
+    })
+
+    it('should work when RHS variable is apply-to-all (1D) and is accessed with specific subscript', () => {
+      const vars = readInlineModel(`
+        DimA: A1, A2, A3 ~~|
+        x[DimA] = 1 ~~|
+        y[DimA] = x[A2] ~~|
+      `)
+      expect(vars).toEqual([
+        v('x[DimA]', '1', {
+          refId: '_x',
+          subscripts: ['_dima'],
+          varType: 'const'
+        }),
+        // expandedRefIdsForVar(_y, '_x', ['_a2'])
+        //   -> ['_x']
+        v('y[DimA]', 'x[A2]', {
+          refId: '_y',
+          subscripts: ['_dima'],
+          references: ['_x']
+        })
+      ])
+    })
+
+    it('should work when RHS variable is apply-to-all (1D) and is accessed with same dimension that appears in LHS', () => {
+      const vars = readInlineModel(`
+        DimA: A1, A2, A3 ~~|
+        x[DimA] = 1 ~~|
+        y[DimA] = x[DimA] ~~|
+      `)
+      expect(vars).toEqual([
+        v('x[DimA]', '1', {
+          refId: '_x',
+          subscripts: ['_dima'],
+          varType: 'const'
+        }),
+        // expandedRefIdsForVar(_y, '_x', ['_dima'])
+        //   -> ['_x']
+        v('y[DimA]', 'x[DimA]', {
+          refId: '_y',
+          subscripts: ['_dima'],
+          references: ['_x']
+        })
+      ])
+    })
+
+    it('should work when RHS variable is NON-apply-to-all (1D) and is accessed with specific subscript', () => {
+      const vars = readInlineModel(`
+        DimA: A1, A2, A3 ~~|
+        x[DimA] = 1, 2, 3 ~~|
+        y[DimA] = x[A2] ~~|
+      `)
+      expect(vars).toEqual([
+        v('x[DimA]', '1,2,3', {
+          refId: '_x[_a1]',
+          separationDims: ['_dima'],
+          subscripts: ['_a1'],
+          varType: 'const'
+        }),
+        v('x[DimA]', '1,2,3', {
+          refId: '_x[_a2]',
+          separationDims: ['_dima'],
+          subscripts: ['_a2'],
+          varType: 'const'
+        }),
+        v('x[DimA]', '1,2,3', {
+          refId: '_x[_a3]',
+          separationDims: ['_dima'],
+          subscripts: ['_a3'],
+          varType: 'const'
+        }),
+        // expandedRefIdsForVar(_y, '_x', ['_a2'])
+        //   -> ['_x[_a2]']
+        v('y[DimA]', 'x[A2]', {
+          refId: '_y',
+          subscripts: ['_dima'],
+          references: ['_x[_a2]']
+        })
+      ])
+    })
+
+    it('should work when RHS variable is NON-apply-to-all (1D) and is accessed with same dimension that appears in LHS', () => {
+      const vars = readInlineModel(`
+        DimA: A1, A2, A3 ~~|
+        x[DimA] = 1, 2, 3 ~~|
+        y[DimA] = x[DimA] ~~|
+      `)
+      expect(vars).toEqual([
+        v('x[DimA]', '1,2,3', {
+          refId: '_x[_a1]',
+          separationDims: ['_dima'],
+          subscripts: ['_a1'],
+          varType: 'const'
+        }),
+        v('x[DimA]', '1,2,3', {
+          refId: '_x[_a2]',
+          separationDims: ['_dima'],
+          subscripts: ['_a2'],
+          varType: 'const'
+        }),
+        v('x[DimA]', '1,2,3', {
+          refId: '_x[_a3]',
+          separationDims: ['_dima'],
+          subscripts: ['_a3'],
+          varType: 'const'
+        }),
+        // expandedRefIdsForVar(_y, '_x', ['_dima'])
+        //   -> ['_x[_a1]', '_x[_a2]', '_x[_a3]']
+        v('y[DimA]', 'x[DimA]', {
+          refId: '_y',
+          subscripts: ['_dima'],
+          references: ['_x[_a1]', '_x[_a2]', '_x[_a3]']
+        })
+      ])
+    })
+
+    it('should work when RHS variable is NON-apply-to-all (1D) with separated definitions and is accessed with same dimension that appears in LHS', () => {
+      const vars = readInlineModel(`
+        DimA: A1, A2 ~~|
+        x[A1] = 1 ~~|
+        x[A2] = 2 ~~|
+        y[DimA] = x[DimA] ~~|
+      `)
+      expect(vars).toEqual([
+        v('x[A1]', '1', {
+          refId: '_x[_a1]',
+          subscripts: ['_a1'],
+          varType: 'const'
+        }),
+        v('x[A2]', '2', {
+          refId: '_x[_a2]',
+          subscripts: ['_a2'],
+          varType: 'const'
+        }),
+        // expandedRefIdsForVar(_y, '_x', ['_dima'])
+        //   -> ['_x[_a1]', '_x[_a2]']
+        v('y[DimA]', 'x[DimA]', {
+          refId: '_y',
+          subscripts: ['_dima'],
+          references: ['_x[_a1]', '_x[_a2]']
+        })
+      ])
+    })
+
+    // This is adapted from the "except" sample model (see equation for `k`)
+    it('should work when RHS variable is NON-apply-to-all (1D) and is accessed with mapped version of LHS dimension', () => {
+      const vars = readInlineModel(`
+        DimA: A1, A2, A3 ~~|
+        SubA: A2, A3 ~~|
+        DimB: B1, B2 -> (DimA: SubA, A1) ~~|
+        a[DimA] = 1, 2, 3 ~~|
+        b[DimB] = 4, 5 ~~|
+        y[DimA] = a[DimA] + b[DimB] ~~|
+      `)
+      expect(vars).toEqual([
+        v('a[DimA]', '1,2,3', {
+          refId: '_a[_a1]',
+          separationDims: ['_dima'],
+          subscripts: ['_a1'],
+          varType: 'const'
+        }),
+        v('a[DimA]', '1,2,3', {
+          refId: '_a[_a2]',
+          separationDims: ['_dima'],
+          subscripts: ['_a2'],
+          varType: 'const'
+        }),
+        v('a[DimA]', '1,2,3', {
+          refId: '_a[_a3]',
+          separationDims: ['_dima'],
+          subscripts: ['_a3'],
+          varType: 'const'
+        }),
+        v('b[DimB]', '4,5', {
+          refId: '_b[_b1]',
+          separationDims: ['_dimb'],
+          subscripts: ['_b1'],
+          varType: 'const'
+        }),
+        v('b[DimB]', '4,5', {
+          refId: '_b[_b2]',
+          separationDims: ['_dimb'],
+          subscripts: ['_b2'],
+          varType: 'const'
+        }),
+        // expandedRefIdsForVar(_y, '_a', ['_dima'])
+        //   -> ['_a[_a1]', '_a[_a2]', '_a[_a3]']
+        // expandedRefIdsForVar(_y, '_b', ['_dimb'])
+        //   -> ['_b[_b1]', '_b[_b2]']
+        v('y[DimA]', 'a[DimA]+b[DimB]', {
+          refId: '_y',
+          subscripts: ['_dima'],
+          references: ['_a[_a1]', '_a[_a2]', '_a[_a3]', '_b[_b1]', '_b[_b2]']
+        })
+      ])
+    })
+
+    it('should work when RHS variable is apply-to-all (1D) and is accessed with marked dimension that is different from one on LHS', () => {
+      const vars = readInlineModel(`
+        DimA: A1, A2 ~~|
+        DimB: B1, B2 ~~|
+        x[DimA] = 1 ~~|
+        y[DimB] = SUM(x[DimA!]) ~~|
+      `)
+      expect(vars).toEqual([
+        v('x[DimA]', '1', {
+          refId: '_x',
+          subscripts: ['_dima'],
+          varType: 'const'
+        }),
+        // expandedRefIdsForVar(_y, '_x', ['_dima!'])
+        //   -> ['_x']
+        v('y[DimB]', 'SUM(x[DimA!])', {
+          refId: '_y',
+          subscripts: ['_dimb'],
+          referencedFunctionNames: ['__sum'],
+          references: ['_x']
+        })
+      ])
+    })
+
+    it('should work when RHS variable is apply-to-all (1D) and is accessed with marked dimension that is same as one on LHS', () => {
+      const vars = readInlineModel(`
+        DimA: A1, A2 ~~|
+        x[DimA] = 1 ~~|
+        y[DimA] = SUM(x[DimA!]) ~~|
+      `)
+      expect(vars).toEqual([
+        v('x[DimA]', '1', {
+          refId: '_x',
+          subscripts: ['_dima'],
+          varType: 'const'
+        }),
+        // expandedRefIdsForVar(_y, '_x', ['_dima!'])
+        //   -> ['_x']
+        v('y[DimA]', 'SUM(x[DimA!])', {
+          refId: '_y',
+          subscripts: ['_dima'],
+          referencedFunctionNames: ['__sum'],
+          references: ['_x']
+        })
+      ])
+    })
+
+    it('should work when RHS variable is NON-apply-to-all (1D) and is accessed with marked dimension that is different from one on LHS', () => {
+      const vars = readInlineModel(`
+        DimA: A1, A2 ~~|
+        DimB: B1, B2 ~~|
+        x[DimA] = 1, 2 ~~|
+        y[DimB] = SUM(x[DimA!]) ~~|
+      `)
+      expect(vars).toEqual([
+        v('x[DimA]', '1,2', {
+          refId: '_x[_a1]',
+          separationDims: ['_dima'],
+          subscripts: ['_a1'],
+          varType: 'const'
+        }),
+        v('x[DimA]', '1,2', {
+          refId: '_x[_a2]',
+          separationDims: ['_dima'],
+          subscripts: ['_a2'],
+          varType: 'const'
+        }),
+        // expandedRefIdsForVar(_y, '_x', ['_dima!'])
+        //   -> ['_x[_a1]', '_x[_a2]']
+        v('y[DimB]', 'SUM(x[DimA!])', {
+          refId: '_y',
+          subscripts: ['_dimb'],
+          referencedFunctionNames: ['__sum'],
+          references: ['_x[_a1]', '_x[_a2]']
+        })
+      ])
+    })
+
+    it('should work when RHS variable is NON-apply-to-all (1D) and is accessed with marked dimension that is same as one on LHS', () => {
+      const vars = readInlineModel(`
+        DimA: A1, A2 ~~|
+        x[DimA] = 1, 2 ~~|
+        y[DimA] = SUM(x[DimA!]) ~~|
+      `)
+      expect(vars).toEqual([
+        v('x[DimA]', '1,2', {
+          refId: '_x[_a1]',
+          separationDims: ['_dima'],
+          subscripts: ['_a1'],
+          varType: 'const'
+        }),
+        v('x[DimA]', '1,2', {
+          refId: '_x[_a2]',
+          separationDims: ['_dima'],
+          subscripts: ['_a2'],
+          varType: 'const'
+        }),
+        // expandedRefIdsForVar(_y, '_x', ['_dima!'])
+        //   -> ['_x[_a1]', '_x[_a2]']
+        v('y[DimA]', 'SUM(x[DimA!])', {
+          refId: '_y',
+          subscripts: ['_dima'],
+          referencedFunctionNames: ['__sum'],
+          references: ['_x[_a1]', '_x[_a2]']
+        })
+      ])
+    })
+
+    // it('should work when RHS variable is apply-to-all (2D) and is accessed with specific subscripts', () => {
+    //   // TODO
+    // })
+
+    // it('should work when RHS variable is NON-apply-to-all (2D) and is accessed with specific subscripts', () => {
+    //   // TODO
+    // })
+
+    it('should work when RHS variable is apply-to-all (2D) and is accessed with one normal dimension and one marked dimension that resolve to same family', () => {
+      const vars = readInlineModel(`
+        DimA: A1, A2 ~~|
+        DimB: DimA ~~|
+        x[DimA,DimB] = 1 ~~|
+        y[DimA] = SUM(x[DimA,DimA!]) ~~|
+      `)
+      expect(vars).toEqual([
+        v('x[DimA,DimB]', '1', {
+          refId: '_x',
+          subscripts: ['_dima', '_dimb'],
+          varType: 'const'
+        }),
+        // expandedRefIdsForVar(_y, '_x', ['_dima!'])
+        //   -> ['_x']
+        v('y[DimA]', 'SUM(x[DimA,DimA!])', {
+          refId: '_y',
+          subscripts: ['_dima'],
+          referencedFunctionNames: ['__sum'],
+          references: ['_x']
+        })
+      ])
+    })
+
+    // it('should work when RHS variable is apply-to-all (3D) and is accessed with specific subscripts', () => {
+    //   // TODO
+    // })
+
+    // it('should work when RHS variable is NON-apply-to-all (3D) and is accessed with specific subscripts', () => {
+    //   // TODO
+    // })
+  })
+
+  describe('when LHS is NON-apply-to-all (1D)', () => {
+    it('should work when RHS variable has no subscripts', () => {
+      const vars = readInlineModel(`
+        DimA: A1, A2, A3 ~~|
+        x = 1 ~~|
+        y[DimA] :EXCEPT: [A1] = x ~~|
+      `)
+      expect(vars).toEqual([
+        v('x', '1', {
+          refId: '_x',
+          varType: 'const'
+        }),
+        // expandedRefIdsForVar(_y[_a2], '_x', [])
+        //   -> ['_x']
+        v('y[DimA]:EXCEPT:[A1]', 'x', {
+          refId: '_y[_a2]',
+          separationDims: ['_dima'],
+          subscripts: ['_a2'],
+          references: ['_x']
+        }),
+        // expandedRefIdsForVar(_y[_a3], '_x', [])
+        //   -> ['_x']
+        v('y[DimA]:EXCEPT:[A1]', 'x', {
+          refId: '_y[_a3]',
+          separationDims: ['_dima'],
+          subscripts: ['_a3'],
+          references: ['_x']
+        })
+      ])
+    })
+
+    it('should work when RHS variable is apply-to-all (1D) and is accessed with specific subscript', () => {
+      const vars = readInlineModel(`
+        DimA: A1, A2, A3 ~~|
+        x[DimA] = 1 ~~|
+        y[DimA] :EXCEPT: [A1] = x[A2] ~~|
+      `)
+      expect(vars).toEqual([
+        v('x[DimA]', '1', {
+          refId: '_x',
+          subscripts: ['_dima'],
+          varType: 'const'
+        }),
+        // expandedRefIdsForVar(_y[_a2], '_x', ['_a2'])
+        //   -> ['_x']
+        v('y[DimA]:EXCEPT:[A1]', 'x[A2]', {
+          refId: '_y[_a2]',
+          separationDims: ['_dima'],
+          subscripts: ['_a2'],
+          references: ['_x']
+        }),
+        // expandedRefIdsForVar(_y[_a3], '_x', ['_a2'])
+        //   -> ['_x']
+        v('y[DimA]:EXCEPT:[A1]', 'x[A2]', {
+          refId: '_y[_a3]',
+          separationDims: ['_dima'],
+          subscripts: ['_a3'],
+          references: ['_x']
+        })
+      ])
+    })
+
+    it('should work when RHS variable is apply-to-all (1D) and is accessed with same dimension that appears in LHS', () => {
+      const vars = readInlineModel(`
+        DimA: A1, A2, A3 ~~|
+        x[DimA] = 1 ~~|
+        y[DimA] :EXCEPT: [A1] = x[DimA] ~~|
+      `)
+      expect(vars).toEqual([
+        v('x[DimA]', '1', {
+          refId: '_x',
+          subscripts: ['_dima'],
+          varType: 'const'
+        }),
+        // expandedRefIdsForVar(_y[_a2], '_x', ['_dima'])
+        //   -> ['_x']
+        v('y[DimA]:EXCEPT:[A1]', 'x[DimA]', {
+          refId: '_y[_a2]',
+          separationDims: ['_dima'],
+          subscripts: ['_a2'],
+          references: ['_x']
+        }),
+        // expandedRefIdsForVar(_y[_a3], '_x', ['_dima'])
+        //   -> ['_x']
+        v('y[DimA]:EXCEPT:[A1]', 'x[DimA]', {
+          refId: '_y[_a3]',
+          separationDims: ['_dima'],
+          subscripts: ['_a3'],
+          references: ['_x']
+        })
+      ])
+    })
+
+    it('should work when RHS variable is NON-apply-to-all (1D) and is accessed with specific subscript', () => {
+      const vars = readInlineModel(`
+        DimA: A1, A2, A3 ~~|
+        x[DimA] = 1, 2, 3 ~~|
+        y[DimA] :EXCEPT: [A1] = x[A2] ~~|
+      `)
+      expect(vars).toEqual([
+        v('x[DimA]', '1,2,3', {
+          refId: '_x[_a1]',
+          separationDims: ['_dima'],
+          subscripts: ['_a1'],
+          varType: 'const'
+        }),
+        v('x[DimA]', '1,2,3', {
+          refId: '_x[_a2]',
+          separationDims: ['_dima'],
+          subscripts: ['_a2'],
+          varType: 'const'
+        }),
+        v('x[DimA]', '1,2,3', {
+          refId: '_x[_a3]',
+          separationDims: ['_dima'],
+          subscripts: ['_a3'],
+          varType: 'const'
+        }),
+        // expandedRefIdsForVar(_y[_a2], '_x', ['_a2'])
+        //   -> ['_x[_a2]']
+        v('y[DimA]:EXCEPT:[A1]', 'x[A2]', {
+          refId: '_y[_a2]',
+          separationDims: ['_dima'],
+          subscripts: ['_a2'],
+          references: ['_x[_a2]']
+        }),
+        // expandedRefIdsForVar(_y[_a3], '_x', ['_a2'])
+        //   -> ['_x[_a2]']
+        v('y[DimA]:EXCEPT:[A1]', 'x[A2]', {
+          refId: '_y[_a3]',
+          separationDims: ['_dima'],
+          subscripts: ['_a3'],
+          references: ['_x[_a2]']
+        })
+      ])
+    })
+
+    it('should work when RHS variable is NON-apply-to-all (1D) and is accessed with same dimension that appears in LHS', () => {
+      const vars = readInlineModel(`
+        DimA: A1, A2, A3 ~~|
+        x[DimA] = 1, 2, 3 ~~|
+        y[DimA] :EXCEPT: [A1] = x[DimA] ~~|
+      `)
+      expect(vars).toEqual([
+        v('x[DimA]', '1,2,3', {
+          refId: '_x[_a1]',
+          separationDims: ['_dima'],
+          subscripts: ['_a1'],
+          varType: 'const'
+        }),
+        v('x[DimA]', '1,2,3', {
+          refId: '_x[_a2]',
+          separationDims: ['_dima'],
+          subscripts: ['_a2'],
+          varType: 'const'
+        }),
+        v('x[DimA]', '1,2,3', {
+          refId: '_x[_a3]',
+          separationDims: ['_dima'],
+          subscripts: ['_a3'],
+          varType: 'const'
+        }),
+        // expandedRefIdsForVar(_y[_a2], '_x', ['_dima'])
+        //   -> ['_x[_a2]']
+        v('y[DimA]:EXCEPT:[A1]', 'x[DimA]', {
+          refId: '_y[_a2]',
+          separationDims: ['_dima'],
+          subscripts: ['_a2'],
+          references: ['_x[_a2]']
+        }),
+        // expandedRefIdsForVar(_y[_a3], '_x', ['_dima'])
+        //   -> ['_x[_a3]']
+        v('y[DimA]:EXCEPT:[A1]', 'x[DimA]', {
+          refId: '_y[_a3]',
+          separationDims: ['_dima'],
+          subscripts: ['_a3'],
+          references: ['_x[_a3]']
+        })
+      ])
+    })
+
+    // This is adapted from the "except" sample model (see equation for `k`)
+    it('should work when RHS variable is NON-apply-to-all (1D) and is accessed with mapped version of LHS dimension', () => {
+      const vars = readInlineModel(`
+        DimA: A1, A2, A3 ~~|
+        SubA: A2, A3 ~~|
+        DimB: B1, B2 -> (DimA: SubA, A1) ~~|
+        a[DimA] = 1, 2, 3 ~~|
+        b[DimB] = 4, 5 ~~|
+        y[DimA] :EXCEPT: [A1] = a[DimA] + b[DimB] ~~|
+      `)
+      expect(vars).toEqual([
+        v('a[DimA]', '1,2,3', {
+          refId: '_a[_a1]',
+          separationDims: ['_dima'],
+          subscripts: ['_a1'],
+          varType: 'const'
+        }),
+        v('a[DimA]', '1,2,3', {
+          refId: '_a[_a2]',
+          separationDims: ['_dima'],
+          subscripts: ['_a2'],
+          varType: 'const'
+        }),
+        v('a[DimA]', '1,2,3', {
+          refId: '_a[_a3]',
+          separationDims: ['_dima'],
+          subscripts: ['_a3'],
+          varType: 'const'
+        }),
+        v('b[DimB]', '4,5', {
+          refId: '_b[_b1]',
+          separationDims: ['_dimb'],
+          subscripts: ['_b1'],
+          varType: 'const'
+        }),
+        v('b[DimB]', '4,5', {
+          refId: '_b[_b2]',
+          separationDims: ['_dimb'],
+          subscripts: ['_b2'],
+          varType: 'const'
+        }),
+        // expandedRefIdsForVar(_y[_a2], '_a', ['_dima'])
+        //   -> ['_a[_a2]']
+        // expandedRefIdsForVar(_y[_a2], '_b', ['_dimb'])
+        //   -> ['_b[_b1]']
+        v('y[DimA]:EXCEPT:[A1]', 'a[DimA]+b[DimB]', {
+          refId: '_y[_a2]',
+          separationDims: ['_dima'],
+          subscripts: ['_a2'],
+          references: ['_a[_a2]', '_b[_b1]']
+        }),
+        // expandedRefIdsForVar(_y[_a3], '_a', ['_dima'])
+        //   -> ['_a[_a3]']
+        // expandedRefIdsForVar(_y[_a3], '_b', ['_dimb'])
+        //   -> ['_b[_b1]']
+        v('y[DimA]:EXCEPT:[A1]', 'a[DimA]+b[DimB]', {
+          refId: '_y[_a3]',
+          separationDims: ['_dima'],
+          subscripts: ['_a3'],
+          references: ['_a[_a3]', '_b[_b1]']
+        })
+      ])
+    })
+
+    // This is adapted from the "ref" sample model (with updated naming for clarity)
+    it('should work for complex mapping example', () => {
+      const vars = readInlineModel(`
+        Target: (t1-t3) ~~|
+        tNext: (t2-t3) -> tPrev ~~|
+        tPrev: (t1-t2) -> tNext ~~|
+        x[t1] = y[t1] + 1 ~~|
+        x[tNext] = y[tNext] + 1 ~~|
+        y[t1] = 1 ~~|
+        y[tNext] = x[tPrev] + 1 ~~|
+      `)
+      expect(vars).toEqual([
+        v('x[t1]', 'y[t1]+1', {
+          refId: '_x[_t1]',
+          subscripts: ['_t1'],
+          references: ['_y[_t1]']
+        }),
+        v('x[tNext]', 'y[tNext]+1', {
+          refId: '_x[_t2]',
+          separationDims: ['_tnext'],
+          subscripts: ['_t2'],
+          references: ['_y[_t2]']
+        }),
+        v('x[tNext]', 'y[tNext]+1', {
+          refId: '_x[_t3]',
+          separationDims: ['_tnext'],
+          subscripts: ['_t3'],
+          references: ['_y[_t3]']
+        }),
+        v('y[t1]', '1', {
+          refId: '_y[_t1]',
+          subscripts: ['_t1'],
+          varType: 'const'
+        }),
+        v('y[tNext]', 'x[tPrev]+1', {
+          refId: '_y[_t2]',
+          references: ['_x[_t1]'],
+          separationDims: ['_tnext'],
+          subscripts: ['_t2']
+        }),
+        v('y[tNext]', 'x[tPrev]+1', {
+          refId: '_y[_t3]',
+          references: ['_x[_t2]'],
+          separationDims: ['_tnext'],
+          subscripts: ['_t3']
+        })
+      ])
+    })
+  })
+
+  describe('when LHS is apply-to-all (2D)', () => {
+    // it('should work when RHS variable has no subscripts', () => {
+    //   // TODO
+    // })
+
+    // it('should work when RHS variable is apply-to-all (1D) and is accessed with specific subscript', () => {
+    //   // TODO
+    // })
+
+    // it('should work when RHS variable is NON-apply-to-all (1D) and is accessed with specific subscript', () => {
+    //   // TODO
+    // })
+
+    it('should work when RHS variable is NON-apply-to-all (1D) and is accessed with LHS dimensions that resolve to the same family', () => {
+      const vars = readInlineModel(`
+        DimA: A1, A2 ~~|
+        DimB <-> DimA ~~|
+        x[DimA] = 1, 2 ~~|
+        y[DimA, DimB] = x[DimA] + x[DimB] ~~|
+      `)
+      expect(vars).toEqual([
+        v('x[DimA]', '1,2', {
+          refId: '_x[_a1]',
+          separationDims: ['_dima'],
+          subscripts: ['_a1'],
+          varType: 'const'
+        }),
+        v('x[DimA]', '1,2', {
+          refId: '_x[_a2]',
+          separationDims: ['_dima'],
+          subscripts: ['_a2'],
+          varType: 'const'
+        }),
+        // expandedRefIdsForVar(_y[_dima,_dimb], '_x', ['_dima'])
+        //   -> ['_x[_a1]', '_x[_a2]']
+        // expandedRefIdsForVar(_y[_dima,_dimb], '_x', ['_dimb'])
+        //   -> ['_x[_a1]', '_x[_a2]']
+        v('y[DimA,DimB]', 'x[DimA]+x[DimB]', {
+          refId: '_y',
+          subscripts: ['_dima', '_dimb'],
+          references: ['_x[_a1]', '_x[_a2]']
+        })
+      ])
+    })
+
+    // it('should work when RHS variable is apply-to-all (2D) and is accessed with specific subscripts', () => {
+    //   // TODO
+    // })
+
+    // it('should work when RHS variable is NON-apply-to-all (2D) and is accessed with specific subscripts', () => {
+    //   // TODO
+    // })
+
+    it('should work when RHS variable is apply-to-all (2D) and is accessed with same dimensions that appear in LHS', () => {
+      const vars = readInlineModel(`
+        DimA: A1, A2 ~~|
+        DimB: B1, B2 ~~|
+        x[DimA, DimB] = 1 ~~|
+        y[DimB, DimA] = x[DimA, DimB] ~~|
+      `)
+      expect(vars).toEqual([
+        v('x[DimA,DimB]', '1', {
+          refId: '_x',
+          subscripts: ['_dima', '_dimb'],
+          varType: 'const'
+        }),
+        // expandedRefIdsForVar(_y[_dimb,_dima], '_x', ['_dima', '_dimb'])
+        //   -> ['_x']
+        v('y[DimB,DimA]', 'x[DimA,DimB]', {
+          refId: '_y',
+          subscripts: ['_dimb', '_dima'],
+          references: ['_x']
+        })
+      ])
+    })
+
+    it('should work when RHS variable is apply-to-all (2D) and is accessed with LHS dimensions that resolve to the same family', () => {
+      const vars = readInlineModel(`
+        DimA: A1, A2 ~~|
+        DimB <-> DimA ~~|
+        x[DimA, DimB] = 1 ~~|
+        y[DimB, DimA] = x[DimA, DimB] ~~|
+      `)
+      expect(vars).toEqual([
+        v('x[DimA,DimB]', '1', {
+          refId: '_x',
+          subscripts: ['_dima', '_dimb'],
+          varType: 'const'
+        }),
+        // expandedRefIdsForVar(_y[_dimb,_dima], '_x', ['_dima', '_dimb'])
+        //   -> ['_x']
+        v('y[DimB,DimA]', 'x[DimA,DimB]', {
+          refId: '_y',
+          subscripts: ['_dimb', '_dima'],
+          references: ['_x']
+        })
+      ])
+    })
+
+    it('should work when RHS variable is NON-apply-to-all (2D) and is accessed with same dimensions that appear in LHS', () => {
+      const vars = readInlineModel(`
+        DimA: A1, A2 ~~|
+        DimB: B1, B2 ~~|
+        x[DimA, DimB] = 1, 2; 3, 4; ~~|
+        y[DimB, DimA] = x[DimA, DimB] ~~|
+      `)
+      expect(vars).toEqual([
+        v('x[DimA,DimB]', '1,2;3,4;', {
+          refId: '_x[_a1,_b1]',
+          separationDims: ['_dima', '_dimb'],
+          subscripts: ['_a1', '_b1'],
+          varType: 'const'
+        }),
+        v('x[DimA,DimB]', '1,2;3,4;', {
+          refId: '_x[_a1,_b2]',
+          separationDims: ['_dima', '_dimb'],
+          subscripts: ['_a1', '_b2'],
+          varType: 'const'
+        }),
+        v('x[DimA,DimB]', '1,2;3,4;', {
+          refId: '_x[_a2,_b1]',
+          separationDims: ['_dima', '_dimb'],
+          subscripts: ['_a2', '_b1'],
+          varType: 'const'
+        }),
+        v('x[DimA,DimB]', '1,2;3,4;', {
+          refId: '_x[_a2,_b2]',
+          separationDims: ['_dima', '_dimb'],
+          subscripts: ['_a2', '_b2'],
+          varType: 'const'
+        }),
+        // expandedRefIdsForVar(_y[_dimb,_dima], '_x', ['_dima', '_dimb'])
+        //   -> ['_x[_a1,_b1]', '_x[_a1,_b2]', '_x[_a2,_b1]', '_x[_a2,_b2]']
+        v('y[DimB,DimA]', 'x[DimA,DimB]', {
+          refId: '_y',
+          subscripts: ['_dimb', '_dima'],
+          references: ['_x[_a1,_b1]', '_x[_a1,_b2]', '_x[_a2,_b1]', '_x[_a2,_b2]']
+        })
+      ])
+    })
+
+    it('should work when RHS variable is NON-apply-to-all (2D) with separated definitions (for subscript in first position) and is accessed with same dimensions that appear in LHS', () => {
+      const vars = readInlineModel(`
+        DimA: A1, A2 ~~|
+        DimB: B1, B2 ~~|
+        x[A1, DimB] = 1 ~~|
+        x[A2, DimB] = 2 ~~|
+        y[DimB, DimA] = x[DimA, DimB] ~~|
+      `)
+      expect(vars).toEqual([
+        v('x[A1,DimB]', '1', {
+          refId: '_x[_a1,_dimb]',
+          subscripts: ['_a1', '_dimb'],
+          varType: 'const'
+        }),
+        v('x[A2,DimB]', '2', {
+          refId: '_x[_a2,_dimb]',
+          subscripts: ['_a2', '_dimb'],
+          varType: 'const'
+        }),
+        // expandedRefIdsForVar(_y[_dimb,_dima], '_x', ['_dima', '_dimb'])
+        //   -> ['_x[_a1,_dimb]', '_x[_a2,_dimb]']
+        v('y[DimB,DimA]', 'x[DimA,DimB]', {
+          refId: '_y',
+          subscripts: ['_dimb', '_dima'],
+          references: ['_x[_a1,_dimb]', '_x[_a2,_dimb]']
+        })
+      ])
+    })
+
+    // it('should work when RHS variable is apply-to-all (3D) and is accessed with specific subscripts', () => {
+    //   // TODO
+    // })
+
+    // it('should work when RHS variable is NON-apply-to-all (3D) and is accessed with specific subscripts', () => {
+    //   // TODO
+    // })
+  })
+
+  describe('when LHS is NON-apply-to-all (2D)', () => {
+    // The LHS in this test is partially separated (expanded only for first dimension position)
+    it('should work when RHS variable is apply-to-all (2D) and is accessed with same dimensions that appear in LHS', () => {
+      const vars = readInlineModel(`
+        DimA: A1, A2, A3 ~~|
+        SubA: A1, A2 ~~|
+        DimB: B1, B2 ~~|
+        x[DimA, DimB] = 1 ~~|
+        y[SubA, DimB] = x[SubA, DimB] ~~|
+      `)
+      expect(vars).toEqual([
+        v('x[DimA,DimB]', '1', {
+          refId: '_x',
+          subscripts: ['_dima', '_dimb'],
+          varType: 'const'
+        }),
+        // expandedRefIdsForVar(_y[_a1,_dimb], '_x', ['_suba', '_dimb'])
+        //   -> ['_x']
+        v('y[SubA,DimB]', 'x[SubA,DimB]', {
+          refId: '_y[_a1,_dimb]',
+          separationDims: ['_suba'],
+          subscripts: ['_a1', '_dimb'],
+          references: ['_x']
+        }),
+        // expandedRefIdsForVar(_y[_a2,_dimb], '_x', ['_suba', '_dimb'])
+        //   -> ['_x']
+        v('y[SubA,DimB]', 'x[SubA,DimB]', {
+          refId: '_y[_a2,_dimb]',
+          separationDims: ['_suba'],
+          subscripts: ['_a2', '_dimb'],
+          references: ['_x']
+        })
+      ])
+    })
+
+    // This test is based on the example from #179 (simplified to use subdimensions to ensure separation)
+    // TODO: This test is disabled until the fix for #179 is implemented
+    it('should work when RHS variable is NON-apply-to-all (1D) and is accessed with 2 different dimensions from LHS that map to the same family', () => {
+      const vars = readInlineModel(`
+        DimA: A1, A2, A3 ~~|
+        SubA: A1, A2 ~~|
+        SubB <-> SubA ~~|
+        x[SubA] = 1, 2 ~~|
+        y[SubA, SubB] = x[SubA] + x[SubB] ~~|
+      `)
+      expect(vars).toEqual([
+        v('x[SubA]', '1,2', {
+          refId: '_x[_a1]',
+          separationDims: ['_suba'],
+          subscripts: ['_a1'],
+          varType: 'const'
+        }),
+        v('x[SubA]', '1,2', {
+          refId: '_x[_a2]',
+          separationDims: ['_suba'],
+          subscripts: ['_a2'],
+          varType: 'const'
+        }),
+        // expandedRefIdsForVar(_y[_a1,_a1], '_x', ['_suba'])
+        //   -> ['_x[_a1]']
+        // expandedRefIdsForVar(_y[_a1,_a1], '_x', ['_subb'])
+        //   -> ['_x[_a1]']
+        v('y[SubA,SubB]', 'x[SubA]+x[SubB]', {
+          refId: '_y[_a1,_a1]',
+          separationDims: ['_suba', '_subb'],
+          subscripts: ['_a1', '_a1'],
+          references: ['_x[_a1]']
+        }),
+        // expandedRefIdsForVar(_y[_a1,_a2], '_x', ['_suba'])
+        //   -> ['_x[_a1]']
+        // expandedRefIdsForVar(_y[_a1,_a2], '_x', ['_subb'])
+        //   -> ['_x[_a2]']
+        v('y[SubA,SubB]', 'x[SubA]+x[SubB]', {
+          refId: '_y[_a1,_a2]',
+          separationDims: ['_suba', '_subb'],
+          subscripts: ['_a1', '_a2'],
+          references: ['_x[_a1]', '_x[_a2]']
+        }),
+        // expandedRefIdsForVar(_y[_a2,_a1], '_x', ['_suba'])
+        //   -> ['_x[_a2]']
+        // expandedRefIdsForVar(_y[_a2,_a1], '_x', ['_subb'])
+        //   -> ['_x[_a1]']
+        v('y[SubA,SubB]', 'x[SubA]+x[SubB]', {
+          refId: '_y[_a2,_a1]',
+          separationDims: ['_suba', '_subb'],
+          subscripts: ['_a2', '_a1'],
+          references: ['_x[_a2]', '_x[_a1]']
+        }),
+        // expandedRefIdsForVar(_y[_a2,_a2], '_x', ['_suba'])
+        //   -> ['_x[_a2]']
+        // expandedRefIdsForVar(_y[_a2,_a2], '_x', ['_subb'])
+        //   -> ['_x[_a2]']
+        v('y[SubA,SubB]', 'x[SubA]+x[SubB]', {
+          refId: '_y[_a2,_a2]',
+          separationDims: ['_suba', '_subb'],
+          subscripts: ['_a2', '_a2'],
+          references: ['_x[_a2]']
+        })
+      ])
+    })
+
+    // This test is based on the example from #179 (simplified to use subdimensions to ensure separation).
+    // It is similar to the previous one, except in this one, `x` is apply-to-all (and refers to the parent
+    // dimension).
+    it('should work when RHS variable is apply-to-all (1D) and is accessed with 2 different dimensions from LHS that map to the same family', () => {
+      const vars = readInlineModel(`
+        DimA: A1, A2, A3 ~~|
+        SubA: A1, A2 ~~|
+        SubB <-> SubA ~~|
+        x[DimA] = 1 ~~|
+        y[SubA, SubB] = x[SubA] + x[SubB] ~~|
+      `)
+      expect(vars).toEqual([
+        v('x[DimA]', '1', {
+          refId: '_x',
+          subscripts: ['_dima'],
+          varType: 'const'
+        }),
+        // For all 4 instances of `y`, the following should hold true:
+        // expandedRefIdsForVar(_y[_aN,_aN], '_x', ['_suba'])
+        //   -> ['_x']
+        // expandedRefIdsForVar(_y[_aN,_aN], '_x', ['_subb'])
+        //   -> ['_x']
+        v('y[SubA,SubB]', 'x[SubA]+x[SubB]', {
+          refId: '_y[_a1,_a1]',
+          separationDims: ['_suba', '_subb'],
+          subscripts: ['_a1', '_a1'],
+          references: ['_x']
+        }),
+        v('y[SubA,SubB]', 'x[SubA]+x[SubB]', {
+          refId: '_y[_a1,_a2]',
+          separationDims: ['_suba', '_subb'],
+          subscripts: ['_a1', '_a2'],
+          references: ['_x']
+        }),
+        v('y[SubA,SubB]', 'x[SubA]+x[SubB]', {
+          refId: '_y[_a2,_a1]',
+          separationDims: ['_suba', '_subb'],
+          subscripts: ['_a2', '_a1'],
+          references: ['_x']
+        }),
+        v('y[SubA,SubB]', 'x[SubA]+x[SubB]', {
+          refId: '_y[_a2,_a2]',
+          separationDims: ['_suba', '_subb'],
+          subscripts: ['_a2', '_a2'],
+          references: ['_x']
+        })
+      ])
+    })
+  })
+
+  describe('when LHS is apply-to-all (3D)', () => {
+    it('should work when RHS variable is apply-to-all (3D) and is accessed with same dimensions that appear in LHS (but in a different order)', () => {
+      const vars = readInlineModel(`
+        DimA: A1, A2 ~~|
+        DimB: B1, B2 ~~|
+        DimC: C1, C2 ~~|
+        x[DimA, DimC, DimB] = 1 ~~|
+        y[DimC, DimB, DimA] = x[DimA, DimC, DimB] ~~|
+      `)
+      expect(vars).toEqual([
+        v('x[DimA,DimC,DimB]', '1', {
+          refId: '_x',
+          subscripts: ['_dima', '_dimc', '_dimb'],
+          varType: 'const'
+        }),
+        // expandedRefIdsForVar(_y, '_x', ['_dima', '_dimc', '_dimb'])
+        //   -> ['_x']
+        v('y[DimC,DimB,DimA]', 'x[DimA,DimC,DimB]', {
+          refId: '_y',
+          subscripts: ['_dimc', '_dimb', '_dima'],
+          references: ['_x']
+        })
+      ])
+    })
+
+    it('should work when RHS variable is NON-apply-to-all (3D) and is accessed with same dimensions that appear in LHS (but in a different order)', () => {
+      const vars = readInlineModel(`
+        DimA: A1, A2 ~~|
+        DimB: B1, B2 ~~|
+        DimC: C1, C2 ~~|
+        x[DimA, C1, DimB] = 1 ~~|
+        x[DimA, C2, DimB] = 2 ~~|
+        y[DimC, DimB, DimA] = x[DimA, DimC, DimB] ~~|
+      `)
+      expect(vars).toEqual([
+        v('x[DimA,C1,DimB]', '1', {
+          refId: '_x[_dima,_c1,_dimb]',
+          subscripts: ['_dima', '_c1', '_dimb'],
+          varType: 'const'
+        }),
+        v('x[DimA,C2,DimB]', '2', {
+          refId: '_x[_dima,_c2,_dimb]',
+          subscripts: ['_dima', '_c2', '_dimb'],
+          varType: 'const'
+        }),
+        // expandedRefIdsForVar(_y, '_x', ['_dima', '_dimc', '_dimb'])
+        //   -> ['_x[_dima,_c1,_dimb]', '_x[_dima,_c2,_dimb]']
+        v('y[DimC,DimB,DimA]', 'x[DimA,DimC,DimB]', {
+          refId: '_y',
+          subscripts: ['_dimc', '_dimb', '_dima'],
+          references: ['_x[_dima,_c1,_dimb]', '_x[_dima,_c2,_dimb]']
+        })
+      ])
+    })
+  })
+
+  describe('when LHS is NON-apply-to-all (3D)', () => {
+    it('should work when RHS variable is apply-to-all (3D) and is accessed with same dimensions that appear in LHS (but in a different order)', () => {
+      const vars = readInlineModel(`
+        DimA: A1, A2 ~~|
+        DimB: B1, B2 ~~|
+        DimC: C1, C2, C3 ~~|
+        SubC: C2, C3 ~~|
+        x[DimA, DimC, DimB] = 1 ~~|
+        y[SubC, DimB, DimA] = x[DimA, SubC, DimB] ~~|
+      `)
+      expect(vars).toEqual([
+        v('x[DimA,DimC,DimB]', '1', {
+          refId: '_x',
+          subscripts: ['_dima', '_dimc', '_dimb'],
+          varType: 'const'
+        }),
+        // expandedRefIdsForVar(_y[_c2,_dimb,_dima], '_x', ['_dima', '_dimc', '_dimb'])
+        //   -> ['_x']
+        v('y[SubC,DimB,DimA]', 'x[DimA,SubC,DimB]', {
+          refId: '_y[_c2,_dimb,_dima]',
+          separationDims: ['_subc'],
+          subscripts: ['_c2', '_dimb', '_dima'],
+          references: ['_x']
+        }),
+        // expandedRefIdsForVar(_y[_c3,_dimb,_dima], '_x', ['_dima', '_dimc', '_dimb'])
+        //   -> ['_x']
+        v('y[SubC,DimB,DimA]', 'x[DimA,SubC,DimB]', {
+          refId: '_y[_c3,_dimb,_dima]',
+          separationDims: ['_subc'],
+          subscripts: ['_c3', '_dimb', '_dima'],
+          references: ['_x']
+        })
+      ])
+    })
+
+    // This test is based on the example from #278
+    it('should work when RHS variable is NON-apply-to-all (2D) and is accessed with 2 different dimensions from LHS that map to the same family', () => {
+      const vars = readInlineModel(`
+        Scenario: S1, S2 ~~|
+        Sector: A1, A2, A3 ~~|
+        Supplying Sector: A1, A2 -> Producing Sector ~~|
+        Producing Sector: A1, A2 -> Supplying Sector ~~|
+        x[A1,A1] = 101 ~~|
+        x[A1,A2] = 102 ~~|
+        x[A1,A3] = 103 ~~|
+        x[A2,A1] = 201 ~~|
+        x[A2,A2] = 202 ~~|
+        x[A2,A3] = 203 ~~|
+        x[A3,A1] = 301 ~~|
+        x[A3,A2] = 302 ~~|
+        x[A3,A3] = 303 ~~|
+        y[S1] = 1000 ~~|
+        y[S2] = 2000 ~~|
+        z[Scenario, Supplying Sector, Producing Sector] =
+          y[Scenario] + x[Supplying Sector, Producing Sector]
+          ~~|
+      `)
+      expect(vars).toEqual([
+        v('x[A1,A1]', '101', {
+          refId: '_x[_a1,_a1]',
+          subscripts: ['_a1', '_a1'],
+          varType: 'const'
+        }),
+        v('x[A1,A2]', '102', {
+          refId: '_x[_a1,_a2]',
+          subscripts: ['_a1', '_a2'],
+          varType: 'const'
+        }),
+        v('x[A1,A3]', '103', {
+          refId: '_x[_a1,_a3]',
+          subscripts: ['_a1', '_a3'],
+          varType: 'const'
+        }),
+        v('x[A2,A1]', '201', {
+          refId: '_x[_a2,_a1]',
+          subscripts: ['_a2', '_a1'],
+          varType: 'const'
+        }),
+        v('x[A2,A2]', '202', {
+          refId: '_x[_a2,_a2]',
+          subscripts: ['_a2', '_a2'],
+          varType: 'const'
+        }),
+        v('x[A2,A3]', '203', {
+          refId: '_x[_a2,_a3]',
+          subscripts: ['_a2', '_a3'],
+          varType: 'const'
+        }),
+        v('x[A3,A1]', '301', {
+          refId: '_x[_a3,_a1]',
+          subscripts: ['_a3', '_a1'],
+          varType: 'const'
+        }),
+        v('x[A3,A2]', '302', {
+          refId: '_x[_a3,_a2]',
+          subscripts: ['_a3', '_a2'],
+          varType: 'const'
+        }),
+        v('x[A3,A3]', '303', {
+          refId: '_x[_a3,_a3]',
+          subscripts: ['_a3', '_a3'],
+          varType: 'const'
+        }),
+        v('y[S1]', '1000', {
+          refId: '_y[_s1]',
+          subscripts: ['_s1'],
+          varType: 'const'
+        }),
+        v('y[S2]', '2000', {
+          refId: '_y[_s2]',
+          subscripts: ['_s2'],
+          varType: 'const'
+        }),
+        // expandedRefIdsForVar(_z[_scenario,_a1,_a1], '_y', ['_scenario'])
+        //   -> ['_y[_s1]', '_y[_s2]']
+        // expandedRefIdsForVar(_z[_scenario,_a1,_a1], '_x', ['_supplying_sector', '_producing_sector'])
+        //   -> ['_x[_a1,_a1]']
+        v('z[Scenario,Supplying Sector,Producing Sector]', 'y[Scenario]+x[Supplying Sector,Producing Sector]', {
+          refId: '_z[_scenario,_a1,_a1]',
+          subscripts: ['_scenario', '_a1', '_a1'],
+          separationDims: ['_supplying_sector', '_producing_sector'],
+          references: ['_y[_s1]', '_y[_s2]', '_x[_a1,_a1]'],
+          varType: 'aux'
+        }),
+        // expandedRefIdsForVar(_z[_scenario,_a1,_a2], '_x', ['_supplying_sector', '_producing_sector'])
+        //   -> ['_x[_a1,_a2]']
+        v('z[Scenario,Supplying Sector,Producing Sector]', 'y[Scenario]+x[Supplying Sector,Producing Sector]', {
+          refId: '_z[_scenario,_a1,_a2]',
+          subscripts: ['_scenario', '_a1', '_a2'],
+          separationDims: ['_supplying_sector', '_producing_sector'],
+          references: ['_y[_s1]', '_y[_s2]', '_x[_a1,_a2]'],
+          varType: 'aux'
+        }),
+        // expandedRefIdsForVar(_z[_scenario,_a2,_a1], '_x', ['_supplying_sector', '_producing_sector'])
+        //   -> ['_x[_a2,_a1]']
+        v('z[Scenario,Supplying Sector,Producing Sector]', 'y[Scenario]+x[Supplying Sector,Producing Sector]', {
+          refId: '_z[_scenario,_a2,_a1]',
+          subscripts: ['_scenario', '_a2', '_a1'],
+          separationDims: ['_supplying_sector', '_producing_sector'],
+          references: ['_y[_s1]', '_y[_s2]', '_x[_a2,_a1]'],
+          varType: 'aux'
+        }),
+        // expandedRefIdsForVar(_z[_scenario,_a2,_a2], '_x', ['_supplying_sector', '_producing_sector'])
+        //   -> ['_x[_a2,_a2]']
+        v('z[Scenario,Supplying Sector,Producing Sector]', 'y[Scenario]+x[Supplying Sector,Producing Sector]', {
+          refId: '_z[_scenario,_a2,_a2]',
+          subscripts: ['_scenario', '_a2', '_a2'],
+          separationDims: ['_supplying_sector', '_producing_sector'],
+          references: ['_y[_s1]', '_y[_s2]', '_x[_a2,_a2]'],
+          varType: 'aux'
+        })
+      ])
+    })
+  })
+
+  //
+  // NOTE: This is the end of the "should work for {0,1,2,3}D variable" tests.
+  //
+
   it('should work for ACTIVE INITIAL function', () => {
     const vars = readInlineModel(`
       Initial Target Capacity = 1 ~~|
@@ -391,7 +1841,7 @@ describe('readEquations', () => {
           '_demand[_boston]',
           '_demand[_dayton]',
           '_priority[_boston,_ppriority]',
-          '_priority[_boston,undefined]',
+          '_priority[_boston,undefined]', // TODO: This looks incorrect
           '_supply_available'
         ],
         subscripts: ['_branch']
@@ -939,7 +2389,7 @@ describe('readEquations', () => {
         delayTimeVarName: '__aux4',
         delayVarRefId: '__level3',
         refId: '_y',
-        references: ['__level3', '__level2', '__level1', '__aux4[_dima]'],
+        references: ['__level3', '__level2', '__level1', '__aux4[_dima]'], // TODO: The last one is suspicious
         subscripts: ['_dima']
       }),
       v('_level3[DimA]', 'INTEG(_aux2[DimA]-_aux3[DimA],init[DimA]*((delay[DimA])/3))', {
@@ -1078,7 +2528,7 @@ describe('readEquations', () => {
         initReferences: ['_init', '_delay[_a2]'],
         refId: '__level_y_3[_a2]',
         referencedFunctionNames: ['__integ'],
-        references: ['__aux_y_2', '__aux_y_3'],
+        references: ['__aux_y_2[_a2]', '__aux_y_3[_a2]'],
         subscripts: ['_a2'],
         varType: 'level'
       }),
@@ -1088,7 +2538,7 @@ describe('readEquations', () => {
         initReferences: ['_init', '_delay[_a2]'],
         refId: '__level_y_2[_a2]',
         referencedFunctionNames: ['__integ'],
-        references: ['__aux_y_1', '__aux_y_2'],
+        references: ['__aux_y_1[_a2]', '__aux_y_2[_a2]'],
         subscripts: ['_a2'],
         varType: 'level'
       }),
@@ -1098,25 +2548,25 @@ describe('readEquations', () => {
         initReferences: ['_init', '_delay[_a2]'],
         refId: '__level_y_1[_a2]',
         referencedFunctionNames: ['__integ'],
-        references: ['_input[_a2]', '__aux_y_1'],
+        references: ['_input[_a2]', '__aux_y_1[_a2]'],
         subscripts: ['_a2'],
         varType: 'level'
       }),
       v('_aux_y_1[a2]', '_level_y_1[a2]/((delay[a2])/3)', {
         includeInOutput: false,
-        refId: '__aux_y_1',
+        refId: '__aux_y_1[_a2]',
         references: ['__level_y_1[_a2]', '_delay[_a2]'],
         subscripts: ['_a2']
       }),
       v('_aux_y_2[a2]', '_level_y_2[a2]/((delay[a2])/3)', {
         includeInOutput: false,
-        refId: '__aux_y_2',
+        refId: '__aux_y_2[_a2]',
         references: ['__level_y_2[_a2]', '_delay[_a2]'],
         subscripts: ['_a2']
       }),
       v('_aux_y_3[a2]', '_level_y_3[a2]/((delay[a2])/3)', {
         includeInOutput: false,
-        refId: '__aux_y_3',
+        refId: '__aux_y_3[_a2]',
         references: ['__level_y_3[_a2]', '_delay[_a2]'],
         subscripts: ['_a2']
       }),
@@ -1132,7 +2582,7 @@ describe('readEquations', () => {
         initReferences: ['_init', '_delay[_a3]'],
         refId: '__level_y_3[_a3]',
         referencedFunctionNames: ['__integ'],
-        references: ['__aux_y_2', '__aux_y_3'],
+        references: ['__aux_y_2[_a3]', '__aux_y_3[_a3]'],
         subscripts: ['_a3'],
         varType: 'level'
       }),
@@ -1142,7 +2592,7 @@ describe('readEquations', () => {
         initReferences: ['_init', '_delay[_a3]'],
         refId: '__level_y_2[_a3]',
         referencedFunctionNames: ['__integ'],
-        references: ['__aux_y_1', '__aux_y_2'],
+        references: ['__aux_y_1[_a3]', '__aux_y_2[_a3]'],
         subscripts: ['_a3'],
         varType: 'level'
       }),
@@ -1152,25 +2602,25 @@ describe('readEquations', () => {
         initReferences: ['_init', '_delay[_a3]'],
         refId: '__level_y_1[_a3]',
         referencedFunctionNames: ['__integ'],
-        references: ['_input[_a3]', '__aux_y_1'],
+        references: ['_input[_a3]', '__aux_y_1[_a3]'],
         subscripts: ['_a3'],
         varType: 'level'
       }),
       v('_aux_y_1[a3]', '_level_y_1[a3]/((delay[a3])/3)', {
         includeInOutput: false,
-        refId: '__aux_y_1',
+        refId: '__aux_y_1[_a3]',
         references: ['__level_y_1[_a3]', '_delay[_a3]'],
         subscripts: ['_a3']
       }),
       v('_aux_y_2[a3]', '_level_y_2[a3]/((delay[a3])/3)', {
         includeInOutput: false,
-        refId: '__aux_y_2',
+        refId: '__aux_y_2[_a3]',
         references: ['__level_y_2[_a3]', '_delay[_a3]'],
         subscripts: ['_a3']
       }),
       v('_aux_y_3[a3]', '_level_y_3[a3]/((delay[a3])/3)', {
         includeInOutput: false,
-        refId: '__aux_y_3',
+        refId: '__aux_y_3[_a3]',
         references: ['__level_y_3[_a3]', '_delay[_a3]'],
         subscripts: ['_a3']
       }),
@@ -1452,22 +2902,22 @@ describe('readEquations', () => {
     expect(vars).toEqual([
       v('x[DimC,SubA]', "GET DIRECT CONSTANTS('data/f.csv',',','B2')", {
         directConstArgs: { file: 'data/f.csv', tab: ',', startCell: 'B2' },
-        refId: '_x[_a2,_dimc]',
+        refId: '_x[_dimc,_a2]',
         separationDims: ['_suba'],
-        subscripts: ['_a2', '_dimc'],
+        subscripts: ['_dimc', '_a2'],
         varType: 'const'
       }),
       v('x[DimC,SubA]', "GET DIRECT CONSTANTS('data/f.csv',',','B2')", {
         directConstArgs: { file: 'data/f.csv', tab: ',', startCell: 'B2' },
-        refId: '_x[_a3,_dimc]',
+        refId: '_x[_dimc,_a3]',
         separationDims: ['_suba'],
-        subscripts: ['_a3', '_dimc'],
+        subscripts: ['_dimc', '_a3'],
         varType: 'const'
       }),
       v('x[DimC,DimA]:EXCEPT:[DimC,SubA]', '0', {
-        refId: '_x[_a1,_dimc]',
+        refId: '_x[_dimc,_a1]',
         separationDims: ['_dima'],
-        subscripts: ['_a1', '_dimc'],
+        subscripts: ['_dimc', '_a1'],
         varType: 'const'
       })
     ])
@@ -3839,7 +5289,7 @@ describe('readEquations', () => {
         initReferences: ['_init_2[_a2]', '_delay_2'],
         refId: '__level_d9_3[_a2]',
         referencedFunctionNames: ['__integ'],
-        references: ['__aux_d9_2', '__aux_d9_3'],
+        references: ['__aux_d9_2[_a2]', '__aux_d9_3[_a2]'],
         subscripts: ['_a2'],
         varType: 'level'
       }),
@@ -3849,7 +5299,7 @@ describe('readEquations', () => {
         initReferences: ['_init_2[_a2]', '_delay_2'],
         refId: '__level_d9_2[_a2]',
         referencedFunctionNames: ['__integ'],
-        references: ['__aux_d9_1', '__aux_d9_2'],
+        references: ['__aux_d9_1[_a2]', '__aux_d9_2[_a2]'],
         subscripts: ['_a2'],
         varType: 'level'
       }),
@@ -3859,25 +5309,25 @@ describe('readEquations', () => {
         initReferences: ['_init_2[_a2]', '_delay_2'],
         refId: '__level_d9_1[_a2]',
         referencedFunctionNames: ['__integ'],
-        references: ['_input_2[_a2]', '__aux_d9_1'],
+        references: ['_input_2[_a2]', '__aux_d9_1[_a2]'],
         subscripts: ['_a2'],
         varType: 'level'
       }),
       v('_aux_d9_1[a2]', '_level_d9_1[a2]/((delay 2)/3)', {
         includeInOutput: false,
-        refId: '__aux_d9_1',
+        refId: '__aux_d9_1[_a2]',
         references: ['__level_d9_1[_a2]', '_delay_2'],
         subscripts: ['_a2']
       }),
       v('_aux_d9_2[a2]', '_level_d9_2[a2]/((delay 2)/3)', {
         includeInOutput: false,
-        refId: '__aux_d9_2',
+        refId: '__aux_d9_2[_a2]',
         references: ['__level_d9_2[_a2]', '_delay_2'],
         subscripts: ['_a2']
       }),
       v('_aux_d9_3[a2]', '_level_d9_3[a2]/((delay 2)/3)', {
         includeInOutput: false,
-        refId: '__aux_d9_3',
+        refId: '__aux_d9_3[_a2]',
         references: ['__level_d9_3[_a2]', '_delay_2'],
         subscripts: ['_a2']
       }),
@@ -3893,7 +5343,7 @@ describe('readEquations', () => {
         initReferences: ['_init_2[_a3]', '_delay_2'],
         refId: '__level_d9_3[_a3]',
         referencedFunctionNames: ['__integ'],
-        references: ['__aux_d9_2', '__aux_d9_3'],
+        references: ['__aux_d9_2[_a3]', '__aux_d9_3[_a3]'],
         subscripts: ['_a3'],
         varType: 'level'
       }),
@@ -3903,7 +5353,7 @@ describe('readEquations', () => {
         initReferences: ['_init_2[_a3]', '_delay_2'],
         refId: '__level_d9_2[_a3]',
         referencedFunctionNames: ['__integ'],
-        references: ['__aux_d9_1', '__aux_d9_2'],
+        references: ['__aux_d9_1[_a3]', '__aux_d9_2[_a3]'],
         subscripts: ['_a3'],
         varType: 'level'
       }),
@@ -3913,25 +5363,25 @@ describe('readEquations', () => {
         initReferences: ['_init_2[_a3]', '_delay_2'],
         refId: '__level_d9_1[_a3]',
         referencedFunctionNames: ['__integ'],
-        references: ['_input_2[_a3]', '__aux_d9_1'],
+        references: ['_input_2[_a3]', '__aux_d9_1[_a3]'],
         subscripts: ['_a3'],
         varType: 'level'
       }),
       v('_aux_d9_1[a3]', '_level_d9_1[a3]/((delay 2)/3)', {
         includeInOutput: false,
-        refId: '__aux_d9_1',
+        refId: '__aux_d9_1[_a3]',
         references: ['__level_d9_1[_a3]', '_delay_2'],
         subscripts: ['_a3']
       }),
       v('_aux_d9_2[a3]', '_level_d9_2[a3]/((delay 2)/3)', {
         includeInOutput: false,
-        refId: '__aux_d9_2',
+        refId: '__aux_d9_2[_a3]',
         references: ['__level_d9_2[_a3]', '_delay_2'],
         subscripts: ['_a3']
       }),
       v('_aux_d9_3[a3]', '_level_d9_3[a3]/((delay 2)/3)', {
         includeInOutput: false,
-        refId: '__aux_d9_3',
+        refId: '__aux_d9_3[_a3]',
         references: ['__level_d9_3[_a3]', '_delay_2'],
         subscripts: ['_a3']
       }),
@@ -4048,7 +5498,7 @@ describe('readEquations', () => {
         initReferences: ['_init_2[_a2]', '_delay_2'],
         refId: '__level_d12_3[_a2]',
         referencedFunctionNames: ['__integ'],
-        references: ['__aux_d12_2', '__aux_d12_3'],
+        references: ['__aux_d12_2[_a2]', '__aux_d12_3[_a2]'],
         subscripts: ['_a2'],
         varType: 'level'
       }),
@@ -4058,7 +5508,7 @@ describe('readEquations', () => {
         initReferences: ['_init_2[_a2]', '_delay_2'],
         refId: '__level_d12_2[_a2]',
         referencedFunctionNames: ['__integ'],
-        references: ['__aux_d12_1', '__aux_d12_2'],
+        references: ['__aux_d12_1[_a2]', '__aux_d12_2[_a2]'],
         subscripts: ['_a2'],
         varType: 'level'
       }),
@@ -4068,25 +5518,25 @@ describe('readEquations', () => {
         initReferences: ['_init_2[_a2]', '_delay_2'],
         refId: '__level_d12_1[_a2]',
         referencedFunctionNames: ['__integ'],
-        references: ['_input_2[_a2]', '__aux_d12_1'],
+        references: ['_input_2[_a2]', '__aux_d12_1[_a2]'],
         subscripts: ['_a2'],
         varType: 'level'
       }),
       v('_aux_d12_1[a2]', '_level_d12_1[a2]/((delay 2)/3)', {
         includeInOutput: false,
-        refId: '__aux_d12_1',
+        refId: '__aux_d12_1[_a2]',
         references: ['__level_d12_1[_a2]', '_delay_2'],
         subscripts: ['_a2']
       }),
       v('_aux_d12_2[a2]', '_level_d12_2[a2]/((delay 2)/3)', {
         includeInOutput: false,
-        refId: '__aux_d12_2',
+        refId: '__aux_d12_2[_a2]',
         references: ['__level_d12_2[_a2]', '_delay_2'],
         subscripts: ['_a2']
       }),
       v('_aux_d12_3[a2]', '_level_d12_3[a2]/((delay 2)/3)', {
         includeInOutput: false,
-        refId: '__aux_d12_3',
+        refId: '__aux_d12_3[_a2]',
         references: ['__level_d12_3[_a2]', '_delay_2'],
         subscripts: ['_a2']
       }),
@@ -4102,7 +5552,7 @@ describe('readEquations', () => {
         initReferences: ['_init_2[_a3]', '_delay_2'],
         refId: '__level_d12_3[_a3]',
         referencedFunctionNames: ['__integ'],
-        references: ['__aux_d12_2', '__aux_d12_3'],
+        references: ['__aux_d12_2[_a3]', '__aux_d12_3[_a3]'],
         subscripts: ['_a3'],
         varType: 'level'
       }),
@@ -4112,7 +5562,7 @@ describe('readEquations', () => {
         initReferences: ['_init_2[_a3]', '_delay_2'],
         refId: '__level_d12_2[_a3]',
         referencedFunctionNames: ['__integ'],
-        references: ['__aux_d12_1', '__aux_d12_2'],
+        references: ['__aux_d12_1[_a3]', '__aux_d12_2[_a3]'],
         subscripts: ['_a3'],
         varType: 'level'
       }),
@@ -4122,25 +5572,25 @@ describe('readEquations', () => {
         initReferences: ['_init_2[_a3]', '_delay_2'],
         refId: '__level_d12_1[_a3]',
         referencedFunctionNames: ['__integ'],
-        references: ['_input_2[_a3]', '__aux_d12_1'],
+        references: ['_input_2[_a3]', '__aux_d12_1[_a3]'],
         subscripts: ['_a3'],
         varType: 'level'
       }),
       v('_aux_d12_1[a3]', '_level_d12_1[a3]/((delay 2)/3)', {
         includeInOutput: false,
-        refId: '__aux_d12_1',
+        refId: '__aux_d12_1[_a3]',
         references: ['__level_d12_1[_a3]', '_delay_2'],
         subscripts: ['_a3']
       }),
       v('_aux_d12_2[a3]', '_level_d12_2[a3]/((delay 2)/3)', {
         includeInOutput: false,
-        refId: '__aux_d12_2',
+        refId: '__aux_d12_2[_a3]',
         references: ['__level_d12_2[_a3]', '_delay_2'],
         subscripts: ['_a3']
       }),
       v('_aux_d12_3[a3]', '_level_d12_3[a3]/((delay 2)/3)', {
         includeInOutput: false,
-        refId: '__aux_d12_3',
+        refId: '__aux_d12_3[_a3]',
         references: ['__level_d12_3[_a3]', '_delay_2'],
         subscripts: ['_a3']
       }),
@@ -4399,33 +5849,33 @@ describe('readEquations', () => {
       v('d[D1,DimB,DimC]', "GET DIRECT CONSTANTS('data/c.csv',',','B2')", {
         directConstArgs: { file: 'data/c.csv', tab: ',', startCell: 'B2' },
         refId: '_d',
-        subscripts: ['_dimb', '_dimc', '_d1'],
+        subscripts: ['_d1', '_dimb', '_dimc'],
         varType: 'const'
       }),
       v('e[DimC,DimB]', "GET DIRECT CONSTANTS('data/c.csv',',','B2*')", {
         directConstArgs: { file: 'data/c.csv', tab: ',', startCell: 'B2*' },
         refId: '_e',
-        subscripts: ['_dimb', '_dimc'],
+        subscripts: ['_dimc', '_dimb'],
         varType: 'const'
       }),
       v('f[DimC,SubA]', "GET DIRECT CONSTANTS('data/f.csv',',','B2')", {
         directConstArgs: { file: 'data/f.csv', tab: ',', startCell: 'B2' },
-        refId: '_f[_a2,_dimc]',
+        refId: '_f[_dimc,_a2]',
         separationDims: ['_suba'],
-        subscripts: ['_a2', '_dimc'],
+        subscripts: ['_dimc', '_a2'],
         varType: 'const'
       }),
       v('f[DimC,SubA]', "GET DIRECT CONSTANTS('data/f.csv',',','B2')", {
         directConstArgs: { file: 'data/f.csv', tab: ',', startCell: 'B2' },
-        refId: '_f[_a3,_dimc]',
+        refId: '_f[_dimc,_a3]',
         separationDims: ['_suba'],
-        subscripts: ['_a3', '_dimc'],
+        subscripts: ['_dimc', '_a3'],
         varType: 'const'
       }),
       v('f[DimC,DimA]:EXCEPT:[DimC,SubA]', '0', {
-        refId: '_f[_a1,_dimc]',
+        refId: '_f[_dimc,_a1]',
         separationDims: ['_dima'],
-        subscripts: ['_a1', '_dimc'],
+        subscripts: ['_dimc', '_a1'],
         varType: 'const'
       }),
       v('g[From DimC,To DimC]', "GET DIRECT CONSTANTS('data/g.csv',',','B2')", {
@@ -5422,7 +6872,7 @@ describe('readEquations', () => {
       }),
       v('EBC Values[DimE,DimB,DimC]', '', {
         refId: '_ebc_values',
-        subscripts: ['_dimb', '_dimc', '_dime'],
+        subscripts: ['_dime', '_dimb', '_dimc'],
         varType: 'data'
       }),
       v('Simple Totals', 'Simple 1+Simple 2', {
@@ -5486,7 +6936,7 @@ describe('readEquations', () => {
           refId: '_total_ebc_for_selected_c',
           referencedFunctionNames: ['__vector_select'],
           references: ['_c_selection', '_ebc_values', '_vssum', '_vserratleastone'],
-          subscripts: ['_dimb', '_dime']
+          subscripts: ['_dime', '_dimb']
         }
       ),
       v(
@@ -6004,7 +7454,7 @@ describe('readEquations', () => {
       }),
       v('EqnB[DimX,DimW]', '1', {
         refId: '_eqnb',
-        subscripts: ['_dimw', '_dimx'],
+        subscripts: ['_dimx', '_dimw'],
         varType: 'const'
       }),
       v(
@@ -8212,19 +9662,19 @@ describe('readEquations', () => {
         varType: 'const'
       }),
       v('g[B1,DimA]', 'f[DimA,B1]', {
-        refId: '_g[_dima,_b1]',
+        refId: '_g[_b1,_dima]',
         references: ['_f[_dima,_b1]'],
-        subscripts: ['_dima', '_b1']
+        subscripts: ['_b1', '_dima']
       }),
       v('g[B2,DimA]', 'f[DimA,B2]', {
-        refId: '_g[_dima,_b2]',
+        refId: '_g[_b2,_dima]',
         references: ['_f[_dima,_b2]'],
-        subscripts: ['_dima', '_b2']
+        subscripts: ['_b2', '_dima']
       }),
       v('g[B3,DimA]', 'f[DimA,B3]', {
-        refId: '_g[_dima,_b3]',
+        refId: '_g[_b3,_dima]',
         references: ['_f[_dima,_b3]'],
-        subscripts: ['_dima', '_b3']
+        subscripts: ['_b3', '_dima']
       }),
       v('o[DimA,DimB]', 'f[DimA,DimB]', {
         refId: '_o',
@@ -8234,7 +9684,7 @@ describe('readEquations', () => {
       v('p[DimB,DimA]', 'f[DimA,DimB]', {
         refId: '_p',
         references: ['_f[_dima,_b1]', '_f[_dima,_b2]', '_f[_dima,_b3]'],
-        subscripts: ['_dima', '_dimb']
+        subscripts: ['_dimb', '_dima']
       }),
       v('r[DimA]', 'IF THEN ELSE(DimA=Selected A,1,0)', {
         refId: '_r',
@@ -8558,6 +10008,70 @@ describe('readEquations', () => {
         referencedFunctionNames: ['__sum'],
         references: ['_o[_d1,_dime,_f1]', '_o[_d1,_dime,_f2]', '_o[_d2,_dime,_f1]', '_o[_d2,_dime,_f2]'],
         subscripts: ['_dimd', '_dime']
+      }),
+      v('t[DimT]', '1,2', {
+        refId: '_t[_t1]',
+        separationDims: ['_dimt'],
+        subscripts: ['_t1'],
+        varType: 'const'
+      }),
+      v('t[DimT]', '1,2', {
+        refId: '_t[_t2]',
+        separationDims: ['_dimt'],
+        subscripts: ['_t2'],
+        varType: 'const'
+      }),
+      v('u[DimU]', '10,20,30,40', {
+        refId: '_u[_u1]',
+        separationDims: ['_dimu'],
+        subscripts: ['_u1'],
+        varType: 'const'
+      }),
+      v('u[DimU]', '10,20,30,40', {
+        refId: '_u[_u2]',
+        separationDims: ['_dimu'],
+        subscripts: ['_u2'],
+        varType: 'const'
+      }),
+      v('u[DimU]', '10,20,30,40', {
+        refId: '_u[_u3]',
+        separationDims: ['_dimu'],
+        subscripts: ['_u3'],
+        varType: 'const'
+      }),
+      v('u[DimU]', '10,20,30,40', {
+        refId: '_u[_u4]',
+        separationDims: ['_dimu'],
+        subscripts: ['_u4'],
+        varType: 'const'
+      }),
+      v("t two dim[DimT,DimT']", "(10*t[DimT])+t[DimT']", {
+        refId: '_t_two_dim',
+        references: ['_t[_t1]', '_t[_t2]'],
+        subscripts: ['_dimt', '_dimt_']
+      }),
+      v("t two dim with u[DimT,DimT',DimU]", "(10*u[DimU])+(10*t[DimT])+t[DimT']", {
+        refId: '_t_two_dim_with_u',
+        references: ['_u[_u1]', '_u[_u2]', '_u[_u3]', '_u[_u4]', '_t[_t1]', '_t[_t2]'],
+        subscripts: ['_dimt', '_dimt_', '_dimu']
+      }),
+      v('v[DimT]', 'SUM(t two dim[DimT,DimT!])', {
+        refId: '_v',
+        referencedFunctionNames: ['__sum'],
+        references: ['_t_two_dim'],
+        subscripts: ['_dimt']
+      }),
+      v('w[DimT,DimU]', 'u[DimU]*SUM(t two dim[DimT,DimT!])', {
+        refId: '_w',
+        referencedFunctionNames: ['__sum'],
+        references: ['_u[_u1]', '_u[_u2]', '_u[_u3]', '_u[_u4]', '_t_two_dim'],
+        subscripts: ['_dimt', '_dimu']
+      }),
+      v('x[DimT,DimU]', 'SUM(t two dim with u[DimT,DimT!,DimU])', {
+        refId: '_x',
+        referencedFunctionNames: ['__sum'],
+        references: ['_t_two_dim_with_u'],
+        subscripts: ['_dimt', '_dimu']
       }),
       v('INITIAL TIME', '0', {
         refId: '_initial_time',
