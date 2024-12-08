@@ -384,6 +384,57 @@ describe('readEquations', () => {
       ])
     })
 
+    it('should work when RHS variable is apply-to-all (1D) and is accessed with marked dimension', () => {
+      const vars = readInlineModel(`
+        DimA: A1, A2 ~~|
+        x[DimA] = 1 ~~|
+        y = SUM(x[DimA!]) ~~|
+      `)
+      expect(vars).toEqual([
+        v('x[DimA]', '1', {
+          refId: '_x',
+          subscripts: ['_dima'],
+          varType: 'const'
+        }),
+        // expandedRefIdsForVar(_y, '_x', ['_dima!'])
+        //   -> ['_x']
+        v('y', 'SUM(x[DimA!])', {
+          refId: '_y',
+          referencedFunctionNames: ['__sum'],
+          references: ['_x']
+        })
+      ])
+    })
+
+    it('should work when RHS variable is NON-apply-to-all (1D) and is accessed with marked dimension', () => {
+      const vars = readInlineModel(`
+        DimA: A1, A2 ~~|
+        x[DimA] = 1, 2 ~~|
+        y = SUM(x[DimA!]) ~~|
+      `)
+      expect(vars).toEqual([
+        v('x[DimA]', '1,2', {
+          refId: '_x[_a1]',
+          separationDims: ['_dima'],
+          subscripts: ['_a1'],
+          varType: 'const'
+        }),
+        v('x[DimA]', '1,2', {
+          refId: '_x[_a2]',
+          separationDims: ['_dima'],
+          subscripts: ['_a2'],
+          varType: 'const'
+        }),
+        // expandedRefIdsForVar(_y, '_x', ['_dima!'])
+        //   -> ['_x[_a1]', '_x[_a2]']
+        v('y', 'SUM(x[DimA!])', {
+          refId: '_y',
+          referencedFunctionNames: ['__sum'],
+          references: ['_x[_a1]', '_x[_a2]']
+        })
+      ])
+    })
+
     it('should work when RHS variable is apply-to-all (2D) and is accessed with specific subscripts', () => {
       const vars = readInlineModel(`
         DimA: A1, A2 ~~|
@@ -718,6 +769,114 @@ describe('readEquations', () => {
       ])
     })
 
+    it('should work when RHS variable is apply-to-all (1D) and is accessed with marked dimension that is different from one on LHS', () => {
+      const vars = readInlineModel(`
+        DimA: A1, A2 ~~|
+        DimB: B1, B2 ~~|
+        x[DimA] = 1 ~~|
+        y[DimB] = SUM(x[DimA!]) ~~|
+      `)
+      expect(vars).toEqual([
+        v('x[DimA]', '1', {
+          refId: '_x',
+          subscripts: ['_dima'],
+          varType: 'const'
+        }),
+        // expandedRefIdsForVar(_y, '_x', ['_dima!'])
+        //   -> ['_x']
+        v('y[DimB]', 'SUM(x[DimA!])', {
+          refId: '_y',
+          subscripts: ['_dimb'],
+          referencedFunctionNames: ['__sum'],
+          references: ['_x']
+        })
+      ])
+    })
+
+    it('should work when RHS variable is apply-to-all (1D) and is accessed with marked dimension that is same as one on LHS', () => {
+      const vars = readInlineModel(`
+        DimA: A1, A2 ~~|
+        x[DimA] = 1 ~~|
+        y[DimA] = SUM(x[DimA!]) ~~|
+      `)
+      expect(vars).toEqual([
+        v('x[DimA]', '1', {
+          refId: '_x',
+          subscripts: ['_dima'],
+          varType: 'const'
+        }),
+        // expandedRefIdsForVar(_y, '_x', ['_dima!'])
+        //   -> ['_x']
+        v('y[DimA]', 'SUM(x[DimA!])', {
+          refId: '_y',
+          subscripts: ['_dima'],
+          referencedFunctionNames: ['__sum'],
+          references: ['_x']
+        })
+      ])
+    })
+
+    it('should work when RHS variable is NON-apply-to-all (1D) and is accessed with marked dimension that is different from one on LHS', () => {
+      const vars = readInlineModel(`
+        DimA: A1, A2 ~~|
+        DimB: B1, B2 ~~|
+        x[DimA] = 1, 2 ~~|
+        y[DimB] = SUM(x[DimA!]) ~~|
+      `)
+      expect(vars).toEqual([
+        v('x[DimA]', '1,2', {
+          refId: '_x[_a1]',
+          separationDims: ['_dima'],
+          subscripts: ['_a1'],
+          varType: 'const'
+        }),
+        v('x[DimA]', '1,2', {
+          refId: '_x[_a2]',
+          separationDims: ['_dima'],
+          subscripts: ['_a2'],
+          varType: 'const'
+        }),
+        // expandedRefIdsForVar(_y, '_x', ['_dima!'])
+        //   -> ['_x[_a1]', '_x[_a2]']
+        v('y[DimB]', 'SUM(x[DimA!])', {
+          refId: '_y',
+          subscripts: ['_dimb'],
+          referencedFunctionNames: ['__sum'],
+          references: ['_x[_a1]', '_x[_a2]']
+        })
+      ])
+    })
+
+    it('should work when RHS variable is NON-apply-to-all (1D) and is accessed with marked dimension that is same as one on LHS', () => {
+      const vars = readInlineModel(`
+        DimA: A1, A2 ~~|
+        x[DimA] = 1, 2 ~~|
+        y[DimA] = SUM(x[DimA!]) ~~|
+      `)
+      expect(vars).toEqual([
+        v('x[DimA]', '1,2', {
+          refId: '_x[_a1]',
+          separationDims: ['_dima'],
+          subscripts: ['_a1'],
+          varType: 'const'
+        }),
+        v('x[DimA]', '1,2', {
+          refId: '_x[_a2]',
+          separationDims: ['_dima'],
+          subscripts: ['_a2'],
+          varType: 'const'
+        }),
+        // expandedRefIdsForVar(_y, '_x', ['_dima!'])
+        //   -> ['_x[_a1]', '_x[_a2]']
+        v('y[DimA]', 'SUM(x[DimA!])', {
+          refId: '_y',
+          subscripts: ['_dima'],
+          referencedFunctionNames: ['__sum'],
+          references: ['_x[_a1]', '_x[_a2]']
+        })
+      ])
+    })
+
     // it('should work when RHS variable is apply-to-all (2D) and is accessed with specific subscripts', () => {
     //   // TODO
     // })
@@ -725,6 +884,30 @@ describe('readEquations', () => {
     // it('should work when RHS variable is NON-apply-to-all (2D) and is accessed with specific subscripts', () => {
     //   // TODO
     // })
+
+    it('should work when RHS variable is apply-to-all (2D) and is accessed with one normal dimension and one marked dimension that resolve to same family', () => {
+      const vars = readInlineModel(`
+        DimA: A1, A2 ~~|
+        DimB: DimA ~~|
+        x[DimA,DimB] = 1 ~~|
+        y[DimA] = SUM(x[DimA,DimA!]) ~~|
+      `)
+      expect(vars).toEqual([
+        v('x[DimA,DimB]', '1', {
+          refId: '_x',
+          subscripts: ['_dima', '_dimb'],
+          varType: 'const'
+        }),
+        // expandedRefIdsForVar(_y, '_x', ['_dima!'])
+        //   -> ['_x']
+        v('y[DimA]', 'SUM(x[DimA,DimA!])', {
+          refId: '_y',
+          subscripts: ['_dima'],
+          referencedFunctionNames: ['__sum'],
+          references: ['_x']
+        })
+      ])
+    })
 
     // it('should work when RHS variable is apply-to-all (3D) and is accessed with specific subscripts', () => {
     //   // TODO

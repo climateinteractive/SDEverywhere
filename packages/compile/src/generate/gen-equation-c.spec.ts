@@ -870,6 +870,41 @@ describe('generateEquation (Vensim -> C)', () => {
       expect(genC(vars.get('_y'))).toEqual(['_y = _x[0];'])
     })
 
+    it('should work when RHS variable is apply-to-all (1D) and is accessed with marked dimension', () => {
+      const vars = readInlineModel(`
+        DimA: A1, A2 ~~|
+        x[DimA] = 1 ~~|
+        y = SUM(x[DimA!]) ~~|
+      `)
+      expect(vars.size).toBe(2)
+      expect(genC(vars.get('_x'), 'init-constants')).toEqual(['for (size_t i = 0; i < 2; i++) {', '_x[i] = 1.0;', '}'])
+      expect(genC(vars.get('_y'))).toEqual([
+        'double __t1 = 0.0;',
+        'for (size_t u = 0; u < 2; u++) {',
+        '__t1 += _x[u];',
+        '}',
+        '_y = __t1;'
+      ])
+    })
+
+    it('should work when RHS variable is NON-apply-to-all (1D) and is accessed with marked dimension', () => {
+      const vars = readInlineModel(`
+        DimA: A1, A2 ~~|
+        x[DimA] = 1, 2 ~~|
+        y = SUM(x[DimA!]) ~~|
+      `)
+      expect(vars.size).toBe(3)
+      expect(genC(vars.get('_x[_a1]'), 'init-constants')).toEqual(['_x[0] = 1.0;'])
+      expect(genC(vars.get('_x[_a2]'), 'init-constants')).toEqual(['_x[1] = 2.0;'])
+      expect(genC(vars.get('_y'))).toEqual([
+        'double __t1 = 0.0;',
+        'for (size_t u = 0; u < 2; u++) {',
+        '__t1 += _x[u];',
+        '}',
+        '_y = __t1;'
+      ])
+    })
+
     it('should work when RHS variable is apply-to-all (2D) and is accessed with specific subscripts', () => {
       const vars = readInlineModel(`
         DimA: A1, A2 ~~|
@@ -1048,6 +1083,86 @@ describe('generateEquation (Vensim -> C)', () => {
       ])
     })
 
+    it('should work when RHS variable is apply-to-all (1D) and is accessed with marked dimension that is different from one on LHS', () => {
+      const vars = readInlineModel(`
+        DimA: A1, A2 ~~|
+        DimB: B1, B2 ~~|
+        x[DimA] = 1 ~~|
+        y[DimB] = SUM(x[DimA!]) ~~|
+      `)
+      expect(vars.size).toBe(2)
+      expect(genC(vars.get('_x')), 'init-constants').toEqual(['for (size_t i = 0; i < 2; i++) {', '_x[i] = 1.0;', '}'])
+      expect(genC(vars.get('_y'))).toEqual([
+        'for (size_t i = 0; i < 2; i++) {',
+        'double __t1 = 0.0;',
+        'for (size_t u = 0; u < 2; u++) {',
+        '__t1 += _x[u];',
+        '}',
+        '_y[i] = __t1;',
+        '}'
+      ])
+    })
+
+    it('should work when RHS variable is apply-to-all (1D) and is accessed with marked dimension that is same as one on LHS', () => {
+      const vars = readInlineModel(`
+        DimA: A1, A2 ~~|
+        x[DimA] = 1 ~~|
+        y[DimA] = SUM(x[DimA!]) ~~|
+      `)
+      expect(vars.size).toBe(2)
+      expect(genC(vars.get('_x')), 'init-constants').toEqual(['for (size_t i = 0; i < 2; i++) {', '_x[i] = 1.0;', '}'])
+      expect(genC(vars.get('_y'))).toEqual([
+        'for (size_t i = 0; i < 2; i++) {',
+        'double __t1 = 0.0;',
+        'for (size_t u = 0; u < 2; u++) {',
+        '__t1 += _x[u];',
+        '}',
+        '_y[i] = __t1;',
+        '}'
+      ])
+    })
+
+    it('should work when RHS variable is NON-apply-to-all (1D) and is accessed with marked dimension that is different from one on LHS', () => {
+      const vars = readInlineModel(`
+        DimA: A1, A2 ~~|
+        DimB: B1, B2 ~~|
+        x[DimA] = 1, 2 ~~|
+        y[DimB] = SUM(x[DimA!]) ~~|
+      `)
+      expect(vars.size).toBe(3)
+      expect(genC(vars.get('_x[_a1]')), 'init-constants').toEqual(['_x[0] = 1.0;'])
+      expect(genC(vars.get('_x[_a2]')), 'init-constants').toEqual(['_x[1] = 2.0;'])
+      expect(genC(vars.get('_y'))).toEqual([
+        'for (size_t i = 0; i < 2; i++) {',
+        'double __t1 = 0.0;',
+        'for (size_t u = 0; u < 2; u++) {',
+        '__t1 += _x[u];',
+        '}',
+        '_y[i] = __t1;',
+        '}'
+      ])
+    })
+
+    it('should work when RHS variable is NON-apply-to-all (1D) and is accessed with marked dimension that is same as one on LHS', () => {
+      const vars = readInlineModel(`
+        DimA: A1, A2 ~~|
+        x[DimA] = 1, 2 ~~|
+        y[DimA] = SUM(x[DimA!]) ~~|
+      `)
+      expect(vars.size).toBe(3)
+      expect(genC(vars.get('_x[_a1]')), 'init-constants').toEqual(['_x[0] = 1.0;'])
+      expect(genC(vars.get('_x[_a2]')), 'init-constants').toEqual(['_x[1] = 2.0;'])
+      expect(genC(vars.get('_y'))).toEqual([
+        'for (size_t i = 0; i < 2; i++) {',
+        'double __t1 = 0.0;',
+        'for (size_t u = 0; u < 2; u++) {',
+        '__t1 += _x[u];',
+        '}',
+        '_y[i] = __t1;',
+        '}'
+      ])
+    })
+
     // it('should work when RHS variable is apply-to-all (2D) and is accessed with specific subscripts', () => {
     //   // TODO
     // })
@@ -1055,6 +1170,32 @@ describe('generateEquation (Vensim -> C)', () => {
     // it('should work when RHS variable is NON-apply-to-all (2D) and is accessed with specific subscripts', () => {
     //   // TODO
     // })
+
+    it('should work when RHS variable is apply-to-all (2D) and is accessed with one normal dimension and one marked dimension that resolve to same family', () => {
+      const vars = readInlineModel(`
+        DimA: A1, A2 ~~|
+        DimB: DimA ~~|
+        x[DimA,DimB] = 1 ~~|
+        y[DimA] = SUM(x[DimA,DimA!]) ~~|
+      `)
+      expect(vars.size).toBe(2)
+      expect(genC(vars.get('_x')), 'init-constants').toEqual([
+        'for (size_t i = 0; i < 2; i++) {',
+        'for (size_t j = 0; j < 2; j++) {',
+        '_x[i][j] = 1.0;',
+        '}',
+        '}'
+      ])
+      expect(genC(vars.get('_y'))).toEqual([
+        'for (size_t i = 0; i < 2; i++) {',
+        'double __t1 = 0.0;',
+        'for (size_t u = 0; u < 2; u++) {',
+        '__t1 += _x[i][u];',
+        '}',
+        '_y[i] = __t1;',
+        '}'
+      ])
+    })
 
     // it('should work when RHS variable is apply-to-all (3D) and is accessed with specific subscripts', () => {
     //   // TODO
