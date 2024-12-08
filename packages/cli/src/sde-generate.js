@@ -108,6 +108,13 @@ function preprocessModel(mdlContent) {
   // Run the preprocessor
   const { defs } = preprocessVensimModel(mdlContent)
 
+  // Sort the definitions alphabetically by key.  This mainly exists for compatibility
+  // with the legacy `sde generate --preprocess` command, which was changed in #55 to
+  // sort definitions alphabetically.
+  defs.sort((a, b) => {
+    return a.key < b.key ? -1 : a.key > b.key ? 1 : 0
+  })
+
   // Join the preprocessed definitions into a single string
   let text = '{UTF-8}\n'
   for (const def of defs) {
