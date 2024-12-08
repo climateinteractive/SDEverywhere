@@ -9,7 +9,7 @@ const reWhitespace = new RegExp('(\\s|_)+', 'g')
 // Detect special punctuation characters
 // TODO: We do not currently include '!' characters in this set; we should only replace these
 // when they don't appear at the end of a (marked) dimension
-const reSpecialChars = new RegExp(`['"\\.,\\-\\$&%\\/\\|]`, 'g')
+const reSpecialChars = new RegExp(`['"\\.,\\-\\$&%\\/\\|()]`, 'g')
 
 /**
  * Format a model variable or subscript/dimension name into a valid C identifier (with
