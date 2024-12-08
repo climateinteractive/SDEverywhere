@@ -157,11 +157,6 @@ export function parseModel(input, modelDir, options) {
   }
 
   // Parse the model
-  // TODO: The `parseVensimModel` function implicitly runs the preprocess step
-  // on the input text.  We currently allow for setting the `sort` flag only
-  // for use in tests that assume the behavior of the legacy preprocessor
-  // (because it sorted alphabetically).  Once we update those tests, we can
-  // remove this option.
   const sort = options?.sort === true
   const root = parseVensimModel(input, parseContext, sort)
 
