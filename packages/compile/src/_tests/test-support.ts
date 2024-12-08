@@ -154,13 +154,7 @@ export function parseVensimModel(modelName: string): ParsedModel {
   const modelDir = sampleModelDir(modelName)
   const modelFile = resolve(modelDir, `${modelName}.mdl`)
   const mdlContent = readFileSync(modelFile, 'utf8')
-
-  // TODO: We currently sort the preprocessed definitions alphabetically for
-  // compatibility with tests that were written back when we used the legacy
-  // preprocessor, which sorted definitions alphabetically.  Now that we no
-  // longer rely on the legacy preprocessor, we should update the tests to
-  // use the original order and remove this option.
-  return parseModel(mdlContent, modelDir, { sort: true })
+  return parseModel(mdlContent, modelDir)
 }
 
 export function parseInlineVensimModel(mdlContent: string, modelDir?: string): ParsedModel {
