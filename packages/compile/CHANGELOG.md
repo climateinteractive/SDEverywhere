@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.7.21](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.20...compile-v0.7.21) (2024-12-11)
+
+
+### Bug Fixes
+
+* remove duplicate implementations of canonical[Var]Name functions ([#580](https://github.com/climateinteractive/SDEverywhere/issues/580)) ([e215d7d](https://github.com/climateinteractive/SDEverywhere/commit/e215d7de5e2fe551a0dd4cb6e3a960180db4b76f)), closes [#578](https://github.com/climateinteractive/SDEverywhere/issues/578)
+* remove legacy preprocessor implementation and use newer one from parse package ([#576](https://github.com/climateinteractive/SDEverywhere/issues/576)) ([c04e0ca](https://github.com/climateinteractive/SDEverywhere/commit/c04e0ca5143c7f31ba23f7dfed7a008428b77867)), closes [#575](https://github.com/climateinteractive/SDEverywhere/issues/575)
+* restore alphabetical sorting for `sde generate --preprocess` command ([#587](https://github.com/climateinteractive/SDEverywhere/issues/587)) ([039fb79](https://github.com/climateinteractive/SDEverywhere/commit/039fb7923df2c62d80212685aa7a5d9f49e261ee)), closes [#586](https://github.com/climateinteractive/SDEverywhere/issues/586)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/parse bumped from ^0.1.1 to ^0.1.2
+
 ## [0.7.20](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.19...compile-v0.7.20) (2024-09-15)
 
 
