@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.7.21](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.20...compile-v0.7.21) (2024-12-13)
+
+
+### Bug Fixes
+
+* cast index values to double when used in expression position in C code generation ([#591](https://github.com/climateinteractive/SDEverywhere/issues/591)) ([6e14176](https://github.com/climateinteractive/SDEverywhere/commit/6e1417602dd4c48a11983256ac12959533214d22)), closes [#568](https://github.com/climateinteractive/SDEverywhere/issues/568)
+* correct code generation for cases involving multiple dimensions that resolve to same family ([#588](https://github.com/climateinteractive/SDEverywhere/issues/588)) ([6c4748f](https://github.com/climateinteractive/SDEverywhere/commit/6c4748fae8245add84a50a85ec6cf869f61dc7ad))
+* correct handling of `ALLOCATE AVAILABLE` calls where arguments are subscripted variables ([#590](https://github.com/climateinteractive/SDEverywhere/issues/590)) ([0f741a5](https://github.com/climateinteractive/SDEverywhere/commit/0f741a537fad019023d7e4850c85830270de2310)), closes [#377](https://github.com/climateinteractive/SDEverywhere/issues/377)
+* remove duplicate implementations of canonical[Var]Name functions ([#580](https://github.com/climateinteractive/SDEverywhere/issues/580)) ([e215d7d](https://github.com/climateinteractive/SDEverywhere/commit/e215d7de5e2fe551a0dd4cb6e3a960180db4b76f)), closes [#578](https://github.com/climateinteractive/SDEverywhere/issues/578)
+* remove legacy preprocessor implementation and use newer one from parse package ([#576](https://github.com/climateinteractive/SDEverywhere/issues/576)) ([c04e0ca](https://github.com/climateinteractive/SDEverywhere/commit/c04e0ca5143c7f31ba23f7dfed7a008428b77867)), closes [#575](https://github.com/climateinteractive/SDEverywhere/issues/575)
+* restore alphabetical sorting for `sde generate --preprocess` command ([#587](https://github.com/climateinteractive/SDEverywhere/issues/587)) ([039fb79](https://github.com/climateinteractive/SDEverywhere/commit/039fb7923df2c62d80212685aa7a5d9f49e261ee)), closes [#586](https://github.com/climateinteractive/SDEverywhere/issues/586)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/parse bumped from ^0.1.1 to ^0.1.2
+
 ## [0.7.20](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.19...compile-v0.7.20) (2024-09-15)
 
 

@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.7.28](https://github.com/climateinteractive/SDEverywhere/compare/cli-v0.7.27...cli-v0.7.28) (2024-12-13)
+
+
+### Bug Fixes
+
+* remove legacy preprocessor implementation and use newer one from parse package ([#576](https://github.com/climateinteractive/SDEverywhere/issues/576)) ([c04e0ca](https://github.com/climateinteractive/SDEverywhere/commit/c04e0ca5143c7f31ba23f7dfed7a008428b77867)), closes [#575](https://github.com/climateinteractive/SDEverywhere/issues/575)
+* restore alphabetical sorting for `sde generate --preprocess` command ([#587](https://github.com/climateinteractive/SDEverywhere/issues/587)) ([039fb79](https://github.com/climateinteractive/SDEverywhere/commit/039fb7923df2c62d80212685aa7a5d9f49e261ee)), closes [#586](https://github.com/climateinteractive/SDEverywhere/issues/586)
+* show full stack trace when build or test command fails ([#581](https://github.com/climateinteractive/SDEverywhere/issues/581)) ([013bbf7](https://github.com/climateinteractive/SDEverywhere/commit/013bbf79000b6e5bbef85cdb5f3d72643ca18046)), closes [#579](https://github.com/climateinteractive/SDEverywhere/issues/579)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/build bumped from ^0.3.6 to ^0.3.7
+    * @sdeverywhere/compile bumped from ^0.7.20 to ^0.7.21
+
 ## [0.7.27](https://github.com/climateinteractive/SDEverywhere/compare/cli-v0.7.26...cli-v0.7.27) (2024-09-15)
 
 

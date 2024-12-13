@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.3.13](https://github.com/climateinteractive/SDEverywhere/compare/plugin-check-v0.3.12...plugin-check-v0.3.13) (2024-12-13)
+
+
+### Bug Fixes
+
+* remove duplicate implementations of canonical[Var]Name functions ([#580](https://github.com/climateinteractive/SDEverywhere/issues/580)) ([e215d7d](https://github.com/climateinteractive/SDEverywhere/commit/e215d7de5e2fe551a0dd4cb6e3a960180db4b76f)), closes [#578](https://github.com/climateinteractive/SDEverywhere/issues/578)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @sdeverywhere/build bumped from * to 0.3.7
+  * peerDependencies
+    * @sdeverywhere/build bumped from ^0.3.6 to ^0.3.7
+
 ## [0.3.12](https://github.com/climateinteractive/SDEverywhere/compare/plugin-check-v0.3.11...plugin-check-v0.3.12) (2024-12-02)
 
 

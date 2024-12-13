@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.3.7](https://github.com/climateinteractive/SDEverywhere/compare/build-v0.3.6...build-v0.3.7) (2024-12-13)
+
+
+### Bug Fixes
+
+* remove duplicate implementations of canonical[Var]Name functions ([#580](https://github.com/climateinteractive/SDEverywhere/issues/580)) ([e215d7d](https://github.com/climateinteractive/SDEverywhere/commit/e215d7de5e2fe551a0dd4cb6e3a960180db4b76f)), closes [#578](https://github.com/climateinteractive/SDEverywhere/issues/578)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/parse bumped from ^0.1.1 to ^0.1.2
+
 ## [0.3.6](https://github.com/climateinteractive/SDEverywhere/compare/build-v0.3.5...build-v0.3.6) (2024-08-23)
 
 

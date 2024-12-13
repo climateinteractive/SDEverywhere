@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.1.11](https://github.com/climateinteractive/SDEverywhere/compare/plugin-vite-v0.1.10...plugin-vite-v0.1.11) (2024-12-13)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @sdeverywhere/build bumped from * to 0.3.7
+  * peerDependencies
+    * @sdeverywhere/build bumped from ^0.3.6 to ^0.3.7
+
 ## [0.1.10](https://github.com/climateinteractive/SDEverywhere/compare/plugin-vite-v0.1.9...plugin-vite-v0.1.10) (2024-08-23)
 
 
