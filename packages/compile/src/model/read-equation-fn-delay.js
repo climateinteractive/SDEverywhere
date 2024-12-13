@@ -310,6 +310,10 @@ function generateDelay3VarsForSeparatedVar(v, context, subs, argInput, argDelay,
   Model.addNonAtoAVar(canonicalName(level2), [true])
   Model.addNonAtoAVar(canonicalName(level3), [true])
 
+  Model.addNonAtoAVar(canonicalName(aux1), [true])
+  Model.addNonAtoAVar(canonicalName(aux2), [true])
+  Model.addNonAtoAVar(canonicalName(aux3), [true])
+
   // Generate level variables
   const eqns = []
   eqns.push(generateDelayLevel(context, level3LHS, level3RefId, aux2LHS, aux3LHS, initArg))
@@ -324,9 +328,7 @@ function generateDelay3VarsForSeparatedVar(v, context, subs, argInput, argDelay,
 
   // Generate an aux variable to hold the delay time expression
   v.delayTimeVarName = canonicalName(aux4)
-  if (isSeparatedVar(v)) {
-    Model.addNonAtoAVar(v.delayTimeVarName, [true])
-  }
+  Model.addNonAtoAVar(v.delayTimeVarName, [true])
   const delayTimeVarRefId = canonicalVensimName(aux4LHS)
   eqns.push(`${aux4LHS} = ${delay3Val} ~~|`)
   context.addVarReference(delayTimeVarRefId)
