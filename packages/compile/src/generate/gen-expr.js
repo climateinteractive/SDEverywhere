@@ -74,7 +74,7 @@ export function generateExpr(expr, ctx) {
         // (since Vensim indices are one-based).
         const subId = expr.varId
         const indexValue = sub(subId).value
-        return indexExpr(`${indexValue + 1}`, ctx)
+        return `${indexValue + 1}`
       } else {
         throw new Error(`Unresolved variable reference '${expr.varName}' in code gen for '${ctx.variable.modelLHS}'`)
       }
@@ -1035,7 +1035,13 @@ function indexExpr(indexValue, ctx) {
       // In the C case, we need to cast to double since the index variable will be
       // of type `size_t`, which is an unsigned type, but we want a signed type for
       // the rare cases where math is involved that makes it go negative
-      return `((double)${indexValue})`
+      if (isNaN(indexValue)) {
+        // This is a (non-numeric) loop index variable reference, so cast to double
+        return `((double)${indexValue})`
+      } else {
+        // This is a numeric index, no cast is necessary
+        return indexValue
+      }
     case 'js':
       // In the JS case, no cast is necessary
       return indexValue
