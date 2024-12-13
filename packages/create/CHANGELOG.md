@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.2.22](https://github.com/climateinteractive/SDEverywhere/compare/create-v0.2.21...create-v0.2.22) (2024-12-13)
+
+
+### Bug Fixes
+
+* remove legacy preprocessor implementation and use newer one from parse package ([#576](https://github.com/climateinteractive/SDEverywhere/issues/576)) ([c04e0ca](https://github.com/climateinteractive/SDEverywhere/commit/c04e0ca5143c7f31ba23f7dfed7a008428b77867)), closes [#575](https://github.com/climateinteractive/SDEverywhere/issues/575)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/compile bumped from ^0.7.20 to ^0.7.21
+
 ## [0.2.21](https://github.com/climateinteractive/SDEverywhere/compare/create-v0.2.20...create-v0.2.21) (2024-12-02)
 
 

@@ -1,6 +1,6 @@
 {
   "name": "@sdeverywhere/plugin-check",
-  "version": "0.3.12",
+  "version": "0.3.13",
   "files": [
     "bin/**",
     "dist/**",
@@ -59,7 +59,7 @@
     ]
   },
   "peerDependencies": {
-    "@sdeverywhere/build": "^0.3.6"
+    "@sdeverywhere/build": "^0.3.7"
   },
   "devDependencies": {
     "@sdeverywhere/build": "*",

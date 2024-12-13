@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.2.8](https://github.com/climateinteractive/SDEverywhere/compare/plugin-worker-v0.2.7...plugin-worker-v0.2.8) (2024-12-13)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * peerDependencies
+    * @sdeverywhere/build bumped from ^0.3.6 to ^0.3.7
+
 ## [0.2.7](https://github.com/climateinteractive/SDEverywhere/compare/plugin-worker-v0.2.6...plugin-worker-v0.2.7) (2024-08-27)
 
 

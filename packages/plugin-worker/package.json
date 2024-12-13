@@ -1,6 +1,6 @@
 {
   "name": "@sdeverywhere/plugin-worker",
-  "version": "0.2.7",
+  "version": "0.2.8",
   "files": [
     "dist/**",
     "template-worker/**"
@@ -36,7 +36,7 @@
     "vite": "5.4.2"
   },
   "peerDependencies": {
-    "@sdeverywhere/build": "^0.3.6"
+    "@sdeverywhere/build": "^0.3.7"
   },
   "devDependencies": {
     "@sdeverywhere/build": "*",
