@@ -291,7 +291,7 @@ describe('generateEquation (Vensim -> C)', () => {
     expect(genC(vars.get('_x'))).toEqual(['_x = 1.0;'])
     expect(genC(vars.get('_y'))).toEqual([
       'for (size_t i = 0; i < 2; i++) {',
-      '_y[i] = _IF_THEN_ELSE((i + 1) == _x, 1.0, 0.0);',
+      '_y[i] = _IF_THEN_ELSE((((double)i) + 1) == _x, 1.0, 0.0);',
       '}'
     ])
   })
@@ -304,7 +304,7 @@ describe('generateEquation (Vensim -> C)', () => {
     expect(vars.size).toBe(1)
     expect(genC(vars.get('_y'))).toEqual([
       'for (size_t i = 0; i < 2; i++) {',
-      '_y[i] = _IF_THEN_ELSE((i + 1) == 2, 1.0, 0.0);',
+      '_y[i] = _IF_THEN_ELSE((((double)i) + 1) == 2, 1.0, 0.0);',
       '}'
     ])
   })
@@ -650,7 +650,11 @@ describe('generateEquation (Vensim -> C)', () => {
       x[DimA] = DimB ~~|
     `)
     expect(vars.size).toBe(1)
-    expect(genC(vars.get('_x'))).toEqual(['for (size_t i = 0; i < 2; i++) {', '_x[i] = (__map_dimb_dima[i] + 1);', '}'])
+    expect(genC(vars.get('_x'))).toEqual([
+      'for (size_t i = 0; i < 2; i++) {',
+      '_x[i] = (((double)__map_dimb_dima[i]) + 1);',
+      '}'
+    ])
   })
 
   it('should work for 1D equation with one mapped dimension name used in subscript position (separated/non-apply-to-all)', () => {
@@ -680,7 +684,7 @@ describe('generateEquation (Vensim -> C)', () => {
     expect(genC(vars.get('_selected_a_index'), 'init-constants')).toEqual(['_selected_a_index = 1.0;'])
     expect(genC(vars.get('_x'))).toEqual([
       'for (size_t i = 0; i < 2; i++) {',
-      '_x[i] = _IF_THEN_ELSE((i + 1) == _selected_a_index, 1.0, 0.0);',
+      '_x[i] = _IF_THEN_ELSE((((double)i) + 1) == _selected_a_index, 1.0, 0.0);',
       '}'
     ])
   })
@@ -708,7 +712,7 @@ describe('generateEquation (Vensim -> C)', () => {
     expect(genC(vars.get('_x'))).toEqual([
       'for (size_t i = 0; i < 2; i++) {',
       'for (size_t j = 0; j < 2; j++) {',
-      '_x[i][j] = ((i + 1) * 10.0) + (j + 1);',
+      '_x[i][j] = ((((double)i) + 1) * 10.0) + (((double)j) + 1);',
       '}',
       '}'
     ])
@@ -738,7 +742,7 @@ describe('generateEquation (Vensim -> C)', () => {
     expect(genC(vars.get('_x'))).toEqual([
       'for (size_t i = 0; i < 2; i++) {',
       'for (size_t j = 0; j < 2; j++) {',
-      '_x[i][j] = ((i + 1) * 10.0) + (j + 1);',
+      '_x[i][j] = ((((double)i) + 1) * 10.0) + (((double)j) + 1);',
       '}',
       '}'
     ])
@@ -3224,7 +3228,7 @@ describe('generateEquation (Vensim -> C)', () => {
     expect(genC(vars.get('_x[_five]'), 'init-constants')).toEqual(['_x[4] = 5.0;'])
     expect(genC(vars.get('_y'))).toEqual([
       'for (size_t i = 0; i < 3; i++) {',
-      '_y[i] = _x[_dimx[(size_t)(2 + ((i + 1) - 1.0))]];',
+      '_y[i] = _x[_dimx[(size_t)(2 + ((((double)i) + 1) - 1.0))]];',
       '}'
     ])
   })
