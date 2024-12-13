@@ -10174,6 +10174,10 @@ describe('readEquations', () => {
         refId: '_v',
         subscripts: ['_dima']
       }),
+      v('w[DimX,DimY]', 'DimX-DimY', {
+        refId: '_w',
+        subscripts: ['_dimx', '_dimy']
+      }),
       v('FINAL TIME', '1', {
         refId: '_final_time',
         varType: 'const'

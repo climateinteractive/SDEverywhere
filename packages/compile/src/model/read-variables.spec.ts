@@ -1933,6 +1933,9 @@ describe('readVariables', () => {
       v('v[DimA]', 'IF THEN ELSE(DimA=A2,1,0)', {
         subscripts: ['_dima']
       }),
+      v('w[DimX,DimY]', 'DimX-DimY', {
+        subscripts: ['_dimx', '_dimy']
+      }),
       v('FINAL TIME', '1'),
       v('INITIAL TIME', '0'),
       v('SAVEPER', 'TIME STEP'),
