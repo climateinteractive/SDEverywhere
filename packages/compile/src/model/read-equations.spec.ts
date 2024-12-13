@@ -1428,7 +1428,6 @@ describe('readEquations', () => {
     })
 
     // This test is based on the example from #179 (simplified to use subdimensions to ensure separation)
-    // TODO: This test is disabled until the fix for #179 is implemented
     it('should work when RHS variable is NON-apply-to-all (1D) and is accessed with 2 different dimensions from LHS that map to the same family', () => {
       const vars = readInlineModel(`
         DimA: A1, A2, A3 ~~|
