@@ -159,7 +159,7 @@ Here are some prominent current limitations:
 - You must rewrite tabbed arrays as separate, non-apply-to-all variables.
 - You must rewrite equations that use macros or code them in C.
 
-Tabbed arrays and macros are removed from the model during preprocessing and written to the `removals.txt` file for your reference.
+Note that tabbed arrays and macros are automatically removed from the model by the transpiler prior to parsing.
 
 ## SDEverywhere in Production
 

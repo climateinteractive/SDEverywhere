@@ -10,6 +10,11 @@
 	~ Comment
 	|
 
+"quotes 3 with | pipe character "  = 2
+	~ dmnl
+	~ Comment
+	|
+
 apple 3  = 1
 	~ dmnl
 	~ Comment
@@ -66,11 +71,24 @@ Apple 1  = 1
 	~ Comment
 	|
 
-dimB: B1, B2, B3
+:MACRO: VSMOOTH(input,SMOOTH TIME)
+
+Vsmooth = INTEG((input - Vsmooth)/SMOOTH TIME, input)
+  ~ input
+  ~ The first order smoothed value of a variable.
+  |
+
+:END OF MACRO:
+
+dimB: B1, B2
   ~~|
 
-DimA: A1, A2, A3
+DimA: A1, A2
   ~~|
+
+Population[DimA,dimB] = TABBED ARRAY(
+\t1\t2
+\t5\t6) ~Person~|
 
 ********************************************************
 	.Control

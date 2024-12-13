@@ -40,7 +40,7 @@ class CheckPlugin implements Plugin {
     if (this.options?.testConfigPath === undefined) {
       // Test config was not provided, so generate a default config in watch mode.
       // The test template uses import.meta.glob so that checks are re-run
-      // automatically when the *.check.yaml files are changed.
+      // automatically when the `{checks/comparisons}/*.yaml` files are changed.
       await this.genTestConfig(config, 'watch')
     }
 
@@ -56,9 +56,9 @@ class CheckPlugin implements Plugin {
     // in the baselines directory (Vite's import.meta.glob handling doesn't
     // seem to do this automatically), so as a workaround, watch the baselines
     // directory and restart the server if files are added/removed
-    // TODO: The same problem also applies to the glob for `.check.yaml` files
-    // in the test config, so we should also reload if files match/unmatch
-    // the `.check.yaml` glob
+    // TODO: The same problem also applies to the glob for `checks/*.yaml` and
+    // `comparisons/*.yaml` files in the test config, so we should also reload
+    // if files match/unmatch those glob patterns
     // TODO: Use the baselines directory from the config
     const baselinesDir = 'baselines'
     const watcher = chokidar.watch(baselinesDir, {
@@ -98,7 +98,7 @@ class CheckPlugin implements Plugin {
         await this.copyPreviousBundle(context.config)
       }
       context.log('info', 'Generating model check bundle...')
-      await this.genCurrentBundle(context.config, modelSpec)
+      await this.genCurrentBundle(context, modelSpec)
     }
 
     // For production builds (and for the initial build in local development mode),
@@ -137,9 +137,8 @@ class CheckPlugin implements Plugin {
     }
   }
 
-  private async genCurrentBundle(config: ResolvedConfig, modelSpec: ResolvedModelSpec): Promise<void> {
-    const prepDir = config.prepDir
-    const viteConfig = await createViteConfigForBundle(prepDir, modelSpec)
+  private async genCurrentBundle(context: BuildContext, modelSpec: ResolvedModelSpec): Promise<void> {
+    const viteConfig = await createViteConfigForBundle(context, modelSpec)
     await build(viteConfig)
   }
 

@@ -7,9 +7,7 @@ import { fileURLToPath } from 'url'
 import type { InlineConfig, ResolvedConfig, Plugin as VitePlugin } from 'vite'
 import { nodeResolve } from '@rollup/plugin-node-resolve'
 
-import type { ResolvedModelSpec } from '@sdeverywhere/build'
-
-import { sdeNameForVensimVarName } from './var-names'
+import type { BuildContext, ResolvedModelSpec } from '@sdeverywhere/build'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
@@ -24,7 +22,7 @@ const __dirname = dirname(__filename)
  * TODO: This could be simplified by using `vite-plugin-virtual` but that
  * doesn't seem to be working correctly in an ESM setting
  */
-function injectModelSpec(prepDir: string, modelSpec: ResolvedModelSpec): VitePlugin {
+function injectModelSpec(context: BuildContext, modelSpec: ResolvedModelSpec): VitePlugin {
   // Include the SDE variable ID with each spec
   const inputSpecs = []
   for (const modelInputSpec of modelSpec.inputs) {
@@ -52,7 +50,7 @@ function injectModelSpec(prepDir: string, modelSpec: ResolvedModelSpec): VitePlu
     // a stable `inputId` for each row in the `inputs.csv`, and that is the most
     // common way to configure a `ModelSpec`, so it will be uncommon for `inputId`
     // to be undefined here.
-    const varId = sdeNameForVensimVarName(modelInputSpec.varName)
+    const varId = context.canonicalVarId(modelInputSpec.varName)
     const inputId = modelInputSpec.inputId || varId
     inputSpecs.push({
       inputId,
@@ -62,12 +60,13 @@ function injectModelSpec(prepDir: string, modelSpec: ResolvedModelSpec): VitePlu
   }
   const outputSpecs = modelSpec.outputs.map(o => {
     return {
-      varId: sdeNameForVensimVarName(o.varName),
+      varId: context.canonicalVarId(o.varName),
       ...o
     }
   })
 
   function stagedFileSize(filename: string): number {
+    const prepDir = context.config.prepDir
     const path = joinPath(prepDir, 'staged', 'model', filename)
     if (existsSync(path)) {
       return statSync(path).size
@@ -161,12 +160,16 @@ function overrideViteResolvePlugin(viteConfig: ResolvedConfig) {
   }
 }
 
-export async function createViteConfigForBundle(prepDir: string, modelSpec: ResolvedModelSpec): Promise<InlineConfig> {
+export async function createViteConfigForBundle(
+  context: BuildContext,
+  modelSpec: ResolvedModelSpec
+): Promise<InlineConfig> {
   // Use `template-bundle` as the root directory for the bundle project
   const root = resolvePath(__dirname, '..', 'template-bundle')
 
   // Calculate output directory relative to the template root
   // TODO: For now we write it to `prepDir`; make this configurable?
+  const prepDir = context.config.prepDir
   const outDir = relative(root, prepDir)
 
   // Use the model worker from the staged directory
@@ -228,7 +231,7 @@ export async function createViteConfigForBundle(prepDir: string, modelSpec: Reso
 
     plugins: [
       // Use a virtual module plugin to inject the model spec values
-      injectModelSpec(prepDir, modelSpec),
+      injectModelSpec(context, modelSpec),
 
       // XXX: Install a wrapper around the built-in `vite:resolve` plugin so that we can
       // override the default resolver behavior that tries to resolve the `browser` section

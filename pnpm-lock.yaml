@@ -192,6 +192,9 @@ importers:
 
   packages/build:
     dependencies:
+      '@sdeverywhere/parse':
+        specifier: ^0.1.1
+        version: link:../parse
       chokidar:
         specifier: ^3.5.3
         version: 3.5.3
@@ -344,9 +347,6 @@ importers:
       ramda:
         specifier: ^0.27.0
         version: 0.27.2
-      split-string:
-        specifier: ^6.0.0
-        version: 6.1.0
       xlsx:
         specifier: https://cdn.sheetjs.com/xlsx-0.20.2/xlsx-0.20.2.tgz
         version: '@cdn.sheetjs.com/xlsx-0.20.2/xlsx-0.20.2.tgz'

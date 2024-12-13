@@ -1,4 +1,6 @@
-import { parseAndGenerate, preprocessModel, printNames } from '@sdeverywhere/compile'
+import { readFileSync } from 'fs'
+
+import { parseAndGenerate, printNames } from '@sdeverywhere/compile'
 
 import { modelPathProps, parseSpec } from './utils.js'
 
@@ -26,9 +28,8 @@ let names = async (model, namesPathname, opts) => {
   // Get the model name and directory from the model argument.
   let { modelDirname, modelPathname, modelName } = modelPathProps(model)
   let spec = parseSpec(opts.spec)
-  // Preprocess model text into parser input.
-  let input = preprocessModel(modelPathname, spec)
   // Parse the model to get variable and subscript information.
+  let input = readFileSync(modelPathname, 'utf8')
   await parseAndGenerate(input, spec, ['convertNames'], modelDirname, modelName, '')
   // Read each variable name from the names file and convert it.
   printNames(namesPathname, opts.toc ? 'to-c' : 'to-vensim')
