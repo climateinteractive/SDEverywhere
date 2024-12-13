@@ -607,7 +607,9 @@ describe('readSubscriptRanges + resolveSubscriptRanges', () => {
       dim('DimB', ['B1', 'B2', 'B3'], undefined, undefined, [dimMapping('DimA')], {
         _dima: []
       }),
-      dim('DimC', ['C1', 'C2', 'C3', 'C4', 'C5'])
+      dim('DimC', ['C1', 'C2', 'C3', 'C4', 'C5']),
+      dim('DimX', ['X1', 'X2', 'X3']),
+      dim('DimY', ['Y1', 'Y2', 'Y3'])
     ])
 
     const resolvedSubs = readAndResolveSubscripts('subscript')
@@ -641,6 +643,8 @@ describe('readSubscriptRanges + resolveSubscriptRanges', () => {
         _dima: ['_b1', '_b2', '_b3']
       }),
       dim('DimC', ['C1', 'C2', 'C3', 'C4', 'C5']),
+      dim('DimX', ['X1', 'X2', 'X3']),
+      dim('DimY', ['Y1', 'Y2', 'Y3']),
       // { name: '_a1', value: 0, size: 1, family: '_dima', mappings: {} },
       sub('A1', 'DimA', 0),
       // { name: '_a2', value: 1, size: 1, family: '_dima', mappings: {} },
@@ -657,7 +661,13 @@ describe('readSubscriptRanges + resolveSubscriptRanges', () => {
       sub('C2', 'DimC', 1),
       sub('C3', 'DimC', 2),
       sub('C4', 'DimC', 3),
-      sub('C5', 'DimC', 4)
+      sub('C5', 'DimC', 4),
+      sub('X1', 'DimX', 0),
+      sub('X2', 'DimX', 1),
+      sub('X3', 'DimX', 2),
+      sub('Y1', 'DimY', 0),
+      sub('Y2', 'DimY', 1),
+      sub('Y3', 'DimY', 2)
     ])
   })
 })
