@@ -1783,15 +1783,28 @@ describe('generateEquation (Vensim -> C)', () => {
     expect(genC(vars.get('_target_capacity'), 'eval')).toEqual(['_target_capacity = _capacity;'])
   })
 
-  it('should work for ALLOCATE AVAILABLE function', () => {
+  // Note the following from the Vensim documentation for allocation with multiple subscripts
+  // (from https://www.vensim.com/documentation/24337.html)
+  //   You can use ALLOCATE AVAILABLE with multiple subscripts, but the additional subscripts must
+  //   all come before those active in the allocation.
+  //   ...
+  //   In the above example the subscript order item,branch is not the natural subscript order.
+  //   Normally big things come first, then small things so branch,item would be a more common choice.
+  //   However, if you use the subscript order branch,item it won’t work.  You can use this in other
+  //   model variables but not in the input to the ALLOCATE AVAILABLE function and not for the result.
+  // This restriction likely exists due to the fact that the allocation needs to happen over a
+  // specific dimension.  We will make the subscript ordering in the following test models match
+  // the examples from the Vensim documentation (item then branch).
+
+  it('should work for ALLOCATE AVAILABLE function (1D LHS, 1D demand, 2D pp, non-subscripted avail)', () => {
     const vars = readInlineModel(`
       branch: Boston, Dayton, Fresno ~~|
       pprofile: ptype, ppriority ~~|
       supply available = 200 ~~|
       demand[branch] = 500,300,750 ~~|
-      priority[Boston,pprofile] = 1,5 ~~|
-      priority[Dayton,pprofile] = 1,7 ~~|
-      priority[Fresno,pprofile] = 1,3 ~~|
+      priority[Boston,pprofile] = 3,5 ~~|
+      priority[Dayton,pprofile] = 3,7 ~~|
+      priority[Fresno,pprofile] = 3,3 ~~|
       shipments[branch] = ALLOCATE AVAILABLE(demand[branch], priority[branch,ptype], supply available) ~~|
     `)
     expect(vars.size).toBe(11)
@@ -1799,16 +1812,144 @@ describe('generateEquation (Vensim -> C)', () => {
     expect(genC(vars.get('_demand[_boston]'))).toEqual(['_demand[0] = 500.0;'])
     expect(genC(vars.get('_demand[_dayton]'))).toEqual(['_demand[1] = 300.0;'])
     expect(genC(vars.get('_demand[_fresno]'))).toEqual(['_demand[2] = 750.0;'])
-    expect(genC(vars.get('_priority[_boston,_ptype]'))).toEqual(['_priority[0][0] = 1.0;'])
+    expect(genC(vars.get('_priority[_boston,_ptype]'))).toEqual(['_priority[0][0] = 3.0;'])
     expect(genC(vars.get('_priority[_boston,_ppriority]'))).toEqual(['_priority[0][1] = 5.0;'])
-    expect(genC(vars.get('_priority[_dayton,_ptype]'))).toEqual(['_priority[1][0] = 1.0;'])
+    expect(genC(vars.get('_priority[_dayton,_ptype]'))).toEqual(['_priority[1][0] = 3.0;'])
     expect(genC(vars.get('_priority[_dayton,_ppriority]'))).toEqual(['_priority[1][1] = 7.0;'])
-    expect(genC(vars.get('_priority[_fresno,_ptype]'))).toEqual(['_priority[2][0] = 1.0;'])
+    expect(genC(vars.get('_priority[_fresno,_ptype]'))).toEqual(['_priority[2][0] = 3.0;'])
     expect(genC(vars.get('_priority[_fresno,_ppriority]'))).toEqual(['_priority[2][1] = 3.0;'])
     expect(genC(vars.get('_shipments'))).toEqual([
       'double* __t1 = _ALLOCATE_AVAILABLE(_demand, (double*)_priority, _supply_available, 3);',
       'for (size_t i = 0; i < 3; i++) {',
       '_shipments[i] = __t1[_branch[i]];',
+      '}'
+    ])
+  })
+
+  it('should work for ALLOCATE AVAILABLE function (1D LHS, 1D demand, 3D pp with specific first subscript, non-subscripted avail)', () => {
+    const vars = readInlineModel(`
+      branch: Boston, Dayton, Fresno ~~|
+      item: Item1, Item2 ~~|
+      pprofile: ptype, ppriority ~~|
+      supply available = 200 ~~|
+      demand[branch] = 500,300,750 ~~|
+      priority[Item1,Boston,pprofile] = 3,5 ~~|
+      priority[Item1,Dayton,pprofile] = 3,7 ~~|
+      priority[Item1,Fresno,pprofile] = 3,3 ~~|
+      priority[Item2,Boston,pprofile] = 3,6 ~~|
+      priority[Item2,Dayton,pprofile] = 3,8 ~~|
+      priority[Item2,Fresno,pprofile] = 3,4 ~~|
+      item 1 shipments[branch] = ALLOCATE AVAILABLE(demand[branch], priority[Item1,branch,ptype], supply available) ~~|
+      item 2 shipments[branch] = ALLOCATE AVAILABLE(demand[branch], priority[Item2,branch,ptype], supply available) ~~|
+    `)
+    expect(genC(vars.get('_supply_available'))).toEqual(['_supply_available = 200.0;'])
+    expect(genC(vars.get('_demand[_boston]'))).toEqual(['_demand[0] = 500.0;'])
+    expect(genC(vars.get('_demand[_dayton]'))).toEqual(['_demand[1] = 300.0;'])
+    expect(genC(vars.get('_demand[_fresno]'))).toEqual(['_demand[2] = 750.0;'])
+    expect(genC(vars.get('_priority[_item1,_boston,_ptype]'))).toEqual(['_priority[0][0][0] = 3.0;'])
+    expect(genC(vars.get('_priority[_item1,_boston,_ppriority]'))).toEqual(['_priority[0][0][1] = 5.0;'])
+    expect(genC(vars.get('_priority[_item1,_dayton,_ptype]'))).toEqual(['_priority[0][1][0] = 3.0;'])
+    expect(genC(vars.get('_priority[_item1,_dayton,_ppriority]'))).toEqual(['_priority[0][1][1] = 7.0;'])
+    expect(genC(vars.get('_priority[_item1,_fresno,_ptype]'))).toEqual(['_priority[0][2][0] = 3.0;'])
+    expect(genC(vars.get('_priority[_item1,_fresno,_ppriority]'))).toEqual(['_priority[0][2][1] = 3.0;'])
+    expect(genC(vars.get('_priority[_item2,_boston,_ptype]'))).toEqual(['_priority[1][0][0] = 3.0;'])
+    expect(genC(vars.get('_priority[_item2,_boston,_ppriority]'))).toEqual(['_priority[1][0][1] = 6.0;'])
+    expect(genC(vars.get('_priority[_item2,_dayton,_ptype]'))).toEqual(['_priority[1][1][0] = 3.0;'])
+    expect(genC(vars.get('_priority[_item2,_dayton,_ppriority]'))).toEqual(['_priority[1][1][1] = 8.0;'])
+    expect(genC(vars.get('_priority[_item2,_fresno,_ptype]'))).toEqual(['_priority[1][2][0] = 3.0;'])
+    expect(genC(vars.get('_priority[_item2,_fresno,_ppriority]'))).toEqual(['_priority[1][2][1] = 4.0;'])
+    expect(genC(vars.get('_item_1_shipments'))).toEqual([
+      'double* __t1 = _ALLOCATE_AVAILABLE(_demand, (double*)_priority[0], _supply_available, 3);',
+      'for (size_t i = 0; i < 3; i++) {',
+      '_item_1_shipments[i] = __t1[_branch[i]];',
+      '}'
+    ])
+    expect(genC(vars.get('_item_2_shipments'))).toEqual([
+      'double* __t2 = _ALLOCATE_AVAILABLE(_demand, (double*)_priority[1], _supply_available, 3);',
+      'for (size_t i = 0; i < 3; i++) {',
+      '_item_2_shipments[i] = __t2[_branch[i]];',
+      '}'
+    ])
+  })
+
+  it('should work for ALLOCATE AVAILABLE function (2D LHS, 2D demand, 2D pp, non-subscripted avail)', () => {
+    const vars = readInlineModel(`
+      branch: Boston, Dayton, Fresno ~~|
+      item: Item1, Item2 ~~|
+      pprofile: ptype, ppriority ~~|
+      supply available = 200 ~~|
+      demand[item,branch] = 500,300,750;501,301,751; ~~|
+      priority[Boston,pprofile] = 3,5 ~~|
+      priority[Dayton,pprofile] = 3,7 ~~|
+      priority[Fresno,pprofile] = 3,3 ~~|
+      shipments[item,branch] = ALLOCATE AVAILABLE(demand[item,branch], priority[branch,ptype], supply available) ~~|
+    `)
+    expect(vars.size).toBe(14)
+    expect(genC(vars.get('_supply_available'))).toEqual(['_supply_available = 200.0;'])
+    expect(genC(vars.get('_demand[_item1,_boston]'))).toEqual(['_demand[0][0] = 500.0;'])
+    expect(genC(vars.get('_demand[_item1,_dayton]'))).toEqual(['_demand[0][1] = 300.0;'])
+    expect(genC(vars.get('_demand[_item1,_fresno]'))).toEqual(['_demand[0][2] = 750.0;'])
+    expect(genC(vars.get('_demand[_item2,_boston]'))).toEqual(['_demand[1][0] = 501.0;'])
+    expect(genC(vars.get('_demand[_item2,_dayton]'))).toEqual(['_demand[1][1] = 301.0;'])
+    expect(genC(vars.get('_demand[_item2,_fresno]'))).toEqual(['_demand[1][2] = 751.0;'])
+    expect(genC(vars.get('_priority[_boston,_ptype]'))).toEqual(['_priority[0][0] = 3.0;'])
+    expect(genC(vars.get('_priority[_boston,_ppriority]'))).toEqual(['_priority[0][1] = 5.0;'])
+    expect(genC(vars.get('_priority[_dayton,_ptype]'))).toEqual(['_priority[1][0] = 3.0;'])
+    expect(genC(vars.get('_priority[_dayton,_ppriority]'))).toEqual(['_priority[1][1] = 7.0;'])
+    expect(genC(vars.get('_priority[_fresno,_ptype]'))).toEqual(['_priority[2][0] = 3.0;'])
+    expect(genC(vars.get('_priority[_fresno,_ppriority]'))).toEqual(['_priority[2][1] = 3.0;'])
+    expect(genC(vars.get('_shipments'))).toEqual([
+      'for (size_t i = 0; i < 2; i++) {',
+      'double* __t1 = _ALLOCATE_AVAILABLE(_demand[i], (double*)_priority, _supply_available, 3);',
+      'for (size_t j = 0; j < 3; j++) {',
+      '_shipments[i][j] = __t1[_branch[j]];',
+      '}',
+      '}'
+    ])
+  })
+
+  it('should work for ALLOCATE AVAILABLE function (2D LHS, 2D demand, 3D pp, 1D avail)', () => {
+    const vars = readInlineModel(`
+      branch: Boston, Dayton, Fresno ~~|
+      item: Item1, Item2 ~~|
+      pprofile: ptype, ppriority ~~|
+      supply available[item] = 200,400 ~~|
+      demand[item,branch] = 500,300,750;501,301,751; ~~|
+      priority[Item1,Boston,pprofile] = 3,5 ~~|
+      priority[Item1,Dayton,pprofile] = 3,7 ~~|
+      priority[Item1,Fresno,pprofile] = 3,3 ~~|
+      priority[Item2,Boston,pprofile] = 3,6 ~~|
+      priority[Item2,Dayton,pprofile] = 3,8 ~~|
+      priority[Item2,Fresno,pprofile] = 3,4 ~~|
+      shipments[item,branch] = ALLOCATE AVAILABLE(demand[item,branch], priority[item,branch,ptype], supply available[item]) ~~|
+    `)
+    expect(vars.size).toBe(21)
+    expect(genC(vars.get('_supply_available[_item1]'))).toEqual(['_supply_available[0] = 200.0;'])
+    expect(genC(vars.get('_supply_available[_item2]'))).toEqual(['_supply_available[1] = 400.0;'])
+    expect(genC(vars.get('_demand[_item1,_boston]'))).toEqual(['_demand[0][0] = 500.0;'])
+    expect(genC(vars.get('_demand[_item1,_dayton]'))).toEqual(['_demand[0][1] = 300.0;'])
+    expect(genC(vars.get('_demand[_item1,_fresno]'))).toEqual(['_demand[0][2] = 750.0;'])
+    expect(genC(vars.get('_demand[_item2,_boston]'))).toEqual(['_demand[1][0] = 501.0;'])
+    expect(genC(vars.get('_demand[_item2,_dayton]'))).toEqual(['_demand[1][1] = 301.0;'])
+    expect(genC(vars.get('_demand[_item2,_fresno]'))).toEqual(['_demand[1][2] = 751.0;'])
+    expect(genC(vars.get('_priority[_item1,_boston,_ptype]'))).toEqual(['_priority[0][0][0] = 3.0;'])
+    expect(genC(vars.get('_priority[_item1,_boston,_ppriority]'))).toEqual(['_priority[0][0][1] = 5.0;'])
+    expect(genC(vars.get('_priority[_item1,_dayton,_ptype]'))).toEqual(['_priority[0][1][0] = 3.0;'])
+    expect(genC(vars.get('_priority[_item1,_dayton,_ppriority]'))).toEqual(['_priority[0][1][1] = 7.0;'])
+    expect(genC(vars.get('_priority[_item1,_fresno,_ptype]'))).toEqual(['_priority[0][2][0] = 3.0;'])
+    expect(genC(vars.get('_priority[_item1,_fresno,_ppriority]'))).toEqual(['_priority[0][2][1] = 3.0;'])
+    expect(genC(vars.get('_priority[_item2,_boston,_ptype]'))).toEqual(['_priority[1][0][0] = 3.0;'])
+    expect(genC(vars.get('_priority[_item2,_boston,_ppriority]'))).toEqual(['_priority[1][0][1] = 6.0;'])
+    expect(genC(vars.get('_priority[_item2,_dayton,_ptype]'))).toEqual(['_priority[1][1][0] = 3.0;'])
+    expect(genC(vars.get('_priority[_item2,_dayton,_ppriority]'))).toEqual(['_priority[1][1][1] = 8.0;'])
+    expect(genC(vars.get('_priority[_item2,_fresno,_ptype]'))).toEqual(['_priority[1][2][0] = 3.0;'])
+    expect(genC(vars.get('_priority[_item2,_fresno,_ppriority]'))).toEqual(['_priority[1][2][1] = 4.0;'])
+    expect(genC(vars.get('_shipments'))).toEqual([
+      'for (size_t i = 0; i < 2; i++) {',
+      'double* __t1 = _ALLOCATE_AVAILABLE(_demand[i], (double*)_priority[i], _supply_available[i], 3);',
+      'for (size_t j = 0; j < 3; j++) {',
+      '_shipments[i][j] = __t1[_branch[j]];',
+      '}',
       '}'
     ])
   })

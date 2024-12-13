@@ -1428,7 +1428,6 @@ describe('readEquations', () => {
     })
 
     // This test is based on the example from #179 (simplified to use subdimensions to ensure separation)
-    // TODO: This test is disabled until the fix for #179 is implemented
     it('should work when RHS variable is NON-apply-to-all (1D) and is accessed with 2 different dimensions from LHS that map to the same family', () => {
       const vars = readInlineModel(`
         DimA: A1, A2, A3 ~~|
@@ -1783,7 +1782,7 @@ describe('readEquations', () => {
     ])
   })
 
-  it('should work for ALLOCATE AVAILABLE function', () => {
+  it('should work for ALLOCATE AVAILABLE function (1D LHS, 1D demand, 2D pp, non-subscripted avail)', () => {
     const vars = readInlineModel(`
       branch: Boston, Dayton ~~|
       pprofile: ptype, ppriority ~~|
@@ -1840,12 +1839,452 @@ describe('readEquations', () => {
         references: [
           '_demand[_boston]',
           '_demand[_dayton]',
+          '_priority[_boston,_ptype]',
+          '_priority[_dayton,_ptype]',
           '_priority[_boston,_ppriority]',
-          '_priority[_boston,undefined]', // TODO: This looks incorrect
+          '_priority[_dayton,_ppriority]',
           '_supply_available'
         ],
         subscripts: ['_branch']
       })
+    ])
+  })
+
+  it('should work for ALLOCATE AVAILABLE function (1D LHS, 1D demand, 3D pp with specific first subscript, non-subscripted avail)', () => {
+    const vars = readInlineModel(`
+      branch: Boston, Dayton, Fresno ~~|
+      item: Item1, Item2 ~~|
+      pprofile: ptype, ppriority ~~|
+      supply available = 200 ~~|
+      demand[branch] = 500,300,750 ~~|
+      priority[Item1,Boston,pprofile] = 3,5 ~~|
+      priority[Item1,Dayton,pprofile] = 3,7 ~~|
+      priority[Item1,Fresno,pprofile] = 3,3 ~~|
+      priority[Item2,Boston,pprofile] = 3,6 ~~|
+      priority[Item2,Dayton,pprofile] = 3,8 ~~|
+      priority[Item2,Fresno,pprofile] = 3,4 ~~|
+      item 1 shipments[branch] = ALLOCATE AVAILABLE(demand[branch], priority[Item1,branch,ptype], supply available) ~~|
+      item 2 shipments[branch] = ALLOCATE AVAILABLE(demand[branch], priority[Item2,branch,ptype], supply available) ~~|
+    `)
+    expect(vars).toEqual([
+      v('supply available', '200', {
+        refId: '_supply_available',
+        varType: 'const'
+      }),
+      v('demand[branch]', '500,300,750', {
+        refId: '_demand[_boston]',
+        separationDims: ['_branch'],
+        subscripts: ['_boston'],
+        varType: 'const'
+      }),
+      v('demand[branch]', '500,300,750', {
+        refId: '_demand[_dayton]',
+        separationDims: ['_branch'],
+        subscripts: ['_dayton'],
+        varType: 'const'
+      }),
+      v('demand[branch]', '500,300,750', {
+        refId: '_demand[_fresno]',
+        separationDims: ['_branch'],
+        subscripts: ['_fresno'],
+        varType: 'const'
+      }),
+      v('priority[Item1,Boston,pprofile]', '3,5', {
+        refId: '_priority[_item1,_boston,_ptype]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_item1', '_boston', '_ptype'],
+        varType: 'const'
+      }),
+      v('priority[Item1,Boston,pprofile]', '3,5', {
+        refId: '_priority[_item1,_boston,_ppriority]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_item1', '_boston', '_ppriority'],
+        varType: 'const'
+      }),
+      v('priority[Item1,Dayton,pprofile]', '3,7', {
+        refId: '_priority[_item1,_dayton,_ptype]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_item1', '_dayton', '_ptype'],
+        varType: 'const'
+      }),
+      v('priority[Item1,Dayton,pprofile]', '3,7', {
+        refId: '_priority[_item1,_dayton,_ppriority]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_item1', '_dayton', '_ppriority'],
+        varType: 'const'
+      }),
+      v('priority[Item1,Fresno,pprofile]', '3,3', {
+        refId: '_priority[_item1,_fresno,_ptype]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_item1', '_fresno', '_ptype'],
+        varType: 'const'
+      }),
+      v('priority[Item1,Fresno,pprofile]', '3,3', {
+        refId: '_priority[_item1,_fresno,_ppriority]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_item1', '_fresno', '_ppriority'],
+        varType: 'const'
+      }),
+      v('priority[Item2,Boston,pprofile]', '3,6', {
+        refId: '_priority[_item2,_boston,_ptype]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_item2', '_boston', '_ptype'],
+        varType: 'const'
+      }),
+      v('priority[Item2,Boston,pprofile]', '3,6', {
+        refId: '_priority[_item2,_boston,_ppriority]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_item2', '_boston', '_ppriority'],
+        varType: 'const'
+      }),
+      v('priority[Item2,Dayton,pprofile]', '3,8', {
+        refId: '_priority[_item2,_dayton,_ptype]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_item2', '_dayton', '_ptype'],
+        varType: 'const'
+      }),
+      v('priority[Item2,Dayton,pprofile]', '3,8', {
+        refId: '_priority[_item2,_dayton,_ppriority]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_item2', '_dayton', '_ppriority'],
+        varType: 'const'
+      }),
+      v('priority[Item2,Fresno,pprofile]', '3,4', {
+        refId: '_priority[_item2,_fresno,_ptype]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_item2', '_fresno', '_ptype'],
+        varType: 'const'
+      }),
+      v('priority[Item2,Fresno,pprofile]', '3,4', {
+        refId: '_priority[_item2,_fresno,_ppriority]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_item2', '_fresno', '_ppriority'],
+        varType: 'const'
+      }),
+      v(
+        'item 1 shipments[branch]',
+        'ALLOCATE AVAILABLE(demand[branch],priority[Item1,branch,ptype],supply available)',
+        {
+          refId: '_item_1_shipments',
+          referencedFunctionNames: ['__allocate_available'],
+          references: [
+            '_demand[_boston]',
+            '_demand[_dayton]',
+            '_demand[_fresno]',
+            '_priority[_item1,_boston,_ptype]',
+            '_priority[_item1,_dayton,_ptype]',
+            '_priority[_item1,_fresno,_ptype]',
+            '_priority[_item1,_boston,_ppriority]',
+            '_priority[_item1,_dayton,_ppriority]',
+            '_priority[_item1,_fresno,_ppriority]',
+            '_supply_available'
+          ],
+          subscripts: ['_branch']
+        }
+      ),
+      v(
+        'item 2 shipments[branch]',
+        'ALLOCATE AVAILABLE(demand[branch],priority[Item2,branch,ptype],supply available)',
+        {
+          refId: '_item_2_shipments',
+          referencedFunctionNames: ['__allocate_available'],
+          references: [
+            '_demand[_boston]',
+            '_demand[_dayton]',
+            '_demand[_fresno]',
+            '_priority[_item2,_boston,_ptype]',
+            '_priority[_item2,_dayton,_ptype]',
+            '_priority[_item2,_fresno,_ptype]',
+            '_priority[_item2,_boston,_ppriority]',
+            '_priority[_item2,_dayton,_ppriority]',
+            '_priority[_item2,_fresno,_ppriority]',
+            '_supply_available'
+          ],
+          subscripts: ['_branch']
+        }
+      )
+    ])
+  })
+
+  it('should work for ALLOCATE AVAILABLE function (2D LHS, 2D demand, 2D pp, non-subscripted avail)', () => {
+    const vars = readInlineModel(`
+      branch: Boston, Dayton, Fresno ~~|
+      item: Item1, Item2 ~~|
+      pprofile: ptype, ppriority ~~|
+      supply available = 200 ~~|
+      demand[item,branch] = 500,300,750;501,301,751; ~~|
+      priority[Boston,pprofile] = 3,5 ~~|
+      priority[Dayton,pprofile] = 3,7 ~~|
+      priority[Fresno,pprofile] = 3,3 ~~|
+      shipments[item,branch] = ALLOCATE AVAILABLE(demand[item,branch], priority[branch,ptype], supply available) ~~|
+    `)
+    expect(vars).toEqual([
+      v('supply available', '200', {
+        refId: '_supply_available',
+        varType: 'const'
+      }),
+      v('demand[item,branch]', '500,300,750;501,301,751;', {
+        refId: '_demand[_item1,_boston]',
+        separationDims: ['_item', '_branch'],
+        subscripts: ['_item1', '_boston'],
+        varType: 'const'
+      }),
+      v('demand[item,branch]', '500,300,750;501,301,751;', {
+        refId: '_demand[_item1,_dayton]',
+        separationDims: ['_item', '_branch'],
+        subscripts: ['_item1', '_dayton'],
+        varType: 'const'
+      }),
+      v('demand[item,branch]', '500,300,750;501,301,751;', {
+        refId: '_demand[_item1,_fresno]',
+        separationDims: ['_item', '_branch'],
+        subscripts: ['_item1', '_fresno'],
+        varType: 'const'
+      }),
+      v('demand[item,branch]', '500,300,750;501,301,751;', {
+        refId: '_demand[_item2,_boston]',
+        separationDims: ['_item', '_branch'],
+        subscripts: ['_item2', '_boston'],
+        varType: 'const'
+      }),
+      v('demand[item,branch]', '500,300,750;501,301,751;', {
+        refId: '_demand[_item2,_dayton]',
+        separationDims: ['_item', '_branch'],
+        subscripts: ['_item2', '_dayton'],
+        varType: 'const'
+      }),
+      v('demand[item,branch]', '500,300,750;501,301,751;', {
+        refId: '_demand[_item2,_fresno]',
+        separationDims: ['_item', '_branch'],
+        subscripts: ['_item2', '_fresno'],
+        varType: 'const'
+      }),
+      v('priority[Boston,pprofile]', '3,5', {
+        refId: '_priority[_boston,_ptype]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_boston', '_ptype'],
+        varType: 'const'
+      }),
+      v('priority[Boston,pprofile]', '3,5', {
+        refId: '_priority[_boston,_ppriority]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_boston', '_ppriority'],
+        varType: 'const'
+      }),
+      v('priority[Dayton,pprofile]', '3,7', {
+        refId: '_priority[_dayton,_ptype]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_dayton', '_ptype'],
+        varType: 'const'
+      }),
+      v('priority[Dayton,pprofile]', '3,7', {
+        refId: '_priority[_dayton,_ppriority]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_dayton', '_ppriority'],
+        varType: 'const'
+      }),
+      v('priority[Fresno,pprofile]', '3,3', {
+        refId: '_priority[_fresno,_ptype]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_fresno', '_ptype'],
+        varType: 'const'
+      }),
+      v('priority[Fresno,pprofile]', '3,3', {
+        refId: '_priority[_fresno,_ppriority]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_fresno', '_ppriority'],
+        varType: 'const'
+      }),
+      v('shipments[item,branch]', 'ALLOCATE AVAILABLE(demand[item,branch],priority[branch,ptype],supply available)', {
+        refId: '_shipments',
+        referencedFunctionNames: ['__allocate_available'],
+        references: [
+          '_demand[_item1,_boston]',
+          '_demand[_item1,_dayton]',
+          '_demand[_item1,_fresno]',
+          '_demand[_item2,_boston]',
+          '_demand[_item2,_dayton]',
+          '_demand[_item2,_fresno]',
+          '_priority[_boston,_ptype]',
+          '_priority[_dayton,_ptype]',
+          '_priority[_fresno,_ptype]',
+          '_priority[_boston,_ppriority]',
+          '_priority[_dayton,_ppriority]',
+          '_priority[_fresno,_ppriority]',
+          '_supply_available'
+        ],
+        subscripts: ['_item', '_branch']
+      })
+    ])
+  })
+
+  it('should work for ALLOCATE AVAILABLE function (2D LHS, 2D demand, 3D pp, 1D avail)', () => {
+    const vars = readInlineModel(`
+      branch: Boston, Dayton, Fresno ~~|
+      item: Item1, Item2 ~~|
+      pprofile: ptype, ppriority ~~|
+      supply available[item] = 200,400 ~~|
+      demand[item,branch] = 500,300,750;501,301,751; ~~|
+      priority[Item1,Boston,pprofile] = 3,5 ~~|
+      priority[Item1,Dayton,pprofile] = 3,7 ~~|
+      priority[Item1,Fresno,pprofile] = 3,3 ~~|
+      priority[Item2,Boston,pprofile] = 3,6 ~~|
+      priority[Item2,Dayton,pprofile] = 3,8 ~~|
+      priority[Item2,Fresno,pprofile] = 3,4 ~~|
+      shipments[item,branch] = ALLOCATE AVAILABLE(demand[item,branch], priority[item,branch,ptype], supply available[item]) ~~|
+    `)
+    expect(vars).toEqual([
+      v('supply available[item]', '200,400', {
+        refId: '_supply_available[_item1]',
+        separationDims: ['_item'],
+        subscripts: ['_item1'],
+        varType: 'const'
+      }),
+      v('supply available[item]', '200,400', {
+        refId: '_supply_available[_item2]',
+        separationDims: ['_item'],
+        subscripts: ['_item2'],
+        varType: 'const'
+      }),
+      v('demand[item,branch]', '500,300,750;501,301,751;', {
+        refId: '_demand[_item1,_boston]',
+        separationDims: ['_item', '_branch'],
+        subscripts: ['_item1', '_boston'],
+        varType: 'const'
+      }),
+      v('demand[item,branch]', '500,300,750;501,301,751;', {
+        refId: '_demand[_item1,_dayton]',
+        separationDims: ['_item', '_branch'],
+        subscripts: ['_item1', '_dayton'],
+        varType: 'const'
+      }),
+      v('demand[item,branch]', '500,300,750;501,301,751;', {
+        refId: '_demand[_item1,_fresno]',
+        separationDims: ['_item', '_branch'],
+        subscripts: ['_item1', '_fresno'],
+        varType: 'const'
+      }),
+      v('demand[item,branch]', '500,300,750;501,301,751;', {
+        refId: '_demand[_item2,_boston]',
+        separationDims: ['_item', '_branch'],
+        subscripts: ['_item2', '_boston'],
+        varType: 'const'
+      }),
+      v('demand[item,branch]', '500,300,750;501,301,751;', {
+        refId: '_demand[_item2,_dayton]',
+        separationDims: ['_item', '_branch'],
+        subscripts: ['_item2', '_dayton'],
+        varType: 'const'
+      }),
+      v('demand[item,branch]', '500,300,750;501,301,751;', {
+        refId: '_demand[_item2,_fresno]',
+        separationDims: ['_item', '_branch'],
+        subscripts: ['_item2', '_fresno'],
+        varType: 'const'
+      }),
+      v('priority[Item1,Boston,pprofile]', '3,5', {
+        refId: '_priority[_item1,_boston,_ptype]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_item1', '_boston', '_ptype'],
+        varType: 'const'
+      }),
+      v('priority[Item1,Boston,pprofile]', '3,5', {
+        refId: '_priority[_item1,_boston,_ppriority]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_item1', '_boston', '_ppriority'],
+        varType: 'const'
+      }),
+      v('priority[Item1,Dayton,pprofile]', '3,7', {
+        refId: '_priority[_item1,_dayton,_ptype]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_item1', '_dayton', '_ptype'],
+        varType: 'const'
+      }),
+      v('priority[Item1,Dayton,pprofile]', '3,7', {
+        refId: '_priority[_item1,_dayton,_ppriority]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_item1', '_dayton', '_ppriority'],
+        varType: 'const'
+      }),
+      v('priority[Item1,Fresno,pprofile]', '3,3', {
+        refId: '_priority[_item1,_fresno,_ptype]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_item1', '_fresno', '_ptype'],
+        varType: 'const'
+      }),
+      v('priority[Item1,Fresno,pprofile]', '3,3', {
+        refId: '_priority[_item1,_fresno,_ppriority]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_item1', '_fresno', '_ppriority'],
+        varType: 'const'
+      }),
+      v('priority[Item2,Boston,pprofile]', '3,6', {
+        refId: '_priority[_item2,_boston,_ptype]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_item2', '_boston', '_ptype'],
+        varType: 'const'
+      }),
+      v('priority[Item2,Boston,pprofile]', '3,6', {
+        refId: '_priority[_item2,_boston,_ppriority]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_item2', '_boston', '_ppriority'],
+        varType: 'const'
+      }),
+      v('priority[Item2,Dayton,pprofile]', '3,8', {
+        refId: '_priority[_item2,_dayton,_ptype]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_item2', '_dayton', '_ptype'],
+        varType: 'const'
+      }),
+      v('priority[Item2,Dayton,pprofile]', '3,8', {
+        refId: '_priority[_item2,_dayton,_ppriority]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_item2', '_dayton', '_ppriority'],
+        varType: 'const'
+      }),
+      v('priority[Item2,Fresno,pprofile]', '3,4', {
+        refId: '_priority[_item2,_fresno,_ptype]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_item2', '_fresno', '_ptype'],
+        varType: 'const'
+      }),
+      v('priority[Item2,Fresno,pprofile]', '3,4', {
+        refId: '_priority[_item2,_fresno,_ppriority]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_item2', '_fresno', '_ppriority'],
+        varType: 'const'
+      }),
+      v(
+        'shipments[item,branch]',
+        'ALLOCATE AVAILABLE(demand[item,branch],priority[item,branch,ptype],supply available[item])',
+        {
+          refId: '_shipments',
+          referencedFunctionNames: ['__allocate_available'],
+          references: [
+            '_demand[_item1,_boston]',
+            '_demand[_item1,_dayton]',
+            '_demand[_item1,_fresno]',
+            '_demand[_item2,_boston]',
+            '_demand[_item2,_dayton]',
+            '_demand[_item2,_fresno]',
+            '_priority[_item1,_boston,_ptype]',
+            '_priority[_item1,_dayton,_ptype]',
+            '_priority[_item1,_fresno,_ptype]',
+            '_priority[_item2,_boston,_ptype]',
+            '_priority[_item2,_dayton,_ptype]',
+            '_priority[_item2,_fresno,_ptype]',
+            '_priority[_item1,_boston,_ppriority]',
+            '_priority[_item1,_dayton,_ppriority]',
+            '_priority[_item1,_fresno,_ppriority]',
+            '_priority[_item2,_boston,_ppriority]',
+            '_priority[_item2,_dayton,_ppriority]',
+            '_priority[_item2,_fresno,_ppriority]',
+            '_supply_available[_item1]',
+            '_supply_available[_item2]'
+          ],
+          subscripts: ['_item', '_branch']
+        }
+      )
     ])
   })
 
@@ -4717,8 +5156,10 @@ describe('readEquations', () => {
             '_demand[_boston]',
             '_demand[_dayton]',
             '_demand[_fresno]',
+            '_priority_vector[_region,_ptype]',
             '_priority_vector[_region,_ppriority]',
             '_priority_vector[_region,_pwidth]',
+            '_priority_vector[_region,_pextra]',
             '_total_supply_available'
           ],
           subscripts: ['_region']

@@ -1804,6 +1804,9 @@ describe('generateEquation (Vensim -> JS)', () => {
     )
   })
 
+  // TODO: Copy more tests from gen-equation-c.spec.ts once we implement ALLOCATE AVAILABLE
+  // for JS code gen
+
   it('should work for ARCCOS function', () => {
     const vars = readInlineModel(`
       x = 1 ~~|
