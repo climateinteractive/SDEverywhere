@@ -36,10 +36,10 @@
     "vite": "5.4.2"
   },
   "peerDependencies": {
-    "@sdeverywhere/build": "^0.3.6"
+    "@sdeverywhere/build": "^0.3.7"
   },
   "devDependencies": {
-    "@sdeverywhere/build": "0.3.7",
+    "@sdeverywhere/build": "*",
     "@types/node": "^20.5.7"
   },
   "author": "Climate Interactive",
