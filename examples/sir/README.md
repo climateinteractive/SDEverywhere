@@ -29,11 +29,12 @@ cd ./sir
 npm create @sdeverywhere@latest
 
 # Enter development mode for the sample model.  This will start a live
-# development environment that will build a WebAssembly version of the
+# development environment that will build a JavaScript version of the
 # sample model and run checks on it any time you make changes to:
 #   - the config files
-#   - the Vensim model file (sir.mdl)
-#   - the checks file (sir.check.yaml)
+#   - the Vensim model file (model/sir.mdl)
+#   - the model check definitions (model/checks/*.yaml)
+#   - the model comparison definitions (model/comparisons/*.yaml)
 npm run dev
 ```
 

@@ -56,6 +56,19 @@ osum[DimD, DimE] = SUM(o[DimD, DimE, DimF!])
 2 separated dimensions with 1 unseparated dimension
 |
 
+DimT: T1, T2 ~~|
+DimT': DimT ~~|
+DimU: U1, U2, U3, U4 ~~|
+
+t[DimT] = 1, 2 ~~|
+u[DimU] = 10, 20, 30, 40 ~~|
+
+t two dim[DimT,DimT'] = (10 * t[DimT]) + t[DimT'] ~~|
+t two dim with u[DimT, DimT', DimU] = (10 * u[DimU]) + (10 * t[DimT]) + t[DimT'] ~~|
+v[DimT] = SUM(t two dim[DimT, DimT!]) ~~|
+w[DimT, DimU] = u[DimU] * SUM(t two dim[DimT, DimT!]) ~~|
+x[DimT, DimU] = SUM(t two dim with u[DimT, DimT!, DimU]) ~~|
+
 INITIAL TIME = 0 ~~|
 FINAL TIME = 1 ~~|
 TIME STEP = 1 ~~|

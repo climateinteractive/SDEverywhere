@@ -81,7 +81,7 @@ export function setInputsForScenario(inputs: Map<InputVarId, Input>, scenario: S
     input.value.set(input.minValue)
   }
   function setInputToMaximum(input: Input): void {
-    input.value.set(input.minValue)
+    input.value.set(input.maxValue)
   }
 
   function setAllToDefault(): void {

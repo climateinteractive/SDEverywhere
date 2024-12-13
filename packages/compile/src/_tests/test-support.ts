@@ -153,25 +153,12 @@ export function sampleModelDir(modelName: string): string {
 export function parseVensimModel(modelName: string): ParsedModel {
   const modelDir = sampleModelDir(modelName)
   const modelFile = resolve(modelDir, `${modelName}.mdl`)
-
-  // Note that the new parser implicitly runs the preprocessor on the input model text,
-  // so we don't need to do that here.  (We should make it configurable so that we can
-  // skip the preprocess step in `parse-and-generate.js` when the input model text has
-  // already been run through a preprocessor.)
   const mdlContent = readFileSync(modelFile, 'utf8')
-
-  // We currently sort the preprocessed definitions alphabetically for
-  // compatibility with the legacy preprocessor.  Once we drop the legacy code
-  // we could remove this step and update the tests to use the original order.
-  return parseModel(mdlContent, modelDir, { sort: true })
+  return parseModel(mdlContent, modelDir)
 }
 
 export function parseInlineVensimModel(mdlContent: string, modelDir?: string): ParsedModel {
-  // For tests that parse inline model text, in the case of the legacy parser, don't run
-  // the preprocess step, and in the case of the new parser (which implicitly runs the
-  // preprocess step), don't sort the definitions.  This makes it easier to do apples
-  // to apples comparisons on the outputs from the two parser implementations.
-  return parseModel(mdlContent, modelDir, { sort: false })
+  return parseModel(mdlContent, modelDir)
 }
 
 function prettyVar(variable: Variable): string {

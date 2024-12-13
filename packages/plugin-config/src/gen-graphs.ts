@@ -16,7 +16,6 @@ import type {
   UnitSystem
 } from './spec-types'
 import { genStringKey, htmlToUtf8 } from './strings'
-import { sdeNameForVensimVarName } from './var-names'
 
 /**
  * Convert the `config/graphs.csv` file to config specs that can be used in
@@ -181,7 +180,7 @@ function graphSpecFromCsv(g: CsvRow, context: ConfigContext): GraphSpec | undefi
       return
     }
 
-    const varId = sdeNameForVensimVarName(varName)
+    const varId = context.canonicalVarId(varName)
     const externalSourceName = overrides?.sourceName || optionalString(g[plotKey('source')])
     const datasetLabel = optionalString(g[plotKey('label')])
     let labelKey: StringKey

@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.12](https://github.com/climateinteractive/SDEverywhere/compare/plugin-check-v0.3.11...plugin-check-v0.3.12) (2024-12-02)
+
+
+### Bug Fixes
+
+* set input to correct value for at-max setting ([#572](https://github.com/climateinteractive/SDEverywhere/issues/572)) ([109d385](https://github.com/climateinteractive/SDEverywhere/commit/109d385d70ac87e37a1d22302628d87d4c89c069)), closes [#570](https://github.com/climateinteractive/SDEverywhere/issues/570)
+* update default plugin-check configuration to include comparison yaml files ([#574](https://github.com/climateinteractive/SDEverywhere/issues/574)) ([24f5e56](https://github.com/climateinteractive/SDEverywhere/commit/24f5e56a473cf5cf696fb26e9d21a26441bb2c56)), closes [#571](https://github.com/climateinteractive/SDEverywhere/issues/571)
+
 ## [0.3.11](https://github.com/climateinteractive/SDEverywhere/compare/plugin-check-v0.3.10...plugin-check-v0.3.11) (2024-10-16)
 
 
