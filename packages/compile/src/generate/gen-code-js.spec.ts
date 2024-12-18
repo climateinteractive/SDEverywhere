@@ -354,6 +354,9 @@ let data_initialized = false;
 
 function initLookups0() {
   __lookup1 = fns.createLookup(6, __lookup1_data_);
+  for (let i = 0; i < 2; i++) {
+  _d_game_inputs[i] = fns.createLookup(0, undefined);
+  }
 }
 
 function initLookups() {
@@ -446,27 +449,32 @@ function evalAux0() {
   _input = valueAtIndex(0);
 }
 
-/*export*/ function setLookup(varSpec /*: VarSpec*/, points /*: Float64Array*/) {
+/*export*/ function setLookup(varSpec /*: VarSpec*/, points /*: Float64Array | undefined*/) {
   if (!varSpec) {
     throw new Error('Got undefined varSpec in setLookup');
   }
   const varIndex = varSpec.varIndex;
   const subs = varSpec.subscriptIndices;
+  let lookup;
   switch (varIndex) {
     case 6:
-      _d_game_inputs[subs[0]] = fns.createLookup(points.length / 2, points);
+      lookup = _d_game_inputs[subs[0]];
       break;
     case 7:
-      _a_data[subs[0]] = fns.createLookup(points.length / 2, points);
+      lookup = _a_data[subs[0]];
       break;
     case 8:
-      _b_data[subs[0]][subs[1]] = fns.createLookup(points.length / 2, points);
+      lookup = _b_data[subs[0]][subs[1]];
       break;
     case 9:
-      _c_data = fns.createLookup(points.length / 2, points);
+      lookup = _c_data;
       break;
     default:
       throw new Error(\`No lookup found for var index \${varIndex} in setLookup\`);
+  }
+  if (lookup) {
+    const size = points ? points.length / 2 : 0;
+    lookup.setData(size, points);
   }
 }
 
@@ -725,7 +733,7 @@ export default async function () {
       bundleListing: true
     })
     expect(code).toMatch(`\
-/*export*/ function setLookup(varSpec /*: VarSpec*/, points /*: Float64Array*/) {
+/*export*/ function setLookup(varSpec /*: VarSpec*/, points /*: Float64Array | undefined*/) {
   throw new Error('The setLookup function was not enabled for the generated model. Set the customLookups property in the spec/config file to allow for overriding lookups at runtime.');
 }`)
   })
@@ -767,21 +775,26 @@ export default async function () {
       customLookups: ['y data[A1]', 'q data']
     })
     expect(code).toMatch(`\
-/*export*/ function setLookup(varSpec /*: VarSpec*/, points /*: Float64Array*/) {
+/*export*/ function setLookup(varSpec /*: VarSpec*/, points /*: Float64Array | undefined*/) {
   if (!varSpec) {
     throw new Error('Got undefined varSpec in setLookup');
   }
   const varIndex = varSpec.varIndex;
   const subs = varSpec.subscriptIndices;
+  let lookup;
   switch (varIndex) {
     case 6:
-      _q_data = fns.createLookup(points.length / 2, points);
+      lookup = _q_data;
       break;
     case 7:
-      _y_data[subs[0]] = fns.createLookup(points.length / 2, points);
+      lookup = _y_data[subs[0]];
       break;
     default:
       throw new Error(\`No lookup found for var index \${varIndex} in setLookup\`);
+  }
+  if (lookup) {
+    const size = points ? points.length / 2 : 0;
+    lookup.setData(size, points);
   }
 }`)
   })
