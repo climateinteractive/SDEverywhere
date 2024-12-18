@@ -110,12 +110,13 @@ export class MockJsModel implements JsModel {
   }
 
   // from JsModel interface
-  setLookup(varSpec: VarSpec, points: Float64Array): void {
+  setLookup(varSpec: VarSpec, points: Float64Array | undefined): void {
     const varId = this.varIdForSpec(varSpec)
     if (varId === undefined) {
       throw new Error(`No lookup variable found for spec ${varSpec}`)
     }
-    this.lookups.set(varId, new JsModelLookup(points.length / 2, points))
+    const numPoints = points ? points.length / 2 : 0
+    this.lookups.set(varId, new JsModelLookup(numPoints, points))
   }
 
   // from JsModel interface

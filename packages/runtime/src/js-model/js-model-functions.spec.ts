@@ -48,8 +48,12 @@ describe('JsModelFunctions', () => {
   })
 
   it('should expose GAME', () => {
-    // Verify that it returns the `x` value when `inputs` is undefined
+    // Verify that it returns the `x` value when `inputs` lookup is undefined
     expect(fns.GAME(undefined, 10)).toBe(10)
+
+    // Verify that it returns the `x` value when `inputs` data is undefined
+    const lookupWithUndefinedData = fns.createLookup(0, undefined)
+    expect(fns.GAME(lookupWithUndefinedData, 10)).toBe(10)
 
     // Verify that it returns the `x` value when `inputs` is empty
     const empty = fns.createLookup(0, [])
@@ -231,12 +235,16 @@ describe('JsModelFunctions', () => {
     expect(fns.LOOKUP(lookup, 3)).toBe(6)
     expect(fns.LOOKUP(lookup, 4)).toBe(6)
 
+    // Verify that it returns _NA_ for an undefined lookup
+    expect(fns.LOOKUP(undefined, 0)).toBe(_NA_)
+
+    // Verify that it returns _NA_ for a lookup with undefined data
+    const lookupWithUndefinedData = fns.createLookup(0, undefined)
+    expect(fns.LOOKUP(lookupWithUndefinedData, 0)).toBe(_NA_)
+
     // Verify that it returns _NA_ for an empty lookup
     const empty = fns.createLookup(0, [])
     expect(fns.LOOKUP(empty, 0)).toBe(_NA_)
-
-    // Verify that it returns _NA_ for an undefined lookup
-    expect(fns.LOOKUP(undefined, 0)).toBe(_NA_)
   })
 
   it('should expose LOOKUP_FORWARD', () => {
@@ -248,12 +256,16 @@ describe('JsModelFunctions', () => {
     expect(fns.LOOKUP_FORWARD(lookup, 3)).toBe(6)
     expect(fns.LOOKUP_FORWARD(lookup, 4)).toBe(6)
 
+    // Verify that it returns _NA_ for an undefined lookup
+    expect(fns.LOOKUP_FORWARD(undefined, 0)).toBe(_NA_)
+
+    // Verify that it returns _NA_ for a lookup with undefined data
+    const lookupWithUndefinedData = fns.createLookup(0, undefined)
+    expect(fns.LOOKUP_FORWARD(lookupWithUndefinedData, 0)).toBe(_NA_)
+
     // Verify that it returns _NA_ for an empty lookup
     const empty = fns.createLookup(0, [])
     expect(fns.LOOKUP_FORWARD(empty, 0)).toBe(_NA_)
-
-    // Verify that it returns _NA_ for an undefined lookup
-    expect(fns.LOOKUP_FORWARD(undefined, 0)).toBe(_NA_)
   })
 
   it('should expose LOOKUP_BACKWARD', () => {
@@ -265,12 +277,16 @@ describe('JsModelFunctions', () => {
     expect(fns.LOOKUP_BACKWARD(lookup, 3)).toBe(6)
     expect(fns.LOOKUP_BACKWARD(lookup, 4)).toBe(6)
 
+    // Verify that it returns _NA_ for an undefined lookup
+    expect(fns.LOOKUP_BACKWARD(undefined, 0)).toBe(_NA_)
+
+    // Verify that it returns _NA_ for a lookup with undefined data
+    const lookupWithUndefinedData = fns.createLookup(0, undefined)
+    expect(fns.LOOKUP_BACKWARD(lookupWithUndefinedData, 0)).toBe(_NA_)
+
     // Verify that it returns _NA_ for an empty lookup
     const empty = fns.createLookup(0, [])
     expect(fns.LOOKUP_BACKWARD(empty, 0)).toBe(_NA_)
-
-    // Verify that it returns _NA_ for an undefined lookup
-    expect(fns.LOOKUP_BACKWARD(undefined, 0)).toBe(_NA_)
   })
 
   it('should expose LOOKUP_INVERT', () => {
@@ -285,12 +301,16 @@ describe('JsModelFunctions', () => {
     expect(fns.LOOKUP_INVERT(lookup, 6)).toBe(3)
     expect(fns.LOOKUP_INVERT(lookup, 7)).toBe(3)
 
-    // Verify that it returns _NA_ for an empty lookup
-    const empty = fns.createLookup(0, [])
-    expect(fns.LOOKUP_INVERT(empty, 0)).toBe(_NA_)
+    // Verify that it returns _NA_ for a lookup with undefined data
+    const lookupWithUndefinedData = fns.createLookup(0, undefined)
+    expect(fns.LOOKUP_INVERT(lookupWithUndefinedData, 0)).toBe(_NA_)
 
     // Verify that it returns _NA_ for an undefined lookup
     expect(fns.LOOKUP_INVERT(undefined, 0)).toBe(_NA_)
+
+    // Verify that it returns _NA_ for an empty lookup
+    const empty = fns.createLookup(0, [])
+    expect(fns.LOOKUP_INVERT(empty, 0)).toBe(_NA_)
   })
 
   it('should expose WITH_LOOKUP', () => {
@@ -301,12 +321,16 @@ describe('JsModelFunctions', () => {
     expect(fns.WITH_LOOKUP(3, lookup)).toBe(6)
     expect(fns.WITH_LOOKUP(4, lookup)).toBe(6)
 
+    // Verify that it returns _NA_ for an undefined lookup
+    expect(fns.WITH_LOOKUP(0, undefined)).toBe(_NA_)
+
+    // Verify that it returns _NA_ for a lookup with undefined data
+    const lookupWithUndefinedData = fns.createLookup(0, undefined)
+    expect(fns.WITH_LOOKUP(0, lookupWithUndefinedData)).toBe(_NA_)
+
     // Verify that it returns _NA_ for an empty lookup
     const empty = fns.createLookup(0, [])
     expect(fns.WITH_LOOKUP(0, empty)).toBe(_NA_)
-
-    // Verify that it returns _NA_ for an undefined lookup
-    expect(fns.WITH_LOOKUP(0, undefined)).toBe(_NA_)
   })
 
   it('should expose GET_DATA_BETWEEN_TIMES', () => {
@@ -379,11 +403,15 @@ describe('JsModelFunctions', () => {
     expect(fns.GET_DATA_BETWEEN_TIMES(lookup, 10.5, -1)).toBe(70)
     expect(fns.GET_DATA_BETWEEN_TIMES(lookup, 11.0, -1)).toBe(70)
 
+    // Verify that it returns _NA_ for an undefined lookup
+    expect(fns.GET_DATA_BETWEEN_TIMES(undefined, 0, 0)).toBe(_NA_)
+
+    // Verify that it returns _NA_ for a lookup with undefined data
+    const lookupWithUndefinedData = fns.createLookup(0, undefined)
+    expect(fns.GET_DATA_BETWEEN_TIMES(lookupWithUndefinedData, 0, 0)).toBe(_NA_)
+
     // Verify that it returns _NA_ for an empty lookup
     const empty = fns.createLookup(0, [])
     expect(fns.GET_DATA_BETWEEN_TIMES(empty, 0, 0)).toBe(_NA_)
-
-    // Verify that it returns _NA_ for an undefined lookup
-    expect(fns.GET_DATA_BETWEEN_TIMES(undefined, 0, 0)).toBe(_NA_)
   })
 })
