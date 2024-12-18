@@ -94,19 +94,28 @@ class WasmModel implements RunnableModel {
           subIndicesAddress = 0
         }
 
-        // Copy the lookup data to the `WasmBuffer`.  If we don't have an existing `WasmBuffer`,
-        // or the existing one is not big enough, allocate a new one.
-        const numLookupElements = lookupDef.points.length
-        if (this.lookupDataBuffer === undefined || this.lookupDataBuffer.numElements < numLookupElements) {
-          this.lookupDataBuffer?.dispose()
-          this.lookupDataBuffer = createFloat64WasmBuffer(this.wasmModule, numLookupElements)
-        }
-        this.lookupDataBuffer.getArrayView().set(lookupDef.points)
-        const pointsAddress = this.lookupDataBuffer.getAddress()
+        let pointsAddress: number
+        let numPoints: number
+        if (lookupDef.points) {
+          // Copy the lookup data to the `WasmBuffer`.  If we don't have an existing `WasmBuffer`,
+          // or the existing one is not big enough, allocate a new one.
+          const numLookupElements = lookupDef.points.length
+          if (this.lookupDataBuffer === undefined || this.lookupDataBuffer.numElements < numLookupElements) {
+            this.lookupDataBuffer?.dispose()
+            this.lookupDataBuffer = createFloat64WasmBuffer(this.wasmModule, numLookupElements)
+          }
+          this.lookupDataBuffer.getArrayView().set(lookupDef.points)
+          pointsAddress = this.lookupDataBuffer.getAddress()
 
-        // Note that the native `numPoints` argument is the number of (x,y) pairs, but so divide
-        // the length of the flat points array by two
-        const numPoints = numLookupElements / 2
+          // Note that the native `numPoints` argument is the number of (x,y) pairs, so divide
+          // the length of the flat points array by two
+          numPoints = numLookupElements / 2
+        } else {
+          // In the case where the points array is undefined, we pass 0 (NULL), which will reset
+          // the lookup to its original data
+          pointsAddress = 0
+          numPoints = 0
+        }
 
         // Call the native `setLookup` function
         const varIndex = varSpec.varIndex

@@ -16,10 +16,23 @@ import { isDimension, isTrivialDimension, sub } from '../_shared/subscript.js'
  */
 export function generateLookupFromPoints(variable, mode, copy, varLhs, loopIndexVars, outFormat) {
   if (variable.points.length === 0) {
-    throw new Error(`Empty lookup data array for ${variable.modelLHS}`)
-  }
-
-  if (copy) {
+    // In the case where the lookup data array is empty (typically this only occurs in the
+    // case of game inputs), generate a new empty lookup
+    if (mode === 'decl') {
+      // Nothing to emit in decl mode
+      return []
+    } else if (mode === 'init-lookups') {
+      // In init mode, generate a new empty lookup
+      switch (outFormat) {
+        case 'c':
+          return [`  ${varLhs} = __new_lookup(0, /*copy=*/false, NULL);`]
+        case 'js':
+          return [`  ${varLhs} = fns.createLookup(0, undefined);`]
+        default:
+          throw new Error(`Unhandled output format '${outFormat}'`)
+      }
+    }
+  } else if (copy) {
     // Inline the data points and copy them when initializing the lookup
     if (mode === 'decl') {
       // Nothing to emit in decl mode

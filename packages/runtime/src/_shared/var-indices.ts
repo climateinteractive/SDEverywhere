@@ -117,7 +117,7 @@ export function getEncodedLookupBufferLengths(lookupDefs: LookupDef[]): {
     lookupIndicesLength += 2
 
     // Add the length of the lookup points array
-    lookupsLength += lookupDef.points.length
+    lookupsLength += lookupDef.points?.length || 0
   }
 
   return {
@@ -163,14 +163,23 @@ export function encodeLookups(
       lookupIndicesArray[li++] = subs[i]
     }
 
-    // Write the lookup data offset and length for this variable
-    lookupIndicesArray[li++] = lookupDataOffset
-    lookupIndicesArray[li++] = lookupDef.points.length
+    if (lookupDef.points !== undefined) {
+      // Write the lookup data offset and length for this variable
+      lookupIndicesArray[li++] = lookupDataOffset
+      lookupIndicesArray[li++] = lookupDef.points.length
 
-    // Write the lookup data.  Note that `lookupsView` can be undefined in the case
-    // where the lookup data is empty.
-    lookupsArray?.set(lookupDef.points, lookupDataOffset)
-    lookupDataOffset += lookupDef.points.length
+      // Write the lookup data.  Note that `lookupsView` can be undefined in the case
+      // where the lookup data is empty.
+      lookupsArray?.set(lookupDef.points, lookupDataOffset)
+      lookupDataOffset += lookupDef.points.length
+    } else {
+      // Note that the points array can be undefined, which is used to indicate
+      // that the lookup should be reset to its original data.  In this case,
+      // we use -1 for the data offset, which will be translated to NULL/undefined
+      // when passed to the `setLookup` call.
+      lookupIndicesArray[li++] = -1
+      lookupIndicesArray[li++] = 0
+    }
   }
 }
 
@@ -216,15 +225,21 @@ export function decodeLookups(lookupIndicesArray: Int32Array, lookupsArray: Floa
       subscriptIndices
     }
 
-    // Copy the data from the lookup data buffer.  Note that `lookupsArray` can be undefined
-    // in the case where the lookup data is empty.
-    // TODO: We can use `subarray` here instead of `slice` and let the model implementations
-    // copy the data if needed on their side
     let points: Float64Array
-    if (lookupsArray) {
-      points = lookupsArray.slice(lookupDataOffset, lookupDataOffset + lookupDataLength)
+    if (lookupDataOffset >= 0) {
+      // Copy the data from the lookup data buffer.  Note that `lookupsArray` can be undefined
+      // in the case where the lookup data is empty.
+      // TODO: We can use `subarray` here instead of `slice` and let the model implementations
+      // copy the data if needed on their side
+      if (lookupsArray) {
+        points = lookupsArray.slice(lookupDataOffset, lookupDataOffset + lookupDataLength)
+      } else {
+        points = new Float64Array(0)
+      }
     } else {
-      points = new Float64Array(0)
+      // A negative data offset value is used in the case where the points array is undefined,
+      // which is used to indicate that the lookup should be reset to its original data
+      points = undefined
     }
     lookupDefs.push({
       varRef: {

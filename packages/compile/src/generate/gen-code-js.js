@@ -251,10 +251,15 @@ ${chunkedFunctions('evalLevels', true, Model.levelVars(), '  // Evaluate levels'
   }
   const varIndex = varSpec.varIndex;
   const subs = varSpec.subscriptIndices;
+  let lookup;
   switch (varIndex) {
 ${setLookupImpl(Model.varIndexInfo(), spec.customLookups)}
     default:
       throw new Error(\`No lookup found for var index \${varIndex} in setLookup\`);
+  }
+  if (lookup) {
+    const size = points ? points.length / 2 : 0;
+    lookup.setData(size, points);
   }`
     } else {
       let msg = 'The setLookup function was not enabled for the generated model. '
@@ -307,7 +312,7 @@ ${customOutputSection(Model.varIndexInfo(), spec.customOutputs)}
     return `\
 /*export*/ function setInputs(valueAtIndex /*: (index: number) => number*/) {${inputsFromBufferImpl()}}
 
-/*export*/ function setLookup(varSpec /*: VarSpec*/, points /*: Float64Array*/) {
+/*export*/ function setLookup(varSpec /*: VarSpec*/, points /*: Float64Array | undefined*/) {
 ${setLookupBody}
 }
 
@@ -517,7 +522,7 @@ ${section(chunk)}
     return inputVars
   }
   function setLookupImpl(varIndexInfo, customLookups) {
-    // Emit `createLookup` calls for all lookups and data variables that can be overridden
+    // Emit case statements for all lookups and data variables that can be overridden
     // at runtime
     let overrideAllowed
     if (Array.isArray(customLookups)) {
@@ -543,7 +548,7 @@ ${section(chunk)}
       }
       let c = ''
       c += `    case ${info.varIndex}:\n`
-      c += `      ${lookupVar} = fns.createLookup(points.length / 2, points);\n`
+      c += `      lookup = ${lookupVar};\n`
       c += `      break;`
       return c
     })

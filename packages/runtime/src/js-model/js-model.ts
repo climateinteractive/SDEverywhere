@@ -50,7 +50,7 @@ export interface JsModel {
   setInputs(inputValue: (index: number) => number): void
 
   /** @hidden */
-  setLookup(varSpec: VarSpec, points: Float64Array): void
+  setLookup(varSpec: VarSpec, points: Float64Array | undefined): void
 
   /** @hidden */
   storeOutputs(storeValue: (value: number) => void): void

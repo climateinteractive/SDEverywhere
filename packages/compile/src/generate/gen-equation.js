@@ -113,13 +113,12 @@ export function generateEquation(variable, mode, extData, directData, modelDir, 
   // Apply special handling for lookup variables.  The data for lookup variables is already
   // defined as a set of explicit data points (stored in the `Variable` instance).
   if (variable.isLookup()) {
-    if (variable.varSubtype === 'gameInputs') {
-      // For a synthesized game inputs lookup, there is no data array (the data is expected
-      // to be supplied at runtime), so don't emit decl or init code for these
-      return []
+    // Emit decl/init code for the lookup
+    const lookupDef = generateLookupFromPoints(variable, mode, /*copy=*/ false, cLhs, loopIndexVars, outFormat)
+    if (lookupDef.length > 0) {
+      return [...openLoops, ...lookupDef, ...closeLoops]
     } else {
-      // For all other lookups, emit decl/init code for the lookup
-      return generateLookupFromPoints(variable, mode, /*copy=*/ false, cLhs, loopIndexVars, outFormat)
+      return []
     }
   }
 

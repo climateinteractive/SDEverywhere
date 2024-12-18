@@ -65,26 +65,28 @@ describe('encodeVarIndices', () => {
 const p = (x: number, y: number) => ({ x, y })
 const lookupDefs: LookupDef[] = [
   createLookupDef({ varSpec: { varIndex: 1 } }, [p(0, 0), p(1, 1)]),
-  createLookupDef({ varSpec: { varIndex: 2, subscriptIndices: [1, 2] } }, [p(0, 0), p(1, 1)])
+  createLookupDef({ varSpec: { varIndex: 2, subscriptIndices: [1, 2] } }, [p(0, 0), p(1, 1)]),
+  createLookupDef({ varSpec: { varIndex: 3 } }, []),
+  createLookupDef({ varSpec: { varIndex: 4 } }, undefined)
 ]
 
 describe('getEncodedLookupBufferLengths', () => {
   it('should return the correct length', () => {
     const { lookupIndicesLength, lookupsLength } = getEncodedLookupBufferLengths(lookupDefs)
-    expect(lookupIndicesLength).toBe(11)
+    expect(lookupIndicesLength).toBe(19)
     expect(lookupsLength).toBe(8)
   })
 })
 
 describe('encodeLookups and decodeLookups', () => {
   it('should encode and decode the correct values', () => {
-    const lookupIndices = new Int32Array(13)
+    const lookupIndices = new Int32Array(21)
     const lookupValues = new Float64Array(10)
     encodeLookups(lookupDefs, lookupIndices, lookupValues)
 
     expect(lookupIndices).toEqual(
       new Int32Array([
-        2, // variable count
+        4, // variable count
 
         1, // var0 index
         0, // var0 subscript count
@@ -97,6 +99,16 @@ describe('encodeLookups and decodeLookups', () => {
         2, // var1 sub1 index
         4, // var1 data offset
         4, // var1 data length
+
+        3, // var2 index
+        0, // var2 subscript count
+        8, // var2 data offset
+        0, // var2 data length
+
+        4, // var3 index
+        0, // var3 subscript count
+        -1, // var3 data offset
+        0, // var3 data length
 
         // zero padding
         0,
