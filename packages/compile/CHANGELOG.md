@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.22](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.21...compile-v0.7.22) (2024-12-18)
+
+
+### Bug Fixes
+
+* allow for resetting a lookup at runtime back to its original data ([#593](https://github.com/climateinteractive/SDEverywhere/issues/593)) ([cfec212](https://github.com/climateinteractive/SDEverywhere/commit/cfec2129c681b8ae5e1ade05b73c37f2c739c5d9)), closes [#592](https://github.com/climateinteractive/SDEverywhere/issues/592)
+
 ## [0.7.21](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.20...compile-v0.7.21) (2024-12-13)
 
 
