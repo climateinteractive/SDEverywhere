@@ -2,7 +2,7 @@
 
 int main(int argc, char** argv) {
   // TODO make the input buffer size dynamic
-  char inputs[1500];
+  char inputs[500000];
   // When true, output data without newlines or a header, suitable for embedding reference data.
   bool raw_output = false;
   // When true, suppress data output when using PR* macros.
