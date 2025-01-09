@@ -586,7 +586,7 @@ double _b[2];`)
       X = Y ~~|
       Y = X + 1 ~~|
     `
-    expect(() => readInlineModelAndGenerateC(mdl)).toThrow('Found cyclic dependency during toposort:\n_y →\n_x\n_y')
+    expect(() => readInlineModelAndGenerateC(mdl)).toThrow('Found cyclic dependency during toposort:\n_y →\n_x →\n_y')
   })
 
   it('should throw error when cyclic dependency is detected for init variable', () => {
@@ -594,6 +594,6 @@ double _b[2];`)
       X = INITIAL(Y) ~~|
       Y = X + 1 ~~|
     `
-    expect(() => readInlineModelAndGenerateC(mdl)).toThrow('Found cyclic dependency during toposort:\n_y →\n_x\n_y')
+    expect(() => readInlineModelAndGenerateC(mdl)).toThrow('Found cyclic dependency during toposort:\n_y →\n_x →\n_y')
   })
 })
