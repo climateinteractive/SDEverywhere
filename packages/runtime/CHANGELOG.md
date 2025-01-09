@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.6](https://github.com/climateinteractive/SDEverywhere/compare/runtime-v0.2.5...runtime-v0.2.6) (2025-01-09)
+
+
+### Bug Fixes
+
+* allow for resetting a lookup at runtime back to its original data ([#593](https://github.com/climateinteractive/SDEverywhere/issues/593)) ([cfec212](https://github.com/climateinteractive/SDEverywhere/commit/cfec2129c681b8ae5e1ade05b73c37f2c739c5d9)), closes [#592](https://github.com/climateinteractive/SDEverywhere/issues/592)
+
 ## [0.2.5](https://github.com/climateinteractive/SDEverywhere/compare/runtime-v0.2.4...runtime-v0.2.5) (2024-08-27)
 
 

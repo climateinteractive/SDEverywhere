@@ -1,6 +1,6 @@
 {
   "name": "@sdeverywhere/compile",
-  "version": "0.7.21",
+  "version": "0.7.22",
   "description": "The core Vensim to C compiler for the SDEverywhere tool suite.",
   "type": "module",
   "main": "./src/index.js",
