@@ -976,7 +976,7 @@ let _b = multiDimArray([2]);`)
       X = Y ~~|
       Y = X + 1 ~~|
     `
-    expect(() => readInlineModelAndGenerateJS(mdl)).toThrow('Found cyclic dependency during toposort:\n_y →\n_x\n_y')
+    expect(() => readInlineModelAndGenerateJS(mdl)).toThrow('Found cyclic dependency during toposort:\n_y →\n_x →\n_y')
   })
 
   it('should throw error when cyclic dependency is detected for init variable', () => {
@@ -984,6 +984,6 @@ let _b = multiDimArray([2]);`)
       X = INITIAL(Y) ~~|
       Y = X + 1 ~~|
     `
-    expect(() => readInlineModelAndGenerateJS(mdl)).toThrow('Found cyclic dependency during toposort:\n_y →\n_x\n_y')
+    expect(() => readInlineModelAndGenerateJS(mdl)).toThrow('Found cyclic dependency during toposort:\n_y →\n_x →\n_y')
   })
 })
