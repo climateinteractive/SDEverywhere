@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.7.29](https://github.com/climateinteractive/SDEverywhere/compare/cli-v0.7.28...cli-v0.7.29) (2025-01-09)
+
+
+### Bug Fixes
+
+* allow for resetting a lookup at runtime back to its original data ([#593](https://github.com/climateinteractive/SDEverywhere/issues/593)) ([cfec212](https://github.com/climateinteractive/SDEverywhere/commit/cfec2129c681b8ae5e1ade05b73c37f2c739c5d9)), closes [#592](https://github.com/climateinteractive/SDEverywhere/issues/592)
+* increase C input buffer size + change default optimization flag for C compilation to `-O2` ([#596](https://github.com/climateinteractive/SDEverywhere/issues/596)) ([f9f6804](https://github.com/climateinteractive/SDEverywhere/commit/f9f6804411ef499fc688b74bf7a73e83e696e35a)), closes [#595](https://github.com/climateinteractive/SDEverywhere/issues/595)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/compile bumped from ^0.7.21 to ^0.7.22
+
 ## [0.7.28](https://github.com/climateinteractive/SDEverywhere/compare/cli-v0.7.27...cli-v0.7.28) (2024-12-13)
 
 
