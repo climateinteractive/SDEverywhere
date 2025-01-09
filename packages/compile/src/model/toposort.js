@@ -42,7 +42,7 @@ function toposort(nodes, edges) {
       } catch (e) {
         nodeRep = ''
       }
-      throw new Error('Found cyclic dependency during toposort:\n' + [...predecessors].join(' →\n') + nodeRep)
+      throw new Error('Found cyclic dependency during toposort:\n' + [...predecessors].join(' →\n') + ' →' + nodeRep)
     }
 
     if (!nodesHash.has(node)) {

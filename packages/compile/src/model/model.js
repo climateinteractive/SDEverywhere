@@ -808,7 +808,13 @@ function sortVarsOfType(varType) {
   // Sort into an lhs dependency list.
   if (PRINT_AUX_GRAPH) printDepsGraph(graph, 'AUX')
   if (PRINT_LEVEL_GRAPH) printDepsGraph(graph, 'LEVEL')
-  let deps = toposort(graph).reverse()
+  let deps
+  try {
+    deps = toposort(graph).reverse()
+  } catch (err) {
+    console.error(err.message)
+    process.exit(1)
+  }
 
   // Turn the dependency-sorted var name list into a var list.
   let sortedVars = varsOfType(
