@@ -14,15 +14,17 @@ import Variable from './variable.js'
  * @param {Object.<string, string>} [specialSeparationDims] The variable names that need to be
  * separated because of circular references.  A mapping from "C" variable name to "C" dimension
  * name to separate on.
+ * @param {string[]} [separateAllVarsWithDims] Arrays with the specified
+ * dimensions are separated on those dimensions.
  * @returns {*} An array containing all `Variable` instances that were generated from
  * the model equations.
  */
-export function readVariables(parsedModel, specialSeparationDims) {
+export function readVariables(parsedModel, specialSeparationDims, separateAllVarsWithDims) {
   const variables = []
 
   // Add one or more `Variable` definitions for each parsed equation
   for (const eqn of parsedModel.root.equations) {
-    variables.push(...variablesForEquation(eqn, specialSeparationDims || {}))
+    variables.push(...variablesForEquation(eqn, specialSeparationDims || {}, separateAllVarsWithDims || []))
   }
 
   return variables
@@ -37,10 +39,12 @@ export function readVariables(parsedModel, specialSeparationDims) {
  * @param {*} eqn The parsed equation.
  * @param {Object.<string, string>} specialSeparationDims The variable names that need to be
  * separated because of circular references.
+ * @param {string[]} separateAllVarsWithDims Arrays with the specified
+ * dimensions are separated on those dimensions.
  * @returns {*} An array containing all `Variable` instances that were generated from
  * the given equation.
  */
-function variablesForEquation(eqn, specialSeparationDims) {
+function variablesForEquation(eqn, specialSeparationDims, separateAllVarsWithDims) {
   // Start a new variable defined by this equation
   const variable = new Variable()
 
@@ -114,6 +118,19 @@ function variablesForEquation(eqn, specialSeparationDims) {
       let separationDims = specialSeparationDims[baseVarId] || []
       if (!Array.isArray(separationDims)) {
         separationDims = [separationDims]
+      }
+      // Alternatively, if the variable was not in `specialSeparationDims`, separate
+      // on dims from `separateAllVarsWithDims` if the var matches one of the dim lists.
+      if (separationDims.length === 0) {
+        for (let dimList of separateAllVarsWithDims) {
+          if (!Array.isArray(dimList)) {
+            dimList = [dimList]
+          }
+          if (dimList.every(dim => subIds.includes(dim))) {
+            separationDims = dimList
+            break
+          }
+        }
       }
       positionsToExpand = subscriptPositionsToExpand(subIds, exceptSubIdSets, separationDims, variable.modelFormula)
     }

@@ -1,0 +1,4 @@
+{
+  "specialSeparationDims": { "_a": "_dima" },
+  "separateAllVarsWithDims": ["_dimb"]
+}

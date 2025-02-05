@@ -71,6 +71,9 @@ function read(parsedModel, spec, extData, directData, modelDirname, opts) {
   // Some arrays need to be separated into variables with individual indices to
   // prevent eval cycles. They are manually added to the spec file.
   let specialSeparationDims = spec.specialSeparationDims
+  // All arrays with the specified dimensions are separated on those dimensions.
+  // This allows variables to be separated without listing each one.
+  let separateAllVarsWithDims = spec.separateAllVarsWithDims
 
   // Dimensions must be defined before reading variables that use them.
   readDimensionDefs(parsedModel, modelDirname)
@@ -79,7 +82,7 @@ function read(parsedModel, spec, extData, directData, modelDirname, opts) {
   if (opts?.stopAfterResolveSubscripts) return
 
   // Read variables from the model parse tree.
-  const vars = readVariables(parsedModel, specialSeparationDims)
+  const vars = readVariables(parsedModel, specialSeparationDims, separateAllVarsWithDims)
 
   // Include a placeholder variable for the exogenous `Time` variable
   const timeVar = new Variable()
