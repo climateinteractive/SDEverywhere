@@ -25,6 +25,7 @@ function readSubscriptsAndEquationsFromSource(
   },
   opts?: {
     specialSeparationDims?: { [key: string]: string }
+    separateAllVarsWithDims?: string[][]
   }
 ): Variable[] {
   // XXX: These steps are needed due to subs/dims and variables being in module-level storage
@@ -40,7 +41,8 @@ function readSubscriptsAndEquationsFromSource(
   }
 
   const spec = {
-    specialSeparationDims: opts?.specialSeparationDims
+    specialSeparationDims: opts?.specialSeparationDims,
+    separateAllVarsWithDims: opts?.separateAllVarsWithDims
   }
 
   let modelDir = source.modelDir
@@ -67,6 +69,7 @@ function readInlineModel(
   modelDir?: string,
   opts?: {
     specialSeparationDims?: { [key: string]: string }
+    separateAllVarsWithDims?: string[][]
   }
 ): Variable[] {
   const vars = readSubscriptsAndEquationsFromSource({ modelText, modelDir }, opts)
@@ -188,6 +191,120 @@ describe('readEquations', () => {
         varType: 'const',
         separationDims: ['_dima'],
         subscripts: ['_a2']
+      })
+    ])
+  })
+
+  it('should work for equations that are affected by separateAllVarsWithDims', () => {
+    const vars = readInlineModel(
+      `
+      DimA: A1, A2 ~~|
+      DimB: B1, B2 ~~|
+      DimC: C1, C2 ~~|
+      x[DimA] = 0 ~~|
+      y[DimB] = 0 ~~|
+      z[DimA, DimB, DimC] = 0 ~~|
+    `,
+      undefined,
+      {
+        separateAllVarsWithDims: [['_dima', '_dimc'], ['_dimb']]
+      }
+    )
+    expect(vars).toEqual([
+      // x should not be separated ('_dima' is not listed in `separateAllVarsWithDims`)
+      v('x[DimA]', '0', {
+        refId: '_x',
+        varType: 'const',
+        subscripts: ['_dima']
+      }),
+      // y should be separated ('_dimb' is listed in `separateAllVarsWithDims`)
+      v('y[DimB]', '0', {
+        refId: '_y[_b1]',
+        varType: 'const',
+        separationDims: ['_dimb'],
+        subscripts: ['_b1']
+      }),
+      v('y[DimB]', '0', {
+        refId: '_y[_b2]',
+        varType: 'const',
+        separationDims: ['_dimb'],
+        subscripts: ['_b2']
+      }),
+      // z should be separated only on DimA and DimC
+      v('z[DimA,DimB,DimC]', '0', {
+        refId: '_z[_a1,_dimb,_c1]',
+        varType: 'const',
+        separationDims: ['_dima', '_dimc'],
+        subscripts: ['_a1', '_dimb', '_c1']
+      }),
+      v('z[DimA,DimB,DimC]', '0', {
+        refId: '_z[_a1,_dimb,_c2]',
+        varType: 'const',
+        separationDims: ['_dima', '_dimc'],
+        subscripts: ['_a1', '_dimb', '_c2']
+      }),
+      v('z[DimA,DimB,DimC]', '0', {
+        refId: '_z[_a2,_dimb,_c1]',
+        varType: 'const',
+        separationDims: ['_dima', '_dimc'],
+        subscripts: ['_a2', '_dimb', '_c1']
+      }),
+      v('z[DimA,DimB,DimC]', '0', {
+        refId: '_z[_a2,_dimb,_c2]',
+        varType: 'const',
+        separationDims: ['_dima', '_dimc'],
+        subscripts: ['_a2', '_dimb', '_c2']
+      })
+    ])
+  })
+
+  it('should work for equations when specialSeparationDims and separateAllVarsWithDims are used together', () => {
+    const vars = readInlineModel(
+      `
+      DimA: A1, A2 ~~|
+      DimB: B1, B2 ~~|
+      x1[DimA] = 0 ~~|
+      x2[DimA] = 0 ~~|
+      y[DimB] = 0 ~~|
+    `,
+      undefined,
+      {
+        specialSeparationDims: { _x1: '_dima' },
+        separateAllVarsWithDims: [['_dimb']]
+      }
+    )
+    expect(vars).toEqual([
+      // x1 should be separated ('_x1[_dima]' is listed in `specialSeparationDims`)
+      v('x1[DimA]', '0', {
+        refId: '_x1[_a1]',
+        varType: 'const',
+        separationDims: ['_dima'],
+        subscripts: ['_a1']
+      }),
+      v('x1[DimA]', '0', {
+        refId: '_x1[_a2]',
+        varType: 'const',
+        separationDims: ['_dima'],
+        subscripts: ['_a2']
+      }),
+      // x2 should not be separated ('_x2[_dima]' is listed in `specialSeparationDims`)
+      v('x2[DimA]', '0', {
+        refId: '_x2',
+        varType: 'const',
+        subscripts: ['_dima']
+      }),
+      // y should be separated ('_dimb' is listed in `separateAllVarsWithDims`)
+      v('y[DimB]', '0', {
+        refId: '_y[_b1]',
+        varType: 'const',
+        separationDims: ['_dimb'],
+        subscripts: ['_b1']
+      }),
+      v('y[DimB]', '0', {
+        refId: '_y[_b2]',
+        varType: 'const',
+        separationDims: ['_dimb'],
+        subscripts: ['_b2']
       })
     ])
   })
