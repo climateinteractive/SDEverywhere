@@ -71,8 +71,9 @@ function read(parsedModel, spec, extData, directData, modelDirname, opts) {
   // Some arrays need to be separated into variables with individual indices to
   // prevent eval cycles. They are manually added to the spec file.
   let specialSeparationDims = spec.specialSeparationDims
-  // All arrays with the specified dimensions are separated on those dimensions.
-  // This allows variables to be separated without listing each one.
+  // All arrays that have one of the specified dimension ID lists are
+  // separated on those dimensions. This allows variables to be separated
+  // without listing each one.
   let separateAllVarsWithDims = spec.separateAllVarsWithDims
 
   // Dimensions must be defined before reading variables that use them.

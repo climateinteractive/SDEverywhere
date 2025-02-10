@@ -12,10 +12,12 @@ import Variable from './variable.js'
  *
  * @param {*} parsedModel TODO: Use ParsedVensimModel type here
  * @param {Object.<string, string>} [specialSeparationDims] The variable names that need to be
- * separated because of circular references.  A mapping from "C" variable name to "C" dimension
- * name to separate on.
- * @param {string[]} [separateAllVarsWithDims] Arrays with the specified
- * dimensions are separated on those dimensions.
+ * separated because of circular references.  This is an optional mapping from "C" variable name
+ * to "C" dimension name to separate on.
+ * @param {string[][]} [separateAllVarsWithDims] An optional array containing arrays of dimension
+ * identifiers for which variables will be separated.  For example, if the LHS is `x[DimA,DimB,DimC]`
+ * and this array contains a list `['_dima', '_dimb']`, then the LHS will be separated on both
+ * DimA and DimB.
  * @returns {*} An array containing all `Variable` instances that were generated from
  * the model equations.
  */
@@ -39,8 +41,8 @@ export function readVariables(parsedModel, specialSeparationDims, separateAllVar
  * @param {*} eqn The parsed equation.
  * @param {Object.<string, string>} specialSeparationDims The variable names that need to be
  * separated because of circular references.
- * @param {string[]} separateAllVarsWithDims Arrays with the specified
- * dimensions are separated on those dimensions.
+ * @param {string[][]} separateAllVarsWithDims An array containing arrays of dimension
+ * identifiers for which variables will be separated.
  * @returns {*} An array containing all `Variable` instances that were generated from
  * the given equation.
  */
@@ -123,10 +125,14 @@ function variablesForEquation(eqn, specialSeparationDims, separateAllVarsWithDim
       // on dims from `separateAllVarsWithDims` if the var matches one of the dim lists.
       if (separationDims.length === 0) {
         for (let dimList of separateAllVarsWithDims) {
-          if (!Array.isArray(dimList)) {
-            dimList = [dimList]
-          }
+          // The list entry from the spec is only considered a match if every dimension
+          // in the spec list appears on the LHS
           if (dimList.every(dim => subIds.includes(dim))) {
+            // Technically we allow each entry in the spec array to be either a single
+            // dim ID string or an array of dim IDs
+            if (!Array.isArray(dimList)) {
+              dimList = [dimList]
+            }
             separationDims = dimList
             break
           }
