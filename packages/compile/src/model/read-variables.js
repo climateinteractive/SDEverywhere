@@ -125,13 +125,13 @@ function variablesForEquation(eqn, specialSeparationDims, separateAllVarsWithDim
       // on dims from `separateAllVarsWithDims` if the var matches one of the dim lists.
       if (separationDims.length === 0) {
         for (let dimList of separateAllVarsWithDims) {
-          // The list entry from the spec is only considered a match if every dimension
-          // in the spec list appears on the LHS
+          // Technically we allow each entry in the spec array to be either a single
+          // dim ID string or an array of dim IDs, so convert to array if needed
           if (!Array.isArray(dimList)) {
-            // Technically we allow each entry in the spec array to be either a single
-            // dim ID string or an array of dim IDs
             dimList = [dimList]
           }
+          // The list entry from the spec is only considered a match if every dimension
+          // in the spec list appears on the LHS
           if (dimList.every(dim => subIds.includes(dim))) {
             separationDims = dimList
             break
