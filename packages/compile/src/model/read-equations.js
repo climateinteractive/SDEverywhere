@@ -114,6 +114,9 @@ class Context {
     const parsedModel = { kind: 'vensim', root: parseVensimModel(eqnText) }
 
     // Create one or more `Variable` instances from the equations
+    // TODO: Technically we should pass `spec.separateAllVarsWithDims` here so that any
+    // generated apply-to-all variables will be separated according to the spec like other
+    // normal variables
     const vars = readVariables(parsedModel)
 
     // Add the variables to the `Model`
