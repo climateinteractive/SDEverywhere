@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.23](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.22...compile-v0.7.23) (2025-02-11)
+
+
+### Features
+
+* add `separateAllVarsWithDims` option to spec file to separate all vars with a dimension on the LHS ([#602](https://github.com/climateinteractive/SDEverywhere/issues/602)) ([9b69f52](https://github.com/climateinteractive/SDEverywhere/commit/9b69f5267eb6cd37ab63632420807d9719b15e10)), closes [#601](https://github.com/climateinteractive/SDEverywhere/issues/601)
+
 ## [0.7.22](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.21...compile-v0.7.22) (2025-01-09)
 
 
