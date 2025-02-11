@@ -309,7 +309,7 @@ importers:
         specifier: ^0.3.7
         version: link:../build
       '@sdeverywhere/compile':
-        specifier: ^0.7.22
+        specifier: ^0.7.23
         version: link:../compile
       bufx:
         specifier: ^1.0.5
@@ -354,7 +354,7 @@ importers:
   packages/create:
     dependencies:
       '@sdeverywhere/compile':
-        specifier: ^0.7.22
+        specifier: ^0.7.23
         version: link:../compile
       execa:
         specifier: ^6.1.0
