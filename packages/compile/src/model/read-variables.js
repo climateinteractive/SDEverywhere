@@ -12,17 +12,21 @@ import Variable from './variable.js'
  *
  * @param {*} parsedModel TODO: Use ParsedVensimModel type here
  * @param {Object.<string, string>} [specialSeparationDims] The variable names that need to be
- * separated because of circular references.  A mapping from "C" variable name to "C" dimension
- * name to separate on.
+ * separated because of circular references.  This is an optional mapping from "C" variable name
+ * to "C" dimension name to separate on.
+ * @param {string[][]} [separateAllVarsWithDims] An optional array containing arrays of dimension
+ * identifiers for which variables will be separated.  For example, if the LHS is `x[DimA,DimB,DimC]`
+ * and this array contains a list `['_dima', '_dimb']`, then the LHS will be separated on both
+ * DimA and DimB.
  * @returns {*} An array containing all `Variable` instances that were generated from
  * the model equations.
  */
-export function readVariables(parsedModel, specialSeparationDims) {
+export function readVariables(parsedModel, specialSeparationDims, separateAllVarsWithDims) {
   const variables = []
 
   // Add one or more `Variable` definitions for each parsed equation
   for (const eqn of parsedModel.root.equations) {
-    variables.push(...variablesForEquation(eqn, specialSeparationDims || {}))
+    variables.push(...variablesForEquation(eqn, specialSeparationDims || {}, separateAllVarsWithDims || []))
   }
 
   return variables
@@ -37,10 +41,12 @@ export function readVariables(parsedModel, specialSeparationDims) {
  * @param {*} eqn The parsed equation.
  * @param {Object.<string, string>} specialSeparationDims The variable names that need to be
  * separated because of circular references.
+ * @param {string[][]} separateAllVarsWithDims An array containing arrays of dimension
+ * identifiers for which variables will be separated.
  * @returns {*} An array containing all `Variable` instances that were generated from
  * the given equation.
  */
-function variablesForEquation(eqn, specialSeparationDims) {
+function variablesForEquation(eqn, specialSeparationDims, separateAllVarsWithDims) {
   // Start a new variable defined by this equation
   const variable = new Variable()
 
@@ -114,6 +120,23 @@ function variablesForEquation(eqn, specialSeparationDims) {
       let separationDims = specialSeparationDims[baseVarId] || []
       if (!Array.isArray(separationDims)) {
         separationDims = [separationDims]
+      }
+      // Alternatively, if the variable was not in `specialSeparationDims`, separate
+      // on dims from `separateAllVarsWithDims` if the var matches one of the dim lists.
+      if (separationDims.length === 0) {
+        for (let dimList of separateAllVarsWithDims) {
+          // Technically we allow each entry in the spec array to be either a single
+          // dim ID string or an array of dim IDs, so convert to array if needed
+          if (!Array.isArray(dimList)) {
+            dimList = [dimList]
+          }
+          // The list entry from the spec is only considered a match if every dimension
+          // in the spec list appears on the LHS
+          if (dimList.every(dim => subIds.includes(dim))) {
+            separationDims = dimList
+            break
+          }
+        }
       }
       positionsToExpand = subscriptPositionsToExpand(subIds, exceptSubIdSets, separationDims, variable.modelFormula)
     }
