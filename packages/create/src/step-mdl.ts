@@ -1,7 +1,7 @@
 // Copyright (c) 2022 Climate Interactive / New Venture Fund
 
 import { readdir, writeFile } from 'fs/promises'
-import { join as joinPath, relative, resolve as resolvePath } from 'path'
+import { join as joinPath, relative, resolve as resolvePath, sep, posix } from 'path'
 
 import { bold, cyan, dim, green, yellow } from 'kleur/colors'
 import ora from 'ora'
@@ -42,7 +42,13 @@ export async function chooseMdlFile(projDir: string): Promise<string> {
     return files.flat()
   }
   const allFiles = await getFiles(projDir)
-  const mdlFiles = allFiles.filter(f => f.endsWith('.mdl')).map(f => relative(projDir, f))
+  const mdlFiles = allFiles
+    // Only include files ending with '.mdl'
+    .filter(f => f.endsWith('.mdl'))
+    // Convert to a relative path with POSIX path separators (we want
+    // paths in the 'sde.config.js' file to use POSIX path style only,
+    // since that works on any OS including Windows)
+    .map(f => relative(projDir, f).replaceAll(sep, posix.sep))
   const mdlChoices = mdlFiles.map(f => {
     return {
       title: f,
