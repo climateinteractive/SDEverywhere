@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.25](https://github.com/climateinteractive/SDEverywhere/compare/create-v0.2.24...create-v0.2.25) (2025-02-20)
+
+
+### Bug Fixes
+
+* convert paths to use POSIX separators when detecting mdl files ([#606](https://github.com/climateinteractive/SDEverywhere/issues/606)) ([19d38e8](https://github.com/climateinteractive/SDEverywhere/commit/19d38e8c679b6a8d96020e596e3fb31243d523a1)), closes [#605](https://github.com/climateinteractive/SDEverywhere/issues/605)
+
 ## [0.2.24](https://github.com/climateinteractive/SDEverywhere/compare/create-v0.2.23...create-v0.2.24) (2025-02-11)
 
 

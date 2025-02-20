@@ -1,6 +1,6 @@
 {
   "name": "@sdeverywhere/create",
-  "version": "0.2.24",
+  "version": "0.2.25",
   "description": "Create a new SDEverywhere project with minimal configuration",
   "type": "module",
   "files": [
