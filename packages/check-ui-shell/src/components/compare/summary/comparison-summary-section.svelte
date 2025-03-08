@@ -22,7 +22,7 @@ function onHeaderClicked() {
 
 <div class="section-container">
   <!-- svelte-ignore a11y-click-events-have-key-events -->
-  <div class="header-container" on:click={onHeaderClicked}>
+  <div class="header-container {$expanded ? 'expanded' : 'collapsed'}" on:click={onHeaderClicked}>
     <SummaryRow viewModel={viewModel.header} />
   </div>
   {#if $expanded}
@@ -50,6 +50,8 @@ function onHeaderClicked() {
   display: flex
   align-items: center
   cursor: pointer
+  &.collapsed
+    opacity: 0.5
   &:hover
     opacity: 0.8
 

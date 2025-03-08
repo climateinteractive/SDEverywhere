@@ -332,7 +332,12 @@ export function createComparisonSummaryViewModels(
       return undefined
     }
 
+    // Create a view model for each row
     const rows: ComparisonSummaryRowViewModel[] = groupSummaries.map(rowForGroupSummary)
+
+    // If any row has issues or has non-zero differences, expand the section by default,
+    // otherwise keep it collapsed
+    const expanded = rows.some(row => hasSignificantDiffs(row.diffPercentByBucket))
 
     if (count) {
       // Prepend the number of rows to the header text, replacing the word "scenario" or "dataset"
@@ -351,7 +356,7 @@ export function createComparisonSummaryViewModels(
     return {
       header: headerRow,
       rows,
-      expanded: writable(true)
+      expanded: writable(expanded)
     }
   }
 
