@@ -21,7 +21,7 @@ export let viewModel: ComparisonSummaryViewModel
     <div class="section-container">
       <SummaryRow viewModel={section.header} />
       {#each section.rows as rowViewModel}
-        <SummaryRow viewModel={rowViewModel} />
+        <SummaryRow viewModel={rowViewModel} on:command />
       {/each}
     </div>
   {/each}
