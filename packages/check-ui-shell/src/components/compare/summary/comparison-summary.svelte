@@ -3,7 +3,7 @@
 <!-- SCRIPT -->
 <script lang='ts'>
 
-import SummaryRow from './comparison-summary-row.svelte'
+import ComparisonSummarySection from './comparison-summary-section.svelte'
 import type { ComparisonSummaryViewModel } from './comparison-summary-vm'
 
 export let viewModel: ComparisonSummaryViewModel
@@ -18,12 +18,7 @@ export let viewModel: ComparisonSummaryViewModel
 
 <div class="comparison-summary-container">
   {#each viewModel.sections as section}
-    <div class="section-container">
-      <SummaryRow viewModel={section.header} />
-      {#each section.rows as rowViewModel}
-        <SummaryRow viewModel={rowViewModel} on:command />
-      {/each}
-    </div>
+    <ComparisonSummarySection viewModel={section} on:command />
   {/each}
   <div class="footer"></div>
 </div>
@@ -40,12 +35,6 @@ export let viewModel: ComparisonSummaryViewModel
   display: flex
   flex-direction: column
   padding-top: 2rem
-
-.section-container
-  display: flex
-  flex-direction: column
-  &:not(:last-child)
-    margin-bottom: 1.5rem
 
 .footer
   flex: 0 0 1rem

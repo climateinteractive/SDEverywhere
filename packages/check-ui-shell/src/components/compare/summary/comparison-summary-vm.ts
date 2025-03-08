@@ -29,11 +29,7 @@ import type {
   ComparisonSummaryRowViewModel,
   ComparisonViewKey
 } from './comparison-summary-row-vm'
-
-export interface ComparisonSummarySectionViewModel {
-  header: ComparisonSummaryRowViewModel
-  rows: ComparisonSummaryRowViewModel[]
-}
+import type { ComparisonSummarySectionViewModel } from './comparison-summary-section-vm'
 
 export interface ComparisonViewsSummaryViewModel {
   kind: 'views'
@@ -272,7 +268,8 @@ export function createComparisonSummaryViewModels(
     })
     viewGroupSections.push({
       header: headerRow,
-      rows: viewRows
+      rows: viewRows,
+      expanded: writable(true)
     })
   }
 
@@ -353,7 +350,8 @@ export function createComparisonSummaryViewModels(
 
     return {
       header: headerRow,
-      rows
+      rows,
+      expanded: writable(true)
     }
   }
 
