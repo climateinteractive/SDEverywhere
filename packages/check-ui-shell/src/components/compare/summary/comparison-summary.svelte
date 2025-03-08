@@ -14,20 +14,19 @@ export let viewModel: ComparisonSummaryViewModel
 
 
 <!-- TEMPLATE -->
-<template lang='pug'>
+<template>
 
-include comparison-summary.pug
-
-.comparison-summary-container
-  +if('viewModel.kind === "views"')
-    +view-group-sections
-    +else
-      +section('withErrors')
-      +section('onlyInLeft')
-      +section('onlyInRight')
-      +section('withDiffs')
-      +section('withoutDiffs')
-  .footer
+<div class="comparison-summary-container">
+  {#each viewModel.sections as section}
+    <div class="section-container">
+      <SummaryRow viewModel={section.header} />
+      {#each section.rows as rowViewModel}
+        <SummaryRow viewModel={rowViewModel} />
+      {/each}
+    </div>
+  {/each}
+  <div class="footer"></div>
+</div>
 
 </template>
 
