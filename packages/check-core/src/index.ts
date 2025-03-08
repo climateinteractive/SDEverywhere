@@ -82,7 +82,9 @@ export type {
   ComparisonConfig,
   ComparisonDatasetOptions,
   ComparisonOptions,
-  ComparisonPlot
+  ComparisonPlot,
+  ComparisonReportOptions,
+  ComparisonReportSummarySection
 } from './comparison/config/comparison-config'
 export type { ComparisonScenarios } from './comparison/config/comparison-scenarios'
 export type { ComparisonDatasets } from './comparison/config/comparison-datasets'

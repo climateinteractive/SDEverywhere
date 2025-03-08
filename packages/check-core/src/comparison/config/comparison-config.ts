@@ -4,6 +4,7 @@ import type { DatasetKey } from '../../_shared/types'
 import type { BundleGraphId, LoadedBundle, ModelSpec, NamedBundle } from '../../bundle/bundle-types'
 
 import type { ComparisonDataset, ComparisonScenario, ComparisonViewGroup } from '../_shared/comparison-resolved-types'
+import type { ComparisonGroupSummariesByCategory, ComparisonGroupSummary } from '../report/comparison-group-types'
 
 import type { ComparisonDatasets } from './comparison-datasets'
 import type { ComparisonScenarios } from './comparison-scenarios'
@@ -56,6 +57,31 @@ export interface ComparisonDatasetOptions {
   contextGraphIdsForDataset?: (dataset: ComparisonDataset, scenario: ComparisonScenario) => BundleGraphId[]
 }
 
+export interface ComparisonReportSummarySection {
+  /** The text to display for the section header. */
+  headerText: string
+  /** The summary rows to display in the section. */
+  summaries: ComparisonGroupSummary[]
+}
+
+export interface ComparisonReportOptions {
+  /**
+   * An optional function that allows for customizing the order and grouping of
+   * sections and rows in the "comparisons by scenario" summary view.
+   */
+  summarySectionsForComparisonsByScenario?: (
+    summaries: ComparisonGroupSummariesByCategory
+  ) => ComparisonReportSummarySection[]
+
+  /**
+   * An optional function that allows for customizing the order and grouping of
+   * sections and rows in the "comparisons by dataset" summary view.
+   */
+  summarySectionsForComparisonsByDataset?: (
+    summaries: ComparisonGroupSummariesByCategory
+  ) => ComparisonReportSummarySection[]
+}
+
 export interface ComparisonOptions {
   /** The left-side ("baseline") bundle being compared. */
   baseline: NamedBundle
@@ -71,6 +97,8 @@ export interface ComparisonOptions {
   specs: (ComparisonSpecs | ComparisonSpecsSource)[]
   /** Optional configuration for the datasets that are compared for different scenarios. */
   datasets?: ComparisonDatasetOptions
+  /** Options for customizing the comparison report. */
+  report?: ComparisonReportOptions
 }
 
 export interface ComparisonConfig {
@@ -89,6 +117,8 @@ export interface ComparisonConfig {
   datasets: ComparisonDatasets
   /** The set of resolved view groups. */
   viewGroups: ComparisonViewGroup[]
+  /** Options for customizing the comparison report. */
+  reportOptions?: ComparisonReportOptions
 }
 
 /**
