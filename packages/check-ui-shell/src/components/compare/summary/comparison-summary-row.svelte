@@ -13,7 +13,7 @@ const bucketPcts = viewModel.diffPercentByBucket
 const dispatch = createEventDispatcher()
 
 function onLinkClicked() {
-  if (viewModel.key) {
+  if (viewModel.itemKey) {
     dispatch('command', {
       cmd: 'show-comparison-detail',
       summaryRow: viewModel

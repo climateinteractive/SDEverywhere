@@ -160,7 +160,7 @@ export class AppViewModel {
     const view = summaryRowViewModel.viewMetadata?.view
 
     if (view?.kind === 'unresolved-view') {
-      return createCompareDetailViewModelForUnresolvedView(summaryRowViewModel.key, viewGroup, view)
+      return createCompareDetailViewModelForUnresolvedView(summaryRowViewModel.rowKey, viewGroup, view)
     }
 
     if (groupSummary !== undefined) {
@@ -168,7 +168,7 @@ export class AppViewModel {
         // Show the detail view for the given dataset summary item, with pinned
         // scenarios at the top of the detail view
         return createCompareDetailViewModelForDataset(
-          summaryRowViewModel.key,
+          summaryRowViewModel.rowKey,
           this.appModel.config.comparison,
           this.appModel.comparisonDataCoordinator,
           this.userPrefs,
@@ -179,7 +179,7 @@ export class AppViewModel {
         // Show the detail view for the given scenario (or view) summary item,
         // with pinned datasets at the top of the detail view
         return createCompareDetailViewModelForScenario(
-          summaryRowViewModel.key,
+          summaryRowViewModel.rowKey,
           this.appModel.config.comparison,
           this.appModel.comparisonDataCoordinator,
           this.userPrefs,
@@ -192,7 +192,7 @@ export class AppViewModel {
     } else {
       // Show the detail view for the given freeform view
       return createCompareDetailViewModelForFreeformView(
-        summaryRowViewModel.key,
+        summaryRowViewModel.rowKey,
         this.appModel.config.comparison,
         this.appModel.comparisonDataCoordinator,
         this.userPrefs,
@@ -224,7 +224,7 @@ export class AppViewModel {
     // Get the index of the associated row in the context of the summary view
     const comparisonSummaryViewModel = this.getComparisonSummaryViewModel(kind)
     const allRows = get(comparisonSummaryViewModel.allRows)
-    const rowIndex = allRows.findIndex(row => row.key === summaryRowKey)
+    const rowIndex = allRows.findIndex(row => row.rowKey === summaryRowKey)
     const adjRowIndex = rowIndex + delta
     if (adjRowIndex >= 0 && adjRowIndex < allRows.length) {
       // Create a detail view for the adjacent row

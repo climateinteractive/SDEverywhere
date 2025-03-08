@@ -8,9 +8,11 @@ import type {
   ComparisonConfig,
   ComparisonGroupSummariesByCategory,
   ComparisonGroupSummary,
+  ComparisonScenarioKey,
   ComparisonTestSummary,
   ComparisonView,
-  ComparisonViewGroup
+  ComparisonViewGroup,
+  DatasetKey
 } from '@sdeverywhere/check-core'
 import { categorizeComparisonTestSummaries, getScoresForTestSummaries } from '@sdeverywhere/check-core'
 
@@ -22,7 +24,11 @@ import { datasetSpan } from '../_shared/spans'
 
 import { getGraphsGroupedByDiffs } from '../detail/compare-detail-vm'
 
-import type { ComparisonSummaryRowViewModel, ComparisonViewKey } from './comparison-summary-row-vm'
+import type {
+  ComparisonSummaryRowKey,
+  ComparisonSummaryRowViewModel,
+  ComparisonViewKey
+} from './comparison-summary-row-vm'
 
 export interface ComparisonSummarySectionViewModel {
   header: ComparisonSummaryRowViewModel
@@ -60,7 +66,7 @@ export class ComparisonsByItemSummaryViewModel {
     this.pinnedRows = derived(pinnedItemState.orderedKeys, $orderedKeys => {
       const pinnedRows: ComparisonSummaryRowViewModel[] = []
       for (const itemKey of $orderedKeys) {
-        // XXX: On the "Comparisons by Scenario" view, we don't currently have a good
+        // XXX: On the "Comparisons by scenario" view, we don't currently have a good
         // way to display "scenario group" rows that were pinned in the detail view,
         // so exclude them for now
         if (itemKey.startsWith('row')) {
@@ -68,13 +74,13 @@ export class ComparisonsByItemSummaryViewModel {
         }
         // The pinned row is a clone of the original row, except that the pinned one has
         // a key with 'pinned_' in the front to differentiate it from the normal row
-        const regularRow = this.regularRows.find(row => row.key === itemKey)
+        const regularRow = this.regularRows.find(row => row.itemKey === itemKey)
         if (regularRow === undefined) {
           throw new Error(`No regular row found for key=${itemKey}`)
         }
         pinnedRows.push({
           ...regularRow,
-          key: `pinned_${regularRow.key}`
+          rowKey: `pinned_${regularRow.itemKey}`
         })
       }
       return pinnedRows
@@ -91,15 +97,14 @@ export class ComparisonsByItemSummaryViewModel {
   public toggleItemPinned(row: ComparisonSummaryRowViewModel): void {
     // Note that `row` can either be a normal row or a pinned row (since they both
     // have a toggle button), so we need to get the key for the regular row here
-    const key = row.key.startsWith('pinned_') ? row.key.replace('pinned_', '') : row.key
-    this.pinnedItemState.toggleItemPinned(key)
+    this.pinnedItemState.toggleItemPinned(row.itemKey)
   }
 
   // TODO: This is only used in `comparison-summary-pinned.svelte` and can be removed
   // if we decide to not use that component
   public setReorderedPinnedItems(rows: ComparisonSummaryRowViewModel[]): void {
     // Use the new order of items that resulted from a drag-and-drop operation
-    this.pinnedItemState.setItemOrder(rows.map(row => row.key.replace('pinned_', '')))
+    this.pinnedItemState.setItemOrder(rows.map(row => row.itemKey))
   }
 }
 
@@ -131,6 +136,16 @@ export function createComparisonSummaryViewModels(
     return `view_${viewId++}`
   }
 
+  let headerId = 1
+  function genHeaderRowKey(): ComparisonSummaryRowKey {
+    return `header_${headerId++}`
+  }
+
+  let rowId = 1
+  function genRowKey(itemKey: DatasetKey | ComparisonScenarioKey | ComparisonViewKey): ComparisonSummaryRowKey {
+    return `row_${rowId++}_${itemKey}`
+  }
+
   // Helper function that creates a summary row view model for a single-scenario comparison view
   function rowForViewWithScenario(view: ComparisonView, viewGroup: ComparisonViewGroup): ComparisonSummaryRowViewModel {
     // Get the comparison test results for the scenario used in this view
@@ -152,9 +167,12 @@ export function createComparisonSummaryViewModels(
       // TODO: We should only look at datasets that appear in the specified graphs, not all datasets
       diffPercentByBucket = groupSummary.scores?.diffPercentByBucket
     }
+    const itemKey = genViewKey()
+    const rowKey = genRowKey(itemKey)
     return {
       kind: 'views',
-      key: genViewKey(),
+      rowKey,
+      itemKey,
       title: view.title,
       subtitle: view.subtitle,
       diffPercentByBucket,
@@ -190,9 +208,12 @@ export function createComparisonSummaryViewModels(
     const scoresForView = getScoresForTestSummaries(testSummariesForView, comparisonConfig.thresholds)
     const diffPercentByBucket = scoresForView.diffPercentByBucket
 
+    const itemKey = genViewKey()
+    const rowKey = genRowKey(itemKey)
     return {
       kind: 'views',
-      key: genViewKey(),
+      rowKey,
+      itemKey,
       title: view.title,
       subtitle: view.subtitle,
       diffPercentByBucket,
@@ -209,6 +230,7 @@ export function createComparisonSummaryViewModels(
   for (const viewGroup of comparisonConfig.viewGroups) {
     const headerRow: ComparisonSummaryRowViewModel = {
       kind: 'views',
+      rowKey: genHeaderRowKey(),
       title: viewGroup.title,
       header: true
     }
@@ -227,19 +249,23 @@ export function createComparisonSummaryViewModels(
           }
           return summaryRow
         }
-        case 'unresolved-view':
+        case 'unresolved-view': {
           // If the view is unresolved, treat it as a row with diffs
           viewRowsWithDiffs++
           // TODO: Show proper error message here
+          const itemKey = genViewKey()
+          const rowKey = genRowKey(itemKey)
           return {
             kind: 'views',
-            key: genViewKey(),
+            rowKey,
+            itemKey,
             title: 'Unresolved view',
             viewMetadata: {
               viewGroup,
               view
             }
           }
+        }
         default:
           assertNever(view)
       }
@@ -281,9 +307,15 @@ export function createComparisonSummaryViewModels(
         assertNever(root)
     }
 
+    // Note that the same item can be used in multiple sections.  The row key is derived
+    // from the item key, but we make each row key distinct.
+    const itemKey = groupSummary.group.key
+    const rowKey = genRowKey(itemKey)
+
     return {
       kind,
-      key: groupSummary.group.key,
+      rowKey,
+      itemKey,
       title,
       subtitle,
       annotations,
@@ -314,6 +346,7 @@ export function createComparisonSummaryViewModels(
 
     const headerRow: ComparisonSummaryRowViewModel = {
       kind,
+      rowKey: genHeaderRowKey(),
       title: headerText,
       header: true
     }
