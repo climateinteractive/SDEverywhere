@@ -33,31 +33,26 @@ function onLinkClicked() {
 <!-- TEMPLATE -->
 <template lang='pug'>
 
-+if('viewModel.header')
-  .summary-header-row
-    .header-bar
-    .header-title { @html viewModel.title }
-  +else
-    .summary-row
-      .bar-container(on:click!='{onLinkClicked}')
-        +if('viewModel.diffPercentByBucket === undefined')
-          .bar.striped
-          +else
-            .bar.bucket-bg-0(style!='width: {bucketPcts[0]}%;')
-            .bar.bucket-bg-1(style!='width: {bucketPcts[1]}%;')
-            .bar.bucket-bg-2(style!='width: {bucketPcts[2]}%;')
-            .bar.bucket-bg-3(style!='width: {bucketPcts[3]}%;')
-            .bar.bucket-bg-4(style!='width: {bucketPcts[4]}%;')
-      .title-container
-        //- .grouping-part Grouping goes here
-        .title-part
-          .title(on:click!='{onLinkClicked}') { @html viewModel.title }
-          +if('viewModel.subtitle')
-            .subtitle(on:click!='{onLinkClicked}') { @html viewModel.subtitle }
-          //- +if('viewModel.valuesPart')
-          //-   .values-part { @html viewModel.valuesPart }
-          +if('viewModel.annotations')
-            .annotations { @html viewModel.annotations }
+.summary-row
+  .bar-container(on:click!='{onLinkClicked}')
+    +if('viewModel.diffPercentByBucket === undefined')
+      .bar.striped
+      +else
+        .bar.bucket-bg-0(style!='width: {bucketPcts[0]}%;')
+        .bar.bucket-bg-1(style!='width: {bucketPcts[1]}%;')
+        .bar.bucket-bg-2(style!='width: {bucketPcts[2]}%;')
+        .bar.bucket-bg-3(style!='width: {bucketPcts[3]}%;')
+        .bar.bucket-bg-4(style!='width: {bucketPcts[4]}%;')
+  .title-container
+    //- .grouping-part Grouping goes here
+    .title-part
+      .title(on:click!='{onLinkClicked}') { @html viewModel.title }
+      +if('viewModel.subtitle')
+        .subtitle(on:click!='{onLinkClicked}') { @html viewModel.subtitle }
+      //- +if('viewModel.valuesPart')
+      //-   .values-part { @html viewModel.valuesPart }
+      +if('viewModel.annotations')
+        .annotations { @html viewModel.annotations }
 
 </template>
 
@@ -135,24 +130,5 @@ $bar-width: 15rem
   background-color: #1c1c1c
   border: .5px solid #555
   border-radius: .4rem
-
-.summary-header-row
-  display: flex
-  flex-direction: row
-  flex: 0 0 auto
-  align-items: center
-  margin: .4rem 0
-
-// XXX: Merge with other bar classes
-.header-bar
-  display: flex
-  width: $bar-width
-  height: 1px
-  background-color: #555
-
-.header-title
-  margin-left: .8rem
-  color: #fff
-  font-size: 1.2em
 
 </style>
