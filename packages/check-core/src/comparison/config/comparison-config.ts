@@ -57,11 +57,20 @@ export interface ComparisonDatasetOptions {
   contextGraphIdsForDataset?: (dataset: ComparisonDataset, scenario: ComparisonScenario) => BundleGraphId[]
 }
 
+export interface ComparisonReportSummaryRow {
+  /** The group summary represented by the row. */
+  groupSummary: ComparisonGroupSummary
+  /** The custom title for the row (this overrides the default title derived from the summary). */
+  title?: string
+  /** The custom subtitle for the row (this overrides the default subtitle derived from the summary). */
+  subtitle?: string
+}
+
 export interface ComparisonReportSummarySection {
   /** The text to display for the section header. */
   headerText: string
   /** The summary rows to display in the section. */
-  summaries: ComparisonGroupSummary[]
+  rows: ComparisonReportSummaryRow[]
 }
 
 export interface ComparisonReportOptions {

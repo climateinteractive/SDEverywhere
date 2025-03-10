@@ -5,6 +5,7 @@ import type {
   ComparisonGroupSummariesByCategory,
   ComparisonGroupSummary,
   ComparisonReportOptions,
+  ComparisonReportSummaryRow,
   ComparisonReportSummarySection,
   ComparisonSpecs,
   ComparisonSpecsSource,
@@ -48,8 +49,8 @@ export function getConfigOptions(bundleL: Bundle, bundleR: Bundle, opts?: Config
   const renamedDatasetKeys: Map<DatasetKey, DatasetKey> = new Map([['Model__output_w_v1', 'Model__output_w_v2']])
 
   // Customize the report sections if the kind is 'custom'
-  const reportKind: string = 'custom'
-  // const reportKind: string = 'default'
+  // const reportKind: string = 'custom'
+  const reportKind: string = 'default'
   let reportOptions: ComparisonReportOptions
   if (reportKind === 'custom') {
     reportOptions = {
@@ -104,16 +105,66 @@ function summarySectionsForComparisonsByScenario(
   const allSummaries = Array.from(summaries.allGroupSummaries.values())
 
   const sections: ComparisonReportSummarySection[] = []
-  function addSection(
-    headerText: string,
-    summaries: ComparisonGroupSummary[] | undefined,
-    include?: (id?: string) => boolean
-  ) {
-    if (summaries === undefined) {
+  function addSection(headerText: string, rows: ComparisonReportSummaryRow[] | undefined) {
+    if (rows === undefined) {
       return
     }
+    sections.push({
+      headerText,
+      rows
+    })
+  }
+
+  function summaryForScenarioId(scenarioId: string): ComparisonGroupSummary | undefined {
+    return allSummaries.find(summary => {
+      if (summary.root.kind === 'scenario') {
+        return summary.root.id === scenarioId
+      }
+      return false
+    })
+  }
+
+  function addSectionWithScenarios(headerText: string, scenarios: (string | [string, string?])[]) {
+    const rows: ComparisonReportSummaryRow[] = []
+    const errorIds: string[] = []
+    for (const scenario of scenarios) {
+      let id: string
+      let title: string | undefined
+      if (typeof scenario === 'string') {
+        id = scenario
+      } else {
+        id = scenario[0]
+        title = scenario[1]
+      }
+      const summary = summaryForScenarioId(id)
+      if (summary) {
+        rows.push({
+          groupSummary: summary,
+          title,
+          subtitle: title ? ' ' : undefined
+        })
+      } else {
+        // TODO: We should create an error row, but for now we'll add the id to
+        // an error message within the section title
+        // return errorSummaryForScenarioId(id)
+        errorIds.push(id)
+      }
+    }
+    if (errorIds.length > 0) {
+      headerText += ` (ERROR: Failed to resolve ${errorIds.join(', ')})`
+    }
+    addSection(headerText, rows)
+  }
+
+  function addSectionWithSummaries(
+    headerText: string,
+    summaries: ComparisonGroupSummary[],
+    include?: (id?: string) => boolean
+  ) {
+    let rows: ComparisonReportSummaryRow[] = summaries.map(summary => ({ groupSummary: summary }))
     if (include) {
-      summaries = summaries.filter(summary => {
+      rows = rows.filter(row => {
+        const summary = row.groupSummary
         if (summary.root.kind === 'scenario') {
           const id = summary.root.id
           if (id) {
@@ -123,28 +174,27 @@ function summarySectionsForComparisonsByScenario(
         return false
       })
     }
-    sections.push({
-      headerText,
-      summaries
-    })
+    addSection(headerText, rows)
   }
 
   // Add a section with a couple key scenarios (this demonstrates that we can highlight
   // specific scenarios at top, and these scenarios can also appear in other sections)
-  addSection('Key scenarios', allSummaries, id => {
-    return id === 'baseline' || id === 'extreme_main_sliders_at_best_case'
-  })
+  addSectionWithScenarios('Key scenarios', [
+    ['baseline', 'Baseline'],
+    'extreme_main_sliders_at_best_case',
+    'non_existent_scenario'
+  ])
 
   // Add sections for scenarios with issues
-  addSection('Scenarios with errors', summaries.withErrors)
-  addSection(`Scenarios only valid in ${datasetSpan(nameL, 'left')}`, summaries.onlyInLeft)
-  addSection(`Scenarios only valid in ${datasetSpan(nameR, 'right')}`, summaries.onlyInRight)
+  addSectionWithSummaries('Scenarios with errors', summaries.withErrors)
+  addSectionWithSummaries(`Scenarios only valid in ${datasetSpan(nameL, 'left')}`, summaries.onlyInLeft)
+  addSectionWithSummaries(`Scenarios only valid in ${datasetSpan(nameR, 'right')}`, summaries.onlyInRight)
 
   // Add a section with all scenarios that produce differences
-  addSection('Scenarios producing differences', summaries.withDiffs)
+  addSectionWithSummaries('Scenarios producing differences', summaries.withDiffs)
 
   // Add a section with all scenarios that don't produce differences
-  addSection('Scenarios NOT producing differences', summaries.withoutDiffs)
+  addSectionWithSummaries('Scenarios NOT producing differences', summaries.withoutDiffs)
 
   return sections
 }
@@ -155,45 +205,95 @@ function summarySectionsForComparisonsByDataset(
   const allSummaries = Array.from(summaries.allGroupSummaries.values())
 
   const sections: ComparisonReportSummarySection[] = []
-  function addSection(
-    headerText: string,
-    summaries: ComparisonGroupSummary[] | undefined,
-    include?: (key: string) => boolean
-  ) {
-    if (summaries === undefined) {
+  function addSection(headerText: string, rows: ComparisonReportSummaryRow[] | undefined) {
+    if (rows === undefined) {
       return
-    }
-    if (include) {
-      summaries = summaries.filter(summary => include(summary.root.key))
     }
     sections.push({
       headerText,
-      summaries
+      rows
     })
+  }
+
+  function summaryForDatasetKey(datasetKey: string): ComparisonGroupSummary | undefined {
+    return allSummaries.find(summary => {
+      if (summary.root.kind === 'dataset') {
+        return summary.root.key === datasetKey
+      }
+      return false
+    })
+  }
+
+  function addSectionWithDatasets(headerText: string, datasets: (string | [string, string?])[]) {
+    const rows: ComparisonReportSummaryRow[] = []
+    const errorKeys: string[] = []
+    for (const dataset of datasets) {
+      let key: string
+      let title: string | undefined
+      if (typeof dataset === 'string') {
+        key = dataset
+      } else {
+        key = dataset[0]
+        title = dataset[1]
+      }
+      const summary = summaryForDatasetKey(key)
+      if (summary) {
+        rows.push({
+          groupSummary: summary,
+          title,
+          subtitle: title ? ' ' : undefined
+        })
+      } else {
+        // TODO: We should create an error row, but for now we'll add the id to
+        // an error message within the section title
+        // return errorSummaryForDatasetKey(id)
+        errorKeys.push(key)
+      }
+    }
+    if (errorKeys.length > 0) {
+      headerText += ` (ERROR: Failed to resolve ${errorKeys.join(', ')})`
+    }
+    addSection(headerText, rows)
+  }
+
+  function addSectionWithSummaries(
+    headerText: string,
+    summaries: ComparisonGroupSummary[],
+    include?: (id?: string) => boolean
+  ) {
+    let rows: ComparisonReportSummaryRow[] = summaries.map(summary => ({ groupSummary: summary }))
+    if (include) {
+      rows = rows.filter(row => {
+        const summary = row.groupSummary
+        if (summary.root.kind === 'dataset') {
+          return include(summary.root.key)
+        }
+        return false
+      })
+    }
+    addSection(headerText, rows)
   }
 
   // Add a section with a couple key outputs (this demonstrates that we can highlight
   // specific datasets at top, and these datasets can also appear in other sections)
-  addSection('Key model outputs', allSummaries, key => {
-    return key === 'Model__output_x' || key === 'Model__output_y'
-  })
+  addSectionWithDatasets('Key model outputs', ['Model__output_x', 'Model__output_y'])
 
   // Add sections for datasets with errors and removed/added datasets
-  addSection('Datasets with errors', summaries.withErrors)
-  addSection('Removed datasets', summaries.onlyInLeft)
-  addSection('Added datasets', summaries.onlyInRight)
+  addSectionWithSummaries('Datasets with errors', summaries.withErrors)
+  addSectionWithSummaries('Removed datasets', summaries.onlyInLeft)
+  addSectionWithSummaries('Added datasets', summaries.onlyInRight)
 
   // Add a section with all model outputs that have differences
-  addSection('Model outputs with differences', summaries.withDiffs, key => key.startsWith('Model__'))
+  addSectionWithSummaries('Model outputs with differences', summaries.withDiffs, key => key.startsWith('Model__'))
 
   // Add a section with all model outputs that have no differences
-  addSection('Model outputs without differences', summaries.withoutDiffs, key => key.startsWith('Model__'))
+  addSectionWithSummaries('Model outputs without differences', summaries.withoutDiffs, key => key.startsWith('Model__'))
 
   // Add a section with all other non-output datasets (this demonstrates that we
   // can customize the sorting of datasets)
   const staticWithDiffs = summaries.withDiffs.filter(summary => !summary.root.key.startsWith('Model__'))
   const staticWithoutDiffs = summaries.withoutDiffs.filter(summary => !summary.root.key.startsWith('Model__'))
-  addSection('All static datasets', [
+  addSectionWithSummaries('All static datasets', [
     ...staticWithDiffs,
     ...staticWithoutDiffs.sort((a, b) => a.root.key.localeCompare(b.root.key))
   ])

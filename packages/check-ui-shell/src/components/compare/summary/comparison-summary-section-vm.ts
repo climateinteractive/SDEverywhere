@@ -7,5 +7,6 @@ import type { ComparisonSummaryRowViewModel } from './comparison-summary-row-vm'
 export interface ComparisonSummarySectionViewModel {
   header: ComparisonSummaryRowViewModel
   rows: ComparisonSummaryRowViewModel[]
+  rowsWithDiffs: number
   expanded: Writable<boolean>
 }

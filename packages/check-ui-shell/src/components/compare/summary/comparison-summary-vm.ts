@@ -8,6 +8,7 @@ import type {
   ComparisonConfig,
   ComparisonGroupSummariesByCategory,
   ComparisonGroupSummary,
+  ComparisonReportSummaryRow,
   ComparisonScenarioKey,
   ComparisonTestSummary,
   ComparisonView,
@@ -269,35 +270,32 @@ export function createComparisonSummaryViewModels(
     viewGroupSections.push({
       header: headerRow,
       rows: viewRows,
+      // XXX: This value is not used for the comparison views tab, so we can set it to 0
+      rowsWithDiffs: 0,
       expanded: writable(true)
     })
   }
 
-  // Helper that prepends the given string with `count` and replaces `{replace}`
-  // with `{replace}s` if count is not one
-  function countString(count: number, s: string, replace: string): string {
-    return `${count} ${count !== 1 ? s.replace(replace, `${replace}s`) : s}`
-  }
-
-  function rowForGroupSummary(groupSummary: ComparisonGroupSummary): ComparisonSummaryRowViewModel {
+  function viewModelForRow(row: ComparisonReportSummaryRow): ComparisonSummaryRowViewModel {
     let kind: ComparisonGroupingKind
     let title: string
     let subtitle: string
     let annotations: string
+    const groupSummary = row.groupSummary
     const root = groupSummary.root
     switch (root.kind) {
       case 'dataset': {
         kind = 'by-dataset'
         const outputVar = root.outputVarR || root.outputVarL
-        title = outputVar.varName
-        subtitle = outputVar.sourceName
+        title = row.title || outputVar.varName
+        subtitle = row.subtitle || outputVar.sourceName
         annotations = getAnnotationsForDataset(root, bundleNameL, bundleNameR).join(' ')
         break
       }
       case 'scenario':
         kind = 'by-scenario'
-        title = root.title
-        subtitle = root.subtitle
+        title = row.title || root.title
+        subtitle = row.subtitle || root.subtitle
         annotations = getAnnotationsForScenario(root, bundleNameL, bundleNameR).join(' ')
         break
       default:
@@ -323,28 +321,21 @@ export function createComparisonSummaryViewModels(
 
   function sectionViewModel(
     kind: ComparisonGroupingKind,
-    groupSummaries: ComparisonGroupSummary[],
-    headerText: string,
-    count: boolean
+    rows: ComparisonReportSummaryRow[],
+    headerText: string
   ): ComparisonSummarySectionViewModel | undefined {
-    if (groupSummaries.length === 0) {
+    if (rows.length === 0) {
       // Exclude sections that have no rows
       return undefined
     }
 
     // Create a view model for each row
-    const rows: ComparisonSummaryRowViewModel[] = groupSummaries.map(rowForGroupSummary)
+    const rowViewModels: ComparisonSummaryRowViewModel[] = rows.map(viewModelForRow)
 
     // If any row has issues or has non-zero differences, expand the section by default,
     // otherwise keep it collapsed
-    const expanded = rows.some(row => hasSignificantDiffs(row.diffPercentByBucket))
-
-    if (count) {
-      // Prepend the number of rows to the header text, replacing the word "scenario" or "dataset"
-      // with the plural form if necessary
-      const replace = kind === 'by-scenario' ? 'scenario' : 'dataset'
-      headerText = countString(rows.length, headerText, replace)
-    }
+    const rowsWithDiffs = rowViewModels.filter(row => hasSignificantDiffs(row.diffPercentByBucket)).length
+    const expanded = rowsWithDiffs > 0
 
     const headerRow: ComparisonSummaryRowViewModel = {
       kind,
@@ -355,7 +346,8 @@ export function createComparisonSummaryViewModels(
 
     return {
       header: headerRow,
-      rows,
+      rows: rowViewModels,
+      rowsWithDiffs,
       expanded: writable(expanded)
     }
   }
@@ -364,48 +356,56 @@ export function createComparisonSummaryViewModels(
   const nameL = datasetSpan(bundleNameL, 'left')
   const nameR = datasetSpan(bundleNameR, 'right')
   const byScenarioSections: ComparisonSummarySectionViewModel[] = []
-  function addByScenarioSection(groupSummaries: ComparisonGroupSummary[], headerText: string, count = true): void {
-    const section = sectionViewModel('by-scenario', groupSummaries, headerText, count)
+  function addByScenarioSection(rows: ComparisonReportSummaryRow[], headerText: string): void {
+    const section = sectionViewModel('by-scenario', rows, headerText)
     if (section) {
       byScenarioSections.push(section)
     }
+  }
+  function addDefaultByScenarioSection(summaries: ComparisonGroupSummary[], headerText: string): void {
+    const rows = summaries.map(groupSummary => ({ groupSummary }))
+    addByScenarioSection(rows, headerText)
   }
   if (comparisonConfig.reportOptions?.summarySectionsForComparisonsByScenario) {
     // When a callback is defined, build the custom sections
     const customSections = comparisonConfig.reportOptions.summarySectionsForComparisonsByScenario(groupsByScenario)
     for (const customSection of customSections) {
-      addByScenarioSection(customSection.summaries, customSection.headerText, /*count=*/ false)
+      addByScenarioSection(customSection.rows, customSection.headerText)
     }
   } else {
     // Otherwise, build the default sections
-    addByScenarioSection(groupsByScenario.withErrors, 'scenario with errors…')
-    addByScenarioSection(groupsByScenario.onlyInLeft, `scenario only valid in ${nameL}…`)
-    addByScenarioSection(groupsByScenario.onlyInRight, `scenario only valid in ${nameR}…`)
-    addByScenarioSection(groupsByScenario.withDiffs, 'scenario producing differences…')
-    addByScenarioSection(groupsByScenario.withoutDiffs, 'No differences produced by the following scenarios…', false)
+    addDefaultByScenarioSection(groupsByScenario.withErrors, 'Scenarios with errors')
+    addDefaultByScenarioSection(groupsByScenario.onlyInLeft, `Scenarios only valid in ${nameL}`)
+    addDefaultByScenarioSection(groupsByScenario.onlyInRight, `Scenarios only valid in ${nameR}`)
+    addDefaultByScenarioSection(groupsByScenario.withDiffs, 'Scenarios producing differences')
+    addDefaultByScenarioSection(groupsByScenario.withoutDiffs, 'No differences produced by the following scenarios')
   }
 
   // Build the by-dataset comparison sections
   const byDatasetSections: ComparisonSummarySectionViewModel[] = []
-  function addByDatasetSection(groupSummaries: ComparisonGroupSummary[], headerText: string, count = true): void {
-    const section = sectionViewModel('by-dataset', groupSummaries, headerText, count)
+  function addByDatasetSection(rows: ComparisonReportSummaryRow[], headerText: string): void {
+    const section = sectionViewModel('by-dataset', rows, headerText)
     if (section) {
       byDatasetSections.push(section)
     }
+  }
+  function addDefaultByDatasetSection(summaries: ComparisonGroupSummary[], headerText: string): void {
+    const rows = summaries.map(groupSummary => ({ groupSummary }))
+    addByDatasetSection(rows, headerText)
   }
   if (comparisonConfig.reportOptions?.summarySectionsForComparisonsByDataset) {
     // When a callback is defined, build the custom sections
     const customSections = comparisonConfig.reportOptions.summarySectionsForComparisonsByDataset(groupsByDataset)
     for (const customSection of customSections) {
-      addByDatasetSection(customSection.summaries, customSection.headerText, /*count=*/ false)
+      addByDatasetSection(customSection.rows, customSection.headerText)
     }
   } else {
     // Otherwise, build the default sections
-    addByDatasetSection(groupsByDataset.withErrors, 'dataset with errors…')
-    addByDatasetSection(groupsByDataset.onlyInLeft, 'removed dataset…')
-    addByDatasetSection(groupsByDataset.onlyInRight, 'added dataset…')
-    addByDatasetSection(groupsByDataset.withDiffs, 'dataset with differences…')
-    addByDatasetSection(groupsByDataset.withoutDiffs, 'No differences detected for the following datasets…', false)
+    addDefaultByDatasetSection(groupsByDataset.withErrors, 'Datasets with errors')
+    addDefaultByDatasetSection(groupsByDataset.onlyInLeft, 'Removed datasets')
+    addDefaultByDatasetSection(groupsByDataset.onlyInRight, 'Added datasets')
+    addDefaultByDatasetSection(groupsByDataset.withDiffs, 'Datasets with differences')
+    addDefaultByDatasetSection(groupsByDataset.withoutDiffs, 'No differences detected for the following datasets')
   }
 
   // Build the summary view models

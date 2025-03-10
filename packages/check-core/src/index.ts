@@ -84,6 +84,7 @@ export type {
   ComparisonOptions,
   ComparisonPlot,
   ComparisonReportOptions,
+  ComparisonReportSummaryRow,
   ComparisonReportSummarySection
 } from './comparison/config/comparison-config'
 export type { ComparisonScenarios } from './comparison/config/comparison-scenarios'
