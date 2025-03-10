@@ -49,8 +49,8 @@ export function getConfigOptions(bundleL: Bundle, bundleR: Bundle, opts?: Config
   const renamedDatasetKeys: Map<DatasetKey, DatasetKey> = new Map([['Model__output_w_v1', 'Model__output_w_v2']])
 
   // Customize the report sections if the kind is 'custom'
-  // const reportKind: string = 'custom'
-  const reportKind: string = 'default'
+  const reportKind: string = 'custom'
+  // const reportKind: string = 'default'
   let reportOptions: ComparisonReportOptions
   if (reportKind === 'custom') {
     reportOptions = {

@@ -18,18 +18,18 @@ $: visibleSections = sections.filter(section => section.rowsWithDiffs > 0)
 
 <div class="toc-container">
   <div class="toc-title">Groups with differences</div>
-  {#if visibleSections.length > 0}
-    <div class="toc-entries">
+  <div class="toc-entries">
+    {#if visibleSections.length > 0}
       {#each visibleSections as section}
         <a class="toc-entry" href="#{section.header.rowKey}">
           <span class="title">{@html section.header.title}</span>
           <span class="row-count">{section.rows.length}</span>
         </a>
       {/each}
-    </div>
-  {:else}
-    <div class="toc-all-clear">No differences detected</div>
-  {/if}
+    {:else}
+      <div class="toc-all-clear">No differences detected</div>
+    {/if}
+  </div>
 </div>
 
 </template>
@@ -43,23 +43,24 @@ $: visibleSections = sections.filter(section => section.rowsWithDiffs > 0)
 .toc-container
   position: relative
   width: fit-content
+  min-width: 13rem
   // TODO: This value depends on the one in the row component
   // margin-left: 15rem
+  margin-top: .4rem
   margin-bottom: 1.2rem
-  padding: .8rem
   border: .5px solid #444
   border-radius: .4rem
 
 .toc-title
   position: absolute
   top: -.6rem
+  left: .4rem
   font-weight: 700
   padding: 0 .4rem
   background-color: #272727
   color: #999
 
 .toc-all-clear
-  font-weight: 700
   color: var(--status-passed)
 
 .toc-entries
@@ -67,6 +68,7 @@ $: visibleSections = sections.filter(section => section.rowsWithDiffs > 0)
   flex-direction: column
   gap: .4rem
   margin-top: .4rem
+  padding: .8rem
 
 .toc-entry
   text-decoration: none
@@ -77,7 +79,6 @@ $: visibleSections = sections.filter(section => section.rowsWithDiffs > 0)
 
 .title
   flex: 1
-  margin-left: .4rem
 
 .row-count
   margin-left: .2rem
