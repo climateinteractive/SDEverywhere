@@ -322,7 +322,8 @@ export function createComparisonSummaryViewModels(
   function sectionViewModel(
     kind: ComparisonGroupingKind,
     rows: ComparisonReportSummaryRow[],
-    headerText: string
+    headerText: string,
+    initialState: 'collapsed' | 'expanded' | 'expanded-if-diffs' | undefined
   ): ComparisonSummarySectionViewModel | undefined {
     if (rows.length === 0) {
       // Exclude sections that have no rows
@@ -332,10 +333,22 @@ export function createComparisonSummaryViewModels(
     // Create a view model for each row
     const rowViewModels: ComparisonSummaryRowViewModel[] = rows.map(viewModelForRow)
 
-    // If any row has issues or has non-zero differences, expand the section by default,
-    // otherwise keep it collapsed
+    // Determine the initial expanded state of the section based on the `initialState` value and
+    // whether the any row has issues or has non-zero differences
     const rowsWithDiffs = rowViewModels.filter(row => hasSignificantDiffs(row.diffPercentByBucket)).length
-    const expanded = rowsWithDiffs > 0
+    let expanded: boolean
+    switch (initialState) {
+      case 'collapsed':
+        expanded = false
+        break
+      case 'expanded':
+        expanded = true
+        break
+      case 'expanded-if-diffs':
+      default:
+        expanded = rowsWithDiffs > 0
+        break
+    }
 
     const headerRow: ComparisonSummaryRowViewModel = {
       kind,
@@ -356,21 +369,25 @@ export function createComparisonSummaryViewModels(
   const nameL = datasetSpan(bundleNameL, 'left')
   const nameR = datasetSpan(bundleNameR, 'right')
   const byScenarioSections: ComparisonSummarySectionViewModel[] = []
-  function addByScenarioSection(rows: ComparisonReportSummaryRow[], headerText: string): void {
-    const section = sectionViewModel('by-scenario', rows, headerText)
+  function addByScenarioSection(
+    rows: ComparisonReportSummaryRow[],
+    headerText: string,
+    initialState: 'collapsed' | 'expanded' | 'expanded-if-diffs' | undefined
+  ): void {
+    const section = sectionViewModel('by-scenario', rows, headerText, initialState)
     if (section) {
       byScenarioSections.push(section)
     }
   }
   function addDefaultByScenarioSection(summaries: ComparisonGroupSummary[], headerText: string): void {
     const rows = summaries.map(groupSummary => ({ groupSummary }))
-    addByScenarioSection(rows, headerText)
+    addByScenarioSection(rows, headerText, 'expanded-if-diffs')
   }
   if (comparisonConfig.reportOptions?.summarySectionsForComparisonsByScenario) {
     // When a callback is defined, build the custom sections
     const customSections = comparisonConfig.reportOptions.summarySectionsForComparisonsByScenario(groupsByScenario)
     for (const customSection of customSections) {
-      addByScenarioSection(customSection.rows, customSection.headerText)
+      addByScenarioSection(customSection.rows, customSection.headerText, customSection.initialState)
     }
   } else {
     // Otherwise, build the default sections
@@ -383,21 +400,25 @@ export function createComparisonSummaryViewModels(
 
   // Build the by-dataset comparison sections
   const byDatasetSections: ComparisonSummarySectionViewModel[] = []
-  function addByDatasetSection(rows: ComparisonReportSummaryRow[], headerText: string): void {
-    const section = sectionViewModel('by-dataset', rows, headerText)
+  function addByDatasetSection(
+    rows: ComparisonReportSummaryRow[],
+    headerText: string,
+    initialState: 'collapsed' | 'expanded' | 'expanded-if-diffs' | undefined
+  ): void {
+    const section = sectionViewModel('by-dataset', rows, headerText, initialState)
     if (section) {
       byDatasetSections.push(section)
     }
   }
   function addDefaultByDatasetSection(summaries: ComparisonGroupSummary[], headerText: string): void {
     const rows = summaries.map(groupSummary => ({ groupSummary }))
-    addByDatasetSection(rows, headerText)
+    addByDatasetSection(rows, headerText, 'expanded-if-diffs')
   }
   if (comparisonConfig.reportOptions?.summarySectionsForComparisonsByDataset) {
     // When a callback is defined, build the custom sections
     const customSections = comparisonConfig.reportOptions.summarySectionsForComparisonsByDataset(groupsByDataset)
     for (const customSection of customSections) {
-      addByDatasetSection(customSection.rows, customSection.headerText)
+      addByDatasetSection(customSection.rows, customSection.headerText, customSection.initialState)
     }
   } else {
     // Otherwise, build the default sections

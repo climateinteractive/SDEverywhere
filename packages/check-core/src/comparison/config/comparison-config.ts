@@ -78,6 +78,12 @@ export interface ComparisonReportSummarySection {
   headerText: string
   /** The summary rows to display in the section. */
   rows: ComparisonReportSummaryRow[]
+  /**
+   * The initial expanded state of the section.  If undefined, defaults to 'expanded-if-diffs',
+   * meaning the section will be initially expanded only if any rows have differences, otherwise
+   * it will be initially collapsed.
+   */
+  initialState?: 'collapsed' | 'expanded' | 'expanded-if-diffs'
 }
 
 /**
