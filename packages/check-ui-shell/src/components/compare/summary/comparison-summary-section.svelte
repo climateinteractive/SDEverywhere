@@ -79,7 +79,7 @@ $bar-width: 15rem
   margin-left: .5rem
   padding: .1rem .5rem
   border-radius: 1rem
-  background-color: #9f7f20
+  background-color: rgba(255, 165, 0, .7)
   color: #eee
   font-size: .85em
 
