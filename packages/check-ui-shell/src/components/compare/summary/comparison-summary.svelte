@@ -18,7 +18,7 @@ export let viewModel: ComparisonSummaryViewModel
 <template>
 
 <div class="comparison-summary-container">
-  <!-- TODO: Add an option to show the TOC-->
+  <!-- TODO: Add an option to show the TOC -->
   {#if viewModel.kind === ''}
     <ComparisonSummaryToc sections={viewModel.sections} />
   {/if}
