@@ -218,6 +218,7 @@ svelte:window(on:keydown!='{onKeyDown}')
       +graph-sections
       +pinned-box-rows
       +regular-box-rows
+      .footer
       ContextMenu(items!='{contextMenuItems}' parentElem!='{scrollContent}' initialEvent!='{contextMenuEvent}' on:item-selected!='{onContextMenuItemSelected}' on:clickout!='{onHideContextMenu}')
 
 </template>
@@ -332,7 +333,6 @@ ul
 
 .scroll-content
   position: relative
-  margin-bottom: 2rem
 
 .section-title
   width: calc(100vw - 2rem)
@@ -355,5 +355,8 @@ ul
 
 .row-container:first-child
   margin-top: 3rem
+
+.footer
+  height: 1rem
 
 </style>
