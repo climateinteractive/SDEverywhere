@@ -2,31 +2,20 @@
 
 import { assertNever } from 'assert-never'
 
-import type { ComparisonConfig, ComparisonScenario, ComparisonTestSummary } from '@sdeverywhere/check-core'
-
-export interface ComparisonDetailItem {
-  title: string
-  subtitle?: string
-  scenario: ComparisonScenario
-  testSummary: ComparisonTestSummary
-}
-
-export interface ComparisonDetailItemGroup {
-  /** The title for the group. */
-  title: string
-  /** The sum of the `maxDiff` score for all items in the group. */
-  totalMaxDiff: number
-  /** The items in this group (one item per box). */
-  items: ComparisonDetailItem[]
-}
+import type {
+  ComparisonConfig,
+  ComparisonReportDetailItem,
+  ComparisonReportDetailRow,
+  ComparisonTestSummary
+} from '@sdeverywhere/check-core'
 
 export function groupItemsByTitle(
   comparisonConfig: ComparisonConfig,
   testSummaries: ComparisonTestSummary[],
   itemKind: 'dataset' | 'scenario'
-): ComparisonDetailItemGroup[] {
+): ComparisonReportDetailRow[] {
   // Group by title
-  const groupsByTitle: Map<string, ComparisonDetailItemGroup> = new Map()
+  const rowsByTitle: Map<string, ComparisonReportDetailRow> = new Map()
   for (const testSummary of testSummaries) {
     const scenario = comparisonConfig.scenarios.getScenario(testSummary.s)
     if (scenario === undefined) {
@@ -56,30 +45,30 @@ export function groupItemsByTitle(
         assertNever(itemKind)
     }
 
-    let group = groupsByTitle.get(itemTitle)
+    let group = rowsByTitle.get(itemTitle)
     if (group === undefined) {
       group = {
         title: itemTitle,
-        totalMaxDiff: 0,
+        score: 0,
         items: []
       }
-      groupsByTitle.set(itemTitle, group)
+      rowsByTitle.set(itemTitle, group)
     }
 
-    const item: ComparisonDetailItem = {
+    const item: ComparisonReportDetailItem = {
       title: itemTitle,
       subtitle: itemSubtitle,
       scenario,
       testSummary
     }
     group.items.push(item)
-    group.totalMaxDiff += item.testSummary.md
+    group.score += item.testSummary.md
   }
 
   // Sort the groups by score, with highest scores at the top
-  const unsortedGroups = [...groupsByTitle.values()]
+  const unsortedGroups = [...rowsByTitle.values()]
   const sortedGroups = unsortedGroups.sort((a, b) => {
-    return a.totalMaxDiff > b.totalMaxDiff ? -1 : a.totalMaxDiff < b.totalMaxDiff ? 1 : 0
+    return a.score > b.score ? -1 : a.score < b.score ? 1 : 0
   })
 
   return sortedGroups

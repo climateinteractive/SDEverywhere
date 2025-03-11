@@ -83,6 +83,8 @@ export type {
   ComparisonDatasetOptions,
   ComparisonOptions,
   ComparisonPlot,
+  ComparisonReportDetailItem,
+  ComparisonReportDetailRow,
   ComparisonReportOptions,
   ComparisonReportSummaryRow,
   ComparisonReportSummarySection

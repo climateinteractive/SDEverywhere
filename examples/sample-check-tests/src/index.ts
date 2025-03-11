@@ -4,6 +4,8 @@ import type {
   Bundle,
   ComparisonGroupSummariesByCategory,
   ComparisonGroupSummary,
+  ComparisonReportDetailItem,
+  ComparisonReportDetailRow,
   ComparisonReportOptions,
   ComparisonReportSummaryRow,
   ComparisonReportSummarySection,
@@ -57,7 +59,9 @@ export function getConfigOptions(bundleL: Bundle, bundleR: Bundle, opts?: Config
       summarySectionsForComparisonsByScenario: summaries => {
         return summarySectionsForComparisonsByScenario(summaries, nameL, nameR)
       },
-      summarySectionsForComparisonsByDataset
+      summarySectionsForComparisonsByDataset,
+      detailRowsForScenario,
+      detailRowsForDataset
     }
   }
 
@@ -97,6 +101,9 @@ export function getConfigOptions(bundleL: Bundle, bundleR: Bundle, opts?: Config
   }
 }
 
+/**
+ * This demonstrates how to customize the ordering of sections in the "by scenario" summary view.
+ */
 function summarySectionsForComparisonsByScenario(
   summaries: ComparisonGroupSummariesByCategory,
   nameL: string,
@@ -179,10 +186,10 @@ function summarySectionsForComparisonsByScenario(
 
   // Add a section with a couple key scenarios (this demonstrates that we can highlight
   // specific scenarios at top, and these scenarios can also appear in other sections)
-  addSectionWithScenarios('Key scenarios', [
+  addSectionWithScenarios('&#9733; Key scenarios', [
     ['baseline', 'Baseline'],
-    'extreme_main_sliders_at_best_case',
-    'non_existent_scenario'
+    'extreme_main_sliders_at_best_case'
+    // 'non_existent_scenario'
   ])
 
   // Add sections for scenarios with issues
@@ -199,6 +206,9 @@ function summarySectionsForComparisonsByScenario(
   return sections
 }
 
+/**
+ * This demonstrates how to customize the ordering of sections in the "by dataset" summary view.
+ */
 function summarySectionsForComparisonsByDataset(
   summaries: ComparisonGroupSummariesByCategory
 ): ComparisonReportSummarySection[] {
@@ -276,7 +286,7 @@ function summarySectionsForComparisonsByDataset(
 
   // Add a section with a couple key outputs (this demonstrates that we can highlight
   // specific datasets at top, and these datasets can also appear in other sections)
-  addSectionWithDatasets('Key model outputs', ['Model__output_x', 'Model__output_y'])
+  addSectionWithDatasets('&#9733; Key model outputs', ['Model__output_x', 'Model__output_y'])
 
   // Add sections for datasets with errors and removed/added datasets
   addSectionWithSummaries('Datasets with errors', summaries.withErrors)
@@ -299,6 +309,105 @@ function summarySectionsForComparisonsByDataset(
   ])
 
   return sections
+}
+
+/**
+ * This demonstrates how to customize the ordering of rows in the detail view for a scenario.
+ */
+function detailRowsForScenario(rows: ComparisonReportDetailRow[]): ComparisonReportDetailRow[] {
+  function removeRowForDatasetKey(datasetKey: DatasetKey): ComparisonReportDetailItem | undefined {
+    const index = rows.findIndex(row => row.items[0].testSummary.d === datasetKey)
+    if (index >= 0) {
+      const row = rows.splice(index, 1)[0]
+      return row.items[0]
+    }
+    return undefined
+  }
+
+  // Remove the rows for the two key outputs and put them into a single row at top
+  const keyOutputs: ComparisonReportDetailItem[] = []
+  let keyOutputsScore = 0
+  function addKeyOutput(datasetKey: DatasetKey): void {
+    const item = removeRowForDatasetKey(datasetKey)
+    if (item === undefined) {
+      throw new Error(`No row found for dataset key=${datasetKey}`)
+    }
+    keyOutputs.push(item)
+    keyOutputsScore += item.testSummary.md
+  }
+  addKeyOutput('Model__output_x')
+  addKeyOutput('Model__output_y')
+  const keyOutputsRow: ComparisonReportDetailRow = {
+    title: '&#9733; Key model outputs',
+    score: keyOutputsScore,
+    items: keyOutputs
+  }
+  rows.unshift(keyOutputsRow)
+
+  return rows
+}
+
+/**
+ * This demonstrates how to customize the ordering of rows in the detail view for a dataset.
+ */
+function detailRowsForDataset(rows: ComparisonReportDetailRow[]): ComparisonReportDetailRow[] {
+  // Pull out the "all at default" item and remove the "All inputs" row
+  let allAtDefaultItem: ComparisonReportDetailItem
+  const allInputsIndex = rows.findIndex(row => row.title === 'All inputs')
+  if (allInputsIndex >= 0) {
+    const allInputsRow = rows.splice(allInputsIndex, 1)[0]
+    allAtDefaultItem = allInputsRow.items[0]
+  }
+  allAtDefaultItem.title = '…at default'
+  allAtDefaultItem.subtitle = undefined
+
+  // Create a "Key scenarios" row at the top
+  const keyScenariosTitle = '&#9733; Key scenarios'
+  let keyScenariosRow: ComparisonReportDetailRow
+  const mainSlidersIndex = rows.findIndex(row => row.title === 'Main sliders')
+  if (mainSlidersIndex >= 0) {
+    // Move the "Main sliders" row to the top and change the title to "Key scenarios"
+    keyScenariosRow = rows.splice(mainSlidersIndex, 1)[0]
+    keyScenariosRow.title = keyScenariosTitle
+  } else {
+    // There is no "Main sliders" row (this can happen in the case of static datasets, for
+    // which we only show a subset of scenarios) so create a new "Key scenarios" row with
+    // just the "all at default" item
+    keyScenariosRow = {
+      title: keyScenariosTitle,
+      score: allAtDefaultItem.testSummary.md,
+      items: [allAtDefaultItem]
+    }
+  }
+  rows.unshift(keyScenariosRow)
+
+  // Customize the rows
+  for (const [rowIndex, row] of rows.entries()) {
+    // Make the "all at default" item always be the first item in each row
+    const firstItem = row.items[0]
+    if (firstItem !== allAtDefaultItem) {
+      row.items.unshift(allAtDefaultItem)
+    }
+
+    if (rowIndex === 0) {
+      // Customize the titles for the first row
+      row.items[0] = {
+        ...allAtDefaultItem,
+        title: 'All inputs',
+        subtitle: 'at default'
+      }
+    } else {
+      // Simplify titles for all other rows
+      for (const [itemIndex, item] of row.items.entries()) {
+        if (itemIndex > 0) {
+          item.title = `…${item.subtitle}`
+          item.subtitle = undefined
+        }
+      }
+    }
+  }
+
+  return rows
 }
 
 /**
