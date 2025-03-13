@@ -10,6 +10,8 @@ import type {
   ComparisonDataset,
   ComparisonGraphId,
   ComparisonGroupSummary,
+  ComparisonReportDetailItem,
+  ComparisonReportDetailRow,
   ComparisonScenario,
   ComparisonScenarioKey,
   ComparisonTestSummary,
@@ -27,7 +29,6 @@ import { getAnnotationsForDataset, getAnnotationsForScenario } from '../_shared/
 import { getBucketIndex } from '../_shared/buckets'
 import type { PinnedItemState } from '../_shared/pinned-item-state'
 
-import type { ComparisonDetailItem } from './compare-detail-item'
 import { groupItemsByTitle } from './compare-detail-item'
 
 import type { CompareDetailRowViewModel } from './compare-detail-row-vm'
@@ -113,9 +114,9 @@ export function createCompareDetailViewModelForFreeformView(
   // Create a detail row for each row spec
   const regularDetailRows: CompareDetailRowViewModel[] = []
   for (const rowSpec of view.rows || []) {
-    const items: ComparisonDetailItem[] = []
+    const items: ComparisonReportDetailItem[] = []
     for (const boxSpec of rowSpec.boxes) {
-      const detailItem: ComparisonDetailItem = {
+      const detailItem: ComparisonReportDetailItem = {
         title: boxSpec.title,
         subtitle: boxSpec.subtitle,
         scenario: boxSpec.scenario,
@@ -204,50 +205,65 @@ export function createCompareDetailViewModelForDataset(
   }
 
   // Group the scenarios by title (input variable name, typically), then sort by score
-  const groups = groupItemsByTitle(comparisonConfig, groupSummary.group.testSummaries, 'scenario')
+  let groups = groupItemsByTitle(comparisonConfig, groupSummary.group.testSummaries, 'scenario')
 
-  // Pull out the "all at default" item; for now we make it the first item in each row
-  // TODO: Make this more configurable
-  let allAtDefaultItem: ComparisonDetailItem
-  for (const group of groups) {
-    for (const item of group.items) {
-      if (item.scenario.settings.kind === 'all-inputs-settings' && item.scenario.settings.position === 'at-default') {
-        allAtDefaultItem = item
-        break
+  if (comparisonConfig.reportOptions?.detailRowsForDataset) {
+    // Apply custom ordering
+    groups = comparisonConfig.reportOptions.detailRowsForDataset(groups)
+  } else {
+    // No custom ordering function was defined, so apply default ordering
+    let allAtDefaultItem: ComparisonReportDetailItem
+    const allInputsIndex = groups.findIndex(group => group.title === 'All inputs')
+    if (allInputsIndex >= 0) {
+      // Remove the "All inputs" row and move it to the top
+      const allInputsRow = groups.splice(allInputsIndex, 1)[0]
+      allAtDefaultItem = allInputsRow.items.find(item => {
+        const settings = item.scenario.settings
+        return settings.kind === 'all-inputs-settings' && settings.position === 'at-default'
+      })
+      groups.unshift(allInputsRow)
+    }
+    if (allAtDefaultItem) {
+      allAtDefaultItem.title = '…at default'
+      allAtDefaultItem.subtitle = undefined
+    }
+
+    // Customize the remaining rows
+    for (const group of groups.slice(1)) {
+      // Simplify the title for each item in the row
+      for (const item of group.items) {
+        item.title = `…${item.subtitle}`
+        item.subtitle = undefined
+      }
+
+      // Make the "all at default" item always be the first item in each row
+      const firstItem = group.items[0]
+      if (firstItem !== allAtDefaultItem) {
+        group.items.unshift(allAtDefaultItem)
       }
     }
   }
 
-  // Create a row for each group
+  // Create a row view model for each group
   const regularDetailRows: CompareDetailRowViewModel[] = []
   for (const group of groups) {
-    // TODO: For now put all grouped items in the same row, and make the "all at
-    // default" item always be the first item in the row.  Later we should make
+    // TODO: For now put all grouped items in the same row.  Later we should make
     // this configurable so that items can be put in a different order or split
     // out into multiple rows.
-    const items = group.items[0] !== allAtDefaultItem ? [allAtDefaultItem, ...group.items] : group.items
     const detailRow = createCompareDetailRowViewModel(
       comparisonConfig,
       dataCoordinator,
       userPrefs,
       'scenarios',
       group.title,
-      undefined, // TODO: Subtitle?
-      items
+      group.subtitle,
+      group.items
     )
     regularDetailRows.push(detailRow)
   }
 
-  // For now, always put the "all inputs" row at top
-  // TODO: Use a more stable way to identify the row (without using the title)
-  const allInputsRowIndex = regularDetailRows.findIndex(row => row.title === 'All inputs')
-  if (allInputsRowIndex !== undefined) {
-    const allInputsRow = regularDetailRows.splice(allInputsRowIndex, 1)[0]
-    regularDetailRows.unshift(allInputsRow)
-  }
-
   // Helper function that finds a detail item for a given scenario key
-  type GroupTitleAndDetailItem = [string, ComparisonDetailItem]
+  type GroupTitleAndDetailItem = [string, ComparisonReportDetailItem]
   function groupTitleAndDetailItemForScenarioKey(
     scenarioKey: ComparisonScenarioKey
   ): GroupTitleAndDetailItem | undefined {
@@ -361,63 +377,74 @@ export function createCompareDetailViewModelForScenario(
     }
   }
 
-  // Create one box/row for each dataset in the group
-  interface Row {
-    viewModel: CompareDetailRowViewModel
-    detailItem: ComparisonDetailItem
-    maxDiff: number
-  }
-  const rows: Row[] = []
-  for (const testSummary of groupSummary.group.testSummaries) {
+  // Put each dataset item into its own row
+  const testSummaries = groupSummary.group.testSummaries
+  let groups: ComparisonReportDetailRow[] = []
+  for (const testSummary of testSummaries) {
     const scenario = comparisonConfig.scenarios.getScenario(testSummary.s)
     if (scenario === undefined) {
       continue
     }
 
     const dataset = comparisonConfig.datasets.getDataset(testSummary.d)
+    if (dataset === undefined) {
+      continue
+    }
+
     // TODO: Include both old and new names here, if applicable
     const outputVar = dataset.outputVarR || dataset.outputVarL
 
-    const detailItem: ComparisonDetailItem = {
+    const detailItem: ComparisonReportDetailItem = {
       title: outputVar.varName,
       subtitle: outputVar.sourceName,
       scenario,
       testSummary
     }
 
-    const rowViewModel = createCompareDetailRowViewModel(
-      comparisonConfig,
-      dataCoordinator,
-      userPrefs,
-      'datasets',
-      title,
-      subtitle,
-      [detailItem]
-    )
-
-    rows.push({
-      viewModel: rowViewModel,
-      detailItem,
-      maxDiff: testSummary.md
+    groups.push({
+      title: '',
+      score: testSummary.md,
+      items: [detailItem]
     })
   }
 
-  // Sort rows by score (highest score at top), then alphabetically by dataset name
-  const sortedRows = rows.sort((a, b) => {
-    const aScore = a.maxDiff
-    const bScore = b.maxDiff
+  // Sort datasets by score (highest score at top), then alphabetically by dataset name
+  groups = groups.sort((a, b) => {
+    const aFirstItem = a.items[0]
+    const bFirstItem = b.items[0]
+    const aScore = a.score
+    const bScore = b.score
     if (aScore !== bScore) {
       // Sort by score first
       return aScore > bScore ? -1 : 1
     } else {
       // Sort by dataset name alphabetically
       // TODO: Also sort by source name?
-      const aDatasetName = a.viewModel.title.toLowerCase()
-      const bDatasetName = b.viewModel.title.toLowerCase()
+      const aDatasetName = aFirstItem.title.toLowerCase()
+      const bDatasetName = bFirstItem.title.toLowerCase()
       return aDatasetName.localeCompare(bDatasetName)
     }
   })
-  const regularDetailRows = sortedRows.map(row => row.viewModel)
+
+  if (comparisonConfig.reportOptions?.detailRowsForScenario) {
+    // Apply custom ordering
+    groups = comparisonConfig.reportOptions.detailRowsForScenario(groups)
+  }
+
+  // Create a row view model for each group
+  const regularDetailRows: CompareDetailRowViewModel[] = []
+  for (const group of groups) {
+    const detailRow = createCompareDetailRowViewModel(
+      comparisonConfig,
+      dataCoordinator,
+      userPrefs,
+      'datasets',
+      group.title,
+      group.subtitle,
+      group.items
+    )
+    regularDetailRows.push(detailRow)
+  }
 
   // Add rows at the top of the view for the pinned items
   function detailRowForDatasetKey(datasetKey: DatasetKey): CompareDetailRowViewModel | undefined {

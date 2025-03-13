@@ -129,7 +129,7 @@ export function createSummaryViewModel(
     // Add tab for by-dataset summaries
     comparisonsByDatasetSummaryViewModel = comparisonSummaries.byDataset
     const byDatasetTabInfo = getTabInfo(comparisonsByDatasetSummaryViewModel.rowsWithDiffs, 'dataset')
-    addTabItem('comps-by-dataset', 'Comparisons by output', byDatasetTabInfo)
+    addTabItem('comps-by-dataset', 'Comparisons by dataset', byDatasetTabInfo)
   }
 
   // Select the first tab that has differences by default; if no differences, show the

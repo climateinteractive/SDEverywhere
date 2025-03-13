@@ -2,6 +2,7 @@
 
 import type {
   Bundle,
+  ComparisonReportOptions,
   ComparisonSpecs,
   ComparisonSpecsSource,
   ConfigInitOptions,
@@ -10,6 +11,7 @@ import type {
 } from '@sdeverywhere/check-core'
 
 import { createBaseComparisonSpecs } from './comparisons/comparison-specs'
+import { getComparisonReportOptions } from './comparison-report-options'
 
 const checksYamlGlob = import.meta.glob('./checks/*.yaml', { eager: true, query: '?raw', import: 'default' })
 const checksYaml = Object.values(checksYamlGlob) as string[]
@@ -24,6 +26,9 @@ const comparisonsYaml: ComparisonSpecsSource[] = Object.entries(comparisonsYamlG
 })
 
 export function getConfigOptions(bundleL: Bundle, bundleR: Bundle, opts?: ConfigInitOptions): ConfigOptions {
+  const nameL = 'Sample Model Current'
+  const nameR = 'Sample Model Baseline'
+
   // Configure the set of input scenarios used for comparisons; this includes
   // the default matrix of scenarios
   const baseComparisonSpecs = createBaseComparisonSpecs(bundleL, bundleR)
@@ -40,9 +45,15 @@ export function getConfigOptions(bundleL: Bundle, bundleR: Bundle, opts?: Config
   // (see `getOutputVars` in `sample-model-bundle`)
   const renamedDatasetKeys: Map<DatasetKey, DatasetKey> = new Map([['Model__output_w_v1', 'Model__output_w_v2']])
 
+  // Customize the report sections if the kind is 'custom'
+  const reportKind: string = 'custom'
+  // const reportKind: string = 'default'
+  const reportOptions: ComparisonReportOptions =
+    reportKind === 'custom' ? getComparisonReportOptions(nameL, nameR) : undefined
+
   return {
     current: {
-      name: 'Sample Model Current',
+      name: nameL,
       bundle: bundleR
     },
     check: {
@@ -50,7 +61,7 @@ export function getConfigOptions(bundleL: Bundle, bundleR: Bundle, opts?: Config
     },
     comparison: {
       baseline: {
-        name: 'Sample Model Baseline',
+        name: nameR,
         bundle: bundleL
       },
       thresholds: [1, 5, 10],
@@ -70,7 +81,8 @@ export function getConfigOptions(bundleL: Bundle, bundleR: Bundle, opts?: Config
           }
           return []
         }
-      }
+      },
+      report: reportOptions
     }
   }
 }

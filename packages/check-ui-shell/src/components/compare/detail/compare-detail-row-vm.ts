@@ -8,6 +8,7 @@ import type {
   BundleGraphSpec,
   ComparisonConfig,
   ComparisonDataCoordinator,
+  ComparisonReportDetailItem,
   ComparisonScenario
 } from '@sdeverywhere/check-core'
 
@@ -18,7 +19,6 @@ import { ContextGraphViewModel } from '../../graphs/context-graph-vm'
 import type { PinnedItemKey } from '../_shared/pinned-item-state'
 
 import { CompareDetailBoxViewModel, type AxisRange, type CompareDetailBoxKind } from './compare-detail-box-vm'
-import type { ComparisonDetailItem } from './compare-detail-item'
 
 export interface CompareDetailContextGraphRowViewModel {
   graphL: ContextGraphViewModel
@@ -31,8 +31,7 @@ export interface CompareDetailRowViewModel {
   kind: CompareDetailRowKind
   title?: string
   subtitle?: string
-  showTitle: boolean
-  items: ComparisonDetailItem[]
+  items: ComparisonReportDetailItem[]
   boxes: CompareDetailBoxViewModel[]
   pinnedItemKey: string
 }
@@ -44,7 +43,7 @@ export function createCompareDetailRowViewModel(
   kind: CompareDetailRowKind,
   title: string | undefined,
   subtitle: string | undefined,
-  items: ComparisonDetailItem[]
+  items: ComparisonReportDetailItem[]
 ): CompareDetailRowViewModel {
   const boxes: CompareDetailBoxViewModel[] = []
 
@@ -54,24 +53,6 @@ export function createCompareDetailRowViewModel(
     if (item === undefined) {
       boxes.push(undefined)
       continue
-    }
-
-    // Determine which title/subtitle to show above the box based on the row kind
-    let boxTitle: string
-    let boxSubtitle: string
-    switch (kind) {
-      case 'scenarios':
-        boxTitle = `…${item.subtitle}`
-        break
-      case 'datasets':
-        boxTitle = item.title
-        break
-      case 'freeform':
-        boxTitle = item.title
-        boxSubtitle = item.subtitle
-        break
-      default:
-        assertNever(kind)
     }
 
     // Determine which key to use as the pinned item key
@@ -102,8 +83,8 @@ export function createCompareDetailRowViewModel(
         comparisonConfig,
         dataCoordinator,
         boxKind,
-        boxTitle,
-        boxSubtitle,
+        item.title,
+        item.subtitle,
         item.scenario,
         item.testSummary.d,
         pinnedItemKey
@@ -158,7 +139,6 @@ export function createCompareDetailRowViewModel(
     kind,
     title,
     subtitle,
-    showTitle: kind !== 'datasets',
     items,
     boxes,
     pinnedItemKey
