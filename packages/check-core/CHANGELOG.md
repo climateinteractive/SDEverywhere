@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.4](https://github.com/climateinteractive/SDEverywhere/compare/check-core-v0.1.3...check-core-v0.1.4) (2025-03-13)
+
+
+### Features
+
+* allow for customizing sections and ordering in comparison summary+detail views ([#610](https://github.com/climateinteractive/SDEverywhere/issues/610)) ([1d15602](https://github.com/climateinteractive/SDEverywhere/commit/1d15602d7ec92d8e021da9e34cdbeeaf34812a1c)), closes [#608](https://github.com/climateinteractive/SDEverywhere/issues/608)
+
 ## [0.1.3](https://github.com/climateinteractive/SDEverywhere/compare/check-core-v0.1.2...check-core-v0.1.3) (2024-10-16)
 
 
