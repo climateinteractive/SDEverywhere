@@ -1,7 +1,6 @@
 // Copyright (c) 2022 Climate Interactive / New Venture Fund
 
-import { existsSync } from 'fs'
-import { mkdir } from 'fs/promises'
+import { existsSync, mkdirSync, rmSync } from 'fs'
 import { dirname, resolve as resolvePath } from 'path'
 import { fileURLToPath } from 'url'
 
@@ -35,9 +34,10 @@ describe('step - create project directory', () => {
 
   it('should proceed if directory provided on command line is empty', async () => {
     const emptyDir = resolvePath(testsDir, dirs.empty)
-    if (!existsSync(emptyDir)) {
-      await mkdir(emptyDir)
+    if (existsSync(emptyDir)) {
+      rmSync(emptyDir, { recursive: true, force: true })
     }
+    mkdirSync(emptyDir)
     return new Promise(resolve => {
       const { stdout } = runCreate([dirs.empty])
       stdout?.on('data', chunk => {
