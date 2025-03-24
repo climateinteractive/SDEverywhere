@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.26](https://github.com/climateinteractive/SDEverywhere/compare/create-v0.2.25...create-v0.2.26) (2025-03-24)
+
+
+### Bug Fixes
+
+* read from json model listing instead of yaml file + remove yaml dependency in create package ([#614](https://github.com/climateinteractive/SDEverywhere/issues/614)) ([4394386](https://github.com/climateinteractive/SDEverywhere/commit/4394386588c03c3582c7ddef54d6d0ae21e55b58)), closes [#357](https://github.com/climateinteractive/SDEverywhere/issues/357)
+
 ## [0.2.25](https://github.com/climateinteractive/SDEverywhere/compare/create-v0.2.24...create-v0.2.25) (2025-02-20)
 
 
