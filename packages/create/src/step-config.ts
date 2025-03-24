@@ -8,7 +8,6 @@ import { bold, cyan, dim, green, reset, yellow } from 'kleur/colors'
 import ora from 'ora'
 import type { Choice } from 'prompts'
 import prompts from 'prompts'
-import yaml from 'yaml'
 
 import { parseAndGenerate } from '@sdeverywhere/compile'
 
@@ -472,13 +471,11 @@ async function readModelVars(projDir: string, mdlPath: string): Promise<MdlVaria
   const mdlName = parsePath(mdlFile).name
   await parseAndGenerate(mdlContent, spec, ['printVarList'], mdlDir, mdlName, buildDir)
 
-  // Read `build/{mdl}_vars.yaml`
-  // TODO: For now the printVarList code only outputs txt and yaml files; we'll use the
-  // yaml file for now, but that means we have a dependency on the `yaml` package.  Once
-  // we change the `compile` package to output JSON, we'll need to change this code.
-  const varsYamlFile = joinPath(buildDir, `${mdlName}_vars.yaml`)
-  const varsYamlContent = await readFile(varsYamlFile, 'utf8')
-  const varObjs = yaml.parse(varsYamlContent)
+  // Read `build/{mdl}.json`
+  const jsonListFile = joinPath(buildDir, `${mdlName}.json`)
+  const jsonListContent = await readFile(jsonListFile, 'utf8')
+  const jsonList = JSON.parse(jsonListContent)
+  const varObjs = jsonList.variables
 
   // Create a simplified array of variables
   const mdlVars: MdlVariable[] = []
