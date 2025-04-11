@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.31](https://github.com/climateinteractive/SDEverywhere/compare/cli-v0.7.30...cli-v0.7.31) (2025-04-11)
+
+
+### Bug Fixes
+
+* correct the exit code reported by the `sde bundle` command ([#618](https://github.com/climateinteractive/SDEverywhere/issues/618)) ([6623c5b](https://github.com/climateinteractive/SDEverywhere/commit/6623c5bd45e68143e6cac988505ab5fa9d786c68)), closes [#617](https://github.com/climateinteractive/SDEverywhere/issues/617)
+
 ## [0.7.30](https://github.com/climateinteractive/SDEverywhere/compare/cli-v0.7.29...cli-v0.7.30) (2025-02-11)
 
 
