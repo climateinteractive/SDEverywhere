@@ -8,10 +8,11 @@
 set +e # don't fail on error
 
 pnpm build-js
+exit_code=$?
 
 echo
-if [ $? -ne 2 ]; then
-  echo "Test failed: 'sde bundle' reported exit code $? but the expected exit code is 2"
+if [ $exit_code -ne 2 ]; then
+  echo "Test failed: 'sde bundle' reported exit code $exit_code but the expected exit code is 2"
   echo
   exit 1
 else
