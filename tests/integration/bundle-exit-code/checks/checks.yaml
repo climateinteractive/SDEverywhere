@@ -1,0 +1,13 @@
+# yaml-language-server: $schema=../../../../packages/check-core/schema/check.schema.json
+
+# This check is designed to always fail so that we can test the exit code of the `sde bundle` command
+- describe: Force a failed check
+  tests:
+    - it: should always fail
+      scenarios:
+        - with_inputs: all
+          at: default
+      datasets:
+        - name: Total inventory
+      predicates:
+        - eq: 0

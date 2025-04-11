@@ -1,0 +1,20 @@
+{
+  "name": "bundle-exit-code",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "clean": "rm -rf sde-prep",
+    "build-js": "GEN_FORMAT=js sde bundle",
+    "run-tests": "./run-tests.sh",
+    "ci:int-test": "run-s clean run-tests"
+  },
+  "dependencies": {
+    "@sdeverywhere/build": "workspace:*",
+    "@sdeverywhere/cli": "workspace:*",
+    "@sdeverywhere/plugin-check": "workspace:*",
+    "@sdeverywhere/plugin-worker": "workspace:*",
+    "@sdeverywhere/runtime": "workspace:*",
+    "@sdeverywhere/runtime-async": "workspace:*"
+  }
+}
