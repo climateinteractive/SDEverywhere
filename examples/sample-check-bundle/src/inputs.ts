@@ -1,11 +1,20 @@
 // Copyright (c) 2022 Climate Interactive / New Venture Fund
 
-import type { InputAliasName, InputGroupName, InputId, InputVar, VarId } from '@sdeverywhere/check-core'
+import type {
+  InputAliasName,
+  InputGroupName,
+  InputScenarioName,
+  InputId,
+  InputSetting,
+  InputVar,
+  VarId
+} from '@sdeverywhere/check-core'
 
 export interface Inputs {
   inputVars: Map<VarId, InputVar>
   inputGroups: Map<InputGroupName, InputVar[]>
   inputAliases: Map<InputAliasName, VarId>
+  inputScenarios: Map<InputScenarioName, InputSetting[]>
 }
 
 /**
@@ -65,9 +74,33 @@ export function getInputs(modelVersion: number): Inputs {
     ['Empty Input Group', []]
   ])
 
+  // Configure custom scenarios.  This demonstrates how to configure custom scenarios
+  // that can be referenced by name in check and comparison specs, but that have
+  // settings that are specific to the particular model being tested.
+  const scenario1Settings: InputSetting[] = []
+  scenario1Settings.push({
+    kind: 'value',
+    inputVarId: '_input_a',
+    value: 60
+  })
+  scenario1Settings.push({
+    kind: 'value',
+    inputVarId: modelVersion === 1 ? '_input_b' : '_input_b_prime',
+    value: 60
+  })
+  if (modelVersion === 2) {
+    scenario1Settings.push({
+      kind: 'value',
+      inputVarId: '_input_d',
+      value: 60
+    })
+  }
+  const inputScenarios: Map<InputScenarioName, InputSetting[]> = new Map([['Named scenario 1', scenario1Settings]])
+
   return {
     inputVars,
     inputGroups,
-    inputAliases
+    inputAliases,
+    inputScenarios
   }
 }

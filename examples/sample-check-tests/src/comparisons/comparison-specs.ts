@@ -1,11 +1,12 @@
 // Copyright (c) 2023 Climate Interactive / New Venture Fund
 
-import type {
-  Bundle,
-  ComparisonScenarioInputPosition,
-  ComparisonScenarioSpec,
-  ComparisonSpecs,
-  InputId
+import {
+  comparisonScenarioSpecForNamedScenario,
+  type Bundle,
+  type ComparisonScenarioInputPosition,
+  type ComparisonScenarioSpec,
+  type ComparisonSpecs,
+  type InputId
 } from '@sdeverywhere/check-core'
 
 /**
@@ -66,6 +67,21 @@ export function createBaseComparisonSpecs(bundleL: Bundle, bundleR: Bundle): Com
     inputsL: [{ kind: 'input-at-value', inputName: 'Input A', value: 75 }],
     inputsR: [{ kind: 'input-at-value', inputName: 'Input B prime', value: 25 }]
   })
+
+  // Create a scenario that sets the inputs for each model based on the settings
+  // defined by the named scenario for that model
+  const modelSpecL = bundleL.modelSpec
+  const modelSpecR = bundleR.modelSpec
+  scenarios.push(
+    comparisonScenarioSpecForNamedScenario(
+      modelSpecL,
+      modelSpecR,
+      'Named scenario 1',
+      'named_scenario_1',
+      'Named scenario 1',
+      ''
+    )
+  )
 
   return {
     scenarios
