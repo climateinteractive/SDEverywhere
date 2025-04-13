@@ -1,11 +1,11 @@
 // Copyright (c) 2023 Climate Interactive / New Venture Fund
 
-import {
-  type Bundle,
-  type ComparisonScenarioInputPosition,
-  type ComparisonScenarioSpec,
-  type ComparisonSpecs,
-  type InputId
+import type {
+  Bundle,
+  ComparisonScenarioInputPosition,
+  ComparisonScenarioSpec,
+  ComparisonSpecs,
+  InputId
 } from '@sdeverywhere/check-core'
 
 /**
