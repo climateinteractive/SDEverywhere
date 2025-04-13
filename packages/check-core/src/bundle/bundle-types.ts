@@ -12,8 +12,8 @@ export type InputGroupName = string
 /** The alias name for an input. */
 export type InputAliasName = string
 
-/** The name for a custom input scenario. */
-export type InputScenarioName = string
+/** The name for a custom input setting group. */
+export type InputSettingGroupId = string
 
 /** The human-readable name for a group of dataset. */
 export type DatasetGroupName = string
@@ -109,8 +109,8 @@ export interface ModelSpec {
   inputAliases?: Map<InputAliasName, VarId>
   /** The custom input variable groups defined for this model. */
   inputGroups?: Map<InputGroupName, InputVar[]>
-  /** The custom input scenarios defined for this model. */
-  inputScenarios?: Map<InputScenarioName, InputSetting[]>
+  /** The custom input setting groups defined for this model. */
+  inputSettingGroups?: Map<InputSettingGroupId, InputSetting[]>
   /** The custom dataset (output variable) groups defined for this model. */
   datasetGroups?: Map<DatasetGroupName, DatasetKey[]>
   /** The start time (year) for the model. */

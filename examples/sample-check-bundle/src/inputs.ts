@@ -3,7 +3,7 @@
 import type {
   InputAliasName,
   InputGroupName,
-  InputScenarioName,
+  InputSettingGroupId,
   InputId,
   InputSetting,
   InputVar,
@@ -14,7 +14,7 @@ export interface Inputs {
   inputVars: Map<VarId, InputVar>
   inputGroups: Map<InputGroupName, InputVar[]>
   inputAliases: Map<InputAliasName, VarId>
-  inputScenarios: Map<InputScenarioName, InputSetting[]>
+  inputSettingGroups: Map<InputSettingGroupId, InputSetting[]>
 }
 
 /**
@@ -77,30 +77,30 @@ export function getInputs(modelVersion: number): Inputs {
   // Configure custom scenarios.  This demonstrates how to configure custom scenarios
   // that can be referenced by name in check and comparison specs, but that have
   // settings that are specific to the particular model being tested.
-  const scenario1Settings: InputSetting[] = []
-  scenario1Settings.push({
+  const settingGroup1: InputSetting[] = []
+  settingGroup1.push({
     kind: 'value',
     inputVarId: '_input_a',
     value: 60
   })
-  scenario1Settings.push({
+  settingGroup1.push({
     kind: 'value',
     inputVarId: modelVersion === 1 ? '_input_b' : '_input_b_prime',
     value: 60
   })
   if (modelVersion === 2) {
-    scenario1Settings.push({
+    settingGroup1.push({
       kind: 'value',
       inputVarId: '_input_d',
       value: 60
     })
   }
-  const inputScenarios: Map<InputScenarioName, InputSetting[]> = new Map([['Named scenario 1', scenario1Settings]])
+  const inputSettingGroups: Map<InputSettingGroupId, InputSetting[]> = new Map([['setting_group_1', settingGroup1]])
 
   return {
     inputVars,
     inputGroups,
     inputAliases,
-    inputScenarios
+    inputSettingGroups
   }
 }
