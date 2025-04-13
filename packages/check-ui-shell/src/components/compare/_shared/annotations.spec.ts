@@ -2,7 +2,13 @@
 
 import { describe, expect, it } from 'vitest'
 
-import type { ComparisonDataset, ComparisonResolverError, DatasetKey, OutputVar } from '@sdeverywhere/check-core'
+import type {
+  ComparisonDataset,
+  ComparisonResolverError,
+  ComparisonScenario,
+  DatasetKey,
+  OutputVar
+} from '@sdeverywhere/check-core'
 
 import { getAnnotationsForDataset, getAnnotationsForScenario } from './annotations'
 import {
@@ -19,6 +25,7 @@ const bundleNameL = 'baseline'
 const bundleNameR = 'current'
 
 const errUnknownInput: ComparisonResolverError = { kind: 'unknown-input' }
+const errUnknownSettingGroup: ComparisonResolverError = { kind: 'unknown-input-setting-group' }
 
 function outputVar(varName: string, source?: string): OutputVar {
   const varId = `_${varName.toLowerCase()}`
@@ -117,6 +124,111 @@ describe('getAnnotationsForScenario', () => {
     const annotations = getAnnotationsForScenario(s, bundleNameL, bundleNameR)
     expect(annotations).toEqual([
       `<span class="annotation"><span class="status-color-warning">‼</span>&ensp;scenario not valid in <span class="dataset-color-0">baseline</span>: unknown inputs 'i1', 'i2'</span>`
+    ])
+  })
+
+  it('should return correct annotation when setting group is invalid on both sides', () => {
+    const s: ComparisonScenario = {
+      kind: 'scenario',
+      key: 's1',
+      id: 'sg1',
+      title: 'sg1',
+      settings: {
+        kind: 'input-settings',
+        inputs: [
+          {
+            requestedName: 'sg1',
+            stateL: { error: errUnknownSettingGroup },
+            stateR: { error: errUnknownSettingGroup }
+          }
+        ]
+      },
+      specL: undefined,
+      specR: undefined
+    }
+
+    const annotations = getAnnotationsForScenario(s, bundleNameL, bundleNameR)
+    expect(annotations).toEqual([
+      `<span class="annotation"><span class="status-color-failed">✗</span>&ensp;invalid scenario: unknown input setting group 'sg1'</span>`
+    ])
+  })
+
+  it('should return correct annotation when setting group is only valid on left side (group is unknown on right)', () => {
+    const s: ComparisonScenario = {
+      kind: 'scenario',
+      key: 's1',
+      id: 'sg1',
+      title: 'sg1',
+      settings: {
+        kind: 'input-settings',
+        inputs: [
+          {
+            requestedName: 'sg1',
+            stateL: {},
+            stateR: { error: errUnknownSettingGroup }
+          }
+        ]
+      },
+      specL: undefined,
+      specR: undefined
+    }
+
+    const annotations = getAnnotationsForScenario(s, bundleNameL, bundleNameR)
+    expect(annotations).toEqual([
+      `<span class="annotation"><span class="status-color-warning">‼</span>&ensp;scenario not valid in <span class="dataset-color-1">current</span>: unknown input setting group 'sg1'</span>`
+    ])
+  })
+
+  it('should return correct annotation when setting group is only valid on right side (group is unknown on left, plus invalid input on right)', () => {
+    const s: ComparisonScenario = {
+      kind: 'scenario',
+      key: 's1',
+      id: 'sg1',
+      title: 'sg1',
+      settings: {
+        kind: 'input-settings',
+        inputs: [
+          {
+            requestedName: 'sg1',
+            stateL: { error: errUnknownSettingGroup },
+            stateR: {}
+          },
+          {
+            requestedName: 'i1',
+            stateL: {},
+            stateR: { error: errUnknownInput }
+          }
+        ]
+      },
+      specL: undefined,
+      specR: undefined
+    }
+
+    const annotations = getAnnotationsForScenario(s, bundleNameL, bundleNameR)
+    expect(annotations).toEqual([
+      `<span class="annotation"><span class="status-color-warning">‼</span>&ensp;scenario not valid in <span class="dataset-color-0">baseline</span>: unknown input setting group 'sg1'</span>`,
+      `<span class="annotation"><span class="status-color-warning">‼</span>&ensp;scenario not valid in <span class="dataset-color-1">current</span>: unknown input 'i1'</span>`
+    ])
+  })
+
+  it('should return correct annotation when settings differ between the two models', () => {
+    const s: ComparisonScenario = {
+      kind: 'scenario',
+      key: 's1',
+      id: 'sg1',
+      title: 'sg1',
+      settings: {
+        kind: 'input-settings',
+        inputs: [],
+        settingsDiffer: true
+      },
+      specL: undefined,
+      specR: undefined
+    }
+
+    const annotations = getAnnotationsForScenario(s, bundleNameL, bundleNameR)
+    expect(annotations).toEqual([
+      '<span class="annotation"><span class="status-color-warning">‼</span>&ensp;input settings differ between the two models</span>'
     ])
   })
 
