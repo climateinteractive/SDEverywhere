@@ -23,7 +23,7 @@
     "prettier:fix": "prettier --write .",
     "precommit": "../../scripts/precommit",
     "test": "vitest run",
-    "test:watch": "vitest",
+    "test:watch": "vitest --hideSkippedTests",
     "test:ci": "vitest run",
     "type-check": "tsc --noEmit -p tsconfig-test.json",
     "compile": "tsup",
