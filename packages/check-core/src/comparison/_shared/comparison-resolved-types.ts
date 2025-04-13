@@ -52,11 +52,18 @@ export interface ComparisonResolverUnknownInputError {
   kind: 'unknown-input'
 }
 
+export interface ComparisonResolverUnknownInputSettingGroupError {
+  kind: 'unknown-input-setting-group'
+}
+
 export interface ComparisonResolverInvalidValueError {
   kind: 'invalid-value'
 }
 
-export type ComparisonResolverError = ComparisonResolverUnknownInputError | ComparisonResolverInvalidValueError
+export type ComparisonResolverError =
+  | ComparisonResolverUnknownInputError
+  | ComparisonResolverUnknownInputSettingGroupError
+  | ComparisonResolverInvalidValueError
 
 /** Describes the resolution state for a scenario input relative to a specific model. */
 export interface ComparisonScenarioInputState {
@@ -85,6 +92,12 @@ export interface ComparisonScenarioInputSettings {
   kind: 'input-settings'
   /** The resolutions for the specified inputs in the scenario. */
   inputs: ComparisonScenarioInput[]
+  /**
+   * Whether the settings differ between the "left" and "right" models.  This is
+   * typically only used in the case of a scenario based on model-specific setting
+   * groups, where the set of inputs or the input values differ between the two models.
+   */
+  settingsDiffer?: boolean
 }
 
 /** A configuration that sets all inputs in the model to a certain position. */

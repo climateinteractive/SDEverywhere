@@ -1,5 +1,7 @@
 // Copyright (c) 2023 Climate Interactive / New Venture Fund
 
+import type { InputSettingGroupId } from '../../bundle/bundle-types'
+
 //
 // DATASETS
 //
@@ -96,6 +98,22 @@ export interface ComparisonScenarioWithDistinctInputsSpec {
 }
 
 /**
+ * Specifies a single scenario that configures inputs according to the setting
+ * group defined for each model instance.
+ */
+export interface ComparisonScenarioWithSettingGroupSpec {
+  kind: 'scenario-with-setting-group'
+  /** The unique identifier for the scenario. */
+  id?: ComparisonScenarioId
+  /** The title of the scenario. */
+  title?: ComparisonScenarioTitle
+  /** The subtitle of the scenario. */
+  subtitle?: ComparisonScenarioSubtitle
+  /** The identifier of the input setting group as used in `ModelSpec.inputSettingGroups`. */
+  settingGroupId: InputSettingGroupId
+}
+
+/**
  * Specifies a single scenario that sets all available inputs to position.
  */
 export interface ComparisonScenarioWithAllInputsSpec {
@@ -128,6 +146,7 @@ export interface ComparisonScenarioPresetMatrixSpec {
 export type ComparisonScenarioSpec =
   | ComparisonScenarioWithInputsSpec
   | ComparisonScenarioWithDistinctInputsSpec
+  | ComparisonScenarioWithSettingGroupSpec
   | ComparisonScenarioWithAllInputsSpec
   | ComparisonScenarioPresetMatrixSpec
 

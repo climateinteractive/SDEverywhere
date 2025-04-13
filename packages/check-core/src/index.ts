@@ -23,7 +23,7 @@ export type {
   DatasetGroupName,
   InputAliasName,
   InputGroupName,
-  InputScenarioName,
+  InputSettingGroupId,
   LegendItem,
   LinkItem,
   LoadedBundle,
@@ -90,7 +90,6 @@ export type {
   ComparisonReportSummaryRow,
   ComparisonReportSummarySection
 } from './comparison/config/comparison-config'
-export { comparisonScenarioSpecForNamedScenario } from './comparison/config/comparison-named-scenarios'
 export type { ComparisonScenarios } from './comparison/config/comparison-scenarios'
 export type { ComparisonDatasets } from './comparison/config/comparison-datasets'
 

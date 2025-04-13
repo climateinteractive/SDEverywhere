@@ -1,5 +1,6 @@
 // Copyright (c) 2023 Climate Interactive / New Venture Fund
 
+import type { InputSettingGroupId } from '../../../bundle/bundle-types'
 import type {
   ComparisonDatasetName,
   ComparisonDatasetSource,
@@ -24,6 +25,7 @@ import type {
   ComparisonScenarioWithAllInputsSpec,
   ComparisonScenarioWithDistinctInputsSpec,
   ComparisonScenarioWithInputsSpec,
+  ComparisonScenarioWithSettingGroupSpec,
   ComparisonViewBoxSpec,
   ComparisonViewGraphOrder,
   ComparisonViewGraphsSpec,
@@ -93,6 +95,19 @@ export function scenarioWithDistinctInputsSpec(
     subtitle: opts?.subtitle,
     inputsL,
     inputsR
+  }
+}
+
+export function scenarioWithSettingGroupSpec(
+  settingGroupId: InputSettingGroupId,
+  opts?: { id?: string; title?: string; subtitle?: string }
+): ComparisonScenarioWithSettingGroupSpec {
+  return {
+    kind: 'scenario-with-setting-group',
+    id: opts?.id,
+    title: opts?.title,
+    subtitle: opts?.subtitle,
+    settingGroupId
   }
 }
 

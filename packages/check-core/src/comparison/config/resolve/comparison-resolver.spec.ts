@@ -3,8 +3,15 @@
 import { describe, expect, it } from 'vitest'
 
 import { inputAtPositionSpec as atPosSpec, inputAtValueSpec as atValSpec } from '../../../_shared/scenario-specs'
+import type { InputSetting } from '../../../_shared/scenario-spec-types'
 import type { DatasetKey, VarId } from '../../../_shared/types'
-import type { BundleGraphId, BundleGraphSpec, InputAliasName, ModelSpec } from '../../../bundle/bundle-types'
+import type {
+  BundleGraphId,
+  BundleGraphSpec,
+  InputAliasName,
+  InputSettingGroupId,
+  ModelSpec
+} from '../../../bundle/bundle-types'
 import { ModelInputs } from '../../../bundle/model-inputs'
 import type { InputId, InputVar, OutputVar } from '../../../bundle/var-types'
 
@@ -50,6 +57,7 @@ import {
   scenarioWithAllInputsSpec,
   scenarioWithDistinctInputsSpec,
   scenarioWithInputsSpec,
+  scenarioWithSettingGroupSpec,
   viewBoxSpec,
   viewGroupWithScenariosSpec,
   viewGroupWithViewsSpec,
@@ -59,6 +67,10 @@ import {
 } from '../_mocks/mock-spec-types'
 
 import { resolveComparisonSpecs } from './comparison-resolver'
+
+const errUnknownInput: ComparisonScenarioInputState = { error: { kind: 'unknown-input' } }
+const errUnknownSettingGroup: ComparisonScenarioInputState = { error: { kind: 'unknown-input-setting-group' } }
+const errInvalidValue: ComparisonScenarioInputState = { error: { kind: 'invalid-value' } }
 
 function mockModelSpec(kind: 'L' | 'R'): ModelSpec {
   //
@@ -108,6 +120,41 @@ function mockModelSpec(kind: 'L' | 'R'): ModelSpec {
   inputAliases.set('S2', kind === 'L' ? '_ivarb' : '_ivarb_renamed')
   inputAliases.set('S3', kind === 'L' ? '_ivarc' : '_ivard')
 
+  //
+  // INPUT SETTING GROUPS
+  // L             R
+  // id=sg1        id=sg1      (same settings in both)
+  //   IVarA=40      IVarA=40
+  // id=sg2        id=sg2      (same variables but different settings)
+  //   IVarA=40      IVarA=60
+  // id=sg3        id=sg3      (different variables)
+  //   IVarA=40      IVarB_Renamed=40
+  // id=sg4        ----        (setting group only on left side)
+  //   IVarA=40
+  // ----          id=sg5      (setting group only on right side)
+  //                 IVarA=40
+  // id=sg6        id=sg6      (setting with unknown input variable)
+  //   IVarZ=40      IVarZ=40
+  // id=sg7        id=sg7      (setting with out-of-range value)
+  //   IVarA=500    IVarA=500
+  // id=sg8        id=sg8      (setting with out-of-range value on one side)
+  //   IVarA=40     IVarA=500
+  const inputSettingGroups: Map<InputSettingGroupId, InputSetting[]> = new Map()
+  function inputSetting(inputVarId: VarId, value: number): InputSetting {
+    return { kind: 'value', inputVarId, value }
+  }
+  function addInputSettingGroup(id: InputSettingGroupId, settings: InputSetting[]): void {
+    inputSettingGroups.set(id, settings)
+  }
+  addInputSettingGroup('sg1', [inputSetting('_ivara', 40)])
+  addInputSettingGroup('sg2', [inputSetting('_ivara', kind === 'L' ? 40 : 60)])
+  addInputSettingGroup('sg3', [inputSetting(kind === 'L' ? '_ivara' : '_ivarb_renamed', 40)])
+  addInputSettingGroup('sg4', kind === 'L' ? [inputSetting('_ivara', 40)] : [])
+  addInputSettingGroup('sg5', kind === 'L' ? [] : [inputSetting('_ivara', 40)])
+  addInputSettingGroup('sg6', [inputSetting('_ivarz', 40)])
+  addInputSettingGroup('sg7', [inputSetting('_ivara', 500)])
+  addInputSettingGroup('sg8', [inputSetting('_ivara', kind === 'L' ? 40 : 500)])
+
   // Add graphs
   const graphSpecs: BundleGraphSpec[] = []
   function addGraph(graphId: BundleGraphId): void {
@@ -131,6 +178,7 @@ function mockModelSpec(kind: 'L' | 'R'): ModelSpec {
     outputVars,
     implVars: new Map(),
     inputAliases,
+    inputSettingGroups,
     graphSpecs
   }
 }
@@ -329,26 +377,122 @@ describe('resolveComparisonSpecs', () => {
           scenarioWithInputs('1', [], atValSpec('_ivara', 20), atValSpec('_ivara', 30)),
           scenarioWithInputs('2', [], atValSpec('_ivarb', 40), atValSpec('_ivarb_renamed', 50)),
           scenarioWithInputs('3', [], atValSpec('_ivarc', 60), atValSpec('_ivard', 70)),
+          scenarioWithInputs('4', [resolvedInput('unknown', {}, errUnknownInput)], undefined, undefined),
           scenarioWithInputs(
-            '4',
-            [resolvedInput('unknown', {}, { error: { kind: 'unknown-input' } })],
+            '5',
+            [resolvedInput('ivarA', errInvalidValue, {}), resolvedInput('ivarA', {}, errInvalidValue)],
             undefined,
             undefined
+          ),
+          scenarioWithInputs('6', [resolvedInput('id 2', {}, errInvalidValue)], undefined, undefined)
+        ],
+        scenarioGroups: [],
+        viewGroups: []
+      })
+    })
+
+    it('should expand model-specific input setting group specs', () => {
+      function resolvedInput(
+        requestedInputName: string,
+        stateL: ComparisonScenarioInputState,
+        stateR: ComparisonScenarioInputState
+      ): ComparisonScenarioInput {
+        return {
+          requestedName: requestedInputName,
+          stateL,
+          stateR
+        }
+      }
+
+      function opts(id: string): { id?: string; title?: string; subtitle?: string } {
+        return {
+          id,
+          title: `${id} title`,
+          subtitle: `${id} subtitle`
+        }
+      }
+
+      const specs: ComparisonSpecs = {
+        scenarios: [
+          // INPUT SETTING GROUPS
+          // L             R
+          // id=sg1        id=sg1      (same settings in both)
+          //   IVarA=40      IVarA=40
+          scenarioWithSettingGroupSpec('sg1', opts('sg1')),
+          // id=sg2        id=sg2      (WARNING: same variables but different settings)
+          //   IVarA=40      IVarA=60
+          scenarioWithSettingGroupSpec('sg2', opts('sg2')),
+          // id=sg3        id=sg3      (WARNING: different variables)
+          //   IVarA=40      IVarB_Renamed=40
+          scenarioWithSettingGroupSpec('sg3', opts('sg3')),
+          // id=sg4        ----        (WARNING: setting group only on left side)
+          //   IVarA=40
+          scenarioWithSettingGroupSpec('sg4', opts('sg4')),
+          // ----          id=sg5      (WARNING: setting group only on right side)
+          //                 IVarA=40
+          scenarioWithSettingGroupSpec('sg5', opts('sg5')),
+          // id=sg6        id=sg6      (ERROR: setting with unknown input variable)
+          //   IVarZ=40      IVarZ=40
+          scenarioWithSettingGroupSpec('sg6', opts('sg6')),
+          // id=sg7        id=sg7      (ERROR: setting with out-of-range value)
+          //   IVarA=500    IVarA=500
+          scenarioWithSettingGroupSpec('sg7', opts('sg7')),
+          // id=sg8        id=sg8      (ERROR: setting with out-of-range value on one side)
+          //   IVarA=40     IVarA=500
+          scenarioWithSettingGroupSpec('sg8', opts('sg8')),
+          // id=sg9        id=sg9      (ERROR: setting group not found on either side)
+          //   IVarA=40     ----
+          scenarioWithSettingGroupSpec('sg9', opts('sg9'))
+        ]
+      }
+
+      const resolved = resolveComparisonSpecs(modelSpecL, modelSpecR, specs)
+      expect(resolved).toEqual({
+        scenarios: [
+          scenarioWithInputs('1', [], atValSpec('_ivara', 40), atValSpec('_ivara', 40), opts('sg1')),
+          scenarioWithInputs('2', [], atValSpec('_ivara', 40), atValSpec('_ivara', 60), {
+            ...opts('sg2'),
+            settingsDiffer: true
+          }),
+          scenarioWithInputs('3', [], atValSpec('_ivara', 40), atValSpec('_ivarb_renamed', 40), {
+            ...opts('sg3'),
+            settingsDiffer: true
+          }),
+          scenarioWithInputs(
+            '4',
+            [resolvedInput('sg4', {}, errUnknownSettingGroup)],
+            atValSpec('_ivara', 40),
+            undefined,
+            opts('sg4')
           ),
           scenarioWithInputs(
             '5',
-            [
-              resolvedInput('ivarA', { error: { kind: 'invalid-value' } }, {}),
-              resolvedInput('ivarA', {}, { error: { kind: 'invalid-value' } })
-            ],
+            [resolvedInput('sg5', errUnknownSettingGroup, {})],
             undefined,
-            undefined
+            atValSpec('_ivara', 40),
+            opts('sg5')
           ),
           scenarioWithInputs(
             '6',
-            [resolvedInput('id 2', {}, { error: { kind: 'invalid-value' } })],
+            [resolvedInput('_ivarz', errUnknownInput, {}), resolvedInput('_ivarz', {}, errUnknownInput)],
             undefined,
-            undefined
+            undefined,
+            opts('sg6')
+          ),
+          scenarioWithInputs(
+            '7',
+            [resolvedInput('IVarA', errInvalidValue, {}), resolvedInput('IVarA', {}, errInvalidValue)],
+            undefined,
+            undefined,
+            opts('sg7')
+          ),
+          scenarioWithInputs('8', [resolvedInput('IVarA', {}, errInvalidValue)], undefined, undefined, opts('sg8')),
+          scenarioWithInputs(
+            '9',
+            [resolvedInput('sg9', errUnknownSettingGroup, errUnknownSettingGroup)],
+            undefined,
+            undefined,
+            opts('sg9')
           )
         ],
         scenarioGroups: [],

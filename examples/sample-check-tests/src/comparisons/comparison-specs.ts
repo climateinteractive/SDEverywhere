@@ -1,7 +1,6 @@
 // Copyright (c) 2023 Climate Interactive / New Venture Fund
 
 import {
-  comparisonScenarioSpecForNamedScenario,
   type Bundle,
   type ComparisonScenarioInputPosition,
   type ComparisonScenarioSpec,
@@ -69,19 +68,14 @@ export function createBaseComparisonSpecs(bundleL: Bundle, bundleR: Bundle): Com
   })
 
   // Create a scenario that sets the inputs for each model based on the settings
-  // defined by the named scenario for that model
-  const modelSpecL = bundleL.modelSpec
-  const modelSpecR = bundleR.modelSpec
-  scenarios.push(
-    comparisonScenarioSpecForNamedScenario(
-      modelSpecL,
-      modelSpecR,
-      'Named scenario 1',
-      'named_scenario_1',
-      'Named scenario 1',
-      ''
-    )
-  )
+  // defined by that model
+  scenarios.push({
+    kind: 'scenario-with-setting-group',
+    id: 'scenario_from_setting_group_1',
+    title: 'Custom scenario',
+    subtitle: 'with setting group 1',
+    settingGroupId: 'setting_group_1'
+  })
 
   return {
     scenarios
