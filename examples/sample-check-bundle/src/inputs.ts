@@ -66,36 +66,56 @@ export function getInputs(modelVersion: number): Inputs {
     addSlider('4', 'Input D')
   }
 
+  // Slider id=5 is defined with input var 'Input E' in both v1 and v2
+  addSlider('5', 'Input E')
+
   // Configure input groups
   const inputGroups: Map<InputGroupName, InputVar[]> = new Map([
     ['All Inputs', [...inputVars.values()]],
-    // ['Input Group 1', [inputVars.get('_input_a'), inputVars.get('_input_b')]],
-    ['Input Group 1', [inputVars.get('_input_a')]],
+    ['Input Group 1', [inputVars.get('_input_a'), inputVars.get('_input_e')]],
     ['Empty Input Group', []]
   ])
 
   // Configure custom scenarios.  This demonstrates how to configure custom scenarios
   // that can be referenced by name in check and comparison specs, but that have
-  // settings that are specific to the particular model being tested.
-  const settingGroup1: InputSetting[] = []
-  settingGroup1.push({
+  // settings that are specific to the particular model being tested.  The first
+  // group has settings that are the same in both models, but the second group has
+  // settings that are specific to each model (this will be flagged in the UI with
+  // a warning annotation).
+  const settingGroup1: InputSetting[] = [
+    {
+      kind: 'value',
+      inputVarId: '_input_a',
+      value: 40
+    },
+    {
+      kind: 'position',
+      inputVarId: '_input_e',
+      position: 'at-maximum'
+    }
+  ]
+  const settingGroup2: InputSetting[] = []
+  settingGroup2.push({
     kind: 'value',
     inputVarId: '_input_a',
     value: 60
   })
-  settingGroup1.push({
+  settingGroup2.push({
     kind: 'value',
     inputVarId: modelVersion === 1 ? '_input_b' : '_input_b_prime',
     value: 60
   })
   if (modelVersion === 2) {
-    settingGroup1.push({
+    settingGroup2.push({
       kind: 'value',
       inputVarId: '_input_d',
       value: 60
     })
   }
-  const inputSettingGroups: Map<InputSettingGroupId, InputSetting[]> = new Map([['setting_group_1', settingGroup1]])
+  const inputSettingGroups: Map<InputSettingGroupId, InputSetting[]> = new Map([
+    ['setting_group_1', settingGroup1],
+    ['setting_group_2', settingGroup2]
+  ])
 
   return {
     inputVars,

@@ -5,7 +5,8 @@ import type {
   ComparisonScenarioInputPosition,
   ComparisonScenarioSpec,
   ComparisonSpecs,
-  InputId
+  InputId,
+  InputSettingGroupId
 } from '@sdeverywhere/check-core'
 
 /**
@@ -17,7 +18,7 @@ import type {
 export function createBaseComparisonSpecs(bundleL: Bundle, bundleR: Bundle): ComparisonSpecs {
   // Get the union of all input IDs appearing in left and/or right
   const allInputIds: Set<InputId> = new Set()
-  const addInputs = (bundle: Bundle) => {
+  function addInputs(bundle: Bundle): void {
     for (const inputVar of bundle.modelSpec.inputVars.values()) {
       allInputIds.add(inputVar.inputId)
     }
@@ -36,7 +37,7 @@ export function createBaseComparisonSpecs(bundleL: Bundle, bundleR: Bundle): Com
   })
 
   // Create "input at min/max" scenarios for all inputs (that appear in either "left" or "right")
-  const addScenario = (inputId: InputId, position: ComparisonScenarioInputPosition) => {
+  function addScenarioForInputAtExtreme(inputId: InputId, position: ComparisonScenarioInputPosition): void {
     scenarios.push({
       kind: 'scenario-with-inputs',
       id: `input_${inputId}_at_${position}`,
@@ -52,8 +53,8 @@ export function createBaseComparisonSpecs(bundleL: Bundle, bundleR: Bundle): Com
     })
   }
   for (const inputId of allInputIds) {
-    addScenario(inputId, 'min')
-    addScenario(inputId, 'max')
+    addScenarioForInputAtExtreme(inputId, 'min')
+    addScenarioForInputAtExtreme(inputId, 'max')
   }
 
   // Create a special scenario that controls a different set of inputs in the "left" model
@@ -67,15 +68,19 @@ export function createBaseComparisonSpecs(bundleL: Bundle, bundleR: Bundle): Com
     inputsR: [{ kind: 'input-at-value', inputName: 'Input B prime', value: 25 }]
   })
 
-  // Create a scenario that sets the inputs for each model based on the settings
+  // Create scenarios that set the inputs for each model based on the settings
   // defined by that model
-  scenarios.push({
-    kind: 'scenario-with-setting-group',
-    id: 'scenario_from_setting_group_1',
-    title: 'Custom scenario',
-    subtitle: 'with setting group 1',
-    settingGroupId: 'setting_group_1'
-  })
+  function addScenarioForSettingGroup(settingGroupId: InputSettingGroupId): void {
+    scenarios.push({
+      kind: 'scenario-with-setting-group',
+      id: `scenario_from_setting_group_${settingGroupId}`,
+      title: 'Custom scenario',
+      subtitle: settingGroupId.replace(/_/g, ' '),
+      settingGroupId
+    })
+  }
+  addScenarioForSettingGroup('setting_group_1')
+  addScenarioForSettingGroup('setting_group_2')
 
   return {
     scenarios
