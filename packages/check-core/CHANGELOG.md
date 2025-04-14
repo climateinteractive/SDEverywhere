@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.5](https://github.com/climateinteractive/SDEverywhere/compare/check-core-v0.1.4...check-core-v0.1.5) (2025-04-14)
+
+
+### Features
+
+* add support for scenarios that are specific to each bundle ([#622](https://github.com/climateinteractive/SDEverywhere/issues/622)) ([c762828](https://github.com/climateinteractive/SDEverywhere/commit/c7628280dffe2f2cc7f12fac30051969bc48a18a)), closes [#620](https://github.com/climateinteractive/SDEverywhere/issues/620)
+
 ## [0.1.4](https://github.com/climateinteractive/SDEverywhere/compare/check-core-v0.1.3...check-core-v0.1.4) (2025-03-13)
 
 

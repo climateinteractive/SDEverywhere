@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.2.9](https://github.com/climateinteractive/SDEverywhere/compare/check-ui-shell-v0.2.8...check-ui-shell-v0.2.9) (2025-04-14)
+
+
+### Features
+
+* add support for scenarios that are specific to each bundle ([#622](https://github.com/climateinteractive/SDEverywhere/issues/622)) ([c762828](https://github.com/climateinteractive/SDEverywhere/commit/c7628280dffe2f2cc7f12fac30051969bc48a18a)), closes [#620](https://github.com/climateinteractive/SDEverywhere/issues/620)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/check-core bumped from ^0.1.4 to ^0.1.5
+
 ## [0.2.8](https://github.com/climateinteractive/SDEverywhere/compare/check-ui-shell-v0.2.7...check-ui-shell-v0.2.8) (2025-03-13)
 
 
