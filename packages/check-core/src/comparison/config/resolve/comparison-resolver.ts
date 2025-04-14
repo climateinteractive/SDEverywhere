@@ -4,8 +4,9 @@ import { assertNever } from 'assert-never'
 
 import type { InputPosition, InputSetting, ScenarioSpec } from '../../../_shared/scenario-spec-types'
 import { inputSettingsSpec } from '../../../_shared/scenario-specs'
+import type { VarId } from '../../../_shared/types'
 
-import type { BundleGraphId, ModelSpec } from '../../../bundle/bundle-types'
+import type { BundleGraphId, InputSettingGroupId, ModelSpec } from '../../../bundle/bundle-types'
 import { ModelInputs } from '../../../bundle/model-inputs'
 import type { InputId, InputVar, OutputVar } from '../../../bundle/var-types'
 
@@ -34,6 +35,7 @@ import type {
   ComparisonGraphId,
   ComparisonScenarioGroupId,
   ComparisonScenarioGroupSpec,
+  ComparisonScenarioInputName,
   ComparisonScenarioId,
   ComparisonScenarioInputPosition,
   ComparisonScenarioInputSpec,
@@ -327,6 +329,22 @@ function resolveScenariosFromSpec(
       ]
     }
 
+    case 'scenario-with-setting-group': {
+      // Create one scenario in which the inputs are configured according to the
+      // setting group defined for each model
+      return [
+        resolveScenarioForSettingGroup(
+          modelInputsL,
+          modelInputsR,
+          genKey(),
+          scenarioSpec.id,
+          scenarioSpec.title,
+          scenarioSpec.subtitle,
+          scenarioSpec.settingGroupId
+        )
+      ]
+    }
+
     default:
       assertNever(scenarioSpec)
   }
@@ -545,6 +563,161 @@ function resolveScenarioForDistinctInputSpecs(
     specL,
     specR
   }
+}
+
+/**
+ * Return a resolved `ComparisonScenario` for the given input setting group
+ */
+function resolveScenarioForSettingGroup(
+  modelInputsL: ModelInputs,
+  modelInputsR: ModelInputs,
+  key: ComparisonScenarioKey,
+  id: ComparisonScenarioId | undefined,
+  title: ComparisonScenarioTitle | undefined,
+  subtitle: ComparisonScenarioSubtitle | undefined,
+  settingGroupId: InputSettingGroupId
+): ComparisonScenario {
+  // XXX: Currently the `ComparisonScenarioInputSpec` must reference an input by
+  // its full variable name or by its alias ("id 3").  But the lower-level
+  // `InputSetting` interface only includes the input variable ID, so we need
+  // to map from the variable ID to the variable name.
+  function inputVarNameForVarId(modelInputs: ModelInputs, varId: VarId): ComparisonScenarioInputName {
+    const inputVar = modelInputs.getInputVarForVarId(varId)
+    if (inputVar !== undefined) {
+      // Get the variable name
+      return inputVar.varName
+    } else {
+      // XXX: It is not likely that a bundle will advertise an input setting group that references
+      // an unknown variable, but in this case, we will use the variable ID as the variable name
+      // and let the resolver fail later
+      return varId
+    }
+  }
+
+  // Convert an `InputPosition` into a `ComparisonScenarioInputPosition`
+  function inputPositionForPosition(position: InputPosition): ComparisonScenarioInputPosition {
+    switch (position) {
+      case 'at-minimum':
+        return 'min'
+      case 'at-maximum':
+        return 'max'
+      case 'at-default':
+        return 'default'
+      default:
+        throw new Error(`Unknown input position: ${position}`)
+    }
+  }
+
+  // Convert an `InputSetting` into a `ComparisonScenarioInputSpec`
+  function inputSpecForSetting(modelInputs: ModelInputs, inputSetting: InputSetting): ComparisonScenarioInputSpec {
+    switch (inputSetting.kind) {
+      case 'position':
+        return {
+          kind: 'input-at-position',
+          inputName: inputVarNameForVarId(modelInputs, inputSetting.inputVarId),
+          position: inputPositionForPosition(inputSetting.position)
+        }
+      case 'value':
+        return {
+          kind: 'input-at-value',
+          inputName: inputVarNameForVarId(modelInputs, inputSetting.inputVarId),
+          value: inputSetting.value
+        }
+      default:
+        throw new Error(`Unknown input setting kind: ${inputSetting}`)
+    }
+  }
+
+  // Convert the input settings given model into a set of `ComparisonScenarioInputSpec` instances
+  function inputSpecsForSettingGroup(
+    modelInputs: ModelInputs,
+    inputSettings: InputSetting[]
+  ): ComparisonScenarioInputSpec[] {
+    return inputSettings.map(inputSetting => inputSpecForSetting(modelInputs, inputSetting))
+  }
+
+  // Convert the `InputSetting` instances to `ComparisonScenarioInputSpec` instances so that
+  // we can use `resolveScenarioForDistinctInputSpecs` to handle the rest of the conversion.
+  // Note that if the setting group is not defined for one or both models, the settings array
+  // will be empty, but we will add the error state after the resolve step.
+  const inputSettingsL = modelInputsL.modelSpec.inputSettingGroups?.get(settingGroupId) || []
+  const inputSettingsR = modelInputsR.modelSpec.inputSettingGroups?.get(settingGroupId) || []
+  const inputsL = inputSpecsForSettingGroup(modelInputsL, inputSettingsL)
+  const inputsR = inputSpecsForSettingGroup(modelInputsR, inputSettingsR)
+
+  // Resolve the scenario and inputs
+  const scenario = resolveScenarioForDistinctInputSpecs(
+    modelInputsL,
+    modelInputsR,
+    key,
+    id,
+    title,
+    subtitle,
+    inputsL,
+    inputsR
+  )
+
+  // Helper function that converts a `ScenarioSpec` to a string for easier comparison (this
+  // sorts the inputs by name and value)
+  function scenarioString(scenario: ScenarioSpec): string {
+    if (scenario.kind === 'input-settings') {
+      const settings = scenario.settings.map(setting => {
+        switch (setting.kind) {
+          case 'position':
+            return `${setting.inputVarId}=${setting.position}`
+          case 'value':
+            return `${setting.inputVarId}=${setting.value}`
+          default:
+            throw new Error(`Unexpected input setting kind: ${setting}`)
+        }
+      })
+      return settings.sort().join('__')
+    } else {
+      throw new Error(`Unexpected scenario spec kind: ${scenario.kind}`)
+    }
+  }
+
+  // Helper function that returns true if the two scenarios are identical (same inputs and values)
+  function scenariosAreEqual(scenarioL: ScenarioSpec, scenarioR: ScenarioSpec): boolean {
+    return scenarioString(scenarioL) === scenarioString(scenarioR)
+  }
+
+  // If the setting group is not defined for one or both models, add the error state
+  function errorState(inputSettings: InputSetting[]): ComparisonScenarioInputState {
+    if (inputSettings.length === 0) {
+      return { error: { kind: 'unknown-input-setting-group' } }
+    } else {
+      return {}
+    }
+  }
+  if (inputSettingsL.length === 0 || inputSettingsR.length === 0) {
+    if (scenario.settings.kind === 'input-settings') {
+      // Put the "unknown group" error at the beginning of the list
+      const errorSetting: ComparisonScenarioInput = {
+        requestedName: settingGroupId,
+        stateL: errorState(inputSettingsL),
+        stateR: errorState(inputSettingsR)
+      }
+      scenario.settings.inputs.unshift(errorSetting)
+    }
+    if (inputSettingsL.length === 0) {
+      scenario.specL = undefined
+    }
+    if (inputSettingsR.length === 0) {
+      scenario.specR = undefined
+    }
+  }
+
+  // If the setting group is defined for both models, but the settings are different
+  // (either the set of inputs is different or the values are different), add a warning
+  // to the scenario so that it can be flagged in the UI
+  if (scenario.settings.kind === 'input-settings') {
+    if (scenario.specL && scenario.specR && !scenariosAreEqual(scenario.specL, scenario.specR)) {
+      scenario.settings.settingsDiffer = true
+    }
+  }
+
+  return scenario
 }
 
 /**

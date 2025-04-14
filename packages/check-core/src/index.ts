@@ -23,6 +23,7 @@ export type {
   DatasetGroupName,
   InputAliasName,
   InputGroupName,
+  InputSettingGroupId,
   LegendItem,
   LinkItem,
   LoadedBundle,
