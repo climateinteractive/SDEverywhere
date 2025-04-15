@@ -785,6 +785,10 @@ function sortVarsOfType(varType) {
     console.error(varType.toUpperCase())
   }
 
+  console.log('------------------------------------------')
+  console.log(`sorting variables of type ${varType}...`)
+  console.log('------------------------------------------')
+
   // Get vars with varType 'aux' or 'level' sorted in dependency order at eval time.
   // Start with vars of the given varType.
   let vars = varsOfType(varType)
@@ -794,6 +798,15 @@ function sortVarsOfType(varType) {
   function refs(v) {
     // Return a list of dependency pairs for all vars referenced by v at eval time.
     let refs = R.map(refId => varWithRefId(refId), v.references)
+    console.log(`variables referenced by ${v.refId}:`)
+    for (const refId of v.references) {
+      const ref = varWithRefId(refId)
+      if (ref) {
+        console.log(`-> ${ref.refId}: varType=${ref.varType}`)
+      } else {
+        console.log(`-> ERROR: found undefined ref in references for ${v.refId}`)
+      }
+    }
     // Only consider references having the correct var type.
     // Remove duplicate references.
     refs = R.uniq(R.filter(R.propEq('varType', varType), refs))
