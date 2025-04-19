@@ -4,7 +4,7 @@ import type { InputValue, InputVarId, Outputs } from '../_shared'
 import type { ModelRunner } from '../model-runner'
 
 /**
- * A high-level interface that schedules running of the underlying `WasmModel`.
+ * A high-level interface that schedules the underlying `ModelRunner`.
  *
  * When one or more input values are changed, this class will schedule a model
  * run to be completed as soon as possible.  When the model run has completed,
@@ -39,7 +39,7 @@ export class ModelScheduler {
   ) {
     // When any input has an updated value, schedule a model run on the next tick
     const afterSet = () => {
-      this.runWasmModelIfNeeded()
+      this.runModelIfNeeded()
     }
     for (const userInput of userInputs) {
       userInput.callbacks.onSet = afterSet
@@ -53,10 +53,10 @@ export class ModelScheduler {
   }
 
   /**
-   * Schedule a wasm model run (if not already pending).  When the run is
+   * Schedule a model run (if not already pending).  When the run is
    * complete, save the outputs and call the `onOutputsChanged` callback.
    */
-  private runWasmModelIfNeeded(): void {
+  private runModelIfNeeded(): void {
     // Set a flag indicating that a new run is needed (even if one is already
     // in progress)
     this.runNeeded = true
@@ -73,15 +73,15 @@ export class ModelScheduler {
       this.runInProgress = true
       setTimeout(() => {
         // Kick off the (possibly asynchronous) model run
-        this.runWasmModelNow()
+        this.runModelNow()
       }, 0)
     }
   }
 
   /**
-   * Run the wasm model asynchronously using the current set of input values.
+   * Run the model asynchronously using the current set of input values.
    */
-  private async runWasmModelNow(): Promise<void> {
+  private async runModelNow(): Promise<void> {
     // Copy the current inputs into a separate array; this ensures that the
     // model run uses a stable set of inputs, even if the user continues to
     // change the inputs while the model is being run asynchronously
@@ -102,7 +102,7 @@ export class ModelScheduler {
       // Keep `runInProgress` set, but clear the `runNeeded` flag
       this.runNeeded = false
       setTimeout(() => {
-        this.runWasmModelNow()
+        this.runModelNow()
       }, 0)
     } else {
       // No run needed, so clear both flags
