@@ -1,7 +1,8 @@
 packages:
   - packages/*
   - examples/**
-  - '!examples/template-*'
-  - '!examples/template-*/**'
+  - '!examples/template-default'
+  - '!examples/template-default/**'
+  - '!examples/template-minimal'
   - models
   - tests/**
