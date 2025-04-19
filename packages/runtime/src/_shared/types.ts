@@ -1,5 +1,8 @@
 // Copyright (c) 2020-2022 Climate Interactive / New Venture Fund
 
+/** The name of a data source for external/static datasets, e.g., 'Ref', 'Constants'. */
+export type SourceName = string
+
 /** A variable name, as used in the modeling tool. */
 export type VarName = string
 
