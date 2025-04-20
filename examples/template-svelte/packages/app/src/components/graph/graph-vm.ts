@@ -1,9 +1,14 @@
+import type { Readable } from 'svelte/store'
+
 import type { GraphSpec, GraphDatasetSpec, OutputVarId, Series, StringKey } from '@core'
 
 /** View model for a graph. */
 export interface GraphViewModel {
   /** The spec that describes the graph datasets and visuals. */
   spec: GraphSpec
+
+  /** A readable store that indicates when the data source has been updated. */
+  dataChanged: Readable<number>
 
   /**
    * Optional callback to customize graph line width.  If defined,

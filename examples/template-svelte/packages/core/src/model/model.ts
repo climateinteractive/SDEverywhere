@@ -28,6 +28,9 @@ import workerJs from './generated/worker.js?raw'
  * with multiple sets of inputs and outputs.
  */
 export interface ModelContext {
+  /** The source name associated with the context. */
+  sourceName: SourceName
+
   /** The set of inputs associated with this context. */
   inputs: Map<InputId, Input>
 
@@ -87,6 +90,13 @@ export class Model {
   }
 
   /**
+   * Return the context for the given source name.
+   */
+  public getContext(sourceName: SourceName): ModelContext | undefined {
+    return this.contexts.get(sourceName)
+  }
+
+  /**
    * Add a new context that holds a distinct set of model inputs and outputs.
    * These inputs and outputs are kept separate from those in other contexts,
    * which allows an application to use the same underlying model to run with
@@ -130,12 +140,13 @@ export class Model {
 
     // Notify when the outputs are updated for this context
     runtimeContext.onOutputsChanged = () => {
-      this.onOutputsChanged()
+      this.onOutputsChanged?.()
     }
 
     // Create the model context that provides access to the inputs and data
     const contextImpl: ModelContextImpl = {
       runtimeContext,
+      sourceName,
       inputs,
       getSeriesForVar: (varId: OutputVarId) => {
         return runtimeContext.getSeriesForVar(varId)

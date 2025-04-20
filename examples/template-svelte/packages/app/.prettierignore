@@ -1,3 +1,4 @@
+node_modules
 public
+dist
 src/model/generated
-**/*.svelte
