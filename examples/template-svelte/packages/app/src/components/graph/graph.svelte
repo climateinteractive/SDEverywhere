@@ -10,14 +10,11 @@ import type { GraphViewModel } from './graph-vm'
 /** The view model. */
 export let viewModel: GraphViewModel
 
-/** The fixed width (in px). */
-export let width: number
-
-/** The fixed height (in px). */
-export let height: number
-
 let container: HTMLElement
-let containerStyle = `width: ${width}px; height: ${height}px;`
+let containerParent: HTMLElement
+let containerStyle = ''
+let availableWidth: number
+let availableHeight: number
 
 let graphView: GraphView
 let dataChanged = viewModel.dataChanged
@@ -57,10 +54,29 @@ function initGraphView() {
 }
 
 onMount(() => {
-  // Create the graph view when the component is mounted
+  // Observe resize events on the parent container.  When the size changes,
+  // update the `style` attribute of our inner container.  This will cause
+  // Chart.js to perform a responsive resize on the chart canvas.
+  let resizeObserver = new ResizeObserver(entries => {
+    const entry = entries[0]
+    const boxSize = entry.contentBoxSize[0]
+    const containerWidth = Math.ceil(boxSize.inlineSize)
+    const containerHeight = Math.ceil(boxSize.blockSize)
+    availableWidth = containerWidth
+    availableHeight = containerHeight
+    updateContainerSize(viewModel.spec)
+  })
+  containerParent = container.parentElement
+  availableWidth = containerParent.offsetWidth
+  availableHeight = containerParent.offsetHeight
+  resizeObserver.observe(containerParent)
+
+  // Create the GraphView that wraps the canvas element
   initGraphView()
 
   return () => {
+    resizeObserver?.disconnect()
+    resizeObserver = undefined
     graphView?.destroy()
     graphView = undefined
   }

@@ -36,23 +36,19 @@ function handleInput(event: Event) {
 </div>
 
 <!-- STYLE -->
-<style>
-.slider-container {
-  margin: 1rem 0;
-}
+<style lang="sass">
+.slider-container
+  margin: 1rem 0
 
-.slider-row {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
+.slider-row
+  display: flex
+  align-items: center
+  gap: 1rem
 
-input[type="range"] {
-  flex: 1;
-}
+input[type="range"]
+  flex: 1
 
-.value {
-  min-width: 2rem;
-  text-align: right;
-}
+.value
+  min-width: 2rem
+  text-align: right
 </style>

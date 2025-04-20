@@ -26,23 +26,19 @@ function handleChange(event: Event) {
 </div>
 
 <!-- STYLE -->
-<style>
-.selector-container {
-  margin: 1rem 0;
-}
+<style lang="sass">
+.selector-container
+  margin: 1rem 0
 
-select {
-  width: 100%;
-  padding: 0.5rem;
-  font-size: inherit;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  background-color: white;
-}
-
-select:focus {
-  outline: none;
-  border-color: #0062ff;
-  box-shadow: 0 0 0 2px rgba(0, 98, 255, 0.2);
-}
+select
+  width: 100%
+  padding: 0.5rem
+  font-size: inherit
+  border: 1px solid #ccc
+  border-radius: 4px
+  background-color: white
+  &:focus
+    outline: none
+    border-color: #0062ff
+    box-shadow: 0 0 0 2px rgba(0, 98, 255, 0.2)
 </style>
