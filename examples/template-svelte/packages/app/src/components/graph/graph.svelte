@@ -51,6 +51,13 @@ function initGraphView() {
 
   // Create the graph view that wraps the canvas element
   graphView = new GraphView(canvas, viewModel, viewOptions)
+  updateContainerSize(viewModel.spec)
+}
+
+function updateContainerSize(graphSpec: GraphSpec) {
+  const width = Math.round(availableWidth)
+  const height = Math.round(availableHeight)
+  containerStyle = `width: ${width}px; height: ${height}px;`
 }
 
 onMount(() => {

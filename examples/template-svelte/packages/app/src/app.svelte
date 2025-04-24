@@ -64,7 +64,7 @@ const scenarios = viewModel.scenarios
   padding: 10px
   border-radius: 10px
   border: 1px solid #ddd
-  background-color: #fafafa
+  background-color: #fff
 
 .bottom-container
   display: flex
@@ -76,8 +76,8 @@ const scenarios = viewModel.scenarios
   flex-direction: column
   padding: 10px
   border-radius: 10px
-  border: 1px solid #ddd
-  background-color: #fafafa
+  border: 1px solid #ccc
+  background-color: #eee
 
 .scenario-name
   margin-bottom: 10px
