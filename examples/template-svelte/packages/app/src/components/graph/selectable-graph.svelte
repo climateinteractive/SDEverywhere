@@ -8,8 +8,6 @@ export let viewModel: SelectableGraphViewModel
 
 const selectedGraphId = viewModel.selectedGraphId
 const selectedGraphViewModel = viewModel.selectedGraphViewModel
-
-console.log(viewModel.graphOptions)
 </script>
 
 <!-- TEMPLATE -->

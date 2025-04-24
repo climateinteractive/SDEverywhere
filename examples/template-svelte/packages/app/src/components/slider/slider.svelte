@@ -1,8 +1,8 @@
 <!-- SCRIPT -->
 <script lang="ts">
-import type { SliderInput } from '@core'
+import type { WritableSliderInput } from '../../model/app-model-inputs'
 
-export let input: SliderInput
+export let input: WritableSliderInput
 export let label: string
 export let min: number
 export let max: number

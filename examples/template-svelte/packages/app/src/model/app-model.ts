@@ -4,16 +4,21 @@ import { addMessages, init as initSvelteIntl } from 'svelte-i18n'
 import type {
   Config as CoreConfig,
   Model as CoreModel,
-  Input,
+  InputId,
   OutputVarId,
   Series,
-  SliderInput,
   SourceName,
   StringKey
 } from '@core'
 import { config as coreConfig, createAsyncModel } from '@core'
 
 import enStrings from '@core-strings/en'
+
+import {
+  createWritableModelInput,
+  type WritableInput,
+  type WritableSliderInput
+} from './app-model-inputs'
 
 /**
  * Create an `AppModel` instance.
@@ -58,8 +63,17 @@ export class AppModel {
     this.coreConfig = coreConfig
 
     // XXX: For now, create two contexts ahead of time
-    coreModel.addContext('Scenario1')
-    coreModel.addContext('Scenario2')
+    function addContext(name: SourceName) {
+      // Create a `WritableInput` instance for each input variable in the config
+      const inputs: Map<InputId, WritableInput> = new Map()
+      for (const inputSpec of coreConfig.inputs.values()) {
+        const input = createWritableModelInput(inputSpec)
+        inputs.set(input.spec.id, input)
+      }
+      coreModel.addContext(name, inputs)
+    }
+    addContext('Scenario1')
+    addContext('Scenario2')
 
     // Increment the data change count when the model produces new outputs
     coreModel.onOutputsChanged = () => {
@@ -67,13 +81,13 @@ export class AppModel {
     }
   }
 
-  getInputsForContext(contextName: SourceName): Input[] | undefined {
+  getInputsForContext(contextName: SourceName): WritableInput[] | undefined {
     const context = this.coreModel.getContext(contextName)
     const inputMap = context?.inputs
-    return inputMap ? Array.from(inputMap.values()) : undefined
+    return inputMap ? (Array.from(inputMap.values()) as WritableInput[]) : undefined
   }
 
-  getSliderInputsForContext(contextName: SourceName): SliderInput[] | undefined {
+  getSliderInputsForContext(contextName: SourceName): WritableSliderInput[] | undefined {
     return this.getInputsForContext(contextName)?.filter(input => input.kind === 'slider')
   }
 
