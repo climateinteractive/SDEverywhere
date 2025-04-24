@@ -16,10 +16,13 @@ const scenarios = viewModel.scenarios
 type Layout = 'layout_1_1' | 'layout_1_2' | 'layout_2_2'
 let selectedLayout: Layout = 'layout_1_2'
 const layoutOptions = [
-  { value: 'layout_1_1', stringKey: '1' },
-  { value: 'layout_1_2', stringKey: '2' },
-  { value: 'layout_2_2', stringKey: '4' }
+  { value: 'layout_1_1', stringKey: '1', maxVisible: 1 },
+  { value: 'layout_1_2', stringKey: '2', maxVisible: 2 },
+  { value: 'layout_2_2', stringKey: '4', maxVisible: 4 }
 ]
+
+$: selectedLayoutOption = layoutOptions.find(option => option.value === selectedLayout)
+$: visibleGraphContainers = viewModel.graphContainers.slice(0, selectedLayoutOption.maxVisible)
 </script>
 
 <!-- TEMPLATE -->
@@ -34,7 +37,7 @@ const layoutOptions = [
       />
     </div>
     <div class="graphs-container {selectedLayout}">
-      {#each viewModel.graphContainers as graphContainer}
+      {#each visibleGraphContainers as graphContainer}
         <div class="selectable-graph-container">
           <SelectableGraph viewModel={graphContainer} />
         </div>
@@ -43,18 +46,18 @@ const layoutOptions = [
   </div>
   <div class="bottom-container">
     {#each $scenarios as scenario}
-    <div class="scenario-container">
-      <div class="scenario-name">{scenario.name}</div>
-      {#each scenario.sliders as slider}
-        <Slider
-          input={slider}
-          label={$_(slider.spec.labelKey)}
-          min={slider.spec.minValue}
-          max={slider.spec.maxValue}
-          step={slider.spec.step}
-        />
-      {/each}
-    </div>
+      <div class="scenario-container">
+        <div class="scenario-name">{scenario.name}</div>
+        {#each scenario.sliders as slider}
+          <Slider
+            input={slider}
+            label={$_(slider.spec.labelKey)}
+            min={slider.spec.minValue}
+            max={slider.spec.maxValue}
+            step={slider.spec.step}
+          />
+        {/each}
+      </div>
     {/each}
   </div>
 </div>
@@ -82,12 +85,10 @@ const layoutOptions = [
 .graphs-container
   display: grid
   gap: 10px
-  width: 100%
-  overflow: hidden
   &.layout_1_1
     grid-template: 1fr
   &.layout_1_2
-    grid-template: 1fr 1fr
+    grid-template-columns: 1fr 1fr
   &.layout_2_2
     grid-template: 1fr 1fr / 1fr 1fr
 
@@ -95,6 +96,7 @@ const layoutOptions = [
   display: flex
   box-sizing: border-box
   width: 100%
+  max-width: 400px
   height: 300px
   padding: 10px
   border-radius: 10px
