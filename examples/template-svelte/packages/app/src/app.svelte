@@ -72,6 +72,15 @@ $: visibleGraphContainers = viewModel.graphContainers.slice(0, selectedLayoutOpt
   display: flex
   flex-direction: column
   gap: 10px
+  padding: 10px
+
+.options-container
+  display: flex
+  flex-direction: row
+  align-items: baseline
+  margin-bottom: 4px
+  margin-left: 4px
+  gap: 10px
 
 .main-container
   display: flex
@@ -83,13 +92,7 @@ $: visibleGraphContainers = viewModel.graphContainers.slice(0, selectedLayoutOpt
   display: flex
   flex-direction: column
   gap: 10px
-
-.options-container
-  display: flex
-  flex-direction: row
-  align-items: baseline
-  margin-bottom: 10px
-  gap: 10px
+  flex-shrink: 0
 
 .graphs-container
   display: grid
@@ -112,6 +115,7 @@ $: visibleGraphContainers = viewModel.graphContainers.slice(0, selectedLayoutOpt
   background-color: #fff
   .graphs-container.layout_1_1 &
     height: 450px
+    max-height: 50vh
   .graphs-container.layout_2_2 &
     height: 250px
 
@@ -129,6 +133,7 @@ $: visibleGraphContainers = viewModel.graphContainers.slice(0, selectedLayoutOpt
   border-radius: 10px
   border: 1px solid #ccc
   background-color: #eee
+  overflow-y: auto
 
 .scenario-name
   margin-bottom: 10px
