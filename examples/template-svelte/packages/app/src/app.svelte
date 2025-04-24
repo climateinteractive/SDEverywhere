@@ -10,21 +10,17 @@ import SelectableGraph from './components/graph/selectable-graph.svelte'
 import Slider from './components/slider/slider.svelte'
 
 export let viewModel: AppViewModel
-const graphViewModel = viewModel.graphContainers[0]
 const scenarios = viewModel.scenarios
-
-// let maxVisibleGraphs = 2
 </script>
 
 <!-- TEMPLATE -->
 <div class="app-container">
   <div class="top-container">
-    <div class="selectable-graph-container">
-      <SelectableGraph viewModel={viewModel.graphContainers[0]} />
-    </div>
-    <div class="selectable-graph-container">
-      <SelectableGraph viewModel={viewModel.graphContainers[1]} />
-    </div>
+    {#each viewModel.graphContainers as graphContainer}
+      <div class="selectable-graph-container">
+        <SelectableGraph viewModel={graphContainer} />
+      </div>
+    {/each}
   </div>
   <div class="bottom-container">
     {#each $scenarios as scenario}

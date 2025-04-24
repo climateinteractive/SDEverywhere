@@ -28,11 +28,14 @@ export class AppViewModel {
     const graphSpecs = [...appModel.coreConfig.graphs.values()]
     const graphViewModels = graphSpecs.map(graphSpec => createGraphViewModel(appModel, graphSpec))
 
-    // TODO: For now, add two graph containers.  We should make this dynamic
-    // to support different layouts, like 1-up, 2-up, 4-up, etc.
+    // The UI allows the user to choose different graph layouts.  For now, add
+    // enough graph containers to support up to 4 graphs at a time.
+    const maxVisibleGraphs = Math.min(4, graphSpecs.length)
     this.graphContainers = []
-    this.graphContainers.push(new SelectableGraphViewModel(graphViewModels, '1'))
-    this.graphContainers.push(new SelectableGraphViewModel(graphViewModels, '2'))
+    for (let i = 0; i < maxVisibleGraphs; i++) {
+      const graphId = graphViewModels[i].spec.id
+      this.graphContainers.push(new SelectableGraphViewModel(graphViewModels, graphId))
+    }
 
     const scenarios: Scenario[] = []
     function addScenario(displayName: string, contextName: SourceName) {
