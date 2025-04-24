@@ -1,6 +1,7 @@
-import { writable, type Readable } from 'svelte/store'
+import { get, writable, type Readable } from 'svelte/store'
+import { _ } from 'svelte-i18n'
 
-import type { GraphSpec, SliderInput, SourceName, StringKey } from '@core'
+import type { GraphSpec, SliderInput, SourceName } from '@core'
 
 import { type AppModel, createAppModel } from './model/app-model'
 
@@ -48,10 +49,6 @@ export class AppViewModel {
     addScenario('Scenario 2', 'Scenario2')
     this.scenarios = writable(scenarios)
   }
-
-  stringForKey(key: StringKey): string {
-    return this.appModel.strings.get(key)
-  }
 }
 
 /**
@@ -64,9 +61,8 @@ function createGraphViewModel(appModel: AppModel, graphSpec: GraphSpec): GraphVi
     getSeriesForVar: (varId, sourceName) => {
       return appModel.getSeriesForVar(sourceName, varId)
     },
-    getStringForKey: key => {
-      // TODO: Use svelte-i18n here and inject values if string is templated
-      return appModel.strings.get(key)
+    getStringForKey(key: string, values?: { [key: string]: string }): string {
+      return get(_)(key, values)
     },
     formatYAxisTickValue: value => {
       return format(value, graphSpec.yFormat)

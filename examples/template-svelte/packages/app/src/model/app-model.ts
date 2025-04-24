@@ -7,8 +7,7 @@ import type {
   InputId,
   OutputVarId,
   Series,
-  SourceName,
-  StringKey
+  SourceName
 } from '@core'
 import { config as coreConfig, createAsyncModel } from '@core'
 
@@ -39,16 +38,6 @@ export async function createAppModel(): Promise<AppModel> {
 }
 
 /**
- * Provides access to strings for a given key
- */
-export class Strings {
-  // TODO: Replace this with svelte-i18n
-  get(key: StringKey): string | undefined {
-    return enStrings[key]
-  }
-}
-
-/**
  * High-level interface to the runnable model.
  */
 export class AppModel {
@@ -56,8 +45,6 @@ export class AppModel {
 
   private readonly writableDataChanged: Writable<number> = writable(0)
   public readonly dataChanged: Readable<number> = this.writableDataChanged
-
-  public readonly strings: Strings = new Strings()
 
   constructor(private readonly coreModel: CoreModel) {
     this.coreConfig = coreConfig
