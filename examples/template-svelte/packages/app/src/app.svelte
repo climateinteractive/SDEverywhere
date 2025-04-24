@@ -14,7 +14,7 @@ export let viewModel: AppViewModel
 const scenarios = viewModel.scenarios
 
 type Layout = 'layout_1_1' | 'layout_1_2' | 'layout_2_2'
-let selectedLayout: Layout = 'layout_1_2'
+let selectedLayout: Layout = 'layout_1_1'
 const layoutOptions = [
   { value: 'layout_1_1', stringKey: '1', maxVisible: 1 },
   { value: 'layout_1_2', stringKey: '2', maxVisible: 2 },
@@ -27,38 +27,42 @@ $: visibleGraphContainers = viewModel.graphContainers.slice(0, selectedLayoutOpt
 
 <!-- TEMPLATE -->
 <div class="app-container">
-  <div class="top-container">
-    <div class="options-container">
-      <div class="layout-label">Visible Graphs:</div>
-      <Selector
-        options={layoutOptions}
-        bind:value={selectedLayout}
-        onSelect={() => {}}
-      />
+  <div class="options-container">
+    <div class="layout-label">Visible Graphs:</div>
+    <Selector
+      options={layoutOptions}
+      bind:value={selectedLayout}
+      onSelect={() => {}}
+    />
+  </div>
+  <div class="main-container">
+    <div class="top-container">
+      <div class="graphs-container {selectedLayout}">
+        {#each visibleGraphContainers as graphContainer}
+          <div class="selectable-graph-container">
+            <SelectableGraph viewModel={graphContainer} />
+          </div>
+        {/each}
+      </div>
     </div>
-    <div class="graphs-container {selectedLayout}">
-      {#each visibleGraphContainers as graphContainer}
-        <div class="selectable-graph-container">
-          <SelectableGraph viewModel={graphContainer} />
+    <div class="bottom-container">
+      {#each $scenarios as scenario}
+        <div class="scenario-container">
+          {#if $scenarios.length > 1}
+            <div class="scenario-name">{scenario.name}</div>
+          {/if}
+          {#each scenario.sliders as slider}
+            <Slider
+              input={slider}
+              label={$_(slider.spec.labelKey)}
+              min={slider.spec.minValue}
+              max={slider.spec.maxValue}
+              step={slider.spec.step}
+            />
+          {/each}
         </div>
       {/each}
     </div>
-  </div>
-  <div class="bottom-container">
-    {#each $scenarios as scenario}
-      <div class="scenario-container">
-        <div class="scenario-name">{scenario.name}</div>
-        {#each scenario.sliders as slider}
-          <Slider
-            input={slider}
-            label={$_(slider.spec.labelKey)}
-            min={slider.spec.minValue}
-            max={slider.spec.maxValue}
-            step={slider.spec.step}
-          />
-        {/each}
-      </div>
-    {/each}
   </div>
 </div>
 
@@ -69,6 +73,12 @@ $: visibleGraphContainers = viewModel.graphContainers.slice(0, selectedLayoutOpt
   flex-direction: column
   gap: 10px
 
+.main-container
+  display: flex
+  flex-direction: column
+  gap: 10px
+  max-width: 800px
+
 .top-container
   display: flex
   flex-direction: column
@@ -78,7 +88,6 @@ $: visibleGraphContainers = viewModel.graphContainers.slice(0, selectedLayoutOpt
   display: flex
   flex-direction: row
   align-items: baseline
-  align-self: flex-end
   margin-bottom: 10px
   gap: 10px
 
@@ -96,21 +105,26 @@ $: visibleGraphContainers = viewModel.graphContainers.slice(0, selectedLayoutOpt
   display: flex
   box-sizing: border-box
   width: 100%
-  max-width: 400px
   height: 300px
   padding: 10px
   border-radius: 10px
   border: 1px solid #ddd
   background-color: #fff
+  .graphs-container.layout_1_1 &
+    height: 450px
+  .graphs-container.layout_2_2 &
+    height: 250px
 
 .bottom-container
   display: flex
   flex-direction: row
-  gap: 20px
+  justify-content: space-evenly
+  gap: 10px
 
 .scenario-container
   display: flex
   flex-direction: column
+  width: 300px
   padding: 10px
   border-radius: 10px
   border: 1px solid #ccc
