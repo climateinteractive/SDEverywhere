@@ -54,15 +54,21 @@ const scenarios = viewModel.scenarios
 .top-container
   display: flex
   flex-direction: column
-  padding: 10px
+  gap: 10px
 
 .selectable-graph-container
-  flex: 1
+  display: flex
+  box-sizing: border-box
+  width: 400px
+  height: 300px
+  padding: 10px
+  border-radius: 10px
+  border: 1px solid #ddd
+  background-color: #fafafa
 
 .bottom-container
   display: flex
   flex-direction: row
-  padding: 10px
   gap: 20px
 
 .scenario-container

@@ -31,8 +31,11 @@ console.log(viewModel.graphOptions)
 .selectable-graph
   display: flex
   flex-direction: column
+  flex: 1
   gap: 1rem
 
 .graph-container
   position: relative
+  width: 100%
+  height: 100%
 </style>

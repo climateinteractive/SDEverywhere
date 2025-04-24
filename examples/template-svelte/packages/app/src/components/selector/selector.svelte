@@ -27,12 +27,9 @@ function handleChange(event: Event) {
 
 <!-- STYLE -->
 <style lang="sass">
-.selector-container
-  margin: 1rem 0
-
 select
   width: 100%
-  padding: 0.5rem
+  padding: 4px
   font-size: inherit
   border: 1px solid #ccc
   border-radius: 4px
