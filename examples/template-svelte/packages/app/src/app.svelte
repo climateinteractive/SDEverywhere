@@ -28,7 +28,7 @@ $: visibleGraphContainers = viewModel.graphContainers.slice(0, selectedLayoutOpt
 <!-- TEMPLATE -->
 <div class="app-container">
   <div class="options-container">
-    <div class="layout-label">Visible Graphs:</div>
+    <div class="layout-label">Max Visible Graphs:</div>
     <Selector
       options={layoutOptions}
       bind:value={selectedLayout}
@@ -72,6 +72,8 @@ $: visibleGraphContainers = viewModel.graphContainers.slice(0, selectedLayoutOpt
   display: flex
   flex-direction: column
   gap: 10px
+  box-sizing: border-box
+  height: 100vh
   padding: 10px
 
 .options-container
@@ -87,6 +89,8 @@ $: visibleGraphContainers = viewModel.graphContainers.slice(0, selectedLayoutOpt
   flex-direction: column
   gap: 10px
   max-width: 800px
+  height: calc(100% - 20px)
+  min-height: 0
 
 .top-container
   display: flex
@@ -118,12 +122,15 @@ $: visibleGraphContainers = viewModel.graphContainers.slice(0, selectedLayoutOpt
     max-height: 50vh
   .graphs-container.layout_2_2 &
     height: 250px
+    max-height: 30vh
 
 .bottom-container
   display: flex
   flex-direction: row
   justify-content: space-evenly
   gap: 10px
+  min-height: 0
+  overflow: hidden
 
 .scenario-container
   display: flex
@@ -133,6 +140,7 @@ $: visibleGraphContainers = viewModel.graphContainers.slice(0, selectedLayoutOpt
   border-radius: 10px
   border: 1px solid #ccc
   background-color: #eee
+  min-height: 0
   overflow-y: auto
 
 .scenario-name
