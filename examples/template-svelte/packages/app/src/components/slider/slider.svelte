@@ -1,8 +1,9 @@
 <!-- SCRIPT -->
 <script lang="ts">
 import { onMount } from 'svelte'
+import { _ } from 'svelte-i18n'
 
-import type { WritableSliderInput } from '../../model/app-model-inputs'
+import type { WritableSliderInput } from '@model/app-model-inputs'
 
 export let input: WritableSliderInput
 export let label: string
@@ -17,6 +18,18 @@ function handleInput(event: Event) {
   const target = event.target as HTMLInputElement
   const newValue = parseFloat(target.value)
   input.set(newValue)
+}
+
+// Format the slider value
+function formatValue(value: number): string {
+  // TODO: Exercise for the reader: use d3-format or similar to format the slider value
+  if (input.spec.format === '.1f') {
+    return value.toFixed(1)
+  } else if (input.spec.format === '.2f') {
+    return value.toFixed(2)
+  } else {
+    return value
+  }
 }
 
 onMount(() => {
@@ -35,19 +48,22 @@ onMount(() => {
 
 <!-- TEMPLATE -->
 <div class="slider-container">
-  <label for={input.varId}>{@html label}</label>
+  <div class="label-row">
+    <div class="label">{@html label}</div>
+    <div class="spacer"></div>
+    <div class="value">{formatValue($input)}</div>
+    <div class="units">{$_(input.spec.unitsKey)}</div>
+  </div>
   <div class="slider-row">
     <input
       bind:this={sliderElem}
       type="range"
-      id={input.varId}
       value={$input}
       {min}
       {max}
       {step}
       on:input={handleInput}
     />
-    <span class="value">{$input.toFixed(1)}</span>
   </div>
 </div>
 
@@ -55,6 +71,16 @@ onMount(() => {
 <style lang="sass">
 .slider-container
   margin: 1rem 0
+
+.spacer
+  flex: 1
+
+.label-row
+  display: flex
+  gap: .3rem
+
+.label, .value
+  font-weight: bold
 
 .slider-row
   display: flex
