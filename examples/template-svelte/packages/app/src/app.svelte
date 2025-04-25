@@ -24,6 +24,7 @@ $: visibleGraphContainers = viewModel.graphContainers.slice(0, $selectedLayoutOp
     <div class="layout-label">Max Visible Graphs:</div>
     <Selector viewModel={viewModel.layoutSelector} />
   </div>
+
   <div class="main-container">
     <div class="top-container">
       <div class="graphs-container {$selectedLayoutOption.value}">
@@ -34,6 +35,7 @@ $: visibleGraphContainers = viewModel.graphContainers.slice(0, $selectedLayoutOp
         {/each}
       </div>
     </div>
+
     <div class="bottom-container">
       {#each $scenarios as scenario}
         <div class="scenario-container">
@@ -54,6 +56,7 @@ $: visibleGraphContainers = viewModel.graphContainers.slice(0, $selectedLayoutOp
       {/each}
     </div>
   </div>
+
   <DevOverlay />
 </div>
 

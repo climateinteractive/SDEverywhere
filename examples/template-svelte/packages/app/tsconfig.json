@@ -11,7 +11,10 @@
       "@core": ["../core/src"],
       "@core-strings": ["../core/strings"],
       "@core-strings/*": ["../core/strings/*"],
-      "@prep/*": ["../../sde-prep/*"]
+      "@prep/*": ["../../sde-prep/*"],
+      "@shared/*": ["src/_shared/*"],
+      "@model/*": ["src/model/*"],
+      "@components/*": ["src/components/*"]
     },
     // XXX: The following two lines work around a TS/VSCode issue where this config
     // file shows an error ("Cannot write file appcfg.js because it would overwrite

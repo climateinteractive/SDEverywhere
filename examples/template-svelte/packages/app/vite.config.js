@@ -31,7 +31,10 @@ export default defineConfig({
     alias: {
       '@core': resolve(appDir, '..', 'core', 'src'),
       '@core-strings': resolve(appDir, '..', 'core', 'strings'),
-      '@prep': resolve(projDir, 'sde-prep')
+      '@prep': resolve(projDir, 'sde-prep'),
+      '@shared': resolve(appDir, 'src', '_shared'),
+      '@model': resolve(appDir, 'src', 'model'),
+      '@components': resolve(appDir, 'src', 'components')
     }
   },
 

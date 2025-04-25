@@ -6,7 +6,6 @@ import type { SelectorViewModel } from './selector-vm'
 
 export let viewModel: SelectorViewModel
 const selectedValue = viewModel.selectedValue
-
 </script>
 
 <!-- TEMPLATE -->

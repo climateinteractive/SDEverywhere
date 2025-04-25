@@ -1,6 +1,6 @@
 import { writable } from 'svelte/store'
 import type { InputCallbacks, InputSpec, SliderInput, SwitchInput } from '@core'
-import type { SyncWritable } from './stores'
+import type { SyncWritable } from '@shared/stores'
 
 /**
  * Represents a writable slider (range) input to the model.  This is a

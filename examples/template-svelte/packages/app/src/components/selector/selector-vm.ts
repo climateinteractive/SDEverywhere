@@ -1,4 +1,4 @@
-import type { SyncWritable } from '../../model/stores'
+import type { SyncWritable } from '@shared/stores'
 
 export interface SelectorOption {
   value: string

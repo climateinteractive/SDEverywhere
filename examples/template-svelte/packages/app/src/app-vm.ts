@@ -3,13 +3,14 @@ import { _ } from 'svelte-i18n'
 
 import type { GraphSpec, SourceName } from '@core'
 
-import { type AppModel, createAppModel } from './model/app-model'
-import type { WritableSliderInput } from './model/app-model-inputs'
-import { syncWritable } from './model/stores'
+import { syncWritable } from '@shared/stores'
 
-import type { GraphViewModel } from './components/graph/graph-vm'
-import { SelectableGraphViewModel } from './components/graph/selectable-graph-vm'
-import type { SelectorOption, SelectorViewModel } from './components/selector/selector-vm'
+import { type AppModel, createAppModel } from '@model/app-model'
+import type { WritableSliderInput } from '@model/app-model-inputs'
+
+import type { GraphViewModel } from '@components/graph/graph-vm'
+import { SelectableGraphViewModel } from '@components/graph/selectable-graph-vm'
+import type { SelectorOption, SelectorViewModel } from '@components/selector/selector-vm'
 
 export interface LayoutOption extends SelectorOption {
   maxVisible: number

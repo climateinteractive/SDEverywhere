@@ -1,6 +1,6 @@
 <!-- SCRIPT -->
 <script lang="ts">
-import Selector from '../selector/selector.svelte'
+import Selector from '@components/selector/selector.svelte'
 import Graph from './graph.svelte'
 import Legend from './legend.svelte'
 import type { SelectableGraphViewModel } from './selectable-graph-vm'

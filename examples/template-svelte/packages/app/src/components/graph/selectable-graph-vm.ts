@@ -3,8 +3,10 @@ import { derived } from 'svelte/store'
 
 import type { GraphId } from '@core'
 
-import { type SyncWritable, syncWritable } from '../../model/stores'
-import type { SelectorViewModel } from '../selector/selector-vm'
+import { type SyncWritable, syncWritable } from '@shared/stores'
+
+import type { SelectorViewModel } from '@components/selector/selector-vm'
+
 import type { GraphViewModel } from './graph-vm'
 
 export class SelectableGraphViewModel {
