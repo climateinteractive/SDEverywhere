@@ -216,31 +216,28 @@ export async function createModel(runner: ModelRunner, options?: { externalData?
     externalData = new Map()
   }
 
-  let refOutputs: Outputs
-  if (refOutputVarIds.size > 0) {
-    // Perform a primary reference run to capture the baseline ("Ref") data.
-    // Note that we save the `Outputs` for this reference run so that initial
-    // contexts are initialized with the baseline data.
-    const inputs: number[] = []
-    for (const inputSpec of coreConfig.inputs.values()) {
-      inputs.push(inputSpec.defaultValue)
-    }
-    refOutputs = await runner.runModel(inputs, runner.createOutputs())
-
-    // Capture data from the reference run for the given variables.  Note that we
-    // must copy the series data, since the `Outputs` instance can be reused by
-    // the runner and otherwise the data might be overwritten.
-    const refData: SeriesMap = new Map()
-    for (const varId of refOutputVarIds) {
-      const series = refOutputs.getSeriesForVar(varId)
-      if (series) {
-        refData.set(varId, series.copy())
-      } else {
-        console.error(`ERROR: No reference data available for ${varId}`)
-      }
-    }
-    externalData.set('Ref', refData)
+  // Perform a primary reference run to capture the baseline ("Ref") data.
+  // Note that we save the `Outputs` for this reference run so that initial
+  // contexts are initialized with the baseline data.
+  const inputs: number[] = []
+  for (const inputSpec of coreConfig.inputs.values()) {
+    inputs.push(inputSpec.defaultValue)
   }
+  const refOutputs = await runner.runModel(inputs, runner.createOutputs())
+
+  // Capture data from the reference run for the given variables.  Note that we
+  // must copy the series data, since the `Outputs` instance can be reused by
+  // the runner and otherwise the data might be overwritten.
+  const refData: SeriesMap = new Map()
+  for (const varId of refOutputVarIds) {
+    const series = refOutputs.getSeriesForVar(varId)
+    if (series) {
+      refData.set(varId, series.copy())
+    } else {
+      console.error(`ERROR: No reference data available for ${varId}`)
+    }
+  }
+  externalData.set('Ref', refData)
 
   // Create the `Model` instance
   return new Model(coreConfig, runner, externalData, refOutputs)
