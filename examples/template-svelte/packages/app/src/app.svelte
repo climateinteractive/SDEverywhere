@@ -6,6 +6,7 @@ import './global.css'
 
 import type { AppViewModel } from './app-vm'
 
+import DevOverlay from './components/dev/dev-overlay.svelte'
 import SelectableGraph from './components/graph/selectable-graph.svelte'
 import Selector from './components/selector/selector.svelte'
 import Slider from './components/slider/slider.svelte'
@@ -65,6 +66,7 @@ $: visibleGraphContainers = viewModel.graphContainers.slice(0, selectedLayoutOpt
       {/each}
     </div>
   </div>
+  <DevOverlay />
 </div>
 
 <!-- STYLE -->
