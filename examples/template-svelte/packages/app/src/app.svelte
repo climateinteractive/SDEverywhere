@@ -48,9 +48,10 @@ $: visibleGraphContainers = viewModel.graphContainers.slice(0, selectedLayoutOpt
     <div class="bottom-container">
       {#each $scenarios as scenario}
         <div class="scenario-container">
-          {#if $scenarios.length > 1}
+          <div class="scenario-header">
             <div class="scenario-name">{scenario.name}</div>
-          {/if}
+            <button on:click={() => scenario.reset()}>Reset</button>
+          </div>
           {#each scenario.sliders as slider}
             <Slider
               input={slider}
@@ -142,6 +143,12 @@ $: visibleGraphContainers = viewModel.graphContainers.slice(0, selectedLayoutOpt
   background-color: #eee
   min-height: 0
   overflow-y: auto
+
+.scenario-header
+  display: flex
+  flex-direction: row
+  justify-content: space-between
+  align-items: baseline
 
 .scenario-name
   margin-bottom: 10px

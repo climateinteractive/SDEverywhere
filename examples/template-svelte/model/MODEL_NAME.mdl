@@ -15,7 +15,7 @@ Production years = 10
   ~
   |
 
-Initial inventory = 1000
+Initial inventory = 100
   ~~|
 
 Total inventory = Initial inventory + RAMP(Production slope, Production start year, Production start year + Production years)

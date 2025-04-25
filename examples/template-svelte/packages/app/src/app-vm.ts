@@ -1,16 +1,23 @@
 import { get, writable, type Readable } from 'svelte/store'
 import { _ } from 'svelte-i18n'
 
-import type { GraphSpec, SliderInput, SourceName } from '@core'
+import type { GraphSpec, SourceName } from '@core'
 
 import { type AppModel, createAppModel } from './model/app-model'
+import type { WritableSliderInput } from './model/app-model-inputs'
 
 import type { GraphViewModel } from './components/graph/graph-vm'
 import { SelectableGraphViewModel } from './components/graph/selectable-graph-vm'
 
-export interface Scenario {
-  name: string
-  sliders: SliderInput[]
+export class ScenarioViewModel {
+  constructor(
+    public readonly name: string,
+    public readonly sliders: WritableSliderInput[]
+  ) {}
+
+  reset() {
+    this.sliders.forEach(slider => slider.reset())
+  }
 }
 
 export async function createAppViewModel(): Promise<AppViewModel> {
@@ -23,9 +30,9 @@ export async function createAppViewModel(): Promise<AppViewModel> {
 
 export class AppViewModel {
   public readonly graphContainers: SelectableGraphViewModel[]
-  public readonly scenarios: Readable<Scenario[]>
+  public readonly scenarios: Readable<ScenarioViewModel[]>
 
-  constructor(private readonly appModel: AppModel) {
+  constructor(appModel: AppModel) {
     const graphSpecs = [...appModel.coreConfig.graphs.values()]
     const graphViewModels = graphSpecs.map(graphSpec => createGraphViewModel(appModel, graphSpec))
 
@@ -38,12 +45,15 @@ export class AppViewModel {
       this.graphContainers.push(new SelectableGraphViewModel(graphViewModels, graphId))
     }
 
-    const scenarios: Scenario[] = []
+    // Create the scenario view models
+    const scenarios: ScenarioViewModel[] = []
     function addScenario(displayName: string, contextName: SourceName) {
-      scenarios.push({
-        name: displayName,
-        sliders: appModel.getSliderInputsForContext(contextName) ?? []
-      })
+      const scenario = new ScenarioViewModel(
+        displayName,
+        appModel.getSliderInputsForContext(contextName) ?? []
+      )
+      scenarios.push(scenario)
+      return scenario
     }
     addScenario('Scenario 1', 'Scenario1')
     addScenario('Scenario 2', 'Scenario2')

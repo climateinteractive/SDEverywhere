@@ -1,5 +1,7 @@
 <!-- SCRIPT -->
 <script lang="ts">
+import { onMount } from 'svelte'
+
 import type { WritableSliderInput } from '../../model/app-model-inputs'
 
 export let input: WritableSliderInput
@@ -9,6 +11,7 @@ export let max: number
 export let step: number = 1
 
 let value = input.get()
+let sliderElem: HTMLInputElement
 
 function handleInput(event: Event) {
   const target = event.target as HTMLInputElement
@@ -16,6 +19,20 @@ function handleInput(event: Event) {
   input.set(newValue)
   value = newValue
 }
+
+onMount(() => {
+  // When the model input value changes, update the slider view
+  const unsubscribe = input.subscribe(newValue => {
+    if (sliderElem) {
+      sliderElem.value = newValue.toString()
+      value = newValue
+    }
+  })
+
+  return () => {
+    unsubscribe?.()
+  }
+})
 </script>
 
 <!-- TEMPLATE -->
@@ -23,6 +40,7 @@ function handleInput(event: Event) {
   <label for={input.varId}>{@html label}</label>
   <div class="slider-row">
     <input
+      bind:this={sliderElem}
       type="range"
       id={input.varId}
       bind:value
