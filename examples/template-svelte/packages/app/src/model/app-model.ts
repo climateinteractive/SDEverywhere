@@ -57,7 +57,7 @@ export class AppModel {
         const input = createWritableModelInput(inputSpec)
         inputs.set(input.spec.id, input)
       }
-      coreModel.addContext(name, inputs)
+      coreModel.addContext(name, { inputs })
     }
     addContext('Scenario1')
     addContext('Scenario2')

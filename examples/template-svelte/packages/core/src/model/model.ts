@@ -86,7 +86,7 @@ export class Model {
     private readonly externalData: DataMap,
     initialOutputs?: Outputs
   ) {
-    this.scheduler = new MultiContextModelScheduler(runner, initialOutputs)
+    this.scheduler = new MultiContextModelScheduler(runner, { initialOutputs })
   }
 
   /**
@@ -103,28 +103,31 @@ export class Model {
    * multiple I/O contexts.
    *
    * Note that contexts created before the first scheduled model run will
-   * inherit the baseline/reference scenario outputs as a memory-saving
-   * measure, but contexts created after that first run will initially have
-   * output values set to zero.
+   * inherit the baseline/reference scenario outputs, but contexts created
+   * after that first run will initially have output values set to zero.
    *
    * @param sourceName The name of the data source that will be associated with
    * the new context.  This name must be unique across all contexts and cannot
    * be the same as one of the source names in the `externalData` map.
-   * @param inputs The input values, in the same order as in the spec file passed to `sde`.
+   * @param options The options for the new context.
+   * @param options.inputs The input values, in the same order as in the spec file passed to `sde`.
    * If undefined, a map of `Input` instances will be initialized according to the input
    * specs in the default `Config`.
    */
-  public addContext(sourceName: SourceName, inputs?: Map<InputId, Input>): ModelContext {
+  public addContext(sourceName: SourceName, options?: { inputs?: Map<InputId, Input> }): ModelContext {
     if (this.contexts.has(sourceName)) {
       throw new Error(`Context with source name '${sourceName}' already exists`)
     }
     if (this.externalData.has(sourceName)) {
-      throw new Error(`External data with source name '${sourceName}' already exists`)
+      throw new Error(
+        `Cannot add context with source name '${sourceName}' because there is already an external data source with that name`
+      )
     }
 
-    if (inputs) {
+    let inputs: Map<InputId, Input>
+    if (options?.inputs) {
       // Ensure that the inputs are in the order expected by the generated model
-      inputs = getOrderedInputs(inputs)
+      inputs = getOrderedInputs(options.inputs)
     } else {
       // Create an `Input` instance for each input variable in the config
       inputs = new Map()
@@ -136,7 +139,7 @@ export class Model {
 
     // Create a context with the underlying model scheduler
     const inputsArray = Array.from(inputs.values())
-    const runtimeContext = this.scheduler.addContext(inputsArray, undefined)
+    const runtimeContext = this.scheduler.addContext(inputsArray)
 
     // Notify when the outputs are updated for this context
     runtimeContext.onOutputsChanged = () => {
@@ -186,9 +189,10 @@ export class Model {
  * model run to capture the reference/baseline data.
  *
  * @param runner The model runner.
- * @param externalData Additional external datasets that will be available for display in graphs.
+ * @param options The options for the model.
+ * @param options.externalData Additional external datasets that will be available for display in graphs.
  */
-export async function createModel(runner: ModelRunner, externalData?: DataMap): Promise<Model> {
+export async function createModel(runner: ModelRunner, options?: { externalData?: DataMap }): Promise<Model> {
   // Find all variables in the graph config that have "Ref" as the source name.
   // These are the reference/baseline datasets that will be captured in the
   // initial reference run.
@@ -202,10 +206,12 @@ export async function createModel(runner: ModelRunner, externalData?: DataMap): 
   }
 
   // Create a map to hold the external data if one was not provided
-  if (externalData) {
+  let externalData: DataMap
+  if (options?.externalData) {
     if (externalData.has('Ref')) {
       throw new Error(`The 'externalData' map cannot contain 'Ref' data`)
     }
+    externalData = options.externalData
   } else {
     externalData = new Map()
   }
@@ -261,13 +267,16 @@ export async function createAsyncModelRunner(): Promise<ModelRunner> {
  *
  * This is an asynchronous operation because it loads the generated model asynchronously
  * and then performs an initial model run to capture the reference/baseline data.
+ *
+ * @param options The options for the model.
+ * @param options.externalData Additional external datasets that will be available for display in graphs.
  */
-export async function createAsyncModel(): Promise<Model> {
+export async function createAsyncModel(options?: { externalData?: DataMap }): Promise<Model> {
   // Initialize the asynchronous model runner
   const runner = await createAsyncModelRunner()
 
   // Create the `Model` instance that uses the asynchronous runner
-  return createModel(runner)
+  return createModel(runner, options)
 }
 
 /**
