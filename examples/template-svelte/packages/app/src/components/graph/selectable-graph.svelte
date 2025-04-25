@@ -12,7 +12,6 @@ const selectedGraphViewModel = viewModel.selectedGraphViewModel
 <!-- TEMPLATE -->
 <div class="selectable-graph">
   <Selector viewModel={viewModel.selectorViewModel} />
-
   <div class="graph-container">
     <Graph viewModel={$selectedGraphViewModel} />
   </div>
