@@ -62,7 +62,7 @@ export class AppViewModel {
     ]
     this.layoutSelector = {
       options: layoutOptions,
-      selectedValue: syncWritable('layout_1_1')
+      selectedValue: syncWritable('layout_1_2')
     }
     this.selectedLayoutOption = derived(this.layoutSelector.selectedValue, $selectedLayout => {
       return layoutOptions.find(option => option.value === $selectedLayout)
