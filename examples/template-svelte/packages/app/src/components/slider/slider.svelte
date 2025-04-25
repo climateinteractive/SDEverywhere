@@ -10,14 +10,13 @@ export let min: number
 export let max: number
 export let step: number = 1
 
-let value = input.get()
 let sliderElem: HTMLInputElement
 
+// When the slider value changes, update the model input value
 function handleInput(event: Event) {
   const target = event.target as HTMLInputElement
   const newValue = parseFloat(target.value)
   input.set(newValue)
-  value = newValue
 }
 
 onMount(() => {
@@ -25,7 +24,6 @@ onMount(() => {
   const unsubscribe = input.subscribe(newValue => {
     if (sliderElem) {
       sliderElem.value = newValue.toString()
-      value = newValue
     }
   })
 
@@ -43,13 +41,13 @@ onMount(() => {
       bind:this={sliderElem}
       type="range"
       id={input.varId}
-      bind:value
+      value={$input}
       {min}
       {max}
       {step}
       on:input={handleInput}
     />
-    <span class="value">{value.toFixed(1)}</span>
+    <span class="value">{$input.toFixed(1)}</span>
   </div>
 </div>
 
