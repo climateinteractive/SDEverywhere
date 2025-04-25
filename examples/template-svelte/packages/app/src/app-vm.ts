@@ -1,13 +1,19 @@
-import { get, writable, type Readable } from 'svelte/store'
+import { derived, get, writable, type Readable } from 'svelte/store'
 import { _ } from 'svelte-i18n'
 
 import type { GraphSpec, SourceName } from '@core'
 
 import { type AppModel, createAppModel } from './model/app-model'
 import type { WritableSliderInput } from './model/app-model-inputs'
+import { syncWritable } from './model/stores'
 
 import type { GraphViewModel } from './components/graph/graph-vm'
 import { SelectableGraphViewModel } from './components/graph/selectable-graph-vm'
+import type { SelectorOption, SelectorViewModel } from './components/selector/selector-vm'
+
+export interface LayoutOption extends SelectorOption {
+  maxVisible: number
+}
 
 export class ScenarioViewModel {
   constructor(
@@ -29,6 +35,8 @@ export async function createAppViewModel(): Promise<AppViewModel> {
 }
 
 export class AppViewModel {
+  public readonly layoutSelector: SelectorViewModel
+  public readonly selectedLayoutOption: Readable<LayoutOption>
   public readonly graphContainers: SelectableGraphViewModel[]
   public readonly scenarios: Readable<ScenarioViewModel[]>
 
@@ -44,6 +52,20 @@ export class AppViewModel {
       const graphId = graphViewModels[i].spec.id
       this.graphContainers.push(new SelectableGraphViewModel(graphViewModels, graphId))
     }
+
+    // Add the layout options
+    const layoutOptions: LayoutOption[] = [
+      { value: 'layout_1_1', stringKey: '1', maxVisible: 1 },
+      { value: 'layout_1_2', stringKey: '2', maxVisible: 2 },
+      { value: 'layout_2_2', stringKey: '4', maxVisible: 4 }
+    ]
+    this.layoutSelector = {
+      options: layoutOptions,
+      selectedValue: syncWritable('layout_1_1')
+    }
+    this.selectedLayoutOption = derived(this.layoutSelector.selectedValue, $selectedLayout => {
+      return layoutOptions.find(option => option.value === $selectedLayout)
+    })
 
     // Create the scenario view models
     const scenarios: ScenarioViewModel[] = []

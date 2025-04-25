@@ -18,7 +18,16 @@ Production years = 10
 Initial inventory = 100
   ~~|
 
-Total inventory = Initial inventory + RAMP(Production slope, Production start year, Production start year + Production years)
+Total inventory = Initial inventory + Total production
+  ~~|
+
+Total production = RAMP(Production slope, Production start year, Production start year + Production years)
+  ~~|
+
+Max output per factory = 40
+  ~~|
+
+Factories required = INTEGER(Total production / Max output per factory) + 1
   ~~|
 
 INITIAL TIME = 2000 ~~|

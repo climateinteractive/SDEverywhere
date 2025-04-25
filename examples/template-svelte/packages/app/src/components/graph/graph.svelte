@@ -20,7 +20,8 @@ let graphView: GraphView
 let dataChanged = viewModel.dataChanged
 
 // When the view model changes, rebuild the graph view
-$: if (graphView) {
+$: if (graphView && graphView.viewModel.spec.id !== viewModel.spec.id) {
+  graphView.destroy()
   initGraphView()
 }
 

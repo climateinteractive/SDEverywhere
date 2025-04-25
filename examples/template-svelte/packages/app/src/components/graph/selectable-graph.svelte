@@ -3,22 +3,16 @@
 import Selector from '../selector/selector.svelte'
 import Graph from './graph.svelte'
 import Legend from './legend.svelte'
-
 import type { SelectableGraphViewModel } from './selectable-graph-vm'
 
 export let viewModel: SelectableGraphViewModel
-
-const selectedGraphId = viewModel.selectedGraphId
 const selectedGraphViewModel = viewModel.selectedGraphViewModel
 </script>
 
 <!-- TEMPLATE -->
 <div class="selectable-graph">
-  <Selector
-    options={viewModel.graphOptions}
-    bind:value={$selectedGraphId}
-    onSelect={() => console.log('not implemented')}
-  />
+  <Selector viewModel={viewModel.selectorViewModel} />
+
   <div class="graph-container">
     <Graph viewModel={$selectedGraphViewModel} />
   </div>

@@ -1,5 +1,5 @@
 <!-- SCRIPT -->
-<script lang='ts'>
+<script lang="ts">
 import { _ } from 'svelte-i18n'
 
 import './global.css'
@@ -13,32 +13,20 @@ import Slider from './components/slider/slider.svelte'
 
 export let viewModel: AppViewModel
 const scenarios = viewModel.scenarios
+const selectedLayoutOption = viewModel.selectedLayoutOption
 
-type Layout = 'layout_1_1' | 'layout_1_2' | 'layout_2_2'
-let selectedLayout: Layout = 'layout_1_1'
-const layoutOptions = [
-  { value: 'layout_1_1', stringKey: '1', maxVisible: 1 },
-  { value: 'layout_1_2', stringKey: '2', maxVisible: 2 },
-  { value: 'layout_2_2', stringKey: '4', maxVisible: 4 }
-]
-
-$: selectedLayoutOption = layoutOptions.find(option => option.value === selectedLayout)
-$: visibleGraphContainers = viewModel.graphContainers.slice(0, selectedLayoutOption.maxVisible)
+$: visibleGraphContainers = viewModel.graphContainers.slice(0, $selectedLayoutOption.maxVisible)
 </script>
 
 <!-- TEMPLATE -->
 <div class="app-container">
   <div class="options-container">
     <div class="layout-label">Max Visible Graphs:</div>
-    <Selector
-      options={layoutOptions}
-      bind:value={selectedLayout}
-      onSelect={() => {}}
-    />
+    <Selector viewModel={viewModel.layoutSelector} />
   </div>
   <div class="main-container">
     <div class="top-container">
-      <div class="graphs-container {selectedLayout}">
+      <div class="graphs-container {$selectedLayoutOption.value}">
         {#each visibleGraphContainers as graphContainer}
           <div class="selectable-graph-container">
             <SelectableGraph viewModel={graphContainer} />
@@ -70,7 +58,7 @@ $: visibleGraphContainers = viewModel.graphContainers.slice(0, selectedLayoutOpt
 </div>
 
 <!-- STYLE -->
-<style lang='sass'>
+<style lang="sass">
 .app-container
   display: flex
   flex-direction: column
