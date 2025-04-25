@@ -150,7 +150,6 @@ describe('MultiContextModelScheduler', () => {
     let onOutputsChangedCalled = false
     context1.onOutputsChanged = () => {
       onOutputsChangedCalled = true
-      console.log('onOutputsChanged called')
     }
 
     // Verify that `onOutputsChanged` has not been called yet
@@ -162,9 +161,7 @@ describe('MultiContextModelScheduler', () => {
 
     // Move fake time forward enough to cause the model run to be scheduled,
     // but not enough for the model run to complete (which takes 20ms)
-    console.log('Advancing timers 2')
-    // vi.advanceTimersByTime(10)
-    await vi.advanceTimersToNextTimerAsync()
+    await vi.advanceTimersByTimeAsync(10)
     expect(onOutputsChangedCalled).toBe(false)
 
     // Set the same input to a new value; this should not affect the current
@@ -175,9 +172,8 @@ describe('MultiContextModelScheduler', () => {
     inputs1.input2.set(6)
 
     // Move fake time forward enough to cause the first model run to complete
-    console.log('Advancing timers 2')
-    // vi.advanceTimersByTime(20)
-    await vi.advanceTimersToNextTimerAsync()
+    await vi.advanceTimersByTimeAsync(20)
+
     // Verify that `onOutputsChanged` is called after the first model run completed
     expect(onOutputsChangedCalled).toBe(true)
     expect(context1.getSeriesForVar('_output_1').getValueAtTime(2000)).toBe(3)
@@ -187,20 +183,12 @@ describe('MultiContextModelScheduler', () => {
     onOutputsChangedCalled = false
 
     // Move fake time forward enough to cause the next run to complete
-    // await vi.advanceTimersByTimeAsync(20)
+    await vi.advanceTimersByTimeAsync(30)
+    expect(onOutputsChangedCalled).toBe(true)
 
-    // vi.advanceTimersByTime(30)
-    // vi.advanceTimersToNextTimer()
-    // await vi.advanceTimersToNextTimerAsync()
-
-    // TODO: The following code is timing out unexpectedly; the code is basically
-    // the same as `ModelScheduler`, but it fails for `MultiContextModelScheduler`,
-    // so this will need more investigation
-
-    // // Verify that `onOutputsChanged` is called after the second model run completed
-    // await contextOutputsChanged(context1)
-    // expect(context1.getSeriesForVar('_output_1').getValueAtTime(2000)).toBe(5)
-    // expect(context1.getSeriesForVar('_output_2').getValueAtTime(2100)).toBe(12)
+    // Verify that `onOutputsChanged` is called after the second model run completed
+    expect(context1.getSeriesForVar('_output_1').getValueAtTime(2000)).toBe(5)
+    expect(context1.getSeriesForVar('_output_2').getValueAtTime(2100)).toBe(12)
   })
 })
 
