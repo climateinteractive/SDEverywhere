@@ -2,6 +2,8 @@
 <script lang="ts">
 import Selector from '../selector/selector.svelte'
 import Graph from './graph.svelte'
+import Legend from './legend.svelte'
+
 import type { SelectableGraphViewModel } from './selectable-graph-vm'
 
 export let viewModel: SelectableGraphViewModel
@@ -18,10 +20,9 @@ const selectedGraphViewModel = viewModel.selectedGraphViewModel
     onSelect={() => console.log('not implemented')}
   />
   <div class="graph-container">
-    <Graph
-      viewModel={$selectedGraphViewModel}
-    />
+    <Graph viewModel={$selectedGraphViewModel} />
   </div>
+  <Legend graphSpec={$selectedGraphViewModel.spec} />
 </div>
 
 <!-- STYLE -->
