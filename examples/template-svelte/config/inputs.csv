@@ -1,3 +1,3 @@
 id,input type,viewid,varname,label,view level,group name,slider min,slider max,slider/switch default,slider step,units,format,reversed,range 2 start,range 3 start,range 4 start,range 5 start,range 1 label,range 2 label,range 3 label,range 4 label,range 5 label,enabled value,disabled value,controlled input ids,listing label,description
-1,slider,v1,Production Slope,Production Slope,,Inputs,0,10,1,0.1,,.1f,,,,,,,,,,,,,,,
+1,slider,v1,Production Slope,Production Slope,,Inputs,0,10,4,0.1,,.1f,,,,,,,,,,,,,,,
 2,slider,v1,Production Years,Production Years,,Inputs,1,30,10,1,,,,,,,,,,,,,,,,,
