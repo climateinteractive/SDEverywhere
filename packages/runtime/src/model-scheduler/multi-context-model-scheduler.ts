@@ -33,8 +33,8 @@ export interface ModelContext {
  * this one supports multiple contexts, each with its own distinct set of
  * inputs and outputs.  This is useful for running the same underlying model
  * instance with different sets of inputs and outputs.  For example, you can
- * use this to show the outputs for multiple scenarios in a single graph or
- * in different graphs.
+ * use this to show the outputs for multiple scenarios in a single graph, or
+ * multiple scenarios across different graphs.
  *
  * When input values are changed in one or more contexts, this class will schedule
  * a model run for each changed context to be completed as soon as possible.
@@ -46,6 +46,12 @@ export interface ModelContext {
  * worker thread).
  */
 export class MultiContextModelScheduler {
+  /**
+   * An optional `Outputs` instance that will be reused for the initial context.  This will
+   * be set to undefined after it is used for the first context.
+   */
+  private initialOutputs?: Outputs
+
   /** The second array that holds a stable copy of the user inputs. */
   private currentInputs: number[]
 
@@ -60,13 +66,13 @@ export class MultiContextModelScheduler {
 
   /**
    * @param runner The model runner.
-   * @param initialOutputs An `Outputs` instance that will be reused for the initial
-   * context (this can be undefined).
+   * @param options Additional options for the scheduler.
+   * @param options.initialOutputs An optional `Outputs` instance that will be reused
+   * for the initial context.  This is useful for saving memory when an `Outputs`
+   * instance was already created for, e.g., a initial baseline/reference run.
    */
-  constructor(private readonly runner: ModelRunner, private initialOutputs?: Outputs) {
-    if (initialOutputs === undefined) {
-      this.initialOutputs = runner.createOutputs()
-    }
+  constructor(private readonly runner: ModelRunner, options?: { initialOutputs?: Outputs }) {
+    this.initialOutputs = options?.initialOutputs
   }
 
   /**
@@ -82,27 +88,30 @@ export class MultiContextModelScheduler {
    * which allows an application to use the same underlying model to run with
    * multiple I/O contexts.
    *
-   * Note that contexts created before the first scheduled model run will
-   * inherit the baseline/reference scenario outputs as a memory-saving
-   * measure, but contexts created after that first run will initially have
-   * output values set to zero.
+   * Note that the contexts created before the first scheduled model run
+   * will inherit the data from `initialOutputs` passed to the constructor,
+   * but contexts created after that will initially have output values set
+   * to zero.
    *
    * @param inputs The input values, in the same order as in the spec file passed to `sde`.
-   * @param externalData Additional data that is external to the model outputs.
+   * @param options Additional options for the context.
+   * @param options.externalData Additional data that is external to the model outputs.
    * For example, this can contain data that was captured from an initial reference
    * run, or other static data that is displayed in graphs alongside the model
    * output data in graphs.
    */
-  public addContext(inputs: InputValue[], externalData?: DataMap): ModelContext {
-    // If we haven't yet performed the initial scheduled model run, use the output
-    // data from the baseline/reference run, otherwise initialize a new instance
+  public addContext(inputs: InputValue[], options?: { externalData?: DataMap }): ModelContext {
+    // If we haven't yet performed the initial scheduled model run, the context
+    // will inherit the data from `initialOutputs` (if defined), otherwise we
+    // initialize a new instance with output values set to zero
     let outputs: Outputs
     if (this.initialOutputs !== undefined) {
       if (this.contexts.length === 0) {
         // For the first context, use the initial outputs by reference
         outputs = this.initialOutputs
       } else {
-        // For all other contexts, create a copy of the initial outputs
+        // For all other contexts created before the initial scheduled model run,
+        // create a copy of the initial outputs
         outputs = this.runner.createOutputs()
         for (const varId of outputs.varIds) {
           const series0 = this.initialOutputs.getSeriesForVar(varId)
@@ -113,12 +122,12 @@ export class MultiContextModelScheduler {
         }
       }
     } else {
-      // Initialize a new instance (with values set to zero)
+      // Otherwise, initialize a new instance (with values set to zero)
       outputs = this.runner.createOutputs()
     }
 
     // Create the context
-    const context = new ModelContextImpl(inputs, outputs, externalData)
+    const context = new ModelContextImpl(inputs, outputs, options?.externalData)
 
     // When any input has an updated value, schedule a model run on the next tick
     const afterSet = () => {
@@ -237,19 +246,19 @@ export class MultiContextModelScheduler {
 class ModelContextImpl implements ModelContext {
   /**
    * A copy of the `inputs` array that was passed to `addContext`.
-   * @hidden This is intended for use by `ModelScheduler` only.
+   * @hidden This is intended for use by `MultiContextModelScheduler` only.
    */
   public readonly inputsArray: InputValue[]
 
   /**
    * The structure into which the model outputs will be stored.
-   * @hidden This is intended for use by `ModelScheduler` only.
+   * @hidden This is intended for use by `MultiContextModelScheduler` only.
    */
   public readonly outputs: Outputs
 
   /**
    * Whether a model run is needed for this context.
-   * @hidden This is intended for use by `ModelScheduler` only.
+   * @hidden This is intended for use by `MultiContextModelScheduler` only.
    */
   public runNeeded = false
 
@@ -259,7 +268,7 @@ class ModelContextImpl implements ModelContext {
   public onOutputsChanged?: () => void
 
   /**
-   * @hidden This is intended for use by `Model` only.
+   * @hidden This is intended for use by `MultiContextModelScheduler` only.
    *
    * @param inputs The input values, in the same order as in the spec file passed to `sde`.
    * @param outputs The structure into which the model outputs will be stored.
@@ -282,7 +291,7 @@ class ModelContextImpl implements ModelContext {
    */
   public getSeriesForVar(varId: OutputVarId, sourceName?: SourceName): Series | undefined {
     if (sourceName === undefined) {
-      // Return the latest model output data
+      // Return the latest model output data for this context
       return this.outputs.getSeriesForVar(varId)
     } else {
       const dataForSource = this.externalData.get(sourceName)
