@@ -399,4 +399,37 @@ describe('configProcessor', () => {
     const specJsonFile = joinPath(testEnv.projDir, 'sde-prep', 'spec.json')
     expect(await readFile(specJsonFile, 'utf8')).toEqual(specJson3)
   })
+
+  it('should treat variables with "Scenario" source as normal model outputs', async () => {
+    const configDir = joinPath(__dirname, '__tests__', 'config3')
+    const testEnv = await prepareForBuild(corePkgDir => ({
+      config: configDir,
+      out: {
+        modelSpecsDir: joinPath(corePkgDir, 'mgen'),
+        configSpecsDir: joinPath(corePkgDir, 'cgen'),
+        stringsDir: joinPath(corePkgDir, 'sgen')
+      }
+    }))
+    const result = await build('production', testEnv.buildOptions)
+    if (result.isErr()) {
+      throw new Error('Expected ok result but got: ' + result.error.message)
+    }
+
+    const specJsonFile = joinPath(testEnv.projDir, 'sde-prep', 'spec.json')
+    const expectedSpecJson = `\
+{
+  "inputVarNames": [
+    "Input A"
+  ],
+  "outputVarNames": [
+    "Var 1"
+  ],
+  "externalDatfiles": [],
+  "bundleListing": true,
+  "customLookups": true,
+  "customOutputs": true
+}\
+`
+    expect(await readFile(specJsonFile, 'utf8')).toEqual(expectedSpecJson)
+  })
 })

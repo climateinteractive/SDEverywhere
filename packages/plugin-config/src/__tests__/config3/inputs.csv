@@ -1,0 +1,2 @@
+id,input type,viewid,varname,label,view level,group name,slider min,slider max,slider/switch default,slider step,units,format,reversed,range 2 start,range 3 start,range 4 start,range 5 start,range 1 label,range 2 label,range 3 label,range 4 label,range 5 label,enabled value,disabled value,controlled input ids,listing label,description
+1,slider,v1,Input A,Slider A Label,,Input Group 1,-50,50,0,1,%,,,-25,-10,10,25,,lowest,low,status quo,high,highest,,,,This is a description of Slider A
