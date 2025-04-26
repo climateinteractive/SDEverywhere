@@ -12,9 +12,9 @@
     "packages/app"
   ],
   "dependencies": {
-    "@sdeverywhere/build": "^0.3.4",
-    "@sdeverywhere/cli": "^0.7.23",
-    "@sdeverywhere/plugin-vite": "^0.1.8",
-    "@sdeverywhere/plugin-worker": "^0.2.3"
+    "@sdeverywhere/build": "^0.3.7",
+    "@sdeverywhere/cli": "^0.7.31",
+    "@sdeverywhere/plugin-vite": "^0.1.11",
+    "@sdeverywhere/plugin-worker": "^0.2.10"
   }
 }

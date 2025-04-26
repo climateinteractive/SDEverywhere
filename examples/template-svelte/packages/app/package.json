@@ -1,5 +1,5 @@
 {
-  "name": "@sdeverywhere/house-game-app",
+  "name": "template-svelte-app",
   "private": true,
   "version": "1.0.0",
   "type": "module",
@@ -10,37 +10,27 @@
     "lint": "run-s lint:ts lint:svelte",
     "prettier:check": "prettier --check .",
     "prettier:fix": "prettier --write .",
-    "precommit": "../../../../scripts/precommit",
     "test": "echo No tests yet",
     "type-check": "tsc --noEmit",
     "bundle": "vite build",
     "dev": "vite",
-    "ci:build": "run-s clean lint prettier:check type-check bundle"
+    "ci:build:disabled": "run-s clean lint prettier:check type-check bundle"
   },
   "dependencies": {
-    "@sdeverywhere/runtime": "^0.2.7",
-    "@sdeverywhere/runtime-async": "^0.2.7",
-    "chart.js": "^2.9.4"
+    "bootstrap-slider": "10.6.2",
+    "chart.js": "^2.9.4",
+    "svelte-i18n": "^4.0.1"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^3.1.2",
     "@types/chart.js": "^2.9.34",
     "postcss": "^8.4.41",
+    "prettier": "^3.5.3",
+    "prettier-plugin-svelte": "^3.3.3",
     "sass": "^1.77.8",
     "svelte": "^4.2.19",
     "svelte-check": "^3.8.6",
     "svelte-preprocess": "^6.0.2",
     "vite": "^5.4.2"
-  },
-  "author": "Climate Interactive",
-  "license": "MIT",
-  "homepage": "https://sdeverywhere.org",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/climateinteractive/SDEverywhere.git",
-    "directory": "examples/house-game/packages/app"
-  },
-  "bugs": {
-    "url": "https://github.com/climateinteractive/SDEverywhere/issues"
   }
 }
