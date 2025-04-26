@@ -2,7 +2,7 @@
 
 # Interface: ModelRunner
 
-Abstraction that allows for running the wasm model on the JS thread
+Abstraction that allows for running a generated model on the JS thread
 or asynchronously (e.g. in a Web Worker), depending on the implementation.
 
 ## Methods

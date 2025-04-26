@@ -3,10 +3,16 @@
 import type { Result } from 'neverthrow'
 import { ok, err } from 'neverthrow'
 
-import type { OutputVarId, Point, VarSpec } from './types'
+import type { OutputVarId, Point, SourceName, VarSpec } from './types'
 
 /** Indicates the type of error encountered when parsing an outputs buffer. */
 export type ParseError = 'invalid-point-count'
+
+/** Type alias for a map that holds a `Series` instance for each output (or static) variable ID. */
+export type SeriesMap = Map<OutputVarId, Series>
+
+/** Type alias for a map that holds data for a given source name. */
+export type DataMap = Map<SourceName, SeriesMap>
 
 /**
  * A time series of data points for an output variable.

@@ -11,15 +11,24 @@ or asynchronously.
 
 ### Model Scheduler
 
-Optional: Create a [ModelScheduler](classes/ModelScheduler.md) around a `ModelRunner` to
-simplify the process of running the model on demand.
-This API is especially useful in web applications built with a reactive framework.
+Optional: Create a [ModelScheduler](classes/ModelScheduler.md) or
+[MultiContextModelScheduler](classes/MultiContextModelScheduler.md)
+around a `ModelRunner` to simplify the process of running the model on demand.
+These classes are especially useful in web applications built with a reactive framework.
+
+NOTE: The main difference between these two classes is that `MultiContextModelScheduler`
+allows for using multiple "contexts" (i.e., distinct sets of inputs and outputs) with
+the same underlying model instance, while `ModelScheduler` effectively only supports a
+single context. These two APIs will be combined prior to version 1.0 of the `runtime`
+package.
 
 - [ModelScheduler](classes/ModelScheduler.md)
+- [MultiContextModelScheduler](classes/MultiContextModelScheduler.md)
 
 ### Inputs
 
-The `InputValue` API is generally only needed when working with the `ModelScheduler` class.
+The `InputValue` API is generally only needed when working with the `ModelScheduler` or
+`MultiContextModelScheduler` classes.
 
 - [InputValue](interfaces/InputValue.md)
 - [InputCallbacks](interfaces/InputCallbacks.md)
