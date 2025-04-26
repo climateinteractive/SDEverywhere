@@ -1,3 +1,3 @@
 module.exports = {
-  extends: ['../../../../.eslintrc-svelte-common.cjs']
+  extends: ['./.eslintrc-svelte.cjs']
 }

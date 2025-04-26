@@ -6,7 +6,7 @@ import { config as coreConfig, createAsyncModel } from '@core'
 
 import enStrings from '@core-strings/en'
 
-import { createWritableModelInput, type WritableInput, type WritableSliderInput } from './app-model-inputs'
+import { createWritableModelInput, type WritableInput } from './app-model-inputs'
 
 /**
  * Create an `AppModel` instance.
@@ -103,14 +103,6 @@ export class AppModel {
 
   getContexts(): ReadonlyMap<SourceName, AppModelContext> {
     return this.contexts
-  }
-
-  getInputsForContext(contextName: SourceName): WritableInput[] | undefined {
-    return Array.from(this.contexts.get(contextName)?.inputs.values() ?? [])
-  }
-
-  getSliderInputsForContext(contextName: SourceName): WritableSliderInput[] | undefined {
-    return this.getInputsForContext(contextName)?.filter(input => input.kind === 'slider')
   }
 
   getSeriesForVar(sourceName: SourceName | undefined, varId: OutputVarId): Series | undefined {

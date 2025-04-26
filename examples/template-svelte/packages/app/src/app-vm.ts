@@ -77,7 +77,8 @@ export class AppViewModel {
       } else {
         displayName = ''
       }
-      const sliders = [...context.inputs.values()].filter(input => input.kind === 'slider')
+      // TODO: We need to update `app.svelte` to handle switch inputs; for now, only show sliders
+      const sliders = [...context.inputs.values()].filter(input => input.kind === 'slider') as WritableSliderInput[]
       const scenario = new ScenarioViewModel(displayName, sliders)
       scenarios.push(scenario)
       return scenario
