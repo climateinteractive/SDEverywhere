@@ -7,8 +7,8 @@ import './global.css'
 import type { AppViewModel } from './app-vm'
 
 import DevOverlay from './components/dev/dev-overlay.svelte'
-import InputRow from './components/input-row/input-row.svelte'
-import SelectableGraph from './components/graph/selectable-graph.svelte'
+import InputRow from './components/inputs/input-row.svelte'
+import SelectableGraph from './components/graphs/selectable-graph.svelte'
 import Selector from './components/selector/selector.svelte'
 
 export let viewModel: AppViewModel

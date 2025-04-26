@@ -3,7 +3,7 @@
 import { onMount } from 'svelte'
 import { _ } from 'svelte-i18n'
 import type { WritableSliderInput } from '@model/app-model-inputs'
-import Slider from '@components/slider/slider.svelte'
+import Slider from './slider.svelte'
 
 export let input: WritableSliderInput
 export let idPrefix: string

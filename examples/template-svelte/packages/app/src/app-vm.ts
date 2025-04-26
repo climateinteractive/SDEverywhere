@@ -8,8 +8,8 @@ import { syncWritable } from '@shared/stores'
 import { type AppModel, type AppModelContext, createAppModel } from '@model/app-model'
 import type { WritableSliderInput } from '@model/app-model-inputs'
 
-import type { GraphViewModel } from '@components/graph/graph-vm'
-import { SelectableGraphViewModel } from '@components/graph/selectable-graph-vm'
+import type { GraphViewModel } from '@components/graphs/graph-vm'
+import { SelectableGraphViewModel } from '@components/graphs/selectable-graph-vm'
 import type { SelectorOption, SelectorViewModel } from '@components/selector/selector-vm'
 
 export interface LayoutOption extends SelectorOption {
