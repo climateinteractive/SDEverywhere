@@ -23,12 +23,10 @@ function handleInput(event: Event) {
 // Format the slider value
 function formatValue(value: number): string {
   // TODO: Exercise for the reader: use d3-format or similar to format the slider value
-  if (input.spec.format === '.1f') {
-    return value.toFixed(1)
-  } else if (input.spec.format === '.2f') {
+  if (input.spec.format === '.2f') {
     return value.toFixed(2)
   } else {
-    return value
+    return value.toFixed(1)
   }
 }
 
