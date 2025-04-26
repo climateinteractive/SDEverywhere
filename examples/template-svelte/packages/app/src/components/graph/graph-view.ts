@@ -23,7 +23,11 @@ export interface GraphViewOptions {
 export class GraphView {
   private chart: Chart
 
-  constructor(readonly canvas: HTMLCanvasElement, readonly viewModel: GraphViewModel, options: GraphViewOptions) {
+  constructor(
+    readonly canvas: HTMLCanvasElement,
+    readonly viewModel: GraphViewModel,
+    options: GraphViewOptions
+  ) {
     this.chart = createChart(canvas, viewModel, options)
   }
 

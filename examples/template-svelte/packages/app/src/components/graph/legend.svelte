@@ -1,5 +1,5 @@
 <!-- SCRIPT -->
-<script lang='ts'>
+<script lang="ts">
 import { _ } from 'svelte-i18n'
 
 export let graphSpec: GraphSpec
@@ -15,7 +15,7 @@ export let graphSpec: GraphSpec
 </div>
 
 <!-- STYLE -->
-<style lang='sass'>
+<style lang="sass">
 .legend-container
   display: flex
   flex-direction: row

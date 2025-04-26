@@ -3,7 +3,7 @@
   "editor.defaultFormatter": "esbenp.prettier-vscode"
   // "[svelte]": {
   //   "editor.defaultFormatter": "esbenp.prettier-vscode",
-  //   "prettier.configPath": ".prettierrc.svelte"
+  //   "prettier.configPath": ".prettierrc"
   // },
   // "prettier.documentSelectors": ["**/*.svelte"],
   // "files.associations": {

@@ -1,23 +1,12 @@
 import { writable, type Writable, type Readable } from 'svelte/store'
 import { addMessages, init as initSvelteIntl } from 'svelte-i18n'
 
-import type {
-  Config as CoreConfig,
-  Model as CoreModel,
-  InputId,
-  OutputVarId,
-  Series,
-  SourceName
-} from '@core'
+import type { Config as CoreConfig, Model as CoreModel, InputId, OutputVarId, Series, SourceName } from '@core'
 import { config as coreConfig, createAsyncModel } from '@core'
 
 import enStrings from '@core-strings/en'
 
-import {
-  createWritableModelInput,
-  type WritableInput,
-  type WritableSliderInput
-} from './app-model-inputs'
+import { createWritableModelInput, type WritableInput, type WritableSliderInput } from './app-model-inputs'
 
 /**
  * Create an `AppModel` instance.

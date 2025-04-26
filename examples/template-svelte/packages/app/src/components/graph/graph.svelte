@@ -1,6 +1,5 @@
 <!-- SCRIPT -->
-<script lang='ts'>
-
+<script lang="ts">
 import { onMount } from 'svelte'
 
 import type { GraphViewOptions } from './graph-view'
@@ -52,10 +51,10 @@ function initGraphView() {
 
   // Create the graph view that wraps the canvas element
   graphView = new GraphView(canvas, viewModel, viewOptions)
-  updateContainerSize(viewModel.spec)
+  updateContainerSize()
 }
 
-function updateContainerSize(graphSpec: GraphSpec) {
+function updateContainerSize() {
   const width = Math.round(availableWidth)
   const height = Math.round(availableHeight)
   containerStyle = `width: ${width}px; height: ${height}px;`
@@ -72,7 +71,7 @@ onMount(() => {
     const containerHeight = Math.ceil(boxSize.blockSize)
     availableWidth = containerWidth
     availableHeight = containerHeight
-    updateContainerSize(viewModel.spec)
+    updateContainerSize()
   })
   containerParent = container.parentElement
   availableWidth = containerParent.offsetWidth
@@ -89,25 +88,13 @@ onMount(() => {
     graphView = undefined
   }
 })
-
 </script>
 
-
-
-
 <!-- TEMPLATE -->
-<template>
-
-<div class="graph-inner-container" bind:this={container} style={containerStyle} />
-
-</template>
-
-
-
+<div class="graph-inner-container" bind:this={container} style={containerStyle}></div>
 
 <!-- STYLE -->
-<style lang='sass'>
-
+<style lang="sass">
 // This container is set up to allow for automatic responsive sizing
 // by Chart.js.  For this to work, we need the canvas element to have
 // this parent container with `position: absolute` and configured with
@@ -118,5 +105,4 @@ onMount(() => {
   left: 0
   bottom: 0
   right: 0
-
 </style>

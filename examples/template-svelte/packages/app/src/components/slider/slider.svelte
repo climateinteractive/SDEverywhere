@@ -53,15 +53,7 @@ onMount(() => {
     <div class="units">{$_(input.spec.unitsKey)}</div>
   </div>
   <div class="slider-row">
-    <input
-      bind:this={sliderElem}
-      type="range"
-      value={$input}
-      {min}
-      {max}
-      {step}
-      on:input={handleInput}
-    />
+    <input bind:this={sliderElem} type="range" value={$input} {min} {max} {step} on:input={handleInput} />
   </div>
 </div>
 

@@ -1,17 +1,17 @@
 <!-- SCRIPT -->
-<script lang='ts'>
+<script lang="ts">
 import messagesHtml from '@prep/messages.html?raw'
 </script>
 
 <!-- TEMPLATE -->
 {#if messagesHtml}
   <div class="overlay-container allow-selection">
-    <div class="overlay-text">{ @html messagesHtml }</div>
+    <div class="overlay-text">{@html messagesHtml}</div>
   </div>
 {/if}
 
 <!-- STYLE -->
-<style lang='sass'>
+<style lang="sass">
 .overlay-container
   position: fixed
   display: flex
