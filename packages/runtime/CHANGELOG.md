@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.7](https://github.com/climateinteractive/SDEverywhere/compare/runtime-v0.2.6...runtime-v0.2.7) (2025-04-26)
+
+
+### Features
+
+* add model scheduler variant that supports multiple input/output contexts ([#630](https://github.com/climateinteractive/SDEverywhere/issues/630)) ([ffd53d1](https://github.com/climateinteractive/SDEverywhere/commit/ffd53d17566ab5744344ce4ad5b00aa6d0b85213)), closes [#625](https://github.com/climateinteractive/SDEverywhere/issues/625)
+
 ## [0.2.6](https://github.com/climateinteractive/SDEverywhere/compare/runtime-v0.2.5...runtime-v0.2.6) (2025-01-09)
 
 

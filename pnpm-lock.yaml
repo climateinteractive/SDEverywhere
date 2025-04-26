@@ -434,10 +434,10 @@ importers:
         specifier: ^0.2.9
         version: link:../check-ui-shell
       '@sdeverywhere/runtime':
-        specifier: ^0.2.6
+        specifier: ^0.2.7
         version: link:../runtime
       '@sdeverywhere/runtime-async':
-        specifier: ^0.2.6
+        specifier: ^0.2.7
         version: link:../runtime-async
       assert-never:
         specifier: ^1.2.1
@@ -527,10 +527,10 @@ importers:
   packages/plugin-worker:
     dependencies:
       '@sdeverywhere/runtime':
-        specifier: ^0.2.6
+        specifier: ^0.2.7
         version: link:../runtime
       '@sdeverywhere/runtime-async':
-        specifier: ^0.2.6
+        specifier: ^0.2.7
         version: link:../runtime-async
       vite:
         specifier: 5.4.2
@@ -552,7 +552,7 @@ importers:
   packages/runtime-async:
     dependencies:
       '@sdeverywhere/runtime':
-        specifier: ^0.2.6
+        specifier: ^0.2.7
         version: link:../runtime
       threads:
         specifier: 1.7.0
