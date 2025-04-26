@@ -1,7 +1,7 @@
 # template-default
 
 This is a template that is used by the `@sdeverywhere/create` package to generate a
-new project that uses SDEverywhere.
+new project that uses SDEverywhere for a jQuery-based web application.
 
 The project includes:
 

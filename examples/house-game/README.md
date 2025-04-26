@@ -59,7 +59,7 @@ npm install
 npm run dev
 ```
 
-## For Developers
+## For Contributors
 
 If you are modifying SDEverywhere (the packages in this repository) and want
 to use this `house-game` example to test your changes, you can use it directly
