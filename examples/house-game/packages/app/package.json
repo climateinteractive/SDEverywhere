@@ -10,7 +10,7 @@
     "lint": "run-s lint:ts lint:svelte",
     "prettier:check": "prettier --check .",
     "prettier:fix": "prettier --write .",
-    "precommit": "../../scripts/precommit",
+    "precommit": "../../../../scripts/precommit",
     "test": "echo No tests yet",
     "type-check": "tsc --noEmit",
     "bundle": "vite build",
