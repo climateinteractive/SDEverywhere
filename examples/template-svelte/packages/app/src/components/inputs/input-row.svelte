@@ -6,7 +6,6 @@ import type { WritableSliderInput } from '@model/app-model-inputs'
 import Slider from './slider.svelte'
 
 export let input: WritableSliderInput
-export let idPrefix: string
 
 // Format the slider value
 function formatValue(value: number): string {
@@ -28,7 +27,7 @@ function formatValue(value: number): string {
     <div class="units">{@html $_(input.spec.unitsKey)}</div>
   </div>
   <div class="slider-row">
-    <Slider {input} {idPrefix} />
+    <Slider {input} />
   </div>
 </div>
 

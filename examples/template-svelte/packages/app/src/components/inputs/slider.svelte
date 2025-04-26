@@ -34,11 +34,6 @@ function createSliderView() {
 
   // Create the slider view and bind it to the input element
   sliderView = new SliderView(inputElem, input)
-
-  // When the slider view updates its value, update the qualifier
-  sliderView.onChange = newValue => {
-    updateQualKey(newValue)
-  }
 }
 
 onMount(() => {

@@ -44,7 +44,7 @@ $: visibleGraphContainers = viewModel.graphContainers.slice(0, $selectedLayoutOp
             <button on:click={() => scenario.reset()}>Reset</button>
           </div>
           {#each scenario.sliders as slider}
-            <InputRow input={slider} idPrefix={`${scenario.name.toLowerCase().replace(/\s+/g, '-')}-`} />
+            <InputRow input={slider} />
           {/each}
         </div>
       {/each}
