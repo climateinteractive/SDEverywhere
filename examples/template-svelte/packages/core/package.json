@@ -19,8 +19,8 @@
     "ci:build:disabled": "run-s clean lint prettier:check type-check"
   },
   "dependencies": {
-    "@sdeverywhere/runtime": "^0.2.6",
-    "@sdeverywhere/runtime-async": "^0.2.6"
+    "@sdeverywhere/runtime": "^0.2.7",
+    "@sdeverywhere/runtime-async": "^0.2.7"
   },
   "devDependencies": {
     "typescript": "^5.2.2",

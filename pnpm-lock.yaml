@@ -54,16 +54,16 @@ importers:
   examples/hello-world:
     dependencies:
       '@sdeverywhere/build':
-        specifier: ^0.3.4
+        specifier: ^0.3.7
         version: link:../../packages/build
       '@sdeverywhere/cli':
-        specifier: ^0.7.23
+        specifier: ^0.7.31
         version: link:../../packages/cli
       '@sdeverywhere/plugin-check':
-        specifier: ^0.3.5
+        specifier: ^0.3.17
         version: link:../../packages/plugin-check
       '@sdeverywhere/plugin-worker':
-        specifier: ^0.2.3
+        specifier: ^0.2.10
         version: link:../../packages/plugin-worker
       vite:
         specifier: ^5.4.2
@@ -72,25 +72,25 @@ importers:
   examples/house-game:
     dependencies:
       '@sdeverywhere/build':
-        specifier: ^0.3.4
+        specifier: ^0.3.7
         version: link:../../packages/build
       '@sdeverywhere/cli':
-        specifier: ^0.7.23
+        specifier: ^0.7.31
         version: link:../../packages/cli
       '@sdeverywhere/plugin-vite':
-        specifier: ^0.1.8
+        specifier: ^0.1.11
         version: link:../../packages/plugin-vite
       '@sdeverywhere/plugin-worker':
-        specifier: ^0.2.3
+        specifier: ^0.2.10
         version: link:../../packages/plugin-worker
 
   examples/house-game/packages/app:
     dependencies:
       '@sdeverywhere/runtime':
-        specifier: ^0.2.2
+        specifier: ^0.2.7
         version: link:../../../../packages/runtime
       '@sdeverywhere/runtime-async':
-        specifier: ^0.2.2
+        specifier: ^0.2.7
         version: link:../../../../packages/runtime-async
       chart.js:
         specifier: ^2.9.4
@@ -196,7 +196,7 @@ importers:
         specifier: ^0.7.31
         version: link:../../packages/cli
       '@sdeverywhere/plugin-check':
-        specifier: ^0.3.16
+        specifier: ^0.3.17
         version: link:../../packages/plugin-check
       '@sdeverywhere/plugin-config':
         specifier: ^0.2.8
@@ -208,14 +208,11 @@ importers:
         specifier: ^0.2.6
         version: link:../../packages/plugin-wasm
       '@sdeverywhere/plugin-worker':
-        specifier: ^0.2.9
+        specifier: ^0.2.10
         version: link:../../packages/plugin-worker
 
   examples/template-svelte/packages/app:
     dependencies:
-      '@sdeverywhere/runtime':
-        specifier: ^0.2.6
-        version: link:../../../../packages/runtime
       chart.js:
         specifier: ^2.9.4
         version: 2.9.4
@@ -257,10 +254,10 @@ importers:
   examples/template-svelte/packages/core:
     dependencies:
       '@sdeverywhere/runtime':
-        specifier: ^0.2.6
+        specifier: ^0.2.7
         version: link:../../../../packages/runtime
       '@sdeverywhere/runtime-async':
-        specifier: ^0.2.6
+        specifier: ^0.2.7
         version: link:../../../../packages/runtime-async
     devDependencies:
       typescript:

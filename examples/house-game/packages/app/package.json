@@ -18,8 +18,8 @@
     "ci:build": "run-s clean lint prettier:check type-check bundle"
   },
   "dependencies": {
-    "@sdeverywhere/runtime": "^0.2.2",
-    "@sdeverywhere/runtime-async": "^0.2.2",
+    "@sdeverywhere/runtime": "^0.2.7",
+    "@sdeverywhere/runtime-async": "^0.2.7",
     "chart.js": "^2.9.4"
   },
   "devDependencies": {

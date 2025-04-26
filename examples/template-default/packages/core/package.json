@@ -14,8 +14,8 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@sdeverywhere/runtime": "^0.2.2",
-    "@sdeverywhere/runtime-async": "^0.2.2"
+    "@sdeverywhere/runtime": "^0.2.7",
+    "@sdeverywhere/runtime-async": "^0.2.7"
   },
   "devDependencies": {
     "typescript": "^5.2.2",
