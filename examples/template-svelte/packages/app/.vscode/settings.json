@@ -1,12 +1,11 @@
 {
   "editor.formatOnSave": true,
-  "editor.defaultFormatter": "esbenp.prettier-vscode"
-  // "[svelte]": {
-  //   "editor.defaultFormatter": "esbenp.prettier-vscode",
-  //   "prettier.configPath": ".prettierrc"
-  // },
-  // "prettier.documentSelectors": ["**/*.svelte"],
-  // "files.associations": {
-  //   "*.svelte": "svelte"
-  // }
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "[svelte]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "prettier.documentSelectors": ["**/*.svelte"],
+  "files.associations": {
+    "*.svelte": "svelte"
+  }
 }

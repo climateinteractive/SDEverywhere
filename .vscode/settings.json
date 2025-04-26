@@ -27,5 +27,14 @@
   "yaml.schemas": {
     // XXX: Workaround for vscode-yaml issue: https://github.com/redhat-developer/vscode-yaml/issues/397
     "https://json.schemastore.org/github-workflow": "/.github/workflows/**/*.yaml"
+  },
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "[svelte]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "prettier.documentSelectors": ["examples/template-svelte/packages/app/**/*.svelte"],
+  "files.associations": {
+    "*.svelte": "svelte"
   }
 }
