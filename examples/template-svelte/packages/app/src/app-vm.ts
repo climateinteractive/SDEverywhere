@@ -5,7 +5,7 @@ import type { GraphSpec, SourceName } from '@core'
 
 import { syncWritable } from '@shared/stores'
 
-import { type AppModel, createAppModel } from '@model/app-model'
+import { type AppModel, type AppModelContext, createAppModel } from '@model/app-model'
 import type { WritableSliderInput } from '@model/app-model-inputs'
 
 import type { GraphViewModel } from '@components/graph/graph-vm'
@@ -70,16 +70,21 @@ export class AppViewModel {
 
     // Create the scenario view models
     const scenarios: ScenarioViewModel[] = []
-    function addScenario(displayName: string, contextName: SourceName) {
-      const scenario = new ScenarioViewModel(
-        displayName,
-        appModel.getSliderInputsForContext(contextName) ?? []
-      )
+    function addScenario(sourceName: SourceName, context: AppModelContext) {
+      let displayName: string
+      if (sourceName.startsWith('Scenario')) {
+        displayName = sourceName.replace('Scenario', 'Scenario ')
+      } else {
+        displayName = ''
+      }
+      const sliders = [...context.inputs.values()].filter(input => input.kind === 'slider')
+      const scenario = new ScenarioViewModel(displayName, sliders)
       scenarios.push(scenario)
       return scenario
     }
-    addScenario('Scenario 1', 'Scenario1')
-    addScenario('Scenario 2', 'Scenario2')
+    for (const [sourceName, context] of appModel.getContexts()) {
+      addScenario(sourceName, context)
+    }
     this.scenarios = writable(scenarios)
   }
 }

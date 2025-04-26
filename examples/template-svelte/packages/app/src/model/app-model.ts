@@ -38,10 +38,23 @@ export async function createAppModel(): Promise<AppModel> {
 }
 
 /**
+ * A context that holds a distinct set of model inputs and outputs.
+ */
+export interface AppModelContext {
+  /** The source name associated with the context. */
+  sourceName: SourceName
+
+  /** The set of inputs associated with this context. */
+  inputs: Map<InputId, WritableInput>
+}
+
+/**
  * High-level interface to the runnable model.
  */
 export class AppModel {
   public readonly coreConfig: CoreConfig
+
+  public readonly contexts: Map<SourceName, AppModelContext> = new Map()
 
   private readonly writableDataChanged: Writable<number> = writable(0)
   public readonly dataChanged: Readable<number> = this.writableDataChanged
@@ -49,18 +62,49 @@ export class AppModel {
   constructor(private readonly coreModel: CoreModel) {
     this.coreConfig = coreConfig
 
-    // XXX: For now, create two contexts ahead of time
-    function addContext(name: SourceName) {
+    // Helper function that creates a context with Svelte-friendly
+    // `WritableInput` instances
+    const contexts = this.contexts
+    function addContext(sourceName: SourceName) {
       // Create a `WritableInput` instance for each input variable in the config
       const inputs: Map<InputId, WritableInput> = new Map()
       for (const inputSpec of coreConfig.inputs.values()) {
         const input = createWritableModelInput(inputSpec)
         inputs.set(input.spec.id, input)
       }
-      coreModel.addContext(name, { inputs })
+
+      // Add the context in the core model
+      coreModel.addContext(sourceName, { inputs })
+
+      // Add the app-level context
+      contexts.set(sourceName, {
+        sourceName,
+        inputs
+      })
     }
-    addContext('Scenario1')
-    addContext('Scenario2')
+
+    // This is a special feature of this template.  We check the graph specs to
+    // see if there are graphs configured with one or more datasets that use
+    // "ScenarioN" as the source.  If so, we create a context for each scenario
+    // name.  This allows the UI to show multiple groups of inputs.  If there
+    // are no scenario-specific datasets, we create a single context.
+    const scenarioNames = new Set<SourceName>()
+    for (const graphSpec of coreConfig.graphs.values()) {
+      for (const dataset of graphSpec.datasets) {
+        if (dataset.externalSourceName?.startsWith('Scenario')) {
+          scenarioNames.add(dataset.externalSourceName)
+        }
+      }
+    }
+    if (scenarioNames.size > 0) {
+      // Create a context for each scenario name
+      for (const scenarioName of scenarioNames) {
+        addContext(scenarioName)
+      }
+    } else {
+      // Create a single context
+      addContext('Primary')
+    }
 
     // Increment the data change count when the model produces new outputs
     coreModel.onOutputsChanged = () => {
@@ -68,17 +112,22 @@ export class AppModel {
     }
   }
 
+  getContexts(): ReadonlyMap<SourceName, AppModelContext> {
+    return this.contexts
+  }
+
   getInputsForContext(contextName: SourceName): WritableInput[] | undefined {
-    const context = this.coreModel.getContext(contextName)
-    const inputMap = context?.inputs
-    return inputMap ? (Array.from(inputMap.values()) as WritableInput[]) : undefined
+    return Array.from(this.contexts.get(contextName)?.inputs.values() ?? [])
   }
 
   getSliderInputsForContext(contextName: SourceName): WritableSliderInput[] | undefined {
     return this.getInputsForContext(contextName)?.filter(input => input.kind === 'slider')
   }
 
-  getSeriesForVar(sourceName: SourceName, varId: OutputVarId): Series | undefined {
+  getSeriesForVar(sourceName: SourceName | undefined, varId: OutputVarId): Series | undefined {
+    if (sourceName === undefined) {
+      sourceName = 'Primary'
+    }
     return this.coreModel.getSeriesForVar(sourceName, varId)
   }
 }
