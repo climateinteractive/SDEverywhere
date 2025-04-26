@@ -2,85 +2,104 @@
 <script lang="ts">
 import { onMount } from 'svelte'
 import { _ } from 'svelte-i18n'
-
 import type { WritableSliderInput } from '@model/app-model-inputs'
+import { SliderView } from './slider-view'
 
 export let input: WritableSliderInput
-export let label: string
-export let min: number
-export let max: number
-export let step: number = 1
+export let enabled = true
 
-let sliderElem: HTMLInputElement
+const sliderSpec = input.spec
+let sliderView: SliderView
+let inputElem: HTMLInputElement
+let tickStyle: string
 
-// When the slider value changes, update the model input value
-function handleInput(event: Event) {
-  const target = event.target as HTMLInputElement
-  const newValue = parseFloat(target.value)
-  input.set(newValue)
-}
+// Enable or disable the slider view when the prop changes
+$: sliderView?.setEnabled(enabled)
 
-// Format the slider value
-function formatValue(value: number): string {
-  // TODO: Exercise for the reader: use d3-format or similar to format the slider value
-  if (input.spec.format === '.2f') {
-    return value.toFixed(2)
-  } else {
-    return value.toFixed(1)
+function createSliderView() {
+  // Update the tick position
+  const def = sliderSpec.defaultValue
+  const min = sliderSpec.minValue
+  const max = sliderSpec.maxValue
+  const reversed = sliderSpec.reversed
+  let tickPct = ((def - min) / (max - min)) * 100
+  if (reversed) {
+    tickPct = 100 - tickPct
+  }
+  tickStyle = `margin-left: ${tickPct}%`
+
+  // Destroy the old slider view (if one was already created
+  // before the language direction changed)
+  sliderView?.destroy()
+
+  // Create the slider view and bind it to the input element
+  sliderView = new SliderView(inputElem, input)
+
+  // When the slider view updates its value, update the qualifier
+  sliderView.onChange = newValue => {
+    updateQualKey(newValue)
   }
 }
 
 onMount(() => {
+  // Create the slider view
+  createSliderView()
+
   // When the model input value changes, update the slider view
   const unsubscribe = input.subscribe(newValue => {
-    if (sliderElem) {
-      sliderElem.value = newValue.toString()
-    }
+    sliderView.updateRangeHighlights(newValue)
+    sliderView.setValue(newValue)
   })
 
   return () => {
     unsubscribe?.()
+    sliderView?.destroy()
+    sliderView = undefined
   }
 })
 </script>
 
 <!-- TEMPLATE -->
-<div class="slider-container">
-  <div class="label-row">
-    <div class="label">{@html label}</div>
-    <div class="spacer"></div>
-    <div class="value">{formatValue($input)}</div>
-    <div class="units">{$_(input.spec.unitsKey)}</div>
-  </div>
-  <div class="slider-row">
-    <input bind:this={sliderElem} type="range" value={$input} {min} {max} {step} on:input={handleInput} />
-  </div>
+<div class="tick-container" style={tickStyle}>
+  <div class="tick"></div>
 </div>
+<input bind:this={inputElem} />
 
 <!-- STYLE -->
 <style lang="sass">
-.slider-container
-  margin: 1rem 0
+.tick
+  position: absolute
+  top: 12px
+  width: 4px
+  height: 14px
+  transform: translate(-2px, 0)
+  border-radius: 4px
+  background: #ccc
 
-.spacer
-  flex: 1
+/*
+ * Customizations for bootstrap-slider
+ */
 
-.label-row
-  display: flex
-  gap: .3rem
+:global(.slider.slider-horizontal)
+  width: 100%
+  height: 16px
+  margin-top: 4px
+  margin-bottom: 4px
 
-.label, .value
-  font-weight: bold
+:global(.slider.slider-horizontal .slider-track)
+  height: 8px
+  top: 4px // (slider-handle:height / 2) - (slider-track:height / 2)
+  margin-top: 0
+  background: #ccc
 
-.slider-row
-  display: flex
-  align-items: center
-  gap: 1rem
+:global(.slider-rangeHighlight)
+  background: #5588ff
 
-input[type="range"]
-  flex: 1
+:global(.slider-handle)
+  width: 16px
+  height: 16px
+  background: #000
 
-.value
-  min-width: 2rem
-  text-align: right
+:global(.slider.slider-horizontal .slider-handle)
+  margin-left: -8px
 </style>

@@ -213,6 +213,9 @@ importers:
 
   examples/template-svelte/packages/app:
     dependencies:
+      bootstrap-slider:
+        specifier: 10.6.2
+        version: 10.6.2
       chart.js:
         specifier: ^2.9.4
         version: 2.9.4
@@ -2293,6 +2296,10 @@ packages:
       buffer: 6.0.3
       inherits: 2.0.4
       readable-stream: 3.6.0
+    dev: false
+
+  /bootstrap-slider@10.6.2:
+    resolution: {integrity: sha512-8JTPZB9QVOdrGzYF3YgC3YW6ssfPeBvBwZnXffiZ7YH/zz1D0EKlZvmQsm/w3N0XjVNYQEoQ0ax+jHrErV4K1Q==}
     dev: false
 
   /brace-expansion@1.1.11:

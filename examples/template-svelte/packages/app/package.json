@@ -17,8 +17,9 @@
     "ci:build:disabled": "run-s clean lint prettier:check type-check bundle"
   },
   "dependencies": {
-    "svelte-i18n": "^4.0.1",
-    "chart.js": "^2.9.4"
+    "bootstrap-slider": "10.6.2",
+    "chart.js": "^2.9.4",
+    "svelte-i18n": "^4.0.1"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^3.1.2",
