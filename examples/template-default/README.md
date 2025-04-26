@@ -1,16 +1,16 @@
 # template-default
 
 This is a template that is used by the `@sdeverywhere/create` package to generate a
-new project that uses SDEverywhere for a jQuery-based web application.
+new project that uses SDEverywhere.
 
 The project includes:
 
-- a build process that converts a Vensim model to a JavaScript or WebAssembly
-  module that can run the model in any web browser or in a Node.js application
+- a build process that converts a Vensim model to a WebAssembly module that
+  can run the model in any web browser or in a Node.js application
 - a `config` directory that contains CSV files for configuring the generated
   model and application
 - a "core" package that provides a clean JavaScript / TypeScript API around the
-  generated model
+  WebAssembly model
 - an "app" package containing a simple JavaScript / jQuery-based web application
   that can be used to exercise the model
 - a local development mode (`npm run dev`) that allows for rapid prototyping
