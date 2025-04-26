@@ -44,17 +44,15 @@ function formatValue(value: number): string {
   display: flex
   gap: .3rem
 
-.label, .value
+.label
   font-weight: bold
 
 .slider-row
   position: relative
   width: 100%
 
-input[type="range"]
-  flex: 1
-
 .value
   min-width: 2rem
   text-align: right
+  font-weight: bold
 </style>
