@@ -93,7 +93,7 @@ SAVEPER = TIME STEP ~~|
 
     // Run the create command
     // TODO: Remove the --commit flag once the updated template is on main
-    const { stdin, stdout } = runCreate(['--commit', 'a860f70', dirs.scratch])
+    const { stdin, stdout } = runCreate(['--commit', '17e5ac6', dirs.scratch])
 
     // Wait for the template prompt
     await respondAndWaitForPrompt(stdin!, stdout!, undefined, promptMessages.template)
