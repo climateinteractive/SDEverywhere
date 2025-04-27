@@ -82,8 +82,8 @@ export async function updateSdeConfig(projDir: string, mdlPath: string, genForma
   // Set the code generation format to the chosen format
   configText = configText.replace(`const genFormat = 'js'`, `const genFormat = '${genFormat}'`)
 
-  // Replace instances of `MODEL_NAME.mdl` with the path to the chosen mdl file
-  configText = configText.replaceAll('MODEL_NAME.mdl', mdlPath)
+  // Replace instances of `model/MODEL_NAME.mdl` with the path to the chosen mdl file
+  configText = configText.replaceAll('model/MODEL_NAME.mdl', mdlPath)
 
   // Write the updated file
   await writeFile(configPath, configText)
