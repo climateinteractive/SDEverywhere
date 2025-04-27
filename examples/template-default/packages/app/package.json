@@ -10,7 +10,7 @@
     "prettier:fix": "prettier --write .",
     "precommit": "../scripts/precommit",
     "dev": "vite",
-    "build": "vite build",
+    "bundle": "vite build",
     "preview": "vite preview"
   },
   "dependencies": {
