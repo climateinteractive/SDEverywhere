@@ -15,14 +15,19 @@ import type { Arguments } from 'yargs-parser'
 
 const TEMPLATES = [
   {
-    title: 'Default project',
-    description: 'Includes recommended structure with config files, app, core library, model-check, etc',
-    value: 'template-default'
+    title: 'Default (jQuery) project',
+    description: 'Includes recommended structure with config files, jQuery-based app, core library, model-check, etc',
+    value: 'default'
+  },
+  {
+    title: 'Svelte project',
+    description: 'Includes recommended structure with config files, Svelte-based app, core library, model-check, etc',
+    value: 'svelte'
   },
   {
     title: 'Minimal project',
     description: 'Includes simple config for model-check',
-    value: 'template-minimal'
+    value: 'minimal'
   }
 ]
 
@@ -51,12 +56,32 @@ export async function chooseTemplate(projDir: string, args: Arguments, pkgManage
     return
   }
 
+  // Allow template name or repository to be provided on command line
+  const templateName = args.template || options.template
+
   // Allow branch name or commit hash to be overridden on command line
   const defaultRev = 'main'
   const commit = args.commit || defaultRev
 
+  // Construct the template repository URL
+  let baseTemplateTarget: string
+  if (templateName.includes(':')) {
+    // Assume the template name is already in the form of a giget template, for example:
+    //   github:owner/repo
+    //   gitlab:owner/repo
+    baseTemplateTarget = templateName
+  } else if (templateName.includes('/')) {
+    // Assume the template name is a GitHub repository name, for example:
+    //   owner/repo
+    baseTemplateTarget = `github:${templateName}`
+  } else {
+    // Otherwise, assume the template name is one of the available `template-*`
+    // projects under `examples` in the SDEverywhere repository
+    baseTemplateTarget = `github:climateinteractive/SDEverywhere/examples/template-${templateName}`
+  }
+  const templateTarget = `${baseTemplateTarget}#${commit}`
+
   // Copy the template files to the project directory
-  const templateTarget = `climateinteractive/SDEverywhere/examples/${options.template}#${commit}`
   const templateSpinner = ora('Copying project files...').start()
   await copyTemplate(templateTarget, projDir, templateSpinner)
   templateSpinner.text = green('Template copied!')
@@ -81,9 +106,8 @@ async function copyTemplate(templateTarget: string, dstDir: string, spinner: Ora
 
     // Use giget to download the template (we will be writing to a temporary directory,
     // so `force` is safe)
-    await downloadTemplate(`github:${templateTarget}`, {
+    await downloadTemplate(`${templateTarget}`, {
       force: true,
-      provider: 'github',
       dir: tmpDir
     })
 
