@@ -22,8 +22,7 @@ The project includes:
 
 ```sh
 # Create a new project (you can also use yarn or pnpm here, if preferred).
-# Be sure to choose the "Svelte project" template.
-npm create @sdeverywhere@latest
+npm create @sdeverywhere@latest --template svelte
 
 # Enter development mode for your model.  This will start a live
 # development environment that will build a JavaScript version of the
@@ -47,7 +46,7 @@ npm run dev
   See `packages/app/src/app.svelte` for the top-level `App` component.
 
 - The code that runs the generated model is located in
-  `packages/app/src/model/app-model.ts`. This code:
+  `packages/core/src/model/model.ts`. This code:
   1. passes the slider values to the generated model as inputs
   2. runs the generated model asynchronously (in a Web Worker)
   3. makes the model outputs available to be displayed (and animated) in the

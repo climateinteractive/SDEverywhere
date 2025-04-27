@@ -1,6 +1,6 @@
 // Copyright (c) 2025 Climate Interactive / New Venture Fund
 
-import { existsSync, mkdirSync, readFileSync, rmSync } from 'fs'
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'fs'
 import { dirname, resolve as resolvePath } from 'path'
 import type { Readable, Writable } from 'stream'
 import { fileURLToPath } from 'url'
@@ -62,12 +62,38 @@ async function respondAndWaitForPrompt(
 
 describe('step - read model variables and create config files', () => {
   it('should read model variables and suggest input/output variables to include', async () => {
+    // Create a scratch directory
     const scratchDir = resolvePath(testsDir, dirs.scratch)
     if (existsSync(scratchDir)) {
       rmSync(scratchDir, { recursive: true, force: true })
     }
     mkdirSync(scratchDir)
-    const { stdin, stdout } = runCreate([dirs.scratch])
+
+    // Add a sample model file to the scratch directory
+    const sampleMdlContent = `\
+{UTF-8}
+
+X = TIME
+  ~~|
+
+Y = 0
+  ~ [-10,10,0.1]
+  ~
+  |
+
+Z = X + Y
+  ~~|
+
+INITIAL TIME = 2000 ~~|
+FINAL TIME = 2100 ~~|
+TIME STEP = 1 ~~|
+SAVEPER = TIME STEP ~~|
+`
+    writeFileSync(resolvePath(scratchDir, 'sample.mdl'), sampleMdlContent)
+
+    // Run the create command
+    // TODO: Remove the --commit flag once the updated template is on main
+    const { stdin, stdout } = runCreate(['--commit', '17e5ac6', dirs.scratch])
 
     // Wait for the template prompt
     await respondAndWaitForPrompt(stdin!, stdout!, undefined, promptMessages.template)

@@ -27,25 +27,35 @@ $: visibleGraphContainers = viewModel.graphContainers.slice(0, $selectedLayoutOp
 
   <div class="main-container">
     <div class="top-container">
-      <div class="graphs-container {$selectedLayoutOption.value}">
-        {#each visibleGraphContainers as graphContainer}
-          <div class="selectable-graph-container">
-            <SelectableGraph viewModel={graphContainer} />
-          </div>
-        {/each}
-      </div>
+      {#if visibleGraphContainers.length > 0}
+        <div class="graphs-container {$selectedLayoutOption.value}">
+          {#each visibleGraphContainers as graphContainer}
+            <div class="selectable-graph-container">
+              <SelectableGraph viewModel={graphContainer} />
+            </div>
+          {/each}
+        </div>
+      {:else}
+        <div class="empty-config-message">No graphs configured. You can edit 'config/graphs.csv' to get started.</div>
+      {/if}
     </div>
 
     <div class="bottom-container">
       {#each $scenarios as scenario}
         <div class="scenario-container">
-          <div class="scenario-header">
-            <div class="scenario-name">{scenario.name}</div>
-            <button on:click={() => scenario.reset()}>Reset</button>
-          </div>
-          {#each scenario.sliders as slider}
-            <InputRow input={slider} />
-          {/each}
+          {#if scenario.sliders.length > 0}
+            <div class="scenario-header">
+              <div class="scenario-name">{scenario.name}</div>
+              <button on:click={() => scenario.reset()}>Reset</button>
+            </div>
+            {#each scenario.sliders as slider}
+              <InputRow input={slider} />
+            {/each}
+          {:else}
+            <div class="empty-config-message">
+              No sliders configured. You can edit 'config/inputs.csv' to get started.
+            </div>
+          {/if}
         </div>
       {/each}
     </div>
@@ -142,4 +152,9 @@ $: visibleGraphContainers = viewModel.graphContainers.slice(0, $selectedLayoutOp
   color: #777
   font-size: .9em
   font-weight: 700
+
+.empty-config-message
+  margin: 20px 0
+  font-size: .9em
+  text-align: center
 </style>

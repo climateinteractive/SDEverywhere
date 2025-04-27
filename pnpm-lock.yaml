@@ -184,8 +184,8 @@ importers:
         specifier: ^5.4.2
         version: 5.4.2(@types/node@20.5.7)
 
-  examples/template-svelte:
-    dependencies:
+  examples/template-default:
+    devDependencies:
       '@sdeverywhere/build':
         specifier: ^0.3.7
         version: link:../../packages/build
@@ -210,6 +210,143 @@ importers:
       '@sdeverywhere/plugin-worker':
         specifier: ^0.2.10
         version: link:../../packages/plugin-worker
+      '@typescript-eslint/eslint-plugin':
+        specifier: ^8.2.0
+        version: 8.2.0(@typescript-eslint/parser@8.2.0)(eslint@8.57.0)(typescript@5.2.2)
+      '@typescript-eslint/parser':
+        specifier: ^8.2.0
+        version: 8.2.0(eslint@8.57.0)(typescript@5.2.2)
+      eslint:
+        specifier: ^8.57.0
+        version: 8.57.0
+      eslint-config-prettier:
+        specifier: ^9.1.0
+        version: 9.1.0(eslint@8.57.0)
+      eslint-plugin-eslint-comments:
+        specifier: ^3.2.0
+        version: 3.2.0(eslint@8.57.0)
+      eslint-plugin-svelte3:
+        specifier: ^4.0.0
+        version: 4.0.0(eslint@8.57.0)
+      npm-run-all:
+        specifier: ^4.1.5
+        version: 4.1.5
+      prettier:
+        specifier: ^2.6.2
+        version: 2.6.2
+      typescript:
+        specifier: ^5.2.2
+        version: 5.2.2
+
+  examples/template-default/packages/app:
+    dependencies:
+      bootstrap-slider:
+        specifier: 10.6.2
+        version: 10.6.2
+      chart.js:
+        specifier: ^2.9.4
+        version: 2.9.4
+      jquery:
+        specifier: ^3.5.1
+        version: 3.7.1
+    devDependencies:
+      '@types/chart.js':
+        specifier: ^2.9.34
+        version: 2.9.37
+      vite:
+        specifier: ^5.4.2
+        version: 5.4.2(@types/node@20.5.7)
+
+  examples/template-default/packages/core:
+    dependencies:
+      '@sdeverywhere/runtime':
+        specifier: ^0.2.7
+        version: link:../../../../packages/runtime
+      '@sdeverywhere/runtime-async':
+        specifier: ^0.2.7
+        version: link:../../../../packages/runtime-async
+    devDependencies:
+      typescript:
+        specifier: ^5.2.2
+        version: 5.2.2
+      vite:
+        specifier: ^5.4.2
+        version: 5.4.2(@types/node@20.5.7)
+
+  examples/template-minimal:
+    dependencies:
+      '@sdeverywhere/build':
+        specifier: ^0.3.7
+        version: link:../../packages/build
+      '@sdeverywhere/check-core':
+        specifier: ^0.1.5
+        version: link:../../packages/check-core
+      '@sdeverywhere/cli':
+        specifier: ^0.7.31
+        version: link:../../packages/cli
+      '@sdeverywhere/plugin-check':
+        specifier: ^0.3.17
+        version: link:../../packages/plugin-check
+      '@sdeverywhere/plugin-wasm':
+        specifier: ^0.2.6
+        version: link:../../packages/plugin-wasm
+      '@sdeverywhere/plugin-worker':
+        specifier: ^0.2.10
+        version: link:../../packages/plugin-worker
+
+  examples/template-svelte:
+    devDependencies:
+      '@sdeverywhere/build':
+        specifier: ^0.3.7
+        version: link:../../packages/build
+      '@sdeverywhere/check-core':
+        specifier: ^0.1.5
+        version: link:../../packages/check-core
+      '@sdeverywhere/cli':
+        specifier: ^0.7.31
+        version: link:../../packages/cli
+      '@sdeverywhere/plugin-check':
+        specifier: ^0.3.17
+        version: link:../../packages/plugin-check
+      '@sdeverywhere/plugin-config':
+        specifier: ^0.2.8
+        version: link:../../packages/plugin-config
+      '@sdeverywhere/plugin-vite':
+        specifier: ^0.1.11
+        version: link:../../packages/plugin-vite
+      '@sdeverywhere/plugin-wasm':
+        specifier: ^0.2.6
+        version: link:../../packages/plugin-wasm
+      '@sdeverywhere/plugin-worker':
+        specifier: ^0.2.10
+        version: link:../../packages/plugin-worker
+      '@typescript-eslint/eslint-plugin':
+        specifier: ^8.2.0
+        version: 8.2.0(@typescript-eslint/parser@8.2.0)(eslint@8.57.0)(typescript@5.2.2)
+      '@typescript-eslint/parser':
+        specifier: ^8.2.0
+        version: 8.2.0(eslint@8.57.0)(typescript@5.2.2)
+      eslint:
+        specifier: ^8.57.0
+        version: 8.57.0
+      eslint-config-prettier:
+        specifier: ^9.1.0
+        version: 9.1.0(eslint@8.57.0)
+      eslint-plugin-eslint-comments:
+        specifier: ^3.2.0
+        version: 3.2.0(eslint@8.57.0)
+      eslint-plugin-svelte3:
+        specifier: ^4.0.0
+        version: 4.0.0(eslint@8.57.0)
+      npm-run-all:
+        specifier: ^4.1.5
+        version: 4.1.5
+      prettier:
+        specifier: ^2.6.2
+        version: 2.6.2
+      typescript:
+        specifier: ^5.2.2
+        version: 5.2.2
 
   examples/template-svelte/packages/app:
     dependencies:
@@ -2950,7 +3087,7 @@ packages:
     dependencies:
       escape-string-regexp: 1.0.5
       eslint: 8.57.0
-      ignore: 5.2.0
+      ignore: 5.3.2
     dev: true
 
   /eslint-plugin-svelte3@4.0.0(eslint@8.57.0):
@@ -3401,7 +3538,7 @@ packages:
       array-union: 2.1.0
       dir-glob: 3.0.1
       fast-glob: 3.2.11
-      ignore: 5.2.4
+      ignore: 5.3.2
       merge2: 1.4.1
       slash: 3.0.0
     dev: true
@@ -3497,16 +3634,6 @@ packages:
   /ieee754@1.2.1:
     resolution: {integrity: sha512-dcyqhDvX1C46lXZcVqCpK+FtMRQVdIMN6/Df5js2zouUsqG7I6sFxitIC+7KYK29KdXOLHdu9zL4sFnoVQnqaA==}
     dev: false
-
-  /ignore@5.2.0:
-    resolution: {integrity: sha512-CmxgYGiEPCLhfLnpPp1MoRmifwEIOgjcHXxOBjv7mY96c+eWScsOP9c112ZyLdWHi0FxHjI+4uVhKYp/gcdRmQ==}
-    engines: {node: '>= 4'}
-    dev: true
-
-  /ignore@5.2.4:
-    resolution: {integrity: sha512-MAb38BcSbH0eHNBxn7ql2NH/kX33OkB3lZ1BNdh7ENeRChHTYsTvWrMubiIAMNS2llXEEgZ1MUOBtXChP3kaFQ==}
-    engines: {node: '>= 4'}
-    dev: true
 
   /ignore@5.3.2:
     resolution: {integrity: sha512-hsBTNUqQTDwkWtcdYI2i06Y/nUBEsNEDJKjWdigLvegy8kDuJAS8uRlpkkcQpyEXL0Z/pjDy5HBmMjRCJ2gq+g==}
@@ -3742,6 +3869,10 @@ packages:
     resolution: {integrity: sha512-34wB/Y7MW7bzjKRjUKTa46I2Z7eV62Rkhva+KkopW7Qvv/OSWBqvkSY7vusOPrNuZcUG3tApvdVgNB8POj3SPw==}
     engines: {node: '>=10'}
     dev: true
+
+  /jquery@3.7.1:
+    resolution: {integrity: sha512-m4avr8yL8kmFN8psrbFFFmB/If14iN5o9nw/NgnnM+kybDJpRsAynV2BsfpTYrTRysYUdADVD7CkUUizgkpLfg==}
+    dev: false
 
   /js-stringify@1.0.2:
     resolution: {integrity: sha512-rtS5ATOo2Q5k1G+DADISilDA6lv79zIiwFd6CcjuIxGKLFm5C+RLImRscVap9k55i+MOZwgliw+NejvkLuGD5g==}

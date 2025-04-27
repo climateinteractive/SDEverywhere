@@ -35,16 +35,16 @@ export async function config() {
     genFormat,
 
     // Specify the Vensim model to read
-    modelFiles: ['MODEL_NAME.mdl'],
+    modelFiles: ['model/MODEL_NAME.mdl'],
 
     // The following files will be hashed to determine whether the model needs
     // to be rebuilt when watch mode is active
-    modelInputPaths: ['MODEL_NAME.mdl'],
+    modelInputPaths: ['model/MODEL_NAME.mdl'],
 
     // The following files will cause the model to be rebuilt when watch mode is
     // is active.  Note that these are globs so we use forward slashes regardless
     // of platform.
-    watchPaths: ['config/**', 'MODEL_NAME.mdl'],
+    watchPaths: ['config/**', 'model/MODEL_NAME.mdl'],
 
     // Read csv files from `config` directory
     modelSpec: configProcessor({

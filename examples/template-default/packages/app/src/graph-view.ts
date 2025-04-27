@@ -235,7 +235,7 @@ function createLineChartJsData(spec: GraphSpec): ChartData {
 
     const color = spec.datasets[varIndex].color
     const lineStyle = spec.datasets[varIndex].lineStyle
-    const lineStyleModifiers = spec.datasets[varIndex].lineStyleModifiers || []
+    // const lineStyleModifiers = spec.datasets[varIndex].lineStyleModifiers || []
     if (stacked && lineStyle === 'area') {
       // This is an area section of a stacked chart; display it with fill style
       // and disable the border (which would otherwise make the section appear

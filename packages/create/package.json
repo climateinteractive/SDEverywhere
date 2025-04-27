@@ -11,7 +11,7 @@
     "create-sde": "bin/create-sde.js"
   },
   "scripts": {
-    "clean": "rm -rf dist",
+    "clean": "rm -rf dist tests/fixtures/empty-dir tests/fixtures/scratch-dir",
     "lint": "eslint src --ext .ts --max-warnings 0",
     "prettier:check": "prettier --check .",
     "prettier:fix": "prettier --write .",

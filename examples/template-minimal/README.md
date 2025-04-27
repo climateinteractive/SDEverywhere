@@ -18,8 +18,7 @@ to add the `@sdeverywhere/plugin-config` package to your project.)
 
 ```sh
 # Create a new project (you can also use yarn or pnpm here, if preferred).
-# Be sure to choose the "Minimal" template.
-npm create @sdeverywhere@latest
+npm create @sdeverywhere@latest --template minimal
 
 # Enter development mode for your model.  This will start a live
 # development environment that will build a JavaScript version of the

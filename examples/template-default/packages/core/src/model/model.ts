@@ -1,5 +1,5 @@
-import type { InputValue, InputVarId, ModelRunner, OutputVarId, Series } from '@sdeverywhere/runtime'
-import { ModelScheduler, Outputs } from '@sdeverywhere/runtime'
+import type { InputValue, InputVarId, ModelRunner, Outputs, OutputVarId, Series } from '@sdeverywhere/runtime'
+import { ModelScheduler } from '@sdeverywhere/runtime'
 import { spawnAsyncModelRunner } from '@sdeverywhere/runtime-async'
 import type { InputId } from '../config/generated/spec-types'
 import { config } from '../config/config'

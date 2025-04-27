@@ -82,8 +82,8 @@ export async function updateSdeConfig(projDir: string, mdlPath: string, genForma
   // Set the code generation format to the chosen format
   configText = configText.replace(`const genFormat = 'js'`, `const genFormat = '${genFormat}'`)
 
-  // Replace instances of `MODEL_NAME.mdl` with the path to the chosen mdl file
-  configText = configText.replaceAll('MODEL_NAME.mdl', mdlPath)
+  // Replace instances of `model/MODEL_NAME.mdl` with the path to the chosen mdl file
+  configText = configText.replaceAll('model/MODEL_NAME.mdl', mdlPath)
 
   // Write the updated file
   await writeFile(configPath, configText)
@@ -264,17 +264,24 @@ async function chooseGenGraphConfig(projDir: string, mdlVars: MdlVariable[]): Pr
     }
   )
 
+  // Preserve the `graphs.csv` header but drop other existing content (if any)
+  const graphsCsvFile = joinPath(projDir, 'config', 'graphs.csv')
+  const origGraphsCsvContent = await readFile(graphsCsvFile, 'utf8')
+  const graphsCsvHeader = origGraphsCsvContent.split('\n')[0]
+
+  // Write the updated `graphs.csv` file
+  let newGraphsCsvContent = `${graphsCsvHeader}\n`
+  if (varsResponse.vars.length > 0) {
+    // Add line to `graphs.csv`
+    const csvLine = graphsCsvLine(varsResponse.vars)
+    newGraphsCsvContent += `${csvLine}\n`
+  }
+  await writeFile(graphsCsvFile, newGraphsCsvContent)
+
   if (varsResponse.vars.length === 0) {
     ora().info(dim(`No variables selected. You can edit the "${cyan('config/graphs.csv')}" file later.`))
     return
   }
-
-  // Add line to `graphs.csv`
-  const graphsCsvFile = joinPath(projDir, 'config', 'graphs.csv')
-  const csvLine = graphsCsvLine(varsResponse.vars)
-  let graphsCsvContent = await readFile(graphsCsvFile, 'utf8')
-  graphsCsvContent += `${csvLine}\n`
-  await writeFile(graphsCsvFile, graphsCsvContent)
 
   ora(
     green(`Added graph to "${bold('config/graphs.csv')}". ${dim('You can configure graphs in that file later.')}`)
@@ -372,25 +379,32 @@ async function chooseGenSliderConfig(projDir: string, mdlVars: MdlVariable[]): P
     }
   )
 
+  // Preserve the `inputs.csv` header but drop other existing content (if any)
+  const inputsCsvFile = joinPath(projDir, 'config', 'inputs.csv')
+  const origInputsCsvContent = await readFile(inputsCsvFile, 'utf8')
+  const inputsCsvHeader = origInputsCsvContent.split('\n')[0]
+
+  // Write the updated `inputs.csv` file
+  let newInputsCsvContent = `${inputsCsvHeader}\n`
+  if (varsResponse.vars.length > 0) {
+    // Add lines to `inputs.csv`
+    let idNumber = 1
+    for (const inputVarName of varsResponse.vars) {
+      const inputVar = mdlVars.find(v => v.name === inputVarName)
+      if (inputVar && inputVar.kind === 'const') {
+        const defaultValue = inputVar.value
+        const csvLine = inputsCsvLine(inputVarName, defaultValue, idNumber.toString())
+        newInputsCsvContent += `${csvLine}\n`
+        idNumber++
+      }
+    }
+  }
+  await writeFile(inputsCsvFile, newInputsCsvContent)
+
   if (varsResponse.vars.length === 0) {
     ora().info(dim(`No variables selected. You can edit the "${cyan('config/inputs.csv')}" file later.`))
     return
   }
-
-  // Add lines to `inputs.csv`
-  const inputsCsvFile = joinPath(projDir, 'config', 'inputs.csv')
-  let inputsCsvContent = await readFile(inputsCsvFile, 'utf8')
-  let idNumber = 1
-  for (const inputVarName of varsResponse.vars) {
-    const inputVar = mdlVars.find(v => v.name === inputVarName)
-    if (inputVar && inputVar.kind === 'const') {
-      const defaultValue = inputVar.value
-      const csvLine = inputsCsvLine(inputVarName, defaultValue, idNumber.toString())
-      inputsCsvContent += `${csvLine}\n`
-      idNumber++
-    }
-  }
-  await writeFile(inputsCsvFile, inputsCsvContent)
 
   const slidersText = varsResponse.vars.length > 1 ? 'sliders' : 'sliders'
   ora(
