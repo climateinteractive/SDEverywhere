@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.27](https://github.com/climateinteractive/SDEverywhere/compare/create-v0.2.26...create-v0.2.27) (2025-04-27)
+
+
+### Features
+
+* add Svelte template as an option in create package ([#634](https://github.com/climateinteractive/SDEverywhere/issues/634)) ([a214a61](https://github.com/climateinteractive/SDEverywhere/commit/a214a610155673c4da4387aa7eee75c588bb467f)), closes [#633](https://github.com/climateinteractive/SDEverywhere/issues/633)
+
 ## [0.2.26](https://github.com/climateinteractive/SDEverywhere/compare/create-v0.2.25...create-v0.2.26) (2025-03-24)
 
 
