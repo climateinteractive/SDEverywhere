@@ -8,7 +8,8 @@
     "lint": "eslint src --max-warnings 0",
     "prettier:check": "prettier --check .",
     "prettier:fix": "prettier --write .",
-    "precommit": "../scripts/precommit",
+    "test": "echo No tests yet",
+    "type-check": "tsc --noEmit",
     "dev": "vite",
     "bundle": "vite build",
     "preview": "vite preview"
