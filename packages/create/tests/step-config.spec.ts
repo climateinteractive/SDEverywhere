@@ -167,9 +167,9 @@ variable name
 
     // Verify the generated `config/strings.csv` file
     const expectedStrings = `\
-    id,string
-    __model_name,My Model
-    `
+id,string
+__model_name,My Model
+`
     const actualStrings = readFileSync(resolvePath(scratchDir, 'config', 'strings.csv'), 'utf8')
     expect(actualStrings).toEqual(expectedStrings)
   })
