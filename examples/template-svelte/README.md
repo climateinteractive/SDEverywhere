@@ -22,7 +22,7 @@ The project includes:
 
 ```sh
 # Create a new project (you can also use yarn or pnpm here, if preferred).
-npm create @sdeverywhere@latest --template svelte
+npm create @sdeverywhere@latest -- --template svelte
 
 # Enter development mode for your model.  This will start a live
 # development environment that will build a JavaScript version of the

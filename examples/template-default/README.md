@@ -22,7 +22,7 @@ The project includes:
 
 ```sh
 # Create a new project (you can also use yarn or pnpm here, if preferred).
-npm create @sdeverywhere@latest --template default
+npm create @sdeverywhere@latest -- --template default
 
 # Enter development mode for your model.  This will start a live
 # development environment that will build a JavaScript version of the
