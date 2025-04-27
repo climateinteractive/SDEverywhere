@@ -12,5 +12,5 @@
   "packages/plugin-worker": "0.2.10",
   "packages/runtime": "0.2.7",
   "packages/runtime-async": "0.2.7",
-  "packages/create": "0.2.26"
+  "packages/create": "0.2.27"
 }
