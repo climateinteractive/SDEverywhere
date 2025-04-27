@@ -273,6 +273,27 @@ importers:
         specifier: ^5.4.2
         version: 5.4.2(@types/node@20.5.7)
 
+  examples/template-minimal:
+    dependencies:
+      '@sdeverywhere/build':
+        specifier: ^0.3.7
+        version: link:../../packages/build
+      '@sdeverywhere/check-core':
+        specifier: ^0.1.5
+        version: link:../../packages/check-core
+      '@sdeverywhere/cli':
+        specifier: ^0.7.31
+        version: link:../../packages/cli
+      '@sdeverywhere/plugin-check':
+        specifier: ^0.3.17
+        version: link:../../packages/plugin-check
+      '@sdeverywhere/plugin-wasm':
+        specifier: ^0.2.6
+        version: link:../../packages/plugin-wasm
+      '@sdeverywhere/plugin-worker':
+        specifier: ^0.2.10
+        version: link:../../packages/plugin-worker
+
   examples/template-svelte:
     devDependencies:
       '@sdeverywhere/build':

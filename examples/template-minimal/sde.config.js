@@ -24,17 +24,21 @@ export async function config() {
     genFormat,
 
     // Specify the Vensim model to read
-    modelFiles: ['MODEL_NAME.mdl'],
+    modelFiles: ['model/MODEL_NAME.mdl'],
 
     modelSpec: async () => {
       return {
         inputs: [
           // TODO: List your input variables here
-          { varName: 'Y', defaultValue: 0, minValue: -10, maxValue: 10 }
+          { varName: 'Initial Contact Rate', defaultValue: 2.5, minValue: 0, maxValue: 5 },
+          { varName: 'Infectivity i', defaultValue: 0, minValue: -2, maxValue: 2 },
+          { varName: 'Average Duration of Illness d', defaultValue: 2, minValue: 0, maxValue: 10 }
         ],
         outputs: [
           // TODO: List your output variables here
-          { varName: 'Z' }
+          { varName: 'Susceptible Population S' },
+          { varName: 'Infectious Population I' },
+          { varName: 'Recovered Population R' }
         ],
         datFiles: [
           // TODO: If your mdl refers to vdfx files, list dat files here (first
