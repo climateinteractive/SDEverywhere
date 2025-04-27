@@ -82,8 +82,6 @@ export async function main(): Promise<void> {
   }
   console.log()
 
-  // If the user chose a template that has a `config` directory, and there wasn't
-  // already a `config` directory, but there was an mdl file, offer to set up CSV files
   if (configDirExisted) {
     // There was already a `config` directory, so don't offer to set up CSV files
     ora().succeed(`Found existing "${bold('config')}" directory.`)
