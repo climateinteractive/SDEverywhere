@@ -1,6 +1,6 @@
 {
   "name": "@sdeverywhere/runtime",
-  "version": "0.2.5",
+  "version": "0.2.7",
   "files": [
     "dist/**"
   ],
@@ -22,7 +22,7 @@
     "prettier:fix": "prettier --write .",
     "precommit": "../../scripts/precommit",
     "test": "vitest run",
-    "test:watch": "vitest",
+    "test:watch": "vitest --hideSkippedTests",
     "test:ci": "vitest run",
     "type-check": "tsc --noEmit -p tsconfig-test.json",
     "build": "tsup",

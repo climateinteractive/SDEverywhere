@@ -16,7 +16,6 @@ import type {
   UnitSystem
 } from './spec-types'
 import { genStringKey, htmlToUtf8 } from './strings'
-import { sdeNameForVensimVarName } from './var-names'
 
 /**
  * Convert the `config/graphs.csv` file to config specs that can be used in
@@ -181,7 +180,7 @@ function graphSpecFromCsv(g: CsvRow, context: ConfigContext): GraphSpec | undefi
       return
     }
 
-    const varId = sdeNameForVensimVarName(varName)
+    const varId = context.canonicalVarId(varName)
     const externalSourceName = overrides?.sourceName || optionalString(g[plotKey('source')])
     const datasetLabel = optionalString(g[plotKey('label')])
     let labelKey: StringKey
@@ -213,13 +212,15 @@ function graphSpecFromCsv(g: CsvRow, context: ConfigContext): GraphSpec | undefi
       lineStyleModifiers = [lineStyleModifierString]
     }
 
-    if (externalSourceName && externalSourceName !== 'Ref') {
-      // Add the variable to the set of vars to be included in the static data file
-      context.addStaticVariable(externalSourceName, varName)
-    } else {
-      // Add the variable if this is a normal model output (in which case the source
-      // name is undefined) or if it will be captured as "Ref" (baseline) values
+    if (externalSourceName === undefined || externalSourceName.startsWith('Scenario') || externalSourceName === 'Ref') {
+      // This is a normal model output (i.e., the source name is undefined or starts
+      // with "Scenario") or it is a model output for which reference/baseline values
+      // will be captured (i.e., the source name is "Ref")
       context.addOutputVariable(varName)
+    } else {
+      // This is a variable from an external data source (i.e., the data will be
+      // included in the static data file)
+      context.addStaticVariable(externalSourceName, varName)
     }
 
     const datasetSpec: GraphDatasetSpec = {

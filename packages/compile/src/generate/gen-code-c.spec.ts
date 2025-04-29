@@ -151,6 +151,9 @@ bool data_initialized = false;
 
 void initLookups0() {
   __lookup1 = __new_lookup(6, /*copy=*/false, __lookup1_data_);
+  for (size_t i = 0; i < 2; i++) {
+  _d_game_inputs[i] = __new_lookup(0, /*copy=*/false, NULL);
+  }
 }
 
 void initLookups() {
@@ -264,36 +267,31 @@ void setInputsFromBuffer(double* inputData) {
   _input = inputData[0];
 }
 
-void replaceLookup(Lookup** lookup, double* points, size_t numPoints) {
-  if (lookup == NULL) {
-    return;
-  }
-  if (*lookup != NULL) {
-    __delete_lookup(*lookup);
-    *lookup = NULL;
-  }
-  if (points != NULL) {
-    *lookup = __new_lookup(numPoints, /*copy=*/true, points);
-  }
-}
-
 void setLookup(size_t varIndex, size_t* subIndices, double* points, size_t numPoints) {
+  Lookup** pLookup = NULL;
   switch (varIndex) {
     case 6:
-      replaceLookup(&_d_game_inputs[subIndices[0]], points, numPoints);
+      pLookup = &_d_game_inputs[subIndices[0]];
       break;
     case 7:
-      replaceLookup(&_a_data[subIndices[0]], points, numPoints);
+      pLookup = &_a_data[subIndices[0]];
       break;
     case 8:
-      replaceLookup(&_b_data[subIndices[0]][subIndices[1]], points, numPoints);
+      pLookup = &_b_data[subIndices[0]][subIndices[1]];
       break;
     case 9:
-      replaceLookup(&_c_data, points, numPoints);
+      pLookup = &_c_data;
       break;
     default:
       fprintf(stderr, "No lookup found for var index %zu in setLookup\\n", varIndex);
       break;
+  }
+  if (pLookup != NULL) {
+    if (*pLookup == NULL) {
+      *pLookup = __new_lookup(numPoints, /*copy=*/true, points);
+    } else {
+      __set_lookup(*pLookup, numPoints, points);
+    }
   }
 }
 
@@ -418,16 +416,24 @@ void setLookup(size_t varIndex, size_t* subIndices, double* points, size_t numPo
     })
     expect(code).toMatch(`\
 void setLookup(size_t varIndex, size_t* subIndices, double* points, size_t numPoints) {
+  Lookup** pLookup = NULL;
   switch (varIndex) {
     case 6:
-      replaceLookup(&_q_data, points, numPoints);
+      pLookup = &_q_data;
       break;
     case 7:
-      replaceLookup(&_y_data[subIndices[0]], points, numPoints);
+      pLookup = &_y_data[subIndices[0]];
       break;
     default:
       fprintf(stderr, "No lookup found for var index %zu in setLookup\\n", varIndex);
       break;
+  }
+  if (pLookup != NULL) {
+    if (*pLookup == NULL) {
+      *pLookup = __new_lookup(numPoints, /*copy=*/true, points);
+    } else {
+      __set_lookup(*pLookup, numPoints, points);
+    }
   }
 }`)
   })
@@ -580,7 +586,7 @@ double _b[2];`)
       X = Y ~~|
       Y = X + 1 ~~|
     `
-    expect(() => readInlineModelAndGenerateC(mdl)).toThrow('Found cyclic dependency during toposort:\n_y →\n_x\n_y')
+    expect(() => readInlineModelAndGenerateC(mdl)).toThrow('Found cyclic dependency during toposort:\n_y →\n_x →\n_y')
   })
 
   it('should throw error when cyclic dependency is detected for init variable', () => {
@@ -588,6 +594,6 @@ double _b[2];`)
       X = INITIAL(Y) ~~|
       Y = X + 1 ~~|
     `
-    expect(() => readInlineModelAndGenerateC(mdl)).toThrow('Found cyclic dependency during toposort:\n_y →\n_x\n_y')
+    expect(() => readInlineModelAndGenerateC(mdl)).toThrow('Found cyclic dependency during toposort:\n_y →\n_x →\n_y')
   })
 })

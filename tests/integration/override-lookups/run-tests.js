@@ -92,6 +92,18 @@ async function runTests(runnerKind, modelRunner) {
   // Verify that the empty data override is in effect
   verifyDeclaredOutputs(runnerKind, 4, outputs, 0, 60)
 
+  // Run the model with one data variable reset to its original values (by setting
+  // the points array for the lookup to undefined)
+  outputs = await modelRunner.runModel(inputs, outputs, {
+    lookups: [
+      createLookupDef({ varId: '_a_data[_a1]' }, undefined),
+      createLookupDef({ varId: '_b_data[_a2,_b1]' }, undefined)
+    ]
+  })
+
+  // Verify that the empty data override is in effect
+  verifyDeclaredOutputs(runnerKind, 5, outputs, 0, 0)
+
   // Terminate the model runner
   await modelRunner.terminate()
 }

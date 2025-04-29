@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.2.7](https://github.com/climateinteractive/SDEverywhere/compare/runtime-v0.2.6...runtime-v0.2.7) (2025-04-26)
+
+
+### Features
+
+* add model scheduler variant that supports multiple input/output contexts ([#630](https://github.com/climateinteractive/SDEverywhere/issues/630)) ([ffd53d1](https://github.com/climateinteractive/SDEverywhere/commit/ffd53d17566ab5744344ce4ad5b00aa6d0b85213)), closes [#625](https://github.com/climateinteractive/SDEverywhere/issues/625)
+
+## [0.2.6](https://github.com/climateinteractive/SDEverywhere/compare/runtime-v0.2.5...runtime-v0.2.6) (2025-01-09)
+
+
+### Bug Fixes
+
+* allow for resetting a lookup at runtime back to its original data ([#593](https://github.com/climateinteractive/SDEverywhere/issues/593)) ([cfec212](https://github.com/climateinteractive/SDEverywhere/commit/cfec2129c681b8ae5e1ade05b73c37f2c739c5d9)), closes [#592](https://github.com/climateinteractive/SDEverywhere/issues/592)
+
 ## [0.2.5](https://github.com/climateinteractive/SDEverywhere/compare/runtime-v0.2.4...runtime-v0.2.5) (2024-08-27)
 
 

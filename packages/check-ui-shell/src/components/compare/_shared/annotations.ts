@@ -45,9 +45,10 @@ export function getAnnotationsForScenario(
     return []
   }
 
+  type InputErrorKind = 'unknown-input' | 'unknown-input-setting-group' | 'invalid-value'
   interface InputError {
     requestedName: string
-    kind: 'unknown-input' | 'invalid-value'
+    kind: InputErrorKind
   }
   const errorsInBoth: InputError[] = []
   const errorsInL: InputError[] = []
@@ -56,12 +57,25 @@ export function getAnnotationsForScenario(
     const kindL = input.stateL.error?.kind
     const kindR = input.stateR.error?.kind
 
+    const uisgL = kindL === 'unknown-input-setting-group'
+    const uisgR = kindR === 'unknown-input-setting-group'
+
     const uiL = kindL === 'unknown-input'
     const uiR = kindR === 'unknown-input'
 
     const ivL = kindL === 'invalid-value'
     const ivR = kindR === 'invalid-value'
 
+    if (uisgL || uisgR) {
+      const err: InputError = { requestedName: input.requestedName, kind: 'unknown-input-setting-group' }
+      if (uisgL && uisgR) {
+        errorsInBoth.push(err)
+      } else if (uisgL) {
+        errorsInL.push(err)
+      } else if (uisgR) {
+        errorsInR.push(err)
+      }
+    }
     if (uiL || uiR) {
       const err: InputError = { requestedName: input.requestedName, kind: 'unknown-input' }
       if (uiL && uiR) {
@@ -71,7 +85,8 @@ export function getAnnotationsForScenario(
       } else if (uiR) {
         errorsInR.push(err)
       }
-    } else if (ivL || ivR) {
+    }
+    if (ivL || ivR) {
       const err: InputError = { requestedName: input.requestedName, kind: 'invalid-value' }
       if (ivL && ivR) {
         errorsInBoth.push(err)
@@ -84,8 +99,9 @@ export function getAnnotationsForScenario(
   }
 
   // unknown inputs 'X', 'Y'
+  // unknown input setting group 'Z'
   // value out of range for 'X', 'Y'
-  function messageForErrorKind(errors: InputError[], kind: 'unknown-input' | 'invalid-value'): string | undefined {
+  function messageForErrorKind(errors: InputError[], kind: InputErrorKind): string | undefined {
     const inputs = errors.filter(e => e.kind === kind).map(e => `'${e.requestedName}'`)
     if (inputs.length === 0) {
       return undefined
@@ -93,6 +109,8 @@ export function getAnnotationsForScenario(
       if (kind === 'unknown-input') {
         const subject = inputs.length === 1 ? 'input' : 'inputs'
         return `unknown ${subject} ${inputs.join(', ')}`
+      } else if (kind === 'unknown-input-setting-group') {
+        return `unknown input setting group ${inputs[0]}`
       } else {
         return `value out of range for ${inputs.join(', ')}`
       }
@@ -102,7 +120,12 @@ export function getAnnotationsForScenario(
   // If there are "unknown input" errors, those take precedence over other errors like
   // "invalid value"
   function message(errors: InputError[]): string {
-    return messageForErrorKind(errors, 'unknown-input') || messageForErrorKind(errors, 'invalid-value')
+    const parts = [
+      messageForErrorKind(errors, 'unknown-input-setting-group'),
+      messageForErrorKind(errors, 'unknown-input'),
+      messageForErrorKind(errors, 'invalid-value')
+    ]
+    return parts.filter(p => p !== undefined).join('; ')
   }
 
   // If there are any errors in both, those take precendence over errors in one side only
@@ -111,12 +134,19 @@ export function getAnnotationsForScenario(
   //   scenario not valid in {right}: {inputMessages}
   if (errorsInBoth.length > 0) {
     annotations.push(annotationSpan('err', `invalid scenario: ${message(errorsInBoth)}`))
-  } else if (errorsInL.length > 0) {
+  }
+  if (errorsInL.length > 0) {
     const firstPart = `scenario not valid in ${datasetSpan(bundleNameL, 'left')}`
     annotations.push(annotationSpan('warn', `${firstPart}: ${message(errorsInL)}`))
-  } else if (errorsInR.length > 0) {
+  }
+  if (errorsInR.length > 0) {
     const firstPart = `scenario not valid in ${datasetSpan(bundleNameR, 'right')}`
     annotations.push(annotationSpan('warn', `${firstPart}: ${message(errorsInR)}`))
+  }
+
+  // Add a warning if the settings differ between the two models
+  if (scenario.settings.settingsDiffer === true) {
+    annotations.push(annotationSpan('warn', 'input settings differ between the two models'))
   }
 
   return annotations

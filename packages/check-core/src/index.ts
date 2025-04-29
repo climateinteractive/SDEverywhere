@@ -24,6 +24,7 @@ export type {
   ImplVarGroup,
   InputAliasName,
   InputGroupName,
+  InputSettingGroupId,
   LegendItem,
   LinkItem,
   LoadedBundle,
@@ -83,7 +84,12 @@ export type {
   ComparisonConfig,
   ComparisonDatasetOptions,
   ComparisonOptions,
-  ComparisonPlot
+  ComparisonPlot,
+  ComparisonReportDetailItem,
+  ComparisonReportDetailRow,
+  ComparisonReportOptions,
+  ComparisonReportSummaryRow,
+  ComparisonReportSummarySection
 } from './comparison/config/comparison-config'
 export type { ComparisonScenarios } from './comparison/config/comparison-scenarios'
 export type { ComparisonDatasets } from './comparison/config/comparison-datasets'

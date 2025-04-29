@@ -319,11 +319,11 @@ describe('readSubscriptRanges + resolveSubscriptRanges', () => {
       // and family will be changed from DimC' to DimC
       dim("DimC'", ['DimC'], "DimC'", ['DimC']),
       dim('DimD', ['D1', 'D2', 'D3', 'D4']),
+      // After resolve phase, family will be changed from SubA to DimA
+      dim('SubA', ['A2', 'A3'], 'SubA'),
       // After resolve phase, DimX will be expanded to individual subscripts,
       // and family will be changed from DimX to DimA
-      dim('DimX', ['SubA', 'A1'], 'DimX', ['SubA', 'A1']),
-      // After resolve phase, family will be changed from SubA to DimA
-      dim('SubA', ['A2', 'A3'], 'SubA')
+      dim('DimX', ['SubA', 'A1'], 'DimX', ['SubA', 'A1'])
     ])
 
     const resolvedSubs = readAndResolveSubscripts('arrays')
@@ -335,8 +335,8 @@ describe('readSubscriptRanges + resolveSubscriptRanges', () => {
       dim('DimC', ['C1', 'C2', 'C3']),
       dim("DimC'", ['DimC'], 'DimC', ['C1', 'C2', 'C3']),
       dim('DimD', ['D1', 'D2', 'D3', 'D4']),
-      dim('DimX', ['SubA', 'A1'], 'DimA', ['A2', 'A3', 'A1']),
       dim('SubA', ['A2', 'A3'], 'DimA'),
+      dim('DimX', ['SubA', 'A1'], 'DimA', ['A2', 'A3', 'A1']),
       sub('A1', 'DimA', 0),
       sub('A2', 'DimA', 1),
       sub('A3', 'DimA', 2),
@@ -357,28 +357,28 @@ describe('readSubscriptRanges + resolveSubscriptRanges', () => {
     const rawSubs = readSubscripts('directconst')
     expect(rawSubs).toEqual([
       dim('DimA', ['A1', 'A2', 'A3']),
+      // After resolve phase, family will be changed from SubA to DimA
+      dim('SubA', ['A2', 'A3'], 'SubA'),
       dim('DimB', ['B1', 'B2', 'B3']),
       dim('DimC', ['C1', 'C2']),
-      dim('DimD', ['D1', 'D2']),
       // After resolve phase, "From DimC" will be expanded to individual subscripts,
       // and family will be changed from "From DimC" to DimC
       dim('From DimC', ['DimC'], 'From DimC', ['DimC']),
-      // After resolve phase, family will be changed from SubA to DimA
-      dim('SubA', ['A2', 'A3'], 'SubA'),
       // After resolve phase, "To DimC" will be expanded to individual subscripts,
       // and family will be changed from "To DimC" to DimC
-      dim('To DimC', ['DimC'], 'To DimC', ['DimC'])
+      dim('To DimC', ['DimC'], 'To DimC', ['DimC']),
+      dim('DimD', ['D1', 'D2'])
     ])
 
     const resolvedSubs = readAndResolveSubscripts('directconst')
     expect(resolvedSubs).toEqual([
       dim('DimA', ['A1', 'A2', 'A3']),
+      dim('SubA', ['A2', 'A3'], 'DimA'),
       dim('DimB', ['B1', 'B2', 'B3']),
       dim('DimC', ['C1', 'C2']),
-      dim('DimD', ['D1', 'D2']),
       dim('From DimC', ['DimC'], 'DimC', ['C1', 'C2']),
-      dim('SubA', ['A2', 'A3'], 'DimA'),
       dim('To DimC', ['DimC'], 'DimC', ['C1', 'C2']),
+      dim('DimD', ['D1', 'D2']),
       sub('A1', 'DimA', 0),
       sub('A2', 'DimA', 1),
       sub('A3', 'DimA', 2),
@@ -607,7 +607,9 @@ describe('readSubscriptRanges + resolveSubscriptRanges', () => {
       dim('DimB', ['B1', 'B2', 'B3'], undefined, undefined, [dimMapping('DimA')], {
         _dima: []
       }),
-      dim('DimC', ['C1', 'C2', 'C3', 'C4', 'C5'])
+      dim('DimC', ['C1', 'C2', 'C3', 'C4', 'C5']),
+      dim('DimX', ['X1', 'X2', 'X3']),
+      dim('DimY', ['Y1', 'Y2', 'Y3'])
     ])
 
     const resolvedSubs = readAndResolveSubscripts('subscript')
@@ -641,6 +643,8 @@ describe('readSubscriptRanges + resolveSubscriptRanges', () => {
         _dima: ['_b1', '_b2', '_b3']
       }),
       dim('DimC', ['C1', 'C2', 'C3', 'C4', 'C5']),
+      dim('DimX', ['X1', 'X2', 'X3']),
+      dim('DimY', ['Y1', 'Y2', 'Y3']),
       // { name: '_a1', value: 0, size: 1, family: '_dima', mappings: {} },
       sub('A1', 'DimA', 0),
       // { name: '_a2', value: 1, size: 1, family: '_dima', mappings: {} },
@@ -657,7 +661,13 @@ describe('readSubscriptRanges + resolveSubscriptRanges', () => {
       sub('C2', 'DimC', 1),
       sub('C3', 'DimC', 2),
       sub('C4', 'DimC', 3),
-      sub('C5', 'DimC', 4)
+      sub('C5', 'DimC', 4),
+      sub('X1', 'DimX', 0),
+      sub('X2', 'DimX', 1),
+      sub('X3', 'DimX', 2),
+      sub('Y1', 'DimY', 0),
+      sub('Y2', 'DimY', 1),
+      sub('Y3', 'DimY', 2)
     ])
   })
 })

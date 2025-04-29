@@ -56,25 +56,79 @@ double _ZIDZ(double a, double b) {
 Lookup* __new_lookup(size_t size, bool copy, double* data) {
   // Make a new Lookup with "size" number of pairs given in x, y order in a flattened list.
   Lookup* lookup = malloc(sizeof(Lookup));
-  lookup->n = size;
-  lookup->inverted_data = NULL;
-  lookup->data_is_owned = copy;
+  lookup->original_size = size;
+  lookup->original_data_is_owned = copy;
   if (copy) {
-    // Copy array into the lookup data.
-    lookup->data = malloc(sizeof(double) * 2 * size);
-    memcpy(lookup->data, data, size * 2 * sizeof(double));
+    // Copy the given lookup data into an internally managed buffer.
+    size_t data_length_in_bytes = size * 2 * sizeof(double);
+    lookup->original_data = malloc(data_length_in_bytes);
+    memcpy(lookup->original_data, data, data_length_in_bytes);
   } else {
     // Store a pointer to the lookup data (assumed to be static or owned elsewhere).
-    lookup->data = data;
+    lookup->original_data = data;
   }
+  // Set the original data as "active".
+  lookup->active_data = lookup->original_data;
+  lookup->active_size = lookup->original_size;
+  // Set `dynamic_data` to NULL initially; it will be allocated on demand if lookup
+  // data is overridden at runtime using `__set_lookup`.
+  lookup->dynamic_data = NULL;
+  lookup->dynamic_data_length = 0;
+  lookup->dynamic_size = 0;
+  // Set `inverted_data` to NULL initially; it will be allocated on demand in case
+  // of `LOOKUP INVERT` calls.
+  lookup->inverted_data = NULL;
+  // Set the cached "last" values to the initial values.
   lookup->last_input = DBL_MAX;
   lookup->last_hit_index = 0;
   return lookup;
 }
+void __set_lookup(Lookup* lookup, size_t size, double* data) {
+  // Set new data for the given `Lookup`.  If `data` is NULL, the original data that was
+  // supplied to the `__new_lookup` call will be restored as the "active" data.  Otherwise,
+  // `data` will be copied to an internal data buffer, which will be the "active" data.
+  // If `size` is greater than the size passed to previous calls, the internal data buffer
+  // will be grown as needed.
+  if (lookup == NULL) {
+    return;
+  }
+  if (data != NULL) {
+    // Allocate or grow the internal buffer as needed.
+    size_t data_length_in_elems = size * 2;
+    size_t data_length_in_bytes = data_length_in_elems * sizeof(double);
+    if (data_length_in_elems > lookup->dynamic_data_length) {
+      lookup->dynamic_data = malloc(data_length_in_bytes);
+      lookup->dynamic_data_length = data_length_in_elems;
+    }
+    // Copy the given lookup data into the internally managed buffer.
+    lookup->dynamic_size = size;
+    if (data_length_in_bytes > 0) {
+      memcpy(lookup->dynamic_data, data, data_length_in_bytes);
+    }
+    // Set the dynamic data as the "active" data.
+    lookup->active_data = lookup->dynamic_data;
+    lookup->active_size = lookup->dynamic_size;
+  } else {
+    // Restore the original data as the "active" data.
+    lookup->active_data = lookup->original_data;
+    lookup->active_size = lookup->original_size;
+  }
+  // Clear the cached inverted data, if needed.
+  if (lookup->inverted_data) {
+    free(lookup->inverted_data);
+    lookup->inverted_data = NULL;
+  }
+  // Reset the cached "last" values to the initial values.
+  lookup->last_input = DBL_MAX;
+  lookup->last_hit_index = 0;
+}
 void __delete_lookup(Lookup* lookup) {
   if (lookup) {
-    if (lookup->data && lookup->data_is_owned) {
-      free(lookup->data);
+    if (lookup->original_data && lookup->original_data_is_owned) {
+      free(lookup->original_data);
+    }
+    if (lookup->dynamic_data) {
+      free(lookup->dynamic_data);
     }
     if (lookup->inverted_data) {
       free(lookup->inverted_data);
@@ -84,8 +138,8 @@ void __delete_lookup(Lookup* lookup) {
 }
 void __print_lookup(Lookup* lookup) {
   if (lookup) {
-    for (size_t i = 0; i < lookup->n; i++) {
-      printf("(%g, %g)\n", *(lookup->data + 2 * i), *(lookup->data + 2 * i + 1));
+    for (size_t i = 0; i < lookup->active_size; i++) {
+      printf("(%g, %g)\n", *(lookup->active_data + 2 * i), *(lookup->active_data + 2 * i + 1));
     }
   }
 }
@@ -94,12 +148,12 @@ double __lookup(Lookup* lookup, double input, bool use_inverted_data, LookupMode
   // Interpolate the y value from an array of (x,y) pairs.
   // NOTE: The x values are assumed to be monotonically increasing.
 
-  if (lookup == NULL || lookup->n == 0) {
+  if (lookup == NULL || lookup->active_size == 0) {
     return _NA_;
   }
 
-  const double* data = use_inverted_data ? lookup->inverted_data : lookup->data;
-  const size_t max = (lookup->n) * 2;
+  const double* data = use_inverted_data ? lookup->inverted_data : lookup->active_data;
+  const size_t max = (lookup->active_size) * 2;
 
   // Use the cached values for improved lookup performance, except in the case
   // of `LOOKUP INVERT` (since it may not be accurate if calls flip back and forth
@@ -166,12 +220,12 @@ double __get_data_between_times(Lookup* lookup, double input, LookupMode mode) {
   // Interpolate the y value from an array of (x,y) pairs.
   // NOTE: The x values are assumed to be monotonically increasing.
 
-  if (lookup == NULL || lookup->n == 0) {
+  if (lookup == NULL || lookup->active_size == 0) {
     return _NA_;
   }
 
-  const double* data = lookup->data;
-  const size_t n = lookup->n;
+  const double* data = lookup->active_data;
+  const size_t n = lookup->active_size;
   const size_t max = n * 2;
 
   switch (mode) {
@@ -248,10 +302,10 @@ double __get_data_between_times(Lookup* lookup, double input, LookupMode mode) {
 double _LOOKUP_INVERT(Lookup* lookup, double y) {
   if (lookup->inverted_data == NULL) {
     // Invert the matrix and cache it.
-    lookup->inverted_data = malloc(sizeof(double) * 2 * lookup->n);
-    double* pLookup = lookup->data;
+    lookup->inverted_data = malloc(sizeof(double) * 2 * lookup->active_size);
+    double* pLookup = lookup->active_data;
     double* pInvert = lookup->inverted_data;
-    for (size_t i = 0; i < lookup->n; i++) {
+    for (size_t i = 0; i < lookup->active_size; i++) {
       *pInvert++ = *(pLookup + 1);
       *pInvert++ = *pLookup;
       pLookup += 2;
@@ -261,12 +315,12 @@ double _LOOKUP_INVERT(Lookup* lookup, double y) {
 }
 
 double _GAME(Lookup* lookup, double default_value) {
-  if (lookup == NULL || lookup->n <= 0) {
+  if (lookup == NULL || lookup->active_size == 0) {
     // The lookup is NULL or empty, so return the default value
     return default_value;
   }
 
-  double x0 = lookup->data[0];
+  double x0 = lookup->active_data[0];
   if (_time < x0) {
     // The current time is earlier than the first data point, so return the
     // default value

@@ -153,11 +153,19 @@ ${chunkedFunctions('evalLevels', Model.levelVars(), '  // Evaluate levels.')}`
     let setLookupBody
     if (spec.customLookups === true || Array.isArray(spec.customLookups)) {
       setLookupBody = `\
+  Lookup** pLookup = NULL;
   switch (varIndex) {
 ${setLookupImpl(Model.varIndexInfo(), spec.customLookups)}
     default:
       fprintf(stderr, "No lookup found for var index %zu in setLookup\\n", varIndex);
       break;
+  }
+  if (pLookup != NULL) {
+    if (*pLookup == NULL) {
+      *pLookup = __new_lookup(numPoints, /*copy=*/true, points);
+    } else {
+      __set_lookup(*pLookup, numPoints, points);
+    }
   }`
     } else {
       let msg = 'The setLookup function was not enabled for the generated model. '
@@ -198,19 +206,6 @@ ${inputsFromStringImpl()}
 
 void setInputsFromBuffer(double* inputData) {
 ${inputsFromBufferImpl()}
-}
-
-void replaceLookup(Lookup** lookup, double* points, size_t numPoints) {
-  if (lookup == NULL) {
-    return;
-  }
-  if (*lookup != NULL) {
-    __delete_lookup(*lookup);
-    *lookup = NULL;
-  }
-  if (points != NULL) {
-    *lookup = __new_lookup(numPoints, /*copy=*/true, points);
-  }
 }
 
 void setLookup(size_t varIndex, size_t* subIndices, double* points, size_t numPoints) {
@@ -441,7 +436,7 @@ ${section(chunk)}
     return inputVars.join('\n')
   }
   function setLookupImpl(varIndexInfo, customLookups) {
-    // Emit `replaceLookup` calls for all lookups and data variables that can be overridden
+    // Emit case statements for all lookups and data variables that can be overridden
     // at runtime
     let includeCase
     if (Array.isArray(customLookups)) {
@@ -467,7 +462,7 @@ ${section(chunk)}
       }
       let c = ''
       c += `    case ${info.varIndex}:\n`
-      c += `      replaceLookup(&${lookupVar}, points, numPoints);\n`
+      c += `      pLookup = &${lookupVar};\n`
       c += `      break;`
       return c
     })

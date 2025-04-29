@@ -6,10 +6,14 @@ import { derived, writable, type Readable } from 'svelte/store'
 
 import type {
   ComparisonConfig,
+  ComparisonGroupSummariesByCategory,
   ComparisonGroupSummary,
+  ComparisonReportSummaryRow,
+  ComparisonScenarioKey,
   ComparisonTestSummary,
   ComparisonView,
-  ComparisonViewGroup
+  ComparisonViewGroup,
+  DatasetKey
 } from '@sdeverywhere/check-core'
 import { categorizeComparisonTestSummaries, getScoresForTestSummaries } from '@sdeverywhere/check-core'
 
@@ -21,24 +25,22 @@ import { datasetSpan } from '../_shared/spans'
 
 import { getGraphsGroupedByDiffs } from '../detail/compare-detail-vm'
 
-import type { ComparisonSummaryRowViewModel, ComparisonViewKey } from './comparison-summary-row-vm'
-
-export interface ComparisonSummarySectionViewModel {
-  header: ComparisonSummaryRowViewModel
-  rows: ComparisonSummaryRowViewModel[]
-}
+import type {
+  ComparisonSummaryRowKey,
+  ComparisonSummaryRowViewModel,
+  ComparisonViewKey
+} from './comparison-summary-row-vm'
+import type { ComparisonSummarySectionViewModel } from './comparison-summary-section-vm'
 
 export interface ComparisonViewsSummaryViewModel {
   kind: 'views'
   rowsWithDiffs: number
   allRows: Readable<ComparisonSummaryRowViewModel[]>
-  viewGroups: ComparisonSummarySectionViewModel[]
+  sections: ComparisonSummarySectionViewModel[]
 }
 
 export class ComparisonsByItemSummaryViewModel {
   public kind = 'by-item'
-
-  public readonly rowsWithDiffs: number
 
   private readonly regularRows: ComparisonSummaryRowViewModel[]
   public readonly pinnedRows: Readable<ComparisonSummaryRowViewModel[]>
@@ -47,35 +49,21 @@ export class ComparisonsByItemSummaryViewModel {
   constructor(
     private readonly pinnedItemState: PinnedItemState,
     public readonly itemKind: 'scenario' | 'dataset',
-    public readonly withErrors?: ComparisonSummarySectionViewModel,
-    public readonly onlyInLeft?: ComparisonSummarySectionViewModel,
-    public readonly onlyInRight?: ComparisonSummarySectionViewModel,
-    public readonly withDiffs?: ComparisonSummarySectionViewModel,
-    public readonly withoutDiffs?: ComparisonSummarySectionViewModel
+    public readonly sections: ComparisonSummarySectionViewModel[],
+    public readonly rowsWithDiffs: number
   ) {
     // Create an array that holds all regular rows
     const regularRows: ComparisonSummaryRowViewModel[] = []
-    const addRows = (section?: ComparisonSummarySectionViewModel) => {
-      if (section?.rows.length > 0) {
-        regularRows.push(...section.rows)
-      }
+    for (const section of sections) {
+      regularRows.push(...section.rows)
     }
-    addRows(withErrors)
-    addRows(onlyInLeft)
-    addRows(onlyInRight)
-    addRows(withDiffs)
-    addRows(withoutDiffs)
     this.regularRows = regularRows
-
-    // Determine the number of rows with differences
-    const rowsWithoutDiffsCount = withoutDiffs?.rows.length || 0
-    this.rowsWithDiffs = regularRows.length - rowsWithoutDiffsCount
 
     // Derive the pinned row view models from the pinned item state
     this.pinnedRows = derived(pinnedItemState.orderedKeys, $orderedKeys => {
       const pinnedRows: ComparisonSummaryRowViewModel[] = []
       for (const itemKey of $orderedKeys) {
-        // XXX: On the "Comparisons by Scenario" view, we don't currently have a good
+        // XXX: On the "Comparisons by scenario" view, we don't currently have a good
         // way to display "scenario group" rows that were pinned in the detail view,
         // so exclude them for now
         if (itemKey.startsWith('row')) {
@@ -83,13 +71,13 @@ export class ComparisonsByItemSummaryViewModel {
         }
         // The pinned row is a clone of the original row, except that the pinned one has
         // a key with 'pinned_' in the front to differentiate it from the normal row
-        const regularRow = this.regularRows.find(row => row.key === itemKey)
+        const regularRow = this.regularRows.find(row => row.itemKey === itemKey)
         if (regularRow === undefined) {
           throw new Error(`No regular row found for key=${itemKey}`)
         }
         pinnedRows.push({
           ...regularRow,
-          key: `pinned_${regularRow.key}`
+          rowKey: `pinned_${regularRow.itemKey}`
         })
       }
       return pinnedRows
@@ -106,15 +94,14 @@ export class ComparisonsByItemSummaryViewModel {
   public toggleItemPinned(row: ComparisonSummaryRowViewModel): void {
     // Note that `row` can either be a normal row or a pinned row (since they both
     // have a toggle button), so we need to get the key for the regular row here
-    const key = row.key.startsWith('pinned_') ? row.key.replace('pinned_', '') : row.key
-    this.pinnedItemState.toggleItemPinned(key)
+    this.pinnedItemState.toggleItemPinned(row.itemKey)
   }
 
   // TODO: This is only used in `comparison-summary-pinned.svelte` and can be removed
   // if we decide to not use that component
   public setReorderedPinnedItems(rows: ComparisonSummaryRowViewModel[]): void {
     // Use the new order of items that resulted from a drag-and-drop operation
-    this.pinnedItemState.setItemOrder(rows.map(row => row.key.replace('pinned_', '')))
+    this.pinnedItemState.setItemOrder(rows.map(row => row.itemKey))
   }
 }
 
@@ -146,6 +133,16 @@ export function createComparisonSummaryViewModels(
     return `view_${viewId++}`
   }
 
+  let headerId = 1
+  function genHeaderRowKey(): ComparisonSummaryRowKey {
+    return `header_${headerId++}`
+  }
+
+  let rowId = 1
+  function genRowKey(itemKey: DatasetKey | ComparisonScenarioKey | ComparisonViewKey): ComparisonSummaryRowKey {
+    return `row_${rowId++}_${itemKey}`
+  }
+
   // Helper function that creates a summary row view model for a single-scenario comparison view
   function rowForViewWithScenario(view: ComparisonView, viewGroup: ComparisonViewGroup): ComparisonSummaryRowViewModel {
     // Get the comparison test results for the scenario used in this view
@@ -167,9 +164,12 @@ export function createComparisonSummaryViewModels(
       // TODO: We should only look at datasets that appear in the specified graphs, not all datasets
       diffPercentByBucket = groupSummary.scores?.diffPercentByBucket
     }
+    const itemKey = genViewKey()
+    const rowKey = genRowKey(itemKey)
     return {
       kind: 'views',
-      key: genViewKey(),
+      rowKey,
+      itemKey,
       title: view.title,
       subtitle: view.subtitle,
       diffPercentByBucket,
@@ -205,9 +205,12 @@ export function createComparisonSummaryViewModels(
     const scoresForView = getScoresForTestSummaries(testSummariesForView, comparisonConfig.thresholds)
     const diffPercentByBucket = scoresForView.diffPercentByBucket
 
+    const itemKey = genViewKey()
+    const rowKey = genRowKey(itemKey)
     return {
       kind: 'views',
-      key: genViewKey(),
+      rowKey,
+      itemKey,
       title: view.title,
       subtitle: view.subtitle,
       diffPercentByBucket,
@@ -224,6 +227,7 @@ export function createComparisonSummaryViewModels(
   for (const viewGroup of comparisonConfig.viewGroups) {
     const headerRow: ComparisonSummaryRowViewModel = {
       kind: 'views',
+      rowKey: genHeaderRowKey(),
       title: viewGroup.title,
       header: true
     }
@@ -242,63 +246,71 @@ export function createComparisonSummaryViewModels(
           }
           return summaryRow
         }
-        case 'unresolved-view':
+        case 'unresolved-view': {
           // If the view is unresolved, treat it as a row with diffs
           viewRowsWithDiffs++
           // TODO: Show proper error message here
+          const itemKey = genViewKey()
+          const rowKey = genRowKey(itemKey)
           return {
             kind: 'views',
-            key: genViewKey(),
+            rowKey,
+            itemKey,
             title: 'Unresolved view',
             viewMetadata: {
               viewGroup,
               view
             }
           }
+        }
         default:
           assertNever(view)
       }
     })
     viewGroupSections.push({
       header: headerRow,
-      rows: viewRows
+      rows: viewRows,
+      // XXX: This value is not used for the comparison views tab, so we can set it to 0
+      rowsWithDiffs: 0,
+      expanded: writable(true)
     })
   }
 
-  // Helper that prepends the given string with `count` and replaces `{replace}`
-  // with `{replace}s` if count is not one
-  function countString(count: number, s: string, replace: string): string {
-    return `${count} ${count !== 1 ? s.replace(replace, `${replace}s`) : s}`
-  }
-
-  function rowForGroupSummary(groupSummary: ComparisonGroupSummary): ComparisonSummaryRowViewModel {
+  function viewModelForRow(row: ComparisonReportSummaryRow): ComparisonSummaryRowViewModel {
     let kind: ComparisonGroupingKind
     let title: string
     let subtitle: string
     let annotations: string
+    const groupSummary = row.groupSummary
     const root = groupSummary.root
     switch (root.kind) {
       case 'dataset': {
         kind = 'by-dataset'
         const outputVar = root.outputVarR || root.outputVarL
-        title = outputVar.varName
-        subtitle = outputVar.sourceName
+        title = row.title || outputVar.varName
+        subtitle = row.subtitle || outputVar.sourceName
         annotations = getAnnotationsForDataset(root, bundleNameL, bundleNameR).join(' ')
         break
       }
       case 'scenario':
         kind = 'by-scenario'
-        title = root.title
-        subtitle = root.subtitle
+        title = row.title || root.title
+        subtitle = row.subtitle || root.subtitle
         annotations = getAnnotationsForScenario(root, bundleNameL, bundleNameR).join(' ')
         break
       default:
         assertNever(root)
     }
 
+    // Note that the same item can be used in multiple sections.  The row key is derived
+    // from the item key, but we make each row key distinct.
+    const itemKey = groupSummary.group.key
+    const rowKey = genRowKey(itemKey)
+
     return {
       kind,
-      key: groupSummary.group.key,
+      rowKey,
+      itemKey,
       title,
       subtitle,
       annotations,
@@ -307,66 +319,115 @@ export function createComparisonSummaryViewModels(
     }
   }
 
-  function section(
-    groupSummaries: ComparisonGroupSummary[],
+  function sectionViewModel(
+    kind: ComparisonGroupingKind,
+    rows: ComparisonReportSummaryRow[],
     headerText: string,
-    count = true
+    initialState: 'collapsed' | 'expanded' | 'expanded-if-diffs' | undefined
   ): ComparisonSummarySectionViewModel | undefined {
-    if (groupSummaries.length > 0) {
-      const rows: ComparisonSummaryRowViewModel[] = groupSummaries.map(rowForGroupSummary)
-
-      let kind: ComparisonGroupingKind
-      let replace: string
-      if (headerText.includes('scenario')) {
-        kind = 'by-scenario'
-        replace = 'scenario'
-      } else {
-        kind = 'by-dataset'
-        replace = 'variable'
-      }
-
-      if (count) {
-        headerText = countString(rows.length, headerText, replace)
-      }
-
-      const headerRow: ComparisonSummaryRowViewModel = {
-        kind,
-        title: headerText,
-        header: true
-      }
-
-      return {
-        header: headerRow,
-        rows
-      }
-    } else {
+    if (rows.length === 0) {
+      // Exclude sections that have no rows
       return undefined
+    }
+
+    // Create a view model for each row
+    const rowViewModels: ComparisonSummaryRowViewModel[] = rows.map(viewModelForRow)
+
+    // Determine the initial expanded state of the section based on the `initialState` value and
+    // whether the any row has issues or has non-zero differences
+    const rowsWithDiffs = rowViewModels.filter(row => hasSignificantDiffs(row.diffPercentByBucket)).length
+    let expanded: boolean
+    switch (initialState) {
+      case 'collapsed':
+        expanded = false
+        break
+      case 'expanded':
+        expanded = true
+        break
+      case 'expanded-if-diffs':
+      default:
+        expanded = rowsWithDiffs > 0
+        break
+    }
+
+    const headerRow: ComparisonSummaryRowViewModel = {
+      kind,
+      rowKey: genHeaderRowKey(),
+      title: headerText,
+      header: true
+    }
+
+    return {
+      header: headerRow,
+      rows: rowViewModels,
+      rowsWithDiffs,
+      expanded: writable(expanded)
     }
   }
 
   // Build the by-scenario comparison sections
   const nameL = datasetSpan(bundleNameL, 'left')
   const nameR = datasetSpan(bundleNameR, 'right')
-  const scenariosWithErrors = section(groupsByScenario.withErrors, 'scenario with errors…')
-  const scenariosOnlyInLeft = section(groupsByScenario.onlyInLeft, `scenario only valid in ${nameL}…`)
-  const scenariosOnlyInRight = section(groupsByScenario.onlyInRight, `scenario only valid in ${nameR}…`)
-  const scenariosWithDiffs = section(groupsByScenario.withDiffs, 'scenario producing differences…')
-  const scenariosWithoutDiffs = section(
-    groupsByScenario.withoutDiffs,
-    'No differences produced by the following scenarios…',
-    false
-  )
+  const byScenarioSections: ComparisonSummarySectionViewModel[] = []
+  function addByScenarioSection(
+    rows: ComparisonReportSummaryRow[],
+    headerText: string,
+    initialState: 'collapsed' | 'expanded' | 'expanded-if-diffs' | undefined
+  ): void {
+    const section = sectionViewModel('by-scenario', rows, headerText, initialState)
+    if (section) {
+      byScenarioSections.push(section)
+    }
+  }
+  function addDefaultByScenarioSection(summaries: ComparisonGroupSummary[], headerText: string): void {
+    const rows = summaries.map(groupSummary => ({ groupSummary }))
+    addByScenarioSection(rows, headerText, 'expanded-if-diffs')
+  }
+  if (comparisonConfig.reportOptions?.summarySectionsForComparisonsByScenario) {
+    // When a callback is defined, build the custom sections
+    const customSections = comparisonConfig.reportOptions.summarySectionsForComparisonsByScenario(groupsByScenario)
+    for (const customSection of customSections) {
+      addByScenarioSection(customSection.rows, customSection.headerText, customSection.initialState)
+    }
+  } else {
+    // Otherwise, build the default sections
+    addDefaultByScenarioSection(groupsByScenario.withErrors, 'Scenarios with errors')
+    addDefaultByScenarioSection(groupsByScenario.onlyInLeft, `Scenarios only valid in ${nameL}`)
+    addDefaultByScenarioSection(groupsByScenario.onlyInRight, `Scenarios only valid in ${nameR}`)
+    addDefaultByScenarioSection(groupsByScenario.withDiffs, 'Scenarios producing differences')
+    addDefaultByScenarioSection(groupsByScenario.withoutDiffs, 'No differences produced by the following scenarios')
+  }
 
   // Build the by-dataset comparison sections
-  const datasetsWithErrors = section(groupsByDataset.withErrors, 'output variable with errors…')
-  const datasetsOnlyInLeft = section(groupsByDataset.onlyInLeft, 'removed output variable…')
-  const datasetsOnlyInRight = section(groupsByDataset.onlyInRight, 'added output variable…')
-  const datasetsWithDiffs = section(groupsByDataset.withDiffs, 'output variable with differences…')
-  const datasetsWithoutDiffs = section(
-    groupsByDataset.withoutDiffs,
-    'No differences detected for the following outputs…',
-    false
-  )
+  const byDatasetSections: ComparisonSummarySectionViewModel[] = []
+  function addByDatasetSection(
+    rows: ComparisonReportSummaryRow[],
+    headerText: string,
+    initialState: 'collapsed' | 'expanded' | 'expanded-if-diffs' | undefined
+  ): void {
+    const section = sectionViewModel('by-dataset', rows, headerText, initialState)
+    if (section) {
+      byDatasetSections.push(section)
+    }
+  }
+  function addDefaultByDatasetSection(summaries: ComparisonGroupSummary[], headerText: string): void {
+    const rows = summaries.map(groupSummary => ({ groupSummary }))
+    addByDatasetSection(rows, headerText, 'expanded-if-diffs')
+  }
+  if (comparisonConfig.reportOptions?.summarySectionsForComparisonsByDataset) {
+    // When a callback is defined, build the custom sections
+    const customSections = comparisonConfig.reportOptions.summarySectionsForComparisonsByDataset(groupsByDataset)
+    for (const customSection of customSections) {
+      addByDatasetSection(customSection.rows, customSection.headerText, customSection.initialState)
+    }
+  } else {
+    // Otherwise, build the default sections
+    addDefaultByDatasetSection(groupsByDataset.withErrors, 'Datasets with errors')
+    addDefaultByDatasetSection(groupsByDataset.onlyInLeft, 'Removed datasets')
+    addDefaultByDatasetSection(groupsByDataset.onlyInRight, 'Added datasets')
+    addDefaultByDatasetSection(groupsByDataset.withDiffs, 'Datasets with differences')
+    addDefaultByDatasetSection(groupsByDataset.withoutDiffs, 'No differences detected for the following datasets')
+  }
 
   // Build the summary view models
   let viewsSummary: ComparisonViewsSummaryViewModel
@@ -379,28 +440,28 @@ export function createComparisonSummaryViewModels(
       kind: 'views',
       allRows: writable(allViewRows),
       rowsWithDiffs: viewRowsWithDiffs,
-      viewGroups: viewGroupSections
+      sections: viewGroupSections
     }
+  }
+
+  // Helper function that determines the number of rows with differences
+  function rowsWithDiffs(groupSummaries: ComparisonGroupSummariesByCategory): number {
+    const rowsWithoutDiffsCount = groupSummaries.withoutDiffs?.length || 0
+    return groupSummaries.allGroupSummaries.size - rowsWithoutDiffsCount
   }
 
   const byScenarioSummary = new ComparisonsByItemSummaryViewModel(
     pinnedItemStates.pinnedScenarios,
     'scenario',
-    scenariosWithErrors,
-    scenariosOnlyInLeft,
-    scenariosOnlyInRight,
-    scenariosWithDiffs,
-    scenariosWithoutDiffs
+    byScenarioSections,
+    rowsWithDiffs(groupsByScenario)
   )
 
   const byDatasetSummary = new ComparisonsByItemSummaryViewModel(
     pinnedItemStates.pinnedDatasets,
     'dataset',
-    datasetsWithErrors,
-    datasetsOnlyInLeft,
-    datasetsOnlyInRight,
-    datasetsWithDiffs,
-    datasetsWithoutDiffs
+    byDatasetSections,
+    rowsWithDiffs(groupsByDataset)
   )
 
   return {

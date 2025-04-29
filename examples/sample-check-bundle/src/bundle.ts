@@ -91,6 +91,7 @@ export function createBundle(): Bundle {
     inputVars: inputs.inputVars,
     inputGroups: inputs.inputGroups,
     inputAliases: inputs.inputAliases,
+    inputSettingGroups: inputs.inputSettingGroups,
     outputVars: outputs.outputVars,
     implVars: outputs.implVars,
     datasetGroups: outputs.datasetGroups,

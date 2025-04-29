@@ -54,15 +54,44 @@ typedef enum {
 } LookupMode;
 
 typedef struct {
-  double* data;
-  size_t n;
+  // The pointer to the active data buffer.  This will be the same as either
+  // `original_data` or `dynamic_data`, depending on whether the lookup data
+  // is overridden at runtime using `__set_lookup`.
+  double* active_data;
+  // The size (i.e., number of pairs) of the active data.
+  size_t active_size;
+
+  // The pointer to the original data buffer.
+  double* original_data;
+  // The size (i.e., number of pairs) of the original data.
+  size_t original_size;
+  // Whether the `original_data` is owned by this `Lookup` instance.  If `true`,
+  // the `original_data` buffer will be freed by `__delete_lookup`.
+  bool original_data_is_owned;
+
+  // The pointer to the dynamic data buffer.  This will be NULL initially,
+  // and the buffer will be allocated (or grown) by `__set_lookup`.
+  double* dynamic_data;
+  // The size (i.e., number of pairs) of the dynamic data.
+  size_t dynamic_size;
+  // The number of elements in the dynamic data buffer.  The buffer will grow
+  // as needed, so this can be greater than `2 * dynamic_size`.
+  size_t dynamic_data_length;
+
+  // The inverted version of the active data buffer.  This is allocated on demand
+  // only in the case of `LOOKUP INVERT` function calls.
   double* inverted_data;
-  bool data_is_owned;
+
+  // The input value for the last hit.  This is cached for performance so that we
+  // can reduce the amount of linear searching in the common case where `LOOKUP`
+  // input values are monotonically increasing.
   double last_input;
+  // The index for the last hit (see `last_input`).
   size_t last_hit_index;
 } Lookup;
 
 Lookup* __new_lookup(size_t size, bool copy, double* data);
+void __set_lookup(Lookup* lookup, size_t size, double* data);
 void __delete_lookup(Lookup* lookup);
 void __print_lookup(Lookup* lookup);
 

@@ -128,7 +128,13 @@ pnpm create @sdeverywhere@latest
 yarn create @sdeverywhere
 ```
 
-Answer a few questions, and within minutes you can have a functional web application that runs your model!
+The `create` script will ask you a few questions.
+The default answers have been chosen to get you up and running quickly.
+If at any step you are unsure of the best option, simply hit the "enter" key to select the default answer.
+You can always change the configuration for your project after it has been created by editing the `sde.config.js` file and the other files in the `config` directory.
+
+After answering all questions, you will have a functional web application that runs your model!
+For more guidance on configuring your project, refer to [Creating a Web Application](https://github.com/climateinteractive/SDEverywhere/wiki/Creating-a-Web-Application) in the [SDEverywhere wiki](https://github.com/climateinteractive/SDEverywhere/wiki).
 
 ## Documentation
 
@@ -153,7 +159,7 @@ Here are some prominent current limitations:
 - You must rewrite tabbed arrays as separate, non-apply-to-all variables.
 - You must rewrite equations that use macros or code them in C.
 
-Tabbed arrays and macros are removed from the model during preprocessing and written to the `removals.txt` file for your reference.
+Note that tabbed arrays and macros are automatically removed from the model by the transpiler prior to parsing.
 
 ## SDEverywhere in Production
 

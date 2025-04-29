@@ -1,19 +1,20 @@
 {
-  "name": "project",
+  "name": "template-minimal",
   "version": "1.0.0",
   "private": true,
   "type": "module",
   "scripts": {
+    "clean": "rm -rf sde-prep",
     "build": "sde bundle",
     "dev": "sde dev",
     "save-baseline": "sde-check baseline --save"
   },
   "dependencies": {
-    "@sdeverywhere/build": "^0.3.4",
-    "@sdeverywhere/check-core": "^0.1.2",
-    "@sdeverywhere/cli": "^0.7.23",
-    "@sdeverywhere/plugin-check": "^0.3.5",
-    "@sdeverywhere/plugin-wasm": "^0.2.3",
-    "@sdeverywhere/plugin-worker": "^0.2.3"
+    "@sdeverywhere/build": "^0.3.7",
+    "@sdeverywhere/check-core": "^0.1.5",
+    "@sdeverywhere/cli": "^0.7.31",
+    "@sdeverywhere/plugin-check": "^0.3.17",
+    "@sdeverywhere/plugin-wasm": "^0.2.6",
+    "@sdeverywhere/plugin-worker": "^0.2.10"
   }
 }

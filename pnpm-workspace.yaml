@@ -1,7 +1,5 @@
 packages:
   - packages/*
   - examples/**
-  - '!examples/template-*'
-  - '!examples/template-*/**'
   - models
   - tests/**

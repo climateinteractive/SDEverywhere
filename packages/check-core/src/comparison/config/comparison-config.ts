@@ -4,6 +4,8 @@ import type { DatasetKey } from '../../_shared/types'
 import type { BundleGraphId, LoadedBundle, ModelSpec, NamedBundle } from '../../bundle/bundle-types'
 
 import type { ComparisonDataset, ComparisonScenario, ComparisonViewGroup } from '../_shared/comparison-resolved-types'
+import type { ComparisonGroupSummariesByCategory, ComparisonGroupSummary } from '../report/comparison-group-types'
+import type { ComparisonTestSummary } from '../report/comparison-report-types'
 
 import type { ComparisonDatasets } from './comparison-datasets'
 import type { ComparisonScenarios } from './comparison-scenarios'
@@ -56,6 +58,104 @@ export interface ComparisonDatasetOptions {
   contextGraphIdsForDataset?: (dataset: ComparisonDataset, scenario: ComparisonScenario) => BundleGraphId[]
 }
 
+/**
+ * Describes a row in the comparison report summary view.
+ */
+export interface ComparisonReportSummaryRow {
+  /** The group summary represented by the row. */
+  groupSummary: ComparisonGroupSummary
+  /** The custom title for the row (this overrides the default title derived from the summary). */
+  title?: string
+  /** The custom subtitle for the row (this overrides the default subtitle derived from the summary). */
+  subtitle?: string
+}
+
+/**
+ * Describes a section in the comparison report summary view.
+ */
+export interface ComparisonReportSummarySection {
+  /** The text to display for the section header. */
+  headerText: string
+  /** The summary rows to display in the section. */
+  rows: ComparisonReportSummaryRow[]
+  /**
+   * The initial expanded state of the section.  If undefined, defaults to 'expanded-if-diffs',
+   * meaning the section will be initially expanded only if any rows have differences, otherwise
+   * it will be initially collapsed.
+   */
+  initialState?: 'collapsed' | 'expanded' | 'expanded-if-diffs'
+}
+
+/**
+ * Describes an item (box) in the comparison report detail view.
+ */
+export interface ComparisonReportDetailItem {
+  /** The title of the item. */
+  title: string
+  /** The subtitle of the item (if any). */
+  subtitle?: string
+  /** The scenario for the item. */
+  scenario: ComparisonScenario
+  /** The test summary for the item. */
+  testSummary: ComparisonTestSummary
+}
+
+/**
+ * Describes a row in the comparison report detail view.
+ */
+export interface ComparisonReportDetailRow {
+  /** The title of the row. */
+  title: string
+  /** The subtitle of the row (if any). */
+  subtitle?: string
+  /** The score for the row (the meaning of the value depends on the chosen statistical method). */
+  score: number
+  /** The items in this row (one item per box). */
+  items: ComparisonReportDetailItem[]
+}
+
+export interface ComparisonReportOptions {
+  /**
+   * An optional function that allows for customizing the order and grouping of
+   * sections and rows in the "comparisons by scenario" summary view.
+   *
+   * @param summaries The comparison summaries, one summary per scenario.
+   * @returns The sections to display in the "comparisons by scenario" summary view.
+   */
+  summarySectionsForComparisonsByScenario?: (
+    summaries: ComparisonGroupSummariesByCategory
+  ) => ComparisonReportSummarySection[]
+
+  /**
+   * An optional function that allows for customizing the order and grouping of
+   * sections and rows in the "comparisons by dataset" summary view.
+   *
+   * @param summaries The comparison summaries, one summary per dataset.
+   * @returns The sections to display in the "comparisons by dataset" summary view.
+   */
+  summarySectionsForComparisonsByDataset?: (
+    summaries: ComparisonGroupSummariesByCategory
+  ) => ComparisonReportSummarySection[]
+
+  /**
+   * An optional function that allows for customizing the order of rows and boxes
+   * in the detail view for a scenario.
+   *
+   * @param rows The original rows to be displayed in the detail view for a scenario.
+   * @returns The customized rows to display in the detail view for a scenario.
+   */
+  detailRowsForScenario?: (rows: ComparisonReportDetailRow[]) => ComparisonReportDetailRow[]
+
+  /**
+   * An optional function that allows for customizing the order of rows and boxes
+   * in the detail view for a dataset.
+   *
+   * @param rows The original rows to be displayed in the detail view for a dataset.
+   * @returns The customized rows to display in the detail view for a dataset.
+   */
+  detailRowsForDataset?: (rows: ComparisonReportDetailRow[]) => ComparisonReportDetailRow[]
+}
+
 export interface ComparisonOptions {
   /** The left-side ("baseline") bundle being compared. */
   baseline: NamedBundle
@@ -71,6 +171,8 @@ export interface ComparisonOptions {
   specs: (ComparisonSpecs | ComparisonSpecsSource)[]
   /** Optional configuration for the datasets that are compared for different scenarios. */
   datasets?: ComparisonDatasetOptions
+  /** Options for customizing the comparison report. */
+  report?: ComparisonReportOptions
 }
 
 export interface ComparisonConfig {
@@ -89,6 +191,8 @@ export interface ComparisonConfig {
   datasets: ComparisonDatasets
   /** The set of resolved view groups. */
   viewGroups: ComparisonViewGroup[]
+  /** Options for customizing the comparison report. */
+  reportOptions?: ComparisonReportOptions
 }
 
 /**

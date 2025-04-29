@@ -21,6 +21,7 @@
     "target": "es6",
     "module": "esnext",
     "moduleResolution": "node",
+    "skipLibCheck": true,
     "allowJs": true,
     "noImplicitAny": false,
     "noUnusedLocals": false,

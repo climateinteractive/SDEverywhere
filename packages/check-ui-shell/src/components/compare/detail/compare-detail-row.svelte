@@ -72,7 +72,7 @@ function getContextGraphPadding(index: number): number {
 <template>
 
 <div class="detail-row">
-  {#if viewModel.showTitle}
+  {#if viewModel.title}
     <div class="title-row" on:contextmenu|preventDefault={onContextMenu}>
       <div class="title">{ @html viewModel.title }</div>
       {#if viewModel.subtitle}

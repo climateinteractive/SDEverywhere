@@ -97,7 +97,10 @@ sde bundle [--config sde.config.js] [--verbose]
 sde generate --list {model}
 ```
 
-#### Preprocess a model to remove macros and tabbed arrays to removals.txt
+#### Preprocess a model to remove macros and tabbed arrays
+
+_NOTE:_ For most users it is not necessary to run the preprocessor manually
+because the transpiler runs the preprocessor automatically prior to parsing.
 
 ```
 sde generate --preprocess {model}
@@ -204,21 +207,6 @@ There is an example in the `directdata` sample model.
 }
 ```
 
-#### Specify equations to remove from the model
-
-When SDEverywhere cannot handle a certain Vensim construct yet, you will need to remove equations that use the construct from the model, convert it by hand into something that SDEverywhere can handle, and then insert it back into the model.
-To have the preprocessor remove equations from the model into a `removals.txt` file, specify substrings to match in the equation in the `removalKeys` section.
-Macros and `TABBED ARRAY` equations are already automatically removed by the preprocessor.
-
-For instance, you could key on the variable name in the equation definition.
-
-```json
-"removalKeys": [
-  "varname1 =",
-  "varname2 ="
-]
-```
-
 #### Generating, compiling, running, and testing the C code
 
 To generate C code using the `--spec` argument, enter the following command:
@@ -259,15 +247,6 @@ That is, the values are separated by spaces, and each pair has an index number, 
 
 The zero-based index maps into a static array of input variable pointers held in the function.
 These are used to set the value directly into the static `double` variable in the generated code.
-
-#### Inserting a file into the model
-
-Some constructs like macros are not supported by SDEverywhere.
-They are removed from the model by the preprocessor into the `removals.txt` file.
-You can edit these constructs into a form that SDEverywhere supports and insert them back into the model.
-Create a file called `mdl-edits.txt` in the model directory with the constructs to insert.
-For instance, manually expand macros and place them into the `mdl-edits.txt` file.
-The preprocessor will read this file and insert its contents unchanged into the beginning of the model.
 
 ## License
 

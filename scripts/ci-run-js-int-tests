@@ -17,6 +17,9 @@ pnpm \
 --workspace-concurrency=0 \
 -F parse \
 -F build \
+-F check-core \
+-F check-ui-shell \
+-F plugin-check \
 -F plugin-wasm \
 -F plugin-worker \
 -F runtime \

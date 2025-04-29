@@ -14,6 +14,8 @@ import type { ComparisonGroupingKind } from '../_shared/comparison-grouping-kind
 // XXX: Views don't currently have a unique key of their own, so we assign them at runtime
 export type ComparisonViewKey = string
 
+export type ComparisonSummaryRowKey = string
+
 export interface ComparisonSummaryRowViewMetadata {
   /** The view group that the view belongs to. */
   viewGroup: ComparisonViewGroup
@@ -25,8 +27,10 @@ export interface ComparisonSummaryRowViewMetadata {
 
 export interface ComparisonSummaryRowViewModel {
   kind: ComparisonGroupingKind
-  /** The unique key for the row (can be undefined for a header row). */
-  key?: DatasetKey | ComparisonScenarioKey | ComparisonViewKey
+  /** The unique key for the row.  This must be unique among all rows. */
+  rowKey: ComparisonSummaryRowKey
+  /** The unique key of the item represented by the row (can be undefined for a header row). */
+  itemKey?: DatasetKey | ComparisonScenarioKey | ComparisonViewKey
   /** The row title (e.g., output variable name or scenario title). */
   title: string
   /** The row subtitle (e.g., output variable source name or scenario subtitle). */

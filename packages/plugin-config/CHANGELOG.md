@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.2.8](https://github.com/climateinteractive/SDEverywhere/compare/plugin-config-v0.2.7...plugin-config-v0.2.8) (2025-04-25)
+
+
+### Bug Fixes
+
+* treat variable as a model output if source starts with "Scenario" ([#627](https://github.com/climateinteractive/SDEverywhere/issues/627)) ([de1c7d6](https://github.com/climateinteractive/SDEverywhere/commit/de1c7d6e3b99b742596d1d1eb608e2188cc6b6fd)), closes [#626](https://github.com/climateinteractive/SDEverywhere/issues/626)
+
+## [0.2.7](https://github.com/climateinteractive/SDEverywhere/compare/plugin-config-v0.2.6...plugin-config-v0.2.7) (2024-12-13)
+
+
+### Bug Fixes
+
+* remove duplicate implementations of canonical[Var]Name functions ([#580](https://github.com/climateinteractive/SDEverywhere/issues/580)) ([e215d7d](https://github.com/climateinteractive/SDEverywhere/commit/e215d7de5e2fe551a0dd4cb6e3a960180db4b76f)), closes [#578](https://github.com/climateinteractive/SDEverywhere/issues/578)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * peerDependencies
+    * @sdeverywhere/build bumped from ^0.3.6 to ^0.3.7
+
 ## [0.2.6](https://github.com/climateinteractive/SDEverywhere/compare/plugin-config-v0.2.5...plugin-config-v0.2.6) (2024-08-23)
 
 

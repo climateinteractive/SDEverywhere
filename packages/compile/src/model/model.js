@@ -10,7 +10,6 @@ import {
   indexNamesForSubscript,
   isDimension,
   isIndex,
-  normalizeSubscripts,
   sub,
   subscriptFamilies
 } from '../_shared/subscript.js'
@@ -74,6 +73,10 @@ function read(parsedModel, spec, extData, directData, modelDirname, opts) {
   // Some arrays need to be separated into variables with individual indices to
   // prevent eval cycles. They are manually added to the spec file.
   let specialSeparationDims = spec.specialSeparationDims
+  // All arrays that have one of the specified dimension ID lists are
+  // separated on those dimensions. This allows variables to be separated
+  // without listing each one.
+  let separateAllVarsWithDims = spec.separateAllVarsWithDims
 
   // Dimensions must be defined before reading variables that use them.
   readDimensionDefs(parsedModel, modelDirname)
@@ -82,7 +85,7 @@ function read(parsedModel, spec, extData, directData, modelDirname, opts) {
   if (opts?.stopAfterResolveSubscripts) return
 
   // Read variables from the model parse tree.
-  const vars = readVariables(parsedModel, specialSeparationDims)
+  const vars = readVariables(parsedModel, specialSeparationDims, separateAllVarsWithDims)
 
   // Include a placeholder variable for the exogenous `Time` variable
   const timeVar = new Variable()
@@ -473,7 +476,7 @@ function findNonAtoAVars() {
   // Find variables with multiple instances with the same var name, which makes them
   // elements in a non-apply-to-all array. This function constructs the nonAtoANames list.
   function areSubsEqual(vars, i) {
-    // Scan the subscripts for each var at position i in normal order.
+    // Scan the subscripts for each var at position i in the original order.
     // Return true if the subscript is the same for all vars with that name.
     let subscript = vars[0].subscripts[i]
     for (let v of vars) {
@@ -486,7 +489,7 @@ function findNonAtoAVars() {
   R.forEach(name => {
     let vars = varsWithName(name)
     if (vars.length > 1) {
-      // This is a non-apply-to-all array. Construct the exansion dims array for it.
+      // This is a non-apply-to-all array. Construct the expansion dims array for it.
       // The expansion dim is true at each dim position where the subscript varies.
       let numDims = vars[0].subscripts.length
       let expansionDims = []
@@ -673,8 +676,6 @@ function splitRefId(refId) {
       varName = m[0]
     }
   }
-  // Put subscripts in normal order.
-  subscripts = normalizeSubscripts(subscripts)
   return { varName, subscripts }
 }
 function varWithName(varName) {

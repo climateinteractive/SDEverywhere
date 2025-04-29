@@ -52,7 +52,7 @@ import loadGeneratedModel from './sde-prep/generated-model.js'
 ### 2. Initialize a `ModelRunner`
 
 The next step is to create a `ModelRunner` instance, which simplifies
-the process of running a `WasmModel` with a given set of inputs and
+the process of running a generated model with a given set of inputs and
 parsing the outputs.
 The `ModelRunner` produces an `Outputs` instance that provides easy
 access to time series data for each output variable in the model.

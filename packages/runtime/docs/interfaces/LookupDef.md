@@ -16,6 +16,6 @@ ___
 
 ### points
 
- **points**: `Float64Array`
+ `Optional` **points**: `Float64Array`
 
 The lookup data as a flat array of (x,y) pairs.

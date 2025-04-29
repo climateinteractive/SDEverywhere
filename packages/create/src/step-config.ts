@@ -8,9 +8,8 @@ import { bold, cyan, dim, green, reset, yellow } from 'kleur/colors'
 import ora from 'ora'
 import type { Choice } from 'prompts'
 import prompts from 'prompts'
-import yaml from 'yaml'
 
-import { parseAndGenerate, preprocessModel } from '@sdeverywhere/compile'
+import { parseAndGenerate } from '@sdeverywhere/compile'
 
 interface MdlConstVariable {
   kind: 'const'
@@ -30,12 +29,17 @@ interface MdlLevelVariable {
 
 type MdlVariable = MdlConstVariable | MdlAuxVariable | MdlLevelVariable
 
-const sampleCheckContent = `\
+const sampleChecksContent = `\
 # yaml-language-server: $schema=SCHEMA_PATH
 
-# NOTE: This is just a simple check to get you started.  Replace "Some output" with
-# the name of some variable you'd like to test.  Additional tests can be developed
-# in the "playground" (beta) inside the model-check report.
+#
+# This file contains "check" tests that exercise your model under different input
+# scenarios.  For more guidance, consult this wiki page:
+#   https://github.com/climateinteractive/SDEverywhere/wiki/Testing-and-Comparing-Your-Model
+#
+
+# NOTE: The following is an example of a simple check just to get you started.
+# Replace "Some output" with the name of some variable you'd like to test.
 - describe: Some output
   tests:
     - it: should be > 0 for all input scenarios
@@ -47,6 +51,29 @@ const sampleCheckContent = `\
         - gt: 0
 `
 
+const sampleComparisonsContent = `\
+# yaml-language-server: $schema=SCHEMA_PATH
+
+#
+# This file contains definitions of custom comparison scenarios, which allow you to see
+# how the behavior of the model compares to that of previous versions.  For more guidance,
+# consult the following wiki page:
+#   https://github.com/climateinteractive/SDEverywhere/wiki/Testing-and-Comparing-Your-Model
+#
+
+# NOTE: The following is an example of a custom scenario just to get you started.
+# Replace "Some input" and "Another input" with the names of some variables you'd
+# like to test.
+- scenario:
+    title: Custom scenario
+    subtitle: gradual ramp-up
+    with:
+      - input: Some input
+        at: 10
+      - input: Another input
+        at: 20
+`
+
 export async function updateSdeConfig(projDir: string, mdlPath: string, genFormat: string): Promise<void> {
   // Read the `sde.config.js` file from the template
   const configPath = joinPath(projDir, 'sde.config.js')
@@ -55,24 +82,25 @@ export async function updateSdeConfig(projDir: string, mdlPath: string, genForma
   // Set the code generation format to the chosen format
   configText = configText.replace(`const genFormat = 'js'`, `const genFormat = '${genFormat}'`)
 
-  // Replace instances of `MODEL_NAME.mdl` with the path to the chosen mdl file
-  configText = configText.replaceAll('MODEL_NAME.mdl', mdlPath)
+  // Replace instances of `model/MODEL_NAME.mdl` with the path to the chosen mdl file
+  configText = configText.replaceAll('model/MODEL_NAME.mdl', mdlPath)
 
   // Write the updated file
   await writeFile(configPath, configText)
 }
 
-export async function generateCheckYaml(projDir: string, mdlPath: string): Promise<void> {
-  // Generate a sample `{mdl}.check.yaml` file if one doesn't already exist
-  // TODO: Make this optional (ask user first)?
-  const checkYamlFile = mdlPath.replace('.mdl', '.check.yaml')
-  const checkYamlPath = joinPath(projDir, checkYamlFile)
-  if (!existsSync(checkYamlPath)) {
+async function generateYaml(projDir: string, kind: 'checks' | 'comparisons', template: string): Promise<void> {
+  const yamlDir = joinPath(projDir, 'model', kind)
+  const yamlPath = joinPath(yamlDir, `${kind}.yaml`)
+  if (!existsSync(yamlPath)) {
     // Get relative path from yaml file parent dir to project dir
-    let relProjPath = relative(dirname(checkYamlPath), projDir)
+    let relProjPath = relative(dirname(yamlPath), projDir)
     if (relProjPath.length === 0) {
       relProjPath = './'
     }
+
+    // Create the directory for the yaml file, if needed
+    await mkdir(yamlDir, { recursive: true })
 
     // TODO: This path is normally different depending on whether using npm/yarn or
     // pnpm. For npm/yarn, `check-core` is hoisted under top-level `node_modules`,
@@ -82,11 +110,20 @@ export async function generateCheckYaml(projDir: string, mdlPath: string): Promi
     // suffice).  This allows us to use the same path here that works for all
     // three package managers.
     const nodeModulesPart = joinPath(relProjPath, 'node_modules')
-    const checkCorePart = '@sdeverywhere/check-core/schema/check.schema.json'
+    const schemaName = kind === 'checks' ? 'check' : 'comparison'
+    const checkCorePart = `@sdeverywhere/check-core/schema/${schemaName}.schema.json`
     const schemaPath = `${nodeModulesPart}/${checkCorePart}`
-    const checkContent = sampleCheckContent.replace('SCHEMA_PATH', schemaPath)
-    await writeFile(checkYamlPath, checkContent)
+    const yamlContent = template.replace('SCHEMA_PATH', schemaPath)
+    await writeFile(yamlPath, yamlContent)
   }
+}
+
+export async function generateSampleYamlFiles(projDir: string): Promise<void> {
+  // Generate a sample `checks.yaml` file if one doesn't already exist
+  await generateYaml(projDir, 'checks', sampleChecksContent)
+
+  // Generate a sample `comparisons.yaml` file if one doesn't already exist
+  await generateYaml(projDir, 'comparisons', sampleComparisonsContent)
 }
 
 export async function chooseGenConfig(projDir: string, mdlPath: string): Promise<void> {
@@ -227,17 +264,24 @@ async function chooseGenGraphConfig(projDir: string, mdlVars: MdlVariable[]): Pr
     }
   )
 
+  // Preserve the `graphs.csv` header but drop other existing content (if any)
+  const graphsCsvFile = joinPath(projDir, 'config', 'graphs.csv')
+  const origGraphsCsvContent = await readFile(graphsCsvFile, 'utf8')
+  const graphsCsvHeader = origGraphsCsvContent.split('\n')[0]
+
+  // Write the updated `graphs.csv` file
+  let newGraphsCsvContent = `${graphsCsvHeader}\n`
+  if (varsResponse.vars.length > 0) {
+    // Add line to `graphs.csv`
+    const csvLine = graphsCsvLine(varsResponse.vars)
+    newGraphsCsvContent += `${csvLine}\n`
+  }
+  await writeFile(graphsCsvFile, newGraphsCsvContent)
+
   if (varsResponse.vars.length === 0) {
     ora().info(dim(`No variables selected. You can edit the "${cyan('config/graphs.csv')}" file later.`))
     return
   }
-
-  // Add line to `graphs.csv`
-  const graphsCsvFile = joinPath(projDir, 'config', 'graphs.csv')
-  const csvLine = graphsCsvLine(varsResponse.vars)
-  let graphsCsvContent = await readFile(graphsCsvFile, 'utf8')
-  graphsCsvContent += `${csvLine}\n`
-  await writeFile(graphsCsvFile, graphsCsvContent)
 
   ora(
     green(`Added graph to "${bold('config/graphs.csv')}". ${dim('You can configure graphs in that file later.')}`)
@@ -335,25 +379,32 @@ async function chooseGenSliderConfig(projDir: string, mdlVars: MdlVariable[]): P
     }
   )
 
+  // Preserve the `inputs.csv` header but drop other existing content (if any)
+  const inputsCsvFile = joinPath(projDir, 'config', 'inputs.csv')
+  const origInputsCsvContent = await readFile(inputsCsvFile, 'utf8')
+  const inputsCsvHeader = origInputsCsvContent.split('\n')[0]
+
+  // Write the updated `inputs.csv` file
+  let newInputsCsvContent = `${inputsCsvHeader}\n`
+  if (varsResponse.vars.length > 0) {
+    // Add lines to `inputs.csv`
+    let idNumber = 1
+    for (const inputVarName of varsResponse.vars) {
+      const inputVar = mdlVars.find(v => v.name === inputVarName)
+      if (inputVar && inputVar.kind === 'const') {
+        const defaultValue = inputVar.value
+        const csvLine = inputsCsvLine(inputVarName, defaultValue, idNumber.toString())
+        newInputsCsvContent += `${csvLine}\n`
+        idNumber++
+      }
+    }
+  }
+  await writeFile(inputsCsvFile, newInputsCsvContent)
+
   if (varsResponse.vars.length === 0) {
     ora().info(dim(`No variables selected. You can edit the "${cyan('config/inputs.csv')}" file later.`))
     return
   }
-
-  // Add lines to `inputs.csv`
-  const inputsCsvFile = joinPath(projDir, 'config', 'inputs.csv')
-  let inputsCsvContent = await readFile(inputsCsvFile, 'utf8')
-  let idNumber = 1
-  for (const inputVarName of varsResponse.vars) {
-    const inputVar = mdlVars.find(v => v.name === inputVarName)
-    if (inputVar && inputVar.kind === 'const') {
-      const defaultValue = inputVar.value
-      const csvLine = inputsCsvLine(inputVarName, defaultValue, idNumber.toString())
-      inputsCsvContent += `${csvLine}\n`
-      idNumber++
-    }
-  }
-  await writeFile(inputsCsvFile, inputsCsvContent)
 
   const slidersText = varsResponse.vars.length > 1 ? 'sliders' : 'sliders'
   ora(
@@ -425,24 +476,20 @@ async function readModelVars(projDir: string, mdlPath: string): Promise<MdlVaria
   // Ideally we'd use an API that does not write files but instead returns an in-memory
   // object in a specified format.
 
-  // Read and preprocess the model
-  // TODO: We can skip the preprocess step once parseAndGenerate calls
-  // the new parser that has preprocessing built-in
+  // Read the model file
   const mdlFile = resolvePath(projDir, mdlPath)
-  const preprocessed = preprocessModel(mdlFile, spec, 'runnable', /*writeFiles=*/ false)
+  const mdlContent = await readFile(mdlFile, 'utf8')
 
   // Parse the model and generate the variable list
   const mdlDir = dirname(mdlFile)
   const mdlName = parsePath(mdlFile).name
-  await parseAndGenerate(preprocessed, spec, ['printVarList'], mdlDir, mdlName, buildDir)
+  await parseAndGenerate(mdlContent, spec, ['printVarList'], mdlDir, mdlName, buildDir)
 
-  // Read `build/{mdl}_vars.yaml`
-  // TODO: For now the printVarList code only outputs txt and yaml files; we'll use the
-  // yaml file for now, but that means we have a dependency on the `yaml` package.  Once
-  // we change the `compile` package to output JSON, we'll need to change this code.
-  const varsYamlFile = joinPath(buildDir, `${mdlName}_vars.yaml`)
-  const varsYamlContent = await readFile(varsYamlFile, 'utf8')
-  const varObjs = yaml.parse(varsYamlContent)
+  // Read `build/{mdl}.json`
+  const jsonListFile = joinPath(buildDir, `${mdlName}.json`)
+  const jsonListContent = await readFile(jsonListFile, 'utf8')
+  const jsonList = JSON.parse(jsonListContent)
+  const varObjs = jsonList.variables
 
   // Create a simplified array of variables
   const mdlVars: MdlVariable[] = []

@@ -23,16 +23,18 @@ cp -rf SDEverywhere/examples/sir .
 cd ./sir
 
 # Create a new project (you can also use yarn or pnpm here, if preferred).
-# Be sure to choose the "Default" template, which will make use of the
-# existing files in the `config` directory.
+# You can choose either the "Default" or "Svelte" template; either one
+# of these will make use of the existing files in the `sir/config`
+# directory that have been pre-configured with some graphs and sliders.
 npm create @sdeverywhere@latest
 
 # Enter development mode for the sample model.  This will start a live
-# development environment that will build a WebAssembly version of the
+# development environment that will build a JavaScript version of the
 # sample model and run checks on it any time you make changes to:
 #   - the config files
-#   - the Vensim model file (sir.mdl)
-#   - the checks file (sir.check.yaml)
+#   - the Vensim model file (model/sir.mdl)
+#   - the model check definitions (model/checks/*.yaml)
+#   - the model comparison definitions (model/comparisons/*.yaml)
 npm run dev
 ```
 

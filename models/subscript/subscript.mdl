@@ -59,6 +59,14 @@ v[DimA] = IF THEN ELSE (DimA = A2, 1, 0)
   ~:SUPPLEMENTARY
 	|
 
+DimX: (X1-X3) ~~|
+DimY: (Y1-Y3) ~~|
+w[DimX,DimY] = DimX - DimY
+	~
+	~	dimensions used in expression position (where expression result can go negative)
+  ~:SUPPLEMENTARY
+	|
+
 ********************************************************
 	.Control
 ********************************************************~

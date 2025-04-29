@@ -1,5 +1,5 @@
 import { cdbl, newTmpVarName } from '../_shared/helpers.js'
-import { extractMarkedDims, isDimension, isIndex, normalizeSubscripts, sub } from '../_shared/subscript.js'
+import { extractMarkedDims, isDimension, isIndex, sub } from '../_shared/subscript.js'
 
 import Model from '../model/model.js'
 
@@ -12,8 +12,6 @@ import Model from '../model/model.js'
  * @param {string} cLhs The C/JS code for the LHS variable reference.
  * @param {LoopIndexVars} loopIndexVars The loop index state used for LHS dimensions.
  * @param {LoopIndexVars} arrayIndexVars The loop index state used for array functions (that use marked dimensions).
- * @param {() => void} resetMarkedDims Function that resets the marked dimension state.
- * @param {(dimId: string) => void} addMarkedDim Function that adds the given dimension to the set of marked dimensions.
  * @param {(s: string) => void} emitPreInnerLoop Function that will cause the given code to be appended to the chunk that
  * precedes the generated inner loop for the equation.
  * @param {(s: string) => void} emitPreFormula Function that will cause the given code to be appended to the chunk that
@@ -69,7 +67,7 @@ export function generateExpr(expr, ctx) {
         // plus one (since Vensim indices are one-based).
         const dimId = expr.varId
         const indexCode = ctx.cVarIndex(dimId)
-        return `(${indexCode} + 1)`
+        return `(${indexExpr(indexCode, ctx)} + 1)`
       } else if (isIndex(expr.varId)) {
         // This is a reference to a subscript/index that is being used in expression position.
         // In place of the subscript, emit the numeric index value of the subscript plus one
@@ -646,7 +644,6 @@ function generateArrayFunctionCall(callExpr, ctx) {
   // Open the array function loop(s)
   const indexDecl = ctx.outFormat === 'js' ? 'let' : 'size_t'
   for (const markedDimId of markedDimIds) {
-    ctx.addMarkedDim(markedDimId)
     const n = sub(markedDimId).size
     const i = ctx.arrayIndexVars.index(markedDimId)
     ctx.emitPreFormula(`  for (${indexDecl} ${i} = 0; ${i} < ${n}; ${i}++) {`)
@@ -690,9 +687,6 @@ function generateArrayFunctionCall(callExpr, ctx) {
   for (let i = 0; i < markedDimIds.size; i++) {
     ctx.emitPreFormula(`  }`)
   }
-
-  // Reset marked dim state
-  ctx.resetMarkedDims()
 
   if (returnCode) {
     // Emit the expression defined above in place of the array function
@@ -747,7 +741,7 @@ function generateVectorElmMapCall(callExpr, ctx) {
 
   // The `VECTOR ELM MAP` function replaces one subscript with a calculated offset from
   // a base index
-  const rhsSubIds = normalizeSubscripts(vecSubIds)
+  const rhsSubIds = vecSubIds
   const cSubscripts = rhsSubIds.map(rhsSubId => {
     if (isIndex(rhsSubId)) {
       let indexDecl
@@ -838,35 +832,55 @@ function generateAllocateAvailableCall(callExpr, ctx) {
     }
   }
 
-  // Process the request argument
+  // Given a C/JS variable reference string (e.g., '_var[i][j]'), return that
+  // string without the last N array index parts
+  function cVarRefWithoutLastIndices(arg, count) {
+    const varRef = ctx.cVarRef(arg)
+    const origIndexParts = Model.splitRefId(varRef).subscripts
+    if (origIndexParts < count) {
+      throw new Error(`ALLOCATE AVAILABLE argument '${arg}' should have at least ${count} subscripts`)
+    }
+    const newIndexParts = origIndexParts.slice(0, -count)
+    if (newIndexParts.length > 0) {
+      return `${arg.varId}${newIndexParts.map(x => `[${x}]`).join('')}`
+    } else {
+      return arg.varId
+    }
+  }
+
+  // Process the request argument.  Only include subscripts up until the last one;
+  // the implementation function will iterate over the requesters array.
   const reqArg = validateArg(0, 'req')
-  const reqRefId = reqArg.varId
-  const reqSubIds = reqArg.subscriptRefs.map(subRef => subRef.subId)
+  const reqRef = cVarRefWithoutLastIndices(reqArg, 1)
 
-  // Process the priority argument
-  const priorityArg = validateArg(1, 'priority')
-  const priorityRefId = priorityArg.varId
+  // Process the pp (priority profile) argument.  Only include subscripts up until the
+  // second to last one; the implementation function will iterate over the priority
+  // profile array.
+  const ppArg = validateArg(1, 'pp')
+  const ppRef = cVarRefWithoutLastIndices(ppArg, 2)
 
-  // Process the avail argument
+  // Process the avail argument; include any subscripts
   const availArg = validateArg(2, 'avail')
-  const availRefId = availArg.varId
+  const availRef = ctx.cVarRef(availArg)
 
-  // The `ALLOCATE AVAILABLE` function iterates over the subscript in its first arg
-  const dimId = reqSubIds[0]
-  const subIndex = ctx.loopIndexVars.index(dimId)
+  // The `ALLOCATE AVAILABLE` function iterates over the last subscript in its first arg.
+  // The `readEquation` process will have already verified that the last dimension matches
+  // the last dimension for the LHS.
+  const allocDimId = reqArg.subscriptRefs[reqArg.subscriptRefs.length - 1].subId
+  const allocLoopIndexVar = ctx.loopIndexVars.index(allocDimId)
 
   // Generate the code that is emitted before the entire block (before any loops are opened)
   const tmpVarId = newTmpVarName()
-  const dimSize = sub(dimId).size
+  const numRequesters = sub(allocDimId).size
   switch (ctx.outFormat) {
     case 'c':
       ctx.emitPreInnerLoop(
-        `  double* ${tmpVarId} = _ALLOCATE_AVAILABLE(${reqRefId}, (double*)${priorityRefId}, ${availRefId}, ${dimSize});`
+        `  double* ${tmpVarId} = _ALLOCATE_AVAILABLE(${reqRef}, (double*)${ppRef}, ${availRef}, ${numRequesters});`
       )
       break
     case 'js':
       ctx.emitPreInnerLoop(
-        `  let ${tmpVarId} = fns.ALLOCATE_AVAILABLE(${reqRefId}, ${priorityRefId}, ${availRefId}, ${dimSize});`
+        `  let ${tmpVarId} = fns.ALLOCATE_AVAILABLE(${reqRef}, ${ppRef}, ${availRef}, ${numRequesters});`
       )
       break
     default:
@@ -874,7 +888,7 @@ function generateAllocateAvailableCall(callExpr, ctx) {
   }
 
   // Generate the RHS expression used in the inner loop
-  return `${tmpVarId}[${dimId}[${subIndex}]]`
+  return `${tmpVarId}[${allocDimId}[${allocLoopIndexVar}]]`
 }
 
 /**
@@ -1002,6 +1016,35 @@ function minFunc(ctx) {
       return 'fmin'
     case 'js':
       return 'Math.min'
+    default:
+      throw new Error(`Unhandled output format '${ctx.outFormat}'`)
+  }
+}
+
+/**
+ * Return the C or JS code for a subscript or dimension (loop index variable) used in
+ * expression position.
+ *
+ * @param {string} indexValue The index number or code.
+ * @param {GenExprContext} ctx The context used when generating code for the expression.
+ * @return {string} The generated C/JS code.
+ */
+function indexExpr(indexValue, ctx) {
+  switch (ctx.outFormat) {
+    case 'c':
+      // In the C case, we need to cast to double since the index variable will be
+      // of type `size_t`, which is an unsigned type, but we want a signed type for
+      // the rare cases where math is involved that makes it go negative
+      if (isNaN(indexValue)) {
+        // This is a (non-numeric) loop index variable reference, so cast to double
+        return `((double)${indexValue})`
+      } else {
+        // This is a numeric index, no cast is necessary
+        return indexValue
+      }
+    case 'js':
+      // In the JS case, no cast is necessary
+      return indexValue
     default:
       throw new Error(`Unhandled output format '${ctx.outFormat}'`)
   }

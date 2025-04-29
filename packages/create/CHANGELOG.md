@@ -1,5 +1,72 @@
 # Changelog
 
+## [0.2.27](https://github.com/climateinteractive/SDEverywhere/compare/create-v0.2.26...create-v0.2.27) (2025-04-27)
+
+
+### Features
+
+* add Svelte template as an option in create package ([#634](https://github.com/climateinteractive/SDEverywhere/issues/634)) ([a214a61](https://github.com/climateinteractive/SDEverywhere/commit/a214a610155673c4da4387aa7eee75c588bb467f)), closes [#633](https://github.com/climateinteractive/SDEverywhere/issues/633)
+
+## [0.2.26](https://github.com/climateinteractive/SDEverywhere/compare/create-v0.2.25...create-v0.2.26) (2025-03-24)
+
+
+### Bug Fixes
+
+* read from json model listing instead of yaml file + remove yaml dependency in create package ([#614](https://github.com/climateinteractive/SDEverywhere/issues/614)) ([4394386](https://github.com/climateinteractive/SDEverywhere/commit/4394386588c03c3582c7ddef54d6d0ae21e55b58)), closes [#357](https://github.com/climateinteractive/SDEverywhere/issues/357)
+
+## [0.2.25](https://github.com/climateinteractive/SDEverywhere/compare/create-v0.2.24...create-v0.2.25) (2025-02-20)
+
+
+### Bug Fixes
+
+* convert paths to use POSIX separators when detecting mdl files ([#606](https://github.com/climateinteractive/SDEverywhere/issues/606)) ([19d38e8](https://github.com/climateinteractive/SDEverywhere/commit/19d38e8c679b6a8d96020e596e3fb31243d523a1)), closes [#605](https://github.com/climateinteractive/SDEverywhere/issues/605)
+
+## [0.2.24](https://github.com/climateinteractive/SDEverywhere/compare/create-v0.2.23...create-v0.2.24) (2025-02-11)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/compile bumped from ^0.7.22 to ^0.7.23
+
+## [0.2.23](https://github.com/climateinteractive/SDEverywhere/compare/create-v0.2.22...create-v0.2.23) (2025-01-09)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/compile bumped from ^0.7.21 to ^0.7.22
+
+## [0.2.22](https://github.com/climateinteractive/SDEverywhere/compare/create-v0.2.21...create-v0.2.22) (2024-12-13)
+
+
+### Bug Fixes
+
+* remove legacy preprocessor implementation and use newer one from parse package ([#576](https://github.com/climateinteractive/SDEverywhere/issues/576)) ([c04e0ca](https://github.com/climateinteractive/SDEverywhere/commit/c04e0ca5143c7f31ba23f7dfed7a008428b77867)), closes [#575](https://github.com/climateinteractive/SDEverywhere/issues/575)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/compile bumped from ^0.7.20 to ^0.7.21
+
+## [0.2.21](https://github.com/climateinteractive/SDEverywhere/compare/create-v0.2.20...create-v0.2.21) (2024-12-02)
+
+
+### Bug Fixes
+
+* update default plugin-check configuration to include comparison yaml files ([#574](https://github.com/climateinteractive/SDEverywhere/issues/574)) ([24f5e56](https://github.com/climateinteractive/SDEverywhere/commit/24f5e56a473cf5cf696fb26e9d21a26441bb2c56)), closes [#571](https://github.com/climateinteractive/SDEverywhere/issues/571)
+
+## [0.2.20](https://github.com/climateinteractive/SDEverywhere/compare/create-v0.2.19...create-v0.2.20) (2024-11-21)
+
+
+### Bug Fixes
+
+* skip questions in create script if config and/or emsdk directories exist ([#562](https://github.com/climateinteractive/SDEverywhere/issues/562)) ([4b37db0](https://github.com/climateinteractive/SDEverywhere/commit/4b37db0f41192aaed9ff2d33254d6a9a0451862e)), closes [#335](https://github.com/climateinteractive/SDEverywhere/issues/335)
+
 ## [0.2.19](https://github.com/climateinteractive/SDEverywhere/compare/create-v0.2.18...create-v0.2.19) (2024-09-15)
 
 

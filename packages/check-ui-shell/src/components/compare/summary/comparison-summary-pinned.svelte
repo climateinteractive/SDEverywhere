@@ -20,8 +20,9 @@ const dispatch = createEventDispatcher()
 // Rebuild the local array of pinned items when the source array is changed
 type LocalItem = { id: string, row: ComparisonSummaryRowViewModel }
 $: localItems = $rows.map(row => {
+  // TODO: This isn't currently used, so not sure if `rowKey` is correct here
   return {
-    id: row.key,
+    id: row.rowKey,
     row
   }
 })

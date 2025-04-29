@@ -1,5 +1,6 @@
 // Copyright (c) 2023 Climate Interactive / New Venture Fund
 
+import type { VarId } from '../_shared/types'
 import type { ModelSpec } from './bundle-types'
 import type { InputVar } from './var-types'
 
@@ -14,7 +15,7 @@ export class ModelInputs {
   /** All input ID aliases. */
   private readonly inputIdAliases: Set<string> = new Set()
 
-  constructor(modelSpec: ModelSpec) {
+  constructor(public readonly modelSpec: ModelSpec) {
     // Add the inputs from the primary map
     for (const inputVar of modelSpec.inputVars.values()) {
       // Add an entry with the input's variable name as the key
@@ -68,5 +69,14 @@ export class ModelInputs {
    */
   getInputVarForName(name: string): InputVar | undefined {
     return this.inputsByLookupName.get(name.toLowerCase())
+  }
+
+  /**
+   * Return the `InputVar` that matches the requested variable ID.
+   *
+   * @param varId The variable identifier to match.
+   */
+  getInputVarForVarId(varId: VarId): InputVar | undefined {
+    return this.modelSpec.inputVars.get(varId)
   }
 }

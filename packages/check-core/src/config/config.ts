@@ -89,7 +89,8 @@ export async function createConfig(options: ConfigOptions): Promise<Config> {
       thresholds: options.comparison.thresholds,
       scenarios: getComparisonScenarios(comparisonDefs.scenarios),
       datasets: getComparisonDatasets(modelSpecL, modelSpecR, options.comparison.datasets),
-      viewGroups: comparisonDefs.viewGroups
+      viewGroups: comparisonDefs.viewGroups,
+      reportOptions: options.comparison.report
     }
   }
 

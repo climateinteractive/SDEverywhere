@@ -1,7 +1,7 @@
 // Copyright (c) 2021-2022 Climate Interactive / New Venture Fund
 
 import type { DataSource } from '../_shared/data-source'
-import type { ScenarioSpec } from '../_shared/scenario-spec-types'
+import type { InputSetting, ScenarioSpec } from '../_shared/scenario-spec-types'
 import type { DatasetKey, VarId } from '../_shared/types'
 
 import type { ImplVar, InputVar, OutputVar } from './var-types'
@@ -11,6 +11,9 @@ export type InputGroupName = string
 
 /** The alias name for an input. */
 export type InputAliasName = string
+
+/** The name for a custom input setting group. */
+export type InputSettingGroupId = string
 
 /** The human-readable name for a group of datasets. */
 export type DatasetGroupName = string
@@ -128,6 +131,8 @@ export interface ModelSpec {
   inputAliases?: Map<InputAliasName, VarId>
   /** The custom input variable groups defined for this model. */
   inputGroups?: Map<InputGroupName, InputVar[]>
+  /** The custom input setting groups defined for this model. */
+  inputSettingGroups?: Map<InputSettingGroupId, InputSetting[]>
   /** The custom dataset (output variable) groups defined for this model. */
   datasetGroups?: Map<DatasetGroupName, DatasetKey[]>
   /** The start time (year) for the model. */

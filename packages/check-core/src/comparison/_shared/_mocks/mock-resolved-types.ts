@@ -133,7 +133,7 @@ export function scenarioWithInputs(
   resolvedInputs: ComparisonScenarioInput[],
   specL?: ScenarioSpec,
   specR?: ScenarioSpec,
-  opts?: { id?: string; title?: string; subtitle?: string }
+  opts?: { id?: string; title?: string; subtitle?: string; settingsDiffer?: boolean }
 ): ComparisonScenario {
   return {
     kind: 'scenario',
@@ -143,7 +143,8 @@ export function scenarioWithInputs(
     subtitle: opts?.subtitle,
     settings: {
       kind: 'input-settings',
-      inputs: resolvedInputs
+      inputs: resolvedInputs,
+      settingsDiffer: opts?.settingsDiffer
     },
     specL,
     specR

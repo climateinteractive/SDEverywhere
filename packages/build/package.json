@@ -1,6 +1,6 @@
 {
   "name": "@sdeverywhere/build",
-  "version": "0.3.6",
+  "version": "0.3.7",
   "files": [
     "dist/**"
   ],
@@ -30,6 +30,7 @@
     "ci:build": "run-s clean lint prettier:check type-check build test:ci docs"
   },
   "dependencies": {
+    "@sdeverywhere/parse": "^0.1.2",
     "chokidar": "^3.5.3",
     "cross-spawn": "^7.0.3",
     "folder-hash": "^4.0.2",

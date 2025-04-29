@@ -8,6 +8,7 @@ import { ModelScheduler } from './model-scheduler'
 
 describe('ModelScheduler', () => {
   afterEach(() => {
+    vi.useRealTimers()
     vi.restoreAllMocks()
   })
 
