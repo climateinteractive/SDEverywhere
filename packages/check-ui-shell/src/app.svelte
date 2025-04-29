@@ -146,6 +146,7 @@ function onKeyDown(event: KeyboardEvent) {
       }
       viewMode = 'trace'
       event.preventDefault()
+      break
     default:
       break
   }

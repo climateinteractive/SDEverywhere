@@ -1,5 +1,5 @@
 import { canonicalName } from './helpers.js'
-import { isIndex, normalizeSubscripts, sub } from './subscript.js'
+import { isIndex, sub } from './subscript.js'
 
 /**
  * Convert a Vensim variable name to a C name.
@@ -20,7 +20,6 @@ export function cName(vensimVarName) {
   if (matches[2]) {
     // The variable name includes subscripts, so split them into individual IDs
     let cSubIds = matches[2].split(',').map(x => canonicalName(x))
-    cSubIds = normalizeSubscripts(cSubIds)
     // If a subscript is an index, convert it to an index number to match Vensim data exports
     let cSubIdParts = cSubIds.map(cSubId => {
       return isIndex(cSubId) ? `[${sub(cSubId).value}]` : `[${cSubId}]`
