@@ -203,6 +203,8 @@ export let isIterable = obj => {
 }
 // Command helpers
 export let readXlsx = pathname => {
+  // Read the XLSX file at the pathname and parse it.
+  // Return a `XLSX.WorkBook` object that can be used to access the data.
   // Cache parsed files to support multiple reads from different equations.
   let xlsx = xlsxData.get(pathname)
   if (!xlsx) {
