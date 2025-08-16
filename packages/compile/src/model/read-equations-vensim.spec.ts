@@ -99,7 +99,7 @@ function v(lhs: string, formula: string, overrides?: Partial<Variable>): Variabl
   return variable as Variable
 }
 
-describe('readEquations', () => {
+describe('readEquations (from Vensim model)', () => {
   it('should work for simple equation with explicit parentheses', () => {
     const vars = readInlineModel(`
       x = 1 ~~|

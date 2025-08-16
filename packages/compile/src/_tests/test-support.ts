@@ -154,11 +154,22 @@ export function parseVensimModel(modelName: string): ParsedModel {
   const modelDir = sampleModelDir(modelName)
   const modelFile = resolve(modelDir, `${modelName}.mdl`)
   const mdlContent = readFileSync(modelFile, 'utf8')
-  return parseModel(mdlContent, modelDir)
+  return parseModel(mdlContent, 'vensim', modelDir)
 }
 
 export function parseInlineVensimModel(mdlContent: string, modelDir?: string): ParsedModel {
-  return parseModel(mdlContent, modelDir)
+  return parseModel(mdlContent, 'vensim', modelDir)
+}
+
+export function parseXmileModel(modelName: string): ParsedModel {
+  const modelDir = sampleModelDir(modelName)
+  const modelFile = resolve(modelDir, `${modelName}.stmx`)
+  const mdlContent = readFileSync(modelFile, 'utf8')
+  return parseModel(mdlContent, 'xmile', modelDir)
+}
+
+export function parseInlineXmileModel(mdlContent: string, modelDir?: string): ParsedModel {
+  return parseModel(mdlContent, 'xmile', modelDir)
 }
 
 function prettyVar(variable: Variable): string {
