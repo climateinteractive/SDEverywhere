@@ -2,7 +2,7 @@
 
 import type { XmlElement } from '@rgrove/parse-xml'
 
-import { canonicalName } from '../_shared/names'
+import { canonicalId } from '../_shared/canonical-id'
 
 import { call, lookupDef, subRef } from '../ast/ast-builders'
 import type { Equation, Expr, LookupDef, LookupPoint, SubscriptRef } from '../ast/ast-types'
@@ -25,7 +25,7 @@ const conditionalRegExp = /IF\s+(.*)\s+THEN\s+(.*)\s+ELSE\s+(.*)\s*/gi
 export function parseXmileVariableDef(varElem: XmlElement): Equation[] {
   // Extract required variable name
   const varName = parseRequiredAttr(varElem, varElem, 'name')
-  const varId = canonicalName(varName)
+  const varId = canonicalId(varName)
 
   // Extract optional <units> -> units string
   const units = firstElemOf(varElem, 'units')?.text || ''

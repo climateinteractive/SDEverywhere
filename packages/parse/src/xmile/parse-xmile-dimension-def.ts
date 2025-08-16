@@ -2,7 +2,7 @@
 
 import type { XmlElement } from '@rgrove/parse-xml'
 
-import { canonicalName } from '../_shared/names'
+import { canonicalId } from '../_shared/canonical-id'
 
 import type { DimensionDef, SubscriptRef } from '../ast/ast-types'
 
@@ -34,7 +34,7 @@ export function parseXmileDimensionDef(dimElem: XmlElement): DimensionDef {
       throw new Error(xmlError(dimElem, '<elem> name attribute is required for dimension element definition'))
     }
 
-    const subId = canonicalName(subName)
+    const subId = canonicalId(subName)
     subscriptRefs.push({
       subId,
       subName
@@ -44,7 +44,7 @@ export function parseXmileDimensionDef(dimElem: XmlElement): DimensionDef {
   // Extract <doc> -> comment string
   const comment = firstElemOf(dimElem, 'doc')?.text || ''
 
-  const dimId = canonicalName(dimName)
+  const dimId = canonicalId(dimName)
   return {
     dimName,
     dimId,
