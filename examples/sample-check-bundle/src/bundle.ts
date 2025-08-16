@@ -26,16 +26,13 @@ import { getOutputs } from './outputs'
 const VERSION = 1
 
 // The size (in bytes) of the model file(s), injected at build time.
-const __MODEL_SIZE_IN_BYTES__ = 1
 const modelSizeInBytes = __MODEL_SIZE_IN_BYTES__
 
 // The size (in bytes) of the data file(s), injected at build time.
-const __DATA_SIZE_IN_BYTES__ = 1
 const dataSizeInBytes = __DATA_SIZE_IN_BYTES__
 
 // The special model version, injected at build time.  This is only used
 // to determine which variables will be simulated by this sample bundle.
-const __MODEL_VERSION__ = 1
 const modelVersion = __MODEL_VERSION__
 
 export class BundleModel implements CheckBundleModel {
@@ -94,6 +91,7 @@ export function createBundle(): Bundle {
     inputVars: inputs.inputVars,
     inputGroups: inputs.inputGroups,
     inputAliases: inputs.inputAliases,
+    inputSettingGroups: inputs.inputSettingGroups,
     outputVars: outputs.outputVars,
     implVars: outputs.implVars,
     datasetGroups: outputs.datasetGroups,

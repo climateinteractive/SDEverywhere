@@ -45,17 +45,21 @@ export function generateSmoothVariables(v, callExpr, context) {
   const fnId = callExpr.fnId
   if (fnId === '_SMOOTH' || fnId === '_SMOOTHI') {
     // Generate 1 level variable that will replace the `SMOOTH[I]` function call
-    const levelVarName = generateSmoothLevel(v, context, argInput, argDelay, argInit, 1)
+    const level = generateSmoothLevel(v, context, argInput, argDelay, argInit, 1)
     // For `SMOOTH[I]`, the smoothVarRefId is the level var's refId
-    v.smoothVarRefId = levelVarName[0]
+    v.smoothVarRefId = level.varRefId
+    // Add the generated variable to the model
+    context.defineVariables([level.eqn])
   } else {
     // Generate 3 level variables that will replace the `SMOOTH3[I]` function call
     const delay3Val = `(${argDelay} / 3)`
-    const level1VarName = generateSmoothLevel(v, context, argInput, delay3Val, argInit, 1)
-    const level2VarName = generateSmoothLevel(v, context, level1VarName[1], delay3Val, argInit, 2)
-    const level3VarName = generateSmoothLevel(v, context, level2VarName[1], delay3Val, argInit, 3)
+    const level1 = generateSmoothLevel(v, context, argInput, delay3Val, argInit, 1)
+    const level2 = generateSmoothLevel(v, context, level1.varFullName, delay3Val, argInit, 2)
+    const level3 = generateSmoothLevel(v, context, level2.varFullName, delay3Val, argInit, 3)
     // For `SMOOTH3[I]`, the smoothVarRefId is the final level var's refId
-    v.smoothVarRefId = level3VarName[0]
+    v.smoothVarRefId = level3.varRefId
+    // Add the generated variables to the model
+    context.defineVariables([level1.eqn, level2.eqn, level3.eqn])
   }
 }
 
@@ -126,11 +130,14 @@ function generateSmoothLevel(v, context, argInput, argDelay, argInit, levelNumbe
   if (isSeparatedVar(v)) {
     Model.addNonAtoAVar(canonicalName(levelVarBaseName), [true])
   }
-  context.defineVariable(levelEqn)
   context.addVarReference(levelVarRefId)
 
   // The name of the level variable returned here includes the original subscript/dimension names
   // (not the separated subscript names) so that the `argInput` is correct for the 2nd and 3rd levels
   const levelVarFullName = `${levelVarBaseName}${origSubs}`
-  return [levelVarRefId, levelVarFullName]
+  return {
+    varRefId: levelVarRefId,
+    varFullName: levelVarFullName,
+    eqn: levelEqn
+  }
 }

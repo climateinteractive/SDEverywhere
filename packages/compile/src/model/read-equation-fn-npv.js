@@ -26,6 +26,10 @@ export function generateNpvVariables(v, callExpr, context) {
   // const subs = this.genSubs(stream, discountRate, initVal, factor)
   const subs = ''
 
+  // Build an array of equation strings; variables will be defined for these at the
+  // end of this step once all equations are known
+  const eqns = []
+
   // Level 1:
   //   df = INTEG((-df * discount rate) / (1 + discount rate * TIME STEP), 1)
   const dfVarName = newLevelVarName()
@@ -34,7 +38,7 @@ export function generateNpvVariables(v, callExpr, context) {
   // TODO: There should be parens around the `discount rate` argument in case it is an expression
   // and not a simple constant
   const dfEqn = `${dfLHS} = INTEG((-${dfLHS} * ${argDiscountRate}) / (1 + ${argDiscountRate} * TIME STEP), 1) ~~|`
-  context.defineVariable(dfEqn)
+  eqns.push(dfEqn)
 
   // Level 2:
   //   ncum = INTEG(stream * df, init val)
@@ -42,7 +46,7 @@ export function generateNpvVariables(v, callExpr, context) {
   const ncumVarId = canonicalName(ncumVarName)
   const ncumLHS = `${ncumVarName}${subs}`
   const ncumEqn = `${ncumLHS} = INTEG(${argStream} * ${dfLHS}, ${argInitVal}) ~~|`
-  context.defineVariable(ncumEqn)
+  eqns.push(ncumEqn)
 
   // Aux:
   //   npv = (ncum + stream * TIME STEP * df) * factor
@@ -52,7 +56,7 @@ export function generateNpvVariables(v, callExpr, context) {
   // TODO: There should be parens around the `stream` argument in case it is an expression
   // and not a simple constant
   const auxEqn = `${auxLHS} = (${ncumVarName} + ${argStream} * TIME STEP * ${dfVarName}) * ${argFactor} ~~|`
-  context.defineVariable(auxEqn)
+  eqns.push(auxEqn)
   v.npvVarName = auxVarId
 
   // Add references to the generated variables
@@ -61,6 +65,9 @@ export function generateNpvVariables(v, callExpr, context) {
   context.addVarReference(ncumVarId)
   context.addVarReference(dfVarId)
   context.addVarReference(auxVarId)
+
+  // Add the generated variables to the model
+  context.defineVariables(eqns)
 
   // TODO: Check on this comment from the legacy reader to see if it's still applicable:
   // If they have subscripts, the refIds are still just the var name, because they are apply-to-all arrays.

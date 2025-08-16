@@ -2,7 +2,7 @@
 
 # Class: ModelScheduler
 
-A high-level interface that schedules running of the underlying `WasmModel`.
+A high-level interface that schedules the underlying `ModelRunner`.
 
 When one or more input values are changed, this class will schedule a model
 run to be completed as soon as possible.  When the model run has completed,

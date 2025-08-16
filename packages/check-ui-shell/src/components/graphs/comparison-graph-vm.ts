@@ -7,20 +7,23 @@ export interface Point {
   y: number
 }
 
-export type PlotStyle = 'normal' | 'wide' | 'dashed' | 'fill-to-next' | 'fill-above' | 'fill-below'
+export type ComparisonGraphPlotStyle = 'normal' | 'dashed' | 'fill-to-next' | 'fill-above' | 'fill-below'
 
-export interface RefPlot {
+export interface ComparisonGraphPlot {
   points: Point[]
-  style: PlotStyle
+  color: string
+  style?: ComparisonGraphPlotStyle
+  lineWidth?: number
 }
 
 export interface ComparisonGraphViewModel {
   key: string
-  refPlots: RefPlot[]
-  pointsL: Point[]
-  pointsR: Point[]
+  plots: ComparisonGraphPlot[]
   xMin?: number
   xMax?: number
+  yMin?: number
+  yMax?: number
+  onUpdated?: () => void
 }
 
 /**

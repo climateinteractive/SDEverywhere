@@ -1,5 +1,5 @@
 import { cdbl, newTmpVarName } from '../_shared/helpers.js'
-import { extractMarkedDims, isDimension, isIndex, normalizeSubscripts, sub } from '../_shared/subscript.js'
+import { extractMarkedDims, isDimension, isIndex, sub } from '../_shared/subscript.js'
 
 import Model from '../model/model.js'
 
@@ -8,11 +8,10 @@ import Model from '../model/model.js'
  *
  * @param {*} variable The `Variable` instance to process.
  * @param {'decl' | 'init-constants' | 'init-lookups' | 'init-levels' | 'eval'} mode The code generation mode.
- * @param {string} cLhs The C code for the LHS variable reference.
+ * @param {'c' | 'js'} outFormat The output format.
+ * @param {string} cLhs The C/JS code for the LHS variable reference.
  * @param {LoopIndexVars} loopIndexVars The loop index state used for LHS dimensions.
  * @param {LoopIndexVars} arrayIndexVars The loop index state used for array functions (that use marked dimensions).
- * @param {() => void} resetMarkedDims Function that resets the marked dimension state.
- * @param {(dimId: string) => void} addMarkedDim Function that adds the given dimension to the set of marked dimensions.
  * @param {(s: string) => void} emitPreInnerLoop Function that will cause the given code to be appended to the chunk that
  * precedes the generated inner loop for the equation.
  * @param {(s: string) => void} emitPreFormula Function that will cause the given code to be appended to the chunk that
@@ -23,7 +22,7 @@ import Model from '../model/model.js'
  * referenced in a RHS expression.
  * @param {(baseVarId: string) => string} cVarRefWithLhsSubscripts Function that returns a C variable reference that
  * takes into account the relevant LHS subscripts.
- * @param {(subOrDimId: string) => string} cVarIndex Function that returns C code for indexing into a subscripted variable.
+ * @param {(subOrDimId: string) => string} cVarIndex Function that returns C/JS code for indexing into a subscripted variable.
  */
 
 /**
@@ -33,7 +32,7 @@ import Model from '../model/model.js'
  *
  * @param {*} expr The expression from the parsed model.
  * @param {GenExprContext} ctx The context used when generating code for the expression.
- * @return {string} The generated C code.
+ * @return {string} The generated C/JS code.
  */
 export function generateExpr(expr, ctx) {
   switch (expr.kind) {
@@ -57,7 +56,7 @@ export function generateExpr(expr, ctx) {
         // This is a reference to a known variable
         if (v.isData()) {
           // It's a data variable; transform to a `_LOOKUP` function call
-          return `_LOOKUP(${ctx.cVarRef(expr)}, _time)`
+          return `${fnRef('_LOOKUP', ctx)}(${ctx.cVarRef(expr)}, _time)`
         } else {
           // It's not a data variable; generate a normal variable reference
           return ctx.cVarRef(expr)
@@ -68,7 +67,7 @@ export function generateExpr(expr, ctx) {
         // plus one (since Vensim indices are one-based).
         const dimId = expr.varId
         const indexCode = ctx.cVarIndex(dimId)
-        return `(${indexCode} + 1)`
+        return `(${indexExpr(indexCode, ctx)} + 1)`
       } else if (isIndex(expr.varId)) {
         // This is a reference to a subscript/index that is being used in expression position.
         // In place of the subscript, emit the numeric index value of the subscript plus one
@@ -102,15 +101,15 @@ export function generateExpr(expr, ctx) {
       const lhs = generateExpr(expr.lhs, ctx)
       const rhs = generateExpr(expr.rhs, ctx)
       if (expr.op === '^') {
-        return `pow(${lhs}, ${rhs})`
+        return `${ctx.outFormat === 'js' ? 'fns.POW' : 'pow'}(${lhs}, ${rhs})`
       } else {
         let op
         switch (expr.op) {
           case '=':
-            op = '=='
+            op = ctx.outFormat === 'js' ? '===' : '=='
             break
           case '<>':
-            op = '!='
+            op = ctx.outFormat === 'js' ? '!==' : '!='
             break
           case ':AND:':
             op = '&&'
@@ -154,13 +153,13 @@ export function generateExpr(expr, ctx) {
 }
 
 /**
- * Generate C code for the given function call.
+ * Generate C/JS code for the given function call.
  *
  * TODO: Types
  *
  * @param {*} callExpr The function call expression from the parsed model.
  * @param {GenExprContext} ctx The context used when generating code for the expression.
- * @return {string} The generated C code.
+ * @return {string} The generated C/JS code.
  */
 function generateFunctionCall(callExpr, ctx) {
   const fnId = callExpr.fnId
@@ -170,8 +169,8 @@ function generateFunctionCall(callExpr, ctx) {
     //
     // Simple functions
     //
-    // Each of these functions is implemented with a C function or macro, so no further processing
-    // is required other than to emit the C function/macro call.
+    // Each of these functions is implemented with a C/JS function or C macro, so no further processing
+    // is required other than to emit the function/macro call.
     //
     //
 
@@ -181,7 +180,6 @@ function generateFunctionCall(callExpr, ctx) {
     case '_ARCTAN':
     case '_COS':
     case '_EXP':
-    case '_GAME':
     case '_GAMMA_LN':
     case '_IF_THEN_ELSE':
     case '_INTEGER':
@@ -202,16 +200,26 @@ function generateFunctionCall(callExpr, ctx) {
     case '_WITH_LOOKUP':
     case '_XIDZ':
     case '_ZIDZ': {
-      // For simple functions, emit a C function call with a generated C expression for each argument
       const args = callExpr.args.map(argExpr => generateExpr(argExpr, ctx))
-      return `${fnId}(${args.join(', ')})`
+      if (ctx.outFormat === 'js' && fnId === '_GAMMA_LN') {
+        throw new Error(`${callExpr.fnName} function not yet implemented for JS code gen`)
+      }
+      if (ctx.outFormat === 'js' && fnId === '_IF_THEN_ELSE') {
+        // When generating conditional expressions for JS target, since we can't rely on macros like we do for C,
+        // it is better to translate it into a ternary instead of relying on a built-in function (since the latter
+        // would require always evaluating both branches, while the former can be more optimized by the interpreter)
+        return `((${args[0]}) ? (${args[1]}) : (${args[2]}))`
+      } else {
+        // For simple functions, emit a C/JS function call with a generated C/JS expression for each argument
+        return `${fnRef(fnId, ctx)}(${args.join(', ')})`
+      }
     }
 
     //
     //
     // Lookup functions
     //
-    // Each of these functions is implemented with a C function (like the simple functions above),
+    // Each of these functions is implemented with a C/JS function (like the simple functions above),
     // but we need to handle the first argument specially, otherwise we would get the default handling
     // for data variables, which generates a lookup call (see 'variable-ref' case in `generateExpr`).
     //
@@ -222,10 +230,18 @@ function generateFunctionCall(callExpr, ctx) {
     case '_LOOKUP_FORWARD':
     case '_LOOKUP_INVERT': {
       // For LOOKUP* functions, the first argument must be a reference to the lookup variable.  Emit
-      // a C function call with a generated C expression for each remaining argument.
+      // a C/JS function call with a generated C/JS expression for each remaining argument.
       const cVarRef = ctx.cVarRef(callExpr.args[0])
       const cArgs = callExpr.args.slice(1).map(arg => generateExpr(arg, ctx))
-      return `${fnId}(${cVarRef}, ${cArgs.join(', ')})`
+      return `${fnRef(fnId, ctx)}(${cVarRef}, ${cArgs.join(', ')})`
+    }
+
+    case '_GAME': {
+      // For the GAME function, emit a C/JS function call that has the synthesized game inputs lookup
+      // as the first argument, followed by the default value argument from the function call
+      const cLookupArg = ctx.cVarRefWithLhsSubscripts(ctx.variable.gameLookupVarName)
+      const cDefaultArg = generateExpr(callExpr.args[0], ctx)
+      return `${fnRef(fnId, ctx)}(${cLookupArg}, ${cDefaultArg})`
     }
 
     //
@@ -240,6 +256,9 @@ function generateFunctionCall(callExpr, ctx) {
     case '_SAMPLE_IF_TRUE':
     case '_INTEG':
       // Split level functions into init and eval expressions
+      if (ctx.outFormat === 'js' && (fnId === '_DELAY_FIXED' || fnId === '_DEPRECIATE_STRAIGHTLINE')) {
+        throw new Error(`${callExpr.fnName} function not yet implemented for JS code gen`)
+      }
       if (ctx.mode.startsWith('init')) {
         return generateLevelInit(callExpr, ctx)
       } else if (ctx.mode === 'eval') {
@@ -321,6 +340,9 @@ function generateFunctionCall(callExpr, ctx) {
     //
 
     case '_ALLOCATE_AVAILABLE':
+      if (ctx.outFormat === 'js') {
+        throw new Error(`${callExpr.fnName} function not yet implemented for JS code gen`)
+      }
       return generateAllocateAvailableCall(callExpr, ctx)
 
     case '_ELMCOUNT': {
@@ -383,13 +405,13 @@ function generateFunctionCall(callExpr, ctx) {
 }
 
 /**
- * Generate C code for the given level variable at init time.
+ * Generate C/JS code for the given level variable at init time.
  *
  * TODO: Types
  *
  * @param {*} callExpr The function call expression from the parsed model.
  * @param {GenExprContext} ctx The context used when generating code for the expression.
- * @return {string} The generated C code.
+ * @return {string} The generated C/JS code.
  */
 function generateLevelInit(callExpr, ctx) {
   const fnId = callExpr.fnId
@@ -432,19 +454,19 @@ function generateLevelInit(callExpr, ctx) {
 }
 
 /**
- * Generate C code for the given level variable at eval time.
+ * Generate C/JS code for the given level variable at eval time.
  *
  * TODO: Types
  *
  * @param {*} callExpr The function call expression from the parsed model.
  * @param {GenExprContext} ctx The context used when generating code for the expression.
- * @return {string} The generated C code.
+ * @return {string} The generated C/JS code.
  */
 function generateLevelEval(callExpr, ctx) {
   const fnId = callExpr.fnId
 
   function generateCall(args) {
-    return `${fnId}(${args.join(', ')})`
+    return `${fnRef(fnId, ctx)}(${args.join(', ')})`
   }
 
   switch (fnId) {
@@ -478,7 +500,15 @@ function generateLevelEval(callExpr, ctx) {
       if (fnId === '_SAMPLE_IF_TRUE') {
         args.push(generateExpr(callExpr.args[1], ctx))
       }
-      return generateCall(args)
+      if (ctx.outFormat === 'js' && fnId === '_SAMPLE_IF_TRUE') {
+        // When generating conditional expressions for JS target, since we can't rely on macros like we do for C,
+        // it is better to translate it into a ternary instead of relying on a built-in function (since the latter
+        // would require always evaluating both branches, while the former can be more optimized by the interpreter)
+        return `((${args[1]}) ? (${args[2]}) : (${args[0]}))`
+      } else {
+        // In all other cases, generate a normal call
+        return generateCall(args)
+      }
     }
 
     default:
@@ -487,27 +517,27 @@ function generateLevelEval(callExpr, ctx) {
 }
 
 /**
- * Generate C code for a lookup call.
+ * Generate C/JS code for a lookup call.
  *
  * TODO: Types
  *
  * @param {*} lookupVarRef The lookup `VariableRef`.
  * @param {*} argExpr The parsed `Expr` for the single argument for the lookup.
  * @param {GenExprContext} ctx The context used when generating code for the expression.
- * @return {string} The generated C code.
+ * @return {string} The generated C/JS code.
  */
 function generateLookupCall(lookupVarRef, argExpr, ctx) {
   const cVarRef = ctx.cVarRef(lookupVarRef)
   const cArg = generateExpr(argExpr, ctx)
-  return `_LOOKUP(${cVarRef}, ${cArg})`
+  return `${fnRef('_LOOKUP', ctx)}(${cVarRef}, ${cArg})`
 }
 
 /**
- * Generate C code for an array function call (e.g., `SUM`).
+ * Generate C/JS code for an array function call (e.g., `SUM`).
  *
  * @param {*} callExpr The function call expression from the parsed model.
  * @param {GenExprContext} ctx The context used when generating code for the expression.
- * @return {string} The generated C code.
+ * @return {string} The generated C/JS code.
  */
 function generateArrayFunctionCall(callExpr, ctx) {
   // Determine the initial value and loop body depending on the function
@@ -523,12 +553,12 @@ function generateArrayFunctionCall(callExpr, ctx) {
       break
 
     case '_VMIN':
-      initValue = 'DBL_MAX'
+      initValue = maxNumber(ctx)
       loopBodyOp = 'min'
       break
 
     case '_VMAX':
-      initValue = '-DBL_MAX'
+      initValue = `-${maxNumber(ctx)}`
       loopBodyOp = 'max'
       break
 
@@ -573,7 +603,7 @@ function generateArrayFunctionCall(callExpr, ctx) {
           loopBodyOp = 'sum'
           break
         case 3:
-          initValue = '-DBL_MAX'
+          initValue = `-${maxNumber(ctx)}`
           loopBodyOp = 'max'
           break
         default:
@@ -582,7 +612,7 @@ function generateArrayFunctionCall(callExpr, ctx) {
 
       // Emit the temporary condition variable declaration
       vsCondVar = newTmpVarName()
-      ctx.emitPreFormula(`  bool ${vsCondVar} = false;`)
+      ctx.emitPreFormula(`  ${varDecl('bool', vsCondVar, 'false', ctx)}`)
 
       // Define the code that will be emitted in place of the `VECTOR SELECT` call
       tmpVar = newTmpVarName()
@@ -598,7 +628,7 @@ function generateArrayFunctionCall(callExpr, ctx) {
   if (!tmpVar) {
     tmpVar = newTmpVarName()
   }
-  ctx.emitPreFormula(`  double ${tmpVar} = ${initValue};`)
+  ctx.emitPreFormula(`  ${varDecl('double', tmpVar, initValue, ctx)}`)
 
   // Find all marked dimensions used in the array function arguments
   const markedDimIds = new Set()
@@ -612,11 +642,11 @@ function generateArrayFunctionCall(callExpr, ctx) {
   }
 
   // Open the array function loop(s)
+  const indexDecl = ctx.outFormat === 'js' ? 'let' : 'size_t'
   for (const markedDimId of markedDimIds) {
-    ctx.addMarkedDim(markedDimId)
     const n = sub(markedDimId).size
     const i = ctx.arrayIndexVars.index(markedDimId)
-    ctx.emitPreFormula(`  for (size_t ${i} = 0; ${i} < ${n}; ${i}++) {`)
+    ctx.emitPreFormula(`  for (${indexDecl} ${i} = 0; ${i} < ${n}; ${i}++) {`)
   }
 
   // Emit the body of the array function loop.  Note that we generate the expression code here
@@ -627,9 +657,9 @@ function generateArrayFunctionCall(callExpr, ctx) {
       case 'sum':
         return `${tmpVar} += ${argCode};`
       case 'min':
-        return `${tmpVar} = fmin(${tmpVar}, ${argCode});`
+        return `${tmpVar} = ${minFunc(ctx)}(${tmpVar}, ${argCode});`
       case 'max':
-        return `${tmpVar} = fmax(${tmpVar}, ${argCode});`
+        return `${tmpVar} = ${maxFunc(ctx)}(${tmpVar}, ${argCode});`
       default:
         throw new Error(`Unexpected loop body op ${loopBodyOp} for VECTOR SELECT`)
     }
@@ -639,7 +669,11 @@ function generateArrayFunctionCall(callExpr, ctx) {
     // For `VECTOR SELECT`, the inner loop includes a conditional
     const selArrayCode = generateExpr(callExpr.args[0], ctx)
     const exprArrayCode = generateExpr(callExpr.args[1], ctx)
-    ctx.emitPreFormula(`    if (bool_cond(${selArrayCode})) {`)
+    if (ctx.outFormat === 'c') {
+      ctx.emitPreFormula(`    if (bool_cond(${selArrayCode})) {`)
+    } else {
+      ctx.emitPreFormula(`    if (${selArrayCode}) {`)
+    }
     ctx.emitPreFormula(`      ${innerStmt(exprArrayCode)}`)
     ctx.emitPreFormula(`      ${vsCondVar} = true;`)
     ctx.emitPreFormula('    }')
@@ -654,9 +688,6 @@ function generateArrayFunctionCall(callExpr, ctx) {
     ctx.emitPreFormula(`  }`)
   }
 
-  // Reset marked dim state
-  ctx.resetMarkedDims()
-
   if (returnCode) {
     // Emit the expression defined above in place of the array function
     return returnCode
@@ -667,11 +698,11 @@ function generateArrayFunctionCall(callExpr, ctx) {
 }
 
 /**
- * Generate C code for a `VECTOR ELM MAP` function call.
+ * Generate C/JS code for a `VECTOR ELM MAP` function call.
  *
  * @param {*} callExpr The function call expression from the parsed model.
  * @param {GenExprContext} ctx The context used when generating code for the expression.
- * @return {string} The generated C code.
+ * @return {string} The generated C/JS code.
  */
 function generateVectorElmMapCall(callExpr, ctx) {
   function validateArg(index, name) {
@@ -710,10 +741,21 @@ function generateVectorElmMapCall(callExpr, ctx) {
 
   // The `VECTOR ELM MAP` function replaces one subscript with a calculated offset from
   // a base index
-  const rhsSubIds = normalizeSubscripts(vecSubIds)
+  const rhsSubIds = vecSubIds
   const cSubscripts = rhsSubIds.map(rhsSubId => {
     if (isIndex(rhsSubId)) {
-      return `[${subFamily}[(size_t)(${subBase} + ${offsetArgCode})]]`
+      let indexDecl
+      switch (ctx.outFormat) {
+        case 'c':
+          indexDecl = `(size_t)(${subBase} + ${offsetArgCode})`
+          break
+        case 'js':
+          indexDecl = `${subBase} + ${offsetArgCode}`
+          break
+        default:
+          throw new Error(`Unhandled output format '${ctx.outFormat}'`)
+      }
+      return `[${subFamily}[${indexDecl}]]`
     } else {
       const subIndex = ctx.loopIndexVars.index(rhsSubId)
       return `[${rhsSubId}[${subIndex}]]`
@@ -725,11 +767,11 @@ function generateVectorElmMapCall(callExpr, ctx) {
 }
 
 /**
- * Generate C code for a `VECTOR SORT ORDER` function call.
+ * Generate C/JS code for a `VECTOR SORT ORDER` function call.
  *
  * @param {*} callExpr The function call expression from the parsed model.
  * @param {GenExprContext} ctx The context used when generating code for the expression.
- * @return {string} The generated C code.
+ * @return {string} The generated C/JS code.
  */
 function generateVectorSortOrderCall(callExpr, ctx) {
   // Process the vector argument
@@ -758,18 +800,27 @@ function generateVectorSortOrderCall(callExpr, ctx) {
   // Generate the code that is emitted before the entire block (before any loops are opened)
   const tmpVarId = newTmpVarName()
   const dimSize = sub(dimId).size
-  ctx.emitPreInnerLoop(`  double* ${tmpVarId} = _VECTOR_SORT_ORDER(${vecVarRefId}, ${dimSize}, ${dirArg});`)
+  switch (ctx.outFormat) {
+    case 'c':
+      ctx.emitPreInnerLoop(`  double* ${tmpVarId} = _VECTOR_SORT_ORDER(${vecVarRefId}, ${dimSize}, ${dirArg});`)
+      break
+    case 'js':
+      ctx.emitPreInnerLoop(`  let ${tmpVarId} = fns.VECTOR_SORT_ORDER(${vecVarRefId}, ${dimSize}, ${dirArg});`)
+      break
+    default:
+      throw new Error(`Unhandled output format '${ctx.outFormat}'`)
+  }
 
   // Generate the RHS expression used in the inner loop
   return `${tmpVarId}[${dimId}[${subIndex}]]`
 }
 
 /**
- * Generate C code for an `ALLOCATE AVAILABLE` function call.
+ * Generate C/JS code for an `ALLOCATE AVAILABLE` function call.
  *
  * @param {*} callExpr The function call expression from the parsed model.
  * @param {GenExprContext} ctx The context used when generating code for the expression.
- * @return {string} The generated C code.
+ * @return {string} The generated C/JS code.
  */
 function generateAllocateAvailableCall(callExpr, ctx) {
   function validateArg(index, name) {
@@ -781,32 +832,63 @@ function generateAllocateAvailableCall(callExpr, ctx) {
     }
   }
 
-  // Process the request argument
+  // Given a C/JS variable reference string (e.g., '_var[i][j]'), return that
+  // string without the last N array index parts
+  function cVarRefWithoutLastIndices(arg, count) {
+    const varRef = ctx.cVarRef(arg)
+    const origIndexParts = Model.splitRefId(varRef).subscripts
+    if (origIndexParts < count) {
+      throw new Error(`ALLOCATE AVAILABLE argument '${arg}' should have at least ${count} subscripts`)
+    }
+    const newIndexParts = origIndexParts.slice(0, -count)
+    if (newIndexParts.length > 0) {
+      return `${arg.varId}${newIndexParts.map(x => `[${x}]`).join('')}`
+    } else {
+      return arg.varId
+    }
+  }
+
+  // Process the request argument.  Only include subscripts up until the last one;
+  // the implementation function will iterate over the requesters array.
   const reqArg = validateArg(0, 'req')
-  const reqRefId = reqArg.varId
-  const reqSubIds = reqArg.subscriptRefs.map(subRef => subRef.subId)
+  const reqRef = cVarRefWithoutLastIndices(reqArg, 1)
 
-  // Process the priority argument
-  const priorityArg = validateArg(1, 'priority')
-  const priorityRefId = priorityArg.varId
+  // Process the pp (priority profile) argument.  Only include subscripts up until the
+  // second to last one; the implementation function will iterate over the priority
+  // profile array.
+  const ppArg = validateArg(1, 'pp')
+  const ppRef = cVarRefWithoutLastIndices(ppArg, 2)
 
-  // Process the avail argument
+  // Process the avail argument; include any subscripts
   const availArg = validateArg(2, 'avail')
-  const availRefId = availArg.varId
+  const availRef = ctx.cVarRef(availArg)
 
-  // The `ALLOCATE AVAILABLE` function iterates over the subscript in its first arg
-  const dimId = reqSubIds[0]
-  const subIndex = ctx.loopIndexVars.index(dimId)
+  // The `ALLOCATE AVAILABLE` function iterates over the last subscript in its first arg.
+  // The `readEquation` process will have already verified that the last dimension matches
+  // the last dimension for the LHS.
+  const allocDimId = reqArg.subscriptRefs[reqArg.subscriptRefs.length - 1].subId
+  const allocLoopIndexVar = ctx.loopIndexVars.index(allocDimId)
 
   // Generate the code that is emitted before the entire block (before any loops are opened)
   const tmpVarId = newTmpVarName()
-  const dimSize = sub(dimId).size
-  ctx.emitPreInnerLoop(
-    `  double* ${tmpVarId} = _ALLOCATE_AVAILABLE(${reqRefId}, (double*)${priorityRefId}, ${availRefId}, ${dimSize});`
-  )
+  const numRequesters = sub(allocDimId).size
+  switch (ctx.outFormat) {
+    case 'c':
+      ctx.emitPreInnerLoop(
+        `  double* ${tmpVarId} = _ALLOCATE_AVAILABLE(${reqRef}, (double*)${ppRef}, ${availRef}, ${numRequesters});`
+      )
+      break
+    case 'js':
+      ctx.emitPreInnerLoop(
+        `  let ${tmpVarId} = fns.ALLOCATE_AVAILABLE(${reqRef}, ${ppRef}, ${availRef}, ${numRequesters});`
+      )
+      break
+    default:
+      throw new Error(`Unhandled output format '${ctx.outFormat}'`)
+  }
 
   // Generate the RHS expression used in the inner loop
-  return `${tmpVarId}[${dimId}[${subIndex}]]`
+  return `${tmpVarId}[${allocDimId}[${allocLoopIndexVar}]]`
 }
 
 /**
@@ -847,5 +929,123 @@ function visitVariableRefs(expr, onVarRef) {
 
     default:
       throw new Error(`Unhandled expression kind '${expr.kind}' in visitVariableRefs`)
+  }
+}
+
+/**
+ * Return a C or JS function reference for the given function ID and context.
+ *
+ * @param {string} fnId The function ID.
+ * @param {GenExprContext} ctx The context used when generating code for the expression.
+ * @return {string} The generated C/JS code.
+ */
+function fnRef(fnId, ctx) {
+  switch (ctx.outFormat) {
+    case 'c':
+      return fnId
+    case 'js':
+      return `fns.${fnId.slice(1)}`
+    default:
+      throw new Error(`Unhandled output format '${ctx.outFormat}'`)
+  }
+}
+
+/**
+ * Return a C or JS variable declaration.
+ *
+ * @param {string} cVarType The variable type (only used for C code generation).
+ * @param {string} varName The variable name.
+ * @param {string} rhs The RHS for the declaration.
+ * @param {GenExprContext} ctx The context used when generating code for the expression.
+ * @return {string} The generated C/JS code.
+ */
+function varDecl(cVarType, varName, rhs, ctx) {
+  switch (ctx.outFormat) {
+    case 'c':
+      return `${cVarType} ${varName} = ${rhs};`
+    case 'js':
+      return `let ${varName} = ${rhs};`
+    default:
+      throw new Error(`Unhandled output format '${ctx.outFormat}'`)
+  }
+}
+
+/**
+ * Return the "max number" constant for C or JS.
+ *
+ * @param {GenExprContext} ctx The context used when generating code for the expression.
+ * @return {string} The generated C/JS code.
+ */
+function maxNumber(ctx) {
+  switch (ctx.outFormat) {
+    case 'c':
+      return 'DBL_MAX'
+    case 'js':
+      return 'Number.MAX_VALUE'
+    default:
+      throw new Error(`Unhandled output format '${ctx.outFormat}'`)
+  }
+}
+
+/**
+ * Return the "max" function for C or JS.
+ *
+ * @param {GenExprContext} ctx The context used when generating code for the expression.
+ * @return {string} The generated C/JS code.
+ */
+function maxFunc(ctx) {
+  switch (ctx.outFormat) {
+    case 'c':
+      return 'fmax'
+    case 'js':
+      return 'Math.max'
+    default:
+      throw new Error(`Unhandled output format '${ctx.outFormat}'`)
+  }
+}
+
+/**
+ * Return the "min" function for C or JS.
+ *
+ * @param {GenExprContext} ctx The context used when generating code for the expression.
+ * @return {string} The generated C/JS code.
+ */
+function minFunc(ctx) {
+  switch (ctx.outFormat) {
+    case 'c':
+      return 'fmin'
+    case 'js':
+      return 'Math.min'
+    default:
+      throw new Error(`Unhandled output format '${ctx.outFormat}'`)
+  }
+}
+
+/**
+ * Return the C or JS code for a subscript or dimension (loop index variable) used in
+ * expression position.
+ *
+ * @param {string} indexValue The index number or code.
+ * @param {GenExprContext} ctx The context used when generating code for the expression.
+ * @return {string} The generated C/JS code.
+ */
+function indexExpr(indexValue, ctx) {
+  switch (ctx.outFormat) {
+    case 'c':
+      // In the C case, we need to cast to double since the index variable will be
+      // of type `size_t`, which is an unsigned type, but we want a signed type for
+      // the rare cases where math is involved that makes it go negative
+      if (isNaN(indexValue)) {
+        // This is a (non-numeric) loop index variable reference, so cast to double
+        return `((double)${indexValue})`
+      } else {
+        // This is a numeric index, no cast is necessary
+        return indexValue
+      }
+    case 'js':
+      // In the JS case, no cast is necessary
+      return indexValue
+    default:
+      throw new Error(`Unhandled output format '${ctx.outFormat}'`)
   }
 }

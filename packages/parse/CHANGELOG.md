@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.1.2](https://github.com/climateinteractive/SDEverywhere/compare/parse-v0.1.1...parse-v0.1.2) (2024-12-13)
+
+
+### Bug Fixes
+
+* correct generated code when model variable name includes parentheses ([#585](https://github.com/climateinteractive/SDEverywhere/issues/585)) ([25412f2](https://github.com/climateinteractive/SDEverywhere/commit/25412f2aed9185a008fb0a906f998e3f0b1e1036)), closes [#582](https://github.com/climateinteractive/SDEverywhere/issues/582)
+* remove duplicate implementations of canonical[Var]Name functions ([#580](https://github.com/climateinteractive/SDEverywhere/issues/580)) ([e215d7d](https://github.com/climateinteractive/SDEverywhere/commit/e215d7de5e2fe551a0dd4cb6e3a960180db4b76f)), closes [#578](https://github.com/climateinteractive/SDEverywhere/issues/578)
+* remove legacy preprocessor implementation and use newer one from parse package ([#576](https://github.com/climateinteractive/SDEverywhere/issues/576)) ([c04e0ca](https://github.com/climateinteractive/SDEverywhere/commit/c04e0ca5143c7f31ba23f7dfed7a008428b77867)), closes [#575](https://github.com/climateinteractive/SDEverywhere/issues/575)
+* restore alphabetical sorting for `sde generate --preprocess` command ([#587](https://github.com/climateinteractive/SDEverywhere/issues/587)) ([039fb79](https://github.com/climateinteractive/SDEverywhere/commit/039fb7923df2c62d80212685aa7a5d9f49e261ee)), closes [#586](https://github.com/climateinteractive/SDEverywhere/issues/586)
+
+## [0.1.1](https://github.com/climateinteractive/SDEverywhere/compare/parse-v0.1.0...parse-v0.1.1) (2024-09-15)
+
+
+### Bug Fixes
+
+* update to latest antlr4-vensim with support for Unicode characters in variable names ([#533](https://github.com/climateinteractive/SDEverywhere/issues/533)) ([c921657](https://github.com/climateinteractive/SDEverywhere/commit/c921657e12b4b996ab64be84a7af20826ca8350d)), closes [#532](https://github.com/climateinteractive/SDEverywhere/issues/532)
+
 ## 0.1.0 (2023-12-11)
 
 

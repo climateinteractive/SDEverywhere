@@ -1,0 +1,20 @@
+{
+  "name": "@sdeverywhere/house-game",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "clean": "rm -rf ./sde-prep",
+    "dev": "sde dev",
+    "build": "sde bundle"
+  },
+  "workspaces": [
+    "packages/app"
+  ],
+  "dependencies": {
+    "@sdeverywhere/build": "^0.3.7",
+    "@sdeverywhere/cli": "^0.7.31",
+    "@sdeverywhere/plugin-vite": "^0.1.11",
+    "@sdeverywhere/plugin-worker": "^0.2.10"
+  }
+}

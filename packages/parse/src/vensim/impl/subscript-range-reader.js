@@ -2,7 +2,7 @@
 
 import { ModelParser, ModelVisitor } from 'antlr4-vensim'
 
-import { canonicalName, cFunctionName } from '../../_shared/names'
+import { canonicalFunctionId, canonicalId } from '../../_shared/canonical-id'
 
 import { createAntlrParser } from './antlr-parser'
 
@@ -54,7 +54,7 @@ export class SubscriptRangeReader extends ModelVisitor {
     if (ids.length === 1) {
       // This is a regular subscript range definition, which begins with the dimension name
       const dimName = ids[0].getText()
-      const dimId = canonicalName(dimName)
+      const dimId = canonicalId(dimName)
 
       // Visit children to fill in the subscript range definition
       super.visitSubscriptRange(ctx)
@@ -72,7 +72,7 @@ export class SubscriptRangeReader extends ModelVisitor {
         subscriptRefs: this.subscriptNames.map(subName => {
           return {
             subName,
-            subId: canonicalName(subName)
+            subId: canonicalId(subName)
           }
         }),
         subscriptMappings: this.subscriptMappings,
@@ -81,9 +81,9 @@ export class SubscriptRangeReader extends ModelVisitor {
     } else if (ids.length === 2) {
       // This is a dimension alias (`DimA <-> DimB`)
       const dimName = ids[0].getText()
-      const dimId = canonicalName(dimName)
+      const dimId = canonicalId(dimName)
       const familyName = ids[1].getText()
-      const familyId = canonicalName(familyName)
+      const familyId = canonicalId(familyName)
       return {
         dimName,
         dimId,
@@ -138,11 +138,11 @@ export class SubscriptRangeReader extends ModelVisitor {
     // Add the mappings
     this.subscriptMappings.push({
       toDimName,
-      toDimId: canonicalName(toDimName),
+      toDimId: canonicalId(toDimName),
       subscriptRefs: this.mappedSubscriptNames.map(subName => {
         return {
           subName,
-          subId: canonicalName(subName)
+          subId: canonicalId(subName)
         }
       })
     })
@@ -157,7 +157,7 @@ export class SubscriptRangeReader extends ModelVisitor {
   visitCall(ctx) {
     // A subscript range can have a `GET DIRECT SUBSCRIPT` call on the RHS
     const fnName = ctx.Id().getText()
-    const fnId = cFunctionName(fnName)
+    const fnId = canonicalFunctionId(fnName)
     if (fnId === '_GET_DIRECT_SUBSCRIPT') {
       super.visitCall(ctx)
     } else {

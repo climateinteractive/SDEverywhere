@@ -4,7 +4,7 @@
 <script lang='ts'>
 
 import { slide } from 'svelte/transition'
-import Icon from 'svelte-awesome'
+import Icon from 'svelte-awesome/components/Icon.svelte'
 import { faLightbulb } from '@fortawesome/free-regular-svg-icons'
 
 import type { WizardCardDescViewModel } from './wizard-card-desc-vm'

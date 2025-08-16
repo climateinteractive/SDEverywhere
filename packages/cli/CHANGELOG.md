@@ -1,5 +1,105 @@
 # Changelog
 
+## [0.7.31](https://github.com/climateinteractive/SDEverywhere/compare/cli-v0.7.30...cli-v0.7.31) (2025-04-11)
+
+
+### Bug Fixes
+
+* correct the exit code reported by the `sde bundle` command ([#618](https://github.com/climateinteractive/SDEverywhere/issues/618)) ([6623c5b](https://github.com/climateinteractive/SDEverywhere/commit/6623c5bd45e68143e6cac988505ab5fa9d786c68)), closes [#617](https://github.com/climateinteractive/SDEverywhere/issues/617)
+
+## [0.7.30](https://github.com/climateinteractive/SDEverywhere/compare/cli-v0.7.29...cli-v0.7.30) (2025-02-11)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/compile bumped from ^0.7.22 to ^0.7.23
+
+## [0.7.29](https://github.com/climateinteractive/SDEverywhere/compare/cli-v0.7.28...cli-v0.7.29) (2025-01-09)
+
+
+### Bug Fixes
+
+* allow for resetting a lookup at runtime back to its original data ([#593](https://github.com/climateinteractive/SDEverywhere/issues/593)) ([cfec212](https://github.com/climateinteractive/SDEverywhere/commit/cfec2129c681b8ae5e1ade05b73c37f2c739c5d9)), closes [#592](https://github.com/climateinteractive/SDEverywhere/issues/592)
+* increase C input buffer size + change default optimization flag for C compilation to `-O2` ([#596](https://github.com/climateinteractive/SDEverywhere/issues/596)) ([f9f6804](https://github.com/climateinteractive/SDEverywhere/commit/f9f6804411ef499fc688b74bf7a73e83e696e35a)), closes [#595](https://github.com/climateinteractive/SDEverywhere/issues/595)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/compile bumped from ^0.7.21 to ^0.7.22
+
+## [0.7.28](https://github.com/climateinteractive/SDEverywhere/compare/cli-v0.7.27...cli-v0.7.28) (2024-12-13)
+
+
+### Bug Fixes
+
+* remove legacy preprocessor implementation and use newer one from parse package ([#576](https://github.com/climateinteractive/SDEverywhere/issues/576)) ([c04e0ca](https://github.com/climateinteractive/SDEverywhere/commit/c04e0ca5143c7f31ba23f7dfed7a008428b77867)), closes [#575](https://github.com/climateinteractive/SDEverywhere/issues/575)
+* restore alphabetical sorting for `sde generate --preprocess` command ([#587](https://github.com/climateinteractive/SDEverywhere/issues/587)) ([039fb79](https://github.com/climateinteractive/SDEverywhere/commit/039fb7923df2c62d80212685aa7a5d9f49e261ee)), closes [#586](https://github.com/climateinteractive/SDEverywhere/issues/586)
+* show full stack trace when build or test command fails ([#581](https://github.com/climateinteractive/SDEverywhere/issues/581)) ([013bbf7](https://github.com/climateinteractive/SDEverywhere/commit/013bbf79000b6e5bbef85cdb5f3d72643ca18046)), closes [#579](https://github.com/climateinteractive/SDEverywhere/issues/579)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/build bumped from ^0.3.6 to ^0.3.7
+    * @sdeverywhere/compile bumped from ^0.7.20 to ^0.7.21
+
+## [0.7.27](https://github.com/climateinteractive/SDEverywhere/compare/cli-v0.7.26...cli-v0.7.27) (2024-09-15)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/compile bumped from ^0.7.19 to ^0.7.20
+
+## [0.7.26](https://github.com/climateinteractive/SDEverywhere/compare/cli-v0.7.25...cli-v0.7.26) (2024-08-28)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/compile bumped from ^0.7.18 to ^0.7.19
+
+## [0.7.25](https://github.com/climateinteractive/SDEverywhere/compare/cli-v0.7.24...cli-v0.7.25) (2024-08-23)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/build bumped from ^0.3.5 to ^0.3.6
+
+## [0.7.24](https://github.com/climateinteractive/SDEverywhere/compare/cli-v0.7.23...cli-v0.7.24) (2024-08-17)
+
+
+### Features
+
+* add bundleListing, customLookups, and customOutputs settings to control code generation ([#504](https://github.com/climateinteractive/SDEverywhere/issues/504)) ([fcea642](https://github.com/climateinteractive/SDEverywhere/commit/fcea642a8e0bcd23e3ebf07983f1f30415b4f81d)), closes [#503](https://github.com/climateinteractive/SDEverywhere/issues/503)
+* add compiler and runtime support for generating pure JS models ([#486](https://github.com/climateinteractive/SDEverywhere/issues/486)) ([42d4dc6](https://github.com/climateinteractive/SDEverywhere/commit/42d4dc6da2fba3b34474c634374e07bc56d72868)), closes [#437](https://github.com/climateinteractive/SDEverywhere/issues/437)
+* add support for GAME function and for providing gaming inputs at runtime ([#505](https://github.com/climateinteractive/SDEverywhere/issues/505)) ([338e91e](https://github.com/climateinteractive/SDEverywhere/commit/338e91edff16ce47109ef50cdbddef9ae7a27fa2)), closes [#483](https://github.com/climateinteractive/SDEverywhere/issues/483)
+* allow for overriding data variables and lookups at runtime ([#490](https://github.com/climateinteractive/SDEverywhere/issues/490)) ([6c888e8](https://github.com/climateinteractive/SDEverywhere/commit/6c888e887336e7b874dbde7e318e993936296c48)), closes [#472](https://github.com/climateinteractive/SDEverywhere/issues/472)
+
+
+### Bug Fixes
+
+* change encoding of variable and lookup indices to allow for arbitrary number of subscripts ([#507](https://github.com/climateinteractive/SDEverywhere/issues/507)) ([697e943](https://github.com/climateinteractive/SDEverywhere/commit/697e94397ca00b33d2e6216d63f4cfbc2f160fa0)), closes [#506](https://github.com/climateinteractive/SDEverywhere/issues/506)
+* remove old implementation of read and code gen phases ([#473](https://github.com/climateinteractive/SDEverywhere/issues/473)) ([8de0d16](https://github.com/climateinteractive/SDEverywhere/commit/8de0d167a59d0722352e73c31cbbdd7c09ac150f)), closes [#448](https://github.com/climateinteractive/SDEverywhere/issues/448)
+* update build and plugin packages to support JS code generation ([#487](https://github.com/climateinteractive/SDEverywhere/issues/487)) ([18b0873](https://github.com/climateinteractive/SDEverywhere/commit/18b0873e74facea772e56f59a1ba4470ebb1fdd6)), closes [#479](https://github.com/climateinteractive/SDEverywhere/issues/479)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/build bumped from ^0.3.4 to ^0.3.5
+    * @sdeverywhere/compile bumped from ^0.7.17 to ^0.7.18
+
 ## [0.7.23](https://github.com/climateinteractive/SDEverywhere/compare/cli-v0.7.22...cli-v0.7.23) (2024-04-22)
 
 

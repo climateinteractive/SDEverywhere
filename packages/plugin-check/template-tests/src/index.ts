@@ -5,6 +5,7 @@ import type {
   ComparisonOptions,
   ComparisonScenarioSpec,
   ComparisonSpecs,
+  ComparisonSpecsSource,
   ConfigInitOptions,
   ConfigOptions,
   DatasetKey,
@@ -12,19 +13,35 @@ import type {
   InputVar
 } from '@sdeverywhere/check-core'
 
-// Load the yaml test files.  The `./__YAML_PATH__` part will be replaced by Vite
-// (see `vite-config-for-tests.ts`).  Note that we provide a placeholder here that
-// looks like a valid glob pattern, since Vite's dependency resolver will report
-// errors if it is invalid (not a literal).
-const yamlGlob = import.meta.glob('./__YAML_PATH__', {
+// Load the yaml files containing model check test definitions.  The
+// `./__YAML_*_GLOB_PATTERNS__` part will be replaced by Vite (see
+// `vite-config-for-tests.ts`).  Note that we provide a placeholder here
+// that looks like a valid glob pattern, since Vite's dependency resolver
+// will report errors if it is invalid (not a literal).
+const yamlCheckSpecFilesGlob = import.meta.glob('./__YAML_CHECK_GLOB_PATTERNS__', {
   eager: true,
-  as: 'raw'
+  query: '?raw',
+  import: 'default'
 })
-const tests: string[] = []
-for (const yamlKey of Object.keys(yamlGlob)) {
-  const yaml = yamlGlob[yamlKey]
-  tests.push(yaml as unknown as string)
+const yamlCheckSpecFiles: string[] = []
+for (const yamlKey of Object.keys(yamlCheckSpecFilesGlob)) {
+  const yaml = yamlCheckSpecFilesGlob[yamlKey]
+  yamlCheckSpecFiles.push(yaml as unknown as string)
 }
+
+// Load the yaml files containing model comparison test definitions
+const yamlComparisonFilesGlob = import.meta.glob('./__YAML_COMPARISON_GLOB_PATTERNS__', {
+  eager: true,
+  query: '?raw',
+  import: 'default'
+})
+const yamlComparisonSpecFiles: ComparisonSpecsSource[] = Object.entries(yamlComparisonFilesGlob).map(entry => {
+  return {
+    kind: 'yaml',
+    filename: entry[0],
+    content: entry[1] as string
+  }
+})
 
 // If an output variable is renamed, define the mapping from the old key
 // to the new key here.  If this step is omitted, the old variable will
@@ -52,8 +69,10 @@ export async function getConfigOptions(
     //   - twice for each input
     //       - once with single input at its minimum
     //       - once with single input at its maximum
-    // TODO: Also read specs from comparison yaml files
     const baseComparisonSpecs = createBaseComparisonSpecs(bundleL, bundleR)
+
+    // Also include custom scenarios defined in the `comparisons/*.yaml` files
+    const comparisonSpecs = [baseComparisonSpecs, ...yamlComparisonSpecFiles]
 
     comparisonOptions = {
       baseline: {
@@ -61,7 +80,7 @@ export async function getConfigOptions(
         bundle: bundleL
       },
       thresholds: [1, 5, 10],
-      specs: [baseComparisonSpecs],
+      specs: comparisonSpecs,
       datasets: {
         renamedDatasetKeys
       }
@@ -74,7 +93,7 @@ export async function getConfigOptions(
       bundle: bundleR
     },
     check: {
-      tests
+      tests: yamlCheckSpecFiles
     },
     comparison: comparisonOptions
   }

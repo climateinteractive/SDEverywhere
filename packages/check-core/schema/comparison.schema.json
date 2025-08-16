@@ -16,8 +16,26 @@
           "$ref": "#/$defs/scenario_group_array_item"
         },
         {
+          "$ref": "#/$defs/graph_group_array_item"
+        },
+        {
           "$ref": "#/$defs/view_group_array_item"
         }
+      ]
+    },
+    "dataset": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name"
       ]
     },
     "scenario_array_item": {
@@ -322,7 +340,70 @@
         "scenario_group_ref"
       ]
     },
+    "graphs_preset": {
+      "type": "string",
+      "enum": [
+        "all"
+      ]
+    },
+    "graphs_array": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1
+    },
+    "graph_group_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "graph_group_ref": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "graph_group_ref"
+      ]
+    },
+    "graph_group_array_item": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "graph_group": {
+          "$ref": "#/$defs/graph_group"
+        }
+      },
+      "required": [
+        "graph_group"
+      ]
+    },
+    "graph_group": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "graphs": {
+          "$ref": "#/$defs/graphs_array"
+        }
+      },
+      "required": [
+        "id",
+        "graphs"
+      ]
+    },
     "view": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/view_with_scenario"
+        },
+        {
+          "$ref": "#/$defs/view_with_rows"
+        }
+      ]
+    },
+    "view_with_scenario": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
@@ -337,35 +418,127 @@
         },
         "graphs": {
           "$ref": "#/$defs/view_graphs"
+        },
+        "graph_order": {
+          "$ref": "#/$defs/view_graph_order"
         }
       },
       "required": [
-        "scenario_ref",
-        "graphs"
+        "scenario_ref"
+      ]
+    },
+    "view_with_rows": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "subtitle": {
+          "type": "string"
+        },
+        "rows": {
+          "$ref": "#/$defs/view_rows_array"
+        }
+      },
+      "required": [
+        "title",
+        "rows"
+      ]
+    },
+    "view_rows_array": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/view_rows_array_item"
+      },
+      "minItems": 1
+    },
+    "view_rows_array_item": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "row": {
+          "$ref": "#/$defs/view_row"
+        }
+      }
+    },
+    "view_row": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "subtitle": {
+          "type": "string"
+        },
+        "boxes": {
+          "$ref": "#/$defs/view_boxes_array"
+        }
+      },
+      "required": [
+        "title",
+        "boxes"
+      ]
+    },
+    "view_boxes_array": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/view_boxes_array_item"
+      },
+      "minItems": 1
+    },
+    "view_boxes_array_item": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "box": {
+          "$ref": "#/$defs/view_box"
+        }
+      }
+    },
+    "view_box": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "subtitle": {
+          "type": "string"
+        },
+        "dataset": {
+          "$ref": "#/$defs/dataset"
+        },
+        "scenario_ref": {
+          "$ref": "#/$defs/scenario_ref_id"
+        }
+      },
+      "required": [
+        "title",
+        "dataset",
+        "scenario_ref"
       ]
     },
     "view_graphs": {
       "oneOf": [
         {
-          "$ref": "#/$defs/view_graphs_preset"
+          "$ref": "#/$defs/graphs_preset"
         },
         {
-          "$ref": "#/$defs/view_graphs_array"
+          "$ref": "#/$defs/graphs_array"
+        },
+        {
+          "$ref": "#/$defs/graph_group_ref"
         }
       ]
     },
-    "view_graphs_preset": {
+    "view_graph_order": {
       "type": "string",
       "enum": [
-        "all"
+        "default",
+        "grouped-by-diffs"
       ]
-    },
-    "view_graphs_array": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "minItems": 1
     },
     "view_group_array_item": {
       "type": "object",

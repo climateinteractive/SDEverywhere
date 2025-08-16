@@ -27,22 +27,17 @@ _NOTE:_ If you followed the "Quick Start" instructions and/or used the
 steps listed below are already implemented for you in the generated `core` package,
 and you can work directly with a `ModelRunner` and/or `ModelScheduler` instance.
 
-### 1. Initialize the `WasmModel` in a Web Worker
+### 1. Initialize your generated model in a Web Worker
 
 In your app project, define a separate JavaScript file, called
-`worker.js` for example, that initializes the model worker in the
+`worker.js` for example, that initializes the generated model in the
 context of the Web Worker:
 
 ```js
-import { initWasmModelAndBuffers } from '@sdeverywhere/runtime'
 import { exposeModelWorker } from '@sdeverywhere/runtime-async/worker'
+import loadGeneratedModel from './sde-prep/generated-model.js'
 
-async function initWasmModel() {
-  const wasmModules = loadWasm()
-  return initWasmModelAndBuffers(...)
-}
-
-exposeModelWorker(initWasmModel)
+exposeModelWorker(loadGeneratedModel)
 ```
 
 ### 2. Spawn the worker

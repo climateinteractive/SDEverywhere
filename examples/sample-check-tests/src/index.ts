@@ -2,6 +2,7 @@
 
 import type {
   Bundle,
+  ComparisonReportOptions,
   ComparisonSpecs,
   ComparisonSpecsSource,
   ConfigInitOptions,
@@ -10,20 +11,24 @@ import type {
 } from '@sdeverywhere/check-core'
 
 import { createBaseComparisonSpecs } from './comparisons/comparison-specs'
+import { getComparisonReportOptions } from './comparison-report-options'
 
-const checksYamlGlob = import.meta.glob('./checks/*.yaml', { eager: true, as: 'raw' })
-const checksYaml = Object.values(checksYamlGlob)
+const checksYamlGlob = import.meta.glob('./checks/*.yaml', { eager: true, query: '?raw', import: 'default' })
+const checksYaml = Object.values(checksYamlGlob) as string[]
 
-const comparisonsYamlGlob = import.meta.glob('./comparisons/*.yaml', { eager: true, as: 'raw' })
+const comparisonsYamlGlob = import.meta.glob('./comparisons/*.yaml', { eager: true, query: '?raw', import: 'default' })
 const comparisonsYaml: ComparisonSpecsSource[] = Object.entries(comparisonsYamlGlob).map(entry => {
   return {
     kind: 'yaml',
     filename: entry[0],
-    content: entry[1]
+    content: entry[1] as string
   }
 })
 
 export function getConfigOptions(bundleL: Bundle, bundleR: Bundle, opts?: ConfigInitOptions): ConfigOptions {
+  const nameL = 'Sample Model Current'
+  const nameR = 'Sample Model Baseline'
+
   // Configure the set of input scenarios used for comparisons; this includes
   // the default matrix of scenarios
   const baseComparisonSpecs = createBaseComparisonSpecs(bundleL, bundleR)
@@ -40,9 +45,15 @@ export function getConfigOptions(bundleL: Bundle, bundleR: Bundle, opts?: Config
   // (see `getOutputVars` in `sample-model-bundle`)
   const renamedDatasetKeys: Map<DatasetKey, DatasetKey> = new Map([['Model__output_w_v1', 'Model__output_w_v2']])
 
+  // Customize the report sections if the kind is 'custom'
+  const reportKind: string = 'custom'
+  // const reportKind: string = 'default'
+  const reportOptions: ComparisonReportOptions =
+    reportKind === 'custom' ? getComparisonReportOptions(nameL, nameR) : undefined
+
   return {
     current: {
-      name: 'Sample Model Current',
+      name: nameL,
       bundle: bundleR
     },
     check: {
@@ -50,14 +61,28 @@ export function getConfigOptions(bundleL: Bundle, bundleR: Bundle, opts?: Config
     },
     comparison: {
       baseline: {
-        name: 'Sample Model Baseline',
+        name: nameR,
         bundle: bundleL
       },
       thresholds: [1, 5, 10],
       specs: comparisonSpecs,
       datasets: {
-        renamedDatasetKeys
-      }
+        renamedDatasetKeys,
+        referencePlotsForDataset: (dataset, scenario) => {
+          if (dataset.key === 'Model__output_x' && scenario.title.startsWith('Input A')) {
+            return [
+              {
+                datasetKey: 'StaticData__static_s',
+                color: 'orange',
+                style: 'dashed',
+                lineWidth: 2
+              }
+            ]
+          }
+          return []
+        }
+      },
+      report: reportOptions
     }
   }
 }

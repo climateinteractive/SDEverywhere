@@ -16,9 +16,15 @@ import type {
 import { diffDatasets } from '@sdeverywhere/check-core'
 
 import { getBucketIndex } from '../_shared/buckets'
+import type { PinnedItemKey } from '../_shared/pinned-item-state'
 import { datasetSpan } from '../_shared/spans'
 
-import type { ComparisonGraphViewModel } from '../../graphs/comparison-graph-vm'
+import type {
+  ComparisonGraphPlot,
+  ComparisonGraphPlotStyle,
+  ComparisonGraphViewModel,
+  Point
+} from '../../graphs/comparison-graph-vm'
 import { pointsFromDataset } from '../../graphs/comparison-graph-vm'
 
 let requestId = 1
@@ -30,24 +36,44 @@ export interface CompareDetailBoxContent {
   comparisonGraphViewModel: ComparisonGraphViewModel
 }
 
+export type CompareDetailBoxKind = 'scenario' | 'dataset' | 'freeform'
+
+export interface AxisRange {
+  min: number
+  max: number
+}
+
 export class CompareDetailBoxViewModel {
   public readonly requestKey: string
+  private localContent: CompareDetailBoxContent
   private readonly writableContent: Writable<CompareDetailBoxContent>
   public readonly content: Readable<CompareDetailBoxContent>
+
+  private readonly writableYRange: Writable<AxisRange>
+  public readonly yRange: Readable<AxisRange>
+  private activeYMin: number
+  private activeYMax: number
+
   private dataRequested = false
   private dataLoaded = false
 
   constructor(
     public readonly comparisonConfig: ComparisonConfig,
     public readonly dataCoordinator: ComparisonDataCoordinator,
+    public readonly kind: CompareDetailBoxKind,
     public readonly title: string,
     public readonly subtitle: string | undefined,
     public readonly scenario: ComparisonScenario,
-    public readonly datasetKey: DatasetKey
+    public readonly datasetKey: DatasetKey,
+    public readonly pinnedItemKey: PinnedItemKey | undefined
   ) {
     this.requestKey = `detail-box::${requestId++}::${scenario.key}::${datasetKey}`
+
     this.writableContent = writable(undefined)
     this.content = this.writableContent
+
+    this.writableYRange = writable(undefined)
+    this.yRange = this.writableYRange
   }
 
   requestData(): void {
@@ -56,11 +82,15 @@ export class CompareDetailBoxViewModel {
     }
     this.dataRequested = true
 
+    const datasetKeys: DatasetKey[] = [this.datasetKey]
+    const refPlots = this.comparisonConfig.datasets.getReferencePlotsForDataset(this.datasetKey, this.scenario)
+    datasetKeys.push(...refPlots.map(plot => plot.datasetKey))
+
     this.dataCoordinator.requestDatasetMaps(
       this.requestKey,
       this.scenario.specL,
       this.scenario.specR,
-      [this.datasetKey],
+      datasetKeys,
       (datasetMapL, datasetMapR) => {
         if (!this.dataRequested) {
           return
@@ -124,28 +154,92 @@ export class CompareDetailBoxViewModel {
           }
         }
 
-        const comparisonGraphViewModel: ComparisonGraphViewModel = {
-          key: this.requestKey,
-          refPlots: [],
-          pointsL: pointsFromDataset(datasetMapL?.get(this.datasetKey)),
-          pointsR: pointsFromDataset(datasetMapR?.get(this.datasetKey)),
-          xMin,
-          xMax
+        // Extract the data points
+        const pointsL = pointsFromDataset(datasetMapL?.get(this.datasetKey))
+        const pointsR = pointsFromDataset(datasetMapR?.get(this.datasetKey))
+
+        const plots: ComparisonGraphPlot[] = []
+        function addPlot(points: Point[], color: string, style?: ComparisonGraphPlotStyle, lineWidth?: number): void {
+          plots.push({
+            points,
+            color,
+            style: style || 'normal',
+            lineWidth
+          })
         }
 
-        this.writableContent.set({
+        // Add the primary plots.  We add the right data points first so that they are drawn
+        // on top of the left data points.
+        // TODO: Use the colors defined in CSS (or make them configurable through other means);
+        // these should not be hardcoded here
+        addPlot(pointsR, 'deepskyblue')
+        addPlot(pointsL, 'crimson')
+
+        // Add the secondary/reference plots
+        // TODO: Currently these are always shown behind the primary plots; might need to make
+        // this configurable
+        for (const refPlot of refPlots) {
+          const points = pointsFromDataset(datasetMapR?.get(refPlot.datasetKey))
+          addPlot(points, refPlot.color, refPlot.style, refPlot.lineWidth)
+        }
+
+        // Find the min and max y values for all datasets
+        let yMin = Number.POSITIVE_INFINITY
+        let yMax = Number.NEGATIVE_INFINITY
+        function setExtents(points: Point[]): void {
+          for (const p of points) {
+            if (p.y < yMin) {
+              yMin = p.y
+            }
+            if (p.y > yMax) {
+              yMax = p.y
+            }
+          }
+        }
+        for (const plot of plots) {
+          setExtents(plot.points)
+        }
+        this.writableYRange.set({
+          min: yMin,
+          max: yMax
+        })
+
+        // Create the graph view model
+        const comparisonGraphViewModel: ComparisonGraphViewModel = {
+          key: this.requestKey,
+          plots,
+          xMin,
+          xMax,
+          yMin: this.activeYMin,
+          yMax: this.activeYMax
+        }
+
+        this.localContent = {
           bucketClass: `bucket-border-${bucketIndex !== undefined ? bucketIndex : 'undefined'}`,
           message,
           diffReport,
           comparisonGraphViewModel
-        })
+        }
+        this.writableContent.set(this.localContent)
         this.dataLoaded = true
       }
     )
   }
 
+  updateYAxisRange(yRange: AxisRange | undefined): void {
+    this.activeYMin = yRange?.min
+    this.activeYMax = yRange?.max
+    if (this.localContent) {
+      const graphViewModel = this.localContent.comparisonGraphViewModel
+      graphViewModel.yMin = this.activeYMin
+      graphViewModel.yMax = this.activeYMax
+      graphViewModel.onUpdated?.()
+    }
+  }
+
   clearData(): void {
     if (this.dataRequested) {
+      this.localContent = undefined
       this.writableContent.set(undefined)
       if (!this.dataLoaded) {
         this.dataCoordinator.cancelRequest(this.requestKey)

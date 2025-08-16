@@ -41,6 +41,21 @@ export interface UserConfig {
   watchPaths?: string[]
 
   /**
+   * The code format to generate.  If 'js', the model will be compiled to a JavaScript
+   * file.  If 'c', the model will be compiled to a C file (in which case an additional
+   * plugin will be needed to convert the C code to a WebAssembly module).  If undefined,
+   * defaults to 'js'.
+   */
+  genFormat?: 'js' | 'c'
+
+  /**
+   * If defined, the build process will write a JSON file to the provided path that lists
+   * all dimensions and variables in the model.  This can be an absolute path, or if it
+   * is a relative path it will be resolved relative to the `rootDir` for the project.
+   */
+  outListingFile?: string
+
+  /**
    * The array of plugins that are used to customize the build process.  These will be
    * executed in the order defined here.
    */

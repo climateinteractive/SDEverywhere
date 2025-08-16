@@ -13,13 +13,17 @@ const bucketPcts = viewModel.diffPercentByBucket
 const dispatch = createEventDispatcher()
 
 function onLinkClicked() {
-  if (viewModel.groupKey) {
+  if (viewModel.itemKey) {
     dispatch('command', {
       cmd: 'show-comparison-detail',
       summaryRow: viewModel
     })
   }
 }
+
+// function onTogglePinned() {
+//   dispatch('toggle-item-pinned')
+// }
 
 </script>
 
@@ -29,31 +33,26 @@ function onLinkClicked() {
 <!-- TEMPLATE -->
 <template lang='pug'>
 
-+if('viewModel.header')
-  .summary-header-row
-    .header-bar
-    .header-title { @html viewModel.title }
-  +else
-    .summary-row
-      .bar-container(on:click!='{onLinkClicked}')
-        +if('viewModel.diffPercentByBucket === undefined')
-          .bar.striped
-          +else
-            .bar.bucket-bg-0(style!='width: {bucketPcts[0]}%;')
-            .bar.bucket-bg-1(style!='width: {bucketPcts[1]}%;')
-            .bar.bucket-bg-2(style!='width: {bucketPcts[2]}%;')
-            .bar.bucket-bg-3(style!='width: {bucketPcts[3]}%;')
-            .bar.bucket-bg-4(style!='width: {bucketPcts[4]}%;')
-      .title-container
-        //- .grouping-part Grouping goes here
-        .title-part
-          .title(on:click!='{onLinkClicked}') { @html viewModel.title }
-          +if('viewModel.subtitle')
-            .subtitle(on:click!='{onLinkClicked}') { @html viewModel.subtitle }
-          //- +if('viewModel.valuesPart')
-          //-   .values-part { @html viewModel.valuesPart }
-          +if('viewModel.annotations')
-            .annotations { @html viewModel.annotations }
+.summary-row
+  .bar-container(on:click!='{onLinkClicked}')
+    +if('viewModel.diffPercentByBucket === undefined')
+      .bar.striped
+      +else
+        .bar.bucket-bg-0(style!='width: {bucketPcts[0]}%;')
+        .bar.bucket-bg-1(style!='width: {bucketPcts[1]}%;')
+        .bar.bucket-bg-2(style!='width: {bucketPcts[2]}%;')
+        .bar.bucket-bg-3(style!='width: {bucketPcts[3]}%;')
+        .bar.bucket-bg-4(style!='width: {bucketPcts[4]}%;')
+  .title-container
+    //- .grouping-part Grouping goes here
+    .title-part
+      .title(on:click!='{onLinkClicked}') { @html viewModel.title }
+      +if('viewModel.subtitle')
+        .subtitle(on:click!='{onLinkClicked}') { @html viewModel.subtitle }
+      //- +if('viewModel.valuesPart')
+      //-   .values-part { @html viewModel.valuesPart }
+      +if('viewModel.annotations')
+        .annotations { @html viewModel.annotations }
 
 </template>
 
@@ -62,6 +61,8 @@ function onLinkClicked() {
 
 <!-- STYLE -->
 <style lang='sass'>
+
+$bar-width: 15rem
 
 .summary-row
   display: flex
@@ -77,7 +78,7 @@ function onLinkClicked() {
 .bar-container
   display: flex
   flex-direction: row
-  width: 20rem
+  width: $bar-width
   height: .8rem
   margin-bottom: .25rem
   cursor: pointer
@@ -129,24 +130,5 @@ function onLinkClicked() {
   background-color: #1c1c1c
   border: .5px solid #555
   border-radius: .4rem
-
-.summary-header-row
-  display: flex
-  flex-direction: row
-  flex: 0 0 auto
-  align-items: center
-  margin: .4rem 0
-
-// XXX: Merge with other bar classes
-.header-bar
-  display: flex
-  width: 20rem
-  height: 1px
-  background-color: #555
-
-.header-title
-  margin-left: .8rem
-  color: #fff
-  font-size: 1.2em
 
 </style>

@@ -1,9 +1,12 @@
 // Copyright (c) 2021-2022 Climate Interactive / New Venture Fund
 
+import { get } from 'svelte/store'
+
 import type { CheckDataCoordinator, CheckReport, ComparisonConfig, ComparisonSummary } from '@sdeverywhere/check-core'
 
 import type { CheckSummaryViewModel } from '../check/summary/check-summary-vm'
 import { createCheckSummaryViewModel } from '../check/summary/check-summary-vm'
+import type { PinnedItemStates } from '../compare/_shared/pinned-item-state'
 import type { ComparisonSummaryViewModel } from '../compare/summary/comparison-summary-vm'
 import { createComparisonSummaryViewModels } from '../compare/summary/comparison-summary-vm'
 import type { StatsTableViewModel } from '../stats/stats-table-vm'
@@ -24,7 +27,8 @@ export function createSummaryViewModel(
   checkDataCoordinator: CheckDataCoordinator,
   checkReport: CheckReport,
   comparisonConfig: ComparisonConfig | undefined,
-  comparisonSummary: ComparisonSummary | undefined
+  comparisonSummary: ComparisonSummary | undefined,
+  pinnedItemStates: PinnedItemStates
 ): SummaryViewModel {
   type TabInfo = [subtitle: string, status: string]
 
@@ -85,18 +89,30 @@ export function createSummaryViewModel(
     )
 
     // Create comparison summary view models
-    const comparisonSummaries = createComparisonSummaryViewModels(comparisonConfig, comparisonSummary.testSummaries)
+    const comparisonSummaries = createComparisonSummaryViewModels(
+      comparisonConfig,
+      pinnedItemStates,
+      comparisonSummary.testSummaries
+    )
 
     // Add tab for comparison views, if some are defined
     if (comparisonSummaries.views) {
       comparisonViewsSummaryViewModel = comparisonSummaries.views
 
-      // For now, if we have an "all graphs" view, report the number of changed graphs.  If no graph differences, report
-      // the number of views (scenarios) with differences.
+      // For now, if we have one or more views that show graphs grouped by diffs, report the
+      // number of changed graphs.  If no graph differences, report the number of views
+      // (scenarios) with differences.
       let viewsTabInfo: TabInfo
-      const allViewRows = comparisonSummaries.views.allRows
-      const allGraphsRow = allViewRows.find(row => row.viewMetadata?.view.graphs === 'all')
-      const changedGraphCount = allGraphsRow?.viewMetadata?.changedGraphCount || 0
+      let changedGraphCount = 0
+      for (const row of get(comparisonSummaries.views.allRows)) {
+        // TODO: We may end up counting the same graph here multiple times if there are multiple
+        // views that use "grouped-by-diffs" mode and display the same subset of graphs in each.
+        // Ideally we would get the number of unique graphs with changes here instead.
+        const view = row.viewMetadata?.view
+        if (view?.kind === 'view' && view.graphOrder === 'grouped-by-diffs') {
+          changedGraphCount += row?.viewMetadata?.changedGraphCount || 0
+        }
+      }
       if (changedGraphCount > 0) {
         viewsTabInfo = getTabInfo(changedGraphCount, 'graph')
       } else {
@@ -113,7 +129,7 @@ export function createSummaryViewModel(
     // Add tab for by-dataset summaries
     comparisonsByDatasetSummaryViewModel = comparisonSummaries.byDataset
     const byDatasetTabInfo = getTabInfo(comparisonsByDatasetSummaryViewModel.rowsWithDiffs, 'dataset')
-    addTabItem('comps-by-dataset', 'Comparisons by output', byDatasetTabInfo)
+    addTabItem('comps-by-dataset', 'Comparisons by dataset', byDatasetTabInfo)
   }
 
   // Select the first tab that has differences by default; if no differences, show the

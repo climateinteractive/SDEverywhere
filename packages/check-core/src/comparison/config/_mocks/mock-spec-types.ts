@@ -1,6 +1,16 @@
 // Copyright (c) 2023 Climate Interactive / New Venture Fund
 
+import type { InputSettingGroupId } from '../../../bundle/bundle-types'
 import type {
+  ComparisonDatasetName,
+  ComparisonDatasetSource,
+  ComparisonDatasetSpec,
+  ComparisonGraphGroupId,
+  ComparisonGraphGroupRefSpec,
+  ComparisonGraphGroupSpec,
+  ComparisonGraphId,
+  ComparisonGraphsArraySpec,
+  ComparisonGraphsPresetSpec,
   ComparisonScenarioGroupId,
   ComparisonScenarioGroupRefSpec,
   ComparisonScenarioGroupSpec,
@@ -15,15 +25,27 @@ import type {
   ComparisonScenarioWithAllInputsSpec,
   ComparisonScenarioWithDistinctInputsSpec,
   ComparisonScenarioWithInputsSpec,
-  ComparisonSpecs,
-  ComparisonViewGraphsArraySpec,
-  ComparisonViewGraphsPresetSpec,
+  ComparisonScenarioWithSettingGroupSpec,
+  ComparisonViewBoxSpec,
+  ComparisonViewGraphOrder,
   ComparisonViewGraphsSpec,
-  ComparisonViewGroupSpec,
   ComparisonViewGroupWithScenariosSpec,
   ComparisonViewGroupWithViewsSpec,
+  ComparisonViewRowSpec,
   ComparisonViewSpec
 } from '../comparison-spec-types'
+
+//
+// DATASETS
+//
+
+export function datasetSpec(name: ComparisonDatasetName, source?: ComparisonDatasetSource): ComparisonDatasetSpec {
+  return {
+    kind: 'dataset',
+    name,
+    source
+  }
+}
 
 //
 // SCENARIOS
@@ -73,6 +95,19 @@ export function scenarioWithDistinctInputsSpec(
     subtitle: opts?.subtitle,
     inputsL,
     inputsR
+  }
+}
+
+export function scenarioWithSettingGroupSpec(
+  settingGroupId: InputSettingGroupId,
+  opts?: { id?: string; title?: string; subtitle?: string }
+): ComparisonScenarioWithSettingGroupSpec {
+  return {
+    kind: 'scenario-with-setting-group',
+    id: opts?.id,
+    title: opts?.title,
+    subtitle: opts?.subtitle,
+    settingGroupId
   }
 }
 
@@ -133,35 +168,101 @@ export function scenarioGroupRefSpec(groupId: ComparisonScenarioGroupId): Compar
 }
 
 //
-// VIEWS
+// GRAPHS
 //
 
-export function viewSpec(
-  title: string | undefined,
-  subtitle: string | undefined,
-  scenarioId: ComparisonScenarioId,
-  graphs: ComparisonViewGraphsSpec
-): ComparisonViewSpec {
-  return {
-    kind: 'view',
-    title,
-    subtitle,
-    scenarioId,
-    graphs
-  }
-}
-
-export function graphsPresetSpec(preset: 'all'): ComparisonViewGraphsPresetSpec {
+export function graphsPresetSpec(preset: 'all'): ComparisonGraphsPresetSpec {
   return {
     kind: 'graphs-preset',
     preset
   }
 }
 
-export function graphsArraySpec(graphIds: string[]): ComparisonViewGraphsArraySpec {
+export function graphsArraySpec(graphIds: ComparisonGraphId[]): ComparisonGraphsArraySpec {
   return {
     kind: 'graphs-array',
     graphIds
+  }
+}
+
+//
+// GRAPH GROUPS
+//
+
+export function graphGroupSpec(id: ComparisonGraphGroupId, graphIds: ComparisonGraphId[]): ComparisonGraphGroupSpec {
+  return {
+    kind: 'graph-group',
+    id,
+    graphIds
+  }
+}
+
+export function graphGroupRefSpec(groupId: ComparisonGraphGroupId): ComparisonGraphGroupRefSpec {
+  return {
+    kind: 'graph-group-ref',
+    groupId
+  }
+}
+
+//
+// VIEWS
+//
+
+export function viewWithScenarioSpec(
+  title: string | undefined,
+  subtitle: string | undefined,
+  scenarioId: ComparisonScenarioId,
+  graphs?: ComparisonViewGraphsSpec,
+  graphOrder?: ComparisonViewGraphOrder
+): ComparisonViewSpec {
+  return {
+    kind: 'view',
+    title,
+    subtitle,
+    scenarioId,
+    graphs,
+    graphOrder
+  }
+}
+
+export function viewWithRowsSpec(
+  title: string | undefined,
+  subtitle: string | undefined,
+  rows: ComparisonViewRowSpec[]
+): ComparisonViewSpec {
+  return {
+    kind: 'view',
+    title,
+    subtitle,
+    rows
+  }
+}
+
+export function viewRowSpec(
+  title: string,
+  subtitle: string | undefined,
+  boxes: ComparisonViewBoxSpec[]
+): ComparisonViewRowSpec {
+  return {
+    kind: 'view-row',
+    title,
+    subtitle,
+    boxes
+  }
+}
+
+export function viewBoxSpec(
+  title: string,
+  subtitle: string | undefined,
+  dataset: ComparisonDatasetSpec,
+  scenarioId: ComparisonScenarioId
+): ComparisonViewBoxSpec {
+  return {
+    kind: 'view-box',
+    title,
+    subtitle,
+    dataset,
+    scenarioId
   }
 }
 
@@ -180,28 +281,14 @@ export function viewGroupWithViewsSpec(title: string, views: ComparisonViewSpec[
 export function viewGroupWithScenariosSpec(
   title: string,
   scenarios: (ComparisonScenarioRefSpec | ComparisonScenarioGroupRefSpec)[],
-  graphs: ComparisonViewGraphsSpec
+  graphs: ComparisonViewGraphsSpec,
+  graphOrder?: ComparisonViewGraphOrder
 ): ComparisonViewGroupWithScenariosSpec {
   return {
     kind: 'view-group-with-scenarios',
     title,
     scenarios,
-    graphs
-  }
-}
-
-//
-// TOP-LEVEL TYPES
-//
-
-export function comparisonSpecs(
-  scenarios: ComparisonScenarioSpec[],
-  scenarioGroups: ComparisonScenarioGroupSpec[] = [],
-  viewGroups: ComparisonViewGroupSpec[] = []
-): ComparisonSpecs {
-  return {
-    scenarios,
-    scenarioGroups,
-    viewGroups
+    graphs,
+    graphOrder
   }
 }

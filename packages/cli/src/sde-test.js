@@ -13,6 +13,11 @@ export let builder = {
     type: 'string',
     alias: 's'
   },
+  genformat: {
+    describe: 'generated code format',
+    choices: ['js', 'c'],
+    default: 'js'
+  },
   builddir: {
     describe: 'build directory',
     type: 'string',
@@ -61,7 +66,8 @@ export let test = async (model, opts) => {
     }
   } catch (e) {
     // Exit with a non-zero error code if any step failed
-    console.error(`ERROR: ${e.message}\n`)
+    console.error(e)
+    console.error()
     process.exit(1)
   }
 }

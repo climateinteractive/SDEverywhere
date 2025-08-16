@@ -1,5 +1,5 @@
 {
-  "name": "app",
+  "name": "template-default-app",
   "version": "1.0.0",
   "private": true,
   "type": "module",
@@ -8,9 +8,10 @@
     "lint": "eslint src --max-warnings 0",
     "prettier:check": "prettier --check .",
     "prettier:fix": "prettier --write .",
-    "precommit": "../scripts/precommit",
+    "test": "echo No tests yet",
+    "type-check": "tsc --noEmit",
     "dev": "vite",
-    "build": "vite build",
+    "bundle": "vite build",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -20,6 +21,6 @@
   },
   "devDependencies": {
     "@types/chart.js": "^2.9.34",
-    "vite": "^4.4.9"
+    "vite": "^5.4.2"
   }
 }

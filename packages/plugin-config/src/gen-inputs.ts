@@ -4,7 +4,6 @@ import type { ConfigContext, CsvRow } from './context'
 import { optionalNumber, optionalString } from './read-config'
 import type { InputId, InputSpec, SliderSpec, StringKey, SwitchSpec } from './spec-types'
 import { genStringKey, htmlToUtf8 } from './strings'
-import { sdeNameForVensimVarName } from './var-names'
 
 // TODO: For now, all strings use the same "layout" specifier; this could be customized
 // to provide a "maximum length" hint for a group of strings to the translation tool
@@ -116,7 +115,7 @@ function inputSpecFromCsv(r: CsvRow, context: ConfigContext): InputSpec | undefi
   // Converts a slider row in `inputs.csv` to a `SliderSpec`
   function sliderSpecFromCsv(): SliderSpec {
     const varName = requiredString('varname')
-    const varId = sdeNameForVensimVarName(varName)
+    const varId = context.canonicalVarId(varName)
 
     const defaultValue = requiredNumber('slider/switch default')
     const minValue = requiredNumber('slider min')
@@ -166,7 +165,7 @@ function inputSpecFromCsv(r: CsvRow, context: ConfigContext): InputSpec | undefi
   // Converts a switch row in `inputs.csv` to a `SwitchSpec`
   function switchSpecFromCsv(): SwitchSpec {
     const varName = requiredString('varname')
-    const varId = sdeNameForVensimVarName(varName)
+    const varId = context.canonicalVarId(varName)
 
     const onValue = requiredNumber('enabled value')
     const offValue = requiredNumber('disabled value')

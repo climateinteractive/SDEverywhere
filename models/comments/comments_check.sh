@@ -1,10 +1,11 @@
 #!/bin/bash
 
 MODEL_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-SDE='node ../../packages/cli/src/main.js'
+PROJ_DIR="$MODEL_DIR/../.."
+SDE_MAIN="$PROJ_DIR/packages/cli/src/main.js"
 
 cd $MODEL_DIR
-$SDE generate --preprocess comments.mdl
+node "$SDE_MAIN" generate --preprocess comments.mdl
 
 diff expected.mdl build/comments.mdl > build/diff.txt 2>&1
 if [ $? != 0 ]; then

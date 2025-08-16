@@ -38,7 +38,7 @@ jobs:
     strategy:
       matrix:
         config:
-          - { plat: 'linux', os: 'ubuntu-20.04' }
+          - { plat: 'linux', os: 'ubuntu-latest' }
           # - { plat: 'mac', os: 'macos-10.15' }
           # - { plat: 'win', os: 'windows-2019' }
     steps:
@@ -103,7 +103,7 @@ jobs:
     strategy:
       matrix:
         config:
-          - { plat: 'linux', os: 'ubuntu-20.04' }
+          - { plat: 'linux', os: 'ubuntu-latest' }
           # - { plat: 'mac', os: 'macos-10.15' }
           # - { plat: 'win', os: 'windows-2019' }
     steps:
@@ -168,7 +168,7 @@ jobs:
     strategy:
       matrix:
         config:
-          - { plat: 'linux', os: 'ubuntu-20.04' }
+          - { plat: 'linux', os: 'ubuntu-latest' }
           # - { plat: 'mac', os: 'macos-10.15' }
           # - { plat: 'win', os: 'windows-2019' }
     steps:

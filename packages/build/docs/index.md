@@ -16,8 +16,7 @@ export async function config() {
     modelSpec: async () => {
       return {
         inputs: [{ varName: 'Y', defaultValue: 0, minValue: -10, maxValue: 10 }],
-        outputs: [{ varName: 'Z' }],
-        datFiles: []
+        outputs: [{ varName: 'Z' }]
       }
     }
   }
@@ -41,3 +40,4 @@ export async function config() {
 - [Plugin](interfaces/Plugin.md)
 - [BuildContext](classes/BuildContext.md)
 - [ResolvedConfig](interfaces/ResolvedConfig.md)
+- [ResolvedModelSpec](interfaces/ResolvedModelSpec.md)

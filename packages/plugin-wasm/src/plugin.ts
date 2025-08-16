@@ -1,11 +1,13 @@
 // Copyright (c) 2022 Climate Interactive / New Venture Fund
 
 import { existsSync } from 'fs'
+import { readFile, writeFile } from 'fs/promises'
+
 import { basename, dirname, join as joinPath } from 'path'
 
 import { findUp } from 'find-up'
 
-import type { BuildContext, Plugin } from '@sdeverywhere/build'
+import type { BuildContext, ResolvedModelSpec, Plugin } from '@sdeverywhere/build'
 
 import type { WasmPluginOptions } from './options'
 
@@ -14,13 +16,51 @@ export function wasmPlugin(options?: WasmPluginOptions): Plugin {
 }
 
 class WasmPlugin implements Plugin {
+  // The properties from `modelSpec` captured in `preGenerate`
+  private outputVarIds: string[]
+  private bundleListing: boolean
+
   constructor(private readonly options?: WasmPluginOptions) {}
 
-  async postGenerateC(context: BuildContext, cContent: string): Promise<string> {
+  async preGenerate(context: BuildContext, modelSpec: ResolvedModelSpec): Promise<void> {
+    // Save some properties for later processing.  This is a workaround for the fact
+    // that `modelSpec` is not passed to `postGenerateCode`, so we need to capture
+    // these values here.
+    this.outputVarIds = modelSpec.outputs.map(o => context.canonicalVarId(o.varName))
+    this.bundleListing = modelSpec.bundleListing
+  }
+
+  async postGenerateCode(context: BuildContext, format: 'js' | 'c', content: string): Promise<string> {
+    if (format !== 'c') {
+      throw new Error("When using plugin-wasm, you must set `genFormat` to 'c' in your `sde.config.js` file")
+    }
+
     context.log('info', '  Generating WebAssembly module')
 
-    // If `outputJsPath` is undefined, write `wasm-model.js` to the prep dir
-    const stagedOutputJsFile = 'wasm-model.js'
+    const buildDir = joinPath(context.config.prepDir, 'build')
+    let modelListingJs: string
+    if (this.bundleListing === true) {
+      // Include the minimal model listing
+      const modelListingPath = joinPath(buildDir, 'processed_min.json')
+      const modelListingJson = await readFile(modelListingPath, 'utf8')
+      const modelListingObj = JSON.parse(modelListingJson)
+      modelListingJs = JSON.stringify(modelListingObj).replace(/"(\w+)"\s*:/g, '$1:')
+    } else {
+      // Omit the minimal model listing
+      modelListingJs = 'undefined;'
+    }
+
+    // Write a file that will be folded into the generated Wasm module
+    const preJsFile = joinPath(buildDir, 'processed_extras.js')
+    const preJsContent = `\
+Module["kind"] = "wasm";
+Module["outputVarIds"] = ${JSON.stringify(this.outputVarIds)};
+Module["modelListing"] = ${modelListingJs}
+`
+    await writeFile(preJsFile, preJsContent)
+
+    // If `outputJsPath` is undefined, write `generated-model.js` to the prep dir
+    const stagedOutputJsFile = 'generated-model.js'
     let outputJsPath: string
     if (this.options?.outputJsPath) {
       outputJsPath = this.options.outputJsPath
@@ -39,7 +79,7 @@ class WasmPlugin implements Plugin {
 
     // context.log('info', '  Done!')
 
-    return cContent
+    return content
   }
 }
 
@@ -99,6 +139,8 @@ async function buildWasm(
   addInput('macros.c')
   addInput('model.c')
   addInput('vensim.c')
+  addArg('--pre-js')
+  addArg('build/processed_extras.js')
   addArg('-Ibuild')
   addArg('-o')
   addArg(outputJsPath)
@@ -128,7 +170,7 @@ async function buildWasm(
     // and Node.js contexts (tested in Emscripten 2.0.34 and 3.1.46).
     addFlag(`ENVIRONMENT='web,webview,worker'`)
     addFlag(
-      `EXPORTED_FUNCTIONS=['_malloc','_getMaxOutputIndices','_getInitialTime','_getFinalTime','_getSaveper','_runModelWithBuffers']`
+      `EXPORTED_FUNCTIONS=['_malloc','_free','_getInitialTime','_getFinalTime','_getSaveper','_setLookup','_runModelWithBuffers']`
     )
     addFlag(`EXPORTED_RUNTIME_METHODS=['cwrap']`)
   }

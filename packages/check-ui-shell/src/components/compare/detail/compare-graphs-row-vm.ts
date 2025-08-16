@@ -95,10 +95,12 @@ export function createCompareGraphsRowViewModel(
       const detailBoxViewModel = new CompareDetailBoxViewModel(
         comparisonConfig,
         dataCoordinator,
+        'freeform',
         '',
         '',
         scenario,
-        datasetKey
+        datasetKey,
+        undefined
       )
 
       datasetRows.push({

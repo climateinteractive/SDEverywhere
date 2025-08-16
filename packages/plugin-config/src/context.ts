@@ -7,13 +7,20 @@ import { parse as parseCsv } from 'csv-parse/sync'
 
 import type { BuildContext, InputSpec, LogLevel, OutputSpec } from '@sdeverywhere/build'
 
-import type { HexColor } from './spec-types'
+import type { HexColor, InputVarId, OutputVarId } from './spec-types'
 import { Strings } from './strings'
-import type { InputVarId, OutputVarId } from './var-names'
-import { sdeNameForVensimVarName } from './var-names'
 
 export type CsvRow = { [key: string]: string }
 export type ColorId = string
+
+export interface ModelOptions {
+  readonly graphDefaultMinTime: number
+  readonly graphDefaultMaxTime: number
+  readonly datFiles: string[]
+  readonly bundleListing: boolean
+  readonly customLookups: boolean
+  readonly customOutputs: boolean
+}
 
 export class ConfigContext {
   private readonly inputSpecs: Map<InputVarId, InputSpec> = new Map()
@@ -25,9 +32,7 @@ export class ConfigContext {
     private readonly configDir: string,
     public readonly strings: Strings,
     private readonly colorMap: Map<ColorId, HexColor>,
-    public readonly graphDefaultMinTime: number,
-    public readonly graphDefaultMaxTime: number,
-    public readonly datFiles: string[]
+    public readonly modelOptions: ModelOptions
   ) {}
 
   /**
@@ -47,6 +52,18 @@ export class ConfigContext {
    */
   log(level: LogLevel, msg: string): void {
     this.buildContext.log(level, msg)
+  }
+
+  /**
+   * Format a (subscripted or non-subscripted) model variable name into a canonical
+   * identifier (with special characters converted to underscore, and subscript/dimension
+   * parts separated by commas).
+   *
+   * @param name The name of the variable in the source model, e.g., `Variable name[DimA, B2]`.
+   * @returns The canonical identifier for the given name, e.g., `_variable_name[_dima,_b2]`.
+   */
+  canonicalVarId(name: string): string {
+    return this.buildContext.canonicalVarId(name)
   }
 
   /**
@@ -78,7 +95,7 @@ export class ConfigContext {
   ): void {
     // We use the C name as the key to avoid redundant entries in cases where
     // the csv file refers to variables with different capitalization
-    const varId = sdeNameForVensimVarName(inputVarName)
+    const varId = this.buildContext.canonicalVarId(inputVarName)
     if (this.inputSpecs.get(varId)) {
       // Fail if the variable was already added (there should only be one spec
       // per input variable)
@@ -96,7 +113,7 @@ export class ConfigContext {
   addOutputVariable(outputVarName: string): void {
     // We use the C name as the key to avoid redundant entries in cases where
     // the csv file refers to variables with different capitalization
-    const varId = sdeNameForVensimVarName(outputVarName)
+    const varId = this.buildContext.canonicalVarId(outputVarName)
     this.outputVarNames.set(varId, outputVarName)
   }
 
@@ -156,6 +173,23 @@ export function createConfigContext(buildContext: BuildContext, configDir: strin
   const projDir = buildContext.config.rootDir
   const datFiles = origDatFiles.map(f => joinPath(relative(prepDir, projDir), f))
 
+  // Read other boolean properties from `model.csv`
+  // TODO: If customLookups is true, see if there is a `config/custom-lookups.csv` file
+  // and if so, make an array of variable names instead of setting a boolean in `spec.json`.
+  // (Same thing for customOutputs.)
+  const bundleListing = modelCsv['bundle listing'] === 'true'
+  const customLookups = modelCsv['custom lookups'] === 'true'
+  const customOutputs = modelCsv['custom outputs'] === 'true'
+
+  const modelOptions: ModelOptions = {
+    graphDefaultMinTime,
+    graphDefaultMaxTime,
+    datFiles,
+    bundleListing,
+    customLookups,
+    customOutputs
+  }
+
   // Read the static strings from `strings.csv`
   const strings = readStringsCsv(configDir)
 
@@ -168,7 +202,7 @@ export function createConfigContext(buildContext: BuildContext, configDir: strin
     colors.set(colorId, hexColor)
   }
 
-  return new ConfigContext(buildContext, configDir, strings, colors, graphDefaultMinTime, graphDefaultMaxTime, datFiles)
+  return new ConfigContext(buildContext, configDir, strings, colors, modelOptions)
 }
 
 function configFilePath(configDir: string, name: string, ext: string): string {

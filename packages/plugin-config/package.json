@@ -1,6 +1,6 @@
 {
   "name": "@sdeverywhere/plugin-config",
-  "version": "0.2.4",
+  "version": "0.2.8",
   "files": [
     "dist/**",
     "template-config/**"
@@ -25,7 +25,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:ci": "vitest run",
-    "type-check": "tsc --noEmit -p tsconfig-build.json",
+    "type-check": "tsc --noEmit -p tsconfig-test.json",
     "bundle": "tsup",
     "copy-types": "cp src/spec-types.ts dist",
     "build": "run-s bundle copy-types",
@@ -35,10 +35,10 @@
   "dependencies": {
     "byline": "^5.0.0",
     "csv-parse": "^5.3.3",
-    "sanitize-html": "^2.7.1"
+    "sanitize-html": "^2.13.0"
   },
   "peerDependencies": {
-    "@sdeverywhere/build": "^0.3.1"
+    "@sdeverywhere/build": "^0.3.7"
   },
   "devDependencies": {
     "@sdeverywhere/build": "*",
@@ -46,7 +46,7 @@
     "@types/dedent": "^0.7.0",
     "@types/marked": "^4.0.1",
     "@types/node": "^20.5.7",
-    "@types/sanitize-html": "^2.6.2",
+    "@types/sanitize-html": "^2.13.0",
     "@types/temp": "^0.9.1",
     "dedent": "^0.7.0",
     "temp": "^0.9.4"

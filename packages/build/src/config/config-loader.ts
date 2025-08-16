@@ -1,7 +1,7 @@
 // Copyright (c) 2022 Climate Interactive / New Venture Fund
 
 import { existsSync, lstatSync, mkdirSync } from 'fs'
-import { dirname, join as joinPath, relative, resolve as resolvePath } from 'path'
+import { dirname, isAbsolute, join as joinPath, relative, resolve as resolvePath } from 'path'
 import { fileURLToPath } from 'url'
 
 import type { Result } from 'neverthrow'
@@ -157,6 +157,31 @@ function resolveUserConfig(
     watchPaths = modelFiles
   }
 
+  // Validate the code generation format
+  const rawGenFormat = userConfig.genFormat || 'js'
+  let genFormat: 'js' | 'c'
+  switch (rawGenFormat) {
+    case 'js':
+      genFormat = 'js'
+      break
+    case 'c':
+      genFormat = 'c'
+      break
+    default:
+      throw new Error(`The configured genFormat value is invalid; must be either 'js' or 'c'`)
+  }
+
+  // Validate the out listing file, if defined
+  let outListingFile: string
+  if (userConfig.outListingFile) {
+    // Get the absolute path of the output file
+    if (isAbsolute(userConfig.outListingFile)) {
+      outListingFile = userConfig.outListingFile
+    } else {
+      outListingFile = resolvePath(rootDir, userConfig.outListingFile)
+    }
+  }
+
   return {
     mode,
     rootDir,
@@ -164,6 +189,8 @@ function resolveUserConfig(
     modelFiles,
     modelInputPaths,
     watchPaths,
+    genFormat,
+    outListingFile,
     sdeDir,
     sdeCmdPath
   }

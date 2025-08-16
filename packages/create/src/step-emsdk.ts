@@ -4,6 +4,7 @@ import { existsSync, rmSync } from 'fs'
 import { join as joinPath, resolve as resolvePath } from 'path'
 
 import { execa } from 'execa'
+import { findUp } from 'find-up'
 import { bold, cyan, dim, green, red } from 'kleur/colors'
 import ora from 'ora'
 import prompts from 'prompts'
@@ -14,7 +15,16 @@ import type { Arguments } from 'yargs-parser'
 const version = '2.0.34'
 
 export async function chooseInstallEmsdk(projDir: string, args: Arguments): Promise<void> {
-  // TODO: Use findUp and skip this step if emsdk directory already exists
+  // Walk up the directory structure to see if there is an existing `emsdk` directory
+  const existingEmsdkDir = await findUp('emsdk', {
+    cwd: projDir,
+    type: 'directory'
+  })
+  if (existingEmsdkDir) {
+    ora().succeed('Found existing Emscripten SDK installation.')
+    ora().info(dim(`Your project will use "${cyan(existingEmsdkDir)}".`))
+    return
+  }
 
   // Prompt the user
   const underParentDir = resolvePath(projDir, '..', 'emsdk')
@@ -23,7 +33,7 @@ export async function chooseInstallEmsdk(projDir: string, args: Arguments): Prom
     {
       type: 'select',
       name: 'install',
-      message: `Would you like to install the Emscripten SDK?`,
+      message: `Would you like to install the Emscripten SDK that is used to generate WebAssembly?`,
       choices: [
         // ${reset(dim('(recommended)'))
         {

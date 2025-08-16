@@ -14,7 +14,6 @@ import { createBundle as currentBundle } from '../../sample-check-bundle/dist/sa
 // For "production" builds, load the summary from a JSON file that was generated as
 // part of the build process.  This makes the report load almost immediately instead
 // of running all the checks in the user's browser.
-const __SUITE_SUMMARY_JSON__ = ''
 const suiteSummaryJson = __SUITE_SUMMARY_JSON__
 let suiteSummary: SuiteSummary
 if (suiteSummaryJson) {

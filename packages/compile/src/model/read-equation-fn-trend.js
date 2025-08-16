@@ -24,12 +24,13 @@ export function generateTrendVariables(v, callExpr, context) {
   const subs = context.extractSubscriptsFromVarNames(argInput, argAvgTime, argInitVal)
 
   // Generate a level variable that will be used in place of the `TREND` call
+  const eqns = []
   const levelVarName = newLevelVarName()
   const levelLHS = `${levelVarName}${subs}`
   // TODO: There should be parens around the arguments in this equation in case any of them
   // is an expression and not a simple constant
   const levelEqn = `${levelLHS} = INTEG((${argInput} - ${levelLHS}) / ${argAvgTime}, ${argInput} / (1 + ${argInitVal} * ${argAvgTime})) ~~|`
-  context.defineVariable(levelEqn)
+  eqns.push(levelEqn)
   context.addVarReference(canonicalName(levelVarName))
 
   // Generate a aux variable that will be used in place of the `TREND` call
@@ -38,7 +39,10 @@ export function generateTrendVariables(v, callExpr, context) {
   // TODO: There should be parens around the arguments in this equation in case any of them
   // is an expression and not a simple constant
   const auxEqn = `${auxLHS} = ZIDZ(${argInput} - ${levelLHS}, ${argAvgTime} * ABS(${levelLHS})) ~~|`
-  context.defineVariable(auxEqn)
+  eqns.push(auxEqn)
   v.trendVarName = canonicalName(auxVarName)
   context.addVarReference(v.trendVarName)
+
+  // Add the generated variables to the model
+  context.defineVariables(eqns)
 }

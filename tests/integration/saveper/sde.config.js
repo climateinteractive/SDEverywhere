@@ -1,23 +1,26 @@
 import { wasmPlugin } from '@sdeverywhere/plugin-wasm'
 import { workerPlugin } from '@sdeverywhere/plugin-worker'
 
+const genFormat = process.env.GEN_FORMAT === 'c' ? 'c' : 'js'
+
 export async function config() {
   return {
+    genFormat,
     modelFiles: ['saveper.mdl'],
 
     modelSpec: async () => {
       return {
-        inputs: [{ varName: 'Y', defaultValue: 0, minValue: -10, maxValue: 10 }],
-        outputs: [{ varName: 'Z' }],
-        datFiles: []
+        inputs: ['Y'],
+        outputs: ['Z']
       }
     },
 
     plugins: [
-      // Generate a `wasm-model.js` file containing the Wasm model
-      wasmPlugin(),
+      // If targeting WebAssembly, generate a `generated-model.js` file
+      // containing the Wasm model
+      genFormat === 'c' && wasmPlugin(),
 
-      // Generate a `worker.js` file that runs the Wasm model in a worker
+      // Generate a `worker.js` file that runs the generated model in a worker
       workerPlugin()
     ]
   }

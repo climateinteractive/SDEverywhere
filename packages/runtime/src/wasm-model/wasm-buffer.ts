@@ -13,14 +13,22 @@ import type { WasmModule } from './wasm-module'
  * `Float64Array` that can be transferred between the worker and the client running
  * in the browser's normal JS thread, and then use `getArrayView` to copy into and
  * out of the wasm buffer.
+ *
+ * @hidden For internal use only.
  */
 export class WasmBuffer<ArrType> {
   /**
    * @param wasmModule The `WasmModule` used to initialize the memory.
+   * @param numElements The number of elements in the buffer.
    * @param byteOffset The byte offset within the wasm heap.
    * @param heapArray The array view on the underlying heap buffer.
    */
-  constructor(private readonly wasmModule: WasmModule, private byteOffset: number, private heapArray: ArrType) {}
+  constructor(
+    private readonly wasmModule: WasmModule,
+    public numElements: number,
+    private byteOffset: number,
+    private heapArray: ArrType
+  ) {}
 
   /**
    * @return An `ArrType` view on the underlying heap buffer.
@@ -42,7 +50,8 @@ export class WasmBuffer<ArrType> {
    */
   dispose(): void {
     if (this.heapArray) {
-      this.wasmModule._free(this.byteOffset)
+      this.wasmModule._free?.(this.byteOffset)
+      this.numElements = undefined
       this.heapArray = undefined
       this.byteOffset = undefined
     }
@@ -63,7 +72,7 @@ export function createInt32WasmBuffer(wasmModule: WasmModule, numElements: numbe
   const byteOffset = wasmModule._malloc(lengthInBytes)
   const elemOffset = byteOffset / elemSizeInBytes
   const heapArray = wasmModule.HEAP32.subarray(elemOffset, elemOffset + numElements)
-  return new WasmBuffer<Int32Array>(wasmModule, byteOffset, heapArray)
+  return new WasmBuffer<Int32Array>(wasmModule, numElements, byteOffset, heapArray)
 }
 
 /**
@@ -80,5 +89,5 @@ export function createFloat64WasmBuffer(wasmModule: WasmModule, numElements: num
   const byteOffset = wasmModule._malloc(lengthInBytes)
   const elemOffset = byteOffset / elemSizeInBytes
   const heapArray = wasmModule.HEAPF64.subarray(elemOffset, elemOffset + numElements)
-  return new WasmBuffer<Float64Array>(wasmModule, byteOffset, heapArray)
+  return new WasmBuffer<Float64Array>(wasmModule, numElements, byteOffset, heapArray)
 }

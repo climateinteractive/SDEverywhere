@@ -1,5 +1,40 @@
 # Changelog
 
+## [0.3.7](https://github.com/climateinteractive/SDEverywhere/compare/build-v0.3.6...build-v0.3.7) (2024-12-13)
+
+
+### Bug Fixes
+
+* remove duplicate implementations of canonical[Var]Name functions ([#580](https://github.com/climateinteractive/SDEverywhere/issues/580)) ([e215d7d](https://github.com/climateinteractive/SDEverywhere/commit/e215d7de5e2fe551a0dd4cb6e3a960180db4b76f)), closes [#578](https://github.com/climateinteractive/SDEverywhere/issues/578)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/parse bumped from ^0.1.1 to ^0.1.2
+
+## [0.3.6](https://github.com/climateinteractive/SDEverywhere/compare/build-v0.3.5...build-v0.3.6) (2024-08-23)
+
+
+### Bug Fixes
+
+* upgrade to vite 5.x + upgrade related packages ([#519](https://github.com/climateinteractive/SDEverywhere/issues/519)) ([b89d013](https://github.com/climateinteractive/SDEverywhere/commit/b89d01319c355fc087b382fd299a7231bf942fc2)), closes [#518](https://github.com/climateinteractive/SDEverywhere/issues/518)
+
+## [0.3.5](https://github.com/climateinteractive/SDEverywhere/compare/build-v0.3.4...build-v0.3.5) (2024-08-17)
+
+
+### Features
+
+* add bundleListing, customLookups, and customOutputs settings to control code generation ([#504](https://github.com/climateinteractive/SDEverywhere/issues/504)) ([fcea642](https://github.com/climateinteractive/SDEverywhere/commit/fcea642a8e0bcd23e3ebf07983f1f30415b4f81d)), closes [#503](https://github.com/climateinteractive/SDEverywhere/issues/503)
+* add optional `outListingFile` config property that copies model listing JSON file as post-generate step ([#493](https://github.com/climateinteractive/SDEverywhere/issues/493)) ([af4abbe](https://github.com/climateinteractive/SDEverywhere/commit/af4abbe09102950f9fe7576ed3b23bea57ec3443)), closes [#492](https://github.com/climateinteractive/SDEverywhere/issues/492)
+* change ModelSpec to allow for simple array of input/output var names ([#495](https://github.com/climateinteractive/SDEverywhere/issues/495)) ([3130901](https://github.com/climateinteractive/SDEverywhere/commit/31309017e207ac6ce0d0bcd20499b12b5b918bb9)), closes [#494](https://github.com/climateinteractive/SDEverywhere/issues/494)
+
+
+### Bug Fixes
+
+* update build and plugin packages to support JS code generation ([#487](https://github.com/climateinteractive/SDEverywhere/issues/487)) ([18b0873](https://github.com/climateinteractive/SDEverywhere/commit/18b0873e74facea772e56f59a1ba4470ebb1fdd6)), closes [#479](https://github.com/climateinteractive/SDEverywhere/issues/479)
+
 ## [0.3.4](https://github.com/climateinteractive/SDEverywhere/compare/build-v0.3.3...build-v0.3.4) (2024-02-23)
 
 

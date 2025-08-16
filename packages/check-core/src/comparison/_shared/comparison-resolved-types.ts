@@ -4,11 +4,18 @@ import type { DatasetKey } from '../../_shared/types'
 import type { InputPosition, ScenarioSpec } from '../../_shared/scenario-spec-types'
 import type { InputVar, OutputVar } from '../../bundle/var-types'
 import type {
+  ComparisonDatasetName,
+  ComparisonDatasetSource,
+  ComparisonGraphId,
   ComparisonScenarioGroupId,
   ComparisonScenarioGroupTitle,
   ComparisonScenarioId,
-  ComparisonViewGraphId,
+  ComparisonViewGraphOrder,
   ComparisonViewGroupTitle,
+  ComparisonViewItemSubtitle,
+  ComparisonViewItemTitle,
+  ComparisonViewRowSubtitle,
+  ComparisonViewRowTitle,
   ComparisonViewSubtitle,
   ComparisonViewTitle
 } from '../config/comparison-spec-types'
@@ -45,11 +52,18 @@ export interface ComparisonResolverUnknownInputError {
   kind: 'unknown-input'
 }
 
+export interface ComparisonResolverUnknownInputSettingGroupError {
+  kind: 'unknown-input-setting-group'
+}
+
 export interface ComparisonResolverInvalidValueError {
   kind: 'invalid-value'
 }
 
-export type ComparisonResolverError = ComparisonResolverUnknownInputError | ComparisonResolverInvalidValueError
+export type ComparisonResolverError =
+  | ComparisonResolverUnknownInputError
+  | ComparisonResolverUnknownInputSettingGroupError
+  | ComparisonResolverInvalidValueError
 
 /** Describes the resolution state for a scenario input relative to a specific model. */
 export interface ComparisonScenarioInputState {
@@ -78,6 +92,12 @@ export interface ComparisonScenarioInputSettings {
   kind: 'input-settings'
   /** The resolutions for the specified inputs in the scenario. */
   inputs: ComparisonScenarioInput[]
+  /**
+   * Whether the settings differ between the "left" and "right" models.  This is
+   * typically only used in the case of a scenario based on model-specific setting
+   * groups, where the set of inputs or the input values differ between the two models.
+   */
+  settingsDiffer?: boolean
 }
 
 /** A configuration that sets all inputs in the model to a certain position. */
@@ -131,7 +151,7 @@ export interface ComparisonScenarioGroup {
   /** The title of the group. */
   title: ComparisonScenarioGroupTitle
   /**
-   * The scenarios that are included in this group.  This includes scenario that were successfully
+   * The scenarios that are included in this group.  This includes scenarios that were successfully
    * resolved as well as scenario references that could not be resolved.
    */
   scenarios: (ComparisonScenario | ComparisonUnresolvedScenarioRef)[]
@@ -145,20 +165,67 @@ export interface ComparisonUnresolvedScenarioGroupRef {
 }
 
 //
+// GRAPH GROUPS
+//
+
+/** A resolved group of graphs. */
+export interface ComparisonGraphGroup {
+  kind: 'graph-group'
+  /** The unique identifier for the group. */
+  id: ComparisonScenarioGroupId
+  /** The graphs that are included in this group. */
+  graphIds: ComparisonGraphId[]
+}
+
+//
 // VIEWS
 //
 
-/** A resolved view definition.  A view presents a set of graphs for a single input scenario. */
+/**
+ * A resolved comparison box to be shown in a view.
+ */
+export interface ComparisonViewBox {
+  kind: 'view-box'
+  /** The title of the box. */
+  title: ComparisonViewItemTitle
+  /** The subtitle of the box. */
+  subtitle?: ComparisonViewItemSubtitle
+  /** The resolved dataset shown in this comparison box. */
+  dataset: ComparisonDataset
+  /** The resolved scenario shown in this comparison box. */
+  scenario: ComparisonScenario
+}
+
+/**
+ * A resolved row of comparison boxes to be shown in a view.
+ */
+export interface ComparisonViewRow {
+  kind: 'view-row'
+  /** The title of the row. */
+  title: ComparisonViewRowTitle
+  /** The subtitle of the row. */
+  subtitle?: ComparisonViewRowSubtitle
+  /** The array of resolved boxes to be shown in the row. */
+  boxes: ComparisonViewBox[]
+}
+/**
+ * A resolved view definition.  A view presents a set of graphs, either for a single input scenario
+ * or for a mix of different dataset/scenario combinations.
+ */
 export interface ComparisonView {
   kind: 'view'
   /** The title of the view. */
   title: ComparisonViewTitle
   /** The subtitle of the view. */
   subtitle?: ComparisonViewSubtitle
-  /** The resolved scenario to be shown in the view. */
-  scenario: ComparisonScenario
+  /** The resolved scenario to be shown in the view if this is a single-scenario view. */
+  scenario?: ComparisonScenario
+  /** The array of resolved rows to be shown in the view if this is a freeform view. */
+  rows?: ComparisonViewRow[]
   /** The graphs to be shown for each scenario view. */
-  graphs: 'all' | ComparisonViewGraphId[]
+  graphIds: ComparisonGraphId[]
+  /** The order in which the graphs will be displayed. */
+  graphOrder: ComparisonViewGraphOrder
 }
 
 /** An unresolved view. */
@@ -168,6 +235,10 @@ export interface ComparisonUnresolvedView {
   title?: ComparisonViewTitle
   /** The requested subtitle of the view, if provided. */
   subtitle?: ComparisonViewSubtitle
+  /** The name of the referenced dataset that could not be resolved. */
+  datasetName?: ComparisonDatasetName
+  /** The source of the referenced dataset that could not be resolved. */
+  datasetSource?: ComparisonDatasetSource
   /** The ID of the referenced scenario that could not be resolved. */
   scenarioId?: ComparisonScenarioId
   /** The ID of the referenced scenario group that could not be resolved. */

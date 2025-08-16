@@ -79,7 +79,7 @@ $indent: 1rem
 .group-container :global(.test-rows)
   display: flex
   flex-direction: column
- 
+
 // Hide passed rows by default
 .group-container :global(.row.passed)
   display: none
@@ -128,7 +128,7 @@ $indent: 1rem
 .bar-container
   display: flex
   flex-direction: row
-  width: 20rem
+  width: 15rem
   height: .8rem
 
 .bar

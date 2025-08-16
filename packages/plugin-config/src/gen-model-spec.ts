@@ -1,15 +1,14 @@
 // Copyright (c) 2022 Climate Interactive / New Venture Fund
 
 import type { ConfigContext } from './context'
-import { sdeNameForVensimVarName } from './var-names'
 
 /**
  * Write the `model-spec.ts` file used by the core package to initialize the model.
  */
 export function writeModelSpec(context: ConfigContext, dstDir: string): void {
   // Create ordered arrays of inputs and outputs
-  const inputVarIds = context.getOrderedInputs().map(i => sdeNameForVensimVarName(i.varName))
-  const outputVarIds = context.getOrderedOutputs().map(o => sdeNameForVensimVarName(o.varName))
+  const inputVarIds = context.getOrderedInputs().map(i => context.canonicalVarId(i.varName))
+  const outputVarIds = context.getOrderedOutputs().map(o => context.canonicalVarId(o.varName))
 
   // Generate the `model-spec.ts` file
   let tsContent = ''

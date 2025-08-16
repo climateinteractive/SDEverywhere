@@ -3,28 +3,25 @@
 import { BlobWorker, spawn, Thread, Transfer, Worker } from 'threads'
 
 import type { ModelRunner } from '@sdeverywhere/runtime'
-import { Outputs, updateOutputIndices } from '@sdeverywhere/runtime'
+import { BufferedRunModelParams, ModelListing, Outputs } from '@sdeverywhere/runtime'
 
 /**
- * Initialize a `ModelRunner` that runs the model asynchronously in a worker thread.
+ * Initialize a `ModelRunner` that runs the model asynchronously in a worker
+ * (a Web Worker when running in a browser environment, or a worker thread
+ * when running in a Node.js environment).
  *
- * In your app project, define a JavaScript file, called `worker.js` for example, that
- * initializes the model worker in the context of the Web Worker:
+ * In your app project, define a JavaScript file, called `worker.js` for example,
+ * that initializes the generated model in the context of a worker thread:
  *
  * ```js
- * import { initWasmModelAndBuffers } from '@sdeverywhere/runtime'
  * import { exposeModelWorker } from '@sdeverywhere/runtime-async/worker'
+ * import loadGeneratedModel from './sde-prep/generated-model.js'
  *
- * async function initWasmModel() {
- *   const wasmModules = loadWasm()
- *   return initWasmModelAndBuffers(...)
- * }
- *
- * exposeModelWorker(initWasmModel)
+ * exposeModelWorker(loadGeneratedModel)
  * ```
  *
  * Then, in your web app, call the `spawnAsyncModelRunner` function, which
- * will spawn the Web Worker and initialize the `ModelRunner` that communicates
+ * will spawn the worker thread and initialize the `ModelRunner` that communicates
  * with the worker:
  *
  * ```js
@@ -57,29 +54,12 @@ async function spawnAsyncModelRunnerWithWorker(worker: Worker): Promise<ModelRun
 
   // Wait for the worker to initialize the wasm model (in the worker thread)
   const initResult = await modelWorker.initModel()
-  let ioBuffer: ArrayBuffer = initResult.ioBuffer
 
-  // The run time is stored in the first 8 bytes of the shared buffer
-  const runTimeOffsetInBytes = 0
-  const runTimeLengthInElements = 1
-  const runTimeLengthInBytes = runTimeLengthInElements * 8
+  // Create a `ModelListing` instance if the listing was defined in the generated model
+  const modelListing = initResult.modelListing ? new ModelListing(initResult.modelListing) : undefined
 
-  // The inputs are stored after the run time in the shared buffer
-  const inputsOffsetInBytes = runTimeOffsetInBytes + runTimeLengthInBytes
-  const inputsLengthInElements: number = initResult.inputsLength
-  const inputsLengthInBytes = inputsLengthInElements * 8
-
-  // The outputs are stored after the inputs in the shared buffer
-  const outputsOffsetInBytes = inputsOffsetInBytes + inputsLengthInBytes
-  const outputsLengthInElements: number = initResult.outputsLength
-  const outputsLengthInBytes = outputsLengthInElements * 8
-
-  // The output indices are (optionally) stored after the outputs in the shared buffer
-  const indicesOffsetInBytes = outputsOffsetInBytes + outputsLengthInBytes
-  const indicesLengthInElements: number = initResult.outputIndicesLength
-
-  // The row length is the number of elements in each row of the outputs buffer
-  const outputRowLength: number = initResult.outputRowLength
+  // Maintain a `BufferedRunModelParams` instance that holds the I/O parameters
+  const params = new BufferedRunModelParams(modelListing)
 
   // Use a flag to ensure that only one request is made at a time
   let running = false
@@ -92,7 +72,7 @@ async function spawnAsyncModelRunnerWithWorker(worker: Worker): Promise<ModelRun
       return new Outputs(initResult.outputVarIds, initResult.startTime, initResult.endTime, initResult.saveFreq)
     },
 
-    runModel: async (inputs, outputs) => {
+    runModel: async (inputs, outputs, options) => {
       if (terminated) {
         throw new Error('Async model runner has already been terminated')
       } else if (running) {
@@ -101,37 +81,29 @@ async function spawnAsyncModelRunnerWithWorker(worker: Worker): Promise<ModelRun
         running = true
       }
 
-      // Capture the current set of input values into the reusable buffer
-      const inputsArray = new Float64Array(ioBuffer, inputsOffsetInBytes, inputsLengthInElements)
-      for (let i = 0; i < inputs.length; i++) {
-        inputsArray[i] = inputs[i].get()
-      }
-
-      // Update the output indices, if needed
-      if (indicesLengthInElements > 0) {
-        const outputSpecs = outputs.varSpecs || []
-        const indicesArray = new Int32Array(ioBuffer, indicesOffsetInBytes, indicesLengthInElements)
-        updateOutputIndices(indicesArray, outputSpecs)
-      }
+      // Update the I/O parameters
+      params.updateFromParams(inputs, outputs, options)
 
       // Run the model in the worker. We pass the underlying `ArrayBuffer`
       // instance back to the worker wrapped in a `Transfer` to make it
       // no-copy transferable, and then the worker will return it back
       // to us.
+      let ioBuffer: ArrayBuffer
       try {
-        ioBuffer = await modelWorker.runModel(Transfer(ioBuffer))
+        ioBuffer = await modelWorker.runModel(Transfer(params.getEncodedBuffer()))
       } finally {
         running = false
       }
 
-      // Save the model run time
-      const runTimeArray = new Float64Array(ioBuffer, runTimeOffsetInBytes, runTimeLengthInElements)
-      outputs.runTimeInMillis = runTimeArray[0]
+      // Once the buffer is transferred to the worker, the buffer in the
+      // `BufferedRunModelParams` becomes "detached" and is no longer usable.
+      // After the buffer is transferred back from the worker, we need to
+      // restore the state of the object to use the new buffer.
+      params.updateFromEncodedBuffer(ioBuffer)
 
-      // Capture the outputs array by copying the data into the given `Outputs`
-      // data structure
-      const outputsArray = new Float64Array(ioBuffer, outputsOffsetInBytes, outputsLengthInElements)
-      outputs.updateFromBuffer(outputsArray, outputRowLength)
+      // Copy the output values and elapsed time from the buffer to the
+      // `Outputs` instance
+      params.finalizeOutputs(outputs)
 
       return outputs
     },

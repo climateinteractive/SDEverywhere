@@ -41,23 +41,15 @@ describe('expandVarNames', () => {
     expect(expandVarNames(true)).toEqual(['_time', '_x[0]', '_x[1]', '_x[2]'])
   })
 
-  // TODO: Note that the EXCEPT clause refers to a subscript that is not in the subdimension.
-  // Due to the way that the legacy ModelLHSReader works (it looks at all subscripts, even those
-  // in the EXCEPT clause), it will pick up the `A1` and include it in the set of expanded names
-  // even though this doesn't seem appropriate.  We will treat this as a quirk of the legacy
-  // reader and therefore skip this test when the legacy code is in use.
-  it.skipIf(process.env.SDE_NONPUBLIC_USE_NEW_PARSE === '0')(
-    'should return names for a subscripted 1D variable that uses a disjoint EXCEPT clause',
-    () => {
-      readInlineModel(`
+  it('should return names for a subscripted 1D variable that uses a disjoint EXCEPT clause', () => {
+    readInlineModel(`
       DimA: A1, A2, A3 ~~|
       SubA: A2, A3 ~~|
       X[SubA] :EXCEPT: [A1] = 1 ~~|
     `)
-      expect(expandVarNames(false)).toEqual(['Time', 'X[A2]', 'X[A3]'])
-      expect(expandVarNames(true)).toEqual(['_time', '_x[1]', '_x[2]'])
-    }
-  )
+    expect(expandVarNames(false)).toEqual(['Time', 'X[A2]', 'X[A3]'])
+    expect(expandVarNames(true)).toEqual(['_time', '_x[1]', '_x[2]'])
+  })
 
   it('should return names for a subscripted 1D variable that refers to subdimensions', () => {
     readInlineModel(`

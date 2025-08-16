@@ -2,7 +2,7 @@
 
 import { ModelLexer, ModelVisitor } from 'antlr4-vensim'
 
-import { canonicalName, cFunctionName } from '../../_shared/names'
+import { canonicalFunctionId, canonicalId } from '../../_shared/canonical-id'
 
 import { createAntlrParser } from './antlr-parser'
 
@@ -82,7 +82,7 @@ export class ExprReader extends ModelVisitor {
   visitCall(ctx) {
     // Convert the function name from Vensim to C format
     const vensimFnName = ctx.Id().getText()
-    const fnId = cFunctionName(vensimFnName)
+    const fnId = canonicalFunctionId(vensimFnName)
     this.callStack.push({ fn: fnId, args: [] })
     super.visitCall(ctx)
     const callInfo = this.callStack.pop()
@@ -109,7 +109,7 @@ export class ExprReader extends ModelVisitor {
   visitVar(ctx) {
     // Convert the variable name from Vensim to C format
     const vensimVarName = ctx.Id().getText().trim()
-    const varId = canonicalName(vensimVarName)
+    const varId = canonicalId(vensimVarName)
 
     // Process the subscripts (if any) that follow the variable name
     this.subscripts = undefined
@@ -118,7 +118,7 @@ export class ExprReader extends ModelVisitor {
     const subscriptRefs = subscriptNames?.map(name => {
       return {
         subName: name,
-        subId: canonicalName(name)
+        subId: canonicalId(name)
       }
     })
     this.subscripts = undefined
@@ -178,7 +178,7 @@ export class ExprReader extends ModelVisitor {
   visitLookupCall(ctx) {
     // Process the lookup variable name
     const lookupVarName = ctx.Id().getText()
-    const lookupVarId = canonicalName(lookupVarName)
+    const lookupVarId = canonicalId(lookupVarName)
 
     // Process any subscripts that follow the variable name
     if (ctx.subscriptList()) {
@@ -188,7 +188,7 @@ export class ExprReader extends ModelVisitor {
     const subscriptRefs = subscriptNames?.map(name => {
       return {
         subName: name,
-        subId: canonicalName(name)
+        subId: canonicalId(name)
       }
     })
     this.subscripts = undefined

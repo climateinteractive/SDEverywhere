@@ -21,7 +21,7 @@ pnpm \
 -F build \
 -r build
 
-# Run the C-level model/integration tests
+# Run the C-level integration tests
 pnpm run test:c-int
 
 # Fail the build if there are any untracked or modified files.  This usually

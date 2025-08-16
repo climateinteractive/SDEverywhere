@@ -1,0 +1,132 @@
+FINAL TIME
+0	1
+Fractional Increase[A1,A1]
+0	0
+1	0
+Fractional Increase[A1,A2]
+0	1
+1	1
+Fractional Increase[A1,A3]
+0	1
+1	1
+Fractional Increase[A2,A1]
+0	0
+1	0
+Fractional Increase[A2,A2]
+0	1
+1	1
+Fractional Increase[A2,A3]
+0	0
+1	0
+Fractional Increase[A3,A1]
+0	0
+1	0
+Fractional Increase[A3,A2]
+0	0
+1	0
+Fractional Increase[A3,A3]
+0	1
+1	1
+INITIAL TIME
+0	0
+Intensity[A1]
+0	1000
+Intensity[A2]
+0	1000
+Intensity[A3]
+0	1000
+Intensity[B1]
+0	1000
+Intensity[B2]
+0	1000
+Intensity[B3]
+0	1000
+Intensity Diff[A1,A1]
+0	990
+1	990
+Intensity Diff[A1,A2]
+0	666
+1	666
+Intensity Diff[A1,A3]
+0	666
+1	666
+Intensity Diff[A2,A1]
+0	990
+1	990
+Intensity Diff[A2,A2]
+0	600
+1	600
+Intensity Diff[A2,A3]
+0	666
+1	666
+Intensity Diff[A3,A1]
+0	990
+1	990
+Intensity Diff[A3,A2]
+0	600
+1	600
+Intensity Diff[A3,A3]
+0	100
+1	100
+Intensity Diff[B1,B1]
+0	990
+1	990
+Intensity Diff[B1,B2]
+0	777
+1	777
+Intensity Diff[B1,B3]
+0	777
+1	777
+Intensity Diff[B2,B1]
+0	990
+1	990
+Intensity Diff[B2,B2]
+0	600
+1	600
+Intensity Diff[B2,B3]
+0	777
+1	777
+Intensity Diff[B3,B1]
+0	990
+1	990
+Intensity Diff[B3,B2]
+0	600
+1	600
+Intensity Diff[B3,B3]
+0	100
+1	100
+Other[A1]
+0	10
+Other[A2]
+0	400
+Other[A3]
+0	900
+Other[B1]
+0	10
+Other[B2]
+0	400
+Other[B3]
+0	900
+Rank[A1]
+0	1
+Rank[A2]
+0	2
+Rank[A3]
+0	3
+Rank[B1]
+0	1
+Rank[B2]
+0	2
+Rank[B3]
+0	3
+SAVEPER
+0	1
+1	1
+Something[A1]
+0	100
+Something[A2]
+0	200
+Something[A3]
+0	300
+TIME STEP
+0	1

@@ -1,5 +1,42 @@
 # Changelog
 
+## [0.1.11](https://github.com/climateinteractive/SDEverywhere/compare/plugin-vite-v0.1.10...plugin-vite-v0.1.11) (2024-12-13)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * peerDependencies
+    * @sdeverywhere/build bumped from ^0.3.6 to ^0.3.7
+
+## [0.1.10](https://github.com/climateinteractive/SDEverywhere/compare/plugin-vite-v0.1.9...plugin-vite-v0.1.10) (2024-08-23)
+
+
+### Bug Fixes
+
+* upgrade to vite 5.x + upgrade related packages ([#519](https://github.com/climateinteractive/SDEverywhere/issues/519)) ([b89d013](https://github.com/climateinteractive/SDEverywhere/commit/b89d01319c355fc087b382fd299a7231bf942fc2)), closes [#518](https://github.com/climateinteractive/SDEverywhere/issues/518)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * peerDependencies
+    * @sdeverywhere/build bumped from ^0.3.5 to ^0.3.6
+
+## [0.1.9](https://github.com/climateinteractive/SDEverywhere/compare/plugin-vite-v0.1.8...plugin-vite-v0.1.9) (2024-08-17)
+
+
+### Features
+
+* add compiler and runtime support for generating pure JS models ([#486](https://github.com/climateinteractive/SDEverywhere/issues/486)) ([42d4dc6](https://github.com/climateinteractive/SDEverywhere/commit/42d4dc6da2fba3b34474c634374e07bc56d72868)), closes [#437](https://github.com/climateinteractive/SDEverywhere/issues/437)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * peerDependencies
+    * @sdeverywhere/build bumped from ^0.3.0 to ^0.3.5
+
 ## [0.1.8](https://github.com/climateinteractive/SDEverywhere/compare/plugin-vite-v0.1.7...plugin-vite-v0.1.8) (2023-09-29)
 
 Note: This is a redo of the 0.1.7 release to workaround an npmjs registry issue.  There are no actual changes in this release.

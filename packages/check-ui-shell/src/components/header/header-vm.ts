@@ -3,7 +3,6 @@
 import type { Writable } from 'svelte/store'
 import { writable } from 'svelte/store'
 import type { ComparisonConfig } from '@sdeverywhere/check-core'
-import { localStorageWritableBoolean } from '../../_shared/stores'
 
 export interface HeaderViewModel {
   nameL?: string
@@ -12,18 +11,18 @@ export interface HeaderViewModel {
   bundleNamesR: Writable<string[]>
   thresholds?: string[]
   simplifyScenarios?: Writable<boolean>
+  controlsVisible: Writable<boolean>
+  zoom: Writable<number>
+  consistentYRange: Writable<boolean>
 }
 
 export function createHeaderViewModel(
   comparisonConfig: ComparisonConfig | undefined,
-  includeSimplifyScenarios: boolean
+  simplifyScenarios: Writable<boolean> | undefined,
+  zoom: Writable<number>,
+  consistentYRange: Writable<boolean>
 ): HeaderViewModel {
-  let simplifyScenarios: Writable<boolean>
-  if (includeSimplifyScenarios) {
-    simplifyScenarios = localStorageWritableBoolean('sde-check-simplify-scenarios', false)
-  } else {
-    simplifyScenarios = undefined
-  }
+  const controlsVisible = writable(false)
 
   // Only include the comparison-related header elements if the comparison
   // config is defined
@@ -42,13 +41,19 @@ export function createHeaderViewModel(
       bundleNamesL: writable([comparisonConfig.bundleL.name]),
       bundleNamesR: writable([comparisonConfig.bundleR.name]),
       thresholds: thresholdStrings,
-      simplifyScenarios
+      simplifyScenarios,
+      controlsVisible,
+      zoom,
+      consistentYRange
     }
   } else {
     return {
       bundleNamesL: writable([]),
       bundleNamesR: writable([]),
-      simplifyScenarios
+      simplifyScenarios,
+      controlsVisible,
+      zoom,
+      consistentYRange
     }
   }
 }

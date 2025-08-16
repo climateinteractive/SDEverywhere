@@ -1,6 +1,6 @@
 {
   "name": "@sdeverywhere/plugin-vite",
-  "version": "0.1.8",
+  "version": "0.1.11",
   "files": [
     "dist/**"
   ],
@@ -24,18 +24,18 @@
     "test": "echo No tests yet",
     "test:watch": "echo No tests yet",
     "test:ci": "echo No tests yet",
-    "type-check": "tsc --noEmit -p tsconfig-build.json",
+    "type-check": "tsc --noEmit -p tsconfig-test.json",
     "build": "tsup",
     "docs": "../../scripts/gen-docs.js",
     "ci:build": "run-s clean lint prettier:check test:ci type-check build docs"
   },
   "peerDependencies": {
-    "@sdeverywhere/build": "^0.3.0",
-    "vite": "^3.0.0 || ^4.0.0"
+    "@sdeverywhere/build": "^0.3.7",
+    "vite": "^3.0.0 || ^4.0.0 || ^5.0.0"
   },
   "devDependencies": {
     "@sdeverywhere/build": "*",
-    "vite": "^4.4.9"
+    "vite": "^5.4.2"
   },
   "author": "Climate Interactive",
   "license": "MIT",

@@ -1,5 +1,74 @@
 # Changelog
 
+## [0.7.23](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.22...compile-v0.7.23) (2025-02-11)
+
+
+### Features
+
+* add `separateAllVarsWithDims` option to spec file to separate all vars with a dimension on the LHS ([#602](https://github.com/climateinteractive/SDEverywhere/issues/602)) ([9b69f52](https://github.com/climateinteractive/SDEverywhere/commit/9b69f5267eb6cd37ab63632420807d9719b15e10)), closes [#601](https://github.com/climateinteractive/SDEverywhere/issues/601)
+
+## [0.7.22](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.21...compile-v0.7.22) (2025-01-09)
+
+
+### Bug Fixes
+
+* add arrow that was missing in cyclic dependency error message ([#600](https://github.com/climateinteractive/SDEverywhere/issues/600)) ([c578f74](https://github.com/climateinteractive/SDEverywhere/commit/c578f742fa18710467dbe3c7511f35a280eb2072)), closes [#599](https://github.com/climateinteractive/SDEverywhere/issues/599)
+* allow for resetting a lookup at runtime back to its original data ([#593](https://github.com/climateinteractive/SDEverywhere/issues/593)) ([cfec212](https://github.com/climateinteractive/SDEverywhere/commit/cfec2129c681b8ae5e1ade05b73c37f2c739c5d9)), closes [#592](https://github.com/climateinteractive/SDEverywhere/issues/592)
+
+## [0.7.21](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.20...compile-v0.7.21) (2024-12-13)
+
+
+### Bug Fixes
+
+* cast index values to double when used in expression position in C code generation ([#591](https://github.com/climateinteractive/SDEverywhere/issues/591)) ([6e14176](https://github.com/climateinteractive/SDEverywhere/commit/6e1417602dd4c48a11983256ac12959533214d22)), closes [#568](https://github.com/climateinteractive/SDEverywhere/issues/568)
+* correct code generation for cases involving multiple dimensions that resolve to same family ([#588](https://github.com/climateinteractive/SDEverywhere/issues/588)) ([6c4748f](https://github.com/climateinteractive/SDEverywhere/commit/6c4748fae8245add84a50a85ec6cf869f61dc7ad))
+* correct handling of `ALLOCATE AVAILABLE` calls where arguments are subscripted variables ([#590](https://github.com/climateinteractive/SDEverywhere/issues/590)) ([0f741a5](https://github.com/climateinteractive/SDEverywhere/commit/0f741a537fad019023d7e4850c85830270de2310)), closes [#377](https://github.com/climateinteractive/SDEverywhere/issues/377)
+* remove duplicate implementations of canonical[Var]Name functions ([#580](https://github.com/climateinteractive/SDEverywhere/issues/580)) ([e215d7d](https://github.com/climateinteractive/SDEverywhere/commit/e215d7de5e2fe551a0dd4cb6e3a960180db4b76f)), closes [#578](https://github.com/climateinteractive/SDEverywhere/issues/578)
+* remove legacy preprocessor implementation and use newer one from parse package ([#576](https://github.com/climateinteractive/SDEverywhere/issues/576)) ([c04e0ca](https://github.com/climateinteractive/SDEverywhere/commit/c04e0ca5143c7f31ba23f7dfed7a008428b77867)), closes [#575](https://github.com/climateinteractive/SDEverywhere/issues/575)
+* restore alphabetical sorting for `sde generate --preprocess` command ([#587](https://github.com/climateinteractive/SDEverywhere/issues/587)) ([039fb79](https://github.com/climateinteractive/SDEverywhere/commit/039fb7923df2c62d80212685aa7a5d9f49e261ee)), closes [#586](https://github.com/climateinteractive/SDEverywhere/issues/586)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/parse bumped from ^0.1.1 to ^0.1.2
+
+## [0.7.20](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.19...compile-v0.7.20) (2024-09-15)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/parse bumped from ^0.1.0 to ^0.1.1
+
+## [0.7.19](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.18...compile-v0.7.19) (2024-08-28)
+
+
+### Bug Fixes
+
+* cache sorted variables to improve compile performance ([#531](https://github.com/climateinteractive/SDEverywhere/issues/531)) ([0c359c8](https://github.com/climateinteractive/SDEverywhere/commit/0c359c842d0692e78df54f16f559d13f9ee713b9)), closes [#528](https://github.com/climateinteractive/SDEverywhere/issues/528)
+* include 'initial' variables in JSON model listing ([#529](https://github.com/climateinteractive/SDEverywhere/issues/529)) ([2e1a004](https://github.com/climateinteractive/SDEverywhere/commit/2e1a004555c9d30658179900bca099d1ad4820ea)), closes [#527](https://github.com/climateinteractive/SDEverywhere/issues/527)
+
+## [0.7.18](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.17...compile-v0.7.18) (2024-08-17)
+
+
+### Features
+
+* add bundleListing, customLookups, and customOutputs settings to control code generation ([#504](https://github.com/climateinteractive/SDEverywhere/issues/504)) ([fcea642](https://github.com/climateinteractive/SDEverywhere/commit/fcea642a8e0bcd23e3ebf07983f1f30415b4f81d)), closes [#503](https://github.com/climateinteractive/SDEverywhere/issues/503)
+* add compiler and runtime support for generating pure JS models ([#486](https://github.com/climateinteractive/SDEverywhere/issues/486)) ([42d4dc6](https://github.com/climateinteractive/SDEverywhere/commit/42d4dc6da2fba3b34474c634374e07bc56d72868)), closes [#437](https://github.com/climateinteractive/SDEverywhere/issues/437)
+* add support for GAME function and for providing gaming inputs at runtime ([#505](https://github.com/climateinteractive/SDEverywhere/issues/505)) ([338e91e](https://github.com/climateinteractive/SDEverywhere/commit/338e91edff16ce47109ef50cdbddef9ae7a27fa2)), closes [#483](https://github.com/climateinteractive/SDEverywhere/issues/483)
+* allow for creating a LookupDef without manually initializing a ModelListing ([#502](https://github.com/climateinteractive/SDEverywhere/issues/502)) ([5690055](https://github.com/climateinteractive/SDEverywhere/commit/569005502d2240a22b6a31284215b89ec1f8de05)), closes [#501](https://github.com/climateinteractive/SDEverywhere/issues/501)
+* allow for overriding data variables and lookups at runtime ([#490](https://github.com/climateinteractive/SDEverywhere/issues/490)) ([6c888e8](https://github.com/climateinteractive/SDEverywhere/commit/6c888e887336e7b874dbde7e318e993936296c48)), closes [#472](https://github.com/climateinteractive/SDEverywhere/issues/472)
+
+
+### Bug Fixes
+
+* change encoding of variable and lookup indices to allow for arbitrary number of subscripts ([#507](https://github.com/climateinteractive/SDEverywhere/issues/507)) ([697e943](https://github.com/climateinteractive/SDEverywhere/commit/697e94397ca00b33d2e6216d63f4cfbc2f160fa0)), closes [#506](https://github.com/climateinteractive/SDEverywhere/issues/506)
+* remove old implementation of read and code gen phases ([#473](https://github.com/climateinteractive/SDEverywhere/issues/473)) ([8de0d16](https://github.com/climateinteractive/SDEverywhere/commit/8de0d167a59d0722352e73c31cbbdd7c09ac150f)), closes [#448](https://github.com/climateinteractive/SDEverywhere/issues/448)
+* update build and plugin packages to support JS code generation ([#487](https://github.com/climateinteractive/SDEverywhere/issues/487)) ([18b0873](https://github.com/climateinteractive/SDEverywhere/commit/18b0873e74facea772e56f59a1ba4470ebb1fdd6)), closes [#479](https://github.com/climateinteractive/SDEverywhere/issues/479)
+
 ## [0.7.17](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.16...compile-v0.7.17) (2024-04-22)
 
 

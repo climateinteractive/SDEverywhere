@@ -1,10 +1,11 @@
 // Copyright (c) 2021-2022 Climate Interactive / New Venture Fund
 
 import type { DatasetKey } from '../../_shared/types'
-import type { LoadedBundle, NamedBundle } from '../../bundle/bundle-types'
-import type { ModelInputs } from '../../bundle/model-inputs'
+import type { BundleGraphId, LoadedBundle, ModelSpec, NamedBundle } from '../../bundle/bundle-types'
 
-import type { ComparisonScenario, ComparisonViewGroup } from '../_shared/comparison-resolved-types'
+import type { ComparisonDataset, ComparisonScenario, ComparisonViewGroup } from '../_shared/comparison-resolved-types'
+import type { ComparisonGroupSummariesByCategory, ComparisonGroupSummary } from '../report/comparison-group-types'
+import type { ComparisonTestSummary } from '../report/comparison-report-types'
 
 import type { ComparisonDatasets } from './comparison-datasets'
 import type { ComparisonScenarios } from './comparison-scenarios'
@@ -12,6 +13,20 @@ import type { ComparisonSpecs, ComparisonSpecsSource } from './comparison-spec-t
 import { parseComparisonSpecs } from './parse/comparison-parser'
 import type { ComparisonResolvedDefs } from './resolve/comparison-resolver'
 import { resolveComparisonSpecs } from './resolve/comparison-resolver'
+
+/**
+ * Describes an extra plot to be shown in a comparison graph.
+ */
+export interface ComparisonPlot {
+  /** The dataset key for the plot. */
+  datasetKey: DatasetKey
+  /** The plot color. */
+  color: string
+  /** The plot style.  If undefined, defaults to 'normal'. */
+  style?: 'normal' | 'dashed'
+  /** The plot line width, in px units.  If undefined, a default width will be used. */
+  lineWidth?: number
+}
 
 export interface ComparisonDatasetOptions {
   /**
@@ -26,6 +41,119 @@ export interface ComparisonDatasetOptions {
    * datasets (for example, to omit datasets that are not relevant).
    */
   datasetKeysForScenario?: (allDatasetKeys: DatasetKey[], scenario: ComparisonScenario) => DatasetKey[]
+  /**
+   * An optional function that allows for including additional reference plots
+   * on a comparison graph for a given dataset and scenario.  By default, no
+   * additional reference plots are included, but if a custom function is
+   * provided, it can return an array of `ComparisonPlot` objects.
+   */
+  referencePlotsForDataset?: (dataset: ComparisonDataset, scenario: ComparisonScenario) => ComparisonPlot[]
+  /**
+   * An optional function that allows for customizing the set of context graphs
+   * that are shown for a given dataset and scenario.  By default, all graphs in
+   * which the dataset appears will be shown, but if a custom function is provided,
+   * it can return a different set of graphs (for example, to omit graphs that are
+   * not relevant under the given scenario).
+   */
+  contextGraphIdsForDataset?: (dataset: ComparisonDataset, scenario: ComparisonScenario) => BundleGraphId[]
+}
+
+/**
+ * Describes a row in the comparison report summary view.
+ */
+export interface ComparisonReportSummaryRow {
+  /** The group summary represented by the row. */
+  groupSummary: ComparisonGroupSummary
+  /** The custom title for the row (this overrides the default title derived from the summary). */
+  title?: string
+  /** The custom subtitle for the row (this overrides the default subtitle derived from the summary). */
+  subtitle?: string
+}
+
+/**
+ * Describes a section in the comparison report summary view.
+ */
+export interface ComparisonReportSummarySection {
+  /** The text to display for the section header. */
+  headerText: string
+  /** The summary rows to display in the section. */
+  rows: ComparisonReportSummaryRow[]
+  /**
+   * The initial expanded state of the section.  If undefined, defaults to 'expanded-if-diffs',
+   * meaning the section will be initially expanded only if any rows have differences, otherwise
+   * it will be initially collapsed.
+   */
+  initialState?: 'collapsed' | 'expanded' | 'expanded-if-diffs'
+}
+
+/**
+ * Describes an item (box) in the comparison report detail view.
+ */
+export interface ComparisonReportDetailItem {
+  /** The title of the item. */
+  title: string
+  /** The subtitle of the item (if any). */
+  subtitle?: string
+  /** The scenario for the item. */
+  scenario: ComparisonScenario
+  /** The test summary for the item. */
+  testSummary: ComparisonTestSummary
+}
+
+/**
+ * Describes a row in the comparison report detail view.
+ */
+export interface ComparisonReportDetailRow {
+  /** The title of the row. */
+  title: string
+  /** The subtitle of the row (if any). */
+  subtitle?: string
+  /** The score for the row (the meaning of the value depends on the chosen statistical method). */
+  score: number
+  /** The items in this row (one item per box). */
+  items: ComparisonReportDetailItem[]
+}
+
+export interface ComparisonReportOptions {
+  /**
+   * An optional function that allows for customizing the order and grouping of
+   * sections and rows in the "comparisons by scenario" summary view.
+   *
+   * @param summaries The comparison summaries, one summary per scenario.
+   * @returns The sections to display in the "comparisons by scenario" summary view.
+   */
+  summarySectionsForComparisonsByScenario?: (
+    summaries: ComparisonGroupSummariesByCategory
+  ) => ComparisonReportSummarySection[]
+
+  /**
+   * An optional function that allows for customizing the order and grouping of
+   * sections and rows in the "comparisons by dataset" summary view.
+   *
+   * @param summaries The comparison summaries, one summary per dataset.
+   * @returns The sections to display in the "comparisons by dataset" summary view.
+   */
+  summarySectionsForComparisonsByDataset?: (
+    summaries: ComparisonGroupSummariesByCategory
+  ) => ComparisonReportSummarySection[]
+
+  /**
+   * An optional function that allows for customizing the order of rows and boxes
+   * in the detail view for a scenario.
+   *
+   * @param rows The original rows to be displayed in the detail view for a scenario.
+   * @returns The customized rows to display in the detail view for a scenario.
+   */
+  detailRowsForScenario?: (rows: ComparisonReportDetailRow[]) => ComparisonReportDetailRow[]
+
+  /**
+   * An optional function that allows for customizing the order of rows and boxes
+   * in the detail view for a dataset.
+   *
+   * @param rows The original rows to be displayed in the detail view for a dataset.
+   * @returns The customized rows to display in the detail view for a dataset.
+   */
+  detailRowsForDataset?: (rows: ComparisonReportDetailRow[]) => ComparisonReportDetailRow[]
 }
 
 export interface ComparisonOptions {
@@ -43,6 +171,8 @@ export interface ComparisonOptions {
   specs: (ComparisonSpecs | ComparisonSpecsSource)[]
   /** Optional configuration for the datasets that are compared for different scenarios. */
   datasets?: ComparisonDatasetOptions
+  /** Options for customizing the comparison report. */
+  report?: ComparisonReportOptions
 }
 
 export interface ComparisonConfig {
@@ -61,24 +191,27 @@ export interface ComparisonConfig {
   datasets: ComparisonDatasets
   /** The set of resolved view groups. */
   viewGroups: ComparisonViewGroup[]
+  /** Options for customizing the comparison report. */
+  reportOptions?: ComparisonReportOptions
 }
 
 /**
  * Expand and resolve all the scenario and view specs in the provided sources, which can
  * be a mix of YAML, JSON, and object specs.
  *
- * @param modelInputsL The model inputs for the "left" bundle being compared.
- * @param modelInputsR The model inputs for the "right" bundle being compared.
+ * @param modelSpecL The model spec for the "left" bundle being compared.
+ * @param modelSpecR The model spec for the "right" bundle being compared.
  * @param specSources The scenario and view spec sources.
  */
 export function resolveComparisonSpecsFromSources(
-  modelInputsL: ModelInputs,
-  modelInputsR: ModelInputs,
+  modelSpecL: ModelSpec,
+  modelSpecR: ModelSpec,
   specSources: (ComparisonSpecs | ComparisonSpecsSource)[]
 ): ComparisonResolvedDefs {
   const combinedSpecs: ComparisonSpecs = {
     scenarios: [],
     scenarioGroups: [],
+    graphGroups: [],
     viewGroups: []
   }
 
@@ -97,10 +230,11 @@ export function resolveComparisonSpecsFromSources(
     } else {
       specs = specSource
     }
-    combinedSpecs.scenarios.push(...specs.scenarios)
-    combinedSpecs.scenarioGroups.push(...specs.scenarioGroups)
-    combinedSpecs.viewGroups.push(...specs.viewGroups)
+    combinedSpecs.scenarios.push(...(specs.scenarios || []))
+    combinedSpecs.scenarioGroups.push(...(specs.scenarioGroups || []))
+    combinedSpecs.graphGroups.push(...(specs.graphGroups || []))
+    combinedSpecs.viewGroups.push(...(specs.viewGroups || []))
   }
 
-  return resolveComparisonSpecs(modelInputsL, modelInputsR, combinedSpecs)
+  return resolveComparisonSpecs(modelSpecL, modelSpecR, combinedSpecs)
 }

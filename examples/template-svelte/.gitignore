@@ -1,0 +1,6 @@
+baselines
+node_modules
+sde-prep
+*.vdf
+*.vdfx
+*.3vmfx

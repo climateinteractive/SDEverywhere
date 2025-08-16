@@ -1,6 +1,6 @@
 {
   "name": "@sdeverywhere/parse",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "files": [
     "dist/**"
   ],
@@ -22,7 +22,7 @@
     "prettier:fix": "prettier --write .",
     "precommit": "../../scripts/precommit",
     "test": "vitest run",
-    "test:watch": "vitest",
+    "test:watch": "vitest --hideSkippedTests",
     "test:ci": "vitest run",
     "type-check": "tsc --noEmit -p tsconfig-test.json",
     "build": "tsup",
@@ -33,7 +33,7 @@
   "dependencies": {
     "@rgrove/parse-xml": "^4.1.0",
     "antlr4": "4.12.0",
-    "antlr4-vensim": "0.6.2",
+    "antlr4-vensim": "0.6.3",
     "assert-never": "^1.2.1",
     "split-string": "^6.1.0"
   },

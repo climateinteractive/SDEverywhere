@@ -3,9 +3,8 @@
 <!-- SCRIPT -->
 <script lang='ts'>
 
-import { createEventDispatcher } from 'svelte'
-
-import SummaryRow from './comparison-summary-row.svelte'
+import ComparisonSummarySection from './comparison-summary-section.svelte'
+import ComparisonSummaryToc from './comparison-summary-toc.svelte'
 import type { ComparisonSummaryViewModel } from './comparison-summary-vm'
 
 export let viewModel: ComparisonSummaryViewModel
@@ -16,26 +15,20 @@ export let viewModel: ComparisonSummaryViewModel
 
 
 <!-- TEMPLATE -->
-<template lang='pug'>
+<template>
 
-include comparison-summary.pug
-
-.comparison-summary-container
-  +if('viewModel.kind === "views"')
-    +view-group-sections
-    +elseif('viewModel.kind === "by-scenario"')
-      +section('scenariosWithErrors')
-      +section('scenariosOnlyInLeft')
-      +section('scenariosOnlyInRight')
-      +section('scenariosWithDiffs')
-      +section('scenariosWithoutDiffs')
-    +elseif('viewModel.kind === "by-dataset"')
-      +section('datasetsWithErrors')
-      +section('datasetsOnlyInLeft')
-      +section('datasetsOnlyInRight')
-      +section('datasetsWithDiffs')
-      +section('datasetsWithoutDiffs')
-  .footer
+<div class="comparison-summary-container">
+  <!-- TODO: Add an option to show the TOC -->
+  {#if viewModel.kind === ''}
+    <ComparisonSummaryToc sections={viewModel.sections} />
+  {/if}
+  {#each viewModel.sections as section}
+    <div class="section-container" id={section.header.rowKey}>
+      <ComparisonSummarySection viewModel={section} on:command />
+    </div>
+  {/each}
+  <div class="footer"></div>
+</div>
 
 </template>
 
@@ -53,6 +46,8 @@ include comparison-summary.pug
 .section-container
   display: flex
   flex-direction: column
+  // Set scroll margin to account for headers when jumping to anchors
+  scroll-margin-top: 5rem
   &:not(:last-child)
     margin-bottom: 1.5rem
 
