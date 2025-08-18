@@ -24,6 +24,8 @@ let nextLevelVarSeq = 1
 let nextAuxVarSeq = 1
 // parsed csv data cache
 let csvData = new Map()
+// parsed xlsx data cache
+let xlsxData = new Map()
 
 // Newer versions of the xlsx package require manually setting the `fs` instance
 // before using the `XLSX.readFile` function
@@ -38,6 +40,7 @@ export function resetHelperState() {
   nextLevelVarSeq = 1
   nextAuxVarSeq = 1
   csvData.clear()
+  xlsxData.clear()
 }
 
 export let canonicalName = name => {
@@ -200,7 +203,15 @@ export let isIterable = obj => {
 }
 // Command helpers
 export let readXlsx = pathname => {
-  return XLSX.readFile(pathname, { cellDates: true })
+  // Read the XLSX file at the pathname and parse it.
+  // Return a `XLSX.WorkBook` object that can be used to access the data.
+  // Cache parsed files to support multiple reads from different equations.
+  let xlsx = xlsxData.get(pathname)
+  if (!xlsx) {
+    xlsx = XLSX.readFile(pathname, { cellDates: true })
+    xlsxData.set(pathname, xlsx)
+  }
+  return xlsx
 }
 export let readCsv = (pathname, delimiter = ',') => {
   // Read the CSV file at the pathname and parse it with the given delimiter.
@@ -208,7 +219,7 @@ export let readCsv = (pathname, delimiter = ',') => {
   // If there is a header row, it is returned as the first row.
   // Cache parsed files to support multiple reads from different equations.
   let csv = csvData.get(pathname)
-  if (csv == null) {
+  if (!csv) {
     const CSV_PARSE_OPTS = {
       delimiter,
       columns: false,
