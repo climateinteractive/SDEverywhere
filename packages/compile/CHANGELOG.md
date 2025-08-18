@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.24](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.23...compile-v0.7.24) (2025-08-18)
+
+
+### Performance Improvements
+
+* cache parsed XLSX file data to improve code gen performance ([#641](https://github.com/climateinteractive/SDEverywhere/issues/641)) ([f7f4e8b](https://github.com/climateinteractive/SDEverywhere/commit/f7f4e8bf0d9f4706af9ac10dbd7cee927c9b5ec1)), closes [#640](https://github.com/climateinteractive/SDEverywhere/issues/640)
+
 ## [0.7.23](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.22...compile-v0.7.23) (2025-02-11)
 
 
