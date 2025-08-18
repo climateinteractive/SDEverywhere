@@ -349,6 +349,56 @@ describe('parseXmileVariableDef with <aux>', () => {
     ])
   })
 
+  it('should parse an aux variable definition with array function using wildcard (one dimension)', () => {
+    const v = xml(`
+      <aux name="x">
+        <dimensions>
+          <dim name="DimA" />
+        </dimensions>
+        <eqn>SUM(y[*])</eqn>
+      </aux>
+    `)
+    // TODO: For now the parser will replace the wildcard with a placeholder dimension name;
+    // we should have a better way to express this in the AST
+    expect(parseXmileVariableDef(v)).toEqual([
+      exprEqn(varDef('x', ['DimA']), call('SUM', varRef('y', ['_SDE_WILDCARD_!'])))
+    ])
+  })
+
+  it('should parse an aux variable definition with array function using wildcard (two dimensions, first is wildcard)', () => {
+    const v = xml(`
+      <aux name="x">
+        <dimensions>
+          <dim name="DimA" />
+          <dim name="DimB" />
+        </dimensions>
+        <eqn>SUM(y[*, DimB])</eqn>
+      </aux>
+    `)
+    // TODO: For now the parser will replace the wildcard with a placeholder dimension name;
+    // we should have a better way to express this in the AST
+    expect(parseXmileVariableDef(v)).toEqual([
+      exprEqn(varDef('x', ['DimA', 'DimB']), call('SUM', varRef('y', ['_SDE_WILDCARD_!', 'DimB'])))
+    ])
+  })
+
+  it('should parse an aux variable definition with array function using wildcard (two dimensions, second is wildcard)', () => {
+    const v = xml(`
+      <aux name="x">
+        <dimensions>
+          <dim name="DimA" />
+          <dim name="DimB" />
+        </dimensions>
+        <eqn>SUM(y[DimA, *])</eqn>
+      </aux>
+    `)
+    // TODO: For now the parser will replace the wildcard with a placeholder dimension name;
+    // we should have a better way to express this in the AST
+    expect(parseXmileVariableDef(v)).toEqual([
+      exprEqn(varDef('x', ['DimA', 'DimB']), call('SUM', varRef('y', ['DimA', '_SDE_WILDCARD_!'])))
+    ])
+  })
+
   it('should parse an aux variable definition with XMILE conditional expression', () => {
     const v = xml(`
       <aux name="x">

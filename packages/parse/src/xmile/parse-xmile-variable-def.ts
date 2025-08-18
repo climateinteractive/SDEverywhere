@@ -247,6 +247,14 @@ function parseExpr(exprText: string): Expr {
   // Since we only support the latter in the compile package, it's better if we transform
   // the XMILE form to Vensim form, and then we can use the Vensim expression parser.
   exprText = exprText.replace(conditionalRegExp, 'IF THEN ELSE($1, $2, $3)')
+
+  // XXX: XMILE uses different syntax for array functions than Vensim.  XMILE uses an
+  // asterisk (wildcard), e.g., `SUM(x[*])`, while Vensim uses e.g., `SUM(x[DimA!])`.
+  // To allow for reusing the Vensim expression parser, we will replace the XMILE wildcard
+  // with the Vensim syntax (using a placeholder dimension name; the real one will be
+  // resolved later).
+  exprText = exprText.replace(/\[([^\]]*)\*([^\]]*)\]/g, '[$1_SDE_WILDCARD_!$2]')
+
   return parseVensimExpr(exprText)
 }
 
