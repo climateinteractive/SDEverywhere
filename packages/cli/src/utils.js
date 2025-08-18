@@ -24,25 +24,45 @@ export function execCmd(cmd) {
 }
 
 /**
- * Normalize a model pathname that may or may not include the .mdl extension.
+ * Normalize a model pathname that may or may not include the .mdl or .xmile/.stmx extension.
+ * If the pathname does not end with .mdl, .xmile, or .stmx, this will attempt to find a
+ * file with one of those extensions.
  * If there is not a path in the model argument, default to the current working directory.
+ *
  * Return an object with properties that look like this:
  *   modelDirname: '/Users/todd/src/models/arrays'
  *   modelName: 'arrays'
  *   modelPathname: '/Users/todd/src/models/arrays/arrays.mdl'
+ *   modelKind: 'vensim'
  *
  * @param model A path to a Vensim model file.
  * @return An object with the properties specified above.
  */
 export function modelPathProps(model) {
-  let p = R.merge({ ext: '.mdl' }, R.pick(['dir', 'name'], path.parse(model)))
+  const parsedPath = path.parse(model)
+  if (parsedPath.ext === '') {
+    const exts = ['.mdl', '.xmile', '.stmx']
+    const paths = exts.map(ext => path.join(parsedPath.dir, parsedPath.name + ext))
+    const existingPaths = paths.filter(path => fs.existsSync(path))
+    if (existingPaths.length > 1) {
+      throw new Error(
+        `Found multiple files that match '${model}'; please specify a file with a .mdl, .xmile, or .stmx extension`
+      )
+    }
+    if (existingPaths.length === 0) {
+      throw new Error(`No {mdl,xmile,stmx} file found for ${model}`)
+    }
+    parsedPath.ext = path.extname(existingPaths[0])
+  }
+  let p = R.merge({ ext: parsedPath.ext }, R.pick(['dir', 'name'], parsedPath))
   if (R.isEmpty(p.dir)) {
     p.dir = process.cwd()
   }
   return {
     modelDirname: p.dir,
     modelName: p.name,
-    modelPathname: path.format(p)
+    modelPathname: path.format(p),
+    modelKind: p.ext === '.mdl' ? 'vensim' : 'xmile'
   }
 }
 

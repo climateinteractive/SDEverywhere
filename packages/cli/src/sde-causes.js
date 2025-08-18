@@ -18,11 +18,11 @@ let handler = argv => {
 }
 let causes = async (model, varname, opts) => {
   // Get the model name and directory from the model argument.
-  let { modelDirname, modelPathname, modelName } = modelPathProps(model)
+  let { modelDirname, modelPathname, modelName, modelKind } = modelPathProps(model)
   let spec = parseSpec(opts.spec)
   // Parse the model to get variable and subscript information.
   let input = readFileSync(modelPathname, 'utf8')
-  await parseAndGenerate(input, spec, ['printRefGraph'], modelDirname, modelName, '', varname)
+  await parseAndGenerate(input, modelKind, spec, ['printRefGraph'], modelDirname, modelName, '', varname)
 }
 export default {
   command,
