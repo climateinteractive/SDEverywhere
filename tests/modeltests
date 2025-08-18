@@ -4,6 +4,11 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 PROJ_DIR=$SCRIPT_DIR/..
 MODELS_DIR=$PROJ_DIR/models
 
+# If INPUT_FORMAT is not set, default to "mdl"
+if [[ -z $INPUT_FORMAT ]]; then
+  export INPUT_FORMAT=mdl
+fi
+
 # If GEN_FORMAT is not set, default to "c"
 if [[ -z $GEN_FORMAT ]]; then
   export GEN_FORMAT=c
@@ -41,7 +46,7 @@ function test {
     if [[ $MODEL == "allocate" ]]; then
       PRECISION="1e-2"
     fi
-    node "$SDE_MAIN" test $TEST_ARGS --genformat=$GEN_FORMAT -p $PRECISION "$MODEL_DIR/$MODEL"
+    node "$SDE_MAIN" test $TEST_ARGS --genformat=$GEN_FORMAT -p $PRECISION "$MODEL_DIR/$MODEL.$INPUT_FORMAT"
   fi
 
   # Run additional script to validate output
