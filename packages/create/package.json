@@ -1,6 +1,6 @@
 {
   "name": "@sdeverywhere/create",
-  "version": "0.2.27",
+  "version": "0.2.28",
   "description": "Create a new SDEverywhere project with minimal configuration",
   "type": "module",
   "files": [
@@ -25,7 +25,7 @@
     "ci:build": "run-s clean lint prettier:check type-check build test:ci"
   },
   "dependencies": {
-    "@sdeverywhere/compile": "^0.7.23",
+    "@sdeverywhere/compile": "^0.7.24",
     "execa": "^6.1.0",
     "find-up": "^6.3.0",
     "fs-extra": "^10.1.0",
