@@ -172,6 +172,46 @@ export function parseInlineXmileModel(mdlContent: string, modelDir?: string): Pa
   return parseModel(mdlContent, 'xmile', modelDir)
 }
 
+export function xmile(dimensions: string, variables: string): string {
+  let dims: string
+  if (dimensions.length > 0) {
+    dims = `\
+    <dimensions>
+        ${dimensions}
+    </dimensions>`
+  } else {
+    dims = ''
+  }
+
+  let vars: string
+  if (variables.length > 0) {
+    vars = `\
+        <variables>
+            ${variables}
+        </variables>`
+  } else {
+    vars = ''
+  }
+
+  return `\
+<xmile xmlns="http://docs.oasis-open.org/xmile/ns/XMILE/v1.0" version="1.0">
+<header>
+    <options namespace="std"/>
+    <vendor>Ventana Systems, xmutil</vendor>
+    <product lang="en">Vensim, xmutil</product>
+</header>
+<sim_specs isee:simulation_delay="0" method="Euler" time_units="Months">
+    <start>0</start>
+    <stop>100</stop>
+    <dt>1</dt>
+</sim_specs>
+${dims}
+    <model>
+    ${vars}
+    </model>
+</xmile>`
+}
+
 function prettyVar(variable: Variable): string {
   const stringify = (x: any) => {
     return JSON.stringify(x)
