@@ -283,13 +283,12 @@ describe('readSubscriptRanges + resolveSubscriptRanges (from XMILE model)', () =
     ])
   })
 
-  TODO: `GET DIRECT SUBSCRIPTS` is already covered by the "directsubs" test below.
-  It would be nice if we had a simpler inline test here, but since it depends on
-  reading files, it would end up doing the same as the "directsubs" test.  Once
-  we make it easier to provide in-memory (or mock) data sources, we can consider
-  implementing this inline test.
-  it('should work for a subscript range defined with GET DIRECT SUBSCRIPTS', () => {
-  })
+  // TODO: `GET DIRECT SUBSCRIPTS` is already covered by the "directsubs" test below.
+  // It would be nice if we had a simpler inline test here, but since it depends on
+  // reading files, it would end up doing the same as the "directsubs" test.  Once
+  // we make it easier to provide in-memory (or mock) data sources, we can consider
+  // implementing this inline test.
+  it('should work for a subscript range defined with GET DIRECT SUBSCRIPTS', () => {})
 
   it('should work for XMILE "active_initial" model', () => {
     const rawSubs = readSubscripts('active_initial')
