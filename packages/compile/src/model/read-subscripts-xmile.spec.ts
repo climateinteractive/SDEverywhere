@@ -322,34 +322,51 @@ describe('readSubscriptRanges + resolveSubscriptRanges (from XMILE model)', () =
   it.only('should work for XMILE "arrays" model', () => {
     const rawSubs = readSubscripts('arrays')
     expect(rawSubs).toEqual([
-      dim('DimA', ['A1', 'A2', 'A3'], 'DimA', undefined, [dimMapping('DimB')], {
-        // After resolve phase, this will be filled in with _a1,_a2,_a3
-        _dimb: []
-      }),
+      // NOTE: XMILE does not have the concept of aliases/mappings, so the stmx file
+      // just uses {A1,A2,A3}
+      // dim('DimA', ['A1', 'A2', 'A3'], 'DimA', undefined, [dimMapping('DimB')], {
+      //   // After resolve phase, this will be filled in with _a1,_a2,_a3
+      //   _dimb: []
+      // }),
+      dim('DimA', ['A1', 'A2', 'A3']),
       dim('DimB', ['B1', 'B2', 'B3']),
       dim('DimC', ['C1', 'C2', 'C3']),
-      // After resolve phase, DimC' will be expanded to individual subscripts,
-      // and family will be changed from DimC' to DimC
-      dim("DimC'", ['DimC'], "DimC'", ['DimC']),
+      // NOTE: XMILE does not have the concept of aliases/mappings, so the stmx file
+      // just uses {C1,C2,C3}
+      // // After resolve phase, DimC' will be expanded to individual subscripts,
+      // // and family will be changed from DimC' to DimC
+      // dim("DimC'", ['DimC'], "DimC'", ['DimC']),
+      dim("DimC'", ['C1', 'C2', 'C3']),
       dim('DimD', ['D1', 'D2', 'D3', 'D4']),
+      // NOTE: XMILE does not seem to have the concept of putting a dimension name
+      // in another dimension definition, so the stmx file just uses {A2,A3,A1}
+      // // After resolve phase, DimX will be expanded to individual subscripts,
+      // // and family will be changed from DimX to DimA
+      // dim('DimX', ['SubA', 'A1'], 'DimX', ['SubA', 'A1']),
+      dim('DimX', ['A2', 'A3', 'A1']),
       // After resolve phase, family will be changed from SubA to DimA
-      dim('SubA', ['A2', 'A3'], 'SubA'),
-      // After resolve phase, DimX will be expanded to individual subscripts,
-      // and family will be changed from DimX to DimA
-      dim('DimX', ['SubA', 'A1'], 'DimX', ['SubA', 'A1'])
+      dim('SubA', ['A2', 'A3'], 'SubA')
     ])
 
     const resolvedSubs = readAndResolveSubscripts('arrays')
     expect(resolvedSubs).toEqual([
-      dim('DimA', ['A1', 'A2', 'A3'], 'DimA', undefined, [dimMapping('DimB')], {
-        _dimb: ['_a1', '_a2', '_a3']
-      }),
+      // NOTE: XMILE does not have the concept of aliases/mappings, so the stmx file
+      // just uses {A1,A2,A3}
+      // dim('DimA', ['A1', 'A2', 'A3'], 'DimA', undefined, [dimMapping('DimB')], {
+      //   _dimb: ['_a1', '_a2', '_a3']
+      // }),
+      dim('DimA', ['A1', 'A2', 'A3']),
       dim('DimB', ['B1', 'B2', 'B3']),
       dim('DimC', ['C1', 'C2', 'C3']),
-      dim("DimC'", ['DimC'], 'DimC', ['C1', 'C2', 'C3']),
+      // NOTE: XMILE does not have the concept of aliases/mappings, so the stmx file
+      // just uses {C1,C2,C3}
+      dim("DimC'", ['C1', 'C2', 'C3'], 'DimC', ['C1', 'C2', 'C3']),
       dim('DimD', ['D1', 'D2', 'D3', 'D4']),
+      // NOTE: XMILE does not seem to have the concept of putting a dimension name
+      // in another dimension definition, so the stmx file just uses {A2,A3,A1}
+      // dim('DimX', ['SubA', 'A1'], 'DimA', ['A2', 'A3', 'A1']),
+      dim('DimX', ['A2', 'A3', 'A1'], 'DimA', ['A2', 'A3', 'A1']),
       dim('SubA', ['A2', 'A3'], 'DimA'),
-      dim('DimX', ['SubA', 'A1'], 'DimA', ['A2', 'A3', 'A1']),
       sub('A1', 'DimA', 0),
       sub('A2', 'DimA', 1),
       sub('A3', 'DimA', 2),
