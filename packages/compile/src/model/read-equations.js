@@ -984,11 +984,22 @@ export function resolveXmileDimensionWildcards(variable) {
             const referencedVars = Model.varsWithName(expr.varId)
             if (referencedVars && referencedVars.length > 0) {
               // Get the dimension ID at this index from the referenced variable
-              const referencedDimId = referencedVars[0].subscripts[subIndex]
+              const referencedDimOrSubId = referencedVars[0].subscripts[subIndex]
 
               // Get the dimension name for the ID
-              const referencedDim = sub(referencedDimId)
-              const referencedDimName = referencedDim.modelName
+              const referencedDimOrSub = sub(referencedDimOrSubId)
+              let referencedDimName
+              let referencedDimId
+              if (isIndex(referencedDimOrSubId)) {
+                // This is a subscript, so get the parent dimension name and ID
+                const parentDim = sub(referencedDimOrSub.family)
+                referencedDimName = parentDim.modelName
+                referencedDimId = parentDim.name
+              } else {
+                // This is a dimension, so take its name and ID directly
+                referencedDimName = referencedDimOrSub.modelName
+                referencedDimId = referencedDimOrSub.name
+              }
 
               // Preserve any trailing characters (like '!') from the wildcard
               const trailingChars = subRef.subId.substring('__sde_wildcard_'.length)
