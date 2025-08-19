@@ -2,6 +2,8 @@ import B from 'bufx'
 import yaml from 'js-yaml'
 import * as R from 'ramda'
 
+import { toPrettyString } from '@sdeverywhere/parse'
+
 import { canonicalName, decanonicalize, isIterable, /*listConcat,*/ strlist, vlog, vsort } from '../_shared/helpers.js'
 import {
   addIndex,
@@ -14,7 +16,7 @@ import {
   subscriptFamilies
 } from '../_shared/subscript.js'
 
-import { readEquation } from './read-equations.js'
+import { readEquation, resolveXmileDimensionWildcards } from './read-equations.js'
 import { readDimensionDefs } from './read-subscripts.js'
 import { readVariables } from './read-variables.js'
 import { reduceVariables } from './reduce-variables.js'
@@ -95,6 +97,20 @@ function read(parsedModel, spec, extData, directData, modelDirname, opts) {
   vars.forEach(addVariable)
   if (opts?.stopAfterReadVariables) return
 
+  if (parsedModel.kind === 'xmile') {
+    // XXX: In the case of XMILE, we need to resolve any wildcards used in dimension
+    // position in the RHS of the equation
+    for (const variable of vars) {
+      if (variable.parsedEqn?.rhs?.kind === 'expr') {
+        const updatedEqn = resolveXmileDimensionWildcards(variable)
+        if (updatedEqn) {
+          variable.parsedEqn = updatedEqn
+          variable.modelFormula = toPrettyString(updatedEqn.rhs.expr, { compact: true })
+        }
+      }
+    }
+  }
+
   if (spec) {
     // If the spec file contains `input/outputVarNames`, convert the full Vensim variable
     // names to C names first so that later phases only need to work with canonical names
@@ -111,7 +127,7 @@ function read(parsedModel, spec, extData, directData, modelDirname, opts) {
   }
 
   // Analyze model equations to fill in more details about variables.
-  analyze(parsedModel.kind, spec?.inputVars, opts)
+  analyze(spec?.inputVars, opts)
   if (opts?.stopAfterAnalyze) return
 
   // Check that all input and output vars in the spec actually exist in the model.
@@ -267,7 +283,7 @@ function resolveDimensions(dimensionFamilies) {
   }
 }
 
-function analyze(parsedModelKind, inputVars, opts) {
+function analyze(inputVars, opts) {
   // Analyze the RHS of each equation in stages after all the variables are read.
   // Find non-apply-to-all vars that are defined with more than one equation.
   findNonAtoAVars()

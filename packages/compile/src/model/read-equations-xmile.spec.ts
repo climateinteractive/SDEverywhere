@@ -520,11 +520,13 @@ describe('readEquations (from XMILE model)', () => {
       //   y = SUM(x[DimA!]) ~~|
       // `)
 
-      const xmileVars = `\
+      const xmileDims = `\
 <dim name="DimA">
   <elem name="A1"/>
   <elem name="A2"/>
 </dim>
+`
+      const xmileVars = `\
 <aux name="x">
   <dimensions>
     <dim name="DimA"/>
@@ -534,7 +536,7 @@ describe('readEquations (from XMILE model)', () => {
 <aux name="y">
   <eqn>SUM(x[*])</eqn>
 </aux>`
-      const mdl = xmile('', xmileVars)
+      const mdl = xmile(xmileDims, xmileVars)
       const vars = readInlineModel(mdl)
 
       expect(vars).toEqual([

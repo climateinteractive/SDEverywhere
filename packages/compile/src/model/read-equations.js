@@ -949,3 +949,110 @@ function resolveRhsSubOrDim(lhsVariable, lhsSubIds, rhsSubId) {
     throw new Error(`Failed to find LHS dimension for RHS dimension ${rhsSubId} in lhs=${lhsVariable.refId}`)
   }
 }
+
+/**
+ * Resolve any XMILE dimension wildcards in the given equation and return a new equation
+ * that has the `_SDE_WILDCARD_` placeholder replaced with the actual dimension name.
+ *
+ * @param {*} variable The `Variable` instance to process.
+ * @returns {*} The parsed equation with the `_SDE_WILDCARD_` placeholder replaced with the
+ * actual dimension name, or `undefined` if the equation does not contain any wildcards.
+ */
+export function resolveXmileDimensionWildcards(variable) {
+  const eqn = variable.parsedEqn
+  if (!eqn.rhs || eqn.rhs.kind !== 'expr') {
+    return undefined
+  }
+
+  // Create a deep copy of the equation and resolve wildcards
+  let hasWildcards = false
+  function resolveWildcardsInExpr(expr) {
+    switch (expr.kind) {
+      case 'variable-ref': {
+        if (!expr.subscriptRefs) {
+          return expr
+        }
+
+        // Check if this variable reference has wildcards
+        let varRefHasWildcard = false
+        const newSubscriptRefs = expr.subscriptRefs.map((subRef, subIndex) => {
+          if (subRef.subId.startsWith('__sde_wildcard_')) {
+            varRefHasWildcard = true
+            hasWildcards = true
+
+            // Look up the referenced variable to get its dimensions
+            const referencedVars = Model.varsWithName(expr.varId)
+            if (referencedVars && referencedVars.length > 0) {
+              // Get the dimension ID at this index from the referenced variable
+              const referencedDimId = referencedVars[0].subscripts[subIndex]
+
+              // Get the dimension name for the ID
+              const referencedDim = sub(referencedDimId)
+              const referencedDimName = referencedDim.modelName
+
+              // Preserve any trailing characters (like '!') from the wildcard
+              const trailingChars = subRef.subId.substring('__sde_wildcard_'.length)
+              return {
+                subName: referencedDimName + trailingChars,
+                subId: referencedDimId + trailingChars
+              }
+            } else {
+              // If we can't find the referenced variable or it has no dimensions, keep the wildcard
+              return subRef
+            }
+          }
+          return subRef
+        })
+
+        if (varRefHasWildcard) {
+          return { ...expr, subscriptRefs: newSubscriptRefs }
+        }
+        return expr
+      }
+
+      case 'binary-op':
+        return {
+          ...expr,
+          lhs: resolveWildcardsInExpr(expr.lhs),
+          rhs: resolveWildcardsInExpr(expr.rhs)
+        }
+
+      case 'parens':
+      case 'unary-op':
+        return { ...expr, expr: resolveWildcardsInExpr(expr.expr) }
+
+      case 'function-call': {
+        const newArgs = expr.args.map(arg => resolveWildcardsInExpr(arg))
+        return { ...expr, args: newArgs }
+      }
+
+      case 'lookup-call':
+        return { ...expr, arg: resolveWildcardsInExpr(expr.arg) }
+
+      case 'number':
+      case 'string':
+      case 'keyword':
+      case 'lookup-def':
+        return expr
+
+      default:
+        throw new Error(`Unhandled expression kind '${expr.kind}' when reading '${variable.modelLHS}'`)
+    }
+  }
+
+  const resolvedRhs = resolveWildcardsInExpr(eqn.rhs.expr)
+  if (!hasWildcards) {
+    // No wildcards were found, so return the original equation
+    return undefined
+  }
+
+  // Wildcards were found, so return a new equation with the wildcards replaced with the
+  // actual dimension names
+  return {
+    ...eqn,
+    rhs: {
+      ...eqn.rhs,
+      expr: resolvedRhs
+    }
+  }
+}
