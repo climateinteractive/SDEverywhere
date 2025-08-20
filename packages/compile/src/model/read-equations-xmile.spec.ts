@@ -1762,13 +1762,13 @@ ${elements.join('\n')}
       ])
     })
 
-    it.skip('should work when RHS variable is apply-to-all (2D) and is accessed with specific subscripts', () => {
-      // TODO
-    })
+    // it.skip('should work when RHS variable is apply-to-all (2D) and is accessed with specific subscripts', () => {
+    //   // TODO
+    // })
 
-    it.skip('should work when RHS variable is NON-apply-to-all (2D) and is accessed with specific subscripts', () => {
-      // TODO
-    })
+    // it.skip('should work when RHS variable is NON-apply-to-all (2D) and is accessed with specific subscripts', () => {
+    //   // TODO
+    // })
 
     it('should work when RHS variable is apply-to-all (2D) and is accessed with one normal dimension and one marked dimension that resolve to same family', () => {
       // Equivalent Vensim model for reference:
@@ -1822,13 +1822,13 @@ ${elements.join('\n')}
       ])
     })
 
-    it.skip('should work when RHS variable is apply-to-all (3D) and is accessed with specific subscripts', () => {
-      // TODO
-    })
+    // it.skip('should work when RHS variable is apply-to-all (3D) and is accessed with specific subscripts', () => {
+    //   // TODO
+    // })
 
-    it.skip('should work when RHS variable is NON-apply-to-all (3D) and is accessed with specific subscripts', () => {
-      // TODO
-    })
+    // it.skip('should work when RHS variable is NON-apply-to-all (3D) and is accessed with specific subscripts', () => {
+    //   // TODO
+    // })
   })
 
   describe('when LHS is NON-apply-to-all (1D)', () => {
@@ -2087,44 +2087,77 @@ ${elements.join('\n')}
       ])
     })
 
+    // TODO: This test is skipped because it's failing; not sure if this is a valid construct in XMILE
     it.skip('should work when RHS variable is NON-apply-to-all (1D) and is accessed with same dimension that appears in LHS', () => {
-      const vars = readInlineModel(`
-        DimA: A1, A2, A3 ~~|
-        x[DimA] = 1, 2, 3 ~~|
-        y[DimA] :EXCEPT: [A1] = x[DimA] ~~|
-      `)
+      // Equivalent Vensim model for reference:
+      // const vars = readInlineModel(`
+      //   DimA: A1, A2, A3 ~~|
+      //   x[DimA] = 1, 2, 3 ~~|
+      //   y[DimA] :EXCEPT: [A1] = x[DimA] ~~|
+      // `)
+
+      const xmileDims = `\
+<dim name="DimA">
+  <elem name="A1"/>
+  <elem name="A2"/>
+  <elem name="A3"/>
+</dim>
+`
+      const xmileVars = `\
+<aux name="x">
+  <dimensions>
+    <dim name="DimA"/>
+  </dimensions>
+  <element subscript="A1">
+    <eqn>1</eqn>
+  </element>
+  <element subscript="A2">
+    <eqn>2</eqn>
+  </element>
+  <element subscript="A3">
+    <eqn>3</eqn>
+  </element>
+</aux>
+<aux name="y">
+  <dimensions>
+    <dim name="DimA"/>
+  </dimensions>
+  <element subscript="A2">
+    <eqn>x[DimA]</eqn>
+  </element>
+  <element subscript="A3">
+    <eqn>x[DimA]</eqn>
+  </element>
+</aux>`
+      const mdl = xmile(xmileDims, xmileVars)
+      const vars = readInlineModel(mdl)
       expect(vars).toEqual([
-        v('x[DimA]', '1,2,3', {
+        v('x[A1]', '1', {
           refId: '_x[_a1]',
-          separationDims: ['_dima'],
           subscripts: ['_a1'],
           varType: 'const'
         }),
-        v('x[DimA]', '1,2,3', {
+        v('x[A2]', '2', {
           refId: '_x[_a2]',
-          separationDims: ['_dima'],
           subscripts: ['_a2'],
           varType: 'const'
         }),
-        v('x[DimA]', '1,2,3', {
+        v('x[A3]', '3', {
           refId: '_x[_a3]',
-          separationDims: ['_dima'],
           subscripts: ['_a3'],
           varType: 'const'
         }),
         // expandedRefIdsForVar(_y[_a2], '_x', ['_dima'])
         //   -> ['_x[_a2]']
-        v('y[DimA]:EXCEPT:[A1]', 'x[DimA]', {
+        v('y[A2]', 'x[DimA]', {
           refId: '_y[_a2]',
-          separationDims: ['_dima'],
           subscripts: ['_a2'],
           references: ['_x[_a2]']
         }),
         // expandedRefIdsForVar(_y[_a3], '_x', ['_dima'])
         //   -> ['_x[_a3]']
-        v('y[DimA]:EXCEPT:[A1]', 'x[DimA]', {
+        v('y[A3]', 'x[DimA]', {
           refId: '_y[_a3]',
-          separationDims: ['_dima'],
           subscripts: ['_a3'],
           references: ['_x[_a3]']
         })
@@ -2132,43 +2165,95 @@ ${elements.join('\n')}
     })
 
     // This is adapted from the "except" sample model (see equation for `k`)
+    // TODO: This test is skipped because it's not clear if XMILE supports mapped subdimensions
     it.skip('should work when RHS variable is NON-apply-to-all (1D) and is accessed with mapped version of LHS dimension', () => {
-      const vars = readInlineModel(`
-        DimA: A1, A2, A3 ~~|
-        SubA: A2, A3 ~~|
-        DimB: B1, B2 -> (DimA: SubA, A1) ~~|
-        a[DimA] = 1, 2, 3 ~~|
-        b[DimB] = 4, 5 ~~|
-        y[DimA] :EXCEPT: [A1] = a[DimA] + b[DimB] ~~|
-      `)
+      // Equivalent Vensim model for reference:
+      // const vars = readInlineModel(`
+      //   DimA: A1, A2, A3 ~~|
+      //   SubA: A2, A3 ~~|
+      //   DimB: B1, B2 -> (DimA: SubA, A1) ~~|
+      //   a[DimA] = 1, 2, 3 ~~|
+      //   b[DimB] = 4, 5 ~~|
+      //   y[DimA] :EXCEPT: [A1] = a[DimA] + b[DimB] ~~|
+      // `)
+
+      const xmileDims = `\
+<dim name="DimA">
+  <elem name="A1"/>
+  <elem name="A2"/>
+  <elem name="A3"/>
+</dim>
+<dim name="SubA">
+  <elem name="A2"/>
+  <elem name="A3"/>
+</dim>
+<dim name="DimB">
+  <elem name="B1"/>
+  <elem name="B2"/>
+</dim>
+`
+      const xmileVars = `\
+<aux name="a">
+  <dimensions>
+    <dim name="DimA"/>
+  </dimensions>
+  <element subscript="A1">
+    <eqn>1</eqn>
+  </element>
+  <element subscript="A2">
+    <eqn>2</eqn>
+  </element>
+  <element subscript="A3">
+    <eqn>3</eqn>
+  </element>
+</aux>
+<aux name="b">
+  <dimensions>
+    <dim name="DimB"/>
+  </dimensions>
+  <element subscript="B1">
+    <eqn>4</eqn>
+  </element>
+  <element subscript="B2">
+    <eqn>5</eqn>
+  </element>
+</aux>
+<aux name="y">
+  <dimensions>
+    <dim name="DimA"/>
+  </dimensions>
+  <element subscript="A2">
+    <eqn>a[DimA] + b[DimB]</eqn>
+  </element>
+  <element subscript="A3">
+    <eqn>a[DimA] + b[DimB]</eqn>
+  </element>
+</aux>`
+      const mdl = xmile(xmileDims, xmileVars)
+      const vars = readInlineModel(mdl)
       expect(vars).toEqual([
-        v('a[DimA]', '1,2,3', {
+        v('a[A1]', '1', {
           refId: '_a[_a1]',
-          separationDims: ['_dima'],
           subscripts: ['_a1'],
           varType: 'const'
         }),
-        v('a[DimA]', '1,2,3', {
+        v('a[A2]', '2', {
           refId: '_a[_a2]',
-          separationDims: ['_dima'],
           subscripts: ['_a2'],
           varType: 'const'
         }),
-        v('a[DimA]', '1,2,3', {
+        v('a[A3]', '3', {
           refId: '_a[_a3]',
-          separationDims: ['_dima'],
           subscripts: ['_a3'],
           varType: 'const'
         }),
-        v('b[DimB]', '4,5', {
+        v('b[B1]', '4', {
           refId: '_b[_b1]',
-          separationDims: ['_dimb'],
           subscripts: ['_b1'],
           varType: 'const'
         }),
-        v('b[DimB]', '4,5', {
+        v('b[B2]', '5', {
           refId: '_b[_b2]',
-          separationDims: ['_dimb'],
           subscripts: ['_b2'],
           varType: 'const'
         }),
@@ -2176,9 +2261,8 @@ ${elements.join('\n')}
         //   -> ['_a[_a2]']
         // expandedRefIdsForVar(_y[_a2], '_b', ['_dimb'])
         //   -> ['_b[_b1]']
-        v('y[DimA]:EXCEPT:[A1]', 'a[DimA]+b[DimB]', {
+        v('y[A2]', 'a[DimA]+b[DimB]', {
           refId: '_y[_a2]',
-          separationDims: ['_dima'],
           subscripts: ['_a2'],
           references: ['_a[_a2]', '_b[_b1]']
         }),
@@ -2186,9 +2270,8 @@ ${elements.join('\n')}
         //   -> ['_a[_a3]']
         // expandedRefIdsForVar(_y[_a3], '_b', ['_dimb'])
         //   -> ['_b[_b1]']
-        v('y[DimA]:EXCEPT:[A1]', 'a[DimA]+b[DimB]', {
+        v('y[A3]', 'a[DimA]+b[DimB]', {
           refId: '_y[_a3]',
-          separationDims: ['_dima'],
           subscripts: ['_a3'],
           references: ['_a[_a3]', '_b[_b1]']
         })
@@ -2196,16 +2279,65 @@ ${elements.join('\n')}
     })
 
     // This is adapted from the "ref" sample model (with updated naming for clarity)
+    // TODO: This test is skipped because it's not clear if XMILE supports this kind of mapping
     it.skip('should work for complex mapping example', () => {
-      const vars = readInlineModel(`
-        Target: (t1-t3) ~~|
-        tNext: (t2-t3) -> tPrev ~~|
-        tPrev: (t1-t2) -> tNext ~~|
-        x[t1] = y[t1] + 1 ~~|
-        x[tNext] = y[tNext] + 1 ~~|
-        y[t1] = 1 ~~|
-        y[tNext] = x[tPrev] + 1 ~~|
-      `)
+      // Equivalent Vensim model for reference:
+      // const vars = readInlineModel(`
+      //   Target: (t1-t3) ~~|
+      //   tNext: (t2-t3) -> tPrev ~~|
+      //   tPrev: (t1-t2) -> tNext ~~|
+      //   x[t1] = y[t1] + 1 ~~|
+      //   x[tNext] = y[tNext] + 1 ~~|
+      //   y[t1] = 1 ~~|
+      //   y[tNext] = x[tPrev] + 1 ~~|
+      // `)
+
+      const xmileDims = `\
+<dim name="Target">
+  <elem name="t1"/>
+  <elem name="t2"/>
+  <elem name="t3"/>
+</dim>
+<dim name="tNext">
+  <elem name="t2"/>
+  <elem name="t3"/>
+</dim>
+<dim name="tPrev">
+  <elem name="t1"/>
+  <elem name="t2"/>
+</dim>
+`
+      const xmileVars = `\
+<aux name="x">
+  <dimensions>
+    <dim name="Target"/>
+  </dimensions>
+  <element subscript="t1">
+    <eqn>y[t1] + 1</eqn>
+  </element>
+  <element subscript="t2">
+    <eqn>y[t2] + 1</eqn>
+  </element>
+  <element subscript="t3">
+    <eqn>y[t3] + 1</eqn>
+  </element>
+</aux>
+<aux name="y">
+  <dimensions>
+    <dim name="Target"/>
+  </dimensions>
+  <element subscript="t1">
+    <eqn>1</eqn>
+  </element>
+  <element subscript="t2">
+    <eqn>x[t1] + 1</eqn>
+  </element>
+  <element subscript="t3">
+    <eqn>x[t2] + 1</eqn>
+  </element>
+</aux>`
+      const mdl = xmile(xmileDims, xmileVars)
+      const vars = readInlineModel(mdl)
       expect(vars).toEqual([
         v('x[t1]', 'y[t1]+1', {
           refId: '_x[_t1]',
@@ -2258,23 +2390,54 @@ ${elements.join('\n')}
     //   // TODO
     // })
 
-    it.skip('should work when RHS variable is NON-apply-to-all (1D) and is accessed with LHS dimensions that resolve to the same family', () => {
-      const vars = readInlineModel(`
-        DimA: A1, A2 ~~|
-        DimB <-> DimA ~~|
-        x[DimA] = 1, 2 ~~|
-        y[DimA, DimB] = x[DimA] + x[DimB] ~~|
-      `)
+    it('should work when RHS variable is NON-apply-to-all (1D) and is accessed with LHS dimensions that resolve to the same family', () => {
+      // Equivalent Vensim model for reference:
+      // const vars = readInlineModel(`
+      //   DimA: A1, A2 ~~|
+      //   DimB <-> DimA ~~|
+      //   x[DimA] = 1, 2 ~~|
+      //   y[DimA, DimB] = x[DimA] + x[DimB] ~~|
+      // `)
+
+      const xmileDims = `\
+<dim name="DimA">
+  <elem name="A1"/>
+  <elem name="A2"/>
+</dim>
+<dim name="DimB">
+  <elem name="A1"/>
+  <elem name="A2"/>
+</dim>
+`
+      const xmileVars = `\
+<aux name="x">
+  <dimensions>
+    <dim name="DimA"/>
+  </dimensions>
+  <element subscript="A1">
+    <eqn>1</eqn>
+  </element>
+  <element subscript="A2">
+    <eqn>2</eqn>
+  </element>
+</aux>
+<aux name="y">
+  <dimensions>
+    <dim name="DimA"/>
+    <dim name="DimB"/>
+  </dimensions>
+  <eqn>x[DimA] + x[DimB]</eqn>
+</aux>`
+      const mdl = xmile(xmileDims, xmileVars)
+      const vars = readInlineModel(mdl)
       expect(vars).toEqual([
-        v('x[DimA]', '1,2', {
+        v('x[A1]', '1', {
           refId: '_x[_a1]',
-          separationDims: ['_dima'],
           subscripts: ['_a1'],
           varType: 'const'
         }),
-        v('x[DimA]', '1,2', {
+        v('x[A2]', '2', {
           refId: '_x[_a2]',
-          separationDims: ['_dima'],
           subscripts: ['_a2'],
           varType: 'const'
         }),
@@ -2298,13 +2461,42 @@ ${elements.join('\n')}
     //   // TODO
     // })
 
-    it.skip('should work when RHS variable is apply-to-all (2D) and is accessed with same dimensions that appear in LHS', () => {
-      const vars = readInlineModel(`
-        DimA: A1, A2 ~~|
-        DimB: B1, B2 ~~|
-        x[DimA, DimB] = 1 ~~|
-        y[DimB, DimA] = x[DimA, DimB] ~~|
-      `)
+    it('should work when RHS variable is apply-to-all (2D) and is accessed with same dimensions that appear in LHS', () => {
+      // Equivalent Vensim model for reference:
+      // const vars = readInlineModel(`
+      //   DimA: A1, A2 ~~|
+      //   DimB: B1, B2 ~~|
+      //   x[DimA, DimB] = 1 ~~|
+      //   y[DimB, DimA] = x[DimA, DimB] ~~|
+      // `)
+
+      const xmileDims = `\
+<dim name="DimA">
+  <elem name="A1"/>
+  <elem name="A2"/>
+</dim>
+<dim name="DimB">
+  <elem name="B1"/>
+  <elem name="B2"/>
+</dim>
+`
+      const xmileVars = `\
+<aux name="x">
+  <dimensions>
+    <dim name="DimA"/>
+    <dim name="DimB"/>
+  </dimensions>
+  <eqn>1</eqn>
+</aux>
+<aux name="y">
+  <dimensions>
+    <dim name="DimB"/>
+    <dim name="DimA"/>
+  </dimensions>
+  <eqn>x[DimA, DimB]</eqn>
+</aux>`
+      const mdl = xmile(xmileDims, xmileVars)
+      const vars = readInlineModel(mdl)
       expect(vars).toEqual([
         v('x[DimA,DimB]', '1', {
           refId: '_x',
@@ -2321,13 +2513,42 @@ ${elements.join('\n')}
       ])
     })
 
-    it.skip('should work when RHS variable is apply-to-all (2D) and is accessed with LHS dimensions that resolve to the same family', () => {
-      const vars = readInlineModel(`
-        DimA: A1, A2 ~~|
-        DimB <-> DimA ~~|
-        x[DimA, DimB] = 1 ~~|
-        y[DimB, DimA] = x[DimA, DimB] ~~|
-      `)
+    it('should work when RHS variable is apply-to-all (2D) and is accessed with LHS dimensions that resolve to the same family', () => {
+      // Equivalent Vensim model for reference:
+      // const vars = readInlineModel(`
+      //   DimA: A1, A2 ~~|
+      //   DimB <-> DimA ~~|
+      //   x[DimA, DimB] = 1 ~~|
+      //   y[DimB, DimA] = x[DimA, DimB] ~~|
+      // `)
+
+      const xmileDims = `\
+<dim name="DimA">
+  <elem name="A1"/>
+  <elem name="A2"/>
+</dim>
+<dim name="DimB">
+  <elem name="A1"/>
+  <elem name="A2"/>
+</dim>
+`
+      const xmileVars = `\
+<aux name="x">
+  <dimensions>
+    <dim name="DimA"/>
+    <dim name="DimB"/>
+  </dimensions>
+  <eqn>1</eqn>
+</aux>
+<aux name="y">
+  <dimensions>
+    <dim name="DimB"/>
+    <dim name="DimA"/>
+  </dimensions>
+  <eqn>x[DimA, DimB]</eqn>
+</aux>`
+      const mdl = xmile(xmileDims, xmileVars)
+      const vars = readInlineModel(mdl)
       expect(vars).toEqual([
         v('x[DimA,DimB]', '1', {
           refId: '_x',
@@ -2344,35 +2565,71 @@ ${elements.join('\n')}
       ])
     })
 
-    it.skip('should work when RHS variable is NON-apply-to-all (2D) and is accessed with same dimensions that appear in LHS', () => {
-      const vars = readInlineModel(`
-        DimA: A1, A2 ~~|
-        DimB: B1, B2 ~~|
-        x[DimA, DimB] = 1, 2; 3, 4; ~~|
-        y[DimB, DimA] = x[DimA, DimB] ~~|
-      `)
+    it('should work when RHS variable is NON-apply-to-all (2D) and is accessed with same dimensions that appear in LHS', () => {
+      // Equivalent Vensim model for reference:
+      // const vars = readInlineModel(`
+      //   DimA: A1, A2 ~~|
+      //   DimB: B1, B2 ~~|
+      //   x[DimA, DimB] = 1, 2; 3, 4; ~~|
+      //   y[DimB, DimA] = x[DimA, DimB] ~~|
+      // `)
+
+      const xmileDims = `\
+<dim name="DimA">
+  <elem name="A1"/>
+  <elem name="A2"/>
+</dim>
+<dim name="DimB">
+  <elem name="B1"/>
+  <elem name="B2"/>
+</dim>
+`
+      const xmileVars = `\
+<aux name="x">
+  <dimensions>
+    <dim name="DimA"/>
+    <dim name="DimB"/>
+  </dimensions>
+  <element subscript="A1,B1">
+    <eqn>1</eqn>
+  </element>
+  <element subscript="A1,B2">
+    <eqn>2</eqn>
+  </element>
+  <element subscript="A2,B1">
+    <eqn>3</eqn>
+  </element>
+  <element subscript="A2,B2">
+    <eqn>4</eqn>
+  </element>
+</aux>
+<aux name="y">
+  <dimensions>
+    <dim name="DimB"/>
+    <dim name="DimA"/>
+  </dimensions>
+  <eqn>x[DimA, DimB]</eqn>
+</aux>`
+      const mdl = xmile(xmileDims, xmileVars)
+      const vars = readInlineModel(mdl)
       expect(vars).toEqual([
-        v('x[DimA,DimB]', '1,2;3,4;', {
+        v('x[A1,B1]', '1', {
           refId: '_x[_a1,_b1]',
-          separationDims: ['_dima', '_dimb'],
           subscripts: ['_a1', '_b1'],
           varType: 'const'
         }),
-        v('x[DimA,DimB]', '1,2;3,4;', {
+        v('x[A1,B2]', '2', {
           refId: '_x[_a1,_b2]',
-          separationDims: ['_dima', '_dimb'],
           subscripts: ['_a1', '_b2'],
           varType: 'const'
         }),
-        v('x[DimA,DimB]', '1,2;3,4;', {
+        v('x[A2,B1]', '3', {
           refId: '_x[_a2,_b1]',
-          separationDims: ['_dima', '_dimb'],
           subscripts: ['_a2', '_b1'],
           varType: 'const'
         }),
-        v('x[DimA,DimB]', '1,2;3,4;', {
+        v('x[A2,B2]', '4', {
           refId: '_x[_a2,_b2]',
-          separationDims: ['_dima', '_dimb'],
           subscripts: ['_a2', '_b2'],
           varType: 'const'
         }),
@@ -2386,14 +2643,48 @@ ${elements.join('\n')}
       ])
     })
 
-    it.skip('should work when RHS variable is NON-apply-to-all (2D) with separated definitions (for subscript in first position) and is accessed with same dimensions that appear in LHS', () => {
-      const vars = readInlineModel(`
-        DimA: A1, A2 ~~|
-        DimB: B1, B2 ~~|
-        x[A1, DimB] = 1 ~~|
-        x[A2, DimB] = 2 ~~|
-        y[DimB, DimA] = x[DimA, DimB] ~~|
-      `)
+    it('should work when RHS variable is NON-apply-to-all (2D) with separated definitions (for subscript in first position) and is accessed with same dimensions that appear in LHS', () => {
+      // Equivalent Vensim model for reference:
+      // const vars = readInlineModel(`
+      //   DimA: A1, A2 ~~|
+      //   DimB: B1, B2 ~~|
+      //   x[A1, DimB] = 1 ~~|
+      //   x[A2, DimB] = 2 ~~|
+      //   y[DimB, DimA] = x[DimA, DimB] ~~|
+      // `)
+
+      const xmileDims = `\
+<dim name="DimA">
+  <elem name="A1"/>
+  <elem name="A2"/>
+</dim>
+<dim name="DimB">
+  <elem name="B1"/>
+  <elem name="B2"/>
+</dim>
+`
+      const xmileVars = `\
+<aux name="x">
+  <dimensions>
+    <dim name="DimA"/>
+    <dim name="DimB"/>
+  </dimensions>
+  <element subscript="A1,DimB">
+    <eqn>1</eqn>
+  </element>
+  <element subscript="A2,DimB">
+    <eqn>2</eqn>
+  </element>
+</aux>
+<aux name="y">
+  <dimensions>
+    <dim name="DimB"/>
+    <dim name="DimA"/>
+  </dimensions>
+  <eqn>x[DimA, DimB]</eqn>
+</aux>`
+      const mdl = xmile(xmileDims, xmileVars)
+      const vars = readInlineModel(mdl)
       expect(vars).toEqual([
         v('x[A1,DimB]', '1', {
           refId: '_x[_a1,_dimb]',
@@ -2426,14 +2717,48 @@ ${elements.join('\n')}
 
   describe('when LHS is NON-apply-to-all (2D)', () => {
     // The LHS in this test is partially separated (expanded only for first dimension position)
-    it.skip('should work when RHS variable is apply-to-all (2D) and is accessed with same dimensions that appear in LHS', () => {
-      const vars = readInlineModel(`
-        DimA: A1, A2, A3 ~~|
-        SubA: A1, A2 ~~|
-        DimB: B1, B2 ~~|
-        x[DimA, DimB] = 1 ~~|
-        y[SubA, DimB] = x[SubA, DimB] ~~|
-      `)
+    it('should work when RHS variable is apply-to-all (2D) and is accessed with same dimensions that appear in LHS', () => {
+      // Equivalent Vensim model for reference:
+      // const vars = readInlineModel(`
+      //   DimA: A1, A2, A3 ~~|
+      //   SubA: A1, A2 ~~|
+      //   DimB: B1, B2 ~~|
+      //   x[DimA, DimB] = 1 ~~|
+      //   y[SubA, DimB] = x[SubA, DimB] ~~|
+      // `)
+
+      const xmileDims = `\
+<dim name="DimA">
+  <elem name="A1"/>
+  <elem name="A2"/>
+  <elem name="A3"/>
+</dim>
+<dim name="SubA">
+  <elem name="A1"/>
+  <elem name="A2"/>
+</dim>
+<dim name="DimB">
+  <elem name="B1"/>
+  <elem name="B2"/>
+</dim>
+`
+      const xmileVars = `\
+<aux name="x">
+  <dimensions>
+    <dim name="DimA"/>
+    <dim name="DimB"/>
+  </dimensions>
+  <eqn>1</eqn>
+</aux>
+<aux name="y">
+  <dimensions>
+    <dim name="SubA"/>
+    <dim name="DimB"/>
+  </dimensions>
+  <eqn>x[SubA, DimB]</eqn>
+</aux>`
+      const mdl = xmile(xmileDims, xmileVars)
+      const vars = readInlineModel(mdl)
       expect(vars).toEqual([
         v('x[DimA,DimB]', '1', {
           refId: '_x',
@@ -2460,24 +2785,60 @@ ${elements.join('\n')}
     })
 
     // This test is based on the example from #179 (simplified to use subdimensions to ensure separation)
-    it.skip('should work when RHS variable is NON-apply-to-all (1D) and is accessed with 2 different dimensions from LHS that map to the same family', () => {
-      const vars = readInlineModel(`
-        DimA: A1, A2, A3 ~~|
-        SubA: A1, A2 ~~|
-        SubB <-> SubA ~~|
-        x[SubA] = 1, 2 ~~|
-        y[SubA, SubB] = x[SubA] + x[SubB] ~~|
-      `)
+    it('should work when RHS variable is NON-apply-to-all (1D) and is accessed with 2 different dimensions from LHS that map to the same family', () => {
+      // Equivalent Vensim model for reference:
+      // const vars = readInlineModel(`
+      //   DimA: A1, A2, A3 ~~|
+      //   SubA: A1, A2 ~~|
+      //   SubB <-> SubA ~~|
+      //   x[SubA] = 1, 2 ~~|
+      //   y[SubA, SubB] = x[SubA] + x[SubB] ~~|
+      // `)
+
+      const xmileDims = `\
+<dim name="DimA">
+  <elem name="A1"/>
+  <elem name="A2"/>
+  <elem name="A3"/>
+</dim>
+<dim name="SubA">
+  <elem name="A1"/>
+  <elem name="A2"/>
+</dim>
+<dim name="SubB">
+  <elem name="A1"/>
+  <elem name="A2"/>
+</dim>
+`
+      const xmileVars = `\
+<aux name="x">
+  <dimensions>
+    <dim name="SubA"/>
+  </dimensions>
+  <element subscript="A1">
+    <eqn>1</eqn>
+  </element>
+  <element subscript="A2">
+    <eqn>2</eqn>
+  </element>
+</aux>
+<aux name="y">
+  <dimensions>
+    <dim name="SubA"/>
+    <dim name="SubB"/>
+  </dimensions>
+  <eqn>x[SubA] + x[SubB]</eqn>
+</aux>`
+      const mdl = xmile(xmileDims, xmileVars)
+      const vars = readInlineModel(mdl)
       expect(vars).toEqual([
-        v('x[SubA]', '1,2', {
+        v('x[A1]', '1', {
           refId: '_x[_a1]',
-          separationDims: ['_suba'],
           subscripts: ['_a1'],
           varType: 'const'
         }),
-        v('x[SubA]', '1,2', {
+        v('x[A2]', '2', {
           refId: '_x[_a2]',
-          separationDims: ['_suba'],
           subscripts: ['_a2'],
           varType: 'const'
         }),
@@ -2527,14 +2888,47 @@ ${elements.join('\n')}
     // This test is based on the example from #179 (simplified to use subdimensions to ensure separation).
     // It is similar to the previous one, except in this one, `x` is apply-to-all (and refers to the parent
     // dimension).
-    it.skip('should work when RHS variable is apply-to-all (1D) and is accessed with 2 different dimensions from LHS that map to the same family', () => {
-      const vars = readInlineModel(`
-        DimA: A1, A2, A3 ~~|
-        SubA: A1, A2 ~~|
-        SubB <-> SubA ~~|
-        x[DimA] = 1 ~~|
-        y[SubA, SubB] = x[SubA] + x[SubB] ~~|
-      `)
+    it('should work when RHS variable is apply-to-all (1D) and is accessed with 2 different dimensions from LHS that map to the same family', () => {
+      // Equivalent Vensim model for reference:
+      // const vars = readInlineModel(`
+      //   DimA: A1, A2, A3 ~~|
+      //   SubA: A1, A2 ~~|
+      //   SubB <-> SubA ~~|
+      //   x[DimA] = 1 ~~|
+      //   y[SubA, SubB] = x[SubA] + x[SubB] ~~|
+      // `)
+
+      const xmileDims = `\
+<dim name="DimA">
+  <elem name="A1"/>
+  <elem name="A2"/>
+  <elem name="A3"/>
+</dim>
+<dim name="SubA">
+  <elem name="A1"/>
+  <elem name="A2"/>
+</dim>
+<dim name="SubB">
+  <elem name="A1"/>
+  <elem name="A2"/>
+</dim>
+`
+      const xmileVars = `\
+<aux name="x">
+  <dimensions>
+    <dim name="DimA"/>
+  </dimensions>
+  <eqn>1</eqn>
+</aux>
+<aux name="y">
+  <dimensions>
+    <dim name="SubA"/>
+    <dim name="SubB"/>
+  </dimensions>
+  <eqn>x[SubA] + x[SubB]</eqn>
+</aux>`
+      const mdl = xmile(xmileDims, xmileVars)
+      const vars = readInlineModel(mdl)
       expect(vars).toEqual([
         v('x[DimA]', '1', {
           refId: '_x',
@@ -2575,14 +2969,49 @@ ${elements.join('\n')}
   })
 
   describe('when LHS is apply-to-all (3D)', () => {
-    it.skip('should work when RHS variable is apply-to-all (3D) and is accessed with same dimensions that appear in LHS (but in a different order)', () => {
-      const vars = readInlineModel(`
-        DimA: A1, A2 ~~|
-        DimB: B1, B2 ~~|
-        DimC: C1, C2 ~~|
-        x[DimA, DimC, DimB] = 1 ~~|
-        y[DimC, DimB, DimA] = x[DimA, DimC, DimB] ~~|
-      `)
+    it('should work when RHS variable is apply-to-all (3D) and is accessed with same dimensions that appear in LHS (but in a different order)', () => {
+      // Equivalent Vensim model for reference:
+      // const vars = readInlineModel(`
+      //   DimA: A1, A2 ~~|
+      //   DimB: B1, B2 ~~|
+      //   DimC: C1, C2 ~~|
+      //   x[DimA, DimC, DimB] = 1 ~~|
+      //   y[DimC, DimB, DimA] = x[DimA, DimC, DimB] ~~|
+      // `)
+
+      const xmileDims = `\
+<dim name="DimA">
+  <elem name="A1"/>
+  <elem name="A2"/>
+</dim>
+<dim name="DimB">
+  <elem name="B1"/>
+  <elem name="B2"/>
+</dim>
+<dim name="DimC">
+  <elem name="C1"/>
+  <elem name="C2"/>
+</dim>
+`
+      const xmileVars = `\
+<aux name="x">
+  <dimensions>
+    <dim name="DimA"/>
+    <dim name="DimC"/>
+    <dim name="DimB"/>
+  </dimensions>
+  <eqn>1</eqn>
+</aux>
+<aux name="y">
+  <dimensions>
+    <dim name="DimC"/>
+    <dim name="DimB"/>
+    <dim name="DimA"/>
+  </dimensions>
+  <eqn>x[DimA, DimC, DimB]</eqn>
+</aux>`
+      const mdl = xmile(xmileDims, xmileVars)
+      const vars = readInlineModel(mdl)
       expect(vars).toEqual([
         v('x[DimA,DimC,DimB]', '1', {
           refId: '_x',
@@ -2599,15 +3028,55 @@ ${elements.join('\n')}
       ])
     })
 
-    it.skip('should work when RHS variable is NON-apply-to-all (3D) and is accessed with same dimensions that appear in LHS (but in a different order)', () => {
-      const vars = readInlineModel(`
-        DimA: A1, A2 ~~|
-        DimB: B1, B2 ~~|
-        DimC: C1, C2 ~~|
-        x[DimA, C1, DimB] = 1 ~~|
-        x[DimA, C2, DimB] = 2 ~~|
-        y[DimC, DimB, DimA] = x[DimA, DimC, DimB] ~~|
-      `)
+    it('should work when RHS variable is NON-apply-to-all (3D) and is accessed with same dimensions that appear in LHS (but in a different order)', () => {
+      // Equivalent Vensim model for reference:
+      // const vars = readInlineModel(`
+      //   DimA: A1, A2 ~~|
+      //   DimB: B1, B2 ~~|
+      //   DimC: C1, C2 ~~|
+      //   x[DimA, C1, DimB] = 1 ~~|
+      //   x[DimA, C2, DimB] = 2 ~~|
+      //   y[DimC, DimB, DimA] = x[DimA, DimC, DimB] ~~|
+      // `)
+
+      const xmileDims = `\
+<dim name="DimA">
+  <elem name="A1"/>
+  <elem name="A2"/>
+</dim>
+<dim name="DimB">
+  <elem name="B1"/>
+  <elem name="B2"/>
+</dim>
+<dim name="DimC">
+  <elem name="C1"/>
+  <elem name="C2"/>
+</dim>
+`
+      const xmileVars = `\
+<aux name="x">
+  <dimensions>
+    <dim name="DimA"/>
+    <dim name="DimC"/>
+    <dim name="DimB"/>
+  </dimensions>
+  <element subscript="DimA,C1,DimB">
+    <eqn>1</eqn>
+  </element>
+  <element subscript="DimA,C2,DimB">
+    <eqn>2</eqn>
+  </element>
+</aux>
+<aux name="y">
+  <dimensions>
+    <dim name="DimC"/>
+    <dim name="DimB"/>
+    <dim name="DimA"/>
+  </dimensions>
+  <eqn>x[DimA, DimC, DimB]</eqn>
+</aux>`
+      const mdl = xmile(xmileDims, xmileVars)
+      const vars = readInlineModel(mdl)
       expect(vars).toEqual([
         v('x[DimA,C1,DimB]', '1', {
           refId: '_x[_dima,_c1,_dimb]',
@@ -2631,15 +3100,55 @@ ${elements.join('\n')}
   })
 
   describe('when LHS is NON-apply-to-all (3D)', () => {
-    it.skip('should work when RHS variable is apply-to-all (3D) and is accessed with same dimensions that appear in LHS (but in a different order)', () => {
-      const vars = readInlineModel(`
-        DimA: A1, A2 ~~|
-        DimB: B1, B2 ~~|
-        DimC: C1, C2, C3 ~~|
-        SubC: C2, C3 ~~|
-        x[DimA, DimC, DimB] = 1 ~~|
-        y[SubC, DimB, DimA] = x[DimA, SubC, DimB] ~~|
-      `)
+    it('should work when RHS variable is apply-to-all (3D) and is accessed with same dimensions that appear in LHS (but in a different order)', () => {
+      // Equivalent Vensim model for reference:
+      // const vars = readInlineModel(`
+      //   DimA: A1, A2 ~~|
+      //   DimB: B1, B2 ~~|
+      //   DimC: C1, C2, C3 ~~|
+      //   SubC: C2, C3 ~~|
+      //   x[DimA, DimC, DimB] = 1 ~~|
+      //   y[SubC, DimB, DimA] = x[DimA, SubC, DimB] ~~|
+      // `)
+
+      const xmileDims = `\
+<dim name="DimA">
+  <elem name="A1"/>
+  <elem name="A2"/>
+</dim>
+<dim name="DimB">
+  <elem name="B1"/>
+  <elem name="B2"/>
+</dim>
+<dim name="DimC">
+  <elem name="C1"/>
+  <elem name="C2"/>
+  <elem name="C3"/>
+</dim>
+<dim name="SubC">
+  <elem name="C2"/>
+  <elem name="C3"/>
+</dim>
+`
+      const xmileVars = `\
+<aux name="x">
+  <dimensions>
+    <dim name="DimA"/>
+    <dim name="DimC"/>
+    <dim name="DimB"/>
+  </dimensions>
+  <eqn>1</eqn>
+</aux>
+<aux name="y">
+  <dimensions>
+    <dim name="SubC"/>
+    <dim name="DimB"/>
+    <dim name="DimA"/>
+  </dimensions>
+  <eqn>x[DimA, SubC, DimB]</eqn>
+</aux>`
+      const mdl = xmile(xmileDims, xmileVars)
+      const vars = readInlineModel(mdl)
       expect(vars).toEqual([
         v('x[DimA,DimC,DimB]', '1', {
           refId: '_x',
@@ -2666,27 +3175,103 @@ ${elements.join('\n')}
     })
 
     // This test is based on the example from #278
-    it.skip('should work when RHS variable is NON-apply-to-all (2D) and is accessed with 2 different dimensions from LHS that map to the same family', () => {
-      const vars = readInlineModel(`
-        Scenario: S1, S2 ~~|
-        Sector: A1, A2, A3 ~~|
-        Supplying Sector: A1, A2 -> Producing Sector ~~|
-        Producing Sector: A1, A2 -> Supplying Sector ~~|
-        x[A1,A1] = 101 ~~|
-        x[A1,A2] = 102 ~~|
-        x[A1,A3] = 103 ~~|
-        x[A2,A1] = 201 ~~|
-        x[A2,A2] = 202 ~~|
-        x[A2,A3] = 203 ~~|
-        x[A3,A1] = 301 ~~|
-        x[A3,A2] = 302 ~~|
-        x[A3,A3] = 303 ~~|
-        y[S1] = 1000 ~~|
-        y[S2] = 2000 ~~|
-        z[Scenario, Supplying Sector, Producing Sector] =
-          y[Scenario] + x[Supplying Sector, Producing Sector]
-          ~~|
-      `)
+    it('should work when RHS variable is NON-apply-to-all (2D) and is accessed with 2 different dimensions from LHS that map to the same family', () => {
+      // Equivalent Vensim model for reference:
+      // const vars = readInlineModel(`
+      //   Scenario: S1, S2 ~~|
+      //   Sector: A1, A2, A3 ~~|
+      //   Supplying Sector: A1, A2 -> Producing Sector ~~|
+      //   Producing Sector: A1, A2 -> Supplying Sector ~~|
+      //   x[A1,A1] = 101 ~~|
+      //   x[A1,A2] = 102 ~~|
+      //   x[A1,A3] = 103 ~~|
+      //   x[A2,A1] = 201 ~~|
+      //   x[A2,A2] = 202 ~~|
+      //   x[A2,A3] = 203 ~~|
+      //   x[A3,A1] = 301 ~~|
+      //   x[A3,A2] = 302 ~~|
+      //   x[A3,A3] = 303 ~~|
+      //   y[S1] = 1000 ~~|
+      //   y[S2] = 2000 ~~|
+      //   z[Scenario, Supplying Sector, Producing Sector] =
+      //     y[Scenario] + x[Supplying Sector, Producing Sector]
+      //     ~~|
+      // `)
+
+      const xmileDims = `\
+<dim name="Scenario">
+  <elem name="S1"/>
+  <elem name="S2"/>
+</dim>
+<dim name="Sector">
+  <elem name="A1"/>
+  <elem name="A2"/>
+  <elem name="A3"/>
+</dim>
+<dim name="Supplying Sector">
+  <elem name="A1"/>
+  <elem name="A2"/>
+</dim>
+<dim name="Producing Sector">
+  <elem name="A1"/>
+  <elem name="A2"/>
+</dim>
+`
+      const xmileVars = `\
+<aux name="x">
+  <dimensions>
+    <dim name="Sector"/>
+    <dim name="Sector"/>
+  </dimensions>
+  <element subscript="A1,A1">
+    <eqn>101</eqn>
+  </element>
+  <element subscript="A1,A2">
+    <eqn>102</eqn>
+  </element>
+  <element subscript="A1,A3">
+    <eqn>103</eqn>
+  </element>
+  <element subscript="A2,A1">
+    <eqn>201</eqn>
+  </element>
+  <element subscript="A2,A2">
+    <eqn>202</eqn>
+  </element>
+  <element subscript="A2,A3">
+    <eqn>203</eqn>
+  </element>
+  <element subscript="A3,A1">
+    <eqn>301</eqn>
+  </element>
+  <element subscript="A3,A2">
+    <eqn>302</eqn>
+  </element>
+  <element subscript="A3,A3">
+    <eqn>303</eqn>
+  </element>
+</aux>
+<aux name="y">
+  <dimensions>
+    <dim name="Scenario"/>
+  </dimensions>
+  <element subscript="S1">
+    <eqn>1000</eqn>
+  </element>
+  <element subscript="S2">
+    <eqn>2000</eqn>
+  </element>
+</aux>
+<aux name="z">
+  <dimensions>
+    <dim name="Scenario"/>
+    <dim name="Supplying Sector"/>
+    <dim name="Producing Sector"/>
+  </dimensions>
+  <eqn>y[Scenario] + x[Supplying Sector, Producing Sector]</eqn>
+</aux>`
+      const mdl = xmile(xmileDims, xmileVars)
+      const vars = readInlineModel(mdl)
       expect(vars).toEqual([
         v('x[A1,A1]', '101', {
           refId: '_x[_a1,_a1]',
@@ -2789,12 +3374,26 @@ ${elements.join('\n')}
   // NOTE: This is the end of the "should work for {0,1,2,3}D variable" tests.
   //
 
-  it.skip('should work for ACTIVE INITIAL function', () => {
-    const vars = readInlineModel(`
-      Initial Target Capacity = 1 ~~|
-      Capacity = 2 ~~|
-      Target Capacity = ACTIVE INITIAL(Capacity, Initial Target Capacity) ~~|
-    `)
+  it('should work for ACTIVE INITIAL function', () => {
+    // Equivalent Vensim model for reference:
+    // const vars = readInlineModel(`
+    //   Initial Target Capacity = 1 ~~|
+    //   Capacity = 2 ~~|
+    //   Target Capacity = ACTIVE INITIAL(Capacity, Initial Target Capacity) ~~|
+    // `)
+
+    const xmileVars = `\
+<aux name="Initial Target Capacity">
+  <eqn>1</eqn>
+</aux>
+<aux name="Capacity">
+  <eqn>2</eqn>
+</aux>
+<aux name="Target Capacity">
+  <eqn>ACTIVE INITIAL(Capacity, Initial Target Capacity)</eqn>
+</aux>`
+    const mdl = xmile('', xmileVars)
+    const vars = readInlineModel(mdl)
     expect(vars).toEqual([
       v('Initial Target Capacity', '1', {
         refId: '_initial_target_capacity',
@@ -2814,16 +3413,71 @@ ${elements.join('\n')}
     ])
   })
 
+  // TODO: This test is skipped for now; in Stella, the function is called `ALLOCATE` and we will need to see
+  // if the Vensim `ALLOCATE AVAILABLE` is compatible enough
   it.skip('should work for ALLOCATE AVAILABLE function (1D LHS, 1D demand, 2D pp, non-subscripted avail)', () => {
-    const vars = readInlineModel(`
-      branch: Boston, Dayton ~~|
-      pprofile: ptype, ppriority ~~|
-      supply available = 200 ~~|
-      demand[branch] = 500,300 ~~|
-      priority[Boston,pprofile] = 1,5 ~~|
-      priority[Dayton,pprofile] = 1,7 ~~|
-      shipments[branch] = ALLOCATE AVAILABLE(demand[branch], priority[branch,ptype], supply available) ~~|
-    `)
+    // Equivalent Vensim model for reference:
+    // const vars = readInlineModel(`
+    //   branch: Boston, Dayton ~~|
+    //   pprofile: ptype, ppriority ~~|
+    //   supply available = 200 ~~|
+    //   demand[branch] = 500,300 ~~|
+    //   priority[Boston,pprofile] = 1,5 ~~|
+    //   priority[Dayton,pprofile] = 1,7 ~~|
+    //   shipments[branch] = ALLOCATE AVAILABLE(demand[branch], priority[branch,ptype], supply available) ~~|
+    // `)
+
+    const xmileDims = `\
+<dim name="branch">
+  <elem name="Boston"/>
+  <elem name="Dayton"/>
+</dim>
+<dim name="pprofile">
+  <elem name="ptype"/>
+  <elem name="ppriority"/>
+</dim>
+`
+    const xmileVars = `\
+<aux name="supply available">
+  <eqn>200</eqn>
+</aux>
+<aux name="demand">
+  <dimensions>
+    <dim name="branch"/>
+  </dimensions>
+  <element subscript="Boston">
+    <eqn>500</eqn>
+  </element>
+  <element subscript="Dayton">
+    <eqn>300</eqn>
+  </element>
+</aux>
+<aux name="priority">
+  <dimensions>
+    <dim name="branch"/>
+    <dim name="pprofile"/>
+  </dimensions>
+  <element subscript="Boston,ptype">
+    <eqn>1</eqn>
+  </element>
+  <element subscript="Boston,ppriority">
+    <eqn>5</eqn>
+  </element>
+  <element subscript="Dayton,ptype">
+    <eqn>1</eqn>
+  </element>
+  <element subscript="Dayton,ppriority">
+    <eqn>7</eqn>
+  </element>
+</aux>
+<aux name="shipments">
+  <dimensions>
+    <dim name="branch"/>
+  </dimensions>
+  <eqn>ALLOCATE AVAILABLE(demand[branch], priority[branch,ptype], supply available)</eqn>
+</aux>`
+    const mdl = xmile(xmileDims, xmileVars)
+    const vars = readInlineModel(mdl)
     expect(vars).toEqual([
       v('supply available', '200', {
         refId: '_supply_available',
@@ -2882,6 +3536,8 @@ ${elements.join('\n')}
     ])
   })
 
+  // TODO: This test is skipped for now; in Stella, the function is called `ALLOCATE` and we will need to see
+  // if the Vensim `ALLOCATE AVAILABLE` is compatible enough
   it.skip('should work for ALLOCATE AVAILABLE function (1D LHS, 1D demand, 3D pp with specific first subscript, non-subscripted avail)', () => {
     const vars = readInlineModel(`
       branch: Boston, Dayton, Fresno ~~|
@@ -3038,6 +3694,8 @@ ${elements.join('\n')}
     ])
   })
 
+  // TODO: This test is skipped for now; in Stella, the function is called `ALLOCATE` and we will need to see
+  // if the Vensim `ALLOCATE AVAILABLE` is compatible enough
   it.skip('should work for ALLOCATE AVAILABLE function (2D LHS, 2D demand, 2D pp, non-subscripted avail)', () => {
     const vars = readInlineModel(`
       branch: Boston, Dayton, Fresno ~~|
@@ -3150,6 +3808,8 @@ ${elements.join('\n')}
     ])
   })
 
+  // TODO: This test is skipped for now; in Stella, the function is called `ALLOCATE` and we will need to see
+  // if the Vensim `ALLOCATE AVAILABLE` is compatible enough
   it.skip('should work for ALLOCATE AVAILABLE function (2D LHS, 2D demand, 3D pp, 1D avail)', () => {
     const vars = readInlineModel(`
       branch: Boston, Dayton, Fresno ~~|
@@ -3320,11 +3980,22 @@ ${elements.join('\n')}
     ])
   })
 
-  it.skip('should work for DELAY1 function', () => {
-    const vars = readInlineModel(`
-      x = 1 ~~|
-      y = DELAY1(x, 5) ~~|
-    `)
+  it('should work for DELAY1 function', () => {
+    // Equivalent Vensim model for reference:
+    // const vars = readInlineModel(`
+    //   x = 1 ~~|
+    //   y = DELAY1(x, 5) ~~|
+    // `)
+
+    const xmileVars = `\
+<aux name="x">
+  <eqn>1</eqn>
+</aux>
+<aux name="y">
+  <eqn>DELAY1(x, 5)</eqn>
+</aux>`
+    const mdl = xmile('', xmileVars)
+    const vars = readInlineModel(mdl)
     expect(vars).toEqual([
       v('x', '1', {
         refId: '_x',
@@ -3353,12 +4024,26 @@ ${elements.join('\n')}
     ])
   })
 
-  it.skip('should work for DELAY1I function', () => {
-    const vars = readInlineModel(`
-      x = 1 ~~|
-      init = 2 ~~|
-      y = DELAY1I(x, 5, init) ~~|
-    `)
+  it('should work for DELAY1I function', () => {
+    // Equivalent Vensim model for reference:
+    // const vars = readInlineModel(`
+    //   x = 1 ~~|
+    //   init = 2 ~~|
+    //   y = DELAY1I(x, 5, init) ~~|
+    // `)
+
+    const xmileVars = `\
+<aux name="x">
+  <eqn>1</eqn>
+</aux>
+<aux name="init">
+  <eqn>2</eqn>
+</aux>
+<aux name="y">
+  <eqn>DELAY1I(x, 5, init)</eqn>
+</aux>`
+    const mdl = xmile('', xmileVars)
+    const vars = readInlineModel(mdl)
     expect(vars).toEqual([
       v('x', '1', {
         refId: '_x',
@@ -3391,50 +4076,96 @@ ${elements.join('\n')}
     ])
   })
 
-  it.skip('should work for DELAY1I function (with subscripted variables)', () => {
+  it('should work for DELAY1I function (with subscripted variables)', () => {
     // Note that we have a mix of non-apply-to-all (input, delay) and apply-to-all (init)
     // variables here to cover both cases
-    const vars = readInlineModel(`
-      DimA: A1, A2, A3 ~~|
-      input[DimA] = 10, 20, 30 ~~|
-      delay[DimA] = 1, 2, 3 ~~|
-      init[DimA] = 0 ~~|
-      y[DimA] = DELAY1I(input[DimA], delay[DimA], init[DimA]) ~~|
-    `)
+    // Equivalent Vensim model for reference:
+    // const vars = readInlineModel(`
+    //   DimA: A1, A2, A3 ~~|
+    //   input[DimA] = 10, 20, 30 ~~|
+    //   delay[DimA] = 1, 2, 3 ~~|
+    //   init[DimA] = 0 ~~|
+    //   y[DimA] = DELAY1I(input[DimA], delay[DimA], init[DimA]) ~~|
+    // `)
+
+    const xmileDims = `\
+<dim name="DimA">
+  <elem name="A1"/>
+  <elem name="A2"/>
+  <elem name="A3"/>
+</dim>
+`
+    const xmileVars = `\
+<aux name="input">
+  <dimensions>
+    <dim name="DimA"/>
+  </dimensions>
+  <element subscript="A1">
+    <eqn>10</eqn>
+  </element>
+  <element subscript="A2">
+    <eqn>20</eqn>
+  </element>
+  <element subscript="A3">
+    <eqn>30</eqn>
+  </element>
+</aux>
+<aux name="delay">
+  <dimensions>
+    <dim name="DimA"/>
+  </dimensions>
+  <element subscript="A1">
+    <eqn>1</eqn>
+  </element>
+  <element subscript="A2">
+    <eqn>2</eqn>
+  </element>
+  <element subscript="A3">
+    <eqn>3</eqn>
+  </element>
+</aux>
+<aux name="init">
+  <dimensions>
+    <dim name="DimA"/>
+  </dimensions>
+  <eqn>0</eqn>
+</aux>
+<aux name="y">
+  <dimensions>
+    <dim name="DimA"/>
+  </dimensions>
+  <eqn>DELAY1I(input[DimA], delay[DimA], init[DimA])</eqn>
+</aux>`
+    const mdl = xmile(xmileDims, xmileVars)
+    const vars = readInlineModel(mdl)
     expect(vars).toEqual([
-      v('input[DimA]', '10,20,30', {
+      v('input[A1]', '10', {
         refId: '_input[_a1]',
-        separationDims: ['_dima'],
         subscripts: ['_a1'],
         varType: 'const'
       }),
-      v('input[DimA]', '10,20,30', {
+      v('input[A2]', '20', {
         refId: '_input[_a2]',
-        separationDims: ['_dima'],
         subscripts: ['_a2'],
         varType: 'const'
       }),
-      v('input[DimA]', '10,20,30', {
+      v('input[A3]', '30', {
         refId: '_input[_a3]',
-        separationDims: ['_dima'],
         subscripts: ['_a3'],
         varType: 'const'
       }),
-      v('delay[DimA]', '1,2,3', {
+      v('delay[A1]', '1', {
         refId: '_delay[_a1]',
-        separationDims: ['_dima'],
         subscripts: ['_a1'],
         varType: 'const'
       }),
-      v('delay[DimA]', '1,2,3', {
+      v('delay[A2]', '2', {
         refId: '_delay[_a2]',
-        separationDims: ['_dima'],
         subscripts: ['_a2'],
         varType: 'const'
       }),
-      v('delay[DimA]', '1,2,3', {
+      v('delay[A3]', '3', {
         refId: '_delay[_a3]',
-        separationDims: ['_dima'],
         subscripts: ['_a3'],
         varType: 'const'
       }),
@@ -3469,50 +4200,110 @@ ${elements.join('\n')}
     ])
   })
 
+  // TODO: This test is not exactly equivalent to the Vensim one since it uses separated definitions
+  // for y[A1] and y[A2] instead of a single definition for y[SubA]
   it.skip('should work for DELAY1I function (with separated variables using subdimension)', () => {
-    const vars = readInlineModel(`
-      DimA: A1, A2, A3 ~~|
-      SubA: A2, A3 ~~|
-      input[DimA] = 10, 20, 30 ~~|
-      delay[DimA] = 1, 2, 3 ~~|
-      init[DimA] = 0 ~~|
-      y[A1] = 5 ~~|
-      y[SubA] = DELAY1I(input[SubA], delay[SubA], init[SubA]) ~~|
-    `)
+    // Equivalent Vensim model for reference:
+    // const vars = readInlineModel(`
+    //   DimA: A1, A2, A3 ~~|
+    //   SubA: A2, A3 ~~|
+    //   input[DimA] = 10, 20, 30 ~~|
+    //   delay[DimA] = 1, 2, 3 ~~|
+    //   init[DimA] = 0 ~~|
+    //   y[A1] = 5 ~~|
+    //   y[SubA] = DELAY1I(input[SubA], delay[SubA], init[SubA]) ~~|
+    // `)
+
+    const xmileDims = `\
+<dim name="DimA">
+  <elem name="A1"/>
+  <elem name="A2"/>
+  <elem name="A3"/>
+</dim>
+<dim name="SubA">
+  <elem name="A2"/>
+  <elem name="A3"/>
+</dim>
+`
+    const xmileVars = `\
+<aux name="input">
+  <dimensions>
+    <dim name="DimA"/>
+  </dimensions>
+  <element subscript="A1">
+    <eqn>10</eqn>
+  </element>
+  <element subscript="A2">
+    <eqn>20</eqn>
+  </element>
+  <element subscript="A3">
+    <eqn>30</eqn>
+  </element>
+</aux>
+<aux name="delay">
+  <dimensions>
+    <dim name="DimA"/>
+  </dimensions>
+  <element subscript="A1">
+    <eqn>1</eqn>
+  </element>
+  <element subscript="A2">
+    <eqn>2</eqn>
+  </element>
+  <element subscript="A3">
+    <eqn>3</eqn>
+  </element>
+</aux>
+<aux name="init">
+  <dimensions>
+    <dim name="DimA"/>
+  </dimensions>
+  <eqn>0</eqn>
+</aux>
+<aux name="y">
+  <dimensions>
+    <dim name="DimA"/>
+  </dimensions>
+  <element subscript="A1">
+    <eqn>5</eqn>
+  </element>
+  <element subscript="A2">
+    <eqn>DELAY1I(input[A2], delay[A2], init[A2])</eqn>
+  </element>
+  <element subscript="A3">
+    <eqn>DELAY1I(input[A3], delay[A3], init[A3])</eqn>
+  </element>
+</aux>`
+    const mdl = xmile(xmileDims, xmileVars)
+    const vars = readInlineModel(mdl)
     expect(vars).toEqual([
-      v('input[DimA]', '10,20,30', {
+      v('input[A1]', '10', {
         refId: '_input[_a1]',
-        separationDims: ['_dima'],
         subscripts: ['_a1'],
         varType: 'const'
       }),
-      v('input[DimA]', '10,20,30', {
+      v('input[A2]', '20', {
         refId: '_input[_a2]',
-        separationDims: ['_dima'],
         subscripts: ['_a2'],
         varType: 'const'
       }),
-      v('input[DimA]', '10,20,30', {
+      v('input[A3]', '30', {
         refId: '_input[_a3]',
-        separationDims: ['_dima'],
         subscripts: ['_a3'],
         varType: 'const'
       }),
-      v('delay[DimA]', '1,2,3', {
+      v('delay[A1]', '1', {
         refId: '_delay[_a1]',
-        separationDims: ['_dima'],
         subscripts: ['_a1'],
         varType: 'const'
       }),
-      v('delay[DimA]', '1,2,3', {
+      v('delay[A2]', '2', {
         refId: '_delay[_a2]',
-        separationDims: ['_dima'],
         subscripts: ['_a2'],
         varType: 'const'
       }),
-      v('delay[DimA]', '1,2,3', {
+      v('delay[A3]', '3', {
         refId: '_delay[_a3]',
-        separationDims: ['_dima'],
         subscripts: ['_a3'],
         varType: 'const'
       }),
@@ -3526,7 +4317,7 @@ ${elements.join('\n')}
         subscripts: ['_a1'],
         varType: 'const'
       }),
-      v('y[SubA]', 'DELAY1I(input[SubA],delay[SubA],init[SubA])', {
+      v('y[A2]', 'DELAY1I(input[A2],delay[A2],init[A2])', {
         delayTimeVarName: '__aux1',
         delayVarRefId: '__level_y_1[_a2]',
         refId: '_y[_a2]',
@@ -3534,7 +4325,7 @@ ${elements.join('\n')}
         separationDims: ['_suba'],
         subscripts: ['_a2']
       }),
-      v('y[SubA]', 'DELAY1I(input[SubA],delay[SubA],init[SubA])', {
+      v('y[A3]', 'DELAY1I(input[A3],delay[A3],init[A3])', {
         delayTimeVarName: '__aux2',
         delayVarRefId: '__level_y_1[_a3]',
         refId: '_y[_a3]',
@@ -3577,12 +4368,26 @@ ${elements.join('\n')}
     ])
   })
 
-  it.skip('should work for DELAY3 function', () => {
-    const vars = readInlineModel(`
-      input = 1 ~~|
-      delay = 2 ~~|
-      y = DELAY3(input, delay) ~~|
-    `)
+  it('should work for DELAY3 function', () => {
+    // Equivalent Vensim model for reference:
+    // const vars = readInlineModel(`
+    //   input = 1 ~~|
+    //   delay = 2 ~~|
+    //   y = DELAY3(input, delay) ~~|
+    // `)
+
+    const xmileVars = `\
+<aux name="input">
+  <eqn>1</eqn>
+</aux>
+<aux name="delay">
+  <eqn>2</eqn>
+</aux>
+<aux name="y">
+  <eqn>DELAY3(input, delay)</eqn>
+</aux>`
+    const mdl = xmile('', xmileVars)
+    const vars = readInlineModel(mdl)
     expect(vars).toEqual([
       v('input', '1', {
         refId: '_input',
@@ -3648,13 +4453,30 @@ ${elements.join('\n')}
     ])
   })
 
-  it.skip('should work for DELAY3I function', () => {
-    const vars = readInlineModel(`
-      input = 1 ~~|
-      delay = 2 ~~|
-      init = 3 ~~|
-      y = DELAY3I(input, delay, init) ~~|
-    `)
+  it('should work for DELAY3I function', () => {
+    // Equivalent Vensim model for reference:
+    // const vars = readInlineModel(`
+    //   input = 1 ~~|
+    //   delay = 2 ~~|
+    //   init = 3 ~~|
+    //   y = DELAY3I(input, delay, init) ~~|
+    // `)
+
+    const xmileVars = `\
+<aux name="input">
+  <eqn>1</eqn>
+</aux>
+<aux name="delay">
+  <eqn>2</eqn>
+</aux>
+<aux name="init">
+  <eqn>3</eqn>
+</aux>
+<aux name="y">
+  <eqn>DELAY3I(input, delay, init)</eqn>
+</aux>`
+    const mdl = xmile('', xmileVars)
+    const vars = readInlineModel(mdl)
     expect(vars).toEqual([
       v('input', '1', {
         refId: '_input',
@@ -3724,13 +4546,30 @@ ${elements.join('\n')}
     ])
   })
 
-  it.skip('should work for DELAY3I function (with nested function calls)', () => {
-    const vars = readInlineModel(`
-      input = 1 ~~|
-      delay = 2 ~~|
-      init = 3 ~~|
-      y = DELAY3I(MIN(0, input), MAX(0, delay), ABS(init)) ~~|
-    `)
+  it('should work for DELAY3I function (with nested function calls)', () => {
+    // Equivalent Vensim model for reference:
+    // const vars = readInlineModel(`
+    //   input = 1 ~~|
+    //   delay = 2 ~~|
+    //   init = 3 ~~|
+    //   y = DELAY3I(MIN(0, input), MAX(0, delay), ABS(init)) ~~|
+    // `)
+
+    const xmileVars = `\
+<aux name="input">
+  <eqn>1</eqn>
+</aux>
+<aux name="delay">
+  <eqn>2</eqn>
+</aux>
+<aux name="init">
+  <eqn>3</eqn>
+</aux>
+<aux name="y">
+  <eqn>DELAY3I(MIN(0, input), MAX(0, delay), ABS(init))</eqn>
+</aux>`
+    const mdl = xmile('', xmileVars)
+    const vars = readInlineModel(mdl)
     expect(vars).toEqual([
       v('input', '1', {
         refId: '_input',
@@ -3804,50 +4643,96 @@ ${elements.join('\n')}
     ])
   })
 
-  it.skip('should work for DELAY3I function (with subscripted variables)', () => {
+  it('should work for DELAY3I function (with subscripted variables)', () => {
     // Note that we have a mix of non-apply-to-all (input, delay) and apply-to-all (init)
     // variables here to cover both cases
-    const vars = readInlineModel(`
-      DimA: A1, A2, A3 ~~|
-      input[DimA] = 10, 20, 30 ~~|
-      delay[DimA] = 1, 2, 3 ~~|
-      init[DimA] = 0 ~~|
-      y[DimA] = DELAY3I(input[DimA], delay[DimA], init[DimA]) ~~|
-    `)
+    // Equivalent Vensim model for reference:
+    // const vars = readInlineModel(`
+    //   DimA: A1, A2, A3 ~~|
+    //   input[DimA] = 10, 20, 30 ~~|
+    //   delay[DimA] = 1, 2, 3 ~~|
+    //   init[DimA] = 0 ~~|
+    //   y[DimA] = DELAY3I(input[DimA], delay[DimA], init[DimA]) ~~|
+    // `)
+
+    const xmileDims = `\
+<dim name="DimA">
+  <elem name="A1"/>
+  <elem name="A2"/>
+  <elem name="A3"/>
+</dim>
+`
+    const xmileVars = `\
+<aux name="input">
+  <dimensions>
+    <dim name="DimA"/>
+  </dimensions>
+  <element subscript="A1">
+    <eqn>10</eqn>
+  </element>
+  <element subscript="A2">
+    <eqn>20</eqn>
+  </element>
+  <element subscript="A3">
+    <eqn>30</eqn>
+  </element>
+</aux>
+<aux name="delay">
+  <dimensions>
+    <dim name="DimA"/>
+  </dimensions>
+  <element subscript="A1">
+    <eqn>1</eqn>
+  </element>
+  <element subscript="A2">
+    <eqn>2</eqn>
+  </element>
+  <element subscript="A3">
+    <eqn>3</eqn>
+  </element>
+</aux>
+<aux name="init">
+  <dimensions>
+    <dim name="DimA"/>
+  </dimensions>
+  <eqn>0</eqn>
+</aux>
+<aux name="y">
+  <dimensions>
+    <dim name="DimA"/>
+  </dimensions>
+  <eqn>DELAY3I(input[DimA], delay[DimA], init[DimA])</eqn>
+</aux>`
+    const mdl = xmile(xmileDims, xmileVars)
+    const vars = readInlineModel(mdl)
     expect(vars).toEqual([
-      v('input[DimA]', '10,20,30', {
+      v('input[A1]', '10', {
         refId: '_input[_a1]',
-        separationDims: ['_dima'],
         subscripts: ['_a1'],
         varType: 'const'
       }),
-      v('input[DimA]', '10,20,30', {
+      v('input[A2]', '20', {
         refId: '_input[_a2]',
-        separationDims: ['_dima'],
         subscripts: ['_a2'],
         varType: 'const'
       }),
-      v('input[DimA]', '10,20,30', {
+      v('input[A3]', '30', {
         refId: '_input[_a3]',
-        separationDims: ['_dima'],
         subscripts: ['_a3'],
         varType: 'const'
       }),
-      v('delay[DimA]', '1,2,3', {
+      v('delay[A1]', '1', {
         refId: '_delay[_a1]',
-        separationDims: ['_dima'],
         subscripts: ['_a1'],
         varType: 'const'
       }),
-      v('delay[DimA]', '1,2,3', {
+      v('delay[A2]', '2', {
         refId: '_delay[_a2]',
-        separationDims: ['_dima'],
         subscripts: ['_a2'],
         varType: 'const'
       }),
-      v('delay[DimA]', '1,2,3', {
+      v('delay[A3]', '3', {
         refId: '_delay[_a3]',
-        separationDims: ['_dima'],
         subscripts: ['_a3'],
         varType: 'const'
       }),
@@ -3920,16 +4805,82 @@ ${elements.join('\n')}
     ])
   })
 
+  // TODO: This test is not exactly equivalent to the Vensim one since it uses separated definitions
+  // for y[A1] and y[A2] instead of a single definition for y[SubA]
   it.skip('should work for DELAY3I function (with separated variables using subdimension)', () => {
-    const vars = readInlineModel(`
-      DimA: A1, A2, A3 ~~|
-      SubA: A2, A3 ~~|
-      input[DimA] = 10, 20, 30 ~~|
-      delay[DimA] = 1, 2, 3 ~~|
-      init[DimA] = 0 ~~|
-      y[A1] = 5 ~~|
-      y[SubA] = DELAY3I(input[SubA], delay[SubA], init[SubA]) ~~|
-    `)
+    // Equivalent Vensim model for reference:
+    // const vars = readInlineModel(`
+    //   DimA: A1, A2, A3 ~~|
+    //   SubA: A2, A3 ~~|
+    //   input[DimA] = 10, 20, 30 ~~|
+    //   delay[DimA] = 1, 2, 3 ~~|
+    //   init[DimA] = 0 ~~|
+    //   y[A1] = 5 ~~|
+    //   y[SubA] = DELAY3I(input[SubA], delay[SubA], init[SubA]) ~~|
+    // `)
+
+    const xmileDims = `\
+<dim name="DimA">
+  <elem name="A1"/>
+  <elem name="A2"/>
+  <elem name="A3"/>
+</dim>
+<dim name="SubA">
+  <elem name="A2"/>
+  <elem name="A3"/>
+</dim>
+`
+    const xmileVars = `\
+<aux name="input">
+  <dimensions>
+    <dim name="DimA"/>
+  </dimensions>
+  <element subscript="A1">
+    <eqn>10</eqn>
+  </element>
+  <element subscript="A2">
+    <eqn>20</eqn>
+  </element>
+  <element subscript="A3">
+    <eqn>30</eqn>
+  </element>
+</aux>
+<aux name="delay">
+  <dimensions>
+    <dim name="DimA"/>
+  </dimensions>
+  <element subscript="A1">
+    <eqn>1</eqn>
+  </element>
+  <element subscript="A2">
+    <eqn>2</eqn>
+  </element>
+  <element subscript="A3">
+    <eqn>3</eqn>
+  </element>
+</aux>
+<aux name="init">
+  <dimensions>
+    <dim name="DimA"/>
+  </dimensions>
+  <eqn>0</eqn>
+</aux>
+<aux name="y">
+  <dimensions>
+    <dim name="DimA"/>
+  </dimensions>
+  <element subscript="A1">
+    <eqn>5</eqn>
+  </element>
+  <element subscript="A2">
+    <eqn>DELAY3I(input[A2], delay[A2], init[A2])</eqn>
+  </element>
+  <element subscript="A3">
+    <eqn>DELAY3I(input[A3], delay[A3], init[A3])</eqn>
+  </element>
+</aux>`
+    const mdl = xmile(xmileDims, xmileVars)
+    const vars = readInlineModel(mdl)
     expect(vars).toEqual([
       v('input[DimA]', '10,20,30', {
         refId: '_input[_a1]',
@@ -4104,14 +5055,34 @@ ${elements.join('\n')}
     ])
   })
 
-  it.skip('should work for DELAY FIXED function', () => {
-    const vars = readInlineModel(`
-      x = 1 ~~|
-      y = 2 ~~|
-      delay = y + 5 ~~|
-      init = 3 ~~|
-      z = DELAY FIXED(x, delay, init) ~~|
-    `)
+  it('should work for DELAY FIXED function', () => {
+    // Equivalent Vensim model for reference:
+    // const vars = readInlineModel(`
+    //   x = 1 ~~|
+    //   y = 2 ~~|
+    //   delay = y + 5 ~~|
+    //   init = 3 ~~|
+    //   z = DELAY FIXED(x, delay, init) ~~|
+    // `)
+
+    const xmileVars = `\
+<aux name="x">
+  <eqn>1</eqn>
+</aux>
+<aux name="y">
+  <eqn>2</eqn>
+</aux>
+<aux name="delay">
+  <eqn>y + 5</eqn>
+</aux>
+<aux name="init">
+  <eqn>3</eqn>
+</aux>
+<aux name="z">
+  <eqn>DELAY FIXED(x, delay, init)</eqn>
+</aux>`
+    const mdl = xmile('', xmileVars)
+    const vars = readInlineModel(mdl)
     expect(vars).toEqual([
       v('x', '1', {
         refId: '_x',
@@ -4142,16 +5113,42 @@ ${elements.join('\n')}
     ])
   })
 
-  it.skip('should work for DEPRECIATE STRAIGHTLINE function', () => {
-    const vars = readInlineModel(`
-      dtime = 20 ~~|
-      fisc = 1 ~~|
-      init = 5 ~~|
-      Capacity Cost = 1000 ~~|
-      New Capacity = 2000 ~~|
-      stream = Capacity Cost * New Capacity ~~|
-      Depreciated Amount = DEPRECIATE STRAIGHTLINE(stream, dtime, fisc, init) ~~|
-    `)
+  it('should work for DEPRECIATE STRAIGHTLINE function', () => {
+    // Equivalent Vensim model for reference:
+    // const vars = readInlineModel(`
+    //   dtime = 20 ~~|
+    //   fisc = 1 ~~|
+    //   init = 5 ~~|
+    //   Capacity Cost = 1000 ~~|
+    //   New Capacity = 2000 ~~|
+    //   stream = Capacity Cost * New Capacity ~~|
+    //   Depreciated Amount = DEPRECIATE STRAIGHTLINE(stream, dtime, fisc, init) ~~|
+    // `)
+
+    const xmileVars = `\
+<aux name="dtime">
+  <eqn>20</eqn>
+</aux>
+<aux name="fisc">
+  <eqn>1</eqn>
+</aux>
+<aux name="init">
+  <eqn>5</eqn>
+</aux>
+<aux name="Capacity Cost">
+  <eqn>1000</eqn>
+</aux>
+<aux name="New Capacity">
+  <eqn>2000</eqn>
+</aux>
+<aux name="stream">
+  <eqn>Capacity Cost * New Capacity</eqn>
+</aux>
+<aux name="Depreciated Amount">
+  <eqn>DEPRECIATE STRAIGHTLINE(stream, dtime, fisc, init)</eqn>
+</aux>`
+    const mdl = xmile('', xmileVars)
+    const vars = readInlineModel(mdl)
     expect(vars).toEqual([
       v('dtime', '20', {
         refId: '_dtime',
@@ -4189,11 +5186,22 @@ ${elements.join('\n')}
     ])
   })
 
-  it.skip('should work for GAME function (no dimensions)', () => {
-    const vars = readInlineModel(`
-      x = 1 ~~|
-      y = GAME(x) ~~|
-    `)
+  it('should work for GAME function (no dimensions)', () => {
+    // Equivalent Vensim model for reference:
+    // const vars = readInlineModel(`
+    //   x = 1 ~~|
+    //   y = GAME(x) ~~|
+    // `)
+
+    const xmileVars = `\
+<aux name="x">
+  <eqn>1</eqn>
+</aux>
+<aux name="y">
+  <eqn>GAME(x)</eqn>
+</aux>`
+    const mdl = xmile('', xmileVars)
+    const vars = readInlineModel(mdl)
     expect(vars).toEqual([
       v('x', '1', {
         refId: '_x',
@@ -4214,22 +5222,48 @@ ${elements.join('\n')}
     ])
   })
 
-  it.skip('should work for GAME function (1D)', () => {
-    const vars = readInlineModel(`
-      DimA: A1, A2 ~~|
-      x[DimA] = 1, 2 ~~|
-      y[DimA] = GAME(x[DimA]) ~~|
-    `)
+  it('should work for GAME function (1D)', () => {
+    // Equivalent Vensim model for reference:
+    // const vars = readInlineModel(`
+    //   DimA: A1, A2 ~~|
+    //   x[DimA] = 1, 2 ~~|
+    //   y[DimA] = GAME(x[DimA]) ~~|
+    // `)
+
+    const xmileDims = `\
+<dim name="DimA">
+  <elem name="A1"/>
+  <elem name="A2"/>
+</dim>
+`
+    const xmileVars = `\
+<aux name="x">
+  <dimensions>
+    <dim name="DimA"/>
+  </dimensions>
+  <element subscript="A1">
+    <eqn>1</eqn>
+  </element>
+  <element subscript="A2">
+    <eqn>2</eqn>
+  </element>
+</aux>
+<aux name="y">
+  <dimensions>
+    <dim name="DimA"/>
+  </dimensions>
+  <eqn>GAME(x[DimA])</eqn>
+</aux>`
+    const mdl = xmile(xmileDims, xmileVars)
+    const vars = readInlineModel(mdl)
     expect(vars).toEqual([
-      v('x[DimA]', '1,2', {
+      v('x[A1]', '1', {
         refId: '_x[_a1]',
-        separationDims: ['_dima'],
         subscripts: ['_a1'],
         varType: 'const'
       }),
-      v('x[DimA]', '1,2', {
+      v('x[A2]', '2', {
         refId: '_x[_a2]',
-        separationDims: ['_dima'],
         subscripts: ['_a2'],
         varType: 'const'
       }),
@@ -4250,36 +5284,76 @@ ${elements.join('\n')}
     ])
   })
 
-  it.skip('should work for GAME function (2D)', () => {
-    const vars = readInlineModel(`
-      DimA: A1, A2 ~~|
-      DimB: B1, B2 ~~|
-      a[DimA] = 1, 2 ~~|
-      b[DimB] = 1, 2 ~~|
-      y[DimA, DimB] = GAME(a[DimA] + b[DimB]) ~~|
-    `)
+  it('should work for GAME function (2D)', () => {
+    // Equivalent Vensim model for reference:
+    // const vars = readInlineModel(`
+    //   DimA: A1, A2 ~~|
+    //   DimB: B1, B2 ~~|
+    //   a[DimA] = 1, 2 ~~|
+    //   b[DimB] = 1, 2 ~~|
+    //   y[DimA, DimB] = GAME(a[DimA] + b[DimB]) ~~|
+    // `)
+
+    const xmileDims = `\
+<dim name="DimA">
+  <elem name="A1"/>
+  <elem name="A2"/>
+</dim>
+<dim name="DimB">
+  <elem name="B1"/>
+  <elem name="B2"/>
+</dim>
+`
+    const xmileVars = `\
+<aux name="a">
+  <dimensions>
+    <dim name="DimA"/>
+  </dimensions>
+  <element subscript="A1">
+    <eqn>1</eqn>
+  </element>
+  <element subscript="A2">
+    <eqn>2</eqn>
+  </element>
+</aux>
+<aux name="b">
+  <dimensions>
+    <dim name="DimB"/>
+  </dimensions>
+  <element subscript="B1">
+    <eqn>1</eqn>
+  </element>
+  <element subscript="B2">
+    <eqn>2</eqn>
+  </element>
+</aux>
+<aux name="y">
+  <dimensions>
+    <dim name="DimA"/>
+    <dim name="DimB"/>
+  </dimensions>
+  <eqn>GAME(a[DimA] + b[DimB])</eqn>
+</aux>`
+    const mdl = xmile(xmileDims, xmileVars)
+    const vars = readInlineModel(mdl)
     expect(vars).toEqual([
-      v('a[DimA]', '1,2', {
+      v('a[A1]', '1', {
         refId: '_a[_a1]',
-        separationDims: ['_dima'],
         subscripts: ['_a1'],
         varType: 'const'
       }),
-      v('a[DimA]', '1,2', {
+      v('a[A2]', '2', {
         refId: '_a[_a2]',
-        separationDims: ['_dima'],
         subscripts: ['_a2'],
         varType: 'const'
       }),
-      v('b[DimB]', '1,2', {
+      v('b[B1]', '1', {
         refId: '_b[_b1]',
-        separationDims: ['_dimb'],
         subscripts: ['_b1'],
         varType: 'const'
       }),
-      v('b[DimB]', '1,2', {
+      v('b[B2]', '2', {
         refId: '_b[_b2]',
-        separationDims: ['_dimb'],
         subscripts: ['_b2'],
         varType: 'const'
       }),
@@ -4300,11 +5374,22 @@ ${elements.join('\n')}
     ])
   })
 
-  it.skip('should work for GAMMA LN function', () => {
-    const vars = readInlineModel(`
-      x = 1 ~~|
-      y = GAMMA LN(x) ~~|
-    `)
+  it('should work for GAMMA LN function', () => {
+    // Equivalent Vensim model for reference:
+    // const vars = readInlineModel(`
+    //   x = 1 ~~|
+    //   y = GAMMA LN(x) ~~|
+    // `)
+
+    const xmileVars = `\
+<aux name="x">
+  <eqn>1</eqn>
+</aux>
+<aux name="y">
+  <eqn>GAMMA LN(x)</eqn>
+</aux>`
+    const mdl = xmile('', xmileVars)
+    const vars = readInlineModel(mdl)
     expect(vars).toEqual([
       v('x', '1', {
         refId: '_x',
@@ -4318,10 +5403,18 @@ ${elements.join('\n')}
     ])
   })
 
-  it.skip('should work for GET DIRECT CONSTANTS function (single value)', () => {
-    const vars = readInlineModel(`
-      x = GET DIRECT CONSTANTS('data/a.csv', ',', 'B2') ~~|
-    `)
+  it('should work for GET DIRECT CONSTANTS function (single value)', () => {
+    // Equivalent Vensim model for reference:
+    // const vars = readInlineModel(`
+    //   x = GET DIRECT CONSTANTS('data/a.csv', ',', 'B2') ~~|
+    // `)
+
+    const xmileVars = `\
+<aux name="x">
+  <eqn>GET DIRECT CONSTANTS('data/a.csv', ',', 'B2')</eqn>
+</aux>`
+    const mdl = xmile('', xmileVars)
+    const vars = readInlineModel(mdl)
     expect(vars).toEqual([
       v('x', "GET DIRECT CONSTANTS('data/a.csv',',','B2')", {
         directConstArgs: { file: 'data/a.csv', tab: ',', startCell: 'B2' },
@@ -4331,11 +5424,29 @@ ${elements.join('\n')}
     ])
   })
 
-  it.skip('should work for GET DIRECT CONSTANTS function (1D)', () => {
-    const vars = readInlineModel(`
-      DimB: B1, B2, B3 ~~|
-      x[DimB] = GET DIRECT CONSTANTS('data/b.csv', ',', 'B2*') ~~|
-    `)
+  it('should work for GET DIRECT CONSTANTS function (1D)', () => {
+    // Equivalent Vensim model for reference:
+    // const vars = readInlineModel(`
+    //   DimB: B1, B2, B3 ~~|
+    //   x[DimB] = GET DIRECT CONSTANTS('data/b.csv', ',', 'B2*') ~~|
+    // `)
+
+    const xmileDims = `\
+<dim name="DimB">
+  <elem name="B1"/>
+  <elem name="B2"/>
+  <elem name="B3"/>
+</dim>
+`
+    const xmileVars = `\
+<aux name="x">
+  <dimensions>
+    <dim name="DimB"/>
+  </dimensions>
+  <eqn>GET DIRECT CONSTANTS('data/b.csv', ',', 'B2*')</eqn>
+</aux>`
+    const mdl = xmile(xmileDims, xmileVars)
+    const vars = readInlineModel(mdl)
     expect(vars).toEqual([
       v('x[DimB]', "GET DIRECT CONSTANTS('data/b.csv',',','B2*')", {
         directConstArgs: { file: 'data/b.csv', tab: ',', startCell: 'B2*' },
@@ -4346,12 +5457,35 @@ ${elements.join('\n')}
     ])
   })
 
-  it.skip('should work for GET DIRECT CONSTANTS function (2D)', () => {
-    const vars = readInlineModel(`
-      DimB: B1, B2, B3 ~~|
-      DimC: C1, C2 ~~|
-      x[DimB, DimC] = GET DIRECT CONSTANTS('data/c.csv', ',', 'B2') ~~|
-    `)
+  it('should work for GET DIRECT CONSTANTS function (2D)', () => {
+    // Equivalent Vensim model for reference:
+    // const vars = readInlineModel(`
+    //   DimB: B1, B2, B3 ~~|
+    //   DimC: C1, C2 ~~|
+    //   x[DimB, DimC] = GET DIRECT CONSTANTS('data/c.csv', ',', 'B2') ~~|
+    // `)
+
+    const xmileDims = `\
+<dim name="DimB">
+  <elem name="B1"/>
+  <elem name="B2"/>
+  <elem name="B3"/>
+</dim>
+<dim name="DimC">
+  <elem name="C1"/>
+  <elem name="C2"/>
+</dim>
+`
+    const xmileVars = `\
+<aux name="x">
+  <dimensions>
+    <dim name="DimB"/>
+    <dim name="DimC"/>
+  </dimensions>
+  <eqn>GET DIRECT CONSTANTS('data/c.csv', ',', 'B2')</eqn>
+</aux>`
+    const mdl = xmile(xmileDims, xmileVars)
+    const vars = readInlineModel(mdl)
     expect(vars).toEqual([
       v('x[DimB,DimC]', "GET DIRECT CONSTANTS('data/c.csv',',','B2')", {
         directConstArgs: { file: 'data/c.csv', tab: ',', startCell: 'B2' },
@@ -4362,6 +5496,8 @@ ${elements.join('\n')}
     ])
   })
 
+  // TODO: This test is skipped because Stella doesn't include the GET DIRECT CONSTANTS function
+  // and it would need to be updated to not use :EXCEPT:
   it.skip('should work for GET DIRECT CONSTANTS function (separate definitions)', () => {
     const vars = readInlineModel(`
       DimA: A1, A2, A3 ~~|
@@ -4394,6 +5530,7 @@ ${elements.join('\n')}
     ])
   })
 
+  // TODO: This test is skipped because Stella doesn't include the GET DIRECT DATA function
   it.skip('should work for GET DIRECT DATA function (single value)', () => {
     const vars = readInlineModel(`
       x = GET DIRECT DATA('g_data.csv', ',', 'A', 'B13') ~~|
@@ -4440,6 +5577,7 @@ ${elements.join('\n')}
     ])
   })
 
+  // TODO: This test is skipped because Stella doesn't include the GET DIRECT DATA function
   it.skip('should work for GET DIRECT DATA function (2D with separate definitions)', () => {
     const vars = readInlineModel(`
       DimA: A1, A2 ~~|
@@ -4475,6 +5613,7 @@ ${elements.join('\n')}
     ])
   })
 
+  // TODO: This test is skipped because Stella doesn't include the GET DIRECT DATA function
   it.skip('should work for GET DIRECT LOOKUPS function', () => {
     const vars = readInlineModel(`
       DimA: A1, A2, A3 ~~|
@@ -4517,12 +5656,26 @@ ${elements.join('\n')}
     ])
   })
 
-  it.skip('should work for IF THEN ELSE function', () => {
-    const vars = readInlineModel(`
-      x = 100 ~~|
-      y = 2 ~~|
-      z = IF THEN ELSE(Time > x, 1, y) ~~|
-    `)
+  it('should work for IF THEN ELSE function', () => {
+    // Equivalent Vensim model for reference:
+    // const vars = readInlineModel(`
+    //   x = 100 ~~|
+    //   y = 2 ~~|
+    //   z = IF THEN ELSE(Time > x, 1, y) ~~|
+    // `)
+
+    const xmileVars = `\
+<aux name="x">
+  <eqn>100</eqn>
+</aux>
+<aux name="y">
+  <eqn>2</eqn>
+</aux>
+<aux name="z">
+  <eqn>IF Time>x THEN 1 ELSE y</eqn>
+</aux>`
+    const mdl = xmile('', xmileVars)
+    const vars = readInlineModel(mdl)
     expect(vars).toEqual([
       v('x', '100', {
         refId: '_x',
@@ -4539,11 +5692,23 @@ ${elements.join('\n')}
     ])
   })
 
-  it.skip('should work for INITIAL function', () => {
-    const vars = readInlineModel(`
-      x = Time * 2 ~~|
-      y = INITIAL(x) ~~|
-    `)
+  // TODO: Stella calls this function INIT, not INITIAL
+  it('should work for INITIAL function', () => {
+    // Equivalent Vensim model for reference:
+    // const vars = readInlineModel(`
+    //   x = Time * 2 ~~|
+    //   y = INITIAL(x) ~~|
+    // `)
+
+    const xmileVars = `\
+<aux name="x">
+  <eqn>Time*2</eqn>
+</aux>
+<aux name="y">
+  <eqn>INITIAL(x)</eqn>
+</aux>`
+    const mdl = xmile('', xmileVars)
+    const vars = readInlineModel(mdl)
     expect(vars).toEqual([
       v('x', 'Time*2', {
         refId: '_x',
