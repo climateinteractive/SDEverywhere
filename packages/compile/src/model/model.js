@@ -127,7 +127,7 @@ function read(parsedModel, spec, extData, directData, modelDirname, opts) {
   }
 
   // Analyze model equations to fill in more details about variables.
-  analyze(spec?.inputVars, opts)
+  analyze(parsedModel.kind, spec?.inputVars, opts)
   if (opts?.stopAfterAnalyze) return
 
   // Check that all input and output vars in the spec actually exist in the model.
@@ -283,7 +283,7 @@ function resolveDimensions(dimensionFamilies) {
   }
 }
 
-function analyze(inputVars, opts) {
+function analyze(modelKind, inputVars, opts) {
   // Analyze the RHS of each equation in stages after all the variables are read.
   // Find non-apply-to-all vars that are defined with more than one equation.
   findNonAtoAVars()
@@ -299,7 +299,9 @@ function analyze(inputVars, opts) {
   if (opts?.stopAfterReduceVariables === true) return
 
   // Read the RHS to list the refIds of vars that are referenced and set the var type.
-  variables.forEach(readEquation)
+  variables.forEach(v => {
+    readEquation(v, modelKind)
+  })
 }
 
 function checkSpecVars(spec) {

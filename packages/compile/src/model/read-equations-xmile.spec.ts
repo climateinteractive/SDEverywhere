@@ -3374,7 +3374,8 @@ ${elements.join('\n')}
   // NOTE: This is the end of the "should work for {0,1,2,3}D variable" tests.
   //
 
-  it('should work for ACTIVE INITIAL function', () => {
+  // TODO: This test is skipped because Stella doesn't appear to include the ACTIVE INITIAL function
+  it.skip('should work for ACTIVE INITIAL function', () => {
     // Equivalent Vensim model for reference:
     // const vars = readInlineModel(`
     //   Initial Target Capacity = 1 ~~|
@@ -3414,7 +3415,7 @@ ${elements.join('\n')}
   })
 
   // TODO: This test is skipped for now; in Stella, the function is called `ALLOCATE` and we will need to see
-  // if the Vensim `ALLOCATE AVAILABLE` is compatible enough
+  // if the Vensim `ALLOCATE AVAILABLE` function is compatible enough
   it.skip('should work for ALLOCATE AVAILABLE function (1D LHS, 1D demand, 2D pp, non-subscripted avail)', () => {
     // Equivalent Vensim model for reference:
     // const vars = readInlineModel(`
@@ -3537,7 +3538,7 @@ ${elements.join('\n')}
   })
 
   // TODO: This test is skipped for now; in Stella, the function is called `ALLOCATE` and we will need to see
-  // if the Vensim `ALLOCATE AVAILABLE` is compatible enough
+  // if the Vensim `ALLOCATE AVAILABLE` function is compatible enough
   it.skip('should work for ALLOCATE AVAILABLE function (1D LHS, 1D demand, 3D pp with specific first subscript, non-subscripted avail)', () => {
     const vars = readInlineModel(`
       branch: Boston, Dayton, Fresno ~~|
@@ -3695,7 +3696,7 @@ ${elements.join('\n')}
   })
 
   // TODO: This test is skipped for now; in Stella, the function is called `ALLOCATE` and we will need to see
-  // if the Vensim `ALLOCATE AVAILABLE` is compatible enough
+  // if the Vensim `ALLOCATE AVAILABLE` function is compatible enough
   it.skip('should work for ALLOCATE AVAILABLE function (2D LHS, 2D demand, 2D pp, non-subscripted avail)', () => {
     const vars = readInlineModel(`
       branch: Boston, Dayton, Fresno ~~|
@@ -3809,7 +3810,7 @@ ${elements.join('\n')}
   })
 
   // TODO: This test is skipped for now; in Stella, the function is called `ALLOCATE` and we will need to see
-  // if the Vensim `ALLOCATE AVAILABLE` is compatible enough
+  // if the Vensim `ALLOCATE AVAILABLE` function is compatible enough
   it.skip('should work for ALLOCATE AVAILABLE function (2D LHS, 2D demand, 3D pp, 1D avail)', () => {
     const vars = readInlineModel(`
       branch: Boston, Dayton, Fresno ~~|
@@ -4024,7 +4025,7 @@ ${elements.join('\n')}
     ])
   })
 
-  it('should work for DELAY1I function', () => {
+  it('should work for DELAY1 function (with initial value argument)', () => {
     // Equivalent Vensim model for reference:
     // const vars = readInlineModel(`
     //   x = 1 ~~|
@@ -4040,7 +4041,7 @@ ${elements.join('\n')}
   <eqn>2</eqn>
 </aux>
 <aux name="y">
-  <eqn>DELAY1I(x, 5, init)</eqn>
+  <eqn>DELAY1(x, 5, init)</eqn>
 </aux>`
     const mdl = xmile('', xmileVars)
     const vars = readInlineModel(mdl)
@@ -4053,7 +4054,7 @@ ${elements.join('\n')}
         refId: '_init',
         varType: 'const'
       }),
-      v('y', 'DELAY1I(x,5,init)', {
+      v('y', 'DELAY1(x,5,init)', {
         refId: '_y',
         references: ['__level1', '__aux1'],
         delayVarRefId: '__level1',
@@ -4076,7 +4077,7 @@ ${elements.join('\n')}
     ])
   })
 
-  it('should work for DELAY1I function (with subscripted variables)', () => {
+  it('should work for DELAY1 function (with initial value argument and subscripted variables)', () => {
     // Note that we have a mix of non-apply-to-all (input, delay) and apply-to-all (init)
     // variables here to cover both cases
     // Equivalent Vensim model for reference:
@@ -4134,7 +4135,7 @@ ${elements.join('\n')}
   <dimensions>
     <dim name="DimA"/>
   </dimensions>
-  <eqn>DELAY1I(input[DimA], delay[DimA], init[DimA])</eqn>
+  <eqn>DELAY1(input[DimA], delay[DimA], init[DimA])</eqn>
 </aux>`
     const mdl = xmile(xmileDims, xmileVars)
     const vars = readInlineModel(mdl)
@@ -4174,7 +4175,7 @@ ${elements.join('\n')}
         subscripts: ['_dima'],
         varType: 'const'
       }),
-      v('y[DimA]', 'DELAY1I(input[DimA],delay[DimA],init[DimA])', {
+      v('y[DimA]', 'DELAY1(input[DimA],delay[DimA],init[DimA])', {
         delayTimeVarName: '__aux1',
         delayVarRefId: '__level1',
         refId: '_y',
@@ -4202,7 +4203,7 @@ ${elements.join('\n')}
 
   // TODO: This test is not exactly equivalent to the Vensim one since it uses separated definitions
   // for y[A1] and y[A2] instead of a single definition for y[SubA]
-  it.skip('should work for DELAY1I function (with separated variables using subdimension)', () => {
+  it.skip('should work for DELAY1 function (with separated variables using subdimension)', () => {
     // Equivalent Vensim model for reference:
     // const vars = readInlineModel(`
     //   DimA: A1, A2, A3 ~~|
@@ -4268,10 +4269,10 @@ ${elements.join('\n')}
     <eqn>5</eqn>
   </element>
   <element subscript="A2">
-    <eqn>DELAY1I(input[A2], delay[A2], init[A2])</eqn>
+    <eqn>DELAY1(input[A2], delay[A2], init[A2])</eqn>
   </element>
   <element subscript="A3">
-    <eqn>DELAY1I(input[A3], delay[A3], init[A3])</eqn>
+    <eqn>DELAY1(input[A3], delay[A3], init[A3])</eqn>
   </element>
 </aux>`
     const mdl = xmile(xmileDims, xmileVars)
@@ -4317,7 +4318,7 @@ ${elements.join('\n')}
         subscripts: ['_a1'],
         varType: 'const'
       }),
-      v('y[A2]', 'DELAY1I(input[A2],delay[A2],init[A2])', {
+      v('y[A2]', 'DELAY1(input[A2],delay[A2],init[A2])', {
         delayTimeVarName: '__aux1',
         delayVarRefId: '__level_y_1[_a2]',
         refId: '_y[_a2]',
@@ -4325,7 +4326,7 @@ ${elements.join('\n')}
         separationDims: ['_suba'],
         subscripts: ['_a2']
       }),
-      v('y[A3]', 'DELAY1I(input[A3],delay[A3],init[A3])', {
+      v('y[A3]', 'DELAY1(input[A3],delay[A3],init[A3])', {
         delayTimeVarName: '__aux2',
         delayVarRefId: '__level_y_1[_a3]',
         refId: '_y[_a3]',
@@ -4453,7 +4454,7 @@ ${elements.join('\n')}
     ])
   })
 
-  it('should work for DELAY3I function', () => {
+  it('should work for DELAY3 function (with initial value argument)', () => {
     // Equivalent Vensim model for reference:
     // const vars = readInlineModel(`
     //   input = 1 ~~|
@@ -4473,7 +4474,7 @@ ${elements.join('\n')}
   <eqn>3</eqn>
 </aux>
 <aux name="y">
-  <eqn>DELAY3I(input, delay, init)</eqn>
+  <eqn>DELAY3(input, delay, init)</eqn>
 </aux>`
     const mdl = xmile('', xmileVars)
     const vars = readInlineModel(mdl)
@@ -4490,7 +4491,7 @@ ${elements.join('\n')}
         refId: '_init',
         varType: 'const'
       }),
-      v('y', 'DELAY3I(input,delay,init)', {
+      v('y', 'DELAY3(input,delay,init)', {
         delayTimeVarName: '__aux4',
         delayVarRefId: '__level3',
         refId: '_y',
@@ -4546,7 +4547,7 @@ ${elements.join('\n')}
     ])
   })
 
-  it('should work for DELAY3I function (with nested function calls)', () => {
+  it('should work for DELAY3I function (with initial value argument and nested function calls)', () => {
     // Equivalent Vensim model for reference:
     // const vars = readInlineModel(`
     //   input = 1 ~~|
@@ -4566,7 +4567,7 @@ ${elements.join('\n')}
   <eqn>3</eqn>
 </aux>
 <aux name="y">
-  <eqn>DELAY3I(MIN(0, input), MAX(0, delay), ABS(init))</eqn>
+  <eqn>DELAY3(MIN(0, input), MAX(0, delay), ABS(init))</eqn>
 </aux>`
     const mdl = xmile('', xmileVars)
     const vars = readInlineModel(mdl)
@@ -4583,7 +4584,7 @@ ${elements.join('\n')}
         refId: '_init',
         varType: 'const'
       }),
-      v('y', 'DELAY3I(MIN(0,input),MAX(0,delay),ABS(init))', {
+      v('y', 'DELAY3(MIN(0,input),MAX(0,delay),ABS(init))', {
         delayTimeVarName: '__aux4',
         delayVarRefId: '__level3',
         refId: '_y',
@@ -4643,7 +4644,7 @@ ${elements.join('\n')}
     ])
   })
 
-  it('should work for DELAY3I function (with subscripted variables)', () => {
+  it('should work for DELAY3 function (with initial value argument and subscripted variables)', () => {
     // Note that we have a mix of non-apply-to-all (input, delay) and apply-to-all (init)
     // variables here to cover both cases
     // Equivalent Vensim model for reference:
@@ -4701,7 +4702,7 @@ ${elements.join('\n')}
   <dimensions>
     <dim name="DimA"/>
   </dimensions>
-  <eqn>DELAY3I(input[DimA], delay[DimA], init[DimA])</eqn>
+  <eqn>DELAY3(input[DimA], delay[DimA], init[DimA])</eqn>
 </aux>`
     const mdl = xmile(xmileDims, xmileVars)
     const vars = readInlineModel(mdl)
@@ -4741,7 +4742,7 @@ ${elements.join('\n')}
         subscripts: ['_dima'],
         varType: 'const'
       }),
-      v('y[DimA]', 'DELAY3I(input[DimA],delay[DimA],init[DimA])', {
+      v('y[DimA]', 'DELAY3(input[DimA],delay[DimA],init[DimA])', {
         delayTimeVarName: '__aux4',
         delayVarRefId: '__level3',
         refId: '_y',
@@ -5055,7 +5056,9 @@ ${elements.join('\n')}
     ])
   })
 
-  it('should work for DELAY FIXED function', () => {
+  // TODO: This test is skipped for now; in Stella, the function is called `DELAY` and we will need to see
+  // if the Vensim `DELAY FIXED` function is compatible enough
+  it.skip('should work for DELAY FIXED function', () => {
     // Equivalent Vensim model for reference:
     // const vars = readInlineModel(`
     //   x = 1 ~~|
@@ -5079,7 +5082,7 @@ ${elements.join('\n')}
   <eqn>3</eqn>
 </aux>
 <aux name="z">
-  <eqn>DELAY FIXED(x, delay, init)</eqn>
+  <eqn>DELAY(x, delay, init)</eqn>
 </aux>`
     const mdl = xmile('', xmileVars)
     const vars = readInlineModel(mdl)
@@ -5100,7 +5103,7 @@ ${elements.join('\n')}
         refId: '_init',
         varType: 'const'
       }),
-      v('z', 'DELAY FIXED(x,delay,init)', {
+      v('z', 'DELAY(x,delay,init)', {
         refId: '_z',
         varType: 'level',
         varSubtype: 'fixedDelay',
@@ -5113,7 +5116,8 @@ ${elements.join('\n')}
     ])
   })
 
-  it('should work for DEPRECIATE STRAIGHTLINE function', () => {
+  // TODO: This test is skipped because Stella doesn't appear to include the DEPRECIATE STRAIGHTLINE function
+  it.skip('should work for DEPRECIATE STRAIGHTLINE function', () => {
     // Equivalent Vensim model for reference:
     // const vars = readInlineModel(`
     //   dtime = 20 ~~|
@@ -5186,7 +5190,8 @@ ${elements.join('\n')}
     ])
   })
 
-  it('should work for GAME function (no dimensions)', () => {
+  // TODO: This test is skipped because Stella doesn't appear to include the GAME function
+  it.skip('should work for GAME function (no dimensions)', () => {
     // Equivalent Vensim model for reference:
     // const vars = readInlineModel(`
     //   x = 1 ~~|
@@ -5222,7 +5227,8 @@ ${elements.join('\n')}
     ])
   })
 
-  it('should work for GAME function (1D)', () => {
+  // TODO: This test is skipped because Stella doesn't appear to include the GAME function
+  it.skip('should work for GAME function (1D)', () => {
     // Equivalent Vensim model for reference:
     // const vars = readInlineModel(`
     //   DimA: A1, A2 ~~|
@@ -5284,7 +5290,8 @@ ${elements.join('\n')}
     ])
   })
 
-  it('should work for GAME function (2D)', () => {
+  // TODO: This test is skipped because Stella doesn't appear to include the GAME function
+  it.skip('should work for GAME function (2D)', () => {
     // Equivalent Vensim model for reference:
     // const vars = readInlineModel(`
     //   DimA: A1, A2 ~~|
@@ -5374,7 +5381,7 @@ ${elements.join('\n')}
     ])
   })
 
-  it('should work for GAMMA LN function', () => {
+  it('should work for GAMMALN function', () => {
     // Equivalent Vensim model for reference:
     // const vars = readInlineModel(`
     //   x = 1 ~~|
@@ -5386,7 +5393,7 @@ ${elements.join('\n')}
   <eqn>1</eqn>
 </aux>
 <aux name="y">
-  <eqn>GAMMA LN(x)</eqn>
+  <eqn>GAMMALN(x)</eqn>
 </aux>`
     const mdl = xmile('', xmileVars)
     const vars = readInlineModel(mdl)
@@ -5395,15 +5402,16 @@ ${elements.join('\n')}
         refId: '_x',
         varType: 'const'
       }),
-      v('y', 'GAMMA LN(x)', {
+      v('y', 'GAMMALN(x)', {
         refId: '_y',
-        referencedFunctionNames: ['__gamma_ln'],
+        referencedFunctionNames: ['__gammaln'],
         references: ['_x']
       })
     ])
   })
 
-  it('should work for GET DIRECT CONSTANTS function (single value)', () => {
+  // TODO: This test is skipped because Stella doesn't appear to include the GET DIRECT CONSTANTS function
+  it.skip('should work for GET DIRECT CONSTANTS function (single value)', () => {
     // Equivalent Vensim model for reference:
     // const vars = readInlineModel(`
     //   x = GET DIRECT CONSTANTS('data/a.csv', ',', 'B2') ~~|
@@ -5424,7 +5432,8 @@ ${elements.join('\n')}
     ])
   })
 
-  it('should work for GET DIRECT CONSTANTS function (1D)', () => {
+  // TODO: This test is skipped because Stella doesn't appear to include the GET DIRECT CONSTANTS function
+  it.skip('should work for GET DIRECT CONSTANTS function (1D)', () => {
     // Equivalent Vensim model for reference:
     // const vars = readInlineModel(`
     //   DimB: B1, B2, B3 ~~|
@@ -5457,7 +5466,8 @@ ${elements.join('\n')}
     ])
   })
 
-  it('should work for GET DIRECT CONSTANTS function (2D)', () => {
+  // TODO: This test is skipped because Stella doesn't appear to include the GET DIRECT CONSTANTS function
+  it.skip('should work for GET DIRECT CONSTANTS function (2D)', () => {
     // Equivalent Vensim model for reference:
     // const vars = readInlineModel(`
     //   DimB: B1, B2, B3 ~~|
@@ -5692,8 +5702,7 @@ ${elements.join('\n')}
     ])
   })
 
-  // TODO: Stella calls this function INIT instead of INITIAL
-  it('should work for INITIAL function', () => {
+  it('should work for INIT function', () => {
     // Equivalent Vensim model for reference:
     // const vars = readInlineModel(`
     //   x = Time * 2 ~~|
@@ -5705,7 +5714,7 @@ ${elements.join('\n')}
   <eqn>Time*2</eqn>
 </aux>
 <aux name="y">
-  <eqn>INITIAL(x)</eqn>
+  <eqn>INIT(x)</eqn>
 </aux>`
     const mdl = xmile('', xmileVars)
     const vars = readInlineModel(mdl)
@@ -5714,18 +5723,18 @@ ${elements.join('\n')}
         refId: '_x',
         references: ['_time']
       }),
-      v('y', 'INITIAL(x)', {
+      v('y', 'INIT(x)', {
         refId: '_y',
         varType: 'initial',
         hasInitValue: true,
         initReferences: ['_x'],
-        referencedFunctionNames: ['__initial']
+        referencedFunctionNames: ['__init']
       })
     ])
   })
 
-  // TODO: Not sure what the equivalent function is called in Stella
-  it('should work for INTEG function', () => {
+  // TODO: This test is skipped because Stella doesn't appear to include the INTEG function
+  it.skip('should work for INTEG function', () => {
     // Equivalent Vensim model for reference:
     // const vars = readInlineModel(`
     //   x = Time * 2 ~~|
@@ -5765,8 +5774,8 @@ ${elements.join('\n')}
     ])
   })
 
-  // TODO: Not sure what the equivalent function is called in Stella
-  it('should work for INTEG function (with nested function calls)', () => {
+  // TODO: This test is skipped because Stella doesn't appear to include the INTEG function
+  it.skip('should work for INTEG function (with nested function calls)', () => {
     // Equivalent Vensim model for reference:
     // const vars = readInlineModel(`
     //   x = Time * 2 ~~|
@@ -5940,8 +5949,7 @@ ${elements.join('\n')}
     ])
   })
 
-  // TODO: Stella calls this function LOOKUPINV instead of LOOKUP INVERT
-  it('should work for LOOKUP INVERT function (with lookup defined explicitly)', () => {
+  it('should work for LOOKUPINV function (with lookup defined explicitly)', () => {
     // Equivalent Vensim model for reference:
     // const vars = readInlineModel(`
     //   x( (0,0),(2,1.3) ) ~~|
@@ -5954,7 +5962,7 @@ ${elements.join('\n')}
   <ypts>0,1.3</ypts>
 </gf>
 <aux name="y">
-  <eqn>LOOKUP INVERT(x,1)</eqn>
+  <eqn>LOOKUPINV(x,1)</eqn>
 </aux>`
     const mdl = xmile('', xmileVars)
     const vars = readInlineModel(mdl)
@@ -5968,16 +5976,16 @@ ${elements.join('\n')}
           [2, 1.3]
         ]
       }),
-      v('y', 'LOOKUP INVERT(x,1)', {
+      v('y', 'LOOKUPINV(x,1)', {
         refId: '_y',
-        referencedFunctionNames: ['__lookup_invert'],
+        referencedFunctionNames: ['__lookupinv'],
         references: ['_x']
       })
     ])
   })
 
   // TODO: This test is skipped because Stella doesn't include the GET DIRECT LOOKUPS function
-  it.skip('should work for LOOKUP INVERT function (with lookup defined using GET DIRECT LOOKUPS)', () => {
+  it.skip('should work for LOOKUPINV function (with lookup defined using GET DIRECT LOOKUPS)', () => {
     const vars = readInlineModel(`
       DimA: A1, A2, A3 ~~|
       x[DimA] = GET DIRECT LOOKUPS('lookups.csv', ',', '1', 'AH2') ~~|
@@ -6006,9 +6014,9 @@ ${elements.join('\n')}
         subscripts: ['_a3'],
         varType: 'data'
       }),
-      v('y[DimA]', 'LOOKUP INVERT(x[DimA],Time)', {
+      v('y[DimA]', 'LOOKUPINV(x[DimA],Time)', {
         refId: '_y',
-        referencedFunctionNames: ['__lookup_invert'],
+        referencedFunctionNames: ['__lookupinv'],
         references: ['_x[_a1]', '_x[_a2]', '_x[_a3]', '_time'],
         subscripts: ['_dima']
       }),
@@ -6093,8 +6101,7 @@ ${elements.join('\n')}
     ])
   })
 
-  // TODO: Stella calls this function MOD instead of MODULO
-  it('should work for MODULO function', () => {
+  it('should work for MOD function', () => {
     // Equivalent Vensim model for reference:
     // const vars = readInlineModel(`
     //   a = 20 ~~|
@@ -6110,7 +6117,7 @@ ${elements.join('\n')}
   <eqn>10</eqn>
 </aux>
 <aux name="y">
-  <eqn>MODULO(a,b)</eqn>
+  <eqn>MOD(a,b)</eqn>
 </aux>`
     const mdl = xmile('', xmileVars)
     const vars = readInlineModel(mdl)
@@ -6123,9 +6130,9 @@ ${elements.join('\n')}
         refId: '_b',
         varType: 'const'
       }),
-      v('y', 'MODULO(a,b)', {
+      v('y', 'MOD(a,b)', {
         refId: '_y',
-        referencedFunctionNames: ['__modulo'],
+        referencedFunctionNames: ['__mod'],
         references: ['_a', '_b']
       })
     ])
@@ -6133,8 +6140,9 @@ ${elements.join('\n')}
 
   // TODO: Add a variant where discount rate is defined as (x+1) (old reader did not include
   // parens and might generate incorrect equation)
-  // TODO: Stella's NPV function takes 2 or 3 arguments, but Vensim's takes 4 arguments
-  it('should work for NPV function', () => {
+  // TODO: This test is skipped because Stella's NPV function takes 2 or 3 arguments, but Vensim's
+  // takes 4 arguments, so it is not implemented yet in SDE
+  it.skip('should work for NPV function', () => {
     // Equivalent Vensim model for reference:
     // const vars = readInlineModel(`
     //   stream = 100 ~~|
@@ -6212,8 +6220,9 @@ ${elements.join('\n')}
   // TODO
   it.skip('should work for NPV function (with subscripted variables)', () => {})
 
-  // TODO: Stella's PULSE function takes 1 or 3 arguments, but Vensim's takes 2 arguments
-  it('should work for PULSE function', () => {
+  // TODO: This test is skipped because Stella's PULSE function takes 1 or 3 arguments, but Vensim's
+  // takes 2 arguments, so it is not implemented yet in SDE
+  it.skip('should work for PULSE function', () => {
     // Equivalent Vensim model for reference:
     // const vars = readInlineModel(`
     //   start = 10 ~~|
