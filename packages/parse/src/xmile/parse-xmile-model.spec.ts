@@ -65,8 +65,10 @@ describe('parseXmileModel', () => {
     const mdl = xmile('', vars)
 
     const msg = `\
-Failed to parse XMILE variable definition at line unknown, col 13:
-IF   THEN 1 ELSE 2
+Failed to parse XMILE variable definition at line 15, col 13:
+<aux name="x">
+  <eqn>IF   THEN 1 ELSE 2</eqn>
+</aux>
 
 Detail:
   no viable alternative at input 'IF THEN ELSE(,'`
