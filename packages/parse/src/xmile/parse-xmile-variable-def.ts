@@ -21,7 +21,10 @@ import { elemsOf, firstElemOf, firstTextOf, xmlError } from './xml'
  */
 export function parseXmileVariableDef(varElem: XmlElement): Equation[] {
   // Extract required variable name
-  const varName = parseRequiredAttr(varElem, varElem, 'name')
+  let varName = parseRequiredAttr(varElem, varElem, 'name')
+  // XXX: Variable names in XMILE can contain newline sequences (represented as '\n').  For now
+  // we will replace them with spaces since `canonicalId` does not currently handle this case.
+  varName = varName.replace(/\\n/g, ' ')
   const varId = canonicalId(varName)
 
   // Extract optional <units> -> units string

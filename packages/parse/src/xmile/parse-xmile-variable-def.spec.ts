@@ -112,7 +112,7 @@ describe('parseXmileVariableDef with <stock>', () => {
     ])
   })
 
-  it.only('should parse a stock variable definition (without subscripts, multiple inflows, multiple outflows)', () => {
+  it('should parse a stock variable definition (without subscripts, multiple inflows, multiple outflows)', () => {
     const v = xml(`
       <stock name="x">
         <eqn>y + 10</eqn>
@@ -151,6 +151,22 @@ describe('parseXmileVariableDef with <stock>', () => {
         varDef('x'),
         // INTEG(matriculating - graduating, 1000)
         call('INTEG', binaryOp(varRef('matriculating'), '-', varRef('graduating')), num(1000))
+      )
+    ])
+  })
+
+  it('should parse a stock variable definition (with newline sequences in the name)', () => {
+    const v = xml(`
+      <stock name="x\\ny\\nz">
+        <eqn>1000</eqn>
+        <inflow>q</inflow>
+      </stock>
+    `)
+    expect(parseXmileVariableDef(v)).toEqual([
+      exprEqn(
+        varDef('x y z'),
+        // INTEG(q, 1000)
+        call('INTEG', varRef('q'), num(1000))
       )
     ])
   })
@@ -293,6 +309,15 @@ describe('parseXmileVariableDef with <flow>', () => {
       exprEqn(varDef('x', ['A1']), binaryOp(varRef('y', ['A1']), '+', num(10))),
       exprEqn(varDef('x', ['A2']), num(20))
     ])
+  })
+
+  it('should parse a flow variable definition (with newline sequences in the name)', () => {
+    const v = xml(`
+      <flow name="x\\ny\\nz">
+        <eqn>y + 10</eqn>
+      </flow>
+    `)
+    expect(parseXmileVariableDef(v)).toEqual([exprEqn(varDef('x y z'), binaryOp(varRef('y'), '+', num(10)))])
   })
 
   // TODO: We currently ignore `<non_negative>` elements during parsing; more work will be needed to
@@ -613,6 +638,15 @@ describe('parseXmileVariableDef with <aux>', () => {
         )
       )
     ])
+  })
+
+  it('should parse an aux variable definition (with newline sequences in the name)', () => {
+    const v = xml(`
+      <aux name="x\\ny\\nz">
+        <eqn>y + 10</eqn>
+      </aux>
+    `)
+    expect(parseXmileVariableDef(v)).toEqual([exprEqn(varDef('x y z'), binaryOp(varRef('y'), '+', num(10)))])
   })
 
   it('should throw an error if aux variable equation cannot be parsed', () => {
