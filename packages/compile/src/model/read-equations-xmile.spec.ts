@@ -5733,8 +5733,7 @@ ${elements.join('\n')}
     ])
   })
 
-  // TODO: This test is skipped because Stella doesn't appear to include the INTEG function
-  it.skip('should work for INTEG function', () => {
+  it('should work for INTEG function (synthesized from <stock> variable definition)', () => {
     // Equivalent Vensim model for reference:
     // const vars = readInlineModel(`
     //   x = Time * 2 ~~|
@@ -5749,9 +5748,10 @@ ${elements.join('\n')}
 <aux name="init">
   <eqn>5</eqn>
 </aux>
-<aux name="y">
-  <eqn>INTEG(x,init)</eqn>
-</aux>`
+<stock name="y">
+  <eqn>init</eqn>
+  <inflow>x</inflow>
+</stock>`
     const mdl = xmile('', xmileVars)
     const vars = readInlineModel(mdl)
     expect(vars).toEqual([
@@ -5774,13 +5774,12 @@ ${elements.join('\n')}
     ])
   })
 
-  // TODO: This test is skipped because Stella doesn't appear to include the INTEG function
-  it.skip('should work for INTEG function (with nested function calls)', () => {
+  it('should work for INTEG function (synthesized from <stock> variable definition, with nested function calls)', () => {
     // Equivalent Vensim model for reference:
     // const vars = readInlineModel(`
     //   x = Time * 2 ~~|
     //   init = 5 ~~|
-    //   y = INTEG(ABS(x), POW(init, 3)) ~~|
+    //   y = INTEG(ABS(x), SQRT(init)) ~~|
     // `)
 
     const xmileVars = `\
@@ -5790,9 +5789,10 @@ ${elements.join('\n')}
 <aux name="init">
   <eqn>5</eqn>
 </aux>
-<aux name="y">
-  <eqn>INTEG(ABS(x),POW(init,3))</eqn>
-</aux>`
+<stock name="y">
+  <eqn>SQRT(init)</eqn>
+  <inflow>ABS(x)</inflow>
+</stock>`
     const mdl = xmile('', xmileVars)
     const vars = readInlineModel(mdl)
     expect(vars).toEqual([
@@ -5804,13 +5804,13 @@ ${elements.join('\n')}
         refId: '_init',
         varType: 'const'
       }),
-      v('y', 'INTEG(ABS(x),POW(init,3))', {
+      v('y', 'INTEG(ABS(x),SQRT(init))', {
         refId: '_y',
         varType: 'level',
         references: ['_x'],
         hasInitValue: true,
         initReferences: ['_init'],
-        referencedFunctionNames: ['__integ', '__abs', '__pow']
+        referencedFunctionNames: ['__integ', '__abs', '__sqrt']
       })
     ])
   })

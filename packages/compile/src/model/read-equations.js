@@ -704,6 +704,18 @@ function visitFunctionCall(v, callExpr, context) {
         argModes[0] = 'init'
         break
 
+      case '_INTEG':
+        // NOTE: Stella doesn't have a built-in `INTEG` function, but our XMILE parser synthesizes
+        // an `INTEG` function call for `<stock>` variable definitions using the `<inflow>` element
+        // as the `rate` argument for the Vensim-style `INTEG` function call
+        validateCallDepth(callExpr, context)
+        validateCallArgs(callExpr, 2)
+        v.varType = 'level'
+        v.hasInitValue = true
+        // The 2nd argument is used at init time
+        argModes[1] = 'init'
+        break
+
       case '_SMTH1':
       case '_SMTH3':
         // Stella's SMTH1 and SMTH3 functions can take a third "initial" argument (in which case
