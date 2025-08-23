@@ -2,7 +2,7 @@ import B from 'bufx'
 import yaml from 'js-yaml'
 import * as R from 'ramda'
 
-import { toPrettyString } from '@sdeverywhere/parse'
+import { canonicalId, toPrettyString } from '@sdeverywhere/parse'
 
 import { canonicalName, decanonicalize, isIterable, /*listConcat,*/ strlist, vlog, vsort } from '../_shared/helpers.js'
 import {
@@ -92,6 +92,62 @@ function read(parsedModel, spec, extData, directData, modelDirname, opts) {
   timeVar.modelLHS = 'Time'
   timeVar.varName = '_time'
   vars.push(timeVar)
+
+  // Helper function to define a control variable for XMILE models
+  function defineXmileControlVar(varName, varId, rhsValue) {
+    let rhsExpr
+    if (typeof rhsValue === 'number') {
+      rhsExpr = {
+        kind: 'number',
+        value: rhsValue,
+        text: rhsValue.toString()
+      }
+    } else {
+      rhsExpr = {
+        kind: 'variable-ref',
+        varName: rhsValue,
+        varId: canonicalId(rhsValue)
+      }
+    }
+    const v = new Variable()
+    v.modelLHS = varName
+    v.varName = varId
+    v.parsedEqn = {
+      lhs: {
+        varDef: {
+          varName,
+          varId
+        }
+      },
+      rhs: {
+        kind: 'expr',
+        expr: rhsExpr
+      }
+    }
+    v.modelFormula = toPrettyString(rhsExpr, { compact: true })
+    v.includeInOutput = false
+    vars.push(v)
+  }
+
+  if (parsedModel.kind === 'xmile') {
+    // XXX: Unlike Vensim models, XMILE models do not include the control parameters as
+    // normal model equations; instead, they are defined in the `<sim_specs>` element.
+    // In addition, XMILE allows these values to be accessed in equations (e.g., `<start>`
+    // can be accessed as `STARTTIME`, `<stop>` as `STOPTIME`, and `<dt>` as `DT`).
+    // For compatibility with the existing runtime code (which expects these variables
+    // to be defined using the Vensim names), we will synthesize variables using the
+    // Vensim names (e.g., `INITIAL TIME`) and also synthesize variables that derive
+    // from these using the XMILE names (e.g., `STARTTIME`).
+    defineXmileControlVar('INITIAL TIME', '_initial_time', parsedModel.root.simulationSpec.startTime)
+    defineXmileControlVar('FINAL TIME', '_final_time', parsedModel.root.simulationSpec.endTime)
+    defineXmileControlVar('TIME STEP', '_time_step', parsedModel.root.simulationSpec.timeStep)
+    defineXmileControlVar('STARTTIME', '_starttime', 'INITIAL TIME')
+    defineXmileControlVar('STOPTIME', '_stoptime', 'FINAL TIME')
+    defineXmileControlVar('DT', '_dt', 'TIME STEP')
+    // XXX: For now, also include a `SAVEPER` variable that is the same as `TIME STEP` (is there
+    // an equivalent of this in XMILE?)
+    defineXmileControlVar('SAVEPER', '_saveper', 'TIME STEP')
+  }
 
   // Add the variables to the `Model`
   vars.forEach(addVariable)

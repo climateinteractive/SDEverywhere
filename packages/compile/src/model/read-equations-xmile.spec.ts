@@ -70,12 +70,32 @@ function readInlineModel(
   opts?: {
     specialSeparationDims?: { [key: string]: string }
     separateAllVarsWithDims?: string[][]
+    filterControlVars?: boolean
   }
 ): Variable[] {
   const vars = readSubscriptsAndEquationsFromSource({ modelText, modelDir }, opts)
 
-  // Exclude the `Time` variable so that we have one less thing to check
-  return vars.filter(v => v.varName !== '_time')
+  if (opts?.filterControlVars !== false) {
+    // Exclude the `Time` variable and other synthesized control variables so that we have
+    // fewer things to check
+    return vars.filter(v => {
+      switch (v.varName) {
+        case '_time':
+        case '_initial_time':
+        case '_final_time':
+        case '_time_step':
+        case '_starttime':
+        case '_stoptime':
+        case '_dt':
+          return false
+        default:
+          return true
+      }
+    })
+  } else {
+    // Include the control variables
+    return vars
+  }
 }
 
 // function readSubscriptsAndEquations(modelName: string): Variable[] {
