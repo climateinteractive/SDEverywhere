@@ -5056,9 +5056,15 @@ ${elements.join('\n')}
     ])
   })
 
-  // TODO: This test is skipped for now; in Stella, the function is called `DELAY` and we will need to see
-  // if the Vensim `DELAY FIXED` function is compatible enough
-  it.skip('should work for DELAY FIXED function', () => {
+  // TODO: This test is skipped for now; in Stella, the DELAY function can be called with or
+  // without an initial value argument, but the code that handles the Vensim DELAY FIXED function
+  // currently assumes the initial value argument
+  it.skip('should work for DELAY function (without initial value argument)', () => {})
+
+  // TODO: This test is skipped for now because the code that handles Stella's DELAY function
+  // will need to be updated to generate an internal level variable, since Stella's DELAY
+  // does not necessarily have to follow the "=" like Vensim's DELAY FIXED function does
+  it.skip('should work for DELAY function (with initial value argument)', () => {
     // Equivalent Vensim model for reference:
     // const vars = readInlineModel(`
     //   x = 1 ~~|
