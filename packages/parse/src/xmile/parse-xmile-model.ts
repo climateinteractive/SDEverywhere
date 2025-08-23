@@ -94,7 +94,7 @@ function parseVariableDefs(rootElem: XmlElement | undefined, originalXml: string
             linePart += ` at line ${lineNumInOriginalXml}`
           }
         }
-        const varElemString = elementToXmlString(varElem)
+        const varElemString = extractXmlLines(originalXml, varElem.start, varElem.end)
         const msg = `Failed to parse XMILE variable definition${linePart}:\n${varElemString}\n\nDetail:\n  ${e.message}`
         throw new Error(msg)
       }
@@ -122,36 +122,34 @@ function getLineNumber(xmlString: string, byteOffset: number): number {
 }
 
 /**
- * Reconstruct XML string from an XmlElement.
+ * Extract relevant lines from the original XML string using start/end byte offsets.
+ * Includes full lines for context, even if start/end are not at line boundaries.
  *
- * @param elem The XmlElement to convert back to XML
- * @returns A string representation of the XML element
+ * @param originalXml The original XML string
+ * @param startOffset The starting byte offset
+ * @param endOffset The ending byte offset
+ * @returns A string containing the relevant lines with line numbers
  */
-function elementToXmlString(elem: XmlElement): string {
-  const attrs = Object.entries(elem.attributes || {})
-    .map(([key, value]) => `${key}="${value}"`)
-    .join(' ')
-
-  const attrStr = attrs ? ` ${attrs}` : ''
-
-  if (elem.isEmpty) {
-    return `<${elem.name}${attrStr} />`
+function extractXmlLines(originalXml: string, startOffset: number, endOffset: number): string {
+  if (startOffset === -1 || endOffset === -1 || startOffset >= originalXml.length || endOffset > originalXml.length) {
+    return '[Unable to extract XML lines - invalid offsets]'
   }
 
-  const children = elem.children
-    .map(child => {
-      if (child.type === 'text') {
-        return (child as { text: string }).text
-      } else if (child.type === 'element') {
-        return elementToXmlString(child as XmlElement)
-      } else if (child.type === 'cdata') {
-        return `<![CDATA[${(child as { text: string }).text}]]>`
-      } else if (child.type === 'comment') {
-        return `<!--${(child as { text: string }).text}-->`
-      }
-      return ''
-    })
-    .join('')
+  // Find the start of the line containing the start offset
+  let lineStart = startOffset
+  while (lineStart > 0 && originalXml[lineStart - 1] !== '\n') {
+    lineStart--
+  }
 
-  return `<${elem.name}${attrStr}>${children}</${elem.name}>`
+  // Find the end of the line containing the end offset
+  let lineEnd = endOffset
+  while (lineEnd < originalXml.length && originalXml[lineEnd] !== '\n') {
+    lineEnd++
+  }
+
+  // Extract the lines
+  const relevantXml = originalXml.substring(lineStart, lineEnd)
+
+  // Return just the XML content without line number prefix
+  return relevantXml
 }

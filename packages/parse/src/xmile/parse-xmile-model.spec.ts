@@ -66,7 +66,7 @@ describe('parseXmileModel', () => {
 
     const msg = `\
 Failed to parse XMILE variable definition at line 15, col 13:
-<aux name="x">
+            <aux name="x">
   <eqn>IF   THEN 1 ELSE 2</eqn>
 </aux>
 
