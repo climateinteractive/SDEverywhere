@@ -24,8 +24,8 @@ export function execCmd(cmd) {
 }
 
 /**
- * Normalize a model pathname that may or may not include the .mdl or .xmile/.stmx extension.
- * If the pathname does not end with .mdl, .xmile, or .stmx, this will attempt to find a
+ * Normalize a model pathname that may or may not include the .mdl or .xmile/.stmx/.itmx extension.
+ * If the pathname does not end with .mdl, .xmile, .stmx, or .itmx, this will attempt to find a
  * file with one of those extensions.
  * If there is not a path in the model argument, default to the current working directory.
  *
@@ -41,16 +41,16 @@ export function execCmd(cmd) {
 export function modelPathProps(model) {
   const parsedPath = path.parse(model)
   if (parsedPath.ext === '') {
-    const exts = ['.mdl', '.xmile', '.stmx']
+    const exts = ['.mdl', '.xmile', '.stmx', '.itmx']
     const paths = exts.map(ext => path.join(parsedPath.dir, parsedPath.name + ext))
     const existingPaths = paths.filter(path => fs.existsSync(path))
     if (existingPaths.length > 1) {
       throw new Error(
-        `Found multiple files that match '${model}'; please specify a file with a .mdl, .xmile, or .stmx extension`
+        `Found multiple files that match '${model}'; please specify a file with a .mdl, .xmile, .stmx, or .itmx extension`
       )
     }
     if (existingPaths.length === 0) {
-      throw new Error(`No {mdl,xmile,stmx} file found for ${model}`)
+      throw new Error(`No {mdl,xmile,stmx,itmx} file found for ${model}`)
     }
     parsedPath.ext = path.extname(existingPaths[0])
   }
