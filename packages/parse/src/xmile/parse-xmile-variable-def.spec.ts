@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest'
 import type { XmlElement } from '@rgrove/parse-xml'
 import { parseXml } from '@rgrove/parse-xml'
 
-import { binaryOp, call, exprEqn, lookupDef, lookupVarEqn, num, varDef, varRef } from '../ast/ast-builders'
+import { binaryOp, call, exprEqn, lookupDef, lookupVarEqn, num, unaryOp, varDef, varRef } from '../ast/ast-builders'
 
 import { parseXmileVariableDef } from './parse-xmile-variable-def'
 
@@ -315,6 +315,22 @@ describe('parseXmileVariableDef with <aux>', () => {
     expect(parseXmileVariableDef(v)).toEqual([exprEqn(varDef('x'), binaryOp(varRef('y'), '+', num(10)))])
   })
 
+  // TODO: According to the XMILE spec, "this is a long variable name" should be equivalent to the same name
+  // without quotes, but SDE doesn't support this yet (it keeps the quotes), so this test is skipped for now
+  it.skip('should parse an aux variable definition (with quoted variable name)', () => {
+    const v = xml(`
+      <aux name="this is a long variable name x">
+        <eqn>"this is a long variable name y" + 10</eqn>
+      </aux>
+    `)
+    expect(parseXmileVariableDef(v)).toEqual([
+      exprEqn(
+        varDef('this is a long variable name x'),
+        binaryOp(varRef('this is a long variable name y'), '+', num(10))
+      )
+    ])
+  })
+
   it('should parse an aux variable definition (with one dimension, apply to all)', () => {
     const v = xml(`
       <aux name="x">
@@ -399,7 +415,7 @@ describe('parseXmileVariableDef with <aux>', () => {
     ])
   })
 
-  it('should parse an aux variable definition with XMILE conditional expression', () => {
+  it('should parse an aux variable definition with XMILE-style "IF ... THEN ... ELSE ..." conditional expression', () => {
     const v = xml(`
       <aux name="x">
         <eqn>IF c > 10 THEN y + 3 ELSE z * 5</eqn>
@@ -411,6 +427,88 @@ describe('parseXmileVariableDef with <aux>', () => {
         call(
           'IF THEN ELSE',
           binaryOp(varRef('c'), '>', num(10)),
+          binaryOp(varRef('y'), '+', num(3)),
+          binaryOp(varRef('z'), '*', num(5))
+        )
+      )
+    ])
+  })
+
+  it('should parse an aux variable definition with XMILE conditional expression with binary AND op', () => {
+    const v = xml(`
+      <aux name="x">
+        <eqn>IF c &gt; 10 AND d &lt; 20 THEN y + 3 ELSE z * 5</eqn>
+      </aux>
+    `)
+    expect(parseXmileVariableDef(v)).toEqual([
+      exprEqn(
+        varDef('x'),
+        call(
+          'IF THEN ELSE',
+          binaryOp(binaryOp(varRef('c'), '>', num(10)), ':AND:', binaryOp(varRef('d'), '<', num(20))),
+          binaryOp(varRef('y'), '+', num(3)),
+          binaryOp(varRef('z'), '*', num(5))
+        )
+      )
+    ])
+  })
+
+  it('should parse an aux variable definition with XMILE conditional expression with binary OR op', () => {
+    const v = xml(`
+      <aux name="x">
+        <eqn>IF c &gt; 10 OR d &lt; 20 THEN y + 3 ELSE z * 5</eqn>
+      </aux>
+    `)
+    expect(parseXmileVariableDef(v)).toEqual([
+      exprEqn(
+        varDef('x'),
+        call(
+          'IF THEN ELSE',
+          binaryOp(binaryOp(varRef('c'), '>', num(10)), ':OR:', binaryOp(varRef('d'), '<', num(20))),
+          binaryOp(varRef('y'), '+', num(3)),
+          binaryOp(varRef('z'), '*', num(5))
+        )
+      )
+    ])
+  })
+
+  it('should parse an aux variable definition with XMILE conditional expression with binary NOT op', () => {
+    const v = xml(`
+      <aux name="x">
+        <eqn>IF NOT c THEN y + 3 ELSE z * 5</eqn>
+      </aux>
+    `)
+    expect(parseXmileVariableDef(v)).toEqual([
+      exprEqn(
+        varDef('x'),
+        call(
+          'IF THEN ELSE',
+          unaryOp(':NOT:', varRef('c')),
+          binaryOp(varRef('y'), '+', num(3)),
+          binaryOp(varRef('z'), '*', num(5))
+        )
+      )
+    ])
+  })
+
+  // TODO: According to the XMILE spec, "this is a long variable name" should be equivalent to the same name
+  // without quotes, but SDE doesn't support this yet (it keeps the quotes), so this test is skipped for now
+  it.skip('should parse an aux variable definition with XMILE conditional expression (and should not replace boolean operators when inside quoted variable names)', () => {
+    const v = xml(`
+      <aux name="x">
+        <eqn>IF "This variable contains AND OR NOT keywords" &gt; 10 AND d &lt; 20 THEN y + 3 ELSE z * 5</eqn>
+      </aux>
+    `)
+    expect(parseXmileVariableDef(v)).toEqual([
+      exprEqn(
+        varDef('x'),
+        call(
+          'IF THEN ELSE',
+          binaryOp(
+            binaryOp(varRef('This variable contains AND OR NOT keywords'), '>', num(10)),
+            ':AND:',
+            binaryOp(varRef('d'), '<', num(20))
+          ),
           binaryOp(varRef('y'), '+', num(3)),
           binaryOp(varRef('z'), '*', num(5))
         )

@@ -246,7 +246,15 @@ function parseExpr(exprText: string): Expr {
   //   IF_THEN_ELSE({condition}, {trueExpr}, {falseExpr})
   // Since we only support the latter in the compile package, it's better if we transform
   // the XMILE form to Vensim form, and then we can use the Vensim expression parser.
-  exprText = exprText.replace(conditionalRegExp, 'IF THEN ELSE($1, $2, $3)')
+  exprText = exprText.replace(conditionalRegExp, (_, p1, p2, p3) => {
+    // XXX: Vensim uses {:AND:,:OR:,:NOT:} but XMILE uses {AND,OR,NOT}, so we replace the
+    // XMILE syntax with the Vensim syntax so that the Vensim parser can handle them
+    // Replace XMILE logical operators with Vensim syntax, but avoid replacing when inside quoted strings
+    p1 = p1.replace(/(?<!".*?)\b AND \b(?!.*?")/gi, ' :AND: ')
+    p1 = p1.replace(/(?<!".*?)\b OR \b(?!.*?")/gi, ' :OR: ')
+    p1 = p1.replace(/(?<!".*?)\b\s?NOT \b(?!.*?")/gi, ' :NOT: ')
+    return `IF THEN ELSE(${p1}, ${p2}, ${p3})`
+  })
 
   // XXX: XMILE uses different syntax for array functions than Vensim.  XMILE uses an
   // asterisk (wildcard), e.g., `SUM(x[*])`, while Vensim uses e.g., `SUM(x[DimA!])`.
