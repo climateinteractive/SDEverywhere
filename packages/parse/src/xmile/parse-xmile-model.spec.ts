@@ -60,18 +60,18 @@ describe('parseXmileModel', () => {
   it('should throw an error if model equation cannot be parsed', () => {
     const vars = `\
 <aux name="x">
-  <eqn>IF   THEN 1 ELSE 2</eqn>
+  <eqn>x + ?! + y</eqn>
 </aux>`
     const mdl = xmile('', vars)
 
     const msg = `\
-Failed to parse XMILE variable definition at line 15, col 13:
+Failed to parse XMILE variable definition at line 15, col 4:
             <aux name="x">
-  <eqn>IF   THEN 1 ELSE 2</eqn>
+  <eqn>x + ?! + y</eqn>
 </aux>
 
 Detail:
-  no viable alternative at input 'IF THEN ELSE(,'`
+  token recognition error at: '?'`
     expect(() => parseXmileModel(mdl)).toThrow(msg)
   })
 
