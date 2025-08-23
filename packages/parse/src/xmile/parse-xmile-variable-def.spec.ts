@@ -253,6 +253,18 @@ describe('parseXmileVariableDef with <flow>', () => {
     ])
   })
 
+  // TODO: We currently ignore `<non_negative>` elements during parsing; more work will be needed to
+  // match the behavior described in the XMILE spec for flows
+  it('should parse a flow variable definition that has <non_negative>', () => {
+    const v = xml(`
+      <flow name="x">
+        <eqn>1000</eqn>
+        <non_negative />
+      </flow>
+    `)
+    expect(parseXmileVariableDef(v)).toEqual([exprEqn(varDef('x'), num(1000))])
+  })
+
   it('should throw an error if flow variable definition has no <eqn> or <gf>', () => {
     const v = xml(`
       <flow name="x">
@@ -270,17 +282,6 @@ describe('parseXmileVariableDef with <flow>', () => {
       </flow>
     `)
     expect(() => parseXmileVariableDef(v)).toThrow('Currently <multiplier> is not supported for a <flow> variable')
-  })
-
-  // TODO: Support <non_negative>
-  it('should throw an error if flow variable definition has <non_negative>', () => {
-    const v = xml(`
-      <flow name="x">
-        <eqn>1000</eqn>
-        <non_negative />
-      </flow>
-    `)
-    expect(() => parseXmileVariableDef(v)).toThrow('Currently <non_negative> is not supported for a <flow> variable')
   })
 
   // TODO: Support <overflow>

@@ -221,9 +221,12 @@ function parseEqnElem(varElem: XmlElement, parentElem: XmlElement): Expr {
       if (firstElemOf(parentElem, 'multiplier')) {
         throw new Error(xmlError(varElem, 'Currently <multiplier> is not supported for a <flow> variable'))
       }
-      if (firstElemOf(parentElem, 'non_negative')) {
-        throw new Error(xmlError(varElem, 'Currently <non_negative> is not supported for a <flow> variable'))
-      }
+      // TODO: We currently ignore `<non_negative>` elements during parsing since it is noted in the XMILE
+      // spec that it is not directly supported by XMILE and an optional vendor-specific feature.  More
+      // work will be needed to make this work according to the spec, but for now it's OK to ignore it.
+      // if (firstElemOf(parentElem, 'non_negative')) {
+      //   throw new Error(xmlError(varElem, 'Currently <non_negative> is not supported for a <flow> variable'))
+      // }
       if (firstElemOf(parentElem, 'overflow')) {
         throw new Error(xmlError(varElem, 'Currently <overflow> is not supported for a <flow> variable'))
       }
