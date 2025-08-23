@@ -661,6 +661,7 @@ function visitFunctionCall(v, callExpr, context) {
       case '_MAX':
       case '_MIN':
       case '_MOD':
+      case '_STEP':
         validateCallArgs(callExpr, 2)
         break
 
