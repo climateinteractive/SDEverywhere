@@ -435,6 +435,61 @@ describe('parseXmileVariableDef with <aux>', () => {
     ])
   })
 
+  it('should parse an aux variable definition with XMILE-style "IF ... THEN ... ELSE ..." conditional expression (over multiple lines)', () => {
+    const v = xml(`
+      <aux name="x">
+        <eqn>IF c > 10
+        THEN y + 3 ELSE z * 5</eqn>
+      </aux>
+    `)
+    expect(parseXmileVariableDef(v)).toEqual([
+      exprEqn(
+        varDef('x'),
+        call(
+          'IF THEN ELSE',
+          binaryOp(varRef('c'), '>', num(10)),
+          binaryOp(varRef('y'), '+', num(3)),
+          binaryOp(varRef('z'), '*', num(5))
+        )
+      )
+    ])
+  })
+
+  it('should parse an aux variable definition with XMILE-style "IF ... THEN ... ELSE ..." conditional expression (with nested IF THEN ELSE)', () => {
+    const v = xml(`
+      <aux name="x" flow_concept="true">
+        <eqn>IF (vacation_switch = 1 AND total_weeks_vacation_taken &lt; 4)
+        THEN (IF TIME - Last_Vacation_Start &gt;= time_working_before_vacation THEN 1
+        ELSE 0)
+        ELSE 0</eqn>
+      </aux>
+    `)
+    expect(parseXmileVariableDef(v)).toEqual([
+      exprEqn(
+        varDef('x'),
+        call(
+          'IF THEN ELSE',
+          binaryOp(
+            binaryOp(varRef('vacation_switch'), '=', num(1)),
+            ':AND:',
+            binaryOp(varRef('total_weeks_vacation_taken'), '<', num(4))
+          ),
+          call(
+            'IF THEN ELSE',
+            binaryOp(
+              binaryOp(varRef('TIME'), '-', varRef('Last_Vacation_Start')),
+              '>=',
+              varRef('time_working_before_vacation')
+            ),
+            num(1),
+            num(0)
+          ),
+          num(0)
+        )
+      )
+    ])
+  })
+
   it('should parse an aux variable definition with XMILE conditional expression with binary AND op', () => {
     const v = xml(`
       <aux name="x">
