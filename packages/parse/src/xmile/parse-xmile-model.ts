@@ -3,11 +3,11 @@
 import type { XmlElement } from '@rgrove/parse-xml'
 import { parseXml } from '@rgrove/parse-xml'
 
-import type { DimensionDef, Equation, Model } from '../ast/ast-types'
+import type { DimensionDef, Equation, Model, SimulationSpec } from '../ast/ast-types'
 
 import { parseXmileDimensionDef } from './parse-xmile-dimension-def'
 import { parseXmileVariableDef } from './parse-xmile-variable-def'
-import { firstElemOf, elemsOf } from './xml'
+import { firstElemOf, elemsOf, xmlError } from './xml'
 
 /**
  * Parse the given XMILE model definition and return a `Model` AST node.
@@ -28,19 +28,68 @@ export function parseXmileModel(input: string): Model {
     throw new Error(msg)
   }
 
+  // Extract <sim_specs> -> SimulationSpec
+  const simulationSpec: SimulationSpec = parseSimSpecs(xml.root, input)
+
   // Extract <dimensions> -> DimensionDef[]
-  const dimensions: DimensionDef[] = parseDimensionDefs(xml.root)
+  const dimensions: DimensionDef[] = parseDimensionDefs(xml.root, input)
 
   // Extract <variables> -> Equation[]
   const equations: Equation[] = parseVariableDefs(xml.root, input)
 
   return {
+    simulationSpec,
     dimensions,
     equations
   }
 }
 
-function parseDimensionDefs(rootElem: XmlElement | undefined): DimensionDef[] {
+function parseSimSpecs(rootElem: XmlElement | undefined, originalXml: string): SimulationSpec {
+  // Extract <sim_specs> element
+  const simSpecsElem = firstElemOf(rootElem, 'sim_specs')
+  if (simSpecsElem === undefined) {
+    throw new Error(xmlError(rootElem, '<sim_specs> element is required for XMILE model definition'))
+  }
+
+  function getSimSpecValue(name: string, required: boolean): number | undefined {
+    const elem = firstElemOf(simSpecsElem, name)
+    if (required && elem === undefined) {
+      const error = new Error(xmlError(simSpecsElem, `<${name}> element is required in XMILE sim specs`))
+      throwXmileParseError(error, originalXml, simSpecsElem, 'model')
+    }
+    if (elem === undefined) {
+      return undefined
+    }
+    const value = Number(elem.text)
+    if (!isNaN(value)) {
+      return value
+    } else {
+      const error = new Error(xmlError(elem, `Invalid numeric value for <${name}> element: ${elem.text}`))
+      throwXmileParseError(error, originalXml, simSpecsElem, 'model')
+    }
+  }
+
+  // Extract <start> element
+  const startTime = getSimSpecValue('start', true)
+
+  // Extract <stop> element
+  const endTime = getSimSpecValue('stop', true)
+
+  // Extract <dt> element
+  let timeStep = getSimSpecValue('dt', false)
+  if (timeStep === undefined) {
+    // The default `dt` value is 1 according to the XMILE spec
+    timeStep = 1
+  }
+
+  return {
+    startTime,
+    endTime,
+    timeStep
+  }
+}
+
+function parseDimensionDefs(rootElem: XmlElement | undefined, originalXml: string): DimensionDef[] {
   const dimensionDefs: DimensionDef[] = []
 
   const dimensionsElem = firstElemOf(rootElem, 'dimensions')
@@ -48,7 +97,11 @@ function parseDimensionDefs(rootElem: XmlElement | undefined): DimensionDef[] {
     // Extract <dim> -> SubscriptRange
     const dimElems = elemsOf(dimensionsElem, ['dim'])
     for (const dimElem of dimElems) {
-      dimensionDefs.push(parseXmileDimensionDef(dimElem))
+      try {
+        dimensionDefs.push(parseXmileDimensionDef(dimElem))
+      } catch (e) {
+        throwXmileParseError(e, originalXml, dimElem, 'dimension')
+      }
     }
   }
 
@@ -73,35 +126,46 @@ function parseVariableDefs(rootElem: XmlElement | undefined, originalXml: string
           equations.push(...eqns)
         }
       } catch (e) {
-        // Include context such as line/column numbers in the error message if available
-        let linePart = ''
-        // Try to get line number from the XML element's position
-        const lineNumInOriginalXml = getLineNumber(originalXml, varElem.start)
-        if (lineNumInOriginalXml !== -1) {
-          if (e.cause?.code === 'VensimParseError') {
-            if (e.cause.line) {
-              // The line number reported by ANTLR is relative to the beginning of the
-              // preprocessed definition (since we parse each definition individually),
-              // so we need to add it to the line of the definition in the original source
-              const lineNum = e.cause.line - 1 + lineNumInOriginalXml
-              linePart += ` at line ${lineNum}`
-              if (e.cause.column) {
-                linePart += `, col ${e.cause.column}`
-              }
-            }
-          } else {
-            // Include the line number from the original XML
-            linePart += ` at line ${lineNumInOriginalXml}`
-          }
-        }
-        const varElemString = extractXmlLines(originalXml, varElem.start, varElem.end)
-        const msg = `Failed to parse XMILE variable definition${linePart}:\n${varElemString}\n\nDetail:\n  ${e.message}`
-        throw new Error(msg)
+        throwXmileParseError(e, originalXml, varElem, 'variable')
       }
     }
   }
 
   return equations
+}
+
+function throwXmileParseError(
+  originalError: Error,
+  originalXml: string,
+  elem: XmlElement,
+  elemKind: 'model' | 'dimension' | 'variable'
+): void {
+  // Include context such as line/column numbers in the error message if available
+  let linePart = ''
+  // Try to get line number from the XML element's position
+  const lineNumInOriginalXml = getLineNumber(originalXml, elem.start)
+  if (lineNumInOriginalXml !== -1) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const cause = (originalError as any).cause as { code?: string; line?: number; column?: number }
+    if (cause?.code === 'VensimParseError') {
+      if (cause.line) {
+        // The line number reported by ANTLR is relative to the beginning of the
+        // preprocessed definition (since we parse each definition individually),
+        // so we need to add it to the line of the definition in the original source
+        const lineNum = cause.line - 1 + lineNumInOriginalXml
+        linePart += ` at line ${lineNum}`
+        if (cause.column) {
+          linePart += `, col ${cause.column}`
+        }
+      }
+    } else {
+      // Include the line number from the original XML
+      linePart += ` at line ${lineNumInOriginalXml}`
+    }
+  }
+  const elemString = extractXmlLines(originalXml, elem.start, elem.end)
+  const msg = `Failed to parse XMILE ${elemKind} definition${linePart}:\n${elemString}\n\nDetail:\n  ${originalError.message}`
+  throw new Error(msg)
 }
 
 /**
