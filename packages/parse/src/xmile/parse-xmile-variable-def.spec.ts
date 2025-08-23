@@ -78,6 +78,63 @@ describe('parseXmileVariableDef with <stock>', () => {
     ])
   })
 
+  it('should parse a stock variable definition (without subscripts, multiple inflows, no outflows)', () => {
+    const v = xml(`
+      <stock name="x">
+        <eqn>y + 10</eqn>
+        <inflow>a</inflow>
+        <inflow>b</inflow>
+      </stock>
+    `)
+    expect(parseXmileVariableDef(v)).toEqual([
+      exprEqn(
+        varDef('x'),
+        // INTEG(a + b, y + 10)
+        call('INTEG', binaryOp(varRef('a'), '+', varRef('b')), binaryOp(varRef('y'), '+', num(10)))
+      )
+    ])
+  })
+
+  it('should parse a stock variable definition (without subscripts, no inflows, multiple outflows)', () => {
+    const v = xml(`
+      <stock name="x">
+        <eqn>y + 10</eqn>
+        <outflow>a</outflow>
+        <outflow>b</outflow>
+      </stock>
+    `)
+    expect(parseXmileVariableDef(v)).toEqual([
+      exprEqn(
+        varDef('x'),
+        // INTEG(-a - b, y + 10)
+        call('INTEG', binaryOp(unaryOp('-', varRef('a')), '-', varRef('b')), binaryOp(varRef('y'), '+', num(10)))
+      )
+    ])
+  })
+
+  it.only('should parse a stock variable definition (without subscripts, multiple inflows, multiple outflows)', () => {
+    const v = xml(`
+      <stock name="x">
+        <eqn>y + 10</eqn>
+        <inflow>a</inflow>
+        <inflow>b</inflow>
+        <outflow>c</outflow>
+        <outflow>d</outflow>
+      </stock>
+    `)
+    expect(parseXmileVariableDef(v)).toEqual([
+      exprEqn(
+        varDef('x'),
+        // INTEG(a + b - c - d, y + 10)
+        call(
+          'INTEG',
+          binaryOp(binaryOp(binaryOp(varRef('a'), '+', varRef('b')), '-', varRef('c')), '-', varRef('d')),
+          binaryOp(varRef('y'), '+', num(10))
+        )
+      )
+    ])
+  })
+
   // TODO: We currently ignore `<non_negative>` elements during parsing; more work will be needed to
   // match the behavior described in the XMILE spec for stocks
   it('should parse a stock variable definition that has <non_negative>', () => {
@@ -89,7 +146,13 @@ describe('parseXmileVariableDef with <stock>', () => {
           <non_negative />
         </stock>
       `)
-    expect(parseXmileVariableDef(v)).toEqual([exprEqn(varDef('x'), call('INTEG', varRef('matriculating'), num(1000)))])
+    expect(parseXmileVariableDef(v)).toEqual([
+      exprEqn(
+        varDef('x'),
+        // INTEG(matriculating - graduating, 1000)
+        call('INTEG', binaryOp(varRef('matriculating'), '-', varRef('graduating')), num(1000))
+      )
+    ])
   })
 
   it('should throw an error if stock variable definition has no <eqn>', () => {
@@ -97,7 +160,7 @@ describe('parseXmileVariableDef with <stock>', () => {
       <stock name="x">
       </stock>
     `)
-    expect(() => parseXmileVariableDef(v)).toThrow('Currently <eqn> is required for a <stock> variable')
+    expect(() => parseXmileVariableDef(v)).toThrow('An <eqn> is required for a <stock> variable')
   })
 
   it('should throw an error if stock variable definition has <gf>', () => {
@@ -110,27 +173,6 @@ describe('parseXmileVariableDef with <stock>', () => {
       </stock>
     `)
     expect(() => parseXmileVariableDef(v)).toThrow('<gf> is only allowed for <flow> and <aux> variables')
-  })
-
-  it('should throw an error if stock variable definition has no <inflow>', () => {
-    const v = xml(`
-      <stock name="x">
-        <eqn>y + 10</eqn>
-      </stock>
-    `)
-    expect(() => parseXmileVariableDef(v)).toThrow('Currently only one <inflow> is supported for a <stock> variable')
-  })
-
-  // TODO: Support multiple inflows
-  it('should throw an error if stock variable definition has multiple <inflow>', () => {
-    const v = xml(`
-      <stock name="x">
-        <eqn>y + 10</eqn>
-        <inflow>z * 2</inflow>
-        <inflow>q + 4</inflow>
-      </stock>
-    `)
-    expect(() => parseXmileVariableDef(v)).toThrow('Currently only one <inflow> is supported for a <stock> variable')
   })
 
   // TODO: Support <conveyor>

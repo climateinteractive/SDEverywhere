@@ -172,21 +172,28 @@ function parseEqnElem(varElem: XmlElement, parentElem: XmlElement): Expr {
 
     case 'stock': {
       // <stock> elements are currently translated to a Vensim-style aux:
-      //   INTEG({inflow}, {eqn})
+      //   INTEG({inflow1} + {inflow2} + ... - {outflow1} - {outflow2} - ..., {eqn})
       if (eqnText === undefined) {
         // An <eqn> is currently required for a <stock>
-        throw new Error(xmlError(varElem, 'Currently <eqn> is required for a <stock> variable'))
+        throw new Error(xmlError(varElem, 'An <eqn> is required for a <stock> variable'))
       }
       const inflowElems = elemsOf(parentElem, ['inflow'])
-      if (inflowElems.length !== 1) {
-        // TODO: XMILE allows for multiple <inflow> elements, but we don't support that yet
-        throw new Error(xmlError(varElem, 'Currently only one <inflow> is supported for a <stock> variable'))
-      }
-      // TODO: Handle the case where <inflow> is defined using CDATA
-      const inflowText = firstTextOf(inflowElems[0])
-      if (inflowText === undefined) {
-        throw new Error(xmlError(varElem, 'Currently <inflow> is required for a <stock> variable'))
-      }
+      const outflowElems = elemsOf(parentElem, ['outflow'])
+      // TODO: Handle the case where <inflow> or <outflow> is defined using CDATA
+      const inflowTexts = inflowElems.map(inflowElem => {
+        const inflowText = firstTextOf(inflowElem)
+        if (inflowText === undefined) {
+          throw new Error(xmlError(varElem, 'An <inflow> must be non-empty for a <stock> variable'))
+        }
+        return inflowText.text
+      })
+      const outflowTexts = outflowElems.map(outflowElem => {
+        const outflowText = firstTextOf(outflowElem)
+        if (outflowText === undefined) {
+          throw new Error(xmlError(varElem, 'An <outflow> must be non-empty for a <stock> variable'))
+        }
+        return outflowText.text
+      })
 
       // TODO: We currently do not support certain <stock> options, so for now we
       // fail fast if we encounter these
@@ -203,9 +210,22 @@ function parseEqnElem(varElem: XmlElement, parentElem: XmlElement): Expr {
       //   throw new Error(xmlError(varElem, 'Currently <non_negative> is not supported for a <stock> variable'))
       // }
 
+      // Combine the inflow and outflow expressions into a single expression
+      // TODO: Do we need to worry about parentheses here?
+      const inflowParts = inflowTexts.join(' + ')
+      let outflowParts = outflowTexts.join(' - ')
+      if (outflowTexts.length > 0) {
+        if (inflowParts.length > 0) {
+          outflowParts = `- ${outflowParts}`
+        } else {
+          outflowParts = `-${outflowParts}`
+        }
+      }
+      const flowsExpr = parseExpr(`${inflowParts} ${outflowParts}`)
+
+      // Synthesize a Vensim-style `INTEG` function call
       const initExpr = parseExpr(eqnText.text)
-      const inflowExpr = parseExpr(inflowText.text)
-      return call('INTEG', inflowExpr, initExpr)
+      return call('INTEG', flowsExpr, initExpr)
     }
 
     case 'flow':
