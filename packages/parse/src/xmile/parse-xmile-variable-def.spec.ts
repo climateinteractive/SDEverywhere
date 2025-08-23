@@ -78,6 +78,20 @@ describe('parseXmileVariableDef with <stock>', () => {
     ])
   })
 
+  // TODO: We currently ignore `<non_negative>` elements during parsing; more work will be needed to
+  // match the behavior described in the XMILE spec for stocks
+  it('should parse a stock variable definition that has <non_negative>', () => {
+    const v = xml(`
+        <stock name="x">
+          <eqn>1000</eqn>
+          <inflow>matriculating</inflow>
+          <outflow>graduating</outflow>
+          <non_negative />
+        </stock>
+      `)
+    expect(parseXmileVariableDef(v)).toEqual([exprEqn(varDef('x'), call('INTEG', varRef('matriculating'), num(1000)))])
+  })
+
   it('should throw an error if stock variable definition has no <eqn>', () => {
     const v = xml(`
       <stock name="x">
@@ -146,19 +160,6 @@ describe('parseXmileVariableDef with <stock>', () => {
       </stock>
     `)
     expect(() => parseXmileVariableDef(v)).toThrow('Currently <queue> is not supported for a <stock> variable')
-  })
-
-  // TODO: Support <non_negative>
-  it('should throw an error if stock variable definition has <non_negative>', () => {
-    const v = xml(`
-      <stock name="x">
-        <eqn>1000</eqn>
-        <inflow>matriculating</inflow>
-        <outflow>graduating</outflow>
-        <non_negative />
-      </stock>
-    `)
-    expect(() => parseXmileVariableDef(v)).toThrow('Currently <non_negative> is not supported for a <stock> variable')
   })
 })
 

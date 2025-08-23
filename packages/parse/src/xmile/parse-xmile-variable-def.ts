@@ -199,9 +199,12 @@ function parseEqnElem(varElem: XmlElement, parentElem: XmlElement): Expr {
       if (firstElemOf(parentElem, 'queue')) {
         throw new Error(xmlError(varElem, 'Currently <queue> is not supported for a <stock> variable'))
       }
-      if (firstElemOf(parentElem, 'non_negative')) {
-        throw new Error(xmlError(varElem, 'Currently <non_negative> is not supported for a <stock> variable'))
-      }
+      // TODO: We currently ignore `<non_negative>` elements during parsing since it is noted in the XMILE
+      // spec that it is not directly supported by XMILE and an optional vendor-specific feature.  More
+      // work will be needed to make this work according to the spec, but for now it's OK to ignore it.
+      // if (firstElemOf(parentElem, 'non_negative')) {
+      //   throw new Error(xmlError(varElem, 'Currently <non_negative> is not supported for a <stock> variable'))
+      // }
 
       const initExpr = parseExpr(eqnText.text)
       const inflowExpr = parseExpr(inflowText.text)
