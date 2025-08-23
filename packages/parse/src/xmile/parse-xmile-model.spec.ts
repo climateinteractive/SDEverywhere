@@ -47,13 +47,29 @@ ${dims}
 }
 
 describe('parseXmileModel', () => {
-  it('should throw an error if model cannot be parsed', () => {
+  it('should throw an error if model XML cannot be parsed', () => {
     const mdl = 'NOT XMILE'
 
     let msg = 'Failed to parse XMILE model definition:\n\n'
     msg += 'Root element is missing or invalid (line 1, column 1)\n'
     msg += '  NOT XMILE\n'
     msg += '  ^'
+    expect(() => parseXmileModel(mdl)).toThrow(msg)
+  })
+
+  it('should throw an error if model equation cannot be parsed', () => {
+    const vars = `\
+<aux name="x">
+  <eqn>IF   THEN 1 ELSE 2</eqn>
+</aux>`
+    const mdl = xmile('', vars)
+
+    const msg = `\
+Failed to parse XMILE variable definition at line unknown, col 13:
+IF   THEN 1 ELSE 2
+
+Detail:
+  no viable alternative at input 'IF THEN ELSE(,'`
     expect(() => parseXmileModel(mdl)).toThrow(msg)
   })
 

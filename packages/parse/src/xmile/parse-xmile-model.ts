@@ -66,9 +66,31 @@ function parseVariableDefs(rootElem: XmlElement | undefined): Equation[] {
     // Extract variable definition (e.g., <aux>, <stock>, <flow>, <gf>) -> Equation[]
     const varElems = elemsOf(variablesElem, ['aux', 'stock', 'flow', 'gf'])
     for (const varElem of varElems) {
-      const eqns = parseXmileVariableDef(varElem)
-      if (eqns) {
-        equations.push(...eqns)
+      try {
+        const eqns = parseXmileVariableDef(varElem)
+        if (eqns) {
+          equations.push(...eqns)
+        }
+      } catch (e) {
+        // Include context such as line/column numbers in the error message if available
+        let linePart = ''
+        if (e.cause?.code === 'VensimParseError') {
+          if (e.cause.line) {
+            // The line number reported by ANTLR is relative to the beginning of the
+            // preprocessed definition (since we parse each definition individually),
+            // so we need to add it to the line of the definition in the original source
+            // TODO: Get the actual line number
+            // const lineNum = e.cause.line - 1 + def.line
+            const lineNum = 'unknown'
+            linePart += ` at line ${lineNum}`
+            if (e.cause.column) {
+              linePart += `, col ${e.cause.column}`
+            }
+          }
+        }
+        const varElemString = varElem.toString()
+        const msg = `Failed to parse XMILE variable definition${linePart}:\n${varElemString}\n\nDetail:\n  ${e.message}`
+        throw new Error(msg)
       }
     }
   }
