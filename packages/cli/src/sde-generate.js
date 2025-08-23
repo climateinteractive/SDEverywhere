@@ -58,7 +58,6 @@ export let handler = async argv => {
 export let generate = async (model, opts) => {
   // Get the model name and directory from the model argument.
   let { modelDirname, modelName, modelPathname, modelKind } = modelPathProps(model)
-  console.log(modelPathname, modelKind)
   // Ensure the build directory exists.
   let buildDirname = buildDir(opts.builddir, modelDirname)
   let spec = parseSpec(opts.spec)
