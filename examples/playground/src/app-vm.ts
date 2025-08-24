@@ -11,20 +11,46 @@ import { createSynchronousModelRunner, type JsModel, type ModelRunner, type Outp
 
 import { SelectorOptionViewModel, SelectorViewModel } from './components/_shared/selector-vm'
 import type { GraphViewModel } from './components/graph/graph-vm'
+import { parseInlineXmileModel } from '@sdeverywhere/compile'
+
+// const initialMdl = `\
+// x = TIME ~~|
+
+// y = x * x ~~|
+
+// z data ~~|
+
+// z = z data + 2 ~~|
+
+// INITIAL TIME = 0 ~~|
+// FINAL TIME = 5 ~~|
+// TIME STEP = 1 ~~|
+// SAVEPER = 1 ~~|
+// `
 
 const initialMdl = `\
-x = TIME ~~|
-
-y = x * x ~~|
-
-z data ~~|
-
-z = z data + 2 ~~|
-
-INITIAL TIME = 0 ~~|
-FINAL TIME = 5 ~~|
-TIME STEP = 1 ~~|
-SAVEPER = 1 ~~|
+<xmile xmlns="http://docs.oasis-open.org/xmile/ns/XMILE/v1.0" version="1.0">
+<header>
+    <options namespace="std"/>
+    <vendor>isee systems, inc.</vendor>
+    <product version="3.7" lang="en">Stella Architect</product>
+</header>
+<sim_specs isee:simulation_delay="0" method="Euler" time_units="Months">
+    <start>0</start>
+    <stop>5</stop>
+    <dt>1</dt>
+</sim_specs>
+<model>
+<variables>
+    <aux name="x">
+        <eqn>TIME</eqn>
+    </aux>
+    <aux name="y">
+        <eqn>x * x</eqn>
+    </aux>
+</variables>
+</model>
+</xmile>
 `
 
 export interface VarInfo {
@@ -156,8 +182,14 @@ function readInlineModelAndGenerateJS(
     spec = {}
   }
 
-  // Parse the Vensim model
-  const parsedModel = parseInlineVensimModel(mdlContent /*, opts?.modelDir*/)
+  let parsedModel
+  if (mdlContent.includes('<xmile')) {
+    // Parse the XMILE model
+    parsedModel = parseInlineXmileModel(mdlContent /*, opts?.modelDir*/)
+  } else {
+    // Parse the Vensim model
+    parsedModel = parseInlineVensimModel(mdlContent /*, opts?.modelDir*/)
+  }
 
   // Look for data variables in the parsed model.  For now we don't allow the user to
   // supply a CSV or DAT file containing that data, but the compiler will not be able
