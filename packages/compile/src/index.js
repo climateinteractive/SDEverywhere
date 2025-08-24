@@ -42,6 +42,14 @@ export function parseInlineVensimModel(mdlContent /*: string*/, modelDir /*?: st
  * @hidden This is not yet part of the public API; it is exposed only for use
  * in the experimental playground app.
  */
+export function parseInlineXmileModel(mdlContent /*: string*/, modelDir /*?: string*/) /*: ParsedModel*/ {
+  return parseModel(mdlContent, 'xmile', modelDir)
+}
+
+/**
+ * @hidden This is not yet part of the public API; it is exposed only for use
+ * in the experimental playground app.
+ */
 export function getModelListing() /*: string*/ {
   return Model.jsonList()
 }
