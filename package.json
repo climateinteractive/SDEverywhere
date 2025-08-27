@@ -43,7 +43,15 @@
         "rollup",
         "svelte"
       ]
-    }
+    },
+    "onlyBuiltDependencies": [
+      "es5-ext",
+      "esbuild",
+      "svelte-preprocess"
+    ],
+    "ignoredBuiltDependencies": [
+      "@parcel/watcher"
+    ]
   },
   "author": "Climate Interactive",
   "license": "MIT",
