@@ -84,6 +84,7 @@ function readInlineModel(
         case '_initial_time':
         case '_final_time':
         case '_time_step':
+        case '_saveper':
         case '_starttime':
         case '_stoptime':
         case '_dt':
