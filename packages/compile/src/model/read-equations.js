@@ -707,8 +707,8 @@ function visitFunctionCall(v, callExpr, context) {
 
       case '_INTEG':
         // NOTE: Stella doesn't have a built-in `INTEG` function, but our XMILE parser synthesizes
-        // an `INTEG` function call for `<stock>` variable definitions using the `<inflow>` element
-        // as the `rate` argument for the Vensim-style `INTEG` function call
+        // an `INTEG` function call for `<stock>` variable definitions using the `<inflow>` and
+        // `<outflow>` elements as the `rate` argument for the Vensim-style `INTEG` function call
         validateCallDepth(callExpr, context)
         validateCallArgs(callExpr, 2)
         v.varType = 'level'
