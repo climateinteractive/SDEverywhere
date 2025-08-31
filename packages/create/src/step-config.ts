@@ -483,7 +483,8 @@ async function readModelVars(projDir: string, mdlPath: string): Promise<MdlVaria
   // Parse the model and generate the variable list
   const mdlDir = dirname(mdlFile)
   const mdlName = parsePath(mdlFile).name
-  await parseAndGenerate(mdlContent, spec, ['printVarList'], mdlDir, mdlName, buildDir)
+  // TODO: Update this to pass 'xmile' or 'vensim' depending on the input model kind
+  await parseAndGenerate(mdlContent, 'vensim', spec, ['printVarList'], mdlDir, mdlName, buildDir)
 
   // Read `build/{mdl}.json`
   const jsonListFile = joinPath(buildDir, `${mdlName}.json`)
