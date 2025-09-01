@@ -4098,7 +4098,7 @@ ${elements.join('\n')}
     ])
   })
 
-  it('should work for DELAY1 function (with initial value argument and subscripted variables)', () => {
+  it('should work for DELAY1 function (with initial value argument; with subscripted variables)', () => {
     // Note that we have a mix of non-apply-to-all (input, delay) and apply-to-all (init)
     // variables here to cover both cases
     // Equivalent Vensim model for reference:
@@ -4224,7 +4224,7 @@ ${elements.join('\n')}
 
   // TODO: This test is not exactly equivalent to the Vensim one since it uses separated definitions
   // for y[A1] and y[A2] instead of a single definition for y[SubA]
-  it.skip('should work for DELAY1 function (with separated variables using subdimension)', () => {
+  it.skip('should work for DELAY1 function (with initial value argument; with separated variables using subdimension)', () => {
     // Equivalent Vensim model for reference:
     // const vars = readInlineModel(`
     //   DimA: A1, A2, A3 ~~|
@@ -4568,7 +4568,7 @@ ${elements.join('\n')}
     ])
   })
 
-  it('should work for DELAY3I function (with initial value argument and nested function calls)', () => {
+  it('should work for DELAY3 function (with initial value argument; with nested function calls)', () => {
     // Equivalent Vensim model for reference:
     // const vars = readInlineModel(`
     //   input = 1 ~~|
@@ -4665,7 +4665,7 @@ ${elements.join('\n')}
     ])
   })
 
-  it('should work for DELAY3 function (with initial value argument and subscripted variables)', () => {
+  it('should work for DELAY3 function (with initial value argument; with subscripted variables)', () => {
     // Note that we have a mix of non-apply-to-all (input, delay) and apply-to-all (init)
     // variables here to cover both cases
     // Equivalent Vensim model for reference:
@@ -4829,7 +4829,7 @@ ${elements.join('\n')}
 
   // TODO: This test is not exactly equivalent to the Vensim one since it uses separated definitions
   // for y[A1] and y[A2] instead of a single definition for y[SubA]
-  it.skip('should work for DELAY3I function (with separated variables using subdimension)', () => {
+  it.skip('should work for DELAY3 function (with initial value argument; with separated variables using subdimension)', () => {
     // Equivalent Vensim model for reference:
     // const vars = readInlineModel(`
     //   DimA: A1, A2, A3 ~~|
@@ -6363,7 +6363,7 @@ ${elements.join('\n')}
     ])
   })
 
-  it('should work for SMTH1 function (with subscripted input and subscripted delay)', () => {
+  it('should work for SMTH1 function (without initial value argument; with subscripted input and subscripted delay)', () => {
     // Equivalent Vensim model for reference:
     // const vars = readInlineModel(`
     //   DimA: A1, A2 ~~|
@@ -6438,7 +6438,7 @@ ${elements.join('\n')}
     ])
   })
 
-  it('should work for SMTH1 function (with subscripted input and non-subscripted delay)', () => {
+  it('should work for SMTH1 function (without initial value argument; with subscripted input and non-subscripted delay)', () => {
     // Equivalent Vensim model for reference:
     // const vars = readInlineModel(`
     //   DimA: A1, A2 ~~|
@@ -6553,7 +6553,7 @@ ${elements.join('\n')}
     ])
   })
 
-  it('should work for SMTH1 function (with initial value argument and subscripted variables)', () => {
+  it('should work for SMTH1 function (with initial value argument; with subscripted variables)', () => {
     // Note that we have a mix of non-apply-to-all (delay, init) and apply-to-all (input)
     // variables here to cover both cases
 
@@ -6702,7 +6702,7 @@ ${elements.join('\n')}
 
   // TODO: This test is not exactly equivalent to the Vensim one since it uses separated definitions
   // for y[A1] and y[A2] instead of a single definition for y[SubA]
-  it.skip('should work for SMTH1 function (with initial value argument and separated variables using subdimension)', () => {
+  it.skip('should work for SMTH1 function (with initial value argument; with separated variables using subdimension)', () => {
     // Equivalent Vensim model for reference:
     // const vars = readInlineModel(`
     //   DimA: A1, A2, A3 ~~|
@@ -6929,23 +6929,36 @@ ${elements.join('\n')}
     ])
   })
 
-  // TODO: Stella calls this function SMTH3 instead of SMOOTH3, skipping this test for now
-  it.skip('should work for SMOOTH3 function (when nested in another function)', () => {
-    const vars = readInlineModel(`
-      input = 3 + PULSE(10, 10) ~~|
-      delay = 2 ~~|
-      y = MAX(SMOOTH3(input, delay), 0) ~~|
-    `)
+  it('should work for SMTH3 function (without initial value argument; when nested in another function)', () => {
+    // Equivalent Vensim model for reference:
+    // const vars = readInlineModel(`
+    //   input = 1 ~~|
+    //   delay = 2 ~~|
+    //   y = MAX(SMOOTH3(input, delay), 0) ~~|
+    // `)
+
+    const xmileVars = `\
+<aux name="input">
+  <eqn>1</eqn>
+</aux>
+<aux name="delay">
+  <eqn>2</eqn>
+</aux>
+<aux name="y">
+  <eqn>MAX(SMTH3(input, delay), 0)</eqn>
+</aux>`
+    const mdl = xmile('', xmileVars)
+    const vars = readInlineModel(mdl)
     expect(vars).toEqual([
-      v('input', '3+PULSE(10,10)', {
+      v('input', '1', {
         refId: '_input',
-        referencedFunctionNames: ['__pulse']
+        varType: 'const'
       }),
       v('delay', '2', {
         refId: '_delay',
         varType: 'const'
       }),
-      v('y', 'MAX(SMOOTH3(input,delay),0)', {
+      v('y', 'MAX(SMTH3(input,delay),0)', {
         refId: '_y',
         referencedFunctionNames: ['__max'],
         references: ['__level1', '__level2', '__level3'],
@@ -6981,33 +6994,63 @@ ${elements.join('\n')}
     ])
   })
 
-  // TODO: Stella calls this function SMTH3 instead of SMOOTH3, skipping this test for now
-  it.skip('should work for SMOOTH3 function (with subscripted input and subscripted delay)', () => {
-    const vars = readInlineModel(`
-      DimA: A1, A2 ~~|
-      input[DimA] = 3 + PULSE(10, 10) ~~|
-      delay[DimA] = 2, 3 ~~|
-      y[DimA] = SMOOTH3(input[DimA], delay[DimA]) ~~|
-    `)
+  it('should work for SMTH3 function (without initial value argument; with subscripted input and subscripted delay)', () => {
+    // Equivalent Vensim model for reference:
+    // const vars = readInlineModel(`
+    //   DimA: A1, A2 ~~|
+    //   input[DimA] = 1 ~~|
+    //   delay[DimA] = 2, 3 ~~|
+    //   y[DimA] = SMOOTH3(input[DimA], delay[DimA]) ~~|
+    // `)
+
+    const xmileDims = `\
+<dim name="DimA">
+  <elem name="A1"/>
+  <elem name="A2"/>
+</dim>`
+    const xmileVars = `\
+<aux name="input">
+  <dimensions>
+    <dim name="DimA"/>
+  </dimensions>
+  <eqn>1</eqn>
+</aux>
+<aux name="delay">
+  <dimensions>
+    <dim name="DimA"/>
+  </dimensions>
+  <element subscript="A1">
+    <eqn>2</eqn>
+  </element>
+  <element subscript="A2">
+    <eqn>3</eqn>
+  </element>
+</aux>
+<aux name="y">
+  <dimensions>
+    <dim name="DimA"/>
+  </dimensions>
+  <eqn>SMTH3(input[DimA], delay[DimA])</eqn>
+</aux>`
+    const mdl = xmile(xmileDims, xmileVars)
+    const vars = readInlineModel(mdl)
     expect(vars).toEqual([
-      v('input[DimA]', '3+PULSE(10,10)', {
+      v('input[DimA]', '1', {
         refId: '_input',
-        referencedFunctionNames: ['__pulse'],
-        subscripts: ['_dima']
+        subscripts: ['_dima'],
+        varType: 'const'
       }),
-      v('delay[DimA]', '2,3', {
+      v('delay[A1]', '2', {
         refId: '_delay[_a1]',
-        separationDims: ['_dima'],
         subscripts: ['_a1'],
         varType: 'const'
       }),
-      v('delay[DimA]', '2,3', {
+      v('delay[A2]', '3', {
         refId: '_delay[_a2]',
-        separationDims: ['_dima'],
         subscripts: ['_a2'],
         varType: 'const'
       }),
-      v('y[DimA]', 'SMOOTH3(input[DimA],delay[DimA])', {
+      v('y[DimA]', 'SMTH3(input[DimA],delay[DimA])', {
         refId: '_y',
         references: ['__level1', '__level2', '__level3'],
         smoothVarRefId: '__level3',
@@ -7046,25 +7089,49 @@ ${elements.join('\n')}
     ])
   })
 
-  // TODO: Stella calls this function SMTH3 instead of SMOOTH3, skipping this test for now
-  it.skip('should work for SMOOTH3 function (with subscripted input and non-subscripted delay)', () => {
-    const vars = readInlineModel(`
-      DimA: A1, A2 ~~|
-      input[DimA] = 3 + PULSE(10, 10) ~~|
-      delay = 2 ~~|
-      y[DimA] = SMOOTH3(input[DimA], delay) ~~|
-    `)
+  it('should work for SMTH3 function (without initial value argument; with subscripted input and non-subscripted delay)', () => {
+    // Equivalent Vensim model for reference:
+    // const vars = readInlineModel(`
+    //   DimA: A1, A2 ~~|
+    //   input[DimA] = 1 ~~|
+    //   delay = 2 ~~|
+    //   y[DimA] = SMOOTH3(input[DimA], delay) ~~|
+    // `)
+
+    const xmileDims = `\
+<dim name="DimA">
+  <elem name="A1"/>
+  <elem name="A2"/>
+</dim>`
+    const xmileVars = `\
+<aux name="input">
+  <dimensions>
+    <dim name="DimA"/>
+  </dimensions>
+  <eqn>1</eqn>
+</aux>
+<aux name="delay">
+  <eqn>2</eqn>
+</aux>
+<aux name="y">
+  <dimensions>
+    <dim name="DimA"/>
+  </dimensions>
+  <eqn>SMTH3(input[DimA], delay)</eqn>
+</aux>`
+    const mdl = xmile(xmileDims, xmileVars)
+    const vars = readInlineModel(mdl)
     expect(vars).toEqual([
-      v('input[DimA]', '3+PULSE(10,10)', {
+      v('input[DimA]', '1', {
         refId: '_input',
-        referencedFunctionNames: ['__pulse'],
-        subscripts: ['_dima']
+        subscripts: ['_dima'],
+        varType: 'const'
       }),
       v('delay', '2', {
         refId: '_delay',
         varType: 'const'
       }),
-      v('y[DimA]', 'SMOOTH3(input[DimA],delay)', {
+      v('y[DimA]', 'SMTH3(input[DimA],delay)', {
         refId: '_y',
         references: ['__level1', '__level2', '__level3'],
         smoothVarRefId: '__level3',
@@ -7103,23 +7170,36 @@ ${elements.join('\n')}
     ])
   })
 
-  // TODO: Stella calls this function SMTH3 instead of SMOOTH3I, skipping this test for now
-  it.skip('should work for SMOOTH3I function', () => {
-    const vars = readInlineModel(`
-      input = 3 + PULSE(10, 10) ~~|
-      delay = 2 ~~|
-      y = SMOOTH3I(input, delay, 5) ~~|
-    `)
+  it('should work for SMTH3 function (with initial value argument)', () => {
+    // Equivalent Vensim model for reference:
+    // const vars = readInlineModel(`
+    //   input = 1 ~~|
+    //   delay = 2 ~~|
+    //   y = SMOOTH3I(input, delay, 5) ~~|
+    // `)
+
+    const xmileVars = `\
+<aux name="input">
+  <eqn>1</eqn>
+</aux>
+<aux name="delay">
+  <eqn>2</eqn>
+</aux>
+<aux name="y">
+  <eqn>SMTH3(input, delay, 5)</eqn>
+</aux>`
+    const mdl = xmile('', xmileVars)
+    const vars = readInlineModel(mdl)
     expect(vars).toEqual([
-      v('input', '3+PULSE(10,10)', {
+      v('input', '1', {
         refId: '_input',
-        referencedFunctionNames: ['__pulse']
+        varType: 'const'
       }),
       v('delay', '2', {
         refId: '_delay',
         varType: 'const'
       }),
-      v('y', 'SMOOTH3I(input,delay,5)', {
+      v('y', 'SMTH3(input,delay,5)', {
         refId: '_y',
         references: ['__level1', '__level2', '__level3'],
         smoothVarRefId: '__level3'
@@ -7151,23 +7231,41 @@ ${elements.join('\n')}
     ])
   })
 
-  // TODO: Stella calls this function SMTH3 instead of SMOOTH3I, skipping this test for now
-  it.skip('should work for SMOOTH3I function (with nested function calls)', () => {
-    const vars = readInlineModel(`
-      x = 1 ~~|
-      input = x + PULSE(10, 10) ~~|
-      delay = 3 ~~|
-      init = 0 ~~|
-      y = SMOOTH3I(MIN(0, input), MIN(0, delay), ABS(init)) ~~|
-    `)
+  it('should work for SMTH3 function (with initial value argument; with nested function calls)', () => {
+    // Equivalent Vensim model for reference:
+    // const vars = readInlineModel(`
+    //   x = 1 ~~|
+    //   input = 1 ~~|
+    //   delay = 3 ~~|
+    //   init = 0 ~~|
+    //   y = SMOOTH3I(MIN(0, input), MIN(0, delay), ABS(init)) ~~|
+    // `)
+
+    const xmileVars = `\
+<aux name="x">
+  <eqn>1</eqn>
+</aux>
+<aux name="input">
+  <eqn>x</eqn>
+</aux>
+<aux name="delay">
+  <eqn>3</eqn>
+</aux>
+<aux name="init">
+  <eqn>0</eqn>
+</aux>
+<aux name="y">
+  <eqn>SMTH3(MIN(0, input), MIN(0, delay), ABS(init))</eqn>
+</aux>`
+    const mdl = xmile('', xmileVars)
+    const vars = readInlineModel(mdl)
     expect(vars).toEqual([
       v('x', '1', {
         refId: '_x',
         varType: 'const'
       }),
-      v('input', 'x+PULSE(10,10)', {
+      v('input', 'x', {
         refId: '_input',
-        referencedFunctionNames: ['__pulse'],
         references: ['_x']
       }),
       v('delay', '3', {
@@ -7178,7 +7276,7 @@ ${elements.join('\n')}
         refId: '_init',
         varType: 'const'
       }),
-      v('y', 'SMOOTH3I(MIN(0,input),MIN(0,delay),ABS(init))', {
+      v('y', 'SMTH3(MIN(0,input),MIN(0,delay),ABS(init))', {
         refId: '_y',
         references: ['__level1', '__level2', '__level3'],
         smoothVarRefId: '__level3'
@@ -7213,80 +7311,135 @@ ${elements.join('\n')}
     ])
   })
 
-  // TODO: Stella calls this function SMTH3 instead of SMOOTH3I, skipping this test for now
-  it.skip('should work for SMOOTH3I function (with subscripted variables)', () => {
+  it('should work for SMTH3 function (with initial value argument; with subscripted variables)', () => {
     // Note that we have a mix of non-apply-to-all (input, delay) and apply-to-all (init)
     // variables here to cover both cases
-    const vars = readInlineModel(`
-      DimA: A1, A2, A3 ~~|
-      x[DimA] = 1, 2, 3 ~~|
-      input[DimA] = x[DimA] + PULSE(10, 10) ~~|
-      delay[DimA] = 1, 2, 3 ~~|
-      init[DimA] = 4, 5, 6 ~~|
-      y[DimA] = SMOOTH3I(input[DimA], delay[DimA], init[DimA]) ~~|
-    `)
+
+    // Equivalent Vensim model for reference:
+    // const vars = readInlineModel(`
+    //   DimA: A1, A2, A3 ~~|
+    //   x[DimA] = 1, 2, 3 ~~|
+    //   input[DimA] = x[DimA] ~~|
+    //   delay[DimA] = 1, 2, 3 ~~|
+    //   init[DimA] = 4, 5, 6 ~~|
+    //   y[DimA] = SMOOTH3I(input[DimA], delay[DimA], init[DimA]) ~~|
+    // `)
+
+    const xmileDims = `\
+<dim name="DimA">
+  <elem name="A1"/>
+  <elem name="A2"/>
+  <elem name="A3"/>
+</dim>`
+    const xmileVars = `\
+<aux name="x">
+  <dimensions>
+    <dim name="DimA"/>
+  </dimensions>
+  <element subscript="A1">
+    <eqn>1</eqn>
+  </element>
+  <element subscript="A2">
+    <eqn>2</eqn>
+  </element>
+  <element subscript="A3">
+    <eqn>3</eqn>
+  </element>
+</aux>
+<aux name="input">
+  <dimensions>
+    <dim name="DimA"/>
+  </dimensions>
+  <eqn>x[DimA]</eqn>
+</aux>
+<aux name="delay">
+  <dimensions>
+    <dim name="DimA"/>
+  </dimensions>
+  <element subscript="A1">
+    <eqn>1</eqn>
+  </element>
+  <element subscript="A2">
+    <eqn>2</eqn>
+  </element>
+  <element subscript="A3">
+    <eqn>3</eqn>
+  </element>
+</aux>
+<aux name="init">
+  <dimensions>
+    <dim name="DimA"/>
+  </dimensions>
+  <element subscript="A1">
+    <eqn>4</eqn>
+  </element>
+  <element subscript="A2">
+    <eqn>5</eqn>
+  </element>
+  <element subscript="A3">
+    <eqn>6</eqn>
+  </element>
+</aux>
+<aux name="y">
+  <dimensions>
+    <dim name="DimA"/>
+  </dimensions>
+  <eqn>SMTH3(input[DimA], delay[DimA], init[DimA])</eqn>
+</aux>`
+    const mdl = xmile(xmileDims, xmileVars)
+    const vars = readInlineModel(mdl)
     expect(vars).toEqual([
-      v('x[DimA]', '1,2,3', {
+      v('x[A1]', '1', {
         refId: '_x[_a1]',
-        separationDims: ['_dima'],
         subscripts: ['_a1'],
         varType: 'const'
       }),
-      v('x[DimA]', '1,2,3', {
+      v('x[A2]', '2', {
         refId: '_x[_a2]',
-        separationDims: ['_dima'],
         subscripts: ['_a2'],
         varType: 'const'
       }),
-      v('x[DimA]', '1,2,3', {
+      v('x[A3]', '3', {
         refId: '_x[_a3]',
-        separationDims: ['_dima'],
         subscripts: ['_a3'],
         varType: 'const'
       }),
-      v('input[DimA]', 'x[DimA]+PULSE(10,10)', {
+      v('input[DimA]', 'x[DimA]', {
         refId: '_input',
-        referencedFunctionNames: ['__pulse'],
         references: ['_x[_a1]', '_x[_a2]', '_x[_a3]'],
         subscripts: ['_dima']
       }),
-      v('delay[DimA]', '1,2,3', {
+      v('delay[A1]', '1', {
         refId: '_delay[_a1]',
-        separationDims: ['_dima'],
         subscripts: ['_a1'],
         varType: 'const'
       }),
-      v('delay[DimA]', '1,2,3', {
+      v('delay[A2]', '2', {
         refId: '_delay[_a2]',
-        separationDims: ['_dima'],
         subscripts: ['_a2'],
         varType: 'const'
       }),
-      v('delay[DimA]', '1,2,3', {
+      v('delay[A3]', '3', {
         refId: '_delay[_a3]',
-        separationDims: ['_dima'],
         subscripts: ['_a3'],
         varType: 'const'
       }),
-      v('init[DimA]', '4,5,6', {
+      v('init[A1]', '4', {
         refId: '_init[_a1]',
-        separationDims: ['_dima'],
         subscripts: ['_a1'],
         varType: 'const'
       }),
-      v('init[DimA]', '4,5,6', {
+      v('init[A2]', '5', {
         refId: '_init[_a2]',
-        separationDims: ['_dima'],
         subscripts: ['_a2'],
         varType: 'const'
       }),
-      v('init[DimA]', '4,5,6', {
+      v('init[A3]', '6', {
         refId: '_init[_a3]',
-        separationDims: ['_dima'],
         subscripts: ['_a3'],
         varType: 'const'
       }),
-      v('y[DimA]', 'SMOOTH3I(input[DimA],delay[DimA],init[DimA])', {
+      v('y[DimA]', 'SMTH3(input[DimA],delay[DimA],init[DimA])', {
         refId: '_y',
         references: ['__level1', '__level2', '__level3'],
         smoothVarRefId: '__level3',
@@ -7325,25 +7478,49 @@ ${elements.join('\n')}
     ])
   })
 
-  // TODO: Stella calls this function SMTH3 instead of SMOOTH3I, skipping this test for now
-  it.skip('should work for SMOOTH3I function (with subscripted input and non-subscripted delay)', () => {
-    const vars = readInlineModel(`
-      DimA: A1, A2 ~~|
-      input[DimA] = 3 + PULSE(10, 10) ~~|
-      delay = 2 ~~|
-      y[DimA] = SMOOTH3I(input[DimA], delay, 5) ~~|
-    `)
+  it('should work for SMTH3 function (with initial value argument; with subscripted input and non-subscripted delay)', () => {
+    // Equivalent Vensim model for reference:
+    // const vars = readInlineModel(`
+    //   DimA: A1, A2 ~~|
+    //   input[DimA] = 1 ~~|
+    //   delay = 2 ~~|
+    //   y[DimA] = SMOOTH3I(input[DimA], delay, 5) ~~|
+    // `)
+
+    const xmileDims = `\
+<dim name="DimA">
+  <elem name="A1"/>
+  <elem name="A2"/>
+</dim>`
+    const xmileVars = `\
+<aux name="input">
+  <dimensions>
+    <dim name="DimA"/>
+  </dimensions>
+  <eqn>1</eqn>
+</aux>
+<aux name="delay">
+  <eqn>2</eqn>
+</aux>
+<aux name="y">
+  <dimensions>
+    <dim name="DimA"/>
+  </dimensions>
+  <eqn>SMTH3(input[DimA], delay, 5)</eqn>
+</aux>`
+    const mdl = xmile(xmileDims, xmileVars)
+    const vars = readInlineModel(mdl)
     expect(vars).toEqual([
-      v('input[DimA]', '3+PULSE(10,10)', {
+      v('input[DimA]', '1', {
         refId: '_input',
-        referencedFunctionNames: ['__pulse'],
-        subscripts: ['_dima']
+        subscripts: ['_dima'],
+        varType: 'const'
       }),
       v('delay', '2', {
         refId: '_delay',
         varType: 'const'
       }),
-      v('y[DimA]', 'SMOOTH3I(input[DimA],delay,5)', {
+      v('y[DimA]', 'SMTH3(input[DimA],delay,5)', {
         refId: '_y',
         references: ['__level1', '__level2', '__level3'],
         smoothVarRefId: '__level3',
@@ -7379,18 +7556,88 @@ ${elements.join('\n')}
     ])
   })
 
-  // TODO: Stella calls this function SMTH3 instead of SMOOTH3I, skipping this test for now
-  it.skip('should work for SMOOTH3I function (with separated variables using subdimension)', () => {
-    const vars = readInlineModel(`
-      DimA: A1, A2, A3 ~~|
-      SubA: A2, A3 ~~|
-      x[DimA] = 1, 2, 3 ~~|
-      input[DimA] = x[DimA] + PULSE(10, 10) ~~|
-      delay[DimA] = 1, 2, 3 ~~|
-      init[DimA] = 0 ~~|
-      y[A1] = 5 ~~|
-      y[SubA] = SMOOTH3I(input[SubA], delay[SubA], init[SubA]) ~~|
-    `)
+  // TODO: This test is not exactly equivalent to the Vensim one since it uses separated definitions
+  // for y[A1] and y[A2] instead of a single definition for y[SubA]
+  it.skip('should work for SMTH3 function (with initial value argument and separated variables using subdimension)', () => {
+    // Equivalent Vensim model for reference:
+    // const vars = readInlineModel(`
+    //   DimA: A1, A2, A3 ~~|
+    //   SubA: A2, A3 ~~|
+    //   x[DimA] = 1, 2, 3 ~~|
+    //   input[DimA] = x[DimA] ~~|
+    //   delay[DimA] = 1, 2, 3 ~~|
+    //   init[DimA] = 0 ~~|
+    //   y[A1] = 5 ~~|
+    //   y[SubA] = SMOOTH3I(input[SubA], delay[SubA], init[SubA]) ~~|
+    // `)
+
+    const xmileDims = `\
+<dim name="DimA">
+  <elem name="A1"/>
+  <elem name="A2"/>
+  <elem name="A3"/>
+</dim>
+<dim name="SubA">
+  <elem name="A2"/>
+  <elem name="A3"/>
+</dim>`
+    const xmileVars = `\
+<aux name="x">
+  <dimensions>
+    <dim name="DimA"/>
+  </dimensions>
+  <element subscript="A1">
+    <eqn>1</eqn>
+  </element>
+  <element subscript="A2">
+    <eqn>2</eqn>
+  </element>
+  <element subscript="A3">
+    <eqn>3</eqn>
+  </element>
+</aux>
+<aux name="input">
+  <dimensions>
+    <dim name="DimA"/>
+  </dimensions>
+  <eqn>x[DimA]</eqn>
+</aux>
+<aux name="delay">
+  <dimensions>
+    <dim name="DimA"/>
+  </dimensions>
+  <element subscript="A1">
+    <eqn>1</eqn>
+  </element>
+  <element subscript="A2">
+    <eqn>2</eqn>
+  </element>
+  <element subscript="A3">
+    <eqn>3</eqn>
+  </element>
+</aux>
+<aux name="init">
+  <dimensions>
+    <dim name="DimA"/>
+  </dimensions>
+  <eqn>0</eqn>
+</aux>
+<aux name="y">
+  <dimensions>
+    <dim name="DimA"/>
+  </dimensions>
+  <element subscript="A1">
+    <eqn>5</eqn>
+  </element>
+  <element subscript="A2">
+    <eqn>SMTH3(input[A2], delay[A2], init[A2])</eqn>
+  </element>
+  <element subscript="A3">
+    <eqn>SMTH3(input[A3], delay[A3], init[A3])</eqn>
+  </element>
+</aux>`
+    const mdl = xmile(xmileDims, xmileVars)
+    const vars = readInlineModel(mdl)
     expect(vars).toEqual([
       v('x[DimA]', '1,2,3', {
         refId: '_x[_a1]',
@@ -7444,14 +7691,14 @@ ${elements.join('\n')}
         subscripts: ['_a1'],
         varType: 'const'
       }),
-      v('y[SubA]', 'SMOOTH3I(input[SubA],delay[SubA],init[SubA])', {
+      v('y[SubA]', 'SMTH3(input[SubA],delay[SubA],init[SubA])', {
         refId: '_y[_a2]',
         references: ['__level_y_1[_a2]', '__level_y_2[_a2]', '__level_y_3[_a2]'],
         separationDims: ['_suba'],
         smoothVarRefId: '__level_y_3[_a2]',
         subscripts: ['_a2']
       }),
-      v('y[SubA]', 'SMOOTH3I(input[SubA],delay[SubA],init[SubA])', {
+      v('y[SubA]', 'SMTH3(input[SubA],delay[SubA],init[SubA])', {
         refId: '_y[_a3]',
         references: ['__level_y_1[_a3]', '__level_y_2[_a3]', '__level_y_3[_a3]'],
         separationDims: ['_suba'],
