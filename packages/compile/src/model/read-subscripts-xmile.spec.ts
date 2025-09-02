@@ -74,7 +74,7 @@ function readAndResolveSubscripts(modelName: string): any[] {
 }
 
 describe('readSubscriptRanges + resolveSubscriptRanges (from XMILE model)', () => {
-  it.only('should work for a subscript range with explicit subscripts', () => {
+  it('should work for a subscript range with explicit subscripts', () => {
     const xmileDims = `\
 <dim name="DimA">
   <elem name="A1"/>
@@ -95,7 +95,8 @@ describe('readSubscriptRanges + resolveSubscriptRanges (from XMILE model)', () =
     ])
   })
 
-  it('should work for a subscript range with a single numeric range', () => {
+  // TODO: This test is skipped until we update it to use the equivalent XMILE syntax
+  it.skip('should work for a subscript range with a single numeric range', () => {
     const range = `DimA: (A1-A3) ~~|`
 
     const rawSubs = readInlineSubscripts(range)
@@ -110,7 +111,8 @@ describe('readSubscriptRanges + resolveSubscriptRanges (from XMILE model)', () =
     ])
   })
 
-  it('should work for a subscript range with multiple numeric ranges', () => {
+  // TODO: This test is skipped until we update it to use the equivalent XMILE syntax
+  it.skip('should work for a subscript range with multiple numeric ranges', () => {
     const ranges = `DimA: (A1-A3),A5,(A7-A8) ~~|`
 
     const rawSubs = readInlineSubscripts(ranges)
@@ -128,7 +130,8 @@ describe('readSubscriptRanges + resolveSubscriptRanges (from XMILE model)', () =
     ])
   })
 
-  it('should work for a subscript range with one mapping (to dimension with explicit individual subscripts)', () => {
+  // TODO: This test is skipped until we update it to use the equivalent XMILE syntax
+  it.skip('should work for a subscript range with one mapping (to dimension with explicit individual subscripts)', () => {
     const ranges = `
       DimA: A1, A2, A3 -> DimB ~~|
       DimB: B1, B2, B3 ~~|
@@ -158,7 +161,8 @@ describe('readSubscriptRanges + resolveSubscriptRanges (from XMILE model)', () =
     ])
   })
 
-  it('should work for a subscript range with one mapping (to dimension with explicit mix of dimensions and subscripts)', () => {
+  // TODO: This test is skipped until we update it to use the equivalent XMILE syntax
+  it.skip('should work for a subscript range with one mapping (to dimension with explicit mix of dimensions and subscripts)', () => {
     const ranges = `
       DimA: A1, A2, A3 ~~|
       SubA: A1, A2 ~~|
@@ -190,7 +194,8 @@ describe('readSubscriptRanges + resolveSubscriptRanges (from XMILE model)', () =
     ])
   })
 
-  it('should work for a subscript range with one mapping (to dimension without explicit subscripts)', () => {
+  // TODO: This test is skipped until we update it to use the equivalent XMILE syntax
+  it.skip('should work for a subscript range with one mapping (to dimension without explicit subscripts)', () => {
     const ranges = `
       DimA: SubA, A3 -> DimB ~~|
       SubA: A1, A2 ~~|
@@ -223,7 +228,8 @@ describe('readSubscriptRanges + resolveSubscriptRanges (from XMILE model)', () =
     ])
   })
 
-  it('should work for a subscript range with two mappings', () => {
+  // TODO: This test is skipped until we update it to use the equivalent XMILE syntax
+  it.skip('should work for a subscript range with two mappings', () => {
     const ranges = `
       DimA: A1, A2, A3 -> (DimB: B3, B2, B1), DimC ~~|
       DimB: B1, B2, B3 ~~|
@@ -262,7 +268,8 @@ describe('readSubscriptRanges + resolveSubscriptRanges (from XMILE model)', () =
     ])
   })
 
-  it('should work for a subscript range alias (<-> operator)', () => {
+  // TODO: This test is skipped until we update it to use the equivalent XMILE syntax
+  it.skip('should work for a subscript range alias (<-> operator)', () => {
     const ranges = `
       DimA <-> DimB ~~|
       DimB: B1, B2, B3 ~~|
@@ -319,7 +326,7 @@ describe('readSubscriptRanges + resolveSubscriptRanges (from XMILE model)', () =
     ])
   })
 
-  it.only('should work for XMILE "arrays" model', () => {
+  it('should work for XMILE "arrays" model', () => {
     const rawSubs = readSubscripts('arrays')
     expect(rawSubs).toEqual([
       // NOTE: XMILE does not have the concept of aliases/mappings, so the stmx file
@@ -383,7 +390,8 @@ describe('readSubscriptRanges + resolveSubscriptRanges (from XMILE model)', () =
     ])
   })
 
-  it('should work for XMILE "directconst" model', () => {
+  // TODO: This test is skipped because XMILE/Stella don't appear to have an equivalent function
+  it.skip('should work for XMILE "directconst" model', () => {
     const rawSubs = readSubscripts('directconst')
     expect(rawSubs).toEqual([
       dim('DimA', ['A1', 'A2', 'A3']),
@@ -422,7 +430,8 @@ describe('readSubscriptRanges + resolveSubscriptRanges (from XMILE model)', () =
     ])
   })
 
-  it('should work for XMILE "directdata" model', () => {
+  // TODO: This test is skipped because XMILE/Stella don't appear to have an equivalent function
+  it.skip('should work for XMILE "directdata" model', () => {
     const rawSubs = readSubscripts('directdata')
     expect(rawSubs).toEqual([
       dim('DimA', ['A1', 'A2']),
@@ -453,7 +462,8 @@ describe('readSubscriptRanges + resolveSubscriptRanges (from XMILE model)', () =
     ])
   })
 
-  it('should work for XMILE "directsubs" model', () => {
+  // TODO: This test is skipped because XMILE/Stella don't appear to have an equivalent function
+  it.skip('should work for XMILE "directsubs" model', () => {
     const rawSubs = readSubscripts('directsubs')
     expect(rawSubs).toEqual([
       dim('DimA', ['A1', 'A2', 'A3'], undefined, undefined, [dimMapping('DimB'), dimMapping('DimC')], {
@@ -486,7 +496,8 @@ describe('readSubscriptRanges + resolveSubscriptRanges (from XMILE model)', () =
     ])
   })
 
-  it('should work for XMILE "mapping" model', () => {
+  // TODO: This test is skipped because we don't yet have an equivalent XMILE model
+  it.skip('should work for XMILE "mapping" model', () => {
     const rawSubs = readSubscripts('mapping')
     expect(rawSubs).toEqual([
       dim('DimA', ['A1', 'A2', 'A3']),
@@ -532,7 +543,8 @@ describe('readSubscriptRanges + resolveSubscriptRanges (from XMILE model)', () =
     ])
   })
 
-  it('should work for XMILE "multimap" model', () => {
+  // TODO: This test is skipped because we don't yet have an equivalent XMILE model
+  it.skip('should work for XMILE "multimap" model', () => {
     const rawSubs = readSubscripts('multimap')
     expect(rawSubs).toEqual([
       dim(
@@ -579,7 +591,8 @@ describe('readSubscriptRanges + resolveSubscriptRanges (from XMILE model)', () =
     ])
   })
 
-  it('should work for XMILE "ref" model', () => {
+  // TODO: This test is skipped because we don't yet have an equivalent XMILE model
+  it.skip('should work for XMILE "ref" model', () => {
     const rawSubs = readSubscripts('ref')
     expect(rawSubs).toEqual([
       dim('Target', ['t1', 't2', 't3']),
@@ -610,7 +623,8 @@ describe('readSubscriptRanges + resolveSubscriptRanges (from XMILE model)', () =
     ])
   })
 
-  it('should work for XMILE "subalias" model', () => {
+  // TODO: This test is skipped because we don't yet have an equivalent XMILE model
+  it.skip('should work for XMILE "subalias" model', () => {
     const rawSubs = readSubscripts('subalias')
     expect(rawSubs).toEqual([
       // After resolve phase, DimE will be expanded to individual subscripts,
@@ -630,7 +644,8 @@ describe('readSubscriptRanges + resolveSubscriptRanges (from XMILE model)', () =
     ])
   })
 
-  it('should work for XMILE "subscript" model', () => {
+  // TODO: This test is skipped because we don't yet have an equivalent XMILE model
+  it.skip('should work for XMILE "subscript" model', () => {
     const rawSubs = readSubscripts('subscript')
     expect(rawSubs).toEqual([
       dim('DimA', ['A1', 'A2', 'A3']),
