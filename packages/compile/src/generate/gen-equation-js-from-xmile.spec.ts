@@ -185,60 +185,126 @@ describe('generateEquation (XMILE -> JS)', () => {
   })
 
   it('should work for simple equation with binary - op', () => {
-    const vars = readInlineModel(`
-      x = 1 ~~|
-      y = x - 2 ~~|
-    `)
+    // Equivalent Vensim model for reference:
+    // const vars = readInlineModel(`
+    //   x = 1 ~~|
+    //   y = x - 2 ~~|
+    // `)
+
+    const xmileVars = `\
+<aux name="x">
+  <eqn>1</eqn>
+</aux>
+<aux name="y">
+  <eqn>x - 2</eqn>
+</aux>`
+    const mdl = xmile('', xmileVars)
+    const vars = readInlineModel(mdl)
     expect(vars.size).toBe(2)
     expect(genJS(vars.get('_x'))).toEqual(['_x = 1.0;'])
     expect(genJS(vars.get('_y'))).toEqual(['_y = _x - 2.0;'])
   })
 
   it('should work for simple equation with binary * op', () => {
-    const vars = readInlineModel(`
-      x = 1 ~~|
-      y = x * 2 ~~|
-    `)
+    // Equivalent Vensim model for reference:
+    // const vars = readInlineModel(`
+    //   x = 1 ~~|
+    //   y = x * 2 ~~|
+    // `)
+
+    const xmileVars = `\
+<aux name="x">
+  <eqn>1</eqn>
+</aux>
+<aux name="y">
+  <eqn>x * 2</eqn>
+</aux>`
+    const mdl = xmile('', xmileVars)
+    const vars = readInlineModel(mdl)
     expect(vars.size).toBe(2)
     expect(genJS(vars.get('_x'))).toEqual(['_x = 1.0;'])
     expect(genJS(vars.get('_y'))).toEqual(['_y = _x * 2.0;'])
   })
 
   it('should work for simple equation with binary / op', () => {
-    const vars = readInlineModel(`
-      x = 1 ~~|
-      y = x / 2 ~~|
-    `)
+    // Equivalent Vensim model for reference:
+    // const vars = readInlineModel(`
+    //   x = 1 ~~|
+    //   y = x / 2 ~~|
+    // `)
+
+    const xmileVars = `\
+<aux name="x">
+  <eqn>1</eqn>
+</aux>
+<aux name="y">
+  <eqn>x / 2</eqn>
+</aux>`
+    const mdl = xmile('', xmileVars)
+    const vars = readInlineModel(mdl)
     expect(vars.size).toBe(2)
     expect(genJS(vars.get('_x'))).toEqual(['_x = 1.0;'])
     expect(genJS(vars.get('_y'))).toEqual(['_y = _x / 2.0;'])
   })
 
   it('should work for simple equation with binary ^ op', () => {
-    const vars = readInlineModel(`
-      x = 1 ~~|
-      y = x ^ 2 ~~|
-    `)
+    // Equivalent Vensim model for reference:
+    // const vars = readInlineModel(`
+    //   x = 1 ~~|
+    //   y = x ^ 2 ~~|
+    // `)
+
+    const xmileVars = `\
+<aux name="x">
+  <eqn>1</eqn>
+</aux>
+<aux name="y">
+  <eqn>x ^ 2</eqn>
+</aux>`
+    const mdl = xmile('', xmileVars)
+    const vars = readInlineModel(mdl)
     expect(vars.size).toBe(2)
     expect(genJS(vars.get('_x'))).toEqual(['_x = 1.0;'])
     expect(genJS(vars.get('_y'))).toEqual(['_y = fns.POW(_x, 2.0);'])
   })
 
   it('should work for simple equation with explicit parentheses', () => {
-    const vars = readInlineModel(`
-      x = 1 ~~|
-      y = (x + 2) * 3 ~~|
-    `)
+    // Equivalent Vensim model for reference:
+    // const vars = readInlineModel(`
+    //   x = 1 ~~|
+    //   y = (x + 2) * 3 ~~|
+    // `)
+
+    const xmileVars = `\
+<aux name="x">
+  <eqn>1</eqn>
+</aux>
+<aux name="y">
+  <eqn>(x + 2) * 3</eqn>
+</aux>`
+    const mdl = xmile('', xmileVars)
+    const vars = readInlineModel(mdl)
     expect(vars.size).toBe(2)
     expect(genJS(vars.get('_x'))).toEqual(['_x = 1.0;'])
     expect(genJS(vars.get('_y'))).toEqual(['_y = (_x + 2.0) * 3.0;'])
   })
 
   it('should work for conditional expression with = op', () => {
-    const vars = readInlineModel(`
-      x = 1 ~~|
-      y = IF THEN ELSE(x = time, 1, 0) ~~|
-    `)
+    // Equivalent Vensim model for reference:
+    // const vars = readInlineModel(`
+    //   x = 1 ~~|
+    //   y = IF THEN ELSE(x = time, 1, 0) ~~|
+    // `)
+
+    const xmileVars = `\
+<aux name="x">
+  <eqn>1</eqn>
+</aux>
+<aux name="y">
+  <eqn>IF x = time THEN 1 ELSE 0</eqn>
+</aux>`
+    const mdl = xmile('', xmileVars)
+    const vars = readInlineModel(mdl)
     expect(vars.size).toBe(2)
     expect(genJS(vars.get('_x'))).toEqual(['_x = 1.0;'])
     expect(genJS(vars.get('_y'))).toEqual(['_y = ((_x === _time) ? (1.0) : (0.0));'])
