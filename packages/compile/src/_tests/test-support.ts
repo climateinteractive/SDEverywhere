@@ -173,12 +173,19 @@ export function parseInlineXmileModel(mdlContent: string, modelDir?: string): Pa
 }
 
 export function xmile(dimensions: string, variables: string): string {
+  function indent(text: string, indent: string): string {
+    return text
+      .split('\n')
+      .map(line => indent + line)
+      .join('\n')
+  }
+
   let dims: string
   if (dimensions.length > 0) {
     dims = `\
-    <dimensions>
-        ${dimensions}
-    </dimensions>`
+  <dimensions>
+${indent(dimensions, '    ')}
+  </dimensions>`
   } else {
     dims = ''
   }
@@ -186,29 +193,29 @@ export function xmile(dimensions: string, variables: string): string {
   let vars: string
   if (variables.length > 0) {
     vars = `\
-        <variables>
-            ${variables}
-        </variables>`
+    <variables>
+${indent(variables, '      ')}
+    </variables>`
   } else {
     vars = ''
   }
 
   return `\
 <xmile xmlns="http://docs.oasis-open.org/xmile/ns/XMILE/v1.0" version="1.0">
-<header>
+  <header>
     <options namespace="std"/>
     <vendor>Ventana Systems, xmutil</vendor>
     <product lang="en">Vensim, xmutil</product>
-</header>
-<sim_specs isee:simulation_delay="0" method="Euler" time_units="Months">
+  </header>
+  <sim_specs isee:simulation_delay="0" method="Euler" time_units="Months">
     <start>0</start>
     <stop>100</stop>
     <dt>1</dt>
-</sim_specs>
+  </sim_specs>
 ${dims}
-    <model>
-    ${vars}
-    </model>
+  <model>
+${vars}
+  </model>
 </xmile>`
 }
 
