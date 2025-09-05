@@ -5,7 +5,18 @@ import { describe, expect, it } from 'vitest'
 import type { XmlElement } from '@rgrove/parse-xml'
 import { parseXml } from '@rgrove/parse-xml'
 
-import { binaryOp, call, exprEqn, lookupDef, lookupVarEqn, num, unaryOp, varDef, varRef } from '../ast/ast-builders'
+import {
+  binaryOp,
+  call,
+  exprEqn,
+  lookupDef,
+  lookupVarEqn,
+  num,
+  parens,
+  unaryOp,
+  varDef,
+  varRef
+} from '../ast/ast-builders'
 
 import { parseXmileVariableDef } from './parse-xmile-variable-def'
 
@@ -523,6 +534,32 @@ describe('parseXmileVariableDef with <aux>', () => {
     ])
   })
 
+  it('should parse an aux variable definition with XMILE-style "IF ... THEN ... ELSE ..." conditional expression (inside a function call)', () => {
+    const v = xml(`
+      <aux name="x">
+        <eqn>ABS(IF c > 10 THEN y + 3 ELSE z * 5) + 1</eqn>
+      </aux>
+    `)
+    expect(parseXmileVariableDef(v)).toEqual([
+      exprEqn(
+        varDef('x'),
+        binaryOp(
+          call(
+            'ABS',
+            call(
+              'IF THEN ELSE',
+              binaryOp(varRef('c'), '>', num(10)),
+              binaryOp(varRef('y'), '+', num(3)),
+              binaryOp(varRef('z'), '*', num(5))
+            )
+          ),
+          '+',
+          num(1)
+        )
+      )
+    ])
+  })
+
   it('should parse an aux variable definition with XMILE-style "IF ... THEN ... ELSE ..." conditional expression (with nested IF THEN ELSE)', () => {
     const v = xml(`
       <aux name="x" flow_concept="true">
@@ -542,15 +579,17 @@ describe('parseXmileVariableDef with <aux>', () => {
             ':AND:',
             binaryOp(varRef('total_weeks_vacation_taken'), '<', num(4))
           ),
-          call(
-            'IF THEN ELSE',
-            binaryOp(
-              binaryOp(varRef('TIME'), '-', varRef('Last_Vacation_Start')),
-              '>=',
-              varRef('time_working_before_vacation')
-            ),
-            num(1),
-            num(0)
+          parens(
+            call(
+              'IF THEN ELSE',
+              binaryOp(
+                binaryOp(varRef('TIME'), '-', varRef('Last_Vacation_Start')),
+                '>=',
+                varRef('time_working_before_vacation')
+              ),
+              num(1),
+              num(0)
+            )
           ),
           num(0)
         )

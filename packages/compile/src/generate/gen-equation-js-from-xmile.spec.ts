@@ -2645,7 +2645,7 @@ describe('generateEquation (XMILE -> JS)', () => {
   </element>
 </aux>
 <aux name="x">
-  <eqn>SUM(IF a[*] = 10 THEN 0 ELSE a[*])) + 1</eqn>
+  <eqn>SUM(IF a[*] = 10 THEN 0 ELSE a[*]) + 1</eqn>
 </aux>`
     const mdl = xmile(xmileDims, xmileVars)
     const vars = readInlineModel(mdl)
