@@ -394,15 +394,22 @@ static inline double __difference(double x, double y) {
 }
 // Return true if the values are equal up to the tolerance.
 static inline bool __isEqual(double x, double y) { return __difference(x, y) < _epsilon; }
+// Clamp x to the interval [0,1].
+static inline double __clamp01(double x) {
+  if (x < 0.0) return 0.0;
+  if (x > 1.0) return 1.0;
+  return x;
+}
 
 // Normal distribution
-double __pdf_normal(double x, double mu, double sigma) {
+static double __pdf_normal(double x, double mu, double sigma) {
   double base = 1.0 / (sigma * sqrt(2.0 * M_PI));
   double exponent = -pow(x - mu, 2.0) / (2.0 * sigma * sigma);
   return base * exp(exponent);
 }
-double __cdf_unit_normal_P(double x) {
-  // Zelen & Severo (1964) in Handbook Of Mathematical Functions, Abramowitz and Stegun, 26.2.17
+static double __cdf_unit_normal_P(double x) {
+  // Ref: Zelen & Severo (1964) in Handbook Of Mathematical Functions,
+  // Abramowitz and Stegun, 26.2.17
   double p = 0.2316419;
   double b[5] = {0.31938153, -0.356563782, 1.781477937, -1.821255978, 1.330274429};
   double t = 1.0 / (1.0 + p * x);
@@ -414,14 +421,54 @@ double __cdf_unit_normal_P(double x) {
   }
   return 1.0 - __pdf_normal(x, 0.0, 1.0) * y;
 }
-double __cdf_unit_normal_Q(double x) {
-  // Calculate the unit cumulative distribution function from x to +∞, often known as Q(x).
+// Calculate Q(x), the unit cumulative distribution function from x to +∞.
+static double __cdf_unit_normal_Q(double x) {
   return x >= 0.0 ? 1.0 - __cdf_unit_normal_P(x) : __cdf_unit_normal_P(-x);
 }
-double __cdf_normal_Q(double x, double sigma) { return __cdf_unit_normal_Q(x / sigma); }
+static double __cdf_normal_Q(double x, double mu, double sigma) { return __cdf_unit_normal_Q((x - mu) / sigma); }
+// Rectangular CDF on [0,1] ramping over [a,b]
+static double __cdf_rectangular(double x, double a, double b) {
+  if (b <= a) return (x <= 0.0) ? 0.0 : 1.0;
+  if (x <= a) return 0.0;
+  if (x >= b) return 1.0;
+  return __clamp01((x - a) / (b - a));
+}
+static double __cdf_rectangular_Q(double x, double priority, double width) {
+  double a = priority - width / 2.0;
+  double b = priority + width / 2.0;
+  return 1.0 - __cdf_rectangular(x, a, b);
+}
+// Triangular CDF extending from a to b
+static double __cdf_triangular(double x, double a, double b) {
+  double xLeft = fmin(a, b);
+  double xRight = fmax(a, b);
+  double mode = (xLeft + xRight) / 2.0;
+  if (x <= xLeft) return 0.0;
+  if (x >= xRight) return 1.0;
+  double c1 = (xRight - xLeft) * (mode - xLeft);
+  double c2 = (xRight - xLeft) * (xRight - mode);
+  if (x <= mode) return __clamp01(((x - xLeft) * (x - xLeft)) / c1);
+  return __clamp01(1.0 - ((xRight - x) * (xRight - x)) / c2);
+}
+static double __cdf_triangular_Q(double x, double priority, double width) {
+  double a = priority - width / 2.0;
+  double b = priority + width / 2.0;
+  return 1.0 - __cdf_triangular(x, a, b);
+}
+// Exponential CDF using the Laplace distribution
+static double __cdf_exponential_Q(double x, double mu, double b) {
+  // Convert the CDF to Q by subtracting it from 1.
+  if (x < mu) {
+    return 1.0 - 0.5 * exp((x - mu) / b);
+  } else {
+    return 0.5 * exp(-(x - mu) / b);
+  }
+}
+
 // Access the doubly-subscripted priority profiles array by pointer.
 enum { PTYPE, PPRIORITY, PWIDTH, PEXTRA };
-double __get_pp(double* pp, size_t iProfile, size_t iElement) {
+enum { PTYPE_FIXED, PTYPE_RECTANGULAR, PTYPE_TRIANGULAR, PTYPE_NORMAL, PTYPE_EXPONENTIAL };
+static double __get_pp(double* pp, size_t iProfile, size_t iElement) {
   const int NUM_PP = PEXTRA - PTYPE + 1;
   return *(pp + iProfile * NUM_PP + iElement);
 }
@@ -471,14 +518,37 @@ double* _ALLOCATE_AVAILABLE(
     // Calculate allocations for each requester.
     for (size_t i = 0; i < num_requesters; i++) {
       if (requested_quantities[i] > 0.0) {
-        double mean = __get_pp(priority_profiles, i, PPRIORITY);
-        double sigma = __get_pp(priority_profiles, i, PWIDTH);
-        // The allocation is the area under the requester's normal curve from x out to +∞
-        // scaled by the size of the request. We integrate over the right-hand side of the
-        // normal curve so that higher means have higher priority, that is, are allocated more.
-        // The unit cumulative distribution function integrates to one over all x,
-        // so we simply multiply by a constant to scale the area under the curve.
-        allocations[i] = requested_quantities[i] * __cdf_normal_Q(x - mean, sigma);
+        int ptype = (int)__get_pp(priority_profiles, i, PTYPE);
+        if (ptype == PTYPE_FIXED) {
+          // The fixed priority type allocates proportionally to each request.
+          if (total_requests > available_resource) {
+            allocations[i] = (requested_quantities[i] / total_requests) * available_resource;
+          } else {
+            allocations[i] = requested_quantities[i];
+          }
+        } else {
+          // Calculate the allocation using the specified priority curve.
+          double priority = __get_pp(priority_profiles, i, PPRIORITY);
+          double width = __get_pp(priority_profiles, i, PWIDTH);
+          double q = 0.0;
+          switch (ptype) {
+            case PTYPE_RECTANGULAR:
+              q = __cdf_rectangular_Q(x, priority, width);
+              break;
+            case PTYPE_TRIANGULAR:
+              q = __cdf_triangular_Q(x, priority, width);
+              break;
+            case PTYPE_EXPONENTIAL:
+              q = __cdf_exponential_Q(x, priority, width);
+              break;
+            case PTYPE_NORMAL:
+              q = __cdf_normal_Q(x, priority, width);
+              break;
+            default:
+              fprintf(stderr, "unknown priority type %d\n", ptype);
+          }
+          allocations[i] = requested_quantities[i] * q;
+        }
       } else {
         allocations[i] = 0.0;
       }
