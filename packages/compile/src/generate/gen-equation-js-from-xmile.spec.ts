@@ -1976,8 +1976,28 @@ describe('generateEquation (XMILE -> JS)', () => {
     expect(genJS(vars.get('_y'))).toEqual(['_y = fns.LN(_x);'])
   })
 
-  // TODO: Implement this test
-  it.skip('should work for LOOKUP function', () => {})
+  it('should work for LOOKUP function', () => {
+    // Equivalent Vensim model for reference:
+    // const vars = readInlineModel(`
+    //   x((0,0),(1,1),(2,2)) ~~|
+    //   y = x(1.5) ~~|
+    // `)
+
+    const xmileVars = `\
+<gf name="x" type="continuous">
+  <xpts>0,1,2</xpts>
+  <ypts>0,1,2</ypts>
+</gf>
+<aux name="y">
+  <eqn>LOOKUP(x, 1.5)</eqn>
+</aux>`
+    const mdl = xmile('', xmileVars)
+    const vars = readInlineModel(mdl)
+    expect(vars.size).toBe(2)
+    expect(genJS(vars.get('_x'), 'decl')).toEqual(['const _x_data_ = [0.0, 0.0, 1.0, 1.0, 2.0, 2.0];'])
+    expect(genJS(vars.get('_x'), 'init-lookups')).toEqual(['_x = fns.createLookup(3, _x_data_);'])
+    expect(genJS(vars.get('_y'))).toEqual(['_y = fns.LOOKUP(_x, 1.5);'])
+  })
 
   it('should work for LOOKUPINV function', () => {
     // Equivalent Vensim model for reference:
@@ -1992,7 +2012,7 @@ describe('generateEquation (XMILE -> JS)', () => {
   <ypts>0,1,2</ypts>
 </gf>
 <aux name="y">
-  <eqn>LOOKUP INVERT(x, 1.5)</eqn>
+  <eqn>LOOKUPINV(x, 1.5)</eqn>
 </aux>`
     const mdl = xmile('', xmileVars)
     const vars = readInlineModel(mdl)

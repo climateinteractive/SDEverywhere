@@ -162,8 +162,28 @@ export function generateExpr(expr, ctx) {
  * @return {string} The generated C/JS code.
  */
 function generateFunctionCall(callExpr, ctx) {
-  const fnId = callExpr.fnId
+  function generateSimpleFunctionCall(fnId) {
+    const args = callExpr.args.map(argExpr => generateExpr(argExpr, ctx))
+    if (ctx.outFormat === 'js' && fnId === '_IF_THEN_ELSE') {
+      // When generating conditional expressions for JS target, since we can't rely on macros like we do for C,
+      // it is better to translate it into a ternary instead of relying on a built-in function (since the latter
+      // would require always evaluating both branches, while the former can be more optimized by the interpreter)
+      return `((${args[0]}) ? (${args[1]}) : (${args[2]}))`
+    } else {
+      // For simple functions, emit a C/JS function call with a generated C/JS expression for each argument
+      return `${fnRef(fnId, ctx)}(${args.join(', ')})`
+    }
+  }
 
+  function generateLookupFunctionCall(fnId) {
+    // For LOOKUP* functions, the first argument must be a reference to the lookup variable.  Emit
+    // a C/JS function call with a generated C/JS expression for each remaining argument.
+    const cVarRef = ctx.cVarRef(callExpr.args[0])
+    const cArgs = callExpr.args.slice(1).map(arg => generateExpr(arg, ctx))
+    return `${fnRef(fnId, ctx)}(${cVarRef}, ${cArgs.join(', ')})`
+  }
+
+  const fnId = callExpr.fnId
   switch (fnId) {
     //
     //
@@ -174,46 +194,50 @@ function generateFunctionCall(callExpr, ctx) {
     //
     //
 
+    // Simple functions that are common to Vensim and XMILE/Stella
     case '_ABS':
     case '_ARCCOS':
     case '_ARCSIN':
     case '_ARCTAN':
     case '_COS':
     case '_EXP':
-    case '_GAMMA_LN':
     case '_IF_THEN_ELSE':
-    case '_INTEGER':
     case '_LN':
     case '_MAX':
     case '_MIN':
-    case '_MODULO':
-    case '_POW':
-    case '_POWER':
-    case '_PULSE':
-    case '_PULSE_TRAIN':
-    case '_QUANTUM':
     case '_RAMP':
     case '_SIN':
     case '_SQRT':
     case '_STEP':
     case '_TAN':
+      return generateSimpleFunctionCall(fnId)
+
+    // Simple functions supported by Vensim only
+    case '_GAMMA_LN':
+    case '_INTEGER':
+    case '_MODULO':
+    case '_POW':
+    case '_POWER':
+    case '_PULSE_TRAIN':
+    case '_PULSE':
+    case '_QUANTUM':
     case '_WITH_LOOKUP':
     case '_XIDZ':
-    case '_ZIDZ': {
-      const args = callExpr.args.map(argExpr => generateExpr(argExpr, ctx))
+    case '_ZIDZ':
       if (ctx.outFormat === 'js' && fnId === '_GAMMA_LN') {
         throw new Error(`${callExpr.fnName} function not yet implemented for JS code gen`)
       }
-      if (ctx.outFormat === 'js' && fnId === '_IF_THEN_ELSE') {
-        // When generating conditional expressions for JS target, since we can't rely on macros like we do for C,
-        // it is better to translate it into a ternary instead of relying on a built-in function (since the latter
-        // would require always evaluating both branches, while the former can be more optimized by the interpreter)
-        return `((${args[0]}) ? (${args[1]}) : (${args[2]}))`
-      } else {
-        // For simple functions, emit a C/JS function call with a generated C/JS expression for each argument
-        return `${fnRef(fnId, ctx)}(${args.join(', ')})`
-      }
-    }
+      return generateSimpleFunctionCall(fnId)
+
+    // Simple functions supported by XMILE/Stella only
+    case '_INT':
+      // XMILE/Stella uses `INT`, but it is the same as the Vensim `INTEGER` function,
+      // which is the name used in the runtime function implementation
+      return generateSimpleFunctionCall('_INTEGER')
+    case '_MOD':
+      // XMILE/Stella uses `MOD`, but it is the same as the Vensim `MODULO` function,
+      // which is the name used in the runtime function implementation
+      return generateSimpleFunctionCall('_MODULO')
 
     //
     //
@@ -225,17 +249,12 @@ function generateFunctionCall(callExpr, ctx) {
     //
     //
 
+    // Lookup functions supported by Vensim only
     case '_GET_DATA_BETWEEN_TIMES':
     case '_LOOKUP_BACKWARD':
     case '_LOOKUP_FORWARD':
-    case '_LOOKUP_INVERT': {
-      // For LOOKUP* functions, the first argument must be a reference to the lookup variable.  Emit
-      // a C/JS function call with a generated C/JS expression for each remaining argument.
-      const cVarRef = ctx.cVarRef(callExpr.args[0])
-      const cArgs = callExpr.args.slice(1).map(arg => generateExpr(arg, ctx))
-      return `${fnRef(fnId, ctx)}(${cVarRef}, ${cArgs.join(', ')})`
-    }
-
+    case '_LOOKUP_INVERT':
+      return generateLookupFunctionCall(fnId)
     case '_GAME': {
       // For the GAME function, emit a C/JS function call that has the synthesized game inputs lookup
       // as the first argument, followed by the default value argument from the function call
@@ -243,6 +262,16 @@ function generateFunctionCall(callExpr, ctx) {
       const cDefaultArg = generateExpr(callExpr.args[0], ctx)
       return `${fnRef(fnId, ctx)}(${cLookupArg}, ${cDefaultArg})`
     }
+
+    // Lookup functions supported by XMILE/Stella only
+    case '_LOOKUP':
+      // XMILE/Stella has an explicit `LOOKUP` function while Vensim uses `x(y)` syntax, but
+      // underneath both are implemented at runtime by the `LOOKUP` function
+      return generateLookupFunctionCall('_LOOKUP')
+    case '_LOOKUPINV':
+      // XMILE/Stella uses `LOOKUPINV`, but it is the same as the Vensim `LOOKUP INVERT` function,
+      // which is the name used in the runtime function implementation
+      return generateLookupFunctionCall('_LOOKUP_INVERT')
 
     //
     //
@@ -311,7 +340,12 @@ function generateFunctionCall(callExpr, ctx) {
     case '_SMOOTH':
     case '_SMOOTHI':
     case '_SMOOTH3':
-    case '_SMOOTH3I': {
+    case '_SMOOTH3I':
+    case '_SMTH1':
+    case '_SMTH3': {
+      // Note that Vensim uses `SMOOTH[I]` and `SMOOTH3[I]` while XMILE uses `SMTH1` and
+      // `SMTH3`, but otherwise they have been translated the same way during the read
+      // equations phase
       const smoothVar = Model.varWithRefId(ctx.variable.smoothVarRefId)
       return ctx.cVarRef(smoothVar.parsedEqn.lhs.varDef)
     }
@@ -362,7 +396,9 @@ function generateFunctionCall(callExpr, ctx) {
       throw new Error(`Unexpected function '${fnId}' in code gen for '${ctx.variable.modelLHS}'`)
 
     case '_INITIAL':
-      // In init mode, only emit the initial expression without the INITIAL function call
+    case '_INIT':
+      // Note that Vensim uses `INITIAL` while XMILE uses `INIT`, but otherwise they are the same.
+      // In init mode, only emit the initial expression without the INITIAL function call.
       if (ctx.mode.startsWith('init')) {
         return generateExpr(callExpr.args[0], ctx)
       } else {
