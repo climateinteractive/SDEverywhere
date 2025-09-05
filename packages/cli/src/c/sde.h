@@ -12,18 +12,18 @@
 extern "C" {
 #endif
 
+#include <ctype.h>
+#include <float.h>
 #include <math.h>
-#include <stdlib.h>
 #include <stdarg.h>
 #include <stdbool.h>
-#include <float.h>
-#include <string.h>
-#include <ctype.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
+#include "macros.h"
 #include "model.h"
 #include "vensim.h"
-#include "macros.h"
 
 EXTERN double _epsilon;
 
@@ -31,7 +31,10 @@ EXTERN double _epsilon;
 // #define PRDBG
 #ifdef PRDBG
 #define PRINIT(v) printf("initLevels: " #v " = %g\n", (v));
-#define PRAUX(v, t) if (_time == t) { printf("evalAux: " #v " = %g\n", (v)); }
+#define PRAUX(v, t)                        \
+  if (_time == t) {                        \
+    printf("evalAux: " #v " = %g\n", (v)); \
+  }
 #else
 #define PRINIT(v)
 #define PRAUX(v, t)
@@ -65,7 +68,7 @@ void finish(void);
 void initConstants(void);
 void initLevels(void);
 void setInputs(const char* inputData);
-void setInputsFromBuffer(double *inputData);
+void setInputsFromBuffer(double* inputData);
 void setLookup(size_t varIndex, size_t* subIndices, double* points, size_t numPoints);
 void evalAux(void);
 void evalLevels(void);

@@ -37,8 +37,8 @@ extern "C" {
 #define _STEP(height, step_time) (_time + _time_step / 2.0 > (step_time) ? (height) : 0.0)
 #define _TAN(x) tan(x)
 
-
-double* _ALLOCATE_AVAILABLE(double* requested_quantities, double* priority_profiles, double available_resource, size_t num_requesters);
+double* _ALLOCATE_AVAILABLE(
+    double* requested_quantities, double* priority_profiles, double available_resource, size_t num_requesters);
 double _PULSE(double start, double width);
 double _PULSE_TRAIN(double start, double width, double interval, double end);
 double _RAMP(double slope, double start_time, double end_time);
@@ -49,9 +49,7 @@ double _ZIDZ(double a, double b);
 //
 // Lookups
 //
-typedef enum {
-  Interpolate, Forward, Backward
-} LookupMode;
+typedef enum { Interpolate, Forward, Backward } LookupMode;
 
 typedef struct {
   // The pointer to the active data buffer.  This will be the same as either
@@ -95,7 +93,7 @@ void __set_lookup(Lookup* lookup, size_t size, double* data);
 void __delete_lookup(Lookup* lookup);
 void __print_lookup(Lookup* lookup);
 
-double __lookup(Lookup *lookup, double input, bool use_inverted_data, LookupMode mode);
+double __lookup(Lookup* lookup, double input, bool use_inverted_data, LookupMode mode);
 #define _LOOKUP(lookup, x) __lookup(lookup, x, false, Interpolate)
 #define _LOOKUP_FORWARD(lookup, x) __lookup(lookup, x, false, Forward)
 #define _LOOKUP_BACKWARD(lookup, x) __lookup(lookup, x, false, Backward)
@@ -104,7 +102,8 @@ double _LOOKUP_INVERT(Lookup* lookup, double y);
 
 double __get_data_between_times(Lookup* lookup, double input, LookupMode mode);
 #define _GET_DATA_MODE_TO_LOOKUP_MODE(mode) ((mode) >= 1) ? Forward : (((mode) <= -1) ? Backward : Interpolate)
-#define _GET_DATA_BETWEEN_TIMES(lookup, x, mode) __get_data_between_times(lookup, x, _GET_DATA_MODE_TO_LOOKUP_MODE(mode))
+#define _GET_DATA_BETWEEN_TIMES(lookup, x, mode) \
+  __get_data_between_times(lookup, x, _GET_DATA_MODE_TO_LOOKUP_MODE(mode))
 
 double _GAME(Lookup* lookup, double default_value);
 
