@@ -370,10 +370,32 @@ double* _VECTOR_SORT_ORDER(double* vector, size_t size, double direction) {
   return result;
 }
 
-//
-// ALLOCATE AVAILABLE
-//
-// Mathematical functions for calculating the normal pdf and cdf at a point x
+// ALLOCATE AVAILABLE distributes a resource among requesters using a priority
+// profile for each requester. The curve type specifies a complementary
+// cumulative distribution function. The shape of the distribution is given by
+// the priority (indicating the midpoint) and the width (spread). The search
+// space for allocations that match the available resource is the x axis. A
+// greater priority pushes the midpoint of the distribution to the right,
+// resulting in more area under the curve at a given x and a larger allocation
+// for that requester.
+
+// Return true if the value is near zero.
+static inline bool __isZero(double value) { return fabs(value) < _epsilon; }
+// Compute the absolute difference when x or y is near zero, otherwise compute
+// the relative difference, with y considered as the baseline.
+static inline double __difference(double x, double y) {
+  double diff = 0.0;
+  if (__isZero(x) || __isZero(y)) {
+    diff = fabs(x - y);
+  } else {
+    diff = fabs(1.0 - x / y);
+  }
+  return diff;
+}
+// Return true if the values are equal up to the tolerance.
+static inline bool __isEqual(double x, double y) { return __difference(x, y) < _epsilon; }
+
+// Normal distribution
 double __pdf_normal(double x, double mu, double sigma) {
   double base = 1.0 / (sigma * sqrt(2.0 * M_PI));
   double exponent = -pow(x - mu, 2.0) / (2.0 * sigma * sigma);
@@ -409,9 +431,6 @@ double* _ALLOCATE_AVAILABLE(
     double* requested_quantities, double* priority_profiles, double available_resource, size_t num_requesters) {
   // requested_quantities points to an array of length num_requesters.
   // priority_profiles points to an array of num_requesters arrays of length 4.
-  // The priority profiles give the mean and standard deviation of normal curves used to allocate
-  // the available resource, with a higher mean indicating a higher priority. The search space for
-  // allocations that match the available resource is the x axis with tails on both ends of the curves.
   static double allocations[ALLOCATIONS_BUFSIZE];
   if (num_requesters > ALLOCATIONS_BUFSIZE) {
     fprintf(stderr, "_ALLOCATE_AVAILABLE num_requesters exceeds internal maximum size of %d\n", ALLOCATIONS_BUFSIZE);
@@ -440,7 +459,8 @@ double* _ALLOCATE_AVAILABLE(
     min_mean = fmin(__get_pp(priority_profiles, i, PPRIORITY), min_mean);
     max_mean = fmax(__get_pp(priority_profiles, i, PPRIORITY), max_mean);
   }
-  // Start the search in the midpoint of the means, with a big first jump scaled to the spread of the means.
+  // Start the search in the midpoint of the means, with a big first jump scaled
+  // to the spread of the means.
   double total_allocations = 0.0;
   double x = (max_mean + min_mean) / 2.0;
   double delta = (max_mean - min_mean) / 2.0;
@@ -469,8 +489,10 @@ double* _ALLOCATE_AVAILABLE(
       total_allocations += allocations[i];
     }
 #ifdef PRINT_ALLOCATIONS_DEBUG_INFO
-    fprintf(stderr, "x=%-+14g delta=%-+14g Δ=%-+14g total_allocations=%-+14g available_resource=%-+14g\n", x, delta,
-        fabs(total_allocations - available_resource), total_allocations, available_resource);
+    fprintf(stderr,
+        "x=%-+14g delta=%-+14g diff=%-14g%% total_allocations=%-+14g "
+        "available_resource=%-+14g\n",
+        x, delta, __difference(total_allocations, available_resource) * 100.0, total_allocations, available_resource);
 #endif
     if (++num_steps >= max_steps) {
       fprintf(stderr,
@@ -489,11 +511,12 @@ double* _ALLOCATE_AVAILABLE(
     last_delta_sign = delta_sign;
     delta = (delta_sign * fabs(delta)) / (num_jumps_in_same_direction < 3 ? 2.0 : 1.0);
     x += delta;
-    // The search terminates when the total allocations are equal to the available resource
-    // up to a very small epsilon difference.
-  } while (fabs(total_allocations - available_resource) > _epsilon);
+    // The search terminates when the total allocations are equal to the
+    // available resource up to the built-in tolerance.
+  } while (!__isEqual(total_allocations, available_resource));
 #ifdef PRINT_ALLOCATIONS_DEBUG_INFO
-  fprintf(stderr, "converged with Δ=%g in %zu steps\n", fabs(total_allocations - available_resource), num_steps);
+  fprintf(stderr, "converged with diff=%g%% in %zu steps\n",
+      __difference(total_allocations, available_resource) * 100.0, num_steps);
   fprintf(stderr, "total_allocations=%f, available_resource=%f\n", total_allocations, available_resource);
   for (size_t i = 0; i < num_requesters; i++) {
     fprintf(stderr, "[%2zu] %f\n", i, allocations[i]);
