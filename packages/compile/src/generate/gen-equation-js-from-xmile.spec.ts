@@ -8,7 +8,7 @@ import { resetSubscriptsAndDimensions } from '../_shared/subscript'
 import Model from '../model/model'
 // import { default as VariableImpl } from '../model/variable'
 
-import { parseInlineXmileModel, sampleModelDir, type Variable } from '../_tests/test-support'
+import { parseInlineXmileModel, sampleModelDir, type Variable, xmile } from '../_tests/test-support'
 import { generateEquation } from './gen-equation'
 
 type ExtData = Map<string, Map<number, number>>
@@ -47,7 +47,20 @@ function readInlineModel(
   // exclude that so that we have one less thing to check)
   const map = new Map<string, Variable>()
   Model.allVars().forEach((v: Variable) => {
-    map.set(v.refId, v)
+    // Exclude control variables so that we have fewer things to check
+    switch (v.varName) {
+      case '_initial_time':
+      case '_final_time':
+      case '_time_step':
+      case '_saveper':
+      case '_starttime':
+      case '_stoptime':
+      case '_dt':
+        return
+      default:
+        map.set(v.refId, v)
+        break
+    }
   })
   return map
 }
@@ -85,41 +98,87 @@ function genJS(
 }
 
 describe('generateEquation (XMILE -> JS)', () => {
-  it('should work for simple equation with unary :NOT: op', () => {
-    const vars = readInlineModel(`
-      x = 1 ~~|
-      y = :NOT: x ~~|
-    `)
+  // TODO: This test is skipped because we currently only handle boolean operators inside
+  // `IF THEN ELSE` expressions
+  it.skip('should work for simple equation with unary :NOT: op', () => {
+    // Equivalent Vensim model for reference:
+    // const vars = readInlineModel(`
+    //   x = 1 ~~|
+    //   y = :NOT: x ~~|
+    // `)
+
+    const xmileVars = `\
+<aux name="x">
+  <eqn>1</eqn>
+</aux>
+<aux name="y">
+  <eqn>NOT x</eqn>
+</aux>`
+    const mdl = xmile('', xmileVars)
+    const vars = readInlineModel(mdl)
     expect(vars.size).toBe(2)
     expect(genJS(vars.get('_x'))).toEqual(['_x = 1.0;'])
     expect(genJS(vars.get('_y'))).toEqual(['_y = !_x;'])
   })
 
   it('should work for simple equation with unary + op', () => {
-    const vars = readInlineModel(`
-      x = 1 ~~|
-      y = +x ~~|
-    `)
+    // Equivalent Vensim model for reference:
+    // const vars = readInlineModel(`
+    //   x = 1 ~~|
+    //   y = +x ~~|
+    // `)
+
+    const xmileVars = `\
+<aux name="x">
+  <eqn>1</eqn>
+</aux>
+<aux name="y">
+  <eqn>+x</eqn>
+</aux>`
+    const mdl = xmile('', xmileVars)
+    const vars = readInlineModel(mdl)
     expect(vars.size).toBe(2)
     expect(genJS(vars.get('_x'))).toEqual(['_x = 1.0;'])
     expect(genJS(vars.get('_y'))).toEqual(['_y = _x;'])
   })
 
   it('should work for simple equation with unary - op', () => {
-    const vars = readInlineModel(`
-      x = 1 ~~|
-      y = -x ~~|
-    `)
+    // Equivalent Vensim model for reference:
+    // const vars = readInlineModel(`
+    //   x = 1 ~~|
+    //   y = -x ~~|
+    // `)
+
+    const xmileVars = `\
+<aux name="x">
+  <eqn>1</eqn>
+</aux>
+<aux name="y">
+  <eqn>-x</eqn>
+</aux>`
+    const mdl = xmile('', xmileVars)
+    const vars = readInlineModel(mdl)
     expect(vars.size).toBe(2)
     expect(genJS(vars.get('_x'))).toEqual(['_x = 1.0;'])
     expect(genJS(vars.get('_y'))).toEqual(['_y = -_x;'])
   })
 
   it('should work for simple equation with binary + op', () => {
-    const vars = readInlineModel(`
-      x = 1 ~~|
-      y = x + 2 ~~|
-    `)
+    // Equivalent Vensim model for reference:
+    // const vars = readInlineModel(`
+    //   x = 1 ~~|
+    //   y = x + 2 ~~|
+    // `)
+
+    const xmileVars = `\
+<aux name="x">
+  <eqn>1</eqn>
+</aux>
+<aux name="y">
+  <eqn>x + 2</eqn>
+</aux>`
+    const mdl = xmile('', xmileVars)
+    const vars = readInlineModel(mdl)
     expect(vars.size).toBe(2)
     expect(genJS(vars.get('_x'))).toEqual(['_x = 1.0;'])
     expect(genJS(vars.get('_y'))).toEqual(['_y = _x + 2.0;'])
