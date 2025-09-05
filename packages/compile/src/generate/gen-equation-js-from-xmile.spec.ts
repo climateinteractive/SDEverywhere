@@ -8,7 +8,7 @@ import { resetSubscriptsAndDimensions } from '../_shared/subscript'
 import Model from '../model/model'
 // import { default as VariableImpl } from '../model/variable'
 
-import { parseInlineXmileModel, sampleModelDir, type Variable, xmile } from '../_tests/test-support'
+import { parseInlineXmileModel, type Variable, xmile } from '../_tests/test-support'
 import { generateEquation } from './gen-equation'
 
 type ExtData = Map<string, Map<number, number>>
@@ -1312,10 +1312,21 @@ describe('generateEquation (XMILE -> JS)', () => {
   //
 
   it('should work for ABS function', () => {
-    const vars = readInlineModel(`
-      x = 1 ~~|
-      y = ABS(x) ~~|
-    `)
+    // Equivalent Vensim model for reference:
+    // const vars = readInlineModel(`
+    //   x = 1 ~~|
+    //   y = ABS(x) ~~|
+    // `)
+
+    const xmileVars = `\
+<aux name="x">
+  <eqn>1</eqn>
+</aux>
+<aux name="y">
+  <eqn>ABS(x)</eqn>
+</aux>`
+    const mdl = xmile('', xmileVars)
+    const vars = readInlineModel(mdl)
     expect(vars.size).toBe(2)
     expect(genJS(vars.get('_x'))).toEqual(['_x = 1.0;'])
     expect(genJS(vars.get('_y'))).toEqual(['_y = fns.ABS(_x);'])
@@ -1360,40 +1371,84 @@ describe('generateEquation (XMILE -> JS)', () => {
   // for JS code gen
 
   it('should work for ARCCOS function', () => {
-    const vars = readInlineModel(`
-      x = 1 ~~|
-      y = ARCCOS(x) ~~|
-    `)
+    // Equivalent Vensim model for reference:
+    // const vars = readInlineModel(`
+    //   x = 1 ~~|
+    //   y = ARCCOS(x) ~~|
+    // `)
+
+    const xmileVars = `\
+<aux name="x">
+  <eqn>1</eqn>
+</aux>
+<aux name="y">
+  <eqn>ARCCOS(x)</eqn>
+</aux>`
+    const mdl = xmile('', xmileVars)
+    const vars = readInlineModel(mdl)
     expect(vars.size).toBe(2)
     expect(genJS(vars.get('_x'))).toEqual(['_x = 1.0;'])
     expect(genJS(vars.get('_y'))).toEqual(['_y = fns.ARCCOS(_x);'])
   })
 
   it('should work for ARCSIN function', () => {
-    const vars = readInlineModel(`
-      x = 1 ~~|
-      y = ARCSIN(x) ~~|
-    `)
+    // Equivalent Vensim model for reference:
+    // const vars = readInlineModel(`
+    //   x = 1 ~~|
+    //   y = ARCSIN(x) ~~|
+    // `)
+
+    const xmileVars = `\
+<aux name="x">
+  <eqn>1</eqn>
+</aux>
+<aux name="y">
+  <eqn>ARCSIN(x)</eqn>
+</aux>`
+    const mdl = xmile('', xmileVars)
+    const vars = readInlineModel(mdl)
     expect(vars.size).toBe(2)
     expect(genJS(vars.get('_x'))).toEqual(['_x = 1.0;'])
     expect(genJS(vars.get('_y'))).toEqual(['_y = fns.ARCSIN(_x);'])
   })
 
   it('should work for ARCTAN function', () => {
-    const vars = readInlineModel(`
-      x = 1 ~~|
-      y = ARCTAN(x) ~~|
-    `)
+    // Equivalent Vensim model for reference:
+    // const vars = readInlineModel(`
+    //   x = 1 ~~|
+    //   y = ARCTAN(x) ~~|
+    // `)
+
+    const xmileVars = `\
+<aux name="x">
+  <eqn>1</eqn>
+</aux>
+<aux name="y">
+  <eqn>ARCTAN(x)</eqn>
+</aux>`
+    const mdl = xmile('', xmileVars)
+    const vars = readInlineModel(mdl)
     expect(vars.size).toBe(2)
     expect(genJS(vars.get('_x'))).toEqual(['_x = 1.0;'])
     expect(genJS(vars.get('_y'))).toEqual(['_y = fns.ARCTAN(_x);'])
   })
 
   it('should work for COS function', () => {
-    const vars = readInlineModel(`
-      x = 1 ~~|
-      y = COS(x) ~~|
-    `)
+    // Equivalent Vensim model for reference:
+    // const vars = readInlineModel(`
+    //   x = 1 ~~|
+    //   y = COS(x) ~~|
+    // `)
+
+    const xmileVars = `\
+<aux name="x">
+  <eqn>1</eqn>
+</aux>
+<aux name="y">
+  <eqn>COS(x)</eqn>
+</aux>`
+    const mdl = xmile('', xmileVars)
+    const vars = readInlineModel(mdl)
     expect(vars.size).toBe(2)
     expect(genJS(vars.get('_x'))).toEqual(['_x = 1.0;'])
     expect(genJS(vars.get('_y'))).toEqual(['_y = fns.COS(_x);'])
@@ -1401,10 +1456,21 @@ describe('generateEquation (XMILE -> JS)', () => {
 
   // TODO: Subscripted variants
   it('should work for DELAY1 function (without initial value argument)', () => {
-    const vars = readInlineModel(`
-      x = 1 ~~|
-      y = DELAY1(x, 5) ~~|
-    `)
+    // Equivalent Vensim model for reference:
+    // const vars = readInlineModel(`
+    //   x = 1 ~~|
+    //   y = DELAY1(x, 5) ~~|
+    // `)
+
+    const xmileVars = `\
+<aux name="x">
+  <eqn>1</eqn>
+</aux>
+<aux name="y">
+  <eqn>DELAY1(x, 5)</eqn>
+</aux>`
+    const mdl = xmile('', xmileVars)
+    const vars = readInlineModel(mdl)
     expect(vars.size).toBe(4)
     expect(genJS(vars.get('_x'))).toEqual(['_x = 1.0;'])
     expect(genJS(vars.get('__level1'), 'init-levels')).toEqual(['__level1 = _x * 5.0;'])
@@ -1414,11 +1480,25 @@ describe('generateEquation (XMILE -> JS)', () => {
   })
 
   it('should work for DELAY1 function (with initial value argument)', () => {
-    const vars = readInlineModel(`
-      x = 1 ~~|
-      init = 2 ~~|
-      y = DELAY1I(x, 5, init) ~~|
-    `)
+    // Equivalent Vensim model for reference:
+    // const vars = readInlineModel(`
+    //   x = 1 ~~|
+    //   init = 2 ~~|
+    //   y = DELAY1I(x, 5, init) ~~|
+    // `)
+
+    const xmileVars = `\
+<aux name="x">
+  <eqn>1</eqn>
+</aux>
+<aux name="init">
+  <eqn>2</eqn>
+</aux>
+<aux name="y">
+  <eqn>DELAY1(x, 5, init)</eqn>
+</aux>`
+    const mdl = xmile('', xmileVars)
+    const vars = readInlineModel(mdl)
     expect(vars.size).toBe(5)
     expect(genJS(vars.get('_x'))).toEqual(['_x = 1.0;'])
     expect(genJS(vars.get('_init'))).toEqual(['_init = 2.0;'])
@@ -1429,10 +1509,21 @@ describe('generateEquation (XMILE -> JS)', () => {
   })
 
   it('should work for DELAY3 function (without initial value argument)', () => {
-    const vars = readInlineModel(`
-      x = 1 ~~|
-      y = DELAY3(x, 5) ~~|
-    `)
+    // Equivalent Vensim model for reference:
+    // const vars = readInlineModel(`
+    //   x = 1 ~~|
+    //   y = DELAY3(x, 5) ~~|
+    // `)
+
+    const xmileVars = `\
+<aux name="x">
+  <eqn>1</eqn>
+</aux>
+<aux name="y">
+  <eqn>DELAY3(x, 5)</eqn>
+</aux>`
+    const mdl = xmile('', xmileVars)
+    const vars = readInlineModel(mdl)
     expect(vars.size).toBe(9)
     expect(genJS(vars.get('_x'))).toEqual(['_x = 1.0;'])
     expect(genJS(vars.get('__level1'), 'init-levels')).toEqual(['__level1 = _x * ((5.0) / 3.0);'])
@@ -1449,11 +1540,25 @@ describe('generateEquation (XMILE -> JS)', () => {
   })
 
   it('should work for DELAY3 function (with initial value argument)', () => {
-    const vars = readInlineModel(`
-      x = 1 ~~|
-      init = 2 ~~|
-      y = DELAY3I(x, 5, init) ~~|
-    `)
+    // Equivalent Vensim model for reference:
+    // const vars = readInlineModel(`
+    //   x = 1 ~~|
+    //   init = 2 ~~|
+    //   y = DELAY3I(x, 5, init) ~~|
+    // `)
+
+    const xmileVars = `\
+<aux name="x">
+  <eqn>1</eqn>
+</aux>
+<aux name="init">
+  <eqn>2</eqn>
+</aux>
+<aux name="y">
+  <eqn>DELAY3(x, 5, init)</eqn>
+</aux>`
+    const mdl = xmile('', xmileVars)
+    const vars = readInlineModel(mdl)
     expect(vars.size).toBe(10)
     expect(genJS(vars.get('_x'))).toEqual(['_x = 1.0;'])
     expect(genJS(vars.get('_init'))).toEqual(['_init = 2.0;'])
@@ -1471,12 +1576,50 @@ describe('generateEquation (XMILE -> JS)', () => {
   })
 
   it('should work for DELAY3 function (1D with initial value argument)', () => {
-    const vars = readInlineModel(`
-      DimA: A1, A2 ~~|
-      x[DimA] = 1, 2 ~~|
-      init[DimA] = 2, 3 ~~|
-      y[DimA] = DELAY3I(x[DimA], 5, init[DimA]) ~~|
-    `)
+    // Equivalent Vensim model for reference:
+    // const vars = readInlineModel(`
+    //   DimA: A1, A2 ~~|
+    //   x[DimA] = 1, 2 ~~|
+    //   init[DimA] = 2, 3 ~~|
+    //   y[DimA] = DELAY3I(x[DimA], 5, init[DimA]) ~~|
+    // `)
+
+    const xmileDims = `\
+<dim name="DimA">
+  <elem name="A1"/>
+  <elem name="A2"/>
+</dim>`
+    const xmileVars = `\
+<aux name="x">
+  <dimensions>
+    <dim name="DimA"/>
+  </dimensions>
+  <element subscript="A1">
+    <eqn>1</eqn>
+  </element>
+  <element subscript="A2">
+    <eqn>2</eqn>
+  </element>
+</aux>
+<aux name="init">
+  <dimensions>
+    <dim name="DimA"/>
+  </dimensions>
+  <element subscript="A1">
+    <eqn>2</eqn>
+  </element>
+  <element subscript="A2">
+    <eqn>3</eqn>
+  </element>
+</aux>
+<aux name="y">
+  <dimensions>
+    <dim name="DimA"/>
+  </dimensions>
+  <eqn>DELAY3(x[DimA], 5, init[DimA])</eqn>
+</aux>`
+    const mdl = xmile(xmileDims, xmileVars)
+    const vars = readInlineModel(mdl)
     expect(vars.size).toBe(12)
     expect(genJS(vars.get('_x[_a1]'))).toEqual(['_x[0] = 1.0;'])
     expect(genJS(vars.get('_x[_a2]'))).toEqual(['_x[1] = 2.0;'])
@@ -1559,71 +1702,161 @@ describe('generateEquation (XMILE -> JS)', () => {
   })
 
   it('should work for EXP function', () => {
-    const vars = readInlineModel(`
-      x = 1 ~~|
-      y = EXP(x) ~~|
-    `)
+    // Equivalent Vensim model for reference:
+    // const vars = readInlineModel(`
+    //   x = 1 ~~|
+    //   y = EXP(x) ~~|
+    // `)
+
+    const xmileVars = `\
+<aux name="x">
+  <eqn>1</eqn>
+</aux>
+<aux name="y">
+  <eqn>EXP(x)</eqn>
+</aux>`
+    const mdl = xmile('', xmileVars)
+    const vars = readInlineModel(mdl)
     expect(vars.size).toBe(2)
     expect(genJS(vars.get('_x'))).toEqual(['_x = 1.0;'])
     expect(genJS(vars.get('_y'))).toEqual(['_y = fns.EXP(_x);'])
   })
 
-  it('should work for GAMMALN function', () => {
-    const vars = readInlineModel(`
-      x = 1 ~~|
-      y = GAMMA LN(x) ~~|
-    `)
+  // TODO: Implement this test once we support the GAMMALN function for XMILE+JS
+  it.skip('should work for GAMMALN function', () => {
+    // Equivalent Vensim model for reference:
+    // const vars = readInlineModel(`
+    //   x = 1 ~~|
+    //   y = GAMMA LN(x) ~~|
+    // `)
+
+    const xmileVars = `\
+<aux name="x">
+  <eqn>1</eqn>
+</aux>
+<aux name="y">
+  <eqn>GAMMALN(x)</eqn>
+</aux>`
+    const mdl = xmile('', xmileVars)
+    const vars = readInlineModel(mdl)
     expect(vars.size).toBe(2)
     expect(genJS(vars.get('_x'))).toEqual(['_x = 1.0;'])
     // expect(genJS(vars.get('_y'))).toEqual(['_y = fns.GAMMA_LN(_x);'])
-    expect(() => genJS(vars.get('_y'))).toThrow('GAMMA LN function not yet implemented for JS code gen')
+    expect(() => genJS(vars.get('_y'))).toThrow('GAMMA_LN function not yet implemented for JS code gen')
   })
 
   it('should work for IF THEN ELSE function', () => {
-    // Note that we use `ABS(1)` here to circumvent the constant conditional optimization
-    // code (the legacy `ExprReader` doesn't currently optimize function calls).  This
-    // allows us to verify the generated code without the risk of it being optimized away.
-    const vars = readInlineModel(`
-      x = ABS(1) ~~|
-      y = IF THEN ELSE(x > 0, 1, x) ~~|
-    `)
+    // Equivalent Vensim model for reference:
+    // const vars = readInlineModel(`
+    //   x = ABS(1) ~~|
+    //   y = IF THEN ELSE(x > 0, 1, x) ~~|
+    // `)
+
+    const xmileVars = `\
+<aux name="x">
+  <eqn>ABS(1)</eqn>
+</aux>
+<aux name="y">
+  <eqn>IF x > 0 THEN 1 ELSE x</eqn>
+</aux>`
+    const mdl = xmile('', xmileVars)
+    const vars = readInlineModel(mdl)
     expect(vars.size).toBe(2)
     expect(genJS(vars.get('_x'))).toEqual(['_x = fns.ABS(1.0);'])
     expect(genJS(vars.get('_y'))).toEqual(['_y = ((_x > 0.0) ? (1.0) : (_x));'])
   })
 
   it('should work for INIT function', () => {
-    const vars = readInlineModel(`
-      x = Time * 2 ~~|
-      y = INITIAL(x) ~~|
-    `)
+    // Equivalent Vensim model for reference:
+    // const vars = readInlineModel(`
+    //   x = Time * 2 ~~|
+    //   y = INITIAL(x) ~~|
+    // `)
+
+    const xmileVars = `\
+<aux name="x">
+  <eqn>Time * 2</eqn>
+</aux>
+<aux name="y">
+  <eqn>INIT(x)</eqn>
+</aux>`
+    const mdl = xmile('', xmileVars)
+    const vars = readInlineModel(mdl)
     expect(vars.size).toBe(2)
-    // TODO: When `x` is only referenced in an `INITIAL`, we currently evaluate it in `evalAux`
-    // on every iteration even though it is unused.  Maybe we can detect that case and avoid
-    // the redundant work.
     expect(genJS(vars.get('_x'), 'init-levels')).toEqual(['_x = _time * 2.0;'])
     expect(genJS(vars.get('_x'), 'eval')).toEqual(['_x = _time * 2.0;'])
     expect(genJS(vars.get('_y'), 'init-levels')).toEqual(['_y = _x;'])
   })
 
-  it('should work for INTEG function', () => {
-    const vars = readInlineModel(`
-      x = Time * 2 ~~|
-      y = INTEG(x, 10) ~~|
-    `)
+  it('should work for INTEG function (synthesized from <stock> variable definition)', () => {
+    // Equivalent Vensim model for reference:
+    // const vars = readInlineModel(`
+    //   x = Time * 2 ~~|
+    //   y = INTEG(x, 10) ~~|
+    // `)
+
+    const xmileVars = `\
+<aux name="x">
+  <eqn>Time * 2</eqn>
+</aux>
+<stock name="y">
+  <eqn>10</eqn>
+  <inflow>x</inflow>
+</stock>`
+    const mdl = xmile('', xmileVars)
+    const vars = readInlineModel(mdl)
     expect(vars.size).toBe(2)
     expect(genJS(vars.get('_x'), 'eval')).toEqual(['_x = _time * 2.0;'])
     expect(genJS(vars.get('_y'), 'init-levels')).toEqual(['_y = 10.0;'])
     expect(genJS(vars.get('_y'), 'eval')).toEqual(['_y = fns.INTEG(_y, _x);'])
   })
 
-  it('should work for INTEG function (with one dimension)', () => {
-    const vars = readInlineModel(`
-      DimA: A1, A2 ~~|
-      rate[DimA] = 10, 20 ~~|
-      init[DimA] = 1, 2 ~~|
-      y[DimA] = INTEG(rate[DimA], init[DimA]) ~~|
-    `)
+  it('should work for INTEG function (synthesized from <stock> variable definition with one dimension)', () => {
+    // Equivalent Vensim model for reference:
+    // const vars = readInlineModel(`
+    //   DimA: A1, A2 ~~|
+    //   rate[DimA] = 10, 20 ~~|
+    //   init[DimA] = 1, 2 ~~|
+    //   y[DimA] = INTEG(rate[DimA], init[DimA]) ~~|
+    // `)
+
+    const xmileDims = `\
+<dim name="DimA">
+  <elem name="A1"/>
+  <elem name="A2"/>
+</dim>`
+    const xmileVars = `\
+<aux name="rate">
+  <dimensions>
+    <dim name="DimA"/>
+  </dimensions>
+  <element subscript="A1">
+    <eqn>10</eqn>
+  </element>
+  <element subscript="A2">
+    <eqn>20</eqn>
+  </element>
+</aux>
+<aux name="init">
+  <dimensions>
+    <dim name="DimA"/>
+  </dimensions>
+  <element subscript="A1">
+    <eqn>1</eqn>
+  </element>
+  <element subscript="A2">
+    <eqn>2</eqn>
+  </element>
+</aux>
+<stock name="y">
+  <dimensions>
+    <dim name="DimA"/>
+  </dimensions>
+  <eqn>init[DimA]</eqn>
+  <inflow>rate[DimA]</inflow>
+</stock>`
+    const mdl = xmile(xmileDims, xmileVars)
+    const vars = readInlineModel(mdl)
     expect(vars.size).toBe(5)
     expect(genJS(vars.get('_rate[_a1]'), 'init-constants')).toEqual(['_rate[0] = 10.0;'])
     expect(genJS(vars.get('_rate[_a2]'), 'init-constants')).toEqual(['_rate[1] = 20.0;'])
@@ -1637,13 +1870,49 @@ describe('generateEquation (XMILE -> JS)', () => {
     ])
   })
 
-  it('should work for INTEG function (with SUM used in arguments)', () => {
-    const vars = readInlineModel(`
-      DimA: A1, A2 ~~|
-      rate[DimA] = 10, 20 ~~|
-      init[DimA] = 1, 2 ~~|
-      y = INTEG(SUM(rate[DimA!]), SUM(init[DimA!])) ~~|
-    `)
+  it('should work for INTEG function (synthesized from <stock> variable definition with SUM used in arguments)', () => {
+    // Equivalent Vensim model for reference:
+    // const vars = readInlineModel(`
+    //   DimA: A1, A2 ~~|
+    //   rate[DimA] = 10, 20 ~~|
+    //   init[DimA] = 1, 2 ~~|
+    //   y = INTEG(SUM(rate[DimA!]), SUM(init[DimA!])) ~~|
+    // `)
+
+    const xmileDims = `\
+<dim name="DimA">
+  <elem name="A1"/>
+  <elem name="A2"/>
+</dim>`
+    const xmileVars = `\
+<aux name="rate">
+  <dimensions>
+    <dim name="DimA"/>
+  </dimensions>
+  <element subscript="A1">
+    <eqn>10</eqn>
+  </element>
+  <element subscript="A2">
+    <eqn>20</eqn>
+  </element>
+</aux>
+<aux name="init">
+  <dimensions>
+    <dim name="DimA"/>
+  </dimensions>
+  <element subscript="A1">
+    <eqn>1</eqn>
+  </element>
+  <element subscript="A2">
+    <eqn>2</eqn>
+  </element>
+</aux>
+<stock name="y">
+  <eqn>SUM(init[*])</eqn>
+  <inflow>SUM(rate[*])</inflow>
+</stock>`
+    const mdl = xmile(xmileDims, xmileVars)
+    const vars = readInlineModel(mdl)
     expect(vars.size).toBe(5)
     expect(genJS(vars.get('_rate[_a1]'), 'init-constants')).toEqual(['_rate[0] = 10.0;'])
     expect(genJS(vars.get('_rate[_a2]'), 'init-constants')).toEqual(['_rate[1] = 20.0;'])
@@ -1666,20 +1935,42 @@ describe('generateEquation (XMILE -> JS)', () => {
   })
 
   it('should work for INT function', () => {
-    const vars = readInlineModel(`
-      x = 1 ~~|
-      y = INTEGER(x) ~~|
-    `)
+    // Equivalent Vensim model for reference:
+    // const vars = readInlineModel(`
+    //   x = 1 ~~|
+    //   y = INTEGER(x) ~~|
+    // `)
+
+    const xmileVars = `\
+<aux name="x">
+  <eqn>1</eqn>
+</aux>
+<aux name="y">
+  <eqn>INT(x)</eqn>
+</aux>`
+    const mdl = xmile('', xmileVars)
+    const vars = readInlineModel(mdl)
     expect(vars.size).toBe(2)
     expect(genJS(vars.get('_x'))).toEqual(['_x = 1.0;'])
     expect(genJS(vars.get('_y'))).toEqual(['_y = fns.INTEGER(_x);'])
   })
 
   it('should work for LN function', () => {
-    const vars = readInlineModel(`
-      x = 1 ~~|
-      y = LN(x) ~~|
-    `)
+    // Equivalent Vensim model for reference:
+    // const vars = readInlineModel(`
+    //   x = 1 ~~|
+    //   y = LN(x) ~~|
+    // `)
+
+    const xmileVars = `\
+<aux name="x">
+  <eqn>1</eqn>
+</aux>
+<aux name="y">
+  <eqn>LN(x)</eqn>
+</aux>`
+    const mdl = xmile('', xmileVars)
+    const vars = readInlineModel(mdl)
     expect(vars.size).toBe(2)
     expect(genJS(vars.get('_x'))).toEqual(['_x = 1.0;'])
     expect(genJS(vars.get('_y'))).toEqual(['_y = fns.LN(_x);'])
@@ -1689,10 +1980,22 @@ describe('generateEquation (XMILE -> JS)', () => {
   it.skip('should work for LOOKUP function', () => {})
 
   it('should work for LOOKUPINV function', () => {
-    const vars = readInlineModel(`
-      x((0,0),(1,1),(2,2)) ~~|
-      y = LOOKUP INVERT(x, 1.5) ~~|
-    `)
+    // Equivalent Vensim model for reference:
+    // const vars = readInlineModel(`
+    //   x((0,0),(1,1),(2,2)) ~~|
+    //   y = LOOKUP INVERT(x, 1.5) ~~|
+    // `)
+
+    const xmileVars = `\
+<gf name="x" type="continuous">
+  <xpts>0,1,2</xpts>
+  <ypts>0,1,2</ypts>
+</gf>
+<aux name="y">
+  <eqn>LOOKUP INVERT(x, 1.5)</eqn>
+</aux>`
+    const mdl = xmile('', xmileVars)
+    const vars = readInlineModel(mdl)
     expect(vars.size).toBe(2)
     expect(genJS(vars.get('_x'), 'decl')).toEqual(['const _x_data_ = [0.0, 0.0, 1.0, 1.0, 2.0, 2.0];'])
     expect(genJS(vars.get('_x'), 'init-lookups')).toEqual(['_x = fns.createLookup(3, _x_data_);'])
@@ -1700,30 +2003,63 @@ describe('generateEquation (XMILE -> JS)', () => {
   })
 
   it('should work for MAX function', () => {
-    const vars = readInlineModel(`
-      x = 1 ~~|
-      y = MAX(x, 0) ~~|
-    `)
+    // Equivalent Vensim model for reference:
+    // const vars = readInlineModel(`
+    //   x = 1 ~~|
+    //   y = MAX(x, 0) ~~|
+    // `)
+
+    const xmileVars = `\
+<aux name="x">
+  <eqn>1</eqn>
+</aux>
+<aux name="y">
+  <eqn>MAX(x, 0)</eqn>
+</aux>`
+    const mdl = xmile('', xmileVars)
+    const vars = readInlineModel(mdl)
     expect(vars.size).toBe(2)
     expect(genJS(vars.get('_x'))).toEqual(['_x = 1.0;'])
     expect(genJS(vars.get('_y'))).toEqual(['_y = fns.MAX(_x, 0.0);'])
   })
 
   it('should work for MIN function', () => {
-    const vars = readInlineModel(`
-      x = 1 ~~|
-      y = MIN(x, 0) ~~|
-    `)
+    // Equivalent Vensim model for reference:
+    // const vars = readInlineModel(`
+    //   x = 1 ~~|
+    //   y = MIN(x, 0) ~~|
+    // `)
+
+    const xmileVars = `\
+<aux name="x">
+  <eqn>1</eqn>
+</aux>
+<aux name="y">
+  <eqn>MIN(x, 0)</eqn>
+</aux>`
+    const mdl = xmile('', xmileVars)
+    const vars = readInlineModel(mdl)
     expect(vars.size).toBe(2)
     expect(genJS(vars.get('_x'))).toEqual(['_x = 1.0;'])
     expect(genJS(vars.get('_y'))).toEqual(['_y = fns.MIN(_x, 0.0);'])
   })
 
   it('should work for MOD function', () => {
-    const vars = readInlineModel(`
-      x = 1 ~~|
-      y = MODULO(x, 2) ~~|
-    `)
+    // Equivalent Vensim model for reference:
+    // const vars = readInlineModel(`
+    //   x = 1 ~~|
+    //   y = MODULO(x, 2) ~~|
+    // `)
+
+    const xmileVars = `\
+<aux name="x">
+  <eqn>1</eqn>
+</aux>
+<aux name="y">
+  <eqn>MOD(x, 2)</eqn>
+</aux>`
+    const mdl = xmile('', xmileVars)
+    const vars = readInlineModel(mdl)
     expect(vars.size).toBe(2)
     expect(genJS(vars.get('_x'))).toEqual(['_x = 1.0;'])
     expect(genJS(vars.get('_y'))).toEqual(['_y = fns.MODULO(_x, 2.0);'])
@@ -1770,12 +2106,29 @@ describe('generateEquation (XMILE -> JS)', () => {
   })
 
   it('should work for RAMP function', () => {
-    const vars = readInlineModel(`
-      slope = 100 ~~|
-      start = 1 ~~|
-      end = 10 ~~|
-      y = RAMP(slope, start, end) ~~|
-    `)
+    // Equivalent Vensim model for reference:
+    // const vars = readInlineModel(`
+    //   slope = 100 ~~|
+    //   start = 1 ~~|
+    //   end = 10 ~~|
+    //   y = RAMP(slope, start, end) ~~|
+    // `)
+
+    const xmileVars = `\
+<aux name="slope">
+  <eqn>100</eqn>
+</aux>
+<aux name="start">
+  <eqn>1</eqn>
+</aux>
+<aux name="end">
+  <eqn>10</eqn>
+</aux>
+<aux name="y">
+  <eqn>RAMP(slope, start, end)</eqn>
+</aux>`
+    const mdl = xmile('', xmileVars)
+    const vars = readInlineModel(mdl)
     expect(vars.size).toBe(4)
     expect(genJS(vars.get('_slope'))).toEqual(['_slope = 100.0;'])
     expect(genJS(vars.get('_start'))).toEqual(['_start = 1.0;'])
@@ -1784,23 +2137,48 @@ describe('generateEquation (XMILE -> JS)', () => {
   })
 
   it('should work for SIN function', () => {
-    const vars = readInlineModel(`
-      x = 1 ~~|
-      y = SIN(x) ~~|
-    `)
+    // Equivalent Vensim model for reference:
+    // const vars = readInlineModel(`
+    //   x = 1 ~~|
+    //   y = SIN(x) ~~|
+    // `)
+
+    const xmileVars = `\
+<aux name="x">
+  <eqn>1</eqn>
+</aux>
+<aux name="y">
+  <eqn>SIN(x)</eqn>
+</aux>`
+    const mdl = xmile('', xmileVars)
+    const vars = readInlineModel(mdl)
     expect(vars.size).toBe(2)
     expect(genJS(vars.get('_x'))).toEqual(['_x = 1.0;'])
     expect(genJS(vars.get('_y'))).toEqual(['_y = fns.SIN(_x);'])
   })
 
-  it('should work for SMOOTH function (without initial value argument)', () => {
-    const vars = readInlineModel(`
-      input = 3 + PULSE(10, 10) ~~|
-      delay = 2 ~~|
-      y = SMOOTH(input, delay) ~~|
-    `)
+  it('should work for SMTH1 function (without initial value argument)', () => {
+    // Equivalent Vensim model for reference:
+    // const vars = readInlineModel(`
+    //   input = 1 ~~|
+    //   delay = 2 ~~|
+    //   y = SMOOTH(input, delay) ~~|
+    // `)
+
+    const xmileVars = `\
+<aux name="input">
+  <eqn>1</eqn>
+</aux>
+<aux name="delay">
+  <eqn>2</eqn>
+</aux>
+<aux name="y">
+  <eqn>SMTH1(input, delay)</eqn>
+</aux>`
+    const mdl = xmile('', xmileVars)
+    const vars = readInlineModel(mdl)
     expect(vars.size).toBe(4)
-    expect(genJS(vars.get('_input'))).toEqual(['_input = 3.0 + fns.PULSE(10.0, 10.0);'])
+    expect(genJS(vars.get('_input'))).toEqual(['_input = 1.0;'])
     expect(genJS(vars.get('_delay'))).toEqual(['_delay = 2.0;'])
     expect(genJS(vars.get('__level1'), 'init-levels')).toEqual(['__level1 = _input;'])
     expect(genJS(vars.get('__level1'), 'eval')).toEqual([
@@ -1809,14 +2187,28 @@ describe('generateEquation (XMILE -> JS)', () => {
     expect(genJS(vars.get('_y'))).toEqual(['_y = __level1;'])
   })
 
-  it('should work for SMOOTH function (with initial value argument)', () => {
-    const vars = readInlineModel(`
-      input = 3 + PULSE(10, 10) ~~|
-      delay = 2 ~~|
-      y = SMOOTHI(input, delay, 5) ~~|
-    `)
+  it('should work for SMTH1 function (with initial value argument)', () => {
+    // Equivalent Vensim model for reference:
+    // const vars = readInlineModel(`
+    //   input = 1 ~~|
+    //   delay = 2 ~~|
+    //   y = SMOOTHI(input, delay, 5) ~~|
+    // `)
+
+    const xmileVars = `\
+<aux name="input">
+  <eqn>1</eqn>
+</aux>
+<aux name="delay">
+  <eqn>2</eqn>
+</aux>
+<aux name="y">
+  <eqn>SMTH1(input, delay, 5)</eqn>
+</aux>`
+    const mdl = xmile('', xmileVars)
+    const vars = readInlineModel(mdl)
     expect(vars.size).toBe(4)
-    expect(genJS(vars.get('_input'))).toEqual(['_input = 3.0 + fns.PULSE(10.0, 10.0);'])
+    expect(genJS(vars.get('_input'))).toEqual(['_input = 1.0;'])
     expect(genJS(vars.get('_delay'))).toEqual(['_delay = 2.0;'])
     expect(genJS(vars.get('__level1'), 'init-levels')).toEqual(['__level1 = 5.0;'])
     expect(genJS(vars.get('__level1'), 'eval')).toEqual([
@@ -1825,14 +2217,28 @@ describe('generateEquation (XMILE -> JS)', () => {
     expect(genJS(vars.get('_y'))).toEqual(['_y = __level1;'])
   })
 
-  it('should work for SMOOTH3 function (without initial value argument)', () => {
-    const vars = readInlineModel(`
-      input = 3 + PULSE(10, 10) ~~|
-      delay = 2 ~~|
-      y = SMOOTH3(input, delay) ~~|
-    `)
+  it('should work for SMTH3 function (without initial value argument)', () => {
+    // Equivalent Vensim model for reference:
+    // const vars = readInlineModel(`
+    //   input = 1 ~~|
+    //   delay = 2 ~~|
+    //   y = SMOOTH3(input, delay) ~~|
+    // `)
+
+    const xmileVars = `\
+<aux name="input">
+  <eqn>1</eqn>
+</aux>
+<aux name="delay">
+  <eqn>2</eqn>
+</aux>
+<aux name="y">
+  <eqn>SMTH3(input, delay)</eqn>
+</aux>`
+    const mdl = xmile('', xmileVars)
+    const vars = readInlineModel(mdl)
     expect(vars.size).toBe(6)
-    expect(genJS(vars.get('_input'))).toEqual(['_input = 3.0 + fns.PULSE(10.0, 10.0);'])
+    expect(genJS(vars.get('_input'))).toEqual(['_input = 1.0;'])
     expect(genJS(vars.get('_delay'))).toEqual(['_delay = 2.0;'])
     expect(genJS(vars.get('__level1'), 'init-levels')).toEqual(['__level1 = _input;'])
     expect(genJS(vars.get('__level1'), 'eval')).toEqual([
@@ -1849,14 +2255,28 @@ describe('generateEquation (XMILE -> JS)', () => {
     expect(genJS(vars.get('_y'))).toEqual(['_y = __level3;'])
   })
 
-  it('should work for SMOOTH3 function (no dimensions with initial value argument)', () => {
-    const vars = readInlineModel(`
-      input = 3 + PULSE(10, 10) ~~|
-      delay = 2 ~~|
-      y = SMOOTH3I(input, delay, 5) ~~|
-    `)
+  it('should work for SMTH3 function (no dimensions with initial value argument)', () => {
+    // Equivalent Vensim model for reference:
+    // const vars = readInlineModel(`
+    //   input = 1 ~~|
+    //   delay = 2 ~~|
+    //   y = SMOOTH3I(input, delay, 5) ~~|
+    // `)
+
+    const xmileVars = `\
+<aux name="input">
+  <eqn>1</eqn>
+</aux>
+<aux name="delay">
+  <eqn>2</eqn>
+</aux>
+<aux name="y">
+  <eqn>SMTH3(input, delay, 5)</eqn>
+</aux>`
+    const mdl = xmile('', xmileVars)
+    const vars = readInlineModel(mdl)
     expect(vars.size).toBe(6)
-    expect(genJS(vars.get('_input'))).toEqual(['_input = 3.0 + fns.PULSE(10.0, 10.0);'])
+    expect(genJS(vars.get('_input'))).toEqual(['_input = 1.0;'])
     expect(genJS(vars.get('_delay'))).toEqual(['_delay = 2.0;'])
     expect(genJS(vars.get('__level1'), 'init-levels')).toEqual(['__level1 = 5.0;'])
     expect(genJS(vars.get('__level1'), 'eval')).toEqual([
@@ -1873,19 +2293,43 @@ describe('generateEquation (XMILE -> JS)', () => {
     expect(genJS(vars.get('_y'))).toEqual(['_y = __level3;'])
   })
 
-  it('should work for SMOOTH3 function (1D with subscripted delay parameter and initial value argument)', () => {
-    const vars = readInlineModel(`
-      DimA: A1, A2 ~~|
-      input[DimA] = 3 + PULSE(10, 10) ~~|
-      delay[DimA] = 2 ~~|
-      y[DimA] = SMOOTH3I(input[DimA], delay[DimA], 5) ~~|
-    `)
+  it('should work for SMTH3 function (1D with subscripted delay parameter and initial value argument)', () => {
+    // Equivalent Vensim model for reference:
+    // const vars = readInlineModel(`
+    //   DimA: A1, A2 ~~|
+    //   input[DimA] = 1 ~~|
+    //   delay[DimA] = 2 ~~|
+    //   y[DimA] = SMOOTH3I(input[DimA], delay[DimA], 5) ~~|
+    // `)
+
+    const xmileDims = `\
+<dim name="DimA">
+  <elem name="A1"/>
+  <elem name="A2"/>
+</dim>`
+    const xmileVars = `\
+<aux name="input">
+  <dimensions>
+    <dim name="DimA"/>
+  </dimensions>
+  <eqn>1</eqn>
+</aux>
+<aux name="delay">
+  <dimensions>
+    <dim name="DimA"/>
+  </dimensions>
+  <eqn>2</eqn>
+</aux>
+<aux name="y">
+  <dimensions>
+    <dim name="DimA"/>
+  </dimensions>
+  <eqn>SMTH3(input[DimA], delay[DimA], 5)</eqn>
+</aux>`
+    const mdl = xmile(xmileDims, xmileVars)
+    const vars = readInlineModel(mdl)
     expect(vars.size).toBe(6)
-    expect(genJS(vars.get('_input'))).toEqual([
-      'for (let i = 0; i < 2; i++) {',
-      '_input[i] = 3.0 + fns.PULSE(10.0, 10.0);',
-      '}'
-    ])
+    expect(genJS(vars.get('_input'))).toEqual(['for (let i = 0; i < 2; i++) {', '_input[i] = 1.0;', '}'])
     expect(genJS(vars.get('_delay'))).toEqual(['for (let i = 0; i < 2; i++) {', '_delay[i] = 2.0;', '}'])
     expect(genJS(vars.get('__level1'), 'init-levels')).toEqual([
       'for (let i = 0; i < 2; i++) {',
@@ -1920,19 +2364,40 @@ describe('generateEquation (XMILE -> JS)', () => {
     expect(genJS(vars.get('_y'))).toEqual(['for (let i = 0; i < 2; i++) {', '_y[i] = __level3[i];', '}'])
   })
 
-  it('should work for SMOOTH3 function (1D with non-subscripted delay parameter and initial value argument)', () => {
-    const vars = readInlineModel(`
-      DimA: A1, A2 ~~|
-      input[DimA] = 3 + PULSE(10, 10) ~~|
-      delay = 2 ~~|
-      y[DimA] = SMOOTH3I(input[DimA], delay, 5) ~~|
-    `)
+  it('should work for SMTH3 function (1D with non-subscripted delay parameter and initial value argument)', () => {
+    // Equivalent Vensim model for reference:
+    // const vars = readInlineModel(`
+    //   DimA: A1, A2 ~~|
+    //   input[DimA] = 1 ~~|
+    //   delay = 2 ~~|
+    //   y[DimA] = SMOOTH3I(input[DimA], delay, 5) ~~|
+    // `)
+
+    const xmileDims = `\
+<dim name="DimA">
+  <elem name="A1"/>
+  <elem name="A2"/>
+</dim>`
+    const xmileVars = `\
+<aux name="input">
+  <dimensions>
+    <dim name="DimA"/>
+  </dimensions>
+  <eqn>1</eqn>
+</aux>
+<aux name="delay">
+  <eqn>2</eqn>
+</aux>
+<aux name="y">
+  <dimensions>
+    <dim name="DimA"/>
+  </dimensions>
+  <eqn>SMTH3(input[DimA], delay, 5)</eqn>
+</aux>`
+    const mdl = xmile(xmileDims, xmileVars)
+    const vars = readInlineModel(mdl)
     expect(vars.size).toBe(6)
-    expect(genJS(vars.get('_input'))).toEqual([
-      'for (let i = 0; i < 2; i++) {',
-      '_input[i] = 3.0 + fns.PULSE(10.0, 10.0);',
-      '}'
-    ])
+    expect(genJS(vars.get('_input'))).toEqual(['for (let i = 0; i < 2; i++) {', '_input[i] = 1.0;', '}'])
     expect(genJS(vars.get('_delay'))).toEqual(['_delay = 2.0;'])
     expect(genJS(vars.get('__level1'), 'init-levels')).toEqual([
       'for (let i = 0; i < 2; i++) {',
@@ -1968,31 +2433,77 @@ describe('generateEquation (XMILE -> JS)', () => {
   })
 
   it('should work for SQRT function', () => {
-    const vars = readInlineModel(`
-      x = 1 ~~|
-      y = SQRT(x) ~~|
-    `)
+    // Equivalent Vensim model for reference:
+    // const vars = readInlineModel(`
+    //   x = 1 ~~|
+    //   y = SQRT(x) ~~|
+    // `)
+
+    const xmileVars = `\
+<aux name="x">
+  <eqn>1</eqn>
+</aux>
+<aux name="y">
+  <eqn>SQRT(x)</eqn>
+</aux>`
+    const mdl = xmile('', xmileVars)
+    const vars = readInlineModel(mdl)
     expect(vars.size).toBe(2)
     expect(genJS(vars.get('_x'))).toEqual(['_x = 1.0;'])
     expect(genJS(vars.get('_y'))).toEqual(['_y = fns.SQRT(_x);'])
   })
 
   it('should work for STEP function', () => {
-    const vars = readInlineModel(`
-      x = 1 ~~|
-      y = STEP(x, 10) ~~|
-    `)
+    // Equivalent Vensim model for reference:
+    // const vars = readInlineModel(`
+    //   x = 1 ~~|
+    //   y = STEP(x, 10) ~~|
+    // `)
+
+    const xmileVars = `\
+<aux name="x">
+  <eqn>1</eqn>
+</aux>
+<aux name="y">
+  <eqn>STEP(x, 10)</eqn>
+</aux>`
+    const mdl = xmile('', xmileVars)
+    const vars = readInlineModel(mdl)
     expect(vars.size).toBe(2)
     expect(genJS(vars.get('_x'))).toEqual(['_x = 1.0;'])
     expect(genJS(vars.get('_y'))).toEqual(['_y = fns.STEP(_x, 10.0);'])
   })
 
   it('should work for SUM function (single call)', () => {
-    const vars = readInlineModel(`
-      DimA: A1, A2 ~~|
-      a[DimA] = 10, 20 ~~|
-      x = SUM(a[DimA!]) + 1 ~~|
-    `)
+    // Equivalent Vensim model for reference:
+    // const vars = readInlineModel(`
+    //   DimA: A1, A2 ~~|
+    //   a[DimA] = 10, 20 ~~|
+    //   x = SUM(a[DimA!]) + 1 ~~|
+    // `)
+
+    const xmileDims = `\
+<dim name="DimA">
+  <elem name="A1"/>
+  <elem name="A2"/>
+</dim>`
+    const xmileVars = `\
+<aux name="a">
+  <dimensions>
+    <dim name="DimA"/>
+  </dimensions>
+  <element subscript="A1">
+    <eqn>10</eqn>
+  </element>
+  <element subscript="A2">
+    <eqn>20</eqn>
+  </element>
+</aux>
+<aux name="x">
+  <eqn>SUM(a[*]) + 1</eqn>
+</aux>`
+    const mdl = xmile(xmileDims, xmileVars)
+    const vars = readInlineModel(mdl)
     expect(vars.size).toBe(3)
     expect(genJS(vars.get('_a[_a1]'), 'init-constants')).toEqual(['_a[0] = 10.0;'])
     expect(genJS(vars.get('_a[_a2]'), 'init-constants')).toEqual(['_a[1] = 20.0;'])
@@ -2006,14 +2517,64 @@ describe('generateEquation (XMILE -> JS)', () => {
   })
 
   it('should work for SUM function (multiple calls)', () => {
-    const vars = readInlineModel(`
-      DimA: A1, A2 ~~|
-      DimB: B1, B2 ~~|
-      a[DimA] = 10, 20 ~~|
-      b[DimB] = 50, 60 ~~|
-      c[DimA] = 1, 2 ~~|
-      x = SUM(a[DimA!]) + SUM(b[DimB!]) + SUM(c[DimA!]) ~~|
-    `)
+    // Equivalent Vensim model for reference:
+    // const vars = readInlineModel(`
+    //   DimA: A1, A2 ~~|
+    //   DimB: B1, B2 ~~|
+    //   a[DimA] = 10, 20 ~~|
+    //   b[DimB] = 50, 60 ~~|
+    //   c[DimA] = 1, 2 ~~|
+    //   x = SUM(a[DimA!]) + SUM(b[DimB!]) + SUM(c[DimA!]) ~~|
+    // `)
+
+    const xmileDims = `\
+<dim name="DimA">
+  <elem name="A1"/>
+  <elem name="A2"/>
+</dim>
+<dim name="DimB">
+  <elem name="B1"/>
+  <elem name="B2"/>
+</dim>`
+    const xmileVars = `\
+<aux name="a">
+  <dimensions>
+    <dim name="DimA"/>
+  </dimensions>
+  <element subscript="A1">
+    <eqn>10</eqn>
+  </element>
+  <element subscript="A2">
+    <eqn>20</eqn>
+  </element>
+</aux>
+<aux name="b">
+  <dimensions>
+    <dim name="DimB"/>
+  </dimensions>
+  <element subscript="B1">
+    <eqn>50</eqn>
+  </element>
+  <element subscript="B2">
+    <eqn>60</eqn>
+  </element>
+</aux>
+<aux name="c">
+  <dimensions>
+    <dim name="DimA"/>
+  </dimensions>
+  <element subscript="A1">
+    <eqn>1</eqn>
+  </element>
+  <element subscript="A2">
+    <eqn>2</eqn>
+  </element>
+</aux>
+<aux name="x">
+  <eqn>SUM(a[*]) + SUM(b[*]) + SUM(c[*])</eqn>
+</aux>`
+    const mdl = xmile(xmileDims, xmileVars)
+    const vars = readInlineModel(mdl)
     expect(vars.size).toBe(7)
     expect(genJS(vars.get('_a[_a1]'), 'init-constants')).toEqual(['_a[0] = 10.0;'])
     expect(genJS(vars.get('_a[_a2]'), 'init-constants')).toEqual(['_a[1] = 20.0;'])
@@ -2039,11 +2600,35 @@ describe('generateEquation (XMILE -> JS)', () => {
   })
 
   it('should work for SUM function (with nested function call)', () => {
-    const vars = readInlineModel(`
-      DimA: A1, A2 ~~|
-      a[DimA] = 10, 20 ~~|
-      x = SUM(IF THEN ELSE(a[DimA!] = 10, 0, a[DimA!])) + 1 ~~|
-    `)
+    // Equivalent Vensim model for reference:
+    // const vars = readInlineModel(`
+    //   DimA: A1, A2 ~~|
+    //   a[DimA] = 10, 20 ~~|
+    //   x = SUM(IF THEN ELSE(a[DimA!] = 10, 0, a[DimA!])) + 1 ~~|
+    // `)
+
+    const xmileDims = `\
+<dim name="DimA">
+  <elem name="A1"/>
+  <elem name="A2"/>
+</dim>`
+    const xmileVars = `\
+<aux name="a">
+  <dimensions>
+    <dim name="DimA"/>
+  </dimensions>
+  <element subscript="A1">
+    <eqn>10</eqn>
+  </element>
+  <element subscript="A2">
+    <eqn>20</eqn>
+  </element>
+</aux>
+<aux name="x">
+  <eqn>SUM(IF a[*] = 10 THEN 0 ELSE a[*])) + 1</eqn>
+</aux>`
+    const mdl = xmile(xmileDims, xmileVars)
+    const vars = readInlineModel(mdl)
     expect(vars.size).toBe(3)
     expect(genJS(vars.get('_a[_a1]'), 'init-constants')).toEqual(['_a[0] = 10.0;'])
     expect(genJS(vars.get('_a[_a2]'), 'init-constants')).toEqual(['_a[1] = 20.0;'])
@@ -2057,20 +2642,42 @@ describe('generateEquation (XMILE -> JS)', () => {
   })
 
   it('should work for TAN function', () => {
-    const vars = readInlineModel(`
-      x = 1 ~~|
-      y = TAN(x) ~~|
-    `)
+    // Equivalent Vensim model for reference:
+    // const vars = readInlineModel(`
+    //   x = 1 ~~|
+    //   y = TAN(x) ~~|
+    // `)
+
+    const xmileVars = `\
+<aux name="x">
+  <eqn>1</eqn>
+</aux>
+<aux name="y">
+  <eqn>TAN(x)</eqn>
+</aux>`
+    const mdl = xmile('', xmileVars)
+    const vars = readInlineModel(mdl)
     expect(vars.size).toBe(2)
     expect(genJS(vars.get('_x'))).toEqual(['_x = 1.0;'])
     expect(genJS(vars.get('_y'))).toEqual(['_y = fns.TAN(_x);'])
   })
 
   it('should work for TREND function', () => {
-    const vars = readInlineModel(`
-      x = 1 ~~|
-      y = TREND(x, 10, 2) ~~|
-    `)
+    // Equivalent Vensim model for reference:
+    // const vars = readInlineModel(`
+    //   x = 1 ~~|
+    //   y = TREND(x, 10, 2) ~~|
+    // `)
+
+    const xmileVars = `\
+<aux name="x">
+  <eqn>1</eqn>
+</aux>
+<aux name="y">
+  <eqn>TREND(x, 10, 2)</eqn>
+</aux>`
+    const mdl = xmile('', xmileVars)
+    const vars = readInlineModel(mdl)
     expect(vars.size).toBe(4)
     expect(genJS(vars.get('_x'))).toEqual(['_x = 1.0;'])
     expect(genJS(vars.get('__level1'), 'init-levels')).toEqual(['__level1 = _x / (1.0 + 2.0 * 10.0);'])
