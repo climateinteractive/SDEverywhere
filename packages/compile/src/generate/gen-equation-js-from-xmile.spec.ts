@@ -1192,12 +1192,42 @@ describe('generateEquation (XMILE -> JS)', () => {
   })
 
   it('should work for equation with one dimension', () => {
-    const vars = readInlineModel(`
-      DimA: A1, A2 ~~|
-      x[DimA] = 1, 2 ~~|
-      y[DimA] = (x[DimA] + 2) * MIN(0, x[DimA]) ~~|
-      z = y[A2] ~~|
-    `)
+    // Equivalent Vensim model for reference:
+    // const vars = readInlineModel(`
+    //   DimA: A1, A2 ~~|
+    //   x[DimA] = 1, 2 ~~|
+    //   y[DimA] = (x[DimA] + 2) * MIN(0, x[DimA]) ~~|
+    //   z = y[A2] ~~|
+    // `)
+
+    const xmileDims = `\
+<dim name="DimA">
+  <elem name="A1"/>
+  <elem name="A2"/>
+</dim>`
+    const xmileVars = `\
+<aux name="x">
+  <dimensions>
+    <dim name="DimA"/>
+  </dimensions>
+  <element subscript="A1">
+    <eqn>1</eqn>
+  </element>
+  <element subscript="A2">
+    <eqn>2</eqn>
+  </element>
+</aux>
+<aux name="y">
+  <dimensions>
+    <dim name="DimA"/>
+  </dimensions>
+  <eqn>(x[DimA] + 2) * MIN(0, x[DimA])</eqn>
+</aux>
+<aux name="z">
+  <eqn>y[A2]</eqn>
+</aux>`
+    const mdl = xmile(xmileDims, xmileVars)
+    const vars = readInlineModel(mdl)
     expect(vars.size).toBe(4)
     expect(genJS(vars.get('_x[_a1]'), 'init-constants')).toEqual(['_x[0] = 1.0;'])
     expect(genJS(vars.get('_x[_a2]'), 'init-constants')).toEqual(['_x[1] = 2.0;'])
@@ -1210,13 +1240,55 @@ describe('generateEquation (XMILE -> JS)', () => {
   })
 
   it('should work for equation with two dimensions', () => {
-    const vars = readInlineModel(`
-      DimA: A1, A2 ~~|
-      DimB: B1, B2 ~~|
-      x[DimA, DimB] = 1, 2; 3, 4; ~~|
-      y[DimA, DimB] = (x[DimA, DimB] + 2) * MIN(0, x[DimA, DimB]) ~~|
-      z = y[A2, B1] ~~|
-    `)
+    // Equivalent Vensim model for reference:
+    // const vars = readInlineModel(`
+    //   DimA: A1, A2 ~~|
+    //   DimB: B1, B2 ~~|
+    //   x[DimA, DimB] = 1, 2; 3, 4; ~~|
+    //   y[DimA, DimB] = (x[DimA, DimB] + 2) * MIN(0, x[DimA, DimB]) ~~|
+    //   z = y[A2, B1] ~~|
+    // `)
+
+    const xmileDims = `\
+<dim name="DimA">
+  <elem name="A1"/>
+  <elem name="A2"/>
+</dim>
+<dim name="DimB">
+  <elem name="B1"/>
+  <elem name="B2"/>
+</dim>`
+    const xmileVars = `\
+<aux name="x">
+  <dimensions>
+    <dim name="DimA"/>
+    <dim name="DimB"/>
+  </dimensions>
+  <element subscript="A1,B1">
+    <eqn>1</eqn>
+  </element>
+  <element subscript="A1,B2">
+    <eqn>2</eqn>
+  </element>
+  <element subscript="A2,B1">
+    <eqn>3</eqn>
+  </element>
+  <element subscript="A2,B2">
+    <eqn>4</eqn>
+  </element>
+</aux>
+<aux name="y">
+  <dimensions>
+    <dim name="DimA"/>
+    <dim name="DimB"/>
+  </dimensions>
+  <eqn>(x[DimA, DimB] + 2) * MIN(0, x[DimA, DimB])</eqn>
+</aux>
+<aux name="z">
+  <eqn>y[A2, B1]</eqn>
+</aux>`
+    const mdl = xmile(xmileDims, xmileVars)
+    const vars = readInlineModel(mdl)
     expect(vars.size).toBe(6)
     expect(genJS(vars.get('_x[_a1,_b1]'), 'init-constants')).toEqual(['_x[0][0] = 1.0;'])
     expect(genJS(vars.get('_x[_a1,_b2]'), 'init-constants')).toEqual(['_x[0][1] = 2.0;'])
