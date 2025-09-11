@@ -493,6 +493,11 @@ function visitFunctionCall(v, callExpr, context) {
       argModes[2] = 'init'
       break
 
+    case '_DEMAND_AT_PRICE':
+      validateCallDepth(callExpr, context)
+      validateCallArgs(callExpr, 3)
+      break
+
     case '_DEPRECIATE_STRAIGHTLINE':
       validateCallDepth(callExpr, context)
       validateCallArgs(callExpr, 4)
@@ -505,6 +510,11 @@ function visitFunctionCall(v, callExpr, context) {
       // not treated as 'init' in the legacy reader.)
       argModes[1] = 'init'
       argModes[2] = 'init'
+      break
+
+    case '_FIND_MARKET_PRICE':
+      validateCallDepth(callExpr, context)
+      validateCallArgs(callExpr, 4)
       break
 
     case '_GAME':
@@ -595,6 +605,11 @@ function visitFunctionCall(v, callExpr, context) {
       generateSmoothVariables(v, callExpr, context)
       break
 
+    case '_SUPPLY_AT_PRICE':
+      validateCallDepth(callExpr, context)
+      validateCallArgs(callExpr, 3)
+      break
+
     case '_TREND':
       validateCallArgs(callExpr, 3)
       addFnReference = false
@@ -660,25 +675,27 @@ function visitFunctionCall(v, callExpr, context) {
       if (callExpr.fnId === '_WITH_LOOKUP' && index > 1) {
         // XXX: For `WITH LOOKUP` calls, only process the first argument; need to generalize this
         break
-      } else if (callExpr.fnId === '_ALLOCATE_AVAILABLE' && index === 1) {
-        // Handle the second (`pp` or priority profile) argument of `ALLOCATE AVAILABLE` calls
+      } else if (
+        (callExpr.fnId === '_ALLOCATE_AVAILABLE' && index === 1) ||
+        (callExpr.fnId === '_DEMAND_AT_PRICE' && index === 1) ||
+        (callExpr.fnId === '_SUPPLY_AT_PRICE' && index === 1) ||
+        (callExpr.fnId === '_FIND_MARKET_PRICE' && (index === 1 || index === 3))
+      ) {
+        // Handle the second (`pp` or priority profile) argument of allocation function calls
         // specially.  An example call with a 2D `pp` looks like this:
         //   shipments[branch] = ALLOCATE AVAILABLE(demand[branch], priority[branch,ptype], avail) ~~|
         // Or a 3D `pp` with a dimension:
         //   shipments[item,branch] = ALLOCATE AVAILABLE(demand[branch], priority[item,branch,ptype], avail) ~~|
         // Or a 3D `pp` with a specific subscript:
         //   shipments[branch] = ALLOCATE AVAILABLE(demand[branch], priority[item1,branch,ptype], avail) ~~|
-        // Vensim requires passing a reference with `ptype` as the last subscript, but the function
-        // implementation uses the `ppriority` and `pwidth` values (the `ptype` is currently assumed
-        // to be 3).  Therefore we need to add references to all variants of the variable, not just
-        // the ones for `ptype`.
+        // Vensim requires passing a reference with `ptype` as the last subscript.
         if (argExpr.kind !== 'variable-ref') {
-          throw new Error(`ALLOCATE AVAILABLE argument 'pp' must be a variable reference`)
+          throw new Error(`${callExpr.fnName} argument 'pp' must be a variable reference`)
         }
         // TODO: Throw an error if the last dimension of arg0 does not match last dimension of LHS
         // TODO: Throw an error if the second-to-last dimension of arg1 does not match last dimension of LHS
         // TODO: Throw an error if the last subscript of arg1 does not have the "shape" of a `ppriority` dimension
-        // TODO: Throw an error if the `ptype` value is not 3
+        // TODO: Throw an error if the `ptype` value is unsupported
         // Get the RHS subscript/dimension IDs
         const rhsVarBaseRefId = argExpr.varId
         const rhsVarSubIds = argExpr.subscriptRefs?.map(subRef => subRef.subId) || []

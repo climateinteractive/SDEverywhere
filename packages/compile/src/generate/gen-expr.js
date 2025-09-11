@@ -340,10 +340,18 @@ function generateFunctionCall(callExpr, ctx) {
     //
 
     case '_ALLOCATE_AVAILABLE':
+    case '_DEMAND_AT_PRICE':
+    case '_SUPPLY_AT_PRICE':
       if (ctx.outFormat === 'js') {
         throw new Error(`${callExpr.fnName} function not yet implemented for JS code gen`)
       }
-      return generateAllocateAvailableCall(callExpr, ctx)
+      return generateAllocationFunctionCall(callExpr, ctx)
+
+    case '_FIND_MARKET_PRICE':
+      if (ctx.outFormat === 'js') {
+        throw new Error(`FIND MARKET PRICE function not yet implemented for JS code gen`)
+      }
+      return generateFindMarketPriceFunctionCall(callExpr, ctx)
 
     case '_ELMCOUNT': {
       // Emit the size of the dimension in place of the dimension name
@@ -816,19 +824,20 @@ function generateVectorSortOrderCall(callExpr, ctx) {
 }
 
 /**
- * Generate C/JS code for an `ALLOCATE AVAILABLE` function call.
+ * Generate C/JS code for an allocation function call.
+ * This includes `_ALLOCATE_AVAILABLE`, `_DEMAND_AT_PRICE`, and `_SUPPLY_AT_PRICE`.
  *
  * @param {*} callExpr The function call expression from the parsed model.
  * @param {GenExprContext} ctx The context used when generating code for the expression.
  * @return {string} The generated C/JS code.
  */
-function generateAllocateAvailableCall(callExpr, ctx) {
+function generateAllocationFunctionCall(callExpr, ctx) {
   function validateArg(index, name) {
     const arg = callExpr.args[index]
     if (arg.kind === 'variable-ref') {
       return arg
     } else {
-      throw new Error(`ALLOCATE AVAILABLE argument '${name}' must be a variable reference`)
+      throw new Error(`${callExpr.fnName} argument '${name}' must be a variable reference`)
     }
   }
 
@@ -837,8 +846,8 @@ function generateAllocateAvailableCall(callExpr, ctx) {
   function cVarRefWithoutLastIndices(arg, count) {
     const varRef = ctx.cVarRef(arg)
     const origIndexParts = Model.splitRefId(varRef).subscripts
-    if (origIndexParts < count) {
-      throw new Error(`ALLOCATE AVAILABLE argument '${arg}' should have at least ${count} subscripts`)
+    if (origIndexParts.length < count) {
+      throw new Error(`${callExpr.fnName} argument '${arg}' should have at least ${count} subscripts`)
     }
     const newIndexParts = origIndexParts.slice(0, -count)
     if (newIndexParts.length > 0) {
@@ -863,7 +872,7 @@ function generateAllocateAvailableCall(callExpr, ctx) {
   const availArg = validateArg(2, 'avail')
   const availRef = ctx.cVarRef(availArg)
 
-  // The `ALLOCATE AVAILABLE` function iterates over the last subscript in its first arg.
+  // Allocation functions iterate over the last subscript in its first arg.
   // The `readEquation` process will have already verified that the last dimension matches
   // the last dimension for the LHS.
   const allocDimId = reqArg.subscriptRefs[reqArg.subscriptRefs.length - 1].subId
@@ -875,13 +884,14 @@ function generateAllocateAvailableCall(callExpr, ctx) {
   switch (ctx.outFormat) {
     case 'c':
       ctx.emitPreInnerLoop(
-        `  double* ${tmpVarId} = _ALLOCATE_AVAILABLE(${reqRef}, (double*)${ppRef}, ${availRef}, ${numRequesters});`
+        `  double* ${tmpVarId} = ${callExpr.fnId}(${reqRef}, (double*)${ppRef}, ${availRef}, ${numRequesters});`
       )
       break
     case 'js':
-      ctx.emitPreInnerLoop(
-        `  let ${tmpVarId} = fns.ALLOCATE_AVAILABLE(${reqRef}, ${ppRef}, ${availRef}, ${numRequesters});`
-      )
+      // TODO: Implement allocation functions for JS
+      // ctx.emitPreInnerLoop(
+      //   `  let ${tmpVarId} = fns.ALLOCATE_AVAILABLE(${reqRef}, ${ppRef}, ${availRef}, ${numRequesters});`
+      // )
       break
     default:
       throw new Error(`Unhandled output format '${ctx.outFormat}'`)
@@ -889,6 +899,76 @@ function generateAllocateAvailableCall(callExpr, ctx) {
 
   // Generate the RHS expression used in the inner loop
   return `${tmpVarId}[${allocDimId}[${allocLoopIndexVar}]]`
+}
+
+/**
+ * Generate C/JS code for a `FIND MARKET PRICE` function call.
+ *
+ * @param {*} callExpr The function call expression from the parsed model.
+ * @param {GenExprContext} ctx The context used when generating code for the expression.
+ * @return {string} The generated C/JS code.
+ */
+function generateFindMarketPriceFunctionCall(callExpr, ctx) {
+  function validateArg(index, name) {
+    const arg = callExpr.args[index]
+    if (arg.kind === 'variable-ref') {
+      return arg
+    } else {
+      throw new Error(`${callExpr.fnName} argument '${name}' must be a variable reference`)
+    }
+  }
+
+  // Given a C/JS variable reference string (e.g., '_var[i][j]'), return that
+  // string without the last N array index parts
+  function cVarRefWithoutLastIndices(arg, count) {
+    const varRef = ctx.cVarRef(arg)
+    const origIndexParts = Model.splitRefId(varRef).subscripts
+    if (origIndexParts.length < count) {
+      throw new Error(`${callExpr.fnName} argument '${arg}' should have at least ${count} subscripts`)
+    }
+    const newIndexParts = origIndexParts.slice(0, -count)
+    if (newIndexParts.length > 0) {
+      return `${arg.varId}${newIndexParts.map(x => `[${x}]`).join('')}`
+    } else {
+      return arg.varId
+    }
+  }
+
+  // Process the demand quantities argument.  Only include subscripts up until the last one;
+  // the implementation function will iterate over the demand quantities array.
+  const demandQtysArg = validateArg(0, 'demandQtys')
+  const demandQtysRef = cVarRefWithoutLastIndices(demandQtysArg, 1)
+
+  // Process the demand profiles argument.  Only include subscripts up until the
+  // second to last one; the implementation function will iterate over the priority
+  // profile array.
+  const demandProfilesArg = validateArg(1, 'demandProfiles')
+  const demandProfilesRef = cVarRefWithoutLastIndices(demandProfilesArg, 2)
+
+  // The `FIND MARKET PRICE` implementation sums total demand over all demanders.
+  // const demandDimId = demandQtysArg.subscriptRefs[demandQtysArg.subscriptRefs.length - 1].subId
+  const demandSubId = demandQtysArg.subscriptRefs[demandQtysArg.subscriptRefs.length - 1].subId
+  const demandDimId = sub(demandSubId).family
+  const numDemanders = sub(demandDimId).size
+
+  // Process the supply quantities argument.  Only include subscripts up until the last one;
+  // the implementation function will iterate over the supply quantities array.
+  const supplyQtysArg = validateArg(2, 'supplyQtys')
+  const supplyQtysRef = cVarRefWithoutLastIndices(supplyQtysArg, 1)
+
+  // Process the supply profiles argument.  Only include subscripts up until the
+  // second to last one; the implementation function will iterate over the priority
+  // profile array.
+  const supplyProfilesArg = validateArg(3, 'supplyProfiles')
+  const supplyProfilesRef = cVarRefWithoutLastIndices(supplyProfilesArg, 2)
+
+  // The `FIND MARKET PRICE` implementation sums total supply over all suppliers.
+  const supplySubId = supplyQtysArg.subscriptRefs[supplyQtysArg.subscriptRefs.length - 1].subId
+  const supplyDimId = sub(supplySubId).family
+  const numSuppliers = sub(supplyDimId).size
+
+  // Generate the RHS expression
+  return `_FIND_MARKET_PRICE(${demandQtysRef}, (double*)${demandProfilesRef}, ${supplyQtysRef}, (double*)${supplyProfilesRef}, ${numDemanders}, ${numSuppliers})`
 }
 
 /**
