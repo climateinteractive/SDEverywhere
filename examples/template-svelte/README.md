@@ -5,7 +5,7 @@ new project that uses SDEverywhere for a Svelte-based web application.
 
 The project includes:
 
-- a build process that converts a Vensim model to a JavaScript or WebAssembly
+- a build process that converts a Vensim or Stella model to a JavaScript or WebAssembly
   module that can run the model in any web browser or in a Node.js application
 - a `config` directory that contains CSV files for configuring the generated
   model and application
@@ -28,7 +28,7 @@ npm create @sdeverywhere@latest -- --template svelte
 # development environment that will build a JavaScript version of the
 # model and run checks on it any time you make changes to:
 #   - the config files
-#   - the Vensim model file (<name>.mdl)
+#   - the Vensim or Stella model file (<name>.mdl or <name>.stmx)
 #   - the model check definitions (model/checks/*.yaml)
 #   - the model comparison definitions (model/comparisons/*.yaml)
 npm run dev

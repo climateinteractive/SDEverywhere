@@ -1,7 +1,7 @@
 {
   "name": "sdeverywhere-monorepo",
   "private": true,
-  "description": "SDEverywhere translates System Dynamics models from Vensim to C and WebAssembly",
+  "description": "SDEverywhere translates System Dynamics models from Vensim and Stella formats to C, JavaScript, and WebAssembly",
   "type": "module",
   "scripts": {
     "clean": "pnpm -r clean",

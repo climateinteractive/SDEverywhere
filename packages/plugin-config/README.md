@@ -44,8 +44,8 @@ import { configProcessor } from '@sdeverywhere/plugin-config'
 
 export async function config() {
   return {
-    // Specify the Vensim model to read
-    modelFiles: ['example.mdl'],
+    // Specify the Vensim or Stella/XMILE model to read
+    modelFiles: ['example.mdl'], // or ['example.stmx']
 
     // Read csv files from `config` directory and write to the recommended output
     // directory structure.  See `ConfigProcessorOptions` for more details.

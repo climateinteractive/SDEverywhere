@@ -1,7 +1,7 @@
 {
   "name": "@sdeverywhere/compile",
   "version": "0.7.24",
-  "description": "The core Vensim to C compiler for the SDEverywhere tool suite.",
+  "description": "The core compiler for the SDEverywhere tool suite that translates Vensim and Stella models to C and JavaScript code.",
   "type": "module",
   "main": "./src/index.js",
   "scripts": {

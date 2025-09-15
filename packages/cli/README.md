@@ -2,7 +2,7 @@
 
 This package contains the `sde` command line interface for the [SDEverywhere](https://github.com/climateinteractive/SDEverywhere) suite of tools.
 
-SDEverywhere can be used to translate System Dynamics models from Vensim to C and WebAssembly.
+SDEverywhere can be used to translate System Dynamics models from Vensim and Stella formats to C, JavaScript, and WebAssembly.
 
 For more details on the full suite of tools and libraries provided in SDEverywhere, refer to the top-level [README](https://github.com/climateinteractive/SDEverywhere) in the SDEverywhere repository.
 
@@ -71,8 +71,8 @@ sde generate --genc --spec {model}_spec.json {model}
 
 The `sde dev` command is great for local development of a web application.
 It will start a builder process that rebuilds your app and runs QA checks against your model any time you save changes to your `mdl` file.
-You can leave the builder running while developing your model in Vensim.
-The app and model-check tabs in your browser will refresh automatically whenever you save changes in Vensim or make edits to your application code.
+You can leave the builder running while developing your model in Vensim or Stella.
+The app and model-check tabs in your browser will refresh automatically whenever you save changes in the modeling tool or make edits to your application code.
 
 See [`examples/hello-world`](https://github.com/climateinteractive/SDEverywhere/tree/main/examples/hello-world) for a simple example of an `sde.config.js` file.
 You can also follow the [Quick Start](https://github.com/climateinteractive/SDEverywhere/tree/main/examples/sir#quick-start) instructions for `examples/sir`, which will generate a more complete example of an `sde.config.js` file.
@@ -186,7 +186,7 @@ And we usually want to designate some constant variables as inputs.
 In SDEverywhere, this is done with a model specification JSON file.
 The conventional name is `{model}_spec.json`.
 
-First, create a model specification file that gives the Vensim names of input and output variables of interest.
+First, create a model specification file that gives the full names of input and output variables of interest.
 Be sure to include `Time` first among the output variables.
 
 ```json

@@ -23,7 +23,7 @@ npm create @sdeverywhere@latest -- --template minimal
 # Enter development mode for your model.  This will start a live
 # development environment that will build a JavaScript version of the
 # model and run checks on it any time you make changes to:
-#   - the Vensim model file (<name>.mdl)
+#   - the Vensim or Stella model file (<name>.mdl or <name>.stmx)
 #   - the model check definitions (model/checks/*.yaml)
 #   - the model comparison definitions (model/comparisons/*.yaml)
 npm run dev
