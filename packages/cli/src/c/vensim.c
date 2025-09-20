@@ -1,32 +1,32 @@
 #include "sde.h"
 
-extern double _time;
-extern double _time_step;
+extern sde_float _time;
+extern sde_float _time_step;
 
-double _epsilon = 1e-6;
+sde_float _epsilon = 1e-6;
 
 //
 // Vensim functions
 // See the Vensim Reference Manual for descriptions of the functions.
 // http://www.vensim.com/documentation/index.html?22300.htm
 //
-double _PULSE(double start, double width) {
-  double time_plus = _time + _time_step / 2.0;
+sde_float _PULSE(sde_float start, sde_float width) {
+  sde_float time_plus = _time + _time_step / 2.0;
   if (width == 0.0) {
     width = _time_step;
   }
   return (time_plus > start && time_plus < start + width) ? 1.0 : 0.0;
 }
-double _PULSE_TRAIN(double start, double width, double interval, double end) {
-  double n = floor((end - start) / interval);
-  for (double k = 0; k <= n; k++) {
+sde_float _PULSE_TRAIN(sde_float start, sde_float width, sde_float interval, sde_float end) {
+  sde_float n = floor((end - start) / interval);
+  for (sde_float k = 0; k <= n; k++) {
     if (_PULSE(start + k * interval, width) && _time <= end) {
       return 1.0;
     }
   }
   return 0.0;
 }
-double _RAMP(double slope, double start_time, double end_time) {
+sde_float _RAMP(sde_float slope, sde_float start_time, sde_float end_time) {
   // Return 0 until the start time is exceeded.
   // Interpolate from start time to end time.
   // Hold at the end time value.
@@ -41,8 +41,8 @@ double _RAMP(double slope, double start_time, double end_time) {
     return 0.0;
   }
 }
-double _XIDZ(double a, double b, double x) { return fabs(b) < _epsilon ? x : a / b; }
-double _ZIDZ(double a, double b) {
+sde_float _XIDZ(sde_float a, sde_float b, sde_float x) { return fabs(b) < _epsilon ? x : a / b; }
+sde_float _ZIDZ(sde_float a, sde_float b) {
   if (fabs(b) < _epsilon) {
     return 0.0;
   } else {
@@ -53,19 +53,32 @@ double _ZIDZ(double a, double b) {
 //
 // Lookups
 //
-Lookup* __new_lookup(size_t size, bool copy, double* data) {
+Lookup* __new_lookup(size_t size, bool copy, void* data) {
   // Make a new Lookup with "size" number of pairs given in x, y order in a flattened list.
   Lookup* lookup = malloc(sizeof(Lookup));
   lookup->original_size = size;
   lookup->original_data_is_owned = copy;
   if (copy) {
+    // When copy is true, the data is assumed to be in a double buffer.
     // Copy the given lookup data into an internally managed buffer.
-    size_t data_length_in_bytes = size * 2 * sizeof(double);
+    double* double_data = (double*)data;
+    size_t data_length_in_elems = size * 2;
+    size_t data_length_in_bytes = data_length_in_elems * sizeof(sde_float);
     lookup->original_data = malloc(data_length_in_bytes);
-    memcpy(lookup->original_data, data, data_length_in_bytes);
+    if (sizeof(sde_float) == sizeof(double)) {
+      // The internal data buffer is stored as doubles, so we can memcpy
+      memcpy(lookup->original_data, data, data_length_in_bytes);
+    } else {
+      // The internal data buffer is stored as floats, so we need to convert
+      // the doubles to floats one element at a time
+      for (size_t i = 0; i < data_length_in_elems; i++) {
+        lookup->original_data[i] = (sde_float)double_data[i];
+      }
+    }
   } else {
-    // Store a pointer to the lookup data (assumed to be static or owned elsewhere).
-    lookup->original_data = data;
+    // When copy is false, the data is assumed to be in a sde_float buffer (static
+    // or owned elsewhere). Store a pointer to the lookup data.
+    lookup->original_data = (sde_float*)data;
   }
   // Set the original data as "active".
   lookup->active_data = lookup->original_data;
@@ -83,6 +96,12 @@ Lookup* __new_lookup(size_t size, bool copy, double* data) {
   lookup->last_hit_index = 0;
   return lookup;
 }
+Lookup* __new_lookup_by_reference(size_t size, sde_float* data) {
+  return __new_lookup(size, /*copy=*/false, data);
+}
+Lookup* __new_lookup_by_copy(size_t size, double* data) {
+  return __new_lookup(size, /*copy=*/true, data);
+}
 void __set_lookup(Lookup* lookup, size_t size, double* data) {
   // Set new data for the given `Lookup`.  If `data` is NULL, the original data that was
   // supplied to the `__new_lookup` call will be restored as the "active" data.  Otherwise,
@@ -95,7 +114,7 @@ void __set_lookup(Lookup* lookup, size_t size, double* data) {
   if (data != NULL) {
     // Allocate or grow the internal buffer as needed.
     size_t data_length_in_elems = size * 2;
-    size_t data_length_in_bytes = data_length_in_elems * sizeof(double);
+    size_t data_length_in_bytes = data_length_in_elems * sizeof(sde_float);
     if (data_length_in_elems > lookup->dynamic_data_length) {
       lookup->dynamic_data = malloc(data_length_in_bytes);
       lookup->dynamic_data_length = data_length_in_elems;
@@ -103,7 +122,16 @@ void __set_lookup(Lookup* lookup, size_t size, double* data) {
     // Copy the given lookup data into the internally managed buffer.
     lookup->dynamic_size = size;
     if (data_length_in_bytes > 0) {
-      memcpy(lookup->dynamic_data, data, data_length_in_bytes);
+      if (sizeof(sde_float) == sizeof(double)) {
+        // The internal data buffer is stored as doubles, so we can memcpy
+        memcpy(lookup->dynamic_data, data, data_length_in_bytes);
+      } else {
+        // The internal data buffer is stored as floats, so we need to convert
+        // the doubles to floats one element at a time
+        for (size_t i = 0; i < data_length_in_elems; i++) {
+          lookup->dynamic_data[i] = (sde_float)data[i];
+        }
+      }
     }
     // Set the dynamic data as the "active" data.
     lookup->active_data = lookup->dynamic_data;
@@ -144,7 +172,7 @@ void __print_lookup(Lookup* lookup) {
   }
 }
 
-double __lookup(Lookup* lookup, double input, bool use_inverted_data, LookupMode mode) {
+sde_float __lookup(Lookup* lookup, sde_float input, bool use_inverted_data, LookupMode mode) {
   // Interpolate the y value from an array of (x,y) pairs.
   // NOTE: The x values are assumed to be monotonically increasing.
 
@@ -152,7 +180,7 @@ double __lookup(Lookup* lookup, double input, bool use_inverted_data, LookupMode
     return _NA_;
   }
 
-  const double* data = use_inverted_data ? lookup->inverted_data : lookup->active_data;
+  const sde_float* data = use_inverted_data ? lookup->inverted_data : lookup->active_data;
   const size_t max = (lookup->active_size) * 2;
 
   // Use the cached values for improved lookup performance, except in the case
@@ -167,7 +195,7 @@ double __lookup(Lookup* lookup, double input, bool use_inverted_data, LookupMode
   }
 
   for (size_t xi = start_index; xi < max; xi += 2) {
-    double x = data[xi];
+    sde_float x = data[xi];
 
     if (x >= input) {
       // We went past the input, or hit it exactly.
@@ -187,11 +215,11 @@ double __lookup(Lookup* lookup, double input, bool use_inverted_data, LookupMode
         default:
         case Interpolate: {
           // Interpolate along the line from the last (x,y).
-          double last_x = data[xi - 2];
-          double last_y = data[xi - 1];
-          double y = data[xi + 1];
-          double dx = x - last_x;
-          double dy = y - last_y;
+          sde_float last_x = data[xi - 2];
+          sde_float last_y = data[xi - 1];
+          sde_float y = data[xi + 1];
+          sde_float dx = x - last_x;
+          sde_float dy = y - last_y;
           return last_y + ((dy / dx) * (input - last_x));
         }
         case Forward: {
@@ -216,7 +244,7 @@ double __lookup(Lookup* lookup, double input, bool use_inverted_data, LookupMode
 // This function is similar to `__lookup` in concept, but Vensim produces results for
 // the GET DATA BETWEEN TIMES function that differ in unexpected ways from normal lookup
 // behavior, so we implement it as a separate function here.
-double __get_data_between_times(Lookup* lookup, double input, LookupMode mode) {
+sde_float __get_data_between_times(Lookup* lookup, sde_float input, LookupMode mode) {
   // Interpolate the y value from an array of (x,y) pairs.
   // NOTE: The x values are assumed to be monotonically increasing.
 
@@ -224,7 +252,7 @@ double __get_data_between_times(Lookup* lookup, double input, LookupMode mode) {
     return _NA_;
   }
 
-  const double* data = lookup->active_data;
+  const sde_float* data = lookup->active_data;
   const size_t n = lookup->active_size;
   const size_t max = n * 2;
 
@@ -235,7 +263,7 @@ double __get_data_between_times(Lookup* lookup, double input, LookupMode mode) {
       input = floor(input);
 
       for (size_t xi = 0; xi < max; xi += 2) {
-        double x = data[xi];
+        sde_float x = data[xi];
         if (x >= input) {
           return data[xi + 1];
         }
@@ -250,7 +278,7 @@ double __get_data_between_times(Lookup* lookup, double input, LookupMode mode) {
       input = floor(input);
 
       for (size_t xi = 2; xi < max; xi += 2) {
-        double x = data[xi];
+        sde_float x = data[xi];
         if (x >= input) {
           return data[xi - 1];
         }
@@ -283,13 +311,13 @@ double __get_data_between_times(Lookup* lookup, double input, LookupMode mode) {
       }
 
       for (size_t xi = 2; xi < max; xi += 2) {
-        double x = data[xi];
+        sde_float x = data[xi];
         if (x >= input) {
-          double last_x = data[xi - 2];
-          double last_y = data[xi - 1];
-          double y = data[xi + 1];
-          double dx = x - last_x;
-          double dy = y - last_y;
+          sde_float last_x = data[xi - 2];
+          sde_float last_y = data[xi - 1];
+          sde_float y = data[xi + 1];
+          sde_float dx = x - last_x;
+          sde_float dy = y - last_y;
           return last_y + ((dy / dx) * (input - last_x));
         }
       }
@@ -299,12 +327,12 @@ double __get_data_between_times(Lookup* lookup, double input, LookupMode mode) {
   }
 }
 
-double _LOOKUP_INVERT(Lookup* lookup, double y) {
+sde_float _LOOKUP_INVERT(Lookup* lookup, sde_float y) {
   if (lookup->inverted_data == NULL) {
     // Invert the matrix and cache it.
-    lookup->inverted_data = malloc(sizeof(double) * 2 * lookup->active_size);
-    double* pLookup = lookup->active_data;
-    double* pInvert = lookup->inverted_data;
+    lookup->inverted_data = malloc(sizeof(sde_float) * 2 * lookup->active_size);
+    sde_float* pLookup = lookup->active_data;
+    sde_float* pInvert = lookup->inverted_data;
     for (size_t i = 0; i < lookup->active_size; i++) {
       *pInvert++ = *(pLookup + 1);
       *pInvert++ = *pLookup;
@@ -314,13 +342,13 @@ double _LOOKUP_INVERT(Lookup* lookup, double y) {
   return __lookup(lookup, y, true, Interpolate);
 }
 
-double _GAME(Lookup* lookup, double default_value) {
+sde_float _GAME(Lookup* lookup, sde_float default_value) {
   if (lookup == NULL || lookup->active_size == 0) {
     // The lookup is NULL or empty, so return the default value
     return default_value;
   }
 
-  double x0 = lookup->active_data[0];
+  sde_float x0 = lookup->active_data[0];
   if (_time < x0) {
     // The current time is earlier than the first data point, so return the
     // default value
@@ -332,7 +360,7 @@ double _GAME(Lookup* lookup, double default_value) {
 }
 
 typedef struct {
-  double x;
+  sde_float x;
   int ind;
 } dbl_ind;
 
@@ -351,9 +379,9 @@ int __compare_dbl_ind(const void* a, const void* b) {
   }
   return sort_order * result;
 }
-double* _VECTOR_SORT_ORDER(double* vector, size_t size, double direction) {
+sde_float* _VECTOR_SORT_ORDER(sde_float* vector, size_t size, sde_float direction) {
   static dbl_ind d[DBL_IND_BUFSIZE];
-  static double result[DBL_IND_BUFSIZE];
+  static sde_float result[DBL_IND_BUFSIZE];
   if (size > DBL_IND_BUFSIZE) {
     // TODO signal error
     return NULL;
@@ -374,45 +402,45 @@ double* _VECTOR_SORT_ORDER(double* vector, size_t size, double direction) {
 // ALLOCATE AVAILABLE
 //
 // Mathematical functions for calculating the normal pdf and cdf at a point x
-double __pdf_normal(double x, double mu, double sigma) {
-  double base = 1.0 / (sigma * sqrt(2.0 * M_PI));
-  double exponent = -pow(x - mu, 2.0) / (2.0 * sigma * sigma);
+sde_float __pdf_normal(sde_float x, sde_float mu, sde_float sigma) {
+  sde_float base = 1.0 / (sigma * sqrt(2.0 * M_PI));
+  sde_float exponent = -pow(x - mu, 2.0) / (2.0 * sigma * sigma);
   return base * exp(exponent);
 }
-double __cdf_unit_normal_P(double x) {
+sde_float __cdf_unit_normal_P(sde_float x) {
   // Zelen & Severo (1964) in Handbook Of Mathematical Functions, Abramowitz and Stegun, 26.2.17
-  double p = 0.2316419;
-  double b[5] = {0.31938153, -0.356563782, 1.781477937, -1.821255978, 1.330274429};
-  double t = 1.0 / (1.0 + p * x);
-  double y = 0.0;
-  double k = t;
+  sde_float p = 0.2316419;
+  sde_float b[5] = {0.31938153, -0.356563782, 1.781477937, -1.821255978, 1.330274429};
+  sde_float t = 1.0 / (1.0 + p * x);
+  sde_float y = 0.0;
+  sde_float k = t;
   for (size_t i = 0; i < 5; i++) {
     y += b[i] * k;
     k *= t;
   }
   return 1.0 - __pdf_normal(x, 0.0, 1.0) * y;
 }
-double __cdf_unit_normal_Q(double x) {
+sde_float __cdf_unit_normal_Q(sde_float x) {
   // Calculate the unit cumulative distribution function from x to +∞, often known as Q(x).
   return x >= 0.0 ? 1.0 - __cdf_unit_normal_P(x) : __cdf_unit_normal_P(-x);
 }
-double __cdf_normal_Q(double x, double sigma) { return __cdf_unit_normal_Q(x / sigma); }
+sde_float __cdf_normal_Q(sde_float x, sde_float sigma) { return __cdf_unit_normal_Q(x / sigma); }
 // Access the doubly-subscripted priority profiles array by pointer.
 enum { PTYPE, PPRIORITY, PWIDTH, PEXTRA };
-double __get_pp(double* pp, size_t iProfile, size_t iElement) {
+sde_float __get_pp(sde_float* pp, size_t iProfile, size_t iElement) {
   const int NUM_PP = PEXTRA - PTYPE + 1;
   return *(pp + iProfile * NUM_PP + iElement);
 }
 #define ALLOCATIONS_BUFSIZE 60
 // #define PRINT_ALLOCATIONS_DEBUG_INFO
-double* _ALLOCATE_AVAILABLE(
-    double* requested_quantities, double* priority_profiles, double available_resource, size_t num_requesters) {
+sde_float* _ALLOCATE_AVAILABLE(
+    sde_float* requested_quantities, sde_float* priority_profiles, sde_float available_resource, size_t num_requesters) {
   // requested_quantities points to an array of length num_requesters.
   // priority_profiles points to an array of num_requesters arrays of length 4.
   // The priority profiles give the mean and standard deviation of normal curves used to allocate
   // the available resource, with a higher mean indicating a higher priority. The search space for
   // allocations that match the available resource is the x axis with tails on both ends of the curves.
-  static double allocations[ALLOCATIONS_BUFSIZE];
+  static sde_float allocations[ALLOCATIONS_BUFSIZE];
   if (num_requesters > ALLOCATIONS_BUFSIZE) {
     fprintf(stderr, "_ALLOCATE_AVAILABLE num_requesters exceeds internal maximum size of %d\n", ALLOCATIONS_BUFSIZE);
     return NULL;
@@ -420,7 +448,7 @@ double* _ALLOCATE_AVAILABLE(
   // Limit the search to this number of steps.
   const size_t max_steps = 100;
   // If the available resource is more than the total requests, clamp to the total requests so we don't overallocate.
-  double total_requests = 0.0;
+  sde_float total_requests = 0.0;
   for (size_t i = 0; i < num_requesters; i++) {
     total_requests += requested_quantities[i];
   }
@@ -434,25 +462,25 @@ double* _ALLOCATE_AVAILABLE(
   }
 #endif
   // Find the minimum and maximum means in the priority curves.
-  double min_mean = DBL_MAX;
-  double max_mean = DBL_MIN;
+  sde_float min_mean = DBL_MAX;
+  sde_float max_mean = DBL_MIN;
   for (size_t i = 0; i < num_requesters; i++) {
     min_mean = fmin(__get_pp(priority_profiles, i, PPRIORITY), min_mean);
     max_mean = fmax(__get_pp(priority_profiles, i, PPRIORITY), max_mean);
   }
   // Start the search in the midpoint of the means, with a big first jump scaled to the spread of the means.
-  double total_allocations = 0.0;
-  double x = (max_mean + min_mean) / 2.0;
-  double delta = (max_mean - min_mean) / 2.0;
+  sde_float total_allocations = 0.0;
+  sde_float x = (max_mean + min_mean) / 2.0;
+  sde_float delta = (max_mean - min_mean) / 2.0;
   size_t num_steps = 0;
-  double last_delta_sign = 1.0;
+  sde_float last_delta_sign = 1.0;
   size_t num_jumps_in_same_direction = 0;
   do {
     // Calculate allocations for each requester.
     for (size_t i = 0; i < num_requesters; i++) {
       if (requested_quantities[i] > 0.0) {
-        double mean = __get_pp(priority_profiles, i, PPRIORITY);
-        double sigma = __get_pp(priority_profiles, i, PWIDTH);
+        sde_float mean = __get_pp(priority_profiles, i, PPRIORITY);
+        sde_float sigma = __get_pp(priority_profiles, i, PWIDTH);
         // The allocation is the area under the requester's normal curve from x out to +∞
         // scaled by the size of the request. We integrate over the right-hand side of the
         // normal curve so that higher means have higher priority, that is, are allocated more.
@@ -481,7 +509,7 @@ double* _ALLOCATE_AVAILABLE(
     // Set up the next x value by computing a new delta that is usually half the size of the
     // previous delta, that is, do a binary search of the x axis. We may jump over the target
     // x value, so we may need to change direction.
-    double delta_sign = total_allocations < available_resource ? -1.0 : 1.0;
+    sde_float delta_sign = total_allocations < available_resource ? -1.0 : 1.0;
     // Too many jumps in the same direction can result in the search converging on a point
     // that falls short of the target x value. Stop halving the delta when that happens until
     // we jump over the target again.
@@ -506,14 +534,14 @@ double* _ALLOCATE_AVAILABLE(
 //
 // DELAY FIXED
 //
-FixedDelay* __new_fixed_delay(FixedDelay* fixed_delay, double delay_time, double initial_value) {
+FixedDelay* __new_fixed_delay(FixedDelay* fixed_delay, sde_float delay_time, sde_float initial_value) {
   // Construct a FixedDelay struct with a ring buffer for the delay line.
   // We don't know the size until runtime, so it must be dynamically allocated.
   // The delay time is quantized to an integral number of time steps.
   // The FixedDelay should be constructed at init time to latch the delay time and initial value.
   // Allocate memory on the first call only. Pass the same pointer back in on subsequent runs.
   size_t n = (size_t)ceil(delay_time / _time_step);
-  size_t bufsize = n * sizeof(double);
+  size_t bufsize = n * sizeof(sde_float);
   if (fixed_delay == NULL) {
     // Create the FixedDelay object and allocate its data buffer.
     fixed_delay = malloc(sizeof(FixedDelay));
@@ -529,10 +557,10 @@ FixedDelay* __new_fixed_delay(FixedDelay* fixed_delay, double delay_time, double
   fixed_delay->initial_value = initial_value;
   return fixed_delay;
 }
-double _DELAY_FIXED(double input, FixedDelay* fixed_delay) {
+sde_float _DELAY_FIXED(sde_float input, FixedDelay* fixed_delay) {
   // Cache input values in a ring buffer for the number of time steps equal to the delay time.
   // Return the init value until the time reaches the delay time.
-  double result;
+  sde_float result;
   // Require the buffer size to be positive to protect from buffer overflows.
   if (fixed_delay->n > 0) {
     fixed_delay->data[fixed_delay->data_index] = input;
@@ -554,14 +582,14 @@ double _DELAY_FIXED(double input, FixedDelay* fixed_delay) {
 //
 // DEPRECIATE STRAIGHTLINE
 //
-Depreciation* __new_depreciation(Depreciation* depreciation, double dtime, double initial_value) {
+Depreciation* __new_depreciation(Depreciation* depreciation, sde_float dtime, sde_float initial_value) {
   // Construct a Depreciation struct with a ring buffer for the time steps in the depreciation time.
   // We don't know the size until runtime, so it must be dynamically allocated.
   // The depreciation time is quantized to an integral number of time steps.
   // The Depreciation should be constructed at init time to latch the depreciation time and initial value.
   // Allocate memory on the first call only. Pass the same pointer back in on subsequent runs.
   size_t n = (size_t)ceil(dtime / _time_step);
-  size_t bufsize = n * sizeof(double);
+  size_t bufsize = n * sizeof(sde_float);
   if (depreciation == NULL) {
     // Create the Depreciation object and allocate its data buffer.
     depreciation = malloc(sizeof(Depreciation));
@@ -579,14 +607,14 @@ Depreciation* __new_depreciation(Depreciation* depreciation, double dtime, doubl
   depreciation->initial_value = initial_value;
   return depreciation;
 }
-double _DEPRECIATE_STRAIGHTLINE(double input, Depreciation* depreciation) {
+sde_float _DEPRECIATE_STRAIGHTLINE(sde_float input, Depreciation* depreciation) {
   // Distribute the input at this time step over the depreciation time in a ring buffer.
   // Return the depreciation amout at the current time.
-  double result;
+  sde_float result;
   // Require the buffer size to be positive to protect from buffer overflows.
   if (depreciation->n > 0) {
     // Distribute input from the stream over the depreciation time.
-    double distribution = input / depreciation->dtime;
+    sde_float distribution = input / depreciation->dtime;
     for (size_t i = 0; i < depreciation->n; i++) {
       size_t pos = (depreciation->data_index + i) % depreciation->n;
       depreciation->data[pos] += distribution;

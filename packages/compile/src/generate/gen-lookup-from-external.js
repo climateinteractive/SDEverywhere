@@ -40,7 +40,7 @@ export function generateLookupsFromExternalData(variable, mode, extData, varLhs,
       const points = pointsString(Array.from(data.entries()))
       switch (outFormat) {
         case 'c':
-          return `double ${dataName}[${data.size * 2}] = { ${points} };`
+          return `sde_float ${dataName}[${data.size * 2}] = { ${points} };`
         case 'js':
           return `const ${dataName} = [${points}];`
         default:
@@ -50,7 +50,7 @@ export function generateLookupsFromExternalData(variable, mode, extData, varLhs,
       // In init mode, create the `Lookup`, passing in a pointer to the static data array declared in decl mode.
       switch (outFormat) {
         case 'c':
-          return `  ${lhs} = __new_lookup(${data.size}, /*copy=*/false, ${dataName});`
+          return `  ${lhs} = __new_lookup_by_reference(${data.size}, ${dataName});`
         case 'js':
           return `  ${lhs} = fns.createLookup(${data.size}, ${dataName});`
         default:

@@ -628,7 +628,7 @@ function generateArrayFunctionCall(callExpr, ctx) {
   if (!tmpVar) {
     tmpVar = newTmpVarName()
   }
-  ctx.emitPreFormula(`  ${varDecl('double', tmpVar, initValue, ctx)}`)
+  ctx.emitPreFormula(`  ${varDecl('sde_float', tmpVar, initValue, ctx)}`)
 
   // Find all marked dimensions used in the array function arguments
   const markedDimIds = new Set()
@@ -802,7 +802,7 @@ function generateVectorSortOrderCall(callExpr, ctx) {
   const dimSize = sub(dimId).size
   switch (ctx.outFormat) {
     case 'c':
-      ctx.emitPreInnerLoop(`  double* ${tmpVarId} = _VECTOR_SORT_ORDER(${vecVarRefId}, ${dimSize}, ${dirArg});`)
+      ctx.emitPreInnerLoop(`  sde_float* ${tmpVarId} = _VECTOR_SORT_ORDER(${vecVarRefId}, ${dimSize}, ${dirArg});`)
       break
     case 'js':
       ctx.emitPreInnerLoop(`  let ${tmpVarId} = fns.VECTOR_SORT_ORDER(${vecVarRefId}, ${dimSize}, ${dirArg});`)
@@ -875,7 +875,7 @@ function generateAllocateAvailableCall(callExpr, ctx) {
   switch (ctx.outFormat) {
     case 'c':
       ctx.emitPreInnerLoop(
-        `  double* ${tmpVarId} = _ALLOCATE_AVAILABLE(${reqRef}, (double*)${ppRef}, ${availRef}, ${numRequesters});`
+        `  sde_float* ${tmpVarId} = _ALLOCATE_AVAILABLE(${reqRef}, (sde_float*)${ppRef}, ${availRef}, ${numRequesters});`
       )
       break
     case 'js':
@@ -1032,12 +1032,12 @@ function minFunc(ctx) {
 function indexExpr(indexValue, ctx) {
   switch (ctx.outFormat) {
     case 'c':
-      // In the C case, we need to cast to double since the index variable will be
+      // In the C case, we need to cast to sde_float since the index variable will be
       // of type `size_t`, which is an unsigned type, but we want a signed type for
       // the rare cases where math is involved that makes it go negative
       if (isNaN(indexValue)) {
-        // This is a (non-numeric) loop index variable reference, so cast to double
-        return `((double)${indexValue})`
+        // This is a (non-numeric) loop index variable reference, so cast to sde_float
+        return `((sde_float)${indexValue})`
       } else {
         // This is a numeric index, no cast is necessary
         return indexValue

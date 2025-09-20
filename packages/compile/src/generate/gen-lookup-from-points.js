@@ -25,7 +25,7 @@ export function generateLookupFromPoints(variable, mode, copy, varLhs, loopIndex
       // In init mode, generate a new empty lookup
       switch (outFormat) {
         case 'c':
-          return [`  ${varLhs} = __new_lookup(0, /*copy=*/false, NULL);`]
+          return [`  ${varLhs} = __new_lookup_by_reference(0, NULL);`]
         case 'js':
           return [`  ${varLhs} = fns.createLookup(0, undefined);`]
         default:
@@ -42,7 +42,7 @@ export function generateLookupFromPoints(variable, mode, copy, varLhs, loopIndex
       const points = pointsString(variable.points)
       switch (outFormat) {
         case 'c':
-          return [`  ${varLhs} = __new_lookup(${variable.points.length}, /*copy=*/true, (double[]){ ${points} });`]
+          return [`  ${varLhs} = __new_lookup_by_copy(${variable.points.length}, (double[]){ ${points} });`]
         case 'js':
           return [`  ${varLhs} = fns.createLookup(${variable.points.length}, [${points}]);`]
         default:
@@ -61,7 +61,7 @@ export function generateLookupFromPoints(variable, mode, copy, varLhs, loopIndex
       const points = pointsString(variable.points)
       switch (outFormat) {
         case 'c':
-          return [`double ${dataName}[${variable.points.length * 2}] = { ${points} };`]
+          return [`sde_float ${dataName}[${variable.points.length * 2}] = { ${points} };`]
         case 'js':
           return [`const ${dataName} = [${points}];`]
         default:
@@ -72,7 +72,7 @@ export function generateLookupFromPoints(variable, mode, copy, varLhs, loopIndex
       // TODO: Make use of the lookup range
       switch (outFormat) {
         case 'c':
-          return [`  ${varLhs} = __new_lookup(${variable.points.length}, /*copy=*/false, ${dataName});`]
+          return [`  ${varLhs} = __new_lookup_by_reference(${variable.points.length}, ${dataName});`]
         case 'js':
           return [`  ${varLhs} = fns.createLookup(${variable.points.length}, ${dataName});`]
         default:

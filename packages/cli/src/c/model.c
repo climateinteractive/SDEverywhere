@@ -9,7 +9,7 @@ struct timespec startTime, finishTime;
 #endif
 
 // The special _time variable is not included in .mdl files.
-double _time;
+sde_float _time;
 
 // Output data buffer used by `run_model`
 char* outputData = NULL;
@@ -170,7 +170,7 @@ void run() {
   }
 }
 
-void outputVar(double value) {
+void outputVar(sde_float value) {
   if (outputBuffer != NULL) {
     // Write each value into the preallocated buffer; each variable has a "row" that
     // contains `numSavePoints` values, one value for each save point

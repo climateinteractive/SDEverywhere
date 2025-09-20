@@ -104,7 +104,7 @@ function generateDirectDataLookup(varLhs, getCellValue, timeRowOrCol, startCell,
 
   switch (outFormat) {
     case 'c':
-      return `  ${varLhs} = __new_lookup(${lookupSize}, /*copy=*/true, (double[]){ ${lookupData} });`
+      return `  ${varLhs} = __new_lookup_by_copy(${lookupSize}, (double[]){ ${lookupData} });`
     case 'js':
       return `  ${varLhs} = fns.createLookup(${lookupSize}, [${lookupData}]);`
     default:

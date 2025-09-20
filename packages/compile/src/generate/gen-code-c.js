@@ -162,7 +162,7 @@ ${setLookupImpl(Model.varIndexInfo(), spec.customLookups)}
   }
   if (pLookup != NULL) {
     if (*pLookup == NULL) {
-      *pLookup = __new_lookup(numPoints, /*copy=*/true, points);
+      *pLookup = __new_lookup_by_copy(numPoints, points);
     } else {
       __set_lookup(*pLookup, numPoints, points);
     }
@@ -294,7 +294,7 @@ ${section(chunk)}
       // Build a C array declaration for the variable v.
       // This uses the subscript family for each dimension, which may overallocate
       // if the subscript is a subdimension.
-      let varType = v.isLookup() || v.isData() ? 'Lookup* ' : 'double '
+      let varType = v.isLookup() || v.isData() ? 'Lookup* ' : 'sde_float '
       let families = subscriptFamilies(v.subscripts)
       if (v.isFixedDelay()) {
         // Add the associated FixedDelay var decl.
@@ -409,7 +409,7 @@ ${section(chunk)}
     if (spec.inputVars && spec.inputVars.length > 0) {
       let inputVarPtrs = R.reduce((a, inputVar) => R.concat(a, `    &${inputVar},\n`), '', spec.inputVars)
       inputVars = `\
-  static double* inputVarPtrs[] = {\n${inputVarPtrs}  };
+  static sde_float* inputVarPtrs[] = {\n${inputVarPtrs}  };
   char* inputs = (char*)inputData;
   char* token = strtok(inputs, " ");
   while (token) {
@@ -417,7 +417,7 @@ ${section(chunk)}
     if (p) {
       *p = '\\0';
       int modelVarIndex = atoi(token);
-      double value = atof(p+1);
+      sde_float value = (sde_float)atof(p+1);
       *inputVarPtrs[modelVarIndex] = value;
     }
     token = strtok(NULL, " ");
@@ -430,7 +430,7 @@ ${section(chunk)}
     if (spec.inputVars && spec.inputVars.length > 0) {
       for (let i = 0; i < spec.inputVars.length; i++) {
         const inputVar = spec.inputVars[i]
-        inputVars.push(`  ${inputVar} = inputData[${i}];`)
+        inputVars.push(`  ${inputVar} = (sde_float)inputData[${i}];`)
       }
     }
     return inputVars.join('\n')

@@ -111,19 +111,19 @@ Lookup* _a_data[2];
 Lookup* _b_data[2][2];
 Lookup* _c_data;
 Lookup* _d_game_inputs[2];
-double _a[2];
-double _b[2][2];
-double _c;
-double _d[2];
-double _final_time;
-double _initial_time;
-double _input;
-double _saveper;
-double _time_step;
-double _w;
-double _x;
-double _y;
-double _z;
+sde_float _a[2];
+sde_float _b[2][2];
+sde_float _c;
+sde_float _d[2];
+sde_float _final_time;
+sde_float _initial_time;
+sde_float _input;
+sde_float _saveper;
+sde_float _time_step;
+sde_float _w;
+sde_float _x;
+sde_float _y;
+sde_float _z;
 
 // Internal variables
 const int numOutputs = 8;
@@ -136,23 +136,23 @@ const size_t _dimb[2] = { 0, 1 };
 
 
 // Lookup data arrays
-double __lookup1_data_[12] = { 0.0, 0.0, 0.1, 0.01, 0.5, 0.7, 1.0, 1.0, 1.5, 1.2, 2.0, 1.3 };
-double _a_data_data__0_[6] = { 0.0, 0.0, 1.0, 2.0, 2.0, 5.0 };
-double _a_data_data__1_[6] = { 0.0, 0.0, 1.0, 2.0, 2.0, 5.0 };
-double _b_data_data__0__0_[6] = { 0.0, 0.0, 1.0, 2.0, 2.0, 5.0 };
-double _b_data_data__0__1_[6] = { 0.0, 0.0, 1.0, 2.0, 2.0, 5.0 };
-double _b_data_data__1__0_[6] = { 0.0, 0.0, 1.0, 2.0, 2.0, 5.0 };
-double _b_data_data__1__1_[6] = { 0.0, 0.0, 1.0, 2.0, 2.0, 5.0 };
-double _c_data_data_[6] = { 0.0, 0.0, 1.0, 2.0, 2.0, 5.0 };
+sde_float __lookup1_data_[12] = { 0.0, 0.0, 0.1, 0.01, 0.5, 0.7, 1.0, 1.0, 1.5, 1.2, 2.0, 1.3 };
+sde_float _a_data_data__0_[6] = { 0.0, 0.0, 1.0, 2.0, 2.0, 5.0 };
+sde_float _a_data_data__1_[6] = { 0.0, 0.0, 1.0, 2.0, 2.0, 5.0 };
+sde_float _b_data_data__0__0_[6] = { 0.0, 0.0, 1.0, 2.0, 2.0, 5.0 };
+sde_float _b_data_data__0__1_[6] = { 0.0, 0.0, 1.0, 2.0, 2.0, 5.0 };
+sde_float _b_data_data__1__0_[6] = { 0.0, 0.0, 1.0, 2.0, 2.0, 5.0 };
+sde_float _b_data_data__1__1_[6] = { 0.0, 0.0, 1.0, 2.0, 2.0, 5.0 };
+sde_float _c_data_data_[6] = { 0.0, 0.0, 1.0, 2.0, 2.0, 5.0 };
 
 // Internal state
 bool lookups_initialized = false;
 bool data_initialized = false;
 
 void initLookups0() {
-  __lookup1 = __new_lookup(6, /*copy=*/false, __lookup1_data_);
+  __lookup1 = __new_lookup_by_reference(6, __lookup1_data_);
   for (size_t i = 0; i < 2; i++) {
-  _d_game_inputs[i] = __new_lookup(0, /*copy=*/false, NULL);
+  _d_game_inputs[i] = __new_lookup_by_reference(0, NULL);
   }
 }
 
@@ -166,13 +166,13 @@ void initLookups() {
 }
 
 void initData0() {
-  _a_data[0] = __new_lookup(3, /*copy=*/false, _a_data_data__0_);
-  _a_data[1] = __new_lookup(3, /*copy=*/false, _a_data_data__1_);
-  _b_data[0][0] = __new_lookup(3, /*copy=*/false, _b_data_data__0__0_);
-  _b_data[0][1] = __new_lookup(3, /*copy=*/false, _b_data_data__0__1_);
-  _b_data[1][0] = __new_lookup(3, /*copy=*/false, _b_data_data__1__0_);
-  _b_data[1][1] = __new_lookup(3, /*copy=*/false, _b_data_data__1__1_);
-  _c_data = __new_lookup(3, /*copy=*/false, _c_data_data_);
+  _a_data[0] = __new_lookup_by_reference(3, _a_data_data__0_);
+  _a_data[1] = __new_lookup_by_reference(3, _a_data_data__1_);
+  _b_data[0][0] = __new_lookup_by_reference(3, _b_data_data__0__0_);
+  _b_data[0][1] = __new_lookup_by_reference(3, _b_data_data__0__1_);
+  _b_data[1][0] = __new_lookup_by_reference(3, _b_data_data__1__0_);
+  _b_data[1][1] = __new_lookup_by_reference(3, _b_data_data__1__1_);
+  _c_data = __new_lookup_by_reference(3, _c_data_data_);
 }
 
 void initData() {
@@ -246,7 +246,7 @@ void evalLevels() {
 }
 
 void setInputs(const char* inputData) {
-  static double* inputVarPtrs[] = {
+  static sde_float* inputVarPtrs[] = {
     &_input,
   };
   char* inputs = (char*)inputData;
@@ -256,7 +256,7 @@ void setInputs(const char* inputData) {
     if (p) {
       *p = '\\0';
       int modelVarIndex = atoi(token);
-      double value = atof(p+1);
+      sde_float value = (sde_float)atof(p+1);
       *inputVarPtrs[modelVarIndex] = value;
     }
     token = strtok(NULL, " ");
@@ -264,7 +264,7 @@ void setInputs(const char* inputData) {
 }
 
 void setInputsFromBuffer(double* inputData) {
-  _input = inputData[0];
+  _input = (sde_float)inputData[0];
 }
 
 void setLookup(size_t varIndex, size_t* subIndices, double* points, size_t numPoints) {
@@ -288,7 +288,7 @@ void setLookup(size_t varIndex, size_t* subIndices, double* points, size_t numPo
   }
   if (pLookup != NULL) {
     if (*pLookup == NULL) {
-      *pLookup = __new_lookup(numPoints, /*copy=*/true, points);
+      *pLookup = __new_lookup_by_copy(numPoints, points);
     } else {
       __set_lookup(*pLookup, numPoints, points);
     }
@@ -430,7 +430,7 @@ void setLookup(size_t varIndex, size_t* subIndices, double* points, size_t numPo
   }
   if (pLookup != NULL) {
     if (*pLookup == NULL) {
-      *pLookup = __new_lookup(numPoints, /*copy=*/true, points);
+      *pLookup = __new_lookup_by_copy(numPoints, points);
     } else {
       __set_lookup(*pLookup, numPoints, points);
     }
@@ -503,8 +503,8 @@ void storeOutput(size_t varIndex, size_t* subIndices) {
 #include "sde.h"
 
 // Model variables
-double _x;
-double _y;`)
+sde_float _x;
+sde_float _y;`)
   })
 
   it('should work when valid input variable name with subscript (referenced by output variable) is provided in spec file', () => {
@@ -521,8 +521,8 @@ double _y;`)
 #include "sde.h"
 
 // Model variables
-double _a[2];
-double _b[2];`)
+sde_float _a[2];
+sde_float _b[2];`)
   })
 
   it('should work when valid input variable name with subscript (not referenced by output variable) is provided in spec file', () => {
@@ -542,8 +542,8 @@ double _b[2];`)
 #include "sde.h"
 
 // Model variables
-double _a[2];
-double _b[2];`)
+sde_float _a[2];
+sde_float _b[2];`)
   })
 
   // Note that this test takes a while (> 8 seconds) to run, so is skipped by default
@@ -561,7 +561,7 @@ double _b[2];`)
       outputVarNames: [`x${n}`]
     })
     for (let i = 0; i <= n; i++) {
-      expect(code).toContain(`double _x${i};`)
+      expect(code).toContain(`sde_float _x${i};`)
     }
   })
 

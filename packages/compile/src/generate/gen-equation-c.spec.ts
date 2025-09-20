@@ -291,7 +291,7 @@ describe('generateEquation (Vensim -> C)', () => {
     expect(genC(vars.get('_x'))).toEqual(['_x = 1.0;'])
     expect(genC(vars.get('_y'))).toEqual([
       'for (size_t i = 0; i < 2; i++) {',
-      '_y[i] = _IF_THEN_ELSE((((double)i) + 1) == _x, 1.0, 0.0);',
+      '_y[i] = _IF_THEN_ELSE((((sde_float)i) + 1) == _x, 1.0, 0.0);',
       '}'
     ])
   })
@@ -304,7 +304,7 @@ describe('generateEquation (Vensim -> C)', () => {
     expect(vars.size).toBe(1)
     expect(genC(vars.get('_y'))).toEqual([
       'for (size_t i = 0; i < 2; i++) {',
-      '_y[i] = _IF_THEN_ELSE((((double)i) + 1) == 2, 1.0, 0.0);',
+      '_y[i] = _IF_THEN_ELSE((((sde_float)i) + 1) == 2, 1.0, 0.0);',
       '}'
     ])
   })
@@ -329,11 +329,9 @@ describe('generateEquation (Vensim -> C)', () => {
     )
     expect(vars.size).toBe(2)
     expect(genC(vars.get('_x'), 'decl', { extData })).toEqual([
-      'double _x_data_[6] = { 0.0, 0.0, 1.0, 2.0, 2.0, 5.0 };'
+      'sde_float _x_data_[6] = { 0.0, 0.0, 1.0, 2.0, 2.0, 5.0 };'
     ])
-    expect(genC(vars.get('_x'), 'init-lookups', { extData })).toEqual([
-      '_x = __new_lookup(3, /*copy=*/false, _x_data_);'
-    ])
+    expect(genC(vars.get('_x'), 'init-lookups', { extData })).toEqual(['_x = __new_lookup_by_reference(3, _x_data_);'])
     expect(genC(vars.get('_y'), 'eval', { extData })).toEqual(['_y = _LOOKUP(_x, _time) * 10.0;'])
   })
 
@@ -369,12 +367,12 @@ describe('generateEquation (Vensim -> C)', () => {
     )
     expect(vars.size).toBe(3)
     expect(genC(vars.get('_x'), 'decl', { extData })).toEqual([
-      'double _x_data__0_[6] = { 0.0, 0.0, 1.0, 2.0, 2.0, 5.0 };',
-      'double _x_data__1_[6] = { 0.0, 10.0, 1.0, 12.0, 2.0, 15.0 };'
+      'sde_float _x_data__0_[6] = { 0.0, 0.0, 1.0, 2.0, 2.0, 5.0 };',
+      'sde_float _x_data__1_[6] = { 0.0, 10.0, 1.0, 12.0, 2.0, 15.0 };'
     ])
     expect(genC(vars.get('_x'), 'init-lookups', { extData })).toEqual([
-      '_x[0] = __new_lookup(3, /*copy=*/false, _x_data__0_);',
-      '_x[1] = __new_lookup(3, /*copy=*/false, _x_data__1_);'
+      '_x[0] = __new_lookup_by_reference(3, _x_data__0_);',
+      '_x[1] = __new_lookup_by_reference(3, _x_data__1_);'
     ])
     expect(genC(vars.get('_y'), 'eval', { extData })).toEqual([
       'for (size_t i = 0; i < 2; i++) {',
@@ -390,9 +388,9 @@ describe('generateEquation (Vensim -> C)', () => {
     `)
     expect(vars.size).toBe(1)
     expect(genC(vars.get('_x'), 'decl')).toEqual([
-      'double _x_data_[12] = { 0.0, 0.0, 0.1, 0.01, 0.5, 0.7, 1.0, 1.0, 1.5, 1.2, 2.0, 1.3 };'
+      'sde_float _x_data_[12] = { 0.0, 0.0, 0.1, 0.01, 0.5, 0.7, 1.0, 1.0, 1.5, 1.2, 2.0, 1.3 };'
     ])
-    expect(genC(vars.get('_x'), 'init-lookups')).toEqual(['_x = __new_lookup(6, /*copy=*/false, _x_data_);'])
+    expect(genC(vars.get('_x'), 'init-lookups')).toEqual(['_x = __new_lookup_by_reference(6, _x_data_);'])
   })
 
   it('should work for lookup definition (one dimension)', () => {
@@ -402,10 +400,10 @@ describe('generateEquation (Vensim -> C)', () => {
       x[A2]( (0,30), (1,40) ) ~~|
     `)
     expect(vars.size).toBe(2)
-    expect(genC(vars.get('_x[_a1]'), 'decl')).toEqual(['double _x_data__0_[4] = { 0.0, 10.0, 1.0, 20.0 };'])
-    expect(genC(vars.get('_x[_a2]'), 'decl')).toEqual(['double _x_data__1_[4] = { 0.0, 30.0, 1.0, 40.0 };'])
-    expect(genC(vars.get('_x[_a1]'), 'init-lookups')).toEqual(['_x[0] = __new_lookup(2, /*copy=*/false, _x_data__0_);'])
-    expect(genC(vars.get('_x[_a2]'), 'init-lookups')).toEqual(['_x[1] = __new_lookup(2, /*copy=*/false, _x_data__1_);'])
+    expect(genC(vars.get('_x[_a1]'), 'decl')).toEqual(['sde_float _x_data__0_[4] = { 0.0, 10.0, 1.0, 20.0 };'])
+    expect(genC(vars.get('_x[_a2]'), 'decl')).toEqual(['sde_float _x_data__1_[4] = { 0.0, 30.0, 1.0, 40.0 };'])
+    expect(genC(vars.get('_x[_a1]'), 'init-lookups')).toEqual(['_x[0] = __new_lookup_by_reference(2, _x_data__0_);'])
+    expect(genC(vars.get('_x[_a2]'), 'init-lookups')).toEqual(['_x[1] = __new_lookup_by_reference(2, _x_data__1_);'])
   })
 
   it('should work for lookup definition (two dimensions)', () => {
@@ -418,21 +416,21 @@ describe('generateEquation (Vensim -> C)', () => {
       x[A2,B2]( (0,70), (1,80) ) ~~|
     `)
     expect(vars.size).toBe(4)
-    expect(genC(vars.get('_x[_a1,_b1]'), 'decl')).toEqual(['double _x_data__0__0_[4] = { 0.0, 10.0, 1.0, 20.0 };'])
-    expect(genC(vars.get('_x[_a1,_b2]'), 'decl')).toEqual(['double _x_data__0__1_[4] = { 0.0, 30.0, 1.0, 40.0 };'])
-    expect(genC(vars.get('_x[_a2,_b1]'), 'decl')).toEqual(['double _x_data__1__0_[4] = { 0.0, 50.0, 1.0, 60.0 };'])
-    expect(genC(vars.get('_x[_a2,_b2]'), 'decl')).toEqual(['double _x_data__1__1_[4] = { 0.0, 70.0, 1.0, 80.0 };'])
+    expect(genC(vars.get('_x[_a1,_b1]'), 'decl')).toEqual(['sde_float _x_data__0__0_[4] = { 0.0, 10.0, 1.0, 20.0 };'])
+    expect(genC(vars.get('_x[_a1,_b2]'), 'decl')).toEqual(['sde_float _x_data__0__1_[4] = { 0.0, 30.0, 1.0, 40.0 };'])
+    expect(genC(vars.get('_x[_a2,_b1]'), 'decl')).toEqual(['sde_float _x_data__1__0_[4] = { 0.0, 50.0, 1.0, 60.0 };'])
+    expect(genC(vars.get('_x[_a2,_b2]'), 'decl')).toEqual(['sde_float _x_data__1__1_[4] = { 0.0, 70.0, 1.0, 80.0 };'])
     expect(genC(vars.get('_x[_a1,_b1]'), 'init-lookups')).toEqual([
-      '_x[0][0] = __new_lookup(2, /*copy=*/false, _x_data__0__0_);'
+      '_x[0][0] = __new_lookup_by_reference(2, _x_data__0__0_);'
     ])
     expect(genC(vars.get('_x[_a1,_b2]'), 'init-lookups')).toEqual([
-      '_x[0][1] = __new_lookup(2, /*copy=*/false, _x_data__0__1_);'
+      '_x[0][1] = __new_lookup_by_reference(2, _x_data__0__1_);'
     ])
     expect(genC(vars.get('_x[_a2,_b1]'), 'init-lookups')).toEqual([
-      '_x[1][0] = __new_lookup(2, /*copy=*/false, _x_data__1__0_);'
+      '_x[1][0] = __new_lookup_by_reference(2, _x_data__1__0_);'
     ])
     expect(genC(vars.get('_x[_a2,_b2]'), 'init-lookups')).toEqual([
-      '_x[1][1] = __new_lookup(2, /*copy=*/false, _x_data__1__1_);'
+      '_x[1][1] = __new_lookup_by_reference(2, _x_data__1__1_);'
     ])
   })
 
@@ -443,9 +441,9 @@ describe('generateEquation (Vensim -> C)', () => {
     `)
     expect(vars.size).toBe(2)
     expect(genC(vars.get('_x'), 'decl')).toEqual([
-      'double _x_data_[12] = { 0.0, 0.0, 0.1, 0.01, 0.5, 0.7, 1.0, 1.0, 1.5, 1.2, 2.0, 1.3 };'
+      'sde_float _x_data_[12] = { 0.0, 0.0, 0.1, 0.01, 0.5, 0.7, 1.0, 1.0, 1.5, 1.2, 2.0, 1.3 };'
     ])
-    expect(genC(vars.get('_x'), 'init-lookups')).toEqual(['_x = __new_lookup(6, /*copy=*/false, _x_data_);'])
+    expect(genC(vars.get('_x'), 'init-lookups')).toEqual(['_x = __new_lookup_by_reference(6, _x_data_);'])
     expect(genC(vars.get('_y'))).toEqual(['_y = _LOOKUP(_x, 2.0);'])
   })
 
@@ -457,10 +455,10 @@ describe('generateEquation (Vensim -> C)', () => {
       y = x[A1](2) ~~|
     `)
     expect(vars.size).toBe(3)
-    expect(genC(vars.get('_x[_a1]'), 'decl')).toEqual(['double _x_data__0_[4] = { 0.0, 0.0, 2.0, 1.3 };'])
-    expect(genC(vars.get('_x[_a2]'), 'decl')).toEqual(['double _x_data__1_[4] = { 0.0, 0.5, 2.0, 1.5 };'])
-    expect(genC(vars.get('_x[_a1]'), 'init-lookups')).toEqual(['_x[0] = __new_lookup(2, /*copy=*/false, _x_data__0_);'])
-    expect(genC(vars.get('_x[_a2]'), 'init-lookups')).toEqual(['_x[1] = __new_lookup(2, /*copy=*/false, _x_data__1_);'])
+    expect(genC(vars.get('_x[_a1]'), 'decl')).toEqual(['sde_float _x_data__0_[4] = { 0.0, 0.0, 2.0, 1.3 };'])
+    expect(genC(vars.get('_x[_a2]'), 'decl')).toEqual(['sde_float _x_data__1_[4] = { 0.0, 0.5, 2.0, 1.5 };'])
+    expect(genC(vars.get('_x[_a1]'), 'init-lookups')).toEqual(['_x[0] = __new_lookup_by_reference(2, _x_data__0_);'])
+    expect(genC(vars.get('_x[_a2]'), 'init-lookups')).toEqual(['_x[1] = __new_lookup_by_reference(2, _x_data__1_);'])
     expect(genC(vars.get('_y'))).toEqual(['_y = _LOOKUP(_x[0], 2.0);'])
   })
 
@@ -652,7 +650,7 @@ describe('generateEquation (Vensim -> C)', () => {
     expect(vars.size).toBe(1)
     expect(genC(vars.get('_x'))).toEqual([
       'for (size_t i = 0; i < 2; i++) {',
-      '_x[i] = (((double)__map_dimb_dima[i]) + 1);',
+      '_x[i] = (((sde_float)__map_dimb_dima[i]) + 1);',
       '}'
     ])
   })
@@ -684,7 +682,7 @@ describe('generateEquation (Vensim -> C)', () => {
     expect(genC(vars.get('_selected_a_index'), 'init-constants')).toEqual(['_selected_a_index = 1.0;'])
     expect(genC(vars.get('_x'))).toEqual([
       'for (size_t i = 0; i < 2; i++) {',
-      '_x[i] = _IF_THEN_ELSE((((double)i) + 1) == _selected_a_index, 1.0, 0.0);',
+      '_x[i] = _IF_THEN_ELSE((((sde_float)i) + 1) == _selected_a_index, 1.0, 0.0);',
       '}'
     ])
   })
@@ -712,7 +710,7 @@ describe('generateEquation (Vensim -> C)', () => {
     expect(genC(vars.get('_x'))).toEqual([
       'for (size_t i = 0; i < 2; i++) {',
       'for (size_t j = 0; j < 2; j++) {',
-      '_x[i][j] = ((((double)i) + 1) * 10.0) + (((double)j) + 1);',
+      '_x[i][j] = ((((sde_float)i) + 1) * 10.0) + (((sde_float)j) + 1);',
       '}',
       '}'
     ])
@@ -742,7 +740,7 @@ describe('generateEquation (Vensim -> C)', () => {
     expect(genC(vars.get('_x'))).toEqual([
       'for (size_t i = 0; i < 2; i++) {',
       'for (size_t j = 0; j < 2; j++) {',
-      '_x[i][j] = ((((double)i) + 1) * 10.0) + (((double)j) + 1);',
+      '_x[i][j] = ((((sde_float)i) + 1) * 10.0) + (((sde_float)j) + 1);',
       '}',
       '}'
     ])
@@ -883,7 +881,7 @@ describe('generateEquation (Vensim -> C)', () => {
       expect(vars.size).toBe(2)
       expect(genC(vars.get('_x'), 'init-constants')).toEqual(['for (size_t i = 0; i < 2; i++) {', '_x[i] = 1.0;', '}'])
       expect(genC(vars.get('_y'))).toEqual([
-        'double __t1 = 0.0;',
+        'sde_float __t1 = 0.0;',
         'for (size_t u = 0; u < 2; u++) {',
         '__t1 += _x[u];',
         '}',
@@ -901,7 +899,7 @@ describe('generateEquation (Vensim -> C)', () => {
       expect(genC(vars.get('_x[_a1]'), 'init-constants')).toEqual(['_x[0] = 1.0;'])
       expect(genC(vars.get('_x[_a2]'), 'init-constants')).toEqual(['_x[1] = 2.0;'])
       expect(genC(vars.get('_y'))).toEqual([
-        'double __t1 = 0.0;',
+        'sde_float __t1 = 0.0;',
         'for (size_t u = 0; u < 2; u++) {',
         '__t1 += _x[u];',
         '}',
@@ -1098,7 +1096,7 @@ describe('generateEquation (Vensim -> C)', () => {
       expect(genC(vars.get('_x')), 'init-constants').toEqual(['for (size_t i = 0; i < 2; i++) {', '_x[i] = 1.0;', '}'])
       expect(genC(vars.get('_y'))).toEqual([
         'for (size_t i = 0; i < 2; i++) {',
-        'double __t1 = 0.0;',
+        'sde_float __t1 = 0.0;',
         'for (size_t u = 0; u < 2; u++) {',
         '__t1 += _x[u];',
         '}',
@@ -1117,7 +1115,7 @@ describe('generateEquation (Vensim -> C)', () => {
       expect(genC(vars.get('_x')), 'init-constants').toEqual(['for (size_t i = 0; i < 2; i++) {', '_x[i] = 1.0;', '}'])
       expect(genC(vars.get('_y'))).toEqual([
         'for (size_t i = 0; i < 2; i++) {',
-        'double __t1 = 0.0;',
+        'sde_float __t1 = 0.0;',
         'for (size_t u = 0; u < 2; u++) {',
         '__t1 += _x[u];',
         '}',
@@ -1138,7 +1136,7 @@ describe('generateEquation (Vensim -> C)', () => {
       expect(genC(vars.get('_x[_a2]')), 'init-constants').toEqual(['_x[1] = 2.0;'])
       expect(genC(vars.get('_y'))).toEqual([
         'for (size_t i = 0; i < 2; i++) {',
-        'double __t1 = 0.0;',
+        'sde_float __t1 = 0.0;',
         'for (size_t u = 0; u < 2; u++) {',
         '__t1 += _x[u];',
         '}',
@@ -1158,7 +1156,7 @@ describe('generateEquation (Vensim -> C)', () => {
       expect(genC(vars.get('_x[_a2]')), 'init-constants').toEqual(['_x[1] = 2.0;'])
       expect(genC(vars.get('_y'))).toEqual([
         'for (size_t i = 0; i < 2; i++) {',
-        'double __t1 = 0.0;',
+        'sde_float __t1 = 0.0;',
         'for (size_t u = 0; u < 2; u++) {',
         '__t1 += _x[u];',
         '}',
@@ -1192,7 +1190,7 @@ describe('generateEquation (Vensim -> C)', () => {
       ])
       expect(genC(vars.get('_y'))).toEqual([
         'for (size_t i = 0; i < 2; i++) {',
-        'double __t1 = 0.0;',
+        'sde_float __t1 = 0.0;',
         'for (size_t u = 0; u < 2; u++) {',
         '__t1 += _x[i][u];',
         '}',
@@ -1823,7 +1821,7 @@ describe('generateEquation (Vensim -> C)', () => {
     expect(genC(vars.get('_priority[_fresno,_ptype]'))).toEqual(['_priority[2][0] = 3.0;'])
     expect(genC(vars.get('_priority[_fresno,_ppriority]'))).toEqual(['_priority[2][1] = 3.0;'])
     expect(genC(vars.get('_shipments'))).toEqual([
-      'double* __t1 = _ALLOCATE_AVAILABLE(_demand, (double*)_priority, _supply_available, 3);',
+      'sde_float* __t1 = _ALLOCATE_AVAILABLE(_demand, (sde_float*)_priority, _supply_available, 3);',
       'for (size_t i = 0; i < 3; i++) {',
       '_shipments[i] = __t1[_branch[i]];',
       '}'
@@ -1863,13 +1861,13 @@ describe('generateEquation (Vensim -> C)', () => {
     expect(genC(vars.get('_priority[_item2,_fresno,_ptype]'))).toEqual(['_priority[1][2][0] = 3.0;'])
     expect(genC(vars.get('_priority[_item2,_fresno,_ppriority]'))).toEqual(['_priority[1][2][1] = 4.0;'])
     expect(genC(vars.get('_item_1_shipments'))).toEqual([
-      'double* __t1 = _ALLOCATE_AVAILABLE(_demand, (double*)_priority[0], _supply_available, 3);',
+      'sde_float* __t1 = _ALLOCATE_AVAILABLE(_demand, (sde_float*)_priority[0], _supply_available, 3);',
       'for (size_t i = 0; i < 3; i++) {',
       '_item_1_shipments[i] = __t1[_branch[i]];',
       '}'
     ])
     expect(genC(vars.get('_item_2_shipments'))).toEqual([
-      'double* __t2 = _ALLOCATE_AVAILABLE(_demand, (double*)_priority[1], _supply_available, 3);',
+      'sde_float* __t2 = _ALLOCATE_AVAILABLE(_demand, (sde_float*)_priority[1], _supply_available, 3);',
       'for (size_t i = 0; i < 3; i++) {',
       '_item_2_shipments[i] = __t2[_branch[i]];',
       '}'
@@ -1904,7 +1902,7 @@ describe('generateEquation (Vensim -> C)', () => {
     expect(genC(vars.get('_priority[_fresno,_ppriority]'))).toEqual(['_priority[2][1] = 3.0;'])
     expect(genC(vars.get('_shipments'))).toEqual([
       'for (size_t i = 0; i < 2; i++) {',
-      'double* __t1 = _ALLOCATE_AVAILABLE(_demand[i], (double*)_priority, _supply_available, 3);',
+      'sde_float* __t1 = _ALLOCATE_AVAILABLE(_demand[i], (sde_float*)_priority, _supply_available, 3);',
       'for (size_t j = 0; j < 3; j++) {',
       '_shipments[i][j] = __t1[_branch[j]];',
       '}',
@@ -1950,7 +1948,7 @@ describe('generateEquation (Vensim -> C)', () => {
     expect(genC(vars.get('_priority[_item2,_fresno,_ppriority]'))).toEqual(['_priority[1][2][1] = 4.0;'])
     expect(genC(vars.get('_shipments'))).toEqual([
       'for (size_t i = 0; i < 2; i++) {',
-      'double* __t1 = _ALLOCATE_AVAILABLE(_demand[i], (double*)_priority[i], _supply_available[i], 3);',
+      'sde_float* __t1 = _ALLOCATE_AVAILABLE(_demand[i], (sde_float*)_priority[i], _supply_available[i], 3);',
       'for (size_t j = 0; j < 3; j++) {',
       '_shipments[i][j] = __t1[_branch[j]];',
       '}',
@@ -2275,10 +2273,10 @@ describe('generateEquation (Vensim -> C)', () => {
       )
       expect(vars.size).toBe(2)
       expect(genC(vars.get('_x'), 'decl', { extData })).toEqual([
-        'double _x_data_[6] = { 0.0, 0.0, 1.0, 2.0, 2.0, 5.0 };'
+        'sde_float _x_data_[6] = { 0.0, 0.0, 1.0, 2.0, 2.0, 5.0 };'
       ])
       expect(genC(vars.get('_x'), 'init-lookups', { extData })).toEqual([
-        '_x = __new_lookup(3, /*copy=*/false, _x_data_);'
+        '_x = __new_lookup_by_reference(3, _x_data_);'
       ])
       expect(genC(vars.get('_y'))).toEqual([`_y = _GET_DATA_BETWEEN_TIMES(_x, _time, ${mode}.0);`])
     }
@@ -2433,7 +2431,7 @@ describe('generateEquation (Vensim -> C)', () => {
     `)
     expect(vars.size).toBe(2)
     expect(genC(vars.get('_x'), 'init-lookups', opts)).toEqual([
-      '_x = __new_lookup(2, /*copy=*/true, (double[]){ 2045.0, 35.0, 2050.0, 47.0 });'
+      '_x = __new_lookup_by_copy(2, (double[]){ 2045.0, 35.0, 2050.0, 47.0 });'
     ])
     expect(genC(vars.get('_y'), 'eval', opts)).toEqual(['_y = _LOOKUP(_x, _time) * 10.0;'])
   })
@@ -2449,7 +2447,7 @@ describe('generateEquation (Vensim -> C)', () => {
     `)
     expect(vars.size).toBe(2)
     expect(genC(vars.get('_x'), 'init-lookups', opts)).toEqual([
-      '_x = __new_lookup(2, /*copy=*/true, (double[]){ 2045.0, 35.0, 2050.0, 47.0 });'
+      '_x = __new_lookup_by_copy(2, (double[]){ 2045.0, 35.0, 2050.0, 47.0 });'
     ])
     expect(genC(vars.get('_y'), 'eval', opts)).toEqual(['_y = _LOOKUP(_x, _time) * 10.0;'])
   })
@@ -2466,7 +2464,7 @@ describe('generateEquation (Vensim -> C)', () => {
     `)
     expect(vars.size).toBe(2)
     expect(genC(vars.get('_x'), 'init-lookups', opts)).toEqual([
-      '_x = __new_lookup(2, /*copy=*/true, (double[]){ 2045.0, 35.0, 2050.0, 47.0 });'
+      '_x = __new_lookup_by_copy(2, (double[]){ 2045.0, 35.0, 2050.0, 47.0 });'
     ])
     expect(genC(vars.get('_y'), 'eval', opts)).toEqual(['_y = _LOOKUP(_x, _time) * 10.0;'])
   })
@@ -2479,7 +2477,7 @@ describe('generateEquation (Vensim -> C)', () => {
     `)
     expect(vars.size).toBe(2)
     expect(genC(vars.get('_x'), 'init-lookups', { modelDir })).toEqual([
-      '_x = __new_lookup(2, /*copy=*/true, (double[]){ 2045.0, 35.0, 2050.0, 47.0 });'
+      '_x = __new_lookup_by_copy(2, (double[]){ 2045.0, 35.0, 2050.0, 47.0 });'
     ])
     expect(genC(vars.get('_y'), 'eval', { modelDir })).toEqual(['_y = _LOOKUP(_x, _time) * 10.0;'])
   })
@@ -2506,10 +2504,10 @@ describe('generateEquation (Vensim -> C)', () => {
     `)
     expect(vars.size).toBe(3)
     expect(genC(vars.get('_x[_a1]'), 'init-lookups', { modelDir })).toEqual([
-      '_x[0] = __new_lookup(2, /*copy=*/true, (double[]){ 2030.0, 593.0, 2050.0, 583.0 });'
+      '_x[0] = __new_lookup_by_copy(2, (double[]){ 2030.0, 593.0, 2050.0, 583.0 });'
     ])
     expect(genC(vars.get('_x[_a2]'), 'init-lookups', { modelDir })).toEqual([
-      '_x[1] = __new_lookup(2, /*copy=*/true, (double[]){ 2030.0, 185.0, 2050.0, 180.0 });'
+      '_x[1] = __new_lookup_by_copy(2, (double[]){ 2030.0, 185.0, 2050.0, 180.0 });'
     ])
     expect(genC(vars.get('_y'), 'eval', { modelDir })).toEqual(['_y = _LOOKUP(_x[1], _time) * 10.0;'])
   })
@@ -2529,14 +2527,14 @@ describe('generateEquation (Vensim -> C)', () => {
     `)
     expect(vars.size).toBe(4)
     expect(genC(vars.get('_x[_a1,_b1]'), 'init-lookups', opts)).toEqual([
-      '_x[0][0] = __new_lookup(2, /*copy=*/true, (double[]){ 2030.0, 593.0, 2050.0, 583.0 });'
+      '_x[0][0] = __new_lookup_by_copy(2, (double[]){ 2030.0, 593.0, 2050.0, 583.0 });'
     ])
     expect(genC(vars.get('_x[_a1,_b2]'), 'init-lookups', opts)).toEqual([
-      '_x[0][1] = __new_lookup(2, /*copy=*/true, (double[]){ 2030.0, 185.0, 2050.0, 180.0 });'
+      '_x[0][1] = __new_lookup_by_copy(2, (double[]){ 2030.0, 185.0, 2050.0, 180.0 });'
     ])
     expect(genC(vars.get('_x[_a2,_dimb]'), 'init-lookups', opts)).toEqual([
       'for (size_t i = 0; i < 2; i++) {',
-      '_x[1][i] = __new_lookup(2, /*copy=*/true, (double[]){ -1e+308, 0.0, 1e+308, 0.0 });',
+      '_x[1][i] = __new_lookup_by_copy(2, (double[]){ -1e+308, 0.0, 1e+308, 0.0 });',
       '}'
     ])
     expect(genC(vars.get('_y'), 'eval', opts)).toEqual(['_y = _LOOKUP(_x[1][0], _time) * 10.0;'])
@@ -2552,13 +2550,13 @@ describe('generateEquation (Vensim -> C)', () => {
     `)
     expect(vars.size).toBe(5)
     expect(genC(vars.get('_x[_a1]'), 'init-lookups', { modelDir })).toEqual([
-      '_x[0] = __new_lookup(2, /*copy=*/true, (double[]){ 2049.0, 0.966667, 2050.0, 1.0 });'
+      '_x[0] = __new_lookup_by_copy(2, (double[]){ 2049.0, 0.966667, 2050.0, 1.0 });'
     ])
     expect(genC(vars.get('_x[_a2]'), 'init-lookups', { modelDir })).toEqual([
-      '_x[1] = __new_lookup(2, /*copy=*/true, (double[]){ 2049.0, 0.965517, 2050.0, 1.0 });'
+      '_x[1] = __new_lookup_by_copy(2, (double[]){ 2049.0, 0.965517, 2050.0, 1.0 });'
     ])
     expect(genC(vars.get('_x[_a3]'), 'init-lookups', { modelDir })).toEqual([
-      '_x[2] = __new_lookup(2, /*copy=*/true, (double[]){ 2049.0, 0.98975, 2050.0, 0.998394 });'
+      '_x[2] = __new_lookup_by_copy(2, (double[]){ 2049.0, 0.98975, 2050.0, 0.998394 });'
     ])
     expect(genC(vars.get('_y'), 'eval', { modelDir })).toEqual([
       'for (size_t i = 0; i < 3; i++) {',
@@ -2674,14 +2672,14 @@ describe('generateEquation (Vensim -> C)', () => {
     expect(genC(vars.get('_init[_a1]'), 'init-constants')).toEqual(['_init[0] = 1.0;'])
     expect(genC(vars.get('_init[_a2]'), 'init-constants')).toEqual(['_init[1] = 2.0;'])
     expect(genC(vars.get('_y'), 'init-levels')).toEqual([
-      'double __t1 = 0.0;',
+      'sde_float __t1 = 0.0;',
       'for (size_t u = 0; u < 2; u++) {',
       '__t1 += _init[u];',
       '}',
       '_y = __t1;'
     ])
     expect(genC(vars.get('_y'), 'eval')).toEqual([
-      'double __t2 = 0.0;',
+      'sde_float __t2 = 0.0;',
       'for (size_t u = 0; u < 2; u++) {',
       '__t2 += _rate[u];',
       '}',
@@ -2715,8 +2713,8 @@ describe('generateEquation (Vensim -> C)', () => {
       y = LOOKUP BACKWARD(x, 1.5) ~~|
     `)
     expect(vars.size).toBe(2)
-    expect(genC(vars.get('_x'), 'decl')).toEqual(['double _x_data_[6] = { 0.0, 0.0, 1.0, 1.0, 2.0, 2.0 };'])
-    expect(genC(vars.get('_x'), 'init-lookups')).toEqual(['_x = __new_lookup(3, /*copy=*/false, _x_data_);'])
+    expect(genC(vars.get('_x'), 'decl')).toEqual(['sde_float _x_data_[6] = { 0.0, 0.0, 1.0, 1.0, 2.0, 2.0 };'])
+    expect(genC(vars.get('_x'), 'init-lookups')).toEqual(['_x = __new_lookup_by_reference(3, _x_data_);'])
     expect(genC(vars.get('_y'))).toEqual(['_y = _LOOKUP_BACKWARD(_x, 1.5);'])
   })
 
@@ -2729,13 +2727,13 @@ describe('generateEquation (Vensim -> C)', () => {
     `)
     expect(vars.size).toBe(4)
     expect(genC(vars.get('_x[_a1]'), 'init-lookups', { modelDir })).toEqual([
-      '_x[0] = __new_lookup(2, /*copy=*/true, (double[]){ 2049.0, 0.966667, 2050.0, 1.0 });'
+      '_x[0] = __new_lookup_by_copy(2, (double[]){ 2049.0, 0.966667, 2050.0, 1.0 });'
     ])
     expect(genC(vars.get('_x[_a2]'), 'init-lookups', { modelDir })).toEqual([
-      '_x[1] = __new_lookup(2, /*copy=*/true, (double[]){ 2049.0, 0.965517, 2050.0, 1.0 });'
+      '_x[1] = __new_lookup_by_copy(2, (double[]){ 2049.0, 0.965517, 2050.0, 1.0 });'
     ])
     expect(genC(vars.get('_x[_a3]'), 'init-lookups', { modelDir })).toEqual([
-      '_x[2] = __new_lookup(2, /*copy=*/true, (double[]){ 2049.0, 0.98975, 2050.0, 0.998394 });'
+      '_x[2] = __new_lookup_by_copy(2, (double[]){ 2049.0, 0.98975, 2050.0, 0.998394 });'
     ])
     expect(genC(vars.get('_y'), 'eval', { modelDir })).toEqual([
       'for (size_t i = 0; i < 3; i++) {',
@@ -2750,8 +2748,8 @@ describe('generateEquation (Vensim -> C)', () => {
       y = LOOKUP FORWARD(x, 1.5) ~~|
     `)
     expect(vars.size).toBe(2)
-    expect(genC(vars.get('_x'), 'decl')).toEqual(['double _x_data_[6] = { 0.0, 0.0, 1.0, 1.0, 2.0, 2.0 };'])
-    expect(genC(vars.get('_x'), 'init-lookups')).toEqual(['_x = __new_lookup(3, /*copy=*/false, _x_data_);'])
+    expect(genC(vars.get('_x'), 'decl')).toEqual(['sde_float _x_data_[6] = { 0.0, 0.0, 1.0, 1.0, 2.0, 2.0 };'])
+    expect(genC(vars.get('_x'), 'init-lookups')).toEqual(['_x = __new_lookup_by_reference(3, _x_data_);'])
     expect(genC(vars.get('_y'))).toEqual(['_y = _LOOKUP_FORWARD(_x, 1.5);'])
   })
 
@@ -2761,8 +2759,8 @@ describe('generateEquation (Vensim -> C)', () => {
       y = LOOKUP INVERT(x, 1.5) ~~|
     `)
     expect(vars.size).toBe(2)
-    expect(genC(vars.get('_x'), 'decl')).toEqual(['double _x_data_[6] = { 0.0, 0.0, 1.0, 1.0, 2.0, 2.0 };'])
-    expect(genC(vars.get('_x'), 'init-lookups')).toEqual(['_x = __new_lookup(3, /*copy=*/false, _x_data_);'])
+    expect(genC(vars.get('_x'), 'decl')).toEqual(['sde_float _x_data_[6] = { 0.0, 0.0, 1.0, 1.0, 2.0, 2.0 };'])
+    expect(genC(vars.get('_x'), 'init-lookups')).toEqual(['_x = __new_lookup_by_reference(3, _x_data_);'])
     expect(genC(vars.get('_y'))).toEqual(['_y = _LOOKUP_INVERT(_x, 1.5);'])
   })
 
@@ -3107,7 +3105,7 @@ describe('generateEquation (Vensim -> C)', () => {
     expect(genC(vars.get('_a[_a1]'), 'init-constants')).toEqual(['_a[0] = 10.0;'])
     expect(genC(vars.get('_a[_a2]'), 'init-constants')).toEqual(['_a[1] = 20.0;'])
     expect(genC(vars.get('_x'))).toEqual([
-      'double __t1 = 0.0;',
+      'sde_float __t1 = 0.0;',
       'for (size_t u = 0; u < 2; u++) {',
       '__t1 += _a[u];',
       '}',
@@ -3132,15 +3130,15 @@ describe('generateEquation (Vensim -> C)', () => {
     expect(genC(vars.get('_c[_a1]'), 'init-constants')).toEqual(['_c[0] = 1.0;'])
     expect(genC(vars.get('_c[_a2]'), 'init-constants')).toEqual(['_c[1] = 2.0;'])
     expect(genC(vars.get('_x'))).toEqual([
-      'double __t1 = 0.0;',
+      'sde_float __t1 = 0.0;',
       'for (size_t u = 0; u < 2; u++) {',
       '__t1 += _a[u];',
       '}',
-      'double __t2 = 0.0;',
+      'sde_float __t2 = 0.0;',
       'for (size_t v = 0; v < 2; v++) {',
       '__t2 += _b[v];',
       '}',
-      'double __t3 = 0.0;',
+      'sde_float __t3 = 0.0;',
       'for (size_t u = 0; u < 2; u++) {',
       '__t3 += _c[u];',
       '}',
@@ -3158,7 +3156,7 @@ describe('generateEquation (Vensim -> C)', () => {
     expect(genC(vars.get('_a[_a1]'), 'init-constants')).toEqual(['_a[0] = 10.0;'])
     expect(genC(vars.get('_a[_a2]'), 'init-constants')).toEqual(['_a[1] = 20.0;'])
     expect(genC(vars.get('_x'))).toEqual([
-      'double __t1 = 0.0;',
+      'sde_float __t1 = 0.0;',
       'for (size_t u = 0; u < 2; u++) {',
       '__t1 += _IF_THEN_ELSE(_a[u] == 10.0, 0.0, _a[u]);',
       '}',
@@ -3228,7 +3226,7 @@ describe('generateEquation (Vensim -> C)', () => {
     expect(genC(vars.get('_x[_five]'), 'init-constants')).toEqual(['_x[4] = 5.0;'])
     expect(genC(vars.get('_y'))).toEqual([
       'for (size_t i = 0; i < 3; i++) {',
-      '_y[i] = _x[_dimx[(size_t)(2 + ((((double)i) + 1) - 1.0))]];',
+      '_y[i] = _x[_dimx[(size_t)(2 + ((((sde_float)i) + 1) - 1.0))]];',
       '}'
     ])
   })
@@ -3253,7 +3251,7 @@ describe('generateEquation (Vensim -> C)', () => {
     expect(genC(vars.get('_b[_b2]'), 'init-constants')).toEqual(['_b[1] = 2.0;'])
     expect(genC(vars.get('_c'))).toEqual([
       'bool __t1 = false;',
-      'double __t2 = 0.0;',
+      'sde_float __t2 = 0.0;',
       'for (size_t u = 0; u < 2; u++) {',
       'for (size_t v = 0; v < 3; v++) {',
       'if (bool_cond(_b[u])) {',
@@ -3286,7 +3284,7 @@ describe('generateEquation (Vensim -> C)', () => {
     expect(genC(vars.get('_b[_b2]'), 'init-constants')).toEqual(['_b[1] = 2.0;'])
     expect(genC(vars.get('_c'))).toEqual([
       'bool __t1 = false;',
-      'double __t2 = -DBL_MAX;',
+      'sde_float __t2 = -DBL_MAX;',
       'for (size_t u = 0; u < 2; u++) {',
       'for (size_t v = 0; v < 3; v++) {',
       'if (bool_cond(_b[u])) {',
@@ -3311,7 +3309,7 @@ describe('generateEquation (Vensim -> C)', () => {
     expect(genC(vars.get('_a[_a2]'), 'init-constants')).toEqual(['_a[1] = 1.0;'])
     expect(genC(vars.get('_a[_a3]'), 'init-constants')).toEqual(['_a[2] = 2.0;'])
     expect(genC(vars.get('_x'))).toEqual([
-      'double* __t1 = _VECTOR_SORT_ORDER(_a, 3, 1.0);',
+      'sde_float* __t1 = _VECTOR_SORT_ORDER(_a, 3, 1.0);',
       'for (size_t i = 0; i < 3; i++) {',
       '_x[i] = __t1[_dima[i]];',
       '}'
@@ -3340,7 +3338,7 @@ describe('generateEquation (Vensim -> C)', () => {
     expect(genC(vars.get('_x[_a3,_b2]'), 'init-constants')).toEqual(['_x[2][1] = 5.0;'])
     expect(genC(vars.get('_y'))).toEqual([
       'for (size_t i = 0; i < 3; i++) {',
-      'double* __t1 = _VECTOR_SORT_ORDER(_x[_dima[i]], 2, 1.0);',
+      'sde_float* __t1 = _VECTOR_SORT_ORDER(_x[_dima[i]], 2, 1.0);',
       'for (size_t j = 0; j < 2; j++) {',
       '_y[i][j] = __t1[_dimb[j]];',
       '}',
@@ -3359,7 +3357,7 @@ describe('generateEquation (Vensim -> C)', () => {
     expect(genC(vars.get('_x[_a2]'), 'init-constants')).toEqual(['_x[1] = 2.0;'])
     expect(genC(vars.get('_x[_a3]'), 'init-constants')).toEqual(['_x[2] = 3.0;'])
     expect(genC(vars.get('_y'))).toEqual([
-      'double __t1 = -DBL_MAX;',
+      'sde_float __t1 = -DBL_MAX;',
       'for (size_t u = 0; u < 3; u++) {',
       '__t1 = fmax(__t1, _x[u]);',
       '}',
@@ -3379,7 +3377,7 @@ describe('generateEquation (Vensim -> C)', () => {
     expect(genC(vars.get('_x[_a2]'), 'init-constants')).toEqual(['_x[1] = 2.0;'])
     expect(genC(vars.get('_x[_a3]'), 'init-constants')).toEqual(['_x[2] = 3.0;'])
     expect(genC(vars.get('_y'))).toEqual([
-      'double __t1 = -DBL_MAX;',
+      'sde_float __t1 = -DBL_MAX;',
       'for (size_t u = 0; u < 2; u++) {',
       '__t1 = fmax(__t1, _x[_suba[u]]);',
       '}',
@@ -3398,7 +3396,7 @@ describe('generateEquation (Vensim -> C)', () => {
     expect(genC(vars.get('_x[_a2]'), 'init-constants')).toEqual(['_x[1] = 2.0;'])
     expect(genC(vars.get('_x[_a3]'), 'init-constants')).toEqual(['_x[2] = 3.0;'])
     expect(genC(vars.get('_y'))).toEqual([
-      'double __t1 = DBL_MAX;',
+      'sde_float __t1 = DBL_MAX;',
       'for (size_t u = 0; u < 3; u++) {',
       '__t1 = fmin(__t1, _x[u]);',
       '}',
@@ -3418,7 +3416,7 @@ describe('generateEquation (Vensim -> C)', () => {
     expect(genC(vars.get('_x[_a2]'), 'init-constants')).toEqual(['_x[1] = 2.0;'])
     expect(genC(vars.get('_x[_a3]'), 'init-constants')).toEqual(['_x[2] = 3.0;'])
     expect(genC(vars.get('_y'))).toEqual([
-      'double __t1 = DBL_MAX;',
+      'sde_float __t1 = DBL_MAX;',
       'for (size_t u = 0; u < 2; u++) {',
       '__t1 = fmin(__t1, _x[_suba[u]]);',
       '}',
@@ -3432,10 +3430,10 @@ describe('generateEquation (Vensim -> C)', () => {
     `)
     expect(vars.size).toBe(2)
     expect(genC(vars.get('__lookup1'), 'decl')).toEqual([
-      'double __lookup1_data_[12] = { 0.0, 0.0, 0.1, 0.01, 0.5, 0.7, 1.0, 1.0, 1.5, 1.2, 2.0, 1.3 };'
+      'sde_float __lookup1_data_[12] = { 0.0, 0.0, 0.1, 0.01, 0.5, 0.7, 1.0, 1.0, 1.5, 1.2, 2.0, 1.3 };'
     ])
     expect(genC(vars.get('__lookup1'), 'init-lookups')).toEqual([
-      '__lookup1 = __new_lookup(6, /*copy=*/false, __lookup1_data_);'
+      '__lookup1 = __new_lookup_by_reference(6, __lookup1_data_);'
     ])
     expect(genC(vars.get('_y'))).toEqual(['_y = _WITH_LOOKUP(_time, __lookup1);'])
   })

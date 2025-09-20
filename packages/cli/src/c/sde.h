@@ -21,11 +21,12 @@ extern "C" {
 #include <ctype.h>
 #include <stdio.h>
 
+#include "types.h"
 #include "model.h"
 #include "vensim.h"
 #include "macros.h"
 
-EXTERN double _epsilon;
+EXTERN sde_float _epsilon;
 
 // Enable this to add print statements in initLevels and evalAux for debugging.
 // #define PRDBG
@@ -44,11 +45,11 @@ EXTERN double _epsilon;
 EXTERN const int numOutputs;
 
 // Standard simulation control parameters
-EXTERN double _time;
-EXTERN double _initial_time;
-EXTERN double _final_time;
-EXTERN double _time_step;
-EXTERN double _saveper;
+EXTERN sde_float _time;
+EXTERN sde_float _initial_time;
+EXTERN sde_float _final_time;
+EXTERN sde_float _time_step;
+EXTERN sde_float _saveper;
 
 // API (defined in model.c)
 double getInitialTime(void);
@@ -58,7 +59,7 @@ char* run_model(const char* inputs);
 void runModelWithBuffers(double* inputs, double* outputs, int32_t* outputIndices);
 void run(void);
 void startOutput(void);
-void outputVar(double value);
+void outputVar(sde_float value);
 void finish(void);
 
 // Functions implemented by the generated model
