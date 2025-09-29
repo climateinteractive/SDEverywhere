@@ -1,4 +1,21 @@
 {
   "name": "ALLOCATE AVAILABLE test model",
-  "outputVarNames": ["Time", "shipments[Boston]", "shipments[Dayton]", "shipments[Fresno]", "total supply available"]
+  "outputVarNames": [
+    "Time",
+    "shipments[fixed,Boston]",
+    "shipments[fixed,Dayton]",
+    "shipments[fixed,Fresno]",
+    "shipments[rectangular,Boston]",
+    "shipments[rectangular,Dayton]",
+    "shipments[rectangular,Fresno]",
+    "shipments[triangular,Boston]",
+    "shipments[triangular,Dayton]",
+    "shipments[triangular,Fresno]",
+    "shipments[normal,Boston]",
+    "shipments[normal,Dayton]",
+    "shipments[normal,Fresno]",
+    "shipments[exponential,Boston]",
+    "shipments[exponential,Dayton]",
+    "shipments[exponential,Fresno]"
+  ]
 }
