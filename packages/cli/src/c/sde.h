@@ -25,8 +25,6 @@ extern "C" {
 #include "model.h"
 #include "vensim.h"
 
-EXTERN double _epsilon;
-
 // Enable this to add print statements in initLevels and evalAux for debugging.
 // #define PRDBG
 #ifdef PRDBG
@@ -45,9 +43,10 @@ EXTERN double _epsilon;
 
 // Internal variables
 EXTERN const int numOutputs;
+EXTERN double _epsilon;
+EXTERN double _time;
 
 // Standard simulation control parameters
-EXTERN double _time;
 EXTERN double _initial_time;
 EXTERN double _final_time;
 EXTERN double _time_step;

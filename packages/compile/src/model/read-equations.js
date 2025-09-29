@@ -494,7 +494,6 @@ function visitFunctionCall(v, callExpr, context) {
       break
 
     case '_DEMAND_AT_PRICE':
-      validateCallDepth(callExpr, context)
       validateCallArgs(callExpr, 3)
       break
 
@@ -513,7 +512,6 @@ function visitFunctionCall(v, callExpr, context) {
       break
 
     case '_FIND_MARKET_PRICE':
-      validateCallDepth(callExpr, context)
       validateCallArgs(callExpr, 4)
       break
 
@@ -606,7 +604,6 @@ function visitFunctionCall(v, callExpr, context) {
       break
 
     case '_SUPPLY_AT_PRICE':
-      validateCallDepth(callExpr, context)
       validateCallArgs(callExpr, 3)
       break
 

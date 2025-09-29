@@ -39,9 +39,13 @@ extern "C" {
 
 double* _ALLOCATE_AVAILABLE(
     double* requested_quantities, double* priority_profiles, double available_resource, size_t num_requesters);
+double* _DEMAND_AT_PRICE(double* demand_quantities, double* demand_profiles, double price, size_t num_demanders);
+double _FIND_MARKET_PRICE(double* demand_quantities, double* demand_profiles, double* supply_quantities,
+    double* supply_profiles, size_t num_demanders, size_t num_suppliers);
 double _PULSE(double start, double width);
 double _PULSE_TRAIN(double start, double width, double interval, double end);
 double _RAMP(double slope, double start_time, double end_time);
+double* _SUPPLY_AT_PRICE(double* supply_quantities, double* supply_profiles, double price, size_t num_suppliers);
 double* _VECTOR_SORT_ORDER(double* vector, size_t size, double direction);
 double _XIDZ(double a, double b, double x);
 double _ZIDZ(double a, double b);
