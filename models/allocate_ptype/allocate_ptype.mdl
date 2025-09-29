@@ -67,7 +67,7 @@ $-1--1--1,0,|12||-1--1--1|-1--1--1|-1--1--1|-1--1--1|-1--1--1|96,96,100,0
 51:
 52:
 53:
-43:/Users/todd/Projects/SDEverywhere/models/allocate_ptype/allocate_ptype.dat
+43:allocate_ptype.dat
 47:
 48:
 23:0
@@ -90,7 +90,7 @@ $-1--1--1,0,|12||-1--1--1|-1--1--1|-1--1--1|-1--1--1|-1--1--1|96,96,100,0
 90:0
 87:0
 75:
-43:/Users/todd/Projects/SDEverywhere/models/allocate_ptype/allocate_ptype.dat
+43:allocate_ptype.dat
 103:8,8,8,3,8
 105:0,0,0,0,0,0,0,0,0,0
 104:Courier|12||0-0-0|0-0-0|-1--1--1|0-0-255|192-192-192|-1--1--1
