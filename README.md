@@ -38,7 +38,9 @@ Please get in touch on the [discussion board](https://github.com/climateinteract
 SDEverywhere provides a live development environment and configuration files that allow you to see your edits in real time.
 Every time you save changes to your Vensim model or to the CSV config files, the local builder automatically rebuilds your project and the changes appear instantaneously in your browser, no manual reloads required.
 
-The following video demonstrates using a text editor to make simple edits in the CSV config files that affect the appearance and behavior of the generated web application.
+For more guidance on developing a project, refer to [Creating a Web Application](https://github.com/climateinteractive/SDEverywhere/wiki/Creating-a-Web-Application) in the [SDEverywhere wiki](https://github.com/climateinteractive/SDEverywhere/wiki).
+
+**Demo:** The following video demonstrates using a text editor to make simple edits in the CSV config files that affect the appearance and behavior of the generated web application.
 In the video, we tweak the color of a graph plot, change an axis label, and set a new default for a slider.
 All of these settings and more can be configured by editing the CSV files in your favorite text editor or in Excel.
 
@@ -52,7 +54,9 @@ There is support for two different kinds of tests:
 - **_Checks:_** Check tests can be used to verify that your model behaves according to some guidelines (or conforms to your mental models). For example, you can have checks that verify that stocks are always positive, or that some output variable produces values that are close to historical reference data.
 - **_Comparisons:_** Comparison tests can be used to track changes to your model between two different versions. For example, you can run your model over thousands of input scenarios and see at a glance how your model outputs differ from a previous version.
 
-In the following video, we demonstrate how the model-check tools can be run alongside Vensim to give you immediate feedback whenever you make changes to your model.
+For more guidance on configuring checks and comparisons, refer to [Testing and Comparing Your Model](https://github.com/climateinteractive/SDEverywhere/wiki/Testing-and-Comparing-Your-Model) in the [SDEverywhere wiki](https://github.com/climateinteractive/SDEverywhere/wiki).
+
+**Demo:** In the following video, we demonstrate how the model-check tools can be run alongside Vensim to give you immediate feedback whenever you make changes to your model.
 In this example, we have an existing "check" test that verifies that the different population variables always produce values in the range 0 to 10000.
 If we multiply a variable by -1 and save the model file, the builder detects the change and re-runs all the defined check and comparison tests.
 
@@ -145,6 +149,7 @@ For example:
 
 - For guidance on designing and building a full-featured web application around your model, refer to [Creating a Web Application](https://github.com/climateinteractive/SDEverywhere/wiki/Creating-a-Web-Application).
 - To learn how to embed an SD model into a native C/C++ application or library, refer to [Integrating a Model into a Native Application](https://github.com/climateinteractive/SDEverywhere/wiki/Integrating-a-Model-into-a-Native-Application).
+- For details on configuring checks and comparisons, refer to [Testing and Comparing Your Model](https://github.com/climateinteractive/SDEverywhere/wiki/Testing-and-Comparing-Your-Model).
 
 ## Caveats
 

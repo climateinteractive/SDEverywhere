@@ -43,7 +43,18 @@
         "rollup",
         "svelte"
       ]
-    }
+    },
+    "onlyBuiltDependencies": [
+      "@fortawesome/fontawesome-common-types",
+      "@fortawesome/free-regular-svg-icons",
+      "@fortawesome/free-solid-svg-icons",
+      "es5-ext",
+      "esbuild",
+      "svelte-preprocess"
+    ],
+    "ignoredBuiltDependencies": [
+      "@parcel/watcher"
+    ]
   },
   "author": "Climate Interactive",
   "license": "MIT",
