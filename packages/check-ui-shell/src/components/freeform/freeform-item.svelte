@@ -47,19 +47,19 @@ function onTitleClicked() {
 
 <div class="freeform-item">
   {#if viewModel.title}
-    <div class="title-row no-selection">
-      <div class="title" on:click={onTitleClicked}>{@html viewModel.title}</div>
+    <div class="freeform-item-title-row no-selection">
+      <div class="freeform-item-title" on:click={onTitleClicked}>{@html viewModel.title}</div>
       {#if viewModel.subtitle}
-        <div class="subtitle">{@html viewModel.subtitle}</div>
+        <div class="freeform-item-subtitle">{@html viewModel.subtitle}</div>
       {/if}
     </div>
   {/if}
-  <div class="content-container">
+  <div class="freeform-item-content-container">
     <Lazy bind:visible={visible}>
       {#if $content}
-        <div class="content">
-          <div class="graph-container">
-            <ComparisonGraph viewModel={$content.comparisonGraphViewModel} width={30} height={22} />
+        <div class="freeform-item-content">
+          <div class="freeform-item-graph-container">
+            <ComparisonGraph viewModel={$content.comparisonGraphViewModel} />
           </div>
         </div>
       {/if}
