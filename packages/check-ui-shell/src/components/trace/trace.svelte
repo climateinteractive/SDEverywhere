@@ -3,6 +3,8 @@
 <!-- SCRIPT -->
 <script lang='ts'>
 
+import { onMount } from 'svelte'
+
 import Row from './trace-row.svelte'
 import type { TraceViewModel } from './trace-vm'
 
@@ -24,9 +26,13 @@ $: if (files && files[0]) {
   reader.readAsText(file)
 }
 
-// function onRun() {
-//   viewModel.run(datText)
-// }
+function onRun() {
+  viewModel.run()
+}
+
+onMount(() => {
+  viewModel.run()
+})
 
 </script>
 
@@ -34,13 +40,11 @@ $: if (files && files[0]) {
 
 
 <!-- TEMPLATE -->
-<template>
-
 <div class="trace-container">
   <div class="trace-header-container">
     {#if !$running}
       <input bind:files type="file" id="trace-dat-file" name="trace-dat-file" accept=".dat" />
-      <!-- <button class="run" on:click={onRun} disabled={$running}>Run</button> -->
+      <button class="run" on:click={onRun} disabled={$running}>Run</button>
     {:else}
       <div>Running comparisons, please wait…</div>
     {/if}
@@ -56,8 +60,6 @@ $: if (files && files[0]) {
     {/each}
   </div>
 </div>
-
-</template>
 
 
 
@@ -81,6 +83,9 @@ $: if (files && files[0]) {
   box-shadow: 0 1rem .5rem -.5rem rgba(0,0,0,.5)
   z-index: 1
 
+#trace-dat-file
+  display: none
+
 .trace-scroll-container
   display: flex
   // XXX: We use 1px here for flex-basis, otherwise in Firefox and Chrome the
@@ -89,7 +94,7 @@ $: if (files && files[0]) {
   flex: 1 1 1px
   flex-direction: column
   overflow: auto
-  padding: 1rem
+  padding: 2rem 1rem
   align-items: flex-start
   outline: none
   background-color: #3c3c3c

@@ -89,7 +89,7 @@ export function getOutputs(modelVersion: number): Outputs {
     }
     implVars.set(`ModelImpl${implVar.varId}`, implVar)
   }
-  for (let i = 1; i <= 200; i++) {
+  for (let i = 1; i <= 5; i++) {
     addImplVar(`_constant_${i}`, `Constant ${i}`, 'const')
   }
   addImplVar('_initial_1', 'Initial 1', 'initial')

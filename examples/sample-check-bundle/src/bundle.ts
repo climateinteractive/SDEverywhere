@@ -94,8 +94,9 @@ export function createBundle(): Bundle {
     inputSettingGroups: inputs.inputSettingGroups,
     outputVars: outputs.outputVars,
     implVars: outputs.implVars,
+    implVarGroups: outputs.implVarGroups,
     datasetGroups: outputs.datasetGroups,
-    startTime: 1850,
+    startTime: 2000,
     endTime: 2100,
     graphSpecs
   }

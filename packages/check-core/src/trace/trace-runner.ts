@@ -127,17 +127,17 @@ export class TraceRunner {
 
     // Get the set of all dataset keys
     const allDatasetKeys: DatasetKey[] = [...this.bundleModelR.modelSpec.implVars.keys()]
-    console.log('ALL:')
-    console.log(allDatasetKeys)
+    // console.log('ALL:')
+    // console.log(allDatasetKeys)
 
-    // Break the dataset requests into batches, with up to 2000 variables
+    // Break the dataset requests into batches, with up to `batchSize` variables
     // in each batch
     const batchSize = 2000
     for (let i = 0; i < allDatasetKeys.length; i += batchSize) {
       const datasetKeysForBatch = allDatasetKeys.slice(i, i + batchSize)
       // TODO: Implement comparison to external data
-      console.log('BATCH:')
-      console.log(datasetKeysForBatch)
+      // console.log('BATCH:')
+      // console.log(datasetKeysForBatch)
       addTask(datasetKeysForBatch)
     }
   }
