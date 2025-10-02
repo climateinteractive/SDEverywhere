@@ -2,7 +2,7 @@
 
 import { assertNever } from 'assert-never'
 
-import { allInputsAtPositionSpec } from '../_shared/scenario-specs'
+import type { ScenarioSpec } from '../_shared/scenario-spec-types'
 import { TaskQueue } from '../_shared/task-queue'
 import type { Dataset, DatasetKey, DatasetMap } from '../_shared/types'
 
@@ -28,17 +28,19 @@ export class TraceRunner {
   public onComplete?: (traceReport: TraceReport) => void
   public onError?: (error: Error) => void
 
-  constructor(public readonly bundleModelL: BundleModel, public readonly bundleModelR: BundleModel) {
-    // TODO: Allow for creating a TraceRunner instance with a specific scenario
-    const scenarioSpec = allInputsAtPositionSpec('at-default')
-
+  constructor(
+    public readonly bundleModelL: BundleModel,
+    public readonly bundleModelR: BundleModel,
+    scenarioSpecL: ScenarioSpec,
+    scenarioSpecR: ScenarioSpec
+  ) {
     this.taskQueue = new TaskQueue({
       process: async request => {
         switch (request.kind) {
           case 'compare-to-left': {
             const [resultL, resultR] = await Promise.all([
-              bundleModelL.getDatasetsForScenario(scenarioSpec, request.datasetKeys),
-              bundleModelR.getDatasetsForScenario(scenarioSpec, request.datasetKeys)
+              bundleModelL.getDatasetsForScenario(scenarioSpecL, request.datasetKeys),
+              bundleModelR.getDatasetsForScenario(scenarioSpecR, request.datasetKeys)
             ])
             const datasetReports: TraceDatasetReport[] = []
             for (const datasetKey of request.datasetKeys) {
@@ -52,7 +54,7 @@ export class TraceRunner {
             }
           }
           case 'compare-to-ext-data': {
-            const resultR = await bundleModelR.getDatasetsForScenario(scenarioSpec, request.datasetKeys)
+            const resultR = await bundleModelR.getDatasetsForScenario(scenarioSpecR, request.datasetKeys)
             const datasetReports: TraceDatasetReport[] = []
             for (const datasetKey of request.datasetKeys) {
               let datasetL = request.extData.get(datasetKey)

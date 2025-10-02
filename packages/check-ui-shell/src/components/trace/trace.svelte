@@ -5,6 +5,8 @@
 
 import { onMount } from 'svelte'
 
+import Selector from '../_shared/selector.svelte'
+
 import Row from './trace-row.svelte'
 import type { TraceViewModel } from './trace-vm'
 
@@ -26,10 +28,6 @@ $: if (files && files[0]) {
   reader.readAsText(file)
 }
 
-function onRun() {
-  viewModel.run()
-}
-
 onMount(() => {
   viewModel.run()
 })
@@ -43,8 +41,16 @@ onMount(() => {
 <div class="trace-container">
   <div class="trace-header-container">
     {#if !$running}
-      <input bind:files type="file" id="trace-dat-file" name="trace-dat-file" accept=".dat" />
-      <button class="run" on:click={onRun} disabled={$running}>Run</button>
+      <div class="trace-selector-label">{viewModel.bundleNameL}</div>
+      <div class="trace-selector-content">
+        <Selector viewModel={viewModel.scenarioSelectorL} />
+        <div class="trace-selector-label">or choose dat file:</div>
+        <input bind:files type="file" id="trace-dat-file" name="trace-dat-file" accept=".dat" />
+      </div>
+      <div class="trace-selector-label">{viewModel.bundleNameR}</div>
+      <div class="trace-selector-content">
+        <Selector viewModel={viewModel.scenarioSelectorR} />
+      </div>
     {:else}
       <div>Running comparisons, please wait…</div>
     {/if}
@@ -73,9 +79,10 @@ onMount(() => {
   flex: 1
 
 .trace-header-container
-  display: flex
-  flex-direction: column
-  align-items: flex-start
+  display: grid
+  grid-template-columns: auto 1fr
+  align-items: center
+  gap: .5rem 1rem
   // XXX: Use negative margin to make the shadow stretch all the way
   // across, then use extra padding to compensate
   margin: 0 -1rem
@@ -83,8 +90,14 @@ onMount(() => {
   box-shadow: 0 1rem .5rem -.5rem rgba(0,0,0,.5)
   z-index: 1
 
-#trace-dat-file
-  display: none
+.trace-selector-content
+  display: flex
+  flex-direction: row
+  align-items: center
+  gap: 1rem
+
+.trace-selector-content :global(select)
+  width: 300px
 
 .trace-scroll-container
   display: flex

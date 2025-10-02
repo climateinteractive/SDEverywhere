@@ -47,6 +47,7 @@ export class AppViewModel {
   public readonly headerViewModel: HeaderViewModel
   private readonly pinnedItemStates: PinnedItemStates
   public summaryViewModel: SummaryViewModel
+  public traceViewModel: TraceViewModel
   private cancelRunSuite: () => void
 
   /**
@@ -138,6 +139,8 @@ export class AppViewModel {
               comparisonSummary,
               this.pinnedItemStates
             )
+            // TODO: Create this lazily
+            this.traceViewModel = createTraceViewModel(comparisonConfig, comparisonSummary.testSummaries)
             this.writableChecksInProgress.set(false)
           },
           onError: error => {
@@ -260,10 +263,6 @@ export class AppViewModel {
   //   }
   //   return createFreeformViewModel(this.appModel.config.comparison, this.appModel.comparisonDataCoordinator)
   // }
-
-  createTraceViewModel(): TraceViewModel {
-    return createTraceViewModel(this.appModel.config)
-  }
 }
 
 export interface AppViewModelResult {

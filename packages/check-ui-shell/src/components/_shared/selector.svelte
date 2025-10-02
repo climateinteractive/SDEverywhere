@@ -12,6 +12,7 @@ import type { SelectorViewModel } from './selector-vm'
 
 export let viewModel: SelectorViewModel
 const selectedValue = viewModel.selectedValue
+const initialValue = get(selectedValue)
 
 function onChange() {
   // Note: The `change` event is only emitted when the user makes a change,
@@ -26,14 +27,11 @@ function onChange() {
 
 
 <!-- TEMPLATE -->
-<template lang='pug'>
-
-include selector.pug
-
-select(bind:value!='{$selectedValue}' on:change!='{onChange}')
-  +options
-
-</template>
+<select bind:value={$selectedValue} on:change={onChange}>
+  {#each viewModel.options as option}
+    <option value={option.value} disabled={option.options.disabled === true} hidden={option.options.hidden === true} selected={option.value === initialValue}>{@html option.label}</option>
+  {/each}
+</select>
 
 
 
@@ -45,13 +43,13 @@ select
   width: auto
   font-family: inherit
   font-size: inherit
-  color: inherit
+  color: #000
   // Note: The following values were derived from bootstrap
   margin: 0
   background-color: #fff
   background-image: none
   border: 1px solid #ccc
-  border-radius: 0
+  border-radius: 4px
   box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075)
   transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out
   text-transform: none

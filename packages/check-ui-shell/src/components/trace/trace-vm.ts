@@ -5,13 +5,20 @@ import { writable } from 'svelte/store'
 
 import type {
   BundleModel,
-  Config,
+  ComparisonConfig,
+  ComparisonGroupSummariesByCategory,
+  ComparisonGroupSummary,
+  ComparisonScenario,
+  ComparisonTestSummary,
   DatasetMap,
   ImplVar,
+  ScenarioSpec,
   TraceDatasetReport,
   TraceReport
 } from '@sdeverywhere/check-core'
-import { TraceRunner } from '@sdeverywhere/check-core'
+import { categorizeComparisonTestSummaries, TraceRunner } from '@sdeverywhere/check-core'
+
+import { SelectorOptionViewModel, SelectorViewModel } from '../_shared/selector-vm'
 
 import type { TracePointViewModel, TraceRowViewModel } from './trace-row-vm'
 import { readDat } from './read-dat'
@@ -22,13 +29,33 @@ export interface TraceGroupViewModel {
 }
 
 export class TraceViewModel {
+  private readonly bundleModelL: BundleModel
+  private readonly bundleModelR: BundleModel
+
+  public readonly bundleNameL: string
+  public readonly bundleNameR: string
+
+  public readonly scenarioSelectorL: SelectorViewModel
+  public readonly scenarioSelectorR: SelectorViewModel
+
   private readonly writableGroups: Writable<TraceGroupViewModel[]>
   public readonly groups: Readable<TraceGroupViewModel[]>
 
   private readonly writableRunning: Writable<boolean>
   public readonly running: Readable<boolean>
 
-  constructor(private readonly bundleModelL: BundleModel, private readonly bundleModelR: BundleModel) {
+  constructor(public readonly comparisonConfig: ComparisonConfig, terseSummaries: ComparisonTestSummary[]) {
+    this.bundleModelL = comparisonConfig.bundleL.model
+    this.bundleModelR = comparisonConfig.bundleR.model
+
+    this.bundleNameL = comparisonConfig.bundleL.name
+    this.bundleNameR = comparisonConfig.bundleR.name
+
+    const comparisonGroups = categorizeComparisonTestSummaries(comparisonConfig, terseSummaries)
+    const groupsByScenario = comparisonGroups.byScenario
+    this.scenarioSelectorL = createScenarioSelectorViewModel(this.bundleNameL, groupsByScenario, 'left')
+    this.scenarioSelectorR = createScenarioSelectorViewModel(this.bundleNameR, groupsByScenario, 'right')
+
     this.writableGroups = writable([])
     this.groups = this.writableGroups
 
@@ -47,9 +74,27 @@ export class TraceViewModel {
     this.writableGroups.set([])
     this.writableRunning.set(true)
 
+    // XXX: Temporary
+    function allInputsAtDefaultSpec(): ScenarioSpec {
+      return {
+        kind: 'all-inputs',
+        uid: 'all_inputs_at_default',
+        position: 'at-default'
+      }
+    }
+
+    // XXX
+    let scenarioSpecL: ScenarioSpec | undefined
+    if (!extData) {
+      scenarioSpecL = allInputsAtDefaultSpec()
+    }
+
+    // XXX
+    const scenarioSpecR: ScenarioSpec = allInputsAtDefaultSpec()
+
     // TODO: Get this value from the UI
-    const threshold = 1
-    const traceRunner = new TraceRunner(this.bundleModelL, this.bundleModelR)
+    const threshold = 0
+    const traceRunner = new TraceRunner(this.bundleModelL, this.bundleModelR, scenarioSpecL, scenarioSpecR)
     traceRunner.onComplete = report => {
       console.log('COMPLETE!')
       this.writableGroups.set(groupsFromReport(/*this.bundleModelL,*/ this.bundleModelR, report, threshold))
@@ -64,8 +109,11 @@ export class TraceViewModel {
   }
 }
 
-export function createTraceViewModel(config: Config): TraceViewModel {
-  return new TraceViewModel(config.comparison.bundleL.model, config.comparison.bundleR.model)
+export function createTraceViewModel(
+  comparisonConfig: ComparisonConfig,
+  terseSummaries: ComparisonTestSummary[]
+): TraceViewModel {
+  return new TraceViewModel(comparisonConfig, terseSummaries)
 }
 
 function groupsFromReport(
@@ -191,4 +239,51 @@ function groupsFromReport(
     })
   }
   return groups
+}
+
+function createScenarioSelectorViewModel(
+  bundleName: string,
+  groupsByScenario: ComparisonGroupSummariesByCategory,
+  side: 'left' | 'right'
+): SelectorViewModel {
+  const scenarioOptions: SelectorOptionViewModel[] = []
+
+  function addScenarioOption(summary: ComparisonGroupSummary): void {
+    const scenario = summary.root as ComparisonScenario
+    const spec = side === 'right' ? scenario.specR : scenario.specL
+    if (!spec) {
+      return
+    }
+    let scenarioTitle = scenario.title
+    if (scenario.subtitle) {
+      scenarioTitle += ` ${scenario.subtitle}`
+    }
+    scenarioOptions.push(new SelectorOptionViewModel(scenarioTitle, scenario.key))
+  }
+
+  function addScenarioOptions(summaries: ComparisonGroupSummary[], header: string, value: string): void {
+    if (summaries.length === 0) {
+      return
+    }
+    scenarioOptions.push(new SelectorOptionViewModel(header, value, { disabled: true }))
+    summaries.forEach(addScenarioOption)
+  }
+
+  const onlyInSide = side === 'left' ? groupsByScenario.onlyInLeft : groupsByScenario.onlyInRight
+  addScenarioOptions(onlyInSide, `--- Scenarios only valid in ${bundleName}`, '___only_in_side')
+  addScenarioOptions(groupsByScenario.withDiffs, `--- Scenarios producing differences`, '___with_diffs')
+  addScenarioOptions(groupsByScenario.withoutDiffs, `--- Scenarios NOT producing differences`, '___without_diffs')
+
+  // XXX: Select the "All inputs at default" scenario by default.  This is fragile because it assumes that the
+  // display name is a certain value, but there is no guarantee of that.
+  let initialValue: string
+  for (const option of scenarioOptions) {
+    if (option.label === 'All inputs at default') {
+      initialValue = option.value
+      break
+    }
+  }
+
+  const selectedValue = writable(initialValue)
+  return new SelectorViewModel(scenarioOptions, selectedValue)
 }

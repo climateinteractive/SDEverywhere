@@ -28,7 +28,6 @@ const zoom = viewModel.headerViewModel.zoom
 let compareDetailViewModel: CompareDetailViewModel
 let perfViewModel: PerfViewModel
 let freeformViewModel: FreeformViewModel
-let traceViewModel: TraceViewModel
 
 type ViewMode = 'summary' | 'comparison-detail' | 'perf' | 'freeform' | 'trace'
 let viewMode: ViewMode = 'summary'
@@ -141,9 +140,6 @@ function onKeyDown(event: KeyboardEvent) {
     //   event.preventDefault()
     //   break
     case 't':
-      if (!traceViewModel) {
-        traceViewModel = viewModel.createTraceViewModel()
-      }
       viewMode = 'trace'
       event.preventDefault()
       break
@@ -177,7 +173,7 @@ svelte:window(on:keydown!='{onKeyDown}')
         +elseif('viewMode === "perf"')
           Perf(on:command!='{onCommand}' viewModel!='{perfViewModel}')
         +elseif('viewMode === "trace"')
-          Trace(on:command!='{onCommand}' viewModel!='{traceViewModel}')
+          Trace(on:command!='{onCommand}' viewModel!='{viewModel.traceViewModel}')
         +else
           Summary(on:command!='{onCommand}' viewModel!='{viewModel.summaryViewModel}')
 
