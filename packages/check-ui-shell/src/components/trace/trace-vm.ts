@@ -148,8 +148,6 @@ export class TraceViewModel {
   }
 
   public run(): void {
-    console.log('run called', 'already running?', this.running)
-
     // For now, we only allow one run at a time
     if (this.running) {
       return
@@ -172,7 +170,6 @@ export class TraceViewModel {
         return
       }
       const extData = readDat(datText, 'ModelImpl_')
-      console.log('extData', extData)
       const bundleModel = this.bundleModelR
       const scenarioSpec = get(this.selectedScenarioSpec1)
       traceOptions = {
@@ -244,7 +241,6 @@ function groupsFromReport(bundleModelR: BundleModel, report: TraceReport, thresh
   let modelMinTime: number
   let modelMaxTime: number
   for (const datasetReport of report.datasetReports.values()) {
-    console.log('datasetReport', datasetReport)
     if (datasetReport.points.size > 1) {
       let min = Number.POSITIVE_INFINITY
       let max = Number.NEGATIVE_INFINITY
