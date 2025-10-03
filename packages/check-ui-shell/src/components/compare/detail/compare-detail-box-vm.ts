@@ -88,7 +88,9 @@ export class CompareDetailBoxViewModel {
 
     this.dataCoordinator.requestDatasetMaps(
       this.requestKey,
+      'left',
       this.scenario.specL,
+      'right',
       this.scenario.specR,
       datasetKeys,
       (datasetMapL, datasetMapR) => {

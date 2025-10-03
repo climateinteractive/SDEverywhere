@@ -72,7 +72,9 @@ export class ContextGraphViewModel {
     const specR: ScenarioSpec = this.bundle === 'right' ? this.scenario.specR : undefined
     this.dataCoordinator.requestGraphData(
       this.requestKey,
+      'left',
       specL,
+      'right',
       specR,
       this.graphSpec.id,
       (graphDataL, graphDataR) => {

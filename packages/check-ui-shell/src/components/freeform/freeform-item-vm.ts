@@ -48,7 +48,9 @@ export class FreeformItemViewModel {
 
     this.dataCoordinator.requestDatasetMaps(
       this.requestKey,
+      'left',
       this.scenario.specL,
+      'right',
       this.scenario.specR,
       [this.datasetKey],
       (datasetMapL, datasetMapR) => {
