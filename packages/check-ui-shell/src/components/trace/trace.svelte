@@ -5,8 +5,11 @@
 
 import Selector from '../_shared/selector.svelte'
 
-import Row from './trace-row.svelte'
+import type { TraceTooltipViewModel } from './trace-tooltip-vm'
 import type { TraceViewModel } from './trace-vm'
+
+import Row from './trace-row.svelte'
+import TraceTooltip from './trace-tooltip.svelte'
 
 export let viewModel: TraceViewModel
 const sourceSelector0 = viewModel.sourceSelector0
@@ -36,6 +39,49 @@ $: if (files && files[0]) {
 // XXX: This is heavy-handed, but the idea is to run immediately any time the options are changed
 $: if ($selectedSource0 || $selectedScenarioSpec0 || $selectedDatText || $selectedSource1 || $selectedScenarioSpec1) {
   viewModel.run()
+}
+
+let tooltipViewModel: TraceTooltipViewModel | undefined = undefined
+let tooltipX = 0
+let tooltipY = 0
+
+function onShowTooltip(event: CustomEvent): void {
+  const datasetKey = event.detail.datasetKey
+  const varName = event.detail.varName
+  const diffPoint = event.detail.diffPoint
+  const eventX = event.detail.eventX
+  const eventY = event.detail.eventY
+
+  // Position tooltip near the mouse cursor, but ensure it stays on screen
+  const tooltipWidth = 400
+  const tooltipHeight = 300
+  const margin = 10
+
+  let x = eventX + margin
+  let y = eventY - margin
+
+  // Adjust if tooltip would go off the right edge
+  if (x + tooltipWidth > window.innerWidth) {
+    x = eventX - tooltipWidth - margin
+  }
+
+  // Adjust if tooltip would go off the bottom edge
+  if (y + tooltipHeight > window.innerHeight) {
+    y = eventY - tooltipHeight - margin
+  }
+
+  // Ensure tooltip doesn't go off the left or top edges
+  x = Math.max(margin, x)
+  y = Math.max(margin, y)
+
+  tooltipX = x
+  tooltipY = y
+  tooltipViewModel = viewModel.createTooltipViewModel(datasetKey, varName, diffPoint)
+}
+
+function onHideTooltip(): void {
+  tooltipViewModel?.clearData()
+  tooltipViewModel = undefined
 }
 
 </script>
@@ -70,10 +116,18 @@ $: if ($selectedSource0 || $selectedScenarioSpec0 || $selectedDatText || $select
         <div class="trace-group">
           <div class="trace-group-title">{group.title}</div>
           {#each group.rows as row}
-            <Row viewModel={row} />
+            <Row viewModel={row} on:show-tooltip={onShowTooltip} on:hide-tooltip={onHideTooltip} />
           {/each}
         </div>
       {/each}
+    {/if}
+
+    {#if tooltipViewModel}
+      <TraceTooltip
+        viewModel={tooltipViewModel}
+        x={tooltipX}
+        y={tooltipY}
+      />
     {/if}
   </div>
 </div>

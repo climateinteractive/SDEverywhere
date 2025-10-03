@@ -140,7 +140,11 @@ export class AppViewModel {
               this.pinnedItemStates
             )
             // TODO: Create this lazily
-            this.traceViewModel = createTraceViewModel(comparisonConfig, comparisonSummary.testSummaries)
+            this.traceViewModel = createTraceViewModel(
+              comparisonConfig,
+              this.appModel.comparisonDataCoordinator,
+              comparisonSummary.testSummaries
+            )
             this.writableChecksInProgress.set(false)
           },
           onError: error => {

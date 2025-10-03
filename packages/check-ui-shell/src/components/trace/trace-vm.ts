@@ -6,10 +6,13 @@ import { derived, get, writable } from 'svelte/store'
 import type {
   BundleModel,
   ComparisonConfig,
+  ComparisonDataCoordinator,
   ComparisonGroupSummariesByCategory,
   ComparisonGroupSummary,
   ComparisonScenario,
   ComparisonTestSummary,
+  DatasetKey,
+  DiffPoint,
   ImplVar,
   ScenarioSpec,
   TraceDatasetReport,
@@ -20,8 +23,9 @@ import { categorizeComparisonTestSummaries, TraceRunner } from '@sdeverywhere/ch
 
 import { SelectorOptionViewModel, SelectorViewModel } from '../_shared/selector-vm'
 
-import type { TracePointViewModel, TraceRowViewModel } from './trace-row-vm'
 import { readDat } from './read-dat'
+import type { TracePointViewModel, TraceRowViewModel } from './trace-row-vm'
+import { TraceTooltipViewModel } from './trace-tooltip-vm'
 
 export interface TraceGroupViewModel {
   title: string
@@ -60,7 +64,11 @@ export class TraceViewModel {
 
   private running = false
 
-  constructor(public readonly comparisonConfig: ComparisonConfig, terseSummaries: ComparisonTestSummary[]) {
+  constructor(
+    public readonly comparisonConfig: ComparisonConfig,
+    public readonly dataCoordinator: ComparisonDataCoordinator,
+    terseSummaries: ComparisonTestSummary[]
+  ) {
     // Extract the bundle models
     this.bundleModelL = comparisonConfig.bundleL.model
     this.bundleModelR = comparisonConfig.bundleR.model
@@ -222,13 +230,28 @@ export class TraceViewModel {
     }
     traceRunner.start(traceOptions)
   }
+
+  createTooltipViewModel(datasetKey: DatasetKey, varName: string, diffPoint: DiffPoint): TraceTooltipViewModel {
+    const scenarioSpecL = get(this.selectedScenarioSpec0)
+    const scenarioSpecR = get(this.selectedScenarioSpec1)
+    return new TraceTooltipViewModel(
+      this.comparisonConfig,
+      this.dataCoordinator,
+      datasetKey,
+      varName,
+      scenarioSpecL,
+      scenarioSpecR,
+      diffPoint
+    )
+  }
 }
 
 export function createTraceViewModel(
   comparisonConfig: ComparisonConfig,
+  dataCoordinator: ComparisonDataCoordinator,
   terseSummaries: ComparisonTestSummary[]
 ): TraceViewModel {
-  return new TraceViewModel(comparisonConfig, terseSummaries)
+  return new TraceViewModel(comparisonConfig, dataCoordinator, terseSummaries)
 }
 
 function groupsFromReport(bundleModelR: BundleModel, report: TraceReport, threshold: number): TraceGroupViewModel[] {
@@ -318,6 +341,7 @@ function groupsFromReport(bundleModelR: BundleModel, report: TraceReport, thresh
     }
 
     return {
+      datasetKey: datasetReport.datasetKey,
       varName: implVar.varName,
       points
     }

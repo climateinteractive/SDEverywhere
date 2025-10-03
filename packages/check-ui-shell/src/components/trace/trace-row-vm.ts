@@ -1,6 +1,6 @@
 // Copyright (c) 2024 Climate Interactive / New Venture Fund
 
-import type { DiffPoint } from '@sdeverywhere/check-core'
+import type { DatasetKey, DiffPoint } from '@sdeverywhere/check-core'
 
 export interface TracePointViewModel {
   color: string
@@ -9,6 +9,7 @@ export interface TracePointViewModel {
 }
 
 export interface TraceRowViewModel {
+  datasetKey: DatasetKey
   varName: string
   points: TracePointViewModel[]
 }
