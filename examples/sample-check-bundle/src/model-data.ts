@@ -33,7 +33,7 @@ export function getDatasetsForScenario(
   for (const datasetKey of datasetKeys) {
     if (datasetKey.startsWith('ModelImpl')) {
       const dataset: Dataset = new Map()
-      if (modelVersion === 2 && datasetKey === 'ModelImpl_output_y') {
+      if (modelVersion === 2 && datasetKey === 'ModelImpl__output_y') {
         // XXX: Set a different value at one data point for one model to show
         // what happens when there is a difference at one time step
         for (let t = 2000; t <= 2100; t++) {

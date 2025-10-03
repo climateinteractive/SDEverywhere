@@ -3,34 +3,40 @@
 <!-- SCRIPT -->
 <script lang='ts'>
 
-import { onMount } from 'svelte'
-
 import Selector from '../_shared/selector.svelte'
 
 import Row from './trace-row.svelte'
 import type { TraceViewModel } from './trace-vm'
 
 export let viewModel: TraceViewModel
-const running = viewModel.running
+const sourceSelector0 = viewModel.sourceSelector0
+const sourceSelector1 = viewModel.sourceSelector1
+const selectedSource0 = viewModel.sourceSelector0.selectedValue
+const selectedSource1 = viewModel.sourceSelector1.selectedValue
+const scenarioSelector0 = viewModel.scenarioSelector0
+const scenarioSelector1 = viewModel.scenarioSelector1
+const selectedScenarioSpec0 = viewModel.selectedScenarioSpec0
+const selectedScenarioSpec1 = viewModel.selectedScenarioSpec1
+const selectedDatText = viewModel.datText
+const statusMessage = viewModel.statusMessage
 const groups = viewModel.groups
 
 let datText: string
 let files: FileList
 $: if (files && files[0]) {
   const file = files[0]
-  // console.log(file)
   const reader = new FileReader()
   reader.onload = () => {
     datText = reader.result as string
-    viewModel.run(datText)
-    // console.log(datText)
+    viewModel.datText.set(datText)
   }
   reader.readAsText(file)
 }
 
-onMount(() => {
+// XXX: This is heavy-handed, but the idea is to run immediately any time the options are changed
+$: if ($selectedSource0 || $selectedScenarioSpec0 || $selectedDatText || $selectedSource1 || $selectedScenarioSpec1) {
   viewModel.run()
-})
+}
 
 </script>
 
@@ -40,30 +46,35 @@ onMount(() => {
 <!-- TEMPLATE -->
 <div class="trace-container">
   <div class="trace-header-container">
-    {#if !$running}
-      <div class="trace-selector-label">{viewModel.bundleNameL}</div>
-      <div class="trace-selector-content">
-        <Selector viewModel={viewModel.scenarioSelectorL} />
-        <div class="trace-selector-label">or choose dat file:</div>
-        <input bind:files type="file" id="trace-dat-file" name="trace-dat-file" accept=".dat" />
-      </div>
-      <div class="trace-selector-label">{viewModel.bundleNameR}</div>
-      <div class="trace-selector-content">
-        <Selector viewModel={viewModel.scenarioSelectorR} />
-      </div>
-    {:else}
-      <div>Running comparisons, please wait…</div>
-    {/if}
+    <div class="trace-header-content">
+      <div class="trace-source-selector-label">Source 1: </div>
+      <Selector viewModel={sourceSelector0} />
+      {#if $selectedSource0 === 'dat'}
+        <div class="trace-scenario-selector-label">File: </div>
+        <input bind:files type="file" class="trace-dat-file-chooser" id="trace-dat-file" name="trace-dat-file" accept=".dat" />
+      {:else}
+        <div class="trace-scenario-selector-label">Scenario: </div>
+        <Selector viewModel={$scenarioSelector0} />
+      {/if}
+      <div class="trace-source-selector-label">Source 2:</div>
+      <Selector viewModel={sourceSelector1} />
+      <div class="trace-scenario-selector-label">Scenario: </div>
+      <Selector viewModel={$scenarioSelector1} />
+    </div>
   </div>
   <div class="trace-scroll-container">
-    {#each $groups as group}
-      <div class="trace-group">
-        <div class="trace-group-title">{group.title}</div>
-        {#each group.rows as row}
-          <Row viewModel={row} />
-        {/each}
-      </div>
-    {/each}
+    {#if $statusMessage}
+      <div>{$statusMessage}</div>
+    {:else}
+      {#each $groups as group}
+        <div class="trace-group">
+          <div class="trace-group-title">{group.title}</div>
+          {#each group.rows as row}
+            <Row viewModel={row} />
+          {/each}
+        </div>
+      {/each}
+    {/if}
   </div>
 </div>
 
@@ -71,57 +82,79 @@ onMount(() => {
 
 
 <!-- STYLE -->
-<style lang='sass'>
+<style lang="scss">
 
-.trace-container
-  display: flex
-  flex-direction: column
-  flex: 1
+.trace-container {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
 
-.trace-header-container
-  display: grid
-  grid-template-columns: auto 1fr
-  align-items: center
-  gap: .5rem 1rem
+.trace-header-container {
+  display: flex;
   // XXX: Use negative margin to make the shadow stretch all the way
   // across, then use extra padding to compensate
-  margin: 0 -1rem
-  padding: 0 2rem 1rem 2rem
-  box-shadow: 0 1rem .5rem -.5rem rgba(0,0,0,.5)
-  z-index: 1
+  margin: 0 -1rem;
+  padding: 0 2rem 1rem 2rem;
+  box-shadow: 0 1rem .5rem -.5rem rgba(0,0,0,.5);
+  z-index: 1;
+}
 
-.trace-selector-content
-  display: flex
-  flex-direction: row
-  align-items: center
-  gap: 1rem
+.trace-header-content {
+  display: grid;
+  grid-template-columns: auto auto auto auto;
+  // XXX: Use a fixed height for the rows so that they don't bounce around when the file chooser is shown
+  grid-template-rows: 24px 24px;
+  align-items: center;
+  gap: .5rem .5rem;
+}
 
-.trace-selector-content :global(select)
-  width: 300px
+.trace-header-content :global(select) {
+  max-width: 300px;
+}
 
-.trace-scroll-container
-  display: flex
+.trace-source-selector-label, .trace-scenario-selector-label {
+  text-align: right;
+}
+
+.trace-scenario-selector-label {
+  margin-left: .7rem;
+}
+
+.trace-dat-file-chooser {
+  width: auto;
+  font-family: inherit;
+  font-size: inherit;
+  margin: 0;
+}
+
+.trace-scroll-container {
+  display: flex;
   // XXX: We use 1px here for flex-basis, otherwise in Firefox and Chrome the
   // whole page will scroll instead of just this container.  See also:
   //   https://stackoverflow.com/a/52489012
-  flex: 1 1 1px
-  flex-direction: column
-  overflow: auto
-  padding: 2rem 1rem
-  align-items: flex-start
-  outline: none
-  background-color: #3c3c3c
+  flex: 1 1 1px;
+  flex-direction: column;
+  overflow: auto;
+  padding: 2rem 1rem;
+  align-items: flex-start;
+  outline: none;
+  background-color: #3c3c3c;
+}
 
-.trace-group
-  display: flex
-  flex-direction: column
-  &:not(:first-child)
+.trace-group {
+  display: flex;
+  flex-direction: column;
+  &:not(:first-child) {
     margin-top: 20px
+  }
+}
 
-.trace-group-title
-  font-size: 14px
-  font-weight: 700
-  color: #fff
-  margin-bottom: 4px
+.trace-group-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 4px;
+}
 
 </style>

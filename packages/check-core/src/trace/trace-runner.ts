@@ -10,14 +10,43 @@ import type { BundleModel } from '../bundle/bundle-types'
 
 import type { TraceDatasetReport, TraceReport } from './trace-report'
 import type { DiffPoint, DiffValidity } from '../comparison/diff-datasets/diff-datasets'
+import type { DatasetsResult } from '../_shared/data-source'
 
-type TraceRequestKind = 'compare-to-left' | 'compare-to-ext-data'
-
-interface TraceRequest {
-  kind: TraceRequestKind
-  datasetKeys: DatasetKey[]
-  extData?: DatasetMap
+export interface TraceCompareToBundleOptions {
+  kind: 'compare-to-bundle'
+  bundleModel0: BundleModel
+  scenarioSpec0: ScenarioSpec
+  bundleModel1: BundleModel
+  scenarioSpec1: ScenarioSpec
 }
+
+export interface TraceCompareToExtDataOptions {
+  kind: 'compare-to-ext-data'
+  extData: DatasetMap
+  bundleModel: BundleModel
+  scenarioSpec: ScenarioSpec
+}
+
+export type TraceOptions = TraceCompareToBundleOptions | TraceCompareToExtDataOptions
+
+interface CompareToBundleRequest {
+  kind: 'compare-to-bundle'
+  datasetKeys: DatasetKey[]
+  bundleModel0: BundleModel
+  scenarioSpec0: ScenarioSpec
+  bundleModel1: BundleModel
+  scenarioSpec1: ScenarioSpec
+}
+
+interface CompareToExtDataRequest {
+  kind: 'compare-to-ext-data'
+  datasetKeys: DatasetKey[]
+  extData: DatasetMap
+  bundleModel: BundleModel
+  scenarioSpec: ScenarioSpec
+}
+
+type TraceRequest = CompareToBundleRequest | CompareToExtDataRequest
 
 interface TraceResponse {
   datasetReports: TraceDatasetReport[]
@@ -28,25 +57,31 @@ export class TraceRunner {
   public onComplete?: (traceReport: TraceReport) => void
   public onError?: (error: Error) => void
 
-  constructor(
-    public readonly bundleModelL: BundleModel,
-    public readonly bundleModelR: BundleModel,
-    scenarioSpecL: ScenarioSpec,
-    scenarioSpecR: ScenarioSpec
-  ) {
+  constructor() {
     this.taskQueue = new TaskQueue({
       process: async request => {
         switch (request.kind) {
-          case 'compare-to-left': {
-            const [resultL, resultR] = await Promise.all([
-              bundleModelL.getDatasetsForScenario(scenarioSpecL, request.datasetKeys),
-              bundleModelR.getDatasetsForScenario(scenarioSpecR, request.datasetKeys)
-            ])
+          case 'compare-to-bundle': {
+            let result0: DatasetsResult
+            let result1: DatasetsResult
+            if (request.bundleModel1 === request.bundleModel0) {
+              // The bundles being compared are the same, so we need to run the model
+              // for the two scenarios sequentially
+              result0 = await request.bundleModel0.getDatasetsForScenario(request.scenarioSpec0, request.datasetKeys)
+              result1 = await request.bundleModel1.getDatasetsForScenario(request.scenarioSpec1, request.datasetKeys)
+            } else {
+              // The bundles being compared are different, so we can run the model
+              // for the two scenarios in parallel
+              ;[result0, result1] = await Promise.all([
+                request.bundleModel0.getDatasetsForScenario(request.scenarioSpec0, request.datasetKeys),
+                request.bundleModel1.getDatasetsForScenario(request.scenarioSpec1, request.datasetKeys)
+              ])
+            }
             const datasetReports: TraceDatasetReport[] = []
             for (const datasetKey of request.datasetKeys) {
-              const datasetL = resultL.datasetMap.get(datasetKey)
-              const datasetR = resultR.datasetMap.get(datasetKey)
-              const datasetReport = diffDatasets(datasetKey, datasetL, datasetR)
+              const dataset0 = result0.datasetMap.get(datasetKey)
+              const dataset1 = result1.datasetMap.get(datasetKey)
+              const datasetReport = diffDatasets(datasetKey, dataset0, dataset1)
               datasetReports.push(datasetReport)
             }
             return {
@@ -54,7 +89,7 @@ export class TraceRunner {
             }
           }
           case 'compare-to-ext-data': {
-            const resultR = await bundleModelR.getDatasetsForScenario(scenarioSpecR, request.datasetKeys)
+            const resultR = await request.bundleModel.getDatasetsForScenario(request.scenarioSpec, request.datasetKeys)
             const datasetReports: TraceDatasetReport[] = []
             for (const datasetKey of request.datasetKeys) {
               let datasetL = request.extData.get(datasetKey)
@@ -88,13 +123,13 @@ export class TraceRunner {
             }
           }
           default:
-            assertNever(request.kind)
+            assertNever(request)
         }
       }
     })
   }
 
-  start(extData?: DatasetMap): void {
+  start(options: TraceOptions): void {
     // Gather all dataset reports into a single map
     const allDatasetReports: Map<DatasetKey, TraceDatasetReport> = new Map()
 
@@ -112,12 +147,25 @@ export class TraceRunner {
     const taskQueue = this.taskQueue
     let index = 1
     function addTask(datasetKeys: DatasetKey[]) {
-      const kind: TraceRequestKind = extData !== undefined ? 'compare-to-ext-data' : 'compare-to-left'
-      const key = `${kind}-${index++}`
-      const request: TraceRequest = {
-        kind,
-        datasetKeys,
-        extData
+      const key = `${options.kind}-${index++}`
+      let request: TraceRequest
+      if (options.kind === 'compare-to-bundle') {
+        request = {
+          kind: 'compare-to-bundle',
+          datasetKeys,
+          bundleModel0: options.bundleModel0,
+          scenarioSpec0: options.scenarioSpec0,
+          bundleModel1: options.bundleModel1,
+          scenarioSpec1: options.scenarioSpec1
+        }
+      } else {
+        request = {
+          kind: 'compare-to-ext-data',
+          datasetKeys,
+          extData: options.extData,
+          bundleModel: options.bundleModel,
+          scenarioSpec: options.scenarioSpec
+        }
       }
       taskQueue.addTask(key, request, response => {
         // Add the dataset comparison reports to the rollup map
@@ -127,8 +175,9 @@ export class TraceRunner {
       })
     }
 
-    // Get the set of all dataset keys
-    const allDatasetKeys: DatasetKey[] = [...this.bundleModelR.modelSpec.implVars.keys()]
+    // Get the set of all dataset keys (as reported by the "right" bundle)
+    const bundleModelR = options.kind === 'compare-to-bundle' ? options.bundleModel1 : options.bundleModel
+    const allDatasetKeys: DatasetKey[] = [...bundleModelR.modelSpec.implVars.keys()]
     // console.log('ALL:')
     // console.log(allDatasetKeys)
 

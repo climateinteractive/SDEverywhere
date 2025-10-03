@@ -129,6 +129,7 @@ export { PerfStats } from './perf/perf-stats'
 // trace
 //
 
+export type { TraceCompareToBundleOptions, TraceCompareToExtDataOptions, TraceOptions } from './trace/trace-runner'
 export { TraceRunner } from './trace/trace-runner'
 
 export type { TraceDatasetReport, TraceReport } from './trace/trace-report'

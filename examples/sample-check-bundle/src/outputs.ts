@@ -81,13 +81,14 @@ export function getOutputs(modelVersion: number): Outputs {
   const implVars: Map<DatasetKey, ImplVar> = new Map()
   let index = 1
   const addImplVar = (varId: string, varName: string, varType: string) => {
+    const datasetKey = `ModelImpl_${varId}`
     const implVar: ImplVar = {
       varId,
       varName,
       varType,
       varIndex: index++
     }
-    implVars.set(`ModelImpl${implVar.varId}`, implVar)
+    implVars.set(datasetKey, implVar)
   }
   for (let i = 1; i <= 5; i++) {
     addImplVar(`_constant_${i}`, `Constant ${i}`, 'const')
@@ -109,11 +110,11 @@ export function getOutputs(modelVersion: number): Outputs {
   const implVarGroups: ImplVarGroup[] = [
     group(
       'initConstants',
-      [...implVars.values()].filter(v => v.varType === 'const').map(v => `ModelImpl${v.varId}`)
+      [...implVars.values()].filter(v => v.varType === 'const').map(v => `ModelImpl_${v.varId}`)
     ),
-    group('initLevels', ['ModelImpl_initial_1', 'ModelImpl_initial_2', 'ModelImpl_level_1']),
-    group('evalLevels', ['ModelImpl_level_1']),
-    group('evalAux', ['ModelImpl_output_x', 'ModelImpl_output_y', 'ModelImpl_output_z'])
+    group('initLevels', ['ModelImpl__initial_1', 'ModelImpl__initial_2', 'ModelImpl__level_1']),
+    group('evalLevels', ['ModelImpl__level_1']),
+    group('evalAux', ['ModelImpl__output_x', 'ModelImpl__output_y', 'ModelImpl__output_z'])
   ]
 
   // Configure dataset groups
