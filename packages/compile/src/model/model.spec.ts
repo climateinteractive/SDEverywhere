@@ -25,6 +25,7 @@ function readSubscriptsAndEquationsFromSource(
   opts?: {
     specialSeparationDims?: { [key: string]: string }
   }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): { full: any; minimal: any } {
   // XXX: These steps are needed due to subs/dims and variables being in module-level storage
   resetHelperState()
@@ -63,6 +64,7 @@ function readInlineModel(
   opts?: {
     specialSeparationDims?: { [key: string]: string }
   }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): any {
   return readSubscriptsAndEquationsFromSource({ modelText, modelDir }, opts)
 }

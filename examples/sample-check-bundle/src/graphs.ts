@@ -74,12 +74,8 @@ class SampleGraphData implements BundleGraphData {
 /**
  * Return a `BundleGraphData` instance for the given graph.
  */
-export function getGraphDataForScenario(
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  _scenarioSpec: ScenarioSpec,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  _graphId: BundleGraphId
-): BundleGraphData {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function getGraphDataForScenario(_scenarioSpec: ScenarioSpec, _graphId: BundleGraphId): BundleGraphData {
   return new SampleGraphData()
 }
 

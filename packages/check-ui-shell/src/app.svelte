@@ -3,7 +3,6 @@
 <!-- SCRIPT -->
 <script lang='ts'>
 
-import assertNever from 'assert-never'
 import FontFaceObserver from 'fontfaceobserver'
 
 import type { ComparisonGroupingKind } from './components/compare/_shared/comparison-grouping-kind'
