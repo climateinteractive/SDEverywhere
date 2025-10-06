@@ -41,7 +41,7 @@
   "devDependencies": {
     "@types/cross-spawn": "^6.0.2",
     "@types/folder-hash": "^4.0.1",
-    "@types/node": "^20.5.7"
+    "@types/node": "^20.14.8"
   },
   "author": "Climate Interactive",
   "license": "MIT",

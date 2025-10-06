@@ -38,7 +38,7 @@
   },
   "devDependencies": {
     "@types/fs-extra": "^9.0.13",
-    "@types/node": "^20.5.7",
+    "@types/node": "^20.14.8",
     "@types/prompts": "^2.0.14",
     "@types/which-pm-runs": "^1.0.0",
     "@types/yargs-parser": "^21.0.0"
