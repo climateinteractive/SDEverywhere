@@ -216,7 +216,13 @@ export class TraceViewModel {
       const groups = groupsFromReport(this.bundleModelR, report, threshold)
       this.writableGroups.set(groups)
       if (groups.length === 0) {
-        this.writableStatusMessage.set('No comparisons were performed. Check that the DAT file is valid.')
+        let statusMessage = 'No comparisons were performed.'
+        if (source0 === 'dat') {
+          statusMessage += ' Check that the DAT file is valid.'
+        } else {
+          statusMessage += ' Check that the bundle is configured correctly.'
+        }
+        this.writableStatusMessage.set(statusMessage)
       } else {
         this.writableStatusMessage.set(undefined)
       }
