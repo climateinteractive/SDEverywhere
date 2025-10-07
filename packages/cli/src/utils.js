@@ -60,7 +60,7 @@ export function parseSpec(specFilename) {
   try {
     let json = B.read(specFilename)
     spec = JSON.parse(json)
-  } catch (ex) {
+  } catch (_) {
     // If the file doesn't exist, use an empty object without complaining.
     // TODO: This needs to be fixed to fail fast instead of staying silent
   }

@@ -18,7 +18,7 @@ const commonRules = {
   // XXX: The following two lines are needed to avoid false positives in function types, see:
   //   https://stackoverflow.com/questions/63767199/typescript-eslint-no-unused-vars-false-positive-in-type-declarations
   'no-unused-vars': 'off',
-  '@typescript-eslint/no-unused-vars': ['error'],
+  '@typescript-eslint/no-unused-vars': ['error', { caughtErrors: 'all', caughtErrorsIgnorePattern: '^_' }],
   'no-unused-private-class-members': 'error',
   '@typescript-eslint/consistent-type-imports': 'error',
   // XXX: Disable the "no-undef" rule, since it is not helpful for TS files, see:
