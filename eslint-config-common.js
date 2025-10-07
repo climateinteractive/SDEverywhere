@@ -69,8 +69,6 @@ export const svelteRules = {
   }
 }
 
-export const allRulesWithoutSvelte = [eslint.configs.recommended, jsAndTsRules, prettier]
-
 export const allRules = [eslint.configs.recommended, jsAndTsRules, svelteRules, prettier]
 
 export default allRules

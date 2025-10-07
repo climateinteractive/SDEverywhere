@@ -10,7 +10,7 @@
   "types": "types/index.d.ts",
   "scripts": {
     "clean": "rm -rf dist",
-    "lint:ts": "eslint src --ext .ts --max-warnings 0",
+    "lint:ts": "eslint src --max-warnings 0",
     "lint:svelte": "svelte-check --fail-on-warnings --output human",
     "lint": "run-s lint:ts lint:svelte",
     "prettier:check": "prettier --check .",
