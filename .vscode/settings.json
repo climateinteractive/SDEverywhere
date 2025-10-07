@@ -33,7 +33,6 @@
   "[svelte]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
-  "prettier.documentSelectors": ["examples/template-svelte/packages/app/**/*.svelte"],
   "files.associations": {
     "*.svelte": "svelte"
   }

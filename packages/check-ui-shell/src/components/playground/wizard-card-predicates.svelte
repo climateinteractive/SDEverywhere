@@ -1,8 +1,7 @@
 <!-- Copyright (c) 2021-2022 Climate Interactive / New Venture Fund -->
 
 <!-- SCRIPT -->
-<script lang='ts'>
-
+<script lang="ts">
 import { slide } from 'svelte/transition'
 import Icon from 'svelte-awesome/components/Icon.svelte'
 import { faCircleCheck } from '@fortawesome/free-regular-svg-icons'
@@ -24,11 +23,7 @@ let selectedRefOption: RefOption = 'constant'
 
 type TimeOption = 'single' | 'range'
 let selectedTimeOption: TimeOption = 'single'
-
 </script>
-
-
-
 
 <!-- TEMPLATE -->
 <div class="content">
@@ -52,7 +47,7 @@ let selectedTimeOption: TimeOption = 'single'
           <label for="constant">
             <input type="radio" id="constant" name="constant" bind:group={selectedRefOption} value="constant" />
             a constant value
-            {#if selectedRefOption === "constant"}
+            {#if selectedRefOption === 'constant'}
               <input type="number" id="constant-val" bind:value={$constantValue} />
             {/if}
           </label>
@@ -78,7 +73,7 @@ let selectedTimeOption: TimeOption = 'single'
             a range of years
           </label>
         </div>
-        {#if selectedTimeOption === "range"}
+        {#if selectedTimeOption === 'range'}
           <div class="row">
             <label for="time-after">
               <input type="checkbox" id="time-after" name="time-after" />
@@ -111,12 +106,8 @@ let selectedTimeOption: TimeOption = 'single'
   {/if}
 </div>
 
-
-
-
 <!-- STYLE -->
-<style lang='scss'>
-
+<style lang="scss">
 .content {
   display: flex;
   flex-direction: column;
@@ -127,7 +118,7 @@ let selectedTimeOption: TimeOption = 'single'
   display: flex;
   justify-content: center;
   width: 1.5rem;
-  margin-right: .8rem;
+  margin-right: 0.8rem;
 }
 
 .question {
@@ -141,7 +132,7 @@ let selectedTimeOption: TimeOption = 'single'
 }
 
 .ref-intro {
-  margin-bottom: .5rem;
+  margin-bottom: 0.5rem;
 }
 
 .row {
@@ -151,24 +142,24 @@ let selectedTimeOption: TimeOption = 'single'
   margin-left: 1.2rem;
 }
 
-input[type="radio"] {
-  margin-right: .4rem;
+input[type='radio'] {
+  margin-right: 0.4rem;
 }
 
 .time-intro {
-  margin-top: .8rem;
-  margin-bottom: .5rem;
+  margin-top: 0.8rem;
+  margin-bottom: 0.5rem;
 }
 
-input[type="checkbox"] {
+input[type='checkbox'] {
   margin-left: 3rem;
-  margin-right: .4rem;
+  margin-right: 0.4rem;
 }
 
-input[type="number"] {
+input[type='number'] {
   width: 4rem;
-  margin-left: .3rem;
-  margin-right: .4rem;
+  margin-left: 0.3rem;
+  margin-right: 0.4rem;
 }
 
 .summary {
@@ -177,10 +168,9 @@ input[type="number"] {
 }
 
 .varname {
-  border-radius: .4rem;
-  padding: .08rem .3rem;
+  border-radius: 0.4rem;
+  padding: 0.08rem 0.3rem;
   background-color: #ddd;
   font-weight: 700;
 }
-
 </style>

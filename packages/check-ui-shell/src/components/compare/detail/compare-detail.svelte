@@ -1,8 +1,7 @@
 <!-- Copyright (c) 2021-2022 Climate Interactive / New Venture Fund -->
 
 <!-- SCRIPT -->
-<script lang='ts'>
-
+<script lang="ts">
 import assertNever from 'assert-never'
 
 import { createEventDispatcher, onMount } from 'svelte'
@@ -177,11 +176,7 @@ onMount(() => {
   // Make the scroll container have focus by default to allow for easier keyboard navigation
   scrollContainer.focus()
 })
-
 </script>
-
-
-
 
 <!-- TEMPLATE -->
 <svelte:window on:keydown={onKeyDown} />
@@ -205,9 +200,9 @@ onMount(() => {
       </div>
       <div class="spacer-flex"></div>
       <div class="nav-links no-selection">
-        <div class="nav-link" on:click={() => onNavLink("detail-previous")}>previous</div>
+        <div class="nav-link" on:click={() => onNavLink('detail-previous')}>previous</div>
         <div class="nav-link-sep">&nbsp;|&nbsp;</div>
-        <div class="nav-link" on:click={() => onNavLink("detail-next")}>next</div>
+        <div class="nav-link" on:click={() => onNavLink('detail-next')}>next</div>
       </div>
     </div>
     {#if relatedItemsVisible && viewModel.relatedItems.length > 0}
@@ -257,17 +252,19 @@ onMount(() => {
         </div>
       {/each}
       <div class="footer"></div>
-      <ContextMenu items={contextMenuItems} parentElem={scrollContent} initialEvent={contextMenuEvent} on:item-selected={onContextMenuItemSelected} on:clickout={onHideContextMenu} />
+      <ContextMenu
+        items={contextMenuItems}
+        parentElem={scrollContent}
+        initialEvent={contextMenuEvent}
+        on:item-selected={onContextMenuItemSelected}
+        on:clickout={onHideContextMenu}
+      />
     </div>
   </div>
 </div>
 
-
-
-
 <!-- STYLE -->
-<style lang='scss'>
-
+<style lang="scss">
 .compare-detail-container {
   display: flex;
   flex-direction: column;
@@ -282,7 +279,7 @@ onMount(() => {
   width: calc(100vw - 2rem);
   margin: 0 -1rem;
   padding: 0 2rem;
-  box-shadow: 0 1rem .5rem -.5rem rgba(0,0,0,.5);
+  box-shadow: 0 1rem 0.5rem -0.5rem rgba(0, 0, 0, 0.5);
   z-index: 1;
 }
 
@@ -302,7 +299,7 @@ onMount(() => {
 .nav-links {
   display: flex;
   flex-direction: row;
-  font-size: .8em;
+  font-size: 0.8em;
 }
 
 .nav-link-sep {
@@ -324,8 +321,8 @@ onMount(() => {
 }
 
 .pretitle {
-  margin-bottom: .2rem;
-  font-size: .9em;
+  margin-bottom: 0.2rem;
+  font-size: 0.9em;
   font-weight: 700;
   color: #aaa;
 }
@@ -337,7 +334,7 @@ onMount(() => {
 }
 
 .title {
-  margin-bottom: .4rem;
+  margin-bottom: 0.4rem;
   font-size: 2em;
   font-weight: 700;
   cursor: pointer;
@@ -351,22 +348,22 @@ onMount(() => {
 }
 
 .annotations {
-  margin-left: .3rem;
+  margin-left: 0.3rem;
   color: #aaa;
 
   :global(.annotation) {
-    margin: 0 .3rem;
-    padding: .1rem .3rem;
+    margin: 0 0.3rem;
+    padding: 0.1rem 0.3rem;
     background-color: #222;
-    border: .5px solid #555;
-    border-radius: .4rem;
+    border: 0.5px solid #555;
+    border-radius: 0.4rem;
   }
 }
 
 .related {
   font-size: 1em;
   color: #aaa;
-  margin-bottom: .6rem;
+  margin-bottom: 0.6rem;
 
   :global(.related-sep) {
     color: #666;
@@ -374,7 +371,7 @@ onMount(() => {
 }
 
 ul {
-  margin: .1rem 0;
+  margin: 0.1rem 0;
   padding-left: 2rem;
 }
 
@@ -395,7 +392,7 @@ ul {
 .section-title {
   width: calc(100vw - 2rem);
   margin: 1.5rem 1rem 2rem 1rem;
-  padding: .2rem 0;
+  padding: 0.2rem 0;
   border-bottom: solid 1px #555;
   color: #ccc;
   font-size: 1.4em;
@@ -409,7 +406,7 @@ ul {
 .row-container {
   display: flex;
   flex-direction: row;
-  margin-top: .5rem;
+  margin-top: 0.5rem;
   margin-bottom: 3rem;
   margin-left: 1rem;
   margin-right: 1rem;
@@ -422,5 +419,4 @@ ul {
 .footer {
   height: 1rem;
 }
-
 </style>

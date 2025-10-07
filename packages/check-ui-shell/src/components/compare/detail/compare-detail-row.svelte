@@ -1,16 +1,12 @@
 <!-- Copyright (c) 2021-2022 Climate Interactive / New Venture Fund -->
 
 <!-- SCRIPT -->
-<script lang='ts'>
-
+<script lang="ts">
 import { createEventDispatcher } from 'svelte'
 
 import ContextGraph from '../../graphs/context-graph.svelte'
 
-import type {
-  CompareDetailContextGraphRowViewModel,
-  CompareDetailRowViewModel,
-} from './compare-detail-row-vm'
+import type { CompareDetailContextGraphRowViewModel, CompareDetailRowViewModel } from './compare-detail-row-vm'
 import { createContextGraphRows } from './compare-detail-row-vm'
 import DetailBox from './compare-detail-box.svelte'
 
@@ -57,26 +53,20 @@ function getContextGraphPadding(index: number): number {
 
   if (viewModel.boxes.length > 0) {
     // Calculate the center of the box as a percentage of the width of the row
-    return ((index + 0.5) / (viewModel.boxes.length)) * 100
+    return ((index + 0.5) / viewModel.boxes.length) * 100
   } else {
     return 0
   }
 }
-
 </script>
 
-
-
-
 <!-- TEMPLATE -->
-<template>
-
 <div class="detail-row">
   {#if viewModel.title}
     <div class="title-row" on:contextmenu|preventDefault={onContextMenu}>
-      <div class="title">{ @html viewModel.title }</div>
+      <div class="title">{@html viewModel.title}</div>
       {#if viewModel.subtitle}
-        <div class="subtitle">{ @html viewModel.subtitle }</div>
+        <div class="subtitle">{@html viewModel.subtitle}</div>
       {/if}
     </div>
   {/if}
@@ -87,14 +77,20 @@ function getContextGraphPadding(index: number): number {
         <div class="spacer-fixed"></div>
       {/if}
       <div class="box-container" class:dimmed={isDimmed(i, expandedIndex)}>
-        <DetailBox viewModel={boxViewModel} on:toggle-context-graphs={() => onToggleContextGraphs(i)} on:show-context-menu />
+        <DetailBox
+          viewModel={boxViewModel}
+          on:toggle-context-graphs={() => onToggleContextGraphs(i)}
+          on:show-context-menu
+        />
       </div>
     {/each}
   </div>
 
   {#if expandedIndex !== undefined}
     <div class="context-graphs-container">
-      <div style="min-width: max(0%, min(calc({getContextGraphPadding(expandedIndex)}% - 38.75rem), calc(100% - 77.5rem)))"></div>
+      <div
+        style="min-width: max(0%, min(calc({getContextGraphPadding(expandedIndex)}% - 38.75rem), calc(100% - 77.5rem)))"
+      ></div>
       <div class="context-graphs-column">
         {#if contextGraphRows}
           {#each contextGraphRows as rowViewModel}
@@ -110,14 +106,8 @@ function getContextGraphPadding(index: number): number {
   {/if}
 </div>
 
-</template>
-
-
-
-
 <!-- STYLE -->
-<style lang='scss'>
-
+<style lang="scss">
 .detail-row {
   display: flex;
   flex-direction: column;
@@ -125,11 +115,11 @@ function getContextGraphPadding(index: number): number {
 
 .title-row {
   align-items: baseline;
-  margin-bottom: .5rem;
+  margin-bottom: 0.5rem;
 }
 
 .title {
-  margin-right: .8rem;
+  margin-right: 0.8rem;
   font-size: 1.5em;
   font-weight: 700;
 }
@@ -182,5 +172,4 @@ function getContextGraphPadding(index: number): number {
 .context-graph-spacer {
   min-width: 1.5rem;
 }
-
 </style>

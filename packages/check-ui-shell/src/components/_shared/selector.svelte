@@ -4,8 +4,7 @@
 <!-- svelte-ignore a11y-no-onchange -->
 
 <!-- SCRIPT -->
-<script lang='ts'>
-
+<script lang="ts">
 import { get } from 'svelte/store'
 
 import type { SelectorViewModel } from './selector-vm'
@@ -19,11 +18,7 @@ function onChange() {
   // `change` event is emitted, so it reflects the current value here.
   viewModel.onUserChange?.(get(selectedValue))
 }
-
 </script>
-
-
-
 
 <!-- TEMPLATE -->
 <select bind:value={$selectedValue} on:change={onChange}>
@@ -34,12 +29,8 @@ function onChange() {
   {/each}
 </select>
 
-
-
-
 <!-- STYLE -->
-<style lang='scss'>
-
+<style lang="scss">
 select {
   width: auto;
   font-family: inherit;
@@ -52,7 +43,9 @@ select {
   border: 1px solid #ccc;
   border-radius: 0;
   box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
-  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  transition:
+    border-color 0.15s ease-in-out,
+    box-shadow 0.15s ease-in-out;
   text-transform: none;
 
   > option {
@@ -61,5 +54,4 @@ select {
     font-family: 'Roboto Condensed', Helvetica, sans-serif;
   }
 }
-
 </style>

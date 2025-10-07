@@ -1,8 +1,7 @@
 <!-- Copyright (c) 2021-2022 Climate Interactive / New Venture Fund -->
 
 <!-- SCRIPT -->
-<script lang='ts'>
-
+<script lang="ts">
 import assertNever from 'assert-never'
 import copyToClipboard from 'copy-text-to-clipboard'
 
@@ -54,22 +53,18 @@ function onLinkClicked(linkItem: LinkItem) {
       assertNever(linkItem.kind)
   }
 }
-
 </script>
-
-
-
 
 <!-- TEMPLATE -->
 <div class="context-graph-container">
   {#if viewModel.graphSpec}
     <div class="graph-and-info">
-      <div class="graph-title" class:dataset-color-0={viewModel.datasetClass === 'dataset-color-0'} class:dataset-color-1={viewModel.datasetClass === 'dataset-color-1'}>
+      <div class={`graph-title ${viewModel.datasetClass}`}>
         {@html viewModel.graphSpec.title}
       </div>
       {#if viewModel.requestKey}
         <div class="graph-container">
-          <Lazy bind:visible={visible}>
+          <Lazy bind:visible>
             {#if $content && $content.graphData}
               <Graph viewModel={$content.graphData} config={graphConfig} />
             {/if}
@@ -86,24 +81,20 @@ function onLinkClicked(linkItem: LinkItem) {
       {:else}
         <div class="message not-shown">
           <span>Graph not shown: scenario is invalid in&nbsp;</span>
-          <span class:dataset-color-0={viewModel.datasetClass === 'dataset-color-0'} class:dataset-color-1={viewModel.datasetClass === 'dataset-color-1'}>{viewModel.bundleName}</span>
+          <span class={viewModel.datasetClass}>{viewModel.bundleName}</span>
         </div>
       {/if}
     </div>
   {:else}
     <div class="message not-included">
       <span>Graph not included in&nbsp;</span>
-      <span class:dataset-color-0={viewModel.datasetClass === 'dataset-color-0'} class:dataset-color-1={viewModel.datasetClass === 'dataset-color-1'}>{viewModel.bundleName}</span>
+      <span class={viewModel.datasetClass}>{viewModel.bundleName}</span>
     </div>
   {/if}
 </div>
 
-
-
-
 <!-- STYLE -->
-<style lang='scss'>
-
+<style lang="scss">
 // The graph columns have a fixed width of 38rem (38% of app width);
 // this needs to match the `graphConfig.width` value above
 $graph-width: 38rem;
@@ -123,8 +114,8 @@ $graph-height: 20rem;
 }
 
 .graph-title {
-  margin: .5rem 0;
-  padding: 0 .8rem;
+  margin: 0.5rem 0;
+  padding: 0 0.8rem;
   font-family: 'Roboto Condensed';
   font-size: 1.55rem;
 }
@@ -154,12 +145,12 @@ $graph-height: 20rem;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  margin-bottom: .4rem;
+  margin-bottom: 0.4rem;
 }
 
 .link-row {
   height: 1.2rem;
-  margin: 0 .8rem;
+  margin: 0 0.8rem;
   color: #999;
   cursor: pointer;
 
@@ -167,5 +158,4 @@ $graph-height: 20rem;
     color: #000;
   }
 }
-
 </style>

@@ -1,8 +1,7 @@
 <!-- Copyright (c) 2021-2022 Climate Interactive / New Venture Fund -->
 
 <!-- SCRIPT -->
-<script lang='ts'>
-
+<script lang="ts">
 import CheckGraphBox from './check-summary-graph-box.svelte'
 import type { CheckSummaryRowViewModel } from './check-summary-row-vm'
 
@@ -12,11 +11,7 @@ const graphVisible = viewModel.graphVisible
 function onLabelClicked() {
   graphVisible.update(v => !v)
 }
-
 </script>
-
-
-
 
 <!-- TEMPLATE -->
 <div class={`row ${viewModel.rowClasses}`}>
@@ -28,15 +23,10 @@ function onLabelClicked() {
   </div>
 {/if}
 
-
-
-
 <!-- STYLE -->
-<style lang='scss'>
-
+<style lang="scss">
 .check-graph {
   height: 23rem;
   margin-left: 8.5rem;
 }
-
 </style>

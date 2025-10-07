@@ -1,8 +1,7 @@
 <!-- Copyright (c) 2021-2022 Climate Interactive / New Venture Fund -->
 
 <!-- SCRIPT -->
-<script lang='ts'>
-
+<script lang="ts">
 import { createEventDispatcher } from 'svelte'
 import DotPlot from '../perf/dot-plot.svelte'
 import type { StatsTableRowViewModel } from './stats-table-row-vm'
@@ -17,14 +16,10 @@ const dispatch = createEventDispatcher()
 function onShowPerf() {
   dispatch('command', { cmd: 'show-perf' })
 }
-
 </script>
 
-
-
-
 <!-- TEMPLATE -->
-<td class="name" class:dataset-color-0={modelTextClass === 'dataset-color-0'} class:dataset-color-1={modelTextClass === 'dataset-color-1'} class:row-header={modelTextClass === 'row-header'}>
+<td class={`name ${modelTextClass}`}>
   {viewModel.modelName}
 </td>
 <td>
@@ -75,12 +70,8 @@ function onShowPerf() {
   </td>
 {/if}
 
-
-
-
 <!-- STYLE -->
-<style lang='scss'>
-
+<style lang="scss">
 td {
   padding: 0;
   height: 1.8rem;
@@ -112,15 +103,15 @@ td {
 
 .value {
   flex: 1;
-  padding-right: .4rem;
+  padding-right: 0.4rem;
   text-align: right;
 }
 
 .change {
   flex: 1;
-  padding-left: .4rem;
+  padding-left: 0.4rem;
   text-align: left;
-  font-size: .8em;
+  font-size: 0.8em;
 }
 
 .plot {
@@ -129,5 +120,4 @@ td {
   padding-right: 2rem;
   cursor: pointer;
 }
-
 </style>

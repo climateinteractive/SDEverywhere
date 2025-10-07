@@ -1,8 +1,7 @@
 <!-- Copyright (c) 2021-2022 Climate Interactive / New Venture Fund -->
 
 <!-- SCRIPT -->
-<script lang='ts'>
-
+<script lang="ts">
 import { slide } from 'svelte/transition'
 import Icon from 'svelte-awesome/components/Icon.svelte'
 import { faArrowRightToBracket } from '@fortawesome/free-solid-svg-icons'
@@ -20,11 +19,7 @@ console.log(viewModel.todo)
 
 // XXX: This is just so `selectedOption` is read
 $: console.log(selectedOption)
-
 </script>
-
-
-
 
 <!-- TEMPLATE -->
 <div class="content">
@@ -64,12 +59,8 @@ $: console.log(selectedOption)
   {/if}
 </div>
 
-
-
-
 <!-- STYLE -->
-<style lang='scss'>
-
+<style lang="scss">
 .content {
   display: flex;
   flex-direction: column;
@@ -80,7 +71,7 @@ $: console.log(selectedOption)
   display: flex;
   justify-content: center;
   width: 1.5rem;
-  margin-right: .8rem;
+  margin-right: 0.8rem;
 }
 
 .question {
@@ -102,8 +93,8 @@ $: console.log(selectedOption)
   flex: 1;
 }
 
-input[type="radio"] {
-  margin-right: .4rem;
+input[type='radio'] {
+  margin-right: 0.4rem;
 }
 
 .summary {
@@ -112,10 +103,9 @@ input[type="radio"] {
 }
 
 .scenario {
-  border-radius: .4rem;
-  padding: .08rem .3rem;
+  border-radius: 0.4rem;
+  padding: 0.08rem 0.3rem;
   background-color: #ddd;
   font-weight: 700;
 }
-
 </style>

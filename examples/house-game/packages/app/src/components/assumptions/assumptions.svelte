@@ -1,18 +1,11 @@
 <!-- SCRIPT -->
-<script lang='ts'>
-
+<script lang="ts">
 import type { AssumptionsViewModel } from './assumptions-vm'
 
 export let viewModel: AssumptionsViewModel
-
 </script>
 
-
-
-
 <!-- TEMPLATE -->
-<template>
-
 <div class="assumptions-title">Assumptions</div>
 <div class="assumption-rows">
   {#each viewModel.rows as row (row.label)}
@@ -23,14 +16,8 @@ export let viewModel: AssumptionsViewModel
   {/each}
 </div>
 
-</template>
-
-
-
-
 <!-- STYLE -->
-<style lang='scss'>
-
+<style lang="scss">
 .assumptions-title {
   font-weight: 700;
   margin-bottom: 12px;
@@ -54,5 +41,4 @@ export let viewModel: AssumptionsViewModel
     margin-bottom: 12px;
   }
 }
-
 </style>

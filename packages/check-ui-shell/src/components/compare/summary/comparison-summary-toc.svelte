@@ -2,20 +2,15 @@
 
 <!-- SCRIPT -->
 <script lang="ts">
-
 import type { ComparisonSummarySectionViewModel } from './comparison-summary-section-vm'
 
 export let sections: ComparisonSummarySectionViewModel[]
 
 // Only show sections that have differences
 $: visibleSections = sections.filter(section => section.rowsWithDiffs > 0)
-
 </script>
 
-
 <!-- TEMPLATE -->
-<template>
-
 <div class="toc-container">
   <div class="toc-title">Groups with differences</div>
   <div class="toc-entries">
@@ -31,11 +26,6 @@ $: visibleSections = sections.filter(section => section.rowsWithDiffs > 0)
     {/if}
   </div>
 </div>
-
-</template>
-
-
-
 
 <!-- STYLE -->
 <style lang="sass">

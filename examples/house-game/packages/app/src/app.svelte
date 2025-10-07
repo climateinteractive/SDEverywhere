@@ -1,6 +1,5 @@
 <!-- SCRIPT -->
-<script lang='ts'>
-
+<script lang="ts">
 import './global.css'
 
 import Assumptions from './components/assumptions/assumptions.svelte'
@@ -22,15 +21,9 @@ function onReset() {
 function onContinue() {
   viewModel.nextStep()
 }
-
 </script>
 
-
-
-
 <!-- TEMPLATE -->
-<template>
-
 <div class="app-container">
   <div class="left-container">
     <div class="text-container">
@@ -56,20 +49,14 @@ function onContinue() {
   <div class="right-container">
     <div class="column">
       <div class="graph-container">
-        <Graph viewModel={viewModel.supplyGraphViewModel} width={500} height={400}/>
+        <Graph viewModel={viewModel.supplyGraphViewModel} width={500} height={400} />
       </div>
     </div>
   </div>
 </div>
 
-</template>
-
-
-
-
 <!-- STYLE -->
-<style lang='scss'>
-
+<style lang="scss">
 .app-container {
   display: flex;
   flex-direction: row;
@@ -183,5 +170,4 @@ button {
 .cell-value {
   max-width: 40px;
 }
-
 </style>

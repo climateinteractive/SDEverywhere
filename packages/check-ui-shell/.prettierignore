@@ -1,4 +1,3 @@
 dist
 docs
-**/*.svelte
 CHANGELOG.md

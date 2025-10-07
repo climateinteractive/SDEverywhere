@@ -1,22 +1,15 @@
 <!-- Copyright (c) 2021-2022 Climate Interactive / New Venture Fund -->
 
 <!-- SCRIPT -->
-<script lang='ts'>
-
+<script lang="ts">
 import ComparisonSummarySection from './comparison-summary-section.svelte'
 import ComparisonSummaryToc from './comparison-summary-toc.svelte'
 import type { ComparisonSummaryViewModel } from './comparison-summary-vm'
 
 export let viewModel: ComparisonSummaryViewModel
-
 </script>
 
-
-
-
 <!-- TEMPLATE -->
-<template>
-
 <div class="comparison-summary-container">
   <!-- TODO: Add an option to show the TOC -->
   {#if viewModel.kind === ''}
@@ -30,14 +23,8 @@ export let viewModel: ComparisonSummaryViewModel
   <div class="footer"></div>
 </div>
 
-</template>
-
-
-
-
 <!-- STYLE -->
-<style lang='scss'>
-
+<style lang="scss">
 .comparison-summary-container {
   display: flex;
   flex-direction: column;
@@ -58,5 +45,4 @@ export let viewModel: ComparisonSummaryViewModel
 .footer {
   flex: 0 0 1rem;
 }
-
 </style>

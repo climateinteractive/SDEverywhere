@@ -1,8 +1,7 @@
 <!-- Copyright (c) 2021-2022 Climate Interactive / New Venture Fund -->
 
 <!-- SCRIPT -->
-<script lang='ts'>
-
+<script lang="ts">
 import DetailBox from './compare-detail-box.svelte'
 
 import type { CompareGraphsDatasetViewModel } from './compare-graphs-dataset-vm'
@@ -20,11 +19,7 @@ const detailBoxVisible = viewModel.detailBoxVisible
 function onDatasetClicked() {
   detailBoxVisible.update(v => !v)
 }
-
 </script>
-
-
-
 
 <!-- TEMPLATE -->
 <div class="dataset-container">
@@ -52,12 +47,8 @@ function onDatasetClicked() {
   {/if}
 </div>
 
-
-
-
 <!-- STYLE -->
-<style lang='scss'>
-
+<style lang="scss">
 .dataset-container {
   display: flex;
   flex: 1;
@@ -68,11 +59,11 @@ function onDatasetClicked() {
   display: flex;
   flex: 1;
   align-items: baseline;
-  margin-left: .6rem;
+  margin-left: 0.6rem;
   cursor: pointer;
 
   &:hover {
-    background-color: rgba(255, 255, 255, .05);
+    background-color: rgba(255, 255, 255, 0.05);
   }
 }
 
@@ -84,8 +75,8 @@ function onDatasetClicked() {
   font-family: 'Roboto Condensed';
   font-weight: 700;
   font-size: 1rem;
-  margin: .2rem .4rem;
-  padding: .25rem .6rem .2rem .6rem;
+  margin: 0.2rem 0.4rem;
+  padding: 0.25rem 0.6rem 0.2rem 0.6rem;
   color: #fff;
   text-align: center;
 }
@@ -93,9 +84,8 @@ function onDatasetClicked() {
 .detail-box-container {
   display: flex;
   flex: 1;
-  margin-top: .2rem;
-  margin-bottom: .8rem;
-  margin-left: .4rem;
+  margin-top: 0.2rem;
+  margin-bottom: 0.8rem;
+  margin-left: 0.4rem;
 }
-
 </style>

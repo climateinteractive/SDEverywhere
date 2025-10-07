@@ -1,8 +1,7 @@
 <!-- Copyright (c) 2021-2022 Climate Interactive / New Venture Fund -->
 
 <!-- SCRIPT -->
-<script lang='ts'>
-
+<script lang="ts">
 import { slide } from 'svelte/transition'
 import Icon from 'svelte-awesome/components/Icon.svelte'
 import { faLightbulb } from '@fortawesome/free-regular-svg-icons'
@@ -14,11 +13,7 @@ export let editing: boolean
 
 const subject = viewModel.subject
 const expectation = viewModel.expectation
-
 </script>
-
-
-
 
 <!-- TEMPLATE -->
 <div class="content">
@@ -28,7 +23,7 @@ const expectation = viewModel.expectation
         <div class="icon-wrapper">
           <Icon class="icon" data={faLightbulb} />
         </div>
-        What part of the model are we checking?  And what is the expected behavior?
+        What part of the model are we checking? And what is the expected behavior?
       </div>
       <div class="answer">
         <input class="desc" placeholder="Part of the model" bind:value={$subject} />
@@ -69,12 +64,8 @@ const expectation = viewModel.expectation
   {/if}
 </div>
 
-
-
-
 <!-- STYLE -->
-<style lang='scss'>
-
+<style lang="scss">
 .content {
   display: flex;
   flex-direction: column;
@@ -85,7 +76,7 @@ const expectation = viewModel.expectation
   display: flex;
   justify-content: center;
   width: 1.5rem;
-  margin-right: .8rem;
+  margin-right: 0.8rem;
 }
 
 .question {
@@ -104,8 +95,8 @@ const expectation = viewModel.expectation
 input {
   outline: none;
   border: 1px solid #aaa;
-  border-radius: .2rem;
-  padding: .2rem .3rem;
+  border-radius: 0.2rem;
+  padding: 0.2rem 0.3rem;
 
   &:focus {
     border-color: blue;
@@ -122,7 +113,7 @@ input {
 
 .examples {
   margin-left: 2.3rem;
-  opacity: .6;
+  opacity: 0.6;
 }
 
 .header {
@@ -136,12 +127,13 @@ ul {
 }
 
 li {
-  margin: .3rem 0;
+  margin: 0.3rem 0;
 }
 
-.subject, .expect {
-  border-radius: .4rem;
-  padding: .08rem .2rem;
+.subject,
+.expect {
+  border-radius: 0.4rem;
+  padding: 0.08rem 0.2rem;
 }
 
 .subject {
@@ -155,12 +147,11 @@ li {
 }
 
 .should {
-  margin: 0 .25rem;
+  margin: 0 0.25rem;
 }
 
 .summary {
   display: flex;
   align-items: center;
 }
-
 </style>
