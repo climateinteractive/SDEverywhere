@@ -73,77 +73,94 @@ const expectation = viewModel.expectation
 
 
 <!-- STYLE -->
-<style lang='sass'>
+<style lang='scss'>
 
-.content
-  display: flex
-  flex-direction: column
-  flex: 1
+.content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
 
-.icon-wrapper
-  display: flex
-  justify-content: center  
-  width: 1.5rem
-  margin-right: .8rem
+.icon-wrapper {
+  display: flex;
+  justify-content: center;
+  width: 1.5rem;
+  margin-right: .8rem;
+}
 
-.question
-  display: flex
-  align-items: center
+.question {
+  display: flex;
+  align-items: center;
+}
 
-.answer
-  display: flex
-  flex-direction: row
-  align-items: baseline
-  margin-top: 1rem
-  margin-left: 3.5rem
+.answer {
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  margin-top: 1rem;
+  margin-left: 3.5rem;
+}
 
-input
-  outline: none
-  border: 1px solid #aaa
-  border-radius: .2rem
-  padding: .2rem .3rem
+input {
+  outline: none;
+  border: 1px solid #aaa;
+  border-radius: .2rem;
+  padding: .2rem .3rem;
 
-input:focus
-  border-color: blue
+  &:focus {
+    border-color: blue;
+  }
+}
 
-.desc
-  width: 11rem
+.desc {
+  width: 11rem;
+}
 
-.test
-  width: 25rem
+.test {
+  width: 25rem;
+}
 
-.examples
-  margin-left: 2.3rem
-  opacity: .6
+.examples {
+  margin-left: 2.3rem;
+  opacity: .6;
+}
 
-.header
-  margin-top: 1rem
-  margin-bottom: 0
+.header {
+  margin-top: 1rem;
+  margin-bottom: 0;
+}
 
-ul
-  margin: 0
-  padding-left: 2.5rem
+ul {
+  margin: 0;
+  padding-left: 2.5rem;
+}
 
-li
-  margin: .3rem 0
+li {
+  margin: .3rem 0;
+}
 
-.subject, .expect
-  border-radius: .4rem
-  padding: .08rem .2rem
+.subject, .expect {
+  border-radius: .4rem;
+  padding: .08rem .2rem;
+}
 
-.subject
-  background-color: #ddddff
-  // color: #0000ff
+.subject {
+  background-color: #ddddff;
+  // color: #0000ff;
+}
 
-.expect
-  background-color: #ccddcc
-  // color: #00aa00
+.expect {
+  background-color: #ccddcc;
+  // color: #00aa00;
+}
 
-.should
-  margin: 0 .25rem
+.should {
+  margin: 0 .25rem;
+}
 
-.summary
-  display: flex
-  align-items: center
+.summary {
+  display: flex;
+  align-items: center;
+}
 
 </style>

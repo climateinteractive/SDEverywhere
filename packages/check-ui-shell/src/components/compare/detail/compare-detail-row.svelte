@@ -116,57 +116,71 @@ function getContextGraphPadding(index: number): number {
 
 
 <!-- STYLE -->
-<style lang='sass'>
+<style lang='scss'>
 
-.detail-row
-  display: flex
-  flex-direction: column
+.detail-row {
+  display: flex;
+  flex-direction: column;
+}
 
-.title-row
-  align-items: baseline
-  margin-bottom: .5rem
+.title-row {
+  align-items: baseline;
+  margin-bottom: .5rem;
+}
 
-.title
-  margin-right: .8rem
-  font-size: 1.5em
-  font-weight: 700
+.title {
+  margin-right: .8rem;
+  font-size: 1.5em;
+  font-weight: 700;
+}
 
-.subtitle
-  font-size: 1.3em
-  color: #aaa
+.subtitle {
+  font-size: 1.3em;
+  color: #aaa;
 
-.subtitle :global(.subtitle-sep)
-  color: #666
+  :global(.subtitle-sep) {
+    color: #666;
+  }
+}
 
-.boxes
-  display: flex
-  flex-direction: row
+.boxes {
+  display: flex;
+  flex-direction: row;
+}
 
-.box-container.dimmed
-  opacity: 0.2
+.box-container {
+  &.dimmed {
+    opacity: 0.2;
+  }
+}
 
-.spacer-fixed
-  min-width: 1.5rem
+.spacer-fixed {
+  min-width: 1.5rem;
+}
 
-.context-graphs-container
-  display: inline-flex
-  flex-direction: row
-  margin-top: 1rem
-  padding: 0 1rem
-  background-color: #555
+.context-graphs-container {
+  display: inline-flex;
+  flex-direction: row;
+  margin-top: 1rem;
+  padding: 0 1rem;
+  background-color: #555;
+}
 
-.context-graphs-column
-  display: inline-flex
-  flex-direction: column
+.context-graphs-column {
+  display: inline-flex;
+  flex-direction: column;
+}
 
-.context-graph-row
-  display: flex
-  flex-direction: row
+.context-graph-row {
+  display: flex;
+  flex-direction: row;
   // XXX: Remove this hardcoded value
-  width: 77.5rem
-  margin: 1rem 0
+  width: 77.5rem;
+  margin: 1rem 0;
+}
 
-.context-graph-spacer
-  min-width: 1.5rem
+.context-graph-spacer {
+  min-width: 1.5rem;
+}
 
 </style>

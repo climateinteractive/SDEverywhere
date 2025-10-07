@@ -32,10 +32,11 @@ function onLabelClicked() {
 
 
 <!-- STYLE -->
-<style lang='sass'>
+<style lang='scss'>
 
-.check-graph
-  height: 23rem
-  margin-left: 8.5rem
+.check-graph {
+  height: 23rem;
+  margin-left: 8.5rem;
+}
 
 </style>

@@ -133,104 +133,118 @@ function getMaxDiffSpan(content: CompareDetailBoxContent): string {
 
 
 <!-- STYLE -->
-<style lang='sass'>
+<style lang='scss'>
 
-$border-w: .3rem
-$border-w-2x: $border-w * 2
+$border-w: .3rem;
+$border-w-2x: $border-w * 2;
 
-$padding-w: .5rem
-$padding-w-2x: $padding-w * 2
+$padding-w: .5rem;
+$padding-w-2x: $padding-w * 2;
 
-$stats-h: 4rem
+$stats-h: 4rem;
 
-.detail-box
-  display: flex
-  flex-direction: column
-  --box-graph-w: calc(30rem * var(--graph-zoom))
-  --box-graph-h: calc(22rem * var(--graph-zoom))
+.detail-box {
+  display: flex;
+  flex-direction: column;
+  --box-graph-w: calc(30rem * var(--graph-zoom));
+  --box-graph-h: calc(22rem * var(--graph-zoom));
+}
 
-.title-row
-  position: relative
-  max-width: calc(var(--box-graph-w) + 1rem)
-  height: 1.4rem
-  cursor: pointer
+.title-row {
+  position: relative;
+  max-width: calc(var(--box-graph-w) + 1rem);
+  height: 1.4rem;
+  cursor: pointer;
+}
 
-.title-content
-  position: absolute
-  max-width: calc(var(--box-graph-w) + 1rem)
-  white-space: nowrap
-  overflow: hidden
-  text-overflow: ellipsis
+.title-content {
+  position: absolute;
+  max-width: calc(var(--box-graph-w) + 1rem);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 
-.title-content:hover
-  width: max-content
-  max-width: unset
-  overflow: unset
-  z-index: 100
-  background-color: #3c3c3c
+  &:hover {
+    width: max-content;
+    max-width: unset;
+    overflow: unset;
+    z-index: 100;
+    background-color: #3c3c3c;
+  }
+}
 
-.title
-  margin-left: .7rem
-  font-size: 1.1em
-  font-weight: 700
+.title {
+  margin-left: .7rem;
+  font-size: 1.1em;
+  font-weight: 700;
+}
 
-.subtitle
-  color: #aaa
-  margin-left: .4rem
-  margin-right: .7rem
+.subtitle {
+  color: #aaa;
+  margin-left: .4rem;
+  margin-right: .7rem;
+}
 
-.content-container
-  display: flex
-  flex-direction: column
+.content-container {
+  display: flex;
+  flex-direction: column;
   // XXX: This is content size + padding + border; we use a fixed size so that
   // the box layout remains stable when the graph content is loaded lazily
-  width: calc(var(--box-graph-w) + $padding-w-2x + $border-w-2x)
-  max-width: calc(var(--box-graph-w) + $padding-w-2x + $border-w-2x)
-  height: calc(var(--box-graph-h) + $stats-h + $padding-w-2x + $border-w-2x)
-  max-height: calc(var(--box-graph-h) + $stats-h + $padding-w-2x + $border-w-2x)
+  width: calc(var(--box-graph-w) + $padding-w-2x + $border-w-2x);
+  max-width: calc(var(--box-graph-w) + $padding-w-2x + $border-w-2x);
+  height: calc(var(--box-graph-h) + $stats-h + $padding-w-2x + $border-w-2x);
+  max-height: calc(var(--box-graph-h) + $stats-h + $padding-w-2x + $border-w-2x);
+}
 
-.content
-  display: flex
-  flex-direction: column
-  height: calc(var(--box-graph-h) + $stats-h)
-  padding: $padding-w
-  border-width: $border-w
-  border-style: solid
-  border-radius: .8rem
+.content {
+  display: flex;
+  flex-direction: column;
+  height: calc(var(--box-graph-h) + $stats-h);
+  padding: $padding-w;
+  border-width: $border-w;
+  border-style: solid;
+  border-radius: .8rem;
+}
 
-.graph-container
-  position: relative
-  display: flex
-  width: var(--box-graph-w)
-  height: var(--box-graph-h)
+.graph-container {
+  position: relative;
+  display: flex;
+  width: var(--box-graph-w);
+  height: var(--box-graph-h);
+}
 
-.message-container
-  display: flex
-  flex-direction: column
-  max-width: var(--box-graph-w)
-  height: $stats-h
-  justify-content: flex-end
+.message-container {
+  display: flex;
+  flex-direction: column;
+  max-width: var(--box-graph-w);
+  height: $stats-h;
+  justify-content: flex-end;
+}
 
-.message
-  white-space: nowrap
-  overflow: hidden
-  text-overflow: ellipsis
+.message {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
-.data-row
-  display: flex
-  flex-direction: row
-  align-items: baseline
+.data-row {
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+}
 
-.data-label
-  font-size: .9em
-  color: #aaa
-  min-width: 2rem
-  margin-right: .4rem
-  text-align: right
+.data-label {
+  font-size: .9em;
+  color: #aaa;
+  min-width: 2rem;
+  margin-right: .4rem;
+  text-align: right;
+}
 
-.data-value
-  white-space: nowrap
-  overflow: hidden
-  text-overflow: ellipsis
+.data-value {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
 </style>

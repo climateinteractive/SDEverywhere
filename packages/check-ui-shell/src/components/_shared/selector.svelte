@@ -38,26 +38,28 @@ function onChange() {
 
 
 <!-- STYLE -->
-<style lang='sass'>
+<style lang='scss'>
 
-select
-  width: auto
-  font-family: inherit
-  font-size: inherit
-  color: inherit
+select {
+  width: auto;
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
   // Note: The following values were derived from bootstrap
-  margin: 0
-  background-color: #fff
-  background-image: none
-  border: 1px solid #ccc
-  border-radius: 0
-  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075)
-  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out
-  text-transform: none
+  margin: 0;
+  background-color: #fff;
+  background-image: none;
+  border: 1px solid #ccc;
+  border-radius: 0;
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  text-transform: none;
 
-select > option
-  // XXX: Firefox doesn't support @font-face in select menus, so
-  // the best we can do is try a similar sans serif font
-  font-family: 'Roboto Condensed', Helvetica, sans-serif
+  > option {
+    // XXX: Firefox doesn't support @font-face in select menus, so
+    // the best we can do is try a similar sans serif font
+    font-family: 'Roboto Condensed', Helvetica, sans-serif;
+  }
+}
 
 </style>

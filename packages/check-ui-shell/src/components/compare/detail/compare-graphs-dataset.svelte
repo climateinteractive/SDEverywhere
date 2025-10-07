@@ -56,40 +56,46 @@ function onDatasetClicked() {
 
 
 <!-- STYLE -->
-<style lang='sass'>
+<style lang='scss'>
 
-.dataset-container
-  display: flex
-  flex: 1
-  flex-direction: column
+.dataset-container {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+}
 
-.dataset-row
-  display: flex
-  flex: 1
-  align-items: baseline
-  margin-left: .6rem
-  cursor: pointer
+.dataset-row {
+  display: flex;
+  flex: 1;
+  align-items: baseline;
+  margin-left: .6rem;
+  cursor: pointer;
 
-.dataset-row:hover
-  background-color: rgba(255, 255, 255, .05)
+  &:hover {
+    background-color: rgba(255, 255, 255, .05);
+  }
+}
 
-.dataset-arrow
-  color: #777
+.dataset-arrow {
+  color: #777;
+}
 
-.legend-item
-  font-family: 'Roboto Condensed'
-  font-weight: 700
-  font-size: 1rem
-  margin: .2rem .4rem
-  padding: .25rem .6rem .2rem .6rem
-  color: #fff
-  text-align: center
+.legend-item {
+  font-family: 'Roboto Condensed';
+  font-weight: 700;
+  font-size: 1rem;
+  margin: .2rem .4rem;
+  padding: .25rem .6rem .2rem .6rem;
+  color: #fff;
+  text-align: center;
+}
 
-.detail-box-container
-  display: flex
-  flex: 1
-  margin-top: .2rem
-  margin-bottom: .8rem
-  margin-left: .4rem
+.detail-box-container {
+  display: flex;
+  flex: 1;
+  margin-top: .2rem;
+  margin-bottom: .8rem;
+  margin-left: .4rem;
+}
 
 </style>

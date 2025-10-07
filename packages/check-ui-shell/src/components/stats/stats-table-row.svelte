@@ -79,47 +79,55 @@ function onShowPerf() {
 
 
 <!-- STYLE -->
-<style lang='sass'>
+<style lang='scss'>
 
-td
-  padding: 0
-  height: 1.8rem
+td {
+  padding: 0;
+  height: 1.8rem;
+}
 
-.name
-  padding-right: 3rem
-  max-width: 20rem
-  white-space: nowrap
-  overflow: hidden
-  text-overflow: ellipsis
+.name {
+  padding-right: 3rem;
+  max-width: 20rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
-:global(.row-header)
-  color: #aaa
+:global(.row-header) {
+  color: #aaa;
+}
 
-.cell
-  display: flex
-  width: 100%
-  flex-direction: row
-  align-items: baseline
-  font-family: monospace
+.cell {
+  display: flex;
+  width: 100%;
+  flex-direction: row;
+  align-items: baseline;
+  font-family: monospace;
 
-.cell.dim
-  color: #777
+  &.dim {
+    color: #777;
+  }
+}
 
-.value
-  flex: 1
-  padding-right: .4rem
-  text-align: right
+.value {
+  flex: 1;
+  padding-right: .4rem;
+  text-align: right;
+}
 
-.change
-  flex: 1
-  padding-left: .4rem
-  text-align: left
-  font-size: .8em
+.change {
+  flex: 1;
+  padding-left: .4rem;
+  text-align: left;
+  font-size: .8em;
+}
 
-.plot
-  width: 12rem
-  padding-left: 2rem
-  padding-right: 2rem
-  cursor: pointer
+.plot {
+  width: 12rem;
+  padding-left: 2rem;
+  padding-right: 2rem;
+  cursor: pointer;
+}
 
 </style>

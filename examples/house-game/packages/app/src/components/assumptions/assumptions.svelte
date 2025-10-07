@@ -29,25 +29,30 @@ export let viewModel: AssumptionsViewModel
 
 
 <!-- STYLE -->
-<style lang='sass'>
+<style lang='scss'>
 
-.assumptions-title
-  font-weight: 700
-  margin-bottom: 12px
+.assumptions-title {
+  font-weight: 700;
+  margin-bottom: 12px;
+}
 
-.assumption-rows
-  display: flex
-  flex-direction: column
-  width: 100%
+.assumption-rows {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
 
-.assumption-row
-  display: flex
-  flex-direction: row
-  width: 100%
-  justify-content: space-between
-  font-size: 14px
-  line-height: 1.4
-  &:nth-child(2)
-    margin-bottom: 12px
+.assumption-row {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  justify-content: space-between;
+  font-size: 14px;
+  line-height: 1.4;
+
+  &:nth-child(2) {
+    margin-bottom: 12px;
+  }
+}
 
 </style>

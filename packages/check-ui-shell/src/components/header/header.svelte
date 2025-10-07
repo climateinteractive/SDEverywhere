@@ -134,73 +134,85 @@ $: if ($simplifyScenarios !== undefined) {
 
 
 <!-- STYLE -->
-<style lang='sass'>
+<style lang='scss'>
 
-.header-container
-  display: flex
-  flex-direction: column
-  box-sizing: border-box
-  width: 100vw
-  padding: 0 1rem
-  color: #aaa
+.header-container {
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  width: 100vw;
+  padding: 0 1rem;
+  color: #aaa;
+}
 
-.header-content
-  display: flex
-  flex-direction: row
-  margin: .4rem 0
+.header-content {
+  display: flex;
+  flex-direction: row;
+  margin: .4rem 0;
+}
 
-.header-group
-  display: flex
-  flex-direction: row
-  align-items: center
+.header-group {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
 
-.spacer-flex
-  flex: 1
+.spacer-flex {
+  flex: 1;
+}
 
-.spacer-fixed
-  width: 2rem
+.spacer-fixed {
+  width: 2rem;
+}
 
-.icon-button
-  color: #bbb
-  cursor: pointer
+.icon-button {
+  color: #bbb;
+  cursor: pointer;
 
-.icon-button:hover
-  color: #fff
+  &:hover {
+    color: #fff;
+  }
+}
 
-.label:not(:last-child)
-  margin-right: 1rem
+.label:not(:last-child) {
+  margin-right: 1rem;
+}
 
-select
-  margin-right: 1rem
-  font-family: Roboto, sans-serif
-  font-size: 1em
+select {
+  margin-right: 1rem;
+  font-family: Roboto, sans-serif;
+  font-size: 1em;
   // XXX: Remove browser-provided background, but preserve arrow; based on:
   //   https://stackoverflow.com/a/57510283
-  -webkit-appearance: none
-  -moz-appearance: none
-  appearance: none
-  padding: .2rem 1.6rem .2rem .4rem
-  background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' fill='%23555'><polygon points='0,0 100,0 50,60'/></svg>") no-repeat
-  background-size: .8rem
-  background-position: calc(100% - .4rem) 70%
-  background-repeat: no-repeat
-  background-color: #353535
-  border: none
-  border-radius: .4rem
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  padding: .2rem 1.6rem .2rem .4rem;
+  background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' fill='%23555'><polygon points='0,0 100,0 50,60'/></svg>") no-repeat;
+  background-size: .8rem;
+  background-position: calc(100% - .4rem) 70%;
+  background-repeat: no-repeat;
+  background-color: #353535;
+  border: none;
+  border-radius: .4rem;
+}
 
-.header-controls
-  display: flex
-  flex-direction: row
-  margin: .4rem 0
-  align-items: center
+.header-controls {
+  display: flex;
+  flex-direction: row;
+  margin: .4rem 0;
+  align-items: center;
+}
 
-input[type=range]
-  width: 10rem
-  margin: 0 .4rem
+input[type=range] {
+  width: 10rem;
+  margin: 0 .4rem;
+}
 
-.line
-  min-height: 1px
-  margin-bottom: 1rem
-  background-color: #555
+.line {
+  min-height: 1px;
+  margin-bottom: 1rem;
+  background-color: #555;
+}
 
 </style>

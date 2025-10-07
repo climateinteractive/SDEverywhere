@@ -83,69 +83,80 @@ function onNextClicked() {
 
 
 <!-- STYLE -->
-<style lang='sass'>
+<style lang='scss'>
 
-.playground-container
-  display: flex
-  flex-direction: column
-  flex: 1
+.playground-container {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
 
-.scroll-container
-  display: flex
+.scroll-container {
+  display: flex;
   // XXX: We use 1px here for flex-basis, otherwise in Firefox and Chrome the
   // whole page will scroll instead of just this container.  See also:
   //   https://stackoverflow.com/a/52489012
-  flex: 1 1 1px
-  flex-direction: column
-  padding: 0 1rem
-  overflow: auto
+  flex: 1 1 1px;
+  flex-direction: column;
+  padding: 0 1rem;
+  overflow: auto;
+}
 
-.wizard-container
-  display: flex
-  flex-direction: row
+.wizard-container {
+  display: flex;
+  flex-direction: row;
+}
 
-.card-container
-  display: flex
-  flex-direction: column
-  width: 54rem
+.card-container {
+  display: flex;
+  flex-direction: column;
+  width: 54rem;
+}
 
-.spacer-fixed
-  flex: 0 0 1rem
+.spacer-fixed {
+  flex: 0 0 1rem;
+}
 
-.card
-  display: flex
-  padding: 1.5rem
-  background-color: #eee
-  color: #000
-  border-radius: 1rem
-  cursor: pointer
+.card {
+  display: flex;
+  padding: 1.5rem;
+  background-color: #eee;
+  color: #000;
+  border-radius: 1rem;
+  cursor: pointer;
 
-.card.editing
-  cursor: default
+  &.editing {
+    cursor: default;
+  }
+}
 
-.button-row
-  display: flex
-  justify-content: flex-end
+.button-row {
+  display: flex;
+  justify-content: flex-end;
+}
 
-.next-button
-  border-radius: .5rem
-  margin-top: 1.5rem
-  margin-bottom: 1rem
-  padding: .625rem 2rem
-  background-color: #007700
-  color: #fff
-  cursor: pointer
-  user-select: none
+.next-button {
+  border-radius: .5rem;
+  margin-top: 1.5rem;
+  margin-bottom: 1rem;
+  padding: .625rem 2rem;
+  background-color: #007700;
+  color: #fff;
+  cursor: pointer;
+  user-select: none;
 
-.next-button:hover
-  background-color: #008800
+  &:hover {
+    background-color: #008800;
+  }
+}
 
-.graph-container
-  display: flex
-  flex-direction: column
-  width: 42rem
-  margin-left: 1rem
-  padding-top: 2rem
-  align-items: center
+.graph-container {
+  display: flex;
+  flex-direction: column;
+  width: 42rem;
+  margin-left: 1rem;
+  padding-top: 2rem;
+  align-items: center;
+}
 
 </style>

@@ -42,45 +42,56 @@ function onHeaderClicked() {
 
 
 <!-- STYLE -->
-<style lang='sass'>
+<style lang='scss'>
 
 // TODO: Share with comparison-summary-row
-$bar-width: 15rem
+$bar-width: 15rem;
 
-.section-container
-  display: flex
-  flex-direction: column
-  &:not(:last-child)
-    margin-bottom: 1.5rem
+.section-container {
+  display: flex;
+  flex-direction: column;
 
-.header-row
-  display: flex
-  flex-direction: row
-  align-items: center
-  margin: .4rem 0
-  cursor: pointer
-  &.collapsed
-    opacity: 0.5
-  &:hover
-    opacity: 0.8
+  &:not(:last-child) {
+    margin-bottom: 1.5rem;
+  }
+}
 
-.header-bar
-  display: flex
-  width: $bar-width
-  height: 1px
-  background-color: #555
+.header-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  margin: .4rem 0;
+  cursor: pointer;
 
-.header-title
-  margin-left: .8rem
-  color: #fff
-  font-size: 1.2em
+  &.collapsed {
+    opacity: 0.5;
+  }
 
-.header-count
-  margin-left: .5rem
-  padding: .1rem .5rem
-  border-radius: 1rem
-  background-color: rgba(255, 165, 0, .7)
-  color: #eee
-  font-size: .85em
+  &:hover {
+    opacity: 0.8;
+  }
+}
+
+.header-bar {
+  display: flex;
+  width: $bar-width;
+  height: 1px;
+  background-color: #555;
+}
+
+.header-title {
+  margin-left: .8rem;
+  color: #fff;
+  font-size: 1.2em;
+}
+
+.header-count {
+  margin-left: .5rem;
+  padding: .1rem .5rem;
+  border-radius: 1rem;
+  background-color: rgba(255, 165, 0, .7);
+  color: #eee;
+  font-size: .85em;
+}
 
 </style>

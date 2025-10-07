@@ -28,45 +28,51 @@ export let colorClass: string
 
 
 <!-- STYLE -->
-<style lang='sass'>
+<style lang='scss'>
 
-$dot-size: .8rem
-$height: 1.4rem
-$line-color: #555
+$dot-size: .8rem;
+$height: 1.4rem;
+$line-color: #555;
 
-.dot-plot-container
-  position: relative
-  width: 100%
-  height: $dot-size * 2
+.dot-plot-container {
+  position: relative;
+  width: 100%;
+  height: $dot-size * 2;
+}
 
-.hline
-  position: absolute
-  left: 0
-  top: $height * 0.5
-  width: 100%
-  height: 1px
-  background-color: $line-color
+.hline {
+  position: absolute;
+  left: 0;
+  top: $height * 0.5;
+  width: 100%;
+  height: 1px;
+  background-color: $line-color;
+}
 
-.vline
-  position: absolute
-  left: 0
-  height: $height
-  width: 1px
+.vline {
+  position: absolute;
+  left: 0;
+  height: $height;
+  width: 1px;
 
-.end-line
-  background-color: $line-color
+  &.end-line {
+    background-color: $line-color;
+  }
 
-.avg-line
-  width: 2px  
-  margin-left: -1px
+  &.avg-line {
+    width: 2px;
+    margin-left: -1px;
+  }
+}
 
-.dot
-  position: absolute
-  top: ($height * 0.5) - ($dot-size * 0.5)
-  width: $dot-size
-  height: $dot-size
-  margin-left: -$dot-size * 0.5
-  border-radius: $dot-size * 0.5
-  opacity: .2
+.dot {
+  position: absolute;
+  top: ($height * 0.5) - ($dot-size * 0.5);
+  width: $dot-size;
+  height: $dot-size;
+  margin-left: -$dot-size * 0.5;
+  border-radius: $dot-size * 0.5;
+  opacity: .2;
+}
 
 </style>
