@@ -47,7 +47,10 @@ type DataResponse = DatasetResponse | GraphDataResponse
 export class ComparisonDataCoordinator {
   private readonly taskQueue: TaskQueue<DataRequest, DataResponse>
 
-  constructor(public readonly bundleModelL: BundleModel, public readonly bundleModelR: BundleModel) {
+  constructor(
+    public readonly bundleModelL: BundleModel,
+    public readonly bundleModelR: BundleModel
+  ) {
     this.taskQueue = new TaskQueue({
       process: async request => {
         // Run the models in parallel

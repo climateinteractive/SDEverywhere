@@ -48,7 +48,10 @@ class SuiteRunner {
   private readonly perfStatsR: PerfStats = new PerfStats()
   private stopped = false
 
-  constructor(private readonly config: Config, private readonly callbacks: RunSuiteCallbacks) {
+  constructor(
+    private readonly config: Config,
+    private readonly callbacks: RunSuiteCallbacks
+  ) {
     this.taskQueue = new TaskQueue({
       process: request => {
         return this.processRequest(request)
