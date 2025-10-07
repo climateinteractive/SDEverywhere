@@ -53,8 +53,7 @@
       "@fortawesome/free-regular-svg-icons",
       "@fortawesome/free-solid-svg-icons",
       "es5-ext",
-      "esbuild",
-      "svelte-preprocess"
+      "esbuild"
     ],
     "ignoredBuiltDependencies": [
       "@parcel/watcher"
