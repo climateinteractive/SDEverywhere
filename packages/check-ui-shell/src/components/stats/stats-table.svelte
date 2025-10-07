@@ -10,26 +10,30 @@ export let viewModel: StatsTableViewModel
 
 <!-- TEMPLATE -->
 <table class="header">
-  <tr>
-    <th></th>
-    <th>inputs</th>
-    <th>outputs</th>
-    <th>model size (bytes)</th>
-    <th>data size (bytes)</th>
-    <th>avg time (ms)</th>
-    <th class="dim">min time (ms)</th>
-    <th class="dim">max time (ms)</th>
-    <th></th>
-  </tr>
-  <tr>
-    <StatsTableRow on:command viewModel={viewModel.row1} />
-  </tr>
-  <tr>
-    <StatsTableRow on:command viewModel={viewModel.row2} />
-  </tr>
-  <tr>
-    <StatsTableRow on:command viewModel={viewModel.row3} />
-  </tr>
+  <thead>
+    <tr>
+      <th></th>
+      <th>inputs</th>
+      <th>outputs</th>
+      <th>model size (bytes)</th>
+      <th>data size (bytes)</th>
+      <th>avg time (ms)</th>
+      <th class="dim">min time (ms)</th>
+      <th class="dim">max time (ms)</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <StatsTableRow on:command viewModel={viewModel.row1} />
+    </tr>
+    <tr>
+      <StatsTableRow on:command viewModel={viewModel.row2} />
+    </tr>
+    <tr>
+      <StatsTableRow on:command viewModel={viewModel.row3} />
+    </tr>
+  </tbody>
 </table>
 
 <!-- STYLE -->
