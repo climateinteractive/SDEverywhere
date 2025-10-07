@@ -6,18 +6,15 @@ Based on example code by @dukenmarga from:
 -->
 
 <script context="module" lang="ts">
-
 export interface ContextMenuItem {
   key: string
   displayText: string
   iconClass?: string
   disabled?: boolean
 }
-
 </script>
 
 <script lang="ts">
-
 import { createEventDispatcher } from 'svelte'
 
 import { clickOutside } from './click-outside'
@@ -48,7 +45,6 @@ $: if (initialEvent) {
 function onItemSelected(cmd: string) {
   dispatch('item-selected', cmd)
 }
-
 </script>
 
 {#if showMenu}
@@ -56,10 +52,14 @@ function onItemSelected(cmd: string) {
     <div class="navbar" id="navbar">
       <ul>
         {#each items as item}
-          {#if item.key == "hr"}
-            <hr>
+          {#if item.key == 'hr'}
+            <hr />
           {:else}
-            <li><button class:disabled={item.disabled === true} on:click={() => onItemSelected(item.key)}><i class={item.iconClass}></i>{item.displayText}</button></li>
+            <li>
+              <button class:disabled={item.disabled === true} on:click={() => onItemSelected(item.key)}
+                ><i class={item.iconClass}></i>{item.displayText}</button
+              >
+            </li>
           {/if}
         {/each}
       </ul>

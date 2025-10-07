@@ -1,8 +1,7 @@
 <!-- Copyright (c) 2021-2022 Climate Interactive / New Venture Fund -->
 
 <!-- SCRIPT -->
-<script lang='ts'>
-
+<script lang="ts">
 import assertNever from 'assert-never'
 import copyToClipboard from 'copy-text-to-clipboard'
 
@@ -54,97 +53,109 @@ function onLinkClicked(linkItem: LinkItem) {
       assertNever(linkItem.kind)
   }
 }
-
 </script>
 
-
-
-
 <!-- TEMPLATE -->
-<template lang='pug'>
-
-include context-graph.pug
-
-.context-graph-container
-  +if('viewModel.graphSpec')
-    .graph-and-info
-      .graph-title(class!='{viewModel.datasetClass}') { @html viewModel.graphSpec.title }
-      +if('viewModel.requestKey')
-        .graph-container
-          Lazy(bind:visible!='{visible}')
-            +if('$content && $content.graphData')
-              Graph(viewModel!='{$content.graphData}' config!='{graphConfig}')
-        Legend(graphSpec!='{viewModel.graphSpec}')
-        +links
-        +else
-          .message.not-shown
-            span Graph not shown: scenario is invalid in&nbsp;
-            span(class!='{viewModel.datasetClass}') { viewModel.bundleName }
-    +else
-      .message.not-included
-        span Graph not included in&nbsp;
-        span(class!='{viewModel.datasetClass}') { viewModel.bundleName }
-
-</template>
-
-
-
+<div class="context-graph-container">
+  {#if viewModel.graphSpec}
+    <div class="graph-and-info">
+      <div class={`graph-title ${viewModel.datasetClass}`}>
+        {@html viewModel.graphSpec.title}
+      </div>
+      {#if viewModel.requestKey}
+        <div class="graph-container">
+          <Lazy bind:visible>
+            {#if $content && $content.graphData}
+              <Graph viewModel={$content.graphData} config={graphConfig} />
+            {/if}
+          </Lazy>
+        </div>
+        <Legend graphSpec={viewModel.graphSpec} />
+        {#if viewModel.linkItems}
+          <div class="link-container">
+            {#each viewModel.linkItems as linkItem}
+              <div class="link-row" on:click={() => onLinkClicked(linkItem)}>{linkItem.text}</div>
+            {/each}
+          </div>
+        {/if}
+      {:else}
+        <div class="message not-shown">
+          <span>Graph not shown: scenario is invalid in&nbsp;</span>
+          <span class={viewModel.datasetClass}>{viewModel.bundleName}</span>
+        </div>
+      {/if}
+    </div>
+  {:else}
+    <div class="message not-included">
+      <span>Graph not included in&nbsp;</span>
+      <span class={viewModel.datasetClass}>{viewModel.bundleName}</span>
+    </div>
+  {/if}
+</div>
 
 <!-- STYLE -->
-<style lang='sass'>
-
+<style lang="scss">
 // The graph columns have a fixed width of 38rem (38% of app width);
 // this needs to match the `graphConfig.width` value above
-$graph-width: 38rem
-$graph-height: 20rem
+$graph-width: 38rem;
+$graph-height: 20rem;
 
-.context-graph-container
-  display: inline-flex
-  flex-direction: column
+.context-graph-container {
+  display: inline-flex;
+  flex-direction: column;
   // Use a fixed width measured in viewport-relative units
-  flex: 0 0 $graph-width
-  background-color: #fff
+  flex: 0 0 $graph-width;
+  background-color: #fff;
+}
 
-.graph-and-info
-  display: flex
-  flex-direction: column
+.graph-and-info {
+  display: flex;
+  flex-direction: column;
+}
 
-.graph-title
-  margin: .5rem 0
-  padding: 0 .8rem
-  font-family: 'Roboto Condensed'
-  font-size: 1.55rem
+.graph-title {
+  margin: 0.5rem 0;
+  padding: 0 0.8rem;
+  font-family: 'Roboto Condensed';
+  font-size: 1.55rem;
+}
 
-.graph-container
-  display: block
-  position: relative
-  width: $graph-width
-  height: $graph-height
+.graph-container {
+  display: block;
+  position: relative;
+  width: $graph-width;
+  height: $graph-height;
+}
 
-.message
-  display: flex
-  flex: 1
-  min-height: $graph-height
-  align-items: center
-  justify-content: center
-  color: #aaa
-  border: solid 1px #fff
-  &.not-included
-    background-color: #555
+.message {
+  display: flex;
+  flex: 1;
+  min-height: $graph-height;
+  align-items: center;
+  justify-content: center;
+  color: #aaa;
+  border: solid 1px #fff;
 
-.link-container
-  display: flex
-  flex-direction: column
-  align-items: flex-start
-  margin-bottom: .4rem
+  &.not-included {
+    background-color: #555;
+  }
+}
 
-.link-row
-  height: 1.2rem
-  margin: 0 .8rem
-  color: #999
-  cursor: pointer
+.link-container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-bottom: 0.4rem;
+}
 
-.link-row:hover
-  color: #000
+.link-row {
+  height: 1.2rem;
+  margin: 0 0.8rem;
+  color: #999;
+  cursor: pointer;
 
+  &:hover {
+    color: #000;
+  }
+}
 </style>

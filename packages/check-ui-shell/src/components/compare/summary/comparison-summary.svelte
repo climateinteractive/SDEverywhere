@@ -1,22 +1,15 @@
 <!-- Copyright (c) 2021-2022 Climate Interactive / New Venture Fund -->
 
 <!-- SCRIPT -->
-<script lang='ts'>
-
+<script lang="ts">
 import ComparisonSummarySection from './comparison-summary-section.svelte'
 import ComparisonSummaryToc from './comparison-summary-toc.svelte'
 import type { ComparisonSummaryViewModel } from './comparison-summary-vm'
 
 export let viewModel: ComparisonSummaryViewModel
-
 </script>
 
-
-
-
 <!-- TEMPLATE -->
-<template>
-
 <div class="comparison-summary-container">
   <!-- TODO: Add an option to show the TOC -->
   {#if viewModel.kind === ''}
@@ -30,28 +23,26 @@ export let viewModel: ComparisonSummaryViewModel
   <div class="footer"></div>
 </div>
 
-</template>
-
-
-
-
 <!-- STYLE -->
-<style lang='sass'>
+<style lang="scss">
+.comparison-summary-container {
+  display: flex;
+  flex-direction: column;
+  padding-top: 2rem;
+}
 
-.comparison-summary-container
-  display: flex
-  flex-direction: column
-  padding-top: 2rem
-
-.section-container
-  display: flex
-  flex-direction: column
+.section-container {
+  display: flex;
+  flex-direction: column;
   // Set scroll margin to account for headers when jumping to anchors
-  scroll-margin-top: 5rem
-  &:not(:last-child)
-    margin-bottom: 1.5rem
+  scroll-margin-top: 5rem;
 
-.footer
-  flex: 0 0 1rem
+  &:not(:last-child) {
+    margin-bottom: 1.5rem;
+  }
+}
 
+.footer {
+  flex: 0 0 1rem;
+}
 </style>

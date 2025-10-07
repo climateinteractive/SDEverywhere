@@ -22,7 +22,10 @@ export class Series {
    * @param varId The ID for the output variable (as used by SDEverywhere).
    * @param points The data points for the variable, one point per time increment.
    */
-  constructor(public readonly varId: OutputVarId, public readonly points: Point[]) {}
+  constructor(
+    public readonly varId: OutputVarId,
+    public readonly points: Point[]
+  ) {}
 
   /**
    * Return the Y value at the given time.  Note that this does not attempt to interpolate

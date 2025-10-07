@@ -5,5 +5,11 @@
   "semi": false,
   "singleQuote": true,
   "tabWidth": 2,
-  "trailingComma": "none"
+  "trailingComma": "none",
+  "plugins": ["prettier-plugin-svelte"],
+  "overrides": [{ "files": "*.svelte", "options": { "parser": "svelte" } }],
+  "svelteSortOrder": "options-scripts-markup-styles",
+  "svelteIndentScriptAndStyle": false,
+  "svelteStrictMode": false,
+  "svelteAllowShorthand": true
 }

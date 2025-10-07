@@ -15,7 +15,10 @@ export class TabBarViewModel {
   public readonly selectedItem: Readable<TabItemViewModel>
   public readonly selectedItemId: Readable<string>
 
-  constructor(public readonly items: TabItemViewModel[], initialIndex: number) {
+  constructor(
+    public readonly items: TabItemViewModel[],
+    initialIndex: number
+  ) {
     this.selectedIndex = writable(initialIndex)
     this.selectedItem = derived(this.selectedIndex, $selectedIndex => items[$selectedIndex])
     this.selectedItemId = derived(this.selectedItem, $selectedItem => $selectedItem.id)

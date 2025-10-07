@@ -1,8 +1,7 @@
 <!-- Copyright (c) 2021-2022 Climate Interactive / New Venture Fund -->
 
 <!-- SCRIPT -->
-<script lang='ts'>
-
+<script lang="ts">
 import FontFaceObserver from 'fontfaceobserver'
 
 import type { ComparisonGroupingKind } from './components/compare/_shared/comparison-grouping-kind'
@@ -92,7 +91,11 @@ function onCommand(event: CustomEvent) {
     case 'show-comparison-detail-for-previous':
     case 'show-comparison-detail-for-next': {
       const delta = cmd === 'show-comparison-detail-for-previous' ? -1 : +1
-      const adjacent = viewModel.createCompareDetailViewModelForSummaryRowWithDelta(cmdObj.kind, cmdObj.summaryRowKey, delta)
+      const adjacent = viewModel.createCompareDetailViewModelForSummaryRowWithDelta(
+        cmdObj.kind,
+        cmdObj.summaryRowKey,
+        delta
+      )
       if (adjacent) {
         compareDetailViewModel = adjacent
         viewMode = 'comparison-detail'
@@ -130,57 +133,51 @@ function onKeyDown(event: KeyboardEvent) {
       break
   }
 }
-
 </script>
 
-
-
-
 <!-- TEMPLATE -->
-<template lang='pug'>
+<svelte:window on:keydown={onKeyDown} />
 
-svelte:window(on:keydown!='{onKeyDown}')
-
-+await('viewReady')
-  .loading-container
-  +then('ignored')
-    .app-container(style!='{appStyle}')
-      Header(on:command!='{onCommand}' viewModel!='{viewModel.headerViewModel}')
-      +if('$checksInProgress')
-        .progress-container
-          .progress {$progress}
-        +elseif('viewMode === "comparison-detail"')
-          ComparisonDetail(on:command!='{onCommand}' viewModel!='{compareDetailViewModel}')
-        +elseif('viewMode === "perf"')
-          Perf(on:command!='{onCommand}' viewModel!='{perfViewModel}')
-        +else
-          Summary(on:command!='{onCommand}' viewModel!='{viewModel.summaryViewModel}')
-
-</template>
-
-
-
+{#await viewReady}
+  <div class="loading-container"></div>
+{:then}
+  <div class="app-container" style={appStyle}>
+    <Header on:command={onCommand} viewModel={viewModel.headerViewModel} />
+    {#if $checksInProgress}
+      <div class="progress-container">
+        <div class="progress">{$progress}</div>
+      </div>
+    {:else if viewMode === 'comparison-detail'}
+      <ComparisonDetail on:command={onCommand} viewModel={compareDetailViewModel} />
+    {:else if viewMode === 'perf'}
+      <Perf on:command={onCommand} viewModel={perfViewModel} />
+    {:else}
+      <Summary on:command={onCommand} viewModel={viewModel.summaryViewModel} />
+    {/if}
+  </div>
+{/await}
 
 <!-- STYLE -->
-<style lang='sass'>
+<style lang="scss">
+.app-container {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
 
-.app-container
-  display: flex
-  flex-direction: column
-  flex: 1
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  align-items: center;
+  justify-content: center;
+}
 
-.loading-container
-  display: flex
-  flex-direction: column
-  flex: 1 1 auto
-  align-items: center
-  justify-content: center
-
-.progress-container
-  display: flex
-  height: 100vh
-  align-items: center
-  justify-content: center
-  font-size: 2em
-
+.progress-container {
+  display: flex;
+  height: 100vh;
+  align-items: center;
+  justify-content: center;
+  font-size: 2em;
+}
 </style>

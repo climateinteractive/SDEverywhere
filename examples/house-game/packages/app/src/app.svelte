@@ -1,6 +1,5 @@
 <!-- SCRIPT -->
-<script lang='ts'>
-
+<script lang="ts">
 import './global.css'
 
 import Assumptions from './components/assumptions/assumptions.svelte'
@@ -22,15 +21,9 @@ function onReset() {
 function onContinue() {
   viewModel.nextStep()
 }
-
 </script>
 
-
-
-
 <!-- TEMPLATE -->
-<template>
-
 <div class="app-container">
   <div class="left-container">
     <div class="text-container">
@@ -56,123 +49,125 @@ function onContinue() {
   <div class="right-container">
     <div class="column">
       <div class="graph-container">
-        <Graph viewModel={viewModel.supplyGraphViewModel} width={500} height={400}/>
+        <Graph viewModel={viewModel.supplyGraphViewModel} width={500} height={400} />
       </div>
     </div>
   </div>
 </div>
 
-</template>
-
-
-
-
 <!-- STYLE -->
-<style lang='sass'>
+<style lang="scss">
+.app-container {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+}
 
-.app-container
-  display: flex
-  flex-direction: row
-  gap: 10px
+.left-container {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  gap: 10px;
+  font-family: sans-serif;
+}
 
-.left-container
-  display: flex
-  flex-direction: column
-  flex-shrink: 0
-  gap: 10px
-  font-family: sans-serif
+.text-container {
+  display: flex;
+  flex-direction: column;
+  width: 250px;
+  height: 240px;
+  flex-shrink: 0;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px;
+  border-radius: 8px;
+  border: solid 1px #555;
+  font-family: sans-serif;
+}
 
-.text-container
-  display: flex
-  flex-direction: column
-  width: 250px
-  height: 240px
-  flex-shrink: 0
-  align-items: flex-start
-  gap: 10px
-  padding: 10px
-  border-radius: 8px
-  border: solid 1px #555
-  font-family: sans-serif
+.message {
+  font-size: 14px;
+  line-height: 1.4;
 
-.message
-  font-size: 14px
-  line-height: 1.4
-.message :global(.supply)
-  color: magenta
-  font-weight: 700
-.message :global(.demand)
-  color: #4080e0
-  font-weight: 700
+  :global(.supply) {
+    color: magenta;
+    font-weight: 700;
+  }
 
-.input-row
-  display: flex
-  flex-direction: row
-  align-items: baseline
-  gap: 8px
-  font-size: 14px
-  line-height: 1.4
+  :global(.demand) {
+    color: #4080e0;
+    font-weight: 700;
+  }
+}
 
-.spacer-flex
-  flex: 1
+.input-row {
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 14px;
+  line-height: 1.4;
+}
 
-.buttons
-  display: flex
-  flex-direction: row
-  width: 100%
-  justify-content: space-between
+.spacer-flex {
+  flex: 1;
+}
 
-button
-  background-color: transparent
-  background-repeat: no-repeat
-  border: solid 1px #fff
-  border-radius: 8px
-  padding: 4px 8px
-  outline: none
-  overflow: hidden
-  color: #fff
-  cursor: pointer
-  &.reset
-    border-color: #555
-    color: #555
-  &:disabled
-    opacity: 0.5
-    cursor: not-allowed
-  &:hover:not(:disabled)
-    background-color: rgba(128, 128, 128, 0.2)
+.buttons {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  justify-content: space-between;
+}
 
-.text-container.assumptions
-  height: 160px
-  gap: 4px
-  color: #777
+button {
+  background-color: transparent;
+  background-repeat: no-repeat;
+  border: solid 1px #fff;
+  border-radius: 8px;
+  padding: 4px 8px;
+  outline: none;
+  overflow: hidden;
+  color: #fff;
+  cursor: pointer;
 
-.right-container
-  display: flex
-  flex-direction: column
-  padding: 10px
-  border-radius: 8px
-  border: solid 1px #555
+  &.reset {
+    border-color: #555;
+    color: #555;
+  }
 
-// textarea
-//   font-family: monospace
-//   min-height: 600px
-//   background-color: black
-//   color: #fff
-//   border: none
-//   border-radius: 8px
-//   padding: 8px
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
 
-.graph-container
-  position: relative
-  width: 500px
-  height: 300px
-  margin-top: 20px
+  &:hover:not(:disabled) {
+    background-color: rgba(128, 128, 128, 0.2);
+  }
+}
 
-// .cell-column
-//   display: flex
-//   flex-direction: column
+.text-container.assumptions {
+  height: 160px;
+  gap: 4px;
+  color: #777;
+}
 
-.cell-value
-  max-width: 40px
+.right-container {
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+  border-radius: 8px;
+  border: solid 1px #555;
+}
 
+.graph-container {
+  position: relative;
+  width: 500px;
+  height: 300px;
+  margin-top: 20px;
+}
+
+.cell-value {
+  max-width: 40px;
+}
 </style>

@@ -41,6 +41,9 @@ importers:
       prettier:
         specifier: ^3.6.2
         version: 3.6.2
+      prettier-plugin-svelte:
+        specifier: ^3.4.0
+        version: 3.4.0(prettier@3.6.2)(svelte@5.39.9)
       svelte-eslint-parser:
         specifier: ^1.3.1
         version: 1.3.3(svelte@5.39.9)
@@ -172,9 +175,6 @@ importers:
       postcss:
         specifier: ^8.4.41
         version: 8.4.41
-      pug:
-        specifier: ^3.0.3
-        version: 3.0.3
       sass:
         specifier: ^1.77.8
         version: 1.77.8
@@ -546,9 +546,6 @@ importers:
       postcss:
         specifier: ^8.4.41
         version: 8.4.41
-      pug:
-        specifier: ^3.0.3
-        version: 3.0.3
       sass:
         specifier: ^1.77.8
         version: 1.77.8
@@ -2621,9 +2618,6 @@ packages:
     resolution: {integrity: sha512-DyFP3BM/3YHTQOCUL/w0OZHR0lpKeGrxotcHWcqNEdnltqFwXVfhEBQ94eIo34AfQpo0rGki4cyIiftY06h2Fg==}
     engines: {node: 6.* || 8.* || >= 10.*}
 
-  get-func-name@2.0.2:
-    resolution: {integrity: sha512-8vXOvuE167CtIc3OyItco7N/dpRtBbYOsPsXCz7X/PMnlGjYjSGuZJgM1Y7mmew7BKf9BqvLX2tnOVy1BBUsxQ==}
-
   get-intrinsic@1.1.1:
     resolution: {integrity: sha512-kWZrnVM42QCiEA2Ig1bG8zjoIMOgxWwYCEeNdwY6Tv/cOSeGpcoX4pXHfKUxNKVoArnrEr2e9srnAxxGIraS9Q==}
 
@@ -2989,9 +2983,6 @@ packages:
   log-symbols@5.1.0:
     resolution: {integrity: sha512-l0x2DvrW294C9uDCoQe1VSU4gf529FkSZ6leBl4TiqZH/e+0R7hSfHQBNut2mNygDgHwvYHfFLn6Oxb3VWj2rA==}
     engines: {node: '>=12'}
-
-  loupe@3.1.1:
-    resolution: {integrity: sha512-edNu/8D5MKVfGVFRhFf8aAxiTM6Wumfz5XsaatSxlD3w4R1d/WEKUTydCdPGbl9K7QG/Ca3GnDV2sIKIpXRQcw==}
 
   loupe@3.2.1:
     resolution: {integrity: sha512-CdzqowRJCeLU72bHvWqwRBBlLcMEtIvGrlvef74kMnV2AolS9Y8xUv1I0U/MNAWMhBlKIoyuEgoJ0t/bbwHbLQ==}
@@ -3405,9 +3396,6 @@ packages:
 
   pug-code-gen@3.0.3:
     resolution: {integrity: sha512-cYQg0JW0w32Ux+XTeZnBEeuWrAY7/HNE6TWnhiHGnnRYlCgyAUPoyh9KzCMa9WhcJlJ1AtQqpEYHc+vbCzA+Aw==}
-
-  pug-error@2.0.0:
-    resolution: {integrity: sha512-sjiUsi9M4RAGHktC1drQfCr5C5eriu24Lfbt4s+7SykztEOwVZtbFk1RRq0tzLxcMxMYTBR+zMQaG07J/btayQ==}
 
   pug-error@2.1.0:
     resolution: {integrity: sha512-lv7sU9e5Jk8IeUheHata6/UThZ7RK2jnaaNztxfPYUY+VxZyk/ePVaNZ/vwmH8WqGvDz3LrNYt/+gA55NDg6Pg==}
@@ -4120,16 +4108,19 @@ snapshots:
 
   '@aashutoshrathi/word-wrap@1.2.6': {}
 
-  '@babel/helper-validator-identifier@7.16.7': {}
+  '@babel/helper-validator-identifier@7.16.7':
+    optional: true
 
   '@babel/parser@7.18.5':
     dependencies:
       '@babel/types': 7.18.4
+    optional: true
 
   '@babel/types@7.18.4':
     dependencies:
       '@babel/helper-validator-identifier': 7.16.7
       to-fast-properties: 2.0.0
+    optional: true
 
   '@esbuild/aix-ppc64@0.19.12':
     optional: true
@@ -4871,7 +4862,8 @@ snapshots:
     dependencies:
       acorn: 8.15.0
 
-  acorn@7.4.1: {}
+  acorn@7.4.1:
+    optional: true
 
   acorn@8.15.0: {}
 
@@ -4928,7 +4920,8 @@ snapshots:
 
   array-union@2.1.0: {}
 
-  asap@2.0.6: {}
+  asap@2.0.6:
+    optional: true
 
   assert-never@1.2.1: {}
 
@@ -4939,6 +4932,7 @@ snapshots:
   babel-walk@3.0.0-canary-5:
     dependencies:
       '@babel/types': 7.18.4
+    optional: true
 
   balanced-match@1.0.2: {}
 
@@ -5006,7 +5000,7 @@ snapshots:
       assertion-error: 2.0.1
       check-error: 2.1.1
       deep-eql: 5.0.2
-      loupe: 3.1.1
+      loupe: 3.2.1
       pathval: 2.0.0
 
   chalk@2.4.2:
@@ -5025,6 +5019,7 @@ snapshots:
   character-parser@2.2.0:
     dependencies:
       is-regex: 1.1.4
+    optional: true
 
   chart.js@2.9.4:
     dependencies:
@@ -5122,6 +5117,7 @@ snapshots:
     dependencies:
       '@babel/parser': 7.18.5
       '@babel/types': 7.18.4
+    optional: true
 
   copy-text-to-clipboard@3.2.0: {}
 
@@ -5193,7 +5189,8 @@ snapshots:
     dependencies:
       path-type: 4.0.0
 
-  doctypes@1.1.0: {}
+  doctypes@1.1.0:
+    optional: true
 
   dom-serializer@2.0.0:
     dependencies:
@@ -5642,8 +5639,6 @@ snapshots:
 
   get-caller-file@2.0.5: {}
 
-  get-func-name@2.0.2: {}
-
   get-intrinsic@1.1.1:
     dependencies:
       function-bind: 1.1.1
@@ -5839,6 +5834,7 @@ snapshots:
     dependencies:
       acorn: 7.4.1
       object-assign: 4.1.1
+    optional: true
 
   is-extglob@2.1.1: {}
 
@@ -5909,7 +5905,8 @@ snapshots:
 
   jquery@3.7.1: {}
 
-  js-stringify@1.0.2: {}
+  js-stringify@1.0.2:
+    optional: true
 
   js-tokens@9.0.1: {}
 
@@ -5944,6 +5941,7 @@ snapshots:
     dependencies:
       is-promise: 2.2.2
       promise: 7.3.1
+    optional: true
 
   keyv@4.5.4:
     dependencies:
@@ -5993,10 +5991,6 @@ snapshots:
     dependencies:
       chalk: 5.0.1
       is-unicode-supported: 1.3.0
-
-  loupe@3.1.1:
-    dependencies:
-      get-func-name: 2.0.2
 
   loupe@3.2.1: {}
 
@@ -6348,6 +6342,7 @@ snapshots:
   promise@7.3.1:
     dependencies:
       asap: 2.0.6
+    optional: true
 
   prompts@2.4.2:
     dependencies:
@@ -6359,6 +6354,7 @@ snapshots:
       constantinople: 4.0.1
       js-stringify: 1.0.2
       pug-runtime: 3.0.1
+    optional: true
 
   pug-code-gen@3.0.3:
     dependencies:
@@ -6370,47 +6366,55 @@ snapshots:
       pug-runtime: 3.0.1
       void-elements: 3.1.0
       with: 7.0.2
+    optional: true
 
-  pug-error@2.0.0: {}
-
-  pug-error@2.1.0: {}
+  pug-error@2.1.0:
+    optional: true
 
   pug-filters@4.0.0:
     dependencies:
       constantinople: 4.0.1
       jstransformer: 1.0.0
-      pug-error: 2.0.0
+      pug-error: 2.1.0
       pug-walk: 2.0.0
       resolve: 1.22.1
+    optional: true
 
   pug-lexer@5.0.1:
     dependencies:
       character-parser: 2.2.0
       is-expression: 4.0.0
-      pug-error: 2.0.0
+      pug-error: 2.1.0
+    optional: true
 
   pug-linker@4.0.0:
     dependencies:
-      pug-error: 2.0.0
+      pug-error: 2.1.0
       pug-walk: 2.0.0
+    optional: true
 
   pug-load@3.0.0:
     dependencies:
       object-assign: 4.1.1
       pug-walk: 2.0.0
+    optional: true
 
   pug-parser@6.0.0:
     dependencies:
-      pug-error: 2.0.0
+      pug-error: 2.1.0
       token-stream: 1.0.0
+    optional: true
 
-  pug-runtime@3.0.1: {}
+  pug-runtime@3.0.1:
+    optional: true
 
   pug-strip-comments@2.0.0:
     dependencies:
-      pug-error: 2.0.0
+      pug-error: 2.1.0
+    optional: true
 
-  pug-walk@2.0.0: {}
+  pug-walk@2.0.0:
+    optional: true
 
   pug@3.0.3:
     dependencies:
@@ -6422,6 +6426,7 @@ snapshots:
       pug-parser: 6.0.0
       pug-runtime: 3.0.1
       pug-strip-comments: 2.0.0
+    optional: true
 
   punycode@2.1.1: {}
 
@@ -6854,13 +6859,15 @@ snapshots:
 
   tinyspy@4.0.4: {}
 
-  to-fast-properties@2.0.0: {}
+  to-fast-properties@2.0.0:
+    optional: true
 
   to-regex-range@5.0.1:
     dependencies:
       is-number: 7.0.0
 
-  token-stream@1.0.0: {}
+  token-stream@1.0.0:
+    optional: true
 
   tr46@1.0.1:
     dependencies:
@@ -7030,7 +7037,8 @@ snapshots:
       - tsx
       - yaml
 
-  void-elements@3.1.0: {}
+  void-elements@3.1.0:
+    optional: true
 
   vscode-oniguruma@1.7.0: {}
 
@@ -7077,6 +7085,7 @@ snapshots:
       '@babel/types': 7.18.4
       assert-never: 1.2.1
       babel-walk: 3.0.0-canary-5
+    optional: true
 
   wordwrap@1.0.0: {}
 
