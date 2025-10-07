@@ -6,7 +6,7 @@
   "scripts": {
     "clean": "rm -rf public",
     "lint:ts": "eslint src --max-warnings 0",
-    "lint:svelte": "svelte-check --fail-on-warnings --output human --compiler-warnings \"a11y-click-events-have-key-events:ignore,a11y-no-noninteractive-tabindex:ignore,a11y-no-static-element-interactions:ignore\"",
+    "lint:svelte": "svelte-check --fail-on-warnings --output human",
     "lint": "run-s lint:ts lint:svelte",
     "prettier:check": "prettier --check .",
     "prettier:fix": "prettier --write .",

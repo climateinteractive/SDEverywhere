@@ -1,7 +1,7 @@
 <!-- Copyright (c) 2021-2022 Climate Interactive / New Venture Fund -->
 
 <!-- XXX: Svelte complains if we use `on:change` (they prefer `on:blur`); we silence the warning -->
-<!-- svelte-ignore a11y-no-onchange -->
+<!-- svelte-ignore a11y_no_onchange -->
 
 <!-- SCRIPT -->
 <script lang="ts">
