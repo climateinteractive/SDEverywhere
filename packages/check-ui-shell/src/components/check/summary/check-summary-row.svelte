@@ -19,15 +19,14 @@ function onLabelClicked() {
 
 
 <!-- TEMPLATE -->
-<template lang='pug'>
-
-.row(class!='{viewModel.rowClasses}')
-  span.label(on:click!='{onLabelClicked}') {@html viewModel.span}
-+if('viewModel.graphBoxViewModel && $graphVisible')
-  .row.check-graph(class!='{viewModel.rowClasses}')
-    CheckGraphBox(viewModel!='{viewModel.graphBoxViewModel}')
-
-</template>
+<div class={`row ${viewModel.rowClasses}`}>
+  <span class="label" on:click={onLabelClicked}>{@html viewModel.span}</span>
+</div>
+{#if viewModel.graphBoxViewModel && $graphVisible}
+  <div class={`row check-graph ${viewModel.rowClasses}`}>
+    <CheckGraphBox viewModel={viewModel.graphBoxViewModel} />
+  </div>
+{/if}
 
 
 

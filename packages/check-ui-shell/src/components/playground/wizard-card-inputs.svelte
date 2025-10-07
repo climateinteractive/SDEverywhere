@@ -15,7 +15,11 @@ export let editing: boolean
 type Option = 'matrix' | 'specify'
 let selectedOption: Option = 'matrix'
 
-const todo = viewModel.todo
+// XXX: This is just so `viewModel` is referenced
+console.log(viewModel.todo)
+
+// XXX: This is just so `selectedOption` is read
+$: console.log(selectedOption)
 
 </script>
 
@@ -23,33 +27,42 @@ const todo = viewModel.todo
 
 
 <!-- TEMPLATE -->
-<template lang='pug'>
-
-.content
-  +if('editing')
-    .editor(transition:slide)
-      .question
-        .icon-wrapper
-          Icon(class='icon' data!='{faArrowRightToBracket}')
-        | What input scenarios should we run?
-      .answer
-        .row
-          label(for='matrix')
-            input(type='radio' id='matrix' name='matrix' bind:group!='{selectedOption}' value='matrix')
-            | Run the whole matrix of scenarios
-        .row
-          label(for='selected')
-            input(type='radio' id='specify' name='specify' bind:group!='{selectedOption}' value='specify')
-            | Run the following scenario...
-  +if('!editing')
-    .summary(transition:slide)
-      .icon-wrapper
-        Icon(class='icon' data!='{faArrowRightToBracket}')
-      span Run&nbsp;
-      span.scenario baseline scenario
-      span &nbsp;and 5 others
-
-</template>
+<div class="content">
+  {#if editing}
+    <div class="editor" transition:slide>
+      <div class="question">
+        <div class="icon-wrapper">
+          <Icon class="icon" data={faArrowRightToBracket} />
+        </div>
+        What input scenarios should we run?
+      </div>
+      <div class="answer">
+        <div class="row">
+          <label for="matrix">
+            <input type="radio" id="matrix" name="matrix" bind:group={selectedOption} value="matrix" />
+            Run the whole matrix of scenarios
+          </label>
+        </div>
+        <div class="row">
+          <label for="selected">
+            <input type="radio" id="specify" name="specify" bind:group={selectedOption} value="specify" />
+            Run the following scenario...
+          </label>
+        </div>
+      </div>
+    </div>
+  {/if}
+  {#if !editing}
+    <div class="summary" transition:slide>
+      <div class="icon-wrapper">
+        <Icon class="icon" data={faArrowRightToBracket} />
+      </div>
+      <span>Run&nbsp;</span>
+      <span class="scenario">baseline scenario</span>
+      <span>&nbsp;and 5 others</span>
+    </div>
+  {/if}
+</div>
 
 
 
@@ -64,7 +77,7 @@ const todo = viewModel.todo
 
 .icon-wrapper
   display: flex
-  justify-content: center  
+  justify-content: center
   width: 1.5rem
   margin-right: .8rem
 

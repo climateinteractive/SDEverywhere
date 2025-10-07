@@ -79,13 +79,11 @@ onMount(() => {
 
 
 <!-- TEMPLATE -->
-<template lang='pug'>
-
-.lazy-container(bind:this!='{container}')
-  +if('visible')
-    slot
-
-</template>
+<div class="lazy-container" bind:this={container}>
+  {#if visible}
+    <slot />
+  {/if}
+</div>
 
 
 

@@ -26,14 +26,13 @@ function onChange() {
 
 
 <!-- TEMPLATE -->
-<template lang='pug'>
-
-include selector.pug
-
-select(bind:value!='{$selectedValue}' on:change!='{onChange}')
-  +options
-
-</template>
+<select bind:value={$selectedValue} on:change={onChange}>
+  {#each viewModel.options as option}
+    <option value={option.value} disabled={option.disabled} hidden={option.disabled} selected={option.disabled}>
+      {@html option.label}
+    </option>
+  {/each}
+</select>
 
 
 

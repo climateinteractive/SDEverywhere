@@ -39,34 +39,45 @@ function onNextClicked() {
 
 
 <!-- TEMPLATE -->
-<template lang='pug'>
-
-.playground-container
-  .scroll-container
-    .wizard-container
-      .card-container
-        .card(class:editing!='{activeCard === 0}' on:click!='{() => onCardClicked(0)}')
-          WizardCardDesc(viewModel!='{cards.desc}' editing!='{activeCard === 0}')
-        +if('maxCompleted >= 0')
-          .spacer-fixed
-          .card(class:editing!='{activeCard === 1}' transition:slide on:click!='{() => onCardClicked(1)}')
-            WizardCardOutputs(viewModel!='{cards.outputs}' editing!='{activeCard === 1}')
-        +if('maxCompleted >= 1')
-          .spacer-fixed
-          .card(class:editing!='{activeCard === 2}' transition:slide on:click!='{() => onCardClicked(2)}')
-            WizardCardInputs(viewModel!='{cards.inputs}' editing!='{activeCard === 2}')
-        +if('maxCompleted >= 2')
-          .spacer-fixed
-          .card(class:editing!='{activeCard === 3}' transition:slide on:click!='{() => onCardClicked(3)}')
-            WizardCardPredicates(viewModel!='{cards.predicates}' editing!='{activeCard === 3}')
-        +if('showNextButton')
-          .button-row
-            .next-button(on:click!='{onNextClicked}') Next
-      .graph-container
-        +if('$graphBox')
-          CheckGraphBox(viewModel!='{$graphBox}')
-
-</template>
+<div class="playground-container">
+  <div class="scroll-container">
+    <div class="wizard-container">
+      <div class="card-container">
+        <div class="card" class:editing={activeCard === 0} on:click={() => onCardClicked(0)}>
+          <WizardCardDesc viewModel={cards.desc} editing={activeCard === 0} />
+        </div>
+        {#if maxCompleted >= 0}
+          <div class="spacer-fixed"></div>
+          <div class="card" class:editing={activeCard === 1} transition:slide on:click={() => onCardClicked(1)}>
+            <WizardCardOutputs viewModel={cards.outputs} editing={activeCard === 1} />
+          </div>
+        {/if}
+        {#if maxCompleted >= 1}
+          <div class="spacer-fixed"></div>
+          <div class="card" class:editing={activeCard === 2} transition:slide on:click={() => onCardClicked(2)}>
+            <WizardCardInputs viewModel={cards.inputs} editing={activeCard === 2} />
+          </div>
+        {/if}
+        {#if maxCompleted >= 2}
+          <div class="spacer-fixed"></div>
+          <div class="card" class:editing={activeCard === 3} transition:slide on:click={() => onCardClicked(3)}>
+            <WizardCardPredicates viewModel={cards.predicates} editing={activeCard === 3} />
+          </div>
+        {/if}
+        {#if showNextButton}
+          <div class="button-row">
+            <div class="next-button" on:click={onNextClicked}>Next</div>
+          </div>
+        {/if}
+      </div>
+      <div class="graph-container">
+        {#if $graphBox}
+          <CheckGraphBox viewModel={$graphBox} />
+        {/if}
+      </div>
+    </div>
+  </div>
+</div>
 
 
 

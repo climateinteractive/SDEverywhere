@@ -15,7 +15,6 @@ import type { ComparisonGroupingKind } from '../_shared/comparison-grouping-kind
 import type { PinnedItemKey } from '../_shared/pinned-item-state'
 
 import type { CompareDetailViewModel } from './compare-detail-vm'
-import type { CompareDetailBoxViewModel } from './compare-detail-box-vm'
 import type { CompareDetailRowViewModel } from './compare-detail-row-vm'
 import DetailRow from './compare-detail-row.svelte'
 import GraphsRow from './compare-graphs-row.svelte'
@@ -30,7 +29,7 @@ let scrollContent: HTMLElement
 
 let contextMenuSourceKey: PinnedItemKey
 let contextMenuItems: ContextMenuItem[] = []
-let contextMenuEvent: Event
+let contextMenuEvent: MouseEvent
 let relatedItemsVisible = false
 
 // Rebuild the view state when the view model changes
@@ -185,43 +184,83 @@ onMount(() => {
 
 
 <!-- TEMPLATE -->
-<template lang='pug'>
+<svelte:window on:keydown={onKeyDown} />
 
-include compare-detail.pug
-
-svelte:window(on:keydown!='{onKeyDown}')
-
-.compare-detail-container
-  .header-container
-    .title-and-links
-      .title-container
-        +if('viewModel.pretitle')
-          .pretitle { @html viewModel.pretitle }
-        .title-and-subtitle
-          .title(on:click!='{toggleRelatedItems}') { @html viewModel.title }
-          +if('viewModel.subtitle')
-            .subtitle { @html viewModel.subtitle }
-          +if('viewModel.annotations')
-            .annotations { @html viewModel.annotations }
-      .spacer-flex
-      .nav-links.no-selection
-        .nav-link(on:click!='{() => onNavLink("detail-previous")}') previous
-        .nav-link-sep &nbsp;|&nbsp;
-        .nav-link(on:click!='{() => onNavLink("detail-next")}') next
-    +if('relatedItemsVisible && viewModel.relatedItems.length > 0')
-      .related
-        span { viewModel.relatedListHeader }
-        ul
-          +related-items
-  .scroll-container(bind:this!='{scrollContainer}' tabindex='0')
-    .scroll-content(bind:this!='{scrollContent}')
-      +graph-sections
-      +pinned-box-rows
-      +regular-box-rows
-      .footer
-      ContextMenu(items!='{contextMenuItems}' parentElem!='{scrollContent}' initialEvent!='{contextMenuEvent}' on:item-selected!='{onContextMenuItemSelected}' on:clickout!='{onHideContextMenu}')
-
-</template>
+<div class="compare-detail-container">
+  <div class="header-container">
+    <div class="title-and-links">
+      <div class="title-container">
+        {#if viewModel.pretitle}
+          <div class="pretitle">{@html viewModel.pretitle}</div>
+        {/if}
+        <div class="title-and-subtitle">
+          <div class="title" on:click={toggleRelatedItems}>{@html viewModel.title}</div>
+          {#if viewModel.subtitle}
+            <div class="subtitle">{@html viewModel.subtitle}</div>
+          {/if}
+          {#if viewModel.annotations}
+            <div class="annotations">{@html viewModel.annotations}</div>
+          {/if}
+        </div>
+      </div>
+      <div class="spacer-flex"></div>
+      <div class="nav-links no-selection">
+        <div class="nav-link" on:click={() => onNavLink("detail-previous")}>previous</div>
+        <div class="nav-link-sep">&nbsp;|&nbsp;</div>
+        <div class="nav-link" on:click={() => onNavLink("detail-next")}>next</div>
+      </div>
+    </div>
+    {#if relatedItemsVisible && viewModel.relatedItems.length > 0}
+      <div class="related">
+        <span>{viewModel.relatedListHeader}</span>
+        <ul>
+          {#each viewModel.relatedItems as relatedItem}
+            <li class="related-item">{@html relatedItem}</li>
+          {/each}
+        </ul>
+      </div>
+    {/if}
+  </div>
+  <div class="scroll-container" bind:this={scrollContainer} tabindex="0">
+    <div class="scroll-content" bind:this={scrollContent}>
+      {#if viewModel.graphSections.length > 0}
+        {#each viewModel.graphSections as graphsSectionViewModel}
+          <div class="section-title">{graphsSectionViewModel.title}</div>
+          {#each graphsSectionViewModel.rows as graphsRowViewModel}
+            <div class="row-container">
+              <!-- XXX: Use `key` to force GraphsRow component to be recreated when the view model changes
+                   (otherwise the "Dataset differences" section may show outdated items) -->
+              {#key graphsRowViewModel}
+                <GraphsRow viewModel={graphsRowViewModel} align="left" />
+              {/key}
+            </div>
+          {/each}
+        {/each}
+        {#if $pinnedDetailRows.length === 0}
+          <div class="section-title">All {itemKindPlural}</div>
+        {/if}
+      {/if}
+      {#if $pinnedDetailRows.length > 0}
+        <div class="section-title">Pinned {itemKindPlural}</div>
+        {#each $pinnedDetailRows as detailRowViewModel}
+          <div class="row-container">
+            <DetailRow viewModel={detailRowViewModel} on:show-context-menu={onShowContextMenu} />
+          </div>
+        {/each}
+      {/if}
+      {#if $pinnedDetailRows.length > 0}
+        <div class="section-title">All {itemKindPlural}</div>
+      {/if}
+      {#each viewModel.regularDetailRows as detailRowViewModel}
+        <div class="row-container">
+          <DetailRow viewModel={detailRowViewModel} on:show-context-menu={onShowContextMenu} />
+        </div>
+      {/each}
+      <div class="footer"></div>
+      <ContextMenu items={contextMenuItems} parentElem={scrollContent} initialEvent={contextMenuEvent} on:item-selected={onContextMenuItemSelected} on:clickout={onHideContextMenu} />
+    </div>
+  </div>
+</div>
 
 
 

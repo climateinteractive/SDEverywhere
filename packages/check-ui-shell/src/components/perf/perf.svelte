@@ -35,27 +35,46 @@ function onRun() {
 
 
 <!-- TEMPLATE -->
-<template lang='pug'>
-
-include perf.pug
-
-.perf-container
-  .controls-container
-    +if('!running')
-      button.run(on:click!='{onRun}' disabled!='{running}') Run
-      +else
-        div Running performance tests, please wait…
-  .table-container
-    +if('$rows.length > 0')
-      table
-        tr
-          th run
-          th min
-          th avg
-          th max
-        +rows
-
-</template>
+<div class="perf-container">
+  <div class="controls-container">
+    {#if !running}
+      <button class="run" on:click={onRun} disabled={running}>Run</button>
+    {:else}
+      <div>Running performance tests, please wait…</div>
+    {/if}
+  </div>
+  <div class="table-container">
+    {#if $rows.length > 0}
+      <table>
+        <tr>
+          <th>run</th>
+          <th>min</th>
+          <th>avg</th>
+          <th>max</th>
+        </tr>
+        {#each $rows as row}
+          <tr>
+            <td class="rownum" rowspan="2">{row.num}</td>
+            <td class="dim">{row.minTimeL}</td>
+            <td class="value dataset-color-0">{row.avgTimeL}</td>
+            <td class="dim">{row.maxTimeL}</td>
+            <td class="plot">
+              <DotPlot viewModel={row.dotPlotL} colorClass="dataset-bg-0" />
+            </td>
+          </tr>
+          <tr>
+            <td class="dim">{row.minTimeR}</td>
+            <td class="value dataset-color-1">{row.avgTimeR}</td>
+            <td class="dim">{row.maxTimeR}</td>
+            <td class="plot">
+              <DotPlot viewModel={row.dotPlotR} colorClass="dataset-bg-1" />
+            </td>
+          </tr>
+        {/each}
+      </table>
+    {/if}
+  </div>
+</div>
 
 
 

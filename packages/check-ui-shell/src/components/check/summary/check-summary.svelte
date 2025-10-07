@@ -19,43 +19,58 @@ const showCheckDetail = true
 
 
 <!-- TEMPLATE -->
-<template lang='pug'>
-
-include check-summary.pug
-
-.check-summary-container
-  .summary-bar-row
-    .bar-container
-      +if('viewModel.total > 0')
-        .bar.bucket-bg-0(style!='width: {viewModel.percents[0]}%;')
-        .bar.status-bg-failed(style!='width: {viewModel.percents[1]}%;')
-        .bar.status-bg-error(style!='width: {viewModel.percents[2]}%;')
-        +else
-          .bar.gray(style!='width: 100%')
-    span.summary-label
-      +if('viewModel.total === 0')
-        span No checks
-        +elseif('viewModel.total === viewModel.passed')
-          span { viewModel.total } total passed
-        +else
-          span { viewModel.total } total
-          +if('viewModel.passed')
-            span.sep &nbsp;|&nbsp;
-            span.status-color-passed {viewModel.passed} passed
-          +if('viewModel.failed')
-            span.sep &nbsp;|&nbsp;
-            span.status-color-failed {viewModel.failed} failed
-          +if('viewModel.errors')
-            span.sep &nbsp;|&nbsp;
-            +if('viewModel.errors > 1')
-              span.status-color-error {viewModel.errors} errors
-              +else
-                span.status-color-error {viewModel.errors} error
-  +if('showCheckDetail')
-    .check-detail
-      +groups
-
-</template>
+<div class="check-summary-container">
+  <div class="summary-bar-row">
+    <div class="bar-container">
+      {#if viewModel.total > 0}
+        <div class="bar bucket-bg-0" style="width: {viewModel.percents[0]}%;"></div>
+        <div class="bar status-bg-failed" style="width: {viewModel.percents[1]}%;"></div>
+        <div class="bar status-bg-error" style="width: {viewModel.percents[2]}%;"></div>
+      {:else}
+        <div class="bar gray" style="width: 100%"></div>
+      {/if}
+    </div>
+    <span class="summary-label">
+      {#if viewModel.total === 0}
+        <span>No checks</span>
+      {:else if viewModel.total === viewModel.passed}
+        <span>{viewModel.total} total passed</span>
+      {:else}
+        <span>{viewModel.total} total</span>
+        {#if viewModel.passed}
+          <span class="sep">&nbsp;|&nbsp;</span>
+          <span class="status-color-passed">{viewModel.passed} passed</span>
+        {/if}
+        {#if viewModel.failed}
+          <span class="sep">&nbsp;|&nbsp;</span>
+          <span class="status-color-failed">{viewModel.failed} failed</span>
+        {/if}
+        {#if viewModel.errors}
+          <span class="sep">&nbsp;|&nbsp;</span>
+          {#if viewModel.errors > 1}
+            <span class="status-color-error">{viewModel.errors} errors</span>
+          {:else}
+            <span class="status-color-error">{viewModel.errors} error</span>
+          {/if}
+        {/if}
+      {/if}
+    </span>
+  </div>
+  {#if showCheckDetail}
+    <div class="check-detail">
+      {#each viewModel.groups as group}
+        <div class="group-container">
+          <div class="row group">
+            <div class="label">{group.name}</div>
+          </div>
+          {#each group.tests as testViewModel}
+            <CheckSummaryTest viewModel={testViewModel} />
+          {/each}
+        </div>
+      {/each}
+    </div>
+  {/if}
+</div>
 
 
 

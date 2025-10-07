@@ -19,13 +19,11 @@ function onTestClicked() {
 
 
 <!-- TEMPLATE -->
-<template lang='pug'>
-
-include check-summary-test.pug
-
-.row.test
-  span.label(on:click!='{onTestClicked}') {@html viewModel.testRow.span}{$expandAll || viewModel.testRow.status !== 'passed' ? ':' : ''}
-.test-rows(class:expand-all!='{$expandAll}')
-  +rows
-
-</template>
+<div class="row test">
+  <span class="label" on:click={onTestClicked}>{@html viewModel.testRow.span}{$expandAll || viewModel.testRow.status !== 'passed' ? ':' : ''}</span>
+</div>
+<div class="test-rows" class:expand-all={$expandAll}>
+  {#each viewModel.childRows as row}
+    <SummaryRow viewModel={row} />
+  {/each}
+</div>

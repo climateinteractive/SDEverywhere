@@ -62,58 +62,73 @@ $: if ($simplifyScenarios !== undefined) {
 
 
 <!-- TEMPLATE -->
-<template lang='pug'>
-
-include header.pug
-
-.header-container
-  .header-content
-    .header-group
-      .icon-button.home(on:click!='{onHome}')
-        Icon(class='icon' data!='{faHome}')
-    .spacer-flex
-    +if('simplifyScenarios !== undefined')
-      .header-group
-        input.checkbox(type='checkbox' name='simplify-toggle' bind:checked!='{$simplifyScenarios}')
-        label(for='simplify-toggle') Simplify Scenarios
-    +if('viewModel.nameL || $bundleNamesL.length > 1')
-      .spacer-fixed
-      .header-group
-        .label Comparing:
-        +if('$bundleNamesL.length > 1')
-          select.selector.dataset-color-0(on:change!='{onSelectBundleL}')
-            +optionsL
-          +else
-            .label.dataset-color-0 {viewModel.nameL}
-        +if('$bundleNamesR.length > 1')
-          select.selector.dataset-color-1(on:change!='{onSelectBundleR}')
-            +optionsR
-          +else
-            .label.dataset-color-1 {viewModel.nameR}
-      .spacer-fixed
-      .header-group
-        .label Thresholds:
-        .label.bucket-color-0 { @html thresholds[0] }
-        .label.bucket-color-1 { @html thresholds[1] }
-        .label.bucket-color-2 { @html thresholds[2] }
-        .label.bucket-color-3 { @html thresholds[3] }
-        .label.bucket-color-4 { @html thresholds[4] }
-      .spacer-fixed
-      .header-group
-        .icon-button.controls(on:click!='{onToggleControls}')
-          Icon(class='icon' data!='{faCog}')
-  +if('$controlsVisible')
-    .header-controls
-      .spacer-flex
-      input.checkbox(type='checkbox' name='toggle-consistent-y-range' bind:checked!='{$consistentYRange}')
-      label(for='toggle-consistent-y-range') Consistent Y-Axis Ranges
-      .spacer-fixed
-      .control-label Graph Zoom:
-      input(type="range" min="0.3" max="2.5" step="0.1" bind:value!='{$zoom}')
-      .control-label { `${$zoom.toFixed(1)}x` }
-  .line
-
-</template>
+<div class="header-container">
+  <div class="header-content">
+    <div class="header-group">
+      <div class="icon-button home" on:click={onHome}>
+        <Icon class="icon" data={faHome} />
+      </div>
+    </div>
+    <div class="spacer-flex"></div>
+    {#if simplifyScenarios !== undefined}
+      <div class="header-group">
+        <input class="checkbox" type="checkbox" name="simplify-toggle" bind:checked={$simplifyScenarios} />
+        <label for="simplify-toggle">Simplify Scenarios</label>
+      </div>
+    {/if}
+    {#if viewModel.nameL || $bundleNamesL.length > 1}
+      <div class="spacer-fixed"></div>
+      <div class="header-group">
+        <div class="label">Comparing:</div>
+        {#if $bundleNamesL.length > 1}
+          <select class="selector dataset-color-0" on:change={onSelectBundleL}>
+            {#each $bundleNamesL as name}
+              <option selected={name === viewModel.nameL}>{name}</option>
+            {/each}
+          </select>
+        {:else}
+          <div class="label dataset-color-0">{viewModel.nameL}</div>
+        {/if}
+        {#if $bundleNamesR.length > 1}
+          <select class="selector dataset-color-1" on:change={onSelectBundleR}>
+            {#each $bundleNamesR as name}
+              <option selected={name === viewModel.nameR}>{name}</option>
+            {/each}
+          </select>
+        {:else}
+          <div class="label dataset-color-1">{viewModel.nameR}</div>
+        {/if}
+      </div>
+      <div class="spacer-fixed"></div>
+      <div class="header-group">
+        <div class="label">Thresholds:</div>
+        <div class="label bucket-color-0">{@html thresholds[0]}</div>
+        <div class="label bucket-color-1">{@html thresholds[1]}</div>
+        <div class="label bucket-color-2">{@html thresholds[2]}</div>
+        <div class="label bucket-color-3">{@html thresholds[3]}</div>
+        <div class="label bucket-color-4">{@html thresholds[4]}</div>
+      </div>
+      <div class="spacer-fixed"></div>
+      <div class="header-group">
+        <div class="icon-button controls" on:click={onToggleControls}>
+          <Icon class="icon" data={faCog} />
+        </div>
+      </div>
+    {/if}
+  </div>
+  {#if $controlsVisible}
+    <div class="header-controls">
+      <div class="spacer-flex"></div>
+      <input class="checkbox" type="checkbox" name="toggle-consistent-y-range" bind:checked={$consistentYRange} />
+      <label for="toggle-consistent-y-range">Consistent Y-Axis Ranges</label>
+      <div class="spacer-fixed"></div>
+      <div class="control-label">Graph Zoom:</div>
+      <input type="range" min="0.3" max="2.5" step="0.1" bind:value={$zoom} />
+      <div class="control-label">{`${$zoom.toFixed(1)}x`}</div>
+    </div>
+  {/if}
+  <div class="line"></div>
+</div>
 
 
 

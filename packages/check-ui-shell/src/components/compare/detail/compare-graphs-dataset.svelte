@@ -27,28 +27,30 @@ function onDatasetClicked() {
 
 
 <!-- TEMPLATE -->
-<template lang='pug'>
-
-.dataset-container
-  .dataset-row(on:click!='{onDatasetClicked}')
-    //- TODO: Revisit this logic
-    +if('legendLabelL && !legendLabelR')
-      .legend-item(style='background-color: {legendColorL};') { @html legendLabelL.toUpperCase() }
-      +elseif('legendLabelR')
-        .legend-item(style='background-color: {legendColorR};') { @html legendLabelR.toUpperCase() }
-    +if('nameL && nameR && nameL !== nameR')
-      .dataset-name(class!='{bucketClass}') { nameL }
-      span.dataset-arrow &nbsp;-&gt;&nbsp;
-      .dataset-name(class!='{bucketClass}') { nameR }
-      +elseif('nameL && !nameR')
-        .dataset-name(class!='{bucketClass}') { nameL }
-      +elseif('nameR')
-        .dataset-name(class!='{bucketClass}') { nameR }
-  +if('$detailBoxVisible')
-    .detail-box-container
-      DetailBox(viewModel!='{viewModel.detailBoxViewModel}')
-
-</template>
+<div class="dataset-container">
+  <div class="dataset-row" on:click={onDatasetClicked}>
+    <!-- TODO: Revisit this logic -->
+    {#if legendLabelL && !legendLabelR}
+      <div class="legend-item" style="background-color: {legendColorL};">{@html legendLabelL.toUpperCase()}</div>
+    {:else if legendLabelR}
+      <div class="legend-item" style="background-color: {legendColorR};">{@html legendLabelR.toUpperCase()}</div>
+    {/if}
+    {#if nameL && nameR && nameL !== nameR}
+      <div class={`dataset-name ${bucketClass}`}>{nameL}</div>
+      <span class="dataset-arrow">&nbsp;-&gt;&nbsp;</span>
+      <div class={`dataset-name ${bucketClass}`}>{nameR}</div>
+    {:else if nameL && !nameR}
+      <div class={`dataset-name ${bucketClass}`}>{nameL}</div>
+    {:else if nameR}
+      <div class={`dataset-name ${bucketClass}`}>{nameR}</div>
+    {/if}
+  </div>
+  {#if $detailBoxVisible}
+    <div class="detail-box-container">
+      <DetailBox viewModel={viewModel.detailBoxViewModel} />
+    </div>
+  {/if}
+</div>
 
 
 

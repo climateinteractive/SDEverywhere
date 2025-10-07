@@ -39,16 +39,16 @@ function onKeyDown(event: KeyboardEvent) {
 
 
 <!-- TEMPLATE -->
-<template lang='pug'>
+<svelte:window on:keydown={onKeyDown} />
 
-include tab-bar.pug
-
-svelte:window(on:keydown!='{onKeyDown}')
-
-.tab-bar(on:command)
-  +items
-
-</template>
+<div class="tab-bar">
+  {#each viewModel.items as item, index}
+    <div class="tab-item" class:selected={item.id === $selectedItemId} on:click={() => onItemClicked(index)}>
+      <div class="tab-title">{item.title}</div>
+      <div class={`tab-subtitle ${item.subtitleClass}`}>{item.subtitle}</div>
+    </div>
+  {/each}
+</div>
 
 
 
@@ -64,7 +64,7 @@ svelte:window(on:keydown!='{onKeyDown}')
   gap: 3rem
   background-color: #272727
   z-index: 1000
-  // XXX: Use negative margin to make the shadow stretch all the way 
+  // XXX: Use negative margin to make the shadow stretch all the way
   // across, then use extra padding to compensate
   margin: 0 -1rem
   padding: 0 1rem
