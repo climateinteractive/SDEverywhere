@@ -14,18 +14,15 @@ export let colorClass: string
 
 
 <!-- TEMPLATE -->
-<template lang='pug'>
-
-include dot-plot.pug
-
-.dot-plot-container
-  .hline
-  .vline.end-line(style!='left: 0;')
-  .vline.end-line(style!='left: 100%')
-  +dots
-  .vline.avg-line(class!='{colorClass}' style!='left: {viewModel.avgPoint}%;')
-
-</template>
+<div class="dot-plot-container">
+  <div class="hline"></div>
+  <div class="vline end-line" style="left: 0;"></div>
+  <div class="vline end-line" style="left: 100%;"></div>
+  {#each viewModel.points as point}
+    <div class="dot" class:dataset-bg-0={colorClass === 'dataset-bg-0'} class:dataset-bg-1={colorClass === 'dataset-bg-1'} style="left: {point}%;"></div>
+  {/each}
+  <div class="vline avg-line" class:dataset-bg-0={colorClass === 'dataset-bg-0'} class:dataset-bg-1={colorClass === 'dataset-bg-1'} style="left: {viewModel.avgPoint}%;"></div>
+</div>
 
 
 

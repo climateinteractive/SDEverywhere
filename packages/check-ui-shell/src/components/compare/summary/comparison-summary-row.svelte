@@ -31,30 +31,34 @@ function onLinkClicked() {
 
 
 <!-- TEMPLATE -->
-<template lang='pug'>
-
-.summary-row
-  .bar-container(on:click!='{onLinkClicked}')
-    +if('viewModel.diffPercentByBucket === undefined')
-      .bar.striped
-      +else
-        .bar.bucket-bg-0(style!='width: {bucketPcts[0]}%;')
-        .bar.bucket-bg-1(style!='width: {bucketPcts[1]}%;')
-        .bar.bucket-bg-2(style!='width: {bucketPcts[2]}%;')
-        .bar.bucket-bg-3(style!='width: {bucketPcts[3]}%;')
-        .bar.bucket-bg-4(style!='width: {bucketPcts[4]}%;')
-  .title-container
-    //- .grouping-part Grouping goes here
-    .title-part
-      .title(on:click!='{onLinkClicked}') { @html viewModel.title }
-      +if('viewModel.subtitle')
-        .subtitle(on:click!='{onLinkClicked}') { @html viewModel.subtitle }
-      //- +if('viewModel.valuesPart')
-      //-   .values-part { @html viewModel.valuesPart }
-      +if('viewModel.annotations')
-        .annotations { @html viewModel.annotations }
-
-</template>
+<div class="summary-row">
+  <div class="bar-container" on:click={onLinkClicked}>
+    {#if viewModel.diffPercentByBucket === undefined}
+      <div class="bar striped"></div>
+    {:else}
+      <div class="bar bucket-bg-0" style="width: {bucketPcts[0]}%;"></div>
+      <div class="bar bucket-bg-1" style="width: {bucketPcts[1]}%;"></div>
+      <div class="bar bucket-bg-2" style="width: {bucketPcts[2]}%;"></div>
+      <div class="bar bucket-bg-3" style="width: {bucketPcts[3]}%;"></div>
+      <div class="bar bucket-bg-4" style="width: {bucketPcts[4]}%;"></div>
+    {/if}
+  </div>
+  <div class="title-container">
+    <!-- .grouping-part Grouping goes here -->
+    <div class="title-part">
+      <div class="title" on:click={onLinkClicked}>{@html viewModel.title}</div>
+      {#if viewModel.subtitle}
+        <div class="subtitle" on:click={onLinkClicked}>{@html viewModel.subtitle}</div>
+      {/if}
+      <!-- {#if viewModel.valuesPart}
+        <div class="values-part">{@html viewModel.valuesPart}</div>
+      {/if} -->
+      {#if viewModel.annotations}
+        <div class="annotations">{@html viewModel.annotations}</div>
+      {/if}
+    </div>
+  </div>
+</div>
 
 
 

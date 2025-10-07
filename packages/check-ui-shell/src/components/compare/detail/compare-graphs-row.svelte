@@ -16,30 +16,48 @@ export let align: 'center' | 'left' = 'center'
 
 
 <!-- TEMPLATE -->
-<template lang='pug'>
-
-include compare-graphs-row.pug
-
-.graphs-row
-  +if('align === "center"')
-    .spacer-flex
-  .content
-    .graphs-container
-      ContextGraph(viewModel!='{viewModel.graphL}')
-      .spacer-fixed
-      ContextGraph(viewModel!='{viewModel.graphR}')
-    .metadata-container
-      .metadata-header id { viewModel.graphId }
-      +if('viewModel.metadataRows.length > 0')
-        .metadata-header Metadata differences:
-        +metarows
-      +if('viewModel.datasetRows.length > 0')
-        .metadata-header Dataset differences:
-        +datarows
-  +if('align === "center"')
-    .spacer-flex
-
-</template>
+<div class="graphs-row">
+  {#if align === "center"}
+    <div class="spacer-flex"></div>
+  {/if}
+  <div class="content">
+    <div class="graphs-container">
+      <ContextGraph viewModel={viewModel.graphL} />
+      <div class="spacer-fixed"></div>
+      <ContextGraph viewModel={viewModel.graphR} />
+    </div>
+    <div class="metadata-container">
+      <div class="metadata-header">id {viewModel.graphId}</div>
+      {#if viewModel.metadataRows.length > 0}
+        <div class="metadata-header">Metadata differences:</div>
+        {#each viewModel.metadataRows as row}
+          <div class="metadata-row">
+            <div class="metadata-col">
+              <div class="metadata-key">{row.key}</div>
+              <span>&nbsp;</span>
+              <div class="metadata-value">{row.valueL || 'n/a'}</div>
+            </div>
+            <div class="spacer-fixed"></div>
+            <div class="metadata-col">
+              <div class="metadata-key">{row.key}</div>
+              <span>&nbsp;</span>
+              <div class="metadata-value">{row.valueR || 'n/a'}</div>
+            </div>
+          </div>
+        {/each}
+      {/if}
+      {#if viewModel.datasetRows.length > 0}
+        <div class="metadata-header">Dataset differences:</div>
+        {#each viewModel.datasetRows as row}
+          <DatasetRow viewModel={row} />
+        {/each}
+      {/if}
+    </div>
+  </div>
+  {#if align === "center"}
+    <div class="spacer-flex"></div>
+  {/if}
+</div>
 
 
 

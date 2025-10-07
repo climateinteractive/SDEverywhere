@@ -31,65 +31,85 @@ let selectedTimeOption: TimeOption = 'single'
 
 
 <!-- TEMPLATE -->
-<template lang='pug'>
-
-.content
-  +if('editing')
-    .editor(transition:slide)
-      .question
-        .icon-wrapper
-          Icon(class='icon' data!='{faCircleCheck}')
-        | What should we verify for each of those variables?
-      .answer
-        .ref-intro
-          span Verify that each value in&nbsp;
-          span.varname Temperature change from 1850
-          span &nbsp;is&nbsp;
-          Selector(viewModel!='{viewModel.opSelector}')
-          span &nbsp;...
-        .row
-          label(for='constant')
-            input(type='radio' id='constant' name='constant' bind:group!='{selectedRefOption}' value='constant')
-            | a constant value
-            +if('selectedRefOption === "constant"')
-              input(type='number' id='constant-val' bind:value!='{$constantValue}')
-        .row
-          label(for='variable')
-            input(type='radio' id='variable' name='variable' bind:group!='{selectedRefOption}' value='variable')
-            | another variable
-        .time-intro
-          span Time range:
-        .row
-          label(for='time-single')
-            input(type='radio' id='time-single' name='time-single' bind:group!='{selectedTimeOption}' value='single')
-            | a single year
-        .row
-          label(for='time-range')
-            input(type='radio' id='time-range' name='time-range' bind:group!='{selectedTimeOption}' value='range')
-            | a range of years
-        +if('selectedTimeOption === "range"')
-          .row
-            label(for='time-after')
-              input(type='checkbox' id='time-after' name='time-after')
-              | after
-              input(type='number' id='time-after-val' bind:value!='{$timeStart}' min='1850' max='2100')
-          .row
-            label(for='time-before')
-              input(type='checkbox' id='time-before' name='time-before')
-              | before
-              input(type='number' id='time-after-val' bind:value!='{$timeEnd}' min='1850' max='2100')
-
-  +if('!editing')
-    .summary(transition:slide)
-      .icon-wrapper
-        Icon(class='icon' data!='{faCircleCheck}')
-      span Verify that each value in&nbsp;
-      span.varname Temperature change from 1850
-      span &nbsp;is&nbsp;
-      span.varname { $selectedOpLabel }
-      span { $constantValue }
-
-</template>
+<div class="content">
+  {#if editing}
+    <div class="editor" transition:slide>
+      <div class="question">
+        <div class="icon-wrapper">
+          <Icon class="icon" data={faCircleCheck} />
+        </div>
+        What should we verify for each of those variables?
+      </div>
+      <div class="answer">
+        <div class="ref-intro">
+          <span>Verify that each value in&nbsp;</span>
+          <span class="varname">Temperature change from 1850</span>
+          <span>&nbsp;is&nbsp;</span>
+          <Selector viewModel={viewModel.opSelector} />
+          <span>&nbsp;...</span>
+        </div>
+        <div class="row">
+          <label for="constant">
+            <input type="radio" id="constant" name="constant" bind:group={selectedRefOption} value="constant" />
+            a constant value
+            {#if selectedRefOption === "constant"}
+              <input type="number" id="constant-val" bind:value={$constantValue} />
+            {/if}
+          </label>
+        </div>
+        <div class="row">
+          <label for="variable">
+            <input type="radio" id="variable" name="variable" bind:group={selectedRefOption} value="variable" />
+            another variable
+          </label>
+        </div>
+        <div class="time-intro">
+          <span>Time range:</span>
+        </div>
+        <div class="row">
+          <label for="time-single">
+            <input type="radio" id="time-single" name="time-single" bind:group={selectedTimeOption} value="single" />
+            a single year
+          </label>
+        </div>
+        <div class="row">
+          <label for="time-range">
+            <input type="radio" id="time-range" name="time-range" bind:group={selectedTimeOption} value="range" />
+            a range of years
+          </label>
+        </div>
+        {#if selectedTimeOption === "range"}
+          <div class="row">
+            <label for="time-after">
+              <input type="checkbox" id="time-after" name="time-after" />
+              after
+              <input type="number" id="time-after-val" bind:value={$timeStart} min="1850" max="2100" />
+            </label>
+          </div>
+          <div class="row">
+            <label for="time-before">
+              <input type="checkbox" id="time-before" name="time-before" />
+              before
+              <input type="number" id="time-after-val" bind:value={$timeEnd} min="1850" max="2100" />
+            </label>
+          </div>
+        {/if}
+      </div>
+    </div>
+  {/if}
+  {#if !editing}
+    <div class="summary" transition:slide>
+      <div class="icon-wrapper">
+        <Icon class="icon" data={faCircleCheck} />
+      </div>
+      <span>Verify that each value in&nbsp;</span>
+      <span class="varname">Temperature change from 1850</span>
+      <span>&nbsp;is&nbsp;</span>
+      <span class="varname">{$selectedOpLabel}</span>
+      <span>{$constantValue}</span>
+    </div>
+  {/if}
+</div>
 
 
 

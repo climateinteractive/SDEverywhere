@@ -87,36 +87,47 @@ function getMaxDiffSpan(content: CompareDetailBoxContent): string {
 
 
 <!-- TEMPLATE -->
-<template lang='pug'>
-
-.detail-box
-  +if('viewModel.title')
-    .title-row.no-selection(on:click!='{onTitleClicked}' on:contextmenu|preventDefault!='{onContextMenu}')
-      .title-content
-        span.title {@html viewModel.title}
-        +if('viewModel.subtitle')
-          span.subtitle {@html viewModel.subtitle}
-  .content-container
-    Lazy(bind:visible!='{visible}')
-      +if('$content')
-        .content(class!='{$content.bucketClass}')
-          .graph-container
-            ComparisonGraph(viewModel!='{$content.comparisonGraphViewModel}')
-          .message-container
-            +if('$content.message')
-              .message {@html $content.message}
-              +else
-                .data-row
-                  .data-label avg
-                  .data-value {diffPct($content.diffReport.avgDiff)}
-                .data-row
-                  .data-label min
-                  .data-value {diffPct($content.diffReport.minDiff)}
-                .data-row
-                  .data-label max
-                  .data-value {@html getMaxDiffSpan($content)}
-
-</template>
+<div class="detail-box">
+  {#if viewModel.title}
+    <div class="title-row no-selection" on:click={onTitleClicked} on:contextmenu|preventDefault={onContextMenu}>
+      <div class="title-content">
+        <span class="title">{@html viewModel.title}</span>
+        {#if viewModel.subtitle}
+          <span class="subtitle">{@html viewModel.subtitle}</span>
+        {/if}
+      </div>
+    </div>
+  {/if}
+  <div class="content-container">
+    <Lazy bind:visible={visible}>
+      {#if $content}
+        <div class={`content ${$content.bucketClass}`}>
+          <div class="graph-container">
+            <ComparisonGraph viewModel={$content.comparisonGraphViewModel} />
+          </div>
+          <div class="message-container">
+            {#if $content.message}
+              <div class="message">{@html $content.message}</div>
+            {:else}
+              <div class="data-row">
+                <div class="data-label">avg</div>
+                <div class="data-value">{diffPct($content.diffReport.avgDiff)}</div>
+              </div>
+              <div class="data-row">
+                <div class="data-label">min</div>
+                <div class="data-value">{diffPct($content.diffReport.minDiff)}</div>
+              </div>
+              <div class="data-row">
+                <div class="data-label">max</div>
+                <div class="data-value">{@html getMaxDiffSpan($content)}</div>
+              </div>
+            {/if}
+          </div>
+        </div>
+      {/if}
+    </Lazy>
+  </div>
+</div>
 
 
 

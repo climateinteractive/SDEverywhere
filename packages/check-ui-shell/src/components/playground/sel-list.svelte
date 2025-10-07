@@ -10,9 +10,6 @@ export let viewModel: SelListViewModel
 const items = viewModel.items
 const selectedItemId = viewModel.selectedItemId
 
-let inputElem: HTMLInputElement
-let inputValue = ''
-
 function onItemClicked(item: ListItemViewModel) {
   viewModel.selectedItemId.set(item.id)
 }
@@ -23,14 +20,11 @@ function onItemClicked(item: ListItemViewModel) {
 
 
 <!-- TEMPLATE -->
-<template lang='pug'>
-
-include sel-list.pug
-
-.items
-  +items
-
-</template>
+<div class="items">
+  {#each $items as item}
+    <div class="item" on:click={() => onItemClicked(item)} class:active={item.id === $selectedItemId}>{@html item.label}</div>
+  {/each}
+</div>
 
 
 

@@ -3,7 +3,6 @@
 <!-- SCRIPT -->
 <script lang='ts'>
 
-import assertNever from 'assert-never'
 import FontFaceObserver from 'fontfaceobserver'
 
 import type { ComparisonGroupingKind } from './components/compare/_shared/comparison-grouping-kind'
@@ -138,26 +137,26 @@ function onKeyDown(event: KeyboardEvent) {
 
 
 <!-- TEMPLATE -->
-<template lang='pug'>
+<svelte:window on:keydown={onKeyDown} />
 
-svelte:window(on:keydown!='{onKeyDown}')
-
-+await('viewReady')
-  .loading-container
-  +then('ignored')
-    .app-container(style!='{appStyle}')
-      Header(on:command!='{onCommand}' viewModel!='{viewModel.headerViewModel}')
-      +if('$checksInProgress')
-        .progress-container
-          .progress {$progress}
-        +elseif('viewMode === "comparison-detail"')
-          ComparisonDetail(on:command!='{onCommand}' viewModel!='{compareDetailViewModel}')
-        +elseif('viewMode === "perf"')
-          Perf(on:command!='{onCommand}' viewModel!='{perfViewModel}')
-        +else
-          Summary(on:command!='{onCommand}' viewModel!='{viewModel.summaryViewModel}')
-
-</template>
+{#await viewReady}
+  <div class="loading-container"></div>
+{:then}
+  <div class="app-container" style={appStyle}>
+    <Header on:command={onCommand} viewModel={viewModel.headerViewModel} />
+    {#if $checksInProgress}
+      <div class="progress-container">
+        <div class="progress">{$progress}</div>
+      </div>
+    {:else if viewMode === "comparison-detail"}
+      <ComparisonDetail on:command={onCommand} viewModel={compareDetailViewModel} />
+    {:else if viewMode === "perf"}
+      <Perf on:command={onCommand} viewModel={perfViewModel} />
+    {:else}
+      <Summary on:command={onCommand} viewModel={viewModel.summaryViewModel} />
+    {/if}
+  </div>
+{/await}
 
 
 

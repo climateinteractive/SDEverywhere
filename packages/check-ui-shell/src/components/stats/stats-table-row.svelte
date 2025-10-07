@@ -24,42 +24,56 @@ function onShowPerf() {
 
 
 <!-- TEMPLATE -->
-<template lang='pug'>
-
-td.name(class!='{modelTextClass}') { viewModel.modelName }
-td
-  .cell
-    .value { viewModel.inputs }
-    .change
-td
-  .cell
-    .value { viewModel.outputs }
-    .change
-td
-  .cell
-    .value { viewModel.modelSize }
-    .change { viewModel.modelSizePctChange }
-td
-  .cell
-    .value { viewModel.dataSize }
-    .change { viewModel.dataSizePctChange }
-td
-  .cell
-    .value { viewModel.avgTime }
-    .change { viewModel.avgTimePctChange }
-td
-  .cell.dim
-    .value { viewModel.minTime }
-    .change
-td
-  .cell.dim
-    .value { viewModel.maxTime }
-    .change
-+if('viewModel.dotPlot')
-  td.plot(on:click!='{onShowPerf}')
-    DotPlot(viewModel!='{viewModel.dotPlot}' colorClass!='{modelBgClass}')
-
-</template>
+<td class="name" class:dataset-color-0={modelTextClass === 'dataset-color-0'} class:dataset-color-1={modelTextClass === 'dataset-color-1'} class:row-header={modelTextClass === 'row-header'}>
+  {viewModel.modelName}
+</td>
+<td>
+  <div class="cell">
+    <div class="value">{viewModel.inputs}</div>
+    <div class="change"></div>
+  </div>
+</td>
+<td>
+  <div class="cell">
+    <div class="value">{viewModel.outputs}</div>
+    <div class="change"></div>
+  </div>
+</td>
+<td>
+  <div class="cell">
+    <div class="value">{viewModel.modelSize}</div>
+    <div class="change">{viewModel.modelSizePctChange}</div>
+  </div>
+</td>
+<td>
+  <div class="cell">
+    <div class="value">{viewModel.dataSize}</div>
+    <div class="change">{viewModel.dataSizePctChange}</div>
+  </div>
+</td>
+<td>
+  <div class="cell">
+    <div class="value">{viewModel.avgTime}</div>
+    <div class="change">{viewModel.avgTimePctChange}</div>
+  </div>
+</td>
+<td>
+  <div class="cell dim">
+    <div class="value">{viewModel.minTime}</div>
+    <div class="change"></div>
+  </div>
+</td>
+<td>
+  <div class="cell dim">
+    <div class="value">{viewModel.maxTime}</div>
+    <div class="change"></div>
+  </div>
+</td>
+{#if viewModel.dotPlot}
+  <td class="plot" on:click={onShowPerf}>
+    <DotPlot viewModel={viewModel.dotPlot} colorClass={modelBgClass} />
+  </td>
+{/if}
 
 
 

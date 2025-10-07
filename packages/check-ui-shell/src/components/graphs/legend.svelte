@@ -13,14 +13,11 @@ export let graphSpec: BundleGraphSpec
 
 
 <!-- TEMPLATE -->
-<template lang='pug'>
-
-include legend.pug
-
-.legend-container
-  +items
-
-</template>
+<div class="legend-container">
+  {#each graphSpec.legendItems as item}
+    <div class="legend-item" style="background-color: {item.color};">{item.label.toUpperCase()}</div>
+  {/each}
+</div>
 
 
 

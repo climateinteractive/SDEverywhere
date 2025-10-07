@@ -23,43 +23,58 @@ let selectedOption: Option = 'all_outputs'
 
 
 <!-- TEMPLATE -->
-<template lang='pug'>
-
-.content
-  +if('editing')
-    .editor(transition:slide)
-      .question
-        .icon-wrapper
-          Icon(class='icon' data!='{faArrowRightFromBracket}')
-        | What variables should we check?
-      .answer
-        .row
-          label(for='all_outputs')
-            input(type='radio' id='all_outputs' name='all_outputs' bind:group!='{selectedOption}' value='all_outputs')
-            | Check all output variables
-        .row
-          label(for='in_group')
-            input(type='radio' id='all_in_group' name='all_in_group' bind:group!='{selectedOption}' value='all_in_group')
-            | Check all variables in a predefined group
-        .row
-          label(for='selected')
-            input(type='radio' id='specify' name='specify' bind:group!='{selectedOption}' value='specify')
-            | Check the following variables...
-          +if('selectedOption === "specify"')
-            .row-content
-              .available-items-container
-                SearchList(viewModel!='{viewModel.availableOutputs}')
-              .selected-items-container
-                SelList(viewModel!='{viewModel.selectedOutputs}')
-  +if('!editing')
-    .summary(transition:slide)
-      .icon-wrapper
-        Icon(class='icon' data!='{faArrowRightFromBracket}')
-      span Check&nbsp;
-      span.varname Temperature change from 1850
-      span &nbsp;and 3 others
-
-</template>
+<div class="content">
+  {#if editing}
+    <div class="editor" transition:slide>
+      <div class="question">
+        <div class="icon-wrapper">
+          <Icon class="icon" data={faArrowRightFromBracket} />
+        </div>
+        What variables should we check?
+      </div>
+      <div class="answer">
+        <div class="row">
+          <label for="all_outputs">
+            <input type="radio" id="all_outputs" name="all_outputs" bind:group={selectedOption} value="all_outputs" />
+            Check all output variables
+          </label>
+        </div>
+        <div class="row">
+          <label for="in_group">
+            <input type="radio" id="all_in_group" name="all_in_group" bind:group={selectedOption} value="all_in_group" />
+            Check all variables in a predefined group
+          </label>
+        </div>
+        <div class="row">
+          <label for="selected">
+            <input type="radio" id="specify" name="specify" bind:group={selectedOption} value="specify" />
+            Check the following variables...
+            {#if selectedOption === "specify"}
+              <div class="row-content">
+                <div class="available-items-container">
+                  <SearchList viewModel={viewModel.availableOutputs} />
+                </div>
+                <div class="selected-items-container">
+                  <SelList viewModel={viewModel.selectedOutputs} />
+                </div>
+              </div>
+            {/if}
+          </label>
+        </div>
+      </div>
+    </div>
+  {/if}
+  {#if !editing}
+    <div class="summary" transition:slide>
+      <div class="icon-wrapper">
+        <Icon class="icon" data={faArrowRightFromBracket} />
+      </div>
+      <span>Check&nbsp;</span>
+      <span class="varname">Temperature change from 1850</span>
+      <span>&nbsp;and 3 others</span>
+    </div>
+  {/if}
+</div>
 
 
 

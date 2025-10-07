@@ -1,9 +1,0 @@
-//- Copyright (c) 2021-2022 Climate Interactive / New Venture Fund
-
-//- Note: These mixins are kept in an external pug file to work around a
-//- Svelte issue related to `each` and TypeScript, see:
-//-   https://github.com/sveltejs/svelte-preprocess/issues/207
-
-mixin options
-  +each('viewModel.options as option')
-    option(value='{option.value}' disabled='{option.disabled}' hidden='{option.disabled}' selected='{option.disabled}') { @html option.label }

@@ -3,7 +3,6 @@
 <!-- SCRIPT -->
 <script lang='ts'>
 
-import { createEventDispatcher } from 'svelte'
 import CheckSummary from '../check/summary/check-summary.svelte'
 import ComparisonSummary from '../compare/summary/comparison-summary.svelte'
 import StatsTable from '../stats/stats-table.svelte'
@@ -20,25 +19,26 @@ const selectedTabId = viewModel.tabBarViewModel.selectedItemId
 
 
 <!-- TEMPLATE -->
-<template lang='pug'>
-
-.summary-container
-  .scroll-container
-    +if('viewModel.statsTableViewModel')
-      .header-container
-        StatsTable(on:command viewModel!='{viewModel.statsTableViewModel}')
-      .line
-    TabBar(on:command viewModel!='{viewModel.tabBarViewModel}')
-    +if('$selectedTabId === "checks"')
-      CheckSummary(viewModel!='{viewModel.checkSummaryViewModel}')
-      +elseif('$selectedTabId === "comp-views"')
-        ComparisonSummary(on:command viewModel!='{viewModel.comparisonViewsSummaryViewModel}')
-      +elseif('$selectedTabId === "comps-by-scenario"')
-        ComparisonSummary(on:command viewModel!='{viewModel.comparisonsByScenarioSummaryViewModel}')
-      +elseif('$selectedTabId === "comps-by-dataset"')
-        ComparisonSummary(on:command viewModel!='{viewModel.comparisonsByDatasetSummaryViewModel}')
-
-</template>
+<div class="summary-container">
+  <div class="scroll-container">
+    {#if viewModel.statsTableViewModel}
+      <div class="header-container">
+        <StatsTable on:command viewModel={viewModel.statsTableViewModel} />
+      </div>
+      <div class="line"></div>
+    {/if}
+    <TabBar on:command viewModel={viewModel.tabBarViewModel} />
+    {#if $selectedTabId === "checks"}
+      <CheckSummary viewModel={viewModel.checkSummaryViewModel} />
+    {:else if $selectedTabId === "comp-views"}
+      <ComparisonSummary on:command viewModel={viewModel.comparisonViewsSummaryViewModel} />
+    {:else if $selectedTabId === "comps-by-scenario"}
+      <ComparisonSummary on:command viewModel={viewModel.comparisonsByScenarioSummaryViewModel} />
+    {:else if $selectedTabId === "comps-by-dataset"}
+      <ComparisonSummary on:command viewModel={viewModel.comparisonsByDatasetSummaryViewModel} />
+    {/if}
+  </div>
+</div>
 
 
 

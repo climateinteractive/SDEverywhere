@@ -60,11 +60,7 @@ onMount(() => {
 
 
 <!-- TEMPLATE -->
-<template lang='pug'>
-
-.graph-inner-container(bind:this!='{container}')
-
-</template>
+<div class="graph-inner-container" bind:this={container}></div>
 
 
 

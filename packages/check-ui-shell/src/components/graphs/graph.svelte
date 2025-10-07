@@ -13,8 +13,6 @@ export let config: GraphViewConfig
 /** The graph view model. */
 export let viewModel: BundleGraphData
 
-let container: HTMLElement
-let containerParent: HTMLElement
 // TODO: Use height of parent
 let containerStyle = `width: ${config.width}rem; height: 20rem;`
 
@@ -37,12 +35,9 @@ onMount(() => {
 
 
 <!-- TEMPLATE -->
-<template lang='pug'>
-
-.graph-inner-container(bind:this!='{container}' style!='{containerStyle}')
-  canvas(bind:this!='{canvas}')
-
-</template>
+<div class="graph-inner-container" style={containerStyle}>
+  <canvas bind:this={canvas}></canvas>
+</div>
 
 
 

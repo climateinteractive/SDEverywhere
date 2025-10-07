@@ -3,8 +3,6 @@
 <!-- SCRIPT -->
 <script lang='ts'>
 
-import { get } from 'svelte/store'
-
 import type { ListItemViewModel } from './list-item-vm'
 import type { SearchListViewModel } from './search-list-vm'
 
@@ -70,17 +68,14 @@ function onItemClicked(item: ListItemViewModel) {
 
 
 <!-- TEMPLATE -->
-<template lang='pug'>
+<input type="text" placeholder="Search variables..." bind:value={$query} on:input={onInput} />
+<div class="items">
+  {#each $filteredItems as item, i}
+    <div class="item" on:click={() => onItemClicked(item)} class:active={i === activeIndex}>{@html item.label}</div>
+  {/each}
+</div>
 
-include search-list.pug
-
-input(type='text' placeholder='Search variables...' bind:value!='{$query}' on:input!='{onInput}')
-.items
-  +items
-
-svelte:window(on:keydown!='{onKeyDown}')
-
-</template>
+<svelte:window on:keydown={onKeyDown} />
 
 
 

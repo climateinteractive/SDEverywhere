@@ -18,9 +18,6 @@ export let appViewModel: AppViewModel
 
 
 <!-- TEMPLATE -->
-<template lang='pug'>
-
-+if('appViewModel')
-  App(viewModel!='{appViewModel}')
-
-</template>
+{#if appViewModel}
+  <App viewModel={appViewModel} />
+{/if}

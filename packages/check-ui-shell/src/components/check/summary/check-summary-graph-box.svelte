@@ -35,14 +35,13 @@ $: if (visible !== previousVisible || viewModel.baseRequestKey !== previousViewM
 
 
 <!-- TEMPLATE -->
-<template lang='pug'>
-
-Lazy(bind:visible!='{visible}')
-  +if('$content')
-    .graph-container
-      ComparisonGraph(viewModel!='{$content.comparisonGraphViewModel}')
-
-</template>
+<Lazy bind:visible={visible}>
+  {#if $content}
+    <div class="graph-container">
+      <ComparisonGraph viewModel={$content.comparisonGraphViewModel} />
+    </div>
+  {/if}
+</Lazy>
 
 
 

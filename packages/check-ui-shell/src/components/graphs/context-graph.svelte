@@ -61,31 +61,42 @@ function onLinkClicked(linkItem: LinkItem) {
 
 
 <!-- TEMPLATE -->
-<template lang='pug'>
-
-include context-graph.pug
-
-.context-graph-container
-  +if('viewModel.graphSpec')
-    .graph-and-info
-      .graph-title(class!='{viewModel.datasetClass}') { @html viewModel.graphSpec.title }
-      +if('viewModel.requestKey')
-        .graph-container
-          Lazy(bind:visible!='{visible}')
-            +if('$content && $content.graphData')
-              Graph(viewModel!='{$content.graphData}' config!='{graphConfig}')
-        Legend(graphSpec!='{viewModel.graphSpec}')
-        +links
-        +else
-          .message.not-shown
-            span Graph not shown: scenario is invalid in&nbsp;
-            span(class!='{viewModel.datasetClass}') { viewModel.bundleName }
-    +else
-      .message.not-included
-        span Graph not included in&nbsp;
-        span(class!='{viewModel.datasetClass}') { viewModel.bundleName }
-
-</template>
+<div class="context-graph-container">
+  {#if viewModel.graphSpec}
+    <div class="graph-and-info">
+      <div class="graph-title" class:dataset-color-0={viewModel.datasetClass === 'dataset-color-0'} class:dataset-color-1={viewModel.datasetClass === 'dataset-color-1'}>
+        {@html viewModel.graphSpec.title}
+      </div>
+      {#if viewModel.requestKey}
+        <div class="graph-container">
+          <Lazy bind:visible={visible}>
+            {#if $content && $content.graphData}
+              <Graph viewModel={$content.graphData} config={graphConfig} />
+            {/if}
+          </Lazy>
+        </div>
+        <Legend graphSpec={viewModel.graphSpec} />
+        {#if viewModel.linkItems}
+          <div class="link-container">
+            {#each viewModel.linkItems as linkItem}
+              <div class="link-row" on:click={() => onLinkClicked(linkItem)}>{linkItem.text}</div>
+            {/each}
+          </div>
+        {/if}
+      {:else}
+        <div class="message not-shown">
+          <span>Graph not shown: scenario is invalid in&nbsp;</span>
+          <span class:dataset-color-0={viewModel.datasetClass === 'dataset-color-0'} class:dataset-color-1={viewModel.datasetClass === 'dataset-color-1'}>{viewModel.bundleName}</span>
+        </div>
+      {/if}
+    </div>
+  {:else}
+    <div class="message not-included">
+      <span>Graph not included in&nbsp;</span>
+      <span class:dataset-color-0={viewModel.datasetClass === 'dataset-color-0'} class:dataset-color-1={viewModel.datasetClass === 'dataset-color-1'}>{viewModel.bundleName}</span>
+    </div>
+  {/if}
+</div>
 
 
 
