@@ -22,7 +22,7 @@ const commonRules = {
   'no-unused-private-class-members': 'error',
   '@typescript-eslint/consistent-type-imports': 'error',
   // XXX: Disable the "no-undef" rule, since it is not helpful for TS files, see:
-  //   https://typescript-eslint.io/troubleshooting/faqs/eslint)
+  //   https://typescript-eslint.io/troubleshooting/faqs/eslint
   'no-undef': 'off'
 }
 
