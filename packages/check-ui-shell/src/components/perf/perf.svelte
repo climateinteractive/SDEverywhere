@@ -1,8 +1,7 @@
 <!-- Copyright (c) 2021-2022 Climate Interactive / New Venture Fund -->
 
 <!-- SCRIPT -->
-<script lang='ts'>
-
+<script lang="ts">
 import { PerfRunner } from '@sdeverywhere/check-core'
 
 import DotPlot from './dot-plot.svelte'
@@ -28,11 +27,7 @@ function onRun() {
   }
   perfRunner.start()
 }
-
 </script>
-
-
-
 
 <!-- TEMPLATE -->
 <div class="perf-container">
@@ -76,12 +71,8 @@ function onRun() {
   </div>
 </div>
 
-
-
-
 <!-- STYLE -->
-<style lang='scss'>
-
+<style lang="scss">
 .perf-container {
   display: flex;
   flex-direction: column;
@@ -104,9 +95,10 @@ table {
   border-collapse: collapse;
 }
 
-td, th {
-  padding-top: .2rem;
-  padding-bottom: .2rem;
+td,
+th {
+  padding-top: 0.2rem;
+  padding-bottom: 0.2rem;
 }
 
 th {
@@ -134,5 +126,4 @@ td {
     padding-right: 2rem;
   }
 }
-
 </style>

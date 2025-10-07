@@ -1,8 +1,7 @@
 <!-- Copyright (c) 2021-2022 Climate Interactive / New Venture Fund -->
 
 <!-- SCRIPT -->
-<script lang='ts'>
-
+<script lang="ts">
 import { createEventDispatcher } from 'svelte'
 import Icon from 'svelte-awesome/components/Icon.svelte'
 import { faCog, faHome } from '@fortawesome/free-solid-svg-icons'
@@ -55,11 +54,7 @@ $: if ($simplifyScenarios !== undefined) {
     document.dispatchEvent(new CustomEvent('sde-check-simplify-scenarios-toggled'))
   }
 }
-
 </script>
-
-
-
 
 <!-- TEMPLATE -->
 <div class="header-container">
@@ -130,12 +125,8 @@ $: if ($simplifyScenarios !== undefined) {
   <div class="line"></div>
 </div>
 
-
-
-
 <!-- STYLE -->
-<style lang='scss'>
-
+<style lang="scss">
 .header-container {
   display: flex;
   flex-direction: column;
@@ -148,7 +139,7 @@ $: if ($simplifyScenarios !== undefined) {
 .header-content {
   display: flex;
   flex-direction: row;
-  margin: .4rem 0;
+  margin: 0.4rem 0;
 }
 
 .header-group {
@@ -187,26 +178,27 @@ select {
   -webkit-appearance: none;
   -moz-appearance: none;
   appearance: none;
-  padding: .2rem 1.6rem .2rem .4rem;
-  background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' fill='%23555'><polygon points='0,0 100,0 50,60'/></svg>") no-repeat;
-  background-size: .8rem;
-  background-position: calc(100% - .4rem) 70%;
+  padding: 0.2rem 1.6rem 0.2rem 0.4rem;
+  background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' fill='%23555'><polygon points='0,0 100,0 50,60'/></svg>")
+    no-repeat;
+  background-size: 0.8rem;
+  background-position: calc(100% - 0.4rem) 70%;
   background-repeat: no-repeat;
   background-color: #353535;
   border: none;
-  border-radius: .4rem;
+  border-radius: 0.4rem;
 }
 
 .header-controls {
   display: flex;
   flex-direction: row;
-  margin: .4rem 0;
+  margin: 0.4rem 0;
   align-items: center;
 }
 
-input[type=range] {
+input[type='range'] {
   width: 10rem;
-  margin: 0 .4rem;
+  margin: 0 0.4rem;
 }
 
 .line {
@@ -214,5 +206,4 @@ input[type=range] {
   margin-bottom: 1rem;
   background-color: #555;
 }
-
 </style>

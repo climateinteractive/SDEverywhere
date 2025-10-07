@@ -1,8 +1,7 @@
 <!-- Copyright (c) 2021-2022 Climate Interactive / New Venture Fund -->
 
 <!-- SCRIPT -->
-<script lang='ts'>
-
+<script lang="ts">
 import type { CheckSummaryViewModel } from './check-summary-vm'
 import CheckSummaryTest from './check-summary-test.svelte'
 
@@ -12,11 +11,7 @@ export let viewModel: CheckSummaryViewModel
 // tabs, that is less useful, so always show them
 // let showCheckDetail = viewModel.total > 0 && viewModel.total !== viewModel.passed
 const showCheckDetail = true
-
 </script>
-
-
-
 
 <!-- TEMPLATE -->
 <div class="check-summary-container">
@@ -72,12 +67,8 @@ const showCheckDetail = true
   {/if}
 </div>
 
-
-
-
 <!-- STYLE -->
-<style lang='scss'>
-
+<style lang="scss">
 $indent: 1rem;
 
 .check-summary-container {
@@ -118,7 +109,7 @@ $indent: 1rem;
   }
 
   :global(.row.test) {
-    margin-top: .4rem;
+    margin-top: 0.4rem;
   }
 
   :global(.row.test > .label) {
@@ -137,7 +128,7 @@ $indent: 1rem;
     color: #777;
   }
 
-  :global(.row.predicate > .label ){
+  :global(.row.predicate > .label) {
     cursor: pointer;
   }
 
@@ -153,18 +144,18 @@ $indent: 1rem;
   align-items: baseline;
   align-self: flex-start;
   margin: 2.6rem 0;
-  opacity: 1.0;
+  opacity: 1;
 }
 
 .bar-container {
   display: flex;
   flex-direction: row;
   width: 15rem;
-  height: .8rem;
+  height: 0.8rem;
 }
 
 .bar {
-  height: .8rem;
+  height: 0.8rem;
 
   &.gray {
     background-color: #777;
@@ -172,12 +163,11 @@ $indent: 1rem;
 }
 
 .summary-label {
-  margin-left: .8rem;
+  margin-left: 0.8rem;
   color: #fff;
 }
 
 .sep {
   color: #777;
 }
-
 </style>

@@ -1,8 +1,7 @@
 <!-- Copyright (c) 2022 Climate Interactive / New Venture Fund -->
 
 <!-- SCRIPT -->
-<script lang='ts'>
-
+<script lang="ts">
 import type { ListItemViewModel } from './list-item-vm'
 import type { SearchListViewModel } from './search-list-vm'
 
@@ -61,11 +60,7 @@ function onItemClicked(item: ListItemViewModel) {
   // Notify that the item has been selected
   viewModel.onItemSelected?.(item)
 }
-
 </script>
-
-
-
 
 <!-- TEMPLATE -->
 <input type="text" placeholder="Search variables..." bind:value={$query} on:input={onInput} />
@@ -77,12 +72,8 @@ function onItemClicked(item: ListItemViewModel) {
 
 <svelte:window on:keydown={onKeyDown} />
 
-
-
-
 <!-- STYLE -->
-<style lang='scss'>
-
+<style lang="scss">
 input {
   height: 1.7rem;
   font-size: inherit;
@@ -107,7 +98,7 @@ input {
   display: flex;
   align-items: center;
   min-height: 1.6rem;
-  padding: 0 .4rem;
+  padding: 0 0.4rem;
   background-color: #fff;
   cursor: pointer;
   user-select: none;
@@ -115,10 +106,9 @@ input {
   &:hover {
     background-color: #ddd;
   }
-  
+
   &.active {
     background-color: #ccccff;
   }
 }
-
 </style>

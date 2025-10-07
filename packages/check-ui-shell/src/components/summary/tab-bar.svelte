@@ -1,8 +1,7 @@
 <!-- Copyright (c) 2021-2022 Climate Interactive / New Venture Fund -->
 
 <!-- SCRIPT -->
-<script lang='ts'>
-
+<script lang="ts">
 import { createEventDispatcher } from 'svelte'
 
 import type { TabBarViewModel } from './tab-bar-vm'
@@ -32,11 +31,7 @@ function onKeyDown(event: KeyboardEvent) {
     event.preventDefault()
   }
 }
-
 </script>
-
-
-
 
 <!-- TEMPLATE -->
 <svelte:window on:keydown={onKeyDown} />
@@ -50,12 +45,8 @@ function onKeyDown(event: KeyboardEvent) {
   {/each}
 </div>
 
-
-
-
 <!-- STYLE -->
-<style lang='scss'>
-
+<style lang="scss">
 .tab-bar {
   position: sticky;
   top: 0;
@@ -68,23 +59,23 @@ function onKeyDown(event: KeyboardEvent) {
   // across, then use extra padding to compensate
   margin: 0 -1rem;
   padding: 0 1rem;
-  box-shadow: 0 1rem .5rem -.5rem rgba(0,0,0,.8);
+  box-shadow: 0 1rem 0.5rem -0.5rem rgba(0, 0, 0, 0.8);
 }
 
 .tab-item {
   display: flex;
   flex-direction: column;
-  padding: .5rem 3rem .3rem 0;
+  padding: 0.5rem 3rem 0.3rem 0;
   cursor: pointer;
   opacity: 0.7;
   border-bottom: solid 1px transparent;
 
   &:hover {
-    opacity: 1.0;
+    opacity: 1;
   }
 
   &.selected {
-    opacity: 1.0;
+    opacity: 1;
     border-bottom: solid 1px #555;
   }
 }
@@ -93,7 +84,7 @@ function onKeyDown(event: KeyboardEvent) {
   font-size: 1.6rem;
   font-weight: 700;
   color: #fff;
-  margin-bottom: .2rem;
+  margin-bottom: 0.2rem;
   cursor: pointer;
 }
 
@@ -101,5 +92,4 @@ function onKeyDown(event: KeyboardEvent) {
   font-size: 1rem;
   font-weight: 400;
 }
-
 </style>

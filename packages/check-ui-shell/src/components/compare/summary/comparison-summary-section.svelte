@@ -1,8 +1,7 @@
 <!-- Copyright (c) 2021-2022 Climate Interactive / New Venture Fund -->
 
 <!-- SCRIPT -->
-<script lang='ts'>
-
+<script lang="ts">
 import SummaryRow from './comparison-summary-row.svelte'
 import type { ComparisonSummarySectionViewModel } from './comparison-summary-section-vm'
 
@@ -12,19 +11,14 @@ const expanded = viewModel.expanded
 function onHeaderClicked() {
   expanded.update(value => !value)
 }
-
 </script>
 
-
-
 <!-- TEMPLATE -->
-<template>
-
 <div class="section-container">
   <!-- svelte-ignore a11y-click-events-have-key-events -->
   <div class="header-row {$expanded ? 'expanded' : 'collapsed'}" on:click={onHeaderClicked}>
     <div class="header-bar"></div>
-    <div class="header-title">{ @html viewModel.header.title }</div>
+    <div class="header-title">{@html viewModel.header.title}</div>
     {#if viewModel.rowsWithDiffs > 0}
       <div class="header-count">{viewModel.rowsWithDiffs}</div>
     {/if}
@@ -36,14 +30,8 @@ function onHeaderClicked() {
   {/if}
 </div>
 
-</template>
-
-
-
-
 <!-- STYLE -->
-<style lang='scss'>
-
+<style lang="scss">
 // TODO: Share with comparison-summary-row
 $bar-width: 15rem;
 
@@ -60,7 +48,7 @@ $bar-width: 15rem;
   display: flex;
   flex-direction: row;
   align-items: center;
-  margin: .4rem 0;
+  margin: 0.4rem 0;
   cursor: pointer;
 
   &.collapsed {
@@ -80,18 +68,17 @@ $bar-width: 15rem;
 }
 
 .header-title {
-  margin-left: .8rem;
+  margin-left: 0.8rem;
   color: #fff;
   font-size: 1.2em;
 }
 
 .header-count {
-  margin-left: .5rem;
-  padding: .1rem .5rem;
+  margin-left: 0.5rem;
+  padding: 0.1rem 0.5rem;
   border-radius: 1rem;
-  background-color: rgba(255, 165, 0, .7);
+  background-color: rgba(255, 165, 0, 0.7);
   color: #eee;
-  font-size: .85em;
+  font-size: 0.85em;
 }
-
 </style>

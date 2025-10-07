@@ -1,16 +1,11 @@
 <!-- Copyright (c)2020-2022 Climate Interactive / New Venture Fund -->
 
 <!-- SCRIPT -->
-<script lang='ts'>
-
+<script lang="ts">
 import type { BundleGraphSpec } from '@sdeverywhere/check-core'
 
 export let graphSpec: BundleGraphSpec
-
 </script>
-
-
-
 
 <!-- TEMPLATE -->
 <div class="legend-container">
@@ -19,12 +14,8 @@ export let graphSpec: BundleGraphSpec
   {/each}
 </div>
 
-
-
-
 <!-- STYLE -->
-<style lang='scss'>
-
+<style lang="scss">
 // Use `flex` with a fixed height to accomodate at most two rows of items,
 // with a small amount of vertical padding between the rows.  The negative
 // top margin allows the legend to slide up to cover excessive space left
@@ -37,7 +28,7 @@ export let graphSpec: BundleGraphSpec
   justify-content: center;
   align-items: center;
   width: 100%;
-  margin-top: -.45rem;
+  margin-top: -0.45rem;
   font-family: 'Roboto Condensed';
   font-weight: 700;
   font-size: 1rem;
@@ -45,10 +36,9 @@ export let graphSpec: BundleGraphSpec
 }
 
 .legend-item {
-  margin: 0 .2rem .1rem .2rem;
-  padding: .25rem .6rem .2rem .6rem;
+  margin: 0 0.2rem 0.1rem 0.2rem;
+  padding: 0.25rem 0.6rem 0.2rem 0.6rem;
   color: #fff;
   text-align: center;
 }
-
 </style>

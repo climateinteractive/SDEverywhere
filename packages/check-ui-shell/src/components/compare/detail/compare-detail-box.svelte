@@ -1,8 +1,7 @@
 <!-- Copyright (c) 2021-2022 Climate Interactive / New Venture Fund -->
 
 <!-- SCRIPT -->
-<script lang='ts'>
-
+<script lang="ts">
 import { createEventDispatcher } from 'svelte'
 
 import Lazy from '../../_shared/lazy.svelte'
@@ -80,11 +79,7 @@ function getMaxDiffSpan(content: CompareDetailBoxContent): string {
   }
   return span
 }
-
 </script>
-
-
-
 
 <!-- TEMPLATE -->
 <div class="detail-box">
@@ -99,7 +94,7 @@ function getMaxDiffSpan(content: CompareDetailBoxContent): string {
     </div>
   {/if}
   <div class="content-container">
-    <Lazy bind:visible={visible}>
+    <Lazy bind:visible>
       {#if $content}
         <div class={`content ${$content.bucketClass}`}>
           <div class="graph-container">
@@ -129,16 +124,12 @@ function getMaxDiffSpan(content: CompareDetailBoxContent): string {
   </div>
 </div>
 
-
-
-
 <!-- STYLE -->
-<style lang='scss'>
-
-$border-w: .3rem;
+<style lang="scss">
+$border-w: 0.3rem;
 $border-w-2x: $border-w * 2;
 
-$padding-w: .5rem;
+$padding-w: 0.5rem;
 $padding-w-2x: $padding-w * 2;
 
 $stats-h: 4rem;
@@ -174,15 +165,15 @@ $stats-h: 4rem;
 }
 
 .title {
-  margin-left: .7rem;
+  margin-left: 0.7rem;
   font-size: 1.1em;
   font-weight: 700;
 }
 
 .subtitle {
   color: #aaa;
-  margin-left: .4rem;
-  margin-right: .7rem;
+  margin-left: 0.4rem;
+  margin-right: 0.7rem;
 }
 
 .content-container {
@@ -203,7 +194,7 @@ $stats-h: 4rem;
   padding: $padding-w;
   border-width: $border-w;
   border-style: solid;
-  border-radius: .8rem;
+  border-radius: 0.8rem;
 }
 
 .graph-container {
@@ -234,10 +225,10 @@ $stats-h: 4rem;
 }
 
 .data-label {
-  font-size: .9em;
+  font-size: 0.9em;
   color: #aaa;
   min-width: 2rem;
-  margin-right: .4rem;
+  margin-right: 0.4rem;
   text-align: right;
 }
 
@@ -246,5 +237,4 @@ $stats-h: 4rem;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-
 </style>

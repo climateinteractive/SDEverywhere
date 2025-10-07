@@ -1,8 +1,7 @@
 <!-- Copyright (c) 2021-2022 Climate Interactive / New Venture Fund -->
 
 <!-- SCRIPT -->
-<script lang='ts'>
-
+<script lang="ts">
 import { createEventDispatcher } from 'svelte'
 
 import type { ComparisonSummaryRowViewModel } from './comparison-summary-row-vm'
@@ -24,11 +23,7 @@ function onLinkClicked() {
 // function onTogglePinned() {
 //   dispatch('toggle-item-pinned')
 // }
-
 </script>
-
-
-
 
 <!-- TEMPLATE -->
 <div class="summary-row">
@@ -60,12 +55,8 @@ function onLinkClicked() {
   </div>
 </div>
 
-
-
-
 <!-- STYLE -->
-<style lang='scss'>
-
+<style lang="scss">
 $bar-width: 15rem;
 
 .summary-row {
@@ -73,11 +64,11 @@ $bar-width: 15rem;
   flex-direction: row;
   flex: 0 0 auto;
   align-items: flex-end;
-  margin: .2rem 0;
-  opacity: .8;
+  margin: 0.2rem 0;
+  opacity: 0.8;
 
   &:hover {
-    opacity: 1.0;
+    opacity: 1;
   }
 }
 
@@ -85,24 +76,30 @@ $bar-width: 15rem;
   display: flex;
   flex-direction: row;
   width: $bar-width;
-  height: .8rem;
-  margin-bottom: .25rem;
+  height: 0.8rem;
+  margin-bottom: 0.25rem;
   cursor: pointer;
 }
 
 .bar {
-  height: .8rem;
+  height: 0.8rem;
 
   &.striped {
     width: 100%;
-    background: repeating-linear-gradient(-45deg, goldenrod, goldenrod .4rem, darkgoldenrod .4rem, darkgoldenrod 1rem);
+    background: repeating-linear-gradient(
+      -45deg,
+      goldenrod,
+      goldenrod 0.4rem,
+      darkgoldenrod 0.4rem,
+      darkgoldenrod 1rem
+    );
   }
 }
 
 .title-container {
   display: flex;
   flex-direction: column;
-  margin-left: .8rem;
+  margin-left: 0.8rem;
 }
 
 // .grouping-part {
@@ -122,8 +119,8 @@ $bar-width: 15rem;
 }
 
 .subtitle {
-  font-size: .8em;
-  margin-left: .6rem;
+  font-size: 0.8em;
+  margin-left: 0.6rem;
   color: #aaa;
   cursor: pointer;
 }
@@ -135,17 +132,16 @@ $bar-width: 15rem;
 // }
 
 .annotations {
-  font-size: .8em;
-  margin-left: .3rem;
+  font-size: 0.8em;
+  margin-left: 0.3rem;
   color: #aaa;
 
   :global(.annotation) {
-    margin: 0 .3rem;
-    padding: .1rem .3rem;
+    margin: 0 0.3rem;
+    padding: 0.1rem 0.3rem;
     background-color: #1c1c1c;
-    border: .5px solid #555;
-    border-radius: .4rem;
+    border: 0.5px solid #555;
+    border-radius: 0.4rem;
   }
 }
-
 </style>

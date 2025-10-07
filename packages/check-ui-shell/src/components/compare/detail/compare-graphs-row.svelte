@@ -1,23 +1,18 @@
 <!-- Copyright (c) 2021-2022 Climate Interactive / New Venture Fund -->
 
 <!-- SCRIPT -->
-<script lang='ts'>
-
+<script lang="ts">
 import ContextGraph from '../../graphs/context-graph.svelte'
 import DatasetRow from './compare-graphs-dataset.svelte'
 import type { CompareGraphsRowViewModel } from './compare-graphs-row-vm'
 
 export let viewModel: CompareGraphsRowViewModel
 export let align: 'center' | 'left' = 'center'
-
 </script>
-
-
-
 
 <!-- TEMPLATE -->
 <div class="graphs-row">
-  {#if align === "center"}
+  {#if align === 'center'}
     <div class="spacer-flex"></div>
   {/if}
   <div class="content">
@@ -54,17 +49,13 @@ export let align: 'center' | 'left' = 'center'
       {/if}
     </div>
   </div>
-  {#if align === "center"}
+  {#if align === 'center'}
     <div class="spacer-flex"></div>
   {/if}
 </div>
 
-
-
-
 <!-- STYLE -->
-<style lang='scss'>
-
+<style lang="scss">
 .graphs-row {
   display: flex;
   flex-direction: row;
@@ -96,7 +87,7 @@ export let align: 'center' | 'left' = 'center'
 }
 
 .metadata-header {
-  margin-top: .6rem;
+  margin-top: 0.6rem;
 }
 
 .metadata-row {
@@ -104,7 +95,7 @@ export let align: 'center' | 'left' = 'center'
   flex-direction: row;
 
   &:hover {
-    background-color: rgba(255, 255, 255, .05);
+    background-color: rgba(255, 255, 255, 0.05);
   }
 }
 
@@ -117,8 +108,7 @@ export let align: 'center' | 'left' = 'center'
 
 .metadata-key {
   color: #aaa;
-  font-size: .8em;
+  font-size: 0.8em;
   margin-left: 1rem;
 }
-
 </style>

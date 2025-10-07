@@ -1,8 +1,7 @@
 <!-- Copyright (c) 2021-2022 Climate Interactive / New Venture Fund -->
 
 <!-- SCRIPT -->
-<script lang='ts'>
-
+<script lang="ts">
 import { slide } from 'svelte/transition'
 import Icon from 'svelte-awesome/components/Icon.svelte'
 import { faArrowRightFromBracket } from '@fortawesome/free-solid-svg-icons'
@@ -16,11 +15,7 @@ export let editing: boolean
 
 type Option = 'all_outputs' | 'all_in_group' | 'specify'
 let selectedOption: Option = 'all_outputs'
-
 </script>
-
-
-
 
 <!-- TEMPLATE -->
 <div class="content">
@@ -41,7 +36,13 @@ let selectedOption: Option = 'all_outputs'
         </div>
         <div class="row">
           <label for="in_group">
-            <input type="radio" id="all_in_group" name="all_in_group" bind:group={selectedOption} value="all_in_group" />
+            <input
+              type="radio"
+              id="all_in_group"
+              name="all_in_group"
+              bind:group={selectedOption}
+              value="all_in_group"
+            />
             Check all variables in a predefined group
           </label>
         </div>
@@ -49,7 +50,7 @@ let selectedOption: Option = 'all_outputs'
           <label for="selected">
             <input type="radio" id="specify" name="specify" bind:group={selectedOption} value="specify" />
             Check the following variables...
-            {#if selectedOption === "specify"}
+            {#if selectedOption === 'specify'}
               <div class="row-content">
                 <div class="available-items-container">
                   <SearchList viewModel={viewModel.availableOutputs} />
@@ -76,12 +77,8 @@ let selectedOption: Option = 'all_outputs'
   {/if}
 </div>
 
-
-
-
 <!-- STYLE -->
-<style lang='scss'>
-
+<style lang="scss">
 .content {
   display: flex;
   flex-direction: column;
@@ -92,7 +89,7 @@ let selectedOption: Option = 'all_outputs'
   display: flex;
   justify-content: center;
   width: 1.5rem;
-  margin-right: .8rem;
+  margin-right: 0.8rem;
 }
 
 .question {
@@ -114,8 +111,8 @@ let selectedOption: Option = 'all_outputs'
   flex: 1;
 }
 
-input[type="radio"] {
-  margin-right: .4rem;
+input[type='radio'] {
+  margin-right: 0.4rem;
 }
 
 .row-content {
@@ -127,7 +124,7 @@ input[type="radio"] {
   display: flex;
   flex-direction: column;
   width: 20rem;
-  margin-top: .4rem;
+  margin-top: 0.4rem;
   margin-left: 2rem;
 }
 
@@ -135,7 +132,7 @@ input[type="radio"] {
   display: flex;
   flex-direction: column;
   width: 20rem;
-  margin-top: .4rem;
+  margin-top: 0.4rem;
   margin-left: 2rem;
 }
 
@@ -145,10 +142,9 @@ input[type="radio"] {
 }
 
 .varname {
-  border-radius: .4rem;
-  padding: .08rem .3rem;
+  border-radius: 0.4rem;
+  padding: 0.08rem 0.3rem;
   background-color: #ddd;
   font-weight: 700;
 }
-
 </style>

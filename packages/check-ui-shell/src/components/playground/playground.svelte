@@ -1,8 +1,7 @@
 <!-- Copyright (c) 2021-2022 Climate Interactive / New Venture Fund -->
 
 <!-- SCRIPT -->
-<script lang='ts'>
-
+<script lang="ts">
 import { slide } from 'svelte/transition'
 
 import CheckGraphBox from '../check/summary/check-summary-graph-box.svelte'
@@ -32,11 +31,7 @@ function onNextClicked() {
   maxCompleted++
   activeCard++
 }
-
 </script>
-
-
-
 
 <!-- TEMPLATE -->
 <div class="playground-container">
@@ -79,12 +74,8 @@ function onNextClicked() {
   </div>
 </div>
 
-
-
-
 <!-- STYLE -->
-<style lang='scss'>
-
+<style lang="scss">
 .playground-container {
   display: flex;
   flex-direction: column;
@@ -136,10 +127,10 @@ function onNextClicked() {
 }
 
 .next-button {
-  border-radius: .5rem;
+  border-radius: 0.5rem;
   margin-top: 1.5rem;
   margin-bottom: 1rem;
-  padding: .625rem 2rem;
+  padding: 0.625rem 2rem;
   background-color: #007700;
   color: #fff;
   cursor: pointer;
@@ -158,5 +149,4 @@ function onNextClicked() {
   padding-top: 2rem;
   align-items: center;
 }
-
 </style>

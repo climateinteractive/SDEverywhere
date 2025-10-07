@@ -1,17 +1,12 @@
 <!-- Copyright (c) 2021-2022 Climate Interactive / New Venture Fund -->
 
 <!-- SCRIPT -->
-<script lang='ts'>
-
+<script lang="ts">
 import StatsTableRow from './stats-table-row.svelte'
 import type { StatsTableViewModel } from './stats-table-vm'
 
 export let viewModel: StatsTableViewModel
-
 </script>
-
-
-
 
 <!-- TEMPLATE -->
 <table class="header">
@@ -37,12 +32,8 @@ export let viewModel: StatsTableViewModel
   </tr>
 </table>
 
-
-
-
 <!-- STYLE -->
-<style lang='scss'>
-
+<style lang="scss">
 table {
   border-collapse: collapse;
 }
@@ -57,11 +48,13 @@ th {
     color: #555;
   }
 
-  &:nth-child(2), &:nth-child(3) {
+  &:nth-child(2),
+  &:nth-child(3) {
     width: 6rem;
   }
 
-  &:nth-child(4), &:nth-child(5) {
+  &:nth-child(4),
+  &:nth-child(5) {
     width: 10rem;
   }
 
@@ -69,9 +62,9 @@ th {
     width: 8rem;
   }
 
-  &:nth-child(7), &:nth-child(8) {
+  &:nth-child(7),
+  &:nth-child(8) {
     width: 8rem;
   }
 }
-
 </style>

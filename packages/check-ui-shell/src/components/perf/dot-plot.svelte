@@ -1,17 +1,12 @@
 <!-- Copyright (c) 2021-2022 Climate Interactive / New Venture Fund -->
 
 <!-- SCRIPT -->
-<script lang='ts'>
-
+<script lang="ts">
 import type { DotPlotViewModel } from './dot-plot-vm'
 
 export let viewModel: DotPlotViewModel
 export let colorClass: string
-
 </script>
-
-
-
 
 <!-- TEMPLATE -->
 <div class="dot-plot-container">
@@ -19,18 +14,14 @@ export let colorClass: string
   <div class="vline end-line" style="left: 0;"></div>
   <div class="vline end-line" style="left: 100%;"></div>
   {#each viewModel.points as point}
-    <div class="dot" class:dataset-bg-0={colorClass === 'dataset-bg-0'} class:dataset-bg-1={colorClass === 'dataset-bg-1'} style="left: {point}%;"></div>
+    <div class={`dot ${colorClass}`} style="left: {point}%;"></div>
   {/each}
-  <div class="vline avg-line" class:dataset-bg-0={colorClass === 'dataset-bg-0'} class:dataset-bg-1={colorClass === 'dataset-bg-1'} style="left: {viewModel.avgPoint}%;"></div>
+  <div class={`vline avg-line ${colorClass}`} style="left: {viewModel.avgPoint}%;"></div>
 </div>
 
-
-
-
 <!-- STYLE -->
-<style lang='scss'>
-
-$dot-size: .8rem;
+<style lang="scss">
+$dot-size: 0.8rem;
 $height: 1.4rem;
 $line-color: #555;
 
@@ -72,7 +63,6 @@ $line-color: #555;
   height: $dot-size;
   margin-left: -$dot-size * 0.5;
   border-radius: $dot-size * 0.5;
-  opacity: .2;
+  opacity: 0.2;
 }
-
 </style>

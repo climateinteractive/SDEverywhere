@@ -1,8 +1,7 @@
 <!-- Copyright (c) 2021-2022 Climate Interactive / New Venture Fund -->
 
 <!-- SCRIPT -->
-<script lang='ts'>
-
+<script lang="ts">
 import FontFaceObserver from 'fontfaceobserver'
 
 import type { ComparisonGroupingKind } from './components/compare/_shared/comparison-grouping-kind'
@@ -92,7 +91,11 @@ function onCommand(event: CustomEvent) {
     case 'show-comparison-detail-for-previous':
     case 'show-comparison-detail-for-next': {
       const delta = cmd === 'show-comparison-detail-for-previous' ? -1 : +1
-      const adjacent = viewModel.createCompareDetailViewModelForSummaryRowWithDelta(cmdObj.kind, cmdObj.summaryRowKey, delta)
+      const adjacent = viewModel.createCompareDetailViewModelForSummaryRowWithDelta(
+        cmdObj.kind,
+        cmdObj.summaryRowKey,
+        delta
+      )
       if (adjacent) {
         compareDetailViewModel = adjacent
         viewMode = 'comparison-detail'
@@ -130,11 +133,7 @@ function onKeyDown(event: KeyboardEvent) {
       break
   }
 }
-
 </script>
-
-
-
 
 <!-- TEMPLATE -->
 <svelte:window on:keydown={onKeyDown} />
@@ -148,9 +147,9 @@ function onKeyDown(event: KeyboardEvent) {
       <div class="progress-container">
         <div class="progress">{$progress}</div>
       </div>
-    {:else if viewMode === "comparison-detail"}
+    {:else if viewMode === 'comparison-detail'}
       <ComparisonDetail on:command={onCommand} viewModel={compareDetailViewModel} />
-    {:else if viewMode === "perf"}
+    {:else if viewMode === 'perf'}
       <Perf on:command={onCommand} viewModel={perfViewModel} />
     {:else}
       <Summary on:command={onCommand} viewModel={viewModel.summaryViewModel} />
@@ -158,12 +157,8 @@ function onKeyDown(event: KeyboardEvent) {
   </div>
 {/await}
 
-
-
-
 <!-- STYLE -->
-<style lang='scss'>
-
+<style lang="scss">
 .app-container {
   display: flex;
   flex-direction: column;
@@ -185,5 +180,4 @@ function onKeyDown(event: KeyboardEvent) {
   justify-content: center;
   font-size: 2em;
 }
-
 </style>
