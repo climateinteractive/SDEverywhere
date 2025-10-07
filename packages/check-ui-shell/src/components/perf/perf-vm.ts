@@ -15,7 +15,10 @@ export class PerfViewModel {
   private minTime = Number.MAX_VALUE
   private maxTime = 0
 
-  constructor(public readonly bundleModelL: BundleModel, public readonly bundleModelR: BundleModel) {
+  constructor(
+    public readonly bundleModelL: BundleModel,
+    public readonly bundleModelR: BundleModel
+  ) {
     this.writableRows = writable([])
     this.rows = this.writableRows
   }

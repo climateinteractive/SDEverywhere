@@ -9,7 +9,11 @@ export class SelectorOptionViewModel {
    * @param value The value for the option.
    * @param disabled Whether the option is disabled.
    */
-  constructor(public readonly label: string, public readonly value: string, public readonly disabled = false) {}
+  constructor(
+    public readonly label: string,
+    public readonly value: string,
+    public readonly disabled = false
+  ) {}
 }
 
 /** View model for a dropdown/selector control. */

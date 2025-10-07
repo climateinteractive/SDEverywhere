@@ -25,7 +25,7 @@
     "@sveltejs/vite-plugin-svelte": "^3.1.2",
     "@types/chart.js": "^2.9.34",
     "postcss": "^8.4.41",
-    "prettier": "^3.5.3",
+    "prettier": "^3.6.2",
     "prettier-plugin-svelte": "^3.3.3",
     "sass": "^1.77.8",
     "svelte": "^4.2.19",
