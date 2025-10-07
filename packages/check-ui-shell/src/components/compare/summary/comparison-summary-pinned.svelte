@@ -68,14 +68,16 @@ function onToggleItemPinned(row: ComparisonSummaryRowViewModel): void {
 
 
 <!-- STYLE -->
-<style lang='sass'>
+<style lang='scss'>
 
-.dnd-section
-  padding: .2rem 0
+.dnd-section {
+  padding: .2rem 0;
+}
 
-.dnd-item
-  display: flex
-  width: fit-content
-  background-color: #272727
+.dnd-item {
+  display: flex;
+  width: fit-content;
+  background-color: #272727;
+}
 
 </style>

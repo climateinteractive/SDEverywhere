@@ -68,46 +68,54 @@ $: console.log(selectedOption)
 
 
 <!-- STYLE -->
-<style lang='sass'>
+<style lang='scss'>
 
-.content
-  display: flex
-  flex-direction: column
-  flex: 1
+.content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
 
-.icon-wrapper
-  display: flex
-  justify-content: center
-  width: 1.5rem
-  margin-right: .8rem
+.icon-wrapper {
+  display: flex;
+  justify-content: center;
+  width: 1.5rem;
+  margin-right: .8rem;
+}
 
-.question
-  display: flex
-  align-items: center
+.question {
+  display: flex;
+  align-items: center;
+}
 
-.answer
-  display: flex
-  flex-direction: column
-  flex: 1
-  margin-top: 1rem
-  margin-left: 3rem
+.answer {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  margin-top: 1rem;
+  margin-left: 3rem;
+}
 
-.row
-  display: flex
-  flex-direction: column
-  flex: 1
+.row {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
 
-input[type="radio"]
-  margin-right: .4rem
+input[type="radio"] {
+  margin-right: .4rem;
+}
 
-.summary
-  display: flex
-  align-items: center
+.summary {
+  display: flex;
+  align-items: center;
+}
 
-.scenario
-  border-radius: .4rem
-  padding: .08rem .3rem
-  background-color: #ddd
-  font-weight: 700
+.scenario {
+  border-radius: .4rem;
+  padding: .08rem .3rem;
+  background-color: #ddd;
+  font-weight: 700;
+}
 
 </style>

@@ -63,51 +63,62 @@ export let align: 'center' | 'left' = 'center'
 
 
 <!-- STYLE -->
-<style lang='sass'>
+<style lang='scss'>
 
-.graphs-row
-  display: flex
-  flex-direction: row
-  flex: 1
+.graphs-row {
+  display: flex;
+  flex-direction: row;
+  flex: 1;
+}
 
-.spacer-flex
-  flex: 1
+.spacer-flex {
+  flex: 1;
+}
 
-.spacer-fixed
-  flex: 0 0 2rem
+.spacer-fixed {
+  flex: 0 0 2rem;
+}
 
-.content
-  display: flex
-  flex-direction: column
-  flex: 1
+.content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
 
-.graphs-container
-  display: flex
-  flex-direction: row
+.graphs-container {
+  display: flex;
+  flex-direction: row;
+}
 
-.metadata-container
-  display: flex
-  flex-direction: column
+.metadata-container {
+  display: flex;
+  flex-direction: column;
+}
 
-.metadata-header
-  margin-top: .6rem
+.metadata-header {
+  margin-top: .6rem;
+}
 
-.metadata-row
-  display: flex
-  flex-direction: row
+.metadata-row {
+  display: flex;
+  flex-direction: row;
 
-.metadata-row:hover
-  background-color: rgba(255, 255, 255, .05)
+  &:hover {
+    background-color: rgba(255, 255, 255, .05);
+  }
+}
 
-.metadata-col
-  display: flex
+.metadata-col {
+  display: flex;
   // XXX: This needs to match fixed `context-graph-container` width for now
-  width: 38rem
-  align-items: baseline
+  width: 38rem;
+  align-items: baseline;
+}
 
-.metadata-key
-  color: #aaa
-  font-size: .8em
-  margin-left: 1rem
+.metadata-key {
+  color: #aaa;
+  font-size: .8em;
+  margin-left: 1rem;
+}
 
 </style>

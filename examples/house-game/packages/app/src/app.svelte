@@ -68,111 +68,120 @@ function onContinue() {
 
 
 <!-- STYLE -->
-<style lang='sass'>
+<style lang='scss'>
 
-.app-container
-  display: flex
-  flex-direction: row
-  gap: 10px
+.app-container {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+}
 
-.left-container
-  display: flex
-  flex-direction: column
-  flex-shrink: 0
-  gap: 10px
-  font-family: sans-serif
+.left-container {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  gap: 10px;
+  font-family: sans-serif;
+}
 
-.text-container
-  display: flex
-  flex-direction: column
-  width: 250px
-  height: 240px
-  flex-shrink: 0
-  align-items: flex-start
-  gap: 10px
-  padding: 10px
-  border-radius: 8px
-  border: solid 1px #555
-  font-family: sans-serif
+.text-container {
+  display: flex;
+  flex-direction: column;
+  width: 250px;
+  height: 240px;
+  flex-shrink: 0;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px;
+  border-radius: 8px;
+  border: solid 1px #555;
+  font-family: sans-serif;
+}
 
-.message
-  font-size: 14px
-  line-height: 1.4
-.message :global(.supply)
-  color: magenta
-  font-weight: 700
-.message :global(.demand)
-  color: #4080e0
-  font-weight: 700
+.message {
+  font-size: 14px;
+  line-height: 1.4;
 
-.input-row
-  display: flex
-  flex-direction: row
-  align-items: baseline
-  gap: 8px
-  font-size: 14px
-  line-height: 1.4
+  :global(.supply) {
+    color: magenta;
+    font-weight: 700;
+  }
 
-.spacer-flex
-  flex: 1
+  :global(.demand) {
+    color: #4080e0;
+    font-weight: 700;
+  }
+}
 
-.buttons
-  display: flex
-  flex-direction: row
-  width: 100%
-  justify-content: space-between
+.input-row {
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 14px;
+  line-height: 1.4;
+}
 
-button
-  background-color: transparent
-  background-repeat: no-repeat
-  border: solid 1px #fff
-  border-radius: 8px
-  padding: 4px 8px
-  outline: none
-  overflow: hidden
-  color: #fff
-  cursor: pointer
-  &.reset
-    border-color: #555
-    color: #555
-  &:disabled
-    opacity: 0.5
-    cursor: not-allowed
-  &:hover:not(:disabled)
-    background-color: rgba(128, 128, 128, 0.2)
+.spacer-flex {
+  flex: 1;
+}
 
-.text-container.assumptions
-  height: 160px
-  gap: 4px
-  color: #777
+.buttons {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  justify-content: space-between;
+}
 
-.right-container
-  display: flex
-  flex-direction: column
-  padding: 10px
-  border-radius: 8px
-  border: solid 1px #555
+button {
+  background-color: transparent;
+  background-repeat: no-repeat;
+  border: solid 1px #fff;
+  border-radius: 8px;
+  padding: 4px 8px;
+  outline: none;
+  overflow: hidden;
+  color: #fff;
+  cursor: pointer;
 
-// textarea
-//   font-family: monospace
-//   min-height: 600px
-//   background-color: black
-//   color: #fff
-//   border: none
-//   border-radius: 8px
-//   padding: 8px
+  &.reset {
+    border-color: #555;
+    color: #555;
+  }
 
-.graph-container
-  position: relative
-  width: 500px
-  height: 300px
-  margin-top: 20px
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
 
-// .cell-column
-//   display: flex
-//   flex-direction: column
+  &:hover:not(:disabled) {
+    background-color: rgba(128, 128, 128, 0.2);
+  }
+}
 
-.cell-value
-  max-width: 40px
+.text-container.assumptions {
+  height: 160px;
+  gap: 4px;
+  color: #777;
+}
+
+.right-container {
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+  border-radius: 8px;
+  border: solid 1px #555;
+}
+
+.graph-container {
+  position: relative;
+  width: 500px;
+  height: 300px;
+  margin-top: 20px;
+}
+
+.cell-value {
+  max-width: 40px;
+}
 
 </style>

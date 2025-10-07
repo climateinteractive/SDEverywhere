@@ -76,87 +76,108 @@ const showCheckDetail = true
 
 
 <!-- STYLE -->
-<style lang='sass'>
+<style lang='scss'>
 
-$indent: 1rem
+$indent: 1rem;
 
-.check-summary-container
-  display: flex
-  flex-direction: column
+.check-summary-container {
+  display: flex;
+  flex-direction: column;
+}
 
-.check-detail
-  display: flex
-  flex-direction: column
+.check-detail {
+  display: flex;
+  flex-direction: column;
+}
 
-.group-container
-  margin-bottom: 1.2rem
+.group-container {
+  margin-bottom: 1.2rem;
 
-.group-container :global(.test-rows)
-  display: flex
-  flex-direction: column
+  :global(.test-rows) {
+    display: flex;
+    flex-direction: column;
+  }
 
-// Hide passed rows by default
-.group-container :global(.row.passed)
-  display: none
+  // Hide passed rows by default
+  :global(.row.passed) {
+    display: none;
+  }
 
-// Show passed rows when parent test has `expand-all` class
-.group-container :global(.test-rows.expand-all .row.passed)
-  display: flex
+  // Show passed rows when parent test has `expand-all` class
+  :global(.test-rows.expand-all .row.passed) {
+    display: flex;
+  }
 
-.group-container :global(.row)
-  display: flex
-  flex-direction: row
+  :global(.row) {
+    display: flex;
+    flex-direction: row;
+  }
 
-.group-container :global(.row.group)
-  font-size: 1.2em
+  :global(.row.group) {
+    font-size: 1.2em;
+  }
 
-.group-container :global(.row.test)
-  margin-top: .4rem
+  :global(.row.test) {
+    margin-top: .4rem;
+  }
 
-.group-container :global(.row.test > .label)
-  cursor: pointer
+  :global(.row.test > .label) {
+    cursor: pointer;
+  }
 
-.group-container :global(.row.scenario)
-  color: #777
+  :global(.row.scenario) {
+    color: #777;
+  }
 
-.group-container :global(.row.dataset)
-  color: #777
+  :global(.row.dataset) {
+    color: #777;
+  }
 
-.group-container :global(.row.predicate)
-  color: #777
+  :global(.row.predicate) {
+    color: #777;
+  }
 
-.group-container :global(.row.predicate > .label)
-  cursor: pointer
+  :global(.row.predicate > .label ){
+    cursor: pointer;
+  }
 
-.group-container :global(.bold)
-  font-weight: 700
-  color: #bbb
+  :global(.bold) {
+    font-weight: 700;
+    color: #bbb;
+  }
+}
 
-.summary-bar-row
-  display: flex
-  flex-direction: row
-  align-items: baseline
-  align-self: flex-start
-  margin: 2.6rem 0
-  opacity: 1.0
+.summary-bar-row {
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  align-self: flex-start;
+  margin: 2.6rem 0;
+  opacity: 1.0;
+}
 
-.bar-container
-  display: flex
-  flex-direction: row
-  width: 15rem
-  height: .8rem
+.bar-container {
+  display: flex;
+  flex-direction: row;
+  width: 15rem;
+  height: .8rem;
+}
 
-.bar
-  height: .8rem
+.bar {
+  height: .8rem;
 
-.bar.gray
-  background-color: #777
+  &.gray {
+    background-color: #777;
+  }
+}
 
-.summary-label
-  margin-left: .8rem
-  color: #fff
+.summary-label {
+  margin-left: .8rem;
+  color: #fff;
+}
 
-.sep
-  color: #777
+.sep {
+  color: #777;
+}
 
 </style>

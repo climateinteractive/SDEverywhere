@@ -81,38 +81,44 @@ function onItemClicked(item: ListItemViewModel) {
 
 
 <!-- STYLE -->
-<style lang='sass'>
+<style lang='scss'>
 
-input
-  height: 1.7rem
-  font-size: inherit
-  border: 1px solid #aaa
-  outline: none
+input {
+  height: 1.7rem;
+  font-size: inherit;
+  border: 1px solid #aaa;
+  outline: none;
 
-input:focus
-  border-color: blue
+  &:focus {
+    border-color: blue;
+  }
+}
 
-.items
-  display: flex
-  flex-direction: column
-  min-height: 8rem
-  max-height: 8rem
-  overflow-y: auto
-  background-color: #fff
+.items {
+  display: flex;
+  flex-direction: column;
+  min-height: 8rem;
+  max-height: 8rem;
+  overflow-y: auto;
+  background-color: #fff;
+}
 
-.item
-  display: flex
-  align-items: center
-  min-height: 1.6rem
-  padding: 0 .4rem
-  background-color: #fff
-  cursor: pointer
-  user-select: none
+.item {
+  display: flex;
+  align-items: center;
+  min-height: 1.6rem;
+  padding: 0 .4rem;
+  background-color: #fff;
+  cursor: pointer;
+  user-select: none;
 
-.item:hover
-  background-color: #ddd
+  &:hover {
+    background-color: #ddd;
+  }
   
-.item.active
-  background-color: #ccccff
+  &.active {
+    background-color: #ccccff;
+  }
+}
 
 </style>

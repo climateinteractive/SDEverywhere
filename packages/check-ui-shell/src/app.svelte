@@ -162,25 +162,28 @@ function onKeyDown(event: KeyboardEvent) {
 
 
 <!-- STYLE -->
-<style lang='sass'>
+<style lang='scss'>
 
-.app-container
-  display: flex
-  flex-direction: column
-  flex: 1
+.app-container {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
 
-.loading-container
-  display: flex
-  flex-direction: column
-  flex: 1 1 auto
-  align-items: center
-  justify-content: center
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  align-items: center;
+  justify-content: center;
+}
 
-.progress-container
-  display: flex
-  height: 100vh
-  align-items: center
-  justify-content: center
-  font-size: 2em
+.progress-container {
+  display: flex;
+  height: 100vh;
+  align-items: center;
+  justify-content: center;
+  font-size: 2em;
+}
 
 </style>

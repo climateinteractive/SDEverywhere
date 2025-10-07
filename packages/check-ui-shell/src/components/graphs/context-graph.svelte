@@ -102,60 +102,70 @@ function onLinkClicked(linkItem: LinkItem) {
 
 
 <!-- STYLE -->
-<style lang='sass'>
+<style lang='scss'>
 
 // The graph columns have a fixed width of 38rem (38% of app width);
 // this needs to match the `graphConfig.width` value above
-$graph-width: 38rem
-$graph-height: 20rem
+$graph-width: 38rem;
+$graph-height: 20rem;
 
-.context-graph-container
-  display: inline-flex
-  flex-direction: column
+.context-graph-container {
+  display: inline-flex;
+  flex-direction: column;
   // Use a fixed width measured in viewport-relative units
-  flex: 0 0 $graph-width
-  background-color: #fff
+  flex: 0 0 $graph-width;
+  background-color: #fff;
+}
 
-.graph-and-info
-  display: flex
-  flex-direction: column
+.graph-and-info {
+  display: flex;
+  flex-direction: column;
+}
 
-.graph-title
-  margin: .5rem 0
-  padding: 0 .8rem
-  font-family: 'Roboto Condensed'
-  font-size: 1.55rem
+.graph-title {
+  margin: .5rem 0;
+  padding: 0 .8rem;
+  font-family: 'Roboto Condensed';
+  font-size: 1.55rem;
+}
 
-.graph-container
-  display: block
-  position: relative
-  width: $graph-width
-  height: $graph-height
+.graph-container {
+  display: block;
+  position: relative;
+  width: $graph-width;
+  height: $graph-height;
+}
 
-.message
-  display: flex
-  flex: 1
-  min-height: $graph-height
-  align-items: center
-  justify-content: center
-  color: #aaa
-  border: solid 1px #fff
-  &.not-included
-    background-color: #555
+.message {
+  display: flex;
+  flex: 1;
+  min-height: $graph-height;
+  align-items: center;
+  justify-content: center;
+  color: #aaa;
+  border: solid 1px #fff;
 
-.link-container
-  display: flex
-  flex-direction: column
-  align-items: flex-start
-  margin-bottom: .4rem
+  &.not-included {
+    background-color: #555;
+  }
+}
 
-.link-row
-  height: 1.2rem
-  margin: 0 .8rem
-  color: #999
-  cursor: pointer
+.link-container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-bottom: .4rem;
+}
 
-.link-row:hover
-  color: #000
+.link-row {
+  height: 1.2rem;
+  margin: 0 .8rem;
+  color: #999;
+  cursor: pointer;
+
+  &:hover {
+    color: #000;
+  }
+}
 
 </style>

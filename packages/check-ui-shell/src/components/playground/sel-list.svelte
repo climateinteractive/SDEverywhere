@@ -30,26 +30,29 @@ function onItemClicked(item: ListItemViewModel) {
 
 
 <!-- STYLE -->
-<style lang='sass'>
+<style lang='scss'>
 
-.items
-  display: flex
-  flex-direction: column
-  overflow-y: auto
+.items {
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
 
-.item
-  display: flex
-  align-items: center
-  height: 2rem
-  margin-bottom: .2rem
-  padding: 0 .6rem
-  background-color: #fff
-  border-radius: .4rem
-  border: solid 1px #ccc
-  cursor: pointer
-  user-select: none
+.item {
+  display: flex;
+  align-items: center;
+  height: 2rem;
+  margin-bottom: .2rem;
+  padding: 0 .6rem;
+  background-color: #fff;
+  border-radius: .4rem;
+  border: solid 1px #ccc;
+  cursor: pointer;
+  user-select: none;
 
-.item.active
-  background-color: lightblue
+  &.active {
+    background-color: lightblue;
+  }
+}
 
 </style>

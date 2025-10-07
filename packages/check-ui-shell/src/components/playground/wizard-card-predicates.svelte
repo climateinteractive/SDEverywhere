@@ -115,60 +115,72 @@ let selectedTimeOption: TimeOption = 'single'
 
 
 <!-- STYLE -->
-<style lang='sass'>
+<style lang='scss'>
 
-.content
-  display: flex
-  flex-direction: column
-  flex: 1
+.content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
 
-.icon-wrapper
-  display: flex
-  justify-content: center  
-  width: 1.5rem
-  margin-right: .8rem
+.icon-wrapper {
+  display: flex;
+  justify-content: center;
+  width: 1.5rem;
+  margin-right: .8rem;
+}
 
-.question
-  display: flex
-  align-items: center
+.question {
+  display: flex;
+  align-items: center;
+}
 
-.answer
-  margin-top: 1rem
-  margin-left: 2.3rem
+.answer {
+  margin-top: 1rem;
+  margin-left: 2.3rem;
+}
 
-.ref-intro
-  margin-bottom: .5rem
+.ref-intro {
+  margin-bottom: .5rem;
+}
 
-.row
-  display: flex
-  flex-direction: column
-  flex: 1
-  margin-left: 1.2rem
+.row {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  margin-left: 1.2rem;
+}
 
-input[type="radio"]
-  margin-right: .4rem
+input[type="radio"] {
+  margin-right: .4rem;
+}
 
-.time-intro
-  margin-top: .8rem
-  margin-bottom: .5rem
+.time-intro {
+  margin-top: .8rem;
+  margin-bottom: .5rem;
+}
 
-input[type="checkbox"]
-  margin-left: 3rem
-  margin-right: .4rem
+input[type="checkbox"] {
+  margin-left: 3rem;
+  margin-right: .4rem;
+}
 
-input[type="number"]
-  width: 4rem
-  margin-left: .3rem
-  margin-right: .4rem
+input[type="number"] {
+  width: 4rem;
+  margin-left: .3rem;
+  margin-right: .4rem;
+}
 
-.summary
-  display: flex
-  align-items: center
+.summary {
+  display: flex;
+  align-items: center;
+}
 
-.varname
-  border-radius: .4rem
-  padding: .08rem .3rem
-  background-color: #ddd
-  font-weight: 700
+.varname {
+  border-radius: .4rem;
+  padding: .08rem .3rem;
+  background-color: #ddd;
+  font-weight: 700;
+}
 
 </style>

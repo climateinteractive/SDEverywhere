@@ -47,15 +47,16 @@ $: if (visible !== previousVisible || viewModel.baseRequestKey !== previousViewM
 
 
 <!-- STYLE -->
-<style lang='sass'>
+<style lang='scss'>
 
-.graph-container
-  position: relative
-  display: flex
-  width: 36rem
-  height: 22rem
-  margin-left: 1rem
-  margin-top: .5rem
-  margin-bottom: 1rem
+.graph-container {
+  position: relative;
+  display: flex;
+  width: 36rem;
+  height: 22rem;
+  margin-left: 1rem;
+  margin-top: .5rem;
+  margin-bottom: 1rem;
+}
 
 </style>

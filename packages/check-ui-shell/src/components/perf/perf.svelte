@@ -80,49 +80,59 @@ function onRun() {
 
 
 <!-- STYLE -->
-<style lang='sass'>
+<style lang='scss'>
 
-.perf-container
-  display: flex
-  flex-direction: column
-  padding: 0 1rem
+.perf-container {
+  display: flex;
+  flex-direction: column;
+  padding: 0 1rem;
+}
 
-.controls-container
-  display: flex
-  flex-direction: column
-  align-items: flex-start
-  height: 3rem
+.controls-container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  height: 3rem;
+}
 
-.table-container
-  display: flex
-  flex: 1
+.table-container {
+  display: flex;
+  flex: 1;
+}
 
-table
-  border-collapse: collapse
+table {
+  border-collapse: collapse;
+}
 
-td, th
-  padding-top: .2rem
-  padding-bottom: .2rem
+td, th {
+  padding-top: .2rem;
+  padding-bottom: .2rem;
+}
 
-th
-  color: #aaa
-  text-align: right
-  font-weight: 500
+th {
+  color: #aaa;
+  text-align: right;
+  font-weight: 500;
+}
 
-td
-  width: 4.5rem
-  text-align: right
-  font-family: monospace
+td {
+  width: 4.5rem;
+  text-align: right;
+  font-family: monospace;
 
-td.rownum
-  width: 2rem
+  &.rownum {
+    width: 2rem;
+  }
 
-td.dim
-  color: #777
+  &.dim {
+    color: #777;
+  }
 
-td.plot
-  width: 30rem
-  padding-left: 2rem
-  padding-right: 2rem
+  &.plot {
+    width: 30rem;
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+}
 
 </style>

@@ -41,30 +41,37 @@ export let viewModel: StatsTableViewModel
 
 
 <!-- STYLE -->
-<style lang='sass'>
+<style lang='scss'>
 
-table
-  border-collapse: collapse
+table {
+  border-collapse: collapse;
+}
 
-th
-  color: #aaa
-  text-align: left
-  font-family: Roboto
-  font-weight: 500
+th {
+  color: #aaa;
+  text-align: left;
+  font-family: Roboto;
+  font-weight: 500;
 
-th.dim
-  color: #555
+  &.dim {
+    color: #555;
+  }
 
-th:nth-child(2), th:nth-child(3)
-  width: 6rem
+  &:nth-child(2), &:nth-child(3) {
+    width: 6rem;
+  }
 
-th:nth-child(4), th:nth-child(5)
-  width: 10rem
+  &:nth-child(4), &:nth-child(5) {
+    width: 10rem;
+  }
 
-th:nth-child(6)
-  width: 8rem
+  &:nth-child(6) {
+    width: 8rem;
+  }
 
-th:nth-child(7), th:nth-child(8)
-  width: 8rem
+  &:nth-child(7), &:nth-child(8) {
+    width: 8rem;
+  }
+}
 
 </style>

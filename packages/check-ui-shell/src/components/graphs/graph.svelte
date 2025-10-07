@@ -43,17 +43,18 @@ onMount(() => {
 
 
 <!-- STYLE -->
-<style lang='sass'>
+<style lang='scss'>
 
 // This container is set up to allow for automatic responsive sizing
 // by Chart.js.  For this to work, we need the canvas element to have
 // this parent container with `position: absolute` and configured with
 // zero offsets so that it fills its parent.
-.graph-inner-container
-  position: absolute
-  top: 0
-  left: 0
-  bottom: 0
-  right: 0
+.graph-inner-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+}
 
 </style>

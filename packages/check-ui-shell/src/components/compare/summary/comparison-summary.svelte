@@ -36,22 +36,27 @@ export let viewModel: ComparisonSummaryViewModel
 
 
 <!-- STYLE -->
-<style lang='sass'>
+<style lang='scss'>
 
-.comparison-summary-container
-  display: flex
-  flex-direction: column
-  padding-top: 2rem
+.comparison-summary-container {
+  display: flex;
+  flex-direction: column;
+  padding-top: 2rem;
+}
 
-.section-container
-  display: flex
-  flex-direction: column
+.section-container {
+  display: flex;
+  flex-direction: column;
   // Set scroll margin to account for headers when jumping to anchors
-  scroll-margin-top: 5rem
-  &:not(:last-child)
-    margin-bottom: 1.5rem
+  scroll-margin-top: 5rem;
 
-.footer
-  flex: 0 0 1rem
+  &:not(:last-child) {
+    margin-bottom: 1.5rem;
+  }
+}
+
+.footer {
+  flex: 0 0 1rem;
+}
 
 </style>

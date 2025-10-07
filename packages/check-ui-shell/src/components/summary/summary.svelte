@@ -44,30 +44,34 @@ const selectedTabId = viewModel.tabBarViewModel.selectedItemId
 
 
 <!-- STYLE -->
-<style lang='sass'>
+<style lang='scss'>
 
-.summary-container
-  display: flex
-  flex-direction: column
-  flex: 1
+.summary-container {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
 
-.scroll-container
-  position: relative
-  display: flex
+.scroll-container {
+  position: relative;
+  display: flex;
   // XXX: We use 1px here for flex-basis, otherwise in Firefox and Chrome the
   // whole page will scroll instead of just this container.  See also:
   //   https://stackoverflow.com/a/52489012
-  flex: 1 1 1px
-  flex-direction: column
-  padding: 0 1rem
-  overflow: auto
+  flex: 1 1 1px;
+  flex-direction: column;
+  padding: 0 1rem;
+  overflow: auto;
+}
 
-.header-container
-  margin-bottom: 1rem
+.header-container {
+  margin-bottom: 1rem;
+}
 
-.line
-  min-height: 1px
-  margin-bottom: .5rem
-  background-color: #555
+.line {
+  min-height: 1px;
+  margin-bottom: .5rem;
+  background-color: #555;
+}
 
 </style>

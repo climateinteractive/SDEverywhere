@@ -89,11 +89,12 @@ onMount(() => {
 
 
 <!-- STYLE -->
-<style lang='sass'>
+<style lang='scss'>
 
-.lazy-container
-  position: relative
-  display: flex
-  height: 100%
+.lazy-container {
+  position: relative;
+  display: flex;
+  height: 100%;
+}
 
 </style>

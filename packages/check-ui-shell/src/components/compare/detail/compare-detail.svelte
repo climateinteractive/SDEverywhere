@@ -266,136 +266,161 @@ onMount(() => {
 
 
 <!-- STYLE -->
-<style lang='sass'>
+<style lang='scss'>
 
-.compare-detail-container
-  display: flex
-  flex-direction: column
-  flex: 1
+.compare-detail-container {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
 
-.header-container
-  display: flex
-  flex-direction: column
+.header-container {
+  display: flex;
+  flex-direction: column;
   // XXX: Use negative margin to make the shadow stretch all the way
   // across, then use extra padding to compensate
-  width: calc(100vw - 2rem)
-  margin: 0 -1rem
-  padding: 0 2rem
-  box-shadow: 0 1rem .5rem -.5rem rgba(0,0,0,.5)
-  z-index: 1
+  width: calc(100vw - 2rem);
+  margin: 0 -1rem;
+  padding: 0 2rem;
+  box-shadow: 0 1rem .5rem -.5rem rgba(0,0,0,.5);
+  z-index: 1;
+}
 
-.title-and-links
-  display: flex
-  flex-direction: row
-  align-items: center
+.title-and-links {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
   // XXX: Use a fixed height for now so that it doesn't bounce around when
   // the title wraps to two lines
-  height: 4.5rem
+  height: 4.5rem;
+}
 
-.spacer-flex
-  flex: 1
+.spacer-flex {
+  flex: 1;
+}
 
-.nav-links
-  display: flex
-  flex-direction: row
-  font-size: .8em
+.nav-links {
+  display: flex;
+  flex-direction: row;
+  font-size: .8em;
+}
 
-.nav-link-sep
-  color: #444
+.nav-link-sep {
+  color: #444;
+}
 
-.nav-link
-  cursor: pointer
-  color: #777
+.nav-link {
+  cursor: pointer;
+  color: #777;
+}
 
 // .nav-link.disabled
 //   cursor: not-allowed
 //   color: #555
 
-.title-container
-  display: flex
-  flex-direction: column
+.title-container {
+  display: flex;
+  flex-direction: column;
+}
 
-.pretitle
-  margin-bottom: .2rem
-  font-size: .9em
-  font-weight: 700
-  color: #aaa
+.pretitle {
+  margin-bottom: .2rem;
+  font-size: .9em;
+  font-weight: 700;
+  color: #aaa;
+}
 
-.title-and-subtitle
-  display: flex
-  flex-direction: row
-  align-items: baseline
+.title-and-subtitle {
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+}
 
-.title
-  margin-bottom: .4rem
-  font-size: 2em
-  font-weight: 700
-  cursor: pointer
+.title {
+  margin-bottom: .4rem;
+  font-size: 2em;
+  font-weight: 700;
+  cursor: pointer;
+}
 
-.subtitle
-  font-size: 1.2em
-  font-weight: 700
-  margin-left: 1.2rem
-  color: #aaa
+.subtitle {
+  font-size: 1.2em;
+  font-weight: 700;
+  margin-left: 1.2rem;
+  color: #aaa;
+}
 
-.annotations
-  margin-left: .3rem
-  color: #aaa
+.annotations {
+  margin-left: .3rem;
+  color: #aaa;
 
-.annotations :global(.annotation)
-  margin: 0 .3rem
-  padding: .1rem .3rem
-  background-color: #222
-  border: .5px solid #555
-  border-radius: .4rem
+  :global(.annotation) {
+    margin: 0 .3rem;
+    padding: .1rem .3rem;
+    background-color: #222;
+    border: .5px solid #555;
+    border-radius: .4rem;
+  }
+}
 
-.related
-  font-size: 1em
-  color: #aaa
-  margin-bottom: .6rem
+.related {
+  font-size: 1em;
+  color: #aaa;
+  margin-bottom: .6rem;
 
-ul
-  margin: .1rem 0
-  padding-left: 2rem
+  :global(.related-sep) {
+    color: #666;
+  }
+}
 
-.related :global(.related-sep)
-  color: #666
+ul {
+  margin: .1rem 0;
+  padding-left: 2rem;
+}
 
-.scroll-container
-  display: flex
-  flex-direction: row
-  max-width: 100vw
-  flex: 1 0 1px
-  overflow: auto
-  outline: none
-  background-color: #3c3c3c
+.scroll-container {
+  display: flex;
+  flex-direction: row;
+  max-width: 100vw;
+  flex: 1 0 1px;
+  overflow: auto;
+  outline: none;
+  background-color: #3c3c3c;
+}
 
-.scroll-content
-  position: relative
+.scroll-content {
+  position: relative;
+}
 
-.section-title
-  width: calc(100vw - 2rem)
-  margin: 1.5rem 1rem 2rem 1rem
-  padding: .2rem 0
-  border-bottom: solid 1px #555
-  color: #ccc
-  font-size: 1.4em
-  font-weight: 700
-  &:not(:first-child)
-    margin-top: 5rem
+.section-title {
+  width: calc(100vw - 2rem);
+  margin: 1.5rem 1rem 2rem 1rem;
+  padding: .2rem 0;
+  border-bottom: solid 1px #555;
+  color: #ccc;
+  font-size: 1.4em;
+  font-weight: 700;
 
-.row-container
-  display: flex
-  flex-direction: row
-  margin-top: .5rem
-  margin-bottom: 3rem
-  margin-left: 1rem
-  margin-right: 1rem
+  &:not(:first-child) {
+    margin-top: 5rem;
+  }
+}
 
-.row-container:first-child
-  margin-top: 3rem
+.row-container {
+  display: flex;
+  flex-direction: row;
+  margin-top: .5rem;
+  margin-bottom: 3rem;
+  margin-left: 1rem;
+  margin-right: 1rem;
 
-.footer
-  height: 1rem
+  &:first-child {
+    margin-top: 3rem;
+  }
+}
+
+.footer {
+  height: 1rem;
+}
 
 </style>
