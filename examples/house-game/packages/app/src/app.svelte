@@ -34,7 +34,7 @@ function onContinue() {
           <div>houses/month</div>
         </div>
       {/if}
-      <div class="spacer-flex" />
+      <div class="spacer-flex"></div>
       <div class="buttons">
         <button class="reset" disabled={$busy} on:click={onReset}>Reset</button>
         <button disabled={$busy} on:click={onContinue}>Continue</button>

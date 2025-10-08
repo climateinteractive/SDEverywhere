@@ -41,31 +41,35 @@ function onRun() {
   <div class="table-container">
     {#if $rows.length > 0}
       <table>
-        <tr>
-          <th>run</th>
-          <th>min</th>
-          <th>avg</th>
-          <th>max</th>
-        </tr>
-        {#each $rows as row}
+        <thead>
           <tr>
-            <td class="rownum" rowspan="2">{row.num}</td>
-            <td class="dim">{row.minTimeL}</td>
-            <td class="value dataset-color-0">{row.avgTimeL}</td>
-            <td class="dim">{row.maxTimeL}</td>
-            <td class="plot">
-              <DotPlot viewModel={row.dotPlotL} colorClass="dataset-bg-0" />
-            </td>
+            <th>run</th>
+            <th>min</th>
+            <th>avg</th>
+            <th>max</th>
           </tr>
-          <tr>
-            <td class="dim">{row.minTimeR}</td>
-            <td class="value dataset-color-1">{row.avgTimeR}</td>
-            <td class="dim">{row.maxTimeR}</td>
-            <td class="plot">
-              <DotPlot viewModel={row.dotPlotR} colorClass="dataset-bg-1" />
-            </td>
-          </tr>
-        {/each}
+        </thead>
+        <tbody>
+          {#each $rows as row}
+            <tr>
+              <td class="rownum" rowspan="2">{row.num}</td>
+              <td class="dim">{row.minTimeL}</td>
+              <td class="value dataset-color-0">{row.avgTimeL}</td>
+              <td class="dim">{row.maxTimeL}</td>
+              <td class="plot">
+                <DotPlot viewModel={row.dotPlotL} colorClass="dataset-bg-0" />
+              </td>
+            </tr>
+            <tr>
+              <td class="dim">{row.minTimeR}</td>
+              <td class="value dataset-color-1">{row.avgTimeR}</td>
+              <td class="dim">{row.maxTimeR}</td>
+              <td class="plot">
+                <DotPlot viewModel={row.dotPlotR} colorClass="dataset-bg-1" />
+              </td>
+            </tr>
+          {/each}
+        </tbody>
       </table>
     {/if}
   </div>

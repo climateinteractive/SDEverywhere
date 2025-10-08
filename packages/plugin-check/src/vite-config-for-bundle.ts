@@ -156,7 +156,7 @@ function overrideViteResolvePlugin(viteConfig: ResolvedConfig) {
     }
 
     // For all other cases, fall back on the default resolver
-    return originalResolveId.call(this, id, importer, options)
+    return await originalResolveId.handler.call(this, id, importer, options)
   }
 }
 

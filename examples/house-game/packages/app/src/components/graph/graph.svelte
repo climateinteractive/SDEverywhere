@@ -60,7 +60,7 @@ onMount(() => {
 </script>
 
 <!-- TEMPLATE -->
-<div class="graph-inner-container" bind:this={container} style={containerStyle} />
+<div class="graph-inner-container" bind:this={container} style={containerStyle}></div>
 
 <!-- STYLE -->
 <style lang="scss">

@@ -1,5 +1,7 @@
 // Copyright (c) 2021-2022 Climate Interactive / New Venture Fund
 
+import { mount } from 'svelte'
+
 import type { ConfigOptions, SuiteSummary } from '@sdeverywhere/check-core'
 
 import { initAppModel } from './model/app-model'
@@ -13,15 +15,10 @@ export interface AppShellOptions {
   bundleNames?: string[]
 }
 
-export function initAppShell(configOptions: ConfigOptions, appShellOptions?: AppShellOptions): AppShell {
+export function initAppShell(configOptions: ConfigOptions, appShellOptions?: AppShellOptions): void {
   // Initialize the root Svelte component
   const containerId = appShellOptions?.containerId || 'app-shell-container'
-  const appShell = new AppShell({
-    target: document.getElementById(containerId),
-    props: {
-      appViewModel: undefined
-    }
-  })
+  const containerElem = document.getElementById(containerId)
 
   // Initialize the app model asynchronously
   initAppModel(configOptions)
@@ -37,14 +34,15 @@ export function initAppShell(configOptions: ConfigOptions, appShellOptions?: App
       }
 
       // Update the AppShell component
-      appShell.$set({
-        appViewModel
+      mount(AppShell, {
+        target: containerElem,
+        props: {
+          appViewModel
+        }
       })
     })
     .catch(e => {
       // TODO: If any step fails here, show an error screen instead of the app
       console.error(`ERROR: Failed to initialize app model: ${e.message}`)
     })
-
-  return appShell
 }

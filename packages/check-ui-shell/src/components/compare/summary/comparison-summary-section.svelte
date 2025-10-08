@@ -15,7 +15,7 @@ function onHeaderClicked() {
 
 <!-- TEMPLATE -->
 <div class="section-container">
-  <!-- svelte-ignore a11y-click-events-have-key-events -->
+  <!-- svelte-ignore a11y_click_events_have_key_events -->
   <div class="header-row {$expanded ? 'expanded' : 'collapsed'}" on:click={onHeaderClicked}>
     <div class="header-bar"></div>
     <div class="header-title">{@html viewModel.header.title}</div>
