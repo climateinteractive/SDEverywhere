@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.34](https://github.com/climateinteractive/SDEverywhere/compare/cli-v0.7.33...cli-v0.7.34) (2025-10-08)
+
+
+### Dependencies
+
+* upgrade shelljs to 0.10.0 ([#669](https://github.com/climateinteractive/SDEverywhere/issues/669)) ([ba886ff](https://github.com/climateinteractive/SDEverywhere/commit/ba886ff11781c4eae8dd8db1a68cf6d09de2d5c4)), closes [#668](https://github.com/climateinteractive/SDEverywhere/issues/668)
+
 ## [0.7.33](https://github.com/climateinteractive/SDEverywhere/compare/cli-v0.7.32...cli-v0.7.33) (2025-10-08)
 
 
