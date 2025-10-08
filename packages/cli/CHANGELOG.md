@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.33](https://github.com/climateinteractive/SDEverywhere/compare/cli-v0.7.32...cli-v0.7.33) (2025-10-08)
+
+
+### Dependencies
+
+* require Node.js v20 as minimum supported version ([7e993aa](https://github.com/climateinteractive/SDEverywhere/commit/7e993aa864883205bf870c4b814d6b089267bdf1))
+
 ## [0.7.32](https://github.com/climateinteractive/SDEverywhere/compare/cli-v0.7.31...cli-v0.7.32) (2025-08-18)
 
 
