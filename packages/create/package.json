@@ -12,7 +12,7 @@
   },
   "scripts": {
     "clean": "rm -rf dist tests/fixtures/empty-dir tests/fixtures/scratch-dir",
-    "lint": "eslint src --ext .ts --max-warnings 0",
+    "lint": "eslint src --max-warnings 0",
     "prettier:check": "prettier --check .",
     "prettier:fix": "prettier --write .",
     "precommit": "../../scripts/precommit",
@@ -38,7 +38,7 @@
   },
   "devDependencies": {
     "@types/fs-extra": "^9.0.13",
-    "@types/node": "^20.5.7",
+    "@types/node": "^20.14.8",
     "@types/prompts": "^2.0.14",
     "@types/which-pm-runs": "^1.0.0",
     "@types/yargs-parser": "^21.0.0"
