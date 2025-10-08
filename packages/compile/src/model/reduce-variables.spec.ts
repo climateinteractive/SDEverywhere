@@ -79,11 +79,9 @@ function v(lhs: string, formula: string, overrides?: Partial<Variable>): Variabl
   variable.varType = 'aux'
   variable.hasInitValue = false
   variable.includeInOutput = true
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ;(variable as any).reduced = true
   if (overrides) {
     for (const [key, value] of Object.entries(overrides)) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const r = variable as Record<string, any>
       r[key] = value
     }

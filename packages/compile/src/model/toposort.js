@@ -39,7 +39,7 @@ function toposort(nodes, edges) {
       var nodeRep
       try {
         nodeRep = '\n' + node + '\n'
-      } catch (_) {
+      } catch (e) {
         nodeRep = ''
       }
       throw new Error('Found cyclic dependency during toposort:\n' + [...predecessors].join(' →\n') + ' →' + nodeRep)

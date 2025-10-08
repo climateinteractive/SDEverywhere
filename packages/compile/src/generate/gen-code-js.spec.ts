@@ -64,7 +64,6 @@ interface JsModel {
   readonly kind: 'js'
   readonly outputVarIds: string[]
   readonly outputVarNames: string[]
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   readonly modelListing?: any
 
   getInitialTime(): number
@@ -72,18 +71,14 @@ interface JsModel {
   getTimeStep(): number
   getSaveFreq(): number
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   getModelFunctions(): /*JsModelFunctions*/ any
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   setModelFunctions(functions: /*JsModelFunctions*/ any): void
 
   setTime(time: number): void
   setInputs(inputValue: (index: number) => number): void
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   setLookup(varSpec: /*VarSpec*/ any, lookup: /*Lookup*/ any): void
 
   storeOutputs(storeValue: (value: number) => void): void
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   storeOutput(varSpec: /*VarSpec*/ any, storeValue: (value: number) => void): void
 
   initConstants(): void

@@ -107,7 +107,7 @@ export function sub(name) {
   let result
   try {
     result = subscripts.get(name)
-  } catch (_) {
+  } catch (e) {
     console.error(`sub name ${name} not found`)
   }
   return result
@@ -249,7 +249,7 @@ export function subscriptFamilies(subscripts) {
   // Return a list of the subscript families for each subscript.
   try {
     return R.map(subscriptName => sub(subscriptName).family, subscripts)
-  } catch (_) {
+  } catch (e) {
     console.error(`ERROR: subscript not found in "${subscripts.join(',')}" in subscriptFamilies`)
   }
 }
