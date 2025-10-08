@@ -12,9 +12,9 @@
   "dependencies": {
     "@sdeverywhere/build": "^0.3.7",
     "@sdeverywhere/check-core": "^0.1.5",
-    "@sdeverywhere/cli": "^0.7.31",
-    "@sdeverywhere/plugin-check": "^0.3.17",
+    "@sdeverywhere/cli": "^0.7.33",
+    "@sdeverywhere/plugin-check": "^0.3.18",
     "@sdeverywhere/plugin-wasm": "^0.2.6",
-    "@sdeverywhere/plugin-worker": "^0.2.10"
+    "@sdeverywhere/plugin-worker": "^0.2.11"
   }
 }

@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.11](https://github.com/climateinteractive/SDEverywhere/compare/plugin-worker-v0.2.10...plugin-worker-v0.2.11) (2025-10-08)
+
+
+### Dependencies
+
+* upgrade to vite 7.1.9 + svelte 5.39.10 ([39108d2](https://github.com/climateinteractive/SDEverywhere/commit/39108d2cd2973c25a3394778191a4d618dc30640))
+
 ## [0.2.10](https://github.com/climateinteractive/SDEverywhere/compare/plugin-worker-v0.2.9...plugin-worker-v0.2.10) (2025-04-26)
 
 
