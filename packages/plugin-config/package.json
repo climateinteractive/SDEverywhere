@@ -47,9 +47,7 @@
     "@types/marked": "^4.0.1",
     "@types/node": "^20.14.8",
     "@types/sanitize-html": "^2.13.0",
-    "@types/temp": "^0.9.1",
-    "dedent": "^0.7.0",
-    "temp": "^0.9.4"
+    "dedent": "^0.7.0"
   },
   "author": "Climate Interactive",
   "license": "MIT",
