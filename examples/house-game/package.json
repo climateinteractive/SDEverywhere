@@ -14,7 +14,7 @@
   "devDependencies": {
     "@eslint/js": "^9.37.0",
     "@sdeverywhere/build": "^0.3.7",
-    "@sdeverywhere/cli": "^0.7.33",
+    "@sdeverywhere/cli": "^0.7.34",
     "@sdeverywhere/plugin-vite": "^0.2.0",
     "@sdeverywhere/plugin-worker": "^0.2.11",
     "@typescript-eslint/eslint-plugin": "^8.46.0",

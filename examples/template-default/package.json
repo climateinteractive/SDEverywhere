@@ -17,7 +17,7 @@
     "@eslint/js": "^9.37.0",
     "@sdeverywhere/build": "^0.3.7",
     "@sdeverywhere/check-core": "^0.1.5",
-    "@sdeverywhere/cli": "^0.7.33",
+    "@sdeverywhere/cli": "^0.7.34",
     "@sdeverywhere/plugin-check": "^0.3.18",
     "@sdeverywhere/plugin-config": "^0.2.8",
     "@sdeverywhere/plugin-vite": "^0.2.0",
