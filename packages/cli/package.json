@@ -27,7 +27,7 @@
     "yargs": "^17.5.1"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=20"
   },
   "author": "Climate Interactive",
   "license": "MIT",
