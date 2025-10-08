@@ -1,5 +1,6 @@
 // Copyright (c) 2022 Climate Interactive / New Venture Fund
 
+import { existsSync, mkdirSync } from 'fs'
 import { dirname, relative, join as joinPath, resolve as resolvePath } from 'path'
 import { fileURLToPath } from 'url'
 
@@ -24,6 +25,13 @@ export function createViteConfigForReport(
 ): InlineConfig {
   // Use `template-report` as the root directory for the report project
   const root = resolvePath(__dirname, '..', 'template-report')
+
+  // Make sure the `baselines` directory exists, otherwise Vite's dependency scanner
+  // may report errors when processing the `import.meta.glob` call
+  const baselinesDir = resolvePath(projDir, 'baselines')
+  if (!existsSync(baselinesDir)) {
+    mkdirSync(baselinesDir, { recursive: true })
+  }
 
   // Include `baselines/*.js` files under the configured project root directory.  This
   // glob path apparently must be a relative path (relative to the `template-report/src`
@@ -180,7 +188,13 @@ export function createViteConfigForReport(
         delimiters: ['', ''],
         values: {
           // Inject the path for baseline bundles
-          './__BASELINE_BUNDLES_PATH__': baselinesPath
+          // XXX: Note that we use './baselines/*.txt' instead of something special
+          // like './__BASELINE_BUNDLES_PATH__' because sometimes Vite's dependency
+          // scanner sees the latter (instead of the injected path) and reports
+          // an error since the path does not exist.  As a workaround, we use
+          // './baselines/*.txt', which gets interpreted as the valid path
+          // '.../template-report/src/baselines/*.txt' (see `baselines/unused.txt`).
+          './baselines/*.txt': baselinesPath
         }
       }) as unknown as PluginOption
     ],
