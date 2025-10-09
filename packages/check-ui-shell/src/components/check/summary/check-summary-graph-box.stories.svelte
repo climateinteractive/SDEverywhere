@@ -73,7 +73,7 @@ function createGraphBoxViewModel(predicateReport: CheckPredicateReport): CheckSu
 </script>
 
 {#snippet template(args: Args<typeof Story>)}
-  <StoryDecorator width={600} height={400}>
+  <StoryDecorator width={460} height={300}>
     <CheckSummaryGraphBox {...args} />
   </StoryDecorator>
 {/snippet}
