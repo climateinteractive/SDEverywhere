@@ -5,13 +5,13 @@ import { defineConfig, mergeConfig } from 'vitest/config'
 
 import { storybookTest } from '@storybook/addon-vitest/vitest-plugin'
 
-import viteConfig from './vite.config'
+import viteConfig from './vite.config.js'
 
 const dirname = path.dirname(fileURLToPath(import.meta.url))
 
-export default defineConfig(configEnv =>
+export default defineConfig(() =>
   mergeConfig(
-    viteConfig(configEnv),
+    viteConfig,
     defineConfig({
       test: {
         projects: [
