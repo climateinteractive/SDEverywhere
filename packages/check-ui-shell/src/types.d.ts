@@ -7,3 +7,8 @@ declare namespace svelteHTML {
     'on:clickout'?: () => void
   }
 }
+
+// XXX: Workaround for issue where svelte-check fails to resolve the `yaml` package
+// referenced by the `check-core` package because we use `"moduleResolution": "bundler"`,
+// which causes...
+declare module 'yaml'
