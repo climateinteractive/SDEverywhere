@@ -20,19 +20,21 @@ export interface CheckSummaryViewModel {
 
 function createCheckSummaryGroupViewModel(
   dataCoordinator: CheckDataCoordinator,
-  group: CheckGroupReport
+  group: CheckGroupReport,
+  initialExpanded = false
 ): CheckSummaryGroupViewModel {
   return {
     name: group.name,
     tests: group.tests.map(test => {
-      return createCheckSummaryTestViewModel(dataCoordinator, test)
+      return createCheckSummaryTestViewModel(dataCoordinator, test, initialExpanded)
     })
   }
 }
 
 export function createCheckSummaryViewModel(
   dataCoordinator: CheckDataCoordinator,
-  checkReport: CheckReport
+  checkReport: CheckReport,
+  initialExpanded = false
 ): CheckSummaryViewModel {
   let passed = 0
   let failed = 0
@@ -82,7 +84,7 @@ export function createCheckSummaryViewModel(
     errors,
     percents,
     groups: checkReport.groups.map(group => {
-      return createCheckSummaryGroupViewModel(dataCoordinator, group)
+      return createCheckSummaryGroupViewModel(dataCoordinator, group, initialExpanded)
     })
   }
 }
