@@ -22,7 +22,8 @@ function bold(s: string | number): string {
 
 export function createCheckSummaryTestViewModel(
   dataCoordinator: CheckDataCoordinator,
-  test: CheckTestReport
+  test: CheckTestReport,
+  initialExpanded = false
 ): CheckSummaryTestViewModel {
   let expandedFirstGraph = false
 
@@ -63,7 +64,7 @@ export function createCheckSummaryTestViewModel(
   }
 
   // Hide child rows for passed tests by default
-  const expandAll = writable(false)
+  const expandAll = writable(initialExpanded)
 
   return {
     testRow,

@@ -41,15 +41,29 @@ function dataset(delta = 0): Dataset {
 export function mockBundleModel(modelSpec: ModelSpec): BundleModel {
   return {
     modelSpec,
-    getDatasetsForScenario: async () => {
-      return {
+    getDatasetsForScenario: async (_, datasetKeys) => {
+      const datasetMap = new Map()
+      for (const datasetKey of datasetKeys) {
         // TODO: Allow for customizing the data points
-        datasetMap: new Map([
-          ['Model__o1', dataset()],
-          ['Model__o2', dataset(5)],
-          ['Model__o2_upper', dataset(15)],
-          ['Model__o2_lower', dataset(-5)]
-        ])
+        let ds: Dataset
+        switch (datasetKey) {
+          case 'Model__o2':
+            ds = dataset(5)
+            break
+          case 'Model__o2_upper':
+            ds = dataset(15)
+            break
+          case 'Model__o2_lower':
+            ds = dataset(-5)
+            break
+          default:
+            ds = dataset()
+            break
+        }
+        datasetMap.set(datasetKey, ds)
+      }
+      return {
+        datasetMap
       }
     },
     getGraphDataForScenario: async () => {

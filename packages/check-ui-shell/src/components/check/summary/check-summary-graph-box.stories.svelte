@@ -18,8 +18,8 @@ import type {
 import { CheckDataCoordinator } from '@sdeverywhere/check-core'
 
 import { inputVar, mockBundleModel, outputVar } from '../../../_mocks/mock-bundle'
-import { dataset, opConstantRef, opDataRef } from '../../../_mocks/mock-check-report'
-import { inputAtValue } from '../../../_mocks/mock-check-scenario'
+import { dataset, opConstantRef, opDataRef } from '../_mocks/mock-check-report'
+import { inputAtValue } from '../_mocks/mock-check-scenario'
 
 import StoryDecorator from '../../_storybook/story-decorator.svelte'
 

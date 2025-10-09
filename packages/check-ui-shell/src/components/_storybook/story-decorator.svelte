@@ -7,7 +7,7 @@ import type { Snippet } from 'svelte'
 interface Props {
   /** The optional width of the decorator. */
   width?: number
-  /** The height of the decorator. */
+  /** The optional height of the decorator. */
   height?: number
   /** The children content to render. */
   children?: Snippet
@@ -21,13 +21,15 @@ const style = $derived(
 </script>
 
 <!-- TEMPLATE -->
-<div {style}>
+<div class="story-decorator" {style}>
   {@render children?.()}
 </div>
 
 <!-- STYLE -->
-<style lang="scss">
-div {
+<style>
+.story-decorator {
   display: flex;
+  overflow: auto;
+  border: 1px solid #444;
 }
 </style>

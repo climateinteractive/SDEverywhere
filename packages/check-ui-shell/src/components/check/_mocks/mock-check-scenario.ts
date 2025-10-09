@@ -9,7 +9,12 @@ import type {
   ScenarioSpec
 } from '@sdeverywhere/check-core'
 
-import { inputSettingsSpec, valueSetting } from './mock-scenario-spec'
+import {
+  allInputsAtPositionSpec,
+  inputAtPositionSpec,
+  inputSettingsSpec,
+  valueSetting
+} from '../../../_mocks/mock-scenario-spec'
 
 export function inputVar(inputId: string, varName: string): [VarId, InputVar] {
   const varId = `_${varName.toLowerCase()}`
@@ -50,28 +55,28 @@ export function valueForPos(position: InputPosition): number | undefined {
   }
 }
 
-// export function allAtPos(position: InputPosition): CheckScenario {
-//   return {
-//     spec: allInputsAtPositionSpec(position),
-//     inputDescs: []
-//   }
-// }
+export function allAtPos(position: InputPosition): CheckScenario {
+  return {
+    spec: allInputsAtPositionSpec(position),
+    inputDescs: []
+  }
+}
 
-// export function inputAtPos(inputVar: InputVar, position: InputPosition): CheckScenario {
-//   const varName = inputVar.varName
-//   const varId = `_${varName.toLowerCase()}`
-//   const spec = inputAtPositionSpec(varId, position)
-//   const inputDesc: CheckScenarioInputDesc = {
-//     name: varName,
-//     inputVar,
-//     position,
-//     value: valueForPos(position)
-//   }
-//   return {
-//     spec,
-//     inputDescs: [inputDesc]
-//   }
-// }
+export function inputAtPos(inputVar: InputVar, position: InputPosition): CheckScenario {
+  const varName = inputVar.varName
+  const varId = `_${varName.toLowerCase()}`
+  const spec = inputAtPositionSpec(varId, position)
+  const inputDesc: CheckScenarioInputDesc = {
+    name: varName,
+    inputVar,
+    position,
+    value: valueForPos(position)
+  }
+  return {
+    spec,
+    inputDescs: [inputDesc]
+  }
+}
 
 function inputAtValueSpec(inputVarId: VarId, value: number): ScenarioSpec {
   return inputSettingsSpec([valueSetting(inputVarId, value)])
