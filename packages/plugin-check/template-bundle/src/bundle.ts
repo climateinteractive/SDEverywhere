@@ -34,7 +34,10 @@ export class BundleModel implements CheckBundleModel {
    * @param modelSpec The spec for the bundled model.
    * @param bundleModelRunner The bundle model runner.
    */
-  constructor(public readonly modelSpec: ModelSpec, private readonly bundleModelRunner: BundleModelRunner) {}
+  constructor(
+    public readonly modelSpec: ModelSpec,
+    private readonly bundleModelRunner: BundleModelRunner
+  ) {}
 
   // from CheckBundleModel interface
   async getDatasetsForScenario(scenario: ScenarioSpec, datasetKeys: DatasetKey[]): Promise<DatasetsResult> {
