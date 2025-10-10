@@ -3,7 +3,7 @@
 <!-- SCRIPT -->
 <script lang="ts">
 import type { CheckSummaryViewModel } from './check-summary-vm'
-import CheckSummaryTest from './check-summary-test.svelte'
+import CheckSummaryRow from './check-summary-row.svelte'
 
 export let viewModel: CheckSummaryViewModel
 
@@ -59,7 +59,7 @@ const showCheckDetail = true
             <div class="label">{group.name}</div>
           </div>
           {#each group.tests as testViewModel}
-            <CheckSummaryTest viewModel={testViewModel} />
+            <CheckSummaryRow viewModel={testViewModel} />
           {/each}
         </div>
       {/each}
@@ -69,7 +69,13 @@ const showCheckDetail = true
 
 <!-- STYLE -->
 <style lang="scss">
-$indent: 1rem;
+// XXX: Prevent the sticky test rows from being hidden behind the sticky tab bar
+$container-top-offset: 50px;
+
+$group-row-h: 32px;
+$test-row-h: 20px;
+$other-row-h: 18px;
+$bg-color: #272727;
 
 .check-summary-container {
   display: flex;
@@ -89,13 +95,11 @@ $indent: 1rem;
     flex-direction: column;
   }
 
-  // Hide passed rows by default
-  :global(.row.passed) {
+  :global(.test-rows:not(.children-visible)) {
     display: none;
   }
 
-  // Show passed rows when parent test has `expand-all` class
-  :global(.test-rows.expand-all .row.passed) {
+  :global(.test-rows.children-visible) {
     display: flex;
   }
 
@@ -105,31 +109,64 @@ $indent: 1rem;
   }
 
   :global(.row.group) {
+    position: sticky;
+    top: $container-top-offset;
+    height: $group-row-h;
+    z-index: 6;
+    background-color: $bg-color;
     font-size: 1.2em;
   }
 
-  :global(.row.test) {
-    margin-top: 0.4rem;
+  :global(.row.group > .label) {
+    margin-top: 8px;
   }
 
-  :global(.row.test > .label) {
-    cursor: pointer;
+  :global(.row.test) {
+    position: sticky;
+    display: flex;
+    align-items: center;
+    top: $container-top-offset + $group-row-h;
+    height: $test-row-h;
+    z-index: 5;
+    background-color: $bg-color;
   }
 
   :global(.row.scenario) {
-    color: #777;
+    position: sticky;
+    top: $container-top-offset + $group-row-h + $test-row-h;
+    height: $other-row-h;
+    z-index: 4;
+    background-color: $bg-color;
   }
 
   :global(.row.dataset) {
-    color: #777;
+    position: sticky;
+    top: $container-top-offset + $group-row-h + $test-row-h + $other-row-h;
+    height: $other-row-h;
+    z-index: 3;
+    background-color: $bg-color;
   }
 
   :global(.row.predicate) {
-    color: #777;
+    position: sticky;
+    top: $container-top-offset + $group-row-h + $test-row-h + (2 * $other-row-h);
+    height: $other-row-h;
+    z-index: 2;
+    background-color: $bg-color;
   }
 
-  :global(.row.predicate > .label) {
+  :global(.row.placeholder) {
+    height: $other-row-h;
+  }
+
+  :global(.row > .label) {
     cursor: pointer;
+  }
+
+  :global(.row.scenario),
+  :global(.row.dataset),
+  :global(.row.predicate) {
+    color: #777;
   }
 
   :global(.bold) {
