@@ -146,6 +146,11 @@ function loadScenarioChildren(
     for (const dataset of scenario.datasets) {
       datasetRows.push(createDatasetRow(dataset, scenario.checkScenario, dataCoordinator))
     }
+    // Sort by status: error, failed, passed
+    const statusOrder = { error: 0, failed: 1, passed: 2 }
+    datasetRows.sort((a, b) => {
+      return statusOrder[a.status] - statusOrder[b.status]
+    })
     scenarioRow.childRows.update(() => datasetRows)
   } else {
     // Count datasets by status
@@ -237,6 +242,11 @@ function loadTestChildren(
     for (const scenario of test.scenarios) {
       scenarioRows.push(createScenarioRow(scenario, dataCoordinator))
     }
+    // Sort by status: error, failed, passed
+    const statusOrder = { error: 0, failed: 1, passed: 2 }
+    scenarioRows.sort((a, b) => {
+      return statusOrder[a.status] - statusOrder[b.status]
+    })
     testRow.childRows.update(() => scenarioRows)
   } else {
     // Count scenarios by status

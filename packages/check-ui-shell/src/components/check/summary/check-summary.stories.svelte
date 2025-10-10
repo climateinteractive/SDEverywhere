@@ -144,6 +144,15 @@ function createCheckReport(scenarioCount: number, datasetCount: number): CheckRe
 />
 
 <Story
+  name="Single test (100 scenarios x 10 dataset)"
+  {template}
+  beforeEach={async ({ args }) => {
+    const report = createCheckReport(100, 10)
+    args.viewModel = createCheckSummaryViewModel(dataCoordinator, report)
+  }}
+/>
+
+<Story
   name="Single test (100 scenarios x 100 datasets)"
   {template}
   beforeEach={async ({ args }) => {
