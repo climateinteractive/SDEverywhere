@@ -12,7 +12,7 @@ export interface CheckSummaryRowViewModel {
   status: CheckStatus
   span: string
   childRows: Writable<CheckSummaryRowViewModel[]>
-  childRowsVisible: Writable<boolean>
+  expanded: Writable<boolean>
   graphBoxViewModel?: CheckSummaryGraphBoxViewModel
   onClicked: () => void
 }
@@ -35,9 +35,11 @@ export function row(
   rowClass: string,
   status: CheckStatus,
   content: string,
+  initialExpanded: boolean,
   onClicked: () => void,
   graphBoxViewModel?: CheckSummaryGraphBoxViewModel
 ): CheckSummaryRowViewModel {
+  // TODO: Control indentation in CSS
   const whitespace = '&ensp;'.repeat(2 + indent * 4)
   const statusChar = charForStatus(status)
   const statusSpan = `<span class="status-color-${status}">${statusChar}</span>`
@@ -48,7 +50,7 @@ export function row(
     status,
     span,
     childRows: writable([]),
-    childRowsVisible: writable(false),
+    expanded: writable(initialExpanded),
     graphBoxViewModel,
     onClicked
   }

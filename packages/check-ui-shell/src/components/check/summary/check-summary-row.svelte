@@ -6,8 +6,8 @@ import CheckGraphBox from './check-summary-graph-box.svelte'
 import type { CheckSummaryRowViewModel } from './check-summary-row-vm'
 
 export let viewModel: CheckSummaryRowViewModel
-$: childRowsVisible = viewModel.childRowsVisible
 $: childRows = viewModel.childRows
+$: expanded = viewModel.expanded
 
 function onLabelClicked() {
   viewModel.onClicked()
@@ -18,7 +18,7 @@ function onLabelClicked() {
 <div class={`row ${viewModel.rowClasses}`}>
   <span class="label" on:click={onLabelClicked}>{@html viewModel.span}</span>
 </div>
-{#if $childRowsVisible}
+{#if $expanded}
   {#if viewModel.graphBoxViewModel}
     <div class={`row check-graph ${viewModel.rowClasses}`}>
       <CheckGraphBox viewModel={viewModel.graphBoxViewModel} />

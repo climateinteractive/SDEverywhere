@@ -34,147 +34,78 @@ function bold(s: string | number): string {
   return `<span class="bold">${s}</span>`
 }
 
-function createTestRow(dataCoordinator: CheckDataCoordinator, test: CheckTestReport): CheckSummaryRowViewModel {
-  let childrenLoaded = false
-
-  const testRow = row(0, 'test', test.status, test.name, () => {
-    // If becoming visible and no children loaded yet, load them
-    if (!childrenLoaded) {
-      loadTestChildren(testRow, test, dataCoordinator)
-      childrenLoaded = true
-    }
-
-    // Toggle visibility
-    testRow.childRowsVisible.update(v => !v)
-  })
-
-  return testRow
-}
-
-function loadTestChildren(
-  testRow: CheckSummaryRowViewModel,
-  test: CheckTestReport,
-  dataCoordinator: CheckDataCoordinator
-) {
-  // Count scenarios by status
-  const scenarioCounts = { passed: 0, failed: 0, error: 0 }
-  for (const scenario of test.scenarios) {
-    scenarioCounts[scenario.status]++
-  }
-
-  const childRows: CheckSummaryRowViewModel[] = []
-
-  // Create placeholder rows for each status that has scenarios
-  if (scenarioCounts.failed > 0) {
-    childRows.push(
-      createPlaceholderRow(1, 'failed', scenarioCounts.failed, 'failed scenario', () => {
-        loadScenariosForStatus(testRow, test, 'failed', dataCoordinator)
-      })
-    )
-  }
-
-  if (scenarioCounts.passed > 0) {
-    childRows.push(
-      createPlaceholderRow(1, 'passed', scenarioCounts.passed, 'passed scenario', () => {
-        loadScenariosForStatus(testRow, test, 'passed', dataCoordinator)
-      })
-    )
-  }
-
-  if (scenarioCounts.error > 0) {
-    childRows.push(
-      createPlaceholderRow(1, 'error', scenarioCounts.error, 'error scenario', () => {
-        loadScenariosForStatus(testRow, test, 'error', dataCoordinator)
-      })
-    )
-  }
-
-  testRow.childRows.update(() => childRows)
-}
-
-function loadScenariosForStatus(
-  testRow: CheckSummaryRowViewModel,
-  test: CheckTestReport,
+function createPlaceholderRow(
+  indent: number,
   status: CheckStatus,
-  dataCoordinator: CheckDataCoordinator
-) {
-  const scenarios = test.scenarios.filter(s => s.status === status)
-  const scenarioRows: CheckSummaryRowViewModel[] = []
-
-  for (const scenario of scenarios) {
-    scenarioRows.push(createScenarioRow(scenario, dataCoordinator))
-  }
-
-  // Replace placeholder with actual scenario rows
-  testRow.childRows.subscribe(currentRows => {
-    const placeholderIndex = currentRows.findIndex(r => r.rowClasses.includes('placeholder') && r.status === status)
-    if (placeholderIndex !== -1) {
-      const newRows = [...currentRows]
-      newRows.splice(placeholderIndex, 1, ...scenarioRows)
-      testRow.childRows.update(() => newRows)
-    }
-  })()
+  count: number,
+  label: string,
+  onExpand: () => void
+): CheckSummaryRowViewModel {
+  const labelText = count === 1 ? `${count} ${label}` : `${count} ${label}s`
+  const initialExpanded = false
+  return row(indent, 'placeholder', status, labelText, initialExpanded, onExpand)
 }
 
-function createScenarioRow(
-  scenario: CheckScenarioReport,
+function loadDatasetChildren(
+  datasetRow: CheckSummaryRowViewModel,
+  dataset: CheckDatasetReport,
+  scenario: CheckScenario,
+  dataCoordinator: CheckDataCoordinator
+) {
+  // Create the predicate rows
+  const predicateRows: CheckSummaryRowViewModel[] = []
+  for (const predicate of dataset.predicates) {
+    let graphBoxViewModel: CheckSummaryGraphBoxViewModel | undefined
+
+    if (scenario.spec && dataset.checkDataset.datasetKey) {
+      graphBoxViewModel = new CheckSummaryGraphBoxViewModel(
+        dataCoordinator,
+        scenario,
+        dataset.checkDataset.datasetKey,
+        predicate
+      )
+    }
+
+    const initialExpanded = false
+    const predicateRow = row(
+      3,
+      'predicate',
+      predicate.result.status,
+      predicateMessage(predicate, bold),
+      initialExpanded,
+      () => {
+        // Toggle expanded state
+        predicateRow.expanded.update(v => !v)
+      },
+      graphBoxViewModel
+    )
+  }
+
+  // Add the predicate rows to the dataset row
+  datasetRow.childRows.update(() => predicateRows)
+}
+
+function createDatasetRow(
+  dataset: CheckDatasetReport,
+  scenario: CheckScenario,
   dataCoordinator: CheckDataCoordinator
 ): CheckSummaryRowViewModel {
+  // Unlike the other levels, we always expand dataset rows to show the predicates
+  // since there are rarely more than one or two predicates per dataset
+  const initialExpanded = true
   let childrenLoaded = false
-
-  const scenarioRow = row(1, 'scenario', scenario.status, scenarioMessage(scenario, bold), () => {
-    // Toggle visibility
-    scenarioRow.childRowsVisible.update(v => !v)
-
+  const datasetRow = row(2, 'dataset', dataset.status, datasetMessage(dataset, bold), initialExpanded, () => {
     // If becoming visible and no children loaded yet, load them
     if (!childrenLoaded) {
-      loadScenarioChildren(scenarioRow, scenario, dataCoordinator)
+      loadDatasetChildren(datasetRow, dataset, scenario, dataCoordinator)
       childrenLoaded = true
     }
+
+    // Toggle expanded state
+    datasetRow.expanded.update(v => !v)
   })
 
-  return scenarioRow
-}
-
-function loadScenarioChildren(
-  scenarioRow: CheckSummaryRowViewModel,
-  scenario: CheckScenarioReport,
-  dataCoordinator: CheckDataCoordinator
-) {
-  // Count datasets by status
-  const datasetCounts = { passed: 0, failed: 0, error: 0 }
-  for (const dataset of scenario.datasets) {
-    datasetCounts[dataset.status]++
-  }
-
-  const childRows: CheckSummaryRowViewModel[] = []
-
-  // Create placeholder rows for each status that has datasets
-  if (datasetCounts.failed > 0) {
-    childRows.push(
-      createPlaceholderRow(2, 'failed', datasetCounts.failed, 'failed dataset', () => {
-        loadDatasetsForStatus(scenarioRow, scenario, 'failed', dataCoordinator)
-      })
-    )
-  }
-
-  if (datasetCounts.passed > 0) {
-    childRows.push(
-      createPlaceholderRow(2, 'passed', datasetCounts.passed, 'passed dataset', () => {
-        loadDatasetsForStatus(scenarioRow, scenario, 'passed', dataCoordinator)
-      })
-    )
-  }
-
-  if (datasetCounts.error > 0) {
-    childRows.push(
-      createPlaceholderRow(2, 'error', datasetCounts.error, 'error dataset', () => {
-        loadDatasetsForStatus(scenarioRow, scenario, 'error', dataCoordinator)
-      })
-    )
-  }
-
-  scenarioRow.childRows.update(() => childRows)
+  return datasetRow
 }
 
 function loadDatasetsForStatus(
@@ -201,74 +132,133 @@ function loadDatasetsForStatus(
   })()
 }
 
-function createDatasetRow(
-  dataset: CheckDatasetReport,
-  scenario: CheckScenario,
-  dataCoordinator: CheckDataCoordinator
-): CheckSummaryRowViewModel {
-  let childrenLoaded = false
-
-  const datasetRow = row(2, 'dataset', dataset.status, datasetMessage(dataset, bold), () => {
-    // Toggle visibility
-    datasetRow.childRowsVisible.update(v => !v)
-
-    // If becoming visible and no children loaded yet, load them
-    if (!childrenLoaded) {
-      loadDatasetChildren(datasetRow, dataset, scenario, dataCoordinator)
-      childrenLoaded = true
-    }
-  })
-
-  return datasetRow
-}
-
-function loadDatasetChildren(
-  datasetRow: CheckSummaryRowViewModel,
-  dataset: CheckDatasetReport,
-  scenario: CheckScenario,
+function loadScenarioChildren(
+  scenarioRow: CheckSummaryRowViewModel,
+  scenario: CheckScenarioReport,
   dataCoordinator: CheckDataCoordinator
 ) {
-  const predicateRows: CheckSummaryRowViewModel[] = []
-
-  for (const predicate of dataset.predicates) {
-    let graphBoxViewModel: CheckSummaryGraphBoxViewModel | undefined
-
-    if (scenario.spec && dataset.checkDataset.datasetKey) {
-      graphBoxViewModel = new CheckSummaryGraphBoxViewModel(
-        dataCoordinator,
-        scenario,
-        dataset.checkDataset.datasetKey,
-        predicate
-      )
-    }
-
-    predicateRows.push(
-      row(
-        3,
-        'predicate',
-        predicate.result.status,
-        predicateMessage(predicate, bold),
-        () => {
-          // Toggle graph visibility - this will be handled by the component
-          console.log('Predicate clicked:', predicate)
-        },
-        graphBoxViewModel
-      )
-    )
+  // Count datasets by status
+  const datasetCounts = { passed: 0, failed: 0, error: 0 }
+  for (const dataset of scenario.datasets) {
+    datasetCounts[dataset.status]++
   }
 
-  datasetRow.childRows.update(() => predicateRows)
+  // Create placeholder rows for each status that has scenarios
+  const childRows: CheckSummaryRowViewModel[] = []
+  function addPlaceholderRow(status: CheckStatus, count: number, label: string) {
+    childRows.push(
+      createPlaceholderRow(2, status, count, label, () => {
+        loadDatasetsForStatus(scenarioRow, scenario, status, dataCoordinator)
+      })
+    )
+  }
+  if (datasetCounts.error > 0) {
+    addPlaceholderRow('error', datasetCounts.error, 'error')
+  }
+  if (datasetCounts.failed > 0) {
+    addPlaceholderRow('failed', datasetCounts.failed, 'failed dataset')
+  }
+  if (datasetCounts.passed > 0) {
+    addPlaceholderRow('passed', datasetCounts.passed, 'passed dataset')
+  }
+
+  // Add the placeholder rows to the scenario row
+  scenarioRow.childRows.update(() => childRows)
 }
 
-function createPlaceholderRow(
-  indent: number,
-  status: CheckStatus,
-  count: number,
-  label: string,
-  onExpand: () => void
+function createScenarioRow(
+  scenario: CheckScenarioReport,
+  dataCoordinator: CheckDataCoordinator
 ): CheckSummaryRowViewModel {
-  const labelText = count === 1 ? `${count} ${label}` : `${count} ${label}s`
-  return row(indent, 'placeholder', status, labelText, onExpand)
+  const initialExpanded = false
+  let childrenLoaded = false
+  const scenarioRow = row(1, 'scenario', scenario.status, scenarioMessage(scenario, bold), initialExpanded, () => {
+    // If becoming visible and no children loaded yet, load them
+    if (!childrenLoaded) {
+      loadScenarioChildren(scenarioRow, scenario, dataCoordinator)
+      childrenLoaded = true
+    }
+
+    // Toggle expanded state
+    scenarioRow.expanded.update(v => !v)
+  })
+
+  return scenarioRow
+}
+
+function loadScenariosForStatus(
+  testRow: CheckSummaryRowViewModel,
+  test: CheckTestReport,
+  status: CheckStatus,
+  dataCoordinator: CheckDataCoordinator
+) {
+  // Create the child scenario rows
+  const scenarios = test.scenarios.filter(s => s.status === status)
+  const scenarioRows: CheckSummaryRowViewModel[] = []
+  for (const scenario of scenarios) {
+    scenarioRows.push(createScenarioRow(scenario, dataCoordinator))
+  }
+
+  // Replace placeholder with actual scenario rows
+  testRow.childRows.subscribe(currentRows => {
+    const placeholderIndex = currentRows.findIndex(r => r.rowClasses.includes('placeholder') && r.status === status)
+    if (placeholderIndex !== -1) {
+      const newRows = [...currentRows]
+      newRows.splice(placeholderIndex, 1, ...scenarioRows)
+      testRow.childRows.update(() => newRows)
+    }
+  })()
+}
+
+function loadTestChildren(
+  testRow: CheckSummaryRowViewModel,
+  test: CheckTestReport,
+  dataCoordinator: CheckDataCoordinator
+) {
+  // Count scenarios by status
+  const scenarioCounts = { passed: 0, failed: 0, error: 0 }
+  for (const scenario of test.scenarios) {
+    scenarioCounts[scenario.status]++
+  }
+
+  // Create placeholder rows for each status that has scenarios
+  const childRows: CheckSummaryRowViewModel[] = []
+  function addPlaceholderRow(status: CheckStatus, count: number, label: string) {
+    childRows.push(
+      createPlaceholderRow(1, status, count, label, () => {
+        loadScenariosForStatus(testRow, test, status, dataCoordinator)
+      })
+    )
+  }
+  if (scenarioCounts.error > 0) {
+    addPlaceholderRow('error', scenarioCounts.error, 'error')
+  }
+  if (scenarioCounts.failed > 0) {
+    addPlaceholderRow('failed', scenarioCounts.failed, 'failed scenario')
+  }
+  if (scenarioCounts.passed > 0) {
+    addPlaceholderRow('passed', scenarioCounts.passed, 'passed scenario')
+  }
+
+  // Add the placeholder rows to the test row
+  testRow.childRows.update(() => childRows)
+}
+
+function createTestRow(dataCoordinator: CheckDataCoordinator, test: CheckTestReport): CheckSummaryRowViewModel {
+  const initialExpanded = false
+  let childrenLoaded = false
+  const testRow = row(0, 'test', test.status, test.name, initialExpanded, () => {
+    // If becoming visible and no children loaded yet, load them
+    if (!childrenLoaded) {
+      loadTestChildren(testRow, test, dataCoordinator)
+      childrenLoaded = true
+    }
+
+    // Toggle expanded state
+    testRow.expanded.update(v => !v)
+  })
+
+  return testRow
 }
 
 function createCheckSummaryGroupViewModel(
