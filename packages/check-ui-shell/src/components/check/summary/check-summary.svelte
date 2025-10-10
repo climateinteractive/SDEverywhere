@@ -155,6 +155,10 @@ $bg-color: #272727;
     background-color: $bg-color;
   }
 
+  :global(.row.placeholder) {
+    height: $other-row-h;
+  }
+
   :global(.row > .label) {
     cursor: pointer;
   }
