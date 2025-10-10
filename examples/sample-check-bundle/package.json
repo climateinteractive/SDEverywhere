@@ -10,7 +10,7 @@
   "types": "types/index.d.ts",
   "scripts": {
     "clean": "rm -rf dist",
-    "lint": "eslint src --ext .ts --max-warnings 0",
+    "lint": "eslint src --max-warnings 0",
     "prettier:check": "prettier --check .",
     "prettier:fix": "prettier --write .",
     "precommit": "../../scripts/precommit",
@@ -27,7 +27,7 @@
     "assert-never": "^1.2.1"
   },
   "devDependencies": {
-    "vite": "^5.4.2"
+    "vite": "^7.1.9"
   },
   "author": "Climate Interactive",
   "license": "MIT",

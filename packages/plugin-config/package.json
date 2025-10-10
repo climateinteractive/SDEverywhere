@@ -18,7 +18,7 @@
   },
   "scripts": {
     "clean": "rm -rf dist",
-    "lint": "eslint src --ext .ts --max-warnings 0",
+    "lint": "eslint src --max-warnings 0",
     "prettier:check": "prettier --check .",
     "prettier:fix": "prettier --write .",
     "precommit": "../../scripts/precommit",
@@ -45,11 +45,9 @@
     "@types/byline": "^4.2.33",
     "@types/dedent": "^0.7.0",
     "@types/marked": "^4.0.1",
-    "@types/node": "^20.5.7",
+    "@types/node": "^20.14.8",
     "@types/sanitize-html": "^2.13.0",
-    "@types/temp": "^0.9.1",
-    "dedent": "^0.7.0",
-    "temp": "^0.9.4"
+    "dedent": "^0.7.0"
   },
   "author": "Climate Interactive",
   "license": "MIT",

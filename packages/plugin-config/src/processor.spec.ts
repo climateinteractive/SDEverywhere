@@ -1,12 +1,12 @@
 // Copyright (c) 2022 Climate Interactive / New Venture Fund
 
-import { existsSync } from 'fs'
-import { mkdir, readFile } from 'fs/promises'
-import { dirname, join as joinPath } from 'path'
-import { fileURLToPath } from 'url'
+import { existsSync } from 'node:fs'
+import { mkdir, mkdtemp, readFile, rm } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { dirname, join as joinPath } from 'node:path'
+import { fileURLToPath } from 'node:url'
 
-import temp from 'temp'
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
 import type { BuildOptions, Plugin, ResolvedModelSpec, UserConfig } from '@sdeverywhere/build'
 import { build } from '@sdeverywhere/build'
@@ -22,11 +22,16 @@ interface TestEnv {
   buildOptions: BuildOptions
 }
 
+async function createTempDir(): Promise<string> {
+  const baseTmpDir = joinPath(tmpdir(), 'sde-plugin-config-test-')
+  return await mkdtemp(baseTmpDir)
+}
+
 async function prepareForBuild(
+  baseTmpDir: string,
   optionsFunc: (corePkgDir: string) => ConfigProcessorOptions,
   plugins: Plugin[] = []
 ): Promise<TestEnv> {
-  const baseTmpDir = await temp.mkdir('sde-plugin-config')
   const projDir = joinPath(baseTmpDir, 'proj')
   await mkdir(projDir)
   const corePkgDir = joinPath(projDir, 'core-package')
@@ -241,17 +246,19 @@ export default {
 }`
 
 describe('configProcessor', () => {
-  beforeAll(() => {
-    temp.track()
+  let baseTmpDir: string
+
+  beforeEach(async () => {
+    baseTmpDir = await createTempDir()
   })
 
-  afterAll(() => {
-    temp.cleanupSync()
+  afterEach(async () => {
+    await rm(baseTmpDir, { recursive: true, force: true })
   })
 
   it('should throw an error if the config directory does not exist', async () => {
     const configDir = '/___does-not-exist___'
-    const testEnv = await prepareForBuild(() => ({
+    const testEnv = await prepareForBuild(baseTmpDir, () => ({
       config: configDir
     }))
     const result = await build('production', testEnv.buildOptions)
@@ -271,6 +278,7 @@ describe('configProcessor', () => {
 
     const configDir = joinPath(__dirname, '__tests__', 'config1')
     const testEnv = await prepareForBuild(
+      baseTmpDir,
       corePkgDir => ({
         config: configDir,
         out: corePkgDir
@@ -327,7 +335,7 @@ describe('configProcessor', () => {
 
   it('should write to given directories if out paths are provided', async () => {
     const configDir = joinPath(__dirname, '__tests__', 'config1')
-    const testEnv = await prepareForBuild(corePkgDir => ({
+    const testEnv = await prepareForBuild(baseTmpDir, corePkgDir => ({
       config: configDir,
       out: {
         modelSpecsDir: joinPath(corePkgDir, 'mgen'),
@@ -358,7 +366,7 @@ describe('configProcessor', () => {
 
   it('should include additional fields for spec.json when provided', async () => {
     const configDir = joinPath(__dirname, '__tests__', 'config1')
-    const testEnv = await prepareForBuild(corePkgDir => ({
+    const testEnv = await prepareForBuild(baseTmpDir, corePkgDir => ({
       config: configDir,
       out: {
         modelSpecsDir: joinPath(corePkgDir, 'mgen'),
@@ -383,7 +391,7 @@ describe('configProcessor', () => {
 
   it('should include other options from model.csv', async () => {
     const configDir = joinPath(__dirname, '__tests__', 'config2')
-    const testEnv = await prepareForBuild(corePkgDir => ({
+    const testEnv = await prepareForBuild(baseTmpDir, corePkgDir => ({
       config: configDir,
       out: {
         modelSpecsDir: joinPath(corePkgDir, 'mgen'),
@@ -402,7 +410,7 @@ describe('configProcessor', () => {
 
   it('should treat variables with "Scenario" source as normal model outputs', async () => {
     const configDir = joinPath(__dirname, '__tests__', 'config3')
-    const testEnv = await prepareForBuild(corePkgDir => ({
+    const testEnv = await prepareForBuild(baseTmpDir, corePkgDir => ({
       config: configDir,
       out: {
         modelSpecsDir: joinPath(corePkgDir, 'mgen'),

@@ -41,6 +41,10 @@ export type { ImplVar, InputId, InputVar, OutputVar, RelatedItem } from './bundl
 export type { CheckDataRequestKey } from './check/check-data-coordinator'
 export { CheckDataCoordinator } from './check/check-data-coordinator'
 
+export type { CheckDataRef, CheckDataRefKey } from './check/check-data-ref'
+
+export type { CheckDataset, CheckDatasetError } from './check/check-dataset'
+
 export type { CheckResult, CheckResultErrorInfo } from './check/check-func'
 
 export type { CheckKey } from './check/check-planner'

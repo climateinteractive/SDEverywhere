@@ -1,9 +1,7 @@
-
 <!-- Copyright (c) 2021-2022 Climate Interactive / New Venture Fund -->
 
 <!-- SCRIPT -->
-<script lang='ts'>
-
+<script lang="ts">
 import Lazy from '../../_shared/lazy.svelte'
 import ComparisonGraph from '../../graphs/comparison-graph.svelte'
 import type { CheckSummaryGraphBoxViewModel } from './check-summary-graph-box-vm'
@@ -28,35 +26,26 @@ $: if (visible !== previousVisible || viewModel.baseRequestKey !== previousViewM
     viewModel.requestData()
   }
 }
-
 </script>
 
-
-
-
 <!-- TEMPLATE -->
-<template lang='pug'>
-
-Lazy(bind:visible!='{visible}')
-  +if('$content')
-    .graph-container
-      ComparisonGraph(viewModel!='{$content.comparisonGraphViewModel}')
-
-</template>
-
-
-
+<Lazy bind:visible>
+  {#if $content}
+    <div class="graph-container">
+      <ComparisonGraph viewModel={$content.comparisonGraphViewModel} />
+    </div>
+  {/if}
+</Lazy>
 
 <!-- STYLE -->
-<style lang='sass'>
-
-.graph-container
-  position: relative
-  display: flex
-  width: 36rem
-  height: 22rem
-  margin-left: 1rem
-  margin-top: .5rem
-  margin-bottom: 1rem
-
+<style lang="scss">
+.graph-container {
+  position: relative;
+  display: flex;
+  width: 36rem;
+  height: 22rem;
+  margin-left: 1rem;
+  margin-top: 0.5rem;
+  margin-bottom: 1rem;
+}
 </style>

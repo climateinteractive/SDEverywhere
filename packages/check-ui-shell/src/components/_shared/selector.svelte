@@ -1,11 +1,10 @@
 <!-- Copyright (c) 2021-2022 Climate Interactive / New Venture Fund -->
 
 <!-- XXX: Svelte complains if we use `on:change` (they prefer `on:blur`); we silence the warning -->
-<!-- svelte-ignore a11y-no-onchange -->
+<!-- svelte-ignore a11y_no_onchange -->
 
 <!-- SCRIPT -->
-<script lang='ts'>
-
+<script lang="ts">
 import { get } from 'svelte/store'
 
 import type { SelectorViewModel } from './selector-vm'
@@ -20,43 +19,43 @@ function onChange() {
   // `change` event is emitted, so it reflects the current value here.
   viewModel.onUserChange?.(get(selectedValue))
 }
-
 </script>
-
-
-
 
 <!-- TEMPLATE -->
 <select bind:value={$selectedValue} on:change={onChange}>
   {#each viewModel.options as option}
-    <option value={option.value} disabled={option.options.disabled === true} hidden={option.options.hidden === true} selected={option.value === initialValue}>{@html option.label}</option>
+    <option
+      value={option.value}
+      disabled={option.options.disabled === true}
+      hidden={option.options.hidden === true}
+      selected={option.value === initialValue}>{@html option.label}</option
+    >
   {/each}
 </select>
 
-
-
-
 <!-- STYLE -->
-<style lang='sass'>
-
-select
-  width: auto
-  font-family: inherit
-  font-size: inherit
-  color: #000
+<style lang="scss">
+select {
+  width: auto;
+  font-family: inherit;
+  font-size: inherit;
+  color: #000;
   // Note: The following values were derived from bootstrap
-  margin: 0
-  background-color: #fff
-  background-image: none
-  border: 1px solid #ccc
-  border-radius: 4px
-  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075)
-  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out
-  text-transform: none
+  margin: 0;
+  background-color: #fff;
+  background-image: none;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+  transition:
+    border-color 0.15s ease-in-out,
+    box-shadow 0.15s ease-in-out;
+  text-transform: none;
 
-select > option
-  // XXX: Firefox doesn't support @font-face in select menus, so
-  // the best we can do is try a similar sans serif font
-  font-family: 'Roboto Condensed', Helvetica, sans-serif
-
+  > option {
+    // XXX: Firefox doesn't support @font-face in select menus, so
+    // the best we can do is try a similar sans serif font
+    font-family: 'Roboto Condensed', Helvetica, sans-serif;
+  }
+}
 </style>

@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.29](https://github.com/climateinteractive/SDEverywhere/compare/create-v0.2.28...create-v0.2.29) (2025-10-08)
+
+
+### Dependencies
+
+* require Node.js v20 as minimum supported version ([7e993aa](https://github.com/climateinteractive/SDEverywhere/commit/7e993aa864883205bf870c4b814d6b089267bdf1))
+
 ## [0.2.28](https://github.com/climateinteractive/SDEverywhere/compare/create-v0.2.27...create-v0.2.28) (2025-08-18)
 
 

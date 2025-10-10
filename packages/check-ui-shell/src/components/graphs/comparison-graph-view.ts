@@ -67,7 +67,10 @@ Chart.pluginService.register(singlePointFillToNextPlugin)
 export class ComparisonGraphView {
   private chart: Chart
 
-  constructor(readonly canvas: HTMLCanvasElement, readonly viewModel: ComparisonGraphViewModel) {
+  constructor(
+    readonly canvas: HTMLCanvasElement,
+    readonly viewModel: ComparisonGraphViewModel
+  ) {
     this.chart = createChart(canvas, viewModel)
   }
 

@@ -1,14 +1,13 @@
+import { mount } from 'svelte'
+
 import { createAppViewModel } from './app-vm'
 import App from './app.svelte'
 
-let app: App
 createAppViewModel().then(appViewModel => {
-  app = new App({
+  mount(App, {
     target: document.body,
     props: {
       viewModel: appViewModel
     }
   })
 })
-
-export default app

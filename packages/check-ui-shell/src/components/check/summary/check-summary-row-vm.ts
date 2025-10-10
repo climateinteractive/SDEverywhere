@@ -2,15 +2,19 @@
 
 import type { Writable } from 'svelte/store'
 import { writable } from 'svelte/store'
+
 import type { CheckStatus } from '@sdeverywhere/check-core'
+
 import type { CheckSummaryGraphBoxViewModel } from './check-summary-graph-box-vm'
 
 export interface CheckSummaryRowViewModel {
   rowClasses: string
   status: CheckStatus
   span: string
+  childRows: Writable<CheckSummaryRowViewModel[]>
+  expanded: Writable<boolean>
   graphBoxViewModel?: CheckSummaryGraphBoxViewModel
-  graphVisible: Writable<boolean>
+  onClicked: () => void
 }
 
 function charForStatus(status: CheckStatus): string {
@@ -31,18 +35,23 @@ export function row(
   rowClass: string,
   status: CheckStatus,
   content: string,
-  graphBoxViewModel?: CheckSummaryGraphBoxViewModel,
-  graphVisible = false
+  initialExpanded: boolean,
+  onClicked: () => void,
+  graphBoxViewModel?: CheckSummaryGraphBoxViewModel
 ): CheckSummaryRowViewModel {
+  // TODO: Control indentation in CSS
   const whitespace = '&ensp;'.repeat(2 + indent * 4)
   const statusChar = charForStatus(status)
   const statusSpan = `<span class="status-color-${status}">${statusChar}</span>`
   const span = `${whitespace}${statusSpan}&ensp;${content}`
+
   return {
     rowClasses: `${rowClass} ${status}`,
     status,
     span,
+    childRows: writable([]),
+    expanded: writable(initialExpanded),
     graphBoxViewModel,
-    graphVisible: writable(graphVisible)
+    onClicked
   }
 }

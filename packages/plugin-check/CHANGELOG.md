@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.3.18](https://github.com/climateinteractive/SDEverywhere/compare/plugin-check-v0.3.17...plugin-check-v0.3.18) (2025-10-08)
+
+
+### Dependencies
+
+* upgrade to vite 7.1.9 + svelte 5.39.10 ([39108d2](https://github.com/climateinteractive/SDEverywhere/commit/39108d2cd2973c25a3394778191a4d618dc30640))
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/check-ui-shell bumped from ^0.2.9 to ^0.2.10
+
 ## [0.3.17](https://github.com/climateinteractive/SDEverywhere/compare/plugin-check-v0.3.16...plugin-check-v0.3.17) (2025-04-26)
 
 

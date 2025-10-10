@@ -1,7 +1,5 @@
 <!-- SCRIPT -->
 <script lang="ts">
-import { _ } from 'svelte-i18n'
-
 import './global.css'
 
 import type { AppViewModel } from './app-vm'

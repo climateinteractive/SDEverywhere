@@ -56,7 +56,10 @@ export class AppViewModel {
    * model-check CLI tool during the build process; if defined, this will be used
    * instead of running the checks and comparisons in the user's browser.
    */
-  constructor(private readonly appModel: AppModel, private readonly suiteSummary?: SuiteSummary) {
+  constructor(
+    private readonly appModel: AppModel,
+    private readonly suiteSummary?: SuiteSummary
+  ) {
     this.writableChecksInProgress = writable(true)
     this.checksInProgress = this.writableChecksInProgress
     this.writableProgress = writable('0%')

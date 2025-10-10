@@ -1,8 +1,7 @@
 <!-- Copyright (c) 2021-2022 Climate Interactive / New Venture Fund -->
 
 <!-- SCRIPT -->
-<script lang='ts'>
-
+<script lang="ts">
 import { createEventDispatcher } from 'svelte'
 import Icon from 'svelte-awesome/components/Icon.svelte'
 import { faCog, faHome } from '@fortawesome/free-solid-svg-icons'
@@ -55,137 +54,156 @@ $: if ($simplifyScenarios !== undefined) {
     document.dispatchEvent(new CustomEvent('sde-check-simplify-scenarios-toggled'))
   }
 }
-
 </script>
 
-
-
-
 <!-- TEMPLATE -->
-<template lang='pug'>
-
-include header.pug
-
-.header-container
-  .header-content
-    .header-group
-      .icon-button.home(on:click!='{onHome}')
-        Icon(class='icon' data!='{faHome}')
-    .spacer-flex
-    +if('simplifyScenarios !== undefined')
-      .header-group
-        input.checkbox(type='checkbox' name='simplify-toggle' bind:checked!='{$simplifyScenarios}')
-        label(for='simplify-toggle') Simplify Scenarios
-    +if('viewModel.nameL || $bundleNamesL.length > 1')
-      .spacer-fixed
-      .header-group
-        .label Comparing:
-        +if('$bundleNamesL.length > 1')
-          select.selector.dataset-color-0(on:change!='{onSelectBundleL}')
-            +optionsL
-          +else
-            .label.dataset-color-0 {viewModel.nameL}
-        +if('$bundleNamesR.length > 1')
-          select.selector.dataset-color-1(on:change!='{onSelectBundleR}')
-            +optionsR
-          +else
-            .label.dataset-color-1 {viewModel.nameR}
-      .spacer-fixed
-      .header-group
-        .label Thresholds:
-        .label.bucket-color-0 { @html thresholds[0] }
-        .label.bucket-color-1 { @html thresholds[1] }
-        .label.bucket-color-2 { @html thresholds[2] }
-        .label.bucket-color-3 { @html thresholds[3] }
-        .label.bucket-color-4 { @html thresholds[4] }
-      .spacer-fixed
-      .header-group
-        .icon-button.controls(on:click!='{onToggleControls}')
-          Icon(class='icon' data!='{faCog}')
-  +if('$controlsVisible')
-    .header-controls
-      .spacer-flex
-      input.checkbox(type='checkbox' name='toggle-consistent-y-range' bind:checked!='{$consistentYRange}')
-      label(for='toggle-consistent-y-range') Consistent Y-Axis Ranges
-      .spacer-fixed
-      .control-label Graph Zoom:
-      input(type="range" min="0.3" max="2.5" step="0.1" bind:value!='{$zoom}')
-      .control-label { `${$zoom.toFixed(1)}x` }
-  .line
-
-</template>
-
-
-
+<div class="header-container">
+  <div class="header-content">
+    <div class="header-group">
+      <div class="icon-button home" on:click={onHome}>
+        <Icon class="icon" data={faHome} />
+      </div>
+    </div>
+    <div class="spacer-flex"></div>
+    {#if simplifyScenarios !== undefined}
+      <div class="header-group">
+        <input class="checkbox" type="checkbox" name="simplify-toggle" bind:checked={$simplifyScenarios} />
+        <label for="simplify-toggle">Simplify Scenarios</label>
+      </div>
+    {/if}
+    {#if viewModel.nameL || $bundleNamesL.length > 1}
+      <div class="spacer-fixed"></div>
+      <div class="header-group">
+        <div class="label">Comparing:</div>
+        {#if $bundleNamesL.length > 1}
+          <select class="selector dataset-color-0" on:change={onSelectBundleL}>
+            {#each $bundleNamesL as name}
+              <option selected={name === viewModel.nameL}>{name}</option>
+            {/each}
+          </select>
+        {:else}
+          <div class="label dataset-color-0">{viewModel.nameL}</div>
+        {/if}
+        {#if $bundleNamesR.length > 1}
+          <select class="selector dataset-color-1" on:change={onSelectBundleR}>
+            {#each $bundleNamesR as name}
+              <option selected={name === viewModel.nameR}>{name}</option>
+            {/each}
+          </select>
+        {:else}
+          <div class="label dataset-color-1">{viewModel.nameR}</div>
+        {/if}
+      </div>
+      <div class="spacer-fixed"></div>
+      <div class="header-group">
+        <div class="label">Thresholds:</div>
+        <div class="label bucket-color-0">{@html thresholds[0]}</div>
+        <div class="label bucket-color-1">{@html thresholds[1]}</div>
+        <div class="label bucket-color-2">{@html thresholds[2]}</div>
+        <div class="label bucket-color-3">{@html thresholds[3]}</div>
+        <div class="label bucket-color-4">{@html thresholds[4]}</div>
+      </div>
+      <div class="spacer-fixed"></div>
+      <div class="header-group">
+        <div class="icon-button controls" on:click={onToggleControls}>
+          <Icon class="icon" data={faCog} />
+        </div>
+      </div>
+    {/if}
+  </div>
+  {#if $controlsVisible}
+    <div class="header-controls">
+      <div class="spacer-flex"></div>
+      <input class="checkbox" type="checkbox" name="toggle-consistent-y-range" bind:checked={$consistentYRange} />
+      <label for="toggle-consistent-y-range">Consistent Y-Axis Ranges</label>
+      <div class="spacer-fixed"></div>
+      <div class="control-label">Graph Zoom:</div>
+      <input type="range" min="0.3" max="2.5" step="0.1" bind:value={$zoom} />
+      <div class="control-label">{`${$zoom.toFixed(1)}x`}</div>
+    </div>
+  {/if}
+  <div class="line"></div>
+</div>
 
 <!-- STYLE -->
-<style lang='sass'>
+<style lang="scss">
+.header-container {
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  width: 100vw;
+  padding: 0 1rem;
+  color: #aaa;
+}
 
-.header-container
-  display: flex
-  flex-direction: column
-  box-sizing: border-box
-  width: 100vw
-  padding: 0 1rem
-  color: #aaa
+.header-content {
+  display: flex;
+  flex-direction: row;
+  margin: 0.4rem 0;
+}
 
-.header-content
-  display: flex
-  flex-direction: row
-  margin: .4rem 0
+.header-group {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
 
-.header-group
-  display: flex
-  flex-direction: row
-  align-items: center
+.spacer-flex {
+  flex: 1;
+}
 
-.spacer-flex
-  flex: 1
+.spacer-fixed {
+  width: 2rem;
+}
 
-.spacer-fixed
-  width: 2rem
+.icon-button {
+  color: #bbb;
+  cursor: pointer;
 
-.icon-button
-  color: #bbb
-  cursor: pointer
+  &:hover {
+    color: #fff;
+  }
+}
 
-.icon-button:hover
-  color: #fff
+.label:not(:last-child) {
+  margin-right: 1rem;
+}
 
-.label:not(:last-child)
-  margin-right: 1rem
-
-select
-  margin-right: 1rem
-  font-family: Roboto, sans-serif
-  font-size: 1em
+select {
+  margin-right: 1rem;
+  font-family: Roboto, sans-serif;
+  font-size: 1em;
   // XXX: Remove browser-provided background, but preserve arrow; based on:
   //   https://stackoverflow.com/a/57510283
-  -webkit-appearance: none
-  -moz-appearance: none
-  appearance: none
-  padding: .2rem 1.6rem .2rem .4rem
-  background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' fill='%23555'><polygon points='0,0 100,0 50,60'/></svg>") no-repeat
-  background-size: .8rem
-  background-position: calc(100% - .4rem) 70%
-  background-repeat: no-repeat
-  background-color: #353535
-  border: none
-  border-radius: .4rem
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  padding: 0.2rem 1.6rem 0.2rem 0.4rem;
+  background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' fill='%23555'><polygon points='0,0 100,0 50,60'/></svg>")
+    no-repeat;
+  background-size: 0.8rem;
+  background-position: calc(100% - 0.4rem) 70%;
+  background-repeat: no-repeat;
+  background-color: #353535;
+  border: none;
+  border-radius: 0.4rem;
+}
 
-.header-controls
-  display: flex
-  flex-direction: row
-  margin: .4rem 0
-  align-items: center
+.header-controls {
+  display: flex;
+  flex-direction: row;
+  margin: 0.4rem 0;
+  align-items: center;
+}
 
-input[type=range]
-  width: 10rem
-  margin: 0 .4rem
+input[type='range'] {
+  width: 10rem;
+  margin: 0 0.4rem;
+}
 
-.line
-  min-height: 1px
-  margin-bottom: 1rem
-  background-color: #555
-
+.line {
+  min-height: 1px;
+  margin-bottom: 1rem;
+  background-color: #555;
+}
 </style>

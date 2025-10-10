@@ -71,7 +71,10 @@ export class MultiContextModelScheduler {
    * for the initial context.  This is useful for saving memory when an `Outputs`
    * instance was already created for, e.g., a initial baseline/reference run.
    */
-  constructor(private readonly runner: ModelRunner, options?: { initialOutputs?: Outputs }) {
+  constructor(
+    private readonly runner: ModelRunner,
+    options?: { initialOutputs?: Outputs }
+  ) {
     this.initialOutputs = options?.initialOutputs
   }
 
@@ -276,7 +279,11 @@ class ModelContextImpl implements ModelContext {
    * data that was captured from an initial reference run, or other static data that is displayed in graphs
    * alongside the model output data in graphs.
    */
-  constructor(inputs: InputValue[], outputs: Outputs, private readonly externalData: DataMap) {
+  constructor(
+    inputs: InputValue[],
+    outputs: Outputs,
+    private readonly externalData: DataMap
+  ) {
     this.inputsArray = Array.from(inputs)
     this.outputs = outputs
   }
