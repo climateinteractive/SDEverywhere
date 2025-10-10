@@ -138,33 +138,44 @@ function loadScenarioChildren(
   scenario: CheckScenarioReport,
   dataCoordinator: CheckDataCoordinator
 ) {
-  // Count datasets by status
-  const datasetCounts = { passed: 0, failed: 0, error: 0 }
-  for (const dataset of scenario.datasets) {
-    datasetCounts[dataset.status]++
-  }
+  const totalDatasets = scenario.datasets.length
 
-  // Create placeholder rows for each status that has scenarios
-  const childRows: CheckSummaryRowViewModel[] = []
-  function addPlaceholderRow(status: CheckStatus, count: number, label: string) {
-    childRows.push(
-      createPlaceholderRow(2, status, count, label, () => {
-        loadDatasetsForStatus(scenarioRow, scenario, status, dataCoordinator)
-      })
-    )
-  }
-  if (datasetCounts.error > 0) {
-    addPlaceholderRow('error', datasetCounts.error, 'errored dataset')
-  }
-  if (datasetCounts.failed > 0) {
-    addPlaceholderRow('failed', datasetCounts.failed, 'failed dataset')
-  }
-  if (datasetCounts.passed > 0) {
-    addPlaceholderRow('passed', datasetCounts.passed, 'passed dataset')
-  }
+  if (totalDatasets <= 10) {
+    // There are only a few child rows, so add them all directly
+    const datasetRows: CheckSummaryRowViewModel[] = []
+    for (const dataset of scenario.datasets) {
+      datasetRows.push(createDatasetRow(dataset, scenario.checkScenario, dataCoordinator))
+    }
+    scenarioRow.childRows.update(() => datasetRows)
+  } else {
+    // Count datasets by status
+    const datasetCounts = { passed: 0, failed: 0, error: 0 }
+    for (const dataset of scenario.datasets) {
+      datasetCounts[dataset.status]++
+    }
 
-  // Add the placeholder rows to the scenario row
-  scenarioRow.childRows.update(() => childRows)
+    // Create placeholder rows for each status that has scenarios
+    const childRows: CheckSummaryRowViewModel[] = []
+    function addPlaceholderRow(status: CheckStatus, count: number, label: string) {
+      childRows.push(
+        createPlaceholderRow(2, status, count, label, () => {
+          loadDatasetsForStatus(scenarioRow, scenario, status, dataCoordinator)
+        })
+      )
+    }
+    if (datasetCounts.error > 0) {
+      addPlaceholderRow('error', datasetCounts.error, 'errored dataset')
+    }
+    if (datasetCounts.failed > 0) {
+      addPlaceholderRow('failed', datasetCounts.failed, 'failed dataset')
+    }
+    if (datasetCounts.passed > 0) {
+      addPlaceholderRow('passed', datasetCounts.passed, 'passed dataset')
+    }
+
+    // Add the placeholder rows to the scenario row
+    scenarioRow.childRows.update(() => childRows)
+  }
 }
 
 function createScenarioRow(
@@ -218,33 +229,44 @@ function loadTestChildren(
   test: CheckTestReport,
   dataCoordinator: CheckDataCoordinator
 ) {
-  // Count scenarios by status
-  const scenarioCounts = { passed: 0, failed: 0, error: 0 }
-  for (const scenario of test.scenarios) {
-    scenarioCounts[scenario.status]++
-  }
+  const totalScenarios = test.scenarios.length
 
-  // Create placeholder rows for each status that has scenarios
-  const childRows: CheckSummaryRowViewModel[] = []
-  function addPlaceholderRow(status: CheckStatus, count: number, label: string) {
-    childRows.push(
-      createPlaceholderRow(1, status, count, label, () => {
-        loadScenariosForStatus(testRow, test, status, dataCoordinator)
-      })
-    )
-  }
-  if (scenarioCounts.error > 0) {
-    addPlaceholderRow('error', scenarioCounts.error, 'errored scenario')
-  }
-  if (scenarioCounts.failed > 0) {
-    addPlaceholderRow('failed', scenarioCounts.failed, 'failed scenario')
-  }
-  if (scenarioCounts.passed > 0) {
-    addPlaceholderRow('passed', scenarioCounts.passed, 'passed scenario')
-  }
+  if (totalScenarios <= 10) {
+    // There are only a few child rows, so add them all directly
+    const scenarioRows: CheckSummaryRowViewModel[] = []
+    for (const scenario of test.scenarios) {
+      scenarioRows.push(createScenarioRow(scenario, dataCoordinator))
+    }
+    testRow.childRows.update(() => scenarioRows)
+  } else {
+    // Count scenarios by status
+    const scenarioCounts = { passed: 0, failed: 0, error: 0 }
+    for (const scenario of test.scenarios) {
+      scenarioCounts[scenario.status]++
+    }
 
-  // Add the placeholder rows to the test row
-  testRow.childRows.update(() => childRows)
+    // Create placeholder rows for each status that has scenarios
+    const childRows: CheckSummaryRowViewModel[] = []
+    function addPlaceholderRow(status: CheckStatus, count: number, label: string) {
+      childRows.push(
+        createPlaceholderRow(1, status, count, label, () => {
+          loadScenariosForStatus(testRow, test, status, dataCoordinator)
+        })
+      )
+    }
+    if (scenarioCounts.error > 0) {
+      addPlaceholderRow('error', scenarioCounts.error, 'errored scenario')
+    }
+    if (scenarioCounts.failed > 0) {
+      addPlaceholderRow('failed', scenarioCounts.failed, 'failed scenario')
+    }
+    if (scenarioCounts.passed > 0) {
+      addPlaceholderRow('passed', scenarioCounts.passed, 'passed scenario')
+    }
+
+    // Add the placeholder rows to the test row
+    testRow.childRows.update(() => childRows)
+  }
 }
 
 function createTestRow(dataCoordinator: CheckDataCoordinator, test: CheckTestReport): CheckSummaryRowViewModel {
