@@ -1,8 +1,7 @@
 <!-- Copyright (c) 2024 Climate Interactive / New Venture Fund -->
 
 <!-- SCRIPT -->
-<script lang='ts'>
-
+<script lang="ts">
 import { createEventDispatcher } from 'svelte'
 
 import Lazy from '../_shared/lazy.svelte'
@@ -36,15 +35,9 @@ const dispatch = createEventDispatcher()
 function onTitleClicked() {
   dispatch('toggle')
 }
-
 </script>
 
-
-
-
 <!-- TEMPLATE -->
-<template>
-
 <div class="freeform-item">
   {#if viewModel.title}
     <div class="freeform-item-title-row no-selection">
@@ -55,7 +48,7 @@ function onTitleClicked() {
     </div>
   {/if}
   <div class="freeform-item-content-container">
-    <Lazy bind:visible={visible}>
+    <Lazy bind:visible>
       {#if $content}
         <div class="freeform-item-content">
           <div class="freeform-item-graph-container">
@@ -67,24 +60,19 @@ function onTitleClicked() {
   </div>
 </div>
 
-</template>
-
-
-
-
 <!-- STYLE -->
-<style lang='sass'>
+<style lang="scss">
+.freeform-item {
+  display: flex;
+  flex-direction: column;
+  width: 240px;
+  height: 200px;
+  min-height: 200px;
+  border: solid 0.5px red;
+}
 
-.freeform-item
-  display: flex
-  flex-direction: column
-  width: 240px
-  height: 200px
-  min-height: 200px
-  border: solid .5px red
-
-.freeform-item-title
-  font-size: 10px
-  color: #fff
-
+.freeform-item-title {
+  font-size: 10px;
+  color: #fff;
+}
 </style>

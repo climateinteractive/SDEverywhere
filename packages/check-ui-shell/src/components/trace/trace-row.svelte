@@ -2,7 +2,6 @@
 
 <!-- SCRIPT -->
 <script lang="ts">
-
 import { createEventDispatcher } from 'svelte'
 
 import { type TracePointViewModel, type TraceRowViewModel } from './trace-row-vm'
@@ -28,11 +27,7 @@ function onHover(pointViewModel: TracePointViewModel, event: MouseEvent): void {
 function onMouseLeave(): void {
   dispatch('hide-tooltip')
 }
-
 </script>
-
-
-
 
 <!-- TEMPLATE -->
 <div class="trace-row">
@@ -48,18 +43,13 @@ function onMouseLeave(): void {
         style="background-color: {point.color}"
         on:mouseover={event => onHover(point, event)}
         on:mouseleave={onMouseLeave}
-      >
-      </div>
+      ></div>
     {/each}
   </div>
 </div>
 
-
-
-
 <!-- STYLE -->
 <style lang="scss">
-
 .trace-row {
   display: flex;
   flex-direction: row;
@@ -106,5 +96,4 @@ function onMouseLeave(): void {
     border: solid 1px #aaa;
   }
 }
-
 </style>

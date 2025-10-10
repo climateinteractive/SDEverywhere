@@ -1,8 +1,7 @@
 <!-- Copyright (c) 2025 Climate Interactive / New Venture Fund -->
 
 <!-- SCRIPT -->
-<script lang='ts'>
-
+<script lang="ts">
 import ComparisonGraph from '../graphs/comparison-graph.svelte'
 
 import type { TraceTooltipViewModel } from './trace-tooltip-vm'
@@ -24,11 +23,7 @@ $: if (viewModel?.requestKey !== previousViewModel?.requestKey) {
   // Load the data when this view becomes visible
   viewModel.requestData()
 }
-
 </script>
-
-
-
 
 <!-- TEMPLATE -->
 <div class="trace-tooltip" style="left: {x}px; top: {y}px;">
@@ -62,12 +57,8 @@ $: if (viewModel?.requestKey !== previousViewModel?.requestKey) {
   </div>
 </div>
 
-
-
-
 <!-- STYLE -->
 <style lang="scss">
-
 .trace-tooltip {
   position: absolute;
   display: flex;
@@ -128,7 +119,8 @@ $: if (viewModel?.requestKey !== previousViewModel?.requestKey) {
   justify-content: center;
 }
 
-.loading, .error {
+.loading,
+.error {
   color: #ccc;
   font-size: 12px;
   text-align: center;
@@ -137,5 +129,4 @@ $: if (viewModel?.requestKey !== previousViewModel?.requestKey) {
 .error {
   color: #ff6b6b;
 }
-
 </style>

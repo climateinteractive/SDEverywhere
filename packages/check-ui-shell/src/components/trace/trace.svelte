@@ -1,8 +1,7 @@
 <!-- Copyright (c) 2024 Climate Interactive / New Venture Fund -->
 
 <!-- SCRIPT -->
-<script lang='ts'>
-
+<script lang="ts">
 import Selector from '../_shared/selector.svelte'
 
 import type { TraceTooltipViewModel } from './trace-tooltip-vm'
@@ -83,28 +82,31 @@ function onHideTooltip(): void {
   tooltipViewModel?.clearData()
   tooltipViewModel = undefined
 }
-
 </script>
-
-
-
 
 <!-- TEMPLATE -->
 <div class="trace-container">
   <div class="trace-header-container">
     <div class="trace-header-content">
-      <div class="trace-source-selector-label">Source 1: </div>
+      <div class="trace-source-selector-label">Source 1:</div>
       <Selector viewModel={sourceSelector0} />
       {#if $selectedSource0 === 'dat'}
-        <div class="trace-scenario-selector-label">File: </div>
-        <input bind:files type="file" class="trace-dat-file-chooser" id="trace-dat-file" name="trace-dat-file" accept=".dat" />
+        <div class="trace-scenario-selector-label">File:</div>
+        <input
+          bind:files
+          type="file"
+          class="trace-dat-file-chooser"
+          id="trace-dat-file"
+          name="trace-dat-file"
+          accept=".dat"
+        />
       {:else}
-        <div class="trace-scenario-selector-label">Scenario: </div>
+        <div class="trace-scenario-selector-label">Scenario:</div>
         <Selector viewModel={$scenarioSelector0} />
       {/if}
       <div class="trace-source-selector-label">Source 2:</div>
       <Selector viewModel={sourceSelector1} />
-      <div class="trace-scenario-selector-label">Scenario: </div>
+      <div class="trace-scenario-selector-label">Scenario:</div>
       <Selector viewModel={$scenarioSelector1} />
     </div>
   </div>
@@ -123,21 +125,13 @@ function onHideTooltip(): void {
     {/if}
 
     {#if tooltipViewModel}
-      <TraceTooltip
-        viewModel={tooltipViewModel}
-        x={tooltipX}
-        y={tooltipY}
-      />
+      <TraceTooltip viewModel={tooltipViewModel} x={tooltipX} y={tooltipY} />
     {/if}
   </div>
 </div>
 
-
-
-
 <!-- STYLE -->
 <style lang="scss">
-
 .trace-container {
   display: flex;
   flex-direction: column;
@@ -150,7 +144,7 @@ function onHideTooltip(): void {
   // across, then use extra padding to compensate
   margin: 0 -1rem;
   padding: 0 2rem 1rem 2rem;
-  box-shadow: 0 1rem .5rem -.5rem rgba(0,0,0,.5);
+  box-shadow: 0 1rem 0.5rem -0.5rem rgba(0, 0, 0, 0.5);
   z-index: 1;
 }
 
@@ -160,19 +154,20 @@ function onHideTooltip(): void {
   // XXX: Use a fixed height for the rows so that they don't bounce around when the file chooser is shown
   grid-template-rows: 24px 24px;
   align-items: center;
-  gap: .5rem .5rem;
+  gap: 0.5rem 0.5rem;
 }
 
 .trace-header-content :global(select) {
   max-width: 300px;
 }
 
-.trace-source-selector-label, .trace-scenario-selector-label {
+.trace-source-selector-label,
+.trace-scenario-selector-label {
   text-align: right;
 }
 
 .trace-scenario-selector-label {
-  margin-left: .7rem;
+  margin-left: 0.7rem;
 }
 
 .trace-dat-file-chooser {
@@ -200,7 +195,7 @@ function onHideTooltip(): void {
   display: flex;
   flex-direction: column;
   &:not(:first-child) {
-    margin-top: 20px
+    margin-top: 20px;
   }
 }
 
@@ -210,5 +205,4 @@ function onHideTooltip(): void {
   color: #fff;
   margin-bottom: 4px;
 }
-
 </style>
