@@ -79,6 +79,9 @@ function loadDatasetChildren(
       },
       graphBoxViewModel
     )
+
+    // Add the predicate row to the array
+    predicateRows.push(predicateRow)
   }
 
   // Add the predicate rows to the dataset row
@@ -93,17 +96,13 @@ function createDatasetRow(
   // Unlike the other levels, we always expand dataset rows to show the predicates
   // since there are rarely more than one or two predicates per dataset
   const initialExpanded = true
-  let childrenLoaded = false
   const datasetRow = row(2, 'dataset', dataset.status, datasetMessage(dataset, bold), initialExpanded, () => {
-    // If becoming visible and no children loaded yet, load them
-    if (!childrenLoaded) {
-      loadDatasetChildren(datasetRow, dataset, scenario, dataCoordinator)
-      childrenLoaded = true
-    }
-
     // Toggle expanded state
     datasetRow.expanded.update(v => !v)
   })
+
+  // Load the predicate rows eagerly
+  loadDatasetChildren(datasetRow, dataset, scenario, dataCoordinator)
 
   return datasetRow
 }
