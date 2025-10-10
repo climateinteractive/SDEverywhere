@@ -120,7 +120,7 @@ export function printNames(namesPathname, operation) {
   for (let line of lines) {
     if (line.length > 0) {
       if (operation === 'to-c') {
-        B.emitLine(Model.cName(line))
+        B.emitLine(cName(line))
       } else {
         B.emitLine(Model.vensimName(line))
       }
