@@ -3,7 +3,7 @@
 <!-- SCRIPT -->
 <script lang="ts">
 import type { CheckSummaryViewModel } from './check-summary-vm'
-import CheckSummaryTest from './check-summary-test.svelte'
+import CheckSummaryRow from './check-summary-row.svelte'
 
 export let viewModel: CheckSummaryViewModel
 
@@ -59,7 +59,7 @@ const showCheckDetail = true
             <div class="label">{group.name}</div>
           </div>
           {#each group.tests as testViewModel}
-            <CheckSummaryTest viewModel={testViewModel} />
+            <CheckSummaryRow viewModel={testViewModel} />
           {/each}
         </div>
       {/each}
@@ -110,24 +110,14 @@ $indent: 1rem;
     margin-top: 0.4rem;
   }
 
-  :global(.row.test > .label) {
+  :global(.row > .label) {
     cursor: pointer;
   }
 
-  :global(.row.scenario) {
-    color: #777;
-  }
-
-  :global(.row.dataset) {
-    color: #777;
-  }
-
+  :global(.row.scenario),
+  :global(.row.dataset),
   :global(.row.predicate) {
     color: #777;
-  }
-
-  :global(.row.predicate > .label) {
-    cursor: pointer;
   }
 
   :global(.bold) {
