@@ -30,6 +30,7 @@ import StoryDecorator from '../../_storybook/story-decorator.svelte'
 
 import { createCheckSummaryViewModel } from './check-summary-vm'
 import CheckSummary from './check-summary.svelte'
+import type { CheckPredicateReport } from '@sdeverywhere/check-core'
 
 const { Story } = defineMeta({
   title: 'Components/CheckSummary',
@@ -42,10 +43,24 @@ const dataCoordinator = new CheckDataCoordinator(bundleModel)
 const passedResult: CheckResult = {
   status: 'passed'
 }
+const failedResult: CheckResult = {
+  status: 'failed',
+  failValue: 50,
+  failTime: 2000
+}
+const errorResult: CheckResult = {
+  status: 'error',
+  errorInfo: {
+    kind: 'unknown-dataset',
+    name: 'Some Dataset Name'
+  }
+}
 
 const eqZero: [CheckPredicateOp, CheckPredicateOpRef][] = [['eq', opConstantRef(0)]]
 
 const passedPred = (checkKey: CheckKey) => predicateReport(checkKey, eqZero, ['== 0'], passedResult)
+const failedPred = (checkKey: CheckKey) => predicateReport(checkKey, eqZero, ['== 0'], failedResult)
+const errorPred = (checkKey: CheckKey) => predicateReport(checkKey, eqZero, ['== 0'], errorResult)
 
 function createBundleModel(): BundleModel {
   const inputVarNames = Array.from({ length: 1000 }, (_, i) => `I${i + 1}`)
@@ -62,14 +77,33 @@ function createBundleModel(): BundleModel {
 
 function createCheckReport(scenarioCount: number, datasetCount: number): CheckReport {
   let checkKey = 0
+  let allScenariosPassed = true
   const scenarioReports = Array.from({ length: scenarioCount }, (_, scenarioIndex) => {
+    let allDatasetsPassed = true
     const datasetReports = Array.from({ length: datasetCount }, (_, datasetIndex) => {
-      return datasetReport('Model', `O${datasetIndex + 1}`, 'passed', [passedPred(checkKey++)])
+      let pred: CheckPredicateReport
+      switch (datasetIndex % 3) {
+        case 1:
+          pred = failedPred(checkKey++)
+          allDatasetsPassed = false
+          break
+        case 2:
+          pred = errorPred(checkKey++)
+          allDatasetsPassed = false
+          break
+        default:
+          pred = passedPred(checkKey++)
+          break
+      }
+      return datasetReport('Model', `O${datasetIndex + 1}`, pred.result.status, [pred])
     })
+    if (!allDatasetsPassed) {
+      allScenariosPassed = false
+    }
     const input = inputVar(`${scenarioIndex + 1}`, `I${scenarioIndex + 1}`)[1]
-    return scenarioReport(inputAtPos(input, 'at-maximum'), 'passed', datasetReports)
+    return scenarioReport(inputAtPos(input, 'at-maximum'), allDatasetsPassed ? 'passed' : 'error', datasetReports)
   })
-  const group = groupReport('group1', [testReport('test1', 'passed', scenarioReports)])
+  const group = groupReport('group1', [testReport('test1', allScenariosPassed ? 'passed' : 'error', scenarioReports)])
   return {
     groups: [group]
   }
