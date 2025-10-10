@@ -2,25 +2,30 @@
 
 <!-- SCRIPT -->
 <script lang="ts">
-import SummaryRow from './check-summary-row.svelte'
+import type { CheckSummaryRowViewModel } from './check-summary-row-vm'
 import type { CheckSummaryTestViewModel } from './check-summary-test-vm'
 
+import SummaryRow from './check-summary-row.svelte'
+
 export let viewModel: CheckSummaryTestViewModel
-const expandAll = viewModel.expandAll
+const childRows = viewModel.childRows
+const childrenVisible = viewModel.childrenVisible
 
 function onTestClicked() {
-  expandAll.update(v => !v)
+  childrenVisible.update(v => !v)
+}
+
+function onChildRowLabelClicked(rowViewModel: CheckSummaryRowViewModel) {
+  rowViewModel.onClicked()
 }
 </script>
 
 <!-- TEMPLATE -->
 <div class="row test">
-  <span class="label" on:click={onTestClicked}
-    >{@html viewModel.testRow.span}{$expandAll || viewModel.testRow.status !== 'passed' ? ':' : ''}</span
-  >
+  <span class="label" on:click={onTestClicked}>{@html viewModel.testRow.span}{$childrenVisible ? ':' : ''}</span>
 </div>
-<div class="test-rows" class:expand-all={$expandAll}>
-  {#each viewModel.childRows as row}
-    <SummaryRow viewModel={row} />
+<div class="test-rows" class:children-visible={$childrenVisible}>
+  {#each $childRows as row}
+    <SummaryRow viewModel={row} onLabelClicked={() => onChildRowLabelClicked(row)} />
   {/each}
 </div>

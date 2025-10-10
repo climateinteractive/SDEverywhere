@@ -89,13 +89,11 @@ $indent: 1rem;
     flex-direction: column;
   }
 
-  // Hide passed rows by default
-  :global(.row.passed) {
+  :global(.test-rows:not(.children-visible)) {
     display: none;
   }
 
-  // Show passed rows when parent test has `expand-all` class
-  :global(.test-rows.expand-all .row.passed) {
+  :global(.test-rows.children-visible) {
     display: flex;
   }
 

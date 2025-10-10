@@ -87,7 +87,7 @@ function createCheckReport(scenarioCount: number, datasetCount: number): CheckRe
   {template}
   beforeEach={async ({ args }) => {
     const report = createCheckReport(1, 1)
-    args.viewModel = createCheckSummaryViewModel(dataCoordinator, report, true)
+    args.viewModel = createCheckSummaryViewModel(dataCoordinator, report)
   }}
 />
 
@@ -96,7 +96,7 @@ function createCheckReport(scenarioCount: number, datasetCount: number): CheckRe
   {template}
   beforeEach={async ({ args }) => {
     const report = createCheckReport(1, 100)
-    args.viewModel = createCheckSummaryViewModel(dataCoordinator, report, true)
+    args.viewModel = createCheckSummaryViewModel(dataCoordinator, report)
   }}
 />
 
@@ -105,7 +105,7 @@ function createCheckReport(scenarioCount: number, datasetCount: number): CheckRe
   {template}
   beforeEach={async ({ args }) => {
     const report = createCheckReport(100, 1)
-    args.viewModel = createCheckSummaryViewModel(dataCoordinator, report, true)
+    args.viewModel = createCheckSummaryViewModel(dataCoordinator, report)
   }}
 />
 
@@ -114,7 +114,7 @@ function createCheckReport(scenarioCount: number, datasetCount: number): CheckRe
   {template}
   beforeEach={async ({ args }) => {
     const report = createCheckReport(100, 100)
-    args.viewModel = createCheckSummaryViewModel(dataCoordinator, report, true)
+    args.viewModel = createCheckSummaryViewModel(dataCoordinator, report)
   }}
 />
 
@@ -123,7 +123,7 @@ function createCheckReport(scenarioCount: number, datasetCount: number): CheckRe
   {template}
   beforeEach={async ({ args }) => {
     const report = createCheckReport(1000, 1)
-    args.viewModel = createCheckSummaryViewModel(dataCoordinator, report, true)
+    args.viewModel = createCheckSummaryViewModel(dataCoordinator, report)
   }}
 />
 
@@ -132,6 +132,6 @@ function createCheckReport(scenarioCount: number, datasetCount: number): CheckRe
   {template}
   beforeEach={async ({ args }) => {
     const report = createCheckReport(1000, 10)
-    args.viewModel = createCheckSummaryViewModel(dataCoordinator, report, true)
+    args.viewModel = createCheckSummaryViewModel(dataCoordinator, report)
   }}
 />

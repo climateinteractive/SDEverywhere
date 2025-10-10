@@ -11,6 +11,16 @@ export interface CheckSummaryRowViewModel {
   span: string
   graphBoxViewModel?: CheckSummaryGraphBoxViewModel
   graphVisible: Writable<boolean>
+  onClicked: () => void
+  // // Placeholder functionality
+  // isPlaceholder?: boolean
+  // placeholderType?: 'test-summary' | 'scenario-summary'
+  // placeholderData?: {
+  //   count: number
+  //   status: CheckStatus
+  //   label: string
+  //   onExpand: () => void
+  // }
 }
 
 function charForStatus(status: CheckStatus): string {
@@ -31,6 +41,7 @@ export function row(
   rowClass: string,
   status: CheckStatus,
   content: string,
+  onClicked: () => void,
   graphBoxViewModel?: CheckSummaryGraphBoxViewModel,
   graphVisible = false
 ): CheckSummaryRowViewModel {
@@ -43,6 +54,38 @@ export function row(
     status,
     span,
     graphBoxViewModel,
-    graphVisible: writable(graphVisible)
+    graphVisible: writable(graphVisible),
+    onClicked
+    // isPlaceholder: false
   }
 }
+
+// export function placeholderRow(
+//   indent: number,
+//   placeholderType: 'test-summary' | 'scenario-summary',
+//   status: CheckStatus,
+//   count: number,
+//   label: string,
+//   onExpand: () => void
+// ): CheckSummaryRowViewModel {
+//   const whitespace = '&ensp;'.repeat(2 + indent * 4)
+//   const statusChar = charForStatus(status)
+//   const statusSpan = `<span class="status-color-${status}">${statusChar}</span>`
+//   const span = `${whitespace}${statusSpan}&ensp;${count} ${label}`
+
+//   return {
+//     rowClasses: `${placeholderType} ${status}`,
+//     status,
+//     span,
+//     graphBoxViewModel: undefined,
+//     graphVisible: writable(false),
+//     isPlaceholder: true,
+//     placeholderType,
+//     placeholderData: {
+//       count,
+//       status,
+//       label,
+//       onExpand
+//     }
+//   }
+// }

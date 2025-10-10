@@ -6,11 +6,9 @@ import CheckGraphBox from './check-summary-graph-box.svelte'
 import type { CheckSummaryRowViewModel } from './check-summary-row-vm'
 
 export let viewModel: CheckSummaryRowViewModel
-const graphVisible = viewModel.graphVisible
+export let onLabelClicked: () => void = () => {}
 
-function onLabelClicked() {
-  graphVisible.update(v => !v)
-}
+$: graphVisible = viewModel.graphVisible
 </script>
 
 <!-- TEMPLATE -->
@@ -24,7 +22,7 @@ function onLabelClicked() {
 {/if}
 
 <!-- STYLE -->
-<style lang="scss">
+<style>
 .check-graph {
   height: 23rem;
   margin-left: 8.5rem;
