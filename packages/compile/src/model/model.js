@@ -61,12 +61,12 @@ function resetModelState() {
  * TODO: FIX TYPE
  * @param {*} parsedModel The parsed model structure.
  * @param {*} spec The parsed `spec.json` object.
- * @param {Map<string, any>} extData The map of datasets from external `.dat` files.
- * @param {Map<string, any>} directData The mapping of dataset name used in a `GET DIRECT DATA`
+ * @param {Map<string, any>} [extData] The map of datasets from external `.dat` files.
+ * @param {Map<string, any>} [directData] The mapping of dataset name used in a `GET DIRECT DATA`
  * call (e.g., `?data`) to the tabular data contained in the loaded data file.
- * @param {string} modelDirname The path to the directory containing the model (used for resolving data
+ * @param {string} [modelDirname] The path to the directory containing the model (used for resolving data
  * files for `GET DIRECT SUBSCRIPT`).
- * @param {*} opts An optional object used by tests to stop the read process after a specific phase.
+ * @param {*} [opts] An optional object used by tests to stop the read process after a specific phase.
  */
 function read(parsedModel, spec, extData, directData, modelDirname, opts) {
   // Some arrays need to be separated into variables with individual indices to
@@ -426,7 +426,13 @@ function removeUnusedVariables(spec) {
   }
 
   // Filter out unneeded variables so we're left with the minimal set of variables to emit
-  variables = R.filter(v => referencedVarNames.has(v.varName), variables)
+  const filteredVariables = R.filter(v => referencedVarNames.has(v.varName), variables)
+  // TODO: Note that we reuse the same `variables` array instance here instead of reassigning
+  // to it because some code (like in `code-gen/expand-var-names.js` and in some tests) uses
+  // the `variables` array (from module-level storage) directly.  We need to fix those uses
+  // to use accessors to avoid these subtle issues.
+  variables.length = 0
+  variables.push(...filteredVariables)
 
   // Rebuild the variables-by-name map
   variablesByName.clear()
