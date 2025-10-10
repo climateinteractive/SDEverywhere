@@ -2,6 +2,7 @@ import * as R from 'ramda'
 
 import { cartesianProductOf, canonicalName } from '../_shared/helpers.js'
 import { sub, isDimension } from '../_shared/subscript.js'
+import { cName } from '../_shared/var-names.js'
 
 import Model from '../model/model.js'
 
@@ -20,7 +21,7 @@ export function expandVarNames(canonical) {
       (a, v) => {
         if (v.varType !== 'lookup' && v.varType !== 'data' && v.includeInOutput) {
           if (canonical) {
-            return R.concat(a, R.map(Model.cName, namesForVar(v)))
+            return R.concat(a, R.map(cName, namesForVar(v)))
           } else {
             return R.concat(a, namesForVar(v))
           }

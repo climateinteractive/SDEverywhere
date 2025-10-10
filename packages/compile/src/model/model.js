@@ -2,7 +2,7 @@ import B from 'bufx'
 import yaml from 'js-yaml'
 import * as R from 'ramda'
 
-import { canonicalName, decanonicalize, isIterable, /*listConcat,*/ strlist, vlog, vsort } from '../_shared/helpers.js'
+import { decanonicalize, isIterable, strlist, vlog, vsort } from '../_shared/helpers.js'
 import {
   addIndex,
   allAliases,
@@ -13,6 +13,7 @@ import {
   sub,
   subscriptFamilies
 } from '../_shared/subscript.js'
+import { cName } from '../_shared/var-names.js'
 
 import { readEquation } from './read-equations.js'
 import { readDimensionDefs } from './read-subscripts.js'
@@ -732,28 +733,6 @@ function vensimName(cVarName) {
   }
   return result
 }
-function cName(vensimVarName) {
-  // Convert a Vensim variable name to a C name.
-  // This function requires model analysis to be completed first when the variable has subscripts.
-
-  // Split the variable name from the subscripts
-  let matches = vensimVarName.match(/([^[]+)(?:\[([^\]]+)\])?/)
-  if (!matches) {
-    throw new Error(`Invalid variable name '${vensimVarName}' found when converting to C representation`)
-  }
-  let cVarName = canonicalName(matches[1])
-  if (matches[2]) {
-    // The variable name includes subscripts, so split them into individual IDs
-    let cSubIds = matches[2].split(',').map(x => canonicalName(x))
-    // If a subscript is an index, convert it to an index number to match Vensim data exports
-    let cSubIdParts = cSubIds.map(cSubId => {
-      return isIndex(cSubId) ? `[${sub(cSubId).value}]` : `[${cSubId}]`
-    })
-    // Append the subscript parts to the base variable name to create the full reference
-    cVarName += cSubIdParts.join('')
-  }
-  return cVarName
-}
 function isInputVar(varName) {
   // Return true if the given variable (in canonical form) is included in the list of
   // input variables in the spec file.
@@ -1261,7 +1240,6 @@ export default {
   addVariable,
   allVars,
   auxVars,
-  cName,
   constVars,
   dataVars,
   expansionFlags,
