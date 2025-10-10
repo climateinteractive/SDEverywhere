@@ -7,7 +7,7 @@ import { isIndex, sub } from './subscript.js'
  * WARNING: This function requires model analysis to be completed first when the variable
  * has subscripts.
  *
- * @param {string} vensimVarName  The full Vensim variable name (can contain subscripts).
+ * @param {string} vensimVarName The full Vensim variable name (can contain subscripts).
  * @returns {string} A canonical C representation of the variable name (e.g., '_variable_name').
  */
 export function cName(vensimVarName) {
