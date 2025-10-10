@@ -121,14 +121,16 @@ function loadDatasetsForStatus(
   }
 
   // Replace placeholder with actual dataset rows
-  scenarioRow.childRows.subscribe(currentRows => {
+  scenarioRow.childRows.update(currentRows => {
     const placeholderIndex = currentRows.findIndex(r => r.rowClasses.includes('placeholder') && r.status === status)
     if (placeholderIndex !== -1) {
       const newRows = [...currentRows]
       newRows.splice(placeholderIndex, 1, ...datasetRows)
-      scenarioRow.childRows.update(() => newRows)
+      return newRows
+    } else {
+      return currentRows
     }
-  })()
+  })
 }
 
 function loadScenarioChildren(
@@ -199,14 +201,16 @@ function loadScenariosForStatus(
   }
 
   // Replace placeholder with actual scenario rows
-  testRow.childRows.subscribe(currentRows => {
+  testRow.childRows.update(currentRows => {
     const placeholderIndex = currentRows.findIndex(r => r.rowClasses.includes('placeholder') && r.status === status)
     if (placeholderIndex !== -1) {
       const newRows = [...currentRows]
       newRows.splice(placeholderIndex, 1, ...scenarioRows)
-      testRow.childRows.update(() => newRows)
+      return newRows
+    } else {
+      return currentRows
     }
-  })()
+  })
 }
 
 function loadTestChildren(
