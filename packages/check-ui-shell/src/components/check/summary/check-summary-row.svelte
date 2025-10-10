@@ -20,7 +20,7 @@ function onLabelClicked() {
 </div>
 {#if $expanded}
   {#if viewModel.graphBoxViewModel}
-    <div class={`row check-graph ${viewModel.rowClasses}`}>
+    <div class="row check-graph">
       <CheckGraphBox viewModel={viewModel.graphBoxViewModel} />
     </div>
   {:else}

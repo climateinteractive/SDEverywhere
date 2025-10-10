@@ -69,7 +69,13 @@ const showCheckDetail = true
 
 <!-- STYLE -->
 <style lang="scss">
-$indent: 1rem;
+// XXX: Prevent the sticky test rows from being hidden behind the sticky tab bar
+$container-top-offset: 50px;
+
+$group-row-h: 32px;
+$test-row-h: 20px;
+$other-row-h: 18px;
+$bg-color: #272727;
 
 .check-summary-container {
   display: flex;
@@ -103,11 +109,50 @@ $indent: 1rem;
   }
 
   :global(.row.group) {
+    position: sticky;
+    top: $container-top-offset;
+    height: $group-row-h;
+    z-index: 6;
+    background-color: $bg-color;
     font-size: 1.2em;
   }
 
+  :global(.row.group > .label) {
+    margin-top: 8px;
+  }
+
   :global(.row.test) {
-    margin-top: 0.4rem;
+    position: sticky;
+    display: flex;
+    align-items: center;
+    top: $container-top-offset + $group-row-h;
+    height: $test-row-h;
+    z-index: 5;
+    background-color: $bg-color;
+  }
+
+  :global(.row.scenario) {
+    position: sticky;
+    top: $container-top-offset + $group-row-h + $test-row-h;
+    height: $other-row-h;
+    z-index: 4;
+    background-color: $bg-color;
+  }
+
+  :global(.row.dataset) {
+    position: sticky;
+    top: $container-top-offset + $group-row-h + $test-row-h + $other-row-h;
+    height: $other-row-h;
+    z-index: 3;
+    background-color: $bg-color;
+  }
+
+  :global(.row.predicate) {
+    position: sticky;
+    top: $container-top-offset + $group-row-h + $test-row-h + (2 * $other-row-h);
+    height: $other-row-h;
+    z-index: 2;
+    background-color: $bg-color;
   }
 
   :global(.row > .label) {
