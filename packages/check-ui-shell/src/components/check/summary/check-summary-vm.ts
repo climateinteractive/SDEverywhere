@@ -152,7 +152,7 @@ function loadScenarioChildren(
     )
   }
   if (datasetCounts.error > 0) {
-    addPlaceholderRow('error', datasetCounts.error, 'error')
+    addPlaceholderRow('error', datasetCounts.error, 'errored dataset')
   }
   if (datasetCounts.failed > 0) {
     addPlaceholderRow('failed', datasetCounts.failed, 'failed dataset')
@@ -230,7 +230,7 @@ function loadTestChildren(
     )
   }
   if (scenarioCounts.error > 0) {
-    addPlaceholderRow('error', scenarioCounts.error, 'error')
+    addPlaceholderRow('error', scenarioCounts.error, 'errored scenario')
   }
   if (scenarioCounts.failed > 0) {
     addPlaceholderRow('failed', scenarioCounts.failed, 'failed scenario')
