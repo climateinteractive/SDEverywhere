@@ -7,7 +7,6 @@ import type { Dataset, DatasetMap } from '@sdeverywhere/check-core'
  * Each dataset consists of a key (the variable name in the format
  * used by SDE) and a map of time/value pairs.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function readDat(datText: string, prefix: string): DatasetMap {
   // TODO: Replace generic name with actual file name
   const datPathname = 'DAT file'
