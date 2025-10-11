@@ -62,8 +62,11 @@ function createBundleModel(modelSpec: ModelSpec, delta = 0): BundleModel {
   return mockBundleModel(modelSpec, (_, datasetKeys) => {
     const datasetMap = new Map()
     for (const datasetKey of datasetKeys) {
-      // TODO: Apply delta for every even-numbered variable
-      datasetMap.set(datasetKey, mockDataset(delta))
+      // Apply delta only for every even-numbered variable, otherwise use 0
+      const match = datasetKey.match(/_(\d+)$/)
+      const variableNumber = match ? parseInt(match[1], 10) : 0
+      const effectiveDelta = variableNumber % 2 === 0 ? delta : 0
+      datasetMap.set(datasetKey, mockDataset(effectiveDelta))
     }
     return datasetMap
   })
