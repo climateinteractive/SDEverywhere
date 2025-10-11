@@ -81,7 +81,7 @@ export class TraceRunner {
             for (const datasetKey of request.datasetKeys) {
               const dataset0 = result0.datasetMap.get(datasetKey)
               const dataset1 = result1.datasetMap.get(datasetKey)
-              const datasetReport = diffDatasets(datasetKey, dataset0, dataset1)
+              const datasetReport = diffDatasets(datasetKey, dataset0, dataset1, /*matchPrecisionOfLeft=*/ false)
               datasetReports.push(datasetReport)
             }
             return {
@@ -115,7 +115,7 @@ export class TraceRunner {
                 }
               }
               const datasetR = resultR.datasetMap.get(datasetKey)
-              const datasetReport = diffDatasets(datasetKey, datasetL, datasetR)
+              const datasetReport = diffDatasets(datasetKey, datasetL, datasetR, /*matchPrecisionOfLeft=*/ true)
               datasetReports.push(datasetReport)
             }
             return {
@@ -199,7 +199,8 @@ export class TraceRunner {
 function diffDatasets(
   datasetKey: DatasetKey,
   datasetL: Dataset | undefined,
-  datasetR: Dataset | undefined
+  datasetR: Dataset | undefined,
+  matchPrecisionOfLeft: boolean
 ): TraceDatasetReport {
   const points: Map<number, DiffPoint> = new Map()
   let minValueL = Number.MAX_VALUE
@@ -230,7 +231,11 @@ function diffDatasets(
       let valueR: number
       const rawValueR = datasetR.get(t)
       if (rawValueR !== undefined) {
-        valueR = valueL !== undefined ? matchPrecision(rawValueR, valueL) : rawValueR
+        if (matchPrecisionOfLeft && valueL !== undefined) {
+          valueR = matchPrecision(rawValueR, valueL)
+        } else {
+          valueR = rawValueR
+        }
         if (valueR < minValueR) minValueR = valueR
         if (valueR > maxValueR) maxValueR = valueR
         if (valueR < minValue) minValue = valueR
@@ -330,16 +335,13 @@ function matchPrecision(x: number, baseline: number): number {
     return x
   }
 
-  // Remove leading zeros
-  const a = parts[0].replace(/^0+/, '')
-  const b = parts[1].replace(/^0+/, '')
-
-  const sigDigits = a.length + b.length
+  // Remove trailing zeros
+  const sigDigits = parts[1].replace(/0+$/, '').length
   if (sigDigits > 21) {
     return x
   }
 
-  return parseFloat(x.toPrecision(sigDigits))
+  return parseFloat(x.toFixed(sigDigits))
 }
 
 /**
