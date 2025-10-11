@@ -62,6 +62,9 @@ export class TraceViewModel {
   private readonly writableGroups: Writable<TraceGroupViewModel[]>
   public readonly groups: Readable<TraceGroupViewModel[]>
 
+  public readonly hideRowsWithNoDiffs: Writable<boolean>
+  public readonly filteredGroups: Readable<TraceGroupViewModel[]>
+
   private running = false
 
   constructor(
@@ -153,6 +156,23 @@ export class TraceViewModel {
     this.statusMessage = this.writableStatusMessage
     this.writableGroups = writable([])
     this.groups = this.writableGroups
+
+    // Hide rows with no diffs by default
+    this.hideRowsWithNoDiffs = writable(true)
+
+    // Derive the filtered groups when the groups change or the checkbox state is changed
+    this.filteredGroups = derived([this.groups, this.hideRowsWithNoDiffs], ([$groups, $hideRowsWithNoDiffs]) => {
+      if (!$hideRowsWithNoDiffs) {
+        return $groups
+      }
+
+      return $groups
+        .map(group => ({
+          ...group,
+          rows: group.rows.filter(row => this.hasRowWithDiffs(row))
+        }))
+        .filter(group => group.rows.length > 0)
+    })
   }
 
   public run(): void {
@@ -249,6 +269,11 @@ export class TraceViewModel {
       scenarioSpecR,
       diffPoint
     )
+  }
+
+  private hasRowWithDiffs(row: TraceRowViewModel): boolean {
+    // A row has diffs if it has at least one point that is not green and not empty
+    return row.points.some(point => point.color !== 'green' && !point.empty)
   }
 }
 

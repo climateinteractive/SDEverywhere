@@ -21,7 +21,8 @@ const selectedScenarioSpec0 = viewModel.selectedScenarioSpec0
 const selectedScenarioSpec1 = viewModel.selectedScenarioSpec1
 const selectedDatText = viewModel.datText
 const statusMessage = viewModel.statusMessage
-const groups = viewModel.groups
+const hideRowsWithNoDiffs = viewModel.hideRowsWithNoDiffs
+const filteredGroups = viewModel.filteredGroups
 
 let datText: string
 let files: FileList
@@ -109,12 +110,18 @@ function onHideTooltip(): void {
       <div class="trace-scenario-selector-label">Scenario:</div>
       <Selector viewModel={$scenarioSelector1} />
     </div>
+    <div class="trace-options">
+      <label class="trace-checkbox-label">
+        <input type="checkbox" bind:checked={$hideRowsWithNoDiffs} />
+        Hide rows with no diffs
+      </label>
+    </div>
   </div>
   <div class="trace-scroll-container">
     {#if $statusMessage}
       <div>{$statusMessage}</div>
     {:else}
-      {#each $groups as group}
+      {#each $filteredGroups as group}
         <div class="trace-group">
           <div class="trace-group-title">{group.title}</div>
           {#each group.rows as row}
@@ -175,6 +182,24 @@ function onHideTooltip(): void {
   font-family: inherit;
   font-size: inherit;
   margin: 0;
+}
+
+.trace-options {
+  margin-top: 6px;
+  margin-left: 32px;
+}
+
+.trace-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #fff;
+  font-size: inherit;
+  cursor: pointer;
+
+  input[type='checkbox'] {
+    margin: 0;
+  }
 }
 
 .trace-scroll-container {
