@@ -36,7 +36,7 @@ $: if (files && files[0]) {
 }
 
 // XXX: This is heavy-handed, but the idea is to run immediately any time the options are changed
-$: if ($selectedSource0 || $selectedScenarioSpec0 || $selectedDatText || $selectedSource1 || $selectedScenarioSpec1) {
+$: if ($selectedSource0 && ($selectedScenarioSpec0 || $selectedDatText) && $selectedSource1 && $selectedScenarioSpec1) {
   viewModel.run()
 }
 
