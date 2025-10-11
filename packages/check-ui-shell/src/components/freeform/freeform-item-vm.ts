@@ -9,7 +9,12 @@ import type {
   ComparisonScenario
 } from '@sdeverywhere/check-core'
 
-import { pointsFromDataset, type ComparisonGraphViewModel } from '../graphs/comparison-graph-vm'
+import {
+  pointsFromDataset,
+  type ComparisonGraphPlot,
+  type ComparisonGraphViewModel,
+  type Point
+} from '../graphs/comparison-graph-vm'
 
 let requestId = 1
 
@@ -102,6 +107,26 @@ export class FreeformItemViewModel {
         const outputVarR = modelSpecR.outputVars.get(this.datasetKey)
         const outputVar = outputVarR || outputVarL
 
+        // Extract the data points
+        const pointsL = pointsFromDataset(datasetMapL?.get(this.datasetKey))
+        const pointsR = pointsFromDataset(datasetMapR?.get(this.datasetKey))
+
+        const plots: ComparisonGraphPlot[] = []
+        function addPlot(points: Point[], color: string): void {
+          plots.push({
+            points,
+            color,
+            style: 'normal'
+          })
+        }
+
+        // Add the primary plots.  We add the right data points first so that they are drawn
+        // on top of the left data points.
+        // TODO: Use the colors defined in CSS (or make them configurable through other means);
+        // these should not be hardcoded here
+        addPlot(pointsR, 'deepskyblue')
+        addPlot(pointsL, 'crimson')
+
         // Use a fixed x-axis range for model outputs, but leave it
         // undefined for non-model datasets so that we show all
         // available data points
@@ -116,11 +141,10 @@ export class FreeformItemViewModel {
           }
         }
 
+        // Create the graph view model
         const comparisonGraphViewModel: ComparisonGraphViewModel = {
           key: this.requestKey,
-          refPlots: [],
-          pointsL: pointsFromDataset(datasetMapL?.get(this.datasetKey)),
-          pointsR: pointsFromDataset(datasetMapR?.get(this.datasetKey)),
+          plots,
           xMin,
           xMax
         }
