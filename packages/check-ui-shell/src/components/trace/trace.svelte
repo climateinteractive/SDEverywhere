@@ -120,6 +120,8 @@ function onHideTooltip(): void {
   <div class="trace-scroll-container">
     {#if $statusMessage}
       <div>{$statusMessage}</div>
+    {:else if $filteredGroups.length === 0}
+      <div>No differences detected</div>
     {:else}
       {#each $filteredGroups as group}
         <div class="trace-group">
