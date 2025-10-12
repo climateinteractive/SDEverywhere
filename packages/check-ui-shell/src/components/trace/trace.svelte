@@ -98,7 +98,34 @@ function onKeyDown(event: KeyboardEvent): void {
   viewModel.handleKeyDown(event)
 }
 
-// Auto-show tooltip for selected square
+function scrollToSelectedSquare(selectedElement: Element): void {
+  const scrollContainer = document.querySelector('.trace-scroll-container')
+  if (!scrollContainer) return
+
+  const containerRect = scrollContainer.getBoundingClientRect()
+  const elementRect = selectedElement.getBoundingClientRect()
+
+  // Calculate if the element is visible within the scroll container
+  const isVisible = elementRect.top >= containerRect.top && elementRect.bottom <= containerRect.bottom
+
+  if (!isVisible) {
+    // Calculate the scroll position to center the element in the container
+    const elementOffsetTop = selectedElement.getBoundingClientRect().top - containerRect.top + scrollContainer.scrollTop
+    const containerHeight = containerRect.height
+    const elementHeight = elementRect.height
+
+    // Center the element vertically in the container
+    const targetScrollTop = elementOffsetTop - containerHeight / 2 + elementHeight / 2
+
+    // Smooth scroll to the target position
+    scrollContainer.scrollTo({
+      top: targetScrollTop,
+      behavior: 'smooth'
+    })
+  }
+}
+
+// Auto-show tooltip for selected square and scroll to reveal it
 $: if ($selectedSquareData) {
   const selectedInfo = viewModel.getSelectedSquareInfo()
   if (selectedInfo) {
@@ -109,6 +136,9 @@ $: if ($selectedSquareData) {
         const rect = selectedElement.getBoundingClientRect()
         // Position tooltip to the right of the square, with proper left-edge positioning when needed
         positionTooltip(rect.right, rect.top, rect.left)
+
+        // Scroll to reveal the selected square
+        scrollToSelectedSquare(selectedElement)
       } else {
         // Fallback to center if element not found
         tooltipX = window.innerWidth / 2 - 200
@@ -189,6 +219,10 @@ $: if ($selectedSquareData) {
   display: flex;
   flex-direction: column;
   flex: 1;
+}
+
+.trace-container:focus-within {
+  outline: none;
 }
 
 .trace-header-container {
