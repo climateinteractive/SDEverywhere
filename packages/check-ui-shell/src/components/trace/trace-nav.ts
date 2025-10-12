@@ -9,11 +9,6 @@ export interface SquarePosition {
   pointIndex: number
 }
 
-export interface NavigationDependencies {
-  groups: TraceGroupViewModel[]
-  currentPosition: SquarePosition | undefined
-}
-
 function isDiffSquare(point: TracePointViewModel): boolean {
   return point.hasDiff
 }
@@ -50,9 +45,10 @@ export function findLastRedSquare(groups: TraceGroupViewModel[]): SquarePosition
   return undefined
 }
 
-export function findNextRedSquare(deps: NavigationDependencies): SquarePosition | undefined {
-  const { groups, currentPosition } = deps
-
+export function findNextRedSquare(
+  groups: TraceGroupViewModel[],
+  currentPosition: SquarePosition | undefined
+): SquarePosition | undefined {
   if (!currentPosition) {
     return findFirstRedSquare(groups)
   }
@@ -103,9 +99,10 @@ export function findNextRedSquare(deps: NavigationDependencies): SquarePosition 
   return findFirstRedSquare(groups)
 }
 
-export function findPreviousRedSquare(deps: NavigationDependencies): SquarePosition | undefined {
-  const { groups, currentPosition } = deps
-
+export function findPreviousRedSquare(
+  groups: TraceGroupViewModel[],
+  currentPosition: SquarePosition | undefined
+): SquarePosition | undefined {
   if (!currentPosition) {
     return findLastRedSquare(groups)
   }
@@ -158,11 +155,11 @@ export function handleKeyDown(
   switch (event.key) {
     case 'ArrowLeft':
       event.preventDefault()
-      newPosition = findPreviousRedSquare({ groups, currentPosition })
+      newPosition = findPreviousRedSquare(groups, currentPosition)
       break
     case 'ArrowRight':
       event.preventDefault()
-      newPosition = findNextRedSquare({ groups, currentPosition })
+      newPosition = findNextRedSquare(groups, currentPosition)
       break
     case 'Home':
       event.preventDefault()
