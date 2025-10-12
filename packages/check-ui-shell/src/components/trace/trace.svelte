@@ -46,28 +46,33 @@ let tooltipViewModel: TraceTooltipViewModel | undefined = undefined
 let tooltipX = 0
 let tooltipY = 0
 
-function positionTooltip(referenceX: number, referenceY: number): void {
-  // Position tooltip near the reference point, but ensure it stays on screen
-  const tooltipWidth = 400
-  const tooltipHeight = 300
-  const margin = 10
-
-  let x = referenceX + margin
-  let y = referenceY - margin
+function positionTooltip(referenceX: number, referenceY: number, referenceLeft?: number): void {
+  // Position tooltip near the reference point, but ensure it stays on screen.
+  // Actual width: 400px width + 12px padding + 1px border = 426px total width
+  // Actual height: 300px height + 12px padding + 1px border = 326px total height
+  const tooltipWidth = 426
+  const tooltipHeight = 326
 
   // Adjust if tooltip would go off the right edge
+  const xMargin = 2
+  let x = referenceX + xMargin
   if (x + tooltipWidth > window.innerWidth) {
-    x = referenceX - tooltipWidth - margin
+    if (referenceLeft !== undefined) {
+      // For square positioning: right edge of tooltip should be margin pixels from left edge of square
+      x = referenceLeft - tooltipWidth - xMargin
+    } else {
+      // For mouse positioning: position tooltip to the left of the mouse cursor
+      x = referenceX - tooltipWidth - xMargin
+    }
   }
 
-  // Adjust if tooltip would go off the bottom edge
+  // Adjust tooltip position up or down to keep row visible
+  const yOffset = 6
+  let y = referenceY + yOffset
   if (y + tooltipHeight > window.innerHeight) {
-    y = referenceY - tooltipHeight - margin
+    // Adjust if tooltip would go off the bottom edge
+    y = referenceY - tooltipHeight - yOffset
   }
-
-  // Ensure tooltip doesn't go off the left or top edges
-  x = Math.max(margin, x)
-  y = Math.max(margin, y)
 
   tooltipX = x
   tooltipY = y
@@ -102,8 +107,8 @@ $: if ($selectedSquareData) {
       const selectedElement = document.querySelector('.trace-point.selected')
       if (selectedElement) {
         const rect = selectedElement.getBoundingClientRect()
-        // Position tooltip to the right of the square
-        positionTooltip(rect.right, rect.top)
+        // Position tooltip to the right of the square, with proper left-edge positioning when needed
+        positionTooltip(rect.right, rect.top, rect.left)
       } else {
         // Fallback to center if element not found
         tooltipX = window.innerWidth / 2 - 200
