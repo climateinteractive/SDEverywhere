@@ -307,7 +307,7 @@ export class TraceViewModel {
     const row = group.rows[rowIndex]
     const point = row.points[pointIndex]
 
-    if (!point.diffPoint) {
+    if (!point?.diffPoint) {
       return undefined
     }
 
