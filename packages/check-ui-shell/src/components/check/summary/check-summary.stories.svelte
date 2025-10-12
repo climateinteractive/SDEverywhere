@@ -79,7 +79,6 @@ function createBundleModel(): BundleModel {
   return mockBundleModel(modelSpec, (_, datasetKeys) => {
     const datasetMap = new Map()
     for (const datasetKey of datasetKeys) {
-      // TODO: Allow for customizing the data points
       let ds: Dataset
       switch (datasetKey) {
         case 'Model__o2':
