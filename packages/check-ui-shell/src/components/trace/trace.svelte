@@ -46,29 +46,23 @@ let tooltipViewModel: TraceTooltipViewModel | undefined = undefined
 let tooltipX = 0
 let tooltipY = 0
 
-function onShowTooltip(event: CustomEvent): void {
-  const datasetKey = event.detail.datasetKey
-  const varName = event.detail.varName
-  const diffPoint = event.detail.diffPoint
-  const eventX = event.detail.eventX
-  const eventY = event.detail.eventY
-
-  // Position tooltip near the mouse cursor, but ensure it stays on screen
+function positionTooltip(referenceX: number, referenceY: number): void {
+  // Position tooltip near the reference point, but ensure it stays on screen
   const tooltipWidth = 400
   const tooltipHeight = 300
   const margin = 10
 
-  let x = eventX + margin
-  let y = eventY - margin
+  let x = referenceX + margin
+  let y = referenceY - margin
 
   // Adjust if tooltip would go off the right edge
   if (x + tooltipWidth > window.innerWidth) {
-    x = eventX - tooltipWidth - margin
+    x = referenceX - tooltipWidth - margin
   }
 
   // Adjust if tooltip would go off the bottom edge
   if (y + tooltipHeight > window.innerHeight) {
-    y = eventY - tooltipHeight - margin
+    y = referenceY - tooltipHeight - margin
   }
 
   // Ensure tooltip doesn't go off the left or top edges
@@ -77,6 +71,16 @@ function onShowTooltip(event: CustomEvent): void {
 
   tooltipX = x
   tooltipY = y
+}
+
+function onShowTooltip(event: CustomEvent): void {
+  const datasetKey = event.detail.datasetKey
+  const varName = event.detail.varName
+  const diffPoint = event.detail.diffPoint
+  const eventX = event.detail.eventX
+  const eventY = event.detail.eventY
+
+  positionTooltip(eventX, eventY)
   tooltipViewModel = viewModel.createTooltipViewModel(datasetKey, varName, diffPoint)
 }
 
@@ -93,9 +97,20 @@ function onKeyDown(event: KeyboardEvent): void {
 $: if ($selectedSquareData) {
   const selectedInfo = viewModel.getSelectedSquareInfo()
   if (selectedInfo) {
-    // Position tooltip in the center of the screen for now
-    tooltipX = window.innerWidth / 2 - 200
-    tooltipY = window.innerHeight / 2 - 150
+    // Find the selected square's DOM element and position tooltip to its right
+    setTimeout(() => {
+      const selectedElement = document.querySelector('.trace-point.selected')
+      if (selectedElement) {
+        const rect = selectedElement.getBoundingClientRect()
+        // Position tooltip to the right of the square
+        positionTooltip(rect.right, rect.top)
+      } else {
+        // Fallback to center if element not found
+        tooltipX = window.innerWidth / 2 - 200
+        tooltipY = window.innerHeight / 2 - 150
+      }
+    }, 0)
+
     tooltipViewModel = viewModel.createTooltipViewModel(
       selectedInfo.datasetKey,
       selectedInfo.varName,
