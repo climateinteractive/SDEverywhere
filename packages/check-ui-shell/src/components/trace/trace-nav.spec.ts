@@ -199,11 +199,8 @@ describe('handleKeyDown', () => {
       preventDefault: () => {}
     } as KeyboardEvent
 
-    const onPositionChange = (position: SquarePosition | undefined) => {
-      expect(position).toEqual(pos(0, 0, 0))
-    }
-
-    handleKeyDown(mockEvent, groups, pos(0, 0, 2), onPositionChange)
+    const newPos = handleKeyDown(mockEvent, groups, pos(0, 0, 2))
+    expect(newPos).toEqual(pos(0, 0, 0))
   })
 
   it('should handle ArrowRight key', () => {
@@ -214,11 +211,8 @@ describe('handleKeyDown', () => {
       preventDefault: () => {}
     } as KeyboardEvent
 
-    const onPositionChange = (position: SquarePosition | undefined) => {
-      expect(position).toEqual(pos(0, 0, 2))
-    }
-
-    handleKeyDown(mockEvent, groups, pos(0, 0, 0), onPositionChange)
+    const newPos = handleKeyDown(mockEvent, groups, pos(0, 0, 0))
+    expect(newPos).toEqual(pos(0, 0, 2))
   })
 
   it('should handle Home key', () => {
@@ -229,11 +223,8 @@ describe('handleKeyDown', () => {
       preventDefault: () => {}
     } as KeyboardEvent
 
-    const onPositionChange = (position: SquarePosition | undefined) => {
-      expect(position).toEqual(pos(0, 0, 1))
-    }
-
-    handleKeyDown(mockEvent, groups, pos(0, 0, 2), onPositionChange)
+    const newPos = handleKeyDown(mockEvent, groups, pos(0, 0, 2))
+    expect(newPos).toEqual(pos(0, 0, 1))
   })
 
   it('should handle End key', () => {
@@ -244,11 +235,8 @@ describe('handleKeyDown', () => {
       preventDefault: () => {}
     } as KeyboardEvent
 
-    const onPositionChange = (position: SquarePosition | undefined) => {
-      expect(position).toEqual(pos(0, 0, 1))
-    }
-
-    handleKeyDown(mockEvent, groups, pos(0, 0, 0), onPositionChange)
+    const newPos = handleKeyDown(mockEvent, groups, pos(0, 0, 0))
+    expect(newPos).toEqual(pos(0, 0, 1))
   })
 
   it('should ignore unknown keys', () => {
@@ -259,12 +247,7 @@ describe('handleKeyDown', () => {
       preventDefault: () => {}
     } as KeyboardEvent
 
-    let positionChanged = false
-    const onPositionChange = () => {
-      positionChanged = true
-    }
-
-    handleKeyDown(mockEvent, groups, pos(0, 0, 0), onPositionChange)
-    expect(positionChanged).toBe(false)
+    const newPos = handleKeyDown(mockEvent, groups, pos(0, 0, 0))
+    expect(newPos).toBeUndefined()
   })
 })

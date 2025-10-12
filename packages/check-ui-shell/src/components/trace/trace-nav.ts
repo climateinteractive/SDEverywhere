@@ -151,9 +151,8 @@ export function findPreviousRedSquare(deps: NavigationDependencies): SquarePosit
 export function handleKeyDown(
   event: KeyboardEvent,
   groups: TraceGroupViewModel[],
-  currentPosition: SquarePosition | undefined,
-  onPositionChange: (position: SquarePosition | undefined) => void
-): void {
+  currentPosition: SquarePosition | undefined
+): SquarePosition | undefined {
   let newPosition: SquarePosition | undefined
 
   switch (event.key) {
@@ -174,8 +173,8 @@ export function handleKeyDown(
       newPosition = findLastRedSquare(groups)
       break
     default:
-      return
+      return undefined
   }
 
-  onPositionChange(newPosition)
+  return newPosition
 }

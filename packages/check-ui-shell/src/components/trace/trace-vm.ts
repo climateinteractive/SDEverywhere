@@ -289,14 +289,17 @@ export class TraceViewModel {
   public handleKeyDown(event: KeyboardEvent): void {
     const groups = get(this.filteredGroups)
     const currentPosition = get(this.selectedSquare)
-    handleKeyDown(event, groups, currentPosition, newPosition => {
+    const newPosition = handleKeyDown(event, groups, currentPosition)
+    if (newPosition) {
       this.selectedSquare.set(newPosition)
-    })
+    }
   }
 
   public getSelectedSquareInfo(): { datasetKey: DatasetKey; varName: string; diffPoint: DiffPoint } | undefined {
     const selected = get(this.selectedSquare)
-    if (!selected) return undefined
+    if (!selected) {
+      return undefined
+    }
 
     const groups = get(this.filteredGroups)
     const { groupIndex, rowIndex, pointIndex } = selected
@@ -304,7 +307,9 @@ export class TraceViewModel {
     const row = group.rows[rowIndex]
     const point = row.points[pointIndex]
 
-    if (!point.diffPoint) return undefined
+    if (!point.diffPoint) {
+      return undefined
+    }
 
     return {
       datasetKey: row.datasetKey,
