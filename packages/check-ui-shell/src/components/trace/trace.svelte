@@ -23,6 +23,7 @@ const selectedDatText = viewModel.datText
 const statusMessage = viewModel.statusMessage
 const hideRowsWithNoDiffs = viewModel.hideRowsWithNoDiffs
 const filteredGroups = viewModel.filteredGroups
+const selectedSquareData = viewModel.selectedSquareData
 
 let datText: string
 let files: FileList
@@ -83,10 +84,29 @@ function onHideTooltip(): void {
   tooltipViewModel?.clearData()
   tooltipViewModel = undefined
 }
+
+function onKeyDown(event: KeyboardEvent): void {
+  viewModel.handleKeyDown(event)
+}
+
+// Auto-show tooltip for selected square
+$: if ($selectedSquareData) {
+  const selectedInfo = viewModel.getSelectedSquareInfo()
+  if (selectedInfo) {
+    // Position tooltip in the center of the screen for now
+    tooltipX = window.innerWidth / 2 - 200
+    tooltipY = window.innerHeight / 2 - 150
+    tooltipViewModel = viewModel.createTooltipViewModel(
+      selectedInfo.datasetKey,
+      selectedInfo.varName,
+      selectedInfo.diffPoint
+    )
+  }
+}
 </script>
 
 <!-- TEMPLATE -->
-<div class="trace-container">
+<div class="trace-container" tabindex="0" on:keydown={onKeyDown}>
   <div class="trace-header-container">
     <div class="trace-header-content">
       <div class="trace-source-selector-label">Source 1:</div>
@@ -123,11 +143,15 @@ function onHideTooltip(): void {
     {:else if $filteredGroups.length === 0}
       <div>No differences detected</div>
     {:else}
-      {#each $filteredGroups as group}
+      {#each $filteredGroups as group, groupIndex}
         <div class="trace-group">
           <div class="trace-group-title">{group.title}</div>
-          {#each group.rows as row}
-            <Row viewModel={row} on:show-tooltip={onShowTooltip} on:hide-tooltip={onHideTooltip} />
+          {#each group.rows as row, rowIndex}
+            {@const selectedPointIndex =
+              $selectedSquareData?.groupIndex === groupIndex && $selectedSquareData?.rowIndex === rowIndex
+                ? $selectedSquareData.pointIndex
+                : undefined}
+            <Row viewModel={row} {selectedPointIndex} on:show-tooltip={onShowTooltip} on:hide-tooltip={onHideTooltip} />
           {/each}
         </div>
       {/each}

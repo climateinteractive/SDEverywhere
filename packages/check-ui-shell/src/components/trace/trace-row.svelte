@@ -7,6 +7,7 @@ import { createEventDispatcher } from 'svelte'
 import { type TracePointViewModel, type TraceRowViewModel } from './trace-row-vm'
 
 export let viewModel: TraceRowViewModel
+export let selectedPointIndex: number | undefined = undefined
 
 const dispatch = createEventDispatcher()
 
@@ -35,11 +36,12 @@ function onMouseLeave(): void {
     <div class="trace-var-name">{viewModel.varName}</div>
   </div>
   <div class="trace-points">
-    {#each viewModel.points as point}
+    {#each viewModel.points as point, pointIndex}
       <!-- svelte-ignore a11y-mouse-events-have-key-events -->
       <div
         class="trace-point"
-        class:empty={point.empty}
+        class:empty={point.hasDiff === undefined}
+        class:selected={selectedPointIndex === pointIndex}
         style="background-color: {point.color}"
         on:mouseover={event => onHover(point, event)}
         on:mouseleave={onMouseLeave}
@@ -94,6 +96,10 @@ function onMouseLeave(): void {
     height: 4px;
     background-color: unset !important;
     border: solid 1px #aaa;
+  }
+  &.selected {
+    border: solid 2px #4a9eff;
+    box-sizing: border-box;
   }
 }
 </style>

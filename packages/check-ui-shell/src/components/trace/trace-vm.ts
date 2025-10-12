@@ -24,13 +24,10 @@ import { categorizeComparisonTestSummaries, TraceRunner } from '@sdeverywhere/ch
 import { SelectorOptionViewModel, SelectorViewModel } from '../_shared/selector-vm'
 
 import { readDat } from './read-dat'
+import type { TraceGroupViewModel } from './trace-group-vm'
+import { findFirstRedSquare, handleKeyDown, type SquarePosition } from './trace-nav'
 import type { TracePointViewModel, TraceRowViewModel } from './trace-row-vm'
 import { TraceTooltipViewModel } from './trace-tooltip-vm'
-
-export interface TraceGroupViewModel {
-  title: string
-  rows: TraceRowViewModel[]
-}
 
 export class TraceViewModel {
   private readonly bundleModelL: BundleModel
@@ -64,6 +61,9 @@ export class TraceViewModel {
 
   public readonly hideRowsWithNoDiffs: Writable<boolean>
   public readonly filteredGroups: Readable<TraceGroupViewModel[]>
+
+  private readonly selectedSquare: Writable<SquarePosition | undefined>
+  public readonly selectedSquareData: Readable<SquarePosition | undefined>
 
   private running = false
 
@@ -160,6 +160,10 @@ export class TraceViewModel {
     // Hide rows with no diffs by default
     this.hideRowsWithNoDiffs = writable(true)
 
+    // Initialize selected square state
+    this.selectedSquare = writable(undefined)
+    this.selectedSquareData = this.selectedSquare
+
     // Derive the filtered groups when the groups change or the checkbox state is changed
     this.filteredGroups = derived([this.groups, this.hideRowsWithNoDiffs], ([$groups, $hideRowsWithNoDiffs]) => {
       if (!$hideRowsWithNoDiffs) {
@@ -245,6 +249,12 @@ export class TraceViewModel {
         this.writableStatusMessage.set(statusMessage)
       } else {
         this.writableStatusMessage.set(undefined)
+        // Select the first red square after trace completes
+        setTimeout(() => {
+          const groups = get(this.filteredGroups)
+          const firstRedSquare = findFirstRedSquare(groups)
+          this.selectedSquare.set(firstRedSquare)
+        }, 0)
       }
       this.running = false
     }
@@ -272,8 +282,35 @@ export class TraceViewModel {
   }
 
   private hasRowWithDiffs(row: TraceRowViewModel): boolean {
-    // A row has diffs if it has at least one point that is not green and not empty
-    return row.points.some(point => point.color !== 'green' && !point.empty)
+    // A row has diffs if it has at least one point that is defined and has a diff
+    return row.points.some(point => point.hasDiff === true)
+  }
+
+  public handleKeyDown(event: KeyboardEvent): void {
+    const groups = get(this.filteredGroups)
+    const currentPosition = get(this.selectedSquare)
+    handleKeyDown(event, groups, currentPosition, newPosition => {
+      this.selectedSquare.set(newPosition)
+    })
+  }
+
+  public getSelectedSquareInfo(): { datasetKey: DatasetKey; varName: string; diffPoint: DiffPoint } | undefined {
+    const selected = get(this.selectedSquare)
+    if (!selected) return undefined
+
+    const groups = get(this.filteredGroups)
+    const { groupIndex, rowIndex, pointIndex } = selected
+    const group = groups[groupIndex]
+    const row = group.rows[rowIndex]
+    const point = row.points[pointIndex]
+
+    if (!point.diffPoint) return undefined
+
+    return {
+      datasetKey: row.datasetKey,
+      varName: row.varName,
+      diffPoint: point.diffPoint
+    }
   }
 }
 
@@ -315,13 +352,15 @@ function groupsFromReport(bundleModelR: BundleModel, report: TraceReport, thresh
   function point(datasetReport: TraceDatasetReport, time: number): TracePointViewModel {
     const points = datasetReport.points
     const p = points.get(time)
+    let hasDiff: boolean | undefined
     let color: string
-    let empty = false
     if (p) {
       const rawDiff = Math.abs(p.valueR - p.valueL)
       if (rawDiff === 0) {
+        hasDiff = false
         color = 'green'
       } else {
+        hasDiff = true
         // TODO: Revisit handling of comparisons against zero.  For now if the reference
         // (left) value is zero, treat any difference as 100%.
         const diff = p.valueL !== 0 ? Math.abs(rawDiff / p.valueL) : 1
@@ -333,12 +372,12 @@ function groupsFromReport(bundleModelR: BundleModel, report: TraceReport, thresh
         }
       }
     } else {
-      color = 'crimson'
-      empty = true
+      hasDiff = undefined
+      color = 'gray'
     }
     return {
+      hasDiff,
       color,
-      empty,
       diffPoint: p
     }
   }
@@ -356,8 +395,7 @@ function groupsFromReport(bundleModelR: BundleModel, report: TraceReport, thresh
         // For evalLevels, show data points for t>0; use an empty square for
         // the first item
         points.push({
-          color: 'gray',
-          empty: true
+          color: 'gray'
         })
         for (let t = modelMinTime + 1; t <= modelMaxTime; t++) {
           points.push(point(datasetReport, t))

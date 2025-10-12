@@ -2,6 +2,7 @@
 
 <script module lang="ts">
 import { defineMeta, type Args } from '@storybook/addon-svelte-csf'
+import { expect, waitFor } from 'storybook/test'
 
 import type { BundleModel, Config, ImplVar, ImplVarGroup, ModelSpec, SuiteReport } from '@sdeverywhere/check-core'
 import { ComparisonDataCoordinator, runSuite } from '@sdeverywhere/check-core'
@@ -89,7 +90,6 @@ async function createTraceViewModelForStory(deltaR = 0) {
 
   const config = await mockConfig(bundleL, bundleR)
   const comparisonConfig = config.comparison
-  console.log(comparisonConfig)
   const dataCoordinator = new ComparisonDataCoordinator(comparisonConfig.bundleL.model, comparisonConfig.bundleR.model)
 
   // XXX: Run the comparisons to get the terse summaries
@@ -99,7 +99,6 @@ async function createTraceViewModelForStory(deltaR = 0) {
     d: report.datasetKey,
     md: report.diffReport.maxDiff
   }))
-  console.log(terseSummaries)
 
   return createTraceViewModel(comparisonConfig, dataCoordinator, terseSummaries)
 }
@@ -126,5 +125,75 @@ async function createTraceViewModelForStory(deltaR = 0) {
   beforeEach={async ({ args }) => {
     // Create a view model where even-numbered variables have different values
     args.viewModel = await createTraceViewModelForStory(5)
+  }}
+/>
+
+<Story
+  name="Keyboard Navigation"
+  {template}
+  beforeEach={async ({ args }) => {
+    // Create a view model where even-numbered variables have different values
+    args.viewModel = await createTraceViewModelForStory(5)
+  }}
+  play={async ({ canvas, canvasElement, userEvent }) => {
+    // Wait for trace points to appear (this indicates the component has finished loading)
+    await waitFor(() => {
+      const tracePoints = canvasElement.querySelectorAll('.trace-point')
+      expect(tracePoints.length).toBeGreaterThan(0)
+    })
+
+    // Find the trace container by looking for the div with tabindex="0"
+    const genericElements = canvas.getAllByRole('generic')
+    const traceContainer = genericElements.find(el => el.getAttribute('tabindex') === '0')
+    if (!traceContainer) throw new Error('Trace container not found')
+
+    // Focus the container to enable keyboard events
+    await userEvent.click(traceContainer)
+
+    // Wait a moment for the initial selection to be set
+    // await new Promise(resolve => setTimeout(resolve, 200))
+
+    // Find all trace points using canvasElement (manual query since squares don't have semantic text)
+    const tracePoints = canvasElement.querySelectorAll('.trace-point')
+    if (tracePoints.length === 0) throw new Error('No trace points found')
+
+    // Find the initially selected point
+    const initiallySelected = canvasElement.querySelector('.trace-point.selected')
+    if (!initiallySelected) throw new Error('No initially selected point found')
+
+    // Test ArrowDown navigation - should move to next red square
+    await userEvent.keyboard('{ArrowDown}')
+
+    // Verify the selection moved
+    await expect(initiallySelected).not.toHaveClass('selected')
+    const nextSelected = canvasElement.querySelector('.trace-point.selected')
+    await expect(nextSelected).toBeTruthy()
+    await expect(nextSelected).not.toBe(initiallySelected)
+
+    // Test ArrowUp navigation - should move back to previous red square
+    await userEvent.keyboard('{ArrowUp}')
+
+    // Verify we're back to the original selection
+    await expect(initiallySelected).toHaveClass('selected')
+    await expect(nextSelected).not.toHaveClass('selected')
+
+    // Test Home key - should go to first red square
+    await userEvent.keyboard('{Home}')
+
+    // Find the first red square (should be selected)
+    const firstRedSquare = canvasElement.querySelector('.trace-point[style*="crimson"]')
+    if (firstRedSquare) {
+      await expect(firstRedSquare).toHaveClass('selected')
+    }
+
+    // Test End key - should go to last red square
+    await userEvent.keyboard('{End}')
+
+    // Find the last red square (should be selected)
+    const redSquares = canvasElement.querySelectorAll('.trace-point[style*="crimson"]')
+    if (redSquares.length > 0) {
+      const lastRedSquare = redSquares[redSquares.length - 1]
+      await expect(lastRedSquare).toHaveClass('selected')
+    }
   }}
 />
