@@ -295,6 +295,10 @@ export class TraceViewModel {
     }
   }
 
+  public selectSquareByIndices(groupIndex: number, rowIndex: number, pointIndex: number): void {
+    this.selectedSquare.set({ groupIndex, rowIndex, pointIndex })
+  }
+
   public getSelectedSquareInfo(): { datasetKey: DatasetKey; varName: string; diffPoint: DiffPoint } | undefined {
     const selected = get(this.selectedSquare)
     if (!selected) {

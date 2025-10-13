@@ -23,15 +23,17 @@ const { Story } = defineMeta({
 })
 
 function mockModelSpec(): ModelSpec {
-  const inputVarNames = Array.from({ length: 10 }, (_, i) => `Constant ${i + 1}`)
+  const varsPerGroup = 100
+
+  const inputVarNames = Array.from({ length: varsPerGroup }, (_, i) => `Constant ${i + 1}`)
   const inputVars = new Map(inputVarNames.map((varName, i) => inputVar(`${i + 1}`, varName)))
 
-  const outputVarNames = Array.from({ length: 10 }, (_, i) => `Output ${i + 1}`)
+  const outputVarNames = Array.from({ length: varsPerGroup }, (_, i) => `Output ${i + 1}`)
   const outputVars = new Map(outputVarNames.map(varName => outputVar(varName)))
 
-  const constants = Array.from({ length: 10 }, (_, i) => implVar(`Constant ${i + 1}`, 'const'))
-  const levelVars = Array.from({ length: 10 }, (_, i) => implVar(`Level ${i + 1}`, 'level'))
-  const auxVars = Array.from({ length: 10 }, (_, i) => implVar(`Output ${i + 1}`, 'aux'))
+  const constants = Array.from({ length: varsPerGroup }, (_, i) => implVar(`Constant ${i + 1}`, 'const'))
+  const levelVars = Array.from({ length: varsPerGroup }, (_, i) => implVar(`Level ${i + 1}`, 'level'))
+  const auxVars = Array.from({ length: varsPerGroup }, (_, i) => implVar(`Output ${i + 1}`, 'aux'))
   const implVars = new Map([...constants, ...levelVars, ...auxVars])
 
   const implVarGroups: ImplVarGroup[] = []
@@ -145,24 +147,27 @@ async function createTraceViewModelForStory(deltaR = 0) {
     // Find the trace container by looking for the div with tabindex="0"
     const genericElements = canvas.getAllByRole('generic')
     const traceContainer = genericElements.find(el => el.getAttribute('tabindex') === '0')
-    if (!traceContainer) throw new Error('Trace container not found')
+    if (!traceContainer) {
+      throw new Error('Trace container not found')
+    }
 
     // Focus the container to enable keyboard events
     await userEvent.click(traceContainer)
 
-    // Wait a moment for the initial selection to be set
-    // await new Promise(resolve => setTimeout(resolve, 200))
-
     // Find all trace points using canvasElement (manual query since squares don't have semantic text)
     const tracePoints = canvasElement.querySelectorAll('.trace-point')
-    if (tracePoints.length === 0) throw new Error('No trace points found')
+    if (tracePoints.length === 0) {
+      throw new Error('No trace points found')
+    }
 
     // Find the initially selected point
     const initiallySelected = canvasElement.querySelector('.trace-point.selected')
-    if (!initiallySelected) throw new Error('No initially selected point found')
+    if (!initiallySelected) {
+      throw new Error('No initially selected point found')
+    }
 
-    // Test ArrowDown navigation - should move to next red square
-    await userEvent.keyboard('{ArrowDown}')
+    // Test ArrowRight navigation - should move to next red square
+    await userEvent.keyboard('{ArrowRight}')
 
     // Verify the selection moved
     await expect(initiallySelected).not.toHaveClass('selected')
@@ -170,8 +175,8 @@ async function createTraceViewModelForStory(deltaR = 0) {
     await expect(nextSelected).toBeTruthy()
     await expect(nextSelected).not.toBe(initiallySelected)
 
-    // Test ArrowUp navigation - should move back to previous red square
-    await userEvent.keyboard('{ArrowUp}')
+    // Test ArrowLeft navigation - should move back to previous red square
+    await userEvent.keyboard('{ArrowLeft}')
 
     // Verify we're back to the original selection
     await expect(initiallySelected).toHaveClass('selected')
@@ -195,5 +200,50 @@ async function createTraceViewModelForStory(deltaR = 0) {
       const lastRedSquare = redSquares[redSquares.length - 1]
       await expect(lastRedSquare).toHaveClass('selected')
     }
+
+    // Go back to first red square
+    await userEvent.keyboard('{Home}')
+
+    // Test 'n' key - should go to next output variable with differences
+    await userEvent.keyboard('n')
+    const selectedAfterN = canvasElement.querySelector('.trace-point.selected') as HTMLElement | null
+    await expect(selectedAfterN).toBeDefined()
+
+    // Verify the selected square is red (crimson) and belongs to an Output row
+    const styleAttr = selectedAfterN?.getAttribute('style') || ''
+    await expect(styleAttr.includes('crimson')).toBe(true)
+    const parentRow = selectedAfterN?.closest('.trace-row') as HTMLElement | null
+    await expect(parentRow).toBeDefined()
+    const varName = parentRow?.getAttribute('data-var-name') || ''
+    await expect(varName.startsWith('Output ')).toBe(true)
+  }}
+/>
+
+<Story
+  name="Mouse Selection"
+  {template}
+  beforeEach={async ({ args }) => {
+    // Create a view model where even-numbered variables have different values
+    args.viewModel = await createTraceViewModelForStory(5)
+  }}
+  play={async ({ canvasElement, userEvent }) => {
+    // Wait for trace points to render
+    await waitFor(() => {
+      const tracePoints = canvasElement.querySelectorAll('.trace-point')
+      expect(tracePoints.length).toBeGreaterThan(0)
+    })
+
+    // Choose a crimson (diff) square to click; fall back to any square if none
+    const crimsonSquares = canvasElement.querySelectorAll('.trace-point[style*="crimson"]')
+    const target = crimsonSquares[0] ?? canvasElement.querySelector('.trace-point')
+    if (!target) {
+      throw new Error('No trace point found to click')
+    }
+
+    // Click the target
+    await userEvent.click(target as Element)
+
+    // Verify it is selected
+    await expect(target).toHaveClass('selected')
   }}
 />

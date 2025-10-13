@@ -98,6 +98,10 @@ function onKeyDown(event: KeyboardEvent): void {
   viewModel.handleKeyDown(event)
 }
 
+function onSelectSquare(groupIndex: number, rowIndex: number, pointIndex: number): void {
+  viewModel.selectSquareByIndices(groupIndex, rowIndex, pointIndex)
+}
+
 function scrollToSelectedSquare(selectedElement: Element): void {
   const scrollContainer = document.querySelector('.trace-scroll-container')
   if (!scrollContainer) return
@@ -201,7 +205,13 @@ $: if ($selectedSquareData) {
               $selectedSquareData?.groupIndex === groupIndex && $selectedSquareData?.rowIndex === rowIndex
                 ? $selectedSquareData.pointIndex
                 : undefined}
-            <Row viewModel={row} {selectedPointIndex} on:show-tooltip={onShowTooltip} on:hide-tooltip={onHideTooltip} />
+            <Row
+              viewModel={row}
+              {selectedPointIndex}
+              on:show-tooltip={onShowTooltip}
+              on:hide-tooltip={onHideTooltip}
+              on:select={e => onSelectSquare(groupIndex, rowIndex, e.detail.pointIndex)}
+            />
           {/each}
         </div>
       {/each}

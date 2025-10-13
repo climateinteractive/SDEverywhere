@@ -28,10 +28,14 @@ function onHover(pointViewModel: TracePointViewModel, event: MouseEvent): void {
 function onMouseLeave(): void {
   dispatch('hide-tooltip')
 }
+
+function onClick(pointIndex: number): void {
+  dispatch('select', { pointIndex })
+}
 </script>
 
 <!-- TEMPLATE -->
-<div class="trace-row">
+<div class="trace-row" data-var-name={viewModel.varName}>
   <div class="trace-var-name-container">
     <div class="trace-var-name">{viewModel.varName}</div>
   </div>
@@ -45,6 +49,7 @@ function onMouseLeave(): void {
         style="background-color: {point.color}"
         on:mouseover={event => onHover(point, event)}
         on:mouseleave={onMouseLeave}
+        on:click={() => onClick(pointIndex)}
       ></div>
     {/each}
   </div>
