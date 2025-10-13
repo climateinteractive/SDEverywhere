@@ -29,7 +29,7 @@ const noDataPoint: TracePointViewModel = {
 }
 
 function row(varName: string, points: TracePointViewModel[]): TraceRowViewModel {
-  const datasetKey = varIdForName(varName)
+  const datasetKey = `ModelImpl_${varIdForName(varName)}`
   const isOutputVar = varName.startsWith('Output')
   return {
     datasetKey,

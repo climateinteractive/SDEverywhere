@@ -9,15 +9,11 @@ import type {
   ScenarioSpec
 } from '@sdeverywhere/check-core'
 
-import {
-  allInputsAtPositionSpec,
-  inputAtPositionSpec,
-  inputSettingsSpec,
-  valueSetting
-} from '../../../_mocks/mock-scenario-spec'
+import { allInputsAtPositionSpec, inputAtPositionSpec, inputSettingsSpec, valueSetting } from './mock-scenario-spec'
+import { varIdForName } from './mock-vars'
 
 export function inputVar(inputId: string, varName: string): [VarId, InputVar] {
-  const varId = `_${varName.toLowerCase()}`
+  const varId = varIdForName(varName)
   const v: InputVar = {
     inputId,
     varId,
@@ -64,7 +60,7 @@ export function allAtPos(position: InputPosition): CheckScenario {
 
 export function inputAtPos(inputVar: InputVar, position: InputPosition): CheckScenario {
   const varName = inputVar.varName
-  const varId = `_${varName.toLowerCase()}`
+  const varId = varIdForName(varName)
   const spec = inputAtPositionSpec(varId, position)
   const inputDesc: CheckScenarioInputDesc = {
     name: varName,
@@ -84,7 +80,7 @@ function inputAtValueSpec(inputVarId: VarId, value: number): ScenarioSpec {
 
 export function inputAtValue(inputVar: InputVar, value: number): CheckScenario {
   const varName = inputVar.varName
-  const varId = `_${varName.toLowerCase()}`
+  const varId = varIdForName(varName)
   const spec = inputAtValueSpec(varId, value)
   const inputDesc: CheckScenarioInputDesc = {
     name: varName,

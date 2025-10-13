@@ -19,10 +19,11 @@ import type {
   CheckTestReport
 } from '@sdeverywhere/check-core'
 
-import { allInputsAtPositionSpec } from '../../../_mocks/mock-scenario-spec'
+import { allInputsAtPositionSpec } from './mock-scenario-spec'
+import { varIdForName } from './mock-vars'
 
 export function dataset(prefix: string, varName: string): CheckDataset {
-  const varId = `_${varName.toLowerCase()}`
+  const varId = varIdForName(varName)
   const datasetKey = `${prefix}_${varId}`
   return {
     datasetKey,

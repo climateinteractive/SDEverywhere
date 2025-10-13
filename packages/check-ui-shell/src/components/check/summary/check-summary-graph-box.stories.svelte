@@ -22,8 +22,8 @@ import { mockBundleModel } from '../../../_mocks/mock-bundle'
 import { mockDataset } from '../../../_mocks/mock-data'
 import { inputVar, outputVar } from '../../../_mocks/mock-vars'
 
-import { dataset, opConstantRef, opDataRef } from '../_mocks/mock-check-report'
-import { inputAtValue } from '../_mocks/mock-check-scenario'
+import { dataset, opConstantRef, opDataRef } from '../../../_mocks/mock-check-report'
+import { inputAtValue } from '../../../_mocks/mock-check-scenario'
 
 import StoryDecorator from '../../_storybook/story-decorator.svelte'
 

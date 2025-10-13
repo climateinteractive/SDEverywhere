@@ -18,10 +18,7 @@ import type {
 import { CheckDataCoordinator } from '@sdeverywhere/check-core'
 
 import { mockBundleModel } from '../../../_mocks/mock-bundle'
-import { mockDataset } from '../../../_mocks/mock-data'
-import { inputVar, outputVar } from '../../../_mocks/mock-vars'
-
-import { inputAtPos } from '../_mocks/mock-check-scenario'
+import { inputAtPos } from '../../../_mocks/mock-check-scenario'
 import {
   datasetReport,
   groupReport,
@@ -29,7 +26,9 @@ import {
   predicateReport,
   scenarioReport,
   testReport
-} from '../_mocks/mock-check-report'
+} from '../../../_mocks/mock-check-report'
+import { mockDataset } from '../../../_mocks/mock-data'
+import { inputVar, outputVar } from '../../../_mocks/mock-vars'
 
 import StoryDecorator from '../../_storybook/story-decorator.svelte'
 
