@@ -39,6 +39,6 @@ export function implVar(varName: string, varType: string = 'aux'): [DatasetKey, 
   return [datasetKey, v]
 }
 
-function varIdForName(varName: string): VarId {
+export function varIdForName(varName: string): VarId {
   return `_${varName.toLowerCase().replace(/\s/g, '_')}`
 }
