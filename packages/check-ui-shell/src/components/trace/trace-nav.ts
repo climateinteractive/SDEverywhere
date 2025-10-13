@@ -1,16 +1,12 @@
 // Copyright (c) 2025 Climate Interactive / New Venture Fund
 
 import type { TraceGroupViewModel } from './trace-group-vm'
-import type { TracePointViewModel } from './trace-row-vm'
+import type { TracePointViewModel, TraceRowViewModel } from './trace-row-vm'
 
 export interface SquarePosition {
   groupIndex: number
   rowIndex: number
   pointIndex: number
-}
-
-function isDiffSquare(point: TracePointViewModel): boolean {
-  return point.hasDiff
 }
 
 export function findFirstRedSquare(groups: TraceGroupViewModel[]): SquarePosition | undefined {
@@ -20,7 +16,7 @@ export function findFirstRedSquare(groups: TraceGroupViewModel[]): SquarePositio
       const row = group.rows[rowIndex]
       for (let pointIndex = 0; pointIndex < row.points.length; pointIndex++) {
         const point = row.points[pointIndex]
-        if (isDiffSquare(point)) {
+        if (point.hasDiff === true) {
           return { groupIndex, rowIndex, pointIndex }
         }
       }
@@ -36,7 +32,7 @@ export function findLastRedSquare(groups: TraceGroupViewModel[]): SquarePosition
       const row = group.rows[rowIndex]
       for (let pointIndex = row.points.length - 1; pointIndex >= 0; pointIndex--) {
         const point = row.points[pointIndex]
-        if (isDiffSquare(point)) {
+        if (point.hasDiff === true) {
           return { groupIndex, rowIndex, pointIndex }
         }
       }
@@ -47,7 +43,8 @@ export function findLastRedSquare(groups: TraceGroupViewModel[]): SquarePosition
 
 export function findNextRedSquare(
   groups: TraceGroupViewModel[],
-  currentPosition: SquarePosition | undefined
+  currentPosition: SquarePosition | undefined,
+  options?: { matchOutputVarsOnly?: boolean }
 ): SquarePosition | undefined {
   if (!currentPosition) {
     return findFirstRedSquare(groups)
@@ -57,6 +54,16 @@ export function findNextRedSquare(
   const currentRowIndex = currentPosition.rowIndex
   const currentPointIndex = currentPosition.pointIndex
 
+  function isMatch(point: TracePointViewModel, row: TraceRowViewModel): boolean {
+    if (options?.matchOutputVarsOnly === true) {
+      // Only match if it is for an output variable and there is a diff
+      return row.isOutputVar && point.hasDiff === true
+    } else {
+      // Match if there is a diff
+      return point.hasDiff === true
+    }
+  }
+
   // First, try to find the next variable at the current time
   for (let groupIndex = currentGroupIndex; groupIndex < groups.length; groupIndex++) {
     const group = groups[groupIndex]
@@ -65,7 +72,7 @@ export function findNextRedSquare(
     for (let rowIndex = startRowIndex; rowIndex < group.rows.length; rowIndex++) {
       const row = group.rows[rowIndex]
       const point = row.points[currentPointIndex]
-      if (point && isDiffSquare(point)) {
+      if (point && isMatch(point, row)) {
         return {
           groupIndex: groupIndex,
           rowIndex: rowIndex,
@@ -87,7 +94,7 @@ export function findNextRedSquare(
         const row = group.rows[rowIndex]
         if (pointIndex < row.points.length) {
           const point = row.points[pointIndex]
-          if (point && isDiffSquare(point)) {
+          if (point && isMatch(point, row)) {
             return { groupIndex, rowIndex, pointIndex }
           }
         }
@@ -119,7 +126,7 @@ export function findPreviousRedSquare(
     for (let rowIndex = endRowIndex; rowIndex >= 0; rowIndex--) {
       const row = group.rows[rowIndex]
       const point = row.points[currentPointIndex]
-      if (point && isDiffSquare(point)) {
+      if (point && point.hasDiff === true) {
         return { groupIndex, rowIndex, pointIndex: currentPointIndex }
       }
     }
@@ -133,7 +140,7 @@ export function findPreviousRedSquare(
         const row = group.rows[rowIndex]
         if (pointIndex < row.points.length) {
           const point = row.points[pointIndex]
-          if (point && isDiffSquare(point)) {
+          if (point && point.hasDiff === true) {
             return { groupIndex, rowIndex, pointIndex }
           }
         }
@@ -160,6 +167,10 @@ export function handleKeyDown(
     case 'ArrowRight':
       event.preventDefault()
       newPosition = findNextRedSquare(groups, currentPosition)
+      break
+    case 'n':
+      event.preventDefault()
+      newPosition = findNextRedSquare(groups, currentPosition, { matchOutputVarsOnly: true })
       break
     case 'Home':
       event.preventDefault()

@@ -414,9 +414,15 @@ function groupsFromReport(bundleModelR: BundleModel, report: TraceReport, thresh
         break
     }
 
+    // Check if this variable is an output variable
+    // XXX: This assumes that dataset keys for output variables have a consistent format
+    const outputVarDatasetKey = datasetReport.datasetKey.replace('ModelImpl', 'Model')
+    const isOutputVar = bundleModelR.modelSpec.outputVars.has(outputVarDatasetKey)
+
     return {
       datasetKey: datasetReport.datasetKey,
       varName: implVar.varName,
+      isOutputVar,
       points
     }
   }

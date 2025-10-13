@@ -12,7 +12,12 @@ export interface TracePointViewModel {
 }
 
 export interface TraceRowViewModel {
+  /** The dataset key for the variable represented by this row. */
   datasetKey: DatasetKey
+  /** The name of the variable for the row. */
   varName: string
+  /** Whether this row represents an output variable. */
+  isOutputVar: boolean
+  /** The data points for the row. */
   points: TracePointViewModel[]
 }
