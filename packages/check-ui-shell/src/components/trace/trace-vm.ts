@@ -319,8 +319,8 @@ export class TraceViewModel {
     const groups = get(this.filteredGroups)
     const { groupIndex, rowIndex, pointIndex } = selected
     const group = groups[groupIndex]
-    const row = group.rows[rowIndex]
-    const point = row.points[pointIndex]
+    const row = group?.rows[rowIndex]
+    const point = row?.points[pointIndex]
 
     if (!point?.diffPoint) {
       return undefined
