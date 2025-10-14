@@ -10,6 +10,7 @@ import { get } from 'svelte/store'
 import type { SelectorViewModel } from './selector-vm'
 
 export let viewModel: SelectorViewModel
+export let ariaLabel: string | undefined = undefined
 const selectedValue = viewModel.selectedValue
 const initialValue = get(selectedValue)
 
@@ -22,7 +23,7 @@ function onChange() {
 </script>
 
 <!-- TEMPLATE -->
-<select bind:value={$selectedValue} on:change={onChange}>
+<select bind:value={$selectedValue} on:change={onChange} aria-label={ariaLabel} role="combobox">
   {#each viewModel.options as option}
     <option
       value={option.value}

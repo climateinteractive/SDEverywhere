@@ -24,7 +24,7 @@ const selectedTabId = viewModel.tabBarViewModel.selectedItemId
     {/if}
     <TabBar on:command viewModel={viewModel.tabBarViewModel} />
     {#if $selectedTabId === 'checks'}
-      <CheckSummary viewModel={viewModel.checkSummaryViewModel} />
+      <CheckSummary on:command viewModel={viewModel.checkSummaryViewModel} />
     {:else if $selectedTabId === 'comp-views'}
       <ComparisonSummary on:command viewModel={viewModel.comparisonViewsSummaryViewModel} />
     {:else if $selectedTabId === 'comps-by-scenario'}

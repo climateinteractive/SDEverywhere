@@ -12,6 +12,7 @@ import Freeform from './components/freeform/freeform.svelte'
 import Header from './components/header/header.svelte'
 import type { PerfViewModel } from './components/perf/perf-vm'
 import Perf from './components/perf/perf.svelte'
+import type { TraceViewModel } from './components/trace/trace-vm'
 import Trace from './components/trace/trace.svelte'
 import Summary from './components/summary/summary.svelte'
 
@@ -24,6 +25,7 @@ const zoom = viewModel.headerViewModel.zoom
 
 let compareDetailViewModel: CompareDetailViewModel
 let perfViewModel: PerfViewModel
+let traceViewModel: TraceViewModel
 let freeformViewModel: FreeformViewModel
 
 type ViewMode = 'summary' | 'comparison-detail' | 'perf' | 'freeform' | 'trace'
@@ -112,6 +114,10 @@ function onCommand(event: CustomEvent) {
       }
       viewMode = 'perf'
       break
+    case 'show-trace-view-with-scenario':
+      traceViewModel = viewModel.createTraceViewModel(cmdObj.scenarioSpec)
+      viewMode = 'trace'
+      break
     default:
       console.error(`ERROR: Unhandled command ${cmd}`)
       break
@@ -141,8 +147,11 @@ function onKeyDown(event: KeyboardEvent) {
     //   event.preventDefault()
     //   break
     case 't':
-      viewMode = 'trace'
-      event.preventDefault()
+      if (viewMode !== 'trace') {
+        traceViewModel = viewModel.createTraceViewModel()
+        viewMode = 'trace'
+        event.preventDefault()
+      }
       break
     default:
       break
@@ -167,7 +176,7 @@ function onKeyDown(event: KeyboardEvent) {
     {:else if viewMode === 'freeform'}
       <Freeform on:command={onCommand} viewModel={freeformViewModel} />
     {:else if viewMode === 'trace'}
-      <Trace on:command={onCommand} viewModel={viewModel.traceViewModel} />
+      <Trace on:command={onCommand} viewModel={traceViewModel} />
     {:else if viewMode === 'perf'}
       <Perf on:command={onCommand} viewModel={perfViewModel} />
     {:else}

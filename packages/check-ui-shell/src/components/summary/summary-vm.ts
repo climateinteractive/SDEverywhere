@@ -18,6 +18,7 @@ export interface SummaryViewModel {
   statsTableViewModel?: StatsTableViewModel
   tabBarViewModel: TabBarViewModel
   checkSummaryViewModel: CheckSummaryViewModel
+  comparisonSummary?: ComparisonSummary
   comparisonViewsSummaryViewModel?: ComparisonSummaryViewModel
   comparisonsByScenarioSummaryViewModel?: ComparisonSummaryViewModel
   comparisonsByDatasetSummaryViewModel?: ComparisonSummaryViewModel
@@ -141,6 +142,7 @@ export function createSummaryViewModel(
     statsTableViewModel,
     tabBarViewModel,
     checkSummaryViewModel,
+    comparisonSummary,
     comparisonViewsSummaryViewModel,
     comparisonsByScenarioSummaryViewModel,
     comparisonsByDatasetSummaryViewModel

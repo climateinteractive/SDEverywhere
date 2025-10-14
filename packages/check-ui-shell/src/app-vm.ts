@@ -5,7 +5,7 @@ import assertNever from 'assert-never'
 import type { Readable, Writable } from 'svelte/store'
 import { get, writable } from 'svelte/store'
 
-import type { ComparisonSummary, SuiteSummary } from '@sdeverywhere/check-core'
+import type { ComparisonSummary, ScenarioSpec, SuiteSummary } from '@sdeverywhere/check-core'
 import { checkReportFromSummary, comparisonSummaryFromReport, runSuite } from '@sdeverywhere/check-core'
 
 import { localStorageWritableBoolean, localStorageWritableNumber } from './_shared/stores'
@@ -47,7 +47,6 @@ export class AppViewModel {
   public readonly headerViewModel: HeaderViewModel
   private readonly pinnedItemStates: PinnedItemStates
   public summaryViewModel: SummaryViewModel
-  public traceViewModel: TraceViewModel
   private cancelRunSuite: () => void
 
   /**
@@ -141,12 +140,6 @@ export class AppViewModel {
               comparisonConfig,
               comparisonSummary,
               this.pinnedItemStates
-            )
-            // TODO: Create this lazily
-            this.traceViewModel = createTraceViewModel(
-              comparisonConfig,
-              this.appModel.comparisonDataCoordinator,
-              comparisonSummary.testSummaries
             )
             this.writableChecksInProgress.set(false)
           },
@@ -261,6 +254,13 @@ export class AppViewModel {
 
   createPerfViewModel(): PerfViewModel {
     return createPerfViewModel(this.appModel.config)
+  }
+
+  createTraceViewModel(checkScenarioSpec?: ScenarioSpec): TraceViewModel {
+    const comparisonConfig = this.appModel.config.comparison
+    const dataCoordinator = this.appModel.comparisonDataCoordinator
+    const testSummaries = this.summaryViewModel.comparisonSummary?.testSummaries ?? []
+    return createTraceViewModel(comparisonConfig, dataCoordinator, testSummaries, checkScenarioSpec)
   }
 
   // createFreeformViewModel(): FreeformViewModel {

@@ -164,7 +164,7 @@ $: if ($selectedSquareData) {
   <div class="trace-header-container">
     <div class="trace-header-content">
       <div class="trace-source-selector-label">Source 1:</div>
-      <Selector viewModel={sourceSelector0} />
+      <Selector viewModel={sourceSelector0} ariaLabel="Source 1" />
       {#if $selectedSource0 === 'dat'}
         <div class="trace-scenario-selector-label">File:</div>
         <input
@@ -177,12 +177,12 @@ $: if ($selectedSquareData) {
         />
       {:else}
         <div class="trace-scenario-selector-label">Scenario:</div>
-        <Selector viewModel={$scenarioSelector0} />
+        <Selector viewModel={$scenarioSelector0} ariaLabel="Scenario 1" />
       {/if}
       <div class="trace-source-selector-label">Source 2:</div>
-      <Selector viewModel={sourceSelector1} />
+      <Selector viewModel={sourceSelector1} ariaLabel="Source 2" />
       <div class="trace-scenario-selector-label">Scenario:</div>
-      <Selector viewModel={$scenarioSelector1} />
+      <Selector viewModel={$scenarioSelector1} ariaLabel="Scenario 2" />
     </div>
     <div class="trace-options">
       <label class="trace-checkbox-label">

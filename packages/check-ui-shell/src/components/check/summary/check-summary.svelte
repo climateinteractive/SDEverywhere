@@ -2,15 +2,59 @@
 
 <!-- SCRIPT -->
 <script lang="ts">
+import { createEventDispatcher } from 'svelte'
+
+import type { CheckScenarioReport } from '@sdeverywhere/check-core'
+
+import type { ContextMenuItem } from '../../_shared/context-menu.svelte'
+import ContextMenu from '../../_shared/context-menu.svelte'
+
 import type { CheckSummaryViewModel } from './check-summary-vm'
+import type { CheckSummaryRowViewModel } from './check-summary-row-vm'
 import CheckSummaryRow from './check-summary-row.svelte'
 
 export let viewModel: CheckSummaryViewModel
 
-// Previously we allowed for collapsing the whole checks section, but now that we have
-// tabs, that is less useful, so always show them
-// let showCheckDetail = viewModel.total > 0 && viewModel.total !== viewModel.passed
-const showCheckDetail = true
+let contextMenuSourceScenario: CheckScenarioReport | undefined
+let contextMenuItems: ContextMenuItem[] = []
+let contextMenuEvent: MouseEvent | undefined
+
+const dispatch = createEventDispatcher()
+
+function onShowContextMenu(event: MouseEvent, viewModel: CheckSummaryRowViewModel) {
+  if (viewModel.scenarioReport?.checkScenario?.spec) {
+    contextMenuSourceScenario = viewModel.scenarioReport
+    contextMenuItems = [{ key: 'show-trace-view', displayText: 'Open Scenario in Trace View' }]
+    contextMenuEvent = event
+  } else {
+    contextMenuSourceScenario = undefined
+    contextMenuItems = []
+    contextMenuEvent = undefined
+  }
+}
+
+function onHideContextMenu() {
+  contextMenuEvent = undefined
+}
+
+function onContextMenuItemSelected(e: CustomEvent) {
+  // Hide the context menu
+  contextMenuEvent = undefined
+
+  // Handle the command
+  const cmd = e.detail
+  switch (cmd) {
+    case 'show-trace-view':
+      dispatch('command', {
+        cmd: 'show-trace-view-with-scenario',
+        scenarioSpec: contextMenuSourceScenario?.checkScenario?.spec
+      })
+      break
+    default:
+      console.error(`ERROR: Unhandled context menu command '${cmd}'`)
+      break
+  }
+}
 </script>
 
 <!-- TEMPLATE -->
@@ -51,20 +95,24 @@ const showCheckDetail = true
       {/if}
     </span>
   </div>
-  {#if showCheckDetail}
-    <div class="check-detail">
-      {#each viewModel.groups as group}
-        <div class="group-container">
-          <div class="row group">
-            <div class="label">{group.name}</div>
-          </div>
-          {#each group.tests as testViewModel}
-            <CheckSummaryRow viewModel={testViewModel} />
-          {/each}
+  <div class="check-detail">
+    {#each viewModel.groups as group}
+      <div class="group-container">
+        <div class="row group">
+          <div class="label">{group.name}</div>
         </div>
-      {/each}
-    </div>
-  {/if}
+        {#each group.tests as testViewModel}
+          <CheckSummaryRow viewModel={testViewModel} {onShowContextMenu} />
+        {/each}
+      </div>
+    {/each}
+  </div>
+  <ContextMenu
+    items={contextMenuItems}
+    initialEvent={contextMenuEvent}
+    on:item-selected={onContextMenuItemSelected}
+    on:clickout={onHideContextMenu}
+  />
 </div>
 
 <!-- STYLE -->

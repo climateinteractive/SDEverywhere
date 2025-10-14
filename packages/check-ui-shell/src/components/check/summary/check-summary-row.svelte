@@ -6,16 +6,27 @@ import CheckGraphBox from './check-summary-graph-box.svelte'
 import type { CheckSummaryRowViewModel } from './check-summary-row-vm'
 
 export let viewModel: CheckSummaryRowViewModel
+export let onShowContextMenu: (event: MouseEvent, viewModel: CheckSummaryRowViewModel) => void | undefined
+
 $: childRows = viewModel.childRows
 $: expanded = viewModel.expanded
 
 function onLabelClicked() {
   viewModel.onClicked()
 }
+
+function onContextMenu(event: MouseEvent) {
+  // Only show for scenario rows that have a scenario report with a defined spec
+  if (!viewModel.scenarioReport?.checkScenario?.spec) {
+    return
+  }
+  event.preventDefault()
+  onShowContextMenu?.(event, viewModel)
+}
 </script>
 
 <!-- TEMPLATE -->
-<div class={`row ${viewModel.rowClasses}`}>
+<div class={`row ${viewModel.rowClasses}`} on:contextmenu={onContextMenu}>
   <span class="label" on:click={onLabelClicked}>{@html viewModel.span}</span>
 </div>
 {#if $expanded}
@@ -26,7 +37,7 @@ function onLabelClicked() {
   {:else}
     <div class="child-rows">
       {#each $childRows as childRow}
-        <svelte:self viewModel={childRow} />
+        <svelte:self viewModel={childRow} {onShowContextMenu} />
       {/each}
     </div>
   {/if}

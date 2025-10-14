@@ -5,10 +5,10 @@ import { defineMeta, type Args } from '@storybook/addon-svelte-csf'
 import { expect, waitFor } from 'storybook/test'
 
 import type { BundleModel, Config, ImplVar, ImplVarGroup, ModelSpec, SuiteReport } from '@sdeverywhere/check-core'
-import { ComparisonDataCoordinator, runSuite } from '@sdeverywhere/check-core'
+import { ComparisonDataCoordinator, createConfig, runSuite } from '@sdeverywhere/check-core'
 
 import { mockBundleModel, mockNamedBundle } from '../../_mocks/mock-bundle'
-import { mockConfig } from '../../_mocks/mock-config'
+import { mockConfigOptions } from '../../_mocks/mock-config'
 import { mockDataset } from '../../_mocks/mock-data'
 import { implVar, inputVar, outputVar } from '../../_mocks/mock-vars'
 
@@ -90,7 +90,8 @@ async function createTraceViewModelForStory(deltaR = 0) {
   const bundleL = mockNamedBundle('left', createBundleModel(modelSpec, 0))
   const bundleR = mockNamedBundle('right', createBundleModel(modelSpec, deltaR))
 
-  const config = await mockConfig(bundleL, bundleR)
+  const configOptions = mockConfigOptions(bundleL, bundleR)
+  const config = await createConfig(configOptions)
   const comparisonConfig = config.comparison
   const dataCoordinator = new ComparisonDataCoordinator(comparisonConfig.bundleL.model, comparisonConfig.bundleR.model)
 
@@ -102,7 +103,7 @@ async function createTraceViewModelForStory(deltaR = 0) {
     md: report.diffReport.maxDiff
   }))
 
-  return createTraceViewModel(comparisonConfig, dataCoordinator, terseSummaries)
+  return createTraceViewModel(comparisonConfig, dataCoordinator, terseSummaries, undefined)
 }
 </script>
 

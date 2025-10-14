@@ -1,18 +1,33 @@
 // Copyright (c) 2025 Climate Interactive / New Venture Fund
 
-import type { ComparisonSpecs, Config, ConfigOptions, NamedBundle } from '@sdeverywhere/check-core'
-import { createConfig } from '@sdeverywhere/check-core'
+import type { ComparisonSpecs, ConfigOptions, NamedBundle } from '@sdeverywhere/check-core'
 
 import { scenarioWithAllInputsAtDefaultSpec } from './mock-comparison-scenario-spec'
 
-export async function mockConfig(bundleL: NamedBundle, bundleR: NamedBundle): Promise<Config> {
+export function mockConfigOptions(bundleL: NamedBundle, bundleR: NamedBundle): ConfigOptions {
+  const allPositive = `
+- describe: Output 1
+  tests:
+    - it: should be positive
+      scenarios:
+        - with: Constant 1
+          at: max
+      datasets:
+        - name: Output 1
+      predicates:
+        - gt: 0
+  `
+
+  const checkTests = [allPositive]
+
   const comparisonSpecs: ComparisonSpecs = {
     scenarios: [scenarioWithAllInputsAtDefaultSpec()]
   }
-  const configOptions: ConfigOptions = {
+
+  return {
     current: bundleR,
     check: {
-      tests: []
+      tests: checkTests
     },
     comparison: {
       baseline: bundleL,
@@ -20,5 +35,4 @@ export async function mockConfig(bundleL: NamedBundle, bundleR: NamedBundle): Pr
       specs: [comparisonSpecs]
     }
   }
-  return createConfig(configOptions)
 }

@@ -24,7 +24,6 @@ let itemKindPlural: string
 let pinnedDetailRows: Readable<CompareDetailRowViewModel[]>
 
 let scrollContainer: HTMLElement
-let scrollContent: HTMLElement
 
 let contextMenuSourceKey: PinnedItemKey
 let contextMenuItems: ContextMenuItem[] = []
@@ -217,7 +216,7 @@ onMount(() => {
     {/if}
   </div>
   <div class="scroll-container" bind:this={scrollContainer} tabindex="0">
-    <div class="scroll-content" bind:this={scrollContent}>
+    <div class="scroll-content">
       {#if viewModel.graphSections.length > 0}
         {#each viewModel.graphSections as graphsSectionViewModel}
           <div class="section-title">{graphsSectionViewModel.title}</div>
@@ -254,7 +253,6 @@ onMount(() => {
       <div class="footer"></div>
       <ContextMenu
         items={contextMenuItems}
-        parentElem={scrollContent}
         initialEvent={contextMenuEvent}
         on:item-selected={onContextMenuItemSelected}
         on:clickout={onHideContextMenu}

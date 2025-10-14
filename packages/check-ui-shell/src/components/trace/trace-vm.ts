@@ -70,7 +70,8 @@ export class TraceViewModel {
   constructor(
     public readonly comparisonConfig: ComparisonConfig,
     public readonly dataCoordinator: ComparisonDataCoordinator,
-    terseSummaries: ComparisonTestSummary[]
+    terseSummaries: ComparisonTestSummary[],
+    checkScenarioSpec: ScenarioSpec | undefined
   ) {
     // Extract the bundle models
     this.bundleModelL = comparisonConfig.bundleL.model
@@ -104,8 +105,18 @@ export class TraceViewModel {
     // Determine the available scenarios for each bundle
     const comparisonGroups = categorizeComparisonTestSummaries(comparisonConfig, terseSummaries)
     const groupsByScenario = comparisonGroups.byScenario
-    const [scenarioOptionsL, scenarioSpecsL] = scenarioOptionsForBundle('left', this.bundleNameL, groupsByScenario)
-    const [scenarioOptionsR, scenarioSpecsR] = scenarioOptionsForBundle('right', this.bundleNameR, groupsByScenario)
+    const [scenarioOptionsL, scenarioSpecsL] = scenarioOptionsForBundle(
+      'left',
+      this.bundleNameL,
+      groupsByScenario,
+      checkScenarioSpec
+    )
+    const [scenarioOptionsR, scenarioSpecsR] = scenarioOptionsForBundle(
+      'right',
+      this.bundleNameR,
+      groupsByScenario,
+      checkScenarioSpec
+    )
 
     // Configure each scenario selector when the source is changed
     this.selectedScenarioSpecUid0 = writable(undefined)
@@ -113,9 +124,9 @@ export class TraceViewModel {
     this.scenarioSelector0 = derived(this.selectedSource0, $selectedSource0 => {
       switch ($selectedSource0) {
         case 'left':
-          return createScenarioSelectorViewModel(scenarioOptionsL, this.selectedScenarioSpecUid0)
+          return createScenarioSelectorViewModel(0, scenarioOptionsL, this.selectedScenarioSpecUid0)
         case 'right':
-          return createScenarioSelectorViewModel(scenarioOptionsR, this.selectedScenarioSpecUid0)
+          return createScenarioSelectorViewModel(0, scenarioOptionsR, this.selectedScenarioSpecUid0)
         case 'dat':
           return undefined
         default:
@@ -124,7 +135,7 @@ export class TraceViewModel {
     })
     // XXX: For now we only allow for selecting the "right" bundle as the second source
     this.scenarioSelector1 = derived(this.selectedSource1, () => {
-      return createScenarioSelectorViewModel(scenarioOptionsR, this.selectedScenarioSpecUid1)
+      return createScenarioSelectorViewModel(1, scenarioOptionsR, this.selectedScenarioSpecUid1)
     })
 
     // Derive the scenario specs from the selector states
@@ -326,9 +337,10 @@ export class TraceViewModel {
 export function createTraceViewModel(
   comparisonConfig: ComparisonConfig,
   dataCoordinator: ComparisonDataCoordinator,
-  terseSummaries: ComparisonTestSummary[]
+  terseSummaries: ComparisonTestSummary[],
+  checkScenarioSpec: ScenarioSpec | undefined
 ): TraceViewModel {
-  return new TraceViewModel(comparisonConfig, dataCoordinator, terseSummaries)
+  return new TraceViewModel(comparisonConfig, dataCoordinator, terseSummaries, checkScenarioSpec)
 }
 
 function groupsFromReport(bundleModelR: BundleModel, report: TraceReport, threshold: number): TraceGroupViewModel[] {
@@ -462,7 +474,8 @@ function groupsFromReport(bundleModelR: BundleModel, report: TraceReport, thresh
 function scenarioOptionsForBundle(
   side: 'left' | 'right',
   bundleName: string,
-  groupsByScenario: ComparisonGroupSummariesByCategory
+  groupsByScenario: ComparisonGroupSummariesByCategory,
+  checkScenarioSpec: ScenarioSpec | undefined
 ): [SelectorOptionViewModel[], ScenarioSpec[]] {
   const scenarioOptions: SelectorOptionViewModel[] = []
   const scenarioSpecs: ScenarioSpec[] = []
@@ -490,6 +503,12 @@ function scenarioOptionsForBundle(
     summaries.forEach(addScenarioOption)
   }
 
+  // If a check scenario was provided, put it at the top of the list
+  // TODO: It's possible that the check scenario isn't valid for the selected side
+  scenarioSpecs.push(checkScenarioSpec)
+  scenarioOptions.push(new SelectorOptionViewModel('Selected scenario from check test', checkScenarioSpec.uid))
+
+  // Add options for the available comparison scenarios
   const onlyInSide = side === 'left' ? groupsByScenario.onlyInLeft : groupsByScenario.onlyInRight
   addScenarioOptions(onlyInSide, `--- Scenarios only valid in ${bundleName}`, '___only_in_side')
   addScenarioOptions(groupsByScenario.withDiffs, `--- Scenarios producing differences`, '___with_diffs')
@@ -499,19 +518,26 @@ function scenarioOptionsForBundle(
 }
 
 function createScenarioSelectorViewModel(
+  source: 0 | 1,
   scenarioOptions: SelectorOptionViewModel[],
   selectedScenarioSpecUid: Writable<string | undefined>
 ): SelectorViewModel {
-  // XXX: Select the "All inputs at default" scenario by default.  This is fragile because it assumes that the
-  // scenario is always present and has a specific UID, but there is no guarantee of that.
   let initialScenarioSpecUid: string
-  for (const option of scenarioOptions) {
-    if (option.label === 'All inputs at default') {
-      initialScenarioSpecUid = option.value
-      break
+  if (source === 1 && scenarioOptions[0]?.label === 'Selected scenario from check test') {
+    // XXX: If there is a "Selected scenario from check test" option, select it by default
+    initialScenarioSpecUid = scenarioOptions[0].value
+  } else {
+    // XXX: Otherwise, select the "All inputs at default" scenario by default.  This is fragile because it
+    // assumes that the scenario is always present and has a specific UID, but there is no guarantee of that.
+    for (const option of scenarioOptions) {
+      if (option.label === 'All inputs at default') {
+        initialScenarioSpecUid = option.value
+        break
+      }
     }
   }
   selectedScenarioSpecUid.set(initialScenarioSpecUid)
 
-  return new SelectorViewModel(scenarioOptions, selectedScenarioSpecUid)
+  const label = source === 0 ? 'Scenario 1' : 'Scenario 2'
+  return new SelectorViewModel(scenarioOptions, selectedScenarioSpecUid, label)
 }
