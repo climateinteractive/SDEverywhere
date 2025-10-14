@@ -503,10 +503,12 @@ function scenarioOptionsForBundle(
     summaries.forEach(addScenarioOption)
   }
 
-  // If a check scenario was provided, put it at the top of the list
-  // TODO: It's possible that the check scenario isn't valid for the selected side
-  scenarioSpecs.push(checkScenarioSpec)
-  scenarioOptions.push(new SelectorOptionViewModel('Selected scenario from check test', checkScenarioSpec.uid))
+  if (checkScenarioSpec) {
+    // If a check scenario was provided, put it at the top of the list
+    // TODO: It's possible that the check scenario isn't valid for the selected side
+    scenarioSpecs.push(checkScenarioSpec)
+    scenarioOptions.push(new SelectorOptionViewModel('Selected scenario from check test', checkScenarioSpec.uid))
+  }
 
   // Add options for the available comparison scenarios
   const onlyInSide = side === 'left' ? groupsByScenario.onlyInLeft : groupsByScenario.onlyInRight
