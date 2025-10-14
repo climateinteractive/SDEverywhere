@@ -77,11 +77,10 @@ function createBundleModel(modelSpec: ModelSpec, delta = 0): BundleModel {
 
 async function runComparisons(config: Config): Promise<SuiteReport> {
   return await new Promise((resolve, reject) => {
-    const callbacks = {
-      onComplete: (report: any) => resolve(report),
-      onError: (error: Error) => reject(error)
-    }
-    runSuite(config, callbacks)
+    runSuite(config, {
+      onComplete: report => resolve(report),
+      onError: error => reject(error)
+    })
   })
 }
 
