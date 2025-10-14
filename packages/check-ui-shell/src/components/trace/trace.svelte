@@ -46,13 +46,13 @@ let tooltipViewModel: TraceTooltipViewModel | undefined = undefined
 let tooltipX = 0
 let tooltipY = 0
 
-function positionTooltip(referenceX: number, referenceY: number, referenceLeft?: number): void {
-  // Position tooltip near the reference point, but ensure it stays on screen.
-  // Actual width: 400px width + 12px padding + 1px border = 426px total width
-  // Actual height: 300px height + 12px padding + 1px border = 326px total height
-  const tooltipWidth = 426
-  const tooltipHeight = 326
+// Actual width: 400px width + 12px padding + 1px border = 426px total width
+const tooltipWidth = 426
 
+// Actual height: 300px height + 12px padding + 1px border = 326px total height
+const tooltipHeight = 326
+
+function positionTooltip(referenceX: number, referenceY: number, referenceLeft?: number): void {
   // Adjust if tooltip would go off the right edge
   const xMargin = 2
   let x = referenceX + xMargin
@@ -76,6 +76,18 @@ function positionTooltip(referenceX: number, referenceY: number, referenceLeft?:
 
   tooltipX = x
   tooltipY = y
+}
+
+function positionTooltipForElement(element: Element | undefined): void {
+  if (element) {
+    // Position the tooltip next to the element
+    const rect = element.getBoundingClientRect()
+    positionTooltip(rect.right, rect.top, rect.left)
+  } else {
+    // Fallback to center if element not found
+    tooltipX = window.innerWidth / 2 - tooltipWidth / 2
+    tooltipY = window.innerHeight / 2 - tooltipHeight / 2
+  }
 }
 
 function onShowTooltip(event: CustomEvent): void {
@@ -102,59 +114,72 @@ function onSelectSquare(groupIndex: number, rowIndex: number, pointIndex: number
   viewModel.selectSquareByIndices(groupIndex, rowIndex, pointIndex)
 }
 
-function scrollToSelectedSquare(selectedElement: Element): void {
+function scrollToSelectedRow(selectedRowElem: Element): void {
   const scrollContainer = document.querySelector('.trace-scroll-container')
-  if (!scrollContainer) return
+  if (!scrollContainer) {
+    return
+  }
 
   const containerRect = scrollContainer.getBoundingClientRect()
-  const elementRect = selectedElement.getBoundingClientRect()
+  const elementRect = selectedRowElem.getBoundingClientRect()
 
-  // Calculate if the element is visible within the scroll container
+  // Calculate if the row is visible within the scroll container
   const isVisible = elementRect.top >= containerRect.top && elementRect.bottom <= containerRect.bottom
 
   if (!isVisible) {
-    // Calculate the scroll position to center the element in the container
-    const elementOffsetTop = selectedElement.getBoundingClientRect().top - containerRect.top + scrollContainer.scrollTop
+    // Calculate the scroll position to center the row in the container
+    const elementOffsetTop = selectedRowElem.getBoundingClientRect().top - containerRect.top + scrollContainer.scrollTop
     const containerHeight = containerRect.height
     const elementHeight = elementRect.height
 
-    // Center the element vertically in the container
+    // Center the row vertically in the container
     const targetScrollTop = elementOffsetTop - containerHeight / 2 + elementHeight / 2
 
-    // Smooth scroll to the target position
+    // Scroll to the target position
     scrollContainer.scrollTo({
       top: targetScrollTop,
-      behavior: 'smooth'
+      behavior: 'instant'
+      // behavior: 'smooth'
     })
   }
 }
 
 // Auto-show tooltip for selected square and scroll to reveal it
+let tooltipTimeout: ReturnType<typeof setTimeout> | undefined = undefined
 $: if ($selectedSquareData) {
   const selectedInfo = viewModel.getSelectedSquareInfo()
   if (selectedInfo) {
-    // Find the selected square's DOM element and position tooltip to its right
-    setTimeout(() => {
-      const selectedElement = document.querySelector('.trace-point.selected')
-      if (selectedElement) {
-        const rect = selectedElement.getBoundingClientRect()
-        // Position tooltip to the right of the square, with proper left-edge positioning when needed
-        positionTooltip(rect.right, rect.top, rect.left)
-
-        // Scroll to reveal the selected square
-        scrollToSelectedSquare(selectedElement)
-      } else {
-        // Fallback to center if element not found
-        tooltipX = window.innerWidth / 2 - 200
-        tooltipY = window.innerHeight / 2 - 150
-      }
-    }, 0)
-
     tooltipViewModel = viewModel.createTooltipViewModel(
       selectedInfo.datasetKey,
       selectedInfo.varName,
       selectedInfo.diffPoint
     )
+
+    // Cancel any pending tooltip positioning
+    clearTimeout(tooltipTimeout)
+    tooltipTimeout = undefined
+
+    // Find the row element for the selected square
+    setTimeout(() => {
+      const selectedRowElem = document.querySelector('.trace-row.selected')
+      if (selectedRowElem) {
+        // Scroll to reveal the selected square
+        scrollToSelectedRow(selectedRowElem)
+      }
+
+      // Position the tooltip
+      let selectedSquareElem = document.querySelector('.trace-point.selected')
+      if (selectedSquareElem) {
+        // The square is already visible, so position the tooltip immediately
+        positionTooltipForElement(selectedSquareElem)
+      } else {
+        // Add a small delay to ensure the row is visible before positioning the tooltip
+        tooltipTimeout = setTimeout(() => {
+          selectedSquareElem = document.querySelector('.trace-point.selected')
+          positionTooltipForElement(selectedSquareElem)
+        }, 300)
+      }
+    }, 0)
   }
 }
 </script>

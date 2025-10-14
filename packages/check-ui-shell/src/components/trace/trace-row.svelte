@@ -4,6 +4,8 @@
 <script lang="ts">
 import { createEventDispatcher } from 'svelte'
 
+import Lazy from '../_shared/lazy.svelte'
+
 import { type TracePointViewModel, type TraceRowViewModel } from './trace-row-vm'
 
 export let viewModel: TraceRowViewModel
@@ -35,24 +37,26 @@ function onClick(pointIndex: number): void {
 </script>
 
 <!-- TEMPLATE -->
-<div class="trace-row" data-var-name={viewModel.varName}>
+<div class="trace-row" data-var-name={viewModel.varName} class:selected={selectedPointIndex !== undefined}>
   <div class="trace-var-name-container">
     <div class="trace-var-name">{viewModel.varName}</div>
   </div>
-  <div class="trace-points">
-    {#each viewModel.points as point, pointIndex}
-      <!-- svelte-ignore a11y-mouse-events-have-key-events -->
-      <div
-        class="trace-point"
-        class:empty={point.hasDiff === undefined}
-        class:selected={selectedPointIndex === pointIndex}
-        style="background-color: {point.color}"
-        on:mouseover={event => onHover(point, event)}
-        on:mouseleave={onMouseLeave}
-        on:click={() => onClick(pointIndex)}
-      ></div>
-    {/each}
-  </div>
+  <Lazy>
+    <div class="trace-points">
+      {#each viewModel.points as point, pointIndex}
+        <!-- svelte-ignore a11y-mouse-events-have-key-events -->
+        <div
+          class="trace-point"
+          class:empty={point.hasDiff === undefined}
+          class:selected={selectedPointIndex === pointIndex}
+          style="background-color: {point.color}"
+          on:mouseover={event => onHover(point, event)}
+          on:mouseleave={onMouseLeave}
+          on:click={() => onClick(pointIndex)}
+        ></div>
+      {/each}
+    </div>
+  </Lazy>
 </div>
 
 <!-- STYLE -->
