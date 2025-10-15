@@ -4,12 +4,11 @@
 <script lang="ts">
 import { createEventDispatcher } from 'svelte'
 import Icon from 'svelte-awesome/components/Icon.svelte'
-import { faCog, faHome } from '@fortawesome/free-solid-svg-icons'
+import { faCog, faFilter, faHome } from '@fortawesome/free-solid-svg-icons'
 
 import type { HeaderViewModel } from './header-vm'
 
 export let viewModel: HeaderViewModel
-const simplifyScenarios = viewModel.simplifyScenarios
 const thresholds = viewModel.thresholds
 const bundleNamesL = viewModel.bundleNamesL
 const bundleNamesR = viewModel.bundleNamesR
@@ -21,6 +20,10 @@ const dispatch = createEventDispatcher()
 
 function onHome() {
   dispatch('command', { cmd: 'show-summary' })
+}
+
+function onToggleFilters() {
+  dispatch('command', { cmd: 'toggle-filters' })
 }
 
 function onToggleControls() {
@@ -44,16 +47,6 @@ function onSelectBundleL(e: Event) {
 function onSelectBundleR(e: Event) {
   onSelectBundle('right', (e.target as HTMLSelectElement).value)
 }
-
-// XXX: Ignore the first event when we subscribe
-let firstSimplify = true
-$: if ($simplifyScenarios !== undefined) {
-  if (firstSimplify) {
-    firstSimplify = false
-  } else {
-    document.dispatchEvent(new CustomEvent('sde-check-simplify-scenarios-toggled'))
-  }
-}
 </script>
 
 <!-- TEMPLATE -->
@@ -65,12 +58,6 @@ $: if ($simplifyScenarios !== undefined) {
       </div>
     </div>
     <div class="spacer-flex"></div>
-    {#if simplifyScenarios !== undefined}
-      <div class="header-group">
-        <input class="checkbox" type="checkbox" name="simplify-toggle" bind:checked={$simplifyScenarios} />
-        <label for="simplify-toggle">Simplify Scenarios</label>
-      </div>
-    {/if}
     {#if viewModel.nameL || $bundleNamesL.length > 1}
       <div class="spacer-fixed"></div>
       <div class="header-group">
@@ -105,6 +92,9 @@ $: if ($simplifyScenarios !== undefined) {
       </div>
       <div class="spacer-fixed"></div>
       <div class="header-group">
+        <div class="icon-button filter" on:click={onToggleFilters}>
+          <Icon class="icon" data={faFilter} />
+        </div>
         <div class="icon-button controls" on:click={onToggleControls}>
           <Icon class="icon" data={faCog} />
         </div>
@@ -164,6 +154,10 @@ $: if ($simplifyScenarios !== undefined) {
   &:hover {
     color: #fff;
   }
+}
+
+.icon-button.filter {
+  margin-right: 1rem;
 }
 
 .label:not(:last-child) {
