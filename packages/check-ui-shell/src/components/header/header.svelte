@@ -92,9 +92,11 @@ function onSelectBundleR(e: Event) {
       </div>
       <div class="spacer-fixed"></div>
       <div class="header-group">
-        <div class="icon-button filter" on:click={onToggleFilters}>
-          <Icon class="icon" data={faFilter} />
-        </div>
+        {#if (import.meta as any).hot}
+          <div class="icon-button filter" on:click={onToggleFilters}>
+            <Icon class="icon" data={faFilter} />
+          </div>
+        {/if}
         <div class="icon-button controls" on:click={onToggleControls}>
           <Icon class="icon" data={faCog} />
         </div>
