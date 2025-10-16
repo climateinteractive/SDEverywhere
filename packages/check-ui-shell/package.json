@@ -19,7 +19,7 @@
     "test": "vitest run",
     "test:ts": "vitest run --project=ts",
     "test:storybook": "vitest run --project=storybook",
-    "test:ts:watch": "vitest dev --project=ts",
+    "test:ts:watch": "vitest dev --project=ts --hideSkippedTests",
     "test:storybook:watch": "vitest dev --project=storybook",
     "test:ci": "run-s test:ts",
     "type-check": "tsc --noEmit -p tsconfig-test.json",
