@@ -72,7 +72,15 @@ export function createSummaryViewModel(
     }
     checkTabInfo = [parts.join(', '), 'failed']
   } else {
-    checkTabInfo = ['all clear', 'passed']
+    // Show passed count, and skipped count if there are any
+    const parts: string[] = []
+    if (checkSummaryViewModel.passed > 0) {
+      parts.push(`${checkSummaryViewModel.passed} passed`)
+    }
+    if (checkSummaryViewModel.skipped > 0) {
+      parts.push(`${checkSummaryViewModel.skipped} skipped`)
+    }
+    checkTabInfo = [parts.join(', '), 'passed']
   }
   addTabItem('checks', 'Checks', checkTabInfo)
 

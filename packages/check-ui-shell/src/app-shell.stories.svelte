@@ -145,3 +145,128 @@ async function createAppViewModel(): Promise<AppViewModel> {
     await expect(scenario2Select).toHaveTextContent('Selected scenario from check test')
   }}
 />
+
+<Story
+  name="Filter Tests and Apply Changes"
+  {template}
+  beforeEach={async ({ args }) => {
+    args.appViewModel = await createAppViewModel()
+  }}
+  play={async ({ canvas, canvasElement, userEvent }) => {
+    // Wait for the check tests to appear
+    await waitFor(() => {
+      const testRows = canvasElement.querySelectorAll('.row.test')
+      expect(testRows.length).toBeGreaterThan(0)
+    })
+
+    // Click the filter button to open the filter popover
+    const filterButton = canvas.getByRole('button', { name: /filter/i })
+    await userEvent.click(filterButton)
+
+    // Wait for the filter popover to appear
+    await waitFor(() => {
+      const filterPopover = canvasElement.querySelector('.filter-popover')
+      expect(filterPopover).toBeDefined()
+    })
+
+    // Find and uncheck a test in the checks panel
+    const checksPanel = canvasElement.querySelector('.filter-panel')
+    expect(checksPanel).toBeDefined()
+
+    // Look for a checkbox in the checks panel and uncheck it
+    const firstCheckbox = checksPanel?.querySelector('input[type="checkbox"]')
+    expect(firstCheckbox).toBeDefined()
+
+    if (firstCheckbox && firstCheckbox instanceof HTMLInputElement) {
+      // Uncheck the first checkbox
+      if (firstCheckbox.checked) {
+        await userEvent.click(firstCheckbox)
+      }
+    }
+
+    // Click the "Apply and Run" button
+    const applyButton = canvas.getByRole('button', { name: /apply and run/i })
+    await userEvent.click(applyButton)
+
+    // Wait for the page to reload and tests to run again
+    await waitFor(
+      () => {
+        const testRows = canvasElement.querySelectorAll('.row.test')
+        expect(testRows.length).toBeGreaterThan(0)
+      },
+      { timeout: 5000 }
+    )
+
+    // Verify that the filter popover is closed
+    const filterPopover = canvasElement.querySelector('.filter-popover')
+    expect(filterPopover).toBeNull()
+  }}
+/>
+
+<Story
+  name="Verify Skipped Count Display"
+  {template}
+  beforeEach={async ({ args }) => {
+    args.appViewModel = await createAppViewModel()
+  }}
+  play={async ({ canvas, canvasElement, userEvent }) => {
+    // Wait for the check tests to appear
+    await waitFor(() => {
+      const testRows = canvasElement.querySelectorAll('.row.test')
+      expect(testRows.length).toBeGreaterThan(0)
+    })
+
+    // Click the filter button to open the filter popover
+    const filterButton = canvas.getByRole('button', { name: /filter/i })
+    await userEvent.click(filterButton)
+
+    // Wait for the filter popover to appear
+    await waitFor(() => {
+      const filterPopover = canvasElement.querySelector('.filter-popover')
+      expect(filterPopover).toBeDefined()
+    })
+
+    // Find and uncheck a test in the checks panel
+    const checksPanel = canvasElement.querySelector('.filter-panel')
+    expect(checksPanel).toBeDefined()
+
+    // Look for a checkbox in the checks panel and uncheck it
+    const firstCheckbox = checksPanel?.querySelector('input[type="checkbox"]')
+    expect(firstCheckbox).toBeDefined()
+
+    if (firstCheckbox && firstCheckbox instanceof HTMLInputElement) {
+      // Uncheck the first checkbox
+      if (firstCheckbox.checked) {
+        await userEvent.click(firstCheckbox)
+      }
+    }
+
+    // Click the "Apply and Run" button
+    const applyButton = canvas.getByRole('button', { name: /apply and run/i })
+    await userEvent.click(applyButton)
+
+    // Wait for the page to reload and tests to run again
+    await waitFor(
+      () => {
+        const testRows = canvasElement.querySelectorAll('.row.test')
+        expect(testRows.length).toBeGreaterThan(0)
+      },
+      { timeout: 5000 }
+    )
+
+    // Verify that the tab shows skipped count
+    const tabSubtitle = canvasElement.querySelector('.tab-subtitle')
+    expect(tabSubtitle).toBeDefined()
+
+    // The tab subtitle should contain "skipped" text
+    const tabSubtitleText = tabSubtitle?.textContent || ''
+    expect(tabSubtitleText).toContain('skipped')
+
+    // Verify that the summary shows skipped count
+    const summaryLabel = canvasElement.querySelector('.summary-label')
+    expect(summaryLabel).toBeDefined()
+
+    const summaryText = summaryLabel?.textContent || ''
+    expect(summaryText).toContain('skipped')
+  }}
+/>

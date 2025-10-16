@@ -11,9 +11,12 @@ import type { DiffReport } from '../diff-datasets/diff-datasets'
  * a `ComparisonTestSummary` only includes the `maxDiff` value.
  */
 export interface ComparisonTestReport {
+  /** The key of the scenario that was compared. */
   scenarioKey: ComparisonScenarioKey
+  /** The key of the dataset that was compared. */
   datasetKey: DatasetKey
-  diffReport: DiffReport
+  /** The diff report for the comparison, or undefined if the test was skipped. */
+  diffReport?: DiffReport
 }
 
 /**

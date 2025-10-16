@@ -17,7 +17,8 @@ export class FilterPanelViewModel {
 
   constructor(
     public readonly items: FilterItem[],
-    initialState: FilterState
+    initialState: FilterState,
+    private readonly onStateChanged?: (json: string) => void
   ) {
     // Start with all leaf items enabled by default
     const defaultState: FilterState = {}
@@ -82,14 +83,17 @@ export class FilterPanelViewModel {
       // This is a leaf item; update its state
       this.itemState[item.key] = newState
     }
-  }
 
-  getStateAsJson(): string {
-    // Return item states as JSON
-    return JSON.stringify(this.itemState)
+    // Notify the callback that the state has changed
+    const json = JSON.stringify(this.itemState)
+    this.onStateChanged?.(json)
   }
 }
 
-export function createFilterPanelViewModel(filterItems: FilterItem[], initialState: FilterState) {
-  return new FilterPanelViewModel(filterItems, initialState)
+export function createFilterPanelViewModel(
+  filterItems: FilterItem[],
+  initialState: FilterState,
+  onStateChanged?: (json: string) => void
+) {
+  return new FilterPanelViewModel(filterItems, initialState, onStateChanged)
 }

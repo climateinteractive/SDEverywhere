@@ -53,9 +53,9 @@ function onSelectBundleR(e: Event) {
 <div class="header-container">
   <div class="header-content">
     <div class="header-group">
-      <div class="icon-button home" on:click={onHome}>
+      <button class="icon-button home" on:click={onHome} aria-label="Home">
         <Icon class="icon" data={faHome} />
-      </div>
+      </button>
     </div>
     <div class="spacer-flex"></div>
     {#if viewModel.nameL || $bundleNamesL.length > 1}
@@ -93,13 +93,13 @@ function onSelectBundleR(e: Event) {
       <div class="spacer-fixed"></div>
       <div class="header-group">
         {#if (import.meta as any).hot}
-          <div class="icon-button filter" on:click={onToggleFilters}>
+          <button class="icon-button filter" on:click={onToggleFilters} aria-label="Filter">
             <Icon class="icon" data={faFilter} />
-          </div>
+          </button>
         {/if}
-        <div class="icon-button controls" on:click={onToggleControls}>
+        <button class="icon-button controls" on:click={onToggleControls} aria-label="Controls">
           <Icon class="icon" data={faCog} />
-        </div>
+        </button>
       </div>
     {/if}
   </div>
@@ -150,6 +150,9 @@ function onSelectBundleR(e: Event) {
 }
 
 .icon-button {
+  background: none;
+  border: none;
+  padding: 0;
   color: #bbb;
   cursor: pointer;
 

@@ -202,9 +202,9 @@ if (import.meta.hot) {
     initBundlesAndUI()
   })
 
-  // Reload everything when the user toggles the "Simplify Scenarios" checkbox
-  document.addEventListener('sde-check-simplify-scenarios-toggled', () => {
-    // Reinitialize using the new state
+  // Reload everything when the user applies updated filters
+  document.addEventListener('sde-check-apply-filters', () => {
+    // Reinitialize using the new filters
     initBundlesAndUI()
   })
 }

@@ -5,7 +5,15 @@ import assertNever from 'assert-never'
 import type { Readable, Writable } from 'svelte/store'
 import { get, writable } from 'svelte/store'
 
-import type { ComparisonSummary, ScenarioSpec, SuiteSummary } from '@sdeverywhere/check-core'
+import type {
+  CheckNameSpec,
+  CheckReport,
+  ComparisonReport,
+  ComparisonScenarioTitleSpec,
+  ComparisonSummary,
+  ScenarioSpec,
+  SuiteSummary
+} from '@sdeverywhere/check-core'
 import { checkReportFromSummary, comparisonSummaryFromReport, runSuite } from '@sdeverywhere/check-core'
 
 import { localStorageWritableBoolean, localStorageWritableNumber } from './_shared/stores'
@@ -25,9 +33,9 @@ import {
 } from './components/compare/detail/compare-detail-vm'
 import type { ComparisonSummaryRowViewModel } from './components/compare/summary/comparison-summary-row-vm'
 import type { ComparisonSummaryViewModel } from './components/compare/summary/comparison-summary-vm'
-import type { FilterPopoverViewModel } from './components/filter/filter-popover-vm'
 import type { FilterItem, FilterState } from './components/filter/filter-panel-vm.svelte'
 import { createFilterPanelViewModel } from './components/filter/filter-panel-vm.svelte'
+import type { FilterPopoverViewModel } from './components/filter/filter-popover-vm'
 import type { HeaderViewModel } from './components/header/header-vm'
 import { createHeaderViewModel } from './components/header/header-vm'
 import type { PerfViewModel } from './components/perf/perf-vm'
@@ -52,6 +60,8 @@ export class AppViewModel {
   public summaryViewModel: SummaryViewModel
   public filterPopoverViewModel: FilterPopoverViewModel
   private cancelRunSuite: () => void
+  private skipChecks: CheckNameSpec[]
+  private skipComparisonScenarios: ComparisonScenarioTitleSpec[]
 
   /**
    * @param appModel The app model.
@@ -81,6 +91,37 @@ export class AppViewModel {
 
     // Create the object that manages pinned items states
     this.pinnedItemStates = createPinnedItemStates()
+
+    // Load filter states from LocalStorage
+    const checkStatesJson = localStorage.getItem('sde-check-filter-states')
+    const checkStates = checkStatesJson ? JSON.parse(checkStatesJson) : {}
+    console.log(checkStates)
+    this.skipChecks = []
+    // this.skipChecks = Object.keys(checkStates)
+    //   .filter(key => checkStates[key] === 'unchecked')
+    //   .map(key => ({
+    //     groupName: key.split('__')[0],
+    //     testName: key.split('__')[1]
+    //   }))
+    // const scenarioStatesJson = localStorage.getItem('sde-comparison-scenario-filter-states')
+    // this.comparisonScenarioFilterStates = scenarioStatesJson ? JSON.parse(scenarioStatesJson) : []
+    this.skipComparisonScenarios = []
+  }
+
+  private saveCheckFilterStatesToLocalStorage(json: string): void {
+    try {
+      localStorage.setItem('sde-check-filter-states', json)
+    } catch (error) {
+      console.warn('Failed to save check filter states to LocalStorage:', error)
+    }
+  }
+
+  private saveComparisonScenarioFilterStatesToLocalStorage(json: string): void {
+    try {
+      localStorage.setItem('sde-comparison-scenario-filter-states', json)
+    } catch (error) {
+      console.warn('Failed to save comparison scenario filter states to LocalStorage:', error)
+    }
   }
 
   runTestSuite(): void {
@@ -131,10 +172,7 @@ export class AppViewModel {
               comparisonSummary,
               this.pinnedItemStates
             )
-            // TODO: Use checkReport and comparisonReport to determine which checks and comparison scenarios
-            // were actually run.  These should be used to populate the checkboxes and initial state of the
-            // filter popover.
-            this.filterPopoverViewModel = createFilterPopoverViewModel()
+            this.filterPopoverViewModel = this.createFilterPopoverViewModel(checkReport, report.comparisonReport)
             this.writableChecksInProgress.set(false)
           },
           onError: error => {
@@ -143,8 +181,8 @@ export class AppViewModel {
           }
         },
         {
-          // TODO: Include filter states from LocalStorage here
-          // simplifyScenarios
+          skipChecks: this.skipChecks,
+          skipComparisonScenarios: this.skipComparisonScenarios
         }
       )
     }
@@ -264,50 +302,94 @@ export class AppViewModel {
   //     return
   //   }
   //   return createFreeformViewModel(this.appModel.config.comparison, this.appModel.comparisonDataCoordinator)
-  // }
+  //   }
+
+  private createFilterPopoverViewModel(
+    checkReport: CheckReport,
+    comparisonReport?: ComparisonReport
+  ): FilterPopoverViewModel {
+    // Extract check items from the check report
+    const checkItems: FilterItem[] = []
+    const checkState: FilterState = {}
+    for (const group of checkReport.groups) {
+      const groupChildren: FilterItem[] = []
+
+      for (const test of group.tests) {
+        const testKey = `${group.name}__${test.name}`
+        groupChildren.push({
+          key: testKey,
+          label: test.name
+        })
+
+        // Set initial state based on whether this test was skipped
+        checkState[testKey] = test.status === 'skipped' ? 'unchecked' : 'checked'
+      }
+
+      if (groupChildren.length > 0) {
+        checkItems.push({
+          key: group.name,
+          label: group.name,
+          children: groupChildren
+        })
+      }
+    }
+
+    // Extract comparison scenario items from the comparison report
+    const scenarioItems: FilterItem[] = []
+    const scenarioState: FilterState = {}
+    if (comparisonReport) {
+      // Group scenarios by title to avoid duplicates
+      const scenarioMap = new Map<string, { title: string; subtitle?: string; skipped: boolean }>()
+
+      for (const testReport of comparisonReport.testReports) {
+        // Find the scenario details from the config
+        const scenarios = Array.from(this.appModel.config.comparison?.scenarios.getAllScenarios() || [])
+        const scenario = scenarios.find(s => s.key === testReport.scenarioKey)
+        if (scenario) {
+          const key = scenario.subtitle ? `${scenario.title}__${scenario.subtitle}` : scenario.title
+          if (!scenarioMap.has(key)) {
+            scenarioMap.set(key, {
+              title: scenario.title,
+              subtitle: scenario.subtitle,
+              skipped: testReport.diffReport === undefined
+            })
+          }
+        }
+      }
+
+      for (const [key, scenario] of scenarioMap) {
+        scenarioItems.push({
+          key,
+          label: scenario.subtitle ? `${scenario.title} - ${scenario.subtitle}` : scenario.title
+        })
+
+        // Set initial state based on whether this scenario was skipped
+        scenarioState[key] = scenario.skipped ? 'unchecked' : 'checked'
+      }
+    }
+
+    const checksPanel = createFilterPanelViewModel(checkItems, checkState, json =>
+      this.saveCheckFilterStatesToLocalStorage(json)
+    )
+
+    const comparisonScenariosPanel = createFilterPanelViewModel(scenarioItems, scenarioState, json =>
+      this.saveComparisonScenarioFilterStatesToLocalStorage(json)
+    )
+
+    return {
+      checksPanel,
+      comparisonScenariosPanel
+    }
+  }
+
+  applyFilters(): void {
+    // When the "Apply and Run" button is clicked, dispatch an event that will be handled
+    // at a higher level to reload the UI and run the tests again using the new filters
+    dispatchEvent(new CustomEvent('sde-check-apply-filters'))
+  }
 }
 
 export interface AppViewModelResult {
   viewModel?: AppViewModel
   error?: Error
-}
-
-function createFilterPopoverViewModel(): FilterPopoverViewModel {
-  const checkItems: FilterItem[] = [
-    {
-      key: 'policy_sliders',
-      label: 'Policy sliders',
-      children: [
-        { key: 'policy_sliders__should_do_something', label: 'should do something' },
-        { key: 'policy_sliders__should_do_another_thing', label: 'should do another thing' }
-      ]
-    }
-  ]
-  const checkState: FilterState = {
-    policy_sliders__should_do_something: 'checked',
-    policy_sliders__should_do_another_thing: 'checked',
-    other_sliders__should_do_something: 'checked',
-    other_sliders__should_do_another_thing: 'checked'
-  }
-
-  const scenarioItems: FilterItem[] = [
-    {
-      key: 'baseline',
-      label: 'Baseline'
-    }
-  ]
-  const scenarioState: FilterState = {
-    baseline: 'checked',
-    ngfs: 'checked',
-    phase_out: 'checked',
-    coal_max: 'checked',
-    coal_min: 'checked'
-  }
-
-  const checksPanel = createFilterPanelViewModel(checkItems, checkState)
-  const comparisonScenariosPanel = createFilterPanelViewModel(scenarioItems, scenarioState)
-  return {
-    checksPanel,
-    comparisonScenariosPanel
-  }
 }

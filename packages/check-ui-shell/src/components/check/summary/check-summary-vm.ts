@@ -26,6 +26,7 @@ export interface CheckSummaryViewModel {
   passed: number
   failed: number
   errors: number
+  skipped: number
   percents?: [number, number, number]
   groups: CheckSummaryGroupViewModel[]
 }
@@ -147,14 +148,14 @@ function loadScenarioChildren(
       datasetRows.push(createDatasetRow(dataset, scenario.checkScenario, dataCoordinator))
     }
     // Sort by status: error, failed, passed
-    const statusOrder = { error: 0, failed: 1, passed: 2 }
+    const statusOrder = { error: 0, failed: 1, passed: 2, skipped: 3 }
     datasetRows.sort((a, b) => {
       return statusOrder[a.status] - statusOrder[b.status]
     })
     scenarioRow.childRows.update(() => datasetRows)
   } else {
     // Count datasets by status
-    const datasetCounts = { passed: 0, failed: 0, error: 0 }
+    const datasetCounts = { passed: 0, failed: 0, error: 0, skipped: 0 }
     for (const dataset of scenario.datasets) {
       datasetCounts[dataset.status]++
     }
@@ -176,6 +177,9 @@ function loadScenarioChildren(
     }
     if (datasetCounts.passed > 0) {
       addPlaceholderRow('passed', datasetCounts.passed, 'passed dataset')
+    }
+    if (datasetCounts.skipped > 0) {
+      addPlaceholderRow('skipped', datasetCounts.skipped, 'skipped dataset')
     }
 
     // Add the placeholder rows to the scenario row
@@ -246,14 +250,14 @@ function loadTestChildren(
       scenarioRows.push(createScenarioRow(scenario, dataCoordinator))
     }
     // Sort by status: error, failed, passed
-    const statusOrder = { error: 0, failed: 1, passed: 2 }
+    const statusOrder = { error: 0, failed: 1, passed: 2, skipped: 3 }
     scenarioRows.sort((a, b) => {
       return statusOrder[a.status] - statusOrder[b.status]
     })
     testRow.childRows.update(() => scenarioRows)
   } else {
     // Count scenarios by status
-    const scenarioCounts = { passed: 0, failed: 0, error: 0 }
+    const scenarioCounts = { passed: 0, failed: 0, error: 0, skipped: 0 }
     for (const scenario of test.scenarios) {
       scenarioCounts[scenario.status]++
     }
@@ -275,6 +279,9 @@ function loadTestChildren(
     }
     if (scenarioCounts.passed > 0) {
       addPlaceholderRow('passed', scenarioCounts.passed, 'passed scenario')
+    }
+    if (scenarioCounts.skipped > 0) {
+      addPlaceholderRow('skipped', scenarioCounts.passed, 'skipped scenario')
     }
 
     // Add the placeholder rows to the test row
@@ -316,8 +323,16 @@ export function createCheckSummaryViewModel(
   let passed = 0
   let failed = 0
   let errors = 0
+  let skipped = 0
+
   for (const group of checkReport.groups) {
     for (const test of group.tests) {
+      // Check if this test was skipped (has no scenarios)
+      if (test.scenarios.length === 0) {
+        skipped++
+        continue
+      }
+
       for (const scenario of test.scenarios) {
         if (scenario.datasets.length === 0) {
           errors++
@@ -348,7 +363,7 @@ export function createCheckSummaryViewModel(
     }
   }
 
-  const total = passed + failed + errors
+  const total = passed + failed + errors + skipped
   let percents: [number, number, number]
   if (total > 0) {
     percents = [(passed / total) * 100, (failed / total) * 100, (errors / total) * 100]
@@ -359,6 +374,7 @@ export function createCheckSummaryViewModel(
     passed,
     failed,
     errors,
+    skipped,
     percents,
     groups: checkReport.groups.map(group => {
       return createCheckSummaryGroupViewModel(dataCoordinator, group)

@@ -7,9 +7,10 @@ import type { FilterPopoverViewModel } from './filter-popover-vm'
 interface Props {
   viewModel: FilterPopoverViewModel
   onClose: () => void
+  onApplyAndRun?: () => void
 }
 
-let { viewModel, onClose }: Props = $props()
+let { viewModel, onClose, onApplyAndRun }: Props = $props()
 
 // Tab state
 let activeTab = $state<'checks' | 'scenarios'>('checks')
@@ -52,7 +53,7 @@ function setActiveTab(tab: 'checks' | 'scenarios') {
   </div>
 
   <div class="filter-popover-footer">
-    <button class="filter-popover-button apply" onclick={() => setActiveTab('checks')}>Apply and Run</button>
+    <button class="filter-popover-button apply" onclick={() => onApplyAndRun?.()}>Apply and Run</button>
   </div>
 </div>
 

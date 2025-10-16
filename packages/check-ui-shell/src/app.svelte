@@ -215,7 +215,11 @@ function onKeyDown(event: KeyboardEvent) {
       <!-- svelte-ignore event_directive_deprecated -->
       <div class="filter-popover-overlay" use:clickOutside on:clickout={closeFilters}>
         <div class="filter-popover-container">
-          <FilterPopover viewModel={viewModel.filterPopoverViewModel} onClose={closeFilters} />
+          <FilterPopover
+            viewModel={viewModel.filterPopoverViewModel}
+            onClose={closeFilters}
+            onApplyAndRun={() => viewModel.applyFilters()}
+          />
         </div>
       </div>
     {/if}
@@ -261,7 +265,7 @@ function onKeyDown(event: KeyboardEvent) {
   position: absolute;
   top: 26px;
   right: 24px;
-  width: 400px;
+  width: 500px;
   height: min(calc(100% - 60px), 600px);
   background-color: #2c2c2c;
   border: 1px solid #444;

@@ -92,6 +92,10 @@ function onContextMenuItemSelected(e: CustomEvent) {
             <span class="status-color-error">{viewModel.errors} error</span>
           {/if}
         {/if}
+        {#if viewModel.skipped}
+          <span class="sep">&nbsp;|&nbsp;</span>
+          <span class="status-color-skipped">{viewModel.skipped} skipped</span>
+        {/if}
       {/if}
     </span>
   </div>

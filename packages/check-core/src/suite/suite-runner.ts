@@ -105,7 +105,8 @@ class SuiteRunner {
     // Plan the comparisons, if configured
     let buildComparisonTestReports: () => ComparisonTestReport[]
     if (this.config.comparison) {
-      buildComparisonTestReports = runComparisons(this.config.comparison, dataPlanner)
+      const skipScenarios = options?.skipComparisonScenarios || []
+      buildComparisonTestReports = runComparisons(this.config.comparison, dataPlanner, skipScenarios)
     }
 
     // When all tasks have been processed, build the report

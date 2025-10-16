@@ -13,7 +13,7 @@ import { symbolForPredicateOp } from './check-predicate'
 import type { CheckScenario, CheckScenarioInputDesc } from './check-scenario'
 import type { CheckPredicateTimeOptions, CheckPredicateTimeRange, CheckPredicateTimeSpec } from './check-spec'
 
-export type CheckStatus = 'passed' | 'failed' | 'error'
+export type CheckStatus = 'passed' | 'failed' | 'error' | 'skipped'
 
 export interface CheckPredicateOpConstantRef {
   kind: 'constant'
@@ -72,9 +72,18 @@ export function buildCheckReport(checkPlan: CheckPlan, checkResults: Map<CheckKe
     const testReports: CheckTestReport[] = []
 
     for (const testPlan of groupPlan.tests) {
+      // Check if this test was skipped (has no scenarios)
+      if (testPlan.scenarios.length === 0) {
+        testReports.push({
+          name: testPlan.name,
+          status: 'skipped',
+          scenarios: []
+        })
+        continue
+      }
+
       let testStatus: CheckStatus = 'passed'
       const scenarioReports: CheckScenarioReport[] = []
-
       for (const scenarioPlan of testPlan.scenarios) {
         let scenarioStatus: CheckStatus = 'passed'
         if (scenarioPlan.checkScenario.spec === undefined) {

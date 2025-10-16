@@ -89,6 +89,13 @@ export class CheckPlanner {
   constructor(private readonly modelSpec: ModelSpec) {}
 
   addAllChecks(checkSpec: CheckSpec, skipChecks: CheckNameSpec[]): void {
+    function skipCheckKey(groupName: string, testName: string): string {
+      return `${groupName.toLowerCase()} :: ${testName.toLowerCase()}`
+    }
+
+    // Convert to a Set for efficient lookup
+    const skipChecksSet = new Set(skipChecks.map(check => skipCheckKey(check.groupName, check.testName)))
+
     // Iterate over all groups
     for (const groupSpec of checkSpec.groups) {
       const groupName = groupSpec.describe
@@ -97,6 +104,17 @@ export class CheckPlanner {
       const planTests: CheckPlanTest[] = []
       for (const testSpec of groupSpec.tests) {
         const testName = testSpec.it
+
+        // Check if this test should be skipped
+        const shouldSkip = skipChecksSet.has(skipCheckKey(groupName, testName))
+        if (shouldSkip) {
+          // Add skipped test to the plan (with empty scenarios to indicate it was skipped)
+          planTests.push({
+            name: testName,
+            scenarios: []
+          })
+          continue
+        }
 
         // TODO: We no longer offer a "Simplify Scenarios" option in the UI, but
         // we will leave the option here in case we add it back later
