@@ -25,6 +25,9 @@ import {
 } from './components/compare/detail/compare-detail-vm'
 import type { ComparisonSummaryRowViewModel } from './components/compare/summary/comparison-summary-row-vm'
 import type { ComparisonSummaryViewModel } from './components/compare/summary/comparison-summary-vm'
+import type { FilterPopoverViewModel } from './components/filter/filter-popover-vm'
+import type { FilterItem, FilterState } from './components/filter/filter-panel-vm.svelte'
+import { createFilterPanelViewModel } from './components/filter/filter-panel-vm.svelte'
 import type { HeaderViewModel } from './components/header/header-vm'
 import { createHeaderViewModel } from './components/header/header-vm'
 import type { PerfViewModel } from './components/perf/perf-vm'
@@ -47,6 +50,7 @@ export class AppViewModel {
   public readonly headerViewModel: HeaderViewModel
   private readonly pinnedItemStates: PinnedItemStates
   public summaryViewModel: SummaryViewModel
+  public filterPopoverViewModel: FilterPopoverViewModel
   private cancelRunSuite: () => void
 
   /**
@@ -64,14 +68,6 @@ export class AppViewModel {
     this.writableProgress = writable('0%')
     this.progress = this.writableProgress
 
-    // Show the "Simplify Scenarios" checkbox if we run checks in the browser
-    let simplifyScenarios: Writable<boolean>
-    if (suiteSummary === undefined) {
-      simplifyScenarios = localStorageWritableBoolean('sde-check-simplify-scenarios', false)
-    } else {
-      simplifyScenarios = undefined
-    }
-
     // Create the `UserPrefs` object that is passed down to the component hierarchy
     const zoom = localStorageWritableNumber('sde-check-graph-zoom', 1)
     const consistentYRange = localStorageWritableBoolean('sde-check-consistent-y-range', false)
@@ -81,7 +77,7 @@ export class AppViewModel {
     }
 
     // Create the header view model
-    this.headerViewModel = createHeaderViewModel(appModel.config.comparison, simplifyScenarios, zoom, consistentYRange)
+    this.headerViewModel = createHeaderViewModel(appModel.config.comparison, zoom, consistentYRange)
 
     // Create the object that manages pinned items states
     this.pinnedItemStates = createPinnedItemStates()
@@ -116,12 +112,6 @@ export class AppViewModel {
       this.writableChecksInProgress.set(false)
     } else {
       // For local dev builds, run the test suite in the browser
-      // TODO: Once we resolve checks as part of resolving config options, we won't
-      // need this hack here
-      let simplifyScenarios = false
-      if (this.headerViewModel.simplifyScenarios !== undefined) {
-        simplifyScenarios = get(this.headerViewModel.simplifyScenarios)
-      }
       this.cancelRunSuite = runSuite(
         this.appModel.config,
         {
@@ -141,6 +131,10 @@ export class AppViewModel {
               comparisonSummary,
               this.pinnedItemStates
             )
+            // TODO: Use checkReport and comparisonReport to determine which checks and comparison scenarios
+            // were actually run.  These should be used to populate the checkboxes and initial state of the
+            // filter popover.
+            this.filterPopoverViewModel = createFilterPopoverViewModel()
             this.writableChecksInProgress.set(false)
           },
           onError: error => {
@@ -149,7 +143,8 @@ export class AppViewModel {
           }
         },
         {
-          simplifyScenarios
+          // TODO: Include filter states from LocalStorage here
+          // simplifyScenarios
         }
       )
     }
@@ -275,4 +270,44 @@ export class AppViewModel {
 export interface AppViewModelResult {
   viewModel?: AppViewModel
   error?: Error
+}
+
+function createFilterPopoverViewModel(): FilterPopoverViewModel {
+  const checkItems: FilterItem[] = [
+    {
+      key: 'policy_sliders',
+      label: 'Policy sliders',
+      children: [
+        { key: 'policy_sliders__should_do_something', label: 'should do something' },
+        { key: 'policy_sliders__should_do_another_thing', label: 'should do another thing' }
+      ]
+    }
+  ]
+  const checkState: FilterState = {
+    policy_sliders__should_do_something: 'checked',
+    policy_sliders__should_do_another_thing: 'checked',
+    other_sliders__should_do_something: 'checked',
+    other_sliders__should_do_another_thing: 'checked'
+  }
+
+  const scenarioItems: FilterItem[] = [
+    {
+      key: 'baseline',
+      label: 'Baseline'
+    }
+  ]
+  const scenarioState: FilterState = {
+    baseline: 'checked',
+    ngfs: 'checked',
+    phase_out: 'checked',
+    coal_max: 'checked',
+    coal_min: 'checked'
+  }
+
+  const checksPanel = createFilterPanelViewModel(checkItems, checkState)
+  const comparisonScenariosPanel = createFilterPanelViewModel(scenarioItems, scenarioState)
+  return {
+    checksPanel,
+    comparisonScenariosPanel
+  }
 }

@@ -15,11 +15,13 @@ import { createBundle as createCurrentBundle } from '@_current_bundle_'
 import { getConfigOptions } from '@_test_config_'
 
 function loadSimplifyScenariosFlag(): boolean {
-  if (import.meta.hot) {
-    return localStorage.getItem('sde-check-simplify-scenarios') === '1'
-  } else {
-    return false
-  }
+  // TODO: Update this
+  return false
+  // if (import.meta.hot) {
+  //   return localStorage.getItem('sde-check-simplify-scenarios') === '1'
+  // } else {
+  //   return false
+  // }
 }
 
 function loadBundleName(key: string): string | undefined {

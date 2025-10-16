@@ -78,10 +78,6 @@ export function createPlaygroundViewModel(dataCoordinator: CheckDataCoordinator)
       //       // TODO: Show error message in browser
       //       console.error(error)
       //     }
-      //   },
-      //   {
-      //     // TODO
-      //     simplifyScenarios: true
       //   }
       // )
 

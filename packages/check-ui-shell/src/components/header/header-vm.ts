@@ -10,7 +10,6 @@ export interface HeaderViewModel {
   bundleNamesL: Writable<string[]>
   bundleNamesR: Writable<string[]>
   thresholds?: string[]
-  simplifyScenarios?: Writable<boolean>
   controlsVisible: Writable<boolean>
   zoom: Writable<number>
   consistentYRange: Writable<boolean>
@@ -18,7 +17,6 @@ export interface HeaderViewModel {
 
 export function createHeaderViewModel(
   comparisonConfig: ComparisonConfig | undefined,
-  simplifyScenarios: Writable<boolean> | undefined,
   zoom: Writable<number>,
   consistentYRange: Writable<boolean>
 ): HeaderViewModel {
@@ -41,7 +39,6 @@ export function createHeaderViewModel(
       bundleNamesL: writable([comparisonConfig.bundleL.name]),
       bundleNamesR: writable([comparisonConfig.bundleR.name]),
       thresholds: thresholdStrings,
-      simplifyScenarios,
       controlsVisible,
       zoom,
       consistentYRange
@@ -50,7 +47,6 @@ export function createHeaderViewModel(
     return {
       bundleNamesL: writable([]),
       bundleNamesR: writable([]),
-      simplifyScenarios,
       controlsVisible,
       zoom,
       consistentYRange

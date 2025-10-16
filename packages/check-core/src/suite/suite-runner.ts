@@ -21,6 +21,8 @@ import type { Config } from '../config/config-types'
 import { PerfStats } from '../perf/perf-stats'
 
 import type { SuiteReport } from './suite-report-types'
+import type { CheckNameSpec } from '../check/check-spec'
+import type { ComparisonScenarioTitleSpec } from '../comparison/config/comparison-spec-types'
 
 export type CancelRunSuite = () => void
 
@@ -31,8 +33,16 @@ export interface RunSuiteCallbacks {
 }
 
 export interface RunSuiteOptions {
-  /** Set to true to reduce the number of scenarios generated for a `matrix`. */
-  simplifyScenarios?: boolean
+  /**
+   * The check tests to skip.  Note that checks are matched by group and name
+   * (case insensitive).
+   */
+  skipChecks?: CheckNameSpec[]
+  /**
+   * The comparison scenarios to skip.  Note that scenarios are matched by
+   * title and subtitle (case insensitive).
+   */
+  skipComparisonScenarios?: ComparisonScenarioTitleSpec[]
 }
 
 /**
@@ -89,8 +99,8 @@ class SuiteRunner {
     const checkSpec = checkSpecResult.value
 
     // Plan the checks
-    const simplifyScenarios = options?.simplifyScenarios === true
-    const buildCheckReport = runChecks(this.config.check, checkSpec, dataPlanner, refDataPlanner, simplifyScenarios)
+    const skipChecks = options?.skipChecks || []
+    const buildCheckReport = runChecks(this.config.check, checkSpec, dataPlanner, refDataPlanner, skipChecks)
 
     // Plan the comparisons, if configured
     let buildComparisonTestReports: () => ComparisonTestReport[]

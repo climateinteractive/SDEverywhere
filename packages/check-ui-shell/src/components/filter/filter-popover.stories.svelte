@@ -6,8 +6,8 @@ import { defineMeta, type Args } from '@storybook/addon-svelte-csf'
 
 import StoryDecorator from '../_storybook/story-decorator.svelte'
 
-import type { FilterItem, FilterState } from './filter-panel-vm.svelte'
-import { createFilterPopoverViewModel } from './filter-popover-vm'
+import { createFilterPanelViewModel, type FilterItem, type FilterState } from './filter-panel-vm.svelte'
+import type { FilterPopoverViewModel } from './filter-popover-vm'
 import FilterPopover from './filter-popover.svelte'
 
 const sampleCheckItems: FilterItem[] = [
@@ -60,6 +60,20 @@ const sampleScenarioItems: FilterItem[] = [
     ]
   }
 ]
+
+function createFilterPopoverViewModel(
+  checkItems: FilterItem[],
+  checkState: FilterState,
+  scenarioItems: FilterItem[],
+  scenarioState: FilterState
+): FilterPopoverViewModel {
+  const checksPanel = createFilterPanelViewModel(checkItems, checkState)
+  const comparisonScenariosPanel = createFilterPanelViewModel(scenarioItems, scenarioState)
+  return {
+    checksPanel,
+    comparisonScenariosPanel
+  }
+}
 
 const { Story } = defineMeta({
   title: 'Components/FilterPopover',

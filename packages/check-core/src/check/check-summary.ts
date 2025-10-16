@@ -86,7 +86,7 @@ export function checkReportFromSummary(checkConfig: CheckConfig, checkSummary: C
 
   // Build the check plan
   const checkPlanner = new CheckPlanner(checkConfig.bundle.model.modelSpec)
-  checkPlanner.addAllChecks(checkSpec, false)
+  checkPlanner.addAllChecks(checkSpec, [])
   const checkPlan = checkPlanner.buildPlan()
 
   // Put the check results into a map

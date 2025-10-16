@@ -9,7 +9,7 @@ import { CheckPlanner } from './check-planner'
 import type { CheckPredicateOp } from './check-predicate'
 import type { CheckReport } from './check-report'
 import { buildCheckReport } from './check-report'
-import type { CheckSpec } from './check-spec'
+import type { CheckNameSpec, CheckSpec } from './check-spec'
 import type { CheckDataRefKey } from './check-data-ref'
 
 /**
@@ -19,7 +19,7 @@ import type { CheckDataRefKey } from './check-data-ref'
  * @param checkSpec The check spec that resulted from parsing the tests.
  * @param dataPlanner The planner that will plan out data fetches for the check tests.
  * @param refDataPlanner The planner that will plan out reference data fetches.
- * @param simplifyScenarios If true, reduce the number of scenarios generated for a `matrix`.
+ * @param skipChecks The checks to skip.
  * @return A function that will build the check report after the data requests are all processed.
  */
 export function runChecks(
@@ -27,13 +27,13 @@ export function runChecks(
   checkSpec: CheckSpec,
   dataPlanner: DataPlanner,
   refDataPlanner: DataPlanner,
-  simplifyScenarios: boolean
+  skipChecks: CheckNameSpec[]
 ): () => CheckReport {
   // Visit all the check test specs and plan the checks that need
   // to be performed
   const modelSpec = checkConfig.bundle.model.modelSpec
   const checkPlanner = new CheckPlanner(modelSpec)
-  checkPlanner.addAllChecks(checkSpec, simplifyScenarios)
+  checkPlanner.addAllChecks(checkSpec, skipChecks)
   const checkPlan = checkPlanner.buildPlan()
 
   // Create a map to hold reference datasets; these will be fetched before

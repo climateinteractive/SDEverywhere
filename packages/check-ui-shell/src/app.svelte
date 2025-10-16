@@ -10,7 +10,6 @@ import type { ComparisonGroupingKind } from './components/compare/_shared/compar
 import ComparisonDetail from './components/compare/detail/compare-detail.svelte'
 import type { CompareDetailViewModel } from './components/compare/detail/compare-detail-vm'
 
-import { createFilterPopoverViewModel } from './components/filter/filter-popover-vm'
 import FilterPopover from './components/filter/filter-popover.svelte'
 
 import type { FreeformViewModel } from './components/freeform/freeform-vm'
@@ -46,7 +45,6 @@ type ViewMode = 'summary' | 'comparison-detail' | 'perf' | 'freeform' | 'trace'
 let viewMode = $state<ViewMode>('summary')
 
 let filtersVisible = $state(false)
-let filterPopoverViewModel = $state(createFilterPopoverViewModel([], {}, [], {}))
 
 let appStyle = $derived(`--graph-zoom: ${$zoom}`)
 
@@ -213,11 +211,11 @@ function onKeyDown(event: KeyboardEvent) {
       <Summary on:command={onCommand} viewModel={viewModel.summaryViewModel} />
     {/if}
 
-    {#if filtersVisible}
+    {#if filtersVisible && !$checksInProgress}
       <!-- svelte-ignore event_directive_deprecated -->
       <div class="filter-popover-overlay" use:clickOutside on:clickout={closeFilters}>
         <div class="filter-popover-container">
-          <FilterPopover viewModel={filterPopoverViewModel} onClose={closeFilters} />
+          <FilterPopover viewModel={viewModel.filterPopoverViewModel} onClose={closeFilters} />
         </div>
       </div>
     {/if}
