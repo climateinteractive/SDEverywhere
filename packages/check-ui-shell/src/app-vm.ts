@@ -334,7 +334,7 @@ export class AppViewModel {
     comparisonReport?: ComparisonReport
   ): FilterPopoverViewModel {
     // Extract check items from the check report
-    const checkItems: FilterItem[] = []
+    const checkGroupItems: FilterItem[] = []
     const checkStates: FilterStateMap = new Map()
     for (const group of checkReport.groups) {
       const groupChildren: FilterItem[] = []
@@ -355,7 +355,7 @@ export class AppViewModel {
       }
 
       if (groupChildren.length > 0) {
-        checkItems.push({
+        checkGroupItems.push({
           key: group.name,
           label: group.name,
           children: groupChildren
@@ -363,17 +363,26 @@ export class AppViewModel {
       }
     }
 
+    // Put all check groups under a single "All checks" group
+    const checkItems: FilterItem[] = [
+      {
+        key: '__all_checks',
+        label: 'All checks',
+        children: checkGroupItems
+      }
+    ]
+
+    // Group scenarios by title to avoid duplicates
+    const scenarioMap = new Map<string, { title: string; subtitle?: string; skipped: boolean }>()
+
     // Extract comparison scenario items from the comparison report
-    const scenarioItems: FilterItem[] = []
+    const scenarioGroupItems: FilterItem[] = []
     const scenarioStates: FilterStateMap = new Map()
     if (comparisonReport) {
-      // Group scenarios by title to avoid duplicates
-      const scenarioMap = new Map<string, { title: string; subtitle?: string; skipped: boolean }>()
-      const allScenarios = Array.from(this.appModel.config.comparison?.scenarios.getAllScenarios() || [])
-
+      const comparisonScenarios = this.appModel.config.comparison?.scenarios
       for (const testReport of comparisonReport.testReports) {
         // Find the scenario details from the config
-        const scenario = allScenarios.find(s => s.key === testReport.scenarioKey)
+        const scenario = comparisonScenarios?.getScenario(testReport.scenarioKey)
         if (scenario) {
           const key = scenario.subtitle ? `${scenario.title}__${scenario.subtitle}` : scenario.title
           if (!scenarioMap.has(key)) {
@@ -387,7 +396,7 @@ export class AppViewModel {
       }
 
       for (const [key, scenario] of scenarioMap) {
-        scenarioItems.push({
+        scenarioGroupItems.push({
           key,
           titleParts: {
             title: scenario.title,
@@ -400,6 +409,25 @@ export class AppViewModel {
         scenarioStates.set(key, !scenario.skipped)
       }
     }
+
+    // TODO: Use ComparisonReportOptions.summarySectionsForComparisonsByScenario to group scenarios by title
+    // const scenarioGroups: FilterItem[] = []
+    // for (const group of comparisonReport.summarySections) {
+    //   scenarioGroups.push({
+    //     key: group.title,
+    //     label: group.title,
+    //     children: group.items
+    //   })
+    // }
+
+    // Put all scenarios under a single "All scenarios" group
+    const scenarioItems: FilterItem[] = [
+      {
+        key: '__all_scenarios',
+        label: 'All scenarios',
+        children: scenarioGroupItems
+      }
+    ]
 
     const checksPanel = createFilterPanelViewModel(checkItems, checkStates, states =>
       this.saveCheckFilterStatesToLocalStorage(JSON.stringify(states))
