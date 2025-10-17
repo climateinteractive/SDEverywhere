@@ -85,14 +85,18 @@ export class AppViewModel {
       consistentYRange
     }
 
+    // XXX: If the summary is defined, it means that the were run ahead of time using the
+    // model-check CLI tool.  We use this as a heuristic to determine if we are in dev mode.
+    const devMode = this.suiteSummary === undefined
+
     // Create the header view model
-    this.headerViewModel = createHeaderViewModel(appModel.config.comparison, zoom, consistentYRange)
+    this.headerViewModel = createHeaderViewModel(devMode, appModel.config.comparison, zoom, consistentYRange)
 
     // Create the object that manages pinned items states
     this.pinnedItemStates = createPinnedItemStates()
 
-    // Load check filter states from LocalStorage
-    if (import.meta.hot) {
+    if (devMode) {
+      // Load check filter states from LocalStorage
       const checkStatesJson = localStorage.getItem('sde-check-filter-states')
       const checkStates: FilterStates = checkStatesJson ? JSON.parse(checkStatesJson) : {}
       this.skipChecks = Object.keys(checkStates)
@@ -107,12 +111,8 @@ export class AppViewModel {
             testName: state.titleParts?.testName || ''
           }
         })
-    } else {
-      this.skipChecks = []
-    }
 
-    // Load comparison scenario filter states from LocalStorage
-    if (import.meta.hot) {
+      // Load comparison scenario filter states from LocalStorage
       const scenarioStatesJson = localStorage.getItem('sde-comparison-scenario-filter-states')
       const scenarioStates: FilterStates = scenarioStatesJson ? JSON.parse(scenarioStatesJson) : {}
       this.skipComparisonScenarios = Object.keys(scenarioStates)
@@ -128,6 +128,8 @@ export class AppViewModel {
           }
         })
     } else {
+      // For non-dev mode, we don't allow filtering or skipping tests
+      this.skipChecks = []
       this.skipComparisonScenarios = []
     }
   }

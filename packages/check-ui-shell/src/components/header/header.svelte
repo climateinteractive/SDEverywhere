@@ -92,7 +92,7 @@ function onSelectBundleR(e: Event) {
       </div>
       <div class="spacer-fixed"></div>
       <div class="header-group">
-        {#if import.meta.hot}
+        {#if viewModel.devMode}
           <button class="icon-button filter" on:click={onToggleFilters} aria-label="Filters">
             <Icon class="icon" data={faFilter} />
           </button>
@@ -103,7 +103,7 @@ function onSelectBundleR(e: Event) {
       </div>
     {:else}
       <div class="header-group">
-        {#if import.meta.hot}
+        {#if viewModel.devMode}
           <button class="icon-button filter" on:click={onToggleFilters} aria-label="Filters">
             <Icon class="icon" data={faFilter} />
           </button>

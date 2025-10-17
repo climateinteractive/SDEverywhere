@@ -5,6 +5,7 @@ import { writable } from 'svelte/store'
 import type { ComparisonConfig } from '@sdeverywhere/check-core'
 
 export interface HeaderViewModel {
+  devMode: boolean
   nameL?: string
   nameR?: string
   bundleNamesL: Writable<string[]>
@@ -16,6 +17,7 @@ export interface HeaderViewModel {
 }
 
 export function createHeaderViewModel(
+  devMode: boolean,
   comparisonConfig: ComparisonConfig | undefined,
   zoom: Writable<number>,
   consistentYRange: Writable<boolean>
@@ -34,6 +36,7 @@ export function createHeaderViewModel(
     thresholdStrings.push(`diff &gt;= ${thresholds[2]}%`)
 
     return {
+      devMode,
       nameL: comparisonConfig.bundleL.name,
       nameR: comparisonConfig.bundleR.name,
       bundleNamesL: writable([comparisonConfig.bundleL.name]),
@@ -45,6 +48,7 @@ export function createHeaderViewModel(
     }
   } else {
     return {
+      devMode,
       bundleNamesL: writable([]),
       bundleNamesR: writable([]),
       controlsVisible,
