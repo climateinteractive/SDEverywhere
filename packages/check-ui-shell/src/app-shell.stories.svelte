@@ -259,13 +259,11 @@ const { Story } = defineMeta({
     // Verify that the Checks tab shows skipped count
     const tabSubtitle = canvasElement.querySelector('.tab-subtitle')
     await expect(tabSubtitle).toBeDefined()
-    const tabSubtitleText = tabSubtitle.textContent
-    await expect(tabSubtitleText).toContain('skipped')
+    await expect(tabSubtitle.textContent).toBe('1 skipped')
 
     // Verify that the Checks summary shows skipped count
     const summaryLabel = canvasElement.querySelector('.summary-label')
     await expect(summaryLabel).toBeDefined()
-    const summaryText = summaryLabel.textContent
-    await expect(summaryText).toContain('skipped')
+    await expect(summaryLabel.textContent.replace(/\s+/g, ' ')).toBe('1 total | 1 skipped')
   }}
 />
