@@ -84,6 +84,15 @@ export interface ComparisonReportSummarySection {
    * it will be initially collapsed.
    */
   initialState?: 'collapsed' | 'expanded' | 'expanded-if-diffs'
+  /**
+   * Whether the items in the section are stable, i.e., not changing from run to run.  If
+   * undefined, defaults to false.  This can be used to group items in the filter panel.
+   * Set it to true if the group contains a stable set of rows where the order does not
+   * change between runs.  Set it to false (or leave it undefined) if the group contains
+   * rows that have a different order between runs (for example, "Scenarios producing
+   * differences").
+   */
+  stable?: boolean
 }
 
 /**
