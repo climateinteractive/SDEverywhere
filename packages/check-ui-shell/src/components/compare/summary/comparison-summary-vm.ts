@@ -112,7 +112,7 @@ export interface ComparisonSummaryViewModels {
   views?: ComparisonViewsSummaryViewModel
   byScenario: ComparisonsByItemSummaryViewModel
   byDataset: ComparisonsByItemSummaryViewModel
-  skippedScenariosCount: number
+  skippedScenarioCount: number
 }
 
 export function createComparisonSummaryViewModels(
@@ -492,6 +492,6 @@ export function createComparisonSummaryViewModels(
     views: viewsSummary,
     byScenario: byScenarioSummary,
     byDataset: byDatasetSummary,
-    skippedScenariosCount: rowsSkipped(groupsByScenario)
+    skippedScenarioCount: rowsSkipped(groupsByScenario)
   }
 }

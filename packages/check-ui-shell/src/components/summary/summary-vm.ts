@@ -40,20 +40,15 @@ export function createSummaryViewModel(
 ): SummaryViewModel {
   type TabInfo = [subtitle: string, status: string]
 
-  function getTabInfo(diffCount: number, kind: string, skippedCount: number = 0): TabInfo {
+  function getTabInfo(diffCount: number, kind: string, skippedScenarioCount: number = 0): TabInfo {
     if (diffCount === 0) {
-      if (skippedCount === 0) {
-        // There are no diffs and no skipped items
+      if (skippedScenarioCount === 0) {
+        // There are no diffs and no skipped scenarios
         return ['all clear', 'passed']
       } else {
-        // There are no diffs, but there are skipped items
-        let kindPart: string
-        if (kind === 'dataset') {
-          kindPart = skippedCount === 1 ? 'scenario' : 'scenarios'
-        } else {
-          kindPart = skippedCount === 1 ? kind : `${kind}s`
-        }
-        return [`no diffs, but ${skippedCount} skipped ${kindPart}`, 'warning']
+        // There are no diffs, but there are skipped scenarios
+        const kindPart = skippedScenarioCount === 1 ? 'scenario' : 'scenarios'
+        return [`no diffs, but ${skippedScenarioCount} skipped ${kindPart}`, 'warning']
       }
     } else {
       // There are diffs
@@ -127,6 +122,7 @@ export function createSummaryViewModel(
       comparisonSummary.testSummaries,
       skipComparisonScenarios
     )
+    const skippedScenarioCount = comparisonSummaries.skippedScenarioCount
 
     // Add tab for comparison views, if some are defined
     if (comparisonSummaries.views) {
@@ -149,7 +145,7 @@ export function createSummaryViewModel(
       if (changedGraphCount > 0) {
         viewsTabInfo = getTabInfo(changedGraphCount, 'graph')
       } else {
-        viewsTabInfo = getTabInfo(comparisonViewsSummaryViewModel.rowsWithDiffs, 'view')
+        viewsTabInfo = getTabInfo(comparisonViewsSummaryViewModel.rowsWithDiffs, 'view', skippedScenarioCount)
       }
       addTabItem('comp-views', 'Comparison views', viewsTabInfo)
     }
@@ -159,7 +155,7 @@ export function createSummaryViewModel(
     const byScenarioTabInfo = getTabInfo(
       comparisonsByScenarioSummaryViewModel.rowsWithDiffs,
       'scenario',
-      comparisonSummaries.skippedScenariosCount
+      skippedScenarioCount
     )
     addTabItem('comps-by-scenario', 'Comparisons by scenario', byScenarioTabInfo)
 
@@ -168,7 +164,7 @@ export function createSummaryViewModel(
     const byDatasetTabInfo = getTabInfo(
       comparisonsByDatasetSummaryViewModel.rowsWithDiffs,
       'dataset',
-      comparisonSummaries.skippedScenariosCount
+      skippedScenarioCount
     )
     addTabItem('comps-by-dataset', 'Comparisons by dataset', byDatasetTabInfo)
   }
