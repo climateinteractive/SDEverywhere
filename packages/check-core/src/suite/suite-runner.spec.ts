@@ -264,6 +264,45 @@ describe('runSuite', () => {
     expect(report2.diffReport).toBeDefined()
   })
 
+  it('should build reports even when all checks and comparisons are skipped', async () => {
+    const config = await mockConfig({ includeComparisons: true })
+
+    const report: SuiteReport = await new Promise((resolve, reject) => {
+      const callbacks: RunSuiteCallbacks = {
+        onComplete: suiteReport => {
+          resolve(suiteReport)
+        },
+        onError: () => {
+          reject(new Error('onError should not be called'))
+        }
+      }
+
+      runSuite(config, callbacks, {
+        skipChecks: [
+          { groupName: 'group1', testName: 'test1' },
+          { groupName: 'group1', testName: 'test2' }
+        ],
+        skipComparisonScenarios: [
+          { title: 'All inputs', subtitle: 'at default' },
+          { title: 'Input 1', subtitle: 'at min' }
+        ]
+      })
+    })
+
+    expect(report.checkReport.groups.length).toBe(1)
+    expect(report.checkReport.groups[0].name).toBe('group1')
+    expect(report.checkReport.groups[0].tests.length).toBe(2)
+    expect(report.checkReport.groups[0].tests[0].status).toBe('skipped')
+    expect(report.checkReport.groups[0].tests[1].status).toBe('skipped')
+
+    expect(report.comparisonReport).toBeDefined()
+    expect(report.comparisonReport.testReports.length).toBe(2)
+    expect(report.comparisonReport.testReports[0].scenarioKey).toBe('1')
+    expect(report.comparisonReport.testReports[0].diffReport).toBeUndefined()
+    expect(report.comparisonReport.testReports[1].scenarioKey).toBe('2')
+    expect(report.comparisonReport.testReports[1].diffReport).toBeUndefined()
+  })
+
   it('should notify error callback if there was an error', async () => {
     const config = await mockConfig({ invalidTests: true })
 

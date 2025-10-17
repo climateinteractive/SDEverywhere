@@ -141,12 +141,14 @@ class SuiteRunner {
     const dataRequests = [...refDataPlan.requests, ...dataPlan.requests]
     const taskCount = dataRequests.length
     if (taskCount === 0) {
-      // There are no checks or comparison tests; notify completion callback
-      // with empty reports
+      // There are no data requests.  This can occur when there are no checks or comparisons defined,
+      // or when all checks and comparisons are skipped.  We still build the reports so that the
+      // skipped tests can be displayed in the UI.
+      const checkReport = buildCheckReport()
       let comparisonReport: ComparisonReport
       if (this.config.comparison) {
         comparisonReport = {
-          testReports: [],
+          testReports: buildComparisonTestReports(),
           perfReportL: this.perfStatsL.toReport(),
           perfReportR: this.perfStatsR.toReport()
         }
@@ -154,9 +156,7 @@ class SuiteRunner {
       this.cancel()
       this.callbacks.onProgress?.(1)
       this.callbacks.onComplete?.({
-        checkReport: {
-          groups: []
-        },
+        checkReport,
         comparisonReport
       })
       return

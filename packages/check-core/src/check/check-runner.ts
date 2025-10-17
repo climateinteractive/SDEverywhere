@@ -35,7 +35,6 @@ export function runChecks(
   const checkPlanner = new CheckPlanner(modelSpec)
   checkPlanner.addAllChecks(checkSpec, skipChecks)
   const checkPlan = checkPlanner.buildPlan()
-  console.log('runChecks: checkPlan', checkPlan)
 
   // Create a map to hold reference datasets; these will be fetched before
   // performing any checks that rely on reference data
