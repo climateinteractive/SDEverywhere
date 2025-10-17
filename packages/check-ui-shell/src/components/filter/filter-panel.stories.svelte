@@ -7,7 +7,7 @@ import { expect } from 'storybook/test'
 import StoryDecorator from '../_storybook/story-decorator.svelte'
 
 import FilterPanel from './filter-panel.svelte'
-import { createFilterPanelViewModel, type FilterItem } from './filter-panel-vm.svelte'
+import { createFilterPanelViewModel, type FilterItem } from './filter-panel-vm'
 
 const sampleItems: FilterItem[] = [
   {
@@ -18,17 +18,17 @@ const sampleItems: FilterItem[] = [
         key: '___key_scenarios',
         label: 'Key scenarios',
         children: [
-          { key: 'baseline', label: 'Baseline' },
-          { key: 'ngfs', label: 'NGFS' },
-          { key: 'phase_out', label: 'Phase-out' }
+          { key: 'baseline', titleParts: { title: 'Baseline' }, label: 'Baseline' },
+          { key: 'ngfs', titleParts: { title: 'NGFS' }, label: 'NGFS' },
+          { key: 'phase_out', titleParts: { title: 'Phase-out' }, label: 'Phase-out' }
         ]
       },
       {
-        key: 'other-scenarios',
+        key: '___other_scenarios',
         label: 'Other scenarios',
         children: [
-          { key: 'coal_max', label: 'Coal at max' },
-          { key: 'coal_min', label: 'Coal at min' }
+          { key: 'coal_max', titleParts: { title: 'Coal', subtitle: 'at max' }, label: 'Coal at max' },
+          { key: 'coal_min', titleParts: { title: 'Coal', subtitle: 'at min' }, label: 'Coal at min' }
         ]
       }
     ]
@@ -51,13 +51,14 @@ const { Story } = defineMeta({
   name="Default"
   {template}
   beforeEach={async ({ args }) => {
-    args.viewModel = createFilterPanelViewModel(sampleItems, {
-      baseline: 'checked',
-      ngfs: 'checked',
-      phase_out: 'checked',
-      coal_max: 'checked',
-      coal_min: 'checked'
-    })
+    const initialStates = new Map([
+      ['baseline', true],
+      ['ngfs', true],
+      ['phase_out', true],
+      ['coal_max', true],
+      ['coal_min', true]
+    ])
+    args.viewModel = createFilterPanelViewModel(sampleItems, initialStates)
   }}
 />
 
@@ -65,13 +66,14 @@ const { Story } = defineMeta({
   name="All Checked"
   {template}
   beforeEach={async ({ args }) => {
-    args.viewModel = createFilterPanelViewModel(sampleItems, {
-      baseline: 'checked',
-      ngfs: 'checked',
-      phase_out: 'checked',
-      coal_max: 'checked',
-      coal_min: 'checked'
-    })
+    const initialStates = new Map([
+      ['baseline', true],
+      ['ngfs', true],
+      ['phase_out', true],
+      ['coal_max', true],
+      ['coal_min', true]
+    ])
+    args.viewModel = createFilterPanelViewModel(sampleItems, initialStates)
   }}
   play={async ({ canvasElement }) => {
     const checkboxes = canvasElement.querySelectorAll('input[type="checkbox"]')
@@ -89,13 +91,14 @@ const { Story } = defineMeta({
   name="None Checked"
   {template}
   beforeEach={async ({ args }) => {
-    args.viewModel = createFilterPanelViewModel(sampleItems, {
-      baseline: 'unchecked',
-      ngfs: 'unchecked',
-      phase_out: 'unchecked',
-      coal_max: 'unchecked',
-      coal_min: 'unchecked'
-    })
+    const initialStates = new Map([
+      ['baseline', false],
+      ['ngfs', false],
+      ['phase_out', false],
+      ['coal_max', false],
+      ['coal_min', false]
+    ])
+    args.viewModel = createFilterPanelViewModel(sampleItems, initialStates)
   }}
   play={async ({ canvasElement }) => {
     const checkboxes = canvasElement.querySelectorAll('input[type="checkbox"]')
@@ -113,13 +116,14 @@ const { Story } = defineMeta({
   name="Update Checked State"
   {template}
   beforeEach={async ({ args }) => {
-    args.viewModel = createFilterPanelViewModel(sampleItems, {
-      baseline: 'checked',
-      ngfs: 'checked',
-      phase_out: 'checked',
-      coal_max: 'checked',
-      coal_min: 'checked'
-    })
+    const initialStates = new Map([
+      ['baseline', true],
+      ['ngfs', true],
+      ['phase_out', true],
+      ['coal_max', true],
+      ['coal_min', true]
+    ])
+    args.viewModel = createFilterPanelViewModel(sampleItems, initialStates)
   }}
   play={async ({ canvas, canvasElement, userEvent }) => {
     const checkboxes = canvasElement.querySelectorAll('input[type="checkbox"]')

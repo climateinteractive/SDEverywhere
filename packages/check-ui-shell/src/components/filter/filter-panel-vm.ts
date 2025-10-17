@@ -2,27 +2,36 @@
 
 export type FilterCheckboxState = 'checked' | 'unchecked' | 'indeterminate'
 
+export type FilterItemKey = string
+
 export interface FilterItem {
-  key: string
+  key: FilterItemKey
   label: string
+  titleParts?: {
+    [key: string]: string
+  }
   children?: FilterItem[]
 }
 
-export interface FilterState {
-  [key: string]: FilterCheckboxState
+export type FilterStateMap = Map<FilterItemKey, boolean>
+
+export interface FilterStates {
+  [key: FilterItemKey]: {
+    titleParts: {
+      [key: string]: string
+    }
+    checked: boolean
+  }
 }
 
 export class FilterPanelViewModel {
-  private readonly itemState: FilterState = {}
+  private readonly itemStates: FilterStateMap = new Map()
 
   constructor(
     public readonly items: FilterItem[],
-    initialState: FilterState,
-    private readonly onStateChanged?: (json: string) => void
+    initialStates: FilterStateMap,
+    private readonly onStateChanged?: (states: FilterStates) => void
   ) {
-    // Start with all leaf items enabled by default
-    const defaultState: FilterState = {}
-
     const addLeafItemsToState = (items: FilterItem[]) => {
       for (const item of items) {
         if (item.children) {
@@ -30,22 +39,20 @@ export class FilterPanelViewModel {
           addLeafItemsToState(item.children)
         } else {
           // Only leaf items get their own state
-          defaultState[item.key] = 'checked'
+          const initialState = initialStates.get(item.key)
+          this.itemStates.set(item.key, initialState !== undefined ? initialState : true)
         }
       }
     }
-
     addLeafItemsToState(this.items)
-
-    // Merge with initial state (initial state takes precedence)
-    Object.assign(this.itemState, defaultState, initialState)
   }
 
   // XXX: _updateCount is a hack to force a re-render of the component when the state changes
   getCheckboxState(item: FilterItem, _updateCount: number): FilterCheckboxState {
     if (!item.children) {
-      // Leaf items: check their state in itemState
-      return this.itemState[item.key] || 'unchecked'
+      // For leaf items, check the state in itemStates
+      const state = this.itemStates.get(item.key)
+      return state === true ? 'checked' : 'unchecked'
     }
 
     // For parent items, check children states
@@ -64,7 +71,7 @@ export class FilterPanelViewModel {
 
   toggleItem(item: FilterItem): void {
     const currentState = this.getCheckboxState(item, 0)
-    const newState = currentState === 'checked' ? 'unchecked' : 'checked'
+    const newChecked = currentState === 'checked' ? false : true
 
     if (item.children) {
       // This is a parent item; update children to match the state of this item
@@ -73,27 +80,43 @@ export class FilterPanelViewModel {
           if (child.children) {
             toggleChildren(child.children)
           } else {
-            // Only leaf items have state in itemState
-            this.itemState[child.key] = newState
+            // Only leaf items have state in itemStates
+            this.itemStates.set(child.key, newChecked)
           }
         }
       }
       toggleChildren(item.children)
     } else {
       // This is a leaf item; update its state
-      this.itemState[item.key] = newState
+      this.itemStates.set(item.key, newChecked)
     }
 
+    // Create a new `FilterStates` object that contains the state of each leaf item
+    const filterStates: FilterStates = {}
+    const addLeafItemStates = (items: FilterItem[]) => {
+      for (const item of items) {
+        if (item.children) {
+          addLeafItemStates(item.children)
+        } else {
+          const checked = this.itemStates.get(item.key)
+          filterStates[item.key] = {
+            titleParts: item.titleParts,
+            checked: checked !== undefined ? checked : false
+          }
+        }
+      }
+    }
+    addLeafItemStates(this.items)
+
     // Notify the callback that the state has changed
-    const json = JSON.stringify(this.itemState)
-    this.onStateChanged?.(json)
+    this.onStateChanged?.(filterStates)
   }
 }
 
 export function createFilterPanelViewModel(
   filterItems: FilterItem[],
-  initialState: FilterState,
-  onStateChanged?: (json: string) => void
-) {
-  return new FilterPanelViewModel(filterItems, initialState, onStateChanged)
+  initialStates: FilterStateMap,
+  onStateChanged?: (states: FilterStates) => void
+): FilterPanelViewModel {
+  return new FilterPanelViewModel(filterItems, initialStates, onStateChanged)
 }

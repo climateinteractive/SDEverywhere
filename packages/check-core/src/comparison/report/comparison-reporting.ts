@@ -16,7 +16,7 @@ export function comparisonSummaryFromReport(comparisonReport: ComparisonReport):
   const terseSummaries: ComparisonTestSummary[] = []
 
   for (const r of comparisonReport.testReports) {
-    if (r.diffReport.validity === 'both' && r.diffReport.maxDiff > 0) {
+    if (r.diffReport?.validity === 'both' && r.diffReport.maxDiff > 0) {
       terseSummaries.push({
         s: r.scenarioKey,
         d: r.datasetKey,

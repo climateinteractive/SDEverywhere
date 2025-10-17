@@ -121,7 +121,7 @@ function setActiveTab(tab: 'checks' | 'scenarios') {
 .filter-popover-tab-button {
   flex: 1;
   padding: 0.75rem 1rem;
-  background: none;
+  background-color: #2c2c2c;
   border: none;
   border-bottom: 1px solid #444;
   font-family: Roboto, sans-serif;
@@ -135,7 +135,7 @@ function setActiveTab(tab: 'checks' | 'scenarios') {
   }
 
   &.active {
-    background-color: #2c2c2c;
+    background-color: #333;
     color: #fff;
     border-bottom-color: #007acc;
   }

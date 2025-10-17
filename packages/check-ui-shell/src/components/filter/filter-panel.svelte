@@ -1,7 +1,7 @@
 <!-- Copyright (c) 2025 Climate Interactive / New Venture Fund -->
 
 <script lang="ts">
-import type { FilterItem, FilterPanelViewModel } from './filter-panel-vm.svelte'
+import type { FilterItem, FilterPanelViewModel } from './filter-panel-vm'
 
 interface Props {
   viewModel: FilterPanelViewModel

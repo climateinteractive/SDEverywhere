@@ -6,7 +6,7 @@ import { defineMeta, type Args } from '@storybook/addon-svelte-csf'
 
 import StoryDecorator from '../_storybook/story-decorator.svelte'
 
-import { createFilterPanelViewModel, type FilterItem, type FilterState } from './filter-panel-vm.svelte'
+import { createFilterPanelViewModel, type FilterItem, type FilterStateMap } from './filter-panel-vm'
 import type { FilterPopoverViewModel } from './filter-popover-vm'
 import FilterPopover from './filter-popover.svelte'
 
@@ -19,16 +19,32 @@ const sampleCheckItems: FilterItem[] = [
         key: 'policy_sliders',
         label: 'Policy sliders',
         children: [
-          { key: 'policy_sliders__should_do_something', label: 'should do something' },
-          { key: 'policy_sliders__should_do_another_thing', label: 'should do another thing' }
+          {
+            key: 'policy_sliders__should_do_something',
+            titleParts: { title: 'Policy sliders', subtitle: 'should do something' },
+            label: 'should do something'
+          },
+          {
+            key: 'policy_sliders__should_do_another_thing',
+            titleParts: { title: 'Policy sliders', subtitle: 'should do another thing' },
+            label: 'should do another thing'
+          }
         ]
       },
       {
         key: 'other_sliders',
         label: 'Other sliders',
         children: [
-          { key: 'other_sliders__should_do_something', label: 'should do something' },
-          { key: 'other_sliders__should_do_another_thing', label: 'should do another thing' }
+          {
+            key: 'other_sliders__should_do_something',
+            titleParts: { title: 'Other sliders', subtitle: 'should do something' },
+            label: 'should do something'
+          },
+          {
+            key: 'other_sliders__should_do_another_thing',
+            titleParts: { title: 'Other sliders', subtitle: 'should do another thing' },
+            label: 'should do another thing'
+          }
         ]
       }
     ]
@@ -44,17 +60,17 @@ const sampleScenarioItems: FilterItem[] = [
         key: '___key_scenarios',
         label: 'Key scenarios',
         children: [
-          { key: 'baseline', label: 'Baseline' },
-          { key: 'ngfs', label: 'NGFS' },
-          { key: 'phase_out', label: 'Phase-out' }
+          { key: 'baseline', titleParts: { title: 'Baseline' }, label: 'Baseline' },
+          { key: 'ngfs', titleParts: { title: 'NGFS' }, label: 'NGFS' },
+          { key: 'phase_out', titleParts: { title: 'Phase-out' }, label: 'Phase-out' }
         ]
       },
       {
         key: 'other-scenarios',
         label: 'Other scenarios',
         children: [
-          { key: 'coal_max', label: 'Coal at max' },
-          { key: 'coal_min', label: 'Coal at min' }
+          { key: 'coal_max', titleParts: { title: 'Coal', subtitle: 'at max' }, label: 'Coal at max' },
+          { key: 'coal_min', titleParts: { title: 'Coal', subtitle: 'at min' }, label: 'Coal at min' }
         ]
       }
     ]
@@ -63,12 +79,12 @@ const sampleScenarioItems: FilterItem[] = [
 
 function createFilterPopoverViewModel(
   checkItems: FilterItem[],
-  checkState: FilterState,
+  checkStates: FilterStateMap,
   scenarioItems: FilterItem[],
-  scenarioState: FilterState
+  scenarioStates: FilterStateMap
 ): FilterPopoverViewModel {
-  const checksPanel = createFilterPanelViewModel(checkItems, checkState)
-  const comparisonScenariosPanel = createFilterPanelViewModel(scenarioItems, scenarioState)
+  const checksPanel = createFilterPanelViewModel(checkItems, checkStates)
+  const comparisonScenariosPanel = createFilterPanelViewModel(scenarioItems, scenarioStates)
   return {
     checksPanel,
     comparisonScenariosPanel
@@ -91,24 +107,24 @@ const { Story } = defineMeta({
   name="Default"
   {template}
   beforeEach={async ({ args }) => {
-    const sampleCheckState: FilterState = {
-      policy_sliders__should_do_something: 'checked',
-      policy_sliders__should_do_another_thing: 'checked',
-      other_sliders__should_do_something: 'checked',
-      other_sliders__should_do_another_thing: 'checked'
-    }
-    const sampleScenarioState: FilterState = {
-      baseline: 'checked',
-      ngfs: 'checked',
-      phase_out: 'checked',
-      coal_max: 'checked',
-      coal_min: 'checked'
-    }
+    const sampleCheckStates: FilterStateMap = new Map([
+      ['policy_sliders__should_do_something', true],
+      ['policy_sliders__should_do_another_thing', true],
+      ['other_sliders__should_do_something', true],
+      ['other_sliders__should_do_another_thing', true]
+    ])
+    const sampleScenarioStates: FilterStateMap = new Map([
+      ['baseline', true],
+      ['ngfs', true],
+      ['phase_out', true],
+      ['coal_max', true],
+      ['coal_min', true]
+    ])
     args.viewModel = createFilterPopoverViewModel(
       sampleCheckItems,
-      sampleCheckState,
+      sampleCheckStates,
       sampleScenarioItems,
-      sampleScenarioState
+      sampleScenarioStates
     )
   }}
 />

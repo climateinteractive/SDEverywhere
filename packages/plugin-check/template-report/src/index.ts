@@ -14,16 +14,6 @@ import { createBundle as createBaselineBundle } from '@_baseline_bundle_'
 import { createBundle as createCurrentBundle } from '@_current_bundle_'
 import { getConfigOptions } from '@_test_config_'
 
-function loadSimplifyScenariosFlag(): boolean {
-  // TODO: Update this
-  return false
-  // if (import.meta.hot) {
-  //   return localStorage.getItem('sde-check-simplify-scenarios') === '1'
-  // } else {
-  //   return false
-  // }
-}
-
 function loadBundleName(key: string): string | undefined {
   if (import.meta.hot) {
     return localStorage.getItem(`sde-check-selected-bundle-${key}`)
@@ -151,8 +141,7 @@ async function initForLocal(): Promise<void> {
   // Prepare the model check/comparison configuration
   const configInitOptions: ConfigInitOptions = {
     bundleNameL,
-    bundleNameR,
-    simplifyScenarios: loadSimplifyScenariosFlag()
+    bundleNameR
   }
   const configOptions = await getConfigOptions(bundleL, bundleR, configInitOptions)
 
