@@ -70,7 +70,10 @@ function createBundleModel(modelSpec: ModelSpec, delta = 0): BundleModel {
   })
 }
 
-async function createAppViewModel(options?: { groupScenarios?: boolean }): Promise<AppViewModel> {
+async function createAppViewModel(options?: {
+  comparisonsEnabled?: boolean
+  groupScenarios?: boolean
+}): Promise<AppViewModel> {
   const modelSpec = mockModelSpec()
   const bundleL = mockNamedBundle('left', createBundleModel(modelSpec, 0))
   const bundleR = mockNamedBundle('right', createBundleModel(modelSpec, 0))
@@ -189,6 +192,41 @@ const { Story } = defineMeta({
         checked: false
       }
     })
+  }}
+/>
+
+<Story
+  name="Reload with Filters (no comparisons configured)"
+  {template}
+  beforeEach={async ({ args }) => {
+    args.appViewModel = await createAppViewModel({ comparisonsEnabled: false })
+  }}
+  play={async ({ canvas, canvasElement, userEvent }) => {
+    // Wait for the check tests to appear
+    await waitFor(() => {
+      const testRows = canvasElement.querySelectorAll('.row.test')
+      expect(testRows.length).toBeGreaterThan(0)
+    })
+
+    // Click the filter button to open the filter popover
+    const filterButton = canvas.getByRole('button', { name: 'Filters' })
+    await userEvent.click(filterButton)
+
+    // Wait for the filter popover to appear
+    await waitFor(() => {
+      const filterPopover = canvasElement.querySelector('.filter-popover')
+      expect(filterPopover).toBeDefined()
+    })
+
+    // Verify that the Comparison Scenarios panel is empty
+    await userEvent.click(canvas.getByRole('button', { name: 'Comparison Scenarios' }))
+    const comparisonScenariosPanel = canvasElement.querySelector('.filter-popover-content')
+    await expect(comparisonScenariosPanel).not.toBeNull()
+    const comparisonScenarioLabels = comparisonScenariosPanel.querySelectorAll('.filter-label')
+    const comparisonScenarioCheckboxes = comparisonScenariosPanel.querySelectorAll('.filter-checkbox')
+    await expect(comparisonScenarioLabels.length).toBe(0)
+    await expect(comparisonScenarioCheckboxes.length).toBe(0)
+    await expect(comparisonScenariosPanel).toHaveTextContent('No comparisons configured')
   }}
 />
 
@@ -316,7 +354,7 @@ const { Story } = defineMeta({
         }
       })
     )
-    args.appViewModel = await createAppViewModel()
+    args.appViewModel = await createAppViewModel({ groupScenarios: true })
   }}
   play={async ({ canvas, canvasElement, userEvent }) => {
     // Wait for the check tests to appear
@@ -353,7 +391,7 @@ const { Story } = defineMeta({
     await expect(comparisonScenarioCheckboxes[3]).not.toBeChecked()
     await expect(comparisonScenarioLabels[4]).toHaveTextContent('Constant 1 at min')
     await expect(comparisonScenarioCheckboxes[4]).not.toBeChecked()
-    await expect(comparisonScenarioLabels[4]).toHaveTextContent('Constant 1 at max')
-    await expect(comparisonScenarioCheckboxes[4]).not.toBeChecked()
+    await expect(comparisonScenarioLabels[5]).toHaveTextContent('Constant 1 at max')
+    await expect(comparisonScenarioCheckboxes[5]).not.toBeChecked()
   }}
 />

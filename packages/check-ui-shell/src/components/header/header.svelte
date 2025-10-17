@@ -101,6 +101,14 @@ function onSelectBundleR(e: Event) {
           <Icon class="icon" data={faCog} />
         </button>
       </div>
+    {:else}
+      <div class="header-group">
+        {#if import.meta.hot}
+          <button class="icon-button filter" on:click={onToggleFilters} aria-label="Filters">
+            <Icon class="icon" data={faFilter} />
+          </button>
+        {/if}
+      </div>
     {/if}
   </div>
   {#if $controlsVisible}
@@ -161,8 +169,8 @@ function onSelectBundleR(e: Event) {
   }
 }
 
-.icon-button.filter {
-  margin-right: 1rem;
+.icon-button.controls {
+  margin-left: 1rem;
 }
 
 .label:not(:last-child) {

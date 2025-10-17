@@ -33,9 +33,8 @@ import {
 } from './components/compare/detail/compare-detail-vm'
 import type { ComparisonSummaryRowViewModel } from './components/compare/summary/comparison-summary-row-vm'
 import type { ComparisonSummaryViewModel } from './components/compare/summary/comparison-summary-vm'
-import type { FilterItem, FilterStateMap, FilterStates } from './components/filter/filter-panel-vm'
-import { createFilterPanelViewModel } from './components/filter/filter-panel-vm'
-import type { FilterPopoverViewModel } from './components/filter/filter-popover-vm'
+import type { FilterStates } from './components/filter/filter-panel-vm'
+import { createFilterPopoverViewModel, type FilterPopoverViewModel } from './components/filter/filter-popover-vm'
 import type { HeaderViewModel } from './components/header/header-vm'
 import { createHeaderViewModel } from './components/header/header-vm'
 import type { PerfViewModel } from './components/perf/perf-vm'
@@ -130,22 +129,6 @@ export class AppViewModel {
         })
     } else {
       this.skipComparisonScenarios = []
-    }
-  }
-
-  private saveCheckFilterStatesToLocalStorage(json: string): void {
-    try {
-      localStorage.setItem('sde-check-filter-states', json)
-    } catch (error) {
-      console.warn('Failed to save check filter states to LocalStorage:', error)
-    }
-  }
-
-  private saveComparisonScenarioFilterStatesToLocalStorage(json: string): void {
-    try {
-      localStorage.setItem('sde-comparison-scenario-filter-states', json)
-    } catch (error) {
-      console.warn('Failed to save comparison scenario filter states to LocalStorage:', error)
     }
   }
 
@@ -333,114 +316,7 @@ export class AppViewModel {
     checkReport: CheckReport,
     comparisonReport?: ComparisonReport
   ): FilterPopoverViewModel {
-    // Extract check items from the check report
-    const checkGroupItems: FilterItem[] = []
-    const checkStates: FilterStateMap = new Map()
-    for (const group of checkReport.groups) {
-      const groupChildren: FilterItem[] = []
-
-      for (const test of group.tests) {
-        const testKey = `${group.name}__${test.name}`
-        groupChildren.push({
-          key: testKey,
-          titleParts: {
-            groupName: group.name,
-            testName: test.name
-          },
-          label: test.name
-        })
-
-        // Set initial state based on whether this test was skipped
-        checkStates.set(testKey, test.status !== 'skipped')
-      }
-
-      if (groupChildren.length > 0) {
-        checkGroupItems.push({
-          key: group.name,
-          label: group.name,
-          children: groupChildren
-        })
-      }
-    }
-
-    // Put all check groups under a single "All checks" group
-    const checkItems: FilterItem[] = [
-      {
-        key: '__all_checks',
-        label: 'All checks',
-        children: checkGroupItems
-      }
-    ]
-
-    // Group scenarios by title to avoid duplicates
-    const scenarioMap = new Map<string, { title: string; subtitle?: string; skipped: boolean }>()
-
-    // Extract comparison scenario items from the comparison report
-    const scenarioGroupItems: FilterItem[] = []
-    const scenarioStates: FilterStateMap = new Map()
-    if (comparisonReport) {
-      const comparisonScenarios = this.appModel.config.comparison?.scenarios
-      for (const testReport of comparisonReport.testReports) {
-        // Find the scenario details from the config
-        const scenario = comparisonScenarios?.getScenario(testReport.scenarioKey)
-        if (scenario) {
-          const key = scenario.subtitle ? `${scenario.title}__${scenario.subtitle}` : scenario.title
-          if (!scenarioMap.has(key)) {
-            scenarioMap.set(key, {
-              title: scenario.title,
-              subtitle: scenario.subtitle,
-              skipped: testReport.diffReport === undefined
-            })
-          }
-        }
-      }
-
-      for (const [key, scenario] of scenarioMap) {
-        scenarioGroupItems.push({
-          key,
-          titleParts: {
-            title: scenario.title,
-            subtitle: scenario.subtitle
-          },
-          label: scenario.subtitle ? `${scenario.title} ${scenario.subtitle}` : scenario.title
-        })
-
-        // Set initial state based on whether this scenario was skipped
-        scenarioStates.set(key, !scenario.skipped)
-      }
-    }
-
-    // TODO: Use ComparisonReportOptions.summarySectionsForComparisonsByScenario to group scenarios by title
-    // const scenarioGroups: FilterItem[] = []
-    // for (const group of comparisonReport.summarySections) {
-    //   scenarioGroups.push({
-    //     key: group.title,
-    //     label: group.title,
-    //     children: group.items
-    //   })
-    // }
-
-    // Put all scenarios under a single "All scenarios" group
-    const scenarioItems: FilterItem[] = [
-      {
-        key: '__all_scenarios',
-        label: 'All scenarios',
-        children: scenarioGroupItems
-      }
-    ]
-
-    const checksPanel = createFilterPanelViewModel(checkItems, checkStates, states =>
-      this.saveCheckFilterStatesToLocalStorage(JSON.stringify(states))
-    )
-
-    const comparisonScenariosPanel = createFilterPanelViewModel(scenarioItems, scenarioStates, states =>
-      this.saveComparisonScenarioFilterStatesToLocalStorage(JSON.stringify(states))
-    )
-
-    return {
-      checksPanel,
-      comparisonScenariosPanel
-    }
+    return createFilterPopoverViewModel(this.appModel.config, checkReport, comparisonReport)
   }
 
   applyFilters(): void {

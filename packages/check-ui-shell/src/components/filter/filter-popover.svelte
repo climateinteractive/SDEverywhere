@@ -48,7 +48,13 @@ function setActiveTab(tab: 'checks' | 'scenarios') {
     {#if activeTab === 'checks'}
       <FilterPanel viewModel={viewModel.checksPanel} />
     {:else if activeTab === 'scenarios'}
-      <FilterPanel viewModel={viewModel.comparisonScenariosPanel} />
+      {#if viewModel.comparisonScenariosPanel}
+        <FilterPanel viewModel={viewModel.comparisonScenariosPanel} />
+      {:else}
+        <div class="filter-popover-content-empty">
+          <p>No comparisons configured</p>
+        </div>
+      {/if}
     {/if}
   </div>
 
@@ -148,6 +154,14 @@ function setActiveTab(tab: 'checks' | 'scenarios') {
 
 .filter-popover-content :global(.filter-panel) {
   border-top: none;
+}
+
+.filter-popover-content-empty {
+  display: flex;
+  height: 100%;
+  justify-content: center;
+  align-items: center;
+  padding: 1rem;
 }
 
 .filter-popover-footer {

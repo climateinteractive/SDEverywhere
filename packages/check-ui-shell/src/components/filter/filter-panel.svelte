@@ -37,7 +37,7 @@ function triggerUpdate() {
           triggerUpdate()
         }}
       />
-      <span class="filter-text">{item.label}</span>
+      <span class="filter-text">{@html item.label}</span>
     </label>
   </div>
 {/snippet}
