@@ -65,6 +65,7 @@ function onContextMenuItemSelected(e: CustomEvent) {
         <div class="bar bucket-bg-0" style="width: {viewModel.percents[0]}%;"></div>
         <div class="bar status-bg-failed" style="width: {viewModel.percents[1]}%;"></div>
         <div class="bar status-bg-error" style="width: {viewModel.percents[2]}%;"></div>
+        <div class="bar status-bg-skipped" style="width: {viewModel.percents[3]}%;"></div>
       {:else}
         <div class="bar gray" style="width: 100%"></div>
       {/if}

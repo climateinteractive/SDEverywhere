@@ -106,6 +106,9 @@ function printCheckSummary(context: BuildContext, checkReport: CheckReport, verb
       case 'error':
         statusChar = '‼'
         break
+      case 'skipped':
+        statusChar = '–'
+        break
       default:
         statusChar = ''
         break

@@ -58,12 +58,16 @@ const errorResult: CheckResult = {
     name: 'Some Dataset Name'
   }
 }
+const skippedResult: CheckResult = {
+  status: 'skipped'
+}
 
 const eqZero: [CheckPredicateOp, CheckPredicateOpRef][] = [['eq', opConstantRef(0)]]
 
 const passedPred = (checkKey: CheckKey) => predicateReport(checkKey, eqZero, ['== 0'], passedResult)
 const failedPred = (checkKey: CheckKey) => predicateReport(checkKey, eqZero, ['== 0'], failedResult)
 const errorPred = (checkKey: CheckKey) => predicateReport(checkKey, eqZero, ['== 0'], errorResult)
+const skippedPred = (checkKey: CheckKey) => predicateReport(checkKey, eqZero, ['== 0'], skippedResult)
 
 function createBundleModel(): BundleModel {
   const inputVarNames = Array.from({ length: 1000 }, (_, i) => `I${i + 1}`)
@@ -128,6 +132,22 @@ function createCheckReport(scenarioCount: number, datasetCount: number): CheckRe
     return scenarioReport(inputAtPos(input, 'at-maximum'), allDatasetsPassed ? 'passed' : 'error', datasetReports)
   })
   const group = groupReport('group1', [testReport('test1', allScenariosPassed ? 'passed' : 'error', scenarioReports)])
+  return {
+    groups: [group]
+  }
+}
+
+function createCheckReportWithSkippedTests(scenarioCount: number, datasetCount: number): CheckReport {
+  let checkKey = 0
+  const scenarioReports = Array.from({ length: scenarioCount }, (_, scenarioIndex) => {
+    const datasetReports = Array.from({ length: datasetCount }, (_, datasetIndex) => {
+      const pred: CheckPredicateReport = skippedPred(checkKey++)
+      return datasetReport('Model', `O${datasetIndex + 1}`, pred.result.status, [pred])
+    })
+    const input = inputVar(`${scenarioIndex + 1}`, `I${scenarioIndex + 1}`)[1]
+    return scenarioReport(inputAtPos(input, 'at-maximum'), 'skipped', datasetReports)
+  })
+  const group = groupReport('group1', [testReport('test1', 'skipped', scenarioReports)])
   return {
     groups: [group]
   }
@@ -199,6 +219,15 @@ function createCheckReport(scenarioCount: number, datasetCount: number): CheckRe
   {template}
   beforeEach={async ({ args }) => {
     const report = createCheckReport(1000, 10)
+    args.viewModel = createCheckSummaryViewModel(dataCoordinator, report)
+  }}
+/>
+
+<Story
+  name="Single skipped test (1 scenario x 100 datasets)"
+  {template}
+  beforeEach={async ({ args }) => {
+    const report = createCheckReportWithSkippedTests(1, 100)
     args.viewModel = createCheckSummaryViewModel(dataCoordinator, report)
   }}
 />

@@ -217,40 +217,55 @@ const { Story } = defineMeta({
     args.appViewModel = await createAppViewModel()
   }}
   play={async ({ canvas, canvasElement, userEvent }) => {
-    // // Wait for the check tests to appear
-    // await waitFor(() => {
-    //   const testRows = canvasElement.querySelectorAll('.row.test')
-    //   expect(testRows.length).toBeGreaterThan(0)
-    // })
-    // // Click the filter button to open the filter popover
-    // const filterButton = canvas.getByRole('button', { name: 'Filters' })
-    // await userEvent.click(filterButton)
-    // // Wait for the filter popover to appear
-    // await waitFor(() => {
-    //   const filterPopover = canvasElement.querySelector('.filter-popover')
-    //   expect(filterPopover).toBeDefined()
-    // })
-    // // Verify initial checkbox states
-    // const checksPanel = canvasElement.querySelector('.filter-panel')
-    // await expect(checksPanel).toBeDefined()
-    // const checkLabels = checksPanel.querySelectorAll('.filter-label')
-    // const checkCheckboxes = checksPanel.querySelectorAll('.filter-checkbox')
-    // await expect(checkLabels.length).toBe(2)
-    // await expect(checkCheckboxes.length).toBe(2)
-    // await expect(checkLabels[0]).toHaveTextContent('Output 1')
-    // await expect(checkCheckboxes[0]).not.toBeChecked()
-    // await expect(checkLabels[1]).toHaveTextContent('should be positive')
-    // await expect(checkCheckboxes[1]).not.toBeChecked()
-    // // Verify that the tab shows skipped count
-    // const tabSubtitle = canvasElement.querySelector('.tab-subtitle')
-    // expect(tabSubtitle).toBeDefined()
-    // // The tab subtitle should contain "skipped" text
-    // const tabSubtitleText = tabSubtitle?.textContent || ''
-    // expect(tabSubtitleText).toContain('skipped')
-    // // Verify that the summary shows skipped count
-    // const summaryLabel = canvasElement.querySelector('.summary-label')
-    // expect(summaryLabel).toBeDefined()
-    // const summaryText = summaryLabel?.textContent || ''
-    // expect(summaryText).toContain('skipped')
+    // Wait for the check tests to appear
+    await waitFor(() => {
+      const testRows = canvasElement.querySelectorAll('.row.test')
+      expect(testRows.length).toBeGreaterThan(0)
+    })
+
+    // Click the filter button to open the filter popover
+    const filterButton = canvas.getByRole('button', { name: 'Filters' })
+    await userEvent.click(filterButton)
+
+    // Wait for the filter popover to appear
+    await waitFor(() => {
+      const filterPopover = canvasElement.querySelector('.filter-popover')
+      expect(filterPopover).toBeDefined()
+    })
+
+    // Verify initial checkbox states in Checks panel
+    const checksPanel = canvasElement.querySelector('.filter-panel')
+    await expect(checksPanel).toBeDefined()
+    const checkLabels = checksPanel.querySelectorAll('.filter-label')
+    const checkCheckboxes = checksPanel.querySelectorAll('.filter-checkbox')
+    await expect(checkLabels.length).toBe(2)
+    await expect(checkCheckboxes.length).toBe(2)
+    await expect(checkLabels[0]).toHaveTextContent('Output 1')
+    await expect(checkCheckboxes[0]).not.toBeChecked()
+    await expect(checkLabels[1]).toHaveTextContent('should be positive')
+    await expect(checkCheckboxes[1]).not.toBeChecked()
+
+    // Verify initial checkbox states in Comparison Scenarios panel
+    await userEvent.click(canvas.getByRole('button', { name: 'Comparison Scenarios' }))
+    const comparisonScenariosPanel = canvasElement.querySelector('.filter-panel')
+    await expect(comparisonScenariosPanel).toBeDefined()
+    const comparisonScenarioLabels = comparisonScenariosPanel.querySelectorAll('.filter-label')
+    const comparisonScenarioCheckboxes = comparisonScenariosPanel.querySelectorAll('.filter-checkbox')
+    await expect(comparisonScenarioLabels.length).toBe(1)
+    await expect(comparisonScenarioCheckboxes.length).toBe(1)
+    await expect(comparisonScenarioLabels[0]).toHaveTextContent('All inputs at default')
+    await expect(comparisonScenarioCheckboxes[0]).not.toBeChecked()
+
+    // Verify that the Checks tab shows skipped count
+    const tabSubtitle = canvasElement.querySelector('.tab-subtitle')
+    await expect(tabSubtitle).toBeDefined()
+    const tabSubtitleText = tabSubtitle.textContent
+    await expect(tabSubtitleText).toContain('skipped')
+
+    // Verify that the Checks summary shows skipped count
+    const summaryLabel = canvasElement.querySelector('.summary-label')
+    await expect(summaryLabel).toBeDefined()
+    const summaryText = summaryLabel.textContent
+    await expect(summaryText).toContain('skipped')
   }}
 />

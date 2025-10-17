@@ -27,7 +27,7 @@ export interface CheckSummaryViewModel {
   failed: number
   errors: number
   skipped: number
-  percents?: [number, number, number]
+  percents?: [number, number, number, number]
   groups: CheckSummaryGroupViewModel[]
 }
 
@@ -354,6 +354,9 @@ export function createCheckSummaryViewModel(
               case 'error':
                 errors++
                 break
+              case 'skipped':
+                skipped++
+                break
               default:
                 break
             }
@@ -364,9 +367,9 @@ export function createCheckSummaryViewModel(
   }
 
   const total = passed + failed + errors + skipped
-  let percents: [number, number, number]
+  let percents: [number, number, number, number]
   if (total > 0) {
-    percents = [(passed / total) * 100, (failed / total) * 100, (errors / total) * 100]
+    percents = [(passed / total) * 100, (failed / total) * 100, (errors / total) * 100, (skipped / total) * 100]
   }
 
   return {

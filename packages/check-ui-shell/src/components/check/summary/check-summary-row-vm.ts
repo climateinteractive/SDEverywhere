@@ -26,6 +26,8 @@ function charForStatus(status: CheckStatus): string {
       return '✗'
     case 'error':
       return '‼'
+    case 'skipped':
+      return '–'
     default:
       return ''
   }
