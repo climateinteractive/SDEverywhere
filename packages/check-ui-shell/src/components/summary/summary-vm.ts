@@ -2,7 +2,13 @@
 
 import { get } from 'svelte/store'
 
-import type { CheckDataCoordinator, CheckReport, ComparisonConfig, ComparisonSummary } from '@sdeverywhere/check-core'
+import type {
+  CheckDataCoordinator,
+  CheckReport,
+  ComparisonConfig,
+  ComparisonSummary,
+  ComparisonScenarioTitleSpec
+} from '@sdeverywhere/check-core'
 
 import type { CheckSummaryViewModel } from '../check/summary/check-summary-vm'
 import { createCheckSummaryViewModel } from '../check/summary/check-summary-vm'
@@ -29,14 +35,29 @@ export function createSummaryViewModel(
   checkReport: CheckReport,
   comparisonConfig: ComparisonConfig | undefined,
   comparisonSummary: ComparisonSummary | undefined,
-  pinnedItemStates: PinnedItemStates
+  pinnedItemStates: PinnedItemStates,
+  skipComparisonScenarios: ComparisonScenarioTitleSpec[] = []
 ): SummaryViewModel {
   type TabInfo = [subtitle: string, status: string]
 
-  function getTabInfo(diffCount: number, kind: string): TabInfo {
+  function getTabInfo(diffCount: number, kind: string, skippedCount: number = 0): TabInfo {
     if (diffCount === 0) {
-      return ['all clear', 'passed']
+      if (skippedCount === 0) {
+        // There are no diffs and no skipped items
+        return ['all clear', 'passed']
+      } else {
+        // There are no diffs, but there are skipped items
+        let kindPart: string
+        if (kind === 'dataset') {
+          kindPart = skippedCount === 1 ? 'scenario' : 'scenarios'
+        } else {
+          kindPart = skippedCount === 1 ? kind : `${kind}s`
+        }
+        return [`no diffs, but ${skippedCount} skipped ${kindPart}`, 'warning']
+      }
     } else {
+      // There are diffs
+      // TODO: For now we say "diffs" even though some might be errors
       const kindPart = diffCount === 1 ? kind : `${kind}s`
       return [`${diffCount} ${kindPart} with diffs`, 'warning']
     }
@@ -103,7 +124,8 @@ export function createSummaryViewModel(
     const comparisonSummaries = createComparisonSummaryViewModels(
       comparisonConfig,
       pinnedItemStates,
-      comparisonSummary.testSummaries
+      comparisonSummary.testSummaries,
+      skipComparisonScenarios
     )
 
     // Add tab for comparison views, if some are defined
@@ -134,12 +156,20 @@ export function createSummaryViewModel(
 
     // Add tab for by-scenario summaries
     comparisonsByScenarioSummaryViewModel = comparisonSummaries.byScenario
-    const byScenarioTabInfo = getTabInfo(comparisonsByScenarioSummaryViewModel.rowsWithDiffs, 'scenario')
+    const byScenarioTabInfo = getTabInfo(
+      comparisonsByScenarioSummaryViewModel.rowsWithDiffs,
+      'scenario',
+      comparisonSummaries.skippedScenariosCount
+    )
     addTabItem('comps-by-scenario', 'Comparisons by scenario', byScenarioTabInfo)
 
     // Add tab for by-dataset summaries
     comparisonsByDatasetSummaryViewModel = comparisonSummaries.byDataset
-    const byDatasetTabInfo = getTabInfo(comparisonsByDatasetSummaryViewModel.rowsWithDiffs, 'dataset')
+    const byDatasetTabInfo = getTabInfo(
+      comparisonsByDatasetSummaryViewModel.rowsWithDiffs,
+      'dataset',
+      comparisonSummaries.skippedScenariosCount
+    )
     addTabItem('comps-by-dataset', 'Comparisons by dataset', byDatasetTabInfo)
   }
 

@@ -180,7 +180,8 @@ export class AppViewModel {
               checkReport,
               comparisonConfig,
               comparisonSummary,
-              this.pinnedItemStates
+              this.pinnedItemStates,
+              this.skipComparisonScenarios
             )
             this.filterPopoverViewModel = this.createFilterPopoverViewModel(checkReport, report.comparisonReport)
             this.writableChecksInProgress.set(false)

@@ -133,7 +133,7 @@ const { Story } = defineMeta({
 
     // Verify that the trace view is shown
     const traceView = canvasElement.querySelector('.trace-container')
-    await expect(traceView).toBeDefined()
+    await expect(traceView).not.toBeNull()
 
     // Verify that the first source option is "left"
     const source1Select = canvas.getByLabelText('Source 1')
@@ -173,14 +173,14 @@ const { Story } = defineMeta({
     // Wait for the filter popover to appear
     await waitFor(() => {
       const filterPopover = canvasElement.querySelector('.filter-popover')
-      expect(filterPopover).toBeDefined()
+      expect(filterPopover).not.toBeNull()
     })
 
     // Find and uncheck a test in the checks panel
     const checksPanel = canvasElement.querySelector('.filter-panel')
-    await expect(checksPanel).toBeDefined()
+    await expect(checksPanel).not.toBeNull()
     const firstCheckbox = checksPanel?.querySelector('input[type="checkbox"]')
-    await expect(firstCheckbox).toBeDefined()
+    await expect(firstCheckbox).not.toBeNull()
     await userEvent.click(firstCheckbox)
 
     // Verify that the filter states
@@ -224,12 +224,12 @@ const { Story } = defineMeta({
     // Wait for the filter popover to appear
     await waitFor(() => {
       const filterPopover = canvasElement.querySelector('.filter-popover')
-      expect(filterPopover).toBeDefined()
+      expect(filterPopover).not.toBeNull()
     })
 
     // Verify initial checkbox states in Checks panel
     const checksPanel = canvasElement.querySelector('.filter-panel')
-    await expect(checksPanel).toBeDefined()
+    await expect(checksPanel).not.toBeNull()
     const checkLabels = checksPanel.querySelectorAll('.filter-label')
     const checkCheckboxes = checksPanel.querySelectorAll('.filter-checkbox')
     await expect(checkLabels.length).toBe(3)
@@ -254,7 +254,7 @@ const { Story } = defineMeta({
 />
 
 <Story
-  name="Reload with Filters (no scenario groups)"
+  name="Reload with Filters (no scenario groups, all scenarios skipped)"
   {template}
   beforeEach={async ({ args }) => {
     localStorage.setItem(
@@ -299,12 +299,12 @@ const { Story } = defineMeta({
     // Wait for the filter popover to appear
     await waitFor(() => {
       const filterPopover = canvasElement.querySelector('.filter-popover')
-      expect(filterPopover).toBeDefined()
+      expect(filterPopover).not.toBeNull()
     })
 
     // Verify initial checkbox states in Checks panel
     const checksPanel = canvasElement.querySelector('.filter-panel')
-    await expect(checksPanel).toBeDefined()
+    await expect(checksPanel).not.toBeNull()
     const checkLabels = checksPanel.querySelectorAll('.filter-label')
     const checkCheckboxes = checksPanel.querySelectorAll('.filter-checkbox')
     await expect(checkLabels.length).toBe(3)
@@ -319,7 +319,7 @@ const { Story } = defineMeta({
     // Verify initial checkbox states in Comparison Scenarios panel
     await userEvent.click(canvas.getByRole('button', { name: 'Comparison Scenarios' }))
     const comparisonScenariosPanel = canvasElement.querySelector('.filter-panel')
-    await expect(comparisonScenariosPanel).toBeDefined()
+    await expect(comparisonScenariosPanel).not.toBeNull()
     const comparisonScenarioLabels = comparisonScenariosPanel.querySelectorAll('.filter-label')
     const comparisonScenarioCheckboxes = comparisonScenariosPanel.querySelectorAll('.filter-checkbox')
     await expect(comparisonScenarioLabels.length).toBe(4)
@@ -333,17 +333,152 @@ const { Story } = defineMeta({
     await expect(comparisonScenarioLabels[3]).toHaveTextContent('Constant 1 at max')
     await expect(comparisonScenarioCheckboxes[3]).not.toBeChecked()
 
+    // Click the filter button to hide the filter popover
+    await userEvent.click(filterButton)
+
     // Verify that the Checks tab shows skipped count
-    const tabSubtitle = canvasElement.querySelector('.tab-subtitle')
-    await expect(tabSubtitle).toBeDefined()
-    await expect(tabSubtitle.textContent).toBe('1 skipped')
+    const tabTitles = canvasElement.querySelectorAll('.tab-title')
+    const tabSubtitles = canvasElement.querySelectorAll('.tab-subtitle')
+    await expect(tabTitles.length).toBe(3)
+    await expect(tabSubtitles.length).toBe(3)
+    const checksTabTitle = tabTitles[0]
+    const checksTabSubtitle = tabSubtitles[0]
+    await expect(checksTabTitle.textContent).toBe('Checks')
+    await expect(checksTabSubtitle.textContent).toBe('1 skipped')
 
     // Verify that the Checks summary shows skipped count
-    const summaryLabel = canvasElement.querySelector('.summary-label')
-    await expect(summaryLabel).toBeDefined()
-    await expect(summaryLabel.textContent.replace(/\s+/g, ' ')).toBe('1 total | 1 skipped')
+    const checksSummaryLabel = canvasElement.querySelector('.summary-label')
+    await expect(checksSummaryLabel).not.toBeNull()
+    await expect(checksSummaryLabel.textContent.replace(/\s+/g, ' ')).toBe('1 total | 1 skipped')
 
-    // TODO: Verify that the "Comparisons by scenario" tab shows skipped count
+    // Click the "Comparisons by scenario" tab
+    const comparisonsByScenarioTab = canvas.getByText('Comparisons by scenario')
+    await userEvent.click(comparisonsByScenarioTab)
+
+    // Verify that the "Comparisons by scenario" tab shows skipped count
+    const comparisonsByScenarioTabTitle = tabTitles[1]
+    const comparisonsByScenarioTabSubtitle = tabSubtitles[1]
+    await expect(comparisonsByScenarioTabTitle.textContent).toBe('Comparisons by scenario')
+    await expect(comparisonsByScenarioTabSubtitle.textContent).toBe('no diffs, but 3 skipped scenarios')
+
+    // Click the "No differences produced by the following scenarios" link
+    const noDifferencesLink = canvas.getByText('No differences produced by the following scenarios')
+    await userEvent.click(noDifferencesLink)
+  }}
+/>
+
+<Story
+  name="Reload with Filters (no scenario groups, some scenarios skipped)"
+  {template}
+  beforeEach={async ({ args }) => {
+    localStorage.setItem(
+      'sde-check-filter-states',
+      JSON.stringify({
+        'Output 1__should be positive': {
+          titleParts: { groupName: 'Output 1', testName: 'should be positive' },
+          checked: false
+        }
+      })
+    )
+    localStorage.setItem(
+      'sde-comparison-scenario-filter-states',
+      JSON.stringify({
+        'All inputs__at default': {
+          titleParts: { title: 'All inputs', subtitle: 'at default' },
+          checked: true
+        },
+        'Constant 1__at min': {
+          titleParts: { title: 'Constant 1', subtitle: 'at min' },
+          checked: false
+        },
+        'Constant 1__at max': {
+          titleParts: { title: 'Constant 1', subtitle: 'at max' },
+          checked: false
+        }
+      })
+    )
+    args.appViewModel = await createAppViewModel()
+  }}
+  play={async ({ canvas, canvasElement, userEvent }) => {
+    // Wait for the check tests to appear
+    await waitFor(() => {
+      const testRows = canvasElement.querySelectorAll('.row.test')
+      expect(testRows.length).toBeGreaterThan(0)
+    })
+
+    // Click the filter button to open the filter popover
+    const filterButton = canvas.getByRole('button', { name: 'Filters' })
+    await userEvent.click(filterButton)
+
+    // Wait for the filter popover to appear
+    await waitFor(() => {
+      const filterPopover = canvasElement.querySelector('.filter-popover')
+      expect(filterPopover).not.toBeNull()
+    })
+
+    // Verify initial checkbox states in Comparison Scenarios panel
+    await userEvent.click(canvas.getByRole('button', { name: 'Comparison Scenarios' }))
+    const comparisonScenariosPanel = canvasElement.querySelector('.filter-panel')
+    await expect(comparisonScenariosPanel).not.toBeNull()
+    const comparisonScenarioLabels = comparisonScenariosPanel.querySelectorAll('.filter-label')
+    const comparisonScenarioCheckboxes = comparisonScenariosPanel.querySelectorAll('.filter-checkbox')
+    await expect(comparisonScenarioLabels.length).toBe(4)
+    await expect(comparisonScenarioCheckboxes.length).toBe(4)
+    await expect(comparisonScenarioLabels[0]).toHaveTextContent('All scenarios')
+    await expect(comparisonScenarioCheckboxes[0]).toBePartiallyChecked()
+    // TODO: Figure out why these are out of order
+    // await expect(comparisonScenarioLabels[1]).toHaveTextContent('All inputs at default')
+    // await expect(comparisonScenarioCheckboxes[1]).toBeChecked()
+    // await expect(comparisonScenarioLabels[2]).toHaveTextContent('Constant 1 at min')
+    // await expect(comparisonScenarioCheckboxes[2]).not.toBeChecked()
+    // await expect(comparisonScenarioLabels[3]).toHaveTextContent('Constant 1 at max')
+    // await expect(comparisonScenarioCheckboxes[3]).not.toBeChecked()
+
+    // Click the filter button to hide the filter popover
+    await userEvent.click(filterButton)
+
+    // Verify that the Checks tab shows skipped count
+    const tabTitles = canvasElement.querySelectorAll('.tab-title')
+    const tabSubtitles = canvasElement.querySelectorAll('.tab-subtitle')
+    await expect(tabTitles.length).toBe(3)
+    await expect(tabSubtitles.length).toBe(3)
+    const checksTabTitle = tabTitles[0]
+    const checksTabSubtitle = tabSubtitles[0]
+    await expect(checksTabTitle.textContent).toBe('Checks')
+    await expect(checksTabSubtitle.textContent).toBe('1 skipped')
+
+    // Verify that the Checks summary shows skipped count
+    const checksSummaryLabel = canvasElement.querySelector('.summary-label')
+    await expect(checksSummaryLabel).not.toBeNull()
+    await expect(checksSummaryLabel.textContent.replace(/\s+/g, ' ')).toBe('1 total | 1 skipped')
+
+    // Click the "Comparisons by scenario" tab
+    const comparisonsByScenarioTab = canvas.getByText('Comparisons by scenario')
+    await userEvent.click(comparisonsByScenarioTab)
+
+    // Verify that the "Comparisons by scenario" tab shows skipped count
+    const comparisonsByScenarioTabTitle = tabTitles[1]
+    const comparisonsByScenarioTabSubtitle = tabSubtitles[1]
+    await expect(comparisonsByScenarioTabTitle.textContent).toBe('Comparisons by scenario')
+    await expect(comparisonsByScenarioTabSubtitle.textContent).toBe('no diffs, but 2 skipped scenarios')
+
+    // Click the "No differences produced by the following scenarios" link
+    const noDifferencesLink = canvas.getByText('No differences produced by the following scenarios')
+    await userEvent.click(noDifferencesLink)
+
+    // // TODO: Verify the bar colors
+
+    // Click the "Comparisons by dataset" tab
+    const comparisonsByDatasetTab = canvas.getByText('Comparisons by dataset')
+    await userEvent.click(comparisonsByDatasetTab)
+
+    // Verify that the "Comparisons by dataset" tab shows "skipped" message
+    const comparisonsByDatasetTabTitle = tabTitles[2]
+    const comparisonsByDatasetTabSubtitle = tabSubtitles[2]
+    await expect(comparisonsByDatasetTabTitle.textContent).toBe('Comparisons by dataset')
+    await expect(comparisonsByDatasetTabSubtitle.textContent).toBe('no diffs, but 2 skipped scenarios')
+
+    // TODO: Verify the bar colors
   }}
 />
 
@@ -393,13 +528,13 @@ const { Story } = defineMeta({
     // Wait for the filter popover to appear
     await waitFor(() => {
       const filterPopover = canvasElement.querySelector('.filter-popover')
-      expect(filterPopover).toBeDefined()
+      expect(filterPopover).not.toBeNull()
     })
 
     // Verify initial checkbox states in Comparison Scenarios panel
     await userEvent.click(canvas.getByRole('button', { name: 'Comparison Scenarios' }))
     const comparisonScenariosPanel = canvasElement.querySelector('.filter-panel')
-    await expect(comparisonScenariosPanel).toBeDefined()
+    await expect(comparisonScenariosPanel).not.toBeNull()
     const comparisonScenarioLabels = comparisonScenariosPanel.querySelectorAll('.filter-label')
     const comparisonScenarioCheckboxes = comparisonScenariosPanel.querySelectorAll('.filter-checkbox')
     await expect(comparisonScenarioLabels.length).toBe(6)

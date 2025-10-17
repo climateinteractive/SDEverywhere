@@ -56,6 +56,7 @@ sub {
   --bucket-2: orangered;
   --bucket-3: crimson;
   --bucket-4: magenta;
+  --bucket-5: #888;
   --status-none: #555;
   --status-passed: limegreen;
   --status-failed: crimson;
@@ -87,6 +88,9 @@ sub {
 }
 .bucket-color-4 {
   color: var(--bucket-4);
+}
+.bucket-color-5 {
+  color: var(--bucket-5);
 }
 .status-color-none {
   color: var(--status-none);
@@ -131,6 +135,9 @@ sub {
 .bucket-bg-4 {
   background-color: var(--bucket-4);
 }
+.bucket-bg-5 {
+  background-color: var(--bucket-5);
+}
 .status-bg-none {
   background-color: var(--status-none);
 }
@@ -173,6 +180,9 @@ sub {
 }
 .bucket-border-4 {
   border-color: var(--bucket-4);
+}
+.bucket-border-5 {
+  border-color: var(--bucket-5);
 }
 .status-border-none {
   border-color: var(--status-none);

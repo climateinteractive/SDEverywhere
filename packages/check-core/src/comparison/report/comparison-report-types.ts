@@ -31,7 +31,7 @@ export interface ComparisonTestSummary {
   /** Short for `datasetKey`. */
   d: DatasetKey
   /** Short for `maxDiff`. */
-  md: number
+  md?: number
 }
 
 /**

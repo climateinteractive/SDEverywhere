@@ -360,9 +360,9 @@ describe('categorizeComparisonGroups', () => {
         ],
         {
           totalDiffCount: 5,
-          totalMaxDiffByBucket: [0, 0, 0, 0, 40],
-          diffCountByBucket: [4, 0, 0, 0, 1],
-          diffPercentByBucket: [80, 0, 0, 0, 20]
+          totalMaxDiffByBucket: [0, 0, 0, 0, 40, 0],
+          diffCountByBucket: [4, 0, 0, 0, 1, 0],
+          diffPercentByBucket: [80, 0, 0, 0, 20, 0]
         }
       ),
       groupSummary(
@@ -376,9 +376,9 @@ describe('categorizeComparisonGroups', () => {
         ],
         {
           totalDiffCount: 5,
-          totalMaxDiffByBucket: [0, 0, 0, 0, 10],
-          diffCountByBucket: [4, 0, 0, 0, 1],
-          diffPercentByBucket: [80, 0, 0, 0, 20]
+          totalMaxDiffByBucket: [0, 0, 0, 0, 10, 0],
+          diffCountByBucket: [4, 0, 0, 0, 1, 0],
+          diffPercentByBucket: [80, 0, 0, 0, 20, 0]
         }
       ),
       groupSummary(
@@ -392,9 +392,9 @@ describe('categorizeComparisonGroups', () => {
         ],
         {
           totalDiffCount: 5,
-          totalMaxDiffByBucket: [0, 0, 0, 0, 10],
-          diffCountByBucket: [4, 0, 0, 0, 1],
-          diffPercentByBucket: [80, 0, 0, 0, 20]
+          totalMaxDiffByBucket: [0, 0, 0, 0, 10, 0],
+          diffCountByBucket: [4, 0, 0, 0, 1, 0],
+          diffPercentByBucket: [80, 0, 0, 0, 20, 0]
         }
       ),
       groupSummary(
@@ -408,9 +408,9 @@ describe('categorizeComparisonGroups', () => {
         ],
         {
           totalDiffCount: 5,
-          totalMaxDiffByBucket: [0, 0, 0, 10, 0],
-          diffCountByBucket: [3, 0, 0, 2, 0],
-          diffPercentByBucket: [60, 0, 0, 40, 0]
+          totalMaxDiffByBucket: [0, 0, 0, 10, 0, 0],
+          diffCountByBucket: [3, 0, 0, 2, 0, 0],
+          diffPercentByBucket: [60, 0, 0, 40, 0, 0]
         }
       )
     ])
@@ -427,9 +427,9 @@ describe('categorizeComparisonGroups', () => {
         ],
         {
           totalDiffCount: 5,
-          totalMaxDiffByBucket: [0, 0, 0, 0, 0],
-          diffCountByBucket: [5, 0, 0, 0, 0],
-          diffPercentByBucket: [100, 0, 0, 0, 0]
+          totalMaxDiffByBucket: [0, 0, 0, 0, 0, 0],
+          diffCountByBucket: [5, 0, 0, 0, 0, 0],
+          diffPercentByBucket: [100, 0, 0, 0, 0, 0]
         }
       ),
       groupSummary(
@@ -443,9 +443,9 @@ describe('categorizeComparisonGroups', () => {
         ],
         {
           totalDiffCount: 5,
-          totalMaxDiffByBucket: [0, 0, 0, 0, 0],
-          diffCountByBucket: [5, 0, 0, 0, 0],
-          diffPercentByBucket: [100, 0, 0, 0, 0]
+          totalMaxDiffByBucket: [0, 0, 0, 0, 0, 0],
+          diffCountByBucket: [5, 0, 0, 0, 0, 0],
+          diffPercentByBucket: [100, 0, 0, 0, 0, 0]
         }
       )
     ])
@@ -515,9 +515,9 @@ describe('categorizeComparisonGroups', () => {
         ],
         {
           totalDiffCount: 8,
-          totalMaxDiffByBucket: [0, 0, 0, 5, 60],
-          diffCountByBucket: [4, 0, 0, 1, 3],
-          diffPercentByBucket: [50, 0, 0, 12.5, 37.5]
+          totalMaxDiffByBucket: [0, 0, 0, 5, 60, 0],
+          diffCountByBucket: [4, 0, 0, 1, 3, 0],
+          diffPercentByBucket: [50, 0, 0, 12.5, 37.5, 0]
         }
       ),
       groupSummary(
@@ -534,9 +534,9 @@ describe('categorizeComparisonGroups', () => {
         ],
         {
           totalDiffCount: 8,
-          totalMaxDiffByBucket: [0, 0, 0, 5, 0],
-          diffCountByBucket: [7, 0, 0, 1, 0],
-          diffPercentByBucket: [87.5, 0, 0, 12.5, 0]
+          totalMaxDiffByBucket: [0, 0, 0, 5, 0, 0],
+          diffCountByBucket: [7, 0, 0, 1, 0, 0],
+          diffPercentByBucket: [87.5, 0, 0, 12.5, 0, 0]
         }
       )
     ])
@@ -556,9 +556,9 @@ describe('categorizeComparisonGroups', () => {
         ],
         {
           totalDiffCount: 8,
-          totalMaxDiffByBucket: [0, 0, 0, 0, 0],
-          diffCountByBucket: [8, 0, 0, 0, 0],
-          diffPercentByBucket: [100, 0, 0, 0, 0]
+          totalMaxDiffByBucket: [0, 0, 0, 0, 0, 0],
+          diffCountByBucket: [8, 0, 0, 0, 0, 0],
+          diffPercentByBucket: [100, 0, 0, 0, 0, 0]
         }
       )
     ])

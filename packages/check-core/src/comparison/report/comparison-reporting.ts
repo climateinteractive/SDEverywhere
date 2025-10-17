@@ -16,7 +16,15 @@ export function comparisonSummaryFromReport(comparisonReport: ComparisonReport):
   const terseSummaries: ComparisonTestSummary[] = []
 
   for (const r of comparisonReport.testReports) {
-    if (r.diffReport?.validity === 'both' && r.diffReport.maxDiff > 0) {
+    if (r.diffReport === undefined) {
+      // The test was skipped; add a summary with an undefined `maxDiff`
+      terseSummaries.push({
+        s: r.scenarioKey,
+        d: r.datasetKey,
+        md: undefined
+      })
+    } else if (r.diffReport?.validity === 'both' && r.diffReport.maxDiff > 0) {
+      // Only include the summary if the test produced a non-zero `maxDiff`
       terseSummaries.push({
         s: r.scenarioKey,
         d: r.datasetKey,
@@ -57,12 +65,19 @@ export function restoreFromTerseSummaries(
   for (const scenario of comparisonConfig.scenarios.getAllScenarios()) {
     const datasetKeys = comparisonConfig.datasets.getDatasetKeysForScenario(scenario)
     for (const datasetKey of datasetKeys) {
-      // If we have a summary in the array that was passed in, it means
-      // the `maxDiff` was non-zero, so include that value, otherwise
-      // assume zero
       const key = `${scenario.key}::${datasetKey}`
       const existingSummary = existingSummaries.get(key)
-      const maxDiff = existingSummary?.md || 0
+      let maxDiff: number | undefined
+      if (existingSummary) {
+        // We have a summary in the array that was passed in, which means the
+        // `maxDiff` was undefined (meaning the comparison was skipped) or was
+        // non-zero (meaning it had a non-zero difference), so preserve this value
+        maxDiff = existingSummary.md
+      } else {
+        // We don't have a summary in the array that was passed in, which means
+        // the comparison produced no difference, so use zero
+        maxDiff = 0
+      }
       allTestSummaries.push({
         s: scenario.key,
         d: datasetKey,
