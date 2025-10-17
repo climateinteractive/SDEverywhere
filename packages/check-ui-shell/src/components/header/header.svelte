@@ -92,7 +92,7 @@ function onSelectBundleR(e: Event) {
       </div>
       <div class="spacer-fixed"></div>
       <div class="header-group">
-        {#if (import.meta as any).hot}
+        {#if import.meta.hot}
           <button class="icon-button filter" on:click={onToggleFilters} aria-label="Filters">
             <Icon class="icon" data={faFilter} />
           </button>
