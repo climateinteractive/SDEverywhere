@@ -56,6 +56,8 @@ export interface CheckTask {
   action: CheckAction
   /** The op->ref pairs for any reference data needed for performing the check. */
   dataRefs?: Map<CheckPredicateOp, CheckDataRef>
+  /** Whether the check should be skipped. */
+  skip?: boolean
 }
 
 export interface CheckPlan {
@@ -107,14 +109,6 @@ export class CheckPlanner {
 
         // Check if this test should be skipped
         const shouldSkip = skipChecksSet.has(skipCheckKey(groupName, testName))
-        if (shouldSkip) {
-          // Add skipped test to the plan (with empty scenarios to indicate it was skipped)
-          planTests.push({
-            name: testName,
-            scenarios: []
-          })
-          continue
-        }
 
         // TODO: We no longer offer a "Simplify Scenarios" option in the UI, but
         // we will leave the option here in case we add it back later
@@ -186,7 +180,8 @@ export class CheckPlanner {
                 scenario: checkScenario,
                 dataset: checkDataset,
                 action: checkAction,
-                dataRefs
+                dataRefs,
+                skip: shouldSkip
               })
             }
 

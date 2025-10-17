@@ -218,11 +218,11 @@ describe('runSuite', () => {
     expect(report.checkReport.groups[0].name).toBe('group1')
     expect(report.checkReport.groups[0].tests.length).toBe(2)
 
-    // Verify that test1 has no scenarios (since it was skipped)
+    // Verify that test1 has scenarios but is marked as skipped
     const test1 = report.checkReport.groups[0].tests[0]
     expect(test1).toBeDefined()
     expect(test1.status).toBe('skipped')
-    expect(test1.scenarios.length).toBe(0)
+    expect(test1.scenarios.length).toBe(2)
 
     // Verify that test2 has scenarios (since it was not skipped)
     const test2 = report.checkReport.groups[0].tests[1]

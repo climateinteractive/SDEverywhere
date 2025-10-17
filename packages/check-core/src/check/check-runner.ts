@@ -35,6 +35,7 @@ export function runChecks(
   const checkPlanner = new CheckPlanner(modelSpec)
   checkPlanner.addAllChecks(checkSpec, skipChecks)
   const checkPlan = checkPlanner.buildPlan()
+  console.log('runChecks: checkPlan', checkPlan)
 
   // Create a map to hold reference datasets; these will be fetched before
   // performing any checks that rely on reference data
@@ -59,14 +60,20 @@ export function runChecks(
 
   // Plan the checks
   for (const [checkKey, checkTask] of checkPlan.tasks.entries()) {
-    // For each check, add a request to the data planner so that the check
-    // runs when the dataset is fetched
-    dataPlanner.addRequest(undefined, checkTask.scenario.spec, checkTask.dataset.datasetKey, datasets => {
-      // Run the check action on the dataset, then save the result
-      const dataset = datasets.datasetR
-      const checkResult = runCheck(checkTask, dataset, refDatasets)
-      checkResults.set(checkKey, checkResult)
-    })
+    // Check if this check should be skipped
+    if (checkTask.skip === true) {
+      // Create a skipped result immediately
+      checkResults.set(checkKey, { status: 'skipped' })
+    } else {
+      // For each check, add a request to the data planner so that the check
+      // runs when the dataset is fetched
+      dataPlanner.addRequest(undefined, checkTask.scenario.spec, checkTask.dataset.datasetKey, datasets => {
+        // Run the check action on the dataset, then save the result
+        const dataset = datasets.datasetR
+        const checkResult = runCheck(checkTask, dataset, refDatasets)
+        checkResults.set(checkKey, checkResult)
+      })
+    }
   }
 
   // Return a function that will build the report with the check results; this

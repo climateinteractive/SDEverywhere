@@ -66,22 +66,15 @@ export interface CheckReport {
 export type StyleFunc = (s: string) => string
 
 export function buildCheckReport(checkPlan: CheckPlan, checkResults: Map<CheckKey, CheckResult>): CheckReport {
+  // console.log('checkPlan', checkPlan)
+  // console.log('checkResults', checkResults)
+
   const groupReports: CheckGroupReport[] = []
 
   for (const groupPlan of checkPlan.groups) {
     const testReports: CheckTestReport[] = []
 
     for (const testPlan of groupPlan.tests) {
-      // Check if this test was skipped (has no scenarios)
-      if (testPlan.scenarios.length === 0) {
-        testReports.push({
-          name: testPlan.name,
-          status: 'skipped',
-          scenarios: []
-        })
-        continue
-      }
-
       let testStatus: CheckStatus = 'passed'
       const scenarioReports: CheckScenarioReport[] = []
       for (const scenarioPlan of testPlan.scenarios) {
@@ -109,7 +102,7 @@ export function buildCheckReport(checkPlan: CheckPlan, checkResults: Map<CheckKe
             if (checkResult) {
               if (checkResult.status !== 'passed') {
                 // Set the status for parent groupings; 'error' status has higher
-                // precendence than 'failed' status
+                // precendence than 'failed' status, and 'skipped' has lower precedence
                 if (checkResult.status === 'error') {
                   testStatus = 'error'
                   scenarioStatus = 'error'
@@ -118,6 +111,10 @@ export function buildCheckReport(checkPlan: CheckPlan, checkResults: Map<CheckKe
                   testStatus = 'failed'
                   scenarioStatus = 'failed'
                   datasetStatus = 'failed'
+                } else if (checkResult.status === 'skipped' && testStatus === 'passed') {
+                  testStatus = 'skipped'
+                  scenarioStatus = 'skipped'
+                  datasetStatus = 'skipped'
                 }
               }
               predicateReports.push(predicateReport(predicatePlan, checkKey, checkResult))

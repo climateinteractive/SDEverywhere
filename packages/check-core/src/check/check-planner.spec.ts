@@ -246,39 +246,45 @@ describe('CheckPlanner', () => {
     planner.addAllChecks(checkSpec, skipChecks)
     const plan = planner.buildPlan()
 
+    // Verify that tasks were created for all tests (including skipped ones)
+    const taskKeys = Array.from(plan.tasks.keys())
+    expect(taskKeys.length).toBe(3)
+
     // Verify that we have 2 groups
     expect(plan.groups).toHaveLength(2)
 
-    // Verify thatgroup1 has 2 tests (test1 skipped, test2 not skipped)
+    // Verify that group1 has 2 tests (test1 skipped, test2 not skipped)
     const group1 = plan.groups[0]
     expect(group1).toBeDefined()
     expect(group1.tests).toHaveLength(2)
 
-    // Verify that test1 has no scenarios (since it was skipped)
+    // Verify that test1 has scenarios but is marked as skipped
     const test1 = group1.tests[0]
     expect(test1).toBeDefined()
     expect(test1.name).toBe('test1')
-    expect(test1.scenarios.length).toBe(0)
+    expect(test1.scenarios.length).toBe(1)
+    const task1 = plan.tasks.get(1)
+    expect(task1.skip).toBe(true)
 
     // Verify that the non-skipped test has scenarios
     const test2 = group1.tests[1]
     expect(test2).toBeDefined()
     expect(test2.name).toBe('test2')
     expect(test2.scenarios.length).toBe(1)
+    const task2 = plan.tasks.get(2)
+    expect(task2.skip).toBe(false)
 
     // Verify that group2 has 1 test (test3 skipped)
     const group2 = plan.groups[1]
     expect(group2).toBeDefined()
     expect(group2.tests).toHaveLength(1)
 
-    // Verify that test3 has no scenarios (since it was skipped)
+    // Verify that test3 has scenarios but is marked as skipped
     const test3 = group2.tests[0]
     expect(test3).toBeDefined()
     expect(test3.name).toBe('test3')
-    expect(test3.scenarios.length).toBe(0)
-
-    // Verify that no tasks were created for skipped tests
-    const taskKeys = Array.from(plan.tasks.keys())
-    expect(taskKeys.length).toBe(1)
+    expect(test3.scenarios.length).toBe(1)
+    const task3 = plan.tasks.get(3)
+    expect(task3.skip).toBe(true)
   })
 })

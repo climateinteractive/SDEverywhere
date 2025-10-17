@@ -53,6 +53,8 @@ export function checkSummaryFromReport(checkReport: CheckReport): CheckSummary {
                   result: predicate.result
                 })
                 break
+              case 'skipped':
+                break
               default:
                 assertNever(predicate.result.status)
             }
