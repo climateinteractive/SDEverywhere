@@ -187,13 +187,19 @@ export interface NamedBundle {
 }
 
 /**
- * Represents a bundle that has had its model initialized.
+ * Represents a bundle that has had its model instances initialized.
  */
 export interface LoadedBundle {
   /** The name of the bundle, for example, "Current" or "Baseline". */
   name: string
   /** The version of the bundle. */
   version: number
-  /** The initialized model. */
-  model: BundleModel
+  /** The spec for the bundled model. */
+  modelSpec: ModelSpec
+  /**
+   * The initialized model instances for this bundle.  If `concurrentModels` was specified
+   * in the config, then there will be that number of model instances in this array,
+   * otherwise there will be one instance.
+   */
+  models: BundleModel[]
 }

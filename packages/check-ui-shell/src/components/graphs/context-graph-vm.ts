@@ -42,7 +42,10 @@ export class ContextGraphViewModel {
     if (graphSpec) {
       const scenarioSpec = bundle === 'right' ? scenario.specR : scenario.specL
       if (scenarioSpec !== undefined) {
-        this.linkItems = b.model.getGraphLinksForScenario(scenarioSpec, graphSpec.id)
+        // TODO: We shouldn't need to access a model to get the links; the `getGraphLinksForScenario`
+        // method should be defined on the bundle itself
+        const bundleModel = b.models[0]
+        this.linkItems = bundleModel.getGraphLinksForScenario(scenarioSpec, graphSpec.id)
         this.requestKey = `context-graph::${requestId++}::${bundle}::${graphSpec.id}::${scenario.key}`
       } else {
         this.linkItems = []

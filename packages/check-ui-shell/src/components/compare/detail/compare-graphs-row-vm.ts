@@ -42,8 +42,8 @@ export function createCompareGraphsRowViewModel(
   }
 
   // Create a view model for each graph
-  const graphSpecL = comparisonConfig.bundleL.model.modelSpec.graphSpecs?.find(s => s.id === graphId)
-  const graphSpecR = comparisonConfig.bundleR.model.modelSpec.graphSpecs?.find(s => s.id === graphId)
+  const graphSpecL = comparisonConfig.bundleL.modelSpec.graphSpecs?.find(s => s.id === graphId)
+  const graphSpecR = comparisonConfig.bundleR.modelSpec.graphSpecs?.find(s => s.id === graphId)
   const graphL = contextGraph(graphSpecL, 'left')
   const graphR = contextGraph(graphSpecR, 'right')
 

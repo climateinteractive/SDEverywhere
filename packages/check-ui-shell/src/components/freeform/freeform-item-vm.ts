@@ -101,8 +101,8 @@ export class FreeformItemViewModel {
         //     break
         // }
 
-        const modelSpecL = this.dataCoordinator.bundleModelL.modelSpec
-        const modelSpecR = this.dataCoordinator.bundleModelR.modelSpec
+        const modelSpecL = this.comparisonConfig.bundleL.modelSpec
+        const modelSpecR = this.comparisonConfig.bundleR.modelSpec
         const outputVarL = modelSpecL.outputVars.get(this.datasetKey)
         const outputVarR = modelSpecR.outputVars.get(this.datasetKey)
         const outputVar = outputVarR || outputVarL

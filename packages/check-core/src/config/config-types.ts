@@ -31,6 +31,14 @@ export interface ConfigOptions {
    * The model comparison options.
    */
   comparison?: ComparisonOptions
+  /**
+   * The number of model instances to initialize for each bundle.  If undefined, a single
+   * model instance will be initialized for each bundle.  Setting this to a value greater
+   * than 1 will allow multiple model instances to be run concurrently.  For example, if
+   * the number of CPU cores is 8, setting this to 4 will allow 4 pairs of model instances
+   * to be run concurrently, using all available cores.
+   */
+  concurrentModels?: number
 }
 
 /**

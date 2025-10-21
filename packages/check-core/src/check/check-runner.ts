@@ -31,7 +31,7 @@ export function runChecks(
 ): () => CheckReport {
   // Visit all the check test specs and plan the checks that need
   // to be performed
-  const modelSpec = checkConfig.bundle.model.modelSpec
+  const modelSpec = checkConfig.bundle.modelSpec
   const checkPlanner = new CheckPlanner(modelSpec)
   checkPlanner.addAllChecks(checkSpec, skipChecks)
   const checkPlan = checkPlanner.buildPlan()

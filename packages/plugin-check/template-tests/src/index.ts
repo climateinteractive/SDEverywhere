@@ -87,6 +87,16 @@ export async function getConfigOptions(
     }
   }
 
+  // TODO: Make this configurable; for now, use the number of available CPU cores divided by 2
+  let concurrentModels: number
+  if (typeof navigator !== 'undefined') {
+    console.log('navigator.hardwareConcurrency', navigator.hardwareConcurrency)
+    concurrentModels = Math.max(1, Math.floor(navigator.hardwareConcurrency / 2))
+  } else {
+    concurrentModels = 5
+  }
+  console.log('concurrentModels', concurrentModels)
+
   return {
     current: {
       name: opts?.bundleNameR || 'current',
@@ -95,7 +105,8 @@ export async function getConfigOptions(
     check: {
       tests: yamlCheckSpecFiles
     },
-    comparison: comparisonOptions
+    comparison: comparisonOptions,
+    concurrentModels
   }
 }
 

@@ -39,7 +39,7 @@ export type { ImplVar, InputId, InputVar, OutputVar, RelatedItem } from './bundl
 //
 
 export type { CheckDataRequestKey } from './check/check-data-coordinator'
-export { CheckDataCoordinator } from './check/check-data-coordinator'
+export { CheckDataCoordinator, createCheckDataCoordinator } from './check/check-data-coordinator'
 
 export type { CheckDataRef, CheckDataRefKey } from './check/check-data-ref'
 
@@ -100,7 +100,10 @@ export type { ComparisonScenarios } from './comparison/config/comparison-scenari
 export type { ComparisonDatasets } from './comparison/config/comparison-datasets'
 
 export type { ComparisonDataRequestKey } from './comparison/run/comparison-data-coordinator'
-export { ComparisonDataCoordinator } from './comparison/run/comparison-data-coordinator'
+export {
+  ComparisonDataCoordinator,
+  createComparisonDataCoordinator
+} from './comparison/run/comparison-data-coordinator'
 
 export * from './comparison/diff-datasets/diff-datasets'
 

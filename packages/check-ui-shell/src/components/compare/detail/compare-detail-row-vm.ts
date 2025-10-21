@@ -148,8 +148,8 @@ export function createCompareDetailRowViewModel(
 export function createContextGraphRows(box: CompareDetailBoxViewModel): CompareDetailContextGraphRowViewModel[] {
   const comparisonConfig = box.comparisonConfig
   const dataCoordinator = box.dataCoordinator
-  const bundleModelL = dataCoordinator.bundleModelL
-  const bundleModelR = dataCoordinator.bundleModelR
+  const modelSpecL = comparisonConfig.bundleL.modelSpec
+  const modelSpecR = comparisonConfig.bundleR.modelSpec
 
   function contextGraph(
     scenario: ComparisonScenario,
@@ -165,8 +165,8 @@ export function createContextGraphRows(box: CompareDetailBoxViewModel): CompareD
   // Prepare context graphs for this box
   const contextGraphRows: CompareDetailContextGraphRowViewModel[] = []
   for (const graphId of graphIds) {
-    const graphSpecL = bundleModelL.modelSpec.graphSpecs?.find(s => s.id === graphId)
-    const graphSpecR = bundleModelR.modelSpec.graphSpecs?.find(s => s.id === graphId)
+    const graphSpecL = modelSpecL.graphSpecs?.find(s => s.id === graphId)
+    const graphSpecR = modelSpecR.graphSpecs?.find(s => s.id === graphId)
     contextGraphRows.push({
       graphL: contextGraph(box.scenario, graphSpecL, 'left'),
       graphR: contextGraph(box.scenario, graphSpecR, 'right')
