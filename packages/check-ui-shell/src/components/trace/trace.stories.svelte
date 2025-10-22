@@ -22,9 +22,9 @@ const { Story } = defineMeta({
   component: Trace
 })
 
-function mockModelSpec(): ModelSpec {
-  const varsPerGroup = 100
+const varsPerGroup = 100
 
+function mockModelSpec(): ModelSpec {
   const inputVarNames = Array.from({ length: varsPerGroup }, (_, i) => `Constant ${i + 1}`)
   const inputVars = new Map(inputVarNames.map((varName, i) => inputVar(`${i + 1}`, varName)))
 
@@ -127,6 +127,89 @@ async function createTraceViewModelForStory(deltaR = 0) {
   beforeEach={async ({ args }) => {
     // Create a view model where even-numbered variables have different values
     args.viewModel = await createTraceViewModelForStory(5)
+  }}
+/>
+
+<Story
+  name="DAT and Model With Differences"
+  {template}
+  beforeEach={async ({ args }) => {
+    // Create a view model where the models produce identical data (but we will
+    // compare to a DAT file with different data)
+    args.viewModel = await createTraceViewModelForStory(0)
+  }}
+  play={async ({ canvas, canvasElement, userEvent }) => {
+    // Wait for the component to render
+    await waitFor(() => {
+      const sourceSelector = canvasElement.querySelector('select[aria-label="Source 1"]')
+      expect(sourceSelector).toBeDefined()
+    })
+
+    // Select the "DAT file" option from Source 1 selector
+    const source1Selector = canvas.getByLabelText('Source 1')
+    await userEvent.selectOptions(source1Selector, 'dat')
+
+    // Create a mock .dat file with fake content (all values set to 20)
+    let datContent = ''
+    function addDataForVar(varName: string) {
+      datContent += `${varName}\n`
+      for (let i = 2000; i <= 2100; i++) {
+        datContent += `${i}\t20\n`
+      }
+    }
+    function addDataForVarsInGroup(varKind: string) {
+      for (let i = 0; i < varsPerGroup; i++) {
+        addDataForVar(`${varKind} ${i + 1}`)
+      }
+    }
+    addDataForVarsInGroup('Constant')
+    addDataForVarsInGroup('Level')
+    addDataForVarsInGroup('Output')
+    const mockFile = new File([datContent], 'test-data.dat', {
+      type: 'text/plain'
+    })
+
+    // Find the file input element
+    const fileInput = canvasElement.querySelector('#trace-dat-file') as HTMLInputElement
+
+    // XXX: Simulate selecting a local file by creating a FileList and triggering events.
+    // This works around the issue where HTMLInputElement.files is read-only, which
+    // prevents `userEvent.upload` from working.
+    const fileList = {
+      0: mockFile,
+      length: 1,
+      item: (index: number) => (index === 0 ? mockFile : null),
+      [Symbol.iterator]: function* () {
+        yield mockFile
+      }
+    } as FileList
+
+    // Override the `files` property temporarily
+    Object.defineProperty(fileInput, 'files', {
+      value: fileList,
+      writable: true,
+      configurable: true
+    })
+
+    // Trigger the change event to simulate file selection.  This will cause the Svelte
+    // reactive statement to run and process the file.
+    fileInput.dispatchEvent(new Event('change', { bubbles: true }))
+
+    // Wait for the file to be processed
+    await waitFor(() => {
+      const statusMessage = canvasElement.querySelector('.trace-tooltip')
+      expect(statusMessage).not.toBeNull()
+    })
+
+    // Verify that the tooltip is shown for "Constant 1"
+    const tooltip = canvasElement.querySelector('.trace-tooltip')
+    await expect(tooltip).not.toBeNull()
+    await expect(tooltip.querySelector('.tooltip-title')).toHaveTextContent('Constant 1')
+    const dataRows = tooltip.querySelectorAll('.data-point')
+    await expect(dataRows.length).toBe(3)
+    await expect(dataRows[0]).toHaveTextContent('Time: 2000')
+    await expect(dataRows[1]).toHaveTextContent('Value 1: 20.000000')
+    await expect(dataRows[2]).toHaveTextContent('Value 2: 10.000000')
   }}
 />
 
