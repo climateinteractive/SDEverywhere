@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.25](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.24...compile-v0.7.25) (2025-10-17)
+
+
+### Features
+
+* include grouped and sorted arrays of variable instances in JSON listing ([#681](https://github.com/climateinteractive/SDEverywhere/issues/681)) ([0f29d40](https://github.com/climateinteractive/SDEverywhere/commit/0f29d4012dfe8cd5b9526ee970fa9c3c7f664652)), closes [#534](https://github.com/climateinteractive/SDEverywhere/issues/534)
+
 ## [0.7.24](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.23...compile-v0.7.24) (2025-08-18)
 
 

@@ -143,7 +143,7 @@ function onCommand(event: CustomEvent) {
       viewMode = 'perf'
       break
     case 'show-trace-view-with-scenario':
-      traceViewModel = viewModel.createTraceViewModel(cmdObj.scenarioSpec)
+      traceViewModel = viewModel.createTraceViewModel(cmdObj.scenarioSpec, cmdObj.scenarioKind)
       viewMode = 'trace'
       break
     default:

@@ -17,16 +17,16 @@ interface DatasetRequest {
    * The source of the first ("left") dataset.  If "left", the datasets will be fetched from the "left"
    * model passed to the constructor, otherwise they will be fetched from the "right" model.
    */
-  sourceL: 'left' | 'right'
+  sourceL: 'left' | 'right' | undefined
   /** The scenario used for the first ("left") model of the comparison. */
-  scenarioSpecL?: ScenarioSpec
+  scenarioSpecL: ScenarioSpec | undefined
   /**
    * The source of the second ("right") dataset.  If "left", the datasets will be fetched from the "left"
    * model passed to the constructor, otherwise they will be fetched from the "right" model.
    */
   sourceR: 'left' | 'right'
   /** The scenario used for the second ("right") model of the comparison. */
-  scenarioSpecR?: ScenarioSpec
+  scenarioSpecR: ScenarioSpec | undefined
   /** The keys of the datasets to be fetched. */
   datasetKeys: DatasetKey[]
 }
@@ -37,16 +37,16 @@ interface GraphDataRequest {
    * The source of the first ("left") dataset.  If "left", the datasets will be fetched from the "left"
    * model passed to the constructor, otherwise they will be fetched from the "right" model.
    */
-  sourceL: 'left' | 'right'
+  sourceL: 'left' | 'right' | undefined
   /** The scenario used for the first ("left") model of the comparison. */
-  scenarioSpecL?: ScenarioSpec
+  scenarioSpecL: ScenarioSpec | undefined
   /**
    * The source of the second ("right") dataset.  If "left", the datasets will be fetched from the "left"
    * model passed to the constructor, otherwise they will be fetched from the "right" model.
    */
   sourceR: 'left' | 'right'
   /** The scenario used for the second ("right") model of the comparison. */
-  scenarioSpecR?: ScenarioSpec
+  scenarioSpecR: ScenarioSpec | undefined
   /** The ID of the graph for which data will be fetched. */
   graphId: BundleGraphId
 }
@@ -172,8 +172,8 @@ export class ComparisonDataCoordinator {
 
   requestDatasetMaps(
     requestKey: ComparisonDataRequestKey,
-    sourceL: 'left' | 'right',
-    scenarioSpecL: ScenarioSpec,
+    sourceL: 'left' | 'right' | undefined,
+    scenarioSpecL: ScenarioSpec | undefined,
     sourceR: 'left' | 'right',
     scenarioSpecR: ScenarioSpec,
     datasetKeys: DatasetKey[],
@@ -196,8 +196,8 @@ export class ComparisonDataCoordinator {
 
   requestGraphData(
     requestKey: ComparisonDataRequestKey,
-    sourceL: 'left' | 'right',
-    scenarioSpecL: ScenarioSpec,
+    sourceL: 'left' | 'right' | undefined,
+    scenarioSpecL: ScenarioSpec | undefined,
     sourceR: 'left' | 'right',
     scenarioSpecR: ScenarioSpec,
     graphId: BundleGraphId,

@@ -1,6 +1,6 @@
 {
   "name": "@sdeverywhere/check-ui-shell",
-  "version": "0.2.10",
+  "version": "0.2.11",
   "files": [
     "dist/**",
     "types/**"
