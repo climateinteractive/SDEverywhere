@@ -21,6 +21,7 @@ export type {
   BundleGraphView,
   BundleModel,
   DatasetGroupName,
+  ImplVarGroup,
   InputAliasName,
   InputGroupName,
   InputSettingGroupId,
@@ -31,7 +32,7 @@ export type {
   NamedBundle
 } from './bundle/bundle-types'
 
-export type { Dimension, ImplVar, InputId, InputVar, OutputVar, RelatedItem, Subscript } from './bundle/var-types'
+export type { ImplVar, InputId, InputVar, OutputVar, RelatedItem } from './bundle/var-types'
 
 //
 // check
@@ -127,6 +128,15 @@ export { PerfRunner } from './perf/perf-runner'
 
 export type { PerfReport } from './perf/perf-stats'
 export { PerfStats } from './perf/perf-stats'
+
+//
+// trace
+//
+
+export type { TraceCompareToBundleOptions, TraceCompareToExtDataOptions, TraceOptions } from './trace/trace-runner'
+export { TraceRunner } from './trace/trace-runner'
+
+export type { TraceDatasetReport, TraceReport } from './trace/trace-report'
 
 //
 // suite

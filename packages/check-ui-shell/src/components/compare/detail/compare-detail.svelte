@@ -17,6 +17,7 @@ import type { CompareDetailViewModel } from './compare-detail-vm'
 import type { CompareDetailRowViewModel } from './compare-detail-row-vm'
 import DetailRow from './compare-detail-row.svelte'
 import GraphsRow from './compare-graphs-row.svelte'
+import type { ComparisonScenario } from '@sdeverywhere/check-core'
 
 export let viewModel: CompareDetailViewModel
 let itemKind: string
@@ -24,9 +25,9 @@ let itemKindPlural: string
 let pinnedDetailRows: Readable<CompareDetailRowViewModel[]>
 
 let scrollContainer: HTMLElement
-let scrollContent: HTMLElement
 
 let contextMenuSourceKey: PinnedItemKey
+let contextMenuSourceScenario: ComparisonScenario | undefined
 let contextMenuItems: ContextMenuItem[] = []
 let contextMenuEvent: MouseEvent
 let relatedItemsVisible = false
@@ -100,6 +101,7 @@ function onShowContextMenu(e: CustomEvent) {
       const action = pinned ? 'Unpin' : 'Pin'
       const kind = eventSourceKind === 'row' ? 'Row' : itemKind
       contextMenuSourceKey = pinnedItemKey
+      contextMenuSourceScenario = e.detail.scenario
       contextMenuItems = [
         {
           key: 'toggle-item-pinned',
@@ -118,11 +120,18 @@ function onShowContextMenu(e: CustomEvent) {
           })
         }
       }
+      if (kind === 'Scenario') {
+        contextMenuItems.push({
+          key: 'show-trace-view',
+          displayText: 'Open Scenario in Trace View'
+        })
+      }
       contextMenuEvent = e.detail.clickEvent
       break
     }
     default:
       contextMenuSourceKey = undefined
+      contextMenuSourceScenario = undefined
       contextMenuItems = []
       contextMenuEvent = undefined
       break
@@ -146,6 +155,15 @@ function onContextMenuItemSelected(e: CustomEvent) {
       break
     case 'move-item-to-top':
       viewModel.pinnedItemState.moveItemToTop(key)
+      break
+    case 'show-trace-view':
+      // For now, use the `ScenarioSpec` associated with the "right" model; if it's
+      // not valid, the trace view will select another scenario by default
+      dispatch('command', {
+        cmd: 'show-trace-view-with-scenario',
+        scenarioSpec: contextMenuSourceScenario?.specR,
+        scenarioKind: 'comparison'
+      })
       break
     default:
       console.error(`ERROR: Unhandled context menu command '${cmd}'`)
@@ -217,7 +235,7 @@ onMount(() => {
     {/if}
   </div>
   <div class="scroll-container" bind:this={scrollContainer} tabindex="0">
-    <div class="scroll-content" bind:this={scrollContent}>
+    <div class="scroll-content">
       {#if viewModel.graphSections.length > 0}
         {#each viewModel.graphSections as graphsSectionViewModel}
           <div class="section-title">{graphsSectionViewModel.title}</div>
@@ -254,7 +272,6 @@ onMount(() => {
       <div class="footer"></div>
       <ContextMenu
         items={contextMenuItems}
-        parentElem={scrollContent}
         initialEvent={contextMenuEvent}
         on:item-selected={onContextMenuItemSelected}
         on:clickout={onHideContextMenu}
@@ -276,7 +293,7 @@ onMount(() => {
   flex-direction: column;
   // XXX: Use negative margin to make the shadow stretch all the way
   // across, then use extra padding to compensate
-  width: calc(100vw - 2rem);
+  width: calc(min(100%, 100vw) - 2rem);
   margin: 0 -1rem;
   padding: 0 2rem;
   box-shadow: 0 1rem 0.5rem -0.5rem rgba(0, 0, 0, 0.5);
@@ -378,7 +395,7 @@ ul {
 .scroll-container {
   display: flex;
   flex-direction: row;
-  max-width: 100vw;
+  max-width: min(100vw, 100%);
   flex: 1 0 1px;
   overflow: auto;
   outline: none;
@@ -390,7 +407,7 @@ ul {
 }
 
 .section-title {
-  width: calc(100vw - 2rem);
+  width: calc(min(100%, 100vw) - 2rem);
   margin: 1.5rem 1rem 2rem 1rem;
   padding: 0.2rem 0;
   border-bottom: solid 1px #555;

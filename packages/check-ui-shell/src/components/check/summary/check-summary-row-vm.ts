@@ -3,7 +3,7 @@
 import type { Writable } from 'svelte/store'
 import { writable } from 'svelte/store'
 
-import type { CheckStatus } from '@sdeverywhere/check-core'
+import type { CheckStatus, CheckScenarioReport } from '@sdeverywhere/check-core'
 
 import type { CheckSummaryGraphBoxViewModel } from './check-summary-graph-box-vm'
 
@@ -13,6 +13,7 @@ export interface CheckSummaryRowViewModel {
   span: string
   childRows: Writable<CheckSummaryRowViewModel[]>
   expanded: Writable<boolean>
+  scenarioReport?: CheckScenarioReport
   graphBoxViewModel?: CheckSummaryGraphBoxViewModel
   onClicked: () => void
 }

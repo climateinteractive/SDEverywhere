@@ -7,7 +7,7 @@ import type { DatasetGroupName, ModelSpec } from '../bundle/bundle-types'
 import type { ImplVar, OutputVar } from '../bundle/var-types'
 import { expandDatasets } from './check-dataset'
 import type { CheckDatasetSpec } from './check-spec'
-import { dataset, dimension, implVar, outputVar } from './_mocks/mock-check-dataset'
+import { dataset, implVar, outputVar } from './_mocks/mock-check-dataset'
 import { datasetGroupSpec, datasetMatchingTypeSpec, datasetNameSpec } from './_mocks/mock-check-spec'
 
 function nameSpec(name: string, source?: string): CheckDatasetSpec {
@@ -32,10 +32,15 @@ describe('expandDatasets', () => {
 
   const implVars: Map<DatasetKey, ImplVar> = new Map([
     implVar('V1'),
-    implVar('V2', [dimension('A')]),
+    implVar('V2[A1]', [0]),
+    implVar('V2[A2]', [1]),
     implVar('V3'),
-    implVar('V4', [dimension('A')]),
-    implVar('V5', [dimension('A'), dimension('B')]),
+    implVar('V4[A1]', [0]),
+    implVar('V4[A2]', [1]),
+    implVar('V5[A1,B1]', [0, 0]),
+    implVar('V5[A1,B2]', [0, 1]),
+    implVar('V5[A2,B1]', [1, 0]),
+    implVar('V5[A2,B2]', [1, 1]),
     implVar('V6')
   ])
 
@@ -74,7 +79,7 @@ describe('expandDatasets', () => {
 
   it.skip('should expand a single subscripted output variable to one dataset', () => {
     // TODO: Implement support for name that includes subscript(s)
-    expect(expandDatasets(modelSpec, nameSpec('V2[A1]'))).toEqual([dataset('Model', 'V2', ['A1'])])
+    expect(expandDatasets(modelSpec, nameSpec('V2[A1]'))).toEqual([dataset('Model', 'V2[A1]')])
   })
 
   it('should expand a single impl variable to one dataset', () => {
@@ -86,30 +91,12 @@ describe('expandDatasets', () => {
     expect(expandDatasets(modelSpec, nameSpec('v1', 'static'))).toEqual([dataset('Static', 'V1')])
   })
 
-  it('should expand an impl variable with one dimension to multiple datasets', () => {
-    expect(expandDatasets(modelSpec, nameSpec('V4'))).toEqual([
-      dataset('ModelImpl', 'V4', ['A1']),
-      dataset('ModelImpl', 'V4', ['A2'])
-    ])
+  it('should expand an impl variable with one dimension to one dataset', () => {
+    expect(expandDatasets(modelSpec, nameSpec('V4[A1]'))).toEqual([dataset('ModelImpl', 'V4[A1]')])
   })
 
-  it('should expand an impl variable with two dimensions to multiple datasets', () => {
-    expect(expandDatasets(modelSpec, nameSpec('V5'))).toEqual([
-      dataset('ModelImpl', 'V5', ['A1', 'B1']),
-      dataset('ModelImpl', 'V5', ['A1', 'B2']),
-      dataset('ModelImpl', 'V5', ['A2', 'B1']),
-      dataset('ModelImpl', 'V5', ['A2', 'B2'])
-    ])
-  })
-
-  it.skip('should expand an impl variable with one subscript to one dataset', () => {
-    // TODO: Implement support for name that includes subscript(s)
-    expect(expandDatasets(modelSpec, nameSpec('V4[A1]'))).toEqual([dataset('ModelImpl', 'V4', ['A1'])])
-  })
-
-  it.skip('should expand an impl variable with two subscripts to one dataset', () => {
-    // TODO: Implement support for name that includes subscript(s)
-    expect(expandDatasets(modelSpec, nameSpec('V5[A1,B1]'))).toEqual([dataset('ModelImpl', 'V5', ['A1', 'B1'])])
+  it('should expand an impl variable with two dimensions to one dataset', () => {
+    expect(expandDatasets(modelSpec, nameSpec('V5[A2,B1]'))).toEqual([dataset('ModelImpl', 'V5[A2,B1]')])
   })
 
   it('should return a dataset with undefined key if group is unknown', () => {
@@ -165,15 +152,15 @@ describe('expandDatasets', () => {
   it('should expand datasets when matching by type', () => {
     expect(expandDatasets(modelSpec, matchingTypeSpec('aux'))).toEqual([
       dataset('ModelImpl', 'V1'),
-      dataset('ModelImpl', 'V2', ['A1']),
-      dataset('ModelImpl', 'V2', ['A2']),
+      dataset('ModelImpl', 'V2[A1]'),
+      dataset('ModelImpl', 'V2[A2]'),
       dataset('ModelImpl', 'V3'),
-      dataset('ModelImpl', 'V4', ['A1']),
-      dataset('ModelImpl', 'V4', ['A2']),
-      dataset('ModelImpl', 'V5', ['A1', 'B1']),
-      dataset('ModelImpl', 'V5', ['A1', 'B2']),
-      dataset('ModelImpl', 'V5', ['A2', 'B1']),
-      dataset('ModelImpl', 'V5', ['A2', 'B2']),
+      dataset('ModelImpl', 'V4[A1]'),
+      dataset('ModelImpl', 'V4[A2]'),
+      dataset('ModelImpl', 'V5[A1,B1]'),
+      dataset('ModelImpl', 'V5[A1,B2]'),
+      dataset('ModelImpl', 'V5[A2,B1]'),
+      dataset('ModelImpl', 'V5[A2,B2]'),
       dataset('ModelImpl', 'V6')
     ])
   })

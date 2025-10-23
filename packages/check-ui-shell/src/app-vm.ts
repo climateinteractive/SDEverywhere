@@ -5,7 +5,7 @@ import assertNever from 'assert-never'
 import type { Readable, Writable } from 'svelte/store'
 import { get, writable } from 'svelte/store'
 
-import type { ComparisonSummary, SuiteSummary } from '@sdeverywhere/check-core'
+import type { ComparisonSummary, ScenarioSpec, SuiteSummary } from '@sdeverywhere/check-core'
 import { checkReportFromSummary, comparisonSummaryFromReport, runSuite } from '@sdeverywhere/check-core'
 
 import { localStorageWritableBoolean, localStorageWritableNumber } from './_shared/stores'
@@ -31,6 +31,7 @@ import type { PerfViewModel } from './components/perf/perf-vm'
 import { createPerfViewModel } from './components/perf/perf-vm'
 import type { SummaryViewModel } from './components/summary/summary-vm'
 import { createSummaryViewModel } from './components/summary/summary-vm'
+import { type TraceViewModel, createTraceViewModel } from './components/trace/trace-vm'
 
 export interface RunSuiteCallbacks {
   onProgress?: (pct: number) => void
@@ -254,6 +255,30 @@ export class AppViewModel {
   createPerfViewModel(): PerfViewModel {
     return createPerfViewModel(this.appModel.config)
   }
+
+  createTraceViewModel(
+    initialScenarioSpec?: ScenarioSpec,
+    initialScenarioKind?: 'check' | 'comparison'
+  ): TraceViewModel {
+    const comparisonConfig = this.appModel.config.comparison
+    const dataCoordinator = this.appModel.comparisonDataCoordinator
+    const testSummaries = this.summaryViewModel.comparisonSummary?.testSummaries ?? []
+    return createTraceViewModel(
+      comparisonConfig,
+      dataCoordinator,
+      testSummaries,
+      initialScenarioSpec,
+      initialScenarioKind
+    )
+  }
+
+  // createFreeformViewModel(): FreeformViewModel {
+  //   if (this.appModel.config.comparison === undefined) {
+  //     // TODO: Error message
+  //     return
+  //   }
+  //   return createFreeformViewModel(this.appModel.config.comparison, this.appModel.comparisonDataCoordinator)
+  // }
 }
 
 export interface AppViewModelResult {

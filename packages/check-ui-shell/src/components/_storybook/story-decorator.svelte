@@ -29,7 +29,10 @@ const style = $derived(
 <style>
 .story-decorator {
   display: flex;
-  overflow: auto;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
   border: 1px solid #444;
 }
 </style>

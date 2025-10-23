@@ -12,6 +12,8 @@
     // (e.g. Safari in iOS 12).
     "target": "es6",
     "module": "es6",
+    // Use "es2019" for flatMap
+    "lib": ["dom", "es2019"],
     // XXX: Use bundler-friendly module resolution. This overrides the default
     // "node" resolution set in `tsconfig-common.json`. Apparently this is
     // required for Storybook to resolve `@storybook/addon-svelte-csf` imports.

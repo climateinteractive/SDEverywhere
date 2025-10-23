@@ -6,10 +6,13 @@
  * up using aliases in the Vite config file.)
  */
 
+import type { ImplVarInstancesSpec } from './impl-vars'
 import type { InputSpec } from './inputs'
 import type { OutputSpec } from './outputs'
 
 export const inputSpecs: InputSpec[] = []
 export const outputSpecs: OutputSpec[] = []
+export const implSpec: ImplVarInstancesSpec = undefined
+
 export const modelSizeInBytes = 0
 export const dataSizeInBytes = 0

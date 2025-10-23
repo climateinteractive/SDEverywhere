@@ -9,14 +9,16 @@ import type {
   CheckKey,
   CheckPredicateOp,
   CheckPredicateOpRef,
+  CheckPredicateReport,
   CheckReport,
   CheckResult,
+  Dataset,
   ModelSpec
 } from '@sdeverywhere/check-core'
 import { CheckDataCoordinator } from '@sdeverywhere/check-core'
 
-import { inputVar, mockBundleModel, outputVar } from '../../../_mocks/mock-bundle'
-import { inputAtPos } from '../_mocks/mock-check-scenario'
+import { mockBundleModel } from '../../../_mocks/mock-bundle'
+import { inputAtPos } from '../../../_mocks/mock-check-scenario'
 import {
   datasetReport,
   groupReport,
@@ -24,13 +26,14 @@ import {
   predicateReport,
   scenarioReport,
   testReport
-} from '../_mocks/mock-check-report'
+} from '../../../_mocks/mock-check-report'
+import { mockDataset } from '../../../_mocks/mock-data'
+import { inputVar, outputVar } from '../../../_mocks/mock-vars'
 
 import StoryDecorator from '../../_storybook/story-decorator.svelte'
 
 import { createCheckSummaryViewModel } from './check-summary-vm'
 import CheckSummary from './check-summary.svelte'
-import type { CheckPredicateReport } from '@sdeverywhere/check-core'
 
 const { Story } = defineMeta({
   title: 'Components/CheckSummary',
@@ -72,7 +75,28 @@ function createBundleModel(): BundleModel {
     outputVars: new Map(outputVarNames.map(varName => outputVar(varName))),
     implVars: new Map()
   }
-  return mockBundleModel(modelSpec)
+  return mockBundleModel(modelSpec, (_, datasetKeys) => {
+    const datasetMap = new Map()
+    for (const datasetKey of datasetKeys) {
+      let ds: Dataset
+      switch (datasetKey) {
+        case 'Model__o2':
+          ds = mockDataset(5)
+          break
+        case 'Model__o2_upper':
+          ds = mockDataset(15)
+          break
+        case 'Model__o2_lower':
+          ds = mockDataset(-5)
+          break
+        default:
+          ds = mockDataset()
+          break
+      }
+      datasetMap.set(datasetKey, ds)
+    }
+    return datasetMap
+  })
 }
 
 function createCheckReport(scenarioCount: number, datasetCount: number): CheckReport {

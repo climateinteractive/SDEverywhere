@@ -16,12 +16,14 @@ import type {
   InputSetting
 } from '@sdeverywhere/check-core'
 
+import { varIdForName } from './mock-vars'
+
 //
 // SCENARIOS
 //
 
 export function inputVar(inputId: InputId, varName: string, minValue = 0, maxValue = 100): [VarId, InputVar] {
-  const varId = `_${varName.toLowerCase()}`
+  const varId = varIdForName(varName)
   const v: InputVar = {
     inputId,
     varId,

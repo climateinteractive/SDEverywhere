@@ -131,7 +131,8 @@ $: if ($simplifyScenarios !== undefined) {
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
-  width: 100vw;
+  width: 100%;
+  max-width: min(100%, 100vw);
   padding: 0 1rem;
   color: #aaa;
 }

@@ -65,7 +65,7 @@ export class TaskQueue<I, O> {
 
   private processTasksIfNeeded(): void {
     if (!this.stopped && !this.processing) {
-      // No tasks are already in being processed, so schedule them now
+      // No tasks are already being processed, so schedule them now
       this.processing = true
 
       // Process the next task asynchronously
@@ -79,32 +79,38 @@ export class TaskQueue<I, O> {
     // Pop the latest request off the front of the queue
     const taskKey = this.taskKeyQueue.shift()
     if (!taskKey) {
-      return
-    }
-    const task = this.taskMap.get(taskKey)
-    if (task) {
-      this.taskMap.delete(taskKey)
-    } else {
-      return
-    }
-
-    // Run the task asynchronously
-    let output: O
-    try {
-      output = await this.processor.process(task.input)
-    } catch (e) {
+      // All tasks were cancelled before being processed, so clear the processing flag
+      this.processing = false
       if (!this.stopped) {
-        // TODO: For now, if we encounter an error, stop processing tasks
-        // and notify the onIdle callback with the error.  Maybe we should
-        // change this to continue processing other tasks.
-        this.shutdown()
-        this.onIdle?.(e)
+        this.onIdle?.()
       }
       return
     }
 
-    // Notify the callback
-    task.onComplete(output)
+    // Get the task for the key
+    const task = this.taskMap.get(taskKey)
+    if (task) {
+      // Remove the task from the map
+      this.taskMap.delete(taskKey)
+
+      // Run the task asynchronously
+      let output: O
+      try {
+        output = await this.processor.process(task.input)
+      } catch (e) {
+        if (!this.stopped) {
+          // TODO: For now, if we encounter an error, stop processing tasks
+          // and notify the onIdle callback with the error.  Maybe we should
+          // change this to continue processing other tasks.
+          this.shutdown()
+          this.onIdle?.(e)
+        }
+        return
+      }
+
+      // Notify the callback
+      task.onComplete(output)
+    }
 
     // See if another run is needed
     if (this.taskKeyQueue.length > 0) {

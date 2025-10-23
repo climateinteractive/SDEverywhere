@@ -7,12 +7,12 @@ export class SelectorOptionViewModel {
   /**
    * @param label The displayed string.
    * @param value The value for the option.
-   * @param disabled Whether the option is disabled.
+   * @param options The options that control how the selector option is displayed.
    */
   constructor(
     public readonly label: string,
     public readonly value: string,
-    public readonly disabled = false
+    public readonly options: { disabled?: boolean; hidden?: boolean } = {}
   ) {}
 }
 

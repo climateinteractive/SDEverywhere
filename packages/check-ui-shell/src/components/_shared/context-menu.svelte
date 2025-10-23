@@ -20,7 +20,6 @@ import { createEventDispatcher } from 'svelte'
 import { clickOutside } from './click-outside'
 
 export let items: ContextMenuItem[]
-export let parentElem: HTMLElement
 export let initialEvent: MouseEvent
 
 const dispatch = createEventDispatcher()
@@ -32,10 +31,9 @@ let pos = { x: 0, y: 0 }
 let showMenu = false
 
 $: if (initialEvent) {
-  const bounds = parentElem.getBoundingClientRect()
   pos = {
-    x: initialEvent.clientX - bounds.left,
-    y: initialEvent.clientY - bounds.top
+    x: initialEvent.clientX,
+    y: initialEvent.clientY + 6
   }
   showMenu = true
 } else {
@@ -48,7 +46,7 @@ function onItemSelected(cmd: string) {
 </script>
 
 {#if showMenu}
-  <nav use:clickOutside on:clickout style="position: absolute; top:{pos.y}px; left:{pos.x}px">
+  <nav use:clickOutside on:clickout style="position: fixed; top:{pos.y}px; left:{pos.x}px">
     <div class="navbar" id="navbar">
       <ul>
         {#each items as item}
@@ -56,7 +54,7 @@ function onItemSelected(cmd: string) {
             <hr />
           {:else}
             <li>
-              <button class:disabled={item.disabled === true} on:click={() => onItemSelected(item.key)}
+              <button role="menuitem" class:disabled={item.disabled === true} on:click={() => onItemSelected(item.key)}
                 ><i class={item.iconClass}></i>{item.displayText}</button
               >
             </li>
@@ -79,7 +77,7 @@ nav
 .navbar
   display: inline-flex
   flex-direction: column
-  width: 170px
+  width: 200px
   background-color: #fff
   border-radius: .4rem
   box-shadow: 0 .2rem .4rem rgba(0,0,0,.8)

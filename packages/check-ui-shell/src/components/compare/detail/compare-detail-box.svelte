@@ -46,6 +46,7 @@ function onContextMenu(e: Event) {
   dispatch('show-context-menu', {
     kind: 'box',
     itemKey: viewModel.pinnedItemKey,
+    scenario: viewModel.scenario,
     clickEvent: e
   })
 }

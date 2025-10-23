@@ -13,15 +13,41 @@ export type ComparisonDataRequestKey = string
 
 interface DatasetRequest {
   kind: 'dataset'
-  scenarioSpecL?: ScenarioSpec
-  scenarioSpecR?: ScenarioSpec
+  /**
+   * The source of the first ("left") dataset.  If "left", the datasets will be fetched from the "left"
+   * model passed to the constructor, otherwise they will be fetched from the "right" model.
+   */
+  sourceL: 'left' | 'right' | undefined
+  /** The scenario used for the first ("left") model of the comparison. */
+  scenarioSpecL: ScenarioSpec | undefined
+  /**
+   * The source of the second ("right") dataset.  If "left", the datasets will be fetched from the "left"
+   * model passed to the constructor, otherwise they will be fetched from the "right" model.
+   */
+  sourceR: 'left' | 'right'
+  /** The scenario used for the second ("right") model of the comparison. */
+  scenarioSpecR: ScenarioSpec | undefined
+  /** The keys of the datasets to be fetched. */
   datasetKeys: DatasetKey[]
 }
 
 interface GraphDataRequest {
   kind: 'graph-data'
-  scenarioSpecL?: ScenarioSpec
-  scenarioSpecR?: ScenarioSpec
+  /**
+   * The source of the first ("left") dataset.  If "left", the datasets will be fetched from the "left"
+   * model passed to the constructor, otherwise they will be fetched from the "right" model.
+   */
+  sourceL: 'left' | 'right' | undefined
+  /** The scenario used for the first ("left") model of the comparison. */
+  scenarioSpecL: ScenarioSpec | undefined
+  /**
+   * The source of the second ("right") dataset.  If "left", the datasets will be fetched from the "left"
+   * model passed to the constructor, otherwise they will be fetched from the "right" model.
+   */
+  sourceR: 'left' | 'right'
+  /** The scenario used for the second ("right") model of the comparison. */
+  scenarioSpecR: ScenarioSpec | undefined
+  /** The ID of the graph for which data will be fetched. */
   graphId: BundleGraphId
 }
 
@@ -79,11 +105,24 @@ export class ComparisonDataCoordinator {
       }
     }
 
-    // Run the model(s) in parallel and extract the requested datasets
-    const [resultL, resultR] = await Promise.all([
-      fetchDatasets(this.bundleModelL, request.scenarioSpecL),
-      fetchDatasets(this.bundleModelR, request.scenarioSpecR)
-    ])
+    const modelL = request.sourceL === 'left' ? this.bundleModelL : this.bundleModelR
+    const modelR = request.sourceR === 'left' ? this.bundleModelL : this.bundleModelR
+    let resultL: DatasetsResult
+    let resultR: DatasetsResult
+    if (modelL === modelR) {
+      // The models are the same, so we need to perform the two runs sequentially (since
+      // currently a single model instance cannot be used concurrently)
+      resultL = await fetchDatasets(modelL, request.scenarioSpecL)
+      resultR = await fetchDatasets(modelR, request.scenarioSpecR)
+    } else {
+      // The models are different, so we can perform the two runs in parallel
+      const results = await Promise.all([
+        fetchDatasets(modelL, request.scenarioSpecL),
+        fetchDatasets(modelR, request.scenarioSpecR)
+      ])
+      resultL = results[0]
+      resultR = results[1]
+    }
 
     return {
       kind: 'dataset',
@@ -105,11 +144,24 @@ export class ComparisonDataCoordinator {
       }
     }
 
-    // Run the model(s) in parallel and extract the requested graph data
-    const [graphDataL, graphDataR] = await Promise.all([
-      fetchGraphData(this.bundleModelL, request.scenarioSpecL),
-      fetchGraphData(this.bundleModelR, request.scenarioSpecR)
-    ])
+    const modelL = request.sourceL === 'left' ? this.bundleModelL : this.bundleModelR
+    const modelR = request.sourceR === 'left' ? this.bundleModelL : this.bundleModelR
+    let graphDataL: BundleGraphData
+    let graphDataR: BundleGraphData
+    if (modelL === modelR) {
+      // The models are the same, so we need to perform the two runs sequentially (since
+      // currently a single model instance cannot be used concurrently)
+      graphDataL = await fetchGraphData(modelL, request.scenarioSpecL)
+      graphDataR = await fetchGraphData(modelR, request.scenarioSpecR)
+    } else {
+      // The models are different, so we can perform the two runs in parallel
+      const results = await Promise.all([
+        fetchGraphData(modelL, request.scenarioSpecL),
+        fetchGraphData(modelR, request.scenarioSpecR)
+      ])
+      graphDataL = results[0]
+      graphDataR = results[1]
+    }
 
     return {
       kind: 'graph-data',
@@ -120,14 +172,18 @@ export class ComparisonDataCoordinator {
 
   requestDatasetMaps(
     requestKey: ComparisonDataRequestKey,
-    scenarioSpecL: ScenarioSpec,
+    sourceL: 'left' | 'right' | undefined,
+    scenarioSpecL: ScenarioSpec | undefined,
+    sourceR: 'left' | 'right',
     scenarioSpecR: ScenarioSpec,
     datasetKeys: DatasetKey[],
     onResponse: (datasetMapL?: DatasetMap, datasetMapR?: DatasetMap) => void
   ): void {
     const request: DatasetRequest = {
       kind: 'dataset',
+      sourceL,
       scenarioSpecL,
+      sourceR,
       scenarioSpecR,
       datasetKeys
     }
@@ -140,14 +196,18 @@ export class ComparisonDataCoordinator {
 
   requestGraphData(
     requestKey: ComparisonDataRequestKey,
-    scenarioSpecL: ScenarioSpec,
+    sourceL: 'left' | 'right' | undefined,
+    scenarioSpecL: ScenarioSpec | undefined,
+    sourceR: 'left' | 'right',
     scenarioSpecR: ScenarioSpec,
     graphId: BundleGraphId,
     onResponse: (graphDataL?: BundleGraphData, graphDataR?: BundleGraphData) => void
   ): void {
     const request: GraphDataRequest = {
       kind: 'graph-data',
+      sourceL,
       scenarioSpecL,
+      sourceR,
       scenarioSpecR,
       graphId
     }

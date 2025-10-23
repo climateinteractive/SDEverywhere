@@ -7,9 +7,13 @@ import FontFaceObserver from 'fontfaceobserver'
 import type { ComparisonGroupingKind } from './components/compare/_shared/comparison-grouping-kind'
 import ComparisonDetail from './components/compare/detail/compare-detail.svelte'
 import type { CompareDetailViewModel } from './components/compare/detail/compare-detail-vm'
+import type { FreeformViewModel } from './components/freeform/freeform-vm'
+import Freeform from './components/freeform/freeform.svelte'
 import Header from './components/header/header.svelte'
 import type { PerfViewModel } from './components/perf/perf-vm'
 import Perf from './components/perf/perf.svelte'
+import type { TraceViewModel } from './components/trace/trace-vm'
+import Trace from './components/trace/trace.svelte'
 import Summary from './components/summary/summary.svelte'
 
 import type { AppViewModel } from './app-vm'
@@ -21,8 +25,10 @@ const zoom = viewModel.headerViewModel.zoom
 
 let compareDetailViewModel: CompareDetailViewModel
 let perfViewModel: PerfViewModel
+let traceViewModel: TraceViewModel
+let freeformViewModel: FreeformViewModel
 
-type ViewMode = 'summary' | 'comparison-detail' | 'perf'
+type ViewMode = 'summary' | 'comparison-detail' | 'perf' | 'freeform' | 'trace'
 let viewMode: ViewMode = 'summary'
 
 $: appStyle = `--graph-zoom: ${$zoom}`
@@ -108,6 +114,10 @@ function onCommand(event: CustomEvent) {
       }
       viewMode = 'perf'
       break
+    case 'show-trace-view-with-scenario':
+      traceViewModel = viewModel.createTraceViewModel(cmdObj.scenarioSpec, cmdObj.scenarioKind)
+      viewMode = 'trace'
+      break
     default:
       console.error(`ERROR: Unhandled command ${cmd}`)
       break
@@ -129,6 +139,20 @@ function onKeyDown(event: KeyboardEvent) {
       showSummary()
       event.preventDefault()
       break
+    // case 'f':
+    //   if (!freeformViewModel) {
+    //     freeformViewModel = viewModel.createFreeformViewModel()
+    //   }
+    //   viewMode = 'freeform'
+    //   event.preventDefault()
+    //   break
+    case 't':
+      if (viewMode !== 'trace') {
+        traceViewModel = viewModel.createTraceViewModel()
+        viewMode = 'trace'
+        event.preventDefault()
+      }
+      break
     default:
       break
   }
@@ -149,6 +173,10 @@ function onKeyDown(event: KeyboardEvent) {
       </div>
     {:else if viewMode === 'comparison-detail'}
       <ComparisonDetail on:command={onCommand} viewModel={compareDetailViewModel} />
+    {:else if viewMode === 'freeform'}
+      <Freeform on:command={onCommand} viewModel={freeformViewModel} />
+    {:else if viewMode === 'trace'}
+      <Trace on:command={onCommand} viewModel={traceViewModel} />
     {:else if viewMode === 'perf'}
       <Perf on:command={onCommand} viewModel={perfViewModel} />
     {:else}

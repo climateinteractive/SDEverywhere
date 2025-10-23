@@ -200,6 +200,9 @@ function createScenarioRow(
     scenarioRow.expanded.update(v => !v)
   })
 
+  // Attach the scenario report so that it can be used to open the trace view
+  scenarioRow.scenarioReport = scenario
+
   return scenarioRow
 }
 
