@@ -31,7 +31,7 @@
 
 - describe: Output X
   tests:
-    - it: should be ~5 in 1850 when Input A is at max
+    - it: should be ~5 in 2000 when Input A is at max
       scenarios:
         - with: Input A
           at: max
@@ -40,8 +40,8 @@
       predicates:
         - approx: 5
           tolerance: .01
-          time: 1850
-    - it: should be between 5 and 10 in 1900 (scenario with one input)
+          time: 2000
+    - it: should be between 5 and 10 in 2020 (scenario with one input)
       scenarios:
         - with: Input A
           at: 30
@@ -50,8 +50,8 @@
       predicates:
         - gt: 5
           lt: 10
-          time: 1900
-    - it: should be between 5 and 10 in 1900 (scenario with multiple inputs)
+          time: 2020
+    - it: should be between 5 and 10 in 2020 (scenario with multiple inputs)
       scenarios:
         - with:
             - input: Input A
@@ -63,8 +63,8 @@
       predicates:
         - gt: 5
           lt: 10
-          time: 1900
-    - it: should be between 5 and 10 in 1900 (scenario with inputs in group)
+          time: 2020
+    - it: should be between 5 and 10 in 2020 (scenario with inputs in group)
       scenarios:
         - with_inputs_in: Input Group 1
           at: min
@@ -73,8 +73,8 @@
       predicates:
         - gt: 5
           lt: 10
-          time: 1900
-    - it: should be between 5 and 10 in 1900 (single-input and multi-input scenarios in the same test)
+          time: 2020
+    - it: should be between 5 and 10 in 2020 (single-input and multi-input scenarios in the same test)
       scenarios:
         - with: Input A
           at: 30
@@ -88,8 +88,8 @@
       predicates:
         - gt: 5
           lt: 10
-          time: 1900
-    - it: should be between 5 and 10 in 1900 (one scenario for each input in the group)
+          time: 2020
+    - it: should be between 5 and 10 in 2020 (one scenario for each input in the group)
       scenarios:
         - scenarios_for_each_input_in: Input Group 1
           at: max
@@ -98,7 +98,7 @@
       predicates:
         - gt: 5
           lt: 10
-          time: 1900
+          time: 2020
     - it: should follow Historical X
       datasets:
         - name: Output X
@@ -158,78 +158,78 @@
         - name: Output Y
       predicates:
         - gte: 5
-    - it: should be 6 in 1900
+    - it: should be 6 in 2020
       datasets:
         - name: Output Y
       predicates:
         - eq: 6
-          time: 1900
-    - it: should be ~8 in 1950
+          time: 2020
+    - it: should be ~8 in 2040
       datasets:
         - name: Output Y
       predicates:
         - approx: 8
           tolerance: 1
-          time: 1950
-    - it: should be > 10 in 2000
+          time: 2040
+    - it: should be > 10 in 2060
       datasets:
         - name: Output Y
       predicates:
         - gt: 10
-          time: 2000
-    - it: should be >= 6 and <= 12 in year range [1900, 2000] (inclusive range shorthand)
+          time: 2060
+    - it: should be >= 6 and <= 12 in year range [2020, 2050] (inclusive range shorthand)
       datasets:
         - name: Output Y
       predicates:
         - gte: 6
           lte: 12
-          time: [1900, 2000]
-    - it: should be >= 6 and <= 12 in year range (1900, 2000] (half open range)
-      datasets:
-        - name: Output Y
-      predicates:
-        - gte: 6
-          lte: 12
-          time:
-            after_excl: 1900
-            before_incl: 2000
-    - it: should be >= 6 and <= 12 in year range [1900, 2000) (half open range)
+          time: [2020, 2050]
+    - it: should be >= 6 and <= 12 in year range (2020, 2050] (half open range)
       datasets:
         - name: Output Y
       predicates:
         - gte: 6
           lte: 12
           time:
-            after_incl: 1900
-            before_excl: 2000
-    - it: should be >= 6 after 1900 (inclusive)
+            after_excl: 2020
+            before_incl: 2050
+    - it: should be >= 6 and <= 12 in year range [2020, 2050) (half open range)
+      datasets:
+        - name: Output Y
+      predicates:
+        - gte: 6
+          lte: 12
+          time:
+            after_incl: 2020
+            before_excl: 2050
+    - it: should be >= 6 after 2020 (inclusive)
       datasets:
         - name: Output Y
       predicates:
         - gte: 6
           time:
-            after_incl: 1900
-    - it: should be >= 6 after 1900 (exclusive)
+            after_incl: 2020
+    - it: should be >= 6 after 2020 (exclusive)
       datasets:
         - name: Output Y
       predicates:
         - gte: 6
           time:
-            after_excl: 1900
-    - it: should be <= 12 before 2000 (inclusive)
+            after_excl: 2020
+    - it: should be <= 12 before 2040 (inclusive)
       datasets:
         - name: Output Y
       predicates:
         - lte: 12
           time:
-            before_incl: 2000
-    - it: should be <= 12 before 2000 (exclusive)
+            before_incl: 2040
+    - it: should be <= 12 before 2040 (exclusive)
       datasets:
         - name: Output Y
       predicates:
         - lte: 12
           time:
-            before_excl: 2000
+            before_excl: 2040
 #
 # TODO: The following can be uncommented to test error cases
 #
