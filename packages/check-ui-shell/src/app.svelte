@@ -190,9 +190,9 @@ function onKeyDown(event: KeyboardEvent) {
 <!-- TEMPLATE -->
 <svelte:window on:keydown={onKeyDown} />
 
-{#await viewReady}
+{#if !viewReady}
   <div class="loading-container"></div>
-{:then}
+{:else}
   <div class="app-container" style={appStyle}>
     <Header on:command={onCommand} viewModel={viewModel.headerViewModel} />
     {#if $checksInProgress}
@@ -224,7 +224,7 @@ function onKeyDown(event: KeyboardEvent) {
       </div>
     {/if}
   </div>
-{/await}
+{/if}
 
 <!-- STYLE -->
 <style lang="scss">
