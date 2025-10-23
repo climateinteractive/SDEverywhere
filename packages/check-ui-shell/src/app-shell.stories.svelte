@@ -72,11 +72,12 @@ function createBundleModel(modelSpec: ModelSpec, delta = 0): BundleModel {
 
 async function createAppViewModel(options?: {
   comparisonsEnabled?: boolean
+  modelsDiffer?: boolean
   groupScenarios?: boolean
 }): Promise<AppViewModel> {
   const modelSpec = mockModelSpec()
   const bundleL = mockNamedBundle('left', createBundleModel(modelSpec, 0))
-  const bundleR = mockNamedBundle('right', createBundleModel(modelSpec, 5))
+  const bundleR = mockNamedBundle('right', createBundleModel(modelSpec, options?.modelsDiffer === true ? 5 : 0))
   const configOptions = mockConfigOptions(bundleL, bundleR, options)
   const appModel = await initAppModel(configOptions)
   return new AppViewModel(appModel)
@@ -161,7 +162,7 @@ const { Story } = defineMeta({
   name="Open Comparison Scenario in Trace View"
   {template}
   beforeEach={async ({ args }) => {
-    args.appViewModel = await createAppViewModel()
+    args.appViewModel = await createAppViewModel({ modelsDiffer: true })
   }}
   play={async ({ canvas, canvasElement, userEvent }) => {
     // Helper function that verifies the contents of the trace view (should be the
@@ -170,7 +171,7 @@ const { Story } = defineMeta({
     async function verifyTraceView() {
       // Verify that the trace view is shown
       const traceView = canvasElement.querySelector('.trace-container')
-      await expect(traceView).toBeDefined()
+      await expect(traceView).not.toBeNull()
 
       // Verify that the first source option is "left"
       const source1Select = canvas.getByLabelText('Source 1')
@@ -195,6 +196,10 @@ const { Story } = defineMeta({
       expect(checksTab).not.toBeNull()
     })
 
+    // Click the "Comparisons by scenario" tab
+    const comparisonsByScenarioTab = canvas.getByText('Comparisons by scenario')
+    await userEvent.click(comparisonsByScenarioTab)
+
     // Right click the "Constant 1 at max" summary row
     const scenarioTitle = canvas.getAllByText('Constant 1')[0]
     await userEvent.pointer({ keys: '[MouseRight]', target: scenarioTitle })
@@ -208,6 +213,11 @@ const { Story } = defineMeta({
 
     // Type "h" to return to the main screen
     await userEvent.keyboard('h')
+
+    // Click the "Comparisons by dataset" tab
+    const comparisonsByDatasetTab = canvas.getByText('Comparisons by dataset')
+    await userEvent.click(comparisonsByDatasetTab)
+
     // Click the "No differences detected" header
     const noDifferencesDetectedHeader = canvas.getByText('No differences detected for the following datasets')
     await userEvent.click(noDifferencesDetectedHeader)
