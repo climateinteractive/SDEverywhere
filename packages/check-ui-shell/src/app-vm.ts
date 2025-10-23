@@ -256,11 +256,20 @@ export class AppViewModel {
     return createPerfViewModel(this.appModel.config)
   }
 
-  createTraceViewModel(checkScenarioSpec?: ScenarioSpec): TraceViewModel {
+  createTraceViewModel(
+    initialScenarioSpec?: ScenarioSpec,
+    initialScenarioKind?: 'check' | 'comparison'
+  ): TraceViewModel {
     const comparisonConfig = this.appModel.config.comparison
     const dataCoordinator = this.appModel.comparisonDataCoordinator
     const testSummaries = this.summaryViewModel.comparisonSummary?.testSummaries ?? []
-    return createTraceViewModel(comparisonConfig, dataCoordinator, testSummaries, checkScenarioSpec)
+    return createTraceViewModel(
+      comparisonConfig,
+      dataCoordinator,
+      testSummaries,
+      initialScenarioSpec,
+      initialScenarioKind
+    )
   }
 
   // createFreeformViewModel(): FreeformViewModel {

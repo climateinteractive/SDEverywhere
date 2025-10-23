@@ -73,7 +73,8 @@ export class TraceViewModel {
     public readonly comparisonConfig: ComparisonConfig,
     public readonly dataCoordinator: ComparisonDataCoordinator,
     terseSummaries: ComparisonTestSummary[],
-    checkScenarioSpec: ScenarioSpec | undefined
+    initialScenarioSpec: ScenarioSpec | undefined,
+    initialScenarioKind: 'check' | 'comparison' | undefined
   ) {
     // Extract the bundle models
     this.bundleModelL = comparisonConfig.bundleL.model
@@ -111,13 +112,15 @@ export class TraceViewModel {
       'left',
       this.bundleNameL,
       groupsByScenario,
-      checkScenarioSpec
+      initialScenarioSpec,
+      initialScenarioKind
     )
     const [scenarioOptionsR, scenarioSpecsR] = scenarioOptionsForBundle(
       'right',
       this.bundleNameR,
       groupsByScenario,
-      checkScenarioSpec
+      initialScenarioSpec,
+      initialScenarioKind
     )
 
     // Configure each scenario selector when the source is changed
@@ -347,9 +350,10 @@ export function createTraceViewModel(
   comparisonConfig: ComparisonConfig,
   dataCoordinator: ComparisonDataCoordinator,
   terseSummaries: ComparisonTestSummary[],
-  checkScenarioSpec: ScenarioSpec | undefined
+  initialScenarioSpec: ScenarioSpec | undefined,
+  initialScenarioKind: 'check' | 'comparison' | undefined
 ): TraceViewModel {
-  return new TraceViewModel(comparisonConfig, dataCoordinator, terseSummaries, checkScenarioSpec)
+  return new TraceViewModel(comparisonConfig, dataCoordinator, terseSummaries, initialScenarioSpec, initialScenarioKind)
 }
 
 function groupsFromReport(bundleModelR: BundleModel, report: TraceReport, threshold: number): TraceGroupViewModel[] {
@@ -484,7 +488,8 @@ function scenarioOptionsForBundle(
   side: 'left' | 'right',
   bundleName: string,
   groupsByScenario: ComparisonGroupSummariesByCategory,
-  checkScenarioSpec: ScenarioSpec | undefined
+  initialScenarioSpec: ScenarioSpec | undefined,
+  initialScenarioKind: 'check' | 'comparison' | undefined
 ): [SelectorOptionViewModel[], ScenarioSpec[]] {
   const scenarioOptions: SelectorOptionViewModel[] = []
   const scenarioSpecs: ScenarioSpec[] = []
@@ -512,11 +517,14 @@ function scenarioOptionsForBundle(
     summaries.forEach(addScenarioOption)
   }
 
-  if (checkScenarioSpec) {
-    // If a check scenario was provided, put it at the top of the list
-    // TODO: It's possible that the check scenario isn't valid for the selected side
-    scenarioSpecs.push(checkScenarioSpec)
-    scenarioOptions.push(new SelectorOptionViewModel('Selected scenario from check test', checkScenarioSpec.uid))
+  if (initialScenarioSpec && initialScenarioKind) {
+    // If an initial scenario was selected (by choosing the "Open Scenario in Trace View" option
+    // in the context menu for a check or comparison scenario), put it at the top of the list
+    // TODO: It's possible that the check scenario isn't valid for the selected side, so we
+    // should validate it first
+    scenarioSpecs.push(initialScenarioSpec)
+    const optionSource = initialScenarioKind === 'check' ? 'check test' : 'comparison'
+    scenarioOptions.push(new SelectorOptionViewModel(`Selected scenario from ${optionSource}`, initialScenarioSpec.uid))
   }
 
   // Add options for the available comparison scenarios
@@ -534,8 +542,8 @@ function createScenarioSelectorViewModel(
   selectedScenarioSpecUid: Writable<string | undefined>
 ): SelectorViewModel {
   let initialScenarioSpecUid: string
-  if (source === 1 && scenarioOptions[0]?.label === 'Selected scenario from check test') {
-    // XXX: If there is a "Selected scenario from check test" option, select it by default
+  if (source === 1 && scenarioOptions[0]?.label.startsWith('Selected scenario from')) {
+    // XXX: If there is a "Selected scenario from..." option, select it by default
     initialScenarioSpecUid = scenarioOptions[0].value
   } else {
     // XXX: Otherwise, select the "All inputs at default" scenario by default.  This is fragile because it

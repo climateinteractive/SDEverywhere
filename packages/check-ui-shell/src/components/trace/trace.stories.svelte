@@ -89,7 +89,7 @@ async function createTraceViewModelForStory(deltaR = 0) {
   const bundleL = mockNamedBundle('left', createBundleModel(modelSpec, 0))
   const bundleR = mockNamedBundle('right', createBundleModel(modelSpec, deltaR))
 
-  const configOptions = mockConfigOptions(bundleL, bundleR)
+  const configOptions = mockConfigOptions(bundleL, bundleR, { comparisonsEnabled: true })
   const config = await createConfig(configOptions)
   const comparisonConfig = config.comparison
   const dataCoordinator = new ComparisonDataCoordinator(comparisonConfig.bundleL.model, comparisonConfig.bundleR.model)
@@ -102,7 +102,7 @@ async function createTraceViewModelForStory(deltaR = 0) {
     md: report.diffReport.maxDiff
   }))
 
-  return createTraceViewModel(comparisonConfig, dataCoordinator, terseSummaries, undefined)
+  return createTraceViewModel(comparisonConfig, dataCoordinator, terseSummaries, undefined, undefined)
 }
 </script>
 
@@ -142,7 +142,7 @@ async function createTraceViewModelForStory(deltaR = 0) {
     // Wait for the component to render
     await waitFor(() => {
       const sourceSelector = canvasElement.querySelector('select[aria-label="Source 1"]')
-      expect(sourceSelector).toBeDefined()
+      expect(sourceSelector).not.toBeNull()
     })
 
     // Select the "DAT file" option from Source 1 selector
@@ -277,6 +277,9 @@ async function createTraceViewModelForStory(deltaR = 0) {
     // Test End key - should go to last red square
     await userEvent.keyboard('{End}')
 
+    // XXX: Wait for scroll to complete
+    await new Promise(resolve => setTimeout(resolve, 20))
+
     // Find the last red square (should be selected)
     const redSquares = canvasElement.querySelectorAll('.trace-point[style*="crimson"]')
     if (redSquares.length > 0) {
@@ -289,14 +292,18 @@ async function createTraceViewModelForStory(deltaR = 0) {
 
     // Test 'n' key - should go to next output variable with differences
     await userEvent.keyboard('n')
+
+    // XXX: Wait for scroll to complete
+    await new Promise(resolve => setTimeout(resolve, 20))
+
     const selectedAfterN = canvasElement.querySelector('.trace-point.selected') as HTMLElement | null
-    await expect(selectedAfterN).toBeDefined()
+    await expect(selectedAfterN).not.toBeNull()
 
     // Verify the selected square is red (crimson) and belongs to an Output row
     const styleAttr = selectedAfterN?.getAttribute('style') || ''
     await expect(styleAttr.includes('crimson')).toBe(true)
     const parentRow = selectedAfterN?.closest('.trace-row') as HTMLElement | null
-    await expect(parentRow).toBeDefined()
+    await expect(parentRow).not.toBeNull()
     const varName = parentRow?.getAttribute('data-var-name') || ''
     await expect(varName.startsWith('Output ')).toBe(true)
   }}

@@ -20,6 +20,16 @@ function onLinkClicked() {
   }
 }
 
+function onContextMenu(e: Event) {
+  if (viewModel.groupSummary?.root.kind === 'scenario') {
+    dispatch('show-context-menu', {
+      kind: 'scenario',
+      scenario: viewModel.groupSummary?.root,
+      clickEvent: e
+    })
+  }
+}
+
 // function onTogglePinned() {
 //   dispatch('toggle-item-pinned')
 // }
@@ -40,7 +50,7 @@ function onLinkClicked() {
   </div>
   <div class="title-container">
     <!-- .grouping-part Grouping goes here -->
-    <div class="title-part">
+    <div class="title-part" on:contextmenu|preventDefault={onContextMenu}>
       <div class="title" on:click={onLinkClicked}>{@html viewModel.title}</div>
       {#if viewModel.subtitle}
         <div class="subtitle" on:click={onLinkClicked}>{@html viewModel.subtitle}</div>
