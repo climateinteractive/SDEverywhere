@@ -27,26 +27,22 @@ import Trace from './components/trace/trace.svelte'
 
 import type { AppViewModel } from './app-vm'
 
-interface Props {
-  viewModel: AppViewModel
-}
-
-let { viewModel }: Props = $props()
+export let viewModel: AppViewModel
 const checksInProgress = viewModel.checksInProgress
 const progress = viewModel.progress
 const zoom = viewModel.headerViewModel.zoom
 
-let compareDetailViewModel = $state<CompareDetailViewModel | undefined>(undefined)
-let perfViewModel = $state<PerfViewModel | undefined>(undefined)
-let traceViewModel = $state<TraceViewModel | undefined>(undefined)
-let freeformViewModel = $state<FreeformViewModel | undefined>(undefined)
+let compareDetailViewModel: CompareDetailViewModel
+let perfViewModel: PerfViewModel
+let traceViewModel: TraceViewModel
+let freeformViewModel: FreeformViewModel
 
 type ViewMode = 'summary' | 'comparison-detail' | 'perf' | 'freeform' | 'trace'
-let viewMode = $state<ViewMode>('summary')
+let viewMode: ViewMode = 'summary'
 
-let filtersVisible = $state(false)
+let filtersVisible = false
 
-let appStyle = $derived(`--graph-zoom: ${$zoom}`)
+$: appStyle = `--graph-zoom: ${$zoom}`
 
 // Under normal circumstances, the font face used in graphs might not be fully
 // loaded by the browser before one or more graphs are rendered for the first time,
@@ -55,22 +51,20 @@ let appStyle = $derived(`--graph-zoom: ${$zoom}`)
 // observe loading of the font used by the graphs (Roboto Condensed 400) so
 // that we can wait for it to be loaded before rendering the app.
 const graphFont = new FontFaceObserver('Roboto Condensed', { weight: 400 })
-let graphFontReady = $state(false)
+let graphFontReady = false
 graphFont.load().then(() => {
   graphFontReady = true
 })
 
 // Wait for the fonts to be loaded before we render the app
-let viewReady = $state(false)
-$effect(() => {
-  if (graphFontReady) {
-    // Set a flag indicating that the view is ready to be displayed
-    viewReady = true
+let viewReady = false
+$: if (graphFontReady) {
+  // Set a flag indicating that the view is ready to be displayed
+  viewReady = true
 
-    // Run the check/comparison test suite
-    viewModel.runTestSuite()
-  }
-})
+  // Run the check/comparison test suite
+  viewModel.runTestSuite()
+}
 
 function showSummary(): void {
   compareDetailViewModel = undefined
