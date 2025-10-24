@@ -130,7 +130,8 @@ export { createConfig } from './config/config'
 // perf
 //
 
-export { PerfRunner } from './perf/perf-runner'
+export { runPerf } from './perf/perf-runner'
+export type { CancelRunPerf, RunPerfCallbacks, RunPerfOptions } from './perf/perf-runner'
 
 export type { PerfReport } from './perf/perf-stats'
 export { PerfStats } from './perf/perf-stats'
@@ -140,8 +141,8 @@ export { PerfStats } from './perf/perf-stats'
 //
 
 export type {
-  CancelTrace,
-  TraceCallbacks,
+  CancelRunTrace as CancelTrace,
+  RunTraceCallbacks as TraceCallbacks,
   TraceCompareToBundleOptions,
   TraceCompareToExtDataOptions,
   TraceOptions

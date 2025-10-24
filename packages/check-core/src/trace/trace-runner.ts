@@ -14,9 +14,9 @@ import type { DiffPoint, DiffValidity } from '../comparison/diff-datasets/diff-d
 
 import type { TraceDatasetReport, TraceReport } from './trace-report'
 
-export type CancelTrace = () => void
+export type CancelRunTrace = () => void
 
-export interface TraceCallbacks {
+export interface RunTraceCallbacks {
   onComplete?: (traceReport: TraceReport) => void
   onError?: (error: Error) => void
 }
@@ -52,9 +52,9 @@ export type TraceOptions = TraceCompareToBundleOptions | TraceCompareToExtDataOp
 export function runTraceWithTaskQueue(
   modelSpec: ModelSpec,
   taskQueue: TaskQueue,
-  callbacks: TraceCallbacks,
+  callbacks: RunTraceCallbacks,
   options: TraceOptions
-): CancelTrace {
+): CancelRunTrace {
   const traceRunner = new TraceRunner(taskQueue, callbacks)
   traceRunner.start(modelSpec, options)
   return () => {
@@ -63,14 +63,14 @@ export function runTraceWithTaskQueue(
 }
 
 /**
- * Run the full suite of checks and comparisons defined in the given configuration.
+ * Perform a trace run, comparing all datasets from the requested models.
  *
  * @param modelSpec The model spec that provides the datasets to be compared (usually from the "right" bundle).
  * @param callbacks The callbacks that will be notified.
  * @param options Options to control how the trace is run.
  * @return A function that will cancel the process when invoked.
  */
-export function runTrace(modelSpec: ModelSpec, callbacks: TraceCallbacks, options: TraceOptions): CancelTrace {
+export function runTrace(modelSpec: ModelSpec, callbacks: RunTraceCallbacks, options: TraceOptions): CancelRunTrace {
   const taskQueue = TaskQueue.getInstance()
   return runTraceWithTaskQueue(modelSpec, taskQueue, callbacks, options)
 }
@@ -100,7 +100,7 @@ class TraceRunner {
 
   constructor(
     private readonly taskQueue: TaskQueue,
-    private readonly callbacks: TraceCallbacks
+    private readonly callbacks: RunTraceCallbacks
   ) {}
 
   cancel(): void {
