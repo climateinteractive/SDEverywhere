@@ -212,7 +212,10 @@ function onKeyDown(event: KeyboardEvent) {
           <FilterPopover
             viewModel={viewModel.filterPopoverViewModel}
             onClose={closeFilters}
-            onApplyAndRun={() => viewModel.applyFilters()}
+            onApplyAndRun={() => {
+              closeFilters()
+              viewModel.applyFilters()
+            }}
           />
         </div>
       </div>
