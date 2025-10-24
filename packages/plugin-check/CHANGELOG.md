@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.3.20](https://github.com/climateinteractive/SDEverywhere/compare/plugin-check-v0.3.19...plugin-check-v0.3.20) (2025-10-24)
+
+
+### Features
+
+* add support for filtering/skipping checks and comparisons in model-check ([#686](https://github.com/climateinteractive/SDEverywhere/issues/686)) ([95a0c53](https://github.com/climateinteractive/SDEverywhere/commit/95a0c53adbb5289041ec8f1e59b2826f406e7869)), closes [#682](https://github.com/climateinteractive/SDEverywhere/issues/682)
+* add Trace View (tracing/diagnosis tool) to model-check ([#684](https://github.com/climateinteractive/SDEverywhere/issues/684)) ([a9f2b1c](https://github.com/climateinteractive/SDEverywhere/commit/a9f2b1c47be651463b1a85ef85078c65faca9ffe)), closes [#675](https://github.com/climateinteractive/SDEverywhere/issues/675)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/check-core bumped from ^0.1.5 to ^0.1.6
+    * @sdeverywhere/check-ui-shell bumped from ^0.2.11 to ^0.2.12
+
 ## [0.3.19](https://github.com/climateinteractive/SDEverywhere/compare/plugin-check-v0.3.18...plugin-check-v0.3.19) (2025-10-17)
 
 
