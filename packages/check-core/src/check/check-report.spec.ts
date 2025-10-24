@@ -2,16 +2,14 @@
 
 import { describe, expect, it } from 'vitest'
 
-import type { CheckScenarioReport } from '..'
 import { positionSetting, inputSettingsSpec, valueSetting } from '../_shared/scenario-specs'
 import type { CheckDataRef } from './check-data-ref'
 import { dataRef } from './check-data-ref'
 import type { CheckResult } from './check-func'
 import type { CheckKey, CheckPlan, CheckPlanPredicate } from './check-planner'
 import type { CheckPredicateOp } from './check-predicate'
-import type { CheckPredicateOpRef } from './check-report'
-import { predicateMessage } from './check-report'
-import { buildCheckReport, datasetMessage, scenarioMessage } from './check-report'
+import type { CheckPredicateOpRef, CheckScenarioReport } from './check-report'
+import { buildCheckReport, datasetMessage, predicateMessage, scenarioMessage } from './check-report'
 import { dataset } from './_mocks/mock-check-dataset'
 import {
   datasetPlan,

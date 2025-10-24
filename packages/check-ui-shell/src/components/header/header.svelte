@@ -4,12 +4,11 @@
 <script lang="ts">
 import { createEventDispatcher } from 'svelte'
 import Icon from 'svelte-awesome/components/Icon.svelte'
-import { faCog, faHome } from '@fortawesome/free-solid-svg-icons'
+import { faCog, faFilter, faHome } from '@fortawesome/free-solid-svg-icons'
 
 import type { HeaderViewModel } from './header-vm'
 
 export let viewModel: HeaderViewModel
-const simplifyScenarios = viewModel.simplifyScenarios
 const thresholds = viewModel.thresholds
 const bundleNamesL = viewModel.bundleNamesL
 const bundleNamesR = viewModel.bundleNamesR
@@ -21,6 +20,10 @@ const dispatch = createEventDispatcher()
 
 function onHome() {
   dispatch('command', { cmd: 'show-summary' })
+}
+
+function onToggleFilters() {
+  dispatch('command', { cmd: 'toggle-filters' })
 }
 
 function onToggleControls() {
@@ -44,33 +47,17 @@ function onSelectBundleL(e: Event) {
 function onSelectBundleR(e: Event) {
   onSelectBundle('right', (e.target as HTMLSelectElement).value)
 }
-
-// XXX: Ignore the first event when we subscribe
-let firstSimplify = true
-$: if ($simplifyScenarios !== undefined) {
-  if (firstSimplify) {
-    firstSimplify = false
-  } else {
-    document.dispatchEvent(new CustomEvent('sde-check-simplify-scenarios-toggled'))
-  }
-}
 </script>
 
 <!-- TEMPLATE -->
 <div class="header-container">
   <div class="header-content">
     <div class="header-group">
-      <div class="icon-button home" on:click={onHome}>
+      <button class="icon-button home" on:click={onHome} aria-label="Home">
         <Icon class="icon" data={faHome} />
-      </div>
+      </button>
     </div>
     <div class="spacer-flex"></div>
-    {#if simplifyScenarios !== undefined}
-      <div class="header-group">
-        <input class="checkbox" type="checkbox" name="simplify-toggle" bind:checked={$simplifyScenarios} />
-        <label for="simplify-toggle">Simplify Scenarios</label>
-      </div>
-    {/if}
     {#if viewModel.nameL || $bundleNamesL.length > 1}
       <div class="spacer-fixed"></div>
       <div class="header-group">
@@ -105,9 +92,22 @@ $: if ($simplifyScenarios !== undefined) {
       </div>
       <div class="spacer-fixed"></div>
       <div class="header-group">
-        <div class="icon-button controls" on:click={onToggleControls}>
+        {#if viewModel.devMode}
+          <button class="icon-button filter" on:click={onToggleFilters} aria-label="Filters">
+            <Icon class="icon" data={faFilter} />
+          </button>
+        {/if}
+        <button class="icon-button controls" on:click={onToggleControls} aria-label="Controls">
           <Icon class="icon" data={faCog} />
-        </div>
+        </button>
+      </div>
+    {:else}
+      <div class="header-group">
+        {#if viewModel.devMode}
+          <button class="icon-button filter" on:click={onToggleFilters} aria-label="Filters">
+            <Icon class="icon" data={faFilter} />
+          </button>
+        {/if}
       </div>
     {/if}
   </div>
@@ -158,12 +158,19 @@ $: if ($simplifyScenarios !== undefined) {
 }
 
 .icon-button {
+  background: none;
+  border: none;
+  padding: 0;
   color: #bbb;
   cursor: pointer;
 
   &:hover {
     color: #fff;
   }
+}
+
+.icon-button.controls {
+  margin-left: 1rem;
 }
 
 .label:not(:last-child) {

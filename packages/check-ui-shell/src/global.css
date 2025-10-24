@@ -56,11 +56,13 @@ sub {
   --bucket-2: orangered;
   --bucket-3: crimson;
   --bucket-4: magenta;
+  --bucket-5: #888;
   --status-none: #555;
   --status-passed: limegreen;
   --status-failed: crimson;
   --status-warning: orange;
   --status-error: orangered;
+  --status-skipped: #888;
 }
 
 .dataset-color-0 {
@@ -87,6 +89,9 @@ sub {
 .bucket-color-4 {
   color: var(--bucket-4);
 }
+.bucket-color-5 {
+  color: var(--bucket-5);
+}
 .status-color-none {
   color: var(--status-none);
 }
@@ -101,6 +106,9 @@ sub {
 }
 .status-color-error {
   color: var(--status-error);
+}
+.status-color-skipped {
+  color: var(--status-skipped);
 }
 
 .dataset-bg-0 {
@@ -127,6 +135,9 @@ sub {
 .bucket-bg-4 {
   background-color: var(--bucket-4);
 }
+.bucket-bg-5 {
+  background-color: var(--bucket-5);
+}
 .status-bg-none {
   background-color: var(--status-none);
 }
@@ -141,6 +152,9 @@ sub {
 }
 .status-bg-error {
   background-color: var(--status-error);
+}
+.status-bg-skipped {
+  background-color: var(--status-skipped);
 }
 
 .dataset-border-0 {
@@ -167,6 +181,9 @@ sub {
 .bucket-border-4 {
   border-color: var(--bucket-4);
 }
+.bucket-border-5 {
+  border-color: var(--bucket-5);
+}
 .status-border-none {
   border-color: var(--status-none);
 }
@@ -181,6 +198,9 @@ sub {
 }
 .status-border-error {
   border-color: var(--status-error);
+}
+.status-border-skipped {
+  border-color: var(--status-skipped);
 }
 
 /* Add this class to disable text selection */

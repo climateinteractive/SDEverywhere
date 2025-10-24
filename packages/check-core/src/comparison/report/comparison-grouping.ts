@@ -143,7 +143,9 @@ export function categorizeComparisonGroups(
     // Categorize the group
     if (validInL && validInR) {
       // The dataset/scenario is valid in both; see if there were any diffs
-      if (scores.totalDiffCount !== scores.diffCountByBucket[0]) {
+      const noDiffCount = scores.diffCountByBucket[0]
+      const skippedCount = scores.diffCountByBucket[5]
+      if (scores.totalDiffCount !== noDiffCount + skippedCount) {
         withDiffs.push(groupSummary)
       } else {
         withoutDiffs.push(groupSummary)

@@ -5,7 +5,15 @@ import assertNever from 'assert-never'
 import type { Readable, Writable } from 'svelte/store'
 import { get, writable } from 'svelte/store'
 
-import type { ComparisonSummary, ScenarioSpec, SuiteSummary } from '@sdeverywhere/check-core'
+import type {
+  CheckNameSpec,
+  CheckReport,
+  ComparisonReport,
+  ComparisonScenarioTitleSpec,
+  ComparisonSummary,
+  ScenarioSpec,
+  SuiteSummary
+} from '@sdeverywhere/check-core'
 import { checkReportFromSummary, comparisonSummaryFromReport, runSuite } from '@sdeverywhere/check-core'
 
 import { localStorageWritableBoolean, localStorageWritableNumber } from './_shared/stores'
@@ -25,6 +33,11 @@ import {
 } from './components/compare/detail/compare-detail-vm'
 import type { ComparisonSummaryRowViewModel } from './components/compare/summary/comparison-summary-row-vm'
 import type { ComparisonSummaryViewModel } from './components/compare/summary/comparison-summary-vm'
+import type { FilterPopoverViewModel } from './components/filter/filter-popover-vm'
+import {
+  createFilterPopoverViewModelFromReports,
+  loadFiltersFromLocalStorage
+} from './components/filter/filter-popover-vm'
 import type { HeaderViewModel } from './components/header/header-vm'
 import { createHeaderViewModel } from './components/header/header-vm'
 import type { PerfViewModel } from './components/perf/perf-vm'
@@ -47,7 +60,10 @@ export class AppViewModel {
   public readonly headerViewModel: HeaderViewModel
   private readonly pinnedItemStates: PinnedItemStates
   public summaryViewModel: SummaryViewModel
+  public filterPopoverViewModel: FilterPopoverViewModel
   private cancelRunSuite: () => void
+  private skipChecks: CheckNameSpec[]
+  private skipComparisonScenarios: ComparisonScenarioTitleSpec[]
 
   /**
    * @param appModel The app model.
@@ -64,14 +80,6 @@ export class AppViewModel {
     this.writableProgress = writable('0%')
     this.progress = this.writableProgress
 
-    // Show the "Simplify Scenarios" checkbox if we run checks in the browser
-    let simplifyScenarios: Writable<boolean>
-    if (suiteSummary === undefined) {
-      simplifyScenarios = localStorageWritableBoolean('sde-check-simplify-scenarios', false)
-    } else {
-      simplifyScenarios = undefined
-    }
-
     // Create the `UserPrefs` object that is passed down to the component hierarchy
     const zoom = localStorageWritableNumber('sde-check-graph-zoom', 1)
     const consistentYRange = localStorageWritableBoolean('sde-check-consistent-y-range', false)
@@ -80,11 +88,21 @@ export class AppViewModel {
       consistentYRange
     }
 
+    // XXX: If the summary is defined, it means that the were run ahead of time using the
+    // model-check CLI tool.  We use this as a heuristic to determine if we are in dev mode.
+    const devMode = this.suiteSummary === undefined
+
     // Create the header view model
-    this.headerViewModel = createHeaderViewModel(appModel.config.comparison, simplifyScenarios, zoom, consistentYRange)
+    this.headerViewModel = createHeaderViewModel(devMode, appModel.config.comparison, zoom, consistentYRange)
 
     // Create the object that manages pinned items states
     this.pinnedItemStates = createPinnedItemStates()
+
+    // Load the filters (the items to skip and the initial popover view model) from LocalStorage
+    const filters = loadFiltersFromLocalStorage(devMode)
+    this.skipChecks = filters.skipChecks
+    this.skipComparisonScenarios = filters.skipComparisonScenarios
+    this.filterPopoverViewModel = filters.filterPopoverViewModel
   }
 
   runTestSuite(): void {
@@ -116,12 +134,6 @@ export class AppViewModel {
       this.writableChecksInProgress.set(false)
     } else {
       // For local dev builds, run the test suite in the browser
-      // TODO: Once we resolve checks as part of resolving config options, we won't
-      // need this hack here
-      let simplifyScenarios = false
-      if (this.headerViewModel.simplifyScenarios !== undefined) {
-        simplifyScenarios = get(this.headerViewModel.simplifyScenarios)
-      }
       this.cancelRunSuite = runSuite(
         this.appModel.config,
         {
@@ -139,7 +151,14 @@ export class AppViewModel {
               checkReport,
               comparisonConfig,
               comparisonSummary,
-              this.pinnedItemStates
+              this.pinnedItemStates,
+              this.skipComparisonScenarios
+            )
+            // Rebuild the filter popover view model to reflect the checks and comparisons
+            // that were run
+            this.filterPopoverViewModel = this.createFilterPopoverViewModelFromReports(
+              checkReport,
+              report.comparisonReport
             )
             this.writableChecksInProgress.set(false)
           },
@@ -149,7 +168,8 @@ export class AppViewModel {
           }
         },
         {
-          simplifyScenarios
+          skipChecks: this.skipChecks,
+          skipComparisonScenarios: this.skipComparisonScenarios
         }
       )
     }
@@ -278,7 +298,20 @@ export class AppViewModel {
   //     return
   //   }
   //   return createFreeformViewModel(this.appModel.config.comparison, this.appModel.comparisonDataCoordinator)
-  // }
+  //   }
+
+  private createFilterPopoverViewModelFromReports(
+    checkReport: CheckReport,
+    comparisonReport?: ComparisonReport
+  ): FilterPopoverViewModel {
+    return createFilterPopoverViewModelFromReports(this.appModel.config, checkReport, comparisonReport)
+  }
+
+  applyFilters(): void {
+    // When the "Apply and Run" button is clicked, dispatch an event that will be handled
+    // at a higher level to reload the UI and run the tests again using the new filters
+    document.dispatchEvent(new CustomEvent('sde-check-apply-filters'))
+  }
 }
 
 export interface AppViewModelResult {

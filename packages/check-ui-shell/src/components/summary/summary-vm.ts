@@ -2,7 +2,13 @@
 
 import { get } from 'svelte/store'
 
-import type { CheckDataCoordinator, CheckReport, ComparisonConfig, ComparisonSummary } from '@sdeverywhere/check-core'
+import type {
+  CheckDataCoordinator,
+  CheckReport,
+  ComparisonConfig,
+  ComparisonSummary,
+  ComparisonScenarioTitleSpec
+} from '@sdeverywhere/check-core'
 
 import type { CheckSummaryViewModel } from '../check/summary/check-summary-vm'
 import { createCheckSummaryViewModel } from '../check/summary/check-summary-vm'
@@ -29,14 +35,24 @@ export function createSummaryViewModel(
   checkReport: CheckReport,
   comparisonConfig: ComparisonConfig | undefined,
   comparisonSummary: ComparisonSummary | undefined,
-  pinnedItemStates: PinnedItemStates
+  pinnedItemStates: PinnedItemStates,
+  skipComparisonScenarios: ComparisonScenarioTitleSpec[] = []
 ): SummaryViewModel {
   type TabInfo = [subtitle: string, status: string]
 
-  function getTabInfo(diffCount: number, kind: string): TabInfo {
+  function getTabInfo(diffCount: number, kind: string, skippedScenarioCount: number = 0): TabInfo {
     if (diffCount === 0) {
-      return ['all clear', 'passed']
+      if (skippedScenarioCount === 0) {
+        // There are no diffs and no skipped scenarios
+        return ['all clear', 'passed']
+      } else {
+        // There are no diffs, but there are skipped scenarios
+        const kindPart = skippedScenarioCount === 1 ? 'scenario' : 'scenarios'
+        return [`no diffs, but ${skippedScenarioCount} skipped ${kindPart}`, 'warning']
+      }
     } else {
+      // There are diffs
+      // TODO: For now we say "diffs" even though some might be errors
       const kindPart = diffCount === 1 ? kind : `${kind}s`
       return [`${diffCount} ${kindPart} with diffs`, 'warning']
     }
@@ -72,7 +88,17 @@ export function createSummaryViewModel(
     }
     checkTabInfo = [parts.join(', '), 'failed']
   } else {
-    checkTabInfo = ['all clear', 'passed']
+    // Show passed count, and skipped count if there are any
+    const parts: string[] = []
+    let status = 'passed'
+    if (checkSummaryViewModel.passed > 0) {
+      parts.push(`${checkSummaryViewModel.passed} passed`)
+    }
+    if (checkSummaryViewModel.skipped > 0) {
+      parts.push(`${checkSummaryViewModel.skipped} skipped`)
+      status = 'warning'
+    }
+    checkTabInfo = [parts.join(', '), status]
   }
   addTabItem('checks', 'Checks', checkTabInfo)
 
@@ -93,8 +119,10 @@ export function createSummaryViewModel(
     const comparisonSummaries = createComparisonSummaryViewModels(
       comparisonConfig,
       pinnedItemStates,
-      comparisonSummary.testSummaries
+      comparisonSummary.testSummaries,
+      skipComparisonScenarios
     )
+    const skippedScenarioCount = comparisonSummaries.skippedScenarioCount
 
     // Add tab for comparison views, if some are defined
     if (comparisonSummaries.views) {
@@ -117,19 +145,27 @@ export function createSummaryViewModel(
       if (changedGraphCount > 0) {
         viewsTabInfo = getTabInfo(changedGraphCount, 'graph')
       } else {
-        viewsTabInfo = getTabInfo(comparisonViewsSummaryViewModel.rowsWithDiffs, 'view')
+        viewsTabInfo = getTabInfo(comparisonViewsSummaryViewModel.rowsWithDiffs, 'view', skippedScenarioCount)
       }
       addTabItem('comp-views', 'Comparison views', viewsTabInfo)
     }
 
     // Add tab for by-scenario summaries
     comparisonsByScenarioSummaryViewModel = comparisonSummaries.byScenario
-    const byScenarioTabInfo = getTabInfo(comparisonsByScenarioSummaryViewModel.rowsWithDiffs, 'scenario')
+    const byScenarioTabInfo = getTabInfo(
+      comparisonsByScenarioSummaryViewModel.rowsWithDiffs,
+      'scenario',
+      skippedScenarioCount
+    )
     addTabItem('comps-by-scenario', 'Comparisons by scenario', byScenarioTabInfo)
 
     // Add tab for by-dataset summaries
     comparisonsByDatasetSummaryViewModel = comparisonSummaries.byDataset
-    const byDatasetTabInfo = getTabInfo(comparisonsByDatasetSummaryViewModel.rowsWithDiffs, 'dataset')
+    const byDatasetTabInfo = getTabInfo(
+      comparisonsByDatasetSummaryViewModel.rowsWithDiffs,
+      'dataset',
+      skippedScenarioCount
+    )
     addTabItem('comps-by-dataset', 'Comparisons by dataset', byDatasetTabInfo)
   }
 

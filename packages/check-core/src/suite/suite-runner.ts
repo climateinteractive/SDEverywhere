@@ -21,6 +21,8 @@ import type { Config } from '../config/config-types'
 import { PerfStats } from '../perf/perf-stats'
 
 import type { SuiteReport } from './suite-report-types'
+import type { CheckNameSpec } from '../check/check-spec'
+import type { ComparisonScenarioTitleSpec } from '../comparison/config/comparison-spec-types'
 
 export type CancelRunSuite = () => void
 
@@ -31,8 +33,16 @@ export interface RunSuiteCallbacks {
 }
 
 export interface RunSuiteOptions {
-  /** Set to true to reduce the number of scenarios generated for a `matrix`. */
-  simplifyScenarios?: boolean
+  /**
+   * The check tests to skip.  Note that checks are matched by group and name
+   * (case insensitive).
+   */
+  skipChecks?: CheckNameSpec[]
+  /**
+   * The comparison scenarios to skip.  Note that scenarios are matched by
+   * title and subtitle (case insensitive).
+   */
+  skipComparisonScenarios?: ComparisonScenarioTitleSpec[]
 }
 
 /**
@@ -89,13 +99,14 @@ class SuiteRunner {
     const checkSpec = checkSpecResult.value
 
     // Plan the checks
-    const simplifyScenarios = options?.simplifyScenarios === true
-    const buildCheckReport = runChecks(this.config.check, checkSpec, dataPlanner, refDataPlanner, simplifyScenarios)
+    const skipChecks = options?.skipChecks || []
+    const buildCheckReport = runChecks(this.config.check, checkSpec, dataPlanner, refDataPlanner, skipChecks)
 
     // Plan the comparisons, if configured
     let buildComparisonTestReports: () => ComparisonTestReport[]
     if (this.config.comparison) {
-      buildComparisonTestReports = runComparisons(this.config.comparison, dataPlanner)
+      const skipScenarios = options?.skipComparisonScenarios || []
+      buildComparisonTestReports = runComparisons(this.config.comparison, dataPlanner, skipScenarios)
     }
 
     // When all tasks have been processed, build the report
@@ -130,12 +141,14 @@ class SuiteRunner {
     const dataRequests = [...refDataPlan.requests, ...dataPlan.requests]
     const taskCount = dataRequests.length
     if (taskCount === 0) {
-      // There are no checks or comparison tests; notify completion callback
-      // with empty reports
+      // There are no data requests.  This can occur when there are no checks or comparisons defined,
+      // or when all checks and comparisons are skipped.  We still build the reports so that the
+      // skipped tests can be displayed in the UI.
+      const checkReport = buildCheckReport()
       let comparisonReport: ComparisonReport
       if (this.config.comparison) {
         comparisonReport = {
-          testReports: [],
+          testReports: buildComparisonTestReports(),
           perfReportL: this.perfStatsL.toReport(),
           perfReportR: this.perfStatsR.toReport()
         }
@@ -143,9 +156,7 @@ class SuiteRunner {
       this.cancel()
       this.callbacks.onProgress?.(1)
       this.callbacks.onComplete?.({
-        checkReport: {
-          groups: []
-        },
+        checkReport,
         comparisonReport
       })
       return

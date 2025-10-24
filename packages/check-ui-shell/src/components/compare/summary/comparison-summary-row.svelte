@@ -46,6 +46,7 @@ function onContextMenu(e: Event) {
       <div class="bar bucket-bg-2" style="width: {bucketPcts[2]}%;"></div>
       <div class="bar bucket-bg-3" style="width: {bucketPcts[3]}%;"></div>
       <div class="bar bucket-bg-4" style="width: {bucketPcts[4]}%;"></div>
+      <div class="bar bucket-bg-5" style="width: {bucketPcts[5]}%;"></div>
     {/if}
   </div>
   <div class="title-container">

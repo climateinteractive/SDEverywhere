@@ -68,6 +68,7 @@ export { scenarioMessage, datasetMessage, predicateMessage } from './check/check
 export type { CheckScenario, CheckScenarioError, CheckScenarioInputDesc } from './check/check-scenario'
 
 export type {
+  CheckNameSpec,
   CheckPredicateTimeOptions,
   CheckPredicateTimeRange,
   CheckPredicateTimeSingle,

@@ -10,7 +10,7 @@ export interface CheckResultErrorInfo {
 }
 
 export interface CheckResult {
-  status: 'passed' | 'failed' | 'error'
+  status: 'passed' | 'failed' | 'error' | 'skipped'
   message?: string
   failValue?: number
   failOp?: CheckPredicateOp

@@ -37,13 +37,14 @@ function summarySectionsForComparisonsByScenario(
   const allSummaries = Array.from(summaries.allGroupSummaries.values())
 
   const sections: ComparisonReportSummarySection[] = []
-  function addSection(headerText: string, rows: ComparisonReportSummaryRow[] | undefined) {
+  function addSection(headerText: string, rows: ComparisonReportSummaryRow[] | undefined, stable: boolean) {
     if (rows === undefined) {
       return
     }
     sections.push({
       headerText,
-      rows
+      rows,
+      stable
     })
   }
 
@@ -56,7 +57,7 @@ function summarySectionsForComparisonsByScenario(
     })
   }
 
-  function addSectionWithScenarios(headerText: string, scenarios: (string | [string, string?])[]) {
+  function addSectionWithScenarios(headerText: string, stable: boolean, scenarios: (string | [string, string?])[]) {
     const rows: ComparisonReportSummaryRow[] = []
     const errorIds: string[] = []
     for (const scenario of scenarios) {
@@ -85,12 +86,13 @@ function summarySectionsForComparisonsByScenario(
     if (errorIds.length > 0) {
       headerText += ` (ERROR: Failed to resolve ${errorIds.join(', ')})`
     }
-    addSection(headerText, rows)
+    addSection(headerText, rows, stable)
   }
 
   function addSectionWithSummaries(
     headerText: string,
     summaries: ComparisonGroupSummary[],
+    stable = false,
     include?: (id?: string) => boolean
   ) {
     let rows: ComparisonReportSummaryRow[] = summaries.map(summary => ({ groupSummary: summary }))
@@ -106,12 +108,12 @@ function summarySectionsForComparisonsByScenario(
         return false
       })
     }
-    addSection(headerText, rows)
+    addSection(headerText, rows, stable)
   }
 
   // Add a section with a couple key scenarios (this demonstrates that we can highlight
   // specific scenarios at top, and these scenarios can also appear in other sections)
-  addSectionWithScenarios('&#9733; Key scenarios', [
+  addSectionWithScenarios('&#9733; Key scenarios', true, [
     ['baseline', 'Baseline'],
     'extreme_main_sliders_at_best_case'
     // 'non_existent_scenario'

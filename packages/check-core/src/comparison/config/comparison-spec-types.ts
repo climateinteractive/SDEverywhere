@@ -161,6 +161,14 @@ export interface ComparisonScenarioRefSpec {
   subtitle?: ComparisonScenarioSubtitle
 }
 
+/** Spec type that allows for matching a comparison scenario by title and subtitle. */
+export interface ComparisonScenarioTitleSpec {
+  /** The title of a comparison scenario. */
+  title: string
+  /** The subtitle of a comparison scenario. */
+  subtitle?: string
+}
+
 //
 // SCENARIO GROUPS
 //

@@ -4,17 +4,26 @@
 <script lang="ts">
 import FontFaceObserver from 'fontfaceobserver'
 
+import { clickOutside } from './components/_shared/click-outside'
+
 import type { ComparisonGroupingKind } from './components/compare/_shared/comparison-grouping-kind'
 import ComparisonDetail from './components/compare/detail/compare-detail.svelte'
 import type { CompareDetailViewModel } from './components/compare/detail/compare-detail-vm'
+
+import FilterPopover from './components/filter/filter-popover.svelte'
+
 import type { FreeformViewModel } from './components/freeform/freeform-vm'
 import Freeform from './components/freeform/freeform.svelte'
+
 import Header from './components/header/header.svelte'
+
 import type { PerfViewModel } from './components/perf/perf-vm'
 import Perf from './components/perf/perf.svelte'
+
+import Summary from './components/summary/summary.svelte'
+
 import type { TraceViewModel } from './components/trace/trace-vm'
 import Trace from './components/trace/trace.svelte'
-import Summary from './components/summary/summary.svelte'
 
 import type { AppViewModel } from './app-vm'
 
@@ -30,6 +39,8 @@ let freeformViewModel: FreeformViewModel
 
 type ViewMode = 'summary' | 'comparison-detail' | 'perf' | 'freeform' | 'trace'
 let viewMode: ViewMode = 'summary'
+
+let filtersVisible = false
 
 $: appStyle = `--graph-zoom: ${$zoom}`
 
@@ -60,12 +71,23 @@ function showSummary(): void {
   viewMode = 'summary'
 }
 
+function toggleFilters(): void {
+  filtersVisible = !filtersVisible
+}
+
+function closeFilters(): void {
+  filtersVisible = false
+}
+
 function onCommand(event: CustomEvent) {
   const cmdObj = event.detail
   const cmd = cmdObj.cmd
   switch (cmd) {
     case 'show-summary':
       showSummary()
+      break
+    case 'toggle-filters':
+      toggleFilters()
       break
     case 'enter-tab':
       if (cmdObj.itemId !== 'checks') {
@@ -162,9 +184,9 @@ function onKeyDown(event: KeyboardEvent) {
 <!-- TEMPLATE -->
 <svelte:window on:keydown={onKeyDown} />
 
-{#await viewReady}
+{#if !viewReady}
   <div class="loading-container"></div>
-{:then}
+{:else}
   <div class="app-container" style={appStyle}>
     <Header on:command={onCommand} viewModel={viewModel.headerViewModel} />
     {#if $checksInProgress}
@@ -182,12 +204,29 @@ function onKeyDown(event: KeyboardEvent) {
     {:else}
       <Summary on:command={onCommand} viewModel={viewModel.summaryViewModel} />
     {/if}
+
+    {#if filtersVisible}
+      <!-- svelte-ignore event_directive_deprecated -->
+      <div class="filter-popover-overlay" use:clickOutside on:clickout={closeFilters}>
+        <div class="filter-popover-container">
+          <FilterPopover
+            viewModel={viewModel.filterPopoverViewModel}
+            onClose={closeFilters}
+            onApplyAndRun={() => {
+              closeFilters()
+              viewModel.applyFilters()
+            }}
+          />
+        </div>
+      </div>
+    {/if}
   </div>
-{/await}
+{/if}
 
 <!-- STYLE -->
 <style lang="scss">
 .app-container {
+  position: relative;
   display: flex;
   flex-direction: column;
   flex: 1;
@@ -207,5 +246,31 @@ function onKeyDown(event: KeyboardEvent) {
   align-items: center;
   justify-content: center;
   font-size: 2em;
+}
+
+.filter-popover-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  max-width: min(100%, 100vw);
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.4);
+  z-index: 1000;
+  pointer-events: none;
+}
+
+.filter-popover-container {
+  position: absolute;
+  top: 26px;
+  right: 24px;
+  width: 500px;
+  height: min(calc(100% - 60px), 600px);
+  background-color: #2c2c2c;
+  border: 1px solid #444;
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+  pointer-events: auto;
+  overflow: hidden;
 }
 </style>

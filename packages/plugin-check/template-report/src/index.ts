@@ -14,14 +14,6 @@ import { createBundle as createBaselineBundle } from '@_baseline_bundle_'
 import { createBundle as createCurrentBundle } from '@_current_bundle_'
 import { getConfigOptions } from '@_test_config_'
 
-function loadSimplifyScenariosFlag(): boolean {
-  if (import.meta.hot) {
-    return localStorage.getItem('sde-check-simplify-scenarios') === '1'
-  } else {
-    return false
-  }
-}
-
 function loadBundleName(key: string): string | undefined {
   if (import.meta.hot) {
     return localStorage.getItem(`sde-check-selected-bundle-${key}`)
@@ -149,8 +141,7 @@ async function initForLocal(): Promise<void> {
   // Prepare the model check/comparison configuration
   const configInitOptions: ConfigInitOptions = {
     bundleNameL,
-    bundleNameR,
-    simplifyScenarios: loadSimplifyScenariosFlag()
+    bundleNameR
   }
   const configOptions = await getConfigOptions(bundleL, bundleR, configInitOptions)
 
@@ -200,9 +191,9 @@ if (import.meta.hot) {
     initBundlesAndUI()
   })
 
-  // Reload everything when the user toggles the "Simplify Scenarios" checkbox
-  document.addEventListener('sde-check-simplify-scenarios-toggled', () => {
-    // Reinitialize using the new state
+  // Reload everything when the user applies updated filters
+  document.addEventListener('sde-check-apply-filters', () => {
+    // Reinitialize using the new filters
     initBundlesAndUI()
   })
 }

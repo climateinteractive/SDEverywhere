@@ -63,9 +63,9 @@ export function mockConfigOptions(
               return {
                 groupSummary: summary
               }
-            })
+            }),
             // Set the stable flag to true so that this section appears in the filter panel
-            // stable: true
+            stable: true
           })
 
           // Put all other scenarios in an "Other scenarios" section
@@ -76,10 +76,10 @@ export function mockConfigOptions(
               return {
                 groupSummary: summary
               }
-            })
+            }),
             // Set the stable flag to false so that the items in this section go into an "Other scenarios"
             // group in the filter panel
-            // stable: false
+            stable: false
           })
           return sections
         }

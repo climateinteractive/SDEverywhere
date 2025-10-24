@@ -13,7 +13,8 @@ import type {
   ComparisonTestSummary,
   ComparisonView,
   ComparisonViewGroup,
-  DatasetKey
+  DatasetKey,
+  ComparisonScenarioTitleSpec
 } from '@sdeverywhere/check-core'
 import { categorizeComparisonTestSummaries, getScoresForTestSummaries } from '@sdeverywhere/check-core'
 
@@ -111,12 +112,14 @@ export interface ComparisonSummaryViewModels {
   views?: ComparisonViewsSummaryViewModel
   byScenario: ComparisonsByItemSummaryViewModel
   byDataset: ComparisonsByItemSummaryViewModel
+  skippedScenarioCount: number
 }
 
 export function createComparisonSummaryViewModels(
   comparisonConfig: ComparisonConfig,
   pinnedItemStates: PinnedItemStates,
-  terseSummaries: ComparisonTestSummary[]
+  terseSummaries: ComparisonTestSummary[],
+  skipComparisonScenarios: ComparisonScenarioTitleSpec[] = []
 ): ComparisonSummaryViewModels {
   const bundleNameL = comparisonConfig.bundleL.name
   const bundleNameR = comparisonConfig.bundleR.name
@@ -141,6 +144,27 @@ export function createComparisonSummaryViewModels(
   let rowId = 1
   function genRowKey(itemKey: DatasetKey | ComparisonScenarioKey | ComparisonViewKey): ComparisonSummaryRowKey {
     return `row_${rowId++}_${itemKey}`
+  }
+
+  // Helper function to check if a scenario was skipped
+  function isScenarioSkipped(scenarioTitle: string, scenarioSubtitle?: string): boolean {
+    return skipComparisonScenarios.some(
+      skipped => skipped.title === scenarioTitle && skipped.subtitle === scenarioSubtitle
+    )
+  }
+
+  // Helper function that determines the number of skipped scenarios
+  function rowsSkipped(groupSummaries: ComparisonGroupSummariesByCategory): number {
+    let skippedCount = 0
+    for (const groupSummary of groupSummaries.allGroupSummaries.values()) {
+      if (
+        groupSummary.root.kind === 'scenario' &&
+        isScenarioSkipped(groupSummary.root.title, groupSummary.root.subtitle)
+      ) {
+        skippedCount++
+      }
+    }
+    return skippedCount
   }
 
   // Helper function that creates a summary row view model for a single-scenario comparison view
@@ -467,6 +491,7 @@ export function createComparisonSummaryViewModels(
   return {
     views: viewsSummary,
     byScenario: byScenarioSummary,
-    byDataset: byDatasetSummary
+    byDataset: byDatasetSummary,
+    skippedScenarioCount: rowsSkipped(groupsByScenario)
   }
 }

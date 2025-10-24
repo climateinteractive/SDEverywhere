@@ -15,14 +15,17 @@ export function getScoresForTestSummaries(
   testSummaries: ComparisonTestSummary[],
   thresholds: number[]
 ): ComparisonGroupScores {
-  // Add up scores and group them into buckets
-  const diffCountByBucket = Array(thresholds.length + 2).fill(0)
-  const totalMaxDiffByBucket = Array(thresholds.length + 2).fill(0)
+  // Add up scores and group them into buckets (6 buckets: 0-4 for diff levels, 5 for skipped)
+  const diffCountByBucket = Array(thresholds.length + 3).fill(0)
+  const totalMaxDiffByBucket = Array(thresholds.length + 3).fill(0)
   let totalDiffCount = 0
   for (const testSummary of testSummaries) {
     const bucketIndex = getBucketIndex(testSummary.md, thresholds)
     diffCountByBucket[bucketIndex]++
-    totalMaxDiffByBucket[bucketIndex] += testSummary.md
+    // Only include in the total if the value is defined (not skipped)
+    if (testSummary.md !== undefined) {
+      totalMaxDiffByBucket[bucketIndex] += testSummary.md
+    }
     totalDiffCount++
   }
 
