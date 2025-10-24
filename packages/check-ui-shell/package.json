@@ -1,6 +1,6 @@
 {
   "name": "@sdeverywhere/check-ui-shell",
-  "version": "0.2.11",
+  "version": "0.2.12",
   "files": [
     "dist/**",
     "types/**"
@@ -33,7 +33,7 @@
     "@fortawesome/free-regular-svg-icons": "^6.1.1",
     "@fortawesome/free-solid-svg-icons": "^6.1.1",
     "@juggle/resize-observer": "^3.4.0",
-    "@sdeverywhere/check-core": "^0.1.5",
+    "@sdeverywhere/check-core": "^0.1.6",
     "assert-never": "^1.2.1",
     "chart.js": "^2.9.4",
     "copy-text-to-clipboard": "^3.2.0",
