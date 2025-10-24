@@ -252,8 +252,10 @@ function onKeyDown(event: KeyboardEvent) {
   position: absolute;
   top: 0;
   left: 0;
-  right: 0;
+  width: 100%;
+  max-width: min(100%, 100vw);
   bottom: 0;
+  background-color: rgba(0, 0, 0, 0.4);
   z-index: 1000;
   pointer-events: none;
 }
