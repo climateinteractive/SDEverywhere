@@ -22,6 +22,8 @@ import type { Config } from '../config/config-types'
 import { PerfStats } from '../perf/perf-stats'
 
 import type { SuiteReport } from './suite-report-types'
+import type { CheckNameSpec } from '../check/check-spec'
+import type { ComparisonScenarioTitleSpec } from '../comparison/config/comparison-spec-types'
 
 export type CancelRunSuite = () => void
 

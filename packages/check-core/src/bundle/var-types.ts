@@ -69,28 +69,6 @@ export interface OutputVar {
   relatedItems?: RelatedItem[]
 }
 
-// /**
-//  * Holds information about a subscript used in the model.
-//  */
-// export interface Subscript {
-//   /** The subscript identifier, as used in SDE. */
-//   id: string
-//   /** The subscript name, as used in Vensim. */
-//   name: string
-// }
-
-// /**
-//  * Holds information about a dimension (subscript family) used in the model.
-//  */
-// export interface Dimension {
-//   /** The dimension identifier, as used in SDE. */
-//   id: string
-//   /** The dimension name, as used in Vensim. */
-//   name: string
-//   /** The set of subscripts in this dimension. */
-//   subscripts: Subscript[]
-// }
-
 /**
  * Holds information about a variable used in the model implementation.
  */

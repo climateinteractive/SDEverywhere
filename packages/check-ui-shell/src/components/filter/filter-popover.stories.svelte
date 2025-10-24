@@ -6,7 +6,7 @@ import { defineMeta, type Args } from '@storybook/addon-svelte-csf'
 
 import StoryDecorator from '../_storybook/story-decorator.svelte'
 
-import { createFilterPanelViewModel, type FilterItem, type FilterStateMap } from './filter-panel-vm'
+import { createFilterPanelViewModel, type FilterItem, type FilterStates } from './filter-panel-vm'
 import type { FilterPopoverViewModel } from './filter-popover-vm'
 import FilterPopover from './filter-popover.svelte'
 
@@ -79,9 +79,9 @@ const sampleScenarioItems: FilterItem[] = [
 
 function createFilterPopoverViewModel(
   checkItems: FilterItem[],
-  checkStates: FilterStateMap,
+  checkStates: FilterStates,
   scenarioItems: FilterItem[],
-  scenarioStates: FilterStateMap
+  scenarioStates: FilterStates
 ): FilterPopoverViewModel {
   const checksPanel = createFilterPanelViewModel(checkItems, checkStates)
   const comparisonScenariosPanel = createFilterPanelViewModel(scenarioItems, scenarioStates)
@@ -107,19 +107,19 @@ const { Story } = defineMeta({
   name="Default"
   {template}
   beforeEach={async ({ args }) => {
-    const sampleCheckStates: FilterStateMap = new Map([
-      ['policy_sliders__should_do_something', true],
-      ['policy_sliders__should_do_another_thing', true],
-      ['other_sliders__should_do_something', true],
-      ['other_sliders__should_do_another_thing', true]
-    ])
-    const sampleScenarioStates: FilterStateMap = new Map([
-      ['baseline', true],
-      ['ngfs', true],
-      ['phase_out', true],
-      ['coal_max', true],
-      ['coal_min', true]
-    ])
+    const sampleCheckStates: FilterStates = {
+      policy_sliders__should_do_something: true,
+      policy_sliders__should_do_another_thing: true,
+      other_sliders__should_do_something: true,
+      other_sliders__should_do_another_thing: true
+    }
+    const sampleScenarioStates: FilterStates = {
+      baseline: true,
+      ngfs: true,
+      phase_out: true,
+      coal_max: true,
+      coal_min: true
+    }
     args.viewModel = createFilterPopoverViewModel(
       sampleCheckItems,
       sampleCheckStates,

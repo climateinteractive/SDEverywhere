@@ -11,11 +11,17 @@ import type {
 
 export function mockBundleModel(
   modelSpec: ModelSpec,
-  datasetsForScenario: (scenarioSpec: ScenarioSpec, datasetKeys: DatasetKey[]) => DatasetMap
+  datasetsForScenario: (scenarioSpec: ScenarioSpec, datasetKeys: DatasetKey[]) => DatasetMap,
+  options?: {
+    delayInGetDatasets?: number
+  }
 ): BundleModel {
   return {
     modelSpec,
     getDatasetsForScenario: async (scenarioSpec, datasetKeys) => {
+      if (options?.delayInGetDatasets) {
+        await new Promise(resolve => setTimeout(resolve, options.delayInGetDatasets))
+      }
       return {
         datasetMap: datasetsForScenario(scenarioSpec, datasetKeys)
       }

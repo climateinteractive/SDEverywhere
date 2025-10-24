@@ -25,7 +25,7 @@ function onHeaderClicked() {
   </div>
   {#if $expanded}
     {#each viewModel.rows as rowViewModel}
-      <SummaryRow viewModel={rowViewModel} on:command />
+      <SummaryRow viewModel={rowViewModel} on:command on:show-context-menu />
     {/each}
   {/if}
 </div>

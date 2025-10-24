@@ -47,7 +47,8 @@ function onContextMenuItemSelected(e: CustomEvent) {
     case 'show-trace-view':
       dispatch('command', {
         cmd: 'show-trace-view-with-scenario',
-        scenarioSpec: contextMenuSourceScenario?.checkScenario?.spec
+        scenarioSpec: contextMenuSourceScenario?.checkScenario?.spec,
+        scenarioKind: 'check'
       })
       break
     default:

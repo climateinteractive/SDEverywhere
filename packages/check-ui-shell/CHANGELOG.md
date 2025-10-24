@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.11](https://github.com/climateinteractive/SDEverywhere/compare/check-ui-shell-v0.2.10...check-ui-shell-v0.2.11) (2025-10-17)
+
+
+### Performance Improvements
+
+* load check summary rows lazily for improved performance ([#673](https://github.com/climateinteractive/SDEverywhere/issues/673)) ([f74dac1](https://github.com/climateinteractive/SDEverywhere/commit/f74dac1435a0678f7e2745a8dd122eaf611b078e)), closes [#646](https://github.com/climateinteractive/SDEverywhere/issues/646)
+
 ## [0.2.10](https://github.com/climateinteractive/SDEverywhere/compare/check-ui-shell-v0.2.9...check-ui-shell-v0.2.10) (2025-10-08)
 
 

@@ -7,6 +7,7 @@ import type {
   ComparisonConfig,
   ComparisonDataCoordinator,
   DatasetKey,
+  DatasetMap,
   DiffPoint,
   ScenarioSpec
 } from '@sdeverywhere/check-core'
@@ -35,7 +36,10 @@ export class TraceTooltipViewModel {
     public readonly dataCoordinator: ComparisonDataCoordinator,
     public readonly datasetKey: DatasetKey,
     public readonly varName: string,
+    public readonly datDatasets: DatasetMap | undefined,
+    public readonly sourceL: 'left' | 'right' | 'dat',
     public readonly scenarioSpecL: ScenarioSpec | undefined,
+    public readonly sourceR: 'left' | 'right',
     public readonly scenarioSpecR: ScenarioSpec | undefined,
     public readonly diffPoint: DiffPoint
   ) {
@@ -58,13 +62,15 @@ export class TraceTooltipViewModel {
       error: undefined
     })
 
+    const sourceL = this.sourceL === 'dat' ? undefined : this.sourceL
+    const sourceR = this.sourceR
     const datasetKeys: DatasetKey[] = [this.datasetKey]
 
     this.dataCoordinator.requestDatasetMaps(
       this.requestKey,
-      'left',
+      sourceL,
       this.scenarioSpecL,
-      'right',
+      sourceR,
       this.scenarioSpecR,
       datasetKeys,
       (datasetMapL, datasetMapR) => {
@@ -73,6 +79,9 @@ export class TraceTooltipViewModel {
         }
 
         // Extract the data points
+        if (this.sourceL === 'dat') {
+          datasetMapL = this.datDatasets
+        }
         const pointsL = pointsFromDataset(datasetMapL?.get(this.datasetKey))
         const pointsR = pointsFromDataset(datasetMapR?.get(this.datasetKey))
 

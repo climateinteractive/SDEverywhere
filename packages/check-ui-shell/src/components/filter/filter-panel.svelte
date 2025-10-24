@@ -24,8 +24,25 @@ function triggerUpdate() {
 {#snippet filterItem(level: number, item: FilterItem)}
   {@const checkboxState = viewModel.getCheckboxState(item, updateCount)}
   {@const indentStyle = getItemStyle(level)}
+  {@const isExpanded = viewModel.isExpanded(item, updateCount)}
+  {@const hasChildren = item.children && item.children.length > 0}
 
   <div class="filter-item" style={indentStyle}>
+    {#if hasChildren}
+      <button
+        class="filter-expand-button"
+        data-testid="{item.key}-triangle"
+        onclick={event => {
+          const updateSiblingsToMatch = event.altKey
+          viewModel.toggleExpanded(item, updateSiblingsToMatch)
+          triggerUpdate()
+        }}
+      >
+        <span class="filter-triangle" class:expanded={isExpanded}> ▶ </span>
+      </button>
+    {:else}
+      <span class="filter-expand-spacer"></span>
+    {/if}
     <label class="filter-label">
       <input
         type="checkbox"
@@ -33,30 +50,26 @@ function triggerUpdate() {
         checked={checkboxState === 'checked'}
         indeterminate={checkboxState === 'indeterminate'}
         onchange={() => {
-          viewModel.toggleItem(item)
+          viewModel.toggleChecked(item)
           triggerUpdate()
         }}
       />
       <span class="filter-text">{@html item.label}</span>
     </label>
   </div>
+
+  {#if hasChildren}
+    <div class="filter-children" data-testid="{item.key}-children" style="display: {isExpanded ? 'block' : 'none'}">
+      {#each item.children as child (child.key)}
+        {@render filterItem(level + 1, child)}
+      {/each}
+    </div>
+  {/if}
 {/snippet}
 
 <div class="filter-panel">
   {#each viewModel.items as item (item.key)}
     {@render filterItem(0, item)}
-
-    {#if item.children}
-      {#each item.children as child (child.key)}
-        {@render filterItem(1, child)}
-
-        {#if child.children}
-          {#each child.children as grandchild (grandchild.key)}
-            {@render filterItem(2, grandchild)}
-          {/each}
-        {/if}
-      {/each}
-    {/if}
   {/each}
 </div>
 
@@ -75,14 +88,23 @@ function triggerUpdate() {
 }
 
 .filter-item {
+  display: flex;
+  align-items: center;
   margin: 0.2rem 0;
 }
 
 .filter-label {
   display: flex;
   align-items: center;
-  cursor: pointer;
   user-select: none;
+  cursor: pointer;
+}
+
+.filter-label:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  padding: 0.125rem 0.25rem;
+  margin: -0.125rem -0.25rem;
 }
 
 .filter-checkbox {
@@ -94,10 +116,37 @@ function triggerUpdate() {
   flex: 1;
 }
 
-.filter-label:hover {
+.filter-expand-button {
+  background: none;
+  border: none;
+  padding: 0;
+  margin-right: 0.1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.3rem;
+  height: 1.3rem;
+}
+
+.filter-expand-button:hover {
   background-color: rgba(255, 255, 255, 0.1);
   border-radius: 2px;
-  padding: 0.125rem 0.25rem;
-  margin: -0.125rem -0.25rem;
+}
+
+.filter-triangle {
+  font-size: 1rem;
+  color: #ccc;
+  user-select: none;
+}
+
+.filter-triangle.expanded {
+  transform: rotate(90deg);
+}
+
+.filter-expand-spacer {
+  width: 1.3rem;
+  height: 1.3rem;
+  margin-right: 0.25rem;
 }
 </style>

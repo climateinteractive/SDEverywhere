@@ -1,34 +1,135 @@
 // Copyright (c) 2025 Climate Interactive / New Venture Fund
 
-import {
-  categorizeComparisonTestSummaries,
-  comparisonSummaryFromReport,
-  type CheckReport,
-  type ComparisonReport,
-  type Config
+import type {
+  CheckNameSpec,
+  CheckReport,
+  ComparisonReport,
+  ComparisonScenarioTitleSpec,
+  Config
 } from '@sdeverywhere/check-core'
+import { categorizeComparisonTestSummaries, comparisonSummaryFromReport } from '@sdeverywhere/check-core'
+
+import type { FilterItem, FilterPanelViewModel, FilterStates } from './filter-panel-vm'
 import {
   createFilterPanelViewModel,
-  type FilterItem,
-  type FilterPanelViewModel,
-  type FilterStateMap
+  loadFilterItemTreeFromLocalStorage,
+  saveFilterItemTreeToLocalStorage
 } from './filter-panel-vm'
 
+const checksFilterTreeKey = 'sde-check-test-filters'
+const comparisonScenariosFilterTreeKey = 'sde-check-comparison-scenario-filters'
+
 export interface FilterPopoverViewModel {
-  checksPanel: FilterPanelViewModel
+  checksPanel?: FilterPanelViewModel
   comparisonScenariosPanel?: FilterPanelViewModel
 }
 
-export function createFilterPopoverViewModel(
+/**
+ * Create a `FilterPopoverViewModel` using the tree structure that was saved to
+ * LocalStorage.  This is used to provide a functional filter popover while checks
+ * are still running in the browser.
+ */
+export function loadFiltersFromLocalStorage(devMode: boolean): {
+  filterPopoverViewModel: FilterPopoverViewModel | undefined
+  skipChecks: CheckNameSpec[]
+  skipComparisonScenarios: ComparisonScenarioTitleSpec[]
+} {
+  if (!devMode) {
+    // For non-dev mode, we don't allow filtering or skipping tests
+    return {
+      filterPopoverViewModel: undefined,
+      skipChecks: [],
+      skipComparisonScenarios: []
+    }
+  }
+
+  // Load check filter states from LocalStorage
+  const checkTree = loadFilterItemTreeFromLocalStorage(checksFilterTreeKey)
+  const checkStates = checkTree.states || {}
+
+  // Build skipChecks by traversing the tree and finding unchecked leaf items
+  const skipChecks: CheckNameSpec[] = []
+  const traverseForSkipChecks = (items: FilterItem[]) => {
+    for (const item of items) {
+      if (item.children) {
+        traverseForSkipChecks(item.children)
+      } else {
+        // This is a leaf item
+        const isChecked = checkStates[item.key] !== false
+        if (!isChecked && item.titleParts) {
+          skipChecks.push({
+            groupName: item.titleParts.groupName || '',
+            testName: item.titleParts.testName || ''
+          })
+        }
+      }
+    }
+  }
+  traverseForSkipChecks(checkTree.items || [])
+
+  // Load comparison scenario filter states from LocalStorage
+  const scenarioTree = loadFilterItemTreeFromLocalStorage(comparisonScenariosFilterTreeKey)
+  const scenarioStates = scenarioTree.states || {}
+
+  // Build skipComparisonScenarios by traversing the tree and finding unchecked leaf items
+  const skipComparisonScenarios: ComparisonScenarioTitleSpec[] = []
+  const traverseForSkipScenarios = (items: FilterItem[]) => {
+    for (const item of items) {
+      if (item.children) {
+        traverseForSkipScenarios(item.children)
+      } else {
+        // This is a leaf item
+        const isChecked = scenarioStates[item.key] !== false
+        if (!isChecked && item.titleParts) {
+          skipComparisonScenarios.push({
+            title: item.titleParts.title || '',
+            subtitle: item.titleParts.subtitle
+          })
+        }
+      }
+    }
+  }
+  traverseForSkipScenarios(scenarioTree.items || [])
+
+  // Create the initial popover view model
+  let checksPanel: FilterPanelViewModel | undefined = undefined
+  if (Object.keys(checkStates).length > 0) {
+    checksPanel = createFilterPanelViewModel(checkTree.items || [], checkStates, tree =>
+      saveFilterItemTreeToLocalStorage(checksFilterTreeKey, tree)
+    )
+  }
+  let comparisonScenariosPanel: FilterPanelViewModel | undefined = undefined
+  if (Object.keys(scenarioStates).length > 0) {
+    comparisonScenariosPanel = createFilterPanelViewModel(scenarioTree.items || [], scenarioStates, tree =>
+      saveFilterItemTreeToLocalStorage(comparisonScenariosFilterTreeKey, tree)
+    )
+  }
+  const filterPopoverViewModel: FilterPopoverViewModel = {
+    checksPanel,
+    comparisonScenariosPanel
+  }
+
+  return {
+    filterPopoverViewModel,
+    skipChecks,
+    skipComparisonScenarios
+  }
+}
+
+/**
+ * Create a `FilterPopoverViewModel` from the given check and comparison reports (so that
+ * the tree structure is based on the checks and comparisons that were run in the browser).
+ */
+export function createFilterPopoverViewModelFromReports(
   config: Config,
   checkReport: CheckReport,
   comparisonReport?: ComparisonReport
 ): FilterPopoverViewModel {
-  const checksPanel = createChecksFilterPanelViewModel(checkReport)
+  const checksPanel = createChecksFilterPanelViewModelFromReport(checkReport)
 
   let comparisonScenariosPanel: FilterPanelViewModel | undefined
   if (comparisonReport) {
-    comparisonScenariosPanel = createComparisonScenariosFilterPanelViewModel(config, comparisonReport)
+    comparisonScenariosPanel = createComparisonScenariosFilterPanelViewModelFromReport(config, comparisonReport)
   }
 
   return {
@@ -37,10 +138,14 @@ export function createFilterPopoverViewModel(
   }
 }
 
-function createChecksFilterPanelViewModel(checkReport: CheckReport): FilterPanelViewModel {
+function createChecksFilterPanelViewModelFromReport(checkReport: CheckReport): FilterPanelViewModel | undefined {
+  // Load existing filter states from LocalStorage
+  const savedTree = loadFilterItemTreeFromLocalStorage(checksFilterTreeKey)
+  const savedStates = savedTree.states || {}
+
   // Extract check items from the check report
   const checkGroupItems: FilterItem[] = []
-  const checkStates: FilterStateMap = new Map()
+  const checkStates: FilterStates = {}
   for (const group of checkReport.groups) {
     const groupChildren: FilterItem[] = []
 
@@ -55,8 +160,12 @@ function createChecksFilterPanelViewModel(checkReport: CheckReport): FilterPanel
         label: test.name
       })
 
-      // Set initial state based on whether this test was skipped
-      checkStates.set(testKey, test.status !== 'skipped')
+      // Use saved state if available, otherwise determine based on whether this test was skipped
+      if (savedStates[testKey] !== undefined) {
+        checkStates[testKey] = savedStates[testKey]
+      } else {
+        checkStates[testKey] = test.status !== 'skipped'
+      }
     }
 
     if (groupChildren.length > 0) {
@@ -68,6 +177,12 @@ function createChecksFilterPanelViewModel(checkReport: CheckReport): FilterPanel
     }
   }
 
+  if (checkGroupItems.length === 0) {
+    // There are no checks; return undefined so that a message is shown in place
+    // of the filter panel
+    return undefined
+  }
+
   // Put all check groups under a single "All checks" group
   const checkItems: FilterItem[] = [
     {
@@ -77,15 +192,25 @@ function createChecksFilterPanelViewModel(checkReport: CheckReport): FilterPanel
     }
   ]
 
-  return createFilterPanelViewModel(checkItems, checkStates, states =>
-    saveCheckFilterStatesToLocalStorage(JSON.stringify(states))
+  // Create a view model that saves the tree to LocalStorage when it changes
+  const viewModel = createFilterPanelViewModel(checkItems, checkStates, tree =>
+    saveFilterItemTreeToLocalStorage(checksFilterTreeKey, tree)
   )
+
+  // Save the initial computed tree to LocalStorage
+  saveFilterItemTreeToLocalStorage(checksFilterTreeKey, viewModel.getItemTree())
+
+  return viewModel
 }
 
-function createComparisonScenariosFilterPanelViewModel(
+function createComparisonScenariosFilterPanelViewModelFromReport(
   config: Config,
   comparisonReport: ComparisonReport
 ): FilterPanelViewModel {
+  // Load existing filter states from LocalStorage
+  const savedTree = loadFilterItemTreeFromLocalStorage(comparisonScenariosFilterTreeKey)
+  const savedStates = savedTree.states || {}
+
   function scenarioKey(title: string, subtitle?: string): string {
     return subtitle ? `${title}__${subtitle}` : title
   }
@@ -121,7 +246,7 @@ function createComparisonScenariosFilterPanelViewModel(
   }
 
   // Track the filter states for each scenario
-  const scenarioStates: FilterStateMap = new Map()
+  const scenarioStates: FilterStates = {}
 
   let scenarioItems: FilterItem[] = []
   if (config.comparison?.reportOptions?.summarySectionsForComparisonsByScenario) {
@@ -156,7 +281,12 @@ function createComparisonScenariosFilterPanelViewModel(
               // Add the scenario to the section
               sectionChildren.push(filterItemForScenario(scenario))
               const scenarioData = scenarioMap.get(key)
-              scenarioStates.set(key, scenarioData ? !scenarioData.skipped : true)
+              // Use saved state if available, otherwise determine based on whether this scenario was skipped
+              if (savedStates[key] !== undefined) {
+                scenarioStates[key] = savedStates[key]
+              } else {
+                scenarioStates[key] = scenarioData ? !scenarioData.skipped : true
+              }
               addedScenarioKeys.add(key)
             }
           }
@@ -176,7 +306,12 @@ function createComparisonScenariosFilterPanelViewModel(
     for (const [key, scenario] of scenarioMap) {
       if (!addedScenarioKeys.has(key)) {
         otherScenarios.push(filterItemForScenario(scenario))
-        scenarioStates.set(key, !scenario.skipped)
+        // Use saved state if available, otherwise determine based on whether this scenario was skipped
+        if (savedStates[key] !== undefined) {
+          scenarioStates[key] = savedStates[key]
+        } else {
+          scenarioStates[key] = !scenario.skipped
+        }
         addedScenarioKeys.add(key)
       }
     }
@@ -205,7 +340,12 @@ function createComparisonScenariosFilterPanelViewModel(
     const scenarioGroupItems: FilterItem[] = []
     for (const [key, scenario] of scenarioMap) {
       scenarioGroupItems.push(filterItemForScenario(scenario))
-      scenarioStates.set(key, !scenario.skipped)
+      // Use saved state if available, otherwise determine based on whether this scenario was skipped
+      if (savedStates[key] !== undefined) {
+        scenarioStates[key] = savedStates[key]
+      } else {
+        scenarioStates[key] = !scenario.skipped
+      }
     }
 
     scenarioItems = [
@@ -217,23 +357,13 @@ function createComparisonScenariosFilterPanelViewModel(
     ]
   }
 
-  return createFilterPanelViewModel(scenarioItems, scenarioStates, states =>
-    saveComparisonScenarioFilterStatesToLocalStorage(JSON.stringify(states))
+  // Create a view model that saves the tree to LocalStorage when it changes
+  const viewModel = createFilterPanelViewModel(scenarioItems, scenarioStates, tree =>
+    saveFilterItemTreeToLocalStorage(comparisonScenariosFilterTreeKey, tree)
   )
-}
 
-function saveCheckFilterStatesToLocalStorage(json: string): void {
-  try {
-    localStorage.setItem('sde-check-filter-states', json)
-  } catch (error) {
-    console.warn('Failed to save check filter states to LocalStorage:', error)
-  }
-}
+  // Save the initial computed tree to LocalStorage
+  saveFilterItemTreeToLocalStorage(comparisonScenariosFilterTreeKey, viewModel.getItemTree())
 
-function saveComparisonScenarioFilterStatesToLocalStorage(json: string): void {
-  try {
-    localStorage.setItem('sde-comparison-scenario-filter-states', json)
-  } catch (error) {
-    console.warn('Failed to save comparison scenario filter states to LocalStorage:', error)
-  }
+  return viewModel
 }

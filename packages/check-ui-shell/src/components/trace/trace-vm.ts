@@ -12,6 +12,7 @@ import type {
   ComparisonScenario,
   ComparisonTestSummary,
   DatasetKey,
+  DatasetMap,
   DiffPoint,
   ImplVar,
   ScenarioSpec,
@@ -39,8 +40,8 @@ export class TraceViewModel {
   public readonly sourceSelector0: SelectorViewModel
   public readonly sourceSelector1: SelectorViewModel
 
-  public readonly selectedSource0: Readable<string>
-  public readonly selectedSource1: Readable<string>
+  public readonly selectedSource0: Readable<'left' | 'right' | 'dat'>
+  public readonly selectedSource1: Readable<'left' | 'right'>
 
   public readonly scenarioSelector0: Readable<SelectorViewModel>
   public readonly scenarioSelector1: Readable<SelectorViewModel>
@@ -52,6 +53,7 @@ export class TraceViewModel {
   public readonly selectedScenarioSpec1: Readable<ScenarioSpec | undefined>
 
   public readonly datText: Writable<string | undefined>
+  private datDatasets: DatasetMap | undefined
 
   private readonly writableStatusMessage: Writable<string | undefined>
   public readonly statusMessage: Readable<string>
@@ -71,7 +73,8 @@ export class TraceViewModel {
     public readonly comparisonConfig: ComparisonConfig,
     public readonly dataCoordinator: ComparisonDataCoordinator,
     terseSummaries: ComparisonTestSummary[],
-    checkScenarioSpec: ScenarioSpec | undefined
+    initialScenarioSpec: ScenarioSpec | undefined,
+    initialScenarioKind: 'check' | 'comparison' | undefined
   ) {
     // Extract the bundle models
     this.bundleModelL = comparisonConfig.bundleL.model
@@ -82,7 +85,7 @@ export class TraceViewModel {
     this.bundleNameR = comparisonConfig.bundleR.name
 
     // Configure the source selectors
-    const selectedSource0 = writable('left')
+    const selectedSource0 = writable<'left' | 'right' | 'dat'>('left')
     this.sourceSelector0 = new SelectorViewModel(
       [
         new SelectorOptionViewModel(this.bundleNameL, 'left'),
@@ -93,7 +96,7 @@ export class TraceViewModel {
     )
 
     // XXX: For now we only allow comparing the "right" bundle to another since `TraceRunner` only supports that
-    const selectedSource1 = writable('right')
+    const selectedSource1 = writable<'left' | 'right'>('right')
     this.sourceSelector1 = new SelectorViewModel(
       [new SelectorOptionViewModel(this.bundleNameR, 'right')],
       selectedSource1
@@ -109,13 +112,15 @@ export class TraceViewModel {
       'left',
       this.bundleNameL,
       groupsByScenario,
-      checkScenarioSpec
+      initialScenarioSpec,
+      initialScenarioKind
     )
     const [scenarioOptionsR, scenarioSpecsR] = scenarioOptionsForBundle(
       'right',
       this.bundleNameR,
       groupsByScenario,
-      checkScenarioSpec
+      initialScenarioSpec,
+      initialScenarioKind
     )
 
     // Configure each scenario selector when the source is changed
@@ -202,7 +207,7 @@ export class TraceViewModel {
     this.running = true
 
     // Configure the trace options using the selected sources and scenarios
-    const source0 = get(this.sourceSelector0.selectedValue)
+    const source0 = get(this.selectedSource0)
     let traceOptions: TraceOptions
     if (source0 === 'dat') {
       // We are comparing to a dat file; parse the dat file and convert to a `DatasetMap`
@@ -213,6 +218,7 @@ export class TraceViewModel {
         return
       }
       const extData = readDat(datText, 'ModelImpl_')
+      this.datDatasets = extData
       const bundleModel = this.bundleModelR
       const scenarioSpec = get(this.selectedScenarioSpec1)
       traceOptions = {
@@ -223,6 +229,7 @@ export class TraceViewModel {
       }
     } else {
       // We are comparing to another bundle
+      this.datDatasets = undefined
       let bundleModel0: BundleModel
       if (source0 === 'left') {
         bundleModel0 = this.bundleModelL
@@ -279,6 +286,8 @@ export class TraceViewModel {
   }
 
   createTooltipViewModel(datasetKey: DatasetKey, varName: string, diffPoint: DiffPoint): TraceTooltipViewModel {
+    const source0 = get(this.selectedSource0)
+    const source1 = get(this.selectedSource1)
     const scenarioSpecL = get(this.selectedScenarioSpec0)
     const scenarioSpecR = get(this.selectedScenarioSpec1)
     return new TraceTooltipViewModel(
@@ -286,7 +295,10 @@ export class TraceViewModel {
       this.dataCoordinator,
       datasetKey,
       varName,
+      this.datDatasets,
+      source0,
       scenarioSpecL,
+      source1,
       scenarioSpecR,
       diffPoint
     )
@@ -338,9 +350,10 @@ export function createTraceViewModel(
   comparisonConfig: ComparisonConfig,
   dataCoordinator: ComparisonDataCoordinator,
   terseSummaries: ComparisonTestSummary[],
-  checkScenarioSpec: ScenarioSpec | undefined
+  initialScenarioSpec: ScenarioSpec | undefined,
+  initialScenarioKind: 'check' | 'comparison' | undefined
 ): TraceViewModel {
-  return new TraceViewModel(comparisonConfig, dataCoordinator, terseSummaries, checkScenarioSpec)
+  return new TraceViewModel(comparisonConfig, dataCoordinator, terseSummaries, initialScenarioSpec, initialScenarioKind)
 }
 
 function groupsFromReport(bundleModelR: BundleModel, report: TraceReport, threshold: number): TraceGroupViewModel[] {
@@ -475,7 +488,8 @@ function scenarioOptionsForBundle(
   side: 'left' | 'right',
   bundleName: string,
   groupsByScenario: ComparisonGroupSummariesByCategory,
-  checkScenarioSpec: ScenarioSpec | undefined
+  initialScenarioSpec: ScenarioSpec | undefined,
+  initialScenarioKind: 'check' | 'comparison' | undefined
 ): [SelectorOptionViewModel[], ScenarioSpec[]] {
   const scenarioOptions: SelectorOptionViewModel[] = []
   const scenarioSpecs: ScenarioSpec[] = []
@@ -503,11 +517,14 @@ function scenarioOptionsForBundle(
     summaries.forEach(addScenarioOption)
   }
 
-  if (checkScenarioSpec) {
-    // If a check scenario was provided, put it at the top of the list
-    // TODO: It's possible that the check scenario isn't valid for the selected side
-    scenarioSpecs.push(checkScenarioSpec)
-    scenarioOptions.push(new SelectorOptionViewModel('Selected scenario from check test', checkScenarioSpec.uid))
+  if (initialScenarioSpec && initialScenarioKind) {
+    // If an initial scenario was selected (by choosing the "Open Scenario in Trace View" option
+    // in the context menu for a check or comparison scenario), put it at the top of the list
+    // TODO: It's possible that the check scenario isn't valid for the selected side, so we
+    // should validate it first
+    scenarioSpecs.push(initialScenarioSpec)
+    const optionSource = initialScenarioKind === 'check' ? 'check test' : 'comparison'
+    scenarioOptions.push(new SelectorOptionViewModel(`Selected scenario from ${optionSource}`, initialScenarioSpec.uid))
   }
 
   // Add options for the available comparison scenarios
@@ -525,8 +542,8 @@ function createScenarioSelectorViewModel(
   selectedScenarioSpecUid: Writable<string | undefined>
 ): SelectorViewModel {
   let initialScenarioSpecUid: string
-  if (source === 1 && scenarioOptions[0]?.label === 'Selected scenario from check test') {
-    // XXX: If there is a "Selected scenario from check test" option, select it by default
+  if (source === 1 && scenarioOptions[0]?.label.startsWith('Selected scenario from')) {
+    // XXX: If there is a "Selected scenario from..." option, select it by default
     initialScenarioSpecUid = scenarioOptions[0].value
   } else {
     // XXX: Otherwise, select the "All inputs at default" scenario by default.  This is fragile because it

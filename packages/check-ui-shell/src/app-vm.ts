@@ -33,8 +33,11 @@ import {
 } from './components/compare/detail/compare-detail-vm'
 import type { ComparisonSummaryRowViewModel } from './components/compare/summary/comparison-summary-row-vm'
 import type { ComparisonSummaryViewModel } from './components/compare/summary/comparison-summary-vm'
-import type { FilterStates } from './components/filter/filter-panel-vm'
-import { createFilterPopoverViewModel, type FilterPopoverViewModel } from './components/filter/filter-popover-vm'
+import type { FilterPopoverViewModel } from './components/filter/filter-popover-vm'
+import {
+  createFilterPopoverViewModelFromReports,
+  loadFiltersFromLocalStorage
+} from './components/filter/filter-popover-vm'
 import type { HeaderViewModel } from './components/header/header-vm'
 import { createHeaderViewModel } from './components/header/header-vm'
 import type { PerfViewModel } from './components/perf/perf-vm'
@@ -95,43 +98,11 @@ export class AppViewModel {
     // Create the object that manages pinned items states
     this.pinnedItemStates = createPinnedItemStates()
 
-    if (devMode) {
-      // Load check filter states from LocalStorage
-      const checkStatesJson = localStorage.getItem('sde-check-filter-states')
-      const checkStates: FilterStates = checkStatesJson ? JSON.parse(checkStatesJson) : {}
-      this.skipChecks = Object.keys(checkStates)
-        .filter(key => {
-          const state = checkStates[key]
-          return state && state.checked === false
-        })
-        .map(key => {
-          const state = checkStates[key]
-          return {
-            groupName: state.titleParts?.groupName || '',
-            testName: state.titleParts?.testName || ''
-          }
-        })
-
-      // Load comparison scenario filter states from LocalStorage
-      const scenarioStatesJson = localStorage.getItem('sde-comparison-scenario-filter-states')
-      const scenarioStates: FilterStates = scenarioStatesJson ? JSON.parse(scenarioStatesJson) : {}
-      this.skipComparisonScenarios = Object.keys(scenarioStates)
-        .filter(key => {
-          const state = scenarioStates[key]
-          return state && state.checked === false
-        })
-        .map(key => {
-          const state = scenarioStates[key]
-          return {
-            title: state.titleParts?.title || '',
-            subtitle: state.titleParts?.subtitle
-          }
-        })
-    } else {
-      // For non-dev mode, we don't allow filtering or skipping tests
-      this.skipChecks = []
-      this.skipComparisonScenarios = []
-    }
+    // Load the filters (the items to skip and the initial popover view model) from LocalStorage
+    const filters = loadFiltersFromLocalStorage(devMode)
+    this.skipChecks = filters.skipChecks
+    this.skipComparisonScenarios = filters.skipComparisonScenarios
+    this.filterPopoverViewModel = filters.filterPopoverViewModel
   }
 
   runTestSuite(): void {
@@ -182,6 +153,12 @@ export class AppViewModel {
               comparisonSummary,
               this.pinnedItemStates,
               this.skipComparisonScenarios
+            )
+            // Rebuild the filter popover view model to reflect the checks and comparisons
+            // that were run
+            this.filterPopoverViewModel = this.createFilterPopoverViewModelFromReports(
+              checkReport,
+              report.comparisonReport
             )
             this.filterPopoverViewModel = this.createFilterPopoverViewModel(checkReport, report.comparisonReport)
             this.writableChecksInProgress.set(false)
@@ -300,11 +277,20 @@ export class AppViewModel {
     return createPerfViewModel(this.appModel.config)
   }
 
-  createTraceViewModel(checkScenarioSpec?: ScenarioSpec): TraceViewModel {
+  createTraceViewModel(
+    initialScenarioSpec?: ScenarioSpec,
+    initialScenarioKind?: 'check' | 'comparison'
+  ): TraceViewModel {
     const comparisonConfig = this.appModel.config.comparison
     const dataCoordinator = this.appModel.comparisonDataCoordinator
     const testSummaries = this.summaryViewModel.comparisonSummary?.testSummaries ?? []
-    return createTraceViewModel(comparisonConfig, dataCoordinator, testSummaries, checkScenarioSpec)
+    return createTraceViewModel(
+      comparisonConfig,
+      dataCoordinator,
+      testSummaries,
+      initialScenarioSpec,
+      initialScenarioKind
+    )
   }
 
   // createFreeformViewModel(): FreeformViewModel {
@@ -315,11 +301,11 @@ export class AppViewModel {
   //   return createFreeformViewModel(this.appModel.config.comparison, this.appModel.comparisonDataCoordinator)
   //   }
 
-  private createFilterPopoverViewModel(
+  private createFilterPopoverViewModelFromReports(
     checkReport: CheckReport,
     comparisonReport?: ComparisonReport
   ): FilterPopoverViewModel {
-    return createFilterPopoverViewModel(this.appModel.config, checkReport, comparisonReport)
+    return createFilterPopoverViewModelFromReports(this.appModel.config, checkReport, comparisonReport)
   }
 
   applyFilters(): void {

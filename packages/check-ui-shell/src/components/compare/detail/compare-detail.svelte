@@ -17,6 +17,7 @@ import type { CompareDetailViewModel } from './compare-detail-vm'
 import type { CompareDetailRowViewModel } from './compare-detail-row-vm'
 import DetailRow from './compare-detail-row.svelte'
 import GraphsRow from './compare-graphs-row.svelte'
+import type { ComparisonScenario } from '@sdeverywhere/check-core'
 
 export let viewModel: CompareDetailViewModel
 let itemKind: string
@@ -26,6 +27,7 @@ let pinnedDetailRows: Readable<CompareDetailRowViewModel[]>
 let scrollContainer: HTMLElement
 
 let contextMenuSourceKey: PinnedItemKey
+let contextMenuSourceScenario: ComparisonScenario | undefined
 let contextMenuItems: ContextMenuItem[] = []
 let contextMenuEvent: MouseEvent
 let relatedItemsVisible = false
@@ -99,6 +101,7 @@ function onShowContextMenu(e: CustomEvent) {
       const action = pinned ? 'Unpin' : 'Pin'
       const kind = eventSourceKind === 'row' ? 'Row' : itemKind
       contextMenuSourceKey = pinnedItemKey
+      contextMenuSourceScenario = e.detail.scenario
       contextMenuItems = [
         {
           key: 'toggle-item-pinned',
@@ -117,11 +120,18 @@ function onShowContextMenu(e: CustomEvent) {
           })
         }
       }
+      if (kind === 'Scenario') {
+        contextMenuItems.push({
+          key: 'show-trace-view',
+          displayText: 'Open Scenario in Trace View'
+        })
+      }
       contextMenuEvent = e.detail.clickEvent
       break
     }
     default:
       contextMenuSourceKey = undefined
+      contextMenuSourceScenario = undefined
       contextMenuItems = []
       contextMenuEvent = undefined
       break
@@ -145,6 +155,15 @@ function onContextMenuItemSelected(e: CustomEvent) {
       break
     case 'move-item-to-top':
       viewModel.pinnedItemState.moveItemToTop(key)
+      break
+    case 'show-trace-view':
+      // For now, use the `ScenarioSpec` associated with the "right" model; if it's
+      // not valid, the trace view will select another scenario by default
+      dispatch('command', {
+        cmd: 'show-trace-view-with-scenario',
+        scenarioSpec: contextMenuSourceScenario?.specR,
+        scenarioKind: 'comparison'
+      })
       break
     default:
       console.error(`ERROR: Unhandled context menu command '${cmd}'`)
