@@ -2,7 +2,8 @@
 
 import { describe, expect, it } from 'vitest'
 
-import { TaskQueue, type TaskExecutor, type TaskExecutorKey } from '../_shared/task-queue2'
+import type { TaskExecutor, TaskExecutorKey } from '../_shared/task-queue'
+import { TaskQueue } from '../_shared/task-queue'
 
 import type { Bundle, BundleModel, ModelSpec } from '../bundle/bundle-types'
 

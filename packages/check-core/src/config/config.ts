@@ -1,9 +1,10 @@
 // Copyright (c) 2021-2022 Climate Interactive / New Venture Fund
 
 import type { ScenarioSpec } from '../_shared/scenario-spec-types'
-import type { TaskExecutor, TaskExecutorKey } from '../_shared/task-queue2'
-import { TaskQueue } from '../_shared/task-queue2'
+import type { TaskExecutor, TaskExecutorKey } from '../_shared/task-queue'
+import { TaskQueue } from '../_shared/task-queue'
 import type { DatasetKey, DatasetMap } from '../_shared/types'
+
 import type { BundleModel, LoadedBundle, NamedBundle } from '../bundle/bundle-types'
 
 import type { CheckConfig } from '../check/check-config'

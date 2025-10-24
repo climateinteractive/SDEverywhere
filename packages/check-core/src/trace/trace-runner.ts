@@ -4,8 +4,8 @@ import { assertNever } from 'assert-never'
 
 import type { DatasetsResult } from '../_shared/data-source'
 import type { ScenarioSpec } from '../_shared/scenario-spec-types'
-import type { BundleModels, Task, TaskKey } from '../_shared/task-queue2'
-import { TaskQueue } from '../_shared/task-queue2'
+import type { BundleModels, Task, TaskKey } from '../_shared/task-queue'
+import { TaskQueue } from '../_shared/task-queue'
 import type { Dataset, DatasetKey, DatasetMap } from '../_shared/types'
 
 import type { ModelSpec } from '../bundle/bundle-types'

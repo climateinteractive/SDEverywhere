@@ -1,8 +1,8 @@
 // Copyright (c) 2021-2022 Climate Interactive / New Venture Fund
 
 import type { ScenarioSpec } from '../_shared/scenario-spec-types'
-import type { Task } from '../_shared/task-queue2'
-import { TaskQueue } from '../_shared/task-queue2'
+import type { Task } from '../_shared/task-queue'
+import { TaskQueue } from '../_shared/task-queue'
 import type { Dataset, DatasetKey } from '../_shared/types'
 
 export type CheckDataRequestKey = string

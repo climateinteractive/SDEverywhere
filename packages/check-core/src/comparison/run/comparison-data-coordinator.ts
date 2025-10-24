@@ -2,8 +2,8 @@
 
 import type { DatasetsResult } from '../../_shared/data-source'
 import type { ScenarioSpec } from '../../_shared/scenario-spec-types'
-import type { Task } from '../../_shared/task-queue2'
-import { TaskQueue } from '../../_shared/task-queue2'
+import type { Task } from '../../_shared/task-queue'
+import { TaskQueue } from '../../_shared/task-queue'
 import type { DatasetKey, DatasetMap } from '../../_shared/types'
 
 import type { BundleModel, BundleGraphData, BundleGraphId } from '../../bundle/bundle-types'

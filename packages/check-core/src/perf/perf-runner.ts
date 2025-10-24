@@ -2,9 +2,9 @@
 
 import { assertNever } from 'assert-never'
 
-import type { Task, TaskKey } from '../_shared/task-queue2'
-import { TaskQueue } from '../_shared/task-queue2'
 import { allInputsAtPositionSpec } from '../_shared/scenario-specs'
+import type { Task, TaskKey } from '../_shared/task-queue'
+import { TaskQueue } from '../_shared/task-queue'
 
 import type { PerfReport } from './perf-stats'
 import { PerfStats } from './perf-stats'
