@@ -5,6 +5,7 @@ import { defineMeta, type Args } from '@storybook/addon-svelte-csf'
 import { expect, waitFor } from 'storybook/test'
 
 import type { ModelSpec, ImplVarGroup, ImplVar, BundleModel } from '@sdeverywhere/check-core'
+
 import { mockBundleModel, mockNamedBundle } from './_mocks/mock-bundle'
 import { mockConfigOptions } from './_mocks/mock-config'
 import { mockDataset } from './_mocks/mock-data'
@@ -13,6 +14,8 @@ import { inputVar, outputVar, implVar } from './_mocks/mock-vars'
 import StoryDecorator from './components/_storybook/story-decorator.svelte'
 
 import { initAppModel } from './model/app-model'
+
+import type { FilterItemTree, FilterStates } from './components/filter/filter-panel-vm'
 
 import { AppViewModel } from './app-vm'
 import AppShell from './app-shell.svelte'
@@ -81,6 +84,68 @@ function createBundleModel(
       delayInGetDatasets: options?.delayInGetDatasets
     }
   )
+}
+
+function checkFilterTree(states: FilterStates): FilterItemTree {
+  return {
+    items: [
+      {
+        key: '__all_checks',
+        label: 'All checks',
+        children: [
+          {
+            key: 'Output 1',
+            label: 'Output 1',
+            children: [
+              {
+                key: 'Output 1__should be positive',
+                label: 'should be positive',
+                titleParts: { groupName: 'Output 1', testName: 'should be positive' }
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    states
+  }
+}
+
+function scenarioFilterTree(states: FilterStates): FilterItemTree {
+  return {
+    items: [
+      {
+        key: '__all_scenarios',
+        label: 'All scenarios',
+        children: [
+          {
+            key: 'All inputs__at default',
+            label: 'All inputs at default',
+            titleParts: { title: 'All inputs', subtitle: 'at default' }
+          },
+          {
+            key: 'Constant 1__at min',
+            label: 'Constant 1 at min',
+            titleParts: { title: 'Constant 1', subtitle: 'at min' }
+          },
+          {
+            key: 'Constant 1__at max',
+            label: 'Constant 1 at max',
+            titleParts: { title: 'Constant 1', subtitle: 'at max' }
+          }
+        ]
+      }
+    ],
+    states
+  }
+}
+
+function saveCheckFilterTree(states: FilterStates): void {
+  localStorage.setItem('sde-check-test-filters', JSON.stringify(checkFilterTree(states)))
+}
+
+function saveScenarioFilterTree(states: FilterStates): void {
+  localStorage.setItem('sde-check-comparison-scenario-filters', JSON.stringify(scenarioFilterTree(states)))
 }
 
 async function createAppViewModel(options?: {
@@ -297,30 +362,11 @@ const { Story } = defineMeta({
     // Verify that the filter states are saved to LocalStorage
     const filterTreeJson = localStorage.getItem('sde-check-test-filters')
     const filterTree = filterTreeJson ? JSON.parse(filterTreeJson) : {}
-    await expect(filterTree).toEqual({
-      items: [
-        {
-          key: '__all_checks',
-          label: 'All checks',
-          children: [
-            {
-              key: 'Output 1',
-              label: 'Output 1',
-              children: [
-                {
-                  key: 'Output 1__should be positive',
-                  label: 'should be positive',
-                  titleParts: { groupName: 'Output 1', testName: 'should be positive' }
-                }
-              ]
-            }
-          ]
-        }
-      ],
-      states: {
+    await expect(filterTree).toEqual(
+      checkFilterTree({
         'Output 1__should be positive': false
-      }
-    })
+      })
+    )
   }}
 />
 
@@ -329,66 +375,14 @@ const { Story } = defineMeta({
   {template}
   beforeEach={async ({ args }) => {
     // Set up some initial filter states
-    localStorage.setItem(
-      'sde-check-test-filters',
-      JSON.stringify({
-        items: [
-          {
-            key: '__all_checks',
-            label: 'All checks',
-            children: [
-              {
-                key: 'Output 1',
-                label: 'Output 1',
-                children: [
-                  {
-                    key: 'Output 1__should be positive',
-                    label: 'should be positive',
-                    titleParts: { groupName: 'Output 1', testName: 'should be positive' }
-                  }
-                ]
-              }
-            ]
-          }
-        ],
-        states: {
-          'Output 1__should be positive': false
-        }
-      })
-    )
-    localStorage.setItem(
-      'sde-check-comparison-scenario-filters',
-      JSON.stringify({
-        items: [
-          {
-            key: '__all_scenarios',
-            label: 'All scenarios',
-            children: [
-              {
-                key: 'All inputs__at default',
-                label: 'All inputs at default',
-                titleParts: { title: 'All inputs', subtitle: 'at default' }
-              },
-              {
-                key: 'Constant 1__at min',
-                label: 'Constant 1 at min',
-                titleParts: { title: 'Constant 1', subtitle: 'at min' }
-              },
-              {
-                key: 'Constant 1__at max',
-                label: 'Constant 1 at max',
-                titleParts: { title: 'Constant 1', subtitle: 'at max' }
-              }
-            ]
-          }
-        ],
-        states: {
-          'All inputs__at default': false,
-          'Constant 1__at min': false,
-          'Constant 1__at max': false
-        }
-      })
-    )
+    saveCheckFilterTree({
+      'Output 1__should be positive': false
+    })
+    saveScenarioFilterTree({
+      'All inputs__at default': false,
+      'Constant 1__at min': false,
+      'Constant 1__at max': false
+    })
     args.appViewModel = await createAppViewModel({
       // Add a delay to simulate long-running checks so that we can verify that the filter
       // popover is available and shows the correct state while checks are running
@@ -444,21 +438,13 @@ const { Story } = defineMeta({
     await userEvent.click(firstCheckbox)
 
     // Verify that the filter states are saved to LocalStorage
-    const filterStatesJson = localStorage.getItem('sde-check-test-filters')
-    const filterStates = filterStatesJson ? JSON.parse(filterStatesJson) : {}
-    await expect(filterStates).toEqual({
-      items: expect.any(Array),
-      states: {
-        'Output 1__should be positive': true
-      }
-    })
-
-    // Verify that the filter tree is saved to LocalStorage
     const filterTreeJson = localStorage.getItem('sde-check-test-filters')
-    const filterTree = filterTreeJson ? JSON.parse(filterTreeJson) : null
-    await expect(filterTree).not.toBeNull()
-    await expect(filterTree.items).toBeDefined()
-    await expect(filterTree.states).toBeDefined()
+    const filterTree = filterTreeJson ? JSON.parse(filterTreeJson) : {}
+    await expect(filterTree).toEqual(
+      checkFilterTree({
+        'Output 1__should be positive': true
+      })
+    )
 
     // Wait for checks to complete
     await waitFor(
@@ -488,33 +474,9 @@ const { Story } = defineMeta({
   name="Reload with Filters (no comparisons configured)"
   {template}
   beforeEach={async ({ args }) => {
-    localStorage.setItem(
-      'sde-check-test-filters',
-      JSON.stringify({
-        items: [
-          {
-            key: '__all_checks',
-            label: 'All checks',
-            children: [
-              {
-                key: 'Output 1',
-                label: 'Output 1',
-                children: [
-                  {
-                    key: 'Output 1__should be positive',
-                    label: 'should be positive',
-                    titleParts: { groupName: 'Output 1', testName: 'should be positive' }
-                  }
-                ]
-              }
-            ]
-          }
-        ],
-        states: {
-          'Output 1__should be positive': false
-        }
-      })
-    )
+    saveCheckFilterTree({
+      'Output 1__should be positive': false
+    })
     args.appViewModel = await createAppViewModel({ comparisonsEnabled: false })
   }}
   play={async ({ canvas, canvasElement, userEvent }) => {
@@ -564,66 +526,14 @@ const { Story } = defineMeta({
   name="Reload with Filters (no scenario groups, all scenarios skipped)"
   {template}
   beforeEach={async ({ args }) => {
-    localStorage.setItem(
-      'sde-check-test-filters',
-      JSON.stringify({
-        items: [
-          {
-            key: '__all_checks',
-            label: 'All checks',
-            children: [
-              {
-                key: 'Output 1',
-                label: 'Output 1',
-                children: [
-                  {
-                    key: 'Output 1__should be positive',
-                    label: 'should be positive',
-                    titleParts: { groupName: 'Output 1', testName: 'should be positive' }
-                  }
-                ]
-              }
-            ]
-          }
-        ],
-        states: {
-          'Output 1__should be positive': false
-        }
-      })
-    )
-    localStorage.setItem(
-      'sde-check-comparison-scenario-filters',
-      JSON.stringify({
-        items: [
-          {
-            key: '__all_scenarios',
-            label: 'All scenarios',
-            children: [
-              {
-                key: 'All inputs__at default',
-                label: 'All inputs at default',
-                titleParts: { title: 'All inputs', subtitle: 'at default' }
-              },
-              {
-                key: 'Constant 1__at min',
-                label: 'Constant 1 at min',
-                titleParts: { title: 'Constant 1', subtitle: 'at min' }
-              },
-              {
-                key: 'Constant 1__at max',
-                label: 'Constant 1 at max',
-                titleParts: { title: 'Constant 1', subtitle: 'at max' }
-              }
-            ]
-          }
-        ],
-        states: {
-          'All inputs__at default': false,
-          'Constant 1__at min': false,
-          'Constant 1__at max': false
-        }
-      })
-    )
+    saveCheckFilterTree({
+      'Output 1__should be positive': false
+    })
+    saveScenarioFilterTree({
+      'All inputs__at default': false,
+      'Constant 1__at min': false,
+      'Constant 1__at max': false
+    })
     args.appViewModel = await createAppViewModel()
   }}
   play={async ({ canvas, canvasElement, userEvent }) => {
@@ -712,66 +622,14 @@ const { Story } = defineMeta({
   name="Reload with Filters (no scenario groups, some scenarios skipped)"
   {template}
   beforeEach={async ({ args }) => {
-    localStorage.setItem(
-      'sde-check-test-filters',
-      JSON.stringify({
-        items: [
-          {
-            key: '__all_checks',
-            label: 'All checks',
-            children: [
-              {
-                key: 'Output 1',
-                label: 'Output 1',
-                children: [
-                  {
-                    key: 'Output 1__should be positive',
-                    label: 'should be positive',
-                    titleParts: { groupName: 'Output 1', testName: 'should be positive' }
-                  }
-                ]
-              }
-            ]
-          }
-        ],
-        states: {
-          'Output 1__should be positive': false
-        }
-      })
-    )
-    localStorage.setItem(
-      'sde-check-comparison-scenario-filters',
-      JSON.stringify({
-        items: [
-          {
-            key: '__all_scenarios',
-            label: 'All scenarios',
-            children: [
-              {
-                key: 'All inputs__at default',
-                label: 'All inputs at default',
-                titleParts: { title: 'All inputs', subtitle: 'at default' }
-              },
-              {
-                key: 'Constant 1__at min',
-                label: 'Constant 1 at min',
-                titleParts: { title: 'Constant 1', subtitle: 'at min' }
-              },
-              {
-                key: 'Constant 1__at max',
-                label: 'Constant 1 at max',
-                titleParts: { title: 'Constant 1', subtitle: 'at max' }
-              }
-            ]
-          }
-        ],
-        states: {
-          'All inputs__at default': true,
-          'Constant 1__at min': false,
-          'Constant 1__at max': false
-        }
-      })
-    )
+    saveCheckFilterTree({
+      'Output 1__should be positive': false
+    })
+    saveScenarioFilterTree({
+      'All inputs__at default': true,
+      'Constant 1__at min': false,
+      'Constant 1__at max': false
+    })
     args.appViewModel = await createAppViewModel()
   }}
   play={async ({ canvas, canvasElement, userEvent }) => {
@@ -861,78 +719,14 @@ const { Story } = defineMeta({
   name="Reload with Filters (with scenario groups)"
   {template}
   beforeEach={async ({ args }) => {
-    localStorage.setItem(
-      'sde-check-test-filters',
-      JSON.stringify({
-        items: [
-          {
-            key: '__all_checks',
-            label: 'All checks',
-            children: [
-              {
-                key: 'Output 1',
-                label: 'Output 1',
-                children: [
-                  {
-                    key: 'Output 1__should be positive',
-                    label: 'should be positive',
-                    titleParts: { groupName: 'Output 1', testName: 'should be positive' }
-                  }
-                ]
-              }
-            ]
-          }
-        ],
-        states: {
-          'Output 1__should be positive': false
-        }
-      })
-    )
-    localStorage.setItem(
-      'sde-check-comparison-scenario-filters',
-      JSON.stringify({
-        items: [
-          {
-            key: '__all_scenarios',
-            label: 'All scenarios',
-            children: [
-              {
-                key: 'Key scenarios',
-                label: 'Key scenarios',
-                children: [
-                  {
-                    key: 'All inputs__at default',
-                    label: 'All inputs at default',
-                    titleParts: { title: 'All inputs', subtitle: 'at default' }
-                  }
-                ]
-              },
-              {
-                key: 'Other scenarios',
-                label: 'Other scenarios',
-                children: [
-                  {
-                    key: 'Constant 1__at min',
-                    label: 'Constant 1 at min',
-                    titleParts: { title: 'Constant 1', subtitle: 'at min' }
-                  },
-                  {
-                    key: 'Constant 1__at max',
-                    label: 'Constant 1 at max',
-                    titleParts: { title: 'Constant 1', subtitle: 'at max' }
-                  }
-                ]
-              }
-            ]
-          }
-        ],
-        states: {
-          'All inputs__at default': false,
-          'Constant 1__at min': false,
-          'Constant 1__at max': false
-        }
-      })
-    )
+    saveCheckFilterTree({
+      'Output 1__should be positive': false
+    })
+    saveScenarioFilterTree({
+      'All inputs__at default': false,
+      'Constant 1__at min': false,
+      'Constant 1__at max': false
+    })
     args.appViewModel = await createAppViewModel({ groupScenarios: true })
   }}
   play={async ({ canvas, canvasElement, userEvent }) => {
