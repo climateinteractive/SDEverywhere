@@ -280,7 +280,7 @@ export class AppViewModel {
   }
 
   createPerfViewModel(): PerfViewModel {
-    return createPerfViewModel(this.appModel.config)
+    return createPerfViewModel()
   }
 
   createTraceViewModel(
