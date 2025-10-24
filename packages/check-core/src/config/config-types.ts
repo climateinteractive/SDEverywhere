@@ -32,13 +32,20 @@ export interface ConfigOptions {
    */
   comparison?: ComparisonOptions
   /**
-   * The number of model instances to initialize for each bundle.  If undefined, a single
-   * model instance will be initialized for each bundle.  Setting this to a value greater
-   * than 1 will allow multiple model instances to be run concurrently.  For example, if
-   * the number of CPU cores is 8, setting this to 4 will allow 4 pairs of model instances
-   * to be run concurrently, using all available cores.
+   * The number of model instances to initialize for each bundle.
+   *
+   * If undefined, the default behavior will be used, which is to initialize a single
+   * model instance for each bundle.
+   *
+   * If you set this to a value greater than 1, it will allow multiple pairs of model
+   * instances to be run concurrently.  For example, if the number of CPU cores is 8,
+   * setting this to 4 will allow 4 pairs of model instances to be run concurrently,
+   * using all available cores.
+   *
+   * If you set this to 0, the implementation will automatically choose a value based on
+   * the number of available CPU cores (i.e., the number of cores divided by 2).
    */
-  concurrentModels?: number
+  concurrency?: number
 }
 
 /**

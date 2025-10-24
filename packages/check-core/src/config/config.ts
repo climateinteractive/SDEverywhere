@@ -16,8 +16,28 @@ import { getComparisonScenarios } from '../comparison/config/comparison-scenario
 import type { Config, ConfigOptions } from './config-types'
 
 export async function createConfig(options: ConfigOptions): Promise<Config> {
+  // Determine the number of model instances to initialize for each bundle
+  let concurrentModels: number
+  if (options.concurrency === undefined) {
+    // Use the default behavior (one model instance per bundle)
+    concurrentModels = 1
+  } else if (options.concurrency === 0) {
+    // Use the number of available CPU cores (i.e., the number of cores divided by 2)
+    let coreCount: number
+    if (typeof navigator !== 'undefined') {
+      coreCount = navigator.hardwareConcurrency
+    }
+    if (coreCount === undefined || coreCount < 1) {
+      coreCount = 1
+    }
+    concurrentModels = Math.max(1, Math.floor(coreCount / 2))
+  } else {
+    // Use the specified number of model instances per bundle
+    concurrentModels = Math.max(1, options.concurrency)
+  }
+
   // Initialize the model instances for the "current" bundle (the one being checked)
-  const origCurrentBundle = await loadBundle(options.current, options.concurrentModels)
+  const origCurrentBundle = await loadBundle(options.current, concurrentModels)
 
   // Create the comparison configuration, if defined
   let currentBundle: LoadedBundle
@@ -29,7 +49,7 @@ export async function createConfig(options: ConfigOptions): Promise<Config> {
   } else {
     // Initialize the model instances for the "baseline" bundle (the one that "current" will be
     // compared against)
-    const baselineBundle = await loadBundle(options.comparison.baseline, options.concurrentModels)
+    const baselineBundle = await loadBundle(options.comparison.baseline, concurrentModels)
 
     // Wrap the right bundle model instances so that they map "old" dataset keys to "new"
     // dataset keys if there are any renamed variables
@@ -87,8 +107,8 @@ export async function createConfig(options: ConfigOptions): Promise<Config> {
 /**
  * Initialize the model instances for the given bundle.
  */
-async function loadBundle(bundle: NamedBundle, concurrentModels?: number): Promise<LoadedBundle> {
-  const initCalls = Array.from({ length: concurrentModels || 1 }, () => bundle.bundle.initModel())
+async function loadBundle(bundle: NamedBundle, concurrentModels: number): Promise<LoadedBundle> {
+  const initCalls = Array.from({ length: concurrentModels }, () => bundle.bundle.initModel())
   const models = await Promise.all(initCalls)
 
   return {

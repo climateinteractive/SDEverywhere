@@ -197,7 +197,7 @@ export interface LoadedBundle {
   /** The spec for the bundled model. */
   modelSpec: ModelSpec
   /**
-   * The initialized model instances for this bundle.  If `concurrentModels` was specified
+   * The initialized model instances for this bundle.  If `concurrency` was specified
    * in the config, then there will be that number of model instances in this array,
    * otherwise there will be one instance.
    */
