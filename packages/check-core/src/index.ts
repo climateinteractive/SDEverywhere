@@ -38,6 +38,8 @@ export type { ImplVar, InputId, InputVar, OutputVar, RelatedItem } from './bundl
 // check
 //
 
+export type { CheckConfig, CheckOptions } from './check/check-config'
+
 export type { CheckDataRequestKey } from './check/check-data-coordinator'
 export { CheckDataCoordinator, createCheckDataCoordinator } from './check/check-data-coordinator'
 
@@ -137,8 +139,14 @@ export { PerfStats } from './perf/perf-stats'
 // trace
 //
 
-export type { TraceCompareToBundleOptions, TraceCompareToExtDataOptions, TraceOptions } from './trace/trace-runner'
-export { TraceRunner } from './trace/trace-runner'
+export type {
+  CancelTrace,
+  TraceCallbacks,
+  TraceCompareToBundleOptions,
+  TraceCompareToExtDataOptions,
+  TraceOptions
+} from './trace/trace-runner'
+export { runTrace } from './trace/trace-runner'
 
 export type { TraceDatasetReport, TraceReport } from './trace/trace-report'
 
@@ -146,7 +154,7 @@ export type { TraceDatasetReport, TraceReport } from './trace/trace-report'
 // suite
 //
 
-export type { RunSuiteCallbacks, RunSuiteOptions } from './suite/suite-runner'
+export type { CancelRunSuite, RunSuiteCallbacks, RunSuiteOptions } from './suite/suite-runner'
 export { runSuite } from './suite/suite-runner'
 
 export * from './suite/suite-report-types'

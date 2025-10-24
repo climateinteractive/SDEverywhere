@@ -5,7 +5,7 @@ import { defineMeta, type Args } from '@storybook/addon-svelte-csf'
 import { expect, waitFor } from 'storybook/test'
 
 import type { BundleModel, Config, ImplVar, ImplVarGroup, ModelSpec, SuiteReport } from '@sdeverywhere/check-core'
-import { ComparisonDataCoordinator, createConfig, runSuite } from '@sdeverywhere/check-core'
+import { createComparisonDataCoordinator, createConfig, runSuite } from '@sdeverywhere/check-core'
 
 import { mockBundleModel, mockNamedBundle } from '../../_mocks/mock-bundle'
 import { mockConfigOptions } from '../../_mocks/mock-config'
@@ -92,7 +92,7 @@ async function createTraceViewModelForStory(deltaR = 0) {
   const configOptions = mockConfigOptions(bundleL, bundleR, { comparisonsEnabled: true })
   const config = await createConfig(configOptions)
   const comparisonConfig = config.comparison
-  const dataCoordinator = new ComparisonDataCoordinator(comparisonConfig.bundleL.model, comparisonConfig.bundleR.model)
+  const dataCoordinator = createComparisonDataCoordinator()
 
   // XXX: Run the comparisons to get the terse summaries
   const suiteReport = await runComparisons(config)

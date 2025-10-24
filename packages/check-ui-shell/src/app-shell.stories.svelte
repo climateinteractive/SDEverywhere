@@ -176,6 +176,7 @@ async function createAppViewModel(options?: {
 const { Story } = defineMeta({
   title: 'Components/AppShell',
   beforeEach: () => {
+    localStorage.setItem('sde-check-concurrency', '1')
     localStorage.setItem('sde-check-test-filters', JSON.stringify({}))
     localStorage.setItem('sde-check-comparison-scenario-filters', JSON.stringify({}))
   },
