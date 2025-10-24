@@ -165,3 +165,58 @@ const { Story } = defineMeta({
     await expect(phaseOutCheckbox).not.toBeChecked()
   }}
 />
+
+<Story
+  name="Expand/Collapse"
+  {template}
+  beforeEach={async ({ args }) => {
+    const initialStates = {
+      baseline: true,
+      ngfs: true,
+      phase_out: true,
+      coal_max: true,
+      coal_min: true
+    }
+    args.viewModel = createFilterPanelViewModel(sampleItems, initialStates)
+  }}
+  play={async ({ canvasElement, userEvent }) => {
+    // All nodes should be expanded by default now
+    const keyScenariosSection = canvasElement.querySelector('[data-testid="___key_scenarios-children"]')
+    const otherScenariosSection = canvasElement.querySelector('[data-testid="___other_scenarios-children"]')
+
+    // Verify that all children are initially visible
+    if (keyScenariosSection && otherScenariosSection) {
+      await expect(keyScenariosSection).toHaveStyle('display: block')
+      await expect(otherScenariosSection).toHaveStyle('display: block')
+    }
+
+    // Click the collapse triangle for "Key scenarios"
+    const keyScenariosTriangle = canvasElement.querySelector('[data-testid="___key_scenarios-triangle"]')
+    await userEvent.click(keyScenariosTriangle!)
+
+    // Verify that "Key scenarios" children are now hidden
+    await expect(keyScenariosSection).toHaveStyle('display: none')
+    await expect(otherScenariosSection).toHaveStyle('display: block')
+
+    // Click the expand triangle for "Key scenarios" again
+    await userEvent.click(keyScenariosTriangle!)
+
+    // Verify that "Key scenarios" children are now visible again
+    await expect(keyScenariosSection).toHaveStyle('display: block')
+    await expect(otherScenariosSection).toHaveStyle('display: block')
+
+    // Click the collapse triangle for "Other scenarios"
+    const otherScenariosTriangle = canvasElement.querySelector('[data-testid="___other_scenarios-triangle"]')
+    await userEvent.click(otherScenariosTriangle!)
+
+    // Verify that "Other scenarios" children are now hidden
+    await expect(keyScenariosSection).toHaveStyle('display: block')
+    await expect(otherScenariosSection).toHaveStyle('display: none')
+
+    // Verify that checkboxes still work when nodes are collapsed
+    const allScenariosInput = canvasElement.querySelector('input[type="checkbox"]')
+    await expect(allScenariosInput).toBeChecked()
+    await userEvent.click(allScenariosInput!)
+    await expect(allScenariosInput).not.toBeChecked()
+  }}
+/>

@@ -17,6 +17,10 @@ export interface FilterStates {
   [key: FilterItemKey]: boolean
 }
 
+export interface ExpandStates {
+  [key: FilterItemKey]: boolean
+}
+
 export interface FilterItemTree {
   items: FilterItem[]
   states: FilterStates
@@ -24,6 +28,7 @@ export interface FilterItemTree {
 
 export class FilterPanelViewModel {
   private itemStates: FilterStates = {}
+  private expandStates: ExpandStates = {}
 
   constructor(
     public readonly items: FilterItem[],
@@ -36,6 +41,8 @@ export class FilterPanelViewModel {
         if (item.children) {
           // Parent items don't get their own state - they're calculated from children
           addLeafItemsToState(item.children)
+          // Expand all parent items by default
+          this.expandStates[item.key] = true
         } else {
           // Only leaf items get their own state
           const initialState = initialStates[item.key]
@@ -102,6 +109,18 @@ export class FilterPanelViewModel {
       items: this.items,
       states: this.itemStates
     })
+  }
+
+  // XXX: _updateCount is a hack to force a re-render of the component when the state changes
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  isExpanded(item: FilterItem, _updateCount: number): boolean {
+    return this.expandStates[item.key] ?? false
+  }
+
+  toggleExpanded(item: FilterItem): void {
+    if (item.children) {
+      this.expandStates[item.key] = !this.expandStates[item.key]
+    }
   }
 }
 
