@@ -1,34 +1,127 @@
 // Copyright (c) 2025 Climate Interactive / New Venture Fund
 
-import {
-  categorizeComparisonTestSummaries,
-  comparisonSummaryFromReport,
-  type CheckReport,
-  type ComparisonReport,
-  type Config
+import type {
+  CheckNameSpec,
+  CheckReport,
+  ComparisonReport,
+  ComparisonScenarioTitleSpec,
+  Config
 } from '@sdeverywhere/check-core'
+import { categorizeComparisonTestSummaries, comparisonSummaryFromReport } from '@sdeverywhere/check-core'
+
+import type { FilterItem, FilterPanelViewModel, FilterStateMap } from './filter-panel-vm'
 import {
   createFilterPanelViewModel,
-  type FilterItem,
-  type FilterPanelViewModel,
-  type FilterStateMap
+  loadFilterItemTreeFromLocalStorage,
+  saveFilterItemTreeToLocalStorage
 } from './filter-panel-vm'
 
+const checksFilterTreeKey = 'sde-check-test-filters'
+const comparisonScenariosFilterTreeKey = 'sde-check-comparison-scenario-filters'
+
 export interface FilterPopoverViewModel {
-  checksPanel: FilterPanelViewModel
+  checksPanel?: FilterPanelViewModel
   comparisonScenariosPanel?: FilterPanelViewModel
 }
 
-export function createFilterPopoverViewModel(
+/**
+ * Create a `FilterPopoverViewModel` using the tree structure that was saved to
+ * LocalStorage.  This is used to provide a functional filter popover while checks
+ * are still running in the browser.
+ */
+export function loadFiltersFromLocalStorage(devMode: boolean): {
+  filterPopoverViewModel: FilterPopoverViewModel | undefined
+  skipChecks: CheckNameSpec[]
+  skipComparisonScenarios: ComparisonScenarioTitleSpec[]
+} {
+  if (!devMode) {
+    // For non-dev mode, we don't allow filtering or skipping tests
+    return {
+      filterPopoverViewModel: undefined,
+      skipChecks: [],
+      skipComparisonScenarios: []
+    }
+  }
+
+  // Load check filter states from LocalStorage
+  const checkTree = loadFilterItemTreeFromLocalStorage(checksFilterTreeKey)
+  const checkStates = checkTree.states || {}
+  const checkStatesMap: FilterStateMap = new Map()
+  for (const [key, { checked }] of Object.entries(checkStates)) {
+    checkStatesMap.set(key, checked)
+  }
+  const skipChecks = Object.keys(checkStates)
+    .filter(key => {
+      const state = checkStates[key]
+      return state && state.checked === false
+    })
+    .map(key => {
+      const state = checkStates[key]
+      return {
+        groupName: state.titleParts?.groupName || '',
+        testName: state.titleParts?.testName || ''
+      }
+    })
+
+  // Load comparison scenario filter states from LocalStorage
+  const scenarioTree = loadFilterItemTreeFromLocalStorage(comparisonScenariosFilterTreeKey)
+  const scenarioStates = scenarioTree.states || {}
+  const scenarioStatesMap: FilterStateMap = new Map()
+  for (const [key, { checked }] of Object.entries(scenarioStates)) {
+    scenarioStatesMap.set(key, checked)
+  }
+  const skipComparisonScenarios = Object.keys(scenarioStates)
+    .filter(key => {
+      const state = scenarioStates[key]
+      return state && state.checked === false
+    })
+    .map(key => {
+      const state = scenarioStates[key]
+      return {
+        title: state.titleParts?.title || '',
+        subtitle: state.titleParts?.subtitle
+      }
+    })
+
+  // Create the initial popover view model
+  let checksPanel: FilterPanelViewModel | undefined = undefined
+  if (checkStatesMap.size > 0) {
+    checksPanel = createFilterPanelViewModel(checkTree.items || [], checkStatesMap, tree =>
+      saveFilterItemTreeToLocalStorage(checksFilterTreeKey, tree)
+    )
+  }
+  let comparisonScenariosPanel: FilterPanelViewModel | undefined = undefined
+  if (scenarioStatesMap.size > 0) {
+    comparisonScenariosPanel = createFilterPanelViewModel(scenarioTree.items || [], scenarioStatesMap, tree =>
+      saveFilterItemTreeToLocalStorage(comparisonScenariosFilterTreeKey, tree)
+    )
+  }
+  const filterPopoverViewModel: FilterPopoverViewModel = {
+    checksPanel,
+    comparisonScenariosPanel
+  }
+
+  return {
+    filterPopoverViewModel,
+    skipChecks,
+    skipComparisonScenarios
+  }
+}
+
+/**
+ * Create a `FilterPopoverViewModel` from the given check and comparison reports (so that
+ * the tree structure is based on the checks and comparisons that were run in the browser).
+ */
+export function createFilterPopoverViewModelFromReports(
   config: Config,
   checkReport: CheckReport,
   comparisonReport?: ComparisonReport
 ): FilterPopoverViewModel {
-  const checksPanel = createChecksFilterPanelViewModel(checkReport)
+  const checksPanel = createChecksFilterPanelViewModelFromReport(checkReport)
 
   let comparisonScenariosPanel: FilterPanelViewModel | undefined
   if (comparisonReport) {
-    comparisonScenariosPanel = createComparisonScenariosFilterPanelViewModel(config, comparisonReport)
+    comparisonScenariosPanel = createComparisonScenariosFilterPanelViewModelFromReport(config, comparisonReport)
   }
 
   return {
@@ -37,7 +130,7 @@ export function createFilterPopoverViewModel(
   }
 }
 
-function createChecksFilterPanelViewModel(checkReport: CheckReport): FilterPanelViewModel {
+function createChecksFilterPanelViewModelFromReport(checkReport: CheckReport): FilterPanelViewModel | undefined {
   // Extract check items from the check report
   const checkGroupItems: FilterItem[] = []
   const checkStates: FilterStateMap = new Map()
@@ -68,6 +161,12 @@ function createChecksFilterPanelViewModel(checkReport: CheckReport): FilterPanel
     }
   }
 
+  if (checkGroupItems.length === 0) {
+    // There are no checks; return undefined so that a message is shown in place
+    // of the filter panel
+    return undefined
+  }
+
   // Put all check groups under a single "All checks" group
   const checkItems: FilterItem[] = [
     {
@@ -77,12 +176,18 @@ function createChecksFilterPanelViewModel(checkReport: CheckReport): FilterPanel
     }
   ]
 
-  return createFilterPanelViewModel(checkItems, checkStates, states =>
-    saveCheckFilterStatesToLocalStorage(JSON.stringify(states))
+  // Create a view model that saves the tree to LocalStorage when it changes
+  const viewModel = createFilterPanelViewModel(checkItems, checkStates, tree =>
+    saveFilterItemTreeToLocalStorage(checksFilterTreeKey, tree)
   )
+
+  // Save the initial computed tree to LocalStorage
+  saveFilterItemTreeToLocalStorage(checksFilterTreeKey, viewModel.getItemTree())
+
+  return viewModel
 }
 
-function createComparisonScenariosFilterPanelViewModel(
+function createComparisonScenariosFilterPanelViewModelFromReport(
   config: Config,
   comparisonReport: ComparisonReport
 ): FilterPanelViewModel {
@@ -217,23 +322,13 @@ function createComparisonScenariosFilterPanelViewModel(
     ]
   }
 
-  return createFilterPanelViewModel(scenarioItems, scenarioStates, states =>
-    saveComparisonScenarioFilterStatesToLocalStorage(JSON.stringify(states))
+  // Create a view model that saves the tree to LocalStorage when it changes
+  const viewModel = createFilterPanelViewModel(scenarioItems, scenarioStates, tree =>
+    saveFilterItemTreeToLocalStorage(comparisonScenariosFilterTreeKey, tree)
   )
-}
 
-function saveCheckFilterStatesToLocalStorage(json: string): void {
-  try {
-    localStorage.setItem('sde-check-filter-states', json)
-  } catch (error) {
-    console.warn('Failed to save check filter states to LocalStorage:', error)
-  }
-}
+  // Save the initial computed tree to LocalStorage
+  saveFilterItemTreeToLocalStorage(comparisonScenariosFilterTreeKey, viewModel.getItemTree())
 
-function saveComparisonScenarioFilterStatesToLocalStorage(json: string): void {
-  try {
-    localStorage.setItem('sde-comparison-scenario-filter-states', json)
-  } catch (error) {
-    console.warn('Failed to save comparison scenario filter states to LocalStorage:', error)
-  }
+  return viewModel
 }

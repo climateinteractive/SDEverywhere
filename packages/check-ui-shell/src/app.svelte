@@ -205,7 +205,7 @@ function onKeyDown(event: KeyboardEvent) {
       <Summary on:command={onCommand} viewModel={viewModel.summaryViewModel} />
     {/if}
 
-    {#if filtersVisible && !$checksInProgress}
+    {#if filtersVisible}
       <!-- svelte-ignore event_directive_deprecated -->
       <div class="filter-popover-overlay" use:clickOutside on:clickout={closeFilters}>
         <div class="filter-popover-container">

@@ -1,6 +1,7 @@
 // Copyright (c) 2025 Climate Interactive / New Venture Fund
 
 import { describe, it, expect, vi } from 'vitest'
+
 import {
   FilterPanelViewModel,
   createFilterPanelViewModel,

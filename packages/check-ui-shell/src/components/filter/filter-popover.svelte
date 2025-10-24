@@ -46,7 +46,13 @@ function setActiveTab(tab: 'checks' | 'scenarios') {
 
   <div class="filter-popover-content">
     {#if activeTab === 'checks'}
-      <FilterPanel viewModel={viewModel.checksPanel} />
+      {#if viewModel.checksPanel}
+        <FilterPanel viewModel={viewModel.checksPanel} />
+      {:else}
+        <div class="filter-popover-content-empty">
+          <p>No checks configured</p>
+        </div>
+      {/if}
     {:else if activeTab === 'scenarios'}
       {#if viewModel.comparisonScenariosPanel}
         <FilterPanel viewModel={viewModel.comparisonScenariosPanel} />

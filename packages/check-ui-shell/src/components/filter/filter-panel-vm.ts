@@ -24,14 +24,21 @@ export interface FilterStates {
   }
 }
 
+export interface FilterItemTree {
+  items: FilterItem[]
+  states: FilterStates
+}
+
 export class FilterPanelViewModel {
-  private readonly itemStates: FilterStateMap = new Map()
+  private readonly itemStatesMap: FilterStateMap = new Map()
+  private itemStates: FilterStates = {}
 
   constructor(
     public readonly items: FilterItem[],
     initialStates: FilterStateMap,
-    private readonly onStateChanged?: (states: FilterStates) => void
+    private readonly onTreeChanged?: (tree: FilterItemTree) => void
   ) {
+    // Initialize the `itemStatesMap` with the initial states
     const addLeafItemsToState = (items: FilterItem[]) => {
       for (const item of items) {
         if (item.children) {
@@ -40,18 +47,28 @@ export class FilterPanelViewModel {
         } else {
           // Only leaf items get their own state
           const initialState = initialStates.get(item.key)
-          this.itemStates.set(item.key, initialState !== undefined ? initialState : true)
+          this.itemStatesMap.set(item.key, initialState !== undefined ? initialState : true)
         }
       }
     }
     addLeafItemsToState(this.items)
+
+    // Update the `itemStates` object to reflect the states from the map
+    this.updateItemStates()
+  }
+
+  getItemTree(): FilterItemTree {
+    return {
+      items: this.items,
+      states: this.itemStates
+    }
   }
 
   // XXX: _updateCount is a hack to force a re-render of the component when the state changes
   getCheckboxState(item: FilterItem, _updateCount: number): FilterCheckboxState {
     if (!item.children) {
       // For leaf items, check the state in itemStates
-      const state = this.itemStates.get(item.key)
+      const state = this.itemStatesMap.get(item.key)
       return state === true ? 'checked' : 'unchecked'
     }
 
@@ -81,24 +98,34 @@ export class FilterPanelViewModel {
             toggleChildren(child.children)
           } else {
             // Only leaf items have state in itemStates
-            this.itemStates.set(child.key, newChecked)
+            this.itemStatesMap.set(child.key, newChecked)
           }
         }
       }
       toggleChildren(item.children)
     } else {
       // This is a leaf item; update its state
-      this.itemStates.set(item.key, newChecked)
+      this.itemStatesMap.set(item.key, newChecked)
     }
 
-    // Create a new `FilterStates` object that contains the state of each leaf item
+    // Update the `itemStates` object to reflect the new states from the map
+    this.updateItemStates()
+
+    // Notify that the tree has changed
+    this.onTreeChanged?.({
+      items: this.items,
+      states: this.itemStates
+    })
+  }
+
+  private updateItemStates(): void {
     const filterStates: FilterStates = {}
     const addLeafItemStates = (items: FilterItem[]) => {
       for (const item of items) {
         if (item.children) {
           addLeafItemStates(item.children)
         } else {
-          const checked = this.itemStates.get(item.key)
+          const checked = this.itemStatesMap.get(item.key)
           filterStates[item.key] = {
             titleParts: item.titleParts,
             checked: checked !== undefined ? checked : false
@@ -107,16 +134,35 @@ export class FilterPanelViewModel {
       }
     }
     addLeafItemStates(this.items)
-
-    // Notify the callback that the state has changed
-    this.onStateChanged?.(filterStates)
+    this.itemStates = filterStates
   }
 }
 
 export function createFilterPanelViewModel(
   filterItems: FilterItem[],
   initialStates: FilterStateMap,
-  onStateChanged?: (states: FilterStates) => void
+  onTreeChanged?: (tree: FilterItemTree) => void
 ): FilterPanelViewModel {
-  return new FilterPanelViewModel(filterItems, initialStates, onStateChanged)
+  return new FilterPanelViewModel(filterItems, initialStates, onTreeChanged)
+}
+
+export function loadFilterItemTreeFromLocalStorage(key: string): FilterItemTree {
+  try {
+    const json = localStorage.getItem(key)
+    if (!json) {
+      return { items: [], states: {} }
+    }
+    return JSON.parse(json) as FilterItemTree
+  } catch (error) {
+    console.warn(`Failed to load filter item tree from LocalStorage (${key}):`, error)
+    return { items: [], states: {} }
+  }
+}
+
+export function saveFilterItemTreeToLocalStorage(key: string, tree: FilterItemTree): void {
+  try {
+    localStorage.setItem(key, JSON.stringify(tree))
+  } catch (error) {
+    console.warn(`Failed to save filter item tree to LocalStorage (${key}):`, error)
+  }
 }

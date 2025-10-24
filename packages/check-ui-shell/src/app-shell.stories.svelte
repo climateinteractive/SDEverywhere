@@ -56,28 +56,53 @@ function mockModelSpec(): ModelSpec {
   }
 }
 
-function createBundleModel(modelSpec: ModelSpec, delta = 0): BundleModel {
-  return mockBundleModel(modelSpec, (_, datasetKeys) => {
-    const datasetMap = new Map()
-    for (const datasetKey of datasetKeys) {
-      // Apply delta only for every even-numbered variable, otherwise use 0
-      const match = datasetKey.match(/_(\d+)$/)
-      const variableNumber = match ? parseInt(match[1], 10) : 0
-      const effectiveDelta = variableNumber % 2 === 0 ? delta : 0
-      datasetMap.set(datasetKey, mockDataset(effectiveDelta))
+function createBundleModel(
+  modelSpec: ModelSpec,
+  options?: {
+    delta?: number
+    delayInGetDatasets?: number
+  }
+): BundleModel {
+  const delta = options?.delta ?? 0
+  return mockBundleModel(
+    modelSpec,
+    (_, datasetKeys) => {
+      const datasetMap = new Map()
+      for (const datasetKey of datasetKeys) {
+        // Apply delta only for every even-numbered variable, otherwise use 0
+        const match = datasetKey.match(/_(\d+)$/)
+        const variableNumber = match ? parseInt(match[1], 10) : 0
+        const effectiveDelta = variableNumber % 2 === 0 ? delta : 0
+        datasetMap.set(datasetKey, mockDataset(effectiveDelta))
+      }
+      return datasetMap
+    },
+    {
+      delayInGetDatasets: options?.delayInGetDatasets
     }
-    return datasetMap
-  })
+  )
 }
 
 async function createAppViewModel(options?: {
   comparisonsEnabled?: boolean
   modelsDiffer?: boolean
+  delayInGetDatasets?: number
   groupScenarios?: boolean
 }): Promise<AppViewModel> {
   const modelSpec = mockModelSpec()
-  const bundleL = mockNamedBundle('left', createBundleModel(modelSpec, 0))
-  const bundleR = mockNamedBundle('right', createBundleModel(modelSpec, options?.modelsDiffer === true ? 5 : 0))
+  const bundleL = mockNamedBundle(
+    'left',
+    createBundleModel(modelSpec, {
+      delayInGetDatasets: options?.delayInGetDatasets
+    })
+  )
+  const bundleR = mockNamedBundle(
+    'right',
+    createBundleModel(modelSpec, {
+      delta: options?.modelsDiffer === true ? 5 : 0,
+      delayInGetDatasets: options?.delayInGetDatasets
+    })
+  )
   const configOptions = mockConfigOptions(bundleL, bundleR, options)
   const appModel = await initAppModel(configOptions)
   return new AppViewModel(appModel)
@@ -86,8 +111,8 @@ async function createAppViewModel(options?: {
 const { Story } = defineMeta({
   title: 'Components/AppShell',
   beforeEach: () => {
-    localStorage.setItem('sde-check-filter-states', JSON.stringify({}))
-    localStorage.setItem('sde-comparison-scenario-filter-states', JSON.stringify({}))
+    localStorage.setItem('sde-check-test-filters', JSON.stringify({}))
+    localStorage.setItem('sde-check-comparison-scenario-filters', JSON.stringify({}))
   },
   component: AppShell
 })
@@ -240,7 +265,7 @@ const { Story } = defineMeta({
 />
 
 <Story
-  name="Update Filters"
+  name="Update Filters (after checks complete)"
   {template}
   beforeEach={async ({ args }) => {
     args.appViewModel = await createAppViewModel()
@@ -269,15 +294,162 @@ const { Story } = defineMeta({
     await expect(firstCheckbox).not.toBeNull()
     await userEvent.click(firstCheckbox)
 
-    // Verify that the filter states
+    // Verify that the filter states are saved to LocalStorage
+    const filterTreeJson = localStorage.getItem('sde-check-test-filters')
+    const filterTree = filterTreeJson ? JSON.parse(filterTreeJson) : {}
+    await expect(filterTree).toEqual({
+      items: [
+        {
+          key: '__all_checks',
+          label: 'All checks',
+          children: [
+            {
+              key: 'Output 1',
+              label: 'Output 1',
+              children: [
+                {
+                  key: 'Output 1__should be positive',
+                  label: 'should be positive',
+                  titleParts: { groupName: 'Output 1', testName: 'should be positive' }
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      states: {
+        'Output 1__should be positive': {
+          titleParts: { groupName: 'Output 1', testName: 'should be positive' },
+          checked: false
+        }
+      }
+    })
+  }}
+/>
+
+<Story
+  name="Update Filters (while checks running)"
+  {template}
+  beforeEach={async ({ args }) => {
+    // Set up some initial filter states
+    localStorage.setItem(
+      'sde-check-filter-states',
+      JSON.stringify({
+        'Output 1__should be positive': {
+          titleParts: { groupName: 'Output 1', testName: 'should be positive' },
+          checked: false
+        }
+      })
+    )
+    localStorage.setItem(
+      'sde-comparison-scenario-filter-states',
+      JSON.stringify({
+        'All inputs__at default': {
+          titleParts: { title: 'All inputs', subtitle: 'at default' },
+          checked: false
+        },
+        'Constant 1__at min': {
+          titleParts: { title: 'Constant 1', subtitle: 'at min' },
+          checked: false
+        },
+        'Constant 1__at max': {
+          titleParts: { title: 'Constant 1', subtitle: 'at max' },
+          checked: false
+        }
+      })
+    )
+    args.appViewModel = await createAppViewModel({
+      // Add a delay to simulate long-running checks so that we can verify that the filter
+      // popover is available and shows the correct state while checks are running
+      delayInGetDatasets: 100
+    })
+  }}
+  play={async ({ canvas, canvasElement, userEvent }) => {
+    // Wait for the progress indicator to appear
+    await waitFor(() => {
+      const progressContainer = canvasElement.querySelector('.progress-container')
+      expect(progressContainer).not.toBeNull()
+    })
+
+    // Click the filter button to open the filter popover while checks are running
+    const filterButton = canvas.getByRole('button', { name: 'Filters' })
+    await userEvent.click(filterButton)
+
+    // Wait for the filter popover to appear
+    await waitFor(() => {
+      const filterPopover = canvasElement.querySelector('.filter-popover')
+      expect(filterPopover).not.toBeNull()
+    })
+
+    // Verify initial checkbox states in Checks panel (should load from LocalStorage)
+    const checksPanel = canvasElement.querySelector('.filter-panel')
+    await expect(checksPanel).not.toBeNull()
+    const checkLabels = checksPanel.querySelectorAll('.filter-label')
+    const checkCheckboxes = checksPanel.querySelectorAll('.filter-checkbox')
+    await expect(checkLabels.length).toBe(3)
+    await expect(checkCheckboxes.length).toBe(3)
+    await expect(checkLabels[0]).toHaveTextContent('All checks')
+    await expect(checkCheckboxes[0]).not.toBeChecked()
+    await expect(checkLabels[1]).toHaveTextContent('Output 1')
+    await expect(checkCheckboxes[1]).not.toBeChecked()
+    await expect(checkLabels[2]).toHaveTextContent('should be positive')
+    await expect(checkCheckboxes[2]).not.toBeChecked()
+
+    // Verify initial checkbox states in Comparison Scenarios panel
+    await userEvent.click(canvas.getByRole('button', { name: 'Comparison Scenarios' }))
+    const comparisonScenariosPanel = canvasElement.querySelector('.filter-panel')
+    await expect(comparisonScenariosPanel).not.toBeNull()
+    const comparisonScenarioLabels = comparisonScenariosPanel.querySelectorAll('.filter-label')
+    const comparisonScenarioCheckboxes = comparisonScenariosPanel.querySelectorAll('.filter-checkbox')
+    await expect(comparisonScenarioLabels.length).toBe(4)
+    await expect(comparisonScenarioCheckboxes.length).toBe(4)
+    await expect(comparisonScenarioLabels[0]).toHaveTextContent('All scenarios')
+    await expect(comparisonScenarioCheckboxes[0]).not.toBeChecked()
+
+    // Modify a filter while checks are running
+    await userEvent.click(canvas.getByRole('button', { name: 'Checks' }))
+    const firstCheckbox = checksPanel.querySelector('input[type="checkbox"]')
+    await expect(firstCheckbox).not.toBeNull()
+    await userEvent.click(firstCheckbox)
+
+    // Verify that the filter states are saved to LocalStorage
     const filterStatesJson = localStorage.getItem('sde-check-filter-states')
     const filterStates = filterStatesJson ? JSON.parse(filterStatesJson) : {}
     await expect(filterStates).toEqual({
       'Output 1__should be positive': {
         titleParts: { groupName: 'Output 1', testName: 'should be positive' },
-        checked: false
+        checked: true
       }
     })
+
+    // Verify that the filter tree is saved to LocalStorage
+    const filterTreeJson = localStorage.getItem('sde-check-filter-tree')
+    const filterTree = filterTreeJson ? JSON.parse(filterTreeJson) : null
+    await expect(filterTree).not.toBeNull()
+    await expect(filterTree.items).toBeDefined()
+    await expect(filterTree.leafStates).toBeDefined()
+
+    // Wait for checks to complete
+    await waitFor(
+      () => {
+        const progressContainer = canvasElement.querySelector('.progress-container')
+        expect(progressContainer).toBeNull()
+      },
+      { timeout: 1000 }
+    )
+
+    // Verify that the filter popover still works after checks complete
+    await userEvent.click(filterButton)
+    await waitFor(() => {
+      const filterPopover = canvasElement.querySelector('.filter-popover')
+      expect(filterPopover).not.toBeNull()
+    })
+
+    // Verify that the modified state is preserved
+    const checksPanelAfter = canvasElement.querySelector('.filter-panel')
+    await expect(checksPanelAfter).not.toBeNull()
+    const checkCheckboxesAfter = checksPanelAfter.querySelectorAll('.filter-checkbox')
+    await expect(checkCheckboxesAfter[0]).toBeChecked()
   }}
 />
 
