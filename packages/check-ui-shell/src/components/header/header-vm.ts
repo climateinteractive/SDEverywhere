@@ -14,13 +14,15 @@ export interface HeaderViewModel {
   controlsVisible: Writable<boolean>
   zoom: Writable<number>
   consistentYRange: Writable<boolean>
+  concurrency: Writable<number>
 }
 
 export function createHeaderViewModel(
   devMode: boolean,
   comparisonConfig: ComparisonConfig | undefined,
   zoom: Writable<number>,
-  consistentYRange: Writable<boolean>
+  consistentYRange: Writable<boolean>,
+  concurrency: Writable<number>
 ): HeaderViewModel {
   const controlsVisible = writable(false)
 
@@ -44,7 +46,8 @@ export function createHeaderViewModel(
       thresholds: thresholdStrings,
       controlsVisible,
       zoom,
-      consistentYRange
+      consistentYRange,
+      concurrency
     }
   } else {
     return {
@@ -53,7 +56,8 @@ export function createHeaderViewModel(
       bundleNamesR: writable([]),
       controlsVisible,
       zoom,
-      consistentYRange
+      consistentYRange,
+      concurrency
     }
   }
 }

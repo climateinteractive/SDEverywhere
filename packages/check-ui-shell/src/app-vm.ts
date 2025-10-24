@@ -83,6 +83,7 @@ export class AppViewModel {
     // Create the `UserPrefs` object that is passed down to the component hierarchy
     const zoom = localStorageWritableNumber('sde-check-graph-zoom', 1)
     const consistentYRange = localStorageWritableBoolean('sde-check-consistent-y-range', false)
+    const concurrency = localStorageWritableNumber('sde-check-concurrency', 1)
     this.userPrefs = {
       zoom,
       consistentYRange
@@ -93,7 +94,13 @@ export class AppViewModel {
     const devMode = this.suiteSummary === undefined
 
     // Create the header view model
-    this.headerViewModel = createHeaderViewModel(devMode, appModel.config.comparison, zoom, consistentYRange)
+    this.headerViewModel = createHeaderViewModel(
+      devMode,
+      appModel.config.comparison,
+      zoom,
+      consistentYRange,
+      concurrency
+    )
 
     // Create the object that manages pinned items states
     this.pinnedItemStates = createPinnedItemStates()
@@ -310,7 +317,7 @@ export class AppViewModel {
   applyFilters(): void {
     // When the "Apply and Run" button is clicked, dispatch an event that will be handled
     // at a higher level to reload the UI and run the tests again using the new filters
-    document.dispatchEvent(new CustomEvent('sde-check-apply-filters'))
+    document.dispatchEvent(new CustomEvent('sde-check-config-changed'))
   }
 }
 
