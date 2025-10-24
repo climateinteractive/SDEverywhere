@@ -97,7 +97,7 @@ describe('FilterPanelViewModel', () => {
     })
   })
 
-  describe('toggleItem', () => {
+  describe('toggleChecked', () => {
     it('should toggle leaf item state', () => {
       const initialState: FilterStates = { group1__test1: true }
 
@@ -106,7 +106,7 @@ describe('FilterPanelViewModel', () => {
 
       expect(viewModel.getCheckboxState(leafItem, 0)).toBe('checked')
 
-      viewModel.toggleItem(leafItem)
+      viewModel.toggleChecked(leafItem)
 
       expect(viewModel.getCheckboxState(leafItem, 0)).toBe('unchecked')
     })
@@ -124,7 +124,7 @@ describe('FilterPanelViewModel', () => {
       expect(viewModel.getCheckboxState(parentItem, 0)).toBe('checked')
 
       // Toggle parent to unchecked
-      viewModel.toggleItem(parentItem)
+      viewModel.toggleChecked(parentItem)
 
       expect(viewModel.getCheckboxState(parentItem, 0)).toBe('unchecked')
       expect(viewModel.getCheckboxState(parentItem.children![0], 0)).toBe('unchecked')
@@ -135,7 +135,7 @@ describe('FilterPanelViewModel', () => {
       const onTreeChanged = vi.fn()
       const viewModel = new FilterPanelViewModel(sampleItems, {}, onTreeChanged)
 
-      viewModel.toggleItem(sampleItems[0].children![0])
+      viewModel.toggleChecked(sampleItems[0].children![0])
 
       expect(onTreeChanged).toHaveBeenCalledTimes(1)
       expect(onTreeChanged).toHaveBeenCalledWith(
@@ -152,7 +152,70 @@ describe('FilterPanelViewModel', () => {
       const viewModel = new FilterPanelViewModel(sampleItems, {})
 
       expect(() => {
-        viewModel.toggleItem(sampleItems[0].children![0])
+        viewModel.toggleChecked(sampleItems[0].children![0])
+      }).not.toThrow()
+    })
+  })
+
+  describe('expand/collapse functionality', () => {
+    it('should toggle expanded state for individual items', () => {
+      const viewModel = new FilterPanelViewModel(sampleItems, {})
+      const parentItem = sampleItems[0]
+
+      // Initially expanded (default)
+      expect(viewModel.isExpanded(parentItem, 0)).toBe(true)
+
+      // Toggle to collapsed
+      viewModel.toggleExpanded(parentItem)
+      expect(viewModel.isExpanded(parentItem, 0)).toBe(false)
+
+      // Toggle back to expanded
+      viewModel.toggleExpanded(parentItem)
+      expect(viewModel.isExpanded(parentItem, 0)).toBe(true)
+    })
+
+    it('should toggle all siblings when updateSiblingsToMatch is true', () => {
+      const viewModel = new FilterPanelViewModel(sampleItems, {})
+      const group1 = sampleItems[0]
+      const group2 = sampleItems[1]
+
+      // Initially both groups are expanded (default)
+      expect(viewModel.isExpanded(group1, 0)).toBe(true)
+      expect(viewModel.isExpanded(group2, 0)).toBe(true)
+
+      // Toggle all siblings (should collapse both since group1 is expanded)
+      viewModel.toggleExpanded(group1, /*updateSiblingsToMatch=*/ true)
+      expect(viewModel.isExpanded(group1, 0)).toBe(false)
+      expect(viewModel.isExpanded(group2, 0)).toBe(false)
+
+      // Toggle all siblings again (should expand both since group1 is now collapsed)
+      viewModel.toggleExpanded(group1, /*updateSiblingsToMatch=*/ true)
+      expect(viewModel.isExpanded(group1, 0)).toBe(true)
+      expect(viewModel.isExpanded(group2, 0)).toBe(true)
+    })
+
+    it('should affect all root-level siblings when item has no parent', () => {
+      const viewModel = new FilterPanelViewModel(sampleItems, {})
+      const group1 = sampleItems[0]
+      const group2 = sampleItems[1]
+
+      // Initially both expanded
+      expect(viewModel.isExpanded(group1, 0)).toBe(true)
+      expect(viewModel.isExpanded(group2, 0)).toBe(true)
+
+      // Toggle all siblings should affect all root-level items
+      viewModel.toggleExpanded(group1, /*updateSiblingsToMatch=*/ true)
+      expect(viewModel.isExpanded(group1, 0)).toBe(false)
+      expect(viewModel.isExpanded(group2, 0)).toBe(false)
+    })
+
+    it('should not affect leaf items when calling toggleExpanded when updateSiblingsToMatch is true', () => {
+      const viewModel = new FilterPanelViewModel(sampleItems, {})
+      const leafItem = sampleItems[0].children![0]
+
+      // Leaf items don't have expand state, so this should not throw
+      expect(() => {
+        viewModel.toggleExpanded(leafItem, /*updateSiblingsToMatch=*/ true)
       }).not.toThrow()
     })
   })
@@ -167,7 +230,7 @@ describe('FilterPanelViewModel', () => {
       const onTreeChanged = vi.fn()
       const viewModel = new FilterPanelViewModel(sampleItems, initialState, onTreeChanged)
 
-      viewModel.toggleItem(sampleItems[0].children![0])
+      viewModel.toggleChecked(sampleItems[0].children![0])
 
       const tree = onTreeChanged.mock.calls[0][0]
 
@@ -195,7 +258,7 @@ describe('FilterPanelViewModel', () => {
       const onTreeChanged = vi.fn()
       const viewModel = createFilterPanelViewModel(sampleItems, {}, onTreeChanged)
 
-      viewModel.toggleItem(sampleItems[0].children![0])
+      viewModel.toggleChecked(sampleItems[0].children![0])
 
       expect(onTreeChanged).toHaveBeenCalledTimes(1)
     })

@@ -17,10 +17,6 @@ export interface FilterStates {
   [key: FilterItemKey]: boolean
 }
 
-export interface ExpandStates {
-  [key: FilterItemKey]: boolean
-}
-
 export interface FilterItemTree {
   items: FilterItem[]
   states: FilterStates
@@ -28,7 +24,7 @@ export interface FilterItemTree {
 
 export class FilterPanelViewModel {
   private itemStates: FilterStates = {}
-  private expandStates: ExpandStates = {}
+  private expandStates: FilterStates = {}
 
   constructor(
     public readonly items: FilterItem[],
@@ -53,6 +49,9 @@ export class FilterPanelViewModel {
     addLeafItemsToState(this.items)
   }
 
+  /**
+   * Return the current item tree and states.
+   */
   getItemTree(): FilterItemTree {
     return {
       items: this.items,
@@ -60,6 +59,9 @@ export class FilterPanelViewModel {
     }
   }
 
+  /**
+   * Return the checkbox state for the given item.
+   */
   // XXX: _updateCount is a hack to force a re-render of the component when the state changes
   getCheckboxState(item: FilterItem, _updateCount: number): FilterCheckboxState {
     if (!item.children) {
@@ -82,7 +84,10 @@ export class FilterPanelViewModel {
     }
   }
 
-  toggleItem(item: FilterItem): void {
+  /**
+   * Toggle the checked state for the given item.
+   */
+  toggleChecked(item: FilterItem): void {
     const currentState = this.getCheckboxState(item, 0)
     const newChecked = currentState === 'checked' ? false : true
 
@@ -111,16 +116,82 @@ export class FilterPanelViewModel {
     })
   }
 
+  /**
+   * Return true if the given item is expanded.
+   */
   // XXX: _updateCount is a hack to force a re-render of the component when the state changes
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   isExpanded(item: FilterItem, _updateCount: number): boolean {
     return this.expandStates[item.key] ?? false
   }
 
-  toggleExpanded(item: FilterItem): void {
-    if (item.children) {
-      this.expandStates[item.key] = !this.expandStates[item.key]
+  /**
+   * Toggle the expanded state for the given item.
+   *
+   * @param updateSiblingsToMatch If true, update the expanded state of all siblings to match
+   * the new state of the item.
+   */
+  toggleExpanded(item: FilterItem, updateSiblingsToMatch = false): void {
+    if (updateSiblingsToMatch) {
+      this.toggleExpandedIncludingSiblings(item)
+    } else {
+      if (item.children) {
+        this.expandStates[item.key] = !this.expandStates[item.key]
+      }
     }
+  }
+
+  /**
+   * Toggle the expanded state for all sibling items at the same level.  If the given item
+   * is expanded, collapse it and all siblings.  If the given item is collapsed, expand
+   * it and all siblings.
+   */
+  private toggleExpandedIncludingSiblings(item: FilterItem): void {
+    // Find the parent of this item
+    const parent = this.findParent(item)
+
+    // Determine which items are siblings
+    let siblings: FilterItem[]
+    if (!parent) {
+      // If no parent, this is a root-level item, so siblings are all root items
+      siblings = this.items
+    } else if (!parent.children) {
+      return
+    } else {
+      siblings = parent.children
+    }
+
+    // Determine the target state based on current item's state
+    const currentExpanded = this.isExpanded(item, 0)
+    const targetState = !currentExpanded
+
+    // Apply the target state to all siblings
+    for (const sibling of siblings) {
+      if (sibling.children) {
+        this.expandStates[sibling.key] = targetState
+      }
+    }
+  }
+
+  /**
+   * Find the parent of the given item in the tree.
+   */
+  private findParent(targetItem: FilterItem): FilterItem | null {
+    const findParentRecursive = (items: FilterItem[], parent: FilterItem | null = null): FilterItem | null => {
+      for (const item of items) {
+        if (item === targetItem) {
+          return parent
+        }
+        if (item.children) {
+          const found = findParentRecursive(item.children, item)
+          if (found !== null) {
+            return found
+          }
+        }
+      }
+      return null
+    }
+    return findParentRecursive(this.items)
   }
 }
 

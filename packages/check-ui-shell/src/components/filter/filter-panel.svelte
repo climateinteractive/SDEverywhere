@@ -32,8 +32,9 @@ function triggerUpdate() {
       <button
         class="filter-expand-button"
         data-testid="{item.key}-triangle"
-        onclick={() => {
-          viewModel.toggleExpanded(item)
+        onclick={event => {
+          const updateSiblingsToMatch = event.altKey
+          viewModel.toggleExpanded(item, updateSiblingsToMatch)
           triggerUpdate()
         }}
       >
@@ -49,7 +50,7 @@ function triggerUpdate() {
         checked={checkboxState === 'checked'}
         indeterminate={checkboxState === 'indeterminate'}
         onchange={() => {
-          viewModel.toggleItem(item)
+          viewModel.toggleChecked(item)
           triggerUpdate()
         }}
       />
