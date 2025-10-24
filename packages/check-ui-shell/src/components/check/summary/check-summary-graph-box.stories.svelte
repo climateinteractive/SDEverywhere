@@ -16,9 +16,10 @@ import type {
   InputVar,
   ModelSpec
 } from '@sdeverywhere/check-core'
-import { CheckDataCoordinator } from '@sdeverywhere/check-core'
+import { createCheckDataCoordinator, createConfig } from '@sdeverywhere/check-core'
 
-import { mockBundleModel } from '../../../_mocks/mock-bundle'
+import { mockBundleModel, mockNamedBundle } from '../../../_mocks/mock-bundle'
+import { mockConfigOptions } from '../../../_mocks/mock-config'
 import { mockDataset } from '../../../_mocks/mock-data'
 import { inputVar, outputVar } from '../../../_mocks/mock-vars'
 
@@ -56,7 +57,7 @@ function createPredicateReport(
   }
 }
 
-function createGraphBoxViewModel(predicateReport: CheckPredicateReport): CheckSummaryGraphBoxViewModel {
+async function createGraphBoxViewModel(predicateReport: CheckPredicateReport): Promise<CheckSummaryGraphBoxViewModel> {
   const inputVarNames = ['I1']
   const outputVarNames = ['O1', 'O2', 'O2_Upper', 'O2_Lower']
   const modelSpec: ModelSpec = {
@@ -89,7 +90,12 @@ function createGraphBoxViewModel(predicateReport: CheckPredicateReport): CheckSu
     return datasetMap
   })
 
-  const dataCoordinator = new CheckDataCoordinator(bundleModel)
+  // XXX: We have to call `createConfig` to initialize the task queue before creating the data coordinator
+  const bundleR = mockNamedBundle('right', bundleModel)
+  const configOptions = mockConfigOptions(undefined, bundleR)
+  await createConfig(configOptions)
+
+  const dataCoordinator = createCheckDataCoordinator()
   const input1: InputVar = modelSpec.inputVars.get('_i1')
   const scenario: CheckScenario = inputAtValue(input1, 10)
   const datasetKey: DatasetKey = 'Model__o1'
@@ -109,7 +115,7 @@ function createGraphBoxViewModel(predicateReport: CheckPredicateReport): CheckSu
   beforeEach={async ({ args }) => {
     const ops: [CheckPredicateOp, CheckPredicateOpRef][] = [['eq', opConstantRef(50)]]
     const report = createPredicateReport(ops)
-    args.viewModel = createGraphBoxViewModel(report)
+    args.viewModel = await createGraphBoxViewModel(report)
   }}
 />
 
@@ -121,7 +127,7 @@ function createGraphBoxViewModel(predicateReport: CheckPredicateReport): CheckSu
     const report = createPredicateReport(ops, {
       tolerance: 10
     })
-    args.viewModel = createGraphBoxViewModel(report)
+    args.viewModel = await createGraphBoxViewModel(report)
   }}
 />
 
@@ -131,7 +137,7 @@ function createGraphBoxViewModel(predicateReport: CheckPredicateReport): CheckSu
   beforeEach={async ({ args }) => {
     const ops: [CheckPredicateOp, CheckPredicateOpRef][] = [['gt', opConstantRef(50)]]
     const report = createPredicateReport(ops)
-    args.viewModel = createGraphBoxViewModel(report)
+    args.viewModel = await createGraphBoxViewModel(report)
   }}
 />
 
@@ -141,7 +147,7 @@ function createGraphBoxViewModel(predicateReport: CheckPredicateReport): CheckSu
   beforeEach={async ({ args }) => {
     const ops: [CheckPredicateOp, CheckPredicateOpRef][] = [['gte', opConstantRef(50)]]
     const report = createPredicateReport(ops)
-    args.viewModel = createGraphBoxViewModel(report)
+    args.viewModel = await createGraphBoxViewModel(report)
   }}
 />
 
@@ -151,7 +157,7 @@ function createGraphBoxViewModel(predicateReport: CheckPredicateReport): CheckSu
   beforeEach={async ({ args }) => {
     const ops: [CheckPredicateOp, CheckPredicateOpRef][] = [['lt', opConstantRef(50)]]
     const report = createPredicateReport(ops)
-    args.viewModel = createGraphBoxViewModel(report)
+    args.viewModel = await createGraphBoxViewModel(report)
   }}
 />
 
@@ -161,7 +167,7 @@ function createGraphBoxViewModel(predicateReport: CheckPredicateReport): CheckSu
   beforeEach={async ({ args }) => {
     const ops: [CheckPredicateOp, CheckPredicateOpRef][] = [['lte', opConstantRef(50)]]
     const report = createPredicateReport(ops)
-    args.viewModel = createGraphBoxViewModel(report)
+    args.viewModel = await createGraphBoxViewModel(report)
   }}
 />
 
@@ -174,7 +180,7 @@ function createGraphBoxViewModel(predicateReport: CheckPredicateReport): CheckSu
       ['lte', opConstantRef(90)]
     ]
     const report = createPredicateReport(ops)
-    args.viewModel = createGraphBoxViewModel(report)
+    args.viewModel = await createGraphBoxViewModel(report)
   }}
 />
 
@@ -186,7 +192,7 @@ function createGraphBoxViewModel(predicateReport: CheckPredicateReport): CheckSu
     const report = createPredicateReport(ops, {
       time: 2040
     })
-    args.viewModel = createGraphBoxViewModel(report)
+    args.viewModel = await createGraphBoxViewModel(report)
   }}
 />
 
@@ -199,7 +205,7 @@ function createGraphBoxViewModel(predicateReport: CheckPredicateReport): CheckSu
       time: 2040,
       tolerance: 10
     })
-    args.viewModel = createGraphBoxViewModel(report)
+    args.viewModel = await createGraphBoxViewModel(report)
   }}
 />
 
@@ -211,7 +217,7 @@ function createGraphBoxViewModel(predicateReport: CheckPredicateReport): CheckSu
     const report = createPredicateReport(ops, {
       time: 2040
     })
-    args.viewModel = createGraphBoxViewModel(report)
+    args.viewModel = await createGraphBoxViewModel(report)
   }}
 />
 
@@ -223,7 +229,7 @@ function createGraphBoxViewModel(predicateReport: CheckPredicateReport): CheckSu
     const report = createPredicateReport(ops, {
       time: 2040
     })
-    args.viewModel = createGraphBoxViewModel(report)
+    args.viewModel = await createGraphBoxViewModel(report)
   }}
 />
 
@@ -235,7 +241,7 @@ function createGraphBoxViewModel(predicateReport: CheckPredicateReport): CheckSu
     const report = createPredicateReport(ops, {
       time: 2040
     })
-    args.viewModel = createGraphBoxViewModel(report)
+    args.viewModel = await createGraphBoxViewModel(report)
   }}
 />
 
@@ -247,7 +253,7 @@ function createGraphBoxViewModel(predicateReport: CheckPredicateReport): CheckSu
     const report = createPredicateReport(ops, {
       time: 2040
     })
-    args.viewModel = createGraphBoxViewModel(report)
+    args.viewModel = await createGraphBoxViewModel(report)
   }}
 />
 
@@ -262,7 +268,7 @@ function createGraphBoxViewModel(predicateReport: CheckPredicateReport): CheckSu
     const report = createPredicateReport(ops, {
       time: 2040
     })
-    args.viewModel = createGraphBoxViewModel(report)
+    args.viewModel = await createGraphBoxViewModel(report)
   }}
 />
 
@@ -276,7 +282,7 @@ function createGraphBoxViewModel(predicateReport: CheckPredicateReport): CheckSu
         after_incl: 2040
       }
     })
-    args.viewModel = createGraphBoxViewModel(report)
+    args.viewModel = await createGraphBoxViewModel(report)
   }}
 />
 
@@ -291,7 +297,7 @@ function createGraphBoxViewModel(predicateReport: CheckPredicateReport): CheckSu
       },
       tolerance: 10
     })
-    args.viewModel = createGraphBoxViewModel(report)
+    args.viewModel = await createGraphBoxViewModel(report)
   }}
 />
 
@@ -305,7 +311,7 @@ function createGraphBoxViewModel(predicateReport: CheckPredicateReport): CheckSu
         after_incl: 2040
       }
     })
-    args.viewModel = createGraphBoxViewModel(report)
+    args.viewModel = await createGraphBoxViewModel(report)
   }}
 />
 
@@ -319,7 +325,7 @@ function createGraphBoxViewModel(predicateReport: CheckPredicateReport): CheckSu
         after_incl: 2040
       }
     })
-    args.viewModel = createGraphBoxViewModel(report)
+    args.viewModel = await createGraphBoxViewModel(report)
   }}
 />
 
@@ -333,7 +339,7 @@ function createGraphBoxViewModel(predicateReport: CheckPredicateReport): CheckSu
         after_incl: 2040
       }
     })
-    args.viewModel = createGraphBoxViewModel(report)
+    args.viewModel = await createGraphBoxViewModel(report)
   }}
 />
 
@@ -347,7 +353,7 @@ function createGraphBoxViewModel(predicateReport: CheckPredicateReport): CheckSu
         after_incl: 2040
       }
     })
-    args.viewModel = createGraphBoxViewModel(report)
+    args.viewModel = await createGraphBoxViewModel(report)
   }}
 />
 
@@ -364,7 +370,7 @@ function createGraphBoxViewModel(predicateReport: CheckPredicateReport): CheckSu
         after_incl: 2040
       }
     })
-    args.viewModel = createGraphBoxViewModel(report)
+    args.viewModel = await createGraphBoxViewModel(report)
   }}
 />
 
@@ -378,7 +384,7 @@ function createGraphBoxViewModel(predicateReport: CheckPredicateReport): CheckSu
         before_incl: 2060
       }
     })
-    args.viewModel = createGraphBoxViewModel(report)
+    args.viewModel = await createGraphBoxViewModel(report)
   }}
 />
 
@@ -393,7 +399,7 @@ function createGraphBoxViewModel(predicateReport: CheckPredicateReport): CheckSu
       },
       tolerance: 10
     })
-    args.viewModel = createGraphBoxViewModel(report)
+    args.viewModel = await createGraphBoxViewModel(report)
   }}
 />
 
@@ -407,7 +413,7 @@ function createGraphBoxViewModel(predicateReport: CheckPredicateReport): CheckSu
         before_incl: 2060
       }
     })
-    args.viewModel = createGraphBoxViewModel(report)
+    args.viewModel = await createGraphBoxViewModel(report)
   }}
 />
 
@@ -421,7 +427,7 @@ function createGraphBoxViewModel(predicateReport: CheckPredicateReport): CheckSu
         before_incl: 2060
       }
     })
-    args.viewModel = createGraphBoxViewModel(report)
+    args.viewModel = await createGraphBoxViewModel(report)
   }}
 />
 
@@ -435,7 +441,7 @@ function createGraphBoxViewModel(predicateReport: CheckPredicateReport): CheckSu
         before_incl: 2060
       }
     })
-    args.viewModel = createGraphBoxViewModel(report)
+    args.viewModel = await createGraphBoxViewModel(report)
   }}
 />
 
@@ -449,7 +455,7 @@ function createGraphBoxViewModel(predicateReport: CheckPredicateReport): CheckSu
         before_incl: 2060
       }
     })
-    args.viewModel = createGraphBoxViewModel(report)
+    args.viewModel = await createGraphBoxViewModel(report)
   }}
 />
 
@@ -466,7 +472,7 @@ function createGraphBoxViewModel(predicateReport: CheckPredicateReport): CheckSu
         before_incl: 2060
       }
     })
-    args.viewModel = createGraphBoxViewModel(report)
+    args.viewModel = await createGraphBoxViewModel(report)
   }}
 />
 
@@ -481,7 +487,7 @@ function createGraphBoxViewModel(predicateReport: CheckPredicateReport): CheckSu
         before_incl: 2060
       }
     })
-    args.viewModel = createGraphBoxViewModel(report)
+    args.viewModel = await createGraphBoxViewModel(report)
   }}
 />
 
@@ -497,7 +503,7 @@ function createGraphBoxViewModel(predicateReport: CheckPredicateReport): CheckSu
       },
       tolerance: 10
     })
-    args.viewModel = createGraphBoxViewModel(report)
+    args.viewModel = await createGraphBoxViewModel(report)
   }}
 />
 
@@ -512,7 +518,7 @@ function createGraphBoxViewModel(predicateReport: CheckPredicateReport): CheckSu
         before_incl: 2060
       }
     })
-    args.viewModel = createGraphBoxViewModel(report)
+    args.viewModel = await createGraphBoxViewModel(report)
   }}
 />
 
@@ -527,7 +533,7 @@ function createGraphBoxViewModel(predicateReport: CheckPredicateReport): CheckSu
         before_incl: 2060
       }
     })
-    args.viewModel = createGraphBoxViewModel(report)
+    args.viewModel = await createGraphBoxViewModel(report)
   }}
 />
 
@@ -542,7 +548,7 @@ function createGraphBoxViewModel(predicateReport: CheckPredicateReport): CheckSu
         before_incl: 2060
       }
     })
-    args.viewModel = createGraphBoxViewModel(report)
+    args.viewModel = await createGraphBoxViewModel(report)
   }}
 />
 
@@ -557,7 +563,7 @@ function createGraphBoxViewModel(predicateReport: CheckPredicateReport): CheckSu
         before_incl: 2060
       }
     })
-    args.viewModel = createGraphBoxViewModel(report)
+    args.viewModel = await createGraphBoxViewModel(report)
   }}
 />
 
@@ -575,7 +581,7 @@ function createGraphBoxViewModel(predicateReport: CheckPredicateReport): CheckSu
         before_incl: 2060
       }
     })
-    args.viewModel = createGraphBoxViewModel(report)
+    args.viewModel = await createGraphBoxViewModel(report)
   }}
 />
 
@@ -590,7 +596,7 @@ function createGraphBoxViewModel(predicateReport: CheckPredicateReport): CheckSu
         before_incl: 2080
       }
     })
-    args.viewModel = createGraphBoxViewModel(report)
+    args.viewModel = await createGraphBoxViewModel(report)
   }}
 />
 
@@ -606,7 +612,7 @@ function createGraphBoxViewModel(predicateReport: CheckPredicateReport): CheckSu
       },
       tolerance: 10
     })
-    args.viewModel = createGraphBoxViewModel(report)
+    args.viewModel = await createGraphBoxViewModel(report)
   }}
 />
 
@@ -621,7 +627,7 @@ function createGraphBoxViewModel(predicateReport: CheckPredicateReport): CheckSu
         before_incl: 2080
       }
     })
-    args.viewModel = createGraphBoxViewModel(report)
+    args.viewModel = await createGraphBoxViewModel(report)
   }}
 />
 
@@ -636,7 +642,7 @@ function createGraphBoxViewModel(predicateReport: CheckPredicateReport): CheckSu
         before_incl: 2080
       }
     })
-    args.viewModel = createGraphBoxViewModel(report)
+    args.viewModel = await createGraphBoxViewModel(report)
   }}
 />
 
@@ -651,7 +657,7 @@ function createGraphBoxViewModel(predicateReport: CheckPredicateReport): CheckSu
         before_incl: 2080
       }
     })
-    args.viewModel = createGraphBoxViewModel(report)
+    args.viewModel = await createGraphBoxViewModel(report)
   }}
 />
 
@@ -666,7 +672,7 @@ function createGraphBoxViewModel(predicateReport: CheckPredicateReport): CheckSu
         before_incl: 2090
       }
     })
-    args.viewModel = createGraphBoxViewModel(report)
+    args.viewModel = await createGraphBoxViewModel(report)
   }}
 />
 
@@ -684,6 +690,6 @@ function createGraphBoxViewModel(predicateReport: CheckPredicateReport): CheckSu
         before_incl: 2080
       }
     })
-    args.viewModel = createGraphBoxViewModel(report)
+    args.viewModel = await createGraphBoxViewModel(report)
   }}
 />

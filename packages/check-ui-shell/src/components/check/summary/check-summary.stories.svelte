@@ -15,9 +15,9 @@ import type {
   Dataset,
   ModelSpec
 } from '@sdeverywhere/check-core'
-import { CheckDataCoordinator } from '@sdeverywhere/check-core'
+import { createCheckDataCoordinator, createConfig } from '@sdeverywhere/check-core'
 
-import { mockBundleModel } from '../../../_mocks/mock-bundle'
+import { mockBundleModel, mockNamedBundle } from '../../../_mocks/mock-bundle'
 import { inputAtPos } from '../../../_mocks/mock-check-scenario'
 import {
   datasetReport,
@@ -27,21 +27,19 @@ import {
   scenarioReport,
   testReport
 } from '../../../_mocks/mock-check-report'
+import { mockConfigOptions } from '../../../_mocks/mock-config'
 import { mockDataset } from '../../../_mocks/mock-data'
 import { inputVar, outputVar } from '../../../_mocks/mock-vars'
 
 import StoryDecorator from '../../_storybook/story-decorator.svelte'
 
-import { createCheckSummaryViewModel } from './check-summary-vm'
+import { createCheckSummaryViewModel, type CheckSummaryViewModel } from './check-summary-vm'
 import CheckSummary from './check-summary.svelte'
 
 const { Story } = defineMeta({
   title: 'Components/CheckSummary',
   component: CheckSummary
 })
-
-const bundleModel = createBundleModel()
-const dataCoordinator = new CheckDataCoordinator(bundleModel)
 
 const passedResult: CheckResult = {
   status: 'passed'
@@ -152,6 +150,15 @@ function createCheckReportWithSkippedTests(scenarioCount: number, datasetCount: 
     groups: [group]
   }
 }
+
+async function createCheckSummaryViewModelWithReport(report: CheckReport): Promise<CheckSummaryViewModel> {
+  // XXX: We have to call `createConfig` to initialize the task queue before creating the data coordinator
+  const bundleR = mockNamedBundle('right', createBundleModel())
+  const configOptions = mockConfigOptions(undefined, bundleR)
+  await createConfig(configOptions)
+  const dataCoordinator = createCheckDataCoordinator()
+  return createCheckSummaryViewModel(dataCoordinator, report)
+}
 </script>
 
 {#snippet template(args: Args<typeof Story>)}
@@ -165,7 +172,7 @@ function createCheckReportWithSkippedTests(scenarioCount: number, datasetCount: 
   {template}
   beforeEach={async ({ args }) => {
     const report = createCheckReport(1, 1)
-    args.viewModel = createCheckSummaryViewModel(dataCoordinator, report)
+    args.viewModel = await createCheckSummaryViewModelWithReport(report)
   }}
 />
 
@@ -174,7 +181,7 @@ function createCheckReportWithSkippedTests(scenarioCount: number, datasetCount: 
   {template}
   beforeEach={async ({ args }) => {
     const report = createCheckReport(1, 100)
-    args.viewModel = createCheckSummaryViewModel(dataCoordinator, report)
+    args.viewModel = await createCheckSummaryViewModelWithReport(report)
   }}
 />
 
@@ -183,7 +190,7 @@ function createCheckReportWithSkippedTests(scenarioCount: number, datasetCount: 
   {template}
   beforeEach={async ({ args }) => {
     const report = createCheckReport(100, 1)
-    args.viewModel = createCheckSummaryViewModel(dataCoordinator, report)
+    args.viewModel = await createCheckSummaryViewModelWithReport(report)
   }}
 />
 
@@ -192,7 +199,7 @@ function createCheckReportWithSkippedTests(scenarioCount: number, datasetCount: 
   {template}
   beforeEach={async ({ args }) => {
     const report = createCheckReport(100, 10)
-    args.viewModel = createCheckSummaryViewModel(dataCoordinator, report)
+    args.viewModel = await createCheckSummaryViewModelWithReport(report)
   }}
 />
 
@@ -201,7 +208,7 @@ function createCheckReportWithSkippedTests(scenarioCount: number, datasetCount: 
   {template}
   beforeEach={async ({ args }) => {
     const report = createCheckReport(100, 100)
-    args.viewModel = createCheckSummaryViewModel(dataCoordinator, report)
+    args.viewModel = await createCheckSummaryViewModelWithReport(report)
   }}
 />
 
@@ -210,7 +217,7 @@ function createCheckReportWithSkippedTests(scenarioCount: number, datasetCount: 
   {template}
   beforeEach={async ({ args }) => {
     const report = createCheckReport(1000, 1)
-    args.viewModel = createCheckSummaryViewModel(dataCoordinator, report)
+    args.viewModel = await createCheckSummaryViewModelWithReport(report)
   }}
 />
 
@@ -219,7 +226,7 @@ function createCheckReportWithSkippedTests(scenarioCount: number, datasetCount: 
   {template}
   beforeEach={async ({ args }) => {
     const report = createCheckReport(1000, 10)
-    args.viewModel = createCheckSummaryViewModel(dataCoordinator, report)
+    args.viewModel = await createCheckSummaryViewModelWithReport(report)
   }}
 />
 
@@ -228,6 +235,6 @@ function createCheckReportWithSkippedTests(scenarioCount: number, datasetCount: 
   {template}
   beforeEach={async ({ args }) => {
     const report = createCheckReportWithSkippedTests(1, 100)
-    args.viewModel = createCheckSummaryViewModel(dataCoordinator, report)
+    args.viewModel = await createCheckSummaryViewModelWithReport(report)
   }}
 />

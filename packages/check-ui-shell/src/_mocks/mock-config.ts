@@ -17,7 +17,7 @@ import {
 } from './mock-comparison-scenario-spec'
 
 export function mockConfigOptions(
-  bundleL: NamedBundle,
+  bundleL: NamedBundle | undefined,
   bundleR: NamedBundle,
   options?: { comparisonsEnabled?: boolean; groupScenarios?: boolean }
 ): ConfigOptions {
@@ -37,7 +37,7 @@ export function mockConfigOptions(
   const checkTests = [allPositive]
 
   let comparisonOptions: ComparisonOptions | undefined
-  if (options?.comparisonsEnabled !== false) {
+  if (bundleL && options?.comparisonsEnabled !== false) {
     const comparisonSpecs: ComparisonSpecs = {
       scenarios: [
         scenarioWithAllInputsAtDefaultSpec(),
