@@ -139,6 +139,10 @@ export function createFilterPopoverViewModelFromReports(
 }
 
 function createChecksFilterPanelViewModelFromReport(checkReport: CheckReport): FilterPanelViewModel | undefined {
+  // Load existing filter states from LocalStorage
+  const savedTree = loadFilterItemTreeFromLocalStorage(checksFilterTreeKey)
+  const savedStates = savedTree.states || {}
+
   // Extract check items from the check report
   const checkGroupItems: FilterItem[] = []
   const checkStates: FilterStates = {}
@@ -156,8 +160,12 @@ function createChecksFilterPanelViewModelFromReport(checkReport: CheckReport): F
         label: test.name
       })
 
-      // Set initial state based on whether this test was skipped
-      checkStates[testKey] = test.status !== 'skipped'
+      // Use saved state if available, otherwise determine based on whether this test was skipped
+      if (savedStates[testKey] !== undefined) {
+        checkStates[testKey] = savedStates[testKey]
+      } else {
+        checkStates[testKey] = test.status !== 'skipped'
+      }
     }
 
     if (groupChildren.length > 0) {
@@ -199,6 +207,10 @@ function createComparisonScenariosFilterPanelViewModelFromReport(
   config: Config,
   comparisonReport: ComparisonReport
 ): FilterPanelViewModel {
+  // Load existing filter states from LocalStorage
+  const savedTree = loadFilterItemTreeFromLocalStorage(comparisonScenariosFilterTreeKey)
+  const savedStates = savedTree.states || {}
+
   function scenarioKey(title: string, subtitle?: string): string {
     return subtitle ? `${title}__${subtitle}` : title
   }
@@ -269,7 +281,12 @@ function createComparisonScenariosFilterPanelViewModelFromReport(
               // Add the scenario to the section
               sectionChildren.push(filterItemForScenario(scenario))
               const scenarioData = scenarioMap.get(key)
-              scenarioStates[key] = scenarioData ? !scenarioData.skipped : true
+              // Use saved state if available, otherwise determine based on whether this scenario was skipped
+              if (savedStates[key] !== undefined) {
+                scenarioStates[key] = savedStates[key]
+              } else {
+                scenarioStates[key] = scenarioData ? !scenarioData.skipped : true
+              }
               addedScenarioKeys.add(key)
             }
           }
@@ -289,7 +306,12 @@ function createComparisonScenariosFilterPanelViewModelFromReport(
     for (const [key, scenario] of scenarioMap) {
       if (!addedScenarioKeys.has(key)) {
         otherScenarios.push(filterItemForScenario(scenario))
-        scenarioStates[key] = !scenario.skipped
+        // Use saved state if available, otherwise determine based on whether this scenario was skipped
+        if (savedStates[key] !== undefined) {
+          scenarioStates[key] = savedStates[key]
+        } else {
+          scenarioStates[key] = !scenario.skipped
+        }
         addedScenarioKeys.add(key)
       }
     }
@@ -318,7 +340,12 @@ function createComparisonScenariosFilterPanelViewModelFromReport(
     const scenarioGroupItems: FilterItem[] = []
     for (const [key, scenario] of scenarioMap) {
       scenarioGroupItems.push(filterItemForScenario(scenario))
-      scenarioStates[key] = !scenario.skipped
+      // Use saved state if available, otherwise determine based on whether this scenario was skipped
+      if (savedStates[key] !== undefined) {
+        scenarioStates[key] = savedStates[key]
+      } else {
+        scenarioStates[key] = !scenario.skipped
+      }
     }
 
     scenarioItems = [

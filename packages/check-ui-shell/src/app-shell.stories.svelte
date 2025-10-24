@@ -437,18 +437,20 @@ const { Story } = defineMeta({
     await expect(comparisonScenarioLabels[3]).toHaveTextContent('Constant 1 at max')
     await expect(comparisonScenarioCheckboxes[3]).toBeChecked()
 
-    // Modify a filter while checks are running
+    // Disable all checks by deselecting the "All checks" checkbox
     await userEvent.click(canvas.getByRole('button', { name: 'Checks' }))
-    const firstCheckbox = checksPanel.querySelector('input[type="checkbox"]')
-    await expect(firstCheckbox).not.toBeNull()
-    await userEvent.click(firstCheckbox)
+    const allChecksLabel = canvas.getByLabelText('All checks')
+    await expect(allChecksLabel).not.toBeNull()
+    await expect(allChecksLabel).toBeChecked()
+    await userEvent.click(allChecksLabel)
+    await expect(allChecksLabel).not.toBeChecked()
 
     // Verify that the filter states are saved to LocalStorage
     const filterTreeJson = localStorage.getItem('sde-check-test-filters')
     const filterTree = filterTreeJson ? JSON.parse(filterTreeJson) : {}
     await expect(filterTree).toEqual(
       checkFilterTree({
-        'Output 1__should be positive': true
+        'Output 1__should be positive': false
       })
     )
 
@@ -474,13 +476,16 @@ const { Story } = defineMeta({
     // Verify that the modified state is preserved
     const checksPanelAfter = canvasElement.querySelector('.filter-panel')
     await expect(checksPanelAfter).not.toBeNull()
-    // TODO: Currently the filter states will be based on whether the check/scenario
-    // was skipped or not, so if we disabled a check while the checks were running,
-    // but didn't click "Apply and Run", it will show up as enabled in the filter
-    // popover when the checks complete.  We should fix this by using the filter
-    // state from LocalStorage instead of the skipped state.
-    // const checkCheckboxesAfter = checksPanelAfter.querySelectorAll('.filter-checkbox')
-    // await expect(checkCheckboxesAfter[0]).toBeChecked()
+    const checkCheckboxesAfter = checksPanelAfter.querySelectorAll('.filter-checkbox')
+    const checkLabelsAfter = checksPanelAfter.querySelectorAll('.filter-label')
+    await expect(checkLabelsAfter.length).toBe(3)
+    await expect(checkCheckboxesAfter.length).toBe(3)
+    await expect(checkLabelsAfter[0]).toHaveTextContent('All checks')
+    await expect(checkCheckboxesAfter[0]).not.toBeChecked()
+    await expect(checkLabelsAfter[1]).toHaveTextContent('Output 1')
+    await expect(checkCheckboxesAfter[1]).not.toBeChecked()
+    await expect(checkLabelsAfter[2]).toHaveTextContent('should be positive')
+    await expect(checkCheckboxesAfter[2]).not.toBeChecked()
   }}
 />
 
