@@ -32,7 +32,6 @@ function mockBundleModel(modelSpec: ModelSpec, mockOptions: MockConfigOptions): 
   return {
     modelSpec,
     getDatasetsForScenario: async () => {
-      console.log('getDatasetsForScenario')
       if (mockOptions.onGetDatasets) {
         mockOptions.onGetDatasets()
       }

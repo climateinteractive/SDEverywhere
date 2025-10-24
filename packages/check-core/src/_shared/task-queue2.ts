@@ -74,7 +74,6 @@ export class TaskQueue {
    * @param executors The map of available task executors.
    */
   static initialize(executors: Map<TaskExecutorKey, TaskExecutor>): void {
-    console.log('TaskQueue.initialize', executors.size)
     if (executors.size === 0) {
       throw new Error('Must provide at least one executor')
     }

@@ -158,7 +158,6 @@ class SuiteRunner {
     // Schedule a task for each data request
     let tasksCompleted = 0
     let dataTaskId = 1
-    const t0 = performance.now()
     for (const dataRequest of dataRequests) {
       const task: Task = {
         key: `suite-runner-${dataTaskId++}`,
@@ -172,12 +171,10 @@ class SuiteRunner {
 
           // Notify the progress callback after each task is processed
           tasksCompleted++
-          // this.callbacks.onProgress?.(tasksCompleted / taskCount)
+          this.callbacks.onProgress?.(tasksCompleted / taskCount)
 
           // Notify the completion callback when all tasks have been processed
           if (tasksCompleted === taskCount) {
-            const t1 = performance.now()
-            console.log('suite runner completed', dataRequests.length, 'requests in', t1 - t0, 'ms')
             buildReport()
           }
         }

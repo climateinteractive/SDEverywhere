@@ -88,7 +88,6 @@ export async function createConfig(options: ConfigOptions): Promise<Config> {
  * Initialize the model instances for the given bundle.
  */
 async function loadBundle(bundle: NamedBundle, concurrentModels?: number): Promise<LoadedBundle> {
-  console.log('loadBundle', bundle.name, concurrentModels)
   const initCalls = Array.from({ length: concurrentModels || 1 }, () => bundle.bundle.initModel())
   const models = await Promise.all(initCalls)
 
