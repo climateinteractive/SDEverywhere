@@ -51,13 +51,13 @@ const { Story } = defineMeta({
   name="Default"
   {template}
   beforeEach={async ({ args }) => {
-    const initialStates = new Map([
-      ['baseline', true],
-      ['ngfs', true],
-      ['phase_out', true],
-      ['coal_max', true],
-      ['coal_min', true]
-    ])
+    const initialStates = {
+      baseline: true,
+      ngfs: true,
+      phase_out: true,
+      coal_max: true,
+      coal_min: true
+    }
     args.viewModel = createFilterPanelViewModel(sampleItems, initialStates)
   }}
 />
@@ -66,13 +66,13 @@ const { Story } = defineMeta({
   name="All Checked"
   {template}
   beforeEach={async ({ args }) => {
-    const initialStates = new Map([
-      ['baseline', true],
-      ['ngfs', true],
-      ['phase_out', true],
-      ['coal_max', true],
-      ['coal_min', true]
-    ])
+    const initialStates = {
+      baseline: true,
+      ngfs: true,
+      phase_out: true,
+      coal_max: true,
+      coal_min: true
+    }
     args.viewModel = createFilterPanelViewModel(sampleItems, initialStates)
   }}
   play={async ({ canvasElement }) => {
@@ -91,13 +91,13 @@ const { Story } = defineMeta({
   name="None Checked"
   {template}
   beforeEach={async ({ args }) => {
-    const initialStates = new Map([
-      ['baseline', false],
-      ['ngfs', false],
-      ['phase_out', false],
-      ['coal_max', false],
-      ['coal_min', false]
-    ])
+    const initialStates = {
+      baseline: false,
+      ngfs: false,
+      phase_out: false,
+      coal_max: false,
+      coal_min: false
+    }
     args.viewModel = createFilterPanelViewModel(sampleItems, initialStates)
   }}
   play={async ({ canvasElement }) => {
@@ -116,13 +116,13 @@ const { Story } = defineMeta({
   name="Update Checked State"
   {template}
   beforeEach={async ({ args }) => {
-    const initialStates = new Map([
-      ['baseline', true],
-      ['ngfs', true],
-      ['phase_out', true],
-      ['coal_max', true],
-      ['coal_min', true]
-    ])
+    const initialStates = {
+      baseline: true,
+      ngfs: true,
+      phase_out: true,
+      coal_max: true,
+      coal_min: true
+    }
     args.viewModel = createFilterPanelViewModel(sampleItems, initialStates)
   }}
   play={async ({ canvas, canvasElement, userEvent }) => {

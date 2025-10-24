@@ -318,10 +318,7 @@ const { Story } = defineMeta({
         }
       ],
       states: {
-        'Output 1__should be positive': {
-          titleParts: { groupName: 'Output 1', testName: 'should be positive' },
-          checked: false
-        }
+        'Output 1__should be positive': false
       }
     })
   }}
@@ -333,28 +330,62 @@ const { Story } = defineMeta({
   beforeEach={async ({ args }) => {
     // Set up some initial filter states
     localStorage.setItem(
-      'sde-check-filter-states',
+      'sde-check-test-filters',
       JSON.stringify({
-        'Output 1__should be positive': {
-          titleParts: { groupName: 'Output 1', testName: 'should be positive' },
-          checked: false
+        items: [
+          {
+            key: '__all_checks',
+            label: 'All checks',
+            children: [
+              {
+                key: 'Output 1',
+                label: 'Output 1',
+                children: [
+                  {
+                    key: 'Output 1__should be positive',
+                    label: 'should be positive',
+                    titleParts: { groupName: 'Output 1', testName: 'should be positive' }
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        states: {
+          'Output 1__should be positive': false
         }
       })
     )
     localStorage.setItem(
-      'sde-comparison-scenario-filter-states',
+      'sde-check-comparison-scenario-filters',
       JSON.stringify({
-        'All inputs__at default': {
-          titleParts: { title: 'All inputs', subtitle: 'at default' },
-          checked: false
-        },
-        'Constant 1__at min': {
-          titleParts: { title: 'Constant 1', subtitle: 'at min' },
-          checked: false
-        },
-        'Constant 1__at max': {
-          titleParts: { title: 'Constant 1', subtitle: 'at max' },
-          checked: false
+        items: [
+          {
+            key: '__all_scenarios',
+            label: 'All scenarios',
+            children: [
+              {
+                key: 'All inputs__at default',
+                label: 'All inputs at default',
+                titleParts: { title: 'All inputs', subtitle: 'at default' }
+              },
+              {
+                key: 'Constant 1__at min',
+                label: 'Constant 1 at min',
+                titleParts: { title: 'Constant 1', subtitle: 'at min' }
+              },
+              {
+                key: 'Constant 1__at max',
+                label: 'Constant 1 at max',
+                titleParts: { title: 'Constant 1', subtitle: 'at max' }
+              }
+            ]
+          }
+        ],
+        states: {
+          'All inputs__at default': false,
+          'Constant 1__at min': false,
+          'Constant 1__at max': false
         }
       })
     )
@@ -413,21 +444,21 @@ const { Story } = defineMeta({
     await userEvent.click(firstCheckbox)
 
     // Verify that the filter states are saved to LocalStorage
-    const filterStatesJson = localStorage.getItem('sde-check-filter-states')
+    const filterStatesJson = localStorage.getItem('sde-check-test-filters')
     const filterStates = filterStatesJson ? JSON.parse(filterStatesJson) : {}
     await expect(filterStates).toEqual({
-      'Output 1__should be positive': {
-        titleParts: { groupName: 'Output 1', testName: 'should be positive' },
-        checked: true
+      items: expect.any(Array),
+      states: {
+        'Output 1__should be positive': true
       }
     })
 
     // Verify that the filter tree is saved to LocalStorage
-    const filterTreeJson = localStorage.getItem('sde-check-filter-tree')
+    const filterTreeJson = localStorage.getItem('sde-check-test-filters')
     const filterTree = filterTreeJson ? JSON.parse(filterTreeJson) : null
     await expect(filterTree).not.toBeNull()
     await expect(filterTree.items).toBeDefined()
-    await expect(filterTree.leafStates).toBeDefined()
+    await expect(filterTree.states).toBeDefined()
 
     // Wait for checks to complete
     await waitFor(
@@ -458,11 +489,29 @@ const { Story } = defineMeta({
   {template}
   beforeEach={async ({ args }) => {
     localStorage.setItem(
-      'sde-check-filter-states',
+      'sde-check-test-filters',
       JSON.stringify({
-        'Output 1__should be positive': {
-          titleParts: { groupName: 'Output 1', testName: 'should be positive' },
-          checked: false
+        items: [
+          {
+            key: '__all_checks',
+            label: 'All checks',
+            children: [
+              {
+                key: 'Output 1',
+                label: 'Output 1',
+                children: [
+                  {
+                    key: 'Output 1__should be positive',
+                    label: 'should be positive',
+                    titleParts: { groupName: 'Output 1', testName: 'should be positive' }
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        states: {
+          'Output 1__should be positive': false
         }
       })
     )
@@ -516,28 +565,62 @@ const { Story } = defineMeta({
   {template}
   beforeEach={async ({ args }) => {
     localStorage.setItem(
-      'sde-check-filter-states',
+      'sde-check-test-filters',
       JSON.stringify({
-        'Output 1__should be positive': {
-          titleParts: { groupName: 'Output 1', testName: 'should be positive' },
-          checked: false
+        items: [
+          {
+            key: '__all_checks',
+            label: 'All checks',
+            children: [
+              {
+                key: 'Output 1',
+                label: 'Output 1',
+                children: [
+                  {
+                    key: 'Output 1__should be positive',
+                    label: 'should be positive',
+                    titleParts: { groupName: 'Output 1', testName: 'should be positive' }
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        states: {
+          'Output 1__should be positive': false
         }
       })
     )
     localStorage.setItem(
-      'sde-comparison-scenario-filter-states',
+      'sde-check-comparison-scenario-filters',
       JSON.stringify({
-        'All inputs__at default': {
-          titleParts: { title: 'All inputs', subtitle: 'at default' },
-          checked: false
-        },
-        'Constant 1__at min': {
-          titleParts: { title: 'Constant 1', subtitle: 'at min' },
-          checked: false
-        },
-        'Constant 1__at max': {
-          titleParts: { title: 'Constant 1', subtitle: 'at max' },
-          checked: false
+        items: [
+          {
+            key: '__all_scenarios',
+            label: 'All scenarios',
+            children: [
+              {
+                key: 'All inputs__at default',
+                label: 'All inputs at default',
+                titleParts: { title: 'All inputs', subtitle: 'at default' }
+              },
+              {
+                key: 'Constant 1__at min',
+                label: 'Constant 1 at min',
+                titleParts: { title: 'Constant 1', subtitle: 'at min' }
+              },
+              {
+                key: 'Constant 1__at max',
+                label: 'Constant 1 at max',
+                titleParts: { title: 'Constant 1', subtitle: 'at max' }
+              }
+            ]
+          }
+        ],
+        states: {
+          'All inputs__at default': false,
+          'Constant 1__at min': false,
+          'Constant 1__at max': false
         }
       })
     )
@@ -630,28 +713,62 @@ const { Story } = defineMeta({
   {template}
   beforeEach={async ({ args }) => {
     localStorage.setItem(
-      'sde-check-filter-states',
+      'sde-check-test-filters',
       JSON.stringify({
-        'Output 1__should be positive': {
-          titleParts: { groupName: 'Output 1', testName: 'should be positive' },
-          checked: false
+        items: [
+          {
+            key: '__all_checks',
+            label: 'All checks',
+            children: [
+              {
+                key: 'Output 1',
+                label: 'Output 1',
+                children: [
+                  {
+                    key: 'Output 1__should be positive',
+                    label: 'should be positive',
+                    titleParts: { groupName: 'Output 1', testName: 'should be positive' }
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        states: {
+          'Output 1__should be positive': false
         }
       })
     )
     localStorage.setItem(
-      'sde-comparison-scenario-filter-states',
+      'sde-check-comparison-scenario-filters',
       JSON.stringify({
-        'All inputs__at default': {
-          titleParts: { title: 'All inputs', subtitle: 'at default' },
-          checked: true
-        },
-        'Constant 1__at min': {
-          titleParts: { title: 'Constant 1', subtitle: 'at min' },
-          checked: false
-        },
-        'Constant 1__at max': {
-          titleParts: { title: 'Constant 1', subtitle: 'at max' },
-          checked: false
+        items: [
+          {
+            key: '__all_scenarios',
+            label: 'All scenarios',
+            children: [
+              {
+                key: 'All inputs__at default',
+                label: 'All inputs at default',
+                titleParts: { title: 'All inputs', subtitle: 'at default' }
+              },
+              {
+                key: 'Constant 1__at min',
+                label: 'Constant 1 at min',
+                titleParts: { title: 'Constant 1', subtitle: 'at min' }
+              },
+              {
+                key: 'Constant 1__at max',
+                label: 'Constant 1 at max',
+                titleParts: { title: 'Constant 1', subtitle: 'at max' }
+              }
+            ]
+          }
+        ],
+        states: {
+          'All inputs__at default': true,
+          'Constant 1__at min': false,
+          'Constant 1__at max': false
         }
       })
     )
@@ -745,28 +862,74 @@ const { Story } = defineMeta({
   {template}
   beforeEach={async ({ args }) => {
     localStorage.setItem(
-      'sde-check-filter-states',
+      'sde-check-test-filters',
       JSON.stringify({
-        'Output 1__should be positive': {
-          titleParts: { groupName: 'Output 1', testName: 'should be positive' },
-          checked: false
+        items: [
+          {
+            key: '__all_checks',
+            label: 'All checks',
+            children: [
+              {
+                key: 'Output 1',
+                label: 'Output 1',
+                children: [
+                  {
+                    key: 'Output 1__should be positive',
+                    label: 'should be positive',
+                    titleParts: { groupName: 'Output 1', testName: 'should be positive' }
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        states: {
+          'Output 1__should be positive': false
         }
       })
     )
     localStorage.setItem(
-      'sde-comparison-scenario-filter-states',
+      'sde-check-comparison-scenario-filters',
       JSON.stringify({
-        'All inputs__at default': {
-          titleParts: { title: 'All inputs', subtitle: 'at default' },
-          checked: false
-        },
-        'Constant 1__at min': {
-          titleParts: { title: 'Constant 1', subtitle: 'at min' },
-          checked: false
-        },
-        'Constant 1__at max': {
-          titleParts: { title: 'Constant 1', subtitle: 'at max' },
-          checked: false
+        items: [
+          {
+            key: '__all_scenarios',
+            label: 'All scenarios',
+            children: [
+              {
+                key: 'Key scenarios',
+                label: 'Key scenarios',
+                children: [
+                  {
+                    key: 'All inputs__at default',
+                    label: 'All inputs at default',
+                    titleParts: { title: 'All inputs', subtitle: 'at default' }
+                  }
+                ]
+              },
+              {
+                key: 'Other scenarios',
+                label: 'Other scenarios',
+                children: [
+                  {
+                    key: 'Constant 1__at min',
+                    label: 'Constant 1 at min',
+                    titleParts: { title: 'Constant 1', subtitle: 'at min' }
+                  },
+                  {
+                    key: 'Constant 1__at max',
+                    label: 'Constant 1 at max',
+                    titleParts: { title: 'Constant 1', subtitle: 'at max' }
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        states: {
+          'All inputs__at default': false,
+          'Constant 1__at min': false,
+          'Constant 1__at max': false
         }
       })
     )
