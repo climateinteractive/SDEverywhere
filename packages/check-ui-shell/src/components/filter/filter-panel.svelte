@@ -56,35 +56,19 @@ function triggerUpdate() {
       <span class="filter-text">{@html item.label}</span>
     </label>
   </div>
+
+  {#if hasChildren}
+    <div class="filter-children" data-testid="{item.key}-children" style="display: {isExpanded ? 'block' : 'none'}">
+      {#each item.children as child (child.key)}
+        {@render filterItem(level + 1, child)}
+      {/each}
+    </div>
+  {/if}
 {/snippet}
 
 <div class="filter-panel">
   {#each viewModel.items as item (item.key)}
     {@render filterItem(0, item)}
-
-    {#if item.children}
-      <div
-        class="filter-children"
-        data-testid="{item.key}-children"
-        style="display: {viewModel.isExpanded(item, updateCount) ? 'block' : 'none'}"
-      >
-        {#each item.children as child (child.key)}
-          {@render filterItem(1, child)}
-
-          {#if child.children}
-            <div
-              class="filter-children"
-              data-testid="{child.key}-children"
-              style="display: {viewModel.isExpanded(child, updateCount) ? 'block' : 'none'}"
-            >
-              {#each child.children as grandchild (grandchild.key)}
-                {@render filterItem(2, grandchild)}
-              {/each}
-            </div>
-          {/if}
-        {/each}
-      </div>
-    {/if}
   {/each}
 </div>
 
