@@ -160,7 +160,6 @@ export class AppViewModel {
               checkReport,
               report.comparisonReport
             )
-            this.filterPopoverViewModel = this.createFilterPopoverViewModel(checkReport, report.comparisonReport)
             this.writableChecksInProgress.set(false)
           },
           onError: error => {
