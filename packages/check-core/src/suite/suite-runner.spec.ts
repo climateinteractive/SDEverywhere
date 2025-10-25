@@ -3,7 +3,7 @@
 import { describe, expect, it } from 'vitest'
 
 import type { TaskExecutor, TaskExecutorKey } from '../_shared/task-queue'
-import { TaskQueue } from '../_shared/task-queue'
+import { createExecutor, TaskQueue } from '../_shared/task-queue'
 
 import type { Bundle, BundleModel, ModelSpec } from '../bundle/bundle-types'
 
@@ -158,17 +158,6 @@ async function mockConfig(mockOptions: MockConfigOptions): Promise<Config> {
   return createConfig(configOptions)
 }
 
-function mockExecutor(bundleModelL: BundleModel | undefined, bundleModelR: BundleModel): TaskExecutor {
-  return {
-    execute: async task => {
-      return task.process({
-        L: bundleModelL,
-        R: bundleModelR
-      })
-    }
-  }
-}
-
 function mockTaskQueue(config: Config): TaskQueue {
   const bundleModelsL = config.comparison?.bundleL.models
   const bundleModelsR = config.comparison?.bundleR.models || config.check.bundle.models
@@ -176,7 +165,7 @@ function mockTaskQueue(config: Config): TaskQueue {
   for (let i = 0; i < bundleModelsR.length; i++) {
     const bundleModelL = bundleModelsL?.[i]
     const bundleModelR = bundleModelsR[i]
-    const executor = mockExecutor(bundleModelL, bundleModelR)
+    const executor = createExecutor(bundleModelL, bundleModelR)
     executors.set(`executor-${i}`, executor)
   }
   return new TaskQueue(executors)

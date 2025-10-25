@@ -2,8 +2,9 @@
 
 import type { ScenarioSpec } from '../_shared/scenario-spec-types'
 import type { Task } from '../_shared/task-queue'
-import { TaskQueue } from '../_shared/task-queue'
+import { createExecutor, TaskQueue } from '../_shared/task-queue'
 import type { Dataset, DatasetKey } from '../_shared/types'
+import type { BundleModel } from '../bundle/bundle-types'
 
 export type CheckDataRequestKey = string
 
@@ -39,6 +40,19 @@ export class CheckDataCoordinator {
   }
 }
 
+/**
+ * Create a `CheckDataCoordinator` instance using the shared task queue.
+ */
 export function createCheckDataCoordinator(): CheckDataCoordinator {
   return new CheckDataCoordinator(TaskQueue.getInstance())
+}
+
+/**
+ * @hidden This is not part of the public API; it is exposed only for use in tests.
+ */
+export function createCheckDataCoordinatorForTests(bundleModel: BundleModel): CheckDataCoordinator {
+  // Initialize the shared task queue with a single executor for testing purposes
+  const executor = createExecutor(undefined, bundleModel)
+  const taskQueue = new TaskQueue(new Map([['test-executor-0', executor]]))
+  return new CheckDataCoordinator(taskQueue)
 }

@@ -247,3 +247,20 @@ export class TaskQueue {
     }
   }
 }
+
+/**
+ * Create a `TaskExecutor` that executes tasks using the given models.
+ *
+ * @param bundleModelL The left bundle model, or undefined if comparisons are disabled.
+ * @param bundleModelR The right bundle model.
+ */
+export function createExecutor(bundleModelL: BundleModel | undefined, bundleModelR: BundleModel): TaskExecutor {
+  return {
+    execute: async task => {
+      return task.process({
+        L: bundleModelL,
+        R: bundleModelR
+      })
+    }
+  }
+}

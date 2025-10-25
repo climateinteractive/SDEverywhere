@@ -2,7 +2,7 @@
 
 import type { ScenarioSpec } from '../_shared/scenario-spec-types'
 import type { TaskExecutor, TaskExecutorKey } from '../_shared/task-queue'
-import { TaskQueue } from '../_shared/task-queue'
+import { createExecutor, TaskQueue } from '../_shared/task-queue'
 import type { DatasetKey, DatasetMap } from '../_shared/types'
 
 import type { BundleModel, LoadedBundle, NamedBundle } from '../bundle/bundle-types'
@@ -81,16 +81,6 @@ export async function createConfig(options: ConfigOptions): Promise<Config> {
 
   // Initialize the task queue executors
   const executors: Map<TaskExecutorKey, TaskExecutor> = new Map()
-  function createExecutor(bundleModelL: BundleModel | undefined, bundleModelR: BundleModel): TaskExecutor {
-    return {
-      execute: async task => {
-        return task.process({
-          L: bundleModelL,
-          R: bundleModelR
-        })
-      }
-    }
-  }
   for (let i = 0; i < checkConfig.bundle.models.length; i++) {
     const bundleModelL = comparisonConfig?.bundleL.models?.[i]
     const bundleModelR = comparisonConfig?.bundleR.models?.[i] || checkConfig.bundle.models[i]

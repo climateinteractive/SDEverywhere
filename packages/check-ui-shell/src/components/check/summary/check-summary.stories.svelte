@@ -15,9 +15,9 @@ import type {
   Dataset,
   ModelSpec
 } from '@sdeverywhere/check-core'
-import { createCheckDataCoordinator, createConfig } from '@sdeverywhere/check-core'
+import { createCheckDataCoordinatorForTests } from '@sdeverywhere/check-core'
 
-import { mockBundleModel, mockNamedBundle } from '../../../_mocks/mock-bundle'
+import { mockBundleModel } from '../../../_mocks/mock-bundle'
 import { inputAtPos } from '../../../_mocks/mock-check-scenario'
 import {
   datasetReport,
@@ -27,7 +27,6 @@ import {
   scenarioReport,
   testReport
 } from '../../../_mocks/mock-check-report'
-import { mockConfigOptions } from '../../../_mocks/mock-config'
 import { mockDataset } from '../../../_mocks/mock-data'
 import { inputVar, outputVar } from '../../../_mocks/mock-vars'
 
@@ -151,12 +150,9 @@ function createCheckReportWithSkippedTests(scenarioCount: number, datasetCount: 
   }
 }
 
-async function createCheckSummaryViewModelWithReport(report: CheckReport): Promise<CheckSummaryViewModel> {
-  // XXX: We have to call `createConfig` to initialize the task queue before creating the data coordinator
-  const bundleR = mockNamedBundle('right', createBundleModel())
-  const configOptions = mockConfigOptions(undefined, bundleR)
-  await createConfig(configOptions)
-  const dataCoordinator = createCheckDataCoordinator()
+function createCheckSummaryViewModelWithReport(report: CheckReport): CheckSummaryViewModel {
+  const bundleModel = createBundleModel()
+  const dataCoordinator = createCheckDataCoordinatorForTests(bundleModel)
   return createCheckSummaryViewModel(dataCoordinator, report)
 }
 </script>

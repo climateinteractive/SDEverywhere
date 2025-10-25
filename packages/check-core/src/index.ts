@@ -41,7 +41,11 @@ export type { ImplVar, InputId, InputVar, OutputVar, RelatedItem } from './bundl
 export type { CheckConfig, CheckOptions } from './check/check-config'
 
 export type { CheckDataRequestKey } from './check/check-data-coordinator'
-export { CheckDataCoordinator, createCheckDataCoordinator } from './check/check-data-coordinator'
+export {
+  CheckDataCoordinator,
+  createCheckDataCoordinator,
+  createCheckDataCoordinatorForTests
+} from './check/check-data-coordinator'
 
 export type { CheckDataRef, CheckDataRefKey } from './check/check-data-ref'
 
