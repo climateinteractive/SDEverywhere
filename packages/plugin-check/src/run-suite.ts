@@ -53,8 +53,9 @@ export async function runTestSuite(
       onComplete: report => {
         try {
           const t1 = performance.now()
-          const elapsed = ((t1 - t0) / 1000).toFixed(1)
-          context.log('info', `\nTest suite completed in ${elapsed}s`)
+          const elapsedMillis = t1 - t0
+          const elapsedSeconds = (elapsedMillis / 1000).toFixed(1)
+          context.log('info', `\nTest suite completed in ${elapsedSeconds}s`)
 
           // Print check summary to the console
           const allChecksPassed = printCheckSummary(context, report.checkReport, verbose)
@@ -72,7 +73,7 @@ export async function runTestSuite(
           // less reason to use the terse form (since it requires the web app
           // code to reconstruct the results).  But for now, we will continue
           // to use the terse form, and later we can update the app code.
-          const suiteSummary = suiteSummaryFromReport(report)
+          const suiteSummary = suiteSummaryFromReport(report, elapsedMillis)
 
           resolve({
             allChecksPassed,

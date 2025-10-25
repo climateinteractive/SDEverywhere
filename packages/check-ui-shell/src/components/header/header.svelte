@@ -12,6 +12,7 @@ export let viewModel: HeaderViewModel
 const thresholds = viewModel.thresholds
 const bundleNamesL = viewModel.bundleNamesL
 const bundleNamesR = viewModel.bundleNamesR
+const generatedDateString = viewModel.generatedDateString
 const controlsVisible = viewModel.controlsVisible
 const zoom = viewModel.zoom
 const consistentYRange = viewModel.consistentYRange
@@ -65,6 +66,12 @@ function onConcurrencyChange(e: Event) {
       </button>
     </div>
     <div class="spacer-flex"></div>
+    {#if $generatedDateString}
+      <div class="header-group">
+        <div class="label">Generated:</div>
+        <div class="label generated-date">{$generatedDateString}</div>
+      </div>
+    {/if}
     {#if viewModel.nameL || $bundleNamesL.length > 1}
       <div class="spacer-fixed"></div>
       <div class="header-group">
@@ -109,6 +116,7 @@ function onConcurrencyChange(e: Event) {
         </button>
       </div>
     {:else}
+      <div class="spacer-fixed"></div>
       <div class="header-group">
         {#if viewModel.devMode}
           <button class="icon-button filter" on:click={onToggleFilters} aria-label="Filters">
@@ -167,6 +175,7 @@ function onConcurrencyChange(e: Event) {
 
 .spacer-flex {
   flex: 1;
+  min-width: 20px;
 }
 
 .spacer-fixed {
@@ -191,6 +200,10 @@ function onConcurrencyChange(e: Event) {
 
 .label:not(:last-child) {
   margin-right: 1rem;
+}
+
+.generated-date {
+  color: #ddd;
 }
 
 .header-controls {
