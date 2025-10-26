@@ -13,9 +13,9 @@ import { inputVar, outputVar, implVar } from './_mocks/mock-vars'
 
 import StoryDecorator from './components/_storybook/story-decorator.svelte'
 
-import { initAppModel } from './model/app-model'
-
 import type { FilterItemTree, FilterStates } from './components/filter/filter-panel-vm'
+
+import { initAppModel } from './model/app-model'
 
 import { AppViewModel } from './app-vm'
 import AppShell from './app-shell.svelte'
@@ -176,6 +176,7 @@ async function createAppViewModel(options?: {
 const { Story } = defineMeta({
   title: 'Components/AppShell',
   beforeEach: () => {
+    localStorage.setItem('sde-check-concurrency', '1')
     localStorage.setItem('sde-check-test-filters', JSON.stringify({}))
     localStorage.setItem('sde-check-comparison-scenario-filters', JSON.stringify({}))
   },

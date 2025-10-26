@@ -92,7 +92,7 @@ export function checkReportFromSummary(
   const checkSpec = checkSpecResult.value
 
   // Build the check plan
-  const checkPlanner = new CheckPlanner(checkConfig.bundle.model.modelSpec)
+  const checkPlanner = new CheckPlanner(checkConfig.bundle.modelSpec)
   checkPlanner.addAllChecks(checkSpec, skipChecks)
   const checkPlan = checkPlanner.buildPlan()
 

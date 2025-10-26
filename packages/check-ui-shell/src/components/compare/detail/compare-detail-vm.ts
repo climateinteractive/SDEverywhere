@@ -520,8 +520,8 @@ function createCompareGraphsSectionViewModels(
     return grouped.sections
   } else {
     // Show the graphs in a single "Featured graphs" section
-    const graphSpecsL = comparisonConfig.bundleL.model.modelSpec.graphSpecs
-    const graphSpecsR = comparisonConfig.bundleR.model.modelSpec.graphSpecs
+    const graphSpecsL = comparisonConfig.bundleL.modelSpec.graphSpecs
+    const graphSpecsR = comparisonConfig.bundleR.modelSpec.graphSpecs
     const scenario = view.scenario
     const rows: CompareGraphsRowViewModel[] = []
     for (const graphId of view.graphIds) {
@@ -555,8 +555,8 @@ export function getGraphsGroupedByDiffs(
   const unchanged: CompareGraphsRowViewModel[] = []
 
   // Compare the graphs
-  const graphSpecsL = comparisonConfig.bundleL.model.modelSpec.graphSpecs
-  const graphSpecsR = comparisonConfig.bundleR.model.modelSpec.graphSpecs
+  const graphSpecsL = comparisonConfig.bundleL.modelSpec.graphSpecs
+  const graphSpecsR = comparisonConfig.bundleR.modelSpec.graphSpecs
   const diffCountByBucket = Array(comparisonConfig.thresholds.length + 3).fill(0)
   for (const graphId of graphIds) {
     const graphL = graphSpecsL?.find(s => s.id === graphId)

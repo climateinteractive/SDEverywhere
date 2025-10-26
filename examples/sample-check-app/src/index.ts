@@ -41,8 +41,9 @@ async function initBundlesAndUI() {
 // Initialize the bundles and user interface
 initBundlesAndUI()
 
-// Reload everything when the user applies updated filters
-document.addEventListener('sde-check-apply-filters', () => {
-  // Reinitialize using the new filters
+// Reload everything when the user applies updated configuration (e.g., updated filters or
+// concurrency setting)
+document.addEventListener('sde-check-config-changed', () => {
+  // Reinitialize using the new configuration
   initBundlesAndUI()
 })

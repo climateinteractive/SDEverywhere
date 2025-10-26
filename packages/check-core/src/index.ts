@@ -47,8 +47,14 @@ export { encodeImplVars, decodeImplVars } from './bundle/impl-vars-codec'
 // check
 //
 
+export type { CheckConfig, CheckOptions } from './check/check-config'
+
 export type { CheckDataRequestKey } from './check/check-data-coordinator'
-export { CheckDataCoordinator } from './check/check-data-coordinator'
+export {
+  CheckDataCoordinator,
+  createCheckDataCoordinator,
+  createCheckDataCoordinatorForTests
+} from './check/check-data-coordinator'
 
 export type { CheckDataRef, CheckDataRefKey } from './check/check-data-ref'
 
@@ -109,7 +115,10 @@ export type { ComparisonScenarios } from './comparison/config/comparison-scenari
 export type { ComparisonDatasets } from './comparison/config/comparison-datasets'
 
 export type { ComparisonDataRequestKey } from './comparison/run/comparison-data-coordinator'
-export { ComparisonDataCoordinator } from './comparison/run/comparison-data-coordinator'
+export {
+  ComparisonDataCoordinator,
+  createComparisonDataCoordinator
+} from './comparison/run/comparison-data-coordinator'
 
 export * from './comparison/diff-datasets/diff-datasets'
 
@@ -134,7 +143,8 @@ export { createConfig } from './config/config'
 // perf
 //
 
-export { PerfRunner } from './perf/perf-runner'
+export { runPerf } from './perf/perf-runner'
+export type { CancelRunPerf, RunPerfCallbacks, RunPerfOptions } from './perf/perf-runner'
 
 export type { PerfReport } from './perf/perf-stats'
 export { PerfStats } from './perf/perf-stats'
@@ -143,8 +153,14 @@ export { PerfStats } from './perf/perf-stats'
 // trace
 //
 
-export type { TraceCompareToBundleOptions, TraceCompareToExtDataOptions, TraceOptions } from './trace/trace-runner'
-export { TraceRunner } from './trace/trace-runner'
+export type {
+  CancelRunTrace as CancelTrace,
+  RunTraceCallbacks as TraceCallbacks,
+  TraceCompareToBundleOptions,
+  TraceCompareToExtDataOptions,
+  TraceOptions
+} from './trace/trace-runner'
+export { runTrace } from './trace/trace-runner'
 
 export type { TraceDatasetReport, TraceReport } from './trace/trace-report'
 
@@ -152,7 +168,7 @@ export type { TraceDatasetReport, TraceReport } from './trace/trace-report'
 // suite
 //
 
-export type { RunSuiteCallbacks, RunSuiteOptions } from './suite/suite-runner'
+export type { CancelRunSuite, RunSuiteCallbacks, RunSuiteOptions } from './suite/suite-runner'
 export { runSuite } from './suite/suite-runner'
 
 export * from './suite/suite-report-types'

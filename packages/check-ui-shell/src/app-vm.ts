@@ -56,6 +56,7 @@ export class AppViewModel {
   public readonly checksInProgress: Readable<boolean>
   private readonly writableProgress: Writable<string>
   public readonly progress: Readable<string>
+  private readonly writableGeneratedDateString: Writable<string | undefined>
   public readonly userPrefs: UserPrefs
   public readonly headerViewModel: HeaderViewModel
   private readonly pinnedItemStates: PinnedItemStates
@@ -83,6 +84,7 @@ export class AppViewModel {
     // Create the `UserPrefs` object that is passed down to the component hierarchy
     const zoom = localStorageWritableNumber('sde-check-graph-zoom', 1)
     const consistentYRange = localStorageWritableBoolean('sde-check-consistent-y-range', false)
+    const concurrency = localStorageWritableNumber('sde-check-concurrency', 1)
     this.userPrefs = {
       zoom,
       consistentYRange
@@ -92,8 +94,18 @@ export class AppViewModel {
     // model-check CLI tool.  We use this as a heuristic to determine if we are in dev mode.
     const devMode = this.suiteSummary === undefined
 
+    // Keep the generated date string undefined initially; it will be set in `runTestSuite`
+    this.writableGeneratedDateString = writable(undefined)
+
     // Create the header view model
-    this.headerViewModel = createHeaderViewModel(devMode, appModel.config.comparison, zoom, consistentYRange)
+    this.headerViewModel = createHeaderViewModel(
+      devMode,
+      appModel.config.comparison,
+      this.writableGeneratedDateString,
+      zoom,
+      consistentYRange,
+      concurrency
+    )
 
     // Create the object that manages pinned items states
     this.pinnedItemStates = createPinnedItemStates()
@@ -131,9 +143,13 @@ export class AppViewModel {
         comparisonSummary,
         this.pinnedItemStates
       )
+      const dateString = formatGeneratedDateString(this.suiteSummary.date, this.suiteSummary.elapsed)
+      this.writableGeneratedDateString.set(dateString)
       this.writableChecksInProgress.set(false)
     } else {
       // For local dev builds, run the test suite in the browser
+      this.writableGeneratedDateString.set(undefined)
+      const t0 = performance.now()
       this.cancelRunSuite = runSuite(
         this.appModel.config,
         {
@@ -160,6 +176,10 @@ export class AppViewModel {
               checkReport,
               report.comparisonReport
             )
+            const t1 = performance.now()
+            const elapsedMillis = t1 - t0
+            const dateString = formatGeneratedDateString(undefined, elapsedMillis)
+            this.writableGeneratedDateString.set(dateString)
             this.writableChecksInProgress.set(false)
           },
           onError: error => {
@@ -273,7 +293,7 @@ export class AppViewModel {
   }
 
   createPerfViewModel(): PerfViewModel {
-    return createPerfViewModel(this.appModel.config)
+    return createPerfViewModel()
   }
 
   createTraceViewModel(
@@ -310,11 +330,24 @@ export class AppViewModel {
   applyFilters(): void {
     // When the "Apply and Run" button is clicked, dispatch an event that will be handled
     // at a higher level to reload the UI and run the tests again using the new filters
-    document.dispatchEvent(new CustomEvent('sde-check-apply-filters'))
+    document.dispatchEvent(new CustomEvent('sde-check-config-changed'))
   }
 }
 
-export interface AppViewModelResult {
-  viewModel?: AppViewModel
-  error?: Error
+/**
+ * Return the generated date/time string in a human-readable format, for example:
+ *   10/25/2025 15:52 (4.7s)
+ *
+ * @param isoDateString The ISO 8601 date/time string, or undefined to use the current date/time.
+ * @param elapsedMillis The time in milliseconds that it took to run the suite.
+ */
+function formatGeneratedDateString(isoDateString: string | undefined, elapsedMillis: number): string {
+  if (isoDateString === undefined) {
+    isoDateString = new Date().toISOString()
+  }
+  const elapsedSeconds = (elapsedMillis / 1000).toFixed(1)
+  const date = new Date(isoDateString)
+  const dateString = date.toLocaleDateString(undefined, { day: 'numeric', month: 'numeric', year: 'numeric' })
+  const timeString = date.toLocaleTimeString(undefined, { hour12: false, hour: '2-digit', minute: '2-digit' })
+  return `${dateString} ${timeString} (${elapsedSeconds}s)`
 }
