@@ -7,7 +7,7 @@ import { encodeImplVars, decodeImplVars, type EncodedImplVars } from './impl-var
 describe('encodeImplVars', () => {
   it('should encode simple variables without subscripts', () => {
     const input: { [key: string]: ImplVar[] } = {
-      initConstants: [
+      constants: [
         {
           varId: '_variable_name_1',
           varName: 'Variable name 1',
@@ -28,12 +28,12 @@ describe('encodeImplVars', () => {
       }
     ])
     expect(encoded.varTypes).toEqual(['const'])
-    expect(encoded.varInstances.initConstants).toEqual([[0, 0]])
+    expect(encoded.varInstances.constants).toEqual([[0, 0]])
   })
 
   it('should encode variables with subscripts', () => {
     const input: { [key: string]: ImplVar[] } = {
-      initConstants: [
+      constants: [
         {
           varId: '_variable_name_2[_sub_a1,_sub_b1]',
           varName: 'Variable name 2[Sub A1,Sub B1]',
@@ -66,7 +66,7 @@ describe('encodeImplVars', () => {
       }
     ])
     expect(encoded.varTypes).toEqual(['const'])
-    expect(encoded.varInstances.initConstants).toEqual([
+    expect(encoded.varInstances.constants).toEqual([
       [0, 0, 0, 1, 0, 0],
       [0, 0, 0, 2, 0, 1]
     ])
@@ -74,7 +74,7 @@ describe('encodeImplVars', () => {
 
   it('should deduplicate variables, subscripts, and types', () => {
     const input: { [key: string]: ImplVar[] } = {
-      initConstants: [
+      constants: [
         {
           varId: '_variable_name_1',
           varName: 'Variable name 1',
@@ -89,7 +89,7 @@ describe('encodeImplVars', () => {
           subscriptIndices: [0]
         }
       ],
-      evalAux: [
+      auxVars: [
         {
           varId: '_variable_name_3',
           varName: 'Variable name 3',
@@ -122,11 +122,11 @@ describe('encodeImplVars', () => {
     expect(encoded.varTypes).toEqual(['const', 'aux'])
 
     // Should reference the same subscript and variable indices
-    expect(encoded.varInstances.initConstants).toEqual([
+    expect(encoded.varInstances.constants).toEqual([
       [0, 0],
       [0, 1, 0, 0]
     ])
-    expect(encoded.varInstances.evalAux).toEqual([
+    expect(encoded.varInstances.auxVars).toEqual([
       [1, 2],
       [1, 1, 0, 0]
     ])
@@ -134,7 +134,7 @@ describe('encodeImplVars', () => {
 
   it('should handle the example from the requirements', () => {
     const input: { [key: string]: ImplVar[] } = {
-      initConstants: [
+      constants: [
         {
           varId: '_variable_name_1',
           varName: 'Variable name 1',
@@ -156,7 +156,7 @@ describe('encodeImplVars', () => {
           subscriptIndices: [0, 1]
         }
       ],
-      evalAux: [
+      auxVars: [
         {
           varId: '_variable_name_3',
           varName: 'Variable name 3',
@@ -179,12 +179,12 @@ describe('encodeImplVars', () => {
       { n: 'Variable name 3', i: '_variable_name_3', x: 3 }
     ])
     expect(encoded.varTypes).toEqual(['const', 'aux'])
-    expect(encoded.varInstances.initConstants).toEqual([
+    expect(encoded.varInstances.constants).toEqual([
       [0, 0],
       [0, 1, 0, 1, 0, 0],
       [0, 1, 0, 2, 0, 1]
     ])
-    expect(encoded.varInstances.evalAux).toEqual([[1, 2]])
+    expect(encoded.varInstances.auxVars).toEqual([[1, 2]])
   })
 })
 
@@ -195,14 +195,14 @@ describe('decodeImplVars', () => {
       variables: [{ n: 'Variable name 1', i: '_variable_name_1', x: 1 }],
       varTypes: ['const'],
       varInstances: {
-        initConstants: [[0, 0]]
+        constants: [[0, 0]]
       }
     }
 
     const decoded = decodeImplVars(encoded)
 
     expect(decoded).toEqual({
-      initConstants: [
+      constants: [
         {
           varId: '_variable_name_1',
           varName: 'Variable name 1',
@@ -223,7 +223,7 @@ describe('decodeImplVars', () => {
       variables: [{ n: 'Variable name 2', i: '_variable_name_2', x: 2 }],
       varTypes: ['const'],
       varInstances: {
-        initConstants: [
+        constants: [
           [0, 0, 0, 1, 0, 0],
           [0, 0, 0, 2, 0, 1]
         ]
@@ -233,7 +233,7 @@ describe('decodeImplVars', () => {
     const decoded = decodeImplVars(encoded)
 
     expect(decoded).toEqual({
-      initConstants: [
+      constants: [
         {
           varId: '_variable_name_2[_sub_a1,_sub_b1]',
           varName: 'Variable name 2[Sub A1,Sub B1]',
@@ -266,19 +266,19 @@ describe('decodeImplVars', () => {
       ],
       varTypes: ['const', 'aux'],
       varInstances: {
-        initConstants: [
+        constants: [
           [0, 0],
           [0, 1, 0, 1, 0, 0],
           [0, 1, 0, 2, 0, 1]
         ],
-        evalAux: [[1, 2]]
+        auxVars: [[1, 2]]
       }
     }
 
     const decoded = decodeImplVars(encoded)
 
     expect(decoded).toEqual({
-      initConstants: [
+      constants: [
         {
           varId: '_variable_name_1',
           varName: 'Variable name 1',
@@ -300,7 +300,7 @@ describe('decodeImplVars', () => {
           subscriptIndices: [0, 1]
         }
       ],
-      evalAux: [
+      auxVars: [
         {
           varId: '_variable_name_3',
           varName: 'Variable name 3',
@@ -315,7 +315,7 @@ describe('decodeImplVars', () => {
 describe('roundtrip behavior', () => {
   it('should preserve data through encode/decode cycle', () => {
     const original: { [key: string]: ImplVar[] } = {
-      initConstants: [
+      constants: [
         {
           varId: '_variable_name_1',
           varName: 'Variable name 1',
@@ -337,7 +337,7 @@ describe('roundtrip behavior', () => {
           subscriptIndices: [0, 1]
         }
       ],
-      evalAux: [
+      auxVars: [
         {
           varId: '_variable_name_3',
           varName: 'Variable name 3',
@@ -371,8 +371,8 @@ describe('roundtrip behavior', () => {
 
   it('should handle empty groups', () => {
     const original: { [key: string]: ImplVar[] } = {
-      initConstants: [],
-      evalAux: [
+      constants: [],
+      auxVars: [
         {
           varId: '_variable_name_1',
           varName: 'Variable name 1',
@@ -390,7 +390,7 @@ describe('roundtrip behavior', () => {
 
   it('should handle complex subscript scenarios', () => {
     const original: { [key: string]: ImplVar[] } = {
-      initConstants: [
+      constants: [
         {
           varId: '_var[_a,_b,_c]',
           varName: 'Var[A,B,C]',
