@@ -16,7 +16,7 @@ import type {
   InputVar,
   ModelSpec
 } from '@sdeverywhere/check-core'
-import { CheckDataCoordinator } from '@sdeverywhere/check-core'
+import { createCheckDataCoordinatorForTests } from '@sdeverywhere/check-core'
 
 import { mockBundleModel } from '../../../_mocks/mock-bundle'
 import { mockDataset } from '../../../_mocks/mock-data'
@@ -89,7 +89,7 @@ function createGraphBoxViewModel(predicateReport: CheckPredicateReport): CheckSu
     return datasetMap
   })
 
-  const dataCoordinator = new CheckDataCoordinator(bundleModel)
+  const dataCoordinator = createCheckDataCoordinatorForTests(bundleModel)
   const input1: InputVar = modelSpec.inputVars.get('_i1')
   const scenario: CheckScenario = inputAtValue(input1, 10)
   const datasetKey: DatasetKey = 'Model__o1'

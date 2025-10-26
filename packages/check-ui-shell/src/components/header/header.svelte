@@ -12,9 +12,11 @@ export let viewModel: HeaderViewModel
 const thresholds = viewModel.thresholds
 const bundleNamesL = viewModel.bundleNamesL
 const bundleNamesR = viewModel.bundleNamesR
+const generatedDateString = viewModel.generatedDateString
 const controlsVisible = viewModel.controlsVisible
 const zoom = viewModel.zoom
 const consistentYRange = viewModel.consistentYRange
+const concurrency = viewModel.concurrency
 
 const dispatch = createEventDispatcher()
 
@@ -47,6 +49,12 @@ function onSelectBundleL(e: Event) {
 function onSelectBundleR(e: Event) {
   onSelectBundle('right', (e.target as HTMLSelectElement).value)
 }
+
+function onConcurrencyChange(e: Event) {
+  const value = parseInt((e.target as HTMLSelectElement).value)
+  $concurrency = value
+  document.dispatchEvent(new CustomEvent('sde-check-config-changed'))
+}
 </script>
 
 <!-- TEMPLATE -->
@@ -58,6 +66,12 @@ function onSelectBundleR(e: Event) {
       </button>
     </div>
     <div class="spacer-flex"></div>
+    {#if $generatedDateString}
+      <div class="header-group">
+        <div class="label">Generated:</div>
+        <div class="label generated-date">{$generatedDateString}</div>
+      </div>
+    {/if}
     {#if viewModel.nameL || $bundleNamesL.length > 1}
       <div class="spacer-fixed"></div>
       <div class="header-group">
@@ -102,6 +116,7 @@ function onSelectBundleR(e: Event) {
         </button>
       </div>
     {:else}
+      <div class="spacer-fixed"></div>
       <div class="header-group">
         {#if viewModel.devMode}
           <button class="icon-button filter" on:click={onToggleFilters} aria-label="Filters">
@@ -114,6 +129,15 @@ function onSelectBundleR(e: Event) {
   {#if $controlsVisible}
     <div class="header-controls">
       <div class="spacer-flex"></div>
+      {#if viewModel.devMode}
+        <div class="control-label concurrency">Concurrency:</div>
+        <select class="selector concurrency" on:change={onConcurrencyChange}>
+          {#each Array.from({ length: Math.floor(navigator.hardwareConcurrency / 2) }, (_, i) => i + 1) as value}
+            <option {value} selected={value === $concurrency}>{value}</option>
+          {/each}
+        </select>
+        <div class="spacer-fixed"></div>
+      {/if}
       <input class="checkbox" type="checkbox" name="toggle-consistent-y-range" bind:checked={$consistentYRange} />
       <label for="toggle-consistent-y-range">Consistent Y-Axis Ranges</label>
       <div class="spacer-fixed"></div>
@@ -151,6 +175,7 @@ function onSelectBundleR(e: Event) {
 
 .spacer-flex {
   flex: 1;
+  min-width: 20px;
 }
 
 .spacer-fixed {
@@ -177,24 +202,8 @@ function onSelectBundleR(e: Event) {
   margin-right: 1rem;
 }
 
-select {
-  margin-right: 1rem;
-  font-family: Roboto, sans-serif;
-  font-size: 1em;
-  // XXX: Remove browser-provided background, but preserve arrow; based on:
-  //   https://stackoverflow.com/a/57510283
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  appearance: none;
-  padding: 0.2rem 1.6rem 0.2rem 0.4rem;
-  background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' fill='%23555'><polygon points='0,0 100,0 50,60'/></svg>")
-    no-repeat;
-  background-size: 0.8rem;
-  background-position: calc(100% - 0.4rem) 70%;
-  background-repeat: no-repeat;
-  background-color: #353535;
-  border: none;
-  border-radius: 0.4rem;
+.generated-date {
+  color: #ddd;
 }
 
 .header-controls {
@@ -202,6 +211,10 @@ select {
   flex-direction: row;
   margin: 0.4rem 0;
   align-items: center;
+}
+
+.control-label.concurrency {
+  margin-right: 0.4rem;
 }
 
 input[type='range'] {

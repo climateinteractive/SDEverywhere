@@ -145,6 +145,15 @@ async function initForLocal(): Promise<void> {
   }
   const configOptions = await getConfigOptions(bundleL, bundleR, configInitOptions)
 
+  // Override the concurrency setting using the value from LocalStorage
+  const concurrencyValue = localStorage.getItem('sde-check-concurrency')
+  if (concurrencyValue !== null) {
+    const concurrency = parseInt(concurrencyValue)
+    configOptions.concurrency = !isNaN(concurrency) ? concurrency : 1
+  } else {
+    configOptions.concurrency = 1
+  }
+
   // Initialize the root Svelte component
   initAppShell(configOptions, {
     bundleNames
@@ -191,9 +200,10 @@ if (import.meta.hot) {
     initBundlesAndUI()
   })
 
-  // Reload everything when the user applies updated filters
-  document.addEventListener('sde-check-apply-filters', () => {
-    // Reinitialize using the new filters
+  // Reload everything when the user applies updated configuration (e.g., updated filters or
+  // concurrency setting)
+  document.addEventListener('sde-check-config-changed', () => {
+    // Reinitialize using the new configuration
     initBundlesAndUI()
   })
 }

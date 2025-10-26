@@ -4,7 +4,6 @@ import type { Readable, Writable } from 'svelte/store'
 import { derived, get, writable } from 'svelte/store'
 
 import type {
-  BundleModel,
   ComparisonConfig,
   ComparisonDataCoordinator,
   ComparisonGroupSummariesByCategory,
@@ -15,12 +14,14 @@ import type {
   DatasetMap,
   DiffPoint,
   ImplVar,
+  ModelSpec,
   ScenarioSpec,
+  TraceCallbacks,
   TraceDatasetReport,
   TraceOptions,
   TraceReport
 } from '@sdeverywhere/check-core'
-import { categorizeComparisonTestSummaries, TraceRunner } from '@sdeverywhere/check-core'
+import { categorizeComparisonTestSummaries, runTrace } from '@sdeverywhere/check-core'
 
 import { SelectorOptionViewModel, SelectorViewModel } from '../_shared/selector-vm'
 
@@ -31,9 +32,6 @@ import type { TracePointViewModel, TraceRowViewModel } from './trace-row-vm'
 import { TraceTooltipViewModel } from './trace-tooltip-vm'
 
 export class TraceViewModel {
-  private readonly bundleModelL: BundleModel
-  private readonly bundleModelR: BundleModel
-
   public readonly bundleNameL: string
   public readonly bundleNameR: string
 
@@ -76,10 +74,6 @@ export class TraceViewModel {
     initialScenarioSpec: ScenarioSpec | undefined,
     initialScenarioKind: 'check' | 'comparison' | undefined
   ) {
-    // Extract the bundle models
-    this.bundleModelL = comparisonConfig.bundleL.model
-    this.bundleModelR = comparisonConfig.bundleR.model
-
     // Extract the bundle names
     this.bundleNameL = comparisonConfig.bundleL.name
     this.bundleNameR = comparisonConfig.bundleR.name
@@ -208,6 +202,7 @@ export class TraceViewModel {
 
     // Configure the trace options using the selected sources and scenarios
     const source0 = get(this.selectedSource0)
+    const source1 = get(this.selectedSource1)
     let traceOptions: TraceOptions
     if (source0 === 'dat') {
       // We are comparing to a dat file; parse the dat file and convert to a `DatasetMap`
@@ -219,31 +214,23 @@ export class TraceViewModel {
       }
       const extData = readDat(datText, 'ModelImpl_')
       this.datDatasets = extData
-      const bundleModel = this.bundleModelR
       const scenarioSpec = get(this.selectedScenarioSpec1)
       traceOptions = {
         kind: 'compare-to-ext-data',
         extData,
-        bundleModel,
+        bundleSide: source1,
         scenarioSpec
       }
     } else {
       // We are comparing to another bundle
       this.datDatasets = undefined
-      let bundleModel0: BundleModel
-      if (source0 === 'left') {
-        bundleModel0 = this.bundleModelL
-      } else {
-        bundleModel0 = this.bundleModelR
-      }
       const scenarioSpec0 = get(this.selectedScenarioSpec0)
-      const bundleModel1 = this.bundleModelR
       const scenarioSpec1 = get(this.selectedScenarioSpec1)
       traceOptions = {
         kind: 'compare-to-bundle',
-        bundleModel0,
+        bundleSide0: source0,
         scenarioSpec0: scenarioSpec0,
-        bundleModel1,
+        bundleSide1: source1,
         scenarioSpec1: scenarioSpec1
       }
     }
@@ -251,38 +238,41 @@ export class TraceViewModel {
     // TODO: Get this threshold value from the UI
     const threshold = 0
 
+    // TODO: For now, always use the dataset keys from the "right" bundle
+    const modelSpecR = this.comparisonConfig.bundleR.modelSpec
+
     // Run the trace
-    const traceRunner = new TraceRunner()
-    traceRunner.onComplete = report => {
-      // console.log('COMPLETE!')
-      const groups = groupsFromReport(this.bundleModelR, report, threshold)
-      this.writableGroups.set(groups)
-      if (groups.length === 0) {
-        let statusMessage = 'No comparisons were performed.'
-        if (source0 === 'dat') {
-          statusMessage += ' Check that the DAT file is valid.'
+    const callbacks: TraceCallbacks = {
+      onComplete: report => {
+        const groups = groupsFromReport(modelSpecR, report, threshold)
+        this.writableGroups.set(groups)
+        if (groups.length === 0) {
+          let statusMessage = 'No comparisons were performed.'
+          if (source0 === 'dat') {
+            statusMessage += ' Check that the DAT file is valid.'
+          } else {
+            statusMessage += ' Check that the bundle is configured correctly.'
+          }
+          this.writableStatusMessage.set(statusMessage)
         } else {
-          statusMessage += ' Check that the bundle is configured correctly.'
+          this.writableStatusMessage.set(undefined)
+          // Select the first red square after trace completes
+          setTimeout(() => {
+            const groups = get(this.filteredGroups)
+            const firstRedSquare = findFirstRedSquare(groups)
+            this.selectedSquare.set(firstRedSquare)
+          }, 0)
         }
-        this.writableStatusMessage.set(statusMessage)
-      } else {
-        this.writableStatusMessage.set(undefined)
-        // Select the first red square after trace completes
-        setTimeout(() => {
-          const groups = get(this.filteredGroups)
-          const firstRedSquare = findFirstRedSquare(groups)
-          this.selectedSquare.set(firstRedSquare)
-        }, 0)
+        this.running = false
+      },
+      onError: error => {
+        // Show error message
+        console.error(error)
+        this.writableStatusMessage.set(error.message)
+        this.running = false
       }
-      this.running = false
     }
-    traceRunner.onError = error => {
-      // Show error message
-      console.error(error)
-      this.writableStatusMessage.set(error.message)
-      this.running = false
-    }
-    traceRunner.start(traceOptions)
+    runTrace(modelSpecR, callbacks, traceOptions)
   }
 
   createTooltipViewModel(datasetKey: DatasetKey, varName: string, diffPoint: DiffPoint): TraceTooltipViewModel {
@@ -356,10 +346,13 @@ export function createTraceViewModel(
   return new TraceViewModel(comparisonConfig, dataCoordinator, terseSummaries, initialScenarioSpec, initialScenarioKind)
 }
 
-function groupsFromReport(bundleModelR: BundleModel, report: TraceReport, threshold: number): TraceGroupViewModel[] {
-  // TODO: Handle case where implVarGroups is undefined
-  const implVars = bundleModelR.modelSpec.implVars
-  const implVarGroups = bundleModelR.modelSpec.implVarGroups
+function groupsFromReport(modelSpecR: ModelSpec, report: TraceReport, threshold: number): TraceGroupViewModel[] {
+  const implVars = modelSpecR.implVars || new Map()
+  const implVarGroups = modelSpecR.implVarGroups || []
+  if (implVars.size === 0 || implVarGroups.length === 0) {
+    console.error('ERROR: No impl vars or groups defined in model spec; trace report will be empty')
+    return []
+  }
 
   // Get min/max times from datasets
   // XXX: This would be simpler if the min/max times were required in ModelSpec
@@ -379,7 +372,7 @@ function groupsFromReport(bundleModelR: BundleModel, report: TraceReport, thresh
     }
   }
   if (modelMinTime === undefined || modelMaxTime === undefined) {
-    console.error('Failed to determine min/max times')
+    console.error('ERROR: Failed to determine min/max times; trace report will be empty')
     return []
   }
 
@@ -446,7 +439,7 @@ function groupsFromReport(bundleModelR: BundleModel, report: TraceReport, thresh
     // Check if this variable is an output variable
     // XXX: This assumes that dataset keys for output variables have a consistent format
     const outputVarDatasetKey = datasetReport.datasetKey.replace('ModelImpl', 'Model')
-    const isOutputVar = bundleModelR.modelSpec.outputVars.has(outputVarDatasetKey)
+    const isOutputVar = modelSpecR.outputVars.has(outputVarDatasetKey)
 
     return {
       datasetKey: datasetReport.datasetKey,

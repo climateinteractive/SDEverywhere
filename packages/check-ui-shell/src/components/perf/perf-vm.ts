@@ -3,7 +3,7 @@
 import type { Readable, Writable } from 'svelte/store'
 import { get, writable } from 'svelte/store'
 
-import type { BundleModel, Config, PerfReport } from '@sdeverywhere/check-core'
+import type { PerfReport } from '@sdeverywhere/check-core'
 
 import type { DotPlotViewModel } from './dot-plot-vm'
 import { createDotPlotViewModel } from './dot-plot-vm'
@@ -15,10 +15,7 @@ export class PerfViewModel {
   private minTime = Number.MAX_VALUE
   private maxTime = 0
 
-  constructor(
-    public readonly bundleModelL: BundleModel,
-    public readonly bundleModelR: BundleModel
-  ) {
+  constructor() {
     this.writableRows = writable([])
     this.rows = this.writableRows
   }
@@ -64,6 +61,6 @@ export class PerfViewModel {
   }
 }
 
-export function createPerfViewModel(config: Config): PerfViewModel {
-  return new PerfViewModel(config.comparison.bundleL.model, config.comparison.bundleR.model)
+export function createPerfViewModel(): PerfViewModel {
+  return new PerfViewModel()
 }

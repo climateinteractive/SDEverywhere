@@ -4,6 +4,7 @@ import type { Readable } from 'svelte/store'
 import { derived, writable } from 'svelte/store'
 
 import type {
+  CheckConfig,
   CheckDataCoordinator,
   CheckKey,
   CheckPredicateOp,
@@ -28,8 +29,11 @@ export interface PlaygroundViewModel {
   graphBox: Readable<CheckSummaryGraphBoxViewModel>
 }
 
-export function createPlaygroundViewModel(dataCoordinator: CheckDataCoordinator): PlaygroundViewModel {
-  const modelSpec = dataCoordinator.bundleModel.modelSpec
+export function createPlaygroundViewModel(
+  checkConfig: CheckConfig,
+  dataCoordinator: CheckDataCoordinator
+): PlaygroundViewModel {
+  const modelSpec = checkConfig.bundle.modelSpec
 
   const descCard = createDescCardViewModel()
 

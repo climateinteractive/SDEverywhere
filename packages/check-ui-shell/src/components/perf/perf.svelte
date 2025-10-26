@@ -2,7 +2,7 @@
 
 <!-- SCRIPT -->
 <script lang="ts">
-import { PerfRunner } from '@sdeverywhere/check-core'
+import { runPerf } from '@sdeverywhere/check-core'
 
 import DotPlot from './dot-plot.svelte'
 import type { PerfViewModel } from './perf-vm'
@@ -13,19 +13,23 @@ const rows = viewModel.rows
 let running = false
 
 function onRun() {
+  if (running) {
+    return
+  }
+
   running = true
 
-  const perfRunner = new PerfRunner(viewModel.bundleModelL, viewModel.bundleModelR)
-  perfRunner.onComplete = (summaryL, summaryR) => {
-    viewModel.addRow(summaryL, summaryR)
-    running = false
-  }
-  perfRunner.onError = error => {
-    // TODO: Show error message in view
-    console.error(error)
-    running = false
-  }
-  perfRunner.start()
+  runPerf({
+    onComplete: (summaryL, summaryR) => {
+      viewModel.addRow(summaryL, summaryR)
+      running = false
+    },
+    onError: error => {
+      // TODO: Show error message in view
+      console.error(error)
+      running = false
+    }
+  })
 }
 </script>
 

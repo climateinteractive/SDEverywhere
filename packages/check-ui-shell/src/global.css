@@ -43,6 +43,31 @@ sub {
   top: 0.6ex;
 }
 
+select {
+  margin-right: 1rem;
+  font-family: Roboto, sans-serif;
+  font-size: 1em;
+  /* XXX: Remove browser-provided background, but preserve arrow; based on: https://stackoverflow.com/a/57510283 */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  padding: 0.2rem 1.6rem 0.2rem 0.4rem;
+  background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' fill='%23555'><polygon points='0,0 100,0 50,60'/></svg>")
+    no-repeat;
+  background-size: 0.8rem;
+  background-position: calc(100% - 0.4rem) 70%;
+  background-repeat: no-repeat;
+  background-color: #353535;
+  border: none;
+  border-radius: 0.4rem;
+  color: #ddd;
+}
+
+select > option {
+  /* XXX: Firefox doesn't support @font-face in select menus, so the best we can do is try a similar sans serif font */
+  font-family: Roboto, sans-serif;
+}
+
 /*
  * Standard colors
  */

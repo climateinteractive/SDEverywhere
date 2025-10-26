@@ -69,7 +69,8 @@ function mockBundle(name: string, inputVarNames: string[], outputVarNames: strin
   return {
     name,
     version: 1,
-    model: mockBundleModel(modelSpec)
+    modelSpec,
+    models: [mockBundleModel(modelSpec)]
   }
 }
 
@@ -87,7 +88,7 @@ function mockComparisonConfig(
     bundleR,
     thresholds: [1, 5, 10],
     scenarios: getComparisonScenarios(scenarios),
-    datasets: getComparisonDatasets(bundleL.model.modelSpec, bundleR.model.modelSpec, datasetOptions),
+    datasets: getComparisonDatasets(bundleL.modelSpec, bundleR.modelSpec, datasetOptions),
     viewGroups: []
   }
 }

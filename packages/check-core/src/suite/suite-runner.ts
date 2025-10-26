@@ -2,27 +2,27 @@
 
 import type { DatasetsResult } from '../_shared/data-source'
 import type { ScenarioSpec } from '../_shared/scenario-spec-types'
+import type { BundleModels, Task, TaskKey } from '../_shared/task-queue'
 import { TaskQueue } from '../_shared/task-queue'
 import type { DatasetKey } from '../_shared/types'
 
 import type { BundleModel } from '../bundle/bundle-types'
 
-import type { DataRequest } from '../data/data-planner'
-import { DataPlanner } from '../data/data-planner'
+import { DataPlanner, type DataRequest } from '../data/data-planner'
 
 import { parseTestYaml } from '../check/check-parser'
 import { runChecks } from '../check/check-runner'
+import type { CheckNameSpec } from '../check/check-spec'
 
 import { runComparisons } from '../comparison/run/comparison-runner'
 import type { ComparisonReport, ComparisonTestReport } from '../comparison/report/comparison-report-types'
+import type { ComparisonScenarioTitleSpec } from '../comparison/config/comparison-spec-types'
 
 import type { Config } from '../config/config-types'
 
 import { PerfStats } from '../perf/perf-stats'
 
 import type { SuiteReport } from './suite-report-types'
-import type { CheckNameSpec } from '../check/check-spec'
-import type { ComparisonScenarioTitleSpec } from '../comparison/config/comparison-spec-types'
 
 export type CancelRunSuite = () => void
 
@@ -53,26 +53,24 @@ export interface RunSuiteOptions {
  * that scenario.
  */
 class SuiteRunner {
-  private readonly taskQueue: TaskQueue<DataRequest, void>
   private readonly perfStatsL: PerfStats = new PerfStats()
   private readonly perfStatsR: PerfStats = new PerfStats()
+
+  private readonly pendingTaskKeys: Set<TaskKey> = new Set()
   private stopped = false
 
   constructor(
     private readonly config: Config,
+    private readonly taskQueue: TaskQueue,
     private readonly callbacks: RunSuiteCallbacks
-  ) {
-    this.taskQueue = new TaskQueue({
-      process: request => {
-        return this.processRequest(request)
-      }
-    })
-  }
+  ) {}
 
   cancel(): void {
     if (!this.stopped) {
+      for (const taskKey of this.pendingTaskKeys) {
+        this.taskQueue.cancelTask(taskKey)
+      }
       this.stopped = true
-      this.taskQueue.shutdown()
     }
   }
 
@@ -82,13 +80,13 @@ class SuiteRunner {
 
     // Create a data planner to map out the model runs that are needed to
     // efficiently fetch the data to perform both the checks and comparisons
-    const modelSpec = this.config.check.bundle.model.modelSpec
-    const dataPlanner = new DataPlanner(modelSpec.outputVars.size)
+    const modelSpecR = this.config.check.bundle.modelSpec
+    const dataPlanner = new DataPlanner(modelSpecR.outputVars.size)
 
     // Create a separate data planner for ref data; these datasets will be
     // fetched first and kept in memory so that they can be accessed by any
     // checks/predicates that reference them
-    const refDataPlanner = new DataPlanner(modelSpec.outputVars.size)
+    const refDataPlanner = new DataPlanner(modelSpecR.outputVars.size)
 
     // Parse the check tests
     const checkSpecResult = parseTestYaml(this.config.check.tests)
@@ -107,31 +105,6 @@ class SuiteRunner {
     if (this.config.comparison) {
       const skipScenarios = options?.skipComparisonScenarios || []
       buildComparisonTestReports = runComparisons(this.config.comparison, dataPlanner, skipScenarios)
-    }
-
-    // When all tasks have been processed, build the report
-    this.taskQueue.onIdle = error => {
-      if (this.stopped) {
-        return
-      }
-
-      if (error) {
-        this.callbacks.onError?.(error)
-      } else {
-        const checkReport = buildCheckReport()
-        let comparisonReport: ComparisonReport
-        if (this.config.comparison) {
-          comparisonReport = {
-            testReports: buildComparisonTestReports(),
-            perfReportL: this.perfStatsL.toReport(),
-            perfReportR: this.perfStatsR.toReport()
-          }
-        }
-        this.callbacks.onComplete?.({
-          checkReport,
-          comparisonReport
-        })
-      }
     }
 
     // Plan the data tasks.  The ref data tasks must be processed first so that
@@ -162,19 +135,57 @@ class SuiteRunner {
       return
     }
 
+    // When all tasks have been processed, build the report and notify the completion callback
+    const buildReport = (error?: Error) => {
+      if (error) {
+        this.callbacks.onError?.(error)
+      } else {
+        const checkReport = buildCheckReport()
+        let comparisonReport: ComparisonReport
+        if (this.config.comparison) {
+          comparisonReport = {
+            testReports: buildComparisonTestReports(),
+            perfReportL: this.perfStatsL.toReport(),
+            perfReportR: this.perfStatsR.toReport()
+          }
+        }
+        this.callbacks.onComplete?.({
+          checkReport,
+          comparisonReport
+        })
+      }
+    }
+
     // Schedule a task for each data request
     let tasksCompleted = 0
     let dataTaskId = 1
     for (const dataRequest of dataRequests) {
-      this.taskQueue.addTask(`data${dataTaskId++}`, dataRequest, () => {
-        // Notify the progress callback after each task is processed
-        tasksCompleted++
-        this.callbacks.onProgress?.(tasksCompleted / taskCount)
-      })
+      const task: Task = {
+        key: `suite-runner-${dataTaskId++}`,
+        kind: 'suite-runner',
+        process: async bundleModels => {
+          // Remove the task key from the set of pending task keys
+          this.pendingTaskKeys.delete(task.key)
+
+          // Process the request
+          await this.processRequest(dataRequest, bundleModels)
+
+          // Notify the progress callback after each task is processed
+          tasksCompleted++
+          this.callbacks.onProgress?.(tasksCompleted / taskCount)
+
+          // Notify the completion callback when all tasks have been processed
+          if (tasksCompleted === taskCount) {
+            buildReport()
+          }
+        }
+      }
+      this.taskQueue.addTask(task)
+      this.pendingTaskKeys.add(task.key)
     }
   }
 
-  private async processRequest(request: DataRequest): Promise<void> {
+  private async processRequest(request: DataRequest, bundleModels: BundleModels): Promise<void> {
     // Get the set of dataset keys requested for this run
     const datasetKeySet: Set<DatasetKey> = new Set()
     for (const dataTask of request.dataTasks) {
@@ -194,8 +205,8 @@ class SuiteRunner {
     }
 
     // Run the model(s) in parallel and extract the requested datasets
-    const bundleModelL = this.config.comparison?.bundleL.model
-    const bundleModelR = this.config.comparison?.bundleR.model || this.config.check.bundle.model
+    const bundleModelL = bundleModels.L
+    const bundleModelR = bundleModels.R
     const [datasetsResultL, datasetsResultR] = await Promise.all([
       getDatasets(bundleModelL, request.scenarioSpecL),
       getDatasets(bundleModelR, request.scenarioSpecR)
@@ -224,6 +235,30 @@ class SuiteRunner {
 }
 
 /**
+ * Run the full suite of checks and comparisons with a given `TaskQueue` instance.
+ *
+ * @param config The test suite configuration.
+ * @param taskQueue The task queue to use.
+ * @param callbacks The callbacks that will be notified.
+ * @param options Options to control how the tests are run.
+ * @return A function that will cancel the process when invoked.
+ *
+ * @hidden This is exported only for use in tests.
+ */
+export function runSuiteWithTaskQueue(
+  config: Config,
+  taskQueue: TaskQueue,
+  callbacks: RunSuiteCallbacks,
+  options?: RunSuiteOptions
+): CancelRunSuite {
+  const suiteRunner = new SuiteRunner(config, taskQueue, callbacks)
+  suiteRunner.start(options)
+  return () => {
+    suiteRunner.cancel()
+  }
+}
+
+/**
  * Run the full suite of checks and comparisons defined in the given configuration.
  *
  * @param config The test suite configuration.
@@ -232,9 +267,6 @@ class SuiteRunner {
  * @return A function that will cancel the process when invoked.
  */
 export function runSuite(config: Config, callbacks: RunSuiteCallbacks, options?: RunSuiteOptions): CancelRunSuite {
-  const suiteRunner = new SuiteRunner(config, callbacks)
-  suiteRunner.start(options)
-  return () => {
-    suiteRunner.cancel()
-  }
+  const taskQueue = TaskQueue.getInstance()
+  return runSuiteWithTaskQueue(config, taskQueue, callbacks, options)
 }
