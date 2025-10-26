@@ -18,7 +18,7 @@ import { getImplVars } from './impl-vars'
 import { type Input, getInputVars } from './inputs'
 import { getOutputVars } from './outputs'
 
-import { implSpec, inputSpecs, outputSpecs, modelSizeInBytes, dataSizeInBytes } from 'virtual:model-spec'
+import { encodedImplVars, inputSpecs, outputSpecs, modelSizeInBytes, dataSizeInBytes } from 'virtual:model-spec'
 
 import modelWorkerJs from '@_model_worker_/worker.js?raw'
 import { BundleModelRunner } from './bundle-model-runner'
@@ -84,7 +84,7 @@ export function createBundle(): Bundle {
   const outputVars = getOutputVars(outputSpecs)
 
   // Gather information about internal/implementation variables
-  const { implVars, implVarGroups } = getImplVars(implSpec)
+  const { implVars, implVarGroups } = getImplVars(encodedImplVars)
 
   const modelSpec: ModelSpec = {
     modelSizeInBytes,
