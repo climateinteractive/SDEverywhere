@@ -66,9 +66,6 @@ export interface CheckReport {
 export type StyleFunc = (s: string) => string
 
 export function buildCheckReport(checkPlan: CheckPlan, checkResults: Map<CheckKey, CheckResult>): CheckReport {
-  // console.log('checkPlan', checkPlan)
-  // console.log('checkResults', checkResults)
-
   const groupReports: CheckGroupReport[] = []
 
   for (const groupPlan of checkPlan.groups) {
