@@ -35,11 +35,11 @@ export type {
 export type { ImplVar, InputId, InputVar, OutputVar, RelatedItem } from './bundle/var-types'
 
 export type {
-  EncodedVariable,
+  EncodedImplVars,
   EncodedSubscript,
-  EncodedVarType,
+  EncodedVariable,
   EncodedVarInstance,
-  EncodedImplVars
+  EncodedVarType
 } from './bundle/impl-vars-codec'
 export { encodeImplVars, decodeImplVars } from './bundle/impl-vars-codec'
 

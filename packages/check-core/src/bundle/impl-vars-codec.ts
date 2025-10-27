@@ -3,6 +3,16 @@
 import type { ImplVar } from './var-types'
 
 /**
+ * A terse representation of a subscript.
+ */
+export interface EncodedSubscript {
+  /** The subscript name (e.g., "Sub1"). */
+  n: string
+  /** The subscript identifier (e.g., "_sub1"). */
+  i: string
+}
+
+/**
  * A terse representation of a variable without subscripts.
  */
 export interface EncodedVariable {
@@ -12,16 +22,6 @@ export interface EncodedVariable {
   i: string
   /** The variable index (corresponds to `ImplVar.varIndex`). */
   x: number
-}
-
-/**
- * A terse representation of a subscript.
- */
-export interface EncodedSubscript {
-  /** The subscript name (e.g., "Sub1"). */
-  n: string
-  /** The subscript identifier (e.g., "_sub1"). */
-  i: string
 }
 
 /**
