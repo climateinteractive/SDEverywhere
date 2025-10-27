@@ -8,6 +8,7 @@ import type { InlineConfig, ResolvedConfig, Plugin as VitePlugin } from 'vite'
 import { nodeResolve } from '@rollup/plugin-node-resolve'
 
 import type { BuildContext, ResolvedModelSpec } from '@sdeverywhere/build'
+import { encodeImplVars } from '@sdeverywhere/check-core'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
@@ -80,9 +81,14 @@ function injectModelSpec(context: BuildContext, modelSpec: ResolvedModelSpec): V
     }
   }
 
-  // Read the JSON model listing and include impl var specs from `varInstances`
+  // Read the JSON model listing
   const listing = readJsonListing()
+
+  // Extract the `varInstances` object from the model listing
   const varInstances = listing.varInstances || {}
+
+  // Encode the `varInstances` object into a more efficient format to reduce the bundle size
+  const encodedImplVars = encodeImplVars(varInstances)
 
   function stagedFileSize(filename: string): number {
     const path = joinPath(prepDir, 'staged', 'model', filename)
@@ -107,7 +113,7 @@ function injectModelSpec(context: BuildContext, modelSpec: ResolvedModelSpec): V
   const moduleSrc = `
 export const inputSpecs = ${JSON.stringify(inputSpecs)};
 export const outputSpecs = ${JSON.stringify(outputSpecs)};
-export const implSpec = ${JSON.stringify(varInstances)};
+export const encodedImplVars = ${JSON.stringify(encodedImplVars)};
 export const modelSizeInBytes = ${modelSizeInBytes};
 export const dataSizeInBytes = ${dataSizeInBytes};
 `

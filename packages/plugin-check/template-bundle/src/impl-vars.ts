@@ -1,16 +1,7 @@
 // Copyright (c) 2022 Climate Interactive / New Venture Fund
 
-import type { DatasetKey, ImplVar, ImplVarGroup } from '@sdeverywhere/check-core'
-
-/** The shape of the `varInstances` section from the JSON model listing. */
-export interface ImplVarInstancesSpec {
-  constants?: ImplVar[]
-  lookupVars?: ImplVar[]
-  dataVars?: ImplVar[]
-  initVars?: ImplVar[]
-  levelVars?: ImplVar[]
-  auxVars?: ImplVar[]
-}
+import type { DatasetKey, EncodedImplVars, ImplVar, ImplVarGroup } from '@sdeverywhere/check-core'
+import { decodeImplVars } from '@sdeverywhere/check-core'
 
 /** The properties related to impl variables that will be included in the bundle model spec. */
 export interface ImplSpec {
@@ -23,7 +14,10 @@ export interface ImplSpec {
 /**
  * Gather the set of internal/implementation variables used in this version of the model.
  */
-export function getImplVars(implVarInstancesSpec: ImplVarInstancesSpec): ImplSpec {
+export function getImplVars(encodedImplVars: EncodedImplVars): ImplSpec {
+  // Decode the encoded impl variables into the original `ImplVar` objects
+  const decodedImplVars = decodeImplVars(encodedImplVars)
+
   const implVars: Map<DatasetKey, ImplVar> = new Map()
   const implVarGroups: ImplVarGroup[] = []
 
@@ -50,13 +44,13 @@ export function getImplVars(implVarInstancesSpec: ImplVarInstancesSpec): ImplSpe
     })
   }
 
-  addGroup('initConstants', implVarInstancesSpec.constants || [])
+  addGroup('initConstants', decodedImplVars.constants || [])
   // TODO: Include lookups and data variables
-  // addGroup('initLookups', implVarInstancesSpec.lookupVars || [])
-  // addGroup('initData', implVarInstancesSpec.dataVars || [])
-  addGroup('initLevels', implVarInstancesSpec.initVars || [])
-  addGroup('evalLevels', implVarInstancesSpec.levelVars || [])
-  addGroup('evalAux', implVarInstancesSpec.auxVars || [])
+  // addGroup('initLookups', decodedImplVars.lookupVars || [])
+  // addGroup('initData', decodedImplVars.dataVars || [])
+  addGroup('initLevels', decodedImplVars.initVars || [])
+  addGroup('evalLevels', decodedImplVars.levelVars || [])
+  addGroup('evalAux', decodedImplVars.auxVars || [])
 
   return {
     implVars,
