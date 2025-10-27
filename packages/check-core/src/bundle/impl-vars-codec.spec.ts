@@ -1,6 +1,7 @@
-// Copyright (c) 2024 Climate Interactive / New Venture Fund
+// Copyright (c) 2025 Climate Interactive / New Venture Fund
 
 import { describe, it, expect } from 'vitest'
+
 import type { ImplVar } from './var-types'
 import { encodeImplVars, decodeImplVars, type EncodedImplVars } from './impl-vars-codec'
 
@@ -132,7 +133,7 @@ describe('encodeImplVars', () => {
     ])
   })
 
-  it('should handle the example from the requirements', () => {
+  it('should encode a complex example of multiple variables in different groups', () => {
     const input: { [key: string]: ImplVar[] } = {
       constants: [
         {
@@ -252,7 +253,7 @@ describe('decodeImplVars', () => {
     })
   })
 
-  it('should handle the example from the requirements', () => {
+  it('should decode a complex example of multiple variables in different groups', () => {
     const encoded: EncodedImplVars = {
       subscripts: [
         { n: 'Sub A1', i: '_sub_a1' },
@@ -312,8 +313,8 @@ describe('decodeImplVars', () => {
   })
 })
 
-describe('roundtrip behavior', () => {
-  it('should preserve data through encode/decode cycle', () => {
+describe('encodeImplVars + decodeImplVars roundtrip', () => {
+  it('should preserve data through encode/decode roundtrip', () => {
     const original: { [key: string]: ImplVar[] } = {
       constants: [
         {
