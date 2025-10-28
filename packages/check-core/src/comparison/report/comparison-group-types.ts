@@ -28,8 +28,8 @@ export type ComparisonGroupRoot = ComparisonDataset | ComparisonScenario
 export interface ComparisonGroupScores {
   /** The total number of comparisons (sample size) for this group. */
   totalDiffCount: number
-  /** The sum of the `maxDiff` values for each threshold bucket. */
-  totalMaxDiffByBucket: number[]
+  /** The sum of the diff values for the active sort mode (e.g., `maxDiff`, `avgDiff`) for each threshold bucket. */
+  totalDiffByBucket: number[]
   /** The number of comparisons that fall into each threshold bucket. */
   diffCountByBucket: number[]
   /** The percentage of comparisons that fall into each threshold bucket. */

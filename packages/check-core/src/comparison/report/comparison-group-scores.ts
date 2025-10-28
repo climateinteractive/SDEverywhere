@@ -3,6 +3,7 @@
 import { getBucketIndex } from './buckets'
 import type { ComparisonGroupScores } from './comparison-group-types'
 import type { ComparisonTestSummary } from './comparison-report-types'
+import type { ComparisonSortMode } from './comparison-sort-mode'
 
 /**
  * Compute the overall scores for the given group of comparison test summaries.
@@ -10,21 +11,42 @@ import type { ComparisonTestSummary } from './comparison-report-types'
  * @param testSummaries The comparison test summaries to consider.
  * @param thresholds The array of thresholds that determine the buckets into which
  * the scores will be summarized.
+ * @param sortMode The sort mode to determine which field to use for scoring.
  */
 export function getScoresForTestSummaries(
   testSummaries: ComparisonTestSummary[],
-  thresholds: number[]
+  thresholds: number[],
+  sortMode: ComparisonSortMode
 ): ComparisonGroupScores {
   // Add up scores and group them into buckets (6 buckets: 0-4 for diff levels, 5 for skipped)
   const diffCountByBucket = Array(thresholds.length + 3).fill(0)
-  const totalMaxDiffByBucket = Array(thresholds.length + 3).fill(0)
+  const totalDiffByBucket = Array(thresholds.length + 3).fill(0)
   let totalDiffCount = 0
+
+  // Determine which field to use based on sort mode
+  let valueKey: 'md' | 'ad' | 'mdb' | 'adb'
+  switch (sortMode) {
+    case 'max-diff':
+      valueKey = 'md'
+      break
+    case 'avg-diff':
+      valueKey = 'ad'
+      break
+    case 'max-diff-relative':
+      valueKey = 'mdb'
+      break
+    case 'avg-diff-relative':
+      valueKey = 'adb'
+      break
+  }
+
   for (const testSummary of testSummaries) {
-    const bucketIndex = getBucketIndex(testSummary.md, thresholds)
+    const value = testSummary[valueKey]
+    const bucketIndex = getBucketIndex(value, thresholds)
     diffCountByBucket[bucketIndex]++
     // Only include in the total if the value is defined (not skipped)
-    if (testSummary.md !== undefined) {
-      totalMaxDiffByBucket[bucketIndex] += testSummary.md
+    if (value !== undefined) {
+      totalDiffByBucket[bucketIndex] += value
     }
     totalDiffCount++
   }
@@ -40,7 +62,7 @@ export function getScoresForTestSummaries(
 
   return {
     totalDiffCount,
-    totalMaxDiffByBucket,
+    totalDiffByBucket,
     diffCountByBucket,
     diffPercentByBucket
   }

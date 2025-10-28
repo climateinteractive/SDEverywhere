@@ -17,18 +17,53 @@ export function comparisonSummaryFromReport(comparisonReport: ComparisonReport):
 
   for (const r of comparisonReport.testReports) {
     if (r.diffReport === undefined) {
-      // The test was skipped; add a summary with an undefined `maxDiff`
+      // The test was skipped; add a summary with undefined diff values
       terseSummaries.push({
         s: r.scenarioKey,
-        d: r.datasetKey,
-        md: undefined
+        d: r.datasetKey
       })
     } else if (r.diffReport?.validity === 'both' && r.diffReport.maxDiff > 0) {
-      // Only include the summary if the test produced a non-zero `maxDiff`
+      // The test produced a non-zero `maxDiff`, so include the summary
+      let maxDiffRelativeToBaseline: number | undefined
+      let avgDiffRelativeToBaseline: number | undefined
+      if (r.baselineDiffReport) {
+        // Calculate relative values when the baseline diff report is available
+        // XXX: In the case where the baseline diff is zero, we need to avoid division
+        // by zero.  We could use a special value like NaN or null for this case, but
+        // it's simpler to instead use a small non-zero value for the denominator, which
+        // will have the effect of making the relative value very large.  This is close
+        // to the desired behavior, since we want to flag cases where there is a difference
+        // between the two datasets for a given scenario but not for the baseline scenario.
+        const epsilon = 0.000001
+        const baselineMaxDiff = r.baselineDiffReport.maxDiff !== 0 ? r.baselineDiffReport.maxDiff : epsilon
+        const baselineAvgDiff = r.baselineDiffReport.avgDiff !== 0 ? r.baselineDiffReport.avgDiff : epsilon
+        maxDiffRelativeToBaseline = r.diffReport.maxDiff / baselineMaxDiff
+        avgDiffRelativeToBaseline = r.diffReport.avgDiff / baselineAvgDiff
+      } else {
+        // When the baseline diff report is not available, it means that this is a report
+        // for the baseline scenario.  We will use special relative values for this case.
+        const baselineRelativeDiff = (x: number) => {
+          if (x === 0) {
+            // When the baseline diff is zero, set the relative value to zero so that
+            // it falls into the "green" bucket
+            return 0
+          } else {
+            // When the baseline diff is non-zero, set the relative value to 1 (meaning
+            // that the difference is the same as itself); this will put it into the
+            // "yellow" bucket
+            return 1
+          }
+        }
+        maxDiffRelativeToBaseline = baselineRelativeDiff(r.diffReport.maxDiff)
+        avgDiffRelativeToBaseline = baselineRelativeDiff(r.diffReport.avgDiff)
+      }
       terseSummaries.push({
         s: r.scenarioKey,
         d: r.datasetKey,
-        md: r.diffReport.maxDiff
+        md: r.diffReport.maxDiff,
+        ad: r.diffReport.avgDiff,
+        mdb: maxDiffRelativeToBaseline,
+        adb: avgDiffRelativeToBaseline
       })
     }
   }
@@ -67,22 +102,23 @@ export function restoreFromTerseSummaries(
     for (const datasetKey of datasetKeys) {
       const key = `${scenario.key}::${datasetKey}`
       const existingSummary = existingSummaries.get(key)
-      let maxDiff: number | undefined
       if (existingSummary) {
         // We have a summary in the array that was passed in, which means the
         // `maxDiff` was undefined (meaning the comparison was skipped) or was
-        // non-zero (meaning it had a non-zero difference), so preserve this value
-        maxDiff = existingSummary.md
+        // non-zero (meaning it had a non-zero difference), so preserve all fields
+        allTestSummaries.push(existingSummary)
       } else {
         // We don't have a summary in the array that was passed in, which means
         // the comparison produced no difference, so use zero
-        maxDiff = 0
+        allTestSummaries.push({
+          s: scenario.key,
+          d: datasetKey,
+          md: 0,
+          ad: 0,
+          mdb: 0,
+          adb: 0
+        })
       }
-      allTestSummaries.push({
-        s: scenario.key,
-        d: datasetKey,
-        md: maxDiff
-      })
     }
   }
 

@@ -18,14 +18,28 @@ import { getComparisonDatasets } from '../config/comparison-datasets'
 import { getComparisonScenarios } from '../config/comparison-scenarios'
 
 import type { ComparisonGroup, ComparisonGroupScores, ComparisonGroupSummary } from './comparison-group-types'
-import { categorizeComparisonGroups, groupComparisonTestSummaries } from './comparison-grouping'
+import {
+  categorizeComparisonGroups,
+  categorizeComparisonTestSummaries,
+  groupComparisonTestSummaries
+} from './comparison-grouping'
 import type { ComparisonTestSummary } from './comparison-report-types'
 
-function testSummary(scenario: ComparisonScenario, datasetKey: DatasetKey, maxDiff = 0): ComparisonTestSummary {
+function testSummary(
+  scenario: ComparisonScenario,
+  datasetKey: DatasetKey,
+  maxDiff = 0,
+  avgDiff = 0,
+  maxDiffRelativeToBaselineMaxDiff = 0,
+  avgDiffRelativeToBaselineAvgDiff = 0
+): ComparisonTestSummary {
   return {
     s: scenario.key,
     d: datasetKey,
-    md: maxDiff
+    md: maxDiff,
+    ad: avgDiff,
+    mdb: maxDiffRelativeToBaselineMaxDiff,
+    adb: avgDiffRelativeToBaselineAvgDiff
   }
 }
 
@@ -87,6 +101,7 @@ function mockComparisonConfig(
     bundleL,
     bundleR,
     thresholds: [1, 5, 10],
+    ratioThresholds: [1, 2, 3],
     scenarios: getComparisonScenarios(scenarios),
     datasets: getComparisonDatasets(bundleL.modelSpec, bundleR.modelSpec, datasetOptions),
     viewGroups: []
@@ -325,7 +340,7 @@ describe('categorizeComparisonGroups', () => {
     //   order comparisons by max diff (get percent of each bucket)
     //   put into sections (scenarios added, removed, diffs, no diffs)
     const groupsByScenario = groupComparisonTestSummaries(allSummaries, 'by-scenario')
-    const groupSummaries = categorizeComparisonGroups(comparisonConfig, [...groupsByScenario.values()])
+    const groupSummaries = categorizeComparisonGroups(comparisonConfig, [...groupsByScenario.values()], 'max-diff')
 
     // Verify that scenarios with unknown inputs and invalid values get grouped into the "with errors" category
     expect(groupSummaries.withErrors).toEqual([
@@ -361,7 +376,7 @@ describe('categorizeComparisonGroups', () => {
         ],
         {
           totalDiffCount: 5,
-          totalMaxDiffByBucket: [0, 0, 0, 0, 40, 0],
+          totalDiffByBucket: [0, 0, 0, 0, 40, 0],
           diffCountByBucket: [4, 0, 0, 0, 1, 0],
           diffPercentByBucket: [80, 0, 0, 0, 20, 0]
         }
@@ -377,7 +392,7 @@ describe('categorizeComparisonGroups', () => {
         ],
         {
           totalDiffCount: 5,
-          totalMaxDiffByBucket: [0, 0, 0, 0, 10, 0],
+          totalDiffByBucket: [0, 0, 0, 0, 10, 0],
           diffCountByBucket: [4, 0, 0, 0, 1, 0],
           diffPercentByBucket: [80, 0, 0, 0, 20, 0]
         }
@@ -393,7 +408,7 @@ describe('categorizeComparisonGroups', () => {
         ],
         {
           totalDiffCount: 5,
-          totalMaxDiffByBucket: [0, 0, 0, 0, 10, 0],
+          totalDiffByBucket: [0, 0, 0, 0, 10, 0],
           diffCountByBucket: [4, 0, 0, 0, 1, 0],
           diffPercentByBucket: [80, 0, 0, 0, 20, 0]
         }
@@ -409,7 +424,7 @@ describe('categorizeComparisonGroups', () => {
         ],
         {
           totalDiffCount: 5,
-          totalMaxDiffByBucket: [0, 0, 0, 10, 0, 0],
+          totalDiffByBucket: [0, 0, 0, 10, 0, 0],
           diffCountByBucket: [3, 0, 0, 2, 0, 0],
           diffPercentByBucket: [60, 0, 0, 40, 0, 0]
         }
@@ -428,7 +443,7 @@ describe('categorizeComparisonGroups', () => {
         ],
         {
           totalDiffCount: 5,
-          totalMaxDiffByBucket: [0, 0, 0, 0, 0, 0],
+          totalDiffByBucket: [0, 0, 0, 0, 0, 0],
           diffCountByBucket: [5, 0, 0, 0, 0, 0],
           diffPercentByBucket: [100, 0, 0, 0, 0, 0]
         }
@@ -444,7 +459,7 @@ describe('categorizeComparisonGroups', () => {
         ],
         {
           totalDiffCount: 5,
-          totalMaxDiffByBucket: [0, 0, 0, 0, 0, 0],
+          totalDiffByBucket: [0, 0, 0, 0, 0, 0],
           diffCountByBucket: [5, 0, 0, 0, 0, 0],
           diffPercentByBucket: [100, 0, 0, 0, 0, 0]
         }
@@ -473,7 +488,7 @@ describe('categorizeComparisonGroups', () => {
     //   order comparisons by max diff (get percent of each bucket)
     //   put into sections (datasets added, removed, diffs, no diffs)
     const groupsByDataset = groupComparisonTestSummaries(allSummaries, 'by-dataset')
-    const groupSummaries = categorizeComparisonGroups(comparisonConfig, [...groupsByDataset.values()])
+    const groupSummaries = categorizeComparisonGroups(comparisonConfig, [...groupsByDataset.values()], 'max-diff')
 
     expect(groupSummaries.onlyInLeft).toEqual([
       groupSummary('Model_z', [
@@ -516,7 +531,7 @@ describe('categorizeComparisonGroups', () => {
         ],
         {
           totalDiffCount: 8,
-          totalMaxDiffByBucket: [0, 0, 0, 5, 60, 0],
+          totalDiffByBucket: [0, 0, 0, 5, 60, 0],
           diffCountByBucket: [4, 0, 0, 1, 3, 0],
           diffPercentByBucket: [50, 0, 0, 12.5, 37.5, 0]
         }
@@ -535,7 +550,7 @@ describe('categorizeComparisonGroups', () => {
         ],
         {
           totalDiffCount: 8,
-          totalMaxDiffByBucket: [0, 0, 0, 5, 0, 0],
+          totalDiffByBucket: [0, 0, 0, 5, 0, 0],
           diffCountByBucket: [7, 0, 0, 1, 0, 0],
           diffPercentByBucket: [87.5, 0, 0, 12.5, 0, 0]
         }
@@ -557,11 +572,84 @@ describe('categorizeComparisonGroups', () => {
         ],
         {
           totalDiffCount: 8,
-          totalMaxDiffByBucket: [0, 0, 0, 0, 0, 0],
+          totalDiffByBucket: [0, 0, 0, 0, 0, 0],
           diffCountByBucket: [8, 0, 0, 0, 0, 0],
           diffPercentByBucket: [100, 0, 0, 0, 0, 0]
         }
       )
     ])
+  })
+})
+
+describe('categorizeComparisonTestSummaries', () => {
+  const inputVarNames = ['a']
+  const bundleL = mockBundle('L', inputVarNames, ['x'])
+  const bundleR = mockBundle('R', inputVarNames, ['x'])
+
+  const a = inputVar('1', 'a')[1]
+  const baseline = allAtPos('baseline', 'at-default', { title: 'Baseline', subtitle: 'at default' })
+  const scenario1 = scenarioWithInputVar('s1', a, 'at-minimum')
+  const scenario2 = scenarioWithInputVar('s2', a, 'at-maximum')
+  const scenario3 = scenarioWithInputVar('s3', a, 25)
+
+  const x = 'Model_x'
+
+  // Create test data with baseline diffs and relative diffs
+  // baseline: md=1%, ad=0.8%, mdb=1, adb=1 (the relative values are special for the baseline scenario)
+  // scenario1: md=10%, ad=8%, mdb=10, adb=10
+  // scenario2: md=5%, ad=4%, mdb=5, adb=5
+  // scenario3: md=2%, ad=1.5%, mdb=2, adb=1.875
+  const summaries: ComparisonTestSummary[] = [
+    testSummary(baseline, x, 1.0, 0.8, 1.0, 1.0),
+    testSummary(scenario1, x, 10.0, 8.0, 10.0, 10.0),
+    testSummary(scenario2, x, 5.0, 4.0, 5.0, 5.0),
+    testSummary(scenario3, x, 2.0, 1.5, 2.0, 1.875)
+  ]
+
+  const scenarios = [baseline, scenario1, scenario2, scenario3]
+  const comparisonConfig = mockComparisonConfig(bundleL, bundleR, scenarios)
+
+  it('should sort by max-diff with highest values first', () => {
+    const result = categorizeComparisonTestSummaries(comparisonConfig, summaries, 'max-diff')
+
+    // Expected order: scenario1 (10%), scenario2 (5%), scenario3 (2%), baseline (1%)
+    expect(result.byScenario.withDiffs.length).toBe(4)
+    expect(result.byScenario.withDiffs[0].group.testSummaries[0].md).toBe(10.0)
+    expect(result.byScenario.withDiffs[1].group.testSummaries[0].md).toBe(5.0)
+    expect(result.byScenario.withDiffs[2].group.testSummaries[0].md).toBe(2.0)
+    expect(result.byScenario.withDiffs[3].group.testSummaries[0].md).toBe(1.0)
+  })
+
+  it('should sort by avg-diff with highest values first', () => {
+    const result = categorizeComparisonTestSummaries(comparisonConfig, summaries, 'avg-diff')
+
+    // Expected order: scenario1 (8%), scenario2 (4%), scenario3 (1.5%), baseline (0.8%)
+    expect(result.byScenario.withDiffs.length).toBe(4)
+    expect(result.byScenario.withDiffs[0].group.testSummaries[0].ad).toBe(8.0)
+    expect(result.byScenario.withDiffs[1].group.testSummaries[0].ad).toBe(4.0)
+    expect(result.byScenario.withDiffs[2].group.testSummaries[0].ad).toBe(1.5)
+    expect(result.byScenario.withDiffs[3].group.testSummaries[0].ad).toBe(0.8)
+  })
+
+  it('should sort by max-diff-relative with highest values first', () => {
+    const result = categorizeComparisonTestSummaries(comparisonConfig, summaries, 'max-diff-relative')
+
+    // Expected order: scenario1 (10), scenario2 (5), scenario3 (2), baseline (1)
+    expect(result.byScenario.withDiffs.length).toBe(4)
+    expect(result.byScenario.withDiffs[0].group.testSummaries[0].mdb).toBe(10.0)
+    expect(result.byScenario.withDiffs[1].group.testSummaries[0].mdb).toBe(5.0)
+    expect(result.byScenario.withDiffs[2].group.testSummaries[0].mdb).toBe(2.0)
+    expect(result.byScenario.withDiffs[3].group.testSummaries[0].mdb).toBe(1.0)
+  })
+
+  it('should sort by avg-diff-relative with highest values first', () => {
+    const result = categorizeComparisonTestSummaries(comparisonConfig, summaries, 'avg-diff-relative')
+
+    // Expected order: scenario1 (10), scenario2 (5), scenario3 (1.875), baseline (1)
+    expect(result.byScenario.withDiffs.length).toBe(4)
+    expect(result.byScenario.withDiffs[0].group.testSummaries[0].adb).toBe(10.0)
+    expect(result.byScenario.withDiffs[1].group.testSummaries[0].adb).toBe(5.0)
+    expect(result.byScenario.withDiffs[2].group.testSummaries[0].adb).toBe(1.875)
+    expect(result.byScenario.withDiffs[3].group.testSummaries[0].adb).toBe(1.0)
   })
 })

@@ -17,6 +17,11 @@ export interface ComparisonTestReport {
   datasetKey: DatasetKey
   /** The diff report for the comparison, or undefined if the test was skipped. */
   diffReport?: DiffReport
+  /**
+   * The diff report for the baseline scenario (all inputs at default), or undefined if this
+   * report is for the baseline scenario itself.
+   */
+  baselineDiffReport?: DiffReport
 }
 
 /**
@@ -32,6 +37,12 @@ export interface ComparisonTestSummary {
   d: DatasetKey
   /** Short for `maxDiff`. */
   md?: number
+  /** Short for `avgDiff`. */
+  ad?: number
+  /** Short for `maxDiff` relative to baseline `maxDiff`. */
+  mdb?: number
+  /** Short for `avgDiff` relative to baseline `avgDiff`. */
+  adb?: number
 }
 
 /**
