@@ -66,6 +66,7 @@ export async function createConfig(options: ConfigOptions): Promise<Config> {
       bundleL: baselineBundle,
       bundleR: currentBundle,
       thresholds: options.comparison.thresholds,
+      ratioThresholds: options.comparison.ratioThresholds || [1, 2, 3],
       scenarios: getComparisonScenarios(comparisonDefs.scenarios),
       datasets: getComparisonDatasets(modelSpecL, modelSpecR, options.comparison.datasets),
       viewGroups: comparisonDefs.viewGroups,

@@ -174,6 +174,11 @@ export interface ComparisonOptions {
    */
   thresholds: number[]
   /**
+   * The array of thresholds used for relative sorting (ratios), defaults to [1, 2, 3]
+   * which will use buckets of 0, 0-1, 1-2, 2-3, and >3.
+   */
+  ratioThresholds?: number[]
+  /**
    * The requested comparison scenario and view specifications.  These can be
    * specified in YAML or JSON files, or using `Spec` objects.
    */
@@ -194,6 +199,11 @@ export interface ComparisonConfig {
    * buckets of 0%, 0-1%, 1-5%, 5-10%, and >10%.
    */
   thresholds: number[]
+  /**
+   * The array of thresholds used for relative sorting (ratios), e.g., [1, 2, 3]
+   * will use buckets of 0, 0-1, 1-2, 2-3, and >3.
+   */
+  ratioThresholds: number[]
   /** The set of resolved scenarios that will be compared. */
   scenarios: ComparisonScenarios
   /** The set of resolved datasets that will be compared. */
