@@ -129,7 +129,10 @@ export { comparisonSummaryFromReport } from './comparison/report/comparison-repo
 
 export * from './comparison/report/comparison-group-types'
 export * from './comparison/report/comparison-group-scores'
+
 export { categorizeComparisonTestSummaries } from './comparison/report/comparison-grouping'
+
+export type { ComparisonSortMode } from './comparison/report/comparison-sort-mode'
 
 //
 // config
