@@ -2,7 +2,7 @@
 
 import type { Readable, Writable } from 'svelte/store'
 import { writable } from 'svelte/store'
-import type { ComparisonConfig } from '@sdeverywhere/check-core'
+import type { ComparisonConfig, ComparisonSortMode } from '@sdeverywhere/check-core'
 
 export interface HeaderViewModel {
   devMode: boolean
@@ -15,6 +15,7 @@ export interface HeaderViewModel {
   controlsVisible: Writable<boolean>
   zoom: Writable<number>
   consistentYRange: Writable<boolean>
+  sortMode: Writable<ComparisonSortMode>
   concurrency: Writable<number>
 }
 
@@ -24,6 +25,7 @@ export function createHeaderViewModel(
   generatedDateString: Readable<string | undefined>,
   zoom: Writable<number>,
   consistentYRange: Writable<boolean>,
+  sortMode: Writable<ComparisonSortMode>,
   concurrency: Writable<number>
 ): HeaderViewModel {
   const controlsVisible = writable(false)
@@ -50,6 +52,7 @@ export function createHeaderViewModel(
       controlsVisible,
       zoom,
       consistentYRange,
+      sortMode,
       concurrency
     }
   } else {
@@ -61,6 +64,7 @@ export function createHeaderViewModel(
       controlsVisible,
       zoom,
       consistentYRange,
+      sortMode,
       concurrency
     }
   }

@@ -10,13 +10,14 @@ import type {
   CheckReport,
   ComparisonReport,
   ComparisonScenarioTitleSpec,
+  ComparisonSortMode,
   ComparisonSummary,
   ScenarioSpec,
   SuiteSummary
 } from '@sdeverywhere/check-core'
 import { checkReportFromSummary, comparisonSummaryFromReport, runSuite } from '@sdeverywhere/check-core'
 
-import { localStorageWritableBoolean, localStorageWritableNumber } from './_shared/stores'
+import { localStorageWritableBoolean, localStorageWritableNumber, localStorageWritableString } from './_shared/stores'
 import type { UserPrefs } from './_shared/user-prefs'
 
 import type { AppModel } from './model/app-model'
@@ -84,10 +85,12 @@ export class AppViewModel {
     // Create the `UserPrefs` object that is passed down to the component hierarchy
     const zoom = localStorageWritableNumber('sde-check-graph-zoom', 1)
     const consistentYRange = localStorageWritableBoolean('sde-check-consistent-y-range', false)
+    const sortMode = localStorageWritableString<ComparisonSortMode>('sde-check-sort-mode', 'max-diff')
     const concurrency = localStorageWritableNumber('sde-check-concurrency', 1)
     this.userPrefs = {
       zoom,
-      consistentYRange
+      consistentYRange,
+      sortMode
     }
 
     // XXX: If the summary is defined, it means that the were run ahead of time using the
@@ -104,6 +107,7 @@ export class AppViewModel {
       this.writableGeneratedDateString,
       zoom,
       consistentYRange,
+      sortMode,
       concurrency
     )
 
@@ -141,7 +145,9 @@ export class AppViewModel {
         checkReport,
         comparisonConfig,
         comparisonSummary,
-        this.pinnedItemStates
+        this.pinnedItemStates,
+        this.userPrefs.sortMode,
+        []
       )
       const dateString = formatGeneratedDateString(this.suiteSummary.date, this.suiteSummary.elapsed)
       this.writableGeneratedDateString.set(dateString)
@@ -168,6 +174,7 @@ export class AppViewModel {
               comparisonConfig,
               comparisonSummary,
               this.pinnedItemStates,
+              this.userPrefs.sortMode,
               this.skipComparisonScenarios
             )
             // Rebuild the filter popover view model to reflect the checks and comparisons

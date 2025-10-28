@@ -1,11 +1,13 @@
 // Copyright (c) 2021-2022 Climate Interactive / New Venture Fund
 
+import type { Readable } from 'svelte/store'
 import { get } from 'svelte/store'
 
 import type {
   CheckDataCoordinator,
   CheckReport,
   ComparisonConfig,
+  ComparisonSortMode,
   ComparisonSummary,
   ComparisonScenarioTitleSpec
 } from '@sdeverywhere/check-core'
@@ -36,6 +38,7 @@ export function createSummaryViewModel(
   comparisonConfig: ComparisonConfig | undefined,
   comparisonSummary: ComparisonSummary | undefined,
   pinnedItemStates: PinnedItemStates,
+  sortMode: Readable<ComparisonSortMode>,
   skipComparisonScenarios: ComparisonScenarioTitleSpec[] = []
 ): SummaryViewModel {
   type TabInfo = [subtitle: string, status: string]
@@ -120,6 +123,7 @@ export function createSummaryViewModel(
       comparisonConfig,
       pinnedItemStates,
       comparisonSummary.testSummaries,
+      sortMode,
       skipComparisonScenarios
     )
     const skippedScenarioCount = comparisonSummaries.skippedScenarioCount
