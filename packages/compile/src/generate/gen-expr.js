@@ -868,9 +868,8 @@ function generateAllocationFunctionCall(callExpr, ctx) {
   const ppArg = validateArg(1, 'pp')
   const ppRef = cVarRefWithoutLastIndices(ppArg, 2)
 
-  // Process the avail argument; include any subscripts
-  const availArg = validateArg(2, 'avail')
-  const availRef = ctx.cVarRef(availArg)
+  // Process the avail argument; include any subscripts. The avail arg can be any expression.
+  const availArg = generateExpr(callExpr.args[2], ctx)
 
   // Allocation functions iterate over the last subscript in its first arg.
   // The `readEquation` process will have already verified that the last dimension matches
@@ -884,13 +883,13 @@ function generateAllocationFunctionCall(callExpr, ctx) {
   switch (ctx.outFormat) {
     case 'c':
       ctx.emitPreInnerLoop(
-        `  double* ${tmpVarId} = ${callExpr.fnId}(${reqRef}, (double*)${ppRef}, ${availRef}, ${numRequesters});`
+        `  double* ${tmpVarId} = ${callExpr.fnId}(${reqRef}, (double*)${ppRef}, ${availArg}, ${numRequesters});`
       )
       break
     case 'js':
       // TODO: Implement allocation functions for JS
       // ctx.emitPreInnerLoop(
-      //   `  let ${tmpVarId} = fns.ALLOCATE_AVAILABLE(${reqRef}, ${ppRef}, ${availRef}, ${numRequesters});`
+      //   `  let ${tmpVarId} = fns.ALLOCATE_AVAILABLE(${reqRef}, ${ppRef}, ${availArg}, ${numRequesters});`
       // )
       break
     default:
