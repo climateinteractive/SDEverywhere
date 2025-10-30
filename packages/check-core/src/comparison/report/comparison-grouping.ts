@@ -25,6 +25,7 @@ import type { ComparisonSortMode } from './comparison-sort-mode'
  *
  * @param comparisonConfig The comparison configuration.
  * @param terseSummaries The set of terse test summaries.
+ * @param sortMode The sort mode to determine which field to use for scoring.
  */
 export function categorizeComparisonTestSummaries(
   comparisonConfig: ComparisonConfig,
