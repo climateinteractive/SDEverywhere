@@ -199,6 +199,85 @@ const { Story } = defineMeta({
 />
 
 <Story
+  name="Detail View Navigation"
+  {template}
+  beforeEach={async ({ args }) => {
+    args.appViewModel = await createAppViewModel({ modelsDiffer: false })
+  }}
+  play={async ({ canvas, canvasElement, userEvent }) => {
+    // Wait for tabs to appear
+    await waitFor(() => {
+      const comparisonsTab = canvas.getByText('Comparisons by scenario')
+      expect(comparisonsTab).not.toBeNull()
+    })
+
+    // Click the "Comparisons by scenario" tab
+    const comparisonsTab = canvas.getByText('Comparisons by scenario')
+    await userEvent.click(comparisonsTab)
+
+    // Click the section header
+    const noDifferencesHeader = canvas.getByText('No differences produced by the following scenarios')
+    await userEvent.click(noDifferencesHeader)
+
+    // Click the first "All inputs" title (title and subtitle are in separate elements)
+    const allInputsTitle = canvas.getByText('All inputs')
+    await userEvent.click(allInputsTitle)
+
+    // Wait for detail view to appear
+    await waitFor(() => {
+      const detailContainer = canvasElement.querySelector('.compare-detail-container')
+      expect(detailContainer).not.toBeNull()
+    })
+
+    // Helper function to get title and subtitle elements
+    function getHeading() {
+      const detailContainer = canvasElement.querySelector('.compare-detail-container')
+      return {
+        title: detailContainer?.querySelector('.title'),
+        subtitle: detailContainer?.querySelector('.subtitle')
+      }
+    }
+
+    // Verify that the detail view is shown and that the heading shows the first scenario
+    let heading = getHeading()
+    await expect(heading.title).toHaveTextContent('All inputs')
+    await expect(heading.subtitle).toHaveTextContent('at default')
+
+    // Press the right arrow key to go to the next item
+    await userEvent.keyboard('{ArrowRight}')
+
+    // Verify that the heading has changed to the second scenario
+    heading = getHeading()
+    await expect(heading.title).toHaveTextContent('Constant 1')
+    await expect(heading.subtitle).toHaveTextContent('at min')
+
+    // Press the right arrow key to go to the next item
+    await userEvent.keyboard('{ArrowRight}')
+
+    // Verify that the heading has changed to the third scenario
+    heading = getHeading()
+    await expect(heading.title).toHaveTextContent('Constant 1')
+    await expect(heading.subtitle).toHaveTextContent('at max')
+
+    // Press the left arrow key to go to the previous item
+    await userEvent.keyboard('{ArrowLeft}')
+
+    // Verify that the heading has changed to the second scenario
+    heading = getHeading()
+    await expect(heading.title).toHaveTextContent('Constant 1')
+    await expect(heading.subtitle).toHaveTextContent('at min')
+
+    // Press the left arrow key to go to the previous item
+    await userEvent.keyboard('{ArrowLeft}')
+
+    // Verify that the heading has changed to the first scenario
+    heading = getHeading()
+    await expect(heading.title).toHaveTextContent('All inputs')
+    await expect(heading.subtitle).toHaveTextContent('at default')
+  }}
+/>
+
+<Story
   name="Open Check Scenario in Trace View"
   {template}
   beforeEach={async ({ args }) => {
@@ -786,5 +865,265 @@ const { Story } = defineMeta({
     await expect(comparisonScenarioCheckboxes[4]).not.toBeChecked()
     await expect(comparisonScenarioLabels[5]).toHaveTextContent('Constant 1 at max')
     await expect(comparisonScenarioCheckboxes[5]).not.toBeChecked()
+  }}
+/>
+
+<Story
+  name="Sort by Max Diff (summary)"
+  {template}
+  beforeEach={async ({ args }) => {
+    args.appViewModel = await createAppViewModel({ modelsDiffer: true })
+  }}
+  play={async ({ canvas, canvasElement, userEvent }) => {
+    // Wait for tabs to appear
+    await waitFor(() => {
+      const comparisonsTab = canvas.getByText('Comparisons by scenario')
+      expect(comparisonsTab).not.toBeNull()
+    })
+
+    // Click the "Comparisons by scenario" tab
+    const comparisonsTab = canvas.getByText('Comparisons by scenario')
+    await userEvent.click(comparisonsTab)
+
+    // Verify the default sort mode is selected
+    const controlsButton = canvas.getByRole('button', { name: 'Controls' })
+    await userEvent.click(controlsButton)
+    await waitFor(() => {
+      const controls = canvasElement.querySelector('.header-controls')
+      expect(controls).not.toBeNull()
+    })
+
+    const selects = canvasElement.querySelectorAll('select')
+    let sortBySelect: HTMLSelectElement | undefined
+    for (let i = 0; i < selects.length; i++) {
+      const select = selects[i]
+      const optionCount = select.querySelectorAll('option').length
+      if (optionCount === 4) {
+        sortBySelect = select as HTMLSelectElement
+        break
+      }
+    }
+    await expect(sortBySelect!.value).toBe('max-diff')
+  }}
+/>
+
+<Story
+  name="Sort by Avg Diff (summary)"
+  {template}
+  beforeEach={async ({ args }) => {
+    localStorage.setItem('sde-check-sort-mode', 'avg-diff')
+    args.appViewModel = await createAppViewModel({ modelsDiffer: true })
+  }}
+  play={async ({ canvas, canvasElement, userEvent }) => {
+    await waitFor(() => {
+      const comparisonsTab = canvas.getByText('Comparisons by scenario')
+      expect(comparisonsTab).not.toBeNull()
+    })
+
+    const comparisonsTab = canvas.getByText('Comparisons by scenario')
+    await userEvent.click(comparisonsTab)
+
+    // Verify sort mode is avg-diff
+    const controlsButton = canvas.getByRole('button', { name: 'Controls' })
+    await userEvent.click(controlsButton)
+    await waitFor(() => {
+      const controls = canvasElement.querySelector('.header-controls')
+      expect(controls).not.toBeNull()
+    })
+
+    const selects = canvasElement.querySelectorAll('select')
+    let sortBySelect: HTMLSelectElement | undefined
+    for (let i = 0; i < selects.length; i++) {
+      const select = selects[i]
+      const optionCount = select.querySelectorAll('option').length
+      if (optionCount === 4) {
+        sortBySelect = select as HTMLSelectElement
+        break
+      }
+    }
+    await expect(sortBySelect!.value).toBe('avg-diff')
+  }}
+/>
+
+<Story
+  name="Sort by Max Diff Relative (summary)"
+  {template}
+  beforeEach={async ({ args }) => {
+    localStorage.setItem('sde-check-sort-mode', 'max-diff-relative')
+    args.appViewModel = await createAppViewModel({ modelsDiffer: true })
+  }}
+  play={async ({ canvas, canvasElement, userEvent }) => {
+    await waitFor(() => {
+      const comparisonsTab = canvas.getByText('Comparisons by scenario')
+      expect(comparisonsTab).not.toBeNull()
+    })
+
+    const comparisonsTab = canvas.getByText('Comparisons by scenario')
+    await userEvent.click(comparisonsTab)
+
+    // Verify sort mode is max-diff-relative
+    const controlsButton = canvas.getByRole('button', { name: 'Controls' })
+    await userEvent.click(controlsButton)
+    await waitFor(() => {
+      const controls = canvasElement.querySelector('.header-controls')
+      expect(controls).not.toBeNull()
+    })
+
+    const selects = canvasElement.querySelectorAll('select')
+    let sortBySelect: HTMLSelectElement | undefined
+    for (let i = 0; i < selects.length; i++) {
+      const select = selects[i]
+      const optionCount = select.querySelectorAll('option').length
+      if (optionCount === 4) {
+        sortBySelect = select as HTMLSelectElement
+        break
+      }
+    }
+    await expect(sortBySelect!.value).toBe('max-diff-relative')
+  }}
+/>
+
+<Story
+  name="Sort by Avg Diff Relative (summary)"
+  {template}
+  beforeEach={async ({ args }) => {
+    localStorage.setItem('sde-check-sort-mode', 'avg-diff-relative')
+    args.appViewModel = await createAppViewModel({ modelsDiffer: true })
+  }}
+  play={async ({ canvas, canvasElement, userEvent }) => {
+    await waitFor(() => {
+      const comparisonsTab = canvas.getByText('Comparisons by scenario')
+      expect(comparisonsTab).not.toBeNull()
+    })
+
+    const comparisonsTab = canvas.getByText('Comparisons by scenario')
+    await userEvent.click(comparisonsTab)
+
+    // Verify sort mode is avg-diff-relative
+    const controlsButton = canvas.getByRole('button', { name: 'Controls' })
+    await userEvent.click(controlsButton)
+    await waitFor(() => {
+      const controls = canvasElement.querySelector('.header-controls')
+      expect(controls).not.toBeNull()
+    })
+
+    const selects = canvasElement.querySelectorAll('select')
+    let sortBySelect: HTMLSelectElement | undefined
+    for (let i = 0; i < selects.length; i++) {
+      const select = selects[i]
+      const optionCount = select.querySelectorAll('option').length
+      if (optionCount === 4) {
+        sortBySelect = select as HTMLSelectElement
+        break
+      }
+    }
+    await expect(sortBySelect!.value).toBe('avg-diff-relative')
+  }}
+/>
+
+<Story
+  name="Sort by Max Diff (detail)"
+  {template}
+  beforeEach={async ({ args }) => {
+    args.appViewModel = await createAppViewModel({ modelsDiffer: true })
+  }}
+  play={async ({ canvas, userEvent }) => {
+    // Wait for tabs to appear
+    await waitFor(() => {
+      const comparisonsTab = canvas.getByText('Comparisons by scenario')
+      expect(comparisonsTab).not.toBeNull()
+    })
+
+    // Click the "Comparisons by scenario" tab
+    const comparisonsTab = canvas.getByText('Comparisons by scenario')
+    await userEvent.click(comparisonsTab)
+
+    // Click on a scenario row to open the detail view
+    const scenarioRow = canvas.getAllByText('Constant 1')[0]
+    await userEvent.click(scenarioRow)
+
+    // Wait for detail view to appear
+    await waitFor(() => {
+      const detailView = canvas.queryByText('Comparisons by scenario')
+      expect(detailView).not.toBeNull()
+    })
+  }}
+/>
+
+<Story
+  name="Sort by Avg Diff (detail)"
+  {template}
+  beforeEach={async ({ args }) => {
+    localStorage.setItem('sde-check-sort-mode', 'avg-diff')
+    args.appViewModel = await createAppViewModel({ modelsDiffer: true })
+  }}
+  play={async ({ canvas, userEvent }) => {
+    await waitFor(() => {
+      const comparisonsTab = canvas.getByText('Comparisons by scenario')
+      expect(comparisonsTab).not.toBeNull()
+    })
+
+    const comparisonsTab = canvas.getByText('Comparisons by scenario')
+    await userEvent.click(comparisonsTab)
+
+    const scenarioRow = canvas.getAllByText('Constant 1')[0]
+    await userEvent.click(scenarioRow)
+
+    await waitFor(() => {
+      const detailView = canvas.queryByText('Comparisons by scenario')
+      expect(detailView).not.toBeNull()
+    })
+  }}
+/>
+
+<Story
+  name="Sort by Max Diff Relative (detail)"
+  {template}
+  beforeEach={async ({ args }) => {
+    localStorage.setItem('sde-check-sort-mode', 'max-diff-relative')
+    args.appViewModel = await createAppViewModel({ modelsDiffer: true })
+  }}
+  play={async ({ canvas, userEvent }) => {
+    await waitFor(() => {
+      const comparisonsTab = canvas.getByText('Comparisons by scenario')
+      expect(comparisonsTab).not.toBeNull()
+    })
+
+    const comparisonsTab = canvas.getByText('Comparisons by scenario')
+    await userEvent.click(comparisonsTab)
+
+    const scenarioRow = canvas.getAllByText('Constant 1')[0]
+    await userEvent.click(scenarioRow)
+
+    await waitFor(() => {
+      const detailView = canvas.queryByText('Comparisons by scenario')
+      expect(detailView).not.toBeNull()
+    })
+  }}
+/>
+
+<Story
+  name="Sort by Avg Diff Relative (detail)"
+  {template}
+  beforeEach={async ({ args }) => {
+    localStorage.setItem('sde-check-sort-mode', 'avg-diff-relative')
+    args.appViewModel = await createAppViewModel({ modelsDiffer: true })
+  }}
+  play={async ({ canvas, userEvent }) => {
+    await waitFor(() => {
+      const comparisonsTab = canvas.getByText('Comparisons by scenario')
+      expect(comparisonsTab).not.toBeNull()
+    })
+
+    const comparisonsTab = canvas.getByText('Comparisons by scenario')
+    await userEvent.click(comparisonsTab)
+
+    const scenarioRow = canvas.getAllByText('Constant 1')[0]
+    await userEvent.click(scenarioRow)
+
+    await waitFor(() => {
+      const detailView = canvas.queryByText('Comparisons by scenario')
+      expect(detailView).not.toBeNull()
+    })
   }}
 />
