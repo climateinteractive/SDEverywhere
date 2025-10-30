@@ -140,7 +140,7 @@ function onConcurrencyChange(e: Event) {
         <div class="spacer-fixed"></div>
       {/if}
       <div class="control-label sort-by">Sort by:</div>
-      <select class="selector" bind:value={$sortMode}>
+      <select class="selector" data-testid="sort-mode-selector" bind:value={$sortMode}>
         <option value="max-diff">max diff</option>
         <option value="avg-diff">avg diff</option>
         <option value="max-diff-relative">max diff / max baseline diff</option>
