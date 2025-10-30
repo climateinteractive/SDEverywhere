@@ -3,12 +3,7 @@
 import type { Readable, Writable } from 'svelte/store'
 import { derived, writable } from 'svelte/store'
 
-export interface TabItemViewModel {
-  id: string
-  title: string
-  subtitle: string
-  subtitleClass: string
-}
+import type { TabItemViewModel } from './tab-item-vm'
 
 export class TabBarViewModel {
   public readonly selectedIndex: Writable<number>

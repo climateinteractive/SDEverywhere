@@ -5,6 +5,7 @@
 import { createEventDispatcher } from 'svelte'
 
 import type { TabBarViewModel } from './tab-bar-vm'
+import TabItem from './tab-item.svelte'
 
 export let viewModel: TabBarViewModel
 const selectedItemId = viewModel.selectedItemId
@@ -38,10 +39,13 @@ function onKeyDown(event: KeyboardEvent) {
 
 <div class="tab-bar">
   {#each viewModel.items as item, index}
-    <div class="tab-item" class:selected={item.id === $selectedItemId} on:click={() => onItemClicked(index)}>
-      <div class="tab-title">{item.title}</div>
-      <div class={`tab-subtitle ${item.subtitleClass}`}>{item.subtitle}</div>
-    </div>
+    <TabItem
+      title={item.title}
+      subtitle={item.subtitle}
+      subtitleClass={item.subtitleClass}
+      selected={item.id === $selectedItemId}
+      onClick={() => onItemClicked(index)}
+    />
   {/each}
 </div>
 
@@ -60,36 +64,5 @@ function onKeyDown(event: KeyboardEvent) {
   margin: 0 -1rem;
   padding: 0 1rem;
   box-shadow: 0 1rem 0.5rem -0.5rem rgba(0, 0, 0, 0.8);
-}
-
-.tab-item {
-  display: flex;
-  flex-direction: column;
-  padding: 0.5rem 3rem 0.3rem 0;
-  cursor: pointer;
-  opacity: 0.7;
-  border-bottom: solid 1px transparent;
-
-  &:hover {
-    opacity: 1;
-  }
-
-  &.selected {
-    opacity: 1;
-    border-bottom: solid 1px #555;
-  }
-}
-
-.tab-title {
-  font-size: 1.6rem;
-  font-weight: 700;
-  color: #fff;
-  margin-bottom: 0.2rem;
-  cursor: pointer;
-}
-
-.tab-subtitle {
-  font-size: 1rem;
-  font-weight: 400;
 }
 </style>
