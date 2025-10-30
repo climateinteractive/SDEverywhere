@@ -13,6 +13,7 @@ import ComparisonSummarySection from './comparison-summary-section.svelte'
 import type { ComparisonSummaryViewModel } from './comparison-summary-vm'
 
 export let viewModel: ComparisonSummaryViewModel
+$: sections = viewModel.sections
 
 let contextMenuSourceScenario: ComparisonScenario | undefined
 let contextMenuItems: ContextMenuItem[] = []
@@ -72,7 +73,7 @@ function onContextMenuItemSelected(e: CustomEvent) {
 
 <!-- TEMPLATE -->
 <div class="comparison-summary-container">
-  {#each viewModel.sections as section}
+  {#each $sections as section}
     <div class="section-container" id={section.header.rowKey}>
       <ComparisonSummarySection viewModel={section} on:command on:show-context-menu={onShowContextMenu} />
     </div>

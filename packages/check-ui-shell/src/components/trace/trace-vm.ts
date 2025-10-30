@@ -100,7 +100,9 @@ export class TraceViewModel {
     this.selectedSource1 = selectedSource1
 
     // Determine the available scenarios for each bundle
-    const comparisonGroups = categorizeComparisonTestSummaries(comparisonConfig, terseSummaries)
+    // TODO: For now we only sort by `maxDiff`; this code is only used to determine the available
+    // scenarios, so the sorting is not that important, but we can reconsider this in the future
+    const comparisonGroups = categorizeComparisonTestSummaries(comparisonConfig, terseSummaries, 'max-diff')
     const groupsByScenario = comparisonGroups.byScenario
     const [scenarioOptionsL, scenarioSpecsL] = scenarioOptionsForBundle(
       'left',

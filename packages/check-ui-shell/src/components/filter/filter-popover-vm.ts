@@ -253,10 +253,10 @@ function createComparisonScenariosFilterPanelViewModelFromReport(
     // When ComparisonReportOptions is defined, use the result of `summarySectionsForComparisonsByScenario`
     // to group scenarios
     const comparisonSummary = comparisonSummaryFromReport(comparisonReport)
-    const groupsByScenario = categorizeComparisonTestSummaries(
-      config.comparison,
-      comparisonSummary.testSummaries
-    ).byScenario
+    // TODO: For now we only sort by `maxDiff`; this code is only used to determine the available
+    // scenarios, so the sorting is not that important, but we can reconsider this in the future
+    const results = categorizeComparisonTestSummaries(config.comparison, comparisonSummary.testSummaries, 'max-diff')
+    const groupsByScenario = results.byScenario
 
     // Call the custom grouping function
     const customSections = config.comparison.reportOptions.summarySectionsForComparisonsByScenario(groupsByScenario)
