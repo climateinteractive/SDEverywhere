@@ -10,7 +10,6 @@ import type { ContextMenuItem } from '../../_shared/context-menu.svelte'
 import ContextMenu from '../../_shared/context-menu.svelte'
 
 import ComparisonSummarySection from './comparison-summary-section.svelte'
-import ComparisonSummaryToc from './comparison-summary-toc.svelte'
 import type { ComparisonSummaryViewModel } from './comparison-summary-vm'
 
 export let viewModel: ComparisonSummaryViewModel
@@ -73,10 +72,6 @@ function onContextMenuItemSelected(e: CustomEvent) {
 
 <!-- TEMPLATE -->
 <div class="comparison-summary-container">
-  <!-- TODO: Add an option to show the TOC -->
-  {#if viewModel.kind === ''}
-    <ComparisonSummaryToc sections={viewModel.sections} />
-  {/if}
   {#each viewModel.sections as section}
     <div class="section-container" id={section.header.rowKey}>
       <ComparisonSummarySection viewModel={section} on:command on:show-context-menu={onShowContextMenu} />
