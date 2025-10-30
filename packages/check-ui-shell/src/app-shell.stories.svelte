@@ -202,7 +202,7 @@ const { Story } = defineMeta({
   name="Detail View Navigation"
   {template}
   beforeEach={async ({ args }) => {
-    args.appViewModel = await createAppViewModel({ modelsDiffer: false })
+    args.appViewModel = await createAppViewModel({ modelsDiffer: true })
   }}
   play={async ({ canvas, canvasElement, userEvent }) => {
     // Wait for tabs to appear
@@ -215,9 +215,9 @@ const { Story } = defineMeta({
     const comparisonsTab = canvas.getByText('Comparisons by scenario')
     await userEvent.click(comparisonsTab)
 
-    // Click the section header
-    const noDifferencesHeader = canvas.getByText('No differences produced by the following scenarios')
-    await userEvent.click(noDifferencesHeader)
+    // Verify that the "Scenarios producing differences" header is shown
+    const scenariosHeader = canvas.getByText('Scenarios producing differences')
+    await expect(scenariosHeader).not.toBeNull()
 
     // Click the first "All inputs" title (title and subtitle are in separate elements)
     const allInputsTitle = canvas.getByText('All inputs')
@@ -249,7 +249,7 @@ const { Story } = defineMeta({
     // Verify that the heading has changed to the second scenario
     heading = getHeading()
     await expect(heading.title).toHaveTextContent('Constant 1')
-    await expect(heading.subtitle).toHaveTextContent('at min')
+    await expect(heading.subtitle).toHaveTextContent('at max')
 
     // Press the right arrow key to go to the next item
     await userEvent.keyboard('{ArrowRight}')
@@ -257,7 +257,7 @@ const { Story } = defineMeta({
     // Verify that the heading has changed to the third scenario
     heading = getHeading()
     await expect(heading.title).toHaveTextContent('Constant 1')
-    await expect(heading.subtitle).toHaveTextContent('at max')
+    await expect(heading.subtitle).toHaveTextContent('at min')
 
     // Press the left arrow key to go to the previous item
     await userEvent.keyboard('{ArrowLeft}')
@@ -265,7 +265,7 @@ const { Story } = defineMeta({
     // Verify that the heading has changed to the second scenario
     heading = getHeading()
     await expect(heading.title).toHaveTextContent('Constant 1')
-    await expect(heading.subtitle).toHaveTextContent('at min')
+    await expect(heading.subtitle).toHaveTextContent('at max')
 
     // Press the left arrow key to go to the previous item
     await userEvent.keyboard('{ArrowLeft}')
@@ -274,6 +274,70 @@ const { Story } = defineMeta({
     heading = getHeading()
     await expect(heading.title).toHaveTextContent('All inputs')
     await expect(heading.subtitle).toHaveTextContent('at default')
+
+    // Press "h" to return to the main screen
+    await userEvent.keyboard('h')
+
+    // Click the "Comparisons by dataset" tab
+    const comparisonsByDatasetTab = canvas.getByText('Comparisons by dataset')
+    await userEvent.click(comparisonsByDatasetTab)
+
+    // Verify that the "Datasets with differences" header is shown
+    const datasetsHeader = canvas.getByText('Datasets with differences')
+    await expect(datasetsHeader).not.toBeNull()
+
+    // Press the down arrow key to enter detail view for the first dataset
+    await userEvent.keyboard('{ArrowDown}')
+
+    // Wait for detail view to appear
+    await waitFor(() => {
+      const detailContainer = canvasElement.querySelector('.compare-detail-container')
+      expect(detailContainer).not.toBeNull()
+    })
+
+    // Verify that the heading shows the first dataset in the list
+    heading = getHeading()
+    await expect(heading.title).toHaveTextContent('Output 10')
+
+    // Press the right arrow key to go to the next item
+    await userEvent.keyboard('{ArrowRight}')
+
+    // Verify that the heading has changed to the next dataset in the list
+    heading = getHeading()
+    await expect(heading.title).toHaveTextContent('Output 2')
+
+    // Press the right arrow key and verify a few times until we get to the first dataset
+    // without differences
+    await userEvent.keyboard('{ArrowRight}')
+    heading = getHeading()
+    await expect(heading.title).toHaveTextContent('Output 4')
+    await userEvent.keyboard('{ArrowRight}')
+    heading = getHeading()
+    await expect(heading.title).toHaveTextContent('Output 6')
+    await userEvent.keyboard('{ArrowRight}')
+    heading = getHeading()
+    await expect(heading.title).toHaveTextContent('Output 8')
+    await userEvent.keyboard('{ArrowRight}')
+    heading = getHeading()
+    await expect(heading.title).toHaveTextContent('Output 1')
+    await expect(canvas.getByText('No differences')).toBeVisible()
+
+    // Press "h" to return to the main screen
+    await userEvent.keyboard('h')
+
+    // Click the "No differences detected" header to expand that section
+    const datasetsWithoutDiffsHeader = canvas.getByText('No differences detected for the following datasets')
+    await userEvent.click(datasetsWithoutDiffsHeader)
+
+    // Get rows that follow the "No differences detected" header and verify that they are visible
+    const section = datasetsWithoutDiffsHeader.closest('.section-container') as HTMLElement
+    const withoutDiffsRows = section.querySelectorAll('.summary-row')
+    await expect(withoutDiffsRows.length).toBe(5)
+    await expect(withoutDiffsRows[0]).toHaveTextContent('Output 1')
+    await expect(withoutDiffsRows[1]).toHaveTextContent('Output 3')
+    await expect(withoutDiffsRows[2]).toHaveTextContent('Output 5')
+    await expect(withoutDiffsRows[3]).toHaveTextContent('Output 7')
+    await expect(withoutDiffsRows[4]).toHaveTextContent('Output 9')
   }}
 />
 
