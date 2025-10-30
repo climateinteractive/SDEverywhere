@@ -3,7 +3,7 @@
 import assertNever from 'assert-never'
 
 import type { Readable, Writable } from 'svelte/store'
-import { get, writable } from 'svelte/store'
+import { writable } from 'svelte/store'
 
 import type {
   CheckNameSpec,
@@ -257,7 +257,7 @@ export class AppViewModel {
   createCompareDetailViewModelForFirstSummaryRow(kind: ComparisonGroupingKind): CompareDetailViewModel | undefined {
     // Get the index of the associated row in the context of the summary view
     const comparisonSummaryViewModel = this.getComparisonSummaryViewModel(kind)
-    const allRows = get(comparisonSummaryViewModel.allRows)
+    const allRows = comparisonSummaryViewModel.getAllRows()
     if (allRows.length > 0) {
       // Create a detail view for the first row
       const firstRow = allRows[0]
@@ -274,8 +274,9 @@ export class AppViewModel {
   ): CompareDetailViewModel | undefined {
     // Get the index of the associated row in the context of the summary view
     const comparisonSummaryViewModel = this.getComparisonSummaryViewModel(kind)
-    const allRows = get(comparisonSummaryViewModel.allRows)
+    const allRows = comparisonSummaryViewModel.getAllRows()
     const rowIndex = allRows.findIndex(row => row.rowKey === summaryRowKey)
+
     const adjRowIndex = rowIndex + delta
     if (adjRowIndex >= 0 && adjRowIndex < allRows.length) {
       // Create a detail view for the adjacent row

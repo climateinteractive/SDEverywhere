@@ -35,24 +35,51 @@ import type {
 import type { ComparisonSummarySectionViewModel } from './comparison-summary-section-vm'
 import type { ComparisonCategorizedResults } from '@sdeverywhere/check-core'
 
-export interface ComparisonViewsSummaryViewModel {
-  kind: 'views'
-  rowsWithDiffs: Readable<number>
-  allRows: Readable<ComparisonSummaryRowViewModel[]>
-  sections: Readable<ComparisonSummarySectionViewModel[]>
+export class ComparisonViewsSummaryViewModel {
+  public readonly kind = 'views'
+
+  private allRows: ComparisonSummaryRowViewModel[]
+
+  constructor(
+    public readonly sections: Readable<ComparisonSummarySectionViewModel[]>,
+    public readonly rowsWithDiffs: Readable<number>
+  ) {
+    // Derive a flat array containing all rows from the sections
+    const allViewRows = derived(sections, $sections => {
+      const rows: ComparisonSummaryRowViewModel[] = []
+      for (const viewGroupSection of $sections) {
+        rows.push(...viewGroupSection.rows)
+      }
+      return rows
+    })
+
+    // Save a static array of all rows whenever the underlying row store is updated.
+    // The static array is needed so that it can be accessed to find the next/previous
+    // row when navigating between rows.
+    allViewRows.subscribe(rows => {
+      this.allRows = rows
+    })
+  }
+
+  /**
+   * Return the static array of all view rows.
+   */
+  public getAllRows(): ComparisonSummaryRowViewModel[] {
+    return this.allRows
+  }
 }
 
 export class ComparisonsByItemSummaryViewModel {
-  public kind = 'by-item'
+  public readonlykind = 'by-item'
 
   public readonly pinnedRows: Readable<ComparisonSummaryRowViewModel[]>
-  public readonly allRows: Readable<ComparisonSummaryRowViewModel[]>
+  private allRows: ComparisonSummaryRowViewModel[]
 
   constructor(
     public readonly itemKind: 'scenario' | 'dataset',
     public readonly sections: Readable<ComparisonSummarySectionViewModel[]>,
-    private readonly pinnedItemState: PinnedItemState,
-    public readonly rowsWithDiffs: Readable<number>
+    public readonly rowsWithDiffs: Readable<number>,
+    private readonly pinnedItemState: PinnedItemState
   ) {
     // Derive a flat array of regular row view models from the sections
     const regularRows = derived(sections, $sections => {
@@ -87,10 +114,22 @@ export class ComparisonsByItemSummaryViewModel {
       return pinnedRows
     })
 
-    // Derive the array of all rows (pinned rows + regular rows)
-    this.allRows = derived([this.pinnedRows, regularRows], ([$pinnedRows, $regularRows]) => {
+    // Save a static array of all rows (pinned rows + regular rows) whenever the underlying
+    // row stores are updated.  The static array is needed so that it can be accessed to
+    // find the next/previous row when navigating between rows.
+    const allRows = derived([this.pinnedRows, regularRows], ([$pinnedRows, $regularRows]) => {
       return [...$pinnedRows, ...$regularRows]
     })
+    allRows.subscribe(rows => {
+      this.allRows = rows
+    })
+  }
+
+  /**
+   * Return the static array of all rows (pinned rows + regular rows).
+   */
+  public getAllRows(): ComparisonSummaryRowViewModel[] {
+    return this.allRows
   }
 
   // TODO: This is only used in `comparison-summary-pinned.svelte` and can be removed
@@ -467,22 +506,10 @@ function createComparisonViewsSummaryViewModel(
     }
   })
 
-  // Derive an array containing all rows from the sections
-  const allViewRows = derived(info, $info => {
-    const rows: ComparisonSummaryRowViewModel[] = []
-    for (const viewGroupSection of $info.viewGroupSections) {
-      rows.push(...viewGroupSection.rows)
-    }
-    return rows
-  })
-
   // Create the view model for the "Comparison views" summary tab
-  return {
-    kind: 'views',
-    allRows: allViewRows,
-    rowsWithDiffs: derived(info, $info => $info.viewRowsWithDiffs),
-    sections: derived(info, $info => $info.viewGroupSections)
-  }
+  const sections = derived(info, $info => $info.viewGroupSections)
+  const rowsWithDiffs = derived(info, $info => $info.viewRowsWithDiffs)
+  return new ComparisonViewsSummaryViewModel(sections, rowsWithDiffs)
 }
 
 /**
@@ -543,8 +570,8 @@ function createByScenarioSummaryViewModel(
   return new ComparisonsByItemSummaryViewModel(
     'scenario',
     byScenarioSections,
-    pinnedItemStates.pinnedScenarios,
-    rowsWithDiffs(groupsByScenario)
+    rowsWithDiffs(groupsByScenario),
+    pinnedItemStates.pinnedScenarios
   )
 }
 
@@ -604,8 +631,8 @@ function createByDatasetSummaryViewModel(
   return new ComparisonsByItemSummaryViewModel(
     'dataset',
     byDatasetSections,
-    pinnedItemStates.pinnedDatasets,
-    rowsWithDiffs(groupsByDataset)
+    rowsWithDiffs(groupsByDataset),
+    pinnedItemStates.pinnedDatasets
   )
 }
 
