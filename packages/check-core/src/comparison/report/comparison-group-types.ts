@@ -28,8 +28,8 @@ export type ComparisonGroupRoot = ComparisonDataset | ComparisonScenario
 export interface ComparisonGroupScores {
   /** The total number of comparisons (sample size) for this group. */
   totalDiffCount: number
-  /** The sum of the `maxDiff` values for each threshold bucket. */
-  totalMaxDiffByBucket: number[]
+  /** The sum of the diff values for the active sort mode (e.g., `maxDiff`, `avgDiff`) for each threshold bucket. */
+  totalDiffByBucket: number[]
   /** The number of comparisons that fall into each threshold bucket. */
   diffCountByBucket: number[]
   /** The percentage of comparisons that fall into each threshold bucket. */
@@ -72,12 +72,13 @@ export interface ComparisonGroupSummariesByCategory {
    */
   onlyInRight: ComparisonGroupSummary[]
   /**
-   * Groups with one or more comparisons that have non-zero `maxDiff` scores; the groups
-   * will be sorted by `maxDiff`, with higher scores at the front of the array.
+   * Groups with one or more comparisons that have non-zero diff scores; the groups
+   * will be sorted by the diff score according to the active sort mode, with higher
+   * scores at the front of the array.
    */
   withDiffs: ComparisonGroupSummary[]
   /**
-   * Groups where all comparisons have `maxDiff` scores of zero (no differences between
+   * Groups where all comparisons have diff scores of zero (no differences between
    * "left" and "right").
    */
   withoutDiffs: ComparisonGroupSummary[]

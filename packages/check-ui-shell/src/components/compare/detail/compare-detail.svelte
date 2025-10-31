@@ -23,6 +23,7 @@ export let viewModel: CompareDetailViewModel
 let itemKind: string
 let itemKindPlural: string
 let pinnedDetailRows: Readable<CompareDetailRowViewModel[]>
+let regularDetailRows: Readable<CompareDetailRowViewModel[]>
 
 let scrollContainer: HTMLElement
 
@@ -51,6 +52,7 @@ $: if (viewModel) {
   }
   itemKindPlural = `${itemKind}s`
   pinnedDetailRows = viewModel.pinnedDetailRows
+  regularDetailRows = viewModel.regularDetailRows
   if (scrollContainer) {
     scrollContainer.scrollTop = 0
   }
@@ -264,7 +266,7 @@ onMount(() => {
       {#if $pinnedDetailRows.length > 0}
         <div class="section-title">All {itemKindPlural}</div>
       {/if}
-      {#each viewModel.regularDetailRows as detailRowViewModel}
+      {#each $regularDetailRows as detailRowViewModel}
         <div class="row-container">
           <DetailRow viewModel={detailRowViewModel} on:show-context-menu={onShowContextMenu} />
         </div>

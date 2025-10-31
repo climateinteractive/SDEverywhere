@@ -4,7 +4,15 @@
 import { defineMeta, type Args } from '@storybook/addon-svelte-csf'
 import { expect, waitFor } from 'storybook/test'
 
-import type { ModelSpec, ImplVarGroup, ImplVar, BundleModel } from '@sdeverywhere/check-core'
+import type {
+  ModelSpec,
+  ImplVarGroup,
+  ImplVar,
+  BundleModel,
+  ScenarioSpec,
+  DatasetKey,
+  DatasetMap
+} from '@sdeverywhere/check-core'
 
 import { mockBundleModel, mockNamedBundle } from './_mocks/mock-bundle'
 import { mockConfigOptions } from './_mocks/mock-config'
@@ -62,14 +70,54 @@ function mockModelSpec(): ModelSpec {
 function createBundleModel(
   modelSpec: ModelSpec,
   options?: {
-    delta?: number
+    // The offset to apply to values in the datasets:
+    // - 'fixed': apply a fixed offset of +5 to all values for even-numbered variables, otherwise use 0
+    // - 'variable-*': apply an offset calculated from "scenario multiplier * variable multiplier":
+    //     - Scenario multipliers:
+    //         - All inputs at default: 2 (if 'variable-baseline-changed') or 0 (if 'variable-baseline-unchanged')
+    //         - Constant 1 at min: 1.5
+    //         - Constant 1 at max: 4
+    //     - Variable multipliers:
+    //         - Output 1: 1
+    //         - Output 2: 2
+    //           ...
+    //         - Output 10: 10
+    dataOffset?: 'fixed' | 'variable-baseline-changed' | 'variable-baseline-unchanged'
     delayInGetDatasets?: number
   }
 ): BundleModel {
-  const delta = options?.delta ?? 0
-  return mockBundleModel(
-    modelSpec,
-    (_, datasetKeys) => {
+  let datasetsForScenario: (scenarioSpec: ScenarioSpec, datasetKeys: DatasetKey[]) => DatasetMap
+  if (options?.dataOffset?.startsWith('variable-')) {
+    datasetsForScenario = (scenarioSpec, datasetKeys) => {
+      let scenarioMultiplier: number
+      switch (scenarioSpec.kind) {
+        case 'all-inputs':
+          scenarioMultiplier = options?.dataOffset === 'variable-baseline-changed' ? 2 : 0
+          break
+        case 'input-settings':
+          if (scenarioSpec.settings[0].kind === 'position' && scenarioSpec.settings[0].position === 'at-maximum') {
+            scenarioMultiplier = 4
+          } else {
+            scenarioMultiplier = 1.5
+          }
+          break
+        default:
+          scenarioMultiplier = 1
+          break
+      }
+
+      const datasetMap = new Map()
+      for (const datasetKey of datasetKeys) {
+        const match = datasetKey.match(/_(\d+)$/)
+        const variableMultiplier = match ? parseInt(match[1], 10) : 0
+        const effectiveDelta = scenarioMultiplier * variableMultiplier
+        datasetMap.set(datasetKey, mockDataset(effectiveDelta))
+      }
+      return datasetMap
+    }
+  } else {
+    const delta = options?.dataOffset === 'fixed' ? 5 : 0
+    datasetsForScenario = (_, datasetKeys) => {
       const datasetMap = new Map()
       for (const datasetKey of datasetKeys) {
         // Apply delta only for every even-numbered variable, otherwise use 0
@@ -79,11 +127,11 @@ function createBundleModel(
         datasetMap.set(datasetKey, mockDataset(effectiveDelta))
       }
       return datasetMap
-    },
-    {
-      delayInGetDatasets: options?.delayInGetDatasets
     }
-  )
+  }
+  return mockBundleModel(modelSpec, datasetsForScenario, {
+    delayInGetDatasets: options?.delayInGetDatasets
+  })
 }
 
 function checkFilterTree(states: FilterStates): FilterItemTree {
@@ -150,7 +198,7 @@ function saveScenarioFilterTree(states: FilterStates): void {
 
 async function createAppViewModel(options?: {
   comparisonsEnabled?: boolean
-  modelsDiffer?: boolean
+  rightDataOffset?: 'fixed' | 'variable-baseline-changed' | 'variable-baseline-unchanged'
   delayInGetDatasets?: number
   groupScenarios?: boolean
 }): Promise<AppViewModel> {
@@ -164,7 +212,7 @@ async function createAppViewModel(options?: {
   const bundleR = mockNamedBundle(
     'right',
     createBundleModel(modelSpec, {
-      delta: options?.modelsDiffer === true ? 5 : 0,
+      dataOffset: options?.rightDataOffset,
       delayInGetDatasets: options?.delayInGetDatasets
     })
   )
@@ -176,9 +224,8 @@ async function createAppViewModel(options?: {
 const { Story } = defineMeta({
   title: 'Components/AppShell',
   beforeEach: () => {
-    localStorage.setItem('sde-check-concurrency', '1')
-    localStorage.setItem('sde-check-test-filters', JSON.stringify({}))
-    localStorage.setItem('sde-check-comparison-scenario-filters', JSON.stringify({}))
+    localStorage.clear()
+    localStorage.setItem('sde-check-graph-zoom', '0.5')
   },
   component: AppShell
 })
@@ -196,7 +243,150 @@ const { Story } = defineMeta({
   beforeEach={async ({ args }) => {
     args.appViewModel = await createAppViewModel()
   }}
-/>
+></Story>
+
+<Story
+  name="Detail View Navigation"
+  {template}
+  beforeEach={async ({ args }) => {
+    args.appViewModel = await createAppViewModel({ rightDataOffset: 'fixed' })
+  }}
+  play={async ({ canvas, canvasElement, userEvent }) => {
+    // Wait for tabs to appear
+    await waitFor(() => {
+      const comparisonsTab = canvas.getByText('Comparisons by scenario')
+      expect(comparisonsTab).not.toBeNull()
+    })
+
+    // Click the "Comparisons by scenario" tab
+    const comparisonsTab = canvas.getByText('Comparisons by scenario')
+    await userEvent.click(comparisonsTab)
+
+    // Verify that the "Scenarios producing differences" header is shown
+    const scenariosHeader = canvas.getByText('Scenarios producing differences')
+    await expect(scenariosHeader).not.toBeNull()
+
+    // Click the first "All inputs" title
+    const allInputsTitle = canvas.getByText('All inputs')
+    await userEvent.click(allInputsTitle)
+
+    // Wait for detail view to appear
+    await waitFor(() => {
+      const detailContainer = canvasElement.querySelector('.compare-detail-container')
+      expect(detailContainer).not.toBeNull()
+    })
+
+    // Helper function to get title and subtitle elements
+    function getHeading() {
+      const detailContainer = canvasElement.querySelector('.compare-detail-container')
+      return {
+        title: detailContainer?.querySelector('.title'),
+        subtitle: detailContainer?.querySelector('.subtitle')
+      }
+    }
+
+    // Verify that the detail view is shown and that the heading shows the first scenario
+    let heading = getHeading()
+    await expect(heading.title).toHaveTextContent('All inputs')
+    await expect(heading.subtitle).toHaveTextContent('at default')
+
+    // Press the right arrow key to go to the next item
+    await userEvent.keyboard('{ArrowRight}')
+
+    // Verify that the heading has changed to the second scenario
+    heading = getHeading()
+    await expect(heading.title).toHaveTextContent('Constant 1')
+    await expect(heading.subtitle).toHaveTextContent('at max')
+
+    // Press the right arrow key to go to the next item
+    await userEvent.keyboard('{ArrowRight}')
+
+    // Verify that the heading has changed to the third scenario
+    heading = getHeading()
+    await expect(heading.title).toHaveTextContent('Constant 1')
+    await expect(heading.subtitle).toHaveTextContent('at min')
+
+    // Press the left arrow key to go to the previous item
+    await userEvent.keyboard('{ArrowLeft}')
+
+    // Verify that the heading has changed to the second scenario
+    heading = getHeading()
+    await expect(heading.title).toHaveTextContent('Constant 1')
+    await expect(heading.subtitle).toHaveTextContent('at max')
+
+    // Press the left arrow key to go to the previous item
+    await userEvent.keyboard('{ArrowLeft}')
+
+    // Verify that the heading has changed to the first scenario
+    heading = getHeading()
+    await expect(heading.title).toHaveTextContent('All inputs')
+    await expect(heading.subtitle).toHaveTextContent('at default')
+
+    // Press "h" to return to the main screen
+    await userEvent.keyboard('h')
+
+    // Click the "Comparisons by dataset" tab
+    const comparisonsByDatasetTab = canvas.getByText('Comparisons by dataset')
+    await userEvent.click(comparisonsByDatasetTab)
+
+    // Verify that the "Datasets with differences" header is shown
+    const datasetsHeader = canvas.getByText('Datasets with differences')
+    await expect(datasetsHeader).not.toBeNull()
+
+    // Press the down arrow key to enter detail view for the first dataset
+    await userEvent.keyboard('{ArrowDown}')
+
+    // Wait for detail view to appear
+    await waitFor(() => {
+      const detailContainer = canvasElement.querySelector('.compare-detail-container')
+      expect(detailContainer).not.toBeNull()
+    })
+
+    // Verify that the heading shows the first dataset in the list
+    heading = getHeading()
+    await expect(heading.title).toHaveTextContent('Output 10')
+
+    // Press the right arrow key to go to the next item
+    await userEvent.keyboard('{ArrowRight}')
+
+    // Verify that the heading has changed to the next dataset in the list
+    heading = getHeading()
+    await expect(heading.title).toHaveTextContent('Output 2')
+
+    // Press the right arrow key and verify a few times until we get to the first dataset
+    // without differences
+    await userEvent.keyboard('{ArrowRight}')
+    heading = getHeading()
+    await expect(heading.title).toHaveTextContent('Output 4')
+    await userEvent.keyboard('{ArrowRight}')
+    heading = getHeading()
+    await expect(heading.title).toHaveTextContent('Output 6')
+    await userEvent.keyboard('{ArrowRight}')
+    heading = getHeading()
+    await expect(heading.title).toHaveTextContent('Output 8')
+    await userEvent.keyboard('{ArrowRight}')
+    heading = getHeading()
+    await expect(heading.title).toHaveTextContent('Output 1')
+    await expect(canvas.getByText('No differences')).toBeVisible()
+
+    // Press "h" to return to the main screen
+    await userEvent.keyboard('h')
+
+    // Click the "No differences detected" header to expand that section
+    const datasetsWithoutDiffsHeader = canvas.getByText('No differences detected for the following datasets')
+    await userEvent.click(datasetsWithoutDiffsHeader)
+
+    // Get rows that follow the "No differences detected" header and verify that they are visible
+    const section = datasetsWithoutDiffsHeader.closest('.section-container') as HTMLElement
+    const withoutDiffsRows = section.querySelectorAll('.summary-row')
+    await expect(withoutDiffsRows.length).toBe(5)
+    await expect(withoutDiffsRows[0]).toHaveTextContent('Output 1')
+    await expect(withoutDiffsRows[1]).toHaveTextContent('Output 3')
+    await expect(withoutDiffsRows[2]).toHaveTextContent('Output 5')
+    await expect(withoutDiffsRows[3]).toHaveTextContent('Output 7')
+    await expect(withoutDiffsRows[4]).toHaveTextContent('Output 9')
+  }}
+></Story>
 
 <Story
   name="Open Check Scenario in Trace View"
@@ -247,13 +437,12 @@ const { Story } = defineMeta({
     const scenario2Select = canvas.getByLabelText('Scenario 2')
     await expect(scenario2Select).toHaveTextContent('Selected scenario from check test')
   }}
-/>
-
+></Story>
 <Story
   name="Open Comparison Scenario in Trace View"
   {template}
   beforeEach={async ({ args }) => {
-    args.appViewModel = await createAppViewModel({ modelsDiffer: true })
+    args.appViewModel = await createAppViewModel({ rightDataOffset: 'fixed' })
   }}
   play={async ({ canvas, canvasElement, userEvent }) => {
     // Helper function that verifies the contents of the trace view (should be the
@@ -328,7 +517,7 @@ const { Story } = defineMeta({
     // Verify the contents of the trace view
     await verifyTraceView()
   }}
-/>
+></Story>
 
 <Story
   name="Update Filters (after checks complete)"
@@ -369,7 +558,7 @@ const { Story } = defineMeta({
       })
     )
   }}
-/>
+></Story>
 
 <Story
   name="Update Filters (while checks running)"
@@ -488,7 +677,7 @@ const { Story } = defineMeta({
     await expect(checkLabelsAfter[2]).toHaveTextContent('should be positive')
     await expect(checkCheckboxesAfter[2]).not.toBeChecked()
   }}
-/>
+></Story>
 
 <Story
   name="Reload with Filters (no comparisons configured)"
@@ -540,7 +729,7 @@ const { Story } = defineMeta({
     await expect(comparisonScenarioCheckboxes.length).toBe(0)
     await expect(comparisonScenariosPanel).toHaveTextContent('No comparisons configured')
   }}
-/>
+></Story>
 
 <Story
   name="Reload with Filters (no scenario groups, all scenarios skipped)"
@@ -636,7 +825,7 @@ const { Story } = defineMeta({
     const noDifferencesLink = canvas.getByText('No differences produced by the following scenarios')
     await userEvent.click(noDifferencesLink)
   }}
-/>
+></Story>
 
 <Story
   name="Reload with Filters (no scenario groups, some scenarios skipped)"
@@ -733,7 +922,7 @@ const { Story } = defineMeta({
 
     // TODO: Verify the bar colors
   }}
-/>
+></Story>
 
 <Story
   name="Reload with Filters (with scenario groups)"
@@ -787,4 +976,384 @@ const { Story } = defineMeta({
     await expect(comparisonScenarioLabels[5]).toHaveTextContent('Constant 1 at max')
     await expect(comparisonScenarioCheckboxes[5]).not.toBeChecked()
   }}
-/>
+></Story>
+
+<Story
+  name="Sort by Max Diff"
+  {template}
+  beforeEach={async ({ args }) => {
+    args.appViewModel = await createAppViewModel({ rightDataOffset: 'variable-baseline-changed' })
+  }}
+  play={async ({ canvas, canvasElement, userEvent }) => {
+    // Wait for tabs to appear
+    await waitFor(() => {
+      const comparisonsTab = canvas.getByText('Comparisons by scenario')
+      expect(comparisonsTab).not.toBeNull()
+    })
+
+    // Verify the default sort mode (max diff) is selected
+    const controlsButton = canvas.getByRole('button', { name: 'Controls' })
+    await userEvent.click(controlsButton)
+    const controls = canvasElement.querySelector('.header-controls')
+    expect(controls).not.toBeNull()
+    const sortBySelect = controls.querySelector('select[data-testid="sort-mode-selector"]')
+    expect(sortBySelect).not.toBeNull()
+    await expect(sortBySelect).toHaveTextContent('max diff')
+
+    // Click the "Comparisons by scenario" tab
+    const comparisonsTab = canvas.getByText('Comparisons by scenario')
+    await userEvent.click(comparisonsTab)
+
+    // Verify that the "Scenarios producing differences" header is shown
+    const scenariosHeader = canvas.getByText('Scenarios producing differences')
+    await expect(scenariosHeader).not.toBeNull()
+
+    // Get the scenario rows
+    const scenarioRows = canvasElement.querySelectorAll('.summary-row')
+    await expect(scenarioRows.length).toBe(3)
+
+    // Verify that the scenario rows are sorted by max diff
+    await expect(scenarioRows[0].querySelector('.title')).toHaveTextContent('Constant 1')
+    await expect(scenarioRows[0].querySelector('.subtitle')).toHaveTextContent('at max')
+    await expect(scenarioRows[1].querySelector('.title')).toHaveTextContent('All inputs')
+    await expect(scenarioRows[1].querySelector('.subtitle')).toHaveTextContent('at default')
+    await expect(scenarioRows[2].querySelector('.title')).toHaveTextContent('Constant 1')
+    await expect(scenarioRows[2].querySelector('.subtitle')).toHaveTextContent('at min')
+
+    // Click the first row to open the detail view
+    await userEvent.click(scenarioRows[0].querySelector('.title'))
+
+    // Get the titles for the dataset boxes
+    const datasetBoxTitles = canvasElement.querySelectorAll('.detail-box .title')
+    await expect(datasetBoxTitles.length).toBe(10)
+
+    // Verify that the datasets are sorted by max diff
+    await expect(datasetBoxTitles[0]).toHaveTextContent('Output 10')
+    await expect(datasetBoxTitles[1]).toHaveTextContent('Output 9')
+    await expect(datasetBoxTitles[2]).toHaveTextContent('Output 8')
+    await expect(datasetBoxTitles[3]).toHaveTextContent('Output 7')
+    await expect(datasetBoxTitles[4]).toHaveTextContent('Output 6')
+    await expect(datasetBoxTitles[5]).toHaveTextContent('Output 5')
+    await expect(datasetBoxTitles[6]).toHaveTextContent('Output 4')
+    await expect(datasetBoxTitles[7]).toHaveTextContent('Output 3')
+    await expect(datasetBoxTitles[8]).toHaveTextContent('Output 2')
+    await expect(datasetBoxTitles[9]).toHaveTextContent('Output 1')
+
+    // Press the "h" key to return to the main screen
+    await userEvent.keyboard('h')
+
+    // Click the "Comparisons by dataset" tab
+    const comparisonsByDatasetTab = canvas.getByText('Comparisons by dataset')
+    await userEvent.click(comparisonsByDatasetTab)
+
+    // Verify that the "Datasets with differences" header is shown
+    const datasetsHeader = canvas.getByText('Datasets with differences')
+    await expect(datasetsHeader).not.toBeNull()
+
+    // Get the dataset row titles
+    const datasetRowTitles = canvasElement.querySelectorAll('.summary-row .title')
+    await expect(datasetRowTitles.length).toBe(10)
+
+    // Verify that the dataset row titles are sorted by max diff
+    await expect(datasetRowTitles[0]).toHaveTextContent('Output 10')
+    await expect(datasetRowTitles[1]).toHaveTextContent('Output 9')
+    await expect(datasetRowTitles[2]).toHaveTextContent('Output 8')
+    await expect(datasetRowTitles[3]).toHaveTextContent('Output 7')
+    await expect(datasetRowTitles[4]).toHaveTextContent('Output 6')
+    await expect(datasetRowTitles[5]).toHaveTextContent('Output 5')
+    await expect(datasetRowTitles[6]).toHaveTextContent('Output 4')
+    await expect(datasetRowTitles[7]).toHaveTextContent('Output 3')
+    await expect(datasetRowTitles[8]).toHaveTextContent('Output 2')
+    await expect(datasetRowTitles[9]).toHaveTextContent('Output 1')
+
+    // TODO: Verify the detail box ordering
+  }}
+></Story>
+
+<Story
+  name="Sort by Avg Diff"
+  {template}
+  beforeEach={async ({ args }) => {
+    // TODO: Update this test so that the avg diff order is different from the max diff order (currently
+    // it is basically the same as the max diff story above)
+    args.appViewModel = await createAppViewModel({ rightDataOffset: 'variable-baseline-changed' })
+  }}
+  play={async ({ canvas, canvasElement, userEvent }) => {
+    // Wait for tabs to appear
+    await waitFor(() => {
+      const comparisonsTab = canvas.getByText('Comparisons by scenario')
+      expect(comparisonsTab).not.toBeNull()
+    })
+
+    // Verify the default sort mode (max diff) is selected
+    const controlsButton = canvas.getByRole('button', { name: 'Controls' })
+    await userEvent.click(controlsButton)
+    const controls = canvasElement.querySelector('.header-controls')
+    expect(controls).not.toBeNull()
+    const sortBySelect = controls.querySelector('select[data-testid="sort-mode-selector"]')
+    expect(sortBySelect).not.toBeNull()
+    await expect(sortBySelect).toHaveTextContent('max diff')
+
+    // Change the sort mode to avg diff
+    await userEvent.selectOptions(sortBySelect!, ['avg diff'])
+    await expect(sortBySelect).toHaveTextContent('avg diff')
+
+    // Click the "Comparisons by scenario" tab
+    const comparisonsTab = canvas.getByText('Comparisons by scenario')
+    await userEvent.click(comparisonsTab)
+
+    // Verify that the "Scenarios producing differences" header is shown
+    const scenariosHeader = canvas.getByText('Scenarios producing differences')
+    await expect(scenariosHeader).not.toBeNull()
+
+    // Get the scenario rows
+    const scenarioRows = canvasElement.querySelectorAll('.summary-row')
+    await expect(scenarioRows.length).toBe(3)
+
+    // Verify that the scenario rows are sorted by avg diff
+    await expect(scenarioRows[0].querySelector('.title')).toHaveTextContent('Constant 1')
+    await expect(scenarioRows[0].querySelector('.subtitle')).toHaveTextContent('at max')
+    await expect(scenarioRows[1].querySelector('.title')).toHaveTextContent('All inputs')
+    await expect(scenarioRows[1].querySelector('.subtitle')).toHaveTextContent('at default')
+    await expect(scenarioRows[2].querySelector('.title')).toHaveTextContent('Constant 1')
+    await expect(scenarioRows[2].querySelector('.subtitle')).toHaveTextContent('at min')
+
+    // Click the first row to open the detail view
+    await userEvent.click(scenarioRows[0].querySelector('.title'))
+
+    // Get the titles for the dataset boxes
+    const datasetBoxTitles = canvasElement.querySelectorAll('.detail-box .title')
+    await expect(datasetBoxTitles.length).toBe(10)
+
+    // Verify that the datasets are sorted by avg diff
+    await expect(datasetBoxTitles[0]).toHaveTextContent('Output 10')
+    await expect(datasetBoxTitles[1]).toHaveTextContent('Output 9')
+    await expect(datasetBoxTitles[2]).toHaveTextContent('Output 8')
+    await expect(datasetBoxTitles[3]).toHaveTextContent('Output 7')
+    await expect(datasetBoxTitles[4]).toHaveTextContent('Output 6')
+    await expect(datasetBoxTitles[5]).toHaveTextContent('Output 5')
+    await expect(datasetBoxTitles[6]).toHaveTextContent('Output 4')
+    await expect(datasetBoxTitles[7]).toHaveTextContent('Output 3')
+    await expect(datasetBoxTitles[8]).toHaveTextContent('Output 2')
+    await expect(datasetBoxTitles[9]).toHaveTextContent('Output 1')
+
+    // Press the "h" key to return to the main screen
+    await userEvent.keyboard('h')
+
+    // Click the "Comparisons by dataset" tab
+    const comparisonsByDatasetTab = canvas.getByText('Comparisons by dataset')
+    await userEvent.click(comparisonsByDatasetTab)
+
+    // Verify that the "Datasets with differences" header is shown
+    const datasetsHeader = canvas.getByText('Datasets with differences')
+    await expect(datasetsHeader).not.toBeNull()
+
+    // Get the dataset row titles
+    const datasetRowTitles = canvasElement.querySelectorAll('.summary-row .title')
+    await expect(datasetRowTitles.length).toBe(10)
+
+    // Verify that the dataset row titles are sorted by avg diff
+    await expect(datasetRowTitles[0]).toHaveTextContent('Output 10')
+    await expect(datasetRowTitles[1]).toHaveTextContent('Output 9')
+    await expect(datasetRowTitles[2]).toHaveTextContent('Output 8')
+    await expect(datasetRowTitles[3]).toHaveTextContent('Output 7')
+    await expect(datasetRowTitles[4]).toHaveTextContent('Output 6')
+    await expect(datasetRowTitles[5]).toHaveTextContent('Output 5')
+    await expect(datasetRowTitles[6]).toHaveTextContent('Output 4')
+    await expect(datasetRowTitles[7]).toHaveTextContent('Output 3')
+    await expect(datasetRowTitles[8]).toHaveTextContent('Output 2')
+    await expect(datasetRowTitles[9]).toHaveTextContent('Output 1')
+
+    // TODO: Verify the detail box ordering
+  }}
+></Story>
+
+<Story
+  name="Sort by Max Diff Relative (baseline changed)"
+  {template}
+  beforeEach={async ({ args }) => {
+    args.appViewModel = await createAppViewModel({ rightDataOffset: 'variable-baseline-changed' })
+  }}
+  play={async ({ canvas, canvasElement, userEvent }) => {
+    // Wait for tabs to appear
+    await waitFor(() => {
+      const comparisonsTab = canvas.getByText('Comparisons by scenario')
+      expect(comparisonsTab).not.toBeNull()
+    })
+
+    // Verify the default sort mode (max diff) is selected
+    const controlsButton = canvas.getByRole('button', { name: 'Controls' })
+    await userEvent.click(controlsButton)
+    const controls = canvasElement.querySelector('.header-controls')
+    expect(controls).not.toBeNull()
+    const sortBySelect = controls.querySelector('select[data-testid="sort-mode-selector"]')
+    expect(sortBySelect).not.toBeNull()
+    await expect(sortBySelect).toHaveTextContent('max diff')
+
+    // Change the sort mode to max diff relative
+    await userEvent.selectOptions(sortBySelect!, ['max diff / max baseline diff'])
+    await expect(sortBySelect).toHaveTextContent('max diff / max baseline diff')
+
+    // Click the "Comparisons by scenario" tab
+    const comparisonsTab = canvas.getByText('Comparisons by scenario')
+    await userEvent.click(comparisonsTab)
+
+    // Verify that the "Scenarios producing differences" header is shown
+    const scenariosHeader = canvas.getByText('Scenarios producing differences')
+    await expect(scenariosHeader).not.toBeNull()
+
+    // Get the scenario rows
+    const scenarioRows = canvasElement.querySelectorAll('.summary-row')
+    await expect(scenarioRows.length).toBe(3)
+
+    // Verify that the scenario rows are sorted by max diff relative to baseline
+    await expect(scenarioRows[0].querySelector('.title')).toHaveTextContent('Constant 1')
+    await expect(scenarioRows[0].querySelector('.subtitle')).toHaveTextContent('at max')
+    await expect(scenarioRows[1].querySelector('.title')).toHaveTextContent('All inputs')
+    await expect(scenarioRows[1].querySelector('.subtitle')).toHaveTextContent('at default')
+    await expect(scenarioRows[2].querySelector('.title')).toHaveTextContent('Constant 1')
+    await expect(scenarioRows[2].querySelector('.subtitle')).toHaveTextContent('at min')
+
+    // Click the first row to open the detail view
+    await userEvent.click(scenarioRows[0].querySelector('.title'))
+
+    // Get the titles for the dataset boxes
+    const datasetBoxTitles = canvasElement.querySelectorAll('.detail-box .title')
+    await expect(datasetBoxTitles.length).toBe(10)
+
+    // Verify that the datasets are sorted by max diff
+    await expect(datasetBoxTitles[0]).toHaveTextContent('Output 1')
+    await expect(datasetBoxTitles[1]).toHaveTextContent('Output 2')
+    await expect(datasetBoxTitles[2]).toHaveTextContent('Output 3')
+    await expect(datasetBoxTitles[3]).toHaveTextContent('Output 4')
+    await expect(datasetBoxTitles[4]).toHaveTextContent('Output 5')
+    await expect(datasetBoxTitles[5]).toHaveTextContent('Output 6')
+    await expect(datasetBoxTitles[6]).toHaveTextContent('Output 7')
+    await expect(datasetBoxTitles[7]).toHaveTextContent('Output 8')
+    await expect(datasetBoxTitles[8]).toHaveTextContent('Output 9')
+    await expect(datasetBoxTitles[9]).toHaveTextContent('Output 10')
+
+    // Press the "h" key to return to the main screen
+    await userEvent.keyboard('h')
+
+    // Click the "Comparisons by dataset" tab
+    const comparisonsByDatasetTab = canvas.getByText('Comparisons by dataset')
+    await userEvent.click(comparisonsByDatasetTab)
+
+    // Verify that the "Datasets with differences" header is shown
+    const datasetsHeader = canvas.getByText('Datasets with differences')
+    await expect(datasetsHeader).not.toBeNull()
+
+    // Get the dataset row titles
+    const datasetRowTitles = canvasElement.querySelectorAll('.summary-row .title')
+    await expect(datasetRowTitles.length).toBe(10)
+
+    // Verify that the dataset row titles are sorted by max diff
+    await expect(datasetRowTitles[0]).toHaveTextContent('Output 1')
+    await expect(datasetRowTitles[1]).toHaveTextContent('Output 2')
+    await expect(datasetRowTitles[2]).toHaveTextContent('Output 3')
+    await expect(datasetRowTitles[3]).toHaveTextContent('Output 4')
+    await expect(datasetRowTitles[4]).toHaveTextContent('Output 5')
+    await expect(datasetRowTitles[5]).toHaveTextContent('Output 6')
+    await expect(datasetRowTitles[6]).toHaveTextContent('Output 7')
+    await expect(datasetRowTitles[7]).toHaveTextContent('Output 8')
+    await expect(datasetRowTitles[8]).toHaveTextContent('Output 9')
+    await expect(datasetRowTitles[9]).toHaveTextContent('Output 10')
+
+    // TODO: Verify the detail box ordering
+  }}
+></Story>
+
+<Story
+  name="Sort by Max Diff Relative (baseline unchanged)"
+  {template}
+  beforeEach={async ({ args }) => {
+    args.appViewModel = await createAppViewModel({ rightDataOffset: 'variable-baseline-unchanged' })
+  }}
+  play={async ({ canvas, canvasElement, userEvent }) => {
+    // Wait for tabs to appear
+    await waitFor(() => {
+      const comparisonsTab = canvas.getByText('Comparisons by scenario')
+      expect(comparisonsTab).not.toBeNull()
+    })
+
+    // Verify the default sort mode (max diff) is selected
+    const controlsButton = canvas.getByRole('button', { name: 'Controls' })
+    await userEvent.click(controlsButton)
+    const controls = canvasElement.querySelector('.header-controls')
+    expect(controls).not.toBeNull()
+    const sortBySelect = controls.querySelector('select[data-testid="sort-mode-selector"]')
+    expect(sortBySelect).not.toBeNull()
+    await expect(sortBySelect).toHaveTextContent('max diff')
+
+    // Change the sort mode to max diff relative
+    await userEvent.selectOptions(sortBySelect!, ['max diff / max baseline diff'])
+    await expect(sortBySelect).toHaveTextContent('max diff / max baseline diff')
+
+    // Click the "Comparisons by scenario" tab
+    const comparisonsTab = canvas.getByText('Comparisons by scenario')
+    await userEvent.click(comparisonsTab)
+
+    // Verify that the "Scenarios producing differences" header is shown
+    const scenariosHeader = canvas.getByText('Scenarios producing differences')
+    await expect(scenariosHeader).not.toBeNull()
+
+    // Get the scenario rows
+    const scenarioRows = canvasElement.querySelectorAll('.summary-row')
+    await expect(scenarioRows.length).toBe(2)
+
+    // Verify that the scenario rows are sorted by max diff relative to baseline
+    await expect(scenarioRows[0].querySelector('.title')).toHaveTextContent('Constant 1')
+    await expect(scenarioRows[0].querySelector('.subtitle')).toHaveTextContent('at max')
+    await expect(scenarioRows[1].querySelector('.title')).toHaveTextContent('Constant 1')
+    await expect(scenarioRows[1].querySelector('.subtitle')).toHaveTextContent('at min')
+
+    // Click the first row to open the detail view
+    await userEvent.click(scenarioRows[0].querySelector('.title'))
+
+    // Get the titles for the dataset boxes
+    const datasetBoxTitles = canvasElement.querySelectorAll('.detail-box .title')
+    await expect(datasetBoxTitles.length).toBe(10)
+
+    // Verify that the datasets are sorted by max diff
+    await expect(datasetBoxTitles[0]).toHaveTextContent('Output 10')
+    await expect(datasetBoxTitles[1]).toHaveTextContent('Output 9')
+    await expect(datasetBoxTitles[2]).toHaveTextContent('Output 8')
+    await expect(datasetBoxTitles[3]).toHaveTextContent('Output 7')
+    await expect(datasetBoxTitles[4]).toHaveTextContent('Output 6')
+    await expect(datasetBoxTitles[5]).toHaveTextContent('Output 5')
+    await expect(datasetBoxTitles[6]).toHaveTextContent('Output 4')
+    await expect(datasetBoxTitles[7]).toHaveTextContent('Output 3')
+    await expect(datasetBoxTitles[8]).toHaveTextContent('Output 2')
+    await expect(datasetBoxTitles[9]).toHaveTextContent('Output 1')
+
+    // Press the "h" key to return to the main screen
+    await userEvent.keyboard('h')
+
+    // Click the "Comparisons by dataset" tab
+    const comparisonsByDatasetTab = canvas.getByText('Comparisons by dataset')
+    await userEvent.click(comparisonsByDatasetTab)
+
+    // Verify that the "Datasets with differences" header is shown
+    const datasetsHeader = canvas.getByText('Datasets with differences')
+    await expect(datasetsHeader).not.toBeNull()
+
+    // Get the dataset row titles
+    const datasetRowTitles = canvasElement.querySelectorAll('.summary-row .title')
+    await expect(datasetRowTitles.length).toBe(10)
+
+    // Verify that the dataset row titles are sorted by max diff
+    await expect(datasetRowTitles[0]).toHaveTextContent('Output 10')
+    await expect(datasetRowTitles[1]).toHaveTextContent('Output 9')
+    await expect(datasetRowTitles[2]).toHaveTextContent('Output 8')
+    await expect(datasetRowTitles[3]).toHaveTextContent('Output 7')
+    await expect(datasetRowTitles[4]).toHaveTextContent('Output 6')
+    await expect(datasetRowTitles[5]).toHaveTextContent('Output 5')
+    await expect(datasetRowTitles[6]).toHaveTextContent('Output 4')
+    await expect(datasetRowTitles[7]).toHaveTextContent('Output 3')
+    await expect(datasetRowTitles[8]).toHaveTextContent('Output 2')
+    await expect(datasetRowTitles[9]).toHaveTextContent('Output 1')
+
+    // TODO: Verify the detail box ordering
+  }}
+></Story>

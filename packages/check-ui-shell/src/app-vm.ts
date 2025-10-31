@@ -3,20 +3,21 @@
 import assertNever from 'assert-never'
 
 import type { Readable, Writable } from 'svelte/store'
-import { get, writable } from 'svelte/store'
+import { writable } from 'svelte/store'
 
 import type {
   CheckNameSpec,
   CheckReport,
   ComparisonReport,
   ComparisonScenarioTitleSpec,
+  ComparisonSortMode,
   ComparisonSummary,
   ScenarioSpec,
   SuiteSummary
 } from '@sdeverywhere/check-core'
 import { checkReportFromSummary, comparisonSummaryFromReport, runSuite } from '@sdeverywhere/check-core'
 
-import { localStorageWritableBoolean, localStorageWritableNumber } from './_shared/stores'
+import { localStorageWritableBoolean, localStorageWritableNumber, localStorageWritableString } from './_shared/stores'
 import type { UserPrefs } from './_shared/user-prefs'
 
 import type { AppModel } from './model/app-model'
@@ -84,10 +85,12 @@ export class AppViewModel {
     // Create the `UserPrefs` object that is passed down to the component hierarchy
     const zoom = localStorageWritableNumber('sde-check-graph-zoom', 1)
     const consistentYRange = localStorageWritableBoolean('sde-check-consistent-y-range', false)
+    const sortMode = localStorageWritableString<ComparisonSortMode>('sde-check-sort-mode', 'max-diff')
     const concurrency = localStorageWritableNumber('sde-check-concurrency', 1)
     this.userPrefs = {
       zoom,
-      consistentYRange
+      consistentYRange,
+      sortMode
     }
 
     // XXX: If the summary is defined, it means that the were run ahead of time using the
@@ -104,6 +107,7 @@ export class AppViewModel {
       this.writableGeneratedDateString,
       zoom,
       consistentYRange,
+      sortMode,
       concurrency
     )
 
@@ -141,7 +145,9 @@ export class AppViewModel {
         checkReport,
         comparisonConfig,
         comparisonSummary,
-        this.pinnedItemStates
+        this.pinnedItemStates,
+        this.userPrefs.sortMode,
+        []
       )
       const dateString = formatGeneratedDateString(this.suiteSummary.date, this.suiteSummary.elapsed)
       this.writableGeneratedDateString.set(dateString)
@@ -168,6 +174,7 @@ export class AppViewModel {
               comparisonConfig,
               comparisonSummary,
               this.pinnedItemStates,
+              this.userPrefs.sortMode,
               this.skipComparisonScenarios
             )
             // Rebuild the filter popover view model to reflect the checks and comparisons
@@ -215,6 +222,7 @@ export class AppViewModel {
           summaryRowViewModel.rowKey,
           this.appModel.config.comparison,
           this.appModel.comparisonDataCoordinator,
+          this.summaryViewModel.baselineTestSummaries,
           this.userPrefs,
           groupSummary,
           this.pinnedItemStates.pinnedScenarios
@@ -226,6 +234,7 @@ export class AppViewModel {
           summaryRowViewModel.rowKey,
           this.appModel.config.comparison,
           this.appModel.comparisonDataCoordinator,
+          this.summaryViewModel.baselineTestSummaries,
           this.userPrefs,
           groupSummary,
           viewGroup,
@@ -239,6 +248,7 @@ export class AppViewModel {
         summaryRowViewModel.rowKey,
         this.appModel.config.comparison,
         this.appModel.comparisonDataCoordinator,
+        this.summaryViewModel.baselineTestSummaries,
         this.userPrefs,
         viewGroup,
         view,
@@ -250,7 +260,7 @@ export class AppViewModel {
   createCompareDetailViewModelForFirstSummaryRow(kind: ComparisonGroupingKind): CompareDetailViewModel | undefined {
     // Get the index of the associated row in the context of the summary view
     const comparisonSummaryViewModel = this.getComparisonSummaryViewModel(kind)
-    const allRows = get(comparisonSummaryViewModel.allRows)
+    const allRows = comparisonSummaryViewModel.getAllRowsSnapshot()
     if (allRows.length > 0) {
       // Create a detail view for the first row
       const firstRow = allRows[0]
@@ -267,8 +277,9 @@ export class AppViewModel {
   ): CompareDetailViewModel | undefined {
     // Get the index of the associated row in the context of the summary view
     const comparisonSummaryViewModel = this.getComparisonSummaryViewModel(kind)
-    const allRows = get(comparisonSummaryViewModel.allRows)
+    const allRows = comparisonSummaryViewModel.getAllRowsSnapshot()
     const rowIndex = allRows.findIndex(row => row.rowKey === summaryRowKey)
+
     const adjRowIndex = rowIndex + delta
     if (adjRowIndex >= 0 && adjRowIndex < allRows.length) {
       // Create a detail view for the adjacent row

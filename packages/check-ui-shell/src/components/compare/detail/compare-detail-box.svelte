@@ -80,6 +80,14 @@ function getMaxDiffSpan(content: CompareDetailBoxContent): string {
   }
   return span
 }
+
+function diffRelativeToBaseline(x: number | undefined | null): string {
+  if (x !== undefined && x !== null) {
+    return `${x.toFixed(2)}`
+  } else {
+    return 'n/a'
+  }
+}
 </script>
 
 <!-- TEMPLATE -->
@@ -97,7 +105,13 @@ function getMaxDiffSpan(content: CompareDetailBoxContent): string {
   <div class="content-container">
     <Lazy bind:visible>
       {#if $content}
-        <div class={`content ${$content.bucketClass}`}>
+        <div
+          class={`content ${$content.bucketClass}`}
+          class:no-baseline-diff={(viewModel.sortMode === 'max-diff-relative' ||
+            viewModel.sortMode === 'avg-diff-relative') &&
+            $content.baselineMaxDiff === 0 &&
+            $content.diffReport.maxDiff !== 0}
+        >
           <div class="graph-container">
             <ComparisonGraph viewModel={$content.comparisonGraphViewModel} />
           </div>
@@ -117,6 +131,18 @@ function getMaxDiffSpan(content: CompareDetailBoxContent): string {
                 <div class="data-label">max</div>
                 <div class="data-value">{@html getMaxDiffSpan($content)}</div>
               </div>
+              {#if viewModel.sortMode === 'max-diff-relative'}
+                <div class="data-row">
+                  <div class="data-label">rel</div>
+                  <div class="data-value">{diffRelativeToBaseline($content.maxDiffRelativeToBaseline)}</div>
+                </div>
+              {/if}
+              {#if viewModel.sortMode === 'avg-diff-relative'}
+                <div class="data-row">
+                  <div class="data-label">rel</div>
+                  <div class="data-value">{diffRelativeToBaseline($content.avgDiffRelativeToBaseline)}</div>
+                </div>
+              {/if}
             {/if}
           </div>
         </div>
@@ -196,6 +222,10 @@ $stats-h: 4rem;
   border-width: $border-w;
   border-style: solid;
   border-radius: 0.8rem;
+}
+
+.content.no-baseline-diff {
+  border-style: dashed;
 }
 
 .graph-container {

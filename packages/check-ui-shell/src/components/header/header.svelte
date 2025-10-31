@@ -16,6 +16,7 @@ const generatedDateString = viewModel.generatedDateString
 const controlsVisible = viewModel.controlsVisible
 const zoom = viewModel.zoom
 const consistentYRange = viewModel.consistentYRange
+const sortMode = viewModel.sortMode
 const concurrency = viewModel.concurrency
 
 const dispatch = createEventDispatcher()
@@ -98,11 +99,11 @@ function onConcurrencyChange(e: Event) {
       <div class="spacer-fixed"></div>
       <div class="header-group">
         <div class="label">Thresholds:</div>
-        <div class="label bucket-color-0">{@html thresholds[0]}</div>
-        <div class="label bucket-color-1">{@html thresholds[1]}</div>
-        <div class="label bucket-color-2">{@html thresholds[2]}</div>
-        <div class="label bucket-color-3">{@html thresholds[3]}</div>
-        <div class="label bucket-color-4">{@html thresholds[4]}</div>
+        <div class="label bucket-color-0">{@html $thresholds[0]}</div>
+        <div class="label bucket-color-1">{@html $thresholds[1]}</div>
+        <div class="label bucket-color-2">{@html $thresholds[2]}</div>
+        <div class="label bucket-color-3">{@html $thresholds[3]}</div>
+        <div class="label bucket-color-4">{@html $thresholds[4]}</div>
       </div>
       <div class="spacer-fixed"></div>
       <div class="header-group">
@@ -138,6 +139,14 @@ function onConcurrencyChange(e: Event) {
         </select>
         <div class="spacer-fixed"></div>
       {/if}
+      <div class="control-label sort-by">Sort by:</div>
+      <select class="selector" data-testid="sort-mode-selector" bind:value={$sortMode}>
+        <option value="max-diff">max diff</option>
+        <option value="avg-diff">avg diff</option>
+        <option value="max-diff-relative">max diff / max baseline diff</option>
+        <option value="avg-diff-relative">avg diff / avg baseline diff</option>
+      </select>
+      <div class="spacer-fixed"></div>
       <input class="checkbox" type="checkbox" name="toggle-consistent-y-range" bind:checked={$consistentYRange} />
       <label for="toggle-consistent-y-range">Consistent Y-Axis Ranges</label>
       <div class="spacer-fixed"></div>
@@ -213,7 +222,8 @@ function onConcurrencyChange(e: Event) {
   align-items: center;
 }
 
-.control-label.concurrency {
+.control-label.concurrency,
+.control-label.sort-by {
   margin-right: 0.4rem;
 }
 

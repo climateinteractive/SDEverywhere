@@ -169,10 +169,15 @@ export interface ComparisonOptions {
   /** The left-side ("baseline") bundle being compared. */
   baseline: NamedBundle
   /**
-   * The array of thresholds used to color differences, e.g., [1, 5, 10] will use
-   * buckets of 0%, 0-1%, 1-5%, 5-10%, and >10%.
+   * The array of thresholds used to color differences.  Defaults to [1, 5, 10]
+   * which will use buckets of 0%, 0-1%, 1-5%, 5-10%, and >10%.
    */
-  thresholds: number[]
+  thresholds?: number[]
+  /**
+   * The array of ratio thresholds used to color differences when relative sorting is
+   * active.  Defaults to [1, 2, 3] which will use buckets of 0, 0-1, 1-2, 2-3, and >3.
+   */
+  ratioThresholds?: number[]
   /**
    * The requested comparison scenario and view specifications.  These can be
    * specified in YAML or JSON files, or using `Spec` objects.
@@ -190,10 +195,15 @@ export interface ComparisonConfig {
   /** The loaded right-side ("current") bundle being compared. */
   bundleR: LoadedBundle
   /**
-   * The array of thresholds used to color differences, e.g., [1, 5, 10] will use
+   * The array of thresholds used to color differences.  For example, [1, 5, 10] will use
    * buckets of 0%, 0-1%, 1-5%, 5-10%, and >10%.
    */
   thresholds: number[]
+  /**
+   * The array of ratio thresholds used to color differences when relative sorting is
+   * active.  For example, [1, 2, 3] will use buckets of 0, 0-1, 1-2, 2-3, and >3.
+   */
+  ratioThresholds: number[]
   /** The set of resolved scenarios that will be compared. */
   scenarios: ComparisonScenarios
   /** The set of resolved datasets that will be compared. */

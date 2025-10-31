@@ -253,10 +253,10 @@ function createComparisonScenariosFilterPanelViewModelFromReport(
     // When ComparisonReportOptions is defined, use the result of `summarySectionsForComparisonsByScenario`
     // to group scenarios
     const comparisonSummary = comparisonSummaryFromReport(comparisonReport)
-    const groupsByScenario = categorizeComparisonTestSummaries(
-      config.comparison,
-      comparisonSummary.testSummaries
-    ).byScenario
+    // TODO: For now we only sort by `maxDiff`; this code is only used to determine the available
+    // scenarios, so the sorting is not important, but we can reconsider this in the future
+    const results = categorizeComparisonTestSummaries(config.comparison, comparisonSummary.testSummaries, 'max-diff')
+    const groupsByScenario = results.byScenario
 
     // Call the custom grouping function
     const customSections = config.comparison.reportOptions.summarySectionsForComparisonsByScenario(groupsByScenario)
@@ -336,15 +336,22 @@ function createComparisonScenariosFilterPanelViewModelFromReport(
       }
     ]
   } else {
-    // No custom grouping, use the default approach (put all scenarios in a single "All scenarios" group)
+    // No custom grouping, use the default approach (put all scenarios in a single "All scenarios" group).
+    // We use the original order of the scenarios here.
+    const allScenarios = Array.from(comparisonScenarios.getAllScenarios())
     const scenarioGroupItems: FilterItem[] = []
-    for (const [key, scenario] of scenarioMap) {
+    for (const scenario of allScenarios) {
+      // Add the scenario to the group
       scenarioGroupItems.push(filterItemForScenario(scenario))
+
       // Use saved state if available, otherwise determine based on whether this scenario was skipped
+      const key = scenarioKey(scenario.title, scenario.subtitle)
       if (savedStates[key] !== undefined) {
         scenarioStates[key] = savedStates[key]
       } else {
-        scenarioStates[key] = !scenario.skipped
+        const scenarioInfo = scenarioMap.get(key)
+        const skipped = scenarioInfo ? scenarioInfo.skipped : true
+        scenarioStates[key] = !skipped
       }
     }
 
