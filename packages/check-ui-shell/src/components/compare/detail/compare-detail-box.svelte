@@ -105,7 +105,12 @@ function diffRelativeToBaseline(x: number | undefined | null): string {
   <div class="content-container">
     <Lazy bind:visible>
       {#if $content}
-        <div class={`content ${$content.bucketClass}`}>
+        <div
+          class={`content ${$content.bucketClass}`}
+          class:no-baseline-diff={(viewModel.sortMode === 'max-diff-relative' ||
+            viewModel.sortMode === 'avg-diff-relative') &&
+            $content.baselineMaxDiff === 0}
+        >
           <div class="graph-container">
             <ComparisonGraph viewModel={$content.comparisonGraphViewModel} />
           </div>
@@ -216,6 +221,10 @@ $stats-h: 4rem;
   border-width: $border-w;
   border-style: solid;
   border-radius: 0.8rem;
+}
+
+.content.no-baseline-diff {
+  border-style: dashed;
 }
 
 .graph-container {

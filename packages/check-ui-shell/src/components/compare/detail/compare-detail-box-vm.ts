@@ -37,6 +37,7 @@ export interface CompareDetailBoxContent {
   bucketClass: string
   message?: string
   diffReport: DiffReport
+  baselineMaxDiff: number | undefined
   maxDiffRelativeToBaseline: number | undefined
   avgDiffRelativeToBaseline: number | undefined
   comparisonGraphViewModel: ComparisonGraphViewModel
@@ -105,6 +106,12 @@ export class CompareDetailBoxViewModel {
         if (!this.dataRequested) {
           return
         }
+
+        // Determine if this is the baseline scenario.  We use this to decide whether to show the special
+        // dashed border in cases where a dataset has differences for a non-baseline scenario but no
+        // differences for the baseline scenario (only applicable for the baseline-relative sorting modes).
+        const isBaseline =
+          this.scenario.settings.kind === 'all-inputs-settings' && this.scenario.settings.position === 'at-default'
 
         // Get the baseline diff values.  Note that the baseline summary can be undefined in the case
         // where it had no differences (since we only store a summary for tests that had differences),
@@ -267,6 +274,7 @@ export class CompareDetailBoxViewModel {
           bucketClass: `bucket-border-${bucketIndex !== undefined ? bucketIndex : 'undefined'}`,
           message,
           diffReport,
+          baselineMaxDiff: isBaseline ? undefined : baselineMaxDiff,
           maxDiffRelativeToBaseline,
           avgDiffRelativeToBaseline,
           comparisonGraphViewModel
