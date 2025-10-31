@@ -74,7 +74,7 @@ function getMaxDiffSpan(content: CompareDetailBoxContent): string {
   if (maxDiffPoint) {
     span += '&nbsp;('
     span += `<span class="dataset-color-0">${diffPoint(maxDiffPoint.valueL)}</span>`
-    span += '&nbsp;|&nbsp;'
+    span += `&nbsp;${maxDiffPoint.valueL < maxDiffPoint.valueR ? '&lt;' : '&gt;'}&nbsp;`
     span += `<span class="dataset-color-1">${diffPoint(maxDiffPoint.valueR)}</span>`
     span += `) at ${maxDiffPoint.time}`
   }
