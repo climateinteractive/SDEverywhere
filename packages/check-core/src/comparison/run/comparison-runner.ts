@@ -59,16 +59,7 @@ export function runComparisons(
   // Helper function that runs the comparisons for a given scenario
   function runComparisonsForScenario(scenario: ComparisonScenario, isBaseline: boolean): void {
     const datasetKeys = comparisonConfig.datasets.getDatasetKeysForScenario(scenario)
-
-    let shouldSkip: boolean
-    if (isBaseline) {
-      // Don't skip the baseline scenario, even if it's in the skip list, since
-      // it's used to compute the relative values for the other scenarios
-      shouldSkip = false
-    } else {
-      // Otherwise, consult the skip list
-      shouldSkip = skipScenariosSet.has(skipScenarioKey(scenario.title, scenario.subtitle))
-    }
+    const shouldSkip = skipScenariosSet.has(skipScenarioKey(scenario.title, scenario.subtitle))
     if (shouldSkip) {
       // Add a test report for each dataset in the scenario, but with `diffReport` undefined
       // to indicate that the test was skipped
