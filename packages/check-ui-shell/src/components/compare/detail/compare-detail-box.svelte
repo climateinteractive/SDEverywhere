@@ -109,7 +109,8 @@ function diffRelativeToBaseline(x: number | undefined | null): string {
           class={`content ${$content.bucketClass}`}
           class:no-baseline-diff={(viewModel.sortMode === 'max-diff-relative' ||
             viewModel.sortMode === 'avg-diff-relative') &&
-            $content.baselineMaxDiff === 0}
+            $content.baselineMaxDiff === 0 &&
+            $content.diffReport.maxDiff !== 0}
         >
           <div class="graph-container">
             <ComparisonGraph viewModel={$content.comparisonGraphViewModel} />
