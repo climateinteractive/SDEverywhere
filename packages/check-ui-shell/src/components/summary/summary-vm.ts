@@ -65,7 +65,7 @@ export function createSummaryViewModel(
           // There are no diffs, but there are skipped scenarios
           const kindPart = $skippedScenarioCount === 1 ? 'scenario' : 'scenarios'
           return {
-            subtitle: `no diffs, but ${skippedScenarioCount} skipped ${kindPart}`,
+            subtitle: `no diffs, but ${$skippedScenarioCount} skipped ${kindPart}`,
             status: 'warning'
           }
         }
