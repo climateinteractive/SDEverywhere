@@ -99,11 +99,11 @@ function onConcurrencyChange(e: Event) {
       <div class="spacer-fixed"></div>
       <div class="header-group">
         <div class="label">Thresholds:</div>
-        <div class="label bucket-color-0">{@html thresholds[0]}</div>
-        <div class="label bucket-color-1">{@html thresholds[1]}</div>
-        <div class="label bucket-color-2">{@html thresholds[2]}</div>
-        <div class="label bucket-color-3">{@html thresholds[3]}</div>
-        <div class="label bucket-color-4">{@html thresholds[4]}</div>
+        <div class="label bucket-color-0">{@html $thresholds[0]}</div>
+        <div class="label bucket-color-1">{@html $thresholds[1]}</div>
+        <div class="label bucket-color-2">{@html $thresholds[2]}</div>
+        <div class="label bucket-color-3">{@html $thresholds[3]}</div>
+        <div class="label bucket-color-4">{@html $thresholds[4]}</div>
       </div>
       <div class="spacer-fixed"></div>
       <div class="header-group">
