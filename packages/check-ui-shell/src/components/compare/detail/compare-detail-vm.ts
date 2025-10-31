@@ -2,7 +2,7 @@
 
 import assertNever from 'assert-never'
 
-import { derived, writable, type Readable } from 'svelte/store'
+import { derived, get, writable, type Readable } from 'svelte/store'
 
 import type {
   ComparisonConfig,
@@ -14,6 +14,7 @@ import type {
   ComparisonReportDetailRow,
   ComparisonScenario,
   ComparisonScenarioKey,
+  ComparisonSortMode,
   ComparisonTestSummary,
   ComparisonUnresolvedView,
   ComparisonView,
@@ -106,11 +107,16 @@ export function createCompareDetailViewModelForFreeformView(
   summaryRowKey: string,
   comparisonConfig: ComparisonConfig,
   dataCoordinator: ComparisonDataCoordinator,
+  baselineTestSummaries: Map<DatasetKey, ComparisonTestSummary>,
   userPrefs: UserPrefs,
   viewGroup: ComparisonViewGroup | undefined,
   view: ComparisonView | undefined,
   pinnedItemState: PinnedItemState
 ): CompareDetailViewModel {
+  // Use the current sort mode.  It is OK to capture the current sort mode here because
+  // we regenerate the detail rows whenever the sort mode changes.
+  const sortMode = get(userPrefs.sortMode)
+
   // Create a detail row for each row spec
   const regularDetailRows: CompareDetailRowViewModel[] = []
   for (const rowSpec of view.rows || []) {
@@ -134,7 +140,9 @@ export function createCompareDetailViewModelForFreeformView(
     const detailRow = createCompareDetailRowViewModel(
       comparisonConfig,
       dataCoordinator,
+      baselineTestSummaries,
       userPrefs,
+      sortMode,
       'freeform',
       rowSpec.title,
       rowSpec.subtitle,
@@ -151,7 +159,16 @@ export function createCompareDetailViewModelForFreeformView(
         // Find the regular row for this key and clone it
         const regularRow = regularDetailRows.find(row => row.pinnedItemKey === pinnedItemKey)
         if (regularRow) {
-          rows.push(cloneDetailRowViewModel(comparisonConfig, dataCoordinator, userPrefs, regularRow))
+          rows.push(
+            cloneDetailRowViewModel(
+              comparisonConfig,
+              dataCoordinator,
+              baselineTestSummaries,
+              userPrefs,
+              sortMode,
+              regularRow
+            )
+          )
         }
       }
     }
@@ -182,6 +199,7 @@ export function createCompareDetailViewModelForDataset(
   summaryRowKey: string,
   comparisonConfig: ComparisonConfig,
   dataCoordinator: ComparisonDataCoordinator,
+  baselineTestSummaries: Map<DatasetKey, ComparisonTestSummary>,
   userPrefs: UserPrefs,
   groupSummary: ComparisonGroupSummary,
   pinnedItemState: PinnedItemState
@@ -272,6 +290,10 @@ export function createCompareDetailViewModelForDataset(
 
   // Derive the regular detail rows from the sorted groups
   const regularDetailRows = derived(sortedGroups, $sortedGroups => {
+    // Use the current sort mode.  It is OK to capture the current sort mode here because
+    // we regenerate the detail rows whenever the sort mode changes.
+    const sortMode = get(userPrefs.sortMode)
+
     // Create a row view model for each group
     const rows: CompareDetailRowViewModel[] = []
     for (const group of $sortedGroups) {
@@ -281,7 +303,9 @@ export function createCompareDetailViewModelForDataset(
       const detailRow = createCompareDetailRowViewModel(
         comparisonConfig,
         dataCoordinator,
+        baselineTestSummaries,
         userPrefs,
+        sortMode,
         'scenarios',
         group.title,
         group.subtitle,
@@ -296,13 +320,26 @@ export function createCompareDetailViewModelForDataset(
   const pinnedDetailRows = derived(
     [sortedGroups, regularDetailRows, pinnedItemState.orderedKeys],
     ([$sortedGroups, $regularDetailRows, $pinnedItemKeys]) => {
+      // Use the current sort mode.  It is OK to capture the current sort mode here because
+      // we regenerate the detail rows whenever the sort mode changes.
+      const sortMode = get(userPrefs.sortMode)
+
       const rows: CompareDetailRowViewModel[] = []
       for (const pinnedItemKey of $pinnedItemKeys) {
         if (pinnedItemKey.startsWith('row')) {
           // Find the regular row for this key and clone it
           const regularRow = $regularDetailRows.find(row => row.pinnedItemKey === pinnedItemKey)
           if (regularRow) {
-            rows.push(cloneDetailRowViewModel(comparisonConfig, dataCoordinator, userPrefs, regularRow))
+            rows.push(
+              cloneDetailRowViewModel(
+                comparisonConfig,
+                dataCoordinator,
+                baselineTestSummaries,
+                userPrefs,
+                sortMode,
+                regularRow
+              )
+            )
           }
         } else {
           // Find the scenario item for this key and create a row with a single scenario
@@ -314,7 +351,9 @@ export function createCompareDetailViewModelForDataset(
               createCompareDetailRowViewModel(
                 comparisonConfig,
                 dataCoordinator,
+                baselineTestSummaries,
                 userPrefs,
+                sortMode,
                 'scenarios',
                 groupTitle,
                 undefined, // TODO: Subtitle?
@@ -347,6 +386,7 @@ export function createCompareDetailViewModelForScenario(
   summaryRowKey: string,
   comparisonConfig: ComparisonConfig,
   dataCoordinator: ComparisonDataCoordinator,
+  baselineTestSummaries: Map<DatasetKey, ComparisonTestSummary>,
   userPrefs: UserPrefs,
   groupSummary: ComparisonGroupSummary,
   viewGroup: ComparisonViewGroup | undefined,
@@ -450,13 +490,19 @@ export function createCompareDetailViewModelForScenario(
       groups = comparisonConfig.reportOptions.detailRowsForScenario(groups)
     }
 
+    // Use the current sort mode.  It is OK to capture the current sort mode here because
+    // we regenerate the detail rows whenever the sort mode changes.
+    const sortMode = get(userPrefs.sortMode)
+
     // Create a row view model for each group
     const rows: CompareDetailRowViewModel[] = []
     for (const group of groups) {
       const detailRow = createCompareDetailRowViewModel(
         comparisonConfig,
         dataCoordinator,
+        baselineTestSummaries,
         userPrefs,
+        sortMode,
         'datasets',
         group.title,
         group.subtitle,
@@ -472,17 +518,31 @@ export function createCompareDetailViewModelForScenario(
   const pinnedDetailRows = derived(
     [regularDetailRows, pinnedItemState.orderedKeys],
     ([$regularDetailRows, $pinnedDatasetKeys]) => {
+      // Use the current sort mode.  It is OK to capture the current sort mode here because
+      // we regenerate the detail rows whenever the sort mode changes.
+      const sortMode = get(userPrefs.sortMode)
+
       const detailRowForDatasetKey = (datasetKey: DatasetKey) => {
         // TODO: Improve efficiency of looking up detail items
         return $regularDetailRows.find(row => row.items[0].testSummary.d === datasetKey)
       }
+
       const rows: CompareDetailRowViewModel[] = []
       for (const datasetKey of $pinnedDatasetKeys) {
         // Find the item for this dataset key
         const regularRow = detailRowForDatasetKey(datasetKey)
         if (regularRow) {
           // Clone the regular row view model so the pinned row view model is distinct
-          rows.push(cloneDetailRowViewModel(comparisonConfig, dataCoordinator, userPrefs, regularRow))
+          rows.push(
+            cloneDetailRowViewModel(
+              comparisonConfig,
+              dataCoordinator,
+              baselineTestSummaries,
+              userPrefs,
+              sortMode,
+              regularRow
+            )
+          )
         }
       }
       return rows
@@ -680,13 +740,17 @@ function maxDiffPctForGraph(graphReport: GraphComparisonReport): number {
 function cloneDetailRowViewModel(
   comparisonConfig: ComparisonConfig,
   dataCoordinator: ComparisonDataCoordinator,
+  baselineTestSummaries: Map<DatasetKey, ComparisonTestSummary>,
   userPrefs: UserPrefs,
+  sortMode: ComparisonSortMode,
   row: CompareDetailRowViewModel
 ): CompareDetailRowViewModel {
   return createCompareDetailRowViewModel(
     comparisonConfig,
     dataCoordinator,
+    baselineTestSummaries,
     userPrefs,
+    sortMode,
     row.kind,
     row.title,
     row.subtitle,

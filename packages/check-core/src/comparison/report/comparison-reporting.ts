@@ -1,7 +1,12 @@
 // Copyright (c) 2023 Climate Interactive / New Venture Fund
 
 import type { ComparisonConfig } from '../config/comparison-config'
-import type { ComparisonReport, ComparisonSummary, ComparisonTestSummary } from './comparison-report-types'
+import type {
+  ComparisonReport,
+  ComparisonSummary,
+  ComparisonTestReport,
+  ComparisonTestSummary
+} from './comparison-report-types'
 
 /**
  * Convert a full `ComparisonReport` to a simplified `ComparisonSummary` that includes
@@ -16,55 +21,12 @@ export function comparisonSummaryFromReport(comparisonReport: ComparisonReport):
   const terseSummaries: ComparisonTestSummary[] = []
 
   for (const r of comparisonReport.testReports) {
-    if (r.diffReport === undefined) {
-      // The test was skipped; add a summary with undefined diff values
-      terseSummaries.push({
-        s: r.scenarioKey,
-        d: r.datasetKey
-      })
-    } else if (r.diffReport?.validity === 'both' && r.diffReport.maxDiff > 0) {
-      // The test produced a non-zero `maxDiff`, so include the summary
-      let maxDiffRelativeToBaseline: number | undefined
-      let avgDiffRelativeToBaseline: number | undefined
-      if (r.baselineDiffReport) {
-        // Calculate relative values when the baseline diff report is available
-        // XXX: In the case where the baseline diff is zero, we need to avoid division
-        // by zero.  We could use a special value like NaN or null for this case, but
-        // it's simpler to instead use a small non-zero value for the denominator, which
-        // will have the effect of making the relative value very large.  This is close
-        // to the desired behavior, since we want to flag cases where there is a difference
-        // between the two datasets for a given scenario but not for the baseline scenario.
-        const epsilon = 0.000001
-        const baselineMaxDiff = r.baselineDiffReport.maxDiff !== 0 ? r.baselineDiffReport.maxDiff : epsilon
-        const baselineAvgDiff = r.baselineDiffReport.avgDiff !== 0 ? r.baselineDiffReport.avgDiff : epsilon
-        maxDiffRelativeToBaseline = r.diffReport.maxDiff / baselineMaxDiff
-        avgDiffRelativeToBaseline = r.diffReport.avgDiff / baselineAvgDiff
-      } else {
-        // When the baseline diff report is not available, it means that this is a report
-        // for the baseline scenario.  We will use special relative values for this case.
-        const baselineRelativeDiff = (x: number) => {
-          if (x === 0) {
-            // When the baseline diff is zero, set the relative value to zero so that
-            // it falls into the "green" bucket
-            return 0
-          } else {
-            // When the baseline diff is non-zero, set the relative value to 1 (meaning
-            // that the difference is the same as itself); this will put it into the
-            // "yellow" bucket
-            return 1
-          }
-        }
-        maxDiffRelativeToBaseline = baselineRelativeDiff(r.diffReport.maxDiff)
-        avgDiffRelativeToBaseline = baselineRelativeDiff(r.diffReport.avgDiff)
-      }
-      terseSummaries.push({
-        s: r.scenarioKey,
-        d: r.datasetKey,
-        md: r.diffReport.maxDiff,
-        ad: r.diffReport.avgDiff,
-        mdb: maxDiffRelativeToBaseline,
-        adb: avgDiffRelativeToBaseline
-      })
+    // Only include the summary if the test produced a non-zero `maxDiff` value
+    const baselineMaxDiff = r.baselineDiffReport?.maxDiff
+    const baselineAvgDiff = r.baselineDiffReport?.avgDiff
+    const summary = testSummaryFromReport(r, baselineMaxDiff, baselineAvgDiff)
+    if (summary) {
+      terseSummaries.push(summary)
     }
   }
 
@@ -72,6 +34,74 @@ export function comparisonSummaryFromReport(comparisonReport: ComparisonReport):
     testSummaries: terseSummaries,
     perfReportL: comparisonReport.perfReportL,
     perfReportR: comparisonReport.perfReportR
+  }
+}
+
+/**
+ * Convert a full `ComparisonTestReport` to a terse `ComparisonTestSummary`.  This will
+ * return undefined if the test has a zero `maxDiff` value.
+ *
+ * @param r The full comparison test report.
+ * @param baselineMaxDiff The max diff for the baseline scenario, or undefined if not available.
+ * @param baselineAvgDiff The avg diff for the baseline scenario, or undefined if not available.
+ * @return The terse comparison test summary.
+ */
+export function testSummaryFromReport(
+  r: ComparisonTestReport,
+  baselineMaxDiff: number | undefined,
+  baselineAvgDiff: number | undefined
+): ComparisonTestSummary | undefined {
+  function baselineRelativeDiff(diffValue: number, baselineDiffValue: number | undefined) {
+    if (baselineDiffValue !== undefined) {
+      // Calculate relative values when the baseline diff value is available
+      // XXX: In the case where the baseline diff is zero, we need to avoid division
+      // by zero.  We could use a special value like NaN or null for this case, but
+      // it's simpler to instead use a small non-zero value for the denominator, which
+      // will have the effect of making the relative value very large.  This is close
+      // to the desired behavior, since we want to flag cases where there is a difference
+      // between the two datasets for a given scenario but not for the baseline scenario.
+      const epsilon = 0.000001
+      if (baselineDiffValue === 0) {
+        baselineDiffValue = epsilon
+      }
+      return diffValue / baselineDiffValue
+    } else {
+      // When the baseline diff value is not available, it means that this is a report
+      // for the baseline scenario.  We will use special relative values for this case.
+      if (diffValue === 0) {
+        // When the baseline diff is zero, set the relative value to zero so that
+        // it falls into the "green" bucket
+        return 0
+      } else {
+        // When the baseline diff is non-zero, set the relative value to 1 (meaning
+        // that the difference is the same as itself); this will put it into the
+        // "yellow" bucket
+        return 1
+      }
+    }
+  }
+
+  if (r.diffReport === undefined) {
+    // The test was skipped; return a summary with undefined diff values
+    return {
+      s: r.scenarioKey,
+      d: r.datasetKey
+    }
+  } else if (r.diffReport?.validity === 'both' && r.diffReport.maxDiff > 0) {
+    // The test produced a non-zero `maxDiff`, so return a summary
+    const maxDiffRelativeToBaseline = baselineRelativeDiff(r.diffReport.maxDiff, baselineMaxDiff)
+    const avgDiffRelativeToBaseline = baselineRelativeDiff(r.diffReport.avgDiff, baselineAvgDiff)
+    return {
+      s: r.scenarioKey,
+      d: r.datasetKey,
+      md: r.diffReport.maxDiff,
+      ad: r.diffReport.avgDiff,
+      mdb: maxDiffRelativeToBaseline,
+      adb: avgDiffRelativeToBaseline
+    }
+  } else {
+    // The test was only valid on one side or produced no difference, so return undefined
+    return undefined
   }
 }
 

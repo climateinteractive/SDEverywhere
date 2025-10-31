@@ -9,7 +9,9 @@ import type {
   ComparisonConfig,
   ComparisonSortMode,
   ComparisonSummary,
-  ComparisonScenarioTitleSpec
+  ComparisonScenarioTitleSpec,
+  ComparisonTestSummary,
+  DatasetKey
 } from '@sdeverywhere/check-core'
 
 import type { CheckSummaryViewModel } from '../check/summary/check-summary-vm'
@@ -30,6 +32,7 @@ export interface SummaryViewModel {
   comparisonViewsSummaryViewModel?: ComparisonSummaryViewModel
   comparisonsByScenarioSummaryViewModel?: ComparisonSummaryViewModel
   comparisonsByDatasetSummaryViewModel?: ComparisonSummaryViewModel
+  baselineTestSummaries: Map<DatasetKey, ComparisonTestSummary>
 }
 
 export function createSummaryViewModel(
@@ -220,6 +223,23 @@ export function createSummaryViewModel(
   const initialTabIndex = tabItems.findIndex(item => get(item.subtitle) !== 'all clear')
   const tabBarViewModel = new TabBarViewModel(tabItems, initialTabIndex >= 0 ? initialTabIndex : 0)
 
+  // Create a map of all test summaries for the baseline (all inputs at default) scenario.
+  // This will be used to compute relative-to-baseline diff values in the detail view.
+  const baselineTestSummaries = new Map<DatasetKey, ComparisonTestSummary>()
+  const allScenarios = [...(comparisonConfig?.scenarios.getAllScenarios() ?? [])]
+  const baselineScenarioKey = allScenarios.find(
+    scenario => scenario.settings.kind === 'all-inputs-settings' && scenario.settings.position === 'at-default'
+  )?.key
+  if (baselineScenarioKey) {
+    for (const testSummary of comparisonSummary?.testSummaries ?? []) {
+      const scenarioKey = testSummary.s
+      const datasetKey = testSummary.d
+      if (scenarioKey === baselineScenarioKey) {
+        baselineTestSummaries.set(datasetKey, testSummary)
+      }
+    }
+  }
+
   return {
     statsTableViewModel,
     tabBarViewModel,
@@ -227,6 +247,7 @@ export function createSummaryViewModel(
     comparisonSummary,
     comparisonViewsSummaryViewModel,
     comparisonsByScenarioSummaryViewModel,
-    comparisonsByDatasetSummaryViewModel
+    comparisonsByDatasetSummaryViewModel,
+    baselineTestSummaries
   }
 }

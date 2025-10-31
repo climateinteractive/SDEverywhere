@@ -222,6 +222,7 @@ export class AppViewModel {
           summaryRowViewModel.rowKey,
           this.appModel.config.comparison,
           this.appModel.comparisonDataCoordinator,
+          this.summaryViewModel.baselineTestSummaries,
           this.userPrefs,
           groupSummary,
           this.pinnedItemStates.pinnedScenarios
@@ -233,6 +234,7 @@ export class AppViewModel {
           summaryRowViewModel.rowKey,
           this.appModel.config.comparison,
           this.appModel.comparisonDataCoordinator,
+          this.summaryViewModel.baselineTestSummaries,
           this.userPrefs,
           groupSummary,
           viewGroup,
@@ -246,6 +248,7 @@ export class AppViewModel {
         summaryRowViewModel.rowKey,
         this.appModel.config.comparison,
         this.appModel.comparisonDataCoordinator,
+        this.summaryViewModel.baselineTestSummaries,
         this.userPrefs,
         viewGroup,
         view,
@@ -257,7 +260,7 @@ export class AppViewModel {
   createCompareDetailViewModelForFirstSummaryRow(kind: ComparisonGroupingKind): CompareDetailViewModel | undefined {
     // Get the index of the associated row in the context of the summary view
     const comparisonSummaryViewModel = this.getComparisonSummaryViewModel(kind)
-    const allRows = comparisonSummaryViewModel.getAllRows()
+    const allRows = comparisonSummaryViewModel.getAllRowsSnapshot()
     if (allRows.length > 0) {
       // Create a detail view for the first row
       const firstRow = allRows[0]
@@ -274,7 +277,7 @@ export class AppViewModel {
   ): CompareDetailViewModel | undefined {
     // Get the index of the associated row in the context of the summary view
     const comparisonSummaryViewModel = this.getComparisonSummaryViewModel(kind)
-    const allRows = comparisonSummaryViewModel.getAllRows()
+    const allRows = comparisonSummaryViewModel.getAllRowsSnapshot()
     const rowIndex = allRows.findIndex(row => row.rowKey === summaryRowKey)
 
     const adjRowIndex = rowIndex + delta

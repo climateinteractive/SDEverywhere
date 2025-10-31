@@ -9,7 +9,10 @@ import type {
   ComparisonConfig,
   ComparisonDataCoordinator,
   ComparisonReportDetailItem,
-  ComparisonScenario
+  ComparisonScenario,
+  ComparisonSortMode,
+  ComparisonTestSummary,
+  DatasetKey
 } from '@sdeverywhere/check-core'
 
 import type { UserPrefs } from '../../../_shared/user-prefs'
@@ -39,7 +42,9 @@ export interface CompareDetailRowViewModel {
 export function createCompareDetailRowViewModel(
   comparisonConfig: ComparisonConfig,
   dataCoordinator: ComparisonDataCoordinator,
+  baselineTestSummaries: Map<DatasetKey, ComparisonTestSummary>,
   userPrefs: UserPrefs,
+  sortMode: ComparisonSortMode,
   kind: CompareDetailRowKind,
   title: string | undefined,
   subtitle: string | undefined,
@@ -82,6 +87,8 @@ export function createCompareDetailRowViewModel(
       new CompareDetailBoxViewModel(
         comparisonConfig,
         dataCoordinator,
+        baselineTestSummaries.get(item.testSummary.d),
+        sortMode,
         boxKind,
         item.title,
         item.subtitle,

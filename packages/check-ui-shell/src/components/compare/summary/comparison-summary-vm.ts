@@ -38,14 +38,15 @@ import type { ComparisonCategorizedResults } from '@sdeverywhere/check-core'
 export class ComparisonViewsSummaryViewModel {
   public readonly kind = 'views'
 
-  private allRows: ComparisonSummaryRowViewModel[]
+  public readonly allRows: Readable<ComparisonSummaryRowViewModel[]>
+  private allRowsSnapshot: ComparisonSummaryRowViewModel[]
 
   constructor(
     public readonly sections: Readable<ComparisonSummarySectionViewModel[]>,
     public readonly rowsWithDiffs: Readable<number>
   ) {
     // Derive a flat array containing all rows from the sections
-    const allViewRows = derived(sections, $sections => {
+    this.allRows = derived(sections, $sections => {
       const rows: ComparisonSummaryRowViewModel[] = []
       for (const viewGroupSection of $sections) {
         rows.push(...viewGroupSection.rows)
@@ -56,16 +57,16 @@ export class ComparisonViewsSummaryViewModel {
     // Save a static array of all rows whenever the underlying row store is updated.
     // The static array is needed so that it can be accessed to find the next/previous
     // row when navigating between rows.
-    allViewRows.subscribe(rows => {
-      this.allRows = rows
+    this.allRows.subscribe(rows => {
+      this.allRowsSnapshot = rows
     })
   }
 
   /**
-   * Return the static array of all view rows.
+   * Return the current snapshot of the array of all view rows.
    */
-  public getAllRows(): ComparisonSummaryRowViewModel[] {
-    return this.allRows
+  public getAllRowsSnapshot(): ComparisonSummaryRowViewModel[] {
+    return this.allRowsSnapshot
   }
 }
 
@@ -73,7 +74,7 @@ export class ComparisonsByItemSummaryViewModel {
   public readonlykind = 'by-item'
 
   public readonly pinnedRows: Readable<ComparisonSummaryRowViewModel[]>
-  private allRows: ComparisonSummaryRowViewModel[]
+  private allRowsSnapshot: ComparisonSummaryRowViewModel[]
 
   constructor(
     public readonly itemKind: 'scenario' | 'dataset',
@@ -121,15 +122,15 @@ export class ComparisonsByItemSummaryViewModel {
       return [...$pinnedRows, ...$regularRows]
     })
     allRows.subscribe(rows => {
-      this.allRows = rows
+      this.allRowsSnapshot = rows
     })
   }
 
   /**
-   * Return the static array of all rows (pinned rows + regular rows).
+   * Return the current snapshot of the array of all rows (pinned rows + regular rows).
    */
-  public getAllRows(): ComparisonSummaryRowViewModel[] {
-    return this.allRows
+  public getAllRowsSnapshot(): ComparisonSummaryRowViewModel[] {
+    return this.allRowsSnapshot
   }
 
   // TODO: This is only used in `comparison-summary-pinned.svelte` and can be removed

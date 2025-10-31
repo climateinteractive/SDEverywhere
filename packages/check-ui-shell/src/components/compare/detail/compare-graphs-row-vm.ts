@@ -8,6 +8,8 @@ import type {
   ComparisonConfig,
   ComparisonDataCoordinator,
   ComparisonScenario,
+  ComparisonSortMode,
+  ComparisonTestSummary,
   DatasetKey,
   GraphComparisonMetadataReport,
   GraphComparisonReport
@@ -37,6 +39,10 @@ export function createCompareGraphsRowViewModel(
   graphId: BundleGraphId,
   graphReport: GraphComparisonReport
 ): CompareGraphsRowViewModel {
+  // TODO: For now we only sort graphs by max diff.  We should fix this to use the current sort mode.
+  const baselineTestSummary: ComparisonTestSummary | undefined = undefined
+  const sortMode: ComparisonSortMode = 'max-diff'
+
   const contextGraph = (graphSpec: BundleGraphSpec, bundle: 'left' | 'right') => {
     return new ContextGraphViewModel(comparisonConfig, dataCoordinator, bundle, scenario, graphSpec)
   }
@@ -95,6 +101,8 @@ export function createCompareGraphsRowViewModel(
       const detailBoxViewModel = new CompareDetailBoxViewModel(
         comparisonConfig,
         dataCoordinator,
+        baselineTestSummary,
+        sortMode,
         'freeform',
         '',
         '',

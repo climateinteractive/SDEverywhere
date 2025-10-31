@@ -1222,16 +1222,16 @@ const { Story } = defineMeta({
     await expect(datasetBoxTitles.length).toBe(10)
 
     // Verify that the datasets are sorted by max diff
-    await expect(datasetBoxTitles[0]).toHaveTextContent('Output 10')
-    await expect(datasetBoxTitles[1]).toHaveTextContent('Output 9')
-    await expect(datasetBoxTitles[2]).toHaveTextContent('Output 8')
-    await expect(datasetBoxTitles[3]).toHaveTextContent('Output 7')
-    await expect(datasetBoxTitles[4]).toHaveTextContent('Output 6')
-    await expect(datasetBoxTitles[5]).toHaveTextContent('Output 5')
-    await expect(datasetBoxTitles[6]).toHaveTextContent('Output 4')
-    await expect(datasetBoxTitles[7]).toHaveTextContent('Output 3')
-    await expect(datasetBoxTitles[8]).toHaveTextContent('Output 2')
-    await expect(datasetBoxTitles[9]).toHaveTextContent('Output 1')
+    await expect(datasetBoxTitles[0]).toHaveTextContent('Output 1')
+    await expect(datasetBoxTitles[1]).toHaveTextContent('Output 2')
+    await expect(datasetBoxTitles[2]).toHaveTextContent('Output 3')
+    await expect(datasetBoxTitles[3]).toHaveTextContent('Output 4')
+    await expect(datasetBoxTitles[4]).toHaveTextContent('Output 5')
+    await expect(datasetBoxTitles[5]).toHaveTextContent('Output 6')
+    await expect(datasetBoxTitles[6]).toHaveTextContent('Output 7')
+    await expect(datasetBoxTitles[7]).toHaveTextContent('Output 8')
+    await expect(datasetBoxTitles[8]).toHaveTextContent('Output 9')
+    await expect(datasetBoxTitles[9]).toHaveTextContent('Output 10')
 
     // Press the "h" key to return to the main screen
     await userEvent.keyboard('h')
@@ -1249,16 +1249,16 @@ const { Story } = defineMeta({
     await expect(datasetRowTitles.length).toBe(10)
 
     // Verify that the dataset row titles are sorted by max diff
-    await expect(datasetRowTitles[0]).toHaveTextContent('Output 10')
-    await expect(datasetRowTitles[1]).toHaveTextContent('Output 9')
-    await expect(datasetRowTitles[2]).toHaveTextContent('Output 8')
-    await expect(datasetRowTitles[3]).toHaveTextContent('Output 7')
-    await expect(datasetRowTitles[4]).toHaveTextContent('Output 6')
-    await expect(datasetRowTitles[5]).toHaveTextContent('Output 5')
-    await expect(datasetRowTitles[6]).toHaveTextContent('Output 4')
-    await expect(datasetRowTitles[7]).toHaveTextContent('Output 3')
-    await expect(datasetRowTitles[8]).toHaveTextContent('Output 2')
-    await expect(datasetRowTitles[9]).toHaveTextContent('Output 1')
+    await expect(datasetRowTitles[0]).toHaveTextContent('Output 1')
+    await expect(datasetRowTitles[1]).toHaveTextContent('Output 2')
+    await expect(datasetRowTitles[2]).toHaveTextContent('Output 3')
+    await expect(datasetRowTitles[3]).toHaveTextContent('Output 4')
+    await expect(datasetRowTitles[4]).toHaveTextContent('Output 5')
+    await expect(datasetRowTitles[5]).toHaveTextContent('Output 6')
+    await expect(datasetRowTitles[6]).toHaveTextContent('Output 7')
+    await expect(datasetRowTitles[7]).toHaveTextContent('Output 8')
+    await expect(datasetRowTitles[8]).toHaveTextContent('Output 9')
+    await expect(datasetRowTitles[9]).toHaveTextContent('Output 10')
 
     // TODO: Verify the detail box ordering
   }}

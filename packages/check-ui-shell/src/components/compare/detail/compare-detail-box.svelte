@@ -80,6 +80,14 @@ function getMaxDiffSpan(content: CompareDetailBoxContent): string {
   }
   return span
 }
+
+function diffRelativeToBaseline(x: number | undefined | null): string {
+  if (x !== undefined && x !== null) {
+    return `${x.toFixed(2)}`
+  } else {
+    return 'n/a'
+  }
+}
 </script>
 
 <!-- TEMPLATE -->
@@ -117,6 +125,18 @@ function getMaxDiffSpan(content: CompareDetailBoxContent): string {
                 <div class="data-label">max</div>
                 <div class="data-value">{@html getMaxDiffSpan($content)}</div>
               </div>
+              {#if viewModel.sortMode === 'max-diff-relative'}
+                <div class="data-row">
+                  <div class="data-label">rel</div>
+                  <div class="data-value">{diffRelativeToBaseline($content.maxDiffRelativeToBaseline)}</div>
+                </div>
+              {/if}
+              {#if viewModel.sortMode === 'avg-diff-relative'}
+                <div class="data-row">
+                  <div class="data-label">rel</div>
+                  <div class="data-value">{diffRelativeToBaseline($content.avgDiffRelativeToBaseline)}</div>
+                </div>
+              {/if}
             {/if}
           </div>
         </div>
