@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.1.6](https://github.com/climateinteractive/SDEverywhere/compare/check-core-v0.1.5...check-core-v0.1.6) (2025-10-31)
+
+
+### Features
+
+* add support for filtering/skipping checks and comparisons in model-check ([#686](https://github.com/climateinteractive/SDEverywhere/issues/686)) ([95a0c53](https://github.com/climateinteractive/SDEverywhere/commit/95a0c53adbb5289041ec8f1e59b2826f406e7869)), closes [#682](https://github.com/climateinteractive/SDEverywhere/issues/682)
+* add support for running multiple pairs of model instances concurrently in model-check ([#688](https://github.com/climateinteractive/SDEverywhere/issues/688)) ([db975b0](https://github.com/climateinteractive/SDEverywhere/commit/db975b0d3359cd8bbfc4987f24ce525a44a2b513)), closes [#683](https://github.com/climateinteractive/SDEverywhere/issues/683)
+* add Trace View (tracing/diagnosis tool) to model-check ([#684](https://github.com/climateinteractive/SDEverywhere/issues/684)) ([a9f2b1c](https://github.com/climateinteractive/SDEverywhere/commit/a9f2b1c47be651463b1a85ef85078c65faca9ffe)), closes [#675](https://github.com/climateinteractive/SDEverywhere/issues/675)
+* allow for different ways of sorting comparisons in model-check ([#693](https://github.com/climateinteractive/SDEverywhere/issues/693)) ([4cf615a](https://github.com/climateinteractive/SDEverywhere/commit/4cf615a68fd4c10ed7b23896023121e5986300f2)), closes [#692](https://github.com/climateinteractive/SDEverywhere/issues/692)
+
+
+### Bug Fixes
+
+* reduce size of impl var metadata in model-check bundle ([#689](https://github.com/climateinteractive/SDEverywhere/issues/689)) ([58cccb5](https://github.com/climateinteractive/SDEverywhere/commit/58cccb526fd2e86bef40672fe339b0b213c5ac89)), closes [#687](https://github.com/climateinteractive/SDEverywhere/issues/687)
+
 ## [0.1.5](https://github.com/climateinteractive/SDEverywhere/compare/check-core-v0.1.4...check-core-v0.1.5) (2025-04-14)
 
 
