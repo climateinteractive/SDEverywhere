@@ -947,8 +947,7 @@ function generateFindMarketPriceFunctionCall(callExpr, ctx) {
   // The `FIND MARKET PRICE` implementation sums total demand over all demanders.
   // const demandDimId = demandQtysArg.subscriptRefs[demandQtysArg.subscriptRefs.length - 1].subId
   const demandSubId = demandQtysArg.subscriptRefs[demandQtysArg.subscriptRefs.length - 1].subId
-  const demandDimId = sub(demandSubId).family
-  const numDemanders = sub(demandDimId).size
+  const numDemanders = sub(demandSubId).size
 
   // Process the supply quantities argument.  Only include subscripts up until the last one;
   // the implementation function will iterate over the supply quantities array.
@@ -963,8 +962,7 @@ function generateFindMarketPriceFunctionCall(callExpr, ctx) {
 
   // The `FIND MARKET PRICE` implementation sums total supply over all suppliers.
   const supplySubId = supplyQtysArg.subscriptRefs[supplyQtysArg.subscriptRefs.length - 1].subId
-  const supplyDimId = sub(supplySubId).family
-  const numSuppliers = sub(supplyDimId).size
+  const numSuppliers = sub(supplySubId).size
 
   // Generate the RHS expression
   return `_FIND_MARKET_PRICE(${demandQtysRef}, (double*)${demandProfilesRef}, ${supplyQtysRef}, (double*)${supplyProfilesRef}, ${numDemanders}, ${numSuppliers})`
