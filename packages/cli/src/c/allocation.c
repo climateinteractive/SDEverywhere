@@ -19,7 +19,7 @@
 // cumulative distribution function for supply.
 
 // The number of agents receiving allocations is limited by this buffer size.
-#define ALLOCATIONS_BUFSIZE 60
+#define ALLOCATIONS_BUFSIZE 80
 // Define this to print debug info during the allocation process.
 // #define PRINT_ALLOCATIONS_DEBUG_INFO
 
