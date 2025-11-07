@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.36](https://github.com/climateinteractive/SDEverywhere/compare/cli-v0.7.35...cli-v0.7.36) (2025-11-07)
+
+
+### Bug Fixes
+
+* force NODE_ENV=development in sde dev so that HMR works in Vite ([#695](https://github.com/climateinteractive/SDEverywhere/issues/695)) ([51ac221](https://github.com/climateinteractive/SDEverywhere/commit/51ac22185f1d9bcd0162235e8dd89a39b348cf5e)), closes [#694](https://github.com/climateinteractive/SDEverywhere/issues/694)
+
 ## [0.7.35](https://github.com/climateinteractive/SDEverywhere/compare/cli-v0.7.34...cli-v0.7.35) (2025-10-17)
 
 

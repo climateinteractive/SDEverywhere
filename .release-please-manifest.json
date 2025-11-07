@@ -2,7 +2,7 @@
   "packages/parse": "0.1.2",
   "packages/compile": "0.7.25",
   "packages/build": "0.3.7",
-  "packages/cli": "0.7.35",
+  "packages/cli": "0.7.36",
   "packages/check-core": "0.1.6",
   "packages/check-ui-shell": "0.2.12",
   "packages/plugin-check": "0.3.20",
