@@ -1,7 +1,7 @@
 import { derived, get, writable, type Readable } from 'svelte/store'
 import { _ } from 'svelte-i18n'
 
-import type { GraphSpec, SourceName } from '@core'
+import type { Config as CoreConfig, GraphSpec, SourceName } from '@core'
 
 import { syncWritable } from '@shared/stores'
 
@@ -27,9 +27,9 @@ export class ScenarioViewModel {
   }
 }
 
-export async function createAppViewModel(): Promise<AppViewModel> {
+export async function createAppViewModel(coreConfig: CoreConfig): Promise<AppViewModel> {
   // Initialize the app model that wraps the generated model
-  const appModel = await createAppModel()
+  const appModel = await createAppModel(coreConfig)
 
   // Create the `AppViewModel` instance
   return new AppViewModel(appModel)
@@ -51,10 +51,11 @@ export class AppViewModel {
     this.graphContainers = []
     for (let i = 0; i < maxVisibleGraphs; i++) {
       const graphId = graphViewModels[i].spec.id
-      this.graphContainers.push(new SelectableGraphViewModel(graphViewModels, graphId))
+      this.graphContainers.push(new SelectableGraphViewModel(graphViewModels, i, graphId))
     }
 
     // Add the layout options
+    const initialLayout = import.meta.hot?.data?.initialLayout || 'layout_1_2'
     const layoutOptions: LayoutOption[] = [
       { value: 'layout_1_1', stringKey: '1', maxVisible: 1 },
       { value: 'layout_1_2', stringKey: '2', maxVisible: 2 },
@@ -62,7 +63,12 @@ export class AppViewModel {
     ]
     this.layoutSelector = {
       options: layoutOptions,
-      selectedValue: syncWritable('layout_1_2')
+      selectedValue: syncWritable(initialLayout),
+      onUserChange: layout => {
+        if (import.meta.hot) {
+          import.meta.hot.data.initialLayout = layout
+        }
+      }
     }
     this.selectedLayoutOption = derived(this.layoutSelector.selectedValue, $selectedLayout => {
       return layoutOptions.find(option => option.value === $selectedLayout)

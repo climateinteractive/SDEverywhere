@@ -16,14 +16,12 @@ export class Config {
   ) {}
 }
 
-function createConfig(): Config {
+/**
+ * Return the default configuration for the included model instance.
+ */
+export function getConfig(): Config {
   // Convert the arrays from `config-specs.ts` to maps
   const inputs: Map<InputId, InputSpec> = new Map(inputSpecs.map(spec => [spec.id, spec]))
   const graphs: Map<GraphId, GraphSpec> = new Map(graphSpecs.map(spec => [spec.id, spec]))
   return new Config(inputs, graphs)
 }
-
-/**
- * The default configuration for the included model instance.
- */
-export const config: Config = createConfig()

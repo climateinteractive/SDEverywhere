@@ -6,11 +6,18 @@ import type { SelectorViewModel } from './selector-vm'
 
 export let viewModel: SelectorViewModel
 const selectedValue = viewModel.selectedValue
+
+function onChange() {
+  // Note: The `change` event is only emitted when the user makes a change,
+  // which is what we want.  The `selectedValue` is updated before the
+  // `change` event is emitted, so it reflects the current value here.
+  viewModel.onUserChange?.(selectedValue.get())
+}
 </script>
 
 <!-- TEMPLATE -->
 <div class="selector-container">
-  <select bind:value={$selectedValue}>
+  <select bind:value={$selectedValue} on:change={onChange}>
     {#each viewModel.options as option}
       <option value={option.value}>{$_(option.stringKey)}</option>
     {/each}
