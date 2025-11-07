@@ -28,7 +28,7 @@ const viewReady = createAppViewModel(coreConfig).then(result => {
 <!-- TEMPLATE -->
 {#await viewReady}
   <div class="loading-container"></div>
-{:then ignored}
+{:then}
   <div class="app-container">
     <div class="options-container">
       <div class="layout-label">Max Visible Graphs:</div>
