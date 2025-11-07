@@ -187,13 +187,13 @@ double* _ALLOCATE_AVAILABLE(
   fprintf(stderr, "\n_ALLOCATE_AVAILABLE time=%g num_requesters=%zu, available_resource=%f, total_requests=%f\n", _time,
       num_requesters, available_resource, total_requests);
   for (size_t i = 0; i < num_requesters; i++) {
-    fprintf(stderr, "[%2zu] requested_quantities=%17f  mean=%8g  sigma=%8g\n", i, requested_quantities[i],
+    fprintf(stderr, "[%2zu] requested_quantities=%17f  priority=%8g  width=%8g\n", i, requested_quantities[i],
         __get_pp(priority_profiles, i, PPRIORITY), __get_pp(priority_profiles, i, PWIDTH));
   }
 #endif
   // Find the minimum and maximum means in the priority curves.
   double min_mean = DBL_MAX;
-  double max_mean = DBL_MIN;
+  double max_mean = -DBL_MAX;
   for (size_t i = 0; i < num_requesters; i++) {
     min_mean = fmin(__get_pp(priority_profiles, i, PPRIORITY), min_mean);
     max_mean = fmax(__get_pp(priority_profiles, i, PPRIORITY), max_mean);
@@ -211,8 +211,9 @@ double* _ALLOCATE_AVAILABLE(
     for (size_t i = 0; i < num_requesters; i++) {
       if (requested_quantities[i] > 0.0) {
         int ptype = (int)__get_pp(priority_profiles, i, PTYPE);
-        if (ptype == PTYPE_FIXED) {
+        if (ptype == PTYPE_FIXED || __isEqual(min_mean, max_mean)) {
           // The fixed priority type allocates proportionally to each request.
+          // This is also the fallback allocation when all priorities are equal.
           if (total_requests > available_resource) {
             allocations[i] = (requested_quantities[i] / total_requests) * available_resource;
           } else {
