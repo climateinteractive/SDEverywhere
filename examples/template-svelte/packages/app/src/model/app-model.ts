@@ -1,29 +1,19 @@
 import { writable, type Writable, type Readable } from 'svelte/store'
-import { addMessages, init as initSvelteIntl } from 'svelte-i18n'
 
 import type { Config as CoreConfig, Model as CoreModel, InputId, OutputVarId, Series, SourceName } from '@core'
-import { config as coreConfig, createAsyncModel } from '@core'
-
-import enStrings from '@core-strings/en'
+import { createAsyncModel } from '@core'
 
 import { createWritableModelInput, type WritableInput } from './app-model-inputs'
 
 /**
  * Create an `AppModel` instance.
  */
-export async function createAppModel(): Promise<AppModel> {
-  // Initialize svelte-i18n
-  addMessages('en', enStrings)
-  initSvelteIntl({
-    initialLocale: 'en',
-    fallbackLocale: 'en'
-  })
-
+export async function createAppModel(coreConfig: CoreConfig): Promise<AppModel> {
   // Create the underlying model
-  const coreModel = await createAsyncModel()
+  const coreModel = await createAsyncModel(coreConfig)
 
   // Create the `AppModel` instance
-  return new AppModel(coreModel)
+  return new AppModel(coreConfig, coreModel)
 }
 
 /**
@@ -41,16 +31,15 @@ export interface AppModelContext {
  * High-level interface to the runnable model.
  */
 export class AppModel {
-  public readonly coreConfig: CoreConfig
-
   public readonly contexts: Map<SourceName, AppModelContext> = new Map()
 
   private readonly writableDataChanged: Writable<number> = writable(0)
   public readonly dataChanged: Readable<number> = this.writableDataChanged
 
-  constructor(private readonly coreModel: CoreModel) {
-    this.coreConfig = coreConfig
-
+  constructor(
+    public readonly coreConfig: CoreConfig,
+    private readonly coreModel: CoreModel
+  ) {
     // Helper function that creates a context with Svelte-friendly
     // `WritableInput` instances
     const contexts = this.contexts

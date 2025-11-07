@@ -1,13 +1,7 @@
 import { mount } from 'svelte'
 
-import { createAppViewModel } from './app-vm'
-import App from './app.svelte'
+import AppShell from './app-shell.svelte'
 
-createAppViewModel().then(appViewModel => {
-  mount(App, {
-    target: document.body,
-    props: {
-      viewModel: appViewModel
-    }
-  })
+mount(AppShell, {
+  target: document.body
 })
