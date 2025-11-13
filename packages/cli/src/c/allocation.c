@@ -173,6 +173,11 @@ double* _ALLOCATE_AVAILABLE(
   if (num_requesters > ALLOCATIONS_BUFSIZE) {
     fprintf(
         stderr, "Error: _ALLOCATE_AVAILABLE num_requesters exceeds internal maximum size of %d\n", ALLOCATIONS_BUFSIZE);
+    memset(allocations, 0, sizeof(allocations));
+    return allocations;
+  }
+  if (available_resource <= 0.0) {
+    memset(allocations, 0, sizeof(allocations));
     return allocations;
   }
   // Limit the search to this number of steps.
