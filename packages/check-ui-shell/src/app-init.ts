@@ -4,6 +4,8 @@ import { mount } from 'svelte'
 
 import type { ConfigOptions, SuiteSummary } from '@sdeverywhere/check-core'
 
+import type { BundleSpec } from './components/bundle/bundle-spec'
+
 import { initAppModel } from './model/app-model'
 
 import { default as AppShell } from './app-shell.svelte'
@@ -13,6 +15,16 @@ export interface AppShellOptions {
   suiteSummary?: SuiteSummary
   containerId?: string
   bundleNames?: string[]
+  /**
+   * Download a bundle from the network to local storage.
+   *
+   * This callback is invoked when the user clicks the download button for a bundle in the bundle selector.
+   * The implementation should fetch the bundle's JS file from the remote URL and save it to the local
+   * bundle directory.
+   *
+   * @param bundle The bundle to download.
+   */
+  onDownloadBundle?: (bundle: BundleSpec) => void
 }
 
 export function initAppShell(configOptions: ConfigOptions, appShellOptions?: AppShellOptions): void {

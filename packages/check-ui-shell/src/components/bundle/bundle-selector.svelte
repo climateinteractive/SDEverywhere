@@ -12,21 +12,28 @@ export let loading: boolean
 export let error: string | undefined
 export let onReload: (() => void) | undefined = undefined
 export let onSelect: ((bundle: BundleSpec) => void) | undefined = undefined
+export let onDownload: ((bundle: BundleSpec) => void) | undefined = undefined
 
 const searchTerm = writable('')
-const sortBy = writable<'date' | 'path'>('date')
-const sortDirection = writable<'asc' | 'desc'>('asc')
+const sortBy = writable<'date' | 'name'>('date')
+const sortDirection = writable<'asc' | 'desc'>('desc')
 
 const filteredBundles = derived([searchTerm, sortBy, sortDirection], ([$searchTerm, $sortBy, $sortDirection]) => {
   let filtered = bundles
 
   // Apply search filter if there's a search term
   if ($searchTerm) {
-    const results = fuzzysort.go($searchTerm, bundles, {
+    // Create searchable objects with name at top level
+    const searchableBundles = bundles.map(bundle => ({
+      bundle,
+      name: bundle.remote?.name || bundle.local?.name || ''
+    }))
+
+    const results = fuzzysort.go($searchTerm, searchableBundles, {
       keys: ['name'],
       threshold: -10000
     })
-    filtered = results.map(result => result.obj as BundleSpec)
+    filtered = results.map(result => result.obj.bundle)
   }
 
   // Sort the results
@@ -35,7 +42,7 @@ const filteredBundles = derived([searchTerm, sortBy, sortDirection], ([$searchTe
     if ($sortBy === 'date') {
       const aLastModified = a.remote?.lastModified || a.local?.lastModified || ''
       const bLastModified = b.remote?.lastModified || b.local?.lastModified || ''
-      return multiplier * (new Date(bLastModified).getTime() - new Date(aLastModified).getTime())
+      return multiplier * (new Date(aLastModified).getTime() - new Date(bLastModified).getTime())
     } else {
       const aName = a.remote?.name || a.local?.name || ''
       const bName = b.remote?.name || b.local?.name || ''
@@ -44,13 +51,17 @@ const filteredBundles = derived([searchTerm, sortBy, sortDirection], ([$searchTe
   })
 })
 
-function toggleSort(column: 'date' | 'path') {
+function toggleSort(column: 'date' | 'name') {
   if ($sortBy === column) {
     sortDirection.update(d => (d === 'asc' ? 'desc' : 'asc'))
   } else {
     sortBy.set(column)
     sortDirection.set('desc')
   }
+}
+
+function isDownloaded(bundle: BundleSpec): boolean {
+  return bundle.local !== undefined
 }
 
 function formatDate(dateStr: string): string {
@@ -71,14 +82,14 @@ function formatDate(dateStr: string): string {
         aria-label="Search versions"
       />
     </div>
-    <button onclick={() => onReload?.()} disabled={loading}>Reload</button>
   </div>
 
   <div class="bundle-selector-list-container">
     <div class="bundle-selector-list-header">
-      <button class="bundle-selector-sort-button" onclick={() => toggleSort('path')}>
-        Path
-        {#if $sortBy === 'path'}
+      <div class="bundle-selector-header-download"></div>
+      <button class="bundle-selector-sort-button" onclick={() => toggleSort('name')}>
+        Name
+        {#if $sortBy === 'name'}
           <span class="bundle-selector-sort-indicator">{$sortDirection === 'asc' ? '↑' : '↓'}</span>
         {/if}
       </button>
@@ -112,6 +123,19 @@ function formatDate(dateStr: string): string {
               }
             }}
           >
+            <div class="bundle-selector-list-download">
+              <button
+                class="bundle-selector-download-button"
+                disabled={isDownloaded(bundle)}
+                onclick={(e) => {
+                  e.stopPropagation()
+                  onDownload?.(bundle)
+                }}
+                aria-label="Download bundle"
+              >
+                ↓
+              </button>
+            </div>
             <span class="bundle-selector-list-bundle-name">{bundle.remote?.name || bundle.local?.name || ''}</span>
             <span class="bundle-selector-list-bundle-date"
               >{formatDate(bundle.remote?.lastModified || bundle.local?.lastModified || '')}</span
@@ -120,6 +144,26 @@ function formatDate(dateStr: string): string {
         {/each}
       {/if}
     </div>
+  </div>
+
+  <div class="bundle-selector-status-bar">
+    <div class="bundle-selector-status-message">
+      {#if loading}
+        Loading...
+      {:else if error}
+        {error}
+      {:else}
+        {bundles.length} {bundles.length === 1 ? 'bundle' : 'bundles'}
+      {/if}
+    </div>
+    <button
+      class="bundle-selector-reload-button"
+      onclick={() => onReload?.()}
+      disabled={loading}
+      aria-label="Reload"
+    >
+      ↻
+    </button>
   </div>
 </div>
 
@@ -137,14 +181,12 @@ function formatDate(dateStr: string): string {
 }
 
 .bundle-selector-header {
-  display: flex;
-  gap: 1rem;
   padding: 0.75rem;
   border-bottom: 1px solid var(--border-color-normal);
 }
 
 .bundle-selector-search-bar {
-  flex: 1;
+  width: 100%;
 }
 
 .bundle-selector-search-input {
@@ -185,12 +227,17 @@ function formatDate(dateStr: string): string {
 }
 
 .bundle-selector-list-header {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 3rem 1fr auto;
+  gap: 1rem;
   padding: 0.75rem;
   background-color: #333;
   border-bottom: 1px solid var(--border-color-normal);
   font-weight: 700;
+}
+
+.bundle-selector-header-download {
+  width: 3rem;
 }
 
 .bundle-selector-sort-button {
@@ -220,8 +267,10 @@ function formatDate(dateStr: string): string {
 }
 
 .bundle-selector-list-row {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 3rem 1fr auto;
+  gap: 1rem;
+  align-items: center;
   padding: 0.75rem;
   user-select: none;
   cursor: pointer;
@@ -235,13 +284,86 @@ function formatDate(dateStr: string): string {
   }
 }
 
+.bundle-selector-list-download {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bundle-selector-download-button {
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  background-color: #555;
+  border: 1px solid var(--border-color-normal);
+  border-radius: 0.25rem;
+  color: var(--text-color-primary);
+  font-size: 1.25rem;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s;
+
+  .bundle-selector-list-row:hover & {
+    opacity: 1;
+  }
+
+  &:disabled {
+    opacity: 1;
+    cursor: not-allowed;
+    background-color: #333;
+    color: var(--text-color-secondary);
+  }
+
+  &:not(:disabled):hover {
+    background-color: #666;
+    border-color: var(--border-color-focused);
+  }
+}
+
 .bundle-selector-list-bundle-name {
-  flex: 1;
-  margin-right: 1rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .bundle-selector-list-bundle-date {
   color: var(--text-color-secondary);
   white-space: nowrap;
+}
+
+.bundle-selector-status-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0.75rem;
+  background-color: #333;
+  border-top: 1px solid var(--border-color-normal);
+  font-size: 0.875rem;
+}
+
+.bundle-selector-status-message {
+  color: var(--text-color-secondary);
+}
+
+.bundle-selector-reload-button {
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  background-color: #555;
+  border: 1px solid var(--border-color-normal);
+  border-radius: 0.25rem;
+  color: var(--text-color-primary);
+  font-size: 1.25rem;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background-color: #666;
+    border-color: var(--border-color-focused);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
 }
 </style>

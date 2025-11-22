@@ -10,13 +10,18 @@ import StoryDecorator from '../_storybook/story-decorator.svelte'
 
 import BundleSelector from './bundle-selector.svelte'
 
-function bundleSpec(branchName: string, lastModified: string): BundleSpec {
+function bundleSpec(branchName: string, lastModified: string, hasLocal = false): BundleSpec {
   return {
     remote: {
       url: `https://example.com/branch/${branchName}/bundles/check-bundle.js`,
       name: branchName,
       lastModified
-    }
+    },
+    local: hasLocal ? {
+      url: `file:///bundles/${branchName}/check-bundle.js`,
+      name: branchName,
+      lastModified
+    } : undefined
   }
 }
 
@@ -37,7 +42,8 @@ const { Story } = defineMeta({
   tags: ['autodocs'],
   args: {
     onReload: fn(),
-    onSelect: fn()
+    onSelect: fn(),
+    onDownload: fn()
   }
 })
 </script>
@@ -60,20 +66,22 @@ const { Story } = defineMeta({
     // Get all bundle items
     const bundleItems = canvas.getAllByRole('option')
 
-    // Verify the order of items
+    // Verify we have 8 bundles
+    await expect(bundleItems).toHaveLength(8)
+
+    // Verify the order of items (sorted by date descending by default)
     const expectedOrder = [
       'main',
-      'chris/456-another-feature',
       'chris/123-feature',
       'release/25.5.0',
       'release/25.4.0',
+      'chris/456-another-feature',
       'release/25.3.0',
       'release/25.2.0',
-      'release/25.1.0',
-      'release/25.0.0'
+      'release/25.1.0'
     ]
 
-    // Check each item's text content matches the expected order
+    // Check each item's name matches the expected order
     bundleItems.forEach(async (item, index) => {
       await expect(item).toHaveTextContent(expectedOrder[index])
     })
@@ -159,8 +167,9 @@ const { Story } = defineMeta({
     error: 'Failed to load bundles'
   }}
   play={async ({ canvas }) => {
-    // Verify error state message
-    await expect(canvas.getByText('Failed to load bundles')).toBeInTheDocument()
+    // Verify error state message appears (in both content and status bar)
+    const errorMessages = canvas.getAllByText('Failed to load bundles')
+    await expect(errorMessages.length).toBeGreaterThan(0)
   }}
 />
 
@@ -179,5 +188,97 @@ const { Story } = defineMeta({
 
     // Verify that onSelect was called with the correct bundle
     await expect(args.onSelect).toHaveBeenCalledWith(bundleSpec('main', '2025-05-14T10:00:00.000Z'))
+  }}
+/>
+
+<Story
+  name="Column Headers"
+  {template}
+  args={{
+    bundles: sampleBundles,
+    loading: false,
+    error: ''
+  }}
+  play={async ({ canvas }) => {
+    // Verify column headers are present and labeled correctly
+    await expect(canvas.getByRole('button', { name: /Name/i })).toBeInTheDocument()
+    await expect(canvas.getByRole('button', { name: /Last Modified/i })).toBeInTheDocument()
+  }}
+/>
+
+<Story
+  name="Download Button - Remote Only"
+  {template}
+  args={{
+    bundles: [bundleSpec('main', '2025-05-14T10:00:00.000Z', false)],
+    loading: false,
+    error: ''
+  }}
+  play={async ({ canvas, args }) => {
+    // Get the download button (should be enabled for remote-only bundle)
+    const downloadButton = canvas.getByRole('button', { name: /download/i })
+    await expect(downloadButton).toBeInTheDocument()
+    await expect(downloadButton).not.toBeDisabled()
+
+    // Click the download button
+    await userEvent.click(downloadButton)
+
+    // Verify onDownload was called with the correct bundle
+    await expect(args.onDownload).toHaveBeenCalledWith(bundleSpec('main', '2025-05-14T10:00:00.000Z', false))
+  }}
+/>
+
+<Story
+  name="Download Button - Local Bundle"
+  {template}
+  args={{
+    bundles: [bundleSpec('main', '2025-05-14T10:00:00.000Z', true)],
+    loading: false,
+    error: ''
+  }}
+  play={async ({ canvas }) => {
+    // Get the download button (should be disabled for local bundle)
+    const downloadButton = canvas.getByRole('button', { name: /download/i })
+    await expect(downloadButton).toBeInTheDocument()
+    await expect(downloadButton).toBeDisabled()
+  }}
+/>
+
+<Story
+  name="Status Bar with Reload"
+  {template}
+  args={{
+    bundles: sampleBundles,
+    loading: false,
+    error: ''
+  }}
+  play={async ({ canvas, args }) => {
+    // Find the reload button in the status bar (not in header)
+    const reloadButton = canvas.getByRole('button', { name: /reload/i })
+    await expect(reloadButton).toBeInTheDocument()
+
+    // Click reload button
+    await userEvent.click(reloadButton)
+
+    // Verify onReload was called
+    await expect(args.onReload).toHaveBeenCalled()
+  }}
+/>
+
+<Story
+  name="Status Bar - Loading State"
+  {template}
+  args={{
+    bundles: [],
+    loading: true,
+    error: ''
+  }}
+  play={async ({ canvas }) => {
+    // Verify loading message is shown in status bar
+    await expect(canvas.getByText('Loading...')).toBeInTheDocument()
+
+    // Verify reload button is disabled while loading
+    const reloadButton = canvas.getByRole('button', { name: /reload/i })
+    await expect(reloadButton).toBeDisabled()
   }}
 />
