@@ -38,6 +38,7 @@
     "chart.js": "^2.9.4",
     "copy-text-to-clipboard": "^3.2.0",
     "fontfaceobserver": "^2.3.0",
+    "fuzzysort": "^3.1.0",
     "svelte-dnd-action": "^0.9.50"
   },
   "devDependencies": {
