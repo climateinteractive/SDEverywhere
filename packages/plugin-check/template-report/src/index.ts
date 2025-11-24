@@ -2,6 +2,7 @@
 
 import type { Bundle, ConfigInitOptions, SuiteSummary } from '@sdeverywhere/check-core'
 
+import type { BundleLocation, BundleSpec } from '@sdeverywhere/check-ui-shell'
 import { initAppShell } from '@sdeverywhere/check-ui-shell'
 import '@sdeverywhere/check-ui-shell/dist/style.css'
 
@@ -22,19 +23,19 @@ function loadBundleName(key: string): string | undefined {
   }
 }
 
-function saveBundleName(key: string, value: string): void {
-  if (import.meta.hot) {
-    localStorage.setItem(`sde-check-selected-bundle-${key}`, value)
-  }
-}
+// function saveBundleName(key: string, value: string): void {
+//   if (import.meta.hot) {
+//     localStorage.setItem(`sde-check-selected-bundle-${key}`, value)
+//   }
+// }
 
 // For local development mode, load the list of available baseline bundles
-type BundleModule = {
-  createBundle(): Bundle
-}
+// type BundleModule = {
+//   createBundle(): Bundle
+// }
 type LoadBundle = () => Promise<Bundle>
 const availableBundles: { [key: string]: LoadBundle } = {}
-let bundleNames: string[]
+// let bundleNames: string[]
 let selectedBaselineBundleName: string
 let selectedCurrentBundleName: string
 // The following value will be injected by `vite-config-for-report.ts`
@@ -44,34 +45,34 @@ if (import.meta.hot && bundlesPath) {
   selectedBaselineBundleName = loadBundleName('baseline')
   selectedCurrentBundleName = loadBundleName('current')
 
-  // Get the available baseline bundles.  The glob pattern part will be replaced
-  // by Vite (see `vite-config-for-report.ts`).  Note that we provide a placeholder
-  // here that looks like a valid glob pattern, since Vite's dependency resolver will
-  // report errors if it is invalid (not a literal).
-  const bundlesGlob = import.meta.glob('./bundles/*.txt', {
-    eager: false
-  })
-  const baselineBundleNames: string[] = []
-  for (const bundleKey of Object.keys(bundlesGlob)) {
-    const loadBundle = bundlesGlob[bundleKey]
-    const bundlePathParts = bundleKey.split('/')
-    const bundleFileName = bundlePathParts[bundlePathParts.length - 1]
-    const bundleName = bundleFileName.replace('.js', '')
-    baselineBundleNames.push(bundleName)
-    availableBundles[bundleName] = async () => {
-      const module = (await loadBundle()) as BundleModule
-      return module.createBundle() as Bundle
-    }
-  }
+  //   // Get the available baseline bundles.  The glob pattern part will be replaced
+  //   // by Vite (see `vite-config-for-report.ts`).  Note that we provide a placeholder
+  //   // here that looks like a valid glob pattern, since Vite's dependency resolver will
+  //   // report errors if it is invalid (not a literal).
+  //   const bundlesGlob = import.meta.glob('./bundles/*.txt', {
+  //     eager: false
+  //   })
+  //   const baselineBundleNames: string[] = []
+  //   for (const bundleKey of Object.keys(bundlesGlob)) {
+  //     const loadBundle = bundlesGlob[bundleKey]
+  //     const bundlePathParts = bundleKey.split('/')
+  //     const bundleFileName = bundlePathParts[bundlePathParts.length - 1]
+  //     const bundleName = bundleFileName.replace('.js', '')
+  //     baselineBundleNames.push(bundleName)
+  //     availableBundles[bundleName] = async () => {
+  //       const module = (await loadBundle()) as BundleModule
+  //       return module.createBundle() as Bundle
+  //     }
+  //   }
 
-  // Alphabetize (reversed, so that newer dates are at the top of the list)
-  baselineBundleNames.sort((a, b) => {
-    return b.toLowerCase().localeCompare(a.toLowerCase())
-  })
+  //   // Alphabetize (reversed, so that newer dates are at the top of the list)
+  //   baselineBundleNames.sort((a, b) => {
+  //     return b.toLowerCase().localeCompare(a.toLowerCase())
+  //   })
 
-  // Always include the "current" bundle as the first option, followed by
-  // the alphabetized bundle names
-  bundleNames = ['current', ...baselineBundleNames]
+  //   // Always include the "current" bundle as the first option, followed by
+  //   // the alphabetized bundle names
+  //   bundleNames = ['current', ...baselineBundleNames]
 }
 
 async function initForProduction(): Promise<void> {
@@ -156,7 +157,10 @@ async function initForLocal(): Promise<void> {
 
   // Initialize the root Svelte component
   initAppShell(configOptions, {
-    bundleNames
+    // TODO: Remove bundleNames
+    // bundleNames
+    getLocalBundles: import.meta.hot ? getLocalBundles : undefined,
+    onDownloadBundle: import.meta.hot ? onDownloadBundle : undefined
   })
 }
 
@@ -184,21 +188,22 @@ initOverlay()
 initBundlesAndUI()
 
 if (import.meta.hot) {
-  // Reload everything when the user chooses a new baseline or current bundle
-  document.addEventListener('sde-check-bundle', e => {
-    // Change the selected bundle
-    const info = (e as CustomEvent).detail
-    if (info.kind === 'left') {
-      saveBundleName('baseline', info.name)
-      selectedBaselineBundleName = info.name
-    } else {
-      saveBundleName('current', info.name)
-      selectedCurrentBundleName = info.name
-    }
+  // TODO
+  //   // Reload everything when the user chooses a new baseline or current bundle
+  //   document.addEventListener('sde-check-bundle', e => {
+  //     // Change the selected bundle
+  //     const info = (e as CustomEvent).detail
+  //     if (info.kind === 'left') {
+  //       saveBundleName('baseline', info.name)
+  //       selectedBaselineBundleName = info.name
+  //     } else {
+  //       saveBundleName('current', info.name)
+  //       selectedCurrentBundleName = info.name
+  //     }
 
-    // Reinitialize using the chosen bundles
-    initBundlesAndUI()
-  })
+  //     // Reinitialize using the chosen bundles
+  //     initBundlesAndUI()
+  //   })
 
   // Reload everything when the user applies updated configuration (e.g., updated filters or
   // concurrency setting)
@@ -206,4 +211,94 @@ if (import.meta.hot) {
     // Reinitialize using the new configuration
     initBundlesAndUI()
   })
+}
+
+/**
+ * Get the list of locally available bundles (only in development mode with HMR enbaled).
+ */
+async function getLocalBundles(): Promise<BundleLocation[]> {
+  // Only available in development mode with HMR
+  if (!import.meta.hot) {
+    throw new Error('getLocalBundles is only available in development mode with HMR enabled')
+  }
+
+  return new Promise((resolve, reject) => {
+    // Set up listeners
+    const handleSuccess = (data: { bundles: Array<{ name: string; fileName: string }> }) => {
+      cleanup()
+      const bundles: BundleLocation[] = data.bundles.map(b => ({
+        name: b.name,
+        url: `/bundles/${b.fileName}`,
+        lastModified: new Date().toISOString()
+      }))
+      resolve(bundles)
+    }
+
+    const handleError = (data: { error: string }) => {
+      cleanup()
+      reject(new Error(data.error))
+    }
+
+    const cleanup = () => {
+      import.meta.hot.off('list-bundles-success', handleSuccess)
+      import.meta.hot.off('list-bundles-error', handleError)
+    }
+
+    import.meta.hot.on('list-bundles-success', handleSuccess)
+    import.meta.hot.on('list-bundles-error', handleError)
+
+    // Send request to list bundles
+    import.meta.hot.send('list-bundles', {})
+
+    // Timeout after 5 seconds
+    setTimeout(() => {
+      cleanup()
+      reject(new Error('Timeout waiting for bundle list'))
+    }, 5000)
+  })
+}
+
+/**
+ * Download a bundle from the network (only in development mode with HMR).
+ */
+function onDownloadBundle(bundle: BundleSpec): void {
+  // Only available in development mode with HMR
+  if (!import.meta.hot) {
+    throw new Error('onDownloadBundle is only available in development mode with HMR enabled')
+  }
+
+  if (!bundle.remote) {
+    throw new Error('Only bundles with a remote URL can be downloaded')
+  }
+
+  const { url, name } = bundle.remote
+
+  // Set up listeners for download result
+  const handleSuccess = (data: { name: string; filePath: string }) => {
+    cleanup()
+    if (data.name === name) {
+      console.log(`Successfully downloaded bundle: ${name} to ${data.filePath}`)
+      // TODO: Optionally refresh the bundle selector UI
+    }
+  }
+
+  const handleError = (data: { name: string; error: string }) => {
+    cleanup()
+    if (data.name === name) {
+      console.error(`Failed to download bundle ${name}:`, data.error)
+    }
+  }
+
+  const cleanup = () => {
+    import.meta.hot.off('download-bundle-success', handleSuccess)
+    import.meta.hot.off('download-bundle-error', handleError)
+  }
+
+  import.meta.hot.on('download-bundle-success', handleSuccess)
+  import.meta.hot.on('download-bundle-error', handleError)
+
+  // Send download request
+  import.meta.hot.send('download-bundle', { url, name })
+
+  console.log(`Requesting download of bundle: ${name} from ${url}`)
 }

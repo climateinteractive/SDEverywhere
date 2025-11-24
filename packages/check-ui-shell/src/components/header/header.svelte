@@ -72,11 +72,11 @@ function handleBundleSelected(bundle: BundleSpec) {
     return
   }
 
-  // TODO
+  // TODO: We need a better way to identify bundles than just the name
   if (openedBundleSelectorSide === 'left') {
-    // onSelectBundle('left', name)
+    onSelectBundle('left', name)
   } else if (openedBundleSelectorSide === 'right') {
-    // onSelectBundle('right', name)
+    onSelectBundle('right', name)
   }
 
   closeBundleSelector()

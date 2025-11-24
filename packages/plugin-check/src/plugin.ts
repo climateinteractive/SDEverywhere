@@ -48,7 +48,7 @@ class CheckPlugin implements Plugin {
     // model-check report locally (with live reload enabled).  When a model
     // test file is changed, the tests will be re-run in the browser.
     const testOptions = this.resolveTestOptions(config)
-    const viteConfig = this.createViteConfigForReport(config, testOptions, undefined)
+    const viteConfig = this.createViteConfigForReport('watch', config, testOptions, undefined)
     const server: ViteDevServer = await createServer(viteConfig)
     await server.listen()
 
@@ -188,7 +188,7 @@ class CheckPlugin implements Plugin {
 
     // Build the report (using Vite)
     context.log('info', 'Building model check report')
-    const viteConfig = this.createViteConfigForReport(context.config, testOptions, result.suiteSummary)
+    const viteConfig = this.createViteConfigForReport('bundle', context.config, testOptions, result.suiteSummary)
     await build(viteConfig)
 
     // context.log('info', 'Done!')
@@ -226,11 +226,13 @@ class CheckPlugin implements Plugin {
   }
 
   private createViteConfigForReport(
+    mode: 'bundle' | 'watch',
     config: ResolvedConfig,
     testOptions: TestOptions,
     suiteSummary: SuiteSummary | undefined
   ): InlineConfig {
     return createViteConfigForReport(
+      mode,
       this.options,
       config.rootDir,
       config.prepDir,

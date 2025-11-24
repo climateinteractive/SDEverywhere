@@ -10,11 +10,13 @@ import replace from '@rollup/plugin-replace'
 import type { SuiteSummary } from '@sdeverywhere/check-core'
 
 import type { CheckPluginOptions } from './options'
+import { localBundlesPlugin } from './vite-local-bundles-plugin'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 
 export function createViteConfigForReport(
+  mode: 'bundle' | 'watch',
   options: CheckPluginOptions | undefined,
   projDir: string,
   prepDir: string,
@@ -196,7 +198,11 @@ export function createViteConfigForReport(
           // '.../template-report/src/bundles/*.txt' (see `bundles/unused.txt`).
           './bundles/*.txt': bundlesPath
         }
-      }) as unknown as PluginOption
+      }) as unknown as PluginOption,
+
+      // When local development mode is active, enable the local bundles plugin that
+      // allows the report app to access the local bundles directory
+      ...(mode === 'watch' ? [localBundlesPlugin()] : [])
     ],
 
     build: {
