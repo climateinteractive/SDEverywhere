@@ -53,15 +53,15 @@ class CheckPlugin implements Plugin {
     await server.listen()
 
     // XXX: Currently Vite doesn't reload the page if a file is added/removed
-    // in the baselines directory (Vite's import.meta.glob handling doesn't
-    // seem to do this automatically), so as a workaround, watch the baselines
+    // in the bundles directory (Vite's import.meta.glob handling doesn't
+    // seem to do this automatically), so as a workaround, watch the bundles
     // directory and restart the server if files are added/removed
     // TODO: The same problem also applies to the glob for `checks/*.yaml` and
     // `comparisons/*.yaml` files in the test config, so we should also reload
     // if files match/unmatch those glob patterns
-    // TODO: Use the baselines directory from the config
-    const baselinesDir = 'baselines'
-    const watcher = chokidar.watch(baselinesDir, {
+    // TODO: Use the bundles directory from the config
+    const bundlesDir = 'bundles'
+    const watcher = chokidar.watch(bundlesDir, {
       // Watch paths are resolved relative to the project root directory
       cwd: config.rootDir,
       // Don't send initial "file added" events
@@ -93,7 +93,7 @@ class CheckPlugin implements Plugin {
     if (this.options?.current === undefined) {
       // Path to current bundle was not provided, so generate a default bundle
       if (context.config.mode === 'development') {
-        // Copy the previous bundle to the `baselines` directory so that
+        // Copy the previous bundle to the `bundles` directory so that
         // we automatically have it available as a baseline for comparison
         await this.copyPreviousBundle(context.config)
       }
@@ -127,12 +127,12 @@ class CheckPlugin implements Plugin {
     // Only copy if the current bundle exists
     const currentBundleFile = joinPath(config.prepDir, 'check-bundle.js')
     if (existsSync(currentBundleFile)) {
-      // TODO: Use the baselines directory from the config (not yet available)
-      const baselinesDir = joinPath(config.rootDir, 'baselines')
-      if (!existsSync(baselinesDir)) {
-        await mkdir(baselinesDir, { recursive: true })
+      // TODO: Use the bundles directory from the config (not yet available)
+      const bundlesDir = joinPath(config.rootDir, 'bundles')
+      if (!existsSync(bundlesDir)) {
+        await mkdir(bundlesDir, { recursive: true })
       }
-      const previousBundleFile = joinPath(baselinesDir, 'previous.js')
+      const previousBundleFile = joinPath(bundlesDir, 'previous.js')
       await copyFile(currentBundleFile, previousBundleFile)
     }
   }

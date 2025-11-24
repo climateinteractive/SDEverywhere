@@ -38,8 +38,8 @@ let bundleNames: string[]
 let selectedBaselineBundleName: string
 let selectedCurrentBundleName: string
 // The following value will be injected by `vite-config-for-report.ts`
-const baselinesPath = './baselines/*.txt'
-if (import.meta.hot && baselinesPath) {
+const bundlesPath = './bundles/*.txt'
+if (import.meta.hot && bundlesPath) {
   // Restore the previously selected bundles (from before the page was reloaded)
   selectedBaselineBundleName = loadBundleName('baseline')
   selectedCurrentBundleName = loadBundleName('current')
@@ -48,7 +48,7 @@ if (import.meta.hot && baselinesPath) {
   // by Vite (see `vite-config-for-report.ts`).  Note that we provide a placeholder
   // here that looks like a valid glob pattern, since Vite's dependency resolver will
   // report errors if it is invalid (not a literal).
-  const bundlesGlob = import.meta.glob('./baselines/*.txt', {
+  const bundlesGlob = import.meta.glob('./bundles/*.txt', {
     eager: false
   })
   const baselineBundleNames: string[] = []

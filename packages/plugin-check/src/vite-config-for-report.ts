@@ -26,14 +26,14 @@ export function createViteConfigForReport(
   // Use `template-report` as the root directory for the report project
   const root = resolvePath(__dirname, '..', 'template-report')
 
-  // Make sure the `baselines` directory exists, otherwise Vite's dependency scanner
+  // Make sure the `bundles` directory exists, otherwise Vite's dependency scanner
   // may report errors when processing the `import.meta.glob` call
-  const baselinesDir = resolvePath(projDir, 'baselines')
-  if (!existsSync(baselinesDir)) {
-    mkdirSync(baselinesDir, { recursive: true })
+  const bundlesDir = resolvePath(projDir, 'bundles')
+  if (!existsSync(bundlesDir)) {
+    mkdirSync(bundlesDir, { recursive: true })
   }
 
-  // Include `baselines/*.js` files under the configured project root directory.  This
+  // Include `bundles/*.js` files under the configured project root directory.  This
   // glob path apparently must be a relative path (relative to the `template-report/src`
   // directory where the glob is used).
   const templateSrcDir = resolvePath(root, 'src')
@@ -41,8 +41,8 @@ export function createViteConfigForReport(
   // XXX: The glob pattern must use forward slashes only, so on Windows we need to
   // convert backslashes to slashes
   const relProjDirPath = relProjDir.replaceAll('\\', '/')
-  // TODO: Use baselinesDir from options
-  const baselinesPath = `${relProjDirPath}/baselines/*.js`
+  // TODO: Use bundlesDir from options
+  const bundlesPath = `${relProjDirPath}/bundles/*.js`
 
   // Calculate output directory relative to the template root
   let reportPath: string
@@ -188,13 +188,13 @@ export function createViteConfigForReport(
         delimiters: ['', ''],
         values: {
           // Inject the path for baseline bundles
-          // XXX: Note that we use './baselines/*.txt' instead of something special
+          // XXX: Note that we use './bundles/*.txt' instead of something special
           // like './__BASELINE_BUNDLES_PATH__' because sometimes Vite's dependency
           // scanner sees the latter (instead of the injected path) and reports
           // an error since the path does not exist.  As a workaround, we use
-          // './baselines/*.txt', which gets interpreted as the valid path
-          // '.../template-report/src/baselines/*.txt' (see `baselines/unused.txt`).
-          './baselines/*.txt': baselinesPath
+          // './bundles/*.txt', which gets interpreted as the valid path
+          // '.../template-report/src/bundles/*.txt' (see `bundles/unused.txt`).
+          './bundles/*.txt': bundlesPath
         }
       }) as unknown as PluginOption
     ],

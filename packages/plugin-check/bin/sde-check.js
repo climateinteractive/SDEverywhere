@@ -11,8 +11,7 @@ import { join as joinPath } from 'path'
 function printUsage() {
   console.log()
   console.log('Usage:')
-  console.log('  sim-check baseline --save\t\tcopy the latest bundle to the `baselines` directory')
-  // console.log('  sim-check baseline --clear-all\tremove all bundles from the `baselines` directory')
+  console.log('  sim-check save-current-bundle\t\tcopy the latest bundle to the `bundles` directory')
   console.log()
 }
 
@@ -31,19 +30,14 @@ function timestamp() {
 }
 
 const args = process.argv.slice(2)
-if (args.length !== 2 || args[0] !== 'baseline') {
-  printUsage()
-  process.exit(1)
-}
-
-if (args[1] !== '--save') {
+if (args.length !== 2 || args[0] !== 'save-current-bundle') {
   printUsage()
   process.exit(1)
 }
 
 // TODO: For now we make a number of assumptions (e.g., that the bundle will be copied to
-// the `baselines` directory under the current working directory, that the bundle filename
-// will contain the current timestamp); should make these configurable
+// the `bundles` directory under the current working directory, that the bundle filename
+// will contain the current timestamp); we should make these configurable
 const prepDir = joinPath(process.cwd(), 'sde-prep')
 const srcBundleFile = joinPath(prepDir, 'check-bundle.js')
 if (!existsSync(srcBundleFile)) {
@@ -51,10 +45,10 @@ if (!existsSync(srcBundleFile)) {
   process.exit(1)
 }
 
-const baselinesDir = joinPath(process.cwd(), 'baselines')
-if (!existsSync(baselinesDir)) {
-  mkdirSync(baselinesDir, { recursive: true })
+const bundlesDir = joinPath(process.cwd(), 'bundles')
+if (!existsSync(bundlesDir)) {
+  mkdirSync(bundlesDir, { recursive: true })
 }
 
-const dstBundleFile = joinPath(baselinesDir, `${timestamp()}.js`)
+const dstBundleFile = joinPath(bundlesDir, `${timestamp()}.js`)
 copyFileSync(srcBundleFile, dstBundleFile)
