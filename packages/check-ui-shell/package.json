@@ -2,12 +2,11 @@
   "name": "@sdeverywhere/check-ui-shell",
   "version": "0.2.12",
   "files": [
-    "dist/**",
-    "types/**"
+    "dist/**"
   ],
   "type": "module",
   "module": "dist/index.js",
-  "types": "types/index.d.ts",
+  "types": "dist/index.d.ts",
   "scripts": {
     "clean": "rm -rf dist",
     "lint:ts": "eslint src --max-warnings 0",
@@ -23,7 +22,9 @@
     "test:storybook:watch": "vitest dev --project=storybook",
     "test:ci": "run-s test:ts",
     "type-check": "tsc --noEmit -p tsconfig-test.json",
-    "build": "vite build",
+    "build:vite": "vite build",
+    "build:dts": "tsup --dts-only",
+    "build": "run-s build:vite build:dts",
     "build:watch": "vite build --watch",
     "storybook": "storybook dev -p 6010",
     "docs": "../../scripts/gen-docs.js",
