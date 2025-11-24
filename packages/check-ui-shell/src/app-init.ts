@@ -4,7 +4,7 @@ import { mount } from 'svelte'
 
 import type { ConfigOptions, SuiteSummary } from '@sdeverywhere/check-core'
 
-import type { BundleSpec } from './components/bundle/bundle-spec'
+import type { BundleLocation, BundleSpec } from './components/bundle/bundle-spec'
 
 import { initAppModel } from './model/app-model'
 
@@ -15,6 +15,15 @@ export interface AppShellOptions {
   suiteSummary?: SuiteSummary
   containerId?: string
   bundleNames?: string[]
+  /**
+   * Get the list of locally available bundles.
+   *
+   * This callback is invoked when the bundle selector is opened to fetch the list of bundles
+   * that have been downloaded to local storage.
+   *
+   * @returns A promise that resolves to an array of bundle locations.
+   */
+  getLocalBundles?: () => Promise<BundleLocation[]>
   /**
    * Download a bundle from the network to local storage.
    *
@@ -49,7 +58,9 @@ export function initAppShell(configOptions: ConfigOptions, appShellOptions?: App
       mount(AppShell, {
         target: containerElem,
         props: {
-          appViewModel
+          appViewModel,
+          getLocalBundles: appShellOptions?.getLocalBundles,
+          onDownloadBundle: appShellOptions?.onDownloadBundle
         }
       })
     })

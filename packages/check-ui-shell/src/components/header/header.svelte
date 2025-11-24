@@ -6,9 +6,15 @@ import { createEventDispatcher } from 'svelte'
 import Icon from 'svelte-awesome/components/Icon.svelte'
 import { faCog, faFilter, faHome } from '@fortawesome/free-solid-svg-icons'
 
+import type { BundleLocation, BundleSpec } from '../bundle/bundle-spec'
+import SyncedBundleSelector from '../bundle/synced-bundle-selector.svelte'
+
 import type { HeaderViewModel } from './header-vm'
 
 export let viewModel: HeaderViewModel
+export let getLocalBundles: (() => Promise<BundleLocation[]>) | undefined = undefined
+export let onDownloadBundle: ((bundle: BundleSpec) => void) | undefined = undefined
+
 const thresholds = viewModel.thresholds
 const bundleNamesL = viewModel.bundleNamesL
 const bundleNamesR = viewModel.bundleNamesR
@@ -20,6 +26,9 @@ const sortMode = viewModel.sortMode
 const concurrency = viewModel.concurrency
 
 const dispatch = createEventDispatcher()
+
+type BundleSelectorSide = 'left' | 'right' | undefined
+let openedBundleSelectorSide: BundleSelectorSide = undefined
 
 function onHome() {
   dispatch('command', { cmd: 'show-summary' })
@@ -43,18 +52,34 @@ function onSelectBundle(kind: string, name: string): void {
   document.dispatchEvent(changeEvent)
 }
 
-function onSelectBundleL(e: Event) {
-  onSelectBundle('left', (e.target as HTMLSelectElement).value)
-}
-
-function onSelectBundleR(e: Event) {
-  onSelectBundle('right', (e.target as HTMLSelectElement).value)
-}
-
 function onConcurrencyChange(e: Event) {
   const value = parseInt((e.target as HTMLSelectElement).value)
   $concurrency = value
   document.dispatchEvent(new CustomEvent('sde-check-config-changed'))
+}
+
+function openBundleSelector(side: 'left' | 'right') {
+  openedBundleSelectorSide = side
+}
+
+function closeBundleSelector() {
+  openedBundleSelectorSide = undefined
+}
+
+function handleBundleSelected(bundle: BundleSpec) {
+  const name = bundle.remote?.name || bundle.local?.name
+  if (!name) {
+    return
+  }
+
+  // TODO
+  if (openedBundleSelectorSide === 'left') {
+    // onSelectBundle('left', name)
+  } else if (openedBundleSelectorSide === 'right') {
+    // onSelectBundle('right', name)
+  }
+
+  closeBundleSelector()
 }
 </script>
 
@@ -78,20 +103,16 @@ function onConcurrencyChange(e: Event) {
       <div class="header-group">
         <div class="label">Comparing:</div>
         {#if $bundleNamesL.length > 1}
-          <select class="selector dataset-color-0" on:change={onSelectBundleL}>
-            {#each $bundleNamesL as name}
-              <option selected={name === viewModel.nameL}>{name}</option>
-            {/each}
-          </select>
+          <button class="bundle-button dataset-color-0" on:click={() => openBundleSelector('left')}>
+            {viewModel.nameL}
+          </button>
         {:else}
           <div class="label dataset-color-0">{viewModel.nameL}</div>
         {/if}
         {#if $bundleNamesR.length > 1}
-          <select class="selector dataset-color-1" on:change={onSelectBundleR}>
-            {#each $bundleNamesR as name}
-              <option selected={name === viewModel.nameR}>{name}</option>
-            {/each}
-          </select>
+          <button class="bundle-button dataset-color-1" on:click={() => openBundleSelector('right')}>
+            {viewModel.nameR}
+          </button>
         {:else}
           <div class="label dataset-color-1">{viewModel.nameR}</div>
         {/if}
@@ -157,6 +178,20 @@ function onConcurrencyChange(e: Event) {
   {/if}
   <div class="line"></div>
 </div>
+
+{#if openedBundleSelectorSide !== undefined}
+  <div class="modal-overlay" on:click={closeBundleSelector}>
+    <div class="modal-content" on:click={e => e.stopPropagation()}>
+      <div class="modal-header">
+        <h3>Select Bundle</h3>
+        <button class="modal-close" on:click={closeBundleSelector} aria-label="Close">×</button>
+      </div>
+      <div class="modal-body">
+        <SyncedBundleSelector {getLocalBundles} onSelect={handleBundleSelected} onDownload={onDownloadBundle} />
+      </div>
+    </div>
+  </div>
+{/if}
 
 <!-- STYLE -->
 <style lang="scss">
@@ -236,5 +271,83 @@ input[type='range'] {
   min-height: 1px;
   margin-bottom: 1rem;
   background-color: #555;
+}
+
+.bundle-button {
+  background: none;
+  padding: 0.25rem 0.5rem;
+  font: inherit;
+  border: 1px solid #333;
+  border-radius: 4px;
+  cursor: pointer;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-color: #888;
+  }
+
+  &:not(:last-child) {
+    margin-right: 1rem;
+  }
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background-color: #272727;
+  border: 1px solid var(--border-color-normal);
+  border-radius: 0.5rem;
+  width: 90%;
+  max-width: 800px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  border-bottom: 1px solid var(--border-color-normal);
+
+  h3 {
+    margin: 0;
+    color: var(--text-color-primary);
+  }
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  color: var(--text-color-primary);
+  font-size: 2rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+  width: 2rem;
+  height: 2rem;
+
+  &:hover {
+    color: var(--link-color-hover);
+  }
+}
+
+.modal-body {
+  flex: 1;
+  overflow: hidden;
+  padding: 1rem;
 }
 </style>
