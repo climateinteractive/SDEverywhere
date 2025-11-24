@@ -1,0 +1,22 @@
+{
+  "name": "sync-check-bundles",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "clean": "rm -rf sde-prep",
+    "dev": "sde dev",
+    "build": "sde bundle",
+    "run-tests": "echo TODO",
+    "test": "run-s build run-tests",
+    "ci:int-test": "run-s clean test"
+  },
+  "dependencies": {
+    "@sdeverywhere/build": "workspace:*",
+    "@sdeverywhere/cli": "workspace:*",
+    "@sdeverywhere/plugin-check": "workspace:*",
+    "@sdeverywhere/plugin-worker": "workspace:*",
+    "@sdeverywhere/runtime": "workspace:*",
+    "@sdeverywhere/runtime-async": "workspace:*"
+  }
+}
