@@ -1,3 +1,5 @@
 baselines
 bundles
 sde-prep
+playwright-report
+test-results

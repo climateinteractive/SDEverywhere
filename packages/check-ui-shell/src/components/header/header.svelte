@@ -103,14 +103,22 @@ function handleBundleSelected(bundle: BundleSpec) {
       <div class="header-group">
         <div class="label">Comparing:</div>
         {#if $bundleNamesL.length > 1}
-          <button class="bundle-button dataset-color-0" on:click={() => openBundleSelector('left')}>
+          <button
+            class="bundle-button dataset-color-0"
+            data-testid="bundle-selector-left"
+            on:click={() => openBundleSelector('left')}
+          >
             {viewModel.nameL}
           </button>
         {:else}
           <div class="label dataset-color-0">{viewModel.nameL}</div>
         {/if}
         {#if $bundleNamesR.length > 1}
-          <button class="bundle-button dataset-color-1" on:click={() => openBundleSelector('right')}>
+          <button
+            class="bundle-button dataset-color-1"
+            data-testid="bundle-selector-right"
+            on:click={() => openBundleSelector('right')}
+          >
             {viewModel.nameR}
           </button>
         {:else}

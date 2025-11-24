@@ -1,0 +1,25 @@
+// This contains the TypeScript configuration for testing.
+{
+  "extends": "../../../tsconfig-common.json",
+  "compilerOptions": {
+    // Don't emit .d.ts files
+    "declaration": false,
+    // We target ES6 for compatibility with older browsers.  This is
+    // important as it ensures that newer language features like optional
+    // chaining (`?.`) are transpiled so that they work in older browsers
+    // (e.g. Safari in iOS 12).
+    "target": "es6",
+    // XXX: Use "esnext" to match Vite and so that tsc doesn't complain about the
+    // use of dynamic import, which requires ESNext-style modules.  Vite will
+    // perform the actual bundling, so this config file is only relevant for
+    // type checking and therefore using "esnext" here should be safe.
+    "module": "esnext",
+    // Use "es2016" for `Array.includes`
+    "lib": ["dom", "dom.iterable", "es2016"],
+    // Use bundler-friendly module resolution
+    "moduleResolution": "bundler",
+    "outDir": "/dev/shm",
+    "noEmit": true
+  },
+  "include": ["tests/**/*"]
+}
