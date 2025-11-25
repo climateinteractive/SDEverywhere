@@ -2,29 +2,43 @@
 
 <!-- SCRIPT -->
 <script lang="ts">
+import { onMount } from 'svelte'
 import { derived, writable } from 'svelte/store'
 import fuzzysort from 'fuzzysort'
 
 import type { BundleSpec } from './bundle-spec'
+import type { BundleManager } from './bundle-manager'
 
-export let bundles: BundleSpec[]
-export let loading: boolean
-export let error: string | undefined
+export let bundleManager: BundleManager
 export let onSelect: ((bundle: BundleSpec) => void) | undefined = undefined
-export let onReload: (() => void) | undefined = undefined
-export let onDownload: ((bundle: BundleSpec) => void) | undefined = undefined
+
+const bundles = bundleManager.bundles
+const loading = bundleManager.loading
+const error = bundleManager.error
+
+function handleDownload(bundle: BundleSpec) {
+  bundleManager.downloadBundle(bundle)
+}
+
+function handleReload() {
+  bundleManager.load()
+}
+
+onMount(() => {
+  bundleManager.load()
+})
 
 const searchTerm = writable('')
 const sortBy = writable<'date' | 'name'>('date')
 const sortDirection = writable<'asc' | 'desc'>('desc')
 
-const filteredBundles = derived([searchTerm, sortBy, sortDirection], ([$searchTerm, $sortBy, $sortDirection]) => {
-  let filtered = bundles
+const filteredBundles = derived([bundles, searchTerm, sortBy, sortDirection], ([$bundles, $searchTerm, $sortBy, $sortDirection]) => {
+  let filtered = $bundles
 
   // Apply search filter if there's a search term
   if ($searchTerm) {
     // Create searchable objects with name at top level
-    const searchableBundles = bundles.map(bundle => ({
+    const searchableBundles = $bundles.map(bundle => ({
       bundle,
       name: bundle.remote?.name || bundle.local?.name || ''
     }))
@@ -102,11 +116,11 @@ function formatDate(dateStr: string): string {
     </div>
 
     <div class="bundle-selector-list-content">
-      {#if error}
-        <div class="bundle-selector-error">{error}</div>
-      {:else if loading}
+      {#if $error}
+        <div class="bundle-selector-error">{$error}</div>
+      {:else if $loading}
         <div class="bundle-selector-loading">Loading bundles...</div>
-      {:else if bundles.length === 0}
+      {:else if $bundles.length === 0}
         <div class="bundle-selector-empty">No bundles found</div>
       {:else}
         {#each $filteredBundles as bundle}
@@ -129,7 +143,7 @@ function formatDate(dateStr: string): string {
                 disabled={isDownloaded(bundle)}
                 onclick={e => {
                   e.stopPropagation()
-                  onDownload?.(bundle)
+                  handleDownload(bundle)
                 }}
                 aria-label="Download bundle"
               >
@@ -148,15 +162,15 @@ function formatDate(dateStr: string): string {
 
   <div class="bundle-selector-status-bar">
     <div class="bundle-selector-status-message">
-      {#if loading}
+      {#if $loading}
         Loading...
-      {:else if error}
-        {error}
+      {:else if $error}
+        {$error}
       {:else}
-        {bundles.length} {bundles.length === 1 ? 'bundle' : 'bundles'}
+        {$bundles.length} {$bundles.length === 1 ? 'bundle' : 'bundles'}
       {/if}
     </div>
-    <button class="bundle-selector-reload-button" onclick={() => onReload?.()} disabled={loading} aria-label="Reload">
+    <button class="bundle-selector-reload-button" onclick={() => handleReload()} disabled={$loading} aria-label="Reload">
       ↻
     </button>
   </div>

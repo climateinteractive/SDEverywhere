@@ -218,7 +218,7 @@ async function createAppViewModel(options?: {
   )
   const configOptions = mockConfigOptions(bundleL, bundleR, options)
   const appModel = await initAppModel(configOptions)
-  return new AppViewModel(appModel)
+  return new AppViewModel(appModel, undefined, undefined)
 }
 
 const { Story } = defineMeta({

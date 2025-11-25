@@ -7,7 +7,7 @@ import Icon from 'svelte-awesome/components/Icon.svelte'
 import { faCog, faFilter, faHome } from '@fortawesome/free-solid-svg-icons'
 
 import type { BundleSpec } from '../bundle/bundle-spec'
-import SyncedBundleSelector from '../bundle/synced-bundle-selector.svelte'
+import BundleSelector from '../bundle/bundle-selector.svelte'
 
 import type { HeaderViewModel } from './header-vm'
 
@@ -188,7 +188,7 @@ function handleBundleSelected(bundle: BundleSpec) {
         <button class="modal-close" on:click={closeBundleSelector} aria-label="Close">×</button>
       </div>
       <div class="modal-body">
-        <SyncedBundleSelector bundleManager={viewModel.bundleManager} onSelect={handleBundleSelected} />
+        <BundleSelector bundleManager={viewModel.bundleManager} onSelect={handleBundleSelected} />
       </div>
     </div>
   </div>

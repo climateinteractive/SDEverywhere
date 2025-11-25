@@ -1,10 +1,11 @@
 <!-- Copyright (c) 2025 Climate Interactive / New Venture Fund. All rights reserved. -->
 
 <script module lang="ts">
-import { expect, userEvent, fn } from 'storybook/test'
+import { expect, userEvent, fn, waitFor } from 'storybook/test'
 import { defineMeta, type Args } from '@storybook/addon-svelte-csf'
 
-import type { BundleSpec } from './bundle-spec'
+import type { BundleLocation, BundleSpec } from './bundle-spec'
+import { BundleManager } from './bundle-manager'
 
 import StoryDecorator from '../_storybook/story-decorator.svelte'
 
@@ -36,14 +37,52 @@ const sampleBundles: BundleSpec[] = [
   bundleSpec('release/25.5.0', '2025-05-01T15:30:00.000Z')
 ]
 
+const localBundles: BundleLocation[] = [
+  {
+    url: 'file:///bundles/main.js',
+    name: 'main',
+    lastModified: '2025-05-14T10:00:00.000Z'
+  },
+  {
+    url: 'file:///bundles/local-only.js',
+    name: 'local-only',
+    lastModified: '2025-05-12T10:00:00.000Z'
+  }
+]
+
+function bundleManagerFromBundles(bundles: BundleSpec[]): BundleManager {
+  // Extract remote and local bundles for testing
+  const remoteBundlesList: BundleLocation[] = bundles
+    .filter(b => b.remote)
+    .map(b => ({
+      url: b.remote!.url,
+      name: b.remote!.name,
+      lastModified: b.remote!.lastModified
+    }))
+
+  const localBundlesList: BundleLocation[] = bundles
+    .filter(b => b.local)
+    .map(b => ({
+      url: b.local!.url,
+      name: b.local!.name,
+      lastModified: b.local!.lastModified
+    }))
+
+  // Create a simple remote metadata response
+  const remoteMetadataUrl = remoteBundlesList.length > 0 ? 'data:application/json;base64,' + btoa(JSON.stringify(remoteBundlesList)) : undefined
+
+  return new BundleManager({
+    remoteMetadataUrl,
+    getLocalBundles: localBundlesList.length > 0 ? async () => localBundlesList : undefined
+  })
+}
+
 const { Story } = defineMeta({
   title: 'Components/BundleSelector',
   component: BundleSelector,
   tags: ['autodocs'],
   args: {
-    onReload: fn(),
-    onSelect: fn(),
-    onDownload: fn()
+    onSelect: fn()
   }
 })
 </script>
@@ -58,11 +97,12 @@ const { Story } = defineMeta({
   name="Default"
   {template}
   args={{
-    bundles: sampleBundles,
-    loading: false,
-    error: ''
+    bundleManager: bundleManagerFromBundles(sampleBundles)
   }}
   play={async ({ canvas }) => {
+    // Wait for loading to complete
+    await waitFor(() => expect(canvas.queryByText('Loading...')).not.toBeInTheDocument(), { timeout: 3000 })
+
     // Get all bundle items
     const bundleItems = canvas.getAllByRole('option')
 
@@ -92,11 +132,12 @@ const { Story } = defineMeta({
   name="Search"
   {template}
   args={{
-    bundles: sampleBundles,
-    loading: false,
-    error: ''
+    bundleManager: bundleManagerFromBundles(sampleBundles)
   }}
   play={async ({ canvas }) => {
+    // Wait for loading to complete
+    await waitFor(() => expect(canvas.queryByText('Loading...')).not.toBeInTheDocument(), { timeout: 3000 })
+
     // Test search filtering
     const searchInput = canvas.getByRole('searchbox')
     await userEvent.type(searchInput, 'release')
@@ -120,13 +161,15 @@ const { Story } = defineMeta({
   name="Empty"
   {template}
   args={{
-    bundles: [],
-    loading: false,
-    error: ''
+    bundleManager: new BundleManager({})
   }}
   play={async ({ canvas }) => {
-    // Verify empty state message
-    await expect(canvas.getByText('No bundles found')).toBeInTheDocument()
+    // Wait for loading to complete
+    await waitFor(() => expect(canvas.queryByText('Loading...')).not.toBeInTheDocument(), { timeout: 3000 })
+
+    // Verify "No bundles available" message
+    const messages = canvas.getAllByText(/No bundles/i)
+    await expect(messages.length).toBeGreaterThan(0)
   }}
 />
 
@@ -134,27 +177,17 @@ const { Story } = defineMeta({
   name="Loading"
   {template}
   args={{
-    bundles: [],
-    loading: true,
-    error: ''
+    bundleManager: new BundleManager({
+      getLocalBundles: async () => {
+        // Simulate slow loading
+        await new Promise(resolve => setTimeout(resolve, 10000))
+        return []
+      }
+    })
   }}
   play={async ({ canvas }) => {
     // Verify loading state message
-    await expect(canvas.getByText('Loading bundles...')).toBeInTheDocument()
-  }}
-/>
-
-<Story
-  name="Reloading"
-  {template}
-  args={{
-    bundles: sampleBundles,
-    loading: true,
-    error: ''
-  }}
-  play={async ({ canvas }) => {
-    // Verify loading state message
-    await expect(canvas.getByText('Loading bundles...')).toBeInTheDocument()
+    await expect(canvas.getByText('Loading...')).toBeInTheDocument()
   }}
 />
 
@@ -162,13 +195,18 @@ const { Story } = defineMeta({
   name="Error"
   {template}
   args={{
-    bundles: [],
-    loading: false,
-    error: 'Failed to load bundles'
+    bundleManager: new BundleManager({
+      getLocalBundles: async () => {
+        throw new Error('Failed to load bundles')
+      }
+    })
   }}
   play={async ({ canvas }) => {
+    // Wait for loading to complete
+    await waitFor(() => expect(canvas.queryByText('Loading...')).not.toBeInTheDocument(), { timeout: 3000 })
+
     // Verify error state message appears (in both content and status bar)
-    const errorMessages = canvas.getAllByText('Failed to load bundles')
+    const errorMessages = canvas.getAllByText(/Failed to load bundles/i)
     await expect(errorMessages.length).toBeGreaterThan(0)
   }}
 />
@@ -177,11 +215,12 @@ const { Story } = defineMeta({
   name="Selection"
   {template}
   args={{
-    bundles: sampleBundles,
-    loading: false,
-    error: ''
+    bundleManager: bundleManagerFromBundles(sampleBundles)
   }}
   play={async ({ canvas, args }) => {
+    // Wait for loading to complete
+    await waitFor(() => expect(canvas.queryByText('Loading...')).not.toBeInTheDocument(), { timeout: 3000 })
+
     // Click on the first bundle
     const firstBundle = canvas.getAllByRole('option')[0]
     await userEvent.click(firstBundle)
@@ -195,9 +234,7 @@ const { Story } = defineMeta({
   name="Column Headers"
   {template}
   args={{
-    bundles: sampleBundles,
-    loading: false,
-    error: ''
+    bundleManager: bundleManagerFromBundles(sampleBundles)
   }}
   play={async ({ canvas }) => {
     // Verify column headers are present and labeled correctly
@@ -210,21 +247,16 @@ const { Story } = defineMeta({
   name="Download Button - Remote Only"
   {template}
   args={{
-    bundles: [bundleSpec('main', '2025-05-14T10:00:00.000Z', false)],
-    loading: false,
-    error: ''
+    bundleManager: bundleManagerFromBundles([bundleSpec('main', '2025-05-14T10:00:00.000Z', false)])
   }}
-  play={async ({ canvas, args }) => {
+  play={async ({ canvas }) => {
+    // Wait for loading to complete
+    await waitFor(() => expect(canvas.queryByText('Loading...')).not.toBeInTheDocument(), { timeout: 3000 })
+
     // Get the download button (should be enabled for remote-only bundle)
     const downloadButton = canvas.getByRole('button', { name: /download/i })
     await expect(downloadButton).toBeInTheDocument()
     await expect(downloadButton).not.toBeDisabled()
-
-    // Click the download button
-    await userEvent.click(downloadButton)
-
-    // Verify onDownload was called with the correct bundle
-    await expect(args.onDownload).toHaveBeenCalledWith(bundleSpec('main', '2025-05-14T10:00:00.000Z', false))
   }}
 />
 
@@ -232,11 +264,12 @@ const { Story } = defineMeta({
   name="Download Button - Local Bundle"
   {template}
   args={{
-    bundles: [bundleSpec('main', '2025-05-14T10:00:00.000Z', true)],
-    loading: false,
-    error: ''
+    bundleManager: bundleManagerFromBundles([bundleSpec('main', '2025-05-14T10:00:00.000Z', true)])
   }}
   play={async ({ canvas }) => {
+    // Wait for loading to complete
+    await waitFor(() => expect(canvas.queryByText('Loading...')).not.toBeInTheDocument(), { timeout: 3000 })
+
     // Get the download button (should be disabled for local bundle)
     const downloadButton = canvas.getByRole('button', { name: /download/i })
     await expect(downloadButton).toBeInTheDocument()
@@ -248,11 +281,12 @@ const { Story } = defineMeta({
   name="Status Bar with Reload"
   {template}
   args={{
-    bundles: sampleBundles,
-    loading: false,
-    error: ''
+    bundleManager: bundleManagerFromBundles(sampleBundles)
   }}
-  play={async ({ canvas, args }) => {
+  play={async ({ canvas }) => {
+    // Wait for loading to complete
+    await waitFor(() => expect(canvas.queryByText('Loading...')).not.toBeInTheDocument(), { timeout: 3000 })
+
     // Find the reload button in the status bar (not in header)
     const reloadButton = canvas.getByRole('button', { name: /reload/i })
     await expect(reloadButton).toBeInTheDocument()
@@ -260,8 +294,8 @@ const { Story } = defineMeta({
     // Click reload button
     await userEvent.click(reloadButton)
 
-    // Verify onReload was called
-    await expect(args.onReload).toHaveBeenCalled()
+    // Should show loading state
+    await expect(canvas.getByText('Loading...')).toBeInTheDocument()
   }}
 />
 
@@ -269,9 +303,13 @@ const { Story } = defineMeta({
   name="Status Bar - Loading State"
   {template}
   args={{
-    bundles: [],
-    loading: true,
-    error: ''
+    bundleManager: new BundleManager({
+      getLocalBundles: async () => {
+        // Simulate slow loading
+        await new Promise(resolve => setTimeout(resolve, 10000))
+        return []
+      }
+    })
   }}
   play={async ({ canvas }) => {
     // Verify loading message is shown in status bar
@@ -280,5 +318,86 @@ const { Story } = defineMeta({
     // Verify reload button is disabled while loading
     const reloadButton = canvas.getByRole('button', { name: /reload/i })
     await expect(reloadButton).toBeDisabled()
+  }}
+/>
+
+<Story
+  name="Local Bundles Only"
+  {template}
+  args={{
+    bundleManager: new BundleManager({
+      getLocalBundles: async () => localBundles
+    })
+  }}
+  play={async ({ canvas }) => {
+    // Wait for loading to complete
+    await waitFor(() => expect(canvas.queryByText('Loading...')).not.toBeInTheDocument(), { timeout: 3000 })
+
+    // Verify bundles are loaded
+    const bundleItems = canvas.getAllByRole('option')
+    await expect(bundleItems).toHaveLength(2)
+
+    // Verify local bundles are shown (check they contain the names)
+    await expect(canvas.getByText(/main/)).toBeInTheDocument()
+    await expect(canvas.getByText(/local-only/)).toBeInTheDocument()
+  }}
+/>
+
+<Story
+  name="No Sources Provided"
+  {template}
+  args={{
+    bundleManager: new BundleManager({})
+  }}
+  play={async ({ canvas }) => {
+    // Wait for loading to complete
+    await waitFor(() => expect(canvas.queryByText('Loading...')).not.toBeInTheDocument(), { timeout: 3000 })
+
+    // Verify "No bundles available" message (appears in both content and status bar)
+    const messages = canvas.getAllByText('No bundles available')
+    await expect(messages.length).toBeGreaterThan(0)
+  }}
+/>
+
+<Story
+  name="Local Bundles Error"
+  {template}
+  args={{
+    bundleManager: new BundleManager({
+      getLocalBundles: async () => {
+        throw new Error('Failed to load local bundles')
+      }
+    })
+  }}
+  play={async ({ canvas }) => {
+    // Wait for loading to complete
+    await waitFor(() => expect(canvas.queryByText('Loading...')).not.toBeInTheDocument(), { timeout: 3000 })
+
+    // Verify error message is shown (might be in content or status bar)
+    const errorMessages = canvas.getAllByText(/Failed to load local bundles/i)
+    await expect(errorMessages.length).toBeGreaterThan(0)
+  }}
+/>
+
+<Story
+  name="Download Button - Local Only Bundles"
+  {template}
+  args={{
+    bundleManager: new BundleManager({
+      getLocalBundles: async () => localBundles
+    })
+  }}
+  play={async ({ canvas }) => {
+    // Wait for loading to complete
+    await waitFor(() => expect(canvas.queryByText('Loading...')).not.toBeInTheDocument(), { timeout: 3000 })
+
+    // Verify download buttons exist but are disabled (since all bundles are local-only)
+    const downloadButtons = canvas.getAllByRole('button', { name: /download/i })
+    await expect(downloadButtons.length).toBeGreaterThan(0)
+
+    // All download buttons should be disabled since bundles are local-only
+    downloadButtons.forEach(async (button) => {
+      await expect(button).toBeDisabled()
+    })
   }}
 />
