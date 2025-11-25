@@ -5,7 +5,7 @@ import { expect, userEvent, fn, waitFor } from 'storybook/test'
 import { defineMeta, type Args } from '@storybook/addon-svelte-csf'
 
 import type { BundleLocation, BundleSpec } from './bundle-spec'
-import { BundleManager } from './bundle-manager'
+import { BundleManager } from './bundle-manager.svelte'
 
 import StoryDecorator from '../_storybook/story-decorator.svelte'
 
@@ -18,11 +18,13 @@ function bundleSpec(branchName: string, lastModified: string, hasLocal = false):
       name: branchName,
       lastModified
     },
-    local: hasLocal ? {
-      url: `file:///bundles/${branchName}/check-bundle.js`,
-      name: branchName,
-      lastModified
-    } : undefined
+    local: hasLocal
+      ? {
+          url: `file:///bundles/${branchName}/check-bundle.js`,
+          name: branchName,
+          lastModified
+        }
+      : undefined
   }
 }
 
@@ -69,7 +71,8 @@ function bundleManagerFromBundles(bundles: BundleSpec[]): BundleManager {
     }))
 
   // Create a simple remote metadata response
-  const remoteMetadataUrl = remoteBundlesList.length > 0 ? 'data:application/json;base64,' + btoa(JSON.stringify(remoteBundlesList)) : undefined
+  const remoteMetadataUrl =
+    remoteBundlesList.length > 0 ? 'data:application/json;base64,' + btoa(JSON.stringify(remoteBundlesList)) : undefined
 
   return new BundleManager({
     remoteMetadataUrl,
@@ -396,7 +399,7 @@ const { Story } = defineMeta({
     await expect(downloadButtons.length).toBeGreaterThan(0)
 
     // All download buttons should be disabled since bundles are local-only
-    downloadButtons.forEach(async (button) => {
+    downloadButtons.forEach(async button => {
       await expect(button).toBeDisabled()
     })
   }}

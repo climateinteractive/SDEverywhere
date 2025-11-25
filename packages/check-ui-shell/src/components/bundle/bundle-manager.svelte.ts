@@ -1,7 +1,5 @@
 // Copyright (c) 2025 Climate Interactive / New Venture Fund
 
-import { get, writable, type Readable } from 'svelte/store'
-
 import type { BundleLocation, BundleSpec } from './bundle-spec'
 
 /**
@@ -28,27 +26,23 @@ export interface BundleManagerConfig {
  * Manages the state of remote and local bundles.
  *
  * This class handles loading bundles from remote and local sources, merging them,
- * and providing a reactive store that components can subscribe to.
+ * and providing reactive state that components can subscribe to.
  */
 export class BundleManager {
-  private readonly _bundles = writable<BundleSpec[]>([])
-  private readonly _loading = writable<boolean>(false)
-  private readonly _error = writable<string | undefined>(undefined)
+  /**
+   * Reactive state of all available bundles (merged from remote and local).
+   */
+  bundles = $state<BundleSpec[]>([])
 
   /**
-   * Readonly store of all available bundles (merged from remote and local).
+   * Reactive state indicating whether bundles are currently being loaded.
    */
-  public readonly bundles: Readable<BundleSpec[]> = this._bundles
+  loading = $state<boolean>(false)
 
   /**
-   * Readonly store indicating whether bundles are currently being loaded.
+   * Reactive state containing any error message from the last load operation.
    */
-  public readonly loading: Readable<boolean> = this._loading
-
-  /**
-   * Readonly store containing any error message from the last load operation.
-   */
-  public readonly error: Readable<string | undefined> = this._error
+  error = $state<string | undefined>(undefined)
 
   constructor(private readonly config: BundleManagerConfig) {}
 
@@ -56,8 +50,8 @@ export class BundleManager {
    * Load (or reload) bundles from remote and local sources.
    */
   async load(): Promise<void> {
-    this._loading.set(true)
-    this._error.set(undefined)
+    this.loading = true
+    this.error = undefined
 
     const remoteBundlesPromise = this.loadRemoteBundles()
     const localBundlesPromise = this.loadLocalBundles()
@@ -67,23 +61,22 @@ export class BundleManager {
     // Check if both sources failed
     if (!remoteBundles && !localBundles) {
       if (!this.config.remoteMetadataUrl && !this.config.getLocalBundles) {
-        this._error.set('No bundles available')
+        this.error = 'No bundles available'
       } else {
         // Check if a specific error was already set
-        const currentError = get(this._error)
-        if (!currentError) {
-          this._error.set('Failed to load bundles')
+        if (!this.error) {
+          this.error = 'Failed to load bundles'
         }
       }
-      this._bundles.set([])
-      this._loading.set(false)
+      this.bundles = []
+      this.loading = false
       return
     }
 
     // Merge remote and local bundles
     const merged = this.mergeBundles(remoteBundles || [], localBundles || [])
-    this._bundles.set(merged)
-    this._loading.set(false)
+    this.bundles = merged
+    this.loading = false
   }
 
   /**
@@ -114,11 +107,11 @@ export class BundleManager {
       return data as BundleLocation[]
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err)
-      const currentError = get(this._error)
+      const currentError = this.error
       if (currentError) {
-        this._error.set(`${currentError}; ${message}`)
+        this.error = `${currentError}; ${message}`
       } else {
-        this._error.set(message)
+        this.error = message
       }
       return undefined
     }
@@ -136,11 +129,11 @@ export class BundleManager {
       return await this.config.getLocalBundles()
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err)
-      const currentError = get(this._error)
+      const currentError = this.error
       if (currentError) {
-        this._error.set(`${currentError}; ${message}`)
+        this.error = `${currentError}; ${message}`
       } else {
-        this._error.set(message)
+        this.error = message
       }
       return undefined
     }

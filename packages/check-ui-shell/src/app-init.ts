@@ -9,7 +9,7 @@ import { initAppModel } from './model/app-model'
 import type { AppShellOptions } from './app-shell-options'
 import { default as AppShell } from './app-shell.svelte'
 import { AppViewModel } from './app-vm'
-import { BundleManager } from './components/bundle/bundle-manager'
+import { BundleManager } from './components/bundle/bundle-manager.svelte'
 
 export function initAppShell(configOptions: ConfigOptions, appShellOptions?: AppShellOptions): void {
   // Initialize the root Svelte component

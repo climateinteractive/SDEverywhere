@@ -22,7 +22,7 @@ import type { UserPrefs } from './_shared/user-prefs'
 
 import type { AppModel } from './model/app-model'
 
-import type { BundleManager } from './components/bundle/bundle-manager'
+import type { BundleManager } from './components/bundle/bundle-manager.svelte'
 import type { ComparisonGroupingKind } from './components/compare/_shared/comparison-grouping-kind'
 import { type PinnedItemStates } from './components/compare/_shared/pinned-item-state'
 import { createPinnedItemStates } from './components/compare/_shared/pinned-item-state'

@@ -3,7 +3,7 @@
 import type { Readable, Writable } from 'svelte/store'
 import { derived, writable } from 'svelte/store'
 import type { ComparisonConfig, ComparisonSortMode } from '@sdeverywhere/check-core'
-import type { BundleManager } from '../bundle/bundle-manager'
+import type { BundleManager } from '../bundle/bundle-manager.svelte'
 
 export interface HeaderViewModel {
   devMode: boolean

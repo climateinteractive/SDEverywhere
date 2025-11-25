@@ -3,18 +3,21 @@
 <!-- SCRIPT -->
 <script lang="ts">
 import { onMount } from 'svelte'
-import { derived, writable } from 'svelte/store'
 import fuzzysort from 'fuzzysort'
 
 import type { BundleSpec } from './bundle-spec'
-import type { BundleManager } from './bundle-manager'
+import type { BundleManager } from './bundle-manager.svelte'
 
-export let bundleManager: BundleManager
-export let onSelect: ((bundle: BundleSpec) => void) | undefined = undefined
+interface Props {
+  bundleManager: BundleManager
+  onSelect?: (bundle: BundleSpec) => void
+}
 
-const bundles = bundleManager.bundles
-const loading = bundleManager.loading
-const error = bundleManager.error
+let { bundleManager, onSelect = undefined }: Props = $props()
+
+let bundles = $derived(bundleManager.bundles)
+let loading = $derived(bundleManager.loading)
+let error = $derived(bundleManager.error)
 
 function handleDownload(bundle: BundleSpec) {
   bundleManager.downloadBundle(bundle)
@@ -28,22 +31,22 @@ onMount(() => {
   bundleManager.load()
 })
 
-const searchTerm = writable('')
-const sortBy = writable<'date' | 'name'>('date')
-const sortDirection = writable<'asc' | 'desc'>('desc')
+let searchTerm = $state('')
+let sortBy = $state<'date' | 'name'>('date')
+let sortDirection = $state<'asc' | 'desc'>('desc')
 
-const filteredBundles = derived([bundles, searchTerm, sortBy, sortDirection], ([$bundles, $searchTerm, $sortBy, $sortDirection]) => {
-  let filtered = $bundles
+const filteredBundles = $derived.by(() => {
+  let filtered = [...bundles]
 
   // Apply search filter if there's a search term
-  if ($searchTerm) {
+  if (searchTerm) {
     // Create searchable objects with name at top level
-    const searchableBundles = $bundles.map(bundle => ({
+    const searchableBundles = bundles.map(bundle => ({
       bundle,
       name: bundle.remote?.name || bundle.local?.name || ''
     }))
 
-    const results = fuzzysort.go($searchTerm, searchableBundles, {
+    const results = fuzzysort.go(searchTerm, searchableBundles, {
       keys: ['name'],
       threshold: -10000
     })
@@ -52,8 +55,8 @@ const filteredBundles = derived([bundles, searchTerm, sortBy, sortDirection], ([
 
   // Sort the results
   return filtered.sort((a, b) => {
-    const multiplier = $sortDirection === 'asc' ? 1 : -1
-    if ($sortBy === 'date') {
+    const multiplier = sortDirection === 'asc' ? 1 : -1
+    if (sortBy === 'date') {
       const aLastModified = a.remote?.lastModified || a.local?.lastModified || ''
       const bLastModified = b.remote?.lastModified || b.local?.lastModified || ''
       return multiplier * (new Date(aLastModified).getTime() - new Date(bLastModified).getTime())
@@ -66,11 +69,11 @@ const filteredBundles = derived([bundles, searchTerm, sortBy, sortDirection], ([
 })
 
 function toggleSort(column: 'date' | 'name') {
-  if ($sortBy === column) {
-    sortDirection.update(d => (d === 'asc' ? 'desc' : 'asc'))
+  if (sortBy === column) {
+    sortDirection = sortDirection === 'asc' ? 'desc' : 'asc'
   } else {
-    sortBy.set(column)
-    sortDirection.set('desc')
+    sortBy = column
+    sortDirection = 'desc'
   }
 }
 
@@ -90,7 +93,7 @@ function formatDate(dateStr: string): string {
       <input
         type="text"
         placeholder="Search versions..."
-        bind:value={$searchTerm}
+        bind:value={searchTerm}
         class="bundle-selector-search-input"
         role="searchbox"
         aria-label="Search versions"
@@ -103,27 +106,27 @@ function formatDate(dateStr: string): string {
       <div class="bundle-selector-header-download"></div>
       <button class="bundle-selector-sort-button" onclick={() => toggleSort('name')}>
         Name
-        {#if $sortBy === 'name'}
-          <span class="bundle-selector-sort-indicator">{$sortDirection === 'asc' ? '↑' : '↓'}</span>
+        {#if sortBy === 'name'}
+          <span class="bundle-selector-sort-indicator">{sortDirection === 'asc' ? '↑' : '↓'}</span>
         {/if}
       </button>
       <button class="bundle-selector-sort-button" onclick={() => toggleSort('date')}>
         Last Modified
-        {#if $sortBy === 'date'}
-          <span class="bundle-selector-sort-indicator">{$sortDirection === 'asc' ? '↑' : '↓'}</span>
+        {#if sortBy === 'date'}
+          <span class="bundle-selector-sort-indicator">{sortDirection === 'asc' ? '↑' : '↓'}</span>
         {/if}
       </button>
     </div>
 
     <div class="bundle-selector-list-content">
-      {#if $error}
-        <div class="bundle-selector-error">{$error}</div>
-      {:else if $loading}
+      {#if error}
+        <div class="bundle-selector-error">{error}</div>
+      {:else if loading}
         <div class="bundle-selector-loading">Loading bundles...</div>
-      {:else if $bundles.length === 0}
+      {:else if bundles.length === 0}
         <div class="bundle-selector-empty">No bundles found</div>
       {:else}
-        {#each $filteredBundles as bundle}
+        {#each filteredBundles as bundle}
           <div
             class="bundle-selector-list-row"
             role="option"
@@ -162,15 +165,15 @@ function formatDate(dateStr: string): string {
 
   <div class="bundle-selector-status-bar">
     <div class="bundle-selector-status-message">
-      {#if $loading}
+      {#if loading}
         Loading...
-      {:else if $error}
-        {$error}
+      {:else if error}
+        {error}
       {:else}
-        {$bundles.length} {$bundles.length === 1 ? 'bundle' : 'bundles'}
+        {bundles.length} {bundles.length === 1 ? 'bundle' : 'bundles'}
       {/if}
     </div>
-    <button class="bundle-selector-reload-button" onclick={() => handleReload()} disabled={$loading} aria-label="Reload">
+    <button class="bundle-selector-reload-button" onclick={() => handleReload()} disabled={loading} aria-label="Reload">
       ↻
     </button>
   </div>
