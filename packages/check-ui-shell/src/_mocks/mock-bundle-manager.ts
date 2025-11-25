@@ -28,7 +28,10 @@ export const remoteBundles: BundleSpec[] = [
   mockBundleSpec('release/25.2.0', '2025-02-01T15:30:00.000Z'),
   mockBundleSpec('release/25.3.0', '2025-03-01T15:30:00.000Z'),
   mockBundleSpec('release/25.4.0', '2025-04-01T15:30:00.000Z'),
-  mockBundleSpec('release/25.5.0', '2025-05-01T15:30:00.000Z')
+  mockBundleSpec('release/25.5.0', '2025-05-01T15:30:00.000Z'),
+  mockBundleSpec('release/25.6.0', '2025-06-01T15:30:00.000Z'),
+  mockBundleSpec('release/25.7.0', '2025-07-01T15:30:00.000Z'),
+  mockBundleSpec('release/25.8.0', '2025-08-01T15:30:00.000Z')
 ]
 
 export const localBundles: BundleLocation[] = [

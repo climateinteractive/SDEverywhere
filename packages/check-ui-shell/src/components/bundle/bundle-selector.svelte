@@ -230,9 +230,9 @@ function formatDate(dateStr: string): string {
 }
 
 .bundle-selector-list-container {
-  flex: 1;
   display: flex;
   flex-direction: column;
+  flex: 1;
   overflow: hidden;
 }
 
@@ -240,7 +240,7 @@ function formatDate(dateStr: string): string {
   display: grid;
   grid-template-columns: 3rem 1fr auto;
   gap: 1rem;
-  padding: 0.75rem;
+  padding: 0.5rem 1.5rem;
   background-color: #333;
   border-bottom: 1px solid var(--border-color-normal);
   font-weight: 700;
@@ -280,7 +280,7 @@ function formatDate(dateStr: string): string {
   grid-template-columns: 3rem 1fr auto;
   gap: 1rem;
   align-items: center;
-  padding: 0.75rem;
+  padding: 0.5rem 1.5rem;
   user-select: none;
   cursor: pointer;
 

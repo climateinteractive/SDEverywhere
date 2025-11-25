@@ -310,7 +310,7 @@ input[type='range'] {
   flex-direction: column;
   width: 90%;
   max-width: 800px;
-  max-height: 90vh;
+  max-height: 90%;
   background-color: #272727;
   border: 1px solid var(--border-color-normal);
   border-radius: 0.5rem;
@@ -347,7 +347,10 @@ input[type='range'] {
 }
 
 .modal-body {
+  display: flex;
+  flex-direction: column;
   flex: 1;
+  min-height: 0;
   overflow: hidden;
 }
 </style>
