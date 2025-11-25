@@ -11,7 +11,7 @@ import { join as joinPath } from 'path'
 function printUsage() {
   console.log()
   console.log('Usage:')
-  console.log('  sim-check save-current-bundle\t\tcopy the latest bundle to the `bundles` directory')
+  console.log('  sde-check save-current-bundle\t\tcopy the latest bundle to the `bundles` directory')
   console.log()
 }
 
