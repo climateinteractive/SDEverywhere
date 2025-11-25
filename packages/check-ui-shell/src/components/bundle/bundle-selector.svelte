@@ -187,30 +187,28 @@ function formatDate(dateStr: string): string {
   width: 100%;
   height: 100%;
   background-color: #272727;
-  border: 1px solid var(--border-color-normal);
-  border-radius: 0.375rem;
   overflow: hidden;
 }
 
 .bundle-selector-header {
-  padding: 0.75rem;
   border-bottom: 1px solid var(--border-color-normal);
 }
 
 .bundle-selector-search-bar {
+  display: flex;
   width: 100%;
 }
 
 .bundle-selector-search-input {
   width: 100%;
   height: 2rem;
+  margin: 0.75rem;
   padding: 0.5rem;
   background-color: #444;
   border: 1px solid var(--border-color-normal);
   border-radius: 0.25rem;
   color: var(--text-color-primary);
   font-family: inherit;
-  font-size: 0.875rem;
 
   &:focus {
     outline: none;
@@ -269,7 +267,6 @@ function formatDate(dateStr: string): string {
 }
 
 .bundle-selector-sort-indicator {
-  font-size: 0.875rem;
   margin-top: -0.1rem;
 }
 
@@ -350,7 +347,6 @@ function formatDate(dateStr: string): string {
   padding: 0.5rem 0.75rem;
   background-color: #333;
   border-top: 1px solid var(--border-color-normal);
-  font-size: 0.875rem;
 }
 
 .bundle-selector-status-message {

@@ -88,6 +88,12 @@ select > option {
   --status-warning: orange;
   --status-error: orangered;
   --status-skipped: #888;
+
+  --border-color-normal: #777;
+  --border-color-focused: #3b82f6;
+  --text-color-primary: #fff;
+  --text-color-secondary: #ddd;
+  --link-color-hover: #3b82f6;
 }
 
 .dataset-color-0 {

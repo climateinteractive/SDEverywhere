@@ -298,22 +298,22 @@ input[type='range'] {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.7);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  background-color: rgba(0, 0, 0, 0.7);
+  z-index: 10000;
 }
 
 .modal-content {
-  background-color: #272727;
-  border: 1px solid var(--border-color-normal);
-  border-radius: 0.5rem;
+  display: flex;
+  flex-direction: column;
   width: 90%;
   max-width: 800px;
   max-height: 90vh;
-  display: flex;
-  flex-direction: column;
+  background-color: #272727;
+  border: 1px solid var(--border-color-normal);
+  border-radius: 0.5rem;
   overflow: hidden;
 }
 
@@ -331,15 +331,15 @@ input[type='range'] {
 }
 
 .modal-close {
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
   background: none;
   border: none;
   color: var(--text-color-primary);
   font-size: 2rem;
   line-height: 1;
   cursor: pointer;
-  padding: 0;
-  width: 2rem;
-  height: 2rem;
 
   &:hover {
     color: var(--link-color-hover);
@@ -349,6 +349,5 @@ input[type='range'] {
 .modal-body {
   flex: 1;
   overflow: hidden;
-  padding: 1rem;
 }
 </style>
