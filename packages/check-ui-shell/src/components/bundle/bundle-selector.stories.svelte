@@ -4,86 +4,16 @@
 import { expect, userEvent, fn, waitFor } from 'storybook/test'
 import { defineMeta, type Args } from '@storybook/addon-svelte-csf'
 
-import type { BundleLocation, BundleSpec } from './bundle-spec'
-import { BundleManager } from './bundle-manager.svelte'
+import { bundleManagerFromBundles, localBundles, mockBundleSpec, remoteBundles } from '../../_mocks/mock-bundle-manager'
 
 import StoryDecorator from '../_storybook/story-decorator.svelte'
 
+import { BundleManager } from './bundle-manager.svelte'
 import BundleSelector from './bundle-selector.svelte'
-
-function bundleSpec(branchName: string, lastModified: string, hasLocal = false): BundleSpec {
-  return {
-    remote: {
-      url: `https://example.com/branch/${branchName}/bundles/check-bundle.js`,
-      name: branchName,
-      lastModified
-    },
-    local: hasLocal
-      ? {
-          url: `file:///bundles/${branchName}/check-bundle.js`,
-          name: branchName,
-          lastModified
-        }
-      : undefined
-  }
-}
-
-const sampleBundles: BundleSpec[] = [
-  bundleSpec('chris/123-feature', '2025-05-13T19:15:00.000Z'),
-  bundleSpec('chris/456-another-feature', '2025-03-03T23:24:24.000Z'),
-  bundleSpec('main', '2025-05-14T10:00:00.000Z'),
-  bundleSpec('release/25.1.0', '2025-01-01T15:30:00.000Z'),
-  bundleSpec('release/25.2.0', '2025-02-01T15:30:00.000Z'),
-  bundleSpec('release/25.3.0', '2025-03-01T15:30:00.000Z'),
-  bundleSpec('release/25.4.0', '2025-04-01T15:30:00.000Z'),
-  bundleSpec('release/25.5.0', '2025-05-01T15:30:00.000Z')
-]
-
-const localBundles: BundleLocation[] = [
-  {
-    url: 'file:///bundles/main.js',
-    name: 'main',
-    lastModified: '2025-05-14T10:00:00.000Z'
-  },
-  {
-    url: 'file:///bundles/local-only.js',
-    name: 'local-only',
-    lastModified: '2025-05-12T10:00:00.000Z'
-  }
-]
-
-function bundleManagerFromBundles(bundles: BundleSpec[]): BundleManager {
-  // Extract remote and local bundles for testing
-  const remoteBundlesList: BundleLocation[] = bundles
-    .filter(b => b.remote)
-    .map(b => ({
-      url: b.remote!.url,
-      name: b.remote!.name,
-      lastModified: b.remote!.lastModified
-    }))
-
-  const localBundlesList: BundleLocation[] = bundles
-    .filter(b => b.local)
-    .map(b => ({
-      url: b.local!.url,
-      name: b.local!.name,
-      lastModified: b.local!.lastModified
-    }))
-
-  // Create a simple remote metadata response
-  const remoteMetadataUrl =
-    remoteBundlesList.length > 0 ? 'data:application/json;base64,' + btoa(JSON.stringify(remoteBundlesList)) : undefined
-
-  return new BundleManager({
-    remoteMetadataUrl,
-    getLocalBundles: localBundlesList.length > 0 ? async () => localBundlesList : undefined
-  })
-}
 
 const { Story } = defineMeta({
   title: 'Components/BundleSelector',
   component: BundleSelector,
-  tags: ['autodocs'],
   args: {
     onSelect: fn()
   }
@@ -100,7 +30,7 @@ const { Story } = defineMeta({
   name="Default"
   {template}
   args={{
-    bundleManager: bundleManagerFromBundles(sampleBundles)
+    bundleManager: bundleManagerFromBundles(remoteBundles)
   }}
   play={async ({ canvas }) => {
     // Wait for loading to complete
@@ -135,7 +65,7 @@ const { Story } = defineMeta({
   name="Search"
   {template}
   args={{
-    bundleManager: bundleManagerFromBundles(sampleBundles)
+    bundleManager: bundleManagerFromBundles(remoteBundles)
   }}
   play={async ({ canvas }) => {
     // Wait for loading to complete
@@ -218,7 +148,7 @@ const { Story } = defineMeta({
   name="Selection"
   {template}
   args={{
-    bundleManager: bundleManagerFromBundles(sampleBundles)
+    bundleManager: bundleManagerFromBundles(remoteBundles)
   }}
   play={async ({ canvas, args }) => {
     // Wait for loading to complete
@@ -229,7 +159,7 @@ const { Story } = defineMeta({
     await userEvent.click(firstBundle)
 
     // Verify that onSelect was called with the correct bundle
-    await expect(args.onSelect).toHaveBeenCalledWith(bundleSpec('main', '2025-05-14T10:00:00.000Z'))
+    await expect(args.onSelect).toHaveBeenCalledWith(mockBundleSpec('main', '2025-05-14T10:00:00.000Z'))
   }}
 />
 
@@ -237,7 +167,7 @@ const { Story } = defineMeta({
   name="Column Headers"
   {template}
   args={{
-    bundleManager: bundleManagerFromBundles(sampleBundles)
+    bundleManager: bundleManagerFromBundles(remoteBundles)
   }}
   play={async ({ canvas }) => {
     // Verify column headers are present and labeled correctly
@@ -250,7 +180,7 @@ const { Story } = defineMeta({
   name="Download Button - Remote Only"
   {template}
   args={{
-    bundleManager: bundleManagerFromBundles([bundleSpec('main', '2025-05-14T10:00:00.000Z', false)])
+    bundleManager: bundleManagerFromBundles([mockBundleSpec('main', '2025-05-14T10:00:00.000Z', false)])
   }}
   play={async ({ canvas }) => {
     // Wait for loading to complete
@@ -267,7 +197,7 @@ const { Story } = defineMeta({
   name="Download Button - Local Bundle"
   {template}
   args={{
-    bundleManager: bundleManagerFromBundles([bundleSpec('main', '2025-05-14T10:00:00.000Z', true)])
+    bundleManager: bundleManagerFromBundles([mockBundleSpec('main', '2025-05-14T10:00:00.000Z', true)])
   }}
   play={async ({ canvas }) => {
     // Wait for loading to complete
@@ -284,7 +214,7 @@ const { Story } = defineMeta({
   name="Status Bar with Reload"
   {template}
   args={{
-    bundleManager: bundleManagerFromBundles(sampleBundles)
+    bundleManager: bundleManagerFromBundles(remoteBundles)
   }}
   play={async ({ canvas }) => {
     // Wait for loading to complete

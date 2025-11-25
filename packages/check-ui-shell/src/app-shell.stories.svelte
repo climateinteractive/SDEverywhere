@@ -15,6 +15,7 @@ import type {
 } from '@sdeverywhere/check-core'
 
 import { mockBundleModel, mockNamedBundle } from './_mocks/mock-bundle'
+import { bundleManagerFromBundles, remoteBundles } from './_mocks/mock-bundle-manager'
 import { mockConfigOptions } from './_mocks/mock-config'
 import { mockDataset } from './_mocks/mock-data'
 import { inputVar, outputVar, implVar } from './_mocks/mock-vars'
@@ -218,7 +219,8 @@ async function createAppViewModel(options?: {
   )
   const configOptions = mockConfigOptions(bundleL, bundleR, options)
   const appModel = await initAppModel(configOptions)
-  return new AppViewModel(appModel, undefined, undefined)
+  const bundleManager = bundleManagerFromBundles(remoteBundles)
+  return new AppViewModel(appModel, bundleManager, undefined)
 }
 
 const { Story } = defineMeta({
