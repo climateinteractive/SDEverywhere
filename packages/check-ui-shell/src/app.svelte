@@ -27,11 +27,7 @@ import Trace from './components/trace/trace.svelte'
 
 import type { AppViewModel } from './app-vm'
 
-import type { BundleLocation, BundleSpec } from './components/bundle/bundle-spec'
-
 export let viewModel: AppViewModel
-export let getLocalBundles: (() => Promise<BundleLocation[]>) | undefined = undefined
-export let onDownloadBundle: ((bundle: BundleSpec) => void) | undefined = undefined
 
 const checksInProgress = viewModel.checksInProgress
 const progress = viewModel.progress
@@ -193,7 +189,7 @@ function onKeyDown(event: KeyboardEvent) {
   <div class="loading-container"></div>
 {:else}
   <div class="app-container" style={appStyle}>
-    <Header on:command={onCommand} viewModel={viewModel.headerViewModel} {getLocalBundles} {onDownloadBundle} />
+    <Header on:command={onCommand} viewModel={viewModel.headerViewModel} />
     {#if $checksInProgress}
       <div class="progress-container">
         <div class="progress">{$progress}</div>

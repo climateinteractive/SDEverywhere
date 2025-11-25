@@ -3,13 +3,13 @@
 import type { Readable, Writable } from 'svelte/store'
 import { derived, writable } from 'svelte/store'
 import type { ComparisonConfig, ComparisonSortMode } from '@sdeverywhere/check-core'
+import type { BundleManager } from '../bundle/bundle-manager'
 
 export interface HeaderViewModel {
   devMode: boolean
+  bundleManager: BundleManager | undefined
   nameL?: string
   nameR?: string
-  bundleNamesL: Writable<string[]>
-  bundleNamesR: Writable<string[]>
   thresholds?: Readable<string[]>
   generatedDateString: Readable<string | undefined>
   controlsVisible: Writable<boolean>
@@ -22,6 +22,7 @@ export interface HeaderViewModel {
 export function createHeaderViewModel(
   devMode: boolean,
   comparisonConfig: ComparisonConfig | undefined,
+  bundleManager: BundleManager | undefined,
   generatedDateString: Readable<string | undefined>,
   zoom: Writable<number>,
   consistentYRange: Writable<boolean>,
@@ -57,10 +58,9 @@ export function createHeaderViewModel(
 
     return {
       devMode,
+      bundleManager,
       nameL: comparisonConfig.bundleL.name,
       nameR: comparisonConfig.bundleR.name,
-      bundleNamesL: writable([comparisonConfig.bundleL.name]),
-      bundleNamesR: writable([comparisonConfig.bundleR.name]),
       thresholds: thresholdStrings,
       generatedDateString,
       controlsVisible,
@@ -72,8 +72,7 @@ export function createHeaderViewModel(
   } else {
     return {
       devMode,
-      bundleNamesL: writable([]),
-      bundleNamesR: writable([]),
+      bundleManager: undefined,
       generatedDateString,
       controlsVisible,
       zoom,

@@ -9,6 +9,7 @@ import { initAppModel } from './model/app-model'
 import type { AppShellOptions } from './app-shell-options'
 import { default as AppShell } from './app-shell.svelte'
 import { AppViewModel } from './app-vm'
+import { BundleManager } from './components/bundle/bundle-manager'
 
 export function initAppShell(configOptions: ConfigOptions, appShellOptions?: AppShellOptions): void {
   // Initialize the root Svelte component
@@ -18,23 +19,24 @@ export function initAppShell(configOptions: ConfigOptions, appShellOptions?: App
   // Initialize the app model asynchronously
   initAppModel(configOptions)
     .then(appModel => {
-      // Create the app view model
-      const appViewModel = new AppViewModel(appModel, appShellOptions?.suiteSummary)
+      // Create a `BundleManager` instance if local development mode is enabled
+      let bundleManager: BundleManager | undefined = undefined
+      if (appShellOptions?.remoteMetadataUrl || appShellOptions?.getLocalBundles) {
+        bundleManager = new BundleManager({
+          remoteMetadataUrl: appShellOptions.remoteMetadataUrl,
+          getLocalBundles: appShellOptions.getLocalBundles,
+          onDownloadBundle: appShellOptions.onDownloadBundle
+        })
+      }
 
-      // if (appShellOptions?.bundleNames) {
-      //   // Set the list of available bundle names
-      //   // TODO: Pass these to AppViewModel constructor instead of setting them here
-      //   appViewModel.headerViewModel.bundleNamesL.set(appShellOptions.bundleNames)
-      //   appViewModel.headerViewModel.bundleNamesR.set(appShellOptions.bundleNames)
-      // }
+      // Create the app view model
+      const appViewModel = new AppViewModel(appModel, bundleManager, appShellOptions?.suiteSummary)
 
       // Update the AppShell component
       mount(AppShell, {
         target: containerElem,
         props: {
-          appViewModel,
-          getLocalBundles: appShellOptions?.getLocalBundles,
-          onDownloadBundle: appShellOptions?.onDownloadBundle
+          appViewModel
         }
       })
     })

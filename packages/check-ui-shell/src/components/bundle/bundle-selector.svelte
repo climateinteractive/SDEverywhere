@@ -10,8 +10,8 @@ import type { BundleSpec } from './bundle-spec'
 export let bundles: BundleSpec[]
 export let loading: boolean
 export let error: string | undefined
-export let onReload: (() => void) | undefined = undefined
 export let onSelect: ((bundle: BundleSpec) => void) | undefined = undefined
+export let onReload: (() => void) | undefined = undefined
 export let onDownload: ((bundle: BundleSpec) => void) | undefined = undefined
 
 const searchTerm = writable('')
@@ -127,7 +127,7 @@ function formatDate(dateStr: string): string {
               <button
                 class="bundle-selector-download-button"
                 disabled={isDownloaded(bundle)}
-                onclick={(e) => {
+                onclick={e => {
                   e.stopPropagation()
                   onDownload?.(bundle)
                 }}
@@ -156,12 +156,7 @@ function formatDate(dateStr: string): string {
         {bundles.length} {bundles.length === 1 ? 'bundle' : 'bundles'}
       {/if}
     </div>
-    <button
-      class="bundle-selector-reload-button"
-      onclick={() => onReload?.()}
-      disabled={loading}
-      aria-label="Reload"
-    >
+    <button class="bundle-selector-reload-button" onclick={() => onReload?.()} disabled={loading} aria-label="Reload">
       ↻
     </button>
   </div>

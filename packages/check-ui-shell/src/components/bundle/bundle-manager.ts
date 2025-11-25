@@ -1,0 +1,176 @@
+// Copyright (c) 2025 Climate Interactive / New Venture Fund
+
+import { get, writable, type Readable } from 'svelte/store'
+
+import type { BundleLocation, BundleSpec } from './bundle-spec'
+
+/**
+ * Configuration options for the BundleManager.
+ */
+export interface BundleManagerConfig {
+  /**
+   * Optional URL to a JSON file containing the list of remote bundles.
+   */
+  remoteMetadataUrl?: string
+
+  /**
+   * Optional callback to get the list of locally available bundles.
+   */
+  getLocalBundles?: () => Promise<BundleLocation[]>
+
+  /**
+   * Optional callback to download a bundle from the network to local storage.
+   */
+  onDownloadBundle?: (bundle: BundleSpec) => void
+}
+
+/**
+ * Manages the state of remote and local bundles.
+ *
+ * This class handles loading bundles from remote and local sources, merging them,
+ * and providing a reactive store that components can subscribe to.
+ */
+export class BundleManager {
+  private readonly _bundles = writable<BundleSpec[]>([])
+  private readonly _loading = writable<boolean>(false)
+  private readonly _error = writable<string | undefined>(undefined)
+
+  /**
+   * Readonly store of all available bundles (merged from remote and local).
+   */
+  public readonly bundles: Readable<BundleSpec[]> = this._bundles
+
+  /**
+   * Readonly store indicating whether bundles are currently being loaded.
+   */
+  public readonly loading: Readable<boolean> = this._loading
+
+  /**
+   * Readonly store containing any error message from the last load operation.
+   */
+  public readonly error: Readable<string | undefined> = this._error
+
+  constructor(private readonly config: BundleManagerConfig) {}
+
+  /**
+   * Load (or reload) bundles from remote and local sources.
+   */
+  async load(): Promise<void> {
+    this._loading.set(true)
+    this._error.set(undefined)
+
+    const remoteBundlesPromise = this.loadRemoteBundles()
+    const localBundlesPromise = this.loadLocalBundles()
+
+    const [remoteBundles, localBundles] = await Promise.all([remoteBundlesPromise, localBundlesPromise])
+
+    // Check if both sources failed
+    if (!remoteBundles && !localBundles) {
+      if (!this.config.remoteMetadataUrl && !this.config.getLocalBundles) {
+        this._error.set('No bundles available')
+      } else {
+        // Check if a specific error was already set
+        const currentError = get(this._error)
+        if (!currentError) {
+          this._error.set('Failed to load bundles')
+        }
+      }
+      this._bundles.set([])
+      this._loading.set(false)
+      return
+    }
+
+    // Merge remote and local bundles
+    const merged = this.mergeBundles(remoteBundles || [], localBundles || [])
+    this._bundles.set(merged)
+    this._loading.set(false)
+  }
+
+  /**
+   * Download a bundle from the network to local storage.
+   *
+   * @param bundle The bundle to download.
+   */
+  downloadBundle(bundle: BundleSpec): void {
+    if (this.config.onDownloadBundle) {
+      this.config.onDownloadBundle(bundle)
+    }
+  }
+
+  /**
+   * Load bundles from the remote metadata URL.
+   */
+  private async loadRemoteBundles(): Promise<BundleLocation[] | undefined> {
+    if (!this.config.remoteMetadataUrl) {
+      return undefined
+    }
+
+    try {
+      const response = await fetch(this.config.remoteMetadataUrl)
+      if (!response.ok) {
+        throw new Error(`Failed to fetch remote bundles: ${response.statusText}`)
+      }
+      const data = await response.json()
+      return data as BundleLocation[]
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err)
+      const currentError = get(this._error)
+      if (currentError) {
+        this._error.set(`${currentError}; ${message}`)
+      } else {
+        this._error.set(message)
+      }
+      return undefined
+    }
+  }
+
+  /**
+   * Load bundles from the local storage.
+   */
+  private async loadLocalBundles(): Promise<BundleLocation[] | undefined> {
+    if (!this.config.getLocalBundles) {
+      return undefined
+    }
+
+    try {
+      return await this.config.getLocalBundles()
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err)
+      const currentError = get(this._error)
+      if (currentError) {
+        this._error.set(`${currentError}; ${message}`)
+      } else {
+        this._error.set(message)
+      }
+      return undefined
+    }
+  }
+
+  /**
+   * Merge remote and local bundles into a unified list.
+   *
+   * @param remoteBundles The list of remote bundles.
+   * @param localBundles The list of local bundles.
+   * @returns The merged list of bundles.
+   */
+  private mergeBundles(remoteBundles: BundleLocation[], localBundles: BundleLocation[]): BundleSpec[] {
+    const bundleMap = new Map<string, BundleSpec>()
+
+    // Add remote bundles
+    for (const remote of remoteBundles) {
+      bundleMap.set(remote.name, { remote })
+    }
+
+    // Add or merge local bundles
+    for (const local of localBundles) {
+      const existing = bundleMap.get(local.name)
+      if (existing) {
+        existing.local = local
+      } else {
+        bundleMap.set(local.name, { local })
+      }
+    }
+
+    return Array.from(bundleMap.values())
+  }
+}

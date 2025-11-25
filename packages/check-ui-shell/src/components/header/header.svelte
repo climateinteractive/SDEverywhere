@@ -6,18 +6,14 @@ import { createEventDispatcher } from 'svelte'
 import Icon from 'svelte-awesome/components/Icon.svelte'
 import { faCog, faFilter, faHome } from '@fortawesome/free-solid-svg-icons'
 
-import type { BundleLocation, BundleSpec } from '../bundle/bundle-spec'
+import type { BundleSpec } from '../bundle/bundle-spec'
 import SyncedBundleSelector from '../bundle/synced-bundle-selector.svelte'
 
 import type { HeaderViewModel } from './header-vm'
 
 export let viewModel: HeaderViewModel
-export let getLocalBundles: (() => Promise<BundleLocation[]>) | undefined = undefined
-export let onDownloadBundle: ((bundle: BundleSpec) => void) | undefined = undefined
 
 const thresholds = viewModel.thresholds
-const bundleNamesL = viewModel.bundleNamesL
-const bundleNamesR = viewModel.bundleNamesR
 const generatedDateString = viewModel.generatedDateString
 const controlsVisible = viewModel.controlsVisible
 const zoom = viewModel.zoom
@@ -98,11 +94,11 @@ function handleBundleSelected(bundle: BundleSpec) {
         <div class="label generated-date">{$generatedDateString}</div>
       </div>
     {/if}
-    {#if viewModel.nameL || $bundleNamesL.length > 1}
+    {#if viewModel.nameL}
       <div class="spacer-fixed"></div>
       <div class="header-group">
         <div class="label">Comparing:</div>
-        {#if $bundleNamesL.length > 1}
+        {#if viewModel.bundleManager}
           <button
             class="bundle-button dataset-color-0"
             data-testid="bundle-selector-left"
@@ -110,10 +106,6 @@ function handleBundleSelected(bundle: BundleSpec) {
           >
             {viewModel.nameL}
           </button>
-        {:else}
-          <div class="label dataset-color-0">{viewModel.nameL}</div>
-        {/if}
-        {#if $bundleNamesR.length > 1}
           <button
             class="bundle-button dataset-color-1"
             data-testid="bundle-selector-right"
@@ -122,6 +114,7 @@ function handleBundleSelected(bundle: BundleSpec) {
             {viewModel.nameR}
           </button>
         {:else}
+          <div class="label dataset-color-0">{viewModel.nameL}</div>
           <div class="label dataset-color-1">{viewModel.nameR}</div>
         {/if}
       </div>
@@ -187,7 +180,7 @@ function handleBundleSelected(bundle: BundleSpec) {
   <div class="line"></div>
 </div>
 
-{#if openedBundleSelectorSide !== undefined}
+{#if viewModel.bundleManager && openedBundleSelectorSide !== undefined}
   <div class="modal-overlay" on:click={closeBundleSelector}>
     <div class="modal-content" on:click={e => e.stopPropagation()}>
       <div class="modal-header">
@@ -195,7 +188,7 @@ function handleBundleSelected(bundle: BundleSpec) {
         <button class="modal-close" on:click={closeBundleSelector} aria-label="Close">×</button>
       </div>
       <div class="modal-body">
-        <SyncedBundleSelector {getLocalBundles} onSelect={handleBundleSelected} onDownload={onDownloadBundle} />
+        <SyncedBundleSelector bundleManager={viewModel.bundleManager} onSelect={handleBundleSelected} />
       </div>
     </div>
   </div>

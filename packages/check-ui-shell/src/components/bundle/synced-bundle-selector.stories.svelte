@@ -5,6 +5,7 @@ import { expect, fn, waitFor } from 'storybook/test'
 import { defineMeta, type Args } from '@storybook/addon-svelte-csf'
 
 import type { BundleLocation } from './bundle-spec'
+import { BundleManager } from './bundle-manager'
 
 import StoryDecorator from '../_storybook/story-decorator.svelte'
 
@@ -28,7 +29,6 @@ const { Story } = defineMeta({
   component: SyncedBundleSelector,
   tags: ['autodocs'],
   args: {
-    onDownload: fn(),
     onSelect: fn()
   }
 })
@@ -44,8 +44,9 @@ const { Story } = defineMeta({
   name="Local Bundles Only"
   {template}
   args={{
-    remoteMetadataUrl: undefined,
-    getLocalBundles: async () => localBundles
+    bundleManager: new BundleManager({
+      getLocalBundles: async () => localBundles
+    })
   }}
   play={async ({ canvas }) => {
     // Wait for loading to complete
@@ -65,8 +66,7 @@ const { Story } = defineMeta({
   name="No Sources Provided"
   {template}
   args={{
-    remoteMetadataUrl: undefined,
-    getLocalBundles: undefined
+    bundleManager: new BundleManager({})
   }}
   play={async ({ canvas }) => {
     // Wait for loading to complete
@@ -83,10 +83,11 @@ const { Story } = defineMeta({
   name="Local Bundles Error"
   {template}
   args={{
-    remoteMetadataUrl: undefined,
-    getLocalBundles: async () => {
-      throw new Error('Failed to load local bundles')
-    }
+    bundleManager: new BundleManager({
+      getLocalBundles: async () => {
+        throw new Error('Failed to load local bundles')
+      }
+    })
   }}
   play={async ({ canvas }) => {
     // Wait for loading to complete
@@ -102,8 +103,9 @@ const { Story } = defineMeta({
   name="Download Button - Local Only Bundles"
   {template}
   args={{
-    remoteMetadataUrl: undefined,
-    getLocalBundles: async () => localBundles
+    bundleManager: new BundleManager({
+      getLocalBundles: async () => localBundles
+    })
   }}
   play={async ({ canvas }) => {
     // Wait for loading to complete
