@@ -84,7 +84,10 @@ function isDownloaded(bundle: BundleSpec): boolean {
 }
 
 function formatDate(dateStr: string): string {
-  return new Date(dateStr).toISOString().split('T')[0]
+  const date = new Date(dateStr)
+  const dateString = date.toLocaleDateString(undefined, { day: 'numeric', month: 'numeric', year: 'numeric' })
+  const timeString = date.toLocaleTimeString(undefined, { hour12: true, hour: 'numeric', minute: '2-digit' })
+  return `${dateString} at ${timeString}`
 }
 </script>
 
