@@ -15,64 +15,39 @@ import { createBundle as createBaselineBundle } from '@_baseline_bundle_'
 import { createBundle as createCurrentBundle } from '@_current_bundle_'
 import { getConfigOptions } from '@_test_config_'
 
-function loadBundleName(key: string): string | undefined {
+interface BundleMetadata {
+  name: string
+  url: string
+}
+
+function loadBundleMetadata(side: 'left' | 'right'): BundleMetadata | undefined {
   if (import.meta.hot) {
-    return localStorage.getItem(`sde-check-selected-bundle-${key}`)
-  } else {
-    return undefined
+    const metadataJson = localStorage.getItem(`sde-check-selected-bundle-${side}`)
+    if (metadataJson) {
+      const parsed = JSON.parse(metadataJson)
+      if (parsed.name && parsed.url) {
+        return parsed as BundleMetadata
+      }
+    }
+  }
+  return undefined
+}
+
+function saveBundleMetadata(side: 'left' | 'right', metadata: BundleMetadata): void {
+  if (import.meta.hot) {
+    localStorage.setItem(`sde-check-selected-bundle-${side}`, JSON.stringify(metadata))
   }
 }
 
-// function saveBundleName(key: string, value: string): void {
-//   if (import.meta.hot) {
-//     localStorage.setItem(`sde-check-selected-bundle-${key}`, value)
-//   }
-// }
-
-// For local development mode, load the list of available baseline bundles
-// type BundleModule = {
-//   createBundle(): Bundle
-// }
-type LoadBundle = () => Promise<Bundle>
-const availableBundles: { [key: string]: LoadBundle } = {}
-// let bundleNames: string[]
-let selectedBaselineBundleName: string
-let selectedCurrentBundleName: string
+// For local development mode, use the bundle metadata saved in `LocalStorage`
+let savedBundleMetadataL: BundleMetadata | undefined
+let savedBundleMetadataR: BundleMetadata | undefined
 // The following value will be injected by `vite-config-for-report.ts`
 const bundlesPath = './bundles/*.txt'
 if (import.meta.hot && bundlesPath) {
   // Restore the previously selected bundles (from before the page was reloaded)
-  selectedBaselineBundleName = loadBundleName('baseline')
-  selectedCurrentBundleName = loadBundleName('current')
-
-  //   // Get the available baseline bundles.  The glob pattern part will be replaced
-  //   // by Vite (see `vite-config-for-report.ts`).  Note that we provide a placeholder
-  //   // here that looks like a valid glob pattern, since Vite's dependency resolver will
-  //   // report errors if it is invalid (not a literal).
-  //   const bundlesGlob = import.meta.glob('./bundles/*.txt', {
-  //     eager: false
-  //   })
-  //   const baselineBundleNames: string[] = []
-  //   for (const bundleKey of Object.keys(bundlesGlob)) {
-  //     const loadBundle = bundlesGlob[bundleKey]
-  //     const bundlePathParts = bundleKey.split('/')
-  //     const bundleFileName = bundlePathParts[bundlePathParts.length - 1]
-  //     const bundleName = bundleFileName.replace('.js', '')
-  //     baselineBundleNames.push(bundleName)
-  //     availableBundles[bundleName] = async () => {
-  //       const module = (await loadBundle()) as BundleModule
-  //       return module.createBundle() as Bundle
-  //     }
-  //   }
-
-  //   // Alphabetize (reversed, so that newer dates are at the top of the list)
-  //   baselineBundleNames.sort((a, b) => {
-  //     return b.toLowerCase().localeCompare(a.toLowerCase())
-  //   })
-
-  //   // Always include the "current" bundle as the first option, followed by
-  //   // the alphabetized bundle names
-  //   bundleNames = ['current', ...baselineBundleNames]
+  savedBundleMetadataL = loadBundleMetadata('left')
+  savedBundleMetadataR = loadBundleMetadata('right')
 }
 
 async function initForProduction(): Promise<void> {
@@ -115,29 +90,40 @@ async function initForProduction(): Promise<void> {
 }
 
 async function initForLocal(): Promise<void> {
-  async function createBundle(requestedName: string | undefined): Promise<[Bundle, string]> {
-    if (requestedName === undefined) {
-      requestedName = 'current'
+  async function createBundle(bundleMetadata: BundleMetadata | undefined): Promise<[Bundle, string]> {
+    if (bundleMetadata === undefined) {
+      bundleMetadata = {
+        name: 'current',
+        url: 'current'
+      }
     }
 
-    // See if there is a bundle available for the requested name
     let bundle: Bundle
     let bundleName: string
-    if (requestedName in availableBundles) {
-      // Load the bundle for the requested name
-      const loadBundle = availableBundles[requestedName]
-      bundle = await loadBundle()
-      bundleName = requestedName
-    } else {
+    if (bundleMetadata.url === 'current') {
       // Load the "current" bundle
       bundle = createCurrentBundle()
       bundleName = 'current'
+    } else {
+      // Load the local or remote bundle using dynamic import
+      try {
+        // Note that we use `@vite-ignore` since we want to bypass Vite's dynamic import checks
+        const module = await import(/* @vite-ignore */ bundleMetadata.url)
+        bundle = module.createBundle() as Bundle
+        bundleName = bundleMetadata.name
+      } catch (e) {
+        console.error(
+          `ERROR: Failed to load bundle from ${bundleMetadata.url}; will use "current" bundle instead. Cause: ${e.message}`
+        )
+        bundle = createCurrentBundle()
+        bundleName = 'current'
+      }
     }
     return [bundle, bundleName]
   }
 
-  const [bundleL, bundleNameL] = await createBundle(selectedBaselineBundleName)
-  const [bundleR, bundleNameR] = await createBundle(selectedCurrentBundleName)
+  const [bundleL, bundleNameL] = await createBundle(savedBundleMetadataL)
+  const [bundleR, bundleNameR] = await createBundle(savedBundleMetadataR)
 
   // Prepare the model check/comparison configuration
   const configInitOptions: ConfigInitOptions = {
@@ -157,8 +143,6 @@ async function initForLocal(): Promise<void> {
 
   // Initialize the root Svelte component
   initAppShell(configOptions, {
-    // TODO: Remove bundleNames
-    // bundleNames
     getLocalBundles: import.meta.hot ? getLocalBundles : undefined,
     onDownloadBundle: import.meta.hot ? onDownloadBundle : undefined
   })
@@ -188,22 +172,22 @@ initOverlay()
 initBundlesAndUI()
 
 if (import.meta.hot) {
-  // TODO
-  //   // Reload everything when the user chooses a new baseline or current bundle
-  //   document.addEventListener('sde-check-bundle', e => {
-  //     // Change the selected bundle
-  //     const info = (e as CustomEvent).detail
-  //     if (info.kind === 'left') {
-  //       saveBundleName('baseline', info.name)
-  //       selectedBaselineBundleName = info.name
-  //     } else {
-  //       saveBundleName('current', info.name)
-  //       selectedCurrentBundleName = info.name
-  //     }
+  // Reload everything when the user chooses a new baseline or current bundle
+  document.addEventListener('sde-check-bundle', e => {
+    // Change the selected bundle
+    const info = (e as CustomEvent).detail
+    const bundleMetadata = { name: info.name, url: info.url }
+    if (info.side === 'left') {
+      saveBundleMetadata('left', bundleMetadata)
+      savedBundleMetadataL = bundleMetadata
+    } else if (info.side === 'right') {
+      saveBundleMetadata('right', bundleMetadata)
+      savedBundleMetadataR = bundleMetadata
+    }
 
-  //     // Reinitialize using the chosen bundles
-  //     initBundlesAndUI()
-  //   })
+    // Reinitialize using the chosen bundles
+    initBundlesAndUI()
+  })
 
   // Reload everything when the user applies updated configuration (e.g., updated filters or
   // concurrency setting)
@@ -224,12 +208,12 @@ async function getLocalBundles(): Promise<BundleLocation[]> {
 
   return new Promise((resolve, reject) => {
     // Set up listeners
-    const handleSuccess = (data: { bundles: Array<{ name: string; fileName: string }> }) => {
+    const handleSuccess = (data: { bundles: Array<{ name: string; url: string; lastModified: string }> }) => {
       cleanup()
       const bundles: BundleLocation[] = data.bundles.map(b => ({
         name: b.name,
-        url: `/bundles/${b.fileName}`,
-        lastModified: new Date().toISOString()
+        url: b.url,
+        lastModified: b.lastModified
       }))
       resolve(bundles)
     }

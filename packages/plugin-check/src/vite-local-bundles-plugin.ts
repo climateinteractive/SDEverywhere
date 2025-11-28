@@ -1,7 +1,9 @@
 // Copyright (c) 2025 Climate Interactive / New Venture Fund
 
+import { statSync } from 'node:fs'
 import { writeFile, readdir } from 'node:fs/promises'
 import { join } from 'node:path'
+import { pathToFileURL } from 'node:url'
 import type { Plugin } from 'vite'
 
 /**
@@ -9,20 +11,13 @@ import type { Plugin } from 'vite'
  * to the local bundles directory when running in local development mode.
  *
  * This plugin adds an HMR (Hot Module Replacement) event handler that listens for
- * 'download-bundle' events from the client and downloads the bundle to the local
- * bundles directory.
+ * 'list-bundles' and 'download-bundle' events from the client.
+ *
+ * @param bundlesDir The absolute path to the bundles directory.
  */
-export function localBundlesPlugin(): Plugin {
-  let bundlesDir: string
-
+export function localBundlesPlugin(bundlesDir: string): Plugin {
   return {
     name: 'local-bundles',
-
-    configResolved(config) {
-      // Get the bundles directory path
-      // TODO: Use the configured bundles directory path from the plugin-check options
-      bundlesDir = join(config.root, 'bundles')
-    },
 
     configureServer(server) {
       // Handle requests to list the available local bundles
@@ -31,10 +26,15 @@ export function localBundlesPlugin(): Plugin {
           const files = await readdir(bundlesDir)
           const bundles = files
             .filter(file => file.endsWith('.js'))
-            .map(file => ({
-              name: file.replace(/-/g, '/').replace(/\.js$/, ''),
-              fileName: file
-            }))
+            .map(file => {
+              const filePath = join(bundlesDir, file)
+              const stats = statSync(filePath)
+              return {
+                name: file.replace(/\.js$/, ''),
+                url: pathToFileURL(filePath).toString(),
+                lastModified: stats.mtime.toISOString()
+              }
+            })
 
           client.send('list-bundles-success', { bundles })
         } catch (error) {

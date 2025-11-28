@@ -124,10 +124,8 @@ function formatDate(dateStr: string): string {
     </div>
 
     <div class="bundle-selector-list-content">
-      {#if error}
-        <div class="bundle-selector-error">{error}</div>
-      {:else if loading}
-        <div class="bundle-selector-loading">Loading bundles...</div>
+      {#if error || loading}
+        <div class="bundle-selector-empty"></div>
       {:else if bundles.length === 0}
         <div class="bundle-selector-empty">No bundles found</div>
       {:else}

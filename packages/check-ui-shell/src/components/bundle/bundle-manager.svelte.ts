@@ -106,7 +106,8 @@ export class BundleManager {
       const data = await response.json()
       return data as BundleLocation[]
     } catch (err) {
-      const message = err instanceof Error ? err.message : String(err)
+      const detailMessage = err instanceof Error ? err.message : String(err)
+      const message = `Failed to load remote bundles: ${detailMessage}`
       const currentError = this.error
       if (currentError) {
         this.error = `${currentError}; ${message}`
@@ -128,7 +129,8 @@ export class BundleManager {
     try {
       return await this.config.getLocalBundles()
     } catch (err) {
-      const message = err instanceof Error ? err.message : String(err)
+      const detailMessage = err instanceof Error ? err.message : String(err)
+      const message = `Failed to load local bundles: ${detailMessage}`
       const currentError = this.error
       if (currentError) {
         this.error = `${currentError}; ${message}`

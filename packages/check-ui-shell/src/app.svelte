@@ -28,6 +28,7 @@ import type { TraceViewModel } from './components/trace/trace-vm'
 import Trace from './components/trace/trace.svelte'
 
 import type { AppViewModel } from './app-vm'
+import type { BundleSpec } from './components/bundle/bundle-spec'
 
 export let viewModel: AppViewModel
 
@@ -87,6 +88,20 @@ function toggleBundleSelector(side: 'left' | 'right'): void {
 
 function closeBundleSelector(): void {
   openedBundleSelectorSide = undefined
+}
+
+function onBundleSelected(bundle: BundleSpec): void {
+  // When a bundle is selected, dispatch an event that will be handled at a higher level
+  // to reload the UI using the selected bundle
+  const side = openedBundleSelectorSide
+  const changeEvent = new CustomEvent('sde-check-bundle', {
+    detail: {
+      side,
+      name: bundle.local?.name || bundle.remote?.name,
+      url: bundle.local?.url || bundle.remote?.url
+    }
+  })
+  document.dispatchEvent(changeEvent)
 }
 
 function toggleFilters(): void {
@@ -230,7 +245,11 @@ function onKeyDown(event: KeyboardEvent) {
       <!-- svelte-ignore event_directive_deprecated -->
       <div class="popover-overlay" use:clickOutside on:clickout={closeBundleSelector}>
         <div class="popover-container bundle-selector-popover-container">
-          <BundleSelectorPopover bundleManager={viewModel.bundleManager} onClose={closeBundleSelector} />
+          <BundleSelectorPopover
+            bundleManager={viewModel.bundleManager}
+            onClose={closeBundleSelector}
+            onSelect={onBundleSelected}
+          />
         </div>
       </div>
     {/if}

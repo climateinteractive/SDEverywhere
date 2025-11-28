@@ -298,7 +298,7 @@ const { Story } = defineMeta({
   args={{
     bundleManager: new BundleManager({
       getLocalBundles: async () => {
-        throw new Error('Failed to load local bundles')
+        throw new Error('Simulated error')
       }
     })
   }}
@@ -307,7 +307,7 @@ const { Story } = defineMeta({
     await waitFor(() => expect(canvas.queryByText('Loading...')).not.toBeInTheDocument(), { timeout: 3000 })
 
     // Verify error message is shown (might be in content or status bar)
-    const errorMessages = canvas.getAllByText(/Failed to load local bundles/i)
+    const errorMessages = canvas.getAllByText(/Failed to load local bundles: Simulated error/i)
     await expect(errorMessages.length).toBeGreaterThan(0)
   }}
 ></Story>
