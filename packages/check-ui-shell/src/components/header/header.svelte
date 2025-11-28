@@ -6,9 +6,6 @@ import { createEventDispatcher } from 'svelte'
 import Icon from 'svelte-awesome/components/Icon.svelte'
 import { faCog, faFilter, faHome } from '@fortawesome/free-solid-svg-icons'
 
-import type { BundleSpec } from '../bundle/bundle-spec'
-import BundleSelector from '../bundle/bundle-selector.svelte'
-
 import type { HeaderViewModel } from './header-vm'
 
 export let viewModel: HeaderViewModel
@@ -23,11 +20,12 @@ const concurrency = viewModel.concurrency
 
 const dispatch = createEventDispatcher()
 
-type BundleSelectorSide = 'left' | 'right' | undefined
-let openedBundleSelectorSide: BundleSelectorSide = undefined
-
 function onHome() {
   dispatch('command', { cmd: 'show-summary' })
+}
+
+function onBundleNameClicked(side: 'left' | 'right') {
+  dispatch('command', { cmd: 'toggle-bundle-selector', side })
 }
 
 function onToggleFilters() {
@@ -38,44 +36,10 @@ function onToggleControls() {
   viewModel.controlsVisible.update(v => !v)
 }
 
-function onSelectBundle(kind: string, name: string): void {
-  const changeEvent = new CustomEvent('sde-check-bundle', {
-    detail: {
-      kind,
-      name
-    }
-  })
-  document.dispatchEvent(changeEvent)
-}
-
 function onConcurrencyChange(e: Event) {
   const value = parseInt((e.target as HTMLSelectElement).value)
   $concurrency = value
   document.dispatchEvent(new CustomEvent('sde-check-config-changed'))
-}
-
-function openBundleSelector(side: 'left' | 'right') {
-  openedBundleSelectorSide = side
-}
-
-function closeBundleSelector() {
-  openedBundleSelectorSide = undefined
-}
-
-function handleBundleSelected(bundle: BundleSpec) {
-  const name = bundle.remote?.name || bundle.local?.name
-  if (!name) {
-    return
-  }
-
-  // TODO: We need a better way to identify bundles than just the name
-  if (openedBundleSelectorSide === 'left') {
-    onSelectBundle('left', name)
-  } else if (openedBundleSelectorSide === 'right') {
-    onSelectBundle('right', name)
-  }
-
-  closeBundleSelector()
 }
 </script>
 
@@ -102,14 +66,14 @@ function handleBundleSelected(bundle: BundleSpec) {
           <button
             class="bundle-button dataset-color-0"
             data-testid="bundle-selector-left"
-            on:click={() => openBundleSelector('left')}
+            on:click={() => onBundleNameClicked('left')}
           >
             {viewModel.nameL}
           </button>
           <button
             class="bundle-button dataset-color-1"
             data-testid="bundle-selector-right"
-            on:click={() => openBundleSelector('right')}
+            on:click={() => onBundleNameClicked('right')}
           >
             {viewModel.nameR}
           </button>
@@ -180,20 +144,6 @@ function handleBundleSelected(bundle: BundleSpec) {
   <div class="line"></div>
 </div>
 
-{#if viewModel.bundleManager && openedBundleSelectorSide !== undefined}
-  <div class="modal-overlay" on:click={closeBundleSelector}>
-    <div class="modal-content" on:click={e => e.stopPropagation()}>
-      <div class="modal-header">
-        <h3>Select Bundle</h3>
-        <button class="modal-close" on:click={closeBundleSelector} aria-label="Close">×</button>
-      </div>
-      <div class="modal-body">
-        <BundleSelector bundleManager={viewModel.bundleManager} onSelect={handleBundleSelected} />
-      </div>
-    </div>
-  </div>
-{/if}
-
 <!-- STYLE -->
 <style lang="scss">
 .header-container {
@@ -251,6 +201,24 @@ function handleBundleSelected(bundle: BundleSpec) {
   color: #ddd;
 }
 
+.bundle-button {
+  background: none;
+  padding: 0.25rem 0.5rem;
+  font: inherit;
+  border: 1px solid #333;
+  border-radius: 4px;
+  cursor: pointer;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-color: #888;
+  }
+
+  &:not(:last-child) {
+    margin-right: 1rem;
+  }
+}
+
 .header-controls {
   display: flex;
   flex-direction: row;
@@ -272,85 +240,5 @@ input[type='range'] {
   min-height: 1px;
   margin-bottom: 1rem;
   background-color: #555;
-}
-
-.bundle-button {
-  background: none;
-  padding: 0.25rem 0.5rem;
-  font: inherit;
-  border: 1px solid #333;
-  border-radius: 4px;
-  cursor: pointer;
-
-  &:hover {
-    background-color: rgba(255, 255, 255, 0.1);
-    border-color: #888;
-  }
-
-  &:not(:last-child) {
-    margin-right: 1rem;
-  }
-}
-
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: rgba(0, 0, 0, 0.7);
-  z-index: 10000;
-}
-
-.modal-content {
-  display: flex;
-  flex-direction: column;
-  width: 90%;
-  max-width: 800px;
-  max-height: 90%;
-  background-color: #272727;
-  border: 1px solid var(--border-color-normal);
-  border-radius: 0.5rem;
-  overflow: hidden;
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem;
-  border-bottom: 1px solid var(--border-color-normal);
-
-  h3 {
-    margin: 0;
-    color: var(--text-color-primary);
-  }
-}
-
-.modal-close {
-  width: 2rem;
-  height: 2rem;
-  padding: 0;
-  background: none;
-  border: none;
-  color: var(--text-color-primary);
-  font-size: 2rem;
-  line-height: 1;
-  cursor: pointer;
-
-  &:hover {
-    color: var(--link-color-hover);
-  }
-}
-
-.modal-body {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
 }
 </style>

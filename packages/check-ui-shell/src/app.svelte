@@ -6,6 +6,8 @@ import FontFaceObserver from 'fontfaceobserver'
 
 import { clickOutside } from './components/_shared/click-outside'
 
+import BundleSelectorPopover from './components/bundle/bundle-selector-popover.svelte'
+
 import type { ComparisonGroupingKind } from './components/compare/_shared/comparison-grouping-kind'
 import ComparisonDetail from './components/compare/detail/compare-detail.svelte'
 import type { CompareDetailViewModel } from './components/compare/detail/compare-detail-vm'
@@ -41,6 +43,9 @@ let freeformViewModel: FreeformViewModel
 type ViewMode = 'summary' | 'comparison-detail' | 'perf' | 'freeform' | 'trace'
 let viewMode: ViewMode = 'summary'
 
+type BundleSelectorSide = 'left' | 'right' | undefined
+let openedBundleSelectorSide: BundleSelectorSide = undefined
+
 let filtersVisible = false
 
 $: appStyle = `--graph-zoom: ${$zoom}`
@@ -72,6 +77,18 @@ function showSummary(): void {
   viewMode = 'summary'
 }
 
+function toggleBundleSelector(side: 'left' | 'right'): void {
+  if (side === openedBundleSelectorSide) {
+    openedBundleSelectorSide = undefined
+  } else {
+    openedBundleSelectorSide = side
+  }
+}
+
+function closeBundleSelector(): void {
+  openedBundleSelectorSide = undefined
+}
+
 function toggleFilters(): void {
   filtersVisible = !filtersVisible
 }
@@ -86,6 +103,9 @@ function onCommand(event: CustomEvent) {
   switch (cmd) {
     case 'show-summary':
       showSummary()
+      break
+    case 'toggle-bundle-selector':
+      toggleBundleSelector(cmdObj.side)
       break
     case 'toggle-filters':
       toggleFilters()
@@ -206,10 +226,19 @@ function onKeyDown(event: KeyboardEvent) {
       <Summary on:command={onCommand} viewModel={viewModel.summaryViewModel} />
     {/if}
 
+    {#if openedBundleSelectorSide !== undefined}
+      <!-- svelte-ignore event_directive_deprecated -->
+      <div class="popover-overlay" use:clickOutside on:clickout={closeBundleSelector}>
+        <div class="popover-container bundle-selector-popover-container">
+          <BundleSelectorPopover bundleManager={viewModel.bundleManager} onClose={closeBundleSelector} />
+        </div>
+      </div>
+    {/if}
+
     {#if filtersVisible}
       <!-- svelte-ignore event_directive_deprecated -->
-      <div class="filter-popover-overlay" use:clickOutside on:clickout={closeFilters}>
-        <div class="filter-popover-container">
+      <div class="popover-overlay" use:clickOutside on:clickout={closeFilters}>
+        <div class="popover-container filter-popover-container">
           <FilterPopover
             viewModel={viewModel.filterPopoverViewModel}
             onClose={closeFilters}
@@ -249,7 +278,7 @@ function onKeyDown(event: KeyboardEvent) {
   font-size: 2em;
 }
 
-.filter-popover-overlay {
+.popover-overlay {
   position: absolute;
   top: 0;
   left: 0;
@@ -261,10 +290,9 @@ function onKeyDown(event: KeyboardEvent) {
   pointer-events: none;
 }
 
-.filter-popover-container {
+.popover-container {
   position: absolute;
   top: 26px;
-  right: 24px;
   width: 500px;
   height: min(calc(100% - 60px), 600px);
   background-color: #2c2c2c;
@@ -273,5 +301,17 @@ function onKeyDown(event: KeyboardEvent) {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
   pointer-events: auto;
   overflow: hidden;
+}
+
+.bundle-selector-popover-container {
+  left: calc(50% - 250px);
+  width: 500px;
+  height: min(calc(100% - 60px), 500px);
+}
+
+.filter-popover-container {
+  right: 24px;
+  width: 500px;
+  height: min(calc(100% - 60px), 600px);
 }
 </style>

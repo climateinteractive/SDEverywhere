@@ -78,7 +78,7 @@ export class AppViewModel {
    */
   constructor(
     private readonly appModel: AppModel,
-    bundleManager: BundleManager | undefined,
+    public readonly bundleManager: BundleManager | undefined,
     private readonly suiteSummary?: SuiteSummary
   ) {
     this.writableChecksInProgress = writable(true)

@@ -69,6 +69,40 @@ select > option {
 }
 
 /*
+ * Common styles
+ */
+
+:root {
+  /* Text */
+  --text-color-primary: #fff;
+  --text-color-secondary: #ddd;
+  --link-color-hover: #3b82f6;
+
+  /* Borders */
+  --border-color-normal: #777;
+  --border-color-focused: #3b82f6;
+
+  /* Panels */
+  --panel-bg: #2c2c2c;
+  --panel-header-bg: #282828;
+  --panel-footer-bg: #282828;
+  --panel-border: #444;
+  --panel-border-radius: 8px;
+
+  /* Buttons */
+  --button-bg-normal: unset;
+  --button-bg-hover: #555;
+  --button-border-normal: #555;
+  --button-border-hover: #999;
+  --button-border-radius: 8px;
+  --button-icon-size: 24px;
+
+  /* Inputs */
+  --input-bg: #444;
+  --input-border-radius: 0.25rem;
+}
+
+/*
  * Standard colors
  */
 
@@ -88,12 +122,6 @@ select > option {
   --status-warning: orange;
   --status-error: orangered;
   --status-skipped: #888;
-
-  --border-color-normal: #777;
-  --border-color-focused: #3b82f6;
-  --text-color-primary: #fff;
-  --text-color-secondary: #ddd;
-  --link-color-hover: #3b82f6;
 }
 
 .dataset-color-0 {

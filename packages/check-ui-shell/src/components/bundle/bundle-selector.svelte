@@ -5,15 +5,17 @@
 import { onMount } from 'svelte'
 import fuzzysort from 'fuzzysort'
 
-import type { BundleSpec } from './bundle-spec'
+import ReloadButton from '../_shared/reload-button.svelte'
+
 import type { BundleManager } from './bundle-manager.svelte'
+import type { BundleSpec } from './bundle-spec'
 
 interface Props {
   bundleManager: BundleManager
   onSelect?: (bundle: BundleSpec) => void
 }
 
-let { bundleManager, onSelect = undefined }: Props = $props()
+let { bundleManager, onSelect }: Props = $props()
 
 let bundles = $derived(bundleManager.bundles)
 let loading = $derived(bundleManager.loading)
@@ -92,11 +94,11 @@ function formatDate(dateStr: string): string {
     <div class="bundle-selector-search-bar">
       <input
         type="text"
-        placeholder="Search versions..."
+        placeholder="Search bundles..."
         bind:value={searchTerm}
         class="bundle-selector-search-input"
         role="searchbox"
-        aria-label="Search versions"
+        aria-label="Search bundles"
       />
     </div>
   </div>
@@ -173,9 +175,7 @@ function formatDate(dateStr: string): string {
         {bundles.length} {bundles.length === 1 ? 'bundle' : 'bundles'}
       {/if}
     </div>
-    <button class="bundle-selector-reload-button" onclick={() => handleReload()} disabled={loading} aria-label="Reload">
-      ↻
-    </button>
+    <ReloadButton disabled={loading} onClick={() => handleReload()} />
   </div>
 </div>
 
@@ -186,27 +186,32 @@ function formatDate(dateStr: string): string {
   flex-direction: column;
   width: 100%;
   height: 100%;
-  background-color: #272727;
+  background-color: var(--panel-bg);
   overflow: hidden;
 }
 
 .bundle-selector-header {
-  border-bottom: 1px solid var(--border-color-normal);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background-color: var(--panel-header-bg);
+  border-bottom: 1px solid var(--panel-border);
+  border-radius: var(--panel-border-radius) var(--panel-border-radius) 0 0;
 }
 
 .bundle-selector-search-bar {
   display: flex;
-  width: 100%;
+  flex: 1;
 }
 
 .bundle-selector-search-input {
   width: 100%;
   height: 2rem;
-  margin: 0.75rem;
   padding: 0.5rem;
-  background-color: #444;
+  background-color: var(--input-bg);
   border: 1px solid var(--border-color-normal);
-  border-radius: 0.25rem;
+  border-radius: var(--input-border-radius);
   color: var(--text-color-primary);
   font-family: inherit;
 
@@ -242,7 +247,7 @@ function formatDate(dateStr: string): string {
   gap: 1rem;
   padding: 0.5rem 1.5rem;
   background-color: #333;
-  border-bottom: 1px solid var(--border-color-normal);
+  border-bottom: 1px solid var(--panel-border);
   font-weight: 700;
 }
 
@@ -300,17 +305,16 @@ function formatDate(dateStr: string): string {
 }
 
 .bundle-selector-download-button {
-  width: 2rem;
-  height: 2rem;
+  width: var(--button-icon-size);
+  height: var(--button-icon-size);
   padding: 0;
-  background-color: #555;
-  border: 1px solid var(--border-color-normal);
-  border-radius: 0.25rem;
+  background-color: var(--button-bg);
+  border: 1px solid var(--button-border-normal);
+  border-radius: var(--input-border-radius);
   color: var(--text-color-primary);
   font-size: 1.25rem;
   cursor: pointer;
   opacity: 0;
-  transition: opacity 0.2s;
 
   .bundle-selector-list-row:hover & {
     opacity: 1;
@@ -324,7 +328,7 @@ function formatDate(dateStr: string): string {
   }
 
   &:not(:disabled):hover {
-    background-color: #666;
+    background-color: var(--button-bg-hover);
     border-color: var(--border-color-focused);
   }
 }
@@ -344,34 +348,12 @@ function formatDate(dateStr: string): string {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.5rem 0.75rem;
-  background-color: #333;
-  border-top: 1px solid var(--border-color-normal);
+  padding: 1rem;
+  background-color: var(--panel-footer-bg);
+  border-top: 1px solid var(--panel-border);
 }
 
 .bundle-selector-status-message {
   color: var(--text-color-secondary);
-}
-
-.bundle-selector-reload-button {
-  width: 2rem;
-  height: 2rem;
-  padding: 0;
-  background-color: #555;
-  border: 1px solid var(--border-color-normal);
-  border-radius: 0.25rem;
-  color: var(--text-color-primary);
-  font-size: 1.25rem;
-  cursor: pointer;
-
-  &:hover:not(:disabled) {
-    background-color: #666;
-    border-color: var(--border-color-focused);
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
 }
 </style>

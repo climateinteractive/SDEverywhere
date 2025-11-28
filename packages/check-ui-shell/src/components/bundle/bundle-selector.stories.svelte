@@ -39,7 +39,7 @@ const { Story } = defineMeta({
     // Get all bundle items
     const bundleItems = canvas.getAllByRole('option')
 
-    // Verify we have 8 bundles
+    // Verify that we have the expected number of bundles
     await expect(bundleItems).toHaveLength(8)
 
     // Verify the order of items (sorted by date descending by default)
@@ -59,7 +59,7 @@ const { Story } = defineMeta({
       await expect(item).toHaveTextContent(expectedOrder[index])
     })
   }}
-/>
+></Story>
 
 <Story
   name="Search"
@@ -88,7 +88,7 @@ const { Story } = defineMeta({
       await expect(item).toHaveTextContent(releaseBundles[index])
     })
   }}
-/>
+></Story>
 
 <Story
   name="Empty"
@@ -104,7 +104,7 @@ const { Story } = defineMeta({
     const messages = canvas.getAllByText(/No bundles/i)
     await expect(messages.length).toBeGreaterThan(0)
   }}
-/>
+></Story>
 
 <Story
   name="Loading"
@@ -122,7 +122,7 @@ const { Story } = defineMeta({
     // Verify loading state message
     await expect(canvas.getByText('Loading...')).toBeInTheDocument()
   }}
-/>
+></Story>
 
 <Story
   name="Error"
@@ -142,7 +142,7 @@ const { Story } = defineMeta({
     const errorMessages = canvas.getAllByText(/Failed to load bundles/i)
     await expect(errorMessages.length).toBeGreaterThan(0)
   }}
-/>
+></Story>
 
 <Story
   name="Selection"
@@ -161,7 +161,7 @@ const { Story } = defineMeta({
     // Verify that onSelect was called with the correct bundle
     await expect(args.onSelect).toHaveBeenCalledWith(mockBundleSpec('main', '2025-05-14T10:00:00.000Z'))
   }}
-/>
+></Story>
 
 <Story
   name="Column Headers"
@@ -174,7 +174,7 @@ const { Story } = defineMeta({
     await expect(canvas.getByRole('button', { name: /Name/i })).toBeInTheDocument()
     await expect(canvas.getByRole('button', { name: /Last Modified/i })).toBeInTheDocument()
   }}
-/>
+></Story>
 
 <Story
   name="Download Button - Remote Only"
@@ -191,7 +191,7 @@ const { Story } = defineMeta({
     await expect(downloadButton).toBeInTheDocument()
     await expect(downloadButton).not.toBeDisabled()
   }}
-/>
+></Story>
 
 <Story
   name="Download Button - Local Bundle"
@@ -208,7 +208,7 @@ const { Story } = defineMeta({
     await expect(downloadButton).toBeInTheDocument()
     await expect(downloadButton).toBeDisabled()
   }}
-/>
+></Story>
 
 <Story
   name="Status Bar with Reload"
@@ -230,7 +230,7 @@ const { Story } = defineMeta({
     // Should show loading state
     await expect(canvas.getByText('Loading...')).toBeInTheDocument()
   }}
-/>
+></Story>
 
 <Story
   name="Status Bar - Loading State"
@@ -252,7 +252,7 @@ const { Story } = defineMeta({
     const reloadButton = canvas.getByRole('button', { name: /reload/i })
     await expect(reloadButton).toBeDisabled()
   }}
-/>
+></Story>
 
 <Story
   name="Local Bundles Only"
@@ -274,7 +274,7 @@ const { Story } = defineMeta({
     await expect(canvas.getByText(/main/)).toBeInTheDocument()
     await expect(canvas.getByText(/local-only/)).toBeInTheDocument()
   }}
-/>
+></Story>
 
 <Story
   name="No Sources Provided"
@@ -290,7 +290,7 @@ const { Story } = defineMeta({
     const messages = canvas.getAllByText('No bundles available')
     await expect(messages.length).toBeGreaterThan(0)
   }}
-/>
+></Story>
 
 <Story
   name="Local Bundles Error"
@@ -310,7 +310,7 @@ const { Story } = defineMeta({
     const errorMessages = canvas.getAllByText(/Failed to load local bundles/i)
     await expect(errorMessages.length).toBeGreaterThan(0)
   }}
-/>
+></Story>
 
 <Story
   name="Download Button - Local Only Bundles"
@@ -333,4 +333,4 @@ const { Story } = defineMeta({
       await expect(button).toBeDisabled()
     })
   }}
-/>
+></Story>

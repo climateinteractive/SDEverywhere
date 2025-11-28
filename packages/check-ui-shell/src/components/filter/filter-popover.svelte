@@ -1,6 +1,8 @@
 <!-- Copyright (c) 2025 Climate Interactive / New Venture Fund -->
 
 <script lang="ts">
+import Button from '../_shared/button.svelte'
+import CloseButton from '../_shared/close-button.svelte'
 import FilterPanel from './filter-panel.svelte'
 import type { FilterPopoverViewModel } from './filter-popover-vm'
 
@@ -24,7 +26,7 @@ function setActiveTab(tab: 'checks' | 'scenarios') {
 <div class="filter-popover">
   <div class="filter-popover-header">
     <div class="filter-popover-header-title">Filters</div>
-    <button class="filter-popover-button close" aria-label="Close" onclick={() => onClose()}></button>
+    <CloseButton onClick={() => onClose()} />
   </div>
 
   <div class="filter-popover-tab-bar">
@@ -65,7 +67,7 @@ function setActiveTab(tab: 'checks' | 'scenarios') {
   </div>
 
   <div class="filter-popover-footer">
-    <button class="filter-popover-button apply" onclick={() => onApplyAndRun?.()}>Apply and Run</button>
+    <Button onClick={() => onApplyAndRun?.()}>Apply and Run</Button>
   </div>
 </div>
 
@@ -76,8 +78,8 @@ function setActiveTab(tab: 'checks' | 'scenarios') {
   flex-direction: column;
   flex: 1;
   height: 100%;
-  background-color: #2c2c2c;
-  color: #fff;
+  background-color: var(--panel-bg);
+  color: var(--text-color-primary);
 }
 
 .filter-popover-header {
@@ -85,44 +87,13 @@ function setActiveTab(tab: 'checks' | 'scenarios') {
   justify-content: space-between;
   align-items: center;
   padding: 1rem;
-  background-color: #282828;
-  border-bottom: 1px solid #444;
+  background-color: var(--panel-header-bg);
+  border-bottom: 1px solid var(--panel-border);
 }
 
 .filter-popover-header-title {
   font-size: 1.2rem;
   font-weight: 700;
-}
-
-.filter-popover-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: unset;
-  border: 1px solid #555;
-  border-radius: 8px;
-  font-family: Roboto, sans-serif;
-  font-size: 1.2rem;
-  color: #fff;
-  cursor: pointer;
-
-  &:hover {
-    background-color: #555;
-  }
-}
-
-.filter-popover-button.close {
-  width: 2rem;
-  height: 2rem;
-  font-size: 1.5rem;
-
-  &::after {
-    content: '×';
-  }
-}
-
-.filter-popover-button.apply {
-  padding: 4px 8px;
 }
 
 .filter-popover-tab-bar {
@@ -133,23 +104,23 @@ function setActiveTab(tab: 'checks' | 'scenarios') {
 .filter-popover-tab-button {
   flex: 1;
   padding: 0.75rem 1rem;
-  background-color: #2c2c2c;
+  background-color: var(--panel-bg);
   border: none;
-  border-bottom: 1px solid #444;
+  border-bottom: 1px solid var(--panel-border);
   font-family: Roboto, sans-serif;
   font-size: 1rem;
-  color: #ccc;
+  color: var(--text-color-secondary);
   cursor: pointer;
 
   &:hover {
-    background-color: #444;
-    color: #fff;
+    background-color: var(--input-bg);
+    color: var(--text-color-primary);
   }
 
   &.active {
     background-color: #333;
-    color: #fff;
-    border-bottom-color: #007acc;
+    color: var(--text-color-primary);
+    border-bottom-color: var(--border-color-focused);
   }
 }
 
@@ -174,7 +145,7 @@ function setActiveTab(tab: 'checks' | 'scenarios') {
   display: flex;
   justify-content: flex-end;
   padding: 1rem;
-  background-color: #282828;
-  border-top: 1px solid #444;
+  background-color: var(--panel-footer-bg);
+  border-top: 1px solid var(--panel-border);
 }
 </style>
