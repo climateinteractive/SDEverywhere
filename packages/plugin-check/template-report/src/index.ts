@@ -90,7 +90,12 @@ async function initForProduction(): Promise<void> {
 }
 
 async function initForLocal(): Promise<void> {
-  async function createBundle(bundleMetadata: BundleMetadata | undefined): Promise<[Bundle, string]> {
+  interface BundleResult {
+    bundle: Bundle
+    bundleName: string
+    bundleUrl: string
+  }
+  async function createBundle(bundleMetadata: BundleMetadata | undefined): Promise<BundleResult> {
     if (bundleMetadata === undefined) {
       bundleMetadata = {
         name: 'current',
@@ -98,8 +103,6 @@ async function initForLocal(): Promise<void> {
       }
     }
 
-    let bundle: Bundle
-    let bundleName: string
     if (bundleMetadata.url.startsWith('http')) {
       // Load remote bundles using dynamic import
       try {
@@ -107,8 +110,12 @@ async function initForLocal(): Promise<void> {
         const cacheBuster = `?cb=${Date.now()}`
         const fullUrl = `${bundleMetadata.url}${cacheBuster}`
         const module = await import(/* @vite-ignore */ fullUrl)
-        bundle = module.createBundle() as Bundle
-        bundleName = bundleMetadata.name
+        const bundle = module.createBundle() as Bundle
+        return {
+          bundle,
+          bundleName: bundleMetadata.name,
+          bundleUrl: bundleMetadata.url
+        }
       } catch (e) {
         console.error(
           `ERROR: Failed to load remote bundle from ${bundleMetadata.url}; will use "current" bundle instead. Cause:`,
@@ -139,8 +146,12 @@ async function initForLocal(): Promise<void> {
           }
           const loadBundle = bundlesGlob[bundleKey]
           const module = (await loadBundle()) as BundleModule
-          bundle = module.createBundle()
-          bundleName = bundleMetadata.name
+          const bundle = module.createBundle() as Bundle
+          return {
+            bundle,
+            bundleName: bundleMetadata.name,
+            bundleUrl: bundleMetadata.url
+          }
         }
       } catch (e) {
         console.error(
@@ -149,17 +160,19 @@ async function initForLocal(): Promise<void> {
         )
       }
     }
-    if (bundle === undefined) {
-      // Load the "current" bundle if it was requested or if the other loading
-      // processes failed
-      bundle = createCurrentBundle()
-      bundleName = 'current'
+
+    // Load the "current" bundle if it was requested or if the other loading
+    // processes failed
+    const bundle = createCurrentBundle()
+    return {
+      bundle,
+      bundleName: 'current',
+      bundleUrl: 'current'
     }
-    return [bundle, bundleName]
   }
 
-  const [bundleL, bundleNameL] = await createBundle(savedBundleMetadataL)
-  const [bundleR, bundleNameR] = await createBundle(savedBundleMetadataR)
+  const { bundle: bundleL, bundleName: bundleNameL, bundleUrl: bundleUrlL } = await createBundle(savedBundleMetadataL)
+  const { bundle: bundleR, bundleName: bundleNameR, bundleUrl: bundleUrlR } = await createBundle(savedBundleMetadataR)
 
   // Prepare the model check/comparison configuration
   const configInitOptions: ConfigInitOptions = {
@@ -180,6 +193,8 @@ async function initForLocal(): Promise<void> {
   // Initialize the root Svelte component
   const remoteBundlesUrl = __REMOTE_BUNDLES_URL__
   initAppShell(configOptions, {
+    bundleUrlL,
+    bundleUrlR,
     remoteBundlesUrl: remoteBundlesUrl !== '' ? remoteBundlesUrl : undefined,
     getLocalBundles: import.meta.hot ? getLocalBundles : undefined,
     onDownloadBundle: import.meta.hot ? onDownloadBundle : undefined

@@ -10,12 +10,13 @@ import type { BundleSpec } from './bundle-spec'
 import BundleSelector from './bundle-selector.svelte'
 
 interface Props {
+  side: 'left' | 'right'
   bundleManager: BundleManager
   onSelect?: (bundle: BundleSpec) => void
   onClose?: () => void
 }
 
-let { bundleManager, onSelect, onClose }: Props = $props()
+let { side, bundleManager, onSelect, onClose }: Props = $props()
 </script>
 
 <!-- TEMPLATE -->
@@ -24,7 +25,7 @@ let { bundleManager, onSelect, onClose }: Props = $props()
     <div class="bundle-selector-popover-header-title">Select Bundle</div>
     <CloseButton onClick={() => onClose?.()} />
   </div>
-  <BundleSelector {bundleManager} {onSelect} />
+  <BundleSelector {side} {bundleManager} {onSelect} />
 </div>
 
 <!-- STYLE -->

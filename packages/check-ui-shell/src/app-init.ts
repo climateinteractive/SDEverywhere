@@ -23,6 +23,8 @@ export function initAppShell(configOptions: ConfigOptions, appShellOptions?: App
       let bundleManager: BundleManager | undefined = undefined
       if (appShellOptions?.remoteBundlesUrl || appShellOptions?.getLocalBundles) {
         bundleManager = new BundleManager({
+          bundleUrlL: appShellOptions.bundleUrlL,
+          bundleUrlR: appShellOptions.bundleUrlR,
           remoteBundlesUrl: appShellOptions.remoteBundlesUrl,
           getLocalBundles: appShellOptions.getLocalBundles,
           onDownloadBundle: appShellOptions.onDownloadBundle

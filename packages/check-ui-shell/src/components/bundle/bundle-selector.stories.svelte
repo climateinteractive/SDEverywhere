@@ -30,7 +30,8 @@ const { Story } = defineMeta({
   name="Default"
   {template}
   args={{
-    bundleManager: bundleManagerFromBundles()
+    bundleManager: bundleManagerFromBundles(),
+    side: 'left'
   }}
   play={async ({ canvas }) => {
     // Wait for loading to complete
@@ -61,6 +62,10 @@ const { Story } = defineMeta({
     bundleItems.forEach(async (item, index) => {
       await expect(item).toHaveTextContent(expectedOrder[index])
     })
+
+    // Verify that the active bundle is highlighted
+    const activeBundle = canvas.getByRole('option', { name: 'main' })
+    await expect(activeBundle).toHaveClass('active')
   }}
 ></Story>
 
@@ -68,7 +73,8 @@ const { Story } = defineMeta({
   name="Search"
   {template}
   args={{
-    bundleManager: bundleManagerFromBundles()
+    bundleManager: bundleManagerFromBundles(),
+    side: 'left'
   }}
   play={async ({ canvas }) => {
     // Wait for loading to complete
@@ -97,6 +103,7 @@ const { Story } = defineMeta({
   name="Empty"
   {template}
   args={{
+    side: 'left',
     bundleManager: new BundleManager({})
   }}
   play={async ({ canvas }) => {
@@ -119,7 +126,8 @@ const { Story } = defineMeta({
         await new Promise(resolve => setTimeout(resolve, 1000))
         return []
       }
-    })
+    }),
+    side: 'left'
   }}
   play={async ({ canvas }) => {
     // Verify loading state message
@@ -135,7 +143,8 @@ const { Story } = defineMeta({
       getLocalBundles: async () => {
         throw new Error('Simulated error')
       }
-    })
+    }),
+    side: 'left'
   }}
   play={async ({ canvas }) => {
     // Wait for loading to complete
@@ -151,7 +160,8 @@ const { Story } = defineMeta({
   name="Selection"
   {template}
   args={{
-    bundleManager: bundleManagerFromBundles()
+    bundleManager: bundleManagerFromBundles(),
+    side: 'left'
   }}
   play={async ({ canvas, args }) => {
     // Wait for loading to complete
@@ -170,7 +180,8 @@ const { Story } = defineMeta({
   name="Column Headers"
   {template}
   args={{
-    bundleManager: bundleManagerFromBundles()
+    bundleManager: bundleManagerFromBundles(),
+    side: 'left'
   }}
   play={async ({ canvas }) => {
     // Verify column headers are present and labeled correctly
@@ -184,7 +195,8 @@ const { Story } = defineMeta({
   name="Download Button - Remote Only"
   {template}
   args={{
-    bundleManager: bundleManagerFromBundles([mockBundleSpec('main', '2025-05-14T10:00:00.000Z', false)])
+    bundleManager: bundleManagerFromBundles([mockBundleSpec('main', '2025-05-14T10:00:00.000Z', false)]),
+    side: 'left'
   }}
   play={async ({ canvas }) => {
     // Wait for loading to complete
@@ -201,7 +213,8 @@ const { Story } = defineMeta({
   name="Download Button - Local Bundle"
   {template}
   args={{
-    bundleManager: bundleManagerFromBundles([mockBundleSpec('main', '2025-05-14T10:00:00.000Z', true)])
+    bundleManager: bundleManagerFromBundles([mockBundleSpec('main', '2025-05-14T10:00:00.000Z', true)]),
+    side: 'left'
   }}
   play={async ({ canvas }) => {
     // Wait for loading to complete
@@ -219,7 +232,8 @@ const { Story } = defineMeta({
   name="Status Bar with Reload"
   {template}
   args={{
-    bundleManager: bundleManagerFromBundles()
+    bundleManager: bundleManagerFromBundles(),
+    side: 'left'
   }}
   play={async ({ canvas }) => {
     // Wait for loading to complete
@@ -247,7 +261,8 @@ const { Story } = defineMeta({
         await new Promise(resolve => setTimeout(resolve, 10000))
         return []
       }
-    })
+    }),
+    side: 'left'
   }}
   play={async ({ canvas }) => {
     // Verify loading message is shown in status bar
@@ -263,7 +278,8 @@ const { Story } = defineMeta({
   name="No Sources Provided"
   {template}
   args={{
-    bundleManager: new BundleManager({})
+    bundleManager: new BundleManager({}),
+    side: 'left'
   }}
   play={async ({ canvas }) => {
     // Wait for loading to complete
@@ -279,7 +295,8 @@ const { Story } = defineMeta({
   name="Local Bundles Only"
   {template}
   args={{
-    bundleManager: bundleManagerFromBundles(localBundles)
+    bundleManager: bundleManagerFromBundles({ bundles: localBundles }),
+    side: 'right'
   }}
   play={async ({ canvas }) => {
     // Wait for loading to complete

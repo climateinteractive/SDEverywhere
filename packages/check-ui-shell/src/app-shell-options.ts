@@ -13,6 +13,10 @@ export interface AppShellOptions {
    * user opens the report in the browser.
    */
   suiteSummary?: SuiteSummary
+  /** The URL of the "left" bundle to be loaded (only used in local development mode). */
+  bundleUrlL?: string
+  /** The URL of the "right" bundle to be loaded (only used in local development mode). */
+  bundleUrlR?: string
   /**
    * Optional URL to a JSON file containing the list of remote bundles.
    *

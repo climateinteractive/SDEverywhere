@@ -247,6 +247,8 @@ function onKeyDown(event: KeyboardEvent) {
         <div class="popover-container bundle-selector-popover-container">
           <BundleSelectorPopover
             bundleManager={viewModel.bundleManager}
+            side={openedBundleSelectorSide}
+            activeBundleUrl={''}
             onClose={closeBundleSelector}
             onSelect={bundle => {
               onBundleSelected(bundle)

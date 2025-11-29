@@ -15,12 +15,14 @@ import type { BundleManager } from './bundle-manager.svelte'
 import type { BundleSpec } from './bundle-spec'
 
 interface Props {
+  side: 'left' | 'right'
   bundleManager: BundleManager
   onSelect?: (bundle: BundleSpec) => void
 }
 
-let { bundleManager, onSelect }: Props = $props()
+let { side, bundleManager, onSelect }: Props = $props()
 
+let activeBundleUrlForSide = $derived(side === 'left' ? bundleManager.activeBundleUrlL : bundleManager.activeBundleUrlR)
 let bundles = $derived(bundleManager.bundles)
 let loading = $derived(bundleManager.loading)
 let error = $derived(bundleManager.error)
@@ -92,7 +94,7 @@ function formatDate(dateStr: string): string {
 </script>
 
 <!-- TEMPLATE -->
-<div class="bundle-selector">
+<div class="bundle-selector {side}">
   <div class="bundle-selector-header">
     <div class="bundle-selector-search-bar">
       <input
@@ -130,9 +132,13 @@ function formatDate(dateStr: string): string {
         <div class="bundle-selector-empty">No bundles found</div>
       {:else}
         {#each filteredBundles as bundle}
+          {@const active =
+            bundle.remote?.url === activeBundleUrlForSide || bundle.local?.url === activeBundleUrlForSide}
           <div
             class="bundle-selector-item-row"
+            class:active
             role="option"
+            aria-label={bundle.remote?.name || bundle.local?.name || ''}
             aria-selected="false"
             tabindex="0"
             onclick={() => onSelect?.(bundle)}
@@ -291,6 +297,14 @@ $icon-col-w: 18px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.bundle-selector.left .bundle-selector-item-row.active .bundle-selector-item-bundle-name {
+  color: var(--dataset-0);
+}
+
+.bundle-selector.right .bundle-selector-item-row.active .bundle-selector-item-bundle-name {
+  color: var(--dataset-1);
 }
 
 .bundle-selector-item-bundle-date {

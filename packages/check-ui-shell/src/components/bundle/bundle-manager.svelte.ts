@@ -7,6 +7,16 @@ import type { BundleLocation, BundleSpec } from './bundle-spec'
  */
 export interface BundleManagerConfig {
   /**
+   * The URL of the active "left" bundle.
+   */
+  bundleUrlL?: string
+
+  /**
+   * The URL of the active "right" bundle.
+   */
+  bundleUrlR?: string
+
+  /**
    * Optional URL to a JSON file containing the list of remote bundles.
    */
   remoteBundlesUrl?: string
@@ -29,22 +39,25 @@ export interface BundleManagerConfig {
  * and providing reactive state that components can subscribe to.
  */
 export class BundleManager {
-  /**
-   * Reactive state of all available bundles (merged from remote and local).
-   */
+  /** The URL of the active "left" bundle. */
+  public readonly activeBundleUrlL: string
+
+  /** The URL of the active "right" bundle. */
+  public readonly activeBundleUrlR: string
+
+  /** Reactive state of all available bundles (merged from remote and local). */
   public bundles = $state<BundleSpec[]>([])
 
-  /**
-   * Reactive state indicating whether bundles are currently being loaded.
-   */
+  /** Reactive state indicating whether bundles are currently being loaded. */
   public loading = $state<boolean>(false)
 
-  /**
-   * Reactive state containing any error message from the last load operation.
-   */
+  /** Reactive state containing any error message from the last load operation. */
   public error = $state<string | undefined>(undefined)
 
-  constructor(private readonly config: BundleManagerConfig) {}
+  constructor(private readonly config: BundleManagerConfig) {
+    this.activeBundleUrlL = config.bundleUrlL || ''
+    this.activeBundleUrlR = config.bundleUrlR || ''
+  }
 
   /**
    * Load (or reload) bundles from remote and local sources.

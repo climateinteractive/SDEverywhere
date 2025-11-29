@@ -3,19 +3,21 @@
 import { BundleManager } from '../components/bundle/bundle-manager.svelte'
 import type { BundleLocation, BundleSpec } from '../components/bundle/bundle-spec'
 
-export function mockBundleSpec(kind: 'remote' | 'local', branchName: string, lastModified: string): BundleSpec {
-  let url: string
+export function mockBundleUrl(kind: 'remote' | 'local', branchName: string): string {
   if (kind === 'remote') {
-    url = `https://example.com/branch/${branchName}/check-bundle.js`
+    return `https://example.com/branch/${branchName}/check-bundle.js`
   } else {
     if (branchName === 'current') {
-      url = 'current'
+      return 'current'
     } else {
-      url = `file:///bundles/${branchName.replace('/', '-')}.js`
+      return `file:///bundles/${branchName.replace('/', '-')}.js`
     }
   }
+}
+
+export function mockBundleSpec(kind: 'remote' | 'local', branchName: string, lastModified: string): BundleSpec {
   const location: BundleLocation = {
-    url,
+    url: mockBundleUrl(kind, branchName),
     name: branchName,
     lastModified
   }
@@ -45,7 +47,15 @@ export const localBundles: BundleSpec[] = [
 
 export const allBundles: BundleSpec[] = [...remoteBundles, ...localBundles]
 
-export function bundleManagerFromBundles(bundles: BundleSpec[] = allBundles): BundleManager {
+export function bundleManagerFromBundles(options?: {
+  bundles: BundleSpec[]
+  bundleUrlL?: string
+  bundleUrlR?: string
+}): BundleManager {
+  const bundles = options?.bundles || allBundles
+  const bundleUrlL = options?.bundleUrlL || mockBundleUrl('remote', 'main')
+  const bundleUrlR = options?.bundleUrlR || mockBundleUrl('local', 'current')
+
   // Extract remote and local bundles for testing
   const remoteBundlesList: BundleLocation[] = bundles
     .filter(b => b.remote)
@@ -68,6 +78,8 @@ export function bundleManagerFromBundles(bundles: BundleSpec[] = allBundles): Bu
     remoteBundlesList.length > 0 ? 'data:application/json;base64,' + btoa(JSON.stringify(remoteBundlesList)) : undefined
 
   return new BundleManager({
+    bundleUrlL,
+    bundleUrlR,
     remoteBundlesUrl,
     getLocalBundles: localBundlesList.length > 0 ? async () => localBundlesList : undefined
   })
