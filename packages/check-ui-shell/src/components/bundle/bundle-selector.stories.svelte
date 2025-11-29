@@ -40,10 +40,11 @@ const { Story } = defineMeta({
     const bundleItems = canvas.getAllByRole('option')
 
     // Verify that we have the expected number of bundles
-    await expect(bundleItems).toHaveLength(10)
+    await expect(bundleItems).toHaveLength(11)
 
     // Verify the order of items (sorted by date descending by default)
     const expectedOrder = [
+      'current',
       'main',
       'previous',
       'chris/123-feature',
@@ -286,10 +287,13 @@ const { Story } = defineMeta({
 
     // Verify bundles are loaded
     const bundleItems = canvas.getAllByRole('option')
-    await expect(bundleItems).toHaveLength(2)
+    await expect(bundleItems).toHaveLength(3)
 
-    // Verify local bundles are shown
-    await expect(canvas.getByText(/previous/)).toBeInTheDocument()
-    await expect(canvas.getByText(/local-only/)).toBeInTheDocument()
+    const expectedOrder = ['current', 'previous', 'local-only']
+
+    // Check each item's name matches the expected order
+    bundleItems.forEach(async (item, index) => {
+      await expect(item).toHaveTextContent(expectedOrder[index])
+    })
   }}
 ></Story>

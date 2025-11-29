@@ -39,10 +39,11 @@ const { Story } = defineMeta({
     const bundleItems = canvas.getAllByRole('option')
 
     // Verify that we have the expected number of bundles
-    await expect(bundleItems).toHaveLength(10)
+    await expect(bundleItems).toHaveLength(11)
 
     // Verify the order of items (sorted by date descending by default)
     const expectedOrder = [
+      'current',
       'main',
       'previous',
       'chris/123-feature',

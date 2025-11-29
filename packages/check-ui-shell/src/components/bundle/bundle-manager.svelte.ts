@@ -74,8 +74,7 @@ export class BundleManager {
     }
 
     // Merge remote and local bundles
-    const merged = this.mergeBundles(remoteBundles || [], localBundles || [])
-    this.bundles = merged
+    this.bundles = this.mergeBundles(remoteBundles || [], localBundles || [])
     this.loading = false
   }
 
@@ -152,18 +151,23 @@ export class BundleManager {
     const bundleMap = new Map<string, BundleSpec>()
 
     // Add remote bundles
-    for (const remote of remoteBundles) {
-      bundleMap.set(remote.name, { remote })
+    for (const bundle of remoteBundles) {
+      bundleMap.set(bundle.name, { remote: bundle })
     }
 
-    // Add or merge local bundles
-    for (const local of localBundles) {
-      const existing = bundleMap.get(local.name)
-      if (existing) {
-        existing.local = local
-      } else {
-        bundleMap.set(local.name, { local })
-      }
+    // // Add or merge local bundles
+    // for (const local of localBundles) {
+    //   const existing = bundleMap.get(local.name)
+    //   if (existing) {
+    //     existing.local = local
+    //   } else {
+    //     bundleMap.set(local.name, { local })
+    //   }
+    // }
+    // TODO: Ideally we would show a single item in the case where the local bundle is a copy of a remote
+    // bundle (and is up to date with it), but for now we will show local bundles separately in all cases
+    for (const bundle of localBundles) {
+      bundleMap.set(bundle.name, { local: bundle })
     }
 
     return Array.from(bundleMap.values())

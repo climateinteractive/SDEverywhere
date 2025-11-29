@@ -1,8 +1,8 @@
 // Copyright (c) 2022 Climate Interactive / New Venture Fund
 
-import { existsSync, mkdirSync } from 'fs'
-import { dirname, relative, join as joinPath, resolve as resolvePath } from 'path'
-import { fileURLToPath } from 'url'
+import { existsSync, mkdirSync, statSync } from 'node:fs'
+import { dirname, relative, join as joinPath, resolve as resolvePath } from 'node:path'
+import { fileURLToPath } from 'node:url'
 
 import type { Alias, InlineConfig, PluginOption } from 'vite'
 import replace from '@rollup/plugin-replace'
@@ -45,6 +45,9 @@ export function createViteConfigForReport(
   const relProjDirPath = relProjDir.replaceAll('\\', '/')
   // TODO: Use localBundlesPath from options
   const bundlesPath = `${relProjDirPath}/bundles/*.js`
+
+  // Get the last modified time of the current bundle
+  const currentBundleLastModified = statSync(currentBundlePath).mtime.toISOString()
 
   // Calculate output directory relative to the template root
   let reportPath: string
@@ -178,6 +181,9 @@ export function createViteConfigForReport(
 
       // Inject the current branch name
       __CURRENT_NAME__: JSON.stringify(currentBundleName),
+
+      // Inject the last modified time of the current bundle
+      __CURRENT_BUNDLE_LAST_MODIFIED__: JSON.stringify(currentBundleLastModified),
 
       // Inject the remote bundles URL
       __REMOTE_BUNDLES_URL__: JSON.stringify(options?.remoteBundlesUrl || '')

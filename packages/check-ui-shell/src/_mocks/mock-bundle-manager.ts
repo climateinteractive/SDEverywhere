@@ -8,7 +8,11 @@ export function mockBundleSpec(kind: 'remote' | 'local', branchName: string, las
   if (kind === 'remote') {
     url = `https://example.com/branch/${branchName}/check-bundle.js`
   } else {
-    url = `file:///bundles/${branchName.replace('/', '-')}.js`
+    if (branchName === 'current') {
+      url = 'current'
+    } else {
+      url = `file:///bundles/${branchName.replace('/', '-')}.js`
+    }
   }
   const location: BundleLocation = {
     url,
@@ -34,6 +38,7 @@ export const remoteBundles: BundleSpec[] = [
 ]
 
 export const localBundles: BundleSpec[] = [
+  mockBundleSpec('local', 'current', '2025-06-15T10:00:00.000Z'),
   mockBundleSpec('local', 'previous', '2025-05-14T10:00:00.000Z'),
   mockBundleSpec('local', 'local-only', '2025-05-12T10:00:00.000Z')
 ]
