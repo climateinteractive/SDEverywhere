@@ -16,9 +16,9 @@ export interface AppShellOptions {
   /**
    * Optional URL to a JSON file containing the list of remote bundles.
    *
-   * The URL should point to a JSON file that contains an array of BundleLocation objects.
+   * The URL should point to a JSON file that contains an array of `BundleLocation` objects.
    */
-  remoteMetadataUrl?: string
+  remoteBundlesUrl?: string
   /**
    * Get the list of locally available bundles.
    *

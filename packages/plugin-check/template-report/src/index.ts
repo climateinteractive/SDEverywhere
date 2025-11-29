@@ -100,24 +100,60 @@ async function initForLocal(): Promise<void> {
 
     let bundle: Bundle
     let bundleName: string
-    if (bundleMetadata.url === 'current') {
-      // Load the "current" bundle
-      bundle = createCurrentBundle()
-      bundleName = 'current'
-    } else {
-      // Load the local or remote bundle using dynamic import
+    if (bundleMetadata.url.startsWith('http')) {
+      // Load remote bundles using dynamic import
       try {
-        // Note that we use `@vite-ignore` since we want to bypass Vite's dynamic import checks
-        const module = await import(/* @vite-ignore */ bundleMetadata.url)
+        // Add cache busting parameter
+        const cacheBuster = `?cb=${Date.now()}`
+        const fullUrl = `${bundleMetadata.url}${cacheBuster}`
+        const module = await import(/* @vite-ignore */ fullUrl)
         bundle = module.createBundle() as Bundle
         bundleName = bundleMetadata.name
       } catch (e) {
         console.error(
-          `ERROR: Failed to load bundle from ${bundleMetadata.url}; will use "current" bundle instead. Cause: ${e.message}`
+          `ERROR: Failed to load remote bundle from ${bundleMetadata.url}; will use "current" bundle instead. Cause:`,
+          e
         )
-        bundle = createCurrentBundle()
-        bundleName = 'current'
       }
+    } else if (bundleMetadata.url.startsWith('file://')) {
+      // Load local bundles using `import.meta.glob` (since dynamic import isn't
+      // available for file URLs due to security restrictions).  The glob pattern
+      // part will be replaced by Vite (see `vite-config-for-report.ts`).  Note
+      // that we provide a placeholder here that looks like a valid glob pattern,
+      // since Vite's dependency resolver will report errors if it is invalid
+      // (not a literal).
+      try {
+        const bundlesGlob = import.meta.glob('./bundles/*.txt', {
+          eager: false
+        })
+        const remoteBundleUrlParts = bundleMetadata.url.split('/')
+        const remoteBundleFileName = remoteBundleUrlParts[remoteBundleUrlParts.length - 1]
+        const bundleKey = Object.keys(bundlesGlob).find(key => {
+          const bundlePathParts = key.split('/')
+          const bundleFileName = bundlePathParts[bundlePathParts.length - 1]
+          return bundleFileName === remoteBundleFileName
+        })
+        if (bundleKey) {
+          type BundleModule = {
+            createBundle(): Bundle
+          }
+          const loadBundle = bundlesGlob[bundleKey]
+          const module = (await loadBundle()) as BundleModule
+          bundle = module.createBundle()
+          bundleName = bundleMetadata.name
+        }
+      } catch (e) {
+        console.error(
+          `ERROR: Failed to load local bundle from ${bundleMetadata.url}; will use "current" bundle instead. Cause:`,
+          e
+        )
+      }
+    }
+    if (bundle === undefined) {
+      // Load the "current" bundle if it was requested or if the other loading
+      // processes failed
+      bundle = createCurrentBundle()
+      bundleName = 'current'
     }
     return [bundle, bundleName]
   }
@@ -142,7 +178,9 @@ async function initForLocal(): Promise<void> {
   }
 
   // Initialize the root Svelte component
+  const remoteBundlesUrl = __REMOTE_BUNDLES_URL__
   initAppShell(configOptions, {
+    remoteBundlesUrl: remoteBundlesUrl !== '' ? remoteBundlesUrl : undefined,
     getLocalBundles: import.meta.hot ? getLocalBundles : undefined,
     onDownloadBundle: import.meta.hot ? onDownloadBundle : undefined
   })

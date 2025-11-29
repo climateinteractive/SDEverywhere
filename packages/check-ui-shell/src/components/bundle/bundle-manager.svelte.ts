@@ -9,7 +9,7 @@ export interface BundleManagerConfig {
   /**
    * Optional URL to a JSON file containing the list of remote bundles.
    */
-  remoteMetadataUrl?: string
+  remoteBundlesUrl?: string
 
   /**
    * Optional callback to get the list of locally available bundles.
@@ -32,17 +32,17 @@ export class BundleManager {
   /**
    * Reactive state of all available bundles (merged from remote and local).
    */
-  bundles = $state<BundleSpec[]>([])
+  public bundles = $state<BundleSpec[]>([])
 
   /**
    * Reactive state indicating whether bundles are currently being loaded.
    */
-  loading = $state<boolean>(false)
+  public loading = $state<boolean>(false)
 
   /**
    * Reactive state containing any error message from the last load operation.
    */
-  error = $state<string | undefined>(undefined)
+  public error = $state<string | undefined>(undefined)
 
   constructor(private readonly config: BundleManagerConfig) {}
 
@@ -60,7 +60,7 @@ export class BundleManager {
 
     // Check if both sources failed
     if (!remoteBundles && !localBundles) {
-      if (!this.config.remoteMetadataUrl && !this.config.getLocalBundles) {
+      if (!this.config.remoteBundlesUrl && !this.config.getLocalBundles) {
         this.error = 'No bundles available'
       } else {
         // Check if a specific error was already set
@@ -94,12 +94,12 @@ export class BundleManager {
    * Load bundles from the remote metadata URL.
    */
   private async loadRemoteBundles(): Promise<BundleLocation[] | undefined> {
-    if (!this.config.remoteMetadataUrl) {
+    if (!this.config.remoteBundlesUrl) {
       return undefined
     }
 
     try {
-      const response = await fetch(this.config.remoteMetadataUrl)
+      const response = await fetch(this.config.remoteBundlesUrl)
       if (!response.ok) {
         throw new Error(`Failed to fetch remote bundles: ${response.statusText}`)
       }

@@ -223,9 +223,7 @@ function formatDate(dateStr: string): string {
   }
 }
 
-.bundle-selector-loading,
-.bundle-selector-empty,
-.bundle-selector-error {
+.bundle-selector-empty {
   display: flex;
   align-items: center;
   justify-content: center;

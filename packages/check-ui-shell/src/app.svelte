@@ -248,7 +248,10 @@ function onKeyDown(event: KeyboardEvent) {
           <BundleSelectorPopover
             bundleManager={viewModel.bundleManager}
             onClose={closeBundleSelector}
-            onSelect={onBundleSelected}
+            onSelect={bundle => {
+              onBundleSelected(bundle)
+              closeBundleSelector()
+            }}
           />
         </div>
       </div>
@@ -262,8 +265,8 @@ function onKeyDown(event: KeyboardEvent) {
             viewModel={viewModel.filterPopoverViewModel}
             onClose={closeFilters}
             onApplyAndRun={() => {
-              closeFilters()
               viewModel.applyFilters()
+              closeFilters()
             }}
           />
         </div>

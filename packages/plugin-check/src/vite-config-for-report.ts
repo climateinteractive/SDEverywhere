@@ -43,7 +43,7 @@ export function createViteConfigForReport(
   // XXX: The glob pattern must use forward slashes only, so on Windows we need to
   // convert backslashes to slashes
   const relProjDirPath = relProjDir.replaceAll('\\', '/')
-  // TODO: Use bundlesDir from options
+  // TODO: Use localBundlesPath from options
   const bundlesPath = `${relProjDirPath}/bundles/*.js`
 
   // Calculate output directory relative to the template root
@@ -177,7 +177,10 @@ export function createViteConfigForReport(
       __BASELINE_NAME__: JSON.stringify(options?.baseline?.name || ''),
 
       // Inject the current branch name
-      __CURRENT_NAME__: JSON.stringify(currentBundleName)
+      __CURRENT_NAME__: JSON.stringify(currentBundleName),
+
+      // Inject the remote bundles URL
+      __REMOTE_BUNDLES_URL__: JSON.stringify(options?.remoteBundlesUrl || '')
     },
 
     plugins: [

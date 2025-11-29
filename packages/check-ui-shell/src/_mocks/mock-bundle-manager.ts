@@ -63,11 +63,11 @@ export function bundleManagerFromBundles(bundles: BundleSpec[]): BundleManager {
     }))
 
   // Create a simple remote metadata response
-  const remoteMetadataUrl =
+  const remoteBundlesUrl =
     remoteBundlesList.length > 0 ? 'data:application/json;base64,' + btoa(JSON.stringify(remoteBundlesList)) : undefined
 
   return new BundleManager({
-    remoteMetadataUrl,
+    remoteBundlesUrl,
     getLocalBundles: localBundlesList.length > 0 ? async () => localBundlesList : undefined
   })
 }
