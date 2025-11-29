@@ -2,10 +2,12 @@
 
 <!-- SCRIPT -->
 <script lang="ts">
+import Icon, { type IconType } from 'svelte-awesome/components/Icon.svelte'
+
 import Button from './button.svelte'
 
 interface Props {
-  icon: string
+  icon: IconType
   class?: string
   disabled?: boolean
   ariaLabel?: string
@@ -17,17 +19,19 @@ let { icon, class: classes = '', disabled, ariaLabel, onClick }: Props = $props(
 
 <!-- TEMPLATE -->
 <Button class="icon-button {classes}" {disabled} {ariaLabel} {onClick}>
-  <span class="icon-button-icon">{@html icon}</span>
+  <Icon class="icon" data={icon} />
 </Button>
 
 <!-- STYLE -->
 <style lang="scss">
-:global(.icon-button) {
-  width: var(--button-icon-size);
-  height: var(--button-icon-size);
+:global(.button.icon-button) {
+  width: 24px;
+  height: 24px;
+  padding: 0 !important;
 }
 
-:global(.icon-button) .icon-button-icon {
-  font-size: 1.5rem;
+:global(.icon-button .icon) {
+  width: 12px;
+  height: 12px;
 }
 </style>

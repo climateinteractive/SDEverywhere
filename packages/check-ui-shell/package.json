@@ -31,8 +31,8 @@
     "ci:build": "run-s clean lint prettier:check test:ci type-check build docs"
   },
   "dependencies": {
-    "@fortawesome/free-regular-svg-icons": "^6.1.1",
-    "@fortawesome/free-solid-svg-icons": "^6.1.1",
+    "@fortawesome/free-regular-svg-icons": "^7.1.0",
+    "@fortawesome/free-solid-svg-icons": "^7.1.0",
     "@juggle/resize-observer": "^3.4.0",
     "@sdeverywhere/check-core": "^0.1.6",
     "assert-never": "^1.2.1",

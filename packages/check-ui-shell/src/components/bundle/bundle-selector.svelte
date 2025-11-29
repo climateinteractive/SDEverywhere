@@ -3,7 +3,11 @@
 <!-- SCRIPT -->
 <script lang="ts">
 import { onMount } from 'svelte'
+import Icon from 'svelte-awesome/components/Icon.svelte'
 import fuzzysort from 'fuzzysort'
+
+import { faCloud } from '@fortawesome/free-regular-svg-icons'
+import { faLaptop } from '@fortawesome/free-solid-svg-icons'
 
 import ReloadButton from '../_shared/reload-button.svelte'
 
@@ -21,9 +25,9 @@ let bundles = $derived(bundleManager.bundles)
 let loading = $derived(bundleManager.loading)
 let error = $derived(bundleManager.error)
 
-function handleDownload(bundle: BundleSpec) {
-  bundleManager.downloadBundle(bundle)
-}
+// function handleDownload(bundle: BundleSpec) {
+//   bundleManager.downloadBundle(bundle)
+// }
 
 function handleReload() {
   bundleManager.load()
@@ -79,10 +83,6 @@ function toggleSort(column: 'date' | 'name') {
   }
 }
 
-function isDownloaded(bundle: BundleSpec): boolean {
-  return bundle.local !== undefined
-}
-
 function formatDate(dateStr: string): string {
   const date = new Date(dateStr)
   const dateString = date.toLocaleDateString(undefined, { day: 'numeric', month: 'numeric', year: 'numeric' })
@@ -106,8 +106,8 @@ function formatDate(dateStr: string): string {
     </div>
   </div>
 
-  <div class="bundle-selector-list-container">
-    <div class="bundle-selector-list-header">
+  <div class="bundle-selector-item-container">
+    <div class="bundle-selector-item-header">
       <div class="bundle-selector-header-download"></div>
       <button class="bundle-selector-sort-button" onclick={() => toggleSort('name')}>
         Name
@@ -123,7 +123,7 @@ function formatDate(dateStr: string): string {
       </button>
     </div>
 
-    <div class="bundle-selector-list-content">
+    <div class="bundle-selector-item-content">
       {#if error || loading}
         <div class="bundle-selector-empty"></div>
       {:else if bundles.length === 0}
@@ -131,7 +131,7 @@ function formatDate(dateStr: string): string {
       {:else}
         {#each filteredBundles as bundle}
           <div
-            class="bundle-selector-list-row"
+            class="bundle-selector-item-row"
             role="option"
             aria-selected="false"
             tabindex="0"
@@ -143,21 +143,9 @@ function formatDate(dateStr: string): string {
               }
             }}
           >
-            <div class="bundle-selector-list-download">
-              <button
-                class="bundle-selector-download-button"
-                disabled={isDownloaded(bundle)}
-                onclick={e => {
-                  e.stopPropagation()
-                  handleDownload(bundle)
-                }}
-                aria-label="Download bundle"
-              >
-                ↓
-              </button>
-            </div>
-            <span class="bundle-selector-list-bundle-name">{bundle.remote?.name || bundle.local?.name || ''}</span>
-            <span class="bundle-selector-list-bundle-date"
+            <Icon class="bundle-selector-item-location" data={bundle.remote ? faCloud : faLaptop} />
+            <span class="bundle-selector-item-bundle-name">{bundle.remote?.name || bundle.local?.name || ''}</span>
+            <span class="bundle-selector-item-bundle-date"
               >{formatDate(bundle.remote?.lastModified || bundle.local?.lastModified || '')}</span
             >
           </div>
@@ -182,6 +170,8 @@ function formatDate(dateStr: string): string {
 
 <!-- STYLE -->
 <style lang="scss">
+$icon-col-w: 18px;
+
 .bundle-selector {
   display: flex;
   flex-direction: column;
@@ -233,16 +223,16 @@ function formatDate(dateStr: string): string {
   font-style: italic;
 }
 
-.bundle-selector-list-container {
+.bundle-selector-item-container {
   display: flex;
   flex-direction: column;
   flex: 1;
   overflow: hidden;
 }
 
-.bundle-selector-list-header {
+.bundle-selector-item-header {
   display: grid;
-  grid-template-columns: 3rem 1fr auto;
+  grid-template-columns: $icon-col-w 1fr auto;
   gap: 1rem;
   padding: 0.5rem 1.5rem;
   background-color: #333;
@@ -251,7 +241,7 @@ function formatDate(dateStr: string): string {
 }
 
 .bundle-selector-header-download {
-  width: 3rem;
+  width: $icon-col-w;
 }
 
 .bundle-selector-sort-button {
@@ -274,14 +264,14 @@ function formatDate(dateStr: string): string {
   margin-top: -0.1rem;
 }
 
-.bundle-selector-list-content {
+.bundle-selector-item-content {
   flex: 1;
   overflow-y: auto;
 }
 
-.bundle-selector-list-row {
+.bundle-selector-item-row {
   display: grid;
-  grid-template-columns: 3rem 1fr auto;
+  grid-template-columns: $icon-col-w 1fr auto;
   gap: 1rem;
   align-items: center;
   padding: 0.5rem 1.5rem;
@@ -297,48 +287,13 @@ function formatDate(dateStr: string): string {
   }
 }
 
-.bundle-selector-list-download {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.bundle-selector-download-button {
-  width: var(--button-icon-size);
-  height: var(--button-icon-size);
-  padding: 0;
-  background-color: var(--button-bg);
-  border: 1px solid var(--button-border-normal);
-  border-radius: var(--input-border-radius);
-  color: var(--text-color-primary);
-  font-size: 1.25rem;
-  cursor: pointer;
-  opacity: 0;
-
-  .bundle-selector-list-row:hover & {
-    opacity: 1;
-  }
-
-  &:disabled {
-    opacity: 1;
-    cursor: not-allowed;
-    background-color: #333;
-    color: var(--text-color-secondary);
-  }
-
-  &:not(:disabled):hover {
-    background-color: var(--button-bg-hover);
-    border-color: var(--border-color-focused);
-  }
-}
-
-.bundle-selector-list-bundle-name {
+.bundle-selector-item-bundle-name {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.bundle-selector-list-bundle-date {
+.bundle-selector-item-bundle-date {
   color: var(--text-color-secondary);
   white-space: nowrap;
 }

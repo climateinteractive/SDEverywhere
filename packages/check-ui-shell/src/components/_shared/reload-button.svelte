@@ -2,6 +2,8 @@
 
 <!-- SCRIPT -->
 <script lang="ts">
+import { faRotateRight } from '@fortawesome/free-solid-svg-icons'
+
 import IconButton from './icon-button.svelte'
 
 interface Props {
@@ -13,13 +15,12 @@ let { disabled, onClick }: Props = $props()
 </script>
 
 <!-- TEMPLATE -->
-<IconButton icon="↻" class="reload-button" {disabled} ariaLabel="Reload" {onClick} />
+<IconButton icon={faRotateRight} class="reload-button" {disabled} ariaLabel="Reload" {onClick} />
 
 <!-- STYLE -->
 <style lang="scss">
-:global(.reload-button .icon-button-icon) {
-  // The reload icon glyph looks weird in Roboto, so use the default sans-serif font
-  font-family: -apple-system, sans-serif !important;
-  font-size: 1.2rem !important;
+:global(.button.icon-button.reload-button .icon) {
+  width: 10px;
+  height: 10px;
 }
 </style>

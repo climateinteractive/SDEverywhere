@@ -2,6 +2,8 @@
 
 <!-- SCRIPT -->
 <script lang="ts">
+import { faXmark } from '@fortawesome/free-solid-svg-icons'
+
 import IconButton from './icon-button.svelte'
 
 interface Props {
@@ -12,4 +14,4 @@ let { onClick }: Props = $props()
 </script>
 
 <!-- TEMPLATE -->
-<IconButton icon="×" ariaLabel="Close" {onClick} />
+<IconButton icon={faXmark} ariaLabel="Close" {onClick} />
