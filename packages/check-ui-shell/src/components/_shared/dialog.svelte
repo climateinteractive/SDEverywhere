@@ -3,7 +3,6 @@
 <!-- SCRIPT -->
 <script lang="ts">
 import type { Snippet } from 'svelte'
-import { createEventDispatcher } from 'svelte'
 
 import CloseButton from './close-button.svelte'
 
@@ -18,11 +17,8 @@ interface Props {
 
 let { open = $bindable(false), title, children }: Props = $props()
 
-const dispatch = createEventDispatcher()
-
 function closeDialog() {
   open = false
-  dispatch('close')
 }
 
 function handleBackdropClick(event: MouseEvent) {

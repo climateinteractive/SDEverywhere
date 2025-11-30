@@ -2,8 +2,6 @@
 
 <!-- SCRIPT -->
 <script lang="ts">
-import { createEventDispatcher } from 'svelte'
-
 import Button from '../_shared/button.svelte'
 import Dialog from '../_shared/dialog.svelte'
 
@@ -12,24 +10,21 @@ interface Props {
   open: boolean
   /** The initial bundle name. */
   initialName: string
+  /** Callback invoked when the "Save" button is clicked. */
+  onSave?: (newName: string) => void
 }
 
-let { open = $bindable(false), initialName }: Props = $props()
-
-const dispatch = createEventDispatcher()
+let { open = $bindable(false), initialName, onSave }: Props = $props()
 
 let bundleName = $state(initialName)
 
 function handleSave() {
-  // Replace spaces and slashes with dashes
-  const sanitizedName = bundleName.replace(/[\s/]/g, '-')
-  dispatch('save', sanitizedName)
+  onSave?.(bundleName)
   open = false
 }
 
 function handleCancel() {
   open = false
-  dispatch('cancel')
 }
 
 function handleKeydown(event: KeyboardEvent) {
@@ -48,7 +43,7 @@ $effect(() => {
 </script>
 
 <!-- TEMPLATE -->
-<Dialog bind:open title="Save Bundle Copy" on:close={handleCancel}>
+<Dialog bind:open title="Save Bundle Copy">
   <div class="bundle-copy-dialog-form">
     <label for="bundle-name-input" class="bundle-copy-dialog-label">Bundle name</label>
     <input

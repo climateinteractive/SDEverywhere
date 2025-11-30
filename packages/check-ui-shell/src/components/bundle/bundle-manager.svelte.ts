@@ -112,7 +112,9 @@ export class BundleManager {
    */
   public copyBundle(bundle: BundleSpec, newName: string): void {
     if (this.config.onCopyBundle) {
-      this.config.onCopyBundle(bundle, newName)
+      // Replace spaces and slashes with dashes
+      const sanitizedName = newName.replace(/[\s/]/g, '-')
+      this.config.onCopyBundle(bundle, sanitizedName)
     }
   }
 
