@@ -188,7 +188,7 @@ interface StoryArgsWithCallback {
     await userEvent.click(firstBundle)
 
     // Verify that onSelect was called with the correct bundle
-    await expect(args.onSelect).toHaveBeenCalledWith(mockBundleSpec('remote', 'main', '2025-05-14T10:00:00.000Z'))
+    await expect(args.onSelect).toHaveBeenCalledWith(mockBundleSpec('local', 'current', '2025-06-15T10:00:00.000Z'))
   }}
 ></Story>
 
