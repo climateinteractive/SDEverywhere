@@ -8,8 +8,6 @@ import { fileURLToPath } from 'url'
 import type { InlineConfig, ViteDevServer } from 'vite'
 import { build, createServer } from 'vite'
 
-import chokidar from 'chokidar'
-
 import type { BuildContext, Plugin, ResolvedConfig, ResolvedModelSpec } from '@sdeverywhere/build'
 
 import type { Bundle, ConfigInitOptions, SuiteSummary } from '@sdeverywhere/check-core'
@@ -51,29 +49,6 @@ class CheckPlugin implements Plugin {
     const viteConfig = this.createViteConfigForReport('watch', config, testOptions, undefined)
     const server: ViteDevServer = await createServer(viteConfig)
     await server.listen()
-
-    // XXX: Currently Vite doesn't reload the page if a file is added/removed
-    // in the bundles directory (Vite's import.meta.glob handling doesn't
-    // seem to do this automatically), so as a workaround, watch the bundles
-    // directory and restart the server if files are added/removed
-    // TODO: The same problem also applies to the glob for `checks/*.yaml` and
-    // `comparisons/*.yaml` files in the test config, so we should also reload
-    // if files match/unmatch those glob patterns
-    // TODO: Use the bundles directory from the config
-    const bundlesDir = 'bundles'
-    const watcher = chokidar.watch(bundlesDir, {
-      // Watch paths are resolved relative to the project root directory
-      cwd: config.rootDir,
-      // Don't send initial "file added" events
-      ignoreInitial: true,
-      // XXX: Include a delay, otherwise on macOS we sometimes get multiple
-      // change events when a file is saved just once
-      awaitWriteFinish: {
-        stabilityThreshold: 200
-      }
-    })
-    watcher.on('add', () => server.restart())
-    watcher.on('unlink', () => server.restart())
   }
 
   // TODO: Note that this plugin runs as a `postBuild` step because it currently
