@@ -248,7 +248,6 @@ function onKeyDown(event: KeyboardEvent) {
           <BundleSelectorPopover
             bundleManager={viewModel.bundleManager}
             side={openedBundleSelectorSide}
-            activeBundleUrl={''}
             onClose={closeBundleSelector}
             onSelect={bundle => {
               onBundleSelected(bundle)
@@ -319,8 +318,8 @@ function onKeyDown(event: KeyboardEvent) {
   top: 26px;
   width: 500px;
   height: min(calc(100% - 60px), 600px);
-  background-color: #2c2c2c;
-  border: 1px solid #444;
+  background-color: var(--panel-bg);
+  border: 1px solid var(--panel-border);
   border-radius: 12px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
   pointer-events: auto;

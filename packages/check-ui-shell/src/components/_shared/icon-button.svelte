@@ -24,14 +24,19 @@ let { icon, class: classes = '', disabled, ariaLabel, onClick }: Props = $props(
 
 <!-- STYLE -->
 <style lang="scss">
+$button-size: 24px;
+$icon-size: 12px;
+
 :global(.button.icon-button) {
-  width: 24px;
-  height: 24px;
+  width: $button-size;
+  min-width: $button-size;
+  height: $button-size;
+  min-height: $button-size;
   padding: 0 !important;
 }
 
 :global(.icon-button .icon) {
-  width: 12px;
-  height: 12px;
+  width: $icon-size;
+  height: $icon-size;
 }
 </style>

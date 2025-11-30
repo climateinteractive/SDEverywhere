@@ -9,8 +9,10 @@ import fuzzysort from 'fuzzysort'
 import { faCloud } from '@fortawesome/free-regular-svg-icons'
 import { faLaptop } from '@fortawesome/free-solid-svg-icons'
 
+import ContextMenu, { type ContextMenuItem } from '../_shared/context-menu.svelte'
 import ReloadButton from '../_shared/reload-button.svelte'
 
+import BundleCopyDialog from './bundle-copy-dialog.svelte'
 import type { BundleManager } from './bundle-manager.svelte'
 import type { BundleSpec } from './bundle-spec'
 
@@ -27,21 +29,19 @@ let bundles = $derived(bundleManager.bundles)
 let loading = $derived(bundleManager.loading)
 let error = $derived(bundleManager.error)
 
-// function handleDownload(bundle: BundleSpec) {
-//   bundleManager.downloadBundle(bundle)
-// }
-
-function handleReload() {
-  bundleManager.load()
-}
-
-onMount(() => {
-  bundleManager.load()
-})
-
+// Filter and sort state
 let searchTerm = $state('')
 let sortBy = $state<'date' | 'name'>('date')
 let sortDirection = $state<'asc' | 'desc'>('desc')
+
+// Context menu state
+let contextMenuEvent = $state<MouseEvent | undefined>(undefined)
+let contextMenuItems = $state<ContextMenuItem[]>([])
+let contextMenuBundle = $state<BundleSpec | undefined>(undefined)
+
+// Dialog state
+let showCopyDialog = $state(false)
+let copyDialogInitialName = $state('')
 
 const filteredBundles = $derived.by(() => {
   let filtered = [...bundles]
@@ -76,6 +76,10 @@ const filteredBundles = $derived.by(() => {
   })
 })
 
+onMount(() => {
+  bundleManager.load()
+})
+
 function toggleSort(column: 'date' | 'name') {
   if (sortBy === column) {
     sortDirection = sortDirection === 'asc' ? 'desc' : 'asc'
@@ -90,6 +94,56 @@ function formatDate(dateStr: string): string {
   const dateString = date.toLocaleDateString(undefined, { day: 'numeric', month: 'numeric', year: 'numeric' })
   const timeString = date.toLocaleTimeString(undefined, { hour12: true, hour: 'numeric', minute: '2-digit' })
   return `${dateString} at ${timeString}`
+}
+
+function handleReload() {
+  bundleManager.load()
+}
+
+function handleContextMenu(event: MouseEvent, bundle: BundleSpec) {
+  event.preventDefault()
+  contextMenuEvent = event
+  contextMenuBundle = bundle
+
+  if (bundle.remote) {
+    contextMenuItems = [
+      {
+        key: 'save-to-local',
+        displayText: 'Save to Local'
+      }
+    ]
+  } else if (bundle.local) {
+    contextMenuItems = [
+      {
+        key: 'save-copy',
+        displayText: 'Save Copy...'
+      }
+    ]
+  }
+}
+
+function handleContextMenuItemSelected(event: CustomEvent<string>) {
+  const itemKey = event.detail
+
+  if (itemKey === 'save-to-local' && contextMenuBundle) {
+    // Download the remote bundle to local storage
+    bundleManager.downloadBundle(contextMenuBundle)
+  } else if (itemKey === 'save-copy' && contextMenuBundle) {
+    // Show the copy dialog
+    const bundleName = contextMenuBundle.local?.name || ''
+    copyDialogInitialName = `${bundleName} copy`
+    showCopyDialog = true
+  }
+
+  // Close the context menu
+  contextMenuEvent = undefined
+  contextMenuBundle = undefined
+}
+
+function handleSaveCopy(event: CustomEvent<string>) {
+  // Copy the local bundle file using the chosen name
+  const sanitizedName = event.detail
+  bundleManager.copyBundle(contextMenuBundle, sanitizedName)
 }
 </script>
 
@@ -142,6 +196,7 @@ function formatDate(dateStr: string): string {
             aria-selected="false"
             tabindex="0"
             onclick={() => onSelect?.(bundle)}
+            oncontextmenu={e => handleContextMenu(e, bundle)}
             onkeydown={e => {
               if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault()
@@ -173,6 +228,16 @@ function formatDate(dateStr: string): string {
     <ReloadButton disabled={loading} onClick={() => handleReload()} />
   </div>
 </div>
+
+{#if contextMenuEvent}
+  <ContextMenu
+    items={contextMenuItems}
+    initialEvent={contextMenuEvent}
+    on:item-selected={handleContextMenuItemSelected}
+  />
+{/if}
+
+<BundleCopyDialog bind:open={showCopyDialog} initialName={copyDialogInitialName} on:save={handleSaveCopy} />
 
 <!-- STYLE -->
 <style lang="scss">

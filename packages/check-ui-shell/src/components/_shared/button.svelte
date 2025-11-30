@@ -5,18 +5,30 @@
 import type { Snippet } from 'svelte'
 
 interface Props {
+  /** The additional classes to apply. */
   class?: string
+  /** Whether the button is disabled. */
   disabled?: boolean
+  /** Whether the button is a primary/default button. */
+  primary?: boolean
+  /** The aria label for the button. */
   ariaLabel?: string
+  /** The click handler for the button. */
   onClick?: () => void
+  /** The children of the button. */
   children?: Snippet
 }
 
-let { class: classes = '', disabled = false, ariaLabel, onClick, children }: Props = $props()
+let { class: classes = '', disabled = false, primary = false, ariaLabel, onClick, children }: Props = $props()
 </script>
 
 <!-- TEMPLATE -->
-<button class="button {classes}" {disabled} aria-label={ariaLabel} onclick={() => onClick?.()}>
+<button
+  class="button {classes} {primary ? 'primary' : ''}"
+  {disabled}
+  aria-label={ariaLabel}
+  onclick={() => onClick?.()}
+>
   {@render children?.()}
 </button>
 
@@ -37,6 +49,16 @@ let { class: classes = '', disabled = false, ariaLabel, onClick, children }: Pro
 
   &:hover:not(:disabled) {
     background-color: var(--button-bg-hover);
+    border-color: var(--button-border-hover);
+  }
+
+  &.primary {
+    background-color: var(--button-bg-primary-normal);
+    border-color: var(--button-bg-primary-normal);
+  }
+
+  &.primary:hover:not(:disabled) {
+    background-color: var(--button-bg-primary-hover);
     border-color: var(--button-border-hover);
   }
 

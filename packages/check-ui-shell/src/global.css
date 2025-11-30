@@ -92,6 +92,8 @@ select > option {
   /* Buttons */
   --button-bg-normal: unset;
   --button-bg-hover: #555;
+  --button-bg-primary-normal: #0077cc;
+  --button-bg-primary-hover: #005fa3;
   --button-border-normal: #555;
   --button-border-hover: #999;
   --button-border-radius: 8px;

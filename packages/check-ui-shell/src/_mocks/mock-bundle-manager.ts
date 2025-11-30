@@ -48,9 +48,10 @@ export const localBundles: BundleSpec[] = [
 export const allBundles: BundleSpec[] = [...remoteBundles, ...localBundles]
 
 export function bundleManagerFromBundles(options?: {
-  bundles: BundleSpec[]
+  bundles?: BundleSpec[]
   bundleUrlL?: string
   bundleUrlR?: string
+  onDownloadBundle?: (bundle: BundleSpec) => void
 }): BundleManager {
   const bundles = options?.bundles || allBundles
   const bundleUrlL = options?.bundleUrlL || mockBundleUrl('remote', 'main')
@@ -81,6 +82,7 @@ export function bundleManagerFromBundles(options?: {
     bundleUrlL,
     bundleUrlR,
     remoteBundlesUrl,
-    getLocalBundles: localBundlesList.length > 0 ? async () => localBundlesList : undefined
+    getLocalBundles: localBundlesList.length > 0 ? async () => localBundlesList : undefined,
+    onDownloadBundle: options?.onDownloadBundle
   })
 }

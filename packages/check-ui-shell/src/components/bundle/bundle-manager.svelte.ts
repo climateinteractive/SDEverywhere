@@ -22,14 +22,19 @@ export interface BundleManagerConfig {
   remoteBundlesUrl?: string
 
   /**
-   * Optional callback to get the list of locally available bundles.
+   * Callback to get the list of locally available bundles.
    */
   getLocalBundles?: () => Promise<BundleLocation[]>
 
   /**
-   * Optional callback to download a bundle from the network to local storage.
+   * Callback to download a remote bundle from the network to the local bundles directory.
    */
   onDownloadBundle?: (bundle: BundleSpec) => void
+
+  /**
+   * Callback to copy a local bundle file with a new name.
+   */
+  onCopyBundle?: (bundle: BundleSpec, newName: string) => void
 }
 
 /**
@@ -62,7 +67,7 @@ export class BundleManager {
   /**
    * Load (or reload) bundles from remote and local sources.
    */
-  async load(): Promise<void> {
+  public async load(): Promise<void> {
     this.loading = true
     this.error = undefined
 
@@ -92,13 +97,22 @@ export class BundleManager {
   }
 
   /**
-   * Download a bundle from the network to local storage.
+   * Download a remote bundle from the network to the local bundles directory.
    *
    * @param bundle The bundle to download.
    */
-  downloadBundle(bundle: BundleSpec): void {
+  public downloadBundle(bundle: BundleSpec): void {
     if (this.config.onDownloadBundle) {
       this.config.onDownloadBundle(bundle)
+    }
+  }
+
+  /**
+   * Copy a local bundle fileto a new name.
+   */
+  public copyBundle(bundle: BundleSpec, newName: string): void {
+    if (this.config.onCopyBundle) {
+      this.config.onCopyBundle(bundle, newName)
     }
   }
 

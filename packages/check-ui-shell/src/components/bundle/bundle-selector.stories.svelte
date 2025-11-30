@@ -1,14 +1,16 @@
 <!-- Copyright (c) 2025 Climate Interactive / New Venture Fund. All rights reserved. -->
 
 <script module lang="ts">
-import { expect, userEvent, fn, waitFor } from 'storybook/test'
+import { expect, fireEvent, userEvent, fn, waitFor } from 'storybook/test'
 import { defineMeta, type Args } from '@storybook/addon-svelte-csf'
+import type { Mock } from 'vitest'
 
 import { bundleManagerFromBundles, localBundles, mockBundleSpec } from '../../_mocks/mock-bundle-manager'
 
 import StoryDecorator from '../_storybook/story-decorator.svelte'
 
 import { BundleManager } from './bundle-manager.svelte'
+import type { BundleSpec } from './bundle-spec'
 import BundleSelector from './bundle-selector.svelte'
 
 const { Story } = defineMeta({
@@ -18,11 +20,25 @@ const { Story } = defineMeta({
     onSelect: fn()
   }
 })
+
+interface StoryArgsWithCallback {
+  onDownloadBundle: Mock
+  side: 'left' | 'right'
+  onSelect?: (bundle: BundleSpec) => void
+}
 </script>
 
 {#snippet template(args: Args<typeof Story>)}
   <StoryDecorator width={600} height={400}>
     <BundleSelector {...args} />
+  </StoryDecorator>
+{/snippet}
+
+{#snippet templateWithCallback(args: StoryArgsWithCallback)}
+  {@const onDownloadBundle = args.onDownloadBundle}
+  {@const bundleManager = bundleManagerFromBundles({ onDownloadBundle })}
+  <StoryDecorator width={600} height={400}>
+    <BundleSelector side={args.side} {bundleManager} onSelect={args.onSelect} />
   </StoryDecorator>
 {/snippet}
 
@@ -190,44 +206,6 @@ const { Story } = defineMeta({
   }}
 ></Story>
 
-<!--
-<Story
-  name="Download Button - Remote Only"
-  {template}
-  args={{
-    bundleManager: bundleManagerFromBundles([mockBundleSpec('main', '2025-05-14T10:00:00.000Z', false)]),
-    side: 'left'
-  }}
-  play={async ({ canvas }) => {
-    // Wait for loading to complete
-    await waitFor(() => expect(canvas.queryByText('Loading...')).not.toBeInTheDocument(), { timeout: 3000 })
-
-    // Get the download button (should be enabled for remote-only bundle)
-    const downloadButton = canvas.getByRole('button', { name: /download/i })
-    await expect(downloadButton).toBeInTheDocument()
-    await expect(downloadButton).not.toBeDisabled()
-  }}
-></Story>
-
-<Story
-  name="Download Button - Local Bundle"
-  {template}
-  args={{
-    bundleManager: bundleManagerFromBundles([mockBundleSpec('main', '2025-05-14T10:00:00.000Z', true)]),
-    side: 'left'
-  }}
-  play={async ({ canvas }) => {
-    // Wait for loading to complete
-    await waitFor(() => expect(canvas.queryByText('Loading...')).not.toBeInTheDocument(), { timeout: 3000 })
-
-    // Get the download button (should be disabled for local bundle)
-    const downloadButton = canvas.getByRole('button', { name: /download/i })
-    await expect(downloadButton).toBeInTheDocument()
-    await expect(downloadButton).toBeDisabled()
-  }}
-></Story>
--->
-
 <Story
   name="Status Bar with Reload"
   {template}
@@ -312,5 +290,155 @@ const { Story } = defineMeta({
     bundleItems.forEach(async (item, index) => {
       await expect(item).toHaveTextContent(expectedOrder[index])
     })
+  }}
+></Story>
+
+<Story
+  name="Context Menu - Remote Bundle Save to Local"
+  template={templateWithCallback as unknown as typeof template}
+  args={{
+    onDownloadBundle: fn(),
+    side: 'left',
+    onSelect: fn()
+  } as unknown as Args<typeof Story>}
+  play={async ({ canvas, args }) => {
+    const customArgs = args as unknown as StoryArgsWithCallback
+    // Wait for loading to complete
+    await waitFor(() => expect(canvas.queryByText('Loading...')).not.toBeInTheDocument(), { timeout: 3000 })
+
+    // Find a remote bundle (main)
+    const mainBundle = canvas.getByRole('option', { name: 'main' })
+
+    // Right-click on the remote bundle
+    fireEvent.contextMenu(mainBundle)
+
+    // Verify context menu appears
+    const contextMenu = await canvas.findByRole('menuitem', { name: /Save to Local/i })
+    await expect(contextMenu).toBeInTheDocument()
+
+    // Click the "Save to Local" option
+    await userEvent.click(contextMenu)
+
+    // Verify that downloadBundle was called with the correct bundle
+    await waitFor(() => {
+      expect(customArgs.onDownloadBundle).toHaveBeenCalled()
+    })
+  }}
+></Story>
+
+<Story
+  name="Context Menu - Local Bundle Save Copy"
+  {template}
+  args={{
+    bundleManager: bundleManagerFromBundles(),
+    side: 'left'
+  }}
+  play={async ({ canvas }) => {
+    // Wait for loading to complete
+    await waitFor(() => expect(canvas.queryByText('Loading...')).not.toBeInTheDocument(), { timeout: 3000 })
+
+    // Find a local bundle
+    const localBundle = canvas.getByRole('option', { name: 'local-only' })
+
+    // Right-click on the local bundle
+    fireEvent.contextMenu(localBundle)
+
+    // Verify context menu appears
+    const contextMenu = await canvas.findByRole('menuitem', { name: /Save Copy\.\.\./i })
+    await expect(contextMenu).toBeInTheDocument()
+
+    // Click the "Save Copy..." option
+    await userEvent.click(contextMenu)
+
+    // Verify dialog appears with the default name
+    const dialog = await canvas.findByRole('dialog')
+    await expect(dialog).toBeInTheDocument()
+
+    // Verify the input has the default value
+    const nameInput = canvas.getByRole('textbox', { name: /Bundle name/i })
+    await expect(nameInput).toHaveValue('local-only copy')
+
+    // Change the name
+    await userEvent.clear(nameInput)
+    await userEvent.type(nameInput, 'my-new-bundle')
+
+    // Click the Save button
+    const saveButton = canvas.getByRole('button', { name: /Save/i })
+    await userEvent.click(saveButton)
+
+    // Verify dialog closes
+    await waitFor(() => expect(canvas.queryByRole('dialog')).not.toBeInTheDocument())
+  }}
+></Story>
+
+<Story
+  name="Context Menu - Remote Bundle with Slashes in Name"
+  {template}
+  args={{
+    bundleManager: bundleManagerFromBundles(),
+    side: 'left'
+  }}
+  play={async ({ canvas }) => {
+    // Wait for loading to complete
+    await waitFor(() => expect(canvas.queryByText('Loading...')).not.toBeInTheDocument(), { timeout: 3000 })
+
+    // Find a remote bundle with slashes (release/25.5.0)
+    const releaseBundle = canvas.getByRole('option', { name: 'release/25.5.0' })
+
+    // Right-click on the remote bundle
+    fireEvent.contextMenu(releaseBundle)
+
+    // Verify context menu appears
+    const contextMenu = await canvas.findByRole('menuitem', { name: /Save to Local/i })
+    await expect(contextMenu).toBeInTheDocument()
+
+    // Click the "Save to Local" option
+    await userEvent.click(contextMenu)
+
+    // The bundle name should have "/" replaced with "-" when saved
+    // This will be verified by the implementation
+  }}
+></Story>
+
+<Story
+  name="Context Menu - Local Bundle with Spaces in Name"
+  {template}
+  args={{
+    bundleManager: bundleManagerFromBundles({
+      bundles: [mockBundleSpec('local', 'my bundle name', '2025-05-14T10:00:00.000Z')]
+    }),
+    side: 'left'
+  }}
+  play={async ({ canvas }) => {
+    // Wait for loading to complete
+    await waitFor(() => expect(canvas.queryByText('Loading...')).not.toBeInTheDocument(), { timeout: 3000 })
+
+    // Find the local bundle
+    const localBundle = canvas.getByRole('option', { name: 'my bundle name' })
+
+    // Right-click on the local bundle
+    fireEvent.contextMenu(localBundle)
+
+    // Verify context menu appears
+    const contextMenu = await canvas.findByRole('menuitem', { name: /Save Copy\.\.\./i })
+    await expect(contextMenu).toBeInTheDocument()
+
+    // Click the "Save Copy..." option
+    await userEvent.click(contextMenu)
+
+    // Verify dialog appears with the default name
+    const dialog = await canvas.findByRole('dialog')
+    await expect(dialog).toBeInTheDocument()
+
+    // Verify the input has the default value with " copy" appended
+    const nameInput = canvas.getByRole('textbox', { name: /Bundle name/i })
+    await expect(nameInput).toHaveValue('my bundle name copy')
+
+    // Click Save without changing the name
+    const saveButton = canvas.getByRole('button', { name: /Save/i })
+    await userEvent.click(saveButton)
+
+    // The saved name should have spaces replaced with "-"
+    // This will be verified by the implementation
   }}
 ></Story>
