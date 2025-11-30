@@ -137,12 +137,11 @@ function handleContextMenuItemSelected(event: CustomEvent<string>) {
 
   // Close the context menu
   contextMenuEvent = undefined
-  contextMenuBundle = undefined
 }
 
-function handleSaveCopy(newName: string) {
+function handleSaveCopy(bundle: BundleSpec, newName: string) {
   // Copy the local bundle file using the chosen name
-  bundleManager.copyBundle(contextMenuBundle, newName)
+  bundleManager.copyBundle(bundle, newName)
 }
 </script>
 
@@ -236,7 +235,12 @@ function handleSaveCopy(newName: string) {
   />
 {/if}
 
-<BundleCopyDialog bind:open={showCopyDialog} initialName={copyDialogInitialName} onSave={handleSaveCopy} />
+<BundleCopyDialog
+  bind:open={showCopyDialog}
+  srcBundle={contextMenuBundle}
+  initialName={copyDialogInitialName}
+  onSave={handleSaveCopy}
+/>
 
 <!-- STYLE -->
 <style lang="scss">

@@ -4,22 +4,25 @@
 <script lang="ts">
 import Button from '../_shared/button.svelte'
 import Dialog from '../_shared/dialog.svelte'
+import type { BundleSpec } from './bundle-spec'
 
 interface Props {
   /** Whether the dialog is visible. */
   open: boolean
+  /** The bundle to be copied. */
+  srcBundle: BundleSpec
   /** The initial bundle name. */
   initialName: string
   /** Callback invoked when the "Save" button is clicked. */
-  onSave?: (newName: string) => void
+  onSave?: (bundle: BundleSpec, newName: string) => void
 }
 
-let { open = $bindable(false), initialName, onSave }: Props = $props()
+let { open = $bindable(false), srcBundle, initialName, onSave }: Props = $props()
 
 let bundleName = $state(initialName)
 
 function handleSave() {
-  onSave?.(bundleName)
+  onSave?.(srcBundle, bundleName)
   open = false
 }
 

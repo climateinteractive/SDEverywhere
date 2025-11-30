@@ -59,7 +59,7 @@ export class BundleManager {
   /** Reactive state containing any error message from the last load operation. */
   public error = $state<string | undefined>(undefined)
 
-  constructor(private readonly config: BundleManagerConfig) {
+  constructor(public readonly config: BundleManagerConfig) {
     this.activeBundleUrlL = config.bundleUrlL || ''
     this.activeBundleUrlR = config.bundleUrlR || ''
   }

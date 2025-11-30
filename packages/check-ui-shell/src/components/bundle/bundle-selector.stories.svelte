@@ -3,14 +3,12 @@
 <script module lang="ts">
 import { expect, fireEvent, userEvent, fn, waitFor } from 'storybook/test'
 import { defineMeta, type Args } from '@storybook/addon-svelte-csf'
-import type { Mock } from 'vitest'
 
 import { bundleManagerFromBundles, localBundles, mockBundleSpec } from '../../_mocks/mock-bundle-manager'
 
 import StoryDecorator from '../_storybook/story-decorator.svelte'
 
 import { BundleManager } from './bundle-manager.svelte'
-import type { BundleSpec } from './bundle-spec'
 import BundleSelector from './bundle-selector.svelte'
 
 const { Story } = defineMeta({
@@ -20,25 +18,11 @@ const { Story } = defineMeta({
     onSelect: fn()
   }
 })
-
-interface StoryArgsWithCallback {
-  onDownloadBundle: Mock
-  side: 'left' | 'right'
-  onSelect?: (bundle: BundleSpec) => void
-}
 </script>
 
 {#snippet template(args: Args<typeof Story>)}
   <StoryDecorator width={600} height={400}>
     <BundleSelector {...args} />
-  </StoryDecorator>
-{/snippet}
-
-{#snippet templateWithCallback(args: StoryArgsWithCallback)}
-  {@const onDownloadBundle = args.onDownloadBundle}
-  {@const bundleManager = bundleManagerFromBundles({ onDownloadBundle })}
-  <StoryDecorator width={600} height={400}>
-    <BundleSelector side={args.side} {bundleManager} onSelect={args.onSelect} />
   </StoryDecorator>
 {/snippet}
 
@@ -146,8 +130,12 @@ interface StoryArgsWithCallback {
     side: 'left'
   }}
   play={async ({ canvas }) => {
-    // Verify loading state message
+    // Verify loading message is shown in status bar
     await expect(canvas.getByText('Loading...')).toBeInTheDocument()
+
+    // Verify reload button is disabled while loading
+    const reloadButton = canvas.getByRole('button', { name: /reload/i })
+    await expect(reloadButton).toBeDisabled()
   }}
 ></Story>
 
@@ -230,29 +218,6 @@ interface StoryArgsWithCallback {
 ></Story>
 
 <Story
-  name="Status Bar - Loading State"
-  {template}
-  args={{
-    bundleManager: new BundleManager({
-      getLocalBundles: async () => {
-        // Simulate slow loading
-        await new Promise(resolve => setTimeout(resolve, 10000))
-        return []
-      }
-    }),
-    side: 'left'
-  }}
-  play={async ({ canvas }) => {
-    // Verify loading message is shown in status bar
-    await expect(canvas.getByText('Loading...')).toBeInTheDocument()
-
-    // Verify reload button is disabled while loading
-    const reloadButton = canvas.getByRole('button', { name: /reload/i })
-    await expect(reloadButton).toBeDisabled()
-  }}
-></Story>
-
-<Story
   name="No Sources Provided"
   {template}
   args={{
@@ -294,15 +259,14 @@ interface StoryArgsWithCallback {
 ></Story>
 
 <Story
-  name="Context Menu - Remote Bundle Save to Local"
-  template={templateWithCallback as unknown as typeof template}
+  name="Save Remote Bundle"
+  {template}
   args={{
-    onDownloadBundle: fn(),
+    bundleManager: bundleManagerFromBundles({ onDownloadBundle: fn() }),
     side: 'left',
     onSelect: fn()
-  } as unknown as Args<typeof Story>}
+  }}
   play={async ({ canvas, args }) => {
-    const customArgs = args as unknown as StoryArgsWithCallback
     // Wait for loading to complete
     await waitFor(() => expect(canvas.queryByText('Loading...')).not.toBeInTheDocument(), { timeout: 3000 })
 
@@ -319,15 +283,13 @@ interface StoryArgsWithCallback {
     // Click the "Save to Local" option
     await userEvent.click(contextMenu)
 
-    // Verify that downloadBundle was called with the correct bundle
-    await waitFor(() => {
-      expect(customArgs.onDownloadBundle).toHaveBeenCalled()
-    })
+    // Verify that `onDownloadBundle` was called with the correct bundle
+    await expect(args.bundleManager.config.onDownloadBundle).toHaveBeenCalled()
   }}
 ></Story>
 
 <Story
-  name="Context Menu - Local Bundle Save Copy"
+  name="Copy Local Bundle"
   {template}
   args={{
     bundleManager: bundleManagerFromBundles(),
@@ -372,49 +334,21 @@ interface StoryArgsWithCallback {
 ></Story>
 
 <Story
-  name="Context Menu - Remote Bundle with Slashes in Name"
-  {template}
-  args={{
-    bundleManager: bundleManagerFromBundles(),
-    side: 'left'
-  }}
-  play={async ({ canvas }) => {
-    // Wait for loading to complete
-    await waitFor(() => expect(canvas.queryByText('Loading...')).not.toBeInTheDocument(), { timeout: 3000 })
-
-    // Find a remote bundle with slashes (release/25.5.0)
-    const releaseBundle = canvas.getByRole('option', { name: 'release/25.5.0' })
-
-    // Right-click on the remote bundle
-    fireEvent.contextMenu(releaseBundle)
-
-    // Verify context menu appears
-    const contextMenu = await canvas.findByRole('menuitem', { name: /Save to Local/i })
-    await expect(contextMenu).toBeInTheDocument()
-
-    // Click the "Save to Local" option
-    await userEvent.click(contextMenu)
-
-    // The bundle name should have "/" replaced with "-" when saved
-    // This will be verified by the implementation
-  }}
-></Story>
-
-<Story
-  name="Context Menu - Local Bundle with Spaces in Name"
+  name="Copy Local Bundle with Spaces in New Name"
   {template}
   args={{
     bundleManager: bundleManagerFromBundles({
-      bundles: [mockBundleSpec('local', 'my bundle name', '2025-05-14T10:00:00.000Z')]
+      bundles: [mockBundleSpec('local', 'my-bundle-name', '2025-05-14T10:00:00.000Z')],
+      onCopyBundle: fn()
     }),
     side: 'left'
   }}
-  play={async ({ canvas }) => {
+  play={async ({ canvas, args }) => {
     // Wait for loading to complete
     await waitFor(() => expect(canvas.queryByText('Loading...')).not.toBeInTheDocument(), { timeout: 3000 })
 
     // Find the local bundle
-    const localBundle = canvas.getByRole('option', { name: 'my bundle name' })
+    const localBundle = canvas.getByRole('option', { name: 'my-bundle-name' })
 
     // Right-click on the local bundle
     fireEvent.contextMenu(localBundle)
@@ -432,13 +366,16 @@ interface StoryArgsWithCallback {
 
     // Verify the input has the default value with " copy" appended
     const nameInput = canvas.getByRole('textbox', { name: /Bundle name/i })
-    await expect(nameInput).toHaveValue('my bundle name copy')
+    await expect(nameInput).toHaveValue('my-bundle-name copy')
 
     // Click Save without changing the name
     const saveButton = canvas.getByRole('button', { name: /Save/i })
     await userEvent.click(saveButton)
 
-    // The saved name should have spaces replaced with "-"
-    // This will be verified by the implementation
+    // Verify that `onCopyBundle` was called with the correct bundle and new name
+    await expect(args.bundleManager.config.onCopyBundle).toHaveBeenCalledWith(
+      mockBundleSpec('local', 'my-bundle-name', '2025-05-14T10:00:00.000Z'),
+      'my-bundle-name-copy'
+    )
   }}
 ></Story>
