@@ -198,8 +198,8 @@ async function initForLocal(): Promise<void> {
       bundleUrlR,
       remoteBundlesUrl: remoteBundlesUrl !== '' ? remoteBundlesUrl : undefined,
       getLocalBundles: import.meta.hot ? getLocalBundles : undefined,
-      onDownloadBundle: import.meta.hot ? onDownloadBundle : undefined,
-      onCopyBundle: import.meta.hot ? onCopyBundle : undefined,
+      downloadBundle: import.meta.hot ? downloadBundle : undefined,
+      copyBundle: import.meta.hot ? copyBundle : undefined,
       onBundlesChanged: import.meta.hot ? onBundlesChanged : undefined
     }
   })
@@ -313,10 +313,10 @@ async function getLocalBundles(): Promise<BundleLocation[]> {
 /**
  * Download a bundle from the network (only in development mode with HMR).
  */
-function onDownloadBundle(bundle: BundleSpec): void {
+function downloadBundle(bundle: BundleSpec): void {
   // Only available in development mode with HMR
   if (!import.meta.hot) {
-    throw new Error('onDownloadBundle is only available in development mode with HMR enabled')
+    throw new Error('downloadBundle is only available in development mode with HMR enabled')
   }
 
   if (!bundle.remote) {
@@ -357,10 +357,10 @@ function onDownloadBundle(bundle: BundleSpec): void {
 /**
  * Copy a local bundle file to a new name.
  */
-function onCopyBundle(bundle: BundleSpec, newName: string): void {
+function copyBundle(bundle: BundleSpec, newName: string): void {
   // Only available in development mode with HMR
   if (!import.meta.hot) {
-    throw new Error('onCopyBundle is only available in development mode with HMR enabled')
+    throw new Error('copyBundle is only available in development mode with HMR enabled')
   }
 
   if (!bundle.local) {

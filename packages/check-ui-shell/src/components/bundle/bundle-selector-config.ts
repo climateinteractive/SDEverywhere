@@ -42,7 +42,7 @@ export interface BundleSelectorConfig {
    *
    * @param bundle The bundle to download.
    */
-  onDownloadBundle?: (bundle: BundleSpec) => void
+  downloadBundle?: (bundle: BundleSpec) => void
 
   /**
    * Copy a local bundle file to a new name.
@@ -53,7 +53,7 @@ export interface BundleSelectorConfig {
    * @param bundle The bundle to copy.
    * @param newName The new name for the copied bundle.
    */
-  onCopyBundle?: (bundle: BundleSpec, newName: string) => void
+  copyBundle?: (bundle: BundleSpec, newName: string) => void
 
   /**
    * Add a listener that is notified when there are file system changes detected in the

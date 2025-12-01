@@ -75,8 +75,8 @@ export class BundleManager {
    * @param bundle The bundle to download.
    */
   public downloadBundle(bundle: BundleSpec): void {
-    if (this.config.onDownloadBundle) {
-      this.config.onDownloadBundle(bundle)
+    if (this.config.downloadBundle) {
+      this.config.downloadBundle(bundle)
     }
   }
 
@@ -84,10 +84,10 @@ export class BundleManager {
    * Copy a local bundle file to a new name.
    */
   public copyBundle(bundle: BundleSpec, newName: string): void {
-    if (this.config.onCopyBundle) {
+    if (this.config.copyBundle) {
       // Replace spaces with dashes (but preserve slashes)
       const sanitizedName = newName.replace(/\s/g, '-')
-      this.config.onCopyBundle(bundle, sanitizedName)
+      this.config.copyBundle(bundle, sanitizedName)
     }
   }
 

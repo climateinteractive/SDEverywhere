@@ -262,7 +262,7 @@ const { Story } = defineMeta({
   name="Save Remote Bundle"
   {template}
   args={{
-    bundleManager: bundleManagerFromBundles({ onDownloadBundle: fn() }),
+    bundleManager: bundleManagerFromBundles({ downloadBundle: fn() }),
     side: 'left',
     onSelect: fn()
   }}
@@ -283,8 +283,8 @@ const { Story } = defineMeta({
     // Click the "Save to Local" option
     await userEvent.click(contextMenu)
 
-    // Verify that `onDownloadBundle` was called with the correct bundle
-    await expect(args.bundleManager.config.onDownloadBundle).toHaveBeenCalled()
+    // Verify that `downloadBundle` was called with the correct bundle
+    await expect(args.bundleManager.config.downloadBundle).toHaveBeenCalled()
   }}
 ></Story>
 
@@ -339,7 +339,7 @@ const { Story } = defineMeta({
   args={{
     bundleManager: bundleManagerFromBundles({
       bundles: [mockBundleSpec('local', 'my-bundle-name', '2025-05-14T10:00:00.000Z')],
-      onCopyBundle: fn()
+      copyBundle: fn()
     }),
     side: 'left'
   }}
@@ -372,8 +372,8 @@ const { Story } = defineMeta({
     const saveButton = canvas.getByRole('button', { name: /Save/i })
     await userEvent.click(saveButton)
 
-    // Verify that `onCopyBundle` was called with the correct bundle and new name
-    await expect(args.bundleManager.config.onCopyBundle).toHaveBeenCalledWith(
+    // Verify that `copyBundle` was called with the correct bundle and new name
+    await expect(args.bundleManager.config.copyBundle).toHaveBeenCalledWith(
       mockBundleSpec('local', 'my-bundle-name', '2025-05-14T10:00:00.000Z'),
       'my-bundle-name-copy'
     )

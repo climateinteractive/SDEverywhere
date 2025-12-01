@@ -51,8 +51,8 @@ export function bundleManagerFromBundles(options?: {
   bundles?: BundleSpec[]
   bundleUrlL?: string
   bundleUrlR?: string
-  onDownloadBundle?: (bundle: BundleSpec) => void
-  onCopyBundle?: (bundle: BundleSpec, newName: string) => void
+  downloadBundle?: (bundle: BundleSpec) => void
+  copyBundle?: (bundle: BundleSpec, newName: string) => void
 }): BundleManager {
   const bundles = options?.bundles || allBundles
   const bundleUrlL = options?.bundleUrlL || mockBundleUrl('remote', 'main')
@@ -84,7 +84,7 @@ export function bundleManagerFromBundles(options?: {
     bundleUrlR,
     remoteBundlesUrl,
     getLocalBundles: localBundlesList.length > 0 ? async () => localBundlesList : undefined,
-    onDownloadBundle: options?.onDownloadBundle,
-    onCopyBundle: options?.onCopyBundle
+    downloadBundle: options?.downloadBundle,
+    copyBundle: options?.copyBundle
   })
 }
