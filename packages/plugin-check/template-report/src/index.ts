@@ -197,7 +197,8 @@ async function initForLocal(): Promise<void> {
     bundleUrlR,
     remoteBundlesUrl: remoteBundlesUrl !== '' ? remoteBundlesUrl : undefined,
     getLocalBundles: import.meta.hot ? getLocalBundles : undefined,
-    onDownloadBundle: import.meta.hot ? onDownloadBundle : undefined
+    onDownloadBundle: import.meta.hot ? onDownloadBundle : undefined,
+    onCopyBundle: import.meta.hot ? onCopyBundle : undefined
   })
 }
 
@@ -349,4 +350,49 @@ function onDownloadBundle(bundle: BundleSpec): void {
   import.meta.hot.send('download-bundle', { url, name })
 
   console.log(`Requesting download of bundle: ${name} from ${url}`)
+}
+
+/**
+ * Copy a local bundle file to a new name.
+ */
+function onCopyBundle(bundle: BundleSpec, newName: string): void {
+  // Only available in development mode with HMR
+  if (!import.meta.hot) {
+    throw new Error('onCopyBundle is only available in development mode with HMR enabled')
+  }
+
+  if (!bundle.local) {
+    throw new Error('Only local bundles can be copied')
+  }
+
+  const { url, name } = bundle.local
+
+  // Set up listeners for copy result
+  const handleSuccess = (data: { name: string; filePath: string }) => {
+    cleanup()
+    if (data.name === newName) {
+      console.log(`Successfully copied bundle: ${name} to ${data.filePath}`)
+      // TODO: Optionally refresh the bundle selector UI
+    }
+  }
+
+  const handleError = (data: { name: string; error: string }) => {
+    cleanup()
+    if (data.name === name) {
+      console.error(`Failed to copy bundle ${name}:`, data.error)
+    }
+  }
+
+  const cleanup = () => {
+    import.meta.hot.off('copy-bundle-success', handleSuccess)
+    import.meta.hot.off('copy-bundle-error', handleError)
+  }
+
+  import.meta.hot.on('copy-bundle-success', handleSuccess)
+  import.meta.hot.on('copy-bundle-error', handleError)
+
+  // Send copy request
+  import.meta.hot.send('copy-bundle', { url, name, newName })
+
+  console.log(`Requesting copy of bundle: ${name} to ${newName}`)
 }

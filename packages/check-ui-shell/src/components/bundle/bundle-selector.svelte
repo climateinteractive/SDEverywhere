@@ -177,7 +177,7 @@ function handleSaveCopy(bundle: BundleSpec, newName: string) {
       </button>
     </div>
 
-    <div class="bundle-selector-item-content">
+    <div class="bundle-selector-item-content" role="listbox">
       {#if error || loading}
         <div class="bundle-selector-empty"></div>
       {:else if bundles.length === 0}

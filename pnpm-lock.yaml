@@ -1011,6 +1011,10 @@ importers:
       '@sdeverywhere/runtime-async':
         specifier: workspace:*
         version: link:../../../packages/runtime-async
+    devDependencies:
+      '@types/node':
+        specifier: ^20.14.8
+        version: 20.19.19
 
   tests/integration/unicode:
     dependencies:

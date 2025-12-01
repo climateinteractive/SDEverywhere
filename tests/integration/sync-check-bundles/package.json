@@ -8,9 +8,13 @@
     "lint": "eslint tests --max-warnings 0",
     "dev": "sde dev",
     "build": "sde bundle",
+    "serve-test-bundles": "pnpx http-server --cors -p 9000 .",
     "playwright:test": "playwright test",
+    "playwright:test:dev": "PLAYWRIGHT_WITH_DEV_SERVER=1 playwright test",
     "playwright:ui": "playwright test --ui",
+    "playwright:ui:dev": "PLAYWRIGHT_WITH_DEV_SERVER=1 playwright test --ui",
     "playwright:debug": "playwright test --debug",
+    "playwright:debug:dev": "PLAYWRIGHT_WITH_DEV_SERVER=1 playwright test --debug",
     "test": "run-s build playwright:test",
     "ci:int-test": "run-s clean test"
   },
@@ -21,5 +25,8 @@
     "@sdeverywhere/plugin-worker": "workspace:*",
     "@sdeverywhere/runtime": "workspace:*",
     "@sdeverywhere/runtime-async": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.8"
   }
 }

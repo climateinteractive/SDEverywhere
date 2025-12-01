@@ -27,7 +27,8 @@ export function initAppShell(configOptions: ConfigOptions, appShellOptions?: App
           bundleUrlR: appShellOptions.bundleUrlR,
           remoteBundlesUrl: appShellOptions.remoteBundlesUrl,
           getLocalBundles: appShellOptions.getLocalBundles,
-          onDownloadBundle: appShellOptions.onDownloadBundle
+          onDownloadBundle: appShellOptions.onDownloadBundle,
+          onCopyBundle: appShellOptions.onCopyBundle
         })
       }
 

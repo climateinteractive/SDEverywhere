@@ -18,8 +18,9 @@
     "lib": ["dom", "dom.iterable", "es2016"],
     // Use bundler-friendly module resolution
     "moduleResolution": "bundler",
+    "types": ["node"],
     "outDir": "/dev/shm",
     "noEmit": true
   },
-  "include": ["tests/**/*"]
+  "include": ["*.ts", "tests/**/*"]
 }

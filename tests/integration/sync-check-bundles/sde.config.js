@@ -21,7 +21,10 @@ export async function config() {
       workerPlugin(),
 
       // Run model check
-      checkPlugin()
+      checkPlugin({
+        remoteBundlesUrl: 'http://localhost:9000/remote-bundles.json',
+        serverPort: 9001
+      })
     ]
   }
 }

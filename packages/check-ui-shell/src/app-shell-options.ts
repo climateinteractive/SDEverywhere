@@ -37,9 +37,19 @@ export interface AppShellOptions {
    *
    * This callback is invoked when the user clicks the download button for a bundle in the bundle selector.
    * The implementation should fetch the bundle's JS file from the remote URL and save it to the local
-   * bundle directory.
+   * bundles directory.
    *
    * @param bundle The bundle to download.
    */
   onDownloadBundle?: (bundle: BundleSpec) => void
+  /**
+   * Copy a local bundle file to a new name.
+   *
+   * This callback is invoked when the user clicks the copy button for a bundle in the bundle selector.
+   * The implementation should copy the bundle file to the local bundle directory with the new name.
+   *
+   * @param bundle The bundle to copy.
+   * @param newName The new name for the copied bundle.
+   */
+  onCopyBundle?: (bundle: BundleSpec, newName: string) => void
 }

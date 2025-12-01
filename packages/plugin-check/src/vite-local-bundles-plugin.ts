@@ -77,6 +77,51 @@ export function localBundlesPlugin(bundlesDir: string): Plugin {
           })
         }
       })
+
+      // Handle requests to copy a bundle to a new name
+      server.ws.on('copy-bundle', async (data, client) => {
+        const { url, name, newName } = data
+
+        try {
+          console.log(`[local-bundles] Copying bundle: ${name} to ${newName}`)
+
+          let bundleContent: string
+
+          // Check if this is the special "current" bundle
+          if (url === 'current') {
+            // The "current" bundle is in the sde-prep directory (check-bundle.js)
+            const sdePrepDir = join(bundlesDir, '..', 'sde-prep')
+            const currentBundlePath = join(sdePrepDir, 'check-bundle.js')
+            const { readFile } = await import('node:fs/promises')
+            bundleContent = await readFile(currentBundlePath, 'utf8')
+          } else if (url.startsWith('file://')) {
+            // For file:// URLs, extract the file path and read it
+            const filePathFromUrl = new URL(url).pathname
+            const { readFile } = await import('node:fs/promises')
+            bundleContent = await readFile(filePathFromUrl, 'utf8')
+          } else {
+            throw new Error(`Cannot copy bundle with URL: ${url}`)
+          }
+
+          // Write the bundle to the local directory with the new name
+          const fileName = `${newName.replace(/\//g, '-')}.js`
+          const filePath = join(bundlesDir, fileName)
+          await writeFile(filePath, bundleContent, 'utf8')
+
+          console.log(`[local-bundles] Copied bundle to: ${filePath}`)
+
+          // Send success message back to client
+          client.send('copy-bundle-success', { name: newName, filePath: fileName })
+        } catch (error) {
+          console.error(`[local-bundles] Failed to copy bundle:`, error)
+
+          // Send error message back to client
+          client.send('copy-bundle-error', {
+            name,
+            error: error.message
+          })
+        }
+      })
     }
   }
 }
