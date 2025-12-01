@@ -36,8 +36,8 @@ export function localBundlesPlugin(bundlesDir: string): Plugin {
         depth: 10
       })
 
-      watcher.on('all', (event, path) => {
-        console.log(`[sde-local-bundles] Detected ${event} in bundles directory: ${path}`)
+      watcher.on('all', (/*event, path*/) => {
+        // console.log(`[sde-local-bundles] Detected ${event} in bundles directory: ${path}`)
         // Notify all clients that the bundles list has changed
         server.ws.send('bundles-changed', {})
       })
@@ -67,11 +67,11 @@ export function localBundlesPlugin(bundlesDir: string): Plugin {
         const { url, name, lastModified } = data
         try {
           // Download the bundle to the local bundles directory
-          console.log(`[sde-local-bundles] Downloading bundle: ${name} from ${url}`)
+          console.log(`[sde-local-bundles] Downloading bundle: name=${name} url=${url}`)
           const filePath = await downloadBundle(url, name, lastModified, bundlesDir)
 
           // Send success message back to client
-          console.log(`[sde-local-bundles] Downloaded bundle to: ${filePath}`)
+          console.log(`[sde-local-bundles] Downloaded bundle to ${filePath}`)
           client.send('download-bundle-success', { name, filePath: `${name}.js` })
         } catch (error) {
           // Send error message back to client
@@ -85,11 +85,11 @@ export function localBundlesPlugin(bundlesDir: string): Plugin {
         const { url, name, newName } = data
         try {
           // Copy the bundle with a new name
-          console.log(`[sde-local-bundles] Copying bundle: ${name} to ${newName}`)
+          console.log(`[sde-local-bundles] Copying bundle: src=${name} dst=${newName}`)
           const filePath = await copyBundle(url, newName, bundlesDir)
 
           // Send success message back to client
-          console.log(`[sde-local-bundles] Copied bundle to: ${filePath}`)
+          console.log(`[sde-local-bundles] Copied bundle to ${filePath}`)
           client.send('copy-bundle-success', { name: newName, filePath: `${newName}.js` })
         } catch (error) {
           // Send error message back to client
