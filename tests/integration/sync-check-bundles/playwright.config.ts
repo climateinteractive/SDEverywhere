@@ -49,14 +49,16 @@ export default defineConfig({
           name: 'Remote Bundles Server',
           url: 'http://localhost:9000',
           reuseExistingServer: !process.env.CI,
-          timeout: 120000
+          // stdout: 'pipe',
+          timeout: 2000
         },
         {
           command: 'pnpm dev',
           name: 'Web App',
           url: 'http://localhost:9001',
           reuseExistingServer: !process.env.CI,
-          timeout: 120000
+          // stdout: 'pipe',
+          timeout: 2000
         }
       ]
     : undefined

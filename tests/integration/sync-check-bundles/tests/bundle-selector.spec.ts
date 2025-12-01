@@ -1,6 +1,6 @@
 // Copyright (c) 2025 Climate Interactive / New Venture Fund
 
-import { copyFile, readdir, unlink, utimes } from 'node:fs/promises'
+import { copyFile, readdir, rm, utimes } from 'node:fs/promises'
 import { dirname, join as joinPath } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -10,13 +10,13 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 
 test.describe('Bundle Selector', () => {
   test.beforeEach(async ({ app }) => {
-    // Before each test, delete all files in the `bundles` directory except `previous.js`
+    // Before each test, delete all files and directories in the `bundles` directory except `previous.js`
     const projDir = joinPath(__dirname, '..')
     const bundlesDir = joinPath(projDir, 'bundles')
     const files = await readdir(bundlesDir)
     for (const file of files) {
       if (file !== 'previous.js') {
-        await unlink(joinPath(bundlesDir, file))
+        await rm(joinPath(bundlesDir, file), { recursive: true, force: true })
       }
     }
 
@@ -75,22 +75,22 @@ test.describe('Bundle Selector', () => {
     const bundleList = app.page.getByRole('listbox')
     await expect(bundleList).toBeVisible()
 
-    // Find and click on a remote bundle
-    const remoteBundle = app.page.getByRole('option', { name: 'feature/remote-1' })
-    await expect(remoteBundle).toBeVisible()
+    // Find the remote bundle (there should be exactly one remote bundle with this name)
+    const remoteBundles = app.page.getByRole('option', { name: 'feature/remote-1' })
+    await expect(remoteBundles).toHaveCount(1)
 
     // Right-click on the remote bundle to open context menu
-    await remoteBundle.click({ button: 'right' })
+    await remoteBundles.first().click({ button: 'right' })
 
     // Click the "Save to Local" option
     const saveToLocalOption = app.page.getByRole('menuitem', { name: /Save to Local/i })
     await expect(saveToLocalOption).toBeVisible()
     await saveToLocalOption.click()
 
-    // Wait a moment for the download to complete
+    // Wait for the download to complete and the bundle list to refresh
     await app.page.waitForTimeout(1000)
 
-    // Verify that the remote and local bundles are listed
+    // Verify that there is now a local version of "feature/remote-1" in the bundle list
     const expectedLabels = [
       'current',
       'previous',
@@ -115,25 +115,25 @@ test.describe('Bundle Selector', () => {
     const bundleList = app.page.getByRole('listbox')
     await expect(bundleList).toBeVisible()
 
-    // Find the current bundle
-    const currentBundle = app.page.getByRole('option', { name: 'current' })
-    await expect(currentBundle).toBeVisible()
+    // Find the "local-1" bundle
+    const localBundle = app.page.getByRole('option', { name: 'local-1' })
+    await expect(localBundle).toBeVisible()
 
-    // Right-click on the current bundle to open context menu
-    await currentBundle.click({ button: 'right' })
+    // Right-click on the "local-1" bundle to open context menu
+    await localBundle.click({ button: 'right' })
 
     // Click the "Save Copy..." option
     const saveCopyOption = app.page.getByRole('menuitem', { name: /Save Copy\.\.\./i })
     await expect(saveCopyOption).toBeVisible()
     await saveCopyOption.click()
 
-    // Verify the dialog appears
+    // Verify that the dialog appears
     const dialog = app.page.getByRole('dialog')
     await expect(dialog).toBeVisible()
 
     // Find the name input and verify it has a default value
     const nameInput = app.page.getByRole('textbox', { name: /Bundle name/i })
-    await expect(nameInput).toHaveValue('current copy')
+    await expect(nameInput).toHaveValue('local-1 copy')
 
     // Change the name to something custom
     await nameInput.fill('my-test-bundle')
@@ -145,13 +145,98 @@ test.describe('Bundle Selector', () => {
     // Wait for the copy operation to complete
     await app.page.waitForTimeout(1000)
 
-    // Verify that the remote and local bundles are listed
-    const expectedLabels = ['current-copy', 'current', 'previous', 'remote-2', 'local-1', 'remote-1', 'remote-1']
+    // Verify that the copied bundle now appears in the list
+    const expectedLabels = ['current', 'previous', 'feature/remote-2', 'local-1', 'my-test-bundle', 'feature/remote-1']
     const options = app.page.getByRole('option')
     await expect(options).toHaveCount(expectedLabels.length)
     const optionElems = await options.all()
     for (const [index, expectedLabel] of expectedLabels.entries()) {
       await expect(optionElems[index]).toHaveAttribute('aria-label', expectedLabel)
     }
+  })
+
+  test('should copy the current bundle with new name', async ({ app }) => {
+    // Click the left bundle name to open the dropdown
+    await app.page.getByTestId('bundle-selector-left').click()
+
+    // Wait for the bundle selector menu to appear
+    const bundleList = app.page.getByRole('listbox')
+    await expect(bundleList).toBeVisible()
+
+    // Find the "current" bundle
+    const localBundle = app.page.getByRole('option', { name: 'current' })
+    await expect(localBundle).toBeVisible()
+
+    // Right-click on the "local-1" bundle to open context menu
+    await localBundle.click({ button: 'right' })
+
+    // Click the "Save Copy..." option
+    const saveCopyOption = app.page.getByRole('menuitem', { name: /Save Copy\.\.\./i })
+    await expect(saveCopyOption).toBeVisible()
+    await saveCopyOption.click()
+
+    // Verify that the dialog appears
+    const dialog = app.page.getByRole('dialog')
+    await expect(dialog).toBeVisible()
+
+    // Find the name input and verify it has a default value
+    const nameInput = app.page.getByRole('textbox', { name: /Bundle name/i })
+    await expect(nameInput).toHaveValue('current copy')
+
+    // Change the name to something custom
+    await nameInput.fill('my-current-copy')
+
+    // Click the Save button
+    const saveButton = app.page.getByRole('button', { name: /Save/i })
+    await saveButton.click()
+
+    // Wait for the copy operation to complete
+    await app.page.waitForTimeout(1000)
+
+    // Verify that the copied bundle now appears in the list
+    const expectedLabels = ['my-current-copy', 'current', 'previous', 'feature/remote-2', 'local-1', 'feature/remote-1']
+    const options = app.page.getByRole('option')
+    await expect(options).toHaveCount(expectedLabels.length)
+    const optionElems = await options.all()
+    for (const [index, expectedLabel] of expectedLabels.entries()) {
+      await expect(optionElems[index]).toHaveAttribute('aria-label', expectedLabel)
+    }
+  })
+
+  test('should reload page when selecting a new bundle', async ({ app }) => {
+    // Verify the initial "left" bundle name
+    const bundleSelectorLeft = app.page.getByTestId('bundle-selector-left')
+    await expect(bundleSelectorLeft).toBeVisible()
+    await expect(bundleSelectorLeft).toHaveText('current')
+
+    // Verify the initial "right" bundle name
+    const bundleSelectorRight = app.page.getByTestId('bundle-selector-right')
+    await expect(bundleSelectorRight).toBeVisible()
+    await expect(bundleSelectorRight).toHaveText('current')
+
+    // Click the left bundle name to open the popover
+    await app.page.getByTestId('bundle-selector-left').click()
+
+    // Wait for the bundle selector menu to appear
+    const bundleList = app.page.getByRole('listbox')
+    await expect(bundleList).toBeVisible()
+
+    // Find and click on a remote bundle
+    const remoteBundle = app.page.getByRole('option', { name: 'feature/remote-1' })
+    await expect(remoteBundle).toBeVisible()
+
+    // Click on the remote bundle to select it
+    await remoteBundle.click()
+
+    // Wait for the page to reload
+    await app.page.waitForLoadState('load')
+
+    // Verify that the left bundle selector now shows the selected bundle
+    await expect(bundleSelectorLeft).toBeVisible()
+    await expect(bundleSelectorLeft).toHaveText('feature/remote-1')
+
+    // Verify that the right bundle selector still shows 'current'
+    await expect(bundleSelectorRight).toBeVisible()
+    await expect(bundleSelectorRight).toHaveText('current')
   })
 })

@@ -193,12 +193,15 @@ async function initForLocal(): Promise<void> {
   // Initialize the root Svelte component
   const remoteBundlesUrl = __REMOTE_BUNDLES_URL__
   initAppShell(configOptions, {
-    bundleUrlL,
-    bundleUrlR,
-    remoteBundlesUrl: remoteBundlesUrl !== '' ? remoteBundlesUrl : undefined,
-    getLocalBundles: import.meta.hot ? getLocalBundles : undefined,
-    onDownloadBundle: import.meta.hot ? onDownloadBundle : undefined,
-    onCopyBundle: import.meta.hot ? onCopyBundle : undefined
+    bundleSelectorConfig: {
+      bundleUrlL,
+      bundleUrlR,
+      remoteBundlesUrl: remoteBundlesUrl !== '' ? remoteBundlesUrl : undefined,
+      getLocalBundles: import.meta.hot ? getLocalBundles : undefined,
+      onDownloadBundle: import.meta.hot ? onDownloadBundle : undefined,
+      onCopyBundle: import.meta.hot ? onCopyBundle : undefined,
+      onBundlesChanged: import.meta.hot ? onBundlesChanged : undefined
+    }
   })
 }
 
@@ -320,14 +323,13 @@ function onDownloadBundle(bundle: BundleSpec): void {
     throw new Error('Only bundles with a remote URL can be downloaded')
   }
 
-  const { url, name } = bundle.remote
+  const { url, name, lastModified } = bundle.remote
 
   // Set up listeners for download result
   const handleSuccess = (data: { name: string; filePath: string }) => {
     cleanup()
     if (data.name === name) {
       console.log(`Successfully downloaded bundle: ${name} to ${data.filePath}`)
-      // TODO: Optionally refresh the bundle selector UI
     }
   }
 
@@ -347,7 +349,7 @@ function onDownloadBundle(bundle: BundleSpec): void {
   import.meta.hot.on('download-bundle-error', handleError)
 
   // Send download request
-  import.meta.hot.send('download-bundle', { url, name })
+  import.meta.hot.send('download-bundle', { url, name, lastModified })
 
   console.log(`Requesting download of bundle: ${name} from ${url}`)
 }
@@ -372,7 +374,6 @@ function onCopyBundle(bundle: BundleSpec, newName: string): void {
     cleanup()
     if (data.name === newName) {
       console.log(`Successfully copied bundle: ${name} to ${data.filePath}`)
-      // TODO: Optionally refresh the bundle selector UI
     }
   }
 
@@ -395,4 +396,17 @@ function onCopyBundle(bundle: BundleSpec, newName: string): void {
   import.meta.hot.send('copy-bundle', { url, name, newName })
 
   console.log(`Requesting copy of bundle: ${name} to ${newName}`)
+}
+
+/**
+ * Add a listener that is notified when there are file system changes detected in the
+ * local bundles directory.
+ */
+function onBundlesChanged(listener: () => void): void {
+  // Only available in development mode with HMR
+  if (!import.meta.hot) {
+    throw new Error('onBundlesChanged is only available in development mode with HMR enabled')
+  }
+
+  import.meta.hot.on('bundles-changed', listener)
 }

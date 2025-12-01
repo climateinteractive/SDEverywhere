@@ -21,15 +21,8 @@ export function initAppShell(configOptions: ConfigOptions, appShellOptions?: App
     .then(appModel => {
       // Create a `BundleManager` instance if local development mode is enabled
       let bundleManager: BundleManager | undefined = undefined
-      if (appShellOptions?.remoteBundlesUrl || appShellOptions?.getLocalBundles) {
-        bundleManager = new BundleManager({
-          bundleUrlL: appShellOptions.bundleUrlL,
-          bundleUrlR: appShellOptions.bundleUrlR,
-          remoteBundlesUrl: appShellOptions.remoteBundlesUrl,
-          getLocalBundles: appShellOptions.getLocalBundles,
-          onDownloadBundle: appShellOptions.onDownloadBundle,
-          onCopyBundle: appShellOptions.onCopyBundle
-        })
+      if (appShellOptions?.bundleSelectorConfig) {
+        bundleManager = new BundleManager(appShellOptions.bundleSelectorConfig)
       }
 
       // Create the app view model

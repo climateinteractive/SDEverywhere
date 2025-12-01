@@ -1,41 +1,7 @@
 // Copyright (c) 2025 Climate Interactive / New Venture Fund
 
+import type { BundleSelectorConfig } from './bundle-selector-config'
 import type { BundleLocation, BundleSpec } from './bundle-spec'
-
-/**
- * Configuration options for the BundleManager.
- */
-export interface BundleManagerConfig {
-  /**
-   * The URL of the active "left" bundle.
-   */
-  bundleUrlL?: string
-
-  /**
-   * The URL of the active "right" bundle.
-   */
-  bundleUrlR?: string
-
-  /**
-   * Optional URL to a JSON file containing the list of remote bundles.
-   */
-  remoteBundlesUrl?: string
-
-  /**
-   * Callback to get the list of locally available bundles.
-   */
-  getLocalBundles?: () => Promise<BundleLocation[]>
-
-  /**
-   * Callback to download a remote bundle from the network to the local bundles directory.
-   */
-  onDownloadBundle?: (bundle: BundleSpec) => void
-
-  /**
-   * Callback to copy a local bundle file with a new name.
-   */
-  onCopyBundle?: (bundle: BundleSpec, newName: string) => void
-}
 
 /**
  * Manages the state of remote and local bundles.
@@ -59,9 +25,16 @@ export class BundleManager {
   /** Reactive state containing any error message from the last load operation. */
   public error = $state<string | undefined>(undefined)
 
-  constructor(public readonly config: BundleManagerConfig) {
+  constructor(public readonly config: BundleSelectorConfig) {
     this.activeBundleUrlL = config.bundleUrlL || ''
     this.activeBundleUrlR = config.bundleUrlR || ''
+
+    // Reload the selector automatically when `bundles-changed` events are received
+    if (this.config.onBundlesChanged) {
+      this.config.onBundlesChanged(() => {
+        this.load()
+      })
+    }
   }
 
   /**
@@ -108,12 +81,12 @@ export class BundleManager {
   }
 
   /**
-   * Copy a local bundle fileto a new name.
+   * Copy a local bundle file to a new name.
    */
   public copyBundle(bundle: BundleSpec, newName: string): void {
     if (this.config.onCopyBundle) {
-      // Replace spaces and slashes with dashes
-      const sanitizedName = newName.replace(/[\s/]/g, '-')
+      // Replace spaces with dashes (but preserve slashes)
+      const sanitizedName = newName.replace(/\s/g, '-')
       this.config.onCopyBundle(bundle, sanitizedName)
     }
   }
@@ -177,28 +150,20 @@ export class BundleManager {
    * @returns The merged list of bundles.
    */
   private mergeBundles(remoteBundles: BundleLocation[], localBundles: BundleLocation[]): BundleSpec[] {
-    const bundleMap = new Map<string, BundleSpec>()
+    const bundles: BundleSpec[] = []
 
     // Add remote bundles
     for (const bundle of remoteBundles) {
-      bundleMap.set(bundle.name, { remote: bundle })
+      bundles.push({ remote: bundle })
     }
 
-    // // Add or merge local bundles
-    // for (const local of localBundles) {
-    //   const existing = bundleMap.get(local.name)
-    //   if (existing) {
-    //     existing.local = local
-    //   } else {
-    //     bundleMap.set(local.name, { local })
-    //   }
-    // }
+    // Add local bundles
     // TODO: Ideally we would show a single item in the case where the local bundle is a copy of a remote
     // bundle (and is up to date with it), but for now we will show local bundles separately in all cases
     for (const bundle of localBundles) {
-      bundleMap.set(bundle.name, { local: bundle })
+      bundles.push({ local: bundle })
     }
 
-    return Array.from(bundleMap.values())
+    return bundles
   }
 }
