@@ -1,5 +1,5 @@
 {
-  "name": "sync-check-bundles",
+  "name": "model-check",
   "version": "1.0.0",
   "private": true,
   "type": "module",
