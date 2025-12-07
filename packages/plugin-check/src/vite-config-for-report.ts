@@ -9,19 +9,27 @@ import replace from '@rollup/plugin-replace'
 
 import type { SuiteSummary } from '@sdeverywhere/check-core'
 
+import type { LocalBundleSpec } from './bundle-spec'
 import type { CheckPluginOptions } from './options'
 import { localBundlesPlugin } from './vite-local-bundles-plugin'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 
+/**
+ * NOTE: This function currently only supports creating a Vite config for the
+ * model-check report when the current/baseline bundles are local files.  If
+ * you want to use remote bundles, you must first download them to the local
+ * `bundles` directory and then pass `LocalBundleSpec` instances that include
+ * the local bundle file paths.
+ */
 export function createViteConfigForReport(
   mode: 'bundle' | 'watch',
   options: CheckPluginOptions | undefined,
   projDir: string,
   prepDir: string,
-  currentBundleName: string,
-  currentBundlePath: string,
+  currentBundleSpec: LocalBundleSpec,
+  baselineBundleSpec: LocalBundleSpec | undefined,
   testConfigPath: string,
   suiteSummary: SuiteSummary | undefined
 ): InlineConfig {
@@ -47,7 +55,7 @@ export function createViteConfigForReport(
   const bundlesPath = `${relProjDirPath}/bundles/*.js`
 
   // Get the last modified time of the current bundle
-  const currentBundleLastModified = statSync(currentBundlePath).mtime.toISOString()
+  const currentBundleLastModified = statSync(currentBundleSpec.path).mtime.toISOString()
 
   // Calculate output directory relative to the template root
   let reportPath: string
@@ -148,10 +156,10 @@ export function createViteConfigForReport(
       alias: [
         // Use the configured "baseline" bundle if defined, otherwise use the "empty" bundle
         // (which will cause comparison tests to be skipped)
-        alias('@_baseline_bundle_', options?.baseline ? options.baseline.path : '/src/empty-bundle.ts'),
+        alias('@_baseline_bundle_', baselineBundleSpec?.path || '/src/empty-bundle.ts'),
 
         // Use the configured "current" bundle
-        alias('@_current_bundle_', currentBundlePath),
+        alias('@_current_bundle_', currentBundleSpec.path),
 
         // Use the configured test config file
         alias('@_test_config_', testConfigPath),
@@ -176,11 +184,11 @@ export function createViteConfigForReport(
       // Inject the summary JSON into the build
       __SUITE_SUMMARY_JSON__: JSON.stringify(suiteSummaryJson),
 
-      // Inject the baseline branch name
-      __BASELINE_NAME__: JSON.stringify(options?.baseline?.name || ''),
+      // Inject the baseline bundle name
+      __BASELINE_NAME__: JSON.stringify(baselineBundleSpec?.name || ''),
 
-      // Inject the current branch name
-      __CURRENT_NAME__: JSON.stringify(currentBundleName),
+      // Inject the current bundle name
+      __CURRENT_NAME__: JSON.stringify(currentBundleSpec.name),
 
       // Inject the last modified time of the current bundle
       __CURRENT_BUNDLE_LAST_MODIFIED__: JSON.stringify(currentBundleLastModified),

@@ -1,8 +1,8 @@
 // Copyright (c) 2022 Climate Interactive / New Venture Fund
 
-import { existsSync } from 'fs'
-import { copyFile, mkdir } from 'fs/promises'
-import { dirname, join as joinPath, relative } from 'path'
+import { existsSync } from 'node:fs'
+import { copyFile, mkdir } from 'node:fs/promises'
+import { dirname, join as joinPath, relative } from 'node:path'
 import { fileURLToPath } from 'url'
 
 import type { InlineConfig, ViteDevServer } from 'vite'
@@ -13,19 +13,21 @@ import type { BuildContext, Plugin, ResolvedConfig, ResolvedModelSpec } from '@s
 import type { Bundle, ConfigInitOptions, SuiteSummary } from '@sdeverywhere/check-core'
 import { createConfig } from '@sdeverywhere/check-core'
 
-import type { CheckPluginOptions } from './options'
+import type { CheckBundle, CheckPluginOptions } from './options'
 import { runTestSuite } from './run-suite'
 import { createViteConfigForBundle } from './vite-config-for-bundle'
 import { createViteConfigForReport } from './vite-config-for-report'
 import { createViteConfigForTests } from './vite-config-for-tests'
+import type { BundleSpec, LocalBundleSpec } from './bundle-spec'
+import { downloadBundle } from './bundle-file-ops'
 
 export function checkPlugin(options?: CheckPluginOptions): Plugin {
   return new CheckPlugin(options)
 }
 
 interface TestOptions {
-  currentBundleName: string
-  currentBundlePath: string
+  currentBundleSpec: BundleSpec
+  baselineBundleSpec: BundleSpec | undefined
   testConfigPath: string
 }
 
@@ -46,7 +48,7 @@ class CheckPlugin implements Plugin {
     // model-check report locally (with live reload enabled).  When a model
     // test file is changed, the tests will be re-run in the browser.
     const testOptions = this.resolveTestOptions(config)
-    const viteConfig = this.createViteConfigForReport('watch', config, testOptions, undefined)
+    const viteConfig = await this.createViteConfigForReport('watch', config, testOptions, undefined)
     const server: ViteDevServer = await createServer(viteConfig)
     await server.listen()
   }
@@ -127,11 +129,20 @@ class CheckPlugin implements Plugin {
   private async runChecks(context: BuildContext, testOptions: TestOptions): Promise<boolean> {
     context.log('info', 'Running model checks...')
 
+    type BundleModule = { createBundle(): Bundle }
+    async function importBundleModule(bundleSpec: BundleSpec): Promise<BundleModule> {
+      if (bundleSpec.kind === 'local') {
+        return import(relativeToSourcePath(bundleSpec.path))
+      } else {
+        return import(bundleSpec.url)
+      }
+    }
+
     // Load the bundles used by the model check/compare configuration.  We
     // always initialize the "current" bundle.
-    const moduleR = await import(relativeToSourcePath(testOptions.currentBundlePath))
+    const moduleR = await importBundleModule(testOptions.currentBundleSpec)
     const bundleR = moduleR.createBundle() as Bundle
-    const bundleNameR = testOptions.currentBundleName
+    const bundleNameR = testOptions.currentBundleSpec.name
 
     // Only initialize the "baseline" bundle if it is defined and the version
     // is the same as the "current" one.  If the baseline bundle has a different
@@ -139,13 +150,19 @@ class CheckPlugin implements Plugin {
     // current bundle.
     let bundleL: Bundle
     let bundleNameL: string
-    if (this.options?.baseline) {
-      const moduleL = await import(relativeToSourcePath(this.options.baseline.path))
+    if (testOptions.baselineBundleSpec !== undefined) {
+      const moduleL = await importBundleModule(testOptions.baselineBundleSpec)
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const rawBundleL: any = moduleL.createBundle() as any
       if (rawBundleL.version === bundleR.version) {
         bundleL = rawBundleL as Bundle
-        bundleNameL = this.options.baseline.name
+        bundleNameL = testOptions.baselineBundleSpec.name || 'base'
+      } else {
+        console.warn(
+          'WARNING: Bundle version mismatch ' +
+            `(baseline=${rawBundleL.version} current=${bundleR.version}); ` +
+            'check tests will be run but comparisons will be skipped'
+        )
       }
     }
 
@@ -163,7 +180,7 @@ class CheckPlugin implements Plugin {
 
     // Build the report (using Vite)
     context.log('info', 'Building model check report')
-    const viteConfig = this.createViteConfigForReport('bundle', context.config, testOptions, result.suiteSummary)
+    const viteConfig = await this.createViteConfigForReport('bundle', context.config, testOptions, result.suiteSummary)
     await build(viteConfig)
 
     // context.log('info', 'Done!')
@@ -172,16 +189,40 @@ class CheckPlugin implements Plugin {
   }
 
   private resolveTestOptions(config: ResolvedConfig): TestOptions {
-    let currentBundleName: string
-    let currentBundlePath: string
-    if (this.options?.current === undefined) {
-      // Path to current bundle was not provided, so use a generated bundle
-      currentBundleName = 'current'
-      currentBundlePath = joinPath(config.prepDir, 'check-bundle.js')
-    } else {
-      // Use the provided bundle
-      currentBundleName = this.options.current.name
-      currentBundlePath = this.options.current.path
+    function resolveBundleSpec(bundle: CheckBundle | undefined): BundleSpec | undefined {
+      if (bundle?.path !== undefined) {
+        // Use the provided local bundle path
+        return {
+          kind: 'local',
+          name: bundle.name,
+          path: bundle.path
+        }
+      } else if (bundle?.url !== undefined) {
+        // Use the provided remote bundle URL
+        return {
+          kind: 'remote',
+          name: bundle.name,
+          url: bundle.url
+        }
+      } else {
+        // No bundle spec was provided, so use the generated "current" bundle
+        return {
+          kind: 'local',
+          name: 'current',
+          path: joinPath(config.prepDir, 'check-bundle.js')
+        }
+      }
+    }
+
+    // Resolve the current bundle spec
+    const currentBundleSpec = resolveBundleSpec(this.options?.current)
+
+    // Only resolve the baseline bundle spec if defined in the config; if
+    // it is undefined, we will only load the "current" bundle and run the
+    // check tests (no comparisons will be run)
+    let baselineBundleSpec: BundleSpec | undefined
+    if (this.options?.baseline) {
+      baselineBundleSpec = resolveBundleSpec(this.options.baseline)
     }
 
     let testConfigPath: string
@@ -194,25 +235,77 @@ class CheckPlugin implements Plugin {
     }
 
     return {
-      currentBundleName,
-      currentBundlePath,
+      currentBundleSpec,
+      baselineBundleSpec,
       testConfigPath
     }
   }
 
-  private createViteConfigForReport(
+  private async createViteConfigForReport(
     mode: 'bundle' | 'watch',
     config: ResolvedConfig,
     testOptions: TestOptions,
     suiteSummary: SuiteSummary | undefined
-  ): InlineConfig {
+  ): Promise<InlineConfig> {
+    // Note that `createViteConfigForReport` currently only supports loading
+    // from a local bundle file.  If `originalBundleSpec` points to a remote
+    // bundle, we need to first download it to the local bundles directory.
+    async function getLocalBundle(originalBundleSpec: BundleSpec): Promise<LocalBundleSpec> {
+      if (originalBundleSpec.kind === 'local') {
+        // The bundle is already local
+        return originalBundleSpec
+      } else {
+        // The bundle is remote, so download it to the local `bundles` directory
+        const localBundlePath = await downloadBundle(
+          originalBundleSpec.url,
+          originalBundleSpec.name,
+          // TODO: We don't know the last modified time of the remote bundle here, so we use
+          // undefined (which means the local file will be created with the current timestamp)
+          undefined,
+          joinPath(config.rootDir, 'bundles')
+        )
+        return {
+          kind: 'local',
+          name: originalBundleSpec.name,
+          path: localBundlePath
+        }
+      }
+    }
+
+    // Ensure that we have a local version of the current bundle.  If this step fails,
+    // an error will be thrown and the build will fail, since this is a required step
+    // for creating the model-check report.
+    const localCurrentBundleSpec = await getLocalBundle(testOptions.currentBundleSpec)
+
+    // Ensure that we have a local version of the baseline bundle, if defined.  This
+    // step is allowed to fail, since the first time we create the report, the baseline
+    // bundle may not already exist on the remote server.  If downloading fails, log the
+    // error and continue with the build; the report will contain check tests but no
+    // comparison tests will be run.
+    let localBaselineBundleSpec: LocalBundleSpec | undefined
+    if (mode === 'bundle' && testOptions.baselineBundleSpec) {
+      try {
+        localBaselineBundleSpec = await getLocalBundle(testOptions.baselineBundleSpec)
+      } catch (e) {
+        const spec = testOptions.baselineBundleSpec
+        const name = spec.name
+        const loc = spec.kind === 'local' ? spec.path : spec.url
+        console.warn(
+          `WARNING: Failed to load '${name}' bundle from '${loc}'; ` +
+            'check tests will be run but comparisons will be skipped. ' +
+            'Cause:',
+          e
+        )
+      }
+    }
+
     return createViteConfigForReport(
       mode,
       this.options,
       config.rootDir,
       config.prepDir,
-      testOptions.currentBundleName,
-      testOptions.currentBundlePath,
+      localCurrentBundleSpec,
+      localBaselineBundleSpec,
       testOptions.testConfigPath,
       suiteSummary
     )

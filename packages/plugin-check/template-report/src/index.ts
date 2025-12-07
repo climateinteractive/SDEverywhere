@@ -95,6 +95,7 @@ async function initForLocal(): Promise<void> {
     bundleName: string
     bundleUrl: string
   }
+
   async function createBundle(bundleMetadata: BundleMetadata | undefined): Promise<BundleResult> {
     if (bundleMetadata === undefined) {
       bundleMetadata = {

@@ -1,13 +1,14 @@
 // Copyright (c) 2025 Climate Interactive / New Venture Fund
 
-import { mkdir, readdir, readFile, stat, utimes, writeFile } from 'node:fs/promises'
-import { dirname, join, relative, sep } from 'node:path'
+import { readdir, stat } from 'node:fs/promises'
+import { join as joinPath, relative, sep } from 'node:path'
 import { pathToFileURL } from 'node:url'
 
 import chokidar from 'chokidar'
 import type { Plugin } from 'vite'
 
 import type { BundleLocation } from '@sdeverywhere/check-ui-shell'
+import { copyBundle, downloadBundle } from './bundle-file-ops'
 
 /**
  * Vite plugin that provides a bridge to the model-check report app to allow access
@@ -113,7 +114,7 @@ async function scanBundlesRecursively(dir: string, baseDir: string): Promise<Bun
   const entries = await readdir(dir, { withFileTypes: true })
 
   for (const entry of entries) {
-    const fullPath = join(dir, entry.name)
+    const fullPath = joinPath(dir, entry.name)
     if (entry.isDirectory()) {
       // Recursively scan subdirectories
       const subBundles = await scanBundlesRecursively(fullPath, baseDir)
@@ -132,92 +133,4 @@ async function scanBundlesRecursively(dir: string, baseDir: string): Promise<Bun
   }
 
   return bundles
-}
-
-/**
- * Download a bundle from a remote URL and save it to the local bundles directory.
- *
- * @param url The remote URL to download the bundle from.
- * @param name The bundle name (may contain slashes for subdirectories).
- * @param lastModified The last modified timestamp from the remote bundle.
- * @param bundlesDir The bundles directory path.
- * @returns The file path where the bundle was saved.
- */
-async function downloadBundle(
-  url: string,
-  name: string,
-  lastModified: string | undefined,
-  bundlesDir: string
-): Promise<string> {
-  // Fetch the bundle from the remote URL
-  const response = await fetch(url)
-  if (!response.ok) {
-    throw new Error(`HTTP ${response.status}: ${response.statusText}`)
-  }
-
-  const bundleContent = await response.text()
-
-  // Preserve slashes in the bundle name (create subdirectories as needed)
-  const nameParts = name.split('/')
-  const filePath = join(bundlesDir, ...nameParts) + '.js'
-
-  // Create parent directories if they don't exist
-  await mkdir(dirname(filePath), { recursive: true })
-
-  // Write the bundle to the local directory
-  await writeFile(filePath, bundleContent, 'utf8')
-
-  // Preserve the last modified time from the remote bundle
-  if (lastModified) {
-    const mtime = new Date(lastModified)
-    await utimes(filePath, mtime, mtime)
-  }
-
-  return filePath
-}
-
-/**
- * Copy a bundle from a source URL and save it with a new name to the local bundles directory.
- *
- * @param url The source URL to copy the bundle from (can be 'current' or file:// URLs).
- * @param newName The new bundle name (may contain slashes for subdirectories).
- * @param bundlesDir The bundles directory path.
- * @returns The file path where the bundle was saved.
- */
-async function copyBundle(url: string, newName: string, bundlesDir: string): Promise<string> {
-  let srcPath: string
-  if (url === 'current') {
-    // The "current" bundle is in the sde-prep directory (check-bundle.js)
-    const sdePrepDir = join(bundlesDir, '..', 'sde-prep')
-    srcPath = join(sdePrepDir, 'check-bundle.js')
-  } else if (url.startsWith('file://')) {
-    // For file:// URLs, extract the file path
-    srcPath = new URL(url).pathname
-  } else {
-    throw new Error(`Cannot copy bundle with URL: ${url}`)
-  }
-
-  // Read the source file
-  const bundleContent = await readFile(srcPath, 'utf8')
-
-  // Get the last modified time of the source file
-  const stats = await stat(srcPath)
-  const sourceLastModified = stats.mtime
-
-  // Preserve slashes in the bundle name (create subdirectories)
-  const nameParts = newName.split('/')
-  const filePath = join(bundlesDir, ...nameParts) + '.js'
-
-  // Create parent directories if they don't exist
-  await mkdir(dirname(filePath), { recursive: true })
-
-  // Write the bundle to the local directory with the new name
-  await writeFile(filePath, bundleContent, 'utf8')
-
-  // Preserve the last modified time from the source bundle
-  if (sourceLastModified) {
-    await utimes(filePath, sourceLastModified, sourceLastModified)
-  }
-
-  return filePath
 }
