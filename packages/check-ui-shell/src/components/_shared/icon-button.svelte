@@ -25,7 +25,7 @@ let { icon, class: classes = '', disabled, ariaLabel, onClick }: Props = $props(
 <!-- STYLE -->
 <style lang="scss">
 $button-size: 24px;
-$icon-size: 12px;
+$icon-size: 16px;
 
 :global(.button.icon-button) {
   width: $button-size;
