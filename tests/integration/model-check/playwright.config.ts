@@ -23,7 +23,7 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
 
   // Reporter to use
-  reporter: 'html',
+  // reporter: 'html',
 
   // Shared settings for all the projects below
   use: {
@@ -46,7 +46,7 @@ export default defineConfig({
     ? [
         {
           command: 'pnpm serve-test-bundles',
-          name: 'Remote Bundles Server',
+          name: 'test-remote-bundles-server',
           url: 'http://localhost:9000',
           reuseExistingServer: !process.env.CI,
           // stdout: 'pipe',
@@ -54,7 +54,7 @@ export default defineConfig({
         },
         {
           command: 'pnpm dev',
-          name: 'Web App',
+          name: 'test-web-app',
           url: 'http://localhost:9001',
           reuseExistingServer: !process.env.CI,
           // stdout: 'pipe',

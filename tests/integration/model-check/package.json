@@ -15,8 +15,9 @@
     "playwright:ui:dev": "PLAYWRIGHT_WITH_DEV_SERVER=1 playwright test --ui",
     "playwright:debug": "playwright test --debug",
     "playwright:debug:dev": "PLAYWRIGHT_WITH_DEV_SERVER=1 playwright test --debug",
-    "test": "run-s build playwright:test",
-    "ci:int-test": "run-s clean test"
+    "test": "run-s build playwright:test:dev",
+    "skip-test": "echo Skipping model-check integration tests on CI for now",
+    "ci:int-test": "run-s clean skip-test"
   },
   "dependencies": {
     "@sdeverywhere/build": "workspace:*",

@@ -9,6 +9,9 @@ import { test, expect } from './support/fixtures'
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
 test.describe('Bundle Selector', () => {
+  // XXX: Run tests in serial mode since each test modifies the `bundles` directory
+  test.describe.configure({ mode: 'serial' })
+
   test.beforeEach(async ({ app }) => {
     // Before each test, delete all files and directories in the `bundles` directory except `previous.js`
     const projDir = joinPath(__dirname, '..')

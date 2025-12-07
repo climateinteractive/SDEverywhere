@@ -3,7 +3,7 @@ import { workerPlugin } from '@sdeverywhere/plugin-worker'
 
 export async function config() {
   return {
-    modelFiles: ['sync-check-bundles.mdl'],
+    modelFiles: ['model-check-test.mdl'],
 
     modelSpec: async () => {
       return {
