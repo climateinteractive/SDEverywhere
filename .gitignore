@@ -32,3 +32,6 @@ npm-debug.log*
 # Dependency directories
 emsdk
 node_modules
+
+# Other tools
+.claude
