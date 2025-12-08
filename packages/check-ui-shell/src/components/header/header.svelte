@@ -102,14 +102,12 @@ function onConcurrencyChange(e: Event) {
           <Icon class="icon" data={faCog} />
         </button>
       </div>
-    {:else}
+    {:else if viewModel.devMode}
       <div class="spacer-fixed"></div>
       <div class="header-group">
-        {#if viewModel.devMode}
-          <button class="icon-button filter" on:click={onToggleFilters} aria-label="Filters">
-            <Icon class="icon" data={faFilter} />
-          </button>
-        {/if}
+        <button class="icon-button filter" on:click={onToggleFilters} aria-label="Filters">
+          <Icon class="icon" data={faFilter} />
+        </button>
       </div>
     {/if}
   </div>
