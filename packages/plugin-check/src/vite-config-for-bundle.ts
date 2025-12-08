@@ -242,7 +242,10 @@ export async function createViteConfigForBundle(
             // Note that we need to use `resolveId.call` here in order to provide the
             // right `this` context, which provides Rollup plugin functionality
             const customResolver = nodeResolve({ browser: false })
-            const resolved = await customResolver.resolveId.call(this, source, importer, options)
+            // In Rollup 4, resolveId can either be a function or an object with a `handler` property
+            const resolveIdHook = customResolver.resolveId
+            const resolveIdFn = typeof resolveIdHook === 'function' ? resolveIdHook : resolveIdHook.handler
+            const resolved = await resolveIdFn.call(this, source, importer, options)
             // Force the use of the `dist-esm` variant of the threads.js package
             if (source === 'threads/worker') {
               return resolved.id.replace('worker.mjs', 'dist-esm/worker/index.js')
