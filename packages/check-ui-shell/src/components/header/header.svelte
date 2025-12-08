@@ -9,9 +9,8 @@ import { faCog, faFilter, faHome } from '@fortawesome/free-solid-svg-icons'
 import type { HeaderViewModel } from './header-vm'
 
 export let viewModel: HeaderViewModel
+
 const thresholds = viewModel.thresholds
-const bundleNamesL = viewModel.bundleNamesL
-const bundleNamesR = viewModel.bundleNamesR
 const generatedDateString = viewModel.generatedDateString
 const controlsVisible = viewModel.controlsVisible
 const zoom = viewModel.zoom
@@ -25,30 +24,16 @@ function onHome() {
   dispatch('command', { cmd: 'show-summary' })
 }
 
+function onBundleNameClicked(side: 'left' | 'right') {
+  dispatch('command', { cmd: 'toggle-bundle-selector', side })
+}
+
 function onToggleFilters() {
   dispatch('command', { cmd: 'toggle-filters' })
 }
 
 function onToggleControls() {
   viewModel.controlsVisible.update(v => !v)
-}
-
-function onSelectBundle(kind: string, name: string): void {
-  const changeEvent = new CustomEvent('sde-check-bundle', {
-    detail: {
-      kind,
-      name
-    }
-  })
-  document.dispatchEvent(changeEvent)
-}
-
-function onSelectBundleL(e: Event) {
-  onSelectBundle('left', (e.target as HTMLSelectElement).value)
-}
-
-function onSelectBundleR(e: Event) {
-  onSelectBundle('right', (e.target as HTMLSelectElement).value)
 }
 
 function onConcurrencyChange(e: Event) {
@@ -73,26 +58,27 @@ function onConcurrencyChange(e: Event) {
         <div class="label generated-date">{$generatedDateString}</div>
       </div>
     {/if}
-    {#if viewModel.nameL || $bundleNamesL.length > 1}
+    {#if viewModel.nameL}
       <div class="spacer-fixed"></div>
       <div class="header-group">
         <div class="label">Comparing:</div>
-        {#if $bundleNamesL.length > 1}
-          <select class="selector dataset-color-0" on:change={onSelectBundleL}>
-            {#each $bundleNamesL as name}
-              <option selected={name === viewModel.nameL}>{name}</option>
-            {/each}
-          </select>
+        {#if viewModel.bundleManager}
+          <button
+            class="bundle-button dataset-color-0"
+            data-testid="bundle-selector-left"
+            on:click={() => onBundleNameClicked('left')}
+          >
+            {viewModel.nameL}
+          </button>
+          <button
+            class="bundle-button dataset-color-1"
+            data-testid="bundle-selector-right"
+            on:click={() => onBundleNameClicked('right')}
+          >
+            {viewModel.nameR}
+          </button>
         {:else}
           <div class="label dataset-color-0">{viewModel.nameL}</div>
-        {/if}
-        {#if $bundleNamesR.length > 1}
-          <select class="selector dataset-color-1" on:change={onSelectBundleR}>
-            {#each $bundleNamesR as name}
-              <option selected={name === viewModel.nameR}>{name}</option>
-            {/each}
-          </select>
-        {:else}
           <div class="label dataset-color-1">{viewModel.nameR}</div>
         {/if}
       </div>
@@ -116,14 +102,12 @@ function onConcurrencyChange(e: Event) {
           <Icon class="icon" data={faCog} />
         </button>
       </div>
-    {:else}
+    {:else if viewModel.devMode}
       <div class="spacer-fixed"></div>
       <div class="header-group">
-        {#if viewModel.devMode}
-          <button class="icon-button filter" on:click={onToggleFilters} aria-label="Filters">
-            <Icon class="icon" data={faFilter} />
-          </button>
-        {/if}
+        <button class="icon-button filter" on:click={onToggleFilters} aria-label="Filters">
+          <Icon class="icon" data={faFilter} />
+        </button>
       </div>
     {/if}
   </div>
@@ -213,6 +197,24 @@ function onConcurrencyChange(e: Event) {
 
 .generated-date {
   color: #ddd;
+}
+
+.bundle-button {
+  background: none;
+  padding: 0.25rem 0.5rem;
+  font: inherit;
+  border: 1px solid #333;
+  border-radius: 4px;
+  cursor: pointer;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-color: #888;
+  }
+
+  &:not(:last-child) {
+    margin-right: 1rem;
+  }
 }
 
 .header-controls {

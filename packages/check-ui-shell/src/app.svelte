@@ -5,6 +5,9 @@
 import FontFaceObserver from 'fontfaceobserver'
 
 import { clickOutside } from './components/_shared/click-outside'
+import { isEventFromEditableElement } from './components/_shared/keyboard'
+
+import BundleSelectorPopover from './components/bundle/bundle-selector-popover.svelte'
 
 import type { ComparisonGroupingKind } from './components/compare/_shared/comparison-grouping-kind'
 import ComparisonDetail from './components/compare/detail/compare-detail.svelte'
@@ -26,8 +29,10 @@ import type { TraceViewModel } from './components/trace/trace-vm'
 import Trace from './components/trace/trace.svelte'
 
 import type { AppViewModel } from './app-vm'
+import type { BundleSpec } from './components/bundle/bundle-spec'
 
 export let viewModel: AppViewModel
+
 const checksInProgress = viewModel.checksInProgress
 const progress = viewModel.progress
 const zoom = viewModel.headerViewModel.zoom
@@ -39,6 +44,9 @@ let freeformViewModel: FreeformViewModel
 
 type ViewMode = 'summary' | 'comparison-detail' | 'perf' | 'freeform' | 'trace'
 let viewMode: ViewMode = 'summary'
+
+type BundleSelectorSide = 'left' | 'right' | undefined
+let openedBundleSelectorSide: BundleSelectorSide = undefined
 
 let filtersVisible = false
 
@@ -71,6 +79,32 @@ function showSummary(): void {
   viewMode = 'summary'
 }
 
+function toggleBundleSelector(side: 'left' | 'right'): void {
+  if (side === openedBundleSelectorSide) {
+    openedBundleSelectorSide = undefined
+  } else {
+    openedBundleSelectorSide = side
+  }
+}
+
+function closeBundleSelector(): void {
+  openedBundleSelectorSide = undefined
+}
+
+function onBundleSelected(bundle: BundleSpec): void {
+  // When a bundle is selected, dispatch an event that will be handled at a higher level
+  // to reload the UI using the selected bundle
+  const side = openedBundleSelectorSide
+  const changeEvent = new CustomEvent('sde-check-bundle', {
+    detail: {
+      side,
+      name: bundle.local?.name || bundle.remote?.name,
+      url: bundle.local?.url || bundle.remote?.url
+    }
+  })
+  document.dispatchEvent(changeEvent)
+}
+
 function toggleFilters(): void {
   filtersVisible = !filtersVisible
 }
@@ -85,6 +119,9 @@ function onCommand(event: CustomEvent) {
   switch (cmd) {
     case 'show-summary':
       showSummary()
+      break
+    case 'toggle-bundle-selector':
+      toggleBundleSelector(cmdObj.side)
       break
     case 'toggle-filters':
       toggleFilters()
@@ -147,6 +184,12 @@ function onCommand(event: CustomEvent) {
 }
 
 function onKeyDown(event: KeyboardEvent) {
+  // Ignore keyboard events if they originated in input fields or other editable elements
+  // (since we only want to handle global-level keyboard shortcuts here)
+  if (isEventFromEditableElement(event)) {
+    return
+  }
+
   // Ignore events when there is a modifier key involved
   if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey || event.isComposing) {
     return
@@ -205,16 +248,33 @@ function onKeyDown(event: KeyboardEvent) {
       <Summary on:command={onCommand} viewModel={viewModel.summaryViewModel} />
     {/if}
 
+    {#if openedBundleSelectorSide !== undefined}
+      <!-- svelte-ignore event_directive_deprecated -->
+      <div class="popover-overlay" use:clickOutside on:clickout={closeBundleSelector}>
+        <div class="popover-container bundle-selector-popover-container">
+          <BundleSelectorPopover
+            bundleManager={viewModel.bundleManager}
+            side={openedBundleSelectorSide}
+            onClose={closeBundleSelector}
+            onSelect={bundle => {
+              onBundleSelected(bundle)
+              closeBundleSelector()
+            }}
+          />
+        </div>
+      </div>
+    {/if}
+
     {#if filtersVisible}
       <!-- svelte-ignore event_directive_deprecated -->
-      <div class="filter-popover-overlay" use:clickOutside on:clickout={closeFilters}>
-        <div class="filter-popover-container">
+      <div class="popover-overlay" use:clickOutside on:clickout={closeFilters}>
+        <div class="popover-container filter-popover-container">
           <FilterPopover
             viewModel={viewModel.filterPopoverViewModel}
             onClose={closeFilters}
             onApplyAndRun={() => {
-              closeFilters()
               viewModel.applyFilters()
+              closeFilters()
             }}
           />
         </div>
@@ -248,7 +308,7 @@ function onKeyDown(event: KeyboardEvent) {
   font-size: 2em;
 }
 
-.filter-popover-overlay {
+.popover-overlay {
   position: absolute;
   top: 0;
   left: 0;
@@ -260,17 +320,28 @@ function onKeyDown(event: KeyboardEvent) {
   pointer-events: none;
 }
 
-.filter-popover-container {
+.popover-container {
   position: absolute;
   top: 26px;
-  right: 24px;
   width: 500px;
   height: min(calc(100% - 60px), 600px);
-  background-color: #2c2c2c;
-  border: 1px solid #444;
+  background-color: var(--panel-bg);
+  border: 1px solid var(--panel-border);
   border-radius: 12px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
   pointer-events: auto;
   overflow: hidden;
+}
+
+.bundle-selector-popover-container {
+  left: calc(50% - 250px);
+  width: 500px;
+  height: min(calc(100% - 60px), 500px);
+}
+
+.filter-popover-container {
+  right: 24px;
+  width: 500px;
+  height: min(calc(100% - 60px), 600px);
 }
 </style>

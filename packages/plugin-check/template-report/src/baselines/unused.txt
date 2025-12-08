@@ -1,2 +1,0 @@
-This file is not used but must remain present to ensure that the `template-report/src/baselines`
-directory exists.  See `vite-config-for-report.ts` for details.

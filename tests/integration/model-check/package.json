@@ -1,0 +1,37 @@
+{
+  "name": "model-check",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "clean": "rm -rf sde-prep",
+    "lint": "eslint tests --max-warnings 0",
+    "dev": "sde dev",
+    "build": "sde bundle",
+    "serve-test-bundles": "pnpx http-server --cors -p 9000 .",
+    "serve-report": "pnpx http-server -p 9010 --o sde-prep/check-report",
+    "playwright:test": "playwright test",
+    "playwright:test:dev": "PLAYWRIGHT_WITH_DEV_SERVER=1 playwright test",
+    "playwright:ui": "playwright test --ui",
+    "playwright:ui:dev": "PLAYWRIGHT_WITH_DEV_SERVER=1 playwright test --ui",
+    "playwright:debug": "playwright test --debug",
+    "playwright:debug:dev": "PLAYWRIGHT_WITH_DEV_SERVER=1 playwright test --debug",
+    "test-dev": "run-s build playwright:test:dev",
+    "test-build-with-local-baseline": "TEST_BASELINE=local run-s build",
+    "test-build-with-valid-remote-baseline": "TEST_BASELINE=remote-valid run-s build",
+    "test-build-with-invalid-remote-baseline": "TEST_BASELINE=remote-invalid run-s build",
+    "skip-test": "echo Skipping model-check integration tests on CI for now",
+    "ci:int-test": "run-s clean skip-test"
+  },
+  "dependencies": {
+    "@sdeverywhere/build": "workspace:*",
+    "@sdeverywhere/cli": "workspace:*",
+    "@sdeverywhere/plugin-check": "workspace:*",
+    "@sdeverywhere/plugin-worker": "workspace:*",
+    "@sdeverywhere/runtime": "workspace:*",
+    "@sdeverywhere/runtime-async": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.8"
+  }
+}

@@ -69,6 +69,41 @@ select > option {
 }
 
 /*
+ * Common styles
+ */
+
+:root {
+  /* Text */
+  --text-color-primary: #fff;
+  --text-color-secondary: #ddd;
+  --link-color-hover: #3b82f6;
+
+  /* Borders */
+  --border-color-normal: #777;
+  --border-color-focused: #3b82f6;
+
+  /* Panels */
+  --panel-bg: #2c2c2c;
+  --panel-header-bg: #282828;
+  --panel-footer-bg: #282828;
+  --panel-border: #444;
+  --panel-border-radius: 8px;
+
+  /* Buttons */
+  --button-bg-normal: unset;
+  --button-bg-hover: #555;
+  --button-bg-primary-normal: #0077cc;
+  --button-bg-primary-hover: #005fa3;
+  --button-border-normal: #555;
+  --button-border-hover: #999;
+  --button-border-radius: 8px;
+
+  /* Inputs */
+  --input-bg: #444;
+  --input-border-radius: 0.25rem;
+}
+
+/*
  * Standard colors
  */
 

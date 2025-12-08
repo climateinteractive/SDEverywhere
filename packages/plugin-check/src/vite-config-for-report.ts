@@ -1,39 +1,49 @@
 // Copyright (c) 2022 Climate Interactive / New Venture Fund
 
-import { existsSync, mkdirSync } from 'fs'
-import { dirname, relative, join as joinPath, resolve as resolvePath } from 'path'
-import { fileURLToPath } from 'url'
+import { existsSync, mkdirSync, statSync } from 'node:fs'
+import { dirname, relative, join as joinPath, resolve as resolvePath } from 'node:path'
+import { fileURLToPath } from 'node:url'
 
 import type { Alias, InlineConfig, PluginOption } from 'vite'
 import replace from '@rollup/plugin-replace'
 
 import type { SuiteSummary } from '@sdeverywhere/check-core'
 
+import type { LocalBundleSpec } from './bundle-spec'
 import type { CheckPluginOptions } from './options'
+import { localBundlesPlugin } from './vite-local-bundles-plugin'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 
+/**
+ * NOTE: This function currently only supports creating a Vite config for the
+ * model-check report when the current/baseline bundles are local files.  If
+ * you want to use remote bundles, you must first download them to the local
+ * `bundles` directory and then pass `LocalBundleSpec` instances that include
+ * the local bundle file paths.
+ */
 export function createViteConfigForReport(
+  mode: 'bundle' | 'watch',
   options: CheckPluginOptions | undefined,
   projDir: string,
   prepDir: string,
-  currentBundleName: string,
-  currentBundlePath: string,
+  currentBundleSpec: LocalBundleSpec,
+  baselineBundleSpec: LocalBundleSpec | undefined,
   testConfigPath: string,
   suiteSummary: SuiteSummary | undefined
 ): InlineConfig {
   // Use `template-report` as the root directory for the report project
   const root = resolvePath(__dirname, '..', 'template-report')
 
-  // Make sure the `baselines` directory exists, otherwise Vite's dependency scanner
+  // Make sure the `bundles` directory exists, otherwise Vite's dependency scanner
   // may report errors when processing the `import.meta.glob` call
-  const baselinesDir = resolvePath(projDir, 'baselines')
-  if (!existsSync(baselinesDir)) {
-    mkdirSync(baselinesDir, { recursive: true })
+  const bundlesDir = resolvePath(projDir, 'bundles')
+  if (!existsSync(bundlesDir)) {
+    mkdirSync(bundlesDir, { recursive: true })
   }
 
-  // Include `baselines/*.js` files under the configured project root directory.  This
+  // Include `bundles/*.js` files under the configured project root directory.  This
   // glob path apparently must be a relative path (relative to the `template-report/src`
   // directory where the glob is used).
   const templateSrcDir = resolvePath(root, 'src')
@@ -41,8 +51,11 @@ export function createViteConfigForReport(
   // XXX: The glob pattern must use forward slashes only, so on Windows we need to
   // convert backslashes to slashes
   const relProjDirPath = relProjDir.replaceAll('\\', '/')
-  // TODO: Use baselinesDir from options
-  const baselinesPath = `${relProjDirPath}/baselines/*.js`
+  // TODO: Use localBundlesPath from options
+  const bundlesPath = `${relProjDirPath}/bundles/*.js`
+
+  // Get the last modified time of the current bundle
+  const currentBundleLastModified = statSync(currentBundleSpec.path).mtime.toISOString()
 
   // Calculate output directory relative to the template root
   let reportPath: string
@@ -143,10 +156,10 @@ export function createViteConfigForReport(
       alias: [
         // Use the configured "baseline" bundle if defined, otherwise use the "empty" bundle
         // (which will cause comparison tests to be skipped)
-        alias('@_baseline_bundle_', options?.baseline ? options.baseline.path : '/src/empty-bundle.ts'),
+        alias('@_baseline_bundle_', baselineBundleSpec?.path || '/src/empty-bundle.ts'),
 
         // Use the configured "current" bundle
-        alias('@_current_bundle_', currentBundlePath),
+        alias('@_current_bundle_', currentBundleSpec.path),
 
         // Use the configured test config file
         alias('@_test_config_', testConfigPath),
@@ -171,11 +184,17 @@ export function createViteConfigForReport(
       // Inject the summary JSON into the build
       __SUITE_SUMMARY_JSON__: JSON.stringify(suiteSummaryJson),
 
-      // Inject the baseline branch name
-      __BASELINE_NAME__: JSON.stringify(options?.baseline?.name || ''),
+      // Inject the baseline bundle name
+      __BASELINE_NAME__: JSON.stringify(baselineBundleSpec?.name || ''),
 
-      // Inject the current branch name
-      __CURRENT_NAME__: JSON.stringify(currentBundleName)
+      // Inject the current bundle name
+      __CURRENT_NAME__: JSON.stringify(currentBundleSpec.name),
+
+      // Inject the last modified time of the current bundle
+      __CURRENT_BUNDLE_LAST_MODIFIED__: JSON.stringify(currentBundleLastModified),
+
+      // Inject the remote bundles URL
+      __REMOTE_BUNDLES_URL__: JSON.stringify(options?.remoteBundlesUrl || '')
     },
 
     plugins: [
@@ -188,15 +207,19 @@ export function createViteConfigForReport(
         delimiters: ['', ''],
         values: {
           // Inject the path for baseline bundles
-          // XXX: Note that we use './baselines/*.txt' instead of something special
+          // XXX: Note that we use './bundles/*.txt' instead of something special
           // like './__BASELINE_BUNDLES_PATH__' because sometimes Vite's dependency
           // scanner sees the latter (instead of the injected path) and reports
           // an error since the path does not exist.  As a workaround, we use
-          // './baselines/*.txt', which gets interpreted as the valid path
-          // '.../template-report/src/baselines/*.txt' (see `baselines/unused.txt`).
-          './baselines/*.txt': baselinesPath
+          // './bundles/*.txt', which gets interpreted as the valid path
+          // '.../template-report/src/bundles/*.txt' (see `bundles/unused.txt`).
+          './bundles/*.txt': bundlesPath
         }
-      }) as unknown as PluginOption
+      }) as unknown as PluginOption,
+
+      // When local development mode is active, enable the local bundles plugin that
+      // allows the report app to access the local bundles directory
+      ...(mode === 'watch' ? [localBundlesPlugin(bundlesDir)] : [])
     ],
 
     build: {

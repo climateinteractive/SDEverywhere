@@ -9,6 +9,7 @@ import { get, type Readable } from 'svelte/store'
 
 import type { ContextMenuItem } from '../../_shared/context-menu.svelte'
 import ContextMenu from '../../_shared/context-menu.svelte'
+import { isEventFromEditableElement } from '../../_shared/keyboard'
 
 import type { ComparisonGroupingKind } from '../_shared/comparison-grouping-kind'
 import type { PinnedItemKey } from '../_shared/pinned-item-state'
@@ -174,6 +175,12 @@ function onContextMenuItemSelected(e: CustomEvent) {
 }
 
 function onKeyDown(event: KeyboardEvent) {
+  // Ignore keyboard events if they originated in input fields or other editable elements
+  // (since we only want to handle global-level keyboard shortcuts here)
+  if (isEventFromEditableElement(event)) {
+    return
+  }
+
   if (event.key === 'ArrowLeft') {
     onNavLink('detail-previous')
     event.preventDefault()

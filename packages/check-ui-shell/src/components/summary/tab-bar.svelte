@@ -4,6 +4,8 @@
 <script lang="ts">
 import { createEventDispatcher } from 'svelte'
 
+import { isEventFromEditableElement } from '../_shared/keyboard'
+
 import type { TabBarViewModel } from './tab-bar-vm'
 import TabItem from './tab-item.svelte'
 
@@ -17,6 +19,12 @@ function onItemClicked(index: number): void {
 }
 
 function onKeyDown(event: KeyboardEvent) {
+  // Ignore keyboard events if they originated in input fields or other editable elements
+  // (since we only want to handle global-level keyboard shortcuts here)
+  if (isEventFromEditableElement(event)) {
+    return
+  }
+
   if (event.key === 'ArrowLeft') {
     viewModel.selectedIndex.update(index => {
       return index > 0 ? index - 1 : index

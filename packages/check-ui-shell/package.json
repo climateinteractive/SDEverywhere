@@ -2,12 +2,11 @@
   "name": "@sdeverywhere/check-ui-shell",
   "version": "0.2.12",
   "files": [
-    "dist/**",
-    "types/**"
+    "dist/**"
   ],
   "type": "module",
   "module": "dist/index.js",
-  "types": "types/index.d.ts",
+  "types": "dist/index.d.ts",
   "scripts": {
     "clean": "rm -rf dist",
     "lint:ts": "eslint src --max-warnings 0",
@@ -23,21 +22,24 @@
     "test:storybook:watch": "vitest dev --project=storybook",
     "test:ci": "run-s test:ts",
     "type-check": "tsc --noEmit -p tsconfig-test.json",
-    "build": "vite build",
+    "build:vite": "vite build",
+    "build:dts": "tsup --dts-only",
+    "build": "run-s build:vite build:dts",
     "build:watch": "vite build --watch",
     "storybook": "storybook dev -p 6010",
     "docs": "../../scripts/gen-docs.js",
     "ci:build": "run-s clean lint prettier:check test:ci type-check build docs"
   },
   "dependencies": {
-    "@fortawesome/free-regular-svg-icons": "^6.1.1",
-    "@fortawesome/free-solid-svg-icons": "^6.1.1",
+    "@fortawesome/free-regular-svg-icons": "^7.1.0",
+    "@fortawesome/free-solid-svg-icons": "^7.1.0",
     "@juggle/resize-observer": "^3.4.0",
     "@sdeverywhere/check-core": "^0.1.6",
     "assert-never": "^1.2.1",
     "chart.js": "^2.9.4",
     "copy-text-to-clipboard": "^3.2.0",
     "fontfaceobserver": "^2.3.0",
+    "fuzzysort": "^3.1.0",
     "svelte-dnd-action": "^0.9.50"
   },
   "devDependencies": {

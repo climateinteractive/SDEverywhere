@@ -80,8 +80,8 @@ function triggerUpdate() {
   flex-direction: column;
   flex: 1;
   padding: 1rem;
-  background-color: #2c2c2c;
-  color: #fff;
+  background-color: var(--panel-bg);
+  color: var(--text-color-primary);
   font-family: Roboto, sans-serif;
   font-size: 1rem;
   line-height: 1.3;
@@ -136,7 +136,7 @@ function triggerUpdate() {
 
 .filter-triangle {
   font-size: 1rem;
-  color: #ccc;
+  color: var(--text-color-secondary);
   user-select: none;
 }
 

@@ -15,6 +15,7 @@ import type {
 } from '@sdeverywhere/check-core'
 
 import { mockBundleModel, mockNamedBundle } from './_mocks/mock-bundle'
+import { bundleManagerFromBundles } from './_mocks/mock-bundle-manager'
 import { mockConfigOptions } from './_mocks/mock-config'
 import { mockDataset } from './_mocks/mock-data'
 import { inputVar, outputVar, implVar } from './_mocks/mock-vars'
@@ -204,13 +205,13 @@ async function createAppViewModel(options?: {
 }): Promise<AppViewModel> {
   const modelSpec = mockModelSpec()
   const bundleL = mockNamedBundle(
-    'left',
+    'main',
     createBundleModel(modelSpec, {
       delayInGetDatasets: options?.delayInGetDatasets
     })
   )
   const bundleR = mockNamedBundle(
-    'right',
+    'current',
     createBundleModel(modelSpec, {
       dataOffset: options?.rightDataOffset,
       delayInGetDatasets: options?.delayInGetDatasets
@@ -218,7 +219,8 @@ async function createAppViewModel(options?: {
   )
   const configOptions = mockConfigOptions(bundleL, bundleR, options)
   const appModel = await initAppModel(configOptions)
-  return new AppViewModel(appModel)
+  const bundleManager = bundleManagerFromBundles()
+  return new AppViewModel(appModel, bundleManager, undefined)
 }
 
 const { Story } = defineMeta({
@@ -421,17 +423,17 @@ const { Story } = defineMeta({
     const traceView = canvasElement.querySelector('.trace-container')
     await expect(traceView).not.toBeNull()
 
-    // Verify that the first source option is "left"
+    // Verify that the first source option is "main"
     const source1Select = canvas.getByLabelText('Source 1')
-    await expect(source1Select).toHaveTextContent('left')
+    await expect(source1Select).toHaveTextContent('main')
 
     // Verify that the first scenario option is "All inputs at default"
     const scenario1Select = canvas.getByLabelText('Scenario 1')
     await expect(scenario1Select).toHaveTextContent('All inputs at default')
 
-    // Verify that the second source option is "right"
+    // Verify that the second source option is "current"
     const source2Select = canvas.getByLabelText('Source 2')
-    await expect(source2Select).toHaveTextContent('right')
+    await expect(source2Select).toHaveTextContent('current')
 
     // Verify that the second scenario option is "Selected scenario from check test"
     const scenario2Select = canvas.getByLabelText('Scenario 2')
@@ -453,17 +455,17 @@ const { Story } = defineMeta({
       const traceView = canvasElement.querySelector('.trace-container')
       await expect(traceView).not.toBeNull()
 
-      // Verify that the first source option is "left"
+      // Verify that the first source option is "main"
       const source1Select = canvas.getByLabelText('Source 1')
-      await expect(source1Select).toHaveTextContent('left')
+      await expect(source1Select).toHaveTextContent('main')
 
       // Verify that the first scenario option is "All inputs at default"
       const scenario1Select = canvas.getByLabelText('Scenario 1')
       await expect(scenario1Select).toHaveTextContent('All inputs at default')
 
-      // Verify that the second source option is "right"
+      // Verify that the second source option is "current"
       const source2Select = canvas.getByLabelText('Source 2')
-      await expect(source2Select).toHaveTextContent('right')
+      await expect(source2Select).toHaveTextContent('current')
 
       // Verify that the second scenario option is "Selected scenario from comparison"
       const scenario2Select = canvas.getByLabelText('Scenario 2')

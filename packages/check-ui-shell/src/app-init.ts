@@ -2,18 +2,14 @@
 
 import { mount } from 'svelte'
 
-import type { ConfigOptions, SuiteSummary } from '@sdeverywhere/check-core'
+import type { ConfigOptions } from '@sdeverywhere/check-core'
 
 import { initAppModel } from './model/app-model'
 
+import type { AppShellOptions } from './app-shell-options'
 import { default as AppShell } from './app-shell.svelte'
 import { AppViewModel } from './app-vm'
-
-export interface AppShellOptions {
-  suiteSummary?: SuiteSummary
-  containerId?: string
-  bundleNames?: string[]
-}
+import { BundleManager } from './components/bundle/bundle-manager.svelte'
 
 export function initAppShell(configOptions: ConfigOptions, appShellOptions?: AppShellOptions): void {
   // Initialize the root Svelte component
@@ -23,15 +19,14 @@ export function initAppShell(configOptions: ConfigOptions, appShellOptions?: App
   // Initialize the app model asynchronously
   initAppModel(configOptions)
     .then(appModel => {
-      // Create the app view model
-      const appViewModel = new AppViewModel(appModel, appShellOptions?.suiteSummary)
-
-      if (appShellOptions?.bundleNames) {
-        // Set the list of available bundle names
-        // TODO: Pass these to AppViewModel constructor instead of setting them here
-        appViewModel.headerViewModel.bundleNamesL.set(appShellOptions.bundleNames)
-        appViewModel.headerViewModel.bundleNamesR.set(appShellOptions.bundleNames)
+      // Create a `BundleManager` instance if local development mode is enabled
+      let bundleManager: BundleManager | undefined = undefined
+      if (appShellOptions?.bundleSelectorConfig) {
+        bundleManager = new BundleManager(appShellOptions.bundleSelectorConfig)
       }
+
+      // Create the app view model
+      const appViewModel = new AppViewModel(appModel, bundleManager, appShellOptions?.suiteSummary)
 
       // Update the AppShell component
       mount(AppShell, {
