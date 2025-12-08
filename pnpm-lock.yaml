@@ -717,7 +717,7 @@ importers:
         specifier: ^0.1.6
         version: link:../check-core
       '@sdeverywhere/check-ui-shell':
-        specifier: ^0.2.12
+        specifier: ^0.2.13
         version: link:../check-ui-shell
       '@sdeverywhere/runtime':
         specifier: ^0.2.7
