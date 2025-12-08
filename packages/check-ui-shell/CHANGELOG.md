@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.13](https://github.com/climateinteractive/SDEverywhere/compare/check-ui-shell-v0.2.12...check-ui-shell-v0.2.13) (2025-12-08)
+
+
+### Features
+
+* allow for loading (and downloading) remote bundles in model-check ([#698](https://github.com/climateinteractive/SDEverywhere/issues/698)) ([78400b3](https://github.com/climateinteractive/SDEverywhere/commit/78400b35e41d7225e15540ebbbd0eab98f0a43a4)), closes [#697](https://github.com/climateinteractive/SDEverywhere/issues/697)
+
 ## [0.2.12](https://github.com/climateinteractive/SDEverywhere/compare/check-ui-shell-v0.2.11...check-ui-shell-v0.2.12) (2025-10-31)
 
 

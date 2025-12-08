@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.3.21](https://github.com/climateinteractive/SDEverywhere/compare/plugin-check-v0.3.20...plugin-check-v0.3.21) (2025-12-08)
+
+
+### Features
+
+* allow for loading (and downloading) remote bundles in model-check ([#698](https://github.com/climateinteractive/SDEverywhere/issues/698)) ([78400b3](https://github.com/climateinteractive/SDEverywhere/commit/78400b35e41d7225e15540ebbbd0eab98f0a43a4)), closes [#697](https://github.com/climateinteractive/SDEverywhere/issues/697)
+
+
+### Dependencies
+
+* upgrade rollup to 4.53.3 + upgrade related `[@rollup](https://github.com/rollup)` plugins ([#703](https://github.com/climateinteractive/SDEverywhere/issues/703)) ([fdfb5c7](https://github.com/climateinteractive/SDEverywhere/commit/fdfb5c703172fd7faea4f28972e7e127def4577a)), closes [#702](https://github.com/climateinteractive/SDEverywhere/issues/702)
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/check-ui-shell bumped from ^0.2.12 to ^0.2.13
+
 ## [0.3.20](https://github.com/climateinteractive/SDEverywhere/compare/plugin-check-v0.3.19...plugin-check-v0.3.20) (2025-10-31)
 
 
