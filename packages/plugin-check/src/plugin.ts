@@ -13,21 +13,21 @@ import type { BuildContext, Plugin, ResolvedConfig, ResolvedModelSpec } from '@s
 import type { Bundle, ConfigInitOptions, SuiteSummary } from '@sdeverywhere/check-core'
 import { createConfig } from '@sdeverywhere/check-core'
 
+import { downloadBundle } from './bundle-file-ops'
+import type { LocalBundleSpec } from './bundle-spec'
 import type { CheckBundle, CheckPluginOptions } from './options'
 import { runTestSuite } from './run-suite'
 import { createViteConfigForBundle } from './vite-config-for-bundle'
 import { createViteConfigForReport } from './vite-config-for-report'
 import { createViteConfigForTests } from './vite-config-for-tests'
-import type { BundleSpec, LocalBundleSpec } from './bundle-spec'
-import { downloadBundle } from './bundle-file-ops'
 
 export function checkPlugin(options?: CheckPluginOptions): Plugin {
   return new CheckPlugin(options)
 }
 
 interface TestOptions {
-  currentBundleSpec: BundleSpec
-  baselineBundleSpec: BundleSpec | undefined
+  currentBundleSpec: LocalBundleSpec
+  baselineBundleSpec: LocalBundleSpec | undefined
   testConfigPath: string
 }
 
@@ -41,13 +41,13 @@ class CheckPlugin implements Plugin {
       // Test config was not provided, so generate a default config in watch mode.
       // The test template uses import.meta.glob so that checks are re-run
       // automatically when the `{checks/comparisons}/*.yaml` files are changed.
-      await this.genTestConfig(config, 'watch')
+      await this.genTestConfig('watch', config)
     }
 
     // For development mode, run Vite in dev mode so that it serves the
     // model-check report locally (with live reload enabled).  When a model
     // test file is changed, the tests will be re-run in the browser.
-    const testOptions = this.resolveTestOptions(config)
+    const testOptions = await this.resolveTestOptions('watch', config)
     const viteConfig = await this.createViteConfigForReport('watch', config, testOptions, undefined)
     const server: ViteDevServer = await createServer(viteConfig)
     await server.listen()
@@ -84,14 +84,14 @@ class CheckPlugin implements Plugin {
       if (context.config.mode === 'production' || firstBuild) {
         // Test config was not provided, so generate a default config
         context.log('info', 'Generating model check test configuration...')
-        await this.genTestConfig(context.config, 'build')
+        await this.genTestConfig('bundle', context.config)
       }
     }
 
     if (context.config.mode === 'production') {
       // For production builds, run the model checks/comparisons, and then
       // inject the results into the generated report
-      const testOptions = this.resolveTestOptions(context.config)
+      const testOptions = await this.resolveTestOptions('bundle', context.config)
       return this.runChecks(context, testOptions)
     } else {
       // Nothing to do here in dev mode; the dev server will refresh and
@@ -119,10 +119,10 @@ class CheckPlugin implements Plugin {
     await build(viteConfig)
   }
 
-  private async genTestConfig(config: ResolvedConfig, mode: 'build' | 'watch'): Promise<void> {
+  private async genTestConfig(mode: 'bundle' | 'watch', config: ResolvedConfig): Promise<void> {
     const rootDir = config.rootDir
     const prepDir = config.prepDir
-    const viteConfig = createViteConfigForTests(rootDir, prepDir, mode)
+    const viteConfig = createViteConfigForTests(mode, rootDir, prepDir)
     await build(viteConfig)
   }
 
@@ -130,12 +130,8 @@ class CheckPlugin implements Plugin {
     context.log('info', 'Running model checks...')
 
     type BundleModule = { createBundle(): Bundle }
-    async function importBundleModule(bundleSpec: BundleSpec): Promise<BundleModule> {
-      if (bundleSpec.kind === 'local') {
-        return import(relativeToSourcePath(bundleSpec.path))
-      } else {
-        return import(bundleSpec.url)
-      }
+    async function importBundleModule(bundleSpec: LocalBundleSpec): Promise<BundleModule> {
+      return import(relativeToSourcePath(bundleSpec.path))
     }
 
     // Load the bundles used by the model check/compare configuration.  We
@@ -188,41 +184,73 @@ class CheckPlugin implements Plugin {
     return result.allChecksPassed
   }
 
-  private resolveTestOptions(config: ResolvedConfig): TestOptions {
-    function resolveBundleSpec(bundle: CheckBundle | undefined): BundleSpec | undefined {
-      if (bundle?.path !== undefined) {
-        // Use the provided local bundle path
+  private async resolveTestOptions(mode: 'bundle' | 'watch', config: ResolvedConfig): Promise<TestOptions> {
+    // Helper function that resolves the bundle, downloading it to the local `bundles` directory
+    // first if necessary.
+    async function resolveBundle(bundle: CheckBundle | undefined): Promise<LocalBundleSpec> {
+      // Note that Node.js currently only supports importing bundles from a local file.
+      // If `bundle` points to a remote bundle, we need to first download it to the
+      // local bundles directory.
+      if (bundle?.url !== undefined) {
+        // The bundle is remote, so download it to the local `bundles` directory
+        const localBundlePath = await downloadBundle(
+          bundle.url,
+          bundle.name,
+          // TODO: We don't know the last modified time of the remote bundle here, so we use
+          // undefined (which means the local file will be created with the current timestamp)
+          undefined,
+          joinPath(config.rootDir, 'bundles')
+        )
         return {
-          kind: 'local',
+          name: bundle.name,
+          path: localBundlePath
+        }
+      } else if (bundle?.path !== undefined) {
+        // Use the provided local bundle path
+        // TODO: Fail fast if the bundle path does not exist?
+        return {
           name: bundle.name,
           path: bundle.path
-        }
-      } else if (bundle?.url !== undefined) {
-        // Use the provided remote bundle URL
-        return {
-          kind: 'remote',
-          name: bundle.name,
-          url: bundle.url
         }
       } else {
         // No bundle spec was provided, so use the generated "current" bundle
         return {
-          kind: 'local',
-          name: 'current',
+          name: bundle?.name || 'current',
           path: joinPath(config.prepDir, 'check-bundle.js')
         }
       }
     }
 
-    // Resolve the current bundle spec
-    const currentBundleSpec = resolveBundleSpec(this.options?.current)
+    // Resolve the current bundle.  In "bundle" (production) mode, we use the provided
+    // plugin options.  In "watch" (local development) mode, we ignore the plugin options
+    // and use the generated "current" bundle, since the local report will allow the user
+    // to select any local or remote bundle.  Note that if this step fails, an error will
+    // be thrown and the build will fail, since this is a required step for creating the
+    // model-check report.
+    const currentBundleSpec = await resolveBundle(mode === 'bundle' ? this.options?.current : undefined)
 
-    // Only resolve the baseline bundle spec if defined in the config; if
-    // it is undefined, we will only load the "current" bundle and run the
-    // check tests (no comparisons will be run)
-    let baselineBundleSpec: BundleSpec | undefined
-    if (this.options?.baseline) {
-      baselineBundleSpec = resolveBundleSpec(this.options.baseline)
+    // Only resolve the baseline bundle if we are building the production report and the
+    // baseline bundle is defined in the plugin options.  If it is undefined, we will
+    // only run check tests (no comparisons will be run).
+    let baselineBundleSpec: LocalBundleSpec | undefined
+    if (mode === 'bundle' && this.options?.baseline) {
+      // Note that this step is allowed to fail, since the first time we create the report,
+      // the baseline bundle may not already exist on the remote server.  If downloading
+      // fails, log it as a warning and continue with the build; the report will contain
+      // check tests but no comparison tests will be included.
+      try {
+        baselineBundleSpec = await resolveBundle(this.options.baseline)
+      } catch (e) {
+        const name = this.options.baseline.name
+        const loc = this.options.baseline.url || this.options.baseline.path
+        // TODO: Use `context.log('warning')` here (if context is available)?
+        console.warn(
+          `WARNING: Failed to load '${name}' bundle from '${loc}'; ` +
+            'check tests will be run but comparisons will be skipped. ' +
+            'Cause:',
+          e
+        )
+      }
     }
 
     let testConfigPath: string
@@ -247,65 +275,13 @@ class CheckPlugin implements Plugin {
     testOptions: TestOptions,
     suiteSummary: SuiteSummary | undefined
   ): Promise<InlineConfig> {
-    // Note that `createViteConfigForReport` currently only supports loading
-    // from a local bundle file.  If `originalBundleSpec` points to a remote
-    // bundle, we need to first download it to the local bundles directory.
-    async function getLocalBundle(originalBundleSpec: BundleSpec): Promise<LocalBundleSpec> {
-      if (originalBundleSpec.kind === 'local') {
-        // The bundle is already local
-        return originalBundleSpec
-      } else {
-        // The bundle is remote, so download it to the local `bundles` directory
-        const localBundlePath = await downloadBundle(
-          originalBundleSpec.url,
-          originalBundleSpec.name,
-          // TODO: We don't know the last modified time of the remote bundle here, so we use
-          // undefined (which means the local file will be created with the current timestamp)
-          undefined,
-          joinPath(config.rootDir, 'bundles')
-        )
-        return {
-          kind: 'local',
-          name: originalBundleSpec.name,
-          path: localBundlePath
-        }
-      }
-    }
-
-    // Ensure that we have a local version of the current bundle.  If this step fails,
-    // an error will be thrown and the build will fail, since this is a required step
-    // for creating the model-check report.
-    const localCurrentBundleSpec = await getLocalBundle(testOptions.currentBundleSpec)
-
-    // Ensure that we have a local version of the baseline bundle, if defined.  This
-    // step is allowed to fail, since the first time we create the report, the baseline
-    // bundle may not already exist on the remote server.  If downloading fails, log the
-    // error and continue with the build; the report will contain check tests but no
-    // comparison tests will be run.
-    let localBaselineBundleSpec: LocalBundleSpec | undefined
-    if (mode === 'bundle' && testOptions.baselineBundleSpec) {
-      try {
-        localBaselineBundleSpec = await getLocalBundle(testOptions.baselineBundleSpec)
-      } catch (e) {
-        const spec = testOptions.baselineBundleSpec
-        const name = spec.name
-        const loc = spec.kind === 'local' ? spec.path : spec.url
-        console.warn(
-          `WARNING: Failed to load '${name}' bundle from '${loc}'; ` +
-            'check tests will be run but comparisons will be skipped. ' +
-            'Cause:',
-          e
-        )
-      }
-    }
-
     return createViteConfigForReport(
       mode,
       this.options,
       config.rootDir,
       config.prepDir,
-      localCurrentBundleSpec,
-      localBaselineBundleSpec,
+      testOptions.currentBundleSpec,
+      testOptions.baselineBundleSpec,
       testOptions.testConfigPath,
       suiteSummary
     )
