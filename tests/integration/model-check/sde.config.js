@@ -1,6 +1,24 @@
 import { checkPlugin } from '@sdeverywhere/plugin-check'
 import { workerPlugin } from '@sdeverywhere/plugin-worker'
 
+let baseline
+if (process.env.TEST_BASELINE === 'remote-valid') {
+  baseline = {
+    name: 'base',
+    url: 'http://localhost:9000/sde-prep/check-bundle.js'
+  }
+} else if (process.env.TEST_BASELINE === 'remote-invalid') {
+  baseline = {
+    name: 'base',
+    url: 'http://localhost:9000/sde-prep/check-bundle-INVALID.js'
+  }
+} else if (process.env.TEST_BASELINE === 'local') {
+  baseline = {
+    name: 'base',
+    path: 'sde-prep/check-bundle.js'
+  }
+}
+
 export async function config() {
   return {
     modelFiles: ['model-check-test.mdl'],
@@ -22,6 +40,7 @@ export async function config() {
 
       // Run model check
       checkPlugin({
+        baseline,
         remoteBundlesUrl: 'http://localhost:9000/remote-bundles.json',
         serverPort: 9001
       })
