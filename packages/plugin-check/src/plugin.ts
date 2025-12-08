@@ -62,12 +62,12 @@ class CheckPlugin implements Plugin {
     const firstBuild = this.firstBuild
     this.firstBuild = false
 
-    // For both production builds and local development, generate default bundle
+    // For both production builds and local development, generate a default bundle
     // in this post-build step each time a source file is changed
     // TODO: We could potentially use watch mode for the bundle similar to
     // what we do for the test config, but the bundle depends on the ModelSpec,
     // which currently isn't made available to the `watch` function
-    if (this.options?.current === undefined) {
+    if (this.options?.current?.path === undefined && this.options?.current?.url === undefined) {
       // Path to current bundle was not provided, so generate a default bundle
       if (context.config.mode === 'development') {
         // Copy the previous bundle to the `bundles` directory so that
