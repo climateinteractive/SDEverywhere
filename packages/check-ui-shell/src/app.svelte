@@ -5,6 +5,7 @@
 import FontFaceObserver from 'fontfaceobserver'
 
 import { clickOutside } from './components/_shared/click-outside'
+import { isEventFromEditableElement } from './components/_shared/keyboard'
 
 import BundleSelectorPopover from './components/bundle/bundle-selector-popover.svelte'
 
@@ -183,6 +184,12 @@ function onCommand(event: CustomEvent) {
 }
 
 function onKeyDown(event: KeyboardEvent) {
+  // Ignore keyboard events if they originated in input fields or other editable elements
+  // (since we only want to handle global-level keyboard shortcuts here)
+  if (isEventFromEditableElement(event)) {
+    return
+  }
+
   // Ignore events when there is a modifier key involved
   if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey || event.isComposing) {
     return
