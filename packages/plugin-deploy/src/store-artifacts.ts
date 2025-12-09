@@ -369,10 +369,10 @@ function updateMetadata(context: BuildContext, baseUrl: string, currentBranchSpe
       bundleSpecs.push({
         name: branchSpec.name,
         // TODO: For now we store the full URL to the bundle in the `bundles.json` file using
-        // the `PUBLISH_BASE_URL` environment variable.  Ideally we could use a relative URL
+        // the `baseUrl` value from the plugin options.  Ideally we could use a relative URL
         // here instead of encoding the full URL in the `bundles.json` file, but
         // `@sdeverywhere/plugin-check` currently doesn't understand relative URLs.
-        url: `${baseUrl}/${branchSpec.products.checkBundle}`,
+        url: `${baseUrl}/${branchSpec.products.checkBundle.path}`,
         lastModified: branchSpec.lastModified
       })
     }
