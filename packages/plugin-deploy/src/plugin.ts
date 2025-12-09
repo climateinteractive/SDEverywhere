@@ -51,6 +51,12 @@ class DeployPlugin implements Plugin {
     context.log('verbose', 'Copying build products to deploy directory...')
     copyProducts(context, resolvedOptions)
 
+    // XXX: Skip the `storeArtifacts` step if running tests
+    if (process.env.VITEST === 'true') {
+      context.log('info', 'Skipping `storeArtifacts` step in test mode...')
+      return true
+    }
+
     // Get the name of the current branch.  If `GITHUB_REF_NAME` is not defined,
     // skip storing artifacts.
     const currentBranchName = getCurrentBranchName()
@@ -82,7 +88,11 @@ function getRepoOwnerAndName(): [string, string] | undefined {
 }
 
 function getCurrentBranchName(): string | undefined {
-  return process.env.GITHUB_REF_NAME
+  if (process.env.VITEST) {
+    return process.env.TEST_BRANCH_NAME
+  } else {
+    return process.env.GITHUB_REF_NAME
+  }
 }
 
 function resolveOptions(context: BuildContext, userOptions: DeployPluginOptions): ResolvedPluginOptions {
