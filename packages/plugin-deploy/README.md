@@ -168,7 +168,7 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Check out current branch
         uses: actions/checkout@v5
         with:
           # Fetch full history for `artifacts` branch operations
@@ -184,9 +184,11 @@ jobs:
         run: npm ci
 
       - name: Build
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: ./scripts/ci-build.js
 
-      - name: Checkout artifacts branch
+      - name: Check out artifacts branch
         run: git checkout artifacts
 
       - name: Set up GitHub Pages
