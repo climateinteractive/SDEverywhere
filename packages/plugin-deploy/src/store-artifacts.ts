@@ -256,7 +256,8 @@ export function storeArtifacts(
     return true
   } catch (error) {
     // TODO: Use `logError` here once it is available in `BuildContext` and pass error
-    context.log('error', '❌ Error storing artifacts: ' + error.message)
+    context.log('error', '❌ Error storing artifacts:')
+    console.error(error)
     return false
   } finally {
     // Switch back to the original branch
