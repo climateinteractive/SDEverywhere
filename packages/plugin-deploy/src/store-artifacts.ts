@@ -177,7 +177,7 @@ export function storeArtifacts(
     // Update `metadata/index.json` to include the current branch
     const currentBranchUrlPath = `branch/${currentBranchName}`
     const productSpecs: Record<string, ProductSpec> = {}
-    for (const [name, product] of Object.entries(options.products)) {
+    for (const [name, product] of Object.entries(options.products || {})) {
       productSpecs[name] = {
         displayName: product.displayName,
         path: `${currentBranchUrlPath}/${product.dstPath}`
@@ -365,7 +365,7 @@ function updateMetadata(context: BuildContext, baseUrl: string, currentBranchSpe
   for (const branchSpec of branchSpecs) {
     // TODO: For now we check for a specific build product with key `checkBundle`; we should
     // make this configurable instead of expecting a specific key format
-    if (branchSpec.products.checkBundle) {
+    if (branchSpec.products?.checkBundle) {
       bundleSpecs.push({
         name: branchSpec.name,
         // TODO: For now we store the full URL to the bundle in the `bundles.json` file using
@@ -397,7 +397,7 @@ function generateIndexHtml(context: BuildContext, branchSpecs: BranchSpec[]) {
 
   function getBranchLinksHtml(branch: BranchSpec): string {
     const links: string[] = []
-    for (const product of Object.values(branch.products)) {
+    for (const product of Object.values(branch.products || {})) {
       // Only include a link if the product has a display name
       if (product.displayName) {
         links.push(`<a href="${product.path}">${product.displayName}</a>`)

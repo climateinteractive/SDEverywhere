@@ -31,7 +31,7 @@ class DeployPlugin implements Plugin {
       return true
     }
 
-    context.log('info', 'Preparing to deploy build products...')
+    context.log('info', '\nPreparing to deploy build products...')
 
     // Resolve the plugin options
     const resolvedOptions = resolveOptions(context, this.userOptions)
