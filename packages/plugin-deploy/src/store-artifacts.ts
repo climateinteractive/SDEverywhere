@@ -103,7 +103,8 @@ export function storeArtifacts(
 ): boolean {
   const deployDir = options.deployDir
   if (!existsSync(deployDir)) {
-    throw new Error(`Deployment directory '${deployDir}' does not exist`)
+    context.log('error', `ERROR: Deployment directory '${deployDir}' does not exist`)
+    return false
   }
 
   try {
@@ -252,8 +253,15 @@ export function storeArtifacts(
     execSync(`git push --force origin ${artifactsBranchName}`, { stdio: 'inherit' })
 
     context.log('info', `✅ Successfully stored artifacts for branch '${currentBranchName}'`)
+    return true
   } catch (error) {
-    console.error('❌ Error storing artifacts:', error.message)
+    // TODO: Use `logError` here once it is available in `BuildContext` and pass error
+    context.log('error', '❌ Error storing artifacts: ' + error.message)
+    return false
+  } finally {
+    // Switch back to the original branch
+    context.log('verbose', `Switching to original '${currentBranchName}' branch...`)
+    execSync(`git checkout ${currentBranchName}`, { stdio: 'inherit' })
   }
 }
 
