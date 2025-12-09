@@ -114,6 +114,19 @@ export function storeArtifacts(
 
     context.log('info', `Storing artifacts for branch '${currentBranchName}'...`)
 
+    // Configure git so that the commits in the following steps are attributed to
+    // the current user
+    const githubActor = process.env.GITHUB_ACTOR
+    if (!githubActor) {
+      context.log(
+        'error',
+        'Failed to get the GitHub username associated with the latest push (GITHUB_ACTOR is not defined); the artifacts branch will not be updated'
+      )
+      return false
+    }
+    execSync(`git config user.name "${githubActor}"`, { stdio: 'inherit' })
+    execSync(`git config user.email "${githubActor}@users.noreply.github.com"`, { stdio: 'inherit' })
+
     // Check if `artifacts` branch exists
     let artifactsExists
     try {
