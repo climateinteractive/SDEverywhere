@@ -1,0 +1,54 @@
+{
+  "name": "@sdeverywhere/plugin-deploy",
+  "version": "0.1.0",
+  "files": [
+    "bin/**",
+    "dist/**",
+    "template-bundle/**",
+    "template-report/**",
+    "template-tests/**"
+  ],
+  "type": "module",
+  "main": "dist/index.cjs",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "scripts": {
+    "clean": "rm -rf dist",
+    "lint": "eslint src --max-warnings 0",
+    "prettier:check": "prettier --check .",
+    "prettier:fix": "prettier --write .",
+    "precommit": "../../scripts/precommit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ci": "vitest run",
+    "type-check": "tsc --noEmit -p tsconfig-test.json",
+    "build": "tsup",
+    "docs": "../../scripts/gen-docs.js",
+    "ci:build": "run-s clean lint prettier:check test:ci type-check build docs"
+  },
+  "peerDependencies": {
+    "@sdeverywhere/build": "^0.3.7"
+  },
+  "devDependencies": {
+    "@sdeverywhere/build": "*",
+    "@types/node": "^20.14.8"
+  },
+  "author": "Climate Interactive",
+  "license": "MIT",
+  "homepage": "https://sdeverywhere.org",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/climateinteractive/SDEverywhere.git",
+    "directory": "packages/plugin-deploy"
+  },
+  "bugs": {
+    "url": "https://github.com/climateinteractive/SDEverywhere/issues"
+  }
+}

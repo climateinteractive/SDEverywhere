@@ -782,6 +782,15 @@ importers:
         specifier: ^0.7.0
         version: 0.7.0
 
+  packages/plugin-deploy:
+    devDependencies:
+      '@sdeverywhere/build':
+        specifier: '*'
+        version: link:../build
+      '@types/node':
+        specifier: ^20.14.8
+        version: 20.19.19
+
   packages/plugin-vite:
     devDependencies:
       '@sdeverywhere/build':
