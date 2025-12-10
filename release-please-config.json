@@ -13,7 +13,7 @@
     "packages/plugin-vite": {},
     "packages/plugin-wasm": {},
     "packages/plugin-worker": {},
-    "packages/plugin-deploy": { "release-as": "0.1.0" },
+    "packages/plugin-deploy": {},
     "packages/create": {}
   },
   "plugins": ["node-workspace"],
