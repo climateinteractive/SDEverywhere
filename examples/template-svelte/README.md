@@ -57,6 +57,21 @@ npm run dev
 This project automatically publishes your simulator and model-check reports to
 a public website (hosted on GitHub Pages) whenever you push changes to GitHub.
 
+NOTE: The `deployPlugin` step in the `sde.config.js` file will only be enabled
+if you set `baseUrl`; see instructions at the top of that file for details.
+Once you set `baseUrl` and push your changes to GitHub, your builds will fail
+until you manually enable GitHub Pages for your repo.
+
+To enable GitHub Pages for your repository:
+
+1. Go to the GitHub repository settings (`https://github.com/{USER}/{REPO}/settings`)
+2. In the sidebar (under "Code and automation"), select "Pages"
+3. Under "Build and deployment", change "Source" to "GitHub Actions"
+4. In the tab bar, select "Actions"
+5. Click on the most recent failed workflow run
+6. In the upper right corner, click "Re-run jobs" then "Re-run all jobs"
+7. If the build succeeds, you should see a link to the deployed website
+
 ### Automatic Publishing
 
 - **Every time you push changes** to any branch on GitHub, a workflow automatically runs.
