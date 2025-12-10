@@ -18,20 +18,20 @@ import { workerPlugin } from '@sdeverywhere/plugin-worker'
 // If `deployBaseUrl` is defined, this project will be deployed automatically to
 // GitHub Pages every time you push changes to GitHub.  You should set `deployBaseUrl`
 // using the following template (replace the {GH} placeholders with the actual values):
-//   baseUrl = 'https://{GH_USERNAME_OR_ORG}.github.io/{GH_REPO_NAME}'
+//   deployBaseUrl = 'https://{GH_USERNAME_OR_ORG}.github.io/{GH_REPO_NAME}'
 //
 // For example, if your GitHub username is "sdmodeler123", and your GitHub repository
-// is called "my-sd-model", you should set `baseUrl` as follows:
-//   baseUrl = 'https://sdmodeler123.github.io/my-sd-model'
+// is called "my-sd-model", you should set `deployBaseUrl` as follows:
+//   deployBaseUrl = 'https://sdmodeler123.github.io/my-sd-model'
 //
 // IMPORTANT: If you set up GitHub Pages to use a custom domain, be sure to update
 // this variable to use that custom domain, otherwise model-check may fail to load
 // bundles due to cross origin redirect issues, for example:
-//   baseUrl = 'https://sdmodeler123.com/my-sd-model'
+//   deployBaseUrl = 'https://sdmodeler123.com/my-sd-model'
 //
 // If you use a different host/server (AWS, GitLab, etc) or publish to a different
 // directory structure, you can update this variable to suit your needs, for example:
-//   baseUrl: 'https://sdmodeler123.com/projects/my-model'
+//   deployBaseUrl = 'https://sdmodeler123.com/projects/my-model'
 //
 // const deployBaseUrl = 'https://{GH_USERNAME_OR_ORG}.github.io/{GH_REPO_NAME}'
 const deployBaseUrl = undefined
