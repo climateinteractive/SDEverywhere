@@ -345,17 +345,20 @@ importers:
         specifier: ^0.3.7
         version: link:../../packages/build
       '@sdeverywhere/check-core':
-        specifier: ^0.1.5
+        specifier: ^0.1.6
         version: link:../../packages/check-core
       '@sdeverywhere/cli':
-        specifier: ^0.7.34
+        specifier: ^0.7.36
         version: link:../../packages/cli
       '@sdeverywhere/plugin-check':
-        specifier: ^0.3.18
+        specifier: ^0.3.21
         version: link:../../packages/plugin-check
       '@sdeverywhere/plugin-config':
         specifier: ^0.2.8
         version: link:../../packages/plugin-config
+      '@sdeverywhere/plugin-deploy':
+        specifier: ^0.1.0
+        version: link:../../packages/plugin-deploy
       '@sdeverywhere/plugin-vite':
         specifier: ^0.2.0
         version: link:../../packages/plugin-vite
@@ -392,6 +395,9 @@ importers:
       prettier:
         specifier: ^3.6.2
         version: 3.6.2
+      prettier-plugin-svelte:
+        specifier: ^3.4.0
+        version: 3.4.0(prettier@3.6.2)(svelte@5.39.10)
       typescript:
         specifier: ^5.2.2
         version: 5.2.2
