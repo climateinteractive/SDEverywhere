@@ -1,7 +1,7 @@
 <!-- SCRIPT -->
 <script lang="ts">
-import { _ } from 'svelte-i18n'
 import type { GraphSpec } from '@core'
+import { _ } from '@shared/strings'
 
 export let graphSpec: GraphSpec
 </script>
