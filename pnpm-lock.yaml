@@ -223,7 +223,7 @@ importers:
         specifier: ^7.1.9
         version: 7.1.9(@types/node@20.19.19)(sass@1.77.8)
 
-  examples/template-default:
+  examples/template-jquery:
     devDependencies:
       '@eslint/js':
         specifier: ^9.37.0
@@ -280,7 +280,7 @@ importers:
         specifier: ^5.2.2
         version: 5.2.2
 
-  examples/template-default/packages/app:
+  examples/template-jquery/packages/app:
     dependencies:
       bootstrap-slider:
         specifier: 10.6.2
@@ -299,7 +299,7 @@ importers:
         specifier: ^7.1.9
         version: 7.1.9(@types/node@20.19.19)(sass@1.77.8)
 
-  examples/template-default/packages/core:
+  examples/template-jquery/packages/core:
     dependencies:
       '@sdeverywhere/runtime':
         specifier: ^0.2.7
