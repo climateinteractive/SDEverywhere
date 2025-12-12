@@ -18,8 +18,7 @@
   },
   "dependencies": {
     "bootstrap-slider": "10.6.2",
-    "chart.js": "^2.9.4",
-    "svelte-i18n": "^4.0.1"
+    "chart.js": "^2.9.4"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^6.2.1",

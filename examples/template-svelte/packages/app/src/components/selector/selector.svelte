@@ -1,6 +1,6 @@
 <!-- SCRIPT -->
 <script lang="ts">
-import { _ } from 'svelte-i18n'
+import { _ } from '@shared/strings'
 
 import type { SelectorViewModel } from './selector-vm'
 
