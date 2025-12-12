@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.31](https://github.com/climateinteractive/SDEverywhere/compare/create-v0.2.30...create-v0.2.31) (2025-12-12)
+
+
+### Bug Fixes
+
+* make template-svelte the default option in create package + rename template-default to template-jquery ([#714](https://github.com/climateinteractive/SDEverywhere/issues/714)) ([d481a00](https://github.com/climateinteractive/SDEverywhere/commit/d481a00ff870f57bb04c7ddf0bade41a92851b63)), closes [#713](https://github.com/climateinteractive/SDEverywhere/issues/713)
+
 ## [0.2.30](https://github.com/climateinteractive/SDEverywhere/compare/create-v0.2.29...create-v0.2.30) (2025-10-17)
 
 
