@@ -74,6 +74,12 @@ export function localBundlesPlugin(bundlesDir: string): Plugin {
           // Send success message back to client
           console.log(`[sde-local-bundles] Downloaded bundle to ${filePath}`)
           client.send('download-bundle-success', { name, filePath: `${name}.js` })
+
+          // XXX: Reload the server so that the new bundle is available via `import.meta.glob`.
+          // This is a workaround for the fact that `import.meta.glob` does not rescan after
+          // changes are made to the bundles directory.  The problem with this is that it will
+          // cause the page to reload and the user will lose their place in the UI.
+          server.restart()
         } catch (error) {
           // Send error message back to client
           console.error(`[sde-local-bundles] Failed to download bundle:`, error)
@@ -92,6 +98,12 @@ export function localBundlesPlugin(bundlesDir: string): Plugin {
           // Send success message back to client
           console.log(`[sde-local-bundles] Copied bundle to ${filePath}`)
           client.send('copy-bundle-success', { name: newName, filePath: `${newName}.js` })
+
+          // XXX: Reload the server so that the new bundle is available via `import.meta.glob`.
+          // This is a workaround for the fact that `import.meta.glob` does not rescan after
+          // changes are made to the bundles directory.  The problem with this is that it will
+          // cause the page to reload and the user will lose their place in the UI.
+          server.restart()
         } catch (error) {
           // Send error message back to client
           console.error(`[sde-local-bundles] Failed to copy bundle:`, error)

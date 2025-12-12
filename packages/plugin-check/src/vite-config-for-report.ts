@@ -43,7 +43,7 @@ export function createViteConfigForReport(
     mkdirSync(bundlesDir, { recursive: true })
   }
 
-  // Include `bundles/*.js` files under the configured project root directory.  This
+  // Include `bundles/**/*.js` files under the configured project root directory.  This
   // glob path apparently must be a relative path (relative to the `template-report/src`
   // directory where the glob is used).
   const templateSrcDir = resolvePath(root, 'src')
@@ -52,7 +52,7 @@ export function createViteConfigForReport(
   // convert backslashes to slashes
   const relProjDirPath = relProjDir.replaceAll('\\', '/')
   // TODO: Use localBundlesPath from options
-  const bundlesPath = `${relProjDirPath}/bundles/*.js`
+  const bundlesPath = `${relProjDirPath}/bundles/**/*.js`
 
   // Get the last modified time of the current bundle
   const currentBundleLastModified = statSync(currentBundleSpec.path).mtime.toISOString()
@@ -207,13 +207,13 @@ export function createViteConfigForReport(
         delimiters: ['', ''],
         values: {
           // Inject the path for baseline bundles
-          // XXX: Note that we use './bundles/*.txt' instead of something special
+          // XXX: Note that we use './bundles/**/*.txt' instead of something special
           // like './__BASELINE_BUNDLES_PATH__' because sometimes Vite's dependency
           // scanner sees the latter (instead of the injected path) and reports
           // an error since the path does not exist.  As a workaround, we use
-          // './bundles/*.txt', which gets interpreted as the valid path
-          // '.../template-report/src/bundles/*.txt' (see `bundles/unused.txt`).
-          './bundles/*.txt': bundlesPath
+          // './bundles/**/*.txt', which gets interpreted as the valid path
+          // '.../template-report/src/bundles/**/*.txt' (see `bundles/unused.txt`).
+          './bundles/**/*.txt': bundlesPath
         }
       }) as unknown as PluginOption,
 

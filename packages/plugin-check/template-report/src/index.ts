@@ -43,7 +43,7 @@ function saveBundleMetadata(side: 'left' | 'right', metadata: BundleMetadata): v
 let savedBundleMetadataL: BundleMetadata | undefined
 let savedBundleMetadataR: BundleMetadata | undefined
 // The following value will be injected by `vite-config-for-report.ts`
-const bundlesPath = './bundles/*.txt'
+const bundlesPath = './bundles/**/*.txt'
 if (import.meta.hot && bundlesPath) {
   // Restore the previously selected bundles (from before the page was reloaded)
   savedBundleMetadataL = loadBundleMetadata('left')
@@ -131,28 +131,55 @@ async function initForLocal(): Promise<void> {
       // since Vite's dependency resolver will report errors if it is invalid
       // (not a literal).
       try {
-        const bundlesGlob = import.meta.glob('./bundles/*.txt', {
+        const bundlesGlob = import.meta.glob('./bundles/**/*.txt', {
           eager: false
         })
-        const remoteBundleUrlParts = bundleMetadata.url.split('/')
-        const remoteBundleFileName = remoteBundleUrlParts[remoteBundleUrlParts.length - 1]
-        const bundleKey = Object.keys(bundlesGlob).find(key => {
-          const bundlePathParts = key.split('/')
-          const bundleFileName = bundlePathParts[bundlePathParts.length - 1]
-          return bundleFileName === remoteBundleFileName
-        })
-        if (bundleKey) {
-          type BundleModule = {
-            createBundle(): Bundle
+
+        // Helper function to extract the relative path after the rightmost '/bundles/' or '\bundles\'
+        const extractBundleRelPath = (path: string): string | undefined => {
+          // Normalize path separators to forward slashes for consistent searching
+          const normalizedPath = path.replace(/\\/g, '/')
+          // Find the rightmost occurrence of '/bundles/'
+          const bundlesIndex = normalizedPath.lastIndexOf('/bundles/')
+          if (bundlesIndex === -1) {
+            return undefined
           }
-          const loadBundle = bundlesGlob[bundleKey]
-          const module = (await loadBundle()) as BundleModule
-          const bundle = module.createBundle() as Bundle
-          return {
-            bundle,
-            bundleName: bundleMetadata.name,
-            bundleUrl: bundleMetadata.url
+          // Return everything after '/bundles/'
+          return normalizedPath.substring(bundlesIndex + '/bundles/'.length)
+        }
+
+        // The bundle name may contain slashes (e.g., 'feature/remote-1'), so we need to
+        // match the full relative path, not just the filename.  The `url` value will
+        // be a 'file://' URL that has the absolute path the bundle file.
+        const targetBundleRelPath = extractBundleRelPath(bundleMetadata.url)
+        if (targetBundleRelPath) {
+          console.log('bundlesGlob', Object.keys(bundlesGlob))
+          console.log('target', bundleMetadata)
+          const bundleKey = Object.keys(bundlesGlob).find(key => {
+            // The key here is a relative path the bundle file, e.g., '../../bundles/feature/remote-1.js'.
+            // We will extract the relative path after the '.../bundles' part for comparing to the target
+            // bundle path.
+            const bundleRelPath = extractBundleRelPath(key)
+            return bundleRelPath === targetBundleRelPath
+          })
+          if (bundleKey) {
+            type BundleModule = {
+              createBundle(): Bundle
+            }
+            const loadBundle = bundlesGlob[bundleKey]
+            const module = (await loadBundle()) as BundleModule
+            const bundle = module.createBundle() as Bundle
+            return {
+              bundle,
+              bundleName: bundleMetadata.name,
+              bundleUrl: bundleMetadata.url
+            }
           }
+        } else {
+          console.error(
+            `ERROR: Bundle key not found in glob for ${bundleMetadata.name}; will use "current" bundle instead. Available keys:`,
+            Object.keys(bundlesGlob)
+          )
         }
       } catch (e) {
         console.error(
