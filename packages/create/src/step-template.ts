@@ -14,14 +14,14 @@ import type { Arguments } from 'yargs-parser'
 
 const TEMPLATES = [
   {
-    title: 'Default (jQuery) project',
-    description: 'Includes recommended structure with config files, jQuery-based app, core library, model-check, etc',
-    value: 'default'
-  },
-  {
-    title: 'Svelte project',
+    title: 'Svelte project (recommended)',
     description: 'Includes recommended structure with config files, Svelte-based app, core library, model-check, etc',
     value: 'svelte'
+  },
+  {
+    title: 'jQuery project',
+    description: 'Includes recommended structure with config files, jQuery-based app, core library, model-check, etc',
+    value: 'jquery'
   },
   {
     title: 'Minimal project',
@@ -81,8 +81,8 @@ export async function chooseTemplate(args: Arguments): Promise<Template> {
   } else {
     // Otherwise, assume the template name is one of the available `template-*`
     // projects under `examples` in the SDEverywhere repository, for example:
-    //  default
     //  svelte
+    //  jquery
     //  minimal
     baseTemplateUri = `github:climateinteractive/SDEverywhere/examples/template-${templateName}`
   }
