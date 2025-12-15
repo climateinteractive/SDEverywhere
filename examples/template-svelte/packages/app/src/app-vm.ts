@@ -2,8 +2,8 @@ import { derived, get, writable, type Readable } from 'svelte/store'
 
 import type { Config as CoreConfig, GraphSpec, SourceName } from '@core'
 
+import { _ } from '@shared/i18n'
 import { syncWritable } from '@shared/stores'
-import { _ } from '@shared/strings'
 
 import { type AppModel, type AppModelContext, createAppModel } from '@model/app-model'
 import type { WritableSliderInput } from '@model/app-model-inputs'

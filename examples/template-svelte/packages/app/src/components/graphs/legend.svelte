@@ -1,7 +1,7 @@
 <!-- SCRIPT -->
 <script lang="ts">
 import type { GraphSpec } from '@core'
-import { _ } from '@shared/strings'
+import { _ } from '@shared/i18n'
 
 export let graphSpec: GraphSpec
 </script>
