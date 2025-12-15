@@ -1,6 +1,6 @@
 <!-- SCRIPT -->
 <script lang="ts">
-import { _ } from '@shared/strings'
+import { _ } from '@shared/i18n'
 
 import type { SelectorViewModel } from './selector-vm'
 
