@@ -15,12 +15,12 @@ export let viewModel: BundleGraphData
 // TODO: Use height of parent
 let containerStyle = `width: ${config.width}rem; height: 20rem;`
 
-let canvas: HTMLCanvasElement
+let container: HTMLElement
 let graphView: BundleGraphView
 
 onMount(() => {
   // Create the graph view
-  graphView = viewModel.createGraphView(canvas)
+  graphView = viewModel.createGraphView(container)
 
   return () => {
     graphView?.destroy()
@@ -30,9 +30,7 @@ onMount(() => {
 </script>
 
 <!-- TEMPLATE -->
-<div class="graph-inner-container" style={containerStyle}>
-  <canvas bind:this={canvas}></canvas>
-</div>
+<div bind:this={container} class="graph-inner-container" style={containerStyle}></div>
 
 <!-- STYLE -->
 <style lang="scss">

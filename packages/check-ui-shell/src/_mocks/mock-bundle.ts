@@ -25,12 +25,6 @@ export function mockBundleModel(
       return {
         datasetMap: datasetsForScenario(scenarioSpec, datasetKeys)
       }
-    },
-    getGraphDataForScenario: async () => {
-      return undefined
-    },
-    getGraphLinksForScenario: () => {
-      return []
     }
   }
 }

@@ -34,11 +34,16 @@ const legendItems: LegendItem[] = [
  * graph on an HTML canvas.
  */
 class SampleGraphView implements BundleGraphView {
-  constructor(readonly canvas: HTMLCanvasElement) {
+  constructor(readonly parent: HTMLElement) {
     // XXX: Force the graph to a fixed size; typically the graph library
-    // would provide responsive resizing
-    canvas.width = 350
-    canvas.height = 250
+    // would provide responsive resizing, but we don't implement that here
+    const w = 350
+    const h = 250
+    const canvas = document.createElement('canvas')
+    parent.appendChild(canvas)
+
+    canvas.width = w
+    canvas.height = h
     const ctx = canvas.getContext('2d')
     const ax = 20
     const ay = 20
@@ -66,8 +71,8 @@ class SampleGraphView implements BundleGraphView {
  * using mock data.
  */
 class SampleGraphData implements BundleGraphData {
-  createGraphView(canvas: HTMLCanvasElement): BundleGraphView {
-    return new SampleGraphView(canvas)
+  createGraphView(parent: HTMLElement): BundleGraphView {
+    return new SampleGraphView(parent)
   }
 }
 
@@ -88,7 +93,7 @@ export function getGraphLinksForScenario(_scenarioSpec: ScenarioSpec, _graphId: 
     {
       kind: 'url',
       text: 'Open in app',
-      content: 'https://github.com/climateinteractive/model-check'
+      content: 'https://github.com/climateinteractive/SDEverywhere'
     },
     {
       kind: 'copy',
