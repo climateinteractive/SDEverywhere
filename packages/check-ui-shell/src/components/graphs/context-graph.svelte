@@ -12,7 +12,6 @@ import Lazy from '../_shared/lazy.svelte'
 import type { ContextGraphViewModel } from './context-graph-vm'
 import type { GraphViewConfig } from './graph-view-config'
 import Graph from './graph.svelte'
-import Legend from './legend.svelte'
 
 export let viewModel: ContextGraphViewModel
 let content = viewModel.content
@@ -70,7 +69,6 @@ function onLinkClicked(linkItem: LinkItem) {
             {/if}
           </Lazy>
         </div>
-        <Legend graphSpec={viewModel.graphSpec} />
         {#if viewModel.linkItems}
           <div class="link-container">
             {#each viewModel.linkItems as linkItem}
