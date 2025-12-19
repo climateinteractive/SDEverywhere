@@ -48,7 +48,16 @@ export class BundleModel implements CheckBundleModel {
 
   // from CheckBundleModel interface
   async getGraphDataForScenario(scenarioSpec: ScenarioSpec, graphId: BundleGraphId): Promise<BundleGraphData> {
-    return getGraphDataForScenario(scenarioSpec, graphId)
+    const graphSpec = this.modelSpec.graphSpecs.find(graphSpec => graphSpec.id === graphId)
+    if (!graphSpec) {
+      throw new Error(`Graph spec not found for graph id=${graphId}`)
+    }
+    const datasetKeys: DatasetKey[] = []
+    for (const datasetSpec of graphSpec.datasets) {
+      datasetKeys.push(datasetSpec.datasetKey)
+    }
+    const { datasetMap } = getDatasetsForScenario(modelVersion, this.modelSpec, scenarioSpec, datasetKeys)
+    return getGraphDataForScenario(graphSpec, datasetMap)
   }
 
   // from CheckBundleModel interface

@@ -7,81 +7,34 @@ import type {
   BundleGraphSpec,
   BundleGraphView,
   DatasetKey,
+  DatasetMap,
   LegendItem,
   LinkItem,
   OutputVar,
   ScenarioSpec
 } from '@sdeverywhere/check-core'
-
-const barWidths = [200, 150, 120]
-const legendItems: LegendItem[] = [
-  {
-    label: 'X',
-    color: '#8FBC8F'
-  },
-  {
-    label: 'Z',
-    color: '#778899'
-  },
-  {
-    label: 'W',
-    color: '#777'
-  }
-]
-
-/**
- * Implementation of the `BundleGraphView` interface that draws a mock
- * graph on an HTML canvas.
- */
-class SampleGraphView implements BundleGraphView {
-  constructor(readonly parent: HTMLElement) {
-    // XXX: Force the graph to a fixed size; typically the graph library
-    // would provide responsive resizing, but we don't implement that here
-    const w = 350
-    const h = 250
-    const canvas = document.createElement('canvas')
-    parent.appendChild(canvas)
-
-    canvas.width = w
-    canvas.height = h
-    const ctx = canvas.getContext('2d')
-    const ax = 20
-    const ay = 20
-    const aw = 300
-    const ah = 150
-    const barh = 20
-    const pad = 20
-    ctx.fillStyle = '#000'
-    ctx.fillRect(ax, ay, 1, ah)
-    ctx.fillRect(ax, ay + ah, aw, 1)
-    for (let i = 0; i < legendItems.length; i++) {
-      const barw = barWidths[i]
-      ctx.fillStyle = legendItems[i].color
-      ctx.fillRect(ax + 1, ay + barh * i + pad * (i + 1), barw, barh)
-    }
-  }
-
-  destroy(): void {
-    // no-op
-  }
-}
+import { SampleGraphView } from './graph-view'
 
 /**
  * Implementation of the `BundleGraphData` interface that prepares a graph
  * using mock data.
  */
 class SampleGraphData implements BundleGraphData {
+  constructor(
+    readonly graphSpec: BundleGraphSpec,
+    readonly datasetMap: DatasetMap
+  ) {}
+
   createGraphView(parent: HTMLElement): BundleGraphView {
-    return new SampleGraphView(parent)
+    return new SampleGraphView(parent, this.graphSpec, this.datasetMap)
   }
 }
 
 /**
  * Return a `BundleGraphData` instance for the given graph.
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export function getGraphDataForScenario(_scenarioSpec: ScenarioSpec, _graphId: BundleGraphId): BundleGraphData {
-  return new SampleGraphData()
+export function getGraphDataForScenario(graphSpec: BundleGraphSpec, datasetMap: DatasetMap): BundleGraphData {
+  return new SampleGraphData(graphSpec, datasetMap)
 }
 
 /**
@@ -107,6 +60,21 @@ export function getGraphLinksForScenario(_scenarioSpec: ScenarioSpec, _graphId: 
  * Return the set of specs for the graphs available in this bundle.
  */
 export function getGraphSpecs(modelVersion: number, outputVars: Map<DatasetKey, OutputVar>): BundleGraphSpec[] {
+  const legendItems: LegendItem[] = [
+    {
+      label: 'X',
+      color: '#8FBC8F'
+    },
+    {
+      label: 'Z',
+      color: '#778899'
+    },
+    {
+      label: 'W',
+      color: '#777'
+    }
+  ]
+
   function datasetSpec(datasetKey: DatasetKey, legendItemIndex: number): BundleGraphDatasetSpec {
     const outputVar = outputVars.get(datasetKey)
     const legendItem = legendItems[legendItemIndex]

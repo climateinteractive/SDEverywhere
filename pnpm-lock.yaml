@@ -205,7 +205,13 @@ importers:
       assert-never:
         specifier: ^1.2.1
         version: 1.2.1
+      chart.js:
+        specifier: ^2.9.4
+        version: 2.9.4
     devDependencies:
+      '@types/chart.js':
+        specifier: ^2.9.34
+        version: 2.9.37
       vite:
         specifier: ^7.1.9
         version: 7.1.9(@types/node@20.19.19)(sass@1.77.8)
