@@ -96,6 +96,16 @@ export interface BundleGraphSpec {
 }
 
 /**
+ * Options for configuring a bundle-specific graph view.
+ */
+export interface BundleGraphViewOptions {
+  /** Whether graph updates will be animated (default is false). */
+  animated?: boolean
+  /** A hint that indicates the context in which the graph will be displayed. */
+  style?: 'thumbnail' | undefined
+}
+
+/**
  * Allows for displaying a bundle-specific graph.
  */
 export interface BundleGraphView {
@@ -213,16 +223,7 @@ export interface BundleModel extends DataSource {
    * @param options Optional configuration for the graph view.
    * @returns A `BundleGraphView` instance.
    */
-  createGraphView?(
-    parent: HTMLElement,
-    graphId: BundleGraphId,
-    options?: {
-      /** Whether graph updates will be animated (default is false). */
-      animated?: boolean
-      /** A hint that indicates the context for which the graph will be displayed. */
-      style?: 'thumbnail' | undefined
-    }
-  ): BundleGraphView
+  createGraphView?(parent: HTMLElement, graphId: BundleGraphId, options?: BundleGraphViewOptions): BundleGraphView
 }
 
 /**

@@ -19,6 +19,7 @@ export type {
   BundleGraphId,
   BundleGraphSpec,
   BundleGraphView,
+  BundleGraphViewOptions,
   BundleModel,
   DatasetGroupName,
   ImplVarGroup,
