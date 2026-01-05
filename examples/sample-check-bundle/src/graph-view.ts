@@ -9,18 +9,64 @@ import type { BundleGraphSpec, BundleGraphView, DatasetMap } from '@sdeverywhere
  * graph on an HTML canvas.
  */
 export class SampleGraphView implements BundleGraphView {
+  private chart?: Chart
+
   constructor(
     readonly parent: HTMLElement,
     graphSpec: BundleGraphSpec,
     datasetMap: DatasetMap
   ) {
+    // Add a container to hold the graph and legend elements
+    const container = document.createElement('div')
+    container.style.position = 'absolute'
+    container.style.top = '0'
+    container.style.left = '0'
+    container.style.bottom = '0'
+    container.style.right = '0'
+    container.style.display = 'flex'
+    container.style.flexDirection = 'column'
+    parent.appendChild(container)
+
+    // Add a container just for the graph canvas (needed for Chart.js responsive resizing)
+    const graphContainer = document.createElement('div')
+    graphContainer.style.position = 'relative'
+    graphContainer.style.flex = '1'
+    graphContainer.style.minHeight = '0'
+    container.appendChild(graphContainer)
+
+    // Add a canvas element to the graph container and initialize the graph view around that canvas
     const canvas = document.createElement('canvas')
-    parent.appendChild(canvas)
-    createChart(canvas, graphSpec, datasetMap)
+    graphContainer.appendChild(canvas)
+    this.chart = createChart(canvas, graphSpec, datasetMap)
+
+    // Add a legend container element to the container
+    const legend = document.createElement('div')
+    container.appendChild(legend)
+    legend.style.display = 'flex'
+    legend.style.flexDirection = 'row'
+    legend.style.flexWrap = 'wrap'
+    legend.style.justifyContent = 'center'
+    legend.style.alignItems = 'center'
+    legend.style.flex = '0 0 auto'
+    legend.style.color = '#000'
+
+    // Add the legend items
+    for (const itemSpec of graphSpec.legendItems) {
+      const legendItem = document.createElement('div')
+      legendItem.style.backgroundColor = itemSpec.color
+      legendItem.textContent = itemSpec.label
+      legendItem.style.margin = '0 3px 4px 3px'
+      legendItem.style.padding = '3px 8px'
+      legendItem.style.color = '#fff'
+      legendItem.style.textAlign = 'center'
+      legendItem.style.textShadow = '0 .5px 1.5px #000'
+      legend.appendChild(legendItem)
+    }
   }
 
   destroy(): void {
-    // no-op
+    this.chart?.destroy()
+    this.chart = undefined
   }
 }
 
@@ -63,13 +109,9 @@ function createChart(canvas: HTMLCanvasElement, graphSpec: BundleGraphSpec, data
       hover: { animationDuration: 0 },
       responsiveAnimationDuration: 0,
 
-      // Disable the built-in title
+      // Disable the built-in title and legend
       title: { display: false },
-
-      // Customize the legend
-      legend: {
-        position: 'bottom'
-      },
+      legend: { display: false },
 
       // Don't show points
       elements: {
