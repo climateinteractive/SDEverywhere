@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.2.14](https://github.com/climateinteractive/SDEverywhere/compare/check-ui-shell-v0.2.13...check-ui-shell-v0.2.14) (2026-01-05)
+
+
+### Bug Fixes
+
+* update BundleGraphView interface to allow for updating data, custom legend, and non-canvas implementations ([#724](https://github.com/climateinteractive/SDEverywhere/issues/724)) ([1296c6d](https://github.com/climateinteractive/SDEverywhere/commit/1296c6d12629eaa9c515b7e34d0fa2d26348e2b9)), closes [#723](https://github.com/climateinteractive/SDEverywhere/issues/723)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/check-core bumped from ^0.1.6 to ^0.1.7
+
 ## [0.2.13](https://github.com/climateinteractive/SDEverywhere/compare/check-ui-shell-v0.2.12...check-ui-shell-v0.2.13) (2025-12-08)
 
 
