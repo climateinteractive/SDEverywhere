@@ -47,7 +47,7 @@
     "chokidar": "^3.5.3",
     "picocolors": "^1.0.0",
     "rollup": "^4.53.3",
-    "vite": "^7.1.9"
+    "vite": "^7.1.11"
   },
   "dependenciesComments": {
     "rollup": [

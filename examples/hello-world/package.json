@@ -16,6 +16,6 @@
     "@sdeverywhere/cli": "^0.7.34",
     "@sdeverywhere/plugin-check": "^0.3.18",
     "@sdeverywhere/plugin-worker": "^0.2.11",
-    "vite": "^7.1.9"
+    "vite": "^7.1.11"
   }
 }
