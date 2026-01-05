@@ -221,13 +221,9 @@ class CheckPlugin implements Plugin {
       }
     }
 
-    // Resolve the current bundle.  In "bundle" (production) mode, we use the provided
-    // plugin options.  In "watch" (local development) mode, we ignore the plugin options
-    // and use the generated "current" bundle, since the local report will allow the user
-    // to select any local or remote bundle.  Note that if this step fails, an error will
-    // be thrown and the build will fail, since this is a required step for creating the
-    // model-check report.
-    const currentBundleSpec = await resolveBundle(mode === 'bundle' ? this.options?.current : undefined)
+    // Resolve the current bundle.  Note that if this step fails, an error will be thrown and
+    // the build will fail, since this is a required step for creating the model-check report.
+    const currentBundleSpec = await resolveBundle(this.options?.current)
 
     // Only resolve the baseline bundle if we are building the production report and the
     // baseline bundle is defined in the plugin options.  If it is undefined, we will

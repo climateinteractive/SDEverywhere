@@ -43,18 +43,6 @@ export class BundleModel implements CheckBundleModel {
   async getDatasetsForScenario(scenario: ScenarioSpec, datasetKeys: DatasetKey[]): Promise<DatasetsResult> {
     return this.bundleModelRunner.runModelForScenario(scenario, datasetKeys)
   }
-
-  // from CheckBundleModel interface
-  // TODO: This function should be optional
-  async getGraphDataForScenario(): Promise<BundleGraphData> {
-    return undefined
-  }
-
-  // from CheckBundleModel interface
-  // TODO: This function should be optional
-  getGraphLinksForScenario(): LinkItem[] {
-    return []
-  }
 }
 
 /**
