@@ -10,18 +10,11 @@ import type { LinkItem } from '@sdeverywhere/check-core'
 import Lazy from '../_shared/lazy.svelte'
 
 import type { ContextGraphViewModel } from './context-graph-vm'
-import type { GraphViewConfig } from './graph-view-config'
-import Graph from './graph.svelte'
+import BundleGraph from './bundle-graph.svelte'
 
 export let viewModel: ContextGraphViewModel
 let content = viewModel.content
 let visible = false
-
-// If the width value is changed here, be sure to change the
-// `graph-width` Sass variable below to match
-const graphConfig: GraphViewConfig = {
-  width: 38
-}
 
 // Rebuild the view state when the view model changes
 let previousVisible = visible
@@ -65,7 +58,7 @@ function onLinkClicked(linkItem: LinkItem) {
         <div class="graph-container">
           <Lazy bind:visible>
             {#if $content && $content.graphData}
-              <Graph viewModel={$content.graphData} config={graphConfig} />
+              <BundleGraph viewModel={$content.graphData} />
             {/if}
           </Lazy>
         </div>
@@ -93,10 +86,15 @@ function onLinkClicked(linkItem: LinkItem) {
 
 <!-- STYLE -->
 <style lang="scss">
-// The graph columns have a fixed width of 38rem (38% of app width);
-// this needs to match the `graphConfig.width` value above
+// The graph columns have a fixed width of 38rem (38% of app width)
 $graph-width: 38rem;
-$graph-height: 20rem;
+
+// TODO: For now we use a fixed height for the area occupied by the graph and legend.
+// This should be replaced with a more flexible approach that allows the graph to
+// occupy a specified height and the legend to occupy whatever space is needed below
+// the graph.  Currently if the legend has many items, it will take up too much space
+// and make the graph too small.
+$graph-height: 280px;
 
 .context-graph-container {
   display: inline-flex;
