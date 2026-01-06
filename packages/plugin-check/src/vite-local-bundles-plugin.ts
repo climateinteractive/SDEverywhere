@@ -18,8 +18,9 @@ import { copyBundle, downloadBundle } from './bundle-file-ops'
  * 'list-bundles' and 'download-bundle' events from the client.
  *
  * @param bundlesDir The absolute path to the bundles directory.
+ * @param currentBundlePath The absolute path to the current bundle file.
  */
-export function localBundlesPlugin(bundlesDir: string): Plugin {
+export function localBundlesPlugin(bundlesDir: string, currentBundlePath: string): Plugin {
   return {
     name: 'sde-local-bundles',
 
@@ -53,6 +54,14 @@ export function localBundlesPlugin(bundlesDir: string): Plugin {
         try {
           // Find all bundles in the local bundles directory
           const bundles = await scanBundlesRecursively(bundlesDir, bundlesDir)
+
+          // Add the special "current" bundle with its up-to-date last modified time
+          const currentBundleStats = await stat(currentBundlePath)
+          bundles.push({
+            name: 'current',
+            url: 'current',
+            lastModified: currentBundleStats.mtime.toISOString()
+          })
 
           // Send success message back to client
           client.send('list-bundles-success', { bundles })

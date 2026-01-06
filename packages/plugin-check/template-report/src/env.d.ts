@@ -5,5 +5,4 @@
 declare const __SUITE_SUMMARY_JSON__: string
 declare const __BASELINE_NAME__: string
 declare const __CURRENT_NAME__: string
-declare const __CURRENT_BUNDLE_LAST_MODIFIED__: string
 declare const __REMOTE_BUNDLES_URL__: string
