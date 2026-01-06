@@ -7,15 +7,22 @@ import { fileURLToPath } from 'node:url'
 import { test, expect } from './support/fixtures'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
+const projDir = joinPath(__dirname, '..')
+const bundlesDir = joinPath(projDir, 'bundles')
 
 test.describe('Bundle Selector', () => {
   // XXX: Run tests in serial mode since each test modifies the `bundles` directory
   test.describe.configure({ mode: 'serial' })
 
+  test.beforeAll(async () => {
+    // Reset the last modified timestamp of the current bundle to the current time
+    const currentBundleFile = joinPath(projDir, 'sde-prep', 'check-bundle.js')
+    const currentTime = new Date()
+    await utimes(currentBundleFile, currentTime, currentTime)
+  })
+
   test.beforeEach(async ({ app }) => {
     // Before each test, delete all files and directories in the `bundles` directory except `previous.js`
-    const projDir = joinPath(__dirname, '..')
-    const bundlesDir = joinPath(projDir, 'bundles')
     const files = await readdir(bundlesDir)
     for (const file of files) {
       if (file !== 'previous.js') {
@@ -289,6 +296,59 @@ test.describe('Bundle Selector', () => {
     // Verify that the right bundle selector still shows 'current'
     await expect(bundleSelectorRight).toBeVisible()
     await expect(bundleSelectorRight).toHaveText('current')
+  })
+
+  test('should display updated current bundle timestamp after file modification', async ({ app }) => {
+    // Update the last modified time of the current bundle file to a specific date/time
+    const projDir = joinPath(__dirname, '..')
+    const prepDir = joinPath(projDir, 'sde-prep')
+    const currentBundleFile = joinPath(prepDir, 'check-bundle.js')
+    const newLastModified = new Date('2025-12-15T08:30:00.000Z')
+    await utimes(currentBundleFile, newLastModified, newLastModified)
+
+    // XXX: Wait for the page to reload since the bundle file was updated
+    await app.page.waitForTimeout(1000)
+
+    // Open the bundle selector
+    await app.page.getByTestId('bundle-selector-left').click()
+
+    // Wait for the bundle selector menu to appear
+    const bundleList = app.page.getByRole('listbox')
+    await expect(bundleList).toBeVisible()
+
+    // Click the reload button to refresh the bundle list with the updated file timestamp
+    const reloadButton = app.page.getByRole('button', { name: 'Reload' })
+    await expect(reloadButton).toBeVisible()
+    await reloadButton.click()
+
+    // Wait for the bundle list to reload
+    await app.page.waitForTimeout(1000)
+
+    // Verify that the current bundle now shows the updated timestamp
+    const currentBundle = app.page.getByRole('option', { name: 'current' })
+    await expect(currentBundle).toBeVisible()
+
+    // Get the date cell for the current bundle and verify it matches our expected timestamp
+    const dateCell = currentBundle.locator('.bundle-selector-item-bundle-date')
+    await expect(dateCell).toBeVisible()
+
+    // Format the expected date using the same locale-aware formatting that the UI uses
+    const expectedDate = new Date('2025-12-15T08:30:00.000Z')
+    const expectedDateString = expectedDate.toLocaleDateString(undefined, {
+      day: 'numeric',
+      month: 'numeric',
+      year: 'numeric'
+    })
+    const expectedTimeString = expectedDate.toLocaleTimeString(undefined, {
+      hour12: true,
+      hour: 'numeric',
+      minute: '2-digit'
+    })
+    const expectedFormattedDate = `${expectedDateString} at ${expectedTimeString}`
+
+    // Verify that the displayed date matches our expected formatted date
+    const dateText = await dateCell.textContent()
+    expect(dateText).toBe(expectedFormattedDate)
   })
 
   test('should load saved local bundle after download', async ({ app }) => {

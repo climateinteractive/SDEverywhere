@@ -1,8 +1,8 @@
 import { derived, get, writable, type Readable } from 'svelte/store'
-import { _ } from 'svelte-i18n'
 
 import type { Config as CoreConfig, GraphSpec, SourceName } from '@core'
 
+import { _ } from '@shared/i18n'
 import { syncWritable } from '@shared/stores'
 
 import { type AppModel, type AppModelContext, createAppModel } from '@model/app-model'

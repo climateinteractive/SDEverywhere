@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.7](https://github.com/climateinteractive/SDEverywhere/compare/check-core-v0.1.6...check-core-v0.1.7) (2026-01-05)
+
+
+### Bug Fixes
+
+* update BundleGraphView interface to allow for updating data, custom legend, and non-canvas implementations ([#724](https://github.com/climateinteractive/SDEverywhere/issues/724)) ([1296c6d](https://github.com/climateinteractive/SDEverywhere/commit/1296c6d12629eaa9c515b7e34d0fa2d26348e2b9)), closes [#723](https://github.com/climateinteractive/SDEverywhere/issues/723)
+
 ## [0.1.6](https://github.com/climateinteractive/SDEverywhere/compare/check-core-v0.1.5...check-core-v0.1.6) (2025-10-31)
 
 

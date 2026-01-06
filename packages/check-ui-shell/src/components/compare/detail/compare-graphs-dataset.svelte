@@ -79,6 +79,7 @@ function onDatasetClicked() {
   padding: 0.25rem 0.6rem 0.2rem 0.6rem;
   color: #fff;
   text-align: center;
+  text-shadow: 0 0.5px 1.5px #000;
 }
 
 .detail-box-container {

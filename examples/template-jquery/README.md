@@ -1,4 +1,4 @@
-# template-default
+# template-jquery
 
 This is a template that is used by the `@sdeverywhere/create` package to generate a
 new project that uses SDEverywhere for a jQuery-based web application.
@@ -22,7 +22,7 @@ The project includes:
 
 ```sh
 # Create a new project (you can also use yarn or pnpm here, if preferred).
-npm create @sdeverywhere@latest -- --template default
+npm create @sdeverywhere@latest -- --template jquery
 
 # Enter development mode for your model.  This will start a live
 # development environment that will build a JavaScript version of the
@@ -55,7 +55,7 @@ npm run dev
 ## For Contributors
 
 If you are modifying SDEverywhere (the packages in this repository) and want
-to use this `template-default` example to test your changes, you can use it directly
+to use this `template-jquery` example to test your changes, you can use it directly
 without copying to a separate directory.
 
 The template already includes the "SIR" Vensim model in `model/MODEL_NAME.mdl`
