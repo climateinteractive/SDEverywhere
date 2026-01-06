@@ -1,6 +1,6 @@
 // Copyright (c) 2022 Climate Interactive / New Venture Fund
 
-import { existsSync, mkdirSync, statSync } from 'node:fs'
+import { existsSync, mkdirSync } from 'node:fs'
 import { dirname, relative, join as joinPath, resolve as resolvePath } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -53,9 +53,6 @@ export function createViteConfigForReport(
   const relProjDirPath = relProjDir.replaceAll('\\', '/')
   // TODO: Use localBundlesPath from options
   const bundlesPath = `${relProjDirPath}/bundles/*.js`
-
-  // Get the last modified time of the current bundle
-  const currentBundleLastModified = statSync(currentBundleSpec.path).mtime.toISOString()
 
   // Calculate output directory relative to the template root
   let reportPath: string
@@ -190,9 +187,6 @@ export function createViteConfigForReport(
       // Inject the current bundle name
       __CURRENT_NAME__: JSON.stringify(currentBundleSpec.name),
 
-      // Inject the last modified time of the current bundle
-      __CURRENT_BUNDLE_LAST_MODIFIED__: JSON.stringify(currentBundleLastModified),
-
       // Inject the remote bundles URL
       __REMOTE_BUNDLES_URL__: JSON.stringify(options?.remoteBundlesUrl || '')
     },
@@ -219,7 +213,7 @@ export function createViteConfigForReport(
 
       // When local development mode is active, enable the local bundles plugin that
       // allows the report app to access the local bundles directory
-      ...(mode === 'watch' ? [localBundlesPlugin(bundlesDir)] : [])
+      ...(mode === 'watch' ? [localBundlesPlugin(bundlesDir, currentBundleSpec.path)] : [])
     ],
 
     build: {
