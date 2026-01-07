@@ -1,7 +1,7 @@
 <!-- Copyright (c) 2025 Climate Interactive / New Venture Fund. All rights reserved. -->
 
 <script module lang="ts">
-import { expect, fn, waitFor } from 'storybook/test'
+import { expect, fn, userEvent, waitFor, within } from 'storybook/test'
 import { defineMeta, type Args } from '@storybook/addon-svelte-csf'
 
 import { bundleManagerFromBundles } from '../../_mocks/mock-bundle-manager'
@@ -60,5 +60,67 @@ const { Story } = defineMeta({
     bundleItems.forEach(async (item, index) => {
       await expect(item).toHaveTextContent(expectedOrder[index])
     })
+  }}
+></Story>
+
+<Story
+  name="Context menu - click outside to dismiss"
+  {template}
+  args={{
+    bundleManager: bundleManagerFromBundles()
+  }}
+  play={async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    // Wait for loading to complete
+    await waitFor(() => expect(canvas.queryByText('Loading...')).not.toBeInTheDocument(), { timeout: 3000 })
+
+    // Get the first bundle item
+    const bundleItems = canvas.getAllByRole('option')
+    const firstItem = bundleItems[0]
+
+    // Right-click to open context menu
+    await userEvent.pointer({ keys: '[MouseRight>]', target: firstItem })
+
+    // Verify context menu is visible
+    const contextMenu = await waitFor(() => canvas.getByRole('menuitem'))
+    await expect(contextMenu).toBeInTheDocument()
+
+    // Click outside the context menu to dismiss it
+    await userEvent.click(canvasElement)
+
+    // Verify context menu is no longer visible
+    await waitFor(() => expect(canvas.queryByRole('menuitem')).not.toBeInTheDocument())
+  }}
+></Story>
+
+<Story
+  name="Context menu - press escape to dismiss"
+  {template}
+  args={{
+    bundleManager: bundleManagerFromBundles()
+  }}
+  play={async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    // Wait for loading to complete
+    await waitFor(() => expect(canvas.queryByText('Loading...')).not.toBeInTheDocument(), { timeout: 3000 })
+
+    // Get the first bundle item
+    const bundleItems = canvas.getAllByRole('option')
+    const firstItem = bundleItems[0]
+
+    // Right-click to open context menu
+    await userEvent.pointer({ keys: '[MouseRight>]', target: firstItem })
+
+    // Verify context menu is visible
+    const contextMenu = await waitFor(() => canvas.getByRole('menuitem'))
+    await expect(contextMenu).toBeInTheDocument()
+
+    // Press Escape to dismiss the context menu
+    await userEvent.keyboard('{Escape}')
+
+    // Verify context menu is no longer visible
+    await waitFor(() => expect(canvas.queryByRole('menuitem')).not.toBeInTheDocument())
   }}
 ></Story>
