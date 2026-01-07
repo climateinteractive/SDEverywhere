@@ -29,7 +29,7 @@
   },
   "devDependencies": {
     "@types/chart.js": "^2.9.34",
-    "vite": "^7.1.9"
+    "vite": "^7.1.12"
   },
   "author": "Climate Interactive",
   "license": "MIT",
