@@ -6,6 +6,8 @@ import type { BundleLocation, BundleSpec } from '@sdeverywhere/check-ui-shell'
 import { initAppShell } from '@sdeverywhere/check-ui-shell'
 import '@sdeverywhere/check-ui-shell/dist/style.css'
 
+import type { BundleMetadata, BundleResult } from './load-bundle'
+import { loadLocalBundle, loadRemoteBundle } from './load-bundle'
 import { initOverlay } from './overlay'
 
 import './global.css'
@@ -14,11 +16,6 @@ import './global.css'
 import { createBundle as createBaselineBundle } from '@_baseline_bundle_'
 import { createBundle as createCurrentBundle } from '@_current_bundle_'
 import { getConfigOptions } from '@_test_config_'
-
-interface BundleMetadata {
-  name: string
-  url: string
-}
 
 function loadBundleMetadata(side: 'left' | 'right'): BundleMetadata | undefined {
   if (import.meta.hot) {
@@ -43,7 +40,7 @@ function saveBundleMetadata(side: 'left' | 'right', metadata: BundleMetadata): v
 let savedBundleMetadataL: BundleMetadata | undefined
 let savedBundleMetadataR: BundleMetadata | undefined
 // The following value will be injected by `vite-config-for-report.ts`
-const bundlesPath = './bundles/*.txt'
+const bundlesPath = './bundles/**/*.txt'
 if (import.meta.hot && bundlesPath) {
   // Restore the previously selected bundles (from before the page was reloaded)
   savedBundleMetadataL = loadBundleMetadata('left')
@@ -90,12 +87,6 @@ async function initForProduction(): Promise<void> {
 }
 
 async function initForLocal(): Promise<void> {
-  interface BundleResult {
-    bundle: Bundle
-    bundleName: string
-    bundleUrl: string
-  }
-
   async function createBundle(bundleMetadata: BundleMetadata | undefined): Promise<BundleResult> {
     if (bundleMetadata === undefined) {
       bundleMetadata = {
@@ -107,16 +98,7 @@ async function initForLocal(): Promise<void> {
     if (bundleMetadata.url.startsWith('http')) {
       // Load remote bundles using dynamic import
       try {
-        // Add cache busting parameter
-        const cacheBuster = `?cb=${Date.now()}`
-        const fullUrl = `${bundleMetadata.url}${cacheBuster}`
-        const module = await import(/* @vite-ignore */ fullUrl)
-        const bundle = module.createBundle() as Bundle
-        return {
-          bundle,
-          bundleName: bundleMetadata.name,
-          bundleUrl: bundleMetadata.url
-        }
+        return loadRemoteBundle(bundleMetadata)
       } catch (e) {
         console.error(
           `ERROR: Failed to load remote bundle from ${bundleMetadata.url}; will use "current" bundle instead. Cause:`,
@@ -124,35 +106,15 @@ async function initForLocal(): Promise<void> {
         )
       }
     } else if (bundleMetadata.url.startsWith('file://')) {
-      // Load local bundles using `import.meta.glob` (since dynamic import isn't
-      // available for file URLs due to security restrictions).  The glob pattern
-      // part will be replaced by Vite (see `vite-config-for-report.ts`).  Note
-      // that we provide a placeholder here that looks like a valid glob pattern,
-      // since Vite's dependency resolver will report errors if it is invalid
-      // (not a literal).
+      // Load local bundles using `import.meta.glob`
       try {
-        const bundlesGlob = import.meta.glob('./bundles/*.txt', {
-          eager: false
-        })
-        const remoteBundleUrlParts = bundleMetadata.url.split('/')
-        const remoteBundleFileName = remoteBundleUrlParts[remoteBundleUrlParts.length - 1]
-        const bundleKey = Object.keys(bundlesGlob).find(key => {
-          const bundlePathParts = key.split('/')
-          const bundleFileName = bundlePathParts[bundlePathParts.length - 1]
-          return bundleFileName === remoteBundleFileName
-        })
-        if (bundleKey) {
-          type BundleModule = {
-            createBundle(): Bundle
-          }
-          const loadBundle = bundlesGlob[bundleKey]
-          const module = (await loadBundle()) as BundleModule
-          const bundle = module.createBundle() as Bundle
-          return {
-            bundle,
-            bundleName: bundleMetadata.name,
-            bundleUrl: bundleMetadata.url
-          }
+        const result = await loadLocalBundle(bundleMetadata)
+        if (result) {
+          return result
+        } else {
+          console.error(
+            `ERROR: Bundle key not found in glob for ${bundleMetadata.name}; will use "current" bundle instead`
+          )
         }
       } catch (e) {
         console.error(
@@ -269,20 +231,13 @@ async function getLocalBundles(): Promise<BundleLocation[]> {
     const handleSuccess = (data: { bundles: Array<{ name: string; url: string; lastModified: string }> }) => {
       cleanup()
 
-      // Add the bundles that were found in the Node process
+      // Add the bundles that were found in the Node process.  The bundles returned from the Node process
+      // include both local bundles and the special "current" bundle with its up-to-date last modified time.
       const bundles: BundleLocation[] = data.bundles.map(b => ({
         name: b.name,
         url: b.url,
         lastModified: b.lastModified
       }))
-
-      // Add the special "current" bundle that is generated by the builder
-      const currentBundleLastModified = __CURRENT_BUNDLE_LAST_MODIFIED__
-      bundles.push({
-        name: 'current',
-        url: 'current',
-        lastModified: currentBundleLastModified
-      })
 
       resolve(bundles)
     }

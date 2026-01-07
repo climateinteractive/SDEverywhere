@@ -1,8 +1,8 @@
 // Copyright (c) 2025 Climate Interactive / New Venture Fund
 
-import { readdir, stat } from 'node:fs/promises'
+import { readdir, readFile, stat } from 'node:fs/promises'
 import { join as joinPath, relative, sep } from 'node:path'
-import { pathToFileURL } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 
 import chokidar from 'chokidar'
 import type { Plugin } from 'vite'
@@ -18,8 +18,9 @@ import { copyBundle, downloadBundle } from './bundle-file-ops'
  * 'list-bundles' and 'download-bundle' events from the client.
  *
  * @param bundlesDir The absolute path to the bundles directory.
+ * @param currentBundlePath The absolute path to the current bundle file.
  */
-export function localBundlesPlugin(bundlesDir: string): Plugin {
+export function localBundlesPlugin(bundlesDir: string, currentBundlePath: string): Plugin {
   return {
     name: 'sde-local-bundles',
 
@@ -37,10 +38,12 @@ export function localBundlesPlugin(bundlesDir: string): Plugin {
         depth: 10
       })
 
-      watcher.on('all', (/*event, path*/) => {
-        // console.log(`[sde-local-bundles] Detected ${event} in bundles directory: ${path}`)
-        // Notify all clients that the bundles list has changed
-        server.ws.send('bundles-changed', {})
+      watcher.on('all', (event /*, path*/) => {
+        if (event === 'add' || event === 'unlink') {
+          // Notify all clients that the bundles list has changed
+          // console.log(`[sde-local-bundles] Detected ${event} in bundles directory: ${path}`)
+          server.ws.send('bundles-changed', {})
+        }
       })
 
       // Clean up the file watcher when the vite server is closed
@@ -54,12 +57,39 @@ export function localBundlesPlugin(bundlesDir: string): Plugin {
           // Find all bundles in the local bundles directory
           const bundles = await scanBundlesRecursively(bundlesDir, bundlesDir)
 
+          // Add the special "current" bundle with its up-to-date last modified time
+          const currentBundleStats = await stat(currentBundlePath)
+          bundles.push({
+            name: 'current',
+            url: 'current',
+            lastModified: currentBundleStats.mtime.toISOString()
+          })
+
           // Send success message back to client
           client.send('list-bundles-success', { bundles })
         } catch (error) {
           // Send error message back to client
           console.error(`[sde-local-bundles] Failed to list bundles:`, error)
           client.send('list-bundles-error', { error: error.message })
+        }
+      })
+
+      // Handle requests to load a local bundle
+      server.ws.on('load-bundle', async (data, client) => {
+        const { url, name } = data
+        try {
+          console.log(`[sde-local-bundles] Loading local bundle: name=${name} url=${url}`)
+
+          // Read the bundle file source code
+          const filePath = fileURLToPath(url)
+          const sourceCode = await readFile(filePath, 'utf-8')
+
+          // Send the source code back to client
+          client.send('load-bundle-success', { name, url, sourceCode })
+        } catch (error) {
+          // Send error message back to client
+          console.error(`[sde-local-bundles] Failed to load bundle:`, error)
+          client.send('load-bundle-error', { name, url, error: error.message })
         }
       })
 

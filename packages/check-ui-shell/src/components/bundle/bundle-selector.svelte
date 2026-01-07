@@ -143,6 +143,11 @@ function handleSaveCopy(bundle: BundleSpec, newName: string) {
   // Copy the local bundle file using the chosen name
   bundleManager.copyBundle(bundle, newName)
 }
+
+function handleContextMenuClose() {
+  // Close the context menu
+  contextMenuEvent = undefined
+}
 </script>
 
 <!-- TEMPLATE -->
@@ -232,6 +237,7 @@ function handleSaveCopy(bundle: BundleSpec, newName: string) {
     items={contextMenuItems}
     initialEvent={contextMenuEvent}
     on:item-selected={handleContextMenuItemSelected}
+    on:close={handleContextMenuClose}
   />
 {/if}
 
