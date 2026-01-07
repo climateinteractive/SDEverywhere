@@ -606,9 +606,6 @@ importers:
       '@sdeverywhere/compile':
         specifier: ^0.7.25
         version: link:../compile
-      bufx:
-        specifier: ^1.0.5
-        version: 1.0.5
       byline:
         specifier: ^5.0.0
         version: 5.0.0
@@ -618,6 +615,9 @@ importers:
       shelljs:
         specifier: ^0.10.0
         version: 0.10.0
+      strip-bom:
+        specifier: ^5.0.0
+        version: 5.0.0
       yargs:
         specifier: ^17.5.1
         version: 17.5.1
@@ -627,9 +627,6 @@ importers:
       '@sdeverywhere/parse':
         specifier: ^0.1.2
         version: link:../parse
-      bufx:
-        specifier: ^1.0.5
-        version: 1.0.5
       byline:
         specifier: ^5.0.0
         version: 5.0.0
@@ -642,6 +639,9 @@ importers:
       ramda:
         specifier: ^0.27.0
         version: 0.27.2
+      strip-bom:
+        specifier: ^5.0.0
+        version: 5.0.0
       xlsx:
         specifier: https://cdn.sheetjs.com/xlsx-0.20.2/xlsx-0.20.2.tgz
         version: https://cdn.sheetjs.com/xlsx-0.20.2/xlsx-0.20.2.tgz
@@ -1070,10 +1070,6 @@ packages:
 
   '@babel/helper-string-parser@7.27.1':
     resolution: {integrity: sha512-qMlSxKbpRlAridDExk92nSobyDdpPijUq2DW6oDnUqd0iOGxmQjyqhMIihI9+zv4LPyZdRje2cavWPbCbWm3eA==}
-    engines: {node: '>=6.9.0'}
-
-  '@babel/helper-validator-identifier@7.27.1':
-    resolution: {integrity: sha512-D2hP9eA+Sqx1kBZgzxZh0y1trbuU+JoDkiEwqhQ36nodYqJwyEIhPSdMNd7lOm/4io72luTPWH20Yda0xOuUow==}
     engines: {node: '>=6.9.0'}
 
   '@babel/helper-validator-identifier@7.28.5':
@@ -2073,9 +2069,6 @@ packages:
 
   buffer@6.0.3:
     resolution: {integrity: sha512-FTiCpNxtwiZZHEZbcbTIcZjERVICn9yq/pDFkTl95/AxzD1naBctN7YO68riM/gLSDY7sdrMby8hofADYuuqOA==}
-
-  bufx@1.0.5:
-    resolution: {integrity: sha512-AzOd+vXDVhRAIR4k0ZopOLef+XjqLU6h3buAqVXTUrZ5IYWmoPqLtIoITeye174Uq5qiDS+83Rx9U9ItXgNE+A==}
 
   bundle-name@4.1.0:
     resolution: {integrity: sha512-tjwM5exMg6BGRI+kNmTntNsvdZS1X8BFYS6tnJ2hdH0kVxM6/eVZ2xy+FqStSWvYmtfFMDLIxurorHwDKfDz5Q==}
@@ -3349,11 +3342,6 @@ packages:
       prettier: ^3.0.0
       svelte: ^3.2.0 || ^4.0.0-next.0 || ^5.0.0-next.0
 
-  prettier@2.6.2:
-    resolution: {integrity: sha512-PkUpF+qoXTqhOeWL9fu7As8LXsIUZ1WYaJiY/a7McAQzxjk82OF0tibkFXVCDImZtWxbvojFjerkiLb0/q8mew==}
-    engines: {node: '>=10.13.0'}
-    hasBin: true
-
   prettier@3.6.2:
     resolution: {integrity: sha512-I7AIg5boAr5R0FFtJ6rCfD+LFsWHp81dolrFD8S79U9tb8Az2nGrJncnMSnys+bpQJfRUzqs9hnA81OAA3hCuQ==}
     engines: {node: '>=14'}
@@ -3621,9 +3609,9 @@ packages:
     resolution: {integrity: sha512-vavAMRXOgBVNF6nyEEmL3DBK19iRpDcoIwW+swQ+CbGiu7lju6t+JklA1MHweoWtadgt4ISVUsXLyDq34ddcwA==}
     engines: {node: '>=4'}
 
-  strip-bom@4.0.0:
-    resolution: {integrity: sha512-3xurFv5tEgii33Zi8Jtp55wEIILR9eh34FAW00PZf+JnSsTmV/ioewSgQl97JHvgjoRGwPShsWm+IdrxB35d0w==}
-    engines: {node: '>=8'}
+  strip-bom@5.0.0:
+    resolution: {integrity: sha512-p+byADHF7SzEcVnLvc/r3uognM1hUhObuHXxJcgLCfD194XAkaLbjq3Wzb0N5G2tgIjH0dgT708Z51QxMeu60A==}
+    engines: {node: '>=12'}
 
   strip-final-newline@2.0.0:
     resolution: {integrity: sha512-BrpvfNAE3dcvq7ll3xVumzjKjZQ5tI1sEUIKr3Uoks0XUl45St3FlatVqef9prk4jRDzhW6WZg+3bk93y6pLjA==}
@@ -4058,13 +4046,11 @@ snapshots:
 
   '@babel/code-frame@7.27.1':
     dependencies:
-      '@babel/helper-validator-identifier': 7.27.1
+      '@babel/helper-validator-identifier': 7.28.5
       js-tokens: 4.0.0
       picocolors: 1.1.1
 
   '@babel/helper-string-parser@7.27.1': {}
-
-  '@babel/helper-validator-identifier@7.27.1': {}
 
   '@babel/helper-validator-identifier@7.28.5': {}
 
@@ -4990,13 +4976,6 @@ snapshots:
     dependencies:
       base64-js: 1.5.1
       ieee754: 1.2.1
-
-  bufx@1.0.5:
-    dependencies:
-      js-yaml: 3.14.1
-      prettier: 2.6.2
-      ramda: 0.27.2
-      strip-bom: 4.0.0
 
   bundle-name@4.1.0:
     dependencies:
@@ -6235,8 +6214,6 @@ snapshots:
       prettier: 3.6.2
       svelte: 5.39.10
 
-  prettier@2.6.2: {}
-
   prettier@3.6.2: {}
 
   pretty-format@27.5.1:
@@ -6557,7 +6534,7 @@ snapshots:
 
   strip-bom@3.0.0: {}
 
-  strip-bom@4.0.0: {}
+  strip-bom@5.0.0: {}
 
   strip-final-newline@2.0.0: {}
 

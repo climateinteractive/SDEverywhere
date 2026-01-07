@@ -1,7 +1,7 @@
-import B from 'bufx'
 import yaml from 'js-yaml'
 import * as R from 'ramda'
 
+import B from '../_shared/bufx.js'
 import { canonicalVensimName, decanonicalize, isIterable, strlist, vlog, vsort } from '../_shared/helpers.js'
 import {
   addIndex,

@@ -1,10 +1,10 @@
 // Copyright (c) 2022 Climate Interactive / New Venture Fund
 
 import path from 'path'
-import B from 'bufx'
 
 import { parseVensimModel } from '@sdeverywhere/parse'
 
+import B from './_shared/bufx.js'
 import { readXlsx } from './_shared/helpers.js'
 import { readDat } from './_shared/read-dat.js'
 import { printSubscripts, yamlSubsList } from './_shared/subscript.js'

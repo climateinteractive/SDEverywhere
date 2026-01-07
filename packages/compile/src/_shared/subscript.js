@@ -1,7 +1,7 @@
 import util from 'util'
-import B from 'bufx'
 import yaml from 'js-yaml'
 import * as R from 'ramda'
+import B from './bufx.js'
 import { canonicalName, vlog } from './helpers.js'
 
 // A subscript is a dimension or an index.
