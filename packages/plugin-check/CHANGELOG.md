@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.3.23](https://github.com/climateinteractive/SDEverywhere/compare/plugin-check-v0.3.22...plugin-check-v0.3.23) (2026-01-07)
+
+
+### Bug Fixes
+
+* include correct timestamp for current bundle in bundle selector ([#727](https://github.com/climateinteractive/SDEverywhere/issues/727)) ([66d010a](https://github.com/climateinteractive/SDEverywhere/commit/66d010add9635bbc4db09d38a73150ab1700d7a3)), closes [#726](https://github.com/climateinteractive/SDEverywhere/issues/726)
+* use dynamic import to load local bundles + update glob pattern to allow for loading bundles in subdirectories ([#729](https://github.com/climateinteractive/SDEverywhere/issues/729)) ([b3e459b](https://github.com/climateinteractive/SDEverywhere/commit/b3e459b12ab7ad43cc65ce5f8aa657050c7e58e4)), closes [#712](https://github.com/climateinteractive/SDEverywhere/issues/712)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/check-ui-shell bumped from ^0.2.14 to ^0.2.15
+
 ## [0.3.22](https://github.com/climateinteractive/SDEverywhere/compare/plugin-check-v0.3.21...plugin-check-v0.3.22) (2026-01-05)
 
 

@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.15](https://github.com/climateinteractive/SDEverywhere/compare/check-ui-shell-v0.2.14...check-ui-shell-v0.2.15) (2026-01-07)
+
+
+### Bug Fixes
+
+* dismiss bundle selector context menu on escape key or click outside ([#731](https://github.com/climateinteractive/SDEverywhere/issues/731)) ([c1fb33b](https://github.com/climateinteractive/SDEverywhere/commit/c1fb33b0a635cc92d6ec42726d9a66960ed03f5c)), closes [#730](https://github.com/climateinteractive/SDEverywhere/issues/730)
+
 ## [0.2.14](https://github.com/climateinteractive/SDEverywhere/compare/check-ui-shell-v0.2.13...check-ui-shell-v0.2.14) (2026-01-05)
 
 
