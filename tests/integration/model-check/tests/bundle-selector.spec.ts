@@ -83,7 +83,7 @@ test.describe('Bundle Selector', () => {
     await expect(activeBundle).toHaveClass(/active/)
   })
 
-  test('should download a remote bundle', async ({ app }) => {
+  test('should download a remote bundle and load the local copy', async ({ app }) => {
     // Click the left bundle name to open the popover
     await app.page.getByTestId('bundle-selector-left').click()
 
@@ -121,9 +121,25 @@ test.describe('Bundle Selector', () => {
     for (const [index, expectedLabel] of expectedLabels.entries()) {
       await expect(optionElems[index]).toHaveAttribute('aria-label', expectedLabel)
     }
+
+    // Now find the local version of "feature/remote-1" in the bundle list (there will be
+    // two bundles: one remote, one local)
+    const localBundles = app.page.getByRole('option', { name: 'feature/remote-1' })
+    await expect(localBundles).toHaveCount(2)
+
+    // Click on the second one (the local bundle)
+    await localBundles.nth(1).click()
+
+    // Wait for the page to reload
+    await app.page.waitForLoadState('load')
+
+    // Verify that the left bundle selector now shows the selected bundle
+    const bundleSelectorLeft = app.page.getByTestId('bundle-selector-left')
+    await expect(bundleSelectorLeft).toBeVisible()
+    await expect(bundleSelectorLeft).toHaveText('feature/remote-1')
   })
 
-  test('should copy a local bundle with new name', async ({ app }) => {
+  test('should copy a local bundle with new name and load the new copy', async ({ app }) => {
     // Click the left bundle name to open the dropdown
     await app.page.getByTestId('bundle-selector-left').click()
 
@@ -169,9 +185,23 @@ test.describe('Bundle Selector', () => {
     for (const [index, expectedLabel] of expectedLabels.entries()) {
       await expect(optionElems[index]).toHaveAttribute('aria-label', expectedLabel)
     }
+
+    // Find the copied bundle in the list
+    const copiedBundle = app.page.getByRole('option', { name: 'my-test-bundle' })
+
+    // Click on the copied bundle
+    await copiedBundle.click()
+
+    // Wait for the page to reload
+    await app.page.waitForLoadState('load')
+
+    // Verify that the left bundle selector now shows the selected bundle
+    const bundleSelectorLeft = app.page.getByTestId('bundle-selector-left')
+    await expect(bundleSelectorLeft).toBeVisible()
+    await expect(bundleSelectorLeft).toHaveText('my-test-bundle')
   })
 
-  test('should copy the current bundle with new name', async ({ app }) => {
+  test('should copy the current bundle with new name and load the new copy', async ({ app }) => {
     // Click the left bundle name to open the dropdown
     await app.page.getByTestId('bundle-selector-left').click()
 
@@ -217,6 +247,20 @@ test.describe('Bundle Selector', () => {
     for (const [index, expectedLabel] of expectedLabels.entries()) {
       await expect(optionElems[index]).toHaveAttribute('aria-label', expectedLabel)
     }
+
+    // Find the copied bundle in the list
+    const copiedBundle = app.page.getByRole('option', { name: 'my-current-copy' })
+
+    // Click on the copied bundle
+    await copiedBundle.click()
+
+    // Wait for the page to reload
+    await app.page.waitForLoadState('load')
+
+    // Verify that the left bundle selector now shows the selected bundle
+    const bundleSelectorLeft = app.page.getByTestId('bundle-selector-left')
+    await expect(bundleSelectorLeft).toBeVisible()
+    await expect(bundleSelectorLeft).toHaveText('my-current-copy')
   })
 
   test('should reload page and use the correct bundle when a local bundle is selected with slashes in name', async ({
@@ -349,45 +393,5 @@ test.describe('Bundle Selector', () => {
     // Verify that the displayed date matches our expected formatted date
     const dateText = await dateCell.textContent()
     expect(dateText).toBe(expectedFormattedDate)
-  })
-
-  test('should load saved local bundle after download', async ({ app }) => {
-    // Click the left bundle name to open the popover
-    await app.page.getByTestId('bundle-selector-left').click()
-
-    // Wait for the bundle selector menu to appear
-    const bundleList = app.page.getByRole('listbox')
-    await expect(bundleList).toBeVisible()
-
-    // Find the remote bundle "feature/remote-2"
-    const remoteBundles = app.page.getByRole('option', { name: 'feature/remote-2' })
-    await expect(remoteBundles).toHaveCount(1)
-
-    // Right-click on the remote bundle to open context menu
-    await remoteBundles.first().click({ button: 'right' })
-
-    // Click the "Save to Local" option
-    const saveToLocalOption = app.page.getByRole('menuitem', { name: /Save to Local/i })
-    await expect(saveToLocalOption).toBeVisible()
-    await saveToLocalOption.click()
-
-    // Wait for the download to complete and the bundle list to refresh
-    await app.page.waitForTimeout(1000)
-
-    // Now find the local version of "feature/remote-2" in the bundle list
-    const localBundles = app.page.getByRole('option', { name: 'feature/remote-2' })
-    // Should have 2: one remote, one local
-    await expect(localBundles).toHaveCount(2)
-
-    // Click on the second one (the local bundle)
-    await localBundles.nth(1).click()
-
-    // Wait for the page to reload
-    await app.page.waitForLoadState('load')
-
-    // Verify that the left bundle selector now shows the selected bundle
-    const bundleSelectorLeft = app.page.getByTestId('bundle-selector-left')
-    await expect(bundleSelectorLeft).toBeVisible()
-    await expect(bundleSelectorLeft).toHaveText('feature/remote-2')
   })
 })

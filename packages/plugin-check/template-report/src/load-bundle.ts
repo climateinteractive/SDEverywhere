@@ -30,62 +30,66 @@ export async function loadRemoteBundle(bundleMetadata: BundleMetadata): Promise<
 }
 
 /**
- * Load a local bundle from a given path using `import.meta.glob`.
+ * Load a local bundle from the file system using dynamic import (only available in development mode with HMR).
  */
 export async function loadLocalBundle(bundleMetadata: BundleMetadata): Promise<BundleResult | undefined> {
-  // Helper function to extract the relative path after the rightmost '/bundles/' or '\bundles\'
-  const extractBundleRelPath = (path: string): string | undefined => {
-    // Normalize path separators to forward slashes for consistent searching
-    const normalizedPath = path.replace(/\\/g, '/')
-    // Find the rightmost occurrence of '/bundles/'
-    const bundlesIndex = normalizedPath.lastIndexOf('/bundles/')
-    if (bundlesIndex === -1) {
-      return undefined
-    }
-    // Return everything after '/bundles/'
-    return normalizedPath.substring(bundlesIndex + '/bundles/'.length)
+  // Only available in development mode with HMR
+  if (!import.meta.hot) {
+    return undefined
   }
 
-  // Load local bundles using `import.meta.glob` (since dynamic import isn't
-  // available for file URLs due to security restrictions).  The glob pattern
-  // part will be replaced by Vite (see `vite-config-for-report.ts`).  Note
-  // that we provide a placeholder here that looks like a valid glob pattern,
-  // since Vite's dependency resolver will report errors if it is invalid
-  // (not a literal).
-  const bundlesGlob = import.meta.glob('./bundles/**/*.txt', {
-    eager: false
+  return new Promise((resolve, reject) => {
+    // Set up listeners
+    const handleSuccess = async (data: { name: string; url: string; sourceCode: string }) => {
+      cleanup()
+      if (data.url === bundleMetadata.url) {
+        try {
+          // Create a blob URL from the source code
+          const blob = new Blob([data.sourceCode], { type: 'application/javascript' })
+          const blobUrl = URL.createObjectURL(blob)
+
+          // Import the bundle from the blob URL
+          const module = await import(/* @vite-ignore */ blobUrl)
+          const bundle = module.createBundle() as Bundle
+
+          // Clean up the blob URL
+          URL.revokeObjectURL(blobUrl)
+
+          resolve({
+            bundle,
+            bundleName: bundleMetadata.name,
+            bundleUrl: bundleMetadata.url
+          })
+        } catch (error) {
+          console.error(`Failed to execute bundle ${bundleMetadata.name}:`, error)
+          resolve(undefined)
+        }
+      }
+    }
+
+    const handleError = (data: { name: string; url: string; error: string }) => {
+      cleanup()
+      if (data.url === bundleMetadata.url) {
+        console.error(`Failed to load bundle ${bundleMetadata.name}:`, data.error)
+        resolve(undefined)
+      }
+    }
+
+    const cleanup = () => {
+      import.meta.hot.off('load-bundle-success', handleSuccess)
+      import.meta.hot.off('load-bundle-error', handleError)
+    }
+
+    import.meta.hot.on('load-bundle-success', handleSuccess)
+    import.meta.hot.on('load-bundle-error', handleError)
+
+    // Send request to load bundle
+    import.meta.hot.send('load-bundle', { url: bundleMetadata.url, name: bundleMetadata.name })
+
+    // Timeout after 10 seconds
+    setTimeout(() => {
+      cleanup()
+      reject(new Error(`Timeout waiting for bundle: ${bundleMetadata.name}`))
+    }, 10000)
   })
-
-  // The bundle name may contain slashes (e.g., 'feature/remote-1'), so we need to
-  // match the full relative path, not just the filename.  The `url` value will
-  // be a 'file://' URL that has the absolute path the bundle file.
-  const targetBundleRelPath = extractBundleRelPath(bundleMetadata.url)
-  if (targetBundleRelPath) {
-    // TODO!!!!! REMOVE LOGGING!!!!
-    console.log('bundlesGlob', Object.keys(bundlesGlob))
-    console.log('target', bundleMetadata)
-    const bundleKey = Object.keys(bundlesGlob).find(key => {
-      // The key here is a relative path the bundle file, e.g., '../../bundles/feature/remote-1.js'.
-      // We will extract the relative path after the '.../bundles' part for comparing to the target
-      // bundle path.
-      const bundleRelPath = extractBundleRelPath(key)
-      return bundleRelPath === targetBundleRelPath
-    })
-
-    if (bundleKey) {
-      type BundleModule = {
-        createBundle(): Bundle
-      }
-      const loadBundle = bundlesGlob[bundleKey]
-      const module = (await loadBundle()) as BundleModule
-      const bundle = module.createBundle() as Bundle
-      return {
-        bundle,
-        bundleName: bundleMetadata.name,
-        bundleUrl: bundleMetadata.url
-      }
-    }
-  }
-
-  return undefined
 }

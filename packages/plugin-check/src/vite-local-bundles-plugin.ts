@@ -1,8 +1,8 @@
 // Copyright (c) 2025 Climate Interactive / New Venture Fund
 
-import { readdir, stat } from 'node:fs/promises'
+import { readdir, readFile, stat } from 'node:fs/promises'
 import { join as joinPath, relative, sep } from 'node:path'
-import { pathToFileURL } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 
 import chokidar from 'chokidar'
 import type { Plugin } from 'vite'
@@ -25,22 +25,6 @@ export function localBundlesPlugin(bundlesDir: string, currentBundlePath: string
     name: 'sde-local-bundles',
 
     configureServer(server) {
-      // Helper function that reloads the template-report `load-bundle` module so that the latest
-      // `bundles` directory contents are made available when the app calls `import.meta.glob`
-      function reloadTemplateReportGlobModule() {
-        server.moduleGraph.fileToModulesMap.forEach(mods => {
-          mods.forEach(mod => {
-            if (mod.id?.includes('template-report/src/load-bundle.ts')) {
-              server.reloadModule(mod)
-              // server.moduleGraph.invalidateModule(mod)
-              // mod.importers.forEach(importer => {
-              //   server.moduleGraph.invalidateModule(importer)
-              // })
-            }
-          })
-        })
-      }
-
       // Watch the bundles directory for changes and notify clients
       const watcher = chokidar.watch(bundlesDir, {
         // Don't send initial "file added" events
@@ -54,14 +38,10 @@ export function localBundlesPlugin(bundlesDir: string, currentBundlePath: string
         depth: 10
       })
 
-      watcher.on('all', (event, path) => {
-        console.log(`[sde-local-bundles] Detected ${event} in bundles directory: ${path}`)
+      watcher.on('all', (event /*, path*/) => {
         if (event === 'add' || event === 'unlink') {
-          // Reload the template-report module that uses `import.meta.glob` so that the updated
-          // bundle list is available via `import.meta.glob`
-          reloadTemplateReportGlobModule()
-
           // Notify all clients that the bundles list has changed
+          // console.log(`[sde-local-bundles] Detected ${event} in bundles directory: ${path}`)
           server.ws.send('bundles-changed', {})
         }
       })
@@ -94,6 +74,25 @@ export function localBundlesPlugin(bundlesDir: string, currentBundlePath: string
         }
       })
 
+      // Handle requests to load a local bundle
+      server.ws.on('load-bundle', async (data, client) => {
+        const { url, name } = data
+        try {
+          console.log(`[sde-local-bundles] Loading local bundle: name=${name} url=${url}`)
+
+          // Read the bundle file source code
+          const filePath = fileURLToPath(url)
+          const sourceCode = await readFile(filePath, 'utf-8')
+
+          // Send the source code back to client
+          client.send('load-bundle-success', { name, url, sourceCode })
+        } catch (error) {
+          // Send error message back to client
+          console.error(`[sde-local-bundles] Failed to load bundle:`, error)
+          client.send('load-bundle-error', { name, url, error: error.message })
+        }
+      })
+
       // Handle requests to download a bundle to the local bundles directory
       server.ws.on('download-bundle', async (data, client) => {
         const { url, name, lastModified } = data
@@ -101,10 +100,6 @@ export function localBundlesPlugin(bundlesDir: string, currentBundlePath: string
           // Download the bundle to the local bundles directory
           console.log(`[sde-local-bundles] Downloading bundle: name=${name} url=${url}`)
           const filePath = await downloadBundle(url, name, lastModified, bundlesDir)
-
-          // Reload the template-report module that uses `import.meta.glob` so that the new
-          // bundle is available via `import.meta.glob`
-          reloadTemplateReportGlobModule()
 
           // Send success message back to client
           console.log(`[sde-local-bundles] Downloaded bundle to ${filePath}`)
@@ -123,10 +118,6 @@ export function localBundlesPlugin(bundlesDir: string, currentBundlePath: string
           // Copy the bundle with a new name
           console.log(`[sde-local-bundles] Copying bundle: src=${name} dst=${newName}`)
           const filePath = await copyBundle(url, newName, bundlesDir)
-
-          // Reload the template-report module that uses `import.meta.glob` so that the new
-          // bundle is available via `import.meta.glob`
-          reloadTemplateReportGlobModule()
 
           // Send success message back to client
           console.log(`[sde-local-bundles] Copied bundle to ${filePath}`)
