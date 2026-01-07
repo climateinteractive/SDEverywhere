@@ -36,12 +36,6 @@ test.describe('Bundle Selector', () => {
     const dstBundleFile = joinPath(bundlesDir, 'local-1.js')
     await copyFile(srcBundleFile, dstBundleFile)
 
-    // // Also copy to a nested directory so that we can test local bundles with slashes in name
-    // const nestedBundlesDir = joinPath(bundlesDir, 'nested')
-    // await mkdir(nestedBundlesDir, { recursive: true })
-    // const dstNestedBundleFile = joinPath(nestedBundlesDir, 'local-2.js')
-    // await copyFile(srcBundleFile, dstNestedBundleFile)
-
     // Set the last modified timestamp to a specific date/time
     const lastModified = new Date('2025-06-01T12:00:00.000Z')
     await utimes(dstBundleFile, lastModified, lastModified)
