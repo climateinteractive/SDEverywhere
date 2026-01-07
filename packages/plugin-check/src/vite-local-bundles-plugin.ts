@@ -25,6 +25,22 @@ export function localBundlesPlugin(bundlesDir: string, currentBundlePath: string
     name: 'sde-local-bundles',
 
     configureServer(server) {
+      // Helper function that reloads the template-report `load-bundle` module so that the latest
+      // `bundles` directory contents are made available when the app calls `import.meta.glob`
+      function reloadTemplateReportGlobModule() {
+        server.moduleGraph.fileToModulesMap.forEach(mods => {
+          mods.forEach(mod => {
+            if (mod.id?.includes('template-report/src/load-bundle.ts')) {
+              server.reloadModule(mod)
+              // server.moduleGraph.invalidateModule(mod)
+              // mod.importers.forEach(importer => {
+              //   server.moduleGraph.invalidateModule(importer)
+              // })
+            }
+          })
+        })
+      }
+
       // Watch the bundles directory for changes and notify clients
       const watcher = chokidar.watch(bundlesDir, {
         // Don't send initial "file added" events
@@ -38,10 +54,16 @@ export function localBundlesPlugin(bundlesDir: string, currentBundlePath: string
         depth: 10
       })
 
-      watcher.on('all', (/*event, path*/) => {
-        // console.log(`[sde-local-bundles] Detected ${event} in bundles directory: ${path}`)
-        // Notify all clients that the bundles list has changed
-        server.ws.send('bundles-changed', {})
+      watcher.on('all', (event, path) => {
+        console.log(`[sde-local-bundles] Detected ${event} in bundles directory: ${path}`)
+        if (event === 'add' || event === 'unlink') {
+          // Reload the template-report module that uses `import.meta.glob` so that the updated
+          // bundle list is available via `import.meta.glob`
+          reloadTemplateReportGlobModule()
+
+          // Notify all clients that the bundles list has changed
+          server.ws.send('bundles-changed', {})
+        }
       })
 
       // Clean up the file watcher when the vite server is closed
@@ -80,15 +102,13 @@ export function localBundlesPlugin(bundlesDir: string, currentBundlePath: string
           console.log(`[sde-local-bundles] Downloading bundle: name=${name} url=${url}`)
           const filePath = await downloadBundle(url, name, lastModified, bundlesDir)
 
+          // Reload the template-report module that uses `import.meta.glob` so that the new
+          // bundle is available via `import.meta.glob`
+          reloadTemplateReportGlobModule()
+
           // Send success message back to client
           console.log(`[sde-local-bundles] Downloaded bundle to ${filePath}`)
           client.send('download-bundle-success', { name, filePath: `${name}.js` })
-
-          // XXX: Reload the server so that the new bundle is available via `import.meta.glob`.
-          // This is a workaround for the fact that `import.meta.glob` does not rescan after
-          // changes are made to the bundles directory.  The problem with this is that it will
-          // cause the page to reload and the user will lose their place in the UI.
-          server.restart()
         } catch (error) {
           // Send error message back to client
           console.error(`[sde-local-bundles] Failed to download bundle:`, error)
@@ -104,15 +124,13 @@ export function localBundlesPlugin(bundlesDir: string, currentBundlePath: string
           console.log(`[sde-local-bundles] Copying bundle: src=${name} dst=${newName}`)
           const filePath = await copyBundle(url, newName, bundlesDir)
 
+          // Reload the template-report module that uses `import.meta.glob` so that the new
+          // bundle is available via `import.meta.glob`
+          reloadTemplateReportGlobModule()
+
           // Send success message back to client
           console.log(`[sde-local-bundles] Copied bundle to ${filePath}`)
           client.send('copy-bundle-success', { name: newName, filePath: `${newName}.js` })
-
-          // XXX: Reload the server so that the new bundle is available via `import.meta.glob`.
-          // This is a workaround for the fact that `import.meta.glob` does not rescan after
-          // changes are made to the bundles directory.  The problem with this is that it will
-          // cause the page to reload and the user will lose their place in the UI.
-          server.restart()
         } catch (error) {
           // Send error message back to client
           console.error(`[sde-local-bundles] Failed to copy bundle:`, error)
