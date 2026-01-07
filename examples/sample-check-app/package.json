@@ -27,7 +27,7 @@
     "sass": "^1.77.8",
     "svelte": "^5.39.10",
     "svelte-check": "^4.3.2",
-    "vite": "^7.1.9"
+    "vite": "^7.1.12"
   },
   "author": "Climate Interactive",
   "license": "MIT",

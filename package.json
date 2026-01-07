@@ -25,8 +25,8 @@
     "@playwright/test": "^1.56.1",
     "@typescript-eslint/eslint-plugin": "^8.46.0",
     "@typescript-eslint/parser": "^8.46.0",
-    "@vitest/browser": "^3.2.4",
-    "@vitest/coverage-v8": "^3.2.4",
+    "@vitest/browser": "^4.0.16",
+    "@vitest/coverage-v8": "^4.0.16",
     "eslint": "^9.37.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-eslint-comments": "^3.2.0",
@@ -42,7 +42,7 @@
     "typedoc": "0.25.0",
     "typedoc-plugin-markdown": "3.16.0",
     "typescript": "^5.2.2",
-    "vitest": "^3.2.4"
+    "vitest": "^4.0.16"
   },
   "pnpm": {
     "peerDependencyRules": {
