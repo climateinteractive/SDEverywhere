@@ -10,10 +10,6 @@
 * The following workspace dependencies were updated
   * dependencies
     * @sdeverywhere/check-ui-shell bumped from ^0.2.15 to ^0.2.16
-  * devDependencies
-    * @sdeverywhere/build bumped from * to 0.3.8
-  * peerDependencies
-    * @sdeverywhere/build bumped from ^0.3.7 to ^0.3.8
 
 ## [0.3.23](https://github.com/climateinteractive/SDEverywhere/compare/plugin-check-v0.3.22...plugin-check-v0.3.23) (2026-01-07)
 
