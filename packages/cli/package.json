@@ -20,10 +20,10 @@
   "dependencies": {
     "@sdeverywhere/build": "^0.3.7",
     "@sdeverywhere/compile": "^0.7.25",
-    "bufx": "^1.0.5",
     "byline": "^5.0.0",
     "ramda": "^0.27.0",
     "shelljs": "^0.10.0",
+    "strip-bom": "^5.0.0",
     "yargs": "^17.5.1"
   },
   "engines": {
