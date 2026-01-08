@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.8](https://github.com/climateinteractive/SDEverywhere/compare/build-v0.3.7...build-v0.3.8) (2026-01-08)
+
+
+### Dependencies
+
+* upgrade chokidar to 5.0.0 + replace tiny-glob with tinyglobby ([#753](https://github.com/climateinteractive/SDEverywhere/issues/753)) ([c0e7e62](https://github.com/climateinteractive/SDEverywhere/commit/c0e7e62a3e9af7a5bbe88e00dfa868c021236ba8)), closes [#752](https://github.com/climateinteractive/SDEverywhere/issues/752)
+
 ## [0.3.7](https://github.com/climateinteractive/SDEverywhere/compare/build-v0.3.6...build-v0.3.7) (2024-12-13)
 
 

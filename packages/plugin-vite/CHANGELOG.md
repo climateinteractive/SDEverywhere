@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/climateinteractive/SDEverywhere/compare/plugin-vite-v0.2.0...plugin-vite-v0.2.1) (2026-01-08)
+
+
+### Dependencies
+
+* upgrade vite to ^7.1.12 + upgrade vitest to ^4.0.16 ([#735](https://github.com/climateinteractive/SDEverywhere/issues/735)) ([f16f127](https://github.com/climateinteractive/SDEverywhere/commit/f16f127b9fb0e53352d7e1152d78623fe5ec26c9)), closes [#734](https://github.com/climateinteractive/SDEverywhere/issues/734)
+
 ## [0.2.0](https://github.com/climateinteractive/SDEverywhere/compare/plugin-vite-v0.1.11...plugin-vite-v0.2.0) (2025-10-08)
 
 

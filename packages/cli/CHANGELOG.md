@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.7.37](https://github.com/climateinteractive/SDEverywhere/compare/cli-v0.7.36...cli-v0.7.37) (2026-01-08)
+
+
+### Bug Fixes
+
+* drop bufx dependency + inline minimal bufx module with unused yaml/prettier/etc parts removed ([#740](https://github.com/climateinteractive/SDEverywhere/issues/740)) ([70ef00b](https://github.com/climateinteractive/SDEverywhere/commit/70ef00b02f723b3c3c74647cc0581de63cc95b5d)), closes [#739](https://github.com/climateinteractive/SDEverywhere/issues/739)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/build bumped from ^0.3.7 to ^0.3.8
+    * @sdeverywhere/compile bumped from ^0.7.25 to ^0.7.26
+
 ## [0.7.36](https://github.com/climateinteractive/SDEverywhere/compare/cli-v0.7.35...cli-v0.7.36) (2025-11-07)
 
 

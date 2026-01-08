@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.3.24](https://github.com/climateinteractive/SDEverywhere/compare/plugin-check-v0.3.23...plugin-check-v0.3.24) (2026-01-08)
+
+
+### Dependencies
+
+* upgrade chokidar to 5.0.0 + replace tiny-glob with tinyglobby ([#753](https://github.com/climateinteractive/SDEverywhere/issues/753)) ([c0e7e62](https://github.com/climateinteractive/SDEverywhere/commit/c0e7e62a3e9af7a5bbe88e00dfa868c021236ba8)), closes [#752](https://github.com/climateinteractive/SDEverywhere/issues/752)
+* upgrade vite to ^7.1.12 + upgrade vitest to ^4.0.16 ([#735](https://github.com/climateinteractive/SDEverywhere/issues/735)) ([f16f127](https://github.com/climateinteractive/SDEverywhere/commit/f16f127b9fb0e53352d7e1152d78623fe5ec26c9)), closes [#734](https://github.com/climateinteractive/SDEverywhere/issues/734)
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/check-ui-shell bumped from ^0.2.15 to ^0.2.16
+
 ## [0.3.23](https://github.com/climateinteractive/SDEverywhere/compare/plugin-check-v0.3.22...plugin-check-v0.3.23) (2026-01-07)
 
 
