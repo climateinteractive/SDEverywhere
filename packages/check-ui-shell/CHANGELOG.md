@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.2.16](https://github.com/climateinteractive/SDEverywhere/compare/check-ui-shell-v0.2.15...check-ui-shell-v0.2.16) (2026-01-08)
+
+
+### Dependencies
+
+* upgrade postcss to 8.5.6 to avoid older version of nanoid with vulnerability ([#745](https://github.com/climateinteractive/SDEverywhere/issues/745)) ([fb80f93](https://github.com/climateinteractive/SDEverywhere/commit/fb80f930d3d633e5bfeeca8f8e0629d35f817b56)), closes [#743](https://github.com/climateinteractive/SDEverywhere/issues/743)
+* upgrade sass to 1.97.2 ([#751](https://github.com/climateinteractive/SDEverywhere/issues/751)) ([35b6995](https://github.com/climateinteractive/SDEverywhere/commit/35b6995c9e9d94868af285501d2f4deb0104205c)), closes [#750](https://github.com/climateinteractive/SDEverywhere/issues/750)
+* upgrade vite to ^7.1.12 + upgrade vitest to ^4.0.16 ([#735](https://github.com/climateinteractive/SDEverywhere/issues/735)) ([f16f127](https://github.com/climateinteractive/SDEverywhere/commit/f16f127b9fb0e53352d7e1152d78623fe5ec26c9)), closes [#734](https://github.com/climateinteractive/SDEverywhere/issues/734)
+
 ## [0.2.15](https://github.com/climateinteractive/SDEverywhere/compare/check-ui-shell-v0.2.14...check-ui-shell-v0.2.15) (2026-01-07)
 
 
