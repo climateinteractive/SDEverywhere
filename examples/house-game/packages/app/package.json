@@ -25,11 +25,11 @@
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^6.2.1",
     "@types/chart.js": "^2.9.34",
-    "postcss": "^8.4.41",
-    "sass": "^1.77.8",
+    "postcss": "^8.5.6",
+    "sass": "^1.97.2",
     "svelte": "^5.39.10",
     "svelte-check": "^4.3.2",
-    "vite": "^7.1.9"
+    "vite": "^7.1.12"
   },
   "author": "Climate Interactive",
   "license": "MIT",
