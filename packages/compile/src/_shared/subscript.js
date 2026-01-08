@@ -1,5 +1,4 @@
 import util from 'util'
-import yaml from 'js-yaml'
 import * as R from 'ramda'
 import B from './bufx.js'
 import { canonicalName, vlog } from './helpers.js'
@@ -217,21 +216,6 @@ export function printSubscripts() {
     B.emitLine(`${k}:\n${util.inspect(v, { depth: null })}\n`)
   }
   return B.getBuf()
-}
-export function yamlSubsList() {
-  let subs = {}
-  for (let [k, v] of subscripts) {
-    subs[k] = v
-  }
-  return yaml.safeDump(subs)
-}
-export function loadSubscriptsFromYaml(yamlSubs) {
-  // Load the subscripts map from subscripts serialized to a YAML file by yamlSubsList.
-  // This function should be called instead of adding subscripts through the constructor.
-  let subs = yaml.safeLoad(yamlSubs)
-  for (const k in subs) {
-    subscripts.set(k, subs[k])
-  }
 }
 export function extractMarkedDims(subscripts) {
   // Extract all marked dimensions and update subscripts.

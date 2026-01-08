@@ -7,7 +7,7 @@ import { parseVensimModel } from '@sdeverywhere/parse'
 import B from './_shared/bufx.js'
 import { readXlsx } from './_shared/helpers.js'
 import { readDat } from './_shared/read-dat.js'
-import { printSubscripts, yamlSubsList } from './_shared/subscript.js'
+import { printSubscripts } from './_shared/subscript.js'
 import { cName } from './_shared/var-names.js'
 import Model from './model/model.js'
 import { getDirectSubscripts } from './model/read-subscripts.js'
@@ -21,7 +21,7 @@ import { generateCode } from './generate/gen-code.js'
  * - If `operations` has 'generateC', the generated C code will be written to `buildDir`.
  * - If `operations` has 'generateJS', the generated JS code will be written to `buildDir`.
  * - If `operations` has 'printVarList', variables and subscripts will be written to
- *   txt, yaml, and json files under `buildDir`.
+ *   txt and json files under `buildDir`.
  * - If `operations` has 'printRefIdTest', reference identifiers will be printed to the console.
  * - If `operations` has 'convertNames', no output will be generated, but the results of model
  *   analysis will be available.
@@ -92,10 +92,6 @@ export async function parseAndGenerate(input, spec, operations, modelDirname, mo
     writeOutput(`${modelName}_vars.txt`, Model.printVarList())
     // Write subscripts to a text file.
     writeOutput(`${modelName}_subs.txt`, printSubscripts())
-    // Write variables to a YAML file.
-    writeOutput(`${modelName}_vars.yaml`, Model.yamlVarList())
-    // Write subscripts to a YAML file.
-    writeOutput(`${modelName}_subs.yaml`, yamlSubsList())
     // Write variables and subscripts to a JSON file.
     const jsonList = Model.jsonList()
     writeOutput(`${modelName}.json`, JSON.stringify(jsonList.full, null, 2))

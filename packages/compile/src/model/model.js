@@ -1,4 +1,3 @@
-import yaml from 'js-yaml'
 import * as R from 'ramda'
 
 import B from '../_shared/bufx.js'
@@ -946,14 +945,6 @@ function printVarList() {
   }
   return B.getBuf()
 }
-function yamlVarList() {
-  // Print selected properties of all variable objects to a YAML string.
-  let vars = R.sortBy(
-    R.prop('refId'),
-    R.map(v => filterVar(v), variables)
-  )
-  return yaml.safeDump(vars)
-}
 function printVar(v) {
   let nonAtoA = isNonAtoAName(v.varName) ? ' (non-apply-to-all)' : ''
   B.emitLine(`${v.modelLHS}: ${v.varType}${nonAtoA}`)
@@ -1348,6 +1339,5 @@ export default {
   varsWithName,
   varWithName,
   varWithRefId,
-  vensimName,
-  yamlVarList
+  vensimName
 }
