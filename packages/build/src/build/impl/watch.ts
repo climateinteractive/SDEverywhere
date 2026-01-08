@@ -3,6 +3,7 @@
 import { basename } from 'path'
 
 import chokidar from 'chokidar'
+import { globSync, isDynamicPattern } from 'tinyglobby'
 
 import { clearOverlay, log, logError } from '../../_shared/log'
 import type { ResolvedConfig } from '../../_shared/resolved-config'
@@ -93,9 +94,28 @@ export function watch(config: ResolvedConfig, userConfig: UserConfig, plugins: P
     watchPaths = config.modelFiles
   }
 
+  // The chokidar package no longer supports glob patterns, so we need to resolve
+  // glob patterns first and then pass the resolved paths to chokidar
+  const resolvedWatchPaths: string[] = []
+  for (const watchPath of watchPaths) {
+    if (isDynamicPattern(watchPath)) {
+      // This is a glob pattern; resolve files that match the pattern
+      const paths = globSync(watchPath, {
+        // Watch paths are resolved relative to the project root directory
+        cwd: config.rootDir,
+        // Resolve to absolute paths
+        absolute: true
+      })
+      resolvedWatchPaths.push(...paths)
+    } else {
+      // This is regular file or directory path; let chokidar resolve it
+      resolvedWatchPaths.push(watchPath)
+    }
+  }
+
   // Watch the config and model files; if changes are detected, generate the specs
   // and rebuild the model if needed
-  const watcher = chokidar.watch(watchPaths, {
+  const watcher = chokidar.watch(resolvedWatchPaths, {
     // Watch paths are resolved relative to the project root directory
     cwd: config.rootDir,
     // XXX: Include a delay, otherwise on macOS we sometimes get multiple

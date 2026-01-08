@@ -44,7 +44,7 @@
     "@sdeverywhere/runtime": "^0.2.7",
     "@sdeverywhere/runtime-async": "^0.2.7",
     "assert-never": "^1.2.1",
-    "chokidar": "^3.5.3",
+    "chokidar": "^5.0.0",
     "picocolors": "^1.0.0",
     "rollup": "^4.53.3",
     "vite": "^7.1.12"
