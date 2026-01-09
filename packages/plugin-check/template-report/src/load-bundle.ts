@@ -61,7 +61,7 @@ export async function loadLocalBundle(bundleMetadata: BundleMetadata): Promise<B
             bundleUrl: bundleMetadata.url
           })
         } catch (error) {
-          console.error(`Failed to execute bundle ${bundleMetadata.name}:`, error)
+          console.error(`Failed to create bundle ${bundleMetadata.name}:`, error)
           resolve(undefined)
         }
       }

@@ -87,7 +87,10 @@ async function initForProduction(): Promise<void> {
 }
 
 async function initForLocal(): Promise<void> {
-  async function createBundle(bundleMetadata: BundleMetadata | undefined): Promise<BundleResult> {
+  async function createBundle(
+    bundleMetadata: BundleMetadata | undefined,
+    side: 'left' | 'right'
+  ): Promise<BundleResult> {
     if (bundleMetadata === undefined) {
       bundleMetadata = {
         name: 'current',
@@ -98,6 +101,7 @@ async function initForLocal(): Promise<void> {
     if (bundleMetadata.url.startsWith('http')) {
       // Load remote bundles using dynamic import
       try {
+        console.log(`Loading remote bundle for ${side} side: name=${bundleMetadata.name} url=${bundleMetadata.url}`)
         return loadRemoteBundle(bundleMetadata)
       } catch (e) {
         console.error(
@@ -108,6 +112,7 @@ async function initForLocal(): Promise<void> {
     } else if (bundleMetadata.url.startsWith('file://')) {
       // Load local bundles using `import.meta.glob`
       try {
+        console.log(`Loading local bundle for ${side} side: name=${bundleMetadata.name} url=${bundleMetadata.url}`)
         const result = await loadLocalBundle(bundleMetadata)
         if (result) {
           return result
@@ -126,6 +131,7 @@ async function initForLocal(): Promise<void> {
 
     // Load the "current" bundle if it was requested or if the other loading
     // processes failed
+    console.log(`Loading current bundle for ${side} side`)
     const bundle = createCurrentBundle()
     return {
       bundle,
@@ -134,8 +140,16 @@ async function initForLocal(): Promise<void> {
     }
   }
 
-  const { bundle: bundleL, bundleName: bundleNameL, bundleUrl: bundleUrlL } = await createBundle(savedBundleMetadataL)
-  const { bundle: bundleR, bundleName: bundleNameR, bundleUrl: bundleUrlR } = await createBundle(savedBundleMetadataR)
+  const {
+    bundle: bundleL,
+    bundleName: bundleNameL,
+    bundleUrl: bundleUrlL
+  } = await createBundle(savedBundleMetadataL, 'left')
+  const {
+    bundle: bundleR,
+    bundleName: bundleNameR,
+    bundleUrl: bundleUrlR
+  } = await createBundle(savedBundleMetadataR, 'right')
 
   // Prepare the model check/comparison configuration
   const configInitOptions: ConfigInitOptions = {

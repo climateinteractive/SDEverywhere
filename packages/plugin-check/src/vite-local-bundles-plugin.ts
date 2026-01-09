@@ -78,7 +78,7 @@ export function localBundlesPlugin(bundlesDir: string, currentBundlePath: string
       server.ws.on('load-bundle', async (data, client) => {
         const { url, name } = data
         try {
-          console.log(`[sde-local-bundles] Loading local bundle: name=${name} url=${url}`)
+          // console.log(`[sde-local-bundles] Loading local bundle: name=${name} url=${url}`)
 
           // Read the bundle file source code
           const filePath = fileURLToPath(url)
