@@ -7,15 +7,6 @@
 
 * add logging to bundle loading code ([#758](https://github.com/climateinteractive/SDEverywhere/issues/758)) ([df161f7](https://github.com/climateinteractive/SDEverywhere/commit/df161f7a061ca0c1d8ff30c7837a8ac4f7866897)), closes [#757](https://github.com/climateinteractive/SDEverywhere/issues/757)
 
-
-### Dependencies
-
-* The following workspace dependencies were updated
-  * devDependencies
-    * @sdeverywhere/build bumped from * to 0.3.9
-  * peerDependencies
-    * @sdeverywhere/build bumped from ^0.3.7 to ^0.3.9
-
 ## [0.3.24](https://github.com/climateinteractive/SDEverywhere/compare/plugin-check-v0.3.23...plugin-check-v0.3.24) (2026-01-08)
 
 
