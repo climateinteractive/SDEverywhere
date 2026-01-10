@@ -84,15 +84,12 @@ export function watchPaths(
     }
   })
   watcher.on('change', path => {
-    // console.log('change', path)
     onChange(path)
   })
   watcher.on('add', path => {
-    // console.log('add', path)
     onChange(path)
   })
   watcher.on('unlink', path => {
-    // console.log('unlink', path)
     onChange(path)
   })
   if (onReady) {
