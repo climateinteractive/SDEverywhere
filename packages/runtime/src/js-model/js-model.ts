@@ -1,6 +1,6 @@
 // Copyright (c) 2024 Climate Interactive / New Venture Fund
 
-import { type LookupDef, type VarSpec } from '../_shared'
+import { type ConstantDef, type LookupDef, type VarSpec } from '../_shared'
 import type { RunnableModel } from '../runnable-model'
 import { BaseRunnableModel } from '../runnable-model/base-runnable-model'
 
@@ -51,6 +51,9 @@ export interface JsModel {
 
   /** @hidden */
   setLookup(varSpec: VarSpec, points: Float64Array | undefined): void
+
+  /** @hidden */
+  setConstant(varSpec: VarSpec, value: number): void
 
   /** @hidden */
   storeOutputs(storeValue: (value: number) => void): void
@@ -109,6 +112,7 @@ export function initJsModel(model: JsModel): RunnableModel {
         outputs,
         options?.outputIndices,
         options?.lookups,
+        options?.constants,
         undefined
       )
     }
@@ -126,6 +130,7 @@ function runJsModel(
   outputs: Float64Array,
   outputIndices: Int32Array | undefined,
   lookups: LookupDef[] | undefined,
+  constants: ConstantDef[] | undefined,
   stopAfterTime: number | undefined
 ): void {
   // Initialize time with the required `INITIAL TIME` control variable
@@ -147,6 +152,13 @@ function runJsModel(
   if (lookups !== undefined) {
     for (const lookupDef of lookups) {
       model.setLookup(lookupDef.varRef.varSpec, lookupDef.points)
+    }
+  }
+
+  // Apply constant overrides, if provided
+  if (constants !== undefined) {
+    for (const constantDef of constants) {
+      model.setConstant(constantDef.varRef.varSpec, constantDef.value)
     }
   }
 
