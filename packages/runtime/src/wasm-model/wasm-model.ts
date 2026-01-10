@@ -1,6 +1,6 @@
 // Copyright (c) 2020-2022 Climate Interactive / New Venture Fund
 
-import type { OutputVarId } from '../_shared'
+import type { ConstantDef, OutputVarId } from '../_shared'
 import type { RunModelParams, RunnableModel } from '../runnable-model'
 import { perfElapsed, perfNow } from '../perf'
 import { createFloat64WasmBuffer, createInt32WasmBuffer, type WasmBuffer } from './wasm-buffer'
@@ -40,6 +40,7 @@ class WasmModel implements RunnableModel {
     pointsAddress: number,
     numPoints: number
   ) => void
+  private readonly wasmSetConstant: (varIndex: number, subIndicesAddress: number, value: number) => void
   private readonly wasmRunModel: (inputsAddress: number, outputsAddress: number, outputIndicesAddress: number) => void
 
   /**
@@ -65,6 +66,7 @@ class WasmModel implements RunnableModel {
 
     // Make the native functions callable
     this.wasmSetLookup = wasmModule.cwrap('setLookup', null, ['number', 'number', 'number', 'number'])
+    this.wasmSetConstant = wasmModule.cwrap('setConstant', null, ['number', 'number', 'number'])
     this.wasmRunModel = wasmModule.cwrap('runModelWithBuffers', null, ['number', 'number', 'number'])
   }
 
@@ -120,6 +122,32 @@ class WasmModel implements RunnableModel {
         // Call the native `setLookup` function
         const varIndex = varSpec.varIndex
         this.wasmSetLookup(varIndex, subIndicesAddress, pointsAddress, numPoints)
+      }
+    }
+
+    // Apply constant overrides, if provided
+    const constants = params.getConstants()
+    if (constants !== undefined) {
+      for (const constantDef of constants) {
+        const varSpec = constantDef.varRef.varSpec
+        const numSubElements = varSpec.subscriptIndices?.length || 0
+        let subIndicesAddress: number
+
+        if (numSubElements > 0) {
+          // Reuse the lookup sub indices buffer for constants
+          if (this.lookupSubIndicesBuffer === undefined || this.lookupSubIndicesBuffer.numElements < numSubElements) {
+            this.lookupSubIndicesBuffer?.dispose()
+            this.lookupSubIndicesBuffer = createInt32WasmBuffer(this.wasmModule, numSubElements)
+          }
+          this.lookupSubIndicesBuffer.getArrayView().set(varSpec.subscriptIndices)
+          subIndicesAddress = this.lookupSubIndicesBuffer.getAddress()
+        } else {
+          subIndicesAddress = 0
+        }
+
+        // Call the native `setConstant` function
+        const varIndex = varSpec.varIndex
+        this.wasmSetConstant(varIndex, subIndicesAddress, constantDef.value)
       }
     }
 
