@@ -58,9 +58,15 @@ export function resolveWatchPaths(patterns: string[], cwd: string): string[] {
  * @param patterns The paths to watch (may include glob patterns).
  * @param cwd The current working directory to resolve paths relative to.
  * @param onChange Callback invoked when a file is changed.
+ * @param onReady Optional callback invoked when the watcher is ready.
  * @returns A cleanup function that closes the watcher.
  */
-export function watchPaths(patterns: string[], cwd: string, onChange: (path: string) => void): () => void {
+export function watchPaths(
+  patterns: string[],
+  cwd: string,
+  onChange: (path: string) => void,
+  onReady?: () => void
+): () => void {
   // The chokidar package no longer supports glob patterns, so we need to resolve
   // glob patterns first and then pass the resolved paths to chokidar
   const resolvedPathsToWatch = resolveWatchPaths(patterns, cwd)
@@ -69,22 +75,29 @@ export function watchPaths(patterns: string[], cwd: string, onChange: (path: str
   const watcher = chokidar.watch(resolvedPathsToWatch, {
     // Watch paths are resolved relative to the provided cwd
     cwd,
+    // Ignore the initial add events when the watcher is created
+    ignoreInitial: true,
     // Include a delay, otherwise on macOS we sometimes get multiple
     // change events when the file is saved just once
     awaitWriteFinish: {
       stabilityThreshold: 200
     }
   })
-
   watcher.on('change', path => {
+    // console.log('change', path)
     onChange(path)
   })
-  // watcher.on('add', path => {
-  //   onChange(path)
-  // })
-  // watcher.on('unlink', path => {
-  //   onChange(path)
-  // })
+  watcher.on('add', path => {
+    // console.log('add', path)
+    onChange(path)
+  })
+  watcher.on('unlink', path => {
+    // console.log('unlink', path)
+    onChange(path)
+  })
+  if (onReady) {
+    watcher.on('ready', onReady)
+  }
 
   // Return cleanup function
   return () => {
