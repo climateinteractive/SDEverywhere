@@ -174,6 +174,24 @@ ${setLookupImpl(Model.varIndexInfo(), spec.customLookups)}
   fprintf(stderr, "${msg}\\n");`
     }
 
+    // Configure the body of the `setConstant` function depending on the value
+    // of the `customConstants` property in the spec file
+    let setConstantBody
+    if (spec.customConstants === true || Array.isArray(spec.customConstants)) {
+      setConstantBody = `\
+  switch (varIndex) {
+${setConstantImpl(Model.varIndexInfo(), spec.customConstants)}
+    default:
+      fprintf(stderr, "No constant found for var index %zu in setConstant\\n", varIndex);
+      break;
+  }`
+    } else {
+      let msg = 'The setConstant function was not enabled for the generated model. '
+      msg += 'Set the customConstants property in the spec/config file to allow for overriding constants at runtime.'
+      setConstantBody = `\
+  fprintf(stderr, "${msg}\\n");`
+    }
+
     // Configure the output variables that appear in the generated `getHeader`
     // and `storeOutputData` functions
     let headerVarNames = outputAllVars ? expandedVarNames(true) : spec.outputVarNames
@@ -210,6 +228,10 @@ ${inputsFromBufferImpl()}
 
 void setLookup(size_t varIndex, size_t* subIndices, double* points, size_t numPoints) {
 ${setLookupBody}
+}
+
+void setConstant(size_t varIndex, size_t* subIndices, double value) {
+${setConstantBody}
 }
 
 const char* getHeader() {
@@ -467,6 +489,39 @@ ${section(chunk)}
       return c
     })
     const section = R.pipe(lookupAndDataVars, code, lines)
+    return section(varIndexInfo)
+  }
+  function setConstantImpl(varIndexInfo, customConstants) {
+    // Emit case statements for all const variables that can be overridden at runtime
+    let includeCase
+    if (Array.isArray(customConstants)) {
+      // Only include a case statement if the variable was explicitly included
+      // in the `customConstants` array in the spec file
+      const customConstantVarNames = customConstants.map(varName => {
+        // The developer might specify a variable name that includes subscripts,
+        // but we will ignore the subscript part and only match on the base name
+        return canonicalVensimName(varName.split('[')[0])
+      })
+      includeCase = varName => customConstantVarNames.includes(varName)
+    } else {
+      // Include a case statement for all constant variables
+      includeCase = () => true
+    }
+    const constVars = R.filter(info => {
+      return info.varType === 'const' && includeCase(info.varName)
+    })
+    const code = R.map(info => {
+      let constVar = info.varName
+      for (let i = 0; i < info.subscriptCount; i++) {
+        constVar += `[subIndices[${i}]]`
+      }
+      let c = ''
+      c += `    case ${info.varIndex}:\n`
+      c += `      ${constVar} = value;\n`
+      c += `      break;`
+      return c
+    })
+    const section = R.pipe(constVars, code, lines)
     return section(varIndexInfo)
   }
 
