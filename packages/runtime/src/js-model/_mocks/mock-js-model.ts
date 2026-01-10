@@ -120,6 +120,15 @@ export class MockJsModel implements JsModel {
   }
 
   // from JsModel interface
+  setConstant(varSpec: VarSpec, value: number): void {
+    const varId = this.varIdForSpec(varSpec)
+    if (varId === undefined) {
+      throw new Error(`No constant variable found for spec ${varSpec}`)
+    }
+    this.vars.set(varId, value)
+  }
+
+  // from JsModel interface
   storeOutputs(storeValue: (value: number) => void): void {
     for (const varId of this.outputVarIds) {
       storeValue(this.vars.get(varId))

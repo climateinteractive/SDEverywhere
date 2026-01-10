@@ -1,6 +1,6 @@
 // Copyright (c) 2020-2022 Climate Interactive / New Venture Fund
 
-import type { ConstantDef, OutputVarId } from '../_shared'
+import type { OutputVarId } from '../_shared'
 import type { RunModelParams, RunnableModel } from '../runnable-model'
 import { perfElapsed, perfNow } from '../perf'
 import { createFloat64WasmBuffer, createInt32WasmBuffer, type WasmBuffer } from './wasm-buffer'
