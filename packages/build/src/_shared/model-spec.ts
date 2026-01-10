@@ -92,6 +92,20 @@ export interface ModelSpec {
   customLookups?: boolean | VarName[]
 
   /**
+   * Whether to allow constants to be overridden at runtime using `setConstant`.
+   *
+   * If undefined or false, the generated model will implement `setConstant`
+   * as a no-op, meaning that constants cannot be overridden at runtime.
+   *
+   * If true, all constants in the generated model will be available to be
+   * overridden.
+   *
+   * If an array is provided, only those variable names in the array will
+   * be available to be overridden.
+   */
+  customConstants?: boolean | VarName[]
+
+  /**
    * Whether to allow for capturing the data for arbitrary variables at
    * runtime (including variables that are not configured in the `outputs`
    * array).
@@ -179,6 +193,20 @@ export interface ResolvedModelSpec {
    * be available to be overridden.
    */
   customLookups: boolean | VarName[]
+
+  /**
+   * Whether to allow constants to be overridden at runtime using `setConstant`.
+   *
+   * If false, the generated model will contain a `setConstant` function that
+   * throws an error, meaning that constants cannot be overridden at runtime.
+   *
+   * If true, all constants in the generated model will be available to be
+   * overridden.
+   *
+   * If an array is provided, only those variable names in the array will
+   * be available to be overridden.
+   */
+  customConstants: boolean | VarName[]
 
   /**
    * Whether to allow for capturing the data for arbitrary variables at
