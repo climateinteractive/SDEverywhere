@@ -1,6 +1,6 @@
 {
   "name": "@sdeverywhere/plugin-config",
-  "version": "0.2.8",
+  "version": "0.2.9",
   "files": [
     "dist/**",
     "template-config/**"
@@ -41,7 +41,7 @@
     "@sdeverywhere/build": "^0.3.7"
   },
   "devDependencies": {
-    "@sdeverywhere/build": "*",
+    "@sdeverywhere/build": "0.3.9",
     "@types/byline": "^4.2.33",
     "@types/dedent": "^0.7.0",
     "@types/marked": "^4.0.1",
