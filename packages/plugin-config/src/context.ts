@@ -19,6 +19,7 @@ export interface ModelOptions {
   readonly datFiles: string[]
   readonly bundleListing: boolean
   readonly customLookups: boolean
+  readonly customConstants: boolean
   readonly customOutputs: boolean
 }
 
