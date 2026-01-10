@@ -1,9 +1,12 @@
 // Copyright (c) 2024 Climate Interactive / New Venture Fund
 
 import {
+  decodeConstants,
   decodeLookups,
+  encodeConstants,
   encodeLookups,
   encodeVarIndices,
+  getEncodedConstantBufferLengths,
   getEncodedLookupBufferLengths,
   getEncodedVarIndicesLength
 } from '../_shared'
@@ -13,7 +16,7 @@ import { resolveVarRef } from './resolve-var-ref'
 import type { RunModelOptions } from './run-model-options'
 import type { RunModelParams } from './run-model-params'
 
-const headerLengthInElements = 16
+const headerLengthInElements = 20
 const extrasLengthInElements = 1
 
 interface Section<ArrayType> {
@@ -74,6 +77,8 @@ export class BufferedRunModelParams implements RunModelParams {
    *   outputIndices
    *   lookups (data)
    *   lookupIndices
+   *   constants (values)
+   *   constantIndices
    */
   private encoded: ArrayBuffer
 
@@ -100,6 +105,12 @@ export class BufferedRunModelParams implements RunModelParams {
 
   /** The lookup indices section of the `encoded` buffer. */
   private readonly lookupIndices = new Int32Section()
+
+  /** The constant values section of the `encoded` buffer. */
+  private readonly constants = new Float64Section()
+
+  /** The constant indices section of the `encoded` buffer. */
+  private readonly constantIndices = new Int32Section()
 
   /**
    * @param listing The model listing that is used to locate a variable that is referenced by
@@ -213,10 +224,13 @@ export class BufferedRunModelParams implements RunModelParams {
 
   // from RunModelParams interface
   getConstants(): ConstantDef[] | undefined {
-    // TODO: For now, constant overrides are not supported in the buffered (async/worker)
-    // implementation. To support constants in async workers, we would need to add encoding/
-    // decoding functions similar to `encodeLookups` and `decodeLookups`.
-    return undefined
+    if (this.constantIndices.lengthInElements === 0) {
+      return undefined
+    }
+
+    // Reconstruct the `ConstantDef` instances using the data from the constant values and
+    // indices buffers
+    return decodeConstants(this.constantIndices.view, this.constants.view)
   }
 
   // from RunModelParams interface
@@ -290,6 +304,26 @@ export class BufferedRunModelParams implements RunModelParams {
       lookupIndicesLengthInElements = 0
     }
 
+    // Determine the number of elements in the constant values and indices sections
+    let constantsLengthInElements: number
+    let constantIndicesLengthInElements: number
+    if (options?.constants !== undefined && options.constants.length > 0) {
+      // Resolve the `varSpec` for each `ConstantDef`.  If the variable can be resolved, this
+      // will fill in the `varSpec` for the `ConstantDef`, otherwise it will throw an error.
+      for (const constantDef of options.constants) {
+        resolveVarRef(this.listing, constantDef.varRef, 'constant')
+      }
+
+      // Compute the required lengths
+      const encodedLengths = getEncodedConstantBufferLengths(options.constants)
+      constantsLengthInElements = encodedLengths.constantsLength
+      constantIndicesLengthInElements = encodedLengths.constantIndicesLength
+    } else {
+      // Don't use the constant values and indices buffers when constant overrides are not provided
+      constantsLengthInElements = 0
+      constantIndicesLengthInElements = 0
+    }
+
     // Compute the byte offset and byte length of each section
     let byteOffset = 0
     function section(kind: 'float64' | 'int32', lengthInElements: number): number {
@@ -311,6 +345,8 @@ export class BufferedRunModelParams implements RunModelParams {
     const outputIndicesOffsetInBytes = section('int32', outputIndicesLengthInElements)
     const lookupsOffsetInBytes = section('float64', lookupsLengthInElements)
     const lookupIndicesOffsetInBytes = section('int32', lookupIndicesLengthInElements)
+    const constantsOffsetInBytes = section('float64', constantsLengthInElements)
+    const constantIndicesOffsetInBytes = section('int32', constantIndicesLengthInElements)
 
     // Get the total byte length
     const requiredLengthInBytes = byteOffset
@@ -341,6 +377,10 @@ export class BufferedRunModelParams implements RunModelParams {
     headerView[headerIndex++] = lookupsLengthInElements
     headerView[headerIndex++] = lookupIndicesOffsetInBytes
     headerView[headerIndex++] = lookupIndicesLengthInElements
+    headerView[headerIndex++] = constantsOffsetInBytes
+    headerView[headerIndex++] = constantsLengthInElements
+    headerView[headerIndex++] = constantIndicesOffsetInBytes
+    headerView[headerIndex++] = constantIndicesLengthInElements
 
     // Update the views
     // TODO: We can avoid recreating the views every time if buffer and section offset/length
@@ -351,6 +391,8 @@ export class BufferedRunModelParams implements RunModelParams {
     this.outputIndices.update(this.encoded, outputIndicesOffsetInBytes, outputIndicesLengthInElements)
     this.lookups.update(this.encoded, lookupsOffsetInBytes, lookupsLengthInElements)
     this.lookupIndices.update(this.encoded, lookupIndicesOffsetInBytes, lookupIndicesLengthInElements)
+    this.constants.update(this.encoded, constantsOffsetInBytes, constantsLengthInElements)
+    this.constantIndices.update(this.encoded, constantIndicesOffsetInBytes, constantIndicesLengthInElements)
 
     // Copy the input values into the internal buffer
     // TODO: Throw an error if inputs.length is less than number of inputs declared
@@ -377,6 +419,11 @@ export class BufferedRunModelParams implements RunModelParams {
     // Copy the lookup data and indices into the internal buffers, if needed
     if (lookupIndicesLengthInElements > 0) {
       encodeLookups(options.lookups, this.lookupIndices.view, this.lookups.view)
+    }
+
+    // Copy the constant values and indices into the internal buffers, if needed
+    if (constantIndicesLengthInElements > 0) {
+      encodeConstants(options.constants, this.constantIndices.view, this.constants.view)
     }
   }
 
@@ -415,6 +462,10 @@ export class BufferedRunModelParams implements RunModelParams {
     const lookupsLengthInElements = headerView[headerIndex++]
     const lookupIndicesOffsetInBytes = headerView[headerIndex++]
     const lookupIndicesLengthInElements = headerView[headerIndex++]
+    const constantsOffsetInBytes = headerView[headerIndex++]
+    const constantsLengthInElements = headerView[headerIndex++]
+    const constantIndicesOffsetInBytes = headerView[headerIndex++]
+    const constantIndicesLengthInElements = headerView[headerIndex++]
 
     // Verify that the buffer is long enough to contain all sections
     const extrasLengthInBytes = extrasLengthInElements * Float64Array.BYTES_PER_ELEMENT
@@ -423,6 +474,8 @@ export class BufferedRunModelParams implements RunModelParams {
     const outputIndicesLengthInBytes = outputIndicesLengthInElements * Int32Array.BYTES_PER_ELEMENT
     const lookupsLengthInBytes = lookupsLengthInElements * Float64Array.BYTES_PER_ELEMENT
     const lookupIndicesLengthInBytes = lookupIndicesLengthInElements * Int32Array.BYTES_PER_ELEMENT
+    const constantsLengthInBytes = constantsLengthInElements * Float64Array.BYTES_PER_ELEMENT
+    const constantIndicesLengthInBytes = constantIndicesLengthInElements * Int32Array.BYTES_PER_ELEMENT
     const requiredLengthInBytes =
       headerLengthInBytes +
       extrasLengthInBytes +
@@ -430,7 +483,9 @@ export class BufferedRunModelParams implements RunModelParams {
       outputsLengthInBytes +
       outputIndicesLengthInBytes +
       lookupsLengthInBytes +
-      lookupIndicesLengthInBytes
+      lookupIndicesLengthInBytes +
+      constantsLengthInBytes +
+      constantIndicesLengthInBytes
     if (buffer.byteLength < requiredLengthInBytes) {
       throw new Error('Buffer must be long enough to contain sections declared in header')
     }
@@ -442,5 +497,7 @@ export class BufferedRunModelParams implements RunModelParams {
     this.outputIndices.update(this.encoded, outputIndicesOffsetInBytes, outputIndicesLengthInElements)
     this.lookups.update(this.encoded, lookupsOffsetInBytes, lookupsLengthInElements)
     this.lookupIndices.update(this.encoded, lookupIndicesOffsetInBytes, lookupIndicesLengthInElements)
+    this.constants.update(this.encoded, constantsOffsetInBytes, constantsLengthInElements)
+    this.constantIndices.update(this.encoded, constantIndicesOffsetInBytes, constantIndicesLengthInElements)
   }
 }

@@ -322,7 +322,64 @@ Add method:
 getConstants(): ConstantDef[] | undefined
 ```
 
-### 9. Update BaseRunnableModel
+### 9. Add Constant Encoding/Decoding for Async/Worker Support
+
+**File**: `packages/runtime/src/_shared/var-indices.ts`
+
+Add three new functions for encoding/decoding constants (similar to lookup encoding):
+
+1. `getEncodedConstantBufferLengths(constantDefs: ConstantDef[])`
+   - Returns `{ constantIndicesLength, constantsLength }`
+   - Format for constantIndices buffer:
+     - constant count
+     - constantN var index
+     - constantN subscript count
+     - constantN sub1 index, sub2 index, ... subM index
+     - (repeat for each constant)
+   - Format for constants buffer:
+     - constantN value
+     - (repeat for each constant)
+
+2. `encodeConstants(constantDefs: ConstantDef[], constantIndicesArray: Int32Array, constantsArray: Float64Array)`
+   - Writes constant metadata to indices buffer
+   - Writes constant values to constants buffer
+
+3. `decodeConstants(constantIndicesArray: Int32Array, constantsArray: Float64Array): ConstantDef[]`
+   - Reconstructs ConstantDef instances from buffers
+
+### 10. Update BufferedRunModelParams for Async/Worker Support
+
+**File**: `packages/runtime/src/runnable-model/buffered-run-model-params.ts`
+
+1. Add two new buffer sections:
+   ```typescript
+   /** The constant values section of the `encoded` buffer. */
+   private readonly constants = new Float64Section()
+
+   /** The constant indices section of the `encoded` buffer. */
+   private readonly constantIndices = new Int32Section()
+   ```
+
+2. Update header length constant (line 16):
+   ```typescript
+   const headerLengthInElements = 20  // Was 16, add 4 for constants sections
+   ```
+
+3. In `updateFromParams()`:
+   - Compute constant buffer lengths using `getEncodedConstantBufferLengths()`
+   - Add constant sections to memory layout calculation
+   - Update header to include constant section offsets/lengths
+   - Encode constants using `encodeConstants()`
+
+4. In `updateFromEncodedBuffer()`:
+   - Read constant section offsets/lengths from header
+   - Rebuild constant section views
+
+5. In `getConstants()`:
+   - Replace TODO with actual implementation
+   - Return `decodeConstants(this.constantIndices.view, this.constants.view)`
+
+### 11. Update BaseRunnableModel
 
 **File**: `packages/runtime/src/runnable-model/base-runnable-model.ts`
 
@@ -348,7 +405,7 @@ this.onRunModel?.(inputsArray, outputsArray, {
 })
 ```
 
-### 10. Create Integration Test
+### 12. Create Integration Test
 
 **New directory**: `tests/integration/override-constants/`
 
@@ -364,7 +421,7 @@ Create 4 files:
    - Tests both synchronous and asynchronous model runners
 4. **package.json** - Package file with test script
 
-### 11. Add Unit Tests
+### 13. Add Unit Tests
 
 **File**: `packages/compile/src/generate/gen-code-js.spec.ts`
 
@@ -379,28 +436,36 @@ Add test cases for `setConstant` generation similar to existing `setLookup` test
 4. `tests/integration/override-constants/run-tests.js`
 5. `tests/integration/override-constants/package.json`
 
-### Modified Files (10):
+### Modified Files (12):
 1. `packages/runtime/src/_shared/index.ts` - export ConstantDef
-2. `packages/runtime/src/runnable-model/run-model-options.ts` - add constants field
-3. `packages/runtime/src/runnable-model/run-model-params.ts` - add getConstants()
-4. `packages/runtime/src/runnable-model/base-runnable-model.ts` - pass constants through
-5. `packages/runtime/src/js-model/js-model.ts` - add setConstant, integrate with runJsModel
-6. `packages/runtime/src/wasm-model/wasm-model.ts` - add native wrapper, integrate with runModel
-7. `packages/build/src/_shared/model-spec.ts` - add customConstants config option
-8. `packages/compile/src/generate/gen-code-js.js` - generate setConstant function
-9. `packages/compile/src/generate/gen-code-c.js` - generate C setConstant function
-10. `packages/compile/src/generate/gen-code-js.spec.ts` - add unit tests
+2. `packages/runtime/src/_shared/var-indices.ts` - add constant encoding/decoding functions
+3. `packages/runtime/src/runnable-model/run-model-options.ts` - add constants field
+4. `packages/runtime/src/runnable-model/run-model-params.ts` - add getConstants()
+5. `packages/runtime/src/runnable-model/base-runnable-model.ts` - pass constants through
+6. `packages/runtime/src/runnable-model/buffered-run-model-params.ts` - implement constant encoding/decoding
+7. `packages/runtime/src/runnable-model/referenced-run-model-params.ts` - implement getConstants()
+8. `packages/runtime/src/js-model/js-model.ts` - add setConstant, integrate with runJsModel
+9. `packages/runtime/src/wasm-model/wasm-model.ts` - add native wrapper, integrate with runModel
+10. `packages/build/src/_shared/model-spec.ts` - add customConstants config option
+11. `packages/compile/src/generate/gen-code-js.js` - generate setConstant function
+12. `packages/compile/src/generate/gen-code-c.js` - generate C setConstant function
 
 ## Key Differences from Override Lookups
 
-This implementation is **simpler** than override lookups:
+This implementation has some similarities and differences compared to override lookups:
 
-1. **Scalar values** - just `number`, not `Float64Array`
+### Similarities:
+1. **Encoding/decoding for async support** - both need buffer encoding for worker threads
+2. **VarRef resolution** - both use the same varRef pattern for identifying variables
+3. **Subscript handling** - both support subscripted variables (1D, 2D arrays)
+
+### Differences (Constants are simpler):
+1. **Scalar values** - just `number`, not `Float64Array` of points
 2. **No persistence** - constants reset on every run, no state to manage
 3. **Simpler C signature** - `(varIndex, subIndices, value)` vs `(varIndex, subIndices, points, numPoints)`
 4. **No reset logic** - automatic reset via `initConstants()`
-5. **No buffer encoding complexity** - single number vs array of points
-6. **Fewer edge cases** - no array size changes, empty arrays, etc.
+5. **Simpler buffer encoding** - one value per constant vs variable-length point arrays
+6. **No offset tracking** - constants buffer is sequential values, no offset/length metadata needed
 
 ## Testing Strategy
 
@@ -415,15 +480,17 @@ This implementation is **simpler** than override lookups:
 
 ## Progress Tracking
 
-- [x] Create top-level PLAN.md file
-- [ ] Create ConstantDef interface and export
-- [ ] Update RunModelOptions with constants field
-- [ ] Add customConstants to ModelSpec
-- [ ] Generate setConstant function in JS code generator
-- [ ] Generate setConstant function in C code generator
-- [ ] Update JS model runtime
-- [ ] Update Wasm model runtime
-- [ ] Update RunModelParams interface
-- [ ] Update BaseRunnableModel
-- [ ] Create integration test
-- [ ] Run tests and verify implementation
+- [x] 1. Create top-level PLAN.md file
+- [x] 2. Create ConstantDef interface and export
+- [x] 3. Update RunModelOptions with constants field
+- [x] 4. Add customConstants to ModelSpec
+- [x] 5. Generate setConstant function in JS code generator
+- [x] 6. Generate setConstant function in C code generator
+- [x] 7. Update JS model runtime
+- [x] 8. Update Wasm model runtime
+- [x] 9. Update RunModelParams interface
+- [x] 10. Add constant encoding/decoding for async/worker support
+- [x] 11. Update BufferedRunModelParams with constant encoding/decoding
+- [x] 12. Update BaseRunnableModel
+- [x] 13. Create integration test
+- [ ] 14. Run tests and verify implementation

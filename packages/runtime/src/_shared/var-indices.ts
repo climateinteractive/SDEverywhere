@@ -1,5 +1,6 @@
 // Copyright (c) 2024 Climate Interactive / New Venture Fund
 
+import type { ConstantDef } from './constant-def'
 import type { LookupDef } from './lookup-def'
 import type { VarSpec } from './types'
 
@@ -250,4 +251,152 @@ export function decodeLookups(lookupIndicesArray: Int32Array, lookupsArray: Floa
   }
 
   return lookupDefs
+}
+
+/**
+ * Return the lengths of the arrays that are required to store the constant values
+ * and indices for the given `ConstantDef` instances.
+ *
+ * @hidden This is not part of the public API; it is exposed here for use by
+ * the synchronous and asynchronous model runner implementations.
+ *
+ * @param constantDefs The `ConstantDef` instances to encode.
+ */
+export function getEncodedConstantBufferLengths(constantDefs: ConstantDef[]): {
+  constantIndicesLength: number
+  constantsLength: number
+} {
+  // The constants buffer includes all constant values for the provided constant overrides
+  // (added sequentially, one value per constant).  The constant indices buffer has the
+  // following format:
+  //   constant count
+  //   constantN var index
+  //   constantN subscript count
+  //   constantN sub1 index
+  //   constantN sub2 index
+  //   ...
+  //   constantN subM index
+  //   ... (repeat for each constant)
+
+  // Start with one element for the total constant variable count
+  let constantIndicesLength = 1
+  let constantsLength = 0
+
+  for (const constantDef of constantDefs) {
+    // Ensure that the var spec has already been resolved
+    const varSpec = constantDef.varRef.varSpec
+    if (varSpec === undefined) {
+      throw new Error('Cannot compute constant buffer lengths until all constant var specs are defined')
+    }
+
+    // Include one element for the variable index and one for the subscript count
+    constantIndicesLength += 2
+
+    // Include one element for each subscript
+    const subCount = varSpec.subscriptIndices?.length || 0
+    constantIndicesLength += subCount
+
+    // Add one element for the constant value
+    constantsLength += 1
+  }
+
+  return {
+    constantIndicesLength,
+    constantsLength
+  }
+}
+
+/**
+ * Encode constant values and indices to the given arrays.
+ *
+ * @hidden This is not part of the public API; it is exposed here for use by
+ * the synchronous and asynchronous model runner implementations.
+ *
+ * @param constantDefs The `ConstantDef` instances to encode.
+ * @param constantIndicesArray The view on the constant indices buffer.
+ * @param constantsArray The view on the constant values buffer.
+ */
+export function encodeConstants(
+  constantDefs: ConstantDef[],
+  constantIndicesArray: Int32Array,
+  constantsArray: Float64Array
+): void {
+  // Write the constant variable count
+  let ci = 0
+  constantIndicesArray[ci++] = constantDefs.length
+
+  // Write the indices and values for each constant
+  let constantDataOffset = 0
+  for (const constantDef of constantDefs) {
+    // Write the constant variable index
+    const varSpec = constantDef.varRef.varSpec
+    constantIndicesArray[ci++] = varSpec.varIndex
+
+    // Write the subscript count
+    const subs = varSpec.subscriptIndices
+    const subCount = subs?.length || 0
+    constantIndicesArray[ci++] = subCount
+
+    // Write the subscript indices
+    for (let i = 0; i < subCount; i++) {
+      constantIndicesArray[ci++] = subs[i]
+    }
+
+    // Write the constant value
+    constantsArray[constantDataOffset++] = constantDef.value
+  }
+}
+
+/**
+ * Decode constant values and indices from the given buffer views and return the
+ * reconstructed `ConstantDef` instances.
+ *
+ * @hidden This is not part of the public API; it is exposed here for use by
+ * the synchronous and asynchronous model runner implementations.
+ *
+ * @param constantIndicesArray The view on the constant indices buffer.
+ * @param constantsArray The view on the constant values buffer.
+ */
+export function decodeConstants(
+  constantIndicesArray: Int32Array,
+  constantsArray: Float64Array
+): ConstantDef[] {
+  const constantDefs: ConstantDef[] = []
+  let ci = 0
+
+  // Read the constant variable count
+  const constantCount = constantIndicesArray[ci++]
+
+  // Read the metadata for each variable from the constant indices buffer
+  for (let i = 0; i < constantCount; i++) {
+    // Read the constant variable index
+    const varIndex = constantIndicesArray[ci++]
+
+    // Read the subscript count
+    const subCount = constantIndicesArray[ci++]
+
+    // Read the subscript indices
+    const subscriptIndices: number[] = subCount > 0 ? Array(subCount) : undefined
+    for (let subIndex = 0; subIndex < subCount; subIndex++) {
+      subscriptIndices[subIndex] = constantIndicesArray[ci++]
+    }
+
+    // Create a `VarSpec` for the variable
+    const varSpec: VarSpec = {
+      varIndex,
+      subscriptIndices
+    }
+
+    // Read the constant value
+    const value = constantsArray[i]
+
+    constantDefs.push({
+      varRef: {
+        varSpec
+      },
+      value
+    })
+  }
+
+  return constantDefs
 }
