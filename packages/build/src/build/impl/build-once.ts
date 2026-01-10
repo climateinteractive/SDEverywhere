@@ -76,8 +76,9 @@ export async function buildOnce(
       outputVarNames: modelSpec.outputVarNames,
       externalDatfiles: modelSpec.datFiles,
       bundleListing: modelSpec.bundleListing,
-      customLookups: modelSpec.customLookups,
-      customOutputs: modelSpec.customOutputs,
+      customLookups: modelSpec.customLookups || false,
+      customConstants: modelSpec.customConstants || false,
+      customOutputs: modelSpec.customOutputs || false,
       ...modelSpec.options
     }
     const specPath = joinPath(config.prepDir, 'spec.json')
@@ -227,6 +228,13 @@ function resolveModelSpec(modelSpec: ModelSpec): ResolvedModelSpec {
     customLookups = false
   }
 
+  let customConstants: boolean | VarName[]
+  if (modelSpec.customConstants !== undefined) {
+    customConstants = modelSpec.customConstants
+  } else {
+    customConstants = false
+  }
+
   let customOutputs: boolean | VarName[]
   if (modelSpec.customOutputs !== undefined) {
     customOutputs = modelSpec.customOutputs
@@ -242,6 +250,7 @@ function resolveModelSpec(modelSpec: ModelSpec): ResolvedModelSpec {
     datFiles: modelSpec.datFiles || [],
     bundleListing: modelSpec.bundleListing === true,
     customLookups,
+    customConstants,
     customOutputs,
     options: modelSpec.options
   }
