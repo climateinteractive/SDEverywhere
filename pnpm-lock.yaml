@@ -601,7 +601,7 @@ importers:
   packages/cli:
     dependencies:
       '@sdeverywhere/build':
-        specifier: ^0.3.8
+        specifier: ^0.3.9
         version: link:../build
       '@sdeverywhere/compile':
         specifier: ^0.7.26

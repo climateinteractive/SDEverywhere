@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.9](https://github.com/climateinteractive/SDEverywhere/compare/build-v0.3.8...build-v0.3.9) (2026-01-10)
+
+
+### Bug Fixes
+
+* improve handling of glob patterns for build `watchPaths` ([#761](https://github.com/climateinteractive/SDEverywhere/issues/761)) ([9e73220](https://github.com/climateinteractive/SDEverywhere/commit/9e73220548a7f5eb1a80c4ddfbf8afa8545781bb)), closes [#760](https://github.com/climateinteractive/SDEverywhere/issues/760)
+
 ## [0.3.8](https://github.com/climateinteractive/SDEverywhere/compare/build-v0.3.7...build-v0.3.8) (2026-01-08)
 
 
