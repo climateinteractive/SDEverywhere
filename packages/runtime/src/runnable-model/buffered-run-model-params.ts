@@ -7,7 +7,7 @@ import {
   getEncodedLookupBufferLengths,
   getEncodedVarIndicesLength
 } from '../_shared'
-import type { InputValue, LookupDef, Outputs } from '../_shared'
+import type { ConstantDef, InputValue, LookupDef, Outputs } from '../_shared'
 import type { ModelListing } from '../model-listing'
 import { resolveVarRef } from './resolve-var-ref'
 import type { RunModelOptions } from './run-model-options'
@@ -209,6 +209,14 @@ export class BufferedRunModelParams implements RunModelParams {
     // Reconstruct the `LookupDef` instances using the data from the lookup data and
     // indices buffers
     return decodeLookups(this.lookupIndices.view, this.lookups.view)
+  }
+
+  // from RunModelParams interface
+  getConstants(): ConstantDef[] | undefined {
+    // TODO: For now, constant overrides are not supported in the buffered (async/worker)
+    // implementation. To support constants in async workers, we would need to add encoding/
+    // decoding functions similar to `encodeLookups` and `decodeLookups`.
+    return undefined
   }
 
   // from RunModelParams interface

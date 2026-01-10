@@ -79,13 +79,13 @@ importers:
     dependencies:
       '@sdeverywhere/build':
         specifier: ^0.3.7
-        version: link:../../packages/build
+        version: 0.3.9
       '@sdeverywhere/cli':
         specifier: ^0.7.34
-        version: link:../../packages/cli
+        version: 0.7.38
       '@sdeverywhere/plugin-check':
         specifier: ^0.3.18
-        version: link:../../packages/plugin-check
+        version: 0.3.25(@sdeverywhere/build@0.3.9)(@types/node@20.19.19)(sass@1.97.2)(svelte@5.39.10)
       '@sdeverywhere/plugin-worker':
         specifier: ^0.2.11
         version: link:../../packages/plugin-worker
@@ -100,10 +100,10 @@ importers:
         version: 9.37.0
       '@sdeverywhere/build':
         specifier: ^0.3.7
-        version: link:../../packages/build
+        version: 0.3.9
       '@sdeverywhere/cli':
         specifier: ^0.7.34
-        version: link:../../packages/cli
+        version: 0.7.38
       '@sdeverywhere/plugin-vite':
         specifier: ^0.2.0
         version: link:../../packages/plugin-vite
@@ -236,16 +236,16 @@ importers:
         version: 9.37.0
       '@sdeverywhere/build':
         specifier: ^0.3.7
-        version: link:../../packages/build
+        version: 0.3.9
       '@sdeverywhere/check-core':
         specifier: ^0.1.5
         version: link:../../packages/check-core
       '@sdeverywhere/cli':
         specifier: ^0.7.34
-        version: link:../../packages/cli
+        version: 0.7.38
       '@sdeverywhere/plugin-check':
         specifier: ^0.3.18
-        version: link:../../packages/plugin-check
+        version: 0.3.25(@sdeverywhere/build@0.3.9)(@types/node@20.19.19)(sass@1.97.2)(svelte@5.39.10)
       '@sdeverywhere/plugin-config':
         specifier: ^0.2.8
         version: link:../../packages/plugin-config
@@ -325,16 +325,16 @@ importers:
     dependencies:
       '@sdeverywhere/build':
         specifier: ^0.3.7
-        version: link:../../packages/build
+        version: 0.3.9
       '@sdeverywhere/check-core':
         specifier: ^0.1.5
         version: link:../../packages/check-core
       '@sdeverywhere/cli':
         specifier: ^0.7.34
-        version: link:../../packages/cli
+        version: 0.7.38
       '@sdeverywhere/plugin-check':
         specifier: ^0.3.18
-        version: link:../../packages/plugin-check
+        version: 0.3.25(@sdeverywhere/build@0.3.9)(@types/node@20.19.19)(sass@1.97.2)(svelte@5.39.10)
       '@sdeverywhere/plugin-wasm':
         specifier: ^0.2.6
         version: link:../../packages/plugin-wasm
@@ -349,16 +349,16 @@ importers:
         version: 9.37.0
       '@sdeverywhere/build':
         specifier: ^0.3.7
-        version: link:../../packages/build
+        version: 0.3.9
       '@sdeverywhere/check-core':
         specifier: ^0.1.6
         version: link:../../packages/check-core
       '@sdeverywhere/cli':
         specifier: ^0.7.36
-        version: link:../../packages/cli
+        version: 0.7.38
       '@sdeverywhere/plugin-check':
         specifier: ^0.3.21
-        version: link:../../packages/plugin-check
+        version: 0.3.25(@sdeverywhere/build@0.3.9)(@types/node@20.19.19)(sass@1.97.2)(svelte@5.39.10)
       '@sdeverywhere/plugin-config':
         specifier: ^0.2.8
         version: link:../../packages/plugin-config
@@ -602,7 +602,7 @@ importers:
     dependencies:
       '@sdeverywhere/build':
         specifier: ^0.3.8
-        version: link:../build
+        version: 0.3.9
       '@sdeverywhere/compile':
         specifier: ^0.7.26
         version: link:../compile
@@ -749,7 +749,7 @@ importers:
     devDependencies:
       '@sdeverywhere/build':
         specifier: '*'
-        version: link:../build
+        version: 0.3.9
       '@types/node':
         specifier: ^20.14.8
         version: 20.19.19
@@ -768,7 +768,7 @@ importers:
     devDependencies:
       '@sdeverywhere/build':
         specifier: '*'
-        version: link:../build
+        version: 0.3.9
       '@types/byline':
         specifier: ^4.2.33
         version: 4.2.33
@@ -792,7 +792,7 @@ importers:
     devDependencies:
       '@sdeverywhere/build':
         specifier: '*'
-        version: link:../build
+        version: 0.3.9
       '@types/node':
         specifier: ^20.14.8
         version: 20.19.19
@@ -801,7 +801,7 @@ importers:
     devDependencies:
       '@sdeverywhere/build':
         specifier: '*'
-        version: link:../build
+        version: 0.3.9
       vite:
         specifier: ^7.1.12
         version: 7.3.1(@types/node@20.19.19)(sass@1.97.2)
@@ -814,7 +814,7 @@ importers:
     devDependencies:
       '@sdeverywhere/build':
         specifier: '*'
-        version: link:../build
+        version: 0.3.9
       '@types/node':
         specifier: ^20.14.8
         version: 20.19.19
@@ -833,7 +833,7 @@ importers:
     devDependencies:
       '@sdeverywhere/build':
         specifier: '*'
-        version: link:../build
+        version: 0.3.9
       '@types/node':
         specifier: ^20.14.8
         version: 20.19.19
@@ -988,6 +988,27 @@ importers:
       '@types/node':
         specifier: ^20.14.8
         version: 20.19.19
+
+  tests/integration/override-constants:
+    dependencies:
+      '@sdeverywhere/build':
+        specifier: workspace:*
+        version: link:../../../packages/build
+      '@sdeverywhere/cli':
+        specifier: workspace:*
+        version: link:../../../packages/cli
+      '@sdeverywhere/plugin-wasm':
+        specifier: workspace:*
+        version: link:../../../packages/plugin-wasm
+      '@sdeverywhere/plugin-worker':
+        specifier: workspace:*
+        version: link:../../../packages/plugin-worker
+      '@sdeverywhere/runtime':
+        specifier: workspace:*
+        version: link:../../../packages/runtime
+      '@sdeverywhere/runtime-async':
+        specifier: workspace:*
+        version: link:../../../packages/runtime-async
 
   tests/integration/override-lookups:
     dependencies:
@@ -1586,6 +1607,38 @@ packages:
     resolution: {integrity: sha512-UhTd8u31dXadv0MopwGgNOBpUVROFKWVQgAg5N1ESyCz8AuBcMqm4AuTjrwgQKGDfoFuz02EuMRHQIw/frmYKQ==}
     cpu: [x64]
     os: [win32]
+
+  '@sdeverywhere/build@0.3.9':
+    resolution: {integrity: sha512-zjyipiHLxerpQ4tcYWG43dz5VnfDP1JatT3m/gMXTICZnYZS8ogHl+hDbbzK5AgNesVRZwYU4rWtqlbm4MbTIg==}
+
+  '@sdeverywhere/check-core@0.1.7':
+    resolution: {integrity: sha512-JH0TAgc9l4ZZHHCcJ9GHqa6bnekgFnQ593J4Aqk2bAEMAbLRsgHjPgWEB24yMVufSzF7gUeVyltTKbdD9YvAOg==}
+
+  '@sdeverywhere/check-ui-shell@0.2.16':
+    resolution: {integrity: sha512-t5HL9cQekWmIa67lYycOxDSZdcwfeGKxm5jFtO9SyiuFjYAfqRTKKrDda3RpQuoZuK3Kbg3eCfJ9DnNIkt0bSA==}
+
+  '@sdeverywhere/cli@0.7.38':
+    resolution: {integrity: sha512-6HqkzhzZA/42pYeDOB/ITvxm7s0qTXCtOnJqNDd9Vvh/zGZtXwwOq5WNa3OgzTRvEffRhuMrWcsesa9ehznBQQ==}
+    engines: {node: '>=20'}
+    hasBin: true
+
+  '@sdeverywhere/compile@0.7.26':
+    resolution: {integrity: sha512-/NiCqr4cSdgs+NsoFeMVpzE5csacYEFO0n/r9xzO85r5f7aVbBtoF4SNT5uIWg6YWMKivTwRD5a7WMCsaAyElQ==}
+
+  '@sdeverywhere/parse@0.1.2':
+    resolution: {integrity: sha512-8/WQhdG9xxik4k1aU2rksPeNj5rMRKv2mVHwyg2RCDB77JeG2f/3GNTMBzn9R7D1L4ZAXFZ1/pbaw2WELwL22w==}
+
+  '@sdeverywhere/plugin-check@0.3.25':
+    resolution: {integrity: sha512-ktY5ChpVdXI8IxehimOrn6wJK/PWityhZEllXgJe6WpTXqig5eqrWTmzLwX42367ZGJfMPnM8dv5m1Qkwuuaxg==}
+    hasBin: true
+    peerDependencies:
+      '@sdeverywhere/build': ^0.3.7
+
+  '@sdeverywhere/runtime-async@0.2.7':
+    resolution: {integrity: sha512-dr7L9smMbaVJH2NOJNx8q6898J6DYuyO2oEunhUpKBy704R05RF0NsYC+XJNkJRwRuE0t0pulVfXIZzr95GPeg==}
+
+  '@sdeverywhere/runtime@0.2.7':
+    resolution: {integrity: sha512-iEaMn4qMojbBgcv17w+yIInUOdH3cZuOLx4LOk2VFGLjJm1Xv2/FDkGMxJdqvR9rMwI4bg9WtxCcmFLLKMgWNA==}
 
   '@standard-schema/spec@1.1.0':
     resolution: {integrity: sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w==}
@@ -4085,6 +4138,108 @@ snapshots:
 
   '@rollup/rollup-win32-x64-msvc@4.53.3':
     optional: true
+
+  '@sdeverywhere/build@0.3.9':
+    dependencies:
+      '@sdeverywhere/parse': 0.1.2
+      chokidar: 5.0.0
+      cross-spawn: 7.0.6
+      folder-hash: 4.0.2
+      neverthrow: 4.3.1
+      picocolors: 1.1.1
+      tinyglobby: 0.2.15
+    transitivePeerDependencies:
+      - supports-color
+
+  '@sdeverywhere/check-core@0.1.7':
+    dependencies:
+      ajv: 8.12.0
+      assert-never: 1.2.1
+      neverthrow: 4.3.1
+      yaml: 2.2.2
+
+  '@sdeverywhere/check-ui-shell@0.2.16(svelte@5.39.10)':
+    dependencies:
+      '@fortawesome/free-regular-svg-icons': 7.1.0
+      '@fortawesome/free-solid-svg-icons': 7.1.0
+      '@juggle/resize-observer': 3.4.0
+      '@sdeverywhere/check-core': 0.1.7
+      assert-never: 1.2.1
+      chart.js: 2.9.4
+      copy-text-to-clipboard: 3.2.0
+      fontfaceobserver: 2.3.0
+      fuzzysort: 3.1.0
+      svelte-dnd-action: 0.9.50(svelte@5.39.10)
+    transitivePeerDependencies:
+      - svelte
+
+  '@sdeverywhere/cli@0.7.38':
+    dependencies:
+      '@sdeverywhere/build': 0.3.9
+      '@sdeverywhere/compile': 0.7.26
+      byline: 5.0.0
+      ramda: 0.27.2
+      shelljs: 0.10.0
+      strip-bom: 5.0.0
+      yargs: 17.5.1
+    transitivePeerDependencies:
+      - supports-color
+
+  '@sdeverywhere/compile@0.7.26':
+    dependencies:
+      '@sdeverywhere/parse': 0.1.2
+      byline: 5.0.0
+      csv-parse: 5.3.3
+      ramda: 0.27.2
+      strip-bom: 5.0.0
+      xlsx: https://cdn.sheetjs.com/xlsx-0.20.2/xlsx-0.20.2.tgz
+
+  '@sdeverywhere/parse@0.1.2':
+    dependencies:
+      antlr4: 4.12.0
+      antlr4-vensim: 0.6.3
+      assert-never: 1.2.1
+      split-string: 6.1.0
+
+  '@sdeverywhere/plugin-check@0.3.25(@sdeverywhere/build@0.3.9)(@types/node@20.19.19)(sass@1.97.2)(svelte@5.39.10)':
+    dependencies:
+      '@rollup/plugin-node-resolve': 16.0.3(rollup@4.53.3)
+      '@rollup/plugin-replace': 6.0.3(rollup@4.53.3)
+      '@sdeverywhere/build': 0.3.9
+      '@sdeverywhere/check-core': 0.1.7
+      '@sdeverywhere/check-ui-shell': 0.2.16(svelte@5.39.10)
+      '@sdeverywhere/runtime': 0.2.7
+      '@sdeverywhere/runtime-async': 0.2.7
+      assert-never: 1.2.1
+      chokidar: 5.0.0
+      picocolors: 1.1.1
+      rollup: 4.53.3
+      vite: 7.3.1(@types/node@20.19.19)(sass@1.97.2)
+    transitivePeerDependencies:
+      - '@types/node'
+      - jiti
+      - less
+      - lightningcss
+      - sass
+      - sass-embedded
+      - stylus
+      - sugarss
+      - supports-color
+      - svelte
+      - terser
+      - tsx
+      - yaml
+
+  '@sdeverywhere/runtime-async@0.2.7':
+    dependencies:
+      '@sdeverywhere/runtime': 0.2.7
+      threads: 1.7.0
+    transitivePeerDependencies:
+      - supports-color
+
+  '@sdeverywhere/runtime@0.2.7':
+    dependencies:
+      neverthrow: 2.7.1
 
   '@standard-schema/spec@1.1.0': {}
 

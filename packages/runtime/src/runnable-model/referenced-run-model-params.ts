@@ -1,6 +1,6 @@
 // Copyright (c) 2024 Climate Interactive / New Venture Fund
 
-import type { InputValue, LookupDef, Outputs } from '../_shared'
+import type { ConstantDef, InputValue, LookupDef, Outputs } from '../_shared'
 import { encodeVarIndices, getEncodedVarIndicesLength } from '../_shared'
 import type { ModelListing } from '../model-listing'
 import { resolveVarRef } from './resolve-var-ref'
@@ -21,6 +21,7 @@ export class ReferencedRunModelParams implements RunModelParams {
   private outputsLengthInElements = 0
   private outputIndicesLengthInElements = 0
   private lookups: LookupDef[]
+  private constants: ConstantDef[]
 
   /**
    * @param listing The model listing that is used to locate a variable that is referenced by
@@ -121,6 +122,15 @@ export class ReferencedRunModelParams implements RunModelParams {
   }
 
   // from RunModelParams interface
+  getConstants(): ConstantDef[] | undefined {
+    if (this.constants !== undefined && this.constants.length > 0) {
+      return this.constants
+    } else {
+      return undefined
+    }
+  }
+
+  // from RunModelParams interface
   getElapsedTime(): number {
     return this.outputs?.runTimeInMillis
   }
@@ -147,12 +157,21 @@ export class ReferencedRunModelParams implements RunModelParams {
     this.outputs = outputs
     this.outputsLengthInElements = outputs.varIds.length * outputs.seriesLength
     this.lookups = options?.lookups
+    this.constants = options?.constants
 
     if (this.lookups) {
       // Resolve the `varSpec` for each `LookupDef`.  If the variable can be resolved, this
       // will fill in the `varSpec` for the `LookupDef`, otherwise it will throw an error.
       for (const lookupDef of this.lookups) {
         resolveVarRef(this.listing, lookupDef.varRef, 'lookup')
+      }
+    }
+
+    if (this.constants) {
+      // Resolve the `varSpec` for each `ConstantDef`.  If the variable can be resolved, this
+      // will fill in the `varSpec` for the `ConstantDef`, otherwise it will throw an error.
+      for (const constantDef of this.constants) {
+        resolveVarRef(this.listing, constantDef.varRef, 'constant')
       }
     }
 
