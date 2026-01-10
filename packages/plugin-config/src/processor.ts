@@ -135,8 +135,8 @@ async function processModelConfig(buildContext: BuildContext, options: ConfigPro
     outputs: context.getOrderedOutputs(),
     datFiles: modelOptions.datFiles,
     bundleListing: modelOptions.bundleListing,
-    customLookups: modelOptions.customLookups,
     customConstants: modelOptions.customConstants,
+    customLookups: modelOptions.customLookups,
     customOutputs: modelOptions.customOutputs,
     options: options.spec
   }

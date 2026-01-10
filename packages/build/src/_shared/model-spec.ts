@@ -78,20 +78,6 @@ export interface ModelSpec {
   bundleListing?: boolean
 
   /**
-   * Whether to allow lookups to be overridden at runtime using `setLookup`.
-   *
-   * If undefined or false, the generated model will implement `setLookup`
-   * as a no-op, meaning that lookups cannot be overridden at runtime.
-   *
-   * If true, all lookups in the generated model will be available to be
-   * overridden.
-   *
-   * If an array is provided, only those variable names in the array will
-   * be available to be overridden.
-   */
-  customLookups?: boolean | VarName[]
-
-  /**
    * Whether to allow constants to be overridden at runtime using `setConstant`.
    *
    * If undefined or false, the generated model will implement `setConstant`
@@ -104,6 +90,20 @@ export interface ModelSpec {
    * be available to be overridden.
    */
   customConstants?: boolean | VarName[]
+
+  /**
+   * Whether to allow lookups to be overridden at runtime using `setLookup`.
+   *
+   * If undefined or false, the generated model will implement `setLookup`
+   * as a no-op, meaning that lookups cannot be overridden at runtime.
+   *
+   * If true, all lookups in the generated model will be available to be
+   * overridden.
+   *
+   * If an array is provided, only those variable names in the array will
+   * be available to be overridden.
+   */
+  customLookups?: boolean | VarName[]
 
   /**
    * Whether to allow for capturing the data for arbitrary variables at
@@ -181,20 +181,6 @@ export interface ResolvedModelSpec {
   bundleListing: boolean
 
   /**
-   * Whether to allow lookups to be overridden at runtime using `setLookup`.
-   *
-   * If false, the generated model will contain a `setLookup` function that
-   * throws an error, meaning that lookups cannot be overridden at runtime.
-   *
-   * If true, all lookups in the generated model will be available to be
-   * overridden.
-   *
-   * If an array is provided, only those variable names in the array will
-   * be available to be overridden.
-   */
-  customLookups: boolean | VarName[]
-
-  /**
    * Whether to allow constants to be overridden at runtime using `setConstant`.
    *
    * If false, the generated model will contain a `setConstant` function that
@@ -207,6 +193,20 @@ export interface ResolvedModelSpec {
    * be available to be overridden.
    */
   customConstants: boolean | VarName[]
+
+  /**
+   * Whether to allow lookups to be overridden at runtime using `setLookup`.
+   *
+   * If false, the generated model will contain a `setLookup` function that
+   * throws an error, meaning that lookups cannot be overridden at runtime.
+   *
+   * If true, all lookups in the generated model will be available to be
+   * overridden.
+   *
+   * If an array is provided, only those variable names in the array will
+   * be available to be overridden.
+   */
+  customLookups: boolean | VarName[]
 
   /**
    * Whether to allow for capturing the data for arbitrary variables at

@@ -18,8 +18,8 @@ export interface ModelOptions {
   readonly graphDefaultMaxTime: number
   readonly datFiles: string[]
   readonly bundleListing: boolean
-  readonly customLookups: boolean
   readonly customConstants: boolean
+  readonly customLookups: boolean
   readonly customOutputs: boolean
 }
 
@@ -175,10 +175,11 @@ export function createConfigContext(buildContext: BuildContext, configDir: strin
   const datFiles = origDatFiles.map(f => joinPath(relative(prepDir, projDir), f))
 
   // Read other boolean properties from `model.csv`
-  // TODO: If customLookups is true, see if there is a `config/custom-lookups.csv` file
+  // TODO: If customConstants is true, see if there is a `config/custom-constants.csv` file
   // and if so, make an array of variable names instead of setting a boolean in `spec.json`.
-  // (Same thing for customOutputs.)
+  // (Same thing for customLookups and customOutputs.)
   const bundleListing = modelCsv['bundle listing'] === 'true'
+  const customConstants = modelCsv['custom constants'] === 'true'
   const customLookups = modelCsv['custom lookups'] === 'true'
   const customOutputs = modelCsv['custom outputs'] === 'true'
 
@@ -187,6 +188,7 @@ export function createConfigContext(buildContext: BuildContext, configDir: strin
     graphDefaultMaxTime,
     datFiles,
     bundleListing,
+    customConstants,
     customLookups,
     customOutputs
   }
