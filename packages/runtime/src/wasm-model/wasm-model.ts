@@ -33,6 +33,8 @@ class WasmModel implements RunnableModel {
   private outputIndicesBuffer: WasmBuffer<Int32Array>
   private lookupDataBuffer: WasmBuffer<Float64Array>
   private lookupSubIndicesBuffer: WasmBuffer<Int32Array>
+  private constantIndicesBuffer: WasmBuffer<Int32Array>
+  private constantValuesBuffer: WasmBuffer<Float64Array>
 
   private readonly wasmSetLookup: (
     varIndex: number,
@@ -40,8 +42,13 @@ class WasmModel implements RunnableModel {
     pointsAddress: number,
     numPoints: number
   ) => void
-  private readonly wasmSetConstant: (varIndex: number, subIndicesAddress: number, value: number) => void
-  private readonly wasmRunModel: (inputsAddress: number, outputsAddress: number, outputIndicesAddress: number) => void
+  private readonly wasmRunModel: (
+    inputsAddress: number,
+    outputsAddress: number,
+    outputIndicesAddress: number,
+    constantIndicesAddress: number,
+    constantValuesAddress: number
+  ) => void
 
   /**
    * @param wasmModule The `WasmModule` that provides access to the native functions.
@@ -66,8 +73,13 @@ class WasmModel implements RunnableModel {
 
     // Make the native functions callable
     this.wasmSetLookup = wasmModule.cwrap('setLookup', null, ['number', 'number', 'number', 'number'])
-    this.wasmSetConstant = wasmModule.cwrap('setConstant', null, ['number', 'number', 'number'])
-    this.wasmRunModel = wasmModule.cwrap('runModelWithBuffers', null, ['number', 'number', 'number'])
+    this.wasmRunModel = wasmModule.cwrap('runModelWithBuffers', null, [
+      'number',
+      'number',
+      'number',
+      'number',
+      'number'
+    ])
   }
 
   // from RunnableModel interface
@@ -125,30 +137,71 @@ class WasmModel implements RunnableModel {
       }
     }
 
-    // Apply constant overrides, if provided
+    // Prepare constant overrides buffer, if provided
+    let constantIndicesBuffer: WasmBuffer<Int32Array>
+    let constantValuesBuffer: WasmBuffer<Float64Array>
     const constants = params.getConstants()
-    if (constants !== undefined) {
+    if (constants !== undefined && constants.length > 0) {
+      // Calculate the size needed for the constantIndices buffer:
+      // count (1) + for each constant: varIndex (1) + subCount (1) + subIndices (variable)
+      let totalIndicesSize = 1 // for count
+      for (const constantDef of constants) {
+        const numSubElements = constantDef.varRef.varSpec.subscriptIndices?.length || 0
+        totalIndicesSize += 2 + numSubElements // varIndex + subCount + subIndices
+      }
+
+      // Allocate the constantIndices buffer
+      if (
+        this.constantIndicesBuffer === undefined ||
+        this.constantIndicesBuffer.numElements < totalIndicesSize
+      ) {
+        this.constantIndicesBuffer?.dispose()
+        this.constantIndicesBuffer = createInt32WasmBuffer(this.wasmModule, totalIndicesSize)
+      }
+
+      // Allocate the constantValues buffer (one value per constant)
+      const numConstants = constants.length
+      if (this.constantValuesBuffer === undefined || this.constantValuesBuffer.numElements < numConstants) {
+        this.constantValuesBuffer?.dispose()
+        this.constantValuesBuffer = createFloat64WasmBuffer(this.wasmModule, numConstants)
+      }
+
+      // Build the constantIndices and constantValues buffers
+      const indicesView = this.constantIndicesBuffer.getArrayView()
+      const valuesView = this.constantValuesBuffer.getArrayView()
+      let indicesOffset = 0
+      let valuesOffset = 0
+
+      // Write count
+      indicesView[indicesOffset++] = numConstants
+
+      // Write each constant's data
       for (const constantDef of constants) {
         const varSpec = constantDef.varRef.varSpec
         const numSubElements = varSpec.subscriptIndices?.length || 0
-        let subIndicesAddress: number
 
+        // Write varIndex
+        indicesView[indicesOffset++] = varSpec.varIndex
+
+        // Write subCount
+        indicesView[indicesOffset++] = numSubElements
+
+        // Write subIndices
         if (numSubElements > 0) {
-          // Reuse the lookup sub indices buffer for constants
-          if (this.lookupSubIndicesBuffer === undefined || this.lookupSubIndicesBuffer.numElements < numSubElements) {
-            this.lookupSubIndicesBuffer?.dispose()
-            this.lookupSubIndicesBuffer = createInt32WasmBuffer(this.wasmModule, numSubElements)
+          for (let i = 0; i < numSubElements; i++) {
+            indicesView[indicesOffset++] = varSpec.subscriptIndices[i]
           }
-          this.lookupSubIndicesBuffer.getArrayView().set(varSpec.subscriptIndices)
-          subIndicesAddress = this.lookupSubIndicesBuffer.getAddress()
-        } else {
-          subIndicesAddress = 0
         }
 
-        // Call the native `setConstant` function
-        const varIndex = varSpec.varIndex
-        this.wasmSetConstant(varIndex, subIndicesAddress, constantDef.value)
+        // Write value
+        valuesView[valuesOffset++] = constantDef.value
       }
+
+      constantIndicesBuffer = this.constantIndicesBuffer
+      constantValuesBuffer = this.constantValuesBuffer
+    } else {
+      constantIndicesBuffer = undefined
+      constantValuesBuffer = undefined
     }
 
     // Copy the inputs to the `WasmBuffer`.  If we don't have an existing `WasmBuffer`,
@@ -187,7 +240,9 @@ class WasmModel implements RunnableModel {
     this.wasmRunModel(
       this.inputsBuffer?.getAddress() || 0,
       this.outputsBuffer.getAddress(),
-      outputIndicesBuffer?.getAddress() || 0
+      outputIndicesBuffer?.getAddress() || 0,
+      constantIndicesBuffer?.getAddress() || 0,
+      constantValuesBuffer?.getAddress() || 0
     )
     const elapsed = perfElapsed(t0)
 
@@ -208,6 +263,12 @@ class WasmModel implements RunnableModel {
 
     this.outputIndicesBuffer?.dispose()
     this.outputIndicesBuffer = undefined
+
+    this.constantIndicesBuffer?.dispose()
+    this.constantIndicesBuffer = undefined
+
+    this.constantValuesBuffer?.dispose()
+    this.constantValuesBuffer = undefined
 
     // TODO: Dispose the `WasmModule` too?
   }

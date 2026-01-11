@@ -664,6 +664,7 @@ export default async function () {
     setTime,
     setInputs,
     setLookup,
+    setConstant,
 
     storeOutputs,
     storeOutput,
