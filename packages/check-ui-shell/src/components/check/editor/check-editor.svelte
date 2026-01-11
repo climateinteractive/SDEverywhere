@@ -55,7 +55,7 @@ function handleCancel() {
     </div>
 
     <!-- Graph Preview -->
-    <PreviewGraph viewModel={viewModel.graphViewModel} />
+    <PreviewGraph viewModel={viewModel.graphBoxViewModel} />
   </div>
 </Dialog>
 

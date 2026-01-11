@@ -2,13 +2,13 @@
 
 <!-- SCRIPT -->
 <script lang="ts">
-import ComparisonGraph from '../../graphs/comparison-graph.svelte'
+import CheckSummaryGraphBox from '../summary/check-summary-graph-box.svelte'
 
-import type { ComparisonGraphViewModel } from '../../graphs/comparison-graph-vm'
+import type { CheckSummaryGraphBoxViewModel } from '../summary/check-summary-graph-box-vm'
 
 interface Props {
-  /** The view model for the comparison graph. */
-  viewModel: ComparisonGraphViewModel | undefined
+  /** The view model for the graph box. */
+  viewModel: CheckSummaryGraphBoxViewModel | undefined
 }
 
 let { viewModel }: Props = $props()
@@ -17,7 +17,7 @@ let { viewModel }: Props = $props()
 <!-- TEMPLATE -->
 <div class="preview-graph-container">
   {#if viewModel}
-    <ComparisonGraph {viewModel} />
+    <CheckSummaryGraphBox {viewModel} />
   {/if}
 </div>
 

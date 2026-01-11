@@ -4,11 +4,16 @@ import type {
   InputVar,
   OutputVar,
   InputPosition,
-  DatasetKey
+  DatasetKey,
+  CheckDataCoordinator,
+  CheckScenario,
+  CheckPredicateOp,
+  CheckPredicateOpRef,
+  CheckPredicateReport
 } from '@sdeverywhere/check-core'
 
 import type { ListItemViewModel } from '../../list/list-item-vm.svelte'
-import type { ComparisonGraphViewModel, Point, ComparisonGraphPlot } from '../../graphs/comparison-graph-vm'
+import { CheckSummaryGraphBoxViewModel } from '../summary/check-summary-graph-box-vm'
 
 /** The type of predicate operator. */
 export type PredicateType = 'gt' | 'gte' | 'lt' | 'lte' | 'eq' | 'approx'
@@ -55,7 +60,13 @@ export class CheckEditorViewModel {
 
   // Derived state
   public datasetListItems: ListItemViewModel[]
-  public graphViewModel: ComparisonGraphViewModel | undefined
+  public graphBoxViewModel = $derived(this.createGraphBoxViewModel(
+    this.allInputsPosition,
+    this.selectedDatasetKey,
+    this.predicateType,
+    this.predicateValue,
+    this.predicateTolerance
+  ))
 
   /** Called when the user saves the check test. */
   public onSave?: (config: CheckTestConfig) => void
@@ -66,10 +77,12 @@ export class CheckEditorViewModel {
   /**
    * @param inputVars The list of input variables available in the model.
    * @param outputVars The list of output variables available in the model.
+   * @param dataCoordinator The data coordinator for fetching datasets.
    */
   constructor(
     public readonly inputVars: InputVar[],
-    public readonly outputVars: OutputVar[]
+    public readonly outputVars: OutputVar[],
+    private readonly dataCoordinator: CheckDataCoordinator
   ) {
     // Initialize dataset with first output variable
     this.selectedDatasetKey = outputVars.length > 0 ? outputVars[0].datasetKey : ''
@@ -79,14 +92,6 @@ export class CheckEditorViewModel {
       id: outputVar.datasetKey,
       label: outputVar.varName
     }))
-
-    // Create graph view model for preview
-    this.graphViewModel = $derived(this.createGraphViewModel(
-      this.selectedDatasetKey,
-      this.predicateType,
-      this.predicateValue,
-      this.predicateTolerance
-    ))
   }
 
   /**
@@ -176,120 +181,97 @@ export class CheckEditorViewModel {
   }
 
   /**
-   * Create a graph view model for preview.
+   * Create a graph box view model for preview.
    *
+   * @param position The position for all inputs.
    * @param datasetKey The selected dataset key.
    * @param predicateType The predicate type.
    * @param predicateValue The predicate value.
    * @param predicateTolerance The tolerance for approx predicates.
-   * @returns The comparison graph view model.
+   * @returns The check summary graph box view model.
    */
-  private createGraphViewModel(
+  private createGraphBoxViewModel(
+    position: InputPosition,
     datasetKey: DatasetKey,
     predicateType: PredicateType,
     predicateValue: number,
     predicateTolerance: number
-  ): ComparisonGraphViewModel | undefined {
+  ): CheckSummaryGraphBoxViewModel | undefined {
     if (!datasetKey) {
       return undefined
     }
 
-    // For now, create a simple mock graph with a sample data line
-    // and the predicate reference line(s)
-    // TODO: Fetch actual data from the data coordinator
+    // Create a scenario for all inputs at the selected position
+    const scenario: CheckScenario = this.createScenario(position)
 
-    // Create mock sample data (a simple sine wave for demonstration)
-    const sampleDataPoints: Point[] = []
-    for (let t = 2000; t <= 2100; t += 1) {
-      const y = predicateValue + 5 + 3 * Math.sin((t - 2000) / 10)
-      sampleDataPoints.push({ x: t, y })
-    }
+    // Create a predicate report based on the editor's current predicate settings
+    const predicateReport: CheckPredicateReport = this.createPredicateReport(
+      predicateType,
+      predicateValue,
+      predicateTolerance
+    )
 
-    const plots: ComparisonGraphPlot[] = [
-      {
-        points: sampleDataPoints,
-        color: 'deepskyblue',
-        style: 'normal'
-      }
-    ]
+    // Create and return the graph box view model
+    return new CheckSummaryGraphBoxViewModel(
+      this.dataCoordinator,
+      scenario,
+      datasetKey,
+      predicateReport
+    )
+  }
 
-    // Add predicate reference line(s)
-    const refLinePoints: Point[] = [
-      { x: 2000, y: predicateValue },
-      { x: 2100, y: predicateValue }
-    ]
-
-    switch (predicateType) {
-      case 'gt':
-        plots.push({
-          points: refLinePoints,
-          color: 'green',
-          style: 'fill-above'
-        })
-        break
-      case 'gte':
-        plots.push({
-          points: refLinePoints,
-          color: 'green',
-          style: 'fill-above'
-        })
-        break
-      case 'lt':
-        plots.push({
-          points: refLinePoints,
-          color: 'green',
-          style: 'fill-below'
-        })
-        break
-      case 'lte':
-        plots.push({
-          points: refLinePoints,
-          color: 'green',
-          style: 'fill-below'
-        })
-        break
-      case 'eq':
-        plots.push({
-          points: refLinePoints,
-          color: 'green',
-          style: 'normal',
-          lineWidth: 5
-        })
-        break
-      case 'approx': {
-        // Add upper and lower bounds for approx
-        const upperBoundPoints: Point[] = [
-          { x: 2000, y: predicateValue + predicateTolerance },
-          { x: 2100, y: predicateValue + predicateTolerance }
-        ]
-        const lowerBoundPoints: Point[] = [
-          { x: 2000, y: predicateValue - predicateTolerance },
-          { x: 2100, y: predicateValue - predicateTolerance }
-        ]
-        plots.push({
-          points: lowerBoundPoints,
-          color: 'green',
-          style: 'fill-to-next'
-        })
-        plots.push({
-          points: upperBoundPoints,
-          color: 'green',
-          style: 'normal'
-        })
-        plots.push({
-          points: refLinePoints,
-          color: 'green',
-          style: 'dashed'
-        })
-        break
-      }
-    }
-
+  /**
+   * Create a check scenario based on the current editor state.
+   *
+   * @param position The position for all inputs.
+   * @returns The check scenario.
+   */
+  private createScenario(position: InputPosition): CheckScenario {
+    // For now, we only support "all inputs" mode
+    // Create an AllInputsSpec for all inputs at the given position
     return {
-      key: `check-editor-preview-${datasetKey}`,
-      plots,
-      xMin: 2000,
-      xMax: 2100
+      spec: {
+        kind: 'all-inputs',
+        uid: `all-inputs-${position}`,
+        position
+      },
+      inputDescs: []
+    }
+  }
+
+  /**
+   * Create a check predicate report based on the current editor state.
+   *
+   * @param predicateType The predicate type.
+   * @param predicateValue The predicate value.
+   * @param predicateTolerance The tolerance for approx predicates.
+   * @returns The check predicate report.
+   */
+  private createPredicateReport(
+    predicateType: PredicateType,
+    predicateValue: number,
+    predicateTolerance: number
+  ): CheckPredicateReport {
+    // Create the opRefs map with the appropriate predicate operator
+    const opRefs: Map<CheckPredicateOp, CheckPredicateOpRef> = new Map()
+
+    // Add the constant reference for the selected predicate type
+    const opRef: CheckPredicateOpRef = {
+      kind: 'constant',
+      value: predicateValue
+    }
+
+    // Map our PredicateType to CheckPredicateOp
+    const predicateOp = predicateType as CheckPredicateOp
+    opRefs.set(predicateOp, opRef)
+
+    // Create the predicate report
+    return {
+      checkKey: 0, // Placeholder key for editor preview
+      result: { status: 'passed' }, // Placeholder result
+      opRefs,
+      opValues: [],
+      tolerance: predicateType === 'approx' ? predicateTolerance : undefined
     }
   }
 }

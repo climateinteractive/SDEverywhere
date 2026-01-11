@@ -4,8 +4,12 @@
 import { defineMeta, type Args } from '@storybook/addon-svelte-csf'
 import { expect, userEvent, waitFor, within } from 'storybook/test'
 
-import type { InputVar, OutputVar } from '@sdeverywhere/check-core'
+import type { InputVar, OutputVar, ModelSpec, Dataset } from '@sdeverywhere/check-core'
+import { createCheckDataCoordinatorForTests } from '@sdeverywhere/check-core'
 
+import { mockBundleModel } from '../../_mocks/mock-bundle'
+import { mockDataset } from '../../_mocks/mock-data'
+import { inputVar, outputVar } from '../../_mocks/mock-vars'
 import StoryDecorator from '../../_storybook/story-decorator.svelte'
 
 import CheckEditor from './check-editor.svelte'
@@ -63,7 +67,31 @@ const mockOutputVars: OutputVar[] = [
 ]
 
 function createMockViewModel(): CheckEditorViewModel {
-  return new CheckEditorViewModel(mockInputVars, mockOutputVars)
+  // Create a model spec with the input and output variables
+  const inputVarNames = mockInputVars.map(v => v.varName)
+  const outputVarNames = mockOutputVars.map(v => v.varName)
+  const modelSpec: ModelSpec = {
+    modelSizeInBytes: 0,
+    dataSizeInBytes: 0,
+    inputVars: new Map(mockInputVars.map((v, i) => inputVar(`${i}`, v.varName))),
+    outputVars: new Map(outputVarNames.map(varName => outputVar(varName))),
+    implVars: new Map()
+  }
+
+  // Create a bundle model with mock datasets
+  const bundleModel = mockBundleModel(modelSpec, (_, datasetKeys) => {
+    const datasetMap = new Map()
+    for (const datasetKey of datasetKeys) {
+      const ds: Dataset = mockDataset()
+      datasetMap.set(datasetKey, ds)
+    }
+    return datasetMap
+  })
+
+  // Create the data coordinator
+  const dataCoordinator = createCheckDataCoordinatorForTests(bundleModel)
+
+  return new CheckEditorViewModel(mockInputVars, mockOutputVars, dataCoordinator)
 }
 </script>
 
