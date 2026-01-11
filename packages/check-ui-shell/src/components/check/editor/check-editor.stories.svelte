@@ -9,7 +9,7 @@ import type { InputVar, OutputVar } from '@sdeverywhere/check-core'
 import StoryDecorator from '../../_storybook/story-decorator.svelte'
 
 import CheckEditor from './check-editor.svelte'
-import { CheckEditorViewModel } from './check-editor-vm'
+import { CheckEditorViewModel } from './check-editor-vm.svelte'
 
 const { Story } = defineMeta({
   title: 'Components/CheckEditor',

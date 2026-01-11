@@ -2,17 +2,14 @@
 
 <!-- SCRIPT -->
 <script lang="ts">
-import { writable } from 'svelte/store'
-
 import Button from '../../_shared/button.svelte'
 import Dialog from '../../_shared/dialog.svelte'
-import Selector from '../../_shared/selector.svelte'
-import { SelectorOptionViewModel, SelectorViewModel } from '../../_shared/selector-vm'
+import Selector from '../../list/selector.svelte'
+import { SelectorOptionViewModel, SelectorViewModel } from '../../list/selector-vm.svelte'
 import ComparisonGraph from '../../graphs/comparison-graph.svelte'
-import { ListItemViewModel } from '../../playground/list-item-vm'
-import { SearchListViewModel } from '../../playground/search-list-vm'
+import { SearchListViewModel } from '../../list/search-list-vm.svelte'
 
-import type { CheckEditorViewModel, PredicateType } from './check-editor-vm'
+import type { CheckEditorViewModel, PredicateType } from './check-editor-vm.svelte'
 import type { InputPosition } from '@sdeverywhere/check-core'
 
 interface Props {
@@ -24,31 +21,19 @@ interface Props {
 
 let { open = $bindable(false), viewModel }: Props = $props()
 
-// Create stores for reactive UI updates
-const selectedDatasetKey = viewModel.selectedDatasetKey
-const predicateType = viewModel.predicateType
-const predicateValue = viewModel.predicateValue
-const predicateTolerance = viewModel.predicateTolerance
-const allInputsPosition = viewModel.allInputsPosition
-const graphViewModel = viewModel.graphViewModel
-
 // Create search list view model for dataset selection
-const datasetListItems = writable<ListItemViewModel[]>(
-  viewModel.outputVars.map(v => new ListItemViewModel(v.datasetKey, v.varName))
-)
-const datasetSearchViewModel = new SearchListViewModel(datasetListItems)
+const datasetSearchViewModel = new SearchListViewModel(viewModel.datasetListItems)
 datasetSearchViewModel.onItemSelected = item => {
   viewModel.updateSelectedDataset(item.id)
-  datasetQuery.set(item.label)
 }
 
-// Track the current dataset query
-const datasetQuery = writable('')
+// Track the current dataset query and sync with selected dataset
+let datasetQuery = $state('')
 $effect(() => {
   // When selectedDatasetKey changes, update the query to show the selected dataset name
-  const outputVar = viewModel.outputVars.find(v => v.datasetKey === $selectedDatasetKey)
+  const outputVar = viewModel.outputVars.find(v => v.datasetKey === viewModel.selectedDatasetKey)
   if (outputVar) {
-    datasetQuery.set(outputVar.varName)
+    datasetQuery = outputVar.varName
   }
 })
 
@@ -61,8 +46,8 @@ const predicateTypeOptions = [
   new SelectorOptionViewModel('Equal (=)', 'eq'),
   new SelectorOptionViewModel('Approximately (~)', 'approx')
 ]
-const predicateTypeSelector = new SelectorViewModel(predicateTypeOptions, predicateType)
-predicateTypeSelector.onUserChange = newValue => {
+const predicateTypeSelector = new SelectorViewModel(predicateTypeOptions, viewModel.predicateType)
+predicateTypeSelector.onUserChange = (newValue: string) => {
   viewModel.updatePredicateType(newValue as PredicateType)
 }
 
@@ -72,8 +57,8 @@ const allInputsPositionOptions = [
   new SelectorOptionViewModel('Minimum', 'at-minimum'),
   new SelectorOptionViewModel('Maximum', 'at-maximum')
 ]
-const allInputsPositionSelector = new SelectorViewModel(allInputsPositionOptions, allInputsPosition)
-allInputsPositionSelector.onUserChange = newValue => {
+const allInputsPositionSelector = new SelectorViewModel(allInputsPositionOptions, viewModel.allInputsPosition)
+allInputsPositionSelector.onUserChange = (newValue: string) => {
   viewModel.updateAllInputsPosition(newValue as InputPosition)
 }
 
@@ -89,20 +74,6 @@ function handleCancel() {
   viewModel.onCancel?.()
   open = false
 }
-
-// Handle dataset search input
-function handleDatasetInput(event: Event) {
-  const target = event.target as HTMLInputElement
-  datasetSearchViewModel.query.set(target.value)
-}
-
-// Handle dataset item click
-function handleDatasetItemClick(item: ListItemViewModel) {
-  datasetSearchViewModel.onItemSelected?.(item)
-}
-
-// Compute filtered dataset items
-const filteredDatasetItems = datasetSearchViewModel.filteredItems
 
 // Track whether search list should be shown
 let showDatasetList = $state(false)
@@ -131,22 +102,22 @@ let showDatasetList = $state(false)
               id="dataset-search"
               type="text"
               class="check-editor-input"
-              value={$datasetQuery}
+              bind:value={datasetQuery}
               placeholder="Search outputs..."
               aria-label="Search output variables"
               onfocus={() => (showDatasetList = true)}
               onblur={() => setTimeout(() => (showDatasetList = false), 200)}
-              oninput={handleDatasetInput}
+              oninput={e => (datasetSearchViewModel.query = (e.target as HTMLInputElement).value)}
             />
-            {#if showDatasetList && $filteredDatasetItems.length > 0}
+            {#if showDatasetList && datasetSearchViewModel.filteredItems.length > 0}
               <div class="check-editor-dataset-list">
-                {#each $filteredDatasetItems as item}
+                {#each datasetSearchViewModel.filteredItems as item}
                   <div
                     class="check-editor-dataset-item"
                     role="option"
                     tabindex="0"
-                    aria-selected={item.id === $selectedDatasetKey}
-                    onmousedown={() => handleDatasetItemClick(item)}
+                    aria-selected={item.id === viewModel.selectedDatasetKey}
+                    onmousedown={() => datasetSearchViewModel.onItemSelected?.(item)}
                   >
                     {item.label}
                   </div>
@@ -173,19 +144,19 @@ let showDatasetList = $state(false)
               id="predicate-value-input"
               type="number"
               class="check-editor-input"
-              bind:value={$predicateValue}
+              bind:value={viewModel.predicateValue}
               aria-label="Predicate value"
             />
           </div>
         </div>
-        {#if $predicateType === 'approx'}
+        {#if viewModel.predicateType === 'approx'}
           <div class="check-editor-field">
             <label for="predicate-tolerance-input" class="check-editor-label">Tolerance</label>
             <input
               id="predicate-tolerance-input"
               type="number"
               class="check-editor-input"
-              bind:value={$predicateTolerance}
+              bind:value={viewModel.predicateTolerance}
               step="0.01"
               aria-label="Predicate tolerance"
             />
@@ -202,8 +173,8 @@ let showDatasetList = $state(false)
 
     <!-- Graph Preview -->
     <div class="check-editor-graph-container">
-      {#if $graphViewModel}
-        <ComparisonGraph viewModel={$graphViewModel} />
+      {#if viewModel.graphViewModel}
+        <ComparisonGraph viewModel={viewModel.graphViewModel} />
       {/if}
     </div>
   </div>

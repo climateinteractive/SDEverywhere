@@ -1,8 +1,5 @@
 // Copyright (c) 2025 Climate Interactive / New Venture Fund
 
-import type { Readable, Writable } from 'svelte/store'
-import { derived, writable } from 'svelte/store'
-
 import type {
   InputVar,
   OutputVar,
@@ -10,7 +7,7 @@ import type {
   DatasetKey
 } from '@sdeverywhere/check-core'
 
-import type { ListItemViewModel } from '../../playground/list-item-vm'
+import type { ListItemViewModel } from '../../list/list-item-vm.svelte'
 import type { ComparisonGraphViewModel, Point, ComparisonGraphPlot } from '../../graphs/comparison-graph-vm'
 
 /** The type of predicate operator. */
@@ -48,17 +45,17 @@ export interface CheckTestConfig {
 
 /** View model for the check test editor. */
 export class CheckEditorViewModel {
-  // Input stores
-  public readonly scenarioMode: Writable<ScenarioMode>
-  public readonly allInputsPosition: Writable<InputPosition>
-  public readonly selectedDatasetKey: Writable<DatasetKey>
-  public readonly predicateType: Writable<PredicateType>
-  public readonly predicateValue: Writable<number>
-  public readonly predicateTolerance: Writable<number>
+  // Reactive state using runes
+  public scenarioMode = $state('all-inputs' as ScenarioMode)
+  public allInputsPosition = $state('at-default' as InputPosition)
+  public selectedDatasetKey = $state('')
+  public predicateType = $state('gt' as PredicateType)
+  public predicateValue = $state(0)
+  public predicateTolerance = $state(0.1)
 
-  // Derived stores
-  public readonly datasetListItems: Readable<ListItemViewModel[]>
-  public readonly graphViewModel: Readable<ComparisonGraphViewModel | undefined>
+  // Derived state
+  public datasetListItems: ListItemViewModel[]
+  public graphViewModel: ComparisonGraphViewModel | undefined
 
   /** Called when the user saves the check test. */
   public onSave?: (config: CheckTestConfig) => void
@@ -74,34 +71,22 @@ export class CheckEditorViewModel {
     public readonly inputVars: InputVar[],
     public readonly outputVars: OutputVar[]
   ) {
-    // Initialize scenario with "all inputs at default"
-    this.scenarioMode = writable('all-inputs')
-    this.allInputsPosition = writable('at-default')
-
     // Initialize dataset with first output variable
-    const firstDatasetKey = outputVars.length > 0 ? outputVars[0].datasetKey : ''
-    this.selectedDatasetKey = writable(firstDatasetKey)
-
-    // Initialize predicate with "gt: 0"
-    this.predicateType = writable('gt')
-    this.predicateValue = writable(0)
-    this.predicateTolerance = writable(0.1)
+    this.selectedDatasetKey = outputVars.length > 0 ? outputVars[0].datasetKey : ''
 
     // Create list items for dataset selector
-    this.datasetListItems = derived([], () => {
-      return this.outputVars.map(outputVar => ({
-        id: outputVar.datasetKey,
-        label: outputVar.varName
-      }))
-    })
+    this.datasetListItems = this.outputVars.map(outputVar => ({
+      id: outputVar.datasetKey,
+      label: outputVar.varName
+    }))
 
     // Create graph view model for preview
-    this.graphViewModel = derived(
-      [this.selectedDatasetKey, this.predicateType, this.predicateValue, this.predicateTolerance],
-      ([$datasetKey, $predicateType, $predicateValue, $predicateTolerance]) => {
-        return this.createGraphViewModel($datasetKey, $predicateType, $predicateValue, $predicateTolerance)
-      }
-    )
+    this.graphViewModel = $derived(this.createGraphViewModel(
+      this.selectedDatasetKey,
+      this.predicateType,
+      this.predicateValue,
+      this.predicateTolerance
+    ))
   }
 
   /**
@@ -110,7 +95,7 @@ export class CheckEditorViewModel {
    * @param mode The new scenario mode.
    */
   updateScenarioMode(mode: ScenarioMode): void {
-    this.scenarioMode.set(mode)
+    this.scenarioMode = mode
   }
 
   /**
@@ -119,7 +104,7 @@ export class CheckEditorViewModel {
    * @param position The new position for all inputs.
    */
   updateAllInputsPosition(position: InputPosition): void {
-    this.allInputsPosition.set(position)
+    this.allInputsPosition = position
   }
 
   /**
@@ -128,7 +113,7 @@ export class CheckEditorViewModel {
    * @param datasetKey The dataset key for the selected output variable.
    */
   updateSelectedDataset(datasetKey: DatasetKey): void {
-    this.selectedDatasetKey.set(datasetKey)
+    this.selectedDatasetKey = datasetKey
   }
 
   /**
@@ -137,7 +122,7 @@ export class CheckEditorViewModel {
    * @param type The new predicate type.
    */
   updatePredicateType(type: PredicateType): void {
-    this.predicateType.set(type)
+    this.predicateType = type
   }
 
   /**
@@ -146,7 +131,7 @@ export class CheckEditorViewModel {
    * @param value The new predicate value.
    */
   updatePredicateValue(value: number): void {
-    this.predicateValue.set(value)
+    this.predicateValue = value
   }
 
   /**
@@ -155,7 +140,7 @@ export class CheckEditorViewModel {
    * @param tolerance The new tolerance value.
    */
   updatePredicateTolerance(tolerance: number): void {
-    this.predicateTolerance.set(tolerance)
+    this.predicateTolerance = tolerance
   }
 
   /**
@@ -165,24 +150,10 @@ export class CheckEditorViewModel {
    */
   getConfig(): CheckTestConfig {
     let scenarioConfig: ScenarioConfig
-    let scenarioMode: ScenarioMode
-    let allInputsPosition: InputPosition
-    let datasetKey: DatasetKey
-    let predicateType: PredicateType
-    let predicateValue: number
-    let predicateTolerance: number
-
-    this.scenarioMode.subscribe(v => (scenarioMode = v))()
-    this.allInputsPosition.subscribe(v => (allInputsPosition = v))()
-    this.selectedDatasetKey.subscribe(v => (datasetKey = v))()
-    this.predicateType.subscribe(v => (predicateType = v))()
-    this.predicateValue.subscribe(v => (predicateValue = v))()
-    this.predicateTolerance.subscribe(v => (predicateTolerance = v))()
-
-    if (scenarioMode === 'all-inputs') {
+    if (this.scenarioMode === 'all-inputs') {
       scenarioConfig = {
         mode: 'all-inputs',
-        allInputsPosition
+        allInputsPosition: this.allInputsPosition
       }
     } else {
       // For now, only support all-inputs mode
@@ -195,11 +166,11 @@ export class CheckEditorViewModel {
 
     return {
       scenario: scenarioConfig,
-      datasetKey,
+      datasetKey: this.selectedDatasetKey,
       predicate: {
-        type: predicateType,
-        value: predicateValue,
-        tolerance: predicateTolerance
+        type: this.predicateType,
+        value: this.predicateValue,
+        tolerance: this.predicateTolerance
       }
     }
   }
