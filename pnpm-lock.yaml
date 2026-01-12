@@ -22,10 +22,13 @@ importers:
         version: 8.46.0(eslint@9.37.0)(typescript@5.2.2)
       '@vitest/browser':
         specifier: ^4.0.16
-        version: 4.0.16(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2))(vitest@4.0.16(@types/node@20.19.19)(sass@1.97.2))
+        version: 4.0.16(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2))(vitest@4.0.16)
+      '@vitest/browser-playwright':
+        specifier: ^4.0.16
+        version: 4.0.16(playwright@1.56.1)(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2))(vitest@4.0.16)
       '@vitest/coverage-v8':
         specifier: ^4.0.16
-        version: 4.0.16(@vitest/browser@4.0.16(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2))(vitest@4.0.16(@types/node@20.19.19)(sass@1.97.2)))(vitest@4.0.16(@types/node@20.19.19)(sass@1.97.2))
+        version: 4.0.16(@vitest/browser@4.0.16(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2))(vitest@4.0.16))(vitest@4.0.16)
       eslint:
         specifier: ^9.37.0
         version: 9.37.0
@@ -73,7 +76,7 @@ importers:
         version: 5.2.2
       vitest:
         specifier: ^4.0.16
-        version: 4.0.16(@types/node@20.19.19)(sass@1.97.2)
+        version: 4.0.16(@types/node@20.19.19)(@vitest/browser-playwright@4.0.16)(sass@1.97.2)
 
   examples/hello-world:
     dependencies:
@@ -560,7 +563,7 @@ importers:
         version: 5.0.10(@storybook/svelte@10.1.11(storybook@10.1.11(@testing-library/dom@10.4.1)(prettier@3.6.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(svelte@5.39.10))(@sveltejs/vite-plugin-svelte@6.2.1(svelte@5.39.10)(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2)))(storybook@10.1.11(@testing-library/dom@10.4.1)(prettier@3.6.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(svelte@5.39.10)(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2))
       '@storybook/addon-vitest':
         specifier: ^10.1.11
-        version: 10.1.11(@vitest/browser@4.0.16(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2))(vitest@4.0.16(@types/node@20.19.19)(sass@1.97.2)))(@vitest/runner@4.0.16)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(storybook@10.1.11(@testing-library/dom@10.4.1)(prettier@3.6.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(vitest@4.0.16(@types/node@20.19.19)(sass@1.97.2))
+        version: 10.1.11(@vitest/browser-playwright@4.0.16)(@vitest/browser@4.0.16(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2))(vitest@4.0.16))(@vitest/runner@4.0.16)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(storybook@10.1.11(@testing-library/dom@10.4.1)(prettier@3.6.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(vitest@4.0.16)
       '@storybook/svelte':
         specifier: ^10.1.11
         version: 10.1.11(storybook@10.1.11(@testing-library/dom@10.4.1)(prettier@3.6.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(svelte@5.39.10)
@@ -1843,6 +1846,12 @@ packages:
   '@typescript-eslint/visitor-keys@8.46.0':
     resolution: {integrity: sha512-FrvMpAK+hTbFy7vH5j1+tMYHMSKLE6RzluFJlkFNKD0p9YsUT75JlBSmr5so3QRzvMwU5/bIEdeNrxm8du8l3Q==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+
+  '@vitest/browser-playwright@4.0.16':
+    resolution: {integrity: sha512-I2Fy/ANdphi1yI46d15o0M1M4M0UJrUiVKkH5oKeRZZCdPg0fw/cfTKZzv9Ge9eobtJYp4BGblMzXdXH0vcl5g==}
+    peerDependencies:
+      playwright: '*'
+      vitest: 4.0.16
 
   '@vitest/browser@4.0.16':
     resolution: {integrity: sha512-t4toy8X/YTnjYEPoY0pbDBg3EvDPg1elCDrfc+VupPHwoN/5/FNQ8Z+xBYIaEnOE2vVEyKwqYBzZ9h9rJtZVcg==}
@@ -4129,15 +4138,16 @@ snapshots:
     transitivePeerDependencies:
       - babel-plugin-macros
 
-  '@storybook/addon-vitest@10.1.11(@vitest/browser@4.0.16(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2))(vitest@4.0.16(@types/node@20.19.19)(sass@1.97.2)))(@vitest/runner@4.0.16)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(storybook@10.1.11(@testing-library/dom@10.4.1)(prettier@3.6.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(vitest@4.0.16(@types/node@20.19.19)(sass@1.97.2))':
+  '@storybook/addon-vitest@10.1.11(@vitest/browser-playwright@4.0.16)(@vitest/browser@4.0.16(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2))(vitest@4.0.16))(@vitest/runner@4.0.16)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(storybook@10.1.11(@testing-library/dom@10.4.1)(prettier@3.6.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(vitest@4.0.16)':
     dependencies:
       '@storybook/global': 5.0.0
       '@storybook/icons': 2.0.1(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       storybook: 10.1.11(@testing-library/dom@10.4.1)(prettier@3.6.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
     optionalDependencies:
-      '@vitest/browser': 4.0.16(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2))(vitest@4.0.16(@types/node@20.19.19)(sass@1.97.2))
+      '@vitest/browser': 4.0.16(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2))(vitest@4.0.16)
+      '@vitest/browser-playwright': 4.0.16(playwright@1.56.1)(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2))(vitest@4.0.16)
       '@vitest/runner': 4.0.16
-      vitest: 4.0.16(@types/node@20.19.19)(sass@1.97.2)
+      vitest: 4.0.16(@types/node@20.19.19)(@vitest/browser-playwright@4.0.16)(sass@1.97.2)
     transitivePeerDependencies:
       - react
       - react-dom
@@ -4407,7 +4417,20 @@ snapshots:
       '@typescript-eslint/types': 8.46.0
       eslint-visitor-keys: 4.2.1
 
-  '@vitest/browser@4.0.16(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2))(vitest@4.0.16(@types/node@20.19.19)(sass@1.97.2))':
+  '@vitest/browser-playwright@4.0.16(playwright@1.56.1)(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2))(vitest@4.0.16)':
+    dependencies:
+      '@vitest/browser': 4.0.16(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2))(vitest@4.0.16)
+      '@vitest/mocker': 4.0.16(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2))
+      playwright: 1.56.1
+      tinyrainbow: 3.0.3
+      vitest: 4.0.16(@types/node@20.19.19)(@vitest/browser-playwright@4.0.16)(sass@1.97.2)
+    transitivePeerDependencies:
+      - bufferutil
+      - msw
+      - utf-8-validate
+      - vite
+
+  '@vitest/browser@4.0.16(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2))(vitest@4.0.16)':
     dependencies:
       '@vitest/mocker': 4.0.16(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2))
       '@vitest/utils': 4.0.16
@@ -4416,7 +4439,7 @@ snapshots:
       pngjs: 7.0.0
       sirv: 3.0.2
       tinyrainbow: 3.0.3
-      vitest: 4.0.16(@types/node@20.19.19)(sass@1.97.2)
+      vitest: 4.0.16(@types/node@20.19.19)(@vitest/browser-playwright@4.0.16)(sass@1.97.2)
       ws: 8.18.3
     transitivePeerDependencies:
       - bufferutil
@@ -4424,7 +4447,7 @@ snapshots:
       - utf-8-validate
       - vite
 
-  '@vitest/coverage-v8@4.0.16(@vitest/browser@4.0.16(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2))(vitest@4.0.16(@types/node@20.19.19)(sass@1.97.2)))(vitest@4.0.16(@types/node@20.19.19)(sass@1.97.2))':
+  '@vitest/coverage-v8@4.0.16(@vitest/browser@4.0.16(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2))(vitest@4.0.16))(vitest@4.0.16)':
     dependencies:
       '@bcoe/v8-coverage': 1.0.2
       '@vitest/utils': 4.0.16
@@ -4437,9 +4460,9 @@ snapshots:
       obug: 2.1.1
       std-env: 3.10.0
       tinyrainbow: 3.0.3
-      vitest: 4.0.16(@types/node@20.19.19)(sass@1.97.2)
+      vitest: 4.0.16(@types/node@20.19.19)(@vitest/browser-playwright@4.0.16)(sass@1.97.2)
     optionalDependencies:
-      '@vitest/browser': 4.0.16(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2))(vitest@4.0.16(@types/node@20.19.19)(sass@1.97.2))
+      '@vitest/browser': 4.0.16(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2))(vitest@4.0.16)
     transitivePeerDependencies:
       - supports-color
 
@@ -4464,7 +4487,7 @@ snapshots:
     dependencies:
       '@vitest/spy': 3.2.4
       estree-walker: 3.0.3
-      magic-string: 0.30.19
+      magic-string: 0.30.21
     optionalDependencies:
       vite: 7.3.1(@types/node@20.19.19)(sass@1.97.2)
 
@@ -6072,7 +6095,7 @@ snapshots:
     optionalDependencies:
       vite: 7.3.1(@types/node@20.19.19)(sass@1.97.2)
 
-  vitest@4.0.16(@types/node@20.19.19)(sass@1.97.2):
+  vitest@4.0.16(@types/node@20.19.19)(@vitest/browser-playwright@4.0.16)(sass@1.97.2):
     dependencies:
       '@vitest/expect': 4.0.16
       '@vitest/mocker': 4.0.16(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2))
@@ -6096,6 +6119,7 @@ snapshots:
       why-is-node-running: 2.3.0
     optionalDependencies:
       '@types/node': 20.19.19
+      '@vitest/browser-playwright': 4.0.16(playwright@1.56.1)(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2))(vitest@4.0.16)
     transitivePeerDependencies:
       - jiti
       - less
