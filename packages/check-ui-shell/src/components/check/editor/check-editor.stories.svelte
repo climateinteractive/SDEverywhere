@@ -7,9 +7,9 @@ import { expect, userEvent, waitFor, within } from 'storybook/test'
 import type { InputVar, OutputVar, ModelSpec, Dataset } from '@sdeverywhere/check-core'
 import { createCheckDataCoordinatorForTests } from '@sdeverywhere/check-core'
 
-import { mockBundleModel } from '../../_mocks/mock-bundle'
-import { mockDataset } from '../../_mocks/mock-data'
-import { inputVar, outputVar } from '../../_mocks/mock-vars'
+import { mockBundleModel } from '../../../_mocks/mock-bundle'
+import { mockDataset } from '../../../_mocks/mock-data'
+import { inputVar, outputVar } from '../../../_mocks/mock-vars'
 import StoryDecorator from '../../_storybook/story-decorator.svelte'
 
 import CheckEditor from './check-editor.svelte'
@@ -68,7 +68,6 @@ const mockOutputVars: OutputVar[] = [
 
 function createMockViewModel(): CheckEditorViewModel {
   // Create a model spec with the input and output variables
-  const inputVarNames = mockInputVars.map(v => v.varName)
   const outputVarNames = mockOutputVars.map(v => v.varName)
   const modelSpec: ModelSpec = {
     modelSizeInBytes: 0,
@@ -79,7 +78,7 @@ function createMockViewModel(): CheckEditorViewModel {
   }
 
   // Create a bundle model with mock datasets
-  const bundleModel = mockBundleModel(modelSpec, (_, datasetKeys) => {
+  const bundleModel = mockBundleModel(modelSpec, (_scenarioSpec, datasetKeys) => {
     const datasetMap = new Map()
     for (const datasetKey of datasetKeys) {
       const ds: Dataset = mockDataset()
@@ -119,22 +118,35 @@ function createMockViewModel(): CheckEditorViewModel {
     const title = canvas.getByText('Configure Check Test')
     await expect(title).toBeInTheDocument()
 
-    // Verify scenario selector shows default option
-    const scenarioLabel = canvas.getByText(/scenario/i)
-    await expect(scenarioLabel).toBeInTheDocument()
+    // Verify scenario selector section exists
+    const scenariosTitle = canvas.getByText(/scenarios/i)
+    await expect(scenariosTitle).toBeInTheDocument()
 
-    // Verify dataset selector shows first output by default
+    // Verify dataset selector section exists with first output selected
+    const datasetsTitle = canvas.getByText(/datasets/i)
+    await expect(datasetsTitle).toBeInTheDocument()
+
     await waitFor(() => {
       const datasetText = canvas.getByText(/Output X/i)
       expect(datasetText).toBeInTheDocument()
     })
 
-    // Verify predicate selector shows default "gt: 0"
-    const predicateLabel = canvas.getByText(/predicate/i)
-    await expect(predicateLabel).toBeInTheDocument()
+    // Verify predicate selector section exists
+    const predicatesTitle = canvas.getByText(/predicates/i)
+    await expect(predicatesTitle).toBeInTheDocument()
+
+    // Verify add buttons exist
+    const addScenarioButton = canvas.getByRole('button', { name: /add scenario/i })
+    await expect(addScenarioButton).toBeInTheDocument()
+
+    const addDatasetButton = canvas.getByRole('button', { name: /add dataset/i })
+    await expect(addDatasetButton).toBeInTheDocument()
+
+    const addPredicateButton = canvas.getByRole('button', { name: /add predicate/i })
+    await expect(addPredicateButton).toBeInTheDocument()
 
     // Verify graph preview area exists
-    const graphContainer = canvasElement.querySelector('.check-editor-graph-container')
+    const graphContainer = canvasElement.querySelector('.preview-graph-container')
     await expect(graphContainer).toBeInTheDocument()
 
     // Verify action buttons
@@ -177,27 +189,19 @@ function createMockViewModel(): CheckEditorViewModel {
       expect(canvas.getByRole('dialog')).toBeInTheDocument()
     })
 
-    // Find and click the dataset selector
-    const datasetSelector = canvasElement.querySelector('.check-editor-dataset-selector input')
-    await expect(datasetSelector).toBeInTheDocument()
+    // Find the dataset select dropdown (should have id="output-var-dataset-1")
+    const datasetSelect = canvasElement.querySelector('select[id^="output-var-"]') as HTMLSelectElement
+    await expect(datasetSelect).toBeInTheDocument()
 
-    // Type to search for a different output
-    await userEvent.clear(datasetSelector)
-    await userEvent.type(datasetSelector, 'Output Y')
+    // Verify initial selection is Output X
+    await expect(datasetSelect.value).toBe('output_x')
 
-    // Wait for filtered results
-    await waitFor(() => {
-      const outputYOption = canvas.getByText('Output Y')
-      expect(outputYOption).toBeInTheDocument()
-    })
-
-    // Select the option
-    const outputYOption = canvas.getByText('Output Y')
-    await userEvent.click(outputYOption)
+    // Change to Output Y
+    await userEvent.selectOptions(datasetSelect, 'output_y')
 
     // Verify the selection changed
     await waitFor(() => {
-      expect(datasetSelector).toHaveValue('Output Y')
+      expect(datasetSelect.value).toBe('output_y')
     })
   }}
 ></Story>
@@ -216,11 +220,14 @@ function createMockViewModel(): CheckEditorViewModel {
       expect(canvas.getByRole('dialog')).toBeInTheDocument()
     })
 
-    // Find the predicate type selector (dropdown)
+    // Find the predicate type selector - it's within the predicate-selector-item
     const predicateTypeSelect = canvasElement.querySelector(
-      '.check-editor-predicate-type select'
+      '.predicate-selector-item select[aria-label="Predicate type"]'
     ) as HTMLSelectElement
     await expect(predicateTypeSelect).toBeInTheDocument()
+
+    // Verify initial value is 'gt'
+    await expect(predicateTypeSelect.value).toBe('gt')
 
     // Change to 'lt' (less than)
     await userEvent.selectOptions(predicateTypeSelect, 'lt')
@@ -246,11 +253,14 @@ function createMockViewModel(): CheckEditorViewModel {
       expect(canvas.getByRole('dialog')).toBeInTheDocument()
     })
 
-    // Find the predicate value input
+    // Find the predicate value input (has id starting with "pred-value-")
     const predicateValueInput = canvasElement.querySelector(
-      '.check-editor-predicate-value input'
+      'input[id^="pred-value-"]'
     ) as HTMLInputElement
     await expect(predicateValueInput).toBeInTheDocument()
+
+    // Verify initial value is 0
+    await expect(predicateValueInput.value).toBe('0')
 
     // Change the value
     await userEvent.clear(predicateValueInput)
@@ -345,7 +355,7 @@ function createMockViewModel(): CheckEditorViewModel {
 ></Story>
 
 <Story
-  name="Search Dataset with Typeahead"
+  name="Add and Remove Items"
   {template}
   args={{
     open: true,
@@ -358,20 +368,36 @@ function createMockViewModel(): CheckEditorViewModel {
       expect(canvas.getByRole('dialog')).toBeInTheDocument()
     })
 
-    // Find the dataset search input
-    const datasetSelector = canvasElement.querySelector('.check-editor-dataset-selector input')
-    await expect(datasetSelector).toBeInTheDocument()
+    // Initially should have 1 of each item
+    const initialScenarios = canvasElement.querySelectorAll('.scenario-selector-item')
+    await expect(initialScenarios.length).toBe(1)
 
-    // Type partial search query
-    await userEvent.clear(datasetSelector)
-    await userEvent.type(datasetSelector, 'y')
+    const initialDatasets = canvasElement.querySelectorAll('.dataset-selector-item')
+    await expect(initialDatasets.length).toBe(1)
 
-    // Verify filtered results show only Output Y
+    const initialPredicates = canvasElement.querySelectorAll('.predicate-selector-item')
+    await expect(initialPredicates.length).toBe(1)
+
+    // Add a scenario
+    const addScenarioButton = canvas.getByRole('button', { name: /add scenario/i })
+    await userEvent.click(addScenarioButton)
+
     await waitFor(() => {
-      const outputY = canvas.getByText('Output Y')
-      expect(outputY).toBeInTheDocument()
+      const scenarios = canvasElement.querySelectorAll('.scenario-selector-item')
+      expect(scenarios.length).toBe(2)
     })
 
-    // Note: Output X might still be in the DOM but hidden/filtered out
+    // Add a dataset
+    const addDatasetButton = canvas.getByRole('button', { name: /add dataset/i })
+    await userEvent.click(addDatasetButton)
+
+    await waitFor(() => {
+      const datasets = canvasElement.querySelectorAll('.dataset-selector-item')
+      expect(datasets.length).toBe(2)
+    })
+
+    // Remove buttons should now be visible (not when only 1 item)
+    const removeButtons = canvasElement.querySelectorAll('.scenario-selector-remove-btn')
+    await expect(removeButtons.length).toBeGreaterThan(0)
   }}
 ></Story>

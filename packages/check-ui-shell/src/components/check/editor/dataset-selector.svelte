@@ -2,7 +2,7 @@
 
 <!-- SCRIPT -->
 <script lang="ts">
-import { SearchListViewModel } from '../../list/search-list-vm.svelte'
+import Button from '../../_shared/button.svelte'
 
 import type { CheckEditorViewModel } from './check-editor-vm.svelte'
 
@@ -13,60 +13,53 @@ interface Props {
 
 let { viewModel }: Props = $props()
 
-// Create search list view model for dataset selection
-const datasetSearchViewModel = new SearchListViewModel(viewModel.datasetListItems)
-datasetSearchViewModel.onItemSelected = item => {
-  viewModel.updateSelectedDataset(item.id)
+function handleAddDataset() {
+  viewModel.addDataset()
 }
 
-// Track the current dataset query and sync with selected dataset
-let datasetQuery = $state('')
-$effect(() => {
-  // When selectedDatasetKey changes, update the query to show the selected dataset name
-  const outputVar = viewModel.outputVars.find(v => v.datasetKey === viewModel.selectedDatasetKey)
-  if (outputVar) {
-    datasetQuery = outputVar.varName
-  }
-})
-
-// Track whether search list should be shown
-let showDatasetList = $state(false)
+function handleRemoveDataset(id: string) {
+  viewModel.removeDataset(id)
+}
 </script>
 
 <!-- TEMPLATE -->
 <div class="dataset-selector-section">
-  <h3 class="dataset-selector-title">Dataset</h3>
-  <div class="dataset-selector-field">
-    <label for="dataset-search" class="dataset-selector-label">Output Variable</label>
-    <div class="dataset-selector-input-container">
-      <input
-        id="dataset-search"
-        type="text"
-        class="dataset-selector-input"
-        bind:value={datasetQuery}
-        placeholder="Search outputs..."
-        aria-label="Search output variables"
-        onfocus={() => (showDatasetList = true)}
-        onblur={() => setTimeout(() => (showDatasetList = false), 200)}
-        oninput={e => (datasetSearchViewModel.query = (e.target as HTMLInputElement).value)}
-      />
-      {#if showDatasetList && datasetSearchViewModel.filteredItems.length > 0}
-        <div class="dataset-selector-list">
-          {#each datasetSearchViewModel.filteredItems as item}
-            <div
-              class="dataset-selector-item"
-              role="option"
-              tabindex="0"
-              aria-selected={item.id === viewModel.selectedDatasetKey}
-              onmousedown={() => datasetSearchViewModel.onItemSelected?.(item)}
-            >
-              {item.label}
-            </div>
-          {/each}
-        </div>
-      {/if}
-    </div>
+  <div class="dataset-selector-header">
+    <h3 class="dataset-selector-title">Datasets</h3>
+    <Button onClick={handleAddDataset}>Add Dataset</Button>
   </div>
+
+  {#each viewModel.datasets as dataset (dataset.id)}
+    <div class="dataset-selector-item">
+      <div class="dataset-selector-item-header">
+        <span class="dataset-selector-item-label">Dataset</span>
+        {#if viewModel.datasets.length > 1}
+          <button
+            class="dataset-selector-remove-btn"
+            onclick={() => handleRemoveDataset(dataset.id)}
+            aria-label="Remove dataset"
+          >
+            ✕
+          </button>
+        {/if}
+      </div>
+
+      <div class="dataset-selector-field">
+        <label for="output-var-{dataset.id}" class="dataset-selector-label">Output Variable</label>
+        <select
+          id="output-var-{dataset.id}"
+          class="dataset-selector-select"
+          value={dataset.datasetKey}
+          onchange={e => viewModel.updateDataset(dataset.id, { datasetKey: (e.target as HTMLSelectElement).value })}
+          aria-label="Output variable"
+        >
+          {#each viewModel.datasetListItems as item}
+            <option value={item.id}>{item.label}</option>
+          {/each}
+        </select>
+      </div>
+    </div>
+  {/each}
 </div>
 
 <!-- STYLE -->
@@ -74,7 +67,15 @@ let showDatasetList = $state(false)
 .dataset-selector-section {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 1rem;
+}
+
+.dataset-selector-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 0.25rem;
+  border-bottom: 1px solid var(--border-color-normal);
 }
 
 .dataset-selector-title {
@@ -82,8 +83,42 @@ let showDatasetList = $state(false)
   font-size: 1rem;
   font-weight: 700;
   color: var(--text-color-primary);
-  border-bottom: 1px solid var(--border-color-normal);
-  padding-bottom: 0.25rem;
+}
+
+.dataset-selector-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border: 1px solid var(--border-color-normal);
+  border-radius: 4px;
+  background-color: var(--panel-bg);
+}
+
+.dataset-selector-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.dataset-selector-item-label {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--text-color-primary);
+}
+
+.dataset-selector-remove-btn {
+  padding: 0.25rem 0.5rem;
+  background: none;
+  border: 1px solid var(--border-color-normal);
+  border-radius: 4px;
+  color: var(--text-color-primary);
+  cursor: pointer;
+  font-size: 0.9rem;
+
+  &:hover {
+    background-color: var(--button-bg-hover);
+  }
 }
 
 .dataset-selector-field {
@@ -98,7 +133,7 @@ let showDatasetList = $state(false)
   color: var(--text-color-primary);
 }
 
-.dataset-selector-input {
+.dataset-selector-select {
   padding: 0.5rem;
   background-color: var(--input-bg);
   border: 1px solid var(--border-color-normal);
@@ -111,40 +146,6 @@ let showDatasetList = $state(false)
     outline: none;
     border-color: var(--border-color-focused);
     box-shadow: 0 0 0 1px var(--border-color-focused);
-  }
-}
-
-.dataset-selector-input-container {
-  position: relative;
-}
-
-.dataset-selector-list {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
-  max-height: 12rem;
-  overflow-y: auto;
-  background-color: var(--panel-bg);
-  border: 1px solid var(--border-color-normal);
-  border-top: none;
-  border-radius: 0 0 var(--input-border-radius) var(--input-border-radius);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  z-index: 10;
-}
-
-.dataset-selector-item {
-  padding: 0.5rem;
-  cursor: pointer;
-  color: var(--text-color-primary);
-
-  &:hover {
-    background-color: var(--button-bg-hover);
-  }
-
-  &[aria-selected='true'] {
-    background-color: var(--button-bg-primary-normal);
-    color: white;
   }
 }
 </style>
