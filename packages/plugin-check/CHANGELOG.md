@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.3.26](https://github.com/climateinteractive/SDEverywhere/compare/plugin-check-v0.3.25...plugin-check-v0.3.26) (2026-01-13)
+
+
+### Features
+
+* add support for loading model-check bundles from password-protected servers ([#763](https://github.com/climateinteractive/SDEverywhere/issues/763)) ([900bd22](https://github.com/climateinteractive/SDEverywhere/commit/900bd22627f102b92f942538366f0d8509b76965)), closes [#762](https://github.com/climateinteractive/SDEverywhere/issues/762)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/check-ui-shell bumped from ^0.2.16 to ^0.2.17
+
 ## [0.3.25](https://github.com/climateinteractive/SDEverywhere/compare/plugin-check-v0.3.24...plugin-check-v0.3.25) (2026-01-10)
 
 

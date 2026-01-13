@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.17](https://github.com/climateinteractive/SDEverywhere/compare/check-ui-shell-v0.2.16...check-ui-shell-v0.2.17) (2026-01-13)
+
+
+### Features
+
+* add support for loading model-check bundles from password-protected servers ([#763](https://github.com/climateinteractive/SDEverywhere/issues/763)) ([900bd22](https://github.com/climateinteractive/SDEverywhere/commit/900bd22627f102b92f942538366f0d8509b76965)), closes [#762](https://github.com/climateinteractive/SDEverywhere/issues/762)
+
 ## [0.2.16](https://github.com/climateinteractive/SDEverywhere/compare/check-ui-shell-v0.2.15...check-ui-shell-v0.2.16) (2026-01-08)
 
 
