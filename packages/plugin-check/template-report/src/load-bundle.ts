@@ -14,25 +14,9 @@ export interface BundleResult {
 }
 
 /**
- * Load a remote bundle from a given URL.
+ * Load a bundle (local or remote) via the Vite dev server (only available in development mode with HMR).
  */
-export async function loadRemoteBundle(bundleMetadata: BundleMetadata): Promise<BundleResult> {
-  // Add cache busting parameter
-  const cacheBuster = `?cb=${Date.now()}`
-  const fullUrl = `${bundleMetadata.url}${cacheBuster}`
-  const module = await import(/* @vite-ignore */ fullUrl)
-  const bundle = module.createBundle() as Bundle
-  return {
-    bundle,
-    bundleName: bundleMetadata.name,
-    bundleUrl: bundleMetadata.url
-  }
-}
-
-/**
- * Load a local bundle from the file system using dynamic import (only available in development mode with HMR).
- */
-export async function loadLocalBundle(bundleMetadata: BundleMetadata): Promise<BundleResult | undefined> {
+export async function loadBundle(bundleMetadata: BundleMetadata): Promise<BundleResult | undefined> {
   // Only available in development mode with HMR
   if (!import.meta.hot) {
     return undefined

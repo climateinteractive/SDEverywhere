@@ -213,7 +213,7 @@ export function createViteConfigForReport(
 
       // When local development mode is active, enable the local bundles plugin that
       // allows the report app to access the local bundles directory
-      ...(mode === 'watch' ? [localBundlesPlugin(bundlesDir, currentBundleSpec.path)] : [])
+      ...(mode === 'watch' ? [localBundlesPlugin(bundlesDir, currentBundleSpec.path, options?.fetchRemoteBundle)] : [])
     ],
 
     build: {
