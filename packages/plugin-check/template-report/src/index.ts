@@ -7,7 +7,7 @@ import { initAppShell } from '@sdeverywhere/check-ui-shell'
 import '@sdeverywhere/check-ui-shell/dist/style.css'
 
 import type { BundleMetadata, BundleResult } from './load-bundle'
-import { loadLocalBundle, loadRemoteBundle } from './load-bundle'
+import { loadBundle } from './load-bundle'
 import { initOverlay } from './overlay'
 
 import './global.css'
@@ -98,32 +98,19 @@ async function initForLocal(): Promise<void> {
       }
     }
 
-    if (bundleMetadata.url.startsWith('http')) {
-      // Load remote bundles using dynamic import
+    if (bundleMetadata.url.startsWith('http') || bundleMetadata.url.startsWith('file://')) {
+      // Load bundles (both local and remote) via the Vite dev server
       try {
-        console.log(`Loading remote bundle for ${side} side: name=${bundleMetadata.name} url=${bundleMetadata.url}`)
-        return loadRemoteBundle(bundleMetadata)
-      } catch (e) {
-        console.error(
-          `ERROR: Failed to load remote bundle from ${bundleMetadata.url}; will use "current" bundle instead. Cause:`,
-          e
-        )
-      }
-    } else if (bundleMetadata.url.startsWith('file://')) {
-      // Load local bundles using `import.meta.glob`
-      try {
-        console.log(`Loading local bundle for ${side} side: name=${bundleMetadata.name} url=${bundleMetadata.url}`)
-        const result = await loadLocalBundle(bundleMetadata)
+        console.log(`Loading bundle for ${side} side: name=${bundleMetadata.name} url=${bundleMetadata.url}`)
+        const result = await loadBundle(bundleMetadata)
         if (result) {
           return result
         } else {
-          console.error(
-            `ERROR: Bundle key not found in glob for ${bundleMetadata.name}; will use "current" bundle instead`
-          )
+          console.error(`ERROR: Failed to load bundle ${bundleMetadata.name}; will use "current" bundle instead`)
         }
       } catch (e) {
         console.error(
-          `ERROR: Failed to load local bundle from ${bundleMetadata.url}; will use "current" bundle instead. Cause:`,
+          `ERROR: Failed to load bundle from ${bundleMetadata.url}; will use "current" bundle instead. Cause:`,
           e
         )
       }

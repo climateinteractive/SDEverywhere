@@ -42,7 +42,20 @@ export async function config() {
       checkPlugin({
         baseline,
         remoteBundlesUrl: 'http://localhost:9000/remote-bundles.json',
-        serverPort: 9001
+        serverPort: 9001,
+        fetchRemoteBundle: async url => {
+          // Custom function that adds a custom header to verify it's being used
+          console.log(`[custom fetchRemoteBundle] Fetching bundle from: ${url}`)
+          const response = await fetch(url, {
+            headers: {
+              'X-Custom-Loader': 'integration-test'
+            }
+          })
+          if (!response.ok) {
+            throw new Error(`Failed to fetch bundle: ${response.status} ${response.statusText}`)
+          }
+          return response.text()
+        }
       })
     ]
   }

@@ -187,10 +187,14 @@ class CheckPlugin implements Plugin {
   private async resolveTestOptions(mode: 'bundle' | 'watch', config: ResolvedConfig): Promise<TestOptions> {
     // Helper function that resolves the bundle, downloading it to the local `bundles` directory
     // first if necessary.
+    const fetchRemoteBundle = this.options?.fetchRemoteBundle
     async function resolveBundle(bundle: CheckBundle | undefined): Promise<LocalBundleSpec> {
       // Note that Node.js currently only supports importing bundles from a local file.
       // If `bundle` points to a remote bundle, we need to first download it to the
       // local bundles directory.
+      // TODO: We don't technically need to download the bundle to disk.  We could instead
+      // fetch the bundle from the remote URL and then dynamically import it as a blob,
+      // similar to how we load bundles via the Vite dev server in local development mode.
       if (bundle?.url !== undefined) {
         // The bundle is remote, so download it to the local `bundles` directory
         const localBundlePath = await downloadBundle(
@@ -199,7 +203,8 @@ class CheckPlugin implements Plugin {
           // TODO: We don't know the last modified time of the remote bundle here, so we use
           // undefined (which means the local file will be created with the current timestamp)
           undefined,
-          joinPath(config.rootDir, 'bundles')
+          joinPath(config.rootDir, 'bundles'),
+          fetchRemoteBundle
         )
         return {
           name: bundle.name,

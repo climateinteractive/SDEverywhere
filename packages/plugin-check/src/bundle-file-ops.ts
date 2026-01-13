@@ -10,21 +10,32 @@ import { dirname, join as joinPath } from 'node:path'
  * @param name The bundle name (may contain slashes for subdirectories).
  * @param lastModified The last modified timestamp from the remote bundle.
  * @param bundlesDir The bundles directory path.
+ * @param fetchRemoteBundle Optional custom function for fetching remote bundle files.
  * @returns The file path where the bundle was saved.
  */
 export async function downloadBundle(
   url: string,
   name: string,
   lastModified: string | undefined,
-  bundlesDir: string
+  bundlesDir: string,
+  fetchRemoteBundle?: (url: string) => Promise<string>
 ): Promise<string> {
-  // Fetch the bundle from the remote URL
-  const response = await fetch(url)
-  if (!response.ok) {
-    throw new Error(`HTTP ${response.status}: ${response.statusText}`)
-  }
+  // Add cache busting parameter to avoid issues with servers that aggressively cache files
+  const fullUrl = `${url}?cb=${Date.now()}`
 
-  const bundleContent = await response.text()
+  // Fetch the bundle source code from the remote URL
+  let bundleContent: string
+  if (fetchRemoteBundle) {
+    // Use the custom loader function
+    bundleContent = await fetchRemoteBundle(fullUrl)
+  } else {
+    // Use the default fetch implementation
+    const response = await fetch(fullUrl)
+    if (!response.ok) {
+      throw new Error(`Failed to fetch bundle: HTTP ${response.status} ${response.statusText}`)
+    }
+    bundleContent = await response.text()
+  }
 
   // Preserve slashes in the bundle name (create subdirectories as needed)
   const nameParts = name.split('/')
