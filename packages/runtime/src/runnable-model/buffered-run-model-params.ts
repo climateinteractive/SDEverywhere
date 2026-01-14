@@ -458,14 +458,14 @@ export class BufferedRunModelParams implements RunModelParams {
     const outputsLengthInElements = headerView[headerIndex++]
     const outputIndicesOffsetInBytes = headerView[headerIndex++]
     const outputIndicesLengthInElements = headerView[headerIndex++]
-    const lookupsOffsetInBytes = headerView[headerIndex++]
-    const lookupsLengthInElements = headerView[headerIndex++]
-    const lookupIndicesOffsetInBytes = headerView[headerIndex++]
-    const lookupIndicesLengthInElements = headerView[headerIndex++]
     const constantsOffsetInBytes = headerView[headerIndex++]
     const constantsLengthInElements = headerView[headerIndex++]
     const constantIndicesOffsetInBytes = headerView[headerIndex++]
     const constantIndicesLengthInElements = headerView[headerIndex++]
+    const lookupsOffsetInBytes = headerView[headerIndex++]
+    const lookupsLengthInElements = headerView[headerIndex++]
+    const lookupIndicesOffsetInBytes = headerView[headerIndex++]
+    const lookupIndicesLengthInElements = headerView[headerIndex++]
 
     // Verify that the buffer is long enough to contain all sections
     const extrasLengthInBytes = extrasLengthInElements * Float64Array.BYTES_PER_ELEMENT
@@ -495,9 +495,9 @@ export class BufferedRunModelParams implements RunModelParams {
     this.inputs.update(this.encoded, inputsOffsetInBytes, inputsLengthInElements)
     this.outputs.update(this.encoded, outputsOffsetInBytes, outputsLengthInElements)
     this.outputIndices.update(this.encoded, outputIndicesOffsetInBytes, outputIndicesLengthInElements)
-    this.lookups.update(this.encoded, lookupsOffsetInBytes, lookupsLengthInElements)
-    this.lookupIndices.update(this.encoded, lookupIndicesOffsetInBytes, lookupIndicesLengthInElements)
     this.constants.update(this.encoded, constantsOffsetInBytes, constantsLengthInElements)
     this.constantIndices.update(this.encoded, constantIndicesOffsetInBytes, constantIndicesLengthInElements)
+    this.lookups.update(this.encoded, lookupsOffsetInBytes, lookupsLengthInElements)
+    this.lookupIndices.update(this.encoded, lookupIndicesOffsetInBytes, lookupIndicesLengthInElements)
   }
 }
