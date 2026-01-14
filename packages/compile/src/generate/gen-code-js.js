@@ -333,12 +333,12 @@ ${customOutputSection(Model.varIndexInfo(), spec.customOutputs)}
     return `\
 /*export*/ function setInputs(valueAtIndex /*: (index: number) => number*/) {${inputsFromBufferImpl()}}
 
-/*export*/ function setLookup(varSpec /*: VarSpec*/, points /*: Float64Array | undefined*/) {
-${setLookupBody}
-}
-
 /*export*/ function setConstant(varSpec /*: VarSpec*/, value /*: number*/) {
 ${setConstantBody}
+}
+
+/*export*/ function setLookup(varSpec /*: VarSpec*/, points /*: Float64Array | undefined*/) {
+${setLookupBody}
 }
 
 /*export*/ const outputVarIds = [
@@ -663,8 +663,8 @@ export default async function () {
 
     setTime,
     setInputs,
-    setLookup,
     setConstant,
+    setLookup,
 
     storeOutputs,
     storeOutput,

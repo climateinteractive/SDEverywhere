@@ -20,8 +20,8 @@ export class ReferencedRunModelParams implements RunModelParams {
   private outputs: Outputs
   private outputsLengthInElements = 0
   private outputIndicesLengthInElements = 0
-  private lookups: LookupDef[]
   private constants: ConstantDef[]
+  private lookups: LookupDef[]
 
   /**
    * @param listing The model listing that is used to locate a variable that is referenced by
@@ -113,18 +113,18 @@ export class ReferencedRunModelParams implements RunModelParams {
   }
 
   // from RunModelParams interface
-  getLookups(): LookupDef[] | undefined {
-    if (this.lookups !== undefined && this.lookups.length > 0) {
-      return this.lookups
+  getConstants(): ConstantDef[] | undefined {
+    if (this.constants !== undefined && this.constants.length > 0) {
+      return this.constants
     } else {
       return undefined
     }
   }
 
   // from RunModelParams interface
-  getConstants(): ConstantDef[] | undefined {
-    if (this.constants !== undefined && this.constants.length > 0) {
-      return this.constants
+  getLookups(): LookupDef[] | undefined {
+    if (this.lookups !== undefined && this.lookups.length > 0) {
+      return this.lookups
     } else {
       return undefined
     }
@@ -156,22 +156,22 @@ export class ReferencedRunModelParams implements RunModelParams {
     this.inputs = inputs
     this.outputs = outputs
     this.outputsLengthInElements = outputs.varIds.length * outputs.seriesLength
-    this.lookups = options?.lookups
     this.constants = options?.constants
-
-    if (this.lookups) {
-      // Resolve the `varSpec` for each `LookupDef`.  If the variable can be resolved, this
-      // will fill in the `varSpec` for the `LookupDef`, otherwise it will throw an error.
-      for (const lookupDef of this.lookups) {
-        resolveVarRef(this.listing, lookupDef.varRef, 'lookup')
-      }
-    }
+    this.lookups = options?.lookups
 
     if (this.constants) {
       // Resolve the `varSpec` for each `ConstantDef`.  If the variable can be resolved, this
       // will fill in the `varSpec` for the `ConstantDef`, otherwise it will throw an error.
       for (const constantDef of this.constants) {
         resolveVarRef(this.listing, constantDef.varRef, 'constant')
+      }
+    }
+
+    if (this.lookups) {
+      // Resolve the `varSpec` for each `LookupDef`.  If the variable can be resolved, this
+      // will fill in the `varSpec` for the `LookupDef`, otherwise it will throw an error.
+      for (const lookupDef of this.lookups) {
+        resolveVarRef(this.listing, lookupDef.varRef, 'lookup')
       }
     }
 

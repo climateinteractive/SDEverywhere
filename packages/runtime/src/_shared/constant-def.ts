@@ -3,7 +3,8 @@
 import type { VarRef } from './types'
 
 /**
- * Specifies the constant value that will be used to override a constant variable.
+ * Specifies the constant value that will be used to override a constant in a
+ * generated model.
  */
 export interface ConstantDef {
   /** The reference that identifies the constant variable to be modified. */

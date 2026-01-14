@@ -75,16 +75,16 @@ export interface RunModelParams {
   storeOutputs(array: Float64Array): void
 
   /**
-   * Return an array containing lookup overrides, or undefined if no lookups were passed to
-   * the latest `runModel` call.
-   */
-  getLookups(): LookupDef[] | undefined
-
-  /**
    * Return an array containing constant overrides, or undefined if no constants were passed
    * to the latest `runModel` call.
    */
   getConstants(): ConstantDef[] | undefined
+
+  /**
+   * Return an array containing lookup overrides, or undefined if no lookups were passed to
+   * the latest `runModel` call.
+   */
+  getLookups(): LookupDef[] | undefined
 
   /**
    * Return the elapsed time (in milliseconds) of the model run.

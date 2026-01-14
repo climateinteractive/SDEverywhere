@@ -81,39 +81,6 @@ char* run_model(const char* inputs) {
 }
 
 /**
- * Set constant overrides from the given buffers.
- *
- * The `constantIndices` buffer contains the variable indices and subscript indices
- * for each constant to override. The format is:
- *   [count, varIndex1, subCount1, subIndex1_1, ..., varIndex2, subCount2, ...]
- *
- * The `constantValues` buffer contains the corresponding values for each constant.
- */
-void setConstantsFromBuffer(int32_t* constantIndices, double* constantValues) {
-  if (constantIndices == NULL || constantValues == NULL) {
-    return;
-  }
-
-  size_t indexBufferOffset = 0;
-  size_t valueBufferOffset = 0;
-  size_t constantCount = (size_t)constantIndices[indexBufferOffset++];
-
-  for (size_t i = 0; i < constantCount; i++) {
-    size_t varIndex = (size_t)constantIndices[indexBufferOffset++];
-    size_t subCount = (size_t)constantIndices[indexBufferOffset++];
-    size_t* subIndices;
-    if (subCount > 0) {
-      subIndices = (size_t*)(constantIndices + indexBufferOffset);
-      indexBufferOffset += subCount;
-    } else {
-      subIndices = NULL;
-    }
-    double value = constantValues[valueBufferOffset++];
-    setConstant(varIndex, subIndices, value);
-  }
-}
-
-/**
  * Run the model, reading inputs from the given `inputs` buffer, and writing outputs
  * to the given `outputs` buffer.
  *
@@ -141,13 +108,46 @@ void runModelWithBuffers(double* inputs, double* outputs, int32_t* outputIndices
   outputIndexBuffer = outputIndices;
   initConstants();
   if (constantIndices != NULL && constantValues != NULL) {
-    setConstantsFromBuffer(constantIndices, constantValues);
+    setConstantsFromBuffers(constantIndices, constantValues);
   }
   setInputsFromBuffer(inputs);
   initLevels();
   run();
   outputBuffer = NULL;
   outputIndexBuffer = NULL;
+}
+
+/**
+ * Set constant overrides from the given buffers.
+ *
+ * The `constantIndices` buffer contains the variable indices and subscript indices
+ * for each constant to override. The format is:
+ *   [count, varIndex1, subCount1, subIndex1_1, ..., varIndex2, subCount2, ...]
+ *
+ * The `constantValues` buffer contains the corresponding values for each constant.
+ */
+void setConstantsFromBuffers(int32_t* constantIndices, double* constantValues) {
+  if (constantIndices == NULL || constantValues == NULL) {
+    return;
+  }
+
+  size_t indexBufferOffset = 0;
+  size_t valueBufferOffset = 0;
+  size_t constantCount = (size_t)constantIndices[indexBufferOffset++];
+
+  for (size_t i = 0; i < constantCount; i++) {
+    size_t varIndex = (size_t)constantIndices[indexBufferOffset++];
+    size_t subCount = (size_t)constantIndices[indexBufferOffset++];
+    size_t* subIndices;
+    if (subCount > 0) {
+      subIndices = (size_t*)(constantIndices + indexBufferOffset);
+      indexBufferOffset += subCount;
+    } else {
+      subIndices = NULL;
+    }
+    double value = constantValues[valueBufferOffset++];
+    setConstant(varIndex, subIndices, value);
+  }
 }
 
 void run() {

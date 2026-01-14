@@ -7,6 +7,18 @@ import type { ConstantDef, LookupDef } from '../_shared'
  */
 export interface RunModelOptions {
   /**
+   * If defined, override the values for the specified constant variables.
+   *
+   * Note that constant overrides do not persist after the `runModel` call.  Because
+   * `initConstants` is called at the beginning of each `runModel` call, all constants
+   * are reset to their default values before each model run.  If you want to override
+   * constants, you must provide them in the options for each `runModel` call.  To
+   * reset constants to their original values, simply stop passing them in the options
+   * (or pass an empty array).
+   */
+  constants?: ConstantDef[]
+
+  /**
    * If defined, override the data for the specified lookups and/or data variables.
    *
    * If data was already defined in the generated model, the data provided in a
@@ -19,16 +31,4 @@ export interface RunModelOptions {
    * is not changing, you do not need to supply it with every `runModel` call.
    */
   lookups?: LookupDef[]
-
-  /**
-   * If defined, override the values for the specified constant variables.
-   *
-   * Note that UNLIKE lookups (which persist across calls), constant overrides do
-   * NOT persist after the `runModel` call.  Because `initConstants` is called at
-   * the beginning of each `runModel` call, all constants are reset to their default
-   * values.  If you want to override constants, you must provide them in the options
-   * for each `runModel` call.  To reset constants to their original values, simply
-   * stop passing them in the options (or pass an empty array).
-   */
-  constants?: ConstantDef[]
 }

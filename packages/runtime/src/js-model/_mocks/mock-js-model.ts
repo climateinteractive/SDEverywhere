@@ -110,6 +110,15 @@ export class MockJsModel implements JsModel {
   }
 
   // from JsModel interface
+  setConstant(varSpec: VarSpec, value: number): void {
+    const varId = this.varIdForSpec(varSpec)
+    if (varId === undefined) {
+      throw new Error(`No constant variable found for spec ${varSpec}`)
+    }
+    this.vars.set(varId, value)
+  }
+
+  // from JsModel interface
   setLookup(varSpec: VarSpec, points: Float64Array | undefined): void {
     const varId = this.varIdForSpec(varSpec)
     if (varId === undefined) {
@@ -117,15 +126,6 @@ export class MockJsModel implements JsModel {
     }
     const numPoints = points ? points.length / 2 : 0
     this.lookups.set(varId, new JsModelLookup(numPoints, points))
-  }
-
-  // from JsModel interface
-  setConstant(varSpec: VarSpec, value: number): void {
-    const varId = this.varIdForSpec(varSpec)
-    if (varId === undefined) {
-      throw new Error(`No constant variable found for spec ${varSpec}`)
-    }
-    this.vars.set(varId, value)
   }
 
   // from JsModel interface

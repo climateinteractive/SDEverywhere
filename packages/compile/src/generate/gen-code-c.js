@@ -226,12 +226,12 @@ void setInputsFromBuffer(double* inputData) {
 ${inputsFromBufferImpl()}
 }
 
-void setLookup(size_t varIndex, size_t* subIndices, double* points, size_t numPoints) {
-${setLookupBody}
-}
-
 void setConstant(size_t varIndex, size_t* subIndices, double value) {
 ${setConstantBody}
+}
+
+void setLookup(size_t varIndex, size_t* subIndices, double* points, size_t numPoints) {
+${setLookupBody}
 }
 
 const char* getHeader() {

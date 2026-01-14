@@ -55,7 +55,6 @@ double getInitialTime(void);
 double getFinalTime(void);
 double getSaveper(void);
 char* run_model(const char* inputs);
-void setConstantsFromBuffer(int32_t* constantIndices, double* constantValues);
 void runModelWithBuffers(double* inputs, double* outputs, int32_t* outputIndices, int32_t* constantIndices, double* constantValues);
 void run(void);
 void startOutput(void);
