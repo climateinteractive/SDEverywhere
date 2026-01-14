@@ -49,6 +49,7 @@ export function createConstantDef(varRef: VarRef, value: number): ConstantDef {
 ```
 
 **Update**: `packages/runtime/src/_shared/index.ts` - add export:
+
 ```typescript
 export * from './constant-def'
 ```
@@ -58,6 +59,7 @@ export * from './constant-def'
 **File**: `packages/runtime/src/runnable-model/run-model-options.ts`
 
 Add `constants` field:
+
 ```typescript
 import type { ConstantDef, LookupDef } from '../_shared'
 
@@ -83,6 +85,7 @@ export interface RunModelOptions {
 **File**: `packages/build/src/_shared/model-spec.ts`
 
 Add to `ModelSpec` interface (after `customLookups`):
+
 ```typescript
 /**
  * Whether to allow constants to be overridden at runtime using `setConstant`.
@@ -100,6 +103,7 @@ customConstants?: boolean | VarName[]
 ```
 
 Add to `ResolvedModelSpec` interface:
+
 ```typescript
 /**
  * Whether to allow constants to be overridden at runtime using `setConstant`.
@@ -112,6 +116,7 @@ customConstants: boolean | VarName[]
 **File**: `packages/compile/src/generate/gen-code-js.js`
 
 Add `setConstantImpl` function (after `setLookupImpl`, around line 560):
+
 ```javascript
 function setConstantImpl(varIndexInfo, customConstants) {
   // Emit case statements for all const variables that can be overridden at runtime
@@ -145,6 +150,7 @@ function setConstantImpl(varIndexInfo, customConstants) {
 ```
 
 Add `setConstant` function generation in `emitIOCode()` (after `setLookup`, around line 750):
+
 ```javascript
 // Generate the setConstant function
 let setConstantBody
@@ -178,6 +184,7 @@ ${setConstantBody}
 **File**: `packages/compile/src/generate/gen-code-c.js`
 
 Add `setConstantImpl` function (similar pattern as JS):
+
 ```javascript
 function setConstantImpl(varIndexInfo, customConstants) {
   let overrideAllowed
@@ -209,6 +216,7 @@ function setConstantImpl(varIndexInfo, customConstants) {
 ```
 
 Add `setConstant` function generation in `emitIOCode()`:
+
 ```c
 void setConstant(size_t varIndex, size_t* subIndices, double value) {
   switch (varIndex) {
@@ -224,23 +232,26 @@ void setConstant(size_t varIndex, size_t* subIndices, double value) {
 **File**: `packages/runtime/src/js-model/js-model.ts`
 
 Add to `JsModel` interface (around line 53):
+
 ```typescript
 /** @hidden */
 setConstant(varSpec: VarSpec, value: number): void
 ```
 
 Update `runJsModel` function signature (around line 121):
+
 ```typescript
 function runJsModel(
   model: JsModel,
   // ... other params ...
   lookups: LookupDef[] | undefined,
-  constants: ConstantDef[] | undefined,  // NEW
+  constants: ConstantDef[] | undefined, // NEW
   stopAfterTime: number | undefined
 ): void
 ```
 
 Add constant override logic after lookup overrides (after line 150):
+
 ```typescript
 // Apply constant overrides, if provided
 if (constants !== undefined) {
@@ -251,13 +262,14 @@ if (constants !== undefined) {
 ```
 
 Update call in `initJsModel` (around line 111):
+
 ```typescript
 onRunModel: (inputs, outputs, options) => {
   runJsModel(
     model,
     // ... other params ...
     options?.lookups,
-    options?.constants,  // NEW
+    options?.constants, // NEW
     undefined
   )
 }
@@ -268,6 +280,7 @@ onRunModel: (inputs, outputs, options) => {
 **File**: `packages/runtime/src/wasm-model/wasm-model.ts`
 
 Add native function wrapper (around line 67):
+
 ```typescript
 private readonly wasmSetConstant: (
   varIndex: number,
@@ -277,11 +290,13 @@ private readonly wasmSetConstant: (
 ```
 
 Initialize in constructor:
+
 ```typescript
 this.wasmSetConstant = wasmModule.cwrap('setConstant', null, ['number', 'number', 'number'])
 ```
 
 Add constant override logic in `runModel` after lookup overrides (around line 130):
+
 ```typescript
 // Apply constant overrides, if provided
 const constants = params.getConstants()
@@ -293,8 +308,7 @@ if (constants !== undefined) {
 
     if (numSubElements > 0) {
       // Reuse the lookup sub indices buffer
-      if (this.lookupSubIndicesBuffer === undefined ||
-          this.lookupSubIndicesBuffer.numElements < numSubElements) {
+      if (this.lookupSubIndicesBuffer === undefined || this.lookupSubIndicesBuffer.numElements < numSubElements) {
         this.lookupSubIndicesBuffer?.dispose()
         this.lookupSubIndicesBuffer = createInt32WasmBuffer(this.wasmModule, numSubElements)
       }
@@ -314,6 +328,7 @@ if (constants !== undefined) {
 **File**: `packages/runtime/src/runnable-model/run-model-params.ts`
 
 Add method:
+
 ```typescript
 /**
  * Return an array containing constant overrides, or undefined if no constants
@@ -352,6 +367,7 @@ Add three new functions for encoding/decoding constants (similar to lookup encod
 **File**: `packages/runtime/src/runnable-model/buffered-run-model-params.ts`
 
 1. Add two new buffer sections:
+
    ```typescript
    /** The constant values section of the `encoded` buffer. */
    private readonly constants = new Float64Section()
@@ -361,8 +377,9 @@ Add three new functions for encoding/decoding constants (similar to lookup encod
    ```
 
 2. Update header length constant (line 16):
+
    ```typescript
-   const headerLengthInElements = 20  // Was 16, add 4 for constants sections
+   const headerLengthInElements = 20 // Was 16, add 4 for constants sections
    ```
 
 3. In `updateFromParams()`:
@@ -384,6 +401,7 @@ Add three new functions for encoding/decoding constants (similar to lookup encod
 **File**: `packages/runtime/src/runnable-model/base-runnable-model.ts`
 
 Update `OnRunModelFunc` type (line 12):
+
 ```typescript
 export type OnRunModelFunc = (
   inputs: Float64Array | undefined,
@@ -391,17 +409,18 @@ export type OnRunModelFunc = (
   options?: {
     outputIndices?: Int32Array
     lookups?: LookupDef[]
-    constants?: ConstantDef[]  // NEW
+    constants?: ConstantDef[] // NEW
   }
 ) => void
 ```
 
 Update `runModel` call (line 98):
+
 ```typescript
 this.onRunModel?.(inputsArray, outputsArray, {
   outputIndices: outputIndicesArray,
   lookups: params.getLookups(),
-  constants: params.getConstants()  // NEW
+  constants: params.getConstants() // NEW
 })
 ```
 
@@ -430,6 +449,7 @@ Add test cases for `setConstant` generation similar to existing `setLookup` test
 ## Files Summary
 
 ### New Files (5):
+
 1. `packages/runtime/src/_shared/constant-def.ts`
 2. `tests/integration/override-constants/override-constants.mdl`
 3. `tests/integration/override-constants/sde.config.js`
@@ -437,6 +457,7 @@ Add test cases for `setConstant` generation similar to existing `setLookup` test
 5. `tests/integration/override-constants/package.json`
 
 ### Modified Files (12):
+
 1. `packages/runtime/src/_shared/index.ts` - export ConstantDef
 2. `packages/runtime/src/_shared/var-indices.ts` - add constant encoding/decoding functions
 3. `packages/runtime/src/runnable-model/run-model-options.ts` - add constants field
@@ -455,11 +476,13 @@ Add test cases for `setConstant` generation similar to existing `setLookup` test
 This implementation has some similarities and differences compared to override lookups:
 
 ### Similarities:
+
 1. **Encoding/decoding for async support** - both need buffer encoding for worker threads
 2. **VarRef resolution** - both use the same varRef pattern for identifying variables
 3. **Subscript handling** - both support subscripted variables (1D, 2D arrays)
 
 ### Differences (Constants are simpler):
+
 1. **Scalar values** - just `number`, not `Float64Array` of points
 2. **No persistence** - constants reset on every run, no state to manage
 3. **Simpler C signature** - `(varIndex, subIndices, value)` vs `(varIndex, subIndices, points, numPoints)`
