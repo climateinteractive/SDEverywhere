@@ -72,6 +72,23 @@ if it is needed.
 
 ___
 
+### customConstants
+
+ **customConstants**: `boolean` \| `string`[]
+
+Whether to allow constants to be overridden at runtime using `setConstant`.
+
+If false, the generated model will contain a `setConstant` function that
+throws an error, meaning that constants cannot be overridden at runtime.
+
+If true, all constants in the generated model will be available to be
+overridden.
+
+If an array is provided, only those variable names in the array will
+be available to be overridden.
+
+___
+
 ### customLookups
 
  **customLookups**: `boolean` \| `string`[]
