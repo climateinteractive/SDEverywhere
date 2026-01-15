@@ -10,7 +10,11 @@ import { JsModelLookup } from '../js-model-lookup'
  * @hidden This type is not part of the public API; it is exposed only for use in
  * tests in the runtime-async package.
  */
-export type OnEvalAux = (vars: Map<VarId, number>, lookups: Map<VarId, JsModelLookup>) => void
+export type OnEvalAux = (
+  vars: Map<VarId, number>,
+  constants: Map<VarId, number> | undefined,
+  lookups: Map<VarId, JsModelLookup>
+) => void
 
 /**
  * @hidden This type is not part of the public API; it is exposed only for use in
@@ -35,6 +39,7 @@ export class MockJsModel implements JsModel {
   private readonly finalTime: number
 
   private readonly vars: Map<VarId, number> = new Map()
+  private readonly constants: Map<VarId, number> = new Map()
   private readonly lookups: Map<VarId, JsModelLookup> = new Map()
   private fns: JsModelFunctions
 
@@ -115,7 +120,7 @@ export class MockJsModel implements JsModel {
     if (varId === undefined) {
       throw new Error(`No constant variable found for spec ${varSpec}`)
     }
-    this.vars.set(varId, value)
+    this.constants.set(varId, value)
   }
 
   // from JsModel interface
@@ -145,14 +150,17 @@ export class MockJsModel implements JsModel {
   }
 
   // from JsModel interface
-  initConstants(): void {}
+  initConstants(): void {
+    // Clear all constant overrides (they don't persist across runs)
+    this.constants.clear()
+  }
 
   // from JsModel interface
   initLevels(): void {}
 
   // from JsModel interface
   evalAux(): void {
-    this.onEvalAux?.(this.vars, this.lookups)
+    this.onEvalAux?.(this.vars, this.constants.size > 0 ? this.constants : undefined, this.lookups)
   }
 
   // from JsModel interface
