@@ -151,10 +151,7 @@ class WasmModel implements RunnableModel {
       }
 
       // Allocate the constantIndices buffer
-      if (
-        this.constantIndicesBuffer === undefined ||
-        this.constantIndicesBuffer.numElements < totalIndicesSize
-      ) {
+      if (this.constantIndicesBuffer === undefined || this.constantIndicesBuffer.numElements < totalIndicesSize) {
         this.constantIndicesBuffer?.dispose()
         this.constantIndicesBuffer = createInt32WasmBuffer(this.wasmModule, totalIndicesSize)
       }

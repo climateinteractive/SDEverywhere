@@ -237,10 +237,7 @@ describe.each([
 
     // Run again, this time with constant overrides
     outputs = await runner.runModel(inputs, outputs, {
-      constants: [
-        createConstantDef({ varId: '_constant_1' }, 100),
-        createConstantDef({ varId: '_constant_2' }, 400)
-      ]
+      constants: [createConstantDef({ varId: '_constant_1' }, 100), createConstantDef({ varId: '_constant_2' }, 400)]
     })
 
     // Verify that outputs contain the values using the overridden constants
