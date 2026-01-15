@@ -67,6 +67,39 @@ double getSaveper() {
   return _saveper;
 }
 
+/**
+ * Set constant overrides from the given buffers.
+ *
+ * The `constantIndices` buffer contains the variable indices and subscript indices
+ * for each constant to override. The format is:
+ *   [count, varIndex1, subCount1, subIndex1_1, ..., varIndex2, subCount2, ...]
+ *
+ * The `constantValues` buffer contains the corresponding values for each constant.
+ */
+void setConstantsFromBuffers(int32_t* constantIndices, double* constantValues) {
+  if (constantIndices == NULL || constantValues == NULL) {
+    return;
+  }
+
+  size_t indexBufferOffset = 0;
+  size_t valueBufferOffset = 0;
+  size_t constantCount = (size_t)constantIndices[indexBufferOffset++];
+
+  for (size_t i = 0; i < constantCount; i++) {
+    size_t varIndex = (size_t)constantIndices[indexBufferOffset++];
+    size_t subCount = (size_t)constantIndices[indexBufferOffset++];
+    size_t* subIndices;
+    if (subCount > 0) {
+      subIndices = (size_t*)(constantIndices + indexBufferOffset);
+      indexBufferOffset += subCount;
+    } else {
+      subIndices = NULL;
+    }
+    double value = constantValues[valueBufferOffset++];
+    setConstant(varIndex, subIndices, value);
+  }
+}
+
 char* run_model(const char* inputs) {
   // run_model does everything necessary to run the model with the given inputs.
   // It may be called multiple times. Call finish() after all runs are complete.
@@ -115,39 +148,6 @@ void runModelWithBuffers(double* inputs, double* outputs, int32_t* outputIndices
   run();
   outputBuffer = NULL;
   outputIndexBuffer = NULL;
-}
-
-/**
- * Set constant overrides from the given buffers.
- *
- * The `constantIndices` buffer contains the variable indices and subscript indices
- * for each constant to override. The format is:
- *   [count, varIndex1, subCount1, subIndex1_1, ..., varIndex2, subCount2, ...]
- *
- * The `constantValues` buffer contains the corresponding values for each constant.
- */
-void setConstantsFromBuffers(int32_t* constantIndices, double* constantValues) {
-  if (constantIndices == NULL || constantValues == NULL) {
-    return;
-  }
-
-  size_t indexBufferOffset = 0;
-  size_t valueBufferOffset = 0;
-  size_t constantCount = (size_t)constantIndices[indexBufferOffset++];
-
-  for (size_t i = 0; i < constantCount; i++) {
-    size_t varIndex = (size_t)constantIndices[indexBufferOffset++];
-    size_t subCount = (size_t)constantIndices[indexBufferOffset++];
-    size_t* subIndices;
-    if (subCount > 0) {
-      subIndices = (size_t*)(constantIndices + indexBufferOffset);
-      indexBufferOffset += subCount;
-    } else {
-      subIndices = NULL;
-    }
-    double value = constantValues[valueBufferOffset++];
-    setConstant(varIndex, subIndices, value);
-  }
 }
 
 void run() {
