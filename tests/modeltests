@@ -27,11 +27,32 @@ SDE_MAIN="$PROJ_DIR/packages/cli/src/main.js"
 function test {
   MODEL=$1
   ARGS_MSG=$2
-  echo "Testing the $MODEL model $ARGS_MSG"
   MODEL_DIR=$MODELS_DIR/$MODEL
+
+  if [[ $INPUT_FORMAT == "stmx" ]]; then
+    if [[ ! -f $MODEL_DIR/${MODEL}.stmx || ! -f $MODEL_DIR/${MODEL}.csv ]]; then
+      echo "Skipping test for $MODEL (no stmx or csv file found)"
+      echo
+      return
+    fi
+  fi
+
+  echo "Testing the $MODEL model $ARGS_MSG"
 
   # Clean up before
   node "$SDE_MAIN" clean --modeldir "$MODEL_DIR"
+
+  # If INPUT_FORMAT is stmx/xmile, convert the CSV file containing expected data from the
+  # modeling tool to DAT format for comparison with SDE output.  This is a workaround for
+  # the fact that the `sde compare` and `sde test` commands do not yet support CSV input.
+  if [[ $INPUT_FORMAT == "mdl" ]]; then
+    TOOL_DAT=$MODEL_DIR/${MODEL}.dat
+  else
+    echo "Converting ${MODEL}.csv to DAT format"
+    mkdir -p $MODEL_DIR/output
+    TOOL_DAT=$MODEL_DIR/output/${MODEL}_${INPUT_FORMAT}.dat
+    node "$SCRIPT_DIR/csv-to-dat.js" "$MODEL_DIR/${MODEL}.csv" "$TOOL_DAT"
+  fi
 
   # Test (only if there is a dat file to compare against)
   if [[ -f $MODEL_DIR/${MODEL}.dat ]]; then
@@ -46,7 +67,7 @@ function test {
     if [[ $MODEL == "allocate" ]]; then
       PRECISION="1e-2"
     fi
-    node "$SDE_MAIN" test $TEST_ARGS --genformat=$GEN_FORMAT -p $PRECISION "$MODEL_DIR/$MODEL.$INPUT_FORMAT"
+    node "$SDE_MAIN" test $TEST_ARGS --genformat $GEN_FORMAT --tooldat $TOOL_DAT -p $PRECISION "$MODEL_DIR/$MODEL.$INPUT_FORMAT"
   fi
 
   # Run additional script to validate output

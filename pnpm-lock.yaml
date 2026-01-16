@@ -26,6 +26,9 @@ importers:
       '@vitest/coverage-v8':
         specifier: ^4.0.16
         version: 4.0.16(@vitest/browser@4.0.16(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2))(vitest@4.0.16(@types/node@20.19.19)(sass@1.97.2)))(vitest@4.0.16(@types/node@20.19.19)(sass@1.97.2))
+      csv-parse:
+        specifier: ^5.3.3
+        version: 5.3.3
       eslint:
         specifier: ^9.37.0
         version: 9.37.0
