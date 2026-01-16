@@ -2,16 +2,14 @@
 
 import { describe, expect, it } from 'vitest'
 
-import type { CheckScenarioReport } from '..'
 import { positionSetting, inputSettingsSpec, valueSetting } from '../_shared/scenario-specs'
 import type { CheckDataRef } from './check-data-ref'
 import { dataRef } from './check-data-ref'
 import type { CheckResult } from './check-func'
 import type { CheckKey, CheckPlan, CheckPlanPredicate } from './check-planner'
 import type { CheckPredicateOp } from './check-predicate'
-import type { CheckPredicateOpRef } from './check-report'
-import { predicateMessage } from './check-report'
-import { buildCheckReport, datasetMessage, scenarioMessage } from './check-report'
+import type { CheckPredicateOpRef, CheckScenarioReport } from './check-report'
+import { buildCheckReport, datasetMessage, predicateMessage, scenarioMessage } from './check-report'
 import { dataset } from './_mocks/mock-check-dataset'
 import {
   datasetPlan,
@@ -52,7 +50,7 @@ describe('buildCheckReport', () => {
   it('should build a report that includes the correct statuses for passed and failed tests', () => {
     const dataRefs1: Map<CheckPredicateOp, CheckDataRef> = new Map([
       ['lt', dataRef(dataset('ModelImpl', 'V3'))],
-      ['gt', dataRef(dataset('ModelImpl', 'V4', ['A1']), inputAtPos(i1, 'at-minimum'))]
+      ['gt', dataRef(dataset('ModelImpl', 'V4[A1]'), inputAtPos(i1, 'at-minimum'))]
     ])
     const predPlansWithRef1: PredPlansFunc = k0 => [
       predPlan(
@@ -89,23 +87,23 @@ describe('buildCheckReport', () => {
     const checkPlan: CheckPlan = {
       groups: [
         groupPlan('group1', [
-          testPlan('test1', [scenarioPlan(allAtPos('at-default'), [datasetPlan('Model', 'V1', [], predPlans(1, 2))])]),
+          testPlan('test1', [scenarioPlan(allAtPos('at-default'), [datasetPlan('Model', 'V1', predPlans(1, 2))])]),
           testPlan('test2', [
             scenarioPlan(allAtPos('at-default'), [
-              datasetPlan('ModelImpl', 'V4', ['A1'], predPlans(3)),
-              datasetPlan('ModelImpl', 'V4', ['A2'], predPlans(4))
+              datasetPlan('ModelImpl', 'V4[A1]', predPlans(3)),
+              datasetPlan('ModelImpl', 'V4[A2]', predPlans(4))
             ]),
             scenarioPlan(inputAtPos(i1, 'at-minimum'), [
-              datasetPlan('ModelImpl', 'V4', ['A1'], predPlans(5, 6)),
-              datasetPlan('ModelImpl', 'V4', ['A2'], predPlans(7, 8))
+              datasetPlan('ModelImpl', 'V4[A1]', predPlans(5, 6)),
+              datasetPlan('ModelImpl', 'V4[A2]', predPlans(7, 8))
             ])
           ]),
-          testPlan('test3', [scenarioPlan(inputAtValue(i1, 75), [datasetPlan('ModelImpl', 'V3', [], predPlans(9))])]),
+          testPlan('test3', [scenarioPlan(inputAtValue(i1, 75), [datasetPlan('ModelImpl', 'V3', predPlans(9))])]),
           testPlan('test4', [
-            scenarioPlan(allAtPos('at-default'), [datasetPlan('Model', 'V1', [], predPlansWithRef1(10))])
+            scenarioPlan(allAtPos('at-default'), [datasetPlan('Model', 'V1', predPlansWithRef1(10))])
           ]),
           testPlan('test5', [
-            scenarioPlan(inputAtPos(i1, 'at-minimum'), [datasetPlan('Model', 'V1', [], predPlansWithRef2(11))])
+            scenarioPlan(inputAtPos(i1, 'at-minimum'), [datasetPlan('Model', 'V1', predPlansWithRef2(11))])
           ])
         ])
       ],
@@ -145,31 +143,29 @@ describe('buildCheckReport', () => {
       groupReport('group1', [
         testReport('test1', 'passed', [
           scenarioReport(allAtPos('at-default'), 'passed', [
-            datasetReport('Model', 'V1', [], 'passed', [passedPred(1), passedPred(2)])
+            datasetReport('Model', 'V1', 'passed', [passedPred(1), passedPred(2)])
           ])
         ]),
         testReport('test2', 'failed', [
           scenarioReport(allAtPos('at-default'), 'failed', [
-            datasetReport('ModelImpl', 'V4', ['A1'], 'failed', [failedPred(3)]),
-            datasetReport('ModelImpl', 'V4', ['A2'], 'passed', [passedPred(4)])
+            datasetReport('ModelImpl', 'V4[A1]', 'failed', [failedPred(3)]),
+            datasetReport('ModelImpl', 'V4[A2]', 'passed', [passedPred(4)])
           ]),
           scenarioReport(inputAtPos(i1, 'at-minimum'), 'failed', [
-            datasetReport('ModelImpl', 'V4', ['A1'], 'failed', [passedPred(5), failedPred(6)]),
-            datasetReport('ModelImpl', 'V4', ['A2'], 'passed', [passedPred(7), passedPred(8)])
+            datasetReport('ModelImpl', 'V4[A1]', 'failed', [passedPred(5), failedPred(6)]),
+            datasetReport('ModelImpl', 'V4[A2]', 'passed', [passedPred(7), passedPred(8)])
           ])
         ]),
         testReport('test3', 'passed', [
-          scenarioReport(inputAtValue(i1, 75), 'passed', [
-            datasetReport('ModelImpl', 'V3', [], 'passed', [passedPred(9)])
-          ])
+          scenarioReport(inputAtValue(i1, 75), 'passed', [datasetReport('ModelImpl', 'V3', 'passed', [passedPred(9)])])
         ]),
         testReport('test4', 'passed', [
           scenarioReport(allAtPos('at-default'), 'passed', [
-            datasetReport('Model', 'V1', [], 'passed', [
+            datasetReport('Model', 'V1', 'passed', [
               predicateReport(
                 10,
                 [
-                  ['gt', opDataRef(dataset('ModelImpl', 'V4', ['A1']), inputAtPos(i1, 'at-minimum'))],
+                  ['gt', opDataRef(dataset('ModelImpl', 'V4[A1]'), inputAtPos(i1, 'at-minimum'))],
                   ['lt', opDataRef(dataset('ModelImpl', 'V3'))]
                 ],
                 [`> 'V4[A1]' (w/ configured scenario)`, `< 'V3' (w/ default scenario)`],
@@ -180,7 +176,7 @@ describe('buildCheckReport', () => {
         ]),
         testReport('test5', 'passed', [
           scenarioReport(inputAtPos(i1, 'at-minimum'), 'passed', [
-            datasetReport('Model', 'V1', [], 'passed', [
+            datasetReport('Model', 'V1', 'passed', [
               predicateReport(
                 11,
                 [['lt', opDataRef(dataset('ModelImpl', 'V3'), inputAtPos(i1, 'at-minimum'))]],
@@ -239,12 +235,11 @@ describe('buildCheckReport', () => {
           testPlan('test2', [scenarioPlan(inputAtPos(i1, 'at-maximum'), [unknownDatasetPlan('UnknownOutput1')])]),
           testPlan('test3', [
             scenarioPlan(allAtPos('at-default'), [
-              datasetPlan(
-                'Model',
-                'V1',
-                [],
-                [predPlanWithUnknownDataset(1)[0], predPlanWithUnknownInput(2)[0], predPlanWithUnknownInputGroup(3)[0]]
-              )
+              datasetPlan('Model', 'V1', [
+                predPlanWithUnknownDataset(1)[0],
+                predPlanWithUnknownInput(2)[0],
+                predPlanWithUnknownInputGroup(3)[0]
+              ])
             ])
           ])
         ])
@@ -291,7 +286,7 @@ describe('buildCheckReport', () => {
         ]),
         testReport('test3', 'error', [
           scenarioReport(allAtPos('at-default'), 'error', [
-            datasetReport('Model', 'V1', [], 'error', [
+            datasetReport('Model', 'V1', 'error', [
               errorPredicateReport(1, result1),
               errorPredicateReport(2, result2),
               errorPredicateReport(3, result3)
@@ -424,7 +419,7 @@ describe('datasetMessage', () => {
   })
 
   it('should work with a known dataset', () => {
-    const d = datasetReport('Model', 'V1', [], 'passed', [])
+    const d = datasetReport('Model', 'V1', 'passed', [])
     expect(datasetMessage(d, bold)).toBe('then _V1_...')
   })
 })

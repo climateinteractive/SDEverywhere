@@ -1,8 +1,7 @@
 <!-- Copyright (c) 2021-2022 Climate Interactive / New Venture Fund -->
 
 <!-- SCRIPT -->
-<script lang='ts'>
-
+<script lang="ts">
 import { slide } from 'svelte/transition'
 
 import CheckGraphBox from '../check/summary/check-summary-graph-box.svelte'
@@ -32,109 +31,122 @@ function onNextClicked() {
   maxCompleted++
   activeCard++
 }
-
 </script>
 
-
-
-
 <!-- TEMPLATE -->
-<template lang='pug'>
-
-.playground-container
-  .scroll-container
-    .wizard-container
-      .card-container
-        .card(class:editing!='{activeCard === 0}' on:click!='{() => onCardClicked(0)}')
-          WizardCardDesc(viewModel!='{cards.desc}' editing!='{activeCard === 0}')
-        +if('maxCompleted >= 0')
-          .spacer-fixed
-          .card(class:editing!='{activeCard === 1}' transition:slide on:click!='{() => onCardClicked(1)}')
-            WizardCardOutputs(viewModel!='{cards.outputs}' editing!='{activeCard === 1}')
-        +if('maxCompleted >= 1')
-          .spacer-fixed
-          .card(class:editing!='{activeCard === 2}' transition:slide on:click!='{() => onCardClicked(2)}')
-            WizardCardInputs(viewModel!='{cards.inputs}' editing!='{activeCard === 2}')
-        +if('maxCompleted >= 2')
-          .spacer-fixed
-          .card(class:editing!='{activeCard === 3}' transition:slide on:click!='{() => onCardClicked(3)}')
-            WizardCardPredicates(viewModel!='{cards.predicates}' editing!='{activeCard === 3}')
-        +if('showNextButton')
-          .button-row
-            .next-button(on:click!='{onNextClicked}') Next
-      .graph-container
-        +if('$graphBox')
-          CheckGraphBox(viewModel!='{$graphBox}')
-
-</template>
-
-
-
+<div class="playground-container">
+  <div class="scroll-container">
+    <div class="wizard-container">
+      <div class="card-container">
+        <div class="card" class:editing={activeCard === 0} on:click={() => onCardClicked(0)}>
+          <WizardCardDesc viewModel={cards.desc} editing={activeCard === 0} />
+        </div>
+        {#if maxCompleted >= 0}
+          <div class="spacer-fixed"></div>
+          <div class="card" class:editing={activeCard === 1} transition:slide on:click={() => onCardClicked(1)}>
+            <WizardCardOutputs viewModel={cards.outputs} editing={activeCard === 1} />
+          </div>
+        {/if}
+        {#if maxCompleted >= 1}
+          <div class="spacer-fixed"></div>
+          <div class="card" class:editing={activeCard === 2} transition:slide on:click={() => onCardClicked(2)}>
+            <WizardCardInputs viewModel={cards.inputs} editing={activeCard === 2} />
+          </div>
+        {/if}
+        {#if maxCompleted >= 2}
+          <div class="spacer-fixed"></div>
+          <div class="card" class:editing={activeCard === 3} transition:slide on:click={() => onCardClicked(3)}>
+            <WizardCardPredicates viewModel={cards.predicates} editing={activeCard === 3} />
+          </div>
+        {/if}
+        {#if showNextButton}
+          <div class="button-row">
+            <div class="next-button" on:click={onNextClicked}>Next</div>
+          </div>
+        {/if}
+      </div>
+      <div class="graph-container">
+        {#if $graphBox}
+          <CheckGraphBox viewModel={$graphBox} />
+        {/if}
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- STYLE -->
-<style lang='sass'>
+<style lang="scss">
+.playground-container {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
 
-.playground-container
-  display: flex
-  flex-direction: column
-  flex: 1
-
-.scroll-container
-  display: flex
+.scroll-container {
+  display: flex;
   // XXX: We use 1px here for flex-basis, otherwise in Firefox and Chrome the
   // whole page will scroll instead of just this container.  See also:
   //   https://stackoverflow.com/a/52489012
-  flex: 1 1 1px
-  flex-direction: column
-  padding: 0 1rem
-  overflow: auto
+  flex: 1 1 1px;
+  flex-direction: column;
+  padding: 0 1rem;
+  overflow: auto;
+}
 
-.wizard-container
-  display: flex
-  flex-direction: row
+.wizard-container {
+  display: flex;
+  flex-direction: row;
+}
 
-.card-container
-  display: flex
-  flex-direction: column
-  width: 54rem
+.card-container {
+  display: flex;
+  flex-direction: column;
+  width: 54rem;
+}
 
-.spacer-fixed
-  flex: 0 0 1rem
+.spacer-fixed {
+  flex: 0 0 1rem;
+}
 
-.card
-  display: flex
-  padding: 1.5rem
-  background-color: #eee
-  color: #000
-  border-radius: 1rem
-  cursor: pointer
+.card {
+  display: flex;
+  padding: 1.5rem;
+  background-color: #eee;
+  color: #000;
+  border-radius: 1rem;
+  cursor: pointer;
 
-.card.editing
-  cursor: default
+  &.editing {
+    cursor: default;
+  }
+}
 
-.button-row
-  display: flex
-  justify-content: flex-end
+.button-row {
+  display: flex;
+  justify-content: flex-end;
+}
 
-.next-button
-  border-radius: .5rem
-  margin-top: 1.5rem
-  margin-bottom: 1rem
-  padding: .625rem 2rem
-  background-color: #007700
-  color: #fff
-  cursor: pointer
-  user-select: none
+.next-button {
+  border-radius: 0.5rem;
+  margin-top: 1.5rem;
+  margin-bottom: 1rem;
+  padding: 0.625rem 2rem;
+  background-color: #007700;
+  color: #fff;
+  cursor: pointer;
+  user-select: none;
 
-.next-button:hover
-  background-color: #008800
+  &:hover {
+    background-color: #008800;
+  }
+}
 
-.graph-container
-  display: flex
-  flex-direction: column
-  width: 42rem
-  margin-left: 1rem
-  padding-top: 2rem
-  align-items: center
-
+.graph-container {
+  display: flex;
+  flex-direction: column;
+  width: 42rem;
+  margin-left: 1rem;
+  padding-top: 2rem;
+  align-items: center;
+}
 </style>

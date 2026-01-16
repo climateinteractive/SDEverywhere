@@ -23,6 +23,11 @@ export let handler = argv => {
   dev(argv.config, argv.verbose)
 }
 export let dev = async (configPath, verbose) => {
+  if (process.env.NODE_ENV === undefined) {
+    // XXX: Force "development" mode so that HMR works in Vite (see #694 for details)
+    process.env.NODE_ENV = 'development'
+  }
+
   const logLevels = ['error', 'info']
   if (verbose) {
     logLevels.push('verbose')

@@ -31,6 +31,24 @@ export function getDatasetsForScenario(
 
   // Extract the data for each requested output variable and put it into a map
   for (const datasetKey of datasetKeys) {
+    if (datasetKey.startsWith('ModelImpl')) {
+      const dataset: Dataset = new Map()
+      if (modelVersion === 2 && datasetKey === 'ModelImpl__output_y') {
+        // XXX: Set a different value at one data point for one model to show
+        // what happens when there is a difference at one time step
+        for (let t = 2000; t <= 2100; t++) {
+          dataset.set(t, t >= 2025 ? 6 : 5)
+        }
+      } else {
+        // XXX: For now, fill with fake data at each time value
+        for (let t = 2000; t <= 2100; t++) {
+          dataset.set(t, 5)
+        }
+      }
+      datasetMap.set(datasetKey, dataset)
+      continue
+    }
+
     // Get the output variable for the given dataset key; if the variable doesn't
     // exist in this version of the model/bundle, just skip it
     const outputVar = modelSpec.outputVars.get(datasetKey)
@@ -72,11 +90,11 @@ export function getDatasetsForScenario(
     }
 
     const dataset: Dataset = new Map()
-    dataset.set(1850, 5 + delta)
-    dataset.set(1900, 6 + delta)
-    dataset.set(1950, 8 + delta)
-    dataset.set(2000, 12 + delta)
-    dataset.set(2050, 16 + delta)
+    dataset.set(2000, 5 + delta)
+    dataset.set(2020, 6 + delta)
+    dataset.set(2040, 8 + delta)
+    dataset.set(2060, 12 + delta)
+    dataset.set(2080, 16 + delta)
     dataset.set(2100, 22 + delta)
     datasetMap.set(datasetKey, dataset)
   }

@@ -1,14 +1,7 @@
-import { createAppViewModel } from './app-vm'
-import App from './app.svelte'
+import { mount } from 'svelte'
 
-let app: App
-createAppViewModel().then(appViewModel => {
-  app = new App({
-    target: document.body,
-    props: {
-      viewModel: appViewModel
-    }
-  })
+import AppShell from './app-shell.svelte'
+
+mount(AppShell, {
+  target: document.body
 })
-
-export default app

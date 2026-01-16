@@ -1,42 +1,52 @@
 <!-- Copyright (c) 2021-2022 Climate Interactive / New Venture Fund -->
 
 <!-- SCRIPT -->
-<script lang='ts'>
-
+<script lang="ts">
 import CheckGraphBox from './check-summary-graph-box.svelte'
 import type { CheckSummaryRowViewModel } from './check-summary-row-vm'
 
 export let viewModel: CheckSummaryRowViewModel
-const graphVisible = viewModel.graphVisible
+export let onShowContextMenu: (event: MouseEvent, viewModel: CheckSummaryRowViewModel) => void | undefined
+
+$: childRows = viewModel.childRows
+$: expanded = viewModel.expanded
 
 function onLabelClicked() {
-  graphVisible.update(v => !v)
+  viewModel.onClicked()
 }
 
+function onContextMenu(event: MouseEvent) {
+  // Only show for scenario rows that have a scenario report with a defined spec
+  if (!viewModel.scenarioReport?.checkScenario?.spec) {
+    return
+  }
+  event.preventDefault()
+  onShowContextMenu?.(event, viewModel)
+}
 </script>
 
-
-
-
 <!-- TEMPLATE -->
-<template lang='pug'>
-
-.row(class!='{viewModel.rowClasses}')
-  span.label(on:click!='{onLabelClicked}') {@html viewModel.span}
-+if('viewModel.graphBoxViewModel && $graphVisible')
-  .row.check-graph(class!='{viewModel.rowClasses}')
-    CheckGraphBox(viewModel!='{viewModel.graphBoxViewModel}')
-
-</template>
-
-
-
+<div class={`row ${viewModel.rowClasses}`} on:contextmenu={onContextMenu}>
+  <span class="label" on:click={onLabelClicked}>{@html viewModel.span}</span>
+</div>
+{#if $expanded}
+  {#if viewModel.graphBoxViewModel}
+    <div class="row check-graph">
+      <CheckGraphBox viewModel={viewModel.graphBoxViewModel} />
+    </div>
+  {:else}
+    <div class="child-rows">
+      {#each $childRows as childRow}
+        <svelte:self viewModel={childRow} {onShowContextMenu} />
+      {/each}
+    </div>
+  {/if}
+{/if}
 
 <!-- STYLE -->
-<style lang='sass'>
-
-.check-graph
-  height: 23rem
-  margin-left: 8.5rem
-
+<style lang="scss">
+.check-graph {
+  height: 23rem;
+  margin-left: 8.5rem;
+}
 </style>

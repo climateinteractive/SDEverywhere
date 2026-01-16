@@ -199,7 +199,10 @@ export function resolveComparisonSpecs(
 // variable and source name, but it likely is not used as much as scenario lookup; it
 // is probably OK for now but should be improved eventually
 class ModelOutputs {
-  constructor(private readonly modelSpecL: ModelSpec, private readonly modelSpecR: ModelSpec) {}
+  constructor(
+    private readonly modelSpecL: ModelSpec,
+    private readonly modelSpecR: ModelSpec
+  ) {}
 
   getDatasetForName(name: ComparisonDatasetName, source?: ComparisonDatasetSource): ComparisonDataset | undefined {
     // TODO: This doesn't currently handle renames; ideally this would delegate to the

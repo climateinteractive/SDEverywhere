@@ -2,9 +2,12 @@
 
 import type { Bundle, ConfigInitOptions, SuiteSummary } from '@sdeverywhere/check-core'
 
+import type { BundleLocation, BundleSpec } from '@sdeverywhere/check-ui-shell'
 import { initAppShell } from '@sdeverywhere/check-ui-shell'
 import '@sdeverywhere/check-ui-shell/dist/style.css'
 
+import type { BundleMetadata, BundleResult } from './load-bundle'
+import { loadBundle } from './load-bundle'
 import { initOverlay } from './overlay'
 
 import './global.css'
@@ -14,72 +17,34 @@ import { createBundle as createBaselineBundle } from '@_baseline_bundle_'
 import { createBundle as createCurrentBundle } from '@_current_bundle_'
 import { getConfigOptions } from '@_test_config_'
 
-function loadSimplifyScenariosFlag(): boolean {
+function loadBundleMetadata(side: 'left' | 'right'): BundleMetadata | undefined {
   if (import.meta.hot) {
-    return localStorage.getItem('sde-check-simplify-scenarios') === '1'
-  } else {
-    return false
-  }
-}
-
-function loadBundleName(key: string): string | undefined {
-  if (import.meta.hot) {
-    return localStorage.getItem(`sde-check-selected-bundle-${key}`)
-  } else {
-    return undefined
-  }
-}
-
-function saveBundleName(key: string, value: string): void {
-  if (import.meta.hot) {
-    localStorage.setItem(`sde-check-selected-bundle-${key}`, value)
-  }
-}
-
-// For local development mode, load the list of available baseline bundles
-type BundleModule = {
-  createBundle(): Bundle
-}
-type LoadBundle = () => Promise<Bundle>
-const availableBundles: { [key: string]: LoadBundle } = {}
-let bundleNames: string[]
-let selectedBaselineBundleName: string
-let selectedCurrentBundleName: string
-// The following value will be injected by `vite-config-for-report.ts`
-const baselinesPath = './__BASELINE_BUNDLES_PATH__'
-if (import.meta.hot && baselinesPath) {
-  // Restore the previously selected bundles (from before the page was reloaded)
-  selectedBaselineBundleName = loadBundleName('baseline')
-  selectedCurrentBundleName = loadBundleName('current')
-
-  // Get the available baseline bundles.  The `./__BASELINE_BUNDLES_PATH__` part
-  // will be replaced by Vite (see `vite-config-for-report.ts`).  Note that we
-  // provide a placeholder here that looks like a valid glob pattern, since Vite's
-  // dependency resolver will report errors if it is invalid (not a literal).
-  const bundlesGlob = import.meta.glob('./__BASELINE_BUNDLES_PATH__', {
-    eager: false
-  })
-  const baselineBundleNames: string[] = []
-  for (const bundleKey of Object.keys(bundlesGlob)) {
-    const loadBundle = bundlesGlob[bundleKey]
-    const bundlePathParts = bundleKey.split('/')
-    const bundleFileName = bundlePathParts[bundlePathParts.length - 1]
-    const bundleName = bundleFileName.replace('.js', '')
-    baselineBundleNames.push(bundleName)
-    availableBundles[bundleName] = async () => {
-      const module = (await loadBundle()) as BundleModule
-      return module.createBundle() as Bundle
+    const metadataJson = localStorage.getItem(`sde-check-selected-bundle-${side}`)
+    if (metadataJson) {
+      const parsed = JSON.parse(metadataJson)
+      if (parsed.name && parsed.url) {
+        return parsed as BundleMetadata
+      }
     }
   }
+  return undefined
+}
 
-  // Alphabetize (reversed, so that newer dates are at the top of the list)
-  baselineBundleNames.sort((a, b) => {
-    return b.toLowerCase().localeCompare(a.toLowerCase())
-  })
+function saveBundleMetadata(side: 'left' | 'right', metadata: BundleMetadata): void {
+  if (import.meta.hot) {
+    localStorage.setItem(`sde-check-selected-bundle-${side}`, JSON.stringify(metadata))
+  }
+}
 
-  // Always include the "current" bundle as the first option, followed by
-  // the alphabetized bundle names
-  bundleNames = ['current', ...baselineBundleNames]
+// For local development mode, use the bundle metadata saved in `LocalStorage`
+let savedBundleMetadataL: BundleMetadata | undefined
+let savedBundleMetadataR: BundleMetadata | undefined
+// The following value will be injected by `vite-config-for-report.ts`
+const bundlesPath = './bundles/**/*.txt'
+if (import.meta.hot && bundlesPath) {
+  // Restore the previously selected bundles (from before the page was reloaded)
+  savedBundleMetadataL = loadBundleMetadata('left')
+  savedBundleMetadataR = loadBundleMetadata('right')
 }
 
 async function initForProduction(): Promise<void> {
@@ -122,41 +87,85 @@ async function initForProduction(): Promise<void> {
 }
 
 async function initForLocal(): Promise<void> {
-  async function createBundle(requestedName: string | undefined): Promise<[Bundle, string]> {
-    if (requestedName === undefined) {
-      requestedName = 'current'
+  async function createBundle(
+    bundleMetadata: BundleMetadata | undefined,
+    side: 'left' | 'right'
+  ): Promise<BundleResult> {
+    if (bundleMetadata === undefined) {
+      bundleMetadata = {
+        name: 'current',
+        url: 'current'
+      }
     }
 
-    // See if there is a bundle available for the requested name
-    let bundle: Bundle
-    let bundleName: string
-    if (requestedName in availableBundles) {
-      // Load the bundle for the requested name
-      const loadBundle = availableBundles[requestedName]
-      bundle = await loadBundle()
-      bundleName = requestedName
-    } else {
-      // Load the "current" bundle
-      bundle = createCurrentBundle()
-      bundleName = 'current'
+    if (bundleMetadata.url.startsWith('http') || bundleMetadata.url.startsWith('file://')) {
+      // Load bundles (both local and remote) via the Vite dev server
+      try {
+        console.log(`Loading bundle for ${side} side: name=${bundleMetadata.name} url=${bundleMetadata.url}`)
+        const result = await loadBundle(bundleMetadata)
+        if (result) {
+          return result
+        } else {
+          console.error(`ERROR: Failed to load bundle ${bundleMetadata.name}; will use "current" bundle instead`)
+        }
+      } catch (e) {
+        console.error(
+          `ERROR: Failed to load bundle from ${bundleMetadata.url}; will use "current" bundle instead. Cause:`,
+          e
+        )
+      }
     }
-    return [bundle, bundleName]
+
+    // Load the "current" bundle if it was requested or if the other loading
+    // processes failed
+    console.log(`Loading current bundle for ${side} side`)
+    const bundle = createCurrentBundle()
+    return {
+      bundle,
+      bundleName: 'current',
+      bundleUrl: 'current'
+    }
   }
 
-  const [bundleL, bundleNameL] = await createBundle(selectedBaselineBundleName)
-  const [bundleR, bundleNameR] = await createBundle(selectedCurrentBundleName)
+  const {
+    bundle: bundleL,
+    bundleName: bundleNameL,
+    bundleUrl: bundleUrlL
+  } = await createBundle(savedBundleMetadataL, 'left')
+  const {
+    bundle: bundleR,
+    bundleName: bundleNameR,
+    bundleUrl: bundleUrlR
+  } = await createBundle(savedBundleMetadataR, 'right')
 
   // Prepare the model check/comparison configuration
   const configInitOptions: ConfigInitOptions = {
     bundleNameL,
-    bundleNameR,
-    simplifyScenarios: loadSimplifyScenariosFlag()
+    bundleNameR
   }
   const configOptions = await getConfigOptions(bundleL, bundleR, configInitOptions)
 
+  // Override the concurrency setting using the value from LocalStorage
+  const concurrencyValue = localStorage.getItem('sde-check-concurrency')
+  if (concurrencyValue !== null) {
+    const concurrency = parseInt(concurrencyValue)
+    configOptions.concurrency = !isNaN(concurrency) ? concurrency : 1
+  } else {
+    configOptions.concurrency = 1
+  }
+
   // Initialize the root Svelte component
+  const remoteBundlesUrl = __REMOTE_BUNDLES_URL__
   initAppShell(configOptions, {
-    bundleNames
+    bundleSelectorConfig: {
+      bundleUrlL,
+      bundleUrlR,
+      remoteBundlesUrl: remoteBundlesUrl !== '' ? remoteBundlesUrl : undefined,
+      getLocalBundles: import.meta.hot ? getLocalBundles : undefined,
+      downloadBundle: import.meta.hot ? downloadBundle : undefined,
+      copyBundle: import.meta.hot ? copyBundle : undefined,
+      onBundlesChanged: import.meta.hot ? onBundlesChanged : undefined
+    }
   })
 }
 
@@ -188,21 +197,173 @@ if (import.meta.hot) {
   document.addEventListener('sde-check-bundle', e => {
     // Change the selected bundle
     const info = (e as CustomEvent).detail
-    if (info.kind === 'left') {
-      saveBundleName('baseline', info.name)
-      selectedBaselineBundleName = info.name
-    } else {
-      saveBundleName('current', info.name)
-      selectedCurrentBundleName = info.name
+    const bundleMetadata = { name: info.name, url: info.url }
+    if (info.side === 'left') {
+      saveBundleMetadata('left', bundleMetadata)
+      savedBundleMetadataL = bundleMetadata
+    } else if (info.side === 'right') {
+      saveBundleMetadata('right', bundleMetadata)
+      savedBundleMetadataR = bundleMetadata
     }
 
     // Reinitialize using the chosen bundles
     initBundlesAndUI()
   })
 
-  // Reload everything when the user toggles the "Simplify Scenarios" checkbox
-  document.addEventListener('sde-check-simplify-scenarios-toggled', () => {
-    // Reinitialize using the new state
+  // Reload everything when the user applies updated configuration (e.g., updated filters or
+  // concurrency setting)
+  document.addEventListener('sde-check-config-changed', () => {
+    // Reinitialize using the new configuration
     initBundlesAndUI()
   })
+}
+
+/**
+ * Get the list of locally available bundles (only in development mode with HMR enbaled).
+ */
+async function getLocalBundles(): Promise<BundleLocation[]> {
+  // Only available in development mode with HMR
+  if (!import.meta.hot) {
+    throw new Error('getLocalBundles is only available in development mode with HMR enabled')
+  }
+
+  return new Promise((resolve, reject) => {
+    // Set up listeners
+    const handleSuccess = (data: { bundles: Array<{ name: string; url: string; lastModified: string }> }) => {
+      cleanup()
+
+      // Add the bundles that were found in the Node process.  The bundles returned from the Node process
+      // include both local bundles and the special "current" bundle with its up-to-date last modified time.
+      const bundles: BundleLocation[] = data.bundles.map(b => ({
+        name: b.name,
+        url: b.url,
+        lastModified: b.lastModified
+      }))
+
+      resolve(bundles)
+    }
+
+    const handleError = (data: { error: string }) => {
+      cleanup()
+      reject(new Error(data.error))
+    }
+
+    const cleanup = () => {
+      import.meta.hot.off('list-bundles-success', handleSuccess)
+      import.meta.hot.off('list-bundles-error', handleError)
+    }
+
+    import.meta.hot.on('list-bundles-success', handleSuccess)
+    import.meta.hot.on('list-bundles-error', handleError)
+
+    // Send request to list bundles
+    import.meta.hot.send('list-bundles', {})
+
+    // Timeout after 5 seconds
+    setTimeout(() => {
+      cleanup()
+      reject(new Error('Timeout waiting for bundle list'))
+    }, 5000)
+  })
+}
+
+/**
+ * Download a bundle from the network (only in development mode with HMR).
+ */
+function downloadBundle(bundle: BundleSpec): void {
+  // Only available in development mode with HMR
+  if (!import.meta.hot) {
+    throw new Error('downloadBundle is only available in development mode with HMR enabled')
+  }
+
+  if (!bundle.remote) {
+    throw new Error('Only bundles with a remote URL can be downloaded')
+  }
+
+  const { url, name, lastModified } = bundle.remote
+
+  // Set up listeners for download result
+  const handleSuccess = (data: { name: string; filePath: string }) => {
+    cleanup()
+    if (data.name === name) {
+      console.log(`Successfully downloaded bundle: ${name} to ${data.filePath}`)
+    }
+  }
+
+  const handleError = (data: { name: string; error: string }) => {
+    cleanup()
+    if (data.name === name) {
+      console.error(`Failed to download bundle ${name}:`, data.error)
+    }
+  }
+
+  const cleanup = () => {
+    import.meta.hot.off('download-bundle-success', handleSuccess)
+    import.meta.hot.off('download-bundle-error', handleError)
+  }
+
+  import.meta.hot.on('download-bundle-success', handleSuccess)
+  import.meta.hot.on('download-bundle-error', handleError)
+
+  // Send download request
+  import.meta.hot.send('download-bundle', { url, name, lastModified })
+
+  console.log(`Requesting download of bundle: ${name} from ${url}`)
+}
+
+/**
+ * Copy a local bundle file to a new name.
+ */
+function copyBundle(bundle: BundleSpec, newName: string): void {
+  // Only available in development mode with HMR
+  if (!import.meta.hot) {
+    throw new Error('copyBundle is only available in development mode with HMR enabled')
+  }
+
+  if (!bundle.local) {
+    throw new Error('Only local bundles can be copied')
+  }
+
+  const { url, name } = bundle.local
+
+  // Set up listeners for copy result
+  const handleSuccess = (data: { name: string; filePath: string }) => {
+    cleanup()
+    if (data.name === newName) {
+      console.log(`Successfully copied bundle: ${name} to ${data.filePath}`)
+    }
+  }
+
+  const handleError = (data: { name: string; error: string }) => {
+    cleanup()
+    if (data.name === name) {
+      console.error(`Failed to copy bundle ${name}:`, data.error)
+    }
+  }
+
+  const cleanup = () => {
+    import.meta.hot.off('copy-bundle-success', handleSuccess)
+    import.meta.hot.off('copy-bundle-error', handleError)
+  }
+
+  import.meta.hot.on('copy-bundle-success', handleSuccess)
+  import.meta.hot.on('copy-bundle-error', handleError)
+
+  // Send copy request
+  import.meta.hot.send('copy-bundle', { url, name, newName })
+
+  console.log(`Requesting copy of bundle: ${name} to ${newName}`)
+}
+
+/**
+ * Add a listener that is notified when there are file system changes detected in the
+ * local bundles directory.
+ */
+function onBundlesChanged(listener: () => void): void {
+  // Only available in development mode with HMR
+  if (!import.meta.hot) {
+    throw new Error('onBundlesChanged is only available in development mode with HMR enabled')
+  }
+
+  import.meta.hot.on('bundles-changed', listener)
 }

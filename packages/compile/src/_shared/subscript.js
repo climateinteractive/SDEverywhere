@@ -1,7 +1,6 @@
 import util from 'util'
-import B from 'bufx'
-import yaml from 'js-yaml'
 import * as R from 'ramda'
+import B from './bufx.js'
 import { canonicalName, vlog } from './helpers.js'
 
 // A subscript is a dimension or an index.
@@ -107,7 +106,7 @@ export function sub(name) {
   let result
   try {
     result = subscripts.get(name)
-  } catch (e) {
+  } catch (_) {
     console.error(`sub name ${name} not found`)
   }
   return result
@@ -218,21 +217,6 @@ export function printSubscripts() {
   }
   return B.getBuf()
 }
-export function yamlSubsList() {
-  let subs = {}
-  for (let [k, v] of subscripts) {
-    subs[k] = v
-  }
-  return yaml.safeDump(subs)
-}
-export function loadSubscriptsFromYaml(yamlSubs) {
-  // Load the subscripts map from subscripts serialized to a YAML file by yamlSubsList.
-  // This function should be called instead of adding subscripts through the constructor.
-  let subs = yaml.safeLoad(yamlSubs)
-  for (const k in subs) {
-    subscripts.set(k, subs[k])
-  }
-}
 export function extractMarkedDims(subscripts) {
   // Extract all marked dimensions and update subscripts.
   let dims = []
@@ -249,7 +233,7 @@ export function subscriptFamilies(subscripts) {
   // Return a list of the subscript families for each subscript.
   try {
     return R.map(subscriptName => sub(subscriptName).family, subscripts)
-  } catch (e) {
+  } catch (_) {
     console.error(`ERROR: subscript not found in "${subscripts.join(',')}" in subscriptFamilies`)
   }
 }

@@ -1,68 +1,77 @@
 <!-- SCRIPT -->
 <script lang="ts">
-import { _ } from 'svelte-i18n'
-
 import './global.css'
 
-import type { AppViewModel } from './app-vm'
+import type { Config as CoreConfig } from '@core'
 
-import DevOverlay from './components/dev/dev-overlay.svelte'
+import type { AppViewModel } from './app-vm'
+import { createAppViewModel } from './app-vm'
+
 import InputRow from './components/inputs/input-row.svelte'
 import SelectableGraph from './components/graphs/selectable-graph.svelte'
 import Selector from './components/selector/selector.svelte'
 
-export let viewModel: AppViewModel
-const scenarios = viewModel.scenarios
-const selectedLayoutOption = viewModel.selectedLayoutOption
+export let coreConfig: CoreConfig
 
-$: visibleGraphContainers = viewModel.graphContainers.slice(0, $selectedLayoutOption.maxVisible)
+let viewModel: AppViewModel
+
+$: scenarios = viewModel?.scenarios
+$: selectedLayoutOption = viewModel?.selectedLayoutOption
+$: visibleGraphContainers = viewModel?.graphContainers.slice(0, $selectedLayoutOption.maxVisible)
+
+// Wait for the view model to be loaded before we render the app
+const viewReady = createAppViewModel(coreConfig).then(result => {
+  viewModel = result
+})
 </script>
 
 <!-- TEMPLATE -->
-<div class="app-container">
-  <div class="options-container">
-    <div class="layout-label">Max Visible Graphs:</div>
-    <Selector viewModel={viewModel.layoutSelector} />
-  </div>
-
-  <div class="main-container">
-    <div class="top-container">
-      {#if visibleGraphContainers.length > 0}
-        <div class="graphs-container {$selectedLayoutOption.value}">
-          {#each visibleGraphContainers as graphContainer}
-            <div class="selectable-graph-container">
-              <SelectableGraph viewModel={graphContainer} />
-            </div>
-          {/each}
-        </div>
-      {:else}
-        <div class="empty-config-message">No graphs configured. You can edit 'config/graphs.csv' to get started.</div>
-      {/if}
+{#await viewReady}
+  <div class="loading-container"></div>
+{:then}
+  <div class="app-container">
+    <div class="options-container">
+      <div class="layout-label">Max Visible Graphs:</div>
+      <Selector viewModel={viewModel.layoutSelector} />
     </div>
 
-    <div class="bottom-container">
-      {#each $scenarios as scenario}
-        <div class="scenario-container">
-          {#if scenario.sliders.length > 0}
-            <div class="scenario-header">
-              <div class="scenario-name">{scenario.name}</div>
-              <button on:click={() => scenario.reset()}>Reset</button>
-            </div>
-            {#each scenario.sliders as slider}
-              <InputRow input={slider} />
+    <div class="main-container">
+      <div class="top-container">
+        {#if visibleGraphContainers.length > 0}
+          <div class="graphs-container {$selectedLayoutOption.value}">
+            {#each visibleGraphContainers as graphContainer}
+              <div class="selectable-graph-container">
+                <SelectableGraph viewModel={graphContainer} />
+              </div>
             {/each}
-          {:else}
-            <div class="empty-config-message">
-              No sliders configured. You can edit 'config/inputs.csv' to get started.
-            </div>
-          {/if}
-        </div>
-      {/each}
+          </div>
+        {:else}
+          <div class="empty-config-message">No graphs configured. You can edit 'config/graphs.csv' to get started.</div>
+        {/if}
+      </div>
+
+      <div class="bottom-container">
+        {#each $scenarios as scenario}
+          <div class="scenario-container">
+            {#if scenario.sliders.length > 0}
+              <div class="scenario-header">
+                <div class="scenario-name">{scenario.name}</div>
+                <button on:click={() => scenario.reset()}>Reset</button>
+              </div>
+              {#each scenario.sliders as slider}
+                <InputRow input={slider} />
+              {/each}
+            {:else}
+              <div class="empty-config-message">
+                No sliders configured. You can edit 'config/inputs.csv' to get started.
+              </div>
+            {/if}
+          </div>
+        {/each}
+      </div>
     </div>
   </div>
-
-  <DevOverlay />
-</div>
+{/await}
 
 <!-- STYLE -->
 <style lang="sass">

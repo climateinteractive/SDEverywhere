@@ -68,3 +68,35 @@ export function localStorageWritableBoolean(key: string, defaultValue: boolean):
     update: _update
   }
 }
+
+/**
+ * Return a Svelte writable string store that is backed by local storage.
+ */
+export function localStorageWritableString<T extends string = string>(key: string, defaultValue: T): Writable<T> {
+  const initialStringValue = localStorage.getItem(key)
+  let initialValue: T
+  if (initialStringValue !== null) {
+    initialValue = initialStringValue as T
+  } else {
+    initialValue = defaultValue
+  }
+
+  let currentValue = initialValue
+  const { subscribe, set } = writable(initialValue)
+
+  const _set = (newValue: T) => {
+    currentValue = newValue
+    localStorage.setItem(key, newValue)
+    set(newValue)
+  }
+
+  const _update = (updater: (value: T) => T) => {
+    _set(updater(currentValue))
+  }
+
+  return {
+    subscribe,
+    set: _set,
+    update: _update
+  }
+}

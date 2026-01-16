@@ -13,7 +13,7 @@ import { symbolForPredicateOp } from './check-predicate'
 import type { CheckScenario, CheckScenarioInputDesc } from './check-scenario'
 import type { CheckPredicateTimeOptions, CheckPredicateTimeRange, CheckPredicateTimeSpec } from './check-spec'
 
-export type CheckStatus = 'passed' | 'failed' | 'error'
+export type CheckStatus = 'passed' | 'failed' | 'error' | 'skipped'
 
 export interface CheckPredicateOpConstantRef {
   kind: 'constant'
@@ -74,7 +74,6 @@ export function buildCheckReport(checkPlan: CheckPlan, checkResults: Map<CheckKe
     for (const testPlan of groupPlan.tests) {
       let testStatus: CheckStatus = 'passed'
       const scenarioReports: CheckScenarioReport[] = []
-
       for (const scenarioPlan of testPlan.scenarios) {
         let scenarioStatus: CheckStatus = 'passed'
         if (scenarioPlan.checkScenario.spec === undefined) {
@@ -100,7 +99,7 @@ export function buildCheckReport(checkPlan: CheckPlan, checkResults: Map<CheckKe
             if (checkResult) {
               if (checkResult.status !== 'passed') {
                 // Set the status for parent groupings; 'error' status has higher
-                // precendence than 'failed' status
+                // precendence than 'failed' status, and 'skipped' has lower precedence
                 if (checkResult.status === 'error') {
                   testStatus = 'error'
                   scenarioStatus = 'error'
@@ -109,6 +108,10 @@ export function buildCheckReport(checkPlan: CheckPlan, checkResults: Map<CheckKe
                   testStatus = 'failed'
                   scenarioStatus = 'failed'
                   datasetStatus = 'failed'
+                } else if (checkResult.status === 'skipped' && testStatus === 'passed') {
+                  testStatus = 'skipped'
+                  scenarioStatus = 'skipped'
+                  datasetStatus = 'skipped'
                 }
               }
               predicateReports.push(predicateReport(predicatePlan, checkKey, checkResult))

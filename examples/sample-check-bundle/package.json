@@ -10,7 +10,7 @@
   "types": "types/index.d.ts",
   "scripts": {
     "clean": "rm -rf dist",
-    "lint": "eslint src --ext .ts --max-warnings 0",
+    "lint": "eslint src --max-warnings 0",
     "prettier:check": "prettier --check .",
     "prettier:fix": "prettier --write .",
     "precommit": "../../scripts/precommit",
@@ -24,10 +24,12 @@
   },
   "dependencies": {
     "@sdeverywhere/check-core": "workspace:*",
-    "assert-never": "^1.2.1"
+    "assert-never": "^1.2.1",
+    "chart.js": "^2.9.4"
   },
   "devDependencies": {
-    "vite": "^5.4.2"
+    "@types/chart.js": "^2.9.34",
+    "vite": "^7.1.12"
   },
   "author": "Climate Interactive",
   "license": "MIT",

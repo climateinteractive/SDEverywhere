@@ -1,5 +1,85 @@
 # Changelog
 
+## [0.2.17](https://github.com/climateinteractive/SDEverywhere/compare/check-ui-shell-v0.2.16...check-ui-shell-v0.2.17) (2026-01-13)
+
+
+### Features
+
+* add support for loading model-check bundles from password-protected servers ([#763](https://github.com/climateinteractive/SDEverywhere/issues/763)) ([900bd22](https://github.com/climateinteractive/SDEverywhere/commit/900bd22627f102b92f942538366f0d8509b76965)), closes [#762](https://github.com/climateinteractive/SDEverywhere/issues/762)
+
+## [0.2.16](https://github.com/climateinteractive/SDEverywhere/compare/check-ui-shell-v0.2.15...check-ui-shell-v0.2.16) (2026-01-08)
+
+
+### Dependencies
+
+* upgrade postcss to 8.5.6 to avoid older version of nanoid with vulnerability ([#745](https://github.com/climateinteractive/SDEverywhere/issues/745)) ([fb80f93](https://github.com/climateinteractive/SDEverywhere/commit/fb80f930d3d633e5bfeeca8f8e0629d35f817b56)), closes [#743](https://github.com/climateinteractive/SDEverywhere/issues/743)
+* upgrade sass to 1.97.2 ([#751](https://github.com/climateinteractive/SDEverywhere/issues/751)) ([35b6995](https://github.com/climateinteractive/SDEverywhere/commit/35b6995c9e9d94868af285501d2f4deb0104205c)), closes [#750](https://github.com/climateinteractive/SDEverywhere/issues/750)
+* upgrade vite to ^7.1.12 + upgrade vitest to ^4.0.16 ([#735](https://github.com/climateinteractive/SDEverywhere/issues/735)) ([f16f127](https://github.com/climateinteractive/SDEverywhere/commit/f16f127b9fb0e53352d7e1152d78623fe5ec26c9)), closes [#734](https://github.com/climateinteractive/SDEverywhere/issues/734)
+
+## [0.2.15](https://github.com/climateinteractive/SDEverywhere/compare/check-ui-shell-v0.2.14...check-ui-shell-v0.2.15) (2026-01-07)
+
+
+### Bug Fixes
+
+* dismiss bundle selector context menu on escape key or click outside ([#731](https://github.com/climateinteractive/SDEverywhere/issues/731)) ([c1fb33b](https://github.com/climateinteractive/SDEverywhere/commit/c1fb33b0a635cc92d6ec42726d9a66960ed03f5c)), closes [#730](https://github.com/climateinteractive/SDEverywhere/issues/730)
+
+## [0.2.14](https://github.com/climateinteractive/SDEverywhere/compare/check-ui-shell-v0.2.13...check-ui-shell-v0.2.14) (2026-01-05)
+
+
+### Bug Fixes
+
+* update BundleGraphView interface to allow for updating data, custom legend, and non-canvas implementations ([#724](https://github.com/climateinteractive/SDEverywhere/issues/724)) ([1296c6d](https://github.com/climateinteractive/SDEverywhere/commit/1296c6d12629eaa9c515b7e34d0fa2d26348e2b9)), closes [#723](https://github.com/climateinteractive/SDEverywhere/issues/723)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/check-core bumped from ^0.1.6 to ^0.1.7
+
+## [0.2.13](https://github.com/climateinteractive/SDEverywhere/compare/check-ui-shell-v0.2.12...check-ui-shell-v0.2.13) (2025-12-08)
+
+
+### Features
+
+* allow for loading (and downloading) remote bundles in model-check ([#698](https://github.com/climateinteractive/SDEverywhere/issues/698)) ([78400b3](https://github.com/climateinteractive/SDEverywhere/commit/78400b35e41d7225e15540ebbbd0eab98f0a43a4)), closes [#697](https://github.com/climateinteractive/SDEverywhere/issues/697)
+
+## [0.2.12](https://github.com/climateinteractive/SDEverywhere/compare/check-ui-shell-v0.2.11...check-ui-shell-v0.2.12) (2025-10-31)
+
+
+### Features
+
+* add support for filtering/skipping checks and comparisons in model-check ([#686](https://github.com/climateinteractive/SDEverywhere/issues/686)) ([95a0c53](https://github.com/climateinteractive/SDEverywhere/commit/95a0c53adbb5289041ec8f1e59b2826f406e7869)), closes [#682](https://github.com/climateinteractive/SDEverywhere/issues/682)
+* add support for running multiple pairs of model instances concurrently in model-check ([#688](https://github.com/climateinteractive/SDEverywhere/issues/688)) ([db975b0](https://github.com/climateinteractive/SDEverywhere/commit/db975b0d3359cd8bbfc4987f24ce525a44a2b513)), closes [#683](https://github.com/climateinteractive/SDEverywhere/issues/683)
+* add Trace View (tracing/diagnosis tool) to model-check ([#684](https://github.com/climateinteractive/SDEverywhere/issues/684)) ([a9f2b1c](https://github.com/climateinteractive/SDEverywhere/commit/a9f2b1c47be651463b1a85ef85078c65faca9ffe)), closes [#675](https://github.com/climateinteractive/SDEverywhere/issues/675)
+* allow for different ways of sorting comparisons in model-check ([#693](https://github.com/climateinteractive/SDEverywhere/issues/693)) ([4cf615a](https://github.com/climateinteractive/SDEverywhere/commit/4cf615a68fd4c10ed7b23896023121e5986300f2)), closes [#692](https://github.com/climateinteractive/SDEverywhere/issues/692)
+
+
+### Bug Fixes
+
+* show `<` or `>` to indicate which max diff point value is greater ([#691](https://github.com/climateinteractive/SDEverywhere/issues/691)) ([33567e8](https://github.com/climateinteractive/SDEverywhere/commit/33567e83b4e3ce05617becdfd147f4e73e4b252e)), closes [#690](https://github.com/climateinteractive/SDEverywhere/issues/690)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/check-core bumped from ^0.1.5 to ^0.1.6
+
+## [0.2.11](https://github.com/climateinteractive/SDEverywhere/compare/check-ui-shell-v0.2.10...check-ui-shell-v0.2.11) (2025-10-17)
+
+
+### Performance Improvements
+
+* load check summary rows lazily for improved performance ([#673](https://github.com/climateinteractive/SDEverywhere/issues/673)) ([f74dac1](https://github.com/climateinteractive/SDEverywhere/commit/f74dac1435a0678f7e2745a8dd122eaf611b078e)), closes [#646](https://github.com/climateinteractive/SDEverywhere/issues/646)
+
+## [0.2.10](https://github.com/climateinteractive/SDEverywhere/compare/check-ui-shell-v0.2.9...check-ui-shell-v0.2.10) (2025-10-08)
+
+
+### Dependencies
+
+* upgrade to vite 7.1.9 + svelte 5.39.10 ([39108d2](https://github.com/climateinteractive/SDEverywhere/commit/39108d2cd2973c25a3394778191a4d618dc30640))
+
 ## [0.2.9](https://github.com/climateinteractive/SDEverywhere/compare/check-ui-shell-v0.2.8...check-ui-shell-v0.2.9) (2025-04-14)
 
 

@@ -1,6 +1,5 @@
 import { existsSync } from 'fs'
 
-import { pr } from 'bufx'
 import * as R from 'ramda'
 
 import { readDat } from '@sdeverywhere/compile'
@@ -70,7 +69,7 @@ export let compare = async (vensimfile, sdefile, opts) => {
           let diff = difference(sdeValue, vensimValue)
           if (diff > ε) {
             let diffPct = (diff * 100).toFixed(6)
-            pr(`${varName} time=${t.toFixed(2)} vensim=${vensimValue} sde=${sdeValue} diff=${diffPct}%`)
+            console.log(`${varName} time=${t.toFixed(2)} vensim=${vensimValue} sde=${sdeValue} diff=${diffPct}%`)
             noDATDifference = false
           }
         }
@@ -78,10 +77,10 @@ export let compare = async (vensimfile, sdefile, opts) => {
     }
   }
   if (noDATDifference) {
-    pr(`Data were the same for ${vensimfile} and ${sdefile}`)
+    console.log(`Data were the same for ${vensimfile} and ${sdefile}`)
     return true
   } else {
-    pr(`Data differences detected for ${vensimfile} and ${sdefile}`)
+    console.log(`Data differences detected for ${vensimfile} and ${sdefile}`)
     return false
   }
 }

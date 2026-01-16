@@ -11,12 +11,19 @@
     // chaining (`?.`) are transpiled so that they work in older browsers
     // (e.g. Safari in iOS 12).
     "target": "es6",
-    "module": "es6",
+    // Use "es2020" for import.meta
+    "module": "es2020",
+    // Use "es2019" for flatMap
+    "lib": ["dom", "es2019"],
+    // XXX: Use bundler-friendly module resolution. This overrides the default
+    // "node" resolution set in `tsconfig-common.json`. Apparently this is
+    // required for Storybook to resolve `@storybook/addon-svelte-csf` imports.
+    "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "allowJs": true,
     "noImplicitAny": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "types": ["svelte"]
+    "types": ["svelte", "vite/client"]
   }
 }

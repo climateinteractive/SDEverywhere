@@ -10,6 +10,8 @@ import type {
   OutputVar
 } from '@sdeverywhere/check-core'
 
+import { varIdForName } from '../../../_mocks/mock-vars'
+
 import { getAnnotationsForDataset, getAnnotationsForScenario } from './annotations'
 import {
   inputAtPositionSpec,
@@ -19,7 +21,7 @@ import {
   resolvedInput,
   scenarioWithInput,
   scenarioWithInputs
-} from './_mocks/mock-resolved-types'
+} from '../../../_mocks/mock-comparison-scenario'
 
 const bundleNameL = 'baseline'
 const bundleNameR = 'current'
@@ -28,7 +30,7 @@ const errUnknownInput: ComparisonResolverError = { kind: 'unknown-input' }
 const errUnknownSettingGroup: ComparisonResolverError = { kind: 'unknown-input-setting-group' }
 
 function outputVar(varName: string, source?: string): OutputVar {
-  const varId = `_${varName.toLowerCase()}`
+  const varId = varIdForName(varName)
   const datasetKey = `${source || 'Model'}${varId}`
   const v: OutputVar = {
     datasetKey,

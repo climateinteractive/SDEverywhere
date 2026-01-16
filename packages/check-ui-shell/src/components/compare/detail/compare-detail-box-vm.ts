@@ -1,5 +1,7 @@
 // Copyright (c) 2021-2022 Climate Interactive / New Venture Fund
 
+import { assertNever } from 'assert-never'
+
 import type { Readable, Writable } from 'svelte/store'
 import { writable } from 'svelte/store'
 
@@ -8,12 +10,14 @@ import type {
   ComparisonDataCoordinator,
   ComparisonScenario,
   ComparisonScenarioKey,
+  ComparisonSortMode,
   ComparisonTestReport,
+  ComparisonTestSummary,
   DatasetKey,
   DatasetMap,
   DiffReport
 } from '@sdeverywhere/check-core'
-import { diffDatasets } from '@sdeverywhere/check-core'
+import { diffDatasets, testSummaryFromReport } from '@sdeverywhere/check-core'
 
 import { getBucketIndex } from '../_shared/buckets'
 import type { PinnedItemKey } from '../_shared/pinned-item-state'
@@ -33,6 +37,9 @@ export interface CompareDetailBoxContent {
   bucketClass: string
   message?: string
   diffReport: DiffReport
+  baselineMaxDiff: number | undefined
+  maxDiffRelativeToBaseline: number | undefined
+  avgDiffRelativeToBaseline: number | undefined
   comparisonGraphViewModel: ComparisonGraphViewModel
 }
 
@@ -60,6 +67,8 @@ export class CompareDetailBoxViewModel {
   constructor(
     public readonly comparisonConfig: ComparisonConfig,
     public readonly dataCoordinator: ComparisonDataCoordinator,
+    private readonly baselineTestSummary: ComparisonTestSummary | undefined,
+    public readonly sortMode: ComparisonSortMode,
     public readonly kind: CompareDetailBoxKind,
     public readonly title: string,
     public readonly subtitle: string | undefined,
@@ -88,7 +97,9 @@ export class CompareDetailBoxViewModel {
 
     this.dataCoordinator.requestDatasetMaps(
       this.requestKey,
+      'left',
       this.scenario.specL,
+      'right',
       this.scenario.specR,
       datasetKeys,
       (datasetMapL, datasetMapR) => {
@@ -96,7 +107,21 @@ export class CompareDetailBoxViewModel {
           return
         }
 
-        const datasetReport = compareDatasets(this.scenario.key, this.datasetKey, datasetMapL, datasetMapR)
+        // Determine if this is the baseline scenario.  We use this to decide whether to show the special
+        // dashed border in cases where a dataset has differences for a non-baseline scenario but no
+        // differences for the baseline scenario (only applicable for the baseline-relative sorting modes).
+        const isBaseline =
+          this.scenario.settings.kind === 'all-inputs-settings' && this.scenario.settings.position === 'at-default'
+
+        // Get the baseline diff values.  Note that the baseline summary can be undefined in the case
+        // where it had no differences (since we only store a summary for tests that had differences),
+        // use zero values.
+        const baselineMaxDiff = this.baselineTestSummary?.md ?? 0
+        const baselineAvgDiff = this.baselineTestSummary?.ad ?? 0
+
+        // Compute the test summary for this scenario/dataset pair
+        const testReport = compareDatasets(this.scenario.key, this.datasetKey, datasetMapL, datasetMapR)
+        const testSummary = testSummaryFromReport(testReport, baselineMaxDiff, baselineAvgDiff)
 
         const dataOnlyDefinedIn = (side: 'left' | 'right') => {
           const c = this.comparisonConfig
@@ -104,18 +129,49 @@ export class CompareDetailBoxViewModel {
           return `Data only defined in ${datasetSpan(name, side)}`
         }
 
-        const diffReport = datasetReport.diffReport
+        const diffReport = testReport.diffReport
+        let maxDiffRelativeToBaseline: number | undefined
+        let avgDiffRelativeToBaseline: number | undefined
         let bucketIndex: number
         let message: string
         switch (diffReport.validity) {
-          case 'both':
-            bucketIndex = getBucketIndex(diffReport.maxDiff, this.comparisonConfig.thresholds)
+          case 'both': {
             if (diffReport.maxDiff === 0) {
+              // There are no differences, so put the test in the "no differences" bucket
+              bucketIndex = 0
+              maxDiffRelativeToBaseline = 0
+              avgDiffRelativeToBaseline = 0
               message = 'No differences'
             } else {
+              // Select thresholds based on whether we're doing relative sorting
+              const isRelativeMode = this.sortMode === 'max-diff-relative' || this.sortMode === 'avg-diff-relative'
+              const thresholds = isRelativeMode
+                ? this.comparisonConfig.ratioThresholds
+                : this.comparisonConfig.thresholds
+              let diffValue: number
+              switch (this.sortMode) {
+                case 'max-diff':
+                  diffValue = testSummary?.md ?? 0
+                  break
+                case 'avg-diff':
+                  diffValue = testSummary?.ad ?? 0
+                  break
+                case 'max-diff-relative':
+                  diffValue = testSummary?.mdb ?? 0
+                  break
+                case 'avg-diff-relative':
+                  diffValue = testSummary?.adb ?? 0
+                  break
+                default:
+                  assertNever(this.sortMode)
+              }
+              bucketIndex = getBucketIndex(diffValue, thresholds)
+              maxDiffRelativeToBaseline = testSummary?.mdb ?? 0
+              avgDiffRelativeToBaseline = testSummary?.adb ?? 0
               message = undefined
             }
             break
+          }
           case 'left-only':
             bucketIndex = undefined
             message = dataOnlyDefinedIn('left')
@@ -134,8 +190,8 @@ export class CompareDetailBoxViewModel {
             break
         }
 
-        const modelSpecL = this.dataCoordinator.bundleModelL.modelSpec
-        const modelSpecR = this.dataCoordinator.bundleModelR.modelSpec
+        const modelSpecL = this.comparisonConfig.bundleL.modelSpec
+        const modelSpecR = this.comparisonConfig.bundleR.modelSpec
         const outputVarL = modelSpecL.outputVars.get(this.datasetKey)
         const outputVarR = modelSpecR.outputVars.get(this.datasetKey)
         const outputVar = outputVarR || outputVarL
@@ -218,6 +274,9 @@ export class CompareDetailBoxViewModel {
           bucketClass: `bucket-border-${bucketIndex !== undefined ? bucketIndex : 'undefined'}`,
           message,
           diffReport,
+          baselineMaxDiff: isBaseline ? undefined : baselineMaxDiff,
+          maxDiffRelativeToBaseline,
+          avgDiffRelativeToBaseline,
           comparisonGraphViewModel
         }
         this.writableContent.set(this.localContent)

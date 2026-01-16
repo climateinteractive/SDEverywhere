@@ -1,9 +1,9 @@
 import * as fs from 'node:fs'
 import util from 'util'
-import B from 'bufx'
 import { parse as parseCsv } from 'csv-parse/sync'
 import * as R from 'ramda'
 import XLSX from 'xlsx'
+import B from './bufx.js'
 
 import { canonicalId, canonicalVarId } from '@sdeverywhere/parse'
 

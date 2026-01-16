@@ -1,5 +1,37 @@
 # Changelog
 
+## [0.2.32](https://github.com/climateinteractive/SDEverywhere/compare/create-v0.2.31...create-v0.2.32) (2026-01-08)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/compile bumped from ^0.7.25 to ^0.7.26
+
+## [0.2.31](https://github.com/climateinteractive/SDEverywhere/compare/create-v0.2.30...create-v0.2.31) (2025-12-12)
+
+
+### Bug Fixes
+
+* make template-svelte the default option in create package + rename template-default to template-jquery ([#714](https://github.com/climateinteractive/SDEverywhere/issues/714)) ([d481a00](https://github.com/climateinteractive/SDEverywhere/commit/d481a00ff870f57bb04c7ddf0bade41a92851b63)), closes [#713](https://github.com/climateinteractive/SDEverywhere/issues/713)
+
+## [0.2.30](https://github.com/climateinteractive/SDEverywhere/compare/create-v0.2.29...create-v0.2.30) (2025-10-17)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/compile bumped from ^0.7.24 to ^0.7.25
+
+## [0.2.29](https://github.com/climateinteractive/SDEverywhere/compare/create-v0.2.28...create-v0.2.29) (2025-10-08)
+
+
+### Dependencies
+
+* require Node.js v20 as minimum supported version ([7e993aa](https://github.com/climateinteractive/SDEverywhere/commit/7e993aa864883205bf870c4b814d6b089267bdf1))
+
 ## [0.2.28](https://github.com/climateinteractive/SDEverywhere/compare/create-v0.2.27...create-v0.2.28) (2025-08-18)
 
 

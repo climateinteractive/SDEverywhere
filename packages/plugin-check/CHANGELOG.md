@@ -1,5 +1,123 @@
 # Changelog
 
+## [0.3.26](https://github.com/climateinteractive/SDEverywhere/compare/plugin-check-v0.3.25...plugin-check-v0.3.26) (2026-01-13)
+
+
+### Features
+
+* add support for loading model-check bundles from password-protected servers ([#763](https://github.com/climateinteractive/SDEverywhere/issues/763)) ([900bd22](https://github.com/climateinteractive/SDEverywhere/commit/900bd22627f102b92f942538366f0d8509b76965)), closes [#762](https://github.com/climateinteractive/SDEverywhere/issues/762)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/check-ui-shell bumped from ^0.2.16 to ^0.2.17
+
+## [0.3.25](https://github.com/climateinteractive/SDEverywhere/compare/plugin-check-v0.3.24...plugin-check-v0.3.25) (2026-01-10)
+
+
+### Bug Fixes
+
+* add logging to bundle loading code ([#758](https://github.com/climateinteractive/SDEverywhere/issues/758)) ([df161f7](https://github.com/climateinteractive/SDEverywhere/commit/df161f7a061ca0c1d8ff30c7837a8ac4f7866897)), closes [#757](https://github.com/climateinteractive/SDEverywhere/issues/757)
+
+## [0.3.24](https://github.com/climateinteractive/SDEverywhere/compare/plugin-check-v0.3.23...plugin-check-v0.3.24) (2026-01-08)
+
+
+### Dependencies
+
+* upgrade chokidar to 5.0.0 + replace tiny-glob with tinyglobby ([#753](https://github.com/climateinteractive/SDEverywhere/issues/753)) ([c0e7e62](https://github.com/climateinteractive/SDEverywhere/commit/c0e7e62a3e9af7a5bbe88e00dfa868c021236ba8)), closes [#752](https://github.com/climateinteractive/SDEverywhere/issues/752)
+* upgrade vite to ^7.1.12 + upgrade vitest to ^4.0.16 ([#735](https://github.com/climateinteractive/SDEverywhere/issues/735)) ([f16f127](https://github.com/climateinteractive/SDEverywhere/commit/f16f127b9fb0e53352d7e1152d78623fe5ec26c9)), closes [#734](https://github.com/climateinteractive/SDEverywhere/issues/734)
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/check-ui-shell bumped from ^0.2.15 to ^0.2.16
+
+## [0.3.23](https://github.com/climateinteractive/SDEverywhere/compare/plugin-check-v0.3.22...plugin-check-v0.3.23) (2026-01-07)
+
+
+### Bug Fixes
+
+* include correct timestamp for current bundle in bundle selector ([#727](https://github.com/climateinteractive/SDEverywhere/issues/727)) ([66d010a](https://github.com/climateinteractive/SDEverywhere/commit/66d010add9635bbc4db09d38a73150ab1700d7a3)), closes [#726](https://github.com/climateinteractive/SDEverywhere/issues/726)
+* use dynamic import to load local bundles + update glob pattern to allow for loading bundles in subdirectories ([#729](https://github.com/climateinteractive/SDEverywhere/issues/729)) ([b3e459b](https://github.com/climateinteractive/SDEverywhere/commit/b3e459b12ab7ad43cc65ce5f8aa657050c7e58e4)), closes [#712](https://github.com/climateinteractive/SDEverywhere/issues/712)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/check-ui-shell bumped from ^0.2.14 to ^0.2.15
+
+## [0.3.22](https://github.com/climateinteractive/SDEverywhere/compare/plugin-check-v0.3.21...plugin-check-v0.3.22) (2026-01-05)
+
+
+### Bug Fixes
+
+* update BundleGraphView interface to allow for updating data, custom legend, and non-canvas implementations ([#724](https://github.com/climateinteractive/SDEverywhere/issues/724)) ([1296c6d](https://github.com/climateinteractive/SDEverywhere/commit/1296c6d12629eaa9c515b7e34d0fa2d26348e2b9)), closes [#723](https://github.com/climateinteractive/SDEverywhere/issues/723)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/check-core bumped from ^0.1.6 to ^0.1.7
+    * @sdeverywhere/check-ui-shell bumped from ^0.2.13 to ^0.2.14
+
+## [0.3.21](https://github.com/climateinteractive/SDEverywhere/compare/plugin-check-v0.3.20...plugin-check-v0.3.21) (2025-12-08)
+
+
+### Features
+
+* allow for loading (and downloading) remote bundles in model-check ([#698](https://github.com/climateinteractive/SDEverywhere/issues/698)) ([78400b3](https://github.com/climateinteractive/SDEverywhere/commit/78400b35e41d7225e15540ebbbd0eab98f0a43a4)), closes [#697](https://github.com/climateinteractive/SDEverywhere/issues/697)
+
+
+### Dependencies
+
+* upgrade rollup to 4.53.3 + upgrade related `[@rollup](https://github.com/rollup)` plugins ([#703](https://github.com/climateinteractive/SDEverywhere/issues/703)) ([fdfb5c7](https://github.com/climateinteractive/SDEverywhere/commit/fdfb5c703172fd7faea4f28972e7e127def4577a)), closes [#702](https://github.com/climateinteractive/SDEverywhere/issues/702)
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/check-ui-shell bumped from ^0.2.12 to ^0.2.13
+
+## [0.3.20](https://github.com/climateinteractive/SDEverywhere/compare/plugin-check-v0.3.19...plugin-check-v0.3.20) (2025-10-31)
+
+
+### Features
+
+* add support for filtering/skipping checks and comparisons in model-check ([#686](https://github.com/climateinteractive/SDEverywhere/issues/686)) ([95a0c53](https://github.com/climateinteractive/SDEverywhere/commit/95a0c53adbb5289041ec8f1e59b2826f406e7869)), closes [#682](https://github.com/climateinteractive/SDEverywhere/issues/682)
+* add support for running multiple pairs of model instances concurrently in model-check ([#688](https://github.com/climateinteractive/SDEverywhere/issues/688)) ([db975b0](https://github.com/climateinteractive/SDEverywhere/commit/db975b0d3359cd8bbfc4987f24ce525a44a2b513)), closes [#683](https://github.com/climateinteractive/SDEverywhere/issues/683)
+* add Trace View (tracing/diagnosis tool) to model-check ([#684](https://github.com/climateinteractive/SDEverywhere/issues/684)) ([a9f2b1c](https://github.com/climateinteractive/SDEverywhere/commit/a9f2b1c47be651463b1a85ef85078c65faca9ffe)), closes [#675](https://github.com/climateinteractive/SDEverywhere/issues/675)
+
+
+### Bug Fixes
+
+* reduce size of impl var metadata in model-check bundle ([#689](https://github.com/climateinteractive/SDEverywhere/issues/689)) ([58cccb5](https://github.com/climateinteractive/SDEverywhere/commit/58cccb526fd2e86bef40672fe339b0b213c5ac89)), closes [#687](https://github.com/climateinteractive/SDEverywhere/issues/687)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/check-core bumped from ^0.1.5 to ^0.1.6
+    * @sdeverywhere/check-ui-shell bumped from ^0.2.11 to ^0.2.12
+
+## [0.3.19](https://github.com/climateinteractive/SDEverywhere/compare/plugin-check-v0.3.18...plugin-check-v0.3.19) (2025-10-17)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/check-ui-shell bumped from ^0.2.10 to ^0.2.11
+
+## [0.3.18](https://github.com/climateinteractive/SDEverywhere/compare/plugin-check-v0.3.17...plugin-check-v0.3.18) (2025-10-08)
+
+
+### Dependencies
+
+* upgrade to vite 7.1.9 + svelte 5.39.10 ([39108d2](https://github.com/climateinteractive/SDEverywhere/commit/39108d2cd2973c25a3394778191a4d618dc30640))
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/check-ui-shell bumped from ^0.2.9 to ^0.2.10
+
 ## [0.3.17](https://github.com/climateinteractive/SDEverywhere/compare/plugin-check-v0.3.16...plugin-check-v0.3.17) (2025-04-26)
 
 

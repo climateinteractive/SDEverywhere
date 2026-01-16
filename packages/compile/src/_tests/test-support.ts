@@ -48,7 +48,8 @@ export interface Sub {
   size: number // 1
   family: DimCName // '_dima'
   // TODO: Is mappings ever used for subscripts?  (Currently it always seems to be set to empty object.)
-  mappings: {} // {}
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  mappings: any // {}
 }
 
 export type VariableType = 'const' | 'aux' | 'level' | 'initial' | 'lookup' | 'data'
@@ -220,6 +221,7 @@ ${vars}
 }
 
 function prettyVar(variable: Variable): string {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const stringify = (x: any) => {
     return JSON.stringify(x)
   }
