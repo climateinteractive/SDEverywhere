@@ -1,6 +1,6 @@
 import * as R from 'ramda'
 
-import { canonicalId, toPrettyString } from '@sdeverywhere/parse'
+import { canonicalVarId, toPrettyString } from '@sdeverywhere/parse'
 
 import B from '../_shared/bufx.js'
 import { decanonicalize, isIterable, strlist, vlog, vsort } from '../_shared/helpers.js'
@@ -107,7 +107,7 @@ function read(parsedModel, spec, extData, directData, modelDirname, opts) {
       rhsExpr = {
         kind: 'variable-ref',
         varName: rhsValue,
-        varId: canonicalId(rhsValue)
+        varId: canonicalVarId(rhsValue)
       }
     }
     const v = new Variable()
@@ -1295,7 +1295,7 @@ function jsonList() {
 
       const varInstances = expandVar(v)
       for (const { varName, subscriptIndices } of varInstances) {
-        const varId = canonicalId(varName)
+        const varId = canonicalVarId(varName)
         const varItem = {
           varId,
           varName,
