@@ -694,6 +694,9 @@ importers:
 
   packages/parse:
     dependencies:
+      '@rgrove/parse-xml':
+        specifier: ^4.1.0
+        version: 4.2.0
       antlr4:
         specifier: 4.12.0
         version: 4.12.0
@@ -1449,6 +1452,10 @@ packages:
 
   '@polka/url@1.0.0-next.29':
     resolution: {integrity: sha512-wwQAWhWSuHaag8c4q/KN/vCoeOJYshAIvMQwD4GpSb3OiZklFfvAgmj0VCBBImRpuF/aFgIRzllXlVX93Jevww==}
+
+  '@rgrove/parse-xml@4.2.0':
+    resolution: {integrity: sha512-UuBOt7BOsKVOkFXRe4Ypd/lADuNIfqJXv8GvHqtXaTYXPPKkj2nS2zPllVsrtRjcomDhIJVBnZwfmlI222WH8g==}
+    engines: {node: '>=14.0.0'}
 
   '@rollup/plugin-node-resolve@16.0.3':
     resolution: {integrity: sha512-lUYM3UBGuM93CnMPG1YocWu7X802BrNF3jW2zny5gQyLQgRFJhV1Sq0Zi74+dh/6NBx1DxFC4b4GXg9wUCG5Qg==}
@@ -3994,6 +4001,8 @@ snapshots:
       playwright: 1.56.1
 
   '@polka/url@1.0.0-next.29': {}
+
+  '@rgrove/parse-xml@4.2.0': {}
 
   '@rollup/plugin-node-resolve@16.0.3(rollup@4.53.3)':
     dependencies:
