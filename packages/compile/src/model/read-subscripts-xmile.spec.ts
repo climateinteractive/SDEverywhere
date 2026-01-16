@@ -31,6 +31,7 @@ function readSubscriptsFromSource(
     modelDir?: string
   },
   resolve: boolean
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): any[] {
   // XXX: This is needed due to subs/dims being in module-level storage
   resetSubscriptsAndDimensions()
@@ -57,18 +58,22 @@ function readSubscriptsFromSource(
   return allSubscripts()
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function readInlineSubscripts(modelText: string, modelDir?: string): any[] {
   return readSubscriptsFromSource({ modelText, modelDir }, /*resolve=*/ false)
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function readAndResolveInlineSubscripts(modelText: string, modelDir?: string): any[] {
   return readSubscriptsFromSource({ modelText, modelDir }, /*resolve=*/ true)
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function readSubscripts(modelName: string): any[] {
   return readSubscriptsFromSource({ modelName }, /*resolve=*/ false)
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function readAndResolveSubscripts(modelName: string): any[] {
   return readSubscriptsFromSource({ modelName }, /*resolve=*/ true)
 }

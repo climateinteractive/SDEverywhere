@@ -113,6 +113,7 @@ function v(lhs: string, formula: string, overrides?: Partial<Variable>): Variabl
   variable.includeInOutput = true
   if (overrides) {
     for (const [key, value] of Object.entries(overrides)) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const r = variable as Record<string, any>
       r[key] = value
     }
