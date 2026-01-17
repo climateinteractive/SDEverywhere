@@ -645,6 +645,7 @@ function visitFunctionCall(v, callExpr, context) {
       case '_INT':
       case '_LN':
       case '_SIN':
+      case '_SIZE':
       case '_SQRT':
       case '_SUM':
       case '_TAN':

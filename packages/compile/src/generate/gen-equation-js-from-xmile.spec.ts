@@ -2502,6 +2502,36 @@ describe('generateEquation (XMILE -> JS)', () => {
     expect(genJS(vars.get('_y'))).toEqual(['for (let i = 0; i < 2; i++) {', '_y[i] = __level3[i];', '}'])
   })
 
+  it('should work for SIZE function', () => {
+    // Equivalent Vensim model for reference:
+    // const vars = readInlineModel(`
+    //   DimA: A1, A2, A3 ~~|
+    //   a = ELMCOUNT(DimA) ~~|
+    // `)
+
+    const xmileDims = `\
+<dim name="DimA">
+  <elem name="A1"/>
+  <elem name="A2"/>
+  <elem name="A3"/>
+</dim>`
+    const xmileVars = `\
+<aux name="a">
+  <eqn>SIZE(DimA)</eqn>
+</aux>
+<aux name="b">
+  <dimensions>
+    <dim name="DimA"/>
+  </dimensions>
+  <eqn>10*SIZE(DimA)+a</eqn>
+</aux>`
+    const mdl = xmile(xmileDims, xmileVars)
+    const vars = readInlineModel(mdl)
+    expect(vars.size).toBe(2)
+    expect(genJS(vars.get('_a'))).toEqual(['_a = 3;'])
+    expect(genJS(vars.get('_b'))).toEqual(['for (let i = 0; i < 3; i++) {', '_b[i] = 10.0 * 3 + _a;', '}'])
+  })
+
   it('should work for SQRT function', () => {
     // Equivalent Vensim model for reference:
     // const vars = readInlineModel(`

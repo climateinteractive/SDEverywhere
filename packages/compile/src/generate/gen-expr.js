@@ -384,11 +384,13 @@ function generateFunctionCall(callExpr, ctx) {
       }
       return generateAllocateAvailableCall(callExpr, ctx)
 
-    case '_ELMCOUNT': {
-      // Emit the size of the dimension in place of the dimension name
+    case '_ELMCOUNT':
+    case '_SIZE': {
+      // Emit the size of the dimension in place of the dimension name.
+      // Note that Vensim uses `ELMCOUNT` while XMILE uses `SIZE`, but otherwise they are the same.
       const dimArg = callExpr.args[0]
       if (dimArg.kind !== 'variable-ref') {
-        throw new Error('Argument for ELMCOUNT must be a dimension name')
+        throw new Error(`Argument for ${callExpr.fnName} must be a dimension name`)
       }
       const dimId = dimArg.varId
       return `${sub(dimId).size}`
