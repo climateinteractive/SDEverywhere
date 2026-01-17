@@ -682,6 +682,19 @@ function visitFunctionCall(v, callExpr, context) {
       //
       //
 
+      case '_DELAY':
+        // Stella's DELAY function is equivalent to Vensim's DELAY FIXED function
+        validateCallDepth(callExpr, context)
+        validateCallArgs(callExpr, 3)
+        v.varType = 'level'
+        v.varSubtype = 'fixedDelay'
+        v.hasInitValue = true
+        v.fixedDelayVarName = canonicalName(newFixedDelayVarName())
+        // The 2nd and 3rd arguments are used at init time
+        argModes[1] = 'init'
+        argModes[2] = 'init'
+        break
+
       case '_DELAY1':
       case '_DELAY3':
         // Stella's DELAY1 and DELAY3 functions can take a third "initial" argument (in which case

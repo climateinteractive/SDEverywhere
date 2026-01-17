@@ -284,12 +284,13 @@ function generateFunctionCall(callExpr, ctx) {
     //
 
     case '_ACTIVE_INITIAL':
+    case '_DELAY':
     case '_DELAY_FIXED':
     case '_DEPRECIATE_STRAIGHTLINE':
     case '_SAMPLE_IF_TRUE':
     case '_INTEG':
       // Split level functions into init and eval expressions
-      if (ctx.outFormat === 'js' && (fnId === '_DELAY_FIXED' || fnId === '_DEPRECIATE_STRAIGHTLINE')) {
+      if (ctx.outFormat === 'js' && (fnId === '_DELAY' || fnId === '_DELAY_FIXED' || fnId === '_DEPRECIATE_STRAIGHTLINE')) {
         throw new Error(`${callExpr.fnName} function not yet implemented for JS code gen`)
       }
       if (ctx.mode.startsWith('init')) {
@@ -463,6 +464,7 @@ function generateLevelInit(callExpr, ctx) {
     case '_INTEG':
       initialArgIndex = 1
       break
+    case '_DELAY':
     case '_DELAY_FIXED': {
       // Emit the code that initializes the `FixedDelay` support struct
       const fixedDelay = ctx.cVarRefWithLhsSubscripts(ctx.variable.fixedDelayVarName)
@@ -514,12 +516,14 @@ function generateLevelEval(callExpr, ctx) {
       // For ACTIVE INITIAL, emit the first arg without a function call
       return generateExpr(callExpr.args[0], ctx)
 
+    case '_DELAY':
     case '_DELAY_FIXED': {
-      // For DELAY FIXED, emit the first arg followed by the FixedDelay support var
+      // For DELAY/DELAY FIXED, emit the first arg followed by the FixedDelay support var
       const args = []
       args.push(generateExpr(callExpr.args[0], ctx))
       args.push(ctx.cVarRefWithLhsSubscripts(ctx.variable.fixedDelayVarName))
-      return generateCall(args)
+      // Both XMILE's DELAY and Vensim's DELAY FIXED use the same runtime function
+      return `${fnRef('_DELAY_FIXED', ctx)}(${args.join(', ')})`
     }
 
     case '_DEPRECIATE_STRAIGHTLINE': {

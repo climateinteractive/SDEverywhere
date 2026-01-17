@@ -1678,9 +1678,38 @@ describe('generateEquation (XMILE -> JS)', () => {
     expect(genJS(vars.get('_y'))).toEqual(['for (let i = 0; i < 2; i++) {', '_y[i] = (__level3[i] / __aux4[i]);', '}'])
   })
 
-  // TODO: This test is skipped for now; in Stella, the DELAY function can be called with or
-  // without an initial value argument, but the code that handles the Vensim DELAY FIXED function
-  // currently assumes the initial value argument
+  it('should work for DELAY function (XMILE equivalent to Vensim DELAY FIXED)', () => {
+    // Stella's DELAY function is equivalent to Vensim's DELAY FIXED function.
+    // Note: JS code gen is not yet implemented for DELAY FIXED/DELAY, so this test
+    // just verifies that the parsing works correctly and throws the expected error.
+
+    const xmileVars = `\
+<aux name="x">
+  <eqn>1</eqn>
+</aux>
+<aux name="delay time">
+  <eqn>5</eqn>
+</aux>
+<aux name="init">
+  <eqn>2</eqn>
+</aux>
+<aux name="y">
+  <eqn>DELAY(x, delay_time, init)</eqn>
+  <isee:delay_aux/>
+</aux>`
+    const mdl = xmile('', xmileVars)
+    const vars = readInlineModel(mdl)
+    expect(vars.size).toBe(4)
+    expect(genJS(vars.get('_x'))).toEqual(['_x = 1.0;'])
+    expect(genJS(vars.get('_delay_time'))).toEqual(['_delay_time = 5.0;'])
+    expect(genJS(vars.get('_init'))).toEqual(['_init = 2.0;'])
+    // JS code gen is not yet implemented for DELAY, so verify it throws the expected error
+    expect(() => genJS(vars.get('_y'), 'init-levels')).toThrow('DELAY function not yet implemented for JS code gen')
+    expect(() => genJS(vars.get('_y'), 'eval')).toThrow('DELAY function not yet implemented for JS code gen')
+  })
+
+  // TODO: This test is skipped for now; the Vensim DELAY FIXED function JS code gen
+  // is not yet implemented
   it.skip('should work for DELAY FIXED function', () => {
     const vars = readInlineModel(`
       x = 1 ~~|
