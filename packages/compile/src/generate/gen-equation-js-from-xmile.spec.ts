@@ -2156,6 +2156,27 @@ describe('generateEquation (XMILE -> JS)', () => {
     expect(genJS(vars.get('_y'))).toEqual(['_y = fns.RAMP(_slope, _start, _end);'])
   })
 
+  it('should work for SAFEDIV function', () => {
+    // Equivalent Vensim model for reference:
+    // const vars = readInlineModel(`
+    //   x = 1 ~~|
+    //   y = ZIDZ(x, 2) ~~|
+    // `)
+
+    const xmileVars = `\
+<aux name="x">
+  <eqn>1</eqn>
+</aux>
+<aux name="y">
+  <eqn>SAFEDIV(x, 2)</eqn>
+</aux>`
+    const mdl = xmile('', xmileVars)
+    const vars = readInlineModel(mdl)
+    expect(vars.size).toBe(2)
+    expect(genJS(vars.get('_x'))).toEqual(['_x = 1.0;'])
+    expect(genJS(vars.get('_y'))).toEqual(['_y = fns.ZIDZ(_x, 2.0);'])
+  })
+
   it('should work for SIN function', () => {
     // Equivalent Vensim model for reference:
     // const vars = readInlineModel(`

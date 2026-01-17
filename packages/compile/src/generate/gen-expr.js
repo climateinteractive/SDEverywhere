@@ -238,6 +238,10 @@ function generateFunctionCall(callExpr, ctx) {
       // XMILE/Stella uses `MOD`, but it is the same as the Vensim `MODULO` function,
       // which is the name used in the runtime function implementation
       return generateSimpleFunctionCall('_MODULO')
+    case '_SAFEDIV':
+      // XMILE/Stella uses `SAFEDIV`, but it is the same as the Vensim `ZIDZ` function,
+      // which is the name used in the runtime function implementation
+      return generateSimpleFunctionCall('_ZIDZ')
 
     //
     //
