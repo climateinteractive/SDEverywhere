@@ -696,6 +696,18 @@ function visitFunctionCall(v, callExpr, context) {
         argModes[2] = 'init'
         break
 
+      case '_DEPRECIATE_STRAIGHTLINE':
+        // Stella's DEPRECIATE_STRAIGHTLINE function has the same signature as Vensim's
+        validateCallDepth(callExpr, context)
+        validateCallArgs(callExpr, 4)
+        v.varSubtype = 'depreciation'
+        v.hasInitValue = true
+        v.depreciationVarName = canonicalName(newDepreciationVarName())
+        // The 2nd and 3rd arguments are used at init time
+        argModes[1] = 'init'
+        argModes[2] = 'init'
+        break
+
       case '_DELAY1':
       case '_DELAY3':
         // Stella's DELAY1 and DELAY3 functions can take a third "initial" argument (in which case
@@ -704,6 +716,18 @@ function visitFunctionCall(v, callExpr, context) {
         addFnReference = false
         visitArgs = false
         generateDelayVariables(v, callExpr, context)
+        break
+
+      case '_ACTIVE_INITIAL':
+        // NOTE: Stella doesn't have a built-in `ACTIVE INITIAL` function, but our XMILE parser
+        // synthesizes an `ACTIVE INITIAL` function call for `<aux>` variable definitions that
+        // have both `<eqn>` and `<init_eqn>` elements.  This is equivalent to Vensim's
+        // `ACTIVE INITIAL` function.
+        validateCallDepth(callExpr, context)
+        validateCallArgs(callExpr, 2)
+        v.hasInitValue = true
+        // The 2nd argument is used at init time
+        argModes[1] = 'init'
         break
 
       case '_IF_THEN_ELSE':

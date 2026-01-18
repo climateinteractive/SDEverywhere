@@ -3396,8 +3396,9 @@ ${elements.join('\n')}
   // NOTE: This is the end of the "should work for {0,1,2,3}D variable" tests.
   //
 
-  // TODO: This test is skipped because Stella doesn't appear to include the ACTIVE INITIAL function
-  it.skip('should work for ACTIVE INITIAL function', () => {
+  // In XMILE/Stella, ACTIVE INITIAL is expressed using a separate <init_eqn> element.
+  // The XMILE parser synthesizes an ACTIVE INITIAL call when both <eqn> and <init_eqn> are present.
+  it('should work for ACTIVE INITIAL function (synthesized from init_eqn)', () => {
     // Equivalent Vensim model for reference:
     // const vars = readInlineModel(`
     //   Initial Target Capacity = 1 ~~|
@@ -3405,20 +3406,23 @@ ${elements.join('\n')}
     //   Target Capacity = ACTIVE INITIAL(Capacity, Initial Target Capacity) ~~|
     // `)
 
+    // Note: In XMILE, variable names with underscores are different from names with spaces.
+    // The <init_eqn> references the variable using the exact name format (underscores here).
     const xmileVars = `\
-<aux name="Initial Target Capacity">
+<aux name="Initial_Target_Capacity">
   <eqn>1</eqn>
 </aux>
 <aux name="Capacity">
   <eqn>2</eqn>
 </aux>
-<aux name="Target Capacity">
-  <eqn>ACTIVE INITIAL(Capacity, Initial Target Capacity)</eqn>
+<aux name="Target_Capacity">
+  <eqn>Capacity</eqn>
+  <init_eqn>Initial_Target_Capacity</init_eqn>
 </aux>`
     const mdl = xmile('', xmileVars)
     const vars = readInlineModel(mdl)
     expect(vars).toEqual([
-      v('Initial Target Capacity', '1', {
+      v('Initial_Target_Capacity', '1', {
         refId: '_initial_target_capacity',
         varType: 'const'
       }),
@@ -3426,7 +3430,7 @@ ${elements.join('\n')}
         refId: '_capacity',
         varType: 'const'
       }),
-      v('Target Capacity', 'ACTIVE INITIAL(Capacity,Initial Target Capacity)', {
+      v('Target_Capacity', 'ACTIVE INITIAL(Capacity,Initial_Target_Capacity)', {
         refId: '_target_capacity',
         references: ['_capacity'],
         hasInitValue: true,

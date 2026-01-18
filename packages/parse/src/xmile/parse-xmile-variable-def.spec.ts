@@ -688,6 +688,55 @@ describe('parseXmileVariableDef with <aux>', () => {
     expect(parseXmileVariableDef(v)).toEqual([exprEqn(varDef('x y z'), binaryOp(varRef('y'), '+', num(10)))])
   })
 
+  it('should parse an aux variable definition with <init_eqn> (synthesizes ACTIVE INITIAL call)', () => {
+    const v = xml(`
+      <aux name="Target Capacity">
+        <eqn>Capacity_1*Utilization_Adjustment</eqn>
+        <init_eqn>Initial_Target_Capacity</init_eqn>
+      </aux>
+    `)
+    expect(parseXmileVariableDef(v)).toEqual([
+      exprEqn(
+        varDef('Target Capacity'),
+        call(
+          'ACTIVE INITIAL',
+          binaryOp(varRef('Capacity_1'), '*', varRef('Utilization_Adjustment')),
+          varRef('Initial_Target_Capacity')
+        )
+      )
+    ])
+  })
+
+  it('should parse an aux variable definition with <init_eqn> (with numeric init value)', () => {
+    const v = xml(`
+      <aux name="x">
+        <eqn>y + z</eqn>
+        <init_eqn>100</init_eqn>
+      </aux>
+    `)
+    expect(parseXmileVariableDef(v)).toEqual([
+      exprEqn(varDef('x'), call('ACTIVE INITIAL', binaryOp(varRef('y'), '+', varRef('z')), num(100)))
+    ])
+  })
+
+  it('should parse an aux variable definition with <init_eqn> (with one dimension, apply-to-all)', () => {
+    const v = xml(`
+      <aux name="x">
+        <dimensions>
+          <dim name="DimA" />
+        </dimensions>
+        <eqn>y[DimA] + z</eqn>
+        <init_eqn>100</init_eqn>
+      </aux>
+    `)
+    expect(parseXmileVariableDef(v)).toEqual([
+      exprEqn(
+        varDef('x', ['DimA']),
+        call('ACTIVE INITIAL', binaryOp(varRef('y', ['DimA']), '+', varRef('z')), num(100))
+      )
+    ])
+  })
+
   it('should throw an error if aux variable equation cannot be parsed', () => {
     const v = xml(`
       <aux name="x">

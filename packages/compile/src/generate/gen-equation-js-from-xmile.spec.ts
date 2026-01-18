@@ -1730,6 +1730,48 @@ describe('generateEquation (XMILE -> JS)', () => {
     expect(() => genJS(vars.get('_y'), 'eval')).toThrow('DELAY FIXED function not yet implemented for JS code gen')
   })
 
+  it('should work for DEPRECIATE_STRAIGHTLINE function', () => {
+    // Equivalent Vensim model for reference:
+    // const vars = readInlineModel(`
+    //   dtime = 20 ~~|
+    //   Capacity Cost = 1000 ~~|
+    //   New Capacity = 2000 ~~|
+    //   stream = Capacity Cost * New Capacity ~~|
+    //   Depreciated Amount = DEPRECIATE STRAIGHTLINE(stream, dtime, 1, 0) ~~|
+    // `)
+
+    const xmileVars = `\
+<aux name="dtime">
+  <eqn>20</eqn>
+</aux>
+<aux name="Capacity Cost">
+  <eqn>1000</eqn>
+</aux>
+<aux name="New Capacity">
+  <eqn>2000</eqn>
+</aux>
+<aux name="stream">
+  <eqn>Capacity_Cost * New_Capacity</eqn>
+</aux>
+<aux name="Depreciated Amount">
+  <eqn>DEPRECIATE_STRAIGHTLINE(stream, dtime, 1, 0)</eqn>
+</aux>`
+    const mdl = xmile('', xmileVars)
+    const vars = readInlineModel(mdl)
+    expect(vars.size).toBe(5)
+    expect(genJS(vars.get('_dtime'))).toEqual(['_dtime = 20.0;'])
+    expect(genJS(vars.get('_capacity_cost'))).toEqual(['_capacity_cost = 1000.0;'])
+    expect(genJS(vars.get('_new_capacity'))).toEqual(['_new_capacity = 2000.0;'])
+    expect(genJS(vars.get('_stream'))).toEqual(['_stream = _capacity_cost * _new_capacity;'])
+    // JS code gen is not yet implemented for DEPRECIATE_STRAIGHTLINE, so verify it throws the expected error
+    expect(() => genJS(vars.get('_depreciated_amount'), 'init-levels')).toThrow(
+      'DEPRECIATE_STRAIGHTLINE function not yet implemented for JS code gen'
+    )
+    expect(() => genJS(vars.get('_depreciated_amount'), 'eval')).toThrow(
+      'DEPRECIATE_STRAIGHTLINE function not yet implemented for JS code gen'
+    )
+  })
+
   it('should work for EXP function', () => {
     // Equivalent Vensim model for reference:
     // const vars = readInlineModel(`

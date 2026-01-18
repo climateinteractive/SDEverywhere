@@ -166,12 +166,26 @@ function parseEqnElem(varElem: XmlElement, parentElem: XmlElement): Expr {
   // TODO: Handle the case where <eqn> is defined using CDATA
   const eqnText = eqnElem ? firstTextOf(eqnElem) : undefined
   switch (varTagName) {
-    case 'aux':
+    case 'aux': {
       if (eqnText === undefined) {
         // Technically the <eqn> is optional for an <aux>; if not defined, we will skip it
         return undefined
       }
+
+      // Check for <init_eqn> element.  In XMILE, an aux variable can have a separate
+      // init-time equation using <init_eqn>.  This is equivalent to Vensim's ACTIVE_INITIAL
+      // function, so we synthesize an ACTIVE_INITIAL call when both elements are present.
+      const initEqnElem = firstElemOf(parentElem, 'init_eqn')
+      const initEqnText = initEqnElem ? firstTextOf(initEqnElem) : undefined
+      if (initEqnText !== undefined) {
+        // Synthesize: ACTIVE INITIAL(eqnExpr, initEqnExpr)
+        const eqnExpr = parseExpr(eqnText.text)
+        const initEqnExpr = parseExpr(initEqnText.text)
+        return call('ACTIVE INITIAL', eqnExpr, initEqnExpr)
+      }
+
       return parseExpr(eqnText.text)
+    }
 
     case 'stock': {
       // <stock> elements are currently translated to a Vensim-style aux:
