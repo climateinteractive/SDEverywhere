@@ -35,7 +35,7 @@ function handleCancel() {
 </script>
 
 <!-- TEMPLATE -->
-<Dialog bind:open title="Configure Check Test">
+<Dialog bind:open title="Configure Check Test" maxWidth={1000}>
   <div class="check-editor-container">
     <div class="check-editor-form">
       <!-- Scenario Section -->
@@ -64,8 +64,8 @@ function handleCancel() {
 .check-editor-container {
   display: flex;
   gap: 2rem;
-  min-width: 60rem;
-  min-height: 30rem;
+  min-width: 800px;
+  min-height: 600px;
 }
 
 .check-editor-form {
@@ -74,6 +74,8 @@ function handleCancel() {
   gap: 1.5rem;
   flex: 1;
   min-width: 24rem;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .check-editor-actions {

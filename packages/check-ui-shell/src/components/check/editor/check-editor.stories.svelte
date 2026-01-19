@@ -2,7 +2,7 @@
 
 <script module lang="ts">
 import { defineMeta, type Args } from '@storybook/addon-svelte-csf'
-import { expect, userEvent, waitFor, within } from 'storybook/test'
+import { expect, fireEvent, userEvent, waitFor, within } from 'storybook/test'
 
 import type { InputVar, OutputVar, ModelSpec, Dataset } from '@sdeverywhere/check-core'
 import { createCheckDataCoordinatorForTests } from '@sdeverywhere/check-core'
@@ -189,19 +189,36 @@ function createMockViewModel(): CheckEditorViewModel {
       expect(canvas.getByRole('dialog')).toBeInTheDocument()
     })
 
-    // Find the dataset select dropdown (should have id="output-var-dataset-1")
-    const datasetSelect = canvasElement.querySelector('select[id^="output-var-"]') as HTMLSelectElement
-    await expect(datasetSelect).toBeInTheDocument()
+    // Find the dataset selector button
+    const datasetItem = canvasElement.querySelector('.dataset-selector-item')
+    await expect(datasetItem).toBeInTheDocument()
 
-    // Verify initial selection is Output X
-    await expect(datasetSelect.value).toBe('output_x')
+    // Verify initial selection is Output X by checking button text
+    const selectorButton = datasetItem?.querySelector('.typeahead-selector-button') as HTMLButtonElement
+    await expect(selectorButton).toBeInTheDocument()
+    await expect(selectorButton).toHaveTextContent('Output X')
 
-    // Change to Output Y
-    await userEvent.selectOptions(datasetSelect, 'output_y')
+    // Click button to open popup
+    await userEvent.click(selectorButton)
+
+    // Wait for popup to appear
+    await waitFor(() => {
+      const popup = canvasElement.querySelector('.typeahead-selector-popup')
+      expect(popup).toBeInTheDocument()
+    })
+
+    // Click on "Output Y" item
+    const items = canvasElement.querySelectorAll('.typeahead-selector-item')
+    const outputYItem = Array.from(items).find(item => item.textContent?.includes('Output Y'))
+    await expect(outputYItem).toBeInTheDocument()
+
+    if (outputYItem) {
+      await userEvent.click(outputYItem as HTMLElement)
+    }
 
     // Verify the selection changed
     await waitFor(() => {
-      expect(datasetSelect.value).toBe('output_y')
+      expect(selectorButton).toHaveTextContent('Output Y')
     })
   }}
 ></Story>
@@ -339,18 +356,64 @@ function createMockViewModel(): CheckEditorViewModel {
   play={async ({ canvasElement }) => {
     const canvas = within(canvasElement)
 
-    await waitFor(() => {
-      const d = canvas.getByRole('dialog')
-      expect(d).toBeInTheDocument()
-    })
+    // Verify dialog is open
+    const dialog = canvas.getByRole('dialog')
+    await expect(dialog).toBeInTheDocument()
 
     // Press Escape key
-    await userEvent.keyboard('{Escape}')
+    fireEvent.keyDown(dialog, { key: 'Escape' })
 
     // Verify dialog closes
     await waitFor(() => {
       expect(canvas.queryByRole('dialog')).not.toBeInTheDocument()
     })
+  }}
+></Story>
+
+<Story
+  name="Change Scenario Type"
+  {template}
+  args={{
+    open: true,
+    viewModel: createMockViewModel()
+  }}
+  play={async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await waitFor(() => {
+      expect(canvas.getByRole('dialog')).toBeInTheDocument()
+    })
+
+    // Click the "+" button to open scenario context menu
+    const addScenarioButton = canvas.getByRole('button', { name: /add scenario/i })
+    await userEvent.click(addScenarioButton)
+
+    // Wait for context menu
+    await waitFor(() => {
+      const contextMenu = canvasElement.querySelector('.scenario-selector-context-menu')
+      expect(contextMenu).toBeInTheDocument()
+    })
+
+    // Click "Given inputs at..." to add a given-inputs scenario
+    const givenInputsOption = Array.from(canvasElement.querySelectorAll('.scenario-selector-context-item')).find(
+      item => item.textContent?.includes('Given inputs')
+    )
+    await expect(givenInputsOption).toBeInTheDocument()
+
+    if (givenInputsOption) {
+      await userEvent.click(givenInputsOption as HTMLElement)
+    }
+
+    // Verify we now have 2 scenarios
+    await waitFor(() => {
+      const scenarios = canvasElement.querySelectorAll('.scenario-selector-item')
+      expect(scenarios.length).toBe(2)
+    })
+
+    // Verify the second scenario shows "Given inputs:" text
+    const scenarios = canvasElement.querySelectorAll('.scenario-selector-item')
+    const secondScenario = scenarios[1]
+    await expect(secondScenario).toHaveTextContent('Given inputs:')
   }}
 ></Story>
 
@@ -378,9 +441,21 @@ function createMockViewModel(): CheckEditorViewModel {
     const initialPredicates = canvasElement.querySelectorAll('.predicate-selector-item')
     await expect(initialPredicates.length).toBe(1)
 
-    // Add a scenario
+    // Add a scenario by clicking the "+" button and selecting from context menu
     const addScenarioButton = canvas.getByRole('button', { name: /add scenario/i })
     await userEvent.click(addScenarioButton)
+
+    // Wait for context menu to appear
+    await waitFor(() => {
+      const contextMenu = canvasElement.querySelector('.scenario-selector-context-menu')
+      expect(contextMenu).toBeInTheDocument()
+    })
+
+    // Click the "All inputs at..." option
+    const allInputsOption = canvasElement.querySelector(
+      '.scenario-selector-context-item'
+    ) as HTMLButtonElement
+    await userEvent.click(allInputsOption)
 
     await waitFor(() => {
       const scenarios = canvasElement.querySelectorAll('.scenario-selector-item')

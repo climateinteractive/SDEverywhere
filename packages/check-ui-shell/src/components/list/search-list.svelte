@@ -71,9 +71,9 @@ function onItemClicked(item: ListItemViewModel) {
 <!-- TEMPLATE -->
 <div class="search-list">
   <input type="text" placeholder="Search variables..." bind:value={viewModel.query} oninput={onInput} />
-  <div class="items">
+  <div class="items" role="listbox">
     {#each viewModel.filteredItems as item, i}
-      <div class="item" onclick={() => onItemClicked(item)} class:active={i === activeIndex}>{@html item.label}</div>
+      <div class="item" role="option" tabindex="-1" aria-selected={i === activeIndex} onclick={() => onItemClicked(item)} class:active={i === activeIndex}>{@html item.label}</div>
     {/each}
   </div>
 </div>

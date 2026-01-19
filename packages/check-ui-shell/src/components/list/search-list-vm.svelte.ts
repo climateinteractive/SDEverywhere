@@ -5,7 +5,7 @@ import type { ListItemViewModel } from './list-item-vm.svelte'
 /** View model for a searchable list control. */
 export class SearchListViewModel {
   public query = $state('')
-  public readonly filteredItems: ListItemViewModel[]
+  public readonly filteredItems = $derived.by(() => this.computeFilteredItems())
   public activeItemId = $state<string | undefined>(undefined)
 
   /** Called when the user has selected an item. */
@@ -14,9 +14,7 @@ export class SearchListViewModel {
   /**
    * @param items The list items.
    */
-  constructor(public readonly items: ListItemViewModel[]) {
-    this.filteredItems = $derived(this.computeFilteredItems())
-  }
+  constructor(public readonly items: ListItemViewModel[]) {}
 
   private computeFilteredItems(): ListItemViewModel[] {
     const trimmed = this.query.trim()

@@ -2,12 +2,13 @@
 
 <!-- SCRIPT -->
 <script lang="ts">
-import Button from '../../_shared/button.svelte'
 import Selector from '../../list/selector.svelte'
 import { SelectorOptionViewModel, SelectorViewModel } from '../../list/selector-vm.svelte'
+import TypeaheadSelector from '../../list/typeahead-selector.svelte'
 
 import type { InputPosition } from '@sdeverywhere/check-core'
 import type { CheckEditorViewModel, ScenarioKind, ScenarioItemConfig } from './check-editor-vm.svelte'
+import type { ListItemViewModel } from '../../list/list-item-vm.svelte'
 
 interface Props {
   /** The view model for the editor. */
@@ -16,12 +17,9 @@ interface Props {
 
 let { viewModel }: Props = $props()
 
-// Create selector options for scenario kind
-const scenarioKindOptions = [
-  new SelectorOptionViewModel('All Inputs', 'all-inputs'),
-  new SelectorOptionViewModel('Single Input', 'single-input'),
-  new SelectorOptionViewModel('Input Group', 'input-group')
-]
+// State for context menu
+let showContextMenu = $state(false)
+let contextMenuRef = $state<HTMLDivElement | null>(null)
 
 // Create selector options for position
 const positionOptions = [
@@ -29,14 +27,6 @@ const positionOptions = [
   new SelectorOptionViewModel('Minimum', 'at-minimum'),
   new SelectorOptionViewModel('Maximum', 'at-maximum')
 ]
-
-function createKindSelector(scenario: ScenarioItemConfig) {
-  const selector = new SelectorViewModel(scenarioKindOptions, scenario.kind)
-  selector.onUserChange = (newValue: string) => {
-    viewModel.updateScenario(scenario.id, { kind: newValue as ScenarioKind })
-  }
-  return selector
-}
 
 function createPositionSelector(scenario: ScenarioItemConfig) {
   const selector = new SelectorViewModel(positionOptions, scenario.position || 'at-default')
@@ -46,83 +36,211 @@ function createPositionSelector(scenario: ScenarioItemConfig) {
   return selector
 }
 
-function handleAddScenario() {
-  viewModel.addScenario()
+function createInputPositionSelector(scenario: ScenarioItemConfig, inputIndex: number) {
+  const input = scenario.inputs?.[inputIndex]
+  const selector = new SelectorViewModel(positionOptions, input?.position || 'at-default')
+  selector.onUserChange = (newValue: string) => {
+    viewModel.updateScenarioInput(scenario.id, inputIndex, { position: newValue as InputPosition })
+  }
+  return selector
+}
+
+function handleAddButtonClick() {
+  showContextMenu = !showContextMenu
+}
+
+function handleAddScenario(kind: ScenarioKind) {
+  viewModel.addScenario(kind)
+  showContextMenu = false
 }
 
 function handleRemoveScenario(id: string) {
   viewModel.removeScenario(id)
 }
+
+function handleSelectScenario(id: string) {
+  viewModel.selectScenario(id)
+}
+
+function handleAddInput(scenarioId: string) {
+  viewModel.addInputToScenario(scenarioId)
+}
+
+function handleRemoveInput(scenarioId: string, inputIndex: number) {
+  viewModel.removeInputFromScenario(scenarioId, inputIndex)
+}
+
+function handleKeyDown(e: KeyboardEvent) {
+  if (e.key === 'ArrowDown') {
+    e.preventDefault()
+    const currentIndex = viewModel.scenarios.findIndex(s => s.id === viewModel.selectedScenarioId)
+    if (currentIndex < viewModel.scenarios.length - 1) {
+      viewModel.selectScenario(viewModel.scenarios[currentIndex + 1].id)
+    } else {
+      viewModel.selectScenario(viewModel.scenarios[0].id)
+    }
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault()
+    const currentIndex = viewModel.scenarios.findIndex(s => s.id === viewModel.selectedScenarioId)
+    if (currentIndex > 0) {
+      viewModel.selectScenario(viewModel.scenarios[currentIndex - 1].id)
+    } else {
+      viewModel.selectScenario(viewModel.scenarios[viewModel.scenarios.length - 1].id)
+    }
+  }
+}
+
+// Close context menu when clicking outside
+function handleClickOutside(event: MouseEvent) {
+  if (contextMenuRef && !contextMenuRef.contains(event.target as Node)) {
+    showContextMenu = false
+  }
+}
+
+$effect(() => {
+  if (showContextMenu) {
+    // Add a small delay before attaching the click outside listener
+    // to prevent the initial button click from immediately closing the menu
+    const timeoutId = setTimeout(() => {
+      document.addEventListener('click', handleClickOutside)
+    }, 0)
+    return () => {
+      clearTimeout(timeoutId)
+      document.removeEventListener('click', handleClickOutside)
+    }
+  }
+})
 </script>
 
 <!-- TEMPLATE -->
 <div class="scenario-selector-section">
   <div class="scenario-selector-header">
     <h3 class="scenario-selector-title">Scenarios</h3>
-    <Button onClick={handleAddScenario}>Add Scenario</Button>
-  </div>
-
-  {#each viewModel.scenarios as scenario (scenario.id)}
-    <div class="scenario-selector-item">
-      <div class="scenario-selector-item-header">
-        <span class="scenario-selector-item-label">Scenario</span>
-        {#if viewModel.scenarios.length > 1}
+    <div class="scenario-selector-add-container">
+      <button
+        class="scenario-selector-add-btn"
+        onclick={handleAddButtonClick}
+        aria-label="Add scenario"
+      >
+        +
+      </button>
+      {#if showContextMenu}
+        <div class="scenario-selector-context-menu" bind:this={contextMenuRef}>
           <button
-            class="scenario-selector-remove-btn"
-            onclick={() => handleRemoveScenario(scenario.id)}
-            aria-label="Remove scenario"
+            class="scenario-selector-context-item"
+            onclick={() => handleAddScenario('all-inputs')}
           >
-            ✕
+            All inputs at...
           </button>
-        {/if}
-      </div>
-
-      <div class="scenario-selector-field">
-        <span class="scenario-selector-label">Kind</span>
-        <Selector viewModel={createKindSelector(scenario)} ariaLabel="Scenario kind" />
-      </div>
-
-      {#if scenario.kind === 'all-inputs'}
-        <div class="scenario-selector-field">
-          <span class="scenario-selector-label">Position</span>
-          <Selector viewModel={createPositionSelector(scenario)} ariaLabel="Position" />
-        </div>
-      {:else if scenario.kind === 'single-input'}
-        <div class="scenario-selector-field">
-          <label for="input-var-{scenario.id}" class="scenario-selector-label">Input Variable</label>
-          <select
-            id="input-var-{scenario.id}"
-            class="scenario-selector-select"
-            value={scenario.inputVarId || ''}
-            onchange={e => viewModel.updateScenario(scenario.id, { inputVarId: (e.target as HTMLSelectElement).value })}
-            aria-label="Input variable"
+          <button
+            class="scenario-selector-context-item"
+            onclick={() => handleAddScenario('given-inputs')}
           >
-            <option value="">Select input...</option>
-            {#each viewModel.inputListItems as item}
-              <option value={item.id}>{item.label}</option>
-            {/each}
-          </select>
-        </div>
-        <div class="scenario-selector-field">
-          <span class="scenario-selector-label">Position</span>
-          <Selector viewModel={createPositionSelector(scenario)} ariaLabel="Position" />
-        </div>
-      {:else if scenario.kind === 'input-group'}
-        <div class="scenario-selector-field">
-          <label for="group-name-{scenario.id}" class="scenario-selector-label">Input Group Name</label>
-          <input
-            id="group-name-{scenario.id}"
-            type="text"
-            class="scenario-selector-input"
-            value={scenario.inputGroupName || ''}
-            oninput={e => viewModel.updateScenario(scenario.id, { inputGroupName: (e.target as HTMLInputElement).value })}
-            placeholder="Enter group name..."
-            aria-label="Input group name"
-          />
+            Given inputs at...
+          </button>
         </div>
       {/if}
     </div>
-  {/each}
+  </div>
+
+  <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+  <div class="scenario-selector-items" tabindex="0" onkeydown={handleKeyDown} role="list">
+    {#each viewModel.scenarios as scenario (scenario.id)}
+      <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+      <div
+        class="scenario-selector-item"
+        class:selected={viewModel.selectedScenarioId === scenario.id}
+        onclick={() => handleSelectScenario(scenario.id)}
+        role="listitem"
+      >
+        <div class="scenario-selector-item-content">
+          {#if scenario.kind === 'all-inputs'}
+            <div class="scenario-selector-row">
+              <span class="scenario-selector-text">All inputs at</span>
+              <Selector viewModel={createPositionSelector(scenario)} ariaLabel="Position" />
+              {#if viewModel.scenarios.length > 1}
+                <button
+                  class="scenario-selector-remove-btn"
+                  onclick={e => {
+                    e.stopPropagation()
+                    handleRemoveScenario(scenario.id)
+                  }}
+                  aria-label="Remove scenario"
+                >
+                  ✕
+                </button>
+              {/if}
+            </div>
+          {:else if scenario.kind === 'given-inputs'}
+            <div class="scenario-selector-given-inputs">
+              <div class="scenario-selector-given-header">
+                <span class="scenario-selector-text">Given inputs:</span>
+                {#if viewModel.scenarios.length > 1}
+                  <button
+                    class="scenario-selector-remove-btn"
+                    onclick={e => {
+                      e.stopPropagation()
+                      handleRemoveScenario(scenario.id)
+                    }}
+                    aria-label="Remove scenario"
+                  >
+                    ✕
+                  </button>
+                {/if}
+              </div>
+              {#each scenario.inputs || [] as input, inputIndex (inputIndex)}
+                <div class="scenario-selector-row">
+                  <div
+                    class="scenario-selector-typeahead-wrapper"
+                    onclick={e => e.stopPropagation()}
+                    role="none"
+                  >
+                    <TypeaheadSelector
+                      items={viewModel.inputListItems}
+                      selectedId={input.inputVarId}
+                      placeholder="Search inputs..."
+                      ariaLabel="Input variable"
+                      onSelect={(item: ListItemViewModel) => {
+                        viewModel.updateScenarioInput(scenario.id, inputIndex, {
+                          inputVarId: item.id
+                        })
+                      }}
+                    />
+                  </div>
+                  <span class="scenario-selector-text">at</span>
+                  <Selector
+                    viewModel={createInputPositionSelector(scenario, inputIndex)}
+                    ariaLabel="Position"
+                  />
+                  {#if (scenario.inputs?.length || 0) > 1}
+                    <button
+                      class="scenario-selector-remove-input-btn"
+                      onclick={e => {
+                        e.stopPropagation()
+                        handleRemoveInput(scenario.id, inputIndex)
+                      }}
+                      aria-label="Remove input"
+                    >
+                      ✕
+                    </button>
+                  {/if}
+                </div>
+              {/each}
+              <button
+                class="scenario-selector-add-input-btn"
+                onclick={e => {
+                  e.stopPropagation()
+                  handleAddInput(scenario.id)
+                }}
+              >
+                + Add Input
+              </button>
+            </div>
+          {/if}
+        </div>
+      </div>
+    {/each}
+  </div>
 </div>
 
 <!-- STYLE -->
@@ -130,7 +248,8 @@ function handleRemoveScenario(id: string) {
 .scenario-selector-section {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.5rem;
+  min-height: 0;
 }
 
 .scenario-selector-header {
@@ -139,6 +258,7 @@ function handleRemoveScenario(id: string) {
   align-items: center;
   padding-bottom: 0.25rem;
   border-bottom: 1px solid var(--border-color-normal);
+  flex-shrink: 0;
 }
 
 .scenario-selector-title {
@@ -148,33 +268,50 @@ function handleRemoveScenario(id: string) {
   color: var(--text-color-primary);
 }
 
-.scenario-selector-item {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  padding: 0.75rem;
-  border: 1px solid var(--border-color-normal);
-  border-radius: 4px;
-  background-color: var(--panel-bg);
+.scenario-selector-add-container {
+  position: relative;
 }
 
-.scenario-selector-item-header {
+.scenario-selector-add-btn {
+  width: 28px;
+  height: 28px;
+  padding: 0;
   display: flex;
-  justify-content: space-between;
   align-items: center;
-}
-
-.scenario-selector-item-label {
-  font-weight: 600;
-  font-size: 0.9rem;
-  color: var(--text-color-primary);
-}
-
-.scenario-selector-remove-btn {
-  padding: 0.25rem 0.5rem;
-  background: none;
+  justify-content: center;
+  background-color: var(--button-bg);
   border: 1px solid var(--border-color-normal);
   border-radius: 4px;
+  color: var(--text-color-primary);
+  cursor: pointer;
+  font-size: 1.2rem;
+  font-weight: bold;
+
+  &:hover {
+    background-color: var(--button-bg-hover);
+  }
+}
+
+.scenario-selector-context-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 4px;
+  background-color: var(--panel-bg);
+  border: 1px solid var(--border-color-normal);
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  z-index: 100;
+  min-width: 180px;
+}
+
+.scenario-selector-context-item {
+  display: block;
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  background: none;
+  border: none;
+  text-align: left;
   color: var(--text-color-primary);
   cursor: pointer;
   font-size: 0.9rem;
@@ -182,34 +319,112 @@ function handleRemoveScenario(id: string) {
   &:hover {
     background-color: var(--button-bg-hover);
   }
+
+  &:first-child {
+    border-radius: 4px 4px 0 0;
+  }
+
+  &:last-child {
+    border-radius: 0 0 4px 4px;
+  }
 }
 
-.scenario-selector-field {
+.scenario-selector-items {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  overflow-y: auto;
+  max-height: 200px;
+  padding-right: 4px;
+
+  &:focus {
+    outline: 2px solid var(--border-color-focused);
+    outline-offset: -2px;
+  }
+}
+
+.scenario-selector-item {
+  padding: 0.5rem;
+  border: 1px solid var(--border-color-normal);
+  border-radius: 4px;
+  background-color: var(--panel-bg);
+  cursor: pointer;
+  transition: background-color 0.15s;
+
+  &:hover {
+    background-color: rgba(200, 220, 240, 0.1);
+  }
+
+  &.selected {
+    background-color: rgba(100, 180, 255, 0.15);
+    border-color: rgba(100, 180, 255, 0.3);
+  }
+}
+
+.scenario-selector-item-content {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
 }
 
-.scenario-selector-label {
-  font-weight: 600;
-  font-size: 0.9rem;
-  color: var(--text-color-primary);
+.scenario-selector-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: nowrap;
 }
 
-.scenario-selector-input,
-.scenario-selector-select {
-  padding: 0.5rem;
-  background-color: var(--input-bg);
-  border: 1px solid var(--border-color-normal);
-  border-radius: var(--input-border-radius);
-  color: var(--text-color-primary);
-  font-family: inherit;
-  font-size: inherit;
+.scenario-selector-given-inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
 
-  &:focus {
-    outline: none;
-    border-color: var(--border-color-focused);
-    box-shadow: 0 0 0 1px var(--border-color-focused);
+.scenario-selector-given-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.scenario-selector-text {
+  font-size: 0.9rem;
+  color: var(--text-color-primary);
+  white-space: nowrap;
+}
+
+.scenario-selector-typeahead-wrapper {
+  flex: 1;
+  min-width: 0;
+}
+
+.scenario-selector-remove-btn,
+.scenario-selector-remove-input-btn {
+  padding: 0.15rem 0.4rem;
+  background: none;
+  border: 1px solid var(--border-color-normal);
+  border-radius: 4px;
+  color: var(--text-color-primary);
+  cursor: pointer;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+
+  &:hover {
+    background-color: var(--button-bg-hover);
+  }
+}
+
+.scenario-selector-add-input-btn {
+  padding: 0.35rem 0.5rem;
+  background-color: var(--button-bg);
+  border: 1px solid var(--border-color-normal);
+  border-radius: 4px;
+  color: var(--text-color-primary);
+  cursor: pointer;
+  font-size: 0.85rem;
+  align-self: flex-start;
+
+  &:hover {
+    background-color: var(--button-bg-hover);
   }
 }
 </style>

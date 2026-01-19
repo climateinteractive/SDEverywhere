@@ -11,11 +11,13 @@ interface Props {
   open: boolean
   /** The title of the dialog. */
   title: string
+  /** The maximum width of the dialog. */
+  maxWidth?: number
   /** The content of the dialog. */
   children?: Snippet
 }
 
-let { open = $bindable(false), title, children }: Props = $props()
+let { open = $bindable(false), title, maxWidth = 500, children }: Props = $props()
 
 function closeDialog() {
   open = false
@@ -46,7 +48,7 @@ function handleKeydown(event: KeyboardEvent) {
     onclick={handleBackdropClick}
     onkeydown={handleKeydown}
   >
-    <div class="dialog-content">
+    <div class="dialog-content" style={`max-width: ${maxWidth}px;`}>
       <div class="dialog-header">
         <h2 id="dialog-title" class="dialog-title">{title}</h2>
         <CloseButton onClick={closeDialog} />
@@ -81,7 +83,8 @@ function handleKeydown(event: KeyboardEvent) {
   width: 90%;
   max-width: 500px;
   max-height: 90vh;
-  overflow: auto;
+  display: flex;
+  flex-direction: column;
 }
 
 .dialog-header {
@@ -101,5 +104,8 @@ function handleKeydown(event: KeyboardEvent) {
 
 .dialog-body {
   padding: 1.5rem;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
 }
 </style>

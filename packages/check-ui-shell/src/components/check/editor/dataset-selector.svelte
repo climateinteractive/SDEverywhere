@@ -2,9 +2,10 @@
 
 <!-- SCRIPT -->
 <script lang="ts">
-import Button from '../../_shared/button.svelte'
+import TypeaheadSelector from '../../list/typeahead-selector.svelte'
 
 import type { CheckEditorViewModel } from './check-editor-vm.svelte'
+import type { ListItemViewModel } from '../../list/list-item-vm.svelte'
 
 interface Props {
   /** The view model for the editor. */
@@ -20,46 +21,88 @@ function handleAddDataset() {
 function handleRemoveDataset(id: string) {
   viewModel.removeDataset(id)
 }
+
+function handleSelectDataset(id: string) {
+  viewModel.selectDataset(id)
+}
+
+function handleKeyDown(e: KeyboardEvent) {
+  if (e.key === 'ArrowDown') {
+    e.preventDefault()
+    const currentIndex = viewModel.datasets.findIndex(d => d.id === viewModel.selectedDatasetId)
+    if (currentIndex < viewModel.datasets.length - 1) {
+      viewModel.selectDataset(viewModel.datasets[currentIndex + 1].id)
+    } else {
+      viewModel.selectDataset(viewModel.datasets[0].id)
+    }
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault()
+    const currentIndex = viewModel.datasets.findIndex(d => d.id === viewModel.selectedDatasetId)
+    if (currentIndex > 0) {
+      viewModel.selectDataset(viewModel.datasets[currentIndex - 1].id)
+    } else {
+      viewModel.selectDataset(viewModel.datasets[viewModel.datasets.length - 1].id)
+    }
+  }
+}
 </script>
 
 <!-- TEMPLATE -->
 <div class="dataset-selector-section">
   <div class="dataset-selector-header">
     <h3 class="dataset-selector-title">Datasets</h3>
-    <Button onClick={handleAddDataset}>Add Dataset</Button>
+    <button
+      class="dataset-selector-add-btn"
+      onclick={handleAddDataset}
+      aria-label="Add dataset"
+    >
+      +
+    </button>
   </div>
 
-  {#each viewModel.datasets as dataset (dataset.id)}
-    <div class="dataset-selector-item">
-      <div class="dataset-selector-item-header">
-        <span class="dataset-selector-item-label">Dataset</span>
-        {#if viewModel.datasets.length > 1}
-          <button
-            class="dataset-selector-remove-btn"
-            onclick={() => handleRemoveDataset(dataset.id)}
-            aria-label="Remove dataset"
+  <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+  <div class="dataset-selector-items" tabindex="0" onkeydown={handleKeyDown} role="list">
+    {#each viewModel.datasets as dataset (dataset.id)}
+      <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+      <div
+        class="dataset-selector-item"
+        class:selected={viewModel.selectedDatasetId === dataset.id}
+        onclick={() => handleSelectDataset(dataset.id)}
+        role="listitem"
+      >
+        <div class="dataset-selector-row">
+          <span class="dataset-selector-text">Output:</span>
+          <div
+            class="dataset-selector-typeahead-wrapper"
+            onclick={e => e.stopPropagation()}
+            role="none"
           >
-            ✕
-          </button>
-        {/if}
+            <TypeaheadSelector
+              items={viewModel.datasetListItems}
+              selectedId={dataset.datasetKey}
+              placeholder="Search outputs..."
+              ariaLabel="Output variable"
+              onSelect={(item: ListItemViewModel) => {
+                viewModel.updateDataset(dataset.id, { datasetKey: item.id })
+              }}
+            />
+          </div>
+          {#if viewModel.datasets.length > 1}
+            <button
+              class="dataset-selector-remove-btn"
+              onclick={e => {
+                e.stopPropagation()
+                handleRemoveDataset(dataset.id)
+              }}
+              aria-label="Remove dataset"
+            >
+              ✕
+            </button>
+          {/if}
+        </div>
       </div>
-
-      <div class="dataset-selector-field">
-        <label for="output-var-{dataset.id}" class="dataset-selector-label">Output Variable</label>
-        <select
-          id="output-var-{dataset.id}"
-          class="dataset-selector-select"
-          value={dataset.datasetKey}
-          onchange={e => viewModel.updateDataset(dataset.id, { datasetKey: (e.target as HTMLSelectElement).value })}
-          aria-label="Output variable"
-        >
-          {#each viewModel.datasetListItems as item}
-            <option value={item.id}>{item.label}</option>
-          {/each}
-        </select>
-      </div>
-    </div>
-  {/each}
+    {/each}
+  </div>
 </div>
 
 <!-- STYLE -->
@@ -67,7 +110,8 @@ function handleRemoveDataset(id: string) {
 .dataset-selector-section {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.5rem;
+  min-height: 0;
 }
 
 .dataset-selector-header {
@@ -76,6 +120,7 @@ function handleRemoveDataset(id: string) {
   align-items: center;
   padding-bottom: 0.25rem;
   border-bottom: 1px solid var(--border-color-normal);
+  flex-shrink: 0;
 }
 
 .dataset-selector-title {
@@ -85,67 +130,88 @@ function handleRemoveDataset(id: string) {
   color: var(--text-color-primary);
 }
 
-.dataset-selector-item {
+.dataset-selector-add-btn {
+  width: 28px;
+  height: 28px;
+  padding: 0;
   display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  padding: 0.75rem;
-  border: 1px solid var(--border-color-normal);
-  border-radius: 4px;
-  background-color: var(--panel-bg);
-}
-
-.dataset-selector-item-header {
-  display: flex;
-  justify-content: space-between;
   align-items: center;
-}
-
-.dataset-selector-item-label {
-  font-weight: 600;
-  font-size: 0.9rem;
-  color: var(--text-color-primary);
-}
-
-.dataset-selector-remove-btn {
-  padding: 0.25rem 0.5rem;
-  background: none;
+  justify-content: center;
+  background-color: var(--button-bg);
   border: 1px solid var(--border-color-normal);
   border-radius: 4px;
   color: var(--text-color-primary);
   cursor: pointer;
-  font-size: 0.9rem;
+  font-size: 1.2rem;
+  font-weight: bold;
 
   &:hover {
     background-color: var(--button-bg-hover);
   }
 }
 
-.dataset-selector-field {
+.dataset-selector-items {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-}
-
-.dataset-selector-label {
-  font-weight: 600;
-  font-size: 0.9rem;
-  color: var(--text-color-primary);
-}
-
-.dataset-selector-select {
-  padding: 0.5rem;
-  background-color: var(--input-bg);
-  border: 1px solid var(--border-color-normal);
-  border-radius: var(--input-border-radius);
-  color: var(--text-color-primary);
-  font-family: inherit;
-  font-size: inherit;
+  overflow-y: auto;
+  max-height: 200px;
+  padding-right: 4px;
 
   &:focus {
-    outline: none;
-    border-color: var(--border-color-focused);
-    box-shadow: 0 0 0 1px var(--border-color-focused);
+    outline: 2px solid var(--border-color-focused);
+    outline-offset: -2px;
+  }
+}
+
+.dataset-selector-item {
+  padding: 0.5rem;
+  border: 1px solid var(--border-color-normal);
+  border-radius: 4px;
+  background-color: var(--panel-bg);
+  cursor: pointer;
+  transition: background-color 0.15s;
+
+  &:hover {
+    background-color: rgba(200, 220, 240, 0.1);
+  }
+
+  &.selected {
+    background-color: rgba(100, 180, 255, 0.15);
+    border-color: rgba(100, 180, 255, 0.3);
+  }
+}
+
+.dataset-selector-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: nowrap;
+}
+
+.dataset-selector-text {
+  font-size: 0.9rem;
+  color: var(--text-color-primary);
+  white-space: nowrap;
+}
+
+.dataset-selector-typeahead-wrapper {
+  flex: 1;
+  min-width: 0;
+}
+
+.dataset-selector-remove-btn {
+  padding: 0.15rem 0.4rem;
+  background: none;
+  border: 1px solid var(--border-color-normal);
+  border-radius: 4px;
+  color: var(--text-color-primary);
+  cursor: pointer;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+
+  &:hover {
+    background-color: var(--button-bg-hover);
   }
 }
 </style>

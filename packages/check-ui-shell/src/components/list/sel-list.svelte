@@ -18,9 +18,9 @@ function onItemClicked(item: ListItemViewModel) {
 
 <!-- TEMPLATE -->
 <div class="sel-list">
-  <div class="items">
+  <div class="items" role="listbox">
     {#each viewModel.items as item}
-      <div class="item" onclick={() => onItemClicked(item)} class:active={item.id === viewModel.selectedItemId}>
+      <div class="item" role="option" tabindex="-1" aria-selected={item.id === viewModel.selectedItemId} onclick={() => onItemClicked(item)} class:active={item.id === viewModel.selectedItemId}>
         {@html item.label}
       </div>
     {/each}
