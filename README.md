@@ -104,6 +104,32 @@ https://github.com/climateinteractive/SDEverywhere/assets/438425/c0c81bcd-f5a5-4
 
 As shown in the video above, the quickest way to get started with SDEverywhere is to open your terminal emulator ("Terminal" on macOS or Linux, or "Command Prompt" on Windows) and type the commands explained below.
 
+### Option 1: "Hello World" with SIR
+
+The easiest way to get started is to do the SDEverywhere version of `Hello World`.
+Simply create a new folder and run the `create` command to make your first web app using the SIR model.
+After the folder is created, no additional setup is required -- just run the following commands in your terminal, which will copy the SIR model from the `examples` directory of this repository and guide you through the other setup steps:
+
+```sh
+# Create an empty directory and change to that directory:
+mkdir my-project-folder
+cd my-project-folder
+
+# Use `npm` to run the "create" script:
+# See below if you're using pnpm or yarn
+npm create @sdeverywhere@latest
+```
+
+As suggested at the end of the `create`, type the following command to see the demo webapp and the quality control tests:
+
+```sh
+npm run dev
+```
+
+### Option 2: Start with existing model
+
+> [!NOTE] We recommend doing Option 1 first, before trying with an existing model since setting up an existing model likely has more complications with data files and other model settings.
+
 If you already have a directory containing a Vensim `mdl` file, change to that directory first.
 (The script will generate some new files in that directory, so if you would prefer, feel free to create a fresh directory that includes just your `mdl` file.)
 
@@ -112,15 +138,9 @@ If you already have a directory containing a Vensim `mdl` file, change to that d
 cd my-project-folder
 ```
 
-Or, if you don't already have a Vensim `mdl` file, and/or you want to evaluate SDEverywhere for the first time, you can create an empty directory, and the script will provide a sample model to get you started:
-
-```sh
-# Create an empty directory and change to that directory:
-mkdir my-project-folder
-cd my-project-folder
-```
-
-Once you are in the correct folder, run the `create` script:
+Once you are in the correct folder, run the `create` script.
+Below are several variations depending your specific Node.js setup, but only use one.
+If you're not sure, try the first one starting with `npm`.
 
 ```sh
 # Use `npm` to run the "create" script:
@@ -133,12 +153,19 @@ pnpm create @sdeverywhere@latest
 yarn create @sdeverywhere
 ```
 
-The `create` script will ask you a few questions.
+Again, run the following to start a local web server and see the resulting web app:
+
+```sh
+npm run dev
+```
+
+For either Option, the `create` script will ask you a few questions.
 The default answers have been chosen to get you up and running quickly.
 If at any step you are unsure of the best option, simply hit the "enter" key to select the default answer.
 You can always change the configuration for your project after it has been created by editing the `sde.config.js` file and the other files in the `config` directory.
 
 After answering all questions, you will have a functional web application that runs your model!
+
 For more guidance on configuring your project, refer to [Creating a Web Application](https://github.com/climateinteractive/SDEverywhere/wiki/Creating-a-Web-Application) in the [SDEverywhere wiki](https://github.com/climateinteractive/SDEverywhere/wiki).
 
 ## Documentation
@@ -156,6 +183,7 @@ For example:
 
 SDEverywhere has been used to generate code for complex models with thousands of equations, but your model may use features of Vensim that SDEverywhere cannot translate yet.
 Please fork our code and contribute!
+
 Here are some prominent current limitations:
 
 - Sketch information, the visual representation of the model, is not converted.
