@@ -136,22 +136,29 @@ char* run_model(const char* inputs) {
  * (where tN is the last time in the range), the second variable outputs will begin,
  * and so on.
  *
- * @param inputs The required buffer that contains the model input values (see above
- * for details on the expected format).
- * @param outputs The required buffer that will receive the model output values (see
- * above for details on the expected format).
+ * For the optional `outputIndices` and `constantIndices` buffers, the expected format
+ * is:
+ *   [count, varIndex1, subCount1, subIndex1_1, ..., varIndex2, subCount2, ...]
+ * where `count` is the number of variables to store, `varIndexN` is the index of the
+ * variable to store (from the model listing file), `subCountN` is the number of
+ * subscripts for that variable, and `subIndexN_M` is the index of the subscript
+ * at the Mth position for that variable.
+ *
+ * @param inputs The required buffer that contains the model input values.  See above
+ * for details on the expected format.
+ * @param outputs The required buffer that will receive the model output values.  See
+ * above for details on the expected format.
  * @param outputIndices An optional buffer that contains the indices of the output
  * variables to store.  Pass NULL if using the default outputs.  This is typically
- * only used by the JS-level runtime package.  For more details on the expected format,
- * see the `Outputs` API in that package.
+ * only used by the JS-level runtime package.  See above for details on the expected
+ * format.
  * @param constantIndices An optional buffer that contains the indices of the constants
- * to override.  Pass NULL if not overriding any constants.  This is typically only
- * used by the JS-level runtime package.  For more details on the expected format, see
- * the `RunModelParams` API in that package.
+ * to override.  Pass NULL if not overriding any constants.  (This is typically only
+ * used by the JS-level runtime package.  See above for details on the expected format.
  * @param constantValues An optional buffer that contains the values of the constants
  * to override.  Pass NULL if not overriding any constants.  This is typically only
- * used by the JS-level runtime package.  For more details on the expected format, see
- * the `RunModelParams` API in that package.
+ * used by the JS-level runtime package.  Each value in the buffer corresponds to the
+ * value of the constant at the corresponding index.
  */
 void runModelWithBuffers(double* inputs, double* outputs, int32_t* outputIndices, int32_t* constantIndices, double* constantValues) {
   outputBuffer = outputs;
