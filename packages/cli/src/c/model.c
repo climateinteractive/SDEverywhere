@@ -135,6 +135,23 @@ char* run_model(const char* inputs) {
  * by the output value for that variable at t1, and so on.  After the value for tN
  * (where tN is the last time in the range), the second variable outputs will begin,
  * and so on.
+ *
+ * @param inputs The required buffer that contains the model input values (see above
+ * for details on the expected format).
+ * @param outputs The required buffer that will receive the model output values (see
+ * above for details on the expected format).
+ * @param outputIndices An optional buffer that contains the indices of the output
+ * variables to store.  Pass NULL if using the default outputs.  This is typically
+ * only used by the JS-level runtime package.  For more details on the expected format,
+ * see the `Outputs` API in that package.
+ * @param constantIndices An optional buffer that contains the indices of the constants
+ * to override.  Pass NULL if not overriding any constants.  This is typically only
+ * used by the JS-level runtime package.  For more details on the expected format, see
+ * the `RunModelParams` API in that package.
+ * @param constantValues An optional buffer that contains the values of the constants
+ * to override.  Pass NULL if not overriding any constants.  This is typically only
+ * used by the JS-level runtime package.  For more details on the expected format, see
+ * the `RunModelParams` API in that package.
  */
 void runModelWithBuffers(double* inputs, double* outputs, int32_t* outputIndices, int32_t* constantIndices, double* constantValues) {
   outputBuffer = outputs;
