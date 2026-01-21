@@ -336,6 +336,35 @@ test.describe('Bundle Selector', () => {
     await expect(bundleSelectorRight).toHaveText('current')
   })
 
+  test('should load remote bundles using custom fetchRemoteBundle function', async ({ app }) => {
+    // This test verifies that remote bundles can be loaded when a custom
+    // fetchRemoteBundle function is provided in the plugin configuration.
+    // The custom function (defined in sde.config.js) adds a custom header
+    // and logs the bundle URL, but since it runs server-side in the Vite
+    // plugin, we can only verify that the bundle loads successfully.
+
+    // Click the left bundle name to open the popover
+    await app.page.getByTestId('bundle-selector-left').click()
+
+    // Wait for the bundle selector menu to appear
+    const bundleList = app.page.getByRole('listbox')
+    await expect(bundleList).toBeVisible()
+
+    // Find and click on a remote bundle
+    const remoteBundle = app.page.getByRole('option', { name: 'feature/remote-2' })
+    await expect(remoteBundle).toBeVisible()
+    await remoteBundle.click()
+
+    // Wait for the page to reload
+    await app.page.waitForLoadState('load')
+
+    // Verify that the left bundle selector shows the selected bundle
+    // This confirms the remote bundle was loaded successfully using the custom function
+    const bundleSelectorLeft = app.page.getByTestId('bundle-selector-left')
+    await expect(bundleSelectorLeft).toBeVisible()
+    await expect(bundleSelectorLeft).toHaveText('feature/remote-2')
+  })
+
   test('should display updated current bundle timestamp after file modification', async ({ app }) => {
     // Update the last modified time of the current bundle file to a specific date/time
     const projDir = joinPath(__dirname, '..')

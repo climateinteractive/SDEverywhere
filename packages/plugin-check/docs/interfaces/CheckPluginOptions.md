@@ -47,6 +47,33 @@ in that case).
 
 ___
 
+### fetchRemoteBundle
+
+ `Optional` **fetchRemoteBundle**: (`url`: `string`) => `Promise`<`string`\>
+
+#### Type declaration
+
+(`url`): `Promise`<`string`\>
+
+A custom function for fetching remote bundle files.  This allows for customizing
+the fetch operation, such as adding authentication headers or other custom logic.
+
+If undefined, a default fetch implementation will be used.
+
+##### Parameters
+
+| Name | Type | Description |
+| :------ | :------ | :------ |
+| `url` | `string` | The URL of the remote bundle file to fetch. |
+
+##### Returns
+
+`Promise`<`string`\>
+
+The bundle source code as a string.
+
+___
+
 ### testConfigPath
 
  `Optional` **testConfigPath**: `string`
