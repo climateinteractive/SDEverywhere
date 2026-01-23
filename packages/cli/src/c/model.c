@@ -11,7 +11,7 @@ struct timespec startTime, finishTime;
 // The special _time variable is not included in .mdl files.
 double _time;
 
-// Output data buffer used by `runModel` / `runModelWithBuffers`
+// Output data buffer and parameters used by `runModelWithBuffers`
 double* outputBuffer = NULL;
 int32_t* outputIndexBuffer = NULL;
 size_t outputVarIndex = 0;
@@ -68,41 +68,72 @@ double getSaveper() {
  * to the given `outputs` buffer.
  *
  * This is a simplified version of `runModelWithBuffers` that passes NULL for
- * `outputIndices`, which means the outputs will be stored in the order defined
- * in the spec file.
+ * all parameters other than `inputs` and `outputs`.
+ *
+ * After each step of the run, the `outputs` buffer will be updated with the output
+ * variables.  The `outputs` buffer needs to be at least as large as:
+ *   `number of output variables` * `number of save points`
+ *
+ * @param inputs The buffer that contains the model input values.  If NULL,
+ * no inputs will be set and the model will use the default values for all
+ * constants as defined in the generated model.  If non-NULL, the buffer is
+ * assumed to have one double value for each input variable in exactly the
+ * same order that the variables are listed in the spec file.
+ * @param outputs The required buffer that will receive the model output
+ * values.  See above for details on the expected format.
  */
 void runModel(double* inputs, double* outputs) {
-  runModelWithBuffers(inputs, outputs, NULL);
+  runModelWithBuffers(inputs, NULL, outputs, NULL);
 }
 
 /**
  * Run the model, reading inputs from the given `inputs` buffer, and writing outputs
  * to the given `outputs` buffer.
  *
- * This function uses the provided pre-allocated buffers for inputs and outputs.
+ * If `inputIndices` is NULL, the `inputs` buffer is assumed to have one double value
+ * for each input variable, in exactly the same order as the variables are listed in
+ * the spec file.
  *
- * The `inputs` buffer is assumed to have one double value for each input variable;
- * they must be in exactly the same order as the variables are listed in the spec file.
+ * If `inputIndices` is non-NULL, it specifies which inputs are being set:
+ *   - inputIndices[0] is the count of inputs being specified
+ *   - inputIndices[1..N] are the indices of the inputs to set
+ *   - inputs[0..N-1] are the corresponding values
  *
  * After each step of the run, the `outputs` buffer will be updated with the output
- * variables.  The buffer needs to be at least as large as:
+ * variables.  The `outputs` buffer needs to be at least as large as:
  *   `number of output variables` * `number of save points`
- * where `number of save points` is typically one point for each year inclusive of
- * the start and end times.
  *
- * The outputs will be stored in the same order as the outputs are defined in the
- * spec file, with one "row" for each variable.  For example, the first value in
- * the buffer will be the output value at t0 for the first output variable, followed
- * by the output value for that variable at t1, and so on.  After the value for tN
- * (where tN is the last time in the range), the second variable outputs will begin,
- * and so on.
+ * If `outputIndices` is NULL, outputs will be stored in the same order as the outputs
+ * are defined in the spec file, with one "row" for each variable.
+ *
+ * If `outputIndices` is non-NULL, it specifies which outputs are being stored:
+ *   - outputIndices[0] is the count of output variables being stored
+ *   - outputIndices[1..N] are the indices of the output variables to store (unlike
+ *     `inputIndices`, these indices refer to the ones defined in the `{model}.json`
+ *     listing file, NOT the list of output variables spec file)
+ *   - outputs[0..N-1] are the corresponding values
+ *
+ * @param inputs The buffer that contains the model input values.  If NULL,
+ * no inputs will be set and the model will use the default values for all
+ * constants as defined in the generated model.  If non-NULL, the buffer is
+ * assumed to have one double value for each input variable.  The number of
+ * values provided depends on `inputIndices`; see above for details on the
+ * expected format of these two parameters.
+ * @param inputIndices The optional buffer that specifies which input values
+ * from the `inputs` buffer are being set.  See above for details on the
+ * expected format.
+ * @param outputs The required buffer that will receive the model output
+ * values.  See above for details on the expected format.
+ * @param outputIndices The optional buffer that specifies which output values
+ * will be stored in the `outputs` buffer.  See above for details on the
+ * expected format.
  */
-void runModelWithBuffers(double* inputs, double* outputs, int32_t* outputIndices) {
+void runModelWithBuffers(double* inputs, int32_t* inputIndices, double* outputs, int32_t* outputIndices) {
   outputBuffer = outputs;
   outputIndexBuffer = outputIndices;
   initConstants();
   if (inputs != NULL) {
-    setInputs(inputs);
+    setInputs(inputs, inputIndices);
   }
   initLevels();
   run();

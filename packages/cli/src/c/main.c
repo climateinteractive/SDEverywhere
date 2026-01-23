@@ -1,21 +1,48 @@
 #include "sde.h"
 
 /**
+ * Count the number of input pairs in the input string.
+ */
+static size_t countInputs(const char* inputData) {
+  if (inputData == NULL || *inputData == '\0') {
+    return 0;
+  }
+
+  // Make a copy since strtok modifies the string
+  char* inputsCopy = (char*)malloc(strlen(inputData) + 1);
+  strcpy(inputsCopy, inputData);
+
+  size_t count = 0;
+  char* token = strtok(inputsCopy, " ");
+  while (token) {
+    if (strchr(token, ':') != NULL) {
+      count++;
+    }
+    token = strtok(NULL, " ");
+  }
+  free(inputsCopy);
+
+  return count;
+}
+
+/**
  * Parse input data string in the format "varIndex:value varIndex:value ..."
- * and populate the input buffer.
+ * and populate the inputValues and inputIndices arrays for sparse input setting.
  *
  * @param inputData The input string to parse.
- * @param inputBuffer The buffer to populate with parsed values.
+ * @param inputValues The array to populate with input values.
+ * @param inputIndices The array to populate with input indices (first element is count).
  */
-static void parseInputs(const char* inputData, double* inputBuffer) {
+static void parseInputs(const char* inputData, double* inputValues, int32_t* inputIndices) {
   if (inputData == NULL || *inputData == '\0') {
     return;
   }
-  // Make a copy since strtok modifies the string
-  char* inputs = (char*)inputData;
-  char* inputsCopy = (char*)malloc(strlen(inputs) + 1);
-  strcpy(inputsCopy, inputs);
 
+  // Make a copy since strtok modifies the string
+  char* inputsCopy = (char*)malloc(strlen(inputData) + 1);
+  strcpy(inputsCopy, inputData);
+
+  size_t i = 0;
   char* token = strtok(inputsCopy, " ");
   while (token) {
     char* p = strchr(token, ':');
@@ -23,10 +50,13 @@ static void parseInputs(const char* inputData, double* inputBuffer) {
       *p = '\0';
       int modelVarIndex = atoi(token);
       double value = atof(p + 1);
-      inputBuffer[modelVarIndex] = value;
+      inputIndices[i + 1] = modelVarIndex;
+      inputValues[i] = value;
+      i++;
     }
     token = strtok(NULL, " ");
   }
+  inputIndices[0] = (int32_t)i;
   free(inputsCopy);
 }
 
@@ -57,13 +87,16 @@ int main(int argc, char** argv) {
     *inputString = '\0';
   }
 
-  // Allocate input buffer and parse string inputs into it.
-  // Only allocate a buffer if there are inputs to parse; otherwise pass NULL
-  // to runModel so that the model uses its default values from initConstants.
-  double* inputBuffer = NULL;
-  if (numInputs > 0 && *inputString != '\0') {
-    inputBuffer = (double*)calloc(numInputs, sizeof(double));
-    parseInputs(inputString, inputBuffer);
+  // Parse input string and create sparse input arrays. Only allocate buffers if there
+  // are inputs to parse; otherwise pass NULL to runModelWithBuffers so that the model
+  // uses its default values from initConstants.
+  double* inputValues = NULL;
+  int32_t* inputIndices = NULL;
+  size_t inputCount = countInputs(inputString);
+  if (inputCount > 0) {
+    inputValues = (double*)malloc(inputCount * sizeof(double));
+    inputIndices = (int32_t*)malloc((inputCount + 1) * sizeof(int32_t));
+    parseInputs(inputString, inputValues, inputIndices);
   }
 
   // Calculate the number of save points for the output buffer
@@ -75,8 +108,8 @@ int main(int argc, char** argv) {
   // Allocate output buffer
   double* outputBuffer = (double*)malloc(numOutputs * numSavePoints * sizeof(double));
 
-  // Run the model with the input and output buffers
-  runModel(inputBuffer, outputBuffer);
+  // Run the model with the sparse input arrays and output buffer
+  runModelWithBuffers(inputValues, inputIndices, outputBuffer, NULL);
 
   if (!suppress_data_output) {
     if (raw_output) {
@@ -107,8 +140,11 @@ int main(int argc, char** argv) {
   }
 
   // Clean up
-  if (inputBuffer != NULL) {
-    free(inputBuffer);
+  if (inputValues != NULL) {
+    free(inputValues);
+  }
+  if (inputIndices != NULL) {
+    free(inputIndices);
   }
   free(outputBuffer);
   finish();

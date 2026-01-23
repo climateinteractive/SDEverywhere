@@ -200,8 +200,8 @@ ${customOutputSection(Model.varIndexInfo(), spec.customOutputs)}
 
     mode = 'io'
     return `\
-void setInputs(double* inputData) {
-${inputsFromBufferImpl()}
+void setInputs(double* inputValues, int32_t* inputIndices) {
+${setInputsImpl()}
 }
 
 void setLookup(size_t varIndex, size_t* subIndices, double* points, size_t numPoints) {
@@ -404,15 +404,31 @@ ${section(chunk)}
     const section = R.pipe(outputVars, code, lines)
     return section(varIndexInfo)
   }
-  function inputsFromBufferImpl() {
-    let inputVars = []
-    if (spec.inputVars && spec.inputVars.length > 0) {
-      for (let i = 0; i < spec.inputVars.length; i++) {
-        const inputVar = spec.inputVars[i]
-        inputVars.push(`  ${inputVar} = inputData[${i}];`)
-      }
+  function setInputsImpl() {
+    if (!spec.inputVars || spec.inputVars.length === 0) {
+      return ''
     }
-    return inputVars.join('\n')
+    // Build the pointer table for input variables
+    let inputVarPtrs = R.reduce((a, inputVar) => R.concat(a, `    &${inputVar},\n`), '', spec.inputVars)
+    return `\
+  static double* inputVarPtrs[] = {
+${inputVarPtrs}  };
+  if (inputIndices == NULL) {
+    // When inputIndices is NULL, assume that inputValues contains all input values
+    // in the same order that the variables are defined in the model spec
+    for (size_t i = 0; i < numInputs; i++) {
+      *inputVarPtrs[i] = inputValues[i];
+    }
+  } else {
+    // When inputIndices is non-NULL, set the input values according to the indices
+    // in the inputIndices array, where each index corresponds to the index of the
+    // variable in the model spec
+    size_t numInputsToSet = (size_t)inputIndices[0];
+    for (size_t i = 0; i < numInputsToSet; i++) {
+      size_t inputVarIndex = (size_t)inputIndices[i + 1];
+      *inputVarPtrs[inputVarIndex] = inputValues[i];
+    }
+  }`
   }
   function setLookupImpl(varIndexInfo, customLookups) {
     // Emit case statements for all lookups and data variables that can be overridden

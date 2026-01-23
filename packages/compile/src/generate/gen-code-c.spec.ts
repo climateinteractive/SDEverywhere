@@ -246,8 +246,26 @@ void evalLevels() {
   // Evaluate levels.
 }
 
-void setInputs(double* inputData) {
-  _input = inputData[0];
+void setInputs(double* inputValues, int32_t* inputIndices) {
+  static double* inputVarPtrs[] = {
+    &_input,
+  };
+  if (inputIndices == NULL) {
+    // When inputIndices is NULL, assume that inputValues contains all input values
+    // in the same order that the variables are defined in the model spec
+    for (size_t i = 0; i < numInputs; i++) {
+      *inputVarPtrs[i] = inputValues[i];
+    }
+  } else {
+    // When inputIndices is non-NULL, set the input values according to the indices
+    // in the inputIndices array, where each index corresponds to the index of the
+    // variable in the model spec
+    size_t numInputsToSet = (size_t)inputIndices[0];
+    for (size_t i = 0; i < numInputsToSet; i++) {
+      size_t inputVarIndex = (size_t)inputIndices[i + 1];
+      *inputVarPtrs[inputVarIndex] = inputValues[i];
+    }
+  }
 }
 
 void setLookup(size_t varIndex, size_t* subIndices, double* points, size_t numPoints) {
