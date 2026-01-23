@@ -1,6 +1,6 @@
 // Copyright (c) 2021-2022 Climate Interactive / New Venture Fund
 
-import type { ScenarioSpec, ScenarioSpecUid } from '../_shared/scenario-spec-types'
+import type { ConstantOverride, ScenarioSpec, ScenarioSpecUid } from '../_shared/scenario-spec-types'
 import type { Dataset, DatasetKey } from '../_shared/types'
 
 export interface DatasetPair {
@@ -22,6 +22,8 @@ export interface DataTask {
 export interface DataRequest {
   scenarioSpecL?: ScenarioSpec
   scenarioSpecR?: ScenarioSpec
+  constantsL?: ConstantOverride[]
+  constantsR?: ConstantOverride[]
   dataTasks: DataTask[]
 }
 
@@ -83,12 +85,16 @@ export class DataPlanner {
    * is needed from the right model.
    * @param datasetKey The key for the dataset to be fetched from each model for the given scenario.
    * @param dataAction The action to be performed with the fetched datasets.
+   * @param constantsL Optional constant overrides for the "left" model.
+   * @param constantsR Optional constant overrides for the "right" model.
    */
   addRequest(
     scenarioSpecL: ScenarioSpec | undefined,
     scenarioSpecR: ScenarioSpec | undefined,
     datasetKey: DatasetKey,
-    dataAction: DataAction
+    dataAction: DataAction,
+    constantsL?: ConstantOverride[],
+    constantsR?: ConstantOverride[]
   ): void {
     if (scenarioSpecL === undefined && scenarioSpecR === undefined) {
       console.warn('WARNING: Both scenario specs are undefined for DataPlanner request, skipping')
@@ -100,19 +106,19 @@ export class DataPlanner {
     let uid: string
     if (scenarioSpecL && scenarioSpecR) {
       taskSetsMap = this.taskSetsLR
-      uid = scenarioPairUid(scenarioSpecL, scenarioSpecR)
+      uid = scenarioPairUid(scenarioSpecL, scenarioSpecR, constantsL, constantsR)
     } else if (scenarioSpecR) {
       taskSetsMap = this.taskSetsR
-      uid = scenarioSpecR.uid
+      uid = scenarioPairUid(undefined, scenarioSpecR, undefined, constantsR)
     } else {
       taskSetsMap = this.taskSetsL
-      uid = scenarioSpecL.uid
+      uid = scenarioPairUid(scenarioSpecL, undefined, constantsL, undefined)
     }
 
     // Add the task to the appropriate task set (creating a new set if needed)
     let taskSet = taskSetsMap.get(uid)
     if (!taskSet) {
-      taskSet = new DataTaskSet(scenarioSpecL, scenarioSpecR)
+      taskSet = new DataTaskSet(scenarioSpecL, scenarioSpecR, constantsL, constantsR)
       taskSetsMap.set(uid, taskSet)
     }
     taskSet.addTask({
@@ -131,36 +137,67 @@ export class DataPlanner {
     this.complete = true
 
     // Create mappings to make it easy to look up "LR" task sets using only
-    // an "L" or "R" uid.  This will create a mapping to the first available
-    // set with an "L" uid on the left side (in case there are multiple with
-    // the same "L" uid but different "R" uids), and same approach for "R" uids.
-    const lKeyMappings: Map<ScenarioSpecUid, ScenarioPairUid> = new Map()
-    const rKeyMappings: Map<ScenarioSpecUid, ScenarioPairUid> = new Map()
+    // an "L" or "R" key (which includes both scenario uid and constants).
+    // This will create a mapping to the first available set with a matching
+    // "L" key on the left side (in case there are multiple with the same "L"
+    // key but different "R" keys), and same approach for "R" keys.
+    // - The key format for L-only is: `scenarioUid##constantsUid`
+    // - The key format for R-only is: `scenarioUid##constantsUid`
+    // - The LR pair uid format is: `scenarioL::scenarioR##constantsL||constantsR`
+    type SideKey = string
+    const lKeyMappings: Map<SideKey, ScenarioPairUid> = new Map()
+    const rKeyMappings: Map<SideKey, ScenarioPairUid> = new Map()
     for (const lrUid of this.taskSetsLR.keys()) {
-      const [lUid, rUid] = lrUid.split('::')
-      if (!lKeyMappings.has(lUid)) {
-        lKeyMappings.set(lUid, lrUid)
+      // Parse the LR uid to extract L and R components including constants
+      const [scenarioPart, constantsPart] = lrUid.split('##')
+      const [lScenarioUid, rScenarioUid] = scenarioPart.split('::')
+      let lConstUid = ''
+      let rConstUid = ''
+      if (constantsPart) {
+        const [lConst, rConst] = constantsPart.split('||')
+        lConstUid = lConst || ''
+        rConstUid = rConst || ''
       }
-      if (!rKeyMappings.has(rUid)) {
-        rKeyMappings.set(rUid, lrUid)
+
+      // Create keys that match the format used by L-only and R-only requests
+      const lKey = lConstUid ? `${lScenarioUid}##${lConstUid}` : lScenarioUid
+      const rKey = rConstUid ? `${rScenarioUid}##${rConstUid}` : rScenarioUid
+
+      if (lScenarioUid && !lKeyMappings.has(lKey)) {
+        lKeyMappings.set(lKey, lrUid)
+      }
+      if (rScenarioUid && !rKeyMappings.has(rKey)) {
+        rKeyMappings.set(rKey, lrUid)
       }
     }
 
     // See if we can fold "L-only" and "R-only" requests into an existing "LR" set
     function merge(
       taskSetsLR: Map<ScenarioPairUid, DataTaskSet>,
-      taskSetsForSide: Map<ScenarioSpecUid, DataTaskSet>,
-      keyMappingsForSide: Map<ScenarioSpecUid, ScenarioPairUid>
+      taskSetsForSide: Map<ScenarioPairUid, DataTaskSet>,
+      keyMappingsForSide: Map<SideKey, ScenarioPairUid>
     ) {
-      for (const [keyForSide, taskSetForSide] of taskSetsForSide.entries()) {
-        const lrKey = keyMappingsForSide.get(keyForSide)
+      for (const [pairUidForSide, taskSetForSide] of taskSetsForSide.entries()) {
+        // Extract the side key from the pair uid (e.g., "scenarioUid::" -> "scenarioUid"
+        // or "::scenarioUid##||constR" -> "scenarioUid##constR")
+        const [scenarioPart, constantsPart] = pairUidForSide.split('##')
+        const [lScenarioUid, rScenarioUid] = scenarioPart.split('::')
+        const scenarioUid = lScenarioUid || rScenarioUid
+        let constUid = ''
+        if (constantsPart) {
+          const [lConst, rConst] = constantsPart.split('||')
+          constUid = lScenarioUid ? lConst : rConst
+        }
+        const sideKey = constUid ? `${scenarioUid}##${constUid}` : scenarioUid
+
+        const lrKey = keyMappingsForSide.get(sideKey)
         if (lrKey) {
           // Fold the one-side-only requests into an existing "LR" set
           const taskSetLR = taskSetsLR.get(lrKey)
           taskSetLR.merge(taskSetForSide)
 
           // Remove from the one-side-only set
-          taskSetsForSide.delete(keyForSide)
+          taskSetsForSide.delete(pairUidForSide)
         }
       }
     }
@@ -194,7 +231,9 @@ class DataTaskSet {
 
   constructor(
     private readonly scenarioSpecL: ScenarioSpec | undefined,
-    private readonly scenarioSpecR: ScenarioSpec | undefined
+    private readonly scenarioSpecR: ScenarioSpec | undefined,
+    private readonly constantsL: ConstantOverride[] | undefined,
+    private readonly constantsR: ConstantOverride[] | undefined
   ) {}
 
   /**
@@ -259,6 +298,8 @@ class DataTaskSet {
       dataRequests.push({
         scenarioSpecL: this.scenarioSpecL,
         scenarioSpecR: this.scenarioSpecR,
+        constantsL: this.constantsL,
+        constantsR: this.constantsR,
         dataTasks
       })
     }
@@ -279,6 +320,8 @@ class DataTaskSet {
         dataRequests.push({
           scenarioSpecL: this.scenarioSpecL,
           scenarioSpecR: this.scenarioSpecR,
+          constantsL: this.constantsL,
+          constantsR: this.constantsR,
           dataTasks
         })
       }
@@ -289,13 +332,27 @@ class DataTaskSet {
 }
 
 /**
- * An ID that includes one or two scenario UIDs to uniquely identify a pair of scenarios.
- * The format is `<left_uid>::<right_uid>`.
+ * An ID that includes one or two scenario UIDs to uniquely identify a pair of scenarios
+ * along with any constant overrides.
+ * The format is `<left_uid>::<right_uid>` optionally followed by `##<constants_uid>`.
  */
 type ScenarioPairUid = string
 
 /**
- * Create a unique identifier for the given scenarios.
+ * Create a stable string representation of constant overrides for use in UIDs.
+ * Sorts by varId to ensure consistent ordering.
+ */
+function constantsUid(constants: ConstantOverride[] | undefined): string {
+  if (!constants || constants.length === 0) {
+    return ''
+  }
+  // Sort by varId to ensure consistent ordering
+  const sorted = [...constants].sort((a, b) => a.varId.localeCompare(b.varId))
+  return sorted.map(c => `${c.varId}=${c.value}`).join(',')
+}
+
+/**
+ * Create a unique identifier for the given scenarios and constant overrides.
  *
  * For example, a request that includes scenarios for both left and right might look like:
  *   scenario1::scenario1
@@ -306,16 +363,32 @@ type ScenarioPairUid = string
  * A request that only accesses the left model might use a key like:
  *   scenario1::
  *
+ * If constant overrides are provided, they are appended to the UID:
+ *   scenario1::scenario1##_c1=5,_c2=10||_c1=5
+ *
  * @param scenarioSpecL The input scenario used to configure the "left" model, or undefined if no data
  * is needed from the left model.
  * @param scenarioSpecR The input scenario used to configure the "right" model, or undefined if no data
  * is needed from the right model.
+ * @param constantsL Optional constant overrides for the "left" model.
+ * @param constantsR Optional constant overrides for the "right" model.
  */
 function scenarioPairUid(
   scenarioSpecL: ScenarioSpec | undefined,
-  scenarioSpecR: ScenarioSpec | undefined
+  scenarioSpecR: ScenarioSpec | undefined,
+  constantsL: ConstantOverride[] | undefined,
+  constantsR: ConstantOverride[] | undefined
 ): ScenarioPairUid {
   const uidL = scenarioSpecL?.uid || ''
   const uidR = scenarioSpecR?.uid || ''
-  return `${uidL}::${uidR}`
+  let uid = `${uidL}::${uidR}`
+
+  // Append constant overrides if present
+  const constUidL = constantsUid(constantsL)
+  const constUidR = constantsUid(constantsR)
+  if (constUidL || constUidR) {
+    uid += `##${constUidL}||${constUidR}`
+  }
+
+  return uid
 }

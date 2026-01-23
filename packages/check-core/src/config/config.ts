@@ -1,5 +1,6 @@
 // Copyright (c) 2021-2022 Climate Interactive / New Venture Fund
 
+import type { GetDatasetsOptions } from '../_shared/data-source'
 import type { ScenarioSpec } from '../_shared/scenario-spec-types'
 import type { TaskExecutor, TaskExecutorKey } from '../_shared/task-queue'
 import { createExecutor, TaskQueue } from '../_shared/task-queue'
@@ -138,12 +139,16 @@ function handleRenames(
   function wrapModel(origBundleModelR: BundleModel): BundleModel {
     return {
       modelSpec: origBundleModelR.modelSpec,
-      getDatasetsForScenario: async (scenarioSpec: ScenarioSpec, datasetKeys: DatasetKey[]) => {
+      getDatasetsForScenario: async (
+        scenarioSpec: ScenarioSpec,
+        datasetKeys: DatasetKey[],
+        options?: GetDatasetsOptions
+      ) => {
         // The given dataset keys are for the "left" bundle, so convert to the "right" keys
         const rightKeys = datasetKeys.map(rightKeyForLeftKey)
 
         // The returned dataset map has the "right" keys, so convert back to the "left" keys
-        const result = await origBundleModelR.getDatasetsForScenario(scenarioSpec, rightKeys)
+        const result = await origBundleModelR.getDatasetsForScenario(scenarioSpec, rightKeys, options)
         const mapWithRightKeys = result.datasetMap
         const mapWithLeftKeys: DatasetMap = new Map()
         for (const [rightKey, dataset] of mapWithRightKeys.entries()) {

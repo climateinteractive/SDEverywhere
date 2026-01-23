@@ -2,6 +2,20 @@
 
 import type { VarId } from './types'
 
+/**
+ * Specifies a constant override that will be applied when running the model.
+ *
+ * Unlike `InputSetting` (which works with pre-declared input variables that have
+ * defined min/max ranges), constant overrides can modify ANY constant in the model
+ * when the `customConstants` feature is enabled.
+ */
+export interface ConstantOverride {
+  /** The variable ID of the constant to be overridden. */
+  varId: VarId
+  /** The new value for the constant. */
+  value: number
+}
+
 /** A unique identifier for the scenario, derived from its input settings. */
 export type ScenarioSpecUid = string
 

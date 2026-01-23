@@ -1,7 +1,7 @@
 // Copyright (c) 2021-2025 Climate Interactive / New Venture Fund
 
-import type { DatasetsResult } from '../../_shared/data-source'
-import type { ScenarioSpec } from '../../_shared/scenario-spec-types'
+import type { DatasetsResult, GetDatasetsOptions } from '../../_shared/data-source'
+import type { ConstantOverride, ScenarioSpec } from '../../_shared/scenario-spec-types'
 import type { Task } from '../../_shared/task-queue'
 import { TaskQueue } from '../../_shared/task-queue'
 import type { DatasetKey, DatasetMap } from '../../_shared/types'
@@ -9,6 +9,16 @@ import type { DatasetKey, DatasetMap } from '../../_shared/types'
 import type { BundleModel, BundleGraphData, BundleGraphId } from '../../bundle/bundle-types'
 
 export type ComparisonDataRequestKey = string
+
+/**
+ * Options for `requestDatasetMaps`.
+ */
+export interface RequestDatasetMapsOptions {
+  /** Optional constant overrides for the "left" model. */
+  constantsL?: ConstantOverride[]
+  /** Optional constant overrides for the "right" model. */
+  constantsR?: ConstantOverride[]
+}
 
 /**
  * Coordinates loading of data in parallel from two models.
@@ -28,7 +38,8 @@ export class ComparisonDataCoordinator {
    * will be fetched from the "left" bundle's model, otherwise they will be fetched from
    * the "right" bundle's model.
    * @param scenarioSpecR The scenario used for the second ("right") model of the comparison.
-   * @param graphId The keys of the datasets to be fetched.
+   * @param datasetKeys The keys of the datasets to be fetched.
+   * @param options Optional configuration including constant overrides.
    * @param onResponse The callback that will be called with the dataset maps.
    */
   requestDatasetMaps(
@@ -38,15 +49,18 @@ export class ComparisonDataCoordinator {
     sourceR: 'left' | 'right',
     scenarioSpecR: ScenarioSpec,
     datasetKeys: DatasetKey[],
+    options: RequestDatasetMapsOptions | undefined,
     onResponse: (datasetMapL?: DatasetMap, datasetMapR?: DatasetMap) => void
   ): void {
     // Helper function that fetches data from a particular model
     async function fetchDatasets(
       bundleModel: BundleModel,
-      scenarioSpec: ScenarioSpec | undefined
+      scenarioSpec: ScenarioSpec | undefined,
+      constants: ConstantOverride[] | undefined
     ): Promise<DatasetsResult> {
       if (scenarioSpec) {
-        return bundleModel.getDatasetsForScenario(scenarioSpec, datasetKeys)
+        const getDatasetsOptions: GetDatasetsOptions | undefined = constants ? { constants } : undefined
+        return bundleModel.getDatasetsForScenario(scenarioSpec, datasetKeys, getDatasetsOptions)
       } else {
         return undefined
       }
@@ -64,13 +78,13 @@ export class ComparisonDataCoordinator {
         if (modelL === modelR) {
           // The models are the same, so we need to perform the two runs sequentially (since
           // currently a single model instance cannot be used concurrently)
-          resultL = await fetchDatasets(modelL, scenarioSpecL)
-          resultR = await fetchDatasets(modelR, scenarioSpecR)
+          resultL = await fetchDatasets(modelL, scenarioSpecL, options?.constantsL)
+          resultR = await fetchDatasets(modelR, scenarioSpecR, options?.constantsR)
         } else {
           // The models are different, so we can perform the two runs in parallel
           const results = await Promise.all([
-            fetchDatasets(modelL, scenarioSpecL),
-            fetchDatasets(modelR, scenarioSpecR)
+            fetchDatasets(modelL, scenarioSpecL, options?.constantsL),
+            fetchDatasets(modelR, scenarioSpecR, options?.constantsR)
           ])
           resultL = results[0]
           resultR = results[1]

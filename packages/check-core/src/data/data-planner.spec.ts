@@ -2,7 +2,7 @@
 
 import { describe, expect, it } from 'vitest'
 
-import type { ScenarioSpec } from '../_shared/scenario-spec-types'
+import type { ConstantOverride, ScenarioSpec } from '../_shared/scenario-spec-types'
 import { inputAtValueSpec } from '../_shared/scenario-specs'
 import type { DatasetKey } from '../_shared/types'
 
@@ -23,11 +23,15 @@ function noopTask(datasetKey: DatasetKey): DataTask {
 function request(
   scenarioSpecL: ScenarioSpec | undefined,
   scenarioSpecR: ScenarioSpec | undefined,
-  datasetKeys: DatasetKey[]
+  datasetKeys: DatasetKey[],
+  constantsL?: ConstantOverride[],
+  constantsR?: ConstantOverride[]
 ): DataRequest {
   return {
     scenarioSpecL,
     scenarioSpecR,
+    constantsL,
+    constantsR,
     dataTasks: datasetKeys.map(noopTask)
   }
 }
@@ -89,5 +93,116 @@ describe('DataPlanner', () => {
     const plan = planner.buildPlan()
     expect(plan.requests.length).toBe(1)
     expect(plan.requests[0]).toMatchObject(request(s1, s1, ['Model_v1', 'Model_v2']))
+  })
+
+  describe('with constant overrides', () => {
+    const c1: ConstantOverride = { varId: '_c1', value: 10 }
+    const c2: ConstantOverride = { varId: '_c2', value: 20 }
+    const c3: ConstantOverride = { varId: '_c1', value: 99 }
+
+    it('should batch requests with the same constant overrides', () => {
+      const planner = new DataPlanner(10)
+      planner.addRequest(s1, s1, 'Model_v1', noopFunc, [c1], [c1])
+      planner.addRequest(s1, s1, 'Model_v2', noopFunc, [c1], [c1])
+      const plan = planner.buildPlan()
+      expect(plan.requests.length).toBe(1)
+      expect(plan.requests[0]).toMatchObject(request(s1, s1, ['Model_v1', 'Model_v2'], [c1], [c1]))
+    })
+
+    it('should not batch requests with different constant overrides', () => {
+      const planner = new DataPlanner(10)
+      // Same scenario but different constants should create separate requests
+      planner.addRequest(s1, s1, 'Model_v1', noopFunc, [c1], [c1])
+      planner.addRequest(s1, s1, 'Model_v2', noopFunc, [c2], [c2])
+      const plan = planner.buildPlan()
+      expect(plan.requests.length).toBe(2)
+      expect(plan.requests[0]).toMatchObject(request(s1, s1, ['Model_v1'], [c1], [c1]))
+      expect(plan.requests[1]).toMatchObject(request(s1, s1, ['Model_v2'], [c2], [c2]))
+    })
+
+    it('should not batch requests when one has constants and one does not', () => {
+      const planner = new DataPlanner(10)
+      planner.addRequest(s1, s1, 'Model_v1', noopFunc, [c1], [c1])
+      planner.addRequest(s1, s1, 'Model_v2', noopFunc)
+      const plan = planner.buildPlan()
+      expect(plan.requests.length).toBe(2)
+      expect(plan.requests[0]).toMatchObject(request(s1, s1, ['Model_v1'], [c1], [c1]))
+      expect(plan.requests[1]).toMatchObject(request(s1, s1, ['Model_v2']))
+    })
+
+    it('should not batch requests with same varId but different values', () => {
+      const planner = new DataPlanner(10)
+      planner.addRequest(s1, s1, 'Model_v1', noopFunc, [c1], [c1])
+      planner.addRequest(s1, s1, 'Model_v2', noopFunc, [c3], [c3])
+      const plan = planner.buildPlan()
+      expect(plan.requests.length).toBe(2)
+      expect(plan.requests[0]).toMatchObject(request(s1, s1, ['Model_v1'], [c1], [c1]))
+      expect(plan.requests[1]).toMatchObject(request(s1, s1, ['Model_v2'], [c3], [c3]))
+    })
+
+    it('should merge L-only request with LR request when constants match', () => {
+      const planner = new DataPlanner(10)
+      // LR request with constants
+      planner.addRequest(s1, s1, 'Model_v1', noopFunc, [c1], [c1])
+      // L-only request with same L constants should merge
+      planner.addRequest(s1, undefined, 'Model_v2', noopFunc, [c1], undefined)
+      const plan = planner.buildPlan()
+      expect(plan.requests.length).toBe(1)
+      expect(plan.requests[0]).toMatchObject(request(s1, s1, ['Model_v1', 'Model_v2'], [c1], [c1]))
+    })
+
+    it('should not merge L-only request with LR request when constants differ', () => {
+      const planner = new DataPlanner(10)
+      // LR request with constants
+      planner.addRequest(s1, s1, 'Model_v1', noopFunc, [c1], [c1])
+      // L-only request with different L constants should NOT merge
+      planner.addRequest(s1, undefined, 'Model_v2', noopFunc, [c2], undefined)
+      const plan = planner.buildPlan()
+      expect(plan.requests.length).toBe(2)
+      expect(plan.requests[0]).toMatchObject(request(s1, s1, ['Model_v1'], [c1], [c1]))
+      expect(plan.requests[1]).toMatchObject(request(s1, undefined, ['Model_v2'], [c2], undefined))
+    })
+
+    it('should merge R-only request with LR request when constants match', () => {
+      const planner = new DataPlanner(10)
+      // LR request with constants
+      planner.addRequest(s1, s1, 'Model_v1', noopFunc, [c1], [c2])
+      // R-only request with same R constants should merge
+      planner.addRequest(undefined, s1, 'Model_v2', noopFunc, undefined, [c2])
+      const plan = planner.buildPlan()
+      expect(plan.requests.length).toBe(1)
+      expect(plan.requests[0]).toMatchObject(request(s1, s1, ['Model_v1', 'Model_v2'], [c1], [c2]))
+    })
+
+    it('should not merge R-only request with LR request when constants differ', () => {
+      const planner = new DataPlanner(10)
+      // LR request with constants
+      planner.addRequest(s1, s1, 'Model_v1', noopFunc, [c1], [c2])
+      // R-only request with different R constants should NOT merge
+      planner.addRequest(undefined, s1, 'Model_v2', noopFunc, undefined, [c1])
+      const plan = planner.buildPlan()
+      expect(plan.requests.length).toBe(2)
+      expect(plan.requests[0]).toMatchObject(request(s1, s1, ['Model_v1'], [c1], [c2]))
+      expect(plan.requests[1]).toMatchObject(request(undefined, s1, ['Model_v2'], undefined, [c1]))
+    })
+
+    it('should batch requests with multiple constants in same order', () => {
+      const planner = new DataPlanner(10)
+      planner.addRequest(s1, s1, 'Model_v1', noopFunc, [c1, c2], [c1, c2])
+      planner.addRequest(s1, s1, 'Model_v2', noopFunc, [c1, c2], [c1, c2])
+      const plan = planner.buildPlan()
+      expect(plan.requests.length).toBe(1)
+      expect(plan.requests[0]).toMatchObject(request(s1, s1, ['Model_v1', 'Model_v2'], [c1, c2], [c1, c2]))
+    })
+
+    it('should batch requests with multiple constants in different order (sorted by varId)', () => {
+      const planner = new DataPlanner(10)
+      // Constants are sorted by varId when generating the UID, so order shouldn't matter
+      planner.addRequest(s1, s1, 'Model_v1', noopFunc, [c1, c2], [c1, c2])
+      planner.addRequest(s1, s1, 'Model_v2', noopFunc, [c2, c1], [c2, c1])
+      const plan = planner.buildPlan()
+      expect(plan.requests.length).toBe(1)
+      expect(plan.requests[0]).toMatchObject(request(s1, s1, ['Model_v1', 'Model_v2'], [c1, c2], [c1, c2]))
+    })
   })
 })

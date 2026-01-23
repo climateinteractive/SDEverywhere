@@ -1,7 +1,7 @@
 // Copyright (c) 2021-2022 Climate Interactive / New Venture Fund
 
-import type { DatasetsResult } from '../_shared/data-source'
-import type { ScenarioSpec } from '../_shared/scenario-spec-types'
+import type { DatasetsResult, GetDatasetsOptions } from '../_shared/data-source'
+import type { ConstantOverride, ScenarioSpec } from '../_shared/scenario-spec-types'
 import type { BundleModels, Task, TaskKey } from '../_shared/task-queue'
 import { TaskQueue } from '../_shared/task-queue'
 import type { DatasetKey } from '../_shared/types'
@@ -195,10 +195,12 @@ class SuiteRunner {
 
     async function getDatasets(
       bundleModel: BundleModel | undefined,
-      scenarioSpec: ScenarioSpec | undefined
+      scenarioSpec: ScenarioSpec | undefined,
+      constants: ConstantOverride[] | undefined
     ): Promise<DatasetsResult> {
       if (bundleModel && scenarioSpec) {
-        return bundleModel.getDatasetsForScenario(scenarioSpec, datasetKeys)
+        const options: GetDatasetsOptions | undefined = constants ? { constants } : undefined
+        return bundleModel.getDatasetsForScenario(scenarioSpec, datasetKeys, options)
       } else {
         return undefined
       }
@@ -208,8 +210,8 @@ class SuiteRunner {
     const bundleModelL = bundleModels.L
     const bundleModelR = bundleModels.R
     const [datasetsResultL, datasetsResultR] = await Promise.all([
-      getDatasets(bundleModelL, request.scenarioSpecL),
-      getDatasets(bundleModelR, request.scenarioSpecR)
+      getDatasets(bundleModelL, request.scenarioSpecL, request.constantsL),
+      getDatasets(bundleModelR, request.scenarioSpecR, request.constantsR)
     ])
 
     // Update the performance stats
