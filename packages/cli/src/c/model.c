@@ -74,6 +74,13 @@ double getSaveper() {
  * variables.  The `outputs` buffer needs to be at least as large as:
  *   `number of output variables` * `number of save points`
  *
+ * The outputs will be stored in the same order as the outputs are defined in the
+ * spec file, with one "row" for each variable.  For example, the first value in
+ * the buffer will be the output value at t0 for the first output variable,
+ * followed by the output value for that variable at t1, and so on.  After the
+ * value for tN (where tN is the last time in the range), the second variable
+ * outputs will begin, and so on.
+ *
  * @param inputs The buffer that contains the model input values.  If NULL,
  * no inputs will be set and the model will use the default values for all
  * constants as defined in the generated model.  If non-NULL, the buffer is
@@ -104,7 +111,11 @@ void runModel(double* inputs, double* outputs) {
  *   `number of output variables` * `number of save points`
  *
  * If `outputIndices` is NULL, outputs will be stored in the same order as the outputs
- * are defined in the spec file, with one "row" for each variable.
+ * are defined in the spec file, with one "row" for each variable.  For example, the
+ * first value in the buffer will be the output value at t0 for the first output
+ * variable, followed by the output value for that variable at t1, and so on.  After
+ * the value for tN (where tN is the last time in the range), the second variable
+ * outputs will begin, and so on.
  *
  * If `outputIndices` is non-NULL, it specifies which outputs are being stored:
  *   - outputIndices[0] is the count of output variables being stored
