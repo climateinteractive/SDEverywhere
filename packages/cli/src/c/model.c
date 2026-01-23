@@ -11,11 +11,7 @@ struct timespec startTime, finishTime;
 // The special _time variable is not included in .mdl files.
 double _time;
 
-// Output data buffer used by `run_model`
-char* outputData = NULL;
-size_t outputIndex = 0;
-
-// Output data buffer used by `runModelWithBuffers`
+// Output data buffer used by `runModel` / `runModelWithBuffers`
 double* outputBuffer = NULL;
 int32_t* outputIndexBuffer = NULL;
 size_t outputVarIndex = 0;
@@ -67,25 +63,23 @@ double getSaveper() {
   return _saveper;
 }
 
-char* run_model(const char* inputs) {
-  // run_model does everything necessary to run the model with the given inputs.
-  // It may be called multiple times. Call finish() after all runs are complete.
-  // Initialize the state to default values in the model at the start of each run.
-  initConstants();
-  // Set inputs for this run that override default values.
-  // fprintf(stderr, "run_model inputs = %s\n", inputs);
-  setInputs(inputs);
-  initLevels();
-  run();
-  return outputData;
+/**
+ * Run the model, reading inputs from the given `inputs` buffer, and writing outputs
+ * to the given `outputs` buffer.
+ *
+ * This is a simplified version of `runModelWithBuffers` that passes NULL for
+ * `outputIndices`, which means the outputs will be stored in the order defined
+ * in the spec file.
+ */
+void runModel(double* inputs, double* outputs) {
+  runModelWithBuffers(inputs, outputs, NULL);
 }
 
 /**
  * Run the model, reading inputs from the given `inputs` buffer, and writing outputs
  * to the given `outputs` buffer.
  *
- * This function performs the same steps as the original `run_model` function,
- * except that it uses the provided pre-allocated buffers.
+ * This function uses the provided pre-allocated buffers for inputs and outputs.
  *
  * The `inputs` buffer is assumed to have one double value for each input variable;
  * they must be in exactly the same order as the variables are listed in the spec file.
@@ -107,7 +101,9 @@ void runModelWithBuffers(double* inputs, double* outputs, int32_t* outputIndices
   outputBuffer = outputs;
   outputIndexBuffer = outputIndices;
   initConstants();
-  setInputsFromBuffer(inputs);
+  if (inputs != NULL) {
+    setInputs(inputs);
+  }
   initLevels();
   run();
   outputBuffer = NULL;
@@ -121,7 +117,6 @@ void run() {
 
   // Restart fresh output for all steps in this run.
   savePointIndex = 0;
-  outputIndex = 0;
 
   // Initialize time with the required INITIAL TIME control variable.
   _time = _initial_time;
@@ -171,25 +166,11 @@ void run() {
 }
 
 void outputVar(double value) {
-  if (outputBuffer != NULL) {
-    // Write each value into the preallocated buffer; each variable has a "row" that
-    // contains `numSavePoints` values, one value for each save point
-    double* outputPtr = outputBuffer + (outputVarIndex * numSavePoints) + savePointIndex;
-    *outputPtr = value;
-    outputVarIndex++;
-  } else {
-    // Allocate an output buffer for all output steps as a single block.
-    // Add one character for a null terminator.
-    if (outputData == NULL) {
-      int numOutputSteps = (int)(round((_final_time - _initial_time) / _saveper)) + 1;
-      size_t size = numOutputSteps * (OUTPUT_STRING_LEN * numOutputs) + 1;
-      // fprintf(stderr, "output data size = %zu\n", size);
-      outputData = (char*)malloc(size);
-    }
-    // Format the value as a string in the output data buffer.
-    int numChars = snprintf(outputData + outputIndex, OUTPUT_STRING_LEN + 1, "%g\t", value);
-    outputIndex += numChars;
-  }
+  // Write each value into the preallocated buffer; each variable has a "row" that
+  // contains `numSavePoints` values, one value for each save point
+  double* outputPtr = outputBuffer + (outputVarIndex * numSavePoints) + savePointIndex;
+  *outputPtr = value;
+  outputVarIndex++;
 }
 
 void finish() {
@@ -199,7 +180,4 @@ void finish() {
       1000.0 * finishTime.tv_sec + 1e-6 * finishTime.tv_nsec - (1000.0 * startTime.tv_sec + 1e-6 * startTime.tv_nsec);
   fprintf(stderr, "calculation runtime = %.0f ms\n", runtime);
 #endif
-  if (outputData != NULL) {
-    free(outputData);
-  }
 }

@@ -200,11 +200,7 @@ ${customOutputSection(Model.varIndexInfo(), spec.customOutputs)}
 
     mode = 'io'
     return `\
-void setInputs(const char* inputData) {
-${inputsFromStringImpl()}
-}
-
-void setInputsFromBuffer(double* inputData) {
+void setInputs(double* inputData) {
 ${inputsFromBufferImpl()}
 }
 
@@ -322,13 +318,19 @@ ${section(chunk)}
   }
   function internalVarsSection() {
     // Declare internal variables to run the model.
-    let decls
-    if (outputAllVars) {
-      decls = `const int numOutputs = ${expandedVarNames().length};`
+    let numInputsDecl
+    if (spec.inputVars && spec.inputVars.length > 0) {
+      numInputsDecl = `const int numInputs = ${spec.inputVars.length};`
     } else {
-      decls = `const int numOutputs = ${spec.outputVars.length};`
+      numInputsDecl = `const int numInputs = 0;`
     }
-    return decls
+    let numOutputsDecl
+    if (outputAllVars) {
+      numOutputsDecl = `const int numOutputs = ${expandedVarNames().length};`
+    } else {
+      numOutputsDecl = `const int numOutputs = ${spec.outputVars.length};`
+    }
+    return `${numInputsDecl}\n${numOutputsDecl}`
   }
   function arrayDimensionsSection() {
     // Emit a declaration for each array dimension's index numbers.
@@ -401,29 +403,6 @@ ${section(chunk)}
     })
     const section = R.pipe(outputVars, code, lines)
     return section(varIndexInfo)
-  }
-  function inputsFromStringImpl() {
-    // If there was an I/O spec file, then emit code to parse input variables.
-    // The user can replace this with a parser for a different serialization format.
-    let inputVars = ''
-    if (spec.inputVars && spec.inputVars.length > 0) {
-      let inputVarPtrs = R.reduce((a, inputVar) => R.concat(a, `    &${inputVar},\n`), '', spec.inputVars)
-      inputVars = `\
-  static double* inputVarPtrs[] = {\n${inputVarPtrs}  };
-  char* inputs = (char*)inputData;
-  char* token = strtok(inputs, " ");
-  while (token) {
-    char* p = strchr(token, ':');
-    if (p) {
-      *p = '\\0';
-      int modelVarIndex = atoi(token);
-      double value = atof(p+1);
-      *inputVarPtrs[modelVarIndex] = value;
-    }
-    token = strtok(NULL, " ");
-  }`
-    }
-    return inputVars
   }
   function inputsFromBufferImpl() {
     let inputVars = []

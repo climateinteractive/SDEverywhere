@@ -126,6 +126,7 @@ double _y;
 double _z;
 
 // Internal variables
+const int numInputs = 1;
 const int numOutputs = 8;
 
 // Array dimensions
@@ -245,25 +246,7 @@ void evalLevels() {
   // Evaluate levels.
 }
 
-void setInputs(const char* inputData) {
-  static double* inputVarPtrs[] = {
-    &_input,
-  };
-  char* inputs = (char*)inputData;
-  char* token = strtok(inputs, " ");
-  while (token) {
-    char* p = strchr(token, ':');
-    if (p) {
-      *p = '\\0';
-      int modelVarIndex = atoi(token);
-      double value = atof(p+1);
-      *inputVarPtrs[modelVarIndex] = value;
-    }
-    token = strtok(NULL, " ");
-  }
-}
-
-void setInputsFromBuffer(double* inputData) {
+void setInputs(double* inputData) {
   _input = inputData[0];
 }
 
