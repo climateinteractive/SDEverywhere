@@ -1,7 +1,8 @@
 #include "sde.h"
 
 /**
- * Count the number of input pairs in the input string.
+ * Count the number of input pairs in the input string in the format
+ * "varIndex:value varIndex:value ..." (for example, "0:3.14 6:42").
  */
 static size_t countInputs(const char* inputData) {
   if (inputData == NULL || *inputData == '\0') {
@@ -26,8 +27,9 @@ static size_t countInputs(const char* inputData) {
 }
 
 /**
- * Parse input data string in the format "varIndex:value varIndex:value ..."
- * and populate the inputValues and inputIndices arrays for sparse input setting.
+ * Parse an input data string in the format "varIndex:value varIndex:value ..."
+ * (for example, "0:3.14 6:42") and populate the inputValues and inputIndices
+ * arrays for sparse input setting.
  *
  * @param inputData The input string to parse.
  * @param inputValues The array to populate with input values.
