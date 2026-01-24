@@ -92,4 +92,24 @@ expect_not_present "_test_12_f"
 expect_not_present "_test_13_cond"
 expect_not_present "_test_13_f"
 
+# Test sparse input setting in `main.c` by running the generated binary with custom
+# input values:
+#   Input 2 (index 1) = 120.123
+#   Input 1 (index 0) = 110
+# Expected:
+#   Input 1 and 2 Total = 230.123
+INPUT_FILE=output/prune_inputs.txt
+echo "1:120.123 0:110" > "$INPUT_FILE"
+OUTPUT=$(./build/prune "$INPUT_FILE")
+
+# Extract "Input 1 and 2 Total" (column 2) from the t=0 row (line 2)
+ACTUAL=$(echo "$OUTPUT" | sed -n '2p' | cut -f2)
+EXPECTED="230.123"
+if [[ "$ACTUAL" != "$EXPECTED" ]]; then
+  echo "ERROR: Expected 'Input 1 and 2 Total' at t=0 to be '$EXPECTED' but got '$ACTUAL'"
+  echo "Output was:"
+  echo "$OUTPUT"
+  exit 1
+fi
+
 echo "All validation checks passed!"
