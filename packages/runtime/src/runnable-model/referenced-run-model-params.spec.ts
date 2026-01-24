@@ -2,7 +2,7 @@
 
 import { describe, expect, it } from 'vitest'
 
-import { Outputs, createLookupDef, type LookupDef } from '../_shared'
+import { Outputs, createConstantDef, createLookupDef, type ConstantDef, type LookupDef } from '../_shared'
 
 import { ReferencedRunModelParams } from './referenced-run-model-params'
 import { ModelListing } from '../model-listing'
@@ -222,7 +222,53 @@ describe('ReferencedRunModelParams', () => {
     expect(outputs.getSeriesForVar('_y').points).toEqual([p(2000, 4), p(2001, 5), p(2002, 6)])
   })
 
-  it('should copy lookups', () => {
+  it('should copy constant overrides', () => {
+    const listing = new ModelListing(JSON.parse(listingJson))
+
+    const inputs = [1, 2, 3]
+    const outputs = new Outputs(['_x', '_y'], 2000, 2002, 1)
+
+    const constants: ConstantDef[] = [
+      // Reference the first variable by name
+      createConstantDef({ varName: 'A' }, 42),
+      // Reference the second variable by ID
+      createConstantDef({ varId: '_b' }, 100)
+    ]
+
+    const params = new ReferencedRunModelParams(listing)
+
+    // Run once without providing constants
+    params.updateFromParams(inputs, outputs)
+
+    // Verify that constants array is undefined
+    expect(params.getConstants()).toBeUndefined()
+
+    // Run again with constants
+    params.updateFromParams(inputs, outputs, { constants })
+
+    // Verify that constants array contains the expected values
+    expect(params.getConstants()).toEqual([
+      createConstantDef({ varName: 'A', varSpec: { varIndex: 1 } }, 42),
+      createConstantDef({ varId: '_b', varSpec: { varIndex: 2 } }, 100)
+    ])
+
+    // Run again without constants
+    params.updateFromParams(inputs, outputs)
+
+    // Verify that constants array is undefined
+    expect(params.getConstants()).toBeUndefined()
+
+    // Run again with a constant referenced by spec
+    const constantBySpec = createConstantDef({ varSpec: listing.varSpecs.get('_a') }, 999)
+    params.updateFromParams(inputs, outputs, {
+      constants: [constantBySpec]
+    })
+
+    // Verify that constants array contains the expected values
+    expect(params.getConstants()).toEqual([constantBySpec])
+  })
+
+  it('should copy lookup overrides', () => {
     const listing = new ModelListing(JSON.parse(listingJson))
 
     const inputs = [1, 2, 3]

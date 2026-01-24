@@ -67,6 +67,39 @@ double getSaveper() {
   return _saveper;
 }
 
+/**
+ * Set constant overrides from the given buffers.
+ *
+ * The `constantIndices` buffer contains the variable indices and subscript indices
+ * for each constant to override. The format is:
+ *   [count, varIndex1, subCount1, subIndex1_1, ..., varIndex2, subCount2, ...]
+ *
+ * The `constantValues` buffer contains the corresponding values for each constant.
+ */
+void setConstantsFromBuffers(int32_t* constantIndices, double* constantValues) {
+  if (constantIndices == NULL || constantValues == NULL) {
+    return;
+  }
+
+  size_t indexBufferOffset = 0;
+  size_t valueBufferOffset = 0;
+  size_t constantCount = (size_t)constantIndices[indexBufferOffset++];
+
+  for (size_t i = 0; i < constantCount; i++) {
+    size_t varIndex = (size_t)constantIndices[indexBufferOffset++];
+    size_t subCount = (size_t)constantIndices[indexBufferOffset++];
+    size_t* subIndices;
+    if (subCount > 0) {
+      subIndices = (size_t*)(constantIndices + indexBufferOffset);
+      indexBufferOffset += subCount;
+    } else {
+      subIndices = NULL;
+    }
+    double value = constantValues[valueBufferOffset++];
+    setConstant(varIndex, subIndices, value);
+  }
+}
+
 char* run_model(const char* inputs) {
   // run_model does everything necessary to run the model with the given inputs.
   // It may be called multiple times. Call finish() after all runs are complete.
@@ -102,11 +135,38 @@ char* run_model(const char* inputs) {
  * by the output value for that variable at t1, and so on.  After the value for tN
  * (where tN is the last time in the range), the second variable outputs will begin,
  * and so on.
+ *
+ * For the optional `outputIndices` and `constantIndices` buffers, the expected format
+ * is:
+ *   [count, varIndex1, subCount1, subIndex1_1, ..., varIndex2, subCount2, ...]
+ * where `count` is the number of variables to store, `varIndexN` is the index of the
+ * variable to store (from the model listing file), `subCountN` is the number of
+ * subscripts for that variable, and `subIndexN_M` is the index of the subscript
+ * at the Mth position for that variable.
+ *
+ * @param inputs The required buffer that contains the model input values.  See above
+ * for details on the expected format.
+ * @param outputs The required buffer that will receive the model output values.  See
+ * above for details on the expected format.
+ * @param outputIndices An optional buffer that contains the indices of the output
+ * variables to store.  Pass NULL if using the default outputs.  This is typically
+ * only used by the JS-level runtime package.  See above for details on the expected
+ * format.
+ * @param constantIndices An optional buffer that contains the indices of the constants
+ * to override.  Pass NULL if not overriding any constants.  (This is typically only
+ * used by the JS-level runtime package.  See above for details on the expected format.
+ * @param constantValues An optional buffer that contains the values of the constants
+ * to override.  Pass NULL if not overriding any constants.  This is typically only
+ * used by the JS-level runtime package.  Each value in the buffer corresponds to the
+ * value of the constant at the corresponding index.
  */
-void runModelWithBuffers(double* inputs, double* outputs, int32_t* outputIndices) {
+void runModelWithBuffers(double* inputs, double* outputs, int32_t* outputIndices, int32_t* constantIndices, double* constantValues) {
   outputBuffer = outputs;
   outputIndexBuffer = outputIndices;
   initConstants();
+  if (constantIndices != NULL && constantValues != NULL) {
+    setConstantsFromBuffers(constantIndices, constantValues);
+  }
   setInputsFromBuffer(inputs);
   initLevels();
   run();

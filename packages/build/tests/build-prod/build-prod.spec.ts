@@ -101,6 +101,7 @@ describe('build in production mode', () => {
     expect(resolvedModelSpec!.outputs).toEqual([{ varName: 'Z' }])
     expect(resolvedModelSpec!.datFiles).toEqual([])
     expect(resolvedModelSpec!.bundleListing).toBe(false)
+    expect(resolvedModelSpec!.customConstants).toBe(false)
     expect(resolvedModelSpec!.customLookups).toBe(false)
     expect(resolvedModelSpec!.customOutputs).toBe(false)
   })
@@ -144,11 +145,12 @@ describe('build in production mode', () => {
     expect(resolvedModelSpec!.outputs).toEqual([{ varName: 'Z' }])
     expect(resolvedModelSpec!.datFiles).toEqual([])
     expect(resolvedModelSpec!.bundleListing).toBe(true)
+    expect(resolvedModelSpec!.customConstants).toBe(false)
     expect(resolvedModelSpec!.customLookups).toEqual(['lookup1'])
     expect(resolvedModelSpec!.customOutputs).toEqual(['output1'])
   })
 
-  it('should resolve model spec (when boolean is provided for customLookups and customOutputs)', async () => {
+  it('should resolve model spec (when boolean is provided for customConstants, customLookups, and customOutputs)', async () => {
     let resolvedModelSpec: ResolvedModelSpec
     const userConfig: UserConfig = {
       genFormat: 'c',
@@ -161,6 +163,7 @@ describe('build in production mode', () => {
           inputs: ['Y'],
           outputs: ['Z'],
           bundleListing: true,
+          customConstants: true,
           customLookups: true,
           customOutputs: true
         }
@@ -182,6 +185,7 @@ describe('build in production mode', () => {
     expect(result.value.exitCode).toBe(0)
     expect(resolvedModelSpec!).toBeDefined()
     expect(resolvedModelSpec!.bundleListing).toBe(true)
+    expect(resolvedModelSpec!.customConstants).toEqual(true)
     expect(resolvedModelSpec!.customLookups).toEqual(true)
     expect(resolvedModelSpec!.customOutputs).toEqual(true)
   })

@@ -1,0 +1,44 @@
+{UTF-8}
+
+DimA: A1, A2 ~~|
+DimB: B1, B2, B3 ~~|
+
+X = 0
+  ~ dmnl [-10,10,0.1]
+  ~ This is an input variable.
+  |
+
+Constant A[DimA] = 100, 200
+  ~ dmnl
+  ~ This is a 1D subscripted constant.
+  |
+
+A[DimA] = X + Constant A[DimA]
+  ~ dmnl
+  ~ Output based on constant A.
+  |
+
+Constant B[DimA, DimB] = 1, 2, 3; 4, 5, 6;
+  ~ dmnl
+  ~ This is a 2D subscripted constant.
+  |
+
+B[DimA, DimB] = X + Constant B[DimA, DimB]
+  ~ dmnl
+  ~ Output based on constant B.
+  |
+
+Constant C = 42
+  ~ dmnl
+  ~ This is a non-subscripted constant.
+  |
+
+C = X + Constant C
+  ~ dmnl
+  ~ Output based on constant C.
+  |
+
+INITIAL TIME = 2000 ~~|
+FINAL TIME = 2002 ~~|
+TIME STEP = 1 ~~|
+SAVEPER = TIME STEP ~~|

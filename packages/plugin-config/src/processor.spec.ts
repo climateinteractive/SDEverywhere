@@ -74,6 +74,7 @@ const specJson1 = `\
     "../Data2.dat"
   ],
   "bundleListing": false,
+  "customConstants": false,
   "customLookups": false,
   "customOutputs": false
 }\
@@ -94,6 +95,7 @@ const specJson2 = `\
     "../Data2.dat"
   ],
   "bundleListing": false,
+  "customConstants": false,
   "customLookups": false,
   "customOutputs": false,
   "directData": {
@@ -113,6 +115,7 @@ const specJson3 = `\
   ],
   "externalDatfiles": [],
   "bundleListing": true,
+  "customConstants": true,
   "customLookups": true,
   "customOutputs": true
 }\

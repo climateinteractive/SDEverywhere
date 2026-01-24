@@ -12,6 +12,7 @@ import type { WasmModule } from '../wasm-module'
 export type OnRunModel = (
   inputs: Float64Array,
   outputs: Float64Array,
+  constants: Map<VarId, number> | undefined,
   lookups: Map<VarId, JsModelLookup>,
   outputIndices?: Int32Array
 ) => void
@@ -48,6 +49,7 @@ export class MockWasmModule implements WasmModule {
   private readonly allocs: Map<number, number> = new Map()
 
   private readonly lookups: Map<VarId, JsModelLookup> = new Map()
+  private readonly constants: Map<VarId, number> = new Map()
 
   public readonly onRunModel: OnRunModel
 
@@ -104,11 +106,53 @@ export class MockWasmModule implements WasmModule {
           this.lookups.set(varId, new JsModelLookup(numPoints, points))
         }
       case 'runModelWithBuffers':
-        return (inputsAddress: number, outputsAddress: number, outputIndicesAddress: number) => {
+        return (
+          inputsAddress: number,
+          outputsAddress: number,
+          outputIndicesAddress: number,
+          constantIndicesAddress: number,
+          constantValuesAddress: number
+        ) => {
           const inputs = this.getHeapView('float64', inputsAddress) as Float64Array
           const outputs = this.getHeapView('float64', outputsAddress) as Float64Array
           const outputIndices = this.getHeapView('int32', outputIndicesAddress) as Int32Array
-          this.onRunModel(inputs, outputs, this.lookups, outputIndices)
+
+          // Decode constant buffers if provided
+          this.constants.clear()
+          if (constantIndicesAddress !== 0 && constantValuesAddress !== 0) {
+            const constantIndices = this.getHeapView('int32', constantIndicesAddress) as Int32Array
+            const constantValues = this.getHeapView('float64', constantValuesAddress) as Float64Array
+
+            // Read count
+            const numConstants = constantIndices[0]
+            let indicesOffset = 1
+            let valuesOffset = 0
+
+            // Decode each constant
+            for (let i = 0; i < numConstants; i++) {
+              const varIndex = constantIndices[indicesOffset++]
+              const subCount = constantIndices[indicesOffset++]
+              // TODO: We skip subscript indices for now, but we should test them here too
+              indicesOffset += subCount
+
+              const varId = this.varIdForSpec({ varIndex })
+              if (varId) {
+                this.constants.set(varId, constantValues[valuesOffset++])
+              }
+            }
+          }
+
+          // Run the model
+          this.onRunModel(
+            inputs,
+            outputs,
+            this.constants.size > 0 ? this.constants : undefined,
+            this.lookups,
+            outputIndices
+          )
+
+          // Clear constants after the run (they don't persist)
+          this.constants.clear()
         }
       default:
         throw new Error(`Unhandled call to cwrap with function name '${fname}'`)

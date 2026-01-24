@@ -21,6 +21,7 @@ function readInlineModelAndGenerateC(
     directDataSpec?: DirectDataSpec
     inputVarNames?: string[]
     outputVarNames?: string[]
+    customConstants?: boolean | string[]
     customLookups?: boolean | string[]
     customOutputs?: boolean | string[]
   }
@@ -33,6 +34,7 @@ function readInlineModelAndGenerateC(
   const spec = {
     inputVarNames: opts?.inputVarNames,
     outputVarNames: opts?.outputVarNames,
+    customConstants: opts?.customConstants,
     customLookups: opts?.customLookups,
     customOutputs: opts?.customOutputs
   }
@@ -267,6 +269,10 @@ void setInputsFromBuffer(double* inputData) {
   _input = inputData[0];
 }
 
+void setConstant(size_t varIndex, size_t* subIndices, double value) {
+  fprintf(stderr, "The setConstant function was not enabled for the generated model. Set the customConstants property in the spec/config file to allow for overriding constants at runtime.\\n");
+}
+
 void setLookup(size_t varIndex, size_t* subIndices, double* points, size_t numPoints) {
   Lookup** pLookup = NULL;
   switch (varIndex) {
@@ -357,6 +363,58 @@ void storeOutput(size_t varIndex, size_t* subIndices) {
   }
 }
 `)
+  })
+
+  it('should generate setConstant that reports error when customConstants is disabled', () => {
+    const mdl = `
+      DimA: A1, A2 ~~|
+      x[DimA] = 10, 20 ~~|
+      y = 42 ~~|
+      INITIAL TIME = 0 ~~|
+      FINAL TIME = 2 ~~|
+      TIME STEP = 1 ~~|
+      SAVEPER = 1 ~~|
+    `
+    const code = readInlineModelAndGenerateC(mdl, {
+      inputVarNames: [],
+      outputVarNames: ['x[A1]', 'y']
+    })
+    expect(code).toMatch(`\
+void setConstant(size_t varIndex, size_t* subIndices, double value) {
+  fprintf(stderr, "The setConstant function was not enabled for the generated model. Set the customConstants property in the spec/config file to allow for overriding constants at runtime.\\n");
+}`)
+  })
+
+  it('should generate setConstant that includes a subset of cases when customConstants is an array', () => {
+    const mdl = `
+      DimA: A1, A2 ~~|
+      x[DimA] = 10, 20 ~~|
+      y = 42 ~~|
+      z = 99 ~~|
+      INITIAL TIME = 0 ~~|
+      FINAL TIME = 2 ~~|
+      TIME STEP = 1 ~~|
+      SAVEPER = 1 ~~|
+    `
+    const code = readInlineModelAndGenerateC(mdl, {
+      inputVarNames: [],
+      outputVarNames: ['x[A1]', 'y', 'z'],
+      customConstants: ['x[A1]', 'z']
+    })
+    expect(code).toMatch(`\
+void setConstant(size_t varIndex, size_t* subIndices, double value) {
+  switch (varIndex) {
+    case 5:
+      _x[subIndices[0]] = value;
+      break;
+    case 7:
+      _z = value;
+      break;
+    default:
+      fprintf(stderr, "No constant found for var index %zu in setConstant\\n", varIndex);
+      break;
+  }
+}`)
   })
 
   it('should generate setLookup that reports error when customLookups is disabled', () => {
