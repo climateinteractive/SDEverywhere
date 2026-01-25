@@ -24,17 +24,36 @@ let { open = $bindable(false), viewModel }: Props = $props()
 <Dialog bind:open title="Configure Check Test" maxWidth={1000}>
   <div class="check-editor-container">
     <div class="check-editor-form">
-      <!-- Scenario Section -->
+      <div class="check-editor-description-section">
+        <div class="check-editor-field">
+          <label class="check-editor-label" for="describe-input">describe</label>
+          <input
+            id="describe-input"
+            class="check-editor-input"
+            type="text"
+            bind:value={viewModel.describeText}
+            placeholder="Variable or group"
+            aria-label="Describe text"
+          />
+        </div>
+        <div class="check-editor-field">
+          <label class="check-editor-label" for="test-input">it</label>
+          <input
+            id="test-input"
+            class="check-editor-input"
+            type="text"
+            bind:value={viewModel.testText}
+            placeholder="should [have behavior] when [conditions]"
+            aria-label="Test text"
+          />
+        </div>
+      </div>
+
       <ScenarioSelector {viewModel} />
-
-      <!-- Dataset Section -->
       <DatasetSelector {viewModel} />
-
-      <!-- Predicate Section -->
       <PredicateSelector {viewModel} />
     </div>
 
-    <!-- Tabbed Preview -->
     <TabbedPreview {viewModel} />
   </div>
 </Dialog>
@@ -45,7 +64,7 @@ let { open = $bindable(false), viewModel }: Props = $props()
   display: flex;
   gap: 2rem;
   min-width: 800px;
-  min-height: 600px;
+  min-height: 340px;
 }
 
 .check-editor-form {
@@ -56,5 +75,49 @@ let { open = $bindable(false), viewModel }: Props = $props()
   min-width: 24rem;
   min-height: 0;
   overflow: hidden;
+}
+
+.check-editor-description-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border-color-normal);
+}
+
+.check-editor-field {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.check-editor-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-color-secondary);
+  min-width: 60px;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', monospace;
+}
+
+.check-editor-input {
+  flex: 1;
+  padding: 0.5rem 0.75rem;
+  background-color: var(--input-bg);
+  border: 1px solid var(--border-color-normal);
+  border-radius: var(--input-border-radius);
+  color: var(--text-color-primary);
+  font-family: inherit;
+  font-size: 0.9rem;
+
+  &:focus {
+    outline: none;
+    border-color: var(--border-color-focused);
+    box-shadow: 0 0 0 1px var(--border-color-focused);
+  }
+
+  &::placeholder {
+    color: var(--text-color-secondary);
+    opacity: 0.6;
+  }
 }
 </style>

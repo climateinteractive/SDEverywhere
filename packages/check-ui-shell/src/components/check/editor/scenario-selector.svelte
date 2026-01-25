@@ -6,8 +6,7 @@ import Selector from '../../list/selector.svelte'
 import { SelectorOptionViewModel, SelectorViewModel } from '../../list/selector-vm.svelte'
 import TypeaheadSelector from '../../list/typeahead-selector.svelte'
 
-import type { InputPosition } from '@sdeverywhere/check-core'
-import type { CheckEditorViewModel, ScenarioKind, ScenarioItemConfig } from './check-editor-vm.svelte'
+import type { CheckEditorViewModel, ScenarioKind, ScenarioItemConfig, ScenarioInputPosition } from './check-editor-vm.svelte'
 import type { ListItemViewModel } from '../../list/list-item-vm.svelte'
 
 interface Props {
@@ -21,28 +20,82 @@ let { viewModel }: Props = $props()
 let showContextMenu = $state(false)
 let contextMenuRef = $state<HTMLDivElement | null>(null)
 
-// Create selector options for position
-const positionOptions = [
+// Create selector options for position (for all-inputs scenarios, no at-value)
+const allInputsPositionOptions = [
   new SelectorOptionViewModel('Default', 'at-default'),
   new SelectorOptionViewModel('Minimum', 'at-minimum'),
   new SelectorOptionViewModel('Maximum', 'at-maximum')
 ]
 
+// Create selector options for position (for given-inputs scenarios, includes at-value)
+const givenInputsPositionOptions = [
+  new SelectorOptionViewModel('Default', 'at-default'),
+  new SelectorOptionViewModel('Minimum', 'at-minimum'),
+  new SelectorOptionViewModel('Maximum', 'at-maximum'),
+  new SelectorOptionViewModel('Value', 'at-value')
+]
+
 function createPositionSelector(scenario: ScenarioItemConfig) {
-  const selector = new SelectorViewModel(positionOptions, scenario.position || 'at-default')
+  const selector = new SelectorViewModel(allInputsPositionOptions, scenario.position || 'at-default')
   selector.onUserChange = (newValue: string) => {
-    viewModel.updateScenario(scenario.id, { position: newValue as InputPosition })
+    viewModel.updateScenario(scenario.id, { position: newValue as ScenarioInputPosition })
   }
   return selector
 }
 
 function createInputPositionSelector(scenario: ScenarioItemConfig, inputIndex: number) {
   const input = scenario.inputs?.[inputIndex]
-  const selector = new SelectorViewModel(positionOptions, input?.position || 'at-default')
+  const selector = new SelectorViewModel(givenInputsPositionOptions, input?.position || 'at-default')
   selector.onUserChange = (newValue: string) => {
-    viewModel.updateScenarioInput(scenario.id, inputIndex, { position: newValue as InputPosition })
+    const newPosition = newValue as ScenarioInputPosition
+    if (newPosition === 'at-value') {
+      // When switching to 'at-value', set the default value for that input
+      const inputVar = viewModel.inputVars.find(v => v.varId === input?.inputVarId)
+      const defaultValue = inputVar?.defaultValue ?? 0
+      viewModel.updateScenarioInput(scenario.id, inputIndex, {
+        position: newPosition,
+        customValue: defaultValue
+      })
+    } else {
+      viewModel.updateScenarioInput(scenario.id, inputIndex, { position: newPosition })
+    }
   }
   return selector
+}
+
+/**
+ * Get the InputVar for a given input configuration.
+ *
+ * @param inputVarId The input variable ID.
+ * @returns The InputVar, or undefined if not found.
+ */
+function getInputVar(inputVarId: string) {
+  return viewModel.inputVars.find(v => v.varId === inputVarId)
+}
+
+/**
+ * Check if a custom value is outside the declared range for an input.
+ *
+ * @param inputVarId The input variable ID.
+ * @param value The custom value.
+ * @returns True if the value is outside the range.
+ */
+function isValueOutOfRange(inputVarId: string, value: number): boolean {
+  const inputVar = getInputVar(inputVarId)
+  if (!inputVar) return false
+  return value < inputVar.minValue || value > inputVar.maxValue
+}
+
+/**
+ * Get a tooltip message for an out-of-range value.
+ *
+ * @param inputVarId The input variable ID.
+ * @returns The tooltip message.
+ */
+function getOutOfRangeTooltip(inputVarId: string): string {
+  const inputVar = getInputVar(inputVarId)
+  if (!inputVar) return ''
+  return `Value is outside the declared range for this input variable (min=${inputVar.minValue}, max=${inputVar.maxValue})`
 }
 
 function handleAddButtonClick() {
@@ -212,6 +265,30 @@ $effect(() => {
                     viewModel={createInputPositionSelector(scenario, inputIndex)}
                     ariaLabel="Position"
                   />
+                  {#if input.position === 'at-value'}
+                    <div class="scenario-selector-value-container">
+                      <input
+                        class="scenario-selector-value-input"
+                        type="number"
+                        value={input.customValue ?? getInputVar(input.inputVarId)?.defaultValue ?? 0}
+                        oninput={e => {
+                          e.stopPropagation()
+                          const value = parseFloat((e.target as HTMLInputElement).value)
+                          viewModel.updateScenarioInput(scenario.id, inputIndex, { customValue: value })
+                        }}
+                        onclick={e => e.stopPropagation()}
+                        aria-label="Custom value"
+                      />
+                      {#if isValueOutOfRange(input.inputVarId, input.customValue ?? 0)}
+                        <span
+                          class="scenario-selector-warning-badge"
+                          title={getOutOfRangeTooltip(input.inputVarId)}
+                        >
+                          ⚠
+                        </span>
+                      {/if}
+                    </div>
+                  {/if}
                   {#if (scenario.inputs?.length || 0) > 1}
                     <button
                       class="scenario-selector-remove-input-btn"
@@ -426,5 +503,43 @@ $effect(() => {
   &:hover {
     background-color: var(--button-bg-hover);
   }
+}
+
+.scenario-selector-value-container {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.scenario-selector-value-input {
+  width: 70px;
+  padding: 0.35rem 0.5rem;
+  background-color: var(--input-bg);
+  border: 1px solid var(--border-color-normal);
+  border-radius: var(--input-border-radius);
+  color: var(--text-color-primary);
+  font-family: inherit;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+
+  &:focus {
+    outline: none;
+    border-color: var(--border-color-focused);
+    box-shadow: 0 0 0 1px var(--border-color-focused);
+  }
+}
+
+.scenario-selector-warning-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background-color: rgba(255, 180, 0, 0.2);
+  color: #f0a000;
+  font-size: 0.75rem;
+  cursor: help;
+  flex-shrink: 0;
 }
 </style>

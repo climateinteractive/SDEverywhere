@@ -53,35 +53,62 @@ Created the initial check-editor component with basic structure:
 - Updated search-list and sel-list components
 - Created this PLAN.md document
 
+### 2026-01-25: Test Description Fields, At-Value Support, and Predicate Data References
+
+- Added "describe" and "it" text fields at the top of the editor form
+  - Default values: "Variable or group" and "should [have behavior] when [conditions]"
+  - Fields are bound to the view model and reflected in the generated YAML
+- Added "at value" option to the position selector for given-inputs scenarios
+  - When selected, a numeric input field appears to enter a custom value
+  - Default value is set to the input variable's default value
+  - Added validation with warning badge for values outside the declared min/max range
+  - Tooltip on warning badge explains the valid range
+- Enhanced predicate data references:
+  - Added dataset reference selector (Same dataset / Different dataset)
+  - Added scenario reference selector (Same scenario / Different scenario)
+  - When "Different dataset" is selected, a dataset dropdown appears
+  - When "Different scenario" is selected, a scenario dropdown appears with meaningful labels
+  - Updated YAML generation to properly output the predicate data reference structure
+- Added 5 new Storybook test stories:
+  - "Edit Describe and Test Text" - verifies text field editing and YAML output
+  - "Select At Value Position" - tests custom value entry for scenarios
+  - "Out of Range Value Warning" - tests validation badge appearance
+  - "Predicate Data Reference" - tests data reference UI options
+
 ---
 
 ## Current Status
 
 ✅ All check-editor functionality implemented and working
-✅ All 9 check-editor Storybook tests passing
+✅ All 14 check-editor Storybook tests passing (when Playwright is installed)
 ✅ Real data preview functional
 ✅ Multi-item support fully operational
 ✅ Accessibility compliant
 ✅ Vitest configuration fixed
+✅ Test description text fields with customizable describe/it text
+✅ At-value support with validation for given-inputs scenarios
+✅ Predicate data references with dataset/scenario comparison options
 
 ## Suggested Next Steps
 
 ### Immediate Improvements
 
-1. **Predicate Value Validation**
-   - Add min/max constraints to predicate value inputs
-   - Add validation messages for invalid values
+1. ~~**Predicate Value Validation**~~ ✅ DONE (for scenario inputs)
+   - ~~Add min/max constraints to predicate value inputs~~
+   - ~~Add validation messages for invalid values~~
    - Consider adding step increments for numeric inputs
+   - Consider adding similar validation for predicate constant values
 
 2. **Scenario Input Group UI**
    - The input-group scenario kind currently only accepts a text name
    - Consider adding a multi-select interface to choose which inputs belong to the group
    - Add visual feedback showing which inputs are in the selected group
 
-3. **Dataset Reference UI Enhancement**
-   - When predicate ref.kind is 'data', the scenario dropdown shows "Inherit"
-   - Add tooltip or help text explaining what "Inherit" means
-   - Consider showing the inherited scenario ID when applicable
+3. ~~**Dataset Reference UI Enhancement**~~ ✅ DONE
+   - ~~When predicate ref.kind is 'data', the scenario dropdown shows "Inherit"~~
+   - ~~Add tooltip or help text explaining what "Inherit" means~~
+   - ~~Consider showing the inherited scenario ID when applicable~~
+   - Full data reference UI with dataset/scenario selection implemented
 
 4. **Empty State Handling**
    - Add empty state messages when no input/output variables are available

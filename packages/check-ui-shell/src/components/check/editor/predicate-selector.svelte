@@ -5,7 +5,14 @@
 import Selector from '../../list/selector.svelte'
 import { SelectorOptionViewModel, SelectorViewModel } from '../../list/selector-vm.svelte'
 
-import type { CheckEditorViewModel, PredicateType, PredicateRefKind, PredicateItemConfig } from './check-editor-vm.svelte'
+import type {
+  CheckEditorViewModel,
+  PredicateType,
+  PredicateRefKind,
+  PredicateDatasetRefKind,
+  PredicateScenarioRefKind,
+  PredicateItemConfig
+} from './check-editor-vm.svelte'
 
 interface Props {
   /** The view model for the editor. */
@@ -30,6 +37,18 @@ const refKindOptions = [
   new SelectorOptionViewModel('Data', 'data')
 ]
 
+// Create selector options for dataset reference kind
+const datasetRefKindOptions = [
+  new SelectorOptionViewModel('Same dataset', 'inherit'),
+  new SelectorOptionViewModel('Different dataset', 'name')
+]
+
+// Create selector options for scenario reference kind
+const scenarioRefKindOptions = [
+  new SelectorOptionViewModel('Same scenario', 'inherit'),
+  new SelectorOptionViewModel('Different scenario', 'different')
+]
+
 function createTypeSelector(predicate: PredicateItemConfig) {
   const selector = new SelectorViewModel(predicateTypeOptions, predicate.type)
   selector.onUserChange = (newValue: string) => {
@@ -41,7 +60,37 @@ function createTypeSelector(predicate: PredicateItemConfig) {
 function createRefKindSelector(predicate: PredicateItemConfig) {
   const selector = new SelectorViewModel(refKindOptions, predicate.ref.kind)
   selector.onUserChange = (newValue: string) => {
-    const ref = { ...predicate.ref, kind: newValue as PredicateRefKind }
+    const newKind = newValue as PredicateRefKind
+    if (newKind === 'data') {
+      // When switching to data, set default ref kinds
+      const ref = {
+        ...predicate.ref,
+        kind: newKind,
+        datasetRefKind: 'inherit' as PredicateDatasetRefKind,
+        scenarioRefKind: 'different' as PredicateScenarioRefKind
+      }
+      viewModel.updatePredicate(predicate.id, { ref })
+    } else {
+      const ref = { ...predicate.ref, kind: newKind }
+      viewModel.updatePredicate(predicate.id, { ref })
+    }
+  }
+  return selector
+}
+
+function createDatasetRefKindSelector(predicate: PredicateItemConfig) {
+  const selector = new SelectorViewModel(datasetRefKindOptions, predicate.ref.datasetRefKind || 'inherit')
+  selector.onUserChange = (newValue: string) => {
+    const ref = { ...predicate.ref, datasetRefKind: newValue as PredicateDatasetRefKind }
+    viewModel.updatePredicate(predicate.id, { ref })
+  }
+  return selector
+}
+
+function createScenarioRefKindSelector(predicate: PredicateItemConfig) {
+  const selector = new SelectorViewModel(scenarioRefKindOptions, predicate.ref.scenarioRefKind || 'inherit')
+  selector.onUserChange = (newValue: string) => {
+    const ref = { ...predicate.ref, scenarioRefKind: newValue as PredicateScenarioRefKind }
     viewModel.updatePredicate(predicate.id, { ref })
   }
   return selector
@@ -72,6 +121,26 @@ function updateRefDatasetKey(predicate: PredicateItemConfig, datasetKey: string)
 function updateRefScenarioId(predicate: PredicateItemConfig, scenarioId: string) {
   const ref = { ...predicate.ref, scenarioId }
   viewModel.updatePredicate(predicate.id, { ref })
+}
+
+/**
+ * Get a human-readable label for a scenario.
+ *
+ * @param scenario The scenario item configuration.
+ * @returns A descriptive label for the scenario.
+ */
+function getScenarioLabel(scenario: { id: string; kind: string; position?: string; inputs?: Array<{ inputVarId: string; position: string }> }): string {
+  if (scenario.kind === 'all-inputs') {
+    const position = scenario.position?.replace('at-', '') || 'default'
+    return `All inputs at ${position}`
+  } else if (scenario.kind === 'given-inputs' && scenario.inputs && scenario.inputs.length > 0) {
+    const inputNames = scenario.inputs.map(input => {
+      const inputVar = viewModel.inputVars.find(v => v.varId === input.inputVarId)
+      return inputVar?.varName || input.inputVarId
+    })
+    return `Given: ${inputNames.join(', ')}`
+  }
+  return scenario.id
 }
 
 function handleKeyDown(e: KeyboardEvent) {
@@ -136,22 +205,6 @@ function handleKeyDown(e: KeyboardEvent) {
                 onclick={e => e.stopPropagation()}
                 aria-label="Predicate value"
               />
-            {:else if predicate.ref.kind === 'data'}
-              <select
-                class="predicate-selector-select"
-                value={predicate.ref.datasetKey || ''}
-                onchange={e => {
-                  e.stopPropagation()
-                  updateRefDatasetKey(predicate, (e.target as HTMLSelectElement).value)
-                }}
-                onclick={e => e.stopPropagation()}
-                aria-label="Reference dataset"
-              >
-                <option value="">Select...</option>
-                {#each viewModel.datasetListItems as item}
-                  <option value={item.id}>{item.label}</option>
-                {/each}
-              </select>
             {/if}
 
             {#if viewModel.predicates.length > 1}
@@ -170,22 +223,46 @@ function handleKeyDown(e: KeyboardEvent) {
 
           {#if predicate.ref.kind === 'data'}
             <div class="predicate-selector-row">
+              <span class="predicate-selector-text">Dataset:</span>
+              <Selector viewModel={createDatasetRefKindSelector(predicate)} ariaLabel="Dataset reference kind" />
+              {#if predicate.ref.datasetRefKind === 'name'}
+                <select
+                  class="predicate-selector-select"
+                  value={predicate.ref.datasetKey || ''}
+                  onchange={e => {
+                    e.stopPropagation()
+                    updateRefDatasetKey(predicate, (e.target as HTMLSelectElement).value)
+                  }}
+                  onclick={e => e.stopPropagation()}
+                  aria-label="Reference dataset"
+                >
+                  <option value="">Select...</option>
+                  {#each viewModel.datasetListItems as item}
+                    <option value={item.id}>{item.label}</option>
+                  {/each}
+                </select>
+              {/if}
+            </div>
+            <div class="predicate-selector-row">
               <span class="predicate-selector-text">Scenario:</span>
-              <select
-                class="predicate-selector-select"
-                value={predicate.ref.scenarioId || ''}
-                onchange={e => {
-                  e.stopPropagation()
-                  updateRefScenarioId(predicate, (e.target as HTMLSelectElement).value)
-                }}
-                onclick={e => e.stopPropagation()}
-                aria-label="Reference scenario"
-              >
-                <option value="">Inherit</option>
-                {#each viewModel.scenarios as scenario}
-                  <option value={scenario.id}>{scenario.id}</option>
-                {/each}
-              </select>
+              <Selector viewModel={createScenarioRefKindSelector(predicate)} ariaLabel="Scenario reference kind" />
+              {#if predicate.ref.scenarioRefKind === 'different'}
+                <select
+                  class="predicate-selector-select"
+                  value={predicate.ref.scenarioId || ''}
+                  onchange={e => {
+                    e.stopPropagation()
+                    updateRefScenarioId(predicate, (e.target as HTMLSelectElement).value)
+                  }}
+                  onclick={e => e.stopPropagation()}
+                  aria-label="Reference scenario"
+                >
+                  <option value="">Select scenario...</option>
+                  {#each viewModel.scenarios as scenario}
+                    <option value={scenario.id}>{getScenarioLabel(scenario)}</option>
+                  {/each}
+                </select>
+              {/if}
             </div>
           {/if}
 

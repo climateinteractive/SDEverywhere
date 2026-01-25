@@ -3,7 +3,6 @@
 import type {
   InputVar,
   OutputVar,
-  InputPosition,
   DatasetKey,
   CheckDataCoordinator,
   CheckScenario,
@@ -11,6 +10,9 @@ import type {
   CheckPredicateOpRef,
   CheckPredicateReport
 } from '@sdeverywhere/check-core'
+
+/** The position type for scenario inputs (extends InputPosition with 'at-value'). */
+export type ScenarioInputPosition = 'at-default' | 'at-minimum' | 'at-maximum' | 'at-value'
 
 import type { ListItemViewModel } from '../../list/list-item-vm.svelte'
 import { CheckSummaryGraphBoxViewModel } from '../summary/check-summary-graph-box-vm'
@@ -24,15 +26,17 @@ export type ScenarioKind = 'all-inputs' | 'given-inputs'
 /** Configuration for a single input in a given-inputs scenario. */
 export interface GivenInputConfig {
   inputVarId: string
-  position: InputPosition
+  position: ScenarioInputPosition
+  /** Custom value when position is 'at-value'. */
+  customValue?: number
 }
 
 /** Configuration for a single scenario. */
 export interface ScenarioItemConfig {
   id: string
   kind: ScenarioKind
-  /** Position for all-inputs scenarios. */
-  position?: InputPosition
+  /** Position for all-inputs scenarios (only supports preset positions, not at-value). */
+  position?: ScenarioInputPosition
   /** Input configurations for given-inputs scenarios. */
   inputs?: GivenInputConfig[]
 }
@@ -40,14 +44,24 @@ export interface ScenarioItemConfig {
 /** Reference type for predicate values. */
 export type PredicateRefKind = 'constant' | 'data'
 
+/** Dataset reference type for predicates. */
+export type PredicateDatasetRefKind = 'inherit' | 'name'
+
+/** Scenario reference type for predicates. */
+export type PredicateScenarioRefKind = 'inherit' | 'different'
+
 /** Configuration for a predicate reference. */
 export interface PredicateRefConfig {
   kind: PredicateRefKind
   /** Value for constant references. */
   value?: number
-  /** Dataset key for data references. */
+  /** Dataset reference kind for data references. */
+  datasetRefKind?: PredicateDatasetRefKind
+  /** Dataset key for data references (when datasetRefKind is 'name'). */
   datasetKey?: DatasetKey
-  /** Scenario ID for data references. */
+  /** Scenario reference kind for data references. */
+  scenarioRefKind?: PredicateScenarioRefKind
+  /** Scenario ID for data references (when scenarioRefKind is 'different', references existing scenario). */
   scenarioId?: string
 }
 
@@ -74,6 +88,10 @@ export interface CheckTestConfig {
 
 /** View model for the check test editor. */
 export class CheckEditorViewModel {
+  // Test description text fields
+  public describeText = $state('Variable or group')
+  public testText = $state('should [have behavior] when [conditions]')
+
   // Reactive state for managing collections of items
   public scenarios = $state<ScenarioItemConfig[]>([])
   public datasets = $state<DatasetItemConfig[]>([])
@@ -378,9 +396,9 @@ export class CheckEditorViewModel {
   getYamlCode(): string {
     const lines: string[] = []
 
-    lines.push('- describe: Check Test')
+    lines.push(`- describe: ${this.describeText}`)
     lines.push('  tests:')
-    lines.push('    - it: should pass')
+    lines.push(`    - it: ${this.testText}`)
 
     // Generate scenarios
     lines.push('      scenarios:')
@@ -394,8 +412,14 @@ export class CheckEditorViewModel {
           const inputVar = this.inputVars.find(v => v.varId === input.inputVarId)
           if (inputVar) {
             lines.push(`        - with: ${inputVar.varName}`)
-            const position = input.position.replace('at-', '')
-            lines.push(`          at: ${position}`)
+            if (input.position === 'at-value') {
+              // Output the custom value as a number
+              const value = input.customValue ?? inputVar.defaultValue
+              lines.push(`          at: ${value}`)
+            } else {
+              const position = input.position.replace('at-', '')
+              lines.push(`          at: ${position}`)
+            }
           }
         }
       }
@@ -413,11 +437,54 @@ export class CheckEditorViewModel {
     // Generate predicates
     lines.push('      predicates:')
     for (const predicate of this.predicates) {
-      const predicateLine = `        - ${predicate.type}: `
       if (predicate.ref.kind === 'constant') {
-        lines.push(`${predicateLine}${predicate.ref.value ?? 0}`)
+        lines.push(`        - ${predicate.type}: ${predicate.ref.value ?? 0}`)
       } else {
-        lines.push(`${predicateLine}data`)
+        // Data reference predicate
+        lines.push(`        - ${predicate.type}:`)
+
+        // Dataset reference
+        const datasetRefKind = predicate.ref.datasetRefKind || 'inherit'
+        if (datasetRefKind === 'inherit') {
+          lines.push('            dataset: inherit')
+        } else {
+          const outputVar = this.outputVars.find(v => v.datasetKey === predicate.ref.datasetKey)
+          if (outputVar) {
+            lines.push('            dataset:')
+            lines.push(`              name: ${outputVar.varName}`)
+          }
+        }
+
+        // Scenario reference
+        const scenarioRefKind = predicate.ref.scenarioRefKind || 'inherit'
+        if (scenarioRefKind === 'inherit') {
+          lines.push('            scenario: inherit')
+        } else if (predicate.ref.scenarioId) {
+          // Find the referenced scenario and output its configuration
+          const refScenario = this.scenarios.find(s => s.id === predicate.ref.scenarioId)
+          if (refScenario) {
+            lines.push('            scenario:')
+            if (refScenario.kind === 'all-inputs') {
+              const position = refScenario.position || 'at-default'
+              const positionStr = position.replace('at-', '')
+              lines.push(`              with_inputs: all`)
+              lines.push(`              at: ${positionStr}`)
+            } else if (refScenario.kind === 'given-inputs' && refScenario.inputs && refScenario.inputs.length > 0) {
+              const input = refScenario.inputs[0]
+              const inputVar = this.inputVars.find(v => v.varId === input.inputVarId)
+              if (inputVar) {
+                lines.push(`              with: ${inputVar.varName}`)
+                if (input.position === 'at-value') {
+                  const value = input.customValue ?? inputVar.defaultValue
+                  lines.push(`              at: ${value}`)
+                } else {
+                  const position = input.position.replace('at-', '')
+                  lines.push(`              at: ${position}`)
+                }
+              }
+            }
+          }
+        }
       }
       if (predicate.type === 'approx' && predicate.tolerance !== undefined) {
         lines.push(`          tolerance: ${predicate.tolerance}`)
@@ -463,6 +530,20 @@ export class CheckEditorViewModel {
   }
 
   /**
+   * Convert a ScenarioInputPosition to an InputPosition for the check-core API.
+   * Custom values ('at-value') are converted to 'at-default' for preview purposes.
+   *
+   * @param position The scenario input position.
+   * @returns The InputPosition for check-core.
+   */
+  private toInputPosition(position: ScenarioInputPosition): 'at-default' | 'at-minimum' | 'at-maximum' {
+    if (position === 'at-value') {
+      return 'at-default'
+    }
+    return position
+  }
+
+  /**
    * Create a check scenario from a scenario item config.
    *
    * @param config The scenario item configuration.
@@ -470,7 +551,7 @@ export class CheckEditorViewModel {
    */
   private createScenario(config: ScenarioItemConfig): CheckScenario {
     if (config.kind === 'all-inputs') {
-      const position = config.position || 'at-default'
+      const position = this.toInputPosition(config.position || 'at-default')
       return {
         spec: {
           kind: 'all-inputs',
@@ -483,11 +564,12 @@ export class CheckEditorViewModel {
       // For given-inputs, use the first input for now
       // TODO: Support multiple inputs properly
       const firstInput = config.inputs[0]
+      const position = this.toInputPosition(firstInput.position)
       return {
         spec: {
           kind: 'all-inputs',
           uid: `given-inputs-${firstInput.inputVarId}-${firstInput.position}`,
-          position: firstInput.position
+          position
         },
         inputDescs: []
       }
