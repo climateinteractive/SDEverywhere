@@ -145,16 +145,12 @@ function createMockViewModel(): CheckEditorViewModel {
     const addPredicateButton = canvas.getByRole('button', { name: /add predicate/i })
     await expect(addPredicateButton).toBeInTheDocument()
 
-    // Verify graph preview area exists
-    const graphContainer = canvasElement.querySelector('.preview-graph-container')
-    await expect(graphContainer).toBeInTheDocument()
+    // Verify tabbed preview exists
+    const previewTab = canvas.getByRole('button', { name: /preview tab/i })
+    await expect(previewTab).toBeInTheDocument()
 
-    // Verify action buttons
-    const saveButton = canvas.getByRole('button', { name: /save/i })
-    await expect(saveButton).toBeInTheDocument()
-
-    const cancelButton = canvas.getByRole('button', { name: /cancel/i })
-    await expect(cancelButton).toBeInTheDocument()
+    const codeTab = canvas.getByRole('button', { name: /code tab/i })
+    await expect(codeTab).toBeInTheDocument()
   }}
 ></Story>
 
@@ -291,38 +287,7 @@ function createMockViewModel(): CheckEditorViewModel {
 ></Story>
 
 <Story
-  name="Save Button"
-  {template}
-  args={{
-    open: true,
-    viewModel: (() => {
-      const vm = createMockViewModel()
-      vm.onSave = () => {
-        // Save callback for testing
-      }
-      return vm
-    })()
-  }}
-  play={async ({ canvasElement }) => {
-    const canvas = within(canvasElement)
-
-    await waitFor(() => {
-      expect(canvas.getByRole('dialog')).toBeInTheDocument()
-    })
-
-    // Click the save button
-    const saveButton = canvas.getByRole('button', { name: /save/i })
-    await userEvent.click(saveButton)
-
-    // Verify dialog closes
-    await waitFor(() => {
-      expect(canvas.queryByRole('dialog')).not.toBeInTheDocument()
-    })
-  }}
-></Story>
-
-<Story
-  name="Cancel Button"
+  name="Switch to Code Tab"
   {template}
   args={{
     open: true,
@@ -335,14 +300,59 @@ function createMockViewModel(): CheckEditorViewModel {
       expect(canvas.getByRole('dialog')).toBeInTheDocument()
     })
 
-    // Click the cancel button
-    const cancelButton = canvas.getByRole('button', { name: /cancel/i })
-    await userEvent.click(cancelButton)
+    // Verify Preview tab is active by default
+    const previewTab = canvas.getByRole('button', { name: /preview tab/i })
+    await expect(previewTab).toHaveClass('active')
 
-    // Verify dialog closes
+    // Click the Code tab
+    const codeTab = canvas.getByRole('button', { name: /code tab/i })
+    await userEvent.click(codeTab)
+
+    // Verify Code tab is now active
     await waitFor(() => {
-      expect(canvas.queryByRole('dialog')).not.toBeInTheDocument()
+      expect(codeTab).toHaveClass('active')
     })
+
+    // Verify YAML code is displayed
+    await waitFor(() => {
+      const codeElement = canvasElement.querySelector('.tabbed-preview-code')
+      expect(codeElement).toBeInTheDocument()
+      expect(codeElement).toHaveTextContent('describe: Check Test')
+    })
+  }}
+></Story>
+
+<Story
+  name="Copy Code to Clipboard"
+  {template}
+  args={{
+    open: true,
+    viewModel: createMockViewModel()
+  }}
+  play={async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await waitFor(() => {
+      expect(canvas.getByRole('dialog')).toBeInTheDocument()
+    })
+
+    // Click the Code tab
+    const codeTab = canvas.getByRole('button', { name: /code tab/i })
+    await userEvent.click(codeTab)
+
+    // Wait for code to be visible
+    await waitFor(() => {
+      const codeElement = canvasElement.querySelector('.tabbed-preview-code')
+      expect(codeElement).toBeInTheDocument()
+    })
+
+    // Click the Copy button
+    const copyButton = canvas.getByRole('button', { name: /copy to clipboard/i })
+    await userEvent.click(copyButton)
+
+    // Note: We can't actually verify clipboard contents in tests,
+    // but we can verify the button was clicked without errors
+    await expect(copyButton).toBeInTheDocument()
   }}
 ></Story>
 

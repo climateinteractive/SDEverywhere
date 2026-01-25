@@ -371,6 +371,63 @@ export class CheckEditorViewModel {
   }
 
   /**
+   * Generate YAML code for the current check test configuration.
+   *
+   * @returns The YAML code as a string.
+   */
+  getYamlCode(): string {
+    const lines: string[] = []
+
+    lines.push('- describe: Check Test')
+    lines.push('  tests:')
+    lines.push('    - it: should pass')
+
+    // Generate scenarios
+    lines.push('      scenarios:')
+    for (const scenario of this.scenarios) {
+      if (scenario.kind === 'all-inputs') {
+        const position = scenario.position || 'at-default'
+        const positionStr = position.replace('at-', '')
+        lines.push(`        - preset: ${positionStr}`)
+      } else if (scenario.kind === 'given-inputs' && scenario.inputs && scenario.inputs.length > 0) {
+        for (const input of scenario.inputs) {
+          const inputVar = this.inputVars.find(v => v.varId === input.inputVarId)
+          if (inputVar) {
+            lines.push(`        - with: ${inputVar.varName}`)
+            const position = input.position.replace('at-', '')
+            lines.push(`          at: ${position}`)
+          }
+        }
+      }
+    }
+
+    // Generate datasets
+    lines.push('      datasets:')
+    for (const dataset of this.datasets) {
+      const outputVar = this.outputVars.find(v => v.datasetKey === dataset.datasetKey)
+      if (outputVar) {
+        lines.push(`        - name: ${outputVar.varName}`)
+      }
+    }
+
+    // Generate predicates
+    lines.push('      predicates:')
+    for (const predicate of this.predicates) {
+      const predicateLine = `        - ${predicate.type}: `
+      if (predicate.ref.kind === 'constant') {
+        lines.push(`${predicateLine}${predicate.ref.value ?? 0}`)
+      } else {
+        lines.push(`${predicateLine}data`)
+      }
+      if (predicate.type === 'approx' && predicate.tolerance !== undefined) {
+        lines.push(`          tolerance: ${predicate.tolerance}`)
+      }
+    }
+
+    return lines.join('\n')
+  }
+
+  /**
    * Create a graph box view model for preview.
    *
    * @returns The check summary graph box view model.

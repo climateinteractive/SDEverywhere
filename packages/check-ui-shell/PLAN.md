@@ -15,6 +15,46 @@ graph (I think). Be sure to follow TDD practices: create a Storybook stories fil
 stories.svelte files in that package) and define stories with story tests that exercise different cases. Go ahead and try
 things, you don't need my input. Tell me when you have an initial component and storybook file ready for me to look at.
 
+---
+
+## Session History
+
+### 2026-01-10: Initial Check Editor Component
+
+Created the initial check-editor component with basic structure:
+- `check-editor.svelte` - Main dialog component
+- `check-editor-vm.ts` - Initial view model
+- `check-editor.stories.svelte` - Storybook stories
+
+### 2026-01-11: Component Refactoring and Multi-Item Support
+
+**Morning session** - Svelte 5 migration and component architecture:
+- Migrated list/selector components to Svelte 5 syntax
+- Renamed view model files to `.svelte.ts` convention
+- Split editor into separate subcomponents:
+  - `scenario-selector.svelte`
+  - `dataset-selector.svelte`
+  - `predicate-selector.svelte`
+  - `preview-graph.svelte`
+- Updated PreviewGraph to show actual check graph visualization
+
+**Afternoon session** - Multi-item support:
+- Added support for multiple scenarios, datasets, and predicates
+- Updated view model with item management (add/remove)
+- Enhanced stories with multi-item test cases
+
+### 2026-01-19: Layout, Navigation, and Selection
+
+- Improved editor item layout and visual design
+- Added navigation between items
+- Implemented item selection handling
+- Added typeahead-selector component for improved variable selection
+- Added dialog component improvements
+- Updated search-list and sel-list components
+- Created this PLAN.md document
+
+---
+
 ## Current Status
 
 ✅ All check-editor functionality implemented and working
