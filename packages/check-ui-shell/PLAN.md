@@ -112,13 +112,17 @@ Created the initial check-editor component with basic structure:
 - Added collapsible text area for pasting YAML
 - Shows error message if YAML parsing fails
 - Clears paste area on successful parse
+- Added 3 new Storybook test stories:
+  - "Paste Valid YAML" - tests successful YAML parsing and form population
+  - "Paste Invalid YAML Shows Error" - tests error handling for malformed YAML
+  - "Cancel Paste YAML" - tests cancel button closes paste area without changes
 
 ---
 
 ## Current Status
 
 ✅ All check-editor functionality implemented and working
-✅ All 14 check-editor Storybook tests passing (when Playwright is installed)
+✅ All 17 check-editor Storybook tests passing (when Playwright is installed)
 ✅ Real data preview functional
 ✅ Multi-item support fully operational
 ✅ Accessibility compliant
