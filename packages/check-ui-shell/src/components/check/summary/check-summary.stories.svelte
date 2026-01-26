@@ -1,7 +1,7 @@
 <!-- Copyright (c) 2025 Climate Interactive / New Venture Fund -->
 
 <script module lang="ts">
-// import { expect } from 'storybook/test'
+import { expect, userEvent, waitFor, within } from 'storybook/test'
 import { defineMeta, type Args } from '@storybook/addon-svelte-csf'
 
 import type {
@@ -159,7 +159,7 @@ function createCheckSummaryViewModelWithReport(report: CheckReport): CheckSummar
 
 {#snippet template(args: Args<typeof Story>)}
   <StoryDecorator width={800} height={600}>
-    <CheckSummary {...args} />
+    <CheckSummary viewModel={args.viewModel} />
   </StoryDecorator>
 {/snippet}
 
@@ -232,5 +232,69 @@ function createCheckSummaryViewModelWithReport(report: CheckReport): CheckSummar
   beforeEach={async ({ args }) => {
     const report = createCheckReportWithSkippedTests(1, 100)
     args.viewModel = await createCheckSummaryViewModelWithReport(report)
+  }}
+/>
+
+<Story
+  name="New Test button exists"
+  {template}
+  beforeEach={async ({ args }) => {
+    const report = createCheckReport(1, 1)
+    args.viewModel = await createCheckSummaryViewModelWithReport(report)
+  }}
+  play={async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    // Verify New Test button exists and is visible
+    const newTestButton = canvas.getByRole('button', { name: /new test/i })
+    await expect(newTestButton).toBeInTheDocument()
+    await expect(newTestButton).toBeVisible()
+
+    // Verify button has expected text
+    await expect(newTestButton).toHaveTextContent('+ New Test')
+  }}
+/>
+
+<Story
+  name="Right-click test row shows Edit Test context menu"
+  {template}
+  beforeEach={async ({ args }) => {
+    const report = createCheckReport(1, 1)
+    args.viewModel = await createCheckSummaryViewModelWithReport(report)
+  }}
+  play={async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    // Find the test row (has class 'test')
+    const testRow = canvasElement.querySelector('.row.test')
+    await expect(testRow).toBeInTheDocument()
+
+    // Right-click on the test row
+    const contextMenuEvent = new MouseEvent('contextmenu', {
+      bubbles: true,
+      cancelable: true,
+      clientX: 100,
+      clientY: 100
+    })
+    testRow?.dispatchEvent(contextMenuEvent)
+
+    // Wait for context menu to appear
+    await waitFor(() => {
+      const contextMenu = canvasElement.querySelector('.context-menu')
+      expect(contextMenu).toBeInTheDocument()
+    })
+
+    // Verify "Edit Test..." option exists
+    const editOption = canvas.getByText('Edit Test...')
+    await expect(editOption).toBeInTheDocument()
+
+    // Click the Edit Test option to close the menu
+    await userEvent.click(editOption)
+
+    // Verify context menu is closed
+    await waitFor(() => {
+      const contextMenu = canvasElement.querySelector('.context-menu')
+      expect(contextMenu).not.toBeInTheDocument()
+    })
   }}
 />
