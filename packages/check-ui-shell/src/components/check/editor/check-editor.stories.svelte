@@ -872,3 +872,56 @@ function createMockViewModel(): CheckEditorViewModel {
     await expect(describeInput.value).toBe('Variable or group')
   }}
 ></Story>
+
+<Story
+  name="Initialize from Existing Test (Edit Mode)"
+  {template}
+  args={{
+    open: true,
+    viewModel: (() => {
+      const vm = createMockViewModel()
+      // Simulate editing an existing test by calling initFromSpec
+      vm.initFromSpec(
+        { describe: 'Existing Test Group', tests: [] },
+        {
+          it: 'should be greater than 10 when at maximum',
+          scenarios: [{ with_inputs: 'all', at: 'max' }],
+          datasets: [{ name: 'Output Y' }],
+          predicates: [{ gt: 10 }]
+        }
+      )
+      return vm
+    })()
+  }}
+  play={async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await waitFor(() => {
+      expect(canvas.getByRole('dialog')).toBeInTheDocument()
+    })
+
+    // Verify the form was populated with the existing test values
+    const describeInput = canvas.getByLabelText('Describe text') as HTMLInputElement
+    await expect(describeInput.value).toBe('Existing Test Group')
+
+    const testInput = canvas.getByLabelText('Test text') as HTMLInputElement
+    await expect(testInput.value).toBe('should be greater than 10 when at maximum')
+
+    // Verify the scenario is set to "all inputs at maximum"
+    const scenarioItem = canvasElement.querySelector('.scenario-selector-item')
+    await expect(scenarioItem).toBeInTheDocument()
+
+    const positionSelect = scenarioItem?.querySelector('select[aria-label="Position"]') as HTMLSelectElement
+    await expect(positionSelect?.value).toBe('at-maximum')
+
+    // Verify the dataset is set to "Output Y"
+    await waitFor(() => {
+      const datasetButton = canvasElement.querySelector('.dataset-selector-item .typeahead-selector-button')
+      expect(datasetButton).toHaveTextContent('Output Y')
+    })
+
+    // Verify the predicate value is 10
+    const predicateValueInput = canvasElement.querySelector('input[id^="pred-value-"]') as HTMLInputElement
+    await expect(predicateValueInput?.value).toBe('10')
+  }}
+></Story>
