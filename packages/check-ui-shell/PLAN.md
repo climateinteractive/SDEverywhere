@@ -104,6 +104,15 @@ Created the initial check-editor component with basic structure:
 - Support converting datasets (by name)
 - Support converting predicates (constant refs, data refs with inherit/different)
 
+### 2026-01-25: Paste YAML to Prepopulate Form
+
+- Added yaml package dependency
+- Added `parseYamlAndInit()` method to parse YAML and populate the form
+- Added paste YAML toggle button (📋) in header row
+- Added collapsible text area for pasting YAML
+- Shows error message if YAML parsing fails
+- Clears paste area on successful parse
+
 ---
 
 ## Current Status
@@ -119,6 +128,7 @@ Created the initial check-editor component with basic structure:
 ✅ Predicate data references with dataset/scenario comparison options
 ✅ Time range support for predicates
 ✅ Preview graph updates reactively
+✅ Paste YAML to prepopulate form
 
 ## Suggested Next Steps
 
