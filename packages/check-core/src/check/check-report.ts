@@ -11,7 +11,12 @@ import type { CheckKey, CheckPlan, CheckPlanPredicate } from './check-planner'
 import type { CheckPredicateOp } from './check-predicate'
 import { symbolForPredicateOp } from './check-predicate'
 import type { CheckScenario, CheckScenarioInputDesc } from './check-scenario'
-import type { CheckPredicateTimeOptions, CheckPredicateTimeRange, CheckPredicateTimeSpec } from './check-spec'
+import type {
+  CheckPredicateTimeOptions,
+  CheckPredicateTimeRange,
+  CheckPredicateTimeSpec,
+  CheckTestSpec
+} from './check-spec'
 
 export type CheckStatus = 'passed' | 'failed' | 'error' | 'skipped'
 
@@ -49,9 +54,14 @@ export interface CheckScenarioReport {
 }
 
 export interface CheckTestReport {
+  /** The name of the test (the `it` field from the spec). */
   name: string
+  /** The overall status of the test. */
   status: CheckStatus
+  /** The scenario reports for this test. */
   scenarios: CheckScenarioReport[]
+  /** The original test specification from the YAML (if available). */
+  spec?: CheckTestSpec
 }
 
 export interface CheckGroupReport {
@@ -142,7 +152,8 @@ export function buildCheckReport(checkPlan: CheckPlan, checkResults: Map<CheckKe
       testReports.push({
         name: testPlan.name,
         status: testStatus,
-        scenarios: scenarioReports
+        scenarios: scenarioReports,
+        spec: testPlan.spec
       })
     }
 

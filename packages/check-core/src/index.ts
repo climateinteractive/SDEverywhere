@@ -84,11 +84,24 @@ export { scenarioMessage, datasetMessage, predicateMessage } from './check/check
 export type { CheckScenario, CheckScenarioError, CheckScenarioInputDesc } from './check/check-scenario'
 
 export type {
+  CheckDatasetSpec,
   CheckNameSpec,
+  CheckPredicateRefConstant,
+  CheckPredicateRefData,
+  CheckPredicateRefDataDatasetSpec,
+  CheckPredicateRefDataDatasetSpecial,
+  CheckPredicateRefDataScenarioSpec,
+  CheckPredicateRefDataScenarioSpecial,
+  CheckPredicateRefSpec,
+  CheckPredicateSpec,
   CheckPredicateTimeOptions,
   CheckPredicateTimeRange,
   CheckPredicateTimeSingle,
-  CheckPredicateTimeSpec
+  CheckPredicateTimeSpec,
+  CheckScenarioInputSpec,
+  CheckScenarioPosition,
+  CheckScenarioSpec,
+  CheckTestSpec
 } from './check/check-spec'
 
 export type { CheckPredicateSummary, CheckSummary } from './check/check-summary'

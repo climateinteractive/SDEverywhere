@@ -10,7 +10,14 @@ import { expandDatasets } from './check-dataset'
 import type { CheckPredicateOp } from './check-predicate'
 import type { CheckScenario } from './check-scenario'
 import { expandScenarios } from './check-scenario'
-import type { CheckDatasetSpec, CheckNameSpec, CheckPredicateSpec, CheckScenarioSpec, CheckSpec } from './check-spec'
+import type {
+  CheckDatasetSpec,
+  CheckNameSpec,
+  CheckPredicateSpec,
+  CheckScenarioSpec,
+  CheckSpec,
+  CheckTestSpec
+} from './check-spec'
 
 export type CheckKey = number
 
@@ -34,8 +41,12 @@ export interface CheckPlanScenario {
 }
 
 export interface CheckPlanTest {
+  /** The name of the test (the `it` field from the spec). */
   name: string
+  /** The scenarios for this test. */
   scenarios: CheckPlanScenario[]
+  /** The original test specification from the YAML. */
+  spec?: CheckTestSpec
 }
 
 export interface CheckPlanGroup {
@@ -199,7 +210,8 @@ export class CheckPlanner {
 
         planTests.push({
           name: testName,
-          scenarios: planScenarios
+          scenarios: planScenarios,
+          spec: testSpec
         })
       }
 

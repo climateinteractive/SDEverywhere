@@ -149,11 +149,14 @@ Created the initial check-editor component with basic structure:
   - Added CheckEditor dialog to app.svelte
   - Added `createCheckEditorViewModel()` method to AppViewModel
   - Commands now open the check editor dialog
-- Investigated spec preservation for round-trip editing:
-  - Original YAML specs are stored in `CheckConfig.tests` but not passed to reports
-  - `CheckTestReport` only contains execution results (name, status, scenarios)
-  - Edit mode currently opens editor in new-test mode (spec not available)
-  - Future: Need to preserve original spec alongside report for true edit support
+
+### 2026-01-26: Spec Preservation in Check-Core
+
+- Added `spec?: CheckTestSpec` to `CheckPlanTest` in check-planner.ts
+- Added `spec?: CheckTestSpec` to `CheckTestReport` in check-report.ts
+- Updated `buildCheckReport()` to copy spec from plan to report
+- Exported all spec-related types from check-core index.ts
+- Updated tests to verify spec preservation in planner output
 
 ---
 
@@ -177,51 +180,20 @@ Created the initial check-editor component with basic structure:
 ✅ New Test button positioned at right edge of summary bar
 ✅ App.svelte integrated with check editor dialog
 
-⚠️ Edit mode limitation: Original YAML spec not preserved in reports (opens in new-test mode)
+✅ Spec preservation implemented in check-core (original spec now available on reports)
 
 ## Spec Preservation for Round-Trip Editing
 
-### Current Situation
+### Implementation (Completed 2026-01-26)
 
-The original YAML test specifications are **not preserved** alongside the check reports, which means:
-- When a user clicks "Edit Test", we can't show the original YAML configuration
-- The summary view only has access to `CheckTestReport` (execution results), not `CheckTestSpec` (the original YAML)
+The original YAML test specifications are now **preserved** alongside check reports:
 
-### Technical Analysis
+1. **CheckPlanTest** in `check-planner.ts` now includes `spec?: CheckTestSpec`
+2. **CheckTestReport** in `check-report.ts` now includes `spec?: CheckTestSpec`
+3. The spec is passed through the planner and copied to the report during `buildCheckReport()`
+4. All related spec types are now exported from `check-core` index.ts
 
-1. **Where specs are stored**: Original YAML strings are in `CheckConfig.tests: string[]`
-2. **Parsing flow**: YAML → `CheckSpec` → `CheckPlan` → `CheckReport`
-3. **What's lost**: The original spec structure is not attached to the report
-
-### Potential Solutions
-
-**Option A - Extend CheckTestReport**
-```typescript
-interface CheckTestReport {
-  name: string
-  status: CheckStatus
-  scenarios: CheckScenarioReport[]
-  originalSpec?: CheckTestSpec  // NEW: Include original spec
-}
-```
-
-**Option B - Create wrapper type**
-```typescript
-interface CheckTestSpecReport {
-  spec: CheckTestSpec        // Original YAML spec
-  report: CheckTestReport    // Execution results
-}
-```
-
-**Option C - Parallel spec mapping**
-Keep specs in a separate map keyed by test identifier, accessible from UI.
-
-### Recommendation
-
-For full round-trip editing support:
-1. Modify `check-core` to preserve original specs in the report structure
-2. Pass the spec through to the UI layer alongside the report
-3. Use the spec to initialize the check editor in edit mode
+This enables round-trip editing: when a user clicks "Edit Test", the UI can access the original spec via `testReport.spec` and use it to initialize the check editor form.
 
 ---
 

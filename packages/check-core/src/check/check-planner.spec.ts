@@ -110,43 +110,85 @@ describe('CheckPlanner', () => {
     // objects that contain functions (as is the case for our action function), see:
     //   https://github.com/facebook/jest/issues/8475#issuecomment-537830532
     const actualGroup = JSON.parse(JSON.stringify(plan.groups[0]))
+    // Define the expected specs for each test
+    const spec1 = {
+      it: 'test1',
+      datasets: [{ name: 'V1' }],
+      predicates: [{ gte: 1 }, { lte: 5 }]
+    }
+    const spec2 = {
+      it: 'test2',
+      scenarios: [{ preset: 'matrix' }],
+      datasets: [{ name: 'v4[a1]' }, { name: 'v4[A2]' }],
+      predicates: [{ gte: 2 }, { lte: 4 }]
+    }
+    const spec3 = {
+      it: 'test3',
+      scenarios: [{ with: 'I1', at: 75 }],
+      datasets: [{ name: 'V3' }],
+      predicates: [{ eq: 1 }]
+    }
+    const spec4 = {
+      it: 'test4',
+      datasets: [{ name: 'V1' }],
+      predicates: [{ eq: { dataset: { name: 'V3' } } }]
+    }
+    const spec5 = {
+      it: 'test5',
+      scenarios: [{ with: 'I1', at: 75 }],
+      datasets: [{ name: 'V1' }],
+      predicates: [{ eq: { dataset: { name: 'V3' }, scenario: 'inherit' } }]
+    }
+
     const expectedGroup = JSON.parse(
       JSON.stringify(
         groupPlan('group1', [
-          testPlan('test1', [scenarioPlan(allAtPos('at-default'), [datasetPlan('Model', 'V1', predPlans1(1, 2))])]),
-          testPlan('test2', [
-            scenarioPlan(allAtPos('at-default'), [
-              datasetPlan('ModelImpl', 'V4[A1]', predPlans2(3, 4)),
-              datasetPlan('ModelImpl', 'V4[A2]', predPlans2(5, 6))
-            ]),
-            scenarioPlan(allAtPos('at-minimum'), [
-              datasetPlan('ModelImpl', 'V4[A1]', predPlans2(7, 8)),
-              datasetPlan('ModelImpl', 'V4[A2]', predPlans2(9, 10))
-            ]),
-            scenarioPlan(allAtPos('at-maximum'), [
-              datasetPlan('ModelImpl', 'V4[A1]', predPlans2(11, 12)),
-              datasetPlan('ModelImpl', 'V4[A2]', predPlans2(13, 14))
-            ]),
-            scenarioPlan(inputAtPos(i1, 'at-minimum'), [
-              datasetPlan('ModelImpl', 'V4[A1]', predPlans2(15, 16)),
-              datasetPlan('ModelImpl', 'V4[A2]', predPlans2(17, 18))
-            ]),
-            scenarioPlan(inputAtPos(i1, 'at-maximum'), [
-              datasetPlan('ModelImpl', 'V4[A1]', predPlans2(19, 20)),
-              datasetPlan('ModelImpl', 'V4[A2]', predPlans2(21, 22))
-            ]),
-            scenarioPlan(inputAtPos(i2, 'at-minimum'), [
-              datasetPlan('ModelImpl', 'V4[A1]', predPlans2(23, 24)),
-              datasetPlan('ModelImpl', 'V4[A2]', predPlans2(25, 26))
-            ]),
-            scenarioPlan(inputAtPos(i2, 'at-maximum'), [
-              datasetPlan('ModelImpl', 'V4[A1]', predPlans2(27, 28)),
-              datasetPlan('ModelImpl', 'V4[A2]', predPlans2(29, 30))
-            ])
-          ]),
-          testPlan('test3', [scenarioPlan(inputAtValue(i1, 75), [datasetPlan('ModelImpl', 'V3', predPlans3(31))])]),
-          testPlan('test4', [scenarioPlan(allAtPos('at-default'), [datasetPlan('Model', 'V1', predPlans4(32))])]),
-          testPlan('test5', [scenarioPlan(inputAtValue(i1, 75), [datasetPlan('Model', 'V1', predPlans5(33))])])
+          testPlan(
+            'test1',
+            [scenarioPlan(allAtPos('at-default'), [datasetPlan('Model', 'V1', predPlans1(1, 2))])],
+            spec1
+          ),
+          testPlan(
+            'test2',
+            [
+              scenarioPlan(allAtPos('at-default'), [
+                datasetPlan('ModelImpl', 'V4[A1]', predPlans2(3, 4)),
+                datasetPlan('ModelImpl', 'V4[A2]', predPlans2(5, 6))
+              ]),
+              scenarioPlan(allAtPos('at-minimum'), [
+                datasetPlan('ModelImpl', 'V4[A1]', predPlans2(7, 8)),
+                datasetPlan('ModelImpl', 'V4[A2]', predPlans2(9, 10))
+              ]),
+              scenarioPlan(allAtPos('at-maximum'), [
+                datasetPlan('ModelImpl', 'V4[A1]', predPlans2(11, 12)),
+                datasetPlan('ModelImpl', 'V4[A2]', predPlans2(13, 14))
+              ]),
+              scenarioPlan(inputAtPos(i1, 'at-minimum'), [
+                datasetPlan('ModelImpl', 'V4[A1]', predPlans2(15, 16)),
+                datasetPlan('ModelImpl', 'V4[A2]', predPlans2(17, 18))
+              ]),
+              scenarioPlan(inputAtPos(i1, 'at-maximum'), [
+                datasetPlan('ModelImpl', 'V4[A1]', predPlans2(19, 20)),
+                datasetPlan('ModelImpl', 'V4[A2]', predPlans2(21, 22))
+              ]),
+              scenarioPlan(inputAtPos(i2, 'at-minimum'), [
+                datasetPlan('ModelImpl', 'V4[A1]', predPlans2(23, 24)),
+                datasetPlan('ModelImpl', 'V4[A2]', predPlans2(25, 26))
+              ]),
+              scenarioPlan(inputAtPos(i2, 'at-maximum'), [
+                datasetPlan('ModelImpl', 'V4[A1]', predPlans2(27, 28)),
+                datasetPlan('ModelImpl', 'V4[A2]', predPlans2(29, 30))
+              ])
+            ],
+            spec2
+          ),
+          testPlan(
+            'test3',
+            [scenarioPlan(inputAtValue(i1, 75), [datasetPlan('ModelImpl', 'V3', predPlans3(31))])],
+            spec3
+          ),
+          testPlan('test4', [scenarioPlan(allAtPos('at-default'), [datasetPlan('Model', 'V1', predPlans4(32))])], spec4),
+          testPlan('test5', [scenarioPlan(inputAtValue(i1, 75), [datasetPlan('Model', 'V1', predPlans5(33))])], spec5)
         ])
       )
     )

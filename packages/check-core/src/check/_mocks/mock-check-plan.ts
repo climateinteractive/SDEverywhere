@@ -11,7 +11,7 @@ import type {
 } from '../check-planner'
 import type { CheckPredicateOp } from '../check-predicate'
 import type { CheckScenario } from '../check-scenario'
-import type { CheckPredicateSpec } from '../check-spec'
+import type { CheckPredicateSpec, CheckTestSpec } from '../check-spec'
 import { dataset } from './mock-check-dataset'
 
 export function predPlan(
@@ -65,10 +65,11 @@ export function unknownInputsScenarioPlan(...inputNames: string[]): CheckPlanSce
   }
 }
 
-export function testPlan(name: string, scenarios: CheckPlanScenario[]): CheckPlanTest {
+export function testPlan(name: string, scenarios: CheckPlanScenario[], spec?: CheckTestSpec): CheckPlanTest {
   return {
     name,
-    scenarios
+    scenarios,
+    spec
   }
 }
 
