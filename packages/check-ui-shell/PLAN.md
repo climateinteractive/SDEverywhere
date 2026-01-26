@@ -118,12 +118,31 @@ Created the initial check-editor component with basic structure:
   - "Cancel Paste YAML" - tests cancel button closes paste area without changes
   - "Initialize from Existing Test (Edit Mode)" - tests initFromSpec for editing existing tests
 
+### 2026-01-25: UI Polish and Preview Graph Fix
+
+- Removed duplicate top border in preview area (tab bar and content no longer double-border)
+- Fixed preview graph not updating when configuration changes
+  - Added `configKey` derived property that tracks all configuration state
+  - Used `{#key configKey}` block in tabbed-preview to force graph remount
+
+### 2026-01-25: Check-Summary Integration for Edit/New Test
+
+- Added `testInfo` to `CheckSummaryRowViewModel` for test rows
+  - Stores group name and test report for context menu actions
+- Added "Edit Test..." context menu option on test rows
+- Added "+ New Test" button to check-summary header
+- Component dispatches `edit-test` and `new-test` commands
+- Added 2 new Storybook test stories for check-summary:
+  - "New Test button exists" - verifies button is present and visible
+  - "Right-click test row shows Edit Test context menu" - tests context menu UI
+
 ---
 
 ## Current Status
 
 ✅ All check-editor functionality implemented and working
 ✅ All 18 check-editor Storybook tests passing (when Playwright is installed)
+✅ All 10 check-summary Storybook tests passing (when Playwright is installed)
 ✅ Real data preview functional
 ✅ Multi-item support fully operational
 ✅ Accessibility compliant
@@ -134,6 +153,7 @@ Created the initial check-editor component with basic structure:
 ✅ Time range support for predicates
 ✅ Preview graph updates reactively
 ✅ Paste YAML to prepopulate form
+✅ Check-summary wired up for edit-test and new-test commands
 
 ## Suggested Next Steps
 
