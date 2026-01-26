@@ -65,12 +65,24 @@ export interface PredicateRefConfig {
   scenarioId?: string
 }
 
+/** Time range configuration for predicates. */
+export interface PredicateTimeConfig {
+  /** Whether time range is enabled. */
+  enabled: boolean
+  /** Start year (inclusive). */
+  startYear?: number
+  /** End year (inclusive). */
+  endYear?: number
+}
+
 /** Configuration for a single predicate. */
 export interface PredicateItemConfig {
   id: string
   type: PredicateType
   ref: PredicateRefConfig
   tolerance?: number
+  /** Optional time range configuration. */
+  time?: PredicateTimeConfig
 }
 
 /** Configuration for a single dataset. */
@@ -488,6 +500,14 @@ export class CheckEditorViewModel {
       }
       if (predicate.type === 'approx' && predicate.tolerance !== undefined) {
         lines.push(`          tolerance: ${predicate.tolerance}`)
+      }
+      // Time range
+      if (predicate.time?.enabled) {
+        if (predicate.time.startYear !== undefined && predicate.time.endYear !== undefined) {
+          lines.push(`          time: [${predicate.time.startYear}, ${predicate.time.endYear}]`)
+        } else if (predicate.time.startYear !== undefined) {
+          lines.push(`          time: ${predicate.time.startYear}`)
+        }
       }
     }
 

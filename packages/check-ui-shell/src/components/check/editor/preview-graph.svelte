@@ -17,7 +17,9 @@ let { viewModel }: Props = $props()
 <!-- TEMPLATE -->
 <div class="preview-graph-container">
   {#if viewModel}
-    <CheckSummaryGraphBox {viewModel} />
+    {#key viewModel.baseRequestKey}
+      <CheckSummaryGraphBox {viewModel} />
+    {/key}
   {/if}
 </div>
 

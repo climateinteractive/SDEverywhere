@@ -95,7 +95,6 @@ async function handleCopyToClipboard() {
   font-size: 0.9rem;
   font-weight: 500;
   margin-bottom: -2px;
-  transition: all 0.15s;
 
   &:hover {
     color: var(--text-color-primary);

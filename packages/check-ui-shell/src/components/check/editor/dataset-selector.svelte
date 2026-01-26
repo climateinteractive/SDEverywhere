@@ -118,8 +118,6 @@ function handleKeyDown(e: KeyboardEvent) {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-bottom: 0.25rem;
-  border-bottom: 1px solid var(--border-color-normal);
   flex-shrink: 0;
 }
 
@@ -170,7 +168,6 @@ function handleKeyDown(e: KeyboardEvent) {
   border-radius: 4px;
   background-color: var(--panel-bg);
   cursor: pointer;
-  transition: background-color 0.15s;
 
   &:hover {
     background-color: rgba(200, 220, 240, 0.1);

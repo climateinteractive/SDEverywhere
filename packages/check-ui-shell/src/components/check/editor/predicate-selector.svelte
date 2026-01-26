@@ -11,7 +11,8 @@ import type {
   PredicateRefKind,
   PredicateDatasetRefKind,
   PredicateScenarioRefKind,
-  PredicateItemConfig
+  PredicateItemConfig,
+  PredicateTimeConfig
 } from './check-editor-vm.svelte'
 
 interface Props {
@@ -121,6 +122,11 @@ function updateRefDatasetKey(predicate: PredicateItemConfig, datasetKey: string)
 function updateRefScenarioId(predicate: PredicateItemConfig, scenarioId: string) {
   const ref = { ...predicate.ref, scenarioId }
   viewModel.updatePredicate(predicate.id, { ref })
+}
+
+function updateTimeConfig(predicate: PredicateItemConfig, updates: Partial<PredicateTimeConfig>) {
+  const time = { ...predicate.time, ...updates } as PredicateTimeConfig
+  viewModel.updatePredicate(predicate.id, { time })
 }
 
 /**
@@ -285,6 +291,58 @@ function handleKeyDown(e: KeyboardEvent) {
               />
             </div>
           {/if}
+
+          <div class="predicate-selector-row">
+            <label class="predicate-selector-checkbox-label">
+              <input
+                type="checkbox"
+                checked={predicate.time?.enabled ?? false}
+                onchange={e => {
+                  e.stopPropagation()
+                  updateTimeConfig(predicate, { enabled: (e.target as HTMLInputElement).checked })
+                }}
+                onclick={e => e.stopPropagation()}
+              />
+              Time range
+            </label>
+            {#if predicate.time?.enabled}
+              <input
+                class="predicate-selector-input predicate-selector-year-input"
+                type="text"
+                inputmode="numeric"
+                placeholder="Start"
+                value={predicate.time?.startYear ?? ''}
+                oninput={e => {
+                  e.stopPropagation()
+                  const val = (e.target as HTMLInputElement).value
+                  const year = val ? parseInt(val, 10) : undefined
+                  if (val === '' || !isNaN(year!)) {
+                    updateTimeConfig(predicate, { startYear: year })
+                  }
+                }}
+                onclick={e => e.stopPropagation()}
+                aria-label="Start year"
+              />
+              <span class="predicate-selector-text">to</span>
+              <input
+                class="predicate-selector-input predicate-selector-year-input"
+                type="text"
+                inputmode="numeric"
+                placeholder="End"
+                value={predicate.time?.endYear ?? ''}
+                oninput={e => {
+                  e.stopPropagation()
+                  const val = (e.target as HTMLInputElement).value
+                  const year = val ? parseInt(val, 10) : undefined
+                  if (val === '' || !isNaN(year!)) {
+                    updateTimeConfig(predicate, { endYear: year })
+                  }
+                }}
+                onclick={e => e.stopPropagation()}
+                aria-label="End year"
+              />
+            {/if}
+          </div>
         </div>
       </div>
     {/each}
@@ -304,8 +362,6 @@ function handleKeyDown(e: KeyboardEvent) {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-bottom: 0.25rem;
-  border-bottom: 1px solid var(--border-color-normal);
   flex-shrink: 0;
 }
 
@@ -356,7 +412,6 @@ function handleKeyDown(e: KeyboardEvent) {
   border-radius: 4px;
   background-color: var(--panel-bg);
   cursor: pointer;
-  transition: background-color 0.15s;
 
   &:hover {
     background-color: rgba(200, 220, 240, 0.1);
@@ -436,5 +491,19 @@ function handleKeyDown(e: KeyboardEvent) {
   &:hover {
     background-color: var(--button-bg-hover);
   }
+}
+
+.predicate-selector-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  color: var(--text-color-primary);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.predicate-selector-year-input {
+  width: 60px;
 }
 </style>

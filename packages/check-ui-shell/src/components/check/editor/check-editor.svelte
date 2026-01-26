@@ -25,28 +25,22 @@ let { open = $bindable(false), viewModel }: Props = $props()
   <div class="check-editor-container">
     <div class="check-editor-form">
       <div class="check-editor-description-section">
-        <div class="check-editor-field">
-          <label class="check-editor-label" for="describe-input">describe</label>
-          <input
-            id="describe-input"
-            class="check-editor-input"
-            type="text"
-            bind:value={viewModel.describeText}
-            placeholder="Variable or group"
-            aria-label="Describe text"
-          />
-        </div>
-        <div class="check-editor-field">
-          <label class="check-editor-label" for="test-input">it</label>
-          <input
-            id="test-input"
-            class="check-editor-input"
-            type="text"
-            bind:value={viewModel.testText}
-            placeholder="should [have behavior] when [conditions]"
-            aria-label="Test text"
-          />
-        </div>
+        <input
+          id="describe-input"
+          class="check-editor-input"
+          type="text"
+          bind:value={viewModel.describeText}
+          placeholder="Variable or group"
+          aria-label="Describe text"
+        />
+        <input
+          id="test-input"
+          class="check-editor-input"
+          type="text"
+          bind:value={viewModel.testText}
+          placeholder="should [have behavior] when [conditions]"
+          aria-label="Test text"
+        />
       </div>
 
       <ScenarioSelector {viewModel} />
@@ -79,24 +73,7 @@ let { open = $bindable(false), viewModel }: Props = $props()
 
 .check-editor-description-section {
   display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  padding-bottom: 0.75rem;
-  border-bottom: 1px solid var(--border-color-normal);
-}
-
-.check-editor-field {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.check-editor-label {
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: var(--text-color-secondary);
-  min-width: 60px;
-  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', monospace;
+  gap: 0.5rem;
 }
 
 .check-editor-input {

@@ -269,12 +269,16 @@ $effect(() => {
                     <div class="scenario-selector-value-container">
                       <input
                         class="scenario-selector-value-input"
-                        type="number"
+                        type="text"
+                        inputmode="numeric"
                         value={input.customValue ?? getInputVar(input.inputVarId)?.defaultValue ?? 0}
                         oninput={e => {
                           e.stopPropagation()
-                          const value = parseFloat((e.target as HTMLInputElement).value)
-                          viewModel.updateScenarioInput(scenario.id, inputIndex, { customValue: value })
+                          const strValue = (e.target as HTMLInputElement).value
+                          const value = parseFloat(strValue)
+                          if (!isNaN(value)) {
+                            viewModel.updateScenarioInput(scenario.id, inputIndex, { customValue: value })
+                          }
                         }}
                         onclick={e => e.stopPropagation()}
                         aria-label="Custom value"
@@ -333,8 +337,6 @@ $effect(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-bottom: 0.25rem;
-  border-bottom: 1px solid var(--border-color-normal);
   flex-shrink: 0;
 }
 
@@ -426,7 +428,6 @@ $effect(() => {
   border-radius: 4px;
   background-color: var(--panel-bg);
   cursor: pointer;
-  transition: background-color 0.15s;
 
   &:hover {
     background-color: rgba(200, 220, 240, 0.1);
