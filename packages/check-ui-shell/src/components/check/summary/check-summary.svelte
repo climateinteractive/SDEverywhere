@@ -83,9 +83,6 @@ function onContextMenuItemSelected(e: CustomEvent) {
 <!-- TEMPLATE -->
 <div class="check-summary-container">
   <div class="summary-bar-row">
-    <button class="new-test-btn" on:click={onNewTestClick} aria-label="New test">
-      + New Test
-    </button>
     <div class="bar-container">
       {#if viewModel.total > 0}
         <div class="bar bucket-bg-0" style="width: {viewModel.percents[0]}%;"></div>
@@ -125,6 +122,9 @@ function onContextMenuItemSelected(e: CustomEvent) {
         {/if}
       {/if}
     </span>
+    <button class="new-test-btn" on:click={onNewTestClick} aria-label="New test">
+      + New Test
+    </button>
   </div>
   <div class="check-detail">
     {#each viewModel.groups as group}
@@ -258,13 +258,13 @@ $bg-color: #272727;
   display: flex;
   flex-direction: row;
   align-items: center;
-  align-self: flex-start;
   margin: 2.6rem 0;
   gap: 1rem;
   opacity: 1;
 }
 
 .new-test-btn {
+  margin-left: auto;
   padding: 0.4rem 0.8rem;
   background-color: #3a3a3a;
   border: 1px solid #555;
