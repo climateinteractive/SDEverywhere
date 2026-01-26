@@ -88,13 +88,13 @@ importers:
         version: link:../../packages/cli
       '@sdeverywhere/plugin-check':
         specifier: ^0.3.18
-        version: link:../../packages/plugin-check
+        version: 0.3.26(@sdeverywhere/build@packages+build)(@types/node@20.19.19)(sass@1.97.2)(svelte@5.39.10)
       '@sdeverywhere/plugin-worker':
         specifier: ^0.2.11
         version: link:../../packages/plugin-worker
       vite:
         specifier: ^7.1.12
-        version: 7.3.1(@types/node@20.19.19)(sass@1.97.2)
+        version: 7.3.1(@types/node@20.19.19)(sass@1.97.2)(yaml@2.2.2)
 
   examples/house-game:
     devDependencies:
@@ -167,7 +167,7 @@ importers:
         version: 4.3.2(picomatch@4.0.3)(svelte@5.39.10)(typescript@5.2.2)
       vite:
         specifier: ^7.1.12
-        version: 7.3.1(@types/node@20.19.19)(sass@1.97.2)
+        version: 7.3.1(@types/node@20.19.19)(sass@1.97.2)(yaml@2.2.2)
 
   examples/sample-check-app:
     dependencies:
@@ -198,7 +198,7 @@ importers:
         version: 4.3.2(picomatch@4.0.3)(svelte@5.39.10)(typescript@5.2.2)
       vite:
         specifier: ^7.1.12
-        version: 7.3.1(@types/node@20.19.19)(sass@1.97.2)
+        version: 7.3.1(@types/node@20.19.19)(sass@1.97.2)(yaml@2.2.2)
 
   examples/sample-check-bundle:
     dependencies:
@@ -217,7 +217,7 @@ importers:
         version: 2.9.37
       vite:
         specifier: ^7.1.12
-        version: 7.3.1(@types/node@20.19.19)(sass@1.97.2)
+        version: 7.3.1(@types/node@20.19.19)(sass@1.97.2)(yaml@2.2.2)
 
   examples/sample-check-tests:
     dependencies:
@@ -230,7 +230,7 @@ importers:
     devDependencies:
       vite:
         specifier: ^7.1.12
-        version: 7.3.1(@types/node@20.19.19)(sass@1.97.2)
+        version: 7.3.1(@types/node@20.19.19)(sass@1.97.2)(yaml@2.2.2)
 
   examples/template-jquery:
     devDependencies:
@@ -248,7 +248,7 @@ importers:
         version: link:../../packages/cli
       '@sdeverywhere/plugin-check':
         specifier: ^0.3.18
-        version: link:../../packages/plugin-check
+        version: 0.3.26(@sdeverywhere/build@packages+build)(@types/node@20.19.19)(sass@1.97.2)(svelte@5.39.10)
       '@sdeverywhere/plugin-config':
         specifier: ^0.2.8
         version: link:../../packages/plugin-config
@@ -306,7 +306,7 @@ importers:
         version: 2.9.37
       vite:
         specifier: ^7.1.12
-        version: 7.3.1(@types/node@20.19.19)(sass@1.97.2)
+        version: 7.3.1(@types/node@20.19.19)(sass@1.97.2)(yaml@2.2.2)
 
   examples/template-jquery/packages/core:
     dependencies:
@@ -322,7 +322,7 @@ importers:
         version: 5.2.2
       vite:
         specifier: ^7.1.12
-        version: 7.3.1(@types/node@20.19.19)(sass@1.97.2)
+        version: 7.3.1(@types/node@20.19.19)(sass@1.97.2)(yaml@2.2.2)
 
   examples/template-minimal:
     dependencies:
@@ -337,7 +337,7 @@ importers:
         version: link:../../packages/cli
       '@sdeverywhere/plugin-check':
         specifier: ^0.3.18
-        version: link:../../packages/plugin-check
+        version: 0.3.26(@sdeverywhere/build@packages+build)(@types/node@20.19.19)(sass@1.97.2)(svelte@5.39.10)
       '@sdeverywhere/plugin-wasm':
         specifier: ^0.2.6
         version: link:../../packages/plugin-wasm
@@ -361,7 +361,7 @@ importers:
         version: link:../../packages/cli
       '@sdeverywhere/plugin-check':
         specifier: ^0.3.21
-        version: link:../../packages/plugin-check
+        version: 0.3.26(@sdeverywhere/build@packages+build)(@types/node@20.19.19)(sass@1.97.2)(svelte@5.39.10)
       '@sdeverywhere/plugin-config':
         specifier: ^0.2.8
         version: link:../../packages/plugin-config
@@ -446,7 +446,7 @@ importers:
         version: 4.3.2(picomatch@4.0.3)(svelte@5.39.10)(typescript@5.2.2)
       vite:
         specifier: ^7.1.12
-        version: 7.3.1(@types/node@20.19.19)(sass@1.97.2)
+        version: 7.3.1(@types/node@20.19.19)(sass@1.97.2)(yaml@2.2.2)
 
   examples/template-svelte/packages/core:
     dependencies:
@@ -462,7 +462,7 @@ importers:
         version: 5.2.2
       vite:
         specifier: ^7.1.12
-        version: 7.3.1(@types/node@20.19.19)(sass@1.97.2)
+        version: 7.3.1(@types/node@20.19.19)(sass@1.97.2)(yaml@2.2.2)
 
   models:
     dependencies:
@@ -551,28 +551,31 @@ importers:
       svelte-dnd-action:
         specifier: ^0.9.50
         version: 0.9.50(svelte@5.39.10)
+      yaml:
+        specifier: ^2.2.2
+        version: 2.2.2
     devDependencies:
       '@storybook/addon-docs':
         specifier: ^10.1.11
-        version: 10.1.11(@types/react@19.2.2)(esbuild@0.27.0)(rollup@4.53.3)(storybook@10.1.11(@testing-library/dom@10.4.1)(prettier@3.6.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2))
+        version: 10.1.11(@types/react@19.2.2)(esbuild@0.27.0)(rollup@4.53.3)(storybook@10.1.11(@testing-library/dom@10.4.1)(prettier@3.6.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2)(yaml@2.2.2))
       '@storybook/addon-links':
         specifier: ^10.1.11
         version: 10.1.11(react@19.2.0)(storybook@10.1.11(@testing-library/dom@10.4.1)(prettier@3.6.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))
       '@storybook/addon-svelte-csf':
         specifier: ^5.0.10
-        version: 5.0.10(@storybook/svelte@10.1.11(storybook@10.1.11(@testing-library/dom@10.4.1)(prettier@3.6.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(svelte@5.39.10))(@sveltejs/vite-plugin-svelte@6.2.1(svelte@5.39.10)(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2)))(storybook@10.1.11(@testing-library/dom@10.4.1)(prettier@3.6.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(svelte@5.39.10)(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2))
+        version: 5.0.10(@storybook/svelte@10.1.11(storybook@10.1.11(@testing-library/dom@10.4.1)(prettier@3.6.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(svelte@5.39.10))(@sveltejs/vite-plugin-svelte@6.2.1(svelte@5.39.10)(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2)(yaml@2.2.2)))(storybook@10.1.11(@testing-library/dom@10.4.1)(prettier@3.6.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(svelte@5.39.10)(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2)(yaml@2.2.2))
       '@storybook/addon-vitest':
         specifier: ^10.1.11
-        version: 10.1.11(@vitest/browser-playwright@4.0.16)(@vitest/browser@4.0.16(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2))(vitest@4.0.16))(@vitest/runner@4.0.16)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(storybook@10.1.11(@testing-library/dom@10.4.1)(prettier@3.6.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(vitest@4.0.16)
+        version: 10.1.11(@vitest/browser-playwright@4.0.16)(@vitest/browser@4.0.16(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2)(yaml@2.2.2))(vitest@4.0.16))(@vitest/runner@4.0.16)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(storybook@10.1.11(@testing-library/dom@10.4.1)(prettier@3.6.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(vitest@4.0.16)
       '@storybook/svelte':
         specifier: ^10.1.11
         version: 10.1.11(storybook@10.1.11(@testing-library/dom@10.4.1)(prettier@3.6.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(svelte@5.39.10)
       '@storybook/svelte-vite':
         specifier: ^10.1.11
-        version: 10.1.11(@sveltejs/vite-plugin-svelte@6.2.1(svelte@5.39.10)(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2)))(esbuild@0.27.0)(rollup@4.53.3)(storybook@10.1.11(@testing-library/dom@10.4.1)(prettier@3.6.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(svelte@5.39.10)(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2))
+        version: 10.1.11(@sveltejs/vite-plugin-svelte@6.2.1(svelte@5.39.10)(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2)(yaml@2.2.2)))(esbuild@0.27.0)(rollup@4.53.3)(storybook@10.1.11(@testing-library/dom@10.4.1)(prettier@3.6.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(svelte@5.39.10)(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2)(yaml@2.2.2))
       '@sveltejs/vite-plugin-svelte':
         specifier: ^6.2.1
-        version: 6.2.1(svelte@5.39.10)(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2))
+        version: 6.2.1(svelte@5.39.10)(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2)(yaml@2.2.2))
       '@types/chart.js':
         specifier: ^2.9.34
         version: 2.9.37
@@ -599,7 +602,7 @@ importers:
         version: 4.3.2(picomatch@4.0.3)(svelte@5.39.10)(typescript@5.2.2)
       vite:
         specifier: ^7.1.12
-        version: 7.3.1(@types/node@20.19.19)(sass@1.97.2)
+        version: 7.3.1(@types/node@20.19.19)(sass@1.97.2)(yaml@2.2.2)
 
   packages/cli:
     dependencies:
@@ -727,7 +730,7 @@ importers:
         version: link:../check-core
       '@sdeverywhere/check-ui-shell':
         specifier: ^0.2.16
-        version: link:../check-ui-shell
+        version: 0.2.17(svelte@5.39.10)
       '@sdeverywhere/runtime':
         specifier: ^0.2.7
         version: link:../runtime
@@ -748,7 +751,7 @@ importers:
         version: 4.53.3
       vite:
         specifier: ^7.1.12
-        version: 7.3.1(@types/node@20.19.19)(sass@1.97.2)
+        version: 7.3.1(@types/node@20.19.19)(sass@1.97.2)(yaml@2.2.2)
     devDependencies:
       '@sdeverywhere/build':
         specifier: '*'
@@ -807,7 +810,7 @@ importers:
         version: link:../build
       vite:
         specifier: ^7.1.12
-        version: 7.3.1(@types/node@20.19.19)(sass@1.97.2)
+        version: 7.3.1(@types/node@20.19.19)(sass@1.97.2)(yaml@2.2.2)
 
   packages/plugin-wasm:
     dependencies:
@@ -832,7 +835,7 @@ importers:
         version: link:../runtime-async
       vite:
         specifier: ^7.1.12
-        version: 7.3.1(@types/node@20.19.19)(sass@1.97.2)
+        version: 7.3.1(@types/node@20.19.19)(sass@1.97.2)(yaml@2.2.2)
     devDependencies:
       '@sdeverywhere/build':
         specifier: '*'
@@ -1589,6 +1592,24 @@ packages:
     resolution: {integrity: sha512-UhTd8u31dXadv0MopwGgNOBpUVROFKWVQgAg5N1ESyCz8AuBcMqm4AuTjrwgQKGDfoFuz02EuMRHQIw/frmYKQ==}
     cpu: [x64]
     os: [win32]
+
+  '@sdeverywhere/check-core@0.1.7':
+    resolution: {integrity: sha512-JH0TAgc9l4ZZHHCcJ9GHqa6bnekgFnQ593J4Aqk2bAEMAbLRsgHjPgWEB24yMVufSzF7gUeVyltTKbdD9YvAOg==}
+
+  '@sdeverywhere/check-ui-shell@0.2.17':
+    resolution: {integrity: sha512-srWjxD+BN2sLtOjizG++M72pEJ1qcroUEMxs0GtJ4uLVBcyueP7BAXN6ylE7bH1u+jVmZnuC/bzSuCUXht2yEA==}
+
+  '@sdeverywhere/plugin-check@0.3.26':
+    resolution: {integrity: sha512-m9pcIXtxMAoUMzEim4GeLeUgk5ppBMnlDMddYQhPMDxTNcDz1bmdRsPfNVYhw1r4ulLOLGJI3mtNPB29teeVvA==}
+    hasBin: true
+    peerDependencies:
+      '@sdeverywhere/build': ^0.3.7
+
+  '@sdeverywhere/runtime-async@0.2.7':
+    resolution: {integrity: sha512-dr7L9smMbaVJH2NOJNx8q6898J6DYuyO2oEunhUpKBy704R05RF0NsYC+XJNkJRwRuE0t0pulVfXIZzr95GPeg==}
+
+  '@sdeverywhere/runtime@0.2.7':
+    resolution: {integrity: sha512-iEaMn4qMojbBgcv17w+yIInUOdH3cZuOLx4LOk2VFGLjJm1Xv2/FDkGMxJdqvR9rMwI4bg9WtxCcmFLLKMgWNA==}
 
   '@standard-schema/spec@1.1.0':
     resolution: {integrity: sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w==}
@@ -4095,12 +4116,74 @@ snapshots:
   '@rollup/rollup-win32-x64-msvc@4.53.3':
     optional: true
 
+  '@sdeverywhere/check-core@0.1.7':
+    dependencies:
+      ajv: 8.12.0
+      assert-never: 1.2.1
+      neverthrow: 4.3.1
+      yaml: 2.2.2
+
+  '@sdeverywhere/check-ui-shell@0.2.17(svelte@5.39.10)':
+    dependencies:
+      '@fortawesome/free-regular-svg-icons': 7.1.0
+      '@fortawesome/free-solid-svg-icons': 7.1.0
+      '@juggle/resize-observer': 3.4.0
+      '@sdeverywhere/check-core': 0.1.7
+      assert-never: 1.2.1
+      chart.js: 2.9.4
+      copy-text-to-clipboard: 3.2.0
+      fontfaceobserver: 2.3.0
+      fuzzysort: 3.1.0
+      svelte-dnd-action: 0.9.50(svelte@5.39.10)
+    transitivePeerDependencies:
+      - svelte
+
+  '@sdeverywhere/plugin-check@0.3.26(@sdeverywhere/build@packages+build)(@types/node@20.19.19)(sass@1.97.2)(svelte@5.39.10)':
+    dependencies:
+      '@rollup/plugin-node-resolve': 16.0.3(rollup@4.53.3)
+      '@rollup/plugin-replace': 6.0.3(rollup@4.53.3)
+      '@sdeverywhere/build': link:packages/build
+      '@sdeverywhere/check-core': 0.1.7
+      '@sdeverywhere/check-ui-shell': 0.2.17(svelte@5.39.10)
+      '@sdeverywhere/runtime': 0.2.7
+      '@sdeverywhere/runtime-async': 0.2.7
+      assert-never: 1.2.1
+      chokidar: 5.0.0
+      picocolors: 1.1.1
+      rollup: 4.53.3
+      vite: 7.3.1(@types/node@20.19.19)(sass@1.97.2)(yaml@2.2.2)
+    transitivePeerDependencies:
+      - '@types/node'
+      - jiti
+      - less
+      - lightningcss
+      - sass
+      - sass-embedded
+      - stylus
+      - sugarss
+      - supports-color
+      - svelte
+      - terser
+      - tsx
+      - yaml
+
+  '@sdeverywhere/runtime-async@0.2.7':
+    dependencies:
+      '@sdeverywhere/runtime': 0.2.7
+      threads: 1.7.0
+    transitivePeerDependencies:
+      - supports-color
+
+  '@sdeverywhere/runtime@0.2.7':
+    dependencies:
+      neverthrow: 2.7.1
+
   '@standard-schema/spec@1.1.0': {}
 
-  '@storybook/addon-docs@10.1.11(@types/react@19.2.2)(esbuild@0.27.0)(rollup@4.53.3)(storybook@10.1.11(@testing-library/dom@10.4.1)(prettier@3.6.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2))':
+  '@storybook/addon-docs@10.1.11(@types/react@19.2.2)(esbuild@0.27.0)(rollup@4.53.3)(storybook@10.1.11(@testing-library/dom@10.4.1)(prettier@3.6.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2)(yaml@2.2.2))':
     dependencies:
       '@mdx-js/react': 3.1.1(@types/react@19.2.2)(react@19.2.0)
-      '@storybook/csf-plugin': 10.1.11(esbuild@0.27.0)(rollup@4.53.3)(storybook@10.1.11(@testing-library/dom@10.4.1)(prettier@3.6.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2))
+      '@storybook/csf-plugin': 10.1.11(esbuild@0.27.0)(rollup@4.53.3)(storybook@10.1.11(@testing-library/dom@10.4.1)(prettier@3.6.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2)(yaml@2.2.2))
       '@storybook/icons': 2.0.1(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       '@storybook/react-dom-shim': 10.1.11(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(storybook@10.1.11(@testing-library/dom@10.4.1)(prettier@3.6.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))
       react: 19.2.0
@@ -4121,11 +4204,11 @@ snapshots:
     optionalDependencies:
       react: 19.2.0
 
-  '@storybook/addon-svelte-csf@5.0.10(@storybook/svelte@10.1.11(storybook@10.1.11(@testing-library/dom@10.4.1)(prettier@3.6.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(svelte@5.39.10))(@sveltejs/vite-plugin-svelte@6.2.1(svelte@5.39.10)(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2)))(storybook@10.1.11(@testing-library/dom@10.4.1)(prettier@3.6.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(svelte@5.39.10)(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2))':
+  '@storybook/addon-svelte-csf@5.0.10(@storybook/svelte@10.1.11(storybook@10.1.11(@testing-library/dom@10.4.1)(prettier@3.6.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(svelte@5.39.10))(@sveltejs/vite-plugin-svelte@6.2.1(svelte@5.39.10)(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2)(yaml@2.2.2)))(storybook@10.1.11(@testing-library/dom@10.4.1)(prettier@3.6.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(svelte@5.39.10)(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2)(yaml@2.2.2))':
     dependencies:
       '@storybook/csf': 0.1.13
       '@storybook/svelte': 10.1.11(storybook@10.1.11(@testing-library/dom@10.4.1)(prettier@3.6.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(svelte@5.39.10)
-      '@sveltejs/vite-plugin-svelte': 6.2.1(svelte@5.39.10)(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2))
+      '@sveltejs/vite-plugin-svelte': 6.2.1(svelte@5.39.10)(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2)(yaml@2.2.2))
       dedent: 1.7.0
       es-toolkit: 1.40.0
       esrap: 1.4.9
@@ -4133,46 +4216,46 @@ snapshots:
       storybook: 10.1.11(@testing-library/dom@10.4.1)(prettier@3.6.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       svelte: 5.39.10
       svelte-ast-print: 0.4.2(svelte@5.39.10)
-      vite: 7.3.1(@types/node@20.19.19)(sass@1.97.2)
+      vite: 7.3.1(@types/node@20.19.19)(sass@1.97.2)(yaml@2.2.2)
       zimmerframe: 1.1.4
     transitivePeerDependencies:
       - babel-plugin-macros
 
-  '@storybook/addon-vitest@10.1.11(@vitest/browser-playwright@4.0.16)(@vitest/browser@4.0.16(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2))(vitest@4.0.16))(@vitest/runner@4.0.16)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(storybook@10.1.11(@testing-library/dom@10.4.1)(prettier@3.6.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(vitest@4.0.16)':
+  '@storybook/addon-vitest@10.1.11(@vitest/browser-playwright@4.0.16)(@vitest/browser@4.0.16(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2)(yaml@2.2.2))(vitest@4.0.16))(@vitest/runner@4.0.16)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(storybook@10.1.11(@testing-library/dom@10.4.1)(prettier@3.6.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(vitest@4.0.16)':
     dependencies:
       '@storybook/global': 5.0.0
       '@storybook/icons': 2.0.1(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       storybook: 10.1.11(@testing-library/dom@10.4.1)(prettier@3.6.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
     optionalDependencies:
-      '@vitest/browser': 4.0.16(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2))(vitest@4.0.16)
-      '@vitest/browser-playwright': 4.0.16(playwright@1.56.1)(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2))(vitest@4.0.16)
+      '@vitest/browser': 4.0.16(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2)(yaml@2.2.2))(vitest@4.0.16)
+      '@vitest/browser-playwright': 4.0.16(playwright@1.56.1)(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2)(yaml@2.2.2))(vitest@4.0.16)
       '@vitest/runner': 4.0.16
-      vitest: 4.0.16(@types/node@20.19.19)(@vitest/browser-playwright@4.0.16)(sass@1.97.2)
+      vitest: 4.0.16(@types/node@20.19.19)(@vitest/browser-playwright@4.0.16)(sass@1.97.2)(yaml@2.2.2)
     transitivePeerDependencies:
       - react
       - react-dom
 
-  '@storybook/builder-vite@10.1.11(esbuild@0.27.0)(rollup@4.53.3)(storybook@10.1.11(@testing-library/dom@10.4.1)(prettier@3.6.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2))':
+  '@storybook/builder-vite@10.1.11(esbuild@0.27.0)(rollup@4.53.3)(storybook@10.1.11(@testing-library/dom@10.4.1)(prettier@3.6.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2)(yaml@2.2.2))':
     dependencies:
-      '@storybook/csf-plugin': 10.1.11(esbuild@0.27.0)(rollup@4.53.3)(storybook@10.1.11(@testing-library/dom@10.4.1)(prettier@3.6.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2))
-      '@vitest/mocker': 3.2.4(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2))
+      '@storybook/csf-plugin': 10.1.11(esbuild@0.27.0)(rollup@4.53.3)(storybook@10.1.11(@testing-library/dom@10.4.1)(prettier@3.6.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2)(yaml@2.2.2))
+      '@vitest/mocker': 3.2.4(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2)(yaml@2.2.2))
       storybook: 10.1.11(@testing-library/dom@10.4.1)(prettier@3.6.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       ts-dedent: 2.2.0
-      vite: 7.3.1(@types/node@20.19.19)(sass@1.97.2)
+      vite: 7.3.1(@types/node@20.19.19)(sass@1.97.2)(yaml@2.2.2)
     transitivePeerDependencies:
       - esbuild
       - msw
       - rollup
       - webpack
 
-  '@storybook/csf-plugin@10.1.11(esbuild@0.27.0)(rollup@4.53.3)(storybook@10.1.11(@testing-library/dom@10.4.1)(prettier@3.6.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2))':
+  '@storybook/csf-plugin@10.1.11(esbuild@0.27.0)(rollup@4.53.3)(storybook@10.1.11(@testing-library/dom@10.4.1)(prettier@3.6.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2)(yaml@2.2.2))':
     dependencies:
       storybook: 10.1.11(@testing-library/dom@10.4.1)(prettier@3.6.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       unplugin: 2.3.11
     optionalDependencies:
       esbuild: 0.27.0
       rollup: 4.53.3
-      vite: 7.3.1(@types/node@20.19.19)(sass@1.97.2)
+      vite: 7.3.1(@types/node@20.19.19)(sass@1.97.2)(yaml@2.2.2)
 
   '@storybook/csf@0.1.13':
     dependencies:
@@ -4191,17 +4274,17 @@ snapshots:
       react-dom: 19.2.0(react@19.2.0)
       storybook: 10.1.11(@testing-library/dom@10.4.1)(prettier@3.6.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
 
-  '@storybook/svelte-vite@10.1.11(@sveltejs/vite-plugin-svelte@6.2.1(svelte@5.39.10)(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2)))(esbuild@0.27.0)(rollup@4.53.3)(storybook@10.1.11(@testing-library/dom@10.4.1)(prettier@3.6.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(svelte@5.39.10)(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2))':
+  '@storybook/svelte-vite@10.1.11(@sveltejs/vite-plugin-svelte@6.2.1(svelte@5.39.10)(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2)(yaml@2.2.2)))(esbuild@0.27.0)(rollup@4.53.3)(storybook@10.1.11(@testing-library/dom@10.4.1)(prettier@3.6.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(svelte@5.39.10)(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2)(yaml@2.2.2))':
     dependencies:
-      '@storybook/builder-vite': 10.1.11(esbuild@0.27.0)(rollup@4.53.3)(storybook@10.1.11(@testing-library/dom@10.4.1)(prettier@3.6.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2))
+      '@storybook/builder-vite': 10.1.11(esbuild@0.27.0)(rollup@4.53.3)(storybook@10.1.11(@testing-library/dom@10.4.1)(prettier@3.6.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2)(yaml@2.2.2))
       '@storybook/svelte': 10.1.11(storybook@10.1.11(@testing-library/dom@10.4.1)(prettier@3.6.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(svelte@5.39.10)
-      '@sveltejs/vite-plugin-svelte': 6.2.1(svelte@5.39.10)(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2))
+      '@sveltejs/vite-plugin-svelte': 6.2.1(svelte@5.39.10)(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2)(yaml@2.2.2))
       magic-string: 0.30.19
       storybook: 10.1.11(@testing-library/dom@10.4.1)(prettier@3.6.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       svelte: 5.39.10
       svelte2tsx: 0.7.45(svelte@5.39.10)(typescript@5.2.2)
       typescript: 5.2.2
-      vite: 7.3.1(@types/node@20.19.19)(sass@1.97.2)
+      vite: 7.3.1(@types/node@20.19.19)(sass@1.97.2)(yaml@2.2.2)
     transitivePeerDependencies:
       - esbuild
       - msw
@@ -4219,12 +4302,33 @@ snapshots:
     dependencies:
       acorn: 8.15.0
 
+  '@sveltejs/vite-plugin-svelte-inspector@5.0.1(@sveltejs/vite-plugin-svelte@6.2.1(svelte@5.39.10)(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2)(yaml@2.2.2)))(svelte@5.39.10)(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2)(yaml@2.2.2))':
+    dependencies:
+      '@sveltejs/vite-plugin-svelte': 6.2.1(svelte@5.39.10)(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2)(yaml@2.2.2))
+      debug: 4.4.3
+      svelte: 5.39.10
+      vite: 7.3.1(@types/node@20.19.19)(sass@1.97.2)(yaml@2.2.2)
+    transitivePeerDependencies:
+      - supports-color
+
   '@sveltejs/vite-plugin-svelte-inspector@5.0.1(@sveltejs/vite-plugin-svelte@6.2.1(svelte@5.39.10)(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2)))(svelte@5.39.10)(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2))':
     dependencies:
       '@sveltejs/vite-plugin-svelte': 6.2.1(svelte@5.39.10)(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2))
       debug: 4.4.3
       svelte: 5.39.10
-      vite: 7.3.1(@types/node@20.19.19)(sass@1.97.2)
+      vite: 7.3.1(@types/node@20.19.19)(sass@1.97.2)(yaml@2.2.2)
+    transitivePeerDependencies:
+      - supports-color
+
+  '@sveltejs/vite-plugin-svelte@6.2.1(svelte@5.39.10)(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2)(yaml@2.2.2))':
+    dependencies:
+      '@sveltejs/vite-plugin-svelte-inspector': 5.0.1(@sveltejs/vite-plugin-svelte@6.2.1(svelte@5.39.10)(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2)(yaml@2.2.2)))(svelte@5.39.10)(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2)(yaml@2.2.2))
+      debug: 4.4.3
+      deepmerge: 4.3.1
+      magic-string: 0.30.19
+      svelte: 5.39.10
+      vite: 7.3.1(@types/node@20.19.19)(sass@1.97.2)(yaml@2.2.2)
+      vitefu: 1.1.1(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2))
     transitivePeerDependencies:
       - supports-color
 
@@ -4235,7 +4339,7 @@ snapshots:
       deepmerge: 4.3.1
       magic-string: 0.30.19
       svelte: 5.39.10
-      vite: 7.3.1(@types/node@20.19.19)(sass@1.97.2)
+      vite: 7.3.1(@types/node@20.19.19)(sass@1.97.2)(yaml@2.2.2)
       vitefu: 1.1.1(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2))
     transitivePeerDependencies:
       - supports-color
@@ -4417,6 +4521,20 @@ snapshots:
       '@typescript-eslint/types': 8.46.0
       eslint-visitor-keys: 4.2.1
 
+  '@vitest/browser-playwright@4.0.16(playwright@1.56.1)(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2)(yaml@2.2.2))(vitest@4.0.16)':
+    dependencies:
+      '@vitest/browser': 4.0.16(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2)(yaml@2.2.2))(vitest@4.0.16)
+      '@vitest/mocker': 4.0.16(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2))
+      playwright: 1.56.1
+      tinyrainbow: 3.0.3
+      vitest: 4.0.16(@types/node@20.19.19)(@vitest/browser-playwright@4.0.16)(sass@1.97.2)(yaml@2.2.2)
+    transitivePeerDependencies:
+      - bufferutil
+      - msw
+      - utf-8-validate
+      - vite
+    optional: true
+
   '@vitest/browser-playwright@4.0.16(playwright@1.56.1)(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2))(vitest@4.0.16)':
     dependencies:
       '@vitest/browser': 4.0.16(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2))(vitest@4.0.16)
@@ -4429,6 +4547,24 @@ snapshots:
       - msw
       - utf-8-validate
       - vite
+
+  '@vitest/browser@4.0.16(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2)(yaml@2.2.2))(vitest@4.0.16)':
+    dependencies:
+      '@vitest/mocker': 4.0.16(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2))
+      '@vitest/utils': 4.0.16
+      magic-string: 0.30.21
+      pixelmatch: 7.1.0
+      pngjs: 7.0.0
+      sirv: 3.0.2
+      tinyrainbow: 3.0.3
+      vitest: 4.0.16(@types/node@20.19.19)(@vitest/browser-playwright@4.0.16)(sass@1.97.2)(yaml@2.2.2)
+      ws: 8.18.3
+    transitivePeerDependencies:
+      - bufferutil
+      - msw
+      - utf-8-validate
+      - vite
+    optional: true
 
   '@vitest/browser@4.0.16(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2))(vitest@4.0.16)':
     dependencies:
@@ -4483,13 +4619,13 @@ snapshots:
       chai: 6.2.2
       tinyrainbow: 3.0.3
 
-  '@vitest/mocker@3.2.4(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2))':
+  '@vitest/mocker@3.2.4(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2)(yaml@2.2.2))':
     dependencies:
       '@vitest/spy': 3.2.4
       estree-walker: 3.0.3
       magic-string: 0.30.21
     optionalDependencies:
-      vite: 7.3.1(@types/node@20.19.19)(sass@1.97.2)
+      vite: 7.3.1(@types/node@20.19.19)(sass@1.97.2)(yaml@2.2.2)
 
   '@vitest/mocker@4.0.16(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2))':
     dependencies:
@@ -4497,7 +4633,7 @@ snapshots:
       estree-walker: 3.0.3
       magic-string: 0.30.21
     optionalDependencies:
-      vite: 7.3.1(@types/node@20.19.19)(sass@1.97.2)
+      vite: 7.3.1(@types/node@20.19.19)(sass@1.97.2)(yaml@2.2.2)
 
   '@vitest/pretty-format@3.2.4':
     dependencies:
@@ -6078,7 +6214,7 @@ snapshots:
 
   util-deprecate@1.0.2: {}
 
-  vite@7.3.1(@types/node@20.19.19)(sass@1.97.2):
+  vite@7.3.1(@types/node@20.19.19)(sass@1.97.2)(yaml@2.2.2):
     dependencies:
       esbuild: 0.27.0
       fdir: 6.5.0(picomatch@4.0.3)
@@ -6090,10 +6226,11 @@ snapshots:
       '@types/node': 20.19.19
       fsevents: 2.3.3
       sass: 1.97.2
+      yaml: 2.2.2
 
   vitefu@1.1.1(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2)):
     optionalDependencies:
-      vite: 7.3.1(@types/node@20.19.19)(sass@1.97.2)
+      vite: 7.3.1(@types/node@20.19.19)(sass@1.97.2)(yaml@2.2.2)
 
   vitest@4.0.16(@types/node@20.19.19)(@vitest/browser-playwright@4.0.16)(sass@1.97.2):
     dependencies:
@@ -6115,7 +6252,7 @@ snapshots:
       tinyexec: 1.0.2
       tinyglobby: 0.2.15
       tinyrainbow: 3.0.3
-      vite: 7.3.1(@types/node@20.19.19)(sass@1.97.2)
+      vite: 7.3.1(@types/node@20.19.19)(sass@1.97.2)(yaml@2.2.2)
       why-is-node-running: 2.3.0
     optionalDependencies:
       '@types/node': 20.19.19
@@ -6132,6 +6269,45 @@ snapshots:
       - terser
       - tsx
       - yaml
+
+  vitest@4.0.16(@types/node@20.19.19)(@vitest/browser-playwright@4.0.16)(sass@1.97.2)(yaml@2.2.2):
+    dependencies:
+      '@vitest/expect': 4.0.16
+      '@vitest/mocker': 4.0.16(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2))
+      '@vitest/pretty-format': 4.0.16
+      '@vitest/runner': 4.0.16
+      '@vitest/snapshot': 4.0.16
+      '@vitest/spy': 4.0.16
+      '@vitest/utils': 4.0.16
+      es-module-lexer: 1.7.0
+      expect-type: 1.2.2
+      magic-string: 0.30.21
+      obug: 2.1.1
+      pathe: 2.0.3
+      picomatch: 4.0.3
+      std-env: 3.10.0
+      tinybench: 2.9.0
+      tinyexec: 1.0.2
+      tinyglobby: 0.2.15
+      tinyrainbow: 3.0.3
+      vite: 7.3.1(@types/node@20.19.19)(sass@1.97.2)(yaml@2.2.2)
+      why-is-node-running: 2.3.0
+    optionalDependencies:
+      '@types/node': 20.19.19
+      '@vitest/browser-playwright': 4.0.16(playwright@1.56.1)(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2)(yaml@2.2.2))(vitest@4.0.16)
+    transitivePeerDependencies:
+      - jiti
+      - less
+      - lightningcss
+      - msw
+      - sass
+      - sass-embedded
+      - stylus
+      - sugarss
+      - terser
+      - tsx
+      - yaml
+    optional: true
 
   vscode-oniguruma@1.7.0: {}
 

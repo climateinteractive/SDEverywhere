@@ -10,6 +10,7 @@ import type {
   CheckPredicateOpRef,
   CheckPredicateReport
 } from '@sdeverywhere/check-core'
+import yaml from 'yaml'
 
 // Local type definitions compatible with check-core spec types (not exported from check-core)
 type CheckScenarioPosition = 'default' | 'min' | 'max'
@@ -278,6 +279,43 @@ export class CheckEditorViewModel {
     if (this.scenarios.length > 0) this.selectedScenarioId = this.scenarios[0].id
     if (this.datasets.length > 0) this.selectedDatasetId = this.datasets[0].id
     if (this.predicates.length > 0) this.selectedPredicateId = this.predicates[0].id
+  }
+
+  /**
+   * Parse a YAML string and initialize the editor from it.
+   *
+   * @param yamlString The YAML string to parse.
+   * @returns An error message if parsing failed, or undefined if successful.
+   */
+  parseYamlAndInit(yamlString: string): string | undefined {
+    try {
+      const parsed = yaml.parse(yamlString)
+
+      // The YAML should be an array of group specs
+      if (!Array.isArray(parsed) || parsed.length === 0) {
+        return 'Invalid YAML: expected an array of test groups'
+      }
+
+      const groupSpec = parsed[0] as CheckGroupSpec
+      if (!groupSpec.describe || !groupSpec.tests || !Array.isArray(groupSpec.tests)) {
+        return 'Invalid YAML: group must have "describe" and "tests" properties'
+      }
+
+      if (groupSpec.tests.length === 0) {
+        return 'Invalid YAML: group must have at least one test'
+      }
+
+      const testSpec = groupSpec.tests[0] as CheckTestSpec
+      if (!testSpec.it) {
+        return 'Invalid YAML: test must have an "it" property'
+      }
+
+      // Initialize from the spec
+      this.initFromSpec(groupSpec, testSpec)
+      return undefined
+    } catch (e) {
+      return `Failed to parse YAML: ${e instanceof Error ? e.message : String(e)}`
+    }
   }
 
   /**
