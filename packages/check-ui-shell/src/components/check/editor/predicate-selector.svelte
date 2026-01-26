@@ -5,6 +5,9 @@
 import Selector from '../../list/selector.svelte'
 import { SelectorOptionViewModel, SelectorViewModel } from '../../list/selector-vm.svelte'
 
+import TypeaheadSelector from '../../list/typeahead-selector.svelte'
+import type { ListItemViewModel } from '../../list/list-item-vm.svelte'
+
 import type {
   CheckEditorViewModel,
   PredicateType,
@@ -12,7 +15,11 @@ import type {
   PredicateDatasetRefKind,
   PredicateScenarioRefKind,
   PredicateItemConfig,
-  PredicateTimeConfig
+  PredicateTimeConfig,
+  PredicateScenarioConfig,
+  ScenarioKind,
+  ScenarioInputPosition,
+  GivenInputConfig
 } from './check-editor-vm.svelte'
 
 interface Props {
@@ -48,6 +55,27 @@ const datasetRefKindOptions = [
 const scenarioRefKindOptions = [
   new SelectorOptionViewModel('Same scenario', 'inherit'),
   new SelectorOptionViewModel('Different scenario', 'different')
+]
+
+// Create selector options for scenario kind (in predicate)
+const predicateScenarioKindOptions = [
+  new SelectorOptionViewModel('All inputs at...', 'all-inputs'),
+  new SelectorOptionViewModel('Given inputs at...', 'given-inputs')
+]
+
+// Create selector options for position (for all-inputs scenarios in predicate)
+const predicateAllInputsPositionOptions = [
+  new SelectorOptionViewModel('Default', 'at-default'),
+  new SelectorOptionViewModel('Minimum', 'at-minimum'),
+  new SelectorOptionViewModel('Maximum', 'at-maximum')
+]
+
+// Create selector options for position (for given-inputs in predicate)
+const predicateGivenInputsPositionOptions = [
+  new SelectorOptionViewModel('Default', 'at-default'),
+  new SelectorOptionViewModel('Minimum', 'at-minimum'),
+  new SelectorOptionViewModel('Maximum', 'at-maximum'),
+  new SelectorOptionViewModel('Value', 'at-value')
 ]
 
 function createTypeSelector(predicate: PredicateItemConfig) {
@@ -91,8 +119,19 @@ function createDatasetRefKindSelector(predicate: PredicateItemConfig) {
 function createScenarioRefKindSelector(predicate: PredicateItemConfig) {
   const selector = new SelectorViewModel(scenarioRefKindOptions, predicate.ref.scenarioRefKind || 'inherit')
   selector.onUserChange = (newValue: string) => {
-    const ref = { ...predicate.ref, scenarioRefKind: newValue as PredicateScenarioRefKind }
-    viewModel.updatePredicate(predicate.id, { ref })
+    const scenarioRefKind = newValue as PredicateScenarioRefKind
+    if (scenarioRefKind === 'different' && !predicate.ref.scenarioConfig) {
+      // Initialize with default scenario config
+      const ref = {
+        ...predicate.ref,
+        scenarioRefKind,
+        scenarioConfig: { kind: 'all-inputs' as ScenarioKind, position: 'at-default' as ScenarioInputPosition }
+      }
+      viewModel.updatePredicate(predicate.id, { ref })
+    } else {
+      const ref = { ...predicate.ref, scenarioRefKind }
+      viewModel.updatePredicate(predicate.id, { ref })
+    }
   }
   return selector
 }
@@ -119,9 +158,89 @@ function updateRefDatasetKey(predicate: PredicateItemConfig, datasetKey: string)
   viewModel.updatePredicate(predicate.id, { ref })
 }
 
-function updateRefScenarioId(predicate: PredicateItemConfig, scenarioId: string) {
-  const ref = { ...predicate.ref, scenarioId }
+function updateRefScenarioConfig(predicate: PredicateItemConfig, scenarioConfig: PredicateScenarioConfig) {
+  const ref = { ...predicate.ref, scenarioConfig }
   viewModel.updatePredicate(predicate.id, { ref })
+}
+
+function getOrCreateScenarioConfig(predicate: PredicateItemConfig): PredicateScenarioConfig {
+  return predicate.ref.scenarioConfig || {
+    kind: 'all-inputs',
+    position: 'at-default'
+  }
+}
+
+function createPredicateScenarioKindSelector(predicate: PredicateItemConfig) {
+  const config = getOrCreateScenarioConfig(predicate)
+  const selector = new SelectorViewModel(predicateScenarioKindOptions, config.kind)
+  selector.onUserChange = (newValue: string) => {
+    const kind = newValue as ScenarioKind
+    if (kind === 'all-inputs') {
+      updateRefScenarioConfig(predicate, { kind, position: 'at-default' })
+    } else {
+      // Initialize given-inputs with first input variable
+      const firstInput = viewModel.inputVars[0]
+      updateRefScenarioConfig(predicate, {
+        kind,
+        inputs: [{
+          inputVarId: firstInput?.varId || '',
+          position: 'at-default'
+        }]
+      })
+    }
+  }
+  return selector
+}
+
+function createPredicateScenarioPositionSelector(predicate: PredicateItemConfig) {
+  const config = getOrCreateScenarioConfig(predicate)
+  const selector = new SelectorViewModel(predicateAllInputsPositionOptions, config.position || 'at-default')
+  selector.onUserChange = (newValue: string) => {
+    const position = newValue as ScenarioInputPosition
+    updateRefScenarioConfig(predicate, { ...config, position })
+  }
+  return selector
+}
+
+function createPredicateInputPositionSelector(predicate: PredicateItemConfig, inputIndex: number) {
+  const config = getOrCreateScenarioConfig(predicate)
+  const input = config.inputs?.[inputIndex]
+  const selector = new SelectorViewModel(predicateGivenInputsPositionOptions, input?.position || 'at-default')
+  selector.onUserChange = (newValue: string) => {
+    const newPosition = newValue as ScenarioInputPosition
+    const inputs = [...(config.inputs || [])]
+    if (newPosition === 'at-value') {
+      const inputVar = viewModel.inputVars.find(v => v.varId === inputs[inputIndex]?.inputVarId)
+      inputs[inputIndex] = { ...inputs[inputIndex], position: newPosition, customValue: inputVar?.defaultValue ?? 0 }
+    } else {
+      inputs[inputIndex] = { ...inputs[inputIndex], position: newPosition }
+    }
+    updateRefScenarioConfig(predicate, { ...config, inputs })
+  }
+  return selector
+}
+
+function updatePredicateScenarioInput(predicate: PredicateItemConfig, inputIndex: number, updates: Partial<GivenInputConfig>) {
+  const config = getOrCreateScenarioConfig(predicate)
+  const inputs = [...(config.inputs || [])]
+  inputs[inputIndex] = { ...inputs[inputIndex], ...updates }
+  updateRefScenarioConfig(predicate, { ...config, inputs })
+}
+
+function getPredicateInputVar(inputVarId: string) {
+  return viewModel.inputVars.find(v => v.varId === inputVarId)
+}
+
+function isPredicateValueOutOfRange(inputVarId: string, value: number): boolean {
+  const inputVar = getPredicateInputVar(inputVarId)
+  if (!inputVar) return false
+  return value < inputVar.minValue || value > inputVar.maxValue
+}
+
+function getPredicateOutOfRangeTooltip(inputVarId: string): string {
+  const inputVar = getPredicateInputVar(inputVarId)
+  if (!inputVar) return ''
+  return `Value is outside the declared range for this input variable (min=${inputVar.minValue}, max=${inputVar.maxValue})`
 }
 
 function updateTimeConfig(predicate: PredicateItemConfig, updates: Partial<PredicateTimeConfig>) {
@@ -129,25 +248,6 @@ function updateTimeConfig(predicate: PredicateItemConfig, updates: Partial<Predi
   viewModel.updatePredicate(predicate.id, { time })
 }
 
-/**
- * Get a human-readable label for a scenario.
- *
- * @param scenario The scenario item configuration.
- * @returns A descriptive label for the scenario.
- */
-function getScenarioLabel(scenario: { id: string; kind: string; position?: string; inputs?: Array<{ inputVarId: string; position: string }> }): string {
-  if (scenario.kind === 'all-inputs') {
-    const position = scenario.position?.replace('at-', '') || 'default'
-    return `All inputs at ${position}`
-  } else if (scenario.kind === 'given-inputs' && scenario.inputs && scenario.inputs.length > 0) {
-    const inputNames = scenario.inputs.map(input => {
-      const inputVar = viewModel.inputVars.find(v => v.varId === input.inputVarId)
-      return inputVar?.varName || input.inputVarId
-    })
-    return `Given: ${inputNames.join(', ')}`
-  }
-  return scenario.id
-}
 
 function handleKeyDown(e: KeyboardEvent) {
   if (e.key === 'ArrowDown') {
@@ -252,24 +352,72 @@ function handleKeyDown(e: KeyboardEvent) {
             <div class="predicate-selector-row">
               <span class="predicate-selector-text">Scenario:</span>
               <Selector viewModel={createScenarioRefKindSelector(predicate)} ariaLabel="Scenario reference kind" />
-              {#if predicate.ref.scenarioRefKind === 'different'}
-                <select
-                  class="predicate-selector-select"
-                  value={predicate.ref.scenarioId || ''}
-                  onchange={e => {
-                    e.stopPropagation()
-                    updateRefScenarioId(predicate, (e.target as HTMLSelectElement).value)
-                  }}
-                  onclick={e => e.stopPropagation()}
-                  aria-label="Reference scenario"
-                >
-                  <option value="">Select scenario...</option>
-                  {#each viewModel.scenarios as scenario}
-                    <option value={scenario.id}>{getScenarioLabel(scenario)}</option>
-                  {/each}
-                </select>
-              {/if}
             </div>
+            {#if predicate.ref.scenarioRefKind === 'different'}
+              <div class="predicate-selector-scenario-editor">
+                <div class="predicate-selector-row">
+                  <Selector viewModel={createPredicateScenarioKindSelector(predicate)} ariaLabel="Scenario kind" />
+                  {#if getOrCreateScenarioConfig(predicate).kind === 'all-inputs'}
+                    <span class="predicate-selector-text">at</span>
+                    <Selector viewModel={createPredicateScenarioPositionSelector(predicate)} ariaLabel="Position" />
+                  {/if}
+                </div>
+                {#if getOrCreateScenarioConfig(predicate).kind === 'given-inputs'}
+                  {#each getOrCreateScenarioConfig(predicate).inputs || [] as input, inputIndex (inputIndex)}
+                    <div class="predicate-selector-row">
+                      <div
+                        class="predicate-selector-typeahead-wrapper"
+                        onclick={e => e.stopPropagation()}
+                        role="none"
+                      >
+                        <TypeaheadSelector
+                          items={viewModel.inputListItems}
+                          selectedId={input.inputVarId}
+                          placeholder="Search inputs..."
+                          ariaLabel="Input variable"
+                          onSelect={(item: ListItemViewModel) => {
+                            updatePredicateScenarioInput(predicate, inputIndex, { inputVarId: item.id })
+                          }}
+                        />
+                      </div>
+                      <span class="predicate-selector-text">at</span>
+                      <Selector
+                        viewModel={createPredicateInputPositionSelector(predicate, inputIndex)}
+                        ariaLabel="Position"
+                      />
+                      {#if input.position === 'at-value'}
+                        <div class="predicate-selector-value-container">
+                          <input
+                            class="predicate-selector-input predicate-selector-value-input"
+                            type="text"
+                            inputmode="numeric"
+                            value={input.customValue ?? getPredicateInputVar(input.inputVarId)?.defaultValue ?? 0}
+                            oninput={e => {
+                              e.stopPropagation()
+                              const strValue = (e.target as HTMLInputElement).value
+                              const value = parseFloat(strValue)
+                              if (!isNaN(value)) {
+                                updatePredicateScenarioInput(predicate, inputIndex, { customValue: value })
+                              }
+                            }}
+                            onclick={e => e.stopPropagation()}
+                            aria-label="Custom value"
+                          />
+                          {#if isPredicateValueOutOfRange(input.inputVarId, input.customValue ?? 0)}
+                            <span
+                              class="predicate-selector-warning-badge"
+                              title={getPredicateOutOfRangeTooltip(input.inputVarId)}
+                            >
+                              ⚠
+                            </span>
+                          {/if}
+                        </div>
+                      {/if}
+                    </div>
+                  {/each}
+                {/if}
+              </div>
+            {/if}
           {/if}
 
           {#if predicate.type === 'approx'}
@@ -505,5 +653,44 @@ function handleKeyDown(e: KeyboardEvent) {
 
 .predicate-selector-year-input {
   width: 60px;
+}
+
+.predicate-selector-scenario-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background-color: rgba(100, 150, 200, 0.05);
+  border-radius: 4px;
+  margin-top: 0.25rem;
+}
+
+.predicate-selector-typeahead-wrapper {
+  flex: 1;
+  min-width: 0;
+}
+
+.predicate-selector-value-container {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.predicate-selector-value-input {
+  width: 70px;
+}
+
+.predicate-selector-warning-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background-color: rgba(255, 180, 0, 0.2);
+  color: #f0a000;
+  font-size: 0.75rem;
+  cursor: help;
+  flex-shrink: 0;
 }
 </style>

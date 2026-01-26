@@ -50,6 +50,15 @@ export type PredicateDatasetRefKind = 'inherit' | 'name'
 /** Scenario reference type for predicates. */
 export type PredicateScenarioRefKind = 'inherit' | 'different'
 
+/** Inline scenario configuration for predicates. */
+export interface PredicateScenarioConfig {
+  kind: ScenarioKind
+  /** Position for all-inputs scenarios. */
+  position?: ScenarioInputPosition
+  /** Input configurations for given-inputs scenarios. */
+  inputs?: GivenInputConfig[]
+}
+
 /** Configuration for a predicate reference. */
 export interface PredicateRefConfig {
   kind: PredicateRefKind
@@ -61,8 +70,8 @@ export interface PredicateRefConfig {
   datasetKey?: DatasetKey
   /** Scenario reference kind for data references. */
   scenarioRefKind?: PredicateScenarioRefKind
-  /** Scenario ID for data references (when scenarioRefKind is 'different', references existing scenario). */
-  scenarioId?: string
+  /** Inline scenario configuration for data references (when scenarioRefKind is 'different'). */
+  scenarioConfig?: PredicateScenarioConfig
 }
 
 /** Time range configuration for predicates. */
@@ -471,28 +480,26 @@ export class CheckEditorViewModel {
         const scenarioRefKind = predicate.ref.scenarioRefKind || 'inherit'
         if (scenarioRefKind === 'inherit') {
           lines.push('            scenario: inherit')
-        } else if (predicate.ref.scenarioId) {
-          // Find the referenced scenario and output its configuration
-          const refScenario = this.scenarios.find(s => s.id === predicate.ref.scenarioId)
-          if (refScenario) {
-            lines.push('            scenario:')
-            if (refScenario.kind === 'all-inputs') {
-              const position = refScenario.position || 'at-default'
-              const positionStr = position.replace('at-', '')
-              lines.push(`              with_inputs: all`)
-              lines.push(`              at: ${positionStr}`)
-            } else if (refScenario.kind === 'given-inputs' && refScenario.inputs && refScenario.inputs.length > 0) {
-              const input = refScenario.inputs[0]
-              const inputVar = this.inputVars.find(v => v.varId === input.inputVarId)
-              if (inputVar) {
-                lines.push(`              with: ${inputVar.varName}`)
-                if (input.position === 'at-value') {
-                  const value = input.customValue ?? inputVar.defaultValue
-                  lines.push(`              at: ${value}`)
-                } else {
-                  const position = input.position.replace('at-', '')
-                  lines.push(`              at: ${position}`)
-                }
+        } else if (predicate.ref.scenarioConfig) {
+          // Output the inline scenario configuration
+          const scenarioConfig = predicate.ref.scenarioConfig
+          lines.push('            scenario:')
+          if (scenarioConfig.kind === 'all-inputs') {
+            const position = scenarioConfig.position || 'at-default'
+            const positionStr = position.replace('at-', '')
+            lines.push(`              with_inputs: all`)
+            lines.push(`              at: ${positionStr}`)
+          } else if (scenarioConfig.kind === 'given-inputs' && scenarioConfig.inputs && scenarioConfig.inputs.length > 0) {
+            const input = scenarioConfig.inputs[0]
+            const inputVar = this.inputVars.find(v => v.varId === input.inputVarId)
+            if (inputVar) {
+              lines.push(`              with: ${inputVar.varName}`)
+              if (input.position === 'at-value') {
+                const value = input.customValue ?? inputVar.defaultValue
+                lines.push(`              at: ${value}`)
+              } else {
+                const position = input.position.replace('at-', '')
+                lines.push(`              at: ${position}`)
               }
             }
           }
