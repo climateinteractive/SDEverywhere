@@ -51,7 +51,9 @@ async function handleCopyToClipboard() {
 
   <div class="tabbed-preview-content">
     {#if activeTab === 'preview'}
-      <PreviewGraph viewModel={viewModel.graphBoxViewModel} />
+      {#key viewModel.configKey}
+        <PreviewGraph viewModel={viewModel.graphBoxViewModel} />
+      {/key}
     {:else if activeTab === 'code'}
       <div class="tabbed-preview-code-container">
         <button
@@ -126,13 +128,12 @@ async function handleCopyToClipboard() {
   min-height: 0;
   display: flex;
   flex-direction: column;
-  padding: 1rem;
 }
 
 .tabbed-preview-copy-btn {
   position: absolute;
-  top: 1rem;
-  right: 1rem;
+  top: 0.75rem;
+  right: 0.75rem;
   padding: 0.5rem 1rem;
   background-color: var(--button-bg);
   border: 1px solid var(--border-color-normal);
@@ -164,7 +165,8 @@ async function handleCopyToClipboard() {
   margin: 0;
   background-color: var(--panel-bg);
   border: 1px solid var(--border-color-normal);
-  border-radius: 4px;
+  border-top: none;
+  border-radius: 0 0 4px 4px;
   color: var(--text-color-primary);
   font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', monospace;
   font-size: 0.85rem;

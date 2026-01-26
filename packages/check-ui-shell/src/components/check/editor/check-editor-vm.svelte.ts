@@ -178,6 +178,10 @@ export class CheckEditorViewModel {
   // Derived state
   public datasetListItems: ListItemViewModel[]
   public inputListItems: ListItemViewModel[]
+
+  /** Derived key that changes when any configuration changes, used to force graph updates. */
+  public configKey = $derived(this.computeConfigKey())
+
   public graphBoxViewModel = $derived(this.createGraphBoxViewModel())
 
   /** Called when the user saves the check test. */
@@ -842,6 +846,39 @@ export class CheckEditorViewModel {
     }
 
     return lines.join('\n')
+  }
+
+  /**
+   * Compute a unique key representing the current configuration state.
+   * This key changes when any configuration that affects the graph preview changes.
+   *
+   * @returns A string key representing the current configuration.
+   */
+  private computeConfigKey(): string {
+    // Access all the reactive state that should trigger graph updates
+    const scenarioKey = this.scenarios.map(s => {
+      if (s.kind === 'all-inputs') {
+        return `all:${s.position}`
+      } else {
+        const inputs = s.inputs?.map(i => `${i.inputVarId}:${i.position}:${i.customValue}`).join(',') || ''
+        return `given:${inputs}`
+      }
+    }).join('|')
+
+    const datasetKey = this.datasets.map(d => d.datasetKey).join('|')
+
+    const predicateKey = this.predicates.map(p => {
+      const ref = p.ref
+      if (ref.kind === 'constant') {
+        return `${p.type}:const:${ref.value}`
+      } else {
+        return `${p.type}:data:${ref.datasetRefKind}:${ref.datasetKey}:${ref.scenarioRefKind}`
+      }
+    }).join('|')
+
+    const selectionKey = `${this.selectedScenarioId}:${this.selectedDatasetId}:${this.selectedPredicateId}`
+
+    return `${scenarioKey}::${datasetKey}::${predicateKey}::${selectionKey}`
   }
 
   /**

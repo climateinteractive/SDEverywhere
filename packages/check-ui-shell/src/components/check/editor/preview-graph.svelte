@@ -17,9 +17,7 @@ let { viewModel }: Props = $props()
 <!-- TEMPLATE -->
 <div class="preview-graph-container">
   {#if viewModel}
-    {#key viewModel.baseRequestKey}
-      <CheckSummaryGraphBox {viewModel} />
-    {/key}
+    <CheckSummaryGraphBox {viewModel} />
   {/if}
 </div>
 
@@ -34,7 +32,8 @@ let { viewModel }: Props = $props()
   justify-content: center;
   background-color: var(--panel-bg);
   border: 1px solid var(--border-color-normal);
-  border-radius: 4px;
+  border-top: none;
+  border-radius: 0 0 4px 4px;
   padding: 1rem;
 }
 </style>
