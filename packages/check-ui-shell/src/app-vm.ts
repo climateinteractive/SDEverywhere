@@ -47,6 +47,7 @@ import { createPerfViewModel } from './components/perf/perf-vm'
 import type { SummaryViewModel } from './components/summary/summary-vm'
 import { createSummaryViewModel } from './components/summary/summary-vm'
 import { type TraceViewModel, createTraceViewModel } from './components/trace/trace-vm'
+import { CheckEditorViewModel } from './components/check/editor/check-editor-vm.svelte'
 
 export interface RunSuiteCallbacks {
   onProgress?: (pct: number) => void
@@ -347,6 +348,20 @@ export class AppViewModel {
     // When the "Apply and Run" button is clicked, dispatch an event that will be handled
     // at a higher level to reload the UI and run the tests again using the new filters
     document.dispatchEvent(new CustomEvent('sde-check-config-changed'))
+  }
+
+  /**
+   * Create a new CheckEditorViewModel.
+   *
+   * @returns A CheckEditorViewModel instance.
+   */
+  createCheckEditorViewModel(): CheckEditorViewModel {
+    const checkConfig = this.appModel.config.check
+    const modelSpec = checkConfig.bundle.modelSpec
+    const inputVars = Array.from(modelSpec.inputVars.values())
+    const outputVars = Array.from(modelSpec.outputVars.values())
+    const dataCoordinator = this.appModel.checkDataCoordinator
+    return new CheckEditorViewModel(inputVars, outputVars, dataCoordinator)
   }
 }
 

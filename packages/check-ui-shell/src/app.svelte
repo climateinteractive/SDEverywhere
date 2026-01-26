@@ -28,6 +28,9 @@ import Summary from './components/summary/summary.svelte'
 import type { TraceViewModel } from './components/trace/trace-vm'
 import Trace from './components/trace/trace.svelte'
 
+import CheckEditor from './components/check/editor/check-editor.svelte'
+import type { CheckEditorViewModel } from './components/check/editor/check-editor-vm.svelte'
+
 import type { AppViewModel } from './app-vm'
 import type { BundleSpec } from './components/bundle/bundle-spec'
 
@@ -41,6 +44,8 @@ let compareDetailViewModel: CompareDetailViewModel
 let perfViewModel: PerfViewModel
 let traceViewModel: TraceViewModel
 let freeformViewModel: FreeformViewModel
+let checkEditorViewModel: CheckEditorViewModel | undefined
+let checkEditorOpen = false
 
 type ViewMode = 'summary' | 'comparison-detail' | 'perf' | 'freeform' | 'trace'
 let viewMode: ViewMode = 'summary'
@@ -177,6 +182,17 @@ function onCommand(event: CustomEvent) {
       traceViewModel = viewModel.createTraceViewModel(cmdObj.scenarioSpec, cmdObj.scenarioKind)
       viewMode = 'trace'
       break
+    case 'new-test':
+      checkEditorViewModel = viewModel.createCheckEditorViewModel()
+      checkEditorOpen = true
+      break
+    case 'edit-test':
+      // TODO: Edit mode requires the original spec which is not preserved in the report
+      // For now, open the editor in new test mode
+      console.warn('Edit Test: Original spec not available in the report. Opening editor in new test mode.')
+      checkEditorViewModel = viewModel.createCheckEditorViewModel()
+      checkEditorOpen = true
+      break
     default:
       console.error(`ERROR: Unhandled command ${cmd}`)
       break
@@ -279,6 +295,10 @@ function onKeyDown(event: KeyboardEvent) {
           />
         </div>
       </div>
+    {/if}
+
+    {#if checkEditorViewModel}
+      <CheckEditor bind:open={checkEditorOpen} viewModel={checkEditorViewModel} />
     {/if}
   </div>
 {/if}
