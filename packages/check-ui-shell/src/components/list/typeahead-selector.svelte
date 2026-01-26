@@ -114,12 +114,7 @@ function handleKeyDown(e: KeyboardEvent) {
 }
 
 function handleClickOutside(event: MouseEvent) {
-  if (
-    popupRef &&
-    buttonRef &&
-    !popupRef.contains(event.target as Node) &&
-    !buttonRef.contains(event.target as Node)
-  ) {
+  if (popupRef && buttonRef && !popupRef.contains(event.target as Node) && !buttonRef.contains(event.target as Node)) {
     showPopup = false
     searchQuery = ''
   }
@@ -139,64 +134,71 @@ $effect(() => {
 </script>
 
 <!-- TEMPLATE -->
-<button
-  bind:this={buttonRef}
-  class="typeahead-selector-button"
-  onclick={handleButtonClick}
-  aria-label={ariaLabel}
-  aria-haspopup="listbox"
-  aria-expanded={showPopup}
->
-  <span class="typeahead-selector-button-text">{selectedItem?.label || 'Select...'}</span>
-  <span class="typeahead-selector-button-arrow">▼</span>
-</button>
-
-{#if showPopup}
-  <div
-    bind:this={popupRef}
-    class="typeahead-selector-popup"
-    style="position: fixed; top: {popupPosition.top}px; left: {popupPosition.left}px; width: {popupPosition.width}px;"
-    role="listbox"
+<div class="typeahead-selector">
+  <button
+    bind:this={buttonRef}
+    class="typeahead-selector-button"
+    onclick={handleButtonClick}
+    aria-label={ariaLabel}
+    aria-haspopup="listbox"
+    aria-expanded={showPopup}
   >
-    <input
-      bind:this={searchInputRef}
-      bind:value={searchQuery}
-      class="typeahead-selector-search"
-      type="text"
-      placeholder={placeholder}
-      onkeydown={handleKeyDown}
-      aria-label="Search"
-    />
-    <div class="typeahead-selector-items">
-      {#if filteredItems.length === 0}
-        <div class="typeahead-selector-empty">No items found</div>
-      {:else}
-        {#each filteredItems as item, i}
-          <div
-            class="typeahead-selector-item"
-            class:active={i === activeIndex}
-            class:selected={item.id === selectedId}
-            role="option"
-            tabindex="-1"
-            aria-selected={item.id === selectedId}
-            onclick={() => handleItemClick(item)}
-          >
-            {item.label}
-          </div>
-        {/each}
-      {/if}
+    <span class="typeahead-selector-button-text">{selectedItem?.label || 'Select...'}</span>
+    <span class="typeahead-selector-button-arrow">▼</span>
+  </button>
+
+  {#if showPopup}
+    <div
+      bind:this={popupRef}
+      class="typeahead-selector-popup"
+      style="position: fixed; top: {popupPosition.top}px; left: {popupPosition.left}px; width: {popupPosition.width}px;"
+      role="listbox"
+    >
+      <input
+        bind:this={searchInputRef}
+        bind:value={searchQuery}
+        class="typeahead-selector-search"
+        type="text"
+        {placeholder}
+        onkeydown={handleKeyDown}
+        aria-label="Search"
+      />
+      <div class="typeahead-selector-items">
+        {#if filteredItems.length === 0}
+          <div class="typeahead-selector-empty">No items found</div>
+        {:else}
+          {#each filteredItems as item, i}
+            <div
+              class="typeahead-selector-item"
+              class:active={i === activeIndex}
+              class:selected={item.id === selectedId}
+              role="option"
+              tabindex="-1"
+              aria-selected={item.id === selectedId}
+              onclick={() => handleItemClick(item)}
+            >
+              {item.label}
+            </div>
+          {/each}
+        {/if}
+      </div>
     </div>
-  </div>
-{/if}
+  {/if}
+</div>
 
 <!-- STYLE -->
 <style lang="scss">
+.typeahead-selector {
+  display: inline-block;
+  width: 100%;
+}
+
 .typeahead-selector-button {
   display: flex;
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  padding: 0.35rem 0.5rem;
+  padding: 4px 8px;
   background-color: var(--input-bg);
   border: 1px solid var(--border-color-normal);
   border-radius: var(--input-border-radius);
