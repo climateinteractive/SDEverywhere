@@ -87,6 +87,14 @@ Created the initial check-editor component with basic structure:
   - YAML generation outputs time as `[start, end]` or single value
 - Fixed preview graph not updating when configuration changes (added key block)
 
+### 2026-01-25: Inline Scenario Editor in Predicate Data Reference
+
+- Replaced scenario dropdown with full inline scenario editor when "Different scenario" is selected
+- Support both "All inputs at..." and "Given inputs at..." scenario kinds
+- Added position selector (default/min/max/value) for inputs
+- Added custom value input with validation and warning badge for out-of-range values
+- Updated PredicateRefConfig to store scenarioConfig instead of scenarioId
+
 ---
 
 ## Current Status
