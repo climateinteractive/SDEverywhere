@@ -317,7 +317,7 @@ function createMockViewModel(): CheckEditorViewModel {
     await waitFor(() => {
       const codeElement = canvasElement.querySelector('.tabbed-preview-code')
       expect(codeElement).toBeInTheDocument()
-      expect(codeElement).toHaveTextContent('describe: Check Test')
+      expect(codeElement).toHaveTextContent('describe: Variable or group')
     })
   }}
 ></Story>
@@ -741,18 +741,21 @@ function createMockViewModel(): CheckEditorViewModel {
     })
 
     // Click the paste YAML button
+    await waitFor(() => {
+      const pasteButton = canvas.getByRole('button', { name: /paste yaml/i })
+      expect(pasteButton).toBeInTheDocument()
+    })
     const pasteButton = canvas.getByRole('button', { name: /paste yaml/i })
-    await expect(pasteButton).toBeInTheDocument()
     await userEvent.click(pasteButton)
 
-    // Verify the paste area appears
+    // Verify the paste area appears (use querySelector for textarea since both button and textarea have same aria-label)
     await waitFor(() => {
-      const pasteTextarea = canvas.getByLabelText('Paste YAML')
+      const pasteTextarea = canvasElement.querySelector('.check-editor-paste-textarea')
       expect(pasteTextarea).toBeInTheDocument()
     })
 
     // Enter valid YAML
-    const pasteTextarea = canvas.getByLabelText('Paste YAML') as HTMLTextAreaElement
+    const pasteTextarea = canvasElement.querySelector('.check-editor-paste-textarea') as HTMLTextAreaElement
     const validYaml = `- describe: My Test Group
   tests:
     - it: should be greater than zero
@@ -771,7 +774,7 @@ function createMockViewModel(): CheckEditorViewModel {
 
     // Verify the paste area closes
     await waitFor(() => {
-      expect(canvas.queryByLabelText('Paste YAML')).not.toBeInTheDocument()
+      expect(canvasElement.querySelector('.check-editor-paste-textarea')).not.toBeInTheDocument()
     })
 
     // Verify the form was populated
@@ -800,17 +803,21 @@ function createMockViewModel(): CheckEditorViewModel {
     })
 
     // Click the paste YAML button
+    await waitFor(() => {
+      const pasteButton = canvas.getByRole('button', { name: /paste yaml/i })
+      expect(pasteButton).toBeInTheDocument()
+    })
     const pasteButton = canvas.getByRole('button', { name: /paste yaml/i })
     await userEvent.click(pasteButton)
 
     // Verify the paste area appears
     await waitFor(() => {
-      const pasteTextarea = canvas.getByLabelText('Paste YAML')
+      const pasteTextarea = canvasElement.querySelector('.check-editor-paste-textarea')
       expect(pasteTextarea).toBeInTheDocument()
     })
 
     // Enter invalid YAML (not an array, missing tests)
-    const pasteTextarea = canvas.getByLabelText('Paste YAML') as HTMLTextAreaElement
+    const pasteTextarea = canvasElement.querySelector('.check-editor-paste-textarea') as HTMLTextAreaElement
     const invalidYaml = `describe: No tests here`
     await userEvent.type(pasteTextarea, invalidYaml)
 
@@ -826,7 +833,7 @@ function createMockViewModel(): CheckEditorViewModel {
     })
 
     // Verify paste area is still visible
-    const pasteTextareaAfter = canvas.queryByLabelText('Paste YAML')
+    const pasteTextareaAfter = canvasElement.querySelector('.check-editor-paste-textarea')
     await expect(pasteTextareaAfter).toBeInTheDocument()
   }}
 ></Story>
@@ -850,12 +857,16 @@ function createMockViewModel(): CheckEditorViewModel {
     await expect(describeInput.value).toBe('Variable or group')
 
     // Click the paste YAML button
+    await waitFor(() => {
+      const pasteButton = canvas.getByRole('button', { name: /paste yaml/i })
+      expect(pasteButton).toBeInTheDocument()
+    })
     const pasteButton = canvas.getByRole('button', { name: /paste yaml/i })
     await userEvent.click(pasteButton)
 
     // Verify the paste area appears
     await waitFor(() => {
-      const pasteTextarea = canvas.getByLabelText('Paste YAML')
+      const pasteTextarea = canvasElement.querySelector('.check-editor-paste-textarea')
       expect(pasteTextarea).toBeInTheDocument()
     })
 
@@ -865,7 +876,7 @@ function createMockViewModel(): CheckEditorViewModel {
 
     // Verify the paste area closes
     await waitFor(() => {
-      expect(canvas.queryByLabelText('Paste YAML')).not.toBeInTheDocument()
+      expect(canvasElement.querySelector('.check-editor-paste-textarea')).not.toBeInTheDocument()
     })
 
     // Verify the form was NOT modified

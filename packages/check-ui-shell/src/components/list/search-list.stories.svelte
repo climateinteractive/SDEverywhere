@@ -2,7 +2,7 @@
 
 <script module lang="ts">
 import { defineMeta, type Args } from '@storybook/addon-svelte-csf'
-import { expect, userEvent, waitFor, within } from 'storybook/test'
+import { expect, fireEvent, userEvent, waitFor, within } from 'storybook/test'
 
 import StoryDecorator from '../_storybook/story-decorator.svelte'
 
@@ -67,67 +67,69 @@ function createMockViewModel(): SearchListViewModel {
 <Story
   name="Filter Items"
   {template}
-  args={{
-    viewModel: createMockViewModel()
+  beforeEach={async ({ args }) => {
+    args.viewModel = createMockViewModel()
   }}
   play={async ({ canvasElement }) => {
     const canvas = within(canvasElement)
 
-    // Find the search input
-    const searchInput = canvas.getByRole('textbox')
-    await expect(searchInput).toBeInTheDocument()
-
-    // Type to filter for items containing 'a'
-    await userEvent.type(searchInput, 'a')
-
-    // Verify only matching items are shown
+    // Wait for component to render and find the search input
+    let searchInput: HTMLElement
     await waitFor(() => {
-      const appleItem = canvas.getByText('Apple')
-      const bananaItem = canvas.getByText('Banana')
-      expect(appleItem).toBeInTheDocument()
-      expect(bananaItem).toBeInTheDocument()
+      searchInput = canvas.getByRole('textbox')
+      expect(searchInput).toBeInTheDocument()
     })
 
-    // Verify non-matching items are not shown
-    const cherryItem = canvas.queryByText('Cherry')
-    const dateItem = canvas.queryByText('Date')
-    const elderberryItem = canvas.queryByText('Elderberry')
-    await expect(cherryItem).not.toBeInTheDocument()
-    await expect(dateItem).not.toBeInTheDocument()
-    await expect(elderberryItem).not.toBeInTheDocument()
+    // Type to filter - 'ch' will match only Cherry
+    await userEvent.type(searchInput!, 'ch')
+
+    // Verify matching item is shown (Cherry contains 'ch')
+    await waitFor(() => {
+      const cherryItem = canvas.getByText('Cherry')
+      expect(cherryItem).toBeInTheDocument()
+    })
+
+    // Verify non-matching items are not shown (none contain 'ch')
+    await waitFor(() => {
+      const appleItem = canvas.queryByText('Apple')
+      const bananaItem = canvas.queryByText('Banana')
+      const dateItem = canvas.queryByText('Date')
+      const elderberryItem = canvas.queryByText('Elderberry')
+      expect(appleItem).not.toBeInTheDocument()
+      expect(bananaItem).not.toBeInTheDocument()
+      expect(dateItem).not.toBeInTheDocument()
+      expect(elderberryItem).not.toBeInTheDocument()
+    })
   }}
 ></Story>
 
 <Story
   name="Keyboard Navigation"
   {template}
-  args={{
-    viewModel: (() => {
-      const vm = createMockViewModel()
-      vm.onItemSelected = () => {
-        // Item selected - verified by UI state changes in the test
-      }
-      return vm
-    })()
+  beforeEach={async ({ args }) => {
+    const vm = createMockViewModel()
+    vm.onItemSelected = () => {
+      // Item selected - verified by UI state changes in the test
+    }
+    args.viewModel = vm
   }}
   play={async ({ canvasElement }) => {
     const canvas = within(canvasElement)
 
-    // Focus the search input
-    const searchInput = canvas.getByRole('textbox')
-    await searchInput.focus()
+    // Wait for component to render and items to appear
+    await waitFor(() => {
+      const items = canvas.getAllByRole('option')
+      expect(items).toHaveLength(5)
+    })
 
-    // Press down arrow to select first item
-    await userEvent.keyboard('{ArrowDown}')
-
-    // Verify first item is highlighted (active)
+    // The first item should already be active due to $effect
     await waitFor(() => {
       const items = canvas.getAllByRole('option')
       expect(items[0]).toHaveClass('active')
     })
 
-    // Press down arrow again to select second item
-    await userEvent.keyboard('{ArrowDown}')
+    // Press down arrow to select second item
+    fireEvent.keyDown(window, { key: 'ArrowDown' })
     await waitFor(() => {
       const items = canvas.getAllByRole('option')
       expect(items[1]).toHaveClass('active')
@@ -135,9 +137,10 @@ function createMockViewModel(): SearchListViewModel {
     })
 
     // Press Enter to select the active item
-    await userEvent.keyboard('{Enter}')
+    fireEvent.keyDown(window, { key: 'Enter' })
 
     // Verify the search input is cleared after selection
+    const searchInput = canvas.getByRole('textbox')
     await waitFor(() => {
       expect(searchInput).toHaveValue('')
     })
@@ -174,18 +177,21 @@ function createMockViewModel(): SearchListViewModel {
 <Story
   name="Empty Search Results"
   {template}
-  args={{
-    viewModel: createMockViewModel()
+  beforeEach={async ({ args }) => {
+    args.viewModel = createMockViewModel()
   }}
   play={async ({ canvasElement }) => {
     const canvas = within(canvasElement)
 
-    // Find the search input
-    const searchInput = canvas.getByRole('textbox')
-    await expect(searchInput).toBeInTheDocument()
+    // Wait for component to render and find the search input
+    let searchInput: HTMLElement
+    await waitFor(() => {
+      searchInput = canvas.getByRole('textbox')
+      expect(searchInput).toBeInTheDocument()
+    })
 
     // Type a search term that won't match any items
-    await userEvent.type(searchInput, 'xyz')
+    await userEvent.type(searchInput!, 'xyz')
 
     // Verify no items are displayed
     await waitFor(() => {
