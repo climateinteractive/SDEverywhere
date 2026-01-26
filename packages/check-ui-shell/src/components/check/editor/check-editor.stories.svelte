@@ -725,3 +725,150 @@ function createMockViewModel(): CheckEditorViewModel {
     })
   }}
 ></Story>
+
+<Story
+  name="Paste Valid YAML"
+  {template}
+  args={{
+    open: true,
+    viewModel: createMockViewModel()
+  }}
+  play={async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await waitFor(() => {
+      expect(canvas.getByRole('dialog')).toBeInTheDocument()
+    })
+
+    // Click the paste YAML button
+    const pasteButton = canvas.getByRole('button', { name: /paste yaml/i })
+    await expect(pasteButton).toBeInTheDocument()
+    await userEvent.click(pasteButton)
+
+    // Verify the paste area appears
+    await waitFor(() => {
+      const pasteTextarea = canvas.getByLabelText('Paste YAML')
+      expect(pasteTextarea).toBeInTheDocument()
+    })
+
+    // Enter valid YAML
+    const pasteTextarea = canvas.getByLabelText('Paste YAML') as HTMLTextAreaElement
+    const validYaml = `- describe: My Test Group
+  tests:
+    - it: should be greater than zero
+      scenarios:
+        - with_inputs: all
+          at: default
+      datasets:
+        - name: Output X
+      predicates:
+        - gt: 5`
+    await userEvent.type(pasteTextarea, validYaml)
+
+    // Click Apply
+    const applyButton = canvas.getByRole('button', { name: /apply/i })
+    await userEvent.click(applyButton)
+
+    // Verify the paste area closes
+    await waitFor(() => {
+      expect(canvas.queryByLabelText('Paste YAML')).not.toBeInTheDocument()
+    })
+
+    // Verify the form was populated
+    const describeInput = canvas.getByLabelText('Describe text') as HTMLInputElement
+    await waitFor(() => {
+      expect(describeInput.value).toBe('My Test Group')
+    })
+
+    const testInput = canvas.getByLabelText('Test text') as HTMLInputElement
+    await expect(testInput.value).toBe('should be greater than zero')
+  }}
+></Story>
+
+<Story
+  name="Paste Invalid YAML Shows Error"
+  {template}
+  args={{
+    open: true,
+    viewModel: createMockViewModel()
+  }}
+  play={async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await waitFor(() => {
+      expect(canvas.getByRole('dialog')).toBeInTheDocument()
+    })
+
+    // Click the paste YAML button
+    const pasteButton = canvas.getByRole('button', { name: /paste yaml/i })
+    await userEvent.click(pasteButton)
+
+    // Verify the paste area appears
+    await waitFor(() => {
+      const pasteTextarea = canvas.getByLabelText('Paste YAML')
+      expect(pasteTextarea).toBeInTheDocument()
+    })
+
+    // Enter invalid YAML (not an array, missing tests)
+    const pasteTextarea = canvas.getByLabelText('Paste YAML') as HTMLTextAreaElement
+    const invalidYaml = `describe: No tests here`
+    await userEvent.type(pasteTextarea, invalidYaml)
+
+    // Click Apply
+    const applyButton = canvas.getByRole('button', { name: /apply/i })
+    await userEvent.click(applyButton)
+
+    // Verify error message appears
+    await waitFor(() => {
+      const errorMessage = canvasElement.querySelector('.check-editor-paste-error')
+      expect(errorMessage).toBeInTheDocument()
+      expect(errorMessage).toHaveTextContent('Invalid YAML')
+    })
+
+    // Verify paste area is still visible
+    const pasteTextareaAfter = canvas.queryByLabelText('Paste YAML')
+    await expect(pasteTextareaAfter).toBeInTheDocument()
+  }}
+></Story>
+
+<Story
+  name="Cancel Paste YAML"
+  {template}
+  args={{
+    open: true,
+    viewModel: createMockViewModel()
+  }}
+  play={async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await waitFor(() => {
+      expect(canvas.getByRole('dialog')).toBeInTheDocument()
+    })
+
+    // Verify default values before paste
+    const describeInput = canvas.getByLabelText('Describe text') as HTMLInputElement
+    await expect(describeInput.value).toBe('Variable or group')
+
+    // Click the paste YAML button
+    const pasteButton = canvas.getByRole('button', { name: /paste yaml/i })
+    await userEvent.click(pasteButton)
+
+    // Verify the paste area appears
+    await waitFor(() => {
+      const pasteTextarea = canvas.getByLabelText('Paste YAML')
+      expect(pasteTextarea).toBeInTheDocument()
+    })
+
+    // Click Cancel
+    const cancelButton = canvas.getByRole('button', { name: /cancel/i })
+    await userEvent.click(cancelButton)
+
+    // Verify the paste area closes
+    await waitFor(() => {
+      expect(canvas.queryByLabelText('Paste YAML')).not.toBeInTheDocument()
+    })
+
+    // Verify the form was NOT modified
+    await expect(describeInput.value).toBe('Variable or group')
+  }}
+></Story>
