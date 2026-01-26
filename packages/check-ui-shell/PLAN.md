@@ -75,6 +75,18 @@ Created the initial check-editor component with basic structure:
   - "Out of Range Value Warning" - tests validation badge appearance
   - "Predicate Data Reference" - tests data reference UI options
 
+### 2026-01-25: UI Polish and Time Range Support
+
+- Removed describe/it labels and put both text fields on the same line (more compact)
+- Removed CSS transition animations from all selector components (less distracting)
+- Removed separator lines from section headers (cleaner look)
+- Fixed negative number input for at-value box (changed to text input with inputmode)
+- Added time range support for predicates:
+  - Checkbox to enable time range
+  - Start and end year inputs
+  - YAML generation outputs time as `[start, end]` or single value
+- Fixed preview graph not updating when configuration changes (added key block)
+
 ---
 
 ## Current Status
@@ -88,6 +100,8 @@ Created the initial check-editor component with basic structure:
 ✅ Test description text fields with customizable describe/it text
 ✅ At-value support with validation for given-inputs scenarios
 ✅ Predicate data references with dataset/scenario comparison options
+✅ Time range support for predicates
+✅ Preview graph updates reactively
 
 ## Suggested Next Steps
 
