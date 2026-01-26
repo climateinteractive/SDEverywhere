@@ -11,6 +11,57 @@ import type {
   CheckPredicateReport
 } from '@sdeverywhere/check-core'
 
+// Local type definitions compatible with check-core spec types (not exported from check-core)
+type CheckScenarioPosition = 'default' | 'min' | 'max'
+
+interface CheckScenarioInputSpec {
+  input: string
+  at: CheckScenarioPosition | number
+}
+
+/** Scenario spec for check tests. */
+export interface CheckScenarioSpec {
+  preset?: 'matrix'
+  scenarios_for_each_input_in?: string
+  with?: string | CheckScenarioInputSpec[]
+  with_inputs?: 'all'
+  with_inputs_in?: string
+  at?: CheckScenarioPosition | number
+}
+
+/** Dataset spec for check tests. */
+export interface CheckDatasetSpec {
+  name?: string
+  source?: string
+  group?: string
+}
+
+/** Predicate spec for check tests. */
+export interface CheckPredicateSpec {
+  gt?: number | { dataset: unknown; scenario?: unknown }
+  gte?: number | { dataset: unknown; scenario?: unknown }
+  lt?: number | { dataset: unknown; scenario?: unknown }
+  lte?: number | { dataset: unknown; scenario?: unknown }
+  eq?: number | { dataset: unknown; scenario?: unknown }
+  approx?: number | { dataset: unknown; scenario?: unknown }
+  tolerance?: number
+  time?: number | [number, number]
+}
+
+/** Test spec for check tests. */
+export interface CheckTestSpec {
+  it: string
+  scenarios?: CheckScenarioSpec[]
+  datasets: CheckDatasetSpec[]
+  predicates: CheckPredicateSpec[]
+}
+
+/** Group spec for check tests. */
+export interface CheckGroupSpec {
+  describe: string
+  tests: CheckTestSpec[]
+}
+
 /** The position type for scenario inputs (extends InputPosition with 'at-value'). */
 export type ScenarioInputPosition = 'at-default' | 'at-minimum' | 'at-maximum' | 'at-value'
 
@@ -163,6 +214,240 @@ export class CheckEditorViewModel {
     this.addScenario()
     this.addDataset()
     this.addPredicate()
+  }
+
+  /**
+   * Clear all editor state.
+   */
+  clear(): void {
+    this.describeText = 'Variable or group'
+    this.testText = 'should [have behavior] when [conditions]'
+    this.scenarios = []
+    this.datasets = []
+    this.predicates = []
+    this.selectedScenarioId = undefined
+    this.selectedDatasetId = undefined
+    this.selectedPredicateId = undefined
+    this.nextScenarioId = 1
+    this.nextDatasetId = 1
+    this.nextPredicateId = 1
+  }
+
+  /**
+   * Initialize the editor from a group spec and test spec.
+   *
+   * @param groupSpec The group spec containing the describe text.
+   * @param testSpec The test spec to load.
+   */
+  initFromSpec(groupSpec: CheckGroupSpec, testSpec: CheckTestSpec): void {
+    this.clear()
+
+    // Set description texts
+    this.describeText = groupSpec.describe
+    this.testText = testSpec.it
+
+    // Convert scenarios
+    if (testSpec.scenarios && testSpec.scenarios.length > 0) {
+      for (const scenarioSpec of testSpec.scenarios) {
+        this.addScenarioFromSpec(scenarioSpec)
+      }
+    } else {
+      // Default to all-inputs at default
+      this.addScenario('all-inputs')
+    }
+
+    // Convert datasets
+    if (testSpec.datasets && testSpec.datasets.length > 0) {
+      for (const datasetSpec of testSpec.datasets) {
+        this.addDatasetFromSpec(datasetSpec)
+      }
+    } else {
+      this.addDataset()
+    }
+
+    // Convert predicates
+    if (testSpec.predicates && testSpec.predicates.length > 0) {
+      for (const predicateSpec of testSpec.predicates) {
+        this.addPredicateFromSpec(predicateSpec)
+      }
+    } else {
+      this.addPredicate()
+    }
+
+    // Select first items
+    if (this.scenarios.length > 0) this.selectedScenarioId = this.scenarios[0].id
+    if (this.datasets.length > 0) this.selectedDatasetId = this.datasets[0].id
+    if (this.predicates.length > 0) this.selectedPredicateId = this.predicates[0].id
+  }
+
+  /**
+   * Add a scenario from a spec.
+   *
+   * @param spec The scenario spec to convert.
+   */
+  private addScenarioFromSpec(spec: CheckScenarioSpec): void {
+    const newScenario: ScenarioItemConfig = {
+      id: `scenario-${this.nextScenarioId++}`,
+      kind: 'all-inputs'
+    }
+
+    if (spec.preset === 'matrix') {
+      newScenario.kind = 'all-inputs'
+      newScenario.position = 'at-default'
+    } else if (spec.with_inputs === 'all') {
+      newScenario.kind = 'all-inputs'
+      newScenario.position = this.convertPosition(spec.at)
+    } else if (spec.with) {
+      newScenario.kind = 'given-inputs'
+      if (typeof spec.with === 'string') {
+        // Single input
+        newScenario.inputs = [{
+          inputVarId: this.findInputVarId(spec.with),
+          position: this.convertPosition(spec.at)
+        }]
+      } else {
+        // Multiple inputs
+        newScenario.inputs = spec.with.map((inputSpec: { input: string; at: 'default' | 'min' | 'max' | number }) => ({
+          inputVarId: this.findInputVarId(inputSpec.input),
+          position: this.convertPosition(inputSpec.at)
+        }))
+      }
+    } else {
+      newScenario.position = 'at-default'
+    }
+
+    this.scenarios.push(newScenario)
+  }
+
+  /**
+   * Add a dataset from a spec.
+   *
+   * @param spec The dataset spec to convert.
+   */
+  private addDatasetFromSpec(spec: CheckDatasetSpec): void {
+    if (spec.name) {
+      const outputVar = this.outputVars.find(v => v.varName === spec.name)
+      if (outputVar) {
+        const newDataset: DatasetItemConfig = {
+          id: `dataset-${this.nextDatasetId++}`,
+          datasetKey: outputVar.datasetKey
+        }
+        this.datasets.push(newDataset)
+      }
+    }
+    // TODO: Handle group and matching specs
+  }
+
+  /**
+   * Add a predicate from a spec.
+   *
+   * @param spec The predicate spec to convert.
+   */
+  private addPredicateFromSpec(spec: CheckPredicateSpec): void {
+    const predicateTypes: PredicateType[] = ['gt', 'gte', 'lt', 'lte', 'eq', 'approx']
+    let type: PredicateType = 'gt'
+    let refSpec: number | { dataset: unknown; scenario?: unknown } | undefined
+
+    // Find which predicate type is specified
+    for (const t of predicateTypes) {
+      if (spec[t] !== undefined) {
+        type = t
+        refSpec = spec[t]
+        break
+      }
+    }
+
+    const newPredicate: PredicateItemConfig = {
+      id: `predicate-${this.nextPredicateId++}`,
+      type,
+      ref: { kind: 'constant', value: 0 }
+    }
+
+    // Convert the reference
+    if (typeof refSpec === 'number') {
+      newPredicate.ref = { kind: 'constant', value: refSpec }
+    } else if (refSpec && typeof refSpec === 'object') {
+      // Data reference
+      newPredicate.ref = { kind: 'data' }
+      const dataRef = refSpec as { dataset: unknown; scenario?: unknown }
+
+      // Dataset reference
+      if (dataRef.dataset === 'inherit') {
+        newPredicate.ref.datasetRefKind = 'inherit'
+      } else if (dataRef.dataset && typeof dataRef.dataset === 'object') {
+        const datasetSpec = dataRef.dataset as { name: string }
+        newPredicate.ref.datasetRefKind = 'name'
+        const outputVar = this.outputVars.find(v => v.varName === datasetSpec.name)
+        if (outputVar) {
+          newPredicate.ref.datasetKey = outputVar.datasetKey
+        }
+      }
+
+      // Scenario reference
+      if (dataRef.scenario === 'inherit') {
+        newPredicate.ref.scenarioRefKind = 'inherit'
+      } else if (dataRef.scenario && typeof dataRef.scenario === 'object') {
+        newPredicate.ref.scenarioRefKind = 'different'
+        const scenarioSpec = dataRef.scenario as { input?: string; inputs?: string; at?: 'default' | 'min' | 'max' | number }
+        if (scenarioSpec.input) {
+          newPredicate.ref.scenarioConfig = {
+            kind: 'given-inputs',
+            inputs: [{
+              inputVarId: this.findInputVarId(scenarioSpec.input),
+              position: this.convertPosition(scenarioSpec.at)
+            }]
+          }
+        } else if (scenarioSpec.inputs === 'all') {
+          newPredicate.ref.scenarioConfig = {
+            kind: 'all-inputs',
+            position: this.convertPosition(scenarioSpec.at)
+          }
+        }
+      }
+    }
+
+    // Tolerance
+    if (spec.tolerance !== undefined) {
+      newPredicate.tolerance = spec.tolerance
+    }
+
+    // Time
+    if (spec.time !== undefined) {
+      if (typeof spec.time === 'number') {
+        newPredicate.time = { enabled: true, startYear: spec.time }
+      } else if (Array.isArray(spec.time)) {
+        newPredicate.time = { enabled: true, startYear: spec.time[0], endYear: spec.time[1] }
+      }
+      // TODO: Handle CheckPredicateTimeOptions
+    }
+
+    this.predicates.push(newPredicate)
+  }
+
+  /**
+   * Convert a position from spec format to our format.
+   *
+   * @param at The position from the spec.
+   * @returns The position in our format.
+   */
+  private convertPosition(at: 'default' | 'min' | 'max' | number | undefined): ScenarioInputPosition {
+    if (at === undefined || at === 'default') return 'at-default'
+    if (at === 'min') return 'at-minimum'
+    if (at === 'max') return 'at-maximum'
+    // For numeric values, we would use 'at-value' but need to also set customValue
+    // This is handled specially in the caller
+    return 'at-value'
+  }
+
+  /**
+   * Find an input variable ID by name.
+   *
+   * @param name The variable name.
+   * @returns The variable ID, or empty string if not found.
+   */
+  private findInputVarId(name: string): string {
+    const inputVar = this.inputVars.find(v => v.varName === name)
+    return inputVar?.varId || ''
   }
 
   /**
