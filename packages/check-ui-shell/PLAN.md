@@ -95,6 +95,15 @@ Created the initial check-editor component with basic structure:
 - Added custom value input with validation and warning badge for out-of-range values
 - Updated PredicateRefConfig to store scenarioConfig instead of scenarioId
 
+### 2026-01-25: Initialization from Check Test Spec
+
+- Added `clear()` method to reset editor state
+- Added `initFromSpec(groupSpec, testSpec)` method to populate editor from existing test
+- Defined local type interfaces compatible with check-core spec types
+- Support converting scenarios (preset, with, with_inputs variants)
+- Support converting datasets (by name)
+- Support converting predicates (constant refs, data refs with inherit/different)
+
 ---
 
 ## Current Status
