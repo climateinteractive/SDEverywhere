@@ -289,7 +289,11 @@ function loadTestChildren(
   }
 }
 
-function createTestRow(dataCoordinator: CheckDataCoordinator, test: CheckTestReport): CheckSummaryRowViewModel {
+function createTestRow(
+  dataCoordinator: CheckDataCoordinator,
+  test: CheckTestReport,
+  groupName: string
+): CheckSummaryRowViewModel {
   const initialExpanded = false
   let childrenLoaded = false
   const testRow = row(0, 'test', test.status, test.name, initialExpanded, () => {
@@ -303,6 +307,12 @@ function createTestRow(dataCoordinator: CheckDataCoordinator, test: CheckTestRep
     testRow.expanded.update(v => !v)
   })
 
+  // Attach test info for context menu actions
+  testRow.testInfo = {
+    groupName,
+    testReport: test
+  }
+
   return testRow
 }
 
@@ -312,7 +322,7 @@ function createCheckSummaryGroupViewModel(
 ): CheckSummaryGroupViewModel {
   return {
     name: group.name,
-    tests: group.tests.map(test => createTestRow(dataCoordinator, test))
+    tests: group.tests.map(test => createTestRow(dataCoordinator, test, group.name))
   }
 }
 

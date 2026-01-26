@@ -3,9 +3,17 @@
 import type { Writable } from 'svelte/store'
 import { writable } from 'svelte/store'
 
-import type { CheckStatus, CheckScenarioReport } from '@sdeverywhere/check-core'
+import type { CheckStatus, CheckScenarioReport, CheckTestReport } from '@sdeverywhere/check-core'
 
 import type { CheckSummaryGraphBoxViewModel } from './check-summary-graph-box-vm'
+
+/** Information about the test for context menu actions. */
+export interface TestInfo {
+  /** The name of the group containing this test. */
+  groupName: string
+  /** The test report. */
+  testReport: CheckTestReport
+}
 
 export interface CheckSummaryRowViewModel {
   rowClasses: string
@@ -14,6 +22,8 @@ export interface CheckSummaryRowViewModel {
   childRows: Writable<CheckSummaryRowViewModel[]>
   expanded: Writable<boolean>
   scenarioReport?: CheckScenarioReport
+  /** Test info for test rows, used for context menu actions. */
+  testInfo?: TestInfo
   graphBoxViewModel?: CheckSummaryGraphBoxViewModel
   onClicked: () => void
 }

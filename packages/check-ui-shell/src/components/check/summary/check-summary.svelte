@@ -10,24 +10,34 @@ import type { ContextMenuItem } from '../../_shared/context-menu.svelte'
 import ContextMenu from '../../_shared/context-menu.svelte'
 
 import type { CheckSummaryViewModel } from './check-summary-vm'
-import type { CheckSummaryRowViewModel } from './check-summary-row-vm'
+import type { CheckSummaryRowViewModel, TestInfo } from './check-summary-row-vm'
 import CheckSummaryRow from './check-summary-row.svelte'
 
 export let viewModel: CheckSummaryViewModel
 
 let contextMenuSourceScenario: CheckScenarioReport | undefined
+let contextMenuSourceTestInfo: TestInfo | undefined
 let contextMenuItems: ContextMenuItem[] = []
 let contextMenuEvent: MouseEvent | undefined
 
 const dispatch = createEventDispatcher()
 
-function onShowContextMenu(event: MouseEvent, viewModel: CheckSummaryRowViewModel) {
-  if (viewModel.scenarioReport?.checkScenario?.spec) {
-    contextMenuSourceScenario = viewModel.scenarioReport
+function onShowContextMenu(event: MouseEvent, rowViewModel: CheckSummaryRowViewModel) {
+  if (rowViewModel.testInfo) {
+    // Test row - show edit option
+    contextMenuSourceTestInfo = rowViewModel.testInfo
+    contextMenuSourceScenario = undefined
+    contextMenuItems = [{ key: 'edit-test', displayText: 'Edit Test...' }]
+    contextMenuEvent = event
+  } else if (rowViewModel.scenarioReport?.checkScenario?.spec) {
+    // Scenario row - show trace view option
+    contextMenuSourceScenario = rowViewModel.scenarioReport
+    contextMenuSourceTestInfo = undefined
     contextMenuItems = [{ key: 'show-trace-view', displayText: 'Open Scenario in Trace View' }]
     contextMenuEvent = event
   } else {
     contextMenuSourceScenario = undefined
+    contextMenuSourceTestInfo = undefined
     contextMenuItems = []
     contextMenuEvent = undefined
   }
@@ -35,6 +45,12 @@ function onShowContextMenu(event: MouseEvent, viewModel: CheckSummaryRowViewMode
 
 function onHideContextMenu() {
   contextMenuEvent = undefined
+}
+
+function onNewTestClick() {
+  dispatch('command', {
+    cmd: 'new-test'
+  })
 }
 
 function onContextMenuItemSelected(e: CustomEvent) {
@@ -51,6 +67,12 @@ function onContextMenuItemSelected(e: CustomEvent) {
         scenarioKind: 'check'
       })
       break
+    case 'edit-test':
+      dispatch('command', {
+        cmd: 'edit-test',
+        testInfo: contextMenuSourceTestInfo
+      })
+      break
     default:
       console.error(`ERROR: Unhandled context menu command '${cmd}'`)
       break
@@ -61,6 +83,9 @@ function onContextMenuItemSelected(e: CustomEvent) {
 <!-- TEMPLATE -->
 <div class="check-summary-container">
   <div class="summary-bar-row">
+    <button class="new-test-btn" on:click={onNewTestClick} aria-label="New test">
+      + New Test
+    </button>
     <div class="bar-container">
       {#if viewModel.total > 0}
         <div class="bar bucket-bg-0" style="width: {viewModel.percents[0]}%;"></div>
@@ -232,10 +257,33 @@ $bg-color: #272727;
 .summary-bar-row {
   display: flex;
   flex-direction: row;
-  align-items: baseline;
+  align-items: center;
   align-self: flex-start;
   margin: 2.6rem 0;
+  gap: 1rem;
   opacity: 1;
+}
+
+.new-test-btn {
+  padding: 0.4rem 0.8rem;
+  background-color: #3a3a3a;
+  border: 1px solid #555;
+  border-radius: 4px;
+  color: #fff;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 500;
+
+  &:hover {
+    background-color: #4a4a4a;
+  }
+
+  &:focus {
+    outline: none;
+    border-color: #888;
+    box-shadow: 0 0 0 1px #888;
+  }
 }
 
 .bar-container {

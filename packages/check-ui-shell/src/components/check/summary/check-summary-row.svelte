@@ -16,8 +16,8 @@ function onLabelClicked() {
 }
 
 function onContextMenu(event: MouseEvent) {
-  // Only show for scenario rows that have a scenario report with a defined spec
-  if (!viewModel.scenarioReport?.checkScenario?.spec) {
+  // Show context menu for test rows (with testInfo) or scenario rows (with scenario spec)
+  if (!viewModel.testInfo && !viewModel.scenarioReport?.checkScenario?.spec) {
     return
   }
   event.preventDefault()
