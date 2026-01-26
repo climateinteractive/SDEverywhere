@@ -150,13 +150,17 @@ Created the initial check-editor component with basic structure:
   - Added `createCheckEditorViewModel()` method to AppViewModel
   - Commands now open the check editor dialog
 
-### 2026-01-26: Spec Preservation in Check-Core
+### 2026-01-26: Spec Preservation and Edit Test Wiring
 
 - Added `spec?: CheckTestSpec` to `CheckPlanTest` in check-planner.ts
 - Added `spec?: CheckTestSpec` to `CheckTestReport` in check-report.ts
 - Updated `buildCheckReport()` to copy spec from plan to report
 - Exported all spec-related types from check-core index.ts
 - Updated tests to verify spec preservation in planner output
+- Fixed typeahead-selector height (wrapped in container with `display: inline-block`)
+- Wired up "Edit Test" to use original spec from report:
+  - Updated `edit-test` handler in app.svelte to extract `testInfo` and call `initFromSpec`
+  - Falls back to new-test mode if spec is not available
 
 ---
 
@@ -181,19 +185,7 @@ Created the initial check-editor component with basic structure:
 ✅ App.svelte integrated with check editor dialog
 
 ✅ Spec preservation implemented in check-core (original spec now available on reports)
-
-## Spec Preservation for Round-Trip Editing
-
-### Implementation (Completed 2026-01-26)
-
-The original YAML test specifications are now **preserved** alongside check reports:
-
-1. **CheckPlanTest** in `check-planner.ts` now includes `spec?: CheckTestSpec`
-2. **CheckTestReport** in `check-report.ts` now includes `spec?: CheckTestSpec`
-3. The spec is passed through the planner and copied to the report during `buildCheckReport()`
-4. All related spec types are now exported from `check-core` index.ts
-
-This enables round-trip editing: when a user clicks "Edit Test", the UI can access the original spec via `testReport.spec` and use it to initialize the check editor form.
+✅ Edit Test now initializes editor form from original spec (round-trip editing working)
 
 ---
 

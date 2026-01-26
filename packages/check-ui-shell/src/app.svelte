@@ -30,6 +30,7 @@ import Trace from './components/trace/trace.svelte'
 
 import CheckEditor from './components/check/editor/check-editor.svelte'
 import type { CheckEditorViewModel } from './components/check/editor/check-editor-vm.svelte'
+import type { TestInfo } from './components/check/summary/check-summary-row-vm'
 
 import type { AppViewModel } from './app-vm'
 import type { BundleSpec } from './components/bundle/bundle-spec'
@@ -186,13 +187,23 @@ function onCommand(event: CustomEvent) {
       checkEditorViewModel = viewModel.createCheckEditorViewModel()
       checkEditorOpen = true
       break
-    case 'edit-test':
-      // TODO: Edit mode requires the original spec which is not preserved in the report
-      // For now, open the editor in new test mode
-      console.warn('Edit Test: Original spec not available in the report. Opening editor in new test mode.')
+    case 'edit-test': {
+      const testInfo = cmdObj.testInfo as TestInfo | undefined
       checkEditorViewModel = viewModel.createCheckEditorViewModel()
+      if (testInfo?.testReport?.spec) {
+        // Initialize the editor with the original test spec
+        // Note: The spec is cast to the editor's local types which are a compatible subset
+        const groupSpec = { describe: testInfo.groupName, tests: [] as never[] }
+        checkEditorViewModel.initFromSpec(
+          groupSpec,
+          testInfo.testReport.spec as Parameters<typeof checkEditorViewModel.initFromSpec>[1]
+        )
+      } else {
+        console.warn('Edit Test: Original spec not available in the report. Opening editor in new test mode.')
+      }
       checkEditorOpen = true
       break
+    }
     default:
       console.error(`ERROR: Unhandled command ${cmd}`)
       break
