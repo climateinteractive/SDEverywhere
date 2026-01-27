@@ -7,7 +7,13 @@ import type {
   CheckScenario,
   CheckPredicateOp,
   CheckPredicateOpRef,
-  CheckPredicateReport
+  CheckPredicateReport,
+  CheckPredicateTimeSpec,
+  CheckDataRef,
+  CheckDataset,
+  InputPosition,
+  InputSetting,
+  ScenarioSpec
 } from '@sdeverywhere/check-core'
 import yaml from 'yaml'
 
@@ -50,6 +56,9 @@ import type {
   GivenInputConfig,
   ScenarioItemConfig,
   PredicateItemConfig,
+  PredicateTimeConfig,
+  PredicateRefConfig,
+  PredicateScenarioConfig,
   DatasetItemConfig,
   CheckTestConfig
 } from './check-editor-types'
@@ -275,7 +284,10 @@ export class CheckEditorViewModel {
         this.datasets.push(newDataset)
       }
     }
-    // TODO: Handle group and matching specs
+    // Note: The editor currently supports only datasets specified by name.
+    // Dataset groups (spec.group) and type matching (spec.matching) are not
+    // supported in the editor and will be silently ignored. These features
+    // require access to model-level information to expand into individual datasets.
   }
 
   /**
@@ -360,11 +372,36 @@ export class CheckEditorViewModel {
     // Time
     if (spec.time !== undefined) {
       if (typeof spec.time === 'number') {
+        // Single time point (CheckPredicateTimeSingle)
         newPredicate.time = { enabled: true, startYear: spec.time }
       } else if (Array.isArray(spec.time)) {
+        // Time range as tuple (CheckPredicateTimeRange)
         newPredicate.time = { enabled: true, startYear: spec.time[0], endYear: spec.time[1] }
+      } else if (typeof spec.time === 'object') {
+        // Time options object (CheckPredicateTimeOptions)
+        const timeOptions = spec.time
+        const timeConfig: PredicateTimeConfig = { enabled: true }
+
+        // Handle start time (after_incl or after_excl)
+        if (timeOptions.after_incl !== undefined) {
+          timeConfig.startYear = timeOptions.after_incl
+          timeConfig.startType = 'incl'
+        } else if (timeOptions.after_excl !== undefined) {
+          timeConfig.startYear = timeOptions.after_excl
+          timeConfig.startType = 'excl'
+        }
+
+        // Handle end time (before_incl or before_excl)
+        if (timeOptions.before_incl !== undefined) {
+          timeConfig.endYear = timeOptions.before_incl
+          timeConfig.endType = 'incl'
+        } else if (timeOptions.before_excl !== undefined) {
+          timeConfig.endYear = timeOptions.before_excl
+          timeConfig.endType = 'excl'
+        }
+
+        newPredicate.time = timeConfig
       }
-      // TODO: Handle CheckPredicateTimeOptions
     }
 
     this.predicates.push(newPredicate)
@@ -812,8 +849,19 @@ export class CheckEditorViewModel {
     // Create a check scenario from the scenario config
     const scenario: CheckScenario = this.createScenario(selectedScenario)
 
-    // Create a predicate report from the predicate config
-    const predicateReport: CheckPredicateReport = this.createPredicateReport(selectedPredicate)
+    // Create a CheckDataset for the current dataset (used for data reference inherit mode)
+    const currentDataset: CheckDataset = {
+      datasetKey: selectedDataset.datasetKey,
+      name: selectedDataset.datasetKey
+    }
+
+    // Create a predicate report from the predicate config, passing current dataset and scenario
+    // for data reference inherit mode
+    const predicateReport: CheckPredicateReport = this.createPredicateReport(
+      selectedPredicate,
+      currentDataset,
+      scenario
+    )
 
     // Create and return the graph box view model
     return new CheckSummaryGraphBoxViewModel(
@@ -850,22 +898,51 @@ export class CheckEditorViewModel {
       return {
         spec: {
           kind: 'all-inputs',
-          uid: `all-inputs-${position}`,
+          uid: `all_inputs_at_${this.positionKey(position)}`,
           position
         },
         inputDescs: []
       }
     } else if (config.kind === 'given-inputs' && config.inputs && config.inputs.length > 0) {
-      // For given-inputs, use the first input for now
-      // TODO: Support multiple inputs properly
-      const firstInput = config.inputs[0]
-      const position = this.toInputPosition(firstInput.position)
+      // Create InputSettings for each input
+      const settings: InputSetting[] = config.inputs.map(input => {
+        if (input.position === 'at-value' && input.customValue !== undefined) {
+          // Value setting for custom value
+          return {
+            kind: 'value' as const,
+            inputVarId: input.inputVarId,
+            value: input.customValue
+          }
+        } else {
+          // Position setting for preset positions
+          const position = this.toInputPosition(input.position)
+          return {
+            kind: 'position' as const,
+            inputVarId: input.inputVarId,
+            position
+          }
+        }
+      })
+
+      // Create the UID from all settings
+      const uidParts = settings.map(setting => {
+        if (setting.kind === 'position') {
+          return `${setting.inputVarId}_at_${this.positionKey(setting.position)}`
+        } else {
+          return `${setting.inputVarId}_at_${setting.value}`
+        }
+      })
+      const uid = `inputs_${uidParts.sort().join('_')}`
+
+      // Create the scenario spec
+      const spec: ScenarioSpec = {
+        kind: 'input-settings',
+        uid,
+        settings
+      }
+
       return {
-        spec: {
-          kind: 'all-inputs',
-          uid: `given-inputs-${firstInput.inputVarId}-${firstInput.position}`,
-          position
-        },
+        spec,
         inputDescs: []
       }
     } else {
@@ -873,7 +950,7 @@ export class CheckEditorViewModel {
       return {
         spec: {
           kind: 'all-inputs',
-          uid: 'all-inputs-at-default',
+          uid: 'all_inputs_at_default',
           position: 'at-default'
         },
         inputDescs: []
@@ -882,12 +959,167 @@ export class CheckEditorViewModel {
   }
 
   /**
+   * Convert an InputPosition to a short key for use in UIDs.
+   *
+   * @param position The input position.
+   * @returns The key string.
+   */
+  private positionKey(position: InputPosition): string {
+    switch (position) {
+      case 'at-default':
+        return 'default'
+      case 'at-minimum':
+        return 'min'
+      case 'at-maximum':
+        return 'max'
+    }
+  }
+
+  /**
+   * Create a check scenario from a predicate scenario config.
+   * This is similar to createScenario but works with PredicateScenarioConfig.
+   *
+   * @param config The predicate scenario configuration.
+   * @returns The check scenario.
+   */
+  private createScenarioFromConfig(config: PredicateScenarioConfig): CheckScenario {
+    // Convert PredicateScenarioConfig to ScenarioItemConfig by adding a temporary id
+    const scenarioItemConfig: ScenarioItemConfig = {
+      id: 'predicate-scenario',
+      kind: config.kind,
+      position: config.position,
+      inputs: config.inputs
+    }
+    return this.createScenario(scenarioItemConfig)
+  }
+
+  /**
+   * Create a default check scenario (all inputs at default position).
+   *
+   * @returns The default check scenario.
+   */
+  private createDefaultScenario(): CheckScenario {
+    return {
+      spec: {
+        kind: 'all-inputs',
+        uid: 'all-inputs-at-default',
+        position: 'at-default'
+      },
+      inputDescs: []
+    }
+  }
+
+  /**
+   * Convert a PredicateTimeConfig to a CheckPredicateTimeSpec.
+   *
+   * @param timeConfig The predicate time configuration.
+   * @returns The CheckPredicateTimeSpec, or undefined if time is disabled.
+   */
+  private convertTimeConfig(timeConfig?: PredicateTimeConfig): CheckPredicateTimeSpec | undefined {
+    if (!timeConfig || !timeConfig.enabled) {
+      return undefined
+    }
+
+    // Build the CheckPredicateTimeOptions object based on the time config
+    const timeOptions: {
+      after_excl?: number
+      after_incl?: number
+      before_excl?: number
+      before_incl?: number
+    } = {}
+
+    if (timeConfig.startYear !== undefined) {
+      if (timeConfig.startType === 'excl') {
+        timeOptions.after_excl = timeConfig.startYear
+      } else {
+        timeOptions.after_incl = timeConfig.startYear
+      }
+    }
+
+    if (timeConfig.endYear !== undefined) {
+      if (timeConfig.endType === 'excl') {
+        timeOptions.before_excl = timeConfig.endYear
+      } else {
+        timeOptions.before_incl = timeConfig.endYear
+      }
+    }
+
+    // Only return if at least one time option was set
+    if (Object.keys(timeOptions).length === 0) {
+      return undefined
+    }
+
+    return timeOptions
+  }
+
+  /**
+   * Create a CheckDataRef from a PredicateRefConfig for data references.
+   *
+   * @param refConfig The predicate reference configuration.
+   * @param currentDataset The current dataset being tested (for inherit mode).
+   * @param currentScenario The current scenario (for inherit mode).
+   * @returns The CheckDataRef or undefined if the reference is not valid.
+   */
+  private createDataRef(
+    refConfig: PredicateRefConfig,
+    currentDataset: CheckDataset | undefined,
+    currentScenario: CheckScenario | undefined
+  ): CheckDataRef | undefined {
+    // Determine the dataset to reference
+    let dataset: CheckDataset
+    if (refConfig.datasetRefKind === 'inherit') {
+      // Use the same dataset that's being tested
+      if (!currentDataset) {
+        return undefined
+      }
+      dataset = currentDataset
+    } else {
+      // Use the specified dataset key
+      if (!refConfig.datasetKey) {
+        return undefined
+      }
+      dataset = {
+        datasetKey: refConfig.datasetKey,
+        name: refConfig.datasetKey
+      }
+    }
+
+    // Determine the scenario to reference
+    let scenario: CheckScenario
+    if (refConfig.scenarioRefKind === 'inherit' && currentScenario) {
+      // Use the same scenario
+      scenario = currentScenario
+    } else if (refConfig.scenarioRefKind === 'different' && refConfig.scenarioConfig) {
+      // Create a scenario from the inline config
+      scenario = this.createScenarioFromConfig(refConfig.scenarioConfig)
+    } else if (currentScenario) {
+      // Default to current scenario
+      scenario = currentScenario
+    } else {
+      // Fallback to default scenario
+      scenario = this.createDefaultScenario()
+    }
+
+    return {
+      key: scenario.spec ? `${scenario.spec.uid}::${dataset.datasetKey}` : undefined,
+      dataset,
+      scenario
+    }
+  }
+
+  /**
    * Create a check predicate report from a predicate item config.
    *
    * @param config The predicate item configuration.
+   * @param currentDataset The current dataset being tested (for data reference inherit mode).
+   * @param currentScenario The current scenario (for data reference inherit mode).
    * @returns The check predicate report.
    */
-  private createPredicateReport(config: PredicateItemConfig): CheckPredicateReport {
+  private createPredicateReport(
+    config: PredicateItemConfig,
+    currentDataset?: CheckDataset,
+    currentScenario?: CheckScenario
+  ): CheckPredicateReport {
     // Create the opRefs map with the appropriate predicate operator
     const opRefs: Map<CheckPredicateOp, CheckPredicateOpRef> = new Map()
 
@@ -899,11 +1131,19 @@ export class CheckEditorViewModel {
         value: config.ref.value || 0
       }
     } else {
-      // For data references, we would need to create a CheckPredicateOpDataRef
-      // For now, fall back to a constant
-      opRef = {
-        kind: 'constant',
-        value: 0
+      // For data references, create a CheckPredicateOpDataRef
+      const dataRef = this.createDataRef(config.ref, currentDataset, currentScenario)
+      if (dataRef) {
+        opRef = {
+          kind: 'data',
+          dataRef
+        }
+      } else {
+        // Fallback to constant if data ref couldn't be created
+        opRef = {
+          kind: 'constant',
+          value: 0
+        }
       }
     }
 
@@ -911,13 +1151,17 @@ export class CheckEditorViewModel {
     const predicateOp = config.type as CheckPredicateOp
     opRefs.set(predicateOp, opRef)
 
+    // Convert time configuration
+    const time = this.convertTimeConfig(config.time)
+
     // Create the predicate report
     return {
       checkKey: 0, // Placeholder key for editor preview
       result: { status: 'passed' }, // Placeholder result
       opRefs,
       opValues: [],
-      tolerance: config.tolerance
+      tolerance: config.tolerance,
+      time
     }
   }
 }

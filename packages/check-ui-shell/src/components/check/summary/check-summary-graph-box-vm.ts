@@ -43,8 +43,8 @@ export class CheckSummaryGraphBoxViewModel {
   constructor(
     private readonly dataCoordinator: CheckDataCoordinator,
     private readonly scenario: CheckScenario,
-    private readonly datasetKey: DatasetKey,
-    private readonly predicateReport: CheckPredicateReport
+    public readonly datasetKey: DatasetKey,
+    public readonly predicateReport: CheckPredicateReport
   ) {
     this.baseRequestKey = `check-graph-box::${requestId++}`
     this.writableContent = writable(undefined)
