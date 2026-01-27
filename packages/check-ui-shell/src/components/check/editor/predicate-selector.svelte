@@ -41,10 +41,7 @@ const predicateTypeOptions = [
 ]
 
 // Create selector options for reference kind
-const refKindOptions = [
-  new SelectorOptionViewModel('Value', 'constant'),
-  new SelectorOptionViewModel('Data', 'data')
-]
+const refKindOptions = [new SelectorOptionViewModel('Value', 'constant'), new SelectorOptionViewModel('Data', 'data')]
 
 // Create selector options for dataset reference kind
 const datasetRefKindOptions = [
@@ -80,15 +77,9 @@ const predicateGivenInputsPositionOptions = [
 ]
 
 // Create selector options for time bound type (inclusive/exclusive)
-const startTimeBoundOptions = [
-  new SelectorOptionViewModel('>=', 'incl'),
-  new SelectorOptionViewModel('>', 'excl')
-]
+const startTimeBoundOptions = [new SelectorOptionViewModel('>=', 'incl'), new SelectorOptionViewModel('>', 'excl')]
 
-const endTimeBoundOptions = [
-  new SelectorOptionViewModel('<=', 'incl'),
-  new SelectorOptionViewModel('<', 'excl')
-]
+const endTimeBoundOptions = [new SelectorOptionViewModel('<=', 'incl'), new SelectorOptionViewModel('<', 'excl')]
 
 function createTypeSelector(predicate: PredicateItemConfig) {
   const selector = new SelectorViewModel(predicateTypeOptions, predicate.type)
@@ -176,10 +167,12 @@ function updateRefScenarioConfig(predicate: PredicateItemConfig, scenarioConfig:
 }
 
 function getOrCreateScenarioConfig(predicate: PredicateItemConfig): PredicateScenarioConfig {
-  return predicate.ref.scenarioConfig || {
-    kind: 'all-inputs',
-    position: 'at-default'
-  }
+  return (
+    predicate.ref.scenarioConfig || {
+      kind: 'all-inputs',
+      position: 'at-default'
+    }
+  )
 }
 
 function createPredicateScenarioKindSelector(predicate: PredicateItemConfig) {
@@ -194,10 +187,12 @@ function createPredicateScenarioKindSelector(predicate: PredicateItemConfig) {
       const firstInput = viewModel.inputVars[0]
       updateRefScenarioConfig(predicate, {
         kind,
-        inputs: [{
-          inputVarId: firstInput?.varId || '',
-          position: 'at-default'
-        }]
+        inputs: [
+          {
+            inputVarId: firstInput?.varId || '',
+            position: 'at-default'
+          }
+        ]
       })
     }
   }
@@ -232,7 +227,11 @@ function createPredicateInputPositionSelector(predicate: PredicateItemConfig, in
   return selector
 }
 
-function updatePredicateScenarioInput(predicate: PredicateItemConfig, inputIndex: number, updates: Partial<GivenInputConfig>) {
+function updatePredicateScenarioInput(
+  predicate: PredicateItemConfig,
+  inputIndex: number,
+  updates: Partial<GivenInputConfig>
+) {
   const config = getOrCreateScenarioConfig(predicate)
   const inputs = [...(config.inputs || [])]
   inputs[inputIndex] = { ...inputs[inputIndex], ...updates }
@@ -276,7 +275,6 @@ function createEndTimeBoundSelector(predicate: PredicateItemConfig) {
   return selector
 }
 
-
 function handleKeyDown(e: KeyboardEvent) {
   if (e.key === 'ArrowDown') {
     e.preventDefault()
@@ -303,13 +301,7 @@ function handleKeyDown(e: KeyboardEvent) {
   <div class="predicate-selector-header">
     <h3 class="predicate-selector-title">
       Predicates
-      <button
-        class="predicate-selector-add-btn"
-        onclick={handleAddPredicate}
-        aria-label="Add predicate"
-      >
-        +
-      </button>
+      <button class="predicate-selector-add-btn" onclick={handleAddPredicate} aria-label="Add predicate"> + </button>
     </h3>
   </div>
 
@@ -325,6 +317,7 @@ function handleKeyDown(e: KeyboardEvent) {
       >
         <div class="predicate-selector-content">
           <div class="predicate-selector-row">
+            <span class="predicate-selector-text predicate-selector-fixed-width-label">Expect:</span>
             <Selector viewModel={createTypeSelector(predicate)} ariaLabel="Predicate type" />
             <Selector viewModel={createRefKindSelector(predicate)} ariaLabel="Reference kind" />
 
@@ -344,6 +337,7 @@ function handleKeyDown(e: KeyboardEvent) {
             {/if}
 
             {#if viewModel.predicates.length > 1}
+              <div class="spacer-flex"></div>
               <button
                 class="predicate-selector-remove-btn"
                 onclick={e => {
@@ -359,14 +353,10 @@ function handleKeyDown(e: KeyboardEvent) {
 
           {#if predicate.ref.kind === 'data'}
             <div class="predicate-selector-row">
-              <span class="predicate-selector-text">Dataset:</span>
+              <span class="predicate-selector-text predicate-selector-fixed-width-label">Dataset:</span>
               <Selector viewModel={createDatasetRefKindSelector(predicate)} ariaLabel="Dataset reference kind" />
               {#if predicate.ref.datasetRefKind === 'name'}
-                <div
-                  class="predicate-selector-typeahead-wrapper"
-                  onclick={e => e.stopPropagation()}
-                  role="none"
-                >
+                <div class="predicate-selector-typeahead-wrapper" onclick={e => e.stopPropagation()} role="none">
                   <TypeaheadSelector
                     items={viewModel.datasetListItems}
                     selectedId={predicate.ref.datasetKey || ''}
@@ -380,7 +370,7 @@ function handleKeyDown(e: KeyboardEvent) {
               {/if}
             </div>
             <div class="predicate-selector-row">
-              <span class="predicate-selector-text">Scenario:</span>
+              <span class="predicate-selector-text predicate-selector-fixed-width-label">Scenario:</span>
               <Selector viewModel={createScenarioRefKindSelector(predicate)} ariaLabel="Scenario reference kind" />
             </div>
             {#if predicate.ref.scenarioRefKind === 'different'}
@@ -395,11 +385,7 @@ function handleKeyDown(e: KeyboardEvent) {
                 {#if getOrCreateScenarioConfig(predicate).kind === 'given-inputs'}
                   {#each getOrCreateScenarioConfig(predicate).inputs || [] as input, inputIndex (inputIndex)}
                     <div class="predicate-selector-row">
-                      <div
-                        class="predicate-selector-typeahead-wrapper"
-                        onclick={e => e.stopPropagation()}
-                        role="none"
-                      >
+                      <div class="predicate-selector-typeahead-wrapper" onclick={e => e.stopPropagation()} role="none">
                         <TypeaheadSelector
                           items={viewModel.inputListItems}
                           selectedId={input.inputVarId}
@@ -535,7 +521,10 @@ function handleKeyDown(e: KeyboardEvent) {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  min-height: 0;
+}
+
+.spacer-flex {
+  flex: 1;
 }
 
 .predicate-selector-header {
@@ -558,6 +547,7 @@ function handleKeyDown(e: KeyboardEvent) {
   width: 20px;
   height: 20px;
   padding: 0;
+  margin-left: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -579,10 +569,10 @@ function handleKeyDown(e: KeyboardEvent) {
   flex-direction: column;
   gap: 0.5rem;
 
-  &:focus {
-    outline: 2px solid var(--border-color-focused);
-    outline-offset: -2px;
-  }
+  // &:focus {
+  //   outline: 2px solid var(--border-color-focused);
+  //   outline-offset: -2px;
+  // }
 }
 
 .predicate-selector-item {
@@ -621,6 +611,10 @@ function handleKeyDown(e: KeyboardEvent) {
   white-space: nowrap;
 }
 
+.predicate-selector-fixed-width-label {
+  width: 46px;
+}
+
 .predicate-selector-input {
   padding: 4px 8px;
   background-color: var(--input-bg);
@@ -643,7 +637,8 @@ function handleKeyDown(e: KeyboardEvent) {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 4px 6px;
+  width: 22px;
+  height: 22px;
   background-color: var(--input-bg);
   border: 1px solid var(--border-color-normal);
   border-radius: var(--input-border-radius);

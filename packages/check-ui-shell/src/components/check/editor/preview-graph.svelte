@@ -31,10 +31,11 @@ let { viewModel }: Props = $props()
   align-items: center;
   justify-content: center;
   background-color: var(--panel-bg);
-  border: 1px solid var(--border-color-normal);
-  border-top: none;
-  border-radius: 0 0 4px 4px;
+  // border: 1px solid var(--border-color-normal);
+  // border-top: none;
+  // border-radius: 0 0 4px 4px;
   padding: 1rem;
-  overflow: auto;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 </style>

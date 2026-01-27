@@ -44,7 +44,6 @@ sub {
 }
 
 select {
-  margin-right: 1rem;
   font-family: Roboto, sans-serif;
   font-size: 1em;
   /* XXX: Remove browser-provided background, but preserve arrow; based on: https://stackoverflow.com/a/57510283 */

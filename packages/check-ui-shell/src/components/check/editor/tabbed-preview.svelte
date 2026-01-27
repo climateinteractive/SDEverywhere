@@ -56,11 +56,7 @@ async function handleCopyToClipboard() {
       {/key}
     {:else if activeTab === 'code'}
       <div class="tabbed-preview-code-container">
-        <button
-          class="tabbed-preview-copy-btn"
-          onclick={handleCopyToClipboard}
-          aria-label="Copy to clipboard"
-        >
+        <button class="tabbed-preview-copy-btn" onclick={handleCopyToClipboard} aria-label="Copy to clipboard">
           Copy to Clipboard
         </button>
         <pre class="tabbed-preview-code">{yamlCode}</pre>
@@ -84,7 +80,7 @@ async function handleCopyToClipboard() {
 .tabbed-preview-tabs {
   display: flex;
   gap: 0.25rem;
-  border-bottom: 2px solid var(--border-color-normal);
+  border-bottom: 1px solid var(--border-color-normal);
   flex-shrink: 0;
 }
 
@@ -165,9 +161,9 @@ async function handleCopyToClipboard() {
   padding-top: 3rem;
   margin: 0;
   background-color: var(--panel-bg);
-  border: 1px solid var(--border-color-normal);
-  border-top: none;
-  border-radius: 0 0 4px 4px;
+  // border: 1px solid var(--border-color-normal);
+  // border-top: none;
+  // border-radius: 0 0 4px 4px;
   color: var(--text-color-primary);
   font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', monospace;
   font-size: 0.85rem;

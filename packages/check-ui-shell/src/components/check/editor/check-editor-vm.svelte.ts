@@ -170,7 +170,7 @@ export interface CheckTestConfig {
 export class CheckEditorViewModel {
   // Test description text fields
   public describeText = $state('Variable or group')
-  public testText = $state('should [have behavior] when [conditions]')
+  public testText = $state('should [have behavior] when...')
 
   // Reactive state for managing collections of items
   public scenarios = $state<ScenarioItemConfig[]>([])
@@ -233,7 +233,7 @@ export class CheckEditorViewModel {
    */
   clear(): void {
     this.describeText = 'Variable or group'
-    this.testText = 'should [have behavior] when [conditions]'
+    this.testText = 'should [have behavior] when...'
     this.scenarios = []
     this.datasets = []
     this.predicates = []
@@ -350,10 +350,12 @@ export class CheckEditorViewModel {
       newScenario.kind = 'given-inputs'
       if (typeof spec.with === 'string') {
         // Single input
-        newScenario.inputs = [{
-          inputVarId: this.findInputVarId(spec.with),
-          position: this.convertPosition(spec.at)
-        }]
+        newScenario.inputs = [
+          {
+            inputVarId: this.findInputVarId(spec.with),
+            position: this.convertPosition(spec.at)
+          }
+        ]
       } else {
         // Multiple inputs
         newScenario.inputs = spec.with.map((inputSpec: { input: string; at: 'default' | 'min' | 'max' | number }) => ({
@@ -437,14 +439,20 @@ export class CheckEditorViewModel {
         newPredicate.ref.scenarioRefKind = 'inherit'
       } else if (dataRef.scenario && typeof dataRef.scenario === 'object') {
         newPredicate.ref.scenarioRefKind = 'different'
-        const scenarioSpec = dataRef.scenario as { input?: string; inputs?: string; at?: 'default' | 'min' | 'max' | number }
+        const scenarioSpec = dataRef.scenario as {
+          input?: string
+          inputs?: string
+          at?: 'default' | 'min' | 'max' | number
+        }
         if (scenarioSpec.input) {
           newPredicate.ref.scenarioConfig = {
             kind: 'given-inputs',
-            inputs: [{
-              inputVarId: this.findInputVarId(scenarioSpec.input),
-              position: this.convertPosition(scenarioSpec.at)
-            }]
+            inputs: [
+              {
+                inputVarId: this.findInputVarId(scenarioSpec.input),
+                position: this.convertPosition(scenarioSpec.at)
+              }
+            ]
           }
         } else if (scenarioSpec.inputs === 'all') {
           newPredicate.ref.scenarioConfig = {
@@ -824,7 +832,11 @@ export class CheckEditorViewModel {
             const positionStr = position.replace('at-', '')
             lines.push(`              with_inputs: all`)
             lines.push(`              at: ${positionStr}`)
-          } else if (scenarioConfig.kind === 'given-inputs' && scenarioConfig.inputs && scenarioConfig.inputs.length > 0) {
+          } else if (
+            scenarioConfig.kind === 'given-inputs' &&
+            scenarioConfig.inputs &&
+            scenarioConfig.inputs.length > 0
+          ) {
             const input = scenarioConfig.inputs[0]
             const inputVar = this.inputVars.find(v => v.varId === input.inputVarId)
             if (inputVar) {
@@ -890,25 +902,29 @@ export class CheckEditorViewModel {
    */
   private computeConfigKey(): string {
     // Access all the reactive state that should trigger graph updates
-    const scenarioKey = this.scenarios.map(s => {
-      if (s.kind === 'all-inputs') {
-        return `all:${s.position}`
-      } else {
-        const inputs = s.inputs?.map(i => `${i.inputVarId}:${i.position}:${i.customValue}`).join(',') || ''
-        return `given:${inputs}`
-      }
-    }).join('|')
+    const scenarioKey = this.scenarios
+      .map(s => {
+        if (s.kind === 'all-inputs') {
+          return `all:${s.position}`
+        } else {
+          const inputs = s.inputs?.map(i => `${i.inputVarId}:${i.position}:${i.customValue}`).join(',') || ''
+          return `given:${inputs}`
+        }
+      })
+      .join('|')
 
     const datasetKey = this.datasets.map(d => d.datasetKey).join('|')
 
-    const predicateKey = this.predicates.map(p => {
-      const ref = p.ref
-      if (ref.kind === 'constant') {
-        return `${p.type}:const:${ref.value}`
-      } else {
-        return `${p.type}:data:${ref.datasetRefKind}:${ref.datasetKey}:${ref.scenarioRefKind}`
-      }
-    }).join('|')
+    const predicateKey = this.predicates
+      .map(p => {
+        const ref = p.ref
+        if (ref.kind === 'constant') {
+          return `${p.type}:const:${ref.value}`
+        } else {
+          return `${p.type}:data:${ref.datasetRefKind}:${ref.datasetKey}:${ref.scenarioRefKind}`
+        }
+      })
+      .join('|')
 
     const selectionKey = `${this.selectedScenarioId}:${this.selectedDatasetId}:${this.selectedPredicateId}`
 

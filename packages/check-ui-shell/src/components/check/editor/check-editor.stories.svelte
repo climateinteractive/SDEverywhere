@@ -267,9 +267,7 @@ function createMockViewModel(): CheckEditorViewModel {
     })
 
     // Find the predicate value input (has id starting with "pred-value-")
-    const predicateValueInput = canvasElement.querySelector(
-      'input[id^="pred-value-"]'
-    ) as HTMLInputElement
+    const predicateValueInput = canvasElement.querySelector('input[id^="pred-value-"]') as HTMLInputElement
     await expect(predicateValueInput).toBeInTheDocument()
 
     // Verify initial value is 0
@@ -405,8 +403,8 @@ function createMockViewModel(): CheckEditorViewModel {
     })
 
     // Click "Given inputs at..." to add a given-inputs scenario
-    const givenInputsOption = Array.from(canvasElement.querySelectorAll('.scenario-selector-context-item')).find(
-      item => item.textContent?.includes('Given inputs')
+    const givenInputsOption = Array.from(canvasElement.querySelectorAll('.scenario-selector-context-item')).find(item =>
+      item.textContent?.includes('Given inputs')
     )
     await expect(givenInputsOption).toBeInTheDocument()
 
@@ -462,9 +460,7 @@ function createMockViewModel(): CheckEditorViewModel {
     })
 
     // Click the "All inputs at..." option
-    const allInputsOption = canvasElement.querySelector(
-      '.scenario-selector-context-item'
-    ) as HTMLButtonElement
+    const allInputsOption = canvasElement.querySelector('.scenario-selector-context-item') as HTMLButtonElement
     await userEvent.click(allInputsOption)
 
     await waitFor(() => {
@@ -509,7 +505,7 @@ function createMockViewModel(): CheckEditorViewModel {
     // Verify test input exists with default value
     const testInput = canvas.getByLabelText('Test text') as HTMLInputElement
     await expect(testInput).toBeInTheDocument()
-    await expect(testInput.value).toBe('should [have behavior] when [conditions]')
+    await expect(testInput.value).toBe('should [have behavior] when...')
 
     // Edit the describe text
     await userEvent.clear(describeInput)
@@ -565,8 +561,8 @@ function createMockViewModel(): CheckEditorViewModel {
     })
 
     // Click "Given inputs at..." to add a given-inputs scenario
-    const givenInputsOption = Array.from(canvasElement.querySelectorAll('.scenario-selector-context-item')).find(
-      item => item.textContent?.includes('Given inputs')
+    const givenInputsOption = Array.from(canvasElement.querySelectorAll('.scenario-selector-context-item')).find(item =>
+      item.textContent?.includes('Given inputs')
     )
     await expect(givenInputsOption).toBeInTheDocument()
 
@@ -640,8 +636,8 @@ function createMockViewModel(): CheckEditorViewModel {
       expect(contextMenu).toBeInTheDocument()
     })
 
-    const givenInputsOption = Array.from(canvasElement.querySelectorAll('.scenario-selector-context-item')).find(
-      item => item.textContent?.includes('Given inputs')
+    const givenInputsOption = Array.from(canvasElement.querySelectorAll('.scenario-selector-context-item')).find(item =>
+      item.textContent?.includes('Given inputs')
     )
 
     if (givenInputsOption) {
@@ -707,15 +703,21 @@ function createMockViewModel(): CheckEditorViewModel {
 
     // Verify the dataset and scenario reference options appear
     await waitFor(() => {
-      const datasetRefSelect = predicateItem?.querySelector('select[aria-label="Dataset reference kind"]') as HTMLSelectElement
+      const datasetRefSelect = predicateItem?.querySelector(
+        'select[aria-label="Dataset reference kind"]'
+      ) as HTMLSelectElement
       expect(datasetRefSelect).toBeInTheDocument()
 
-      const scenarioRefSelect = predicateItem?.querySelector('select[aria-label="Scenario reference kind"]') as HTMLSelectElement
+      const scenarioRefSelect = predicateItem?.querySelector(
+        'select[aria-label="Scenario reference kind"]'
+      ) as HTMLSelectElement
       expect(scenarioRefSelect).toBeInTheDocument()
     })
 
     // Select "Different dataset" option
-    const datasetRefSelect = predicateItem?.querySelector('select[aria-label="Dataset reference kind"]') as HTMLSelectElement
+    const datasetRefSelect = predicateItem?.querySelector(
+      'select[aria-label="Dataset reference kind"]'
+    ) as HTMLSelectElement
     await userEvent.selectOptions(datasetRefSelect, 'name')
 
     // Verify dataset typeahead selector appears (replaced select with typeahead)

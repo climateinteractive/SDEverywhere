@@ -52,13 +52,7 @@ function handleKeyDown(e: KeyboardEvent) {
   <div class="dataset-selector-header">
     <h3 class="dataset-selector-title">
       Datasets
-      <button
-        class="dataset-selector-add-btn"
-        onclick={handleAddDataset}
-        aria-label="Add dataset"
-      >
-        +
-      </button>
+      <button class="dataset-selector-add-btn" onclick={handleAddDataset} aria-label="Add dataset"> + </button>
     </h3>
   </div>
 
@@ -74,11 +68,7 @@ function handleKeyDown(e: KeyboardEvent) {
       >
         <div class="dataset-selector-row">
           <span class="dataset-selector-text">Output:</span>
-          <div
-            class="dataset-selector-typeahead-wrapper"
-            onclick={e => e.stopPropagation()}
-            role="none"
-          >
+          <div class="dataset-selector-typeahead-wrapper" onclick={e => e.stopPropagation()} role="none">
             <TypeaheadSelector
               items={viewModel.datasetListItems}
               selectedId={dataset.datasetKey}
@@ -113,7 +103,6 @@ function handleKeyDown(e: KeyboardEvent) {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  min-height: 0;
 }
 
 .dataset-selector-header {
@@ -136,6 +125,7 @@ function handleKeyDown(e: KeyboardEvent) {
   width: 20px;
   height: 20px;
   padding: 0;
+  margin-left: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -157,10 +147,10 @@ function handleKeyDown(e: KeyboardEvent) {
   flex-direction: column;
   gap: 0.5rem;
 
-  &:focus {
-    outline: 2px solid var(--border-color-focused);
-    outline-offset: -2px;
-  }
+  // &:focus {
+  //   outline: 2px solid var(--border-color-focused);
+  //   outline-offset: -2px;
+  // }
 }
 
 .dataset-selector-item {

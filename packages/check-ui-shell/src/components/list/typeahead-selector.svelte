@@ -20,7 +20,13 @@ interface Props {
   onSelect?: (item: ListItemViewModel) => void
 }
 
-let { items, selectedId = $bindable(), placeholder = 'Search...', ariaLabel = 'Select item', onSelect }: Props = $props()
+let {
+  items,
+  selectedId = $bindable(),
+  placeholder = 'Search...',
+  ariaLabel = 'Select item',
+  onSelect
+}: Props = $props()
 
 let showPopup = $state(false)
 let searchQuery = $state('')
@@ -145,7 +151,6 @@ $effect(() => {
     aria-expanded={showPopup}
   >
     <span class="typeahead-selector-button-text">{selectedItem?.label || 'Select...'}</span>
-    <span class="typeahead-selector-button-arrow">▼</span>
   </button>
 
   {#if showPopup}
@@ -208,6 +213,12 @@ $effect(() => {
   font-size: 0.85rem;
   cursor: pointer;
   text-align: left;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 6px center;
+  background-size: 12px;
+  padding-right: 24px;
 
   &:hover {
     background-color: var(--button-bg-hover);
@@ -225,12 +236,6 @@ $effect(() => {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.typeahead-selector-button-arrow {
-  margin-left: 0.5rem;
-  font-size: 0.7rem;
-  flex-shrink: 0;
 }
 
 .typeahead-selector-popup {

@@ -6,7 +6,12 @@ import Selector from '../../list/selector.svelte'
 import { SelectorOptionViewModel, SelectorViewModel } from '../../list/selector-vm.svelte'
 import TypeaheadSelector from '../../list/typeahead-selector.svelte'
 
-import type { CheckEditorViewModel, ScenarioKind, ScenarioItemConfig, ScenarioInputPosition } from './check-editor-vm.svelte'
+import type {
+  CheckEditorViewModel,
+  ScenarioKind,
+  ScenarioItemConfig,
+  ScenarioInputPosition
+} from './check-editor-vm.svelte'
 import type { ListItemViewModel } from '../../list/list-item-vm.svelte'
 
 interface Props {
@@ -171,25 +176,13 @@ $effect(() => {
     <h3 class="scenario-selector-title">
       Scenarios
       <span class="scenario-selector-add-container">
-        <button
-          class="scenario-selector-add-btn"
-          onclick={handleAddButtonClick}
-          aria-label="Add scenario"
-        >
-          +
-        </button>
+        <button class="scenario-selector-add-btn" onclick={handleAddButtonClick} aria-label="Add scenario"> + </button>
         {#if showContextMenu}
           <div class="scenario-selector-context-menu" bind:this={contextMenuRef}>
-            <button
-              class="scenario-selector-context-item"
-              onclick={() => handleAddScenario('all-inputs')}
-            >
+            <button class="scenario-selector-context-item" onclick={() => handleAddScenario('all-inputs')}>
               All inputs at...
             </button>
-            <button
-              class="scenario-selector-context-item"
-              onclick={() => handleAddScenario('given-inputs')}
-            >
+            <button class="scenario-selector-context-item" onclick={() => handleAddScenario('given-inputs')}>
               Given inputs at...
             </button>
           </div>
@@ -214,6 +207,7 @@ $effect(() => {
               <span class="scenario-selector-text">All inputs at</span>
               <Selector viewModel={createPositionSelector(scenario)} ariaLabel="Position" />
               {#if viewModel.scenarios.length > 1}
+                <div class="spacer-flex"></div>
                 <button
                   class="scenario-selector-remove-btn"
                   onclick={e => {
@@ -245,11 +239,7 @@ $effect(() => {
               </div>
               {#each scenario.inputs || [] as input, inputIndex (inputIndex)}
                 <div class="scenario-selector-row">
-                  <div
-                    class="scenario-selector-typeahead-wrapper"
-                    onclick={e => e.stopPropagation()}
-                    role="none"
-                  >
+                  <div class="scenario-selector-typeahead-wrapper" onclick={e => e.stopPropagation()} role="none">
                     <TypeaheadSelector
                       items={viewModel.inputListItems}
                       selectedId={input.inputVarId}
@@ -263,10 +253,7 @@ $effect(() => {
                     />
                   </div>
                   <span class="scenario-selector-text">at</span>
-                  <Selector
-                    viewModel={createInputPositionSelector(scenario, inputIndex)}
-                    ariaLabel="Position"
-                  />
+                  <Selector viewModel={createInputPositionSelector(scenario, inputIndex)} ariaLabel="Position" />
                   {#if input.position === 'at-value'}
                     <div class="scenario-selector-value-container">
                       <input
@@ -286,10 +273,7 @@ $effect(() => {
                         aria-label="Custom value"
                       />
                       {#if isValueOutOfRange(input.inputVarId, input.customValue ?? 0)}
-                        <span
-                          class="scenario-selector-warning-badge"
-                          title={getOutOfRangeTooltip(input.inputVarId)}
-                        >
+                        <span class="scenario-selector-warning-badge" title={getOutOfRangeTooltip(input.inputVarId)}>
                           ⚠
                         </span>
                       {/if}
@@ -332,13 +316,16 @@ $effect(() => {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  min-height: 0;
 }
 
 .scenario-selector-header {
   display: flex;
   align-items: center;
   flex-shrink: 0;
+}
+
+.spacer-flex {
+  flex: 1;
 }
 
 .scenario-selector-title {
@@ -360,6 +347,7 @@ $effect(() => {
   width: 20px;
   height: 20px;
   padding: 0;
+  margin-left: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -379,7 +367,7 @@ $effect(() => {
 .scenario-selector-context-menu {
   position: absolute;
   top: 100%;
-  right: 0;
+  left: 0;
   margin-top: 4px;
   background-color: var(--panel-bg);
   border: 1px solid var(--border-color-normal);
@@ -418,10 +406,10 @@ $effect(() => {
   flex-direction: column;
   gap: 0.5rem;
 
-  &:focus {
-    outline: 2px solid var(--border-color-focused);
-    outline-offset: -2px;
-  }
+  // &:focus {
+  //   outline: 2px solid var(--border-color-focused);
+  //   outline-offset: -2px;
+  // }
 }
 
 .scenario-selector-item {
@@ -482,7 +470,8 @@ $effect(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 4px 6px;
+  width: 22px;
+  height: 22px;
   background-color: var(--input-bg);
   border: 1px solid var(--border-color-normal);
   border-radius: var(--input-border-radius);

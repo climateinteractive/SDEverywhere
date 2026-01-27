@@ -71,7 +71,7 @@ function parsePastedYaml() {
         <div class="check-editor-description-section">
           <input
             id="describe-input"
-            class="check-editor-input"
+            class="check-editor-input check-editor-describe-input"
             type="text"
             bind:value={viewModel.describeText}
             placeholder="Variable or group"
@@ -79,10 +79,10 @@ function parsePastedYaml() {
           />
           <input
             id="test-input"
-            class="check-editor-input"
+            class="check-editor-input check-editor-test-input"
             type="text"
             bind:value={viewModel.testText}
-            placeholder="should [have behavior] when [conditions]"
+            placeholder="should [have behavior] when..."
             aria-label="Test text"
           />
         </div>
@@ -101,9 +101,7 @@ function parsePastedYaml() {
             <div class="check-editor-paste-error">{pasteYamlError}</div>
           {/if}
           <div class="check-editor-paste-actions">
-            <button class="check-editor-paste-action-btn" onclick={parsePastedYaml}>
-              Apply
-            </button>
+            <button class="check-editor-paste-action-btn" onclick={parsePastedYaml}> Apply </button>
             <button class="check-editor-paste-action-btn check-editor-paste-cancel-btn" onclick={togglePasteYaml}>
               Cancel
             </button>
@@ -175,11 +173,20 @@ function parsePastedYaml() {
   }
 }
 
+.check-editor-describe-input {
+  flex: 0.3;
+}
+
+.check-editor-test-input {
+  flex: 0.7;
+}
+
 .check-editor-paste-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 4px 8px;
+  width: 22px;
+  height: 22px;
   background-color: var(--input-bg);
   border: 1px solid var(--border-color-normal);
   border-radius: var(--input-border-radius);
@@ -204,8 +211,8 @@ function parsePastedYaml() {
   }
 
   :global(svg) {
-    width: 12px;
-    height: 12px;
+    width: 10px;
+    height: 10px;
   }
 }
 
