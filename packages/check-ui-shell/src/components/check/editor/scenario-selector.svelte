@@ -25,6 +25,12 @@ let { viewModel }: Props = $props()
 let showContextMenu = $state(false)
 let contextMenuRef = $state<HTMLDivElement | null>(null)
 
+// Create selector options for scenario kind
+const scenarioKindOptions = [
+  new SelectorOptionViewModel('All inputs at...', 'all-inputs'),
+  new SelectorOptionViewModel('Given inputs at...', 'given-inputs')
+]
+
 // Create selector options for position (for all-inputs scenarios, no at-value)
 const allInputsPositionOptions = [
   new SelectorOptionViewModel('Default', 'at-default'),
@@ -39,6 +45,30 @@ const givenInputsPositionOptions = [
   new SelectorOptionViewModel('Maximum', 'at-maximum'),
   new SelectorOptionViewModel('Value', 'at-value')
 ]
+
+function createScenarioKindSelector(scenario: ScenarioItemConfig) {
+  const selector = new SelectorViewModel(scenarioKindOptions, scenario.kind)
+  selector.onUserChange = (newValue: string) => {
+    const newKind = newValue as ScenarioKind
+    if (newKind === 'all-inputs') {
+      // Switch to all-inputs, clear inputs array and set position
+      viewModel.updateScenario(scenario.id, {
+        kind: newKind,
+        position: 'at-default',
+        inputs: undefined
+      })
+    } else {
+      // Switch to given-inputs, initialize with one default input
+      const firstInputVarId = viewModel.inputVars.length > 0 ? viewModel.inputVars[0].varId : ''
+      viewModel.updateScenario(scenario.id, {
+        kind: newKind,
+        position: undefined,
+        inputs: [{ inputVarId: firstInputVarId, position: 'at-default' }]
+      })
+    }
+  }
+  return selector
+}
 
 function createPositionSelector(scenario: ScenarioItemConfig) {
   const selector = new SelectorViewModel(allInputsPositionOptions, scenario.position || 'at-default')
@@ -202,41 +232,27 @@ $effect(() => {
         role="listitem"
       >
         <div class="scenario-selector-item-content">
-          {#if scenario.kind === 'all-inputs'}
-            <div class="scenario-selector-row">
-              <span class="scenario-selector-text">All inputs at</span>
+          <div class="scenario-selector-row">
+            <Selector viewModel={createScenarioKindSelector(scenario)} ariaLabel="Scenario kind" />
+            {#if scenario.kind === 'all-inputs'}
               <Selector viewModel={createPositionSelector(scenario)} ariaLabel="Position" />
-              {#if viewModel.scenarios.length > 1}
-                <div class="spacer-flex"></div>
-                <button
-                  class="scenario-selector-remove-btn"
-                  onclick={e => {
-                    e.stopPropagation()
-                    handleRemoveScenario(scenario.id)
-                  }}
-                  aria-label="Remove scenario"
-                >
-                  ✕
-                </button>
-              {/if}
-            </div>
-          {:else if scenario.kind === 'given-inputs'}
+            {/if}
+            {#if viewModel.scenarios.length > 1}
+              <div class="spacer-flex"></div>
+              <button
+                class="scenario-selector-remove-btn"
+                onclick={e => {
+                  e.stopPropagation()
+                  handleRemoveScenario(scenario.id)
+                }}
+                aria-label="Remove scenario"
+              >
+                ✕
+              </button>
+            {/if}
+          </div>
+          {#if scenario.kind === 'given-inputs'}
             <div class="scenario-selector-given-inputs">
-              <div class="scenario-selector-given-header">
-                <span class="scenario-selector-text">Given inputs:</span>
-                {#if viewModel.scenarios.length > 1}
-                  <button
-                    class="scenario-selector-remove-btn"
-                    onclick={e => {
-                      e.stopPropagation()
-                      handleRemoveScenario(scenario.id)
-                    }}
-                    aria-label="Remove scenario"
-                  >
-                    ✕
-                  </button>
-                {/if}
-              </div>
               {#each scenario.inputs || [] as input, inputIndex (inputIndex)}
                 <div class="scenario-selector-row">
                   <div class="scenario-selector-typeahead-wrapper" onclick={e => e.stopPropagation()} role="none">
@@ -446,12 +462,6 @@ $effect(() => {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-}
-
-.scenario-selector-given-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
 }
 
 .scenario-selector-text {

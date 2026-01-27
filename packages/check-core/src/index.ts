@@ -85,6 +85,7 @@ export type { CheckScenario, CheckScenarioError, CheckScenarioInputDesc } from '
 
 export type {
   CheckDatasetSpec,
+  CheckGroupSpec,
   CheckNameSpec,
   CheckPredicateRefConstant,
   CheckPredicateRefData,
@@ -101,6 +102,7 @@ export type {
   CheckScenarioInputSpec,
   CheckScenarioPosition,
   CheckScenarioSpec,
+  CheckSpec,
   CheckTestSpec
 } from './check/check-spec'
 

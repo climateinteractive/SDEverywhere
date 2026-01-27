@@ -8,6 +8,7 @@ import type { CheckDataRef } from './check-data-ref'
 import { dataRef } from './check-data-ref'
 import { parseTestYaml } from './check-parser'
 import type { CheckPlanPredicate } from './check-planner'
+import type { CheckTestSpec } from './check-spec'
 import { CheckPlanner } from './check-planner'
 import type { CheckPredicateOp } from './check-predicate'
 import { dataset, implVar, outputVar } from './_mocks/mock-check-dataset'
@@ -116,24 +117,24 @@ describe('CheckPlanner', () => {
       datasets: [{ name: 'V1' }],
       predicates: [{ gte: 1 }, { lte: 5 }]
     }
-    const spec2 = {
+    const spec2: CheckTestSpec = {
       it: 'test2',
       scenarios: [{ preset: 'matrix' }],
       datasets: [{ name: 'v4[a1]' }, { name: 'v4[A2]' }],
       predicates: [{ gte: 2 }, { lte: 4 }]
     }
-    const spec3 = {
+    const spec3: CheckTestSpec = {
       it: 'test3',
       scenarios: [{ with: 'I1', at: 75 }],
       datasets: [{ name: 'V3' }],
       predicates: [{ eq: 1 }]
     }
-    const spec4 = {
+    const spec4: CheckTestSpec = {
       it: 'test4',
       datasets: [{ name: 'V1' }],
       predicates: [{ eq: { dataset: { name: 'V3' } } }]
     }
-    const spec5 = {
+    const spec5: CheckTestSpec = {
       it: 'test5',
       scenarios: [{ with: 'I1', at: 75 }],
       datasets: [{ name: 'V1' }],

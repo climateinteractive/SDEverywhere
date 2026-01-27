@@ -3,7 +3,6 @@
 import type {
   InputVar,
   OutputVar,
-  DatasetKey,
   CheckDataCoordinator,
   CheckScenario,
   CheckPredicateOp,
@@ -15,156 +14,45 @@ import yaml from 'yaml'
 import type { ListItemViewModel } from '../../list/list-item-vm.svelte'
 import { CheckSummaryGraphBoxViewModel } from '../summary/check-summary-graph-box-vm'
 
-// Local type definitions compatible with check-core spec types (not exported from check-core)
-type CheckScenarioPosition = 'default' | 'min' | 'max'
+// Re-export all types from the types file
+export type {
+  CheckScenarioSpec,
+  CheckDatasetSpec,
+  CheckPredicateSpec,
+  CheckTestSpec,
+  CheckGroupSpec,
+  ScenarioInputPosition,
+  PredicateType,
+  ScenarioKind,
+  GivenInputConfig,
+  ScenarioItemConfig,
+  PredicateRefKind,
+  PredicateDatasetRefKind,
+  PredicateScenarioRefKind,
+  PredicateScenarioConfig,
+  PredicateRefConfig,
+  TimeBoundType,
+  PredicateTimeConfig,
+  PredicateItemConfig,
+  DatasetItemConfig,
+  CheckTestConfig
+} from './check-editor-types'
 
-interface CheckScenarioInputSpec {
-  input: string
-  at: CheckScenarioPosition | number
-}
-
-/** Scenario spec for check tests. */
-export interface CheckScenarioSpec {
-  preset?: 'matrix'
-  scenarios_for_each_input_in?: string
-  with?: string | CheckScenarioInputSpec[]
-  with_inputs?: 'all'
-  with_inputs_in?: string
-  at?: CheckScenarioPosition | number
-}
-
-/** Dataset spec for check tests. */
-export interface CheckDatasetSpec {
-  name?: string
-  source?: string
-  group?: string
-}
-
-/** Predicate spec for check tests. */
-export interface CheckPredicateSpec {
-  gt?: number | { dataset: unknown; scenario?: unknown }
-  gte?: number | { dataset: unknown; scenario?: unknown }
-  lt?: number | { dataset: unknown; scenario?: unknown }
-  lte?: number | { dataset: unknown; scenario?: unknown }
-  eq?: number | { dataset: unknown; scenario?: unknown }
-  approx?: number | { dataset: unknown; scenario?: unknown }
-  tolerance?: number
-  time?: number | [number, number]
-}
-
-/** Test spec for check tests. */
-export interface CheckTestSpec {
-  it: string
-  scenarios?: CheckScenarioSpec[]
-  datasets: CheckDatasetSpec[]
-  predicates: CheckPredicateSpec[]
-}
-
-/** Group spec for check tests. */
-export interface CheckGroupSpec {
-  describe: string
-  tests: CheckTestSpec[]
-}
-
-/** The position type for scenario inputs (extends InputPosition with 'at-value'). */
-export type ScenarioInputPosition = 'at-default' | 'at-minimum' | 'at-maximum' | 'at-value'
-
-/** The type of predicate operator. */
-export type PredicateType = 'gt' | 'gte' | 'lt' | 'lte' | 'eq' | 'approx'
-
-/** The scenario configuration mode. */
-export type ScenarioKind = 'all-inputs' | 'given-inputs'
-
-/** Configuration for a single input in a given-inputs scenario. */
-export interface GivenInputConfig {
-  inputVarId: string
-  position: ScenarioInputPosition
-  /** Custom value when position is 'at-value'. */
-  customValue?: number
-}
-
-/** Configuration for a single scenario. */
-export interface ScenarioItemConfig {
-  id: string
-  kind: ScenarioKind
-  /** Position for all-inputs scenarios (only supports preset positions, not at-value). */
-  position?: ScenarioInputPosition
-  /** Input configurations for given-inputs scenarios. */
-  inputs?: GivenInputConfig[]
-}
-
-/** Reference type for predicate values. */
-export type PredicateRefKind = 'constant' | 'data'
-
-/** Dataset reference type for predicates. */
-export type PredicateDatasetRefKind = 'inherit' | 'name'
-
-/** Scenario reference type for predicates. */
-export type PredicateScenarioRefKind = 'inherit' | 'different'
-
-/** Inline scenario configuration for predicates. */
-export interface PredicateScenarioConfig {
-  kind: ScenarioKind
-  /** Position for all-inputs scenarios. */
-  position?: ScenarioInputPosition
-  /** Input configurations for given-inputs scenarios. */
-  inputs?: GivenInputConfig[]
-}
-
-/** Configuration for a predicate reference. */
-export interface PredicateRefConfig {
-  kind: PredicateRefKind
-  /** Value for constant references. */
-  value?: number
-  /** Dataset reference kind for data references. */
-  datasetRefKind?: PredicateDatasetRefKind
-  /** Dataset key for data references (when datasetRefKind is 'name'). */
-  datasetKey?: DatasetKey
-  /** Scenario reference kind for data references. */
-  scenarioRefKind?: PredicateScenarioRefKind
-  /** Inline scenario configuration for data references (when scenarioRefKind is 'different'). */
-  scenarioConfig?: PredicateScenarioConfig
-}
-
-/** Time bound type for predicates. */
-export type TimeBoundType = 'incl' | 'excl'
-
-/** Time range configuration for predicates. */
-export interface PredicateTimeConfig {
-  /** Whether time range is enabled. */
-  enabled: boolean
-  /** Start year. */
-  startYear?: number
-  /** Whether start year is inclusive (>=) or exclusive (>). */
-  startType?: TimeBoundType
-  /** End year. */
-  endYear?: number
-  /** Whether end year is inclusive (<=) or exclusive (<). */
-  endType?: TimeBoundType
-}
-
-/** Configuration for a single predicate. */
-export interface PredicateItemConfig {
-  id: string
-  type: PredicateType
-  ref: PredicateRefConfig
-  tolerance?: number
-  /** Optional time range configuration. */
-  time?: PredicateTimeConfig
-}
-
-/** Configuration for a single dataset. */
-export interface DatasetItemConfig {
-  id: string
-  datasetKey: DatasetKey
-}
-
-/** The complete check test configuration. */
-export interface CheckTestConfig {
-  scenarios: ScenarioItemConfig[]
-  datasets: DatasetItemConfig[]
-  predicates: PredicateItemConfig[]
-}
+import type {
+  CheckScenarioSpec,
+  CheckDatasetSpec,
+  CheckPredicateSpec,
+  CheckTestSpec,
+  CheckGroupSpec,
+  ScenarioInputPosition,
+  PredicateType,
+  ScenarioKind,
+  GivenInputConfig,
+  ScenarioItemConfig,
+  PredicateItemConfig,
+  DatasetItemConfig,
+  CheckTestConfig
+} from './check-editor-types'
 
 /** View model for the check test editor. */
 export class CheckEditorViewModel {

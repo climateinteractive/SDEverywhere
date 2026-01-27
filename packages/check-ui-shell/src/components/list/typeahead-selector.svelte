@@ -96,6 +96,8 @@ function handleItemClick(item: ListItemViewModel) {
   onSelect?.(item)
   showPopup = false
   searchQuery = ''
+  // Refocus the button to retain focus like a native select element
+  buttonRef?.focus()
 }
 
 function handleKeyDown(e: KeyboardEvent) {
@@ -116,7 +118,10 @@ function handleKeyDown(e: KeyboardEvent) {
   } else if (e.key === 'Escape') {
     showPopup = false
     searchQuery = ''
+    // Refocus the button and stop propagation to prevent closing parent dialog
+    buttonRef?.focus()
     e.preventDefault()
+    e.stopPropagation()
   }
 }
 
