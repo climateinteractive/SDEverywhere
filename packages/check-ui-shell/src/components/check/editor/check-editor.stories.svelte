@@ -718,10 +718,10 @@ function createMockViewModel(): CheckEditorViewModel {
     const datasetRefSelect = predicateItem?.querySelector('select[aria-label="Dataset reference kind"]') as HTMLSelectElement
     await userEvent.selectOptions(datasetRefSelect, 'name')
 
-    // Verify dataset selector appears
+    // Verify dataset typeahead selector appears (replaced select with typeahead)
     await waitFor(() => {
-      const datasetSelect = predicateItem?.querySelector('select[aria-label="Reference dataset"]') as HTMLSelectElement
-      expect(datasetSelect).toBeInTheDocument()
+      const datasetSelector = predicateItem?.querySelector('.typeahead-selector-button[aria-label="Reference dataset"]')
+      expect(datasetSelector).toBeInTheDocument()
     })
   }}
 ></Story>

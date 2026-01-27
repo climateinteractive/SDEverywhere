@@ -2,6 +2,9 @@
 
 <!-- SCRIPT -->
 <script lang="ts">
+import Icon from 'svelte-awesome/components/Icon.svelte'
+import { faPaste } from '@fortawesome/free-solid-svg-icons'
+
 import Dialog from '../../_shared/dialog.svelte'
 import ScenarioSelector from './scenario-selector.svelte'
 import DatasetSelector from './dataset-selector.svelte'
@@ -56,6 +59,15 @@ function parsePastedYaml() {
   <div class="check-editor-container">
     <div class="check-editor-form">
       <div class="check-editor-header-row">
+        <button
+          class="check-editor-paste-btn"
+          class:active={showPasteYaml}
+          onclick={togglePasteYaml}
+          aria-label="Paste YAML"
+          title="Paste YAML to prepopulate form"
+        >
+          <Icon data={faPaste} />
+        </button>
         <div class="check-editor-description-section">
           <input
             id="describe-input"
@@ -74,15 +86,6 @@ function parsePastedYaml() {
             aria-label="Test text"
           />
         </div>
-        <button
-          class="check-editor-paste-btn"
-          class:active={showPasteYaml}
-          onclick={togglePasteYaml}
-          aria-label="Paste YAML"
-          title="Paste YAML to prepopulate form"
-        >
-          📋
-        </button>
       </div>
 
       {#if showPasteYaml}
@@ -152,13 +155,13 @@ function parsePastedYaml() {
 
 .check-editor-input {
   flex: 1;
-  padding: 0.5rem 0.75rem;
+  padding: 4px 8px;
   background-color: var(--input-bg);
   border: 1px solid var(--border-color-normal);
   border-radius: var(--input-border-radius);
   color: var(--text-color-primary);
   font-family: inherit;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
 
   &:focus {
     outline: none;
@@ -176,23 +179,33 @@ function parsePastedYaml() {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
-  padding: 0;
-  background-color: var(--button-bg);
+  padding: 4px 8px;
+  background-color: var(--input-bg);
   border: 1px solid var(--border-color-normal);
-  border-radius: 4px;
+  border-radius: var(--input-border-radius);
+  color: var(--text-color-primary);
   cursor: pointer;
-  font-size: 1rem;
   flex-shrink: 0;
+  aspect-ratio: 1;
 
   &:hover {
     background-color: var(--button-bg-hover);
   }
 
+  &:focus {
+    outline: none;
+    border-color: var(--border-color-focused);
+    box-shadow: 0 0 0 1px var(--border-color-focused);
+  }
+
   &.active {
     background-color: rgba(100, 180, 255, 0.2);
     border-color: rgba(100, 180, 255, 0.4);
+  }
+
+  :global(svg) {
+    width: 12px;
+    height: 12px;
   }
 }
 

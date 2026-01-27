@@ -50,14 +50,16 @@ function handleKeyDown(e: KeyboardEvent) {
 <!-- TEMPLATE -->
 <div class="dataset-selector-section">
   <div class="dataset-selector-header">
-    <h3 class="dataset-selector-title">Datasets</h3>
-    <button
-      class="dataset-selector-add-btn"
-      onclick={handleAddDataset}
-      aria-label="Add dataset"
-    >
-      +
-    </button>
+    <h3 class="dataset-selector-title">
+      Datasets
+      <button
+        class="dataset-selector-add-btn"
+        onclick={handleAddDataset}
+        aria-label="Add dataset"
+      >
+        +
+      </button>
+    </h3>
   </div>
 
   <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
@@ -116,7 +118,6 @@ function handleKeyDown(e: KeyboardEvent) {
 
 .dataset-selector-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
   flex-shrink: 0;
 }
@@ -126,6 +127,9 @@ function handleKeyDown(e: KeyboardEvent) {
   font-size: 1rem;
   font-weight: 700;
   color: var(--text-color-primary);
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
 }
 
 .dataset-selector-add-btn {
@@ -152,9 +156,6 @@ function handleKeyDown(e: KeyboardEvent) {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  overflow-y: auto;
-  max-height: 200px;
-  padding-right: 4px;
 
   &:focus {
     outline: 2px solid var(--border-color-focused);
@@ -198,17 +199,27 @@ function handleKeyDown(e: KeyboardEvent) {
 }
 
 .dataset-selector-remove-btn {
-  padding: 0.15rem 0.4rem;
-  background: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 6px;
+  background-color: var(--input-bg);
   border: 1px solid var(--border-color-normal);
-  border-radius: 4px;
+  border-radius: var(--input-border-radius);
   color: var(--text-color-primary);
   cursor: pointer;
   font-size: 0.85rem;
   flex-shrink: 0;
+  line-height: 1;
 
   &:hover {
     background-color: var(--button-bg-hover);
+  }
+
+  &:focus {
+    outline: none;
+    border-color: var(--border-color-focused);
+    box-shadow: 0 0 0 1px var(--border-color-focused);
   }
 }
 </style>

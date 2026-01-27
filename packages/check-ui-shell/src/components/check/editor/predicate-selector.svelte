@@ -301,14 +301,16 @@ function handleKeyDown(e: KeyboardEvent) {
 <!-- TEMPLATE -->
 <div class="predicate-selector-section">
   <div class="predicate-selector-header">
-    <h3 class="predicate-selector-title">Predicates</h3>
-    <button
-      class="predicate-selector-add-btn"
-      onclick={handleAddPredicate}
-      aria-label="Add predicate"
-    >
-      +
-    </button>
+    <h3 class="predicate-selector-title">
+      Predicates
+      <button
+        class="predicate-selector-add-btn"
+        onclick={handleAddPredicate}
+        aria-label="Add predicate"
+      >
+        +
+      </button>
+    </h3>
   </div>
 
   <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
@@ -360,21 +362,21 @@ function handleKeyDown(e: KeyboardEvent) {
               <span class="predicate-selector-text">Dataset:</span>
               <Selector viewModel={createDatasetRefKindSelector(predicate)} ariaLabel="Dataset reference kind" />
               {#if predicate.ref.datasetRefKind === 'name'}
-                <select
-                  class="predicate-selector-select"
-                  value={predicate.ref.datasetKey || ''}
-                  onchange={e => {
-                    e.stopPropagation()
-                    updateRefDatasetKey(predicate, (e.target as HTMLSelectElement).value)
-                  }}
+                <div
+                  class="predicate-selector-typeahead-wrapper"
                   onclick={e => e.stopPropagation()}
-                  aria-label="Reference dataset"
+                  role="none"
                 >
-                  <option value="">Select...</option>
-                  {#each viewModel.datasetListItems as item}
-                    <option value={item.id}>{item.label}</option>
-                  {/each}
-                </select>
+                  <TypeaheadSelector
+                    items={viewModel.datasetListItems}
+                    selectedId={predicate.ref.datasetKey || ''}
+                    placeholder="Search outputs..."
+                    ariaLabel="Reference dataset"
+                    onSelect={(item: ListItemViewModel) => {
+                      updateRefDatasetKey(predicate, item.id)
+                    }}
+                  />
+                </div>
               {/if}
             </div>
             <div class="predicate-selector-row">
@@ -538,7 +540,6 @@ function handleKeyDown(e: KeyboardEvent) {
 
 .predicate-selector-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
   flex-shrink: 0;
 }
@@ -548,6 +549,9 @@ function handleKeyDown(e: KeyboardEvent) {
   font-size: 1rem;
   font-weight: 700;
   color: var(--text-color-primary);
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
 }
 
 .predicate-selector-add-btn {
@@ -574,9 +578,6 @@ function handleKeyDown(e: KeyboardEvent) {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  overflow-y: auto;
-  max-height: 200px;
-  padding-right: 4px;
 
   &:focus {
     outline: 2px solid var(--border-color-focused);
@@ -621,7 +622,7 @@ function handleKeyDown(e: KeyboardEvent) {
 }
 
 .predicate-selector-input {
-  padding: 0.35rem 0.5rem;
+  padding: 4px 8px;
   background-color: var(--input-bg);
   border: 1px solid var(--border-color-normal);
   border-radius: var(--input-border-radius);
@@ -638,36 +639,28 @@ function handleKeyDown(e: KeyboardEvent) {
   }
 }
 
-.predicate-selector-select {
-  padding: 0.35rem 0.5rem;
+.predicate-selector-remove-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 6px;
   background-color: var(--input-bg);
   border: 1px solid var(--border-color-normal);
   border-radius: var(--input-border-radius);
   color: var(--text-color-primary);
-  font-family: inherit;
+  cursor: pointer;
   font-size: 0.85rem;
-  flex: 1;
-  min-width: 0;
+  flex-shrink: 0;
+  line-height: 1;
+
+  &:hover {
+    background-color: var(--button-bg-hover);
+  }
 
   &:focus {
     outline: none;
     border-color: var(--border-color-focused);
     box-shadow: 0 0 0 1px var(--border-color-focused);
-  }
-}
-
-.predicate-selector-remove-btn {
-  padding: 0.15rem 0.4rem;
-  background: none;
-  border: 1px solid var(--border-color-normal);
-  border-radius: 4px;
-  color: var(--text-color-primary);
-  cursor: pointer;
-  font-size: 0.85rem;
-  flex-shrink: 0;
-
-  &:hover {
-    background-color: var(--button-bg-hover);
   }
 }
 

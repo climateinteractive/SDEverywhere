@@ -168,32 +168,34 @@ $effect(() => {
 <!-- TEMPLATE -->
 <div class="scenario-selector-section">
   <div class="scenario-selector-header">
-    <h3 class="scenario-selector-title">Scenarios</h3>
-    <div class="scenario-selector-add-container">
-      <button
-        class="scenario-selector-add-btn"
-        onclick={handleAddButtonClick}
-        aria-label="Add scenario"
-      >
-        +
-      </button>
-      {#if showContextMenu}
-        <div class="scenario-selector-context-menu" bind:this={contextMenuRef}>
-          <button
-            class="scenario-selector-context-item"
-            onclick={() => handleAddScenario('all-inputs')}
-          >
-            All inputs at...
-          </button>
-          <button
-            class="scenario-selector-context-item"
-            onclick={() => handleAddScenario('given-inputs')}
-          >
-            Given inputs at...
-          </button>
-        </div>
-      {/if}
-    </div>
+    <h3 class="scenario-selector-title">
+      Scenarios
+      <span class="scenario-selector-add-container">
+        <button
+          class="scenario-selector-add-btn"
+          onclick={handleAddButtonClick}
+          aria-label="Add scenario"
+        >
+          +
+        </button>
+        {#if showContextMenu}
+          <div class="scenario-selector-context-menu" bind:this={contextMenuRef}>
+            <button
+              class="scenario-selector-context-item"
+              onclick={() => handleAddScenario('all-inputs')}
+            >
+              All inputs at...
+            </button>
+            <button
+              class="scenario-selector-context-item"
+              onclick={() => handleAddScenario('given-inputs')}
+            >
+              Given inputs at...
+            </button>
+          </div>
+        {/if}
+      </span>
+    </h3>
   </div>
 
   <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
@@ -335,7 +337,6 @@ $effect(() => {
 
 .scenario-selector-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
   flex-shrink: 0;
 }
@@ -345,10 +346,14 @@ $effect(() => {
   font-size: 1rem;
   font-weight: 700;
   color: var(--text-color-primary);
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
 }
 
 .scenario-selector-add-container {
   position: relative;
+  display: inline-flex;
 }
 
 .scenario-selector-add-btn {
@@ -412,9 +417,6 @@ $effect(() => {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  overflow-y: auto;
-  max-height: 200px;
-  padding-right: 4px;
 
   &:focus {
     outline: 2px solid var(--border-color-focused);
@@ -477,17 +479,27 @@ $effect(() => {
 
 .scenario-selector-remove-btn,
 .scenario-selector-remove-input-btn {
-  padding: 0.15rem 0.4rem;
-  background: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 6px;
+  background-color: var(--input-bg);
   border: 1px solid var(--border-color-normal);
-  border-radius: 4px;
+  border-radius: var(--input-border-radius);
   color: var(--text-color-primary);
   cursor: pointer;
   font-size: 0.85rem;
   flex-shrink: 0;
+  line-height: 1;
 
   &:hover {
     background-color: var(--button-bg-hover);
+  }
+
+  &:focus {
+    outline: none;
+    border-color: var(--border-color-focused);
+    box-shadow: 0 0 0 1px var(--border-color-focused);
   }
 }
 
@@ -514,7 +526,7 @@ $effect(() => {
 
 .scenario-selector-value-input {
   width: 70px;
-  padding: 0.35rem 0.5rem;
+  padding: 4px 8px;
   background-color: var(--input-bg);
   border: 1px solid var(--border-color-normal);
   border-radius: var(--input-border-radius);

@@ -162,6 +162,27 @@ Created the initial check-editor component with basic structure:
   - Updated `edit-test` handler in app.svelte to extract `testInfo` and call `initFromSpec`
   - Falls back to new-test mode if spec is not available
 
+### 2026-01-26: UI Layout and Styling Polish
+
+- Changed left side form to scroll as a whole instead of each section scrolling independently
+  - Removed `max-height` and `overflow-y: auto` from section item containers
+- Moved "+" buttons to be inline with section titles (e.g., "Scenarios [+]")
+  - Updated all three selectors: scenario, dataset, and predicate
+- Moved paste button to left of describe text field
+  - Changed icon from emoji (📋) to FontAwesome paste icon (`faPaste`)
+  - Made button square with same height as text inputs
+- Updated predicate selector to use typeahead selector for "different dataset" case
+  - Replaced native `<select>` with `<TypeaheadSelector>` component
+- Styled regular `selector.svelte` component to match `typeahead-selector.svelte`
+  - Added consistent border, background, font, and custom dropdown arrow styling
+  - Used CSS `appearance: none` with custom SVG chevron
+- Made consistent styling across all form controls:
+  - All inputs, selectors, and buttons now use `padding: 4px 8px` and `font-size: 0.85rem`
+  - Remove buttons (✕) updated to match input styling with consistent height
+  - Value inputs updated with consistent padding
+- Removed blue focus outline box-shadow from right side tab bar buttons
+- Updated `PredicateDataReference` Storybook test to use typeahead selector assertion
+
 ---
 
 ## Current Status
@@ -169,20 +190,22 @@ Created the initial check-editor component with basic structure:
 ✅ All check-editor functionality implemented and working
 ✅ All 18 check-editor Storybook tests passing
 ✅ All 9 check-summary Storybook tests passing (1 skipped due to flaky headless rendering)
-✅ 135 total Storybook tests passing
+✅ 178 total Storybook tests passing
 ✅ Real data preview functional
 ✅ Multi-item support fully operational
 ✅ Accessibility compliant
 ✅ Vitest configuration fixed
 ✅ Test description text fields with customizable describe/it text
 ✅ At-value support with validation for given-inputs scenarios
-✅ Predicate data references with dataset/scenario comparison options
+✅ Predicate data references with dataset/scenario comparison options (now with typeahead)
 ✅ Time range support for predicates
 ✅ Preview graph updates reactively
 ✅ Paste YAML to prepopulate form
 ✅ Check-summary wired up for edit-test and new-test commands
 ✅ New Test button positioned at right edge of summary bar
 ✅ App.svelte integrated with check editor dialog
+✅ Unified scrolling for left side form
+✅ Consistent styling across all form controls (selectors, inputs, buttons)
 
 ✅ Spec preservation implemented in check-core (original spec now available on reports)
 ✅ Edit Test now initializes editor form from original spec (round-trip editing working)
