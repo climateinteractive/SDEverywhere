@@ -15,6 +15,7 @@ let { viewModel }: Props = $props()
 type Tab = 'preview' | 'code'
 let activeTab = $state<Tab>('preview')
 
+const graphBoxViewModel = $derived(viewModel.createGraphBoxViewModel())
 const yamlCode = $derived(viewModel.getYamlCode())
 
 async function handleCopyToClipboard() {
@@ -51,9 +52,7 @@ async function handleCopyToClipboard() {
 
   <div class="tabbed-preview-content">
     {#if activeTab === 'preview'}
-      {#key viewModel.configKey}
-        <PreviewGraph viewModel={viewModel.graphBoxViewModel} />
-      {/key}
+      <PreviewGraph viewModel={graphBoxViewModel} />
     {:else if activeTab === 'code'}
       <div class="tabbed-preview-code-container">
         <button class="tabbed-preview-copy-btn" onclick={handleCopyToClipboard} aria-label="Copy to clipboard">

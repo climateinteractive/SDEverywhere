@@ -887,6 +887,50 @@ function createMockViewModel(): CheckEditorViewModel {
 ></Story>
 
 <Story
+  name="Change Scenario Position"
+  {template}
+  args={{
+    open: true,
+    viewModel: createMockViewModel()
+  }}
+  play={async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await waitFor(() => {
+      expect(canvas.getByRole('dialog')).toBeInTheDocument()
+    })
+
+    // Find the scenario position select (in the all-inputs scenario item)
+    const scenarioItem = canvasElement.querySelector('.scenario-selector-item')
+    await expect(scenarioItem).toBeInTheDocument()
+
+    const positionSelect = scenarioItem?.querySelector('select[aria-label="Position"]') as HTMLSelectElement
+    await expect(positionSelect).toBeInTheDocument()
+
+    // Verify initial position is "at-default"
+    await expect(positionSelect.value).toBe('at-default')
+
+    // Change position to "at-minimum"
+    await userEvent.selectOptions(positionSelect, 'at-minimum')
+
+    // Verify the select changed
+    await waitFor(() => {
+      expect(positionSelect.value).toBe('at-minimum')
+    })
+
+    // Verify the code tab reflects the change
+    const codeTab = canvas.getByRole('button', { name: /code tab/i })
+    await userEvent.click(codeTab)
+
+    await waitFor(() => {
+      const codeElement = canvasElement.querySelector('.tabbed-preview-code')
+      expect(codeElement).toBeInTheDocument()
+      expect(codeElement).toHaveTextContent('at: minimum')
+    })
+  }}
+></Story>
+
+<Story
   name="Initialize from Existing Test (Edit Mode)"
   {template}
   args={{

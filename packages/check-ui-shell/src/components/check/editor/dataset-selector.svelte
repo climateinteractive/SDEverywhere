@@ -192,7 +192,8 @@ function handleKeyDown(e: KeyboardEvent) {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 4px 6px;
+  width: 22px;
+  height: 22px;
   background-color: var(--input-bg);
   border: 1px solid var(--border-color-normal);
   border-radius: var(--input-border-radius);

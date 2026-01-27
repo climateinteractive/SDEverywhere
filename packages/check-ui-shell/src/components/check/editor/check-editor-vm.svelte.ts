@@ -12,6 +12,9 @@ import type {
 } from '@sdeverywhere/check-core'
 import yaml from 'yaml'
 
+import type { ListItemViewModel } from '../../list/list-item-vm.svelte'
+import { CheckSummaryGraphBoxViewModel } from '../summary/check-summary-graph-box-vm'
+
 // Local type definitions compatible with check-core spec types (not exported from check-core)
 type CheckScenarioPosition = 'default' | 'min' | 'max'
 
@@ -65,9 +68,6 @@ export interface CheckGroupSpec {
 
 /** The position type for scenario inputs (extends InputPosition with 'at-value'). */
 export type ScenarioInputPosition = 'at-default' | 'at-minimum' | 'at-maximum' | 'at-value'
-
-import type { ListItemViewModel } from '../../list/list-item-vm.svelte'
-import { CheckSummaryGraphBoxViewModel } from '../summary/check-summary-graph-box-vm'
 
 /** The type of predicate operator. */
 export type PredicateType = 'gt' | 'gte' | 'lt' | 'lte' | 'eq' | 'approx'
@@ -186,11 +186,6 @@ export class CheckEditorViewModel {
   public datasetListItems: ListItemViewModel[]
   public inputListItems: ListItemViewModel[]
 
-  /** Derived key that changes when any configuration changes, used to force graph updates. */
-  public configKey = $derived(this.computeConfigKey())
-
-  public graphBoxViewModel = $derived(this.createGraphBoxViewModel())
-
   /** Called when the user saves the check test. */
   public onSave?: (config: CheckTestConfig) => void
 
@@ -287,9 +282,15 @@ export class CheckEditorViewModel {
     }
 
     // Select first items
-    if (this.scenarios.length > 0) this.selectedScenarioId = this.scenarios[0].id
-    if (this.datasets.length > 0) this.selectedDatasetId = this.datasets[0].id
-    if (this.predicates.length > 0) this.selectedPredicateId = this.predicates[0].id
+    if (this.scenarios.length > 0) {
+      this.selectedScenarioId = this.scenarios[0].id
+    }
+    if (this.datasets.length > 0) {
+      this.selectedDatasetId = this.datasets[0].id
+    }
+    if (this.predicates.length > 0) {
+      this.selectedPredicateId = this.predicates[0].id
+    }
   }
 
   /**
@@ -488,11 +489,17 @@ export class CheckEditorViewModel {
    * @returns The position in our format.
    */
   private convertPosition(at: 'default' | 'min' | 'max' | number | undefined): ScenarioInputPosition {
-    if (at === undefined || at === 'default') return 'at-default'
-    if (at === 'min') return 'at-minimum'
-    if (at === 'max') return 'at-maximum'
-    // For numeric values, we would use 'at-value' but need to also set customValue
-    // This is handled specially in the caller
+    if (at === undefined || at === 'default') {
+      return 'at-default'
+    }
+    if (at === 'min') {
+      return 'at-minimum'
+    }
+    if (at === 'max') {
+      return 'at-maximum'
+    }
+    // For numeric values, we would use 'at-value' but need to also set customValue;
+    // this is handled specially in the caller
     return 'at-value'
   }
 
@@ -895,48 +902,11 @@ export class CheckEditorViewModel {
   }
 
   /**
-   * Compute a unique key representing the current configuration state.
-   * This key changes when any configuration that affects the graph preview changes.
-   *
-   * @returns A string key representing the current configuration.
-   */
-  private computeConfigKey(): string {
-    // Access all the reactive state that should trigger graph updates
-    const scenarioKey = this.scenarios
-      .map(s => {
-        if (s.kind === 'all-inputs') {
-          return `all:${s.position}`
-        } else {
-          const inputs = s.inputs?.map(i => `${i.inputVarId}:${i.position}:${i.customValue}`).join(',') || ''
-          return `given:${inputs}`
-        }
-      })
-      .join('|')
-
-    const datasetKey = this.datasets.map(d => d.datasetKey).join('|')
-
-    const predicateKey = this.predicates
-      .map(p => {
-        const ref = p.ref
-        if (ref.kind === 'constant') {
-          return `${p.type}:const:${ref.value}`
-        } else {
-          return `${p.type}:data:${ref.datasetRefKind}:${ref.datasetKey}:${ref.scenarioRefKind}`
-        }
-      })
-      .join('|')
-
-    const selectionKey = `${this.selectedScenarioId}:${this.selectedDatasetId}:${this.selectedPredicateId}`
-
-    return `${scenarioKey}::${datasetKey}::${predicateKey}::${selectionKey}`
-  }
-
-  /**
    * Create a graph box view model for preview.
    *
    * @returns The check summary graph box view model.
    */
-  private createGraphBoxViewModel(): CheckSummaryGraphBoxViewModel | undefined {
+  createGraphBoxViewModel(): CheckSummaryGraphBoxViewModel | undefined {
     // For preview, use the selected scenario, dataset, and predicate
     if (this.scenarios.length === 0 || this.datasets.length === 0 || this.predicates.length === 0) {
       return undefined
