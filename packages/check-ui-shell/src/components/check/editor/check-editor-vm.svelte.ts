@@ -126,14 +126,21 @@ export interface PredicateRefConfig {
   scenarioConfig?: PredicateScenarioConfig
 }
 
+/** Time bound type for predicates. */
+export type TimeBoundType = 'incl' | 'excl'
+
 /** Time range configuration for predicates. */
 export interface PredicateTimeConfig {
   /** Whether time range is enabled. */
   enabled: boolean
-  /** Start year (inclusive). */
+  /** Start year. */
   startYear?: number
-  /** End year (inclusive). */
+  /** Whether start year is inclusive (>=) or exclusive (>). */
+  startType?: TimeBoundType
+  /** End year. */
   endYear?: number
+  /** Whether end year is inclusive (<=) or exclusive (<). */
+  endType?: TimeBoundType
 }
 
 /** Configuration for a single predicate. */
@@ -754,7 +761,8 @@ export class CheckEditorViewModel {
       if (scenario.kind === 'all-inputs') {
         const position = scenario.position || 'at-default'
         const positionStr = position.replace('at-', '')
-        lines.push(`        - preset: ${positionStr}`)
+        lines.push(`        - with_inputs: all`)
+        lines.push(`          at: ${positionStr}`)
       } else if (scenario.kind === 'given-inputs' && scenario.inputs && scenario.inputs.length > 0) {
         for (const input of scenario.inputs) {
           const inputVar = this.inputVars.find(v => v.varId === input.inputVarId)
@@ -837,10 +845,36 @@ export class CheckEditorViewModel {
       }
       // Time range
       if (predicate.time?.enabled) {
-        if (predicate.time.startYear !== undefined && predicate.time.endYear !== undefined) {
-          lines.push(`          time: [${predicate.time.startYear}, ${predicate.time.endYear}]`)
-        } else if (predicate.time.startYear !== undefined) {
-          lines.push(`          time: ${predicate.time.startYear}`)
+        const hasStart = predicate.time.startYear !== undefined
+        const hasEnd = predicate.time.endYear !== undefined
+        const startType = predicate.time.startType || 'incl'
+        const endType = predicate.time.endType || 'incl'
+
+        if (hasStart && hasEnd) {
+          // Both start and end specified - check if we can use simple array format
+          if (startType === 'incl' && endType === 'incl') {
+            lines.push(`          time: [${predicate.time.startYear}, ${predicate.time.endYear}]`)
+          } else {
+            // Use explicit format with after_incl/after_excl and before_incl/before_excl
+            const startKey = startType === 'incl' ? 'after_incl' : 'after_excl'
+            const endKey = endType === 'incl' ? 'before_incl' : 'before_excl'
+            lines.push(`          time:`)
+            lines.push(`            ${startKey}: ${predicate.time.startYear}`)
+            lines.push(`            ${endKey}: ${predicate.time.endYear}`)
+          }
+        } else if (hasStart) {
+          // Only start specified
+          if (startType === 'incl') {
+            lines.push(`          time: ${predicate.time.startYear}`)
+          } else {
+            lines.push(`          time:`)
+            lines.push(`            after_excl: ${predicate.time.startYear}`)
+          }
+        } else if (hasEnd) {
+          // Only end specified
+          const endKey = endType === 'incl' ? 'before_incl' : 'before_excl'
+          lines.push(`          time:`)
+          lines.push(`            ${endKey}: ${predicate.time.endYear}`)
         }
       }
     }

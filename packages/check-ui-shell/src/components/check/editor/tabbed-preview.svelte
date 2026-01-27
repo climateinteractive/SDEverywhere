@@ -77,6 +77,8 @@ async function handleCopyToClipboard() {
   flex: 1;
   min-width: 0;
   min-height: 0;
+  max-height: 100%;
+  overflow: hidden;
 }
 
 .tabbed-preview-tabs {

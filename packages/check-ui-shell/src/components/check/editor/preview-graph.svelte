@@ -26,7 +26,7 @@ let { viewModel }: Props = $props()
 .preview-graph-container {
   flex: 1;
   min-width: 32rem;
-  min-height: 24rem;
+  min-height: 200px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -35,5 +35,6 @@ let { viewModel }: Props = $props()
   border-top: none;
   border-radius: 0 0 4px 4px;
   padding: 1rem;
+  overflow: auto;
 }
 </style>

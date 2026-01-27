@@ -16,6 +16,7 @@ import type {
   PredicateScenarioRefKind,
   PredicateItemConfig,
   PredicateTimeConfig,
+  TimeBoundType,
   PredicateScenarioConfig,
   ScenarioKind,
   ScenarioInputPosition,
@@ -76,6 +77,17 @@ const predicateGivenInputsPositionOptions = [
   new SelectorOptionViewModel('Minimum', 'at-minimum'),
   new SelectorOptionViewModel('Maximum', 'at-maximum'),
   new SelectorOptionViewModel('Value', 'at-value')
+]
+
+// Create selector options for time bound type (inclusive/exclusive)
+const startTimeBoundOptions = [
+  new SelectorOptionViewModel('>=', 'incl'),
+  new SelectorOptionViewModel('>', 'excl')
+]
+
+const endTimeBoundOptions = [
+  new SelectorOptionViewModel('<=', 'incl'),
+  new SelectorOptionViewModel('<', 'excl')
 ]
 
 function createTypeSelector(predicate: PredicateItemConfig) {
@@ -246,6 +258,22 @@ function getPredicateOutOfRangeTooltip(inputVarId: string): string {
 function updateTimeConfig(predicate: PredicateItemConfig, updates: Partial<PredicateTimeConfig>) {
   const time = { ...predicate.time, ...updates } as PredicateTimeConfig
   viewModel.updatePredicate(predicate.id, { time })
+}
+
+function createStartTimeBoundSelector(predicate: PredicateItemConfig) {
+  const selector = new SelectorViewModel(startTimeBoundOptions, predicate.time?.startType || 'incl')
+  selector.onUserChange = (newValue: string) => {
+    updateTimeConfig(predicate, { startType: newValue as TimeBoundType })
+  }
+  return selector
+}
+
+function createEndTimeBoundSelector(predicate: PredicateItemConfig) {
+  const selector = new SelectorViewModel(endTimeBoundOptions, predicate.time?.endType || 'incl')
+  selector.onUserChange = (newValue: string) => {
+    updateTimeConfig(predicate, { endType: newValue as TimeBoundType })
+  }
+  return selector
 }
 
 
@@ -454,6 +482,7 @@ function handleKeyDown(e: KeyboardEvent) {
               Time range
             </label>
             {#if predicate.time?.enabled}
+              <Selector viewModel={createStartTimeBoundSelector(predicate)} ariaLabel="Start bound type" />
               <input
                 class="predicate-selector-input predicate-selector-year-input"
                 type="text"
@@ -472,6 +501,7 @@ function handleKeyDown(e: KeyboardEvent) {
                 aria-label="Start year"
               />
               <span class="predicate-selector-text">to</span>
+              <Selector viewModel={createEndTimeBoundSelector(predicate)} ariaLabel="End bound type" />
               <input
                 class="predicate-selector-input predicate-selector-year-input"
                 type="text"
@@ -521,8 +551,8 @@ function handleKeyDown(e: KeyboardEvent) {
 }
 
 .predicate-selector-add-btn {
-  width: 28px;
-  height: 28px;
+  width: 20px;
+  height: 20px;
   padding: 0;
   display: flex;
   align-items: center;
@@ -532,8 +562,8 @@ function handleKeyDown(e: KeyboardEvent) {
   border-radius: 4px;
   color: var(--text-color-primary);
   cursor: pointer;
-  font-size: 1.2rem;
-  font-weight: bold;
+  font-size: 0.85rem;
+  line-height: 1;
 
   &:hover {
     background-color: var(--button-bg-hover);

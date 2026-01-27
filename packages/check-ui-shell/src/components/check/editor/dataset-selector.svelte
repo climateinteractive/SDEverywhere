@@ -129,8 +129,8 @@ function handleKeyDown(e: KeyboardEvent) {
 }
 
 .dataset-selector-add-btn {
-  width: 28px;
-  height: 28px;
+  width: 20px;
+  height: 20px;
   padding: 0;
   display: flex;
   align-items: center;
@@ -140,8 +140,8 @@ function handleKeyDown(e: KeyboardEvent) {
   border-radius: 4px;
   color: var(--text-color-primary);
   cursor: pointer;
-  font-size: 1.2rem;
-  font-weight: bold;
+  font-size: 0.85rem;
+  line-height: 1;
 
   &:hover {
     background-color: var(--button-bg-hover);

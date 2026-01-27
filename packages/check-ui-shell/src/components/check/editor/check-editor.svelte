@@ -124,6 +124,7 @@ function parsePastedYaml() {
   gap: 2rem;
   min-width: 800px;
   min-height: 340px;
+  max-height: 70vh;
 }
 
 .check-editor-form {
@@ -133,7 +134,8 @@ function parsePastedYaml() {
   flex: 1;
   min-width: 24rem;
   min-height: 0;
-  overflow: hidden;
+  overflow-y: auto;
+  padding-right: 0.5rem;
 }
 
 .check-editor-header-row {
@@ -202,10 +204,14 @@ function parsePastedYaml() {
   background-color: rgba(100, 180, 255, 0.05);
   border: 1px solid rgba(100, 180, 255, 0.2);
   border-radius: 4px;
+  box-sizing: border-box;
+  overflow: hidden;
+  flex-shrink: 0;
 }
 
 .check-editor-paste-textarea {
   width: 100%;
+  box-sizing: border-box;
   padding: 0.5rem;
   background-color: var(--input-bg);
   border: 1px solid var(--border-color-normal);
