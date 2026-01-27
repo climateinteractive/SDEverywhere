@@ -132,7 +132,6 @@ const mockItems = [
   {template}
   args={{
     items: mockItems,
-    selectedId: 'apple',
     placeholder: 'Search...',
     ariaLabel: 'Select item',
     onSelect: () => {
@@ -164,6 +163,12 @@ const mockItems = [
     await waitFor(() => {
       const popup = canvasElement.querySelector('.typeahead-selector-popup')
       expect(popup).not.toBeInTheDocument()
+    })
+
+    // Verify button text updates to show the newly selected item
+    await waitFor(() => {
+      const updatedButton = canvas.getByRole('button', { name: /select item/i })
+      expect(updatedButton).toHaveTextContent('Cherry')
     })
   }}
 ></Story>
@@ -210,6 +215,33 @@ const mockItems = [
       const items = canvasElement.querySelectorAll('.typeahead-selector-item')
       const firstItem = items[0]
       expect(firstItem).toHaveClass('active')
+    })
+
+    // Press down arrow twice to make "Cherry" active
+    await userEvent.type(searchInput, '{ArrowDown}')
+    await userEvent.type(searchInput, '{ArrowDown}')
+
+    // Verify "Cherry" is active
+    await waitFor(() => {
+      const items = canvasElement.querySelectorAll('.typeahead-selector-item')
+      const cherryItem = items[2]
+      expect(cherryItem).toHaveClass('active')
+      expect(cherryItem).toHaveTextContent('Cherry')
+    })
+
+    // Press Enter to select the active item
+    await userEvent.type(searchInput, '{Enter}')
+
+    // Verify popup closes
+    await waitFor(() => {
+      const popup = canvasElement.querySelector('.typeahead-selector-popup')
+      expect(popup).not.toBeInTheDocument()
+    })
+
+    // Verify button text updates to show the newly selected item
+    await waitFor(() => {
+      const updatedButton = canvas.getByRole('button', { name: /select item/i })
+      expect(updatedButton).toHaveTextContent('Cherry')
     })
   }}
 ></Story>

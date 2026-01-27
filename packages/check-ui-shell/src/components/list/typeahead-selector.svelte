@@ -10,7 +10,7 @@ import type { ListItemViewModel } from './list-item-vm.svelte'
 interface Props {
   /** The list of items to choose from. */
   items: ListItemViewModel[]
-  /** The currently selected item ID. */
+  /** The currently selected item ID (bindable). */
   selectedId: string
   /** Placeholder text for the search input. */
   placeholder?: string
@@ -20,7 +20,7 @@ interface Props {
   onSelect?: (item: ListItemViewModel) => void
 }
 
-let { items, selectedId, placeholder = 'Search...', ariaLabel = 'Select item', onSelect }: Props = $props()
+let { items, selectedId = $bindable(), placeholder = 'Search...', ariaLabel = 'Select item', onSelect }: Props = $props()
 
 let showPopup = $state(false)
 let searchQuery = $state('')
@@ -86,6 +86,7 @@ function handleButtonClick() {
 }
 
 function handleItemClick(item: ListItemViewModel) {
+  selectedId = item.id
   onSelect?.(item)
   showPopup = false
   searchQuery = ''
