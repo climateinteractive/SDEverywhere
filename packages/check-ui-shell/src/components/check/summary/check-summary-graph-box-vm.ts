@@ -42,7 +42,7 @@ export class CheckSummaryGraphBoxViewModel {
 
   constructor(
     private readonly dataCoordinator: CheckDataCoordinator,
-    private readonly scenario: CheckScenario,
+    public readonly scenario: CheckScenario,
     public readonly datasetKey: DatasetKey,
     public readonly predicateReport: CheckPredicateReport
   ) {

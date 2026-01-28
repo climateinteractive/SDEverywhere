@@ -4,12 +4,12 @@
 <script lang="ts">
 import TypeaheadSelector from '../../list/typeahead-selector.svelte'
 
-import type { CheckEditorViewModel } from './check-editor-vm.svelte'
+import type { DatasetEditorViewModel } from './dataset-editor-vm.svelte'
 import type { ListItemViewModel } from '../../list/list-item-vm.svelte'
 
 interface Props {
-  /** The view model for the editor. */
-  viewModel: CheckEditorViewModel
+  /** The view model for the dataset editor. */
+  viewModel: DatasetEditorViewModel
 }
 
 let { viewModel }: Props = $props()
@@ -48,27 +48,27 @@ function handleKeyDown(e: KeyboardEvent) {
 </script>
 
 <!-- TEMPLATE -->
-<div class="dataset-selector-section">
-  <div class="dataset-selector-header">
-    <h3 class="dataset-selector-title">
+<div class="dataset-editor-section">
+  <div class="dataset-editor-header">
+    <h3 class="dataset-editor-title">
       Datasets
-      <button class="dataset-selector-add-btn" onclick={handleAddDataset} aria-label="Add dataset"> + </button>
+      <button class="dataset-editor-add-btn" onclick={handleAddDataset} aria-label="Add dataset"> + </button>
     </h3>
   </div>
 
   <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-  <div class="dataset-selector-items" tabindex="0" onkeydown={handleKeyDown} role="list">
+  <div class="dataset-editor-items" tabindex="0" onkeydown={handleKeyDown} role="list">
     {#each viewModel.datasets as dataset (dataset.id)}
       <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
       <div
-        class="dataset-selector-item"
+        class="dataset-editor-item"
         class:selected={viewModel.selectedDatasetId === dataset.id}
         onclick={() => handleSelectDataset(dataset.id)}
         role="listitem"
       >
-        <div class="dataset-selector-row">
-          <span class="dataset-selector-text">Output:</span>
-          <div class="dataset-selector-typeahead-wrapper" onclick={e => e.stopPropagation()} role="none">
+        <div class="dataset-editor-row">
+          <span class="dataset-editor-text">Output:</span>
+          <div class="dataset-editor-typeahead-wrapper" onclick={e => e.stopPropagation()} role="none">
             <TypeaheadSelector
               items={viewModel.datasetListItems}
               selectedId={dataset.datasetKey}
@@ -81,7 +81,7 @@ function handleKeyDown(e: KeyboardEvent) {
           </div>
           {#if viewModel.datasets.length > 1}
             <button
-              class="dataset-selector-remove-btn"
+              class="dataset-editor-remove-btn"
               onclick={e => {
                 e.stopPropagation()
                 handleRemoveDataset(dataset.id)
@@ -99,19 +99,19 @@ function handleKeyDown(e: KeyboardEvent) {
 
 <!-- STYLE -->
 <style lang="scss">
-.dataset-selector-section {
+.dataset-editor-section {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
 }
 
-.dataset-selector-header {
+.dataset-editor-header {
   display: flex;
   align-items: center;
   flex-shrink: 0;
 }
 
-.dataset-selector-title {
+.dataset-editor-title {
   margin: 0;
   font-size: 1rem;
   font-weight: 700;
@@ -121,7 +121,7 @@ function handleKeyDown(e: KeyboardEvent) {
   gap: 0.35rem;
 }
 
-.dataset-selector-add-btn {
+.dataset-editor-add-btn {
   width: 20px;
   height: 20px;
   padding: 0;
@@ -142,18 +142,13 @@ function handleKeyDown(e: KeyboardEvent) {
   }
 }
 
-.dataset-selector-items {
+.dataset-editor-items {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-
-  // &:focus {
-  //   outline: 2px solid var(--border-color-focused);
-  //   outline-offset: -2px;
-  // }
 }
 
-.dataset-selector-item {
+.dataset-editor-item {
   padding: 0.5rem;
   border: 1px solid var(--border-color-normal);
   border-radius: 4px;
@@ -170,25 +165,25 @@ function handleKeyDown(e: KeyboardEvent) {
   }
 }
 
-.dataset-selector-row {
+.dataset-editor-row {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   flex-wrap: nowrap;
 }
 
-.dataset-selector-text {
+.dataset-editor-text {
   font-size: 0.9rem;
   color: var(--text-color-primary);
   white-space: nowrap;
 }
 
-.dataset-selector-typeahead-wrapper {
+.dataset-editor-typeahead-wrapper {
   flex: 1;
   min-width: 0;
 }
 
-.dataset-selector-remove-btn {
+.dataset-editor-remove-btn {
   display: flex;
   align-items: center;
   justify-content: center;

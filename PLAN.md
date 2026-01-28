@@ -183,14 +183,47 @@ Created the initial check-editor component with basic structure:
 - Removed blue focus outline box-shadow from right side tab bar buttons
 - Updated `PredicateDataReference` Storybook test to use typeahead selector assertion
 
+### 2026-01-27: Preview Graph Improvements and Bug Fixes
+
+- Fixed time range options not reflected in preview graph
+  - Added `convertTimeConfig` method to convert `PredicateTimeConfig` to `CheckPredicateTimeSpec`
+  - Time configuration now properly passed to predicate report
+- Fixed predicate dataset comparison not showing in preview graph
+  - Implemented proper `CheckDataRef` and `CheckPredicateOpDataRef` creation
+  - Data references now correctly display comparison datasets
+- Fixed multiple inputs support in given-inputs scenarios
+  - Now creates proper `InputSettingsSpec` with all input settings
+  - Added `positionKey` helper for generating scenario UIDs
+- Handled `CheckPredicateTimeOptions` format when parsing YAML
+  - Support for after_excl, after_incl, before_excl, before_incl
+- Added check-summary style header to preview
+  - Shows status icon (✓) and predicate message
+  - Made `predicateReport` and `datasetKey` public on `CheckSummaryGraphBoxViewModel`
+- Documented limitation: group/matching dataset specs not supported in editor
+
+### 2026-01-27: View Model Refactoring
+
+- Split check-editor-vm.svelte.ts into separate VM files for better code organization:
+  - Created `scenario-editor-vm.svelte.ts` for scenario state and methods
+  - Created `dataset-editor-vm.svelte.ts` for dataset state and methods
+  - Created `predicate-editor-vm.svelte.ts` for predicate state and methods
+  - Updated `check-editor-vm.svelte.ts` to compose and delegate to sub-VMs
+- Main CheckEditorViewModel now uses getter/setter properties for backwards compatibility
+- Sub-VMs are exposed via `scenarioVM`, `datasetVM`, and `predicateVM` public properties
+- All tests pass (179 total, 1 skipped)
+- Fixed preview area min-height to 340px to avoid layout flashing during async loading
+- Fixed arrow key propagation in typeahead-selector (added stopPropagation())
+- Made scenario and datasetKey public on CheckSummaryGraphBoxViewModel for preview header
+- Updated preview-graph.svelte to show full check-summary text message
+
 ---
 
 ## Current Status
 
 ✅ All check-editor functionality implemented and working
-✅ All 18 check-editor Storybook tests passing
+✅ All 19 check-editor Storybook tests passing
 ✅ All 9 check-summary Storybook tests passing (1 skipped due to flaky headless rendering)
-✅ 178 total Storybook tests passing
+✅ 179 total tests passing (126 Storybook + 53 unit tests)
 ✅ Real data preview functional
 ✅ Multi-item support fully operational
 ✅ Accessibility compliant
@@ -209,6 +242,7 @@ Created the initial check-editor component with basic structure:
 
 ✅ Spec preservation implemented in check-core (original spec now available on reports)
 ✅ Edit Test now initializes editor form from original spec (round-trip editing working)
+✅ View model split into separate files (scenario, dataset, predicate VMs)
 
 ---
 
@@ -328,7 +362,11 @@ Created the initial check-editor component with basic structure:
 ### Core Implementation
 
 - `src/components/check/editor/check-editor.svelte` - Main dialog component
-- `src/components/check/editor/check-editor-vm.svelte.ts` - View model with state management
+- `src/components/check/editor/check-editor-vm.svelte.ts` - Main view model (coordinates sub-VMs)
+- `src/components/check/editor/scenario-editor-vm.svelte.ts` - Scenario state and methods
+- `src/components/check/editor/dataset-editor-vm.svelte.ts` - Dataset state and methods
+- `src/components/check/editor/predicate-editor-vm.svelte.ts` - Predicate state and methods
+- `src/components/check/editor/check-editor-types.ts` - Type definitions for editor configs
 - `src/components/check/editor/scenario-selector.svelte` - Scenario configuration UI
 - `src/components/check/editor/dataset-selector.svelte` - Dataset selection UI
 - `src/components/check/editor/predicate-selector.svelte` - Predicate configuration UI
@@ -336,7 +374,7 @@ Created the initial check-editor component with basic structure:
 
 ### Tests
 
-- `src/components/check/editor/check-editor.stories.svelte` - Storybook stories with 9 test cases
+- `src/components/check/editor/check-editor.stories.svelte` - Storybook stories with 19 test cases
 
 ### Dependencies
 

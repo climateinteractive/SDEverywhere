@@ -8,8 +8,8 @@ import { SelectorOptionViewModel, SelectorViewModel } from '../../list/selector-
 import TypeaheadSelector from '../../list/typeahead-selector.svelte'
 import type { ListItemViewModel } from '../../list/list-item-vm.svelte'
 
+import type { PredicateEditorViewModel } from './predicate-editor-vm.svelte'
 import type {
-  CheckEditorViewModel,
   PredicateType,
   PredicateRefKind,
   PredicateDatasetRefKind,
@@ -21,11 +21,11 @@ import type {
   ScenarioKind,
   ScenarioInputPosition,
   GivenInputConfig
-} from './check-editor-vm.svelte'
+} from './check-editor-types'
 
 interface Props {
-  /** The view model for the editor. */
-  viewModel: CheckEditorViewModel
+  /** The view model for the predicate editor. */
+  viewModel: PredicateEditorViewModel
 }
 
 let { viewModel }: Props = $props()
@@ -297,34 +297,34 @@ function handleKeyDown(e: KeyboardEvent) {
 </script>
 
 <!-- TEMPLATE -->
-<div class="predicate-selector-section">
-  <div class="predicate-selector-header">
-    <h3 class="predicate-selector-title">
+<div class="predicate-editor-section">
+  <div class="predicate-editor-header">
+    <h3 class="predicate-editor-title">
       Predicates
-      <button class="predicate-selector-add-btn" onclick={handleAddPredicate} aria-label="Add predicate"> + </button>
+      <button class="predicate-editor-add-btn" onclick={handleAddPredicate} aria-label="Add predicate"> + </button>
     </h3>
   </div>
 
   <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-  <div class="predicate-selector-items" tabindex="0" onkeydown={handleKeyDown} role="list">
+  <div class="predicate-editor-items" tabindex="0" onkeydown={handleKeyDown} role="list">
     {#each viewModel.predicates as predicate (predicate.id)}
       <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
       <div
-        class="predicate-selector-item"
+        class="predicate-editor-item"
         class:selected={viewModel.selectedPredicateId === predicate.id}
         onclick={() => handleSelectPredicate(predicate.id)}
         role="listitem"
       >
-        <div class="predicate-selector-content">
-          <div class="predicate-selector-row">
-            <span class="predicate-selector-text predicate-selector-fixed-width-label">Expect:</span>
+        <div class="predicate-editor-content">
+          <div class="predicate-editor-row">
+            <span class="predicate-editor-text predicate-editor-fixed-width-label">Expect:</span>
             <Selector viewModel={createTypeSelector(predicate)} ariaLabel="Predicate type" />
             <Selector viewModel={createRefKindSelector(predicate)} ariaLabel="Reference kind" />
 
             {#if predicate.ref.kind === 'constant'}
               <input
                 id="pred-value-{predicate.id}"
-                class="predicate-selector-input"
+                class="predicate-editor-input"
                 type="number"
                 value={predicate.ref.value ?? 0}
                 oninput={e => {
@@ -339,7 +339,7 @@ function handleKeyDown(e: KeyboardEvent) {
             {#if viewModel.predicates.length > 1}
               <div class="spacer-flex"></div>
               <button
-                class="predicate-selector-remove-btn"
+                class="predicate-editor-remove-btn"
                 onclick={e => {
                   e.stopPropagation()
                   handleRemovePredicate(predicate.id)
@@ -352,11 +352,11 @@ function handleKeyDown(e: KeyboardEvent) {
           </div>
 
           {#if predicate.ref.kind === 'data'}
-            <div class="predicate-selector-row">
-              <span class="predicate-selector-text predicate-selector-fixed-width-label">Dataset:</span>
+            <div class="predicate-editor-row">
+              <span class="predicate-editor-text predicate-editor-fixed-width-label">Dataset:</span>
               <Selector viewModel={createDatasetRefKindSelector(predicate)} ariaLabel="Dataset reference kind" />
               {#if predicate.ref.datasetRefKind === 'name'}
-                <div class="predicate-selector-typeahead-wrapper" onclick={e => e.stopPropagation()} role="none">
+                <div class="predicate-editor-typeahead-wrapper" onclick={e => e.stopPropagation()} role="none">
                   <TypeaheadSelector
                     items={viewModel.datasetListItems}
                     selectedId={predicate.ref.datasetKey || ''}
@@ -369,23 +369,23 @@ function handleKeyDown(e: KeyboardEvent) {
                 </div>
               {/if}
             </div>
-            <div class="predicate-selector-row">
-              <span class="predicate-selector-text predicate-selector-fixed-width-label">Scenario:</span>
+            <div class="predicate-editor-row">
+              <span class="predicate-editor-text predicate-editor-fixed-width-label">Scenario:</span>
               <Selector viewModel={createScenarioRefKindSelector(predicate)} ariaLabel="Scenario reference kind" />
             </div>
             {#if predicate.ref.scenarioRefKind === 'different'}
-              <div class="predicate-selector-scenario-editor">
-                <div class="predicate-selector-row">
+              <div class="predicate-editor-scenario-editor">
+                <div class="predicate-editor-row">
                   <Selector viewModel={createPredicateScenarioKindSelector(predicate)} ariaLabel="Scenario kind" />
                   {#if getOrCreateScenarioConfig(predicate).kind === 'all-inputs'}
-                    <span class="predicate-selector-text">at</span>
+                    <span class="predicate-editor-text">at</span>
                     <Selector viewModel={createPredicateScenarioPositionSelector(predicate)} ariaLabel="Position" />
                   {/if}
                 </div>
                 {#if getOrCreateScenarioConfig(predicate).kind === 'given-inputs'}
                   {#each getOrCreateScenarioConfig(predicate).inputs || [] as input, inputIndex (inputIndex)}
-                    <div class="predicate-selector-row">
-                      <div class="predicate-selector-typeahead-wrapper" onclick={e => e.stopPropagation()} role="none">
+                    <div class="predicate-editor-row">
+                      <div class="predicate-editor-typeahead-wrapper" onclick={e => e.stopPropagation()} role="none">
                         <TypeaheadSelector
                           items={viewModel.inputListItems}
                           selectedId={input.inputVarId}
@@ -396,15 +396,15 @@ function handleKeyDown(e: KeyboardEvent) {
                           }}
                         />
                       </div>
-                      <span class="predicate-selector-text">at</span>
+                      <span class="predicate-editor-text">at</span>
                       <Selector
                         viewModel={createPredicateInputPositionSelector(predicate, inputIndex)}
                         ariaLabel="Position"
                       />
                       {#if input.position === 'at-value'}
-                        <div class="predicate-selector-value-container">
+                        <div class="predicate-editor-value-container">
                           <input
-                            class="predicate-selector-input predicate-selector-value-input"
+                            class="predicate-editor-input predicate-editor-value-input"
                             type="text"
                             inputmode="numeric"
                             value={input.customValue ?? getPredicateInputVar(input.inputVarId)?.defaultValue ?? 0}
@@ -421,7 +421,7 @@ function handleKeyDown(e: KeyboardEvent) {
                           />
                           {#if isPredicateValueOutOfRange(input.inputVarId, input.customValue ?? 0)}
                             <span
-                              class="predicate-selector-warning-badge"
+                              class="predicate-editor-warning-badge"
                               title={getPredicateOutOfRangeTooltip(input.inputVarId)}
                             >
                               ⚠
@@ -437,10 +437,10 @@ function handleKeyDown(e: KeyboardEvent) {
           {/if}
 
           {#if predicate.type === 'approx'}
-            <div class="predicate-selector-row">
-              <span class="predicate-selector-text">Tolerance:</span>
+            <div class="predicate-editor-row">
+              <span class="predicate-editor-text">Tolerance:</span>
               <input
-                class="predicate-selector-input"
+                class="predicate-editor-input"
                 type="number"
                 value={predicate.tolerance ?? 0.1}
                 oninput={e => {
@@ -456,8 +456,8 @@ function handleKeyDown(e: KeyboardEvent) {
             </div>
           {/if}
 
-          <div class="predicate-selector-row">
-            <label class="predicate-selector-checkbox-label">
+          <div class="predicate-editor-row">
+            <label class="predicate-editor-checkbox-label">
               <input
                 type="checkbox"
                 checked={predicate.time?.enabled ?? false}
@@ -472,7 +472,7 @@ function handleKeyDown(e: KeyboardEvent) {
             {#if predicate.time?.enabled}
               <Selector viewModel={createStartTimeBoundSelector(predicate)} ariaLabel="Start bound type" />
               <input
-                class="predicate-selector-input predicate-selector-year-input"
+                class="predicate-editor-input predicate-editor-year-input"
                 type="text"
                 inputmode="numeric"
                 placeholder="Start"
@@ -488,10 +488,10 @@ function handleKeyDown(e: KeyboardEvent) {
                 onclick={e => e.stopPropagation()}
                 aria-label="Start year"
               />
-              <span class="predicate-selector-text">to</span>
+              <span class="predicate-editor-text">to</span>
               <Selector viewModel={createEndTimeBoundSelector(predicate)} ariaLabel="End bound type" />
               <input
-                class="predicate-selector-input predicate-selector-year-input"
+                class="predicate-editor-input predicate-editor-year-input"
                 type="text"
                 inputmode="numeric"
                 placeholder="End"
@@ -517,7 +517,7 @@ function handleKeyDown(e: KeyboardEvent) {
 
 <!-- STYLE -->
 <style lang="scss">
-.predicate-selector-section {
+.predicate-editor-section {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -527,13 +527,13 @@ function handleKeyDown(e: KeyboardEvent) {
   flex: 1;
 }
 
-.predicate-selector-header {
+.predicate-editor-header {
   display: flex;
   align-items: center;
   flex-shrink: 0;
 }
 
-.predicate-selector-title {
+.predicate-editor-title {
   margin: 0;
   font-size: 1rem;
   font-weight: 700;
@@ -543,7 +543,7 @@ function handleKeyDown(e: KeyboardEvent) {
   gap: 0.35rem;
 }
 
-.predicate-selector-add-btn {
+.predicate-editor-add-btn {
   width: 20px;
   height: 20px;
   padding: 0;
@@ -564,18 +564,13 @@ function handleKeyDown(e: KeyboardEvent) {
   }
 }
 
-.predicate-selector-items {
+.predicate-editor-items {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-
-  // &:focus {
-  //   outline: 2px solid var(--border-color-focused);
-  //   outline-offset: -2px;
-  // }
 }
 
-.predicate-selector-item {
+.predicate-editor-item {
   padding: 0.5rem;
   border: 1px solid var(--border-color-normal);
   border-radius: 4px;
@@ -592,30 +587,30 @@ function handleKeyDown(e: KeyboardEvent) {
   }
 }
 
-.predicate-selector-content {
+.predicate-editor-content {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
 }
 
-.predicate-selector-row {
+.predicate-editor-row {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   flex-wrap: nowrap;
 }
 
-.predicate-selector-text {
+.predicate-editor-text {
   font-size: 0.9rem;
   color: var(--text-color-primary);
   white-space: nowrap;
 }
 
-.predicate-selector-fixed-width-label {
+.predicate-editor-fixed-width-label {
   width: 46px;
 }
 
-.predicate-selector-input {
+.predicate-editor-input {
   padding: 4px 8px;
   background-color: var(--input-bg);
   border: 1px solid var(--border-color-normal);
@@ -633,7 +628,7 @@ function handleKeyDown(e: KeyboardEvent) {
   }
 }
 
-.predicate-selector-remove-btn {
+.predicate-editor-remove-btn {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -659,7 +654,7 @@ function handleKeyDown(e: KeyboardEvent) {
   }
 }
 
-.predicate-selector-checkbox-label {
+.predicate-editor-checkbox-label {
   display: flex;
   align-items: center;
   gap: 0.35rem;
@@ -669,11 +664,11 @@ function handleKeyDown(e: KeyboardEvent) {
   white-space: nowrap;
 }
 
-.predicate-selector-year-input {
+.predicate-editor-year-input {
   width: 60px;
 }
 
-.predicate-selector-scenario-editor {
+.predicate-editor-scenario-editor {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -683,22 +678,22 @@ function handleKeyDown(e: KeyboardEvent) {
   margin-top: 0.25rem;
 }
 
-.predicate-selector-typeahead-wrapper {
+.predicate-editor-typeahead-wrapper {
   flex: 1;
   min-width: 0;
 }
 
-.predicate-selector-value-container {
+.predicate-editor-value-container {
   display: flex;
   align-items: center;
   gap: 0.25rem;
 }
 
-.predicate-selector-value-input {
+.predicate-editor-value-input {
   width: 70px;
 }
 
-.predicate-selector-warning-badge {
+.predicate-editor-warning-badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;

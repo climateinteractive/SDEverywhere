@@ -186,7 +186,7 @@ function createMockViewModel(): CheckEditorViewModel {
     })
 
     // Find the dataset selector button
-    const datasetItem = canvasElement.querySelector('.dataset-selector-item')
+    const datasetItem = canvasElement.querySelector('.dataset-editor-item')
     await expect(datasetItem).toBeInTheDocument()
 
     // Verify initial selection is Output X by checking button text
@@ -235,7 +235,7 @@ function createMockViewModel(): CheckEditorViewModel {
 
     // Find the predicate type selector - it's within the predicate-selector-item
     const predicateTypeSelect = canvasElement.querySelector(
-      '.predicate-selector-item select[aria-label="Predicate type"]'
+      '.predicate-editor-item select[aria-label="Predicate type"]'
     ) as HTMLSelectElement
     await expect(predicateTypeSelect).toBeInTheDocument()
 
@@ -398,12 +398,12 @@ function createMockViewModel(): CheckEditorViewModel {
 
     // Wait for context menu
     await waitFor(() => {
-      const contextMenu = canvasElement.querySelector('.scenario-selector-context-menu')
+      const contextMenu = canvasElement.querySelector('.scenario-editor-context-menu')
       expect(contextMenu).toBeInTheDocument()
     })
 
     // Click "Given inputs at..." to add a given-inputs scenario
-    const givenInputsOption = Array.from(canvasElement.querySelectorAll('.scenario-selector-context-item')).find(item =>
+    const givenInputsOption = Array.from(canvasElement.querySelectorAll('.scenario-editor-context-item')).find(item =>
       item.textContent?.includes('Given inputs')
     )
     await expect(givenInputsOption).toBeInTheDocument()
@@ -414,12 +414,12 @@ function createMockViewModel(): CheckEditorViewModel {
 
     // Verify we now have 2 scenarios
     await waitFor(() => {
-      const scenarios = canvasElement.querySelectorAll('.scenario-selector-item')
+      const scenarios = canvasElement.querySelectorAll('.scenario-editor-item')
       expect(scenarios.length).toBe(2)
     })
 
     // Verify the second scenario shows "Given inputs at..." selector
-    const scenarios = canvasElement.querySelectorAll('.scenario-selector-item')
+    const scenarios = canvasElement.querySelectorAll('.scenario-editor-item')
     const secondScenario = scenarios[1]
     await expect(secondScenario).toHaveTextContent('Given inputs at...')
   }}
@@ -440,13 +440,13 @@ function createMockViewModel(): CheckEditorViewModel {
     })
 
     // Initially should have 1 of each item
-    const initialScenarios = canvasElement.querySelectorAll('.scenario-selector-item')
+    const initialScenarios = canvasElement.querySelectorAll('.scenario-editor-item')
     await expect(initialScenarios.length).toBe(1)
 
-    const initialDatasets = canvasElement.querySelectorAll('.dataset-selector-item')
+    const initialDatasets = canvasElement.querySelectorAll('.dataset-editor-item')
     await expect(initialDatasets.length).toBe(1)
 
-    const initialPredicates = canvasElement.querySelectorAll('.predicate-selector-item')
+    const initialPredicates = canvasElement.querySelectorAll('.predicate-editor-item')
     await expect(initialPredicates.length).toBe(1)
 
     // Add a scenario by clicking the "+" button and selecting from context menu
@@ -455,16 +455,16 @@ function createMockViewModel(): CheckEditorViewModel {
 
     // Wait for context menu to appear
     await waitFor(() => {
-      const contextMenu = canvasElement.querySelector('.scenario-selector-context-menu')
+      const contextMenu = canvasElement.querySelector('.scenario-editor-context-menu')
       expect(contextMenu).toBeInTheDocument()
     })
 
     // Click the "All inputs at..." option
-    const allInputsOption = canvasElement.querySelector('.scenario-selector-context-item') as HTMLButtonElement
+    const allInputsOption = canvasElement.querySelector('.scenario-editor-context-item') as HTMLButtonElement
     await userEvent.click(allInputsOption)
 
     await waitFor(() => {
-      const scenarios = canvasElement.querySelectorAll('.scenario-selector-item')
+      const scenarios = canvasElement.querySelectorAll('.scenario-editor-item')
       expect(scenarios.length).toBe(2)
     })
 
@@ -473,12 +473,12 @@ function createMockViewModel(): CheckEditorViewModel {
     await userEvent.click(addDatasetButton)
 
     await waitFor(() => {
-      const datasets = canvasElement.querySelectorAll('.dataset-selector-item')
+      const datasets = canvasElement.querySelectorAll('.dataset-editor-item')
       expect(datasets.length).toBe(2)
     })
 
     // Remove buttons should now be visible (not when only 1 item)
-    const removeButtons = canvasElement.querySelectorAll('.scenario-selector-remove-btn')
+    const removeButtons = canvasElement.querySelectorAll('.scenario-editor-remove-btn')
     await expect(removeButtons.length).toBeGreaterThan(0)
   }}
 ></Story>
@@ -556,12 +556,12 @@ function createMockViewModel(): CheckEditorViewModel {
 
     // Wait for context menu
     await waitFor(() => {
-      const contextMenu = canvasElement.querySelector('.scenario-selector-context-menu')
+      const contextMenu = canvasElement.querySelector('.scenario-editor-context-menu')
       expect(contextMenu).toBeInTheDocument()
     })
 
     // Click "Given inputs at..." to add a given-inputs scenario
-    const givenInputsOption = Array.from(canvasElement.querySelectorAll('.scenario-selector-context-item')).find(item =>
+    const givenInputsOption = Array.from(canvasElement.querySelectorAll('.scenario-editor-context-item')).find(item =>
       item.textContent?.includes('Given inputs')
     )
     await expect(givenInputsOption).toBeInTheDocument()
@@ -572,12 +572,12 @@ function createMockViewModel(): CheckEditorViewModel {
 
     // Wait for the new scenario to appear
     await waitFor(() => {
-      const scenarios = canvasElement.querySelectorAll('.scenario-selector-item')
+      const scenarios = canvasElement.querySelectorAll('.scenario-editor-item')
       expect(scenarios.length).toBe(2)
     })
 
     // Find the position selector in the given-inputs scenario and select "Value"
-    const scenarios = canvasElement.querySelectorAll('.scenario-selector-item')
+    const scenarios = canvasElement.querySelectorAll('.scenario-editor-item')
     const givenInputsScenario = scenarios[1]
     const positionSelect = givenInputsScenario.querySelector('select[aria-label="Position"]') as HTMLSelectElement
 
@@ -586,14 +586,14 @@ function createMockViewModel(): CheckEditorViewModel {
 
     // Verify the value input appears
     await waitFor(() => {
-      const valueInput = givenInputsScenario.querySelector('.scenario-selector-value-input') as HTMLInputElement
+      const valueInput = givenInputsScenario.querySelector('.scenario-editor-value-input') as HTMLInputElement
       expect(valueInput).toBeInTheDocument()
       // Should default to the input's default value (Input A default is 50)
       expect(valueInput.value).toBe('50')
     })
 
     // Enter a custom value
-    const valueInput = givenInputsScenario.querySelector('.scenario-selector-value-input') as HTMLInputElement
+    const valueInput = givenInputsScenario.querySelector('.scenario-editor-value-input') as HTMLInputElement
     await userEvent.clear(valueInput)
     await userEvent.type(valueInput, '75')
 
@@ -632,11 +632,11 @@ function createMockViewModel(): CheckEditorViewModel {
     await userEvent.click(addScenarioButton)
 
     await waitFor(() => {
-      const contextMenu = canvasElement.querySelector('.scenario-selector-context-menu')
+      const contextMenu = canvasElement.querySelector('.scenario-editor-context-menu')
       expect(contextMenu).toBeInTheDocument()
     })
 
-    const givenInputsOption = Array.from(canvasElement.querySelectorAll('.scenario-selector-context-item')).find(item =>
+    const givenInputsOption = Array.from(canvasElement.querySelectorAll('.scenario-editor-context-item')).find(item =>
       item.textContent?.includes('Given inputs')
     )
 
@@ -646,29 +646,29 @@ function createMockViewModel(): CheckEditorViewModel {
 
     // Wait for scenario and select at-value
     await waitFor(() => {
-      const scenarios = canvasElement.querySelectorAll('.scenario-selector-item')
+      const scenarios = canvasElement.querySelectorAll('.scenario-editor-item')
       expect(scenarios.length).toBe(2)
     })
 
-    const scenarios = canvasElement.querySelectorAll('.scenario-selector-item')
+    const scenarios = canvasElement.querySelectorAll('.scenario-editor-item')
     const givenInputsScenario = scenarios[1]
     const positionSelect = givenInputsScenario.querySelector('select[aria-label="Position"]') as HTMLSelectElement
     await userEvent.selectOptions(positionSelect, 'at-value')
 
     // Wait for value input to appear
     await waitFor(() => {
-      const valueInput = givenInputsScenario.querySelector('.scenario-selector-value-input') as HTMLInputElement
+      const valueInput = givenInputsScenario.querySelector('.scenario-editor-value-input') as HTMLInputElement
       expect(valueInput).toBeInTheDocument()
     })
 
     // Enter an out-of-range value (Input A max is 100)
-    const valueInput = givenInputsScenario.querySelector('.scenario-selector-value-input') as HTMLInputElement
+    const valueInput = givenInputsScenario.querySelector('.scenario-editor-value-input') as HTMLInputElement
     await userEvent.clear(valueInput)
     await userEvent.type(valueInput, '150')
 
     // Verify warning badge appears
     await waitFor(() => {
-      const warningBadge = givenInputsScenario.querySelector('.scenario-selector-warning-badge')
+      const warningBadge = givenInputsScenario.querySelector('.scenario-editor-warning-badge')
       expect(warningBadge).toBeInTheDocument()
       // Verify tooltip text
       expect(warningBadge).toHaveAttribute('title')
@@ -692,7 +692,7 @@ function createMockViewModel(): CheckEditorViewModel {
     })
 
     // Find the predicate item and its reference kind selector
-    const predicateItem = canvasElement.querySelector('.predicate-selector-item')
+    const predicateItem = canvasElement.querySelector('.predicate-editor-item')
     await expect(predicateItem).toBeInTheDocument()
 
     // Find the reference kind selector and change to "Data"
@@ -901,7 +901,7 @@ function createMockViewModel(): CheckEditorViewModel {
     })
 
     // Find the scenario position select (in the all-inputs scenario item)
-    const scenarioItem = canvasElement.querySelector('.scenario-selector-item')
+    const scenarioItem = canvasElement.querySelector('.scenario-editor-item')
     await expect(scenarioItem).toBeInTheDocument()
 
     const positionSelect = scenarioItem?.querySelector('select[aria-label="Position"]') as HTMLSelectElement
@@ -965,7 +965,7 @@ function createMockViewModel(): CheckEditorViewModel {
     await expect(testInput.value).toBe('should be greater than 10 when at maximum')
 
     // Verify the scenario is set to "all inputs at maximum"
-    const scenarioItem = canvasElement.querySelector('.scenario-selector-item')
+    const scenarioItem = canvasElement.querySelector('.scenario-editor-item')
     await expect(scenarioItem).toBeInTheDocument()
 
     const positionSelect = scenarioItem?.querySelector('select[aria-label="Position"]') as HTMLSelectElement
@@ -973,7 +973,7 @@ function createMockViewModel(): CheckEditorViewModel {
 
     // Verify the dataset is set to "Output Y"
     await waitFor(() => {
-      const datasetButton = canvasElement.querySelector('.dataset-selector-item .typeahead-selector-button')
+      const datasetButton = canvasElement.querySelector('.dataset-editor-item .typeahead-selector-button')
       expect(datasetButton).toHaveTextContent('Output Y')
     })
 

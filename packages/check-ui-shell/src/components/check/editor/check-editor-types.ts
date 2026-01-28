@@ -2,17 +2,6 @@
 
 import type { DatasetKey } from '@sdeverywhere/check-core'
 
-// Re-export check spec types from check-core
-export type {
-  CheckDatasetSpec,
-  CheckGroupSpec,
-  CheckPredicateSpec,
-  CheckScenarioInputSpec,
-  CheckScenarioPosition,
-  CheckScenarioSpec,
-  CheckTestSpec
-} from '@sdeverywhere/check-core'
-
 /** The position type for scenario inputs (extends InputPosition with 'at-value'). */
 export type ScenarioInputPosition = 'at-default' | 'at-minimum' | 'at-maximum' | 'at-value'
 

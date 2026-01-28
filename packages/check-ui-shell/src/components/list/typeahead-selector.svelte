@@ -107,14 +107,17 @@ function handleKeyDown(e: KeyboardEvent) {
   if (e.key === 'ArrowDown') {
     activeIndex = activeIndex < itemCount - 1 ? activeIndex + 1 : 0
     e.preventDefault()
+    e.stopPropagation()
   } else if (e.key === 'ArrowUp') {
     activeIndex = activeIndex > 0 ? activeIndex - 1 : itemCount - 1
     e.preventDefault()
+    e.stopPropagation()
   } else if (e.key === 'Enter') {
     if (activeIndex >= 0 && activeIndex < itemCount) {
       handleItemClick(filteredItems[activeIndex])
     }
     e.preventDefault()
+    e.stopPropagation()
   } else if (e.key === 'Escape') {
     showPopup = false
     searchQuery = ''

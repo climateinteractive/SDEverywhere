@@ -6,17 +6,13 @@ import Selector from '../../list/selector.svelte'
 import { SelectorOptionViewModel, SelectorViewModel } from '../../list/selector-vm.svelte'
 import TypeaheadSelector from '../../list/typeahead-selector.svelte'
 
-import type {
-  CheckEditorViewModel,
-  ScenarioKind,
-  ScenarioItemConfig,
-  ScenarioInputPosition
-} from './check-editor-vm.svelte'
+import type { ScenarioEditorViewModel } from './scenario-editor-vm.svelte'
+import type { ScenarioKind, ScenarioItemConfig, ScenarioInputPosition } from './check-editor-types'
 import type { ListItemViewModel } from '../../list/list-item-vm.svelte'
 
 interface Props {
-  /** The view model for the editor. */
-  viewModel: CheckEditorViewModel
+  /** The view model for the scenario editor. */
+  viewModel: ScenarioEditorViewModel
 }
 
 let { viewModel }: Props = $props()
@@ -201,18 +197,18 @@ $effect(() => {
 </script>
 
 <!-- TEMPLATE -->
-<div class="scenario-selector-section">
-  <div class="scenario-selector-header">
-    <h3 class="scenario-selector-title">
+<div class="scenario-editor-section">
+  <div class="scenario-editor-header">
+    <h3 class="scenario-editor-title">
       Scenarios
-      <span class="scenario-selector-add-container">
-        <button class="scenario-selector-add-btn" onclick={handleAddButtonClick} aria-label="Add scenario"> + </button>
+      <span class="scenario-editor-add-container">
+        <button class="scenario-editor-add-btn" onclick={handleAddButtonClick} aria-label="Add scenario"> + </button>
         {#if showContextMenu}
-          <div class="scenario-selector-context-menu" bind:this={contextMenuRef}>
-            <button class="scenario-selector-context-item" onclick={() => handleAddScenario('all-inputs')}>
+          <div class="scenario-editor-context-menu" bind:this={contextMenuRef}>
+            <button class="scenario-editor-context-item" onclick={() => handleAddScenario('all-inputs')}>
               All inputs at...
             </button>
-            <button class="scenario-selector-context-item" onclick={() => handleAddScenario('given-inputs')}>
+            <button class="scenario-editor-context-item" onclick={() => handleAddScenario('given-inputs')}>
               Given inputs at...
             </button>
           </div>
@@ -222,17 +218,17 @@ $effect(() => {
   </div>
 
   <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-  <div class="scenario-selector-items" tabindex="0" onkeydown={handleKeyDown} role="list">
+  <div class="scenario-editor-items" tabindex="0" onkeydown={handleKeyDown} role="list">
     {#each viewModel.scenarios as scenario (scenario.id)}
       <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
       <div
-        class="scenario-selector-item"
+        class="scenario-editor-item"
         class:selected={viewModel.selectedScenarioId === scenario.id}
         onclick={() => handleSelectScenario(scenario.id)}
         role="listitem"
       >
-        <div class="scenario-selector-item-content">
-          <div class="scenario-selector-row">
+        <div class="scenario-editor-item-content">
+          <div class="scenario-editor-row">
             <Selector viewModel={createScenarioKindSelector(scenario)} ariaLabel="Scenario kind" />
             {#if scenario.kind === 'all-inputs'}
               <Selector viewModel={createPositionSelector(scenario)} ariaLabel="Position" />
@@ -240,7 +236,7 @@ $effect(() => {
             {#if viewModel.scenarios.length > 1}
               <div class="spacer-flex"></div>
               <button
-                class="scenario-selector-remove-btn"
+                class="scenario-editor-remove-btn"
                 onclick={e => {
                   e.stopPropagation()
                   handleRemoveScenario(scenario.id)
@@ -252,10 +248,10 @@ $effect(() => {
             {/if}
           </div>
           {#if scenario.kind === 'given-inputs'}
-            <div class="scenario-selector-given-inputs">
+            <div class="scenario-editor-given-inputs">
               {#each scenario.inputs || [] as input, inputIndex (inputIndex)}
-                <div class="scenario-selector-row">
-                  <div class="scenario-selector-typeahead-wrapper" onclick={e => e.stopPropagation()} role="none">
+                <div class="scenario-editor-row">
+                  <div class="scenario-editor-typeahead-wrapper" onclick={e => e.stopPropagation()} role="none">
                     <TypeaheadSelector
                       items={viewModel.inputListItems}
                       selectedId={input.inputVarId}
@@ -268,12 +264,12 @@ $effect(() => {
                       }}
                     />
                   </div>
-                  <span class="scenario-selector-text">at</span>
+                  <span class="scenario-editor-text">at</span>
                   <Selector viewModel={createInputPositionSelector(scenario, inputIndex)} ariaLabel="Position" />
                   {#if input.position === 'at-value'}
-                    <div class="scenario-selector-value-container">
+                    <div class="scenario-editor-value-container">
                       <input
-                        class="scenario-selector-value-input"
+                        class="scenario-editor-value-input"
                         type="text"
                         inputmode="numeric"
                         value={input.customValue ?? getInputVar(input.inputVarId)?.defaultValue ?? 0}
@@ -289,7 +285,7 @@ $effect(() => {
                         aria-label="Custom value"
                       />
                       {#if isValueOutOfRange(input.inputVarId, input.customValue ?? 0)}
-                        <span class="scenario-selector-warning-badge" title={getOutOfRangeTooltip(input.inputVarId)}>
+                        <span class="scenario-editor-warning-badge" title={getOutOfRangeTooltip(input.inputVarId)}>
                           ⚠
                         </span>
                       {/if}
@@ -297,7 +293,7 @@ $effect(() => {
                   {/if}
                   {#if (scenario.inputs?.length || 0) > 1}
                     <button
-                      class="scenario-selector-remove-input-btn"
+                      class="scenario-editor-remove-input-btn"
                       onclick={e => {
                         e.stopPropagation()
                         handleRemoveInput(scenario.id, inputIndex)
@@ -310,7 +306,7 @@ $effect(() => {
                 </div>
               {/each}
               <button
-                class="scenario-selector-add-input-btn"
+                class="scenario-editor-add-input-btn"
                 onclick={e => {
                   e.stopPropagation()
                   handleAddInput(scenario.id)
@@ -328,13 +324,13 @@ $effect(() => {
 
 <!-- STYLE -->
 <style lang="scss">
-.scenario-selector-section {
+.scenario-editor-section {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
 }
 
-.scenario-selector-header {
+.scenario-editor-header {
   display: flex;
   align-items: center;
   flex-shrink: 0;
@@ -344,7 +340,7 @@ $effect(() => {
   flex: 1;
 }
 
-.scenario-selector-title {
+.scenario-editor-title {
   margin: 0;
   font-size: 1rem;
   font-weight: 700;
@@ -354,12 +350,12 @@ $effect(() => {
   gap: 0.35rem;
 }
 
-.scenario-selector-add-container {
+.scenario-editor-add-container {
   position: relative;
   display: inline-flex;
 }
 
-.scenario-selector-add-btn {
+.scenario-editor-add-btn {
   width: 20px;
   height: 20px;
   padding: 0;
@@ -380,7 +376,7 @@ $effect(() => {
   }
 }
 
-.scenario-selector-context-menu {
+.scenario-editor-context-menu {
   position: absolute;
   top: 100%;
   left: 0;
@@ -393,7 +389,7 @@ $effect(() => {
   min-width: 180px;
 }
 
-.scenario-selector-context-item {
+.scenario-editor-context-item {
   display: block;
   width: 100%;
   padding: 0.5rem 0.75rem;
@@ -417,18 +413,13 @@ $effect(() => {
   }
 }
 
-.scenario-selector-items {
+.scenario-editor-items {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-
-  // &:focus {
-  //   outline: 2px solid var(--border-color-focused);
-  //   outline-offset: -2px;
-  // }
 }
 
-.scenario-selector-item {
+.scenario-editor-item {
   padding: 0.5rem;
   border: 1px solid var(--border-color-normal);
   border-radius: 4px;
@@ -445,38 +436,38 @@ $effect(() => {
   }
 }
 
-.scenario-selector-item-content {
+.scenario-editor-item-content {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
 }
 
-.scenario-selector-row {
+.scenario-editor-row {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   flex-wrap: nowrap;
 }
 
-.scenario-selector-given-inputs {
+.scenario-editor-given-inputs {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
 }
 
-.scenario-selector-text {
+.scenario-editor-text {
   font-size: 0.9rem;
   color: var(--text-color-primary);
   white-space: nowrap;
 }
 
-.scenario-selector-typeahead-wrapper {
+.scenario-editor-typeahead-wrapper {
   flex: 1;
   min-width: 0;
 }
 
-.scenario-selector-remove-btn,
-.scenario-selector-remove-input-btn {
+.scenario-editor-remove-btn,
+.scenario-editor-remove-input-btn {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -502,7 +493,7 @@ $effect(() => {
   }
 }
 
-.scenario-selector-add-input-btn {
+.scenario-editor-add-input-btn {
   padding: 0.35rem 0.5rem;
   background-color: var(--button-bg);
   border: 1px solid var(--border-color-normal);
@@ -517,13 +508,13 @@ $effect(() => {
   }
 }
 
-.scenario-selector-value-container {
+.scenario-editor-value-container {
   display: flex;
   align-items: center;
   gap: 0.25rem;
 }
 
-.scenario-selector-value-input {
+.scenario-editor-value-input {
   width: 70px;
   padding: 4px 8px;
   background-color: var(--input-bg);
@@ -541,7 +532,7 @@ $effect(() => {
   }
 }
 
-.scenario-selector-warning-badge {
+.scenario-editor-warning-badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;

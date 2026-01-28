@@ -6,9 +6,9 @@ import Icon from 'svelte-awesome/components/Icon.svelte'
 import { faPaste } from '@fortawesome/free-solid-svg-icons'
 
 import Dialog from '../../_shared/dialog.svelte'
-import ScenarioSelector from './scenario-selector.svelte'
-import DatasetSelector from './dataset-selector.svelte'
-import PredicateSelector from './predicate-selector.svelte'
+import ScenarioEditor from './scenario-editor.svelte'
+import DatasetEditor from './dataset-editor.svelte'
+import PredicateEditor from './predicate-editor.svelte'
 import TabbedPreview from './tabbed-preview.svelte'
 import PasteYamlDialog from './paste-yaml-dialog.svelte'
 
@@ -67,9 +67,9 @@ function openPasteYamlDialog() {
         </div>
       </div>
 
-      <ScenarioSelector {viewModel} />
-      <DatasetSelector {viewModel} />
-      <PredicateSelector {viewModel} />
+      <ScenarioEditor viewModel={viewModel.scenarioEditor} />
+      <DatasetEditor viewModel={viewModel.datasetEditor} />
+      <PredicateEditor viewModel={viewModel.predicateEditor} />
     </div>
 
     <TabbedPreview {viewModel} />
