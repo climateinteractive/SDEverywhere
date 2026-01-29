@@ -60,7 +60,7 @@ export interface CheckTestReport {
   status: CheckStatus
   /** The scenario reports for this test. */
   scenarios: CheckScenarioReport[]
-  /** The original test specification from the YAML (if available). */
+  /** The original test specification, if available (from YAML, JSON, or plain objects). */
   spec?: CheckTestSpec
 }
 

@@ -37,18 +37,16 @@ export class CheckEditorViewModel {
   public onCancel?: () => void
 
   /**
-   * Create a new check editor view model.
-   *
+   * @param dataCoordinator The data coordinator for fetching datasets.
    * @param inputVars The list of input variables available in the model.
    * @param outputVars The list of output variables available in the model.
-   * @param dataCoordinator The data coordinator for fetching datasets.
    */
   constructor(
+    private readonly dataCoordinator: CheckDataCoordinator,
     public readonly inputVars: InputVar[],
-    public readonly outputVars: OutputVar[],
-    private readonly dataCoordinator: CheckDataCoordinator
+    public readonly outputVars: OutputVar[]
   ) {
-    // Create sub-view models
+    // Create the view model for each section
     this.scenarioEditor = new ScenarioEditorViewModel(inputVars)
     this.datasetEditor = new DatasetEditorViewModel(outputVars)
     this.predicateEditor = new PredicateEditorViewModel(inputVars, outputVars)

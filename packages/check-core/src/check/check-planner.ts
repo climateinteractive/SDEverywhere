@@ -45,7 +45,7 @@ export interface CheckPlanTest {
   name: string
   /** The scenarios for this test. */
   scenarios: CheckPlanScenario[]
-  /** The original test specification from the YAML. */
+  /** The original test specification, if available (from YAML, JSON, or plain objects). */
   spec?: CheckTestSpec
 }
 
