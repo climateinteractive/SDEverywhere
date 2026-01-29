@@ -29,7 +29,7 @@ import type {
 /**
  * View model for managing predicate configurations in the check editor.
  */
-export class PredicateEditorViewModel {
+export class CheckPredicateEditorViewModel {
   /** The list of predicates. */
   public predicates = $state<PredicateItemConfig[]>([])
 

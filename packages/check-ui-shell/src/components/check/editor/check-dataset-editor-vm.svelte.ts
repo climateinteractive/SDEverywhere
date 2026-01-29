@@ -8,7 +8,7 @@ import type { DatasetItemConfig } from './check-editor-types'
 /**
  * View model for managing dataset configurations in the check editor.
  */
-export class DatasetEditorViewModel {
+export class CheckDatasetEditorViewModel {
   /** The list of datasets. */
   public datasets = $state<DatasetItemConfig[]>([])
 

@@ -4,12 +4,12 @@
 <script lang="ts">
 import TypeaheadSelector from '../../list/typeahead-selector.svelte'
 
-import type { DatasetEditorViewModel } from './check-dataset-editor-vm.svelte'
+import type { CheckDatasetEditorViewModel } from './check-dataset-editor-vm.svelte'
 import type { ListItemViewModel } from '../../list/list-item-vm.svelte'
 
 interface Props {
   /** The view model for the dataset editor. */
-  viewModel: DatasetEditorViewModel
+  viewModel: CheckDatasetEditorViewModel
 }
 
 let { viewModel }: Props = $props()

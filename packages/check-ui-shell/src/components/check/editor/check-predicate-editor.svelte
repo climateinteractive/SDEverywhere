@@ -8,7 +8,7 @@ import { SelectorOptionViewModel, SelectorViewModel } from '../../list/selector-
 import TypeaheadSelector from '../../list/typeahead-selector.svelte'
 import type { ListItemViewModel } from '../../list/list-item-vm.svelte'
 
-import type { PredicateEditorViewModel } from './check-predicate-editor-vm.svelte'
+import type { CheckPredicateEditorViewModel } from './check-predicate-editor-vm.svelte'
 import type {
   PredicateType,
   PredicateRefKind,
@@ -25,7 +25,7 @@ import type {
 
 interface Props {
   /** The view model for the predicate editor. */
-  viewModel: PredicateEditorViewModel
+  viewModel: CheckPredicateEditorViewModel
 }
 
 let { viewModel }: Props = $props()

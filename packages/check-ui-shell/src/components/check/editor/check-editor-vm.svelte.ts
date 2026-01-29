@@ -15,9 +15,9 @@ import type {} from '@sdeverywhere/check-core'
 import { CheckSummaryGraphBoxViewModel } from '../summary/check-summary-graph-box-vm'
 
 import type { CheckTestConfig } from './check-editor-types'
-import { ScenarioEditorViewModel } from './check-scenario-editor-vm.svelte'
-import { DatasetEditorViewModel } from './check-dataset-editor-vm.svelte'
-import { PredicateEditorViewModel } from './check-predicate-editor-vm.svelte'
+import { CheckScenarioEditorViewModel } from './check-scenario-editor-vm.svelte'
+import { CheckDatasetEditorViewModel } from './check-dataset-editor-vm.svelte'
+import { CheckPredicateEditorViewModel } from './check-predicate-editor-vm.svelte'
 
 /** View model for the check test editor. */
 export class CheckEditorViewModel {
@@ -26,9 +26,9 @@ export class CheckEditorViewModel {
   public testText = $state('should [have behavior] when...')
 
   // Sub-editors for each section
-  public readonly scenarioEditor: ScenarioEditorViewModel
-  public readonly datasetEditor: DatasetEditorViewModel
-  public readonly predicateEditor: PredicateEditorViewModel
+  public readonly scenarioEditor: CheckScenarioEditorViewModel
+  public readonly datasetEditor: CheckDatasetEditorViewModel
+  public readonly predicateEditor: CheckPredicateEditorViewModel
 
   /** Called when the user saves the check test. */
   public onSave?: (config: CheckTestConfig) => void
@@ -37,6 +37,8 @@ export class CheckEditorViewModel {
   public onCancel?: () => void
 
   /**
+   * Create a new check editor view model.
+   *
    * @param dataCoordinator The data coordinator for fetching datasets.
    * @param inputVars The list of input variables available in the model.
    * @param outputVars The list of output variables available in the model.
@@ -47,9 +49,9 @@ export class CheckEditorViewModel {
     public readonly outputVars: OutputVar[]
   ) {
     // Create the view model for each section
-    this.scenarioEditor = new ScenarioEditorViewModel(inputVars)
-    this.datasetEditor = new DatasetEditorViewModel(outputVars)
-    this.predicateEditor = new PredicateEditorViewModel(inputVars, outputVars)
+    this.scenarioEditor = new CheckScenarioEditorViewModel(inputVars)
+    this.datasetEditor = new CheckDatasetEditorViewModel(outputVars)
+    this.predicateEditor = new CheckPredicateEditorViewModel(inputVars, outputVars)
 
     // Initialize with default items
     this.scenarioEditor.addScenario()

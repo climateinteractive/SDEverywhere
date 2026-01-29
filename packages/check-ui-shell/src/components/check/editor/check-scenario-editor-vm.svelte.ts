@@ -10,17 +10,12 @@ import type {
 } from '@sdeverywhere/check-core'
 
 import type { ListItemViewModel } from '../../list/list-item-vm.svelte'
-import type {
-  ScenarioInputPosition,
-  ScenarioKind,
-  GivenInputConfig,
-  ScenarioItemConfig
-} from './check-editor-types'
+import type { ScenarioInputPosition, ScenarioKind, GivenInputConfig, ScenarioItemConfig } from './check-editor-types'
 
 /**
  * View model for managing scenario configurations in the check editor.
  */
-export class ScenarioEditorViewModel {
+export class CheckScenarioEditorViewModel {
   /** The list of scenarios. */
   public scenarios = $state<ScenarioItemConfig[]>([])
 
