@@ -6,6 +6,7 @@ import type { ListItemViewModel } from '../../list/list-item-vm.svelte'
 import TypeaheadSelector from '../../list/typeahead-selector.svelte'
 
 import type { CheckDatasetEditorViewModel } from './check-dataset-editor-vm.svelte'
+import CheckEditorRemoveButton from './check-editor-remove-button.svelte'
 
 interface Props {
   /** The view model for the dataset editor. */
@@ -80,16 +81,7 @@ function handleKeyDown(e: KeyboardEvent) {
             />
           </div>
           {#if viewModel.datasets.length > 1}
-            <button
-              class="dataset-editor-remove-btn"
-              onclick={e => {
-                e.stopPropagation()
-                handleRemoveDataset(dataset.id)
-              }}
-              aria-label="Remove dataset"
-            >
-              ✕
-            </button>
+            <CheckEditorRemoveButton ariaLabel="Remove dataset" onclick={() => handleRemoveDataset(dataset.id)} />
           {/if}
         </div>
       </div>
@@ -181,31 +173,5 @@ function handleKeyDown(e: KeyboardEvent) {
 .dataset-editor-typeahead-wrapper {
   flex: 1;
   min-width: 0;
-}
-
-.dataset-editor-remove-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 22px;
-  height: 22px;
-  background-color: var(--input-bg);
-  border: 1px solid var(--border-color-normal);
-  border-radius: var(--input-border-radius);
-  color: var(--text-color-primary);
-  cursor: pointer;
-  font-size: 0.85rem;
-  flex-shrink: 0;
-  line-height: 1;
-
-  &:hover {
-    background-color: var(--button-bg-hover);
-  }
-
-  &:focus {
-    outline: none;
-    border-color: var(--border-color-focused);
-    box-shadow: 0 0 0 1px var(--border-color-focused);
-  }
 }
 </style>

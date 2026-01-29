@@ -8,20 +8,22 @@ import { SelectorOptionViewModel, SelectorViewModel } from '../../list/selector-
 import TypeaheadSelector from '../../list/typeahead-selector.svelte'
 import type { ListItemViewModel } from '../../list/list-item-vm.svelte'
 
-import type { CheckPredicateEditorViewModel } from './check-predicate-editor-vm.svelte'
 import type {
-  PredicateType,
+  GivenInputConfig,
   PredicateRefKind,
+  PredicateType,
   PredicateDatasetRefKind,
-  PredicateScenarioRefKind,
   PredicateItemConfig,
-  PredicateTimeConfig,
-  TimeBoundType,
   PredicateScenarioConfig,
-  ScenarioKind,
+  PredicateScenarioRefKind,
+  PredicateTimeConfig,
   ScenarioInputPosition,
-  GivenInputConfig
+  ScenarioKind,
+  TimeBoundType
 } from './check-editor-types'
+
+import type { CheckPredicateEditorViewModel } from './check-predicate-editor-vm.svelte'
+import CheckEditorRemoveButton from './check-editor-remove-button.svelte'
 
 interface Props {
   /** The view model for the predicate editor. */
@@ -338,16 +340,10 @@ function handleKeyDown(e: KeyboardEvent) {
 
             {#if viewModel.predicates.length > 1}
               <div class="spacer-flex"></div>
-              <button
-                class="predicate-editor-remove-btn"
-                onclick={e => {
-                  e.stopPropagation()
-                  handleRemovePredicate(predicate.id)
-                }}
-                aria-label="Remove predicate"
-              >
-                ✕
-              </button>
+              <CheckEditorRemoveButton
+                ariaLabel="Remove predicate"
+                onclick={() => handleRemovePredicate(predicate.id)}
+              />
             {/if}
           </div>
 
@@ -620,32 +616,6 @@ function handleKeyDown(e: KeyboardEvent) {
   font-size: 0.85rem;
   width: 80px;
   flex-shrink: 0;
-
-  &:focus {
-    outline: none;
-    border-color: var(--border-color-focused);
-    box-shadow: 0 0 0 1px var(--border-color-focused);
-  }
-}
-
-.predicate-editor-remove-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 22px;
-  height: 22px;
-  background-color: var(--input-bg);
-  border: 1px solid var(--border-color-normal);
-  border-radius: var(--input-border-radius);
-  color: var(--text-color-primary);
-  cursor: pointer;
-  font-size: 0.85rem;
-  flex-shrink: 0;
-  line-height: 1;
-
-  &:hover {
-    background-color: var(--button-bg-hover);
-  }
 
   &:focus {
     outline: none;

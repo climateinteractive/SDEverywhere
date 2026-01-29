@@ -2,13 +2,15 @@
 
 <!-- SCRIPT -->
 <script lang="ts">
+import type { ListItemViewModel } from '../../list/list-item-vm.svelte'
 import Selector from '../../list/selector.svelte'
 import { SelectorOptionViewModel, SelectorViewModel } from '../../list/selector-vm.svelte'
 import TypeaheadSelector from '../../list/typeahead-selector.svelte'
 
-import type { CheckScenarioEditorViewModel } from './check-scenario-editor-vm.svelte'
 import type { ScenarioKind, ScenarioItemConfig, ScenarioInputPosition } from './check-editor-types'
-import type { ListItemViewModel } from '../../list/list-item-vm.svelte'
+
+import type { CheckScenarioEditorViewModel } from './check-scenario-editor-vm.svelte'
+import CheckEditorRemoveButton from './check-editor-remove-button.svelte'
 
 interface Props {
   /** The view model for the scenario editor. */
@@ -235,16 +237,7 @@ $effect(() => {
             {/if}
             {#if viewModel.scenarios.length > 1}
               <div class="spacer-flex"></div>
-              <button
-                class="scenario-editor-remove-btn"
-                onclick={e => {
-                  e.stopPropagation()
-                  handleRemoveScenario(scenario.id)
-                }}
-                aria-label="Remove scenario"
-              >
-                ✕
-              </button>
+              <CheckEditorRemoveButton ariaLabel="Remove scenario" onclick={() => handleRemoveScenario(scenario.id)} />
             {/if}
           </div>
           {#if scenario.kind === 'given-inputs'}
@@ -292,16 +285,10 @@ $effect(() => {
                     </div>
                   {/if}
                   {#if (scenario.inputs?.length || 0) > 1}
-                    <button
-                      class="scenario-editor-remove-input-btn"
-                      onclick={e => {
-                        e.stopPropagation()
-                        handleRemoveInput(scenario.id, inputIndex)
-                      }}
-                      aria-label="Remove input"
-                    >
-                      ✕
-                    </button>
+                    <CheckEditorRemoveButton
+                      ariaLabel="Remove input"
+                      onclick={() => handleRemoveInput(scenario.id, inputIndex)}
+                    />
                   {/if}
                 </div>
               {/each}
@@ -464,33 +451,6 @@ $effect(() => {
 .scenario-editor-typeahead-wrapper {
   flex: 1;
   min-width: 0;
-}
-
-.scenario-editor-remove-btn,
-.scenario-editor-remove-input-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 22px;
-  height: 22px;
-  background-color: var(--input-bg);
-  border: 1px solid var(--border-color-normal);
-  border-radius: var(--input-border-radius);
-  color: var(--text-color-primary);
-  cursor: pointer;
-  font-size: 0.85rem;
-  flex-shrink: 0;
-  line-height: 1;
-
-  &:hover {
-    background-color: var(--button-bg-hover);
-  }
-
-  &:focus {
-    outline: none;
-    border-color: var(--border-color-focused);
-    box-shadow: 0 0 0 1px var(--border-color-focused);
-  }
 }
 
 .scenario-editor-add-input-btn {
