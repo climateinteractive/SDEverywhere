@@ -4,13 +4,15 @@ import { describe, expect, it } from 'vitest'
 
 import type { Dataset } from '../_shared/types'
 import type { ModelSpec } from '../bundle/bundle-types'
+
 import type { CheckDataRef } from './check-data-ref'
 import { dataRef } from './check-data-ref'
 import { parseTestYaml } from './check-parser'
 import type { CheckPlanPredicate } from './check-planner'
-import type { CheckTestSpec } from './check-spec'
 import { CheckPlanner } from './check-planner'
 import type { CheckPredicateOp } from './check-predicate'
+import type { CheckTestSpec } from './check-spec'
+
 import { dataset, implVar, outputVar } from './_mocks/mock-check-dataset'
 import { datasetPlan, groupPlan, predPlan, scenarioPlan, testPlan } from './_mocks/mock-check-plan'
 import { allAtPos, inputAtPos, inputAtValue, inputVar } from './_mocks/mock-check-scenario'
@@ -105,12 +107,6 @@ describe('CheckPlanner', () => {
       predPlan(k0, { eq: { dataset: { name: 'V3' }, scenario: 'inherit' } }, dataRefs5)
     ]
 
-    const plan = planner.buildPlan()
-    expect(plan.groups.length).toBe(1)
-    // XXX: We compare stringified objects here as a workaround for the way Jest handles
-    // objects that contain functions (as is the case for our action function), see:
-    //   https://github.com/facebook/jest/issues/8475#issuecomment-537830532
-    const actualGroup = JSON.parse(JSON.stringify(plan.groups[0]))
     // Define the expected specs for each test
     const spec1 = {
       it: 'test1',
@@ -141,6 +137,12 @@ describe('CheckPlanner', () => {
       predicates: [{ eq: { dataset: { name: 'V3' }, scenario: 'inherit' } }]
     }
 
+    const plan = planner.buildPlan()
+    expect(plan.groups.length).toBe(1)
+    // XXX: We compare stringified objects here as a workaround for the way Jest handles
+    // objects that contain functions (as is the case for our action function), see:
+    //   https://github.com/facebook/jest/issues/8475#issuecomment-537830532
+    const actualGroup = JSON.parse(JSON.stringify(plan.groups[0]))
     const expectedGroup = JSON.parse(
       JSON.stringify(
         groupPlan('group1', [
@@ -188,7 +190,11 @@ describe('CheckPlanner', () => {
             [scenarioPlan(inputAtValue(i1, 75), [datasetPlan('ModelImpl', 'V3', predPlans3(31))])],
             spec3
           ),
-          testPlan('test4', [scenarioPlan(allAtPos('at-default'), [datasetPlan('Model', 'V1', predPlans4(32))])], spec4),
+          testPlan(
+            'test4',
+            [scenarioPlan(allAtPos('at-default'), [datasetPlan('Model', 'V1', predPlans4(32))])],
+            spec4
+          ),
           testPlan('test5', [scenarioPlan(inputAtValue(i1, 75), [datasetPlan('Model', 'V1', predPlans5(33))])], spec5)
         ])
       )
