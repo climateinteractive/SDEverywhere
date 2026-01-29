@@ -45,12 +45,14 @@ export class CheckDatasetEditorViewModel {
    * Add a new dataset with default settings.
    */
   addDataset(): void {
+    // Add a new dataset item
     const defaultDatasetKey = this.outputVars.length > 0 ? this.outputVars[0].datasetKey : ''
     const newDataset: DatasetItemConfig = {
       id: `dataset-${this.nextDatasetId++}`,
       datasetKey: defaultDatasetKey
     }
     this.datasets.push(newDataset)
+
     // Auto-select the first dataset if none is selected
     if (!this.selectedDatasetId) {
       this.selectedDatasetId = newDataset.id
@@ -73,7 +75,7 @@ export class CheckDatasetEditorViewModel {
         this.datasets.push(newDataset)
       }
     }
-    // Note: The editor currently supports only datasets specified by name.
+    // TODO: The editor currently only supports datasets specified by name.
     // Dataset groups (spec.group) and type matching (spec.matching) are not
     // supported in the editor and will be silently ignored. These features
     // require access to model-level information to expand into individual datasets.

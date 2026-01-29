@@ -2,10 +2,10 @@
 
 <!-- SCRIPT -->
 <script lang="ts">
+import type { ListItemViewModel } from '../../list/list-item-vm.svelte'
 import TypeaheadSelector from '../../list/typeahead-selector.svelte'
 
 import type { CheckDatasetEditorViewModel } from './check-dataset-editor-vm.svelte'
-import type { ListItemViewModel } from '../../list/list-item-vm.svelte'
 
 interface Props {
   /** The view model for the dataset editor. */
