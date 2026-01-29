@@ -81,7 +81,6 @@ function handleKeydown(event: KeyboardEvent) {
   border-radius: var(--panel-border-radius);
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
   width: 90%;
-  max-width: 500px;
   max-height: 90vh;
   display: flex;
   flex-direction: column;
