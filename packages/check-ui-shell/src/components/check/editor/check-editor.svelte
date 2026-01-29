@@ -6,13 +6,13 @@ import Icon from 'svelte-awesome/components/Icon.svelte'
 import { faPaste } from '@fortawesome/free-solid-svg-icons'
 
 import Dialog from '../../_shared/dialog.svelte'
-import ScenarioEditor from './scenario-editor.svelte'
-import DatasetEditor from './dataset-editor.svelte'
-import PredicateEditor from './predicate-editor.svelte'
-import TabbedPreview from './tabbed-preview.svelte'
-import PasteYamlDialog from './paste-yaml-dialog.svelte'
 
 import type { CheckEditorViewModel } from './check-editor-vm.svelte'
+import DatasetEditor from './check-dataset-editor.svelte'
+import PredicateEditor from './check-predicate-editor.svelte'
+import ScenarioEditor from './check-scenario-editor.svelte'
+import TabbedPreview from './check-tabbed-preview.svelte'
+import CheckYamlDialog from './check-yaml-dialog.svelte'
 
 interface Props {
   /** Whether the dialog is visible. */
@@ -76,7 +76,7 @@ function openPasteYamlDialog() {
   </div>
 </Dialog>
 
-<PasteYamlDialog bind:open={showPasteYamlDialog} {viewModel} />
+<CheckYamlDialog bind:open={showPasteYamlDialog} {viewModel} />
 
 <!-- STYLE -->
 <style lang="scss">

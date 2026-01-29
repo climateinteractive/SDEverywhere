@@ -8,7 +8,7 @@ import { SelectorOptionViewModel, SelectorViewModel } from '../../list/selector-
 import TypeaheadSelector from '../../list/typeahead-selector.svelte'
 import type { ListItemViewModel } from '../../list/list-item-vm.svelte'
 
-import type { PredicateEditorViewModel } from './predicate-editor-vm.svelte'
+import type { PredicateEditorViewModel } from './check-predicate-editor-vm.svelte'
 import type {
   PredicateType,
   PredicateRefKind,

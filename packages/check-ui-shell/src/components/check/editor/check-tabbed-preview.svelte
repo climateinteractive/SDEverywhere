@@ -2,7 +2,7 @@
 
 <!-- SCRIPT -->
 <script lang="ts">
-import PreviewGraph from './preview-graph.svelte'
+import PreviewGraph from './check-preview-graph.svelte'
 import type { CheckEditorViewModel } from './check-editor-vm.svelte'
 
 interface Props {

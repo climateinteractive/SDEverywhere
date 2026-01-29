@@ -363,14 +363,16 @@ Created the initial check-editor component with basic structure:
 
 - `src/components/check/editor/check-editor.svelte` - Main dialog component
 - `src/components/check/editor/check-editor-vm.svelte.ts` - Main view model (coordinates sub-VMs)
-- `src/components/check/editor/scenario-editor-vm.svelte.ts` - Scenario state and methods
-- `src/components/check/editor/dataset-editor-vm.svelte.ts` - Dataset state and methods
-- `src/components/check/editor/predicate-editor-vm.svelte.ts` - Predicate state and methods
+- `src/components/check/editor/check-scenario-editor-vm.svelte.ts` - Scenario state and methods
+- `src/components/check/editor/check-dataset-editor-vm.svelte.ts` - Dataset state and methods
+- `src/components/check/editor/check-predicate-editor-vm.svelte.ts` - Predicate state and methods
 - `src/components/check/editor/check-editor-types.ts` - Type definitions for editor configs
-- `src/components/check/editor/scenario-selector.svelte` - Scenario configuration UI
-- `src/components/check/editor/dataset-selector.svelte` - Dataset selection UI
-- `src/components/check/editor/predicate-selector.svelte` - Predicate configuration UI
-- `src/components/check/editor/preview-graph.svelte` - Graph preview wrapper
+- `src/components/check/editor/check-scenario-editor.svelte` - Scenario configuration UI
+- `src/components/check/editor/check-dataset-editor.svelte` - Dataset selection UI
+- `src/components/check/editor/check-predicate-editor.svelte` - Predicate configuration UI
+- `src/components/check/editor/check-preview-graph.svelte` - Graph preview wrapper
+- `src/components/check/editor/check-tabbed-preview.svelte` - Tabbed preview container
+- `src/components/check/editor/check-yaml-dialog.svelte` - Paste YAML dialog
 
 ### Tests
 

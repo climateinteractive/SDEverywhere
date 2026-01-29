@@ -6,7 +6,7 @@ import Selector from '../../list/selector.svelte'
 import { SelectorOptionViewModel, SelectorViewModel } from '../../list/selector-vm.svelte'
 import TypeaheadSelector from '../../list/typeahead-selector.svelte'
 
-import type { ScenarioEditorViewModel } from './scenario-editor-vm.svelte'
+import type { ScenarioEditorViewModel } from './check-scenario-editor-vm.svelte'
 import type { ScenarioKind, ScenarioItemConfig, ScenarioInputPosition } from './check-editor-types'
 import type { ListItemViewModel } from '../../list/list-item-vm.svelte'
 

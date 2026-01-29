@@ -15,9 +15,9 @@ import type {} from '@sdeverywhere/check-core'
 import { CheckSummaryGraphBoxViewModel } from '../summary/check-summary-graph-box-vm'
 
 import type { CheckTestConfig } from './check-editor-types'
-import { ScenarioEditorViewModel } from './scenario-editor-vm.svelte'
-import { DatasetEditorViewModel } from './dataset-editor-vm.svelte'
-import { PredicateEditorViewModel } from './predicate-editor-vm.svelte'
+import { ScenarioEditorViewModel } from './check-scenario-editor-vm.svelte'
+import { DatasetEditorViewModel } from './check-dataset-editor-vm.svelte'
+import { PredicateEditorViewModel } from './check-predicate-editor-vm.svelte'
 
 /** View model for the check test editor. */
 export class CheckEditorViewModel {
