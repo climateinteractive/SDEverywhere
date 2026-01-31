@@ -1,57 +1,62 @@
-<!-- SCRIPT -->
-<script lang='ts'>
+<!-- Copyright (c) 2024 Climate Interactive / New Venture Fund -->
 
+<!-- SCRIPT -->
+<script lang="ts">
 import './global.css'
 
-import Selector from './components/_shared/selector.svelte'
 import Graph from './components/graph/graph.svelte'
 
-import { AppViewModel } from './app-vm'
+import { AppViewModel } from './app-vm.svelte'
 
 const appViewModel = new AppViewModel()
-const sourceModel = appViewModel.sourceModel
-const generatedModelInfo = appViewModel.generatedModelInfo
-const varSelectorViewModel = appViewModel.varSelector
-const selectedVarGraphViewModel = appViewModel.selectedVarGraph
 
+// Track source model changes and recompile (debounced)
+let compileTimeout: ReturnType<typeof setTimeout> | undefined
+let lastCompiledSource: string = appViewModel.sourceModel
+
+$effect(() => {
+  const source = appViewModel.sourceModel
+  if (source !== lastCompiledSource) {
+    // Debounce recompilation to avoid too many compiles while typing
+    clearTimeout(compileTimeout)
+    compileTimeout = setTimeout(() => {
+      lastCompiledSource = source
+      appViewModel.compileModel(source)
+    }, 500)
+  }
+})
 </script>
 
-
-
-
 <!-- TEMPLATE -->
-<template>
-
 <div class="app-container">
   <div class="column">
-    <textarea bind:value={$sourceModel} spellcheck="false" />
+    <textarea bind:value={appViewModel.sourceModel} spellcheck="false"></textarea>
   </div>
 
-  {#if $generatedModelInfo}
+  {#if appViewModel.generatedModelInfo}
     <div class="column">
-      <textarea disabled>{$generatedModelInfo.jsCode || ''}</textarea>
+      <textarea disabled>{appViewModel.generatedModelInfo.jsCode || ''}</textarea>
     </div>
 
     <div class="column">
-      {#if $varSelectorViewModel}
-        <Selector viewModel={$varSelectorViewModel}/>
+      {#if appViewModel.varSelectorOptions.length > 0}
+        <select bind:value={appViewModel.selectedVarId} size="5">
+          {#each appViewModel.varSelectorOptions as option}
+            <option value={option.value}>{option.label}</option>
+          {/each}
+        </select>
       {/if}
       <div class="graph-container">
-        {#if $selectedVarGraphViewModel}
-          <Graph viewModel={$selectedVarGraphViewModel} width={400} height={300}/>
+        {#if appViewModel.selectedVarGraph}
+          <Graph viewModel={appViewModel.selectedVarGraph} width={400} height={300} />
         {/if}
       </div>
     </div>
   {/if}
 </div>
 
-</template>
-
-
-
-
 <!-- STYLE -->
-<style lang='sass'>
+<style lang="sass">
 
 .app-container
   display: flex
@@ -71,6 +76,18 @@ textarea
   border: none
   border-radius: 8px
   padding: 8px
+
+select
+  width: 100%
+  max-height: 100px
+  overflow: auto
+  background-color: #333
+  border: solid 1px #777
+  color: #fff
+
+select > option
+  font-family: Helvetica, sans-serif
+  color: #fff
 
 .graph-container
   position: relative

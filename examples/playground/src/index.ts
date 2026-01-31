@@ -1,6 +1,10 @@
+// Copyright (c) 2024 Climate Interactive / New Venture Fund
+
+import { mount } from 'svelte'
+
 import App from './app.svelte'
 
-const app = new App({
+const app = mount(App, {
   target: document.body
 })
 

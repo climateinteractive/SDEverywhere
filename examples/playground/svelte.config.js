@@ -1,7 +1,7 @@
-import sveltePreprocess from 'svelte-preprocess'
+import { vitePreprocess } from '@sveltejs/vite-plugin-svelte'
 
 export default {
-  preprocess: sveltePreprocess({}),
+  preprocess: vitePreprocess(),
   onwarn: (warning, defaultHandler) => {
     // TODO: We should resolve these warnings instead of ignoring them
     if (warning.code === 'a11y-click-events-have-key-events') {
