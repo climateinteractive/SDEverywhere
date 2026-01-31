@@ -64,11 +64,10 @@ export function errorPredicateReport(checkKey: CheckKey, result?: CheckResult): 
 export function datasetReport(
   prefix: string,
   varName: string,
-  subNames: string[],
   status: CheckStatus,
   predicates: CheckPredicateReport[]
 ): CheckDatasetReport {
-  const checkDataset = dataset(prefix, varName, subNames)
+  const checkDataset = dataset(prefix, varName)
   return {
     checkDataset,
     status,

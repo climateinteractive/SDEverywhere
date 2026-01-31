@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.2.1](https://github.com/climateinteractive/SDEverywhere/compare/plugin-vite-v0.2.0...plugin-vite-v0.2.1) (2026-01-08)
+
+
+### Dependencies
+
+* upgrade vite to ^7.1.12 + upgrade vitest to ^4.0.16 ([#735](https://github.com/climateinteractive/SDEverywhere/issues/735)) ([f16f127](https://github.com/climateinteractive/SDEverywhere/commit/f16f127b9fb0e53352d7e1152d78623fe5ec26c9)), closes [#734](https://github.com/climateinteractive/SDEverywhere/issues/734)
+
+## [0.2.0](https://github.com/climateinteractive/SDEverywhere/compare/plugin-vite-v0.1.11...plugin-vite-v0.2.0) (2025-10-08)
+
+
+### ⚠ BREAKING CHANGES
+
+* The plugin-vite package now requires vite 5.x, 6.x, or 7.x; we have dropped support for vite 3.x and 4.x in the `peerDependencies` for plugin-vite.  Most SDE users will not be affected by this change since they pick up whatever version of vite was configured in the project templates.  If you have an existing SDE project that uses an older version of vite, simply update your `package.json` file and change the vite dependency version to `^7.1.9` or later and things should continue to work just fine.
+
+### Dependencies
+
+* drop support for vite &lt;= 4 in plugin-vite ([ca98afc](https://github.com/climateinteractive/SDEverywhere/commit/ca98afca6fd2fa482bb5112783ce96473fa055a9))
+* upgrade to vite 7.1.9 + svelte 5.39.10 ([39108d2](https://github.com/climateinteractive/SDEverywhere/commit/39108d2cd2973c25a3394778191a4d618dc30640))
+
 ## [0.1.11](https://github.com/climateinteractive/SDEverywhere/compare/plugin-vite-v0.1.10...plugin-vite-v0.1.11) (2024-12-13)
 
 

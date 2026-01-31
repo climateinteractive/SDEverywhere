@@ -5,21 +5,13 @@ import type { CheckConfig, CheckOptions } from '../check/check-config'
 import type { ComparisonConfig, ComparisonOptions } from '../comparison/config/comparison-config'
 
 /**
- * Additional options that are passed to `getConfigOptions`.  These can be used to customize
- * the `ConfigOptions`, for example, if the `simplifyScenarios` flag is true, a reduced set
- * of tests can be provided in the `ConfigOptions` so that the tests run faster in a local
- * development situation.
+ * Additional options that are passed to `getConfigOptions`.
  */
 export interface ConfigInitOptions {
   /** If defined, overrides the displayed name of the baseline ("left") bundle. */
   bundleNameL?: string
   /** If defined, overrides the displayed name of the current ("right") bundle. */
   bundleNameR?: string
-  /**
-   * A hint that the user wants tests to run faster.  If true, you can return a
-   * configuration that runs a smaller subset of tests than normal.
-   */
-  simplifyScenarios?: boolean
 }
 
 /**
@@ -39,6 +31,21 @@ export interface ConfigOptions {
    * The model comparison options.
    */
   comparison?: ComparisonOptions
+  /**
+   * The number of model instances to initialize for each bundle.
+   *
+   * If undefined, the default behavior will be used, which is to initialize a single
+   * model instance for each bundle.
+   *
+   * If you set this to a value greater than 1, it will allow multiple pairs of model
+   * instances to be run concurrently.  For example, if the number of CPU cores is 8,
+   * setting this to 4 will allow 4 pairs of model instances to be run concurrently,
+   * using all available cores.
+   *
+   * If you set this to 0, the implementation will automatically choose a value based on
+   * the number of available CPU cores (i.e., the number of cores divided by 2).
+   */
+  concurrency?: number
 }
 
 /**

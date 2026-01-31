@@ -6,24 +6,20 @@ Based on example code by @dukenmarga from:
 -->
 
 <script context="module" lang="ts">
-
 export interface ContextMenuItem {
   key: string
   displayText: string
   iconClass?: string
   disabled?: boolean
 }
-
 </script>
 
 <script lang="ts">
-
-import { createEventDispatcher } from 'svelte'
+import { createEventDispatcher, onMount } from 'svelte'
 
 import { clickOutside } from './click-outside'
 
 export let items: ContextMenuItem[]
-export let parentElem: HTMLElement
 export let initialEvent: MouseEvent
 
 const dispatch = createEventDispatcher()
@@ -35,31 +31,54 @@ let pos = { x: 0, y: 0 }
 let showMenu = false
 
 $: if (initialEvent) {
-  const bounds = parentElem.getBoundingClientRect()
   pos = {
-    x: initialEvent.clientX - bounds.left,
-    y: initialEvent.clientY - bounds.top
+    x: initialEvent.clientX,
+    y: initialEvent.clientY + 6
   }
   showMenu = true
 } else {
   showMenu = false
 }
 
-function onItemSelected(cmd: string) {
+function handleItemSelected(cmd: string) {
   dispatch('item-selected', cmd)
 }
 
+function handleClickOut() {
+  dispatch('close')
+}
+
+function handleKeyDown(event: KeyboardEvent) {
+  if (event.key === 'Escape') {
+    dispatch('close')
+  }
+}
+
+onMount(() => {
+  // Add keydown listener for Escape key
+  window.addEventListener('keydown', handleKeyDown)
+
+  return () => {
+    window.removeEventListener('keydown', handleKeyDown)
+  }
+})
 </script>
 
 {#if showMenu}
-  <nav use:clickOutside on:clickout style="position: absolute; top:{pos.y}px; left:{pos.x}px">
+  <nav use:clickOutside on:clickout={handleClickOut} style="position: fixed; top:{pos.y}px; left:{pos.x}px">
     <div class="navbar" id="navbar">
       <ul>
         {#each items as item}
-          {#if item.key == "hr"}
-            <hr>
+          {#if item.key == 'hr'}
+            <hr />
           {:else}
-            <li><button class:disabled={item.disabled === true} on:click={() => onItemSelected(item.key)}><i class={item.iconClass}></i>{item.displayText}</button></li>
+            <li>
+              <button
+                role="menuitem"
+                class:disabled={item.disabled === true}
+                on:click={() => handleItemSelected(item.key)}><i class={item.iconClass}></i>{item.displayText}</button
+              >
+            </li>
           {/if}
         {/each}
       </ul>
@@ -79,7 +98,7 @@ nav
 .navbar
   display: inline-flex
   flex-direction: column
-  width: 170px
+  width: 200px
   background-color: #fff
   border-radius: .4rem
   box-shadow: 0 .2rem .4rem rgba(0,0,0,.8)

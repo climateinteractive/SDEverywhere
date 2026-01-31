@@ -1,5 +1,59 @@
 # Changelog
 
+## [0.7.38](https://github.com/climateinteractive/SDEverywhere/compare/cli-v0.7.37...cli-v0.7.38) (2026-01-10)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/build bumped from ^0.3.8 to ^0.3.9
+
+## [0.7.37](https://github.com/climateinteractive/SDEverywhere/compare/cli-v0.7.36...cli-v0.7.37) (2026-01-08)
+
+
+### Bug Fixes
+
+* drop bufx dependency + inline minimal bufx module with unused yaml/prettier/etc parts removed ([#740](https://github.com/climateinteractive/SDEverywhere/issues/740)) ([70ef00b](https://github.com/climateinteractive/SDEverywhere/commit/70ef00b02f723b3c3c74647cc0581de63cc95b5d)), closes [#739](https://github.com/climateinteractive/SDEverywhere/issues/739)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/build bumped from ^0.3.7 to ^0.3.8
+    * @sdeverywhere/compile bumped from ^0.7.25 to ^0.7.26
+
+## [0.7.36](https://github.com/climateinteractive/SDEverywhere/compare/cli-v0.7.35...cli-v0.7.36) (2025-11-07)
+
+
+### Bug Fixes
+
+* force NODE_ENV=development in sde dev so that HMR works in Vite ([#695](https://github.com/climateinteractive/SDEverywhere/issues/695)) ([51ac221](https://github.com/climateinteractive/SDEverywhere/commit/51ac22185f1d9bcd0162235e8dd89a39b348cf5e)), closes [#694](https://github.com/climateinteractive/SDEverywhere/issues/694)
+
+## [0.7.35](https://github.com/climateinteractive/SDEverywhere/compare/cli-v0.7.34...cli-v0.7.35) (2025-10-17)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/compile bumped from ^0.7.24 to ^0.7.25
+
+## [0.7.34](https://github.com/climateinteractive/SDEverywhere/compare/cli-v0.7.33...cli-v0.7.34) (2025-10-08)
+
+
+### Dependencies
+
+* upgrade shelljs to 0.10.0 ([#669](https://github.com/climateinteractive/SDEverywhere/issues/669)) ([ba886ff](https://github.com/climateinteractive/SDEverywhere/commit/ba886ff11781c4eae8dd8db1a68cf6d09de2d5c4)), closes [#668](https://github.com/climateinteractive/SDEverywhere/issues/668)
+
+## [0.7.33](https://github.com/climateinteractive/SDEverywhere/compare/cli-v0.7.32...cli-v0.7.33) (2025-10-08)
+
+
+### Dependencies
+
+* require Node.js v20 as minimum supported version ([7e993aa](https://github.com/climateinteractive/SDEverywhere/commit/7e993aa864883205bf870c4b814d6b089267bdf1))
+
 ## [0.7.32](https://github.com/climateinteractive/SDEverywhere/compare/cli-v0.7.31...cli-v0.7.32) (2025-08-18)
 
 

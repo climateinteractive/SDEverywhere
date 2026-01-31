@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.7.26](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.25...compile-v0.7.26) (2026-01-08)
+
+
+### Bug Fixes
+
+* drop bufx dependency + inline minimal bufx module with unused yaml/prettier/etc parts removed ([#740](https://github.com/climateinteractive/SDEverywhere/issues/740)) ([70ef00b](https://github.com/climateinteractive/SDEverywhere/commit/70ef00b02f723b3c3c74647cc0581de63cc95b5d)), closes [#739](https://github.com/climateinteractive/SDEverywhere/issues/739)
+* stop generating yaml files with `--list` option + drop js-yaml dependency ([#738](https://github.com/climateinteractive/SDEverywhere/issues/738)) ([69b1add](https://github.com/climateinteractive/SDEverywhere/commit/69b1add0621df26c9a34fa847a0e6b1fc5230544)), closes [#737](https://github.com/climateinteractive/SDEverywhere/issues/737)
+
+## [0.7.25](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.24...compile-v0.7.25) (2025-10-17)
+
+
+### Features
+
+* include grouped and sorted arrays of variable instances in JSON listing ([#681](https://github.com/climateinteractive/SDEverywhere/issues/681)) ([0f29d40](https://github.com/climateinteractive/SDEverywhere/commit/0f29d4012dfe8cd5b9526ee970fa9c3c7f664652)), closes [#534](https://github.com/climateinteractive/SDEverywhere/issues/534)
+
 ## [0.7.24](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.23...compile-v0.7.24) (2025-08-18)
 
 

@@ -3,3 +3,12 @@ packages:
   - examples/**
   - models
   - tests/**
+
+# Force pnpm to link local packages:
+#   https://pnpm.io/settings#linkworkspacepackages
+# The default value of this option was true in pnpm <= 8, but was changed
+# to false in pnpm 9; setting it to true here should work for both versions.
+# Note that we don't use `workspace:` protocol for intra-repo dependencies
+# because those don't always play well with release-please, so instead we
+# use normal semver ranges (e.g., "^1.2.3") and let pnpm handle resolution.
+linkWorkspacePackages: true

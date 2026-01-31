@@ -1,147 +1,264 @@
 <!-- Copyright (c) 2021-2022 Climate Interactive / New Venture Fund -->
 
 <!-- SCRIPT -->
-<script lang='ts'>
+<script lang="ts">
+import { createEventDispatcher } from 'svelte'
+
+import type { CheckScenarioReport } from '@sdeverywhere/check-core'
+
+import type { ContextMenuItem } from '../../_shared/context-menu.svelte'
+import ContextMenu from '../../_shared/context-menu.svelte'
 
 import type { CheckSummaryViewModel } from './check-summary-vm'
-import CheckSummaryTest from './check-summary-test.svelte'
+import type { CheckSummaryRowViewModel } from './check-summary-row-vm'
+import CheckSummaryRow from './check-summary-row.svelte'
 
 export let viewModel: CheckSummaryViewModel
 
-// Previously we allowed for collapsing the whole checks section, but now that we have
-// tabs, that is less useful, so always show them
-// let showCheckDetail = viewModel.total > 0 && viewModel.total !== viewModel.passed
-const showCheckDetail = true
+let contextMenuSourceScenario: CheckScenarioReport | undefined
+let contextMenuItems: ContextMenuItem[] = []
+let contextMenuEvent: MouseEvent | undefined
 
+const dispatch = createEventDispatcher()
+
+function onShowContextMenu(event: MouseEvent, viewModel: CheckSummaryRowViewModel) {
+  if (viewModel.scenarioReport?.checkScenario?.spec) {
+    contextMenuSourceScenario = viewModel.scenarioReport
+    contextMenuItems = [{ key: 'show-trace-view', displayText: 'Open Scenario in Trace View' }]
+    contextMenuEvent = event
+  } else {
+    contextMenuSourceScenario = undefined
+    contextMenuItems = []
+    contextMenuEvent = undefined
+  }
+}
+
+function onHideContextMenu() {
+  contextMenuEvent = undefined
+}
+
+function onContextMenuItemSelected(e: CustomEvent) {
+  // Hide the context menu
+  contextMenuEvent = undefined
+
+  // Handle the command
+  const cmd = e.detail
+  switch (cmd) {
+    case 'show-trace-view':
+      dispatch('command', {
+        cmd: 'show-trace-view-with-scenario',
+        scenarioSpec: contextMenuSourceScenario?.checkScenario?.spec,
+        scenarioKind: 'check'
+      })
+      break
+    default:
+      console.error(`ERROR: Unhandled context menu command '${cmd}'`)
+      break
+  }
+}
 </script>
 
-
-
-
 <!-- TEMPLATE -->
-<template lang='pug'>
-
-include check-summary.pug
-
-.check-summary-container
-  .summary-bar-row
-    .bar-container
-      +if('viewModel.total > 0')
-        .bar.bucket-bg-0(style!='width: {viewModel.percents[0]}%;')
-        .bar.status-bg-failed(style!='width: {viewModel.percents[1]}%;')
-        .bar.status-bg-error(style!='width: {viewModel.percents[2]}%;')
-        +else
-          .bar.gray(style!='width: 100%')
-    span.summary-label
-      +if('viewModel.total === 0')
-        span No checks
-        +elseif('viewModel.total === viewModel.passed')
-          span { viewModel.total } total passed
-        +else
-          span { viewModel.total } total
-          +if('viewModel.passed')
-            span.sep &nbsp;|&nbsp;
-            span.status-color-passed {viewModel.passed} passed
-          +if('viewModel.failed')
-            span.sep &nbsp;|&nbsp;
-            span.status-color-failed {viewModel.failed} failed
-          +if('viewModel.errors')
-            span.sep &nbsp;|&nbsp;
-            +if('viewModel.errors > 1')
-              span.status-color-error {viewModel.errors} errors
-              +else
-                span.status-color-error {viewModel.errors} error
-  +if('showCheckDetail')
-    .check-detail
-      +groups
-
-</template>
-
-
-
+<div class="check-summary-container">
+  <div class="summary-bar-row">
+    <div class="bar-container">
+      {#if viewModel.total > 0}
+        <div class="bar bucket-bg-0" style="width: {viewModel.percents[0]}%;"></div>
+        <div class="bar status-bg-failed" style="width: {viewModel.percents[1]}%;"></div>
+        <div class="bar status-bg-error" style="width: {viewModel.percents[2]}%;"></div>
+        <div class="bar status-bg-skipped" style="width: {viewModel.percents[3]}%;"></div>
+      {:else}
+        <div class="bar gray" style="width: 100%"></div>
+      {/if}
+    </div>
+    <span class="summary-label">
+      {#if viewModel.total === 0}
+        <span>No checks</span>
+      {:else if viewModel.total === viewModel.passed}
+        <span>{viewModel.total} total passed</span>
+      {:else}
+        <span>{viewModel.total} total</span>
+        {#if viewModel.passed}
+          <span class="sep">&nbsp;|&nbsp;</span>
+          <span class="status-color-passed">{viewModel.passed} passed</span>
+        {/if}
+        {#if viewModel.failed}
+          <span class="sep">&nbsp;|&nbsp;</span>
+          <span class="status-color-failed">{viewModel.failed} failed</span>
+        {/if}
+        {#if viewModel.errors}
+          <span class="sep">&nbsp;|&nbsp;</span>
+          {#if viewModel.errors > 1}
+            <span class="status-color-error">{viewModel.errors} errors</span>
+          {:else}
+            <span class="status-color-error">{viewModel.errors} error</span>
+          {/if}
+        {/if}
+        {#if viewModel.skipped}
+          <span class="sep">&nbsp;|&nbsp;</span>
+          <span class="status-color-skipped">{viewModel.skipped} skipped</span>
+        {/if}
+      {/if}
+    </span>
+  </div>
+  <div class="check-detail">
+    {#each viewModel.groups as group}
+      <div class="group-container">
+        <div class="row group">
+          <div class="label">{group.name}</div>
+        </div>
+        {#each group.tests as testViewModel}
+          <CheckSummaryRow viewModel={testViewModel} {onShowContextMenu} />
+        {/each}
+      </div>
+    {/each}
+  </div>
+  <ContextMenu
+    items={contextMenuItems}
+    initialEvent={contextMenuEvent}
+    on:item-selected={onContextMenuItemSelected}
+    on:clickout={onHideContextMenu}
+  />
+</div>
 
 <!-- STYLE -->
-<style lang='sass'>
+<style lang="scss">
+// XXX: Prevent the sticky test rows from being hidden behind the sticky tab bar
+$container-top-offset: 50px;
 
-$indent: 1rem
+$group-row-h: 32px;
+$test-row-h: 20px;
+$other-row-h: 18px;
+$bg-color: #272727;
 
-.check-summary-container
-  display: flex
-  flex-direction: column
+.check-summary-container {
+  display: flex;
+  flex-direction: column;
+}
 
-.check-detail
-  display: flex
-  flex-direction: column
+.check-detail {
+  display: flex;
+  flex-direction: column;
+}
 
-.group-container
-  margin-bottom: 1.2rem
+.group-container {
+  margin-bottom: 1.2rem;
 
-.group-container :global(.test-rows)
-  display: flex
-  flex-direction: column
+  :global(.test-rows) {
+    display: flex;
+    flex-direction: column;
+  }
 
-// Hide passed rows by default
-.group-container :global(.row.passed)
-  display: none
+  :global(.test-rows:not(.children-visible)) {
+    display: none;
+  }
 
-// Show passed rows when parent test has `expand-all` class
-.group-container :global(.test-rows.expand-all .row.passed)
-  display: flex
+  :global(.test-rows.children-visible) {
+    display: flex;
+  }
 
-.group-container :global(.row)
-  display: flex
-  flex-direction: row
+  :global(.row) {
+    display: flex;
+    flex-direction: row;
+  }
 
-.group-container :global(.row.group)
-  font-size: 1.2em
+  :global(.row.group) {
+    position: sticky;
+    top: $container-top-offset;
+    height: $group-row-h;
+    z-index: 6;
+    background-color: $bg-color;
+    font-size: 1.2em;
+  }
 
-.group-container :global(.row.test)
-  margin-top: .4rem
+  :global(.row.group > .label) {
+    margin-top: 8px;
+  }
 
-.group-container :global(.row.test > .label)
-  cursor: pointer
+  :global(.row.test) {
+    position: sticky;
+    display: flex;
+    align-items: center;
+    top: $container-top-offset + $group-row-h;
+    height: $test-row-h;
+    z-index: 5;
+    background-color: $bg-color;
+  }
 
-.group-container :global(.row.scenario)
-  color: #777
+  :global(.row.scenario) {
+    position: sticky;
+    top: $container-top-offset + $group-row-h + $test-row-h;
+    height: $other-row-h;
+    z-index: 4;
+    background-color: $bg-color;
+  }
 
-.group-container :global(.row.dataset)
-  color: #777
+  :global(.row.dataset) {
+    position: sticky;
+    top: $container-top-offset + $group-row-h + $test-row-h + $other-row-h;
+    height: $other-row-h;
+    z-index: 3;
+    background-color: $bg-color;
+  }
 
-.group-container :global(.row.predicate)
-  color: #777
+  :global(.row.predicate) {
+    position: sticky;
+    top: $container-top-offset + $group-row-h + $test-row-h + (2 * $other-row-h);
+    height: $other-row-h;
+    z-index: 2;
+    background-color: $bg-color;
+  }
 
-.group-container :global(.row.predicate > .label)
-  cursor: pointer
+  :global(.row.placeholder) {
+    height: $other-row-h;
+  }
 
-.group-container :global(.bold)
-  font-weight: 700
-  color: #bbb
+  :global(.row > .label) {
+    cursor: pointer;
+  }
 
-.summary-bar-row
-  display: flex
-  flex-direction: row
-  align-items: baseline
-  align-self: flex-start
-  margin: 2.6rem 0
-  opacity: 1.0
+  :global(.row.scenario),
+  :global(.row.dataset),
+  :global(.row.predicate) {
+    color: #777;
+  }
 
-.bar-container
-  display: flex
-  flex-direction: row
-  width: 15rem
-  height: .8rem
+  :global(.bold) {
+    font-weight: 700;
+    color: #bbb;
+  }
+}
 
-.bar
-  height: .8rem
+.summary-bar-row {
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  align-self: flex-start;
+  margin: 2.6rem 0;
+  opacity: 1;
+}
 
-.bar.gray
-  background-color: #777
+.bar-container {
+  display: flex;
+  flex-direction: row;
+  width: 15rem;
+  height: 0.8rem;
+}
 
-.summary-label
-  margin-left: .8rem
-  color: #fff
+.bar {
+  height: 0.8rem;
 
-.sep
-  color: #777
+  &.gray {
+    background-color: #777;
+  }
+}
 
+.summary-label {
+  margin-left: 0.8rem;
+  color: #fff;
+}
+
+.sep {
+  color: #777;
+}
 </style>

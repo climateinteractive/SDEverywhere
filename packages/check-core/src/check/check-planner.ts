@@ -10,7 +10,7 @@ import { expandDatasets } from './check-dataset'
 import type { CheckPredicateOp } from './check-predicate'
 import type { CheckScenario } from './check-scenario'
 import { expandScenarios } from './check-scenario'
-import type { CheckDatasetSpec, CheckPredicateSpec, CheckScenarioSpec, CheckSpec } from './check-spec'
+import type { CheckDatasetSpec, CheckNameSpec, CheckPredicateSpec, CheckScenarioSpec, CheckSpec } from './check-spec'
 
 export type CheckKey = number
 
@@ -56,6 +56,8 @@ export interface CheckTask {
   action: CheckAction
   /** The op->ref pairs for any reference data needed for performing the check. */
   dataRefs?: Map<CheckPredicateOp, CheckDataRef>
+  /** Whether the check should be skipped. */
+  skip?: boolean
 }
 
 export interface CheckPlan {
@@ -88,7 +90,14 @@ export class CheckPlanner {
 
   constructor(private readonly modelSpec: ModelSpec) {}
 
-  addAllChecks(checkSpec: CheckSpec, simplifyScenarios: boolean): void {
+  addAllChecks(checkSpec: CheckSpec, skipChecks: CheckNameSpec[]): void {
+    function skipCheckKey(groupName: string, testName: string): string {
+      return `${groupName.toLowerCase()} :: ${testName.toLowerCase()}`
+    }
+
+    // Convert to a Set for efficient lookup
+    const skipChecksSet = new Set(skipChecks.map(check => skipCheckKey(check.groupName, check.testName)))
+
     // Iterate over all groups
     for (const groupSpec of checkSpec.groups) {
       const groupName = groupSpec.describe
@@ -97,6 +106,13 @@ export class CheckPlanner {
       const planTests: CheckPlanTest[] = []
       for (const testSpec of groupSpec.tests) {
         const testName = testSpec.it
+
+        // Check if this test should be skipped
+        const shouldSkip = skipChecksSet.has(skipCheckKey(groupName, testName))
+
+        // TODO: We no longer offer a "Simplify Scenarios" option in the UI, but
+        // we will leave the option here in case we add it back later
+        const simplifyScenarios = false
 
         // Expand the set of scenarios for this test
         const checkScenarios = expandScenarios(this.modelSpec, testSpec.scenarios || [], simplifyScenarios)
@@ -164,7 +180,8 @@ export class CheckPlanner {
                 scenario: checkScenario,
                 dataset: checkDataset,
                 action: checkAction,
-                dataRefs
+                dataRefs,
+                skip: shouldSkip
               })
             }
 

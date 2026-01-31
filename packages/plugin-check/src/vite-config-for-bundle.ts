@@ -1,6 +1,6 @@
 // Copyright (c) 2022 Climate Interactive / New Venture Fund
 
-import { existsSync, statSync } from 'fs'
+import { existsSync, readFileSync, statSync } from 'fs'
 import { basename, dirname, join as joinPath, relative, resolve as resolvePath } from 'path'
 import { fileURLToPath } from 'url'
 
@@ -8,6 +8,7 @@ import type { InlineConfig, ResolvedConfig, Plugin as VitePlugin } from 'vite'
 import { nodeResolve } from '@rollup/plugin-node-resolve'
 
 import type { BuildContext, ResolvedModelSpec } from '@sdeverywhere/build'
+import { encodeImplVars } from '@sdeverywhere/check-core'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
@@ -23,6 +24,8 @@ const __dirname = dirname(__filename)
  * doesn't seem to be working correctly in an ESM setting
  */
 function injectModelSpec(context: BuildContext, modelSpec: ResolvedModelSpec): VitePlugin {
+  const prepDir = context.config.prepDir
+
   // Include the SDE variable ID with each spec
   const inputSpecs = []
   for (const modelInputSpec of modelSpec.inputs) {
@@ -58,6 +61,8 @@ function injectModelSpec(context: BuildContext, modelSpec: ResolvedModelSpec): V
       ...modelInputSpec
     })
   }
+
+  // Include the SDE variable ID with each output variable spec
   const outputSpecs = modelSpec.outputs.map(o => {
     return {
       varId: context.canonicalVarId(o.varName),
@@ -65,8 +70,27 @@ function injectModelSpec(context: BuildContext, modelSpec: ResolvedModelSpec): V
     }
   })
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  function readJsonListing(): any {
+    const path = joinPath(prepDir, 'build', 'processed.json')
+    if (existsSync(path)) {
+      const json = readFileSync(path, 'utf8')
+      return JSON.parse(json)
+    } else {
+      return {}
+    }
+  }
+
+  // Read the JSON model listing
+  const listing = readJsonListing()
+
+  // Extract the `varInstances` object from the model listing
+  const varInstances = listing.varInstances || {}
+
+  // Encode the `varInstances` object into a more efficient format to reduce the bundle size
+  const encodedImplVars = encodeImplVars(varInstances)
+
   function stagedFileSize(filename: string): number {
-    const prepDir = context.config.prepDir
     const path = joinPath(prepDir, 'staged', 'model', filename)
     if (existsSync(path)) {
       return statSync(path).size
@@ -89,6 +113,7 @@ function injectModelSpec(context: BuildContext, modelSpec: ResolvedModelSpec): V
   const moduleSrc = `
 export const inputSpecs = ${JSON.stringify(inputSpecs)};
 export const outputSpecs = ${JSON.stringify(outputSpecs)};
+export const encodedImplVars = ${JSON.stringify(encodedImplVars)};
 export const modelSizeInBytes = ${modelSizeInBytes};
 export const dataSizeInBytes = ${dataSizeInBytes};
 `
@@ -156,7 +181,7 @@ function overrideViteResolvePlugin(viteConfig: ResolvedConfig) {
     }
 
     // For all other cases, fall back on the default resolver
-    return originalResolveId.call(this, id, importer, options)
+    return await originalResolveId.handler.call(this, id, importer, options)
   }
 }
 
@@ -217,7 +242,10 @@ export async function createViteConfigForBundle(
             // Note that we need to use `resolveId.call` here in order to provide the
             // right `this` context, which provides Rollup plugin functionality
             const customResolver = nodeResolve({ browser: false })
-            const resolved = await customResolver.resolveId.call(this, source, importer, options)
+            // In Rollup 4, resolveId can either be a function or an object with a `handler` property
+            const resolveIdHook = customResolver.resolveId
+            const resolveIdFn = typeof resolveIdHook === 'function' ? resolveIdHook : resolveIdHook.handler
+            const resolved = await resolveIdFn.call(this, source, importer, options)
             // Force the use of the `dist-esm` variant of the threads.js package
             if (source === 'threads/worker') {
               return resolved.id.replace('worker.mjs', 'dist-esm/worker/index.js')

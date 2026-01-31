@@ -11,10 +11,18 @@
   "workspaces": [
     "packages/app"
   ],
-  "dependencies": {
+  "devDependencies": {
+    "@eslint/js": "^9.37.0",
     "@sdeverywhere/build": "^0.3.7",
-    "@sdeverywhere/cli": "^0.7.31",
-    "@sdeverywhere/plugin-vite": "^0.1.11",
-    "@sdeverywhere/plugin-worker": "^0.2.10"
+    "@sdeverywhere/cli": "^0.7.34",
+    "@sdeverywhere/plugin-vite": "^0.2.0",
+    "@sdeverywhere/plugin-worker": "^0.2.11",
+    "@typescript-eslint/eslint-plugin": "^8.46.0",
+    "@typescript-eslint/parser": "^8.46.0",
+    "eslint": "^9.37.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-eslint-comments": "^3.2.0",
+    "eslint-plugin-svelte": "^3.12.4",
+    "globals": "^16.4.0"
   }
 }

@@ -2,8 +2,6 @@
 
 import { basename } from 'path'
 
-import chokidar from 'chokidar'
-
 import { clearOverlay, log, logError } from '../../_shared/log'
 import type { ResolvedConfig } from '../../_shared/resolved-config'
 
@@ -12,6 +10,7 @@ import type { Plugin } from '../../plugin/plugin'
 
 import type { BuildOnceOptions } from './build-once'
 import { buildOnce } from './build-once'
+import { watchPaths } from './watch-paths'
 
 class BuildState {
   readonly abortController = new AbortController()
@@ -84,27 +83,18 @@ export function watch(config: ResolvedConfig, userConfig: UserConfig, plugins: P
     }
   }
 
-  let watchPaths: string[]
+  let watchPatterns: string[]
   if (config.watchPaths && config.watchPaths.length > 0) {
     // Watch the configured files
-    watchPaths = config.watchPaths
+    watchPatterns = config.watchPaths
   } else {
     // Only watch the mdl files
-    watchPaths = config.modelFiles
+    watchPatterns = config.modelFiles
   }
 
-  // Watch the config and model files; if changes are detected, generate the specs
+  // Watch the configured files; if changes are detected, generate the specs
   // and rebuild the model if needed
-  const watcher = chokidar.watch(watchPaths, {
-    // Watch paths are resolved relative to the project root directory
-    cwd: config.rootDir,
-    // XXX: Include a delay, otherwise on macOS we sometimes get multiple
-    // change events when the csv file is saved just once
-    awaitWriteFinish: {
-      stabilityThreshold: 200
-    }
-  })
-  watcher.on('change', path => {
+  watchPaths(watchPatterns, config.rootDir, path => {
     scheduleBuild(path)
   })
 }

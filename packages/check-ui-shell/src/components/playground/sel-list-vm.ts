@@ -13,5 +13,8 @@ export class SelListViewModel {
    * @param items The list items.
    * @param selectedItemId The selected item ID.
    */
-  constructor(public readonly items: Readable<ListItemViewModel[]>, public readonly selectedItemId: Writable<string>) {}
+  constructor(
+    public readonly items: Readable<ListItemViewModel[]>,
+    public readonly selectedItemId: Writable<string>
+  ) {}
 }

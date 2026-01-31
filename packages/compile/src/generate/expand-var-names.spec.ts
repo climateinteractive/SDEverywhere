@@ -30,15 +30,13 @@ describe('expandVarNames', () => {
     expect(expandVarNames(true)).toEqual(['__x_y_z_', '_time'])
   })
 
-  // TODO: Perhaps we should take the exceptions into account, but right now we do not
-  // so it will expand all variants of DimA
   it('should return names for a subscripted 1D variable that uses an EXCEPT clause', () => {
     readInlineModel(`
       DimA: A1, A2, A3 ~~|
       X[DimA] :EXCEPT: [A1] = 1 ~~|
     `)
-    expect(expandVarNames(false)).toEqual(['Time', 'X[A1]', 'X[A2]', 'X[A3]'])
-    expect(expandVarNames(true)).toEqual(['_time', '_x[0]', '_x[1]', '_x[2]'])
+    expect(expandVarNames(false)).toEqual(['Time', 'X[A2]', 'X[A3]'])
+    expect(expandVarNames(true)).toEqual(['_time', '_x[1]', '_x[2]'])
   })
 
   it('should return names for a subscripted 1D variable that uses a disjoint EXCEPT clause', () => {

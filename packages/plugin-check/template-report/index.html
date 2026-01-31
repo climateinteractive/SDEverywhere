@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <title>Model Check</title>
@@ -22,6 +22,28 @@
         background-color: #272727;
       }
     </style>
+
+    <!--
+      XXX: Include no-op polyfills for these modules that are used in the Node-specific
+      implementation of threads.js.  This allows us to use one model-check bundle that
+      works in both Node and browser environments.  Without this importmap, loading a
+      remote bundle would fail with the following error when trying to import Node
+      modules like `worker_threads` that aren't available in the browser:
+        TypeError: The specifier “worker_threads” was a bare specifier, but was not
+        remapped to anything.
+    -->
+    <script type="importmap">
+      {
+        "imports": {
+          "events": "./polyfills/noop-polyfills.js",
+          "fs": "./polyfills/noop-polyfills.js",
+          "os": "./polyfills/noop-polyfills.js",
+          "path": "./polyfills/noop-polyfills.js",
+          "url": "./polyfills/noop-polyfills.js",
+          "worker_threads": "./polyfills/noop-polyfills.js"
+        }
+      }
+    </script>
 
     <script type="module" src="./src/index.ts"></script>
   </head>

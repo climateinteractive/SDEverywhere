@@ -1,9 +1,9 @@
 import path from 'path'
 import { readFileSync } from 'fs'
-import B from 'bufx'
 
 import { parseAndGenerate, preprocessVensimModel } from '@sdeverywhere/compile'
 
+import B from './bufx.js'
 import { buildDir, modelPathProps, parseSpec } from './utils.js'
 
 export let command = 'generate [options] <model>'

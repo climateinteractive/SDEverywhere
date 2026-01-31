@@ -5,7 +5,6 @@ import type {
   ComparisonReportOptions,
   ComparisonSpecs,
   ComparisonSpecsSource,
-  ConfigInitOptions,
   ConfigOptions,
   DatasetKey
 } from '@sdeverywhere/check-core'
@@ -25,7 +24,7 @@ const comparisonsYaml: ComparisonSpecsSource[] = Object.entries(comparisonsYamlG
   }
 })
 
-export function getConfigOptions(bundleL: Bundle, bundleR: Bundle, opts?: ConfigInitOptions): ConfigOptions {
+export function getConfigOptions(bundleL: Bundle, bundleR: Bundle): ConfigOptions {
   const nameL = 'Sample Model Current'
   const nameR = 'Sample Model Baseline'
 
@@ -33,13 +32,8 @@ export function getConfigOptions(bundleL: Bundle, bundleR: Bundle, opts?: Config
   // the default matrix of scenarios
   const baseComparisonSpecs = createBaseComparisonSpecs(bundleL, bundleR)
 
-  // If the user checked the "Simplify Scenarios" checkbox, we can include a smaller subset
-  // of scenarios.  (This won't make a difference for this simple demo, but can be helpful
-  // for large models that take a while to run.)
-  const comparisonSpecs: (ComparisonSpecs | ComparisonSpecsSource)[] = [baseComparisonSpecs]
-  if (opts?.simplifyScenarios !== true) {
-    comparisonSpecs.push(...comparisonsYaml)
-  }
+  // Configure the comparisons
+  const comparisonSpecs: (ComparisonSpecs | ComparisonSpecsSource)[] = [baseComparisonSpecs, ...comparisonsYaml]
 
   // Simulate a variable being renamed between two versions of the model
   // (see `getOutputVars` in `sample-model-bundle`)

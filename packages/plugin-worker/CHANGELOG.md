@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.2.12](https://github.com/climateinteractive/SDEverywhere/compare/plugin-worker-v0.2.11...plugin-worker-v0.2.12) (2026-01-08)
+
+
+### Dependencies
+
+* upgrade vite to ^7.1.12 + upgrade vitest to ^4.0.16 ([#735](https://github.com/climateinteractive/SDEverywhere/issues/735)) ([f16f127](https://github.com/climateinteractive/SDEverywhere/commit/f16f127b9fb0e53352d7e1152d78623fe5ec26c9)), closes [#734](https://github.com/climateinteractive/SDEverywhere/issues/734)
+
+## [0.2.11](https://github.com/climateinteractive/SDEverywhere/compare/plugin-worker-v0.2.10...plugin-worker-v0.2.11) (2025-10-08)
+
+
+### Dependencies
+
+* upgrade to vite 7.1.9 + svelte 5.39.10 ([39108d2](https://github.com/climateinteractive/SDEverywhere/commit/39108d2cd2973c25a3394778191a4d618dc30640))
+
 ## [0.2.10](https://github.com/climateinteractive/SDEverywhere/compare/plugin-worker-v0.2.9...plugin-worker-v0.2.10) (2025-04-26)
 
 

@@ -17,4 +17,9 @@ describe('getBucketIndex', () => {
     expect(getBucketIndex(6.0, thresholds)).toBe(4)
     expect(getBucketIndex(7.0, thresholds)).toBe(4)
   })
+
+  it('should return the special bucket 5 for undefined values (skipped scenarios)', () => {
+    const thresholds = [2, 4, 6]
+    expect(getBucketIndex(undefined, thresholds)).toBe(5)
+  })
 })

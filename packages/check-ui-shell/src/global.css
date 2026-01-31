@@ -43,6 +43,66 @@ sub {
   top: 0.6ex;
 }
 
+select {
+  margin-right: 1rem;
+  font-family: Roboto, sans-serif;
+  font-size: 1em;
+  /* XXX: Remove browser-provided background, but preserve arrow; based on: https://stackoverflow.com/a/57510283 */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  padding: 0.2rem 1.6rem 0.2rem 0.4rem;
+  background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' fill='%23555'><polygon points='0,0 100,0 50,60'/></svg>")
+    no-repeat;
+  background-size: 0.8rem;
+  background-position: calc(100% - 0.4rem) 70%;
+  background-repeat: no-repeat;
+  background-color: #353535;
+  border: none;
+  border-radius: 0.4rem;
+  color: #ddd;
+}
+
+select > option {
+  /* XXX: Firefox doesn't support @font-face in select menus, so the best we can do is try a similar sans serif font */
+  font-family: Roboto, sans-serif;
+}
+
+/*
+ * Common styles
+ */
+
+:root {
+  /* Text */
+  --text-color-primary: #fff;
+  --text-color-secondary: #ddd;
+  --link-color-hover: #3b82f6;
+
+  /* Borders */
+  --border-color-normal: #777;
+  --border-color-focused: #3b82f6;
+
+  /* Panels */
+  --panel-bg: #2c2c2c;
+  --panel-header-bg: #282828;
+  --panel-footer-bg: #282828;
+  --panel-border: #444;
+  --panel-border-radius: 8px;
+
+  /* Buttons */
+  --button-bg-normal: unset;
+  --button-bg-hover: #555;
+  --button-bg-primary-normal: #0077cc;
+  --button-bg-primary-hover: #005fa3;
+  --button-border-normal: #555;
+  --button-border-hover: #999;
+  --button-border-radius: 8px;
+
+  /* Inputs */
+  --input-bg: #444;
+  --input-border-radius: 0.25rem;
+}
+
 /*
  * Standard colors
  */
@@ -56,11 +116,13 @@ sub {
   --bucket-2: orangered;
   --bucket-3: crimson;
   --bucket-4: magenta;
+  --bucket-5: #888;
   --status-none: #555;
   --status-passed: limegreen;
   --status-failed: crimson;
   --status-warning: orange;
   --status-error: orangered;
+  --status-skipped: #888;
 }
 
 .dataset-color-0 {
@@ -87,6 +149,9 @@ sub {
 .bucket-color-4 {
   color: var(--bucket-4);
 }
+.bucket-color-5 {
+  color: var(--bucket-5);
+}
 .status-color-none {
   color: var(--status-none);
 }
@@ -101,6 +166,9 @@ sub {
 }
 .status-color-error {
   color: var(--status-error);
+}
+.status-color-skipped {
+  color: var(--status-skipped);
 }
 
 .dataset-bg-0 {
@@ -127,6 +195,9 @@ sub {
 .bucket-bg-4 {
   background-color: var(--bucket-4);
 }
+.bucket-bg-5 {
+  background-color: var(--bucket-5);
+}
 .status-bg-none {
   background-color: var(--status-none);
 }
@@ -141,6 +212,9 @@ sub {
 }
 .status-bg-error {
   background-color: var(--status-error);
+}
+.status-bg-skipped {
+  background-color: var(--status-skipped);
 }
 
 .dataset-border-0 {
@@ -167,6 +241,9 @@ sub {
 .bucket-border-4 {
   border-color: var(--bucket-4);
 }
+.bucket-border-5 {
+  border-color: var(--bucket-5);
+}
 .status-border-none {
   border-color: var(--status-none);
 }
@@ -181,6 +258,9 @@ sub {
 }
 .status-border-error {
   border-color: var(--status-error);
+}
+.status-border-skipped {
+  border-color: var(--status-skipped);
 }
 
 /* Add this class to disable text selection */

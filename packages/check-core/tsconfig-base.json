@@ -7,6 +7,8 @@
     "allowJs": true,
     "module": "es6",
     "target": "es6",
+    // Use "es2020" for Object.entries()
+    "lib": ["dom", "es2020"],
     // The following is required for importing JSON Schema files
     "resolveJsonModule": true,
     // The following is required by ajv's `JSONSchemaType`

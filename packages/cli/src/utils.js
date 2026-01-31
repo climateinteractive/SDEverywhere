@@ -2,11 +2,12 @@ import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
 
-import B from 'bufx'
 import * as R from 'ramda'
 import sh from 'shelljs'
 
 import { canonicalName } from '@sdeverywhere/compile'
+
+import B from './bufx.js'
 
 /**
  * Run a command line silently in the "sh" shell. Print error output on error.
@@ -80,7 +81,7 @@ export function parseSpec(specFilename) {
   try {
     let json = B.read(specFilename)
     spec = JSON.parse(json)
-  } catch (ex) {
+  } catch (_) {
     // If the file doesn't exist, use an empty object without complaining.
     // TODO: This needs to be fixed to fail fast instead of staying silent
   }

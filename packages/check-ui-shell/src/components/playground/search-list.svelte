@@ -1,10 +1,7 @@
 <!-- Copyright (c) 2022 Climate Interactive / New Venture Fund -->
 
 <!-- SCRIPT -->
-<script lang='ts'>
-
-import { get } from 'svelte/store'
-
+<script lang="ts">
 import type { ListItemViewModel } from './list-item-vm'
 import type { SearchListViewModel } from './search-list-vm'
 
@@ -63,61 +60,55 @@ function onItemClicked(item: ListItemViewModel) {
   // Notify that the item has been selected
   viewModel.onItemSelected?.(item)
 }
-
 </script>
 
-
-
-
 <!-- TEMPLATE -->
-<template lang='pug'>
+<input type="text" placeholder="Search variables..." bind:value={$query} on:input={onInput} />
+<div class="items">
+  {#each $filteredItems as item, i}
+    <div class="item" on:click={() => onItemClicked(item)} class:active={i === activeIndex}>{@html item.label}</div>
+  {/each}
+</div>
 
-include search-list.pug
-
-input(type='text' placeholder='Search variables...' bind:value!='{$query}' on:input!='{onInput}')
-.items
-  +items
-
-svelte:window(on:keydown!='{onKeyDown}')
-
-</template>
-
-
-
+<svelte:window on:keydown={onKeyDown} />
 
 <!-- STYLE -->
-<style lang='sass'>
+<style lang="scss">
+input {
+  height: 1.7rem;
+  font-size: inherit;
+  border: 1px solid #aaa;
+  outline: none;
 
-input
-  height: 1.7rem
-  font-size: inherit
-  border: 1px solid #aaa
-  outline: none
+  &:focus {
+    border-color: blue;
+  }
+}
 
-input:focus
-  border-color: blue
+.items {
+  display: flex;
+  flex-direction: column;
+  min-height: 8rem;
+  max-height: 8rem;
+  overflow-y: auto;
+  background-color: #fff;
+}
 
-.items
-  display: flex
-  flex-direction: column
-  min-height: 8rem
-  max-height: 8rem
-  overflow-y: auto
-  background-color: #fff
+.item {
+  display: flex;
+  align-items: center;
+  min-height: 1.6rem;
+  padding: 0 0.4rem;
+  background-color: #fff;
+  cursor: pointer;
+  user-select: none;
 
-.item
-  display: flex
-  align-items: center
-  min-height: 1.6rem
-  padding: 0 .4rem
-  background-color: #fff
-  cursor: pointer
-  user-select: none
+  &:hover {
+    background-color: #ddd;
+  }
 
-.item:hover
-  background-color: #ddd
-  
-.item.active
-  background-color: #ccccff
-
+  &.active {
+    background-color: #ccccff;
+  }
+}
 </style>

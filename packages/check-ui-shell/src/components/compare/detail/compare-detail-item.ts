@@ -6,13 +6,15 @@ import type {
   ComparisonConfig,
   ComparisonReportDetailItem,
   ComparisonReportDetailRow,
+  ComparisonSortMode,
   ComparisonTestSummary
 } from '@sdeverywhere/check-core'
 
 export function groupItemsByTitle(
   comparisonConfig: ComparisonConfig,
   testSummaries: ComparisonTestSummary[],
-  itemKind: 'dataset' | 'scenario'
+  itemKind: 'dataset' | 'scenario',
+  sortMode: ComparisonSortMode
 ): ComparisonReportDetailRow[] {
   // Group by title
   const rowsByTitle: Map<string, ComparisonReportDetailRow> = new Map()
@@ -62,14 +64,30 @@ export function groupItemsByTitle(
       testSummary
     }
     group.items.push(item)
-    group.score += item.testSummary.md
+
+    // Get score based on sort mode
+    const score = scoreForSortMode(item.testSummary, sortMode)
+    group.score += score || 0
   }
 
   // Sort the groups by score, with highest scores at the top
   const unsortedGroups = [...rowsByTitle.values()]
-  const sortedGroups = unsortedGroups.sort((a, b) => {
+  return unsortedGroups.sort((a, b) => {
     return a.score > b.score ? -1 : a.score < b.score ? 1 : 0
   })
+}
 
-  return sortedGroups
+export function scoreForSortMode(testSummary: ComparisonTestSummary, sortMode: ComparisonSortMode): number | undefined {
+  switch (sortMode) {
+    case 'max-diff':
+      return testSummary.md
+    case 'avg-diff':
+      return testSummary.ad
+    case 'max-diff-relative':
+      return testSummary.mdb
+    case 'avg-diff-relative':
+      return testSummary.adb
+    default:
+      assertNever(sortMode)
+  }
 }

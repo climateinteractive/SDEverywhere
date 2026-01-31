@@ -1,10 +1,9 @@
 import { readFileSync } from 'fs'
 import path from 'path'
 
-import B from 'bufx'
-
 import { preprocessVensimModel } from '@sdeverywhere/compile'
 
+import B from './bufx.js'
 import { buildDir, modelPathProps } from './utils.js'
 
 const command = 'flatten [options] <outmodel>'

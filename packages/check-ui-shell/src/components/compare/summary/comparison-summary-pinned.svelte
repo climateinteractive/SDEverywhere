@@ -1,8 +1,7 @@
 <!-- Copyright (c) 2024 Climate Interactive / New Venture Fund -->
 
 <!-- SCRIPT -->
-<script lang='ts'>
-
+<script lang="ts">
 import { createEventDispatcher } from 'svelte'
 import { type Readable } from 'svelte/store'
 
@@ -18,7 +17,7 @@ const flipDurationMs = 300
 const dispatch = createEventDispatcher()
 
 // Rebuild the local array of pinned items when the source array is changed
-type LocalItem = { id: string, row: ComparisonSummaryRowViewModel }
+type LocalItem = { id: string; row: ComparisonSummaryRowViewModel }
 $: localItems = $rows.map(row => {
   // TODO: This isn't currently used, so not sure if `rowKey` is correct here
   return {
@@ -45,37 +44,31 @@ function onToggleItemPinned(row: ComparisonSummaryRowViewModel): void {
     row
   })
 }
-
 </script>
 
-
-
-
 <!-- TEMPLATE -->
-<template>
-
-<div class="dnd-section" use:dndzone={{items: localItems, flipDurationMs}} on:consider={onDndConsider} on:finalize={onDndFinalize}>
-  {#each localItems as item(item.id)}
-    <div class="dnd-item" animate:flip={{duration: flipDurationMs}}>
-      <SummaryRow viewModel={item.row} on:toggle-item-pinned={() => onToggleItemPinned(item.row)} on:command/>
+<div
+  class="dnd-section"
+  use:dndzone={{ items: localItems, flipDurationMs }}
+  on:consider={onDndConsider}
+  on:finalize={onDndFinalize}
+>
+  {#each localItems as item (item.id)}
+    <div class="dnd-item" animate:flip={{ duration: flipDurationMs }}>
+      <SummaryRow viewModel={item.row} on:toggle-item-pinned={() => onToggleItemPinned(item.row)} on:command />
     </div>
   {/each}
 </div>
 
-</template>
-
-
-
-
 <!-- STYLE -->
-<style lang='sass'>
+<style lang="scss">
+.dnd-section {
+  padding: 0.2rem 0;
+}
 
-.dnd-section
-  padding: .2rem 0
-
-.dnd-item
-  display: flex
-  width: fit-content
-  background-color: #272727
-
+.dnd-item {
+  display: flex;
+  width: fit-content;
+  background-color: #272727;
+}
 </style>
