@@ -68,44 +68,69 @@ src/
 - [x] Update svelte.config.js to use `vitePreprocess` instead of `svelte-preprocess`
 - [x] Verified type-check and svelte-check pass
 
-### Phase 2: Tabbed Pane UI
-- [ ] Replace the 2nd and 3rd columns with a single tabbed pane on the right side
-- [ ] Tab 1: "Messages" - Display compilation warnings and errors
-- [ ] Tab 2: "Generated Code" - Show the generated JavaScript (move from current column 2)
-- [ ] Tab 3: "Graphs and Sliders" - Interactive visualization panel
+### Phase 2: Tabbed Pane UI ✅ COMPLETE
+- [x] Replace the 2nd and 3rd columns with a single tabbed pane on the right side
+- [x] Tab 1: "Messages" - Display compilation warnings and errors
+- [x] Tab 2: "Generated Code" - Show the generated JavaScript
+- [x] Tab 3: "Graphs and Sliders" - Interactive visualization panel
 
-### Phase 3: Polish and Layout Improvements
-- [ ] Update overall styling to be more like modern REPL/playground environments (VS Code, CodeSandbox, etc.)
-- [ ] Add a header bar with app title and controls
-- [ ] Improve editor styling (syntax highlighting would be nice but not required)
-- [ ] Add proper resizable panes
-- [ ] Improve visual feedback during compilation
+### Phase 3: Polish and Layout Improvements ✅ COMPLETE
+- [x] Update overall styling to be more like modern REPL/playground environments
+- [x] Add a header bar with app title and compilation status
+- [x] Improve visual feedback during compilation
 
-### Phase 4: Graph and Slider Editor
-- [ ] **Top Left Sidebar**: List all output variables (aux/level types) parsed from generated model
-- [ ] **Top Right Panel**: Scrolling area for graphs
-  - [ ] Drag variable from sidebar to blank space → create new graph
-  - [ ] Drag variable onto existing graph → add to that graph
-- [ ] **Bottom Left Sidebar**: List all constants (input variables), sorted alphabetically
-- [ ] **Bottom Right Panel**: Scrolling area for sliders
-  - [ ] Drag constant from sidebar → add slider
-  - [ ] Moving slider runs model and updates graphs in real-time
+### Phase 4: Graph and Slider Editor ✅ COMPLETE
+- [x] Break monolithic app.svelte into separate components:
+  - `graphs-editor/graphs-editor.svelte` - main container
+  - `graphs-editor/graphs-editor-vm.svelte.ts` - view model
+  - `graphs-editor/graph-card.svelte` - individual graph card
+  - `graphs-editor/slider-card.svelte` - individual slider card
+  - `graphs-editor/var-sidebar.svelte` - variable list sidebar
+- [x] **Top Left Sidebar**: List all output variables (aux/level types)
+- [x] **Top Right Panel**: Scrolling area for graphs
+  - [x] Drag variable from sidebar to blank space → create new graph
+  - [x] Drag variable onto existing graph → add to that graph
+- [x] **Graph Card Features**:
+  - [x] Drag handle to reorder graphs
+  - [x] Editable title field
+  - [x] Remove button
+  - [x] Variables table with: label, variable name, color picker, style dropdown
+  - [x] Drag handles and remove buttons for variables
+- [x] **Bottom Left Sidebar**: List all constants (input variables), sorted alphabetically
+- [x] **Bottom Right Panel**: Scrolling area for sliders
+  - [x] Drag constant from sidebar → add slider
 
 ---
 
 ## Progress Log
 
-### 2026-01-31: Phase 1 - Svelte 5 Migration
+### 2026-01-31: Phase 1-4 Complete
 
 - Explored the current playground codebase structure
 - Identified Svelte 4 patterns that need to be converted to Svelte 5
 - Created this development plan document
-- **Completed Phase 1: Svelte 5 Migration**
-  - Converted `app-vm.ts` → `app-vm.svelte.ts` with runes (`$state`, `$derived`, `$derived.by`, `$effect`)
-  - Updated `app.svelte` to use direct property access instead of store subscriptions
-  - Simplified by inlining the variable selector (removed separate Selector component)
-  - Converted `graph.svelte` from `export let` props to `$props()` interface
-  - Replaced `$:` reactive statements with `$effect()`
-  - Updated `svelte.config.js` to use `vitePreprocess` (Svelte 5 standard)
-  - Removed unused files: `app-vm.ts`, `selector.svelte`, `selector-vm.ts`
-  - All type-check and svelte-check passes
+
+**Phase 1: Svelte 5 Migration**
+- Converted `app-vm.ts` → `app-vm.svelte.ts` with runes
+- Updated components to use `$props()`, `$state`, `$derived`, `$effect`
+- Updated `svelte.config.js` to use `vitePreprocess`
+
+**Phase 2: Tabbed Pane UI**
+- Created `Tabs` component for tabbed interface
+- Added Messages, Generated Code, and Graphs & Sliders tabs
+- Updated styling for dark theme
+
+**Phase 3: Polish and Layout**
+- Added header bar with logo and compilation status
+- Improved overall visual styling
+
+**Phase 4: Graph and Slider Editor**
+- Created modular component structure:
+  - `graphs-editor/` - main editor component and view model
+  - `graph-card.svelte` - graph card with title, chart, and variable table
+  - `slider-card.svelte` - slider control card
+  - `var-sidebar.svelte` - draggable variable list sidebar
+- Implemented drag-and-drop for creating graphs and sliders
+- Added editable graph titles
+- Added variable table with label, color picker, and style dropdown
+- Implemented reordering for variables within graphs

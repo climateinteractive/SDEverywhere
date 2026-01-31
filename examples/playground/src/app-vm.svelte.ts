@@ -88,8 +88,8 @@ export class AppViewModel {
   /** The source model text (editable by the user). */
   sourceModel = $state(initialMdl)
 
-  /** The generated model (internal state). */
-  private generatedModel = $state<GeneratedModel | undefined>(undefined)
+  /** The generated model (internal state, but exposed for graph access). */
+  generatedModel = $state<GeneratedModel | undefined>(undefined)
 
   /** The ID of the currently selected output variable. */
   selectedVarId = $state<string | undefined>(undefined)
