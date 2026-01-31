@@ -1,12 +1,14 @@
+// Copyright (c) 2024 Climate Interactive / New Venture Fund
+
 import type { ChartDataSets } from 'chart.js'
 import { Chart } from 'chart.js'
 
-import type { GraphViewModel, PlotStyle, Point } from './graph-vm'
+import type { GraphViewModel, GraphDataset } from './graph-vm'
 
 const gridColor = '#444'
 const fontFamily = 'sans-serif'
-const fontSize = 14
-const fontColor = '#777'
+const fontSize = 12
+const fontColor = '#888'
 
 /**
  * Wraps a native chart element.
@@ -27,79 +29,100 @@ export class GraphView {
   }
 }
 
-function createChart(canvas: HTMLCanvasElement, viewModel: GraphViewModel): Chart {
-  const datasets: ChartDataSets[] = []
+/**
+ * Convert a line style to Chart.js configuration.
+ *
+ * @param dataset The graph dataset.
+ * @returns Chart.js dataset configuration.
+ */
+function datasetToChartJs(dataset: GraphDataset): ChartDataSets {
+  const { color, style, points } = dataset
 
-  function addPlot(points: Point[], color: string, style?: PlotStyle): void {
-    const normalWidth = 3
-    let borderWidth = normalWidth
-    if (style) {
-      // Use thin reference lines
-      borderWidth = 1
-    }
-
-    let borderDash: number[]
-    // let fill: string | boolean = false
-    switch (style) {
-      case 'wide':
-        borderWidth = normalWidth * 2
-        break
-      case 'dashed':
-        borderDash = [8, 2]
-        break
-      // case 'fill-to-next':
-      //   fill = '+1'
-      //   break
-      // case 'fill-above':
-      //   fill = 'end'
-      //   break
-      // case 'fill-below':
-      //   fill = 'start'
-      //   break
-      default:
-        break
-    }
-
-    // let backgroundColor = undefined
-    // if (fill !== false) {
-    //   // Make the fill less translucent when there is only a single point
-    //   const opacity = points.length > 1 ? 0.1 : 0.3
-    //   backgroundColor = `rgba(0, 128, 0, ${opacity})`
-    // }
-
-    let pointRadius = 0
-    let pointBackgroundColor = undefined
-    if (points.length === 1 && style !== 'dashed') {
-      pointRadius = 5
-      pointBackgroundColor = color
-    }
-
-    datasets.push({
-      data: points,
-      borderColor: color,
-      borderWidth,
-      borderDash,
-      // backgroundColor,
-      // fill,
-      pointRadius,
-      pointBackgroundColor,
-      pointBorderWidth: 0,
-      pointBorderColor: 'transparent',
-      lineTension: 0
-    })
+  const chartDataset: ChartDataSets = {
+    data: points,
+    borderColor: color,
+    borderWidth: 2,
+    lineTension: 0,
+    pointBorderWidth: 0,
+    pointBorderColor: 'transparent'
   }
 
-  // Add the plots
-  addPlot(viewModel.points, 'deepskyblue')
-  // for (const refPlot of viewModel.refPlots) {
-  //   addPlot(refPlot.points, 'green', refPlot.style || 'normal')
-  // }
+  // Configure based on style
+  switch (style) {
+    case 'solid':
+      chartDataset.fill = false
+      chartDataset.pointRadius = points.length === 1 ? 5 : 0
+      chartDataset.pointBackgroundColor = color
+      break
+
+    case 'dashed':
+      chartDataset.fill = false
+      chartDataset.borderDash = [6, 3]
+      chartDataset.pointRadius = points.length === 1 ? 5 : 0
+      chartDataset.pointBackgroundColor = color
+      break
+
+    case 'scatter':
+      chartDataset.showLine = false
+      chartDataset.pointRadius = 4
+      chartDataset.pointBackgroundColor = color
+      chartDataset.borderWidth = 0
+      break
+
+    case 'area':
+      chartDataset.fill = true
+      chartDataset.backgroundColor = hexToRgba(color, 0.3)
+      chartDataset.pointRadius = 0
+      break
+
+    case 'none':
+      chartDataset.borderColor = 'transparent'
+      chartDataset.pointRadius = 0
+      chartDataset.fill = false
+      break
+
+    default:
+      chartDataset.fill = false
+      chartDataset.pointRadius = 0
+  }
+
+  return chartDataset
+}
+
+/**
+ * Convert hex color to rgba.
+ *
+ * @param hex The hex color string.
+ * @param alpha The alpha value (0-1).
+ * @returns RGBA color string.
+ */
+function hexToRgba(hex: string, alpha: number): string {
+  // Handle named colors by returning a semi-transparent version
+  if (!hex.startsWith('#')) {
+    return hex
+  }
+
+  const r = parseInt(hex.slice(1, 3), 16)
+  const g = parseInt(hex.slice(3, 5), 16)
+  const b = parseInt(hex.slice(5, 7), 16)
+
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`
+}
+
+/**
+ * Create a Chart.js chart from a view model.
+ *
+ * @param canvas The canvas element.
+ * @param viewModel The graph view model.
+ * @returns The Chart.js instance.
+ */
+function createChart(canvas: HTMLCanvasElement, viewModel: GraphViewModel): Chart {
+  // Convert datasets to Chart.js format
+  const datasets: ChartDataSets[] = viewModel.datasets.map(datasetToChartJs)
 
   // Customize the x-axis range
   const xMin = viewModel.xMin
   const xMax = viewModel.xMax
-  // XXX: Omit the 1990 label to avoid overlap issues
-  const omitFirstTick = xMin === 1990
 
   return new Chart(canvas, {
     type: 'line',
@@ -107,10 +130,7 @@ function createChart(canvas: HTMLCanvasElement, viewModel: GraphViewModel): Char
       datasets
     },
     options: {
-      // Use built-in responsive resizing support.  Note that for this to work
-      // correctly, the canvas parent must be a container with a fixed size
-      // (in `vw` or `px` units) and `position: relative`.  For more information:
-      //   https://www.chartjs.org/docs/latest/general/responsive.html
+      // Use built-in responsive resizing support
       responsive: true,
       maintainAspectRatio: false,
 
@@ -119,21 +139,23 @@ function createChart(canvas: HTMLCanvasElement, viewModel: GraphViewModel): Char
       hover: { animationDuration: 0 },
       responsiveAnimationDuration: 0,
 
-      // Disable the built-in title and legend
+      // Disable the built-in title and legend (we have our own)
       title: { display: false },
       legend: { display: false },
 
-      // Don't show points
+      // Default point configuration
       elements: {
         point: {
           radius: 0
         }
       },
 
-      // Customize tooltip font
+      // Customize tooltip
       tooltips: {
         titleFontFamily: fontFamily,
-        bodyFontFamily: fontFamily
+        bodyFontFamily: fontFamily,
+        mode: 'index',
+        intersect: false
       },
 
       // Axis configurations
@@ -152,8 +174,7 @@ function createChart(canvas: HTMLCanvasElement, viewModel: GraphViewModel): Char
               max: xMax,
               fontFamily,
               fontSize,
-              fontColor,
-              callback: (value, index) => (omitFirstTick && index === 0 ? '' : value)
+              fontColor
             }
           }
         ],

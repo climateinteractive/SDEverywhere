@@ -7,13 +7,15 @@ import type { SliderConfig } from './graphs-editor-vm.svelte'
 interface Props {
   /** The slider configuration. */
   config: SliderConfig
+  /** Whether the slider has a missing variable. */
+  hasErrors?: boolean
   /** Callback when value changes. */
   onValueChange?: (value: number) => void
   /** Callback when the slider is removed. */
   onRemove?: () => void
 }
 
-let { config, onValueChange, onRemove }: Props = $props()
+let { config, hasErrors = false, onValueChange, onRemove }: Props = $props()
 
 /**
  * Get display name for a variable.
@@ -31,9 +33,12 @@ function getDisplayName(varId: string): string {
 </script>
 
 <!-- TEMPLATE -->
-<div class="slider-card">
+<div class="slider-card" class:slider-card-has-errors={hasErrors}>
   <div class="slider-card-header">
-    <span class="slider-card-name">{getDisplayName(config.varId)}</span>
+    <span class="slider-card-name">
+      {#if hasErrors}<span class="slider-card-error">⚠</span>{/if}
+      {getDisplayName(config.varId)}
+    </span>
     <button class="slider-card-close" onclick={onRemove} title="Remove slider">×</button>
   </div>
   <div class="slider-card-control">
@@ -56,6 +61,16 @@ function getDisplayName(varId: string): string {
   background-color: #1e1e1e;
   border-radius: 6px;
   padding: 12px;
+  border: 2px solid transparent;
+
+  &.slider-card-has-errors {
+    border-color: #f14c4c;
+  }
+}
+
+.slider-card-error {
+  color: #f14c4c;
+  margin-right: 4px;
 }
 
 .slider-card-header {

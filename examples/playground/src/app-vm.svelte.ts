@@ -30,6 +30,9 @@ const initialMdl = `\
     <aux name="x">
         <eqn>TIME</eqn>
     </aux>
+    <aux name="multiplier">
+        <eqn>3</eqn>
+    </aux>
     <aux name="y">
         <eqn>x * x</eqn>
     </aux>
@@ -129,7 +132,15 @@ export class AppViewModel {
 
     return {
       key: `${this.graphKey++}`,
-      points: outputs.getSeriesForVar(varId)?.points || []
+      datasets: [
+        {
+          varId,
+          label: varId,
+          color: '#4fc3f7',
+          style: 'solid',
+          points: outputs.getSeriesForVar(varId)?.points || []
+        }
+      ]
     }
   })
 

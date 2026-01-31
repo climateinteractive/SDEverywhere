@@ -2,7 +2,7 @@
 
 <!-- SCRIPT -->
 <script lang="ts">
-import type { GeneratedModelInfo } from '../../app-vm.svelte'
+import type { GeneratedModelInfo, VarInfo } from '../../app-vm.svelte'
 import type { ModelRunner, Outputs } from '@sdeverywhere/runtime'
 
 import VarSidebar from './var-sidebar.svelte'
@@ -29,6 +29,35 @@ $effect(() => {
   vm.setModelInfo(modelInfo)
 })
 
+// Filter out special variables from sidebars
+const filteredOutputVars = $derived(
+  modelInfo?.outputVars.filter(v => !isSpecialVariable(v)) || []
+)
+
+const filteredInputVars = $derived(
+  modelInfo?.inputVars
+    .filter(v => !isSpecialVariable(v))
+    .toSorted((a, b) => a.refId.localeCompare(b.refId)) || []
+)
+
+/**
+ * Check if a variable is a special/internal variable that should be hidden.
+ *
+ * @param varInfo The variable info.
+ * @returns True if the variable should be hidden.
+ */
+function isSpecialVariable(varInfo: VarInfo): boolean {
+  const name = varInfo.varName.toLowerCase()
+  return (
+    name === '_time' ||
+    name === 'time' ||
+    name === '_initial_time' ||
+    name === '_final_time' ||
+    name === '_time_step' ||
+    name === '_saveper'
+  )
+}
+
 /**
  * Get graph data points for a variable.
  *
@@ -53,6 +82,18 @@ function getGraphData(varId: string): Array<{ x: number; y: number }> {
  */
 function handleGraphDrop(e: DragEvent, targetGraphId?: string) {
   e.preventDefault()
+
+  // Handle graph reordering
+  if (vm.draggedGraphIndex !== undefined) {
+    const dropIndex = vm.graphs.length // Drop at end if not on a specific graph
+    if (vm.draggedGraphIndex !== dropIndex) {
+      vm.reorderGraphs(vm.draggedGraphIndex, dropIndex)
+    }
+    vm.draggedGraphIndex = undefined
+    return
+  }
+
+  // Handle variable drop
   if (!vm.draggedOutputVar) return
 
   if (targetGraphId) {
@@ -62,6 +103,22 @@ function handleGraphDrop(e: DragEvent, targetGraphId?: string) {
   }
 
   vm.draggedOutputVar = undefined
+}
+
+/**
+ * Handle drop on a specific graph for reordering.
+ *
+ * @param e The drag event.
+ * @param targetIndex The target index.
+ */
+function handleGraphReorderDrop(e: DragEvent, targetIndex: number) {
+  e.preventDefault()
+  e.stopPropagation()
+
+  if (vm.draggedGraphIndex !== undefined && vm.draggedGraphIndex !== targetIndex) {
+    vm.reorderGraphs(vm.draggedGraphIndex, targetIndex)
+  }
+  vm.draggedGraphIndex = undefined
 }
 
 /**
@@ -77,10 +134,7 @@ function handleSliderDrop(e: DragEvent) {
   vm.draggedInputVar = undefined
 }
 
-// Sort input variables alphabetically
-const sortedInputVars = $derived(
-  modelInfo?.inputVars.toSorted((a, b) => a.refId.localeCompare(b.refId)) || []
-)
+// Track update version to trigger re-renders (used in template via vm.updateVersion)
 </script>
 
 <!-- TEMPLATE -->
@@ -89,14 +143,14 @@ const sortedInputVars = $derived(
   <div class="graphs-editor-section">
     <VarSidebar
       title="Output Variables"
-      variables={modelInfo?.outputVars || []}
+      variables={filteredOutputVars}
       onDragStart={(varId) => (vm.draggedOutputVar = varId)}
       onDragEnd={() => (vm.draggedOutputVar = undefined)}
     />
 
     <div
       class="graphs-editor-area"
-      class:graphs-editor-drop-target={vm.draggedOutputVar !== undefined}
+      class:graphs-editor-drop-target={vm.draggedOutputVar !== undefined || vm.draggedGraphIndex !== undefined}
       role="region"
       aria-label="Graphs drop zone"
       ondragover={(e) => e.preventDefault()}
@@ -112,11 +166,13 @@ const sortedInputVars = $derived(
         </div>
       {:else}
         <div class="graphs-editor-list">
-          {#each vm.graphs as graphConfig}
+          {#each vm.graphs as graphConfig, index}
             <GraphCard
               config={graphConfig}
               {getGraphData}
               isDropTarget={vm.draggedOutputVar !== undefined}
+              hasErrors={vm.hasGraphErrors(graphConfig)}
+              isVarValid={(varId) => vm.isVariableValid(varId, 'output')}
               onTitleChange={(title) => vm.updateGraphTitle(graphConfig.id, title)}
               onVariableUpdate={(varConfigId, updates) => vm.updateGraphVariable(graphConfig.id, varConfigId, updates)}
               onVariableRemove={(varConfigId) => vm.removeVariableFromGraph(graphConfig.id, varConfigId)}
@@ -124,6 +180,12 @@ const sortedInputVars = $derived(
               onRemove={() => vm.removeGraph(graphConfig.id)}
               onDragOver={(e) => e.preventDefault()}
               onDrop={(e) => handleGraphDrop(e, graphConfig.id)}
+              onGraphDragStart={() => (vm.draggedGraphIndex = index)}
+              onGraphDragEnd={() => (vm.draggedGraphIndex = undefined)}
+              onGraphDragOver={(e) => {
+                if (vm.draggedGraphIndex !== undefined) e.preventDefault()
+              }}
+              onGraphDrop={(e) => handleGraphReorderDrop(e, index)}
             />
           {/each}
         </div>
@@ -135,7 +197,7 @@ const sortedInputVars = $derived(
   <div class="graphs-editor-section">
     <VarSidebar
       title="Input Variables"
-      variables={sortedInputVars}
+      variables={filteredInputVars}
       onDragStart={(varId) => (vm.draggedInputVar = varId)}
       onDragEnd={() => (vm.draggedInputVar = undefined)}
     />
@@ -161,6 +223,7 @@ const sortedInputVars = $derived(
           {#each vm.sliders as sliderConfig}
             <SliderCard
               config={sliderConfig}
+              hasErrors={vm.hasSliderErrors(sliderConfig)}
               onValueChange={(value) => vm.updateSliderValue(sliderConfig.id, value)}
               onRemove={() => vm.removeSlider(sliderConfig.id)}
             />

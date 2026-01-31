@@ -1,19 +1,36 @@
+// Copyright (c) 2024 Climate Interactive / New Venture Fund
+
+/** A data point with x and y coordinates. */
 export interface Point {
   x: number
   y: number
 }
 
-export type PlotStyle = 'normal' | 'wide' | 'dashed'
+/** Style options for a line in a graph. */
+export type LineStyle = 'solid' | 'dashed' | 'scatter' | 'area' | 'none'
 
-export interface RefPlot {
+/** A dataset to be plotted in the graph. */
+export interface GraphDataset {
+  /** Variable ID. */
+  varId: string
+  /** Display label. */
+  label: string
+  /** CSS color. */
+  color: string
+  /** Line style. */
+  style: LineStyle
+  /** Data points. */
   points: Point[]
-  style: PlotStyle
 }
 
+/** View model for a graph supporting multiple datasets. */
 export interface GraphViewModel {
+  /** Unique key for tracking changes. */
   key: string
-  // refPlots: RefPlot[]
-  points: Point[]
+  /** Datasets to display. */
+  datasets: GraphDataset[]
+  /** Optional minimum x value. */
   xMin?: number
+  /** Optional maximum x value. */
   xMax?: number
 }

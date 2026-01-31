@@ -10,8 +10,12 @@ interface Props {
   config: GraphConfig
   /** Callback to get graph data points. */
   getGraphData: (varId: string) => Array<{ x: number; y: number }>
-  /** Whether this card is a drop target. */
+  /** Whether this card is a drop target for variables. */
   isDropTarget?: boolean
+  /** Whether the graph has any missing variables. */
+  hasErrors?: boolean
+  /** Check if a specific variable is valid. */
+  isVarValid?: (varId: string) => boolean
   /** Callback when title changes. */
   onTitleChange?: (title: string) => void
   /** Callback when a variable is updated. */
@@ -22,33 +26,62 @@ interface Props {
   onVariablesReorder?: (fromIndex: number, toIndex: number) => void
   /** Callback when the graph is removed. */
   onRemove?: () => void
-  /** Callback for drag over. */
+  /** Callback for variable drag over. */
   onDragOver?: (e: DragEvent) => void
-  /** Callback for drop. */
+  /** Callback for variable drop. */
   onDrop?: (e: DragEvent) => void
+  /** Callback when graph card drag starts. */
+  onGraphDragStart?: () => void
+  /** Callback when graph card drag ends. */
+  onGraphDragEnd?: () => void
+  /** Callback for graph card drag over. */
+  onGraphDragOver?: (e: DragEvent) => void
+  /** Callback for graph card drop. */
+  onGraphDrop?: (e: DragEvent) => void
 }
 
 let {
   config,
   getGraphData,
   isDropTarget = false,
+  hasErrors = false,
+  isVarValid = () => true,
   onTitleChange,
   onVariableUpdate,
   onVariableRemove,
   onVariablesReorder,
   onRemove,
   onDragOver,
-  onDrop
+  onDrop,
+  onGraphDragStart,
+  onGraphDragEnd,
+  onGraphDragOver,
+  onGraphDrop
 }: Props = $props()
 
-// Build graph view model from the first variable (for now)
+// Build graph view model with all variables
 const graphViewModel = $derived.by(() => {
-  const firstVar = config.variables[0]
-  if (!firstVar) return undefined
+  if (config.variables.length === 0) return undefined
+
+  // Build key from all variable configs
+  const key = `${config.id}-${config.variables.map(v => `${v.varId}-${v.color}-${v.style}`).join('-')}`
+
+  // Get data for all valid variables
+  const datasets = config.variables
+    .filter(v => isVarValid(v.varId))
+    .map(v => ({
+      varId: v.varId,
+      label: v.label,
+      color: v.color,
+      style: v.style,
+      points: getGraphData(v.varId)
+    }))
+
+  if (datasets.length === 0) return undefined
 
   return {
-    key: `${config.id}-${config.variables.map(v => v.varId).join('-')}`,
-    points: getGraphData(firstVar.varId)
+    key,
+    datasets
   }
 })
 
@@ -64,7 +97,8 @@ const styleOptions: { value: LineStyle; label: string }[] = [
 // Drag state for reordering variables
 let draggedVarIndex: number | undefined = $state(undefined)
 
-function handleVarDragStart(index: number) {
+function handleVarDragStart(e: DragEvent, index: number) {
+  e.stopPropagation() // Prevent triggering graph card drag
   draggedVarIndex = index
 }
 
@@ -75,15 +109,24 @@ function handleVarDragEnd() {
 function handleVarDragOver(e: DragEvent, index: number) {
   if (draggedVarIndex !== undefined && draggedVarIndex !== index) {
     e.preventDefault()
+    e.stopPropagation()
   }
 }
 
 function handleVarDrop(e: DragEvent, index: number) {
   if (draggedVarIndex !== undefined && draggedVarIndex !== index) {
     e.preventDefault()
+    e.stopPropagation()
     onVariablesReorder?.(draggedVarIndex, index)
   }
   draggedVarIndex = undefined
+}
+
+// Handle graph card drag
+function handleGraphDragStart(e: DragEvent) {
+  // Set some data so the drag works
+  e.dataTransfer?.setData('text/plain', config.id)
+  onGraphDragStart?.()
 }
 </script>
 
@@ -91,13 +134,28 @@ function handleVarDrop(e: DragEvent, index: number) {
 <div
   class="graph-card"
   class:graph-card-drop-target={isDropTarget}
+  class:graph-card-has-errors={hasErrors}
   role="figure"
-  ondragover={onDragOver}
-  ondrop={onDrop}
+  ondragover={(e) => {
+    onDragOver?.(e)
+    onGraphDragOver?.(e)
+  }}
+  ondrop={(e) => {
+    onDrop?.(e)
+    onGraphDrop?.(e)
+  }}
 >
   <!-- Header -->
   <div class="graph-card-header">
-    <div class="graph-card-drag-handle" title="Drag to reorder">
+    <div
+      class="graph-card-drag-handle"
+      title="Drag to reorder"
+      draggable="true"
+      ondragstart={handleGraphDragStart}
+      ondragend={onGraphDragEnd}
+      role="button"
+      tabindex="0"
+    >
       <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
         <circle cx="3" cy="3" r="1.5"/>
         <circle cx="7" cy="3" r="1.5"/>
@@ -117,6 +175,9 @@ function handleVarDrop(e: DragEvent, index: number) {
       oninput={(e) => onTitleChange?.(e.currentTarget.value)}
       placeholder="Graph title"
     />
+    {#if hasErrors}
+      <span class="graph-card-error-badge" title="Some variables are missing from the model">⚠</span>
+    {/if}
     <button class="graph-card-close" onclick={onRemove} title="Remove graph">×</button>
   </div>
 
@@ -124,8 +185,25 @@ function handleVarDrop(e: DragEvent, index: number) {
   <div class="graph-card-content">
     {#if graphViewModel}
       <Graph viewModel={graphViewModel} width={380} height={180} />
+    {:else}
+      <div class="graph-card-no-data">No valid variables to display</div>
     {/if}
   </div>
+
+  <!-- Legend -->
+  {#if config.variables.length > 0}
+    <div class="graph-card-legend">
+      {#each config.variables as varConfig}
+        <div
+          class="graph-card-legend-item"
+          class:graph-card-legend-item-invalid={!isVarValid(varConfig.varId)}
+          style="background-color: {varConfig.color}"
+        >
+          {varConfig.label}
+        </div>
+      {/each}
+    </div>
+  {/if}
 
   <!-- Variables Table -->
   <div class="graph-card-variables">
@@ -142,11 +220,13 @@ function handleVarDrop(e: DragEvent, index: number) {
       </thead>
       <tbody>
         {#each config.variables as varConfig, index}
+          {@const isValid = isVarValid(varConfig.varId)}
           <tr
             class="graph-card-row"
             class:graph-card-row-dragging={draggedVarIndex === index}
+            class:graph-card-row-invalid={!isValid}
             draggable="true"
-            ondragstart={() => handleVarDragStart(index)}
+            ondragstart={(e) => handleVarDragStart(e, index)}
             ondragend={handleVarDragEnd}
             ondragover={(e) => handleVarDragOver(e, index)}
             ondrop={(e) => handleVarDrop(e, index)}
@@ -163,7 +243,10 @@ function handleVarDrop(e: DragEvent, index: number) {
               />
             </td>
             <td class="graph-card-td-var">
-              <span class="graph-card-var-name">{varConfig.varId}</span>
+              <span class="graph-card-var-name" class:graph-card-var-invalid={!isValid}>
+                {#if !isValid}<span class="graph-card-var-error">⚠</span>{/if}
+                {varConfig.varId}
+              </span>
             </td>
             <td class="graph-card-td-color">
               <input
@@ -217,6 +300,10 @@ function handleVarDrop(e: DragEvent, index: number) {
   &.graph-card-drop-target {
     border-color: #0078d4;
   }
+
+  &.graph-card-has-errors {
+    border-color: #f14c4c;
+  }
 }
 
 .graph-card-header {
@@ -267,6 +354,11 @@ function handleVarDrop(e: DragEvent, index: number) {
   }
 }
 
+.graph-card-error-badge {
+  color: #f14c4c;
+  font-size: 14px;
+}
+
 .graph-card-close {
   display: flex;
   align-items: center;
@@ -295,6 +387,42 @@ function handleVarDrop(e: DragEvent, index: number) {
   background-color: #252526;
 }
 
+.graph-card-no-data {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6e6e6e;
+  font-size: 12px;
+}
+
+// Legend
+.graph-card-legend {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background-color: #252526;
+  border-top: 1px solid #3c3c3c;
+}
+
+.graph-card-legend-item {
+  padding: 2px 8px;
+  border-radius: 3px;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 500;
+
+  &.graph-card-legend-item-invalid {
+    opacity: 0.5;
+    text-decoration: line-through;
+  }
+}
+
+// Variables table
 .graph-card-variables {
   border-top: 1px solid #3c3c3c;
   max-height: 150px;
@@ -336,6 +464,10 @@ function handleVarDrop(e: DragEvent, index: number) {
 
   &.graph-card-row-dragging {
     opacity: 0.5;
+  }
+
+  &.graph-card-row-invalid {
+    background-color: rgba(241, 76, 76, 0.1);
   }
 }
 
@@ -384,6 +516,14 @@ function handleVarDrop(e: DragEvent, index: number) {
   color: #888;
   font-family: 'SF Mono', Monaco, monospace;
   font-size: 10px;
+
+  &.graph-card-var-invalid {
+    color: #f14c4c;
+  }
+}
+
+.graph-card-var-error {
+  margin-right: 4px;
 }
 
 .graph-card-td-color {

@@ -2,6 +2,9 @@
 
 import type { GeneratedModelInfo } from '../../app-vm.svelte'
 
+/** LocalStorage key for persisting configuration. */
+const STORAGE_KEY = 'sde-playground-config'
+
 /** Style options for a variable line in a graph. */
 export type LineStyle = 'solid' | 'dashed' | 'scatter' | 'area' | 'none'
 
@@ -43,6 +46,13 @@ export interface SliderConfig {
   max: number
 }
 
+/** Persisted configuration structure. */
+interface PersistedConfig {
+  version: number
+  graphs: GraphConfig[]
+  sliders: SliderConfig[]
+}
+
 /** Default colors for graph lines. */
 const DEFAULT_COLORS = [
   '#4fc3f7', // light blue
@@ -76,8 +86,53 @@ export class GraphsEditorViewModel {
   /** Currently dragged input variable ID. */
   draggedInputVar = $state<string | undefined>(undefined)
 
+  /** Currently dragged graph index for reordering. */
+  draggedGraphIndex = $state<number | undefined>(undefined)
+
+  /** Version counter to trigger graph updates. */
+  updateVersion = $state(0)
+
   /** Color index for assigning default colors. */
   private colorIndex = 0
+
+  constructor() {
+    // Load persisted configuration on startup
+    this.loadFromStorage()
+  }
+
+  /**
+   * Save configuration to LocalStorage.
+   */
+  private saveToStorage(): void {
+    try {
+      const config: PersistedConfig = {
+        version: 1,
+        graphs: this.graphs,
+        sliders: this.sliders
+      }
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(config))
+    } catch (e) {
+      console.warn('Failed to save playground config to localStorage:', e)
+    }
+  }
+
+  /**
+   * Load configuration from LocalStorage.
+   */
+  private loadFromStorage(): void {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY)
+      if (stored) {
+        const config: PersistedConfig = JSON.parse(stored)
+        if (config.version === 1) {
+          this.graphs = config.graphs || []
+          this.sliders = config.sliders || []
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to load playground config from localStorage:', e)
+    }
+  }
 
   /**
    * Update the model info reference.
@@ -86,6 +141,8 @@ export class GraphsEditorViewModel {
    */
   setModelInfo(info: GeneratedModelInfo | undefined): void {
     this.modelInfo = info
+    // Trigger update to refresh error states
+    this.updateVersion++
   }
 
   /**
@@ -95,6 +152,43 @@ export class GraphsEditorViewModel {
    */
   getModelInfo(): GeneratedModelInfo | undefined {
     return this.modelInfo
+  }
+
+  /**
+   * Check if a variable exists in the current model.
+   *
+   * @param varId The variable ID to check.
+   * @param type The variable type ('output' or 'input').
+   * @returns True if the variable exists.
+   */
+  isVariableValid(varId: string, type: 'output' | 'input'): boolean {
+    if (!this.modelInfo) return false
+
+    if (type === 'output') {
+      return this.modelInfo.outputVars.some(v => v.refId === varId)
+    } else {
+      return this.modelInfo.inputVars.some(v => v.refId === varId)
+    }
+  }
+
+  /**
+   * Check if a graph has any invalid (missing) variables.
+   *
+   * @param graph The graph config.
+   * @returns True if any variable is missing from the model.
+   */
+  hasGraphErrors(graph: GraphConfig): boolean {
+    return graph.variables.some(v => !this.isVariableValid(v.varId, 'output'))
+  }
+
+  /**
+   * Check if a slider has an invalid (missing) variable.
+   *
+   * @param slider The slider config.
+   * @returns True if the variable is missing from the model.
+   */
+  hasSliderErrors(slider: SliderConfig): boolean {
+    return !this.isVariableValid(slider.varId, 'input')
   }
 
   /**
@@ -145,6 +239,7 @@ export class GraphsEditorViewModel {
       ]
     }
     this.graphs = [...this.graphs, graph]
+    this.saveToStorage()
     return graph
   }
 
@@ -172,8 +267,10 @@ export class GraphsEditorViewModel {
         style: 'solid'
       }
     ]
-    // Trigger reactivity
+    // Trigger reactivity and save
     this.graphs = [...this.graphs]
+    this.updateVersion++
+    this.saveToStorage()
   }
 
   /**
@@ -183,6 +280,7 @@ export class GraphsEditorViewModel {
    */
   removeGraph(graphId: string): void {
     this.graphs = this.graphs.filter(g => g.id !== graphId)
+    this.saveToStorage()
   }
 
   /**
@@ -196,6 +294,7 @@ export class GraphsEditorViewModel {
     if (graph) {
       graph.title = title
       this.graphs = [...this.graphs]
+      this.saveToStorage()
     }
   }
 
@@ -219,6 +318,8 @@ export class GraphsEditorViewModel {
 
     Object.assign(varConfig, updates)
     this.graphs = [...this.graphs]
+    this.updateVersion++
+    this.saveToStorage()
   }
 
   /**
@@ -238,6 +339,8 @@ export class GraphsEditorViewModel {
       this.removeGraph(graphId)
     } else {
       this.graphs = [...this.graphs]
+      this.updateVersion++
+      this.saveToStorage()
     }
   }
 
@@ -257,6 +360,8 @@ export class GraphsEditorViewModel {
     variables.splice(toIndex, 0, removed)
     graph.variables = variables
     this.graphs = [...this.graphs]
+    this.updateVersion++
+    this.saveToStorage()
   }
 
   /**
@@ -270,6 +375,7 @@ export class GraphsEditorViewModel {
     const [removed] = graphs.splice(fromIndex, 1)
     graphs.splice(toIndex, 0, removed)
     this.graphs = graphs
+    this.saveToStorage()
   }
 
   /**
@@ -292,6 +398,7 @@ export class GraphsEditorViewModel {
       max: 100
     }
     this.sliders = [...this.sliders, slider]
+    this.saveToStorage()
     return slider
   }
 
@@ -306,6 +413,8 @@ export class GraphsEditorViewModel {
     if (slider) {
       slider.value = value
       this.sliders = [...this.sliders]
+      this.updateVersion++
+      // Don't save slider value changes to storage (too frequent)
     }
   }
 
@@ -316,5 +425,6 @@ export class GraphsEditorViewModel {
    */
   removeSlider(sliderId: string): void {
     this.sliders = this.sliders.filter(s => s.id !== sliderId)
+    this.saveToStorage()
   }
 }
