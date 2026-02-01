@@ -11,10 +11,14 @@
     "prettier:check": "prettier --check .",
     "prettier:fix": "prettier --write .",
     "precommit": "../../scripts/precommit",
-    "test": "echo No tests yet",
+    "test": "vitest run",
+    "test:ts": "vitest run --project=ts",
+    "test:storybook": "vitest run --project=storybook",
+    "test:storybook:watch": "vitest dev --project=storybook",
     "type-check": "tsc --noEmit -p tsconfig-build.json",
     "build": "vite build",
     "dev": "vite",
+    "storybook": "storybook dev -p 6011",
     "ci:build": "run-s clean lint prettier:check type-check build"
   },
   "dependencies": {
@@ -23,14 +27,22 @@
     "chart.js": "^2.9.4"
   },
   "devDependencies": {
+    "@storybook/addon-docs": "^10.1.11",
+    "@storybook/addon-links": "^10.1.11",
+    "@storybook/addon-svelte-csf": "^5.0.10",
+    "@storybook/addon-vitest": "^10.1.11",
+    "@storybook/svelte": "^10.1.11",
+    "@storybook/svelte-vite": "^10.1.11",
     "@sveltejs/vite-plugin-svelte": "^6.2.1",
     "@types/chart.js": "^2.9.34",
     "postcss": "^8.5.6",
     "sass": "^1.97.2",
+    "storybook": "^10.1.11",
     "svelte": "^5.39.10",
     "svelte-check": "^4.3.2",
     "vite": "^7.1.12",
-    "vite-plugin-node-polyfills": "^0.24.0"
+    "vite-plugin-node-polyfills": "^0.24.0",
+    "vitest": "^4.0.16"
   },
   "author": "Climate Interactive",
   "license": "MIT",

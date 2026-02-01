@@ -8,6 +8,9 @@
     "resolveJsonModule": true,
     "module": "esnext",
     "target": "esnext",
+    // XXX: Use bundler-friendly module resolution. This is required for
+    // Storybook to resolve `@storybook/addon-svelte-csf` imports.
+    "moduleResolution": "bundler",
     "noImplicitAny": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,

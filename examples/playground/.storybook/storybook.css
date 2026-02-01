@@ -1,0 +1,7 @@
+/* Copyright (c) 2026 Climate Interactive / New Venture Fund */
+
+/* XXX: This is a workaround to fix issue where Docs view was not scrollable */
+#storybook-docs {
+  overflow: auto;
+  height: 100vh;
+}
