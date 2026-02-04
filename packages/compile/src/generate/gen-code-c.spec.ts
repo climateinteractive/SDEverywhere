@@ -126,6 +126,7 @@ double _y;
 double _z;
 
 // Internal variables
+const int numInputs = 1;
 const int numOutputs = 8;
 
 // Array dimensions
@@ -245,26 +246,26 @@ void evalLevels() {
   // Evaluate levels.
 }
 
-void setInputs(const char* inputData) {
+void setInputs(double* inputValues, int32_t* inputIndices) {
   static double* inputVarPtrs[] = {
     &_input,
   };
-  char* inputs = (char*)inputData;
-  char* token = strtok(inputs, " ");
-  while (token) {
-    char* p = strchr(token, ':');
-    if (p) {
-      *p = '\\0';
-      int modelVarIndex = atoi(token);
-      double value = atof(p+1);
-      *inputVarPtrs[modelVarIndex] = value;
+  if (inputIndices == NULL) {
+    // When inputIndices is NULL, assume that inputValues contains all input values
+    // in the same order that the variables are defined in the model spec
+    for (size_t i = 0; i < numInputs; i++) {
+      *inputVarPtrs[i] = inputValues[i];
     }
-    token = strtok(NULL, " ");
+  } else {
+    // When inputIndices is non-NULL, set the input values according to the indices
+    // in the inputIndices array, where each index corresponds to the index of the
+    // variable in the model spec
+    size_t numInputsToSet = (size_t)inputIndices[0];
+    for (size_t i = 0; i < numInputsToSet; i++) {
+      size_t inputVarIndex = (size_t)inputIndices[i + 1];
+      *inputVarPtrs[inputVarIndex] = inputValues[i];
+    }
   }
-}
-
-void setInputsFromBuffer(double* inputData) {
-  _input = inputData[0];
 }
 
 void setLookup(size_t varIndex, size_t* subIndices, double* points, size_t numPoints) {

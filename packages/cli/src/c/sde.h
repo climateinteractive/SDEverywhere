@@ -41,6 +41,7 @@ EXTERN double _epsilon;
 #define OUTPUT_STRING_LEN 14
 
 // Internal variables
+EXTERN const int numInputs;
 EXTERN const int numOutputs;
 
 // Standard simulation control parameters
@@ -54,8 +55,8 @@ EXTERN double _saveper;
 double getInitialTime(void);
 double getFinalTime(void);
 double getSaveper(void);
-char* run_model(const char* inputs);
-void runModelWithBuffers(double* inputs, double* outputs, int32_t* outputIndices);
+void runModel(double* inputs, double* outputs);
+void runModelWithBuffers(double* inputs, int32_t* inputIndices, double* outputs, int32_t* outputIndices);
 void run(void);
 void startOutput(void);
 void outputVar(double value);
@@ -64,8 +65,7 @@ void finish(void);
 // Functions implemented by the generated model
 void initConstants(void);
 void initLevels(void);
-void setInputs(const char* inputData);
-void setInputsFromBuffer(double *inputData);
+void setInputs(double* inputValues, int32_t* inputIndices);
 void setLookup(size_t varIndex, size_t* subIndices, double* points, size_t numPoints);
 void evalAux(void);
 void evalLevels(void);

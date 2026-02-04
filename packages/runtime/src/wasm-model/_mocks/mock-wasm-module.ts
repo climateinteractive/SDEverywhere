@@ -104,7 +104,12 @@ export class MockWasmModule implements WasmModule {
           this.lookups.set(varId, new JsModelLookup(numPoints, points))
         }
       case 'runModelWithBuffers':
-        return (inputsAddress: number, outputsAddress: number, outputIndicesAddress: number) => {
+        return (
+          inputsAddress: number,
+          _inputIndicesAddress: number,
+          outputsAddress: number,
+          outputIndicesAddress: number
+        ) => {
           const inputs = this.getHeapView('float64', inputsAddress) as Float64Array
           const outputs = this.getHeapView('float64', outputsAddress) as Float64Array
           const outputIndices = this.getHeapView('int32', outputIndicesAddress) as Int32Array
