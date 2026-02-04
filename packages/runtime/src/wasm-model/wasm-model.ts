@@ -243,8 +243,8 @@ class WasmModel implements RunnableModel {
       0,
       this.outputsBuffer.getAddress(),
       outputIndicesBuffer?.getAddress() || 0,
-      constantIndicesBuffer?.getAddress() || 0,
-      constantValuesBuffer?.getAddress() || 0
+      constantValuesBuffer?.getAddress() || 0,
+      constantIndicesBuffer?.getAddress() || 0
     )
     const elapsed = perfElapsed(t0)
 
