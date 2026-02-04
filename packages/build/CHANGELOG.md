@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.10](https://github.com/climateinteractive/SDEverywhere/compare/build-v0.3.9...build-v0.3.10) (2026-02-04)
+
+
+### Features
+
+* allow for overriding constants at runtime ([#767](https://github.com/climateinteractive/SDEverywhere/issues/767)) ([984c3bc](https://github.com/climateinteractive/SDEverywhere/commit/984c3bcbd80d6088c73a4f7f3f31070fba328abe)), closes [#470](https://github.com/climateinteractive/SDEverywhere/issues/470)
+
 ## [0.3.9](https://github.com/climateinteractive/SDEverywhere/compare/build-v0.3.8...build-v0.3.9) (2026-01-10)
 
 

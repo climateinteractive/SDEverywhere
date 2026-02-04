@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.2.33](https://github.com/climateinteractive/SDEverywhere/compare/create-v0.2.32...create-v0.2.33) (2026-02-04)
+
+
+### Features
+
+* allow for overriding constants at runtime ([#767](https://github.com/climateinteractive/SDEverywhere/issues/767)) ([984c3bc](https://github.com/climateinteractive/SDEverywhere/commit/984c3bcbd80d6088c73a4f7f3f31070fba328abe)), closes [#470](https://github.com/climateinteractive/SDEverywhere/issues/470)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/compile bumped from ^0.7.26 to ^0.7.27
+
 ## [0.2.32](https://github.com/climateinteractive/SDEverywhere/compare/create-v0.2.31...create-v0.2.32) (2026-01-08)
 
 

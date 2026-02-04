@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.2.8](https://github.com/climateinteractive/SDEverywhere/compare/runtime-async-v0.2.7...runtime-async-v0.2.8) (2026-02-04)
+
+
+### Features
+
+* allow for overriding constants at runtime ([#767](https://github.com/climateinteractive/SDEverywhere/issues/767)) ([984c3bc](https://github.com/climateinteractive/SDEverywhere/commit/984c3bcbd80d6088c73a4f7f3f31070fba328abe)), closes [#470](https://github.com/climateinteractive/SDEverywhere/issues/470)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/runtime bumped from ^0.2.7 to ^0.2.8
+
 ## [0.2.7](https://github.com/climateinteractive/SDEverywhere/compare/runtime-async-v0.2.6...runtime-async-v0.2.7) (2025-04-26)
 
 
