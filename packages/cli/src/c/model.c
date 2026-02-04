@@ -123,7 +123,7 @@ void setConstantOverridesFromBuffers(double* constantValues, int32_t* constantIn
  * values.  See above for details on the expected format.
  */
 void runModel(double* inputs, double* outputs) {
-  runModelWithBuffers(inputs, NULL, outputs, NULL);
+  runModelWithBuffers(inputs, NULL, outputs, NULL, NULL, NULL);
 }
 
 /**
