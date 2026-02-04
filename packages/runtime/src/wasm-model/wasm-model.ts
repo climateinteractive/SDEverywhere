@@ -266,11 +266,11 @@ class WasmModel implements RunnableModel {
     this.outputIndicesBuffer?.dispose()
     this.outputIndicesBuffer = undefined
 
-    this.constantIndicesBuffer?.dispose()
-    this.constantIndicesBuffer = undefined
-
     this.constantValuesBuffer?.dispose()
     this.constantValuesBuffer = undefined
+
+    this.constantIndicesBuffer?.dispose()
+    this.constantIndicesBuffer = undefined
 
     // TODO: Dispose the `WasmModule` too?
   }
