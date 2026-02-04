@@ -1,6 +1,6 @@
 // Copyright (c) 2024 Climate Interactive / New Venture Fund
 
-import { type LookupDef, type VarSpec } from '../_shared'
+import { type ConstantDef, type LookupDef, type VarSpec } from '../_shared'
 import type { RunnableModel } from '../runnable-model'
 import { BaseRunnableModel } from '../runnable-model/base-runnable-model'
 
@@ -48,6 +48,9 @@ export interface JsModel {
   setTime(time: number): void
   /** @hidden */
   setInputs(inputValue: (index: number) => number): void
+
+  /** @hidden */
+  setConstant(varSpec: VarSpec, value: number): void
 
   /** @hidden */
   setLookup(varSpec: VarSpec, points: Float64Array | undefined): void
@@ -108,6 +111,7 @@ export function initJsModel(model: JsModel): RunnableModel {
         inputs,
         outputs,
         options?.outputIndices,
+        options?.constants,
         options?.lookups,
         undefined
       )
@@ -125,6 +129,7 @@ function runJsModel(
   inputs: Float64Array | undefined,
   outputs: Float64Array,
   outputIndices: Int32Array | undefined,
+  constants: ConstantDef[] | undefined,
   lookups: LookupDef[] | undefined,
   stopAfterTime: number | undefined
 ): void {
@@ -143,6 +148,13 @@ function runJsModel(
   // Initialize constants to their default values
   model.initConstants()
 
+  // Apply constant overrides, if provided
+  if (constants !== undefined) {
+    for (const constantDef of constants) {
+      model.setConstant(constantDef.varRef.varSpec, constantDef.value)
+    }
+  }
+
   // Apply lookup overrides, if provided
   if (lookups !== undefined) {
     for (const lookupDef of lookups) {
@@ -152,7 +164,8 @@ function runJsModel(
 
   if (inputs?.length > 0) {
     // Set the user-defined input values.  This needs to happen after `initConstants`
-    // since the input values will override the default constant values.
+    // and the `setConstant` override calls, since the input values will override
+    // the default and custom constant values.
     model.setInputs(index => inputs[index])
   }
 

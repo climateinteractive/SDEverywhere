@@ -22,6 +22,7 @@ function readInlineModelAndGenerateJS(
     inputVarNames?: string[]
     outputVarNames?: string[]
     bundleListing?: boolean
+    customConstants?: boolean | string[]
     customLookups?: boolean | string[]
     customOutputs?: boolean | string[]
   }
@@ -35,6 +36,7 @@ function readInlineModelAndGenerateJS(
     inputVarNames: opts?.inputVarNames,
     outputVarNames: opts?.outputVarNames,
     bundleListing: opts?.bundleListing,
+    customConstants: opts?.customConstants,
     customLookups: opts?.customLookups,
     customOutputs: opts?.customOutputs
   }
@@ -454,6 +456,10 @@ function evalAux0() {
   _input = valueAtIndex(0);
 }
 
+/*export*/ function setConstant(varSpec /*: VarSpec*/, value /*: number*/) {
+  throw new Error('The setConstant function was not enabled for the generated model. Set the customConstants property in the spec/config file to allow for overriding constants at runtime.');
+}
+
 /*export*/ function setLookup(varSpec /*: VarSpec*/, points /*: Float64Array | undefined*/) {
   if (!varSpec) {
     throw new Error('Got undefined varSpec in setLookup');
@@ -693,6 +699,7 @@ export default async function () {
 
     setTime,
     setInputs,
+    setConstant,
     setLookup,
 
     storeOutputs,
@@ -721,6 +728,62 @@ export default async function () {
       bundleListing: false
     })
     expect(code).toMatch(`/*export*/ const modelListing = undefined;`)
+  })
+
+  it('should generate setConstant that throws error when customConstants is disabled', () => {
+    const mdl = `
+      DimA: A1, A2 ~~|
+      x[DimA] = 10, 20 ~~|
+      y = 42 ~~|
+      INITIAL TIME = 0 ~~|
+      FINAL TIME = 2 ~~|
+      TIME STEP = 1 ~~|
+      SAVEPER = 1 ~~|
+    `
+    const code = readInlineModelAndGenerateJS(mdl, {
+      inputVarNames: [],
+      outputVarNames: ['x[A1]', 'y']
+    })
+    expect(code).toMatch(`\
+/*export*/ function setConstant(varSpec /*: VarSpec*/, value /*: number*/) {
+  throw new Error('The setConstant function was not enabled for the generated model. Set the customConstants property in the spec/config file to allow for overriding constants at runtime.');
+}`)
+  })
+
+  it('should generate setConstant that includes a subset of cases when customConstants is an array', () => {
+    const mdl = `
+      DimA: A1, A2 ~~|
+      x[DimA] = 10, 20 ~~|
+      y = 42 ~~|
+      z = 99 ~~|
+      INITIAL TIME = 0 ~~|
+      FINAL TIME = 2 ~~|
+      TIME STEP = 1 ~~|
+      SAVEPER = 1 ~~|
+    `
+    const code = readInlineModelAndGenerateJS(mdl, {
+      inputVarNames: [],
+      outputVarNames: ['x[A1]', 'y', 'z'],
+      customConstants: ['x[A1]', 'z']
+    })
+    expect(code).toMatch(`\
+/*export*/ function setConstant(varSpec /*: VarSpec*/, value /*: number*/) {
+  if (!varSpec) {
+    throw new Error('Got undefined varSpec in setConstant');
+  }
+  const varIndex = varSpec.varIndex;
+  const subs = varSpec.subscriptIndices;
+  switch (varIndex) {
+    case 5:
+      _x[subs[0]] = value;
+      break;
+    case 7:
+      _z = value;
+      break;
+    default:
+      throw new Error(\`No constant found for var index \${varIndex} in setConstant\`);
+  }
+}`)
   })
 
   it('should generate setLookup that throws error when customLookups is disabled', () => {
