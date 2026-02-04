@@ -38,10 +38,10 @@
     "sanitize-html": "^2.13.0"
   },
   "peerDependencies": {
-    "@sdeverywhere/build": "^0.3.7"
+    "@sdeverywhere/build": "^0.3.10"
   },
   "devDependencies": {
-    "@sdeverywhere/build": "0.3.10",
+    "@sdeverywhere/build": "*",
     "@types/byline": "^4.2.33",
     "@types/dedent": "^0.7.0",
     "@types/marked": "^4.0.1",

@@ -33,10 +33,10 @@
     "find-up": "^6.3.0"
   },
   "peerDependencies": {
-    "@sdeverywhere/build": "^0.3.7"
+    "@sdeverywhere/build": "^0.3.10"
   },
   "devDependencies": {
-    "@sdeverywhere/build": "0.3.10",
+    "@sdeverywhere/build": "*",
     "@types/node": "^20.14.8"
   },
   "author": "Climate Interactive",

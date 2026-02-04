@@ -10,8 +10,6 @@
     * @sdeverywhere/check-ui-shell bumped from ^0.2.17 to ^0.2.18
     * @sdeverywhere/runtime bumped from ^0.2.7 to ^0.2.8
     * @sdeverywhere/runtime-async bumped from ^0.2.7 to ^0.2.8
-  * devDependencies
-    * @sdeverywhere/build bumped from * to 0.3.10
   * peerDependencies
     * @sdeverywhere/build bumped from ^0.3.7 to ^0.3.10
 
