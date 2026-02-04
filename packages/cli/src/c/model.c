@@ -11,11 +11,7 @@ struct timespec startTime, finishTime;
 // The special _time variable is not included in .mdl files.
 double _time;
 
-// Output data buffer used by `run_model`
-char* outputData = NULL;
-size_t outputIndex = 0;
-
-// Output data buffer used by `runModelWithBuffers`
+// Output data buffer and parameters used by `runModelWithBuffers`
 double* outputBuffer = NULL;
 int32_t* outputIndexBuffer = NULL;
 size_t outputVarIndex = 0;
@@ -76,8 +72,8 @@ double getSaveper() {
  *
  * The `constantValues` buffer contains the corresponding values for each constant.
  */
-void setConstantsFromBuffers(int32_t* constantIndices, double* constantValues) {
-  if (constantIndices == NULL || constantValues == NULL) {
+void setConstantOverridesFromBuffers(double* constantValues, int32_t* constantIndices) {
+  if (constantValues == NULL || constantIndices == NULL) {
     return;
   }
 
@@ -100,74 +96,124 @@ void setConstantsFromBuffers(int32_t* constantIndices, double* constantValues) {
   }
 }
 
-char* run_model(const char* inputs) {
-  // run_model does everything necessary to run the model with the given inputs.
-  // It may be called multiple times. Call finish() after all runs are complete.
-  // Initialize the state to default values in the model at the start of each run.
-  initConstants();
-  // Set inputs for this run that override default values.
-  // fprintf(stderr, "run_model inputs = %s\n", inputs);
-  setInputs(inputs);
-  initLevels();
-  run();
-  return outputData;
+/**
+ * Run the model, reading inputs from the given `inputs` buffer, and writing outputs
+ * to the given `outputs` buffer.
+ *
+ * This is a simplified version of `runModelWithBuffers` that passes NULL for
+ * all parameters other than `inputs` and `outputs`.
+ *
+ * After each step of the run, the `outputs` buffer will be updated with the output
+ * variables.  The `outputs` buffer needs to be at least as large as:
+ *   `number of output variables` * `number of save points`
+ *
+ * The outputs will be stored in the same order as the outputs are defined in the
+ * spec file, with one "row" for each variable.  For example, the first value in
+ * the buffer will be the output value at t0 for the first output variable,
+ * followed by the output value for that variable at t1, and so on.  After the
+ * value for tN (where tN is the last time in the range), the second variable
+ * outputs will begin, and so on.
+ *
+ * @param inputs The buffer that contains the model input values.  If NULL,
+ * no inputs will be set and the model will use the default values for all
+ * constants as defined in the generated model.  If non-NULL, the buffer is
+ * assumed to have one double value for each input variable in exactly the
+ * same order that the variables are listed in the spec file.
+ * @param outputs The required buffer that will receive the model output
+ * values.  See above for details on the expected format.
+ */
+void runModel(double* inputs, double* outputs) {
+  runModelWithBuffers(inputs, NULL, outputs, NULL);
 }
 
 /**
  * Run the model, reading inputs from the given `inputs` buffer, and writing outputs
  * to the given `outputs` buffer.
  *
- * This function performs the same steps as the original `run_model` function,
- * except that it uses the provided pre-allocated buffers.
+ * INPUTS
+ * ------
  *
- * The `inputs` buffer is assumed to have one double value for each input variable;
- * they must be in exactly the same order as the variables are listed in the spec file.
+ * If `inputIndices` is NULL, the `inputs` buffer is assumed to have one double value
+ * for each input variable, in exactly the same order as the variables are listed in
+ * the spec file.
+ *
+ * If `inputIndices` is non-NULL, it specifies which inputs are being set:
+ *   - inputIndices[0] is the count (C) of inputs being specified
+ *   - inputIndices[1...C] are the indices of the inputs to set (where each index
+ *     corresponds to the index of the input variable in the spec.json file)
+ *   - inputs[0...C-1] are the corresponding values
+ *
+ * OUTPUTS
+ * -------
  *
  * After each step of the run, the `outputs` buffer will be updated with the output
- * variables.  The buffer needs to be at least as large as:
+ * variables.  The `outputs` buffer needs to be at least as large as:
  *   `number of output variables` * `number of save points`
- * where `number of save points` is typically one point for each year inclusive of
- * the start and end times.
  *
- * The outputs will be stored in the same order as the outputs are defined in the
- * spec file, with one "row" for each variable.  For example, the first value in
- * the buffer will be the output value at t0 for the first output variable, followed
- * by the output value for that variable at t1, and so on.  After the value for tN
- * (where tN is the last time in the range), the second variable outputs will begin,
- * and so on.
+ * If `outputIndices` is NULL, outputs will be stored in the same order as the outputs
+ * are defined in the spec file, with one "row" for each variable.  For example, the
+ * first value in the buffer will be the output value at t0 for the first output
+ * variable, followed by the output value for that variable at t1, and so on.  After
+ * the value for tN (where tN is the last time in the range), the second variable
+ * outputs will begin, and so on.
  *
- * For the optional `outputIndices` and `constantIndices` buffers, the expected format
- * is:
- *   [count, varIndex1, subCount1, subIndex1_1, ..., varIndex2, subCount2, ...]
- * where `count` is the number of variables to store, `varIndexN` is the index of the
- * variable to store (from the model listing file), `subCountN` is the number of
- * subscripts for that variable, and `subIndexN_M` is the index of the subscript
- * at the Mth position for that variable.
+ * If `outputIndices` is non-NULL, it specifies which outputs are being stored:
+ *   - outputIndices[0] is the count (C) of output variables being stored
+ *   - outputIndices[1...] are the indices of the output variables to store, in
+ *     the following format:
+ *       [count, varIndex1, subCount1, subIndex1_1, ..., varIndex2, subCount2, ...]
+ *     where `count` is the number of variables to store, `varIndexN` is the index
+ *     of the variable to store (from the {model}.json listing file), `subCountN` is
+ *     the number of subscripts for that variable, and `subIndexN_M` is the index of
+ *     the subscript at the Mth position for that variable
+ *   - outputs[0...C-1] are the corresponding values
  *
- * @param inputs The required buffer that contains the model input values.  See above
- * for details on the expected format.
+ * CONSTANT OVERRIDES
+ * ------------------
+ *
+ * If `constants` and `constantIndices` are non-NULL, the provided constant values will
+ * override the default values for those constants as defined in the generated model.
+ *
+ * The `constantIndices` buffer specifies which constants are being overridden.  The
+ * format is the same as described above for `outputIndices`:
+ *   - constantIndices[0] is the count (C) of constants being overridden
+ *   - constantIndices[1...] are the indices of the constants to override, in the
+ *     following format:
+ *       [count, varIndex1, subCount1, subIndex1_1, ..., varIndex2, subCount2, ...]
+ *     where `count` is the number of constants to override, `varIndexN` is the index
+ *     of the variable to store (from the {model}.json listing file), `subCountN` is
+ *     the number of subscripts for that variable, and `subIndexN_M` is the index of
+ *     the subscript at the Mth position for that variable
+ *   - constants[0...C-1] are the corresponding values
+ *
+ * @param inputs The buffer that contains the model input values.  If NULL, no inputs
+ * will be set and the model will use the default values for all constants as defined
+ * in the generated model.  If non-NULL, the buffer is assumed to have one double value
+ * for each input variable.  The number of values provided depends on `inputIndices`;
+ * see above for details on the expected format of these two parameters.
+ * @param inputIndices The optional buffer that specifies which input values from the
+ * `inputs` buffer are being set.  See above for details on the expected format.
  * @param outputs The required buffer that will receive the model output values.  See
  * above for details on the expected format.
- * @param outputIndices An optional buffer that contains the indices of the output
- * variables to store.  Pass NULL if using the default outputs.  This is typically
- * only used by the JS-level runtime package.  See above for details on the expected
- * format.
+ * @param outputIndices The optional buffer that specifies which output values will be
+ * stored in the `outputs` buffer.  See above for details on the expected format.
+ * @param constants An optional buffer that contains the values of the constants to
+ * override.  Pass NULL if not overriding any constants.  Each value in the buffer
+ * corresponds to the value of the constant at the corresponding index.
  * @param constantIndices An optional buffer that contains the indices of the constants
- * to override.  Pass NULL if not overriding any constants.  (This is typically only
- * used by the JS-level runtime package.  See above for details on the expected format.
- * @param constantValues An optional buffer that contains the values of the constants
- * to override.  Pass NULL if not overriding any constants.  This is typically only
- * used by the JS-level runtime package.  Each value in the buffer corresponds to the
- * value of the constant at the corresponding index.
+ * to override.  Pass NULL if not overriding any constants.  See above for details on
+ * the expected format.
  */
-void runModelWithBuffers(double* inputs, double* outputs, int32_t* outputIndices, int32_t* constantIndices, double* constantValues) {
+void runModelWithBuffers(double* inputs, int32_t* inputIndices, double* outputs, int32_t* outputIndices, double* constants, int32_t* constantIndices) {
   outputBuffer = outputs;
   outputIndexBuffer = outputIndices;
   initConstants();
-  if (constantIndices != NULL && constantValues != NULL) {
-    setConstantsFromBuffers(constantIndices, constantValues);
+  if (constants != NULL && constantIndices != NULL) {
+    setConstantOverridesFromBuffers(constants, constantIndices);
   }
-  setInputsFromBuffer(inputs);
+  if (inputs != NULL) {
+    setInputs(inputs, inputIndices);
+  }
   initLevels();
   run();
   outputBuffer = NULL;
@@ -181,7 +227,6 @@ void run() {
 
   // Restart fresh output for all steps in this run.
   savePointIndex = 0;
-  outputIndex = 0;
 
   // Initialize time with the required INITIAL TIME control variable.
   _time = _initial_time;
@@ -231,25 +276,11 @@ void run() {
 }
 
 void outputVar(double value) {
-  if (outputBuffer != NULL) {
-    // Write each value into the preallocated buffer; each variable has a "row" that
-    // contains `numSavePoints` values, one value for each save point
-    double* outputPtr = outputBuffer + (outputVarIndex * numSavePoints) + savePointIndex;
-    *outputPtr = value;
-    outputVarIndex++;
-  } else {
-    // Allocate an output buffer for all output steps as a single block.
-    // Add one character for a null terminator.
-    if (outputData == NULL) {
-      int numOutputSteps = (int)(round((_final_time - _initial_time) / _saveper)) + 1;
-      size_t size = numOutputSteps * (OUTPUT_STRING_LEN * numOutputs) + 1;
-      // fprintf(stderr, "output data size = %zu\n", size);
-      outputData = (char*)malloc(size);
-    }
-    // Format the value as a string in the output data buffer.
-    int numChars = snprintf(outputData + outputIndex, OUTPUT_STRING_LEN + 1, "%g\t", value);
-    outputIndex += numChars;
-  }
+  // Write each value into the preallocated buffer; each variable has a "row" that
+  // contains `numSavePoints` values, one value for each save point
+  double* outputPtr = outputBuffer + (outputVarIndex * numSavePoints) + savePointIndex;
+  *outputPtr = value;
+  outputVarIndex++;
 }
 
 void finish() {
@@ -259,7 +290,4 @@ void finish() {
       1000.0 * finishTime.tv_sec + 1e-6 * finishTime.tv_nsec - (1000.0 * startTime.tv_sec + 1e-6 * startTime.tv_nsec);
   fprintf(stderr, "calculation runtime = %.0f ms\n", runtime);
 #endif
-  if (outputData != NULL) {
-    free(outputData);
-  }
 }

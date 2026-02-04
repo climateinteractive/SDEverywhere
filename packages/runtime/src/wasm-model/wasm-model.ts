@@ -33,8 +33,8 @@ class WasmModel implements RunnableModel {
   private outputIndicesBuffer: WasmBuffer<Int32Array>
   private lookupDataBuffer: WasmBuffer<Float64Array>
   private lookupSubIndicesBuffer: WasmBuffer<Int32Array>
-  private constantIndicesBuffer: WasmBuffer<Int32Array>
   private constantValuesBuffer: WasmBuffer<Float64Array>
+  private constantIndicesBuffer: WasmBuffer<Int32Array>
 
   private readonly wasmSetLookup: (
     varIndex: number,
@@ -44,10 +44,11 @@ class WasmModel implements RunnableModel {
   ) => void
   private readonly wasmRunModel: (
     inputsAddress: number,
+    inputIndicesAddress: number,
     outputsAddress: number,
     outputIndicesAddress: number,
-    constantIndicesAddress: number,
-    constantValuesAddress: number
+    constantValuesAddress: number,
+    constantIndicesAddress: number
   ) => void
 
   /**
@@ -74,6 +75,7 @@ class WasmModel implements RunnableModel {
     // Make the native functions callable
     this.wasmSetLookup = wasmModule.cwrap('setLookup', null, ['number', 'number', 'number', 'number'])
     this.wasmRunModel = wasmModule.cwrap('runModelWithBuffers', null, [
+      'number',
       'number',
       'number',
       'number',
@@ -236,6 +238,9 @@ class WasmModel implements RunnableModel {
     const t0 = perfNow()
     this.wasmRunModel(
       this.inputsBuffer?.getAddress() || 0,
+      // Always pass 0 (NULL) for input indices, since we assume that all input values are
+      // provided and are in the same order as the input variables defined in the model spec
+      0,
       this.outputsBuffer.getAddress(),
       outputIndicesBuffer?.getAddress() || 0,
       constantIndicesBuffer?.getAddress() || 0,
