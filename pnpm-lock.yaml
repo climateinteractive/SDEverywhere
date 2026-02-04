@@ -604,10 +604,10 @@ importers:
   packages/cli:
     dependencies:
       '@sdeverywhere/build':
-        specifier: ^0.3.9
+        specifier: ^0.3.10
         version: link:../build
       '@sdeverywhere/compile':
-        specifier: ^0.7.26
+        specifier: ^0.7.27
         version: link:../compile
       byline:
         specifier: ^5.0.0
@@ -649,7 +649,7 @@ importers:
   packages/create:
     dependencies:
       '@sdeverywhere/compile':
-        specifier: ^0.7.26
+        specifier: ^0.7.27
         version: link:../compile
       execa:
         specifier: ^6.1.0
@@ -726,13 +726,13 @@ importers:
         specifier: ^0.1.7
         version: link:../check-core
       '@sdeverywhere/check-ui-shell':
-        specifier: ^0.2.17
+        specifier: ^0.2.18
         version: link:../check-ui-shell
       '@sdeverywhere/runtime':
-        specifier: ^0.2.7
+        specifier: ^0.2.8
         version: link:../runtime
       '@sdeverywhere/runtime-async':
-        specifier: ^0.2.7
+        specifier: ^0.2.8
         version: link:../runtime-async
       assert-never:
         specifier: ^1.2.1
@@ -825,10 +825,10 @@ importers:
   packages/plugin-worker:
     dependencies:
       '@sdeverywhere/runtime':
-        specifier: ^0.2.7
+        specifier: ^0.2.8
         version: link:../runtime
       '@sdeverywhere/runtime-async':
-        specifier: ^0.2.7
+        specifier: ^0.2.8
         version: link:../runtime-async
       vite:
         specifier: ^7.1.12
@@ -850,7 +850,7 @@ importers:
   packages/runtime-async:
     dependencies:
       '@sdeverywhere/runtime':
-        specifier: ^0.2.7
+        specifier: ^0.2.8
         version: link:../runtime
       threads:
         specifier: 1.7.0
