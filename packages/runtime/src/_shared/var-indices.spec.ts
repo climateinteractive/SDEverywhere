@@ -2,12 +2,16 @@
 
 import { describe, expect, it } from 'vitest'
 
+import { createConstantDef, type ConstantDef } from './constant-def'
 import { createLookupDef, type LookupDef } from './lookup-def'
 import type { VarSpec } from './types'
 import {
+  decodeConstants,
   decodeLookups,
+  encodeConstants,
   encodeLookups,
   encodeVarIndices,
+  getEncodedConstantBufferLengths,
   getEncodedLookupBufferLengths,
   getEncodedVarIndicesLength
 } from './var-indices'
@@ -59,6 +63,68 @@ describe('encodeVarIndices', () => {
         0
       ])
     )
+  })
+})
+
+const constantDefs: ConstantDef[] = [
+  createConstantDef({ varSpec: { varIndex: 1 } }, 42),
+  createConstantDef({ varSpec: { varIndex: 2, subscriptIndices: [1, 2] } }, 100),
+  createConstantDef({ varSpec: { varIndex: 3 } }, 3.14)
+]
+
+describe('getEncodedConstantBufferLengths', () => {
+  it('should return the correct length', () => {
+    const { constantIndicesLength, constantsLength } = getEncodedConstantBufferLengths(constantDefs)
+    expect(constantIndicesLength).toBe(9)
+    expect(constantsLength).toBe(3)
+  })
+})
+
+describe('encodeConstants and decodeConstants', () => {
+  it('should encode and decode the correct values', () => {
+    const constantIndices = new Int32Array(11)
+    const constantValues = new Float64Array(5)
+    encodeConstants(constantDefs, constantIndices, constantValues)
+
+    expect(constantIndices).toEqual(
+      new Int32Array([
+        3, // constant count
+
+        1, // var0 index
+        0, // var0 subscript count
+
+        2, // var1 index
+        2, // var1 subscript count
+        1, // var1 sub0 index
+        2, // var1 sub1 index
+
+        3, // var2 index
+        0, // var2 subscript count
+
+        // zero padding
+        0,
+        0
+      ])
+    )
+
+    expect(constantValues).toEqual(
+      new Float64Array([
+        // var0 value
+        42,
+
+        // var1 value
+        100,
+
+        // var2 value
+        3.14,
+
+        // zero padding
+        0, 0
+      ])
+    )
+
+    const decodedConstantDefs = decodeConstants(constantIndices, constantValues)
+    expect(decodedConstantDefs).toEqual(constantDefs)
   })
 })
 

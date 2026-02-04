@@ -111,7 +111,7 @@ int main(int argc, char** argv) {
   double* outputBuffer = (double*)malloc(numOutputs * numSavePoints * sizeof(double));
 
   // Run the model with the sparse input arrays and output buffer
-  runModelWithBuffers(inputValues, inputIndices, outputBuffer, NULL);
+  runModelWithBuffers(inputValues, inputIndices, outputBuffer, NULL, NULL, NULL);
 
   if (!suppress_data_output) {
     if (raw_output) {

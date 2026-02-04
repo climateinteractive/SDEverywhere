@@ -64,6 +64,39 @@ double getSaveper() {
 }
 
 /**
+ * Set constant overrides from the given buffers.
+ *
+ * The `constantIndices` buffer contains the variable indices and subscript indices
+ * for each constant to override. The format is:
+ *   [count, varIndex1, subCount1, subIndex1_1, ..., varIndex2, subCount2, ...]
+ *
+ * The `constantValues` buffer contains the corresponding values for each constant.
+ */
+void setConstantOverridesFromBuffers(double* constantValues, int32_t* constantIndices) {
+  if (constantValues == NULL || constantIndices == NULL) {
+    return;
+  }
+
+  size_t indexBufferOffset = 0;
+  size_t valueBufferOffset = 0;
+  size_t constantCount = (size_t)constantIndices[indexBufferOffset++];
+
+  for (size_t i = 0; i < constantCount; i++) {
+    size_t varIndex = (size_t)constantIndices[indexBufferOffset++];
+    size_t subCount = (size_t)constantIndices[indexBufferOffset++];
+    size_t* subIndices;
+    if (subCount > 0) {
+      subIndices = (size_t*)(constantIndices + indexBufferOffset);
+      indexBufferOffset += subCount;
+    } else {
+      subIndices = NULL;
+    }
+    double value = constantValues[valueBufferOffset++];
+    setConstant(varIndex, subIndices, value);
+  }
+}
+
+/**
  * Run the model, reading inputs from the given `inputs` buffer, and writing outputs
  * to the given `outputs` buffer.
  *
@@ -90,21 +123,28 @@ double getSaveper() {
  * values.  See above for details on the expected format.
  */
 void runModel(double* inputs, double* outputs) {
-  runModelWithBuffers(inputs, NULL, outputs, NULL);
+  runModelWithBuffers(inputs, NULL, outputs, NULL, NULL, NULL);
 }
 
 /**
  * Run the model, reading inputs from the given `inputs` buffer, and writing outputs
  * to the given `outputs` buffer.
  *
+ * INPUTS
+ * ------
+ *
  * If `inputIndices` is NULL, the `inputs` buffer is assumed to have one double value
  * for each input variable, in exactly the same order as the variables are listed in
  * the spec file.
  *
  * If `inputIndices` is non-NULL, it specifies which inputs are being set:
- *   - inputIndices[0] is the count of inputs being specified
- *   - inputIndices[1..N] are the indices of the inputs to set
- *   - inputs[0..N-1] are the corresponding values
+ *   - inputIndices[0] is the count (C) of inputs being specified
+ *   - inputIndices[1...C] are the indices of the inputs to set (where each index
+ *     corresponds to the index of the input variable in the spec.json file)
+ *   - inputs[0...C-1] are the corresponding values
+ *
+ * OUTPUTS
+ * -------
  *
  * After each step of the run, the `outputs` buffer will be updated with the output
  * variables.  The `outputs` buffer needs to be at least as large as:
@@ -118,31 +158,59 @@ void runModel(double* inputs, double* outputs) {
  * outputs will begin, and so on.
  *
  * If `outputIndices` is non-NULL, it specifies which outputs are being stored:
- *   - outputIndices[0] is the count of output variables being stored
- *   - outputIndices[1..N] are the indices of the output variables to store (unlike
- *     `inputIndices`, these indices refer to the ones defined in the `{model}.json`
- *     listing file, NOT the list of output variables spec file)
- *   - outputs[0..N-1] are the corresponding values
+ *   - outputIndices[0] is the count (C) of output variables being stored
+ *   - outputIndices[1...] are the indices of the output variables to store, in
+ *     the following format:
+ *       [count, varIndex1, subCount1, subIndex1_1, ..., varIndex2, subCount2, ...]
+ *     where `count` is the number of variables to store, `varIndexN` is the index
+ *     of the variable to store (from the {model}.json listing file), `subCountN` is
+ *     the number of subscripts for that variable, and `subIndexN_M` is the index of
+ *     the subscript at the Mth position for that variable
+ *   - outputs[0...C-1] are the corresponding values
  *
- * @param inputs The buffer that contains the model input values.  If NULL,
- * no inputs will be set and the model will use the default values for all
- * constants as defined in the generated model.  If non-NULL, the buffer is
- * assumed to have one double value for each input variable.  The number of
- * values provided depends on `inputIndices`; see above for details on the
- * expected format of these two parameters.
- * @param inputIndices The optional buffer that specifies which input values
- * from the `inputs` buffer are being set.  See above for details on the
- * expected format.
- * @param outputs The required buffer that will receive the model output
- * values.  See above for details on the expected format.
- * @param outputIndices The optional buffer that specifies which output values
- * will be stored in the `outputs` buffer.  See above for details on the
- * expected format.
+ * CONSTANT OVERRIDES
+ * ------------------
+ *
+ * If `constants` and `constantIndices` are non-NULL, the provided constant values will
+ * override the default values for those constants as defined in the generated model.
+ *
+ * The `constantIndices` buffer specifies which constants are being overridden.  The
+ * format is the same as described above for `outputIndices`:
+ *   - constantIndices[0] is the count (C) of constants being overridden
+ *   - constantIndices[1...] are the indices of the constants to override, in the
+ *     following format:
+ *       [count, varIndex1, subCount1, subIndex1_1, ..., varIndex2, subCount2, ...]
+ *     where `count` is the number of constants to override, `varIndexN` is the index
+ *     of the variable to store (from the {model}.json listing file), `subCountN` is
+ *     the number of subscripts for that variable, and `subIndexN_M` is the index of
+ *     the subscript at the Mth position for that variable
+ *   - constants[0...C-1] are the corresponding values
+ *
+ * @param inputs The buffer that contains the model input values.  If NULL, no inputs
+ * will be set and the model will use the default values for all constants as defined
+ * in the generated model.  If non-NULL, the buffer is assumed to have one double value
+ * for each input variable.  The number of values provided depends on `inputIndices`;
+ * see above for details on the expected format of these two parameters.
+ * @param inputIndices The optional buffer that specifies which input values from the
+ * `inputs` buffer are being set.  See above for details on the expected format.
+ * @param outputs The required buffer that will receive the model output values.  See
+ * above for details on the expected format.
+ * @param outputIndices The optional buffer that specifies which output values will be
+ * stored in the `outputs` buffer.  See above for details on the expected format.
+ * @param constants An optional buffer that contains the values of the constants to
+ * override.  Pass NULL if not overriding any constants.  Each value in the buffer
+ * corresponds to the value of the constant at the corresponding index.
+ * @param constantIndices An optional buffer that contains the indices of the constants
+ * to override.  Pass NULL if not overriding any constants.  See above for details on
+ * the expected format.
  */
-void runModelWithBuffers(double* inputs, int32_t* inputIndices, double* outputs, int32_t* outputIndices) {
+void runModelWithBuffers(double* inputs, int32_t* inputIndices, double* outputs, int32_t* outputIndices, double* constants, int32_t* constantIndices) {
   outputBuffer = outputs;
   outputIndexBuffer = outputIndices;
   initConstants();
+  if (constants != NULL && constantIndices != NULL) {
+    setConstantOverridesFromBuffers(constants, constantIndices);
+  }
   if (inputs != NULL) {
     setInputs(inputs, inputIndices);
   }
