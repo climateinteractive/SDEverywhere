@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.18](https://github.com/climateinteractive/SDEverywhere/compare/check-ui-shell-v0.2.17...check-ui-shell-v0.2.18) (2026-02-04)
+
+
+### Features
+
+* allow for overriding constants at runtime ([#767](https://github.com/climateinteractive/SDEverywhere/issues/767)) ([984c3bc](https://github.com/climateinteractive/SDEverywhere/commit/984c3bcbd80d6088c73a4f7f3f31070fba328abe)), closes [#470](https://github.com/climateinteractive/SDEverywhere/issues/470)
+
 ## [0.2.17](https://github.com/climateinteractive/SDEverywhere/compare/check-ui-shell-v0.2.16...check-ui-shell-v0.2.17) (2026-01-13)
 
 

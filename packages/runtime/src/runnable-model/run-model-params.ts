@@ -1,6 +1,6 @@
 // Copyright (c) 2024 Climate Interactive / New Venture Fund
 
-import type { LookupDef, Outputs } from '../_shared'
+import type { ConstantDef, LookupDef, Outputs } from '../_shared'
 
 /**
  * Encapsulates the parameters that are passed to a `runModel` call.
@@ -73,6 +73,12 @@ export interface RunModelParams {
    * @param array The array that contains the output values.
    */
   storeOutputs(array: Float64Array): void
+
+  /**
+   * Return an array containing constant overrides, or undefined if no constants were passed
+   * to the latest `runModel` call.
+   */
+  getConstants(): ConstantDef[] | undefined
 
   /**
    * Return an array containing lookup overrides, or undefined if no lookups were passed to

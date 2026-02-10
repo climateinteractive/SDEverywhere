@@ -1,6 +1,6 @@
 {
   "name": "@sdeverywhere/cli",
-  "version": "0.7.38",
+  "version": "0.7.39",
   "description": "Contains the `sde` command line interface for the SDEverywhere tool suite.",
   "type": "module",
   "files": [
@@ -18,8 +18,8 @@
     "ci:build": "run-s lint prettier:check"
   },
   "dependencies": {
-    "@sdeverywhere/build": "^0.3.9",
-    "@sdeverywhere/compile": "^0.7.26",
+    "@sdeverywhere/build": "^0.3.10",
+    "@sdeverywhere/compile": "^0.7.27",
     "byline": "^5.0.0",
     "ramda": "^0.27.0",
     "shelljs": "^0.10.0",

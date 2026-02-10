@@ -5659,13 +5659,13 @@ describe('readEquations (from Vensim model)', () => {
         refId: '_final_time',
         varType: 'const'
       }),
-      v('TIME STEP', '1', {
+      v('TIME STEP', '0.25', {
         refId: '_time_step',
         varType: 'const'
       }),
-      v('SAVEPER', 'TIME STEP', {
+      v('SAVEPER', '1', {
         refId: '_saveper',
-        references: ['_time_step']
+        varType: 'const'
       }),
       v('Time', '', {
         refId: '_time',

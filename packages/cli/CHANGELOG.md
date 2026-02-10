@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.7.39](https://github.com/climateinteractive/SDEverywhere/compare/cli-v0.7.38...cli-v0.7.39) (2026-02-04)
+
+
+### Features
+
+* allow for overriding constants at runtime ([#767](https://github.com/climateinteractive/SDEverywhere/issues/767)) ([984c3bc](https://github.com/climateinteractive/SDEverywhere/commit/984c3bcbd80d6088c73a4f7f3f31070fba328abe)), closes [#470](https://github.com/climateinteractive/SDEverywhere/issues/470)
+
+
+### Bug Fixes
+
+* remove string-based `run_model` API from C runtime + update `main.c` to use `runModelWithBuffers` ([#766](https://github.com/climateinteractive/SDEverywhere/issues/766)) ([e031f08](https://github.com/climateinteractive/SDEverywhere/commit/e031f08dbda85768ff5b2739611e5be650aae399)), closes [#302](https://github.com/climateinteractive/SDEverywhere/issues/302)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/build bumped from ^0.3.9 to ^0.3.10
+    * @sdeverywhere/compile bumped from ^0.7.26 to ^0.7.27
+
 ## [0.7.38](https://github.com/climateinteractive/SDEverywhere/compare/cli-v0.7.37...cli-v0.7.38) (2026-01-10)
 
 
