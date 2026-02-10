@@ -147,6 +147,15 @@ else
       continue
     fi
 
+    if [[ $INPUT_FORMAT == "stmx" ]]; then
+      # Skip tests for models that are not yet supported by the Stella/XMILE backend
+      if [[ $m == "allocate" || $m == "arrays" ]]; then
+          echo "Skipping test for $m (not yet supported by Stella/XMILE backend)"
+          echo
+          continue
+      fi
+    fi
+
     if [[ $GEN_FORMAT == "js" ]]; then
       # Skip tests for models that are not yet supported for JS target
       if [[ $m == "allocate" || $m == delayfixed* || $m == "depreciate" || $m == "gamma_ln" ]]; then
