@@ -520,11 +520,12 @@ function generateLevelEval(callExpr, ctx) {
 
     case '_DELAY':
     case '_DELAY_FIXED': {
-      // For DELAY and DELAY FIXED, emit the first arg followed by the FixedDelay support var
+      // Stella's DELAY function is behaviorally equivalent to Vensim's DELAY FIXED function, so
+      // they use the same `_DELAY_FIXED` runtime function.  For these, emit the first arg
+      // followed by the FixedDelay support var.
       const args = []
       args.push(generateExpr(callExpr.args[0], ctx))
       args.push(ctx.cVarRefWithLhsSubscripts(ctx.variable.fixedDelayVarName))
-      // Both XMILE's DELAY and Vensim's DELAY FIXED use the same runtime function
       return `${fnRef('_DELAY_FIXED', ctx)}(${args.join(', ')})`
     }
 
