@@ -178,7 +178,7 @@ function parseEqnElem(varElem: XmlElement, parentElem: XmlElement): Expr {
       const initEqnElem = firstElemOf(parentElem, 'init_eqn')
       const initEqnText = initEqnElem ? firstTextOf(initEqnElem) : undefined
       if (initEqnText !== undefined) {
-        // Synthesize: ACTIVE INITIAL(eqnExpr, initEqnExpr)
+        // Synthesize ACTIVE INITIAL(eqnExpr, initEqnExpr)
         const eqnExpr = parseExpr(eqnText.text)
         const initEqnExpr = parseExpr(initEqnText.text)
         return call('ACTIVE INITIAL', eqnExpr, initEqnExpr)

@@ -683,6 +683,18 @@ function visitFunctionCall(v, callExpr, context) {
       //
       //
 
+      case '_ACTIVE_INITIAL':
+        // NOTE: Stella doesn't have a built-in `ACTIVE INITIAL` function, but our XMILE parser
+        // synthesizes an `ACTIVE INITIAL` function call for `<aux>` variable definitions that
+        // have both `<eqn>` and `<init_eqn>` elements.  This is equivalent to Vensim's
+        // `ACTIVE INITIAL` function.
+        validateCallDepth(callExpr, context)
+        validateCallArgs(callExpr, 2)
+        v.hasInitValue = true
+        // The 2nd argument is used at init time
+        argModes[1] = 'init'
+        break
+
       case '_DELAY':
         // Stella's DELAY function is equivalent to Vensim's DELAY FIXED function
         validateCallDepth(callExpr, context)
@@ -716,18 +728,6 @@ function visitFunctionCall(v, callExpr, context) {
         addFnReference = false
         visitArgs = false
         generateDelayVariables(v, callExpr, context)
-        break
-
-      case '_ACTIVE_INITIAL':
-        // NOTE: Stella doesn't have a built-in `ACTIVE INITIAL` function, but our XMILE parser
-        // synthesizes an `ACTIVE INITIAL` function call for `<aux>` variable definitions that
-        // have both `<eqn>` and `<init_eqn>` elements.  This is equivalent to Vensim's
-        // `ACTIVE INITIAL` function.
-        validateCallDepth(callExpr, context)
-        validateCallArgs(callExpr, 2)
-        v.hasInitValue = true
-        // The 2nd argument is used at init time
-        argModes[1] = 'init'
         break
 
       case '_IF_THEN_ELSE':

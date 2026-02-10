@@ -386,8 +386,8 @@ function generateFunctionCall(callExpr, ctx) {
 
     case '_ELMCOUNT':
     case '_SIZE': {
-      // Emit the size of the dimension in place of the dimension name.
-      // Note that Vensim uses `ELMCOUNT` while XMILE uses `SIZE`, but otherwise they are the same.
+      // Emit the size of the dimension in place of the dimension name. Note that Vensim uses
+      // `ELMCOUNT` while XMILE uses `SIZE`, but otherwise they are the same.
       const dimArg = callExpr.args[0]
       if (dimArg.kind !== 'variable-ref') {
         throw new Error(`Argument for ${callExpr.fnName} must be a dimension name`)
@@ -520,7 +520,7 @@ function generateLevelEval(callExpr, ctx) {
 
     case '_DELAY':
     case '_DELAY_FIXED': {
-      // For DELAY/DELAY FIXED, emit the first arg followed by the FixedDelay support var
+      // For DELAY and DELAY FIXED, emit the first arg followed by the FixedDelay support var
       const args = []
       args.push(generateExpr(callExpr.args[0], ctx))
       args.push(ctx.cVarRefWithLhsSubscripts(ctx.variable.fixedDelayVarName))
