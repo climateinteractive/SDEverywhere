@@ -290,7 +290,10 @@ function generateFunctionCall(callExpr, ctx) {
     case '_SAMPLE_IF_TRUE':
     case '_INTEG':
       // Split level functions into init and eval expressions
-      if (ctx.outFormat === 'js' && (fnId === '_DELAY' || fnId === '_DELAY_FIXED' || fnId === '_DEPRECIATE_STRAIGHTLINE')) {
+      if (
+        ctx.outFormat === 'js' &&
+        (fnId === '_DELAY' || fnId === '_DELAY_FIXED' || fnId === '_DEPRECIATE_STRAIGHTLINE')
+      ) {
         throw new Error(`${callExpr.fnName} function not yet implemented for JS code gen`)
       }
       if (ctx.mode.startsWith('init')) {

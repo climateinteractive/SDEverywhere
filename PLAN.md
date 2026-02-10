@@ -4,19 +4,19 @@ This document analyzes the errors found when running XMILE/Stella integration te
 
 ## Summary of Test Results
 
-| Model | Status | Error Type |
-|-------|--------|------------|
-| active_initial | ✅ **FIXED** | Was: Cyclic dependency (init_eqn handling added) |
-| allocate | ❌ FAIL | Unhandled function `_ALLOCATE` (incompatible signatures, deferred) |
-| arrays | ❌ FAIL | Undefined subscript mapping `_dim_ab_map` (HIGH complexity, deferred) |
-| comments | ✅ PASS | - |
-| delay | ✅ **FIXED** | Was: Data differences (test model TIME STEP updated to 0.25) |
-| delayfixed | ✅ **FIXED** | Was: Unhandled function `_DELAY` |
-| delayfixed2 | ✅ **FIXED** | Was: Unhandled function `_DELAY` |
-| depreciate | ✅ **FIXED** | Was: Unhandled function `_DEPRECIATE_STRAIGHTLINE` |
-| elmcount | ✅ **FIXED** | Was: Unhandled function `_SIZE` |
-| interleaved | ✅ PASS | - |
-| trend | ✅ **FIXED** | Was: Unhandled function `_SAFEDIV` (Stella outputs regenerated) |
+| Model          | Status       | Error Type                                                            |
+| -------------- | ------------ | --------------------------------------------------------------------- |
+| active_initial | ✅ **FIXED** | Was: Cyclic dependency (init_eqn handling added)                      |
+| allocate       | ❌ FAIL      | Unhandled function `_ALLOCATE` (incompatible signatures, deferred)    |
+| arrays         | ❌ FAIL      | Undefined subscript mapping `_dim_ab_map` (HIGH complexity, deferred) |
+| comments       | ✅ PASS      | -                                                                     |
+| delay          | ✅ **FIXED** | Was: Data differences (test model TIME STEP updated to 0.25)          |
+| delayfixed     | ✅ **FIXED** | Was: Unhandled function `_DELAY`                                      |
+| delayfixed2    | ✅ **FIXED** | Was: Unhandled function `_DELAY`                                      |
+| depreciate     | ✅ **FIXED** | Was: Unhandled function `_DEPRECIATE_STRAIGHTLINE`                    |
+| elmcount       | ✅ **FIXED** | Was: Unhandled function `_SIZE`                                       |
+| interleaved    | ✅ PASS      | -                                                                     |
+| trend          | ✅ **FIXED** | Was: Unhandled function `_SAFEDIV` (Stella outputs regenerated)       |
 
 **Current Score: 9 passing, 2 failing** (improved from 2 passing initially)
 
@@ -25,6 +25,7 @@ This document analyzes the errors found when running XMILE/Stella integration te
 ## Error 1: active_initial - Cyclic Dependency (✅ FIXED)
 
 ### Symptom (RESOLVED)
+
 ```
 Error: Found cyclic dependency during toposort:
 _capacity_utilization → _capacity_1 → _target_capacity → _utilization_adjustment → _capacity_utilization
@@ -42,6 +43,7 @@ The XMILE parser was ignoring the `<init_eqn>` element for auxiliary variables. 
 ```
 
 In Vensim, this is expressed using the `ACTIVE INITIAL` function:
+
 ```vensim
 Target Capacity = ACTIVE INITIAL(Capacity*Utilization Adjustment, Initial Target Capacity)
 ```
@@ -52,9 +54,10 @@ The XMILE parser was updated to handle `<init_eqn>` elements by synthesizing an 
 
 ---
 
-## Error 2: allocate - Unhandled _ALLOCATE Function
+## Error 2: allocate - Unhandled \_ALLOCATE Function
 
 ### Symptom
+
 ```
 Error: Unhandled function '_ALLOCATE' in readEquations for 'shipments[region]'
 ```
@@ -64,16 +67,19 @@ Error: Unhandled function '_ALLOCATE' in readEquations for 'shipments[region]'
 **Critical Incompatibility:** Stella's `ALLOCATE` function has a fundamentally different signature than Vensim's `ALLOCATE AVAILABLE`:
 
 **Vensim (3 parameters):**
+
 ```vensim
 shipments[branch] = ALLOCATE AVAILABLE(demand[branch], priority[branch,ptype], supply available)
 ```
 
 **Stella (6 parameters):**
+
 ```xml
 <eqn>ALLOCATE(total_supply_available, region, demand, priority_vector[*,ppriority], priority_vector[region,pwidth], priority_vector[region,ptype])</eqn>
 ```
 
 Key differences:
+
 - Stella has 6 parameters vs Vensim's 3
 - Parameter order is different (Stella puts availability FIRST, Vensim puts it LAST)
 - Stella explicitly names the dimension to iterate over
@@ -90,6 +96,7 @@ Key differences:
 ### Proposed Fix
 
 **Option A: Full Implementation (Recommended for Completeness)**
+
 1. Add `case '_ALLOCATE':` to `validateStellaFunctionCall()` in `read-equations.js`
 2. Create parameter adapter to map Stella's 6-param signature to internal representation
 3. Either:
@@ -97,11 +104,13 @@ Key differences:
    - Create wrapper that converts Stella params to Vensim format
 
 **Option B: Skip for Now**
+
 - Document incompatibility
 - Keep tests skipped
 - Focus on higher-priority functions first
 
 ### Complexity: HIGH
+
 - Fundamentally incompatible parameter signatures
 - Would require ~700-1200 lines of implementation + tests
 - May require new C runtime function or adapter layer
@@ -111,6 +120,7 @@ Key differences:
 ## Error 3: arrays - Undefined Subscript Mapping
 
 ### Symptom
+
 ```
 ERROR: undefined hasMapping fromSubscript : '_dim_ab_map'
 TypeError: Cannot read properties of undefined (reading 'mappings')
@@ -126,6 +136,7 @@ subscriptMappings: [],
 ```
 
 The arrays.stmx model uses Vensim-style subscript mapping patterns:
+
 ```xml
 <aux name="dim ab map">
   <dimensions><dim name="DimB"/></dimensions>
@@ -134,11 +145,13 @@ The arrays.stmx model uses Vensim-style subscript mapping patterns:
 ```
 
 And references it in expressions like:
+
 ```xml
 <eqn>inputA[dim_ab_map]*10</eqn>
 ```
 
 The problem:
+
 1. `dim ab map` is parsed as a regular variable, not a subscript dimension
 2. When the compiler tries to resolve `dim_ab_map` as a subscript, it doesn't exist
 3. `hasMapping()` receives `undefined` and crashes trying to access `.mappings`
@@ -148,12 +161,14 @@ The problem:
 **Option A: Implement XMILE Subscript Mapping Support**
 
 Research how XMILE represents dimension mappings and implement parsing support. This may require:
+
 1. Understanding XMILE's mapping syntax (if it exists)
 2. Modifying `parse-xmile-dimension-def.ts` to populate `subscriptMappings`
 
 **Option B: Handle Variables as Subscript References**
 
 If XMILE uses variables to represent mappings (like the `dim ab map` aux variable):
+
 1. Detect when a subscript reference is actually a variable name
 2. Evaluate the variable to get the actual subscript value
 3. This is more complex as it involves runtime subscript resolution
@@ -161,11 +176,13 @@ If XMILE uses variables to represent mappings (like the `dim ab map` aux variabl
 **Option C: Skip Test with Documentation**
 
 If XMILE fundamentally doesn't support subscript mappings:
+
 1. Document this limitation
 2. Skip the arrays test for XMILE
 3. Users would need to restructure models without mappings
 
 ### Complexity: HIGH (Options A/B) or LOW (Option C)
+
 - Requires understanding XMILE subscript semantics
 - May involve fundamental parser changes
 - Could require runtime subscript resolution
@@ -175,6 +192,7 @@ If XMILE fundamentally doesn't support subscript mappings:
 ## Error 4: delay - Numerical Data Differences (✅ FIXED)
 
 ### Symptom (RESOLVED)
+
 ```
 _d11[_a1] time=7.00 vensim=0 sde=-10920 diff=1092000.000000%
 _d8[_a1] time=7.00 vensim=0 sde=-260 diff=26000.000000%
@@ -192,9 +210,10 @@ See commit 731ed4514a74de314e67ac2bc1037ee264322a69.
 
 ---
 
-## Error 5: delayfixed/delayfixed2 - Unhandled _DELAY Function (FIXED)
+## Error 5: delayfixed/delayfixed2 - Unhandled \_DELAY Function (FIXED)
 
 ### Symptom
+
 ```
 Error: Unhandled function '_DELAY' in readEquations for 'receiving'
 ```
@@ -225,14 +244,16 @@ case '_DELAY':
 ```
 
 ### Complexity: LOW
+
 - Copy existing `_DELAY_FIXED` case logic
 - May need to verify parameter order matches Stella's
 
 ---
 
-## Error 6: depreciate - Unhandled _DEPRECIATE_STRAIGHTLINE Function
+## Error 6: depreciate - Unhandled \_DEPRECIATE_STRAIGHTLINE Function
 
 ### Symptom
+
 ```
 Error: Unhandled function '_DEPRECIATE_STRAIGHTLINE' in readEquations for 'Depreciated Amount'
 ```
@@ -262,14 +283,16 @@ case '_DEPRECIATE_STRAIGHTLINE':
 **Note:** The depreciate.stmx file includes a complete macro definition showing Stella's depreciation implementation. Need to verify the parameter semantics match Vensim's.
 
 ### Complexity: LOW-MEDIUM
+
 - Similar to existing Vensim handling
 - May need parameter verification between Vensim/Stella implementations
 
 ---
 
-## Error 7: elmcount - Unhandled _SIZE Function (FIXED)
+## Error 7: elmcount - Unhandled \_SIZE Function (FIXED)
 
 ### Symptom
+
 ```
 Error: Unhandled function '_SIZE' in readEquations for 'a'
 ```
@@ -279,6 +302,7 @@ Error: Unhandled function '_SIZE' in readEquations for 'a'
 `SIZE(DimA)` is an XMILE-specific function that returns the number of elements in a dimension. There is no direct Vensim equivalent (Vensim uses `ELMCOUNT`).
 
 Usage in elmcount model:
+
 ```xml
 <eqn>SIZE(DimA)</eqn>
 ```
@@ -292,6 +316,7 @@ This should return 3 (since DimA has elements A1, A2, A3).
 This is a **compile-time constant** that can be resolved during parsing:
 
 1. Add case in `validateStellaFunctionCall()`:
+
 ```javascript
 case '_SIZE':
   validateCallDepth(callExpr, context)
@@ -302,6 +327,7 @@ case '_SIZE':
 ```
 
 2. In code generation (`gen-expr.js`), resolve the dimension size:
+
 ```javascript
 case '_SIZE': {
   const dimArg = callExpr.args[0]
@@ -312,14 +338,16 @@ case '_SIZE': {
 ```
 
 ### Complexity: LOW-MEDIUM
+
 - Need to resolve dimension at compile time
 - Simple once dimension lookup is implemented
 
 ---
 
-## Error 8: trend - Unhandled _SAFEDIV Function (✅ FIXED)
+## Error 8: trend - Unhandled \_SAFEDIV Function (✅ FIXED)
 
 ### Symptom (RESOLVED)
+
 ```
 Error: Unhandled function '_SAFEDIV' in readEquations for 'trend1'
 ```
@@ -345,33 +373,35 @@ Two issues were found:
 Based on complexity and impact, here's the recommended implementation order:
 
 ### ✅ COMPLETED - Quick Wins
-1. **_SAFEDIV** → Map to ZIDZ ✓ (commit 940d069f)
-2. **_DELAY** → Copy DELAY_FIXED logic ✓ (commit 631cb38c)
-3. **_SIZE** → Compile-time dimension resolution ✓ (commit 5099835c)
+
+1. **\_SAFEDIV** → Map to ZIDZ ✓ (commit 940d069f)
+2. **\_DELAY** → Copy DELAY_FIXED logic ✓ (commit 631cb38c)
+3. **\_SIZE** → Compile-time dimension resolution ✓ (commit 5099835c)
 4. **active_initial** → Handle `<init_eqn>` in XMILE parser ✓
-5. **_DEPRECIATE_STRAIGHTLINE** → Add to validateStellaFunctionCall ✓
+5. **\_DEPRECIATE_STRAIGHTLINE** → Add to validateStellaFunctionCall ✓
 6. **delay numerical fix** → Updated test model TIME STEP to 0.25 ✓ (commit 731ed451)
 7. **trend numerical fix** → Regenerated Stella outputs ✓ (commit 6030a7a3)
 
 ### Deferred (HIGH complexity)
+
 8. **arrays subscript mapping** → Research XMILE mapping support
-9. **_ALLOCATE** → Significant signature differences, may skip
+9. **\_ALLOCATE** → Significant signature differences, may skip
 
 ---
 
 ## Files Modified
 
-| File | Changes |
-|------|---------|
-| `packages/compile/src/model/read-equations.js` | Added cases for _DELAY, _SIZE, _SAFEDIV, _DEPRECIATE_STRAIGHTLINE, _ACTIVE_INITIAL to validateStellaFunctionCall() |
-| `packages/compile/src/generate/gen-expr.js` | Added code generation for _SIZE (maps to ELMCOUNT), _SAFEDIV (maps to ZIDZ), _DELAY (maps to DELAY_FIXED) |
-| `packages/parse/src/xmile/parse-xmile-variable-def.ts` | Added support for `<init_eqn>` element to synthesize ACTIVE_INITIAL function call |
-| `models/delay/delay.mdl`, `models/delay/delay.stmx` | Updated TIME STEP from 1 to 0.25 for numerical accuracy |
-| `models/delay/delay.csv`, `models/delay/delay.dat` | Regenerated expected outputs with new TIME STEP |
-| `models/trend/trend.csv` | Regenerated Stella expected outputs |
+| File                                                   | Changes                                                                                                                 |
+| ------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------- |
+| `packages/compile/src/model/read-equations.js`         | Added cases for \_DELAY, \_SIZE, \_SAFEDIV, \_DEPRECIATE_STRAIGHTLINE, \_ACTIVE_INITIAL to validateStellaFunctionCall() |
+| `packages/compile/src/generate/gen-expr.js`            | Added code generation for \_SIZE (maps to ELMCOUNT), \_SAFEDIV (maps to ZIDZ), \_DELAY (maps to DELAY_FIXED)            |
+| `packages/parse/src/xmile/parse-xmile-variable-def.ts` | Added support for `<init_eqn>` element to synthesize ACTIVE_INITIAL function call                                       |
+| `models/delay/delay.mdl`, `models/delay/delay.stmx`    | Updated TIME STEP from 1 to 0.25 for numerical accuracy                                                                 |
+| `models/delay/delay.csv`, `models/delay/delay.dat`     | Regenerated expected outputs with new TIME STEP                                                                         |
+| `models/trend/trend.csv`                               | Regenerated Stella expected outputs                                                                                     |
 
 ## Files Still Needing Changes
 
-| File | Changes |
-|------|---------|
+| File                                                    | Changes                                |
+| ------------------------------------------------------- | -------------------------------------- |
 | `packages/parse/src/xmile/parse-xmile-dimension-def.ts` | (Future) Add subscript mapping support |
