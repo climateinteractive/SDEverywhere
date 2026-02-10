@@ -1,4 +1,4 @@
-// Copyright (c) 2023 Climate Interactive / New Venture Fund
+// Copyright (c) 2023-2026 Climate Interactive / New Venture Fund
 
 import type { XmlElement } from '@rgrove/parse-xml'
 
