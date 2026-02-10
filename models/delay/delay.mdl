@@ -33,5 +33,5 @@ d12[SubA] = k * DELAY3I(input 2[SubA], delay 2, init 2[SubA]) ~~|
 
 INITIAL TIME = 0 ~~|
 FINAL TIME = 10 ~~|
-TIME STEP = 1 ~~|
-SAVEPER = TIME STEP ~~|
+TIME STEP = 0.25 ~~|
+SAVEPER = 1 ~~|
