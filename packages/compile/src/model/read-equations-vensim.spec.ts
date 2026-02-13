@@ -100,7 +100,7 @@ function v(lhs: string, formula: string, overrides?: Partial<Variable>): Variabl
   return variable as Variable
 }
 
-describe('readEquations', () => {
+describe('readEquations (from Vensim model)', () => {
   it('should work for simple equation with explicit parentheses', () => {
     const vars = readInlineModel(`
       x = 1 ~~|
@@ -575,7 +575,47 @@ describe('readEquations', () => {
       ])
     })
 
-    it('should work when RHS variable is NON-apply-to-all (2D) and is accessed with specific subscripts', () => {
+    it('should work when RHS variable is NON-apply-to-all (2D with separated definitions) and is accessed with specific subscripts', () => {
+      const vars = readInlineModel(`
+        DimA: A1, A2 ~~|
+        DimB: B1, B2 ~~|
+        x[A1, B1] = 1 ~~|
+        x[A1, B2] = 2 ~~|
+        x[A2, B1] = 3 ~~|
+        x[A2, B2] = 4 ~~|
+        y = x[A1, B2] ~~|
+      `)
+      expect(vars).toEqual([
+        v('x[A1,B1]', '1', {
+          refId: '_x[_a1,_b1]',
+          subscripts: ['_a1', '_b1'],
+          varType: 'const'
+        }),
+        v('x[A1,B2]', '2', {
+          refId: '_x[_a1,_b2]',
+          subscripts: ['_a1', '_b2'],
+          varType: 'const'
+        }),
+        v('x[A2,B1]', '3', {
+          refId: '_x[_a2,_b1]',
+          subscripts: ['_a2', '_b1'],
+          varType: 'const'
+        }),
+        v('x[A2,B2]', '4', {
+          refId: '_x[_a2,_b2]',
+          subscripts: ['_a2', '_b2'],
+          varType: 'const'
+        }),
+        // expandedRefIdsForVar(_y, '_x', ['_a1', '_b2'])
+        //   -> ['_x[_a1,_b2]']
+        v('y', 'x[A1,B2]', {
+          refId: '_y',
+          references: ['_x[_a1,_b2]']
+        })
+      ])
+    })
+
+    it('should work when RHS variable is NON-apply-to-all (2D with shorthand definition) and is accessed with specific subscripts', () => {
       const vars = readInlineModel(`
         DimA: A1, A2 ~~|
         DimB: B1, B2 ~~|

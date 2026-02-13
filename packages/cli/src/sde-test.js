@@ -18,6 +18,10 @@ export let builder = {
     choices: ['js', 'c'],
     default: 'js'
   },
+  tooldat: {
+    describe: 'pathname of the tool DAT file to compare to SDE output',
+    type: 'string'
+  },
   builddir: {
     describe: 'build directory',
     type: 'string',
@@ -53,12 +57,19 @@ export let test = async (model, opts) => {
     // Convert the TSV log file to a DAT file in the same directory.
     opts.dat = true
     await log(logPathname, opts)
-    // Assume there is a Vensim-created DAT file named {modelName}.dat in the model directory.
-    // Compare it to the SDE DAT file.
-    let vensimPathname = path.join(modelDirname, `${modelName}.dat`)
+    let toolDatPathname
+    if (opts.tooldat) {
+      // Use the provided DAT file for comparison
+      toolDatPathname = opts.tooldat
+    } else {
+      // Assume there is a DAT file created by the modeling tool named {modelName}.dat
+      // in the model directory
+      toolDatPathname = path.join(modelDirname, `${modelName}.dat`)
+    }
     let p = path.parse(logPathname)
-    let sdePathname = path.format({ dir: p.dir, name: p.name, ext: '.dat' })
-    let noDiffs = await compare(vensimPathname, sdePathname, opts)
+    let sdeDatPathname = path.format({ dir: p.dir, name: p.name, ext: '.dat' })
+    // Compare SDE-generated DAT file to the tool-generated DAT file
+    let noDiffs = await compare(toolDatPathname, sdeDatPathname, opts)
     if (!noDiffs) {
       // Exit with a non-zero error code if differences were detected
       console.error()
