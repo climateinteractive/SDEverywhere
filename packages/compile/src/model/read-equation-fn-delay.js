@@ -16,10 +16,12 @@ import Model from './model.js'
 /**
  * Generate level and aux variables that implement one of the following `DELAY` function
  * call variants:
- * - DELAY1
- * - DELAY1I
- * - DELAY3
- * - DELAY3I
+ * - DELAY1 (Vensim)
+ * - DELAY1I (Vensim)
+ * - DELAY3 (Vensim)
+ * - DELAY3I (Vensim)
+ * - DELAY1 (Stella)
+ * - DELAY3 (Stella)
  *
  * TODO: Docs
  *

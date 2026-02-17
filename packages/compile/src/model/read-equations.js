@@ -14,7 +14,10 @@ import { generateLookup } from './read-equation-fn-with-lookup.js'
 import { readVariables } from './read-variables.js'
 
 class Context {
-  constructor(eqnLhs, refId) {
+  constructor(modelKind, eqnLhs, refId) {
+    // The kind of model being read, either 'vensim' or 'xmile'
+    this.modelKind = modelKind
+
     // The LHS of the equation being processed
     this.eqnLhs = eqnLhs
 
@@ -109,7 +112,7 @@ class Context {
    * @param {string[]} eqnStrings An array of individual equation strings in Vensim format.
    */
   defineVariables(eqnStrings) {
-    // Parse the equation text
+    // Parse the equation text, which is assumed to be in Vensim format
     const eqnText = eqnStrings.join('\n')
     const parsedModel = { kind: 'vensim', root: parseVensimModel(eqnText) }
 
@@ -131,7 +134,7 @@ class Context {
 
     vars.forEach(v => {
       // Process each variable using the same process as above
-      readEquation(v)
+      readEquation(v, 'vensim')
 
       // Inhibit output for generated variables
       v.includeInOutput = false
@@ -168,10 +171,11 @@ class Context {
  * TODO: Docs and types
  *
  * @param v {*} The `Variable` instance to process.
+ * @param {string} modelKind The kind of model being read, either 'vensim' or 'xmile'.
  */
-export function readEquation(v) {
+export function readEquation(v, modelKind) {
   const eqn = v.parsedEqn
-  const context = new Context(eqn?.lhs, v.refId)
+  const context = new Context(modelKind, eqn?.lhs, v.refId)
 
   // Visit the RHS of the equation.  If the equation is undefined, it is a synthesized
   // variable (e.g., `Time`), in which case we skip this step.
@@ -383,257 +387,432 @@ function visitFunctionCall(v, callExpr, context) {
   // (they will be visited when processing the replacement equations)
   let visitArgs = true
 
-  switch (callExpr.fnId) {
-    //
-    //
-    // 1-argument functions...
-    //
-    //
+  // If the `unhandled` flag is set, it means we did not match a known function
+  let unhandled = false
 
-    case '_ABS':
-    case '_ARCCOS':
-    case '_ARCSIN':
-    case '_ARCTAN':
-    case '_COS':
-    case '_ELMCOUNT':
-    case '_EXP':
-    case '_GAMMA_LN':
-    case '_INTEGER':
-    case '_LN':
-    case '_SIN':
-    case '_SQRT':
-    case '_SUM':
-    case '_TAN':
-    case '_VMAX':
-    case '_VMIN':
-      validateCallArgs(callExpr, 1)
-      break
+  // Helper function that validates a function call for a Vensim model
+  function validateVensimFunctionCall() {
+    switch (callExpr.fnId) {
+      //
+      //
+      // 1-argument functions...
+      //
+      //
 
-    //
-    //
-    // 2-argument functions...
-    //
-    //
+      case '_ABS':
+      case '_ARCCOS':
+      case '_ARCSIN':
+      case '_ARCTAN':
+      case '_COS':
+      case '_ELMCOUNT':
+      case '_EXP':
+      case '_GAMMA_LN':
+      case '_INTEGER':
+      case '_LN':
+      case '_SIN':
+      case '_SQRT':
+      case '_SUM':
+      case '_TAN':
+      case '_VMAX':
+      case '_VMIN':
+        validateCallArgs(callExpr, 1)
+        break
 
-    case '_LOOKUP_BACKWARD':
-    case '_LOOKUP_FORWARD':
-    case '_LOOKUP_INVERT':
-    case '_MAX':
-    case '_MIN':
-    case '_MODULO':
-    case '_POW':
-    case '_POWER':
-    case '_PULSE':
-    case '_QUANTUM':
-    case '_STEP':
-    case '_VECTOR_ELM_MAP':
-    case '_VECTOR_SORT_ORDER':
-    case '_ZIDZ':
-      validateCallArgs(callExpr, 2)
-      break
+      //
+      //
+      // 2-argument functions...
+      //
+      //
 
-    //
-    //
-    // 3-plus-argument functions...
-    //
-    //
+      case '_LOOKUP_BACKWARD':
+      case '_LOOKUP_FORWARD':
+      case '_LOOKUP_INVERT':
+      case '_MAX':
+      case '_MIN':
+      case '_MODULO':
+      case '_POW':
+      case '_POWER':
+      case '_PULSE':
+      case '_QUANTUM':
+      case '_STEP':
+      case '_VECTOR_ELM_MAP':
+      case '_VECTOR_SORT_ORDER':
+      case '_ZIDZ':
+        validateCallArgs(callExpr, 2)
+        break
 
-    case '_GET_DATA_BETWEEN_TIMES':
-    case '_RAMP':
-    case '_XIDZ':
-      validateCallArgs(callExpr, 3)
-      break
+      //
+      //
+      // 3-plus-argument functions...
+      //
+      //
 
-    case '_PULSE_TRAIN':
-      validateCallArgs(callExpr, 4)
-      break
+      case '_GET_DATA_BETWEEN_TIMES':
+      case '_RAMP':
+      case '_XIDZ':
+        validateCallArgs(callExpr, 3)
+        break
 
-    case '_VECTOR_SELECT':
-      validateCallArgs(callExpr, 5)
-      break
+      case '_PULSE_TRAIN':
+        validateCallArgs(callExpr, 4)
+        break
 
-    //
-    //
-    // Complex functions...
-    //
-    //
+      case '_VECTOR_SELECT':
+        validateCallArgs(callExpr, 5)
+        break
 
-    case '_ACTIVE_INITIAL':
-      validateCallDepth(callExpr, context)
-      validateCallArgs(callExpr, 2)
-      v.hasInitValue = true
-      // The 2nd argument is used at init time
-      argModes[1] = 'init'
-      break
+      //
+      //
+      // Complex functions...
+      //
+      //
 
-    case '_ALLOCATE_AVAILABLE':
-      validateCallDepth(callExpr, context)
-      validateCallArgs(callExpr, 3)
-      break
+      case '_ACTIVE_INITIAL':
+        validateCallDepth(callExpr, context)
+        validateCallArgs(callExpr, 2)
+        v.hasInitValue = true
+        // The 2nd argument is used at init time
+        argModes[1] = 'init'
+        break
 
-    case '_DELAY1':
-    case '_DELAY1I':
-    case '_DELAY3':
-    case '_DELAY3I':
-      validateCallArgs(callExpr, callExpr.fnId.endsWith('I') ? 3 : 2)
-      addFnReference = false
-      visitArgs = false
-      generateDelayVariables(v, callExpr, context)
-      break
+      case '_ALLOCATE_AVAILABLE':
+        validateCallDepth(callExpr, context)
+        validateCallArgs(callExpr, 3)
+        break
 
-    case '_DELAY_FIXED':
-      validateCallDepth(callExpr, context)
-      validateCallArgs(callExpr, 3)
-      v.varType = 'level'
-      v.varSubtype = 'fixedDelay'
-      v.hasInitValue = true
-      v.fixedDelayVarName = canonicalName(newFixedDelayVarName())
-      // The 2nd and 3rd arguments are used at init time
-      argModes[1] = 'init'
-      argModes[2] = 'init'
-      break
+      case '_DELAY1':
+      case '_DELAY1I':
+      case '_DELAY3':
+      case '_DELAY3I':
+        validateCallArgs(callExpr, callExpr.fnId.endsWith('I') ? 3 : 2)
+        addFnReference = false
+        visitArgs = false
+        generateDelayVariables(v, callExpr, context)
+        break
 
-    case '_DEPRECIATE_STRAIGHTLINE':
-      validateCallDepth(callExpr, context)
-      validateCallArgs(callExpr, 4)
-      v.varSubtype = 'depreciation'
-      v.hasInitValue = true
-      v.depreciationVarName = canonicalName(newDepreciationVarName())
-      // The 2nd and 3rd arguments are used at init time
-      // TODO: The 3rd (fisc) argument is not currently supported
-      // TODO: Shouldn't the last (init) argument be marked as 'init' here?  (It's
-      // not treated as 'init' in the legacy reader.)
-      argModes[1] = 'init'
-      argModes[2] = 'init'
-      break
+      case '_DELAY_FIXED':
+        validateCallDepth(callExpr, context)
+        validateCallArgs(callExpr, 3)
+        v.varType = 'level'
+        v.varSubtype = 'fixedDelay'
+        v.hasInitValue = true
+        v.fixedDelayVarName = canonicalName(newFixedDelayVarName())
+        // The 2nd and 3rd arguments are used at init time
+        argModes[1] = 'init'
+        argModes[2] = 'init'
+        break
 
-    case '_GAME':
-      validateCallDepth(callExpr, context)
-      validateCallArgs(callExpr, 1)
-      generateGameVariables(v, callExpr, context)
-      break
+      case '_DEPRECIATE_STRAIGHTLINE':
+        validateCallDepth(callExpr, context)
+        validateCallArgs(callExpr, 4)
+        v.varSubtype = 'depreciation'
+        v.hasInitValue = true
+        v.depreciationVarName = canonicalName(newDepreciationVarName())
+        // The 2nd and 3rd arguments are used at init time
+        // TODO: The 3rd (fisc) argument is not currently supported
+        // TODO: Shouldn't the last (init) argument be marked as 'init' here?  (It's
+        // not treated as 'init' in the legacy reader.)
+        argModes[1] = 'init'
+        argModes[2] = 'init'
+        break
 
-    case '_GET_DIRECT_CONSTANTS': {
-      validateCallDepth(callExpr, context)
-      validateCallArgs(callExpr, 3)
-      validateCallArgType(callExpr, 0, 'string')
-      validateCallArgType(callExpr, 1, 'string')
-      validateCallArgType(callExpr, 2, 'string')
-      addFnReference = false
-      v.varType = 'const'
-      v.directConstArgs = {
-        file: callExpr.args[0].text,
-        tab: callExpr.args[1].text,
-        startCell: callExpr.args[2].text
+      case '_GAME':
+        validateCallDepth(callExpr, context)
+        validateCallArgs(callExpr, 1)
+        generateGameVariables(v, callExpr, context)
+        break
+
+      case '_GET_DIRECT_CONSTANTS': {
+        validateCallDepth(callExpr, context)
+        validateCallArgs(callExpr, 3)
+        validateCallArgType(callExpr, 0, 'string')
+        validateCallArgType(callExpr, 1, 'string')
+        validateCallArgType(callExpr, 2, 'string')
+        addFnReference = false
+        v.varType = 'const'
+        v.directConstArgs = {
+          file: callExpr.args[0].text,
+          tab: callExpr.args[1].text,
+          startCell: callExpr.args[2].text
+        }
+        break
       }
-      break
+
+      case '_GET_DIRECT_DATA':
+      case '_GET_DIRECT_LOOKUPS':
+        validateCallDepth(callExpr, context)
+        validateCallArgs(callExpr, 4)
+        validateCallArgType(callExpr, 0, 'string')
+        validateCallArgType(callExpr, 1, 'string')
+        validateCallArgType(callExpr, 2, 'string')
+        validateCallArgType(callExpr, 3, 'string')
+        addFnReference = false
+        v.varType = 'data'
+        v.directDataArgs = {
+          file: callExpr.args[0].text,
+          tab: callExpr.args[1].text,
+          timeRowOrCol: callExpr.args[2].text,
+          startCell: callExpr.args[3].text
+        }
+        break
+
+      case '_IF_THEN_ELSE':
+        validateCallArgs(callExpr, 3)
+        addFnReference = false
+        break
+
+      case '_INITIAL':
+        validateCallDepth(callExpr, context)
+        validateCallArgs(callExpr, 1)
+        v.varType = 'initial'
+        v.hasInitValue = true
+        // The single argument is used at init time
+        argModes[0] = 'init'
+        break
+
+      case '_INTEG':
+        validateCallDepth(callExpr, context)
+        validateCallArgs(callExpr, 2)
+        v.varType = 'level'
+        v.hasInitValue = true
+        // The 2nd argument is used at init time
+        argModes[1] = 'init'
+        break
+
+      case '_NPV':
+        validateCallArgs(callExpr, 4)
+        addFnReference = false
+        visitArgs = false
+        generateNpvVariables(v, callExpr, context)
+        break
+
+      case '_SAMPLE_IF_TRUE':
+        validateCallDepth(callExpr, context)
+        validateCallArgs(callExpr, 3)
+        v.hasInitValue = true
+        // The 3rd argument is used at init time
+        argModes[2] = 'init'
+        break
+
+      case '_SMOOTH':
+      case '_SMOOTHI':
+      case '_SMOOTH3':
+      case '_SMOOTH3I':
+        validateCallArgs(callExpr, callExpr.fnId.endsWith('I') ? 3 : 2)
+        addFnReference = false
+        visitArgs = false
+        generateSmoothVariables(v, callExpr, context)
+        break
+
+      case '_TREND':
+        validateCallArgs(callExpr, 3)
+        addFnReference = false
+        visitArgs = false
+        generateTrendVariables(v, callExpr, context)
+        break
+
+      case '_WITH_LOOKUP':
+        validateCallDepth(callExpr, context)
+        validateCallArgs(callExpr, 2)
+        generateLookup(v, callExpr, context)
+        break
+
+      default:
+        unhandled = true
+        break
     }
+  }
 
-    case '_GET_DIRECT_DATA':
-    case '_GET_DIRECT_LOOKUPS':
-      validateCallDepth(callExpr, context)
-      validateCallArgs(callExpr, 4)
-      validateCallArgType(callExpr, 0, 'string')
-      validateCallArgType(callExpr, 1, 'string')
-      validateCallArgType(callExpr, 2, 'string')
-      validateCallArgType(callExpr, 3, 'string')
-      addFnReference = false
-      v.varType = 'data'
-      v.directDataArgs = {
-        file: callExpr.args[0].text,
-        tab: callExpr.args[1].text,
-        timeRowOrCol: callExpr.args[2].text,
-        startCell: callExpr.args[3].text
-      }
-      break
+  // Helper function that validates a function call for a Stella model
+  // XXX: Currently we conflate "XMILE model" with "XMILE model as generated by Stella",
+  // so this function only handles the subset of Stella functions that are supported in
+  // SDEverywhere's runtime library
+  function validateStellaFunctionCall() {
+    switch (callExpr.fnId) {
+      //
+      //
+      // 1-argument functions...
+      //
+      //
 
-    case '_IF_THEN_ELSE':
-      validateCallArgs(callExpr, 3)
-      addFnReference = false
-      break
+      case '_ABS':
+      case '_ARCCOS':
+      case '_ARCSIN':
+      case '_ARCTAN':
+      case '_COS':
+      case '_EXP':
+      case '_GAMMALN':
+      case '_INT':
+      case '_LN':
+      case '_SIN':
+      case '_SIZE':
+      case '_SQRT':
+      case '_SUM':
+      case '_TAN':
+        break
 
-    case '_INITIAL':
-      validateCallDepth(callExpr, context)
-      validateCallArgs(callExpr, 1)
-      v.varType = 'initial'
-      v.hasInitValue = true
-      // The single argument is used at init time
-      argModes[0] = 'init'
-      break
+      //
+      //
+      // 2-argument functions...
+      //
+      //
 
-    case '_INTEG':
-      validateCallDepth(callExpr, context)
-      validateCallArgs(callExpr, 2)
-      v.varType = 'level'
-      v.hasInitValue = true
-      // The 2nd argument is used at init time
-      argModes[1] = 'init'
-      break
+      case '_LOOKUP':
+      case '_LOOKUPINV':
+      case '_MAX':
+      case '_MIN':
+      case '_MOD':
+      case '_SAFEDIV':
+      case '_STEP':
+        validateCallArgs(callExpr, 2)
+        break
 
-    case '_NPV':
-      validateCallArgs(callExpr, 4)
-      addFnReference = false
-      visitArgs = false
-      generateNpvVariables(v, callExpr, context)
-      break
+      //
+      //
+      // 3-plus-argument functions...
+      //
+      //
 
-    case '_SAMPLE_IF_TRUE':
-      validateCallDepth(callExpr, context)
-      validateCallArgs(callExpr, 3)
-      v.hasInitValue = true
-      // The 3rd argument is used at init time
-      argModes[2] = 'init'
-      break
+      case '_RAMP':
+        validateCallArgs(callExpr, 3)
+        break
 
-    case '_SMOOTH':
-    case '_SMOOTHI':
-    case '_SMOOTH3':
-    case '_SMOOTH3I':
-      validateCallArgs(callExpr, callExpr.fnId.endsWith('I') ? 3 : 2)
-      addFnReference = false
-      visitArgs = false
-      generateSmoothVariables(v, callExpr, context)
-      break
+      //
+      //
+      // Complex functions...
+      //
+      //
 
-    case '_TREND':
-      validateCallArgs(callExpr, 3)
-      addFnReference = false
-      visitArgs = false
-      generateTrendVariables(v, callExpr, context)
-      break
+      case '_ACTIVE_INITIAL':
+        // NOTE: Stella doesn't have a built-in `ACTIVE INITIAL` function, but our XMILE parser
+        // synthesizes an `ACTIVE INITIAL` function call for `<aux>` variable definitions that
+        // have both `<eqn>` and `<init_eqn>` elements.  This is equivalent to Vensim's
+        // `ACTIVE INITIAL` function.
+        validateCallDepth(callExpr, context)
+        validateCallArgs(callExpr, 2)
+        v.hasInitValue = true
+        // The 2nd argument is used at init time
+        argModes[1] = 'init'
+        break
 
-    case '_WITH_LOOKUP':
-      validateCallDepth(callExpr, context)
-      validateCallArgs(callExpr, 2)
-      generateLookup(v, callExpr, context)
-      break
+      case '_DELAY':
+        // Stella's DELAY function is equivalent to Vensim's DELAY FIXED function
+        validateCallDepth(callExpr, context)
+        validateCallArgs(callExpr, 3)
+        v.varType = 'level'
+        v.varSubtype = 'fixedDelay'
+        v.hasInitValue = true
+        v.fixedDelayVarName = canonicalName(newFixedDelayVarName())
+        // The 2nd and 3rd arguments are used at init time
+        argModes[1] = 'init'
+        argModes[2] = 'init'
+        break
 
-    default: {
-      // See if the function name is actually the name of a lookup variable.  For Vensim
-      // models, the antlr4-vensim grammar has separate definitions for lookup calls and
-      // function calls, but in practice they can only be differentiated in the case
-      // where the lookup has subscripts; when there are no subscripts, they get treated
-      // like normal function calls, and in that case we will end up here.  If we find
-      // a variable with the given name, then we will assume it's a lookup call, otherwise
-      // we treat it as a call of an unimplemented function.
-      const varId = callExpr.fnId.toLowerCase()
-      const referencedVar = Model.varWithName(varId)
-      if (referencedVar === undefined || referencedVar.parsedEqn.rhs.kind !== 'lookup') {
-        // Throw an error if the function is not yet implemented in SDE
-        // TODO: This will report false positives in the case of user-defined macros.  For now
-        // we provide the ability to turn off this check via an environment variable, but we
-        // should consider providing a way for the user to declare the names of any user-defined
-        // macros so that we can skip this check when those macros are detected.
-        if (process.env.SDE_REPORT_UNSUPPORTED_FUNCTIONS !== '0') {
-          const msg = `Unhandled function '${callExpr.fnId}' in readEquations for '${v.modelLHS}'`
-          if (process.env.SDE_REPORT_UNSUPPORTED_FUNCTIONS === 'warn') {
-            console.warn(`WARNING: ${msg}`)
-          } else {
-            throw new Error(msg)
-          }
+      case '_DEPRECIATE_STRAIGHTLINE':
+        // Stella's DEPRECIATE_STRAIGHTLINE function has the same signature as Vensim's
+        validateCallDepth(callExpr, context)
+        validateCallArgs(callExpr, 4)
+        v.varSubtype = 'depreciation'
+        v.hasInitValue = true
+        v.depreciationVarName = canonicalName(newDepreciationVarName())
+        // The 2nd and 3rd arguments are used at init time
+        argModes[1] = 'init'
+        argModes[2] = 'init'
+        break
+
+      case '_DELAY1':
+      case '_DELAY3':
+        // Stella's DELAY1 and DELAY3 functions can take a third "initial" argument (in which case
+        // they behave like Vensim's DELAY1I and DELAY3I functions)
+        validateCallArgs(callExpr, [2, 3])
+        addFnReference = false
+        visitArgs = false
+        generateDelayVariables(v, callExpr, context)
+        break
+
+      case '_IF_THEN_ELSE':
+        validateCallArgs(callExpr, 3)
+        addFnReference = false
+        break
+
+      case '_INIT':
+        validateCallDepth(callExpr, context)
+        validateCallArgs(callExpr, 1)
+        v.varType = 'initial'
+        v.hasInitValue = true
+        // The single argument is used at init time
+        argModes[0] = 'init'
+        break
+
+      case '_INTEG':
+        // NOTE: Stella doesn't have a built-in `INTEG` function, but our XMILE parser synthesizes
+        // an `INTEG` function call for `<stock>` variable definitions using the `<inflow>` and
+        // `<outflow>` elements as the `rate` argument for the Vensim-style `INTEG` function call
+        validateCallDepth(callExpr, context)
+        validateCallArgs(callExpr, 2)
+        v.varType = 'level'
+        v.hasInitValue = true
+        // The 2nd argument is used at init time
+        argModes[1] = 'init'
+        break
+
+      case '_SMTH1':
+      case '_SMTH3':
+        // Stella's SMTH1 and SMTH3 functions can take a third "initial" argument (in which case
+        // they behave like Vensim's SMOOTHI and SMOOTH3I functions)
+        validateCallArgs(callExpr, [2, 3])
+        addFnReference = false
+        visitArgs = false
+        generateSmoothVariables(v, callExpr, context)
+        break
+
+      case '_TREND':
+        validateCallArgs(callExpr, 3)
+        addFnReference = false
+        visitArgs = false
+        generateTrendVariables(v, callExpr, context)
+        break
+
+      default:
+        unhandled = true
+        break
+    }
+  }
+
+  // Validate the function call based on the model kind
+  if (context.modelKind === 'vensim') {
+    validateVensimFunctionCall()
+  } else if (context.modelKind === 'xmile') {
+    validateStellaFunctionCall()
+  } else {
+    throw new Error(`Unknown model kind: ${context.modelKind}`)
+  }
+
+  if (unhandled) {
+    // We did not match a known function, so we need to check if this is a lookup call.
+    // See if the function name is actually the name of a lookup variable.  For Vensim
+    // models, the antlr4-vensim grammar has separate definitions for lookup calls and
+    // function calls, but in practice they can only be differentiated in the case
+    // where the lookup has subscripts; when there are no subscripts, they get treated
+    // like normal function calls, and in that case we will end up here.  If we find
+    // a variable with the given name, then we will assume it's a lookup call, otherwise
+    // we treat it as a call of an unimplemented function.
+    const varId = callExpr.fnId.toLowerCase()
+    const referencedVar = Model.varWithName(varId)
+    if (referencedVar === undefined || referencedVar.parsedEqn.rhs.kind !== 'lookup') {
+      // Throw an error if the function is not yet implemented in SDE
+      // TODO: This will report false positives in the case of user-defined macros.  For now
+      // we provide the ability to turn off this check via an environment variable, but we
+      // should consider providing a way for the user to declare the names of any user-defined
+      // macros so that we can skip this check when those macros are detected.
+      if (process.env.SDE_REPORT_UNSUPPORTED_FUNCTIONS !== '0') {
+        const msg = `Unhandled function '${callExpr.fnId}' in readEquations for '${v.modelLHS}'`
+        if (process.env.SDE_REPORT_UNSUPPORTED_FUNCTIONS === 'warn') {
+          console.warn(`WARNING: ${msg}`)
+        } else {
+          throw new Error(msg)
         }
       }
-      break
     }
   }
 
@@ -725,10 +904,20 @@ function validateCallDepth(callExpr, context) {
  * Throw an error if the given function call does not have the expected number of arguments.
  */
 function validateCallArgs(callExpr, expectedArgCount) {
-  if (callExpr.args.length !== expectedArgCount) {
-    throw new Error(
-      `Expected '${callExpr.fnName}' function call to have ${expectedArgCount} arguments but got ${callExpr.args.length} `
-    )
+  if (Array.isArray(expectedArgCount)) {
+    if (!expectedArgCount.includes(callExpr.args.length)) {
+      throw new Error(
+        `Expected '${callExpr.fnName}' function call to have ${expectedArgCount.join('|')} arguments but got ${
+          callExpr.args.length
+        }`
+      )
+    }
+  } else {
+    if (callExpr.args.length !== expectedArgCount) {
+      throw new Error(
+        `Expected '${callExpr.fnName}' function call to have ${expectedArgCount} arguments but got ${callExpr.args.length}`
+      )
+    }
   }
 }
 
@@ -947,5 +1136,123 @@ function resolveRhsSubOrDim(lhsVariable, lhsSubIds, rhsSubId) {
     }
   } else {
     throw new Error(`Failed to find LHS dimension for RHS dimension ${rhsSubId} in lhs=${lhsVariable.refId}`)
+  }
+}
+
+/**
+ * Resolve any XMILE dimension wildcards in the given equation and return a new equation
+ * that has the `_SDE_WILDCARD_` placeholder replaced with the actual dimension name.
+ *
+ * @param {*} variable The `Variable` instance to process.
+ * @returns {*} The parsed equation with the `_SDE_WILDCARD_` placeholder replaced with the
+ * actual dimension name, or `undefined` if the equation does not contain any wildcards.
+ */
+export function resolveXmileDimensionWildcards(variable) {
+  const eqn = variable.parsedEqn
+  if (!eqn.rhs || eqn.rhs.kind !== 'expr') {
+    return undefined
+  }
+
+  // Create a deep copy of the equation and resolve wildcards
+  let hasWildcards = false
+  function resolveWildcardsInExpr(expr) {
+    switch (expr.kind) {
+      case 'variable-ref': {
+        if (!expr.subscriptRefs) {
+          return expr
+        }
+
+        // Check if this variable reference has wildcards
+        let varRefHasWildcard = false
+        const newSubscriptRefs = expr.subscriptRefs.map((subRef, subIndex) => {
+          if (subRef.subId.startsWith('__sde_wildcard_')) {
+            varRefHasWildcard = true
+            hasWildcards = true
+
+            // Look up the referenced variable to get its dimensions
+            const referencedVars = Model.varsWithName(expr.varId)
+            if (referencedVars && referencedVars.length > 0) {
+              // Get the dimension ID at this index from the referenced variable
+              const referencedDimOrSubId = referencedVars[0].subscripts[subIndex]
+
+              // Get the dimension name for the ID
+              const referencedDimOrSub = sub(referencedDimOrSubId)
+              let referencedDimName
+              let referencedDimId
+              if (isIndex(referencedDimOrSubId)) {
+                // This is a subscript, so get the parent dimension name and ID
+                const parentDim = sub(referencedDimOrSub.family)
+                referencedDimName = parentDim.modelName
+                referencedDimId = parentDim.name
+              } else {
+                // This is a dimension, so take its name and ID directly
+                referencedDimName = referencedDimOrSub.modelName
+                referencedDimId = referencedDimOrSub.name
+              }
+
+              // Preserve any trailing characters (like '!') from the wildcard
+              const trailingChars = subRef.subId.substring('__sde_wildcard_'.length)
+              return {
+                subName: referencedDimName + trailingChars,
+                subId: referencedDimId + trailingChars
+              }
+            } else {
+              // If we can't find the referenced variable or it has no dimensions, keep the wildcard
+              return subRef
+            }
+          }
+          return subRef
+        })
+
+        if (varRefHasWildcard) {
+          return { ...expr, subscriptRefs: newSubscriptRefs }
+        }
+        return expr
+      }
+
+      case 'binary-op':
+        return {
+          ...expr,
+          lhs: resolveWildcardsInExpr(expr.lhs),
+          rhs: resolveWildcardsInExpr(expr.rhs)
+        }
+
+      case 'parens':
+      case 'unary-op':
+        return { ...expr, expr: resolveWildcardsInExpr(expr.expr) }
+
+      case 'function-call': {
+        const newArgs = expr.args.map(arg => resolveWildcardsInExpr(arg))
+        return { ...expr, args: newArgs }
+      }
+
+      case 'lookup-call':
+        return { ...expr, arg: resolveWildcardsInExpr(expr.arg) }
+
+      case 'number':
+      case 'string':
+      case 'keyword':
+      case 'lookup-def':
+        return expr
+
+      default:
+        throw new Error(`Unhandled expression kind '${expr.kind}' when reading '${variable.modelLHS}'`)
+    }
+  }
+
+  const resolvedRhs = resolveWildcardsInExpr(eqn.rhs.expr)
+  if (!hasWildcards) {
+    // No wildcards were found, so return the original equation
+    return undefined
+  }
+
+  // Wildcards were found, so return a new equation with the wildcards replaced with the
+  // actual dimension names
+  return {
+    ...eqn,
+    rhs: {
+      ...eqn.rhs,
+      expr: resolvedRhs
+    }
   }
 }

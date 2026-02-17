@@ -74,7 +74,7 @@ const sampleComparisonsContent = `\
         at: 20
 `
 
-export async function updateSdeConfig(projDir: string, mdlPath: string, genFormat: string): Promise<void> {
+export async function updateSdeConfig(projDir: string, modelPath: string, genFormat: string): Promise<void> {
   // Read the `sde.config.js` file from the template
   const configPath = joinPath(projDir, 'sde.config.js')
   let configText = await readFile(configPath, 'utf8')
@@ -82,8 +82,8 @@ export async function updateSdeConfig(projDir: string, mdlPath: string, genForma
   // Set the code generation format to the chosen format
   configText = configText.replace(`const genFormat = 'js'`, `const genFormat = '${genFormat}'`)
 
-  // Replace instances of `model/MODEL_NAME.mdl` with the path to the chosen mdl file
-  configText = configText.replaceAll('model/MODEL_NAME.mdl', mdlPath)
+  // Replace instances of `model/MODEL_NAME.mdl` with the path to the chosen model file
+  configText = configText.replaceAll('model/MODEL_NAME.mdl', modelPath)
 
   // Write the updated file
   await writeFile(configPath, configText)
@@ -126,17 +126,17 @@ export async function generateSampleYamlFiles(projDir: string): Promise<void> {
   await generateYaml(projDir, 'comparisons', sampleComparisonsContent)
 }
 
-export async function chooseGenConfig(projDir: string, mdlPath: string): Promise<void> {
-  // TODO: For now we eagerly read the mdl file; maybe change this to only load it if
+export async function chooseGenConfig(projDir: string, modelPath: string): Promise<void> {
+  // TODO: For now we eagerly read the model file; maybe change this to only load it if
   // the user chooses to generate graph and/or slider config
   let mdlVars: MdlVariable[]
   try {
     // Get the list of variables available in the model
-    mdlVars = await readModelVars(projDir, mdlPath)
+    mdlVars = await readModelVars(projDir, modelPath)
   } catch (e) {
     console.log(e)
     ora(
-      yellow('The mdl file failed to load. We will continue setting things up, and you can diagnose the issue later.')
+      yellow('The model file failed to load. We will continue setting things up, and you can diagnose the issue later.')
     ).warn()
     return
   }
@@ -460,34 +460,36 @@ function escapeCsvField(s: string): string {
   return s.includes(',') ? `"${s}"` : s
 }
 
-async function readModelVars(projDir: string, mdlPath: string): Promise<MdlVariable[]> {
+async function readModelVars(projDir: string, modelPath: string): Promise<MdlVariable[]> {
   // TODO: This function contains a subset of the logic from `sde-generate.js` in
   // the `cli` package; should revisit
-  // let { modelDirname, modelName, modelPathname } = modelPathProps(model)
 
   // Ensure the `build` directory exists (under the `sde-prep` directory)
   const buildDir = resolvePath(projDir, 'sde-prep', 'build')
   await mkdir(buildDir, { recursive: true })
 
-  // Use an empty model spec; this will make SDE look at all variables in the mdl
+  // Use an empty model spec; this will make SDE look at all variables in the model file
   const spec = {}
 
-  // Try parsing the mdl file to generate the list of variables
+  // Try parsing the model file to generate the list of variables
   // TODO: This depends on some `compile` package APIs that are not yet considered stable.
   // Ideally we'd use an API that does not write files but instead returns an in-memory
   // object in a specified format.
 
   // Read the model file
-  const mdlFile = resolvePath(projDir, mdlPath)
-  const mdlContent = await readFile(mdlFile, 'utf8')
+  const modelFile = resolvePath(projDir, modelPath)
+  const modelContent = await readFile(modelFile, 'utf8')
+
+  // Determine the model kind based on the presence of an `<xmile>` tag
+  const modelKind = modelContent.includes('<xmile') ? 'xmile' : 'vensim'
 
   // Parse the model and generate the variable list
-  const mdlDir = dirname(mdlFile)
-  const mdlName = parsePath(mdlFile).name
-  await parseAndGenerate(mdlContent, spec, ['printVarList'], mdlDir, mdlName, buildDir)
+  const modelDir = dirname(modelFile)
+  const modelName = parsePath(modelFile).name
+  await parseAndGenerate(modelContent, modelKind, spec, ['printVarList'], modelDir, modelName, buildDir)
 
-  // Read `build/{mdl}.json`
-  const jsonListFile = joinPath(buildDir, `${mdlName}.json`)
+  // Read `build/{model}.json`
+  const jsonListFile = joinPath(buildDir, `${modelName}.json`)
   const jsonListContent = await readFile(jsonListFile, 'utf8')
   const jsonList = JSON.parse(jsonListContent)
   const varObjs = jsonList.variables

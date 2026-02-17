@@ -70,7 +70,7 @@ function readAndResolveSubscripts(modelName: string): any[] {
   return readSubscriptsFromSource({ modelName }, /*resolve=*/ true)
 }
 
-describe('readSubscriptRanges + resolveSubscriptRanges', () => {
+describe('readSubscriptRanges + resolveSubscriptRanges (from Vensim model)', () => {
   it('should work for a subscript range with explicit subscripts', () => {
     const ranges = `DimA: A1, A2, A3 ~~|`
 

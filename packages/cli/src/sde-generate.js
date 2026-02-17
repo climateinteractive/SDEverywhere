@@ -57,7 +57,7 @@ export let handler = async argv => {
 
 export let generate = async (model, opts) => {
   // Get the model name and directory from the model argument.
-  let { modelDirname, modelName, modelPathname } = modelPathProps(model)
+  let { modelDirname, modelName, modelPathname, modelKind } = modelPathProps(model)
   // Ensure the build directory exists.
   let buildDirname = buildDir(opts.builddir, modelDirname)
   let spec = parseSpec(opts.spec)
@@ -87,7 +87,7 @@ export let generate = async (model, opts) => {
   if (opts.refidtest) {
     operations.push('printRefIdTest')
   }
-  await parseAndGenerate(mdlContent, spec, operations, modelDirname, modelName, buildDirname)
+  await parseAndGenerate(mdlContent, modelKind, spec, operations, modelDirname, modelName, buildDirname)
 }
 
 export default {

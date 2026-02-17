@@ -1,7 +1,9 @@
 import * as R from 'ramda'
 
+import { canonicalVarId, toPrettyString } from '@sdeverywhere/parse'
+
 import B from '../_shared/bufx.js'
-import { canonicalVensimName, decanonicalize, isIterable, strlist, vlog, vsort } from '../_shared/helpers.js'
+import { decanonicalize, isIterable, strlist, vlog, vsort } from '../_shared/helpers.js'
 import {
   addIndex,
   allAliases,
@@ -15,7 +17,7 @@ import {
 import { cName } from '../_shared/var-names.js'
 
 import { expandVar } from './expand-var-instances.js'
-import { readEquation } from './read-equations.js'
+import { readEquation, resolveXmileDimensionWildcards } from './read-equations.js'
 import { readDimensionDefs } from './read-subscripts.js'
 import { readVariables } from './read-variables.js'
 import { reduceVariables } from './reduce-variables.js'
@@ -92,9 +94,79 @@ function read(parsedModel, spec, extData, directData, modelDirname, opts) {
   timeVar.varName = '_time'
   vars.push(timeVar)
 
+  // Helper function to define a control variable for XMILE models
+  function defineXmileControlVar(varName, varId, rhsValue) {
+    let rhsExpr
+    if (typeof rhsValue === 'number') {
+      rhsExpr = {
+        kind: 'number',
+        value: rhsValue,
+        text: rhsValue.toString()
+      }
+    } else {
+      rhsExpr = {
+        kind: 'variable-ref',
+        varName: rhsValue,
+        varId: canonicalVarId(rhsValue)
+      }
+    }
+    const v = new Variable()
+    v.modelLHS = varName
+    v.varName = varId
+    v.parsedEqn = {
+      lhs: {
+        varDef: {
+          varName,
+          varId
+        }
+      },
+      rhs: {
+        kind: 'expr',
+        expr: rhsExpr
+      }
+    }
+    v.modelFormula = toPrettyString(rhsExpr, { compact: true })
+    v.includeInOutput = false
+    vars.push(v)
+  }
+
+  if (parsedModel.kind === 'xmile') {
+    // XXX: Unlike Vensim models, XMILE models do not include the control parameters as
+    // normal model equations; instead, they are defined in the `<sim_specs>` element.
+    // In addition, XMILE allows these values to be accessed in equations (e.g., `<start>`
+    // can be accessed as `STARTTIME`, `<stop>` as `STOPTIME`, and `<dt>` as `DT`).
+    // For compatibility with the existing runtime code (which expects these variables
+    // to be defined using the Vensim names), we will synthesize variables using the
+    // Vensim names (e.g., `INITIAL TIME`) and also synthesize variables that derive
+    // from these using the XMILE names (e.g., `STARTTIME`).
+    defineXmileControlVar('INITIAL TIME', '_initial_time', parsedModel.root.simulationSpec.startTime)
+    defineXmileControlVar('FINAL TIME', '_final_time', parsedModel.root.simulationSpec.endTime)
+    defineXmileControlVar('TIME STEP', '_time_step', parsedModel.root.simulationSpec.timeStep)
+    defineXmileControlVar('STARTTIME', '_starttime', 'INITIAL TIME')
+    defineXmileControlVar('STOPTIME', '_stoptime', 'FINAL TIME')
+    defineXmileControlVar('DT', '_dt', 'TIME STEP')
+    // XXX: For now, also include a `SAVEPER` variable that is the same as `TIME STEP` (is there
+    // an equivalent of this in XMILE?)
+    defineXmileControlVar('SAVEPER', '_saveper', 'TIME STEP')
+  }
+
   // Add the variables to the `Model`
   vars.forEach(addVariable)
   if (opts?.stopAfterReadVariables) return
+
+  if (parsedModel.kind === 'xmile') {
+    // XXX: In the case of XMILE, we need to resolve any wildcards used in dimension
+    // position in the RHS of the equation
+    for (const variable of vars) {
+      if (variable.parsedEqn?.rhs?.kind === 'expr') {
+        const updatedEqn = resolveXmileDimensionWildcards(variable)
+        if (updatedEqn) {
+          variable.parsedEqn = updatedEqn
+          variable.modelFormula = toPrettyString(updatedEqn.rhs.expr, { compact: true })
+        }
+      }
+    }
+  }
 
   if (spec) {
     // If the spec file contains `input/outputVarNames`, convert the full Vensim variable
@@ -268,7 +340,7 @@ function resolveDimensions(dimensionFamilies) {
   }
 }
 
-function analyze(parsedModelKind, inputVars, opts) {
+function analyze(modelKind, inputVars, opts) {
   // Analyze the RHS of each equation in stages after all the variables are read.
   // Find non-apply-to-all vars that are defined with more than one equation.
   findNonAtoAVars()
@@ -284,7 +356,9 @@ function analyze(parsedModelKind, inputVars, opts) {
   if (opts?.stopAfterReduceVariables === true) return
 
   // Read the RHS to list the refIds of vars that are referenced and set the var type.
-  variables.forEach(readEquation)
+  variables.forEach(v => {
+    readEquation(v, modelKind)
+  })
 }
 
 function checkSpecVars(spec) {
@@ -1221,7 +1295,7 @@ function jsonList() {
 
       const varInstances = expandVar(v)
       for (const { varName, subscriptIndices } of varInstances) {
-        const varId = canonicalVensimName(varName)
+        const varId = canonicalVarId(varName)
         const varItem = {
           varId,
           varName,

@@ -12,3 +12,7 @@ export * from './vensim/parse-vensim-equation'
 export * from './vensim/parse-vensim-model'
 export * from './vensim/preprocess-vensim'
 export * from './vensim/vensim-parse-context'
+
+export * from './xmile/parse-xmile-dimension-def'
+export * from './xmile/parse-xmile-model'
+export * from './xmile/parse-xmile-variable-def'
