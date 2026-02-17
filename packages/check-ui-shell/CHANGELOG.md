@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.19](https://github.com/climateinteractive/SDEverywhere/compare/check-ui-shell-v0.2.18...check-ui-shell-v0.2.19) (2026-02-17)
+
+
+### Bug Fixes
+
+* select first tab with differences by default in model-check report ([#780](https://github.com/climateinteractive/SDEverywhere/issues/780)) ([64ab8c3](https://github.com/climateinteractive/SDEverywhere/commit/64ab8c32d7d1e902f798fb4ea07202afdd394cdb)), closes [#779](https://github.com/climateinteractive/SDEverywhere/issues/779)
+
 ## [0.2.18](https://github.com/climateinteractive/SDEverywhere/compare/check-ui-shell-v0.2.17...check-ui-shell-v0.2.18) (2026-02-04)
 
 
