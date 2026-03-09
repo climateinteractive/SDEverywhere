@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.2.8](https://github.com/climateinteractive/SDEverywhere/compare/plugin-wasm-v0.2.7...plugin-wasm-v0.2.8) (2026-03-09)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @sdeverywhere/build bumped from * to 0.3.11
+  * peerDependencies
+    * @sdeverywhere/build bumped from ^0.3.10 to ^0.3.11
+
 ## [0.2.7](https://github.com/climateinteractive/SDEverywhere/compare/plugin-wasm-v0.2.6...plugin-wasm-v0.2.7) (2026-02-04)
 
 
