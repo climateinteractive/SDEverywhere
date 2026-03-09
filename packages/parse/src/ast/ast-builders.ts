@@ -20,6 +20,7 @@ import type {
   Model,
   NumberLiteral,
   ParensExpr,
+  SimulationSpec,
   StringLiteral,
   SubName,
   SubscriptMapping,
@@ -244,8 +245,9 @@ export function lookupVarEqn(varDef: VariableDef, lookupDef: LookupDef, units = 
 // MODEL
 //
 
-export function model(dimensions: DimensionDef[], equations: Equation[]): Model {
+export function model(dimensions: DimensionDef[], equations: Equation[], simulationSpec?: SimulationSpec): Model {
   return {
+    simulationSpec,
     dimensions,
     equations
   }

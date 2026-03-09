@@ -29,6 +29,9 @@ importers:
       '@vitest/coverage-v8':
         specifier: ^4.0.17
         version: 4.0.17(@vitest/browser@4.0.17(vite@7.3.1(@types/node@20.19.19)(sass@1.97.2))(vitest@4.0.17))(vitest@4.0.17)
+      csv-parse:
+        specifier: ^5.3.3
+        version: 5.3.3
       eslint:
         specifier: ^9.37.0
         version: 9.37.0
@@ -697,6 +700,9 @@ importers:
 
   packages/parse:
     dependencies:
+      '@rgrove/parse-xml':
+        specifier: ^4.1.0
+        version: 4.2.0
       antlr4:
         specifier: 4.12.0
         version: 4.12.0
@@ -1473,6 +1479,10 @@ packages:
 
   '@polka/url@1.0.0-next.29':
     resolution: {integrity: sha512-wwQAWhWSuHaag8c4q/KN/vCoeOJYshAIvMQwD4GpSb3OiZklFfvAgmj0VCBBImRpuF/aFgIRzllXlVX93Jevww==}
+
+  '@rgrove/parse-xml@4.2.0':
+    resolution: {integrity: sha512-UuBOt7BOsKVOkFXRe4Ypd/lADuNIfqJXv8GvHqtXaTYXPPKkj2nS2zPllVsrtRjcomDhIJVBnZwfmlI222WH8g==}
+    engines: {node: '>=14.0.0'}
 
   '@rollup/plugin-node-resolve@16.0.3':
     resolution: {integrity: sha512-lUYM3UBGuM93CnMPG1YocWu7X802BrNF3jW2zny5gQyLQgRFJhV1Sq0Zi74+dh/6NBx1DxFC4b4GXg9wUCG5Qg==}
@@ -3834,7 +3844,7 @@ snapshots:
     dependencies:
       '@jridgewell/set-array': 1.2.1
       '@jridgewell/sourcemap-codec': 1.5.0
-      '@jridgewell/trace-mapping': 0.3.25
+      '@jridgewell/trace-mapping': 0.3.31
 
   '@jridgewell/remapping@2.3.5':
     dependencies:
@@ -3945,6 +3955,8 @@ snapshots:
       playwright: 1.56.1
 
   '@polka/url@1.0.0-next.29': {}
+
+  '@rgrove/parse-xml@4.2.0': {}
 
   '@rollup/plugin-node-resolve@16.0.3(rollup@4.53.3)':
     dependencies:

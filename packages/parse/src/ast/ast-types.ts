@@ -1,6 +1,20 @@
 // Copyright (c) 2023 Climate Interactive / New Venture Fund
 
 //
+// SIMULATION SPEC
+//
+
+/** The simulation parameters, such as start time, end time, and time step. */
+export interface SimulationSpec {
+  /** The start time of the simulation. */
+  startTime: number
+  /** The end time of the simulation. */
+  endTime: number
+  /** The time step of the simulation. */
+  timeStep: number
+}
+
+//
 // DIMENSIONS + SUBSCRIPTS
 //
 
@@ -391,6 +405,13 @@ export interface Equation {
 
 /** A complete model definition, including all defined dimensions and equations. */
 export interface Model {
+  /**
+   * The simulation parameters, such as start time, end time, and time step.
+   *
+   * NOTE: This will be defined for XMILE models, but may be undefined for Vensim models
+   * for which the parameters are not compile-time constants.
+   */
+  simulationSpec?: SimulationSpec
   /** The array of all dimension definitions in the model. */
   dimensions: DimensionDef[]
   /** The array of all variable/equation definitions in the model. */
