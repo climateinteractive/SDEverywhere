@@ -218,9 +218,9 @@ export function createSummaryViewModel(
     addTabItem('comps-by-dataset', 'Comparisons by dataset', byDatasetTabInfo)
   }
 
-  // Select the first tab that has differences by default; if no differences, show the
-  // first ("Checks") tab by default
-  const initialTabIndex = tabItems.findIndex(item => get(item.subtitle) !== 'all clear')
+  // Select the first tab that has differences by default, i.e., the first tab with a status
+  // other than "passed".  If no differences, show the first ("Checks") tab by default.
+  const initialTabIndex = tabItems.findIndex(item => get(item.subtitleClass) !== 'status-color-passed')
   const tabBarViewModel = new TabBarViewModel(tabItems, initialTabIndex >= 0 ? initialTabIndex : 0)
 
   // Create a map of all test summaries for the baseline (all inputs at default) scenario.

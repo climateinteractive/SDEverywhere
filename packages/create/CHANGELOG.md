@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.34](https://github.com/climateinteractive/SDEverywhere/compare/create-v0.2.33...create-v0.2.34) (2026-02-17)
+
+
+### Bug Fixes
+
+* upgrade giget to 3.1.2 to avoid dependency on outdated tar package ([#783](https://github.com/climateinteractive/SDEverywhere/issues/783)) ([68a69f0](https://github.com/climateinteractive/SDEverywhere/commit/68a69f028b987e20f3d7be3f259b95f310053c7b)), closes [#782](https://github.com/climateinteractive/SDEverywhere/issues/782)
+
 ## [0.2.33](https://github.com/climateinteractive/SDEverywhere/compare/create-v0.2.32...create-v0.2.33) (2026-02-04)
 
 
