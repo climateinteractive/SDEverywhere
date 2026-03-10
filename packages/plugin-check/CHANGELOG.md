@@ -1,16 +1,5 @@
 # Changelog
 
-## [0.3.29](https://github.com/climateinteractive/SDEverywhere/compare/plugin-check-v0.3.28...plugin-check-v0.3.29) (2026-03-09)
-
-
-### Dependencies
-
-* The following workspace dependencies were updated
-  * devDependencies
-    * @sdeverywhere/build bumped from * to 0.3.11
-  * peerDependencies
-    * @sdeverywhere/build bumped from ^0.3.10 to ^0.3.11
-
 ## [0.3.28](https://github.com/climateinteractive/SDEverywhere/compare/plugin-check-v0.3.27...plugin-check-v0.3.28) (2026-02-17)
 
 

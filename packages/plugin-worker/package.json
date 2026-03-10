@@ -1,6 +1,6 @@
 {
   "name": "@sdeverywhere/plugin-worker",
-  "version": "0.2.14",
+  "version": "0.2.13",
   "files": [
     "dist/**",
     "template-worker/**"
@@ -39,7 +39,7 @@
     "@sdeverywhere/build": "^0.3.10"
   },
   "devDependencies": {
-    "@sdeverywhere/build": "0.3.11",
+    "@sdeverywhere/build": "*",
     "@types/node": "^20.14.8"
   },
   "author": "Climate Interactive",
