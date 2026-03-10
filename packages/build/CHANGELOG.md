@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.3.11](https://github.com/climateinteractive/SDEverywhere/compare/build-v0.3.10...build-v0.3.11) (2026-03-09)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/parse bumped from ^0.1.2 to ^0.1.3
+
 ## [0.3.10](https://github.com/climateinteractive/SDEverywhere/compare/build-v0.3.9...build-v0.3.10) (2026-02-04)
 
 

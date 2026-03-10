@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.7.28](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.27...compile-v0.7.28) (2026-03-09)
+
+
+### Features
+
+* add initial support for XMILE/Stella models ([#778](https://github.com/climateinteractive/SDEverywhere/issues/778)) ([b2e7f80](https://github.com/climateinteractive/SDEverywhere/commit/b2e7f808b8e63dd83b9dcdf8064cf4bc1725c884)), closes [#468](https://github.com/climateinteractive/SDEverywhere/issues/468)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/parse bumped from ^0.1.2 to ^0.1.3
+
 ## [0.7.27](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.26...compile-v0.7.27) (2026-02-04)
 
 
