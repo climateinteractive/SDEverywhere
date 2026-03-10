@@ -345,6 +345,12 @@ function generateFunctionCall(callExpr, ctx) {
       }
       return generateAllocateAvailableCall(callExpr, ctx)
 
+    case '_ALLOCATE_BY_PRIORITY':
+      if (ctx.outFormat === 'js') {
+        throw new Error(`${callExpr.fnName} function not yet implemented for JS code gen`)
+      }
+      return generateAllocateByPriorityCall(callExpr, ctx)
+
     case '_ELMCOUNT': {
       // Emit the size of the dimension in place of the dimension name
       const dimArg = callExpr.args[0]
@@ -881,6 +887,88 @@ function generateAllocateAvailableCall(callExpr, ctx) {
     case 'js':
       ctx.emitPreInnerLoop(
         `  let ${tmpVarId} = fns.ALLOCATE_AVAILABLE(${reqRef}, ${ppRef}, ${availRef}, ${numRequesters});`
+      )
+      break
+    default:
+      throw new Error(`Unhandled output format '${ctx.outFormat}'`)
+  }
+
+  // Generate the RHS expression used in the inner loop
+  return `${tmpVarId}[${allocDimId}[${allocLoopIndexVar}]]`
+}
+
+/**
+ * Generate C/JS code for an `ALLOCATE BY PRIORITY` function call.
+ *
+ * @param {*} callExpr The function call expression from the parsed model.
+ * @param {GenExprContext} ctx The context used when generating code for the expression.
+ * @return {string} The generated C/JS code.
+ */
+function generateAllocateByPriorityCall(callExpr, ctx) {
+  function validateArg(index, name) {
+    const arg = callExpr.args[index]
+    if (arg.kind === 'variable-ref') {
+      return arg
+    } else {
+      throw new Error(`ALLOCATE BY PRIORITY argument '${name}' must be a variable reference`)
+    }
+  }
+
+  // Given a C/JS variable reference string (e.g., '_var[i][j]'), return that
+  // string without the last N array index parts
+  function cVarRefWithoutLastIndices(arg, count) {
+    const varRef = ctx.cVarRef(arg)
+    const origIndexParts = Model.splitRefId(varRef).subscripts
+    if (origIndexParts < count) {
+      throw new Error(`ALLOCATE BY PRIORITY argument '${arg}' should have at least ${count} subscripts`)
+    }
+    const newIndexParts = origIndexParts.slice(0, -count)
+    if (newIndexParts.length > 0) {
+      return `${arg.varId}${newIndexParts.map(x => `[${x}]`).join('')}`
+    } else {
+      return arg.varId
+    }
+  }
+
+  // Process the request argument. Only include subscripts up until the last one;
+  // the implementation function will iterate over the requesters array.
+  const reqArg = validateArg(0, 'req')
+  const reqRef = cVarRefWithoutLastIndices(reqArg, 1)
+
+  // Process the priority argument. Only include subscripts up until the
+  // last one; the implementation function will iterate over the priorities
+  // array.
+  const priorityArg = validateArg(1, 'priority')
+  const priorityRef = cVarRefWithoutLastIndices(priorityArg, 1)
+
+  // Process the size argument
+  const sizeArg = generateExpr(callExpr.args[2], ctx)
+
+  // Process the width argument
+  const widthArg = generateExpr(callExpr.args[3], ctx)
+
+  // Process the supply argument
+  const supplyArg = generateExpr(callExpr.args[4], ctx)
+
+  // The `ALLOCATE BY PRIORITY` function iterates over the last subscript in its first
+  // argument, allocating the available quantity according to the priority values given
+  // in the second argument. The `readEquation` process will have already verified that
+  // the last dimension of both arguments matches the last dimension of the LHS.
+  const allocDimId = reqArg.subscriptRefs[reqArg.subscriptRefs.length - 1].subId
+  const allocLoopIndexVar = ctx.loopIndexVars.index(allocDimId)
+
+  // Generate the code that is emitted before the entire block (before any loops are opened)
+  const tmpVarId = newTmpVarName()
+  const numRequesters = sub(allocDimId).size
+  switch (ctx.outFormat) {
+    case 'c':
+      ctx.emitPreInnerLoop(
+        `  double* ${tmpVarId} = _ALLOCATE_BY_PRIORITY(${reqRef}, ${priorityRef}, ${sizeArg}, ${widthArg}, ${supplyArg}, ${numRequesters});`
+      )
+      break
+    case 'js':
+      ctx.emitPreInnerLoop(
+        `  let ${tmpVarId} = fns.ALLOCATE_BY_PRIORITY(${reqRef}, ${priorityRef}, ${sizeArg}, ${widthArg}, ${supplyArg}, ${numRequesters});`
       )
       break
     default:
