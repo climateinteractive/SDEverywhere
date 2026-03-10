@@ -476,7 +476,7 @@ importers:
   packages/build:
     dependencies:
       '@sdeverywhere/parse':
-        specifier: ^0.1.2
+        specifier: ^0.1.3
         version: link:../parse
       chokidar:
         specifier: ^5.0.0
@@ -607,10 +607,10 @@ importers:
   packages/cli:
     dependencies:
       '@sdeverywhere/build':
-        specifier: ^0.3.10
+        specifier: ^0.3.11
         version: link:../build
       '@sdeverywhere/compile':
-        specifier: ^0.7.27
+        specifier: ^0.7.28
         version: link:../compile
       byline:
         specifier: ^5.0.0
@@ -631,7 +631,7 @@ importers:
   packages/compile:
     dependencies:
       '@sdeverywhere/parse':
-        specifier: ^0.1.2
+        specifier: ^0.1.3
         version: link:../parse
       byline:
         specifier: ^5.0.0
@@ -652,7 +652,7 @@ importers:
   packages/create:
     dependencies:
       '@sdeverywhere/compile':
-        specifier: ^0.7.27
+        specifier: ^0.7.28
         version: link:../compile
       execa:
         specifier: ^6.1.0
