@@ -17,6 +17,7 @@
     "playwright:debug": "playwright test --debug",
     "playwright:debug:dev": "PLAYWRIGHT_WITH_DEV_SERVER=1 playwright test --debug",
     "test-dev": "run-s build playwright:test:dev",
+    "test-dev-with-local-baseline": "TEST_BASELINE=local run-s dev",
     "test-build-with-local-baseline": "TEST_BASELINE=local run-s build",
     "test-build-with-valid-remote-baseline": "TEST_BASELINE=remote-valid run-s build",
     "test-build-with-invalid-remote-baseline": "TEST_BASELINE=remote-invalid run-s build",

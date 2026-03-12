@@ -1,6 +1,6 @@
 {
   "name": "@sdeverywhere/plugin-wasm",
-  "version": "0.2.6",
+  "version": "0.2.7",
   "files": [
     "dist/**"
   ],
@@ -33,7 +33,7 @@
     "find-up": "^6.3.0"
   },
   "peerDependencies": {
-    "@sdeverywhere/build": "^0.3.7"
+    "@sdeverywhere/build": "^0.3.10"
   },
   "devDependencies": {
     "@sdeverywhere/build": "*",

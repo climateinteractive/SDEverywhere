@@ -2,7 +2,7 @@
 
 import { describe, expect, it } from 'vitest'
 
-import { Outputs, createLookupDef, type LookupDef } from '../_shared'
+import { Outputs, createConstantDef, createLookupDef, type ConstantDef, type LookupDef } from '../_shared'
 
 import { BufferedRunModelParams } from './buffered-run-model-params'
 import { ModelListing } from '../model-listing'
@@ -330,7 +330,58 @@ describe('BufferedRunModelParams', () => {
     expect(outputs.runTimeInMillis).toBe(42)
   })
 
-  it('should copy lookups', () => {
+  it('should copy constant overrides', () => {
+    const listing = new ModelListing(JSON.parse(listingJson))
+
+    const inputs = [1, 2, 3]
+    const outputs = new Outputs(['_x', '_y'], 2000, 2002, 1)
+
+    const constants: ConstantDef[] = [
+      // Reference the first variable by name
+      createConstantDef({ varName: 'A' }, 42),
+      // Reference the second variable by ID
+      createConstantDef({ varId: '_b' }, 100)
+    ]
+
+    const runnerParams = new BufferedRunModelParams(listing)
+    const workerParams = new BufferedRunModelParams(listing)
+
+    // Run once without providing constants
+    runnerParams.updateFromParams(inputs, outputs)
+    workerParams.updateFromEncodedBuffer(runnerParams.getEncodedBuffer())
+
+    // Verify that constants array is undefined
+    expect(workerParams.getConstants()).toBeUndefined()
+
+    // Run again with constants
+    runnerParams.updateFromParams(inputs, outputs, { constants })
+    workerParams.updateFromEncodedBuffer(runnerParams.getEncodedBuffer())
+
+    // Verify that constants array on the worker side contains the expected values
+    expect(workerParams.getConstants()).toEqual([
+      createConstantDef({ varSpec: { varIndex: 1 } }, 42),
+      createConstantDef({ varSpec: { varIndex: 2 } }, 100)
+    ])
+
+    // Run again without constants
+    runnerParams.updateFromParams(inputs, outputs)
+    workerParams.updateFromEncodedBuffer(runnerParams.getEncodedBuffer())
+
+    // Verify that constants array is undefined
+    expect(workerParams.getConstants()).toBeUndefined()
+
+    // Run again with a constant referenced by spec
+    const constantBySpec = createConstantDef({ varSpec: listing.varSpecs.get('_a') }, 999)
+    runnerParams.updateFromParams(inputs, outputs, {
+      constants: [constantBySpec]
+    })
+    workerParams.updateFromEncodedBuffer(runnerParams.getEncodedBuffer())
+
+    // Verify that constants array on the worker side contains the expected values
+    expect(workerParams.getConstants()).toEqual([constantBySpec])
+  })
+
+  it('should copy lookup overrides', () => {
     const listing = new ModelListing(JSON.parse(listingJson))
 
     const inputs = [1, 2, 3]

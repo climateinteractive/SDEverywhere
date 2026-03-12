@@ -112,7 +112,7 @@ export class ComparisonDataCoordinator {
       scenarioSpec: ScenarioSpec | undefined
     ): Promise<BundleGraphData> {
       if (scenarioSpec) {
-        return bundleModel.getGraphDataForScenario(scenarioSpec, graphId)
+        return bundleModel.getGraphDataForScenario?.(scenarioSpec, graphId)
       } else {
         return undefined
       }

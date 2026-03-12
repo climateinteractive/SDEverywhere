@@ -15,7 +15,7 @@ export interface ContextMenuItem {
 </script>
 
 <script lang="ts">
-import { createEventDispatcher } from 'svelte'
+import { createEventDispatcher, onMount } from 'svelte'
 
 import { clickOutside } from './click-outside'
 
@@ -40,13 +40,32 @@ $: if (initialEvent) {
   showMenu = false
 }
 
-function onItemSelected(cmd: string) {
+function handleItemSelected(cmd: string) {
   dispatch('item-selected', cmd)
 }
+
+function handleClickOut() {
+  dispatch('close')
+}
+
+function handleKeyDown(event: KeyboardEvent) {
+  if (event.key === 'Escape') {
+    dispatch('close')
+  }
+}
+
+onMount(() => {
+  // Add keydown listener for Escape key
+  window.addEventListener('keydown', handleKeyDown)
+
+  return () => {
+    window.removeEventListener('keydown', handleKeyDown)
+  }
+})
 </script>
 
 {#if showMenu}
-  <nav use:clickOutside on:clickout style="position: fixed; top:{pos.y}px; left:{pos.x}px">
+  <nav use:clickOutside on:clickout={handleClickOut} style="position: fixed; top:{pos.y}px; left:{pos.x}px">
     <div class="navbar" id="navbar">
       <ul>
         {#each items as item}
@@ -54,8 +73,10 @@ function onItemSelected(cmd: string) {
             <hr />
           {:else}
             <li>
-              <button role="menuitem" class:disabled={item.disabled === true} on:click={() => onItemSelected(item.key)}
-                ><i class={item.iconClass}></i>{item.displayText}</button
+              <button
+                role="menuitem"
+                class:disabled={item.disabled === true}
+                on:click={() => handleItemSelected(item.key)}><i class={item.iconClass}></i>{item.displayText}</button
               >
             </li>
           {/if}

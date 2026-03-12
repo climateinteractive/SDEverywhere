@@ -1,5 +1,5 @@
 {
-  "name": "template-default-core",
+  "name": "template-jquery-core",
   "version": "1.0.0",
   "private": true,
   "files": [
@@ -24,6 +24,6 @@
   },
   "devDependencies": {
     "typescript": "^5.2.2",
-    "vite": "^7.1.9"
+    "vite": "^7.1.12"
   }
 }

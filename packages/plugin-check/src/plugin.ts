@@ -187,10 +187,14 @@ class CheckPlugin implements Plugin {
   private async resolveTestOptions(mode: 'bundle' | 'watch', config: ResolvedConfig): Promise<TestOptions> {
     // Helper function that resolves the bundle, downloading it to the local `bundles` directory
     // first if necessary.
+    const fetchRemoteBundle = this.options?.fetchRemoteBundle
     async function resolveBundle(bundle: CheckBundle | undefined): Promise<LocalBundleSpec> {
       // Note that Node.js currently only supports importing bundles from a local file.
       // If `bundle` points to a remote bundle, we need to first download it to the
       // local bundles directory.
+      // TODO: We don't technically need to download the bundle to disk.  We could instead
+      // fetch the bundle from the remote URL and then dynamically import it as a blob,
+      // similar to how we load bundles via the Vite dev server in local development mode.
       if (bundle?.url !== undefined) {
         // The bundle is remote, so download it to the local `bundles` directory
         const localBundlePath = await downloadBundle(
@@ -199,7 +203,8 @@ class CheckPlugin implements Plugin {
           // TODO: We don't know the last modified time of the remote bundle here, so we use
           // undefined (which means the local file will be created with the current timestamp)
           undefined,
-          joinPath(config.rootDir, 'bundles')
+          joinPath(config.rootDir, 'bundles'),
+          fetchRemoteBundle
         )
         return {
           name: bundle.name,
@@ -221,13 +226,9 @@ class CheckPlugin implements Plugin {
       }
     }
 
-    // Resolve the current bundle.  In "bundle" (production) mode, we use the provided
-    // plugin options.  In "watch" (local development) mode, we ignore the plugin options
-    // and use the generated "current" bundle, since the local report will allow the user
-    // to select any local or remote bundle.  Note that if this step fails, an error will
-    // be thrown and the build will fail, since this is a required step for creating the
-    // model-check report.
-    const currentBundleSpec = await resolveBundle(mode === 'bundle' ? this.options?.current : undefined)
+    // Resolve the current bundle.  Note that if this step fails, an error will be thrown and
+    // the build will fail, since this is a required step for creating the model-check report.
+    const currentBundleSpec = await resolveBundle(this.options?.current)
 
     // Only resolve the baseline bundle if we are building the production report and the
     // baseline bundle is defined in the plugin options.  If it is undefined, we will

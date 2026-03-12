@@ -2,7 +2,7 @@
 
 import type { DataSource } from '../_shared/data-source'
 import type { InputSetting, ScenarioSpec } from '../_shared/scenario-spec-types'
-import type { DatasetKey, VarId } from '../_shared/types'
+import type { DatasetKey, DatasetMap, VarId } from '../_shared/types'
 
 import type { ImplVar, InputVar, OutputVar } from './var-types'
 
@@ -96,9 +96,29 @@ export interface BundleGraphSpec {
 }
 
 /**
+ * Options for configuring a bundle-specific graph view.
+ */
+export interface BundleGraphViewOptions {
+  /** Whether graph updates will be animated (default is false). */
+  animated?: boolean
+  /** A hint that indicates the context in which the graph will be displayed. */
+  style?: 'thumbnail' | undefined
+}
+
+/**
  * Allows for displaying a bundle-specific graph.
  */
 export interface BundleGraphView {
+  /**
+   * Update the data that is displayed in the graph.
+   *
+   * @hidden This method is optional; it is not currently used by the report UI, but may be useful
+   * for other tools that want to display bundle-specific graphs.
+   *
+   * @param datasetMap The map of datasets that contain the data to be displayed in the graph.
+   */
+  updateData?(datasetMap: DatasetMap): void
+
   /** Destroy the underlying graph view and any associated resources. */
   destroy(): void
 }
@@ -107,8 +127,15 @@ export interface BundleGraphView {
  * Wrapper around data that can be used to initialize a graph view.
  */
 export interface BundleGraphData {
-  /** Return a graph view that can be attached to the given canvas element. */
-  createGraphView(canvas: HTMLCanvasElement): BundleGraphView
+  /**
+   * Return a graph view that can be attached to the given parent element.  The returned
+   * `BundleGraphView` instance will already be configured to display the data that was
+   * fetched from the model for the associated scenario.
+   *
+   * @param parent The parent element to which the graph view will be attached.
+   * @returns A `BundleGraphView` instance.
+   */
+  createGraphView(parent: HTMLElement): BundleGraphView
 }
 
 /**
@@ -150,13 +177,53 @@ export interface ModelSpec {
 export interface BundleModel extends DataSource {
   /** The spec for the bundled model. */
   modelSpec: ModelSpec
+
   /**
    * Load the data used to display the graph by running the model with inputs
    * configured for the given scenario.
+   *
+   * The returned `BundleGraphData` instance will contain the data associated with the
+   * given graph.  Calling the `createGraphView` method on the `BundleGraphData` instance
+   * will create a `BundleGraphView` that is already configured to display the data
+   * associated with the graph.
+   *
+   * This method is optional; if not implemented, custom graphs will not be displayed in
+   * the report UI.
+   *
+   * @param scenarioSpec The scenario spec that defines the inputs for the model run.
+   * @param graphId The identifier of the graph for which data will be loaded.
+   * @returns The graph data.
    */
-  getGraphDataForScenario(scenarioSpec: ScenarioSpec, graphId: BundleGraphId): Promise<BundleGraphData>
-  /** Return the links to be displayed for the graph in the given scenario. */
-  getGraphLinksForScenario(scenarioSpec: ScenarioSpec, graphId: BundleGraphId): LinkItem[]
+  getGraphDataForScenario?(scenarioSpec: ScenarioSpec, graphId: BundleGraphId): Promise<BundleGraphData>
+
+  /**
+   * Return the links to be displayed for the graph in the given scenario.
+   *
+   * This method is optional; if not implemented, no graph links will be displayed in the report UI.
+   *
+   * @param scenarioSpec The scenario spec that defines the inputs for the model run.
+   * @param graphId The identifier of the graph for which links will be prepared.
+   * @returns An array of `LinkItem` instances.
+   */
+  getGraphLinksForScenario?(scenarioSpec: ScenarioSpec, graphId: BundleGraphId): LinkItem[]
+
+  /**
+   * Return a graph view that is attached to the given element and that is prepared to display data
+   * for the given graph.
+   *
+   * Unlike `getGraphDataForScenario`, this method only creates the graph view.  The data for the
+   * graph must be provided separately by calling the `updateData` method on the `BundleGraphView`
+   * instance.
+   *
+   * @hidden This method is optional; it is not currently used by the report UI, but may be useful
+   * for other tools that want to display bundle-specific graphs.
+   *
+   * @param parent The parent element to which the graph view will be attached.
+   * @param graphId The identifier of the graph for which the graph view will be prepared.
+   * @param options Optional configuration for the graph view.
+   * @returns A `BundleGraphView` instance.
+   */
+  createGraphView?(parent: HTMLElement, graphId: BundleGraphId, options?: BundleGraphViewOptions): BundleGraphView
 }
 
 /**

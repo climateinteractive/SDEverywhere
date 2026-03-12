@@ -1,6 +1,6 @@
 // Copyright (c) 2024 Climate Interactive / New Venture Fund
 
-import type { InputValue, LookupDef, Outputs } from '../_shared'
+import type { ConstantDef, InputValue, LookupDef, Outputs } from '../_shared'
 import { encodeVarIndices, getEncodedVarIndicesLength } from '../_shared'
 import type { ModelListing } from '../model-listing'
 import { resolveVarRef } from './resolve-var-ref'
@@ -20,6 +20,7 @@ export class ReferencedRunModelParams implements RunModelParams {
   private outputs: Outputs
   private outputsLengthInElements = 0
   private outputIndicesLengthInElements = 0
+  private constants: ConstantDef[]
   private lookups: LookupDef[]
 
   /**
@@ -112,6 +113,15 @@ export class ReferencedRunModelParams implements RunModelParams {
   }
 
   // from RunModelParams interface
+  getConstants(): ConstantDef[] | undefined {
+    if (this.constants !== undefined && this.constants.length > 0) {
+      return this.constants
+    } else {
+      return undefined
+    }
+  }
+
+  // from RunModelParams interface
   getLookups(): LookupDef[] | undefined {
     if (this.lookups !== undefined && this.lookups.length > 0) {
       return this.lookups
@@ -146,7 +156,16 @@ export class ReferencedRunModelParams implements RunModelParams {
     this.inputs = inputs
     this.outputs = outputs
     this.outputsLengthInElements = outputs.varIds.length * outputs.seriesLength
+    this.constants = options?.constants
     this.lookups = options?.lookups
+
+    if (this.constants) {
+      // Resolve the `varSpec` for each `ConstantDef`.  If the variable can be resolved, this
+      // will fill in the `varSpec` for the `ConstantDef`, otherwise it will throw an error.
+      for (const constantDef of this.constants) {
+        resolveVarRef(this.listing, constantDef.varRef, 'constant')
+      }
+    }
 
     if (this.lookups) {
       // Resolve the `varSpec` for each `LookupDef`.  If the variable can be resolved, this

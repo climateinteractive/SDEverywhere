@@ -45,12 +45,6 @@ function mockBundleModel(modelSpec: ModelSpec, mockOptions: MockConfigOptions): 
       return {
         datasetMap: new Map([['Model_v1', new Map([[2000, 0]])]])
       }
-    },
-    getGraphDataForScenario: async () => {
-      return undefined
-    },
-    getGraphLinksForScenario: () => {
-      return []
     }
   }
 }

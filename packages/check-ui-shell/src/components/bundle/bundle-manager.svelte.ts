@@ -100,7 +100,22 @@ export class BundleManager {
     }
 
     try {
-      const response = await fetch(this.config.remoteBundlesUrl)
+      // XXX: We support HTTP Basic Authentication if credentials are included in
+      // the URL, but the `fetch` API requires the credentials to be passed with
+      // an "Authorization" header.  This is a bit of a hack; if anyone needs more
+      // sophisticated auth, we could consider additional options.
+      let requestCredentials: RequestInit['credentials'] = undefined
+      const headers: Record<string, string> = {}
+      let remoteBundlesUrl = this.config.remoteBundlesUrl
+      if (remoteBundlesUrl.startsWith('https://') && remoteBundlesUrl.includes('@')) {
+        const [credentials, remainder] = remoteBundlesUrl.replace('https://', '').split('@')
+        headers.Authorization = 'Basic ' + btoa(credentials)
+        remoteBundlesUrl = `https://${remainder}`
+        requestCredentials = 'include'
+      }
+      // Add cache busting parameter to avoid issues with servers that aggressively cache files
+      remoteBundlesUrl += `?cb=${Date.now()}`
+      const response = await fetch(remoteBundlesUrl, { headers, credentials: requestCredentials })
       if (!response.ok) {
         throw new Error(`Failed to fetch remote bundles: ${response.statusText}`)
       }

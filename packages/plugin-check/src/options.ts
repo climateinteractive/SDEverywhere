@@ -70,6 +70,17 @@ export interface CheckPluginOptions {
   remoteBundlesUrl?: string
 
   /**
+   * A custom function for fetching remote bundle files.  This allows for customizing
+   * the fetch operation, such as adding authentication headers or other custom logic.
+   *
+   * If undefined, a default fetch implementation will be used.
+   *
+   * @param url The URL of the remote bundle file to fetch.
+   * @returns The bundle source code as a string.
+   */
+  fetchRemoteBundle?: (url: string) => Promise<string>
+
+  /**
    * The absolute path to the JS file containing the test configuration.  If undefined,
    * a default test configuration will be used.
    */

@@ -1,5 +1,35 @@
 # Changelog
 
+## [0.3.11](https://github.com/climateinteractive/SDEverywhere/compare/build-v0.3.10...build-v0.3.11) (2026-03-09)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/parse bumped from ^0.1.2 to ^0.1.3
+
+## [0.3.10](https://github.com/climateinteractive/SDEverywhere/compare/build-v0.3.9...build-v0.3.10) (2026-02-04)
+
+
+### Features
+
+* allow for overriding constants at runtime ([#767](https://github.com/climateinteractive/SDEverywhere/issues/767)) ([984c3bc](https://github.com/climateinteractive/SDEverywhere/commit/984c3bcbd80d6088c73a4f7f3f31070fba328abe)), closes [#470](https://github.com/climateinteractive/SDEverywhere/issues/470)
+
+## [0.3.9](https://github.com/climateinteractive/SDEverywhere/compare/build-v0.3.8...build-v0.3.9) (2026-01-10)
+
+
+### Bug Fixes
+
+* improve handling of glob patterns for build `watchPaths` ([#761](https://github.com/climateinteractive/SDEverywhere/issues/761)) ([9e73220](https://github.com/climateinteractive/SDEverywhere/commit/9e73220548a7f5eb1a80c4ddfbf8afa8545781bb)), closes [#760](https://github.com/climateinteractive/SDEverywhere/issues/760)
+
+## [0.3.8](https://github.com/climateinteractive/SDEverywhere/compare/build-v0.3.7...build-v0.3.8) (2026-01-08)
+
+
+### Dependencies
+
+* upgrade chokidar to 5.0.0 + replace tiny-glob with tinyglobby ([#753](https://github.com/climateinteractive/SDEverywhere/issues/753)) ([c0e7e62](https://github.com/climateinteractive/SDEverywhere/commit/c0e7e62a3e9af7a5bbe88e00dfa868c021236ba8)), closes [#752](https://github.com/climateinteractive/SDEverywhere/issues/752)
+
 ## [0.3.7](https://github.com/climateinteractive/SDEverywhere/compare/build-v0.3.6...build-v0.3.7) (2024-12-13)
 
 

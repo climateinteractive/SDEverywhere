@@ -1,5 +1,56 @@
 # Changelog
 
+## [0.2.19](https://github.com/climateinteractive/SDEverywhere/compare/check-ui-shell-v0.2.18...check-ui-shell-v0.2.19) (2026-02-17)
+
+
+### Bug Fixes
+
+* select first tab with differences by default in model-check report ([#780](https://github.com/climateinteractive/SDEverywhere/issues/780)) ([64ab8c3](https://github.com/climateinteractive/SDEverywhere/commit/64ab8c32d7d1e902f798fb4ea07202afdd394cdb)), closes [#779](https://github.com/climateinteractive/SDEverywhere/issues/779)
+
+## [0.2.18](https://github.com/climateinteractive/SDEverywhere/compare/check-ui-shell-v0.2.17...check-ui-shell-v0.2.18) (2026-02-04)
+
+
+### Features
+
+* allow for overriding constants at runtime ([#767](https://github.com/climateinteractive/SDEverywhere/issues/767)) ([984c3bc](https://github.com/climateinteractive/SDEverywhere/commit/984c3bcbd80d6088c73a4f7f3f31070fba328abe)), closes [#470](https://github.com/climateinteractive/SDEverywhere/issues/470)
+
+## [0.2.17](https://github.com/climateinteractive/SDEverywhere/compare/check-ui-shell-v0.2.16...check-ui-shell-v0.2.17) (2026-01-13)
+
+
+### Features
+
+* add support for loading model-check bundles from password-protected servers ([#763](https://github.com/climateinteractive/SDEverywhere/issues/763)) ([900bd22](https://github.com/climateinteractive/SDEverywhere/commit/900bd22627f102b92f942538366f0d8509b76965)), closes [#762](https://github.com/climateinteractive/SDEverywhere/issues/762)
+
+## [0.2.16](https://github.com/climateinteractive/SDEverywhere/compare/check-ui-shell-v0.2.15...check-ui-shell-v0.2.16) (2026-01-08)
+
+
+### Dependencies
+
+* upgrade postcss to 8.5.6 to avoid older version of nanoid with vulnerability ([#745](https://github.com/climateinteractive/SDEverywhere/issues/745)) ([fb80f93](https://github.com/climateinteractive/SDEverywhere/commit/fb80f930d3d633e5bfeeca8f8e0629d35f817b56)), closes [#743](https://github.com/climateinteractive/SDEverywhere/issues/743)
+* upgrade sass to 1.97.2 ([#751](https://github.com/climateinteractive/SDEverywhere/issues/751)) ([35b6995](https://github.com/climateinteractive/SDEverywhere/commit/35b6995c9e9d94868af285501d2f4deb0104205c)), closes [#750](https://github.com/climateinteractive/SDEverywhere/issues/750)
+* upgrade vite to ^7.1.12 + upgrade vitest to ^4.0.16 ([#735](https://github.com/climateinteractive/SDEverywhere/issues/735)) ([f16f127](https://github.com/climateinteractive/SDEverywhere/commit/f16f127b9fb0e53352d7e1152d78623fe5ec26c9)), closes [#734](https://github.com/climateinteractive/SDEverywhere/issues/734)
+
+## [0.2.15](https://github.com/climateinteractive/SDEverywhere/compare/check-ui-shell-v0.2.14...check-ui-shell-v0.2.15) (2026-01-07)
+
+
+### Bug Fixes
+
+* dismiss bundle selector context menu on escape key or click outside ([#731](https://github.com/climateinteractive/SDEverywhere/issues/731)) ([c1fb33b](https://github.com/climateinteractive/SDEverywhere/commit/c1fb33b0a635cc92d6ec42726d9a66960ed03f5c)), closes [#730](https://github.com/climateinteractive/SDEverywhere/issues/730)
+
+## [0.2.14](https://github.com/climateinteractive/SDEverywhere/compare/check-ui-shell-v0.2.13...check-ui-shell-v0.2.14) (2026-01-05)
+
+
+### Bug Fixes
+
+* update BundleGraphView interface to allow for updating data, custom legend, and non-canvas implementations ([#724](https://github.com/climateinteractive/SDEverywhere/issues/724)) ([1296c6d](https://github.com/climateinteractive/SDEverywhere/commit/1296c6d12629eaa9c515b7e34d0fa2d26348e2b9)), closes [#723](https://github.com/climateinteractive/SDEverywhere/issues/723)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/check-core bumped from ^0.1.6 to ^0.1.7
+
 ## [0.2.13](https://github.com/climateinteractive/SDEverywhere/compare/check-ui-shell-v0.2.12...check-ui-shell-v0.2.13) (2025-12-08)
 
 

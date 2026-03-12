@@ -50,12 +50,6 @@ function mockBundleModel(modelSpec: ModelSpec): BundleModel {
       return {
         datasetMap: new Map()
       }
-    },
-    getGraphDataForScenario: async () => {
-      return undefined
-    },
-    getGraphLinksForScenario: () => {
-      return []
     }
   }
 }

@@ -1,32 +1,33 @@
 // Copyright (c) 2022 Climate Interactive / New Venture Fund
 
 import path from 'path'
-import B from 'bufx'
 
-import { parseVensimModel } from '@sdeverywhere/parse'
+import { parseVensimModel, parseXmileModel } from '@sdeverywhere/parse'
 
+import B from './_shared/bufx.js'
 import { readXlsx } from './_shared/helpers.js'
 import { readDat } from './_shared/read-dat.js'
-import { printSubscripts, yamlSubsList } from './_shared/subscript.js'
+import { printSubscripts } from './_shared/subscript.js'
 import { cName } from './_shared/var-names.js'
 import Model from './model/model.js'
 import { getDirectSubscripts } from './model/read-subscripts.js'
 import { generateCode } from './generate/gen-code.js'
 
 /**
- * Parse a Vensim model and generate C code.
+ * Parse a Vensim or XMILE model and generate C code.
  *
  * This is the primary entrypoint for the `sde generate` command.
  *
  * - If `operations` has 'generateC', the generated C code will be written to `buildDir`.
  * - If `operations` has 'generateJS', the generated JS code will be written to `buildDir`.
  * - If `operations` has 'printVarList', variables and subscripts will be written to
- *   txt, yaml, and json files under `buildDir`.
+ *   txt and json files under `buildDir`.
  * - If `operations` has 'printRefIdTest', reference identifiers will be printed to the console.
  * - If `operations` has 'convertNames', no output will be generated, but the results of model
  *   analysis will be available.
  *
- * @param {string} input The preprocessed Vensim model text.
+ * @param {string} input The preprocessed Vensim or XMILE model text.
+ * @param {string} modelKind The kind of model to parse, either 'vensim' or 'xmile'.
  * @param {*} spec The model spec (from the JSON file).
  * @param {string[]} operations The set of operations to perform; can include 'generateC', 'generateJS',
  * 'printVarList', 'printRefIdTest', 'convertNames'.  If the array is empty, the model will be
@@ -38,7 +39,7 @@ import { generateCode } from './generate/gen-code.js'
  * @param {string} [varname] The variable name passed to the 'sde causes' command.
  * @return A string containing the generated C code.
  */
-export async function parseAndGenerate(input, spec, operations, modelDirname, modelName, buildDir, varname) {
+export async function parseAndGenerate(input, modelKind, spec, operations, modelDirname, modelName, buildDir, varname) {
   // Read time series from external DAT files into a single object.
   // externalDatfiles is an array of either filenames or objects
   // giving a variable name prefix as the key and a filename as the value.
@@ -69,7 +70,7 @@ export async function parseAndGenerate(input, spec, operations, modelDirname, mo
   }
 
   // Parse the model and generate code
-  let parsedModel = parseModel(input, modelDirname)
+  let parsedModel = parseModel(input, modelKind, modelDirname)
   let code = generateCode(parsedModel, { spec, operations, extData, directData, modelDirname, varname })
 
   function writeOutput(filename, text) {
@@ -92,10 +93,6 @@ export async function parseAndGenerate(input, spec, operations, modelDirname, mo
     writeOutput(`${modelName}_vars.txt`, Model.printVarList())
     // Write subscripts to a text file.
     writeOutput(`${modelName}_subs.txt`, printSubscripts())
-    // Write variables to a YAML file.
-    writeOutput(`${modelName}_vars.yaml`, Model.yamlVarList())
-    // Write subscripts to a YAML file.
-    writeOutput(`${modelName}_subs.yaml`, yamlSubsList())
     // Write variables and subscripts to a JSON file.
     const jsonList = Model.jsonList()
     writeOutput(`${modelName}.json`, JSON.stringify(jsonList.full, null, 2))
@@ -136,33 +133,44 @@ export function printNames(namesPathname, operation) {
  * TODO: Fix return type
  *
  * @param {string} input The string containing the model text.
+ * @param {string} modelKind The kind of model to parse, either 'vensim' or 'xmile'.
  * @param {string} modelDir The absolute path to the directory containing the mdl file.
  * The dat, xlsx, and csv files referenced by the model will be relative to this directory.
  * @param {Object} [options] The options that control parsing.
  * @param {boolean} options.sort Whether to sort definitions alphabetically in the preprocess step.
  * @return {*} A parsed tree representation of the model.
  */
-export function parseModel(input, modelDir, options) {
-  // Prepare the parse context that provides access to external data files
-  let parseContext /*: VensimParseContext*/
-  if (modelDir) {
-    parseContext = {
-      getDirectSubscripts(fileName, tabOrDelimiter, firstCell, lastCell /*, prefix*/) {
-        // Resolve the CSV file relative the model directory
-        const csvPath = path.resolve(modelDir, fileName)
+export function parseModel(input, modelKind, modelDir, options) {
+  if (modelKind === 'vensim') {
+    // Prepare the parse context that provides access to external data files
+    let parseContext /*: VensimParseContext*/
+    if (modelDir) {
+      parseContext = {
+        getDirectSubscripts(fileName, tabOrDelimiter, firstCell, lastCell /*, prefix*/) {
+          // Resolve the CSV file relative the model directory
+          const csvPath = path.resolve(modelDir, fileName)
 
-        // Read the subscripts from the CSV file
-        return getDirectSubscripts(csvPath, tabOrDelimiter, firstCell, lastCell)
+          // Read the subscripts from the CSV file
+          return getDirectSubscripts(csvPath, tabOrDelimiter, firstCell, lastCell)
+        }
       }
     }
-  }
 
-  // Parse the model
-  const sort = options?.sort === true
-  const root = parseVensimModel(input, parseContext, sort)
+    // Parse the Vensim model
+    const sort = options?.sort === true
+    const root = parseVensimModel(input, parseContext, sort)
 
-  return {
-    kind: 'vensim',
-    root
+    return {
+      kind: 'vensim',
+      root
+    }
+  } else {
+    // Parse the XMILE model
+    const root = parseXmileModel(input)
+
+    return {
+      kind: 'xmile',
+      root
+    }
   }
 }

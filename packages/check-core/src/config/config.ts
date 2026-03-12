@@ -156,8 +156,9 @@ function handleRenames(
           modelRunTime: result.modelRunTime
         }
       },
-      getGraphDataForScenario: origBundleModelR.getGraphDataForScenario.bind(origBundleModelR),
-      getGraphLinksForScenario: origBundleModelR.getGraphLinksForScenario.bind(origBundleModelR)
+      getGraphDataForScenario: origBundleModelR.getGraphDataForScenario?.bind(origBundleModelR),
+      getGraphLinksForScenario: origBundleModelR.getGraphLinksForScenario?.bind(origBundleModelR),
+      createGraphView: origBundleModelR.createGraphView?.bind(origBundleModelR)
     }
   }
 

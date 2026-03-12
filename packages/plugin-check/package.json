@@ -1,6 +1,6 @@
 {
   "name": "@sdeverywhere/plugin-check",
-  "version": "0.3.21",
+  "version": "0.3.28",
   "files": [
     "bin/**",
     "dist/**",
@@ -39,15 +39,15 @@
   "dependencies": {
     "@rollup/plugin-node-resolve": "^16.0.3",
     "@rollup/plugin-replace": "^6.0.3",
-    "@sdeverywhere/check-core": "^0.1.6",
-    "@sdeverywhere/check-ui-shell": "^0.2.13",
-    "@sdeverywhere/runtime": "^0.2.7",
-    "@sdeverywhere/runtime-async": "^0.2.7",
+    "@sdeverywhere/check-core": "^0.1.7",
+    "@sdeverywhere/check-ui-shell": "^0.2.19",
+    "@sdeverywhere/runtime": "^0.2.8",
+    "@sdeverywhere/runtime-async": "^0.2.8",
     "assert-never": "^1.2.1",
-    "chokidar": "^3.5.3",
+    "chokidar": "^5.0.0",
     "picocolors": "^1.0.0",
     "rollup": "^4.53.3",
-    "vite": "^7.1.9"
+    "vite": "^7.1.12"
   },
   "dependenciesComments": {
     "rollup": [
@@ -59,7 +59,7 @@
     ]
   },
   "peerDependencies": {
-    "@sdeverywhere/build": "^0.3.7"
+    "@sdeverywhere/build": "^0.3.10"
   },
   "devDependencies": {
     "@sdeverywhere/build": "*",
