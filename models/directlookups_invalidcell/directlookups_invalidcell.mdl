@@ -1,0 +1,54 @@
+{UTF-8}
+
+DimA: A1 ~~|
+
+x from csv[DimA] = GET DIRECT LOOKUPS('data/data.csv', ',', '2', 'D3')
+  ~
+  ~ This tests the case where there is a NON-NUMERIC cell in the middle of
+    other cells.  Vensim omits these data points from the synthesized lookup
+    but continues reading other valid data points in the series.
+    TODO: Vensim appears to have an off-by-one bug where it outputs zero
+    for the column following a blank/non-numeric cell, but then resumes
+    outputting correct values after that.  For this reason this test model
+    sets FINAL TIME to 2001 instead of 2003 so that it only verifies the
+    first two data points and ignores the rest.  We can update this model
+    if the issue is ever resolved in Vensim.
+  ~ :SUPPLEMENTARY
+  |
+
+x from xlsx[DimA] = GET DIRECT LOOKUPS('data/data.xlsx', 'data', '2', 'D3')
+  ~
+  ~ This tests the case where there is a NON-NUMERIC cell in the middle of
+    other cells.  Vensim omits these data points from the synthesized lookup
+    but continues reading other valid data points in the series.
+  ~ :SUPPLEMENTARY
+  |
+
+y from csv[DimA] = GET DIRECT LOOKUPS('data/data.csv', ',', '2', 'D4')
+  ~
+  ~ This tests the case where there is a BLANK cell in the middle of
+    other cells.  Vensim omits these data points from the synthesized lookup
+    but continues reading other valid data points in the series.
+  ~ :SUPPLEMENTARY
+  |
+
+y from xlsx[DimA] = GET DIRECT LOOKUPS('data/data.xlsx', 'data', '2', 'D4')
+  ~
+  ~ This tests the case where there is a BLANK cell in the middle of
+    other cells.  Vensim omits these data points from the synthesized lookup
+    but continues reading other valid data points in the series.
+  ~ :SUPPLEMENTARY
+  |
+
+x value from csv = x from csv[A1](Time) ~~|
+
+x value from xlsx = x from xlsx[A1](Time) ~~|
+
+y value from csv = y from csv[A1](Time) ~~|
+
+y value from xlsx = y from xlsx[A1](Time) ~~|
+
+INITIAL TIME = 2000 ~~|
+FINAL TIME = 2001 ~~|
+TIME STEP = 1 ~~|
+SAVEPER = 1 ~~|
