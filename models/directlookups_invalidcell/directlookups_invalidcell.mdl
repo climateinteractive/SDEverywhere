@@ -9,10 +9,8 @@ x from csv[DimA] = GET DIRECT LOOKUPS('data/data.csv', ',', '2', 'D3')
     but continues reading other valid data points in the series.
     TODO: Vensim appears to have an off-by-one bug where it outputs zero
     for the column following a blank/non-numeric cell, but then resumes
-    outputting correct values after that.  For this reason this test model
-    sets FINAL TIME to 2001 instead of 2003 so that it only verifies the
-    first two data points and ignores the rest.  We can update this model
-    if the issue is ever resolved in Vensim.
+    outputting correct values after that.  This test model will be skipped
+    by the harness until the Vensim issue is resolved.
   ~ :SUPPLEMENTARY
   |
 
@@ -49,6 +47,6 @@ y value from csv = y from csv[A1](Time) ~~|
 y value from xlsx = y from xlsx[A1](Time) ~~|
 
 INITIAL TIME = 2000 ~~|
-FINAL TIME = 2001 ~~|
+FINAL TIME = 2006 ~~|
 TIME STEP = 1 ~~|
 SAVEPER = 1 ~~|
