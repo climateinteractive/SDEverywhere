@@ -2783,6 +2783,59 @@ describe('generateEquation (XMILE -> JS)', () => {
     ])
   })
 
+  // TODO: This test is skipped until we support XMILE spec 4.5.3:
+  //   4.5.3 Apply-to-All Arrays with Non-Apply-to-All Graphical Functions
+  it.skip('should work for SUM function (with lookup call)', () => {
+    // Equivalent Vensim model for reference:
+    // const vars = readInlineModel(`
+    //   DimA: A1, A2 ~~|
+    //   x[A1]( [(0,0)-(2,2)], (0,0),(2,1.3) ) ~~|
+    //   x[A2]( [(0,0)-(2,2)], (0,0.5),(2,1.5) ) ~~|
+    //   y = SUM(x[DimA!](1)) ~~|
+    // `)
+
+    const xmileDims = `\
+<dim name="DimA">
+  <elem name="A1"/>
+  <elem name="A2"/>
+</dim>`
+    const xmileVars = `\
+<aux name="x">
+  <dimensions>
+    <dim name="DimA"/>
+  </dimensions>
+  <element subscript="A1">
+    <gf>
+      <xpts>0,2</xpts>
+      <ypts>0,1.3</ypts>
+    </gf>
+  </element>
+  <element subscript="A2">
+    <gf>
+      <xpts>0,2</xpts>
+      <ypts>0.5,1.5</ypts>
+    </gf>
+  </element>
+</aux>
+<aux name="y">
+  <eqn>SUM(x[*](1))</eqn>
+</aux>`
+    const mdl = xmile(xmileDims, xmileVars)
+    const vars = readInlineModel(mdl)
+    expect(vars.size).toBe(3)
+    expect(genJS(vars.get('_x[_a1]'), 'decl')).toEqual(['const _x_data__0_ = [0.0, 0.0, 2.0, 1.3];'])
+    expect(genJS(vars.get('_x[_a1]'), 'init-lookups')).toEqual(['_x[0] = fns.createLookup(2, _x_data__0_);'])
+    expect(genJS(vars.get('_x[_a2]'), 'decl')).toEqual(['const _x_data__1_ = [0.0, 0.5, 2.0, 1.5];'])
+    expect(genJS(vars.get('_x[_a2]'), 'init-lookups')).toEqual(['_x[1] = fns.createLookup(2, _x_data__1_);'])
+    expect(genJS(vars.get('_y'))).toEqual([
+      'let __t1 = 0.0;',
+      'for (let u = 0; u < 2; u++) {',
+      '__t1 += fns.LOOKUP(_x[u], 1.0);',
+      '}',
+      '_y = __t1;'
+    ])
+  })
+
   it('should work for TAN function', () => {
     // Equivalent Vensim model for reference:
     // const vars = readInlineModel(`
