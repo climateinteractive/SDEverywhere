@@ -82,7 +82,12 @@ export function generateDirectConstInit(variable, directData, modelDir) {
   for (let i = 0; i < cellOffsets.length; i++) {
     let rowOffset = cellOffsets[i][0] ? cellOffsets[i][0] : 0
     let colOffset = cellOffsets[i][1] ? cellOffsets[i][1] : 0
+    // Use 0.0 as a fallback when the cell is missing, empty, or contains a non-numeric value.
+    // (Vensim raises an error in this case, but SDE has historically tolerated invalid cells.)
     let dataValue = getCellValue(startCol + colOffset, startRow + rowOffset)
+    if (dataValue == null) {
+      dataValue = '0.0'
+    }
     let lhs = `${variable.varName}${lhsSubscripts[i] || ''}`
     lines.push(`  ${lhs} = ${dataValue};`)
   }
