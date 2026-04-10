@@ -89,14 +89,21 @@ function generateDirectDataLookup(varLhs, getCellValue, timeRowOrCol, startCell,
     }
   }
 
-  let timeValue = getCellValue(timeCol, timeRow)
-  let dataValue = getCellValue(dataCol, dataRow)
-  while (timeValue != null && dataValue != null) {
-    lookupData = listConcat(lookupData, `${timeValue}, ${dataValue}`, true)
-    lookupSize++
+  // Read time/value pairs, matching Vensim's behavior:
+  //   - Stop reading when the first non-numeric time value is encountered.  This
+  //     allows additional content (e.g., labels) to follow the data in the row or column.
+  //   - Skip pairs with a non-numeric data value, but continue reading subsequent pairs.
+  while (true) {
+    const timeValue = getCellValue(timeCol, timeRow)
+    if (timeValue == null) {
+      break
+    }
+    const dataValue = getCellValue(dataCol, dataRow)
+    if (dataValue != null) {
+      lookupData = listConcat(lookupData, `${timeValue}, ${dataValue}`, true)
+      lookupSize++
+    }
     nextCell()
-    dataValue = getCellValue(dataCol, dataRow)
-    timeValue = getCellValue(timeCol, timeRow)
   }
   if (lookupSize === 0) {
     throw new Error(`Empty lookup data array for ${varLhs}`)
