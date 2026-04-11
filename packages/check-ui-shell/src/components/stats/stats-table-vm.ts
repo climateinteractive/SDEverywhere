@@ -32,8 +32,8 @@ export function createStatsTableViewModel(
     }
   }
 
-  const modelSpecL = comparisonConfig.bundleL.model.modelSpec
-  const modelSpecR = comparisonConfig.bundleR.model.modelSpec
+  const modelSpecL = comparisonConfig.bundleL.modelSpec
+  const modelSpecR = comparisonConfig.bundleR.modelSpec
 
   const inputCountL = modelSpecL.inputVars.size
   const inputCountR = modelSpecR.inputVars.size

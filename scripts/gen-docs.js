@@ -9,7 +9,7 @@
 import { execSync } from 'child_process'
 import { existsSync, readFileSync, writeFileSync } from 'fs'
 import { resolve as resolvePath } from 'path'
-import glob from 'glob'
+import fastGlob from 'fast-glob'
 
 // By default, replace all links to the typedoc-generated `entry.md` with a link to our
 // own customized `index.md`.  More replacements can be defined on a per-project basis
@@ -65,12 +65,12 @@ src/index.ts`
   execSync(typedocCmd)
 
   // List all files in the docs directory
-  glob('docs/**/*.md', {}, (_, files) => {
-    // Edit each file to apply the replacements
-    for (const f of files) {
-      applyReplacements(f)
-    }
-  })
+  const files = fastGlob.sync('docs/**/*.md')
+
+  // Edit each file to apply the replacements
+  for (const f of files) {
+    applyReplacements(f)
+  }
 }
 
 main()

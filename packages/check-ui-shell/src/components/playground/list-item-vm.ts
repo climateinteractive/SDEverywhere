@@ -6,5 +6,8 @@ export class ListItemViewModel {
    * @param id The ID for the item.
    * @param label The displayed string.
    */
-  constructor(public readonly id: string, public readonly label: string) {}
+  constructor(
+    public readonly id: string,
+    public readonly label: string
+  ) {}
 }

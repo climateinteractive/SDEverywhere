@@ -2,111 +2,178 @@
 
 import { assertNever } from 'assert-never'
 
-import { TaskQueue } from '../_shared/task-queue'
 import { allInputsAtPositionSpec } from '../_shared/scenario-specs'
-
-import type { BundleModel } from '../bundle/bundle-types'
+import type { Task, TaskKey } from '../_shared/task-queue'
+import { TaskQueue } from '../_shared/task-queue'
 
 import type { PerfReport } from './perf-stats'
 import { PerfStats } from './perf-stats'
 
-// The number of warmups for each perf run
-const warmupCount = 5
+export type CancelRunPerf = () => void
 
-// The number of times to run the model for each perf run
-const runCount = 100
+export interface RunPerfCallbacks {
+  onComplete?: (reportL: PerfReport, reportR: PerfReport) => void
+  onError?: (error: Error) => void
+}
+
+export interface RunPerfOptions {
+  /** The mode to run the performance tests (default is 'serial'). */
+  mode?: 'serial' | 'parallel'
+
+  /** The number of warmups for each perf run (default is 5). */
+  warmupCount?: number
+
+  /** The number of times to run the model for each perf run (default is 100). */
+  runCount?: number
+}
+
+/**
+ * Perform a performance run with the given `TaskQueue` instance.
+ *
+ * @param taskQueue The task queue to use.
+ * @param callbacks The callbacks that will be notified.
+ * @param options The options for the performance run.
+ * @return A function that will cancel the process when invoked.
+ *
+ * @hidden This is exported only for use in tests.
+ */
+export function runPerfWithTaskQueue(
+  taskQueue: TaskQueue,
+  callbacks: RunPerfCallbacks,
+  options?: RunPerfOptions
+): CancelRunPerf {
+  const perfRunner = new PerfRunner(taskQueue, callbacks, options)
+  perfRunner.start()
+  return () => {
+    perfRunner.cancel()
+  }
+}
+
+/**
+ * Run performance tests on the bundle models.
+ *
+ * @param callbacks The callbacks that will be notified.
+ * @param options The options for the performance run.
+ * @return A function that will cancel the process when invoked.
+ */
+export function runPerf(callbacks: RunPerfCallbacks, options?: RunPerfOptions): CancelRunPerf {
+  const taskQueue = TaskQueue.getInstance()
+  return runPerfWithTaskQueue(taskQueue, callbacks, options)
+}
 
 type PerfRequestKind = 'left' | 'right' | 'both'
 
-interface PerfRequest {
-  kind: PerfRequestKind
-}
-
-interface PerfResponse {
-  runTimeL?: number
-  runTimeR?: number
-}
-
-export class PerfRunner {
-  private readonly taskQueue: TaskQueue<PerfRequest, PerfResponse>
-  public onComplete?: (reportL: PerfReport, reportR: PerfReport) => void
-  public onError?: (error: Error) => void
+class PerfRunner {
+  private readonly pendingTaskKeys: Set<TaskKey> = new Set()
+  private stopped = false
 
   constructor(
-    public readonly bundleModelL: BundleModel,
-    public readonly bundleModelR: BundleModel,
-    private readonly mode: 'serial' | 'parallel' = 'serial'
-  ) {
-    const scenarioSpec = allInputsAtPositionSpec('at-default')
+    private readonly taskQueue: TaskQueue,
+    private readonly callbacks: RunPerfCallbacks,
+    private readonly options?: RunPerfOptions
+  ) {}
 
-    this.taskQueue = new TaskQueue({
-      process: async request => {
-        switch (request.kind) {
-          case 'left': {
-            const result = await bundleModelL.getDatasetsForScenario(scenarioSpec, [])
-            return {
-              runTimeL: result.modelRunTime
-            }
-          }
-          case 'right': {
-            const result = await bundleModelR.getDatasetsForScenario(scenarioSpec, [])
-            return {
-              runTimeR: result.modelRunTime
-            }
-          }
-          case 'both': {
-            const [resultL, resultR] = await Promise.all([
-              bundleModelL.getDatasetsForScenario(scenarioSpec, []),
-              bundleModelR.getDatasetsForScenario(scenarioSpec, [])
-            ])
-            return {
-              runTimeL: resultL.modelRunTime,
-              runTimeR: resultR.modelRunTime
-            }
-          }
-          default:
-            assertNever(request.kind)
-        }
+  cancel(): void {
+    if (!this.stopped) {
+      for (const taskKey of this.pendingTaskKeys) {
+        this.taskQueue.cancelTask(taskKey)
       }
-    })
+      this.stopped = true
+    }
   }
 
   start(): void {
+    // Initialize the performance stats
     const statsL = new PerfStats()
     const statsR = new PerfStats()
-    this.taskQueue.onIdle = error => {
-      if (error) {
-        this.onError(error)
-      } else {
-        this.onComplete?.(statsL.toReport(), statsR.toReport())
-      }
+
+    // Always use the "all inputs at default" scenario
+    const scenarioSpec = allInputsAtPositionSpec('at-default')
+
+    // Get the warmup and run counts
+    const warmupCount = this.options?.warmupCount ?? 5
+    const runCount = this.options?.runCount ?? 100
+
+    // Calculate total number of tasks
+    let totalTasks = 0
+    if (this.options?.mode === 'parallel') {
+      totalTasks = warmupCount + runCount
+    } else {
+      totalTasks = (warmupCount + runCount) * 2
     }
 
-    const taskQueue = this.taskQueue
-    function addTask(index: number, warmup: boolean, kind: PerfRequestKind) {
-      const key = `${warmup ? 'warmup-' : ''}${kind}-${index}`
-      const request: PerfRequest = {
-        kind
+    let tasksCompleted = 0
+    let perfTaskId = 1
+    const addTask = (warmup: boolean, kind: PerfRequestKind) => {
+      const task: Task = {
+        key: `perf-runner-${perfTaskId++}`,
+        kind: 'perf-runner',
+        process: async bundleModels => {
+          // Remove the task key from the set of pending task keys
+          this.pendingTaskKeys.delete(task.key)
+
+          try {
+            let runTimeL: number | undefined
+            let runTimeR: number | undefined
+
+            switch (kind) {
+              case 'left': {
+                const result = await bundleModels.L.getDatasetsForScenario(scenarioSpec, [])
+                runTimeL = result.modelRunTime
+                break
+              }
+              case 'right': {
+                const result = await bundleModels.R.getDatasetsForScenario(scenarioSpec, [])
+                runTimeR = result.modelRunTime
+                break
+              }
+              case 'both': {
+                const [resultL, resultR] = await Promise.all([
+                  bundleModels.L.getDatasetsForScenario(scenarioSpec, []),
+                  bundleModels.R.getDatasetsForScenario(scenarioSpec, [])
+                ])
+                runTimeL = resultL.modelRunTime
+                runTimeR = resultR.modelRunTime
+                break
+              }
+              default:
+                assertNever(kind)
+            }
+
+            // Add to stats if not warmup
+            if (!warmup) {
+              if (runTimeL !== undefined) {
+                statsL.addRun(runTimeL)
+              }
+              if (runTimeR !== undefined) {
+                statsR.addRun(runTimeR)
+              }
+            }
+
+            // Notify the completion callback when all tasks have been processed
+            tasksCompleted++
+            if (tasksCompleted === totalTasks) {
+              this.callbacks.onComplete?.(statsL.toReport(), statsR.toReport())
+            }
+          } catch (error) {
+            this.callbacks.onError?.(error)
+          }
+        }
       }
-      taskQueue.addTask(key, request, response => {
-        if (!warmup && response.runTimeL !== undefined) {
-          statsL.addRun(response.runTimeL)
-        }
-        if (!warmup && response.runTimeR !== undefined) {
-          statsR.addRun(response.runTimeR)
-        }
-      })
+      this.taskQueue.addTask(task)
+      this.pendingTaskKeys.add(task.key)
     }
+
     function addTasks(kind: PerfRequestKind) {
       for (let i = 0; i < warmupCount; i++) {
-        addTask(i, true, kind)
+        addTask(true, kind)
       }
       for (let i = 0; i < runCount; i++) {
-        addTask(i, false, kind)
+        addTask(false, kind)
       }
     }
 
-    if (this.mode === 'parallel') {
+    if (this.options?.mode === 'parallel') {
       addTasks('both')
     } else {
       addTasks('left')

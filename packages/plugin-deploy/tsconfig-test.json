@@ -1,0 +1,5 @@
+// This contains the TypeScript configuration for testing.
+{
+  "extends": "./tsconfig-base.json",
+  "include": ["src/**/*"]
+}

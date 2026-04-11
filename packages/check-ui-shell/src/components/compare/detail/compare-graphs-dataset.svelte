@@ -1,8 +1,7 @@
 <!-- Copyright (c) 2021-2022 Climate Interactive / New Venture Fund -->
 
 <!-- SCRIPT -->
-<script lang='ts'>
-
+<script lang="ts">
 import DetailBox from './compare-detail-box.svelte'
 
 import type { CompareGraphsDatasetViewModel } from './compare-graphs-dataset-vm'
@@ -20,74 +19,74 @@ const detailBoxVisible = viewModel.detailBoxVisible
 function onDatasetClicked() {
   detailBoxVisible.update(v => !v)
 }
-
 </script>
 
-
-
-
 <!-- TEMPLATE -->
-<template lang='pug'>
-
-.dataset-container
-  .dataset-row(on:click!='{onDatasetClicked}')
-    //- TODO: Revisit this logic
-    +if('legendLabelL && !legendLabelR')
-      .legend-item(style='background-color: {legendColorL};') { @html legendLabelL.toUpperCase() }
-      +elseif('legendLabelR')
-        .legend-item(style='background-color: {legendColorR};') { @html legendLabelR.toUpperCase() }
-    +if('nameL && nameR && nameL !== nameR')
-      .dataset-name(class!='{bucketClass}') { nameL }
-      span.dataset-arrow &nbsp;-&gt;&nbsp;
-      .dataset-name(class!='{bucketClass}') { nameR }
-      +elseif('nameL && !nameR')
-        .dataset-name(class!='{bucketClass}') { nameL }
-      +elseif('nameR')
-        .dataset-name(class!='{bucketClass}') { nameR }
-  +if('$detailBoxVisible')
-    .detail-box-container
-      DetailBox(viewModel!='{viewModel.detailBoxViewModel}')
-
-</template>
-
-
-
+<div class="dataset-container">
+  <div class="dataset-row" on:click={onDatasetClicked}>
+    <!-- TODO: Revisit this logic -->
+    {#if legendLabelL && !legendLabelR}
+      <div class="legend-item" style="background-color: {legendColorL};">{@html legendLabelL.toUpperCase()}</div>
+    {:else if legendLabelR}
+      <div class="legend-item" style="background-color: {legendColorR};">{@html legendLabelR.toUpperCase()}</div>
+    {/if}
+    {#if nameL && nameR && nameL !== nameR}
+      <div class={`dataset-name ${bucketClass}`}>{nameL}</div>
+      <span class="dataset-arrow">&nbsp;-&gt;&nbsp;</span>
+      <div class={`dataset-name ${bucketClass}`}>{nameR}</div>
+    {:else if nameL && !nameR}
+      <div class={`dataset-name ${bucketClass}`}>{nameL}</div>
+    {:else if nameR}
+      <div class={`dataset-name ${bucketClass}`}>{nameR}</div>
+    {/if}
+  </div>
+  {#if $detailBoxVisible}
+    <div class="detail-box-container">
+      <DetailBox viewModel={viewModel.detailBoxViewModel} />
+    </div>
+  {/if}
+</div>
 
 <!-- STYLE -->
-<style lang='sass'>
+<style lang="scss">
+.dataset-container {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+}
 
-.dataset-container
-  display: flex
-  flex: 1
-  flex-direction: column
+.dataset-row {
+  display: flex;
+  flex: 1;
+  align-items: baseline;
+  margin-left: 0.6rem;
+  cursor: pointer;
 
-.dataset-row
-  display: flex
-  flex: 1
-  align-items: baseline
-  margin-left: .6rem
-  cursor: pointer
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+  }
+}
 
-.dataset-row:hover
-  background-color: rgba(255, 255, 255, .05)
+.dataset-arrow {
+  color: #777;
+}
 
-.dataset-arrow
-  color: #777
+.legend-item {
+  font-family: 'Roboto Condensed';
+  font-weight: 700;
+  font-size: 1rem;
+  margin: 0.2rem 0.4rem;
+  padding: 0.25rem 0.6rem 0.2rem 0.6rem;
+  color: #fff;
+  text-align: center;
+  text-shadow: 0 0.5px 1.5px #000;
+}
 
-.legend-item
-  font-family: 'Roboto Condensed'
-  font-weight: 700
-  font-size: 1rem
-  margin: .2rem .4rem
-  padding: .25rem .6rem .2rem .6rem
-  color: #fff
-  text-align: center
-
-.detail-box-container
-  display: flex
-  flex: 1
-  margin-top: .2rem
-  margin-bottom: .8rem
-  margin-left: .4rem
-
+.detail-box-container {
+  display: flex;
+  flex: 1;
+  margin-top: 0.2rem;
+  margin-bottom: 0.8rem;
+  margin-left: 0.4rem;
+}
 </style>

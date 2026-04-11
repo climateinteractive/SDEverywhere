@@ -14,14 +14,14 @@ import type { Arguments } from 'yargs-parser'
 
 const TEMPLATES = [
   {
-    title: 'Default (jQuery) project',
-    description: 'Includes recommended structure with config files, jQuery-based app, core library, model-check, etc',
-    value: 'default'
-  },
-  {
-    title: 'Svelte project',
+    title: 'Svelte project (recommended)',
     description: 'Includes recommended structure with config files, Svelte-based app, core library, model-check, etc',
     value: 'svelte'
+  },
+  {
+    title: 'jQuery project',
+    description: 'Includes recommended structure with config files, jQuery-based app, core library, model-check, etc',
+    value: 'jquery'
   },
   {
     title: 'Minimal project',
@@ -81,8 +81,8 @@ export async function chooseTemplate(args: Arguments): Promise<Template> {
   } else {
     // Otherwise, assume the template name is one of the available `template-*`
     // projects under `examples` in the SDEverywhere repository, for example:
-    //  default
     //  svelte
+    //  jquery
     //  minimal
     baseTemplateUri = `github:climateinteractive/SDEverywhere/examples/template-${templateName}`
   }
@@ -101,7 +101,7 @@ export async function copyTemplate(
   projDir: string,
   pkgManager: string,
   configDirExisted: boolean,
-  mdlExisted: boolean
+  modelExisted: boolean
 ): Promise<void> {
   // Show a spinner while copying the template files
   const templateSpinner = ora('Copying template files...').start()
@@ -130,9 +130,9 @@ export async function copyTemplate(
       rmSync(joinPath(tmpDir, 'config'), { recursive: true, force: true })
     }
 
-    if (mdlExisted) {
-      // There is already an mdl file in the project directory; remove the `model`
-      // directory (including the mdl file and the model-check yaml files) from the
+    if (modelExisted) {
+      // There is already a model file in the project directory; remove the `model`
+      // directory (including the model file and the model-check yaml files) from the
       // template so that we don't copy them into the project directory
       rmSync(joinPath(tmpDir, 'model'), { recursive: true, force: true })
     }
@@ -143,10 +143,13 @@ export async function copyTemplate(
       errorOnExist: false
     })
 
-    if (!mdlExisted) {
-      // There wasn't already an mdl file in the project directory, so we will use
+    if (!modelExisted) {
+      // There wasn't already a model file in the project directory, so we will use
       // the one supplied by the template.  Rename it from `MODEL_NAME.mdl` to
       // `sample.mdl`.
+      // TODO: For now we assume that all templates include a sample model in Vensim
+      // format.  This will need to be updated if we add templates that include a
+      // sample model in a different format.
       renameSync(joinPath(projDir, 'model', 'MODEL_NAME.mdl'), joinPath(projDir, 'model', 'sample.mdl'))
     }
 

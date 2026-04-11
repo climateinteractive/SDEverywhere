@@ -1,19 +1,22 @@
 // Copyright (c) 2024 Climate Interactive / New Venture Fund
 
 import {
+  decodeConstants,
   decodeLookups,
+  encodeConstants,
   encodeLookups,
   encodeVarIndices,
+  getEncodedConstantBufferLengths,
   getEncodedLookupBufferLengths,
   getEncodedVarIndicesLength
 } from '../_shared'
-import type { InputValue, LookupDef, Outputs } from '../_shared'
+import type { ConstantDef, InputValue, LookupDef, Outputs } from '../_shared'
 import type { ModelListing } from '../model-listing'
 import { resolveVarRef } from './resolve-var-ref'
 import type { RunModelOptions } from './run-model-options'
 import type { RunModelParams } from './run-model-params'
 
-const headerLengthInElements = 16
+const headerLengthInElements = 20
 const extrasLengthInElements = 1
 
 interface Section<ArrayType> {
@@ -72,6 +75,8 @@ export class BufferedRunModelParams implements RunModelParams {
    *   inputs
    *   outputs
    *   outputIndices
+   *   constants (values)
+   *   constantIndices
    *   lookups (data)
    *   lookupIndices
    */
@@ -94,6 +99,12 @@ export class BufferedRunModelParams implements RunModelParams {
 
   /** The output indices section of the `encoded` buffer. */
   private readonly outputIndices = new Int32Section()
+
+  /** The constant values section of the `encoded` buffer. */
+  private readonly constants = new Float64Section()
+
+  /** The constant indices section of the `encoded` buffer. */
+  private readonly constantIndices = new Int32Section()
 
   /** The lookup data section of the `encoded` buffer. */
   private readonly lookups = new Float64Section()
@@ -201,6 +212,17 @@ export class BufferedRunModelParams implements RunModelParams {
   }
 
   // from RunModelParams interface
+  getConstants(): ConstantDef[] | undefined {
+    if (this.constantIndices.lengthInElements === 0) {
+      return undefined
+    }
+
+    // Reconstruct the `ConstantDef` instances using the data from the constant values and
+    // indices buffers
+    return decodeConstants(this.constantIndices.view, this.constants.view)
+  }
+
+  // from RunModelParams interface
   getLookups(): LookupDef[] | undefined {
     if (this.lookupIndices.lengthInElements === 0) {
       return undefined
@@ -262,6 +284,26 @@ export class BufferedRunModelParams implements RunModelParams {
       outputIndicesLengthInElements = 0
     }
 
+    // Determine the number of elements in the constant values and indices sections
+    let constantsLengthInElements: number
+    let constantIndicesLengthInElements: number
+    if (options?.constants !== undefined && options.constants.length > 0) {
+      // Resolve the `varSpec` for each `ConstantDef`.  If the variable can be resolved, this
+      // will fill in the `varSpec` for the `ConstantDef`, otherwise it will throw an error.
+      for (const constantDef of options.constants) {
+        resolveVarRef(this.listing, constantDef.varRef, 'constant')
+      }
+
+      // Compute the required lengths
+      const encodedLengths = getEncodedConstantBufferLengths(options.constants)
+      constantsLengthInElements = encodedLengths.constantsLength
+      constantIndicesLengthInElements = encodedLengths.constantIndicesLength
+    } else {
+      // Don't use the constant values and indices buffers when constant overrides are not provided
+      constantsLengthInElements = 0
+      constantIndicesLengthInElements = 0
+    }
+
     // Determine the number of elements in the lookup data and indices sections
     let lookupsLengthInElements: number
     let lookupIndicesLengthInElements: number
@@ -301,6 +343,8 @@ export class BufferedRunModelParams implements RunModelParams {
     const inputsOffsetInBytes = section('float64', inputsLengthInElements)
     const outputsOffsetInBytes = section('float64', outputsLengthInElements)
     const outputIndicesOffsetInBytes = section('int32', outputIndicesLengthInElements)
+    const constantsOffsetInBytes = section('float64', constantsLengthInElements)
+    const constantIndicesOffsetInBytes = section('int32', constantIndicesLengthInElements)
     const lookupsOffsetInBytes = section('float64', lookupsLengthInElements)
     const lookupIndicesOffsetInBytes = section('int32', lookupIndicesLengthInElements)
 
@@ -329,6 +373,10 @@ export class BufferedRunModelParams implements RunModelParams {
     headerView[headerIndex++] = outputsLengthInElements
     headerView[headerIndex++] = outputIndicesOffsetInBytes
     headerView[headerIndex++] = outputIndicesLengthInElements
+    headerView[headerIndex++] = constantsOffsetInBytes
+    headerView[headerIndex++] = constantsLengthInElements
+    headerView[headerIndex++] = constantIndicesOffsetInBytes
+    headerView[headerIndex++] = constantIndicesLengthInElements
     headerView[headerIndex++] = lookupsOffsetInBytes
     headerView[headerIndex++] = lookupsLengthInElements
     headerView[headerIndex++] = lookupIndicesOffsetInBytes
@@ -341,6 +389,8 @@ export class BufferedRunModelParams implements RunModelParams {
     this.extras.update(this.encoded, extrasOffsetInBytes, extrasLengthInElements)
     this.outputs.update(this.encoded, outputsOffsetInBytes, outputsLengthInElements)
     this.outputIndices.update(this.encoded, outputIndicesOffsetInBytes, outputIndicesLengthInElements)
+    this.constants.update(this.encoded, constantsOffsetInBytes, constantsLengthInElements)
+    this.constantIndices.update(this.encoded, constantIndicesOffsetInBytes, constantIndicesLengthInElements)
     this.lookups.update(this.encoded, lookupsOffsetInBytes, lookupsLengthInElements)
     this.lookupIndices.update(this.encoded, lookupIndicesOffsetInBytes, lookupIndicesLengthInElements)
 
@@ -364,6 +414,11 @@ export class BufferedRunModelParams implements RunModelParams {
     // Copy the the output indices into the internal buffer, if needed
     if (this.outputIndices.view) {
       encodeVarIndices(outputVarSpecs, this.outputIndices.view)
+    }
+
+    // Copy the constant values and indices into the internal buffers, if needed
+    if (constantIndicesLengthInElements > 0) {
+      encodeConstants(options.constants, this.constantIndices.view, this.constants.view)
     }
 
     // Copy the lookup data and indices into the internal buffers, if needed
@@ -403,6 +458,10 @@ export class BufferedRunModelParams implements RunModelParams {
     const outputsLengthInElements = headerView[headerIndex++]
     const outputIndicesOffsetInBytes = headerView[headerIndex++]
     const outputIndicesLengthInElements = headerView[headerIndex++]
+    const constantsOffsetInBytes = headerView[headerIndex++]
+    const constantsLengthInElements = headerView[headerIndex++]
+    const constantIndicesOffsetInBytes = headerView[headerIndex++]
+    const constantIndicesLengthInElements = headerView[headerIndex++]
     const lookupsOffsetInBytes = headerView[headerIndex++]
     const lookupsLengthInElements = headerView[headerIndex++]
     const lookupIndicesOffsetInBytes = headerView[headerIndex++]
@@ -413,6 +472,8 @@ export class BufferedRunModelParams implements RunModelParams {
     const inputsLengthInBytes = inputsLengthInElements * Float64Array.BYTES_PER_ELEMENT
     const outputsLengthInBytes = outputsLengthInElements * Float64Array.BYTES_PER_ELEMENT
     const outputIndicesLengthInBytes = outputIndicesLengthInElements * Int32Array.BYTES_PER_ELEMENT
+    const constantsLengthInBytes = constantsLengthInElements * Float64Array.BYTES_PER_ELEMENT
+    const constantIndicesLengthInBytes = constantIndicesLengthInElements * Int32Array.BYTES_PER_ELEMENT
     const lookupsLengthInBytes = lookupsLengthInElements * Float64Array.BYTES_PER_ELEMENT
     const lookupIndicesLengthInBytes = lookupIndicesLengthInElements * Int32Array.BYTES_PER_ELEMENT
     const requiredLengthInBytes =
@@ -421,6 +482,8 @@ export class BufferedRunModelParams implements RunModelParams {
       inputsLengthInBytes +
       outputsLengthInBytes +
       outputIndicesLengthInBytes +
+      constantsLengthInBytes +
+      constantIndicesLengthInBytes +
       lookupsLengthInBytes +
       lookupIndicesLengthInBytes
     if (buffer.byteLength < requiredLengthInBytes) {
@@ -432,6 +495,8 @@ export class BufferedRunModelParams implements RunModelParams {
     this.inputs.update(this.encoded, inputsOffsetInBytes, inputsLengthInElements)
     this.outputs.update(this.encoded, outputsOffsetInBytes, outputsLengthInElements)
     this.outputIndices.update(this.encoded, outputIndicesOffsetInBytes, outputIndicesLengthInElements)
+    this.constants.update(this.encoded, constantsOffsetInBytes, constantsLengthInElements)
+    this.constantIndices.update(this.encoded, constantIndicesOffsetInBytes, constantIndicesLengthInElements)
     this.lookups.update(this.encoded, lookupsOffsetInBytes, lookupsLengthInElements)
     this.lookupIndices.update(this.encoded, lookupIndicesOffsetInBytes, lookupIndicesLengthInElements)
   }

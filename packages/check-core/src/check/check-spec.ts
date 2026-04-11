@@ -1,5 +1,13 @@
 // Copyright (c) 2021-2022 Climate Interactive / New Venture Fund
 
+/** Spec type that allows for matching a check by group and test name. */
+export interface CheckNameSpec {
+  /** The name of a check group. */
+  groupName: string
+  /** The name of a check test. */
+  testName: string
+}
+
 export interface CheckDatasetMatchingSpec {
   // TODO: Make this an enum (aux, const, etc)?
   type: string

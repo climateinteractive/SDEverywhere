@@ -20,16 +20,6 @@ if (suiteSummaryJson) {
   suiteSummary = JSON.parse(suiteSummaryJson) as SuiteSummary
 }
 
-// In local development mode, the app header contains a "Simplify Scenarios" checkbox; if checked,
-// we can create a configuration that includes a simpler set of specs so that the tests run faster
-function loadSimplifyScenariosFlag(): boolean {
-  if (import.meta.hot) {
-    return localStorage.getItem('sde-check-simplify-scenarios') === '1'
-  } else {
-    return false
-  }
-}
-
 async function initBundlesAndUI() {
   // Before switching bundles, clear out the app-shell-container element
   const container = document.getElementById('app-shell-container')
@@ -40,8 +30,7 @@ async function initBundlesAndUI() {
   // TODO: Release resources associated with active bundles
 
   // Load the bundles and build the model check/compare configuration
-  const simplifyScenarios = loadSimplifyScenariosFlag()
-  const configOptions = getConfigOptions(baselineBundle() as Bundle, currentBundle() as Bundle, { simplifyScenarios })
+  const configOptions = getConfigOptions(baselineBundle() as Bundle, currentBundle() as Bundle)
 
   // Initialize the root Svelte component
   initAppShell(configOptions, {
@@ -52,10 +41,9 @@ async function initBundlesAndUI() {
 // Initialize the bundles and user interface
 initBundlesAndUI()
 
-if (import.meta.hot) {
-  // Reload everything when the user toggles the "Simplify Scenarios" checkbox
-  document.addEventListener('sde-check-simplify-scenarios-toggled', () => {
-    // Reinitialize using the new state
-    initBundlesAndUI()
-  })
-}
+// Reload everything when the user applies updated configuration (e.g., updated filters or
+// concurrency setting)
+document.addEventListener('sde-check-config-changed', () => {
+  // Reinitialize using the new configuration
+  initBundlesAndUI()
+})

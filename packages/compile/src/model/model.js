@@ -1,8 +1,9 @@
-import B from 'bufx'
-import yaml from 'js-yaml'
 import * as R from 'ramda'
 
-import { canonicalName, decanonicalize, isIterable, /*listConcat,*/ strlist, vlog, vsort } from '../_shared/helpers.js'
+import { canonicalVarId, toPrettyString } from '@sdeverywhere/parse'
+
+import B from '../_shared/bufx.js'
+import { decanonicalize, isIterable, strlist, vlog, vsort } from '../_shared/helpers.js'
 import {
   addIndex,
   allAliases,
@@ -13,8 +14,10 @@ import {
   sub,
   subscriptFamilies
 } from '../_shared/subscript.js'
+import { cName } from '../_shared/var-names.js'
 
-import { readEquation } from './read-equations.js'
+import { expandVar } from './expand-var-instances.js'
+import { readEquation, resolveXmileDimensionWildcards } from './read-equations.js'
 import { readDimensionDefs } from './read-subscripts.js'
 import { readVariables } from './read-variables.js'
 import { reduceVariables } from './reduce-variables.js'
@@ -60,12 +63,12 @@ function resetModelState() {
  * TODO: FIX TYPE
  * @param {*} parsedModel The parsed model structure.
  * @param {*} spec The parsed `spec.json` object.
- * @param {Map<string, any>} extData The map of datasets from external `.dat` files.
- * @param {Map<string, any>} directData The mapping of dataset name used in a `GET DIRECT DATA`
+ * @param {Map<string, any>} [extData] The map of datasets from external `.dat` files.
+ * @param {Map<string, any>} [directData] The mapping of dataset name used in a `GET DIRECT DATA`
  * call (e.g., `?data`) to the tabular data contained in the loaded data file.
- * @param {string} modelDirname The path to the directory containing the model (used for resolving data
+ * @param {string} [modelDirname] The path to the directory containing the model (used for resolving data
  * files for `GET DIRECT SUBSCRIPT`).
- * @param {*} opts An optional object used by tests to stop the read process after a specific phase.
+ * @param {*} [opts] An optional object used by tests to stop the read process after a specific phase.
  */
 function read(parsedModel, spec, extData, directData, modelDirname, opts) {
   // Some arrays need to be separated into variables with individual indices to
@@ -91,9 +94,79 @@ function read(parsedModel, spec, extData, directData, modelDirname, opts) {
   timeVar.varName = '_time'
   vars.push(timeVar)
 
+  // Helper function to define a control variable for XMILE models
+  function defineXmileControlVar(varName, varId, rhsValue) {
+    let rhsExpr
+    if (typeof rhsValue === 'number') {
+      rhsExpr = {
+        kind: 'number',
+        value: rhsValue,
+        text: rhsValue.toString()
+      }
+    } else {
+      rhsExpr = {
+        kind: 'variable-ref',
+        varName: rhsValue,
+        varId: canonicalVarId(rhsValue)
+      }
+    }
+    const v = new Variable()
+    v.modelLHS = varName
+    v.varName = varId
+    v.parsedEqn = {
+      lhs: {
+        varDef: {
+          varName,
+          varId
+        }
+      },
+      rhs: {
+        kind: 'expr',
+        expr: rhsExpr
+      }
+    }
+    v.modelFormula = toPrettyString(rhsExpr, { compact: true })
+    v.includeInOutput = false
+    vars.push(v)
+  }
+
+  if (parsedModel.kind === 'xmile') {
+    // XXX: Unlike Vensim models, XMILE models do not include the control parameters as
+    // normal model equations; instead, they are defined in the `<sim_specs>` element.
+    // In addition, XMILE allows these values to be accessed in equations (e.g., `<start>`
+    // can be accessed as `STARTTIME`, `<stop>` as `STOPTIME`, and `<dt>` as `DT`).
+    // For compatibility with the existing runtime code (which expects these variables
+    // to be defined using the Vensim names), we will synthesize variables using the
+    // Vensim names (e.g., `INITIAL TIME`) and also synthesize variables that derive
+    // from these using the XMILE names (e.g., `STARTTIME`).
+    defineXmileControlVar('INITIAL TIME', '_initial_time', parsedModel.root.simulationSpec.startTime)
+    defineXmileControlVar('FINAL TIME', '_final_time', parsedModel.root.simulationSpec.endTime)
+    defineXmileControlVar('TIME STEP', '_time_step', parsedModel.root.simulationSpec.timeStep)
+    defineXmileControlVar('STARTTIME', '_starttime', 'INITIAL TIME')
+    defineXmileControlVar('STOPTIME', '_stoptime', 'FINAL TIME')
+    defineXmileControlVar('DT', '_dt', 'TIME STEP')
+    // XXX: For now, also include a `SAVEPER` variable that is the same as `TIME STEP` (is there
+    // an equivalent of this in XMILE?)
+    defineXmileControlVar('SAVEPER', '_saveper', 'TIME STEP')
+  }
+
   // Add the variables to the `Model`
   vars.forEach(addVariable)
   if (opts?.stopAfterReadVariables) return
+
+  if (parsedModel.kind === 'xmile') {
+    // XXX: In the case of XMILE, we need to resolve any wildcards used in dimension
+    // position in the RHS of the equation
+    for (const variable of vars) {
+      if (variable.parsedEqn?.rhs?.kind === 'expr') {
+        const updatedEqn = resolveXmileDimensionWildcards(variable)
+        if (updatedEqn) {
+          variable.parsedEqn = updatedEqn
+          variable.modelFormula = toPrettyString(updatedEqn.rhs.expr, { compact: true })
+        }
+      }
+    }
+  }
 
   if (spec) {
     // If the spec file contains `input/outputVarNames`, convert the full Vensim variable
@@ -267,7 +340,7 @@ function resolveDimensions(dimensionFamilies) {
   }
 }
 
-function analyze(parsedModelKind, inputVars, opts) {
+function analyze(modelKind, inputVars, opts) {
   // Analyze the RHS of each equation in stages after all the variables are read.
   // Find non-apply-to-all vars that are defined with more than one equation.
   findNonAtoAVars()
@@ -283,7 +356,9 @@ function analyze(parsedModelKind, inputVars, opts) {
   if (opts?.stopAfterReduceVariables === true) return
 
   // Read the RHS to list the refIds of vars that are referenced and set the var type.
-  variables.forEach(readEquation)
+  variables.forEach(v => {
+    readEquation(v, modelKind)
+  })
 }
 
 function checkSpecVars(spec) {
@@ -425,7 +500,13 @@ function removeUnusedVariables(spec) {
   }
 
   // Filter out unneeded variables so we're left with the minimal set of variables to emit
-  variables = R.filter(v => referencedVarNames.has(v.varName), variables)
+  const filteredVariables = R.filter(v => referencedVarNames.has(v.varName), variables)
+  // TODO: Note that we reuse the same `variables` array instance here instead of reassigning
+  // to it because some code (like in `code-gen/expand-var-names.js` and in some tests) uses
+  // the `variables` array (from module-level storage) directly.  We need to fix those uses
+  // to use accessors to avoid these subtle issues.
+  variables.length = 0
+  variables.push(...filteredVariables)
 
   // Rebuild the variables-by-name map
   variablesByName.clear()
@@ -732,28 +813,6 @@ function vensimName(cVarName) {
   }
   return result
 }
-function cName(vensimVarName) {
-  // Convert a Vensim variable name to a C name.
-  // This function requires model analysis to be completed first when the variable has subscripts.
-
-  // Split the variable name from the subscripts
-  let matches = vensimVarName.match(/([^[]+)(?:\[([^\]]+)\])?/)
-  if (!matches) {
-    throw new Error(`Invalid variable name '${vensimVarName}' found when converting to C representation`)
-  }
-  let cVarName = canonicalName(matches[1])
-  if (matches[2]) {
-    // The variable name includes subscripts, so split them into individual IDs
-    let cSubIds = matches[2].split(',').map(x => canonicalName(x))
-    // If a subscript is an index, convert it to an index number to match Vensim data exports
-    let cSubIdParts = cSubIds.map(cSubId => {
-      return isIndex(cSubId) ? `[${sub(cSubId).value}]` : `[${cSubId}]`
-    })
-    // Append the subscript parts to the base variable name to create the full reference
-    cVarName += cSubIdParts.join('')
-  }
-  return cVarName
-}
 function isInputVar(varName) {
   // Return true if the given variable (in canonical form) is included in the list of
   // input variables in the spec file.
@@ -960,14 +1019,6 @@ function printVarList() {
   }
   return B.getBuf()
 }
-function yamlVarList() {
-  // Print selected properties of all variable objects to a YAML string.
-  let vars = R.sortBy(
-    R.prop('refId'),
-    R.map(v => filterVar(v), variables)
-  )
-  return yaml.safeDump(vars)
-}
 function printVar(v) {
   let nonAtoA = isNonAtoAName(v.varName) ? ' (non-apply-to-all)' : ''
   B.emitLine(`${v.modelLHS}: ${v.varType}${nonAtoA}`)
@@ -1105,12 +1156,13 @@ function allListedVars() {
   }
 
   // The order of execution/evaluation in the generated model is:
-  //   initConstants (vars of type `const` only)
-  //   initLookups (vars of type `lookup` only)
-  //   initData (vars of type `data` only)
-  //   initLevels (vars returned by `initVars`, a mix of initial, aux, and level vars)
-  //   evalAux (vars of type `aux` only)
-  //   evalLevels (vars of type `level` only)
+  //   initConstants (vars of type `const` only; called for t=0 only)
+  //   initLookups (vars of type `lookup` only; called for t=0 only)
+  //   initData (vars of type `data` only; called for t=0 only)
+  //   initLevels (vars returned by `initVars`, a mix of initial, aux, and level vars;
+  //     called for t=0 only)
+  //   evalAux (vars of type `aux` only; called for t>=0)
+  //   evalLevels (vars of type `level` only; called before `evalAux` for t>0)
   // So to make the ordering in the listing better match the order of evaluation,
   // we emit variables in the above order, but filter to avoid having duplicates.
   addUnique(constVars())
@@ -1151,7 +1203,7 @@ function varIndexInfoMap() {
 
   // Get the set of unique variable names, and assign a 1-based index to each.
   // This matches the index number used in `storeOutput` and `setLookup` in the
-  // generated C/JS code
+  // generated C/JS code.
   const infoMap = new Map()
   let varIndex = 1
   for (const v of sortedVars) {
@@ -1209,6 +1261,73 @@ function jsonList() {
     }
   }
 
+  //
+  // We include a `varInstances` object in the generated JSON listing that
+  // includes an array of expanded variable items (one item for every "instance"
+  // of a variable, including subscripted variables) in the same order that they
+  // are evaluated (assigned) in the generated model.
+  //
+  // Each object contains the following minimal set of fields that are needed
+  // for accessing the data for a single variable instance at runtime:
+  //   varId (e.g., '_variable_name')
+  //   varName (e.g., 'Variable Name')
+  //   varType ('const', 'data', 'lookup', 'initial', 'level', 'aux')
+  //   varIndex
+  //   subscriptIndices
+  //
+  // The order of execution/evaluation in the generated model is:
+  //   initConstants (vars of type `const` only, called for t=0 only)
+  //   initLookups (vars of type `lookup` only, called for t=0 only)
+  //   initData (vars of type `data` only, called for t=0 only)
+  //   initLevels (vars returned by `initVars`, a mix of initial, aux, and level vars,
+  //     called for t=0 only)
+  //   evalAux (vars of type `aux` only; called for t>=0)
+  //   evalLevels (vars of type `level` only; called before `evalAux` for t>0)
+  //
+  function expandedVarItems(vars) {
+    const expandedVars = []
+
+    for (const v of vars) {
+      // Filter out variables that are generated/used internally
+      if (v.includeInOutput === false) {
+        continue
+      }
+
+      const varInstances = expandVar(v)
+      for (const { varName, subscriptIndices } of varInstances) {
+        const varId = canonicalVarId(varName)
+        const varItem = {
+          varId,
+          varName,
+          varType: v.varType
+        }
+        const varInfo = infoMap.get(v.varName)
+        if (varInfo) {
+          varItem.varIndex = varInfo.varIndex
+          if (subscriptIndices?.length > 0) {
+            varItem.subscriptIndices = subscriptIndices
+          }
+        }
+        expandedVars.push(varItem)
+      }
+    }
+
+    return expandedVars
+  }
+  const expandedConstants = expandedVarItems(constVars())
+  const expandedLookupVars = expandedVarItems(lookupVars())
+  const expandedDataVars = expandedVarItems(dataVars())
+  // The special exogenous `Time` variable may have already been removed by
+  // `removeUnusedVariables` if it is not referenced explicitly in the model,
+  // so we will only include it in the listing if it is defined here.  Note
+  // that `_time` is set to `_initial_time` as the first step in the
+  // `initLevels` function, which is why it is included in the "init" group.
+  const timeVar = varWithName('_time')
+  const specialInitVars = timeVar ? [timeVar] : []
+  const expandedInitVars = expandedVarItems([...specialInitVars, ...initVars()])
+  const expandedLevelVars = expandedVarItems(levelVars())
+  const expandedAuxVars = expandedVarItems(auxVars())
+
   // Derive minimal versions of the full arrays; these only contain the minimal
   // subset of fields that are needed by the `ModelListing` class from the
   // runtime package.  The property names in the minimal objects are slightly
@@ -1245,7 +1364,15 @@ function jsonList() {
   cachedJsonList = {
     full: {
       dimensions: sortedFullDims,
-      variables: sortedFullVars
+      variables: sortedFullVars,
+      varInstances: {
+        constants: expandedConstants,
+        lookupVars: expandedLookupVars,
+        dataVars: expandedDataVars,
+        initVars: expandedInitVars,
+        levelVars: expandedLevelVars,
+        auxVars: expandedAuxVars
+      }
     },
     minimal: {
       dimensions: sortedMinimalDims,
@@ -1261,7 +1388,6 @@ export default {
   addVariable,
   allVars,
   auxVars,
-  cName,
   constVars,
   dataVars,
   expansionFlags,
@@ -1287,6 +1413,5 @@ export default {
   varsWithName,
   varWithName,
   varWithRefId,
-  vensimName,
-  yamlVarList
+  vensimName
 }

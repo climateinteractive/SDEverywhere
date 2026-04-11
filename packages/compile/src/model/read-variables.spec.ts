@@ -44,6 +44,7 @@ function v(lhs: string, formula: string, overrides?: Partial<Variable>): Variabl
   variable.includeInOutput = true
   if (overrides) {
     for (const [key, value] of Object.entries(overrides)) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const r = variable as Record<string, any>
       r[key] = value
     }
@@ -501,8 +502,8 @@ describe('readVariables', () => {
       }),
       v('INITIAL TIME', '0'),
       v('FINAL TIME', '10'),
-      v('TIME STEP', '1'),
-      v('SAVEPER', 'TIME STEP'),
+      v('TIME STEP', '0.25'),
+      v('SAVEPER', '1'),
       v('Time', '')
     ])
   })

@@ -1,0 +1,92 @@
+#
+# This workflow builds the app and model-check reports, stores them in the `artifacts` branch,
+# then deploys the updated `artifacts` directory to GitHub Pages.
+#
+
+name: Build
+
+on:
+  # Run this workflow on every push to any branch except the special `artifacts` branch
+  push:
+    branches:
+      - '**'
+      - '!artifacts'
+  # Allow for running this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# Set the GITHUB_TOKEN permissions to allow deployment to GitHub Pages
+permissions:
+  # Allow pushing to the `artifacts` branch
+  contents: write
+  # Allow deployment to GitHub Pages
+  pages: write
+  id-token: write
+
+# Allow one concurrent build
+concurrency:
+  group: 'build'
+
+jobs:
+  build:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out current branch
+        uses: actions/checkout@v5
+        with:
+          # Fetch full history for artifact branch operations
+          fetch-depth: 0
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          # XXX: There are issues when this GitHub Actions workflow uses the latest npm version
+          # (11.6.2), see relevant issues:
+          #   https://github.com/npm/cli/issues/8669
+          #   https://github.com/npm/cli/issues/8726
+          # For now, use the latest Node 22, which includes an older npm version that works.
+          #node-version: lts/*
+          node-version: 22
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./scripts/ci-build.js
+
+      - name: Check for deploy directory
+        id: check-deploy
+        run: |
+          # Set an environment variable to true if the `deployPlugin`
+          # step wrote build products.  If `deployPlugin` was disabled,
+          # we will skip the remaining steps in this job (i.e., we will
+          # not deploy to GitHub Pages).
+          if [ -d "./sde-prep/deploy" ]; then
+            echo "products_updated=true" >> $GITHUB_OUTPUT
+          else
+            echo "products_updated=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Check out artifacts branch
+        if: steps.check-deploy.outputs.products_updated == 'true'
+        run: git checkout artifacts
+
+      - name: Set up GitHub Pages
+        if: steps.check-deploy.outputs.products_updated == 'true'
+        uses: actions/configure-pages@v5
+
+      - name: Upload GitHub Pages artifacts
+        if: steps.check-deploy.outputs.products_updated == 'true'
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: './artifacts'
+
+      - name: Deploy to GitHub Pages
+        if: steps.check-deploy.outputs.products_updated == 'true'
+        id: deployment
+        uses: actions/deploy-pages@v4

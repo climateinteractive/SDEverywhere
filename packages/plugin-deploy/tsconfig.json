@@ -1,0 +1,6 @@
+// This contains the TypeScript configuration for local development and testing.
+// It is used as the TypeScript config for tools like VSCode that look for
+// `tsconfig.json` by default.
+{
+  "extends": "./tsconfig-test.json"
+}

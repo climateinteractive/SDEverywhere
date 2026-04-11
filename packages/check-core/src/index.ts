@@ -19,8 +19,10 @@ export type {
   BundleGraphId,
   BundleGraphSpec,
   BundleGraphView,
+  BundleGraphViewOptions,
   BundleModel,
   DatasetGroupName,
+  ImplVarGroup,
   InputAliasName,
   InputGroupName,
   InputSettingGroupId,
@@ -31,14 +33,33 @@ export type {
   NamedBundle
 } from './bundle/bundle-types'
 
-export type { Dimension, ImplVar, InputId, InputVar, OutputVar, RelatedItem, Subscript } from './bundle/var-types'
+export type { ImplVar, InputId, InputVar, OutputVar, RelatedItem } from './bundle/var-types'
+
+export type {
+  EncodedImplVars,
+  EncodedSubscript,
+  EncodedVariable,
+  EncodedVarInstance,
+  EncodedVarType
+} from './bundle/impl-vars-codec'
+export { encodeImplVars, decodeImplVars } from './bundle/impl-vars-codec'
 
 //
 // check
 //
 
+export type { CheckConfig, CheckOptions } from './check/check-config'
+
 export type { CheckDataRequestKey } from './check/check-data-coordinator'
-export { CheckDataCoordinator } from './check/check-data-coordinator'
+export {
+  CheckDataCoordinator,
+  createCheckDataCoordinator,
+  createCheckDataCoordinatorForTests
+} from './check/check-data-coordinator'
+
+export type { CheckDataRef, CheckDataRefKey } from './check/check-data-ref'
+
+export type { CheckDataset, CheckDatasetError } from './check/check-dataset'
 
 export type { CheckResult, CheckResultErrorInfo } from './check/check-func'
 
@@ -63,6 +84,7 @@ export { scenarioMessage, datasetMessage, predicateMessage } from './check/check
 export type { CheckScenario, CheckScenarioError, CheckScenarioInputDesc } from './check/check-scenario'
 
 export type {
+  CheckNameSpec,
   CheckPredicateTimeOptions,
   CheckPredicateTimeRange,
   CheckPredicateTimeSingle,
@@ -94,18 +116,24 @@ export type { ComparisonScenarios } from './comparison/config/comparison-scenari
 export type { ComparisonDatasets } from './comparison/config/comparison-datasets'
 
 export type { ComparisonDataRequestKey } from './comparison/run/comparison-data-coordinator'
-export { ComparisonDataCoordinator } from './comparison/run/comparison-data-coordinator'
+export {
+  ComparisonDataCoordinator,
+  createComparisonDataCoordinator
+} from './comparison/run/comparison-data-coordinator'
 
 export * from './comparison/diff-datasets/diff-datasets'
 
 export * from './comparison/diff-graphs/diff-graphs'
 
 export * from './comparison/report/comparison-report-types'
-export { comparisonSummaryFromReport } from './comparison/report/comparison-reporting'
+export { comparisonSummaryFromReport, testSummaryFromReport } from './comparison/report/comparison-reporting'
 
 export * from './comparison/report/comparison-group-types'
 export * from './comparison/report/comparison-group-scores'
+
 export { categorizeComparisonTestSummaries } from './comparison/report/comparison-grouping'
+
+export type { ComparisonSortMode } from './comparison/report/comparison-sort-mode'
 
 //
 // config
@@ -119,16 +147,32 @@ export { createConfig } from './config/config'
 // perf
 //
 
-export { PerfRunner } from './perf/perf-runner'
+export { runPerf } from './perf/perf-runner'
+export type { CancelRunPerf, RunPerfCallbacks, RunPerfOptions } from './perf/perf-runner'
 
 export type { PerfReport } from './perf/perf-stats'
 export { PerfStats } from './perf/perf-stats'
 
 //
+// trace
+//
+
+export type {
+  CancelRunTrace as CancelTrace,
+  RunTraceCallbacks as TraceCallbacks,
+  TraceCompareToBundleOptions,
+  TraceCompareToExtDataOptions,
+  TraceOptions
+} from './trace/trace-runner'
+export { runTrace } from './trace/trace-runner'
+
+export type { TraceDatasetReport, TraceReport } from './trace/trace-report'
+
+//
 // suite
 //
 
-export type { RunSuiteCallbacks, RunSuiteOptions } from './suite/suite-runner'
+export type { CancelRunSuite, RunSuiteCallbacks, RunSuiteOptions } from './suite/suite-runner'
 export { runSuite } from './suite/suite-runner'
 
 export * from './suite/suite-report-types'

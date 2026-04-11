@@ -11,7 +11,7 @@ Note that unlike the "default" template, this template does not use config files
 (e.g., CSV files read from the `config` directory), so you can edit the
 `sde.config.js` file to configure the input and output variables.
 
-(If you decide later to use config files, refer to `template-default` to see how
+(If you decide later to use config files, refer to `template-svelte` to see how
 to add the `@sdeverywhere/plugin-config` package to your project.)
 
 ## Quick Start

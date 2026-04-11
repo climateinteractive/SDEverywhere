@@ -13,9 +13,9 @@
   },
   "dependencies": {
     "@sdeverywhere/build": "^0.3.7",
-    "@sdeverywhere/cli": "^0.7.31",
-    "@sdeverywhere/plugin-check": "^0.3.17",
-    "@sdeverywhere/plugin-worker": "^0.2.10",
-    "vite": "^5.4.2"
+    "@sdeverywhere/cli": "^0.7.34",
+    "@sdeverywhere/plugin-check": "^0.3.18",
+    "@sdeverywhere/plugin-worker": "^0.2.11",
+    "vite": "^7.1.12"
   }
 }

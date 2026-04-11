@@ -9,8 +9,11 @@ import type { GraphSpec, GraphViewModel } from './graph-vm'
 export class GraphView {
   private chart: Chart
 
-  constructor(readonly canvas: HTMLCanvasElement, readonly viewModel: GraphViewModel /*, options: GraphViewOptions*/) {
-    this.chart = createChart(canvas, viewModel /*, options*/)
+  constructor(
+    readonly canvas: HTMLCanvasElement,
+    readonly viewModel: GraphViewModel
+  ) {
+    this.chart = createChart(canvas, viewModel)
   }
 
   /**

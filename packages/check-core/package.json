@@ -1,6 +1,6 @@
 {
   "name": "@sdeverywhere/check-core",
-  "version": "0.1.5",
+  "version": "0.1.7",
   "files": [
     "dist/**",
     "schema/**"
@@ -18,7 +18,7 @@
   },
   "scripts": {
     "clean": "rm -rf dist",
-    "lint": "eslint src --ext .ts --max-warnings 0",
+    "lint": "eslint src --max-warnings 0",
     "prettier:check": "prettier --check .",
     "prettier:fix": "prettier --write .",
     "precommit": "../../scripts/precommit",

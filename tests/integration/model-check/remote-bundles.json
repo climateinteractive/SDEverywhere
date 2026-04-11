@@ -1,0 +1,12 @@
+[
+  {
+    "name": "feature/remote-2",
+    "url": "http://localhost:9000/sde-prep/check-bundle.js",
+    "lastModified": "2025-07-01T12:00:00.000Z"
+  },
+  {
+    "name": "feature/remote-1",
+    "url": "http://localhost:9000/sde-prep/check-bundle.js",
+    "lastModified": "2025-05-01T12:00:00.000Z"
+  }
+]

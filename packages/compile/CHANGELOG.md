@@ -1,5 +1,53 @@
 # Changelog
 
+## [0.7.28](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.27...compile-v0.7.28) (2026-03-09)
+
+
+### Features
+
+* add initial support for XMILE/Stella models ([#778](https://github.com/climateinteractive/SDEverywhere/issues/778)) ([b2e7f80](https://github.com/climateinteractive/SDEverywhere/commit/b2e7f808b8e63dd83b9dcdf8064cf4bc1725c884)), closes [#468](https://github.com/climateinteractive/SDEverywhere/issues/468)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/parse bumped from ^0.1.2 to ^0.1.3
+
+## [0.7.27](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.26...compile-v0.7.27) (2026-02-04)
+
+
+### Features
+
+* allow for overriding constants at runtime ([#767](https://github.com/climateinteractive/SDEverywhere/issues/767)) ([984c3bc](https://github.com/climateinteractive/SDEverywhere/commit/984c3bcbd80d6088c73a4f7f3f31070fba328abe)), closes [#470](https://github.com/climateinteractive/SDEverywhere/issues/470)
+
+
+### Bug Fixes
+
+* remove string-based `run_model` API from C runtime + update `main.c` to use `runModelWithBuffers` ([#766](https://github.com/climateinteractive/SDEverywhere/issues/766)) ([e031f08](https://github.com/climateinteractive/SDEverywhere/commit/e031f08dbda85768ff5b2739611e5be650aae399)), closes [#302](https://github.com/climateinteractive/SDEverywhere/issues/302)
+
+## [0.7.26](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.25...compile-v0.7.26) (2026-01-08)
+
+
+### Bug Fixes
+
+* drop bufx dependency + inline minimal bufx module with unused yaml/prettier/etc parts removed ([#740](https://github.com/climateinteractive/SDEverywhere/issues/740)) ([70ef00b](https://github.com/climateinteractive/SDEverywhere/commit/70ef00b02f723b3c3c74647cc0581de63cc95b5d)), closes [#739](https://github.com/climateinteractive/SDEverywhere/issues/739)
+* stop generating yaml files with `--list` option + drop js-yaml dependency ([#738](https://github.com/climateinteractive/SDEverywhere/issues/738)) ([69b1add](https://github.com/climateinteractive/SDEverywhere/commit/69b1add0621df26c9a34fa847a0e6b1fc5230544)), closes [#737](https://github.com/climateinteractive/SDEverywhere/issues/737)
+
+## [0.7.25](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.24...compile-v0.7.25) (2025-10-17)
+
+
+### Features
+
+* include grouped and sorted arrays of variable instances in JSON listing ([#681](https://github.com/climateinteractive/SDEverywhere/issues/681)) ([0f29d40](https://github.com/climateinteractive/SDEverywhere/commit/0f29d4012dfe8cd5b9526ee970fa9c3c7f664652)), closes [#534](https://github.com/climateinteractive/SDEverywhere/issues/534)
+
+## [0.7.24](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.23...compile-v0.7.24) (2025-08-18)
+
+
+### Performance Improvements
+
+* cache parsed XLSX file data to improve code gen performance ([#641](https://github.com/climateinteractive/SDEverywhere/issues/641)) ([f7f4e8b](https://github.com/climateinteractive/SDEverywhere/commit/f7f4e8bf0d9f4706af9ac10dbd7cee927c9b5ec1)), closes [#640](https://github.com/climateinteractive/SDEverywhere/issues/640)
+
 ## [0.7.23](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.22...compile-v0.7.23) (2025-02-11)
 
 

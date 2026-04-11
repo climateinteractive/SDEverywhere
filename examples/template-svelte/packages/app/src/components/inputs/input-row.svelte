@@ -1,7 +1,6 @@
 <!-- SCRIPT -->
 <script lang="ts">
-import { onMount } from 'svelte'
-import { _ } from 'svelte-i18n'
+import { _ } from '@shared/i18n'
 import type { WritableSliderInput } from '@model/app-model-inputs'
 import Slider from './slider.svelte'
 

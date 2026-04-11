@@ -1,11 +1,12 @@
 // Copyright (c) 2022 Climate Interactive / New Venture Fund
 
 import type { DatasetGroupName } from '@sdeverywhere/check-core'
-import type { DatasetKey, ImplVar, OutputVar, RelatedItem, VarId } from '@sdeverywhere/check-core'
+import type { DatasetKey, ImplVar, ImplVarGroup, OutputVar, RelatedItem, VarId } from '@sdeverywhere/check-core'
 
 export interface Outputs {
   outputVars: Map<DatasetKey, OutputVar>
   implVars: Map<DatasetKey, ImplVar>
+  implVarGroups: ImplVarGroup[]
   datasetGroups: Map<DatasetGroupName, DatasetKey[]>
 }
 
@@ -75,23 +76,46 @@ export function getOutputs(modelVersion: number): Outputs {
   // TODO: For an SDEverywhere-generated model, you could use the JSON file
   // produced by `sde generate --list` to create an `ImplVar` for each
   // internal variable used in the model.  For the purposes of this sample
-  // bundle, we will synthesize `ImplVar` instances for the model outputs.
-  const implVarArray = [...outputVars.values()]
-    .filter(outputVar => outputVar.sourceName === undefined)
-    .map((outputVar, index) => {
-      const implVar: ImplVar = {
-        varId: outputVar.varId,
-        varName: outputVar.varName,
-        varIndex: index,
-        dimensions: [],
-        varType: 'aux'
-      }
-      return implVar
-    })
+  // bundle, we will synthesize `ImplVar` instances for some internal
+  // variables and include the model outputs as well.
   const implVars: Map<DatasetKey, ImplVar> = new Map()
-  implVarArray.forEach(implVar => {
-    implVars.set(`ModelImpl${implVar.varId}`, implVar)
-  })
+  let index = 1
+  const addImplVar = (varId: string, varName: string, varType: string) => {
+    const datasetKey = `ModelImpl_${varId}`
+    const implVar: ImplVar = {
+      varId,
+      varName,
+      varType,
+      varIndex: index++
+    }
+    implVars.set(datasetKey, implVar)
+  }
+  for (let i = 1; i <= 5; i++) {
+    addImplVar(`_constant_${i}`, `Constant ${i}`, 'const')
+  }
+  addImplVar('_initial_1', 'Initial 1', 'initial')
+  addImplVar('_initial_2', 'Initial 2', 'initial')
+  addImplVar('_level_1', 'Level 1', 'level')
+  addImplVar('_output_x', 'Output X', 'aux')
+  addImplVar('_output_y', 'Output Y', 'aux')
+  addImplVar('_output_z', 'Output Z', 'aux')
+
+  const group = (fn: string, datasetKeys: DatasetKey[]) => {
+    return {
+      title: fn,
+      fn,
+      datasetKeys
+    } as ImplVarGroup
+  }
+  const implVarGroups: ImplVarGroup[] = [
+    group(
+      'initConstants',
+      [...implVars.values()].filter(v => v.varType === 'const').map(v => `ModelImpl_${v.varId}`)
+    ),
+    group('initLevels', ['ModelImpl__initial_1', 'ModelImpl__initial_2', 'ModelImpl__level_1']),
+    group('evalLevels', ['ModelImpl__level_1']),
+    group('evalAux', ['ModelImpl__output_x', 'ModelImpl__output_y', 'ModelImpl__output_z'])
+  ]
 
   // Configure dataset groups
   const keyForVarWithName = (name: string) => {
@@ -109,6 +133,7 @@ export function getOutputs(modelVersion: number): Outputs {
   return {
     outputVars,
     implVars,
+    implVarGroups,
     datasetGroups
   }
 }

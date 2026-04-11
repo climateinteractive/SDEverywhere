@@ -44,7 +44,10 @@ export class AppModel {
 
   public onDataUpdated: (outputs: Outputs, maxTime: number) => void
 
-  constructor(private readonly runner: ModelRunner, private readonly outputs: Outputs) {
+  constructor(
+    private readonly runner: ModelRunner,
+    private readonly outputs: Outputs
+  ) {
     this.writableBusy = writable(false)
     this.busy = this.writableBusy
 

@@ -8,6 +8,7 @@ import type { CheckKey } from './check-planner'
 import { CheckPlanner } from './check-planner'
 import type { CheckReport } from './check-report'
 import { buildCheckReport } from './check-report'
+import type { CheckNameSpec } from './check-spec'
 
 /**
  * A simplified/terse version of `CheckPredicateReport` that matches the
@@ -21,16 +22,16 @@ export interface CheckPredicateSummary {
 /**
  * A simplified/terse version of `CheckReport` that matches the
  * format of the JSON objects emitted by the CLI in terse mode.
- * This only contains predicate summaries for checks that have a status
- * of 'failed' or 'error'.
+ * This contains predicate summaries for checks that have a status
+ * of 'failed', 'error', or 'skipped'.
  */
 export interface CheckSummary {
   predicateSummaries: CheckPredicateSummary[]
 }
 
 /**
- * Convert a full `CheckReport` to a simplified `CheckSummary` that only includes
- * failed/errored checks.
+ * Convert a full `CheckReport` to a simplified `CheckSummary` that includes
+ * failed, errored, and skipped checks.
  *
  * @param checkReport The full check report.
  * @return The converted check summary.
@@ -48,6 +49,7 @@ export function checkSummaryFromReport(checkReport: CheckReport): CheckSummary {
                 break
               case 'failed':
               case 'error':
+              case 'skipped':
                 predicateSummaries.push({
                   checkKey: predicate.checkKey,
                   result: predicate.result
@@ -73,9 +75,14 @@ export function checkSummaryFromReport(checkReport: CheckReport): CheckSummary {
  *
  * @param checkConfig The config used to reconstruct the check test structure.
  * @param checkSummary The simplified check summary.
+ * @param skipChecks The checks that were skipped when the original report was created.
  * @return The converted check report.
  */
-export function checkReportFromSummary(checkConfig: CheckConfig, checkSummary: CheckSummary): CheckReport | undefined {
+export function checkReportFromSummary(
+  checkConfig: CheckConfig,
+  checkSummary: CheckSummary,
+  skipChecks: CheckNameSpec[] = []
+): CheckReport | undefined {
   // Parse the tests
   const checkSpecResult = parseTestYaml(checkConfig.tests)
   if (checkSpecResult.isErr()) {
@@ -85,8 +92,8 @@ export function checkReportFromSummary(checkConfig: CheckConfig, checkSummary: C
   const checkSpec = checkSpecResult.value
 
   // Build the check plan
-  const checkPlanner = new CheckPlanner(checkConfig.bundle.model.modelSpec)
-  checkPlanner.addAllChecks(checkSpec, false)
+  const checkPlanner = new CheckPlanner(checkConfig.bundle.modelSpec)
+  checkPlanner.addAllChecks(checkSpec, skipChecks)
   const checkPlan = checkPlanner.buildPlan()
 
   // Put the check results into a map

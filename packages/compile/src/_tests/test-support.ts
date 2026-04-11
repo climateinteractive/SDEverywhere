@@ -48,7 +48,8 @@ export interface Sub {
   size: number // 1
   family: DimCName // '_dima'
   // TODO: Is mappings ever used for subscripts?  (Currently it always seems to be set to empty object.)
-  mappings: {} // {}
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  mappings: any // {}
 }
 
 export type VariableType = 'const' | 'aux' | 'level' | 'initial' | 'lookup' | 'data'
@@ -154,14 +155,73 @@ export function parseVensimModel(modelName: string): ParsedModel {
   const modelDir = sampleModelDir(modelName)
   const modelFile = resolve(modelDir, `${modelName}.mdl`)
   const mdlContent = readFileSync(modelFile, 'utf8')
-  return parseModel(mdlContent, modelDir)
+  return parseModel(mdlContent, 'vensim', modelDir)
 }
 
 export function parseInlineVensimModel(mdlContent: string, modelDir?: string): ParsedModel {
-  return parseModel(mdlContent, modelDir)
+  return parseModel(mdlContent, 'vensim', modelDir)
+}
+
+export function parseXmileModel(modelName: string): ParsedModel {
+  const modelDir = sampleModelDir(modelName)
+  const modelFile = resolve(modelDir, `${modelName}.stmx`)
+  const mdlContent = readFileSync(modelFile, 'utf8')
+  return parseModel(mdlContent, 'xmile', modelDir)
+}
+
+export function parseInlineXmileModel(mdlContent: string, modelDir?: string): ParsedModel {
+  return parseModel(mdlContent, 'xmile', modelDir)
+}
+
+export function xmile(dimensions: string, variables: string): string {
+  function indent(text: string, indent: string): string {
+    return text
+      .split('\n')
+      .map(line => indent + line)
+      .join('\n')
+  }
+
+  let dims: string
+  if (dimensions.length > 0) {
+    dims = `\
+  <dimensions>
+${indent(dimensions, '    ')}
+  </dimensions>`
+  } else {
+    dims = ''
+  }
+
+  let vars: string
+  if (variables.length > 0) {
+    vars = `\
+    <variables>
+${indent(variables, '      ')}
+    </variables>`
+  } else {
+    vars = ''
+  }
+
+  return `\
+<xmile xmlns="http://docs.oasis-open.org/xmile/ns/XMILE/v1.0" version="1.0">
+  <header>
+    <options namespace="std"/>
+    <vendor>Ventana Systems, xmutil</vendor>
+    <product lang="en">Vensim, xmutil</product>
+  </header>
+  <sim_specs isee:simulation_delay="0" method="Euler" time_units="Months">
+    <start>0</start>
+    <stop>100</stop>
+    <dt>1</dt>
+  </sim_specs>
+${dims}
+  <model>
+${vars}
+  </model>
+</xmile>`
 }
 
 function prettyVar(variable: Variable): string {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const stringify = (x: any) => {
     return JSON.stringify(x)
   }

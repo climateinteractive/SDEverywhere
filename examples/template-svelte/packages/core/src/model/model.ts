@@ -14,7 +14,6 @@ import { spawnAsyncModelRunner } from '@sdeverywhere/runtime-async'
 import type { InputId, OutputVarId } from '../config/generated/spec-types'
 
 import type { Config as CoreConfig } from '../config/config'
-import { config as coreConfig } from '../config/config'
 
 import { createModelInput, type Input } from './model-inputs'
 
@@ -188,11 +187,16 @@ export class Model {
  * This is an asynchronous operation because it performs an initial
  * model run to capture the reference/baseline data.
  *
+ * @param coreConfig The core model configuration.
  * @param runner The model runner.
  * @param options The options for the model.
  * @param options.externalData Additional external datasets that will be available for display in graphs.
  */
-export async function createModel(runner: ModelRunner, options?: { externalData?: DataMap }): Promise<Model> {
+export async function createModel(
+  coreConfig: CoreConfig,
+  runner: ModelRunner,
+  options?: { externalData?: DataMap }
+): Promise<Model> {
   // Find all variables in the graph config that have "Ref" as the source name.
   // These are the reference/baseline datasets that will be captured in the
   // initial reference run.
@@ -265,15 +269,16 @@ export async function createAsyncModelRunner(): Promise<ModelRunner> {
  * This is an asynchronous operation because it loads the generated model asynchronously
  * and then performs an initial model run to capture the reference/baseline data.
  *
+ * @param coreConfig The core model configuration.
  * @param options The options for the model.
  * @param options.externalData Additional external datasets that will be available for display in graphs.
  */
-export async function createAsyncModel(options?: { externalData?: DataMap }): Promise<Model> {
+export async function createAsyncModel(coreConfig: CoreConfig, options?: { externalData?: DataMap }): Promise<Model> {
   // Initialize the asynchronous model runner
   const runner = await createAsyncModelRunner()
 
   // Create the `Model` instance that uses the asynchronous runner
-  return createModel(runner, options)
+  return createModel(coreConfig, runner, options)
 }
 
 /**

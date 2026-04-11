@@ -1,0 +1,36 @@
+{
+  "name": "template-jquery",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "clean": "rm -rf ./sde-prep",
+    "dev": "sde dev",
+    "build": "sde bundle",
+    "save-baseline": "sde-check baseline --save"
+  },
+  "workspaces": [
+    "packages/core",
+    "packages/app"
+  ],
+  "devDependencies": {
+    "@eslint/js": "^9.37.0",
+    "@sdeverywhere/build": "^0.3.7",
+    "@sdeverywhere/check-core": "^0.1.5",
+    "@sdeverywhere/cli": "^0.7.34",
+    "@sdeverywhere/plugin-check": "^0.3.18",
+    "@sdeverywhere/plugin-config": "^0.2.8",
+    "@sdeverywhere/plugin-vite": "^0.2.0",
+    "@sdeverywhere/plugin-wasm": "^0.2.6",
+    "@sdeverywhere/plugin-worker": "^0.2.11",
+    "@typescript-eslint/eslint-plugin": "^8.46.0",
+    "@typescript-eslint/parser": "^8.46.0",
+    "eslint": "^9.37.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-eslint-comments": "^3.2.0",
+    "globals": "^16.4.0",
+    "npm-run-all2": "^8.0.4",
+    "prettier": "^3.6.2",
+    "typescript": "^5.2.2"
+  }
+}

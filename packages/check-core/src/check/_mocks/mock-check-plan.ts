@@ -29,14 +29,9 @@ export function predPlan(
   }
 }
 
-export function datasetPlan(
-  prefix: string,
-  varName: string,
-  subNames: string[],
-  predicates: CheckPlanPredicate[]
-): CheckPlanDataset {
+export function datasetPlan(prefix: string, varName: string, predicates: CheckPlanPredicate[]): CheckPlanDataset {
   return {
-    checkDataset: dataset(prefix, varName, subNames),
+    checkDataset: dataset(prefix, varName),
     predicates
   }
 }

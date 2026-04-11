@@ -2,7 +2,7 @@
 
 import { join as joinPath } from 'path'
 import { hashElement } from 'folder-hash'
-import glob from 'tiny-glob'
+import { glob } from 'tinyglobby'
 
 import type { ResolvedConfig } from '../../_shared/resolved-config'
 
@@ -28,7 +28,7 @@ export async function computeInputFilesHash(config: ResolvedConfig): Promise<str
       const paths = await glob(globPath, {
         cwd: config.rootDir,
         absolute: true,
-        filesOnly: true
+        onlyFiles: true
       })
       inputFiles.push(...paths)
     }

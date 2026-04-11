@@ -76,6 +76,7 @@ The [`sde`](./packages/cli) command line tool &mdash; in addition to generating 
 - [plugin-worker](./packages/plugin-worker) generates a worker module that can be used to run your model in a separate thread for improved user experience
 - [plugin-vite](./packages/plugin-vite) provides integration with [Vite](https://github.com/vitejs/vite) for developing a library or application around your generated model
 - [plugin-check](./packages/plugin-check) allows for running QA checks and comparison tests on your model every time you make a change
+- [plugin-deploy](./packages/plugin-deploy) automates the process of deploying your app and model-check reports to a web server (currently supports publishing to GitHub Pages; support for other services is on the roadmap)
 
 Additionally, the [runtime](./packages/runtime) and [runtime-async](./packages/runtime-async) packages make it easy to interact with your generated model in a JavaScript- or TypeScript-based application.
 
@@ -85,7 +86,7 @@ For more details on all of these packages, refer to the ["Packages"](#packages) 
 
 The SDEverywhere libraries and tools can be used on any computer running macOS, Windows, or Linux.
 
-SDEverywhere requires [Node.js](https://nodejs.org) version 18 or later (the current LTS version 20 is recommended).
+SDEverywhere requires [Node.js](https://nodejs.org) version 20 or later (the current LTS version 22 is recommended).
 Node.js is a cross-platform runtime environment that allows for running JavaScript-based tools (like SDEverywhere) on macOS, Windows, and Linux computers.
 
 Note: It is not necessary to have extensive knowledge of Node.js and JavaScript in order to use SDEverywhere, but a one-time download of Node.js is necessary to get started.
@@ -263,6 +264,15 @@ Most users won't need to interact with these implementation packages directly, b
       <a href="./packages/plugin-check">Source</a>&nbsp;|&nbsp;
       <a href="./packages/plugin-check/README.md">Docs</a>&nbsp;|&nbsp;
       <a href="./packages/plugin-check/CHANGELOG.md">Changelog</a>
+    </td>
+  </tr>
+  <tr>
+    <td><a href="./packages/plugin-deploy">@sdeverywhere/plugin-deploy</a></td>
+    <td><a href="https://www.npmjs.com/package/@sdeverywhere/plugin-deploy"><img style="vertical-align:middle;" src="https://img.shields.io/npm/v/@sdeverywhere/plugin-deploy.svg?label=%20"></a></td>
+    <td>
+      <a href="./packages/plugin-deploy">Source</a>&nbsp;|&nbsp;
+      <a href="./packages/plugin-deploy/README.md">Docs</a>&nbsp;|&nbsp;
+      <a href="./packages/plugin-deploy/CHANGELOG.md">Changelog</a>
     </td>
   </tr>
   <tr>

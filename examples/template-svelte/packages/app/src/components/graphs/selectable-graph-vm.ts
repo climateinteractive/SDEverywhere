@@ -16,16 +16,32 @@ export class SelectableGraphViewModel {
 
   constructor(
     public readonly graphViewModels: GraphViewModel[],
+    graphIndex: number,
     initialGraphId: GraphId
   ) {
+    // Restore the previously selected graph when HMR is enabled
+    if (import.meta.hot) {
+      const savedGraphId = import.meta.hot.data[`savedGraphId_${graphIndex}`]
+      if (savedGraphId) {
+        initialGraphId = savedGraphId
+      }
+    }
+
     const graphOptions = graphViewModels.map(graph => ({
       value: graph.spec.id,
       stringKey: graph.spec.titleKey
     }))
+
     this.selectedGraphId = syncWritable(initialGraphId)
     this.selectorViewModel = {
       options: graphOptions,
-      selectedValue: this.selectedGraphId
+      selectedValue: this.selectedGraphId,
+      onUserChange: graphId => {
+        // Preserve the selected graph when HMR is enabled
+        if (import.meta.hot) {
+          import.meta.hot.data[`savedGraphId_${graphIndex}`] = graphId
+        }
+      }
     }
 
     this.selectedGraphViewModel = derived(this.selectedGraphId, $selectedGraphId => {

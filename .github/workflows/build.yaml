@@ -55,14 +55,14 @@ jobs:
       - name: Install Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 20
 
       # The pnpm caching strategy in the following steps is based on:
       #   https://github.com/pnpm/action-setup#use-cache-to-reduce-installation-time
       - name: Install pnpm
-        uses: pnpm/action-setup@v3.0.0
+        uses: pnpm/action-setup@v4.1.0
         with:
-          version: 8
+          version: 10
 
       - name: Configure pnpm
         if: matrix.config.plat == 'win'
@@ -120,14 +120,14 @@ jobs:
       - name: Install Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 20
 
       # The pnpm caching strategy in the following steps is based on:
       #   https://github.com/pnpm/action-setup#use-cache-to-reduce-installation-time
       - name: Install pnpm
-        uses: pnpm/action-setup@v3.0.0
+        uses: pnpm/action-setup@v4.1.0
         with:
-          version: 8
+          version: 10
 
       - name: Configure pnpm
         if: matrix.config.plat == 'win'
@@ -191,14 +191,14 @@ jobs:
       - name: Install Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 20
 
       # The pnpm caching strategy in the following steps is based on:
       #   https://github.com/pnpm/action-setup#use-cache-to-reduce-installation-time
       - name: Install pnpm
-        uses: pnpm/action-setup@v3.0.0
+        uses: pnpm/action-setup@v4.1.0
         with:
-          version: 8
+          version: 10
 
       - name: Configure pnpm
         if: matrix.config.plat == 'win'

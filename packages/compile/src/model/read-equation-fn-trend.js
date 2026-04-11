@@ -3,7 +3,7 @@ import { toPrettyString } from '@sdeverywhere/parse'
 import { canonicalName, newAuxVarName, newLevelVarName } from '../_shared/helpers.js'
 
 /**
- * Generate two level variables and one aux that implement an `NPV` function call.
+ * Generate two level variables and one aux that implement an `TREND` function call.
  *
  * TODO: Docs
  *

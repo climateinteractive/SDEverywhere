@@ -17,6 +17,7 @@ import type {
 import type { ComparisonTestSummary } from './comparison-report-types'
 import { restoreFromTerseSummaries } from './comparison-reporting'
 import { getScoresForTestSummaries } from './comparison-group-scores'
+import type { ComparisonSortMode } from './comparison-sort-mode'
 
 /**
  * Given a set of terse test summaries (which only includes summaries for tests with non-zero `maxDiff`
@@ -24,21 +25,23 @@ import { getScoresForTestSummaries } from './comparison-group-scores'
  *
  * @param comparisonConfig The comparison configuration.
  * @param terseSummaries The set of terse test summaries.
+ * @param sortMode The sort mode to determine which field to use for scoring.
  */
 export function categorizeComparisonTestSummaries(
   comparisonConfig: ComparisonConfig,
-  terseSummaries: ComparisonTestSummary[]
+  terseSummaries: ComparisonTestSummary[],
+  sortMode: ComparisonSortMode
 ): ComparisonCategorizedResults {
   // Restore the full set of test results
   const allTestSummaries = restoreFromTerseSummaries(comparisonConfig, terseSummaries)
 
   // Categorize the results by scenario
   const groupsByScenario = groupComparisonTestSummaries(allTestSummaries, 'by-scenario')
-  const byScenario = categorizeComparisonGroups(comparisonConfig, [...groupsByScenario.values()])
+  const byScenario = categorizeComparisonGroups(comparisonConfig, [...groupsByScenario.values()], sortMode)
 
   // Categorize the results by dataset
   const groupsByDataset = groupComparisonTestSummaries(allTestSummaries, 'by-dataset')
-  const byDataset = categorizeComparisonGroups(comparisonConfig, [...groupsByDataset.values()])
+  const byDataset = categorizeComparisonGroups(comparisonConfig, [...groupsByDataset.values()], sortMode)
 
   return {
     allTestSummaries,
@@ -109,7 +112,8 @@ export function groupComparisonTestSummaries(
  */
 export function categorizeComparisonGroups(
   comparisonConfig: ComparisonConfig,
-  allGroups: ComparisonGroup[]
+  allGroups: ComparisonGroup[],
+  sortMode: ComparisonSortMode
 ): ComparisonGroupSummariesByCategory {
   const allGroupSummaries: Map<ComparisonGroupKey, ComparisonGroupSummary> = new Map()
   const withErrors: ComparisonGroupSummary[] = []
@@ -127,7 +131,10 @@ export function categorizeComparisonGroups(
     // Compute the scores if the dataset/scenario is valid in both
     let scores: ComparisonGroupScores
     if (validInL && validInR) {
-      scores = getScoresForTestSummaries(group.testSummaries, comparisonConfig.thresholds)
+      // Select thresholds based on whether we're doing relative sorting
+      const isRelativeMode = sortMode === 'max-diff-relative' || sortMode === 'avg-diff-relative'
+      const thresholds = isRelativeMode ? comparisonConfig.ratioThresholds : comparisonConfig.thresholds
+      scores = getScoresForTestSummaries(group.testSummaries, thresholds, sortMode)
     }
 
     // Create the group summary
@@ -143,7 +150,9 @@ export function categorizeComparisonGroups(
     // Categorize the group
     if (validInL && validInR) {
       // The dataset/scenario is valid in both; see if there were any diffs
-      if (scores.totalDiffCount !== scores.diffCountByBucket[0]) {
+      const noDiffCount = scores.diffCountByBucket[0]
+      const skippedCount = scores.diffCountByBucket[5]
+      if (scores.totalDiffCount !== noDiffCount + skippedCount) {
         withDiffs.push(groupSummary)
       } else {
         withoutDiffs.push(groupSummary)
@@ -271,16 +280,16 @@ function sortScenarioGroupSummaries(summaries: ComparisonGroupSummary[]): Compar
  * or 0 if they are the same.
  */
 function compareScores(a: ComparisonGroupScores, b: ComparisonGroupScores): 1 | 0 | -1 {
-  if (a.totalMaxDiffByBucket.length !== b.totalMaxDiffByBucket.length) {
+  if (a.totalDiffByBucket.length !== b.totalDiffByBucket.length) {
     return 0
   }
 
   // Start with the highest threshold bucket (i.e., comparisons with the biggest differences),
   // and then work backwards
-  const len = a.totalMaxDiffByBucket.length
+  const len = a.totalDiffByBucket.length
   for (let i = len - 1; i >= 0; i--) {
-    const aTotal = a.totalMaxDiffByBucket[i]
-    const bTotal = b.totalMaxDiffByBucket[i]
+    const aTotal = a.totalDiffByBucket[i]
+    const bTotal = b.totalDiffByBucket[i]
     if (aTotal > bTotal) {
       return 1
     } else if (aTotal < bTotal) {

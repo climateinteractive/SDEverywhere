@@ -1,11 +1,23 @@
 // Copyright (c) 2024 Climate Interactive / New Venture Fund
 
-import type { LookupDef } from '../_shared'
+import type { ConstantDef, LookupDef } from '../_shared'
 
 /**
  * Additional options that can be passed to a `runModel` call to influence the model run.
  */
 export interface RunModelOptions {
+  /**
+   * If defined, override the values for the specified constant variables.
+   *
+   * Note that constant overrides do not persist after the `runModel` call.  Because
+   * `initConstants` is called at the beginning of each `runModel` call, all constants
+   * are reset to their default values before each model run.  If you want to override
+   * constants, you must provide them in the options for each `runModel` call.  To
+   * reset constants to their original values, simply stop passing them in the options
+   * (or pass an empty array).
+   */
+  constants?: ConstantDef[]
+
   /**
    * If defined, override the data for the specified lookups and/or data variables.
    *

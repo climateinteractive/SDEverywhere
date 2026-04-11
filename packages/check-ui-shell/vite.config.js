@@ -38,7 +38,10 @@ export default defineConfig({
     lib: {
       entry: './src/index.ts',
       formats: ['es'],
-      fileName: () => 'index.js'
+      fileName: 'index',
+      // NOTE: The plugin-check template assumes that the CSS file is named `style.css`,
+      // so if changing the name here, be sure to update the template as well
+      cssFileName: 'style'
     },
 
     rollupOptions: {

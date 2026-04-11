@@ -241,6 +241,27 @@ ${chunkedFunctions('evalLevels', true, Model.levelVars(), '  // Evaluate levels'
   function emitIOCode() {
     mode = 'io'
 
+    // Configure the body of the `setConstant` function depending on the value
+    // of the `customConstants` property in the spec file
+    let setConstantBody
+    if (spec.customConstants === true || Array.isArray(spec.customConstants)) {
+      setConstantBody = `\
+  if (!varSpec) {
+    throw new Error('Got undefined varSpec in setConstant');
+  }
+  const varIndex = varSpec.varIndex;
+  const subs = varSpec.subscriptIndices;
+  switch (varIndex) {
+${setConstantImpl(Model.varIndexInfo(), spec.customConstants)}
+    default:
+      throw new Error(\`No constant found for var index \${varIndex} in setConstant\`);
+  }`
+    } else {
+      let msg = 'The setConstant function was not enabled for the generated model. '
+      msg += 'Set the customConstants property in the spec/config file to allow for overriding constants at runtime.'
+      setConstantBody = `  throw new Error('${msg}');`
+    }
+
     // Configure the body of the `setLookup` function depending on the value
     // of the `customLookups` property in the spec file
     let setLookupBody
@@ -311,6 +332,10 @@ ${customOutputSection(Model.varIndexInfo(), spec.customOutputs)}
 
     return `\
 /*export*/ function setInputs(valueAtIndex /*: (index: number) => number*/) {${inputsFromBufferImpl()}}
+
+/*export*/ function setConstant(varSpec /*: VarSpec*/, value /*: number*/) {
+${setConstantBody}
+}
 
 /*export*/ function setLookup(varSpec /*: VarSpec*/, points /*: Float64Array | undefined*/) {
 ${setLookupBody}
@@ -521,6 +546,39 @@ ${section(chunk)}
     }
     return inputVars
   }
+  function setConstantImpl(varIndexInfo, customConstants) {
+    // Emit case statements for all const variables that can be overridden at runtime
+    let overrideAllowed
+    if (Array.isArray(customConstants)) {
+      // Only include a case statement if the variable was explicitly included
+      // in the `customConstants` array in the spec file
+      const customConstantVarNames = customConstants.map(varName => {
+        // The developer might specify a variable name that includes subscripts,
+        // but we will ignore the subscript part and only match on the base name
+        return canonicalVensimName(varName.split('[')[0])
+      })
+      overrideAllowed = varName => customConstantVarNames.includes(varName)
+    } else {
+      // Include a case statement for all constant variables
+      overrideAllowed = () => true
+    }
+    const constVars = R.filter(info => {
+      return info.varType === 'const' && overrideAllowed(info.varName)
+    })
+    const code = R.map(info => {
+      let constVar = info.varName
+      for (let i = 0; i < info.subscriptCount; i++) {
+        constVar += `[subs[${i}]]`
+      }
+      let c = ''
+      c += `    case ${info.varIndex}:\n`
+      c += `      ${constVar} = value;\n`
+      c += `      break;`
+      return c
+    })
+    const section = R.pipe(constVars, code, lines)
+    return section(varIndexInfo)
+  }
   function setLookupImpl(varIndexInfo, customLookups) {
     // Emit case statements for all lookups and data variables that can be overridden
     // at runtime
@@ -605,6 +663,7 @@ export default async function () {
 
     setTime,
     setInputs,
+    setConstant,
     setLookup,
 
     storeOutputs,

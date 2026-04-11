@@ -2,9 +2,9 @@
   "eslint.workingDirectories": ["./packages/*"],
   // XXX: Silence some Svelte warnings until they can be investigated further
   "svelte.plugin.svelte.compilerWarnings": {
-    "a11y-click-events-have-key-events": "ignore",
-    "a11y-no-noninteractive-tabindex": "ignore",
-    "a11y-no-static-element-interactions": "ignore"
+    "a11y_click_events_have_key_events": "ignore",
+    "a11y_no_noninteractive_tabindex": "ignore",
+    "a11y_no_static_element_interactions": "ignore"
   },
   "psi-header.config": {
     "forceToTop": true,
@@ -33,7 +33,6 @@
   "[svelte]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
-  "prettier.documentSelectors": ["examples/template-svelte/packages/app/**/*.svelte"],
   "files.associations": {
     "*.svelte": "svelte"
   }

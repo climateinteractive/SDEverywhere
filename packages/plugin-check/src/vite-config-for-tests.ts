@@ -9,7 +9,7 @@ import replace from '@rollup/plugin-replace'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 
-export function createViteConfigForTests(projDir: string, prepDir: string, mode: 'build' | 'watch'): InlineConfig {
+export function createViteConfigForTests(mode: 'bundle' | 'watch', projDir: string, prepDir: string): InlineConfig {
   // Use `template-tests` as the root directory for the tests project
   const root = resolvePath(__dirname, '..', 'template-tests')
 

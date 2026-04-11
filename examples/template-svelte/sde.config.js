@@ -3,15 +3,63 @@ import { fileURLToPath } from 'url'
 
 import { checkPlugin } from '@sdeverywhere/plugin-check'
 import { configProcessor } from '@sdeverywhere/plugin-config'
+import { deployPlugin } from '@sdeverywhere/plugin-deploy'
 import { vitePlugin } from '@sdeverywhere/plugin-vite'
 import { wasmPlugin } from '@sdeverywhere/plugin-wasm'
 import { workerPlugin } from '@sdeverywhere/plugin-worker'
 
-const __dirname = dirname(fileURLToPath(import.meta.url))
-const configDir = joinPath(__dirname, 'config')
-const packagePath = (...parts) => joinPath(__dirname, 'packages', ...parts)
-const appPath = (...parts) => packagePath('app', ...parts)
-const corePath = (...parts) => packagePath('core', ...parts)
+//
+// Set the base URL for the deployed project.  This is used for determining the URLs
+// for remote bundle files used by model-check and for other purposes.
+//
+// If you leave this undefined, the `deployPlugin` step will be disabled, and the
+// project will not be automatically deployed to GitHub Pages.
+//
+// If `deployBaseUrl` is defined, this project will be deployed automatically to
+// GitHub Pages every time you push changes to GitHub.  You should set `deployBaseUrl`
+// using the following template (replace the {GH} placeholders with the actual values):
+//   deployBaseUrl = 'https://{GH_USERNAME_OR_ORG}.github.io/{GH_REPO_NAME}'
+//
+// For example, if your GitHub username is "sdmodeler123", and your GitHub repository
+// is called "my-sd-model", you should set `deployBaseUrl` as follows:
+//   deployBaseUrl = 'https://sdmodeler123.github.io/my-sd-model'
+//
+// IMPORTANT: If you set up GitHub Pages to use a custom domain, be sure to update
+// this variable to use that custom domain, otherwise model-check may fail to load
+// bundles due to cross origin redirect issues, for example:
+//   deployBaseUrl = 'https://sdmodeler123.com/my-sd-model'
+//
+// If you use a different host/server (AWS, GitLab, etc) or publish to a different
+// directory structure, you can update this variable to suit your needs, for example:
+//   deployBaseUrl = 'https://sdmodeler123.com/projects/my-model'
+//
+// const deployBaseUrl = 'https://{GH_USERNAME_OR_ORG}.github.io/{GH_REPO_NAME}'
+const deployBaseUrl = undefined
+
+// If building the model-check report that is deployed to the web server, configure
+// the baseline and current bundle options
+let baselineBundle
+let currentBundle
+if (deployBaseUrl && process.env.NODE_ENV !== 'development') {
+  // Configure the name of the branch that is used as the baseline for comparisons
+  // when building the model-check report that is deployed to the web server
+  const baseBranchName = 'main'
+  const baseBranchBundleUrl = `${deployBaseUrl}/branch/${baseBranchName}/extras/check-bundle.js`
+
+  // Configure the baseline bundle that is used for comparisons when building the
+  // model-check report (in local development mode, we leave this undefined since
+  // the local report allows the user to choose bundles at runtime)
+  baselineBundle = {
+    name: baseBranchName,
+    url: baseBranchBundleUrl
+  }
+
+  // Use the current branch name as the "current" bundle name, otherwise (in local
+  // development mode) leave it undefined so that the default value is used
+  currentBundle = {
+    name: process.env.GITHUB_REF_NAME || 'current'
+  }
+}
 
 //
 // NOTE: This template can generate a model as a WebAssembly module (runs faster,
@@ -28,6 +76,12 @@ const corePath = (...parts) => packagePath('core', ...parts)
 // in the browser or in Node.js without the additional Emscripten build step.
 //
 const genFormat = 'js'
+
+const __dirname = dirname(fileURLToPath(import.meta.url))
+const configDir = joinPath(__dirname, 'config')
+const packagePath = (...parts) => joinPath(__dirname, 'packages', ...parts)
+const appPath = (...parts) => packagePath('app', ...parts)
+const corePath = (...parts) => packagePath('core', ...parts)
 
 export async function config() {
   return {
@@ -63,8 +117,12 @@ export async function config() {
         outputPaths: [corePath('src', 'model', 'generated', 'worker.js')]
       }),
 
-      // Run model check
-      checkPlugin(),
+      // Build or serve the model-check report
+      checkPlugin({
+        baseline: baselineBundle,
+        current: currentBundle,
+        remoteBundlesUrl: deployBaseUrl && `${deployBaseUrl}/metadata/bundles.json`
+      }),
 
       // Build or serve the model explorer app
       vitePlugin({
@@ -75,7 +133,16 @@ export async function config() {
         config: {
           configFile: appPath('vite.config.js')
         }
-      })
+      }),
+
+      // Deploy the app and model-check report to GitHub Pages (only if `deployBaseUrl` is defined)
+      ...(deployBaseUrl
+        ? [
+            deployPlugin({
+              baseUrl: deployBaseUrl
+            })
+          ]
+        : [])
     ]
   }
 }
