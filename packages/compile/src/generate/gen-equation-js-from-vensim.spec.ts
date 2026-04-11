@@ -3022,6 +3022,27 @@ describe('generateEquation (Vensim -> JS)', () => {
     ])
   })
 
+  it('should work for SUM function (with lookup call)', () => {
+    const vars = readInlineModel(`
+      DimA: A1, A2 ~~|
+      x[A1]( [(0,0)-(2,2)], (0,0),(2,1.3) ) ~~|
+      x[A2]( [(0,0)-(2,2)], (0,0.5),(2,1.5) ) ~~|
+      y = SUM(x[DimA!](1)) ~~|
+    `)
+    expect(vars.size).toBe(3)
+    expect(genJS(vars.get('_x[_a1]'), 'decl')).toEqual(['const _x_data__0_ = [0.0, 0.0, 2.0, 1.3];'])
+    expect(genJS(vars.get('_x[_a1]'), 'init-lookups')).toEqual(['_x[0] = fns.createLookup(2, _x_data__0_);'])
+    expect(genJS(vars.get('_x[_a2]'), 'decl')).toEqual(['const _x_data__1_ = [0.0, 0.5, 2.0, 1.5];'])
+    expect(genJS(vars.get('_x[_a2]'), 'init-lookups')).toEqual(['_x[1] = fns.createLookup(2, _x_data__1_);'])
+    expect(genJS(vars.get('_y'))).toEqual([
+      'let __t1 = 0.0;',
+      'for (let u = 0; u < 2; u++) {',
+      '__t1 += fns.LOOKUP(_x[u], 1.0);',
+      '}',
+      '_y = __t1;'
+    ])
+  })
+
   it('should work for TAN function', () => {
     const vars = readInlineModel(`
       x = 1 ~~|

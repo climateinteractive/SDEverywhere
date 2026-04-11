@@ -970,6 +970,7 @@ function visitVariableRefs(expr, onVarRef) {
       break
 
     case 'lookup-call':
+      visitVariableRefs(expr.varRef, onVarRef)
       visitVariableRefs(expr.arg, onVarRef)
       break
 
