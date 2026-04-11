@@ -397,10 +397,10 @@ describe('generateEquation (Vensim -> JS)', () => {
       x[DimA]( (0,10), (1,20) ) ~~|
     `)
     expect(vars.size).toBe(1)
-    expect(genJS(vars.get('_x'), 'decl')).toEqual(['const _x_data = [0.0, 10.0, 1.0, 20.0];'])
+    expect(genJS(vars.get('_x'), 'decl')).toEqual(['const _x_data_ = [0.0, 10.0, 1.0, 20.0];'])
     expect(genJS(vars.get('_x'), 'init-lookups')).toEqual([
       'for (let i = 0; i < 2; i++) {',
-      '_x[i] = fns.createLookup(2, _x_data);',
+      '_x[i] = fns.createLookup(2, _x_data_);',
       '}'
     ])
   })

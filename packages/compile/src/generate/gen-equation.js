@@ -47,6 +47,9 @@ export function generateEquation(variable, mode, extData, directData, modelDir, 
     loopIndexVars.index(lhsDimId)
   }
 
+  // Detect apply-to-all variables (i.e., variables where all subscripts are dimensions)
+  const applyToAll = lhsDimIds.length > 0 && lhsDimIds.length === variable.subscripts.length
+
   // Generate the LHS variable reference code
   const parsedEqn = variable.parsedEqn
   const cLhs = cVarRefWithLhsSubscripts(variable, parsedEqn.lhs.varDef.varId, loopIndexVars)
@@ -114,8 +117,14 @@ export function generateEquation(variable, mode, extData, directData, modelDir, 
   // defined as a set of explicit data points (stored in the `Variable` instance).
   if (variable.isLookup()) {
     // Emit decl/init code for the lookup
-    const lookupDef = generateLookupFromPoints(variable, mode, /*copy=*/ false, cLhs, loopIndexVars, outFormat)
+    const copy = false
+    const lookupDef = generateLookupFromPoints(variable, mode, copy, cLhs, loopIndexVars, outFormat, applyToAll)
     if (lookupDef.length > 0) {
+      if (applyToAll && mode === 'decl') {
+        // For apply-to-all lookups, the data is the same for all subscript values, so
+        // skip the for loops in decl mode (the data array only needs to be declared once)
+        return [...lookupDef]
+      }
       return [...openLoops, ...lookupDef, ...closeLoops]
     } else {
       return []

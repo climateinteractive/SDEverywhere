@@ -668,7 +668,42 @@ describe('generateEquation (XMILE -> JS)', () => {
 
   // TODO: This test is skipped until we support XMILE spec 4.5.3:
   //   4.5.3 Apply-to-All Arrays with Non-Apply-to-All Graphical Functions
-  it.skip('should work for lookup definition (one dimension)', () => {
+  it.skip('should work for lookup definition (1D, apply-to-all)', () => {
+    // Equivalent Vensim model for reference:
+    // const vars = readInlineModel(`
+    //   DimA: A1, A2 ~~|
+    //   x[DimA]( (0,10), (1,20) ) ~~|
+    // `)
+
+    const xmileDims = `\
+<dim name="DimA">
+  <elem name="A1"/>
+  <elem name="A2"/>
+</dim>`
+    const xmileVars = `\
+<aux name="x">
+  <dimensions>
+    <dim name="DimA"/>
+  </dimensions>
+  <gf>
+    <xpts>0,1</xpts>
+    <ypts>10,20</ypts>
+  </gf>
+</aux>`
+    const mdl = xmile(xmileDims, xmileVars)
+    const vars = readInlineModel(mdl)
+    expect(vars.size).toBe(1)
+    expect(genJS(vars.get('_x'), 'decl')).toEqual(['const _x_data = [0.0, 10.0, 1.0, 20.0];'])
+    expect(genJS(vars.get('_x'), 'init-lookups')).toEqual([
+      'for (let i = 0; i < 2; i++) {',
+      '_x[i] = fns.createLookup(2, _x_data);',
+      '}'
+    ])
+  })
+
+  // TODO: This test is skipped until we support XMILE spec 4.5.3:
+  //   4.5.3 Apply-to-All Arrays with Non-Apply-to-All Graphical Functions
+  it.skip('should work for lookup definition (1D, separated/non-apply-to-all)', () => {
     // Equivalent Vensim model for reference:
     // const vars = readInlineModel(`
     //   DimA: A1, A2 ~~|
@@ -710,7 +745,7 @@ describe('generateEquation (XMILE -> JS)', () => {
 
   // TODO: This test is skipped until we support XMILE spec 4.5.3:
   //   4.5.3 Apply-to-All Arrays with Non-Apply-to-All Graphical Functions
-  it.skip('should work for lookup definition (two dimensions)', () => {
+  it.skip('should work for lookup definition (2D, separated/non-apply-to-all)', () => {
     const vars = readInlineModel(`
       DimA: A1, A2 ~~|
       DimB: B1, B2 ~~|

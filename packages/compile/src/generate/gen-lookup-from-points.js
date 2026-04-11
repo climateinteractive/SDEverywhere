@@ -11,10 +11,13 @@ import { isDimension, isTrivialDimension, sub } from '../_shared/subscript.js'
  * @param {string} varLhs The C/JS code for the LHS variable reference.
  * @param {LoopIndexVars} loopIndexVars The loop index state.
  * @param {'c' | 'js'} outFormat The output format.
+ * @param {boolean} applyToAll If true, the variable is an apply-to-all lookup, meaning
+ * the same data is shared across all subscript values.  In this case, a simpler data
+ * array name will be used (without subscript suffixes).
  * @return {string[]} An array of strings containing the generated C/JS code for the variable,
  * one string per line of code.
  */
-export function generateLookupFromPoints(variable, mode, copy, varLhs, loopIndexVars, outFormat) {
+export function generateLookupFromPoints(variable, mode, copy, varLhs, loopIndexVars, outFormat, applyToAll = false) {
   if (variable.points.length === 0) {
     // In the case where the lookup data array is empty (typically this only occurs in the
     // case of game inputs), generate a new empty lookup
@@ -52,7 +55,7 @@ export function generateLookupFromPoints(variable, mode, copy, varLhs, loopIndex
   } else {
     // Construct the name of the data array, which is based on the associated lookup var name,
     // with any subscripts tacked on the end.
-    const dataName = variable.varName + '_data_' + generateLookupDataName(variable.subscripts, loopIndexVars)
+    const dataName = generateLookupDataName(variable.varName, variable.subscripts, loopIndexVars, applyToAll)
     if (mode === 'decl') {
       // In decl mode, declare a static data array that will be used to create the associated `Lookup`
       // at init time. Using static arrays is better for code size, helps us avoid creating a copy of
@@ -97,12 +100,22 @@ export function pointsString(points) {
 /**
  * Return a C name for the static data array associated with a lookup variable.
  *
+ * @param {string} varId The base ID of the variable.
  * @param {string[]} subIds The array of subscript IDs.
  * @param {LoopIndexVars} loopIndexVars The loop index state.
+ * @param {boolean} applyToAll If true, the variable is an apply-to-all lookup.
  * @return {string} The C array name.
  */
-function generateLookupDataName(subIds, loopIndexVars) {
-  return subIds
+function generateLookupDataName(varId, subIds, loopIndexVars, applyToAll) {
+  const dataVarId = varId + '_data_'
+  if (applyToAll || subIds.length === 0) {
+    // For non-subscripted variables or apply-to-all variables (where the data is shared across
+    // all subscript values), we use a simpler name without subscript suffixes
+    return dataVarId
+  }
+
+  // For other subscripted variables, append the subscript index name at each position
+  const subParts = subIds
     .map(subId => {
       if (isDimension(subId)) {
         const i = loopIndexVars.index(subId)
@@ -117,4 +130,5 @@ function generateLookupDataName(subIds, loopIndexVars) {
       }
     })
     .join('')
+  return dataVarId + subParts
 }
