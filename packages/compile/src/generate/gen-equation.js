@@ -116,10 +116,9 @@ export function generateEquation(variable, mode, extData, directData, modelDir, 
     // Emit decl/init code for the lookup
     const lookupDef = generateLookupFromPoints(variable, mode, /*copy=*/ false, cLhs, loopIndexVars, outFormat)
     if (lookupDef.length > 0) {
-      if (lhsDimIds.length > 0 && mode === 'decl') {
-        // For lookups with dimension subscripts (i.e., apply-to-all or partially apply-to-all
-        // lookups), the data is the same for all values in those dimensions, so skip the for
-        // loops in decl mode (the data array only needs to be declared once)
+      if (mode === 'decl') {
+        // For lookups with dimensions and/or subscripts, the data is the same for all
+        // values in those dimensions, so skip the for loops in decl mode
         return [...lookupDef]
       }
       return [...openLoops, ...lookupDef, ...closeLoops]
