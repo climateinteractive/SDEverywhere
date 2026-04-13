@@ -117,8 +117,9 @@ export function generateEquation(variable, mode, extData, directData, modelDir, 
     const lookupDef = generateLookupFromPoints(variable, mode, /*copy=*/ false, cLhs, loopIndexVars, outFormat)
     if (lookupDef.length > 0) {
       if (mode === 'decl') {
-        // For lookups with dimensions and/or subscripts, the data is the same for all
-        // values in those dimensions, so skip the for loops in decl mode
+        // When declaring a lookup, even if the lookup variable includes dimensions (i.e., is
+        // partially apply-to-all), the data variable declarations should not be inside for loops,
+        // so we omit them in this case
         return [...lookupDef]
       }
       return [...openLoops, ...lookupDef, ...closeLoops]
