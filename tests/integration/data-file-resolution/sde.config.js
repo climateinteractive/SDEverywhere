@@ -6,12 +6,17 @@ const genFormat = process.env.GEN_FORMAT === 'c' ? 'c' : 'js'
 export async function config() {
   return {
     genFormat,
-    modelFiles: ['ext-control-params.mdl'],
+    modelFiles: ['model/data-file-resolution.mdl'],
 
     modelSpec: async () => {
       return {
         inputs: ['Y'],
-        outputs: ['Z']
+        outputs: ['Z'],
+        options: {
+          directData: {
+            '?constants': 'data/constants.xlsx'
+          }
+        }
       }
     },
 
