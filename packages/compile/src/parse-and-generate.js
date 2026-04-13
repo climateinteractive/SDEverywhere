@@ -32,8 +32,8 @@ import { generateCode } from './generate/gen-code.js'
  * @param {string[]} operations The set of operations to perform; can include 'generateC', 'generateJS',
  * 'printVarList', 'printRefIdTest', 'convertNames'.  If the array is empty, the model will be
  * read but no operation will be performed.
- * @param {string} modelDirname The absolute path to the directory containing the mdl file.
- * The dat and xlsx files referenced by the spec will be relative to this directory.
+ * @param {string} modelDirname The absolute path to the directory containing data (dat, xlsx, csv)
+ * files that are referenced by the model.  These files will be resolved relative to this directory.
  * @param {string} modelName The model name (without the mdl extension).
  * @param {string} buildDir The output directory where the C or list files will be written.
  * @param {string} [varname] The variable name passed to the 'sde causes' command.
@@ -134,8 +134,8 @@ export function printNames(namesPathname, operation) {
  *
  * @param {string} input The string containing the model text.
  * @param {string} modelKind The kind of model to parse, either 'vensim' or 'xmile'.
- * @param {string} modelDir The absolute path to the directory containing the mdl file.
- * The dat, xlsx, and csv files referenced by the model will be relative to this directory.
+ * @param {string} modelDir The absolute path to the directory containing data (dat, xlsx, csv)
+ * files that are referenced by the model.  These files will be resolved relative to this directory.
  * @param {Object} [options] The options that control parsing.
  * @param {boolean} options.sort Whether to sort definitions alphabetically in the preprocess step.
  * @return {*} A parsed tree representation of the model.
@@ -147,7 +147,7 @@ export function parseModel(input, modelKind, modelDir, options) {
     if (modelDir) {
       parseContext = {
         getDirectSubscripts(fileName, tabOrDelimiter, firstCell, lastCell /*, prefix*/) {
-          // Resolve the CSV file relative the model directory
+          // Resolve the CSV file relative to the model directory
           const csvPath = path.resolve(modelDir, fileName)
 
           // Read the subscripts from the CSV file
