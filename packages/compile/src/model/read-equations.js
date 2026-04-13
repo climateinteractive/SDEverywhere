@@ -523,7 +523,8 @@ function visitFunctionCall(v, callExpr, context) {
         generateGameVariables(v, callExpr, context)
         break
 
-      case '_GET_DIRECT_CONSTANTS': {
+      case '_GET_DIRECT_CONSTANTS':
+      case '_GET_XLS_CONSTANTS':
         validateCallDepth(callExpr, context)
         validateCallArgs(callExpr, 3)
         validateCallArgType(callExpr, 0, 'string')
@@ -537,10 +538,11 @@ function visitFunctionCall(v, callExpr, context) {
           startCell: callExpr.args[2].text
         }
         break
-      }
 
       case '_GET_DIRECT_DATA':
+      case '_GET_XLS_DATA':
       case '_GET_DIRECT_LOOKUPS':
+      case '_GET_XLS_LOOKUPS':
         validateCallDepth(callExpr, context)
         validateCallArgs(callExpr, 4)
         validateCallArgType(callExpr, 0, 'string')

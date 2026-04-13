@@ -17,6 +17,16 @@ a from tagged xlsx[DimA] = GET DIRECT LOOKUPS('?lookups', 'a', '1', 'E2')
 	~	subscript currently required for GET DIRECT LOOKUPS
   |
 
+a from named xlsx using GET XLS[DimA] = GET XLS LOOKUPS('lookups.xlsx', 'a', '1', 'E2')
+	~	
+	~	subscript currently required for GET XLS LOOKUPS
+  |
+
+a from tagged xlsx using GET XLS[DimA] = GET XLS LOOKUPS('?lookups', 'a', '1', 'E2')
+	~	
+	~	subscript currently required for GET XLS LOOKUPS
+  |
+
 b = a[A1](Time)
 	~	
 	~	access the lookup
@@ -28,6 +38,16 @@ b from named xlsx = a from named xlsx[A1](Time)
 	|
 
 b from tagged xlsx = a from tagged xlsx[A1](Time)
+	~	
+	~	access the lookup
+	|
+
+b from named xlsx using GET XLS = a from named xlsx using GET XLS[A1](Time)
+	~	
+	~	access the lookup
+	|
+
+b from tagged xlsx using GET XLS = a from tagged xlsx using GET XLS[A1](Time)
 	~	
 	~	access the lookup
 	|
