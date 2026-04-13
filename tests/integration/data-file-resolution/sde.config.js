@@ -6,15 +6,17 @@ const genFormat = process.env.GEN_FORMAT === 'c' ? 'c' : 'js'
 export async function config() {
   return {
     genFormat,
-    modelFiles: ['override-lookups.mdl'],
-    modelInputPaths: ['*.dat'],
+    modelFiles: ['model/data-file-resolution.mdl'],
+
     modelSpec: async () => {
       return {
-        inputs: ['X'],
-        outputs: ['A[A1]', 'A[A2]', 'B[A1,B1]', 'B[A1,B2]', 'B[A1,B3]', 'B[A2,B1]', 'B[A2,B2]', 'B[A2,B3]', 'C'],
-        datFiles: ['override-lookups.dat'],
-        bundleListing: true,
-        customLookups: true
+        inputs: ['Y'],
+        outputs: ['Z'],
+        options: {
+          directData: {
+            '?constants': 'data/constants.xlsx'
+          }
+        }
       }
     },
 

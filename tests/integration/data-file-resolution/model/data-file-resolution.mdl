@@ -1,0 +1,26 @@
+{UTF-8}
+
+X = TIME
+  ~~|
+
+Y = 0
+  ~ [-10,10,0.1]
+  ~
+  |
+
+C1 = GET DIRECT CONSTANTS('data/constants.csv', ',', 'A2')
+  ~~|
+
+C2 = GET DIRECT CONSTANTS('data/constants.xlsx', 'constants', 'B2')
+  ~~|
+
+C3 = GET DIRECT CONSTANTS('?constants', 'constants', 'C2')
+  ~~|
+
+Z = X + Y + C1 + C2 + C3
+  ~~|
+
+INITIAL TIME = 2000 ~~|
+FINAL TIME = 2002 ~~|
+TIME STEP = 1 ~~|
+SAVEPER = TIME STEP ~~|
