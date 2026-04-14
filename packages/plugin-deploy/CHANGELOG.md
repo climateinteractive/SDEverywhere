@@ -1,16 +1,5 @@
 # Changelog
 
-## [0.1.2](https://github.com/climateinteractive/SDEverywhere/compare/plugin-deploy-v0.1.1...plugin-deploy-v0.1.2) (2026-04-14)
-
-
-### Dependencies
-
-* The following workspace dependencies were updated
-  * devDependencies
-    * @sdeverywhere/build bumped from * to 0.3.12
-  * peerDependencies
-    * @sdeverywhere/build bumped from ^0.3.10 to ^0.3.12
-
 ## [0.1.1](https://github.com/climateinteractive/SDEverywhere/compare/plugin-deploy-v0.1.0...plugin-deploy-v0.1.1) (2026-02-04)
 
 
