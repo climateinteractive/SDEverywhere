@@ -577,6 +577,8 @@ describe('readVariables', () => {
       v('a', "GET DIRECT CONSTANTS('data/a.csv',',','B2')"),
       v('a from named xlsx', "GET DIRECT CONSTANTS('data/a.xlsx','a','B2')"),
       v('a from tagged xlsx', "GET DIRECT CONSTANTS('?a','a','B2')"),
+      v('a from named xlsx using GET XLS', "GET XLS CONSTANTS('data/a.xlsx','a','B2')"),
+      v('a from tagged xlsx using GET XLS', "GET XLS CONSTANTS('?a','a','B2')"),
       v('b[DimB]', "GET DIRECT CONSTANTS('data/b.csv',',','b2*')", {
         subscripts: ['_dimb']
       }),
@@ -625,6 +627,17 @@ describe('readVariables', () => {
         subscripts: ['_a2']
       }),
       v('b[DimA]', 'a[DimA]*10', {
+        subscripts: ['_dima']
+      }),
+      v('a using GET XLS[DimA]', "GET XLS DATA('data.xlsx','A Data','A','B2')", {
+        separationDims: ['_dima'],
+        subscripts: ['_a1']
+      }),
+      v('a using GET XLS[DimA]', "GET XLS DATA('data.xlsx','A Data','A','B2')", {
+        separationDims: ['_dima'],
+        subscripts: ['_a2']
+      }),
+      v('b using GET XLS[DimA]', 'a using GET XLS[DimA]*10', {
         subscripts: ['_dima']
       }),
       v('c', "GET DIRECT DATA('?data','C Data','a','b2')"),
@@ -749,9 +762,35 @@ describe('readVariables', () => {
         separationDims: ['_dima'],
         subscripts: ['_a3']
       }),
+      v('a from named xlsx using GET XLS[DimA]', "GET XLS LOOKUPS('lookups.xlsx','a','1','E2')", {
+        separationDims: ['_dima'],
+        subscripts: ['_a1']
+      }),
+      v('a from named xlsx using GET XLS[DimA]', "GET XLS LOOKUPS('lookups.xlsx','a','1','E2')", {
+        separationDims: ['_dima'],
+        subscripts: ['_a2']
+      }),
+      v('a from named xlsx using GET XLS[DimA]', "GET XLS LOOKUPS('lookups.xlsx','a','1','E2')", {
+        separationDims: ['_dima'],
+        subscripts: ['_a3']
+      }),
+      v('a from tagged xlsx using GET XLS[DimA]', "GET XLS LOOKUPS('?lookups','a','1','E2')", {
+        separationDims: ['_dima'],
+        subscripts: ['_a1']
+      }),
+      v('a from tagged xlsx using GET XLS[DimA]', "GET XLS LOOKUPS('?lookups','a','1','E2')", {
+        separationDims: ['_dima'],
+        subscripts: ['_a2']
+      }),
+      v('a from tagged xlsx using GET XLS[DimA]', "GET XLS LOOKUPS('?lookups','a','1','E2')", {
+        separationDims: ['_dima'],
+        subscripts: ['_a3']
+      }),
       v('b', 'a[A1](Time)'),
       v('b from named xlsx', 'a from named xlsx[A1](Time)'),
       v('b from tagged xlsx', 'a from tagged xlsx[A1](Time)'),
+      v('b from named xlsx using GET XLS', 'a from named xlsx using GET XLS[A1](Time)'),
+      v('b from tagged xlsx using GET XLS', 'a from tagged xlsx using GET XLS[A1](Time)'),
       v('c', 'LOOKUP INVERT(a[A1],0.5)'),
       v('d', 'LOOKUP FORWARD(a[A1],2028.1)'),
       v('e', 'LOOKUP FORWARD(a[A1],2028)'),

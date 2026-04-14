@@ -400,8 +400,11 @@ function generateFunctionCall(callExpr, ctx) {
     }
 
     case '_GET_DIRECT_CONSTANTS':
+    case '_GET_XLS_CONSTANTS':
     case '_GET_DIRECT_DATA':
+    case '_GET_XLS_DATA':
     case '_GET_DIRECT_LOOKUPS':
+    case '_GET_XLS_LOOKUPS':
       // These functions are handled at a higher level, so we should not get here
       throw new Error(`Unexpected function '${fnId}' in code gen for '${ctx.variable.modelLHS}'`)
 
