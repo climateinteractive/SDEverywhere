@@ -391,7 +391,43 @@ describe('generateEquation (Vensim -> JS)', () => {
     expect(genJS(vars.get('_x'), 'init-lookups')).toEqual(['_x = fns.createLookup(6, _x_data_);'])
   })
 
-  it('should work for lookup definition (one dimension)', () => {
+  it('should work for lookup definition (1D, apply-to-all)', () => {
+    const vars = readInlineModel(`
+      DimA: A1, A2 ~~|
+      x[DimA]( (0,10), (1,20) ) ~~|
+    `)
+    expect(vars.size).toBe(1)
+    expect(genJS(vars.get('_x'), 'decl')).toEqual(['const _x_data__i_ = [0.0, 10.0, 1.0, 20.0];'])
+    expect(genJS(vars.get('_x'), 'init-lookups')).toEqual([
+      'for (let i = 0; i < 2; i++) {',
+      '_x[i] = fns.createLookup(2, _x_data__i_);',
+      '}'
+    ])
+  })
+
+  it('should work for lookup definition (2D, partially apply-to-all)', () => {
+    const vars = readInlineModel(`
+      DimA: A1, A2 ~~|
+      DimB: B1, B2 ~~|
+      x[DimA,B1]( (0,10), (1,20) ) ~~|
+      x[DimA,B2]( (0,30), (1,40) ) ~~|
+    `)
+    expect(vars.size).toBe(2)
+    expect(genJS(vars.get('_x[_dima,_b1]'), 'decl')).toEqual(['const _x_data__i__0_ = [0.0, 10.0, 1.0, 20.0];'])
+    expect(genJS(vars.get('_x[_dima,_b2]'), 'decl')).toEqual(['const _x_data__i__1_ = [0.0, 30.0, 1.0, 40.0];'])
+    expect(genJS(vars.get('_x[_dima,_b1]'), 'init-lookups')).toEqual([
+      'for (let i = 0; i < 2; i++) {',
+      '_x[i][0] = fns.createLookup(2, _x_data__i__0_);',
+      '}'
+    ])
+    expect(genJS(vars.get('_x[_dima,_b2]'), 'init-lookups')).toEqual([
+      'for (let i = 0; i < 2; i++) {',
+      '_x[i][1] = fns.createLookup(2, _x_data__i__1_);',
+      '}'
+    ])
+  })
+
+  it('should work for lookup definition (1D, separated/non-apply-to-all)', () => {
     const vars = readInlineModel(`
       DimA: A1, A2 ~~|
       x[A1]( (0,10), (1,20) ) ~~|
@@ -404,7 +440,7 @@ describe('generateEquation (Vensim -> JS)', () => {
     expect(genJS(vars.get('_x[_a2]'), 'init-lookups')).toEqual(['_x[1] = fns.createLookup(2, _x_data__1_);'])
   })
 
-  it('should work for lookup definition (two dimensions)', () => {
+  it('should work for lookup definition (2D, separated/non-apply-to-all)', () => {
     const vars = readInlineModel(`
       DimA: A1, A2 ~~|
       DimB: B1, B2 ~~|
