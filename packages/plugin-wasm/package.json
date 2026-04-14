@@ -1,6 +1,6 @@
 {
   "name": "@sdeverywhere/plugin-wasm",
-  "version": "0.2.7",
+  "version": "0.2.8",
   "files": [
     "dist/**"
   ],
@@ -36,7 +36,7 @@
     "@sdeverywhere/build": "^0.3.10"
   },
   "devDependencies": {
-    "@sdeverywhere/build": "*",
+    "@sdeverywhere/build": "0.3.12",
     "@types/node": "^20.14.8"
   },
   "author": "Climate Interactive",
