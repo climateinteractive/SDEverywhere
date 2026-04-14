@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.2.20](https://github.com/climateinteractive/SDEverywhere/compare/check-ui-shell-v0.2.19...check-ui-shell-v0.2.20) (2026-04-14)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/check-core bumped from ^0.1.7 to ^0.1.8
+
 ## [0.2.19](https://github.com/climateinteractive/SDEverywhere/compare/check-ui-shell-v0.2.18...check-ui-shell-v0.2.19) (2026-02-17)
 
 
