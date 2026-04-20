@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.1.4](https://github.com/climateinteractive/SDEverywhere/compare/parse-v0.1.3...parse-v0.1.4) (2026-04-14)
+
+
+### Bug Fixes
+
+* handle more special characters when converting variable names to canonical IDs ([#798](https://github.com/climateinteractive/SDEverywhere/issues/798)) ([3d7a470](https://github.com/climateinteractive/SDEverywhere/commit/3d7a470dca42942f0246c0edfce154e429b4d873)), closes [#794](https://github.com/climateinteractive/SDEverywhere/issues/794)
+
+## [0.1.3](https://github.com/climateinteractive/SDEverywhere/compare/parse-v0.1.2...parse-v0.1.3) (2026-03-09)
+
+
+### Features
+
+* add initial support for XMILE/Stella models ([#778](https://github.com/climateinteractive/SDEverywhere/issues/778)) ([b2e7f80](https://github.com/climateinteractive/SDEverywhere/commit/b2e7f808b8e63dd83b9dcdf8064cf4bc1725c884)), closes [#468](https://github.com/climateinteractive/SDEverywhere/issues/468)
+
 ## [0.1.2](https://github.com/climateinteractive/SDEverywhere/compare/parse-v0.1.1...parse-v0.1.2) (2024-12-13)
 
 

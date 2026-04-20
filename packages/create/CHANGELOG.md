@@ -1,5 +1,35 @@
 # Changelog
 
+## [0.2.36](https://github.com/climateinteractive/SDEverywhere/compare/create-v0.2.35...create-v0.2.36) (2026-04-14)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/compile bumped from ^0.7.28 to ^0.7.29
+
+## [0.2.35](https://github.com/climateinteractive/SDEverywhere/compare/create-v0.2.34...create-v0.2.35) (2026-03-09)
+
+
+### Features
+
+* add initial support for XMILE/Stella models ([#778](https://github.com/climateinteractive/SDEverywhere/issues/778)) ([b2e7f80](https://github.com/climateinteractive/SDEverywhere/commit/b2e7f808b8e63dd83b9dcdf8064cf4bc1725c884)), closes [#468](https://github.com/climateinteractive/SDEverywhere/issues/468)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/compile bumped from ^0.7.27 to ^0.7.28
+
+## [0.2.34](https://github.com/climateinteractive/SDEverywhere/compare/create-v0.2.33...create-v0.2.34) (2026-02-17)
+
+
+### Bug Fixes
+
+* upgrade giget to 3.1.2 to avoid dependency on outdated tar package ([#783](https://github.com/climateinteractive/SDEverywhere/issues/783)) ([68a69f0](https://github.com/climateinteractive/SDEverywhere/commit/68a69f028b987e20f3d7be3f259b95f310053c7b)), closes [#782](https://github.com/climateinteractive/SDEverywhere/issues/782)
+
 ## [0.2.33](https://github.com/climateinteractive/SDEverywhere/compare/create-v0.2.32...create-v0.2.33) (2026-02-04)
 
 

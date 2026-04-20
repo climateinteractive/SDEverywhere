@@ -127,10 +127,10 @@ export let listConcat = (a, x, addSpaces = false) => {
 }
 // Convert a number or string into a C double constant string.
 // A blank string is converted to zero, following Excel.
-// A string that cannot be converted throws an exception.
+// A string that cannot be converted throws an error.
 export let cdbl = x => {
   function throwError() {
-    throw new Error(`ERROR: cannot convert "${x}" to a number`)
+    throw new Error(`Cannot convert "${x}" to a number`)
   }
   let s = '0.0'
   if (typeof x === 'number') {

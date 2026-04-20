@@ -34,6 +34,10 @@ export let builder = {
     type: 'string',
     alias: 's'
   },
+  datadir: {
+    describe: 'directory to use for resolving data file paths',
+    type: 'string'
+  },
   builddir: {
     describe: 'build directory',
     type: 'string',
@@ -57,9 +61,15 @@ export let handler = async argv => {
 
 export let generate = async (model, opts) => {
   // Get the model name and directory from the model argument.
-  let { modelDirname, modelName, modelPathname } = modelPathProps(model)
+  let { modelDirname, modelName, modelPathname, modelKind } = modelPathProps(model)
   // Ensure the build directory exists.
   let buildDirname = buildDir(opts.builddir, modelDirname)
+  // Allow for overriding the directory that is used for resolving data file paths
+  // referenced by the model.  If `--datadir` is not specified, data files will be
+  // resolved relative to the directory of the provided model file.
+  if (opts.datadir) {
+    modelDirname = path.resolve(opts.datadir)
+  }
   let spec = parseSpec(opts.spec)
   let mdlContent = readFileSync(modelPathname, 'utf8')
   if (opts.preprocess) {
@@ -87,7 +97,7 @@ export let generate = async (model, opts) => {
   if (opts.refidtest) {
     operations.push('printRefIdTest')
   }
-  await parseAndGenerate(mdlContent, spec, operations, modelDirname, modelName, buildDirname)
+  await parseAndGenerate(mdlContent, modelKind, spec, operations, modelDirname, modelName, buildDirname)
 }
 
 export default {

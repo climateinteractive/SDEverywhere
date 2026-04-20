@@ -395,7 +395,43 @@ describe('generateEquation (Vensim -> C)', () => {
     expect(genC(vars.get('_x'), 'init-lookups')).toEqual(['_x = __new_lookup(6, /*copy=*/false, _x_data_);'])
   })
 
-  it('should work for lookup definition (one dimension)', () => {
+  it('should work for lookup definition (1D, apply-to-all)', () => {
+    const vars = readInlineModel(`
+      DimA: A1, A2 ~~|
+      x[DimA]( (0,10), (1,20) ) ~~|
+    `)
+    expect(vars.size).toBe(1)
+    expect(genC(vars.get('_x'), 'decl')).toEqual(['double _x_data__i_[4] = { 0.0, 10.0, 1.0, 20.0 };'])
+    expect(genC(vars.get('_x'), 'init-lookups')).toEqual([
+      'for (size_t i = 0; i < 2; i++) {',
+      '_x[i] = __new_lookup(2, /*copy=*/false, _x_data__i_);',
+      '}'
+    ])
+  })
+
+  it('should work for lookup definition (2D, partially apply-to-all)', () => {
+    const vars = readInlineModel(`
+      DimA: A1, A2 ~~|
+      DimB: B1, B2 ~~|
+      x[DimA,B1]( (0,10), (1,20) ) ~~|
+      x[DimA,B2]( (0,30), (1,40) ) ~~|
+    `)
+    expect(vars.size).toBe(2)
+    expect(genC(vars.get('_x[_dima,_b1]'), 'decl')).toEqual(['double _x_data__i__0_[4] = { 0.0, 10.0, 1.0, 20.0 };'])
+    expect(genC(vars.get('_x[_dima,_b2]'), 'decl')).toEqual(['double _x_data__i__1_[4] = { 0.0, 30.0, 1.0, 40.0 };'])
+    expect(genC(vars.get('_x[_dima,_b1]'), 'init-lookups')).toEqual([
+      'for (size_t i = 0; i < 2; i++) {',
+      '_x[i][0] = __new_lookup(2, /*copy=*/false, _x_data__i__0_);',
+      '}'
+    ])
+    expect(genC(vars.get('_x[_dima,_b2]'), 'init-lookups')).toEqual([
+      'for (size_t i = 0; i < 2; i++) {',
+      '_x[i][1] = __new_lookup(2, /*copy=*/false, _x_data__i__1_);',
+      '}'
+    ])
+  })
+
+  it('should work for lookup definition (1D, separated/non-apply-to-all)', () => {
     const vars = readInlineModel(`
       DimA: A1, A2 ~~|
       x[A1]( (0,10), (1,20) ) ~~|
@@ -408,7 +444,7 @@ describe('generateEquation (Vensim -> C)', () => {
     expect(genC(vars.get('_x[_a2]'), 'init-lookups')).toEqual(['_x[1] = __new_lookup(2, /*copy=*/false, _x_data__1_);'])
   })
 
-  it('should work for lookup definition (two dimensions)', () => {
+  it('should work for lookup definition (2D, separated/non-apply-to-all)', () => {
     const vars = readInlineModel(`
       DimA: A1, A2 ~~|
       DimB: B1, B2 ~~|
@@ -3163,6 +3199,27 @@ describe('generateEquation (Vensim -> C)', () => {
       '__t1 += _IF_THEN_ELSE(_a[u] == 10.0, 0.0, _a[u]);',
       '}',
       '_x = __t1 + 1.0;'
+    ])
+  })
+
+  it('should work for SUM function (with lookup call)', () => {
+    const vars = readInlineModel(`
+      DimA: A1, A2 ~~|
+      x[A1]( [(0,0)-(2,2)], (0,0),(2,1.3) ) ~~|
+      x[A2]( [(0,0)-(2,2)], (0,0.5),(2,1.5) ) ~~|
+      y = SUM(x[DimA!](1)) ~~|
+    `)
+    expect(vars.size).toBe(3)
+    expect(genC(vars.get('_x[_a1]'), 'decl')).toEqual(['double _x_data__0_[4] = { 0.0, 0.0, 2.0, 1.3 };'])
+    expect(genC(vars.get('_x[_a1]'), 'init-lookups')).toEqual(['_x[0] = __new_lookup(2, /*copy=*/false, _x_data__0_);'])
+    expect(genC(vars.get('_x[_a2]'), 'decl')).toEqual(['double _x_data__1_[4] = { 0.0, 0.5, 2.0, 1.5 };'])
+    expect(genC(vars.get('_x[_a2]'), 'init-lookups')).toEqual(['_x[1] = __new_lookup(2, /*copy=*/false, _x_data__1_);'])
+    expect(genC(vars.get('_y'))).toEqual([
+      'double __t1 = 0.0;',
+      'for (size_t u = 0; u < 2; u++) {',
+      '__t1 += _LOOKUP(_x[u], 1.0);',
+      '}',
+      '_y = __t1;'
     ])
   })
 

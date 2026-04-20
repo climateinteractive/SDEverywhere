@@ -1,5 +1,35 @@
 # Changelog
 
+## [0.7.41](https://github.com/climateinteractive/SDEverywhere/compare/cli-v0.7.40...cli-v0.7.41) (2026-04-14)
+
+
+### Bug Fixes
+
+* add --datadir option to `sde generate` to allow for resolving data file paths in their original location ([#804](https://github.com/climateinteractive/SDEverywhere/issues/804)) ([e168fd5](https://github.com/climateinteractive/SDEverywhere/commit/e168fd50be1fbe4b9221b6c43a997a195fcb726d)), closes [#303](https://github.com/climateinteractive/SDEverywhere/issues/303)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/build bumped from ^0.3.11 to ^0.3.12
+    * @sdeverywhere/compile bumped from ^0.7.28 to ^0.7.29
+
+## [0.7.40](https://github.com/climateinteractive/SDEverywhere/compare/cli-v0.7.39...cli-v0.7.40) (2026-03-09)
+
+
+### Features
+
+* add initial support for XMILE/Stella models ([#778](https://github.com/climateinteractive/SDEverywhere/issues/778)) ([b2e7f80](https://github.com/climateinteractive/SDEverywhere/commit/b2e7f808b8e63dd83b9dcdf8064cf4bc1725c884)), closes [#468](https://github.com/climateinteractive/SDEverywhere/issues/468)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/build bumped from ^0.3.10 to ^0.3.11
+    * @sdeverywhere/compile bumped from ^0.7.27 to ^0.7.28
+
 ## [0.7.39](https://github.com/climateinteractive/SDEverywhere/compare/cli-v0.7.38...cli-v0.7.39) (2026-02-04)
 
 

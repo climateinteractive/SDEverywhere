@@ -197,7 +197,13 @@ function subscriptPositionsToExpand(subIds, exceptSubIdSets, separationDims, rhs
 
     if (!expand) {
       // Direct data vars with subscripts are separated because we generate a lookup for each index
-      if (isDimension(subId) && (rhsText.includes('GET DIRECT DATA') || rhsText.includes('GET DIRECT LOOKUPS'))) {
+      if (
+        isDimension(subId) &&
+        (rhsText.includes('GET DIRECT DATA') ||
+          rhsText.includes('GET XLS DATA') ||
+          rhsText.includes('GET DIRECT LOOKUPS') ||
+          rhsText.includes('GET XLS LOOKUPS'))
+      ) {
         expand = true
       }
     }
