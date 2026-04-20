@@ -504,6 +504,233 @@ double* _ALLOCATE_AVAILABLE(
 }
 
 //
+// Helper methods for allocate by priority
+//
+double __sum(double* arr, size_t n) {
+  double total = 0.0;
+  for (size_t i = 0; i < n; i++) {
+    total += arr[i];
+  }
+  return total;
+}
+
+// 
+// ALLOCATE BY PRIORITY
+//
+#define ALLOCATE_BY_PRIORITY_BUFSIZE 60
+#define PRINT_ALLOCATIONS_DEBUG_INFO
+
+double* _ALLOCATE_BY_PRIORITY(
+  double* request_quantities, double* priority_values, double size, double width, double supply, size_t num_requesters) {
+
+  // request points to an array of length num_requesters.
+  // priority points to an array of length num_requesters.
+  // size is the number of elements across which allocation is being made.
+  // width specifies how big a gap in priority is required to have the allocation go first to 
+  //    higher priority with only leftovers going to lower priority. 
+  // supply is the total supply available to fulfill all requests.
+
+  // Allocate by priority allocates supply to requesters based on order of priority. The way in 
+  // which the rationing works is determined by the relative priorities and the width parameter.
+
+  static double allocations[ALLOCATE_BY_PRIORITY_BUFSIZE];
+  if (num_requesters > ALLOCATE_BY_PRIORITY_BUFSIZE) {
+    fprintf(stderr, "_ALLOCATE_BY_PRIORITY num_requesters exceeds internal maximum size of %d\n", ALLOCATE_BY_PRIORITY_BUFSIZE);
+    return NULL;
+  }
+
+  // Validate request values (must be non-negative)
+  for (size_t i = 0; i < num_requesters; i++) {
+    if (request_quantities[i] < -_epsilon) {
+      fprintf(stderr,
+          "_ALLOCATE_BY_PRIORITY encountered negative request value at index %zu: %f\n",
+          i, request_quantities[i]);
+      return NULL;
+    }
+  }
+
+  // Validate width (must not be negative)
+  if (width < -_epsilon) {
+    fprintf(stderr,
+        "_ALLOCATE_BY_PRIORITY encountered invalid width value: %f\n"
+        "Width must not be negative.\n",
+        width);
+    return NULL;
+  }
+
+  // Validate supply (must not be negative)
+  if (supply < -_epsilon) {
+    fprintf(stderr,
+        "_ALLOCATE_BY_PRIORITY encountered invalid supply value: %f\n"
+        "Supply must not be negative.\n",
+        supply);
+    return NULL;
+  }
+
+  // If supply > sum(request), return request
+  if (supply > __sum(request_quantities, num_requesters)) {
+    return request_quantities;
+  }
+
+  // If supply = 0, all targets get allocated 0
+  if(fabs(supply) < _epsilon) {
+    return allocations;
+  }
+
+  static double out_return[ALLOCATE_BY_PRIORITY_BUFSIZE];
+
+  fprintf(stderr, request_quantities);
+
+  // Remove request 0 targets and order by priority
+  bool is_0[ALLOCATE_BY_PRIORITY_BUFSIZE];
+  size_t idx[ALLOCATE_BY_PRIORITY_BUFSIZE];
+  size_t m = 0;
+
+  for (size_t i = 0; i < num_requesters; i++) {
+    is_0[i] = request_quantities[i] == 0.0;
+    if (!is_0[i]) {
+      idx[m++] = i;
+    }
+  }
+
+  /* sort = (-priority[~is_0]).argsort() */
+  for (size_t i = 0; i < m; i++) {
+    for (size_t j = i + 1; j < m; j++) {
+      if (priority_values[idx[j]] > priority_values[idx[i]]) {
+        size_t tmp = idx[i];
+        idx[i] = idx[j];
+        idx[j] = tmp;
+      }
+    }
+  }
+
+  double request[ALLOCATE_BY_PRIORITY_BUFSIZE];
+  double priority[ALLOCATE_BY_PRIORITY_BUFSIZE];
+
+  for (size_t i = 0; i < m; i++) {
+    request[i] = (double)request_quantities[idx[i]];
+    priority[i] = priority_values[idx[i]];
+  }
+
+  // Create the outputs array
+  for (size_t i = 0; i < num_requesters; i++) out_return[i] = 0.0;
+
+  double out[ALLOCATE_BY_PRIORITY_BUFSIZE] = {0.0};
+
+  // Compute the distances between target supply and next target start
+  double distances[ALLOCATE_BY_PRIORITY_BUFSIZE];
+
+  for (size_t i = 0; i < m; i++) distances[i] = NAN;
+
+  // last target will have an numpy.nan as distances as there are no
+  // more targets after
+  for (size_t i = 0; i + 1 < m; i++) {
+    double d = -(priority[i + 1] - priority[i]) / width;
+    if (d > 1.0) d = 1.0;
+    distances[i] = d * request[i];
+  }
+
+  // Create a vector of the current active targets
+  bool active[ALLOCATE_BY_PRIORITY_BUFSIZE] = {false};
+  active[0] = true;
+
+  // Create a vector of the last activated target
+  size_t c_i = 0;
+
+  while (supply > 0.0) {
+
+    bool any_active = false;
+    for (size_t i = 0; i < m; i++) {
+      if (active[i]) {
+        any_active = true;
+        break;
+      }
+    }
+    if (!any_active) break;
+
+    // Compute the slopes of the active targets of supply
+    double slopes[ALLOCATE_BY_PRIORITY_BUFSIZE];
+    double slope_sum = 0.0;
+
+    for (size_t i = 0; i < m; i++) {
+      if (active[i]) {
+        slopes[i] = request[i];
+        slope_sum += slopes[i];
+      } else {
+        slopes[i] = 0.0;
+      }
+    }
+
+    for (size_t i = 0; i < m; i++) {
+      slopes[i] /= slope_sum;
+    }
+
+    // Compute how much supply much be given to any target reach its request
+    double dx_next_top = NAN;
+
+    for (size_t i = 0; i < m; i++) {
+      if (active[i]) {
+        double val = (request[i] - out[i]) / slopes[i];
+        if (isnan(dx_next_top) || val < dx_next_top) {
+          dx_next_top = val;
+        }
+      }
+    }
+
+    // Compute how much supply is needed to start next target
+    // (last target will return a numpy.nan)
+    double dx_next_start = (distances[c_i] - out[c_i]) / slopes[c_i];
+
+    // Compute where the next change in allocation function will change
+    // this will happen when a target reaches is request, or when
+    // the next target starts or when the supply is totally distributed
+    double dx = dx_next_top;
+
+    if (!isnan(dx_next_start) && dx_next_start < dx) dx = dx_next_start;
+    if (supply < dx) dx = supply;
+
+    // Assing the supply to the targets
+    for (size_t i = 0; i < m; i++) {
+      out[i] += slopes[i] * dx;
+    }
+
+    if (fabs(dx - dx_next_start) <= (1e-10 * fabs(dx_next_start) + 1e-16)) {
+      // A new target will start in the next loop
+      c_i++;
+
+      // Active the next targetif its request is different than 0
+      if (c_i < m) active[c_i] = true;
+    }
+
+    if (dx == dx_next_top) {
+      // One or more target have reached their request
+      for (size_t i = 0; i < m; i++) {
+        if (fabs(out[i] - request[i]) <= 1e-12) {
+          active[i] = false;
+        }
+      }
+    }
+
+    supply -= dx;
+
+    if (supply < 1e-12) {  // tolerance threshold
+      supply = 0.0;
+    }
+  }
+
+  // Return the distributed supply in the original order
+  // adding to it again the request 0 if the where removed
+  for (size_t i = 0; i < m; i++) {
+    out_return[idx[i]] = out[i];
+  }
+
+  fprintf(stderr, out_return);
+  return out_return;
+
+
+}
+
+//
 // DELAY FIXED
 //
 FixedDelay* __new_fixed_delay(FixedDelay* fixed_delay, double delay_time, double initial_value) {
