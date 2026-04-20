@@ -593,7 +593,7 @@ double* _ALLOCATE_BY_PRIORITY(
     }
   }
 
-  /* sort = (-priority[~is_0]).argsort() */
+  // Sort indices in `idx` by descending `priority_values` (highest priority first)
   for (size_t i = 0; i < m; i++) {
     for (size_t j = i + 1; j < m; j++) {
       if (priority_values[idx[j]] > priority_values[idx[i]]) {
@@ -604,6 +604,7 @@ double* _ALLOCATE_BY_PRIORITY(
     }
   }
 
+  // Populate local arrays with request and priority values reordered according to idx
   double request[ALLOCATE_BY_PRIORITY_BUFSIZE];
   double priority[ALLOCATE_BY_PRIORITY_BUFSIZE];
 
@@ -622,23 +623,24 @@ double* _ALLOCATE_BY_PRIORITY(
 
   for (size_t i = 0; i < m; i++) distances[i] = NAN;
 
-  // last target will have an numpy.nan as distances as there are no
-  // more targets after
+  // Last target will have NaN as distances as there are no more targets after
   for (size_t i = 0; i + 1 < m; i++) {
     double d = -(priority[i + 1] - priority[i]) / width;
     if (d > 1.0) d = 1.0;
     distances[i] = d * request[i];
   }
 
-  // Create a vector of the current active targets
+  // Index of the current activated target
   bool active[ALLOCATE_BY_PRIORITY_BUFSIZE] = {false};
   active[0] = true;
 
-  // Create a vector of the last activated target
+  // Index of the last activated target
   size_t c_i = 0;
 
-  while (supply > 0.0) {
+  // Continue allocating until supply is exhausted
+  while (supply > _epsilon) {
 
+    // Check if there are any active targets left
     bool any_active = false;
     for (size_t i = 0; i < m; i++) {
       if (active[i]) {
@@ -648,19 +650,20 @@ double* _ALLOCATE_BY_PRIORITY(
     }
     if (!any_active) break;
 
-    // Compute the slopes of the active targets of supply
+    // Compute proportional allocation weights ("slopes") for active targets
     double slopes[ALLOCATE_BY_PRIORITY_BUFSIZE];
     double slope_sum = 0.0;
 
     for (size_t i = 0; i < m; i++) {
       if (active[i]) {
-        slopes[i] = request[i];
+        slopes[i] = request[i]; // weight based on requested amount
         slope_sum += slopes[i];
       } else {
         slopes[i] = 0.0;
       }
     }
 
+    // Normalize slopes so total allocation proportion sums to 1
     for (size_t i = 0; i < m; i++) {
       slopes[i] /= slope_sum;
     }
@@ -677,23 +680,23 @@ double* _ALLOCATE_BY_PRIORITY(
       }
     }
 
-    // Compute how much supply is needed to start next target
-    // (last target will return a numpy.nan)
+    // Compute how much supply is needed to activate the next target
+    // (last target will return nan)
     double dx_next_start = (distances[c_i] - out[c_i]) / slopes[c_i];
 
-    // Compute where the next change in allocation function will change
-    // this will happen when a target reaches is request, or when
-    // the next target starts or when the supply is totally distributed
+    // Determine next allocation step size:
+    // smallest of (next completion, next activation, remaining supply)
     double dx = dx_next_top;
 
     if (!isnan(dx_next_start) && dx_next_start < dx) dx = dx_next_start;
     if (supply < dx) dx = supply;
 
-    // Assing the supply to the targets
+    // Distribute this increment of supply across active targets
     for (size_t i = 0; i < m; i++) {
       out[i] += slopes[i] * dx;
     }
 
+    // If we reached the threshold to activate the next target
     if (fabs(dx - dx_next_start) <= (1e-10 * fabs(dx_next_start) + 1e-16)) {
       // A new target will start in the next loop
       c_i++;
@@ -702,8 +705,8 @@ double* _ALLOCATE_BY_PRIORITY(
       if (c_i < m) active[c_i] = true;
     }
 
+    // If any targets have reached their requested amount, deactivate them
     if (dx == dx_next_top) {
-      // One or more target have reached their request
       for (size_t i = 0; i < m; i++) {
         if (fabs(out[i] - request[i]) <= 1e-12) {
           active[i] = false;
@@ -711,11 +714,9 @@ double* _ALLOCATE_BY_PRIORITY(
       }
     }
 
+    // Reduce remaining supply
     supply -= dx;
 
-    if (supply < 1e-12) {  // tolerance threshold
-      supply = 0.0;
-    }
   }
 
   // Return the distributed supply in the original order
