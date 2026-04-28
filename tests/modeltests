@@ -158,7 +158,7 @@ else
 
     if [[ $GEN_FORMAT == "js" ]]; then
       # Skip tests for models that are not yet supported for JS target
-      if [[ $m == "allocate" || $m == delayfixed* || $m == "depreciate" || $m == "gamma_ln" ]]; then
+      if [[ $m == allocate* || $m == delayfixed* || $m == "depreciate" || $m == "gamma_ln" ]]; then
           echo "Skipping test for $m (not yet supported for JS target)"
           echo
           continue
