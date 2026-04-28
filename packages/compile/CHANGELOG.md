@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.30](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.29...compile-v0.7.30) (2026-04-28)
+
+
+### Features
+
+* add support for Vensim's ALLOCATE BY PRIORITY function ([#809](https://github.com/climateinteractive/SDEverywhere/issues/809)) ([197b261](https://github.com/climateinteractive/SDEverywhere/commit/197b26155dab415e9304059b7f1ccf98982b9659)), closes [#792](https://github.com/climateinteractive/SDEverywhere/issues/792)
+
 ## [0.7.29](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.28...compile-v0.7.29) (2026-04-14)
 
 
