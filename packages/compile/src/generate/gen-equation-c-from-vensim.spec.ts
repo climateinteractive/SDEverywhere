@@ -1994,6 +1994,115 @@ describe('generateEquation (Vensim -> C)', () => {
     ])
   })
 
+  it('should work for ALLOCATE BY PRIORITY function (1D LHS, 1D demand, 1D priority, non-subscripted avail)', () => {
+    const vars = readInlineModel(`
+      branch: Boston, Dayton, Fresno ~~|
+      supply available = 200 ~~|
+      demand[branch] = 150,100,200 ~~|
+      priority[Boston] = 3 ~~|
+      priority[Dayton] = 2 ~~|
+      priority[Fresno] = 1 ~~|
+      priority width = 1 ~~|
+      shipments[branch] = ALLOCATE BY PRIORITY(demand[branch], priority[branch], ELMCOUNT(branch), priority width, supply available) ~~|
+    `)
+    expect(vars.size).toBe(9)
+    expect(genC(vars.get('_supply_available'))).toEqual(['_supply_available = 200.0;'])
+    expect(genC(vars.get('_demand[_boston]'))).toEqual(['_demand[0] = 150.0;'])
+    expect(genC(vars.get('_demand[_dayton]'))).toEqual(['_demand[1] = 100.0;'])
+    expect(genC(vars.get('_demand[_fresno]'))).toEqual(['_demand[2] = 200.0;'])
+    expect(genC(vars.get('_priority[_boston]'))).toEqual(['_priority[0] = 3.0;'])
+    expect(genC(vars.get('_priority[_dayton]'))).toEqual(['_priority[1] = 2.0;'])
+    expect(genC(vars.get('_priority[_fresno]'))).toEqual(['_priority[2] = 1.0;'])
+
+    expect(genC(vars.get('_shipments'))).toEqual([
+      'double* __t1 = _ALLOCATE_BY_PRIORITY(_demand, _priority, 3, _priority_width, _supply_available, 3);',
+      'for (size_t i = 0; i < 3; i++) {',
+      '_shipments[i] = __t1[_branch[i]];',
+      '}'
+    ])
+  })
+
+  it('should work for ALLOCATE BY PRIORITY function (2D LHS, 2D demand, 2D priority, non-subscripted avail)', () => {
+    const vars = readInlineModel(`
+      branch: Boston, Dayton, Fresno ~~|
+      item: Item1, Item2 ~~|
+      supply available = 200 ~~|
+      demand[item,branch] = 150,100,200;190,50,130; ~~|
+      priority[Item1,Boston] = 6 ~~|
+      priority[Item2,Boston] = 5 ~~|
+      priority[Item1,Dayton] = 4 ~~|
+      priority[Item2,Dayton] = 3 ~~|
+      priority[Item1,Fresno] = 2 ~~|
+      priority[Item2,Fresno] = 1 ~~|
+      priority width = 1 ~~|
+      shipments[item,branch] = ALLOCATE BY PRIORITY(demand[item,branch], priority[item,branch], ELMCOUNT(branch), priority width, supply available) ~~|
+    `)
+    expect(vars.size).toBe(15)
+    expect(genC(vars.get('_supply_available'))).toEqual(['_supply_available = 200.0;'])
+    expect(genC(vars.get('_demand[_item1,_boston]'))).toEqual(['_demand[0][0] = 150.0;'])
+    expect(genC(vars.get('_demand[_item1,_dayton]'))).toEqual(['_demand[0][1] = 100.0;'])
+    expect(genC(vars.get('_demand[_item1,_fresno]'))).toEqual(['_demand[0][2] = 200.0;'])
+    expect(genC(vars.get('_demand[_item2,_boston]'))).toEqual(['_demand[1][0] = 190.0;'])
+    expect(genC(vars.get('_demand[_item2,_dayton]'))).toEqual(['_demand[1][1] = 50.0;'])
+    expect(genC(vars.get('_demand[_item2,_fresno]'))).toEqual(['_demand[1][2] = 130.0;'])
+    expect(genC(vars.get('_priority[_item1,_boston]'))).toEqual(['_priority[0][0] = 6.0;'])
+    expect(genC(vars.get('_priority[_item1,_dayton]'))).toEqual(['_priority[0][1] = 4.0;'])
+    expect(genC(vars.get('_priority[_item1,_fresno]'))).toEqual(['_priority[0][2] = 2.0;'])
+    expect(genC(vars.get('_priority[_item2,_boston]'))).toEqual(['_priority[1][0] = 5.0;'])
+    expect(genC(vars.get('_priority[_item2,_dayton]'))).toEqual(['_priority[1][1] = 3.0;'])
+    expect(genC(vars.get('_priority[_item2,_fresno]'))).toEqual(['_priority[1][2] = 1.0;'])
+
+    expect(genC(vars.get('_shipments'))).toEqual([
+      'for (size_t i = 0; i < 2; i++) {',
+      'double* __t1 = _ALLOCATE_BY_PRIORITY(_demand[i], _priority[i], 3, _priority_width, _supply_available, 3);',
+      'for (size_t j = 0; j < 3; j++) {',
+      '_shipments[i][j] = __t1[_branch[j]];',
+      '}',
+      '}'
+    ])
+  })
+
+  it('should work for ALLOCATE BY PRIORITY function (2D LHS, 2D demand, 2D priority, 1D avail)', () => {
+    const vars = readInlineModel(`
+      branch: Boston, Dayton, Fresno ~~|
+      item: Item1, Item2 ~~|
+      supply available[item] = 200,300 ~~|
+      demand[item,branch] = 150,100,200;190,50,130; ~~|
+      priority[Item1,Boston] = 6 ~~|
+      priority[Item2,Boston] = 5 ~~|
+      priority[Item1,Dayton] = 4 ~~|
+      priority[Item2,Dayton] = 3 ~~|
+      priority[Item1,Fresno] = 2 ~~|
+      priority[Item2,Fresno] = 1 ~~|
+      priority width = 1 ~~|
+      shipments[item,branch] = ALLOCATE BY PRIORITY(demand[item,branch], priority[item,branch], ELMCOUNT(branch), priority width, supply available[item]) ~~|
+    `)
+    expect(vars.size).toBe(16)
+    expect(genC(vars.get('_supply_available[_item1]'))).toEqual(['_supply_available[0] = 200.0;'])
+    expect(genC(vars.get('_supply_available[_item2]'))).toEqual(['_supply_available[1] = 300.0;'])
+    expect(genC(vars.get('_demand[_item1,_boston]'))).toEqual(['_demand[0][0] = 150.0;'])
+    expect(genC(vars.get('_demand[_item1,_dayton]'))).toEqual(['_demand[0][1] = 100.0;'])
+    expect(genC(vars.get('_demand[_item1,_fresno]'))).toEqual(['_demand[0][2] = 200.0;'])
+    expect(genC(vars.get('_demand[_item2,_boston]'))).toEqual(['_demand[1][0] = 190.0;'])
+    expect(genC(vars.get('_demand[_item2,_dayton]'))).toEqual(['_demand[1][1] = 50.0;'])
+    expect(genC(vars.get('_demand[_item2,_fresno]'))).toEqual(['_demand[1][2] = 130.0;'])
+    expect(genC(vars.get('_priority[_item1,_boston]'))).toEqual(['_priority[0][0] = 6.0;'])
+    expect(genC(vars.get('_priority[_item1,_dayton]'))).toEqual(['_priority[0][1] = 4.0;'])
+    expect(genC(vars.get('_priority[_item1,_fresno]'))).toEqual(['_priority[0][2] = 2.0;'])
+    expect(genC(vars.get('_priority[_item2,_boston]'))).toEqual(['_priority[1][0] = 5.0;'])
+    expect(genC(vars.get('_priority[_item2,_dayton]'))).toEqual(['_priority[1][1] = 3.0;'])
+    expect(genC(vars.get('_priority[_item2,_fresno]'))).toEqual(['_priority[1][2] = 1.0;'])
+
+    expect(genC(vars.get('_shipments'))).toEqual([
+      'for (size_t i = 0; i < 2; i++) {',
+      'double* __t1 = _ALLOCATE_BY_PRIORITY(_demand[i], _priority[i], 3, _priority_width, _supply_available[i], 3);',
+      'for (size_t j = 0; j < 3; j++) {',
+      '_shipments[i][j] = __t1[_branch[j]];',
+      '}',
+      '}'
+    ])
+  })
+
   it('should work for ARCCOS function', () => {
     const vars = readInlineModel(`
       x = 1 ~~|
