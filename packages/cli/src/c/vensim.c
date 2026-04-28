@@ -579,8 +579,6 @@ double* _ALLOCATE_BY_PRIORITY(
 
   static double out_return[ALLOCATE_BY_PRIORITY_BUFSIZE];
 
-  fprintf(stderr, request_quantities);
-
   // Remove request 0 targets and order by priority
   bool is_0[ALLOCATE_BY_PRIORITY_BUFSIZE];
   size_t idx[ALLOCATE_BY_PRIORITY_BUFSIZE];
@@ -614,14 +612,18 @@ double* _ALLOCATE_BY_PRIORITY(
   }
 
   // Create the outputs array
-  for (size_t i = 0; i < num_requesters; i++) out_return[i] = 0.0;
+  for (size_t i = 0; i < num_requesters; i++) {
+    out_return[i] = 0.0;
+  }
 
   double out[ALLOCATE_BY_PRIORITY_BUFSIZE] = {0.0};
 
   // Compute the distances between target supply and next target start
   double distances[ALLOCATE_BY_PRIORITY_BUFSIZE];
 
-  for (size_t i = 0; i < m; i++) distances[i] = NAN;
+  for (size_t i = 0; i < m; i++) {
+    distances[i] = NAN;
+  }
 
   // Last target will have NaN as distances as there are no more targets after
   for (size_t i = 0; i + 1 < m; i++) {
@@ -639,7 +641,6 @@ double* _ALLOCATE_BY_PRIORITY(
 
   // Continue allocating until supply is exhausted
   while (supply > _epsilon) {
-
     // Check if there are any active targets left
     bool any_active = false;
     for (size_t i = 0; i < m; i++) {
@@ -648,7 +649,9 @@ double* _ALLOCATE_BY_PRIORITY(
         break;
       }
     }
-    if (!any_active) break;
+    if (!any_active) {
+      break;
+    }
 
     // Compute proportional allocation weights ("slopes") for active targets
     double slopes[ALLOCATE_BY_PRIORITY_BUFSIZE];
@@ -688,8 +691,12 @@ double* _ALLOCATE_BY_PRIORITY(
     // smallest of (next completion, next activation, remaining supply)
     double dx = dx_next_top;
 
-    if (!isnan(dx_next_start) && dx_next_start < dx) dx = dx_next_start;
-    if (supply < dx) dx = supply;
+    if (!isnan(dx_next_start) && dx_next_start < dx) {
+      dx = dx_next_start;
+    }
+    if (supply < dx) {
+      dx = supply;
+    }
 
     // Distribute this increment of supply across active targets
     for (size_t i = 0; i < m; i++) {
@@ -716,7 +723,6 @@ double* _ALLOCATE_BY_PRIORITY(
 
     // Reduce remaining supply
     supply -= dx;
-
   }
 
   // Return the distributed supply in the original order
@@ -725,10 +731,7 @@ double* _ALLOCATE_BY_PRIORITY(
     out_return[idx[i]] = out[i];
   }
 
-  fprintf(stderr, out_return);
   return out_return;
-
-
 }
 
 //
