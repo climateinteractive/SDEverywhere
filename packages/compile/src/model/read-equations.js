@@ -481,6 +481,11 @@ function visitFunctionCall(v, callExpr, context) {
         validateCallArgs(callExpr, 3)
         break
 
+      case '_ALLOCATE_BY_PRIORITY':
+        validateCallDepth(callExpr, context)
+        validateCallArgs(callExpr, 5)
+        break
+
       case '_DELAY1':
       case '_DELAY1I':
       case '_DELAY3':
@@ -880,6 +885,9 @@ function visitFunctionCall(v, callExpr, context) {
           }
         }
         continue
+      } else if (callExpr.fnId === '_ALLOCATE_BY_PRIORITY') {
+        // TODO: Throw an error if the last dimension of arg0 does not match last dimension of LHS
+        // TODO: Throw an error if the last dimension of arg1 does not match last dimension of LHS
       }
 
       context.setArgIndex(index, argModes[index])

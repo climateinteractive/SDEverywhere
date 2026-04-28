@@ -39,6 +39,7 @@ extern "C" {
 
 
 double* _ALLOCATE_AVAILABLE(double* requested_quantities, double* priority_profiles, double available_resource, size_t num_requesters);
+double* _ALLOCATE_BY_PRIORITY(double* request, double* priority, double size, double width, double supply, size_t num_requesters);
 double _PULSE(double start, double width);
 double _PULSE_TRAIN(double start, double width, double interval, double end);
 double _RAMP(double slope, double start_time, double end_time);
