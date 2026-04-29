@@ -610,7 +610,7 @@ importers:
         specifier: ^0.3.12
         version: link:../build
       '@sdeverywhere/compile':
-        specifier: ^0.7.29
+        specifier: ^0.7.30
         version: link:../compile
       byline:
         specifier: ^5.0.0
@@ -652,7 +652,7 @@ importers:
   packages/create:
     dependencies:
       '@sdeverywhere/compile':
-        specifier: ^0.7.29
+        specifier: ^0.7.30
         version: link:../compile
       execa:
         specifier: ^6.1.0
