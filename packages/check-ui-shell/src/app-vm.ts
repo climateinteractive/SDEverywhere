@@ -58,6 +58,8 @@ export class AppViewModel {
   public readonly checksInProgress: Readable<boolean>
   private readonly writableProgress: Writable<string>
   public readonly progress: Readable<string>
+  private readonly writableErrorMessage: Writable<string | undefined>
+  public readonly errorMessage: Readable<string | undefined>
   private readonly writableGeneratedDateString: Writable<string | undefined>
   public readonly userPrefs: UserPrefs
   public readonly headerViewModel: HeaderViewModel
@@ -85,6 +87,8 @@ export class AppViewModel {
     this.checksInProgress = this.writableChecksInProgress
     this.writableProgress = writable('0%')
     this.progress = this.writableProgress
+    this.writableErrorMessage = writable(undefined)
+    this.errorMessage = this.writableErrorMessage
 
     // Create the `UserPrefs` object that is passed down to the component hierarchy
     const zoom = localStorageWritableNumber('sde-check-graph-zoom', 1)
@@ -136,6 +140,7 @@ export class AppViewModel {
     // Reset the progress state
     this.writableChecksInProgress.set(true)
     this.writableProgress.set('0%')
+    this.writableErrorMessage.set(undefined)
 
     const comparisonConfig = this.appModel.config.comparison
     if (this.suiteSummary) {
@@ -195,8 +200,15 @@ export class AppViewModel {
             this.writableChecksInProgress.set(false)
           },
           onError: error => {
-            // TODO: Show error message in browser
+            // Log the error to the console
             console.error(error)
+
+            // Display the error message in the UI in place of the progress
+            // indicator.  We leave `checksInProgress` set to `true` so that the
+            // app continues to show the centered overlay (which now contains
+            // the error message instead of the percent text).
+            const message = error?.message ? error.message : String(error)
+            this.writableErrorMessage.set(`Error running test suite: ${message}`)
           }
         },
         {

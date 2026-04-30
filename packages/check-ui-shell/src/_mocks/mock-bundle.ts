@@ -14,6 +14,7 @@ export function mockBundleModel(
   datasetsForScenario: (scenarioSpec: ScenarioSpec, datasetKeys: DatasetKey[]) => DatasetMap,
   options?: {
     delayInGetDatasets?: number
+    throwInGetDatasets?: string
   }
 ): BundleModel {
   return {
@@ -21,6 +22,9 @@ export function mockBundleModel(
     getDatasetsForScenario: async (scenarioSpec, datasetKeys) => {
       if (options?.delayInGetDatasets) {
         await new Promise(resolve => setTimeout(resolve, options.delayInGetDatasets))
+      }
+      if (options?.throwInGetDatasets) {
+        throw new Error(options.throwInGetDatasets)
       }
       return {
         datasetMap: datasetsForScenario(scenarioSpec, datasetKeys)

@@ -1019,6 +1019,30 @@ importers:
         specifier: ^20.14.8
         version: 20.19.19
 
+  tests/integration/model-check-error:
+    dependencies:
+      '@sdeverywhere/build':
+        specifier: workspace:*
+        version: link:../../../packages/build
+      '@sdeverywhere/check-core':
+        specifier: workspace:*
+        version: link:../../../packages/check-core
+      '@sdeverywhere/cli':
+        specifier: workspace:*
+        version: link:../../../packages/cli
+      '@sdeverywhere/plugin-check':
+        specifier: workspace:*
+        version: link:../../../packages/plugin-check
+      '@sdeverywhere/plugin-worker':
+        specifier: workspace:*
+        version: link:../../../packages/plugin-worker
+      '@sdeverywhere/runtime':
+        specifier: workspace:*
+        version: link:../../../packages/runtime
+      '@sdeverywhere/runtime-async':
+        specifier: workspace:*
+        version: link:../../../packages/runtime-async
+
   tests/integration/override-constants:
     dependencies:
       '@sdeverywhere/build':

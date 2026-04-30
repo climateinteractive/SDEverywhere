@@ -1,0 +1,17 @@
+{UTF-8}
+
+Production slope = 1
+  ~ [0,10,1]
+  ~
+  |
+
+Initial inventory = 1000
+  ~~|
+
+Total inventory = Initial inventory + RAMP(Production slope, 2020, 2030)
+  ~~|
+
+INITIAL TIME = 2000 ~~|
+FINAL TIME = 2100 ~~|
+TIME STEP = 1 ~~|
+SAVEPER = TIME STEP ~~|

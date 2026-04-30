@@ -1,0 +1,25 @@
+{
+  "name": "model-check-error",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "clean": "rm -rf sde-prep",
+    "dev-js": "GEN_FORMAT=js sde dev",
+    "dev-wasm": "GEN_FORMAT=c sde dev",
+    "build-js": "GEN_FORMAT=js sde bundle",
+    "build-wasm": "GEN_FORMAT=c sde bundle",
+    "test-js": "./run-tests.sh js",
+    "test-wasm": "./run-tests.sh wasm",
+    "ci:int-test": "run-s clean test-js clean test-wasm"
+  },
+  "dependencies": {
+    "@sdeverywhere/build": "workspace:*",
+    "@sdeverywhere/cli": "workspace:*",
+    "@sdeverywhere/check-core": "workspace:*",
+    "@sdeverywhere/plugin-check": "workspace:*",
+    "@sdeverywhere/plugin-worker": "workspace:*",
+    "@sdeverywhere/runtime": "workspace:*",
+    "@sdeverywhere/runtime-async": "workspace:*"
+  }
+}
