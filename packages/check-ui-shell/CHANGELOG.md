@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.2.21](https://github.com/climateinteractive/SDEverywhere/compare/check-ui-shell-v0.2.20...check-ui-shell-v0.2.21) (2026-05-01)
+
+
+### Bug Fixes
+
+* update SuiteRunner to correctly handle task errors + display errors in CLI and UI ([#813](https://github.com/climateinteractive/SDEverywhere/issues/813)) ([f0da024](https://github.com/climateinteractive/SDEverywhere/commit/f0da024d0be8bd56cf22f655448f979884b6aca1)), closes [#812](https://github.com/climateinteractive/SDEverywhere/issues/812)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/check-core bumped from ^0.1.8 to ^0.1.9
+
 ## [0.2.20](https://github.com/climateinteractive/SDEverywhere/compare/check-ui-shell-v0.2.19...check-ui-shell-v0.2.20) (2026-04-14)
 
 
