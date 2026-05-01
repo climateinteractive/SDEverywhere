@@ -389,4 +389,30 @@ describe('runSuite', () => {
 
     expect(sawOnError).toBe(true)
   })
+
+  it('should notify error callback if a task throws during model run', async () => {
+    const config = await mockConfig({ throwInCurrentGetDatasets: true })
+    const taskQueue = mockTaskQueue(config)
+
+    const error: Error = await new Promise((resolve, reject) => {
+      const callbacks: RunSuiteCallbacks = {
+        onComplete: () => {
+          reject(new Error('onComplete should not be called'))
+        },
+        onError: e => {
+          resolve(e)
+        }
+      }
+      runSuiteWithTaskQueue(config, taskQueue, callbacks)
+
+      // Fail the test (instead of hanging) if onError is not called within
+      // a reasonable amount of time
+      setTimeout(() => {
+        reject(new Error('Timed out waiting for onError'))
+      }, 1000)
+    })
+
+    expect(error).toBeInstanceOf(Error)
+    expect(error.message).toBe('Fake error')
+  })
 })

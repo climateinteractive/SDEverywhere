@@ -85,6 +85,7 @@ function createBundleModel(
     //         - Output 10: 10
     dataOffset?: 'fixed' | 'variable-baseline-changed' | 'variable-baseline-unchanged'
     delayInGetDatasets?: number
+    throwInGetDatasets?: string
   }
 ): BundleModel {
   let datasetsForScenario: (scenarioSpec: ScenarioSpec, datasetKeys: DatasetKey[]) => DatasetMap
@@ -131,7 +132,8 @@ function createBundleModel(
     }
   }
   return mockBundleModel(modelSpec, datasetsForScenario, {
-    delayInGetDatasets: options?.delayInGetDatasets
+    delayInGetDatasets: options?.delayInGetDatasets,
+    throwInGetDatasets: options?.throwInGetDatasets
   })
 }
 
@@ -202,6 +204,7 @@ async function createAppViewModel(options?: {
   rightDataOffset?: 'fixed' | 'variable-baseline-changed' | 'variable-baseline-unchanged'
   delayInGetDatasets?: number
   groupScenarios?: boolean
+  throwInGetDatasets?: string
 }): Promise<AppViewModel> {
   const modelSpec = mockModelSpec()
   const bundleL = mockNamedBundle(
@@ -214,7 +217,8 @@ async function createAppViewModel(options?: {
     'current',
     createBundleModel(modelSpec, {
       dataOffset: options?.rightDataOffset,
-      delayInGetDatasets: options?.delayInGetDatasets
+      delayInGetDatasets: options?.delayInGetDatasets,
+      throwInGetDatasets: options?.throwInGetDatasets
     })
   )
   const configOptions = mockConfigOptions(bundleL, bundleR, options)
@@ -1263,6 +1267,33 @@ const { Story } = defineMeta({
     await expect(datasetRowTitles[9]).toHaveTextContent('Output 10')
 
     // TODO: Verify the detail box ordering
+  }}
+></Story>
+
+<Story
+  name="Error During Test Suite"
+  {template}
+  beforeEach={async ({ args }) => {
+    args.appViewModel = await createAppViewModel({
+      throwInGetDatasets: "Cannot read properties of undefined (reading 'varId')"
+    })
+  }}
+  play={async ({ canvasElement }) => {
+    // Wait for the error message to appear in place of the progress percent
+    await waitFor(() => {
+      const errorMessage = canvasElement.querySelector('.progress-container .error-message')
+      expect(errorMessage).not.toBeNull()
+    })
+
+    // Verify that the error message includes the thrown error's message
+    const errorMessage = canvasElement.querySelector('.progress-container .error-message')
+    await expect(errorMessage).toHaveTextContent(
+      "Error running test suite: Cannot read properties of undefined (reading 'varId')"
+    )
+
+    // Verify that the progress percent is no longer shown
+    const progress = canvasElement.querySelector('.progress-container .progress')
+    await expect(progress).toBeNull()
   }}
 ></Story>
 
