@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.3.30](https://github.com/climateinteractive/SDEverywhere/compare/plugin-check-v0.3.29...plugin-check-v0.3.30) (2026-05-01)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/check-core bumped from ^0.1.8 to ^0.1.9
+    * @sdeverywhere/check-ui-shell bumped from ^0.2.20 to ^0.2.21
+
 ## [0.3.29](https://github.com/climateinteractive/SDEverywhere/compare/plugin-check-v0.3.28...plugin-check-v0.3.29) (2026-04-14)
 
 
