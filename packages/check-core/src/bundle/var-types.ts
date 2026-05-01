@@ -43,14 +43,6 @@ export interface SliderInputVar {
   minValue: number
   /** The maximum value of the input. */
   maxValue: number
-  /** The size of each step/increment between stops. */
-  step?: number
-  /** Whether to display the slider with the endpoints reversed. */
-  reversed?: boolean
-  /** The units string. */
-  units?: string
-  /** The string used to format the slider value. */
-  format?: string
   /** The metadata for the related input control. */
   relatedItem?: RelatedItem
 }
@@ -78,10 +70,6 @@ export interface SwitchInputVar {
   offValue: number
   /** The value of the variable when this switch is in an "on" state. */
   onValue: number
-  /** The set of input IDs for sliders that will be active/enabled when this switch is "off". */
-  slidersActiveWhenOff?: InputId[]
-  /** The set of input IDs for sliders that will be active/enabled when this switch is "on". */
-  slidersActiveWhenOn?: InputId[]
   /** The metadata for the related input control. */
   relatedItem?: RelatedItem
 }

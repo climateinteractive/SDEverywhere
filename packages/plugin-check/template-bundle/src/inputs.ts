@@ -2,7 +2,7 @@
 
 import { assertNever } from 'assert-never'
 
-import type { InputVar, ScenarioSpec } from '@sdeverywhere/check-core'
+import type { ScenarioSpec, SliderInputVar } from '@sdeverywhere/check-core'
 import type { InputValue, InputVarId } from '@sdeverywhere/runtime'
 import { createInputValue } from '@sdeverywhere/runtime'
 
@@ -28,7 +28,7 @@ export interface InputSpec {
   maxValue: number
 }
 
-export interface Input extends InputVar {
+export type Input = SliderInputVar & {
   value: InputValue
 }
 
@@ -40,6 +40,7 @@ export function getInputVars(inputSpecs: InputSpec[]): Map<InputVarId, Input> {
   for (const inputSpec of inputSpecs) {
     const varId = inputSpec.varId
     const input: Input = {
+      kind: 'slider',
       inputId: inputSpec.inputId,
       varId,
       varName: inputSpec.varName,
