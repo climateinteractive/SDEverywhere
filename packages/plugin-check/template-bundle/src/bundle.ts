@@ -2,11 +2,9 @@
 
 import type {
   Bundle,
-  BundleGraphData,
   BundleModel as CheckBundleModel,
   DatasetKey,
   DatasetsResult,
-  LinkItem,
   ModelSpec,
   ScenarioSpec
 } from '@sdeverywhere/check-core'

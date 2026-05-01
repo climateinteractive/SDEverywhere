@@ -368,10 +368,19 @@ function resolveScenarioMatrix(
     resolveScenarioWithAllInputsAtPosition(genKey(), undefined, undefined, undefined, 'at-default')
   )
 
-  // Get the union of all input IDs appearing on either side
+  // Get the union of all input IDs appearing on either side.  Only include slider
+  // inputs in the matrix; switch inputs are excluded for now.
   const inputIdAliases: Set<InputId> = new Set()
-  modelInputsL.getAllInputIdAliases().forEach(alias => inputIdAliases.add(alias))
-  modelInputsR.getAllInputIdAliases().forEach(alias => inputIdAliases.add(alias))
+  const addSliderAliases = (modelInputs: ModelInputs) => {
+    for (const alias of modelInputs.getAllInputIdAliases()) {
+      const inputVar = modelInputs.getInputVarForName(alias)
+      if (inputVar?.kind === 'slider') {
+        inputIdAliases.add(alias)
+      }
+    }
+  }
+  addSliderAliases(modelInputsL)
+  addSliderAliases(modelInputsR)
 
   // Create two scenarios for each input, one with the input at its minimum, and one
   // with the input at its maximum.  If the input only exists on one side, we still
@@ -796,9 +805,18 @@ function resolveInputVarAtPosition(inputVar: InputVar, position: InputPosition):
  * Return a `ComparisonScenarioInputState` for the input at the given value.
  */
 function resolveInputVarAtValue(inputVar: InputVar, value: number): ComparisonScenarioInputState {
-  // Check that the value is in the valid range
-  // TODO: This may not be valid for switch inputs
-  if (value >= inputVar.minValue && value <= inputVar.maxValue) {
+  let inRange: boolean
+  switch (inputVar.kind) {
+    case 'slider':
+      inRange = value >= inputVar.minValue && value <= inputVar.maxValue
+      break
+    case 'switch':
+      inRange = value === inputVar.offValue || value === inputVar.onValue
+      break
+    default:
+      assertNever(inputVar)
+  }
+  if (inRange) {
     return {
       inputVar,
       value
@@ -834,9 +852,16 @@ function inputPosition(position: ComparisonScenarioInputPosition): InputPosition
  * Get the value of the input at the given position.
  */
 function inputValueAtPosition(inputVar: InputVar, position: InputPosition): number {
+  if (position === 'at-default') {
+    return inputVar.defaultValue
+  }
+  if (inputVar.kind === 'switch') {
+    // TODO: Currently we do not allow setting a switch to "min" or "max"; we could map
+    // these to "off" and "on" respectively, but that could be confusing so we will treat
+    // this as an error for now
+    throw new Error(`Cannot resolve '${position}' for switch input '${inputVar.varName}'`)
+  }
   switch (position) {
-    case 'at-default':
-      return inputVar.defaultValue
     case 'at-minimum':
       return inputVar.minValue
     case 'at-maximum':

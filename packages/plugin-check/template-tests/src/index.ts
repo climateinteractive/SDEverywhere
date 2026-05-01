@@ -10,7 +10,7 @@ import type {
   ConfigOptions,
   DatasetKey,
   InputId,
-  InputVar
+  SliderInputVar
 } from '@sdeverywhere/check-core'
 
 // Load the yaml files containing model check test definitions.  The
@@ -100,16 +100,21 @@ export async function getConfigOptions(
 }
 
 function createBaseComparisonSpecs(bundleL: Bundle, bundleR: Bundle): ComparisonSpecs {
-  // Get the union of all input IDs appearing in left and/or right
+  // Get the union of all input IDs appearing in left and/or right.  Only include
+  // slider inputs here; switch inputs are excluded from the base comparison matrix
+  // for now.
   const allInputIds: Set<InputId> = new Set()
-  const addInputs = (bundle: Bundle, inputsMap: Map<InputId, InputVar>) => {
+  const addInputs = (bundle: Bundle, inputsMap: Map<InputId, SliderInputVar>) => {
     for (const inputVar of bundle.modelSpec.inputVars.values()) {
+      if (inputVar.kind !== 'slider') {
+        continue
+      }
       allInputIds.add(inputVar.inputId)
       inputsMap.set(inputVar.inputId, inputVar)
     }
   }
-  const inputsByIdL: Map<InputId, InputVar> = new Map()
-  const inputsByIdR: Map<InputId, InputVar> = new Map()
+  const inputsByIdL: Map<InputId, SliderInputVar> = new Map()
+  const inputsByIdR: Map<InputId, SliderInputVar> = new Map()
   addInputs(bundleL, inputsByIdL)
   addInputs(bundleR, inputsByIdR)
 

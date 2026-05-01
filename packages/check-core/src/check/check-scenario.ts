@@ -96,9 +96,16 @@ function inputPosition(position: CheckScenarioPosition): InputPosition | undefin
  * Get the value of the input at the given position.
  */
 function inputValueAtPosition(inputVar: InputVar, position: InputPosition): number {
+  if (position === 'at-default') {
+    return inputVar.defaultValue
+  }
+  if (inputVar.kind === 'switch') {
+    // TODO: Currently we do not allow setting a switch to "min" or "max"; we could map
+    // these to "off" and "on" respectively, but that could be confusing so we will treat
+    // this as an error for now
+    throw new Error(`Cannot resolve '${position}' for switch input '${inputVar.varName}'`)
+  }
   switch (position) {
-    case 'at-default':
-      return inputVar.defaultValue
     case 'at-minimum':
       return inputVar.minValue
     case 'at-maximum':
@@ -283,6 +290,10 @@ function checkScenarioMatrix(modelSpec: ModelSpec, simplify: boolean): CheckScen
     checkScenarios.push(checkScenarioWithAllInputsAtPosition('at-minimum'))
     checkScenarios.push(checkScenarioWithAllInputsAtPosition('at-maximum'))
     for (const inputVar of modelSpec.inputVars.values()) {
+      // Only include slider inputs in the matrix; switches are excluded for now
+      if (inputVar.kind !== 'slider') {
+        continue
+      }
       checkScenarios.push(checkScenarioWithInputAtPosition(inputVar, 'at-minimum'))
       checkScenarios.push(checkScenarioWithInputAtPosition(inputVar, 'at-maximum'))
     }

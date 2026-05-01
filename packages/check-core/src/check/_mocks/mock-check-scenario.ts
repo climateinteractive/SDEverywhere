@@ -9,6 +9,7 @@ import type { CheckScenario, CheckScenarioInputDesc } from '../check-scenario'
 export function inputVar(inputId: string, varName: string): [VarId, InputVar] {
   const varId = `_${varName.toLowerCase()}`
   const v: InputVar = {
+    kind: 'slider',
     inputId,
     varId,
     varName,
@@ -93,10 +94,22 @@ export function inputDesc(inputVar: InputVar, at: InputPosition | number): Check
         value = inputVar.defaultValue
         break
       case 'at-minimum':
-        value = inputVar.minValue
+        switch (inputVar.kind) {
+          case 'slider':
+            value = inputVar.minValue
+            break
+          case 'switch':
+            throw new Error(`Cannot resolve 'at-minimum' for switch input '${inputVar.varName}'`)
+        }
         break
       case 'at-maximum':
-        value = inputVar.maxValue
+        switch (inputVar.kind) {
+          case 'slider':
+            value = inputVar.maxValue
+            break
+          case 'switch':
+            throw new Error(`Cannot resolve 'at-maximum' for switch input '${inputVar.varName}'`)
+        }
         break
       default:
         break

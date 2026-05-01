@@ -58,6 +58,7 @@ export function dataset(key: DatasetKey, outputVarL: OutputVar, outputVarR: Outp
 export function inputVar(inputId: InputId, varName: string, maxValue = 100): [VarId, InputVar] {
   const varId = `_${varName.toLowerCase()}`
   const v: InputVar = {
+    kind: 'slider',
     inputId,
     varId,
     varName,
@@ -82,9 +83,13 @@ export function nameForPos(position: InputPosition): string {
 }
 
 export function valueForPos(inputVar: InputVar, position: InputPosition): number | undefined {
+  if (position === 'at-default') {
+    return inputVar.defaultValue
+  }
+  if (inputVar.kind === 'switch') {
+    throw new Error(`Cannot resolve '${position}' for switch input '${inputVar.varName}'`)
+  }
   switch (position) {
-    case 'at-default':
-      return inputVar.defaultValue
     case 'at-minimum':
       return inputVar.minValue
     case 'at-maximum':

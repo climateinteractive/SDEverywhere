@@ -15,6 +15,7 @@ import { varIdForName } from './mock-vars'
 export function inputVar(inputId: string, varName: string): [VarId, InputVar] {
   const varId = varIdForName(varName)
   const v: InputVar = {
+    kind: 'slider',
     inputId,
     varId,
     varName,
@@ -103,10 +104,28 @@ export function inputDesc(inputVar: InputVar, at: InputPosition | number): Check
         value = inputVar.defaultValue
         break
       case 'at-minimum':
-        value = inputVar.minValue
+        switch (inputVar.kind) {
+          case 'slider':
+            value = inputVar.minValue
+            break
+          case 'switch':
+            // TODO: Currently we do not allow setting a switch to "min" or "max"; we could map
+            // these to "off" and "on" respectively, but that could be confusing so we will treat
+            // this as an error for now
+            throw new Error(`Cannot resolve 'at-minimum' for switch input '${inputVar.varName}'`)
+        }
         break
       case 'at-maximum':
-        value = inputVar.maxValue
+        switch (inputVar.kind) {
+          case 'slider':
+            value = inputVar.maxValue
+            break
+          case 'switch':
+            // TODO: Currently we do not allow setting a switch to "min" or "max"; we could map
+            // these to "off" and "on" respectively, but that could be confusing so we will treat
+            // this as an error for now
+            throw new Error(`Cannot resolve 'at-maximum' for switch input '${inputVar.varName}'`)
+        }
         break
       default:
         break

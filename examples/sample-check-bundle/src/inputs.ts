@@ -31,6 +31,7 @@ export function getInputs(modelVersion: number): Inputs {
     const varId = `_${varName.toLowerCase().replace(/\s/g, '_')}`
 
     inputVars.set(varId, {
+      kind: 'slider',
       inputId,
       varId,
       varName,

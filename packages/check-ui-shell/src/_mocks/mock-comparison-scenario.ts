@@ -25,6 +25,7 @@ import { varIdForName } from './mock-vars'
 export function inputVar(inputId: InputId, varName: string, minValue = 0, maxValue = 100): [VarId, InputVar] {
   const varId = varIdForName(varName)
   const v: InputVar = {
+    kind: 'slider',
     inputId,
     varId,
     varName,
@@ -49,9 +50,16 @@ export function nameForPos(position: InputPosition): string {
 }
 
 export function valueForPos(inputVar: InputVar, position: InputPosition): number | undefined {
+  if (position === 'at-default') {
+    return inputVar.defaultValue
+  }
+  if (inputVar.kind === 'switch') {
+    // TODO: Currently we do not allow setting a switch to "min" or "max"; we could map
+    // these to "off" and "on" respectively, but that could be confusing so we will treat
+    // this as an error for now
+    throw new Error(`Cannot resolve '${position}' for switch input '${inputVar.varName}'`)
+  }
   switch (position) {
-    case 'at-default':
-      return inputVar.defaultValue
     case 'at-minimum':
       return inputVar.minValue
     case 'at-maximum':
