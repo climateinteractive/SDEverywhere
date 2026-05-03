@@ -374,8 +374,18 @@ function resolveScenarioMatrix(
   const addSliderAliases = (modelInputs: ModelInputs) => {
     for (const alias of modelInputs.getAllInputIdAliases()) {
       const inputVar = modelInputs.getInputVarForName(alias)
-      if (inputVar?.kind === 'slider') {
-        inputIdAliases.add(alias)
+      if (inputVar === undefined) {
+        continue
+      }
+      switch (inputVar.kind) {
+        case 'slider':
+          inputIdAliases.add(alias)
+          break
+        case 'switch':
+          // Switches are excluded from the matrix for now
+          break
+        default:
+          assertNever(inputVar)
       }
     }
   }
@@ -849,23 +859,34 @@ function inputPosition(position: ComparisonScenarioInputPosition): InputPosition
 }
 
 /**
- * Get the value of the input at the given position.
+ * Get the value of the input at the given position.  For switch inputs,
+ * `at-minimum` maps to the switch's `offValue` and `at-maximum` maps to its
+ * `onValue`.
  */
 function inputValueAtPosition(inputVar: InputVar, position: InputPosition): number {
-  if (position === 'at-default') {
-    return inputVar.defaultValue
-  }
-  if (inputVar.kind === 'switch') {
-    // TODO: Currently we do not allow setting a switch to "min" or "max"; we could map
-    // these to "off" and "on" respectively, but that could be confusing so we will treat
-    // this as an error for now
-    throw new Error(`Cannot resolve '${position}' for switch input '${inputVar.varName}'`)
-  }
   switch (position) {
+    case 'at-default':
+      return inputVar.defaultValue
     case 'at-minimum':
-      return inputVar.minValue
+      switch (inputVar.kind) {
+        case 'slider':
+          return inputVar.minValue
+        case 'switch':
+          return inputVar.offValue
+        default:
+          assertNever(inputVar)
+      }
+    // eslint-disable-next-line no-fallthrough
     case 'at-maximum':
-      return inputVar.maxValue
+      switch (inputVar.kind) {
+        case 'slider':
+          return inputVar.maxValue
+        case 'switch':
+          return inputVar.onValue
+        default:
+          assertNever(inputVar)
+      }
+    // eslint-disable-next-line no-fallthrough
     default:
       assertNever(position)
   }

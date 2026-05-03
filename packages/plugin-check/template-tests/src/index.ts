@@ -106,11 +106,15 @@ function createBaseComparisonSpecs(bundleL: Bundle, bundleR: Bundle): Comparison
   const allInputIds: Set<InputId> = new Set()
   const addInputs = (bundle: Bundle, inputsMap: Map<InputId, SliderInputVar>) => {
     for (const inputVar of bundle.modelSpec.inputVars.values()) {
-      if (inputVar.kind !== 'slider') {
-        continue
+      switch (inputVar.kind) {
+        case 'slider':
+          allInputIds.add(inputVar.inputId)
+          inputsMap.set(inputVar.inputId, inputVar)
+          break
+        case 'switch':
+          // Switches are excluded from the base comparison matrix for now
+          break
       }
-      allInputIds.add(inputVar.inputId)
-      inputsMap.set(inputVar.inputId, inputVar)
     }
   }
   const inputsByIdL: Map<InputId, SliderInputVar> = new Map()

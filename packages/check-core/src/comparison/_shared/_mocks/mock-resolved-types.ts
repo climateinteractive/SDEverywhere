@@ -83,17 +83,27 @@ export function nameForPos(position: InputPosition): string {
 }
 
 export function valueForPos(inputVar: InputVar, position: InputPosition): number | undefined {
-  if (position === 'at-default') {
-    return inputVar.defaultValue
-  }
-  if (inputVar.kind === 'switch') {
-    throw new Error(`Cannot resolve '${position}' for switch input '${inputVar.varName}'`)
-  }
   switch (position) {
+    case 'at-default':
+      return inputVar.defaultValue
     case 'at-minimum':
-      return inputVar.minValue
+      switch (inputVar.kind) {
+        case 'slider':
+          return inputVar.minValue
+        case 'switch':
+          return inputVar.offValue
+        default:
+          return undefined
+      }
     case 'at-maximum':
-      return inputVar.maxValue
+      switch (inputVar.kind) {
+        case 'slider':
+          return inputVar.maxValue
+        case 'switch':
+          return inputVar.onValue
+        default:
+          return undefined
+      }
     default:
       return undefined
   }

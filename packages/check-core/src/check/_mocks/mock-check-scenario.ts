@@ -99,7 +99,8 @@ export function inputDesc(inputVar: InputVar, at: InputPosition | number): Check
             value = inputVar.minValue
             break
           case 'switch':
-            throw new Error(`Cannot resolve 'at-minimum' for switch input '${inputVar.varName}'`)
+            value = inputVar.offValue
+            break
         }
         break
       case 'at-maximum':
@@ -108,7 +109,8 @@ export function inputDesc(inputVar: InputVar, at: InputPosition | number): Check
             value = inputVar.maxValue
             break
           case 'switch':
-            throw new Error(`Cannot resolve 'at-maximum' for switch input '${inputVar.varName}'`)
+            value = inputVar.onValue
+            break
         }
         break
       default:
