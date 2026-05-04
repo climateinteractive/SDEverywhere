@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.2.22](https://github.com/climateinteractive/SDEverywhere/compare/check-ui-shell-v0.2.21...check-ui-shell-v0.2.22) (2026-05-04)
+
+
+### Features
+
+* update model-check packages to allow for overriding constants and lookups ([#818](https://github.com/climateinteractive/SDEverywhere/issues/818)) ([4b0aa8c](https://github.com/climateinteractive/SDEverywhere/commit/4b0aa8c8711723b46cc3226368d10de241dc291d)), closes [#770](https://github.com/climateinteractive/SDEverywhere/issues/770)
+
+
+### Bug Fixes
+
+* convert InputVar type to a discriminated union with slider and switch variants ([#820](https://github.com/climateinteractive/SDEverywhere/issues/820)) ([9bd55cb](https://github.com/climateinteractive/SDEverywhere/commit/9bd55cbb811a4ec4f9e786d7bfe1ecf56975ef47)), closes [#819](https://github.com/climateinteractive/SDEverywhere/issues/819)
+* don't include cache busting parameter for data URLs when fetching remote bundles list ([#816](https://github.com/climateinteractive/SDEverywhere/issues/816)) ([0179dbb](https://github.com/climateinteractive/SDEverywhere/commit/0179dbb512e2658c6a29d6494e6a61febe4f2309)), closes [#815](https://github.com/climateinteractive/SDEverywhere/issues/815)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/check-core bumped from ^0.1.9 to ^0.1.10
+
 ## [0.2.21](https://github.com/climateinteractive/SDEverywhere/compare/check-ui-shell-v0.2.20...check-ui-shell-v0.2.21) (2026-05-01)
 
 
