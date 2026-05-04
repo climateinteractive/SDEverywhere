@@ -1,6 +1,6 @@
 // Copyright (c) 2021-2022 Climate Interactive / New Venture Fund
 
-import type { ConstantOverride, ScenarioSpec } from './scenario-spec-types'
+import type { ConstantOverride, LookupOverride, ScenarioSpec } from './scenario-spec-types'
 import type { DatasetKey, DatasetMap } from './types'
 
 export interface DatasetsResult {
@@ -30,6 +30,18 @@ export interface GetDatasetsOptions {
    * They must be provided each time you want to override constants.
    */
   constants?: ConstantOverride[]
+
+  /**
+   * If defined, override the data for the specified lookup or data variables.
+   *
+   * The data provided here will override the default data in the generated model
+   * for each variable identified by `varId`.  Lookup overrides are only effective
+   * when the `customLookups` feature is enabled in the bundle.
+   *
+   * Note that lookup overrides do NOT persist across `getDatasetsForScenario` calls.
+   * They must be provided each time you want to override lookup data.
+   */
+  lookups?: LookupOverride[]
 }
 
 export interface DataSource {
@@ -38,7 +50,7 @@ export interface DataSource {
    *
    * @param scenarioSpec The scenario spec that defines the inputs for the model run.
    * @param datasetKeys The keys of the datasets to be fetched.
-   * @param options Optional configuration including constant overrides.
+   * @param options Optional configuration including constant and lookup overrides.
    */
   getDatasetsForScenario(
     scenarioSpec: ScenarioSpec,

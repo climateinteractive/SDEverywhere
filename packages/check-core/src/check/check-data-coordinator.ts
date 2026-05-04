@@ -1,7 +1,7 @@
 // Copyright (c) 2021-2022 Climate Interactive / New Venture Fund
 
 import type { GetDatasetsOptions } from '../_shared/data-source'
-import type { ConstantOverride, ScenarioSpec } from '../_shared/scenario-spec-types'
+import type { ConstantOverride, LookupOverride, ScenarioSpec } from '../_shared/scenario-spec-types'
 import type { Task } from '../_shared/task-queue'
 import { createExecutor, TaskQueue } from '../_shared/task-queue'
 import type { Dataset, DatasetKey } from '../_shared/types'
@@ -15,6 +15,8 @@ export type CheckDataRequestKey = string
 export interface RequestDatasetOptions {
   /** Optional constant overrides for the model. */
   constants?: ConstantOverride[]
+  /** Optional lookup overrides for the model. */
+  lookups?: LookupOverride[]
 }
 
 /**
@@ -30,7 +32,7 @@ export class CheckDataCoordinator {
    * @param requestKey The unique key for the request.
    * @param scenarioSpec The scenario spec that defines the inputs for the model run.
    * @param datasetKey The key of the dataset to be fetched.
-   * @param options Optional configuration including constant overrides.
+   * @param options Optional configuration including constant and lookup overrides.
    * @param onResponse The callback that will be called with the dataset.
    */
   requestDataset(
@@ -46,9 +48,13 @@ export class CheckDataCoordinator {
       process: async bundleModels => {
         // Run the model for this scenario
         const bundleModelR = bundleModels.R
-        const getDatasetsOptions: GetDatasetsOptions | undefined = options?.constants
-          ? { constants: options.constants }
-          : undefined
+        let getDatasetsOptions: GetDatasetsOptions | undefined
+        if (options?.constants || options?.lookups) {
+          getDatasetsOptions = {
+            constants: options.constants,
+            lookups: options.lookups
+          }
+        }
         const result = await bundleModelR.getDatasetsForScenario(scenarioSpec, [datasetKey], getDatasetsOptions)
         const dataset = result.datasetMap.get(datasetKey)
         onResponse(dataset)

@@ -16,6 +16,27 @@ export interface ConstantOverride {
   value: number
 }
 
+/**
+ * Specifies a lookup override that will be applied when running the model.
+ *
+ * The data provided here will override the default data in the generated model
+ * for the lookup or data variable identified by `varId`.  When `points` is
+ * undefined, any previously-applied override for that variable will be reset
+ * back to its original data.
+ *
+ * Lookup overrides are only effective when the `customLookups` feature is
+ * enabled in the bundle.
+ */
+export interface LookupOverride {
+  /** The variable ID of the lookup or data variable to be overridden. */
+  varId: VarId
+  /**
+   * The lookup data as a flat array of (x,y) pairs.  If undefined, the lookup
+   * data will be reset to the original data.
+   */
+  points?: Float64Array
+}
+
 /** A unique identifier for the scenario, derived from its input settings. */
 export type ScenarioSpecUid = string
 

@@ -1,7 +1,7 @@
 // Copyright (c) 2021-2025 Climate Interactive / New Venture Fund
 
 import type { DatasetsResult, GetDatasetsOptions } from '../../_shared/data-source'
-import type { ConstantOverride, ScenarioSpec } from '../../_shared/scenario-spec-types'
+import type { ConstantOverride, LookupOverride, ScenarioSpec } from '../../_shared/scenario-spec-types'
 import type { Task } from '../../_shared/task-queue'
 import { TaskQueue } from '../../_shared/task-queue'
 import type { DatasetKey, DatasetMap } from '../../_shared/types'
@@ -18,6 +18,10 @@ export interface RequestDatasetMapsOptions {
   constantsL?: ConstantOverride[]
   /** Optional constant overrides for the "right" model. */
   constantsR?: ConstantOverride[]
+  /** Optional lookup overrides for the "left" model. */
+  lookupsL?: LookupOverride[]
+  /** Optional lookup overrides for the "right" model. */
+  lookupsR?: LookupOverride[]
 }
 
 /**
@@ -39,7 +43,7 @@ export class ComparisonDataCoordinator {
    * the "right" bundle's model.
    * @param scenarioSpecR The scenario used for the second ("right") model of the comparison.
    * @param datasetKeys The keys of the datasets to be fetched.
-   * @param options Optional configuration including constant overrides.
+   * @param options Optional configuration including constant and lookup overrides.
    * @param onResponse The callback that will be called with the dataset maps.
    */
   requestDatasetMaps(
@@ -56,10 +60,14 @@ export class ComparisonDataCoordinator {
     async function fetchDatasets(
       bundleModel: BundleModel,
       scenarioSpec: ScenarioSpec | undefined,
-      constants: ConstantOverride[] | undefined
+      constants: ConstantOverride[] | undefined,
+      lookups: LookupOverride[] | undefined
     ): Promise<DatasetsResult> {
       if (scenarioSpec) {
-        const getDatasetsOptions: GetDatasetsOptions | undefined = constants ? { constants } : undefined
+        let getDatasetsOptions: GetDatasetsOptions | undefined
+        if (constants || lookups) {
+          getDatasetsOptions = { constants, lookups }
+        }
         return bundleModel.getDatasetsForScenario(scenarioSpec, datasetKeys, getDatasetsOptions)
       } else {
         return undefined
@@ -78,13 +86,13 @@ export class ComparisonDataCoordinator {
         if (modelL === modelR) {
           // The models are the same, so we need to perform the two runs sequentially (since
           // currently a single model instance cannot be used concurrently)
-          resultL = await fetchDatasets(modelL, scenarioSpecL, options?.constantsL)
-          resultR = await fetchDatasets(modelR, scenarioSpecR, options?.constantsR)
+          resultL = await fetchDatasets(modelL, scenarioSpecL, options?.constantsL, options?.lookupsL)
+          resultR = await fetchDatasets(modelR, scenarioSpecR, options?.constantsR, options?.lookupsR)
         } else {
           // The models are different, so we can perform the two runs in parallel
           const results = await Promise.all([
-            fetchDatasets(modelL, scenarioSpecL, options?.constantsL),
-            fetchDatasets(modelR, scenarioSpecR, options?.constantsR)
+            fetchDatasets(modelL, scenarioSpecL, options?.constantsL, options?.lookupsL),
+            fetchDatasets(modelR, scenarioSpecR, options?.constantsR, options?.lookupsR)
           ])
           resultL = results[0]
           resultR = results[1]
