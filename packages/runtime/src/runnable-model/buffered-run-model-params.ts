@@ -476,8 +476,6 @@ export class BufferedRunModelParams implements RunModelParams {
     const constantIndicesLengthInBytes = constantIndicesLengthInElements * Int32Array.BYTES_PER_ELEMENT
     const lookupsLengthInBytes = lookupsLengthInElements * Float64Array.BYTES_PER_ELEMENT
     const lookupIndicesLengthInBytes = lookupIndicesLengthInElements * Int32Array.BYTES_PER_ELEMENT
-    const constantsLengthInBytes = constantsLengthInElements * Float64Array.BYTES_PER_ELEMENT
-    const constantIndicesLengthInBytes = constantIndicesLengthInElements * Int32Array.BYTES_PER_ELEMENT
     const requiredLengthInBytes =
       headerLengthInBytes +
       extrasLengthInBytes +
@@ -487,9 +485,7 @@ export class BufferedRunModelParams implements RunModelParams {
       constantsLengthInBytes +
       constantIndicesLengthInBytes +
       lookupsLengthInBytes +
-      lookupIndicesLengthInBytes +
-      constantsLengthInBytes +
-      constantIndicesLengthInBytes
+      lookupIndicesLengthInBytes
     if (buffer.byteLength < requiredLengthInBytes) {
       throw new Error('Buffer must be long enough to contain sections declared in header')
     }

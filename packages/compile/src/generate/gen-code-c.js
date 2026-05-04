@@ -226,10 +226,6 @@ void setConstant(size_t varIndex, size_t* subIndices, double value) {
 ${setConstantBody}
 }
 
-void setConstant(size_t varIndex, size_t* subIndices, double value) {
-${setConstantBody}
-}
-
 void setLookup(size_t varIndex, size_t* subIndices, double* points, size_t numPoints) {
 ${setLookupBody}
 }
@@ -455,39 +451,6 @@ ${inputVarPtrs}  };
       *inputVarPtrs[inputVarIndex] = inputValues[i];
     }
   }`
-  }
-  function setConstantImpl(varIndexInfo, customConstants) {
-    // Emit case statements for all const variables that can be overridden at runtime
-    let includeCase
-    if (Array.isArray(customConstants)) {
-      // Only include a case statement if the variable was explicitly included
-      // in the `customConstants` array in the spec file
-      const customConstantVarNames = customConstants.map(varName => {
-        // The developer might specify a variable name that includes subscripts,
-        // but we will ignore the subscript part and only match on the base name
-        return canonicalVensimName(varName.split('[')[0])
-      })
-      includeCase = varName => customConstantVarNames.includes(varName)
-    } else {
-      // Include a case statement for all constant variables
-      includeCase = () => true
-    }
-    const constVars = R.filter(info => {
-      return info.varType === 'const' && includeCase(info.varName)
-    })
-    const code = R.map(info => {
-      let constVar = info.varName
-      for (let i = 0; i < info.subscriptCount; i++) {
-        constVar += `[subIndices[${i}]]`
-      }
-      let c = ''
-      c += `    case ${info.varIndex}:\n`
-      c += `      ${constVar} = value;\n`
-      c += `      break;`
-      return c
-    })
-    const section = R.pipe(constVars, code, lines)
-    return section(varIndexInfo)
   }
   function setConstantImpl(varIndexInfo, customConstants) {
     // Emit case statements for all const variables that can be overridden at runtime

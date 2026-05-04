@@ -274,10 +274,6 @@ void setConstant(size_t varIndex, size_t* subIndices, double value) {
   fprintf(stderr, "The setConstant function was not enabled for the generated model. Set the customConstants property in the spec/config file to allow for overriding constants at runtime.\\n");
 }
 
-void setConstant(size_t varIndex, size_t* subIndices, double value) {
-  fprintf(stderr, "The setConstant function was not enabled for the generated model. Set the customConstants property in the spec/config file to allow for overriding constants at runtime.\\n");
-}
-
 void setLookup(size_t varIndex, size_t* subIndices, double* points, size_t numPoints) {
   Lookup** pLookup = NULL;
   switch (varIndex) {

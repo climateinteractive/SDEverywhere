@@ -68,7 +68,6 @@ void initLevels(void);
 void setInputs(double* inputValues, int32_t* inputIndices);
 void setConstant(size_t varIndex, size_t* subIndices, double value);
 void setLookup(size_t varIndex, size_t* subIndices, double* points, size_t numPoints);
-void setConstant(size_t varIndex, size_t* subIndices, double value);
 void evalAux(void);
 void evalLevels(void);
 void storeOutputData(void);
