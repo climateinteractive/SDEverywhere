@@ -176,8 +176,11 @@ function inputSpecFromCsv(r: CsvRow, context: ConfigContext): InputSpec | undefi
       )
     }
 
-    const minValue = Math.min(offValue, onValue)
-    const maxValue = Math.max(offValue, onValue)
+    // By convention, we map switch off/on values to min/max respectively (these
+    // are mainly used by plugin-check when configuring "at-min" and "at-max"
+    // scenarios)
+    const minValue = offValue
+    const maxValue = onValue
     context.addInputVariable(inputId, varName, defaultValue, minValue, maxValue)
 
     // The `controlled input ids` field dictates which rows are active

@@ -368,29 +368,10 @@ function resolveScenarioMatrix(
     resolveScenarioWithAllInputsAtPosition(genKey(), undefined, undefined, undefined, 'at-default')
   )
 
-  // Get the union of all input IDs appearing on either side.  Only include slider
-  // inputs in the matrix; switch inputs are excluded for now.
+  // Get the union of all input IDs appearing on either side
   const inputIdAliases: Set<InputId> = new Set()
-  const addSliderAliases = (modelInputs: ModelInputs) => {
-    for (const alias of modelInputs.getAllInputIdAliases()) {
-      const inputVar = modelInputs.getInputVarForName(alias)
-      if (inputVar === undefined) {
-        continue
-      }
-      switch (inputVar.kind) {
-        case 'slider':
-          inputIdAliases.add(alias)
-          break
-        case 'switch':
-          // Switches are excluded from the matrix for now
-          break
-        default:
-          assertNever(inputVar)
-      }
-    }
-  }
-  addSliderAliases(modelInputsL)
-  addSliderAliases(modelInputsR)
+  modelInputsL.getAllInputIdAliases().forEach(alias => inputIdAliases.add(alias))
+  modelInputsR.getAllInputIdAliases().forEach(alias => inputIdAliases.add(alias))
 
   // Create two scenarios for each input, one with the input at its minimum, and one
   // with the input at its maximum.  If the input only exists on one side, we still

@@ -10,7 +10,7 @@ import type {
   ConfigOptions,
   DatasetKey,
   InputId,
-  SliderInputVar
+  InputVar
 } from '@sdeverywhere/check-core'
 
 // Load the yaml files containing model check test definitions.  The
@@ -100,27 +100,30 @@ export async function getConfigOptions(
 }
 
 function createBaseComparisonSpecs(bundleL: Bundle, bundleR: Bundle): ComparisonSpecs {
-  // Get the union of all input IDs appearing in left and/or right.  Only include
-  // slider inputs here; switch inputs are excluded from the base comparison matrix
-  // for now.
+  // Get the union of all input IDs appearing in left and/or right
   const allInputIds: Set<InputId> = new Set()
-  const addInputs = (bundle: Bundle, inputsMap: Map<InputId, SliderInputVar>) => {
+  const addInputs = (bundle: Bundle, inputsMap: Map<InputId, InputVar>) => {
     for (const inputVar of bundle.modelSpec.inputVars.values()) {
-      switch (inputVar.kind) {
-        case 'slider':
-          allInputIds.add(inputVar.inputId)
-          inputsMap.set(inputVar.inputId, inputVar)
-          break
-        case 'switch':
-          // Switches are excluded from the base comparison matrix for now
-          break
-      }
+      allInputIds.add(inputVar.inputId)
+      inputsMap.set(inputVar.inputId, inputVar)
     }
   }
-  const inputsByIdL: Map<InputId, SliderInputVar> = new Map()
-  const inputsByIdR: Map<InputId, SliderInputVar> = new Map()
+  const inputsByIdL: Map<InputId, InputVar> = new Map()
+  const inputsByIdR: Map<InputId, InputVar> = new Map()
   addInputs(bundleL, inputsByIdL)
   addInputs(bundleR, inputsByIdR)
+
+  // Get the value of an input at the requested matrix position.  For sliders,
+  // this is `minValue`/`maxValue`; for switches, this is `offValue`/`onValue`
+  // (matching the convention used by check-core's position resolution).
+  const valueAtPos = (iv: InputVar, position: 'min' | 'max'): number => {
+    switch (iv.kind) {
+      case 'slider':
+        return position === 'min' ? iv.minValue : iv.maxValue
+      case 'switch':
+        return position === 'min' ? iv.offValue : iv.onValue
+    }
+  }
 
   // Create an "all inputs at default" scenario
   const scenarios: ComparisonScenarioSpec[] = []
@@ -140,16 +143,12 @@ function createBaseComparisonSpecs(bundleL: Bundle, bundleR: Bundle): Comparison
       return
     }
 
-    // Don't add a scenario if the input's min or max is equal to its default (this is already
-    // covered by the `all_inputs_at_default` scenario from above)
-    if (position === 'min') {
-      if (inputL.minValue === inputL.defaultValue && inputR.minValue === inputR.defaultValue) {
-        return
-      }
-    } else {
-      if (inputL.maxValue === inputL.defaultValue && inputR.maxValue === inputR.defaultValue) {
-        return
-      }
+    // Don't add a scenario if the input's value at the requested position is equal to its default
+    // value(this is already covered by the `all_inputs_at_default` scenario from above)
+    const valL = valueAtPos(inputL, position)
+    const valR = valueAtPos(inputR, position)
+    if (valL === inputL.defaultValue && valR === inputR.defaultValue) {
+      return
     }
 
     // Derive the scenario name from the related slider name (or if not defined, the variable name)

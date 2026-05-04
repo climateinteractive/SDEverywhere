@@ -301,10 +301,6 @@ function checkScenarioMatrix(modelSpec: ModelSpec, simplify: boolean): CheckScen
     checkScenarios.push(checkScenarioWithAllInputsAtPosition('at-minimum'))
     checkScenarios.push(checkScenarioWithAllInputsAtPosition('at-maximum'))
     for (const inputVar of modelSpec.inputVars.values()) {
-      // Only include slider inputs in the matrix; switches are excluded for now
-      if (inputVar.kind !== 'slider') {
-        continue
-      }
       checkScenarios.push(checkScenarioWithInputAtPosition(inputVar, 'at-minimum'))
       checkScenarios.push(checkScenarioWithInputAtPosition(inputVar, 'at-maximum'))
     }
