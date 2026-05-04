@@ -108,10 +108,11 @@ export class MockWasmModule implements WasmModule {
       case 'runModelWithBuffers':
         return (
           inputsAddress: number,
+          _inputIndicesAddress: number,
           outputsAddress: number,
           outputIndicesAddress: number,
-          constantIndicesAddress: number,
-          constantValuesAddress: number
+          constantValuesAddress: number,
+          constantIndicesAddress: number
         ) => {
           const inputs = this.getHeapView('float64', inputsAddress) as Float64Array
           const outputs = this.getHeapView('float64', outputsAddress) as Float64Array
@@ -119,9 +120,9 @@ export class MockWasmModule implements WasmModule {
 
           // Decode constant buffers if provided
           this.constants.clear()
-          if (constantIndicesAddress !== 0 && constantValuesAddress !== 0) {
-            const constantIndices = this.getHeapView('int32', constantIndicesAddress) as Int32Array
+          if (constantValuesAddress !== 0 && constantIndicesAddress !== 0) {
             const constantValues = this.getHeapView('float64', constantValuesAddress) as Float64Array
+            const constantIndices = this.getHeapView('int32', constantIndicesAddress) as Int32Array
 
             // Read count
             const numConstants = constantIndices[0]

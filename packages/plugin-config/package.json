@@ -1,6 +1,6 @@
 {
   "name": "@sdeverywhere/plugin-config",
-  "version": "0.2.8",
+  "version": "0.2.9",
   "files": [
     "dist/**",
     "template-config/**"
@@ -38,7 +38,7 @@
     "sanitize-html": "^2.13.0"
   },
   "peerDependencies": {
-    "@sdeverywhere/build": "^0.3.7"
+    "@sdeverywhere/build": "^0.3.10"
   },
   "devDependencies": {
     "@sdeverywhere/build": "*",

@@ -1,5 +1,35 @@
 # Changelog
 
+## [0.3.12](https://github.com/climateinteractive/SDEverywhere/compare/build-v0.3.11...build-v0.3.12) (2026-04-14)
+
+
+### Bug Fixes
+
+* add --datadir option to `sde generate` to allow for resolving data file paths in their original location ([#804](https://github.com/climateinteractive/SDEverywhere/issues/804)) ([e168fd5](https://github.com/climateinteractive/SDEverywhere/commit/e168fd50be1fbe4b9221b6c43a997a195fcb726d)), closes [#303](https://github.com/climateinteractive/SDEverywhere/issues/303)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/parse bumped from ^0.1.3 to ^0.1.4
+
+## [0.3.11](https://github.com/climateinteractive/SDEverywhere/compare/build-v0.3.10...build-v0.3.11) (2026-03-09)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/parse bumped from ^0.1.2 to ^0.1.3
+
+## [0.3.10](https://github.com/climateinteractive/SDEverywhere/compare/build-v0.3.9...build-v0.3.10) (2026-02-04)
+
+
+### Features
+
+* allow for overriding constants at runtime ([#767](https://github.com/climateinteractive/SDEverywhere/issues/767)) ([984c3bc](https://github.com/climateinteractive/SDEverywhere/commit/984c3bcbd80d6088c73a4f7f3f31070fba328abe)), closes [#470](https://github.com/climateinteractive/SDEverywhere/issues/470)
+
 ## [0.3.9](https://github.com/climateinteractive/SDEverywhere/compare/build-v0.3.8...build-v0.3.9) (2026-01-10)
 
 

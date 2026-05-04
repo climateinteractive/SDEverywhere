@@ -116,6 +116,12 @@ export function generateEquation(variable, mode, extData, directData, modelDir, 
     // Emit decl/init code for the lookup
     const lookupDef = generateLookupFromPoints(variable, mode, /*copy=*/ false, cLhs, loopIndexVars, outFormat)
     if (lookupDef.length > 0) {
+      if (mode === 'decl') {
+        // When declaring a lookup, even if the lookup variable includes dimensions (i.e., is
+        // partially apply-to-all), the data variable declarations should not be inside for loops,
+        // so we omit them in this case
+        return [...lookupDef]
+      }
       return [...openLoops, ...lookupDef, ...closeLoops]
     } else {
       return []

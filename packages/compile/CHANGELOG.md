@@ -1,5 +1,61 @@
 # Changelog
 
+## [0.7.30](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.29...compile-v0.7.30) (2026-04-28)
+
+
+### Features
+
+* add support for Vensim's ALLOCATE BY PRIORITY function ([#809](https://github.com/climateinteractive/SDEverywhere/issues/809)) ([197b261](https://github.com/climateinteractive/SDEverywhere/commit/197b26155dab415e9304059b7f1ccf98982b9659)), closes [#792](https://github.com/climateinteractive/SDEverywhere/issues/792)
+
+## [0.7.29](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.28...compile-v0.7.29) (2026-04-14)
+
+
+### Bug Fixes
+
+* add --datadir option to `sde generate` to allow for resolving data file paths in their original location ([#804](https://github.com/climateinteractive/SDEverywhere/issues/804)) ([e168fd5](https://github.com/climateinteractive/SDEverywhere/commit/e168fd50be1fbe4b9221b6c43a997a195fcb726d)), closes [#303](https://github.com/climateinteractive/SDEverywhere/issues/303)
+* correct generated code for apply-to-all lookup definitions ([#805](https://github.com/climateinteractive/SDEverywhere/issues/805)) ([b6762de](https://github.com/climateinteractive/SDEverywhere/commit/b6762dec5a1b5a69bcbd50d07a6bd21d8750c2c6)), closes [#642](https://github.com/climateinteractive/SDEverywhere/issues/642)
+* correct handling of blank and non-numeric cells for `GET DIRECT DATA` and `GET DIRECT LOOKUPS` ([#799](https://github.com/climateinteractive/SDEverywhere/issues/799)) ([82066e6](https://github.com/climateinteractive/SDEverywhere/commit/82066e619859ce4b9d4f64cd155c6cdf4a16e44f)), closes [#796](https://github.com/climateinteractive/SDEverywhere/issues/796)
+* treat `GET XLS ...` function calls as synonymous with `GET DIRECT...` ([#806](https://github.com/climateinteractive/SDEverywhere/issues/806)) ([1021e65](https://github.com/climateinteractive/SDEverywhere/commit/1021e6504bbc823a2aa1fd0255273078d8d5724c)), closes [#402](https://github.com/climateinteractive/SDEverywhere/issues/402)
+* visit variable ref in lookup-call expressions to ensure that marked dimensions are detected ([#802](https://github.com/climateinteractive/SDEverywhere/issues/802)) ([65e6caf](https://github.com/climateinteractive/SDEverywhere/commit/65e6caf081e09c029a19757960612a4afc665d9a)), closes [#801](https://github.com/climateinteractive/SDEverywhere/issues/801)
+
+
+### Performance Improvements
+
+* optimize expandedRefIdsForVar to better handle large dimensions ([#800](https://github.com/climateinteractive/SDEverywhere/issues/800)) ([879d3df](https://github.com/climateinteractive/SDEverywhere/commit/879d3df2b25e7c81082bac1a42e51e35d84ee10a)), closes [#797](https://github.com/climateinteractive/SDEverywhere/issues/797)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/parse bumped from ^0.1.3 to ^0.1.4
+
+## [0.7.28](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.27...compile-v0.7.28) (2026-03-09)
+
+
+### Features
+
+* add initial support for XMILE/Stella models ([#778](https://github.com/climateinteractive/SDEverywhere/issues/778)) ([b2e7f80](https://github.com/climateinteractive/SDEverywhere/commit/b2e7f808b8e63dd83b9dcdf8064cf4bc1725c884)), closes [#468](https://github.com/climateinteractive/SDEverywhere/issues/468)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/parse bumped from ^0.1.2 to ^0.1.3
+
+## [0.7.27](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.26...compile-v0.7.27) (2026-02-04)
+
+
+### Features
+
+* allow for overriding constants at runtime ([#767](https://github.com/climateinteractive/SDEverywhere/issues/767)) ([984c3bc](https://github.com/climateinteractive/SDEverywhere/commit/984c3bcbd80d6088c73a4f7f3f31070fba328abe)), closes [#470](https://github.com/climateinteractive/SDEverywhere/issues/470)
+
+
+### Bug Fixes
+
+* remove string-based `run_model` API from C runtime + update `main.c` to use `runModelWithBuffers` ([#766](https://github.com/climateinteractive/SDEverywhere/issues/766)) ([e031f08](https://github.com/climateinteractive/SDEverywhere/commit/e031f08dbda85768ff5b2739611e5be650aae399)), closes [#302](https://github.com/climateinteractive/SDEverywhere/issues/302)
+
 ## [0.7.26](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.25...compile-v0.7.26) (2026-01-08)
 
 

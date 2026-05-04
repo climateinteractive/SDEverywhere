@@ -162,8 +162,28 @@ export function generateExpr(expr, ctx) {
  * @return {string} The generated C/JS code.
  */
 function generateFunctionCall(callExpr, ctx) {
-  const fnId = callExpr.fnId
+  function generateSimpleFunctionCall(fnId) {
+    const args = callExpr.args.map(argExpr => generateExpr(argExpr, ctx))
+    if (ctx.outFormat === 'js' && fnId === '_IF_THEN_ELSE') {
+      // When generating conditional expressions for JS target, since we can't rely on macros like we do for C,
+      // it is better to translate it into a ternary instead of relying on a built-in function (since the latter
+      // would require always evaluating both branches, while the former can be more optimized by the interpreter)
+      return `((${args[0]}) ? (${args[1]}) : (${args[2]}))`
+    } else {
+      // For simple functions, emit a C/JS function call with a generated C/JS expression for each argument
+      return `${fnRef(fnId, ctx)}(${args.join(', ')})`
+    }
+  }
 
+  function generateLookupFunctionCall(fnId) {
+    // For LOOKUP* functions, the first argument must be a reference to the lookup variable.  Emit
+    // a C/JS function call with a generated C/JS expression for each remaining argument.
+    const cVarRef = ctx.cVarRef(callExpr.args[0])
+    const cArgs = callExpr.args.slice(1).map(arg => generateExpr(arg, ctx))
+    return `${fnRef(fnId, ctx)}(${cVarRef}, ${cArgs.join(', ')})`
+  }
+
+  const fnId = callExpr.fnId
   switch (fnId) {
     //
     //
@@ -174,46 +194,54 @@ function generateFunctionCall(callExpr, ctx) {
     //
     //
 
+    // Simple functions that are common to Vensim and XMILE/Stella
     case '_ABS':
     case '_ARCCOS':
     case '_ARCSIN':
     case '_ARCTAN':
     case '_COS':
     case '_EXP':
-    case '_GAMMA_LN':
     case '_IF_THEN_ELSE':
-    case '_INTEGER':
     case '_LN':
     case '_MAX':
     case '_MIN':
-    case '_MODULO':
-    case '_POW':
-    case '_POWER':
-    case '_PULSE':
-    case '_PULSE_TRAIN':
-    case '_QUANTUM':
     case '_RAMP':
     case '_SIN':
     case '_SQRT':
     case '_STEP':
     case '_TAN':
+      return generateSimpleFunctionCall(fnId)
+
+    // Simple functions supported by Vensim only
+    case '_GAMMA_LN':
+    case '_INTEGER':
+    case '_MODULO':
+    case '_POW':
+    case '_POWER':
+    case '_PULSE_TRAIN':
+    case '_PULSE':
+    case '_QUANTUM':
     case '_WITH_LOOKUP':
     case '_XIDZ':
-    case '_ZIDZ': {
-      const args = callExpr.args.map(argExpr => generateExpr(argExpr, ctx))
+    case '_ZIDZ':
       if (ctx.outFormat === 'js' && fnId === '_GAMMA_LN') {
         throw new Error(`${callExpr.fnName} function not yet implemented for JS code gen`)
       }
-      if (ctx.outFormat === 'js' && fnId === '_IF_THEN_ELSE') {
-        // When generating conditional expressions for JS target, since we can't rely on macros like we do for C,
-        // it is better to translate it into a ternary instead of relying on a built-in function (since the latter
-        // would require always evaluating both branches, while the former can be more optimized by the interpreter)
-        return `((${args[0]}) ? (${args[1]}) : (${args[2]}))`
-      } else {
-        // For simple functions, emit a C/JS function call with a generated C/JS expression for each argument
-        return `${fnRef(fnId, ctx)}(${args.join(', ')})`
-      }
-    }
+      return generateSimpleFunctionCall(fnId)
+
+    // Simple functions supported by XMILE/Stella only
+    case '_INT':
+      // XMILE/Stella uses `INT`, but it is the same as the Vensim `INTEGER` function,
+      // which is the name used in the runtime function implementation
+      return generateSimpleFunctionCall('_INTEGER')
+    case '_MOD':
+      // XMILE/Stella uses `MOD`, but it is the same as the Vensim `MODULO` function,
+      // which is the name used in the runtime function implementation
+      return generateSimpleFunctionCall('_MODULO')
+    case '_SAFEDIV':
+      // XMILE/Stella uses `SAFEDIV`, but it is the same as the Vensim `ZIDZ` function,
+      // which is the name used in the runtime function implementation
+      return generateSimpleFunctionCall('_ZIDZ')
 
     //
     //
@@ -225,17 +253,12 @@ function generateFunctionCall(callExpr, ctx) {
     //
     //
 
+    // Lookup functions supported by Vensim only
     case '_GET_DATA_BETWEEN_TIMES':
     case '_LOOKUP_BACKWARD':
     case '_LOOKUP_FORWARD':
-    case '_LOOKUP_INVERT': {
-      // For LOOKUP* functions, the first argument must be a reference to the lookup variable.  Emit
-      // a C/JS function call with a generated C/JS expression for each remaining argument.
-      const cVarRef = ctx.cVarRef(callExpr.args[0])
-      const cArgs = callExpr.args.slice(1).map(arg => generateExpr(arg, ctx))
-      return `${fnRef(fnId, ctx)}(${cVarRef}, ${cArgs.join(', ')})`
-    }
-
+    case '_LOOKUP_INVERT':
+      return generateLookupFunctionCall(fnId)
     case '_GAME': {
       // For the GAME function, emit a C/JS function call that has the synthesized game inputs lookup
       // as the first argument, followed by the default value argument from the function call
@@ -244,6 +267,16 @@ function generateFunctionCall(callExpr, ctx) {
       return `${fnRef(fnId, ctx)}(${cLookupArg}, ${cDefaultArg})`
     }
 
+    // Lookup functions supported by XMILE/Stella only
+    case '_LOOKUP':
+      // XMILE/Stella has an explicit `LOOKUP` function while Vensim uses `x(y)` syntax, but
+      // underneath both are implemented at runtime by the `LOOKUP` function
+      return generateLookupFunctionCall('_LOOKUP')
+    case '_LOOKUPINV':
+      // XMILE/Stella uses `LOOKUPINV`, but it is the same as the Vensim `LOOKUP INVERT` function,
+      // which is the name used in the runtime function implementation
+      return generateLookupFunctionCall('_LOOKUP_INVERT')
+
     //
     //
     // Level functions
@@ -251,12 +284,16 @@ function generateFunctionCall(callExpr, ctx) {
     //
 
     case '_ACTIVE_INITIAL':
+    case '_DELAY':
     case '_DELAY_FIXED':
     case '_DEPRECIATE_STRAIGHTLINE':
     case '_SAMPLE_IF_TRUE':
     case '_INTEG':
       // Split level functions into init and eval expressions
-      if (ctx.outFormat === 'js' && (fnId === '_DELAY_FIXED' || fnId === '_DEPRECIATE_STRAIGHTLINE')) {
+      if (
+        ctx.outFormat === 'js' &&
+        (fnId === '_DELAY' || fnId === '_DELAY_FIXED' || fnId === '_DEPRECIATE_STRAIGHTLINE')
+      ) {
         throw new Error(`${callExpr.fnName} function not yet implemented for JS code gen`)
       }
       if (ctx.mode.startsWith('init')) {
@@ -311,7 +348,12 @@ function generateFunctionCall(callExpr, ctx) {
     case '_SMOOTH':
     case '_SMOOTHI':
     case '_SMOOTH3':
-    case '_SMOOTH3I': {
+    case '_SMOOTH3I':
+    case '_SMTH1':
+    case '_SMTH3': {
+      // Note that Vensim uses `SMOOTH[I]` and `SMOOTH3[I]` while XMILE uses `SMTH1` and
+      // `SMTH3`, but otherwise they have been translated the same way during the read
+      // equations phase
       const smoothVar = Model.varWithRefId(ctx.variable.smoothVarRefId)
       return ctx.cVarRef(smoothVar.parsedEqn.lhs.varDef)
     }
@@ -345,24 +387,37 @@ function generateFunctionCall(callExpr, ctx) {
       }
       return generateAllocateAvailableCall(callExpr, ctx)
 
-    case '_ELMCOUNT': {
-      // Emit the size of the dimension in place of the dimension name
+    case '_ALLOCATE_BY_PRIORITY':
+      if (ctx.outFormat === 'js') {
+        throw new Error(`${callExpr.fnName} function not yet implemented for JS code gen`)
+      }
+      return generateAllocateByPriorityCall(callExpr, ctx)
+
+    case '_ELMCOUNT':
+    case '_SIZE': {
+      // Emit the size of the dimension in place of the dimension name. Note that Vensim uses
+      // `ELMCOUNT` while XMILE uses `SIZE`, but otherwise they are the same.
       const dimArg = callExpr.args[0]
       if (dimArg.kind !== 'variable-ref') {
-        throw new Error('Argument for ELMCOUNT must be a dimension name')
+        throw new Error(`Argument for ${callExpr.fnName} must be a dimension name`)
       }
       const dimId = dimArg.varId
       return `${sub(dimId).size}`
     }
 
     case '_GET_DIRECT_CONSTANTS':
+    case '_GET_XLS_CONSTANTS':
     case '_GET_DIRECT_DATA':
+    case '_GET_XLS_DATA':
     case '_GET_DIRECT_LOOKUPS':
+    case '_GET_XLS_LOOKUPS':
       // These functions are handled at a higher level, so we should not get here
       throw new Error(`Unexpected function '${fnId}' in code gen for '${ctx.variable.modelLHS}'`)
 
     case '_INITIAL':
-      // In init mode, only emit the initial expression without the INITIAL function call
+    case '_INIT':
+      // Note that Vensim uses `INITIAL` while XMILE uses `INIT`, but otherwise they are the same.
+      // In init mode, only emit the initial expression without the INITIAL function call.
       if (ctx.mode.startsWith('init')) {
         return generateExpr(callExpr.args[0], ctx)
       } else {
@@ -423,6 +478,7 @@ function generateLevelInit(callExpr, ctx) {
     case '_INTEG':
       initialArgIndex = 1
       break
+    case '_DELAY':
     case '_DELAY_FIXED': {
       // Emit the code that initializes the `FixedDelay` support struct
       const fixedDelay = ctx.cVarRefWithLhsSubscripts(ctx.variable.fixedDelayVarName)
@@ -474,12 +530,15 @@ function generateLevelEval(callExpr, ctx) {
       // For ACTIVE INITIAL, emit the first arg without a function call
       return generateExpr(callExpr.args[0], ctx)
 
+    case '_DELAY':
     case '_DELAY_FIXED': {
-      // For DELAY FIXED, emit the first arg followed by the FixedDelay support var
+      // Stella's DELAY function is behaviorally equivalent to Vensim's DELAY FIXED function, so
+      // they use the same `_DELAY_FIXED` runtime function.  For these, emit the first arg
+      // followed by the FixedDelay support var.
       const args = []
       args.push(generateExpr(callExpr.args[0], ctx))
       args.push(ctx.cVarRefWithLhsSubscripts(ctx.variable.fixedDelayVarName))
-      return generateCall(args)
+      return `${fnRef('_DELAY_FIXED', ctx)}(${args.join(', ')})`
     }
 
     case '_DEPRECIATE_STRAIGHTLINE': {
@@ -892,6 +951,88 @@ function generateAllocateAvailableCall(callExpr, ctx) {
 }
 
 /**
+ * Generate C/JS code for an `ALLOCATE BY PRIORITY` function call.
+ *
+ * @param {*} callExpr The function call expression from the parsed model.
+ * @param {GenExprContext} ctx The context used when generating code for the expression.
+ * @return {string} The generated C/JS code.
+ */
+function generateAllocateByPriorityCall(callExpr, ctx) {
+  function validateArg(index, name) {
+    const arg = callExpr.args[index]
+    if (arg.kind === 'variable-ref') {
+      return arg
+    } else {
+      throw new Error(`ALLOCATE BY PRIORITY argument '${name}' must be a variable reference`)
+    }
+  }
+
+  // Given a C/JS variable reference string (e.g., '_var[i][j]'), return that
+  // string without the last N array index parts
+  function cVarRefWithoutLastIndices(arg, count) {
+    const varRef = ctx.cVarRef(arg)
+    const origIndexParts = Model.splitRefId(varRef).subscripts
+    if (origIndexParts < count) {
+      throw new Error(`ALLOCATE BY PRIORITY argument '${arg}' should have at least ${count} subscripts`)
+    }
+    const newIndexParts = origIndexParts.slice(0, -count)
+    if (newIndexParts.length > 0) {
+      return `${arg.varId}${newIndexParts.map(x => `[${x}]`).join('')}`
+    } else {
+      return arg.varId
+    }
+  }
+
+  // Process the request argument. Only include subscripts up until the last one;
+  // the implementation function will iterate over the requesters array.
+  const reqArg = validateArg(0, 'req')
+  const reqRef = cVarRefWithoutLastIndices(reqArg, 1)
+
+  // Process the priority argument. Only include subscripts up until the
+  // last one; the implementation function will iterate over the priorities
+  // array.
+  const priorityArg = validateArg(1, 'priority')
+  const priorityRef = cVarRefWithoutLastIndices(priorityArg, 1)
+
+  // Process the size argument
+  const sizeArg = generateExpr(callExpr.args[2], ctx)
+
+  // Process the width argument
+  const widthArg = generateExpr(callExpr.args[3], ctx)
+
+  // Process the supply argument
+  const supplyArg = generateExpr(callExpr.args[4], ctx)
+
+  // The `ALLOCATE BY PRIORITY` function iterates over the last subscript in its first
+  // argument, allocating the available quantity according to the priority values given
+  // in the second argument. The `readEquation` process will have already verified that
+  // the last dimension of both arguments matches the last dimension of the LHS.
+  const allocDimId = reqArg.subscriptRefs[reqArg.subscriptRefs.length - 1].subId
+  const allocLoopIndexVar = ctx.loopIndexVars.index(allocDimId)
+
+  // Generate the code that is emitted before the entire block (before any loops are opened)
+  const tmpVarId = newTmpVarName()
+  const numRequesters = sub(allocDimId).size
+  switch (ctx.outFormat) {
+    case 'c':
+      ctx.emitPreInnerLoop(
+        `  double* ${tmpVarId} = _ALLOCATE_BY_PRIORITY(${reqRef}, ${priorityRef}, ${sizeArg}, ${widthArg}, ${supplyArg}, ${numRequesters});`
+      )
+      break
+    case 'js':
+      ctx.emitPreInnerLoop(
+        `  let ${tmpVarId} = fns.ALLOCATE_BY_PRIORITY(${reqRef}, ${priorityRef}, ${sizeArg}, ${widthArg}, ${supplyArg}, ${numRequesters});`
+      )
+      break
+    default:
+      throw new Error(`Unhandled output format '${ctx.outFormat}'`)
+  }
+
+  // Generate the RHS expression used in the inner loop
+  return `${tmpVarId}[${allocDimId}[${allocLoopIndexVar}]]`
+}
+
+/**
  * Recursively traverse the given expression and call the function when visiting a variable ref.
  *
  * @param {*} expr The expression to visit.
@@ -920,6 +1061,7 @@ function visitVariableRefs(expr, onVarRef) {
       break
 
     case 'lookup-call':
+      visitVariableRefs(expr.varRef, onVarRef)
       visitVariableRefs(expr.arg, onVarRef)
       break
 

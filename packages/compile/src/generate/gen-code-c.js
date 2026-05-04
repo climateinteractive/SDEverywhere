@@ -218,12 +218,12 @@ ${customOutputSection(Model.varIndexInfo(), spec.customOutputs)}
 
     mode = 'io'
     return `\
-void setInputs(const char* inputData) {
-${inputsFromStringImpl()}
+void setInputs(double* inputValues, int32_t* inputIndices) {
+${setInputsImpl()}
 }
 
-void setInputsFromBuffer(double* inputData) {
-${inputsFromBufferImpl()}
+void setConstant(size_t varIndex, size_t* subIndices, double value) {
+${setConstantBody}
 }
 
 void setConstant(size_t varIndex, size_t* subIndices, double value) {
@@ -344,13 +344,19 @@ ${section(chunk)}
   }
   function internalVarsSection() {
     // Declare internal variables to run the model.
-    let decls
-    if (outputAllVars) {
-      decls = `const int numOutputs = ${expandedVarNames().length};`
+    let numInputsDecl
+    if (spec.inputVars && spec.inputVars.length > 0) {
+      numInputsDecl = `const int numInputs = ${spec.inputVars.length};`
     } else {
-      decls = `const int numOutputs = ${spec.outputVars.length};`
+      numInputsDecl = `const int numInputs = 0;`
     }
-    return decls
+    let numOutputsDecl
+    if (outputAllVars) {
+      numOutputsDecl = `const int numOutputs = ${expandedVarNames().length};`
+    } else {
+      numOutputsDecl = `const int numOutputs = ${spec.outputVars.length};`
+    }
+    return `${numInputsDecl}\n${numOutputsDecl}`
   }
   function arrayDimensionsSection() {
     // Emit a declaration for each array dimension's index numbers.
@@ -424,38 +430,64 @@ ${section(chunk)}
     const section = R.pipe(outputVars, code, lines)
     return section(varIndexInfo)
   }
-  function inputsFromStringImpl() {
-    // If there was an I/O spec file, then emit code to parse input variables.
-    // The user can replace this with a parser for a different serialization format.
-    let inputVars = ''
-    if (spec.inputVars && spec.inputVars.length > 0) {
-      let inputVarPtrs = R.reduce((a, inputVar) => R.concat(a, `    &${inputVar},\n`), '', spec.inputVars)
-      inputVars = `\
-  static double* inputVarPtrs[] = {\n${inputVarPtrs}  };
-  char* inputs = (char*)inputData;
-  char* token = strtok(inputs, " ");
-  while (token) {
-    char* p = strchr(token, ':');
-    if (p) {
-      *p = '\\0';
-      int modelVarIndex = atoi(token);
-      double value = atof(p+1);
-      *inputVarPtrs[modelVarIndex] = value;
+  function setInputsImpl() {
+    if (!spec.inputVars || spec.inputVars.length === 0) {
+      return ''
     }
-    token = strtok(NULL, " ");
+    // Build the pointer table for input variables
+    let inputVarPtrs = R.reduce((a, inputVar) => R.concat(a, `    &${inputVar},\n`), '', spec.inputVars)
+    return `\
+  static double* inputVarPtrs[] = {
+${inputVarPtrs}  };
+  if (inputIndices == NULL) {
+    // When inputIndices is NULL, assume that inputValues contains all input values
+    // in the same order that the variables are defined in the model spec
+    for (size_t i = 0; i < numInputs; i++) {
+      *inputVarPtrs[i] = inputValues[i];
+    }
+  } else {
+    // When inputIndices is non-NULL, set the input values according to the indices
+    // in the inputIndices array, where each index corresponds to the index of the
+    // variable in the model spec
+    size_t numInputsToSet = (size_t)inputIndices[0];
+    for (size_t i = 0; i < numInputsToSet; i++) {
+      size_t inputVarIndex = (size_t)inputIndices[i + 1];
+      *inputVarPtrs[inputVarIndex] = inputValues[i];
+    }
   }`
-    }
-    return inputVars
   }
-  function inputsFromBufferImpl() {
-    let inputVars = []
-    if (spec.inputVars && spec.inputVars.length > 0) {
-      for (let i = 0; i < spec.inputVars.length; i++) {
-        const inputVar = spec.inputVars[i]
-        inputVars.push(`  ${inputVar} = inputData[${i}];`)
-      }
+  function setConstantImpl(varIndexInfo, customConstants) {
+    // Emit case statements for all const variables that can be overridden at runtime
+    let includeCase
+    if (Array.isArray(customConstants)) {
+      // Only include a case statement if the variable was explicitly included
+      // in the `customConstants` array in the spec file
+      const customConstantVarNames = customConstants.map(varName => {
+        // The developer might specify a variable name that includes subscripts,
+        // but we will ignore the subscript part and only match on the base name
+        return canonicalVensimName(varName.split('[')[0])
+      })
+      includeCase = varName => customConstantVarNames.includes(varName)
+    } else {
+      // Include a case statement for all constant variables
+      includeCase = () => true
     }
-    return inputVars.join('\n')
+    const constVars = R.filter(info => {
+      return info.varType === 'const' && includeCase(info.varName)
+    })
+    const code = R.map(info => {
+      let constVar = info.varName
+      for (let i = 0; i < info.subscriptCount; i++) {
+        constVar += `[subIndices[${i}]]`
+      }
+      let c = ''
+      c += `    case ${info.varIndex}:\n`
+      c += `      ${constVar} = value;\n`
+      c += `      break;`
+      return c
+    })
+    const section = R.pipe(constVars, code, lines)
+    return section(varIndexInfo)
   }
   function setConstantImpl(varIndexInfo, customConstants) {
     // Emit case statements for all const variables that can be overridden at runtime

@@ -144,20 +144,34 @@ function handleRenames(
         datasetKeys: DatasetKey[],
         options?: GetDatasetsOptions
       ) => {
-        // The given dataset keys are for the "left" bundle, so convert to the "right" keys
-        const rightKeys = datasetKeys.map(rightKeyForLeftKey)
+        // The given dataset keys may be in "left" (old) or "right" (new) format depending
+        // on whether the caller is a comparison test or a check test.  Translate any old
+        // keys to new keys for the actual model call (new keys pass through unchanged).
+        const rightKeySet: Set<DatasetKey> = new Set()
+        for (const key of datasetKeys) {
+          rightKeySet.add(rightKeyForLeftKey(key))
+        }
 
-        // The returned dataset map has the "right" keys, so convert back to the "left" keys
-        const result = await origBundleModelR.getDatasetsForScenario(scenarioSpec, rightKeys, options)
-        const mapWithRightKeys = result.datasetMap
-        const mapWithLeftKeys: DatasetMap = new Map()
-        for (const [rightKey, dataset] of mapWithRightKeys.entries()) {
+        // Fetch from the underlying model using the "right" (new) keys
+        const result = await origBundleModelR.getDatasetsForScenario(scenarioSpec, [...rightKeySet], options)
+
+        // Build a result map that includes both old and new keys so that both comparison
+        // tests (which look up by old key) and check tests (which look up by new key) can
+        // find the data
+        const resultMap: DatasetMap = new Map()
+        for (const [rightKey, dataset] of result.datasetMap.entries()) {
+          // Always include the new (right) key
+          resultMap.set(rightKey, dataset)
+
+          // Also include the old (left) key alias if this variable was renamed
           const leftKey = leftKeyForRightKey(rightKey)
-          mapWithLeftKeys.set(leftKey, dataset)
+          if (leftKey !== rightKey) {
+            resultMap.set(leftKey, dataset)
+          }
         }
 
         return {
-          datasetMap: mapWithLeftKeys,
+          datasetMap: resultMap,
           modelRunTime: result.modelRunTime
         }
       },

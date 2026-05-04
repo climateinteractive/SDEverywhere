@@ -35,7 +35,15 @@ export function parseInlineVensimModel(mdlContent /*: string*/, modelDir /*?: st
   // the preprocess step, and in the case of the new parser (which implicitly runs the
   // preprocess step), don't sort the definitions.  This makes it easier to do apples
   // to apples comparisons on the outputs from the two parser implementations.
-  return parseModel(mdlContent, modelDir, { sort: false })
+  return parseModel(mdlContent, 'vensim', modelDir, { sort: false })
+}
+
+/**
+ * @hidden This is not yet part of the public API; it is exposed only for use
+ * in the experimental playground app.
+ */
+export function parseInlineXmileModel(mdlContent /*: string*/, modelDir /*?: string*/) /*: ParsedModel*/ {
+  return parseModel(mdlContent, 'xmile', modelDir)
 }
 
 /**

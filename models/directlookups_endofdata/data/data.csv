@@ -1,0 +1,5 @@
+﻿ignored 1,ignored 2,material,data,,,,,,,,,,
+2000,2050,,2000,2001,2002,,ignored 1,ignored 2,material,data,,,
+10,20,Concrete,30,40,50,,2000,2050,,2000,2001,2002,text
+110,120,Steel,130,140,150,,210,220,Cement,230,240,250,text
+,,,,,,,310,320,Glass,330,340,350,text

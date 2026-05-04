@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.1.9](https://github.com/climateinteractive/SDEverywhere/compare/check-core-v0.1.8...check-core-v0.1.9) (2026-05-01)
+
+
+### Bug Fixes
+
+* update SuiteRunner to correctly handle task errors + display errors in CLI and UI ([#813](https://github.com/climateinteractive/SDEverywhere/issues/813)) ([f0da024](https://github.com/climateinteractive/SDEverywhere/commit/f0da024d0be8bd56cf22f655448f979884b6aca1)), closes [#812](https://github.com/climateinteractive/SDEverywhere/issues/812)
+
+## [0.1.8](https://github.com/climateinteractive/SDEverywhere/compare/check-core-v0.1.7...check-core-v0.1.8) (2026-04-14)
+
+
+### Bug Fixes
+
+* correct renamed variable handling so that check tests are unaffected by rename mappings ([#808](https://github.com/climateinteractive/SDEverywhere/issues/808)) ([4a267b6](https://github.com/climateinteractive/SDEverywhere/commit/4a267b69675a51f1d04de85649fe5e10aa397b0c)), closes [#807](https://github.com/climateinteractive/SDEverywhere/issues/807)
+
 ## [0.1.7](https://github.com/climateinteractive/SDEverywhere/compare/check-core-v0.1.6...check-core-v0.1.7) (2026-01-05)
 
 

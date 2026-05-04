@@ -1,5 +1,42 @@
 # Changelog
 
+## [0.2.21](https://github.com/climateinteractive/SDEverywhere/compare/check-ui-shell-v0.2.20...check-ui-shell-v0.2.21) (2026-05-01)
+
+
+### Bug Fixes
+
+* update SuiteRunner to correctly handle task errors + display errors in CLI and UI ([#813](https://github.com/climateinteractive/SDEverywhere/issues/813)) ([f0da024](https://github.com/climateinteractive/SDEverywhere/commit/f0da024d0be8bd56cf22f655448f979884b6aca1)), closes [#812](https://github.com/climateinteractive/SDEverywhere/issues/812)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/check-core bumped from ^0.1.8 to ^0.1.9
+
+## [0.2.20](https://github.com/climateinteractive/SDEverywhere/compare/check-ui-shell-v0.2.19...check-ui-shell-v0.2.20) (2026-04-14)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/check-core bumped from ^0.1.7 to ^0.1.8
+
+## [0.2.19](https://github.com/climateinteractive/SDEverywhere/compare/check-ui-shell-v0.2.18...check-ui-shell-v0.2.19) (2026-02-17)
+
+
+### Bug Fixes
+
+* select first tab with differences by default in model-check report ([#780](https://github.com/climateinteractive/SDEverywhere/issues/780)) ([64ab8c3](https://github.com/climateinteractive/SDEverywhere/commit/64ab8c32d7d1e902f798fb4ea07202afdd394cdb)), closes [#779](https://github.com/climateinteractive/SDEverywhere/issues/779)
+
+## [0.2.18](https://github.com/climateinteractive/SDEverywhere/compare/check-ui-shell-v0.2.17...check-ui-shell-v0.2.18) (2026-02-04)
+
+
+### Features
+
+* allow for overriding constants at runtime ([#767](https://github.com/climateinteractive/SDEverywhere/issues/767)) ([984c3bc](https://github.com/climateinteractive/SDEverywhere/commit/984c3bcbd80d6088c73a4f7f3f31070fba328abe)), closes [#470](https://github.com/climateinteractive/SDEverywhere/issues/470)
+
 ## [0.2.17](https://github.com/climateinteractive/SDEverywhere/compare/check-ui-shell-v0.2.16...check-ui-shell-v0.2.17) (2026-01-13)
 
 

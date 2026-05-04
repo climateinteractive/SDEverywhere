@@ -15,10 +15,12 @@ import Model from './model.js'
 /**
  * Generate level and aux variables that implement one of the following `SMOOTH` function
  * call variants:
- * - SMOOTH
- * - SMOOTHI
- * - SMOOTH3
- * - SMOOTH3I
+ * - SMOOTH (Vensim)
+ * - SMOOTHI (Vensim)
+ * - SMOOTH3 (Vensim)
+ * - SMOOTH3I (Vensim)
+ * - SMTH1 (Stella)
+ * - SMTH3 (Stella)
  *
  * TODO: Docs
  *
@@ -43,7 +45,7 @@ export function generateSmoothVariables(v, callExpr, context) {
   }
 
   const fnId = callExpr.fnId
-  if (fnId === '_SMOOTH' || fnId === '_SMOOTHI') {
+  if (fnId === '_SMOOTH' || fnId === '_SMOOTHI' || fnId === '_SMTH1') {
     // Generate 1 level variable that will replace the `SMOOTH[I]` function call
     const level = generateSmoothLevel(v, context, argInput, argDelay, argInit, 1)
     // For `SMOOTH[I]`, the smoothVarRefId is the level var's refId

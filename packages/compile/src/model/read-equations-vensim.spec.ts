@@ -100,7 +100,7 @@ function v(lhs: string, formula: string, overrides?: Partial<Variable>): Variabl
   return variable as Variable
 }
 
-describe('readEquations', () => {
+describe('readEquations (from Vensim model)', () => {
   it('should work for simple equation with explicit parentheses', () => {
     const vars = readInlineModel(`
       x = 1 ~~|
@@ -575,7 +575,47 @@ describe('readEquations', () => {
       ])
     })
 
-    it('should work when RHS variable is NON-apply-to-all (2D) and is accessed with specific subscripts', () => {
+    it('should work when RHS variable is NON-apply-to-all (2D with separated definitions) and is accessed with specific subscripts', () => {
+      const vars = readInlineModel(`
+        DimA: A1, A2 ~~|
+        DimB: B1, B2 ~~|
+        x[A1, B1] = 1 ~~|
+        x[A1, B2] = 2 ~~|
+        x[A2, B1] = 3 ~~|
+        x[A2, B2] = 4 ~~|
+        y = x[A1, B2] ~~|
+      `)
+      expect(vars).toEqual([
+        v('x[A1,B1]', '1', {
+          refId: '_x[_a1,_b1]',
+          subscripts: ['_a1', '_b1'],
+          varType: 'const'
+        }),
+        v('x[A1,B2]', '2', {
+          refId: '_x[_a1,_b2]',
+          subscripts: ['_a1', '_b2'],
+          varType: 'const'
+        }),
+        v('x[A2,B1]', '3', {
+          refId: '_x[_a2,_b1]',
+          subscripts: ['_a2', '_b1'],
+          varType: 'const'
+        }),
+        v('x[A2,B2]', '4', {
+          refId: '_x[_a2,_b2]',
+          subscripts: ['_a2', '_b2'],
+          varType: 'const'
+        }),
+        // expandedRefIdsForVar(_y, '_x', ['_a1', '_b2'])
+        //   -> ['_x[_a1,_b2]']
+        v('y', 'x[A1,B2]', {
+          refId: '_y',
+          references: ['_x[_a1,_b2]']
+        })
+      ])
+    })
+
+    it('should work when RHS variable is NON-apply-to-all (2D with shorthand definition) and is accessed with specific subscripts', () => {
       const vars = readInlineModel(`
         DimA: A1, A2 ~~|
         DimB: B1, B2 ~~|
@@ -3603,6 +3643,79 @@ describe('readEquations', () => {
     ])
   })
 
+  it('should work for GET XLS CONSTANTS function (single value)', () => {
+    const vars = readInlineModel(`
+      x = GET XLS CONSTANTS('data/a.xlsx', 'a', 'B2') ~~|
+    `)
+    expect(vars).toEqual([
+      v('x', "GET XLS CONSTANTS('data/a.xlsx','a','B2')", {
+        directConstArgs: { file: 'data/a.xlsx', tab: 'a', startCell: 'B2' },
+        refId: '_x',
+        varType: 'const'
+      })
+    ])
+  })
+
+  it('should work for GET XLS DATA function (single value)', () => {
+    const vars = readInlineModel(`
+      x = GET XLS DATA('g_data.xlsx', 'g_data', 'A', 'B13') ~~|
+      y = x * 10 ~~|
+    `)
+    expect(vars).toEqual([
+      v('x', "GET XLS DATA('g_data.xlsx','g_data','A','B13')", {
+        directDataArgs: { file: 'g_data.xlsx', tab: 'g_data', timeRowOrCol: 'A', startCell: 'B13' },
+        refId: '_x',
+        varType: 'data'
+      }),
+      v('y', 'x*10', {
+        refId: '_y',
+        references: ['_x']
+      })
+    ])
+  })
+
+  it('should work for GET XLS LOOKUPS function (single value)', () => {
+    const vars = readInlineModel(`
+      DimA: A1, A2, A3 ~~|
+      x[DimA] = GET XLS LOOKUPS('lookups.xlsx', 'lookups', '1', 'AH2') ~~|
+      y[DimA] = x[DimA](Time) ~~|
+      z = y[A2] ~~|
+    `)
+    expect(vars).toEqual([
+      v('x[DimA]', "GET XLS LOOKUPS('lookups.xlsx','lookups','1','AH2')", {
+        directDataArgs: { file: 'lookups.xlsx', tab: 'lookups', timeRowOrCol: '1', startCell: 'AH2' },
+        refId: '_x[_a1]',
+        separationDims: ['_dima'],
+        subscripts: ['_a1'],
+        varType: 'data'
+      }),
+      v('x[DimA]', "GET XLS LOOKUPS('lookups.xlsx','lookups','1','AH2')", {
+        directDataArgs: { file: 'lookups.xlsx', tab: 'lookups', timeRowOrCol: '1', startCell: 'AH2' },
+        refId: '_x[_a2]',
+        separationDims: ['_dima'],
+        subscripts: ['_a2'],
+        varType: 'data'
+      }),
+      v('x[DimA]', "GET XLS LOOKUPS('lookups.xlsx','lookups','1','AH2')", {
+        directDataArgs: { file: 'lookups.xlsx', tab: 'lookups', timeRowOrCol: '1', startCell: 'AH2' },
+        refId: '_x[_a3]',
+        separationDims: ['_dima'],
+        subscripts: ['_a3'],
+        varType: 'data'
+      }),
+      v('y[DimA]', 'x[DimA](Time)', {
+        refId: '_y',
+        referencedLookupVarNames: ['_x'],
+        references: ['_time'],
+        subscripts: ['_dima']
+      }),
+      v('z', 'y[A2]', {
+        refId: '_z',
+        references: ['_y']
+      })
+    ])
+  })
+
   it('should work for IF THEN ELSE function', () => {
     const vars = readInlineModel(`
       x = 100 ~~|
@@ -5619,13 +5732,13 @@ describe('readEquations', () => {
         refId: '_final_time',
         varType: 'const'
       }),
-      v('TIME STEP', '1', {
+      v('TIME STEP', '0.25', {
         refId: '_time_step',
         varType: 'const'
       }),
-      v('SAVEPER', 'TIME STEP', {
+      v('SAVEPER', '1', {
         refId: '_saveper',
-        references: ['_time_step']
+        varType: 'const'
       }),
       v('Time', '', {
         refId: '_time',
@@ -6393,6 +6506,16 @@ describe('readEquations', () => {
         refId: '_a_from_tagged_xlsx',
         varType: 'const'
       }),
+      v('a from named xlsx using GET XLS', "GET XLS CONSTANTS('data/a.xlsx','a','B2')", {
+        directConstArgs: { file: 'data/a.xlsx', tab: 'a', startCell: 'B2' },
+        refId: '_a_from_named_xlsx_using_get_xls',
+        varType: 'const'
+      }),
+      v('a from tagged xlsx using GET XLS', "GET XLS CONSTANTS('?a','a','B2')", {
+        directConstArgs: { file: '?a', tab: 'a', startCell: 'B2' },
+        refId: '_a_from_tagged_xlsx_using_get_xls',
+        varType: 'const'
+      }),
       v('b[DimB]', "GET DIRECT CONSTANTS('data/b.csv',',','b2*')", {
         directConstArgs: { file: 'data/b.csv', tab: ',', startCell: 'b2*' },
         refId: '_b',
@@ -6491,6 +6614,25 @@ describe('readEquations', () => {
       v('b[DimA]', 'a[DimA]*10', {
         refId: '_b',
         references: ['_a[_a1]', '_a[_a2]'],
+        subscripts: ['_dima']
+      }),
+      v('a using GET XLS[DimA]', "GET XLS DATA('data.xlsx','A Data','A','B2')", {
+        directDataArgs: { file: 'data.xlsx', tab: 'A Data', timeRowOrCol: 'A', startCell: 'B2' },
+        refId: '_a_using_get_xls[_a1]',
+        separationDims: ['_dima'],
+        subscripts: ['_a1'],
+        varType: 'data'
+      }),
+      v('a using GET XLS[DimA]', "GET XLS DATA('data.xlsx','A Data','A','B2')", {
+        directDataArgs: { file: 'data.xlsx', tab: 'A Data', timeRowOrCol: 'A', startCell: 'B2' },
+        refId: '_a_using_get_xls[_a2]',
+        separationDims: ['_dima'],
+        subscripts: ['_a2'],
+        varType: 'data'
+      }),
+      v('b using GET XLS[DimA]', 'a using GET XLS[DimA]*10', {
+        refId: '_b_using_get_xls',
+        references: ['_a_using_get_xls[_a1]', '_a_using_get_xls[_a2]'],
         subscripts: ['_dima']
       }),
       v('c', "GET DIRECT DATA('?data','C Data','a','b2')", {
@@ -6730,6 +6872,48 @@ describe('readEquations', () => {
         subscripts: ['_a3'],
         varType: 'data'
       }),
+      v('a from named xlsx using GET XLS[DimA]', "GET XLS LOOKUPS('lookups.xlsx','a','1','E2')", {
+        directDataArgs: { file: 'lookups.xlsx', tab: 'a', timeRowOrCol: '1', startCell: 'E2' },
+        refId: '_a_from_named_xlsx_using_get_xls[_a1]',
+        separationDims: ['_dima'],
+        subscripts: ['_a1'],
+        varType: 'data'
+      }),
+      v('a from named xlsx using GET XLS[DimA]', "GET XLS LOOKUPS('lookups.xlsx','a','1','E2')", {
+        directDataArgs: { file: 'lookups.xlsx', tab: 'a', timeRowOrCol: '1', startCell: 'E2' },
+        refId: '_a_from_named_xlsx_using_get_xls[_a2]',
+        separationDims: ['_dima'],
+        subscripts: ['_a2'],
+        varType: 'data'
+      }),
+      v('a from named xlsx using GET XLS[DimA]', "GET XLS LOOKUPS('lookups.xlsx','a','1','E2')", {
+        directDataArgs: { file: 'lookups.xlsx', tab: 'a', timeRowOrCol: '1', startCell: 'E2' },
+        refId: '_a_from_named_xlsx_using_get_xls[_a3]',
+        separationDims: ['_dima'],
+        subscripts: ['_a3'],
+        varType: 'data'
+      }),
+      v('a from tagged xlsx using GET XLS[DimA]', "GET XLS LOOKUPS('?lookups','a','1','E2')", {
+        directDataArgs: { file: '?lookups', tab: 'a', timeRowOrCol: '1', startCell: 'E2' },
+        refId: '_a_from_tagged_xlsx_using_get_xls[_a1]',
+        separationDims: ['_dima'],
+        subscripts: ['_a1'],
+        varType: 'data'
+      }),
+      v('a from tagged xlsx using GET XLS[DimA]', "GET XLS LOOKUPS('?lookups','a','1','E2')", {
+        directDataArgs: { file: '?lookups', tab: 'a', timeRowOrCol: '1', startCell: 'E2' },
+        refId: '_a_from_tagged_xlsx_using_get_xls[_a2]',
+        separationDims: ['_dima'],
+        subscripts: ['_a2'],
+        varType: 'data'
+      }),
+      v('a from tagged xlsx using GET XLS[DimA]', "GET XLS LOOKUPS('?lookups','a','1','E2')", {
+        directDataArgs: { file: '?lookups', tab: 'a', timeRowOrCol: '1', startCell: 'E2' },
+        refId: '_a_from_tagged_xlsx_using_get_xls[_a3]',
+        separationDims: ['_dima'],
+        subscripts: ['_a3'],
+        varType: 'data'
+      }),
       v('b', 'a[A1](Time)', {
         refId: '_b',
         referencedLookupVarNames: ['_a'],
@@ -6743,6 +6927,16 @@ describe('readEquations', () => {
       v('b from tagged xlsx', 'a from tagged xlsx[A1](Time)', {
         refId: '_b_from_tagged_xlsx',
         referencedLookupVarNames: ['_a_from_tagged_xlsx'],
+        references: ['_time']
+      }),
+      v('b from named xlsx using GET XLS', 'a from named xlsx using GET XLS[A1](Time)', {
+        refId: '_b_from_named_xlsx_using_get_xls',
+        referencedLookupVarNames: ['_a_from_named_xlsx_using_get_xls'],
+        references: ['_time']
+      }),
+      v('b from tagged xlsx using GET XLS', 'a from tagged xlsx using GET XLS[A1](Time)', {
+        refId: '_b_from_tagged_xlsx_using_get_xls',
+        referencedLookupVarNames: ['_a_from_tagged_xlsx_using_get_xls'],
         references: ['_time']
       }),
       v('c', 'LOOKUP INVERT(a[A1],0.5)', {

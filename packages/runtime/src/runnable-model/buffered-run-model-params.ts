@@ -472,6 +472,8 @@ export class BufferedRunModelParams implements RunModelParams {
     const inputsLengthInBytes = inputsLengthInElements * Float64Array.BYTES_PER_ELEMENT
     const outputsLengthInBytes = outputsLengthInElements * Float64Array.BYTES_PER_ELEMENT
     const outputIndicesLengthInBytes = outputIndicesLengthInElements * Int32Array.BYTES_PER_ELEMENT
+    const constantsLengthInBytes = constantsLengthInElements * Float64Array.BYTES_PER_ELEMENT
+    const constantIndicesLengthInBytes = constantIndicesLengthInElements * Int32Array.BYTES_PER_ELEMENT
     const lookupsLengthInBytes = lookupsLengthInElements * Float64Array.BYTES_PER_ELEMENT
     const lookupIndicesLengthInBytes = lookupIndicesLengthInElements * Int32Array.BYTES_PER_ELEMENT
     const constantsLengthInBytes = constantsLengthInElements * Float64Array.BYTES_PER_ELEMENT
@@ -482,6 +484,8 @@ export class BufferedRunModelParams implements RunModelParams {
       inputsLengthInBytes +
       outputsLengthInBytes +
       outputIndicesLengthInBytes +
+      constantsLengthInBytes +
+      constantIndicesLengthInBytes +
       lookupsLengthInBytes +
       lookupIndicesLengthInBytes +
       constantsLengthInBytes +

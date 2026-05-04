@@ -35,6 +35,7 @@ export let viewModel: AppViewModel
 
 const checksInProgress = viewModel.checksInProgress
 const progress = viewModel.progress
+const errorMessage = viewModel.errorMessage
 const zoom = viewModel.headerViewModel.zoom
 
 let compareDetailViewModel: CompareDetailViewModel
@@ -234,7 +235,11 @@ function onKeyDown(event: KeyboardEvent) {
     <Header on:command={onCommand} viewModel={viewModel.headerViewModel} />
     {#if $checksInProgress}
       <div class="progress-container">
-        <div class="progress">{$progress}</div>
+        {#if $errorMessage}
+          <div class="error-message">{$errorMessage}</div>
+        {:else}
+          <div class="progress">{$progress}</div>
+        {/if}
       </div>
     {:else if viewMode === 'comparison-detail'}
       <ComparisonDetail on:command={onCommand} viewModel={compareDetailViewModel} />
@@ -306,6 +311,14 @@ function onKeyDown(event: KeyboardEvent) {
   align-items: center;
   justify-content: center;
   font-size: 2em;
+}
+
+.error-message {
+  max-width: 80%;
+  text-align: center;
+  color: red;
+  font-size: 1em;
+  white-space: pre-wrap;
 }
 
 .popover-overlay {

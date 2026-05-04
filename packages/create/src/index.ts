@@ -15,7 +15,7 @@ import { chooseInstallDeps } from './step-deps'
 import { chooseProjectDir } from './step-directory'
 import { chooseInstallEmsdk } from './step-emsdk'
 import { chooseGitInit } from './step-git'
-import { chooseMdlFile } from './step-mdl'
+import { chooseModelFile } from './step-model-file'
 import { chooseTemplate, copyTemplate } from './step-template'
 
 export async function main(): Promise<void> {
@@ -46,32 +46,32 @@ export async function main(): Promise<void> {
   const template = await chooseTemplate(args)
   console.log()
 
-  // Prompt the user to select an mdl file
-  let mdlPath = await chooseMdlFile(projDir)
-  const mdlExisted = mdlPath !== undefined
+  // Prompt the user to select a model file
+  let modelPath = await chooseModelFile(projDir)
+  const modelExisted = modelPath !== undefined
   console.log()
 
   if (!args.dryRun) {
     // Copy the template files to the project directory
-    await copyTemplate(template, projDir, pkgManager, configDirExisted, mdlExisted)
+    await copyTemplate(template, projDir, pkgManager, configDirExisted, modelExisted)
     console.log()
   }
 
-  if (mdlPath === undefined) {
-    // There wasn't already an mdl file in the project directory, so we will use
+  if (modelPath === undefined) {
+    // There wasn't already a model file in the project directory, so we will use
     // the one supplied by the template.  The template is expected to have a
     // `model/MODEL_NAME.mdl` file, which gets renamed to `model/sample.mdl`
-    // in the `copyTemplate` step.  Note that `chooseMdlFile` returns a
+    // in the `copyTemplate` step.  Note that `chooseModelFile` returns a
     // POSIX-style relative path, so we will also use a relative path here.
-    mdlPath = `model${posix.sep}sample.mdl`
+    modelPath = `model${posix.sep}sample.mdl`
   }
 
   // Prompt the user to select a code generation format
   const genFormat = await chooseCodeFormat()
 
   if (!args.dryRun) {
-    // Update the `sde.config.js` file to use the chosen mdl file
-    await updateSdeConfig(projDir, mdlPath, genFormat)
+    // Update the `sde.config.js` file to use the chosen model file
+    await updateSdeConfig(projDir, modelPath, genFormat)
 
     // Generate sample `checks.yaml` and `comparisons.yaml` files if needed
     const modelCheckFilesExist =
@@ -90,11 +90,11 @@ export async function main(): Promise<void> {
     )
     console.log()
   } else {
-    // There wasn't already a `config` directory, but there was already an mdl file,
+    // There wasn't already a `config` directory, but there was already a model file,
     // so offer to set up CSV files
     const configDirExistsNow = existsSync(resolvePath(projDir, 'config'))
-    if (configDirExistsNow && mdlExisted && !args.dryRun) {
-      await chooseGenConfig(projDir, mdlPath)
+    if (configDirExistsNow && modelExisted && !args.dryRun) {
+      await chooseGenConfig(projDir, modelPath)
       console.log()
     }
   }

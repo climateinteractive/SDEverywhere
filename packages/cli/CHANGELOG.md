@@ -1,5 +1,69 @@
 # Changelog
 
+## [0.7.42](https://github.com/climateinteractive/SDEverywhere/compare/cli-v0.7.41...cli-v0.7.42) (2026-04-28)
+
+
+### Features
+
+* add support for Vensim's ALLOCATE BY PRIORITY function ([#809](https://github.com/climateinteractive/SDEverywhere/issues/809)) ([197b261](https://github.com/climateinteractive/SDEverywhere/commit/197b26155dab415e9304059b7f1ccf98982b9659)), closes [#792](https://github.com/climateinteractive/SDEverywhere/issues/792)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/compile bumped from ^0.7.29 to ^0.7.30
+
+## [0.7.41](https://github.com/climateinteractive/SDEverywhere/compare/cli-v0.7.40...cli-v0.7.41) (2026-04-14)
+
+
+### Bug Fixes
+
+* add --datadir option to `sde generate` to allow for resolving data file paths in their original location ([#804](https://github.com/climateinteractive/SDEverywhere/issues/804)) ([e168fd5](https://github.com/climateinteractive/SDEverywhere/commit/e168fd50be1fbe4b9221b6c43a997a195fcb726d)), closes [#303](https://github.com/climateinteractive/SDEverywhere/issues/303)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/build bumped from ^0.3.11 to ^0.3.12
+    * @sdeverywhere/compile bumped from ^0.7.28 to ^0.7.29
+
+## [0.7.40](https://github.com/climateinteractive/SDEverywhere/compare/cli-v0.7.39...cli-v0.7.40) (2026-03-09)
+
+
+### Features
+
+* add initial support for XMILE/Stella models ([#778](https://github.com/climateinteractive/SDEverywhere/issues/778)) ([b2e7f80](https://github.com/climateinteractive/SDEverywhere/commit/b2e7f808b8e63dd83b9dcdf8064cf4bc1725c884)), closes [#468](https://github.com/climateinteractive/SDEverywhere/issues/468)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/build bumped from ^0.3.10 to ^0.3.11
+    * @sdeverywhere/compile bumped from ^0.7.27 to ^0.7.28
+
+## [0.7.39](https://github.com/climateinteractive/SDEverywhere/compare/cli-v0.7.38...cli-v0.7.39) (2026-02-04)
+
+
+### Features
+
+* allow for overriding constants at runtime ([#767](https://github.com/climateinteractive/SDEverywhere/issues/767)) ([984c3bc](https://github.com/climateinteractive/SDEverywhere/commit/984c3bcbd80d6088c73a4f7f3f31070fba328abe)), closes [#470](https://github.com/climateinteractive/SDEverywhere/issues/470)
+
+
+### Bug Fixes
+
+* remove string-based `run_model` API from C runtime + update `main.c` to use `runModelWithBuffers` ([#766](https://github.com/climateinteractive/SDEverywhere/issues/766)) ([e031f08](https://github.com/climateinteractive/SDEverywhere/commit/e031f08dbda85768ff5b2739611e5be650aae399)), closes [#302](https://github.com/climateinteractive/SDEverywhere/issues/302)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/build bumped from ^0.3.9 to ^0.3.10
+    * @sdeverywhere/compile bumped from ^0.7.26 to ^0.7.27
+
 ## [0.7.38](https://github.com/climateinteractive/SDEverywhere/compare/cli-v0.7.37...cli-v0.7.38) (2026-01-10)
 
 
