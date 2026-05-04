@@ -144,7 +144,7 @@ function createBaseComparisonSpecs(bundleL: Bundle, bundleR: Bundle): Comparison
     }
 
     // Don't add a scenario if the input's value at the requested position is equal to its default
-    // value(this is already covered by the `all_inputs_at_default` scenario from above)
+    // value (this is already covered by the `all_inputs_at_default` scenario from above)
     const valL = valueAtPos(inputL, position)
     const valR = valueAtPos(inputR, position)
     if (valL === inputL.defaultValue && valR === inputR.defaultValue) {
