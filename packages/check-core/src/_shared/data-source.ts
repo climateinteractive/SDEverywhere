@@ -38,8 +38,11 @@ export interface GetDatasetsOptions {
    * for each variable identified by `varId`.  Lookup overrides are only effective
    * when the `customLookups` feature is enabled in the bundle.
    *
-   * Note that lookup overrides do NOT persist across `getDatasetsForScenario` calls.
-   * They must be provided each time you want to override lookup data.
+   * Note that lookup overrides MAY OR MAY NOT persist across `getDatasetsForScenario`
+   * calls, depending on the underlying model/runtime implementation.  If you want to
+   * ensure that previously-applied lookup overrides do not take effect on subsequent
+   * runs, pass an undefined `points` array for the relevant variable to cause the
+   * lookup data to be reset to its original data.
    */
   lookups?: LookupOverride[]
 }
