@@ -1,5 +1,6 @@
 // Copyright (c) 2021-2022 Climate Interactive / New Venture Fund
 
+import type { GetDatasetsOptions } from '../_shared/data-source'
 import type { ScenarioSpec } from '../_shared/scenario-spec-types'
 import type { TaskExecutor, TaskExecutorKey } from '../_shared/task-queue'
 import { createExecutor, TaskQueue } from '../_shared/task-queue'
@@ -138,7 +139,11 @@ function handleRenames(
   function wrapModel(origBundleModelR: BundleModel): BundleModel {
     return {
       modelSpec: origBundleModelR.modelSpec,
-      getDatasetsForScenario: async (scenarioSpec: ScenarioSpec, datasetKeys: DatasetKey[]) => {
+      getDatasetsForScenario: async (
+        scenarioSpec: ScenarioSpec,
+        datasetKeys: DatasetKey[],
+        options?: GetDatasetsOptions
+      ) => {
         // The given dataset keys may be in "left" (old) or "right" (new) format depending
         // on whether the caller is a comparison test or a check test.  Translate any old
         // keys to new keys for the actual model call (new keys pass through unchanged).
@@ -148,7 +153,7 @@ function handleRenames(
         }
 
         // Fetch from the underlying model using the "right" (new) keys
-        const result = await origBundleModelR.getDatasetsForScenario(scenarioSpec, [...rightKeySet])
+        const result = await origBundleModelR.getDatasetsForScenario(scenarioSpec, [...rightKeySet], options)
 
         // Build a result map that includes both old and new keys so that both comparison
         // tests (which look up by old key) and check tests (which look up by new key) can

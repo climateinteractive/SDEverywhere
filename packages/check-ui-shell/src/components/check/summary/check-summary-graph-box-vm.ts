@@ -130,7 +130,7 @@ export class CheckSummaryGraphBoxViewModel {
     const requestKey = `${this.baseRequestKey}::${dataKey}`
     this.requestKeys.push(requestKey)
 
-    this.dataCoordinator.requestDataset(requestKey, scenarioSpec, datasetKey, dataset => {
+    this.dataCoordinator.requestDataset(requestKey, scenarioSpec, datasetKey, undefined, dataset => {
       if (!this.dataRequested) {
         return
       }
