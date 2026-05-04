@@ -93,16 +93,34 @@ function inputPosition(position: CheckScenarioPosition): InputPosition | undefin
 }
 
 /**
- * Get the value of the input at the given position.
+ * Get the value of the input at the given position.  For switch inputs,
+ * `at-minimum` maps to the switch's `offValue` and `at-maximum` maps to its
+ * `onValue`.
  */
 function inputValueAtPosition(inputVar: InputVar, position: InputPosition): number {
   switch (position) {
     case 'at-default':
       return inputVar.defaultValue
     case 'at-minimum':
-      return inputVar.minValue
+      switch (inputVar.kind) {
+        case 'slider':
+          return inputVar.minValue
+        case 'switch':
+          return inputVar.offValue
+        default:
+          assertNever(inputVar)
+      }
+    // eslint-disable-next-line no-fallthrough
     case 'at-maximum':
-      return inputVar.maxValue
+      switch (inputVar.kind) {
+        case 'slider':
+          return inputVar.maxValue
+        case 'switch':
+          return inputVar.onValue
+        default:
+          assertNever(inputVar)
+      }
+    // eslint-disable-next-line no-fallthrough
     default:
       assertNever(position)
   }

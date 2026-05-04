@@ -796,9 +796,18 @@ function resolveInputVarAtPosition(inputVar: InputVar, position: InputPosition):
  * Return a `ComparisonScenarioInputState` for the input at the given value.
  */
 function resolveInputVarAtValue(inputVar: InputVar, value: number): ComparisonScenarioInputState {
-  // Check that the value is in the valid range
-  // TODO: This may not be valid for switch inputs
-  if (value >= inputVar.minValue && value <= inputVar.maxValue) {
+  let inRange: boolean
+  switch (inputVar.kind) {
+    case 'slider':
+      inRange = value >= inputVar.minValue && value <= inputVar.maxValue
+      break
+    case 'switch':
+      inRange = value === inputVar.offValue || value === inputVar.onValue
+      break
+    default:
+      assertNever(inputVar)
+  }
+  if (inRange) {
     return {
       inputVar,
       value
@@ -831,16 +840,34 @@ function inputPosition(position: ComparisonScenarioInputPosition): InputPosition
 }
 
 /**
- * Get the value of the input at the given position.
+ * Get the value of the input at the given position.  For switch inputs,
+ * `at-minimum` maps to the switch's `offValue` and `at-maximum` maps to its
+ * `onValue`.
  */
 function inputValueAtPosition(inputVar: InputVar, position: InputPosition): number {
   switch (position) {
     case 'at-default':
       return inputVar.defaultValue
     case 'at-minimum':
-      return inputVar.minValue
+      switch (inputVar.kind) {
+        case 'slider':
+          return inputVar.minValue
+        case 'switch':
+          return inputVar.offValue
+        default:
+          assertNever(inputVar)
+      }
+    // eslint-disable-next-line no-fallthrough
     case 'at-maximum':
-      return inputVar.maxValue
+      switch (inputVar.kind) {
+        case 'slider':
+          return inputVar.maxValue
+        case 'switch':
+          return inputVar.onValue
+        default:
+          assertNever(inputVar)
+      }
+    // eslint-disable-next-line no-fallthrough
     default:
       assertNever(position)
   }

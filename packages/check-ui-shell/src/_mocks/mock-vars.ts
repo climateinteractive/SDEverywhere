@@ -5,6 +5,7 @@ import type { DatasetKey, ImplVar, InputVar, OutputVar, VarId } from '@sdeverywh
 export function inputVar(inputId: string, varName: string): [VarId, InputVar] {
   const varId = varIdForName(varName)
   const v: InputVar = {
+    kind: 'slider',
     inputId,
     varId,
     varName,

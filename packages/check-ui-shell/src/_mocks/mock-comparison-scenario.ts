@@ -25,6 +25,7 @@ import { varIdForName } from './mock-vars'
 export function inputVar(inputId: InputId, varName: string, minValue = 0, maxValue = 100): [VarId, InputVar] {
   const varId = varIdForName(varName)
   const v: InputVar = {
+    kind: 'slider',
     inputId,
     varId,
     varName,
@@ -53,9 +54,23 @@ export function valueForPos(inputVar: InputVar, position: InputPosition): number
     case 'at-default':
       return inputVar.defaultValue
     case 'at-minimum':
-      return inputVar.minValue
+      switch (inputVar.kind) {
+        case 'slider':
+          return inputVar.minValue
+        case 'switch':
+          return inputVar.offValue
+        default:
+          return undefined
+      }
     case 'at-maximum':
-      return inputVar.maxValue
+      switch (inputVar.kind) {
+        case 'slider':
+          return inputVar.maxValue
+        case 'switch':
+          return inputVar.onValue
+        default:
+          return undefined
+      }
     default:
       return undefined
   }

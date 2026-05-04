@@ -2,7 +2,7 @@
 
 import { assertNever } from 'assert-never'
 
-import type { InputVar, ScenarioSpec } from '@sdeverywhere/check-core'
+import type { ScenarioSpec, SliderInputVar } from '@sdeverywhere/check-core'
 import type { InputValue, InputVarId } from '@sdeverywhere/runtime'
 import { createInputValue } from '@sdeverywhere/runtime'
 
@@ -28,7 +28,15 @@ export interface InputSpec {
   maxValue: number
 }
 
-export interface Input extends InputVar {
+// TODO: For now we always treat each input as a slider, because the `InputSpec`
+// type in the `@sdeverywhere/build` package only carries slider-style fields
+// (defaultValue/minValue/maxValue) and doesn't distinguish sliders from
+// switches.  In practice, plugin-config-driven builds map a switch's
+// `offValue`/`onValue` onto `minValue`/`maxValue` here, so things work well
+// enough through the model-check pipeline, but it's not ideal.  Developers can
+// implement their own bundle (rather than using this template) if they need to
+// expose true switch inputs.
+export type Input = SliderInputVar & {
   value: InputValue
 }
 
@@ -39,7 +47,11 @@ export function getInputVars(inputSpecs: InputSpec[]): Map<InputVarId, Input> {
   const inputs: Map<InputVarId, Input> = new Map()
   for (const inputSpec of inputSpecs) {
     const varId = inputSpec.varId
+    // TODO: We always construct a slider-kind input here; see the note on the
+    // `Input` type above.  Switches reach this point with their off/on values
+    // already mapped onto `minValue`/`maxValue`.
     const input: Input = {
+      kind: 'slider',
       inputId: inputSpec.inputId,
       varId,
       varName: inputSpec.varName,
