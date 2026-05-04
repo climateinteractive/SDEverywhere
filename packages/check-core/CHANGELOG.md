@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.1.10](https://github.com/climateinteractive/SDEverywhere/compare/check-core-v0.1.9...check-core-v0.1.10) (2026-05-04)
+
+
+### Features
+
+* update model-check packages to allow for overriding constants and lookups ([#818](https://github.com/climateinteractive/SDEverywhere/issues/818)) ([4b0aa8c](https://github.com/climateinteractive/SDEverywhere/commit/4b0aa8c8711723b46cc3226368d10de241dc291d)), closes [#770](https://github.com/climateinteractive/SDEverywhere/issues/770)
+
+
+### Bug Fixes
+
+* convert InputVar type to a discriminated union with slider and switch variants ([#820](https://github.com/climateinteractive/SDEverywhere/issues/820)) ([9bd55cb](https://github.com/climateinteractive/SDEverywhere/commit/9bd55cbb811a4ec4f9e786d7bfe1ecf56975ef47)), closes [#819](https://github.com/climateinteractive/SDEverywhere/issues/819)
+
 ## [0.1.9](https://github.com/climateinteractive/SDEverywhere/compare/check-core-v0.1.8...check-core-v0.1.9) (2026-05-01)
 
 

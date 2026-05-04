@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.3.31](https://github.com/climateinteractive/SDEverywhere/compare/plugin-check-v0.3.30...plugin-check-v0.3.31) (2026-05-04)
+
+
+### Bug Fixes
+
+* convert InputVar type to a discriminated union with slider and switch variants ([#820](https://github.com/climateinteractive/SDEverywhere/issues/820)) ([9bd55cb](https://github.com/climateinteractive/SDEverywhere/commit/9bd55cbb811a4ec4f9e786d7bfe1ecf56975ef47)), closes [#819](https://github.com/climateinteractive/SDEverywhere/issues/819)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/check-core bumped from ^0.1.9 to ^0.1.10
+    * @sdeverywhere/check-ui-shell bumped from ^0.2.21 to ^0.2.22
+
 ## [0.3.30](https://github.com/climateinteractive/SDEverywhere/compare/plugin-check-v0.3.29...plugin-check-v0.3.30) (2026-05-01)
 
 
