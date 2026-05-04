@@ -58,6 +58,7 @@ export class FreeformItemViewModel {
       'right',
       this.scenario.specR,
       [this.datasetKey],
+      undefined,
       (datasetMapL, datasetMapR) => {
         if (!this.dataRequested) {
           return

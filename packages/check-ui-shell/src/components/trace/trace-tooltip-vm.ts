@@ -73,6 +73,7 @@ export class TraceTooltipViewModel {
       sourceR,
       this.scenarioSpecR,
       datasetKeys,
+      undefined,
       (datasetMapL, datasetMapR) => {
         if (!this.dataRequested) {
           return
