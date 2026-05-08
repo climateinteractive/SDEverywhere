@@ -54,19 +54,10 @@ export class PerfViewModel {
     for (let i = 0; i < this.samplesByRunL.length; i++) {
       const runReportL = reportFromTimes(this.samplesByRunL[i])
       const runReportR = reportFromTimes(this.samplesByRunR[i])
-      perRunRows.push(
-        buildRow(`${i + 1}`, false, runReportL, runReportR, lowerBound, upperBound)
-      )
+      perRunRows.push(buildRow(`${i + 1}`, false, runReportL, runReportR, lowerBound, upperBound))
     }
 
-    const summaryRow = buildRow(
-      'all',
-      true,
-      summaryReportL,
-      summaryReportR,
-      lowerBound,
-      upperBound
-    )
+    const summaryRow = buildRow('all', true, summaryReportL, summaryReportR, lowerBound, upperBound)
 
     this.writableRows.set([...perRunRows, summaryRow])
   }
