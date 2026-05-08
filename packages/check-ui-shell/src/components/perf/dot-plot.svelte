@@ -7,6 +7,8 @@ import type { DotPlotViewModel } from './dot-plot-vm'
 export let viewModel: DotPlotViewModel
 export let colorClass: string
 export let showAxisLabels = false
+export let avgLabelPosition: 'above' | 'below' | undefined = undefined
+export let avgLabelTextClass = ''
 </script>
 
 <!-- TEMPLATE -->
@@ -24,6 +26,15 @@ export let showAxisLabels = false
   {#if showAxisLabels}
     <div class="axis-label axis-label-left">{viewModel.min.toFixed(1)}</div>
     <div class="axis-label axis-label-right">{viewModel.max.toFixed(1)}</div>
+  {/if}
+  {#if avgLabelPosition === 'below'}
+    <div class={`avg-label avg-label-below ${avgLabelTextClass}`} style="left: {viewModel.avgPoint}%;">
+      {viewModel.avg.toFixed(1)}
+    </div>
+  {:else if avgLabelPosition === 'above'}
+    <div class={`avg-label avg-label-above ${avgLabelTextClass}`} style="left: {viewModel.avgPoint}%;">
+      {viewModel.avg.toFixed(1)}
+    </div>
   {/if}
 </div>
 
@@ -104,6 +115,25 @@ $line-color: #555;
 
   &.axis-label-right {
     left: 100%;
+  }
+}
+
+.avg-label {
+  position: absolute;
+  font-family: monospace;
+  font-size: 0.75rem;
+  white-space: nowrap;
+
+  &.avg-label-below {
+    top: $height;
+    margin-top: 0.1rem;
+    transform: translateX(-50%);
+  }
+
+  &.avg-label-above {
+    top: 0;
+    margin-top: -0.1rem;
+    transform: translate(-50%, -100%);
   }
 }
 </style>

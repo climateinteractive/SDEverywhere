@@ -66,7 +66,12 @@ function onRun() {
               <td class="dim">{row.p95TimeL}</td>
               <td class="dim">{row.stdDevL}</td>
               <td class="plot">
-                <DotPlot viewModel={row.dotPlotL} colorClass="dataset-bg-0" />
+                <DotPlot
+                  viewModel={row.dotPlotL}
+                  colorClass="dataset-bg-0"
+                  avgLabelPosition={row.isSummary ? 'above' : undefined}
+                  avgLabelTextClass="dataset-color-0"
+                />
               </td>
             </tr>
             <tr class:summary={row.isSummary}>
@@ -75,7 +80,13 @@ function onRun() {
               <td class="dim">{row.p95TimeR}</td>
               <td class="dim">{row.stdDevR}</td>
               <td class="plot">
-                <DotPlot viewModel={row.dotPlotR} colorClass="dataset-bg-1" showAxisLabels={row.isSummary} />
+                <DotPlot
+                  viewModel={row.dotPlotR}
+                  colorClass="dataset-bg-1"
+                  showAxisLabels={row.isSummary}
+                  avgLabelPosition={row.isSummary ? 'below' : undefined}
+                  avgLabelTextClass="dataset-color-1"
+                />
               </td>
             </tr>
           {/each}
@@ -174,11 +185,12 @@ td {
 
 tr.summary > td {
   border-top: 1px solid #444;
-  padding-top: 1.4rem;
+  padding-top: 1.8rem;
 }
 
 tr.summary + tr.summary > td {
   border-top: 0;
   padding-top: 0.2rem;
+  padding-bottom: 1.6rem;
 }
 </style>
