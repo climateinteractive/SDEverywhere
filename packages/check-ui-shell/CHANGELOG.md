@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.2.23](https://github.com/climateinteractive/SDEverywhere/compare/check-ui-shell-v0.2.22...check-ui-shell-v0.2.23) (2026-05-11)
+
+
+### Bug Fixes
+
+* improve performance stats view in model-check ([#822](https://github.com/climateinteractive/SDEverywhere/issues/822)) ([58cf73b](https://github.com/climateinteractive/SDEverywhere/commit/58cf73b7be919612898f2f16f79b4cdeeef12616)), closes [#821](https://github.com/climateinteractive/SDEverywhere/issues/821)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/check-core bumped from ^0.1.10 to ^0.1.11
+
 ## [0.2.22](https://github.com/climateinteractive/SDEverywhere/compare/check-ui-shell-v0.2.21...check-ui-shell-v0.2.22) (2026-05-04)
 
 
