@@ -6830,6 +6830,16 @@ describe('readEquations (from Vensim model)', () => {
         subscripts: ['_a3'],
         varType: 'data'
       }),
+      v('a without subscript', "GET DIRECT LOOKUPS('lookups.CSV',',','1','e2')", {
+        directDataArgs: { file: 'lookups.CSV', tab: ',', timeRowOrCol: '1', startCell: 'e2' },
+        refId: '_a_without_subscript',
+        varType: 'data'
+      }),
+      v('access a without subscript', 'a without subscript(Time)', {
+        refId: '_access_a_without_subscript',
+        referencedFunctionNames: ['__a_without_subscript'],
+        references: ['_time']
+      }),
       v('a from named xlsx[DimA]', "GET DIRECT LOOKUPS('lookups.xlsx','a','1','E2')", {
         directDataArgs: { file: 'lookups.xlsx', tab: 'a', timeRowOrCol: '1', startCell: 'E2' },
         refId: '_a_from_named_xlsx[_a1]',

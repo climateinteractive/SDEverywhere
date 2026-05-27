@@ -738,6 +738,8 @@ describe('readVariables', () => {
         separationDims: ['_dima'],
         subscripts: ['_a3']
       }),
+      v('a without subscript', "GET DIRECT LOOKUPS('lookups.CSV',',','1','e2')"),
+      v('access a without subscript', 'a without subscript(Time)'),
       v('a from named xlsx[DimA]', "GET DIRECT LOOKUPS('lookups.xlsx','a','1','E2')", {
         separationDims: ['_dima'],
         subscripts: ['_a1']

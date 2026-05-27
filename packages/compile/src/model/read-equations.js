@@ -807,7 +807,13 @@ function visitFunctionCall(v, callExpr, context) {
     // we treat it as a call of an unimplemented function.
     const varId = callExpr.fnId.toLowerCase()
     const referencedVar = Model.varWithName(varId)
-    if (referencedVar === undefined || referencedVar.parsedEqn.rhs.kind !== 'lookup') {
+    // Treat the call as a lookup call if the referenced variable is either an inline lookup
+    // (parsed RHS kind 'lookup'), or a data variable (e.g., one defined via `GET DIRECT DATA`,
+    // `GET DIRECT LOOKUPS`, the XLS variants, or sourced from an external `.dat` file).  In all
+    // these cases the runtime backs the variable with a lookup, so `name(arg)` is valid syntax.
+    const isLookupReference =
+      referencedVar !== undefined && (referencedVar.parsedEqn.rhs.kind === 'lookup' || referencedVar.isData())
+    if (!isLookupReference) {
       // Throw an error if the function is not yet implemented in SDE
       // TODO: This will report false positives in the case of user-defined macros.  For now
       // we provide the ability to turn off this check via an environment variable, but we

@@ -432,8 +432,11 @@ function generateFunctionCall(callExpr, ctx) {
       // variable ID only.
       const varId = fnId.toLowerCase()
       const v = Model.varWithName(varId)
-      if (v?.isLookup()) {
-        // Transform to a `_LOOKUP` function call
+      if (v?.isLookup() || v?.isData()) {
+        // Transform to a `_LOOKUP` function call.  Note that data variables (e.g., those
+        // defined via `GET DIRECT DATA`, `GET DIRECT LOOKUPS`, the XLS variants, or sourced
+        // from an external `.dat` file) are also backed by a lookup at runtime, so they
+        // can also be referenced using `name(arg)` syntax.
         const lookupVarRef = {
           kind: 'variable-ref',
           varName: callExpr.fnName,

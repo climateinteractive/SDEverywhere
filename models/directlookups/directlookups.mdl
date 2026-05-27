@@ -7,6 +7,10 @@ a[DimA] = GET DIRECT LOOKUPS('lookups.CSV', ',', '1', 'e2')
 	~	This one uses a lowercase letter in the cell reference (atypical, but valid in Vensim).
   |
 
+a without subscript = GET DIRECT LOOKUPS('lookups.CSV', ',', '1', 'e2') ~~|
+
+access a without subscript = a without subscript(Time) ~~|
+
 a from named xlsx[DimA] = GET DIRECT LOOKUPS('lookups.xlsx', 'a', '1', 'E2')
 	~	
 	~	subscript currently required for GET DIRECT LOOKUPS

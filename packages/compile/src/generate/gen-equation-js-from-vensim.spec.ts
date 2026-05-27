@@ -2456,6 +2456,21 @@ describe('generateEquation (Vensim -> JS)', () => {
     expect(genJS(vars.get('_z'), 'eval', { modelDir })).toEqual(['_z = _y[1];'])
   })
 
+  it('should work for GET DIRECT LOOKUPS function (non-subscripted)', () => {
+    const modelDir = sampleModelDir('directlookups')
+    const vars = readInlineModel(`
+      x = GET DIRECT LOOKUPS('lookups.CSV', ',', '1', 'e2') ~~|
+      y = x(Time) ~~|
+      z = y * 10 ~~|
+    `)
+    expect(vars.size).toBe(3)
+    expect(genJS(vars.get('_x'), 'init-lookups', { modelDir })).toEqual([
+      '_x = fns.createLookup(31, [2020.0, 0.0, 2021.0, 0.033333, 2022.0, 0.066667, 2023.0, 0.1, 2024.0, 0.133333, 2025.0, 0.166667, 2026.0, 0.2, 2027.0, 0.233333, 2028.0, 0.266667, 2029.0, 0.3, 2030.0, 0.333333, 2031.0, 0.366667, 2032.0, 0.4, 2033.0, 0.433333, 2034.0, 0.466667, 2035.0, 0.5, 2036.0, 0.533333, 2037.0, 0.566667, 2038.0, 0.6, 2039.0, 0.633333, 2040.0, 0.666667, 2041.0, 0.7, 2042.0, 0.733333, 2043.0, 0.766667, 2044.0, 0.8, 2045.0, 0.833333, 2046.0, 0.866667, 2047.0, 0.9, 2048.0, 0.933333, 2049.0, 0.966667, 2050.0, 1.0]);'
+    ])
+    expect(genJS(vars.get('_y'), 'eval', { modelDir })).toEqual(['_y = fns.LOOKUP(_x, _time);'])
+    expect(genJS(vars.get('_z'), 'eval', { modelDir })).toEqual(['_z = _y * 10.0;'])
+  })
+
   it('should work for GET DIRECT SUBSCRIPT function', () => {
     const modelDir = sampleModelDir('directsubs')
     // Note that we test both uppercase (typical) and lowercase (atypical) cell references below
