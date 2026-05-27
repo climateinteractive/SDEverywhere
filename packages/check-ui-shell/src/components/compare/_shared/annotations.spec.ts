@@ -213,6 +213,60 @@ describe('getAnnotationsForScenario', () => {
     ])
   })
 
+  it('should return correct annotation when value is out of range on both sides', () => {
+    const i1 = inputVar('1', 'Input1')[1]
+    const spec = inputAtPositionSpec('uid1', '_input1', 'at-maximum')
+    const s: ComparisonScenario = {
+      kind: 'scenario',
+      key: 's1',
+      id: 'sg1',
+      title: 'sg1',
+      settings: {
+        kind: 'input-settings',
+        inputs: [
+          {
+            requestedName: 'i1',
+            stateL: { inputVar: i1, value: 500, warning: { kind: 'value-out-of-range' } },
+            stateR: { inputVar: i1, value: 500, warning: { kind: 'value-out-of-range' } }
+          }
+        ]
+      },
+      specL: spec,
+      specR: spec
+    }
+    const annotations = getAnnotationsForScenario(s, bundleNameL, bundleNameR)
+    expect(annotations).toEqual([
+      `<span class="annotation"><span class="status-color-warning">‼</span>&ensp;warning: value out of range for 'i1'</span>`
+    ])
+  })
+
+  it('should return correct annotation when value is out of range on one side', () => {
+    const i1 = inputVar('1', 'Input1')[1]
+    const spec = inputAtPositionSpec('uid1', '_input1', 'at-maximum')
+    const s: ComparisonScenario = {
+      kind: 'scenario',
+      key: 's1',
+      id: 'sg1',
+      title: 'sg1',
+      settings: {
+        kind: 'input-settings',
+        inputs: [
+          {
+            requestedName: 'i1',
+            stateL: { inputVar: i1, value: 90 },
+            stateR: { inputVar: i1, value: 500, warning: { kind: 'value-out-of-range' } }
+          }
+        ]
+      },
+      specL: spec,
+      specR: spec
+    }
+    const annotations = getAnnotationsForScenario(s, bundleNameL, bundleNameR)
+    expect(annotations).toEqual([
+      `<span class="annotation"><span class="status-color-warning">‼</span>&ensp;warning for <span class="dataset-color-1">current</span>: value out of range for 'i1'</span>`
+    ])
+  })
+
   it('should return correct annotation when settings differ between the two models', () => {
     const s: ComparisonScenario = {
       kind: 'scenario',
