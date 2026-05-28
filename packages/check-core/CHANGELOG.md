@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.12](https://github.com/climateinteractive/SDEverywhere/compare/check-core-v0.1.11...check-core-v0.1.12) (2026-05-28)
+
+
+### Bug Fixes
+
+* treat out-of-range values in comparison tests as a warning instead of error ([#827](https://github.com/climateinteractive/SDEverywhere/issues/827)) ([5677f64](https://github.com/climateinteractive/SDEverywhere/commit/5677f642e9e2d9e2c6c597650dd381b787d9bbec)), closes [#825](https://github.com/climateinteractive/SDEverywhere/issues/825)
+
 ## [0.1.11](https://github.com/climateinteractive/SDEverywhere/compare/check-core-v0.1.10...check-core-v0.1.11) (2026-05-11)
 
 

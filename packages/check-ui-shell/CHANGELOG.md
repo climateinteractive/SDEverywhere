@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.2.24](https://github.com/climateinteractive/SDEverywhere/compare/check-ui-shell-v0.2.23...check-ui-shell-v0.2.24) (2026-05-28)
+
+
+### Bug Fixes
+
+* improve layout of error/warning annotations in model-check ([#831](https://github.com/climateinteractive/SDEverywhere/issues/831)) ([f5dc050](https://github.com/climateinteractive/SDEverywhere/commit/f5dc050a4cab607f4e135581a02f9726887a66e8)), closes [#826](https://github.com/climateinteractive/SDEverywhere/issues/826)
+* treat out-of-range values in comparison tests as a warning instead of error ([#827](https://github.com/climateinteractive/SDEverywhere/issues/827)) ([5677f64](https://github.com/climateinteractive/SDEverywhere/commit/5677f642e9e2d9e2c6c597650dd381b787d9bbec)), closes [#825](https://github.com/climateinteractive/SDEverywhere/issues/825)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/check-core bumped from ^0.1.11 to ^0.1.12
+
 ## [0.2.23](https://github.com/climateinteractive/SDEverywhere/compare/check-ui-shell-v0.2.22...check-ui-shell-v0.2.23) (2026-05-11)
 
 
