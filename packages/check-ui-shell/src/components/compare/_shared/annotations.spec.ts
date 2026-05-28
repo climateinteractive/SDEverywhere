@@ -236,7 +236,7 @@ describe('getAnnotationsForScenario', () => {
     }
     const annotations = getAnnotationsForScenario(s, bundleNameL, bundleNameR)
     expect(annotations).toEqual([
-      `<span class="annotation"><span class="status-color-warning">‼</span>&ensp;warning: value out of range for 'i1'</span>`
+      `<span class="annotation" title="warning: value out of range for 'i1'"><span class="status-color-warning">‼</span>&ensp;warning: value out of range for 1 input</span>`
     ])
   })
 
@@ -263,7 +263,50 @@ describe('getAnnotationsForScenario', () => {
     }
     const annotations = getAnnotationsForScenario(s, bundleNameL, bundleNameR)
     expect(annotations).toEqual([
-      `<span class="annotation"><span class="status-color-warning">‼</span>&ensp;warning for <span class="dataset-color-1">current</span>: value out of range for 'i1'</span>`
+      `<span class="annotation" title="warning for current: value out of range for 'i1'"><span class="status-color-warning">‼</span>&ensp;warning for <span class="dataset-color-1">current</span>: value out of range for 1 input</span>`
+    ])
+  })
+
+  it('should abbreviate multi-input value-out-of-range warnings with a tooltip showing the full list', () => {
+    const i1 = inputVar('1', 'Input1')[1]
+    const i2 = inputVar('2', 'Input2')[1]
+    const i3 = inputVar('3', 'Input3')[1]
+    const spec = inputSettingsSpec('uid1', [
+      positionSetting('_input1', 'at-maximum'),
+      positionSetting('_input2', 'at-maximum'),
+      positionSetting('_input3', 'at-maximum')
+    ])
+    const s: ComparisonScenario = {
+      kind: 'scenario',
+      key: 's1',
+      id: 'sg1',
+      title: 'sg1',
+      settings: {
+        kind: 'input-settings',
+        inputs: [
+          {
+            requestedName: 'i1',
+            stateL: { inputVar: i1, value: 500 },
+            stateR: { inputVar: i1, value: 500, warning: { kind: 'value-out-of-range' } }
+          },
+          {
+            requestedName: 'i2',
+            stateL: { inputVar: i2, value: 500 },
+            stateR: { inputVar: i2, value: 500, warning: { kind: 'value-out-of-range' } }
+          },
+          {
+            requestedName: 'i3',
+            stateL: { inputVar: i3, value: 500 },
+            stateR: { inputVar: i3, value: 500, warning: { kind: 'value-out-of-range' } }
+          }
+        ]
+      },
+      specL: spec,
+      specR: spec
+    }
+    const annotations = getAnnotationsForScenario(s, bundleNameL, bundleNameR)
+    expect(annotations).toEqual([
+      `<span class="annotation" title="warning for current: value out of range for 'i1', 'i2', 'i3'"><span class="status-color-warning">‼</span>&ensp;warning for <span class="dataset-color-1">current</span>: value out of range for 3 inputs</span>`
     ])
   })
 

@@ -132,10 +132,25 @@ export function getAnnotationsForScenario(
     return parts.filter(p => p !== undefined).join('; ')
   }
 
-  // value out of range for 'X', 'Y'
-  function warningMessage(warnings: InputWarning[]): string {
+  // Build the warning message body in two forms:
+  //   - `short`: the displayed text — always abbreviated as a count so the annotation
+  //     pill stays compact regardless of how many inputs are involved.
+  //   - `full`: the complete list — always surfaced via a `title=` tooltip on hover.
+  // value out of range for 1 input          (displayed, singular)
+  // value out of range for N inputs         (displayed, plural)
+  // value out of range for 'X', 'Y', 'Z'    (tooltip, full list)
+  function warningMessage(warnings: InputWarning[]): { short: string; full: string } {
     const inputs = warnings.map(w => `'${w.requestedName}'`)
-    return `value out of range for ${inputs.join(', ')}`
+    const noun = warnings.length === 1 ? 'input' : 'inputs'
+    return {
+      short: `value out of range for ${warnings.length} ${noun}`,
+      full: `value out of range for ${inputs.join(', ')}`
+    }
+  }
+
+  // Push a warning annotation, attaching the full message as a `title=` tooltip on hover.
+  function pushWarning(displayedPrefix: string, plainPrefix: string, msg: { short: string; full: string }): void {
+    annotations.push(annotationSpan('warn', `${displayedPrefix}${msg.short}`, `${plainPrefix}${msg.full}`))
   }
 
   // If there are any fatal errors in both, those take precedence over errors in one side
@@ -156,20 +171,26 @@ export function getAnnotationsForScenario(
   }
 
   // Non-fatal warnings: the scenario still runs, so always render as yellow.  If there are
-  // any warnings in both, those take precedence over errors in one side only:
+  // any warnings in both, those take precedence over warnings on one side only:
   //   warning: {inputMessages}
   //   warning for {left}: {inputMessages}
   //   warning for {right}: {inputMessages}
   if (warningsInBoth.length > 0) {
-    annotations.push(annotationSpan('warn', `warning: ${warningMessage(warningsInBoth)}`))
+    pushWarning('warning: ', 'warning: ', warningMessage(warningsInBoth))
   }
   if (warningsInL.length > 0) {
-    const firstPart = `warning for ${datasetSpan(bundleNameL, 'left')}`
-    annotations.push(annotationSpan('warn', `${firstPart}: ${warningMessage(warningsInL)}`))
+    pushWarning(
+      `warning for ${datasetSpan(bundleNameL, 'left')}: `,
+      `warning for ${bundleNameL}: `,
+      warningMessage(warningsInL)
+    )
   }
   if (warningsInR.length > 0) {
-    const firstPart = `warning for ${datasetSpan(bundleNameR, 'right')}`
-    annotations.push(annotationSpan('warn', `${firstPart}: ${warningMessage(warningsInR)}`))
+    pushWarning(
+      `warning for ${datasetSpan(bundleNameR, 'right')}: `,
+      `warning for ${bundleNameR}: `,
+      warningMessage(warningsInR)
+    )
   }
 
   // Add a warning if the settings differ between the two models
@@ -180,8 +201,13 @@ export function getAnnotationsForScenario(
   return annotations
 }
 
-function annotationSpan(kind: 'err' | 'warn', s: string): string {
+function annotationSpan(kind: 'err' | 'warn', s: string, tooltip?: string): string {
   const statusClass = `status-color-${kind === 'err' ? 'failed' : 'warning'}`
   const statusChar = kind === 'err' ? '✗' : '‼'
-  return `<span class="annotation"><span class="${statusClass}">${statusChar}</span>&ensp;${s}</span>`
+  const titleAttr = tooltip ? ` title="${escapeAttr(tooltip)}"` : ''
+  return `<span class="annotation"${titleAttr}><span class="${statusClass}">${statusChar}</span>&ensp;${s}</span>`
+}
+
+function escapeAttr(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 }
