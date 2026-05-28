@@ -70,7 +70,11 @@ const cleanScenario = scenario(
 
 // Fatal error: input is unknown on both sides — scenario cannot run, render as red.
 const unknownInputBothScenario = scenario([
-  { requestedName: 'Input A', stateL: { error: { kind: 'unknown-input' } }, stateR: { error: { kind: 'unknown-input' } } }
+  {
+    requestedName: 'Input A',
+    stateL: { error: { kind: 'unknown-input' } },
+    stateR: { error: { kind: 'unknown-input' } }
+  }
 ])
 
 // Fatal error on one side only — scenario can still run on the other side, render as yellow.
