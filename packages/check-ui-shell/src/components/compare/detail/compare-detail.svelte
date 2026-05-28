@@ -357,9 +357,15 @@ onMount(() => {
   display: flex;
   flex-direction: row;
   align-items: baseline;
+  // Wrap long annotations onto additional lines instead of squeezing the title/subtitle
+  flex-wrap: wrap;
+  row-gap: 0.25rem;
 }
 
 .title {
+  // Never shrink the scenario title; we'd rather have annotations wrap below than have
+  // the title get clipped
+  flex-shrink: 0;
   margin-bottom: 0.4rem;
   font-size: 2em;
   font-weight: 700;
@@ -367,6 +373,7 @@ onMount(() => {
 }
 
 .subtitle {
+  flex-shrink: 0;
   font-size: 1.2em;
   font-weight: 700;
   margin-left: 1.2rem;
