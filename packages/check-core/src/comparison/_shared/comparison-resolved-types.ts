@@ -48,22 +48,40 @@ export interface ComparisonDataset {
 /** A unique key for a `ComparisonScenario`, generated internally for use by the library. */
 export type ComparisonScenarioKey = string & { _brand?: 'ComparisonScenarioKey' }
 
+/** A fatal error indicating that no input variable matched the requested name. */
 export interface ComparisonResolverUnknownInputError {
   kind: 'unknown-input'
 }
 
+/** A fatal error indicating that no input setting group matched the requested ID. */
 export interface ComparisonResolverUnknownInputSettingGroupError {
   kind: 'unknown-input-setting-group'
 }
 
-export interface ComparisonResolverInvalidValueError {
-  kind: 'invalid-value'
-}
-
+/**
+ * A fatal resolution error.  When this is set on an input state, the scenario
+ * cannot be run for the affected side: spec construction for that side is
+ * skipped and downstream UI annotations render it as an error.
+ */
 export type ComparisonResolverError =
   | ComparisonResolverUnknownInputError
   | ComparisonResolverUnknownInputSettingGroupError
-  | ComparisonResolverInvalidValueError
+
+/**
+ * A non-fatal warning indicating that the resolved value falls outside the
+ * declared `[minValue, maxValue]` range of a slider (or is not one of the
+ * declared values of a switch).  The scenario still runs with the requested
+ * value; consumers (e.g. UI annotations) should flag it as a warning.
+ */
+export interface ComparisonResolverValueOutOfRangeWarning {
+  kind: 'value-out-of-range'
+}
+
+/**
+ * A non-fatal resolution warning.  Warnings do not prevent the scenario from
+ * running; they are surfaced as annotations alongside the resolved value.
+ */
+export type ComparisonResolverWarning = ComparisonResolverValueOutOfRangeWarning
 
 /** Describes the resolution state for a scenario input relative to a specific model. */
 export interface ComparisonScenarioInputState {
@@ -73,8 +91,14 @@ export interface ComparisonScenarioInputState {
   position?: InputPosition
   /** The value of the input, for the given position or explicit value. */
   value?: number
-  /** The error info if the input could not be resolved. */
+  /** The fatal error info if the input could not be resolved. */
   error?: ComparisonResolverError
+  /**
+   * Non-fatal advisory info about the resolved input.  When set (without an
+   * accompanying `error`), the input still resolved and the scenario can run;
+   * consumers should surface the warning alongside the resolved value.
+   */
+  warning?: ComparisonResolverWarning
 }
 
 /** A scenario input that has been checked against both "left" and "right" model. */

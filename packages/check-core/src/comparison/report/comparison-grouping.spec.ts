@@ -4,12 +4,18 @@ import { describe, expect, it } from 'vitest'
 
 import type { DatasetKey } from '../../_shared/types'
 import type {
-  ComparisonResolverInvalidValueError,
   ComparisonResolverUnknownInputError,
   ComparisonScenario,
   ComparisonScenarioKey
 } from '../_shared/comparison-resolved-types'
-import { allAtPos, inputVar, scenarioWithInput, scenarioWithInputVar } from '../_shared/_mocks/mock-resolved-types'
+import {
+  allAtPos,
+  inputVar,
+  scenarioWithInput,
+  scenarioWithInputVar,
+  scenarioWithInputs
+} from '../_shared/_mocks/mock-resolved-types'
+import { inputAtValueSpec } from '../../_shared/scenario-specs'
 import type { BundleModel, LoadedBundle, ModelSpec } from '../../bundle/bundle-types'
 import type { OutputVar } from '../../bundle/var-types'
 
@@ -241,10 +247,20 @@ describe('categorizeComparisonGroups', () => {
   const d: ComparisonResolverUnknownInputError = { kind: 'unknown-input' }
   const dAtMax = scenarioWithInput('7', 'd', 'at-maximum', d, d, undefined, undefined)
 
-  // In this scenario, the input is valid, but the value is out of range, so the scenario should
-  // be invalid for both sides
-  const bInvalid: ComparisonResolverInvalidValueError = { kind: 'invalid-value' }
-  const bAt666 = scenarioWithInput('8', 'b', 666, bInvalid, bInvalid, undefined, undefined)
+  // In this scenario, the input is valid but the value is out of range; this is a non-fatal
+  // warning so the scenario still runs (with the requested out-of-range value) on both sides
+  const bAt666 = scenarioWithInputs(
+    '8',
+    [
+      {
+        requestedName: 'b',
+        stateL: { inputVar: b, value: 666, warning: { kind: 'value-out-of-range' } },
+        stateR: { inputVar: b, value: 666, warning: { kind: 'value-out-of-range' } }
+      }
+    ],
+    inputAtValueSpec('_b', 666),
+    inputAtValueSpec('_b', 666)
+  )
 
   const scenarios = [baseline, aAtMin, aAtMax, bAtMin, bAtMax, bAt20, dAtMax, bAt666]
 
@@ -258,9 +274,10 @@ describe('categorizeComparisonGroups', () => {
   //       - a at {min,max}
   //       - b at {min,max}
   //       - b at 20
-  //   - 2 invalid scenarios:
-  //       - d at max (input is unknown for both sides)
-  //       - b at 666 (value is invalid for both sides)
+  //   - 1 invalid scenario:
+  //       - d at max (input is unknown for both sides; fatal error, scenario does not run)
+  //   - 1 valid scenario with a non-fatal warning:
+  //       - b at 666 (value is out of range for both sides; scenario still runs)
   const allSummaries = [
     testSummary(dAtMax, w),
     testSummary(dAtMax, x),
@@ -336,7 +353,10 @@ describe('categorizeComparisonGroups', () => {
     const groupsByScenario = groupComparisonTestSummaries(allSummaries, 'by-scenario')
     const groupSummaries = categorizeComparisonGroups(comparisonConfig, [...groupsByScenario.values()], 'max-diff')
 
-    // Verify that scenarios with unknown inputs and invalid values get grouped into the "with errors" category
+    // Verify that scenarios with unknown inputs (fatal error, scenario does not run) get
+    // grouped into the "with errors" category.  Scenarios with out-of-range values are
+    // non-fatal warnings: the scenario still runs, so it gets grouped with the other
+    // valid scenarios (see `withoutDiffs` assertion below).
     expect(groupSummaries.withErrors).toEqual([
       groupSummary('7', [
         testSummary(dAtMax, w),
@@ -344,13 +364,6 @@ describe('categorizeComparisonGroups', () => {
         testSummary(dAtMax, y),
         testSummary(dAtMax, z),
         testSummary(dAtMax, v)
-      ]),
-      groupSummary('8', [
-        testSummary(bAt666, w),
-        testSummary(bAt666, x),
-        testSummary(bAt666, y),
-        testSummary(bAt666, z),
-        testSummary(bAt666, v)
       ])
     ])
 
@@ -426,6 +439,26 @@ describe('categorizeComparisonGroups', () => {
     ])
 
     expect(groupSummaries.withoutDiffs).toEqual([
+      // b at 666 carries a non-fatal `value-out-of-range` warning but still runs; its
+      // group iteration order places it ahead of the baseline since the dAtMax summaries
+      // (key '7') are inserted before the bAt666 summaries (key '8') which are inserted
+      // before the baseline summaries (key '1').
+      groupSummary(
+        '8',
+        [
+          testSummary(bAt666, w),
+          testSummary(bAt666, x),
+          testSummary(bAt666, y),
+          testSummary(bAt666, z),
+          testSummary(bAt666, v)
+        ],
+        {
+          totalDiffCount: 5,
+          totalDiffByBucket: [0, 0, 0, 0, 0, 0],
+          diffCountByBucket: [5, 0, 0, 0, 0, 0],
+          diffPercentByBucket: [100, 0, 0, 0, 0, 0]
+        }
+      ),
       groupSummary(
         '1',
         [
