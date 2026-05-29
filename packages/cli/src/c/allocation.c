@@ -55,11 +55,11 @@ static inline double __get_pp(double* pp, size_t iProfile, size_t iElement) {
 }
 
 // Normal distribution
+// Abramowitz and Stegun 26.2.17 (Hastings 5-term rational approximation),
+// using 6-significant-digit rounded coefficients to best match Vensim.
 static double __cdf_unit_normal(double x) {
-  // Ref: Zelen & Severo (1964) in Handbook Of Mathematical Functions,
-  // Abramowitz and Stegun, 26.2.17
-  double p = 0.2316419;
-  double b[5] = {0.31938153, -0.356563782, 1.781477937, -1.821255978, 1.330274429};
+  double p = 0.231642;
+  double b[5] = {0.319382, -0.356564, 1.78148, -1.82126, 1.33027};
   double t = 1.0 / (1.0 + p * x);
   double y = 0.0;
   double k = t;
