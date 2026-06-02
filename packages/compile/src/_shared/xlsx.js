@@ -1,10 +1,13 @@
 // Copyright (c) 2026 Climate Interactive / New Venture Fund
 
+import fs from 'node:fs'
+
+import { strFromU8, unzipSync } from 'fflate'
+
 /**
  * Minimal xlsx reader and cell-address utilities used by the `GET DIRECT ...`
- * code paths in the compile pipeline. We read numeric cell values only; strings,
- * dates, and formula source text are surfaced where present but are not the
- * focus of this module.
+ * code paths in the compile pipeline. We read numeric cell values only; strings
+ * are surfaced where present but are not the focus of this module.
  */
 
 const A_UPPER = 65 // 'A'
@@ -84,4 +87,258 @@ export function decodeCol(ref) {
 export function decodeRow(ref) {
   const r = parseInt(ref, 10)
   return Number.isFinite(r) && r >= 1 ? r - 1 : -1
+}
+
+// --- XML helpers ---
+
+// Pull one attribute value out of a tag's attribute list. Cheaper than a full
+// attribute parser when we only need a few specific keys.
+function getAttr(attrs, name) {
+  const i = attrs.indexOf(name + '="')
+  if (i < 0) return undefined
+  const start = i + name.length + 2
+  const end = attrs.indexOf('"', start)
+  return end < 0 ? undefined : attrs.slice(start, end)
+}
+
+function decodeXmlText(s) {
+  if (s.indexOf('&') === -1) return s
+  return s
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'")
+    .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(parseInt(n, 10)))
+    .replace(/&#x([0-9a-fA-F]+);/g, (_, n) => String.fromCharCode(parseInt(n, 16)))
+    .replace(/&amp;/g, '&')
+}
+
+// --- parsers ---
+
+function parseSharedStrings(xml) {
+  // <sst><si><t>foo</t></si>...<si><r><t>part</t></r><r><t>part2</t></r></si></sst>
+  // Concatenate all <t> elements within each <si> so rich-text runs come back
+  // as a single string.
+  const strings = []
+  const siRe = /<si\b[^>]*>([\s\S]*?)<\/si>/g
+  const tRe = /<t\b[^>]*>([\s\S]*?)<\/t>/g
+  let m
+  while ((m = siRe.exec(xml)) !== null) {
+    const inner = m[1]
+    let s = ''
+    let tm
+    tRe.lastIndex = 0
+    while ((tm = tRe.exec(inner)) !== null) {
+      s += decodeXmlText(tm[1])
+    }
+    strings.push(s)
+  }
+  return strings
+}
+
+function parseWorkbookXml(xml) {
+  // Match <sheet name="..." sheetId="..." r:id="..."/>. Attribute spans can
+  // contain `/` (in URLs), so we match up to the self-closing `/>` non-greedily
+  // rather than excluding `/` from the attribute span.
+  const sheets = []
+  const re = /<sheet\b([\s\S]*?)\/>/g
+  let m
+  while ((m = re.exec(xml)) !== null) {
+    const attrs = m[1]
+    const name = getAttr(attrs, 'name')
+    const rid = getAttr(attrs, 'r:id') ?? getAttr(attrs, 'r:Id')
+    if (name && rid) sheets.push({ name, rid })
+  }
+  return sheets
+}
+
+function parseWorkbookRels(xml) {
+  const rels = Object.create(null)
+  const re = /<Relationship\b([\s\S]*?)\/>/g
+  let m
+  while ((m = re.exec(xml)) !== null) {
+    const attrs = m[1]
+    const id = getAttr(attrs, 'Id')
+    const target = getAttr(attrs, 'Target')
+    if (id && target) rels[id] = target
+  }
+  return rels
+}
+
+// Scan a worksheet's XML and build the sparse cell map.
+function parseSheetXml(xml, sharedStrings) {
+  const cells = Object.create(null)
+  // Match each <c .../> or <c ...>...</c> block. The attribute span is
+  // non-greedy so self-closing cells (e.g. <c r="I4" s="1"/>) don't accidentally
+  // swallow following cells.
+  const cRe = /<c\b([^>]*?)(\/>|>([\s\S]*?)<\/c>)/g
+  let maxRow = -1
+  let maxCol = -1
+  let m
+  while ((m = cRe.exec(xml)) !== null) {
+    const attrs = m[1]
+    const ref = getAttr(attrs, 'r')
+    if (!ref) continue
+    if (m[2] === '/>') continue // empty cell
+    const body = m[3]
+    if (!body) continue
+    const t = getAttr(attrs, 't')
+
+    let value
+    if (t === 's') {
+      // Shared string: <v>N</v> where N indexes sharedStrings.
+      const vStart = body.indexOf('<v>')
+      if (vStart < 0) continue
+      const vEnd = body.indexOf('</v>', vStart + 3)
+      const idx = parseInt(body.slice(vStart + 3, vEnd), 10)
+      value = sharedStrings[idx]
+    } else if (t === 'inlineStr') {
+      // Inline string: <is><t>...</t></is>
+      const tStart = body.indexOf('<t')
+      if (tStart < 0) continue
+      const tOpenEnd = body.indexOf('>', tStart)
+      const tEnd = body.indexOf('</t>', tOpenEnd)
+      value = decodeXmlText(body.slice(tOpenEnd + 1, tEnd))
+    } else if (t === 'str') {
+      // Formula result as string: <v>...</v>
+      const vStart = body.indexOf('<v>')
+      if (vStart < 0) continue
+      const vEnd = body.indexOf('</v>', vStart + 3)
+      value = decodeXmlText(body.slice(vStart + 3, vEnd))
+    } else if (t === 'b') {
+      const vStart = body.indexOf('<v>')
+      if (vStart < 0) continue
+      value = body.charCodeAt(vStart + 3) === 49 // '1'
+    } else if (t === 'e') {
+      continue // error cell, skip
+    } else {
+      // Numeric (t === 'n' or absent). Skip any <f> formula tag and read the
+      // cached <v> value. If <v> is missing (e.g. an uncalculated formula),
+      // skip the cell so the caller's missing-cell handling kicks in.
+      const vStart = body.indexOf('<v>')
+      if (vStart < 0) continue
+      const vEnd = body.indexOf('</v>', vStart + 3)
+      const num = +body.slice(vStart + 3, vEnd)
+      if (Number.isNaN(num)) continue
+      value = num
+    }
+
+    cells[ref] = { v: value }
+
+    const addr = decodeCell(ref)
+    if (addr.r > maxRow) maxRow = addr.r
+    if (addr.c > maxCol) maxCol = addr.c
+  }
+
+  if (maxRow >= 0) cells['!ref'] = `A1:${encodeCell({ c: maxCol, r: maxRow })}`
+  return cells
+}
+
+// --- public API ---
+
+// Workbook cache, mirroring the previous SheetJS readXlsx behavior in
+// helpers.js. Each xlsx file is parsed at most once per process.
+const workbookCache = new Map()
+
+/**
+ * Reset the workbook cache. Intended for tests that load the same path with
+ * different contents across runs.
+ */
+export function resetXlsxCache() {
+  workbookCache.clear()
+}
+
+/**
+ * Read the xlsx file at the given path and return a workbook shaped like the
+ * SheetJS `WorkBook`:
+ *
+ * ```
+ * { SheetNames: string[],
+ *   Sheets: { [name]: { [cellRef]: { v }, '!ref': 'A1:Z99' } } }
+ * ```
+ *
+ * Sheets are materialized lazily — the first time a sheet name is read from
+ * `Sheets`, its XML is parsed; subsequent reads of the same sheet return the
+ * cached map. Workbooks are also cached by path.
+ *
+ * @param {string} pathname The absolute path to the xlsx file.
+ * @returns The parsed workbook.
+ */
+export function readXlsx(pathname) {
+  const cached = workbookCache.get(pathname)
+  if (cached) return cached
+
+  const buf = fs.readFileSync(pathname)
+  const unzipped = unzipSync(buf, {
+    filter: file => {
+      const n = file.name
+      return (
+        n === 'xl/workbook.xml' ||
+        n === 'xl/sharedStrings.xml' ||
+        n === 'xl/_rels/workbook.xml.rels' ||
+        (n.startsWith('xl/worksheets/sheet') && n.endsWith('.xml'))
+      )
+    }
+  })
+
+  const wbBytes = unzipped['xl/workbook.xml']
+  const relsBytes = unzipped['xl/_rels/workbook.xml.rels']
+  if (!wbBytes || !relsBytes) {
+    throw new Error(`Failed to read xlsx file (missing workbook or rels): ${pathname}`)
+  }
+  const wbXml = strFromU8(wbBytes)
+  const relsXml = strFromU8(relsBytes)
+  const ssBytes = unzipped['xl/sharedStrings.xml']
+
+  const sheetDefs = parseWorkbookXml(wbXml)
+  const rels = parseWorkbookRels(relsXml)
+  const sharedStrings = ssBytes ? parseSharedStrings(strFromU8(ssBytes)) : []
+
+  const sheetNames = []
+  const sheetXmls = Object.create(null)
+  for (const { name, rid } of sheetDefs) {
+    let target = rels[rid]
+    if (!target) continue
+    // Targets are workbook-relative; normalize to the zip entry path.
+    target = target.startsWith('/') ? target.slice(1) : 'xl/' + target
+    const bytes = unzipped[target]
+    if (!bytes) continue
+    sheetNames.push(name)
+    sheetXmls[name] = bytes
+  }
+
+  // Lazy materialization: parse a sheet only when first accessed.
+  const parsedSheets = Object.create(null)
+  const sheetsProxy = new Proxy(
+    {},
+    {
+      get(_, name) {
+        if (typeof name !== 'string') return undefined
+        if (parsedSheets[name]) return parsedSheets[name]
+        const bytes = sheetXmls[name]
+        if (!bytes) return undefined
+        const parsed = parseSheetXml(strFromU8(bytes), sharedStrings)
+        parsedSheets[name] = parsed
+        return parsed
+      },
+      has(_, name) {
+        return typeof name === 'string' && name in sheetXmls
+      },
+      ownKeys() {
+        return sheetNames.slice()
+      },
+      getOwnPropertyDescriptor(_, name) {
+        if (typeof name !== 'string' || !(name in sheetXmls)) return undefined
+        const bytes = sheetXmls[name]
+        if (!parsedSheets[name]) {
+          parsedSheets[name] = parseSheetXml(strFromU8(bytes), sharedStrings)
+        }
+        return { enumerable: true, configurable: true, value: parsedSheets[name], writable: false }
+      }
+    }
+  )
+
+  const workbook = { SheetNames: sheetNames, Sheets: sheetsProxy }
+  workbookCache.set(pathname, workbook)
+  return workbook
 }
