@@ -1,8 +1,8 @@
 import * as R from 'ramda'
-import XLSX from 'xlsx'
 
 import { listConcat } from '../_shared/helpers.js'
 import { sub } from '../_shared/subscript.js'
+import { decodeCell, decodeCol, decodeRow } from '../_shared/xlsx.js'
 
 import { handleExcelOrCsvFile } from './direct-data-helpers.js'
 
@@ -61,7 +61,7 @@ function generateDirectDataLookup(varLhs, getCellValue, timeRowOrCol, startCell,
   // The cell(c,r) function wraps data access by column and row.
   let lookupData = ''
   let lookupSize = 0
-  let dataAddress = XLSX.utils.decode_cell(startCell.toUpperCase())
+  let dataAddress = decodeCell(startCell.toUpperCase())
   let dataCol = dataAddress.c
   let dataRow = dataAddress.r
   if (dataCol < 0 || dataRow < 0) {
@@ -71,7 +71,7 @@ function generateDirectDataLookup(varLhs, getCellValue, timeRowOrCol, startCell,
   let timeCol, timeRow, nextCell
   if (isNaN(parseInt(timeRowOrCol))) {
     // Time values are in a column.
-    timeCol = XLSX.utils.decode_col(timeRowOrCol.toUpperCase())
+    timeCol = decodeCol(timeRowOrCol.toUpperCase())
     timeRow = dataRow
     dataCol += indexNum
     nextCell = () => {
@@ -81,7 +81,7 @@ function generateDirectDataLookup(varLhs, getCellValue, timeRowOrCol, startCell,
   } else {
     // Time values are in a row.
     timeCol = dataCol
-    timeRow = XLSX.utils.decode_row(timeRowOrCol)
+    timeRow = decodeRow(timeRowOrCol)
     dataRow += indexNum
     nextCell = () => {
       dataCol++

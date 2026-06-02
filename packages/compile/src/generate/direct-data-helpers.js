@@ -1,8 +1,7 @@
 import path from 'node:path'
 
-import XLSX from 'xlsx'
-
 import { cdbl, readCsv, readXlsx } from '../_shared/helpers.js'
+import { encodeCell } from '../_shared/xlsx.js'
 
 /**
  * Return a `getCellValue` function that reads the CSV or XLS[X] content.
@@ -47,7 +46,7 @@ function handleExcelWorkbook(fileOrTag, workbook, tab, dataKind, dataSource) {
     let sheet = workbook.Sheets[tab]
     if (sheet) {
       return (c, r) => {
-        let cell = sheet[XLSX.utils.encode_cell({ c, r })]
+        let cell = sheet[encodeCell({ c, r })]
         if (cell == null || cell.v === '') {
           return null
         }

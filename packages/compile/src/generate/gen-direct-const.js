@@ -1,7 +1,6 @@
-import XLSX from 'xlsx'
-
 import { cartesianProductOf } from '../_shared/helpers.js'
 import { indexInSepDim, isDimension, sub } from '../_shared/subscript.js'
+import { decodeCell } from '../_shared/xlsx.js'
 
 import { handleExcelOrCsvFile } from './direct-data-helpers.js'
 
@@ -73,7 +72,7 @@ export function generateDirectConstInit(variable, directData, modelDir) {
   // Read tabular data into an indexed variable for each cell.
   let numericSubscripts = lhsIndexSubscripts.map(idx => idx.map(s => sub(s).value))
   let lhsSubscripts = numericSubscripts.map(s => s.reduce((a, v) => a.concat(`[${v}]`), ''))
-  let dataAddress = XLSX.utils.decode_cell(startCell.toUpperCase())
+  let dataAddress = decodeCell(startCell.toUpperCase())
   let startCol = dataAddress.c
   let startRow = dataAddress.r
   if (startCol < 0 || startRow < 0) {
