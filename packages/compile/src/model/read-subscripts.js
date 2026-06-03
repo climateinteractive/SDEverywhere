@@ -1,7 +1,6 @@
-import XLSX from 'xlsx'
-
 import { readCsv } from '../_shared/helpers.js'
 import { Subscript } from '../_shared/subscript.js'
+import { decodeCell } from '../_shared/xlsx.js'
 
 /**
  * Read the dimension definitions from the given model.
@@ -46,7 +45,7 @@ export function readDimensionDefs(parsedModel) {
  */
 export function getDirectSubscripts(fileName, tabOrDelimiter, firstCell, lastCell) {
   // If lastCell is a column letter, scan the column, else scan the row
-  const dataAddress = XLSX.utils.decode_cell(firstCell.toUpperCase())
+  const dataAddress = decodeCell(firstCell.toUpperCase())
   let col = dataAddress.c
   let row = dataAddress.r
   if (col < 0 || row < 0) {
