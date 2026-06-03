@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.31](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.30...compile-v0.7.31) (2026-06-03)
+
+
+### Bug Fixes
+
+* replace SheetJS dependency with custom XLSX file reader ([#833](https://github.com/climateinteractive/SDEverywhere/issues/833)) ([e8624ca](https://github.com/climateinteractive/SDEverywhere/commit/e8624cae31365e0851f22d64fb0bdd150a4b933c)), closes [#832](https://github.com/climateinteractive/SDEverywhere/issues/832)
+
 ## [0.7.30](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.29...compile-v0.7.30) (2026-04-28)
 
 
