@@ -42,11 +42,13 @@ export function resetXlsxCache() {
  * @returns The parsed workbook.
  */
 export function readXlsx(pathname) {
+  // Return the cached workbook if we've already parsed this file
   const cached = workbookCache.get(pathname)
   if (cached) {
     return cached
   }
 
+  // Decompress the file, keeping only the entries we actually read from
   const buf = readFileSync(pathname)
   const unzipped = unzipSync(buf, {
     filter: file => {
@@ -60,6 +62,7 @@ export function readXlsx(pathname) {
     }
   })
 
+  // Pull out the workbook, rels, and (optional) sharedStrings parts as text
   const wbBytes = unzipped['xl/workbook.xml']
   const relsBytes = unzipped['xl/_rels/workbook.xml.rels']
   if (!wbBytes || !relsBytes) {
@@ -69,10 +72,16 @@ export function readXlsx(pathname) {
   const relsXml = strFromU8(relsBytes)
   const ssBytes = unzipped['xl/sharedStrings.xml']
 
+  // Build the sheet definitions
   const sheetDefs = parseWorkbookXml(wbXml)
+
+  // Build the rid-to-target map
   const rels = parseWorkbookRels(relsXml)
+
+  // Build the shared-string table
   const sharedStrings = ssBytes ? parseSharedStrings(strFromU8(ssBytes)) : []
 
+  // Resolve each sheet's rid to its worksheet XML bytes in the zip
   const sheetNames = []
   const sheetXmls = Object.create(null)
   for (const { name, rid } of sheetDefs) {
@@ -129,6 +138,7 @@ export function readXlsx(pathname) {
     }
   )
 
+  // Cache the workbook by path so subsequent reads are free
   const workbook = { SheetNames: sheetNames, Sheets: sheetsProxy }
   workbookCache.set(pathname, workbook)
   return workbook
@@ -148,6 +158,8 @@ export function readXlsx(pathname) {
  * @returns The zero-indexed column and row.
  */
 export function decodeCell(ref) {
+  // Walk the leading run of letters, accumulating the 1-based column index
+  // in bijective base 26 (A=1, B=2, ..., Z=26, AA=27, AB=28, ...)
   let c = 0
   let i = 0
   const len = ref.length
@@ -162,13 +174,19 @@ export function decodeCell(ref) {
     }
     i++
   }
+
+  // Reject input that didn't start with at least one letter
   if (i === 0) {
     return { c: -1, r: -1 }
   }
+
+  // Parse the trailing row digits; rows are 1-based, so reject 0/non-numeric
   const r = parseInt(ref.slice(i), 10)
   if (!Number.isFinite(r) || r < 1) {
     return { c: -1, r: -1 }
   }
+
+  // Convert column and row to the zero-indexed form callers expect
   return { c: c - 1, r: r - 1 }
 }
 
@@ -179,6 +197,8 @@ export function decodeCell(ref) {
  * @returns The A1-style cell reference (e.g. 'B7').
  */
 export function encodeCell({ c, r }) {
+  // Convert the 1-based column index to bijective base-26 letters, building
+  // the string right-to-left (one letter per iteration, least-significant first)
   let col = ''
   let n = c + 1
   while (n > 0) {
@@ -186,6 +206,8 @@ export function encodeCell({ c, r }) {
     col = String.fromCharCode(A_UPPER + rem) + col
     n = Math.floor((n - 1) / 26)
   }
+
+  // Rows in A1 notation are 1-based
   return col + (r + 1)
 }
 
@@ -196,9 +218,13 @@ export function encodeCell({ c, r }) {
  * @returns The zero-indexed column number, or -1 if the input is invalid.
  */
 export function decodeCol(ref) {
+  // Empty input has no valid column
   if (ref.length === 0) {
     return -1
   }
+
+  // Same bijective base-26 walk as decodeCell, but every character must be a
+  // letter — anything else (including a row digit) is rejected
   let c = 0
   for (let i = 0; i < ref.length; i++) {
     const code = ref.charCodeAt(i)
@@ -210,6 +236,8 @@ export function decodeCol(ref) {
       return -1
     }
   }
+
+  // Convert from 1-based to zero-indexed
   return c - 1
 }
 
@@ -220,6 +248,7 @@ export function decodeCol(ref) {
  * @returns The zero-indexed row number, or -1 if the input is invalid.
  */
 export function decodeRow(ref) {
+  // Parse the 1-based row number and convert to zero-indexed; -1 on invalid input
   const r = parseInt(ref, 10)
   return Number.isFinite(r) && r >= 1 ? r - 1 : -1
 }
@@ -237,10 +266,13 @@ export function decodeRow(ref) {
  * @returns The attribute value, or undefined if the attribute is not present.
  */
 function getAttr(attrs, name) {
+  // Look for `name="` — every attribute we care about uses double quotes
   const i = attrs.indexOf(name + '="')
   if (i < 0) {
     return undefined
   }
+
+  // Slice out everything between the opening and closing quote
   const start = i + name.length + 2
   const end = attrs.indexOf('"', start)
   return end < 0 ? undefined : attrs.slice(start, end)
@@ -255,9 +287,14 @@ function getAttr(attrs, name) {
  * @returns The decoded string.
  */
 function decodeXmlText(s) {
+  // Fast path: most cell text contains no entities, so skip the regex chain
   if (s.indexOf('&') === -1) {
     return s
   }
+
+  // Decode the named entities, then decimal and hex numeric refs, and finally
+  // `&amp;` — leaving `&amp;` last avoids accidentally producing `&lt;` etc.
+  // from a literal `&amp;lt;` in the source
   return s
     .replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>')
@@ -282,11 +319,15 @@ function decodeXmlText(s) {
  * @returns An array indexed by shared-string position.
  */
 function parseSharedStrings(xml) {
+  // Outer regex finds each <si> entry; inner regex finds <t> runs within it.
+  // The two are stateful (global) regexes, so reset the inner one per <si>.
   const strings = []
   const siRe = /<si\b[^>]*>([\s\S]*?)<\/si>/g
   const tRe = /<t\b[^>]*>([\s\S]*?)<\/t>/g
   let m
   while ((m = siRe.exec(xml)) !== null) {
+    // Concatenate every <t> chunk inside this <si> — rich-text runs collapse
+    // into a single plain string
     const inner = m[1]
     let s = ''
     let tm
@@ -310,10 +351,13 @@ function parseSharedStrings(xml) {
  * @returns An array of `{ name, rid }` objects in workbook order.
  */
 function parseWorkbookXml(xml) {
+  // Iterate every <sheet .../> element in workbook order
   const sheets = []
   const re = /<sheet\b([\s\S]*?)\/>/g
   let m
   while ((m = re.exec(xml)) !== null) {
+    // Each sheet is identified by its user-visible name and its rid pointer;
+    // the rid attribute is conventionally lowercase but accept both forms
     const attrs = m[1]
     const name = getAttr(attrs, 'name')
     const rid = getAttr(attrs, 'r:id') ?? getAttr(attrs, 'r:Id')
@@ -332,10 +376,12 @@ function parseWorkbookXml(xml) {
  * @returns An object mapping relationship id to target path.
  */
 function parseWorkbookRels(xml) {
+  // Iterate every <Relationship .../> element
   const rels = Object.create(null)
   const re = /<Relationship\b([\s\S]*?)\/>/g
   let m
   while ((m = re.exec(xml)) !== null) {
+    // Record the Id -> Target mapping; ignore the Type and other attributes
     const attrs = m[1]
     const id = getAttr(attrs, 'Id')
     const target = getAttr(attrs, 'Target')
@@ -358,6 +404,7 @@ function parseWorkbookRels(xml) {
  */
 function parseSheetXml(xml, sharedStrings) {
   const cells = Object.create(null)
+
   // Match each <c .../> or <c ...>...</c> block. The attribute span is
   // non-greedy so self-closing cells (e.g. <c r="I4" s="1"/>) don't accidentally
   // swallow following cells.
@@ -434,8 +481,10 @@ function parseSheetXml(xml, sharedStrings) {
       value = num
     }
 
+    // Store the cell under its A1 ref, matching the SheetJS sheet shape
     cells[ref] = { v: value }
 
+    // Track the bounding row/col so we can synthesize the !ref range below
     const addr = decodeCell(ref)
     if (addr.r > maxRow) {
       maxRow = addr.r
@@ -445,6 +494,7 @@ function parseSheetXml(xml, sharedStrings) {
     }
   }
 
+  // Expose the sheet's bounding range as !ref when any cells were read
   if (maxRow >= 0) {
     cells['!ref'] = `A1:${encodeCell({ c: maxCol, r: maxRow })}`
   }
