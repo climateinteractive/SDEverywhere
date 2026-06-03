@@ -258,7 +258,7 @@ function parseSheetXml(xml, sharedStrings) {
 
     let value
     if (t === 's') {
-      // Shared string: <v>N</v> where N indexes sharedStrings.
+      // Shared string: <v>N</v> where N indexes sharedStrings
       const vStart = body.indexOf('<v>')
       if (vStart < 0) {
         continue
@@ -396,7 +396,7 @@ export function readXlsx(pathname) {
     if (!target) {
       continue
     }
-    // Targets are workbook-relative; normalize to the zip entry path.
+    // Targets are workbook-relative; normalize to the zip entry path
     target = target.startsWith('/') ? target.slice(1) : 'xl/' + target
     const bytes = unzipped[target]
     if (!bytes) {
@@ -406,7 +406,7 @@ export function readXlsx(pathname) {
     sheetXmls[name] = bytes
   }
 
-  // Lazy materialization: parse a sheet only when first accessed.
+  // Lazy materialization: parse a sheet only when first accessed
   const parsedSheets = Object.create(null)
   const sheetsProxy = new Proxy(
     {},

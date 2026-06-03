@@ -105,7 +105,7 @@ interface XlsxParts {
   sheets: { name: string; sheetData: string }[]
   sharedStrings?: string[]
   // Raw override for xl/sharedStrings.xml — used when we need <r>/<t> rich text
-  // or other shapes that the `sharedStrings` shorthand can't express.
+  // or other shapes that the `sharedStrings` shorthand can't express
   sharedStringsXml?: string
 }
 
@@ -113,7 +113,7 @@ function buildXlsx(parts: XlsxParts): string {
   const sheets = parts.sheets
   const files: Record<string, Uint8Array> = {}
 
-  // Minimal required files for SheetJS-compatible workbook structure.
+  // Minimal required files for SheetJS-compatible workbook structure
   files['[Content_Types].xml'] = strToU8(
     `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
@@ -288,7 +288,7 @@ describe('readXlsx', () => {
         }
       ],
       // We can't express rich-text runs through the buildXlsx convenience, so
-      // construct the sharedStrings part as a raw override.
+      // construct the sharedStrings part as a raw override
       sharedStringsXml: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="1" uniqueCount="1">
 <si><r><t>foo</t></r><r><t> </t></r><r><t>bar</t></r></si>
@@ -337,7 +337,7 @@ describe('readXlsx', () => {
   it('should not let self-closing empty cells shift subsequent cells', () => {
     // Regression for a bug found in the prototype: a greedy regex matched
     // across <c r="I4" s="1"/><c r="J4" s="1"/><c r="BC4"><v>1840</v></c>
-    // and recorded BC4's value at I4.
+    // and recorded BC4's value at I4
     const file = buildXlsx({
       sheets: [
         {
@@ -380,7 +380,7 @@ describe('readXlsx', () => {
     })
     const wb1 = readXlsx(file)
     const wb2 = readXlsx(file)
-    // Same instance — workbook-level cache mirrors the previous SheetJS path.
+    // Same instance — workbook-level cache mirrors the previous SheetJS path
     expect(wb1).toBe(wb2)
   })
 })
