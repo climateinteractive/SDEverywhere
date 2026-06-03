@@ -13,6 +13,131 @@ import { strFromU8, unzipSync } from 'fflate'
 const A_UPPER = 65 // 'A'
 const A_LOWER = 97 // 'a'
 
+// Workbook cache, mirroring the previous SheetJS readXlsx behavior in
+// helpers.js. Each xlsx file is parsed at most once per process.
+const workbookCache = new Map()
+
+/**
+ * Reset the workbook cache. Intended for tests that load the same path with
+ * different contents across runs.
+ */
+export function resetXlsxCache() {
+  workbookCache.clear()
+}
+
+/**
+ * Read the xlsx file at the given path and return a workbook shaped like the
+ * SheetJS `WorkBook`:
+ *
+ * ```
+ * { SheetNames: string[],
+ *   Sheets: { [name]: { [cellRef]: { v }, '!ref': 'A1:Z99' } } }
+ * ```
+ *
+ * Sheets are materialized lazily — the first time a sheet name is read from
+ * `Sheets`, its XML is parsed; subsequent reads of the same sheet return the
+ * cached map. Workbooks are also cached by path.
+ *
+ * @param {string} pathname The absolute path to the xlsx file.
+ * @returns The parsed workbook.
+ */
+export function readXlsx(pathname) {
+  const cached = workbookCache.get(pathname)
+  if (cached) {
+    return cached
+  }
+
+  const buf = fs.readFileSync(pathname)
+  const unzipped = unzipSync(buf, {
+    filter: file => {
+      const n = file.name
+      return (
+        n === 'xl/workbook.xml' ||
+        n === 'xl/sharedStrings.xml' ||
+        n === 'xl/_rels/workbook.xml.rels' ||
+        (n.startsWith('xl/worksheets/sheet') && n.endsWith('.xml'))
+      )
+    }
+  })
+
+  const wbBytes = unzipped['xl/workbook.xml']
+  const relsBytes = unzipped['xl/_rels/workbook.xml.rels']
+  if (!wbBytes || !relsBytes) {
+    throw new Error(`Failed to read xlsx file (missing workbook or rels): ${pathname}`)
+  }
+  const wbXml = strFromU8(wbBytes)
+  const relsXml = strFromU8(relsBytes)
+  const ssBytes = unzipped['xl/sharedStrings.xml']
+
+  const sheetDefs = parseWorkbookXml(wbXml)
+  const rels = parseWorkbookRels(relsXml)
+  const sharedStrings = ssBytes ? parseSharedStrings(strFromU8(ssBytes)) : []
+
+  const sheetNames = []
+  const sheetXmls = Object.create(null)
+  for (const { name, rid } of sheetDefs) {
+    let target = rels[rid]
+    if (!target) {
+      continue
+    }
+    // Targets are workbook-relative; normalize to the zip entry path
+    target = target.startsWith('/') ? target.slice(1) : 'xl/' + target
+    const bytes = unzipped[target]
+    if (!bytes) {
+      continue
+    }
+    sheetNames.push(name)
+    sheetXmls[name] = bytes
+  }
+
+  // Lazy materialization: parse a sheet only when first accessed
+  const parsedSheets = Object.create(null)
+  const sheetsProxy = new Proxy(
+    {},
+    {
+      get(_, name) {
+        if (typeof name !== 'string') {
+          return undefined
+        }
+        if (parsedSheets[name]) {
+          return parsedSheets[name]
+        }
+        const bytes = sheetXmls[name]
+        if (!bytes) {
+          return undefined
+        }
+        const parsed = parseSheetXml(strFromU8(bytes), sharedStrings)
+        parsedSheets[name] = parsed
+        return parsed
+      },
+      has(_, name) {
+        return typeof name === 'string' && name in sheetXmls
+      },
+      ownKeys() {
+        return sheetNames.slice()
+      },
+      getOwnPropertyDescriptor(_, name) {
+        if (typeof name !== 'string' || !(name in sheetXmls)) {
+          return undefined
+        }
+        const bytes = sheetXmls[name]
+        if (!parsedSheets[name]) {
+          parsedSheets[name] = parseSheetXml(strFromU8(bytes), sharedStrings)
+        }
+        return { enumerable: true, configurable: true, value: parsedSheets[name], writable: false }
+      }
+    }
+  )
+
+  const workbook = { SheetNames: sheetNames, Sheets: sheetsProxy }
+  workbookCache.set(pathname, workbook)
+  return workbook
+}
+
+//
+// Cell address utilities
+//
+
 /**
  * Decode an A1-style cell ref to a zero-indexed `{c, r}`.
  *
@@ -324,129 +449,4 @@ function parseSheetXml(xml, sharedStrings) {
     cells['!ref'] = `A1:${encodeCell({ c: maxCol, r: maxRow })}`
   }
   return cells
-}
-
-//
-// Public API
-//
-
-// Workbook cache, mirroring the previous SheetJS readXlsx behavior in
-// helpers.js. Each xlsx file is parsed at most once per process.
-const workbookCache = new Map()
-
-/**
- * Reset the workbook cache. Intended for tests that load the same path with
- * different contents across runs.
- */
-export function resetXlsxCache() {
-  workbookCache.clear()
-}
-
-/**
- * Read the xlsx file at the given path and return a workbook shaped like the
- * SheetJS `WorkBook`:
- *
- * ```
- * { SheetNames: string[],
- *   Sheets: { [name]: { [cellRef]: { v }, '!ref': 'A1:Z99' } } }
- * ```
- *
- * Sheets are materialized lazily — the first time a sheet name is read from
- * `Sheets`, its XML is parsed; subsequent reads of the same sheet return the
- * cached map. Workbooks are also cached by path.
- *
- * @param {string} pathname The absolute path to the xlsx file.
- * @returns The parsed workbook.
- */
-export function readXlsx(pathname) {
-  const cached = workbookCache.get(pathname)
-  if (cached) {
-    return cached
-  }
-
-  const buf = fs.readFileSync(pathname)
-  const unzipped = unzipSync(buf, {
-    filter: file => {
-      const n = file.name
-      return (
-        n === 'xl/workbook.xml' ||
-        n === 'xl/sharedStrings.xml' ||
-        n === 'xl/_rels/workbook.xml.rels' ||
-        (n.startsWith('xl/worksheets/sheet') && n.endsWith('.xml'))
-      )
-    }
-  })
-
-  const wbBytes = unzipped['xl/workbook.xml']
-  const relsBytes = unzipped['xl/_rels/workbook.xml.rels']
-  if (!wbBytes || !relsBytes) {
-    throw new Error(`Failed to read xlsx file (missing workbook or rels): ${pathname}`)
-  }
-  const wbXml = strFromU8(wbBytes)
-  const relsXml = strFromU8(relsBytes)
-  const ssBytes = unzipped['xl/sharedStrings.xml']
-
-  const sheetDefs = parseWorkbookXml(wbXml)
-  const rels = parseWorkbookRels(relsXml)
-  const sharedStrings = ssBytes ? parseSharedStrings(strFromU8(ssBytes)) : []
-
-  const sheetNames = []
-  const sheetXmls = Object.create(null)
-  for (const { name, rid } of sheetDefs) {
-    let target = rels[rid]
-    if (!target) {
-      continue
-    }
-    // Targets are workbook-relative; normalize to the zip entry path
-    target = target.startsWith('/') ? target.slice(1) : 'xl/' + target
-    const bytes = unzipped[target]
-    if (!bytes) {
-      continue
-    }
-    sheetNames.push(name)
-    sheetXmls[name] = bytes
-  }
-
-  // Lazy materialization: parse a sheet only when first accessed
-  const parsedSheets = Object.create(null)
-  const sheetsProxy = new Proxy(
-    {},
-    {
-      get(_, name) {
-        if (typeof name !== 'string') {
-          return undefined
-        }
-        if (parsedSheets[name]) {
-          return parsedSheets[name]
-        }
-        const bytes = sheetXmls[name]
-        if (!bytes) {
-          return undefined
-        }
-        const parsed = parseSheetXml(strFromU8(bytes), sharedStrings)
-        parsedSheets[name] = parsed
-        return parsed
-      },
-      has(_, name) {
-        return typeof name === 'string' && name in sheetXmls
-      },
-      ownKeys() {
-        return sheetNames.slice()
-      },
-      getOwnPropertyDescriptor(_, name) {
-        if (typeof name !== 'string' || !(name in sheetXmls)) {
-          return undefined
-        }
-        const bytes = sheetXmls[name]
-        if (!parsedSheets[name]) {
-          parsedSheets[name] = parseSheetXml(strFromU8(bytes), sharedStrings)
-        }
-        return { enumerable: true, configurable: true, value: parsedSheets[name], writable: false }
-      }
-    }
-  )
-
-  const workbook = { SheetNames: sheetNames, Sheets: sheetsProxy }
-  workbookCache.set(pathname, workbook)
-  return workbook
 }
