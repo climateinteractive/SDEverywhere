@@ -4,11 +4,11 @@ import fs from 'node:fs'
 
 import { strFromU8, unzipSync } from 'fflate'
 
-/**
- * Minimal xlsx reader and cell-address utilities used by the `GET DIRECT ...`
- * code paths in the compile pipeline. We read numeric cell values only; strings
- * are surfaced where present but are not the focus of this module.
- */
+//
+// Minimal xlsx reader and cell-address utilities used by the `GET DIRECT ...`
+// code paths in the compile pipeline. We read numeric cell values only; strings
+// are surfaced where present but are not the focus of this module.
+//
 
 const A_UPPER = 65 // 'A'
 const A_LOWER = 97 // 'a'
@@ -89,7 +89,9 @@ export function decodeRow(ref) {
   return Number.isFinite(r) && r >= 1 ? r - 1 : -1
 }
 
-// --- XML helpers ---
+//
+// XML helpers
+//
 
 // Pull one attribute value out of a tag's attribute list. Cheaper than a full
 // attribute parser when we only need a few specific keys.
@@ -113,7 +115,9 @@ function decodeXmlText(s) {
     .replace(/&amp;/g, '&')
 }
 
-// --- parsers ---
+//
+// Parsers
+//
 
 function parseSharedStrings(xml) {
   // <sst><si><t>foo</t></si>...<si><r><t>part</t></r><r><t>part2</t></r></si></sst>
@@ -234,7 +238,9 @@ function parseSheetXml(xml, sharedStrings) {
   return cells
 }
 
-// --- public API ---
+//
+// Public API
+//
 
 // Workbook cache, mirroring the previous SheetJS readXlsx behavior in
 // helpers.js. Each xlsx file is parsed at most once per process.
