@@ -284,13 +284,14 @@ function parseSheetXml(xml, sharedStrings) {
       const vEnd = body.indexOf('</v>', vStart + 3)
       value = decodeXmlText(body.slice(vStart + 3, vEnd))
     } else if (t === 'b') {
+      // Boolean: <v>0</v> or <v>1</v>
       const vStart = body.indexOf('<v>')
       if (vStart < 0) {
         continue
       }
       value = body.charCodeAt(vStart + 3) === 49 // '1'
     } else if (t === 'e') {
-      // error cell, skip
+      // Error cell, skip
       continue
     } else {
       // Numeric (t === 'n' or absent). Skip any <f> formula tag and read the
