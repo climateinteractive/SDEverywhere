@@ -93,8 +93,14 @@ export function decodeRow(ref) {
 // XML helpers
 //
 
-// Pull one attribute value out of a tag's attribute list. Cheaper than a full
-// attribute parser when we only need a few specific keys.
+/**
+ * Pull one attribute value out of a tag's attribute list. Cheaper than a full
+ * attribute parser when we only need a few specific keys.
+ *
+ * @param {string} attrs The portion of a start tag containing the attributes.
+ * @param {string} name The attribute name to look up.
+ * @returns The attribute value, or undefined if the attribute is not present.
+ */
 function getAttr(attrs, name) {
   const i = attrs.indexOf(name + '="')
   if (i < 0) return undefined
@@ -103,6 +109,14 @@ function getAttr(attrs, name) {
   return end < 0 ? undefined : attrs.slice(start, end)
 }
 
+/**
+ * Decode the standard XML entities (`&lt;`, `&gt;`, `&amp;`, `&quot;`,
+ * `&apos;`) along with numeric character references (`&#NN;` and `&#xNN;`)
+ * in the given text. Returns the input unchanged when no entities are present.
+ *
+ * @param {string} s The raw text from an XML element body or attribute.
+ * @returns The decoded string.
+ */
 function decodeXmlText(s) {
   if (s.indexOf('&') === -1) return s
   return s
@@ -119,10 +133,16 @@ function decodeXmlText(s) {
 // Parsers
 //
 
+/**
+ * Parse the contents of `xl/sharedStrings.xml` into a positional array of
+ * decoded strings. A shared string may contain rich-text runs
+ * (`<si><r><t>foo</t></r><r><t>bar</t></r></si>`); concatenate all `<t>`
+ * elements within each `<si>` so the result comes back as a single string.
+ *
+ * @param {string} xml The contents of the `xl/sharedStrings.xml` file.
+ * @returns An array indexed by shared-string position.
+ */
 function parseSharedStrings(xml) {
-  // <sst><si><t>foo</t></si>...<si><r><t>part</t></r><r><t>part2</t></r></si></sst>
-  // Concatenate all <t> elements within each <si> so rich-text runs come back
-  // as a single string.
   const strings = []
   const siRe = /<si\b[^>]*>([\s\S]*?)<\/si>/g
   const tRe = /<t\b[^>]*>([\s\S]*?)<\/t>/g
@@ -140,10 +160,17 @@ function parseSharedStrings(xml) {
   return strings
 }
 
+/**
+ * Parse the contents of `xl/workbook.xml` into the list of sheet definitions,
+ * each with the user-visible sheet name and the relationship id that maps to
+ * the sheet's XML part. Attribute spans can contain `/` (in URLs), so the
+ * regex matches up to the self-closing `/>` non-greedily rather than excluding
+ * `/` from the attribute span.
+ *
+ * @param {string} xml The contents of the `xl/workbook.xml` file.
+ * @returns An array of `{ name, rid }` objects in workbook order.
+ */
 function parseWorkbookXml(xml) {
-  // Match <sheet name="..." sheetId="..." r:id="..."/>. Attribute spans can
-  // contain `/` (in URLs), so we match up to the self-closing `/>` non-greedily
-  // rather than excluding `/` from the attribute span.
   const sheets = []
   const re = /<sheet\b([\s\S]*?)\/>/g
   let m
@@ -156,6 +183,13 @@ function parseWorkbookXml(xml) {
   return sheets
 }
 
+/**
+ * Parse the contents of `xl/_rels/workbook.xml.rels` into a map from
+ * relationship id to its target path (the part within the xlsx zip).
+ *
+ * @param {string} xml The contents of the `xl/_rels/workbook.xml.rels` file.
+ * @returns An object mapping relationship id to target path.
+ */
 function parseWorkbookRels(xml) {
   const rels = Object.create(null)
   const re = /<Relationship\b([\s\S]*?)\/>/g
@@ -169,7 +203,16 @@ function parseWorkbookRels(xml) {
   return rels
 }
 
-// Scan a worksheet's XML and build the sparse cell map.
+/**
+ * Scan a worksheet's XML and build a sparse cell map shaped like the SheetJS
+ * worksheet object: `{ [cellRef]: { v }, '!ref': 'A1:Z99' }`. Skips empty
+ * cells, error cells (`t='e'`), and numeric cells whose cached `<v>` value
+ * is missing.
+ *
+ * @param {string} xml The contents of a `xl/worksheets/sheet*.xml` file.
+ * @param {string[]} sharedStrings The shared-string table for resolving `t='s'` cells.
+ * @returns The sparse cell map, including a `!ref` key if any cells were read.
+ */
 function parseSheetXml(xml, sharedStrings) {
   const cells = Object.create(null)
   // Match each <c .../> or <c ...>...</c> block. The attribute span is
