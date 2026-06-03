@@ -37,9 +37,13 @@ export function decodeCell(ref) {
     }
     i++
   }
-  if (i === 0) return { c: -1, r: -1 }
+  if (i === 0) {
+    return { c: -1, r: -1 }
+  }
   const r = parseInt(ref.slice(i), 10)
-  if (!Number.isFinite(r) || r < 1) return { c: -1, r: -1 }
+  if (!Number.isFinite(r) || r < 1) {
+    return { c: -1, r: -1 }
+  }
   return { c: c - 1, r: r - 1 }
 }
 
@@ -67,13 +71,19 @@ export function encodeCell({ c, r }) {
  * @returns The zero-indexed column number, or -1 if the input is invalid.
  */
 export function decodeCol(ref) {
-  if (ref.length === 0) return -1
+  if (ref.length === 0) {
+    return -1
+  }
   let c = 0
   for (let i = 0; i < ref.length; i++) {
     const code = ref.charCodeAt(i)
-    if (code >= 65 && code <= 90) c = c * 26 + (code - A_UPPER + 1)
-    else if (code >= 97 && code <= 122) c = c * 26 + (code - A_LOWER + 1)
-    else return -1
+    if (code >= 65 && code <= 90) {
+      c = c * 26 + (code - A_UPPER + 1)
+    } else if (code >= 97 && code <= 122) {
+      c = c * 26 + (code - A_LOWER + 1)
+    } else {
+      return -1
+    }
   }
   return c - 1
 }
@@ -103,7 +113,9 @@ export function decodeRow(ref) {
  */
 function getAttr(attrs, name) {
   const i = attrs.indexOf(name + '="')
-  if (i < 0) return undefined
+  if (i < 0) {
+    return undefined
+  }
   const start = i + name.length + 2
   const end = attrs.indexOf('"', start)
   return end < 0 ? undefined : attrs.slice(start, end)
@@ -118,7 +130,9 @@ function getAttr(attrs, name) {
  * @returns The decoded string.
  */
 function decodeXmlText(s) {
-  if (s.indexOf('&') === -1) return s
+  if (s.indexOf('&') === -1) {
+    return s
+  }
   return s
     .replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>')
@@ -178,7 +192,9 @@ function parseWorkbookXml(xml) {
     const attrs = m[1]
     const name = getAttr(attrs, 'name')
     const rid = getAttr(attrs, 'r:id') ?? getAttr(attrs, 'r:Id')
-    if (name && rid) sheets.push({ name, rid })
+    if (name && rid) {
+      sheets.push({ name, rid })
+    }
   }
   return sheets
 }
@@ -198,7 +214,9 @@ function parseWorkbookRels(xml) {
     const attrs = m[1]
     const id = getAttr(attrs, 'Id')
     const target = getAttr(attrs, 'Target')
-    if (id && target) rels[id] = target
+    if (id && target) {
+      rels[id] = target
+    }
   }
   return rels
 }
@@ -225,59 +243,85 @@ function parseSheetXml(xml, sharedStrings) {
   while ((m = cRe.exec(xml)) !== null) {
     const attrs = m[1]
     const ref = getAttr(attrs, 'r')
-    if (!ref) continue
-    if (m[2] === '/>') continue // empty cell
+    if (!ref) {
+      continue
+    }
+    if (m[2] === '/>') {
+      // empty cell
+      continue
+    }
     const body = m[3]
-    if (!body) continue
+    if (!body) {
+      continue
+    }
     const t = getAttr(attrs, 't')
 
     let value
     if (t === 's') {
       // Shared string: <v>N</v> where N indexes sharedStrings.
       const vStart = body.indexOf('<v>')
-      if (vStart < 0) continue
+      if (vStart < 0) {
+        continue
+      }
       const vEnd = body.indexOf('</v>', vStart + 3)
       const idx = parseInt(body.slice(vStart + 3, vEnd), 10)
       value = sharedStrings[idx]
     } else if (t === 'inlineStr') {
       // Inline string: <is><t>...</t></is>
       const tStart = body.indexOf('<t')
-      if (tStart < 0) continue
+      if (tStart < 0) {
+        continue
+      }
       const tOpenEnd = body.indexOf('>', tStart)
       const tEnd = body.indexOf('</t>', tOpenEnd)
       value = decodeXmlText(body.slice(tOpenEnd + 1, tEnd))
     } else if (t === 'str') {
       // Formula result as string: <v>...</v>
       const vStart = body.indexOf('<v>')
-      if (vStart < 0) continue
+      if (vStart < 0) {
+        continue
+      }
       const vEnd = body.indexOf('</v>', vStart + 3)
       value = decodeXmlText(body.slice(vStart + 3, vEnd))
     } else if (t === 'b') {
       const vStart = body.indexOf('<v>')
-      if (vStart < 0) continue
+      if (vStart < 0) {
+        continue
+      }
       value = body.charCodeAt(vStart + 3) === 49 // '1'
     } else if (t === 'e') {
-      continue // error cell, skip
+      // error cell, skip
+      continue
     } else {
       // Numeric (t === 'n' or absent). Skip any <f> formula tag and read the
       // cached <v> value. If <v> is missing (e.g. an uncalculated formula),
       // skip the cell so the caller's missing-cell handling kicks in.
       const vStart = body.indexOf('<v>')
-      if (vStart < 0) continue
+      if (vStart < 0) {
+        continue
+      }
       const vEnd = body.indexOf('</v>', vStart + 3)
       const num = +body.slice(vStart + 3, vEnd)
-      if (Number.isNaN(num)) continue
+      if (Number.isNaN(num)) {
+        continue
+      }
       value = num
     }
 
     cells[ref] = { v: value }
 
     const addr = decodeCell(ref)
-    if (addr.r > maxRow) maxRow = addr.r
-    if (addr.c > maxCol) maxCol = addr.c
+    if (addr.r > maxRow) {
+      maxRow = addr.r
+    }
+    if (addr.c > maxCol) {
+      maxCol = addr.c
+    }
   }
 
-  if (maxRow >= 0) cells['!ref'] = `A1:${encodeCell({ c: maxCol, r: maxRow })}`
+  if (maxRow >= 0) {
+    cells['!ref'] = `A1:${encodeCell({ c: maxCol, r: maxRow })}`
+  }
   return cells
 }
 
@@ -315,7 +359,9 @@ export function resetXlsxCache() {
  */
 export function readXlsx(pathname) {
   const cached = workbookCache.get(pathname)
-  if (cached) return cached
+  if (cached) {
+    return cached
+  }
 
   const buf = fs.readFileSync(pathname)
   const unzipped = unzipSync(buf, {
@@ -347,11 +393,15 @@ export function readXlsx(pathname) {
   const sheetXmls = Object.create(null)
   for (const { name, rid } of sheetDefs) {
     let target = rels[rid]
-    if (!target) continue
+    if (!target) {
+      continue
+    }
     // Targets are workbook-relative; normalize to the zip entry path.
     target = target.startsWith('/') ? target.slice(1) : 'xl/' + target
     const bytes = unzipped[target]
-    if (!bytes) continue
+    if (!bytes) {
+      continue
+    }
     sheetNames.push(name)
     sheetXmls[name] = bytes
   }
@@ -362,10 +412,16 @@ export function readXlsx(pathname) {
     {},
     {
       get(_, name) {
-        if (typeof name !== 'string') return undefined
-        if (parsedSheets[name]) return parsedSheets[name]
+        if (typeof name !== 'string') {
+          return undefined
+        }
+        if (parsedSheets[name]) {
+          return parsedSheets[name]
+        }
         const bytes = sheetXmls[name]
-        if (!bytes) return undefined
+        if (!bytes) {
+          return undefined
+        }
         const parsed = parseSheetXml(strFromU8(bytes), sharedStrings)
         parsedSheets[name] = parsed
         return parsed
@@ -377,7 +433,9 @@ export function readXlsx(pathname) {
         return sheetNames.slice()
       },
       getOwnPropertyDescriptor(_, name) {
-        if (typeof name !== 'string' || !(name in sheetXmls)) return undefined
+        if (typeof name !== 'string' || !(name in sheetXmls)) {
+          return undefined
+        }
         const bytes = sheetXmls[name]
         if (!parsedSheets[name]) {
           parsedSheets[name] = parseSheetXml(strFromU8(bytes), sharedStrings)
