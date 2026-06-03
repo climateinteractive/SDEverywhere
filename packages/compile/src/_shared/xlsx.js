@@ -1,6 +1,6 @@
 // Copyright (c) 2026 Climate Interactive / New Venture Fund
 
-import fs from 'node:fs'
+import { readFileSync } from 'node:fs'
 
 import { strFromU8, unzipSync } from 'fflate'
 
@@ -47,7 +47,7 @@ export function readXlsx(pathname) {
     return cached
   }
 
-  const buf = fs.readFileSync(pathname)
+  const buf = readFileSync(pathname)
   const unzipped = unzipSync(buf, {
     filter: file => {
       const n = file.name
