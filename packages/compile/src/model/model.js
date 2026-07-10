@@ -751,6 +751,94 @@ function splitRefId(refId) {
   }
   return { varName, subscripts }
 }
+function separationCandidatesForCycle(cycle) {
+  // Analyze a dependency cycle reported by toposort and find variables that could be
+  // separated into individual index instances to break the cycle.  A false cycle can
+  // appear when a variable keeps a dimension for which the variables it references are
+  // defined (or separated) element by element.  The whole-array variable then depends
+  // on all elements of its references, merging the otherwise independent dependency
+  // chains of each element into a single node.  Separating the variable on that
+  // dimension restores the element-level dependency structure that Vensim uses when
+  // it orders equations.
+  //
+  // For each edge v → next in the cycle, propose separating v on a dimension D when
+  // the next variable's refId carries an individual index in the family of D and the
+  // variable that precedes v in the cycle references v by an individual element of D
+  // (so that the separation actually removes the edge into the other elements of v).
+  // If no candidate satisfies the predecessor condition, fall back to the candidates
+  // that satisfy the first condition alone.
+  // The result is a map from variable name to the set of dimension IDs to separate on.
+  const candidates = new Map()
+  const looseCandidates = new Map()
+  const addCandidate = (map, varName, dimId) => {
+    let dimIds = map.get(varName)
+    if (!dimIds) {
+      dimIds = new Set()
+      map.set(varName, dimIds)
+    }
+    dimIds.add(dimId)
+  }
+  const n = cycle.length
+  for (let i = 0; i < n; i++) {
+    const v = varWithRefId(cycle[i])
+    if (!v || !v.subscripts || v.subscripts.length === 0) {
+      continue
+    }
+    const nextRefId = cycle[(i + 1) % n]
+    const nextIndexFamilies = new Set(
+      splitRefId(nextRefId)
+        .subscripts.filter(isIndex)
+        .map(subId => sub(subId).family)
+    )
+    const prevVar = varWithRefId(cycle[(i - 1 + n) % n])
+    for (const subId of v.subscripts) {
+      if (isDimension(subId) && nextIndexFamilies.has(sub(subId).family)) {
+        addCandidate(looseCandidates, v.varName, subId)
+        if (prevVar && refsElementOfFamily(prevVar, v.varName, sub(subId).family)) {
+          addCandidate(candidates, v.varName, subId)
+        }
+      }
+    }
+  }
+  return candidates.size > 0 ? candidates : looseCandidates
+}
+function refsElementOfFamily(referencingVar, varName, familyId) {
+  // Return true when the given variable's parsed equation references the named variable
+  // with an individual subscript index in the given family and never with a (possibly
+  // marked) dimension in that family.
+  let hasIndexRef = false
+  let hasDimRef = false
+  const visit = node => {
+    if (node === null || typeof node !== 'object') {
+      return
+    }
+    if (Array.isArray(node)) {
+      node.forEach(visit)
+      return
+    }
+    if (node.kind === 'variable-ref' && node.varId === varName && node.subscriptRefs) {
+      for (const subRef of node.subscriptRefs) {
+        // Remove the mark from a marked dimension (e.g., `_dima!`)
+        const subId = subRef.subId.replace('!', '')
+        if (sub(subId)?.family === familyId) {
+          if (isIndex(subId)) {
+            hasIndexRef = true
+          } else {
+            hasDimRef = true
+          }
+        }
+      }
+    }
+    for (const key of Object.keys(node)) {
+      visit(node[key])
+    }
+  }
+  const eqn = referencingVar.parsedEqn
+  if (eqn?.rhs?.kind === 'expr') {
+    visit(eqn.rhs.expr)
+  }
+  return hasIndexRef && !hasDimRef
+}
 function varWithName(varName) {
   // Find a variable with the given name in canonical form.
   // The function returns the first instance of a non-apply-to-all variable with the name.
@@ -1406,6 +1494,7 @@ export default {
   refIdForVar,
   refIdsWithName,
   resetModelState,
+  separationCandidatesForCycle,
   splitRefId,
   variables,
   varIndexInfo,

@@ -1,3 +1,7 @@
+import { resetHelperState } from '../_shared/helpers.js'
+import { resetSubscriptsAndDimensions } from '../_shared/subscript.js'
+import Model from '../model/model.js'
+
 import { generateC } from './gen-code-c.js'
 import { generateJS } from './gen-code-js.js'
 
@@ -29,9 +33,59 @@ export function generateCode(parsedModel, opts) {
   // TODO: For now we only allow for either generateJS or generateC, but not both at
   // the same time.  Maybe we should make it possible to generate both with a single
   // call.
-  if (opts.operations.includes('generateJS')) {
-    return generateJS(parsedModel, opts)
-  } else {
-    return generateC(parsedModel, opts)
+  const generate = () => {
+    if (opts.operations.includes('generateJS')) {
+      return generateJS(parsedModel, opts)
+    } else {
+      return generateC(parsedModel, opts)
+    }
+  }
+
+  // A dependency cycle detected during toposort can be a false cycle caused by a
+  // variable that keeps a dimension for which its references are defined element by
+  // element (see `separationCandidatesForCycle` in model.js).  When a cycle is
+  // detected, add the separation dims proposed by the cycle analysis to the spec
+  // (as if they had been listed in `specialSeparationDims` in the spec file) and
+  // retry code generation.
+  const maxAttempts = 20
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return generate()
+    } catch (e) {
+      if (!e.cycle || !opts.spec || attempt >= maxAttempts) {
+        throw e
+      }
+      if (process.env.SDE_PRINT_CYCLES === '1') {
+        console.error(`Cycle found on attempt ${attempt}:\n${e.cycle.join(' →\n')}\n`)
+      }
+      // Find variables in the cycle that can be separated to break the cycle
+      const candidates = Model.separationCandidatesForCycle(e.cycle)
+      const specialSeparationDims = opts.spec.specialSeparationDims || {}
+      let addedDims = false
+      for (const [varName, dimIds] of candidates) {
+        let dims = specialSeparationDims[varName] || []
+        if (!Array.isArray(dims)) {
+          dims = [dims]
+        }
+        for (const dimId of dimIds) {
+          if (!dims.includes(dimId)) {
+            dims.push(dimId)
+            addedDims = true
+            console.error(`Breaking a dependency cycle by separating ${varName} on dimension ${dimId}`)
+          }
+        }
+        specialSeparationDims[varName] = dims
+      }
+      if (!addedDims) {
+        // The cycle analysis did not find any new separations, so the cycle cannot
+        // be broken this way; report it to the user
+        throw e
+      }
+      opts.spec.specialSeparationDims = specialSeparationDims
+      // Reset the model state and retry code generation with the added separations
+      resetHelperState()
+      resetSubscriptsAndDimensions()
+      Model.resetModelState()
+    }
   }
 }

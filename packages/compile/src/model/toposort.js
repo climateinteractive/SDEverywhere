@@ -42,7 +42,12 @@ function toposort(nodes, edges) {
       } catch (_) {
         nodeRep = ''
       }
-      throw new Error('Found cyclic dependency during toposort:\n' + [...predecessors].join(' →\n') + ' →' + nodeRep)
+      var chain = [...predecessors]
+      var error = new Error('Found cyclic dependency during toposort:\n' + chain.join(' →\n') + ' →' + nodeRep)
+      // Attach the cycle itself (the portion of the dependency chain from the first
+      // occurrence of the repeated node) so that callers can analyze it.
+      error.cycle = chain.slice(chain.indexOf(node))
+      throw error
     }
 
     if (!nodesHash.has(node)) {
