@@ -751,22 +751,23 @@ function splitRefId(refId) {
   }
   return { varName, subscripts }
 }
-function separationCandidatesForCycle(cycle) {
-  // Analyze a dependency cycle reported by toposort and find variables that could be
-  // separated into individual index instances to break the cycle.  A false cycle can
-  // appear when a variable keeps a dimension for which the variables it references are
-  // defined (or separated) element by element.  The whole-array variable then depends
-  // on all elements of its references, merging the otherwise independent dependency
-  // chains of each element into a single node.  Separating the variable on that
-  // dimension restores the element-level dependency structure that Vensim uses when
-  // it orders equations.
+function separationCandidatesForCycles(cycles, outgoingEdges) {
+  // Analyze the dependency cycle clusters reported by toposort and find variables that
+  // could be separated into individual index instances to break the cycles.  A false
+  // cycle can appear when a variable keeps a dimension for which the variables it
+  // references are defined (or separated) element by element.  The whole-array variable
+  // then depends on all elements of its references, merging the otherwise independent
+  // dependency chains of each element into a single node.  Separating the variable on
+  // that dimension restores the element-level dependency structure that Vensim uses
+  // when it orders equations.
   //
-  // For each edge v → next in the cycle, propose separating v on a dimension D when
-  // the next variable's refId carries an individual index in the family of D and the
-  // variable that precedes v in the cycle references v by an individual element of D
+  // Each cycle cluster is a strongly connected component of the dependency graph.
+  // For each variable v in a cluster, propose separating v on a dimension D when a
+  // successor of v in the cluster carries an individual index in the family of D and
+  // a predecessor of v in the cluster references v by an individual element of D
   // (so that the separation actually removes the edge into the other elements of v).
   // If no candidate satisfies the predecessor condition, fall back to the candidates
-  // that satisfy the first condition alone.
+  // that satisfy the successor condition alone.
   // The result is a map from variable name to the set of dimension IDs to separate on.
   const candidates = new Map()
   const looseCandidates = new Map()
@@ -778,36 +779,130 @@ function separationCandidatesForCycle(cycle) {
     }
     dimIds.add(dimId)
   }
-  const n = cycle.length
-  for (let i = 0; i < n; i++) {
-    const v = varWithRefId(cycle[i])
-    if (!v || !v.subscripts || v.subscripts.length === 0) {
-      continue
-    }
-    const nextRefId = cycle[(i + 1) % n]
-    const nextIndexFamilies = new Set(
-      splitRefId(nextRefId)
-        .subscripts.filter(isIndex)
-        .map(subId => sub(subId).family)
-    )
-    const prevVar = varWithRefId(cycle[(i - 1 + n) % n])
-    for (const subId of v.subscripts) {
-      if (isDimension(subId) && nextIndexFamilies.has(sub(subId).family)) {
-        addCandidate(looseCandidates, v.varName, subId)
-        if (prevVar && refsElementOfFamily(prevVar, v.varName, sub(subId).family)) {
-          addCandidate(candidates, v.varName, subId)
+  // The set of (variable name, family) pairs accepted as candidates so far; a variable
+  // that will be separated on a family satisfies the predecessor condition for the
+  // variables it references, so acceptance is iterated to a fixpoint below
+  const acceptedFamilies = new Set()
+  for (const scc of cycles) {
+    const inScc = new Set(scc)
+    // Build a predecessor map for the nodes in this cluster
+    const predsOf = new Map(scc.map(refId => [refId, []]))
+    for (const refId of scc) {
+      for (const succ of outgoingEdges.get(refId) || []) {
+        if (inScc.has(succ)) {
+          predsOf.get(succ).push(refId)
         }
       }
     }
+    // Collect the possible (v, D) pairs for this cluster
+    const sccLooseCandidates = []
+    for (const refId of scc) {
+      const v = varWithRefId(refId)
+      if (!v || !v.subscripts || v.subscripts.length === 0) {
+        continue
+      }
+      // Find the families of the individual indices carried by the successors
+      // of this node within the cluster
+      const succIndexFamilies = new Set()
+      for (const succ of outgoingEdges.get(refId) || []) {
+        if (inScc.has(succ)) {
+          for (const subId of splitRefId(succ).subscripts) {
+            if (isIndex(subId)) {
+              succIndexFamilies.add(sub(subId).family)
+            }
+          }
+        }
+      }
+      for (const subId of v.subscripts) {
+        if (isDimension(subId) && succIndexFamilies.has(sub(subId).family)) {
+          // Skip the candidate when every predecessor references this variable
+          // exclusively through a marked full dimension (e.g., `SUM(x[DimA!])`):
+          // such references span all elements regardless of separation, so
+          // separating this variable can never narrow the incoming edges
+          const familyId = sub(subId).family
+          const possiblyNarrowing = predsOf.get(refId).some(predRefId => {
+            const pv = varWithRefId(predRefId)
+            if (!pv) {
+              return false
+            }
+            const refKinds = elementRefKinds(pv, v.varName, familyId)
+            return refKinds.elementRef || refKinds.fullDimRef || !refKinds.markedFullDimRef
+          })
+          if (possiblyNarrowing) {
+            sccLooseCandidates.push({ refId, v, dimId: subId })
+          }
+        }
+      }
+    }
+    // Accept the candidates that satisfy the predecessor condition, iterating to a
+    // fixpoint since accepting one variable can qualify the variables it references
+    const sccAccepted = new Set()
+    let changed
+    do {
+      changed = false
+      for (const c of sccLooseCandidates) {
+        if (sccAccepted.has(c)) {
+          continue
+        }
+        const familyId = sub(c.dimId).family
+        const predQualifies = predRefId => {
+          const pv = varWithRefId(predRefId)
+          if (!pv) {
+            return false
+          }
+          const refKinds = elementRefKinds(pv, c.v.varName, familyId)
+          if (refKinds.markedFullDimRef) {
+            // The predecessor operates on all elements in the family (e.g., in a
+            // `SUM` expression), so separating this variable does not narrow the edge
+            return false
+          }
+          if (refKinds.elementRef) {
+            // The predecessor references this variable by an individual element
+            // (or through a subdimension, which Vensim maps element by element)
+            return true
+          }
+          if (refKinds.fullDimRef) {
+            // The predecessor references this variable through the full dimension;
+            // that reference narrows to an element when the predecessor itself is
+            // (or will be) separated on the same family
+            if (pv.subscripts?.some(s => isIndex(s) && sub(s).family === familyId)) {
+              return true
+            }
+            return acceptedFamilies.has(`${pv.varName}|${familyId}`)
+          }
+          return false
+        }
+        if (predsOf.get(c.refId).some(predQualifies)) {
+          sccAccepted.add(c)
+          acceptedFamilies.add(`${c.v.varName}|${familyId}`)
+          addCandidate(candidates, c.v.varName, c.dimId)
+          changed = true
+        }
+      }
+    } while (changed)
+    if (sccAccepted.size === 0) {
+      // No candidate in this cluster satisfied the predecessor condition, so fall
+      // back to the candidates that satisfied the successor condition alone
+      for (const c of sccLooseCandidates) {
+        addCandidate(looseCandidates, c.v.varName, c.dimId)
+      }
+    }
   }
-  return candidates.size > 0 ? candidates : looseCandidates
+  if (candidates.size > 0) {
+    return candidates
+  }
+  return looseCandidates
 }
-function refsElementOfFamily(referencingVar, varName, familyId) {
-  // Return true when the given variable's parsed equation references the named variable
-  // with an individual subscript index in the given family and never with a (possibly
-  // marked) dimension in that family.
-  let hasIndexRef = false
-  let hasDimRef = false
+function elementRefKinds(referencingVar, varName, familyId) {
+  // Examine how the given variable's parsed equation references the named variable
+  // in subscript positions of the given family:
+  // - `elementRef` is set when a reference uses an individual index or a subdimension
+  //   (Vensim maps subdimension references element by element, as in the common
+  //   `x[current pass] = f(x[preceeding pass])` iteration idiom)
+  // - `fullDimRef` is set when a reference uses the full dimension for the family
+  // - `markedFullDimRef` is set when a reference uses the full dimension marked for
+  //   vector operations (e.g., `SUM(x[DimA!])`), which always spans all elements
+  const kinds = { elementRef: false, fullDimRef: false, markedFullDimRef: false }
   const visit = node => {
     if (node === null || typeof node !== 'object') {
       return
@@ -819,13 +914,18 @@ function refsElementOfFamily(referencingVar, varName, familyId) {
     if (node.kind === 'variable-ref' && node.varId === varName && node.subscriptRefs) {
       for (const subRef of node.subscriptRefs) {
         // Remove the mark from a marked dimension (e.g., `_dima!`)
+        const marked = subRef.subId.includes('!')
         const subId = subRef.subId.replace('!', '')
-        if (sub(subId)?.family === familyId) {
-          if (isIndex(subId)) {
-            hasIndexRef = true
-          } else {
-            hasDimRef = true
-          }
+        const s = sub(subId)
+        if (s?.family !== familyId) {
+          continue
+        }
+        if (isIndex(subId) || s.size < sub(familyId).size) {
+          kinds.elementRef = true
+        } else if (marked) {
+          kinds.markedFullDimRef = true
+        } else {
+          kinds.fullDimRef = true
         }
       }
     }
@@ -837,7 +937,7 @@ function refsElementOfFamily(referencingVar, varName, familyId) {
   if (eqn?.rhs?.kind === 'expr') {
     visit(eqn.rhs.expr)
   }
-  return hasIndexRef && !hasDimRef
+  return kinds
 }
 function varWithName(varName) {
   // Find a variable with the given name in canonical form.
@@ -1494,7 +1594,7 @@ export default {
   refIdForVar,
   refIdsWithName,
   resetModelState,
-  separationCandidatesForCycle,
+  separationCandidatesForCycles,
   splitRefId,
   variables,
   varIndexInfo,

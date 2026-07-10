@@ -52,14 +52,14 @@ export function generateCode(parsedModel, opts) {
     try {
       return generate()
     } catch (e) {
-      if (!e.cycle || !opts.spec || attempt >= maxAttempts) {
+      if (!e.cycles || !opts.spec || attempt >= maxAttempts) {
         throw e
       }
       if (process.env.SDE_PRINT_CYCLES === '1') {
         console.error(`Cycle found on attempt ${attempt}:\n${e.cycle.join(' →\n')}\n`)
       }
-      // Find variables in the cycle that can be separated to break the cycle
-      const candidates = Model.separationCandidatesForCycle(e.cycle)
+      // Find variables in the cycle clusters that can be separated to break the cycles
+      const candidates = Model.separationCandidatesForCycles(e.cycles, e.outgoingEdges)
       const specialSeparationDims = opts.spec.specialSeparationDims || {}
       let addedDims = false
       for (const [varName, dimIds] of candidates) {
