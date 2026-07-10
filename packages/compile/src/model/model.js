@@ -3,7 +3,7 @@ import * as R from 'ramda'
 import { canonicalVarId, toPrettyString } from '@sdeverywhere/parse'
 
 import B from '../_shared/bufx.js'
-import { decanonicalize, isIterable, strlist, vlog, vsort } from '../_shared/helpers.js'
+import { decanonicalize, isIterable, resetHelperState, strlist, vlog, vsort } from '../_shared/helpers.js'
 import {
   addIndex,
   allAliases,
@@ -11,6 +11,7 @@ import {
   indexNamesForSubscript,
   isDimension,
   isIndex,
+  resetSubscriptsAndDimensions,
   sub,
   subscriptFamilies
 } from '../_shared/subscript.js'
@@ -60,6 +61,12 @@ function resetModelState() {
  * Note that this function currently does not return anything and instead stores the parsed subscript
  * definitions in the `subscript` module and the parsed/analyzed variables in this module.
  *
+ * After a full read, the variables are sorted in dependency order (and the sorted lists are cached
+ * for later use by code generation and variable listings).  A false cyclic dependency detected
+ * during sorting (one that Vensim's element-by-element evaluation order would not produce) is
+ * repaired by separating the variables identified by the cycle analysis and re-reading the model,
+ * as if those variables had been listed in `specialSeparationDims` in the spec file.
+ *
  * TODO: FIX TYPE
  * @param {*} parsedModel The parsed model structure.
  * @param {*} spec The parsed `spec.json` object.
@@ -71,6 +78,70 @@ function resetModelState() {
  * @param {*} [opts] An optional object used by tests to stop the read process after a specific phase.
  */
 function read(parsedModel, spec, extData, directData, modelDirname, opts) {
+  const maxAttempts = 20
+  for (let attempt = 1; ; attempt++) {
+    try {
+      readModel(parsedModel, spec, extData, directData, modelDirname, opts)
+      if (
+        opts?.stopAfterReadSubscripts ||
+        opts?.stopAfterResolveSubscripts ||
+        opts?.stopAfterReadVariables ||
+        opts?.stopAfterAnalyze
+      ) {
+        // The read was stopped early (used by tests), so skip the dependency sorting
+        return
+      }
+      // Sort the variables in dependency order now so that any cyclic dependency is
+      // detected here; the sorted lists are cached for later use
+      auxVars()
+      levelVars()
+      initVars()
+      return
+    } catch (e) {
+      if (!e.cycles || !spec || attempt >= maxAttempts) {
+        throw e
+      }
+      if (process.env.SDE_PRINT_CYCLES === '1') {
+        console.error(`Cycle found on attempt ${attempt}:\n${e.cycle.join(' →\n')}\n`)
+      }
+      // Find variables in the cycle clusters that can be separated to break the cycles
+      const candidates = separationCandidatesForCycles(e.cycles, e.outgoingEdges)
+      const specialSeparationDims = spec.specialSeparationDims || {}
+      let addedDims = false
+      for (const [varName, dimIds] of candidates) {
+        let dims = specialSeparationDims[varName] || []
+        if (!Array.isArray(dims)) {
+          dims = [dims]
+        }
+        for (const dimId of dimIds) {
+          if (!dims.includes(dimId)) {
+            dims.push(dimId)
+            addedDims = true
+            if (process.env.SDE_PRINT_CYCLES === '1') {
+              console.error(`Breaking a dependency cycle by separating ${varName} on dimension ${dimId}`)
+            }
+          }
+        }
+        specialSeparationDims[varName] = dims
+      }
+      if (!addedDims) {
+        // The cycle analysis did not find any new separations, so the cycle cannot
+        // be broken this way; report it to the user
+        throw e
+      }
+      spec.specialSeparationDims = specialSeparationDims
+      // Reset the model state and read the model again with the added separations
+      resetHelperState()
+      resetSubscriptsAndDimensions()
+      resetModelState()
+    }
+  }
+}
+
+/**
+ * Perform a single pass of the model read process (see `read` above).
+ */
+function readModel(parsedModel, spec, extData, directData, modelDirname, opts) {
   // Some arrays need to be separated into variables with individual indices to
   // prevent eval cycles. They are manually added to the spec file.
   let specialSeparationDims = spec.specialSeparationDims
@@ -1594,7 +1665,6 @@ export default {
   refIdForVar,
   refIdsWithName,
   resetModelState,
-  separationCandidatesForCycles,
   splitRefId,
   variables,
   varIndexInfo,
