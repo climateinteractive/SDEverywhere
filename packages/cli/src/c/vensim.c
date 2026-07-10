@@ -735,6 +735,80 @@ double* _ALLOCATE_BY_PRIORITY(
 }
 
 //
+// INVERT MATRIX
+//
+double* _INVERT_MATRIX(double* matrix, size_t n) {
+  // Invert the n x n matrix using Gauss-Jordan elimination with partial pivoting.
+  // The input matrix is not modified. The result buffer is reused across calls
+  // and grown as needed, so the caller must copy the values out before the next call.
+  static double* work = NULL;
+  static double* result = NULL;
+  static size_t max_n = 0;
+  if (n > max_n) {
+    work = realloc(work, n * 2 * n * sizeof(double));
+    result = realloc(result, n * n * sizeof(double));
+    max_n = n;
+  }
+  // Build the augmented matrix [A | I], with each row of width 2n.
+  size_t w = 2 * n;
+  for (size_t i = 0; i < n; i++) {
+    for (size_t j = 0; j < n; j++) {
+      work[i * w + j] = matrix[i * n + j];
+      work[i * w + n + j] = (i == j) ? 1.0 : 0.0;
+    }
+  }
+  for (size_t k = 0; k < n; k++) {
+    // Find the pivot row with the largest absolute value in column k.
+    size_t pivot = k;
+    double max = fabs(work[k * w + k]);
+    for (size_t i = k + 1; i < n; i++) {
+      double v = fabs(work[i * w + k]);
+      if (v > max) {
+        max = v;
+        pivot = i;
+      }
+    }
+    if (max == 0.0) {
+      // The matrix is singular; fill the result with _NA_ values.
+      for (size_t i = 0; i < n * n; i++) {
+        result[i] = _NA_;
+      }
+      return result;
+    }
+    if (pivot != k) {
+      for (size_t j = 0; j < w; j++) {
+        double tmp = work[k * w + j];
+        work[k * w + j] = work[pivot * w + j];
+        work[pivot * w + j] = tmp;
+      }
+    }
+    // Scale the pivot row so the pivot element becomes 1.
+    double p = work[k * w + k];
+    for (size_t j = 0; j < w; j++) {
+      work[k * w + j] /= p;
+    }
+    // Eliminate column k from all other rows.
+    for (size_t i = 0; i < n; i++) {
+      if (i != k) {
+        double f = work[i * w + k];
+        if (f != 0.0) {
+          for (size_t j = 0; j < w; j++) {
+            work[i * w + j] -= f * work[k * w + j];
+          }
+        }
+      }
+    }
+  }
+  // The right half of the augmented matrix now holds the inverse.
+  for (size_t i = 0; i < n; i++) {
+    for (size_t j = 0; j < n; j++) {
+      result[i * n + j] = work[i * w + n + j];
+    }
+  }
+  return result;
+}
+
+//
 // DELAY FIXED
 //
 FixedDelay* __new_fixed_delay(FixedDelay* fixed_delay, double delay_time, double initial_value) {
