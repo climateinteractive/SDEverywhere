@@ -1,0 +1,23 @@
+#
+# Keeps the GitHub Actions used in `.github/workflows` up to date.
+#
+# The actions in our workflows are pinned to specific commit hashes (with the
+# version in a trailing comment) so that a moved tag can't silently change what
+# runs CI.  Dependabot updates both the hash and the comment for us, which
+# means the pins don't go stale.
+#
+
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    commit-message:
+      # Match the commit message conventions used in this repo
+      prefix: build
+    groups:
+      # Open a single PR for all action updates rather than one PR per action
+      github-actions:
+        patterns:
+          - '*'
