@@ -1,15 +1,20 @@
 #include "sde.h"
 
 // ALLOCATE AVAILABLE distributes a resource among requesters using a priority
-// profile for each requester. The priority profile specifies a complementary
-// cumulative distribution function based on the normal distribution. The shape
-// of the distribution is given by the priority (indicating the midpoint) and
-// the width (spread). The search space for allocations that match the
-// available resource is the x axis. A greater priority pushes the midpoint of
-// the distribution to the right, resulting in more area under the curve at a
-// given x and a larger allocation for that requester.
+// profile for each requester. The curve type specifies a complementary
+// cumulative distribution function. The shape of the distribution is given by
+// the priority (indicating the midpoint) and the width (spread). The search
+// space for allocations that match the available resource is the x axis. A
+// greater priority pushes the midpoint of the distribution to the right,
+// resulting in more area under the curve at a given x and a larger allocation
+// for that requester.
 
-// Return true if the value is near zero.
+// The number of agents receiving allocations is limited by this buffer size.
+#define ALLOCATIONS_BUFSIZE 80
+// Define this to print debug info during the allocation process.
+// #define PRINT_ALLOCATIONS_DEBUG_INFO
+
+// Return true if the value is near zero up to the epsilon tolerance.
 static inline bool __isZero(double value) { return fabs(value) < _epsilon; }
 // Compute the absolute difference when x or y is near zero, otherwise compute
 // the relative difference, with y considered as the baseline.
@@ -24,15 +29,26 @@ static inline double __difference(double x, double y) {
 }
 // Return true if the values are equal up to the tolerance.
 static inline bool __isEqual(double x, double y) { return __difference(x, y) < _epsilon; }
+// Clamp x to the interval [0,1].
+static inline double __clamp01(double x) {
+  if (x < 0.0) return 0.0;
+  if (x > 1.0) return 1.0;
+  return x;
+}
+// Priority profiles are arrays of 4 elements.
+enum { PTYPE, PPRIORITY, PWIDTH, PEXTRA };
+// Priority curve types in profiles specify a cumulative distribution function.
+enum { PTYPE_FIXED, PTYPE_RECTANGULAR, PTYPE_TRIANGULAR, PTYPE_NORMAL, PTYPE_EXPONENTIAL };
+// Access the doubly-subscripted priority profiles array by pointer.
+static inline double __get_pp(double* pp, size_t iProfile, size_t iElement) {
+  const int NUM_PP = PEXTRA - PTYPE + 1;
+  return *(pp + iProfile * NUM_PP + iElement);
+}
 
 // Normal distribution
-double __pdf_normal(double x, double mu, double sigma) {
-  double base = 1.0 / (sigma * sqrt(2.0 * M_PI));
-  double exponent = -pow(x - mu, 2.0) / (2.0 * sigma * sigma);
-  return base * exp(exponent);
-}
-double __cdf_unit_normal_P(double x) {
-  // Zelen & Severo (1964) in Handbook Of Mathematical Functions, Abramowitz and Stegun, 26.2.17
+static double __cdf_unit_normal(double x) {
+  // Ref: Zelen & Severo (1964) in Handbook Of Mathematical Functions,
+  // Abramowitz and Stegun, 26.2.17
   double p = 0.2316419;
   double b[5] = {0.31938153, -0.356563782, 1.781477937, -1.821255978, 1.330274429};
   double t = 1.0 / (1.0 + p * x);
@@ -42,29 +58,87 @@ double __cdf_unit_normal_P(double x) {
     y += b[i] * k;
     k *= t;
   }
-  return 1.0 - __pdf_normal(x, 0.0, 1.0) * y;
+  static const double base = 0.39894228040143267794;  // 1/sqrt(2*pi)
+  return 1.0 - (base * exp(-(x * x) / 2.0)) * y;
 }
-double __cdf_unit_normal_Q(double x) {
-  // Calculate the unit cumulative distribution function from x to +∞, often known as Q(x).
-  return x >= 0.0 ? 1.0 - __cdf_unit_normal_P(x) : __cdf_unit_normal_P(-x);
+static double __cdf_normal(double x, double mu, double sigma) {
+  if (x < mu) {
+    return 1.0 - __cdf_unit_normal(-(x - mu) / sigma);
+  } else {
+    return __cdf_unit_normal((x - mu) / sigma);
+  }
 }
-double __cdf_normal_Q(double x, double sigma) { return __cdf_unit_normal_Q(x / sigma); }
-// Access the doubly-subscripted priority profiles array by pointer.
-enum { PTYPE, PPRIORITY, PWIDTH, PEXTRA };
-double __get_pp(double* pp, size_t iProfile, size_t iElement) {
-  const int NUM_PP = PEXTRA - PTYPE + 1;
-  return *(pp + iProfile * NUM_PP + iElement);
+static double __cdf_normal_Q(double x, double mu, double sigma) { return 1.0 - __cdf_normal(x, mu, sigma); }
+// Rectangular CDF on [0,1] ramping over [a,b]
+static double __cdf_rectangular(double x, double priority, double width) {
+  double a = priority - width / 2.0;
+  double b = priority + width / 2.0;
+  if (b <= a) return (x <= 0.0) ? 0.0 : 1.0;
+  if (x <= a) return 0.0;
+  if (x >= b) return 1.0;
+  return __clamp01((x - a) / (b - a));
 }
-#define ALLOCATIONS_BUFSIZE 80
-// #define PRINT_ALLOCATIONS_DEBUG_INFO
+static double __cdf_rectangular_Q(double x, double priority, double width) {
+  return 1.0 - __cdf_rectangular(x, priority, width);
+}
+// Triangular CDF extending from a to b
+static double __cdf_triangular(double x, double priority, double width) {
+  double a = priority - width / 2.0;
+  double b = priority + width / 2.0;
+  double xLeft = fmin(a, b);
+  double xRight = fmax(a, b);
+  double mode = (xLeft + xRight) / 2.0;
+  if (x <= xLeft) return 0.0;
+  if (x >= xRight) return 1.0;
+  double c1 = (xRight - xLeft) * (mode - xLeft);
+  double c2 = (xRight - xLeft) * (xRight - mode);
+  if (x <= mode) return __clamp01(((x - xLeft) * (x - xLeft)) / c1);
+  return __clamp01(1.0 - ((xRight - x) * (xRight - x)) / c2);
+}
+static double __cdf_triangular_Q(double x, double priority, double width) {
+  return 1.0 - __cdf_triangular(x, priority, width);
+}
+// Exponential CDF using the Laplace distribution
+static double __cdf_exponential(double x, double mu, double b) {
+  if (x < mu) {
+    return 0.5 * exp((x - mu) / b);
+  } else {
+    return 1.0 - 0.5 * exp(-(x - mu) / b);
+  }
+}
+static double __cdf_exponential_Q(double x, double mu, double b) { return 1.0 - __cdf_exponential(x, mu, b); }
+
+// Return the fraction of the quantity allocated at x for the given priority profile.
+static double __allocate_by_priority(int ptype, double x, double priority, double width, bool is_demand) {
+  switch (ptype) {
+    case PTYPE_RECTANGULAR:
+      return is_demand ? __cdf_rectangular_Q(x, priority, width) : __cdf_rectangular(x, priority, width);
+    case PTYPE_TRIANGULAR:
+      return is_demand ? __cdf_triangular_Q(x, priority, width) : __cdf_triangular(x, priority, width);
+    case PTYPE_NORMAL:
+      return is_demand ? __cdf_normal_Q(x, priority, width) : __cdf_normal(x, priority, width);
+    case PTYPE_EXPONENTIAL:
+      return is_demand ? __cdf_exponential_Q(x, priority, width) : __cdf_exponential(x, priority, width);
+    default:
+      fprintf(stderr, "Error: unknown priority type %d\n", ptype);
+      return 0.0;
+  }
+}
+// Allocate the available resource to the requesters using their priority profiles.
 double* _ALLOCATE_AVAILABLE(
     double* requested_quantities, double* priority_profiles, double available_resource, size_t num_requesters) {
   // requested_quantities points to an array of length num_requesters.
   // priority_profiles points to an array of num_requesters arrays of length 4.
   static double allocations[ALLOCATIONS_BUFSIZE];
   if (num_requesters > ALLOCATIONS_BUFSIZE) {
-    fprintf(stderr, "_ALLOCATE_AVAILABLE num_requesters exceeds internal maximum size of %d\n", ALLOCATIONS_BUFSIZE);
-    return NULL;
+    fprintf(
+        stderr, "Error: _ALLOCATE_AVAILABLE num_requesters exceeds internal maximum size of %d\n", ALLOCATIONS_BUFSIZE);
+    memset(allocations, 0, sizeof(allocations));
+    return allocations;
+  }
+  if (available_resource <= 0.0) {
+    memset(allocations, 0, sizeof(allocations));
+    return allocations;
   }
   // Limit the search to this number of steps.
   const size_t max_steps = 100;
@@ -78,13 +152,13 @@ double* _ALLOCATE_AVAILABLE(
   fprintf(stderr, "\n_ALLOCATE_AVAILABLE time=%g num_requesters=%zu, available_resource=%f, total_requests=%f\n", _time,
       num_requesters, available_resource, total_requests);
   for (size_t i = 0; i < num_requesters; i++) {
-    fprintf(stderr, "[%2zu] requested_quantities=%17f  mean=%8g  sigma=%8g\n", i, requested_quantities[i],
+    fprintf(stderr, "[%2zu] requested_quantities=%17f  priority=%8g  width=%8g\n", i, requested_quantities[i],
         __get_pp(priority_profiles, i, PPRIORITY), __get_pp(priority_profiles, i, PWIDTH));
   }
 #endif
   // Find the minimum and maximum means in the priority curves.
   double min_mean = DBL_MAX;
-  double max_mean = DBL_MIN;
+  double max_mean = -DBL_MAX;
   for (size_t i = 0; i < num_requesters; i++) {
     min_mean = fmin(__get_pp(priority_profiles, i, PPRIORITY), min_mean);
     max_mean = fmax(__get_pp(priority_profiles, i, PPRIORITY), max_mean);
@@ -101,14 +175,22 @@ double* _ALLOCATE_AVAILABLE(
     // Calculate allocations for each requester.
     for (size_t i = 0; i < num_requesters; i++) {
       if (requested_quantities[i] > 0.0) {
-        double mean = __get_pp(priority_profiles, i, PPRIORITY);
-        double sigma = __get_pp(priority_profiles, i, PWIDTH);
-        // The allocation is the area under the requester's normal curve from x out to +∞
-        // scaled by the size of the request. We integrate over the right-hand side of the
-        // normal curve so that higher means have higher priority, that is, are allocated more.
-        // The unit cumulative distribution function integrates to one over all x,
-        // so we simply multiply by a constant to scale the area under the curve.
-        allocations[i] = requested_quantities[i] * __cdf_normal_Q(x - mean, sigma);
+        int ptype = (int)__get_pp(priority_profiles, i, PTYPE);
+        if (ptype == PTYPE_FIXED || __isEqual(min_mean, max_mean)) {
+          // The fixed priority type allocates proportionally to each request.
+          // This is also the fallback allocation when all priorities are equal.
+          if (total_requests > available_resource) {
+            allocations[i] = (requested_quantities[i] / total_requests) * available_resource;
+          } else {
+            allocations[i] = requested_quantities[i];
+          }
+        } else {
+          // Calculate the allocation using the specified priority curve.
+          double priority = __get_pp(priority_profiles, i, PPRIORITY);
+          double width = __get_pp(priority_profiles, i, PWIDTH);
+          double fraction = __allocate_by_priority(ptype, x, priority, width, true);
+          allocations[i] = requested_quantities[i] * fraction;
+        }
       } else {
         allocations[i] = 0.0;
       }

@@ -1,0 +1,108 @@
+alloc1[A1]
+0	20
+1	20
+2	20
+3	20
+4	20
+alloc1[A2]
+0	30
+1	30
+2	30
+3	30
+4	30
+alloc2[A1]
+0	40
+1	40
+2	40
+3	40
+4	40
+alloc2[A2]
+0	60
+1	60
+2	60
+3	60
+4	60
+alloc3[A1]
+0	40
+1	0
+2	0
+3	3.87908
+4	11.863
+alloc3[A2]
+0	60
+1	100
+2	99.9998
+3	96.1207
+4	88.1368
+alloc4[A1]
+0	80
+1	50
+2	49.9999
+3	57.4714
+4	58.6115
+alloc4[A2]
+0	20
+1	50
+2	50
+3	42.5285
+4	41.3884
+available
+0	100
+FINAL TIME
+0	4
+INITIAL TIME
+0	0
+priority curve type
+0	0
+1	1
+2	2
+3	3
+4	4
+profile[A1,ptype]
+0	0
+1	1
+2	2
+3	3
+4	4
+profile[A1,ppriority]
+0	0.1
+profile[A1,pwidth]
+0	0.5
+profile[A1,pextra]
+0	0
+profile[A2,ptype]
+0	0
+1	1
+2	2
+3	3
+4	4
+profile[A2,ppriority]
+0	0.9
+profile[A2,pwidth]
+0	0.5
+profile[A2,pextra]
+0	0
+request1[A1]
+0	20
+request1[A2]
+0	30
+request2[A1]
+0	40
+request2[A2]
+0	60
+request3[A1]
+0	200
+request3[A2]
+0	300
+request4[A1]
+0	200
+request4[A2]
+0	50
+SAVEPER
+0	1
+1	1
+2	1
+3	1
+4	1
+TIME STEP
+0	1
