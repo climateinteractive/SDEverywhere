@@ -9,6 +9,15 @@
 // resulting in more area under the curve at a given x and a larger allocation
 // for that requester.
 
+// FIND MARKET PRICE balances supply and demand by finding a price that
+// results in total allocations that are as close as possible to total supply.
+// The price can then be applied in DEMAND AT PRICE and SUPPLY AT PRICE to
+// determine individual allocations. Note that the priority curve for demand
+// increases allocations with decreasing price, while the priority curve for
+// supply increases allocations with increasing price. This is modeled with
+// a complementary cumulative distribution function for demand and a
+// cumulative distribution function for supply.
+
 // The number of agents receiving allocations is limited by this buffer size.
 #define ALLOCATIONS_BUFSIZE 80
 // Define this to print debug info during the allocation process.
@@ -124,6 +133,37 @@ static double __allocate_by_priority(int ptype, double x, double priority, doubl
       return 0.0;
   }
 }
+// Compute allocations at the given price for either demanders or suppliers.
+// The is_demand flag is true when allocating demand (using the complementary CDF).
+// Set it false when allocating supply (using the CDF).
+static double* __allocations_at_price(double* quantities, double* profiles, double price, size_t n, bool is_demand) {
+  static double allocations[ALLOCATIONS_BUFSIZE];
+  if (n > ALLOCATIONS_BUFSIZE) {
+    fprintf(stderr, "Error: the number of allocation agents exceeds the maximum size of %d\n", ALLOCATIONS_BUFSIZE);
+    return allocations;
+  }
+  int ptype = (int)__get_pp(profiles, 0, PTYPE);
+  if (ptype == PTYPE_FIXED) {
+    // For the fixed priority type, simply echo the quantities as allocations.
+    for (size_t i = 0; i < n; i++) {
+      allocations[i] = quantities[i];
+    }
+  } else {
+    for (size_t i = 0; i < n; i++) {
+      if (quantities[i] > 0.0) {
+        ptype = (int)__get_pp(profiles, i, PTYPE);
+        double priority = __get_pp(profiles, i, PPRIORITY);
+        double width = __get_pp(profiles, i, PWIDTH);
+        double fraction = __allocate_by_priority(ptype, price, priority, width, is_demand);
+        allocations[i] = quantities[i] * fraction;
+      } else {
+        allocations[i] = 0.0;
+      }
+    }
+  }
+  return allocations;
+}
+
 // Allocate the available resource to the requesters using their priority profiles.
 double* _ALLOCATE_AVAILABLE(
     double* requested_quantities, double* priority_profiles, double available_resource, size_t num_requesters) {
@@ -236,6 +276,130 @@ double* _ALLOCATE_AVAILABLE(
 #endif
   // Return a pointer to the allocations array the caller passed with the results filled in.
   return allocations;
+}
+// Find a market price that balances supply and demand.
+double _FIND_MARKET_PRICE(double* demand_quantities, double* demand_profiles, double* supply_quantities,
+    double* supply_profiles, size_t num_demanders, size_t num_suppliers) {
+  // We assume that all demanders and suppliers use the same ptype.
+  static double demand_allocations[ALLOCATIONS_BUFSIZE];
+  static double supply_allocations[ALLOCATIONS_BUFSIZE];
+  if (num_demanders > ALLOCATIONS_BUFSIZE) {
+    fprintf(
+        stderr, "Error: _FIND_MARKET_PRICE num_demanders exceeds internal maximum size of %d\n", ALLOCATIONS_BUFSIZE);
+    return 0.0;
+  }
+  if (num_suppliers > ALLOCATIONS_BUFSIZE) {
+    fprintf(stderr, "_FIND_MARKET_PRICE num_suppliers exceeds internal maximum size of %d\n", ALLOCATIONS_BUFSIZE);
+    return 0.0;
+  }
+  double total_demand_allocations = 0.0;
+  double total_supply_allocations = 0.0;
+  // Set up the price search.
+  const size_t max_steps = 100;
+  double price = 0.0;
+  double min_price = DBL_MAX;
+  double max_price = DBL_MIN;
+  for (size_t i = 0; i < num_demanders; i++) {
+    min_price = fmin(__get_pp(demand_profiles, i, PPRIORITY), min_price);
+    max_price = fmax(__get_pp(demand_profiles, i, PPRIORITY), max_price);
+  }
+  for (size_t i = 0; i < num_suppliers; i++) {
+    min_price = fmin(__get_pp(supply_profiles, i, PPRIORITY), min_price);
+    max_price = fmax(__get_pp(supply_profiles, i, PPRIORITY), max_price);
+  }
+  double x = (max_price + min_price) / 2.0;
+  double delta = (max_price - min_price) / 2.0;
+  size_t num_steps = 0;
+  double last_delta_sign = 1.0;
+  size_t num_jumps_in_same_direction = 0;
+  // When a ptype is fixed, we need to set total allocations.
+  int demand_ptype = (int)__get_pp(demand_profiles, 0, PTYPE);
+  int supply_ptype = (int)__get_pp(supply_profiles, 0, PTYPE);
+  if (demand_ptype == PTYPE_FIXED || supply_ptype == PTYPE_FIXED) {
+    double total_demand = 0.0;
+    for (size_t i = 0; i < num_demanders; i++) {
+      total_demand += demand_quantities[i];
+    }
+    double total_supply = 0.0;
+    for (size_t i = 0; i < num_suppliers; i++) {
+      total_supply += supply_quantities[i];
+    }
+    // Clamp total allocations so we don't overallocate.
+    if (demand_ptype == PTYPE_FIXED) {
+      total_demand_allocations = fmin(total_demand, total_supply);
+    }
+    if (supply_ptype == PTYPE_FIXED) {
+      total_supply_allocations = fmin(total_supply, total_demand);
+    }
+  }
+  // Search for a price that matches demand with supply.
+  do {
+    if (demand_ptype != PTYPE_FIXED) {
+      // Allocate demand at the current price.
+      total_demand_allocations = 0.0;
+      for (size_t i = 0; i < num_demanders; i++) {
+        if (demand_quantities[i] > 0.0) {
+          double priority = __get_pp(demand_profiles, i, PPRIORITY);
+          double width = __get_pp(demand_profiles, i, PWIDTH);
+          double fraction = __allocate_by_priority(demand_ptype, x, priority, width, true);
+          demand_allocations[i] = demand_quantities[i] * fraction;
+          total_demand_allocations += demand_allocations[i];
+        } else {
+          demand_allocations[i] = 0.0;
+        }
+      }
+    }
+    if (supply_ptype != PTYPE_FIXED) {
+      // Allocate supply at the current price.
+      total_supply_allocations = 0.0;
+      for (size_t i = 0; i < num_suppliers; i++) {
+        if (supply_quantities[i] > 0.0) {
+          double priority = __get_pp(supply_profiles, i, PPRIORITY);
+          double width = __get_pp(supply_profiles, i, PWIDTH);
+          double fraction = __allocate_by_priority(supply_ptype, x, priority, width, false);
+          supply_allocations[i] = supply_quantities[i] * fraction;
+          total_supply_allocations += supply_allocations[i];
+        } else {
+          supply_allocations[i] = 0.0;
+        }
+      }
+    }
+    if (++num_steps >= max_steps) {
+      fprintf(stderr,
+          "_FIND_MARKET_PRICE failed to converge at time=%g with total_demand_allocations=%18f, "
+          "total_supply_allocations=%18f\n",
+          _time, total_demand_allocations, total_supply_allocations);
+      break;
+    }
+    double delta_sign = total_demand_allocations < total_supply_allocations ? -1.0 : 1.0;
+    num_jumps_in_same_direction = delta_sign == last_delta_sign ? num_jumps_in_same_direction + 1 : 0;
+    last_delta_sign = delta_sign;
+    delta = (delta_sign * fabs(delta)) / (num_jumps_in_same_direction < 3 ? 2.0 : 1.0);
+    price = x;
+    x += delta;
+#ifdef PRINT_ALLOCATIONS_DEBUG_INFO
+    fprintf(stderr,
+        "price=%-+14g delta=%-+14g diff%%=%-14g total_demand_allocations=%-+14g "
+        "total_supply_allocations=%-+14g\n",
+        price, delta, __difference(total_demand_allocations, total_supply_allocations) * 100.0,
+        total_demand_allocations, total_supply_allocations);
+#endif
+  } while (__difference(total_demand_allocations, total_supply_allocations) >= 2e-7);
+#ifdef PRINT_ALLOCATIONS_DEBUG_INFO
+  fprintf(stderr, "converged with diff%%=%g at time %g in %zu steps\n",
+      __difference(total_demand_allocations, total_supply_allocations) * 100.0, _time, num_steps);
+  fprintf(stderr, "total_demand_allocations=%f, total_supply_allocations=%f\n", total_demand_allocations,
+      total_supply_allocations);
+#endif
+  return price;
+}
+// Allocate the total demand among demanders at the given price according to their demand profiles.
+double* _DEMAND_AT_PRICE(double* demand_quantities, double* demand_profiles, double price, size_t num_demanders) {
+  return __allocations_at_price(demand_quantities, demand_profiles, price, num_demanders, true);
+}
+// Allocate the total supply among suppliers at the given price according to their supply profiles.
+double* _SUPPLY_AT_PRICE(double* supply_quantities, double* supply_profiles, double price, size_t num_suppliers) {
+  return __allocations_at_price(supply_quantities, supply_profiles, price, num_suppliers, false);
 }
 
 //
