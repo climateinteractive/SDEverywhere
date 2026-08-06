@@ -425,7 +425,7 @@ double __get_pp(double* pp, size_t iProfile, size_t iElement) {
   const int NUM_PP = PEXTRA - PTYPE + 1;
   return *(pp + iProfile * NUM_PP + iElement);
 }
-#define ALLOCATIONS_BUFSIZE 60
+#define ALLOCATIONS_BUFSIZE 80
 // #define PRINT_ALLOCATIONS_DEBUG_INFO
 double* _ALLOCATE_AVAILABLE(
     double* requested_quantities, double* priority_profiles, double available_resource, size_t num_requesters) {
