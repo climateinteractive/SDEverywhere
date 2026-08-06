@@ -43,6 +43,7 @@ double* _ALLOCATE_BY_PRIORITY(double* request, double* priority, double size, do
 double* _DEMAND_AT_PRICE(double* demand_quantities, double* demand_profiles, double price, size_t num_demanders);
 double _FIND_MARKET_PRICE(double* demand_quantities, double* demand_profiles, double* supply_quantities,
     double* supply_profiles, size_t num_demanders, size_t num_suppliers);
+double* _INVERT_MATRIX(double* matrix, size_t n);
 double _PULSE(double start, double width);
 double _PULSE_TRAIN(double start, double width, double interval, double end);
 double _RAMP(double slope, double start_time, double end_time);

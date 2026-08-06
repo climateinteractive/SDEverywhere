@@ -595,6 +595,11 @@ function visitFunctionCall(v, callExpr, context) {
         argModes[1] = 'init'
         break
 
+      case '_INVERT_MATRIX':
+        validateCallDepth(callExpr, context)
+        validateCallArgs(callExpr, 2)
+        break
+
       case '_NPV':
         validateCallArgs(callExpr, 4)
         addFnReference = false

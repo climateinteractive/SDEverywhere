@@ -128,6 +128,9 @@ export function generateEquation(variable, mode, extData, directData, modelDir, 
     }
   }
 
+  // Keep a buffer of code that will be included before all subscript loops
+  const preLoopLines = []
+
   // Keep a buffer of code that will be included before the innermost loop
   const preInnerLoopLines = []
 
@@ -145,6 +148,7 @@ export function generateEquation(variable, mode, extData, directData, modelDir, 
     cLhs,
     loopIndexVars,
     arrayIndexVars,
+    emitPreLoop: s => preLoopLines.push(s),
     emitPreInnerLoop: s => preInnerLoopLines.push(s),
     emitPreFormula: s => preFormulaLines.push(s),
     emitPostFormula: s => postFormulaLines.push(s),
@@ -161,7 +165,7 @@ export function generateEquation(variable, mode, extData, directData, modelDir, 
   }
 
   // Combine all lines of comments and code into a single array
-  return [comment, ...openLoops, ...preFormulaLines, formula, ...postFormulaLines, ...closeLoops]
+  return [comment, ...preLoopLines, ...openLoops, ...preFormulaLines, formula, ...postFormulaLines, ...closeLoops]
 }
 
 /**
