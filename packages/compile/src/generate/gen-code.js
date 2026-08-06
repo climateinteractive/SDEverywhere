@@ -4,6 +4,10 @@ import { generateJS } from './gen-code-js.js'
 /**
  * Generate code from the given parsed model.
  *
+ * Note that a false cyclic dependency detected while reading the model (one that Vensim's
+ * element-by-element evaluation order would not produce) is repaired automatically by
+ * `Model.read`; see the `read` function in model.js for details.
+ *
  * @param {*} parsedModel The parsed model structure.
  * @param {Object} opts The options that control code generation.
  * @param {Object} opts.spec The parsed `spec.json` object.

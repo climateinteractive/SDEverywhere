@@ -3,7 +3,7 @@ import * as R from 'ramda'
 import { canonicalVarId, toPrettyString } from '@sdeverywhere/parse'
 
 import B from '../_shared/bufx.js'
-import { decanonicalize, isIterable, strlist, vlog, vsort } from '../_shared/helpers.js'
+import { decanonicalize, isIterable, resetHelperState, strlist, vlog, vsort } from '../_shared/helpers.js'
 import {
   addIndex,
   allAliases,
@@ -11,6 +11,7 @@ import {
   indexNamesForSubscript,
   isDimension,
   isIndex,
+  resetSubscriptsAndDimensions,
   sub,
   subscriptFamilies
 } from '../_shared/subscript.js'
@@ -60,6 +61,12 @@ function resetModelState() {
  * Note that this function currently does not return anything and instead stores the parsed subscript
  * definitions in the `subscript` module and the parsed/analyzed variables in this module.
  *
+ * After a full read, the variables are sorted in dependency order (and the sorted lists are cached
+ * for later use by code generation and variable listings).  A false cyclic dependency detected
+ * during sorting (one that Vensim's element-by-element evaluation order would not produce) is
+ * repaired by separating the variables identified by the cycle analysis and re-reading the model,
+ * as if those variables had been listed in `specialSeparationDims` in the spec file.
+ *
  * TODO: FIX TYPE
  * @param {*} parsedModel The parsed model structure.
  * @param {*} spec The parsed `spec.json` object.
@@ -71,6 +78,70 @@ function resetModelState() {
  * @param {*} [opts] An optional object used by tests to stop the read process after a specific phase.
  */
 function read(parsedModel, spec, extData, directData, modelDirname, opts) {
+  const maxAttempts = 20
+  for (let attempt = 1; ; attempt++) {
+    try {
+      readModel(parsedModel, spec, extData, directData, modelDirname, opts)
+      if (
+        opts?.stopAfterReadSubscripts ||
+        opts?.stopAfterResolveSubscripts ||
+        opts?.stopAfterReadVariables ||
+        opts?.stopAfterAnalyze
+      ) {
+        // The read was stopped early (used by tests), so skip the dependency sorting
+        return
+      }
+      // Sort the variables in dependency order now so that any cyclic dependency is
+      // detected here; the sorted lists are cached for later use
+      auxVars()
+      levelVars()
+      initVars()
+      return
+    } catch (e) {
+      if (!e.cycles || !spec || attempt >= maxAttempts) {
+        throw e
+      }
+      if (process.env.SDE_PRINT_CYCLES === '1') {
+        console.error(`Cycle found on attempt ${attempt}:\n${e.cycle.join(' →\n')}\n`)
+      }
+      // Find variables in the cycle clusters that can be separated to break the cycles
+      const candidates = separationCandidatesForCycles(e.cycles, e.outgoingEdges)
+      const specialSeparationDims = spec.specialSeparationDims || {}
+      let addedDims = false
+      for (const [varName, dimIds] of candidates) {
+        let dims = specialSeparationDims[varName] || []
+        if (!Array.isArray(dims)) {
+          dims = [dims]
+        }
+        for (const dimId of dimIds) {
+          if (!dims.includes(dimId)) {
+            dims.push(dimId)
+            addedDims = true
+            if (process.env.SDE_PRINT_CYCLES === '1') {
+              console.error(`Breaking a dependency cycle by separating ${varName} on dimension ${dimId}`)
+            }
+          }
+        }
+        specialSeparationDims[varName] = dims
+      }
+      if (!addedDims) {
+        // The cycle analysis did not find any new separations, so the cycle cannot
+        // be broken this way; report it to the user
+        throw e
+      }
+      spec.specialSeparationDims = specialSeparationDims
+      // Reset the model state and read the model again with the added separations
+      resetHelperState()
+      resetSubscriptsAndDimensions()
+      resetModelState()
+    }
+  }
+}
+
+/**
+ * Perform a single pass of the model read process (see `read` above).
+ */
+function readModel(parsedModel, spec, extData, directData, modelDirname, opts) {
   // Some arrays need to be separated into variables with individual indices to
   // prevent eval cycles. They are manually added to the spec file.
   let specialSeparationDims = spec.specialSeparationDims
@@ -750,6 +821,194 @@ function splitRefId(refId) {
     }
   }
   return { varName, subscripts }
+}
+function separationCandidatesForCycles(cycles, outgoingEdges) {
+  // Analyze the dependency cycle clusters reported by toposort and find variables that
+  // could be separated into individual index instances to break the cycles.  A false
+  // cycle can appear when a variable keeps a dimension for which the variables it
+  // references are defined (or separated) element by element.  The whole-array variable
+  // then depends on all elements of its references, merging the otherwise independent
+  // dependency chains of each element into a single node.  Separating the variable on
+  // that dimension restores the element-level dependency structure that Vensim uses
+  // when it orders equations.
+  //
+  // Each cycle cluster is a strongly connected component of the dependency graph.
+  // For each variable v in a cluster, propose separating v on a dimension D when a
+  // successor of v in the cluster carries an individual index in the family of D and
+  // a predecessor of v in the cluster references v by an individual element of D
+  // (so that the separation actually removes the edge into the other elements of v).
+  // If no candidate satisfies the predecessor condition, fall back to the candidates
+  // that satisfy the successor condition alone.
+  // The result is a map from variable name to the set of dimension IDs to separate on.
+  const candidates = new Map()
+  const looseCandidates = new Map()
+  const addCandidate = (map, varName, dimId) => {
+    let dimIds = map.get(varName)
+    if (!dimIds) {
+      dimIds = new Set()
+      map.set(varName, dimIds)
+    }
+    dimIds.add(dimId)
+  }
+  // The set of (variable name, family) pairs accepted as candidates so far; a variable
+  // that will be separated on a family satisfies the predecessor condition for the
+  // variables it references, so acceptance is iterated to a fixpoint below
+  const acceptedFamilies = new Set()
+  for (const scc of cycles) {
+    const inScc = new Set(scc)
+    // Build a predecessor map for the nodes in this cluster
+    const predsOf = new Map(scc.map(refId => [refId, []]))
+    for (const refId of scc) {
+      for (const succ of outgoingEdges.get(refId) || []) {
+        if (inScc.has(succ)) {
+          predsOf.get(succ).push(refId)
+        }
+      }
+    }
+    // Collect the possible (v, D) pairs for this cluster
+    const sccLooseCandidates = []
+    for (const refId of scc) {
+      const v = varWithRefId(refId)
+      if (!v || !v.subscripts || v.subscripts.length === 0) {
+        continue
+      }
+      // Find the families of the individual indices carried by the successors
+      // of this node within the cluster
+      const succIndexFamilies = new Set()
+      for (const succ of outgoingEdges.get(refId) || []) {
+        if (inScc.has(succ)) {
+          for (const subId of splitRefId(succ).subscripts) {
+            if (isIndex(subId)) {
+              succIndexFamilies.add(sub(subId).family)
+            }
+          }
+        }
+      }
+      for (const subId of v.subscripts) {
+        if (isDimension(subId) && succIndexFamilies.has(sub(subId).family)) {
+          // Skip the candidate when every predecessor references this variable
+          // exclusively through a marked full dimension (e.g., `SUM(x[DimA!])`):
+          // such references span all elements regardless of separation, so
+          // separating this variable can never narrow the incoming edges
+          const familyId = sub(subId).family
+          const possiblyNarrowing = predsOf.get(refId).some(predRefId => {
+            const pv = varWithRefId(predRefId)
+            if (!pv) {
+              return false
+            }
+            const refKinds = elementRefKinds(pv, v.varName, familyId)
+            return refKinds.elementRef || refKinds.fullDimRef || !refKinds.markedFullDimRef
+          })
+          if (possiblyNarrowing) {
+            sccLooseCandidates.push({ refId, v, dimId: subId })
+          }
+        }
+      }
+    }
+    // Accept the candidates that satisfy the predecessor condition, iterating to a
+    // fixpoint since accepting one variable can qualify the variables it references
+    const sccAccepted = new Set()
+    let changed
+    do {
+      changed = false
+      for (const c of sccLooseCandidates) {
+        if (sccAccepted.has(c)) {
+          continue
+        }
+        const familyId = sub(c.dimId).family
+        const predQualifies = predRefId => {
+          const pv = varWithRefId(predRefId)
+          if (!pv) {
+            return false
+          }
+          const refKinds = elementRefKinds(pv, c.v.varName, familyId)
+          if (refKinds.markedFullDimRef) {
+            // The predecessor operates on all elements in the family (e.g., in a
+            // `SUM` expression), so separating this variable does not narrow the edge
+            return false
+          }
+          if (refKinds.elementRef) {
+            // The predecessor references this variable by an individual element
+            // (or through a subdimension, which Vensim maps element by element)
+            return true
+          }
+          if (refKinds.fullDimRef) {
+            // The predecessor references this variable through the full dimension;
+            // that reference narrows to an element when the predecessor itself is
+            // (or will be) separated on the same family
+            if (pv.subscripts?.some(s => isIndex(s) && sub(s).family === familyId)) {
+              return true
+            }
+            return acceptedFamilies.has(`${pv.varName}|${familyId}`)
+          }
+          return false
+        }
+        if (predsOf.get(c.refId).some(predQualifies)) {
+          sccAccepted.add(c)
+          acceptedFamilies.add(`${c.v.varName}|${familyId}`)
+          addCandidate(candidates, c.v.varName, c.dimId)
+          changed = true
+        }
+      }
+    } while (changed)
+    if (sccAccepted.size === 0) {
+      // No candidate in this cluster satisfied the predecessor condition, so fall
+      // back to the candidates that satisfied the successor condition alone
+      for (const c of sccLooseCandidates) {
+        addCandidate(looseCandidates, c.v.varName, c.dimId)
+      }
+    }
+  }
+  if (candidates.size > 0) {
+    return candidates
+  }
+  return looseCandidates
+}
+function elementRefKinds(referencingVar, varName, familyId) {
+  // Examine how the given variable's parsed equation references the named variable
+  // in subscript positions of the given family:
+  // - `elementRef` is set when a reference uses an individual index or a subdimension
+  //   (Vensim maps subdimension references element by element, as in the common
+  //   `x[current pass] = f(x[preceeding pass])` iteration idiom)
+  // - `fullDimRef` is set when a reference uses the full dimension for the family
+  // - `markedFullDimRef` is set when a reference uses the full dimension marked for
+  //   vector operations (e.g., `SUM(x[DimA!])`), which always spans all elements
+  const kinds = { elementRef: false, fullDimRef: false, markedFullDimRef: false }
+  const visit = node => {
+    if (node === null || typeof node !== 'object') {
+      return
+    }
+    if (Array.isArray(node)) {
+      node.forEach(visit)
+      return
+    }
+    if (node.kind === 'variable-ref' && node.varId === varName && node.subscriptRefs) {
+      for (const subRef of node.subscriptRefs) {
+        // Remove the mark from a marked dimension (e.g., `_dima!`)
+        const marked = subRef.subId.includes('!')
+        const subId = subRef.subId.replace('!', '')
+        const s = sub(subId)
+        if (s?.family !== familyId) {
+          continue
+        }
+        if (isIndex(subId) || s.size < sub(familyId).size) {
+          kinds.elementRef = true
+        } else if (marked) {
+          kinds.markedFullDimRef = true
+        } else {
+          kinds.fullDimRef = true
+        }
+      }
+    }
+    for (const key of Object.keys(node)) {
+      visit(node[key])
+    }
+  }
+  const eqn = referencingVar.parsedEqn
+  if (eqn?.rhs?.kind === 'expr') {
+    visit(eqn.rhs.expr)
+  }
+  return kinds
 }
 function varWithName(varName) {
   // Find a variable with the given name in canonical form.
