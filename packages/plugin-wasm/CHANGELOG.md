@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.8](https://github.com/climateinteractive/SDEverywhere/compare/plugin-wasm-v0.2.7...plugin-wasm-v0.2.8) (2026-08-07)
+
+
+### Bug Fixes
+
+* correct ALLOCATE AVAILABLE convergence and code generation ([#838](https://github.com/climateinteractive/SDEverywhere/issues/838)) ([4661254](https://github.com/climateinteractive/SDEverywhere/commit/466125408c50197085c4a81cd53ffab153b39875)), closes [#837](https://github.com/climateinteractive/SDEverywhere/issues/837)
+
 ## [0.2.7](https://github.com/climateinteractive/SDEverywhere/compare/plugin-wasm-v0.2.6...plugin-wasm-v0.2.7) (2026-02-04)
 
 
