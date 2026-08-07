@@ -2414,6 +2414,82 @@ describe('generateEquation (Vensim -> C)', () => {
     expect(genC(vars.get('_y'), 'eval')).toEqual(['_y = _DELAY_FIXED(_x, __fixed_delay1);'])
   })
 
+  // Note that the `DEMAND AT PRICE`, `SUPPLY AT PRICE`, and `FIND MARKET PRICE` functions take
+  // a priority profile argument that has the same "shape" as the one used with `ALLOCATE
+  // AVAILABLE`, except that the profile dimension typically includes the `pwidth` and `pextra`
+  // subscripts that are used by the non-fixed priority curve types (see the `allocate_price`
+  // sample model).  The last subscript of the profile argument must be `ptype`, and the
+  // generated code passes a pointer to the start of the profile array for the given requester.
+
+  it('should work for DEMAND AT PRICE function (1D LHS, 1D demand, 2D pp, non-subscripted price)', () => {
+    const vars = readInlineModel(`
+      demander: d1, d2, d3 ~~|
+      pprofile: ptype, ppriority, pwidth, pextra ~~|
+      market price = 5 ~~|
+      demand satiation[demander] = 500,300,750 ~~|
+      priority[d1,pprofile] = 3,5,1,0 ~~|
+      priority[d2,pprofile] = 3,7,1,0 ~~|
+      priority[d3,pprofile] = 3,3,1,0 ~~|
+      amount demanded[demander] = DEMAND AT PRICE(demand satiation[demander], priority[demander,ptype], market price) ~~|
+    `)
+    expect(vars.size).toBe(17)
+    expect(genC(vars.get('_market_price'))).toEqual(['_market_price = 5.0;'])
+    expect(genC(vars.get('_demand_satiation[_d1]'))).toEqual(['_demand_satiation[0] = 500.0;'])
+    expect(genC(vars.get('_demand_satiation[_d2]'))).toEqual(['_demand_satiation[1] = 300.0;'])
+    expect(genC(vars.get('_demand_satiation[_d3]'))).toEqual(['_demand_satiation[2] = 750.0;'])
+    expect(genC(vars.get('_priority[_d1,_ptype]'))).toEqual(['_priority[0][0] = 3.0;'])
+    expect(genC(vars.get('_priority[_d1,_ppriority]'))).toEqual(['_priority[0][1] = 5.0;'])
+    expect(genC(vars.get('_priority[_d1,_pwidth]'))).toEqual(['_priority[0][2] = 1.0;'])
+    expect(genC(vars.get('_priority[_d1,_pextra]'))).toEqual(['_priority[0][3] = 0.0;'])
+    expect(genC(vars.get('_amount_demanded'))).toEqual([
+      'double* __t1 = _DEMAND_AT_PRICE(_demand_satiation, (double*)_priority, _market_price, 3);',
+      'for (size_t i = 0; i < 3; i++) {',
+      '_amount_demanded[i] = __t1[_demander[i]];',
+      '}'
+    ])
+  })
+
+  it('should work for DEMAND AT PRICE function (2D LHS, 2D demand, 3D pp, 1D price)', () => {
+    const vars = readInlineModel(`
+      demander: d1, d2, d3 ~~|
+      curve: fixed, triangular ~~|
+      pprofile: ptype, ppriority, pwidth, pextra ~~|
+      market price[curve] = 5,6 ~~|
+      demand satiation[curve,demander] = 500,300,750;501,301,751; ~~|
+      priority[curve,demander,ptype] = 3 ~~|
+      priority[curve,demander,ppriority] = 5 ~~|
+      priority[curve,demander,pwidth] = 1 ~~|
+      priority[curve,demander,pextra] = 0 ~~|
+      amount demanded[curve,demander] = DEMAND AT PRICE(demand satiation[curve,demander], priority[curve,demander,ptype], market price[curve]) ~~|
+    `)
+    expect(vars.size).toBe(13)
+    expect(genC(vars.get('_market_price[_fixed]'))).toEqual(['_market_price[0] = 5.0;'])
+    expect(genC(vars.get('_market_price[_triangular]'))).toEqual(['_market_price[1] = 6.0;'])
+    expect(genC(vars.get('_demand_satiation[_fixed,_d1]'))).toEqual(['_demand_satiation[0][0] = 500.0;'])
+    expect(genC(vars.get('_demand_satiation[_triangular,_d3]'))).toEqual(['_demand_satiation[1][2] = 751.0;'])
+    expect(genC(vars.get('_amount_demanded'))).toEqual([
+      'for (size_t i = 0; i < 2; i++) {',
+      'double* __t1 = _DEMAND_AT_PRICE(_demand_satiation[i], (double*)_priority[i], _market_price[i], 3);',
+      'for (size_t j = 0; j < 3; j++) {',
+      '_amount_demanded[i][j] = __t1[_demander[j]];',
+      '}',
+      '}'
+    ])
+  })
+
+  it('should throw error for DEMAND AT PRICE function (when pp argument has fewer than two subscripts)', () => {
+    const vars = readInlineModel(`
+      demander: d1, d2, d3 ~~|
+      market price = 5 ~~|
+      demand satiation[demander] = 500,300,750 ~~|
+      priority[demander] = 3,5,7 ~~|
+      amount demanded[demander] = DEMAND AT PRICE(demand satiation[demander], priority[demander], market price) ~~|
+    `)
+    expect(() => genC(vars.get('_amount_demanded'))).toThrow(
+      /^DEMAND AT PRICE argument 'priority' should have at least 2 subscripts$/
+    )
+  })
+
   it('should work for DEPRECIATE STRAIGHTLINE function', () => {
     const vars = readInlineModel(`
       dtime = 20 ~~|
@@ -2453,6 +2529,81 @@ describe('generateEquation (Vensim -> C)', () => {
     expect(vars.size).toBe(2)
     expect(genC(vars.get('_x'))).toEqual(['_x = 1.0;'])
     expect(genC(vars.get('_y'))).toEqual(['_y = _EXP(_x);'])
+  })
+
+  // Note that Vensim requires the quantity and profile arguments of `FIND MARKET PRICE` to be
+  // passed using the first element of the demander/supplier dimension (for example, `demand[d1]`
+  // instead of `demand[demander]`), so the generated code needs to determine the number of
+  // demanders and suppliers from the family dimension of that subscript.
+
+  it('should work for FIND MARKET PRICE function (non-subscripted LHS, 1D qtys with index subscript, 2D profiles)', () => {
+    const vars = readInlineModel(`
+      demander: d1, d2 ~~|
+      supplier: s1, s2, s3 ~~|
+      pprofile: ptype, ppriority, pwidth, pextra ~~|
+      demand satiation[demander] = 500,300 ~~|
+      demand priority[d1,pprofile] = 3,1,1,0 ~~|
+      demand priority[d2,pprofile] = 3,2,1,0 ~~|
+      supply capacity[supplier] = 200,300,450 ~~|
+      supply priority[s1,pprofile] = 3,1,1,0 ~~|
+      supply priority[s2,pprofile] = 3,2,1,0 ~~|
+      supply priority[s3,pprofile] = 3,3,1,0 ~~|
+      market price = FIND MARKET PRICE(demand satiation[d1], demand priority[d1,ptype], supply capacity[s1], supply priority[s1,ptype]) ~~|
+    `)
+    expect(vars.size).toBe(26)
+    expect(genC(vars.get('_demand_satiation[_d1]'))).toEqual(['_demand_satiation[0] = 500.0;'])
+    expect(genC(vars.get('_demand_priority[_d1,_ptype]'))).toEqual(['_demand_priority[0][0] = 3.0;'])
+    expect(genC(vars.get('_supply_capacity[_s3]'))).toEqual(['_supply_capacity[2] = 450.0;'])
+    expect(genC(vars.get('_supply_priority[_s3,_ppriority]'))).toEqual(['_supply_priority[2][1] = 3.0;'])
+    expect(genC(vars.get('_market_price'))).toEqual([
+      '_market_price = _FIND_MARKET_PRICE(_demand_satiation, (double*)_demand_priority, _supply_capacity, (double*)_supply_priority, 2, 3);'
+    ])
+  })
+
+  it('should work for FIND MARKET PRICE function (1D LHS, 2D qtys with index subscript, 3D profiles)', () => {
+    const vars = readInlineModel(`
+      curve: fixed, triangular ~~|
+      demander: d1, d2 ~~|
+      supplier: s1, s2, s3 ~~|
+      pprofile: ptype, ppriority, pwidth, pextra ~~|
+      demand satiation[curve,demander] = 500,300;501,301; ~~|
+      demand priority[curve,demander,ptype] = 3 ~~|
+      demand priority[curve,demander,ppriority] = 1 ~~|
+      demand priority[curve,demander,pwidth] = 1 ~~|
+      demand priority[curve,demander,pextra] = 0 ~~|
+      supply capacity[curve,supplier] = 200,300,450;201,301,451; ~~|
+      supply priority[curve,supplier,ptype] = 3 ~~|
+      supply priority[curve,supplier,ppriority] = 1 ~~|
+      supply priority[curve,supplier,pwidth] = 1 ~~|
+      supply priority[curve,supplier,pextra] = 0 ~~|
+      market price[curve] = FIND MARKET PRICE(demand satiation[curve,d1], demand priority[curve,d1,ptype], supply capacity[curve,s1], supply priority[curve,s1,ptype]) ~~|
+    `)
+    expect(vars.size).toBe(19)
+    expect(genC(vars.get('_demand_satiation[_fixed,_d1]'))).toEqual(['_demand_satiation[0][0] = 500.0;'])
+    expect(genC(vars.get('_supply_capacity[_triangular,_s3]'))).toEqual(['_supply_capacity[1][2] = 451.0;'])
+    expect(genC(vars.get('_market_price'))).toEqual([
+      'for (size_t i = 0; i < 2; i++) {',
+      '_market_price[i] = _FIND_MARKET_PRICE(_demand_satiation[i], (double*)_demand_priority[i], _supply_capacity[i], (double*)_supply_priority[i], 2, 3);',
+      '}'
+    ])
+  })
+
+  it('should throw error for FIND MARKET PRICE function (when profiles argument has fewer than two subscripts)', () => {
+    const vars = readInlineModel(`
+      demander: d1, d2 ~~|
+      supplier: s1, s2, s3 ~~|
+      pprofile: ptype, ppriority, pwidth, pextra ~~|
+      demand satiation[demander] = 500,300 ~~|
+      demand priority[demander] = 3,3 ~~|
+      supply capacity[supplier] = 200,300,450 ~~|
+      supply priority[s1,pprofile] = 3,1,1,0 ~~|
+      supply priority[s2,pprofile] = 3,2,1,0 ~~|
+      supply priority[s3,pprofile] = 3,3,1,0 ~~|
+      market price = FIND MARKET PRICE(demand satiation[d1], demand priority[d1], supply capacity[s1], supply priority[s1,ptype]) ~~|
+    `)
+    expect(() => genC(vars.get('_market_price'))).toThrow(
+      /FIND MARKET PRICE argument .* should have at least 2 subscripts$/
+    )
   })
 
   it('should work for GAME function (no dimensions)', () => {
@@ -3445,6 +3596,67 @@ describe('generateEquation (Vensim -> C)', () => {
       '}',
       '_y = __t1;'
     ])
+  })
+
+  it('should work for SUPPLY AT PRICE function (1D LHS, 1D supply, 2D pp, non-subscripted price)', () => {
+    const vars = readInlineModel(`
+      supplier: s1, s2, s3 ~~|
+      pprofile: ptype, ppriority, pwidth, pextra ~~|
+      market price = 5 ~~|
+      supply capacity[supplier] = 200,300,450 ~~|
+      priority[s1,pprofile] = 3,1,1,0 ~~|
+      priority[s2,pprofile] = 3,2,1,0 ~~|
+      priority[s3,pprofile] = 3,3,1,0 ~~|
+      amount supplied[supplier] = SUPPLY AT PRICE(supply capacity[supplier], priority[supplier,ptype], market price) ~~|
+    `)
+    expect(vars.size).toBe(17)
+    expect(genC(vars.get('_market_price'))).toEqual(['_market_price = 5.0;'])
+    expect(genC(vars.get('_supply_capacity[_s1]'))).toEqual(['_supply_capacity[0] = 200.0;'])
+    expect(genC(vars.get('_priority[_s1,_ptype]'))).toEqual(['_priority[0][0] = 3.0;'])
+    expect(genC(vars.get('_priority[_s3,_pextra]'))).toEqual(['_priority[2][3] = 0.0;'])
+    expect(genC(vars.get('_amount_supplied'))).toEqual([
+      'double* __t1 = _SUPPLY_AT_PRICE(_supply_capacity, (double*)_priority, _market_price, 3);',
+      'for (size_t i = 0; i < 3; i++) {',
+      '_amount_supplied[i] = __t1[_supplier[i]];',
+      '}'
+    ])
+  })
+
+  it('should work for SUPPLY AT PRICE function (2D LHS, 2D supply, 3D pp, 1D price)', () => {
+    const vars = readInlineModel(`
+      supplier: s1, s2, s3 ~~|
+      curve: fixed, triangular ~~|
+      pprofile: ptype, ppriority, pwidth, pextra ~~|
+      market price[curve] = 5,6 ~~|
+      supply capacity[curve,supplier] = 200,300,450;201,301,451; ~~|
+      priority[curve,supplier,ptype] = 3 ~~|
+      priority[curve,supplier,ppriority] = 1 ~~|
+      priority[curve,supplier,pwidth] = 1 ~~|
+      priority[curve,supplier,pextra] = 0 ~~|
+      amount supplied[curve,supplier] = SUPPLY AT PRICE(supply capacity[curve,supplier], priority[curve,supplier,ptype], market price[curve]) ~~|
+    `)
+    expect(vars.size).toBe(13)
+    expect(genC(vars.get('_supply_capacity[_fixed,_s1]'))).toEqual(['_supply_capacity[0][0] = 200.0;'])
+    expect(genC(vars.get('_supply_capacity[_triangular,_s3]'))).toEqual(['_supply_capacity[1][2] = 451.0;'])
+    expect(genC(vars.get('_amount_supplied'))).toEqual([
+      'for (size_t i = 0; i < 2; i++) {',
+      'double* __t1 = _SUPPLY_AT_PRICE(_supply_capacity[i], (double*)_priority[i], _market_price[i], 3);',
+      'for (size_t j = 0; j < 3; j++) {',
+      '_amount_supplied[i][j] = __t1[_supplier[j]];',
+      '}',
+      '}'
+    ])
+  })
+
+  it('should throw error for SUPPLY AT PRICE function (when pp argument is not a variable reference)', () => {
+    expect(() =>
+      readInlineModel(`
+        supplier: s1, s2, s3 ~~|
+        market price = 5 ~~|
+        supply capacity[supplier] = 200,300,450 ~~|
+        amount supplied[supplier] = SUPPLY AT PRICE(supply capacity[supplier], 3, market price) ~~|
+      `)
+    ).toThrow(/^SUPPLY AT PRICE argument 'pp' must be a variable reference$/)
   })
 
   it('should work for TAN function', () => {

@@ -1,0 +1,31 @@
+{
+  "name": "allocation by price test model",
+  "outputVarNames": [
+    "Time",
+    "amount supplied[fixed,s1]",
+    "amount supplied[fixed,s2]",
+    "amount supplied[fixed,s3]",
+    "amount supplied[rectangular,s1]",
+    "amount supplied[rectangular,s2]",
+    "amount supplied[rectangular,s3]",
+    "amount supplied[triangular,s1]",
+    "amount supplied[triangular,s2]",
+    "amount supplied[triangular,s3]",
+    "amount supplied[normal,s1]",
+    "amount supplied[normal,s2]",
+    "amount supplied[normal,s3]",
+    "amount supplied[exponential,s1]",
+    "amount supplied[exponential,s2]",
+    "amount supplied[exponential,s3]",
+    "amount demanded[fixed,d1]",
+    "amount demanded[fixed,d1]",
+    "amount demanded[rectangular,d1]",
+    "amount demanded[rectangular,d1]",
+    "amount demanded[triangular,d1]",
+    "amount demanded[triangular,d1]",
+    "amount demanded[normal,d1]",
+    "amount demanded[normal,d1]",
+    "amount demanded[exponential,d1]",
+    "amount demanded[exponential,d1]"
+  ]
+}
