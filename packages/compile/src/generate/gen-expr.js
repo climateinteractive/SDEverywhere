@@ -897,7 +897,8 @@ function generateAllocateAvailableCall(callExpr, ctx) {
     const varRef = ctx.cVarRef(arg)
     const origIndexParts = Model.splitRefId(varRef).subscripts
     if (origIndexParts.length < count) {
-      throw new Error(`ALLOCATE AVAILABLE argument '${arg}' should have at least ${count} subscripts`)
+      const plural = count === 1 ? '' : 's'
+      throw new Error(`ALLOCATE AVAILABLE argument '${arg.varName}' should have at least ${count} subscript${plural}`)
     }
     const newIndexParts = origIndexParts.slice(0, -count)
     if (newIndexParts.length > 0) {
@@ -971,8 +972,9 @@ function generateAllocateByPriorityCall(callExpr, ctx) {
   function cVarRefWithoutLastIndices(arg, count) {
     const varRef = ctx.cVarRef(arg)
     const origIndexParts = Model.splitRefId(varRef).subscripts
-    if (origIndexParts < count) {
-      throw new Error(`ALLOCATE BY PRIORITY argument '${arg}' should have at least ${count} subscripts`)
+    if (origIndexParts.length < count) {
+      const plural = count === 1 ? '' : 's'
+      throw new Error(`ALLOCATE BY PRIORITY argument '${arg.varName}' should have at least ${count} subscript${plural}`)
     }
     const newIndexParts = origIndexParts.slice(0, -count)
     if (newIndexParts.length > 0) {

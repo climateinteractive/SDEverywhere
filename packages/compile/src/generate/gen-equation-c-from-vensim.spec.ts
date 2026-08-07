@@ -2090,7 +2090,9 @@ describe('generateEquation (Vensim -> C)', () => {
       priority[branch] = 3,5,7 ~~|
       shipments[branch] = ALLOCATE AVAILABLE(demand[branch], priority[branch], supply available) ~~|
     `)
-    expect(() => genC(vars.get('_shipments'))).toThrow('should have at least 2 subscripts')
+    expect(() => genC(vars.get('_shipments'))).toThrow(
+      /^ALLOCATE AVAILABLE argument 'priority' should have at least 2 subscripts$/
+    )
   })
 
   it('should work for ALLOCATE BY PRIORITY function (1D LHS, 1D demand, 1D priority, non-subscripted avail)', () => {
@@ -2200,6 +2202,20 @@ describe('generateEquation (Vensim -> C)', () => {
       '}',
       '}'
     ])
+  })
+
+  it('should throw error for ALLOCATE BY PRIORITY function (when priority argument has no subscripts)', () => {
+    const vars = readInlineModel(`
+      branch: Boston, Dayton, Fresno ~~|
+      supply available = 200 ~~|
+      demand[branch] = 150,100,200 ~~|
+      priority = 3 ~~|
+      priority width = 1 ~~|
+      shipments[branch] = ALLOCATE BY PRIORITY(demand[branch], priority, ELMCOUNT(branch), priority width, supply available) ~~|
+    `)
+    expect(() => genC(vars.get('_shipments'))).toThrow(
+      /^ALLOCATE BY PRIORITY argument 'priority' should have at least 1 subscript$/
+    )
   })
 
   it('should work for ARCCOS function', () => {
