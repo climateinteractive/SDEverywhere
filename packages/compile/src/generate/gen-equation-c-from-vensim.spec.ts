@@ -1994,6 +1994,105 @@ describe('generateEquation (Vensim -> C)', () => {
     ])
   })
 
+  it('should work for ALLOCATE AVAILABLE function (1D LHS, 1D demand, 2D pp, constant avail)', () => {
+    const vars = readInlineModel(`
+      branch: Boston, Dayton, Fresno ~~|
+      pprofile: ptype, ppriority ~~|
+      demand[branch] = 500,300,750 ~~|
+      priority[Boston,pprofile] = 3,5 ~~|
+      priority[Dayton,pprofile] = 3,7 ~~|
+      priority[Fresno,pprofile] = 3,3 ~~|
+      shipments[branch] = ALLOCATE AVAILABLE(demand[branch], priority[branch,ptype], 200) ~~|
+    `)
+    expect(vars.size).toBe(10)
+    expect(genC(vars.get('_shipments'))).toEqual([
+      'double* __t1 = _ALLOCATE_AVAILABLE(_demand, (double*)_priority, 200.0, 3);',
+      'for (size_t i = 0; i < 3; i++) {',
+      '_shipments[i] = __t1[_branch[i]];',
+      '}'
+    ])
+  })
+
+  it('should work for ALLOCATE AVAILABLE function (1D LHS, 1D demand, 2D pp, binary op avail)', () => {
+    const vars = readInlineModel(`
+      branch: Boston, Dayton, Fresno ~~|
+      pprofile: ptype, ppriority ~~|
+      total supply = 400 ~~|
+      demand[branch] = 500,300,750 ~~|
+      priority[Boston,pprofile] = 3,5 ~~|
+      priority[Dayton,pprofile] = 3,7 ~~|
+      priority[Fresno,pprofile] = 3,3 ~~|
+      shipments[branch] = ALLOCATE AVAILABLE(demand[branch], priority[branch,ptype], total supply * 0.5) ~~|
+    `)
+    expect(vars.size).toBe(11)
+    expect(genC(vars.get('_total_supply'))).toEqual(['_total_supply = 400.0;'])
+    expect(genC(vars.get('_shipments'))).toEqual([
+      'double* __t1 = _ALLOCATE_AVAILABLE(_demand, (double*)_priority, _total_supply * 0.5, 3);',
+      'for (size_t i = 0; i < 3; i++) {',
+      '_shipments[i] = __t1[_branch[i]];',
+      '}'
+    ])
+  })
+
+  it('should work for ALLOCATE AVAILABLE function (1D LHS, 1D demand, 2D pp, function call avail)', () => {
+    const vars = readInlineModel(`
+      branch: Boston, Dayton, Fresno ~~|
+      pprofile: ptype, ppriority ~~|
+      total supply = 400 ~~|
+      demand[branch] = 500,300,750 ~~|
+      priority[Boston,pprofile] = 3,5 ~~|
+      priority[Dayton,pprofile] = 3,7 ~~|
+      priority[Fresno,pprofile] = 3,3 ~~|
+      shipments[branch] = ALLOCATE AVAILABLE(demand[branch], priority[branch,ptype], MAX(total supply * 0.5, 100)) ~~|
+    `)
+    expect(vars.size).toBe(11)
+    expect(genC(vars.get('_shipments'))).toEqual([
+      'double* __t1 = _ALLOCATE_AVAILABLE(_demand, (double*)_priority, _MAX(_total_supply * 0.5, 100.0), 3);',
+      'for (size_t i = 0; i < 3; i++) {',
+      '_shipments[i] = __t1[_branch[i]];',
+      '}'
+    ])
+  })
+
+  it('should work for ALLOCATE AVAILABLE function (2D LHS, 2D demand, 3D pp, subscripted expression avail)', () => {
+    const vars = readInlineModel(`
+      branch: Boston, Dayton, Fresno ~~|
+      item: Item1, Item2 ~~|
+      pprofile: ptype, ppriority ~~|
+      allocated fraction = 0.5 ~~|
+      supply available[item] = 200,400 ~~|
+      demand[item,branch] = 500,300,750;501,301,751; ~~|
+      priority[Item1,Boston,pprofile] = 3,5 ~~|
+      priority[Item1,Dayton,pprofile] = 3,7 ~~|
+      priority[Item1,Fresno,pprofile] = 3,3 ~~|
+      priority[Item2,Boston,pprofile] = 3,6 ~~|
+      priority[Item2,Dayton,pprofile] = 3,8 ~~|
+      priority[Item2,Fresno,pprofile] = 3,4 ~~|
+      shipments[item,branch] = ALLOCATE AVAILABLE(demand[item,branch], priority[item,branch,ptype], supply available[item] * allocated fraction) ~~|
+    `)
+    expect(vars.size).toBe(22)
+    expect(genC(vars.get('_allocated_fraction'))).toEqual(['_allocated_fraction = 0.5;'])
+    expect(genC(vars.get('_shipments'))).toEqual([
+      'for (size_t i = 0; i < 2; i++) {',
+      'double* __t1 = _ALLOCATE_AVAILABLE(_demand[i], (double*)_priority[i], _supply_available[i] * _allocated_fraction, 3);',
+      'for (size_t j = 0; j < 3; j++) {',
+      '_shipments[i][j] = __t1[_branch[j]];',
+      '}',
+      '}'
+    ])
+  })
+
+  it('should throw error for ALLOCATE AVAILABLE function (when pp argument has fewer than two subscripts)', () => {
+    const vars = readInlineModel(`
+      branch: Boston, Dayton, Fresno ~~|
+      supply available = 200 ~~|
+      demand[branch] = 500,300,750 ~~|
+      priority[branch] = 3,5,7 ~~|
+      shipments[branch] = ALLOCATE AVAILABLE(demand[branch], priority[branch], supply available) ~~|
+    `)
+    expect(() => genC(vars.get('_shipments'))).toThrow('should have at least 2 subscripts')
+  })
+
   it('should work for ALLOCATE BY PRIORITY function (1D LHS, 1D demand, 1D priority, non-subscripted avail)', () => {
     const vars = readInlineModel(`
       branch: Boston, Dayton, Fresno ~~|
