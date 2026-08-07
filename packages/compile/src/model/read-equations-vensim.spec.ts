@@ -4082,6 +4082,110 @@ describe('readEquations (from Vensim model)', () => {
     ])
   })
 
+  it('should work for INVERT MATRIX function', () => {
+    const vars = readInlineModel(`
+      DimA: A1, A2 ~~|
+      DimB: B1, B2 ~~|
+      x[A1,B1] = 1 ~~|
+      x[A1,B2] = 2 ~~|
+      x[A2,B1] = 3 ~~|
+      x[A2,B2] = 4 ~~|
+      y[DimA,DimB] = INVERT MATRIX(x[DimA,DimB], 2) ~~|
+    `)
+    expect(vars).toEqual([
+      v('x[A1,B1]', '1', {
+        refId: '_x[_a1,_b1]',
+        subscripts: ['_a1', '_b1'],
+        varType: 'const'
+      }),
+      v('x[A1,B2]', '2', {
+        refId: '_x[_a1,_b2]',
+        subscripts: ['_a1', '_b2'],
+        varType: 'const'
+      }),
+      v('x[A2,B1]', '3', {
+        refId: '_x[_a2,_b1]',
+        subscripts: ['_a2', '_b1'],
+        varType: 'const'
+      }),
+      v('x[A2,B2]', '4', {
+        refId: '_x[_a2,_b2]',
+        subscripts: ['_a2', '_b2'],
+        varType: 'const'
+      }),
+      v('y[DimA,DimB]', 'INVERT MATRIX(x[DimA,DimB],2)', {
+        refId: '_y',
+        referencedFunctionNames: ['__invert_matrix'],
+        references: ['_x[_a1,_b1]', '_x[_a1,_b2]', '_x[_a2,_b1]', '_x[_a2,_b2]'],
+        subscripts: ['_dima', '_dimb']
+      })
+    ])
+  })
+
+  it('should work for INVERT MATRIX function (with ELMCOUNT call used for size arg)', () => {
+    const vars = readInlineModel(`
+      DimA: A1, A2 ~~|
+      DimB: B1, B2 ~~|
+      x[A1,B1] = 1 ~~|
+      x[A1,B2] = 2 ~~|
+      x[A2,B1] = 3 ~~|
+      x[A2,B2] = 4 ~~|
+      y[DimA,DimB] = INVERT MATRIX(x[DimA,DimB], ELMCOUNT(DimA)) ~~|
+    `)
+    expect(vars).toEqual([
+      v('x[A1,B1]', '1', {
+        refId: '_x[_a1,_b1]',
+        subscripts: ['_a1', '_b1'],
+        varType: 'const'
+      }),
+      v('x[A1,B2]', '2', {
+        refId: '_x[_a1,_b2]',
+        subscripts: ['_a1', '_b2'],
+        varType: 'const'
+      }),
+      v('x[A2,B1]', '3', {
+        refId: '_x[_a2,_b1]',
+        subscripts: ['_a2', '_b1'],
+        varType: 'const'
+      }),
+      v('x[A2,B2]', '4', {
+        refId: '_x[_a2,_b2]',
+        subscripts: ['_a2', '_b2'],
+        varType: 'const'
+      }),
+      v('y[DimA,DimB]', 'INVERT MATRIX(x[DimA,DimB],ELMCOUNT(DimA))', {
+        refId: '_y',
+        referencedFunctionNames: ['__invert_matrix', '__elmcount'],
+        references: ['_x[_a1,_b1]', '_x[_a1,_b2]', '_x[_a2,_b1]', '_x[_a2,_b2]'],
+        subscripts: ['_dima', '_dimb']
+      })
+    ])
+  })
+
+  it('should throw error for INVERT MATRIX function (when call has wrong number of arguments)', () => {
+    expect(() =>
+      readInlineModel(`
+        DimA: A1, A2 ~~|
+        DimB: B1, B2 ~~|
+        x[DimA,DimB] = 1, 2; 3, 4; ~~|
+        y[DimA,DimB] = INVERT MATRIX(x[DimA,DimB]) ~~|
+      `)
+    ).toThrow(/^Expected 'INVERT MATRIX' function call to have 2 arguments but got 1$/)
+  })
+
+  it('should throw error for INVERT MATRIX function (when call is nested inside another function call)', () => {
+    expect(() =>
+      readInlineModel(`
+        DimA: A1, A2 ~~|
+        DimB: B1, B2 ~~|
+        x[DimA,DimB] = 1, 2; 3, 4; ~~|
+        y[DimA,DimB] = ABS(INVERT MATRIX(x[DimA,DimB], 2)) ~~|
+      `)
+    ).toThrow(
+      /^Function 'INVERT MATRIX' cannot be used inside other function calls \(it must appear directly after the '=' sign in an equation\)$/
+    )
+  })
+
   it('should work for LOOKUP BACKWARD function (with lookup defined explicitly)', () => {
     const vars = readInlineModel(`
       x( (0,0),(2,1.3) ) ~~|
