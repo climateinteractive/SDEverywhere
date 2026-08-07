@@ -39,6 +39,7 @@ export interface JsModelFunctions {
   // GAMMA_LN(x: number): number
   INTEG(value: number, rate: number): number
   INTEGER(x: number): number
+  INVERT_MATRIX(matrix: number[][], n: number): number[][]
   LN(x: number): number
   MAX(x: number, y: number): number
   MIN(x: number, y: number): number
@@ -90,6 +91,11 @@ export function getJsModelFunctions(): JsModelFunctions {
   const cachedVectors: Map<number, number[]> = new Map()
   const cachedSortVectors: Map<number, { x: number; ind: number }[]> = new Map()
 
+  // The C implementation of `_INVERT_MATRIX` reuses work and result buffers, so
+  // we will do the same here (one reused matrix per size)
+  const cachedInvertWorkMatrices: Map<number, number[][]> = new Map()
+  const cachedInvertResultMatrices: Map<number, number[][]> = new Map()
+
   return {
     setContext(context: JsModelFunctionContext) {
       ctx = context
@@ -133,6 +139,91 @@ export function getJsModelFunctions(): JsModelFunctions {
 
     INTEGER(x: number): number {
       return Math.trunc(x)
+    },
+
+    INVERT_MATRIX(matrix: number[][], n: number): number[][] {
+      // Invert the n x n matrix using Gauss-Jordan elimination with partial pivoting.
+      // This mirrors the C implementation of `_INVERT_MATRIX` (same pivoting strategy
+      // and operation order).  The input matrix is not modified.  The result matrix
+      // is reused across calls (one per size), so the caller must copy the values
+      // out before the next call.
+      let work = cachedInvertWorkMatrices.get(n)
+      if (work === undefined) {
+        work = Array(n)
+        for (let i = 0; i < n; i++) {
+          work[i] = Array(2 * n)
+        }
+        cachedInvertWorkMatrices.set(n, work)
+      }
+      let result = cachedInvertResultMatrices.get(n)
+      if (result === undefined) {
+        result = Array(n)
+        for (let i = 0; i < n; i++) {
+          result[i] = Array(n)
+        }
+        cachedInvertResultMatrices.set(n, result)
+      }
+
+      // Build the augmented matrix [A | I]
+      for (let i = 0; i < n; i++) {
+        for (let j = 0; j < n; j++) {
+          work[i][j] = matrix[i][j]
+          work[i][n + j] = i === j ? 1.0 : 0.0
+        }
+      }
+
+      for (let k = 0; k < n; k++) {
+        // Find the pivot row with the largest absolute value in column k
+        let pivot = k
+        let max = Math.abs(work[k][k])
+        for (let i = k + 1; i < n; i++) {
+          const v = Math.abs(work[i][k])
+          if (v > max) {
+            max = v
+            pivot = i
+          }
+        }
+        if (max === 0.0) {
+          // The matrix is singular; fill the result with _NA_ values
+          for (let i = 0; i < n; i++) {
+            for (let j = 0; j < n; j++) {
+              result[i][j] = _NA_
+            }
+          }
+          return result
+        }
+        if (pivot !== k) {
+          const tmpRow = work[k]
+          work[k] = work[pivot]
+          work[pivot] = tmpRow
+        }
+
+        // Scale the pivot row so the pivot element becomes 1
+        const p = work[k][k]
+        for (let j = 0; j < 2 * n; j++) {
+          work[k][j] /= p
+        }
+
+        // Eliminate column k from all other rows
+        for (let i = 0; i < n; i++) {
+          if (i !== k) {
+            const f = work[i][k]
+            if (f !== 0.0) {
+              for (let j = 0; j < 2 * n; j++) {
+                work[i][j] -= f * work[k][j]
+              }
+            }
+          }
+        }
+      }
+
+      // The right half of the augmented matrix now holds the inverse
+      for (let i = 0; i < n; i++) {
+        for (let j = 0; j < n; j++) {
+          result[i][j] = work[i][n + j]
+        }
+      }
+      return result
     },
 
     LN(x: number): number {
