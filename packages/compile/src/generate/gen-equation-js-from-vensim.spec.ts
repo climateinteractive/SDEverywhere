@@ -2039,6 +2039,22 @@ describe('generateEquation (Vensim -> JS)', () => {
     expect(() => genJS(vars.get('_y'), 'eval')).toThrow('DELAY FIXED function not yet implemented for JS code gen')
   })
 
+  it('should work for DEMAND AT PRICE function', () => {
+    const vars = readInlineModel(`
+      demander: d1, d2 ~~|
+      pprofile: ptype, ppriority, pwidth, pextra ~~|
+      market price = 5 ~~|
+      demand satiation[demander] = 500,300 ~~|
+      priority[d1,pprofile] = 3,1,1,0 ~~|
+      priority[d2,pprofile] = 3,2,1,0 ~~|
+      amount demanded[demander] = DEMAND AT PRICE(demand satiation[demander], priority[demander,ptype], market price) ~~|
+    `)
+    // TODO: Emit the actual code once we implement DEMAND AT PRICE for JS code gen
+    expect(() => genJS(vars.get('_amount_demanded'))).toThrow(
+      'DEMAND AT PRICE function not yet implemented for JS code gen'
+    )
+  })
+
   it('should work for DEPRECIATE STRAIGHTLINE function', () => {
     const vars = readInlineModel(`
       dtime = 20 ~~|
@@ -2084,6 +2100,25 @@ describe('generateEquation (Vensim -> JS)', () => {
     expect(vars.size).toBe(2)
     expect(genJS(vars.get('_x'))).toEqual(['_x = 1.0;'])
     expect(genJS(vars.get('_y'))).toEqual(['_y = fns.EXP(_x);'])
+  })
+
+  it('should work for FIND MARKET PRICE function', () => {
+    const vars = readInlineModel(`
+      demander: d1, d2 ~~|
+      supplier: s1, s2 ~~|
+      pprofile: ptype, ppriority, pwidth, pextra ~~|
+      demand satiation[demander] = 500 ~~|
+      demand priority[d1,pprofile] = 3,1,1,0 ~~|
+      demand priority[d2,pprofile] = 3,2,1,0 ~~|
+      supply capacity[supplier] = 200 ~~|
+      supply priority[s1,pprofile] = 3,1,1,0 ~~|
+      supply priority[s2,pprofile] = 3,2,1,0 ~~|
+      market price = FIND MARKET PRICE(demand satiation[d1], demand priority[d1,ptype], supply capacity[s1], supply priority[s1,ptype]) ~~|
+    `)
+    // TODO: Emit the actual code once we implement FIND MARKET PRICE for JS code gen
+    expect(() => genJS(vars.get('_market_price'))).toThrow(
+      'FIND MARKET PRICE function not yet implemented for JS code gen'
+    )
   })
 
   it('should work for GAME function (no dimensions)', () => {
@@ -3077,6 +3112,22 @@ describe('generateEquation (Vensim -> JS)', () => {
       '}',
       '_y = __t1;'
     ])
+  })
+
+  it('should work for SUPPLY AT PRICE function', () => {
+    const vars = readInlineModel(`
+      supplier: s1, s2 ~~|
+      pprofile: ptype, ppriority, pwidth, pextra ~~|
+      market price = 5 ~~|
+      supply capacity[supplier] = 200,300 ~~|
+      priority[s1,pprofile] = 3,1,1,0 ~~|
+      priority[s2,pprofile] = 3,2,1,0 ~~|
+      amount supplied[supplier] = SUPPLY AT PRICE(supply capacity[supplier], priority[supplier,ptype], market price) ~~|
+    `)
+    // TODO: Emit the actual code once we implement SUPPLY AT PRICE for JS code gen
+    expect(() => genJS(vars.get('_amount_supplied'))).toThrow(
+      'SUPPLY AT PRICE function not yet implemented for JS code gen'
+    )
   })
 
   it('should work for TAN function', () => {
