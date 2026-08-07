@@ -896,8 +896,9 @@ function generateAllocateAvailableCall(callExpr, ctx) {
   function cVarRefWithoutLastIndices(arg, count) {
     const varRef = ctx.cVarRef(arg)
     const origIndexParts = Model.splitRefId(varRef).subscripts
-    if (origIndexParts < count) {
-      throw new Error(`ALLOCATE AVAILABLE argument '${arg}' should have at least ${count} subscripts`)
+    if (origIndexParts.length < count) {
+      const plural = count === 1 ? '' : 's'
+      throw new Error(`ALLOCATE AVAILABLE argument '${arg.varName}' should have at least ${count} subscript${plural}`)
     }
     const newIndexParts = origIndexParts.slice(0, -count)
     if (newIndexParts.length > 0) {
@@ -918,9 +919,8 @@ function generateAllocateAvailableCall(callExpr, ctx) {
   const ppArg = validateArg(1, 'pp')
   const ppRef = cVarRefWithoutLastIndices(ppArg, 2)
 
-  // Process the avail argument; include any subscripts
-  const availArg = validateArg(2, 'avail')
-  const availRef = ctx.cVarRef(availArg)
+  // Process the avail argument; include any subscripts. The avail arg can be any expression.
+  const availArg = generateExpr(callExpr.args[2], ctx)
 
   // The `ALLOCATE AVAILABLE` function iterates over the last subscript in its first arg.
   // The `readEquation` process will have already verified that the last dimension matches
@@ -934,12 +934,12 @@ function generateAllocateAvailableCall(callExpr, ctx) {
   switch (ctx.outFormat) {
     case 'c':
       ctx.emitPreInnerLoop(
-        `  double* ${tmpVarId} = _ALLOCATE_AVAILABLE(${reqRef}, (double*)${ppRef}, ${availRef}, ${numRequesters});`
+        `  double* ${tmpVarId} = _ALLOCATE_AVAILABLE(${reqRef}, (double*)${ppRef}, ${availArg}, ${numRequesters});`
       )
       break
     case 'js':
       ctx.emitPreInnerLoop(
-        `  let ${tmpVarId} = fns.ALLOCATE_AVAILABLE(${reqRef}, ${ppRef}, ${availRef}, ${numRequesters});`
+        `  let ${tmpVarId} = fns.ALLOCATE_AVAILABLE(${reqRef}, ${ppRef}, ${availArg}, ${numRequesters});`
       )
       break
     default:
@@ -972,8 +972,9 @@ function generateAllocateByPriorityCall(callExpr, ctx) {
   function cVarRefWithoutLastIndices(arg, count) {
     const varRef = ctx.cVarRef(arg)
     const origIndexParts = Model.splitRefId(varRef).subscripts
-    if (origIndexParts < count) {
-      throw new Error(`ALLOCATE BY PRIORITY argument '${arg}' should have at least ${count} subscripts`)
+    if (origIndexParts.length < count) {
+      const plural = count === 1 ? '' : 's'
+      throw new Error(`ALLOCATE BY PRIORITY argument '${arg.varName}' should have at least ${count} subscript${plural}`)
     }
     const newIndexParts = origIndexParts.slice(0, -count)
     if (newIndexParts.length > 0) {
