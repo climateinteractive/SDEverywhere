@@ -369,6 +369,9 @@ function generateFunctionCall(callExpr, ctx) {
     //
     //
 
+    case '_INVERT_MATRIX':
+      return generateInvertMatrixCall(callExpr, ctx)
+
     case '_VECTOR_ELM_MAP':
       return generateVectorElmMapCall(callExpr, ctx)
 
@@ -880,6 +883,75 @@ function generateVectorSortOrderCall(callExpr, ctx) {
 
   // Generate the RHS expression used in the inner loop
   return `${tmpVarId}[${dimId}[${subIndex}]]`
+}
+
+/**
+ * Generate C/JS code for an `INVERT MATRIX` function call.
+ *
+ * The function inverts the entire 2D matrix argument at once, so the call is emitted
+ * once before the LHS subscript loops are opened, and the per-element expression reads
+ * from the resulting temporary.
+ *
+ * @param {*} callExpr The function call expression from the parsed model.
+ * @param {GenExprContext} ctx The context used when generating code for the expression.
+ * @return {string} The generated C/JS code.
+ */
+function generateInvertMatrixCall(callExpr, ctx) {
+  // Process the matrix argument
+  const matrixArg = callExpr.args[0]
+  if (matrixArg.kind !== 'variable-ref') {
+    throw new Error(`INVERT MATRIX argument 'matrix' must be a variable reference`)
+  }
+  const matrixSubIds = matrixArg.subscriptRefs?.map(subRef => subRef.subId) || []
+  if (matrixSubIds.length !== 2) {
+    throw new Error(`INVERT MATRIX argument 'matrix' must be a 2D matrix variable`)
+  }
+
+  // The result fills the entire LHS variable, so the LHS must be a square 2D matrix
+  const lhsSubIds = ctx.variable.subscripts
+  if (lhsSubIds.length !== 2) {
+    throw new Error(`The LHS of an equation with INVERT MATRIX must have two dimensions`)
+  }
+  const rowDimId = lhsSubIds[0]
+  const colDimId = lhsSubIds[1]
+  const matrixSize = sub(colDimId).size
+  if (sub(rowDimId).size !== matrixSize) {
+    throw new Error(`The LHS of an equation with INVERT MATRIX must be a square matrix`)
+  }
+
+  // Process the size argument.  When it resolves to a constant at code gen time (e.g., a
+  // numeric literal or an `ELMCOUNT` call), verify that it matches the LHS dimension size,
+  // since the generated code always inverts the full LHS-sized matrix.
+  const nArg = generateExpr(callExpr.args[1], ctx)
+  const staticN = Number.parseFloat(nArg)
+  if (!Number.isNaN(staticN) && staticN !== matrixSize) {
+    throw new Error(
+      `The size argument for INVERT MATRIX (${staticN}) must match the LHS dimension size (${matrixSize})`
+    )
+  }
+
+  // Generate the code that is emitted before the entire block (before any loops are opened)
+  const tmpVarId = newTmpVarName()
+  switch (ctx.outFormat) {
+    case 'c':
+      ctx.emitPreLoop(`  double* ${tmpVarId} = _INVERT_MATRIX((double*)${matrixArg.varId}, ${matrixSize});`)
+      break
+    case 'js':
+      ctx.emitPreLoop(`  let ${tmpVarId} = fns.INVERT_MATRIX(${matrixArg.varId}, ${matrixSize});`)
+      break
+    default:
+      throw new Error(`Unhandled output format '${ctx.outFormat}'`)
+  }
+
+  // Generate the RHS expression used in the inner loop.  The C runtime function returns
+  // a flat array in row-major order, while the JS one returns a nested array.
+  const rowIndexVar = ctx.loopIndexVars.index(rowDimId)
+  const colIndexVar = ctx.loopIndexVars.index(colDimId)
+  if (ctx.outFormat === 'c') {
+    return `${tmpVarId}[${rowIndexVar} * ${matrixSize} + ${colIndexVar}]`
+  } else {
+    return `${tmpVarId}[${rowIndexVar}][${colIndexVar}]`
+  }
 }
 
 /**

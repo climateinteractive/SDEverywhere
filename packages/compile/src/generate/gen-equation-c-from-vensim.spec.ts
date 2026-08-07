@@ -3110,6 +3110,134 @@ describe('generateEquation (Vensim -> C)', () => {
     expect(genC(vars.get('_y'))).toEqual(['_y = _INTEGER(_x);'])
   })
 
+  it('should work for INVERT MATRIX function (2x2)', () => {
+    const vars = readInlineModel(`
+      DimA: A1, A2 ~~|
+      DimB: B1, B2 ~~|
+      x[DimA, DimB] = 1, 2; 3, 4; ~~|
+      y[DimA, DimB] = INVERT MATRIX(x[DimA, DimB], 2) ~~|
+    `)
+    expect(vars.size).toBe(5)
+    expect(genC(vars.get('_x[_a1,_b1]'), 'init-constants')).toEqual(['_x[0][0] = 1.0;'])
+    expect(genC(vars.get('_x[_a1,_b2]'), 'init-constants')).toEqual(['_x[0][1] = 2.0;'])
+    expect(genC(vars.get('_x[_a2,_b1]'), 'init-constants')).toEqual(['_x[1][0] = 3.0;'])
+    expect(genC(vars.get('_x[_a2,_b2]'), 'init-constants')).toEqual(['_x[1][1] = 4.0;'])
+    expect(genC(vars.get('_y'))).toEqual([
+      'double* __t1 = _INVERT_MATRIX((double*)_x, 2);',
+      'for (size_t i = 0; i < 2; i++) {',
+      'for (size_t j = 0; j < 2; j++) {',
+      '_y[i][j] = __t1[i * 2 + j];',
+      '}',
+      '}'
+    ])
+  })
+
+  it('should work for INVERT MATRIX function (3x3)', () => {
+    const vars = readInlineModel(`
+      DimA: A1, A2, A3 ~~|
+      DimB: B1, B2, B3 ~~|
+      x[DimA, DimB] = 1, 2, 3; 4, 5, 6; 7, 8, 10; ~~|
+      y[DimA, DimB] = INVERT MATRIX(x[DimA, DimB], 3) ~~|
+    `)
+    expect(vars.size).toBe(10)
+    expect(genC(vars.get('_y'))).toEqual([
+      'double* __t1 = _INVERT_MATRIX((double*)_x, 3);',
+      'for (size_t i = 0; i < 3; i++) {',
+      'for (size_t j = 0; j < 3; j++) {',
+      '_y[i][j] = __t1[i * 3 + j];',
+      '}',
+      '}'
+    ])
+  })
+
+  it('should work for INVERT MATRIX function (with ELMCOUNT call used for size arg)', () => {
+    const vars = readInlineModel(`
+      DimA: A1, A2 ~~|
+      DimB: B1, B2 ~~|
+      x[DimA, DimB] = 1, 2; 3, 4; ~~|
+      y[DimA, DimB] = INVERT MATRIX(x[DimA, DimB], ELMCOUNT(DimA)) ~~|
+    `)
+    expect(vars.size).toBe(5)
+    expect(genC(vars.get('_y'))).toEqual([
+      'double* __t1 = _INVERT_MATRIX((double*)_x, 2);',
+      'for (size_t i = 0; i < 2; i++) {',
+      'for (size_t j = 0; j < 2; j++) {',
+      '_y[i][j] = __t1[i * 2 + j];',
+      '}',
+      '}'
+    ])
+  })
+
+  it('should work for INVERT MATRIX function (with variable reference used for size arg)', () => {
+    const vars = readInlineModel(`
+      DimA: A1, A2 ~~|
+      DimB: B1, B2 ~~|
+      n = 2 ~~|
+      x[DimA, DimB] = 1, 2; 3, 4; ~~|
+      y[DimA, DimB] = INVERT MATRIX(x[DimA, DimB], n) ~~|
+    `)
+    expect(vars.size).toBe(6)
+    expect(genC(vars.get('_y'))).toEqual([
+      'double* __t1 = _INVERT_MATRIX((double*)_x, 2);',
+      'for (size_t i = 0; i < 2; i++) {',
+      'for (size_t j = 0; j < 2; j++) {',
+      '_y[i][j] = __t1[i * 2 + j];',
+      '}',
+      '}'
+    ])
+  })
+
+  it('should throw error for INVERT MATRIX function (when matrix argument is not a variable reference)', () => {
+    const vars = readInlineModel(`
+      DimA: A1, A2 ~~|
+      DimB: B1, B2 ~~|
+      y[DimA, DimB] = INVERT MATRIX(1, 2) ~~|
+    `)
+    expect(() => genC(vars.get('_y'))).toThrow(/^INVERT MATRIX argument 'matrix' must be a variable reference$/)
+  })
+
+  it('should throw error for INVERT MATRIX function (when matrix argument is not a 2D variable)', () => {
+    const vars = readInlineModel(`
+      DimA: A1, A2 ~~|
+      DimB: B1, B2 ~~|
+      x[DimA] = 1, 2 ~~|
+      y[DimA, DimB] = INVERT MATRIX(x[DimA], 2) ~~|
+    `)
+    expect(() => genC(vars.get('_y'))).toThrow(/^INVERT MATRIX argument 'matrix' must be a 2D matrix variable$/)
+  })
+
+  it('should throw error for INVERT MATRIX function (when LHS does not have two dimensions)', () => {
+    const vars = readInlineModel(`
+      DimA: A1, A2 ~~|
+      DimB: B1, B2 ~~|
+      x[DimA, DimB] = 1, 2; 3, 4; ~~|
+      y[DimA] = INVERT MATRIX(x[DimA, B1], 2) ~~|
+    `)
+    expect(() => genC(vars.get('_y'))).toThrow(/^The LHS of an equation with INVERT MATRIX must have two dimensions$/)
+  })
+
+  it('should throw error for INVERT MATRIX function (when LHS is not a square matrix)', () => {
+    const vars = readInlineModel(`
+      DimA: A1, A2, A3 ~~|
+      DimB: B1, B2 ~~|
+      x[DimA, DimB] = 1, 2; 3, 4; 5, 6; ~~|
+      y[DimA, DimB] = INVERT MATRIX(x[DimA, DimB], 2) ~~|
+    `)
+    expect(() => genC(vars.get('_y'))).toThrow(/^The LHS of an equation with INVERT MATRIX must be a square matrix$/)
+  })
+
+  it('should throw error for INVERT MATRIX function (when size argument does not match the LHS dimension size)', () => {
+    const vars = readInlineModel(`
+      DimA: A1, A2 ~~|
+      DimB: B1, B2 ~~|
+      x[DimA, DimB] = 1, 2; 3, 4; ~~|
+      y[DimA, DimB] = INVERT MATRIX(x[DimA, DimB], 3) ~~|
+    `)
+    expect(() => genC(vars.get('_y'))).toThrow(
+      /^The size argument for INVERT MATRIX \(3\) must match the LHS dimension size \(2\)$/
+    )
+  })
+
   it('should work for LN function', () => {
     const vars = readInlineModel(`
       x = 1 ~~|
