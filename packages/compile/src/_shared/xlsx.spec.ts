@@ -235,6 +235,56 @@ describe('readXlsx', () => {
     expect(wb.Sheets['s']['A1']).toEqual({ v: 0.0015189876 })
   })
 
+  it('should read cells whose <v> tag has attributes (e.g. xml:space)', () => {
+    const file = buildXlsx({
+      sheets: [
+        {
+          name: 's',
+          sheetData:
+            '<row r="1">' +
+            '<c r="A1" t="str"><f>IF(B1,"x ","")</f><v xml:space="preserve">x </v></c>' +
+            '<c r="B1"><v xml:space="preserve">42</v></c>' +
+            '<c r="C1" t="s"><v xml:space="preserve">0</v></c>' +
+            '<c r="D1" t="b"><v xml:space="preserve">1</v></c>' +
+            '</row>'
+        }
+      ],
+      sharedStrings: ['hello']
+    })
+    const wb = readXlsx(file)
+    const sheet = wb.Sheets['s']
+    expect(sheet['A1']).toEqual({ v: 'x ' })
+    expect(sheet['B1']).toEqual({ v: 42 })
+    expect(sheet['C1']).toEqual({ v: 'hello' })
+    expect(sheet['D1']).toEqual({ v: true })
+  })
+
+  it('should normalize line endings in cell text like an XML parser (CRLF -> LF)', () => {
+    const file = buildXlsx({
+      sheets: [
+        {
+          name: 's',
+          sheetData:
+            '<row r="1">' +
+            '<c r="A1" t="str"><v>line1&#13;\nline2&#13;</v></c>' +
+            '<c r="B1" t="s"><v>0</v></c>' +
+            '<c r="C1" t="inlineStr"><is><t>a\rb</t></is></c>' +
+            '</row>'
+        }
+      ],
+      sharedStringsXml:
+        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+        '<sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="1" uniqueCount="1">' +
+        '<si><t>x&#13;&#10;y</t></si>' +
+        '</sst>'
+    })
+    const wb = readXlsx(file)
+    const sheet = wb.Sheets['s']
+    expect(sheet['A1']).toEqual({ v: 'line1\nline2\n' })
+    expect(sheet['B1']).toEqual({ v: 'x\ny' })
+    expect(sheet['C1']).toEqual({ v: 'a\nb' })
+  })
+
   it('should skip formula cells with no cached value (uncalculated)', () => {
     const file = buildXlsx({
       sheets: [
