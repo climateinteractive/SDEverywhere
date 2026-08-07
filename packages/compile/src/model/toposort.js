@@ -93,7 +93,9 @@ function stronglyConnectedComponents(nodes, outgoingEdges) {
   var stack = []
   var sccs = []
   for (var start of nodes) {
-    if (nodeIndex.has(start)) continue
+    if (nodeIndex.has(start)) {
+      continue
+    }
     var frames = [{ node: start, edges: null, i: 0, child: undefined }]
     while (frames.length > 0) {
       var frame = frames[frames.length - 1]
@@ -123,7 +125,9 @@ function stronglyConnectedComponents(nodes, outgoingEdges) {
           lowlink.set(node, Math.min(lowlink.get(node), nodeIndex.get(w)))
         }
       }
-      if (descended) continue
+      if (descended) {
+        continue
+      }
       // All edges have been visited, so the node is complete
       if (lowlink.get(node) === nodeIndex.get(node)) {
         var scc = []
