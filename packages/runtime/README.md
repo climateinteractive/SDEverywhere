@@ -150,7 +150,7 @@ The `emcc` command line options should be similar to the following:
 
 ```
 $ emcc \
-build/<mymodel>.c build/macros.c build/model.c build/vensim.c \
+build/<mymodel>.c build/macros.c build/model.c build/vensim.c build/allocation.c \
 -Ibuild -o ./output/<mymodel>.js -Wall -Os \
 -s STRICT=1 -s MALLOC=emmalloc -s FILESYSTEM=0 -s MODULARIZE=1 \
 -s EXPORTED_FUNCTIONS="['_malloc','_free','_getInitialTime','_getFinalTime','_getSaveper','_setLookup','_runModelWithBuffers']" \
