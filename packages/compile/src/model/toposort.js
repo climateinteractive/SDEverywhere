@@ -82,10 +82,17 @@ function toposort(nodes, edges) {
   }
 }
 
+/**
+ * Find the strongly connected components of the graph using an iterative form of
+ * Tarjan's algorithm (iterative to avoid stack overflow on the deep dependency
+ * chains found in large models).
+ *
+ * @param {Array} nodes The nodes in the graph.
+ * @param {Map} outgoingEdges A map of each node to the set of nodes that it points to.
+ * @returns {Array} An array of strongly connected components, where each component is
+ * an array of the nodes that it contains.
+ */
 function stronglyConnectedComponents(nodes, outgoingEdges) {
-  // Find the strongly connected components of the graph using an iterative
-  // form of Tarjan's algorithm (iterative to avoid stack overflow on the
-  // deep dependency chains found in large models).
   var index = 0
   var nodeIndex = new Map()
   var lowlink = new Map()
