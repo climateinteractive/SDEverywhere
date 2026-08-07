@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.2.9](https://github.com/climateinteractive/SDEverywhere/compare/runtime-v0.2.8...runtime-v0.2.9) (2026-08-07)
+
+
+### Features
+
+* add support for the INVERT MATRIX Vensim function in C and JS ([#846](https://github.com/climateinteractive/SDEverywhere/issues/846)) ([28a1968](https://github.com/climateinteractive/SDEverywhere/commit/28a1968d64a6cd751507d989c1e8f18305ea2d4b)), closes [#845](https://github.com/climateinteractive/SDEverywhere/issues/845)
+
+
+### Bug Fixes
+
+* correct ALLOCATE AVAILABLE convergence and code generation ([#838](https://github.com/climateinteractive/SDEverywhere/issues/838)) ([4661254](https://github.com/climateinteractive/SDEverywhere/commit/466125408c50197085c4a81cd53ffab153b39875)), closes [#837](https://github.com/climateinteractive/SDEverywhere/issues/837)
+
 ## [0.2.8](https://github.com/climateinteractive/SDEverywhere/compare/runtime-v0.2.7...runtime-v0.2.8) (2026-02-04)
 
 
