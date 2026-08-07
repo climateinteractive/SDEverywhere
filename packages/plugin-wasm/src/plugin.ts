@@ -139,6 +139,7 @@ async function buildWasm(
   addInput('macros.c')
   addInput('model.c')
   addInput('vensim.c')
+  addInput('allocation.c')
   addArg('--pre-js')
   addArg('build/processed_extras.js')
   addArg('-Ibuild')
