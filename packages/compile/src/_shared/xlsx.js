@@ -279,9 +279,21 @@ function getAttr(attrs, name) {
 }
 
 /**
+ * Normalize line endings the way a conformant XML parser (and SheetJS) does:
+ * `\r\n` and lone `\r` both become `\n`. Applied after entity decoding so a
+ * CR encoded as `&#13;` is normalized too.
+ *
+ * @param {string} s The text to normalize.
+ * @returns The normalized string.
+ */
+function normalizeEol(s) {
+  return s.indexOf('\r') === -1 ? s : s.replace(/\r\n?/g, '\n')
+}
+
+/**
  * Decode the standard XML entities (`&lt;`, `&gt;`, `&amp;`, `&quot;`,
  * `&apos;`) along with numeric character references (`&#NN;` and `&#xNN;`)
- * in the given text. Returns the input unchanged when no entities are present.
+ * in the given text, and normalize line endings to `\n`.
  *
  * @param {string} s The raw text from an XML element body or attribute.
  * @returns The decoded string.
@@ -289,20 +301,22 @@ function getAttr(attrs, name) {
 function decodeXmlText(s) {
   // Fast path: most cell text contains no entities, so skip the regex chain
   if (s.indexOf('&') === -1) {
-    return s
+    return normalizeEol(s)
   }
 
   // Decode the named entities, then decimal and hex numeric refs, and finally
   // `&amp;` — leaving `&amp;` last avoids accidentally producing `&lt;` etc.
   // from a literal `&amp;lt;` in the source
-  return s
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"')
-    .replace(/&apos;/g, "'")
-    .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(parseInt(n, 10)))
-    .replace(/&#x([0-9a-fA-F]+);/g, (_, n) => String.fromCharCode(parseInt(n, 16)))
-    .replace(/&amp;/g, '&')
+  return normalizeEol(
+    s
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .replace(/&apos;/g, "'")
+      .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(parseInt(n, 10)))
+      .replace(/&#x([0-9a-fA-F]+);/g, (_, n) => String.fromCharCode(parseInt(n, 16)))
+      .replace(/&amp;/g, '&')
+  )
 }
 
 //
@@ -402,6 +416,19 @@ function parseWorkbookRels(xml) {
  * @param {string[]} sharedStrings The shared-string table for resolving `t='s'` cells.
  * @returns The sparse cell map, including a `!ref` key if any cells were read.
  */
+/**
+ * Extract the text content of the `<v>` element in a cell body, tolerating
+ * attributes on the tag (e.g. `<v xml:space="preserve">`). Returns undefined
+ * when there is no `<v>` element (e.g. an uncalculated formula cell).
+ *
+ * @param {string} body The inner XML of a `<c>` element.
+ * @returns The raw text between `<v...>` and `</v>`, or undefined.
+ */
+function getVText(body) {
+  const m = /<v\b[^>]*>([\s\S]*?)<\/v>/.exec(body)
+  return m ? m[1] : undefined
+}
+
 function parseSheetXml(xml, sharedStrings) {
   const cells = Object.create(null)
 
@@ -429,16 +456,7 @@ function parseSheetXml(xml, sharedStrings) {
     const t = getAttr(attrs, 't')
 
     let value
-    if (t === 's') {
-      // Shared string: <v>N</v> where N indexes sharedStrings
-      const vStart = body.indexOf('<v>')
-      if (vStart < 0) {
-        continue
-      }
-      const vEnd = body.indexOf('</v>', vStart + 3)
-      const idx = parseInt(body.slice(vStart + 3, vEnd), 10)
-      value = sharedStrings[idx]
-    } else if (t === 'inlineStr') {
+    if (t === 'inlineStr') {
       // Inline string: <is><t>...</t></is>
       const tStart = body.indexOf('<t')
       if (tStart < 0) {
@@ -447,38 +465,35 @@ function parseSheetXml(xml, sharedStrings) {
       const tOpenEnd = body.indexOf('>', tStart)
       const tEnd = body.indexOf('</t>', tOpenEnd)
       value = decodeXmlText(body.slice(tOpenEnd + 1, tEnd))
-    } else if (t === 'str') {
-      // Formula result as string: <v>...</v>
-      const vStart = body.indexOf('<v>')
-      if (vStart < 0) {
-        continue
-      }
-      const vEnd = body.indexOf('</v>', vStart + 3)
-      value = decodeXmlText(body.slice(vStart + 3, vEnd))
-    } else if (t === 'b') {
-      // Boolean: <v>0</v> or <v>1</v>
-      const vStart = body.indexOf('<v>')
-      if (vStart < 0) {
-        continue
-      }
-      value = body.charCodeAt(vStart + 3) === 49 // '1'
     } else if (t === 'e') {
       // Error cell, skip
       continue
     } else {
-      // Numeric (t === 'n' or absent). Skip any <f> formula tag and read the
-      // cached <v> value. If <v> is missing (e.g. an uncalculated formula),
-      // skip the cell so the caller's missing-cell handling kicks in.
-      const vStart = body.indexOf('<v>')
-      if (vStart < 0) {
+      // The remaining cell types carry their value in a <v> element, which
+      // may have attributes (e.g. <v xml:space="preserve">). If <v> is
+      // missing (e.g. an uncalculated formula), skip the cell so the
+      // caller's missing-cell handling kicks in.
+      const vText = getVText(body)
+      if (vText === undefined) {
         continue
       }
-      const vEnd = body.indexOf('</v>', vStart + 3)
-      const num = +body.slice(vStart + 3, vEnd)
-      if (Number.isNaN(num)) {
-        continue
+      if (t === 's') {
+        // Shared string: <v>N</v> where N indexes sharedStrings
+        value = sharedStrings[parseInt(vText, 10)]
+      } else if (t === 'str') {
+        // Formula result as string: <v>...</v>
+        value = decodeXmlText(vText)
+      } else if (t === 'b') {
+        // Boolean: <v>0</v> or <v>1</v>
+        value = vText.charCodeAt(0) === 49 // '1'
+      } else {
+        // Numeric (t === 'n' or absent)
+        const num = +vText
+        if (Number.isNaN(num)) {
+          continue
+        }
+        value = num
       }
-      value = num
     }
 
     // Store the cell under its A1 ref, matching the SheetJS sheet shape
