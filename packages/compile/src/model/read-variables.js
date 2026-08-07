@@ -120,22 +120,27 @@ function variablesForEquation(eqn, specialSeparationDims, separateAllVarsWithDim
       let separationDims = specialSeparationDims[baseVarId] || []
       if (!Array.isArray(separationDims)) {
         separationDims = [separationDims]
+      } else {
+        // Copy the array so that the spec object is not mutated below
+        separationDims = [...separationDims]
       }
-      // Alternatively, if the variable was not in `specialSeparationDims`, separate
-      // on dims from `separateAllVarsWithDims` if the var matches one of the dim lists.
-      if (separationDims.length === 0) {
-        for (let dimList of separateAllVarsWithDims) {
-          // Technically we allow each entry in the spec array to be either a single
-          // dim ID string or an array of dim IDs, so convert to array if needed
-          if (!Array.isArray(dimList)) {
-            dimList = [dimList]
+      // Additionally, separate on dims from `separateAllVarsWithDims` if the var
+      // matches one of the dim lists.
+      for (let dimList of separateAllVarsWithDims) {
+        // Technically we allow each entry in the spec array to be either a single
+        // dim ID string or an array of dim IDs, so convert to array if needed
+        if (!Array.isArray(dimList)) {
+          dimList = [dimList]
+        }
+        // The list entry from the spec is only considered a match if every dimension
+        // in the spec list appears on the LHS
+        if (dimList.every(dim => subIds.includes(dim))) {
+          for (const dim of dimList) {
+            if (!separationDims.includes(dim)) {
+              separationDims.push(dim)
+            }
           }
-          // The list entry from the spec is only considered a match if every dimension
-          // in the spec list appears on the LHS
-          if (dimList.every(dim => subIds.includes(dim))) {
-            separationDims = dimList
-            break
-          }
+          break
         }
       }
       positionsToExpand = subscriptPositionsToExpand(subIds, exceptSubIdSets, separationDims, variable.modelFormula)

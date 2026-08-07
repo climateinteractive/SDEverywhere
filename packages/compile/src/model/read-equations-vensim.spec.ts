@@ -3268,6 +3268,119 @@ describe('readEquations (from Vensim model)', () => {
     ])
   })
 
+  it('should work for DEMAND AT PRICE function (1D LHS, 1D demand, 2D pp, non-subscripted price)', () => {
+    const vars = readInlineModel(`
+      demander: d1, d2 ~~|
+      pprofile: ptype, ppriority, pwidth, pextra ~~|
+      market price = 5 ~~|
+      demand satiation[demander] = 500,300 ~~|
+      priority[d1,pprofile] = 3,1,1,0 ~~|
+      priority[d2,pprofile] = 3,2,1,0 ~~|
+      amount demanded[demander] = DEMAND AT PRICE(demand satiation[demander], priority[demander,ptype], market price) ~~|
+    `)
+    expect(vars).toEqual([
+      v('market price', '5', {
+        refId: '_market_price',
+        varType: 'const'
+      }),
+      v('demand satiation[demander]', '500,300', {
+        refId: '_demand_satiation[_d1]',
+        separationDims: ['_demander'],
+        subscripts: ['_d1'],
+        varType: 'const'
+      }),
+      v('demand satiation[demander]', '500,300', {
+        refId: '_demand_satiation[_d2]',
+        separationDims: ['_demander'],
+        subscripts: ['_d2'],
+        varType: 'const'
+      }),
+      v('priority[d1,pprofile]', '3,1,1,0', {
+        refId: '_priority[_d1,_ptype]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_d1', '_ptype'],
+        varType: 'const'
+      }),
+      v('priority[d1,pprofile]', '3,1,1,0', {
+        refId: '_priority[_d1,_ppriority]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_d1', '_ppriority'],
+        varType: 'const'
+      }),
+      v('priority[d1,pprofile]', '3,1,1,0', {
+        refId: '_priority[_d1,_pwidth]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_d1', '_pwidth'],
+        varType: 'const'
+      }),
+      v('priority[d1,pprofile]', '3,1,1,0', {
+        refId: '_priority[_d1,_pextra]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_d1', '_pextra'],
+        varType: 'const'
+      }),
+      v('priority[d2,pprofile]', '3,2,1,0', {
+        refId: '_priority[_d2,_ptype]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_d2', '_ptype'],
+        varType: 'const'
+      }),
+      v('priority[d2,pprofile]', '3,2,1,0', {
+        refId: '_priority[_d2,_ppriority]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_d2', '_ppriority'],
+        varType: 'const'
+      }),
+      v('priority[d2,pprofile]', '3,2,1,0', {
+        refId: '_priority[_d2,_pwidth]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_d2', '_pwidth'],
+        varType: 'const'
+      }),
+      v('priority[d2,pprofile]', '3,2,1,0', {
+        refId: '_priority[_d2,_pextra]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_d2', '_pextra'],
+        varType: 'const'
+      }),
+      v(
+        'amount demanded[demander]',
+        'DEMAND AT PRICE(demand satiation[demander],priority[demander,ptype],market price)',
+        {
+          refId: '_amount_demanded',
+          referencedFunctionNames: ['__demand_at_price'],
+          references: [
+            '_demand_satiation[_d1]',
+            '_demand_satiation[_d2]',
+            '_priority[_d1,_ptype]',
+            '_priority[_d2,_ptype]',
+            '_priority[_d1,_ppriority]',
+            '_priority[_d2,_ppriority]',
+            '_priority[_d1,_pwidth]',
+            '_priority[_d2,_pwidth]',
+            '_priority[_d1,_pextra]',
+            '_priority[_d2,_pextra]',
+            '_market_price'
+          ],
+          subscripts: ['_demander']
+        }
+      )
+    ])
+  })
+
+  it('should throw error for DEMAND AT PRICE function (when call has wrong number of arguments)', () => {
+    expect(() =>
+      readInlineModel(`
+        demander: d1, d2 ~~|
+        pprofile: ptype, ppriority, pwidth, pextra ~~|
+        demand satiation[demander] = 500,300 ~~|
+        priority[d1,pprofile] = 3,1,1,0 ~~|
+        priority[d2,pprofile] = 3,2,1,0 ~~|
+        amount demanded[demander] = DEMAND AT PRICE(demand satiation[demander], priority[demander,ptype]) ~~|
+      `)
+    ).toThrow(/^Expected 'DEMAND AT PRICE' function call to have 3 arguments but got 2$/)
+  })
+
   it('should work for DEPRECIATE STRAIGHTLINE function', () => {
     const vars = readInlineModel(`
       dtime = 20 ~~|
@@ -3313,6 +3426,165 @@ describe('readEquations (from Vensim model)', () => {
         referencedFunctionNames: ['__depreciate_straightline']
       })
     ])
+  })
+
+  // Note that `FIND MARKET PRICE` takes two priority profile arguments (one for the demanders
+  // and one for the suppliers), so both the second and fourth arguments need the special
+  // handling that adds references to all variants of the profile variable.
+  it('should work for FIND MARKET PRICE function (non-subscripted LHS, 1D qtys, 2D profiles)', () => {
+    const vars = readInlineModel(`
+      demander: d1, d2 ~~|
+      supplier: s1, s2 ~~|
+      pprofile: ptype, ppriority, pwidth, pextra ~~|
+      demand satiation[demander] = 500 ~~|
+      demand priority[d1,pprofile] = 3,1,1,0 ~~|
+      demand priority[d2,pprofile] = 3,2,1,0 ~~|
+      supply capacity[supplier] = 200 ~~|
+      supply priority[s1,pprofile] = 3,1,1,0 ~~|
+      supply priority[s2,pprofile] = 3,2,1,0 ~~|
+      market price = FIND MARKET PRICE(demand satiation[d1], demand priority[d1,ptype], supply capacity[s1], supply priority[s1,ptype]) ~~|
+    `)
+    expect(vars).toEqual([
+      v('demand satiation[demander]', '500', {
+        refId: '_demand_satiation',
+        subscripts: ['_demander'],
+        varType: 'const'
+      }),
+      v('demand priority[d1,pprofile]', '3,1,1,0', {
+        refId: '_demand_priority[_d1,_ptype]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_d1', '_ptype'],
+        varType: 'const'
+      }),
+      v('demand priority[d1,pprofile]', '3,1,1,0', {
+        refId: '_demand_priority[_d1,_ppriority]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_d1', '_ppriority'],
+        varType: 'const'
+      }),
+      v('demand priority[d1,pprofile]', '3,1,1,0', {
+        refId: '_demand_priority[_d1,_pwidth]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_d1', '_pwidth'],
+        varType: 'const'
+      }),
+      v('demand priority[d1,pprofile]', '3,1,1,0', {
+        refId: '_demand_priority[_d1,_pextra]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_d1', '_pextra'],
+        varType: 'const'
+      }),
+      v('demand priority[d2,pprofile]', '3,2,1,0', {
+        refId: '_demand_priority[_d2,_ptype]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_d2', '_ptype'],
+        varType: 'const'
+      }),
+      v('demand priority[d2,pprofile]', '3,2,1,0', {
+        refId: '_demand_priority[_d2,_ppriority]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_d2', '_ppriority'],
+        varType: 'const'
+      }),
+      v('demand priority[d2,pprofile]', '3,2,1,0', {
+        refId: '_demand_priority[_d2,_pwidth]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_d2', '_pwidth'],
+        varType: 'const'
+      }),
+      v('demand priority[d2,pprofile]', '3,2,1,0', {
+        refId: '_demand_priority[_d2,_pextra]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_d2', '_pextra'],
+        varType: 'const'
+      }),
+      v('supply capacity[supplier]', '200', {
+        refId: '_supply_capacity',
+        subscripts: ['_supplier'],
+        varType: 'const'
+      }),
+      v('supply priority[s1,pprofile]', '3,1,1,0', {
+        refId: '_supply_priority[_s1,_ptype]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_s1', '_ptype'],
+        varType: 'const'
+      }),
+      v('supply priority[s1,pprofile]', '3,1,1,0', {
+        refId: '_supply_priority[_s1,_ppriority]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_s1', '_ppriority'],
+        varType: 'const'
+      }),
+      v('supply priority[s1,pprofile]', '3,1,1,0', {
+        refId: '_supply_priority[_s1,_pwidth]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_s1', '_pwidth'],
+        varType: 'const'
+      }),
+      v('supply priority[s1,pprofile]', '3,1,1,0', {
+        refId: '_supply_priority[_s1,_pextra]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_s1', '_pextra'],
+        varType: 'const'
+      }),
+      v('supply priority[s2,pprofile]', '3,2,1,0', {
+        refId: '_supply_priority[_s2,_ptype]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_s2', '_ptype'],
+        varType: 'const'
+      }),
+      v('supply priority[s2,pprofile]', '3,2,1,0', {
+        refId: '_supply_priority[_s2,_ppriority]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_s2', '_ppriority'],
+        varType: 'const'
+      }),
+      v('supply priority[s2,pprofile]', '3,2,1,0', {
+        refId: '_supply_priority[_s2,_pwidth]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_s2', '_pwidth'],
+        varType: 'const'
+      }),
+      v('supply priority[s2,pprofile]', '3,2,1,0', {
+        refId: '_supply_priority[_s2,_pextra]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_s2', '_pextra'],
+        varType: 'const'
+      }),
+      v(
+        'market price',
+        'FIND MARKET PRICE(demand satiation[d1],demand priority[d1,ptype],supply capacity[s1],supply priority[s1,ptype])',
+        {
+          refId: '_market_price',
+          referencedFunctionNames: ['__find_market_price'],
+          references: [
+            '_demand_satiation',
+            '_demand_priority[_d1,_ptype]',
+            '_demand_priority[_d1,_ppriority]',
+            '_demand_priority[_d1,_pwidth]',
+            '_demand_priority[_d1,_pextra]',
+            '_supply_capacity',
+            '_supply_priority[_s1,_ptype]',
+            '_supply_priority[_s1,_ppriority]',
+            '_supply_priority[_s1,_pwidth]',
+            '_supply_priority[_s1,_pextra]'
+          ]
+        }
+      )
+    ])
+  })
+
+  it('should throw error for FIND MARKET PRICE function (when call has wrong number of arguments)', () => {
+    expect(() =>
+      readInlineModel(`
+        demander: d1, d2 ~~|
+        pprofile: ptype, ppriority, pwidth, pextra ~~|
+        demand satiation[demander] = 500 ~~|
+        demand priority[d1,pprofile] = 3,1,1,0 ~~|
+        demand priority[d2,pprofile] = 3,2,1,0 ~~|
+        market price = FIND MARKET PRICE(demand satiation[d1], demand priority[d1,ptype]) ~~|
+      `)
+    ).toThrow(/^Expected 'FIND MARKET PRICE' function call to have 4 arguments but got 2$/)
   })
 
   it('should work for GAME function (no dimensions)', () => {
@@ -5160,6 +5432,119 @@ describe('readEquations (from Vensim model)', () => {
         varType: 'level'
       })
     ])
+  })
+
+  it('should work for SUPPLY AT PRICE function (1D LHS, 1D supply, 2D pp, non-subscripted price)', () => {
+    const vars = readInlineModel(`
+      supplier: s1, s2 ~~|
+      pprofile: ptype, ppriority, pwidth, pextra ~~|
+      market price = 5 ~~|
+      supply capacity[supplier] = 200,300 ~~|
+      priority[s1,pprofile] = 3,1,1,0 ~~|
+      priority[s2,pprofile] = 3,2,1,0 ~~|
+      amount supplied[supplier] = SUPPLY AT PRICE(supply capacity[supplier], priority[supplier,ptype], market price) ~~|
+    `)
+    expect(vars).toEqual([
+      v('market price', '5', {
+        refId: '_market_price',
+        varType: 'const'
+      }),
+      v('supply capacity[supplier]', '200,300', {
+        refId: '_supply_capacity[_s1]',
+        separationDims: ['_supplier'],
+        subscripts: ['_s1'],
+        varType: 'const'
+      }),
+      v('supply capacity[supplier]', '200,300', {
+        refId: '_supply_capacity[_s2]',
+        separationDims: ['_supplier'],
+        subscripts: ['_s2'],
+        varType: 'const'
+      }),
+      v('priority[s1,pprofile]', '3,1,1,0', {
+        refId: '_priority[_s1,_ptype]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_s1', '_ptype'],
+        varType: 'const'
+      }),
+      v('priority[s1,pprofile]', '3,1,1,0', {
+        refId: '_priority[_s1,_ppriority]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_s1', '_ppriority'],
+        varType: 'const'
+      }),
+      v('priority[s1,pprofile]', '3,1,1,0', {
+        refId: '_priority[_s1,_pwidth]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_s1', '_pwidth'],
+        varType: 'const'
+      }),
+      v('priority[s1,pprofile]', '3,1,1,0', {
+        refId: '_priority[_s1,_pextra]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_s1', '_pextra'],
+        varType: 'const'
+      }),
+      v('priority[s2,pprofile]', '3,2,1,0', {
+        refId: '_priority[_s2,_ptype]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_s2', '_ptype'],
+        varType: 'const'
+      }),
+      v('priority[s2,pprofile]', '3,2,1,0', {
+        refId: '_priority[_s2,_ppriority]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_s2', '_ppriority'],
+        varType: 'const'
+      }),
+      v('priority[s2,pprofile]', '3,2,1,0', {
+        refId: '_priority[_s2,_pwidth]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_s2', '_pwidth'],
+        varType: 'const'
+      }),
+      v('priority[s2,pprofile]', '3,2,1,0', {
+        refId: '_priority[_s2,_pextra]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_s2', '_pextra'],
+        varType: 'const'
+      }),
+      v(
+        'amount supplied[supplier]',
+        'SUPPLY AT PRICE(supply capacity[supplier],priority[supplier,ptype],market price)',
+        {
+          refId: '_amount_supplied',
+          referencedFunctionNames: ['__supply_at_price'],
+          references: [
+            '_supply_capacity[_s1]',
+            '_supply_capacity[_s2]',
+            '_priority[_s1,_ptype]',
+            '_priority[_s2,_ptype]',
+            '_priority[_s1,_ppriority]',
+            '_priority[_s2,_ppriority]',
+            '_priority[_s1,_pwidth]',
+            '_priority[_s2,_pwidth]',
+            '_priority[_s1,_pextra]',
+            '_priority[_s2,_pextra]',
+            '_market_price'
+          ],
+          subscripts: ['_supplier']
+        }
+      )
+    ])
+  })
+
+  it('should throw error for SUPPLY AT PRICE function (when call has wrong number of arguments)', () => {
+    expect(() =>
+      readInlineModel(`
+        supplier: s1, s2 ~~|
+        pprofile: ptype, ppriority, pwidth, pextra ~~|
+        supply capacity[supplier] = 200,300 ~~|
+        priority[s1,pprofile] = 3,1,1,0 ~~|
+        priority[s2,pprofile] = 3,2,1,0 ~~|
+        amount supplied[supplier] = SUPPLY AT PRICE(supply capacity[supplier], priority[supplier,ptype]) ~~|
+      `)
+    ).toThrow(/^Expected 'SUPPLY AT PRICE' function call to have 3 arguments but got 2$/)
   })
 
   it('should work for TREND function', () => {
