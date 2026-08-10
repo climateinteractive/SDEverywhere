@@ -6,12 +6,12 @@
   "packages/check-core": "0.1.12",
   "packages/check-ui-shell": "0.2.24",
   "packages/plugin-check": "0.3.34",
-  "packages/plugin-config": "0.2.11",
-  "packages/plugin-vite": "0.2.3",
+  "packages/plugin-config": "0.2.10",
+  "packages/plugin-vite": "0.2.2",
   "packages/plugin-wasm": "0.2.8",
   "packages/plugin-worker": "0.2.14",
   "packages/runtime": "0.2.9",
   "packages/runtime-async": "0.2.9",
   "packages/create": "0.2.39",
-  "packages/plugin-deploy": "0.1.2"
+  "packages/plugin-deploy": "0.1.1"
 }
