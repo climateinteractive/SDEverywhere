@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.2.11](https://github.com/climateinteractive/SDEverywhere/compare/plugin-config-v0.2.10...plugin-config-v0.2.11) (2026-08-10)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @sdeverywhere/build bumped from * to 0.3.13
+  * peerDependencies
+    * @sdeverywhere/build bumped from ^0.3.10 to ^0.3.13
+
 ## [0.2.10](https://github.com/climateinteractive/SDEverywhere/compare/plugin-config-v0.2.9...plugin-config-v0.2.10) (2026-05-04)
 
 
