@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.7.44](https://github.com/climateinteractive/SDEverywhere/compare/cli-v0.7.43...cli-v0.7.44) (2026-08-10)
+
+
+### Features
+
+* add support for the INVERT MATRIX Vensim function in C and JS ([#846](https://github.com/climateinteractive/SDEverywhere/issues/846)) ([28a1968](https://github.com/climateinteractive/SDEverywhere/commit/28a1968d64a6cd751507d989c1e8f18305ea2d4b)), closes [#845](https://github.com/climateinteractive/SDEverywhere/issues/845)
+* support all ALLOCATE AVAILABLE priority curve types and add FIND MARKET PRICE / DEMAND AT PRICE / SUPPLY AT PRICE ([#840](https://github.com/climateinteractive/SDEverywhere/issues/840)) ([bf1e242](https://github.com/climateinteractive/SDEverywhere/commit/bf1e2423f2790f1ed9f86776147d61ea72d26e39)), closes [#839](https://github.com/climateinteractive/SDEverywhere/issues/839)
+
+
+### Bug Fixes
+
+* correct ALLOCATE AVAILABLE convergence and code generation ([#838](https://github.com/climateinteractive/SDEverywhere/issues/838)) ([4661254](https://github.com/climateinteractive/SDEverywhere/commit/466125408c50197085c4a81cd53ffab153b39875)), closes [#837](https://github.com/climateinteractive/SDEverywhere/issues/837)
+* round A&S CDF coefficients to 6 significant digits to best match Vensim ([#842](https://github.com/climateinteractive/SDEverywhere/issues/842)) ([c34d131](https://github.com/climateinteractive/SDEverywhere/commit/c34d131cf644fa3a0e66924c0775675adf3ba02f)), closes [#841](https://github.com/climateinteractive/SDEverywhere/issues/841)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/build bumped from ^0.3.12 to ^0.3.13
+    * @sdeverywhere/compile bumped from ^0.7.31 to ^0.7.32
+
 ## [0.7.43](https://github.com/climateinteractive/SDEverywhere/compare/cli-v0.7.42...cli-v0.7.43) (2026-06-03)
 
 
