@@ -707,8 +707,8 @@ importers:
         specifier: 4.12.0
         version: 4.12.0
       antlr4-vensim:
-        specifier: 0.6.3
-        version: 0.6.3
+        specifier: 0.6.4
+        version: 0.6.4
       assert-never:
         specifier: ^1.2.1
         version: 1.2.1
@@ -2051,8 +2051,8 @@ packages:
     resolution: {integrity: sha512-4Dj6M28JB+oAH8kFkTLUo+a2jwOFkuqb3yucU0CANcRRUbxS0cP0nZYCGjcc3BNXwRIsUVmDGgzawme7zvJHvg==}
     engines: {node: '>=12'}
 
-  antlr4-vensim@0.6.3:
-    resolution: {integrity: sha512-xDjUXNjeDEj2ahCFIIxOIlA6Jf/YtBMngugH1AyvVeg4qKttTFmof13j7lXvE24hHcW9sa0ACs6JmgR+/x8c+A==}
+  antlr4-vensim@0.6.4:
+    resolution: {integrity: sha512-vj2odeD2345dlEYWmlUIvQoWSJEdAEpRG/WN1cCDWSHwjZT5OPbuc6nYZx8aGOAf6BfTLknhZLpKUqKxk3J5UQ==}
 
   antlr4@4.12.0:
     resolution: {integrity: sha512-23iB5IzXJZRZeK9TigzUyrNc9pSmNqAerJRBcNq1ETrmttMWRgaYZzC561IgEO3ygKsDJTYDTozABXa4b/fTQQ==}
@@ -4579,7 +4579,7 @@ snapshots:
 
   ansi-styles@6.2.3: {}
 
-  antlr4-vensim@0.6.3:
+  antlr4-vensim@0.6.4:
     dependencies:
       antlr4: 4.12.0
 
