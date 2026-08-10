@@ -23,16 +23,16 @@
   "devDependencies": {
     "@eslint/js": "^9.34.0",
     "@playwright/test": "^1.56.1",
-    "@typescript-eslint/eslint-plugin": "^8.46.0",
-    "@typescript-eslint/parser": "^8.46.0",
-    "@vitest/browser": "^4.0.17",
-    "@vitest/browser-playwright": "^4.0.17",
-    "@vitest/coverage-v8": "^4.0.17",
+    "@typescript-eslint/eslint-plugin": "^8.67.0",
+    "@typescript-eslint/parser": "^8.67.0",
+    "@vitest/browser": "^4.1.10",
+    "@vitest/browser-playwright": "^4.1.10",
+    "@vitest/coverage-v8": "^4.1.10",
     "csv-parse": "^5.3.3",
-    "eslint": "^9.37.0",
+    "eslint": "^9.39.5",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-eslint-comments": "^3.2.0",
-    "eslint-plugin-svelte": "^3.12.4",
+    "eslint-plugin-svelte": "^3.22.0",
     "fast-glob": "^3.3.3",
     "globals": "^16.4.0",
     "npm-run-all2": "^8.0.4",
@@ -44,7 +44,7 @@
     "typedoc": "0.25.0",
     "typedoc-plugin-markdown": "3.16.0",
     "typescript": "^5.2.2",
-    "vitest": "^4.0.17"
+    "vitest": "^4.1.10"
   },
   "pnpm": {
     "peerDependencyRules": {
